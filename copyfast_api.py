@@ -66,17 +66,25 @@ from copyfast_db import (
     WebManualTopupMethodUnavailable,
     WebManualTopupPendingLimit,
     approve_web_manual_topup,
+    claim_web_credit_operation_for_dispatch,
+    claim_web_manual_topup_approve_decision,
     confirm_web_manual_topup_reject,
+    create_web_manual_topup_approve_receipt,
     create_web_manual_topup_reject_receipt,
     create_web_manual_topup_request,
     ensure_copyfast_schema,
+    finalize_web_manual_topup_approval_with_operation,
+    get_or_create_web_manual_topup_credit_operation,
     get_or_create_web_topup_code,
+    get_web_manual_topup_credit_operation,
     get_web_manual_topup_for_admin,
+    get_web_manual_topup_receipt_action,
     get_web_manual_topup_request,
     list_web_manual_topups_for_admin,
     list_web_manual_topup_requests,
     read_transaction,
     transaction,
+    update_web_manual_topup_credit_operation_status,
     utc_now,
 )
 from copyfast_native_read_models import (
@@ -5007,19 +5015,19 @@ async def manual_admin_draft(
         if str(record["status"]) != "pending_admin_review":
             return _manual_admin_guard("MANUAL_ADMIN_NOT_PENDING", "Yêu cầu không ở trạng thái chờ duyệt.", status_code=409)
         expected_xu = record.get("expected_xu") or (int(record.get("amount_vnd", 0)) // 100)
-        with _manual_admin_receipt_lock:
-            _manual_admin_clean_receipts(time.time())
-            _manual_admin_receipt_vault[receipt_hash] = ManualAdminReceiptEntry(
-                account_id=str(record.get("account_id") or ""),
+        try:
+            record = create_web_manual_topup_approve_receipt(
+                request_number=int(canonical_id.split("-", 1)[1]),
+                admin_account_id=str(account.get("id") or ""),
                 session_id=session_id,
-                admin_id=str(account.get("id") or ""),
-                request_id=canonical_id,
-                action="approve",
+                receipt_hash=receipt_hash,
                 approved_xu=expected_xu,
                 reason=payload.reason,
-                expires_at=time.time() + MANUAL_ADMIN_RECEIPT_TTL_SECONDS,
-                private_token=confirmation_receipt,
+                now=now,
+                expires_at=expires_at,
             )
+        except WebManualTopupAdminGuard as error:
+            return _web_manual_admin_guard(error)
         data = {
             **record,
             "action": "approve",
@@ -5079,143 +5087,197 @@ async def manual_admin_confirm(
     session_id = _manual_admin_session_id(request, account)
     receipt_hash = hashlib.sha256(payload.confirmation_receipt.encode("utf-8")).hexdigest()
     key_hash = hashlib.sha256(payload.idempotency_key.encode("utf-8")).hexdigest()
+    request_number = int(canonical_id.split("-", 1)[1])
 
-    vault_entry = None
-    with _manual_admin_receipt_lock:
-        vault_entry = _manual_admin_receipt_vault.get(receipt_hash)
+    action = get_web_manual_topup_receipt_action(receipt_hash)
+    if action == "approve":
+        try:
+            record, receipt_dict, is_replayed = claim_web_manual_topup_approve_decision(
+                request_number=request_number,
+                admin_account_id=str(account.get("id") or ""),
+                session_id=session_id,
+                receipt_hash=receipt_hash,
+                idempotency_key_hash=key_hash,
+            )
+        except WebManualTopupAdminGuard as error:
+            return _web_manual_admin_guard(error)
 
-    if vault_entry is not None and vault_entry.action == "approve":
-        if vault_entry.expires_at <= time.time():
-            return _manual_admin_guard("MANUAL_ADMIN_CONFIRMATION_EXPIRED", "Biên nhận xác nhận đã hết hạn.", status_code=409)
-        if vault_entry.session_id != session_id or vault_entry.admin_id != str(account.get("id") or ""):
-            return _manual_admin_guard("MANUAL_ADMIN_CONFIRMATION_REQUIRED", "Biên nhận không thuộc phiên quản trị này.", status_code=401)
-        if vault_entry.in_flight:
-            return _manual_admin_guard("MANUAL_ADMIN_CONFIRMATION_IN_PROGRESS", "Quyết định đang được xử lý.", status_code=409)
-
-        vault_entry.in_flight = True
-        record = get_web_manual_topup_for_admin(int(canonical_id.split("-", 1)[1]))
-        if record is None:
-            vault_entry.in_flight = False
-            return _manual_admin_guard("MANUAL_ADMIN_NOT_FOUND", "Không tìm thấy yêu cầu nạp thủ công.", status_code=404)
-        if str(record["status"]) == "approved":
-            vault_entry.in_flight = False
+        if is_replayed or str(record.get("status")) == "approved":
             return envelope(
                 True,
                 "Yêu cầu nạp thủ công đã được duyệt trước đó.",
                 data={**record, "idempotent_replay": True},
                 status_name="approved",
             )
-        if str(record["status"]) != "pending_admin_review":
-            vault_entry.in_flight = False
+        if str(record.get("status")) != "pending_admin_review":
             return _manual_admin_guard("MANUAL_ADMIN_NOT_PENDING", "Yêu cầu không ở trạng thái chờ duyệt.", status_code=409)
-
-        if not bridge_configured():
-            vault_entry.in_flight = False
-            return _manual_admin_guard(
-                "WALLET_CREDIT_BRIDGE_UNAVAILABLE",
-                "Hệ thống kết nối Bot Core Ledger chưa khả dụng; chưa cộng Xu và yêu cầu nạp tiền vẫn ở trạng thái chờ duyệt để thử lại sau.",
-                status_code=503,
-            )
 
         canonical_user_id = record.get("canonical_user_id") or record.get("telegram_user_id")
         if not canonical_user_id:
-            vault_entry.in_flight = False
             return _manual_admin_guard(
                 "WALLET_CREDIT_USER_UNLINKED",
                 "Tài khoản chưa liên kết danh tính Bot Core để cộng Xu; yêu cầu nạp tiền vẫn ở trạng thái chờ duyệt.",
                 status_code=422,
             )
 
-        bridge_res = await bridge_request(
-            "POST",
-            "/internal/v1/admin/wallet/credit",
-            payload={
-                "canonical_user_id": canonical_user_id,
-                "amount_xu": vault_entry.approved_xu,
-                "reason": f"Manual topup {canonical_id}",
-                "idempotency_key": f"admin:{account['id']}:credit:{canonical_id}:{payload.idempotency_key}",
-            },
-            actor_id=str(account.get("id") or ""),
-        )
-        if not bridge_res.get("ok"):
-            vault_entry.in_flight = False
-            error_code = str(bridge_res.get("error_code") or "WALLET_CREDIT_FAILED")
-            status_code = (
-                504
-                if error_code in {"CORE_BRIDGE_TIMEOUT", "CORE_BRIDGE_GATEWAY_TIMEOUT"}
-                else 503
-                if error_code in {"CORE_BRIDGE_UNAVAILABLE", "CORE_BRIDGE_NOT_CONFIGURED"}
-                else 502
-            )
-            return _manual_admin_guard(
-                error_code,
-                bridge_res.get("message") or "Không thể cộng Xu qua Bot Core Ledger; yêu cầu nạp tiền vẫn ở trạng thái chờ duyệt.",
-                status_code=status_code,
-            )
-
-        raw_receipt = (bridge_res.get("data") or {}).get("tx_id") or (bridge_res.get("data") or {}).get("ledger_event_id")
-        ledger_event_id = str(raw_receipt or "").strip()
-        if not ledger_event_id or ledger_event_id.startswith("local-credit-"):
-            vault_entry.in_flight = False
-            return _manual_admin_guard(
-                "WALLET_CREDIT_RECEIPT_MISSING",
-                "Bot Core Ledger không trả về mã biên nhận hợp lệ; chưa ghi nhận hoàn tất và yêu cầu nạp tiền vẫn ở trạng thái chờ duyệt.",
-                status_code=502,
-            )
-
+        # Claim or retrieve durable credit operation
         try:
-            approved_record = approve_web_manual_topup(
-                request_number=int(canonical_id.split("-", 1)[1]),
+            op, claim_status = claim_web_credit_operation_for_dispatch(
+                request_number=request_number,
                 admin_account_id=str(account.get("id") or ""),
-                approved_xu=vault_entry.approved_xu,
+                canonical_user_id=canonical_user_id,
+                amount_xu=receipt_dict["approved_xu"],
+                reference=str(record.get("reference") or f"MANUAL-{request_number}"),
+            )
+        except WebManualTopupAdminGuard as error:
+            return _web_manual_admin_guard(error)
+
+        if claim_status == "already_completed":
+            return envelope(
+                True,
+                "Yêu cầu nạp thủ công đã được duyệt trước đó.",
+                data={**record, "idempotent_replay": True},
+                status_name="approved",
+            )
+
+        if claim_status == "ready_to_finalize":
+            ledger_event_id = op["ledger_event_id"]
+        else:
+            # Dispatch to Bot Core
+            if not bridge_configured():
+                update_web_manual_topup_credit_operation_status(
+                    request_number=request_number,
+                    status="not_sent",
+                    error_detail="WALLET_CREDIT_BRIDGE_UNAVAILABLE",
+                )
+                return _manual_admin_guard(
+                    "WALLET_CREDIT_BRIDGE_UNAVAILABLE",
+                    "Hệ thống kết nối Bot Core Ledger chưa khả dụng; chưa cộng Xu và yêu cầu nạp tiền vẫn ở trạng thái chờ duyệt để thử lại sau.",
+                    status_code=503,
+                )
+
+            try:
+                bridge_res = await bridge_request(
+                    "POST",
+                    "/internal/v1/admin/wallet/credit",
+                    payload={
+                        "canonical_user_id": canonical_user_id,
+                        "amount_xu": op["amount_xu"],
+                        "reason": f"Manual topup {canonical_id}",
+                        "idempotency_key": op["idempotency_key"],
+                    },
+                    actor_id=str(account.get("id") or ""),
+                )
+            except Exception as exc:
+                update_web_manual_topup_credit_operation_status(
+                    request_number=request_number,
+                    status="reconcile_required",
+                    error_detail=str(exc),
+                )
+                return _manual_admin_guard(
+                    "CORE_BRIDGE_TIMEOUT",
+                    "Hệ thống kết nối Bot Core bị lỗi mạng hoặc quá thời gian chờ; yêu cầu nạp tiền vẫn ở trạng thái chờ duyệt.",
+                    status_code=504,
+                )
+
+            if not bridge_res.get("ok"):
+                error_code = str(bridge_res.get("error_code") or "WALLET_CREDIT_FAILED")
+                status_code = (
+                    504
+                    if error_code in {"CORE_BRIDGE_TIMEOUT", "CORE_BRIDGE_GATEWAY_TIMEOUT"}
+                    else 503
+                    if error_code in {"CORE_BRIDGE_UNAVAILABLE", "CORE_BRIDGE_NOT_CONFIGURED"}
+                    else 409
+                    if error_code in {"WALLET_CREDIT_CONFLICT", "IDEMPOTENCY_KEY_CONFLICT", "MANUAL_ADMIN_IDEMPOTENCY_CONFLICT"}
+                    else 502
+                )
+                op_status = "reconcile_required" if status_code in (504, 409, 502) else "not_sent"
+                update_web_manual_topup_credit_operation_status(
+                    request_number=request_number,
+                    status=op_status,
+                    error_detail=error_code,
+                )
+                return _manual_admin_guard(
+                    error_code,
+                    bridge_res.get("message") or "Không thể cộng Xu qua Bot Core Ledger; yêu cầu nạp tiền vẫn ở trạng thái chờ duyệt.",
+                    status_code=status_code,
+                )
+
+            raw_receipt = (bridge_res.get("data") or {}).get("tx_id") or (bridge_res.get("data") or {}).get("ledger_event_id")
+            ledger_event_id = str(raw_receipt or "").strip()
+            if not ledger_event_id or ledger_event_id.startswith("local-credit-"):
+                update_web_manual_topup_credit_operation_status(
+                    request_number=request_number,
+                    status="reconcile_required",
+                    error_detail="WALLET_CREDIT_RECEIPT_MISSING",
+                )
+                return _manual_admin_guard(
+                    "WALLET_CREDIT_RECEIPT_MISSING",
+                    "Bot Core Ledger không trả về mã biên nhận hợp lệ; chưa ghi nhận hoàn tất và yêu cầu nạp tiền vẫn ở trạng thái chờ duyệt.",
+                    status_code=502,
+                )
+
+            # Persist Bot Core receipt in durable operation BEFORE local approval
+            update_web_manual_topup_credit_operation_status(
+                request_number=request_number,
+                status="credit_confirmed",
                 ledger_event_id=ledger_event_id,
-                reason=vault_entry.reason,
+            )
+
+        # Finalize local approval in SQLite
+        try:
+            approved_record = finalize_web_manual_topup_approval_with_operation(
+                request_number=request_number,
+                admin_account_id=str(account.get("id") or ""),
+                approved_xu=op["amount_xu"],
+                ledger_event_id=ledger_event_id,
+                reason=receipt_dict.get("reason", ""),
+                session_id=session_id,
+                idempotency_key_hash=key_hash,
                 audit_request_id=_manual_admin_audit_request_id(request),
             )
         except WebManualTopupAdminGuard as error:
-            vault_entry.in_flight = False
             return _web_manual_admin_guard(error)
         except sqlite3.DatabaseError:
-            vault_entry.in_flight = False
             return _manual_admin_guard(
                 "MANUAL_ADMIN_STORAGE_FAILURE",
                 "Chưa thể ghi quyết định an toàn; dữ liệu đã được hoàn tác.",
                 status_code=503,
             )
 
-        with _manual_admin_receipt_lock:
-            _manual_admin_receipt_vault.pop(receipt_hash, None)
-
         return envelope(
             True,
-            f"Đã duyệt yêu cầu nạp tiền và cộng {vault_entry.approved_xu} Xu thành công.",
+            f"Đã duyệt yêu cầu nạp tiền và cộng {op['amount_xu']} Xu thành công.",
             data=approved_record,
             status_name="approved",
         )
 
-    try:
-        record = confirm_web_manual_topup_reject(
-            request_number=int(canonical_id.split("-", 1)[1]),
-            admin_account_id=str(account.get("id") or ""),
-            session_id=session_id,
-            receipt_hash=receipt_hash,
-            idempotency_key_hash=key_hash,
-            audit_request_id=_manual_admin_audit_request_id(request),
+    elif action == "reject":
+        try:
+            record = confirm_web_manual_topup_reject(
+                request_number=request_number,
+                admin_account_id=str(account.get("id") or ""),
+                session_id=session_id,
+                receipt_hash=receipt_hash,
+                idempotency_key_hash=key_hash,
+                audit_request_id=_manual_admin_audit_request_id(request),
+            )
+        except WebManualTopupAdminGuard as error:
+            return _web_manual_admin_guard(error)
+        except sqlite3.DatabaseError:
+            return _manual_admin_guard(
+                "MANUAL_ADMIN_STORAGE_FAILURE",
+                "Chưa thể ghi quyết định an toàn; dữ liệu đã được hoàn tác.",
+                status_code=503,
+            )
+        return envelope(
+            True,
+            "Đã từ chối yêu cầu nạp thủ công.",
+            data=record,
+            status_name="rejected",
         )
-    except WebManualTopupAdminGuard as error:
-        return _web_manual_admin_guard(error)
-    except sqlite3.DatabaseError:
-        return _manual_admin_guard(
-            "MANUAL_ADMIN_STORAGE_FAILURE",
-            "Chưa thể ghi quyết định an toàn; dữ liệu đã được hoàn tác.",
-            status_code=503,
-        )
-    return envelope(
-        True,
-        "Đã từ chối yêu cầu nạp thủ công.",
-        data=record,
-        status_name="rejected",
-    )
+    else:
+        return _manual_admin_guard("MANUAL_ADMIN_CONFIRMATION_REQUIRED", "Biên nhận không thuộc phiên quản trị này.", status_code=401)
 
 
 
