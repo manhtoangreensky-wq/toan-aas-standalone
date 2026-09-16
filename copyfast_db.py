@@ -6434,7 +6434,9 @@ class WebManualTopupAdminGuard(Exception):
 _WEB_MANUAL_ADMIN_SELECT = """
     SELECT r.id, a.display_name, a.email, r.amount_vnd, r.currency,
            r.method, r.reference, c.payment_code, r.status,
-           r.submitted_at, r.updated_at, r.decision_at, r.decision_reason
+           r.submitted_at, r.updated_at, r.decision_at, r.decision_reason,
+           r.account_id, a.canonical_user_id, r.approved_xu, r.ledger_event_id,
+           r.decided_by_account_id
     FROM web_manual_topup_requests AS r
     JOIN web_accounts AS a ON a.id = r.account_id
     JOIN web_account_topup_codes AS c ON c.account_id = r.account_id
@@ -6444,11 +6446,14 @@ _WEB_MANUAL_ADMIN_SELECT = """
 def _web_manual_admin_public_row(row: tuple | None) -> dict | None:
     if row is None:
         return None
+    amount_vnd = int(row[3])
+    expected_xu = amount_vnd // 100
+    canonical_user_id = str(row[14]) if len(row) > 14 and row[14] else None
     result = {
         "request_id": f"MANUAL-{int(row[0])}",
         "display_name": str(row[1] or ""),
         "email": str(row[2] or ""),
-        "amount_vnd": int(row[3]),
+        "amount_vnd": amount_vnd,
         "currency": str(row[4]),
         "method": str(row[5]),
         "reference": str(row[6] or ""),
@@ -6456,11 +6461,19 @@ def _web_manual_admin_public_row(row: tuple | None) -> dict | None:
         "status": str(row[8]),
         "submitted_at": str(row[9]),
         "updated_at": str(row[10]),
+        "account_id": str(row[13]) if len(row) > 13 and row[13] else "",
+        "canonical_user_id": canonical_user_id,
+        "telegram_user_id": canonical_user_id,
+        "expected_xu": expected_xu,
+        "approved_xu": int(row[15]) if len(row) > 15 and row[15] is not None else None,
+        "ledger_event_id": str(row[16]) if len(row) > 16 and row[16] else None,
+        "decided_by_admin_id": str(row[17]) if len(row) > 17 and row[17] else None,
     }
     if row[11]:
         result["decision_at"] = str(row[11])
     if row[12]:
         result["decision_reason"] = str(row[12])
+        result["admin_note"] = str(row[12])
     return result
 
 
@@ -6673,6 +6686,74 @@ def confirm_web_manual_topup_reject(
                 admin_account_id,
                 _web_manual_audit_request_id(audit_request_id),
                 f"MANUAL-{int(request_number)}",
+                current_time,
+            ),
+        )
+        updated = conn.execute(
+            _WEB_MANUAL_ADMIN_SELECT + " WHERE r.id=?",
+            (int(request_number),),
+        ).fetchone()
+    projected = _web_manual_admin_public_row(updated)
+    assert projected is not None
+    return projected
+
+
+def approve_web_manual_topup(
+    *,
+    request_number: int,
+    admin_account_id: str,
+    approved_xu: int,
+    ledger_event_id: str,
+    reason: str = "",
+    audit_request_id: str = "",
+    now: str | None = None,
+) -> dict:
+    """Approve a pending manual top-up request and record wallet credit event."""
+    current_time = str(now or utc_now())
+    with transaction() as conn:
+        record = conn.execute(
+            _WEB_MANUAL_ADMIN_SELECT + " WHERE r.id=?",
+            (int(request_number),),
+        ).fetchone()
+        if record is None:
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_FOUND")
+        current_status = str(record[8])
+        if current_status == "approved":
+            replay = _web_manual_admin_public_row(record)
+            assert replay is not None
+            replay["idempotent_replay"] = True
+            return replay
+        if current_status != "pending_admin_review":
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_NOT_PENDING")
+        request_update = conn.execute(
+            """UPDATE web_manual_topup_requests
+               SET status='approved', decided_by_account_id=?, decision_at=?,
+                   decision_reason=?, approved_xu=?, ledger_event_id=?, updated_at=?
+               WHERE id=? AND status='pending_admin_review'""",
+            (
+                admin_account_id,
+                current_time,
+                str(reason or "Đã xác nhận tiền vào & cộng Xu"),
+                int(approved_xu),
+                str(ledger_event_id),
+                current_time,
+                int(request_number),
+            ),
+        )
+        if request_update.rowcount != 1:
+            raise WebManualTopupAdminGuard("MANUAL_ADMIN_CONFIRMATION_IN_PROGRESS")
+        conn.execute(
+            """INSERT INTO web_audit_events
+               (id, account_id, canonical_user_id, action, request_id,
+                target, outcome, detail, created_at)
+               VALUES (?, ?, NULL, 'admin.manual_topup.approve', ?, ?,
+                       'approved', ?, ?)""",
+            (
+                str(uuid.uuid4()),
+                admin_account_id,
+                _web_manual_audit_request_id(audit_request_id),
+                f"MANUAL-{int(request_number)}",
+                f"approved_xu={int(approved_xu)};ledger_event_id={str(ledger_event_id)}",
                 current_time,
             ),
         )
