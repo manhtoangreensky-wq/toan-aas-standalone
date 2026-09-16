@@ -47,7 +47,7 @@ def test_admin_ui_canvas_and_surfaces_forbid_obsidian() -> None:
     """Admin default appearance must be light teal/emerald; obsidian black is forbidden."""
     assert '.portal-shell[data-portal-app-kind="admin"]:not([data-portal-theme="dark"])' in PORTAL_THEME_CSS
     assert '--portal-app-canvas: #f3fbfc;' in PORTAL_THEME_CSS
-    assert 'background: #f3fbfc !important;' in PORTAL_THEME_CSS
+    assert 'background: var(--portal-app-canvas) !important;' in PORTAL_THEME_CSS
     
     admin_auth_block = re.search(
         r'\.portal-body--auth\[data-portal-app-kind="admin"\]\s*\{(?P<rules>[^}]+)\}',
@@ -61,8 +61,8 @@ def test_admin_ui_canvas_and_surfaces_forbid_obsidian() -> None:
 def test_admin_ui_sidebar_is_crisp_light_with_teal_accent() -> None:
     """Admin sidebar must be crisp white with light border and teal indicators."""
     assert '.portal-shell[data-portal-app-kind="admin"]:not([data-portal-theme="dark"]) .portal-sidebar' in PORTAL_THEME_CSS
-    assert 'background: #ffffff !important;' in PORTAL_THEME_CSS
-    assert 'border-right: 1px solid #e2edf0 !important;' in PORTAL_THEME_CSS
+    assert 'background: var(--portal-surface-light) !important;' in PORTAL_THEME_CSS
+    assert 'border-right: 1px solid var(--portal-admin-light-rail-border) !important;' in PORTAL_THEME_CSS
 
 
 def test_admin_ui_data_tables_and_filters_are_light_surfaces() -> None:
