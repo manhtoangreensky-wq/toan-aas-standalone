@@ -481,6 +481,10 @@ ADMIN_BRIDGE_MODULES = frozenset({
     "backups",
 })
 ADMIN_BRIDGE_MODULE_ALIASES = {"backup": "backups", "export": "reports"}
+_ACTORLESS_CATALOG_PATHS = frozenset({
+    "/internal/v1/pricing",
+    "/internal/v1/packages",
+})
 
 
 def _request_id(request: Request) -> str:
@@ -2973,29 +2977,37 @@ async def _bridge(
         return envelope(False, "Web App đang tạm khóa theo feature flag COPYFAST.", status_name="guarded", error_code="WEBAPP_COPYFAST_DISABLED")
     if path.startswith("/internal/v1/admin/") and not flags["admin_erp_enabled"]:
         return envelope(False, "Admin ERP trên Web đang tạm khóa theo feature flag.", status_name="guarded", error_code="WEBAPP_ADMIN_ERP_DISABLED")
-    if path in {"/internal/v1/pricing", "/internal/v1/packages", "/internal/v1/features/status"} or path.startswith("/internal/v1/admin/"):
+    is_actorless_catalog = path in _ACTORLESS_CATALOG_PATHS
+    if is_actorless_catalog:
+        user_id = ""
+        bridge_actor_id = ""
+    elif path in {"/internal/v1/features/status"} or path.startswith("/internal/v1/admin/"):
         user_id = str(account.get("canonical_user_id") or "").strip()
+        bridge_actor_id = user_id
     else:
         user_id = _linked(account)
+        bridge_actor_id = user_id
     enriched = dict(payload or {})
     # The browser must never be able to choose the canonical target identity.
     # Do not use setdefault here: a forged outer payload could otherwise
     # override the signed session's Telegram identity on POST requests.
-    enriched["user_id"] = user_id
+    if not is_actorless_catalog:
+        enriched["user_id"] = user_id
     query = None
     if method.upper() == "GET":
         # A route may add safe filters (for example an admin record ID), but
         # it must never replace the canonical target identity supplied by the
         # signed Web session.
         query = dict(params or {})
-        query["user_id"] = user_id
+        if not is_actorless_catalog:
+            query["user_id"] = user_id
     response = await bridge_request(
         method,
         path,
         payload=enriched if method.upper() != "GET" else None,
-        params=query,
+        params=query if query else None,
         request_id=_request_id(request),
-        actor_id=user_id,
+        actor_id=bridge_actor_id,
     )
     allow_admin_user_refs = bool(
         admin_read
