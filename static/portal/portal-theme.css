@@ -70,6 +70,32 @@
   --portal-saas-obsidian-rail-hover: #18181b;
   --portal-saas-obsidian-ink: #f4f4f5;
   --portal-saas-obsidian-muted: #a1a1aa;
+  /* P0.WEBAPP.WEB12 BLUE VISUAL SYSTEM TOKENS */
+  --portal-customer-blue-rail: #075985;
+  --portal-customer-blue-rail-surface: #0c4a6e;
+  --portal-customer-blue-rail-hover: #0e7490;
+  --portal-customer-blue-rail-border: rgba(255, 255, 255, 0.12);
+  --portal-customer-blue-rail-text: #f0f9ff;
+  --portal-customer-blue-rail-muted: #bae6fd;
+  --portal-admin-blue-rail: #075985;
+  --portal-admin-blue-rail-surface: #0c4a6e;
+  --portal-admin-blue-rail-hover: #0e7490;
+  --portal-admin-blue-rail-border: rgba(255, 255, 255, 0.12);
+  --portal-admin-blue-rail-text: #f0f9ff;
+  --portal-admin-blue-rail-muted: #bae6fd;
+  --portal-blue-action: #0284c7;
+  --portal-blue-action-hover: #0369a1;
+  --portal-blue-focus: #38bdf8;
+  --portal-blue-dark-canvas: #0b2545;
+  --portal-blue-dark-surface: #102f4f;
+  --portal-blue-dark-raised: #12395b;
+  --portal-blue-dark-soft: #164e63;
+  --portal-blue-dark-border: rgba(56, 189, 248, 0.2);
+  --portal-blue-dark-border-strong: #38bdf8;
+  --portal-blue-dark-ink: #f0f9ff;
+  --portal-blue-dark-muted: #94a3b8;
+  --portal-blue-dark-placeholder: #7dd3fc;
+  --portal-blue-dark-input-border: rgba(56, 189, 248, 0.25);
   --portal-light-canvas: var(--portal-app-canvas);
   --portal-light-surface: var(--portal-surface-light);
   --portal-light-soft: #e8f6f7;
@@ -3939,8 +3965,33 @@ body {
 }
 
 .portal-shell[data-portal-app-kind="customer"] .portal-sidebar {
-  border-right-color: var(--portal-rail-border);
-  background: var(--portal-rail);
+  border-right-color: var(--portal-customer-blue-rail-border);
+  background: var(--portal-customer-blue-rail) !important;
+  color: var(--portal-customer-blue-rail-text) !important;
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar .portal-nav-link {
+  color: var(--portal-customer-blue-rail-text);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar .portal-nav-link:hover {
+  background: var(--portal-customer-blue-rail-hover);
+  color: var(--portal-surface-light);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar .portal-nav-link[aria-current="page"] {
+  background: var(--portal-customer-blue-rail-surface);
+  color: var(--portal-surface-light);
+  box-shadow: inset 3px 0 0 var(--portal-blue-focus);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar .portal-brand strong,
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar .portal-brand-name {
+  color: var(--portal-surface-light);
+}
+
+.portal-shell[data-portal-app-kind="customer"] .portal-sidebar .portal-brand-caption {
+  color: var(--portal-customer-blue-rail-muted);
 }
 
 .portal-shell[data-portal-app-kind="customer"] .portal-brand {
@@ -19986,29 +20037,29 @@ html[data-portal-theme="dark"] .portal-card,
 html[data-portal-theme="dark"] .portal-auth-page--access {
   --portal-radius-lg: 16px;
   --portal-radius: 12px;
-  --portal-app-canvas: var(--portal-saas-obsidian-canvas);
-  --portal-surface: var(--portal-saas-obsidian-surface);
-  --portal-surface-light: var(--portal-saas-obsidian-surface);
-  --portal-surface-raised: var(--portal-saas-obsidian-raised);
-  --portal-surface-strong: var(--portal-saas-obsidian-raised);
-  --portal-surface-soft: var(--portal-saas-obsidian-soft);
-  --portal-rail: var(--portal-saas-obsidian-rail);
-  --portal-rail-surface: var(--portal-saas-obsidian-surface);
-  --portal-rail-hover: var(--portal-saas-obsidian-rail-hover);
-  --portal-border: var(--portal-saas-obsidian-border);
-  --portal-border-strong: var(--portal-saas-obsidian-border);
-  --portal-ink: var(--portal-saas-obsidian-ink);
-  --portal-muted: var(--portal-saas-obsidian-muted);
-  --portal-input-bg: var(--portal-saas-obsidian-surface);
-  --portal-input-text: var(--portal-saas-obsidian-ink);
-  --portal-input-placeholder: var(--portal-saas-obsidian-muted);
-  --portal-input-border: var(--portal-saas-obsidian-border);
-  --portal-action: var(--portal-saas-teal-context);
-  --portal-action-hover: var(--portal-action-hover);
-  --portal-brand: var(--portal-saas-teal);
-  --portal-brand-hover: var(--portal-saas-emerald);
-  --portal-context: var(--portal-saas-teal-context);
-  --portal-focus: var(--portal-saas-teal-focus);
+  --portal-app-canvas: var(--portal-blue-dark-canvas);
+  --portal-surface: var(--portal-blue-dark-surface);
+  --portal-surface-light: var(--portal-blue-dark-surface);
+  --portal-surface-raised: var(--portal-blue-dark-raised);
+  --portal-surface-strong: var(--portal-blue-dark-raised);
+  --portal-surface-soft: var(--portal-blue-dark-soft);
+  --portal-rail: var(--portal-blue-dark-canvas);
+  --portal-rail-surface: var(--portal-blue-dark-surface);
+  --portal-rail-hover: var(--portal-blue-dark-soft);
+  --portal-border: var(--portal-blue-dark-border);
+  --portal-border-strong: var(--portal-blue-dark-border-strong);
+  --portal-ink: var(--portal-blue-dark-ink);
+  --portal-muted: var(--portal-blue-dark-muted);
+  --portal-input-bg: var(--portal-blue-dark-surface);
+  --portal-input-text: var(--portal-blue-dark-ink);
+  --portal-input-placeholder: var(--portal-blue-dark-placeholder);
+  --portal-input-border: var(--portal-blue-dark-input-border);
+  --portal-action: var(--portal-blue-action);
+  --portal-action-hover: var(--portal-blue-action-hover);
+  --portal-brand: var(--portal-blue-dark-border-strong);
+  --portal-brand-hover: var(--portal-blue-action);
+  --portal-context: var(--portal-blue-action);
+  --portal-focus: var(--portal-blue-focus);
 }
 
 html[data-portal-theme="dark"] .portal-shell:not(.portal-shell--auth):not(.portal-shell--landing) {
@@ -20102,6 +20153,85 @@ html:not([data-portal-theme="dark"]) .portal-shell[data-portal-app-kind="admin"]
   border-right: 1px solid var(--portal-admin-light-rail-border) !important;
   color: var(--portal-admin-light-rail-text) !important;
   box-shadow: 1px 0 3px rgba(15, 118, 110, 0.03);
+}
+
+/* P0.WEBAPP.WEB12 BLUE VISUAL SYSTEM - Admin Blue Rail (ADMIN_BLUE_RAIL=YES, ADMIN_BLACK_SIDEBAR=NO) */
+.portal-shell[data-portal-app-kind="admin"] .portal-sidebar,
+.portal-shell[data-portal-app-kind="admin"]:not([data-portal-theme="dark"]) .portal-sidebar,
+html .portal-shell[data-portal-app-kind="admin"] .portal-sidebar,
+html[data-portal-theme="dark"] .portal-shell[data-portal-app-kind="admin"] .portal-sidebar,
+html:not([data-portal-theme="dark"]) .portal-shell[data-portal-app-kind="admin"] .portal-sidebar,
+.portal-shell--admin .portal-sidebar {
+  background: var(--portal-admin-blue-rail) !important;
+  border-right: 1px solid var(--portal-admin-blue-rail-border) !important;
+  color: var(--portal-admin-blue-rail-text) !important;
+  box-shadow: 1px 0 3px rgba(7, 89, 133, 0.12) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-sidebar .portal-brand,
+.portal-shell[data-portal-app-kind="admin"]:not([data-portal-theme="dark"]) .portal-sidebar .portal-brand,
+.portal-shell--admin .portal-sidebar .portal-brand {
+  border-bottom: 1px solid var(--portal-admin-blue-rail-border) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-sidebar .portal-brand strong,
+.portal-shell[data-portal-app-kind="admin"]:not([data-portal-theme="dark"]) .portal-sidebar .portal-brand strong,
+.portal-shell--admin .portal-sidebar .portal-brand strong {
+  color: var(--portal-surface-light) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-sidebar .portal-brand small,
+.portal-shell[data-portal-app-kind="admin"]:not([data-portal-theme="dark"]) .portal-sidebar .portal-brand small,
+.portal-shell--admin .portal-sidebar .portal-brand small {
+  color: var(--portal-admin-blue-rail-muted) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group-header .portal-nav-label,
+.portal-shell--admin .portal-nav-group-header .portal-nav-label {
+  color: var(--portal-admin-blue-rail-muted) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link,
+.portal-shell--admin .portal-nav-group--flat .portal-nav-link {
+  color: var(--portal-admin-blue-rail-text) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link:hover,
+.portal-shell--admin .portal-nav-group--flat .portal-nav-link:hover {
+  background: var(--portal-admin-blue-rail-hover) !important;
+  color: var(--portal-surface-light) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-nav-group--flat .portal-nav-link[aria-current="page"],
+.portal-shell--admin .portal-nav-group--flat .portal-nav-link[aria-current="page"] {
+  background: var(--portal-admin-blue-rail-surface) !important;
+  color: var(--portal-surface-light) !important;
+  box-shadow: inset 3px 0 0 var(--portal-blue-focus) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-sidebar .portal-nav-link .portal-nav-icon,
+.portal-shell--admin .portal-sidebar .portal-nav-link .portal-nav-icon {
+  color: var(--portal-admin-blue-rail-muted) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-sidebar .portal-nav-link[aria-current="page"] .portal-nav-icon,
+.portal-shell--admin .portal-sidebar .portal-nav-link[aria-current="page"] .portal-nav-icon {
+  color: var(--portal-surface-light) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-button--primary,
+.portal-shell[data-portal-app-kind="admin"]:not([data-portal-theme="dark"]) .portal-button--primary,
+.portal-shell--admin .portal-button--primary {
+  background: var(--portal-blue-action) !important;
+  border-color: var(--portal-blue-action) !important;
+  color: var(--portal-surface-light) !important;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-button--primary:hover,
+.portal-shell[data-portal-app-kind="admin"]:not([data-portal-theme="dark"]) .portal-button--primary:hover,
+.portal-shell--admin .portal-button--primary:hover {
+  background: var(--portal-blue-action-hover) !important;
+  border-color: var(--portal-blue-action-hover) !important;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-sidebar .portal-brand,
