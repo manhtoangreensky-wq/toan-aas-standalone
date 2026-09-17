@@ -1632,7 +1632,7 @@
   customerPage("/wallet", "Ví Xu", "Số dư, lịch sử và quyền sử dụng Xu chỉ hiển thị từ ledger canonical của bot.", ICONS.wallet, {
     layout: "wallet", action: "none", status: "guarded",
     notes: ["Web App không giữ ledger Xu và không tự cộng/trừ số dư.", "Dữ liệu wallet cần Core Bridge kiểm tra signed session và ownership."]
-  });
+  }, ["/wallet/history"]);
   customerPage("/wallet/topup", "Nạp Xu", "Chọn cổng PayOS khi tài khoản đủ điều kiện, hoặc tạo yêu cầu đối soát thủ công trực tiếp trên Web. Xu chỉ được cộng sau khi xác nhận thanh toán.", ICONS.wallet, {
     layout: "wallet", action: "payment-create", actionLabel: "Tạo yêu cầu thanh toán", status: "guarded",
     fields: [
@@ -12808,7 +12808,7 @@
             <div>
               <strong>Video ID:</strong> <span id="free-tools-yt-id" style="font-family: monospace; color: var(--portal-accent);">-</span>
             </div>
-            <a id="free-tools-yt-link" class="portal-button portal-button--quiet" href="#" target="_blank" rel="noopener noreferrer">🔗 Mở trên YouTube ↗</a>
+            <a id="free-tools-yt-link" class="portal-button portal-button--quiet" href="https://www.youtube.com" target="_blank" rel="noopener noreferrer">🔗 Mở trên YouTube ↗</a>
           </div>
           <h3 style="font-size: 14px; margin-bottom: 12px;">Ảnh Thumbnail các độ phân giải:</h3>
           <div class="portal-yt-thumbs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
@@ -12816,7 +12816,7 @@
               <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">MaxRes (1080p Full HD)</div>
               <img id="free-tools-yt-thumb-max" src="" alt="Thumbnail MaxRes" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" onerror="this.src='https://placehold.co/600x338?text=Kh%C3%B4ng+c%C3%B3+1080p'" />
               <div style="margin-top: 10px; display:flex; gap: 6px;">
-                <a id="free-tools-yt-thumb-max-link" href="#" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">Mở ảnh</a>
+                <a id="free-tools-yt-thumb-max-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">Mở ảnh</a>
                 <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="max" style="font-size: 11px;">Copy Link</button>
               </div>
             </div>
@@ -12824,7 +12824,7 @@
               <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">High Quality (720p HD)</div>
               <img id="free-tools-yt-thumb-hq" src="" alt="Thumbnail HQ" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
               <div style="margin-top: 10px; display:flex; gap: 6px;">
-                <a id="free-tools-yt-thumb-hq-link" href="#" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">Mở ảnh</a>
+                <a id="free-tools-yt-thumb-hq-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">Mở ảnh</a>
                 <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="hq" style="font-size: 11px;">Copy Link</button>
               </div>
             </div>
@@ -12832,7 +12832,7 @@
               <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">Medium Quality (360p)</div>
               <img id="free-tools-yt-thumb-mq" src="" alt="Thumbnail MQ" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
               <div style="margin-top: 10px; display:flex; gap: 6px;">
-                <a id="free-tools-yt-thumb-mq-link" href="#" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">Mở ảnh</a>
+                <a id="free-tools-yt-thumb-mq-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">Mở ảnh</a>
                 <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="mq" style="font-size: 11px;">Copy Link</button>
               </div>
             </div>
@@ -20744,7 +20744,7 @@
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Trình Làm Việc →</span>
-            <span style="font-size:11px; color:var(--portal-muted);">0.10 Xu / ký tự · ASR miễn phí</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Theo bảng giá canonical</span>
           </div>
         </a>
 
@@ -20761,7 +20761,7 @@
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Tạo Giọng Đọc →</span>
-            <span style="font-size:11px; color:var(--portal-muted);">Từ 0.10 Xu / từ</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Theo bảng giá canonical</span>
           </div>
         </a>
 
@@ -20778,7 +20778,7 @@
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Sáng Tác Nhạc →</span>
-            <span style="font-size:11px; color:var(--portal-muted);">100 - 300 Xu / bài</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Theo bảng giá canonical</span>
           </div>
         </a>
 
@@ -20795,7 +20795,7 @@
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Sản Xuất Video →</span>
-            <span style="font-size:11px; color:var(--portal-muted);">Theo gói phân cảnh</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Theo bảng giá canonical</span>
           </div>
         </a>
 
@@ -20812,7 +20812,7 @@
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Tạo Ảnh Nghệ Thuật →</span>
-            <span style="font-size:11px; color:var(--portal-muted);">Từ 50 Xu / ảnh</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Theo bảng giá canonical</span>
           </div>
         </a>
 
@@ -20838,32 +20838,32 @@
             <div style="width:44px; height:44px; border-radius:12px; background:color-mix(in srgb, var(--portal-context) 15%, var(--portal-surface-light)); border:1px solid color-mix(in srgb, var(--portal-context) 30%, transparent); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--portal-context);">
               🤖
             </div>
-            <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-context) 14%, transparent); color:var(--portal-context); border:1px solid color-mix(in srgb, var(--portal-context) 28%, transparent);">⚡ Trợ lý AI</span>
+            <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-context) 14%, transparent); color:var(--portal-context); border:1px solid color-mix(in srgb, var(--portal-context) 28%, transparent);">⚡ Không gian hội thoại</span>
           </div>
           <div>
-            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Trợ lý tiếp thị & trò chuyện AI</h3>
-            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Viết bài bán hàng chuẩn SEO, kịch bản livestream, lên chiến dịch quảng cáo TikTok/FB, CSKH tự động.</p>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">AI Chat Workspace</h3>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Tổ chức hội thoại, context card, ghi chú và lịch sử revision trong không gian riêng tư của Web account.</p>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
-            <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Chat Với Trợ Lý →</span>
-            <span style="font-size:11px; color:var(--portal-muted);">Hỗ trợ đa tác vụ</span>
+            <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Workspace →</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Biên tập riêng tư</span>
           </div>
         </a>
 
-        <a href="/pricing" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-lg); padding:20px; transition:border-color 0.2s ease, transform 0.2s ease; position:relative; overflow:hidden;">
+        <a href="/wallet/topup" class="portal-ai-suite-card" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-lg); padding:20px; transition:border-color 0.2s ease, transform 0.2s ease; position:relative; overflow:hidden;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
             <div style="width:44px; height:44px; border-radius:12px; background:color-mix(in srgb, var(--portal-brand) 15%, var(--portal-surface-light)); border:1px solid color-mix(in srgb, var(--portal-brand) 30%, transparent); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--portal-brand);">
               💳
             </div>
-            <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-brand) 14%, transparent); color:var(--portal-brand); border:1px solid color-mix(in srgb, var(--portal-brand) 28%, transparent);">⚡ VietQR 5s</span>
+            <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-brand) 14%, transparent); color:var(--portal-brand); border:1px solid color-mix(in srgb, var(--portal-brand) 28%, transparent);">⚡ VietQR PayOS</span>
           </div>
           <div>
             <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Ví Xu & Nạp Tiền VietQR PayOS</h3>
-            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Nạp Xu tức thì qua VietQR PayOS (VCB, MB, Techcombank), tự động cộng Xu trong 5 giây.</p>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Nạp Xu qua VietQR PayOS (VCB, MB, Techcombank) và đối soát tự động theo catalog nạp canonical.</p>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Nạp Xu Ngay →</span>
-            <span style="font-size:11px; color:var(--portal-brand);">Tặng +10% Xu</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Theo catalog nạp canonical</span>
           </div>
         </a>
       </div>
