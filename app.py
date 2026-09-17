@@ -2595,12 +2595,23 @@ async def _approve_compat_middleware(request: Request, call_next):
     path = request.url.path
     if request.method == "POST" and "/api/v1/admin/payments/manual/" in path and "/approve/" in path:
         import re
+        from fastapi import HTTPException
         from fastapi.responses import JSONResponse, Response
         m = re.match(r"^/api/v1/admin/payments/manual/([^/]+)/approve/(draft|confirm)$", path)
         if m:
             req_id, action = m.groups()
             try:
                 account = copyfast_auth.require_admin_csrf(request)
+            except HTTPException as exc:
+                return JSONResponse(
+                    status_code=exc.status_code,
+                    content={
+                        "ok": False,
+                        "status": "guarded",
+                        "message": str(exc.detail),
+                        "error_code": "FORBIDDEN" if exc.status_code == 403 else "UNAUTHORIZED",
+                    },
+                )
             except Exception:
                 return JSONResponse(status_code=401, content={"ok": False, "status": "guarded", "message": "Phiên quản trị không hợp lệ.", "error_code": "UNAUTHORIZED"})
             if action == "draft":

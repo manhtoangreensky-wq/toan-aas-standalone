@@ -25,12 +25,17 @@ def env_setup():
     os.environ["WEB_SESSION_SECRET"] = "admin-approve-test-secret-12345"
     os.environ["WEBAPP_ADMIN_ERP_ENABLED"] = "true"
     os.environ["WEBAPP_ADMIN_WRITES_ENABLED"] = "true"
+    os.environ.pop("CORE_BRIDGE_BASE_URL", None)
+    os.environ.pop("CORE_BRIDGE_TOKEN", None)
+    os.environ.pop("CORE_BRIDGE_HMAC_SECRET", None)
     copyfast_db.ensure_copyfast_schema()
     yield db_path
 
 
 @pytest.fixture(scope="module")
 def admin_client(env_setup):
+    if hasattr(app_module, "_auth_rate_windows"):
+        app_module._auth_rate_windows.clear()
     client = TestClient(app_module.app)
     email = "admin_super_ops@toanaas.vn"
     password = "SuperSecretPassword2026!"
@@ -193,6 +198,9 @@ def test_manual_topup_approve_lifecycle(admin_client, env_setup):
         return {"ok": False, "error_code": "NOT_FOUND"}
 
     monkeypatch.setattr(copyfast_api, "bridge_request", mock_bridge_request)
+    if hasattr(app_module, "copyfast_api"):
+        monkeypatch.setattr(app_module.copyfast_api, "bridge_configured", lambda: True)
+        monkeypatch.setattr(app_module.copyfast_api, "bridge_request", mock_bridge_request)
 
     # Call confirm with bridge available
     confirm_res = admin_client.post(
