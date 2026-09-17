@@ -89,6 +89,7 @@ from copyfast_db import (
     utc_now,
 )
 from copyfast_native_read_models import (
+    get_native_asset,
     get_native_job,
     list_native_assets,
     list_native_completed_outputs,
@@ -1590,10 +1591,20 @@ def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: boo
             result["checkout_url"] = checkout
         return result
     if surface == "job":
-        fields = ("id", "feature", "job_type", "status", "created_at", "updated_at", "estimated_xu", "charged_xu", "refund_status", "output_available", "error_category", "download_ready")
+        fields = ("id", "feature", "job_type", "status", "progress", "created_at", "updated_at", "estimated_xu", "charged_xu", "refund_status", "output_available", "error_category", "download_ready")
+        def _clean_job_record(rec: dict[str, Any]) -> dict[str, Any]:
+            projected = _project_record(rec, fields)
+            if "progress" in projected:
+                p = projected["progress"]
+                if isinstance(p, (int, float)) and not isinstance(p, bool) and 0 <= p <= 100:
+                    projected["progress"] = int(p) if isinstance(p, int) or float(p).is_integer() else round(float(p), 1)
+                else:
+                    projected.pop("progress", None)
+            return projected
+
         if isinstance(value.get("items"), list):
-            return {"items": _project_items(value.get("items"), fields)}
-        return _project_record(value, fields)
+            return {"items": [_clean_job_record(i) for i in value.get("items") if isinstance(i, dict)]}
+        return _clean_job_record(value)
     if surface == "asset":
         # `delivery_ready` is an explicit Bot signal that the asset may ask
         # the private delivery endpoint for a fresh URL. `download_ready`
@@ -2877,7 +2888,9 @@ def _bridge_surface(path: str) -> str:
     if normalized == "/internal/v1/assets":
         return "asset"
     if normalized.startswith("/internal/v1/assets/"):
-        return "delivery"
+        if normalized.endswith("/download"):
+            return "delivery"
+        return "asset"
     if normalized == "/internal/v1/voice/profiles":
         return "voice"
     if normalized == "/internal/v1/support/tickets":
@@ -5739,6 +5752,44 @@ async def assets(request: Request, account: dict = Depends(require_account)):
     if canonical.get("ok"):
         return _merge_bridge_list_with_native(canonical, native_items)
     return _native_read_envelope(native_items, kind="assets", canonical_unavailable=True)
+
+
+@router.get("/assets/{asset_id}")
+async def asset_detail(asset_id: str, request: Request, account: dict = Depends(require_account)):
+    native_asset = parse_native_asset_id(asset_id)
+    if native_asset is not None:
+        record = get_native_asset(str(account.get("id") or ""), asset_id)
+        if record:
+            item = _native_asset_compatibility_record(record)
+            if item:
+                return envelope(
+                    True,
+                    "Đã tải dữ liệu Asset Web-native của tài khoản hiện tại.",
+                    data={**item, "read_model": "assets", "canonical_available": False},
+                    status_name="read_only",
+                )
+        return envelope(
+            False,
+            "Không tìm thấy Asset Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_ASSET_NOT_FOUND",
+        )
+    if str(asset_id or "").strip().startswith(("wnj:", "wna:")):
+        return envelope(
+            False,
+            "Không tìm thấy Asset Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_ASSET_NOT_FOUND",
+        )
+    asset_id = _canonical_route_identifier(asset_id, "Mã tài sản")
+    if not _flags()["copyfast_enabled"] or _canonical_companion_ready(account):
+        return await _bridge("GET", f"/internal/v1/assets/{asset_id}", account=account, request=request)
+    return envelope(
+        False,
+        "Không tìm thấy Asset thuộc tài khoản hiện tại.",
+        status_name="guarded",
+        error_code="ASSET_NOT_FOUND",
+    )
 
 
 @router.get("/assets/{asset_id}/download")

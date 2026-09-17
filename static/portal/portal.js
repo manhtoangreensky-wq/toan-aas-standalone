@@ -1652,6 +1652,15 @@
   customerPage("/assets", "Thư viện tài sản", "Tệp hoàn tất chỉ xuất hiện sau khi Core Bridge xác minh ownership và cung cấp URL ký tạm thời.", ICONS.assets, {
     layout: "assets", action: "none", status: "empty"
   });
+  customerPage("/history", "Lịch sử & Nhật ký", "Trung tâm điều hướng lịch sử: Công việc tác vụ, biến động số dư Xu ví, hoạt động tài khoản và lịch sử tạo ảnh.", ICONS.jobs, {
+    layout: "history-hub", action: "none", status: "ready",
+    notes: [
+      "Job tác vụ và tiến trình được theo dõi riêng tại Job Center (/jobs).",
+      "Lịch sử biến động Xu ví được bảo vệ bởi Core Bridge ledger (/wallet/history).",
+      "Nhật ký đăng nhập và bảo mật nằm tại Hoạt động tài khoản (/account/activity).",
+      "Thư viện và lịch sử tạo ảnh nằm tại Lịch sử ảnh (/image/history)."
+    ]
+  });
   customerPage("/support", "Web Support Desk", "Tạo và theo dõi yêu cầu trực tiếp trong Web App, với signed session, CSRF, ownership và audit riêng.", ICONS.support, {
     layout: "support-desk", action: "support-case-create", actionLabel: "Tạo yêu cầu", status: "processing",
     notes: [
@@ -9347,6 +9356,15 @@
         recordId: jobId, notes: ["Không có preview hoặc download giả.", "Output riêng tư cần URL ký tạm thời từ Core Bridge."]
       });
     }
+    if (/^\/assets\/[^/]+$/.test(normalized)) {
+      const assetId = normalized.split("/").pop();
+      return Object.freeze({
+        path: "/assets/:id", routePath: normalized, title: "Chi tiết asset", icon: ICONS.assets, section: "Thư viện tài sản",
+        description: "Trạng thái, output và download chỉ hiển thị nếu Core Bridge hoặc Web-native xác minh ownership và delivery hợp lệ.",
+        status: "empty", access: "member", layout: "job-detail", action: "none", actionLabel: "", fields: [],
+        recordId: assetId, notes: ["Không có preview hoặc download giả.", "Output riêng tư cần URL ký tạm thời hoặc bảo mật máy chủ."]
+      });
+    }
     if (/^\/tickets\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
       const caseId = normalized.split("/").pop();
       return Object.freeze({
@@ -10322,12 +10340,12 @@
     }),
     account: Object.freeze({
       exact: Object.freeze([
-        "/account", "/wallet", "/membership", "/packages", "/pricing", "/inbox",
+        "/account", "/history", "/wallet", "/membership", "/packages", "/pricing", "/inbox",
         "/automation", "/tickets", "/support", "/operations", "/rewards",
         "/status", "/legal", "/privacy", "/referrals", "/crm/consultations/new"
       ]),
       prefixes: Object.freeze([
-        "/account/", "/wallet/", "/membership/", "/packages/", "/pricing/",
+        "/account/", "/history/", "/wallet/", "/membership/", "/packages/", "/pricing/",
         "/inbox/", "/automation/", "/tickets/", "/support/", "/operations/",
         "/rewards/", "/status/"
       ])
@@ -22531,7 +22549,10 @@
     const detailLink = validJobId
       ? `<a class="portal-button portal-button--quiet" href="/jobs/${encodeURIComponent(jobId)}" aria-label="${safeText(`${deliveryCenterText("jobs.mobile.detail", "Mở chi tiết")}: ${jobId}`)}">${deliveryCenterText("jobs.mobile.detail", "Mở chi tiết")}</a>`
       : "";
-    return `<article class="portal-delivery-mobile-card" data-delivery-record="job"><div class="portal-delivery-mobile-card-head"><div><span class="portal-section-kicker">${deliveryCenterText("jobs.mobile.kicker", "Job canonical")}</span><strong>${safeText(jobId || "—")}</strong></div>${badge(status)}</div><dl class="portal-delivery-mobile-meta"><div><dt>${deliveryCenterText("jobs.mobile.workflow", "Workflow")}</dt><dd>${safeText(item && (item.feature || item.job_type) || "—")}</dd></div><div><dt>${deliveryCenterText("jobs.mobile.updated", "Cập nhật")}</dt><dd>${safeText(item && (item.updated_at || item.created_at) || "—")}</dd></div><div><dt>${deliveryCenterText("jobs.mobile.outputEngine", "Output engine")}</dt><dd>${reportedOutput(item)}</dd></div><div><dt>${deliveryCenterText("jobs.mobile.canonicalCost", "Chi phí canonical")}</dt><dd>${jobCost(item)}</dd></div></dl><div class="portal-delivery-mobile-card-footer">${detailLink}</div></article>`;
+    const progressRow = (typeof item?.progress === "number" && !isNaN(item.progress) && item.progress >= 0 && item.progress <= 100)
+      ? `<div><dt>${deliveryCenterText("jobs.mobile.progress", "Tiến độ")}</dt><dd>${item.progress}%</dd></div>`
+      : "";
+    return `<article class="portal-delivery-mobile-card" data-delivery-record="job"><div class="portal-delivery-mobile-card-head"><div><span class="portal-section-kicker">${deliveryCenterText("jobs.mobile.kicker", "Job canonical")}</span><strong>${safeText(jobId || "—")}</strong></div>${badge(status)}</div><dl class="portal-delivery-mobile-meta"><div><dt>${deliveryCenterText("jobs.mobile.workflow", "Workflow")}</dt><dd>${safeText(item && (item.feature || item.job_type) || "—")}</dd></div>${progressRow}<div><dt>${deliveryCenterText("jobs.mobile.updated", "Cập nhật")}</dt><dd>${safeText(item && (item.updated_at || item.created_at) || "—")}</dd></div><div><dt>${deliveryCenterText("jobs.mobile.outputEngine", "Output engine")}</dt><dd>${reportedOutput(item)}</dd></div><div><dt>${deliveryCenterText("jobs.mobile.canonicalCost", "Chi phí canonical")}</dt><dd>${jobCost(item)}</dd></div></dl><div class="portal-delivery-mobile-card-footer">${detailLink}</div></article>`;
   }
 
   function renderAssetMobileCard(item) {
@@ -22644,7 +22665,7 @@
       ? `<div class="portal-form-footer portal-empty-route-actions"><span class="portal-form-note">${deliveryCenterText("jobs.first.note", "Chưa có job canonical. Hãy bắt đầu bằng một workflow hoặc lưu brief Web; job chỉ xuất hiện sau khi một luồng được server xác nhận, không do browser tự tạo.")}</span><div class="portal-inline-actions"><a class="portal-button portal-button--primary" href="/features">${deliveryCenterText("jobs.first.workflow", "Chọn workflow")}</a><a class="portal-button portal-button--quiet" href="/workspace">${deliveryCenterText("jobs.first.drafts", "Mở bản nháp Web")}</a></div></div>`
       : "";
     const filters = filterBar(localizedDeliveryFilters("jobs", JOB_FILTERS), selected, "filter-jobs", "data-job-filter", deliveryCenterText("filter.jobs", "Lọc job"), counts, (count) => deliveryCenterText("filter.result", "{count} mục đang hiển thị trong bộ lọc hiện tại.", { count })) + firstJobActions;
-    const records = renderDeliveryRecords("jobs", [deliveryCenterText("jobs.table.job", "Job"), deliveryCenterText("jobs.table.feature", "Tính năng"), deliveryCenterText("jobs.table.status", "Trạng thái"), deliveryCenterText("jobs.table.cost", "Chi phí canonical"), deliveryCenterText("jobs.table.updated", "Cập nhật"), deliveryCenterText("jobs.table.output", "Output engine")], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td>`, renderJobMobileCard, selected === "all" ? deliveryCenterText("jobs.empty.title", "Chưa có job được xác minh") : deliveryCenterText("jobs.empty.filteredTitle", "Không có job ở trạng thái này"), selected === "all" ? deliveryCenterText("jobs.empty.body", "Core Bridge sẽ trả job sau khi tạo/confirm thành công.") : deliveryCenterText("jobs.empty.filteredBody", "Đổi bộ lọc hoặc làm mới để nhận trạng thái canonical mới nhất."), receiptAttribute);
+    const records = renderDeliveryRecords("jobs", [deliveryCenterText("jobs.table.job", "Job"), deliveryCenterText("jobs.table.feature", "Tính năng"), deliveryCenterText("jobs.table.status", "Trạng thái"), deliveryCenterText("jobs.table.cost", "Chi phí canonical"), deliveryCenterText("jobs.table.updated", "Cập nhật"), deliveryCenterText("jobs.table.output", "Output engine")], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}${(typeof item?.progress === "number" && !isNaN(item.progress) && item.progress >= 0 && item.progress <= 100) ? ` <small>(${item.progress}%)</small>` : ""}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td>`, renderJobMobileCard, selected === "all" ? deliveryCenterText("jobs.empty.title", "Chưa có job được xác minh") : deliveryCenterText("jobs.empty.filteredTitle", "Không có job ở trạng thái này"), selected === "all" ? deliveryCenterText("jobs.empty.body", "Core Bridge sẽ trả job sau khi tạo/confirm thành công.") : deliveryCenterText("jobs.empty.filteredBody", "Đổi bộ lọc hoặc làm mới để nhận trạng thái canonical mới nhất."), receiptAttribute);
     return `<article class="portal-page portal-delivery-page" data-delivery-read-state="ready">${renderHero(page, context)}${deliveryNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       ${renderDeliveryReceiptSurface(renderJobDeliverySummary(allJobs), receiptAttribute)}
       <section class="portal-card portal-card-pad portal-delivery-center"><div class="portal-card-header"><div><h2 class="portal-card-title">${deliveryCenterText("jobs.section.title", "Job gần đây (tối đa 100)")}</h2><p class="portal-card-subtitle">${deliveryCenterText("jobs.section.subtitle", "Bridge P0 hiện trả tối đa 100 job mới nhất thuộc signed session. Chi phí là metadata canonical; browser không tính Xu, gọi provider hoặc tạo delivery.")}</p></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-jobs" data-portal-route="/jobs" data-delivery-refresh-control="jobs" aria-controls="delivery-jobs-records"${refreshEnabled && !refreshBusy ? "" : " disabled"}${refreshBusy ? " aria-busy=\"true\"" : ""}>${deliveryCenterText("jobs.refresh", "Làm mới")}</button><a class="portal-button portal-button--quiet" href="/assets">${deliveryCenterText("jobs.openAssets", "Mở tài sản →")}</a></div></div><p class="portal-delivery-read-status" data-delivery-read-status="/jobs" role="status" aria-live="polite">${deliveryCenterText("jobs.readStatus", "Danh sách chỉ có metadata canonical thuộc signed session.")}</p>${filters}${records}</section>
@@ -22659,7 +22680,7 @@
     const jobAssets = exactJobAssets(job, context.jobAssets);
     const deliveryAsset = jobAssets[0] || null;
     const detail = job && Object.keys(job).length
-      ? `<div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.feature", "Tính năng")}</span><span class="portal-summary-value">${safeText(job.feature || job.job_type || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.status", "Trạng thái canonical")}</span><span class="portal-summary-value">${badge(jobStatus(job))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.created", "Tạo lúc")}</span><span class="portal-summary-value">${safeText(job.created_at || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.updated", "Cập nhật")}</span><span class="portal-summary-value">${safeText(job.updated_at || job.created_at || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.estimatedXu", "Xu dự kiến")}</span><span class="portal-summary-value">${safeText(canonicalXu(job.estimated_xu))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.ledgerXu", "Xu đã ghi ledger")}</span><span class="portal-summary-value">${safeText(canonicalXu(job.charged_xu))}</span></div>${job.refund_status ? `<div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.refund", "Hoàn Xu")}</span><span class="portal-summary-value">${safeText(job.refund_status)}</span></div>` : ""}${job.error_category ? `<div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.errorCategory", "Nhóm lỗi canonical")}</span><span class="portal-summary-value">${safeText(job.error_category)}</span></div>` : ""}<div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.output", "Output engine")}</span><span class="portal-summary-value">${reportedOutput(job)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.delivery", "Delivery Web")}</span><span class="portal-summary-value">${assetDeliveryState(deliveryAsset || job, deliveryAsset ? "asset" : "")}</span></div></div>`
+      ? `<div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.feature", "Tính năng")}</span><span class="portal-summary-value">${safeText(job.feature || job.job_type || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.status", "Trạng thái canonical")}</span><span class="portal-summary-value">${badge(jobStatus(job))}</span></div>${(typeof job?.progress === "number" && !isNaN(job.progress) && job.progress >= 0 && job.progress <= 100) ? `<div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.progress", "Tiến độ")}</span><span class="portal-summary-value">${job.progress}%</span></div>` : ""}<div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.created", "Tạo lúc")}</span><span class="portal-summary-value">${safeText(job.created_at || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.updated", "Cập nhật")}</span><span class="portal-summary-value">${safeText(job.updated_at || job.created_at || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.estimatedXu", "Xu dự kiến")}</span><span class="portal-summary-value">${safeText(canonicalXu(job.estimated_xu))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.ledgerXu", "Xu đã ghi ledger")}</span><span class="portal-summary-value">${safeText(canonicalXu(job.charged_xu))}</span></div>${job.refund_status ? `<div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.refund", "Hoàn Xu")}</span><span class="portal-summary-value">${safeText(job.refund_status)}</span></div>` : ""}${job.error_category ? `<div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.errorCategory", "Nhóm lỗi canonical")}</span><span class="portal-summary-value">${safeText(job.error_category)}</span></div>` : ""}<div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.output", "Output engine")}</span><span class="portal-summary-value">${reportedOutput(job)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${deliveryCenterText("jobDetail.field.delivery", "Delivery Web")}</span><span class="portal-summary-value">${assetDeliveryState(deliveryAsset || job, deliveryAsset ? "asset" : "")}</span></div></div>`
       : renderEmpty(deliveryCenterText("jobDetail.empty.title", "Chưa có job detail an toàn"), deliveryCenterText("jobDetail.empty.body", "Core Bridge cần kiểm tra ownership trước khi trả request, timeline và output của job này."), "⌛");
     return `<article class="portal-page portal-delivery-page">${renderHero(page, context)}${deliveryNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${detailTitle}</h2><p class="portal-card-subtitle">${deliveryCenterText("jobDetail.idNote", "ID hiển thị không xác thực dữ liệu hoặc quyền tải xuống.")}</p></div>${badge(job ? jobStatus(job) : stateFor(page, context))}</div>${detail}</section>
@@ -22700,6 +22721,55 @@
     return `<article class="portal-page portal-delivery-page" data-delivery-read-state="ready">${renderHero(page, context)}${deliveryNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       ${renderDeliveryReceiptSurface(renderAssetDeliverySummary(allAssets), receiptAttribute)}
       <section class="portal-card portal-card-pad portal-delivery-center"><div class="portal-card-header"><div><h2 class="portal-card-title">${deliveryCenterText("assets.section.title", "Tài sản gần đây (tối đa 100)")}</h2><p class="portal-card-subtitle">${deliveryCenterText("assets.section.subtitle", "Bridge P0 hiện trả tối đa 100 metadata mới nhất. Output hợp lệ và URL tải là hai contract riêng: metadata không cấp quyền file.")}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-assets" data-portal-route="/assets" data-delivery-refresh-control="assets" aria-controls="delivery-assets-records"${refreshEnabled && !refreshBusy ? "" : " disabled"}${refreshBusy ? " aria-busy=\"true\"" : ""}>${deliveryCenterText("assets.refresh", "Làm mới")}</button></div><p class="portal-delivery-read-status" data-delivery-read-status="/assets" role="status" aria-live="polite">${deliveryCenterText("assets.readStatus", "Nguồn và delivery được kiểm tra riêng cho từng record.")}</p>${filters}${records}</section></article>`;
+  }
+
+  function renderHistoryHub(page, context) {
+    return `<article class="portal-page portal-delivery-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
+      <div class="portal-work-grid">
+        <section class="portal-card portal-card-pad">
+          <div class="portal-card-header">
+            <div>
+              <h2 class="portal-card-title">Trung tâm điều hướng lịch sử</h2>
+              <p class="portal-card-subtitle">Chọn đúng bề mặt lịch sử tương ứng để xem dữ liệu chính xác và trung thực.</p>
+            </div>
+          </div>
+          <div class="portal-summary-list">
+            <div class="portal-summary-item">
+              <span class="portal-summary-key"><a class="portal-link" href="/jobs">📋 Job Center (Tác vụ & Tiến trình)</a></span>
+              <span class="portal-summary-value">Theo dõi các job tác vụ, trạng thái xử lý, chi phí canonical và output engine.</span>
+            </div>
+            <div class="portal-summary-item">
+              <span class="portal-summary-key"><a class="portal-link" href="/wallet/history">💰 Ví Xu & Giao dịch</a></span>
+              <span class="portal-summary-value">Lịch sử biến động số dư Xu và các đơn nạp tiền từ canonical bot ledger.</span>
+            </div>
+            <div class="portal-summary-item">
+              <span class="portal-summary-key"><a class="portal-link" href="/account/activity">🛡️ Hoạt động tài khoản</a></span>
+              <span class="portal-summary-value">Nhật ký các phiên đăng nhập, bảo mật và thiết bị truy cập tài khoản Web.</span>
+            </div>
+            <div class="portal-summary-item">
+              <span class="portal-summary-key"><a class="portal-link" href="/image/history">🖼️ Lịch sử xử lý ảnh</a></span>
+              <span class="portal-summary-value">Nhật ký xử lý ảnh, biến đổi hình ảnh và tác vụ AI tạo sinh hình ảnh.</span>
+            </div>
+          </div>
+        </section>
+        <aside class="portal-card portal-card-pad">
+          <div class="portal-card-header">
+            <div>
+              <h2 class="portal-card-title">Quy tắc phân định lịch sử</h2>
+              <p class="portal-card-subtitle">Phân định rõ ràng, không gộp lẫn lộn</p>
+            </div>
+          </div>
+          <div class="portal-notice portal-notice--info">
+            <span class="portal-notice-icon" aria-hidden="true">i</span>
+            <div>
+              <strong>Bảo mật & Tính xác thực</strong>
+              <p>Mỗi loại lịch sử phục vụ một mục đích riêng. Web App không tự tạo dữ liệu lịch sử giả hoặc gộp job tác vụ vào biến động ví.</p>
+            </div>
+          </div>
+          ${renderNotes(page)}
+        </aside>
+      </div>
+    </article>`;
   }
 
   function validVaultAssetId(value) {
@@ -32067,6 +32137,7 @@
       case "jobs": return renderJobs(page, context);
       case "job-detail": return renderJobDetail(page, context);
       case "assets": return renderAssets(page, context);
+      case "history-hub": return renderHistoryHub(page, context);
       case "asset-vault": return renderAssetVault(page, context);
       case "document-hub": return renderDocumentHub(page, context);
       case "pdf-split": return renderPdfSplit(page, context);
