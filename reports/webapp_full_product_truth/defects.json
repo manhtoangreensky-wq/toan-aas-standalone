@@ -24,8 +24,9 @@
     "ACTUAL": "Web calls /api/v1/wallet which calls /internal/v1/wallet on Bot 8080, which returns 404/guarded. User balance cannot be retrieved from Bot.",
     "DATA_SOURCE": "CORE_BRIDGE_NOT_CONFIGURED_OR_MISSING_ROUTE",
     "FIRST_RED": "/internal/v1/wallet does not exist on 8080 Bot service.",
-    "ROOT_CAUSE": "No route /internal/v1/wallet on Bot service; Web App has no local wallet ledger fallback.",
-    "STATUS": "OPEN"
+    "ROOT_CAUSE": "No route /internal/v1/wallet on Bot service; Web App had no local wallet ledger read-through fallback and portal.js had fake fallback mock values.",
+    "STATUS": "REPAIRED",
+    "REPAIRED_IN": "SPEC-02"
   },
   {
     "DEFECT_ID": "DEFECT-SPEC00-003",

@@ -10616,8 +10616,8 @@
       ? `<span class="portal-user-dropdown-avatar" aria-hidden="true" style="padding:0; overflow:hidden;"><img src="${safeText(avatarUrl)}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;" /></span>`
       : `<span class="portal-user-dropdown-avatar" aria-hidden="true">${initials(name)}</span>`;
 
-    const headerWallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100 };
-    const headerPaidVnd = Number(headerWallet.total_paid_vnd || headerWallet.total_deposited_vnd || (headerWallet.balance_xu ? headerWallet.balance_xu * 100 : 0));
+    const headerWallet = canonicalWalletProjection(context.wallet);
+    const headerPaidVnd = Number(headerWallet ? (headerWallet.total_paid_vnd || headerWallet.total_deposited_vnd || (headerWallet.balance_xu ? headerWallet.balance_xu * 100 : 0)) : 0);
     const headerTierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(headerPaidVnd, profile.vipTierOverride || profile.tier) : { currentTier: { badge: "🌱 Newbie", color: "#00f2fe" } };
     const currentLocale = interfaceLocaleFor(context);
     const localeOption = (value, label) => `<option value="${value}"${currentLocale === value ? " selected" : ""}>${safeText(label)}</option>`;
@@ -21152,9 +21152,9 @@
   }
 
   function renderMembership(page, context) {
-    const wallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100, total_spent_xu: 0 };
-    const balanceXu = Number(wallet.balance_xu !== undefined ? wallet.balance_xu : 100);
-    const totalPaidVnd = Number(wallet.total_paid_vnd || wallet.total_deposited_vnd || (wallet.balance_xu ? wallet.balance_xu * 100 : 0));
+    const wallet = canonicalWalletProjection(context.wallet);
+    const balanceXu = Number(wallet && wallet.balance_xu !== undefined ? wallet.balance_xu : 0);
+    const totalPaidVnd = Number(wallet ? (wallet.total_paid_vnd || wallet.total_deposited_vnd || (wallet.balance_xu ? wallet.balance_xu * 100 : 0)) : 0);
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
     const entries = membershipCatalogEntries(context);
 
@@ -26862,8 +26862,8 @@
     const accountQuickHealth = `<section class="portal-account-command" aria-label="${safeText(copy("quickHealthAria", "Tình trạng tài khoản và bước tiếp theo"))}"><div class="portal-account-command-copy"><h2>${safeText(copy("quickHealthTitle", "Tình trạng tài khoản"))}</h2><p>${safeText(accountPrimaryAction.title)}. ${safeText(linked ? copy("linkedBody", "Dữ liệu canonical chỉ được đọc sau xác minh server-side.") : copy("unlinkedBody", "Workspace Web vẫn hoạt động độc lập khi chưa liên kết Telegram."))}</p></div><dl class="portal-account-command-facts"><div><dt>${safeText(copy("sessionFact", "Phiên"))}</dt><dd>${portalIcon(session.authenticated ? ICONS.check : ICONS.info)} ${safeText(session.authenticated ? copy("sessionValid", "Signed session hợp lệ") : copy("needsVerification", "Cần xác minh"))}</dd></div><div><dt>${safeText(copy("profileFact", "Hồ sơ Web"))}</dt><dd>${portalIcon((profile.displayName || profile.name || profile.email || session.email) ? ICONS.check : ICONS.info)} ${safeText((profile.displayName || profile.name || profile.email || session.email) ? copy("ready", "Đã sẵn sàng") : copy("pendingCompletion", "Chờ hoàn thiện"))}</dd></div><div><dt>${safeText(copy("canonicalFact", "Canonical"))}</dt><dd>${portalIcon(linked ? ICONS.link : ICONS.info)} ${safeText(linked ? copy("oauthLinkedState", "Đã liên kết") : copy("optional", "Tùy chọn"))}</dd></div></dl><a class="portal-button portal-button--primary" href="${safeText(accountPrimaryAction.href)}">${safeText(accountPrimaryAction.label)}</a></section>`;
     const settingsNav = renderAccountSettingsNav("/account");
     const accountAssurance = `<details class="portal-account-assurance"><summary>${safeText(copy("assurance", "Trạng thái tích hợp và bảo mật"))}</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div></details>`;
-    const accountWallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100, total_spent_xu: 0 };
-    const accountPaidVnd = Number(accountWallet.total_paid_vnd || accountWallet.total_deposited_vnd || (accountWallet.balance_xu ? accountWallet.balance_xu * 100 : 0));
+    const accountWallet = canonicalWalletProjection(context.wallet);
+    const accountPaidVnd = Number(accountWallet ? (accountWallet.total_paid_vnd || accountWallet.total_deposited_vnd || (accountWallet.balance_xu ? accountWallet.balance_xu * 100 : 0)) : 0);
     const accountTierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(accountPaidVnd, profile.vipTierOverride || profile.tier) : { currentTier: { badge: "🌱 Newbie", color: "#00f2fe", discountRate: 0, referralPercent: 0, birthdayGiftXu: 0 }, nextTier: null, neededVnd: 0, neededXu: 0, progressPercent: 100, paidVnd: 0 };
     const { currentTier: accTier, nextTier: accNextTier, neededVnd: accNeededVnd, neededXu: accNeededXu, progressPercent: accProgress, paidVnd: accPaidVnd } = accountTierInfo;
 
@@ -35200,8 +35200,8 @@
 
     copilotState.messages.push({ role: "user", text: safeText(rawQuery) });
 
-    const wallet = canonicalWalletProjection(context.wallet) || { balance_xu: 100 };
-    const balanceXu = Number(wallet.balance_xu !== undefined ? wallet.balance_xu : 100);
+    const wallet = canonicalWalletProjection(context.wallet);
+    const balanceXu = Number(wallet && wallet.balance_xu !== undefined ? wallet.balance_xu : 0);
 
     let replyText = "";
     let replyActions = [];
