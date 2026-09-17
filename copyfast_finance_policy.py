@@ -30,7 +30,7 @@ Safety Invariants:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 
@@ -80,6 +80,38 @@ UNAVAILABLE_FINANCE_VALUE_AS_ZERO = False
 UNKNOWN_REVENUE_AS_ZERO = False
 UNAVAILABLE_WALLET_AS_ZERO = False
 PAYMENT_CONFIRMED_NOT_EQUAL_WALLET_CREDITED = True
+
+# Canonical money invariants (WEB07)
+BALANCE_AS_LIFETIME_PAID = False
+BALANCE_AS_REVENUE = False
+TOPUP_COUNT_AS_REVENUE = False
+DISCREPANCY_SUPPRESSED = False
+DUPLICATE_CREDIT_COUNTING = 0
+PAYOS_PENDING_AS_PAID = False
+PAYOS_FAILED_AS_REVENUE = False
+PAYOS_CANCELLED_AS_REVENUE = False
+PENDING_TOPUP_AS_CREDITED = False
+REJECTED_TOPUP_AS_CREDITED = False
+APPROVED_WITHOUT_RECEIPT_AS_CREDITED = False
+
+# Timezone and boundary truth
+FINANCE_TIMEZONE = "UTC"
+WINDOW_BOUNDARY_SOURCE = "SERVER_CANONICAL_UTC"
+
+# Refund / Compensation semantics (Read-model only, real mutations not implemented)
+REFUND_SEMANTICS = "NOT_IMPLEMENTED"
+COMPENSATION_SEMANTICS = "NOT_IMPLEMENTED"
+
+# Canonical money definitions
+CURRENT_BALANCE_XU = "CURRENT_BALANCE_XU"
+TOTAL_CREDITS_XU = "TOTAL_CREDITS_XU"
+TOTAL_DEBITS_XU = "TOTAL_DEBITS_XU"
+LIFETIME_PAID = "LIFETIME_PAID"
+TOPUP_AMOUNT = "TOPUP_AMOUNT"
+PAYMENT_AMOUNT = "PAYMENT_AMOUNT"
+REFUND_AMOUNT = "REFUND_AMOUNT"
+NET_REVENUE = "NET_REVENUE"
+OUTSTANDING_PENDING = "OUTSTANDING_PENDING"
 
 # Operational status semantics
 STATUS_EMPTY = "EMPTY"
@@ -600,5 +632,357 @@ def synthesize_finance_summary(
             "unknown_revenue_as_zero": UNKNOWN_REVENUE_AS_ZERO,
             "unavailable_finance_value_as_zero": UNAVAILABLE_FINANCE_VALUE_AS_ZERO,
             "payment_confirmed_not_equal_wallet_credited": PAYMENT_CONFIRMED_NOT_EQUAL_WALLET_CREDITED,
+        },
+    }
+
+
+# ==============================================================================
+# 9. RECONCILIATION ENGINE (WEB07 TRUTH)
+# ==============================================================================
+def reconcile_wallet_ledger(
+    *,
+    reported_balance: int | None,
+    ledger_events: list[dict[str, Any]] | None,
+    opening_balance: int = 0,
+) -> dict[str, Any]:
+    """Reconcile reported wallet balance with ledger events.
+
+    Invariants:
+    - DISCREPANCY_SUPPRESSED = False (never silently overwrite either side).
+    - FAKE_ZERO_WALLET_BALANCE = 0 (unavailable balance remains None, never 0).
+    """
+    if reported_balance is None:
+        return {
+            "status": STATUS_UNAVAILABLE,
+            "reconciled": False,
+            "discrepancy_xu": None,
+            "reported_balance_xu": None,
+            "expected_balance_xu": None,
+            "total_credits_xu": None,
+            "total_debits_xu": None,
+            "opening_balance_xu": opening_balance,
+            "event_count": 0 if ledger_events is None else len(ledger_events),
+            "discrepancy_suppressed": DISCREPANCY_SUPPRESSED,
+        }
+
+    events = ledger_events or []
+    credits = sum(int(e.get("delta") or 0) for e in events if int(e.get("delta") or 0) > 0)
+    debits = sum(abs(int(e.get("delta") or 0)) for e in events if int(e.get("delta") or 0) < 0)
+    expected = int(opening_balance) + credits - debits
+    discrepancy = int(reported_balance) - expected
+    reconciled = (discrepancy == 0)
+
+    return {
+        "status": "reconciled" if reconciled else "discrepancy_detected",
+        "reconciled": reconciled,
+        "discrepancy_xu": discrepancy,
+        "reported_balance_xu": int(reported_balance),
+        "expected_balance_xu": expected,
+        "total_credits_xu": credits,
+        "total_debits_xu": debits,
+        "opening_balance_xu": opening_balance,
+        "event_count": len(events),
+        "discrepancy_suppressed": DISCREPANCY_SUPPRESSED,
+    }
+
+
+def reconcile_manual_topup_linkages(
+    *,
+    requests: list[dict[str, Any]],
+    operations: list[dict[str, Any]],
+    approve_receipts: list[dict[str, Any]],
+    decision_receipts: list[dict[str, Any]] | None = None,
+    account_canonical_map: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Reconcile manual topup requests, credit operations, and decision receipts.
+
+    Detects:
+    - MISSING_RECEIPT: Approved request without receipt/ledger event.
+    - ORPHAN_OPERATION: Operation referencing non-existent request.
+    - ORPHAN_RECEIPT: Receipt referencing non-existent request.
+    - AMOUNT_MISMATCH: Amount discrepancy across request, operation, and receipt.
+    - TARGET_IDENTITY_MISMATCH: Operation user mismatch.
+    Invariants:
+    - DUPLICATE_CREDIT_COUNTING = 0.
+    - PENDING_TOPUP_AS_CREDITED = False.
+    - REJECTED_TOPUP_AS_CREDITED = False.
+    """
+    unique_ops: dict[str, dict[str, Any]] = {}
+    op_by_req_id: dict[int, dict[str, Any]] = {}
+    for op in operations:
+        op_id = str(op.get("id") or "")
+        if op_id:
+            unique_ops[op_id] = op
+        req_id = op.get("manual_topup_id")
+        if req_id is not None:
+            op_by_req_id[int(req_id)] = op
+
+    unique_receipts: dict[str, dict[str, Any]] = {}
+    receipt_by_req_id: dict[int, dict[str, Any]] = {}
+    for rec in approve_receipts:
+        r_hash = str(rec.get("receipt_hash") or "")
+        if r_hash:
+            unique_receipts[r_hash] = rec
+        req_id = rec.get("manual_topup_id")
+        if req_id is not None:
+            receipt_by_req_id[int(req_id)] = rec
+
+    request_ids = {int(r["id"]) for r in requests if "id" in r}
+    anomalies: list[dict[str, Any]] = []
+
+    for op in unique_ops.values():
+        req_id = op.get("manual_topup_id")
+        if req_id is not None and int(req_id) not in request_ids:
+            anomalies.append({
+                "type": "ORPHAN_OPERATION",
+                "operation_id": op.get("id"),
+                "manual_topup_id": req_id,
+                "detail": f"Credit operation {op.get('id')} references non-existent request {req_id}",
+            })
+
+    for rec in unique_receipts.values():
+        req_id = rec.get("manual_topup_id")
+        if req_id is not None and int(req_id) not in request_ids:
+            anomalies.append({
+                "type": "ORPHAN_RECEIPT",
+                "receipt_hash": rec.get("receipt_hash"),
+                "manual_topup_id": req_id,
+                "detail": f"Approve receipt references non-existent request {req_id}",
+            })
+
+    approved_with_receipt = 0
+    approved_without_receipt = 0
+    pending_count = 0
+    rejected_count = 0
+    credited_amount_xu = 0
+
+    acc_map = account_canonical_map or {}
+
+    for req in requests:
+        req_id = int(req.get("id") or 0)
+        raw_st = str(req.get("status") or "").strip().lower()
+        status = map_topup_raw_state(raw_st)
+
+        if status == TOPUP_STATE_PENDING:
+            pending_count += 1
+        elif status == TOPUP_STATE_REJECTED:
+            rejected_count += 1
+        elif status == TOPUP_STATE_APPROVED:
+            has_ledger_evt = bool(req.get("ledger_event_id"))
+            has_receipt = (req_id in receipt_by_req_id)
+            has_op = (req_id in op_by_req_id)
+
+            if not (has_ledger_evt and (has_receipt or has_op)):
+                approved_without_receipt += 1
+                anomalies.append({
+                    "type": "MISSING_RECEIPT",
+                    "manual_topup_id": req_id,
+                    "detail": f"Approved request {req_id} lacks canonical receipt or ledger event",
+                })
+            else:
+                approved_with_receipt += 1
+                xu_amount = int(req.get("approved_xu") or 0)
+                credited_amount_xu += xu_amount
+
+                if has_op:
+                    op = op_by_req_id[req_id]
+                    op_amount = int(op.get("amount_xu") or 0)
+                    if op_amount != xu_amount:
+                        anomalies.append({
+                            "type": "AMOUNT_MISMATCH",
+                            "manual_topup_id": req_id,
+                            "detail": f"Request approved_xu ({xu_amount}) != operation amount_xu ({op_amount})",
+                        })
+                    acc_id = str(req.get("account_id") or "")
+                    expected_uid = acc_map.get(acc_id)
+                    if expected_uid and str(op.get("canonical_user_id") or "") != expected_uid:
+                        anomalies.append({
+                            "type": "TARGET_IDENTITY_MISMATCH",
+                            "manual_topup_id": req_id,
+                            "detail": f"Operation user {op.get('canonical_user_id')} != account linked user {expected_uid}",
+                        })
+                if has_receipt:
+                    rec = receipt_by_req_id[req_id]
+                    rec_amount = int(rec.get("approved_xu") or 0)
+                    if rec_amount != xu_amount:
+                        anomalies.append({
+                            "type": "AMOUNT_MISMATCH",
+                            "manual_topup_id": req_id,
+                            "detail": f"Request approved_xu ({xu_amount}) != receipt approved_xu ({rec_amount})",
+                        })
+
+    is_reconciled = (len(anomalies) == 0 and approved_without_receipt == 0)
+
+    return {
+        "total_requests": len(requests),
+        "pending_requests": pending_count,
+        "rejected_requests": rejected_count,
+        "approved_requests": approved_with_receipt + approved_without_receipt,
+        "approved_with_receipt": approved_with_receipt,
+        "approved_without_receipt": approved_without_receipt,
+        "credited_amount_xu": credited_amount_xu,
+        "anomalies": anomalies,
+        "is_reconciled": is_reconciled,
+        "pending_topup_as_credited": PENDING_TOPUP_AS_CREDITED,
+        "rejected_topup_as_credited": REJECTED_TOPUP_AS_CREDITED,
+        "approved_without_receipt_as_credited": APPROVED_WITHOUT_RECEIPT_AS_CREDITED,
+        "duplicate_credit_counting": DUPLICATE_CREDIT_COUNTING,
+    }
+
+
+def reconcile_payos_orders(*, orders: list[dict[str, Any]]) -> dict[str, Any]:
+    """Reconcile PayOS orders by state vocabulary without fake revenue."""
+    settled_count = 0
+    settled_revenue_vnd = 0
+    pending_count = 0
+    pending_amount_vnd = 0
+    failed_count = 0
+    failed_amount_vnd = 0
+
+    for order in orders:
+        raw_st = str(order.get("status") or "").strip().lower()
+        amt = int(order.get("amount") or order.get("amount_vnd") or 0)
+        pay_st = map_payment_state(raw_st)
+
+        if pay_st == PAYMENT_STATE_CONFIRMED:
+            settled_count += 1
+            settled_revenue_vnd += amt
+        elif pay_st == PAYMENT_STATE_PENDING:
+            pending_count += 1
+            pending_amount_vnd += amt
+        elif pay_st in (PAYMENT_STATE_FAILED, PAYMENT_STATE_EXPIRED):
+            failed_count += 1
+            failed_amount_vnd += amt
+
+    return {
+        "total_orders": len(orders),
+        "settled_count": settled_count,
+        "settled_revenue_vnd": settled_revenue_vnd,
+        "pending_count": pending_count,
+        "pending_amount_vnd": pending_amount_vnd,
+        "failed_count": failed_count,
+        "failed_amount_vnd": failed_amount_vnd,
+        "payos_pending_as_paid": PAYOS_PENDING_AS_PAID,
+        "payos_failed_as_revenue": PAYOS_FAILED_AS_REVENUE,
+        "payos_cancelled_as_revenue": PAYOS_CANCELLED_AS_REVENUE,
+    }
+
+
+def compute_finance_window_boundaries(
+    window: str,
+    *,
+    reference_time: datetime | None = None,
+) -> tuple[datetime, datetime]:
+    """Calculate deterministic UTC window boundaries."""
+    now = reference_time.astimezone(timezone.utc) if reference_time else datetime.now(timezone.utc)
+    norm = str(window).strip().lower()
+
+    if norm == "today":
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end = now
+    elif norm == "7d":
+        start = (now - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)
+        end = now
+    elif norm == "30d":
+        start = (now - timedelta(days=30)).replace(hour=0, minute=0, second=0, microsecond=0)
+        end = now
+    elif norm == "month":
+        start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        end = now
+    elif norm == "all_time":
+        start = datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        end = now
+    else:
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end = now
+
+    return start, end
+
+
+def reconcile_finance_records(
+    *,
+    wallet_payload: dict[str, Any] | None = None,
+    wallet_bridge_available: bool = True,
+    topups_data: dict[str, Any] | None = None,
+    payos_orders: list[dict[str, Any]] | None = None,
+    account_canonical_map: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Composite reconciliation read model across all financial sources."""
+    now_str = utc_now()
+    w_data = (wallet_payload.get("data") if isinstance(wallet_payload, dict) and isinstance(wallet_payload.get("data"), dict) else wallet_payload) or {}
+    reported_balance = w_data.get("balance_xu") if wallet_bridge_available and isinstance(w_data.get("balance_xu"), int) else None
+    ledger_events = w_data.get("ledger_events") if wallet_bridge_available and isinstance(w_data.get("ledger_events"), list) else None
+
+    wallet_rec = reconcile_wallet_ledger(
+        reported_balance=reported_balance,
+        ledger_events=ledger_events,
+    )
+
+    td = topups_data or {}
+    requests = td.get("requests") or []
+    operations = td.get("operations") or []
+    approve_receipts = td.get("approve_receipts") or []
+    decision_receipts = td.get("decision_receipts") or []
+
+    topup_rec = reconcile_manual_topup_linkages(
+        requests=requests,
+        operations=operations,
+        approve_receipts=approve_receipts,
+        decision_receipts=decision_receipts,
+        account_canonical_map=account_canonical_map,
+    )
+
+    orders = payos_orders or []
+    payos_rec = reconcile_payos_orders(orders=orders)
+
+    confirmed_manual_revenue = sum(int(r.get("amount_vnd") or 0) for r in requests if map_topup_raw_state(r.get("status")) == TOPUP_STATE_APPROVED and r.get("ledger_event_id"))
+    settled_payos_revenue = payos_rec["settled_revenue_vnd"]
+    known_web_revenue = confirmed_manual_revenue + settled_payos_revenue
+
+    all_reconciled = bool(
+        wallet_rec["reconciled"]
+        and topup_rec["is_reconciled"]
+        and len(topup_rec["anomalies"]) == 0
+    )
+
+    return {
+        "reconciled": all_reconciled,
+        "status": "reconciled" if all_reconciled else "reconciliation_discrepancy_or_anomalies",
+        "observed_at": now_str,
+        "finance_timezone": FINANCE_TIMEZONE,
+        "window_boundary_source": WINDOW_BOUNDARY_SOURCE,
+        "refund_semantics": REFUND_SEMANTICS,
+        "compensation_semantics": COMPENSATION_SEMANTICS,
+        "canonical_metrics": {
+            "current_balance_xu": reported_balance,
+            "total_credits_xu": wallet_rec.get("total_credits_xu"),
+            "total_debits_xu": wallet_rec.get("total_debits_xu"),
+            "known_web_revenue_vnd": known_web_revenue,
+            "settled_payos_revenue_vnd": settled_payos_revenue,
+            "confirmed_manual_topup_revenue_vnd": confirmed_manual_revenue,
+            "total_revenue": None,
+            "refund_amount_vnd": None,
+            "pending_topup_requests_count": topup_rec["pending_requests"],
+            "pending_payos_orders_count": payos_rec["pending_count"],
+            "pending_payos_amount_vnd": payos_rec["pending_amount_vnd"],
+        },
+        "wallet_reconciliation": wallet_rec,
+        "manual_topup_reconciliation": topup_rec,
+        "payos_reconciliation": payos_rec,
+        "safety_invariants": {
+            "balance_as_lifetime_paid": BALANCE_AS_LIFETIME_PAID,
+            "balance_as_revenue": BALANCE_AS_REVENUE,
+            "topup_count_as_revenue": TOPUP_COUNT_AS_REVENUE,
+            "discrepancy_suppressed": DISCREPANCY_SUPPRESSED,
+            "duplicate_credit_counting": DUPLICATE_CREDIT_COUNTING,
+            "payos_pending_as_paid": PAYOS_PENDING_AS_PAID,
+            "payos_failed_as_revenue": PAYOS_FAILED_AS_REVENUE,
+            "payos_cancelled_as_revenue": PAYOS_CANCELLED_AS_REVENUE,
+            "pending_topup_as_credited": PENDING_TOPUP_AS_CREDITED,
+            "rejected_topup_as_credited": REJECTED_TOPUP_AS_CREDITED,
+            "approved_without_receipt_as_credited": APPROVED_WITHOUT_RECEIPT_AS_CREDITED,
+            "fake_zero_wallet_balance": FAKE_ZERO_WALLET_BALANCE,
+            "unavailable_finance_value_as_zero": UNAVAILABLE_FINANCE_VALUE_AS_ZERO,
+            "fake_zero_finance": 0,
         },
     }

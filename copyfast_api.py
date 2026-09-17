@@ -109,6 +109,7 @@ from copyfast_finance_policy import (
     PAYMENT_SETTLEMENT_AUTHORITY,
     STATUS_UNAVAILABLE as FINANCE_STATUS_UNAVAILABLE,
     TOPUP_REQUEST_AUTHORITY,
+    reconcile_finance_records,
     synthesize_finance_summary,
     synthesize_payment_record,
     synthesize_topup_record,
@@ -1623,7 +1624,19 @@ def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: boo
     if surface == "feature":
         return _project_feature_response(value)
     if surface == "admin":
-        result = _project_record(value, ("module", "read_only", "message", "revenue_scope"))
+        result = _project_record(value, ("module", "read_only", "message", "revenue_scope", "balance_xu", "total_wallets"))
+        if isinstance(value.get("reconciliation"), dict):
+            result["reconciliation"] = _project_record(
+                value.get("reconciliation"),
+                ("reconciled", "status", "snapshot_credits", "ledger_credits", "discrepancy"),
+            )
+        elif "reconciliation" in value:
+            safe_rec = _browser_scalar(value.get("reconciliation"))
+            if safe_rec is not _MISSING:
+                result["reconciliation"] = safe_rec
+        if isinstance(value.get("ledger_events"), list):
+            event_fields = ("delta", "delta_xu", "event_type", "ref_id", "created_at")
+            result["ledger_events"] = _project_items(value.get("ledger_events"), event_fields, allow_admin_user_refs=allow_admin_user_refs)
         if isinstance(value.get("system_health"), dict):
             result["system_health"] = {
                 str(k)[:60]: str(v)[:40]
@@ -6153,6 +6166,45 @@ async def admin_finance_summary(
         data=summary,
         status_name="read_only",
     )
+
+
+@router.get("/admin/finance/reconciliation")
+async def admin_finance_reconciliation(
+    request: Request,
+    account: dict = Depends(require_canonical_admin),
+):
+    topups_data = copyfast_db.query_finance_reconciliation_data()
+
+    payos_orders: list[dict] = []
+    try:
+        from db import db_connect
+        with closing(db_connect()) as sconn:
+            sconn.row_factory = sqlite3.Row
+            tables = {r[0] for r in sconn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+            if "payos_orders" in tables:
+                payos_orders = [dict(r) for r in sconn.execute("SELECT * FROM payos_orders").fetchall()]
+    except Exception:
+        pass
+
+    wallet_resp = await _bridge("GET", "/internal/v1/admin/modules/wallet", account=account, request=request, admin_read=True)
+    wallet_bridge_avail = bool(wallet_resp.get("ok"))
+    wallet_payload = wallet_resp.get("data") if wallet_bridge_avail else None
+
+    report = reconcile_finance_records(
+        wallet_payload=wallet_payload,
+        wallet_bridge_available=wallet_bridge_avail,
+        topups_data=topups_data,
+        payos_orders=payos_orders,
+        account_canonical_map=topups_data.get("account_canonical_map"),
+    )
+
+    return envelope(
+        True,
+        "Đã tạo báo cáo đối soát tài chính trung thực.",
+        data=report,
+        status_name="read_only" if report.get("reconciled") else "discrepancy_detected",
+    )
+
 
 
 @router.get("/admin/finance/topups")

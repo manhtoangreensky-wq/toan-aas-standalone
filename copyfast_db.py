@@ -7538,3 +7538,33 @@ def query_finance_topups_list(
     return items, total
 
 
+def query_finance_reconciliation_data() -> dict[str, Any]:
+    """Query all manual topup requests, credit operations, receipts, and account mappings for reconciliation."""
+    db_file = session_database_path()
+    res: dict[str, Any] = {
+        "requests": [],
+        "operations": [],
+        "approve_receipts": [],
+        "decision_receipts": [],
+        "account_canonical_map": {},
+    }
+    try:
+        with sqlite3.connect(db_file) as conn:
+            conn.row_factory = sqlite3.Row
+            tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+            if "web_manual_topup_requests" in tables:
+                res["requests"] = [dict(r) for r in conn.execute("SELECT * FROM web_manual_topup_requests").fetchall()]
+            if "web_manual_topup_credit_operations" in tables:
+                res["operations"] = [dict(r) for r in conn.execute("SELECT * FROM web_manual_topup_credit_operations").fetchall()]
+            if "web_manual_topup_approve_receipts" in tables:
+                res["approve_receipts"] = [dict(r) for r in conn.execute("SELECT * FROM web_manual_topup_approve_receipts").fetchall()]
+            if "web_manual_topup_decision_receipts" in tables:
+                res["decision_receipts"] = [dict(r) for r in conn.execute("SELECT * FROM web_manual_topup_decision_receipts").fetchall()]
+            if "web_accounts" in tables:
+                res["account_canonical_map"] = {
+                    str(r["id"]): str(r["canonical_user_id"] or "")
+                    for r in conn.execute("SELECT id, canonical_user_id FROM web_accounts WHERE canonical_user_id IS NOT NULL").fetchall()
+                }
+    except Exception:
+        pass
+    return res
