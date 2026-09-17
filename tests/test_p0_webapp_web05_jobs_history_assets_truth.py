@@ -308,3 +308,243 @@ def test_history_route_resolves_unambiguously() -> None:
     from copyfast_pages import render_portal
     res = render_portal("/history")
     assert res.status_code == 200, f"render_portal('/history') returned {res.status_code}"
+
+
+def test_completed_job_without_asset_no_fake_download() -> None:
+    """10. COMPLETED_WITHOUT_ASSET_NO_FAKE_SUCCESS: Completed job without asset does not show fake download."""
+    import copyfast_api
+
+    # Backend projection checks
+    job_raw = {
+        "id": "job-completed-no-asset",
+        "feature": "video_single",
+        "status": "completed",
+        "output_available": False,
+        "download_ready": False,
+    }
+    projected = copyfast_api._project_surface_data(job_raw, "job")
+    assert projected["status"] == "completed"
+    assert projected["output_available"] is False
+    assert projected["download_ready"] is False
+
+    # Frontend UI delivery state contracts in portal.js
+    portal_text = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert 'if (status === "completed") return `<span class="portal-delivery-state" data-delivery="pending">${deliveryCenterText("status.delivery.completedWaiting", "Job hoàn tất · chưa có delivery Web")}</span>`;' in portal_text
+    assert 'deliveryPath = surface === "asset" && item.delivery_ready === true ? assetDownloadPath(item) : ""' in portal_text
+
+
+def test_completed_job_with_valid_asset_cta() -> None:
+    """11. COMPLETED_WITH_ASSET_VALID_CTA: Completed job with asset has valid download CTA."""
+    import copyfast_api
+
+    asset_raw = {
+        "id": "asset-valid-12345",
+        "feature": "video_single",
+        "status": "completed",
+        "download_ready": True,
+        "delivery_ready": True,
+    }
+    projected = copyfast_api._project_surface_data(asset_raw, "asset")
+    assert projected["download_ready"] is True
+    assert projected["delivery_ready"] is True
+
+    # Frontend UI delivery state contracts in portal.js
+    portal_text = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert '<a class="portal-delivery-state portal-delivery-link" data-delivery="validated" href="${safeText(deliveryPath)}" rel="noreferrer">' in portal_text
+    assert 'return `/api/v1/assets/${encodeURIComponent(assetId)}/download`;' in portal_text
+
+
+def test_backend_failure_timeout_and_errors_truthful(tmp_path: Path, monkeypatch) -> None:
+    """12. BACKEND_FAILURE_TRUTHFUL: Bridge failure/timeout does not fake empty success."""
+    with make_client(tmp_path, monkeypatch) as client:
+        register_and_login(client, "backend_fail_user@example.com")
+        db_path = tmp_path / "web05-test.db"
+        import sqlite3
+        with sqlite3.connect(db_path) as conn:
+            conn.execute("UPDATE web_accounts SET canonical_user_id=? WHERE email=?", ("7126457028", "backend_fail_user@example.com"))
+        client.post("/api/v1/auth/login", json={"email": "backend_fail_user@example.com", "password": "StrongPassword123!"})
+
+        api = importlib.import_module("copyfast_api")
+
+        for failure_resp in (
+            {"ok": False, "status": "gateway_timeout", "error_code": "BRIDGE_TIMEOUT"},
+            {"ok": False, "status": "service_unavailable", "error_code": "BRIDGE_UNAVAILABLE"},
+            {"ok": False, "message": "malformed payload"},
+        ):
+            async def fake_failing_bridge(*_args, **_kwargs):
+                return failure_resp
+
+            monkeypatch.setattr(api, "bridge_configured", lambda: True)
+            monkeypatch.setattr(api, "_canonical_companion_ready", lambda _account: True)
+            monkeypatch.setattr(api, "bridge_request", fake_failing_bridge)
+
+            jobs_res = client.get("/api/v1/jobs").json()
+            assert jobs_res.get("ok") is True
+            # Truthful fallback: canonical_available is False, source is web_native
+            assert jobs_res["data"]["canonical_available"] is False
+            assert jobs_res["data"]["source"] == "web_native"
+
+
+def test_empty_state_truthful(tmp_path: Path, monkeypatch) -> None:
+    """13. EMPTY_STATES_TRUTHFUL: No fake rows, mock jobs, or placeholder assets on empty states."""
+    with make_client(tmp_path, monkeypatch) as client:
+        register_and_login(client, "empty_user@example.com")
+        db_path = tmp_path / "web05-test.db"
+        import sqlite3
+        with sqlite3.connect(db_path) as conn:
+            conn.execute("UPDATE web_accounts SET canonical_user_id=? WHERE email=?", ("7126457028", "empty_user@example.com"))
+        client.post("/api/v1/auth/login", json={"email": "empty_user@example.com", "password": "StrongPassword123!"})
+
+        api = importlib.import_module("copyfast_api")
+
+        async def fake_empty_bridge(*_args, **_kwargs):
+            return {"ok": True, "status": "completed", "data": {"items": []}}
+
+        monkeypatch.setattr(api, "bridge_configured", lambda: True)
+        monkeypatch.setattr(api, "_canonical_companion_ready", lambda _account: True)
+        monkeypatch.setattr(api, "bridge_request", fake_empty_bridge)
+
+        jobs_res = client.get("/api/v1/jobs").json()
+        assert jobs_res.get("ok") is True
+        assert jobs_res["data"]["items"] == []
+
+        assets_res = client.get("/api/v1/assets").json()
+        assert assets_res.get("ok") is True
+        assert assets_res["data"]["items"] == []
+
+    portal_text = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert 'renderEmpty(emptyTitle, emptyText, "◌")' in portal_text or 'renderEmpty(' in portal_text
+
+
+def test_asset_detail_ownership_endpoint_full(tmp_path: Path, monkeypatch) -> None:
+    """14. ASSET_DETAIL_OWNERSHIP: GET /api/v1/assets/{id} enforces strict ownership."""
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf_a = register_and_login(client, "asset_owner_a@example.com")
+        create_native_records(client, csrf_a, tag="assetownera")
+        assets_res_a = client.get("/api/v1/assets").json()
+        assert assets_res_a.get("ok") is True
+        asset_id_a = next(item["id"] for item in assets_res_a["data"]["items"] if item["id"].startswith("wna:v1:"))
+        assert asset_id_a.startswith("wna:v1:")
+
+        # User A reads their own Web-native asset: permitted
+        res_a = client.get(f"/api/v1/assets/{asset_id_a}")
+        assert res_a.status_code == 200
+        body_a = res_a.json()
+        assert body_a["ok"] is True
+        assert body_a["status"] == "read_only"
+        assert body_a["data"]["read_model"] == "assets"
+        assert body_a["data"]["id"] == asset_id_a
+
+        # User B reads User A's Web-native asset: blocked
+        csrf_b = register_and_login(client, "asset_intruder_b@example.com")
+        res_b = client.get(f"/api/v1/assets/{asset_id_a}")
+        assert res_b.status_code == 200
+        body_b = res_b.json()
+        assert body_b["ok"] is False
+        assert body_b["status"] == "guarded"
+        assert body_b["error_code"] == "WEB_NATIVE_ASSET_NOT_FOUND"
+
+        # Unknown Web-native asset: guarded
+        res_unk = client.get("/api/v1/assets/wna:v1:asset:00000000-0000-0000-0000-000000000000")
+        assert res_unk.status_code == 200
+        body_unk = res_unk.json()
+        assert body_unk["ok"] is False
+        assert body_unk["error_code"] == "WEB_NATIVE_ASSET_NOT_FOUND"
+
+        # Canonical asset with unlinked account: blocked
+        res_canon_unlinked = client.get("/api/v1/assets/canonical-asset-12345")
+        assert res_canon_unlinked.status_code == 200
+        body_canon_unlinked = res_canon_unlinked.json()
+        assert body_canon_unlinked["ok"] is False
+
+
+def test_job_status_mapping_and_progress_validation() -> None:
+    """15. JOB_STATUS_MAPPING_AND_PROGRESS: API validates progress and preserves canonical statuses."""
+    import copyfast_api
+
+    # Valid progress preserved
+    for p in (0, 45.5, 65, 100):
+        rec = copyfast_api._project_surface_data({"id": "j1", "status": "processing", "progress": p}, "job")
+        assert rec.get("progress") == p, f"Progress {p} altered: {rec}"
+
+    # Invalid progress removed
+    for bad_p in (-10, 101, True, False, "85", None, float("nan")):
+        rec = copyfast_api._project_surface_data({"id": "j1", "status": "processing", "progress": bad_p}, "job")
+        assert "progress" not in rec, f"Invalid progress {bad_p} not removed: {rec}"
+
+    # Verify status is NOT flipped from progress
+    rec_prog100 = copyfast_api._project_surface_data({"id": "j1", "status": "processing", "progress": 100}, "job")
+    assert rec_prog100["status"] == "processing", "Processing status falsely converted to completed based on progress"
+
+    # Frontend UI status mapping check in portal.js
+    portal_text = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert 'if (["failed", "cancelled", "refunded"].includes(status)) return `<span class="portal-delivery-state" data-delivery="unavailable">${deliveryCenterText("status.delivery.unavailable", "Không có delivery")}</span>`;' in portal_text
+
+
+def test_internal_path_and_delivery_safety() -> None:
+    """16. INTERNAL_PATH_LEAK: Malicious or internal paths are rejected from delivery CTAs."""
+    portal_text = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert 'if (!/^[A-Za-z0-9._:-]{1,160}$/.test(assetId)) return "";' in portal_text
+    assert 'return `/api/v1/assets/${encodeURIComponent(assetId)}/download`;' in portal_text
+
+    import subprocess
+    js_test = """
+    function assetDownloadPath(item) {
+      const assetId = String(item && item.id || "").trim();
+      if (!/^[A-Za-z0-9._:-]{1,160}$/.test(assetId)) return "";
+      return `/api/v1/assets/${encodeURIComponent(assetId)}/download`;
+    }
+    const malicious = [
+      "/opt/toanaas-worker/secrets.env",
+      "file:///etc/passwd",
+      "https://internal-s3.aws.com/bucket/key",
+      "../../etc/shadow",
+      "asset id with space"
+    ];
+    for (const bad of malicious) {
+      if (assetDownloadPath({id: bad}) !== "") {
+        process.exit(1);
+      }
+    }
+    if (assetDownloadPath({id: "valid-asset-12345"}) !== "/api/v1/assets/valid-asset-12345/download") {
+      process.exit(2);
+    }
+    console.log("SAFE");
+    """
+    res = subprocess.run(["node", "-e", js_test], capture_output=True, text=True, check=True)
+    assert "SAFE" in res.stdout
+
+
+def test_no_duplicate_rows_and_pagination_not_applicable() -> None:
+    """17. NO_DUPLICATE_ROWS & PAGINATION_NOT_APPLICABLE: Read models deduplicate and have no pagination cursor."""
+    import copyfast_api
+
+    group_a = [{"id": "item-001", "created_at": "2026-09-17T12:00:00Z"}]
+    group_b = [
+        {"id": "item-001", "created_at": "2026-09-17T12:00:00Z"},
+        {"id": "item-002", "created_at": "2026-09-17T11:00:00Z"},
+    ]
+    merged = copyfast_api._merge_read_items(group_a, group_b)
+    assert len(merged) == 2
+    assert [item["id"] for item in merged] == ["item-001", "item-002"]
+
+    import inspect
+    jobs_sig = inspect.signature(copyfast_api.list_jobs)
+    assert "page" not in jobs_sig.parameters
+    assert "cursor" not in jobs_sig.parameters
+    assert "offset" not in jobs_sig.parameters
+
+    assets_sig = inspect.signature(copyfast_api.assets)
+    assert "page" not in assets_sig.parameters
+    assert "cursor" not in assets_sig.parameters
+    assert "offset" not in assets_sig.parameters
+
+
+def test_history_semantics_unambiguous_content() -> None:
+    """18. HISTORY_SEMANTICS_UNAMBIGUOUS: /history landing contains distinct destinations without ledger mixups."""
+    portal_text = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert 'href="/jobs">📋 Job Center' in portal_text
+    assert 'href="/wallet/history">💰 Ví Xu' in portal_text
+    assert 'href="/account/activity">🛡️ Hoạt động tài khoản' in portal_text
+    assert 'href="/image/history">🖼️ Lịch sử xử lý ảnh' in portal_text
+    assert "Web App không tự tạo dữ liệu lịch sử giả hoặc gộp job tác vụ vào biến động ví." in portal_text
