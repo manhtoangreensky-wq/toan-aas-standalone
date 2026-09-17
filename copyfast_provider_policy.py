@@ -75,7 +75,9 @@ HEALTHY_NOT_EQUAL_ELIGIBLE = True
 ELIGIBLE_NOT_EQUAL_SELECTED = True
 
 # Freshness window in seconds (observations older than this are considered stale)
-PROVIDER_OBSERVATION_FRESHNESS_SECONDS = 3600
+CANONICAL_HEALTH_FRESHNESS_SOURCE = "WEBAPP_EXPLICIT_PROVIDER_POLICY"
+CANONICAL_HEALTH_FRESHNESS_SECONDS = 3600
+PROVIDER_OBSERVATION_FRESHNESS_SECONDS = CANONICAL_HEALTH_FRESHNESS_SECONDS
 
 # Valid taxonomy
 VALID_PROVIDER_KINDS = frozenset({
@@ -92,6 +94,8 @@ VALID_HEALTH_STATES = frozenset({
     "DEGRADED",
     "UNAVAILABLE",
     "UNKNOWN",
+    "UNKNOWN_CURRENT_HEALTH",
+    "STALE_HEALTHY",
 })
 
 VALID_CAPABILITIES = frozenset({
@@ -268,6 +272,8 @@ CANONICAL_PROVIDERS_CATALOG: dict[str, dict[str, Any]] = {
     },
 }
 
+CANONICAL_PROVIDER_COUNT = len(CANONICAL_PROVIDERS_CATALOG)
+
 # ==============================================================================
 # 3. REDACTION & SECRET SCRUBBING
 # ==============================================================================
@@ -279,9 +285,10 @@ SENSITIVE_FIELD_PARTS = frozenset({
 
 SAFE_PROVIDER_SCALAR_KEYS = frozenset({
     "provider_id", "display_name", "provider_kind", "configured",
-    "credential_present", "available", "health_state", "routing_eligible",
-    "source_of_truth", "last_observed_at", "error_state", "notes",
-    "selected", "priority", "probation", "stale", "status",
+    "credential_present", "available", "health_state", "effective_health_state",
+    "current_healthy_evidence", "routing_eligible", "source_of_truth",
+    "last_observed_at", "error_state", "notes", "selected", "priority",
+    "probation", "stale", "status",
 })
 
 
@@ -349,27 +356,72 @@ def synthesize_provider_record(
     configured = bool(cleaned.get("configured", fallback.get("configured", False)))
     credential_present = bool(cleaned.get("credential_present", configured))
 
-    # 2. HEALTH_STATE: HEALTHY | DEGRADED | UNAVAILABLE | UNKNOWN
-    # Invariant: An unconfigured provider cannot be HEALTHY or AVAILABLE
+    # 2. FRESHNESS & OBSERVATION TIMESTAMP
+    last_observed_at_raw = cleaned.get("last_observed_at") or cleaned.get("updated_at")
+    last_observed_at = str(last_observed_at_raw).strip() if last_observed_at_raw is not None else ""
+    stale = False
+    has_valid_timestamp = False
+
+    if last_observed_at:
+        try:
+            dt = datetime.fromisoformat(last_observed_at.replace("Z", "+00:00"))
+            age_seconds = (datetime.now(timezone.utc) - dt).total_seconds()
+            if age_seconds > PROVIDER_OBSERVATION_FRESHNESS_SECONDS:
+                stale = True
+                has_valid_timestamp = True
+            else:
+                stale = False
+                has_valid_timestamp = True
+        except (ValueError, TypeError):
+            stale = True
+            has_valid_timestamp = False
+    else:
+        # Missing last_observed_at: no observation timestamp exists
+        stale = True
+        has_valid_timestamp = False
+
+    # 3. HEALTH_STATE (Observed) vs EFFECTIVE_HEALTH_STATE (Current Verification)
     if not configured:
         health_state = "UNAVAILABLE"
+        effective_health_state = "UNAVAILABLE"
         healthy = False
         available = False
+        current_healthy_evidence = False
     else:
         raw_health = str(cleaned.get("health_state") or cleaned.get("health") or "").strip().upper()
         if raw_health in VALID_HEALTH_STATES:
             health_state = raw_health
         else:
             health_state = "UNKNOWN"
+
         healthy = (health_state == "HEALTHY")
 
+        # Determine effective current health:
+        # Claimed HEALTHY requires a valid, fresh observation timestamp to be effective.
+        if health_state == "HEALTHY":
+            if not has_valid_timestamp:
+                effective_health_state = "UNKNOWN_CURRENT_HEALTH"
+                current_healthy_evidence = False
+            elif stale:
+                effective_health_state = "STALE_HEALTHY"
+                current_healthy_evidence = False
+            else:
+                effective_health_state = "HEALTHY"
+                current_healthy_evidence = True
+        else:
+            effective_health_state = health_state
+            current_healthy_evidence = False
+
+        # Availability:
+        # Cannot be available if unconfigured or UNAVAILABLE
         raw_available = cleaned.get("available")
         if raw_available is not None:
             available = bool(raw_available) and (health_state in {"HEALTHY", "DEGRADED"})
         else:
-            available = health_state in {"HEALTHY", "DEGRADED"}
+            available = (health_state in {"HEALTHY", "DEGRADED"})
 
-    # 4. CAPABILITIES: declared vs executable vs healthy
+    # 4. CAPABILITIES: declared vs executable vs healthy vs ready
+    # Rule: ready = declared AND executable AND configured AND available AND current healthy evidence
     raw_caps = cleaned.get("capabilities") or fallback.get("capabilities") or []
     capabilities: list[dict[str, Any]] = []
     if isinstance(raw_caps, list):
@@ -379,44 +431,44 @@ def synthesize_provider_record(
                 continue
             cap_declared = True
             cap_executable = configured and (cap.get("executable", True) if isinstance(cap, dict) else True)
-            cap_healthy = healthy and (cap.get("healthy", True) if isinstance(cap, dict) else True)
+            cap_healthy = current_healthy_evidence and (cap.get("healthy", True) if isinstance(cap, dict) else True)
+            # CAPABILITY_FAKE_READY = 0:
+            # ready requires declared + executable + configured + available + current healthy evidence
+            cap_ready = bool(
+                cap_declared
+                and cap_executable
+                and configured
+                and available
+                and current_healthy_evidence
+                and (cap.get("ready", True) if isinstance(cap, dict) else True)
+            )
             capabilities.append({
                 "name": cap_name,
                 "declared": cap_declared,
                 "executable": cap_executable,
                 "healthy": cap_healthy,
-                # CAPABILITY_FAKE_READY = 0: only ready if declared + executable + healthy
-                "ready": bool(cap_declared and cap_executable and cap_healthy),
+                "ready": cap_ready,
             })
 
-    # 5. ROUTING_ELIGIBILITY: configured + available + healthy/degraded + not in probation + enabled
+    # 5. ROUTING_ELIGIBILITY:
+    # Rule:
+    # HEALTHY with fresh evidence may be eligible.
+    # DEGRADED is visible but NOT routing eligible.
+    # UNAVAILABLE is NOT eligible.
+    # UNKNOWN / UNKNOWN_CURRENT_HEALTH / STALE is NOT eligible.
     probation = bool(cleaned.get("probation", False))
     raw_eligible = cleaned.get("routing_eligible")
-    if not configured or not available or probation or health_state not in {"HEALTHY", "DEGRADED"}:
+
+    if not configured or not available or probation or not current_healthy_evidence:
         routing_eligible = False
     elif raw_eligible is not None:
         routing_eligible = bool(raw_eligible)
     else:
         routing_eligible = True
 
-    # 6. FRESHNESS: Observation timestamp and stale flag
-    last_observed_at = str(cleaned.get("last_observed_at") or cleaned.get("updated_at") or "").strip()
-    stale = False
-    if last_observed_at:
-        try:
-            # Parse ISO timestamp
-            dt = datetime.fromisoformat(last_observed_at.replace("Z", "+00:00"))
-            age_seconds = (datetime.now(timezone.utc) - dt).total_seconds()
-            if age_seconds > PROVIDER_OBSERVATION_FRESHNESS_SECONDS:
-                stale = True
-        except (ValueError, TypeError):
-            # If malformed, do not assume fresh
-            stale = True
-    else:
-        # If no observation timestamp exists, health is unobserved
-        if health_state != "UNKNOWN" and configured:
-            # If claimed healthy with no observation timestamp, flag as unverified
-            pass
+    # 6. SELECTED:
+    # An ineligible provider cannot be selected in routing
+    selected = bool(cleaned.get("selected", False)) and routing_eligible
 
     # 7. ERROR STATE: Categorized error string or None
     error_state = str(cleaned.get("error_state") or cleaned.get("error") or "").strip() or None
@@ -430,8 +482,10 @@ def synthesize_provider_record(
         "credential_present": credential_present,
         "available": available,
         "health_state": health_state,
+        "effective_health_state": effective_health_state,
+        "current_healthy_evidence": current_healthy_evidence,
         "routing_eligible": routing_eligible,
-        "selected": bool(cleaned.get("selected", False)),
+        "selected": selected,
         "probation": probation,
         "stale": stale,
         "source_of_truth": PROVIDER_AUTHORITY,

@@ -163,6 +163,8 @@ def test_configured_not_equal_available_not_equal_healthy():
     assert rec2["configured"] is True
     assert rec2["health_state"] == "DEGRADED"
     assert rec2["available"] is True
+    assert rec2["routing_eligible"] is False  # DEGRADED must not route
+
 
     # 3. Not configured -> available must be False regardless of incoming flag
     rec3 = policy.synthesize_provider_record({
@@ -228,7 +230,7 @@ def test_routing_ready_fake_zero():
 def test_stale_health_flagged_correctly():
     """Case 5: STALE_HEALTH_AS_CURRENT = 0.
 
-    Observations older than 3600 seconds are flagged as stale.
+    Observations older than 3600 seconds are flagged as stale and not routing eligible.
     """
     old_time = (datetime.datetime.now(timezone.utc) - datetime.timedelta(hours=2)).isoformat()
     rec_stale = policy.synthesize_provider_record({
@@ -239,6 +241,9 @@ def test_stale_health_flagged_correctly():
         "last_observed_at": old_time,
     })
     assert rec_stale["stale"] is True
+    assert rec_stale["effective_health_state"] == "STALE_HEALTHY"
+    assert rec_stale["current_healthy_evidence"] is False
+    assert rec_stale["routing_eligible"] is False
 
     fresh_time = datetime.datetime.now(timezone.utc).isoformat()
     rec_fresh = policy.synthesize_provider_record({
@@ -249,6 +254,311 @@ def test_stale_health_flagged_correctly():
         "last_observed_at": fresh_time,
     })
     assert rec_fresh["stale"] is False
+    assert rec_fresh["effective_health_state"] == "HEALTHY"
+    assert rec_fresh["current_healthy_evidence"] is True
+    assert rec_fresh["routing_eligible"] is True
+
+
+def test_degraded_provider_never_routing_eligible():
+    """DEGRADED MUST NOT ROUTE.
+
+    A provider with health_state=DEGRADED may be visible and available for triage,
+    but MUST NOT be routing_eligible, even when configured=True and available=True.
+    """
+    rec = policy.synthesize_provider_record({
+        "provider_id": "gemini",
+        "configured": True,
+        "available": True,
+        "health_state": "DEGRADED",
+        "probation": False,
+        "last_observed_at": policy.utc_now(),
+        "selected": True,
+    })
+    assert rec["configured"] is True
+    assert rec["available"] is True
+    assert rec["health_state"] == "DEGRADED"
+    assert rec["effective_health_state"] == "DEGRADED"
+    assert rec["current_healthy_evidence"] is False
+    assert rec["routing_eligible"] is False
+    assert rec["selected"] is False  # Ineligible provider cannot be selected
+
+
+def test_healthy_but_unavailable_capability_not_ready():
+    """CAPABILITY READY MUST REQUIRE AVAILABILITY.
+
+    ready = declared AND executable AND configured AND available AND current healthy evidence.
+    If available=False, capability.ready MUST be False even if healthy=True.
+    """
+    rec = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": False,
+        "health_state": "HEALTHY",
+        "last_observed_at": policy.utc_now(),
+        "capabilities": ["video", "image"],
+    })
+    assert rec["configured"] is True
+    assert rec["available"] is False
+    assert rec["health_state"] == "HEALTHY"
+    assert rec["current_healthy_evidence"] is True
+    assert rec["routing_eligible"] is False
+
+    for cap in rec["capabilities"]:
+        assert cap["declared"] is True
+        assert cap["executable"] is True
+        assert cap["healthy"] is True
+        assert cap["ready"] is False, f"Capability {cap['name']} cannot be ready when provider is unavailable"
+
+
+def test_stale_healthy_provider_not_routing_eligible():
+    """STALE HEALTH CANNOT BE CURRENT ROUTING EVIDENCE.
+
+    stale=True MUST force routing_eligible=False.
+    """
+    old_time = (datetime.datetime.now(timezone.utc) - datetime.timedelta(seconds=policy.CANONICAL_HEALTH_FRESHNESS_SECONDS + 60)).isoformat()
+    rec = policy.synthesize_provider_record({
+        "provider_id": "groq",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": old_time,
+        "selected": True,
+    })
+    assert rec["stale"] is True
+    assert rec["effective_health_state"] == "STALE_HEALTHY"
+    assert rec["current_healthy_evidence"] is False
+    assert rec["routing_eligible"] is False
+    assert rec["selected"] is False
+
+
+def test_stale_healthy_capability_not_ready():
+    """STALE HEALTH FORCES ALL CAPABILITY.READY = FALSE."""
+    old_time = (datetime.datetime.now(timezone.utc) - datetime.timedelta(hours=3)).isoformat()
+    rec = policy.synthesize_provider_record({
+        "provider_id": "cohere",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": old_time,
+        "capabilities": ["rerank", "embed"],
+    })
+    assert rec["stale"] is True
+    for cap in rec["capabilities"]:
+        assert cap["declared"] is True
+        assert cap["executable"] is True
+        assert cap["healthy"] is False
+        assert cap["ready"] is False
+
+
+def test_missing_timestamp_claimed_healthy_guard():
+    """MISSING TIMESTAMP GUARD.
+
+    A provider claiming HEALTHY without last_observed_at MUST evaluate to:
+    - effective_health_state="UNKNOWN_CURRENT_HEALTH"
+    - stale=True
+    - current_healthy_evidence=False
+    - routing_eligible=False
+    - all capability.ready=False
+    """
+    rec = policy.synthesize_provider_record({
+        "provider_id": "claude",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": None,
+        "capabilities": ["text", "code"],
+        "selected": True,
+    })
+    assert rec["health_state"] == "HEALTHY"
+    assert rec["effective_health_state"] == "UNKNOWN_CURRENT_HEALTH"
+    assert rec["stale"] is True
+    assert rec["current_healthy_evidence"] is False
+    assert rec["routing_eligible"] is False
+    assert rec["selected"] is False
+    for cap in rec["capabilities"]:
+        assert cap["ready"] is False
+
+
+def test_canonical_freshness_window_and_catalog_count_contract():
+    """FRESHNESS WINDOW & CATALOG COUNT CONTRACT."""
+    assert policy.CANONICAL_HEALTH_FRESHNESS_SOURCE == "WEBAPP_EXPLICIT_PROVIDER_POLICY"
+    assert policy.CANONICAL_HEALTH_FRESHNESS_SECONDS == 3600
+    assert policy.CANONICAL_PROVIDER_COUNT == 19
+    assert len(policy.CANONICAL_PROVIDERS_CATALOG) == 19
+
+
+def test_provider_state_matrix_comprehensive():
+    """Comprehensive 8-state matrix verification across the entire lifecycle.
+
+    Matrix:
+    Case 1: Unconfigured (configured=False, available=False, health=HEALTHY, ts=fresh)
+    Case 2: Configured, Unavailable, Fresh Healthy (configured=True, available=False, health=HEALTHY, ts=fresh)
+    Case 3: Configured, Available, Fresh Healthy (configured=True, available=True, health=HEALTHY, ts=fresh)
+    Case 4: Configured, Available, Fresh Degraded (configured=True, available=True, health=DEGRADED, ts=fresh)
+    Case 5: Configured, Available, Stale Healthy (configured=True, available=True, health=HEALTHY, ts=stale)
+    Case 6: Configured, Available, Missing Timestamp Claimed Healthy (configured=True, available=True, health=HEALTHY, ts=None)
+    Case 7: Configured, Available, Fresh Healthy, Probation (configured=True, available=True, health=HEALTHY, ts=fresh, probation=True)
+    Case 8: Configured, Available (raw), Unknown Health (configured=True, available=True, health=UNKNOWN, ts=fresh)
+    """
+    now = policy.utc_now()
+    old = (datetime.datetime.now(timezone.utc) - datetime.timedelta(hours=5)).isoformat()
+
+    # Case 1: Unconfigured
+    c1 = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": False,
+        "available": False,
+        "health_state": "HEALTHY",
+        "last_observed_at": now,
+        "capabilities": ["video"],
+        "selected": True,
+    })
+    assert c1["configured"] is False
+    assert c1["available"] is False
+    assert c1["health_state"] == "UNAVAILABLE"
+    assert c1["effective_health_state"] == "UNAVAILABLE"
+    assert c1["current_healthy_evidence"] is False
+    assert c1["routing_eligible"] is False
+    assert c1["capabilities"][0]["ready"] is False
+    assert c1["selected"] is False
+
+    # Case 2: Configured, Unavailable, Fresh Healthy
+    c2 = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": False,
+        "health_state": "HEALTHY",
+        "last_observed_at": now,
+        "capabilities": ["video"],
+        "selected": True,
+    })
+    assert c2["configured"] is True
+    assert c2["available"] is False
+    assert c2["health_state"] == "HEALTHY"
+    assert c2["effective_health_state"] == "HEALTHY"
+    assert c2["current_healthy_evidence"] is True
+    assert c2["routing_eligible"] is False
+    assert c2["capabilities"][0]["ready"] is False
+    assert c2["selected"] is False
+
+    # Case 3: Configured, Available, Fresh Healthy
+    c3 = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": now,
+        "capabilities": ["video"],
+        "selected": True,
+    })
+    assert c3["configured"] is True
+    assert c3["available"] is True
+    assert c3["health_state"] == "HEALTHY"
+    assert c3["effective_health_state"] == "HEALTHY"
+    assert c3["current_healthy_evidence"] is True
+    assert c3["routing_eligible"] is True
+    assert c3["capabilities"][0]["ready"] is True
+    assert c3["selected"] is True
+
+    # Case 4: Configured, Available, Fresh Degraded
+    c4 = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": True,
+        "health_state": "DEGRADED",
+        "last_observed_at": now,
+        "capabilities": ["video"],
+        "selected": True,
+    })
+    assert c4["configured"] is True
+    assert c4["available"] is True
+    assert c4["health_state"] == "DEGRADED"
+    assert c4["effective_health_state"] == "DEGRADED"
+    assert c4["current_healthy_evidence"] is False
+    assert c4["routing_eligible"] is False
+    assert c4["capabilities"][0]["ready"] is False
+    assert c4["selected"] is False
+
+    # Case 5: Configured, Available, Stale Healthy
+    c5 = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": old,
+        "capabilities": ["video"],
+        "selected": True,
+    })
+    assert c5["configured"] is True
+    assert c5["available"] is True
+    assert c5["health_state"] == "HEALTHY"
+    assert c5["effective_health_state"] == "STALE_HEALTHY"
+    assert c5["stale"] is True
+    assert c5["current_healthy_evidence"] is False
+    assert c5["routing_eligible"] is False
+    assert c5["capabilities"][0]["ready"] is False
+    assert c5["selected"] is False
+
+    # Case 6: Configured, Available, Missing Timestamp Claimed Healthy
+    c6 = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": None,
+        "capabilities": ["video"],
+        "selected": True,
+    })
+    assert c6["configured"] is True
+    assert c6["available"] is True
+    assert c6["health_state"] == "HEALTHY"
+    assert c6["effective_health_state"] == "UNKNOWN_CURRENT_HEALTH"
+    assert c6["stale"] is True
+    assert c6["current_healthy_evidence"] is False
+    assert c6["routing_eligible"] is False
+    assert c6["capabilities"][0]["ready"] is False
+    assert c6["selected"] is False
+
+    # Case 7: Configured, Available, Fresh Healthy, Probation
+    c7 = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": now,
+        "probation": True,
+        "capabilities": ["video"],
+        "selected": True,
+    })
+    assert c7["configured"] is True
+    assert c7["available"] is True
+    assert c7["health_state"] == "HEALTHY"
+    assert c7["effective_health_state"] == "HEALTHY"
+    assert c7["probation"] is True
+    assert c7["current_healthy_evidence"] is True
+    assert c7["routing_eligible"] is False  # Probation blocks routing
+    assert c7["capabilities"][0]["ready"] is True  # Ready as capability unit
+    assert c7["selected"] is False  # Probation cannot be selected
+
+    # Case 8: Configured, Available (raw), Unknown Health
+    c8 = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": True,
+        "health_state": "UNKNOWN",
+        "last_observed_at": now,
+        "capabilities": ["video"],
+        "selected": True,
+    })
+    assert c8["configured"] is True
+    assert c8["available"] is False  # Forced False when health is UNKNOWN
+    assert c8["health_state"] == "UNKNOWN"
+    assert c8["effective_health_state"] == "UNKNOWN"
+    assert c8["current_healthy_evidence"] is False
+    assert c8["routing_eligible"] is False
+    assert c8["capabilities"][0]["ready"] is False
+    assert c8["selected"] is False
+
 
 
 def test_zero_raw_secret_exposure():
@@ -388,6 +698,7 @@ def test_canonical_admin_receives_sanitized_provider_list(tmp_path, monkeypatch)
                         "configured": True,
                         "available": True,
                         "health_state": "HEALTHY",
+                        "last_observed_at": policy.utc_now(),
                         "api_key": "sk-secret-leaked-key-12345",
                         "capabilities": ["video", "image"],
                     },
@@ -421,6 +732,9 @@ def test_canonical_admin_receives_sanitized_provider_list(tmp_path, monkeypatch)
     assert shopai["configured"] is True
     assert shopai["available"] is True
     assert shopai["health_state"] == "HEALTHY"
+    assert shopai["effective_health_state"] == "HEALTHY"
+    assert shopai["current_healthy_evidence"] is True
+    assert shopai["routing_eligible"] is True
     # Zero secret exposure
     assert "api_key" not in shopai
     assert "12345" not in str(shopai)
