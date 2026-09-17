@@ -583,3 +583,54 @@ def test_portal_js_unknown_wallet_metrics_contract():
     )
     result = subprocess.run(["node", "-e", script], capture_output=True, text=True, check=True)
     assert "TIER_CONTRACT_VERIFIED_OK" in result.stdout
+
+
+def test_bridge_signature_actor_id_binding():
+    """Blocker 1 & SPEC-P0: CoreBridgeClient._headers binds actor_id into HMAC signature when provided."""
+    import hashlib
+    import hmac
+    from copyfast_bridge import CoreBridgeClient
+
+    client = CoreBridgeClient(
+        base_url="http://127.0.0.1:8080",
+        token="test-token",
+        hmac_secret="test-hmac-secret",
+    )
+
+    # Case 1: actor_id is present -> signature message includes .<actor_id>
+    headers = client._headers("GET", "/internal/v1/wallet", b"", request_id="req-123", actor_id="7126457028")
+    assert headers["X-TOAN-AAS-Actor-ID"] == "7126457028"
+    ts = headers["X-TOAN-AAS-Timestamp"]
+    digest = hashlib.sha256(b"").hexdigest()
+    expected_msg = f"{ts}.req-123.GET./internal/v1/wallet.{digest}.7126457028".encode("utf-8")
+    expected_sig = hmac.new(b"test-hmac-secret", expected_msg, hashlib.sha256).hexdigest()
+    assert headers["X-TOAN-AAS-Signature"] == expected_sig
+
+    # Case 2: actor_id is empty -> signature message does not include trailing actor
+    headers_no_actor = client._headers("GET", "/internal/v1/pricing", b"", request_id="req-456", actor_id="")
+    assert "X-TOAN-AAS-Actor-ID" not in headers_no_actor
+    ts2 = headers_no_actor["X-TOAN-AAS-Timestamp"]
+    expected_msg2 = f"{ts2}.req-456.GET./internal/v1/pricing.{digest}".encode("utf-8")
+    expected_sig2 = hmac.new(b"test-hmac-secret", expected_msg2, hashlib.sha256).hexdigest()
+    assert headers_no_actor["X-TOAN-AAS-Signature"] == expected_sig2
+
+
+def test_bridge_sanitize_envelope_preserves_unverified_and_unlinked():
+    """Blocker 1: _sanitize_envelope must allow unverified and unlinked statuses from Bot Core."""
+    from copyfast_bridge import _sanitize_envelope
+
+    env_unverified = _sanitize_envelope({"ok": False, "status": "unverified", "error_code": "BOT_USER_NOT_INITIALIZED"})
+    assert env_unverified["status"] == "unverified"
+    assert env_unverified["error_code"] == "BOT_USER_NOT_INITIALIZED"
+
+    env_unlinked = _sanitize_envelope({"ok": False, "status": "unlinked", "error_code": "ACCOUNT_TELEGRAM_UNLINKED"})
+    assert env_unlinked["status"] == "unlinked"
+    assert env_unlinked["error_code"] == "ACCOUNT_TELEGRAM_UNLINKED"
+
+
+def test_portal_js_no_balance_derived_paid_vnd():
+    """Blocker 2 Invariant: portal.js must never derive total_paid_vnd from balance_xu * 100."""
+    portal_js_path = Path("static/portal/portal.js")
+    content = portal_js_path.read_text(encoding="utf-8")
+    assert "balance_xu * 100" not in content
+    assert "balance_xu*100" not in content

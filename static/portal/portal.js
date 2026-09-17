@@ -10618,7 +10618,9 @@
 
     const headerWallet = canonicalWalletProjection(context.wallet);
     const headerHasWallet = headerWallet && typeof headerWallet.balance_xu === "number";
-    const headerPaidVnd = headerHasWallet ? Number(headerWallet.total_paid_vnd || headerWallet.total_deposited_vnd || (headerWallet.balance_xu * 100)) : null;
+    const headerPaidVnd = (headerHasWallet && (headerWallet.total_paid_vnd != null || headerWallet.total_deposited_vnd != null))
+      ? Number(headerWallet.total_paid_vnd != null ? headerWallet.total_paid_vnd : headerWallet.total_deposited_vnd)
+      : null;
     const headerTierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(headerPaidVnd, profile.vipTierOverride || profile.tier) : { isKnown: false, currentTier: { badge: "—", color: "#8fa3b7" } };
     const currentLocale = interfaceLocaleFor(context);
     const localeOption = (value, label) => `<option value="${value}"${currentLocale === value ? " selected" : ""}>${safeText(label)}</option>`;
@@ -21169,7 +21171,9 @@
     const wallet = canonicalWalletProjection(context.wallet);
     const hasWallet = wallet && typeof wallet.balance_xu === "number";
     const balanceXu = hasWallet ? wallet.balance_xu : null;
-    const totalPaidVnd = hasWallet ? Number(wallet.total_paid_vnd || wallet.total_deposited_vnd || (wallet.balance_xu * 100)) : null;
+    const totalPaidVnd = (hasWallet && (wallet.total_paid_vnd != null || wallet.total_deposited_vnd != null))
+      ? Number(wallet.total_paid_vnd != null ? wallet.total_paid_vnd : wallet.total_deposited_vnd)
+      : null;
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
     const entries = membershipCatalogEntries(context);
 
@@ -26884,7 +26888,9 @@
     const accountAssurance = `<details class="portal-account-assurance"><summary>${safeText(copy("assurance", "Trạng thái tích hợp và bảo mật"))}</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div></details>`;
     const accountWallet = canonicalWalletProjection(context.wallet);
     const accountHasWallet = accountWallet && typeof accountWallet.balance_xu === "number";
-    const accountPaidVnd = accountHasWallet ? Number(accountWallet.total_paid_vnd || accountWallet.total_deposited_vnd || (accountWallet.balance_xu * 100)) : null;
+    const accountPaidVnd = (accountHasWallet && (accountWallet.total_paid_vnd != null || accountWallet.total_deposited_vnd != null))
+      ? Number(accountWallet.total_paid_vnd != null ? accountWallet.total_paid_vnd : accountWallet.total_deposited_vnd)
+      : null;
     const accountTierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(accountPaidVnd, profile.vipTierOverride || profile.tier) : { isKnown: false, currentTier: { badge: "—", color: "#8fa3b7", discountRate: 0, referralPercent: 0, birthdayGiftXu: 0 }, nextTier: null, neededVnd: null, neededXu: null, progressPercent: null, paidVnd: null };
     const { isKnown: accIsKnown, currentTier: accTier, nextTier: accNextTier, neededVnd: accNeededVnd, neededXu: accNeededXu, progressPercent: accProgress, paidVnd: accPaidVnd } = accountTierInfo;
     const accUnlinkedOrNoData = context.wallet && context.wallet.status_name === 'unlinked' ? 'Chưa liên kết Telegram' : 'Chưa có dữ liệu';
