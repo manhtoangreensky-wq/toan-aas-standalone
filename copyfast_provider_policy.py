@@ -74,10 +74,14 @@ AVAILABLE_NOT_EQUAL_HEALTHY = True
 HEALTHY_NOT_EQUAL_ELIGIBLE = True
 ELIGIBLE_NOT_EQUAL_SELECTED = True
 
-# Freshness window in seconds (observations older than this are considered stale)
+# Freshness policy (observations older than this are considered stale)
+# Authority: DOWNGRADE_ONLY (stale => block; fresh => does NOT independently authorize routing)
+WEB_HEALTH_FRESHNESS_POLICY_SECONDS = 3600
+WEB_HEALTH_FRESHNESS_POLICY_MODE = "DOWNGRADE_ONLY"
+PROVIDER_OBSERVATION_FRESHNESS_SECONDS = WEB_HEALTH_FRESHNESS_POLICY_SECONDS
+
 CANONICAL_HEALTH_FRESHNESS_SOURCE = "WEBAPP_EXPLICIT_PROVIDER_POLICY"
-CANONICAL_HEALTH_FRESHNESS_SECONDS = 3600
-PROVIDER_OBSERVATION_FRESHNESS_SECONDS = CANONICAL_HEALTH_FRESHNESS_SECONDS
+CANONICAL_HEALTH_FRESHNESS_SECONDS = WEB_HEALTH_FRESHNESS_POLICY_SECONDS
 
 # Valid taxonomy
 VALID_PROVIDER_KINDS = frozenset({
@@ -272,7 +276,9 @@ CANONICAL_PROVIDERS_CATALOG: dict[str, dict[str, Any]] = {
     },
 }
 
-CANONICAL_PROVIDER_COUNT = len(CANONICAL_PROVIDERS_CATALOG)
+WEB_METADATA_CATALOG_COUNT = len(CANONICAL_PROVIDERS_CATALOG)
+WEB_PROVIDER_METADATA_COUNT = WEB_METADATA_CATALOG_COUNT
+CANONICAL_PROVIDER_COUNT = WEB_METADATA_CATALOG_COUNT
 
 # ==============================================================================
 # 3. REDACTION & SECRET SCRUBBING
@@ -421,7 +427,13 @@ def synthesize_provider_record(
             available = (health_state in {"HEALTHY", "DEGRADED"})
 
     # 4. CAPABILITIES: declared vs executable vs healthy vs ready
-    # Rule: ready = declared AND executable AND configured AND available AND current healthy evidence
+    # Rule (FAIL-CLOSED):
+    # - declared: True if cap name is known / declared.
+    # - executable: True ONLY when Bot/provider payload explicitly proves executable=True.
+    #   Missing or plain string -> executable=False, ready=False.
+    #   Fallback metadata catalog NEVER supplies executable=True or ready=True.
+    # - healthy: current_healthy_evidence AND (cap.get("healthy", True) if isinstance(cap, dict) else True)
+    # - ready: declared AND executable AND configured AND available AND current_healthy_evidence AND ready!=False
     raw_caps = cleaned.get("capabilities") or fallback.get("capabilities") or []
     capabilities: list[dict[str, Any]] = []
     if isinstance(raw_caps, list):
@@ -430,8 +442,18 @@ def synthesize_provider_record(
             if not cap_name:
                 continue
             cap_declared = True
-            cap_executable = configured and (cap.get("executable", True) if isinstance(cap, dict) else True)
-            cap_healthy = current_healthy_evidence and (cap.get("healthy", True) if isinstance(cap, dict) else True)
+
+            # Canonical execution evidence:
+            # Fallback catalog cannot supply executable. Only cleaned (Bot payload) dict with executable=True qualifies.
+            cap_executable = False
+            if isinstance(cap, dict) and cap.get("executable") is True:
+                cap_executable = bool(configured)
+
+            cap_healthy = bool(
+                current_healthy_evidence
+                and (cap.get("healthy", True) if isinstance(cap, dict) else True)
+            )
+
             # CAPABILITY_FAKE_READY = 0:
             # ready requires declared + executable + configured + available + current healthy evidence
             cap_ready = bool(
@@ -450,25 +472,27 @@ def synthesize_provider_record(
                 "ready": cap_ready,
             })
 
-    # 5. ROUTING_ELIGIBILITY:
+    # 5. ROUTING_ELIGIBILITY (FAIL-CLOSED):
     # Rule:
-    # HEALTHY with fresh evidence may be eligible.
-    # DEGRADED is visible but NOT routing eligible.
-    # UNAVAILABLE is NOT eligible.
-    # UNKNOWN / UNKNOWN_CURRENT_HEALTH / STALE is NOT eligible.
-    probation = bool(cleaned.get("probation", False))
+    # - Web MAY DOWNGRADE canonical provider state.
+    # - Web MUST NEVER PROMOTE absent/unknown Bot evidence into routing_eligible=True.
+    # - raw routing_eligible MUST be explicitly True from canonical Bot evidence.
+    # - If raw routing_eligible is missing, False, or non-boolean: routing_eligible = False.
+    # - Local Web health policy may only veto eligibility (DOWNGRADE_ONLY). It may never grant eligibility.
     raw_eligible = cleaned.get("routing_eligible")
+    has_canonical_routing_evidence = (raw_eligible is True)
+    probation = bool(cleaned.get("probation", False))
 
-    if not configured or not available or probation or not current_healthy_evidence:
+    if not has_canonical_routing_evidence or not configured or not available or probation or not current_healthy_evidence:
         routing_eligible = False
-    elif raw_eligible is not None:
-        routing_eligible = bool(raw_eligible)
     else:
         routing_eligible = True
 
-    # 6. SELECTED:
-    # An ineligible provider cannot be selected in routing
-    selected = bool(cleaned.get("selected", False)) and routing_eligible
+    # 6. SELECTED (FAIL-CLOSED):
+    # selected=True only when BOTH raw selected=True AND canonical routing_eligible=True.
+    raw_selected = cleaned.get("selected")
+    has_canonical_selected_evidence = (raw_selected is True)
+    selected = bool(has_canonical_selected_evidence and routing_eligible)
 
     # 7. ERROR STATE: Categorized error string or None
     error_state = str(cleaned.get("error_state") or cleaned.get("error") or "").strip() or None
