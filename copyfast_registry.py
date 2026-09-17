@@ -555,6 +555,7 @@ def allowed_paths() -> set[str]:
         "/campaigns",
         "/calendar",
         "/approvals",
+        "/wallet/history",
     }
     for item in ALL_FEATURES:
         result.add(item.route.split("?", 1)[0])

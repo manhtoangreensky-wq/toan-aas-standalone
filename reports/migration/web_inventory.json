@@ -7984,7 +7984,7 @@
         "copyfast_projects.py",
         "copyfast_prompt_library.py"
       ],
-      "occurrences": 954,
+      "occurrences": 958,
       "provider": "PayOS"
     },
     {
@@ -14646,7 +14646,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 225,
   "source_files_scanned": 225,
-  "source_fingerprint_sha256": "82e1ef94c3ec09b82aafee0fd8718cab447ae62f89dcee0a30d9dfd8bc9b894c",
+  "source_fingerprint_sha256": "6093280a2d12d681fafd3b9807cf83b2e488a9a7e978a2ad109277d9b5b6469d",
   "source_root": "repository-root",
   "ui_path_references": [
     {
