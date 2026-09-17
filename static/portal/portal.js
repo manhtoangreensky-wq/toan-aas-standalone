@@ -30146,7 +30146,40 @@
         "Bảng giá và gói cước do Core Bridge canonical quản trị; Web hiển thị bảng giá chuẩn thời gian thực."
       ));
     }
-    if (["providers", "provider-cost", "features", "freezes", "promos"].includes(module)) {
+    if (module === "providers") {
+      return surface(renderRowsTable(
+        ["Mã Provider", "Nhà cung cấp / Phân loại", "Capabilities", "Cấu hình", "Khả dụng", "Sức khỏe", "Điều phối", "Cập nhật", "Thao tác"],
+        rows,
+        (item) => {
+          const configuredBadge = item.configured ? '<span class="portal-badge" data-status="ready">Đã cấu hình</span>' : '<span class="portal-badge" data-status="guarded">Chưa cấu hình</span>';
+          const availableBadge = item.available ? '<span class="portal-badge" data-status="ready">Khả dụng</span>' : '<span class="portal-badge" data-status="disabled">Không khả dụng</span>';
+          let healthBadge = '<span class="portal-badge" data-status="archived">Unknown</span>';
+          if (item.health_state === "HEALTHY") {
+            healthBadge = '<span class="portal-badge" data-status="ready">Healthy</span>';
+          } else if (item.health_state === "DEGRADED") {
+            healthBadge = '<span class="portal-badge" data-status="guarded">Degraded</span>';
+          } else if (item.health_state === "UNAVAILABLE") {
+            healthBadge = '<span class="portal-badge" data-status="error">Unavailable</span>';
+          }
+          const routingBadge = item.routing_eligible ? '<span class="portal-badge" data-status="ready">Đủ điều kiện</span>' : '<span class="portal-badge" data-status="disabled">Không điều phối</span>';
+          const caps = Array.isArray(item.capabilities)
+            ? item.capabilities.map((c) => safeText(typeof c === "object" && c ? c.name : c)).filter(Boolean).join(", ")
+            : "—";
+          return `<td><code>${safeText(item.provider_id || item.id || "—")}</code></td>`
+            + `<td><strong>${safeText(item.display_name || item.name || item.id || "—")}</strong><br><small style="color:var(--portal-muted,#94a3b8);">${safeText(item.provider_kind || item.kind || "commercial_api")}</small></td>`
+            + `<td><small>${caps || "—"}</small></td>`
+            + `<td>${configuredBadge}</td>`
+            + `<td>${availableBadge}</td>`
+            + `<td>${healthBadge}</td>`
+            + `<td>${routingBadge}</td>`
+            + `<td><small>${safeText(item.last_observed_at || item.updated_at || "—")}</small></td>`
+            + `<td><button class="portal-button portal-button--quiet portal-button--small" type="button" disabled title="Thao tác provider do Bot Core canonical quản trị; Web chỉ đọc.">Chi tiết</button></td>`;
+        },
+        "Chưa có nhà cung cấp được cấp",
+        "Trạng thái provider do Bot Core canonical phát hành; Web không thực hiện thao tác provider trực tiếp."
+      ));
+    }
+    if (["provider-cost", "features", "freezes", "promos"].includes(module)) {
       return surface(renderRowsTable([adminGenericText("providerFeature.column.feature", "Tính năng"), adminGenericText("providerFeature.column.status", "Trạng thái"), adminGenericText("providerFeature.column.reason", "Lý do đã rút gọn"), adminGenericText("providerFeature.column.updatedAt", "Cập nhật")], rows, (item) => `<td>${safeText(item.feature || item.id || "—")}</td><td>${adminDataStatusCell(jobStatus(item))}</td><td>${safeText(item.reason || "—")}</td><td>${safeText(item.updated_at || "—")}</td>`, adminGenericText("providerFeature.emptyTitle", "Chờ trạng thái canonical"), adminGenericText("providerFeature.emptyBody", "Feature/provider readiness chỉ đọc. Freeze, giá và provider operation không được thực hiện từ UI.")));
     }
     if (["tickets", "support"].includes(module)) {
