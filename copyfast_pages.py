@@ -33,6 +33,7 @@ SUBTITLE_STUDIO_PATH = re.compile(r"^/subtitle-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1
 IMAGE_STUDIO_PATH = re.compile(r"^/image-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 IMAGE_HUB_PATH = re.compile(r"^/image-hub/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 JOB_DETAIL_PATH = re.compile(r"^/jobs/[A-Za-z0-9._:-]{1,160}$")
+ASSET_DETAIL_PATH = re.compile(r"^/assets/[A-Za-z0-9._:-]{1,160}$")
 TICKET_DETAIL_PATH = re.compile(r"^/tickets/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 DOCUMENT_WORKSPACE_PATH = re.compile(r"^/document-workspace/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 CHAT_WORKSPACE_PATH = re.compile(r"^/chat/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
@@ -181,6 +182,7 @@ _PORTAL_SHELL_TITLES = {
     "/approvals": {"vi": "Self-review Queue · TOAN AAS", "en": "Self-review Queue · TOAN AAS", "zh": "自审队列 · TOAN AAS"},
     "/operations": {"vi": "Operations Autopilot", "en": "Operations Autopilot", "zh": "Operations Autopilot"},
     "/admin/operations": {"vi": "Operations Autopilot", "en": "Operations Autopilot", "zh": "Operations Autopilot"},
+    "/history": {"vi": "Lịch sử & Nhật ký · TOAN AAS", "en": "History & Logs · TOAN AAS", "zh": "历史与日志 · TOAN AAS"},
 }
 
 # Route-specific descriptions are intentionally limited to reviewed, public
@@ -201,6 +203,11 @@ _PORTAL_SHELL_DESCRIPTIONS = {
         "vi": "Lịch sử biến động số dư và giao dịch nạp Xu thuộc tài khoản Web đã đăng nhập.",
         "en": "Transaction and credit history for the authenticated Web account.",
         "zh": "已登录 Web 账户的积分流水和充值记录。",
+    },
+    "/history": {
+        "vi": "Trung tâm điều hướng lịch sử: Công việc tác vụ, biến động số dư Xu ví, hoạt động tài khoản và lịch sử tạo ảnh.",
+        "en": "Unified history navigation: Task jobs, credit transactions, account activity, and image generation history.",
+        "zh": "统一历史记录导航：任务作业、积分变动、账户活动与生图历史。",
     },
     "/membership": {
         "vi": "Xem quyền lợi và trạng thái gói do nguồn canonical xác minh; Web không tự cấp tier hoặc thay đổi Xu.",
@@ -336,6 +343,10 @@ def _title_for(path: str) -> str:
         return "Memory Center"
     if normalized == "/reminders":
         return "Nhắc việc"
+    if normalized == "/history":
+        return "Lịch sử & Nhật ký"
+    if normalized.startswith("/assets/"):
+        return "Chi tiết Asset"
     if normalized == "/prompt-library/new":
         return "Template Prompt mới"
     if normalized == "/content-studio/new":
@@ -519,7 +530,7 @@ def render_portal(path: str, *, interface_locale: str | None = None) -> HTMLResp
     if normalized.startswith("/tickets/") and not TICKET_DETAIL_PATH.fullmatch(normalized):
         raise HTTPException(status_code=404, detail="Trang không tồn tại")
     is_starter_kit_detail = normalized.startswith("/starter-kits/") and normalized.removeprefix("/starter-kits/") in STARTER_KIT_KEYS
-    if normalized not in allowed_paths() and normalized not in {"/chat/new", "/analytics/new", "/workboard/new", "/content/handoffs/new", "/crm/leads/new", "/audio-hub/new", "/image-hub/new", CAMPAIGN_CREATE_PATH, PROJECT_CREATE_PATH, "/starter-kits"} and not is_starter_kit_detail and not JOB_DETAIL_PATH.fullmatch(normalized) and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not AUDIO_HUB_PATH.fullmatch(normalized) and not IMAGE_HUB_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not SUBTITLE_STUDIO_PATH.fullmatch(normalized) and not IMAGE_STUDIO_PATH.fullmatch(normalized) and not DOCUMENT_WORKSPACE_PATH.fullmatch(normalized) and not CHAT_WORKSPACE_PATH.fullmatch(normalized) and not ANALYTICS_WORKSPACE_PATH.fullmatch(normalized) and not WORKBOARD_PATH.fullmatch(normalized) and not CONTENT_HANDOFF_PATH.fullmatch(normalized) and not PARTNER_CRM_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/wallet", "/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/document-workspace", "/support", "/tickets", "/admin", "/features", "/content", "/crm", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/subtitle-studio", "/image-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
+    if normalized not in allowed_paths() and normalized not in {"/chat/new", "/analytics/new", "/workboard/new", "/content/handoffs/new", "/crm/leads/new", "/audio-hub/new", "/image-hub/new", CAMPAIGN_CREATE_PATH, PROJECT_CREATE_PATH, "/starter-kits"} and not is_starter_kit_detail and not JOB_DETAIL_PATH.fullmatch(normalized) and not ASSET_DETAIL_PATH.fullmatch(normalized) and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not AUDIO_HUB_PATH.fullmatch(normalized) and not IMAGE_HUB_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not SUBTITLE_STUDIO_PATH.fullmatch(normalized) and not IMAGE_STUDIO_PATH.fullmatch(normalized) and not DOCUMENT_WORKSPACE_PATH.fullmatch(normalized) and not CHAT_WORKSPACE_PATH.fullmatch(normalized) and not ANALYTICS_WORKSPACE_PATH.fullmatch(normalized) and not WORKBOARD_PATH.fullmatch(normalized) and not CONTENT_HANDOFF_PATH.fullmatch(normalized) and not PARTNER_CRM_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/assets", "/wallet", "/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/document-workspace", "/support", "/tickets", "/admin", "/features", "/content", "/crm", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/subtitle-studio", "/image-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
         raise HTTPException(status_code=404, detail="Trang không tồn tại")
     locale = _interface_locale(interface_locale)
     motion_route = "dashboard" if normalized == "/dashboard" else "default"
