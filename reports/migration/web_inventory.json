@@ -6477,7 +6477,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 171,
+      "line": 175,
       "name": "ADMIN_ID"
     },
     {
@@ -6672,7 +6672,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 329,
+      "line": 338,
       "name": "INTERNAL_MANUAL_ADMIN_TOKEN"
     },
     {
@@ -6702,7 +6702,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 171,
+      "line": 175,
       "name": "OWNER_IDS"
     },
     {
@@ -14646,7 +14646,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 225,
   "source_files_scanned": 225,
-  "source_fingerprint_sha256": "0855d16e2c8b9c5af0db158d2348c8ee7239ab02d200295365a362228d8a2e8a",
+  "source_fingerprint_sha256": "0a9ba7ac85e7c7972cc789da15a0d03193c4e337f1929547da957ee516f9c863",
   "source_root": "repository-root",
   "ui_path_references": [
     {
@@ -14866,7 +14866,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 30879,
+      "line": 30885,
       "path": "/features"
     },
     {
