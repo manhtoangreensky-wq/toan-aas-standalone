@@ -366,4 +366,3 @@ def test_no_hardcoded_fake_balances_in_portal_js():
     content = portal_js_path.read_text(encoding="utf-8")
     assert "{ balance_xu: 100 }" not in content
     assert "balance_xu: 100," not in content
-
