@@ -20744,7 +20744,7 @@
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Trình Làm Việc →</span>
-            <span style="font-size:11px; color:var(--portal-muted);">Theo bảng giá canonical</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Bảng giá chính thức</span>
           </div>
         </a>
 
@@ -20761,7 +20761,7 @@
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Tạo Giọng Đọc →</span>
-            <span style="font-size:11px; color:var(--portal-muted);">Theo bảng giá canonical</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Bảng giá chính thức</span>
           </div>
         </a>
 
@@ -20778,7 +20778,7 @@
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Sáng Tác Nhạc →</span>
-            <span style="font-size:11px; color:var(--portal-muted);">Theo bảng giá canonical</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Bảng giá chính thức</span>
           </div>
         </a>
 
@@ -20795,7 +20795,7 @@
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Sản Xuất Video →</span>
-            <span style="font-size:11px; color:var(--portal-muted);">Theo bảng giá canonical</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Bảng giá chính thức</span>
           </div>
         </a>
 
@@ -20812,7 +20812,7 @@
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Tạo Ảnh Nghệ Thuật →</span>
-            <span style="font-size:11px; color:var(--portal-muted);">Theo bảng giá canonical</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Bảng giá chính thức</span>
           </div>
         </a>
 
@@ -20841,12 +20841,12 @@
             <span style="padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; background:color-mix(in srgb, var(--portal-context) 14%, transparent); color:var(--portal-context); border:1px solid color-mix(in srgb, var(--portal-context) 28%, transparent);">⚡ Không gian hội thoại</span>
           </div>
           <div>
-            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">AI Chat Workspace</h3>
-            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Tổ chức hội thoại, context card, ghi chú và lịch sử revision trong không gian riêng tư của Web account.</p>
+            <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Hội thoại & Soạn thảo AI</h3>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Tổ chức hội thoại, thẻ ngữ cảnh, ghi chú và các mốc lưu trữ trong không gian riêng tư của bạn.</p>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
-            <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Workspace →</span>
-            <span style="font-size:11px; color:var(--portal-muted);">Biên tập riêng tư</span>
+            <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Hội Thoại →</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Soạn thảo riêng tư</span>
           </div>
         </a>
 
@@ -20859,11 +20859,11 @@
           </div>
           <div>
             <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Ví Xu & Nạp Tiền VietQR PayOS</h3>
-            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Nạp Xu qua VietQR PayOS (VCB, MB, Techcombank) và đối soát tự động theo catalog nạp canonical.</p>
+            <p style="font-size:13px; color:var(--portal-muted); margin:0 0 16px; line-height:1.5;">Nạp Xu qua VietQR PayOS (VCB, MB, Techcombank) và đối soát tự động theo danh mục nạp.</p>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:12px;">
             <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Nạp Xu Ngay →</span>
-            <span style="font-size:11px; color:var(--portal-muted);">Theo catalog nạp canonical</span>
+            <span style="font-size:11px; color:var(--portal-muted);">Theo danh mục nạp</span>
           </div>
         </a>
       </div>
