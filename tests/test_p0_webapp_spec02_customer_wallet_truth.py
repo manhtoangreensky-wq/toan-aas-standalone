@@ -634,3 +634,276 @@ def test_portal_js_no_balance_derived_paid_vnd():
     content = portal_js_path.read_text(encoding="utf-8")
     assert "balance_xu * 100" not in content
     assert "balance_xu*100" not in content
+
+
+def test_pricing_endpoint_is_actorless(tmp_path, monkeypatch):
+    """P0.WEBAPP.WEB02: /api/v1/pricing must send actorless HMAC and no user_id in query."""
+    import hashlib
+    import hmac
+    import httpx
+
+    client, session_db, system_db = _setup_app_client(tmp_path, monkeypatch)
+    import copyfast_bridge
+
+    monkeypatch.setenv("CORE_BRIDGE_BASE_URL", "http://127.0.0.1:8080")
+    monkeypatch.setenv("CORE_BRIDGE_TOKEN", "test-bridge-token")
+    monkeypatch.setenv("CORE_BRIDGE_HMAC_SECRET", "test-bridge-secret")
+
+    captured_requests = []
+
+    async def mock_bot_handler(request: httpx.Request) -> httpx.Response:
+        captured_requests.append(request)
+        sig_header = request.headers.get("X-TOAN-AAS-Signature", "")
+        ts_header = request.headers.get("X-TOAN-AAS-Timestamp", "")
+        req_id_header = request.headers.get("X-TOAN-AAS-Request-ID", "")
+        path = request.url.path
+
+        assert path == "/internal/v1/pricing"
+        # Bot catalog contract: actorless HMAC signature
+        digest = hashlib.sha256(request.content or b"").hexdigest()
+        expected_msg = f"{ts_header}.{req_id_header}.GET.{path}.{digest}".encode("utf-8")
+        expected_sig = hmac.new(b"test-bridge-secret", expected_msg, hashlib.sha256).hexdigest()
+
+        if not hmac.compare_digest(sig_header, expected_sig):
+            return httpx.Response(
+                401,
+                json={"detail": {"ok": False, "error_code": "SIGNATURE_INVALID", "message": "Signature invalid"}},
+            )
+        return httpx.Response(
+            200,
+            json={"ok": True, "status": "read_only", "data": {"image_tiers": [{"name": "Standard", "cost_xu": 10}]}},
+        )
+
+    mock_transport = httpx.MockTransport(mock_bot_handler)
+    real_client_init = copyfast_bridge.CoreBridgeClient.__init__
+
+    def patched_init(self, *args, **kwargs):
+        kwargs["transport"] = mock_transport
+        real_client_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(copyfast_bridge.CoreBridgeClient, "__init__", patched_init)
+
+    with client:
+        _register_and_login(client, CUSTOMER_EMAIL, CUSTOMER_PASSWORD)
+        _link_telegram(session_db, CUSTOMER_EMAIL, TELEGRAM_USER_ID)
+
+        res = client.get("/api/v1/pricing")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["ok"] is True
+        assert data["status"] == "read_only"
+
+        assert len(captured_requests) == 1
+        req = captured_requests[0]
+        # Exact requirements: actorless
+        assert "x-toan-aas-actor-id" not in req.headers
+        assert "user_id=" not in str(req.url)
+        # Server-to-server HMAC headers preserved
+        assert req.headers.get("Authorization") == "Bearer test-bridge-token"
+        assert req.headers.get("X-TOAN-AAS-Timestamp")
+        assert req.headers.get("X-TOAN-AAS-Request-ID")
+        assert req.headers.get("X-TOAN-AAS-Signature")
+
+
+def test_packages_endpoint_is_actorless(tmp_path, monkeypatch):
+    """P0.WEBAPP.WEB02: /api/v1/packages must send actorless HMAC and no user_id in query."""
+    import hashlib
+    import hmac
+    import httpx
+
+    client, session_db, system_db = _setup_app_client(tmp_path, monkeypatch)
+    import copyfast_bridge
+
+    monkeypatch.setenv("CORE_BRIDGE_BASE_URL", "http://127.0.0.1:8080")
+    monkeypatch.setenv("CORE_BRIDGE_TOKEN", "test-bridge-token")
+    monkeypatch.setenv("CORE_BRIDGE_HMAC_SECRET", "test-bridge-secret")
+
+    captured_requests = []
+
+    async def mock_bot_handler(request: httpx.Request) -> httpx.Response:
+        captured_requests.append(request)
+        sig_header = request.headers.get("X-TOAN-AAS-Signature", "")
+        ts_header = request.headers.get("X-TOAN-AAS-Timestamp", "")
+        req_id_header = request.headers.get("X-TOAN-AAS-Request-ID", "")
+        path = request.url.path
+
+        assert path == "/internal/v1/packages"
+        # Bot catalog contract: actorless HMAC signature
+        digest = hashlib.sha256(request.content or b"").hexdigest()
+        expected_msg = f"{ts_header}.{req_id_header}.GET.{path}.{digest}".encode("utf-8")
+        expected_sig = hmac.new(b"test-bridge-secret", expected_msg, hashlib.sha256).hexdigest()
+
+        if not hmac.compare_digest(sig_header, expected_sig):
+            return httpx.Response(
+                401,
+                json={"detail": {"ok": False, "error_code": "SIGNATURE_INVALID", "message": "Signature invalid"}},
+            )
+        return httpx.Response(
+            200,
+            json={"ok": True, "status": "read_only", "data": {"packages": [{"code": "PKG_1", "xu": 100}]}},
+        )
+
+    mock_transport = httpx.MockTransport(mock_bot_handler)
+    real_client_init = copyfast_bridge.CoreBridgeClient.__init__
+
+    def patched_init(self, *args, **kwargs):
+        kwargs["transport"] = mock_transport
+        real_client_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(copyfast_bridge.CoreBridgeClient, "__init__", patched_init)
+
+    with client:
+        _register_and_login(client, CUSTOMER_EMAIL, CUSTOMER_PASSWORD)
+        _link_telegram(session_db, CUSTOMER_EMAIL, TELEGRAM_USER_ID)
+
+        res = client.get("/api/v1/packages")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["ok"] is True
+        assert data["status"] == "read_only"
+
+        assert len(captured_requests) == 1
+        req = captured_requests[0]
+        # Exact requirements: actorless
+        assert "x-toan-aas-actor-id" not in req.headers
+        assert "user_id=" not in str(req.url)
+        # Server-to-server HMAC headers preserved
+        assert req.headers.get("Authorization") == "Bearer test-bridge-token"
+        assert req.headers.get("X-TOAN-AAS-Timestamp")
+        assert req.headers.get("X-TOAN-AAS-Request-ID")
+        assert req.headers.get("X-TOAN-AAS-Signature")
+
+
+def test_wallet_endpoints_remain_actor_bound(tmp_path, monkeypatch):
+    """P0.WEBAPP.WEB02: /api/v1/wallet and /api/v1/wallet/history remain actor-bound."""
+    import hashlib
+    import hmac
+    import httpx
+
+    client, session_db, system_db = _setup_app_client(tmp_path, monkeypatch)
+    import copyfast_bridge
+
+    monkeypatch.setenv("CORE_BRIDGE_BASE_URL", "http://127.0.0.1:8080")
+    monkeypatch.setenv("CORE_BRIDGE_TOKEN", "test-bridge-token")
+    monkeypatch.setenv("CORE_BRIDGE_HMAC_SECRET", "test-bridge-secret")
+
+    captured_requests = []
+
+    async def mock_bot_handler(request: httpx.Request) -> httpx.Response:
+        captured_requests.append(request)
+        sig_header = request.headers.get("X-TOAN-AAS-Signature", "")
+        ts_header = request.headers.get("X-TOAN-AAS-Timestamp", "")
+        req_id_header = request.headers.get("X-TOAN-AAS-Request-ID", "")
+        actor_header = request.headers.get("X-TOAN-AAS-Actor-ID", "")
+        path = request.url.path
+
+        # Bot wallet contract: actor-bound HMAC signature
+        digest = hashlib.sha256(request.content or b"").hexdigest()
+        expected_msg = f"{ts_header}.{req_id_header}.GET.{path}.{digest}.{actor_header}".encode("utf-8")
+        expected_sig = hmac.new(b"test-bridge-secret", expected_msg, hashlib.sha256).hexdigest()
+
+        if not hmac.compare_digest(sig_header, expected_sig):
+            return httpx.Response(
+                401,
+                json={"detail": {"ok": False, "error_code": "SIGNATURE_INVALID", "message": "Signature invalid"}},
+            )
+
+        if path == "/internal/v1/wallet":
+            return httpx.Response(
+                200,
+                json={"ok": True, "status": "read_only", "data": {"balance_xu": 150, "total_spent_xu": 0, "is_vip": False, "source": "canonical_ledger", "reconciliation": {"reconciled": True, "status": "reconciled", "snapshot_credits": 150, "ledger_credits": 150, "discrepancy": 0}}},
+            )
+        if path == "/internal/v1/wallet/history":
+            return httpx.Response(
+                200,
+                json={"ok": True, "status": "read_only", "data": {"items": [{"created_at": "2026-09-01", "event_type": "trial_grant", "delta_xu": 150, "balance_after_xu": 150}]}},
+            )
+        return httpx.Response(404, json={"ok": False})
+
+    mock_transport = httpx.MockTransport(mock_bot_handler)
+    real_client_init = copyfast_bridge.CoreBridgeClient.__init__
+
+    def patched_init(self, *args, **kwargs):
+        kwargs["transport"] = mock_transport
+        real_client_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(copyfast_bridge.CoreBridgeClient, "__init__", patched_init)
+
+    with client:
+        _register_and_login(client, CUSTOMER_EMAIL, CUSTOMER_PASSWORD)
+        _link_telegram(session_db, CUSTOMER_EMAIL, TELEGRAM_USER_ID)
+
+        # 1. Wallet endpoint
+        res_wallet = client.get("/api/v1/wallet")
+        assert res_wallet.status_code == 200
+        data_wallet = res_wallet.json()
+        assert data_wallet["ok"] is True
+        assert data_wallet["data"]["balance_xu"] == 150
+
+        # 2. Wallet history endpoint
+        res_history = client.get("/api/v1/wallet/history")
+        assert res_history.status_code == 200
+        data_history = res_history.json()
+        assert data_history["ok"] is True
+
+        assert len(captured_requests) == 2
+        for req in captured_requests:
+            # Must remain actor-bound
+            assert req.headers.get("x-toan-aas-actor-id") == TELEGRAM_USER_ID
+            assert f"user_id={TELEGRAM_USER_ID}" in str(req.url)
+
+
+def test_admin_routes_preserve_admin_actor_gate(tmp_path, monkeypatch):
+    """P0.WEBAPP.WEB02: Admin routes preserve actor identity in _bridge()."""
+    client, session_db, system_db = _setup_app_client(tmp_path, monkeypatch)
+    import copyfast_api
+
+    captured_bridge_calls = []
+
+    async def mock_bridge_request(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        captured_bridge_calls.append({
+            "method": method,
+            "path": path,
+            "actor_id": actor_id,
+            "params": params,
+        })
+        return {"ok": True, "status": "read_only", "data": {}}
+
+    monkeypatch.setattr(copyfast_api, "bridge_request", mock_bridge_request)
+
+    fake_request = type("FakeReq", (), {"headers": {}})()
+    admin_account = {"canonical_user_id": TELEGRAM_USER_ID, "role": "admin"}
+
+    import asyncio
+    asyncio.run(
+        copyfast_api._bridge(
+            "GET",
+            "/internal/v1/admin/overview",
+            account=admin_account,
+            request=fake_request,
+        )
+    )
+
+    assert len(captured_bridge_calls) == 1
+    call = captured_bridge_calls[0]
+    assert call["actor_id"] == TELEGRAM_USER_ID
+    assert call["params"]["user_id"] == TELEGRAM_USER_ID
+
+
+def test_fail_closed_if_bridge_secrets_missing(tmp_path, monkeypatch):
+    """P0.WEBAPP.WEB02: Fail closed if bridge secrets / base URL are unconfigured."""
+    client, session_db, system_db = _setup_app_client(tmp_path, monkeypatch)
+
+    monkeypatch.delenv("CORE_BRIDGE_BASE_URL", raising=False)
+    monkeypatch.delenv("CORE_BRIDGE_TOKEN", raising=False)
+    monkeypatch.delenv("CORE_BRIDGE_HMAC_SECRET", raising=False)
+
+    with client:
+        _register_and_login(client, CUSTOMER_EMAIL, CUSTOMER_PASSWORD)
+        _link_telegram(session_db, CUSTOMER_EMAIL, TELEGRAM_USER_ID)
+
+        res = client.get("/api/v1/pricing")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["ok"] is False
+        assert data["error_code"] == "CORE_BRIDGE_NOT_CONFIGURED"
