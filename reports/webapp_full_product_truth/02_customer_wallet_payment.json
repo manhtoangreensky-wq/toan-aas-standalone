@@ -1,0 +1,105 @@
+{
+  "spec": "SPEC-02 — CUSTOMER WALLET, BILLING & TOPUP TRUTH",
+  "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
+  "branch": "feat/p0-webapp-spec02-customer-wallet-billing-topup",
+  "status": "PASS",
+  "acceptance": {
+    "DISPLAYED_BALANCE_XU_MATCHES_CANONICAL": "YES",
+    "NO_FAKE_ZERO": "YES",
+    "NO_LOCALSTORAGE_BALANCE": "YES",
+    "NO_OPTIMISTIC_CREDIT": "YES",
+    "NO_UI_APPROVED_BEFORE_LEDGER": "YES",
+    "NO_FAKE_RECEIPT": "YES",
+    "CANONICAL_PRICING_CATALOG_AVAILABLE": "YES",
+    "MANUAL_TOPUP_IDEMPOTENCY_ENFORCED": "YES"
+  },
+  "invariants_enforced": [
+    "DISPLAYED_BALANCE_XU == CANONICAL_BOT_WALLET_BALANCE",
+    "0 != NO_DATA != UNAVAILABLE != ERROR != STALE",
+    "FORBIDDEN: fake zero, localStorage balance, optimistic credit, UI approved before ledger, fake receipt, HTTP 200 interpreted as money success"
+  ],
+  "defect_remediation": {
+    "defect_id": "DEFECT-SPEC00-002",
+    "summary": "Displayed wallet balance and ledger truth discrepancy",
+    "reproduction": "Web called /api/v1/wallet which dispatched to /internal/v1/wallet on Bot port 8080. Bot did not expose read endpoints for /internal/v1/wallet -> returned 404 -> Web App returned CORE_BRIDGE_NOT_CONFIGURED. Portal.js fell back to hardcoded { balance_xu: 100 }.",
+    "remediation": [
+      "Added direct read-through projection in copyfast_api.py against shared canonical SQLite database (/data/toandaas_system.db) querying users.credits and credit_events ledger.",
+      "Explicitly distinguished unlinked accounts: returns ok=False, status_name='unlinked', error_code='ACCOUNT_TELEGRAM_UNLINKED' (never fake 0).",
+      "Explicitly distinguished database failure: returns ok=False, status_name='guarded', error_code='WALLET_DATABASE_UNAVAILABLE' (never fake 0).",
+      "Catalog endpoints /api/v1/pricing and /api/v1/packages provide canonical catalog fallback when bridge is unavailable, without requiring linked Telegram identity.",
+      "Preserved canonical @router.get('/payments/{payment_id}') payment_status read projection without altering the 724 route contract.",
+      "Aligned db.py schema: users.total_spent and payos_orders.payment_type + package_id columns.",
+      "Purged hardcoded mock { balance_xu: 100 } fallbacks from static/portal/portal.js (headerWallet, renderMembership, accountWallet, executeCopilotQuery)."
+    ],
+    "status": "REPAIRED"
+  },
+  "verification_suite": {
+    "file": "tests/test_p0_webapp_spec02_customer_wallet_truth.py",
+    "passed": 8,
+    "failed": 0,
+    "tests": [
+      {
+        "name": "test_first_red_displayed_wallet_balance_and_ledger_truth",
+        "verifies": "Canonical wallet balance matching users.credits, ledger reconciliation with credit_events, refresh behavior",
+        "result": "PASSED"
+      },
+      {
+        "name": "test_unlinked_account_does_not_return_fake_zero",
+        "verifies": "Unlinked accounts return ACCOUNT_TELEGRAM_UNLINKED and status_name='unlinked', not fake 0",
+        "result": "PASSED"
+      },
+      {
+        "name": "test_database_unavailable_does_not_return_fake_zero",
+        "verifies": "Database disconnection returns WALLET_DATABASE_UNAVAILABLE and status_name='guarded', not fake 0",
+        "result": "PASSED"
+      },
+      {
+        "name": "test_pricing_and_packages_availability",
+        "verifies": "Pricing and packages endpoints return canonical data without bridge failure or auth linkage error",
+        "result": "PASSED"
+      },
+      {
+        "name": "test_manual_topup_idempotency_and_no_optimistic_credit",
+        "verifies": "Idempotent replay returns same ticket without duplicate ledger mutation; conflicting key yields 409; pending state does not credit balance optimistically",
+        "result": "PASSED"
+      },
+      {
+        "name": "test_wallet_refresh_reconciles_ledger_and_balance",
+        "verifies": "Subsequent credit event updates canonical balance and appears in history",
+        "result": "PASSED"
+      },
+      {
+        "name": "test_payos_order_validation_and_status",
+        "verifies": "PayOS checkout creates valid order record with canonical schema and /status alias works",
+        "result": "PASSED"
+      },
+      {
+        "name": "test_no_hardcoded_fake_balances_in_portal_js",
+        "verifies": "Zero occurrences of fake mock balance 100 in portal.js runtime",
+        "result": "PASSED"
+      }
+    ]
+  },
+  "regressions": [
+    {
+      "suite": "tests/test_p0_webapp_spec01_auth_rbac_truth.py",
+      "passed": 7,
+      "failed": 0
+    },
+    {
+      "suite": "tests/test_p0_manual_topup_customer_flow.py",
+      "passed": 10,
+      "failed": 0
+    },
+    {
+      "suite": "tests/test_p0_manual_topup_admin_queue.py",
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "suite": "tests/test_migration_audit.py",
+      "passed": 110,
+      "failed": 0
+    }
+  ]
+}

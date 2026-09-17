@@ -1,0 +1,50 @@
+{
+  "summary": {
+    "CURRENT_MAIN_SHA": "4186c03a25092a3408411b171bdf5a1c401634d6",
+    "WEB_RUNTIME_SHA": "4186c03a25092a3408411b171bdf5a1c401634d6",
+    "SOURCE_RUNTIME_MATCH": "YES",
+    "TOTAL_PUBLIC_ROUTES": 1,
+    "TOTAL_CUSTOMER_ROUTES": 172,
+    "TOTAL_ADMIN_ROUTES": 48,
+    "TOTAL_API_ROUTES": 618,
+    "CORE_SURFACES": 179,
+    "PLACEHOLDER_SURFACES": 22,
+    "BROKEN_SURFACES": 29,
+    "DUPLICATE_SURFACES": 6,
+    "REAL_DATA_SURFACES": 4,
+    "HARDCODED_DATA_SURFACES": 198,
+    "DEMO_DATA_SURFACES": 0,
+    "UNKNOWN_DATA_SURFACES": 215,
+    "FIRST_RED": "ADMIN_MODULES_DISCONNECTED_FROM_BOT_SERVICE: 32 admin management pages call /admin/modules/{module} which does not exist on the Bot Core Bridge (8080).",
+    "HIGHEST_RISK_FAKE_DATA": "CUSTOMER_WALLET_BALANCE: The frontend displays wallet balance and quota as 'guarded' or zero when Core Bridge is unlinked, potentially misleading users about their actual ledger balance.",
+    "HIGHEST_RISK_FAKE_SUCCESS": "PROVIDER_MONITORING_FAKE_SUCCESS: /admin/providers and /admin/workers claim to show infrastructure and provider cost, but backend returns guarded compatibility envelopes with empty data arrays.",
+    "NEXT_SPEC": "SPEC-01 — AUTH / SESSION / RBAC"
+  },
+  "database_tables_count": 168,
+  "proven_tables": [
+    "web_accounts",
+    "web_sessions",
+    "web_manual_topup_requests",
+    "web_manual_topup_decision_receipts",
+    "web_manual_topup_approve_receipts",
+    "web_manual_topup_credit_operations",
+    "web_audit_events",
+    "web_asset_files",
+    "web_workspace_drafts"
+  ],
+  "unproven_bridges": [
+    "/internal/v1/admin/modules/users",
+    "/internal/v1/admin/modules/wallet",
+    "/internal/v1/admin/modules/revenue",
+    "/internal/v1/admin/modules/refunds",
+    "/internal/v1/admin/modules/jobs",
+    "/internal/v1/admin/modules/providers",
+    "/internal/v1/admin/modules/provider-cost",
+    "/internal/v1/admin/modules/workers",
+    "/internal/v1/admin/modules/features",
+    "/internal/v1/admin/modules/freezes",
+    "/internal/v1/admin/modules/pricing",
+    "/internal/v1/admin/modules/packages",
+    "/internal/v1/admin/modules/promos"
+  ]
+}

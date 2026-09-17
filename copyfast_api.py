@@ -447,7 +447,7 @@ FEATURE_RESPONSE_PRIVATE_KEY_PARTS = (
 )
 _PUBLIC_BRIDGE_STATUSES = frozenset({
     "draft", "awaiting_confirm", "queued", "processing", "completed", "failed", "failed_no_charge",
-    "guarded", "cancelled", "refunded", "read_only",
+    "guarded", "cancelled", "refunded", "read_only", "unverified", "unlinked",
 })
 _PUBLIC_BRIDGE_MESSAGES = {
     "draft": "Bản nháp canonical đã được cập nhật.",
@@ -461,6 +461,8 @@ _PUBLIC_BRIDGE_MESSAGES = {
     "cancelled": "Yêu cầu đã được canonical hủy.",
     "refunded": "Core Bridge đã ghi nhận trạng thái hoàn Xu canonical.",
     "read_only": "Dữ liệu canonical chỉ được hiển thị ở chế độ đọc.",
+    "unverified": "Tài khoản Telegram chưa kích hoạt trong hệ thống Bot.",
+    "unlinked": "Tài khoản chưa liên kết Telegram.",
 }
 # Error codes produced inside this Web bridge client are already generic and
 # do not expose Bot implementation details. Any other code coming from an
@@ -469,6 +471,8 @@ _PUBLIC_BRIDGE_ERROR_CODES = frozenset({
     "CORE_BRIDGE_NOT_CONFIGURED", "CORE_BRIDGE_UNAVAILABLE", "CORE_BRIDGE_UNAUTHORIZED",
     "CORE_BRIDGE_FORBIDDEN", "CORE_BRIDGE_NOT_AVAILABLE", "CORE_BRIDGE_RATE_LIMITED",
     "CORE_BRIDGE_INVALID_RESPONSE",
+    "WALLET_LEDGER_UNRECONCILED", "BOT_USER_NOT_INITIALIZED", "ACCOUNT_TELEGRAM_UNLINKED",
+    "WALLET_DATABASE_UNAVAILABLE", "PRICING_CATALOG_UNAVAILABLE", "PACKAGES_CATALOG_UNAVAILABLE",
 })
 ADMIN_BRIDGE_MODULES = frozenset({
     "overview", "summary", "users", "user", "wallet", "payments", "topups", "revenue", "refunds",
@@ -1526,6 +1530,12 @@ def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: boo
         plan = _project_record(value.get("plan"), ("current_plan", "plan_name", "plan_status", "plan_expires_at", "plan_xu_remaining"))
         if plan:
             result["plan"] = plan
+        reconciliation = _project_record(
+            value.get("reconciliation"),
+            ("reconciled", "status", "snapshot_credits", "ledger_credits", "discrepancy"),
+        )
+        if reconciliation:
+            result["reconciliation"] = reconciliation
         return result
     if surface == "pricing":
         # The generic key redactor intentionally treats ``bill`` as private,
@@ -2963,7 +2973,10 @@ async def _bridge(
         return envelope(False, "Web App đang tạm khóa theo feature flag COPYFAST.", status_name="guarded", error_code="WEBAPP_COPYFAST_DISABLED")
     if path.startswith("/internal/v1/admin/") and not flags["admin_erp_enabled"]:
         return envelope(False, "Admin ERP trên Web đang tạm khóa theo feature flag.", status_name="guarded", error_code="WEBAPP_ADMIN_ERP_DISABLED")
-    user_id = _linked(account)
+    if path in {"/internal/v1/pricing", "/internal/v1/packages", "/internal/v1/features/status"} or path.startswith("/internal/v1/admin/"):
+        user_id = str(account.get("canonical_user_id") or "").strip()
+    else:
+        user_id = _linked(account)
     enriched = dict(payload or {})
     # The browser must never be able to choose the canonical target identity.
     # Do not use setdefault here: a forged outer payload could otherwise
@@ -4345,11 +4358,29 @@ async def account_activity(account: dict = Depends(require_account)):
 
 @router.get("/wallet")
 async def wallet(request: Request, account: dict = Depends(require_account)):
+    canonical_user_id = str(account.get("canonical_user_id") or "").strip()
+    if not canonical_user_id:
+        return envelope(
+            False,
+            "Tài khoản chưa liên kết Telegram. Vui lòng liên kết để xem số dư Xu.",
+            data=None,
+            status_name="unlinked",
+            error_code="ACCOUNT_TELEGRAM_UNLINKED",
+        )
     return await _bridge("GET", "/internal/v1/wallet", account=account, request=request)
 
 
 @router.get("/wallet/history")
 async def wallet_history(request: Request, account: dict = Depends(require_account)):
+    canonical_user_id = str(account.get("canonical_user_id") or "").strip()
+    if not canonical_user_id:
+        return envelope(
+            False,
+            "Tài khoản chưa liên kết Telegram.",
+            data={"items": []},
+            status_name="unlinked",
+            error_code="ACCOUNT_TELEGRAM_UNLINKED",
+        )
     response = await _bridge("GET", "/internal/v1/wallet/history", account=account, request=request)
     return _browser_safe_wallet_history_response(response)
 
@@ -5544,11 +5575,9 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
                         c = conn.cursor()
                         c.execute(
                             """INSERT INTO payos_orders
-                               (order_code, user_id, amount, xu, package_id, order_type, status,
-                                checkout_url, payment_link_id, currency, metadata_json, payment_type, created_at)
-                               VALUES (?, ?, ?, ?, ?, 'topup', 'PENDING', ?, ?, 'VND', ?, ?, ?)""",
-                            (str(order_code), owner_id, amount, expected_xu, package_id, checkout_url,
-                             payment_link_id, metadata, payment_type, now_text()),
+                               (order_code, user_id, amount, xu, status, created_at)
+                               VALUES (?, ?, ?, ?, 'PENDING', ?)""",
+                            (str(order_code), owner_id, amount, expected_xu, now_text()),
                         )
                         conn.commit()
                     except Exception:
@@ -5589,7 +5618,7 @@ async def payment_status(payment_id: str, request: Request, account: dict = Depe
         with closing(db_connect()) as conn:
             c = conn.cursor()
             c.execute(
-                "SELECT order_code, amount, xu, status, payment_type, created_at, paid_at "
+                "SELECT order_code, amount, xu, status, created_at, paid_at "
                 "FROM payos_orders WHERE order_code=? AND user_id=?",
                 (str(payment_id), owner_id),
             )
@@ -5617,9 +5646,8 @@ async def payment_status(payment_id: str, request: Request, account: dict = Depe
             "amount_vnd": row[1],
             "xu": row[2],
             "status": canonical_status,
-            "payment_type": row[4],
-            "created_at": row[5],
-            "paid_at": row[6],
+            "created_at": row[4],
+            "paid_at": row[5],
         },
         status_name=status_name,
     )

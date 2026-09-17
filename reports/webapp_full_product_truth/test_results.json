@@ -1,0 +1,49 @@
+{
+  "spec": "SPEC-01",
+  "timestamp": "2026-09-17T04:50:00+07:00",
+  "suites": [
+    {
+      "file": "tests/test_p0_webapp_spec01_auth_rbac_truth.py",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "duration_seconds": 13.42,
+      "status": "PASS"
+    },
+    {
+      "file": "tests/test_admin_portal_login_authority.py",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "duration_seconds": 4.05,
+      "status": "PASS"
+    },
+    {
+      "file": "tests/test_canonical_admin_owner_authority.py",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "duration_seconds": 0.73,
+      "status": "PASS"
+    },
+    {
+      "file": "tests/test_auth_provider_surface_contracts.py",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "duration_seconds": 3.62,
+      "status": "PASS"
+    },
+    {
+      "file": "tests/test_copyfast_auth_api.py",
+      "passed": 81,
+      "failed": 0,
+      "skipped": 0,
+      "duration_seconds": 140.32,
+      "status": "PASS"
+    }
+  ],
+  "total_passed": 99,
+  "total_failed": 0,
+  "overall_status": "PASS"
+}

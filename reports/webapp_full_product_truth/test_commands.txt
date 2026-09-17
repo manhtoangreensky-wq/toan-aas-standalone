@@ -1,0 +1,13 @@
+# SPEC-01 Test Commands
+python -m py_compile app.py copyfast_auth.py copyfast_api.py copyfast_db.py tests/test_p0_webapp_spec01_auth_rbac_truth.py
+python -m pytest tests/test_p0_webapp_spec01_auth_rbac_truth.py -v
+python -m pytest tests/test_admin_portal_login_authority.py -v
+python -m pytest tests/test_canonical_admin_owner_authority.py -v
+python -m pytest tests/test_auth_provider_surface_contracts.py -v
+python -m pytest tests/test_copyfast_auth_api.py -q
+
+# SPEC-02 Test Commands
+python -m py_compile copyfast_api.py db.py tests/test_p0_webapp_spec02_customer_wallet_truth.py
+python -m pytest tests/test_p0_webapp_spec02_customer_wallet_truth.py -v
+python -m pytest tests/test_p0_manual_topup_customer_flow.py -v
+python -m pytest tests/test_p0_manual_topup_admin_queue.py -v

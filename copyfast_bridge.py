@@ -146,7 +146,11 @@ class CoreBridgeClient:
     def _headers(self, method: str, path: str, body: bytes, *, request_id: str, actor_id: str = "", owner_id: str = "") -> dict[str, str]:
         timestamp = str(int(time.time()))
         digest = hashlib.sha256(body).hexdigest()
-        message = f"{timestamp}.{request_id}.{method.upper()}.{path}.{digest}".encode("utf-8")
+        clean_actor = str(actor_id or "").strip()
+        if clean_actor:
+            message = f"{timestamp}.{request_id}.{method.upper()}.{path}.{digest}.{clean_actor}".encode("utf-8")
+        else:
+            message = f"{timestamp}.{request_id}.{method.upper()}.{path}.{digest}".encode("utf-8")
         signature = hmac.new(self.hmac_secret.encode("utf-8"), message, hashlib.sha256).hexdigest()
         headers = {
             "Authorization": f"Bearer {self.token}",
@@ -155,8 +159,8 @@ class CoreBridgeClient:
             "X-TOAN-AAS-Signature": signature,
             "Accept": "application/json",
         }
-        if actor_id:
-            headers["X-TOAN-AAS-Actor-ID"] = actor_id[:128]
+        if clean_actor:
+            headers["X-TOAN-AAS-Actor-ID"] = clean_actor[:128]
         if owner_id:
             headers["X-TOAN-AAS-Telegram-User-ID"] = owner_id
         if body:
@@ -309,7 +313,12 @@ def _sanitize_envelope(value: dict, *, fallback_code: str | None = None) -> dict
     if not isinstance(safe_data, (dict, list)):
         safe_data = {}
     status_name = str(value.get("status") or "failed")
-    allowed_statuses = {"draft", "awaiting_confirm", "queued", "processing", "completed", "failed", "failed_no_charge", "guarded", "cancelled", "refunded", "read_only", "pending_admin_review", "approved", "rejected"}
+    allowed_statuses = {
+        "draft", "awaiting_confirm", "queued", "processing", "completed",
+        "failed", "failed_no_charge", "guarded", "cancelled", "refunded",
+        "read_only", "pending_admin_review", "approved", "rejected",
+        "unverified", "unlinked",
+    }
     if status_name not in allowed_statuses:
         status_name = "failed"
     return envelope(
