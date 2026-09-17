@@ -195,12 +195,15 @@ def test_capability_fake_ready_zero():
 
     A capability is only 'ready' if declared + executable + healthy.
     """
-    # Provider is configured but health is DEGRADED -> healthy is False
+    # Provider is configured with explicit executable capability, but health is DEGRADED -> healthy is False
     rec = policy.synthesize_provider_record({
         "provider_id": "shopaikey",
         "configured": True,
         "health_state": "DEGRADED",
-        "capabilities": ["video", "image"],
+        "capabilities": [
+            {"name": "video", "executable": True},
+            {"name": "image", "executable": True},
+        ],
     })
     caps = {c["name"]: c for c in rec["capabilities"]}
     assert "video" in caps
@@ -252,6 +255,7 @@ def test_stale_health_flagged_correctly():
         "available": True,
         "health_state": "HEALTHY",
         "last_observed_at": fresh_time,
+        "routing_eligible": True,
     })
     assert rec_fresh["stale"] is False
     assert rec_fresh["effective_health_state"] == "HEALTHY"
@@ -295,7 +299,10 @@ def test_healthy_but_unavailable_capability_not_ready():
         "available": False,
         "health_state": "HEALTHY",
         "last_observed_at": policy.utc_now(),
-        "capabilities": ["video", "image"],
+        "capabilities": [
+            {"name": "video", "executable": True},
+            {"name": "image", "executable": True},
+        ],
     })
     assert rec["configured"] is True
     assert rec["available"] is False
@@ -340,7 +347,10 @@ def test_stale_healthy_capability_not_ready():
         "available": True,
         "health_state": "HEALTHY",
         "last_observed_at": old_time,
-        "capabilities": ["rerank", "embed"],
+        "capabilities": [
+            {"name": "rerank", "executable": True},
+            {"name": "embed", "executable": True},
+        ],
     })
     assert rec["stale"] is True
     for cap in rec["capabilities"]:
@@ -448,7 +458,8 @@ def test_provider_state_matrix_comprehensive():
         "available": True,
         "health_state": "HEALTHY",
         "last_observed_at": now,
-        "capabilities": ["video"],
+        "routing_eligible": True,
+        "capabilities": [{"name": "video", "executable": True}],
         "selected": True,
     })
     assert c3["configured"] is True
@@ -527,7 +538,8 @@ def test_provider_state_matrix_comprehensive():
         "health_state": "HEALTHY",
         "last_observed_at": now,
         "probation": True,
-        "capabilities": ["video"],
+        "routing_eligible": True,
+        "capabilities": [{"name": "video", "executable": True}],
         "selected": True,
     })
     assert c7["configured"] is True
@@ -559,6 +571,175 @@ def test_provider_state_matrix_comprehensive():
     assert c8["capabilities"][0]["ready"] is False
     assert c8["selected"] is False
 
+
+def test_missing_routing_eligibility_never_promoted():
+    """ROUTING ELIGIBILITY FAIL-CLOSED: Missing raw routing_eligible NEVER promoted to True.
+
+    When configured=True, available=True, health_state=HEALTHY, fresh timestamp, probation=False,
+    but routing_eligible is missing from the payload:
+    Web MUST NOT derive routing_eligible=True. It MUST be False.
+    selected MUST also be False (even if raw selected=True).
+    """
+    rec = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": policy.utc_now(),
+        "probation": False,
+        "selected": True,
+        # Note: routing_eligible is absent!
+    })
+    assert rec["configured"] is True
+    assert rec["available"] is True
+    assert rec["effective_health_state"] == "HEALTHY"
+    assert rec["current_healthy_evidence"] is True
+    assert rec["routing_eligible"] is False, "Missing routing_eligible evidence must never be promoted to True"
+    assert rec["selected"] is False, "Provider without canonical routing_eligible cannot be selected"
+
+
+def test_explicit_routing_eligibility_can_pass_all_guards():
+    """Canonical routing_eligible=True passes only when all safety guards pass."""
+    rec = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": policy.utc_now(),
+        "probation": False,
+        "routing_eligible": True,
+        "selected": True,
+    })
+    assert rec["routing_eligible"] is True
+    assert rec["selected"] is True
+
+    # But explicit routing_eligible=False stays False
+    rec_false = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": policy.utc_now(),
+        "probation": False,
+        "routing_eligible": False,
+        "selected": True,
+    })
+    assert rec_false["routing_eligible"] is False
+    assert rec_false["selected"] is False
+
+
+def test_plain_capability_never_implies_executable():
+    """CAPABILITY EXECUTABLE EVIDENCE: Plain capability string or missing executable NEVER implies True.
+
+    A plain string capability (e.g. 'video') or a capability dict without explicit executable=True
+    must have executable=False and ready=False.
+    """
+    rec = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": policy.utc_now(),
+        "routing_eligible": True,
+        "capabilities": [
+            "video",  # plain string
+            {"name": "image"},  # dict without executable
+            {"name": "text", "executable": False},  # explicit False
+        ],
+    })
+    caps = {c["name"]: c for c in rec["capabilities"]}
+    assert caps["video"]["declared"] is True
+    assert caps["video"]["executable"] is False, "Plain string capability must not imply executable=True"
+    assert caps["video"]["ready"] is False
+
+    assert caps["image"]["declared"] is True
+    assert caps["image"]["executable"] is False, "Missing executable field must evaluate to False"
+    assert caps["image"]["ready"] is False
+
+    assert caps["text"]["declared"] is True
+    assert caps["text"]["executable"] is False
+    assert caps["text"]["ready"] is False
+
+
+def test_explicit_executable_capability_can_be_ready():
+    """CAPABILITY READY: Only explicit canonical executable=True combined with all guards yields ready=True."""
+    rec = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": policy.utc_now(),
+        "routing_eligible": True,
+        "capabilities": [
+            {"name": "video", "executable": True},
+        ],
+    })
+    assert rec["capabilities"][0]["declared"] is True
+    assert rec["capabilities"][0]["executable"] is True
+    assert rec["capabilities"][0]["healthy"] is True
+    assert rec["capabilities"][0]["ready"] is True
+
+
+def test_metadata_catalog_does_not_create_runtime_truth():
+    """CATALOG SEMANTICS: Fallback metadata catalog does NOT fabricate runtime provider rows or execution truth."""
+    # Metadata count is classified as metadata, not runtime truth
+    assert hasattr(policy, "WEB_METADATA_CATALOG_COUNT")
+    assert policy.WEB_METADATA_CATALOG_COUNT == 19
+
+    # Fallback catalog metadata never injects routing_eligible or executable
+    fallback = policy.CANONICAL_PROVIDERS_CATALOG["shopaikey"]
+    assert "routing_eligible" not in fallback
+    assert "selected" not in fallback
+    assert "last_observed_at" not in fallback
+
+    # Read-model synthesizes only items present in Bot response
+    rm = policy.synthesize_providers_read_model({
+        "items": [
+            {"provider_id": "shopaikey", "configured": True, "available": True, "health_state": "HEALTHY", "last_observed_at": policy.utc_now(), "routing_eligible": True},
+        ]
+    })
+    assert rm["summary"]["total_providers"] == 1
+    assert len(rm["items"]) == 1
+    # Does not fabricate the other 18 catalog entries
+    assert not any(item["provider_id"] == "gemini" for item in rm["items"])
+
+
+def test_freshness_policy_is_downgrade_only():
+    """FRESHNESS SEMANTICS: Web freshness policy is strictly DOWNGRADE_ONLY.
+
+    - Fresh health observation does NOT independently grant routing eligibility if Bot evidence is missing.
+    - Stale health observation VETOES routing eligibility even if Bot reported routing_eligible=True.
+    """
+    assert hasattr(policy, "WEB_HEALTH_FRESHNESS_POLICY_SECONDS")
+    assert policy.WEB_HEALTH_FRESHNESS_POLICY_SECONDS == 3600
+    assert hasattr(policy, "WEB_HEALTH_FRESHNESS_POLICY_MODE")
+    assert policy.WEB_HEALTH_FRESHNESS_POLICY_MODE == "DOWNGRADE_ONLY"
+
+    now = policy.utc_now()
+    old = (datetime.datetime.now(timezone.utc) - datetime.timedelta(hours=3)).isoformat()
+
+    # Fresh does NOT grant eligibility when Bot routing evidence is missing
+    rec_fresh_missing = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": now,
+        # missing routing_eligible
+    })
+    assert rec_fresh_missing["routing_eligible"] is False
+
+    # Stale VETOES eligibility even when Bot reported routing_eligible=True
+    rec_stale_veto = policy.synthesize_provider_record({
+        "provider_id": "shopaikey",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": old,
+        "routing_eligible": True,
+    })
+    assert rec_stale_veto["stale"] is True
+    assert rec_stale_veto["routing_eligible"] is False
 
 
 def test_zero_raw_secret_exposure():
@@ -699,8 +880,12 @@ def test_canonical_admin_receives_sanitized_provider_list(tmp_path, monkeypatch)
                         "available": True,
                         "health_state": "HEALTHY",
                         "last_observed_at": policy.utc_now(),
+                        "routing_eligible": True,
                         "api_key": "sk-secret-leaked-key-12345",
-                        "capabilities": ["video", "image"],
+                        "capabilities": [
+                            {"name": "video", "executable": True},
+                            {"name": "image", "executable": True},
+                        ],
                     },
                     {
                         "provider_id": "gemini",
