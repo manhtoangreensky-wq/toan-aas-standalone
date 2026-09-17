@@ -21153,8 +21153,9 @@
 
   function renderMembership(page, context) {
     const wallet = canonicalWalletProjection(context.wallet);
-    const balanceXu = Number(wallet && wallet.balance_xu !== undefined ? wallet.balance_xu : 0);
-    const totalPaidVnd = Number(wallet ? (wallet.total_paid_vnd || wallet.total_deposited_vnd || (wallet.balance_xu ? wallet.balance_xu * 100 : 0)) : 0);
+    const hasWallet = wallet && typeof wallet.balance_xu === "number";
+    const balanceXu = hasWallet ? wallet.balance_xu : null;
+    const totalPaidVnd = Number(wallet ? (wallet.total_paid_vnd || wallet.total_deposited_vnd || (hasWallet ? wallet.balance_xu * 100 : 0)) : 0);
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
     const entries = membershipCatalogEntries(context);
 
@@ -21185,8 +21186,8 @@
           </div>
           <div class="portal-metric">
             <span>Số dư Xu khả dụng</span>
-            <strong style="color:#00d26a; font-size:22px;">${balanceXu.toLocaleString('vi-VN')} Xu</strong>
-            <em>~${(balanceXu * 100).toLocaleString('vi-VN')} VNĐ</em>
+            <strong style="color:${hasWallet ? '#00d26a' : '#8fa3b7'}; font-size:22px;">${hasWallet ? `${balanceXu.toLocaleString('vi-VN')} Xu` : '—'}</strong>
+            <em>${hasWallet ? `~${(balanceXu * 100).toLocaleString('vi-VN')} VNĐ` : (context.wallet && context.wallet.status_name === 'unlinked' ? 'Chưa liên kết Telegram' : 'Chưa có dữ liệu')}</em>
           </div>
         </div>
 
@@ -26799,7 +26800,11 @@
             <span style="font-size:13px; color:var(--portal-text-secondary, #8fa3b7); display:block; margin-bottom:8px;">${safeText(profile.email || session.email || "Tài khoản Web")}</span>
             <div style="display:flex; gap:8px; align-items:center;">
               <span class="portal-badge" data-status="ready">🟢 ${safeText(profile.accountType === 'telegram' ? 'Đã liên kết Telegram' : 'Thành viên Web')}</span>
-              <span class="portal-badge" data-status="ready">⚡ ${safeText(String(context.wallet && context.wallet.balance_xu !== undefined ? context.wallet.balance_xu : 100))} Xu</span>
+              ${(context.wallet && typeof context.wallet.balance_xu === "number")
+                ? `<span class="portal-badge" data-status="ready">⚡ ${safeText(String(context.wallet.balance_xu))} Xu</span>`
+                : (context.wallet && context.wallet.status_name === "unlinked")
+                  ? `<span class="portal-badge" data-status="unlinked">⚡ Chưa liên kết</span>`
+                  : `<span class="portal-badge" data-status="guarded">⚡ — Xu</span>`}
             </div>
           </div>
         </div>
@@ -35201,7 +35206,8 @@
     copilotState.messages.push({ role: "user", text: safeText(rawQuery) });
 
     const wallet = canonicalWalletProjection(context.wallet);
-    const balanceXu = Number(wallet && wallet.balance_xu !== undefined ? wallet.balance_xu : 0);
+    const hasBalance = wallet && typeof wallet.balance_xu === "number";
+    const balanceXu = hasBalance ? wallet.balance_xu : null;
 
     let replyText = "";
     let replyActions = [];
@@ -35381,9 +35387,13 @@
     }
     // 12. Kiểm Tra Số Dư Hiện Tại
     else if (q.includes("số dư") || q.includes("so du") || q.includes("ví") || q.includes("vi") || q.includes("xu") || q.includes("balance") || q.includes("kiểm tra")) {
+      const balanceLine = hasBalance
+        ? `• Số dư Xu khả dụng: <strong style="color:#00f2fe; font-size:16px;">${balanceXu.toLocaleString('vi-VN')} Xu</strong> (~${(balanceXu * 100).toLocaleString('vi-VN')} VNĐ).<br/>`
+        : (context.wallet && context.wallet.status_name === "unlinked")
+          ? `• Số dư Xu: <strong style="color:#f59e0b; font-size:16px;">Chưa liên kết Telegram</strong> (Vui lòng liên kết tài khoản để kích hoạt ví).<br/>`
+          : `• Số dư Xu: <strong style="color:#8fa3b7; font-size:16px;">Đang xác minh hoặc chưa có dữ liệu</strong>.<br/>`;
       replyText = `💼 <strong>Thông Tin Số Dư Tài Khoản:</strong><br/>
-• Số dư Xu khả dụng: <strong style="color:#00f2fe; font-size:16px;">${balanceXu.toLocaleString('vi-VN')} Xu</strong> (~${(balanceXu * 100).toLocaleString('vi-VN')} VNĐ).<br/>
-• Trạng thái tài khoản: <strong>🟢 Đang hoạt động bình thường</strong>.<br/>
+${balanceLine}• Trạng thái tài khoản: <strong>🟢 Đang hoạt động bình thường</strong>.<br/>
 • Bạn có thể nạp thêm Xu bất cứ lúc nào qua cổng PayOS VietQR tự động 5 giây!`;
       replyActions = [
         { label: "⚡ Nạp Thêm Xu", route: "/wallet/topup" },

@@ -4344,47 +4344,6 @@ async def account_activity(account: dict = Depends(require_account)):
     )
 
 
-DEFAULT_CANONICAL_PRICING: dict[str, Any] = {
-    "available": True,
-    "billing_mode": "standard",
-    "price_table_source": "canonical_catalog",
-    "image_tiers": [
-        {"code": "image_standard", "label": "Ảnh Tiêu Chuẩn (SDXL / Flux)", "note": "15 Xu (~1.500 đ)", "retry_warranty_count": 1},
-        {"code": "image_high", "label": "Ảnh Cao Cấp (Ultra / 4K Upscale)", "note": "50 Xu (~5.000 đ)", "retry_warranty_count": 1},
-        {"code": "image_remove_bg", "label": "Tách Nền & Ghép Phông Sản Phẩm", "note": "5 Xu (~500 đ)", "retry_warranty_count": 1},
-    ],
-    "video_tiers": [
-        {"code": "video_basic", "label": "Video Phổ Thông (5s)", "note": "80 Xu (~8.000 đ)", "retry_warranty_count": 1},
-        {"code": "video_standard", "label": "Video Tiêu Chuẩn (10s / 3-5 Cảnh)", "note": "150 Xu (~15.000 đ)", "retry_warranty_count": 1},
-        {"code": "video_high", "label": "Video Cao Cấp Pro (Veo / Kling / MiniMax)", "note": "300 Xu (~30.000 đ)", "retry_warranty_count": 1},
-        {"code": "video_multiscene", "label": "Video Multi-Scene Dài", "note": "500 Xu (~50.000 đ)", "retry_warranty_count": 1},
-    ],
-    "video_combos": [
-        {"code": "subdub_combo", "label": "Combo Phụ Đề + Lồng Tiếng Trọn Gói", "summary": "35 Xu / phút (~3.500 đ)"},
-    ],
-}
-
-DEFAULT_CANONICAL_PACKAGES: dict[str, Any] = {
-    "available": True,
-    "monthly": [
-        {"code": "image_mini_monthly", "type": "image", "label": "🖼 Gói Ảnh Mini (20 ảnh / 30 ngày)", "note": "Tạo 20 ảnh tiêu chuẩn cho concept sản phẩm, avatar, bài đăng social.", "default_days": 30, "manual": False, "items": {"images": 20}},
-        {"code": "image_basic_monthly", "type": "image", "label": "🖼 Gói Ảnh Cơ Bản (50 ảnh / 30 ngày)", "note": "Dùng đều cho ảnh bài đăng, mô tả sản phẩm và nội dung định kỳ.", "default_days": 30, "manual": False, "items": {"images": 50}},
-        {"code": "image_sales_monthly", "type": "image", "label": "🛒 Gói Ảnh Bán Hàng (100 ảnh / 30 ngày)", "note": "80 ảnh tiêu chuẩn + 20 ảnh thương mại chất lượng cao.", "default_days": 30, "manual": False, "items": {"images": 100}},
-        {"code": "video_mini_monthly", "type": "video", "label": "🎬 Gói Video Mini (5 video / 30 ngày)", "note": "5 video sản phẩm tiêu chuẩn (3-5 cảnh, nhạc nền & phụ đề).", "default_days": 30, "manual": False, "items": {"videos": 5}},
-        {"code": "video_standard_monthly", "type": "video", "label": "🎬 Gói Video Tiêu Chuẩn (10 video / 30 ngày)", "note": "10 video sản phẩm thương mại hoàn chỉnh với voice & nhạc.", "default_days": 30, "manual": False, "items": {"videos": 10}},
-        {"code": "video_pro_monthly", "type": "video", "label": "🎬 Gói Video Cao Cấp (20 video / 30 ngày)", "note": "20 video chất lượng cao (Veo 3.1, Kling, MiniMax) đa phân cảnh.", "default_days": 30, "manual": False, "items": {"videos": 20}},
-        {"code": "audio_voice_monthly", "type": "audio", "label": "🎙️ Gói Nhạc & Voice AI (30 bài / 30 ngày)", "note": "30 bản nhạc nền Suno AI + 30 bản đọc Voiceover TTS truyền cảm.", "default_days": 30, "manual": False, "items": {"audios": 30}},
-        {"code": "subdub_monthly", "type": "service", "label": "🗣️ Gói Phụ Đề & Lồng Tiếng (30 phút / 30 ngày)", "note": "30 phút dịch thuật phụ đề karaoke + lồng tiếng đa ngôn ngữ.", "default_days": 30, "manual": False, "items": {"minutes": 30}},
-    ],
-    "combos": [
-        {"code": "combo_ad_video_588k", "label": "🎬 Combo Video Quảng Cáo Mini", "summary": "1 video 3-5 cảnh + 5 ảnh sản phẩm + 1 prompt workflow + 1 nhạc nền AI + phụ đề cơ bản.", "items": {}},
-        {"code": "combo_ad_video_pro_1288k", "label": "🎬 Combo Video Quảng Cáo Pro", "summary": "3 video quảng cáo chất lượng cao + 10 ảnh cao cấp + 3 storyboard workflow + 3 nhạc nền + voice + logo.", "items": {}},
-        {"code": "combo_tiktok_week_1288k", "label": "📱 Combo TikTok/Reels 1 Tuần", "summary": "7 video ngắn theo ngày + 7 ảnh thumbnail + 7 kịch bản/caption + 7 nhạc nền bản quyền.", "items": {}},
-        {"code": "combo_full_month_2888k", "label": "🚀 Combo Sáng Tạo Toàn Diện Tháng", "summary": "30 video + 50 ảnh + 30 kịch bản + 30 voice/nhạc + ưu tiên xử lý VIP.", "items": {}},
-    ],
-}
-
-
 @router.get("/wallet")
 async def wallet(request: Request, account: dict = Depends(require_account)):
     canonical_user_id = str(account.get("canonical_user_id") or "").strip()
@@ -4413,37 +4372,94 @@ async def wallet(request: Request, account: dict = Depends(require_account)):
         except Exception:
             pass
 
-    # 2. Seamless read-through to canonical system SQLite DB
+    # 2. Seamless read-through & real ledger reconciliation against canonical system SQLite DB
     try:
         from db import db_connect
         with closing(db_connect()) as conn:
             c = conn.cursor()
             c.execute(
-                "SELECT credits, total_spent, is_vip FROM users WHERE user_id = ?",
+                "SELECT credits, is_vip FROM users WHERE user_id = ?",
                 (clean_uid,),
             )
             user_row = c.fetchone()
 
-        if user_row is not None:
-            balance_xu = int(user_row[0] or 0)
-            total_spent_xu = int(user_row[1] or 0)
-            is_vip = bool(user_row[2])
-        else:
-            balance_xu = 0
-            total_spent_xu = 0
-            is_vip = False
+            if user_row is None:
+                # Invariant: 0 != NO_DATA != UNAVAILABLE. Do not return fake 0 if account not in Bot DB.
+                return envelope(
+                    False,
+                    "Tài khoản Telegram chưa kích hoạt trong hệ thống Bot.",
+                    data=None,
+                    status_name="unverified",
+                    error_code="BOT_USER_NOT_INITIALIZED",
+                )
 
-        return envelope(
-            True,
-            "Số dư ví canonical đã sẵn sàng.",
-            data={
-                "balance_xu": balance_xu,
-                "total_spent_xu": total_spent_xu,
-                "is_vip": is_vip,
-                "source": "canonical_ledger",
-            },
-            status_name="read_only",
-        )
+            snapshot_credits = int(user_row[0] or 0)
+            is_vip = bool(user_row[1])
+
+            # Query total spent from credit_events ledger (sum of negative deltas)
+            c.execute(
+                "SELECT COALESCE(SUM(ABS(delta)), 0) FROM credit_events WHERE user_id = ? AND delta < 0",
+                (clean_uid,),
+            )
+            total_spent_xu = int(c.fetchone()[0] or 0)
+
+            # Real wallet reconciliation: check latest ledger event balance_after
+            c.execute(
+                "SELECT balance_after FROM credit_events WHERE user_id = ? ORDER BY id DESC LIMIT 1",
+                (clean_uid,),
+            )
+            latest_event = c.fetchone()
+
+            if latest_event is None:
+                # No transactions yet: reconciled if snapshot is 0
+                is_reconciled = (snapshot_credits == 0)
+                ledger_balance = 0
+            else:
+                ledger_balance = int(latest_event[0] or 0)
+                is_reconciled = (snapshot_credits == ledger_balance)
+
+            discrepancy = snapshot_credits - ledger_balance
+
+            if not is_reconciled:
+                # Invariant: UI approved before ledger = FORBIDDEN. Fails closed on ledger discrepancy!
+                return envelope(
+                    False,
+                    "Phát hiện sai lệch đối soát giữa số dư ví và sổ cái giao dịch.",
+                    data={
+                        "balance_xu": snapshot_credits,
+                        "total_spent_xu": total_spent_xu,
+                        "is_vip": is_vip,
+                        "source": "canonical_ledger",
+                        "reconciliation": {
+                            "reconciled": False,
+                            "status": "unreconciled_discrepancy",
+                            "snapshot_credits": snapshot_credits,
+                            "ledger_credits": ledger_balance,
+                            "discrepancy": discrepancy,
+                        },
+                    },
+                    status_name="guarded",
+                    error_code="WALLET_LEDGER_UNRECONCILED",
+                )
+
+            return envelope(
+                True,
+                "Số dư ví canonical đã sẵn sàng.",
+                data={
+                    "balance_xu": snapshot_credits,
+                    "total_spent_xu": total_spent_xu,
+                    "is_vip": is_vip,
+                    "source": "canonical_ledger",
+                    "reconciliation": {
+                        "reconciled": True,
+                        "status": "reconciled",
+                        "snapshot_credits": snapshot_credits,
+                        "ledger_credits": ledger_balance,
+                        "discrepancy": 0,
+                    },
+                },
+                status_name="read_only",
+            )
     except Exception:
         return envelope(
             False,
@@ -4526,36 +4542,12 @@ async def pricing(
     account: dict = Depends(require_account),
 ):
     response.headers["Cache-Control"] = "no-store, private"
-    if bridge_configured():
-        try:
-            res = await _bridge("GET", "/internal/v1/pricing", account=account, request=request)
-            if isinstance(res, dict) and res.get("ok") is True and isinstance(res.get("data"), dict) and res["data"].get("available"):
-                return res
-        except Exception:
-            pass
-    return envelope(
-        True,
-        "Bảng giá dịch vụ canonical.",
-        data=DEFAULT_CANONICAL_PRICING,
-        status_name="read_only",
-    )
+    return await _bridge("GET", "/internal/v1/pricing", account=account, request=request)
 
 
 @router.get("/packages")
 async def packages(request: Request, account: dict = Depends(require_account)):
-    if bridge_configured():
-        try:
-            res = await _bridge("GET", "/internal/v1/packages", account=account, request=request)
-            if isinstance(res, dict) and res.get("ok") is True and isinstance(res.get("data"), dict) and res["data"].get("available"):
-                return res
-        except Exception:
-            pass
-    return envelope(
-        True,
-        "Danh mục các gói dịch vụ canonical.",
-        data=DEFAULT_CANONICAL_PACKAGES,
-        status_name="read_only",
-    )
+    return await _bridge("GET", "/internal/v1/packages", account=account, request=request)
 
 
 def _manual_private_payment_config() -> dict[str, Any]:
@@ -5733,11 +5725,9 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
                         c = conn.cursor()
                         c.execute(
                             """INSERT INTO payos_orders
-                               (order_code, user_id, amount, xu, package_id, order_type, status,
-                                checkout_url, payment_link_id, currency, metadata_json, payment_type, created_at)
-                               VALUES (?, ?, ?, ?, ?, 'topup', 'PENDING', ?, ?, 'VND', ?, ?, ?)""",
-                            (str(order_code), owner_id, amount, expected_xu, package_id, checkout_url,
-                             payment_link_id, metadata, payment_type, now_text()),
+                               (order_code, user_id, amount, xu, status, created_at)
+                               VALUES (?, ?, ?, ?, 'PENDING', ?)""",
+                            (str(order_code), owner_id, amount, expected_xu, now_text()),
                         )
                         conn.commit()
                     except Exception:
@@ -5778,7 +5768,7 @@ async def payment_status(payment_id: str, request: Request, account: dict = Depe
         with closing(db_connect()) as conn:
             c = conn.cursor()
             c.execute(
-                "SELECT order_code, amount, xu, status, payment_type, created_at, paid_at "
+                "SELECT order_code, amount, xu, status, created_at, paid_at "
                 "FROM payos_orders WHERE order_code=? AND user_id=?",
                 (str(payment_id), owner_id),
             )
@@ -5806,9 +5796,8 @@ async def payment_status(payment_id: str, request: Request, account: dict = Depe
             "amount_vnd": row[1],
             "xu": row[2],
             "status": canonical_status,
-            "payment_type": row[4],
-            "created_at": row[5],
-            "paid_at": row[6],
+            "created_at": row[4],
+            "paid_at": row[5],
         },
         status_name=status_name,
     )

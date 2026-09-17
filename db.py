@@ -23,16 +23,9 @@ def init_db():
         user_id TEXT PRIMARY KEY,
         username TEXT,
         credits INTEGER DEFAULT 0,
-        total_spent INTEGER DEFAULT 0,
         is_vip INTEGER DEFAULT 0,
         join_date TEXT
     )""")
-    try:
-        cols = {r[1] for r in c.execute("PRAGMA table_info(users)").fetchall()}
-        if "total_spent" not in cols:
-            c.execute("ALTER TABLE users ADD COLUMN total_spent INTEGER DEFAULT 0")
-    except Exception:
-        pass
     
     c.execute("""CREATE TABLE IF NOT EXISTS payos_orders (
         order_code TEXT PRIMARY KEY,
@@ -40,19 +33,9 @@ def init_db():
         amount INTEGER,
         xu INTEGER,
         status TEXT DEFAULT 'PENDING',
-        payment_type TEXT DEFAULT 'topup_xu',
-        package_id TEXT,
         created_at DATETIME,
         paid_at DATETIME
     )""")
-    try:
-        order_cols = {r[1] for r in c.execute("PRAGMA table_info(payos_orders)").fetchall()}
-        if "payment_type" not in order_cols:
-            c.execute("ALTER TABLE payos_orders ADD COLUMN payment_type TEXT DEFAULT 'topup_xu'")
-        if "package_id" not in order_cols:
-            c.execute("ALTER TABLE payos_orders ADD COLUMN package_id TEXT")
-    except Exception:
-        pass
     
     c.execute("""CREATE TABLE IF NOT EXISTS payos_processed (
         order_code TEXT PRIMARY KEY,

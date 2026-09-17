@@ -101,11 +101,11 @@ def test_first_red_displayed_wallet_balance_and_ledger_truth(tmp_path, monkeypat
         _register_and_login(client, CUSTOMER_EMAIL, CUSTOMER_PASSWORD)
         _link_telegram(session_db, CUSTOMER_EMAIL, TELEGRAM_USER_ID)
 
-        # Seed canonical data in system DB (matching Telegram bot reality)
+        # Seed canonical data in system DB without any schema mutations
         sys_conn = sqlite3.connect(str(system_db))
         sys_conn.execute(
-            "INSERT OR REPLACE INTO users (user_id, username, credits, total_spent, is_vip, join_date) "
-            "VALUES (?, 'toan_test', 200, 50, 0, '2026-09-01 10:00:00')",
+            "INSERT OR REPLACE INTO users (user_id, username, credits, is_vip, join_date) "
+            "VALUES (?, 'toan_test', 150, 0, '2026-09-01 10:00:00')",
             (TELEGRAM_USER_ID,)
         )
         sys_conn.execute(
@@ -126,12 +126,13 @@ def test_first_red_displayed_wallet_balance_and_ledger_truth(tmp_path, monkeypat
         assert wallet_res.status_code == 200
         wallet_data = wallet_res.json()
 
-        # This will fail on unpatched code because _bridge returns guarded!
         assert wallet_data["ok"] is True, f"Wallet endpoint failed: {wallet_data}"
         assert wallet_data["status"] in ("read_only", "ready", "completed")
-        assert wallet_data["data"]["balance_xu"] == 200
+        assert wallet_data["data"]["balance_xu"] == 150
         assert wallet_data["data"]["total_spent_xu"] == 50
         assert wallet_data["data"]["is_vip"] is False
+        assert wallet_data["data"]["reconciliation"]["reconciled"] is True
+        assert wallet_data["data"]["reconciliation"]["discrepancy"] == 0
 
         # Call GET /api/v1/wallet/history
         history_res = client.get("/api/v1/wallet/history")
@@ -182,8 +183,8 @@ def test_database_unavailable_does_not_return_fake_zero(tmp_path, monkeypatch):
             assert "balance_xu" not in data["data"] or data["data"]["balance_xu"] is None
 
 
-def test_pricing_and_packages_availability(tmp_path, monkeypatch):
-    """Packages and pricing catalog must return canonical catalog when bridge is unavailable."""
+def test_remove_web_owned_fake_pricing_packages_when_bridge_unavailable(tmp_path, monkeypatch):
+    """Mission 1: Web App must NOT own fake canonical pricing/packages. When bridge is down, fail closed honestly."""
     client, session_db, system_db = _setup_app_client(tmp_path, monkeypatch)
 
     with client:
@@ -192,13 +193,64 @@ def test_pricing_and_packages_availability(tmp_path, monkeypatch):
         res_pkg = client.get("/api/v1/packages")
         assert res_pkg.status_code == 200
         pkg_data = res_pkg.json()
-        assert pkg_data["ok"] is True
-        assert "monthly" in pkg_data["data"] or "items" in pkg_data["data"]
+        assert pkg_data["ok"] is False
+        assert pkg_data["status"] == "guarded"
+        assert pkg_data["error_code"] == "CORE_BRIDGE_NOT_CONFIGURED"
 
         res_pricing = client.get("/api/v1/pricing")
         assert res_pricing.status_code == 200
         pricing_data = res_pricing.json()
-        assert pricing_data["ok"] is True
+        assert pricing_data["ok"] is False
+        assert pricing_data["status"] == "guarded"
+        assert pricing_data["error_code"] == "CORE_BRIDGE_NOT_CONFIGURED"
+
+
+def test_real_wallet_reconciliation_and_discrepancy_detection(tmp_path, monkeypatch):
+    """Mission 3: Real wallet reconciliation between users.credits and credit_events ledger."""
+    client, session_db, system_db = _setup_app_client(tmp_path, monkeypatch)
+
+    with client:
+        _register_and_login(client, "recon-user@toanaas.vn", CUSTOMER_PASSWORD)
+        _link_telegram(session_db, "recon-user@toanaas.vn", "8881234567")
+
+        # 1. State: users.credits = 300, but latest credit_event balance_after = 200 (DISCREPANCY!)
+        with sqlite3.connect(str(system_db)) as sys_conn:
+            sys_conn.execute(
+                "INSERT OR REPLACE INTO users (user_id, username, credits, is_vip, join_date) "
+                "VALUES ('8881234567', 'recon_test', 300, 0, '2026-09-01 10:00:00')"
+            )
+            sys_conn.execute(
+                "INSERT INTO credit_events (user_id, delta, balance_after, event_type, created_at) "
+                "VALUES ('8881234567', 200, 200, 'grant', '2026-09-01 10:00:00')"
+            )
+            sys_conn.commit()
+
+        # Discrepancy must fail closed with guarded status!
+        res_unreconciled = client.get("/api/v1/wallet")
+        assert res_unreconciled.status_code == 200
+        unrec_data = res_unreconciled.json()
+        assert unrec_data["ok"] is False
+        assert unrec_data["status"] == "guarded"
+        assert unrec_data["error_code"] == "WALLET_LEDGER_UNRECONCILED"
+        assert unrec_data["data"]["reconciliation"]["reconciled"] is False
+        assert unrec_data["data"]["reconciliation"]["discrepancy"] == 100
+
+        # 2. Fix the discrepancy by recording the missing 100 Xu ledger event
+        with sqlite3.connect(str(system_db)) as sys_conn:
+            sys_conn.execute(
+                "INSERT INTO credit_events (user_id, delta, balance_after, event_type, created_at) "
+                "VALUES ('8881234567', 100, 300, 'topup_reconciled', '2026-09-02 10:00:00')"
+            )
+            sys_conn.commit()
+
+        # Now reconciled!
+        res_reconciled = client.get("/api/v1/wallet")
+        assert res_reconciled.status_code == 200
+        rec_data = res_reconciled.json()
+        assert rec_data["ok"] is True
+        assert rec_data["data"]["balance_xu"] == 300
+        assert rec_data["data"]["reconciliation"]["reconciled"] is True
+        assert rec_data["data"]["reconciliation"]["discrepancy"] == 0
 
 
 def test_manual_topup_idempotency_and_no_optimistic_credit(tmp_path, monkeypatch):
@@ -282,15 +334,16 @@ def test_wallet_refresh_reconciles_ledger_and_balance(tmp_path, monkeypatch):
         _register_and_login(client, "refresh-user@toanaas.vn", CUSTOMER_PASSWORD)
         _link_telegram(session_db, "refresh-user@toanaas.vn", TELEGRAM_USER_ID)
 
-        # 1. Initial state: 200 Xu
+        # 1. Initial state: 200 Xu, reconciled with ledger
         with sqlite3.connect(str(system_db)) as sys_conn:
-            sys_conn.execute("INSERT OR REPLACE INTO users (user_id, credits, total_spent) VALUES (?, 200, 0)", (TELEGRAM_USER_ID,))
+            sys_conn.execute("INSERT OR REPLACE INTO users (user_id, credits) VALUES (?, 200)", (TELEGRAM_USER_ID,))
             sys_conn.execute("INSERT INTO credit_events (user_id, delta, balance_after, event_type, created_at) VALUES (?, 200, 200, 'initial', '2026-09-01 10:00:00')", (TELEGRAM_USER_ID,))
             sys_conn.commit()
 
         w1 = client.get("/api/v1/wallet").json()
         assert w1["ok"] is True
         assert w1["data"]["balance_xu"] == 200
+        assert w1["data"]["reconciliation"]["reconciled"] is True
 
         # 2. Canonical event happens (e.g. 150 Xu added via bot or confirmed topup)
         with sqlite3.connect(str(system_db)) as sys_conn:
@@ -302,6 +355,7 @@ def test_wallet_refresh_reconciles_ledger_and_balance(tmp_path, monkeypatch):
         w2 = client.get("/api/v1/wallet").json()
         assert w2["ok"] is True
         assert w2["data"]["balance_xu"] == 350
+        assert w2["data"]["reconciliation"]["reconciled"] is True
 
         h2 = client.get("/api/v1/wallet/history").json()
         assert h2["ok"] is True
@@ -312,7 +366,7 @@ def test_wallet_refresh_reconciles_ledger_and_balance(tmp_path, monkeypatch):
 
 
 def test_payos_order_validation_and_status(tmp_path, monkeypatch):
-    """PayOS order creation enforces package selection, stores in DB, and checks status without optimistic credit."""
+    """PayOS order creation enforces package selection, stores in DB with canonical schema, and checks status without optimistic credit."""
     client, session_db, system_db = _setup_app_client(tmp_path, monkeypatch)
 
     with client:
@@ -336,11 +390,11 @@ def test_payos_order_validation_and_status(tmp_path, monkeypatch):
         assert res_invalid.status_code == 200
         assert res_invalid.json()["ok"] is False
 
-        # 2. Insert test order directly in payos_orders to test status projection
+        # 2. Insert test order directly in payos_orders using canonical schema (NO payment_type or package_id column)
         with sqlite3.connect(str(system_db)) as sys_conn:
             sys_conn.execute(
-                "INSERT INTO payos_orders (order_code, user_id, amount, xu, status, payment_type, created_at) "
-                "VALUES ('888888', ?, 50000, 500, 'PENDING', 'topup_xu', '2026-09-01 10:00:00')",
+                "INSERT INTO payos_orders (order_code, user_id, amount, xu, status, created_at) "
+                "VALUES ('888888', ?, 50000, 500, 'PENDING', '2026-09-01 10:00:00')",
                 (TELEGRAM_USER_ID,)
             )
             sys_conn.commit()
@@ -361,8 +415,11 @@ def test_payos_order_validation_and_status(tmp_path, monkeypatch):
 
 
 def test_no_hardcoded_fake_balances_in_portal_js():
-    """Verify portal.js contains no hardcoded fallback balances."""
+    """Verify portal.js contains no hardcoded fallback balances or fake zero projections."""
     portal_js_path = Path("static/portal/portal.js")
     content = portal_js_path.read_text(encoding="utf-8")
     assert "{ balance_xu: 100 }" not in content
     assert "balance_xu: 100," not in content
+    assert "balance_xu : 100" not in content
+    assert "balance_xu !== undefined ? context.wallet.balance_xu : 100" not in content
+    assert "Number(wallet && wallet.balance_xu !== undefined ? wallet.balance_xu : 0)" not in content
