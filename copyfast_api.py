@@ -447,7 +447,7 @@ FEATURE_RESPONSE_PRIVATE_KEY_PARTS = (
 )
 _PUBLIC_BRIDGE_STATUSES = frozenset({
     "draft", "awaiting_confirm", "queued", "processing", "completed", "failed", "failed_no_charge",
-    "guarded", "cancelled", "refunded", "read_only",
+    "guarded", "cancelled", "refunded", "read_only", "unverified", "unlinked",
 })
 _PUBLIC_BRIDGE_MESSAGES = {
     "draft": "Bản nháp canonical đã được cập nhật.",
@@ -461,6 +461,8 @@ _PUBLIC_BRIDGE_MESSAGES = {
     "cancelled": "Yêu cầu đã được canonical hủy.",
     "refunded": "Core Bridge đã ghi nhận trạng thái hoàn Xu canonical.",
     "read_only": "Dữ liệu canonical chỉ được hiển thị ở chế độ đọc.",
+    "unverified": "Tài khoản Telegram chưa kích hoạt trong hệ thống Bot.",
+    "unlinked": "Tài khoản chưa liên kết Telegram.",
 }
 # Error codes produced inside this Web bridge client are already generic and
 # do not expose Bot implementation details. Any other code coming from an
@@ -469,6 +471,8 @@ _PUBLIC_BRIDGE_ERROR_CODES = frozenset({
     "CORE_BRIDGE_NOT_CONFIGURED", "CORE_BRIDGE_UNAVAILABLE", "CORE_BRIDGE_UNAUTHORIZED",
     "CORE_BRIDGE_FORBIDDEN", "CORE_BRIDGE_NOT_AVAILABLE", "CORE_BRIDGE_RATE_LIMITED",
     "CORE_BRIDGE_INVALID_RESPONSE",
+    "WALLET_LEDGER_UNRECONCILED", "BOT_USER_NOT_INITIALIZED", "ACCOUNT_TELEGRAM_UNLINKED",
+    "WALLET_DATABASE_UNAVAILABLE", "PRICING_CATALOG_UNAVAILABLE", "PACKAGES_CATALOG_UNAVAILABLE",
 })
 ADMIN_BRIDGE_MODULES = frozenset({
     "overview", "summary", "users", "user", "wallet", "payments", "topups", "revenue", "refunds",
@@ -1526,6 +1530,12 @@ def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: boo
         plan = _project_record(value.get("plan"), ("current_plan", "plan_name", "plan_status", "plan_expires_at", "plan_xu_remaining"))
         if plan:
             result["plan"] = plan
+        reconciliation = _project_record(
+            value.get("reconciliation"),
+            ("reconciled", "status", "snapshot_credits", "ledger_credits", "discrepancy"),
+        )
+        if reconciliation:
+            result["reconciliation"] = reconciliation
         return result
     if surface == "pricing":
         # The generic key redactor intentionally treats ``bill`` as private,
@@ -2961,6 +2971,8 @@ async def _bridge(
     flags = _flags()
     if not flags["copyfast_enabled"]:
         return envelope(False, "Web App đang tạm khóa theo feature flag COPYFAST.", status_name="guarded", error_code="WEBAPP_COPYFAST_DISABLED")
+    if path.startswith("/internal/v1/admin/") and not flags["admin_erp_enabled"]:
+        return envelope(False, "Admin ERP trên Web đang tạm khóa theo feature flag.", status_name="guarded", error_code="WEBAPP_ADMIN_ERP_DISABLED")
     if path in {"/internal/v1/pricing", "/internal/v1/packages", "/internal/v1/features/status"} or path.startswith("/internal/v1/admin/"):
         user_id = str(account.get("canonical_user_id") or "").strip()
     else:
@@ -4355,119 +4367,7 @@ async def wallet(request: Request, account: dict = Depends(require_account)):
             status_name="unlinked",
             error_code="ACCOUNT_TELEGRAM_UNLINKED",
         )
-
-    clean_uid = re.sub(r"^[^\d]*", "", canonical_user_id).strip() or canonical_user_id
-
-    # 1. Try bridge first if configured
-    if bridge_configured():
-        try:
-            bridge_resp = await _bridge("GET", "/internal/v1/wallet", account=account, request=request)
-            if (
-                isinstance(bridge_resp, dict)
-                and bridge_resp.get("ok") is True
-                and isinstance(bridge_resp.get("data"), dict)
-                and "balance_xu" in bridge_resp["data"]
-            ):
-                return bridge_resp
-        except Exception:
-            pass
-
-    # 2. Seamless read-through & real ledger reconciliation against canonical system SQLite DB
-    try:
-        from db import db_connect
-        with closing(db_connect()) as conn:
-            c = conn.cursor()
-            c.execute(
-                "SELECT credits, is_vip FROM users WHERE user_id = ?",
-                (clean_uid,),
-            )
-            user_row = c.fetchone()
-
-            if user_row is None:
-                # Invariant: 0 != NO_DATA != UNAVAILABLE. Do not return fake 0 if account not in Bot DB.
-                return envelope(
-                    False,
-                    "Tài khoản Telegram chưa kích hoạt trong hệ thống Bot.",
-                    data=None,
-                    status_name="unverified",
-                    error_code="BOT_USER_NOT_INITIALIZED",
-                )
-
-            snapshot_credits = int(user_row[0] or 0)
-            is_vip = bool(user_row[1])
-
-            # Query total spent from credit_events ledger (sum of negative deltas)
-            c.execute(
-                "SELECT COALESCE(SUM(ABS(delta)), 0) FROM credit_events WHERE user_id = ? AND delta < 0",
-                (clean_uid,),
-            )
-            total_spent_xu = int(c.fetchone()[0] or 0)
-
-            # Real wallet reconciliation: check latest ledger event balance_after
-            c.execute(
-                "SELECT balance_after FROM credit_events WHERE user_id = ? ORDER BY id DESC LIMIT 1",
-                (clean_uid,),
-            )
-            latest_event = c.fetchone()
-
-            if latest_event is None:
-                # No transactions yet: reconciled if snapshot is 0
-                is_reconciled = (snapshot_credits == 0)
-                ledger_balance = 0
-            else:
-                ledger_balance = int(latest_event[0] or 0)
-                is_reconciled = (snapshot_credits == ledger_balance)
-
-            discrepancy = snapshot_credits - ledger_balance
-
-            if not is_reconciled:
-                # Invariant: UI approved before ledger = FORBIDDEN. Fails closed on ledger discrepancy!
-                return envelope(
-                    False,
-                    "Phát hiện sai lệch đối soát giữa số dư ví và sổ cái giao dịch.",
-                    data={
-                        "balance_xu": snapshot_credits,
-                        "total_spent_xu": total_spent_xu,
-                        "is_vip": is_vip,
-                        "source": "canonical_ledger",
-                        "reconciliation": {
-                            "reconciled": False,
-                            "status": "unreconciled_discrepancy",
-                            "snapshot_credits": snapshot_credits,
-                            "ledger_credits": ledger_balance,
-                            "discrepancy": discrepancy,
-                        },
-                    },
-                    status_name="guarded",
-                    error_code="WALLET_LEDGER_UNRECONCILED",
-                )
-
-            return envelope(
-                True,
-                "Số dư ví canonical đã sẵn sàng.",
-                data={
-                    "balance_xu": snapshot_credits,
-                    "total_spent_xu": total_spent_xu,
-                    "is_vip": is_vip,
-                    "source": "canonical_ledger",
-                    "reconciliation": {
-                        "reconciled": True,
-                        "status": "reconciled",
-                        "snapshot_credits": snapshot_credits,
-                        "ledger_credits": ledger_balance,
-                        "discrepancy": 0,
-                    },
-                },
-                status_name="read_only",
-            )
-    except Exception:
-        return envelope(
-            False,
-            "Cơ sở dữ liệu ví canonical tạm thời không khả dụng.",
-            data=None,
-            status_name="guarded",
-            error_code="WALLET_DATABASE_UNAVAILABLE",
-        )
+    return await _bridge("GET", "/internal/v1/wallet", account=account, request=request)
 
 
 @router.get("/wallet/history")
@@ -4481,58 +4381,8 @@ async def wallet_history(request: Request, account: dict = Depends(require_accou
             status_name="unlinked",
             error_code="ACCOUNT_TELEGRAM_UNLINKED",
         )
-
-    clean_uid = re.sub(r"^[^\d]*", "", canonical_user_id).strip() or canonical_user_id
-
-    # 1. Try bridge first if configured
-    if bridge_configured():
-        try:
-            bridge_resp = await _bridge("GET", "/internal/v1/wallet/history", account=account, request=request)
-            if (
-                isinstance(bridge_resp, dict)
-                and bridge_resp.get("ok") is True
-                and isinstance(bridge_resp.get("data"), dict)
-                and isinstance(bridge_resp["data"].get("items"), list)
-            ):
-                return _browser_safe_wallet_history_response(bridge_resp)
-        except Exception:
-            pass
-
-    # 2. Seamless read-through to canonical credit_events in system DB
-    try:
-        from db import db_connect
-        with closing(db_connect()) as conn:
-            c = conn.cursor()
-            c.execute(
-                "SELECT created_at, event_type, delta, balance_after "
-                "FROM credit_events WHERE user_id = ? ORDER BY id DESC LIMIT 100",
-                (clean_uid,),
-            )
-            rows = c.fetchall()
-
-        safe_items = []
-        for row in rows:
-            safe_items.append({
-                "created_at": str(row[0] or "")[:160],
-                "event_type": str(row[1] or "")[:160],
-                "delta_xu": int(row[2] or 0),
-                "balance_after_xu": int(row[3] or 0),
-            })
-
-        return envelope(
-            True,
-            "Lịch sử biến động Xu canonical.",
-            data={"items": safe_items},
-            status_name="read_only",
-        )
-    except Exception:
-        return envelope(
-            False,
-            "Không thể đọc lịch sử ví canonical.",
-            data={"items": []},
-            status_name="guarded",
-            error_code="WALLET_HISTORY_UNAVAILABLE",
-        )
+    response = await _bridge("GET", "/internal/v1/wallet/history", account=account, request=request)
+    return _browser_safe_wallet_history_response(response)
 
 
 @router.get("/pricing")

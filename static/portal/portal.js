@@ -10617,8 +10617,9 @@
       : `<span class="portal-user-dropdown-avatar" aria-hidden="true">${initials(name)}</span>`;
 
     const headerWallet = canonicalWalletProjection(context.wallet);
-    const headerPaidVnd = Number(headerWallet ? (headerWallet.total_paid_vnd || headerWallet.total_deposited_vnd || (headerWallet.balance_xu ? headerWallet.balance_xu * 100 : 0)) : 0);
-    const headerTierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(headerPaidVnd, profile.vipTierOverride || profile.tier) : { currentTier: { badge: "🌱 Newbie", color: "#00f2fe" } };
+    const headerHasWallet = headerWallet && typeof headerWallet.balance_xu === "number";
+    const headerPaidVnd = headerHasWallet ? Number(headerWallet.total_paid_vnd || headerWallet.total_deposited_vnd || (headerWallet.balance_xu * 100)) : null;
+    const headerTierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(headerPaidVnd, profile.vipTierOverride || profile.tier) : { isKnown: false, currentTier: { badge: "—", color: "#8fa3b7" } };
     const currentLocale = interfaceLocaleFor(context);
     const localeOption = (value, label) => `<option value="${value}"${currentLocale === value ? " selected" : ""}>${safeText(label)}</option>`;
     const adminHeaderLocaleForm = adminSurface
@@ -21129,10 +21130,23 @@
   ];
 
   function getMemberTierInfo(totalPaidVnd, overrideTier) {
-    const paid = Math.max(0, Number(totalPaidVnd || 0));
-    if (overrideTier && overrideTier.toLowerCase() === "vip") {
-      return { currentTier: MEMBER_TIER_CANONICAL[5], currentIndex: 5, nextTier: null, neededVnd: 0, neededXu: 0, progressPercent: 100, paidVnd: paid };
+    if (overrideTier && String(overrideTier).toLowerCase() === "vip") {
+      const paid = typeof totalPaidVnd === "number" && !isNaN(totalPaidVnd) ? Math.max(0, totalPaidVnd) : null;
+      return { isKnown: true, currentTier: MEMBER_TIER_CANONICAL[5], currentIndex: 5, nextTier: null, neededVnd: 0, neededXu: 0, progressPercent: 100, paidVnd: paid };
     }
+    if (totalPaidVnd === null || totalPaidVnd === undefined || typeof totalPaidVnd !== "number" || isNaN(totalPaidVnd)) {
+      return {
+        isKnown: false,
+        currentTier: { badge: "—", label: "Chưa xác định", color: "#8fa3b7", discountRate: 0, referralPercent: 0, referralCap: 0, birthdayGiftXu: 0, queuePriority: "Tiêu chuẩn" },
+        currentIndex: -1,
+        nextTier: null,
+        neededVnd: null,
+        neededXu: null,
+        progressPercent: null,
+        paidVnd: null
+      };
+    }
+    const paid = Math.max(0, totalPaidVnd);
     let currentIndex = 0;
     for (let i = MEMBER_TIER_CANONICAL.length - 1; i >= 0; i--) {
       if (paid >= MEMBER_TIER_CANONICAL[i].thresholdVnd) {
@@ -21148,19 +21162,20 @@
     const prevThresh = currentTier.thresholdVnd;
     const progressPercent = nextTier ? Math.min(100, Math.max(0, Math.round(((paid - prevThresh) / (nextTier.thresholdVnd - prevThresh)) * 100))) : 100;
 
-    return { currentTier, currentIndex, nextTier, neededVnd, neededXu, progressPercent, paidVnd: paid };
+    return { isKnown: true, currentTier, currentIndex, nextTier, neededVnd, neededXu, progressPercent, paidVnd: paid };
   }
 
   function renderMembership(page, context) {
     const wallet = canonicalWalletProjection(context.wallet);
     const hasWallet = wallet && typeof wallet.balance_xu === "number";
     const balanceXu = hasWallet ? wallet.balance_xu : null;
-    const totalPaidVnd = Number(wallet ? (wallet.total_paid_vnd || wallet.total_deposited_vnd || (hasWallet ? wallet.balance_xu * 100 : 0)) : 0);
+    const totalPaidVnd = hasWallet ? Number(wallet.total_paid_vnd || wallet.total_deposited_vnd || (wallet.balance_xu * 100)) : null;
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
     const entries = membershipCatalogEntries(context);
 
     const tierInfo = getMemberTierInfo(totalPaidVnd, profile.vipTierOverride || profile.tier);
-    const { currentTier, nextTier, neededVnd, neededXu, progressPercent, paidVnd } = tierInfo;
+    const { isKnown, currentTier, nextTier, neededVnd, neededXu, progressPercent, paidVnd } = tierInfo;
+    const unlinkedOrNoData = context.wallet && context.wallet.status_name === 'unlinked' ? 'Chưa liên kết Telegram' : 'Chưa có dữ liệu';
 
     const currentCard = `
       <section class="portal-card portal-card-pad" style="border-top: 3px solid ${currentTier.color};">
@@ -21177,17 +21192,17 @@
           <div class="portal-metric">
             <span>Hạng hiện tại</span>
             <strong style="color:${currentTier.color}; font-size:22px;">${safeText(currentTier.badge)}</strong>
-            <em>${currentTier.discountRate > 0 ? `Giảm ${currentTier.discountRate}% khi tiêu Xu` : 'Ưu đãi chuẩn'}</em>
+            <em>${isKnown && currentTier.discountRate > 0 ? `Giảm ${currentTier.discountRate}% khi tiêu Xu` : (isKnown ? 'Ưu đãi chuẩn' : unlinkedOrNoData)}</em>
           </div>
           <div class="portal-metric">
             <span>Tổng tiền đã nạp</span>
-            <strong style="color:#00f2fe; font-size:22px;">${paidVnd.toLocaleString('vi-VN')} đ</strong>
-            <em>~${Math.floor(paidVnd / 100).toLocaleString('vi-VN')} Xu tích lũy</em>
+            <strong style="color:#00f2fe; font-size:22px;">${isKnown && typeof paidVnd === 'number' ? `${paidVnd.toLocaleString('vi-VN')} đ` : '—'}</strong>
+            <em>${isKnown && typeof paidVnd === 'number' ? `~${Math.floor(paidVnd / 100).toLocaleString('vi-VN')} Xu tích lũy` : unlinkedOrNoData}</em>
           </div>
           <div class="portal-metric">
             <span>Số dư Xu khả dụng</span>
             <strong style="color:${hasWallet ? '#00d26a' : '#8fa3b7'}; font-size:22px;">${hasWallet ? `${balanceXu.toLocaleString('vi-VN')} Xu` : '—'}</strong>
-            <em>${hasWallet ? `~${(balanceXu * 100).toLocaleString('vi-VN')} VNĐ` : (context.wallet && context.wallet.status_name === 'unlinked' ? 'Chưa liên kết Telegram' : 'Chưa có dữ liệu')}</em>
+            <em>${hasWallet ? `~${(balanceXu * 100).toLocaleString('vi-VN')} VNĐ` : unlinkedOrNoData}</em>
           </div>
         </div>
 
@@ -21195,20 +21210,20 @@
         <div style="background:var(--portal-surface-card, #091a28); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; margin-top:20px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
             <div style="font-size:14px; font-weight:700; color:var(--portal-text-primary, #fff);">
-              ${nextTier ? `Tiến trình lên hạng ${nextTier.badge}:` : '🏆 Bạn đã đạt Hạng Thành Viên Tối Cao!'}
+              ${!isKnown ? 'Tiến trình lên hạng: Chưa có dữ liệu nạp tích lũy' : (nextTier ? `Tiến trình lên hạng ${nextTier.badge}:` : '🏆 Bạn đã đạt Hạng Thành Viên Tối Cao!')}
             </div>
-            <div style="font-size:13px; font-weight:700; color:${nextTier ? nextTier.color : '#00d26a'};">
-              ${progressPercent}%
+            <div style="font-size:13px; font-weight:700; color:${isKnown && nextTier ? nextTier.color : '#8fa3b7'};">
+              ${isKnown && typeof progressPercent === 'number' ? `${progressPercent}%` : '—%'}
             </div>
           </div>
 
           <div style="width:100%; height:12px; background:#112233; border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); margin-bottom:10px;">
-            <div style="width:${progressPercent}%; height:100%; background:linear-gradient(90deg, #00f2fe, ${nextTier ? nextTier.color : '#00d26a'}); border-radius:999px; transition:width 0.4s ease;"></div>
+            <div style="width:${isKnown && typeof progressPercent === 'number' ? progressPercent : 0}%; height:100%; background:linear-gradient(90deg, #00f2fe, ${isKnown && nextTier ? nextTier.color : '#8fa3b7'}); border-radius:999px; transition:width 0.4s ease;"></div>
           </div>
 
           <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--portal-text-secondary, #8fa3b7); flex-wrap:wrap; gap:6px;">
-            <span>Đã nạp: <strong style="color:#fff;">${paidVnd.toLocaleString('vi-VN')} đ</strong></span>
-            ${nextTier ? `<span>Cần thêm: <strong style="color:#00f2fe;">${neededVnd.toLocaleString('vi-VN')} đ</strong> (~${neededXu.toLocaleString('vi-VN')} Xu) để lên <strong>${nextTier.badge}</strong></span>` : '<span>Đặc quyền tối cao không giới hạn</span>'}
+            <span>Đã nạp: <strong style="color:#fff;">${isKnown && typeof paidVnd === 'number' ? `${paidVnd.toLocaleString('vi-VN')} đ` : '—'}</strong></span>
+            ${!isKnown ? `<span>${safeText(unlinkedOrNoData)}</span>` : (nextTier ? `<span>Cần thêm: <strong style="color:#00f2fe;">${neededVnd.toLocaleString('vi-VN')} đ</strong> (~${neededXu.toLocaleString('vi-VN')} Xu) để lên <strong>${nextTier.badge}</strong></span>` : '<span>Đặc quyền tối cao không giới hạn</span>')}
           </div>
         </div>
 
@@ -26868,9 +26883,11 @@
     const settingsNav = renderAccountSettingsNav("/account");
     const accountAssurance = `<details class="portal-account-assurance"><summary>${safeText(copy("assurance", "Trạng thái tích hợp và bảo mật"))}</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div></details>`;
     const accountWallet = canonicalWalletProjection(context.wallet);
-    const accountPaidVnd = Number(accountWallet ? (accountWallet.total_paid_vnd || accountWallet.total_deposited_vnd || (accountWallet.balance_xu ? accountWallet.balance_xu * 100 : 0)) : 0);
-    const accountTierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(accountPaidVnd, profile.vipTierOverride || profile.tier) : { currentTier: { badge: "🌱 Newbie", color: "#00f2fe", discountRate: 0, referralPercent: 0, birthdayGiftXu: 0 }, nextTier: null, neededVnd: 0, neededXu: 0, progressPercent: 100, paidVnd: 0 };
-    const { currentTier: accTier, nextTier: accNextTier, neededVnd: accNeededVnd, neededXu: accNeededXu, progressPercent: accProgress, paidVnd: accPaidVnd } = accountTierInfo;
+    const accountHasWallet = accountWallet && typeof accountWallet.balance_xu === "number";
+    const accountPaidVnd = accountHasWallet ? Number(accountWallet.total_paid_vnd || accountWallet.total_deposited_vnd || (accountWallet.balance_xu * 100)) : null;
+    const accountTierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(accountPaidVnd, profile.vipTierOverride || profile.tier) : { isKnown: false, currentTier: { badge: "—", color: "#8fa3b7", discountRate: 0, referralPercent: 0, birthdayGiftXu: 0 }, nextTier: null, neededVnd: null, neededXu: null, progressPercent: null, paidVnd: null };
+    const { isKnown: accIsKnown, currentTier: accTier, nextTier: accNextTier, neededVnd: accNeededVnd, neededXu: accNeededXu, progressPercent: accProgress, paidVnd: accPaidVnd } = accountTierInfo;
+    const accUnlinkedOrNoData = context.wallet && context.wallet.status_name === 'unlinked' ? 'Chưa liên kết Telegram' : 'Chưa có dữ liệu';
 
     const memberTierCard = `
       <section class="portal-card portal-card-pad" style="border-top: 3px solid ${accTier.color};">
@@ -26878,26 +26895,26 @@
           <div>
             <span class="portal-section-kicker">👑 Cấp bậc hội viên</span>
             <h2 class="portal-card-title">Hạng Hội Viên: <span style="color:${accTier.color};">${safeText(accTier.badge)}</span></h2>
-            <p class="portal-card-subtitle">Hệ thống tự động nâng hạng theo tổng số tiền nạp tích lũy (${accPaidVnd.toLocaleString('vi-VN')} đ).</p>
+            <p class="portal-card-subtitle">${accIsKnown && typeof accPaidVnd === 'number' ? `Hệ thống tự động nâng hạng theo tổng số tiền nạp tích lũy (${accPaidVnd.toLocaleString('vi-VN')} đ).` : safeText(accUnlinkedOrNoData)}</p>
           </div>
           ${badge("read_only")}
         </div>
         <div style="margin-bottom:16px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:13px;">
-            <strong style="color:var(--portal-text-primary, #fff);">${accNextTier ? `Tiến trình lên ${accNextTier.badge}:` : '🏆 Đạt Hạng Tối Cao VIP'}</strong>
-            <span style="color:${accNextTier ? accNextTier.color : '#00d26a'}; font-weight:700;">${accProgress}%</span>
+            <strong style="color:var(--portal-text-primary, #fff);">${!accIsKnown ? 'Tiến trình lên hạng: ' + safeText(accUnlinkedOrNoData) : (accNextTier ? `Tiến trình lên ${accNextTier.badge}:` : '🏆 Đạt Hạng Tối Cao VIP')}</strong>
+            <span style="color:${accIsKnown && accNextTier ? accNextTier.color : '#8fa3b7'}; font-weight:700;">${accIsKnown && typeof accProgress === 'number' ? `${accProgress}%` : '—%'}</span>
           </div>
           <div style="width:100%; height:10px; background:#112233; border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); margin-bottom:8px;">
-            <div style="width:${accProgress}%; height:100%; background:linear-gradient(90deg, #00f2fe, ${accNextTier ? accNextTier.color : '#00d26a'}); border-radius:999px;"></div>
+            <div style="width:${accIsKnown && typeof accProgress === 'number' ? accProgress : 0}%; height:100%; background:linear-gradient(90deg, #00f2fe, ${accIsKnown && accNextTier ? accNextTier.color : '#8fa3b7'}); border-radius:999px;"></div>
           </div>
           <div style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">
-            ${accNextTier ? `Còn thiếu: <strong style="color:#00f2fe;">${accNeededVnd.toLocaleString('vi-VN')} đ</strong> (~${accNeededXu.toLocaleString('vi-VN')} Xu) để lên <strong>${accNextTier.badge}</strong>` : 'Đang hưởng trọn vẹn đặc quyền tối cao VIP'}
+            ${!accIsKnown ? safeText(accUnlinkedOrNoData) : (accNextTier ? `Còn thiếu: <strong style="color:#00f2fe;">${accNeededVnd.toLocaleString('vi-VN')} đ</strong> (~${accNeededXu.toLocaleString('vi-VN')} Xu) để lên <strong>${accNextTier.badge}</strong>` : 'Đang hưởng trọn vẹn đặc quyền tối cao VIP')}
           </div>
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
-          <span style="background:rgba(0, 242, 254, 0.1); color:#00f2fe; border:1px solid rgba(0, 242, 254, 0.25); font-size:11.5px; font-weight:700; padding:4px 8px; border-radius:6px;">🏷 Giảm ${accTier.discountRate}% trừ Xu</span>
-          <span style="background:rgba(0, 210, 106, 0.1); color:#00d26a; border:1px solid rgba(0, 210, 106, 0.25); font-size:11.5px; font-weight:700; padding:4px 8px; border-radius:6px;">🎁 Ref ${accTier.referralPercent}%</span>
-          <span style="background:rgba(251, 191, 36, 0.1); color:#fbbf24; border:1px solid rgba(251, 191, 36, 0.25); font-size:11.5px; font-weight:700; padding:4px 8px; border-radius:6px;">🎂 Sinh nhật ${accTier.birthdayGiftXu} Xu</span>
+          <span style="background:rgba(0, 242, 254, 0.1); color:#00f2fe; border:1px solid rgba(0, 242, 254, 0.25); font-size:11.5px; font-weight:700; padding:4px 8px; border-radius:6px;">🏷 Giảm ${accTier.discountRate || 0}% trừ Xu</span>
+          <span style="background:rgba(0, 210, 106, 0.1); color:#00d26a; border:1px solid rgba(0, 210, 106, 0.25); font-size:11.5px; font-weight:700; padding:4px 8px; border-radius:6px;">🎁 Ref ${accTier.referralPercent || 0}%</span>
+          <span style="background:rgba(251, 191, 36, 0.1); color:#fbbf24; border:1px solid rgba(251, 191, 36, 0.25); font-size:11.5px; font-weight:700; padding:4px 8px; border-radius:6px;">🎂 Sinh nhật ${accTier.birthdayGiftXu || 0} Xu</span>
         </div>
         <div class="portal-form-footer">
           <a class="portal-button portal-button--quiet" href="/membership">Xem bảng quyền lợi 6 hạng →</a>

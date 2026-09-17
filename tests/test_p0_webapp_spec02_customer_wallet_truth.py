@@ -4,22 +4,28 @@ Mandate: MASTER_PROGRAM=P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1
 Task: TASK=P0.WEBAPP.SPEC02.CUSTOMER.WALLET.BILLING.TOPUP.TRUTH
 
 Checks and Invariants:
-1. displayed wallet balance == canonical bot wallet balance (users.credits)
+1. displayed wallet balance == canonical bot wallet balance via loopback bridge
 2. 0 != NO_DATA != UNAVAILABLE != ERROR != STALE
 3. Forbidden: fake zero, localStorage balance, optimistic credit, UI approved before ledger, fake receipt
-4. Bridge unavailable behavior: seamless read-through projection to canonical system SQLite database
-5. Unlinked account behavior: explicit unlinked status, never fake 0
-6. Database unavailable behavior: guarded error, never fake 0
-7. Topup packages and pricing catalog availability
-8. Manual topup creation, idempotency, pending_admin_review state, no optimistic credit
-9. PayOS order flow and status projection
+4. Strict bridge-only architecture: zero direct Bot SQLite reads from Web App
+5. Admin ERP feature gate enforced in _bridge
+6. Unlinked account behavior: explicit unlinked status, never fake 0
+7. Bridge unavailable behavior: fail-closed guarded error, never fake 0
+8. Bot user not initialized behavior: explicit unverified status, never fake 0
+9. Real wallet reconciliation discrepancy: fails closed on ledger mismatch
+10. Topup packages and pricing catalog availability via bridge
+11. Manual topup creation, idempotency, pending_admin_review state, no optimistic credit
+12. PayOS order flow and status projection
+13. Purged derived fake-zero metrics: UNKNOWN_BALANCE => UNKNOWN_TIER (never Newbie)
 """
 
 from __future__ import annotations
 
 import importlib
+import inspect
 from pathlib import Path
 import sqlite3
+import subprocess
 import sys
 
 import pytest
@@ -93,33 +99,90 @@ def _link_telegram(session_db_path: Path, email: str, telegram_uid: str):
     conn.close()
 
 
-def test_first_red_displayed_wallet_balance_and_ledger_truth(tmp_path, monkeypatch):
-    """PROVE FIRST-RED: When Bridge lacks /wallet endpoint, Web App must project canonical balance and ledger from system DB."""
+def test_wallet_endpoints_do_not_access_bot_sqlite_directly():
+    """Blocker 2: Architecture is strictly Web -> loopback bridge -> Bot read model API.
+
+    No direct SQLite connection (`from db import db_connect`) is allowed in wallet routes.
+    """
+    copyfast_api = importlib.import_module("copyfast_api")
+    wallet_source = inspect.getsource(copyfast_api.wallet)
+    wallet_history_source = inspect.getsource(copyfast_api.wallet_history)
+
+    for src, fn_name in ((wallet_source, "wallet"), (wallet_history_source, "wallet_history")):
+        assert "db_connect" not in src, f"{fn_name} must not import or call db_connect"
+        assert "sqlite3" not in src, f"{fn_name} must not use sqlite3 directly"
+        assert "credit_events" not in src, f"{fn_name} must not query credit_events table directly"
+        assert "_bridge" in src, f"{fn_name} must delegate strictly to _bridge"
+
+
+def test_admin_erp_feature_gate_in_bridge(tmp_path, monkeypatch):
+    """Blocker 1: Admin ERP feature gate restored in _bridge()."""
+    copyfast_api = importlib.import_module("copyfast_api")
+
+    monkeypatch.setenv("WEBAPP_ADMIN_ERP_ENABLED", "false")
+    fake_request = type("FakeReq", (), {"headers": {}})()
+    account = {"canonical_user_id": TELEGRAM_USER_ID, "role": "admin"}
+
+    import asyncio
+    res = asyncio.run(
+        copyfast_api._bridge(
+            "GET",
+            "/internal/v1/admin/overview",
+            account=account,
+            request=fake_request,
+        )
+    )
+    assert res["ok"] is False
+    assert res["status"] == "guarded"
+    assert res["error_code"] == "WEBAPP_ADMIN_ERP_DISABLED"
+
+
+def test_canonical_wallet_balance_and_ledger_via_bridge(tmp_path, monkeypatch):
+    """Blocker 3: Canonical Bot wallet and history projected via bridge."""
     client, session_db, system_db = _setup_app_client(tmp_path, monkeypatch)
 
     with client:
         _register_and_login(client, CUSTOMER_EMAIL, CUSTOMER_PASSWORD)
         _link_telegram(session_db, CUSTOMER_EMAIL, TELEGRAM_USER_ID)
 
-        # Seed canonical data in system DB without any schema mutations
-        sys_conn = sqlite3.connect(str(system_db))
-        sys_conn.execute(
-            "INSERT OR REPLACE INTO users (user_id, username, credits, is_vip, join_date) "
-            "VALUES (?, 'toan_test', 150, 0, '2026-09-01 10:00:00')",
-            (TELEGRAM_USER_ID,)
-        )
-        sys_conn.execute(
-            "INSERT INTO credit_events (user_id, delta, balance_after, event_type, ref_id, note, created_at) "
-            "VALUES (?, 200, 200, 'trial_grant', 'trial-001', 'Tặng 200 Xu trải nghiệm', '2026-09-01 10:00:00')",
-            (TELEGRAM_USER_ID,)
-        )
-        sys_conn.execute(
-            "INSERT INTO credit_events (user_id, delta, balance_after, event_type, ref_id, note, created_at) "
-            "VALUES (?, -50, 150, 'video_render', 'job-001', 'Tạo video ngắn', '2026-09-02 14:00:00')",
-            (TELEGRAM_USER_ID,)
-        )
-        sys_conn.commit()
-        sys_conn.close()
+        copyfast_api = importlib.import_module("copyfast_api")
+        monkeypatch.setattr(copyfast_api, "bridge_configured", lambda: True)
+
+        async def mock_bridge(method, path, **kwargs):
+            if path == "/internal/v1/wallet":
+                return {
+                    "ok": True,
+                    "status": "read_only",
+                    "message": "Số dư ví canonical đã sẵn sàng.",
+                    "data": {
+                        "balance_xu": 150,
+                        "total_spent_xu": 50,
+                        "is_vip": False,
+                        "source": "canonical_ledger",
+                        "reconciliation": {
+                            "reconciled": True,
+                            "status": "reconciled",
+                            "snapshot_credits": 150,
+                            "ledger_credits": 150,
+                            "discrepancy": 0,
+                        },
+                    },
+                }
+            if path == "/internal/v1/wallet/history":
+                return {
+                    "ok": True,
+                    "status": "read_only",
+                    "message": "Lịch sử biến động Xu canonical.",
+                    "data": {
+                        "items": [
+                            {"created_at": "2026-09-02 14:00:00", "event_type": "video_render", "delta_xu": -50, "balance_after_xu": 150},
+                            {"created_at": "2026-09-01 10:00:00", "event_type": "trial_grant", "delta_xu": 200, "balance_after_xu": 200},
+                        ]
+                    },
+                }
+            return {"ok": False, "status": "guarded", "error_code": "NOT_FOUND"}
+
+        monkeypatch.setattr(copyfast_api, "bridge_request", mock_bridge)
 
         # Call GET /api/v1/wallet
         wallet_res = client.get("/api/v1/wallet")
@@ -127,7 +190,7 @@ def test_first_red_displayed_wallet_balance_and_ledger_truth(tmp_path, monkeypat
         wallet_data = wallet_res.json()
 
         assert wallet_data["ok"] is True, f"Wallet endpoint failed: {wallet_data}"
-        assert wallet_data["status"] in ("read_only", "ready", "completed")
+        assert wallet_data["status"] == "read_only"
         assert wallet_data["data"]["balance_xu"] == 150
         assert wallet_data["data"]["total_spent_xu"] == 50
         assert wallet_data["data"]["is_vip"] is False
@@ -140,9 +203,11 @@ def test_first_red_displayed_wallet_balance_and_ledger_truth(tmp_path, monkeypat
         history_data = history_res.json()
 
         assert history_data["ok"] is True, f"History endpoint failed: {history_data}"
-        assert history_data["status"] in ("read_only", "ready", "completed")
+        assert history_data["status"] == "read_only"
         items = history_data["data"]["items"]
         assert len(items) == 2
+        assert items[0]["event_type"] == "video_render"
+        assert items[0]["delta_xu"] == -50
 
 
 def test_unlinked_account_does_not_return_fake_zero(tmp_path, monkeypatch):
@@ -162,25 +227,28 @@ def test_unlinked_account_does_not_return_fake_zero(tmp_path, monkeypatch):
         assert data.get("error_code") in ("ACCOUNT_TELEGRAM_UNLINKED", "CORE_BRIDGE_NOT_CONFIGURED", "TELEGRAM_LINK_REQUIRED")
 
 
-def test_database_unavailable_does_not_return_fake_zero(tmp_path, monkeypatch):
-    """Invariant: When database fails, return guarded error, never fake 0."""
+def test_bridge_unavailable_fails_closed_without_fake_zero(tmp_path, monkeypatch):
+    """Invariant: When bridge is unconfigured/down, fail closed honestly (never fake 0 Xu)."""
     client, session_db, system_db = _setup_app_client(tmp_path, monkeypatch)
 
     with client:
-        _register_and_login(client, "db-fail-user@toanaas.vn", CUSTOMER_PASSWORD)
-        _link_telegram(session_db, "db-fail-user@toanaas.vn", "9999999999")
+        _register_and_login(client, CUSTOMER_EMAIL, CUSTOMER_PASSWORD)
+        _link_telegram(session_db, CUSTOMER_EMAIL, TELEGRAM_USER_ID)
 
-        import config
-        monkeypatch.setattr(config.settings, "DB_FILE", "/invalid/nonexistent/path/db.sqlite")
-
+        # Bridge unconfigured
         wallet_res = client.get("/api/v1/wallet")
         assert wallet_res.status_code == 200
         data = wallet_res.json()
 
         assert data["ok"] is False
-        assert data["status"] in ("guarded", "failed")
-        if isinstance(data.get("data"), dict):
-            assert "balance_xu" not in data["data"] or data["data"]["balance_xu"] is None
+        assert data["status"] == "guarded"
+        assert data["error_code"] == "CORE_BRIDGE_NOT_CONFIGURED"
+
+        history_res = client.get("/api/v1/wallet/history")
+        assert history_res.status_code == 200
+        h_data = history_res.json()
+        assert h_data["ok"] is False
+        assert h_data["status"] == "guarded"
 
 
 def test_remove_web_owned_fake_pricing_packages_when_bridge_unavailable(tmp_path, monkeypatch):
@@ -205,27 +273,40 @@ def test_remove_web_owned_fake_pricing_packages_when_bridge_unavailable(tmp_path
         assert pricing_data["error_code"] == "CORE_BRIDGE_NOT_CONFIGURED"
 
 
-def test_real_wallet_reconciliation_and_discrepancy_detection(tmp_path, monkeypatch):
-    """Mission 3: Real wallet reconciliation between users.credits and credit_events ledger."""
+def test_real_wallet_reconciliation_discrepancy_fails_closed_via_bridge(tmp_path, monkeypatch):
+    """Mission 3: Discrepancy detected by Bot read model fails closed on Web App."""
     client, session_db, system_db = _setup_app_client(tmp_path, monkeypatch)
 
     with client:
         _register_and_login(client, "recon-user@toanaas.vn", CUSTOMER_PASSWORD)
         _link_telegram(session_db, "recon-user@toanaas.vn", "8881234567")
 
-        # 1. State: users.credits = 300, but latest credit_event balance_after = 200 (DISCREPANCY!)
-        with sqlite3.connect(str(system_db)) as sys_conn:
-            sys_conn.execute(
-                "INSERT OR REPLACE INTO users (user_id, username, credits, is_vip, join_date) "
-                "VALUES ('8881234567', 'recon_test', 300, 0, '2026-09-01 10:00:00')"
-            )
-            sys_conn.execute(
-                "INSERT INTO credit_events (user_id, delta, balance_after, event_type, created_at) "
-                "VALUES ('8881234567', 200, 200, 'grant', '2026-09-01 10:00:00')"
-            )
-            sys_conn.commit()
+        copyfast_api = importlib.import_module("copyfast_api")
+        monkeypatch.setattr(copyfast_api, "bridge_configured", lambda: True)
 
-        # Discrepancy must fail closed with guarded status!
+        async def mock_discrepancy(method, path, **kwargs):
+            return {
+                "ok": False,
+                "status": "guarded",
+                "message": "Phát hiện sai lệch đối soát giữa số dư ví và sổ cái giao dịch.",
+                "data": {
+                    "balance_xu": 300,
+                    "total_spent_xu": 0,
+                    "is_vip": False,
+                    "source": "canonical_ledger",
+                    "reconciliation": {
+                        "reconciled": False,
+                        "status": "unreconciled_discrepancy",
+                        "snapshot_credits": 300,
+                        "ledger_credits": 200,
+                        "discrepancy": 100,
+                    },
+                },
+                "error_code": "WALLET_LEDGER_UNRECONCILED",
+            }
+
+        monkeypatch.setattr(copyfast_api, "bridge_request", mock_discrepancy)
+
         res_unreconciled = client.get("/api/v1/wallet")
         assert res_unreconciled.status_code == 200
         unrec_data = res_unreconciled.json()
@@ -235,22 +316,35 @@ def test_real_wallet_reconciliation_and_discrepancy_detection(tmp_path, monkeypa
         assert unrec_data["data"]["reconciliation"]["reconciled"] is False
         assert unrec_data["data"]["reconciliation"]["discrepancy"] == 100
 
-        # 2. Fix the discrepancy by recording the missing 100 Xu ledger event
-        with sqlite3.connect(str(system_db)) as sys_conn:
-            sys_conn.execute(
-                "INSERT INTO credit_events (user_id, delta, balance_after, event_type, created_at) "
-                "VALUES ('8881234567', 100, 300, 'topup_reconciled', '2026-09-02 10:00:00')"
-            )
-            sys_conn.commit()
 
-        # Now reconciled!
-        res_reconciled = client.get("/api/v1/wallet")
-        assert res_reconciled.status_code == 200
-        rec_data = res_reconciled.json()
-        assert rec_data["ok"] is True
-        assert rec_data["data"]["balance_xu"] == 300
-        assert rec_data["data"]["reconciliation"]["reconciled"] is True
-        assert rec_data["data"]["reconciliation"]["discrepancy"] == 0
+def test_bot_user_not_initialized_via_bridge(tmp_path, monkeypatch):
+    """Invariant: Uninitialized Bot user returns explicit unverified status, never fake 0."""
+    client, session_db, system_db = _setup_app_client(tmp_path, monkeypatch)
+
+    with client:
+        _register_and_login(client, "new-user@toanaas.vn", CUSTOMER_PASSWORD)
+        _link_telegram(session_db, "new-user@toanaas.vn", "9991234567")
+
+        copyfast_api = importlib.import_module("copyfast_api")
+        monkeypatch.setattr(copyfast_api, "bridge_configured", lambda: True)
+
+        async def mock_uninitialized(method, path, **kwargs):
+            return {
+                "ok": False,
+                "status": "unverified",
+                "message": "Tài khoản Telegram chưa kích hoạt trong hệ thống Bot.",
+                "data": None,
+                "error_code": "BOT_USER_NOT_INITIALIZED",
+            }
+
+        monkeypatch.setattr(copyfast_api, "bridge_request", mock_uninitialized)
+
+        res = client.get("/api/v1/wallet")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["ok"] is False
+        assert data["status"] == "unverified"
+        assert data["error_code"] == "BOT_USER_NOT_INITIALIZED"
 
 
 def test_manual_topup_idempotency_and_no_optimistic_credit(tmp_path, monkeypatch):
@@ -334,22 +428,60 @@ def test_wallet_refresh_reconciles_ledger_and_balance(tmp_path, monkeypatch):
         _register_and_login(client, "refresh-user@toanaas.vn", CUSTOMER_PASSWORD)
         _link_telegram(session_db, "refresh-user@toanaas.vn", TELEGRAM_USER_ID)
 
-        # 1. Initial state: 200 Xu, reconciled with ledger
-        with sqlite3.connect(str(system_db)) as sys_conn:
-            sys_conn.execute("INSERT OR REPLACE INTO users (user_id, credits) VALUES (?, 200)", (TELEGRAM_USER_ID,))
-            sys_conn.execute("INSERT INTO credit_events (user_id, delta, balance_after, event_type, created_at) VALUES (?, 200, 200, 'initial', '2026-09-01 10:00:00')", (TELEGRAM_USER_ID,))
-            sys_conn.commit()
+        copyfast_api = importlib.import_module("copyfast_api")
+        monkeypatch.setattr(copyfast_api, "bridge_configured", lambda: True)
 
+        current_balance = {"balance": 200}
+        history_items = [
+            {"created_at": "2026-09-01 10:00:00", "event_type": "initial", "delta_xu": 200, "balance_after_xu": 200}
+        ]
+
+        async def dynamic_bridge(method, path, **kwargs):
+            if path == "/internal/v1/wallet":
+                b = current_balance["balance"]
+                return {
+                    "ok": True,
+                    "status": "read_only",
+                    "message": "Số dư ví canonical đã sẵn sàng.",
+                    "data": {
+                        "balance_xu": b,
+                        "total_spent_xu": 0,
+                        "is_vip": False,
+                        "source": "canonical_ledger",
+                        "reconciliation": {
+                            "reconciled": True,
+                            "status": "reconciled",
+                            "snapshot_credits": b,
+                            "ledger_credits": b,
+                            "discrepancy": 0,
+                        },
+                    },
+                }
+            if path == "/internal/v1/wallet/history":
+                return {
+                    "ok": True,
+                    "status": "read_only",
+                    "message": "Lịch sử biến động Xu canonical.",
+                    "data": {"items": list(history_items)},
+                }
+            return {"ok": False, "status": "guarded"}
+
+        monkeypatch.setattr(copyfast_api, "bridge_request", dynamic_bridge)
+
+        # 1. Initial state: 200 Xu, reconciled with ledger
         w1 = client.get("/api/v1/wallet").json()
         assert w1["ok"] is True
         assert w1["data"]["balance_xu"] == 200
         assert w1["data"]["reconciliation"]["reconciled"] is True
 
-        # 2. Canonical event happens (e.g. 150 Xu added via bot or confirmed topup)
-        with sqlite3.connect(str(system_db)) as sys_conn:
-            sys_conn.execute("UPDATE users SET credits=350 WHERE user_id=?", (TELEGRAM_USER_ID,))
-            sys_conn.execute("INSERT INTO credit_events (user_id, delta, balance_after, event_type, created_at) VALUES (?, 150, 350, 'topup_confirmed', '2026-09-02 12:00:00')", (TELEGRAM_USER_ID,))
-            sys_conn.commit()
+        # 2. Canonical event happens in Bot (e.g. 150 Xu added via bot or confirmed topup)
+        current_balance["balance"] = 350
+        history_items.insert(0, {
+            "created_at": "2026-09-02 12:00:00",
+            "event_type": "topup_confirmed",
+            "delta_xu": 150,
+            "balance_after_xu": 350,
+        })
 
         # 3. Web App refresh immediately reflects updated canonical balance
         w2 = client.get("/api/v1/wallet").json()
@@ -423,3 +555,31 @@ def test_no_hardcoded_fake_balances_in_portal_js():
     assert "balance_xu : 100" not in content
     assert "balance_xu !== undefined ? context.wallet.balance_xu : 100" not in content
     assert "Number(wallet && wallet.balance_xu !== undefined ? wallet.balance_xu : 0)" not in content
+
+
+def test_portal_js_unknown_wallet_metrics_contract():
+    """Blocker 4 Invariant: UNKNOWN_BALANCE => UNKNOWN_TIER_PROGRESS (never 0 VND -> Newbie)."""
+    script = (
+        "const fs = require('fs');\n"
+        "const code = fs.readFileSync('static/portal/portal.js', 'utf8');\n"
+        "const fn = new Function(code.slice(code.indexOf('const MEMBER_TIER_CANONICAL ='), code.indexOf('function renderMembership')) + '\\nreturn getMemberTierInfo;');\n"
+        "const getTier = fn();\n"
+        "const nullRes = getTier(null);\n"
+        "if (nullRes.isKnown !== false || nullRes.currentTier.badge !== '—' || nullRes.progressPercent !== null || nullRes.paidVnd !== null) {\n"
+        "  console.error('FAILED null check:', nullRes);\n"
+        "  process.exit(1);\n"
+        "}\n"
+        "const undefRes = getTier(undefined);\n"
+        "if (undefRes.isKnown !== false || undefRes.currentTier.badge !== '—' || undefRes.progressPercent !== null) {\n"
+        "  console.error('FAILED undefined check:', undefRes);\n"
+        "  process.exit(1);\n"
+        "}\n"
+        "const zeroRes = getTier(0);\n"
+        "if (zeroRes.isKnown !== true || zeroRes.currentTier.badge !== '🌱 Newbie' || zeroRes.paidVnd !== 0) {\n"
+        "  console.error('FAILED zero check:', zeroRes);\n"
+        "  process.exit(1);\n"
+        "}\n"
+        "console.log('TIER_CONTRACT_VERIFIED_OK');\n"
+    )
+    result = subprocess.run(["node", "-e", script], capture_output=True, text=True, check=True)
+    assert "TIER_CONTRACT_VERIFIED_OK" in result.stdout
