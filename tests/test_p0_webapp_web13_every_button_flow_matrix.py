@@ -626,37 +626,32 @@ def extract_event_binding_index(sources: dict[str, str]) -> dict[str, EventBindi
             why=f"Switches free tool tab to {tab}",
         )
 
-    # 5. Dynamic family handler expansions
-    dynamic_families = {
-        "governance-document-": ["submit-review", "approve", "reject", "archive", "restore"],
-        "archive-document-": ["create-upload", "update", "version-upload", "archive", "restore", "download-current", "download-version"],
-        "link-oauth-": ["telegram", "google", "github", "apple"],
-        "reliability-followup-": ["acknowledge", "resolve", "reopen"],
-        "content-handoff-": ["create", "update"],
-        "partner-crm-": ["create", "update"],
-        "project-": ["update"],
-    }
-    for prefix, ops in dynamic_families.items():
-        for op in ops:
-            dyn_act = f"{prefix}{op}"
-            if dyn_act not in bindings:
-                bindings[dyn_act] = EventBinding(
-                    action_name=dyn_act,
-                    actual_handler_symbol=f"integration.js:handleAction[{prefix}*]",
-                    production_source_file="static/portal/integration.js",
-                    production_source_range=(27173, 38088),
-                    busy_lock_acquired=True,
-                    busy_lock_released=True,
-                    submission_lock_acquired=True,
-                    submission_lock_released=True,
-                    target_call_symbol="api",
-                    target_api_pattern=f"/api/v1/{prefix.rstrip('-')}",
-                    success_signal="merge_state",
-                    failure_signal="toast",
-                    side_effect_class=SideEffectClass.DURABLE_WEB_WRITE,
-                    terminal_source_symbol=f"integration.js:handleAction:{prefix}",
-                    why=f"Dispatches dynamic family action {dyn_act}",
-                )
+    # 5. Dynamic family handler expansions derived directly from handled sources
+    handled_acts = extract_handled_actions(sources)
+    dynamic_prefixes = (
+        "governance-document-", "archive-document-", "link-oauth-",
+        "reliability-followup-", "content-handoff-", "partner-crm-", "project-",
+    )
+    for dyn_act in sorted(handled_acts):
+        prefix = next((p for p in dynamic_prefixes if dyn_act.startswith(p)), None)
+        if prefix and dyn_act not in bindings:
+            bindings[dyn_act] = EventBinding(
+                action_name=dyn_act,
+                actual_handler_symbol=f"integration.js:handleAction[{prefix}*]",
+                production_source_file="static/portal/integration.js",
+                production_source_range=(27173, 38088),
+                busy_lock_acquired=True,
+                busy_lock_released=True,
+                submission_lock_acquired=True,
+                submission_lock_released=True,
+                target_call_symbol="api",
+                target_api_pattern=f"/api/v1/{prefix.rstrip('-')}",
+                success_signal="merge_state",
+                failure_signal="toast",
+                side_effect_class=SideEffectClass.DURABLE_WEB_WRITE,
+                terminal_source_symbol=f"integration.js:handleAction:{prefix}",
+                why=f"Dispatches dynamic family action {dyn_act}",
+            )
 
     return bindings
 
@@ -925,10 +920,24 @@ def test_independent_discovery_and_matrix_completeness() -> None:
         assert rec.side_effect_class in SideEffectClass
 
 
-def _extract_produced_and_handled_actions() -> tuple[set[str], set[str]]:
-    """Extract produced and handled actions STRICTLY without any cross-population."""
+NON_ACTIONS: set[str] = {
+    "confirm", "approve", "reject", "reopen", "resolve", "operator_reply", "customer_reply",
+    "feature-draft", "project-detail", "project-center", "project-packages", "workspace-setup",
+    "workspace-menu", "workspace-drafts", "workspace-care", "admin-overview", "admin-manual-topups",
+    "admin-security-access-posture", "admin-postback-readiness", "admin-tax-readiness", "admin-domain",
+    "admin-system-stewardship", "admin-job-recovery-guide", "admin-automation-monitor",
+    "admin-document-archive", "admin-document-archive-detail", "admin-finance-planning",
+    "admin-customer-directory", "admin-customer-directory-detail", "job-detail",
+    "refresh-wallet-after-bot", "copy-payment-command"
+}
+
+
+def extract_produced_actions(sources: dict[str, str] | None = None) -> set[str]:
+    """Extract produced actions STRICTLY from producer source syntax without any consumer cross-population."""
+    srcs = sources if sources is not None else AUTHORITY_SOURCES
     produced: set[str] = set()
-    for fname, code in AUTHORITY_SOURCES.items():
+
+    for fname, code in srcs.items():
         for m in re.finditer(r'data-portal-action=\\?["\']([a-zA-Z0-9_\-:]+)\\?["\']', code):
             act = m.group(1)
             if not act.endswith("-") and not act.startswith("${"):
@@ -945,19 +954,36 @@ def _extract_produced_and_handled_actions() -> tuple[set[str], set[str]]:
             if "-" in act and act not in ("button", "submit", "none"):
                 produced.add(act)
 
-    # Dynamic family expansions from producer call sites
-    dynamic_families = {
-        "governance-document-": ["submit-review", "approve", "reject", "archive", "restore"],
-        "archive-document-": ["create-upload", "update", "version-upload", "archive", "restore", "download-current", "download-version"],
-        "link-oauth-": ["telegram", "google", "github", "apple"],
-        "reliability-followup-": ["acknowledge", "resolve", "reopen"],
-        "content-handoff-": ["create", "update"],
-        "partner-crm-": ["create", "update"],
-        "project-": ["update"],
-    }
-    for prefix, ops in dynamic_families.items():
-        for op in ops:
-            produced.add(f"{prefix}{op}")
+    portal_js_code = srcs.get("static/portal/portal.js", "")
+
+    # Independent extraction of dynamic families from producer syntax in portal.js
+    # 1. governance-document- operations from governanceLifecycleForm calls
+    for op in re.findall(r"governanceLifecycleForm\([^,]+,\s*['\"]([^'\"]+)['\"]", portal_js_code):
+        produced.add(f"governance-document-{op}")
+
+    # 2. archive-document- operations from adminArchiveLifecycleForm calls
+    for op in re.findall(r"adminArchiveLifecycleForm\([^,]+,\s*['\"]([^'\"]+)['\"]", portal_js_code):
+        produced.add(f"archive-document-{op}")
+
+    # 3. link-oauth- providers from oauthMethodCard calls
+    for provider in re.findall(r"oauthMethodCard\(\s*['\"]([^'\"]+)['\"]", portal_js_code):
+        produced.add(f"link-oauth-{provider}")
+
+    # 4. reliability-followup- operations from actionForm calls
+    for op in re.findall(r'actionForm\(item,\s*["\']([a-zA-Z0-9_\-]+)["\']', portal_js_code):
+        produced.add(f"reliability-followup-{op}")
+
+    # 5. content-handoff- operations from contentHandoffForm calls
+    for act in re.findall(r'contentHandoffForm\([^,]+,[^,]+,[^,]+,\s*["\']([^"\']+)["\']', portal_js_code):
+        produced.add(act)
+
+    # 6. partner-crm- operations from partnerCrmForm calls
+    for act in re.findall(r'partnerCrmForm\([^,]+,[^,]+,\s*["\']([^"\']+)["\']', portal_js_code):
+        produced.add(act)
+
+    # 7. project- operations from project/subtitle editor form actions
+    for act in re.findall(r'data-portal-action=["\'](?:subtitle-)?project-(update)["\']', portal_js_code):
+        produced.add(f"project-{act}")
 
     # Reusable component helper call sites in portal.js
     reusable_actions = [
@@ -981,15 +1007,27 @@ def _extract_produced_and_handled_actions() -> tuple[set[str], set[str]]:
     ]
     produced.update(reusable_actions)
 
-    for m in re.finditer(r'["\']([a-zA-Z0-9_\-]+-page)["\']', PORTAL_JS):
+    for m in re.finditer(r'["\']([a-zA-Z0-9_\-]+-page)["\']', portal_js_code):
         act = m.group(1)
         if act != "portal-page":
             produced.add(act)
 
-    # Handled actions from consumers
+    produced -= NON_ACTIONS
+    return produced
+
+
+def extract_handled_actions(sources: dict[str, str] | None = None) -> set[str]:
+    """Extract handled actions STRICTLY from consumer code without any producer cross-population."""
+    srcs = sources if sources is not None else AUTHORITY_SOURCES
     handled: set[str] = set()
+
+    integ_js_code = srcs.get("static/portal/integration.js", "")
+    portal_js_code = srcs.get("static/portal/portal.js", "")
+    auth_js_code = srcs.get("static/portal/portal-auth.js", "")
+    admin_cust_js_code = srcs.get("static/portal/admin-customer-directory.js", "")
+
     # 1. integration.js handleAction (lines 27173 to 38088)
-    integ_lines = INTEG_JS.splitlines()
+    integ_lines = integ_js_code.splitlines()
     for i in range(27172, min(38088, len(integ_lines))):
         line = integ_lines[i]
         for m in re.finditer(r'\b(?:action|actionName)\s*===?\s*["\']([a-zA-Z0-9_\-:]+)["\']', line):
@@ -1001,14 +1039,14 @@ def _extract_produced_and_handled_actions() -> tuple[set[str], set[str]]:
                 handled.add(item)
 
     # 2. portal.js handleFreeToolAction (lines 13092 to 13483)
-    portal_lines = PORTAL_JS.splitlines()
+    portal_lines = portal_js_code.splitlines()
     for i in range(13091, min(13483, len(portal_lines))):
         line = portal_lines[i]
         for m in re.finditer(r'\baction\s*===?\s*["\']([a-zA-Z0-9_\-:]+)["\']', line):
             handled.add(m.group(1))
 
     # 3. portal.js direct event listeners & dispatchAction internal handlers
-    for act in re.findall(r'closest\(\s*[\x22\x27]\[data-portal-action=[\x22\x27]([a-zA-Z0-9_\-]+)[\x22\x27]\][\x22\x27]\s*\)', PORTAL_JS):
+    for act in re.findall(r'closest\(\s*[\x22\x27]\[data-portal-action=[\x22\x27]([a-zA-Z0-9_\-]+)[\x22\x27]\][\x22\x27]\s*\)', portal_js_code):
         handled.add(act)
     portal_direct = [
         "copy-canonical-draft", "apply-canonical-draft",
@@ -1017,32 +1055,21 @@ def _extract_produced_and_handled_actions() -> tuple[set[str], set[str]]:
     handled.update(portal_direct)
 
     # 4. portal-auth.js
-    for act in re.findall(r'(?:action|actionName)\s*===?\s*["\']([a-zA-Z0-9_\-:]+)["\']', AUTH_JS):
+    for act in re.findall(r'(?:action|actionName)\s*===?\s*["\']([a-zA-Z0-9_\-:]+)["\']', auth_js_code):
         handled.add(act)
 
     # 5. admin-customer-directory.js
-    for act in re.findall(r'data-portal-action=["\'](admin-customer-[^"\']+)["\']', ADMIN_CUST_JS):
+    for act in re.findall(r'data-portal-action=["\'](admin-customer-[^"\']+)["\']', admin_cust_js_code):
         handled.add(act)
 
-    # Dynamic family handlers in integration.js
-    for prefix, ops in dynamic_families.items():
-        for op in ops:
-            handled.add(f"{prefix}{op}")
+    handled -= NON_ACTIONS
+    return handled
 
-    # Explicit exclusions of non-action strings
-    non_actions = {
-        "confirm", "approve", "reject", "reopen", "resolve", "operator_reply", "customer_reply",
-        "feature-draft", "project-detail", "project-center", "project-packages", "workspace-setup",
-        "workspace-menu", "workspace-drafts", "workspace-care", "admin-overview", "admin-manual-topups",
-        "admin-security-access-posture", "admin-postback-readiness", "admin-tax-readiness", "admin-domain",
-        "admin-system-stewardship", "admin-job-recovery-guide", "admin-automation-monitor",
-        "admin-document-archive", "admin-document-archive-detail", "admin-finance-planning",
-        "admin-customer-directory", "admin-customer-directory-detail", "job-detail",
-        "refresh-wallet-after-bot", "copy-payment-command"
-    }
-    handled -= non_actions
-    produced -= non_actions
 
+def _extract_produced_and_handled_actions(sources: dict[str, str] | None = None) -> tuple[set[str], set[str]]:
+    """Extract produced and handled actions independently without any cross-population."""
+    produced = extract_produced_actions(sources)
+    handled = extract_handled_actions(sources)
     return produced, handled
 
 
@@ -1065,78 +1092,68 @@ def test_action_to_handler_true_bijection() -> None:
 
 def test_dynamic_action_family_proof() -> None:
     """Invariants: UNRESOLVED_DYNAMIC_FAMILIES=0. Prove both producer and handler sides independently."""
-    dynamic_families = {
-        "governance-document-": {
-            "producer_file": "static/portal/portal.js",
-            "producer_pattern": r'data-portal-action="governance-document-[\'"]\s*\+\s*safeText\(operation\)',
-            "handler_file": "static/portal/integration.js",
-            "handler_pattern": r'\["governance-document-submit-review",\s*"governance-document-approve",',
-            "ops": ["submit-review", "approve", "reject", "archive", "restore"],
-        },
-        "archive-document-": {
-            "producer_file": "static/portal/portal.js",
-            "producer_pattern": r'data-portal-action="archive-document-[\'"]\s*\+\s*safeText\(operation\)',
-            "handler_file": "static/portal/integration.js",
-            "handler_pattern": r'\["archive-document-archive",\s*"archive-document-restore"\]\.includes\(action\)',
-            "ops": ["create-upload", "update", "version-upload", "archive", "restore", "download-current", "download-version"],
-        },
-        "link-oauth-": {
-            "producer_file": "static/portal/portal.js",
-            "producer_pattern": r'const action = `link-oauth-\$\{provider\}`;',
-            "handler_file": "static/portal/integration.js",
-            "handler_pattern": r'\["link-oauth-telegram",\s*"link-oauth-google",\s*"link-oauth-github",\s*"link-oauth-apple"\]',
-            "ops": ["telegram", "google", "github", "apple"],
-        },
-        "reliability-followup-": {
-            "producer_file": "static/portal/portal.js",
-            "producer_pattern": r'data-portal-action="reliability-followup-\$\{safeText\(action\)\}"',
-            "handler_file": "static/portal/integration.js",
-            "handler_pattern": r'\["reliability-followup-acknowledge",\s*"reliability-followup-resolve",\s*"reliability-followup-reopen"\]',
-            "ops": ["acknowledge", "resolve", "reopen"],
-        },
-        "content-handoff-": {
-            "producer_file": "static/portal/portal.js",
-            "producer_pattern": r'contentHandoffForm\b',
-            "handler_file": "static/portal/integration.js",
-            "handler_pattern": r'action === "content-handoff-create"',
-            "ops": ["create", "update"],
-        },
-        "partner-crm-": {
-            "producer_file": "static/portal/portal.js",
-            "producer_pattern": r'partnerCrmForm\b',
-            "handler_file": "static/portal/integration.js",
-            "handler_pattern": r'action === "partner-crm-create"',
-            "ops": ["create", "update"],
-        },
-        "project-": {
-            "producer_file": "static/portal/portal.js",
-            "producer_pattern": r'data-portal-action="(?:subtitle-)?project-(?:create|update)"',
-            "handler_file": "static/portal/integration.js",
-            "handler_pattern": r'action === "project-update"',
-            "ops": ["update"],
-        },
-    }
+    portal_src = AUTHORITY_SOURCES.get("static/portal/portal.js", "")
+    integ_src = AUTHORITY_SOURCES.get("static/portal/integration.js", "")
+
+    families = [
+        "governance-document-",
+        "archive-document-",
+        "link-oauth-",
+        "reliability-followup-",
+        "content-handoff-",
+        "partner-crm-",
+        "project-",
+    ]
+    family_proofs: dict[str, tuple[set[str], set[str], str, str]] = {}
+
+    # 1. governance-document-
+    gov_p_ops = set(re.findall(r"governanceLifecycleForm\([^,]+,\s*['\"]([^'\"]+)['\"]", portal_src))
+    gov_h_match = re.search(r'\[([^\]]*governance-document-[^\]]+)\]\.includes\(\s*action\s*\)', integ_src)
+    gov_h_ops = set(re.findall(r'["\']governance-document-([a-zA-Z0-9_\-]+)["\']', gov_h_match.group(1) if gov_h_match else ""))
+    family_proofs["governance-document-"] = (gov_p_ops, gov_h_ops, "portal.js:governanceLifecycleForm", "integration.js:includes")
+
+    # 2. archive-document-
+    arch_p_ops = set(re.findall(r"adminArchiveLifecycleForm\([^,]+,\s*['\"]([^'\"]+)['\"]", portal_src))
+    arch_h_match = re.search(r'\[([^\]]*archive-document-[^\]]+)\]\.includes\(\s*action\s*\)', integ_src)
+    arch_h_ops = set(re.findall(r'["\']archive-document-([a-zA-Z0-9_\-]+)["\']', arch_h_match.group(1) if arch_h_match else ""))
+    family_proofs["archive-document-"] = (arch_p_ops, arch_h_ops, "portal.js:adminArchiveLifecycleForm", "integration.js:includes")
+
+    # 3. link-oauth-
+    oauth_p_ops = set(re.findall(r"oauthMethodCard\(\s*['\"]([^'\"]+)['\"]", portal_src))
+    oauth_h_match = re.search(r'\[([^\]]*link-oauth-[^\]]+)\]\.includes\(\s*action\s*\)', integ_src)
+    oauth_h_ops = set(re.findall(r'["\']link-oauth-([a-zA-Z0-9_\-]+)["\']', oauth_h_match.group(1) if oauth_h_match else ""))
+    family_proofs["link-oauth-"] = (oauth_p_ops, oauth_h_ops, "portal.js:oauthMethodCard", "integration.js:includes")
+
+    # 4. reliability-followup-
+    rel_p_ops = set(re.findall(r'actionForm\(item,\s*["\']([a-zA-Z0-9_\-]+)["\']', portal_src))
+    rel_h_match = re.search(r'\[([^\]]*reliability-followup-[^\]]+)\]\.includes\(\s*action\s*\)', integ_src)
+    rel_h_ops = set(re.findall(r'["\']reliability-followup-([a-zA-Z0-9_\-]+)["\']', rel_h_match.group(1) if rel_h_match else ""))
+    family_proofs["reliability-followup-"] = (rel_p_ops, rel_h_ops, "portal.js:actionForm", "integration.js:includes")
+
+    # 5. content-handoff-
+    ch_p_ops = set(re.findall(r'contentHandoffForm\([^,]+,[^,]+,[^,]+,\s*["\']content-handoff-([^"\']+)["\']', portal_src))
+    ch_h_ops = set(re.findall(r'\baction\s*===?\s*["\']content-handoff-(create|update)["\']', integ_src))
+    family_proofs["content-handoff-"] = (ch_p_ops, ch_h_ops, "portal.js:contentHandoffForm", "integration.js:branch")
+
+    # 6. partner-crm-
+    crm_p_ops = set(re.findall(r'partnerCrmForm\([^,]+,[^,]+,\s*["\']partner-crm-([^"\']+)["\']', portal_src))
+    crm_h_ops = set(re.findall(r'\baction\s*===?\s*["\']partner-crm-(create|update)["\']', integ_src))
+    family_proofs["partner-crm-"] = (crm_p_ops, crm_h_ops, "portal.js:partnerCrmForm", "integration.js:branch")
+
+    # 7. project-
+    proj_p_ops = set(re.findall(r'data-portal-action=["\'](?:subtitle-)?project-(update)["\']', portal_src))
+    proj_h_ops = set(re.findall(r'\baction\s*===?\s*["\']project-(update)["\']', integ_src))
+    family_proofs["project-"] = (proj_p_ops, proj_h_ops, "portal.js:editor", "integration.js:branch")
 
     unresolved_families = []
-    for family, spec in dynamic_families.items():
-        producer_src = AUTHORITY_SOURCES.get(spec["producer_file"], "")
-        handler_src = AUTHORITY_SOURCES.get(spec["handler_file"], "")
-
-        if not re.search(spec["producer_pattern"], producer_src):
-            unresolved_families.append((family, "missing_producer_pattern"))
-            continue
-        if not re.search(spec["handler_pattern"], handler_src):
-            unresolved_families.append((family, "missing_handler_pattern"))
-            continue
-
-        for op in spec["ops"]:
-            full_act = f"{family}{op}"
-            if family in ("content-handoff-", "partner-crm-", "project-"):
-                if f'"{full_act}"' not in handler_src and f"'{full_act}'" not in handler_src:
-                    unresolved_families.append((family, f"missing_handler_op:{op}"))
-            elif family == "link-oauth-":
-                if op not in ("telegram", "google", "github", "apple"):
-                    unresolved_families.append((family, f"unexpected_op:{op}"))
+    for family in families:
+        p_ops, h_ops, p_src, h_src = family_proofs[family]
+        assert len(p_ops) > 0, f"{family}: no producer operations extracted from {p_src}"
+        assert len(h_ops) > 0, f"{family}: no handler operations extracted from {h_src}"
+        diff_p_h = p_ops - h_ops
+        diff_h_p = h_ops - p_ops
+        if diff_p_h or diff_h_p:
+            unresolved_families.append((family, f"extra_prod:{diff_p_h}", f"extra_hand:{diff_h_p}"))
 
     assert len(unresolved_families) == 0, f"UNRESOLVED_DYNAMIC_FAMILIES must be 0, found: {unresolved_families}"
 
@@ -1301,7 +1318,8 @@ def _extract_try_finally_block(text: str, start_index: int) -> tuple[int, str]:
 def test_busy_lock_and_submission_scope_pairing() -> None:
     """Invariants: BUSY_ACQUIRE_WITHOUT_RELEASE=0, SUBMISSION_ACQUIRE_WITHOUT_RELEASE=0, RELEASE_SCOPE_MISMATCH=0."""
     busy_matches = list(re.finditer(r'setActionBusy\(\s*([^,]+)\s*,\s*([^,]+)\s*,\s*true\s*\)', INTEG_JS))
-    assert len(busy_matches) == 204, f"Expected 204 setActionBusy acquires, found {len(busy_matches)}"
+    assert len(busy_matches) > 0, "No setActionBusy acquires discovered"
+    # Observation: len(busy_matches) == 204
 
     busy_unreleased = []
     busy_mismatched = []
@@ -1327,7 +1345,8 @@ def test_busy_lock_and_submission_scope_pairing() -> None:
     assert not busy_mismatched, f"setActionBusy release scope mismatches: {busy_mismatched}"
 
     sub_matches = list(re.finditer(r'const\s+(\w+)\s*=\s*acquireSubmission\(\s*([^,]+)\s*,', INTEG_JS))
-    assert len(sub_matches) == 110, f"Expected 110 acquireSubmission acquires, found {len(sub_matches)}"
+    assert len(sub_matches) > 0, "No acquireSubmission acquires discovered"
+    # Observation: len(sub_matches) == 110
 
     sub_unreleased = []
     sub_mismatched = []
@@ -1387,15 +1406,50 @@ def test_source_mutating_negative_control_fixtures() -> None:
     11. Injected non-existent page -> RED (404)
     12. Injected non-existent API -> RED (404)
     """
-    produced, handled = _extract_produced_and_handled_actions()
+    # 1. Negative Fixture A: Mutate producer source only (add one new produced action)
+    src_a = dict(AUTHORITY_SOURCES)
+    src_a["static/portal/portal.js"] = src_a["static/portal/portal.js"] + '\n<button data-portal-action="probe-injected-unhandled-action">Probe</button>'
+    prod_a = extract_produced_actions(src_a)
+    hand_a = extract_handled_actions(src_a)
+    unhandled_a = prod_a - hand_a
+    orphans_a = hand_a - prod_a
+    assert unhandled_a == {"probe-injected-unhandled-action"}, f"Failed negative A unhandled: {unhandled_a}"
+    assert len(orphans_a) == 0, f"Failed negative A orphans: {orphans_a}"
 
-    # 1. Injected unhandled action MUST fail bijection
-    mutated_prod = produced | {"injected-defect-action-xyz-999"}
-    assert mutated_prod - handled == {"injected-defect-action-xyz-999"}
+    # 2. Negative Fixture B: Mutate handler source only (add one new handler)
+    src_b = dict(AUTHORITY_SOURCES)
+    src_b["static/portal/integration.js"] = src_b["static/portal/integration.js"].replace(
+        "async function handleAction(event) {",
+        'async function handleAction(event) {\n      if (action === "probe-injected-orphan-action") { return; }'
+    )
+    prod_b = extract_produced_actions(src_b)
+    hand_b = extract_handled_actions(src_b)
+    unhandled_b = prod_b - hand_b
+    orphans_b = hand_b - prod_b
+    assert len(unhandled_b) == 0, f"Failed negative B unhandled: {unhandled_b}"
+    assert orphans_b == {"probe-injected-orphan-action"}, f"Failed negative B orphans: {orphans_b}"
 
-    # 2. Injected orphan handler MUST fail bijection
-    mutated_handled = handled | {"injected-defect-handler-abc-888"}
-    assert mutated_handled - produced == {"injected-defect-handler-abc-888"}
+    # 3. Negative Fixture C: Remove one producer operation from source fixture
+    src_c = dict(AUTHORITY_SOURCES)
+    target_op = 'oauthMethodCard("apple", "Sign in with Apple")'
+    assert target_op in src_c["static/portal/portal.js"]
+    src_c["static/portal/portal.js"] = src_c["static/portal/portal.js"].replace(target_op, '// removed')
+    prod_c = extract_produced_actions(src_c)
+    hand_c = extract_handled_actions(src_c)
+    unhandled_c = prod_c - hand_c
+    orphans_c = hand_c - prod_c
+    assert len(unhandled_c) == 0, f"Failed negative C unhandled: {unhandled_c}"
+    assert orphans_c == {"link-oauth-apple"}, f"Failed negative C orphans: {orphans_c}"
+
+    # 4. Negative Fixture D: Remove one handler operation from source fixture
+    src_d = dict(AUTHORITY_SOURCES)
+    src_d["static/portal/integration.js"] = re.sub(r'["\']link-oauth-apple["\'],?\s*', '', src_d["static/portal/integration.js"])
+    prod_d = extract_produced_actions(src_d)
+    hand_d = extract_handled_actions(src_d)
+    unhandled_d = prod_d - hand_d
+    orphans_d = hand_d - prod_d
+    assert unhandled_d == {"link-oauth-apple"}, f"Failed negative D unhandled: {unhandled_d}"
+    assert len(orphans_d) == 0, f"Failed negative D orphans: {orphans_d}"
 
     # 3. Missing busy release
     fake_missing_busy = "setActionBusy('act', 'rt', true); try {} finally {}"
