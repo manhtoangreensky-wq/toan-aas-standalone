@@ -20901,7 +20901,7 @@
       const linkedStatus = linked ? "Đã liên kết Telegram" : "Chưa kết nối Telegram";
       const planName = w && w.plan && (w.plan.plan_name || w.plan.current_plan)
         ? String(w.plan.plan_name || w.plan.current_plan)
-        : (w && w.is_vip ? "VIP Enterprise" : "Gói Tiêu Chuẩn");
+        : (w && w.is_vip ? "VIP Doanh nghiệp" : "Gói Tiêu Chuẩn");
 
       return `<section class="portal-card portal-card-pad portal-dashboard-wallet-hero" aria-labelledby="dashboard-wallet-title" style="margin-bottom:24px; background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand) 8%, var(--portal-surface-light)) 0%, var(--portal-surface-light) 100%); border:1px solid color-mix(in srgb, var(--portal-brand) 25%, var(--portal-border)); border-radius:var(--portal-radius-lg);">
         <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:20px;">
@@ -20955,11 +20955,11 @@
           <div>
             <span class="portal-section-kicker" style="color:var(--portal-action); font-weight:700;">KHỞI TẠO DỰ ÁN MỚI</span>
             <h2 id="dashboard-start-work-title" class="portal-card-title" style="font-size:20px; font-weight:800; margin:2px 0;">Bắt Đầu Tác Vụ Sáng Tạo AI</h2>
-            <p class="portal-card-subtitle" style="margin:0; font-size:13px; color:var(--portal-muted);">Chọn không gian xưởng chuyên biệt để bắt đầu dự án hoặc khám phá danh mục 139 công cụ.</p>
+            <p class="portal-card-subtitle" style="margin:0; font-size:13px; color:var(--portal-muted);">Chọn không gian chuyên biệt để bắt đầu dự án hoặc khám phá danh mục 139 công cụ.</p>
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
             <a class="portal-button portal-button--quiet" href="/projects" style="display:inline-flex; align-items:center; gap:6px; font-weight:600;">
-              <span>Project Center</span>
+              <span>Trung tâm dự án</span>
               <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
             </a>
             <a class="portal-button portal-button--quiet" href="/features" style="display:inline-flex; align-items:center; gap:6px; font-weight:600;">
@@ -20974,8 +20974,8 @@
               <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, var(--portal-brand) 15%, var(--portal-surface-light)); display:flex; align-items:center; justify-content:center; color:var(--portal-brand); margin-bottom:12px;">
                 ${portalIcon(ICONS.video)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng Video AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Sản xuất video ngắn TikTok/Reels, phân cảnh đa góc quay và kịch bản phân cảnh AI.</p>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng video AI</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Sản xuất video ngắn TikTok/Reels, phân cảnh đa góc quay và kịch bản video AI.</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
               <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Video →</span>
@@ -20987,11 +20987,11 @@
               <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, var(--portal-context) 15%, var(--portal-surface-light)); display:flex; align-items:center; justify-content:center; color:var(--portal-context); margin-bottom:12px;">
                 ${portalIcon(ICONS.image)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Image Studio</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Tạo ảnh nghệ thuật siêu thực 4K, chân dung AI người mẫu, thumbnail và banner chuyên nghiệp.</p>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng ảnh AI</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Tạo ảnh nghệ thuật siêu thực 4K, chân dung AI người mẫu, hình thu nhỏ và áp phích chuyên nghiệp.</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Image Studio →</span>
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Ảnh →</span>
               <span style="font-size:11px; color:var(--portal-muted);">Độ phân giải cao</span>
             </div>
           </a>
@@ -21000,11 +21000,11 @@
               <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, var(--portal-brand) 15%, var(--portal-surface-light)); display:flex; align-items:center; justify-content:center; color:var(--portal-brand); margin-bottom:12px;">
                 ${portalIcon(ICONS.prompt)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Content Studio</h3>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng nội dung AI</h3>
               <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Sáng tạo nội dung bài viết, kịch bản bán hàng, quảng cáo và tối ưu hóa chuyển đổi tự động.</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Content Studio →</span>
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Nội Dung →</span>
               <span style="font-size:11px; color:var(--portal-muted);">Ý tưởng & kịch bản</span>
             </div>
           </a>
