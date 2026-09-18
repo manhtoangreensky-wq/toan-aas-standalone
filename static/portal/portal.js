@@ -29501,7 +29501,7 @@
   function adminDashboardMetricRows(counts, readiness, descriptors, readinessDescriptor) {
     const source = counts && typeof counts === "object" && !Array.isArray(counts) ? counts : {};
     const rows = (Array.isArray(descriptors) ? descriptors : [])
-      .filter(([key]) => Object.prototype.hasOwnProperty.call(source, key) && (isSourcePresentCount(source[key]) || source[key] === "unavailable" || source[key] === null))
+      .filter(([key]) => Object.prototype.hasOwnProperty.call(source, key) && (isSourcePresentCount(source[key]) || typeof source[key] === "string" || source[key] === "unavailable" || source[key] === null))
       .map(([key, label, note]) => [label, source[key], note]);
     const readinessSnapshot = adminDashboardReadinessSnapshot(readiness);
     if (readinessSnapshot.total && Array.isArray(readinessDescriptor)) {
@@ -29571,7 +29571,15 @@
           ["total_customers", adminText("metrics.customers", "Tài khoản người dùng"), adminText("metrics.customersNote", "Dữ liệu tài khoản đã kiểm tra")],
           ["pending_topups", adminText("metrics.pendingTopups", "Nạp tiền chờ duyệt"), adminText("metrics.pendingTopupsNote", "Chờ đối soát thanh toán")],
           ["open_support", adminText("metrics.openSupport", "Phiếu hỗ trợ mở"), adminText("metrics.openSupportNote", "Yêu cầu hỗ trợ chưa đóng")],
-          ["failed_jobs", adminText("metrics.failedJobs", "Tác vụ gặp sự cố"), adminText("metrics.failedJobsNote", "Các tác vụ cần kiểm tra")]
+          ["failed_jobs", adminText("metrics.failedJobs", "Tác vụ gặp sự cố"), adminText("metrics.failedJobsNote", "Các tác vụ cần kiểm tra")],
+          ["worker_jobs", adminText("metrics.workerJobs", "Tác vụ xử lý"), adminText("metrics.workerJobsNote", "Hàng đợi tiến trình đã xác minh")],
+          ["engine_jobs", adminText("metrics.engineJobs", "Tác vụ hệ thống"), adminText("metrics.engineJobsNote", "Đọc từ hàng đợi đã xác minh")],
+          ["revenue_vnd", adminText("metrics.revenueVnd", "Doanh thu nạp tiền"), adminText("metrics.revenueVndNote", "Doanh thu nạp tiền đã đối soát")],
+          ["topups_completed", adminText("metrics.topupsCompleted", "Giao dịch nạp"), adminText("metrics.topupsCompletedNote", "Số đơn nạp đã hoàn tất")],
+          ["xu_consumed", adminText("metrics.xuConsumed", "Xu tiêu thụ"), adminText("metrics.xuConsumedNote", "Tổng Xu đã chi cho tác vụ")],
+          ["active_sessions", adminText("metrics.activeSessions", "Phiên hoạt động"), adminText("metrics.activeSessionsNote", "Phiên đăng nhập đang hoạt động")],
+          ["pending_approvals", adminText("metrics.pendingApprovals", "Phê duyệt vận hành"), adminText("metrics.pendingApprovalsNote", "Yêu cầu vận hành chờ duyệt")],
+          ["failure_rate", adminText("metrics.failureRate", "Tỷ lệ sự cố"), adminText("metrics.failureRateNote", "Tỷ lệ lỗi trên tổng tác vụ")]
         ]
       : [
           ["users", adminText("metrics.users", "Người dùng"), adminText("metrics.usersNote", "Dữ liệu đã kiểm tra vai trò")],
@@ -29597,6 +29605,7 @@
       : (context.adminManualTopupState && Array.isArray(context.adminManualTopupState.items)
           ? context.adminManualTopupState.items.filter((it) => it.status === "pending_admin_review").length
           : 0);
+    const failedJobsCount = Number(effectiveCounts && effectiveCounts.failed_jobs) || 0;
     const topupBanner = `<section class="portal-card portal-card-pad portal-admin-topup-hero" style="border-left: 4px solid var(--portal-accent, #0ea5e9); margin-bottom: 1.5rem; background: var(--portal-surface-raised, rgba(14,165,233,0.06)); display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
       <div>
         <span class="portal-section-kicker" style="color: var(--portal-accent, #0ea5e9); font-weight: 600;">HÀNG ĐỢI DUYỆT TIỀN</span>
@@ -29607,9 +29616,36 @@
         <a class="portal-button portal-button--primary" href="/admin/topups" style="text-decoration: none;">Mở hàng đợi nạp tiền →</a>
       </div>
     </section>`;
+    const incidentBanner = failedJobsCount > 0
+      ? `<section class="portal-card portal-card-pad portal-admin-incident-alert" style="border-left: 4px solid var(--portal-danger, #ef4444); margin-bottom: 1.5rem; background: var(--portal-surface-raised, rgba(239,68,68,0.06)); display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+      <div>
+        <span class="portal-section-kicker" style="color: var(--portal-danger, #ef4444); font-weight: 600;">CẢNH BÁO SỰ CỐ VẬN HÀNH</span>
+        <h2 style="margin: 0.25rem 0 0.5rem 0; font-size: 1.25rem;">Tác vụ gặp sự cố: <strong>${failedJobsCount}</strong> tác vụ cần kiểm tra</h2>
+        <p style="margin: 0; color: var(--portal-text-muted, #94a3b8); font-size: 0.875rem;">Phát hiện lỗi xử lý trong hàng đợi. Quản trị viên cần kiểm tra chi tiết và hỗ trợ xử lý lại nếu cần.</p>
+      </div>
+      <div class="portal-inline-actions">
+        <a class="portal-button portal-button--danger" href="/admin/jobs/failed" style="text-decoration: none;">Kiểm tra tác vụ lỗi →</a>
+      </div>
+    </section>`
+      : "";
+    const quickActions = `<section class="portal-card portal-card-pad portal-admin-quick-actions" style="margin-bottom: 1.5rem;">
+      <div class="portal-card-header">
+        <div>
+          <span class="portal-section-kicker">THAO TÁC VẬN HÀNH</span>
+          <h2 class="portal-card-title">Lối tắt quản trị nhanh</h2>
+          <p class="portal-card-subtitle">Các lối tắt trực tiếp tới phân hệ xử lý nghiệp vụ trọng yếu.</p>
+        </div>
+      </div>
+      <div class="portal-inline-actions" style="gap: 0.75rem; flex-wrap: wrap;">
+        <a class="portal-button portal-button--secondary" href="/admin/topups" style="text-decoration: none;">Duyệt nạp tiền</a>
+        <a class="portal-button portal-button--secondary" href="/admin/customers" style="text-decoration: none;">Quản lý người dùng</a>
+        <a class="portal-button portal-button--secondary" href="/admin/jobs" style="text-decoration: none;">Quản lý tác vụ</a>
+        <a class="portal-button portal-button--secondary" href="/admin/support" style="text-decoration: none;">Trung tâm hỗ trợ</a>
+      </div>
+    </section>`;
     const adminOverviewTabs = typeof renderAdminModuleTabs === "function" ? renderAdminModuleTabs(page, context) : "";
     const diagnosticsDisclosure = `<details class="portal-admin-diagnostics-disclosure" style="margin-top: 1.5rem;"><summary style="padding: 10px 14px; font-weight: 650; font-size: 13px; color: var(--portal-muted); cursor: pointer; border-radius: 10px; border: 1px solid var(--portal-border); background: var(--portal-surface);">⚙️ ${safeText(adminText("diagnostics.summary", "Chẩn đoán hệ thống & Kết nối kỹ thuật"))}</summary><div style="margin-top: 12px;"><div class="portal-work-grid">${readinessSurface}${authority}</div></div></details>`;
-    return `<article class="portal-page portal-admin-home" aria-label="${safeText(adminText("title", "Trung tâm điều hành"))}">${titleBar}${adminOverviewTabs}${topupBanner}${operationalSurface}${renderAdminWorkQueues(context)}${renderAdminDirectory(context)}${diagnosticsDisclosure}</article>`;
+    return `<article class="portal-page portal-admin-home" aria-label="${safeText(adminText("title", "Trung tâm điều hành"))}">${titleBar}${adminOverviewTabs}${topupBanner}${incidentBanner}${quickActions}${operationalSurface}${renderAdminWorkQueues(context)}${renderAdminDirectory(context)}${diagnosticsDisclosure}</article>`;
   }
 
   function renderAdminSystemStewardship(page, context) {
