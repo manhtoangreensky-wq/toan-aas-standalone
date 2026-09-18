@@ -256,19 +256,78 @@ def test_revenue_excludes_pending_and_failed(tmp_path: Path, monkeypatch: pytest
 # 5. DUPLICATE CREDIT NOT DOUBLE-COUNTED
 # ==============================================================================
 def test_duplicate_credit_not_double_counted() -> None:
-    """5. DUPLICATE_REVENUE_COUNTING=0: Replay projection preserves single attribution."""
-    ledger_events = [
-        {"delta": 100, "event_type": "topup_bank", "ref_id": "duplicate_ref_1"},
-        {"delta": 100, "event_type": "topup_bank", "ref_id": "duplicate_ref_1"},
-    ]
-    reconciliation = policy.reconcile_wallet_ledger(
-        reported_balance=200,
-        ledger_events=ledger_events,
-        opening_balance=0,
+    """5. DUPLICATE_REVENUE_COUNTING=0 & DUPLICATE_CREDIT_COUNTING=0:
+    Empirical proof through production reconciliation functions that replaying
+    identical financial events with the same canonical identity does not double-count.
+    """
+    canonical_req = {
+        "id": 101,
+        "account_id": "acc-101",
+        "amount_vnd": 50000,
+        "approved_xu": 500,
+        "status": "approved",
+        "ledger_event_id": "evt-101",
+    }
+    replayed_req = dict(canonical_req)
+
+    canonical_op = {
+        "id": "op_101",
+        "manual_topup_id": 101,
+        "canonical_user_id": "u101",
+        "amount_xu": 500,
+        "status": "local_approval_persisted",
+        "ledger_event_id": "evt-101",
+    }
+    replayed_op = dict(canonical_op)
+
+    canonical_rec = {
+        "receipt_hash": "a" * 64,
+        "manual_topup_id": 101,
+        "approved_xu": 500,
+        "action": "approve",
+    }
+    replayed_rec = dict(canonical_rec)
+
+    # 1. Baseline single canonical event
+    baseline_res = policy.reconcile_manual_topup_linkages(
+        requests=[canonical_req],
+        operations=[canonical_op],
+        approve_receipts=[canonical_rec],
     )
-    ref_ids = [e["ref_id"] for e in ledger_events]
-    has_duplicates = len(ref_ids) != len(set(ref_ids))
-    assert has_duplicates is True
+    assert baseline_res["approved_with_receipt"] == 1
+    assert baseline_res["credited_amount_xu"] == 500
+    assert baseline_res["duplicate_credit_counting"] == 0
+
+    baseline_rec = policy.reconcile_finance_records(
+        topups_data={
+            "requests": [canonical_req],
+            "operations": [canonical_op],
+            "approve_receipts": [canonical_rec],
+        }
+    )
+    revenue_before = baseline_rec["canonical_metrics"]["confirmed_manual_topup_revenue_vnd"]
+    assert revenue_before == 50000
+
+    # 2. Replay duplicate records with identical canonical identity
+    replayed_res = policy.reconcile_manual_topup_linkages(
+        requests=[canonical_req, replayed_req],
+        operations=[canonical_op, replayed_op],
+        approve_receipts=[canonical_rec, replayed_rec],
+    )
+    # ONE_CANONICAL_FINANCIAL_EVENT => counted exactly once
+    assert replayed_res["approved_with_receipt"] == 1
+    assert replayed_res["credited_amount_xu"] == 500
+
+    replayed_finance = policy.reconcile_finance_records(
+        topups_data={
+            "requests": [canonical_req, replayed_req],
+            "operations": [canonical_op, replayed_op],
+            "approve_receipts": [canonical_rec, replayed_rec],
+        }
+    )
+    revenue_after = replayed_finance["canonical_metrics"]["confirmed_manual_topup_revenue_vnd"]
+    assert revenue_after == revenue_before == 50000
+    assert replayed_finance["canonical_metrics"]["known_web_revenue_vnd"] == 50000
 
 
 # ==============================================================================
@@ -314,58 +373,166 @@ def test_customer_identity_scopes_separated(tmp_path: Path, monkeypatch: pytest.
 # 7. JOB SUCCESS RATE USES TERMINAL STATUS ONLY
 # ==============================================================================
 def test_job_success_rate_uses_terminal_status_only() -> None:
-    """7. PROGRESS_AS_COMPLETION=0 & MISSING_ASSET_AS_SUCCESS=0: UI progress != completion."""
-    job_processing = {"status": "running", "progress": 99}
-    job_completed = {"status": "completed", "progress": 100}
-    job_failed = {"status": "failed", "progress": 50}
+    """7. PROGRESS_AS_COMPLETION=0 & TERMINAL_STATUS_IS_AUTHORITY=YES:
+    Production job policy enforces terminal status authority over progress;
+    job_success_rate calculation engine is NOT_IMPLEMENTED.
+    """
+    import copyfast_operations_jobs_policy as jobs_policy
 
-    def eval_status(item: dict) -> str:
-        val = str(item.get("status") or "").lower()
-        aliases = {"pending": "queued", "new": "queued", "running": "processing", "success": "completed", "succeeded": "completed", "error": "failed"}
-        return aliases.get(val, val)
+    # 1. Assert absence of job_success_rate calculation engine in production
+    JOB_SUCCESS_RATE_ENGINE = "NOT_IMPLEMENTED"
+    assert JOB_SUCCESS_RATE_ENGINE == "NOT_IMPLEMENTED"
+    assert not hasattr(jobs_policy, "job_success_rate")
+    assert not hasattr(jobs_policy, "calculate_success_rate")
+    overview_metrics = copyfast_db.get_admin_overview_metrics()
+    assert "success_rate" not in overview_metrics
+    assert "job_success_rate" not in overview_metrics
 
-    assert eval_status(job_processing) == "processing"
-    assert eval_status(job_completed) == "completed"
-    assert eval_status(job_failed) == "failed"
+    # 2. PROGRESS_AS_COMPLETION=0: Running job with 99% progress is NEVER SUCCEEDED
+    job_running = {"status": "running", "progress": 99, "id": "job-1"}
+    rec_running = jobs_policy.synthesize_operations_job_record(job_running)
+    assert rec_running["state"] == jobs_policy.JOB_STATE_RUNNING
+    assert rec_running["state"] != jobs_policy.JOB_STATE_SUCCEEDED
 
-    asset_incomplete = {"delivery_ready": True, "download_ready": False}
-    asset_complete = {"delivery_ready": True, "download_ready": True}
-    assert (asset_incomplete.get("delivery_ready") is True and asset_incomplete.get("download_ready") is True) is False
-    assert (asset_complete.get("delivery_ready") is True and asset_complete.get("download_ready") is True) is True
+    # 3. TERMINAL_STATUS_IS_AUTHORITY=YES: Succeeded vs Failed terminal states
+    job_completed = {"status": "completed", "progress": 100, "id": "job-2"}
+    rec_completed = jobs_policy.synthesize_operations_job_record(job_completed)
+    assert rec_completed["state"] == jobs_policy.JOB_STATE_SUCCEEDED
+
+    job_failed = {"status": "failed", "progress": 100, "id": "job-3"}
+    rec_failed = jobs_policy.synthesize_operations_job_record(job_failed)
+    assert rec_failed["state"] == jobs_policy.JOB_STATE_FAILED
+    assert rec_failed["state"] != jobs_policy.JOB_STATE_SUCCEEDED
+
+    # 4. Succeeded job without valid delivery output requires attention
+    job_no_output = {
+        "status": "completed",
+        "output_available": False,
+        "download_ready": False,
+        "id": "job-4",
+    }
+    needs_att, reasons = jobs_policy.evaluate_job_attention(job_no_output)
+    assert needs_att is True
+    assert any("thiếu tệp đầu ra" in r for r in reasons)
+
+    # 5. Production summary classification
+    summary = jobs_policy.synthesize_operations_jobs_summary(
+        bridge_available=True,
+        jobs_list=[job_running, job_completed, job_failed, job_no_output],
+    )
+    assert summary["counts"]["running"] == 1
+    assert summary["counts"]["succeeded"] == 2
+    assert summary["counts"]["failed"] == 1
+    assert "success_rate" not in summary["counts"]
 
 
 # ==============================================================================
 # 8. PROVIDER STATE TAXONOMY PRESERVED
 # ==============================================================================
 def test_provider_state_taxonomy_preserved() -> None:
-    """8. PROVIDER_STATE_CONFLATION=0: Configured != Available != Healthy != Eligible != Selected."""
-    dimensions = {"configured", "available", "healthy", "eligible", "selected"}
-    assert len(dimensions) == 5
+    """8. PROVIDER_STATE_CONFLATION=0:
+    CONFIGURED != AVAILABLE != HEALTHY != ELIGIBLE != SELECTED.
+    Exercised directly through production copyfast_provider_policy.synthesize_provider_record.
+    """
+    import copyfast_provider_policy as prov_policy
 
-    stale_state = {"configured": True, "available": True, "health": "stale", "routing_eligible": False}
-    assert stale_state["health"] != "healthy"
-    assert stale_state["routing_eligible"] is False
+    # 1. Source invariants
+    assert prov_policy.CONFIGURED_NOT_EQUAL_AVAILABLE is True
+    assert prov_policy.CONFIGURED_NOT_EQUAL_HEALTHY is True
+    assert prov_policy.AVAILABLE_NOT_EQUAL_HEALTHY is True
+    assert prov_policy.HEALTHY_NOT_EQUAL_ELIGIBLE is True
+    assert prov_policy.ELIGIBLE_NOT_EQUAL_SELECTED is True
+
+    # 2. CONFIGURED != AVAILABLE (Configured with degraded health is not available)
+    unavail_raw = {
+        "provider_id": "shopaikey",
+        "configured": True,
+        "health_state": "UNAVAILABLE",
+        "last_observed_at": prov_policy.utc_now(),
+    }
+    unavail_rec = prov_policy.synthesize_provider_record(unavail_raw)
+    assert unavail_rec["configured"] is True
+    assert unavail_rec["available"] is False
+    assert unavail_rec["configured"] != unavail_rec["available"]
+
+    # 3. AVAILABLE != HEALTHY (Available with degraded or stale health is not healthy)
+    stale_raw = {
+        "provider_id": "gemini",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": "2020-01-01T00:00:00+00:00",  # Stale timestamp
+        "routing_eligible": True,
+    }
+    stale_rec = prov_policy.synthesize_provider_record(stale_raw)
+    assert stale_rec["stale"] is True
+    assert stale_rec["effective_health_state"] == "STALE_HEALTHY"
+    assert stale_rec["current_healthy_evidence"] is False
+    assert stale_rec["routing_eligible"] is False  # Stale downgrades routing eligibility
+
+    # 4. HEALTHY != ELIGIBLE (Healthy but probation or lacking canonical routing evidence is not eligible)
+    probation_raw = {
+        "provider_id": "groq",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": prov_policy.utc_now(),
+        "probation": True,
+        "routing_eligible": True,
+    }
+    probation_rec = prov_policy.synthesize_provider_record(probation_raw)
+    assert probation_rec["effective_health_state"] == "HEALTHY"
+    assert probation_rec["current_healthy_evidence"] is True
+    assert probation_rec["routing_eligible"] is False
+
+    # 5. ELIGIBLE != SELECTED (Routing eligible candidate is not automatically selected)
+    unselected_raw = {
+        "provider_id": "kling",
+        "configured": True,
+        "available": True,
+        "health_state": "HEALTHY",
+        "last_observed_at": prov_policy.utc_now(),
+        "routing_eligible": True,
+        "selected": False,
+    }
+    unselected_rec = prov_policy.synthesize_provider_record(unselected_raw)
+    assert unselected_rec["routing_eligible"] is True
+    assert unselected_rec["selected"] is False
+
+    # 6. KPI layer does not expose provider state (isolated to provider admin)
+    overview_metrics = copyfast_db.get_admin_overview_metrics()
+    assert "provider_health" not in overview_metrics
+    assert "providers_healthy" not in overview_metrics
 
 
 # ==============================================================================
 # 9. TREND UNDEFINED WHEN COMPARATOR INVALID
 # ==============================================================================
 def test_trend_undefined_when_comparator_invalid() -> None:
-    """9. FAKE_TREND=0 & DIVIDE_BY_ZERO_TREND=0: Missing or zero comparator results in undefined/NA, not +100%."""
-    def calculate_trend(current: float | None, previous: float | None) -> str | None:
-        if current is None or previous is None:
-            return None
-        if previous == 0:
-            return "N/A"
-        pct = ((current - previous) / previous) * 100
-        return f"{pct:+.1f}%"
+    """9. FAKE_TREND=0 & DIVIDE_BY_ZERO_TREND=0:
+    Trend calculation engine is NOT_IMPLEMENTED;
+    channel strategy explicitly disclaims trends, audience analytics, reach, or conversion evidence.
+    """
+    import copyfast_channel_strategy as cs
 
-    assert calculate_trend(100, None) is None
-    assert calculate_trend(None, 50) is None
-    assert calculate_trend(100, 0) == "N/A"
-    assert calculate_trend(150, 100) == "+50.0%"
-    assert calculate_trend(50, 100) == "-50.0%"
+    # 1. Assert trend calculation engine is NOT_IMPLEMENTED in production
+    TREND_ENGINE = "NOT_IMPLEMENTED"
+    assert TREND_ENGINE == "NOT_IMPLEMENTED"
+    assert not hasattr(copyfast_api, "calculate_trend")
+    assert not hasattr(copyfast_db, "calculate_trend")
+    assert not hasattr(policy, "calculate_trend")
 
+    # 2. Portal & Strategy explicit disclaimers
+    source = inspect.getsource(cs._strategy)
+    assert "not live trend research, audience data, analytics, reach or conversion evidence" in source
+    assert "không phải dữ liệu trend live, dữ liệu khán giả, analytics, bằng chứng reach" in source
+
+    # 3. Manual trend research feature registration preserves non-live boundary
+    import copyfast_registry
+    trend_feature = next((f for f in copyfast_registry.ALL_FEATURES if f.key == "trend_research"), None)
+    assert trend_feature is not None
+    assert "Checklist keyword và tiêu chí nghiên cứu trend thủ công" in trend_feature.description
+    assert "không live search" in trend_feature.description
     assert "Ảnh chụp hiện tại từ dữ liệu máy chủ; không phải xu hướng theo thời gian" in PORTAL_CODE
 
 
