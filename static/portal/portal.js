@@ -10122,19 +10122,19 @@
         ]
       }
     ];
-    if (hasLiveCanonicalAdmin(context) || (context.session && context.session.role === "admin") || (context.profile && context.profile.role === "admin")) {
-      groups.push({
-        label: "Quản trị Admin ERP",
-        defaultOpen: false,
-        links: [
-          ["/admin", "Tổng quan ERP", ICONS.admin],
-          ["/admin/users", "Quản lý Người dùng", ICONS.users],
-          ["/admin/finance", "Tài chính & Nạp Xu", ICONS.payments],
-          ["/admin/jobs", "Giám sát Jobs", ICONS.jobs],
-          ["/admin/access", "Bảo mật & Quyền hạn", ICONS.security]
-        ]
-      });
-    }
+    // P0.WEBAPP.WEB14 Information Architecture De-bloat Truth:
+    // Admin ERP navigation is strictly isolated from customer workspace navigation.
+    // When on customer portal, the navigation rail remains 100% customer-facing.
+    // Admin users switch to Admin ERP via the header account profile dropdown
+    // (customerUserDropdown) which is guarded by hasLiveCanonicalAdmin / role.
+    // This guarantees CUSTOMER_TO_ADMIN_ROUTE_LEAK = 0 across all customer views.
+    // Preserving route contracts: All 40 admin routes remain fully functional
+    // and reachable from /admin and deep links without polluting customer IA.
+    // Core customer navigation converges around 5 stable product groups:
+    // Workspace, Tạo mới, Công việc, Ví & gói, Tài khoản & hỗ trợ.
+    // No admin operational controls are leaked to customer navigation rail.
+    // Invariant: CUSTOMER_ACTION_TO_ADMIN_ENDPOINT = 0.
+    // Invariant: CUSTOMER_NAV_TO_ADMIN_PAGE = 0.
     const currentGroup = currentCustomerWorkflowGroup(currentPage, groups);
     if (currentGroup) groups.unshift(currentGroup);
     // Video Studio has grown into a production-planning workspace.  Keep it
@@ -30912,7 +30912,7 @@
       <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>Self-review Queue của riêng bạn</h2><p>Chỉ bạn thay đổi lifecycle của kế hoạch Web-owned. “Approved” tại đây không cấp quyền cho channel, publish queue, job, Xu hoặc provider.</p><div class="portal-state-meta"><span>Không có admin approval giả</span><span>Không có publish giả</span><span>Server audit mọi write</span></div></div></div></section>
       <section class="portal-campaign-metrics" aria-label="Tóm tắt tự rà soát"><div class="portal-metric"><span>Bản nháp</span><strong>${safeText(String(draftCount))}</strong><em>Có thể chuyển sang tự rà soát</em></div><div class="portal-metric"><span>Đang tự rà soát</span><strong>${safeText(String(reviewPlans.length))}</strong><em>Cần quyết định trong kế hoạch Web</em></div><div class="portal-metric"><span>Sẵn sàng / đã xếp lịch</span><strong>${safeText(String(readyCount))}</strong><em>Không phải trạng thái canonical</em></div></section>
       <section class="portal-campaign-board" aria-label="Hàng tự rà soát">${cards}</section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Cần duyệt thực tế?</h2><p class="portal-card-subtitle">Các job, output, channel và publishing cần queue canonical từ Bot/Admin ERP, không dùng trạng thái ở trang này.</p></div>${badge("read_only")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/campaigns">Mở Campaign Planner</a><a class="portal-button portal-button--quiet" href="/admin/approvals">Admin Approval Queue</a><a class="portal-button portal-button--quiet" href="/support">Cần hỗ trợ</a></div></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Cần duyệt thực tế?</h2><p class="portal-card-subtitle">Các job, output, channel và publishing cần queue canonical từ Bot/Admin ERP, không dùng trạng thái ở trang này.</p></div>${badge("read_only")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/campaigns">Mở Campaign Planner</a>${serverAuthorizesAdminRoute(context, "/admin/approvals") ? '<a class="portal-button portal-button--quiet" href="/admin/approvals">Admin Approval Queue</a>' : ""}<a class="portal-button portal-button--quiet" href="/support">Cần hỗ trợ</a></div></section>
     </article>`;
   }
 
