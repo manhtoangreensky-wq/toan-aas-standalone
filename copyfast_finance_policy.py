@@ -758,7 +758,17 @@ def reconcile_manual_topup_linkages(
 
     acc_map = account_canonical_map or {}
 
+    seen_req_ids: set[int] = set()
+    unique_requests: list[dict[str, Any]] = []
     for req in requests:
+        req_id = int(req.get("id") or 0)
+        if req_id and req_id in seen_req_ids:
+            continue
+        if req_id:
+            seen_req_ids.add(req_id)
+        unique_requests.append(req)
+
+    for req in unique_requests:
         req_id = int(req.get("id") or 0)
         raw_st = str(req.get("status") or "").strip().lower()
         status = map_topup_raw_state(raw_st)
@@ -814,7 +824,7 @@ def reconcile_manual_topup_linkages(
     is_reconciled = (len(anomalies) == 0 and approved_without_receipt == 0)
 
     return {
-        "total_requests": len(requests),
+        "total_requests": len(unique_requests),
         "pending_requests": pending_count,
         "rejected_requests": rejected_count,
         "approved_requests": approved_with_receipt + approved_without_receipt,
@@ -832,6 +842,16 @@ def reconcile_manual_topup_linkages(
 
 def reconcile_payos_orders(*, orders: list[dict[str, Any]]) -> dict[str, Any]:
     """Reconcile PayOS orders by state vocabulary without fake revenue."""
+    seen_order_codes: set[str] = set()
+    unique_orders: list[dict[str, Any]] = []
+    for o in orders:
+        code = str(o.get("order_code") or o.get("id") or "").strip()
+        if code and code in seen_order_codes:
+            continue
+        if code:
+            seen_order_codes.add(code)
+        unique_orders.append(o)
+
     settled_count = 0
     settled_revenue_vnd = 0
     pending_count = 0
@@ -839,7 +859,7 @@ def reconcile_payos_orders(*, orders: list[dict[str, Any]]) -> dict[str, Any]:
     failed_count = 0
     failed_amount_vnd = 0
 
-    for order in orders:
+    for order in unique_orders:
         raw_st = str(order.get("status") or "").strip().lower()
         amt = int(order.get("amount") or order.get("amount_vnd") or 0)
         pay_st = map_payment_state(raw_st)
@@ -855,7 +875,7 @@ def reconcile_payos_orders(*, orders: list[dict[str, Any]]) -> dict[str, Any]:
             failed_amount_vnd += amt
 
     return {
-        "total_orders": len(orders),
+        "total_orders": len(unique_orders),
         "settled_count": settled_count,
         "settled_revenue_vnd": settled_revenue_vnd,
         "pending_count": pending_count,
@@ -935,7 +955,17 @@ def reconcile_finance_records(
     orders = payos_orders or []
     payos_rec = reconcile_payos_orders(orders=orders)
 
-    confirmed_manual_revenue = sum(int(r.get("amount_vnd") or 0) for r in requests if map_topup_raw_state(r.get("status")) == TOPUP_STATE_APPROVED and r.get("ledger_event_id"))
+    seen_req_ids: set[int] = set()
+    unique_reqs: list[dict[str, Any]] = []
+    for r in requests:
+        r_id = int(r.get("id") or 0)
+        if r_id and r_id in seen_req_ids:
+            continue
+        if r_id:
+            seen_req_ids.add(r_id)
+        unique_reqs.append(r)
+
+    confirmed_manual_revenue = sum(int(r.get("amount_vnd") or 0) for r in unique_reqs if map_topup_raw_state(r.get("status")) == TOPUP_STATE_APPROVED and r.get("ledger_event_id"))
     settled_payos_revenue = payos_rec["settled_revenue_vnd"]
     known_web_revenue = confirmed_manual_revenue + settled_payos_revenue
 
