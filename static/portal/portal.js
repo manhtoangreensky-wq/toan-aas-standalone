@@ -20501,7 +20501,7 @@
       return { kind: setupProfile.setup_state === "completed" ? "first_session_ready" : "first_session" };
     }
     if (drafts.length) {
-      return { kind: "continue_draft", href: "/workspace", secondaryHref: "/features" };
+      return { kind: "continue_draft", href: "/projects", secondaryHref: "/features" };
     }
     return { kind: "continue_project", href: "/projects", secondaryHref: "/features" };
   }
@@ -20519,7 +20519,7 @@
     Object.freeze({ key: "music", route: "/music/library", icon: ICONS.music }),
     Object.freeze({ key: "subtitle", route: "/subtitle-studio", icon: ICONS.subtitle }),
     Object.freeze({ key: "documents", route: "/document-workspace", icon: ICONS.document }),
-    Object.freeze({ key: "automation", route: "/workboard", icon: ICONS.workboard })
+    Object.freeze({ key: "automation", route: "/projects", icon: ICONS.workboard })
   ]);
 
   function dashboardFocusWorkspaces(context) {
@@ -20640,9 +20640,9 @@
       : readState !== "ready"
         ? renderEmpty(dashboardText("drafts.unavailableTitle"), dashboardText("drafts.unavailableBody"), ICONS.security)
         : drafts.length
-          ? `<div class="portal-dashboard-draft-list">${drafts.map((item) => `<a class="portal-dashboard-draft" href="/workspace"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.prompt)}</span><span><strong>${safeText(String(item.title || item.feature_title || dashboardText("drafts.defaultTitle")))}</strong><small>${safeText(String(item.feature_title || dashboardText("drafts.defaultFeature")))} · ${dashboardText("drafts.updated", { date: String(item.updated_at || item.created_at || "—") })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
+          ? `<div class="portal-dashboard-draft-list">${drafts.map((item) => `<a class="portal-dashboard-draft" href="/projects"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.prompt)}</span><span><strong>${safeText(String(item.title || item.feature_title || dashboardText("drafts.defaultTitle")))}</strong><small>${safeText(String(item.feature_title || dashboardText("drafts.defaultFeature")))} · ${dashboardText("drafts.updated", { date: String(item.updated_at || item.created_at || "—") })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
           : renderEmpty(dashboardText("drafts.emptyTitle"), dashboardText("drafts.emptyBody"), ICONS.prompt);
-    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("drafts.kicker")}</span><h2 class="portal-card-title">${dashboardText("drafts.title")}</h2><p class="portal-card-subtitle">${dashboardText("drafts.body")}</p></div><a class="portal-button portal-button--quiet" href="/workspace"><span>${dashboardText("drafts.viewAll")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
+    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("drafts.kicker")}</span><h2 class="portal-card-title">${dashboardText("drafts.title")}</h2><p class="portal-card-subtitle">${dashboardText("drafts.body")}</p></div><a class="portal-button portal-button--quiet" href="/projects"><span>${dashboardText("drafts.viewAll")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
   }
 
   function renderDashboardRecentProjects(context) {
@@ -20891,7 +20891,128 @@
 
   function renderDashboard(page, context) {
     const readState = dashboardReadState(context);
-    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardWorkspaceSummary(context)}${renderAISuiteProductivityHub(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">${dashboardText("work.kicker")}</span><h2 id="workspace-work-lane-title">${dashboardText("work.title")}</h2><p>${dashboardText("work.body")}</p></div></div>${renderDashboardFocusDock(context)}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>${dashboardText("assurance.title")}</summary><p class="portal-form-note">${dashboardText("assurance.body")}</p></details></article>`;
+
+    function renderDashboardWalletHero(ctx) {
+      const w = canonicalWalletProjection(ctx.wallet);
+      const balance = w ? localizedNumber(w.balance_xu) : "—";
+      const spent = w ? localizedNumber(w.total_spent_xu) : "—";
+      const tier = w && w.is_vip ? "VIP" : "Tiêu chuẩn";
+      const linked = telegramIdentityLinked(ctx);
+      const linkedStatus = linked ? "Đã liên kết Telegram" : "Chưa kết nối Telegram";
+      const planName = w && w.plan && (w.plan.plan_name || w.plan.current_plan)
+        ? String(w.plan.plan_name || w.plan.current_plan)
+        : (w && w.is_vip ? "VIP Doanh nghiệp" : "Gói Tiêu Chuẩn");
+
+      return `<section class="portal-card portal-card-pad portal-dashboard-wallet-hero" aria-labelledby="dashboard-wallet-title" style="margin-bottom:24px; background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand) 8%, var(--portal-surface-light)) 0%, var(--portal-surface-light) 100%); border:1px solid color-mix(in srgb, var(--portal-brand) 25%, var(--portal-border)); border-radius:var(--portal-radius-lg);">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:20px;">
+          <div>
+            <span class="portal-section-kicker" style="color:var(--portal-brand); font-weight:700;">TÀI CHÍNH & TRẠNG THÁI TÀI KHOẢN</span>
+            <h2 id="dashboard-wallet-title" style="margin:4px 0 6px; font-size:22px; font-weight:800; color:var(--portal-ink);">Tổng quan Ví Xu & Quyền lợi</h2>
+            <p style="margin:0; font-size:13px; color:var(--portal-muted);">Số dư thực tế đối soát từ sổ cái chính thức. Nạp tức thì qua VietQR PayOS.</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span class="portal-badge" data-badge="${w && w.is_vip ? 'ready' : 'read_only'}" style="font-weight:700; font-size:12px; padding:4px 10px;">${safeText(tier)}</span>
+            <span class="portal-badge" data-badge="${linked ? 'ready' : 'guarded'}" style="font-size:12px; padding:4px 10px;">${safeText(linkedStatus)}</span>
+          </div>
+        </div>
+        <div class="portal-admin-grid" style="grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:20px;">
+          <div class="portal-metric" style="background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px;">
+            <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">SỐ DƯ KHẢ DỤNG</span>
+            <strong style="font-size:28px; font-weight:900; color:var(--portal-brand); display:block; margin:4px 0;">${safeText(balance)} <small style="font-size:14px; font-weight:600;">Xu</small></strong>
+            <em style="font-size:11px; color:var(--portal-muted); font-style:normal;">${w ? "Khả dụng cho tác vụ AI" : "Đang đồng bộ sổ cái..."}</em>
+          </div>
+          <div class="portal-metric" style="background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px;">
+            <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">TỔNG ĐÃ TIÊU THỤ</span>
+            <strong style="font-size:28px; font-weight:900; color:var(--portal-ink); display:block; margin:4px 0;">${safeText(spent)} <small style="font-size:14px; font-weight:600;">Xu</small></strong>
+            <em style="font-size:11px; color:var(--portal-muted); font-style:normal;">Lũy kế các tác vụ đã thực thi</em>
+          </div>
+          <div class="portal-metric" style="background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px;">
+            <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">GÓI DỊCH VỤ</span>
+            <strong style="font-size:20px; font-weight:800; color:var(--portal-ink); display:block; margin:6px 0 4px;">${safeText(planName)}</strong>
+            <em style="font-size:11px; color:var(--portal-muted); font-style:normal;">Quyền lợi và hạn mức theo gói</em>
+          </div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px; border-top:1px solid var(--portal-border); padding-top:16px;">
+          <a class="portal-button portal-button--primary" href="/wallet/topup" style="display:inline-flex; align-items:center; gap:8px;">
+            <span aria-hidden="true">${portalIcon(ICONS.payments)}</span>
+            <span>Nạp Xu VietQR PayOS</span>
+          </a>
+          <a class="portal-button portal-button--quiet" href="/wallet" style="display:inline-flex; align-items:center; gap:6px;">
+            <span aria-hidden="true">${portalIcon(ICONS.wallet)}</span>
+            <span>Lịch sử Ví Xu</span>
+          </a>
+          <a class="portal-button portal-button--quiet" href="/pricing" style="display:inline-flex; align-items:center; gap:6px;">
+            <span aria-hidden="true">${portalIcon(ICONS.pricing)}</span>
+            <span>Bảng giá dịch vụ</span>
+          </a>
+        </div>
+      </section>`;
+    }
+
+    function renderDashboardStartWork(ctx) {
+      return `<section class="portal-card portal-card-pad portal-dashboard-start-work" aria-labelledby="dashboard-start-work-title" style="margin-bottom:24px;">
+        <div class="portal-card-header" style="margin-bottom:16px;">
+          <div>
+            <span class="portal-section-kicker" style="color:var(--portal-action); font-weight:700;">KHỞI TẠO DỰ ÁN MỚI</span>
+            <h2 id="dashboard-start-work-title" class="portal-card-title" style="font-size:20px; font-weight:800; margin:2px 0;">Bắt Đầu Tác Vụ Sáng Tạo AI</h2>
+            <p class="portal-card-subtitle" style="margin:0; font-size:13px; color:var(--portal-muted);">Chọn không gian chuyên biệt để bắt đầu dự án hoặc khám phá danh mục 139 công cụ.</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <a class="portal-button portal-button--quiet" href="/projects" style="display:inline-flex; align-items:center; gap:6px; font-weight:600;">
+              <span>Trung tâm dự án</span>
+              <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
+            </a>
+            <a class="portal-button portal-button--quiet" href="/features" style="display:inline-flex; align-items:center; gap:6px; font-weight:600;">
+              <span>Tất cả 139 công cụ</span>
+              <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
+            </a>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
+          <a href="/video-studio" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s ease, transform 0.2s ease;">
+            <div>
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, var(--portal-brand) 15%, var(--portal-surface-light)); display:flex; align-items:center; justify-content:center; color:var(--portal-brand); margin-bottom:12px;">
+                ${portalIcon(ICONS.video)}
+              </div>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng video AI</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Sản xuất video ngắn TikTok/Reels, phân cảnh đa góc quay và kịch bản video AI.</p>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Video →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">Theo kịch bản / tệp</span>
+            </div>
+          </a>
+          <a href="/image-studio" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s ease, transform 0.2s ease;">
+            <div>
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, var(--portal-context) 15%, var(--portal-surface-light)); display:flex; align-items:center; justify-content:center; color:var(--portal-context); margin-bottom:12px;">
+                ${portalIcon(ICONS.image)}
+              </div>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng ảnh AI</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Tạo ảnh nghệ thuật siêu thực 4K, chân dung AI người mẫu, hình thu nhỏ và áp phích chuyên nghiệp.</p>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Ảnh →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">Độ phân giải cao</span>
+            </div>
+          </a>
+          <a href="/content-studio" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s ease, transform 0.2s ease;">
+            <div>
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, var(--portal-brand) 15%, var(--portal-surface-light)); display:flex; align-items:center; justify-content:center; color:var(--portal-brand); margin-bottom:12px;">
+                ${portalIcon(ICONS.prompt)}
+              </div>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng nội dung AI</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Sáng tạo nội dung bài viết, kịch bản bán hàng, quảng cáo và tối ưu hóa chuyển đổi tự động.</p>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Nội Dung →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">Ý tưởng & kịch bản</span>
+            </div>
+          </a>
+        </div>
+      </section>`;
+    }
+
+    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardWalletHero(context)}${renderDashboardStartWork(context)}${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">${dashboardText("work.kicker")}</span><h2 id="workspace-work-lane-title">${dashboardText("work.title")}</h2><p>${dashboardText("work.body")}</p></div></div>${renderDashboardFocusDock(context)}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>${dashboardText("assurance.title")}</summary><p class="portal-form-note">${dashboardText("assurance.body")}</p></details></article>`;
   }
 
   function renderWorkspaceActionCenter(context) {
