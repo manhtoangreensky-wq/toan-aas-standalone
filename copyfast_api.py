@@ -114,6 +114,7 @@ from copyfast_finance_policy import (
     synthesize_payment_record,
     synthesize_topup_record,
 )
+import copyfast_provider_policy
 from copyfast_product_readiness import readiness_descriptor
 from copyfast_registry import FEATURE_BY_KEY, catalog, menu_capability_catalog
 from copyfast_route_engine import unconfigured_catalog
@@ -1214,7 +1215,13 @@ def _canonical_admin_module(value: Any) -> str:
 _MISSING = object()
 
 
-def _redact_browser_identity(value: Any, *, allow_admin_user_refs: bool = False, depth: int = 0) -> Any:
+def _redact_browser_identity(
+    value: Any,
+    *,
+    allow_admin_user_refs: bool = False,
+    allow_admin_provider_refs: bool = False,
+    depth: int = 0,
+) -> Any:
     """Bound and redact values before any bridge result reaches a browser.
 
     The Bot is authoritative but its response shape can evolve. This generic
@@ -1235,15 +1242,44 @@ def _redact_browser_identity(value: Any, *, allow_admin_user_refs: bool = False,
             # and public username. It still never receives a canonical
             # session identity, Telegram chat ID, or payment/provider PII.
             if normalized in BROWSER_PRIVATE_KEY_NORMALIZED or any(part in normalized for part in BROWSER_PRIVATE_KEY_PARTS):
-                continue
+                # When admin provider read is authorized, allow safe provider metadata keys
+                # while strictly rejecting any secret/key/token/password/credential.
+                if (
+                    allow_admin_provider_refs
+                    and (
+                        normalized in {
+                            "provider", "providers", "providerid", "providerkind",
+                            "providername", "providertitle", "providerstatus",
+                            "providerhealth", "providercost", "routingeligible",
+                        }
+                        or (part_matches := [p for p in BROWSER_PRIVATE_KEY_PARTS if p in normalized]) == ["provider"]
+                    )
+                    and not any(s in normalized for s in ("key", "token", "secret", "pass", "auth", "cred", "header"))
+                ):
+                    pass
+                else:
+                    continue
             if normalized in BROWSER_IDENTITY_KEY_NORMALIZED and not (
                 allow_admin_user_refs and normalized in {"userid", "username"}
             ):
                 continue
-            safe[name] = _redact_browser_identity(item, allow_admin_user_refs=allow_admin_user_refs, depth=depth + 1)
+            safe[name] = _redact_browser_identity(
+                item,
+                allow_admin_user_refs=allow_admin_user_refs,
+                allow_admin_provider_refs=allow_admin_provider_refs,
+                depth=depth + 1,
+            )
         return safe
     if isinstance(value, (list, tuple)):
-        return [_redact_browser_identity(item, allow_admin_user_refs=allow_admin_user_refs, depth=depth + 1) for item in value[:100]]
+        return [
+            _redact_browser_identity(
+                item,
+                allow_admin_user_refs=allow_admin_user_refs,
+                allow_admin_provider_refs=allow_admin_provider_refs,
+                depth=depth + 1,
+            )
+            for item in value[:100]
+        ]
     if isinstance(value, str):
         return value[:2_000]
     if isinstance(value, (bool, int)) or value is None:
@@ -1522,13 +1558,32 @@ def _project_feature_response(value: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
-def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: bool = False) -> dict[str, Any]:
+def _project_surface_data(
+    data: Any,
+    surface: str,
+    *,
+    allow_admin_user_refs: bool = False,
+    allow_admin_provider_refs: bool = False,
+    bridge_status: str = "completed",
+    bridge_error_code: str | None = None,
+) -> dict[str, Any]:
     # A Bot-issued checkout is the sole, narrow exception to generic response
     # redaction. Keep the original mapping only long enough to validate one
     # URL against the fixed PayOS allowlist; every other browser field still
     # comes from the recursively redacted representation below.
     raw_value = data if isinstance(data, dict) else {}
-    value = _redact_browser_identity(data, allow_admin_user_refs=allow_admin_user_refs)
+    value = _redact_browser_identity(
+        data,
+        allow_admin_user_refs=allow_admin_user_refs,
+        allow_admin_provider_refs=allow_admin_provider_refs,
+    )
+    if surface == "providers":
+        clean_value = value if isinstance(value, dict) else {}
+        return copyfast_provider_policy.synthesize_providers_read_model(
+            clean_value,
+            bridge_status=bridge_status,
+            bridge_error_code=bridge_error_code,
+        )
     if not isinstance(value, dict):
         return {}
     if surface == "wallet":
@@ -1668,7 +1723,13 @@ def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: boo
     return value
 
 
-def _browser_safe_bridge_response(response: dict, *, allow_admin_user_refs: bool = False, surface: str = "generic") -> dict:
+def _browser_safe_bridge_response(
+    response: dict,
+    *,
+    allow_admin_user_refs: bool = False,
+    allow_admin_provider_refs: bool = False,
+    surface: str = "generic",
+) -> dict:
     source = response if isinstance(response, dict) else {}
     status = str(source.get("status") or "guarded")
     if status not in _PUBLIC_BRIDGE_STATUSES:
@@ -1686,7 +1747,14 @@ def _browser_safe_bridge_response(response: dict, *, allow_admin_user_refs: bool
     return envelope(
         bool(source.get("ok")),
         _PUBLIC_BRIDGE_MESSAGES[status],
-        data=_project_surface_data(source.get("data"), surface, allow_admin_user_refs=allow_admin_user_refs),
+        data=_project_surface_data(
+            source.get("data"),
+            surface,
+            allow_admin_user_refs=allow_admin_user_refs,
+            allow_admin_provider_refs=allow_admin_provider_refs,
+            bridge_status=status,
+            bridge_error_code=error_code,
+        ),
         status_name=status,
         error_code=error_code or None,
     )
@@ -2912,6 +2980,12 @@ def _bridge_surface(path: str) -> str:
         return "readiness"
     if normalized.startswith("/internal/v1/features/"):
         return "feature"
+    if (
+        normalized == "/internal/v1/admin/providers"
+        or normalized == "/internal/v1/admin/modules/providers"
+        or normalized.startswith("/internal/v1/admin/providers/")
+    ):
+        return "providers"
     if normalized.startswith("/internal/v1/admin/"):
         return "admin"
     if normalized == "/internal/v1/uploads":
@@ -3040,9 +3114,18 @@ async def _bridge(
         and path.startswith("/internal/v1/admin/")
         and account.get("role") == "admin"
     )
+    allow_admin_provider_refs = bool(
+        admin_read
+        and (
+            path.startswith("/internal/v1/admin/providers")
+            or path == "/internal/v1/admin/modules/providers"
+        )
+        and account.get("role") == "admin"
+    )
     return _browser_safe_bridge_response(
         response,
         allow_admin_user_refs=allow_admin_user_refs,
+        allow_admin_provider_refs=allow_admin_provider_refs,
         surface=_bridge_surface(path),
     )
 
@@ -6331,6 +6414,31 @@ async def admin_payments(request: Request, account: dict = Depends(require_canon
 @router.get("/admin/providers")
 async def admin_providers(request: Request, account: dict = Depends(require_canonical_admin)):
     return await _bridge("GET", "/internal/v1/admin/providers", account=account, request=request, admin_read=True)
+
+
+@router.get("/admin/providers/{provider_id}")
+async def admin_provider_detail(provider_id: str, request: Request, account: dict = Depends(require_canonical_admin)):
+    pid = str(provider_id or "").strip().lower()
+    return await _bridge("GET", f"/internal/v1/admin/providers/{pid}", account=account, request=request, admin_read=True)
+
+
+@router.post("/admin/providers/{provider_id}/{action}")
+async def admin_provider_action_guard(provider_id: str, action: str, request: Request, account: dict = Depends(require_canonical_admin)):
+    pid = str(provider_id or "").strip().lower()
+    act = str(action or "").strip().lower()
+    info = copyfast_provider_policy.classify_provider_action(act)
+    return envelope(
+        False,
+        info.get("title") or "Thao tác provider không được hỗ trợ trên Web App.",
+        data={
+            "provider_id": pid,
+            "action": act,
+            "classification": info.get("classification", "NOT_IMPLEMENTED"),
+            "executable_on_web": False,
+        },
+        status_name="guarded",
+        error_code="PROVIDER_CONTROL_ACTION_GUARDED",
+    )
 
 
 @router.get("/admin/tickets")
