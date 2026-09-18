@@ -669,6 +669,7 @@ def test_timestamps_server_derived_and_deterministic_order(tmp_path: Path, monke
 
     # Insert 3 audit events with known timestamps
     with sqlite3.connect(str(session_db)) as conn:
+        conn.execute("DELETE FROM web_audit_events")
         conn.execute(
             """INSERT INTO web_audit_events
                (id, account_id, canonical_user_id, action, request_id, target, outcome, detail, created_at)
