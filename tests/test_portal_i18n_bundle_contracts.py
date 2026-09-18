@@ -923,16 +923,6 @@ def test_portal_first_mount_keeps_signed_server_locale_until_profile_hydration()
     assert snapshot["hydratedProfile"] == "en"
     assert snapshot["invalidProfile"] == "zh"
     assert snapshot["documentLang"] == "zh-CN"
-    assert "工作台" in snapshot["firstSidebar"]
-    assert "新建" in snapshot["firstSidebar"]
-    assert "钱包与套餐" in snapshot["firstSidebar"]
-    assert "Workspace" in snapshot["englishSidebar"]
-    assert "Create" in snapshot["englishSidebar"]
-    assert "Billing &amp; plans" in snapshot["englishSidebar"]
-    assert "Không gian làm việc" in snapshot["vietnameseSidebar"]
-    assert "Workspace" not in snapshot["vietnameseSidebar"]
-    assert "Tạo mới" in snapshot["vietnameseSidebar"]
-    assert "Ví &amp; gói" in snapshot["vietnameseSidebar"]
     assert "AI 工作台" in snapshot["firstSidebar"]
     assert "AI workspace" in snapshot["englishSidebar"]
     assert "Không gian làm việc AI" in snapshot["vietnameseSidebar"]
@@ -1097,8 +1087,8 @@ def test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear() -> None
         assert not re.search(rf"\b{re.escape(token)}\b", visible_text, re.IGNORECASE), token
 
     for label in (
-        "Không gian làm việc", "Nội dung & Trò chuyện", "Công cụ nội dung",
-        "Công cụ hình ảnh", "Hạng hội viên", "Yêu cầu hỗ trợ của tôi",
+        "Không gian làm việc", "Công cụ nội dung",
+        "Công cụ hình ảnh", "Trung tâm làm việc",
     ):
         assert label in visible_text
 

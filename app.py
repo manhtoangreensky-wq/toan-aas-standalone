@@ -2774,6 +2774,8 @@ async def page(page_path: str, request: Request):
         return RedirectResponse("/music/sfx-library", status_code=307)
     if normalized == "/admin/autopilot":
         return RedirectResponse("/admin/operations", status_code=307)
+    if normalized in {"/admin/internal-docs", "/admin/internal-docs/"} or normalized.startswith("/admin/internal-docs/"):
+        return RedirectResponse("/admin/internal-documents", status_code=307)
     public_pages = {"/welcome", "/legal", "/privacy", "/password-recovery", "/admin/login"}
     if normalized in {"/login", "/register", "/admin/login"}:
         try:
