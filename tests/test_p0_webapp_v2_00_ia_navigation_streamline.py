@@ -37,7 +37,7 @@ def _extract_customer_nav_groups():
     start = PORTAL_JS.index("function navGroups(context, currentPage)")
     end = PORTAL_JS.index("const currentGroup = currentCustomerWorkflowGroup")
     nav_block = PORTAL_JS[start:end]
-    
+
     group_matches = re.findall(r'label:\s*"([^"]+)"[^[]*links:\s*\[(.*?)\]\s*\}', nav_block, re.DOTALL)
     groups = []
     for label, links_str in group_matches:
@@ -169,7 +169,7 @@ class TestP0WebappV200IaNavigationStreamline:
     def test_06_every_primary_nav_route_resolves_and_zero_dead_links(self):
         """Every customer (15) and admin (24) primary link must resolve without 404 or dead href."""
         dead_patterns = {"#", "", "javascript:void(0)", "javascript:;"}
-        
+
         customer_links = _extract_customer_nav_permanent_links()
         for route, title in customer_links:
             assert route not in dead_patterns, f"Dead customer link detected: {route}"
