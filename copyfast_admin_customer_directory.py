@@ -329,7 +329,7 @@ async def update_customer(
     now = utc_now()
 
     # Dedicated Account Safety Actions (Ban / Unban)
-    if payload.action == "ban" or (payload.is_active is False and payload.action != "update"):
+    if payload.action == "ban":
         reason = (payload.reason or "").strip()
         if not reason:
             raise HTTPException(status_code=422, detail="Lý do khóa tài khoản không được để trống")
@@ -398,7 +398,7 @@ async def update_customer(
             status_name="ok",
         )
 
-    if payload.action == "unban" or (payload.is_active is True and payload.action != "update" and payload.reason):
+    if payload.action == "unban":
         reason = (payload.reason or "").strip()
         if not reason:
             raise HTTPException(status_code=422, detail="Lý do mở khóa tài khoản không được để trống")
