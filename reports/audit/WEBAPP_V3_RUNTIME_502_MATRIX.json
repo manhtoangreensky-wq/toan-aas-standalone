@@ -1,8 +1,8 @@
 {
   "audit_metadata": {
-    "task": "P0.WEBAPP.V3.AUDIT.CANONICAL.ARCHITECTURE.TRUTH.CLOSURE",
+    "task": "P0.WEBAPP.V3.AUDIT.FINAL.ROADMAP.EXECUTION.SAFETY.CLOSURE",
     "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
-    "timestamp_utc": "2026-09-19T10:00:00Z",
+    "timestamp_utc": "2026-09-19T10:20:00Z",
     "base_sha": "8873e10f2279aec0fb312b70388b9073ba763f13",
     "evidence_tag": "READ_ONLY_RUNTIME_VERIFIED"
   },
@@ -17,7 +17,12 @@
         "/wallet/topup (HTML)",
         "/api/v1/health (during restart window)"
       ],
-      "remediation": "Configure Nginx proxy_next_upstream (error timeout http_502 non_idempotent) and transition to zero-downtime graceful reload (gunicorn/uvicorn worker reload or socket activation)."
+      "remediation_policy": {
+        "zero_downtime_target": "TARGET_DESIGN: Investigate and implement graceful service replacement (graceful reload, socket handoff, multi-worker rolling replacement, upstream overlap, health-aware deployment) evaluated during task P0-B1.",
+        "upstream_retry_safety": "Safe upstream retry is permitted ONLY for idempotent read requests (GET/HEAD with 'error timeout http_502').",
+        "mutation_http_retry_policy": "NO_BLIND_REPLAY. Financial, job creation, and state mutation POST requests must NOT be blindly replayed by Nginx. Blind replaying of POST requests risks duplicating business side effects.",
+        "principle": "HTTP_RETRY != BUSINESS_OPERATION_RETRY. Mutation retry is permitted exclusively through endpoint-level proven idempotency semantics."
+      }
     },
     {
       "classification": "BOT_CORE_ROUTE_MISSING",
@@ -31,7 +36,7 @@
         "/admin/refunds",
         "/admin/customers (upstream /internal/v1/admin/users)"
       ],
-      "remediation": "Cross-repo Bot task (manhtoangreensky-wq/bot) to implement canonical read-only authenticated admin endpoints in bot.py."
+      "remediation": "Cross-repo Bot task P0-B2 (manhtoangreensky-wq/bot) to implement canonical read-only authenticated admin endpoints in bot.py."
     },
     {
       "classification": "ACCOUNT_TELEGRAM_UNLINKED",
@@ -43,7 +48,7 @@
         "/api/v1/wallet",
         "/api/v1/wallet/history"
       ],
-      "remediation": "Web App UX improvement (toan-aas-standalone) to render clear Telegram deep-link card and 6-digit OTP pairing UI instead of raw error toast."
+      "remediation": "Web App UX task P0-B1 (toan-aas-standalone) to render clear Telegram deep-link card and 6-digit OTP pairing UI instead of raw error toast."
     }
   ],
   "endpoints": [
@@ -58,7 +63,7 @@
       "upstream_http_status": null,
       "failure_class": "DEPLOY_RESTART_NGINX_502",
       "evidence_level": "READ_ONLY_RUNTIME_VERIFIED",
-      "root_cause": "Nginx connection refused during service restart window (1-3s)."
+      "root_cause": "Nginx connection refused during service restart window (1-3s). Solved via zero-downtime graceful reload, not blind POST retry."
     },
     {
       "browser_route": "/wallet",

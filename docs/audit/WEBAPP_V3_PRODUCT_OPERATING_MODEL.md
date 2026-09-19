@@ -1,5 +1,5 @@
 # Web App V3 Product Operating Model & Architectural Truth
-> **Task**: `P0.WEBAPP.V3.AUDIT.CANONICAL.ARCHITECTURE.TRUTH.CLOSURE`
+> **Task**: `P0.WEBAPP.V3.AUDIT.FINAL.ROADMAP.EXECUTION.SAFETY.CLOSURE`
 > **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
 > **Repository**: `manhtoangreensky-wq/toan-aas-standalone`
 > **Authoritative Base SHA**: `8873e10f2279aec0fb312b70388b9073ba763f13`
@@ -26,7 +26,7 @@ The audit establishes the following empirical and architectural truths:
      - Lease/claim semantics via `services/remote_worker_api.py` and `remote_worker.py`
      - Endpoints: `POST /api/v1/worker/claim`, `POST /api/v1/worker/complete`, `POST /api/v1/worker/fail`
      - Workers are systemd-managed daemon processes on Ubuntu VPS.
-     - **Celery and Redis Queue are NOT used** (`CELERY_CURRENTLY_USED=NO`, `REDIS_QUEUE_CURRENTLY_USED=NO`). P0-D must integrate Web jobs with this existing canonical contract.
+     - **Celery and Redis Queue are NOT used** (`CELERY_CURRENTLY_USED=NO`, `REDIS_QUEUE_CURRENTLY_USED=NO`). P0-D integrates Web jobs with this existing canonical contract.
 3. **Product Video Billing Contract (`INDEPENDENT_SOURCE_VERIFIED`)**:
    - Preflight / Quote calculation may occur before dispatch.
    - Customer wallet charge occurs **ONLY after successful final delivery** and canonical charge decision (`FINAL_DELIVERY_REQUIRED_BEFORE_CHARGE=YES`).
@@ -35,23 +35,28 @@ The audit establishes the following empirical and architectural truths:
    - `DEPLOY_RESTART_NGINX_502`: Infrastructure gateway outage during CI/CD auto-deploy `systemctl restart toanaas-web.service` (1-3s socket drop).
    - `BOT_CORE_ROUTE_MISSING`: Upstream Bot Core 127.0.0.1:8080 lacks `/internal/v1/admin/*` endpoints (returns upstream 404; Web bridge wraps into HTTP 200 guarded envelope). Not an Nginx 502.
    - `ACCOUNT_TELEGRAM_UNLINKED`: Application state 409 when user lacks linked Telegram ID. Not a gateway failure.
-5. **Pricing & Packages Invariant (`INDEPENDENT_SOURCE_VERIFIED`)**:
+5. **Nginx Upstream Retry & Zero-Downtime Policy (`TARGET_DESIGN`)**:
+   - Safe upstream retry is permitted ONLY for idempotent read requests (GET/HEAD with `error timeout http_502`).
+   - `MUTATION_HTTP_RETRY_POLICY=NO_BLIND_REPLAY`: Financial, job creation, and state mutation POST requests must NOT be blindly replayed by Nginx. Replaying POST requests risks duplicating business side effects.
+   - Principle: `HTTP_RETRY != BUSINESS_OPERATION_RETRY`. Mutation retry is permitted exclusively through endpoint-level proven idempotency semantics.
+   - Zero-Downtime Target: Candidate solutions (graceful reload, socket handoff, multi-worker rolling replacement, upstream overlap, health-aware deployment) are evaluated in task P0-B1.
+6. **Pricing & Packages Invariant (`INDEPENDENT_SOURCE_VERIFIED`)**:
    - Public routes `/api/v1/pricing` and `/api/v1/packages` use canonical bridge reads.
    - Invariant: `NO_LOCAL_EFFECTIVE_PRICING`, `NO_CLIENT_DERIVED_PRICING`, `NO_STATIC_EFFECTIVE_PRICE_FALLBACK`.
    - If bridge is unreachable, the system renders a truthful unavailable/guarded state; it never fabricates fallback prices.
 
 ---
 
-## 2. The 10 Customer Product Families
+## 2. The 10 Customer Product Families & Independence Contracts
 
-Instead of exposing an uncurated flat catalog of 135 technical subroutines, Web App V3 groups all customer capabilities into **10 Distinct Product Families**:
+Web App V3 groups all customer capabilities into **10 Distinct, Independent Product Families**:
 
 ```
 [1. PRODUCT_VIDEO]                -> AI Product Video Studio (Multi-scene, E2E Render)
 [2. VOICE]                        -> AI Voice & Speech Synthesis (TTS, Clone)
 [3. MUSIC_AND_SFX]                -> Commercial Music & Foley SFX (BGM, Cue Sheets)
 [4. SUBTITLE_DUBBING_TRANSLATION] -> Subtitles, Multilingual Dubbing & Burn-in
-[5. VIDEO_EDIT]                   -> Manual Fast Video Tools (Trim, Crop, Merge)
+[5. VIDEO_EDIT]                   -> Manual Fast Video Tools (Trim, Crop, Merge, FFmpeg)
 [6. PUBLISHING_AUTOMATION]        -> AutoPost (Scheduling, Multi-channel Orchestration)
 [7. FREE_TOOLS]                   -> Free Utility Suite & Viral Prompts (Lead Magnets)
 [8. IMAGE_TOOLS]                  -> AI Product Photography & Creative Visuals
@@ -59,9 +64,13 @@ Instead of exposing an uncurated flat catalog of 135 technical subroutines, Web 
 [10. ACCOUNT_WALLET_COMMERCE]     -> PayOS Topup, Balance Ledger, Telegram Pairing
 ```
 
-### Boundary & Independence Rules (`TARGET_DESIGN`)
-- **Music & SFX** is strictly separated from **Subtitle/Dubbing/Translation**. They are distinct product engines with separate commercial models, toolsets, and lifecycles.
-- Product families are independent: building Voice, Music, or SubDub does NOT depend on Product Video completion.
+### Independence & Non-Blocking Architecture (`TARGET_DESIGN`)
+- **Voice Independence**: Voice synthesis does NOT depend on Product Video.
+- **Music & SFX Independence**: Strictly separated from SubDub and Product Video.
+- **SubDub Independence**: Implementable independently for uploaded/existing media (`SUBDUB_PRODUCT_IMPLEMENTATION != PRODUCT_VIDEO_DEPENDENT`). Integrates with Video Product and Video Edit later via Common Artifact Handoff.
+- **Video Edit Independence**: Independent Manual Video Tools family. Fast local/server FFmpeg utility; never routes cheap local FFmpeg work through expensive paid AI providers.
+- **Free Tools Separation**: Free Utilities is a distinct lead-magnet family, not merged into Video Edit.
+- **AutoPost Independence**: AutoPost core depends on the `PUBLISHABLE_ASSET_HANDOFF_FOUNDATION`, NOT on any single producer. It consumes finished output from any producer through the common contract.
 
 ---
 
@@ -86,38 +95,33 @@ Comparing `copyfast_video_studio.py` against Telegram Bot core:
 | **12. Delivery Receipt** | Durable delivery receipt in DB | None | `INDEPENDENT_SOURCE_VERIFIED` (MISSING) |
 | **13. Wallet Charge** | Charged ONLY after delivery | None (no wallet interaction) | `INDEPENDENT_SOURCE_VERIFIED` (MISSING) |
 
-### 3.2 Canonical Target Pipeline (`TARGET_DESIGN`)
+---
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Customer as Khách Hàng (Web UI)
-    participant WebAPI as Web App API
-    participant Bridge as Copyfast Bridge
-    participant BotCore as Bot Core & SQLite
-    participant Outbox as video_dispatch_outbox
-    participant Worker as systemd Remote Worker
+## 4. Manual Video Tools (Video Edit): Operational Model (`TARGET_DESIGN`)
 
-    Customer->>WebAPI: Nhập brief & cấu hình phân cảnh
-    WebAPI->>Bridge: GET /internal/v1/pricing (Preflight Quote)
-    Bridge->>BotCore: Truy vấn bảng giá SKU
-    BotCore-->>Customer: Hiển thị Báo giá & Preflight Quota
-    Customer->>WebAPI: Xác nhận Hóa đơn (Idempotent Confirm)
-    WebAPI->>Bridge: POST /internal/v1/jobs/create
-    Bridge->>BotCore: Tạo bản ghi video_jobs & outbox
-    BotCore-->>WebAPI: Trả về job_id & tracking token
-    Worker->>Outbox: Claim task (lease/claim semantics)
-    Worker->>Worker: Gọi provider render & FFmpeg stitch
-    Worker->>BotCore: POST /api/v1/worker/complete (kèm MP4 artifact)
-    BotCore->>BotCore: Tạo Delivery Receipt & Quyết định trừ Xu
-    WebAPI->>Customer: Phát MP4 trực tiếp & Kích hoạt Tải về
-```
+`VIDEO_EDIT` provides direct, high-speed, local/server media processing without generative AI model latency or cost.
+
+### 4.1 Scope of Operations
+- **Trimming & Cutting**: Precise timestamp-based cut/trim without re-encoding (`-c copy`) where keyframes align.
+- **Concatenation & Merging**: Stitching multiple clips with matching codecs.
+- **Cropping & Aspect Resizing**: Padding or cropping to 9:16, 16:9, 1:1, 4:5.
+- **Compression**: Web-optimized H.264/AAC compression.
+- **Audio Manipulation**: Mute, audio replacement, audio extraction (MP4 $\rightarrow$ MP3/WAV).
+- **Watermark & Branding**: Overlay transparent PNG logos at fixed anchor positions.
+- **Thumbnail & Poster**: Extraction of specific high-resolution frames.
+- **Speed Ramping**: 0.5x to 2.0x video playback adjustments.
+- **Metadata Inspection**: Media probe (duration, bitrate, dimensions, codec, audio channels).
+
+### 4.2 Local vs Job Execution Boundary (`TARGET_DESIGN`)
+- `LOCAL_SAFE_OPERATION`: Client-side WebAssembly / lightweight server FFmpeg stream processing for instant tasks (trim < 60s, extract audio, probe metadata).
+- `CANONICAL_JOB_REQUIRED`: Complex re-encoding, large batch concatenations, or high-bitrate exports create background jobs in the Media Vault queue.
+- **Cost Invariant**: Cheap FFmpeg tasks must NEVER be routed through paid AI provider APIs.
 
 ---
 
-## 4. AutoPost & Publishing Automation Architecture
+## 5. AutoPost & Common Publishable Artifact Architecture
 
-### 4.1 System Role & Ownership Boundaries (`TARGET_DESIGN`)
+### 5.1 System Role & Ownership Boundaries (`TARGET_DESIGN`)
 AutoPost is an **orchestrator downstream of asset generation**. It consumes finished media artifacts and handles their review, scheduling, dispatch, and delivery receipts.
 
 ```
@@ -136,8 +140,8 @@ AutoPost is an **orchestrator downstream of asset generation**. It consumes fini
 - Subtitle transcription or audio dubbing (owned by SubDub Engine)
 ```
 
-### 4.2 Common Publishable Artifact Contract (`TARGET_DESIGN`)
-Any producer handing off media to AutoPost must conform to this immutable design contract. User-entered raw Job IDs are strictly prohibited as handoff authority:
+### 5.2 Common Publishable Artifact Contract (`TARGET_DESIGN`)
+Any producer handing off media to AutoPost must conform to this immutable contract. Raw user-entered Job IDs are strictly prohibited as handoff authority:
 
 ```json
 {
@@ -160,7 +164,7 @@ Any producer handing off media to AutoPost must conform to this immutable design
 }
 ```
 
-### 4.3 Multi-Step Processing Model (Optional DAG/Recipe) (`DESIGN_PROPOSAL`)
+### 5.3 Multi-Step Processing Model (Optional DAG/Recipe) (`DESIGN_PROPOSAL`)
 The publishing workflow supports an optional pipeline recipe. Chaining is strictly optional; there is no mandatory Product $\rightarrow$ Edit $\rightarrow$ SubDub pipeline:
 
 ```mermaid
@@ -177,7 +181,7 @@ flowchart LR
 
 **Anti-Rerun Rule**: Retrying a failed publication step must **NEVER rerun a completed producer**. If YouTube upload fails with a network timeout, only the publication attempt is retried; the upstream video render remains untouched.
 
-### 4.4 Durable Publishing Core & State Machine (`TARGET_DESIGN`)
+### 5.4 Durable Publishing Core & State Machine (`TARGET_DESIGN`)
 Entities: `publication`, `publication_attempt`, `schedule`, `outbox`, `receipt`.
 
 Lifecycle States:
@@ -201,20 +205,8 @@ Lifecycle States:
 - **Invariant**: `HTTP_200 != PUBLISHED`. A post is only considered published when a verified platform receipt identifier is bound and recorded.
 - **Idempotency**: Every publication attempt carries a unique idempotency key based on `(publication_id, channel_id, scheduled_time)`.
 
-### 4.5 Video Split / Batch Contract (`DESIGN_PROPOSAL`)
+### 5.5 Video Split / Batch Contract (`DESIGN_PROPOSAL`)
 For workflows converting one long master video into multiple short social posts:
 - Structure: **Parent Batch** managing $N$ **Child Publication Units**.
 - Each child independently owns: clip asset, aspect preview, caption, approval status, target channel, scheduled slot, platform receipt, and retry state.
 - **Fault Isolation**: Failure of Child Clip #3 does not affect, pause, or duplicate Child Clips #1, #2, or #4.
-
----
-
-## 5. Web Platform Advantages over Telegram Bot
-
-| Dimension | Telegram Bot Runtime | Web App Studio Target |
-| :--- | :--- | :--- |
-| **Workspace Viewport** | Narrow chat bubble (360–420px) | Full widescreen canvas (1280–1920px) |
-| **Scene Visibility** | One message at a time; lost in scroll history | Multi-scene storyboard grid visible simultaneously |
-| **Ordering & Timing** | Text commands or clunky inline button pagination | Direct drag-and-drop scene reordering with timeline strip |
-| **Bulk Editing** | Edit scene by scene individually | Bulk parameter updates (aspect ratio, style, speaker across all scenes) |
-| **File Delivery** | Bounded by Telegram 50MB Bot API upload limit | Direct streaming & high-bitrate file delivery |

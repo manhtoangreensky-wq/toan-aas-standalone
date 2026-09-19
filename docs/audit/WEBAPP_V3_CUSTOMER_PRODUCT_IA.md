@@ -1,8 +1,8 @@
 # Web App V3 Customer Information Architecture (IA) Specification
-> **Task**: `P0.WEBAPP.V3.AUDIT.CANONICAL.ARCHITECTURE.TRUTH.CLOSURE`
+> **Task**: `P0.WEBAPP.V3.AUDIT.FINAL.ROADMAP.EXECUTION.SAFETY.CLOSURE`
 > **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
 > **Repository**: `manhtoangreensky-wq/toan-aas-standalone`
-> **Base SHA**: `8873e10f2279aec0fb312b70388b9073ba763f13`
+> **Authoritative Base SHA**: `8873e10f2279aec0fb312b70388b9073ba763f13`
 > **Governance**: `OWNER-GOVERNED`, `AUDIT_DOCUMENTATION_ONLY`, `NO_FEATURE_IMPLEMENTATION`
 
 ---
@@ -13,7 +13,9 @@ The customer information architecture is redesigned to eliminate catalog flatten
 
 1. **Product-Centric Hierarchy (`TARGET_DESIGN`)**: Customers interact with high-level creative and business solutions, not raw technical subroutines.
 2. **Distinct Product Family Separation (`TARGET_DESIGN`)**:
-   - **Music & SFX** is strictly separated from **Subtitle/Dubbing/Translation**. They are distinct creative engines.
+   - **Music & SFX** is strictly separated from **Subtitle/Dubbing/Translation**.
+   - **Manual Video Tools (Video Edit)** is an independent utility engine that processes local/server media directly without invoking paid AI generative providers.
+   - **Free Utilities** is a separate lead-magnet product family, not absorbed into Video Edit.
    - **AutoPost (Publishing Automation)** is a downstream orchestrator consuming common publishable artifacts from any finished producer.
 3. **Progressive Disclosure (`TARGET_DESIGN`)**: Primary sidebar provides immediate access to the 10 core product homes. Secondary discovery (tool drawers, format presets, niche calculators) is housed cleanly within product hubs.
 
@@ -24,7 +26,7 @@ The customer information architecture is redesigned to eliminate catalog flatten
 The customer sidebar is organized into 4 logical tiers totaling 13 canonical items:
 
 ```
-TIER 1: CREATIVE ENGINES (PRODUCERS)
+TIER 1: CREATIVE ENGINES (PRODUCERS & EDITORS)
   1. /studio         - Video Sản Phẩm AI (Product Video Studio)
   2. /voice          - Giọng Nói & Thuyết Minh AI (AI Voice Studio)
   3. /music          - Âm Nhạc & Hiệu Ứng (Music & SFX Suite)
@@ -52,7 +54,7 @@ TIER 4: COMMERCE & SUPPORT
 
 ```mermaid
 graph TD
-    subgraph Producers ["1. Creative Producers"]
+    subgraph Producers ["1. Independent Producers & Editors"]
         P1["1. Product Video Studio (/studio)"]
         P2["2. AI Voice Studio (/voice)"]
         P3["3. Music & SFX Suite (/music)"]
@@ -61,8 +63,8 @@ graph TD
         P6["6. AI Image Tools (/tools/image)"]
     end
 
-    subgraph Handoff ["2. Common Publishable Artifact Contract"]
-        H1["Common Artifact (asset_id, sha256, storage_ref)"]
+    subgraph Handoff ["2. Common Publishable Artifact Foundation"]
+        H1["Common Publishable Asset Contract\n(asset_id, sha256, storage_ref, publish_eligible)"]
     end
 
     subgraph Downstream ["3. Downstream Distribution & Vault"]
@@ -81,28 +83,31 @@ graph TD
 
 #### 1. Product Video (`/studio`) — Flagship Producer
 - **Current State**: 39 routes in `copyfast_video_studio.py`, 10,215 lines, purely text prompt composition (`INDEPENDENT_SOURCE_VERIFIED`).
-- **Target Contract**: Full multi-scene storyboard grid, preflight capability and quote check, confirmation modal, job creation in canonical SQLite `video_jobs` outbox, live scene progress polling, and direct HTML5 MP4 player (`TARGET_DESIGN`).
+- **Target Contract**: Full multi-scene storyboard grid, preflight quote, confirmation modal, job creation in canonical SQLite `video_jobs` outbox, live scene progress polling, and direct HTML5 MP4 player (`TARGET_DESIGN`).
 - **Billing Rule**: Wallet charged ONLY after successful final delivery (`FINAL_DELIVERY_REQUIRED_BEFORE_CHARGE=YES`).
 
 #### 2. Voice (`/voice`) — Independent Audio Producer
-- **Current State**: Scattered routes (`voice_studio`, `voice_tts`, `voice_clone`) in general catalog (`INDEPENDENT_SOURCE_VERIFIED`).
+- **Independence**: Strictly independent of Product Video.
 - **Target Contract**: Dedicated voice workshop with speaker sample preview, emotion modulation, script pacing controls, and instant MP3/WAV download (`TARGET_DESIGN`).
 
 #### 3. Music & SFX (`/music`) — Independent Audio Producer
-- **Current State**: Generic audio presets mixed with video helpers (`INDEPENDENT_SOURCE_VERIFIED`).
-- **Target Contract**: Strictly separated from SubDub. Features background music (BGM) generation, sound effect (SFX) cue sheet composer, volume ducking parameters, and audio stem export (`TARGET_DESIGN`).
+- **Independence**: Strictly separated from SubDub and Product Video.
+- **Target Contract**: Background music (BGM) generation, sound effect (SFX) cue sheet composer, volume ducking parameters, and audio stem export (`TARGET_DESIGN`).
 
 #### 4. SubDub & Translation (`/subdub`) — Post-Processor & Standalone Tool
-- **Current State**: Subtitle viewer without rich timeline editing (`INDEPENDENT_SOURCE_VERIFIED`).
-- **Target Contract**: Strictly separated from Music. Provides auto-transcription with SRT/VTT timeline editor, multilingual speech dubbing sync, and burn-in subtitle rendering (`TARGET_DESIGN`). Can consume outputs from Product Video, Video Edit, or user uploads.
+- **Independence**: Implementable independently for uploaded or existing media (`SUBDUB_PRODUCT_IMPLEMENTATION != PRODUCT_VIDEO_DEPENDENT`).
+- **Target Contract**: Auto-transcription with SRT/VTT timeline editor, multilingual speech dubbing sync, and burn-in subtitle rendering (`TARGET_DESIGN`). Integrates with Product Video and Video Edit later via Common Artifact Handoff.
 
-#### 5. Manual Video Tools (`/tools/video`) — Fast Utilities
-- **Target Contract**: Trimming, merging, aspect cropping, watermark removal, and speed ramping without heavy AI generation overhead (`TARGET_DESIGN`).
+#### 5. Manual Video Tools (`/tools/video`) — Fast Utilities (Video Edit)
+- **Independence**: Independent utility family; never routes cheap local FFmpeg work through expensive paid AI providers.
+- **Scope**: Trimming, merging, aspect cropping, compression, watermark logo overlay, thumbnail extraction, format conversion, speed ramping, audio extraction, and metadata probing.
 
 #### 6. AutoPost (`/publishing`) — Downstream Orchestrator
-- **Target Contract**: Consumes finished media from Product Video, Video Edit, SubDub, or user media uploads. Owns review, approval, multi-channel scheduling (TikTok, YouTube Shorts, Facebook Reels), platform receipt binding, and publish-only retry loops (`TARGET_DESIGN`). Does NOT own video rendering or subtitle generation.
+- **Independence**: AutoPost core depends on the Common Publishable Asset Handoff Foundation, not on any specific producer.
+- **Target Contract**: Consumes finished media from Product Video, Video Edit, SubDub, or existing user uploads. Owns review, approval, multi-channel scheduling (TikTok, YouTube Shorts, Facebook Reels), platform receipt binding, and publish-only retry loops (`TARGET_DESIGN`).
 
 #### 7. Free Utilities (`/tools/free`) — Lead Magnets
+- **Independence**: Preserved as a distinct customer product family, not absorbed into Video Edit.
 - **Target Contract**: Free viral prompt generator, aspect ratio preview calculator, bitrate estimator, and hashtag tools (`TARGET_DESIGN`).
 
 #### 8. Image Tools (`/tools/image`) — Creative Assets
@@ -113,13 +118,3 @@ graph TD
 
 #### 10. Account, Wallet & Commerce (`/account`, `/wallet`, `/pricing`) — Commercial Hub
 - **Target Contract**: Real PayOS checkout, balance ledger, Telegram account deep-link pairing, and truthful pricing reads via canonical bridge (`INDEPENDENT_SOURCE_VERIFIED`).
-
----
-
-## 4. Product-to-Publishing Handoff Specification
-
-To prevent tight coupling between producer engines and distribution channels:
-1. Producers output a **Common Publishable Artifact** upon final render completion.
-2. The artifact is validated for `publish_eligible` (duration, format, resolution).
-3. The customer can review, add captions, select channels, and schedule via AutoPost.
-4. **Retry Protection**: If publishing fails at the platform level, only the publication attempt is retried. Upstream video rendering is never rerun (`TARGET_DESIGN`).

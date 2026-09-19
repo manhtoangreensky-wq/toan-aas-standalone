@@ -1,13 +1,17 @@
 {
   "audit_metadata": {
-    "task": "P0.WEBAPP.V3.AUDIT.CANONICAL.ARCHITECTURE.TRUTH.CLOSURE",
+    "task": "P0.WEBAPP.V3.AUDIT.FINAL.ROADMAP.EXECUTION.SAFETY.CLOSURE",
     "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
-    "timestamp_utc": "2026-09-19T10:00:00Z",
+    "timestamp_utc": "2026-09-19T10:20:00Z",
     "governance_rule": "DISTINGUISH_ADMIN_PRODUCT_CONTROL_FROM_OWNER_PRODUCTION_GATE"
   },
   "governance_boundary": {
-    "admin_product_control": "Permitted operational actions exposing reviewed business workflows where a canonical adapter exists (e.g. cancel stuck job, retry failed scene, draft topup decision, reply ticket).",
-    "owner_production_gate": "Strictly restricted actions requiring explicit Owner terminal authorization. PROHIBITED from Admin UI: raw DB editor, arbitrary wallet balance edit, secret/ENV editor, unbounded systemctl console.",
+    "admin_product_control": "Permitted operational actions exposing reviewed business workflows where a canonical adapter exists (e.g. view customer 360, inspect job state, approve manual topup draft with 3-layer proof, reply ticket).",
+    "owner_production_gate": "Strictly restricted actions requiring explicit Owner authorization. Includes raw database mutations, arbitrary balance edits, secret/ENV edits, unbounded systemctl console, and production queue mutations.",
+    "production_queue_mutation_policy": {
+      "telemetry_level": "READ_ONLY_OBSERVABILITY_ALLOWED (Worker heartbeats, outbox depths, and lease states are visible in Admin UI).",
+      "mutation_level": "QUEUE_REDISPATCH_OWNER_GATED=YES. Re-queue, re-dispatch, and task retry mutations are production queue mutations. They require a canonical adapter, authorization check, audit receipt, proven idempotency, and fresh Owner authorization where required by production governance. Raw queue mutation is NOT an unrestricted Admin button."
+    },
     "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
   },
   "matrix": [
@@ -19,11 +23,25 @@
       "admin_detail_route": "/admin/jobs/{id}",
       "admin_observability": "View customer brief, scene progress, provider task state, Xu charge decision, final MP4 delivery receipt",
       "control_boundary": "ADMIN_PRODUCT_CONTROL",
-      "admin_allowed_action": "Cancel stuck job, retry failed scene via canonical worker claim/retry, inspect provider response",
-      "owner_production_gate_restrictions": "NO direct mutation of raw SQLite video_jobs without audit outbox event",
+      "admin_allowed_action": "Cancel stuck job, inspect provider response",
+      "owner_production_gate_restrictions": "QUEUE_REDISPATCH_OWNER_GATED=YES: Task re-dispatch requires canonical adapter and audit receipt. NO direct mutation of raw SQLite video_jobs without audit outbox event.",
       "audit_source": "web_audit_events + bot job_events",
       "canonical_authority": "Bot SQLite video_jobs + video_dispatch_outbox",
       "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "customer_capability": "Manual Video Tools (Video Edit)",
+      "customer_route": "/tools/video",
+      "customer_entity": "video_edit_tasks / edited_assets",
+      "admin_list_route": "/admin/jobs?type=video_edit",
+      "admin_detail_route": "/admin/jobs/{id}",
+      "admin_observability": "View input media parameters, operation type (trim/concat/crop/watermark), FFmpeg execution state, output asset SHA",
+      "control_boundary": "ADMIN_PRODUCT_CONTROL",
+      "admin_allowed_action": "Inspect processing logs, cancel stuck local/server FFmpeg task",
+      "owner_production_gate_restrictions": "Zero routing of cheap local FFmpeg tasks through paid AI provider APIs",
+      "audit_source": "web_audit_events",
+      "canonical_authority": "Local FFmpeg runner / Media Vault",
+      "evidence_level": "TARGET_DESIGN"
     },
     {
       "customer_capability": "Voice Synthesis / TTS",
@@ -33,7 +51,7 @@
       "admin_detail_route": "/admin/jobs/{id}",
       "admin_observability": "View text script, speaker model, character count, audio duration, output MP3 delivery receipt",
       "control_boundary": "ADMIN_PRODUCT_CONTROL",
-      "admin_allowed_action": "Re-run generation via canonical adapter, inspect provider payload",
+      "admin_allowed_action": "Inspect provider payload, flag content policy violation",
       "owner_production_gate_restrictions": "NO arbitrary provider API credentials mutation",
       "audit_source": "web_audit_events",
       "canonical_authority": "Bot SQLite voice_jobs",
@@ -48,7 +66,7 @@
       "admin_observability": "View common publishable asset contract, scheduled timestamp, platform attempt history, platform receipt ID, retry counter",
       "control_boundary": "ADMIN_PRODUCT_CONTROL",
       "admin_allowed_action": "Approve scheduled post, pause publication attempt, manual retry of publish-only step",
-      "owner_production_gate_restrictions": "Publish-only retry must NOT rerun completed producer; NO arbitrary OAuth token tampering",
+      "owner_production_gate_restrictions": "Publish-only retry must NOT rerun completed producer render; NO arbitrary OAuth token tampering",
       "audit_source": "publishing_audit_events",
       "canonical_authority": "Publishing Outbox & Publication Ledger (TARGET_DESIGN)",
       "evidence_level": "TARGET_DESIGN"
