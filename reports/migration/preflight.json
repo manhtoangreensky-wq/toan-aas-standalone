@@ -35,10 +35,10 @@
   "webapp": {
     "entrypoint_present": true,
     "revision": {
-      "checkout_sha": "d1bedad32ef2555fc949daf92bfdb275f3cb4879",
+      "checkout_sha": "6937b4cd213c67d9f5679d6f79897a13073010bb",
       "requested_relation": "exact",
-      "requested_sha": "d1bedad32ef2555fc949daf92bfdb275f3cb4879",
-      "source_fingerprint_sha256": "e78f1ce1fc31a46859d86f64a02580239e1dde94041be39c71e087dc72d97ab2",
+      "requested_sha": "6937b4cd213c67d9f5679d6f79897a13073010bb",
+      "source_fingerprint_sha256": "cb54081fd9a82df635861a5939e44224bac61e929e6d06fe303ae3a1bd5540cd",
       "working_tree_state": "clean"
     },
     "root": "repository-root"

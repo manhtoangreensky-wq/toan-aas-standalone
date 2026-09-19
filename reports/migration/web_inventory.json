@@ -8091,7 +8091,7 @@
         "copyfast_project_packages.py",
         "copyfast_projects.py"
       ],
-      "occurrences": 969,
+      "occurrences": 968,
       "provider": "PayOS"
     },
     {
@@ -8235,7 +8235,7 @@
         "copyfast_pages.py",
         "copyfast_partner_crm.py"
       ],
-      "occurrences": 1796,
+      "occurrences": 1793,
       "provider": "Telegram"
     }
   ],
@@ -14796,7 +14796,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 236,
   "source_files_scanned": 236,
-  "source_fingerprint_sha256": "e78f1ce1fc31a46859d86f64a02580239e1dde94041be39c71e087dc72d97ab2",
+  "source_fingerprint_sha256": "cb54081fd9a82df635861a5939e44224bac61e929e6d06fe303ae3a1bd5540cd",
   "source_root": "repository-root",
   "ui_path_references": [
     {
