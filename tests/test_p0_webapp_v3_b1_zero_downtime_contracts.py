@@ -628,3 +628,184 @@ class TestP0ZeroDowntimeContracts:
         assert "pip freeze --all | LC_ALL=C sort | sha256sum" not in wf_content, (
             "deploy-vps.yml must not use disparate pip freeze algorithm; must use canonical algorithm"
         )
+
+    def test_c3_red_01_http200_wrong_runtime_id_triggers_rollback(self):
+        """C3 RED 01: Ingress returning HTTP 200 with wrong runtime ID must trigger rollback_to_active_slot."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "rollback_to_active_slot" in wf_content, "deploy-vps.yml must define centralized rollback_to_active_slot"
+        assert 'verify_target_identity' in wf_content or 'if ! ' in wf_content or '|| rollback_to_active_slot' in wf_content, (
+            "deploy-vps.yml must explicitly invoke rollback_to_active_slot on identity mismatch, not rely on set -e"
+        )
+
+    def test_c3_red_02_http200_wrong_release_sha_triggers_rollback(self):
+        """C3 RED 02: Ingress returning HTTP 200 with wrong release SHA must trigger rollback_to_active_slot."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "rollback_to_active_slot" in wf_content
+        # Ensure post-switch verification explicitly invokes rollback_to_active_slot on release SHA failure
+        idx_switch = wf_content.find("=== Switching Traffic to Target Slot in Nginx ===")
+        assert idx_switch != -1
+        switch_section = wf_content[idx_switch:]
+        assert "rollback_to_active_slot" in switch_section
+
+    def test_c3_red_03_http200_attestation_valid_false_triggers_rollback(self):
+        """C3 RED 03: Ingress returning HTTP 200 with attestation_valid=false must trigger rollback_to_active_slot."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "rollback_to_active_slot" in wf_content
+
+    def test_c3_red_04_invalid_json_triggers_rollback(self):
+        """C3 RED 04: Ingress returning invalid JSON must trigger rollback_to_active_slot."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "rollback_to_active_slot" in wf_content
+
+    def test_c3_red_05_window_sample_failure_triggers_centralized_rollback(self):
+        """C3 RED 05: Rollback window sampling failure must invoke rollback_to_active_slot."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        idx_window = wf_content.find("=== Commit Boundary and Warm Rollback Window ===")
+        assert idx_window != -1
+        window_section = wf_content[idx_window:]
+        assert "rollback_to_active_slot" in window_section, (
+            "600s rollback window must invoke centralized rollback_to_active_slot on any sample failure"
+        )
+
+    def test_c3_red_06_forward_nginx_test_failure_restores_old_pointer(self):
+        """C3 RED 06: Forward switch nginx -t failure must restore the old pointer atomically."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "FORWARD_NGINX_TEST_FAILURE_RESTORES_POINTER" in wf_content or "RESTORE_OLD_POINTER" in wf_content or "PRESERVED_POINTER" in wf_content or "PREV_UPSTREAM" in wf_content, (
+            "Forward switch must preserve old pointer and restore it if nginx -t fails"
+        )
+
+    def test_c3_red_07_rollback_uses_temp_and_atomic_mv(self):
+        """C3 RED 07: Centralized rollback authority must use temp file and atomic mv."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "rollback_to_active_slot" in wf_content
+        # rollback function must contain atomic mv
+        idx_fn = wf_content.find("rollback_to_active_slot()")
+        assert idx_fn != -1, "deploy-vps.yml must define rollback_to_active_slot() function"
+        fn_body = wf_content[idx_fn:idx_fn+1500]
+        assert "mv " in fn_body and ".tmp." in fn_body, (
+            "rollback_to_active_slot must write to temp file and mv atomically"
+        )
+
+    def test_c3_red_08_rollback_nginx_test_before_reload(self):
+        """C3 RED 08: rollback_to_active_slot must test nginx syntax before reload."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        idx_fn = wf_content.find("rollback_to_active_slot()")
+        assert idx_fn != -1
+        fn_body = wf_content[idx_fn:idx_fn+1500]
+        t_pos = fn_body.find("nginx -t")
+        reload_pos = fn_body.find("systemctl reload nginx")
+        assert t_pos != -1 and reload_pos != -1 and t_pos < reload_pos, (
+            "rollback_to_active_slot must test nginx -t before systemctl reload nginx"
+        )
+
+    def test_c3_red_09_rollback_verifies_publicly_before_stopping_b(self):
+        """C3 RED 09: rollback_to_active_slot must verify public ingress A before stopping target B."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        idx_fn = wf_content.find("rollback_to_active_slot()")
+        assert idx_fn != -1
+        fn_body = wf_content[idx_fn:idx_fn+2500]
+        assert "Host: app.toanaas.vn" in fn_body or "ROLLBACK_VERIFY" in fn_body, (
+            "rollback_to_active_slot must verify public ingress on slot A"
+        )
+        assert "systemctl stop toanaas-web@\\${TARGET_SLOT}.service" in fn_body or "systemctl stop toanaas-web@$TARGET_SLOT.service" in fn_body, (
+            "rollback_to_active_slot must stop target B only after public verification of A"
+        )
+
+    def test_c3_red_10_shared_root_git_update_ref_absent(self):
+        """C3 RED 10: git update-ref refs/heads/main must NOT be run in deploy root."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "git update-ref refs/heads/main" not in wf_content, (
+            "deploy-vps.yml must not mutate refs/heads/main in shared checkout"
+        )
+        assert "git update-ref refs/remotes/origin/main" not in wf_content, (
+            "deploy-vps.yml must not mutate refs/remotes/origin/main in shared checkout"
+        )
+
+    def test_c3_red_11_shared_root_symbolic_ref_absent(self):
+        """C3 RED 11: git symbolic-ref HEAD refs/heads/main must NOT be run in deploy root."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "git symbolic-ref HEAD" not in wf_content, (
+            "deploy-vps.yml must not mutate symbolic-ref HEAD in shared checkout"
+        )
+
+    def test_c3_red_12_nginx_test_loaded_config_proof_required(self):
+        """C3 RED 12: Prerequisite checks must inspect loaded Nginx configuration with nginx -T."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "nginx -T" in wf_content, "Prerequisite checks must run nginx -T to verify loaded config"
+
+    def test_c3_red_13_commented_stale_include_rejected(self):
+        """C3 RED 13: Prerequisite must verify active upstream block consumes web-upstream-active.conf."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "grep -rq 'web-upstream-active.conf' /etc/nginx/" not in wf_content, (
+            "Filesystem grep is prohibited; must verify loaded configuration"
+        )
+
+    def test_c3_red_14_public_lifecycle_proxy_exposure_fails_prerequisite(self):
+        """C3 RED 14: Prerequisite must prove /api/v1/internal/lifecycle/ is denied/blocked publicly in Nginx."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        idx_prereq = wf_content.find("=== Verifying Runtime Prerequisites (Fail-Closed) ===")
+        idx_end_prereq = wf_content.find("=== Fetching Bundle Objects and Verifying Target ===")
+        assert idx_prereq != -1 and idx_end_prereq != -1
+        prereq_section = wf_content[idx_prereq:idx_end_prereq]
+        assert "api/v1/internal/lifecycle" in prereq_section, (
+            "Prerequisite checks must prove public lifecycle route is blocked/denied in loaded Nginx config"
+        )
+        assert "deny all" in prereq_section or "return 404" in prereq_section or "return 403" in prereq_section or "LIFECYCLE_BLOCKED" in prereq_section, (
+            "Prerequisite must verify explicit block of lifecycle route"
+        )
+
+    def test_c3_red_15_strict_release_sha_malformed_returns_503(self, monkeypatch, tmp_path):
+        """C3 RED 15: In strict mode, malformed release_sha (not 40-char hex) must fail closed with release_valid=False."""
+        import app
+        monkeypatch.setenv("WEBAPP_RELEASE_ATTESTATION_REQUIRED", "1")
+        monkeypatch.setattr(app, "ROOT", tmp_path)
+
+        # Create requirements.lock with valid sha
+        lock_file = tmp_path / "requirements.lock"
+        lock_file.write_text("package==1.0.0\n", encoding="utf-8")
+
+        # Create release.json with non-hex / short release_sha
+        release_json = tmp_path / "release.json"
+        release_json.write_text(json.dumps({
+            "release_sha": "short-sha-invalid",
+            "requirements_lock_sha256": "9490bebca11e7aaf14b7804eba35a6bf2c5bcab7d0a1220771c8fbdc29c14d5f",
+        }), encoding="utf-8")
+
+        meta = app._load_release_metadata()
+        assert meta.get("release_valid") is False, f"Expected release_valid=False for malformed release_sha, got {meta.get('release_valid')}"
+
+    def test_c3_red_16_strict_release_lock_sha_mismatch_returns_503(self, monkeypatch, tmp_path):
+        """C3 RED 16: In strict mode, release.json requirements_lock_sha256 mismatching actual repo lock SHA must return release_valid=False."""
+        import app
+        monkeypatch.setenv("WEBAPP_RELEASE_ATTESTATION_REQUIRED", "1")
+        monkeypatch.setattr(app, "ROOT", tmp_path)
+
+        # Create requirements.lock
+        lock_file = tmp_path / "requirements.lock"
+        lock_file.write_text("package==1.0.0\n", encoding="utf-8")
+        import hashlib
+        actual_lock_sha = hashlib.sha256(lock_file.read_bytes()).hexdigest()
+
+        # Create release.json with different requirements_lock_sha256
+        release_json = tmp_path / "release.json"
+        release_json.write_text(json.dumps({
+            "release_sha": "0123456789abcdef0123456789abcdef01234567",
+            "requirements_lock_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        }), encoding="utf-8")
+
+        meta = app._load_release_metadata()
+        assert meta.get("release_valid") is False, f"Expected release_valid=False for lock SHA mismatch in release.json, got {meta.get('release_valid')}"

@@ -16,6 +16,7 @@ import logging
 import os
 from pathlib import Path
 import platform
+import re
 import secrets
 import sys
 import time
@@ -2734,12 +2735,30 @@ def _load_release_metadata() -> dict[str, object]:
     release_path = ROOT / "release.json"
     data: dict[str, object] = {}
     release_valid = False
+
+    lock_path = ROOT / "requirements.lock"
+    lock_sha = ""
+    if lock_path.is_file():
+        try:
+            lock_sha = hashlib.sha256(lock_path.read_bytes()).hexdigest()
+        except Exception:
+            pass
+
     if release_path.is_file():
         try:
             loaded = json.loads(release_path.read_text(encoding="utf-8"))
-            if isinstance(loaded, dict) and bool(loaded.get("release_sha")):
+            if isinstance(loaded, dict):
                 data = loaded
-                release_valid = True
+                r_sha = str(data.get("release_sha") or "")
+                r_lock = str(data.get("requirements_lock_sha256") or "")
+                is_valid_sha = bool(re.fullmatch(r"[0-9a-f]{40}", r_sha))
+                is_valid_lock = bool(re.fullmatch(r"[0-9a-f]{64}", r_lock))
+                if strict_required:
+                    if is_valid_sha and is_valid_lock and lock_sha and r_lock == lock_sha:
+                        release_valid = True
+                else:
+                    if bool(r_sha):
+                        release_valid = True
         except Exception:
             release_valid = False
 
@@ -2773,15 +2792,8 @@ def _load_release_metadata() -> dict[str, object]:
                         sha = head_content
                 except Exception:
                     pass
-        release_valid = bool(sha)
-
-    lock_path = ROOT / "requirements.lock"
-    lock_sha = ""
-    if lock_path.is_file():
-        try:
-            lock_sha = hashlib.sha256(lock_path.read_bytes()).hexdigest()
-        except Exception:
-            pass
+        if not release_path.is_file():
+            release_valid = bool(sha)
 
     return {
         "release_sha": sha,
