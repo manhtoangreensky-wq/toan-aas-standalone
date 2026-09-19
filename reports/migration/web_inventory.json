@@ -323,7 +323,7 @@
     "database_tables": 229,
     "env_references": 280,
     "providers": 12,
-    "routes": 731,
+    "routes": 728,
     "ui_path_references": 47
   },
   "database_references": [
@@ -1097,7 +1097,7 @@
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 299,
+      "line": 283,
       "operation": "INSERT INTO",
       "table": "web_account_profiles"
     },
@@ -1175,25 +1175,25 @@
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 282,
+      "line": 266,
       "operation": "INSERT INTO",
       "table": "web_accounts"
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 377,
+      "line": 368,
       "operation": "UPDATE",
       "table": "web_accounts"
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 677,
+      "line": 434,
       "operation": "UPDATE",
       "table": "web_accounts"
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 756,
+      "line": 496,
       "operation": "UPDATE",
       "table": "web_accounts"
     },
@@ -1727,13 +1727,13 @@
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 305,
+      "line": 289,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 381,
+      "line": 500,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
@@ -4973,7 +4973,7 @@
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 682,
+      "line": 372,
       "operation": "UPDATE",
       "table": "web_sessions"
     },
@@ -14209,7 +14209,7 @@
     {
       "endpoint": "update_customer",
       "file": "copyfast_admin_customer_directory.py",
-      "line": 337,
+      "line": 321,
       "methods": [
         "PATCH"
       ],
@@ -14218,47 +14218,20 @@
     {
       "endpoint": "get_customer",
       "file": "copyfast_admin_customer_directory.py",
-      "line": 410,
+      "line": 529,
       "methods": [
         "GET"
       ],
       "path": "/{account_id}"
     },
     {
-      "endpoint": "get_customer_360",
-      "file": "copyfast_admin_customer_directory.py",
-      "line": 452,
-      "methods": [
-        "GET"
-      ],
-      "path": "/{account_id}/360"
-    },
-    {
-      "endpoint": "ban_customer",
-      "file": "copyfast_admin_customer_directory.py",
-      "line": 630,
-      "methods": [
-        "POST"
-      ],
-      "path": "/{account_id}/ban"
-    },
-    {
       "endpoint": "get_customer_crm",
       "file": "copyfast_admin_customer_directory.py",
-      "line": 436,
+      "line": 555,
       "methods": [
         "GET"
       ],
       "path": "/{account_id}/crm"
-    },
-    {
-      "endpoint": "unban_customer",
-      "file": "copyfast_admin_customer_directory.py",
-      "line": 714,
-      "methods": [
-        "POST"
-      ],
-      "path": "/{account_id}/unban"
     },
     {
       "endpoint": "get_asset",
@@ -14596,7 +14569,7 @@
     {
       "endpoint": "create_customer",
       "file": "copyfast_admin_customer_directory.py",
-      "line": 261,
+      "line": 245,
       "methods": [
         "POST"
       ],
@@ -14759,7 +14732,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 226,
   "source_files_scanned": 226,
-  "source_fingerprint_sha256": "ef458020bd2d2cfe8fedbd40a92ca98aaf581dcf1dafbdae7070d6d19e390b05",
+  "source_fingerprint_sha256": "661246b092ad7a744ecb3df2a905c2113de8fe4403e5c34c13f72df1e1937073",
   "source_root": "repository-root",
   "ui_path_references": [
     {
