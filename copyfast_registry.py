@@ -558,6 +558,14 @@ def allowed_paths() -> set[str]:
         "/wallet/history",
         "/history",
         "/admin/internal-docs",
+        "/studio",
+        "/publishing",
+        "/voice",
+        "/music",
+        "/subdub",
+        "/tools/video",
+        "/tools/image",
+        "/tools/free",
     }
     for item in ALL_FEATURES:
         result.add(item.route.split("?", 1)[0])

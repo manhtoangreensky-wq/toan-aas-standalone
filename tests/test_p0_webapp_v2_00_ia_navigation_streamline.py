@@ -75,22 +75,22 @@ def _get_admin_nav_groups_and_modules():
 class TestP0WebappV200IaNavigationStreamline:
     """Rigorous empirical validation of V2 Information Architecture truth."""
 
-    def test_01_customer_primary_navigation_exact_15_links_and_4_groups(self):
-        """Customer primary navigation must expose exactly 15 core links under 4 groups."""
+    def test_01_customer_primary_navigation_exact_13_links_and_4_tiers(self):
+        """Customer primary navigation must expose exactly 13 core links under 4 tiers."""
         groups = _extract_customer_nav_groups()
         assert len(groups) == 4, f"CUSTOMER_NAV_GROUP_COUNT must be 4, got {len(groups)}"
 
         perm_links = _extract_customer_nav_permanent_links()
-        assert len(perm_links) == 15, f"CUSTOMER_PRIMARY_NAV_COUNT must be 15, got {len(perm_links)}"
+        assert len(perm_links) == 13, f"CUSTOMER_PRIMARY_NAV_COUNT must be 13, got {len(perm_links)}"
 
         routes = [link[0] for link in perm_links]
         assert len(routes) == len(set(routes)), f"DUPLICATE_PRIMARY_NAV_ROUTE detected: {routes}"
 
         expected_structure = [
-            ("Trung tâm làm việc", ["/dashboard", "/projects", "/calendar"]),
-            ("Xưởng sáng tạo AI", ["/features", "/video-studio", "/image-studio", "/content-studio", "/voice-studio"]),
-            ("Quản lý đầu ra", ["/jobs", "/assets"]),
-            ("Tài chính & tài khoản", ["/wallet/topup", "/wallet", "/pricing", "/account", "/support"]),
+            ("Sáng tạo", ["/studio", "/voice", "/music", "/subdub", "/tools/video", "/tools/image"]),
+            ("Phân phối", ["/publishing"]),
+            ("Công việc", ["/projects", "/tools/free"]),
+            ("Tài khoản & Hệ thống", ["/pricing", "/wallet", "/account", "/support"]),
         ]
 
         for i, (expected_title, expected_routes) in enumerate(expected_structure):
@@ -191,12 +191,12 @@ class TestP0WebappV200IaNavigationStreamline:
         leaks = [route for route, title in customer_links if route.startswith("/admin")]
         assert leaks == [], f"CUSTOMER_ADMIN_ROUTE_LEAK detected: {leaks}"
 
-    def test_08_blue_visual_system_protection(self):
-        """Web12 blue visual system variables must remain protected."""
+    def test_08_canonical_light_teal_visual_system_protection(self):
+        """V3 canonical light teal visual system variables must remain protected."""
         css_file = ROOT / "static" / "portal" / "portal-theme.css"
         css_text = css_file.read_text(encoding="utf-8")
-        assert "#0b2545" in css_text or "#1d4ed8" in css_text, "Blue visual system color missing"
+        assert "#f3fbfc" in css_text or "#0d9488" in css_text, "Canonical light teal color missing"
         html_file = ROOT / "templates" / "portal_shell.html"
         html_text = html_file.read_text(encoding="utf-8")
-        assert "#0b2545" in html_text, "Dark theme blue color missing from shell"
-        assert "#f0f9ff" in html_text, "Light theme blue tint missing from shell"
+        assert "#062026" in html_text, "Dark theme teal dark color missing from shell"
+        assert "#0d9488" in html_text, "Light theme teal color missing from shell"

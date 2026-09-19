@@ -1933,24 +1933,65 @@
     return "";
   }
 
+  const MUTATION_HTTP_RETRY_POLICY = "NO_BLIND_REPLAY";
+
+  function classifyError(status, payload) {
+    if (status === 409 || (payload && (payload.code === "ACCOUNT_TELEGRAM_UNLINKED" || payload.error === "telegram_unlinked" || payload.error_code === "ACCOUNT_TELEGRAM_UNLINKED_409"))) {
+      return "ACCOUNT_TELEGRAM_UNLINKED_409";
+    }
+    if (status === 502 || status === 503 || status === 504 || status === 0) {
+      return "TRANSPORT_502";
+    }
+    if (status === 404) {
+      return "UPSTREAM_NOT_FOUND_404";
+    }
+    if (status === 401 || status === 403) {
+      return "AUTH_401_403";
+    }
+    if (status === 422 || (status >= 400 && status < 500)) {
+      return "VALIDATION_4XX";
+    }
+    return "UNKNOWN_ERROR";
+  }
+
   async function api(path, options) {
-    const context = base();
-    const headers = new Headers((options && options.headers) || {});
-    headers.set("Accept", "application/json");
-    headers.set("X-Request-ID", randomKey("web"));
-    if (context.session && context.session.csrfToken && options && options.method && options.method !== "GET") {
-      headers.set("X-CSRF-Token", context.session.csrfToken);
+    const isMutation = Boolean(options && options.method && options.method !== "GET");
+    const maxRetries = isMutation ? 0 : 3; // MUTATION_HTTP_RETRY_POLICY=NO_BLIND_REPLAY
+    let attempt = 0;
+    while (true) {
+      attempt++;
+      try {
+        const context = base();
+        const headers = new Headers((options && options.headers) || {});
+        headers.set("Accept", "application/json");
+        headers.set("X-Request-ID", randomKey("web"));
+        if (context.session && context.session.csrfToken && isMutation) {
+          headers.set("X-CSRF-Token", context.session.csrfToken);
+        }
+        const response = await fetch(`${API}${path}`, { credentials: "same-origin", ...options, cache: "no-store", headers });
+        let payload = {};
+        try { payload = await response.json(); } catch (_) { /* safe generic error below */ }
+        if (!response.ok || !payload.ok) {
+          const errorClass = classifyError(response.status, payload);
+          if (!isMutation && (response.status === 502 || response.status === 503 || response.status === 504) && attempt <= maxRetries) {
+            await new Promise((resolve) => setTimeout(resolve, Math.min(2000, 250 * (2 ** (attempt - 1)))));
+            continue;
+          }
+          const error = new Error(payload.message || "Yêu cầu chưa được máy chủ xác nhận.");
+          error.payload = payload;
+          error.status = response.status;
+          error.errorClass = errorClass;
+          throw error;
+        }
+        return payload;
+      } catch (err) {
+        if (!isMutation && attempt <= maxRetries && (!err.status || err.status >= 500)) {
+          await new Promise((resolve) => setTimeout(resolve, Math.min(2000, 250 * (2 ** (attempt - 1)))));
+          continue;
+        }
+        throw err;
+      }
     }
-    const response = await fetch(`${API}${path}`, { credentials: "same-origin", ...options, cache: "no-store", headers });
-    let payload = {};
-    try { payload = await response.json(); } catch (_) { /* safe generic error below */ }
-    if (!response.ok || !payload.ok) {
-      const error = new Error(payload.message || "Yêu cầu chưa được máy chủ xác nhận.");
-      error.payload = payload;
-      error.status = response.status;
-      throw error;
-    }
-    return payload;
   }
 
   function assetExportNonterminalEnvelope(error) {
