@@ -10,7 +10,7 @@
     {
       "file": "app.py",
       "kind": "create_task",
-      "line": 2873,
+      "line": 2943,
       "target": "<dynamic>"
     },
     {
@@ -268,7 +268,7 @@
     {
       "file": "app.py",
       "kind": "function",
-      "line": 2911,
+      "line": 2981,
       "target": "pwa_service_worker"
     },
     {
@@ -286,7 +286,7 @@
     {
       "file": "app.py",
       "kind": "function",
-      "line": 2519,
+      "line": 2523,
       "target": "root_service_worker"
     },
     {
@@ -327,7 +327,7 @@
     "commands": 0,
     "conversations": 0,
     "database_tables": 232,
-    "env_references": 287,
+    "env_references": 289,
     "providers": 12,
     "routes": 729,
     "ui_path_references": 47
@@ -671,7 +671,7 @@
     },
     {
       "file": "app.py",
-      "line": 1742,
+      "line": 1746,
       "operation": "UPDATE",
       "table": "family"
     },
@@ -6865,7 +6865,7 @@
     },
     {
       "file": "app.py",
-      "line": 2737,
+      "line": 2741,
       "name": "RELEASE_SHA"
     },
     {
@@ -6875,12 +6875,12 @@
     },
     {
       "file": "app.py",
-      "line": 2806,
+      "line": 2846,
       "name": "RESOLVED_PACKAGES_SHA"
     },
     {
       "file": "app.py",
-      "line": 2812,
+      "line": 2853,
       "name": "RUNTIME_ENVIRONMENT_ID"
     },
     {
@@ -7470,7 +7470,7 @@
     },
     {
       "file": "app.py",
-      "line": 2852,
+      "line": 2916,
       "name": "WEBAPP_LIFECYCLE_TOKEN"
     },
     {
@@ -7695,7 +7695,17 @@
     },
     {
       "file": "app.py",
-      "line": 2737,
+      "line": 2858,
+      "name": "WEBAPP_RELEASE_ATTESTATION_REQUIRED"
+    },
+    {
+      "file": "app.py",
+      "line": 2876,
+      "name": "WEBAPP_RELEASE_ATTESTATION_REQUIRED"
+    },
+    {
+      "file": "app.py",
+      "line": 2741,
       "name": "WEBAPP_RELEASE_SHA"
     },
     {
@@ -7720,7 +7730,7 @@
     },
     {
       "file": "app.py",
-      "line": 2807,
+      "line": 2847,
       "name": "WEBAPP_RESOLVED_PACKAGES_SHA256"
     },
     {
@@ -7760,7 +7770,7 @@
     },
     {
       "file": "app.py",
-      "line": 313,
+      "line": 316,
       "name": "WEBAPP_STARTUP_RECONCILIATION_MODE"
     },
     {
@@ -8310,7 +8320,7 @@
     {
       "endpoint": "legacy_admin_redirect",
       "file": "app.py",
-      "line": 2923,
+      "line": 2993,
       "methods": [
         "GET"
       ],
@@ -8760,7 +8770,7 @@
     {
       "endpoint": "legacy_affiliate_redirect",
       "file": "app.py",
-      "line": 2943,
+      "line": 3013,
       "methods": [
         "GET"
       ],
@@ -8796,7 +8806,7 @@
     {
       "endpoint": "durable_login",
       "file": "app.py",
-      "line": 2586,
+      "line": 2590,
       "methods": [
         "POST"
       ],
@@ -8805,7 +8815,7 @@
     {
       "endpoint": "durable_register",
       "file": "app.py",
-      "line": 2572,
+      "line": 2576,
       "methods": [
         "POST"
       ],
@@ -8814,7 +8824,7 @@
     {
       "endpoint": "durable_password_change",
       "file": "app.py",
-      "line": 2600,
+      "line": 2604,
       "methods": [
         "POST"
       ],
@@ -8850,7 +8860,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2829,
+      "line": 2873,
       "methods": [
         "GET"
       ],
@@ -8904,7 +8914,7 @@
     {
       "endpoint": "reconcile_retired_generation",
       "file": "app.py",
-      "line": 2846,
+      "line": 2910,
       "methods": [
         "POST"
       ],
@@ -9264,7 +9274,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2954,
+      "line": 3024,
       "methods": [
         "GET"
       ],
@@ -9309,7 +9319,7 @@
     {
       "endpoint": "legacy_b2b_redirect",
       "file": "app.py",
-      "line": 2959,
+      "line": 3029,
       "methods": [
         "GET"
       ],
@@ -9552,7 +9562,7 @@
     {
       "endpoint": "legacy_campaign_redirect",
       "file": "app.py",
-      "line": 2938,
+      "line": 3008,
       "methods": [
         "GET"
       ],
@@ -9786,7 +9796,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2954,
+      "line": 3024,
       "methods": [
         "GET"
       ],
@@ -10722,7 +10732,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2829,
+      "line": 2873,
       "methods": [
         "GET"
       ],
@@ -11136,7 +11146,7 @@
     {
       "endpoint": "pwa_manifest",
       "file": "app.py",
-      "line": 2904,
+      "line": 2974,
       "methods": [
         "GET"
       ],
@@ -11145,7 +11155,7 @@
     {
       "endpoint": "pwa_manifest",
       "file": "app.py",
-      "line": 2904,
+      "line": 2974,
       "methods": [
         "GET"
       ],
@@ -11190,7 +11200,7 @@
     {
       "endpoint": "legacy_media_redirect",
       "file": "app.py",
-      "line": 2948,
+      "line": 3018,
       "methods": [
         "GET"
       ],
@@ -11370,7 +11380,7 @@
     {
       "endpoint": "pwa_offline_page",
       "file": "app.py",
-      "line": 2917,
+      "line": 2987,
       "methods": [
         "GET"
       ],
@@ -11910,7 +11920,7 @@
     {
       "endpoint": "pwa_service_worker",
       "file": "app.py",
-      "line": 2911,
+      "line": 2981,
       "methods": [
         "GET"
       ],
@@ -12918,7 +12928,7 @@
     {
       "endpoint": "root_service_worker",
       "file": "app.py",
-      "line": 2519,
+      "line": 2523,
       "methods": [
         "GET"
       ],
@@ -12927,7 +12937,7 @@
     {
       "endpoint": "pwa_service_worker",
       "file": "app.py",
-      "line": 2911,
+      "line": 2981,
       "methods": [
         "GET"
       ],
@@ -14079,7 +14089,7 @@
     {
       "endpoint": "legacy_video_redirect",
       "file": "app.py",
-      "line": 2933,
+      "line": 3003,
       "methods": [
         "GET"
       ],
@@ -14106,7 +14116,7 @@
     {
       "endpoint": "legacy_wallet_redirect",
       "file": "app.py",
-      "line": 2928,
+      "line": 2998,
       "methods": [
         "GET"
       ],
@@ -14592,7 +14602,7 @@
     {
       "endpoint": "page",
       "file": "app.py",
-      "line": 2964,
+      "line": 3034,
       "methods": [
         "GET"
       ],
@@ -14845,7 +14855,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 227,
   "source_files_scanned": 227,
-  "source_fingerprint_sha256": "0eae49c5d4989be9d9d18f4c78338b2ad9647eb11752440507048b666f8152c4",
+  "source_fingerprint_sha256": "9cd4dee13967e5b362655ec4e17da0e5b25667bf5a02e74743c8205cacdd47c2",
   "source_root": "repository-root",
   "ui_path_references": [
     {
