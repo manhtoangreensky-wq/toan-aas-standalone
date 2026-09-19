@@ -1,8 +1,8 @@
 # Web App V3 Rebased Master Plan & Transition Roadmap
-**Scope:** TOAN AAS Web App (`toan-aas-standalone`)  
-**Program:** `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`  
-**Task:** `P0.WEBAPP.V3.FULL.PRODUCT.IA.UX.ADMIN.REBASE.AUDIT`  
-**Status:** Canonical Roadmap Specification (`OWNER-GOVERNED`)  
+**Scope:** TOAN AAS Web App (`toan-aas-standalone`)
+**Program:** `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
+**Task:** `P0.WEBAPP.V3.FULL.PRODUCT.IA.UX.ADMIN.REBASE.AUDIT`
+**Status:** Canonical Roadmap Specification (`OWNER-GOVERNED`)
 **Base Commit:** `8873e10f2279aec0fb312b70388b9073ba763f13`
 
 ---

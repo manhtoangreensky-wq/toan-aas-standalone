@@ -1,9 +1,9 @@
 # WEBAPP V3 CUSTOMER PRODUCT IA & WORKFLOW INVENTORY AUDIT
 
-> **Mã nhiệm vụ**: `P0.WEBAPP.V3.FULL.PRODUCT.IA.UX.ADMIN.REBASE.AUDIT`  
-> **Chương trình**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`  
-> **Repository**: `manhtoangreensky-wq/toan-aas-standalone`  
-> **Trạng thái**: `CANONICAL AUDIT & REPLAN`  
+> **Mã nhiệm vụ**: `P0.WEBAPP.V3.FULL.PRODUCT.IA.UX.ADMIN.REBASE.AUDIT`
+> **Chương trình**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
+> **Repository**: `manhtoangreensky-wq/toan-aas-standalone`
+> **Trạng thái**: `CANONICAL AUDIT & REPLAN`
 > **Ngày lập**: 19/09/2026
 
 ---

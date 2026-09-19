@@ -1,10 +1,10 @@
 # WEBAPP V3 PRODUCT OPERATING MODEL — CANONICAL ARCHITECTURE AUDIT
 
-> **Mã nhiệm vụ**: `P0.WEBAPP.V3.FULL.PRODUCT.IA.UX.ADMIN.REBASE.AUDIT`  
-> **Chương trình**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`  
-> **Repository**: `manhtoangreensky-wq/toan-aas-standalone`  
-> **Trạng thái**: `CANONICAL AUDIT & REPLAN (AUDIT_AND_REPLAN_ONLY)`  
-> **Ngày lập**: 19/09/2026  
+> **Mã nhiệm vụ**: `P0.WEBAPP.V3.FULL.PRODUCT.IA.UX.ADMIN.REBASE.AUDIT`
+> **Chương trình**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
+> **Repository**: `manhtoangreensky-wq/toan-aas-standalone`
+> **Trạng thái**: `CANONICAL AUDIT & REPLAN (AUDIT_AND_REPLAN_ONLY)`
+> **Ngày lập**: 19/09/2026
 > **Quy chuẩn**: `owner-governed-codex`, `toanaas-system-design-and-open-apis`
 
 ---
