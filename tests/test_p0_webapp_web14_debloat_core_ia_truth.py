@@ -24,7 +24,11 @@ client = TestClient(app)
 def _extract_customer_nav_permanent_links():
     """Extract permanent customer navigation links from portal.js navGroups."""
     start = PORTAL_JS.index("function navGroups(context, currentPage)")
-    end = PORTAL_JS.index("const videoStudioNavGroups = [")
+    end = (
+        PORTAL_JS.index("const videoStudioNavGroups = [")
+        if "const videoStudioNavGroups = [" in PORTAL_JS
+        else PORTAL_JS.index("const currentGroup = currentCustomerWorkflowGroup")
+    )
     nav_block = PORTAL_JS[start:end]
     return re.findall(r'\["(/[^"]+)",\s*"([^"]+)"', nav_block)
 
@@ -84,7 +88,11 @@ class TestP0WebappWeb14DeBloatCoreIaTruth:
 
         # Verify navGroups definition in portal.js does not push admin groups into customer rail
         start = PORTAL_JS.index("function navGroups(context, currentPage)")
-        end = PORTAL_JS.index("const videoStudioNavGroups = [")
+        end = (
+            PORTAL_JS.index("const videoStudioNavGroups = [")
+            if "const videoStudioNavGroups = [" in PORTAL_JS
+            else PORTAL_JS.index("const currentGroup = currentCustomerWorkflowGroup")
+        )
         nav_block = PORTAL_JS[start:end]
         assert "Quản trị Admin ERP" not in nav_block, "Customer navGroups must not contain admin ERP group"
         assert 'links.push(["/admin' not in nav_block
