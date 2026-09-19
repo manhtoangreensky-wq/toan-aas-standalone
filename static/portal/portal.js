@@ -2078,7 +2078,7 @@
       "Chỉ signed local-admin do máy chủ xác minh mới có thể đọc hoặc ghi. Browser không gửi admin ID, Telegram ID, role, storage path, hash hoặc quyền tự khai.",
       "Kho này tách khỏi Bot internal_documents, Telegram file, Asset Vault khách hàng, Governance Documents, wallet/Xu, PayOS, provider, job, publish và external notification."
     ]
-  });
+  }, ["/admin/internal-docs"]);
   adminPage("/admin/campaigns", "Campaign Center", "Campaign, brief và kết quả chỉ đọc từ Bot canonical; chưa có adapter write nào được mở từ browser.", ICONS.prompt, {}, ["/admin/campaign", "/admin/campaign_new", "/admin/campaign_preset"]);
   adminPage("/admin/calendar", "Content Calendar", "Lịch nội dung chỉ hiển thị khi Bot cấp adapter read-only có redaction; không tạo hoặc publish lịch giả.", ICONS.system, {}, ["/admin/calendar_plan"]);
   adminPage("/admin/approvals", "Approval Queue", "Duyệt job/publish cần workflow canonical, confirmation và audit; Web giữ chế độ chỉ đọc cho đến khi adapter được phê duyệt.", ICONS.security, {}, ["/admin/approve_ready", "/admin/approve_job", "/admin/approve_publish"]);
@@ -9537,6 +9537,13 @@
     "Tạo mới": "nav.create",
     "Công việc": "nav.work",
     "Job Center": "nav.jobs",
+    "Trung tâm làm việc": "shellNav.workspaceCenter",
+    "Xưởng sáng tạo AI": "shellNav.aiStudios",
+    "Quản lý đầu ra": "shellNav.outputManagement",
+    "Tài chính & tài khoản": "shellNav.financeAccount",
+    "Xưởng Video": "shellNav.videoStudio",
+    "Image Studio": "shellNav.imageStudio",
+    "Voice Studio": "shellNav.voiceStudio",
     // Retain the legacy route label for existing manifest metadata, but do
     // not surface Telegram as the name of the standalone Web asset center.
     "Tài sản Bot": "nav.assets",
@@ -10092,33 +10099,27 @@
     const currentRoute = normalizePath(currentPage && (currentPage.routePath || currentPage.path));
     const groups = [
       {
-        label: "Workspace", defaultOpen: true,
+        label: "Trung tâm làm việc", defaultOpen: true,
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/workboard", "Workboard", ICONS.workboard], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system]
+          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/calendar", "Lịch nội dung", ICONS.system]
         ]
       },
       {
-        label: "Tạo mới",
+        label: "Xưởng sáng tạo AI",
         links: [
-          ["/features", "Tất cả công cụ", ICONS.prompt], ["/chat", "Content & Chat", ICONS.chat], ["/content-studio", "Content Studio", ICONS.prompt], ["/image-studio", "Image Studio", ICONS.image]
+          ["/features", "Tất cả công cụ", ICONS.prompt], ["/video-studio", "Xưởng Video", ICONS.video], ["/image-studio", "Image Studio", ICONS.image], ["/content-studio", "Content Studio", ICONS.prompt], ["/voice-studio", "Voice Studio", ICONS.voice]
         ]
       },
       {
-        label: "Công việc",
+        label: "Quản lý đầu ra",
         links: [
-          ["/workspace", "Bản nháp", ICONS.prompt], ["/jobs", "Job Center", ICONS.jobs], ["/assets", "Tài sản", ICONS.assets], ["/asset-vault", "Asset Vault", ICONS.assets], ["/approvals", "Tự rà soát", ICONS.security]
+          ["/jobs", "Job Center", ICONS.jobs], ["/assets", "Tài sản", ICONS.assets]
         ]
       },
       {
-        label: "Ví & gói",
+        label: "Tài chính & tài khoản",
         links: [
-          ["/wallet", "Ví Xu", ICONS.wallet], ["/wallet/topup", "Nạp Xu", ICONS.payments], ["/membership", "👑 Hạng hội viên & VIP", ICONS.pricing], ["/packages", "Gói dịch vụ", ICONS.pricing], ["/pricing", "Bảng giá", ICONS.pricing]
-        ]
-      },
-      {
-        label: "Tài khoản & hỗ trợ",
-        links: [
-          ["/account", "Tài khoản", ICONS.account], ["/tickets", "Ticket của tôi", ICONS.ticket], ["/support", "Hỗ trợ", ICONS.support]
+          ["/wallet/topup", "Nạp Xu", ICONS.payments], ["/wallet", "Ví Xu", ICONS.wallet], ["/pricing", "Bảng giá", ICONS.pricing], ["/account", "Tài khoản", ICONS.account], ["/support", "Hỗ trợ", ICONS.support]
         ]
       }
     ];

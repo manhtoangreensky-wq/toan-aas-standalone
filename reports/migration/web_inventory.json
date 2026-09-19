@@ -321,7 +321,7 @@
     "commands": 0,
     "conversations": 0,
     "database_tables": 229,
-    "env_references": 276,
+    "env_references": 280,
     "providers": 12,
     "routes": 728,
     "ui_path_references": 47
@@ -6808,7 +6808,7 @@
     },
     {
       "file": "copyfast_admin_erp_navigation.py",
-      "line": 390,
+      "line": 396,
       "name": "WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ENABLED"
     },
     {
@@ -6833,17 +6833,12 @@
     },
     {
       "file": "copyfast_admin_erp_navigation.py",
-      "line": 107,
+      "line": 113,
       "name": "WEBAPP_ADMIN_ERP_ENABLED"
     },
     {
       "file": "copyfast_admin_erp_navigation.py",
-      "line": 305,
-      "name": "WEBAPP_ADMIN_ERP_ENABLED"
-    },
-    {
-      "file": "copyfast_admin_erp_navigation.py",
-      "line": 383,
+      "line": 311,
       "name": "WEBAPP_ADMIN_ERP_ENABLED"
     },
     {
@@ -6858,17 +6853,37 @@
     },
     {
       "file": "copyfast_admin_erp_navigation.py",
-      "line": 399,
-      "name": "WEBAPP_ADMIN_ERP_ENABLED"
-    },
-    {
-      "file": "copyfast_admin_erp_navigation.py",
-      "line": 400,
-      "name": "WEBAPP_ADMIN_ERP_ENABLED"
-    },
-    {
-      "file": "copyfast_admin_erp_navigation.py",
       "line": 401,
+      "name": "WEBAPP_ADMIN_ERP_ENABLED"
+    },
+    {
+      "file": "copyfast_admin_erp_navigation.py",
+      "line": 405,
+      "name": "WEBAPP_ADMIN_ERP_ENABLED"
+    },
+    {
+      "file": "copyfast_admin_erp_navigation.py",
+      "line": 406,
+      "name": "WEBAPP_ADMIN_ERP_ENABLED"
+    },
+    {
+      "file": "copyfast_admin_erp_navigation.py",
+      "line": 407,
+      "name": "WEBAPP_ADMIN_ERP_ENABLED"
+    },
+    {
+      "file": "copyfast_admin_erp_navigation.py",
+      "line": 580,
+      "name": "WEBAPP_ADMIN_ERP_ENABLED"
+    },
+    {
+      "file": "copyfast_admin_erp_navigation.py",
+      "line": 581,
+      "name": "WEBAPP_ADMIN_ERP_ENABLED"
+    },
+    {
+      "file": "copyfast_admin_erp_navigation.py",
+      "line": 584,
       "name": "WEBAPP_ADMIN_ERP_ENABLED"
     },
     {
@@ -7103,7 +7118,7 @@
     },
     {
       "file": "copyfast_admin_erp_navigation.py",
-      "line": 301,
+      "line": 307,
       "name": "WEBAPP_CONTENT_HANDOFF_ENABLED"
     },
     {
@@ -7223,7 +7238,7 @@
     },
     {
       "file": "copyfast_admin_erp_navigation.py",
-      "line": 396,
+      "line": 402,
       "name": "WEBAPP_FINANCE_PLANNING_ENABLED"
     },
     {
@@ -7268,7 +7283,7 @@
     },
     {
       "file": "copyfast_admin_erp_navigation.py",
-      "line": 384,
+      "line": 390,
       "name": "WEBAPP_GOVERNANCE_DOCUMENTS_ENABLED"
     },
     {
@@ -7483,7 +7498,12 @@
     },
     {
       "file": "copyfast_admin_erp_navigation.py",
-      "line": 380,
+      "line": 386,
+      "name": "WEBAPP_PARTNER_CRM_ENABLED"
+    },
+    {
+      "file": "copyfast_admin_erp_navigation.py",
+      "line": 579,
       "name": "WEBAPP_PARTNER_CRM_ENABLED"
     },
     {
@@ -11084,7 +11104,7 @@
     {
       "endpoint": "navigation",
       "file": "copyfast_admin_erp_navigation.py",
-      "line": 572,
+      "line": 721,
       "methods": [
         "GET"
       ],
@@ -14694,7 +14714,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 226,
   "source_files_scanned": 226,
-  "source_fingerprint_sha256": "96016250d16f7f0cb81dda439a44ea9040c489da5c9d142b61754a070a695ced",
+  "source_fingerprint_sha256": "829b7506ca321b90f2a6832214c76e7f8bfd9a69ccfba222e27d130db3e2d8c7",
   "source_root": "repository-root",
   "ui_path_references": [
     {
@@ -14914,7 +14934,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 30988,
+      "line": 30989,
       "path": "/features"
     },
     {

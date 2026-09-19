@@ -78,11 +78,17 @@ _MODULE_DESCRIPTIONS = {
     "finance_operations_planning": "Ngân sách và kế hoạch chi phí Web-native có revision/audit; không đọc hoặc thay đổi ledger, Xu, PayOS, payment, refund, revenue, tax/export hay Bot canonical.",
     "governance_documents": "Kho tài liệu vận hành nội bộ Web-native có review/version/audit; không đọc tài liệu, file hay authority Telegram Bot.",
     "internal_document_archive": "Kho hồ sơ Web-native local-admin có blob private, phiên bản bất biến, metadata/audit và download kiểm tra integrity; tách khỏi Bot, Asset Vault khách hàng và Governance Documents.",
+    "internal_docs": "Hồ sơ & tài liệu nội bộ Web-native local-admin có blob private, phiên bản bất biến, metadata/audit và download kiểm tra integrity; tách khỏi Bot, Asset Vault khách hàng và Governance Documents.",
     "system_stewardship": "Hub điều hướng read-only cho System & Data Web-native; không đọc runtime Bot, không có deploy, repair, provider, payment hay ledger control.",
 }
 
 _GROUP_DESCRIPTIONS = {
     "command_center": "Overview, user và canonical ticket read models.",
+    "commerce_finance": "Quản lý nạp tiền, số dư ví, doanh thu, hoàn tiền và bảng giá.",
+    "customer_growth": "Khách hàng Web, người dùng canonical, CRM leads và hỗ trợ CSKH.",
+    "jobs_delivery": "Theo dõi tiến trình jobs, xử lý lỗi và cờ tính năng.",
+    "infrastructure_providers": "Nhà cung cấp AI, worker nodes, hệ thống hạ tầng và runtime.",
+    "security_governance": "Nhật ký kiểm toán, tư thế an ninh RBAC, tài liệu nội bộ và sao lưu.",
     "commerce": "Finance read models; wallet/PayOS authority vẫn ở canonical core.",
     "delivery_runtime": "Jobs, readiness và runtime metadata; không có provider control trực tiếp.",
     "content_growth": "Điều hướng các center content/growth; directory vẫn guarded cho đến khi có adapter riêng.",
@@ -568,6 +574,149 @@ async def _has_live_canonical_admin(request: Request, account: dict[str, Any]) -
     return True
 
 
+def v2_primary_groups() -> list[dict[str, Any]]:
+    """Return the 6 business pillars containing 24 primary modules for Admin V2."""
+    crm_state = "web_native" if _enabled("WEBAPP_PARTNER_CRM_ENABLED", default=True) else "guarded"
+    security_access_state = "web_native" if _enabled("WEBAPP_ADMIN_ERP_ENABLED", default=True) else "guarded"
+    archive_state = "web_native" if _enabled("WEBAPP_ADMIN_ERP_ENABLED", default=True) else "guarded"
+    support_state = "web_native" if support_desk_enabled() else "guarded"
+    operations_state = "web_native" if autopilot_enabled() else "guarded"
+    operations_desk_state = "web_native" if _enabled("WEBAPP_ADMIN_ERP_ENABLED", default=True) else "guarded"
+
+    return [
+        _group(
+            "command_center",
+            "Trung tâm điều hành",
+            authority="canonical_admin",
+            modules=[
+                _canonical_module("overview", "Tổng quan ERP", "/admin"),
+                _module(
+                    "operations",
+                    "Hàng đợi vận hành",
+                    "/admin/operations",
+                    authority="web_support",
+                    source="web_native",
+                    availability=operations_state,
+                    capability="recorded_approval_decisions_only",
+                ),
+                _module(
+                    "operations_desk",
+                    "Hàng đợi xử lý",
+                    "/admin/work-queue",
+                    authority="web_support",
+                    source="web_native",
+                    availability=operations_desk_state,
+                    capability="redacted_cross_queue_read_only_with_server_role_check",
+                ),
+                _canonical_module("reports", "Báo cáo tổng hợp", "/admin/reports"),
+            ],
+        ),
+        _group(
+            "commerce_finance",
+            "Tài chính & Doanh thu",
+            authority="canonical_admin",
+            modules=[
+                _module(
+                    "manual_topups",
+                    "Duyệt nạp tiền",
+                    "/admin/topups",
+                    authority="web_local_admin",
+                    source="web_native",
+                    availability="web_native",
+                    capability="manual_topup_reject_only",
+                ),
+                _canonical_module("wallet", "Sổ quỹ Ví Xu", "/admin/wallet"),
+                _canonical_module("revenue", "Doanh thu & Cổng thanh toán", "/admin/revenue"),
+                _canonical_module("refunds", "Hoàn tiền & Khiếu nại", "/admin/refunds"),
+                _canonical_module("pricing", "Bảng giá & Gói cước", "/admin/pricing"),
+            ],
+        ),
+        _group(
+            "customer_growth",
+            "Khách hàng & Bán hàng",
+            authority="canonical_admin",
+            modules=[
+                _module(
+                    "customer_directory",
+                    "Khách hàng Web",
+                    "/admin/customers",
+                    authority="web_local_admin",
+                    source="web_native",
+                    availability="web_native",
+                    capability="redacted_web_account_directory_read_only",
+                ),
+                _canonical_module("users", "Người dùng canonical", "/admin/users"),
+                _module(
+                    "partner_crm_manager",
+                    "Quản lý Lead & Đối tác",
+                    "/admin/crm/leads",
+                    authority="web_local_admin",
+                    source="web_native",
+                    availability=crm_state,
+                    capability="redacted_cross_account_pipeline_read_only",
+                ),
+                _module(
+                    "support",
+                    "Trung tâm CSKH",
+                    "/admin/support",
+                    authority="web_support",
+                    source="web_native",
+                    availability=support_state,
+                    capability="case_triage_and_confirmed_case_updates",
+                ),
+            ],
+        ),
+        _group(
+            "jobs_delivery",
+            "Hàng đợi & Xử lý sản phẩm",
+            authority="canonical_admin",
+            modules=[
+                _canonical_module("jobs", "Quản lý Jobs", "/admin/jobs"),
+                _canonical_module("failed_jobs", "Jobs thất bại", "/admin/jobs/failed"),
+                _canonical_module("features", "Quản lý tính năng", "/admin/features"),
+            ],
+        ),
+        _group(
+            "infrastructure_providers",
+            "Hạ tầng & Nhà cung cấp",
+            authority="canonical_admin",
+            modules=[
+                _canonical_module("providers", "Nhà cung cấp AI", "/admin/providers"),
+                _canonical_module("workers", "Cụm Workers", "/admin/workers"),
+                _canonical_module("system", "Hệ thống & Dịch vụ", "/admin/system"),
+                _canonical_module("runtime", "Runtime & Môi trường", "/admin/runtime"),
+            ],
+        ),
+        _group(
+            "security_governance",
+            "An ninh & Kiểm toán",
+            authority="canonical_admin",
+            modules=[
+                _web_admin_read_module("audit", "Nhật ký kiểm toán", "/admin/audit", capability="redacted_web_audit_read"),
+                _module(
+                    "security_posture",
+                    "Tư thế an ninh & RBAC",
+                    "/admin/security",
+                    authority="web_local_admin",
+                    source="web_native",
+                    availability=security_access_state,
+                    capability="redacted_web_security_posture_read_only",
+                ),
+                _module(
+                    "internal_docs",
+                    "Hồ sơ & Tài liệu nội bộ",
+                    "/admin/internal-docs",
+                    authority="web_local_admin",
+                    source="web_native",
+                    availability=archive_state,
+                    capability="owner_scoped_immutable_private_document_versions",
+                ),
+                _canonical_module("backups", "Sao lưu dữ liệu", "/admin/backups"),
+            ],
+        ),
+    ]
+
+
 @router.get("/navigation")
 async def navigation(request: Request, account: dict[str, Any] = Depends(require_account)) -> dict[str, Any]:
     """Return the Admin ERP directory authorized for this signed Web account.
@@ -592,12 +741,11 @@ async def navigation(request: Request, account: dict[str, Any] = Depends(require
     # but its Admin ERP shortcuts must not survive after the administrator has
     # disabled the ERP directory.  This also prevents a stale staff shell from
     # treating the feature flag as canonical-only.
-    if erp_enabled and staff_role:
-        groups.extend(support_groups(staff_role))
-    if web_local_admin:
-        groups.extend(web_local_admin_groups())
-    if live_canonical_admin:
-        groups.extend(canonical_groups())
+    if erp_enabled:
+        if web_local_admin or live_canonical_admin:
+            groups = v2_primary_groups()
+        elif staff_role:
+            groups.extend(support_groups(staff_role))
 
     data = {
         "groups": groups,
