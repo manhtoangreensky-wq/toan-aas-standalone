@@ -7,8 +7,11 @@ Mode: OWNER-GOVERNED, WEBAPP_ONLY, TEST_FIRST_RED
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import re
+import shutil
+import subprocess
 import pytest
 
 from copyfast_registry import allowed_paths
@@ -19,6 +22,7 @@ PORTAL_FIRST_PAINT_CSS_PATH = ROOT / "static" / "portal" / "portal-first-paint.c
 PORTAL_THEME_JS_PATH = ROOT / "static" / "portal" / "portal-theme.js"
 PORTAL_SHELL_HTML_PATH = ROOT / "templates" / "portal_shell.html"
 PORTAL_JS_PATH = ROOT / "static" / "portal" / "portal.js"
+INTEGRATION_JS_PATH = ROOT / "static" / "portal" / "integration.js"
 CUSTOMER_APP_HTML_PATH = ROOT / "customer_app.html"
 
 PORTAL_THEME_CSS = PORTAL_THEME_CSS_PATH.read_text(encoding="utf-8")
@@ -51,6 +55,27 @@ def _extract_customer_mobile_dock_links() -> list[tuple[str, str, str]]:
     end = PORTAL_JS.index("function isAdminMobileSurface(page)")
     block = PORTAL_JS[start:end]
     return re.findall(r'\["([^"]+)",\s*"(/[^"]+)",\s*uiText\("[^"]+",\s*"([^"]+)"\)', block)
+
+
+def _node_classify_error(status: int, payload: dict | None) -> str:
+    """Execute classifyError from integration.js directly via Node."""
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node is required for classifyError contract")
+    integration_js = INTEGRATION_JS_PATH.read_text(encoding="utf-8")
+    start = integration_js.index("const MUTATION_HTTP_RETRY_POLICY =")
+    end = integration_js.index("async function api(path, options)")
+    fn_code = integration_js[start:end]
+    payload_json = json.dumps(payload) if payload is not None else "undefined"
+    node_script = f"""
+    {fn_code}
+    const status = {status};
+    const payload = {payload_json};
+    const result = classifyError(status, payload);
+    process.stdout.write(result);
+    """
+    res = subprocess.run([node, "-e", node_script], capture_output=True, text=True, check=True)
+    return res.stdout.strip()
 
 
 class TestP0WebappV3FirstRedContracts:
@@ -143,3 +168,43 @@ class TestP0WebappV3FirstRedContracts:
         assert "#2563eb" not in CUSTOMER_APP_HTML, (
             "Inline blue #2563eb still present in customer_app.html"
         )
+
+    def test_red_08_classify_error_409_requires_authoritative_telegram_unlinked_signal(self) -> None:
+        """Gap 8: HTTP 409 without authoritative Telegram-unlinked signal must classify as VALIDATION_4XX."""
+        # 1. Unrelated 409 payloads MUST NOT return ACCOUNT_TELEGRAM_UNLINKED_409
+        unrelated_payloads = [
+            {"code": "REVISION_CONFLICT"},
+            {"error": "conflict"},
+            {"message": "resource state conflict"},
+            {},
+            None,
+        ]
+        for payload in unrelated_payloads:
+            result = _node_classify_error(409, payload)
+            assert result != "ACCOUNT_TELEGRAM_UNLINKED_409", (
+                f"Generic 409 with payload {payload} misclassified as ACCOUNT_TELEGRAM_UNLINKED_409"
+            )
+            assert result == "VALIDATION_4XX", (
+                f"Generic 409 with payload {payload} expected VALIDATION_4XX, got {result}"
+            )
+
+        # 2. Telegram-unlinked evidence MUST still classify correctly when payload has canonical signals
+        canonical_signals = [
+            {"code": "ACCOUNT_TELEGRAM_UNLINKED"},
+            {"error": "telegram_unlinked"},
+            {"error_code": "ACCOUNT_TELEGRAM_UNLINKED_409"},
+        ]
+        for payload in canonical_signals:
+            result = _node_classify_error(409, payload)
+            assert result == "ACCOUNT_TELEGRAM_UNLINKED_409", (
+                f"Canonical signal {payload} must classify as ACCOUNT_TELEGRAM_UNLINKED_409, got {result}"
+            )
+
+        # 3. Preserved regression classifications
+        assert _node_classify_error(502, {}) == "TRANSPORT_502"
+        assert _node_classify_error(503, {}) == "TRANSPORT_502"
+        assert _node_classify_error(504, {}) == "TRANSPORT_502"
+        assert _node_classify_error(404, {}) == "UPSTREAM_NOT_FOUND_404"
+        assert _node_classify_error(401, {}) == "AUTH_401_403"
+        assert _node_classify_error(403, {}) == "AUTH_401_403"
+        assert _node_classify_error(422, {}) == "VALIDATION_4XX"

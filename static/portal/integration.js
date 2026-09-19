@@ -1935,8 +1935,17 @@
 
   const MUTATION_HTTP_RETRY_POLICY = "NO_BLIND_REPLAY";
 
+  function isTelegramUnlinkedPayload(payload) {
+    if (!payload || typeof payload !== "object") return false;
+    return (
+      payload.code === "ACCOUNT_TELEGRAM_UNLINKED" ||
+      payload.error === "telegram_unlinked" ||
+      payload.error_code === "ACCOUNT_TELEGRAM_UNLINKED_409"
+    );
+  }
+
   function classifyError(status, payload) {
-    if (status === 409 || (payload && (payload.code === "ACCOUNT_TELEGRAM_UNLINKED" || payload.error === "telegram_unlinked" || payload.error_code === "ACCOUNT_TELEGRAM_UNLINKED_409"))) {
+    if (isTelegramUnlinkedPayload(payload)) {
       return "ACCOUNT_TELEGRAM_UNLINKED_409";
     }
     if (status === 502 || status === 503 || status === 504 || status === 0) {
