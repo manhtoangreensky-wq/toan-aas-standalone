@@ -10640,7 +10640,10 @@
     const headerPaidVnd = (headerHasWallet && (headerWallet.total_paid_vnd != null || headerWallet.total_deposited_vnd != null))
       ? Number(headerWallet.total_paid_vnd != null ? headerWallet.total_paid_vnd : headerWallet.total_deposited_vnd)
       : null;
-    const headerTierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(headerPaidVnd, profile.vipTierOverride || profile.tier) : { isKnown: false, currentTier: { badge: "—", color: "#8fa3b7" } };
+    const headerIsVip = Boolean(headerWallet && (headerWallet.is_vip || (profile && profile.vipTierOverride === "vip")));
+    const headerTierBadge = headerIsVip ? "👑 VIP" : "⭐ Thành viên";
+    const headerTierColor = headerIsVip ? "#f43f5e" : "#38bdf8";
+    const headerTierInfo = { isKnown: Boolean(headerWallet), currentTier: { badge: headerTierBadge, color: headerTierColor } };
     const currentLocale = interfaceLocaleFor(context);
     const localeOption = (value, label) => `<option value="${value}"${currentLocale === value ? " selected" : ""}>${safeText(label)}</option>`;
     const adminHeaderLocaleForm = adminSurface
@@ -10663,7 +10666,7 @@
               <div class="portal-user-dropdown-meta">
                 <div style="display:flex; align-items:center; gap:6px;">
                   <strong>${safeText(name)}</strong>
-                  <span style="font-size:11px; font-weight:700; background:rgba(255,255,255,0.1); color:${headerTierInfo.currentTier.color}; padding:1px 6px; border-radius:4px; border:1px solid ${headerTierInfo.currentTier.color}44;">${safeText(headerTierInfo.currentTier.badge)}</span>
+                  <span style="font-size:11px; font-weight:700; background:rgba(255,255,255,0.1); color:${headerTierColor}; padding:1px 6px; border-radius:4px; border:1px solid ${headerTierColor}44;">${safeText(headerTierBadge)}</span>
                 </div>
                 <small>${safeText((context.session && context.session.email) || (context.profile && context.profile.email) || uiText("chrome.accountFallback", "Tài khoản không gian làm việc"))}</small>
               </div>
@@ -10672,7 +10675,7 @@
             <div class="portal-user-dropdown-items">
               <a class="portal-user-dropdown-item" href="/membership">
         <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.pricing)}</span>
-        <div><strong style="color:${headerTierInfo.currentTier.color};">${safeText(headerTierInfo.currentTier.badge)} · Hạng & Quyền Lợi</strong><small>Tiến trình lên hạng, giảm giá Xu</small></div>
+        <div><strong style="color:${headerTierColor};">${safeText(headerTierBadge)} · Quyền Lợi</strong><small>Thông tin tài khoản & quyền lợi Xu</small></div>
       </a>
       <a class="portal-user-dropdown-item" href="/wallet">
         <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.wallet)}</span>
@@ -10680,7 +10683,7 @@
       </a>
       <a class="portal-user-dropdown-item" href="/wallet/topup">
         <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.plus)}</span>
-        <div><strong>Nạp Xu nhanh</strong><small>Thanh toán PayOS tự động</small></div>
+        <div><strong>Nạp Xu</strong><small>Cổng thanh toán PayOS VietQR</small></div>
       </a>
               <a class="portal-user-dropdown-item" href="/account">
                 <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span>
@@ -21090,8 +21093,9 @@
   }
 
   function membershipCatalogEntries(context) {
-    const catalog = canonicalPackageCatalog(context.packageCatalog) || DEFAULT_CANONICAL_PACKAGES;
-    const publicSalePricing = canonicalPublicSalePricingCatalog(context.pricingCatalog) || DEFAULT_CANONICAL_PRICING_CATALOG;
+    const catalog = canonicalPackageCatalog(context.packageCatalog);
+    if (!catalog) return [];
+    const publicSalePricing = canonicalPublicSalePricingCatalog(context.pricingCatalog);
     const approvedSalePrices = approvedPublicSalePriceIndex(publicSalePricing);
     const sources = [catalog.monthly, catalog.combos];
     const seen = new Set();
@@ -21288,28 +21292,14 @@
         <div class="portal-card-header">
           <div>
             <span class="portal-section-kicker">👑 Cấp bậc hội viên</span>
-            <h2 class="portal-card-title">Hạng Hội Viên & Đặc Quyền AI Studio</h2>
-            <p class="portal-card-subtitle">Hệ thống ghi nhận tổng nạp tích lũy để cấp quyền mở khóa các công cụ và ưu tiên xử lý.</p>
+            <h2 class="portal-card-title">Chính Sách Cấp Bậc Hội Viên</h2>
+            <p class="portal-card-subtitle">Quyền lợi và đặc quyền nâng cao được đối soát từ phiên signed session do Core Bridge cấp.</p>
           </div>
           ${badge("read_only")}
         </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-top:16px;">
-          ${MEMBER_TIER_CANONICAL.map((t) => `
-            <div style="border:1px solid var(--portal-border, #2a3b4c); border-top:3px solid ${t.color}; border-radius:12px; padding:18px; background:var(--portal-surface-card, #091a28); display:flex; flex-direction:column; justify-content:space-between;">
-              <div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                  <span style="font-size:24px;">${t.icon}</span>
-                  <span style="font-size:11px; font-weight:700; color:${t.color}; background:rgba(255,255,255,0.06); padding:3px 8px; border-radius:6px;">${t.badge}</span>
-                </div>
-                <h3 style="font-size:16px; font-weight:700; margin:0 0 4px; color:var(--portal-text-primary, #fff);">${safeText(t.name)}</h3>
-                <div style="font-size:12px; color:#00f2fe; margin-bottom:8px;">${t.thresholdVnd === 0 ? "Mặc định khi kích hoạt" : `Nạp tích lũy từ ${t.thresholdVnd.toLocaleString("vi-VN")} đ`}</div>
-                <p style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin:0 0 12px;">${safeText(t.summary)}</p>
-                <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--portal-text-secondary, #c1d1e0);">
-                  ${t.perks.map((p) => `<li style="display:flex; gap:6px;"><span style="color:${t.color};">✓</span><span>${safeText(p)}</span></li>`).join("")}
-                </ul>
-              </div>
-            </div>
-          `).join("")}
+        <div style="background:var(--portal-surface-card, #091a28); border:1px dashed var(--portal-border, #2a3b4c); border-radius:10px; padding:18px; margin-top:16px;">
+          <p style="font-size:13px; color:var(--portal-text-secondary, #8fa3b7); margin:0 0 6px;">Danh mục cấp bậc hội viên thương mại: <strong>Không khả dụng</strong></p>
+          <p style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin:0;">Hệ thống áp dụng chính sách quyền lợi trực tiếp theo dữ liệu phiên tài khoản signed session. Không sử dụng thang bậc tĩnh giả lập khi chưa có catalog cấp bậc chính thức từ máy chủ.</p>
         </div>
       </section>
     `;
@@ -21555,7 +21545,7 @@
       <div class="portal-topup-lane-switch" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px;">
         <button type="button" class="portal-button ${payosActive ? "portal-button--primary" : "portal-button--quiet"} portal-topup-tab-btn ${payosActive ? "is-active" : ""}" data-portal-topup-lane="payos" aria-selected="${payosActive}" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 20px; font-size:15px; font-weight:800; border-radius:12px; cursor:pointer;">
           <span style="font-size:20px;">⚡</span>
-          <span>${safeText(uiText("customerTopup.lane.payos", "Cổng Nạp Tự Động PayOS (5-30s)"))}</span>
+          <span>${safeText(uiText("customerTopup.lane.payos", "Cổng Nạp PayOS VietQR"))}</span>
         </button>
         <button type="button" class="portal-button ${manualActive ? "portal-button--primary" : "portal-button--quiet"} portal-topup-tab-btn ${manualActive ? "is-active" : ""}" data-portal-topup-lane="manual" aria-selected="${manualActive}" style="display:flex; align-items:center; justify-content:center; gap:10px; padding:16px 20px; font-size:15px; font-weight:800; border-radius:12px; cursor:pointer;">
           <span style="font-size:20px;">🏦</span>
@@ -21849,9 +21839,9 @@
       <section class="portal-card portal-card-pad portal-topup-pane" data-portal-topup-pane="payos" style="border-top: 3px solid #00f2fe; display:${isHidden ? "none" : "block"};">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">⚡ ${safeText(uiText("customerTopup.payos.kicker", "Cổng nạp tự động VietQR 24/7"))}</span>
-            <h2 class="portal-card-title">${safeText(uiText("customerTopup.payos.title", "Nạp Xu tự động trực tuyến qua PayOS"))}</h2>
-            <p class="portal-card-subtitle">${safeText(uiText("customerTopup.payos.ratioPrefix", "Tỷ lệ quy đổi"))}: <strong>100 VNĐ = 1 Xu</strong>. ${safeText(uiText("customerTopup.payos.ratioInstruction", "Chọn mệnh giá nạp và mở cổng thanh toán. VietQR sẽ tự động đối soát trong 5–30 giây."))}</p>
+            <span class="portal-section-kicker">⚡ ${safeText(uiText("customerTopup.payos.kicker", "Cổng nạp trực tuyến VietQR/PayOS"))}</span>
+            <h2 class="portal-card-title">${safeText(uiText("customerTopup.payos.title", "Nạp Xu trực tuyến qua cổng PayOS"))}</h2>
+            <p class="portal-card-subtitle">${safeText(uiText("customerTopup.payos.ratioPrefix", "Tỷ lệ quy đổi"))}: <strong>100 VNĐ = 1 Xu</strong>. ${safeText(uiText("customerTopup.payos.ratioInstruction", "Chọn mệnh giá nạp và mở cổng thanh toán để đối soát tự động qua VietQR."))}</p>
           </div>
         </div>
         <form class="portal-form" data-portal-form data-portal-action="payment-create" data-portal-route="${route}">
@@ -21905,8 +21895,8 @@
   function renderBillingJourney() {
     const lanes = [
       { number: "01", title: uiText("customerTopup.journey.step1.title", "Chọn gói nạp"), text: uiText("customerTopup.journey.step1.text", "Chọn mệnh giá hoặc gói Xu phù hợp nhu cầu.") },
-      { number: "02", title: uiText("customerTopup.journey.step2.title", "Thanh toán QR 24/7"), text: uiText("customerTopup.journey.step2.text", "Quét mã VietQR hoặc cổng PayOS bảo mật.") },
-      { number: "03", title: uiText("customerTopup.journey.step3.title", "Nhận Xu tức thì"), text: uiText("customerTopup.journey.step3.text", "Số dư tự động cập nhật trong 5-30 giây.") }
+      { number: "02", title: uiText("customerTopup.journey.step2.title", "Thanh toán VietQR"), text: uiText("customerTopup.journey.step2.text", "Quét mã VietQR hoặc cổng PayOS bảo mật.") },
+      { number: "03", title: uiText("customerTopup.journey.step3.title", "Nhận Xu tự động"), text: uiText("customerTopup.journey.step3.text", "Số dư tự động cập nhật sau khi giao dịch thành công.") }
     ];
     return `<section class="portal-billing-journey" aria-label="${safeText(uiText("customerTopup.journey.aria", "Quy trình nạp Xu"))}"><div class="portal-billing-journey-head"><div><span class="portal-section-kicker">${safeText(uiText("customerTopup.journey.kicker", "Quy trình nạp tiền"))}</span><h2>${safeText(uiText("customerTopup.journey.title", "Quy trình nạp Xu tức thì"))}</h2><p>${safeText(uiText("customerTopup.journey.description", "Hỗ trợ tất cả ứng dụng ngân hàng và ví điện tử Việt Nam."))}</p></div></div><ol class="portal-billing-journey-lanes">${lanes.map((lane) => `<li><span>${safeText(lane.number)}</span><div><strong>${safeText(lane.title)}</strong><p>${safeText(lane.text)}</p></div></li>`).join("")}</ol></section>`;
   }
@@ -21957,7 +21947,7 @@
         <dl class="portal-wallet-facts"><div><dt>${safeText(uiText("customerWallet.facts.balance", "Số dư"))}</dt><dd>${safeText(String(wallet.balance_xu))} Xu</dd></div><div><dt>${safeText(uiText("customerWallet.facts.plan", "Gói"))}</dt><dd>${safeText(planName)}</dd></div></dl>
         <p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(page.path)}" role="status" aria-live="polite">${safeText(uiText("customerWallet.status.ready", "Ví Xu canonical đã sẵn sàng"))}</p>
         <div class="portal-form-footer">
-          <span class="portal-form-note">${safeText(uiText("customerWallet.footerNote", "Nạp Xu tự động 24/7 qua cổng PayOS hoặc chuyển khoản ngân hàng trực tiếp."))}</span>
+          <span class="portal-form-note">${safeText(uiText("customerWallet.footerNote", "Nạp Xu qua cổng PayOS VietQR hoặc chuyển khoản ngân hàng trực tiếp."))}</span>
           <div class="portal-inline-actions">
             ${refreshControl}
             <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ ${safeText(uiText("customerWallet.action.topupNow", "Nạp Xu ngay"))}</a>
@@ -22088,8 +22078,8 @@
       ? billingCatalogText("catalog.publicSale.cardDescription", "Đơn giá Xu tính theo từng lần chạy hoặc độ dài tác vụ (100 VNĐ = 1 Xu).")
       : billingCatalogText("catalog.card.subtitle", "Chọn gói tháng hoặc combo trọn gói để nhận thêm lượt tạo và ưu tiên xử lý.");
     const footerNote = pricingPage
-      ? billingCatalogText("catalog.publicSale.footerNote", "Bạn chỉ bị trừ Xu khi tác vụ được khởi tạo thành công.")
-      : billingCatalogText("catalog.footer.note", "Cần nạp thêm Xu? Mở cổng nạp PayOS tự động hoặc chuyển khoản trực tiếp 24/7.");
+      ? billingCatalogText("catalog.publicSale.footerNote", "Xu chỉ được ghi nhận/trừ theo kết quả hợp lệ theo chính sách thanh toán của hệ thống.")
+      : billingCatalogText("catalog.footer.note", "Cần nạp thêm Xu? Nạp Xu qua VietQR/PayOS hoặc chuyển khoản trực tiếp.");
 
     if (!pricingPage) {
       const compatNotice = `
@@ -22135,7 +22125,7 @@
     `;
 
     // Section B: Packages and combos
-    const effectivePackages = packages || (typeof DEFAULT_CANONICAL_PACKAGES !== "undefined" ? DEFAULT_CANONICAL_PACKAGES : null) || (typeof global !== "undefined" && global.DEFAULT_CANONICAL_PACKAGES ? global.DEFAULT_CANONICAL_PACKAGES : null) || { monthly: [], combos: [] };
+    const effectivePackages = packages || { monthly: [], combos: [] };
     const packageEntries = [
       ...(Array.isArray(effectivePackages.monthly) ? effectivePackages.monthly : []).map((item) => ({
         title: item.label,
@@ -22159,7 +22149,7 @@
             <span class="portal-module-card-footer"><span>${safeText(item.priceLabel || "Giá theo catalog")}</span><span>Gói chính thức</span></span>
           </section>
         `).join("")}</div>`
-      : `<div class="portal-empty"><p>Danh mục gói nạp đang được đồng bộ.</p></div>`;
+      : `<div class="portal-empty" style="text-align:center; padding:24px 16px; border:1px dashed var(--portal-border, #2a3b4c); border-radius:12px;"><p style="color:var(--portal-text-secondary, #8fa3b7); margin:0;">Danh mục gói dịch vụ đang chờ cập nhật từ máy chủ.</p></div>`;
 
     const sectionB = `
       <section class="portal-card portal-card-pad portal-pricing-packages">
@@ -22179,36 +22169,68 @@
       </section>
     `;
 
-    // Section C: Membership tiers
-    const memberTiers = (typeof MEMBER_TIER_CANONICAL !== "undefined" ? MEMBER_TIER_CANONICAL : null) || (typeof global !== "undefined" && global.MEMBER_TIER_CANONICAL ? global.MEMBER_TIER_CANONICAL : null) || [];
+    // Section C: Membership & Account status
+    // Server authority: No authoritative tier ladder catalog exists on server.
+    // Render only signed-session plan/tier metadata if available, truthful current account state, and "Không khả dụng" when absent.
+    const walletData = context && context.wallet && typeof context.wallet === "object" ? context.wallet : null;
+    const profileData = context && context.profile && typeof context.profile === "object" ? context.profile : null;
+    const currentPlanName = walletData && walletData.plan && typeof walletData.plan === "object" && (walletData.plan.plan_name || walletData.plan.current_plan || walletData.plan.name)
+      ? safeText(walletData.plan.plan_name || walletData.plan.current_plan || walletData.plan.name)
+      : "Không khả dụng";
+    const currentPlanStatus = walletData && walletData.plan && typeof walletData.plan === "object" && (walletData.plan.plan_status || walletData.plan.status)
+      ? safeText(walletData.plan.plan_status || walletData.plan.status)
+      : "Không khả dụng";
+    const currentVipStatus = walletData && typeof walletData.is_vip === "boolean"
+      ? (walletData.is_vip ? "Hội viên VIP" : "Hội viên Tiêu chuẩn")
+      : "Không khả dụng";
+    const currentAccountType = profileData && profileData.accountType
+      ? safeText(profileData.accountType)
+      : "Không khả dụng";
+    const balanceDisplay = walletData && typeof walletData.balance_xu === "number" && !isNaN(walletData.balance_xu)
+      ? `${walletData.balance_xu} Xu`
+      : "Không khả dụng";
+
+    const membershipStateBlock = walletData
+      ? `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px; margin-top:16px;">
+          <div style="background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; padding:16px;">
+            <div style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin-bottom:4px;">Hạng hội viên phiên hiện tại</div>
+            <strong style="font-size:15px; color:var(--portal-text-primary, #fff);">${currentVipStatus}</strong>
+          </div>
+          <div style="background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; padding:16px;">
+            <div style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin-bottom:4px;">Gói dịch vụ kích hoạt</div>
+            <strong style="font-size:15px; color:var(--portal-text-primary, #fff);">${currentPlanName}</strong>
+            <span style="font-size:11px; color:#00f2fe; margin-left:6px;">(${currentPlanStatus})</span>
+          </div>
+          <div style="background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; padding:16px;">
+            <div style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin-bottom:4px;">Loại tài khoản Web</div>
+            <strong style="font-size:15px; color:var(--portal-text-primary, #fff);">${currentAccountType}</strong>
+          </div>
+          <div style="background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:10px; padding:16px;">
+            <div style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin-bottom:4px;">Số dư Xu khả dụng</div>
+            <strong style="font-size:15px; color:#00d26a;">${balanceDisplay}</strong>
+          </div>
+        </div>
+        <p style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin:12px 0 0;">Đặc quyền hội viên được áp dụng trực tiếp theo phiên đăng nhập signed session do Core Bridge xác thực. Hệ thống không sử dụng bảng xếp hạng cấp bậc tĩnh khi chưa có catalog cấp bậc chính thức từ máy chủ.</p>
+      `
+      : `
+        <div style="background:var(--portal-surface-card, #091a28); border:1px dashed var(--portal-border, #2a3b4c); border-radius:10px; padding:20px; text-align:center; margin-top:16px;">
+          <p style="font-size:13px; color:var(--portal-text-secondary, #8fa3b7); margin:0 0 8px;">Thông tin quyền lợi hội viên: <strong>Không khả dụng</strong> (Cần đăng nhập phiên signed session để tải metadata quyền lợi).</p>
+          <p style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin:0;">Hệ thống không hiển thị bảng xếp hạng cấp bậc giả lập khi máy chủ chưa công bố catalog cấp bậc chính thức.</p>
+        </div>
+      `;
+
     const sectionC = `
       <section class="portal-card portal-card-pad portal-pricing-membership">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">👑 Cấp bậc hội viên</span>
-            <h2 class="portal-card-title">Hạng Hội Viên & Đặc Quyền AI Studio</h2>
-            <p class="portal-card-subtitle">Hệ thống tự động ghi nhận tổng nạp tích lũy để mở khóa tính năng và ưu tiên phân bổ tài nguyên.</p>
+            <span class="portal-section-kicker">👑 Quyền lợi hội viên</span>
+            <h2 class="portal-card-title">Hạng Hội Viên & Quyền Lợi Tài Khoản</h2>
+            <p class="portal-card-subtitle">Quyền lợi và hạng thành viên được xác định trực tiếp từ dữ liệu phiên signed session do Core Bridge quản lý.</p>
           </div>
           ${badge("read_only")}
         </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-top:16px;">
-          ${memberTiers.map((t) => `
-            <div style="border:1px solid var(--portal-border, #2a3b4c); border-top:3px solid ${t.color}; border-radius:12px; padding:18px; background:var(--portal-surface-card, #091a28); display:flex; flex-direction:column; justify-content:space-between;">
-              <div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                  <span style="font-size:24px;">${t.icon}</span>
-                  <span style="font-size:11px; font-weight:700; color:${t.color}; background:rgba(255,255,255,0.06); padding:3px 8px; border-radius:6px;">${t.badge}</span>
-                </div>
-                <h3 style="font-size:16px; font-weight:700; margin:0 0 4px; color:var(--portal-text-primary, #fff);">${safeText(t.name)}</h3>
-                <div style="font-size:12px; color:#00f2fe; margin-bottom:8px;">${t.thresholdVnd === 0 ? "Mặc định khi kích hoạt" : `Nạp tích lũy từ ${t.thresholdVnd.toLocaleString("vi-VN")} đ (~${t.thresholdXu.toLocaleString("vi-VN")} Xu)`}</div>
-                <p style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin:0 0 12px;">${safeText(t.summary)}</p>
-                <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--portal-text-secondary, #c1d1e0);">
-                  ${t.perks.map((p) => `<li style="display:flex; gap:6px;"><span style="color:${t.color};">✓</span><span>${safeText(p)}</span></li>`).join("")}
-                </ul>
-              </div>
-            </div>
-          `).join("")}
-        </div>
+        ${membershipStateBlock}
       </section>
     `;
 
@@ -22229,12 +22251,12 @@
             <p style="font-size:13px; color:var(--portal-text-secondary, #8fa3b7); margin:0;"><strong>100 VNĐ = 1 Xu</strong> (10.000 VNĐ = 100 Xu, 100.000 VNĐ = 1.000 Xu). Nạp bao nhiêu nhận đúng bấy nhiêu Xu.</p>
           </div>
           <div style="background:var(--portal-surface-card, #091a28); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:16px;">
-            <strong style="color:#00d26a; font-size:14px; display:block; margin-bottom:6px;">Trừ Xu minh bạch</strong>
-            <p style="font-size:13px; color:var(--portal-text-secondary, #8fa3b7); margin:0;">Chỉ trừ Xu khi tác vụ được khởi tạo thành công. Nếu lỗi kết xuất hoặc gián đoạn hệ thống, Xu được hoàn lại tự động.</p>
+            <strong style="color:#00d26a; font-size:14px; display:block; margin-bottom:6px;">Trừ Xu theo kết quả hợp lệ</strong>
+            <p style="font-size:13px; color:var(--portal-text-secondary, #8fa3b7); margin:0;">Xu chỉ được ghi nhận/trừ theo kết quả hợp lệ theo chính sách thanh toán của hệ thống.</p>
           </div>
           <div style="background:var(--portal-surface-card, #091a28); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:16px;">
-            <strong style="color:#fbbf24; font-size:14px; display:block; margin-bottom:6px;">Không hết hạn</strong>
-            <p style="font-size:13px; color:var(--portal-text-secondary, #8fa3b7); margin:0;">Số dư Xu trong ví của bạn không có thời hạn sử dụng. Bạn có thể nạp trước và sử dụng bất kỳ khi nào cần.</p>
+            <strong style="color:#fbbf24; font-size:14px; display:block; margin-bottom:6px;">Ghi nhận sổ cái minh bạch</strong>
+            <p style="font-size:13px; color:var(--portal-text-secondary, #8fa3b7); margin:0;">Mọi biến động số dư Xu được đối soát và ghi nhận chi tiết qua sổ cái (Ledger) tài khoản do Core Bridge xác thực.</p>
           </div>
         </div>
       </section>
@@ -22244,7 +22266,7 @@
     const sectionE = `
       <section class="portal-card portal-card-pad portal-pricing-cta" style="text-align:center; padding:32px 24px;">
         <h2 class="portal-card-title" style="font-size:22px; margin-bottom:8px;">Sẵn Sàng Sáng Tạo Cùng TOAN AAS?</h2>
-        <p class="portal-card-subtitle" style="max-width:540px; margin:0 auto 20px; font-size:14px;">Nạp Xu tự động qua cổng PayOS VietQR chỉ 5-30 giây hoặc chuyển khoản trực tiếp 24/7 để bắt đầu ngay hôm nay.</p>
+        <p class="portal-card-subtitle" style="max-width:540px; margin:0 auto 20px; font-size:14px;">Nạp Xu qua VietQR/PayOS hoặc chuyển khoản trực tiếp để bắt đầu sáng tạo ngay hôm nay.</p>
         <div class="portal-inline-actions" style="justify-content:center; gap:12px;">
           <a class="portal-button portal-button--primary" href="/wallet/topup" style="padding:10px 24px; font-size:14px; font-weight:700;">⚡ Mở nạp Xu ngay</a>
           <a class="portal-button portal-button--quiet" href="/wallet" style="padding:10px 20px; font-size:14px;">💼 Xem ví Xu của tôi</a>
@@ -27000,39 +27022,46 @@
     const accountPaidVnd = (accountHasWallet && (accountWallet.total_paid_vnd != null || accountWallet.total_deposited_vnd != null))
       ? Number(accountWallet.total_paid_vnd != null ? accountWallet.total_paid_vnd : accountWallet.total_deposited_vnd)
       : null;
-    const accountTierInfo = typeof getMemberTierInfo === "function" ? getMemberTierInfo(accountPaidVnd, profile.vipTierOverride || profile.tier) : { isKnown: false, currentTier: { badge: "—", color: "#8fa3b7" }, nextTier: null, neededVnd: null, neededXu: null, progressPercent: null, paidVnd: null };
-    const { isKnown: accIsKnown, currentTier: accTier, nextTier: accNextTier, neededVnd: accNeededVnd, neededXu: accNeededXu, progressPercent: accProgress, paidVnd: accPaidVnd } = accountTierInfo;
-    const accUnlinkedOrNoData = context.wallet && context.wallet.status_name === 'unlinked' ? 'Chưa liên kết Telegram' : 'Chưa có dữ liệu';
+    const hasCanonicalWallet = accountWallet && typeof accountWallet.balance_xu === "number";
+    const accountPlan = (accountWallet && accountWallet.plan && typeof accountWallet.plan === "object") ? accountWallet.plan : {};
+    const accountPlanName = accountPlan.plan_name || (profile && profile.plan_name) || "Tiêu chuẩn";
+    const accountIsVip = Boolean(accountWallet && (accountWallet.is_vip || (profile && profile.vipTierOverride === "vip")));
+    const tierBadge = accountIsVip ? "👑 VIP" : "⭐ Thành viên tiêu chuẩn";
+    const tierColor = accountIsVip ? "#f43f5e" : "#00f2fe";
+    const accUnlinkedOrNoData = context.wallet && context.wallet.status_name === 'unlinked' ? 'Chưa liên kết Telegram' : 'Không khả dụng';
 
     const memberTierCard = `
-      <section class="portal-card portal-card-pad" style="border-top: 3px solid ${accTier.color};">
+      <section class="portal-card portal-card-pad" style="border-top: 3px solid ${tierColor};">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">👑 Cấp bậc hội viên</span>
-            <h2 class="portal-card-title">Hạng Hội Viên: <span style="color:${accTier.color};">${safeText(accTier.badge)}</span></h2>
-            <p class="portal-card-subtitle">${accIsKnown && typeof accPaidVnd === 'number' ? `Hệ thống tự động nâng hạng theo tổng số tiền nạp tích lũy (${accPaidVnd.toLocaleString('vi-VN')} đ).` : safeText(accUnlinkedOrNoData)}</p>
+            <span class="portal-section-kicker">👑 Quyền lợi tài khoản</span>
+            <h2 class="portal-card-title">Hạng Quyền Lợi: <span style="color:${tierColor};">${safeText(tierBadge)}</span></h2>
+            <p class="portal-card-subtitle">${hasCanonicalWallet ? `Metadata quyền lợi tài khoản đối soát từ phiên signed session do Core Bridge cấp.` : safeText(accUnlinkedOrNoData)}</p>
           </div>
           ${badge("read_only")}
         </div>
         <div style="margin-bottom:16px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:13px;">
-            <strong style="color:var(--portal-text-primary, #fff);">${!accIsKnown ? 'Tiến trình lên hạng: ' + safeText(accUnlinkedOrNoData) : (accNextTier ? `Tiến trình lên ${accNextTier.badge}:` : '🏆 Đạt Hạng Tối Cao VIP')}</strong>
-            <span style="color:${accIsKnown && accNextTier ? accNextTier.color : '#8fa3b7'}; font-weight:700;">${accIsKnown && typeof accProgress === 'number' ? `${accProgress}%` : '—%'}</span>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:10px; margin-top:8px;">
+            <div style="background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:8px; padding:12px;">
+              <div style="font-size:11px; color:var(--portal-text-secondary, #8fa3b7); margin-bottom:4px;">Gói dịch vụ</div>
+              <strong style="font-size:14px; color:#fff;">${safeText(accountPlanName)}</strong>
+            </div>
+            <div style="background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:8px; padding:12px;">
+              <div style="font-size:11px; color:var(--portal-text-secondary, #8fa3b7); margin-bottom:4px;">Số dư khả dụng</div>
+              <strong style="font-size:14px; color:#00d26a;">${hasCanonicalWallet ? `${accountWallet.balance_xu.toLocaleString("vi-VN")} Xu` : '—'}</strong>
+            </div>
           </div>
-          <div style="width:100%; height:10px; background:#112233; border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); margin-bottom:8px;">
-            <div style="width:${accIsKnown && typeof accProgress === 'number' ? accProgress : 0}%; height:100%; background:linear-gradient(90deg, #00f2fe, ${accIsKnown && accNextTier ? accNextTier.color : '#8fa3b7'}); border-radius:999px;"></div>
-          </div>
-          <div style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7);">
-            ${!accIsKnown ? safeText(accUnlinkedOrNoData) : (accNextTier ? `Còn thiếu: <strong style="color:#00f2fe;">${accNeededVnd.toLocaleString('vi-VN')} đ</strong> (~${accNeededXu.toLocaleString('vi-VN')} Xu) để lên <strong>${accNextTier.badge}</strong>` : 'Đang hưởng trọn vẹn đặc quyền tối cao VIP')}
+          <div style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin-top:10px;">
+            ${hasCanonicalWallet ? 'Đặc quyền được áp dụng trực tiếp theo phiên signed session. Hệ thống không sử dụng bảng xếp hạng cấp bậc tĩnh khi chưa có catalog cấp bậc chính thức từ máy chủ.' : safeText(accUnlinkedOrNoData)}
           </div>
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
-          <span style="background:rgba(0, 242, 254, 0.1); color:#00f2fe; border:1px solid rgba(0, 242, 254, 0.25); font-size:11.5px; font-weight:700; padding:4px 8px; border-radius:6px;">⭐ Hạng: ${safeText(accTier.badge)}</span>
+          <span style="background:rgba(0, 242, 254, 0.1); color:#00f2fe; border:1px solid rgba(0, 242, 254, 0.25); font-size:11.5px; font-weight:700; padding:4px 8px; border-radius:6px;">⭐ Quyền lợi: ${safeText(tierBadge)}</span>
           <span style="background:rgba(0, 210, 106, 0.1); color:#00d26a; border:1px solid rgba(0, 210, 106, 0.25); font-size:11.5px; font-weight:700; padding:4px 8px; border-radius:6px;">🔒 Xác thực canonical</span>
         </div>
         <div class="portal-form-footer">
-          <a class="portal-button portal-button--quiet" href="/pricing">Xem bảng quyền lợi & dịch vụ →</a>
-          <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ Nạp Xu lên hạng</a>
+          <a class="portal-button portal-button--quiet" href="/pricing">Xem bảng giá & dịch vụ →</a>
+          <a class="portal-button portal-button--primary" href="/wallet/topup">⚡ Nạp Xu</a>
         </div>
       </section>
     `;
@@ -29161,7 +29190,7 @@
               Hôm nay, ngày 19 tháng 08 năm 2026, các bên gồm có:<br>
               Bên A: Hệ thống Tự Động Hóa Đa Nền Tảng TOAN AAS.<br>
               Bên B: Quý khách hàng & Doanh nghiệp sử dụng dịch vụ.<br>
-              Điều 1: Cung cấp quyền truy cập trọn bộ AI Studio & Bot Telegram 24/7.
+              Điều 1: Cung cấp quyền truy cập trọn bộ AI Studio & Bot Telegram theo trạng thái vận hành của hệ thống.
             </div>
           </div>
         </div>
@@ -35648,7 +35677,7 @@ Toàn bộ video, ảnh, audio, bài hát và file phụ đề đã tạo đều
       replyText = `🛡️ <strong>Kênh Hỗ Trợ Khách Hàng TOAN AAS:</strong><br/>
 • <strong>Nạp tiền chưa cộng:</strong> Vui lòng kiểm tra mã giao dịch trong mục <a href="/wallet/history" style="color:#00f2fe;">Lịch Sử Giao Dịch</a>.<br/>
 • <strong>Tác vụ kẹt file:</strong> Kiểm tra trạng thái xuất bản trong <a href="/asset-vault" style="color:#00f2fe;">Asset Vault</a>.<br/>
-• <strong>Liên hệ Admin trực tiếp:</strong> Nhắn tin Telegram hỗ trợ 24/7 tại <strong>@toanaas_support</strong> để được xử lý ngay lập tức!`;
+• <strong>Liên hệ Admin trực tiếp:</strong> Nhắn tin Telegram tại <strong>@toanaas_support</strong> để được nhân sự kỹ thuật hỗ trợ đối soát.`;
       replyActions = [
         { label: "📜 Kiểm Tra Lịch Sử Ví", route: "/wallet/history" },
         { label: "📁 Kiểm Tra Asset Vault", route: "/asset-vault" }

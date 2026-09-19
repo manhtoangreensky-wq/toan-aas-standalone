@@ -62,6 +62,9 @@ function badge(s) {{ return `<span class="portal-badge" data-badge="${{s}}">${{s
 function portalIcon(name) {{ return `<span class="portal-icon" data-icon="${{name}}"></span>`; }}
 function renderHero(page, ctx) {{ return `<header class="portal-page-hero"><h1>${{page.title || "Hero"}}</h1></header>`; }}
 function renderEmpty(t, m, icon) {{ return `<div class="portal-empty"><h2>${{t}}</h2><p>${{m}}</p></div>`; }}
+function renderStatusCard(page, ctx) {{ return `<div class="portal-status-card">Status</div>`; }}
+function renderSummary(page, ctx) {{ return `<div class="portal-summary">Summary</div>`; }}
+function renderNotes(page) {{ return `<div class="portal-notes">Notes</div>`; }}
 function normalizePath(p) {{ return "/" + String(p || "").replace(/^\\/+|\\/+$/g, ""); }}
 function uiText(k, fb) {{ return fb || k; }}
 function billingCatalogText(k, fb) {{ return fb || k; }}
@@ -73,16 +76,18 @@ const page = {{ path: "{page_path}", title: "Bảng giá", description: "Bảng 
 const context = {ctx_json};
 
 // Evaluate needed functions from portal.js
+eval(extract("function membershipCatalogEntries(context)", "const MEMBER_TIER_CANONICAL ="));
 eval(extract("const MEMBER_TIER_CANONICAL =", "function getMemberTierInfo").replace("const MEMBER_TIER_CANONICAL =", "global.MEMBER_TIER_CANONICAL ="));
-eval(extract("const DEFAULT_CANONICAL_PACKAGES =", "function renderCatalog(page, context)").replace("const DEFAULT_CANONICAL_PACKAGES =", "global.DEFAULT_CANONICAL_PACKAGES ="));
+eval(extract("function renderMembership(page, context)", "function renderServiceStatus(page, context)"));
 eval(extract("function canonicalShortText", "function canonicalPricingCatalog"));
 eval(extract("function canonicalPricingCatalog(value)", "function canonicalPackageCatalog(value)"));
 eval(extract("function canonicalPackageCatalog(value)", "function safePayosCheckout"));
+eval(extract("const DEFAULT_CANONICAL_PACKAGES =", "function renderCatalog(page, context)").replace("const DEFAULT_CANONICAL_PACKAGES =", "global.DEFAULT_CANONICAL_PACKAGES ="));
 eval(extract("function renderBillingWorkspaceNav", "function renderPaymentEntryPoints"));
 eval(extract("function renderCatalog(page, context)", "const JOB_FILTERS"));
 
 try {{
-  const html = renderCatalog(page, context);
+  const html = page.path === "/membership" ? renderMembership(page, context) : renderCatalog(page, context);
   console.log(JSON.stringify({{ ok: true, html }}));
 }} catch (err) {{
   console.log(JSON.stringify({{ ok: false, error: err.message, stack: err.stack }}));
@@ -317,3 +322,144 @@ class TestP0WebappV203CustomerCommerceSurfaces:
 
         admin_links = re.findall(r'href=["\'](/admin(?:/[^"\']*)?)["\']', html)
         assert not admin_links, f"Found admin links in customer pricing surface: {admin_links}"
+
+    def test_11_membership_provenance_and_zero_assumed_static_ladder(self) -> None:
+        """Verify zero assumed static membership tiers rendered and provenance requirements.
+
+        1. ASSUMED_MEMBERSHIP_TIERS_RENDERED=0, MEMBERSHIP_STATIC_LADDER_VISIBLE=0
+        2. No static 6-tier ladder (Newbie, Silver, Gold, Platinum, Diamond, VIP) rendered on /pricing or /membership.
+        3. Signed session account metadata rendered when present.
+        4. Informative fallback 'Không khả dụng' when signed session metadata absent.
+        """
+        # A. On /pricing:
+        res_pricing = _run_node_render_catalog("/pricing", {
+            "pricingCatalog": {
+                "available": True,
+                "public_sale_catalog": {"available": True, "items": [{"code": "img_std", "family": "image", "label": "Ảnh chuẩn", "sale_price_xu": 15, "status": "ready"}]}
+            },
+            "wallet": {"balance_xu": 1200, "is_vip": True, "total_spent_xu": 500, "plan": {"plan_name": "Gói Pro VIP", "plan_status": "active"}}
+        })
+        assert res_pricing["ok"], f"Render /pricing failed: {res_pricing.get('error')}"
+        pricing_html = res_pricing["html"]
+
+        # No static tier ladder titles rendered
+        static_tier_titles = [
+            "Hạng Tân Thủ (Newbie)",
+            "Hạng Bạc (Silver)",
+            "Hạng Vàng (Gold)",
+            "Hạng Bạch Kim (Platinum)",
+            "Hạng Kim Cương (Diamond)",
+            "Hạng VIP Đối Tác (VIP Partner)",
+        ]
+        for tier_title in static_tier_titles:
+            assert tier_title not in pricing_html, f"Static tier title '{tier_title}' should not be rendered on /pricing"
+
+        # Truthful signed-session metadata rendered
+        assert "Hội viên VIP" in pricing_html
+        assert "Gói Pro VIP" in pricing_html
+        assert "1200 Xu" in pricing_html
+
+        # When wallet is absent: renders 'Không khả dụng'
+        res_pricing_anon = _run_node_render_catalog("/pricing", {})
+        assert res_pricing_anon["ok"]
+        pricing_anon_html = res_pricing_anon["html"]
+        assert "Không khả dụng" in pricing_anon_html
+        for tier_title in static_tier_titles:
+            assert tier_title not in pricing_anon_html
+
+        # B. On /membership:
+        res_member = _run_node_render_catalog("/membership", {})
+        assert res_member["ok"], f"Render /membership failed: {res_member.get('error')}"
+        member_html = res_member["html"]
+        for tier_title in static_tier_titles:
+            assert tier_title not in member_html, f"Static tier title '{tier_title}' should not be rendered on /membership"
+
+    def test_12_canonical_xu_charge_semantics_and_zero_creation_charge_claim(self) -> None:
+        """Verify truthful valid result charging semantics and zero creation-time charge claim.
+
+        1. CHARGE_AT_JOB_CREATION_CLAIM=0: 'khởi tạo thành công' must not be claimed as charge moment.
+        2. VALID_RESULT_CHARGE_SEMANTICS=YES: 'kết quả hợp lệ' semantics must be present.
+        """
+        res = _run_node_render_catalog("/pricing", {})
+        assert res["ok"]
+        html = res["html"]
+
+        assert "khởi tạo thành công" not in html, "Forbidden claim: charging at job creation"
+        assert "Xu chỉ được ghi nhận/trừ theo kết quả hợp lệ theo chính sách thanh toán của hệ thống" in html
+
+        # Also check source
+        assert "Bạn chỉ bị trừ Xu khi tác vụ được khởi tạo thành công" not in PORTAL_SOURCE
+
+    def test_13_zero_unproven_auto_refund_and_no_expiry_claims(self) -> None:
+        """Verify zero unproven blanket auto-refund and no-expiry claims.
+
+        1. UNPROVEN_AUTO_REFUND_CLAIM=0: Blanket promise 'Xu được hoàn lại tự động' removed.
+        2. UNPROVEN_NO_EXPIRY_CLAIM=0: Blanket claim 'không có thời hạn sử dụng' removed.
+        """
+        res = _run_node_render_catalog("/pricing", {})
+        assert res["ok"]
+        html = res["html"]
+
+        assert "hoàn lại tự động" not in html
+        assert "không có thời hạn sử dụng" not in html
+
+    def test_14_zero_unsourced_payos_sla(self) -> None:
+        """Verify zero unsourced SLA promises (5-30s, 24/7) on commerce surface.
+
+        1. UNSOURCED_PAYOS_SLA=0: '5-30 giây' and '5-30s' removed.
+        2. Neutral VietQR/PayOS copy present.
+        """
+        res = _run_node_render_catalog("/pricing", {})
+        assert res["ok"]
+        html = res["html"]
+
+        assert "5-30 giây" not in html
+        assert "5-30s" not in html
+        assert "VietQR/PayOS" in html
+
+    def test_15_package_catalog_source_truth_and_zero_fake_fallback_packages(self) -> None:
+        """Verify package catalog is strictly derived from source without fake client fallback packages.
+
+        1. FAKE_PACKAGE_COUNT=0: No fallback packages from DEFAULT_CANONICAL_PACKAGES rendered when empty.
+        2. Truthful empty message displayed when server packageCatalog is missing or empty.
+        3. Canonical packages from server rendered when provided.
+        """
+        # When packageCatalog is empty:
+        res_empty = _run_node_render_catalog("/pricing", {
+            "pricingCatalog": {},
+            "packageCatalog": {}
+        })
+        assert res_empty["ok"]
+        empty_html = res_empty["html"]
+
+        # Fake fallback package names must NOT be rendered
+        fake_package_names = [
+            "Gói Ảnh Mini",
+            "Gói Ảnh Cơ Bản",
+            "Gói Ảnh Bán Hàng",
+            "Gói Video Mini",
+            "Gói Video Tiêu Chuẩn",
+            "Gói Video Cao Cấp",
+            "Combo Video Quảng Cáo Mini",
+            "Combo Sáng Tạo Toàn Diện Tháng",
+        ]
+        for pkg_name in fake_package_names:
+            assert pkg_name not in empty_html, f"Fake package '{pkg_name}' must not be rendered from client fallback"
+
+        # Truthful empty message
+        assert "Danh mục gói dịch vụ đang chờ cập nhật từ máy chủ." in empty_html
+
+        # When real canonical packages are provided:
+        res_real = _run_node_render_catalog("/pricing", {
+            "packageCatalog": {
+                "available": True,
+                "monthly": [{"code": "real_pkg_101", "label": "Gói Thực Tế Canonical", "note": "Gói do server cấp"}],
+                "combos": []
+            }
+        })
+        assert res_real["ok"]
+        real_html = res_real["html"]
+        assert "Gói Thực Tế Canonical" in real_html
+        for pkg_name in fake_package_names:
+            assert pkg_name not in real_html
+
