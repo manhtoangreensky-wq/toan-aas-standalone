@@ -2730,44 +2730,53 @@ app.include_router(copyfast_notification_center.router)
 
 
 def _load_release_metadata() -> dict[str, object]:
+    strict_required = os.environ.get("WEBAPP_RELEASE_ATTESTATION_REQUIRED") == "1"
     release_path = ROOT / "release.json"
+    data: dict[str, object] = {}
+    release_valid = False
     if release_path.is_file():
         try:
-            data = json.loads(release_path.read_text(encoding="utf-8"))
-            if isinstance(data, dict):
-                return data
+            loaded = json.loads(release_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict) and bool(loaded.get("release_sha")):
+                data = loaded
+                release_valid = True
         except Exception:
-            pass
-    sha = os.environ.get("WEBAPP_RELEASE_SHA") or os.environ.get("RELEASE_SHA")
-    if not sha:
-        git_head = ROOT / ".git" / "HEAD"
-        if git_head.is_file():
-            try:
-                head_content = git_head.read_text(encoding="utf-8").strip()
-                if head_content.startswith("ref: "):
-                    ref_name = head_content[5:].strip()
-                    ref_path = ROOT / ".git" / ref_name
-                    if ref_path.is_file():
-                        sha = ref_path.read_text(encoding="utf-8").strip()
+            release_valid = False
+
+    if strict_required:
+        sha = str(data.get("release_sha") or "")
+    else:
+        sha = str(data.get("release_sha") or "")
+        if not sha:
+            sha = os.environ.get("WEBAPP_RELEASE_SHA") or os.environ.get("RELEASE_SHA") or ""
+        if not sha:
+            git_head = ROOT / ".git" / "HEAD"
+            if git_head.is_file():
+                try:
+                    head_content = git_head.read_text(encoding="utf-8").strip()
+                    if head_content.startswith("ref: "):
+                        ref_name = head_content[5:].strip()
+                        ref_path = ROOT / ".git" / ref_name
+                        if ref_path.is_file():
+                            sha = ref_path.read_text(encoding="utf-8").strip()
+                        else:
+                            packed_refs = ROOT / ".git" / "packed-refs"
+                            if packed_refs.is_file():
+                                for line in packed_refs.read_text(encoding="utf-8").splitlines():
+                                    line = line.strip()
+                                    if line and not line.startswith("#") and not line.startswith("^"):
+                                        parts = line.split()
+                                        if len(parts) >= 2 and parts[1] == ref_name:
+                                            sha = parts[0]
+                                            break
                     else:
-                        packed_refs = ROOT / ".git" / "packed-refs"
-                        if packed_refs.is_file():
-                            for line in packed_refs.read_text(encoding="utf-8").splitlines():
-                                line = line.strip()
-                                if line and not line.startswith("#") and not line.startswith("^"):
-                                    parts = line.split()
-                                    if len(parts) >= 2 and parts[1] == ref_name:
-                                        sha = parts[0]
-                                        break
-                else:
-                    sha = head_content
-            except Exception:
-                pass
-    if not sha:
-        sha = ""
+                        sha = head_content
+                except Exception:
+                    pass
+        release_valid = bool(sha)
 
     lock_path = ROOT / "requirements.lock"
-    lock_sha = None
+    lock_sha = ""
     if lock_path.is_file():
         try:
             lock_sha = hashlib.sha256(lock_path.read_bytes()).hexdigest()
@@ -2776,8 +2785,9 @@ def _load_release_metadata() -> dict[str, object]:
 
     return {
         "release_sha": sha,
-        "build_timestamp_utc": None,
-        "requirements_lock_sha256": lock_sha or "9490bebca11e7aaf14b7804eba35a6bf2c5bcab7d0a1220771c8fbdc29c14d5f",
+        "build_timestamp_utc": data.get("build_timestamp_utc"),
+        "requirements_lock_sha256": lock_sha,
+        "release_valid": release_valid,
     }
 
 
@@ -2801,6 +2811,7 @@ def _compute_installed_packages_digest() -> str:
 
 
 def _load_runtime_attestation() -> dict[str, object]:
+    strict_required = os.environ.get("WEBAPP_RELEASE_ATTESTATION_REQUIRED") == "1"
     sys_executable = Path(sys.executable).resolve()
     sys_prefix = Path(sys.prefix).resolve()
 
@@ -2816,6 +2827,21 @@ def _load_runtime_attestation() -> dict[str, object]:
     except ValueError:
         is_under_env = False
 
+    lock_path = ROOT / "requirements.lock"
+    actual_lock_sha = ""
+    if lock_path.is_file():
+        try:
+            actual_lock_sha = hashlib.sha256(lock_path.read_bytes()).hexdigest()
+        except Exception:
+            pass
+
+    actual_resolved_packages_sha = _compute_installed_packages_digest()
+    actual_python_runtime_id = f"py{platform.python_version()}-{platform.machine().lower()}"
+    if actual_resolved_packages_sha:
+        actual_runtime_env_id = f"{actual_python_runtime_id}-res-{actual_resolved_packages_sha[:16]}"
+    else:
+        actual_runtime_env_id = f"{actual_python_runtime_id}-unattested"
+
     attestation_file = sys_prefix / "runtime_env_attestation.json"
     attestation_valid = False
     attestation_data: dict[str, object] = {}
@@ -2823,48 +2849,32 @@ def _load_runtime_attestation() -> dict[str, object]:
         try:
             raw_data = json.loads(attestation_file.read_text(encoding="utf-8"))
             if isinstance(raw_data, dict):
-                req_id = raw_data.get("runtime_environment_id")
-                req_lock = raw_data.get("requirements_lock_sha256")
-                req_pkg = raw_data.get("resolved_packages_sha256")
-                if req_id and req_lock and req_pkg:
-                    attestation_valid = True
-                    attestation_data = dict(raw_data)
+                attestation_data = dict(raw_data)
         except Exception:
-            pass
+            attestation_data = {}
 
-    lock_path = ROOT / "requirements.lock"
-    lock_sha = ""
-    if lock_path.is_file():
-        try:
-            lock_sha = hashlib.sha256(lock_path.read_bytes()).hexdigest()
-        except Exception:
-            pass
-    if not lock_sha:
-        lock_sha = str(attestation_data.get("requirements_lock_sha256") or "9490bebca11e7aaf14b7804eba35a6bf2c5bcab7d0a1220771c8fbdc29c14d5f")
+    if attestation_data and is_under_env and actual_lock_sha and actual_resolved_packages_sha:
+        attestation_lock = str(attestation_data.get("requirements_lock_sha256") or "")
+        attestation_pkg = str(attestation_data.get("resolved_packages_sha256") or "")
+        attestation_py = str(attestation_data.get("python_runtime_id") or "")
+        attestation_env = str(attestation_data.get("runtime_environment_id") or "")
 
-    resolved_packages_sha = (
-        os.environ.get("RESOLVED_PACKAGES_SHA")
-        or os.environ.get("WEBAPP_RESOLVED_PACKAGES_SHA256")
-        or str(attestation_data.get("resolved_packages_sha256") or "")
-        or _compute_installed_packages_digest()
-    )
-    python_runtime_id = f"py{platform.python_version()}-{platform.machine().lower()}"
-    runtime_env_id = (
-        os.environ.get("RUNTIME_ENVIRONMENT_ID")
-        or str(attestation_data.get("runtime_environment_id") or "")
-        or (f"{python_runtime_id}-res-{resolved_packages_sha[:16]}" if resolved_packages_sha else f"{python_runtime_id}-unattested")
-    )
-
-    strict_required = os.environ.get("WEBAPP_RELEASE_ATTESTATION_REQUIRED") == "1"
+        if (
+            attestation_lock == actual_lock_sha
+            and attestation_pkg == actual_resolved_packages_sha
+            and attestation_py == actual_python_runtime_id
+            and attestation_env == actual_runtime_env_id
+        ):
+            attestation_valid = True
 
     # Path Privacy Preservation: Never expose host paths (sys.executable, sys.prefix)
     return {
         "running_executable_under_attested_env": is_under_env and (attestation_valid or not strict_required),
         "attestation_valid": attestation_valid,
-        "python_runtime_id": python_runtime_id,
-        "runtime_environment_id": runtime_env_id,
-        "requirements_lock_sha256": lock_sha,
-        "resolved_packages_sha256": resolved_packages_sha,
+        "python_runtime_id": actual_python_runtime_id,
+        "runtime_environment_id": actual_runtime_env_id,
+        "requirements_lock_sha256": actual_lock_sha,
+        "resolved_packages_sha256": actual_resolved_packages_sha,
     }
 
 
@@ -2875,7 +2885,8 @@ async def health():
     runtime_attestation = _load_runtime_attestation()
     strict_required = os.environ.get("WEBAPP_RELEASE_ATTESTATION_REQUIRED") == "1"
     attestation_valid = bool(runtime_attestation.get("attestation_valid"))
-    if strict_required and not attestation_valid:
+    release_valid = bool(release_meta.get("release_valid"))
+    if strict_required and (not attestation_valid or not release_valid):
         return JSONResponse(
             status_code=503,
             content={
@@ -2885,6 +2896,7 @@ async def health():
                 "version": "P0.WEBAPP.COPYFAST1",
                 "error": "RUNTIME_ATTESTATION_FAILED",
                 "attestation_valid": False,
+                "release_valid": False,
                 "release_sha": release_meta.get("release_sha", ""),
                 "requirements_lock_sha256": runtime_attestation.get("requirements_lock_sha256", ""),
                 "runtime_environment_id": runtime_attestation.get("runtime_environment_id", ""),

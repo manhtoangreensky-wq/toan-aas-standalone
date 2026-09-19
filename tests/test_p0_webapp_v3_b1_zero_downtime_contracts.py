@@ -314,7 +314,7 @@ class TestP0ZeroDowntimeContracts:
             or 'RESOLVED_PACKAGES_SHA=\\"\\$(' in wf_content
             or 'RESOLVED_PACKAGES_SHA=\\$(' in wf_content
         ), "deploy workflow must compute RESOLVED_PACKAGES_SHA dynamically"
-        assert "pip freeze" in wf_content, "Workflow must dynamically compute resolved packages SHA using pip freeze"
+        assert "CANONICAL_PKG_DIGEST" in wf_content or "importlib.metadata" in wf_content, "Workflow must dynamically compute resolved packages SHA using canonical package digest algorithm"
 
         app_path = ROOT / "app.py"
         app_content = app_path.read_text(encoding="utf-8")
@@ -391,3 +391,240 @@ class TestP0ZeroDowntimeContracts:
         assert "environment_prefix" not in payload.get("runtime_attestation", {})
         assert "python_executable" not in payload
         assert "environment_prefix" not in payload
+
+    # =========================================================================
+    # FIRST RED: Remediation R1.C2 Hardening Contracts
+    # =========================================================================
+
+    def test_c2_red_01_hardcoded_requirements_lock_sha_fallback(self):
+        """C2 RED 1: app.py must not contain hardcoded lock SHA '9490bebca11e...'."""
+        app_path = ROOT / "app.py"
+        app_content = app_path.read_text(encoding="utf-8")
+        assert "9490bebca11e7aaf14b7804eba35a6bf2c5bcab7d0a1220771c8fbdc29c14d5f" not in app_content, (
+            "app.py must not hardcode fallback lock SHA '9490bebca11e...'"
+        )
+
+    def test_c2_red_02_forged_attestation_wrong_lock_sha(self, monkeypatch):
+        """C2 RED 2: Forged attestation with wrong lock SHA must fail closed (503)."""
+        monkeypatch.setenv("WEBAPP_RELEASE_ATTESTATION_REQUIRED", "1")
+        from app import app as fastapi_app, _compute_installed_packages_digest
+        import platform
+        py_id = f"py{platform.python_version()}-{platform.machine().lower()}"
+        pkg_digest = _compute_installed_packages_digest()
+        env_id = f"{py_id}-res-{pkg_digest[:16]}"
+        bad_attestation = {
+            "runtime_environment_id": env_id,
+            "python_runtime_id": py_id,
+            "requirements_lock_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "resolved_packages_sha256": pkg_digest,
+            "running_executable_under_attested_env": True,
+        }
+        monkeypatch.setattr(Path, "is_file", lambda self: True if self.name == "runtime_env_attestation.json" else os.path.isfile(self))
+        monkeypatch.setattr(Path, "read_text", lambda self, *args, **kwargs: json.dumps(bad_attestation) if self.name == "runtime_env_attestation.json" else open(self, encoding="utf-8").read())
+
+        client = TestClient(fastapi_app)
+        res = client.get("/health")
+        assert res.status_code == 503, f"Expected 503 for wrong lock SHA, got {res.status_code}"
+        payload = res.json()
+        assert payload.get("attestation_valid") is False
+
+    def test_c2_red_03_forged_attestation_wrong_package_digest(self, monkeypatch):
+        """C2 RED 3: Forged attestation with wrong package digest must fail closed (503)."""
+        monkeypatch.setenv("WEBAPP_RELEASE_ATTESTATION_REQUIRED", "1")
+        from app import app as fastapi_app
+        import platform
+        py_id = f"py{platform.python_version()}-{platform.machine().lower()}"
+        lock_path = ROOT / "requirements.lock"
+        actual_lock_sha = hashlib.sha256(lock_path.read_bytes()).hexdigest()
+        bad_attestation = {
+            "runtime_environment_id": f"{py_id}-res-deadbeefdeadbeef",
+            "python_runtime_id": py_id,
+            "requirements_lock_sha256": actual_lock_sha,
+            "resolved_packages_sha256": "deadbeef" * 8,
+            "running_executable_under_attested_env": True,
+        }
+        monkeypatch.setattr(Path, "is_file", lambda self: True if self.name == "runtime_env_attestation.json" else os.path.isfile(self))
+        monkeypatch.setattr(Path, "read_text", lambda self, *args, **kwargs: json.dumps(bad_attestation) if self.name == "runtime_env_attestation.json" else open(self, encoding="utf-8").read())
+
+        client = TestClient(fastapi_app)
+        res = client.get("/health")
+        assert res.status_code == 503, f"Expected 503 for wrong package digest, got {res.status_code}"
+        payload = res.json()
+        assert payload.get("attestation_valid") is False
+
+    def test_c2_red_04_wrong_python_runtime_id(self, monkeypatch):
+        """C2 RED 4: Forged attestation with mismatched python_runtime_id must fail closed (503)."""
+        monkeypatch.setenv("WEBAPP_RELEASE_ATTESTATION_REQUIRED", "1")
+        from app import app as fastapi_app, _compute_installed_packages_digest
+        lock_path = ROOT / "requirements.lock"
+        actual_lock_sha = hashlib.sha256(lock_path.read_bytes()).hexdigest()
+        actual_pkg_digest = _compute_installed_packages_digest()
+        bad_attestation = {
+            "runtime_environment_id": f"py3.99-fake-res-{actual_pkg_digest[:16]}",
+            "python_runtime_id": "py3.99-fake",
+            "requirements_lock_sha256": actual_lock_sha,
+            "resolved_packages_sha256": actual_pkg_digest,
+            "running_executable_under_attested_env": True,
+        }
+        monkeypatch.setattr(Path, "is_file", lambda self: True if self.name == "runtime_env_attestation.json" else os.path.isfile(self))
+        monkeypatch.setattr(Path, "read_text", lambda self, *args, **kwargs: json.dumps(bad_attestation) if self.name == "runtime_env_attestation.json" else open(self, encoding="utf-8").read())
+
+        client = TestClient(fastapi_app)
+        res = client.get("/health")
+        assert res.status_code == 503, f"Expected 503 for mismatched python_runtime_id, got {res.status_code}"
+        payload = res.json()
+        assert payload.get("attestation_valid") is False
+
+    def test_c2_red_05_wrong_runtime_environment_id(self, monkeypatch):
+        """C2 RED 5: Forged attestation with mismatched runtime_environment_id must fail closed (503)."""
+        monkeypatch.setenv("WEBAPP_RELEASE_ATTESTATION_REQUIRED", "1")
+        from app import app as fastapi_app, _compute_installed_packages_digest
+        import platform
+        py_id = f"py{platform.python_version()}-{platform.machine().lower()}"
+        lock_path = ROOT / "requirements.lock"
+        actual_lock_sha = hashlib.sha256(lock_path.read_bytes()).hexdigest()
+        actual_pkg_digest = _compute_installed_packages_digest()
+        bad_attestation = {
+            "runtime_environment_id": "forged-custom-runtime-id",
+            "python_runtime_id": py_id,
+            "requirements_lock_sha256": actual_lock_sha,
+            "resolved_packages_sha256": actual_pkg_digest,
+            "running_executable_under_attested_env": True,
+        }
+        monkeypatch.setattr(Path, "is_file", lambda self: True if self.name == "runtime_env_attestation.json" else os.path.isfile(self))
+        monkeypatch.setattr(Path, "read_text", lambda self, *args, **kwargs: json.dumps(bad_attestation) if self.name == "runtime_env_attestation.json" else open(self, encoding="utf-8").read())
+
+        client = TestClient(fastapi_app)
+        res = client.get("/health")
+        assert res.status_code == 503, f"Expected 503 for mismatched runtime_environment_id, got {res.status_code}"
+        payload = res.json()
+        assert payload.get("attestation_valid") is False
+
+    def test_c2_red_06_target_slot_missing_strict_attestation_mode(self):
+        """C2 RED 6: Target slot env file must configure WEBAPP_RELEASE_ATTESTATION_REQUIRED=1."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "WEBAPP_RELEASE_ATTESTATION_REQUIRED=1" in wf_content, (
+            "deploy-vps.yml must write WEBAPP_RELEASE_ATTESTATION_REQUIRED=1 into /etc/toanaas/web-slot-${TARGET_SLOT}.env"
+        )
+
+    def test_c2_red_07_declared_600s_value_without_actual_rollback_window_wait_gate(self):
+        """C2 RED 7: deploy-vps.yml must enforce an actual rollback window wait/sampling loop, not just static echo."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "ROLLBACK_WINDOW_SECONDS=600" in wf_content
+        window_idx = wf_content.find("ROLLBACK_WINDOW_SECONDS=600")
+        stop_idx = wf_content.find("systemctl stop toanaas-web@${ACTIVE_SLOT}")
+        if stop_idx == -1:
+            stop_idx = wf_content.find("Retiring Old Slot")
+        if stop_idx == -1:
+            stop_idx = wf_content.find("systemctl stop toanaas-web@")
+        assert window_idx != -1 and stop_idx != -1 and window_idx < stop_idx
+        window_block = wf_content[window_idx:stop_idx]
+        assert "sleep" in window_block, "Rollback window must actively sample/wait before retiring old slot"
+
+    def test_c2_red_08_public_nginx_response_validates_runtime_env(self):
+        """C2 RED 8: Ingress verification through Nginx must validate runtime_environment_id and attestation_valid."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        nginx_block = wf_content[wf_content.find("Verifying Health Endpoint via Nginx Ingress") : wf_content.find("Commit Boundary")]
+        assert "runtime_environment_id" in nginx_block and "RUNTIME_ENVIRONMENT_ID" in nginx_block, (
+            "Nginx ingress verification must assert runtime_environment_id"
+        )
+        assert "attestation_valid" in nginx_block, (
+            "Nginx ingress verification must assert attestation_valid is True"
+        )
+
+    def test_c2_red_09_missing_nginx_upstream_integration_prerequisite(self):
+        """C2 RED 9: deploy-vps.yml must verify that Nginx configuration includes web-upstream-active.conf."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        prereq_block = wf_content[wf_content.find("Verifying Runtime Prerequisites") : wf_content.find("Creating Tracked Source Backup")]
+        assert "grep" in prereq_block and "web-upstream-active.conf" in prereq_block and "/etc/nginx" in prereq_block, (
+            "deploy-vps.yml must fail-closed if Nginx configuration does not include web-upstream-active.conf"
+        )
+
+    def test_c2_red_10_release_json_strict_mode_validation(self, monkeypatch):
+        """C2 RED 10: Under WEBAPP_RELEASE_ATTESTATION_REQUIRED=1, missing or malformed release.json fails closed (503)."""
+        monkeypatch.setenv("WEBAPP_RELEASE_ATTESTATION_REQUIRED", "1")
+        import app
+        from app import app as fastapi_app
+        # Mock runtime attestation as valid
+        monkeypatch.setattr(app, "_load_runtime_attestation", lambda: {
+            "attestation_valid": True,
+            "running_executable_under_attested_env": True,
+            "python_runtime_id": "py3.14-win32",
+            "runtime_environment_id": "py3.14-win32-res-valid",
+            "requirements_lock_sha256": "validlock",
+            "resolved_packages_sha256": "validpkg",
+        })
+        # Mock release.json as malformed
+        monkeypatch.setattr(Path, "is_file", lambda self: True if self.name == "release.json" else os.path.isfile(self))
+        monkeypatch.setattr(Path, "read_text", lambda self, *args, **kwargs: "MALFORMED_NOT_JSON" if self.name == "release.json" else open(self, encoding="utf-8").read())
+        client = TestClient(fastapi_app)
+        res = client.get("/health")
+        assert res.status_code == 503, f"Expected 503 for malformed release.json in strict mode, got {res.status_code}"
+
+    def test_c2_red_10b_missing_release_json_strict_mode_fail(self, monkeypatch):
+        """C2 RED 10b: Under WEBAPP_RELEASE_ATTESTATION_REQUIRED=1, missing release.json fails closed (503)."""
+        monkeypatch.setenv("WEBAPP_RELEASE_ATTESTATION_REQUIRED", "1")
+        import app
+        from app import app as fastapi_app
+        # Mock runtime attestation as valid
+        monkeypatch.setattr(app, "_load_runtime_attestation", lambda: {
+            "attestation_valid": True,
+            "running_executable_under_attested_env": True,
+            "python_runtime_id": "py3.14-win32",
+            "runtime_environment_id": "py3.14-win32-res-valid",
+            "requirements_lock_sha256": "validlock",
+            "resolved_packages_sha256": "validpkg",
+        })
+        # Mock release.json as not existing
+        monkeypatch.setattr(Path, "is_file", lambda self: False if self.name == "release.json" else os.path.isfile(self))
+        client = TestClient(fastapi_app)
+        res = client.get("/health")
+        assert res.status_code == 503, f"Expected 503 for missing release.json in strict mode, got {res.status_code}"
+
+    def test_c2_red_11_truly_concurrent_lifecycle_calls_single_task(self, monkeypatch):
+        """C2 RED 11: Truly concurrent lifecycle calls must yield exactly one task_created=True."""
+        import anyio
+        from httpx import AsyncClient, ASGITransport
+        from app import app as fastapi_app
+        monkeypatch.setenv("WEBAPP_STARTUP_RECONCILIATION_MODE", "deferred")
+        monkeypatch.setenv("WEBAPP_LIFECYCLE_TOKEN", "valid-test-lifecycle-token-32chars")
+
+        fastapi_app.state.reconciliation_state = "DEFERRED"
+        fastapi_app.state.copyfast_startup_reconciliation_task = None
+
+        async def run_test():
+            async with AsyncClient(transport=ASGITransport(app=fastapi_app), base_url="http://127.0.0.1") as ac:
+                async def call_lifecycle():
+                    return await ac.post(
+                        "/api/v1/internal/lifecycle/reconcile-retired-generation",
+                        headers={"X-Lifecycle-Token": "valid-test-lifecycle-token-32chars"}
+                    )
+                import asyncio
+                responses = await asyncio.gather(*(call_lifecycle() for _ in range(5)))
+                return responses
+
+        responses = anyio.run(run_test)
+        assert all(r.status_code == 200 for r in responses)
+        data_list = [r.json() for r in responses]
+        task_created_count = sum(1 for d in data_list if d.get("task_created") is True)
+        assert task_created_count == 1, f"Expected exactly 1 task_created=True, got {task_created_count}"
+
+    def test_c2_red_12_atomic_rollback_switch(self):
+        """C2 RED 12: deploy-vps.yml must use atomic mv and nginx -t for rollback, not direct redirection."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "> /etc/toanaas/web-upstream-active.conf" not in wf_content, (
+            "Direct redirection to active pointer file is prohibited; must use temp file and atomic mv"
+        )
+
+    def test_c2_red_13_canonical_package_digest_consistency(self):
+        """C2 RED 13: Workflow and app must share the exact same package digest algorithm."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "pip freeze --all | LC_ALL=C sort | sha256sum" not in wf_content, (
+            "deploy-vps.yml must not use disparate pip freeze algorithm; must use canonical algorithm"
+        )
