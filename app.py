@@ -2812,7 +2812,7 @@ def _compute_installed_packages_digest() -> str:
         return _DYNAMIC_PACKAGES_SHA_CACHE
     try:
         import importlib.metadata
-        dists = sorted(f"{d.name.lower()}=={d.version}" for d in importlib.metadata.distributions())
+        dists = sorted(f"{d.name.lower()}=={d.version}" for d in importlib.metadata.distributions() if getattr(d, "name", None))
         if dists:
             raw = "\n".join(dists).encode("utf-8")
             _DYNAMIC_PACKAGES_SHA_CACHE = hashlib.sha256(raw).hexdigest()

@@ -99,63 +99,66 @@ jobs:
               echo 'ERROR: PREREQUISITE MISSING: Unable to inspect loaded Nginx configuration via nginx -T' >&2
               PREREQUISITES_OK=0
             else
-              if ! printf '%s' \"\$NGINX_LOADED\" | python3 -c '
-import re, sys
-raw_config = sys.stdin.read()
-lines = []
-for line in raw_config.splitlines():
-    in_quote = False
-    qc = \"\"
-    cleaned = []
-    for ch in line:
-        if ch == \"\\\"\" or ch == chr(39):
-            if not in_quote:
-                in_quote = True
-                qc = ch
-            elif qc == ch:
-                in_quote = False
-                qc = \"\"
-            cleaned.append(ch)
-        elif ch == \"#\" and not in_quote:
-            break
-        else:
-            cleaned.append(ch)
-    lines.append(\"\".join(cleaned))
-normalized = \"\\n\".join(lines)
-pointer_re = re.compile(r\"include\s+/etc/toanaas/web-upstream-active\.conf\s*;\")
-upstream_re = re.compile(r\"upstream\s+([a-zA-Z0-9_.-]+)\s*\{([^}]+)\}\")
-valid_upstreams = set()
-for m in upstream_re.finditer(normalized):
-    u_name = m.group(1)
-    u_body = m.group(2)
-    if pointer_re.search(u_body):
-        valid_upstreams.add(u_name)
-if not valid_upstreams:
-    print(\"ERROR: PREREQUISITE MISSING: No active upstream block consumes /etc/toanaas/web-upstream-active.conf\", file=sys.stderr)
-    sys.exit(1)
-has_valid_proxy = False
-for u_name in valid_upstreams:
-    if re.search(rf\"proxy_pass\s+https?://{re.escape(u_name)}[;/]\", normalized):
-        has_valid_proxy = True
-        break
-if not has_valid_proxy:
-    print(f\"ERROR: PREREQUISITE MISSING: Public routing chain does not proxy_pass to active upstream ({valid_upstreams})\", file=sys.stderr)
-    sys.exit(1)
-lifecycle_re = re.compile(r\"location\s+([^{]*api/v1/internal/lifecycle[^{]*)\{([^}]+)\}\")
-has_lifecycle_block = False
-for m in lifecycle_re.finditer(normalized):
-    loc_body = m.group(2)
-    if re.search(r\"(deny\s+all|return\s+(404|403))\", loc_body):
-        has_lifecycle_block = True
-        break
-if not has_lifecycle_block:
-    print(\"ERROR: PREREQUISITE MISSING: Public lifecycle route /api/v1/internal/lifecycle must be explicitly blocked (return 404/403 or deny all)\", file=sys.stderr)
-    sys.exit(1)
-print(\"ACTIVE_NGINX_POINTER_INTEGRATION_PREREQUISITE=YES\")
-print(\"PUBLIC_LIFECYCLE_ROUTE_BLOCK_PREREQUISITE=YES\")
-'; then
+              CHECK_NGINX_SCRIPT=\"/tmp/check-nginx-\$TARGET_SHA-\$\$.py\"
+              printf '%s\n' \
+                'import re, sys' \
+                'raw_config = sys.stdin.read()' \
+                'lines = []' \
+                'for line in raw_config.splitlines():' \
+                '    in_quote = False' \
+                '    qc = \"\"' \
+                '    cleaned = []' \
+                '    for ch in line:' \
+                '        if ch == chr(34) or ch == chr(39):' \
+                '            if not in_quote:' \
+                '                in_quote = True' \
+                '                qc = ch' \
+                '            elif qc == ch:' \
+                '                in_quote = False' \
+                '                qc = \"\"' \
+                '            cleaned.append(ch)' \
+                '        elif ch == \"#\" and not in_quote:' \
+                '            break' \
+                '        else:' \
+                '            cleaned.append(ch)' \
+                '    lines.append(\"\".join(cleaned))' \
+                'normalized = chr(10).join(lines)' \
+                'pointer_re = re.compile(r\"include\s+/etc/toanaas/web-upstream-active\.conf\s*;\")' \
+                'upstream_re = re.compile(r\"upstream\s+([a-zA-Z0-9_.-]+)\s*\{([^}]+)\}\")' \
+                'valid_upstreams = set()' \
+                'for m in upstream_re.finditer(normalized):' \
+                '    u_name = m.group(1)' \
+                '    u_body = m.group(2)' \
+                '    if pointer_re.search(u_body):' \
+                '        valid_upstreams.add(u_name)' \
+                'if not valid_upstreams:' \
+                '    print(\"ERROR: PREREQUISITE MISSING: No active upstream block consumes /etc/toanaas/web-upstream-active.conf\", file=sys.stderr)' \
+                '    sys.exit(1)' \
+                'has_valid_proxy = False' \
+                'for u_name in valid_upstreams:' \
+                '    if re.search(rf\"proxy_pass\s+https?://{re.escape(u_name)}[;/]\", normalized):' \
+                '        has_valid_proxy = True' \
+                '        break' \
+                'if not has_valid_proxy:' \
+                '    print(f\"ERROR: PREREQUISITE MISSING: Public routing chain does not proxy_pass to active upstream ({valid_upstreams})\", file=sys.stderr)' \
+                '    sys.exit(1)' \
+                'lifecycle_re = re.compile(r\"location\s+([^{]*api/v1/internal/lifecycle[^{]*)\{([^}]+)\}\")' \
+                'has_lifecycle_block = False' \
+                'for m in lifecycle_re.finditer(normalized):' \
+                '    loc_body = m.group(2)' \
+                '    if re.search(r\"(deny\s+all|return\s+(404|403))\", loc_body):' \
+                '        has_lifecycle_block = True' \
+                '        break' \
+                'if not has_lifecycle_block:' \
+                '    print(\"ERROR: PREREQUISITE MISSING: Public lifecycle route /api/v1/internal/lifecycle must be explicitly blocked (return 404/403 or deny all)\", file=sys.stderr)' \
+                '    sys.exit(1)' \
+                'print(\"ACTIVE_NGINX_POINTER_INTEGRATION_PREREQUISITE=YES\")' \
+                'print(\"PUBLIC_LIFECYCLE_ROUTE_BLOCK_PREREQUISITE=YES\")' \
+                > \"\$CHECK_NGINX_SCRIPT\"
+              if ! printf '%s' \"\$NGINX_LOADED\" | python3 \"\$CHECK_NGINX_SCRIPT\"; then
                 PREREQUISITES_OK=0
               fi
+              rm -f \"\$CHECK_NGINX_SCRIPT\"
             fi
             if [[ ! -f /etc/toanaas/lifecycle.token ]]; then
               echo 'ERROR: PREREQUISITE MISSING: /etc/toanaas/lifecycle.token' >&2
@@ -322,20 +325,7 @@ print(\"PUBLIC_LIFECYCLE_ROUTE_BLOCK_PREREQUISITE=YES\")
               exit 1
             fi
 
-            printf '%s' \"\$SLOT_HEALTH\" | \"\$ENV_DIR/bin/python\" -c '
-            import json, sys
-            data = json.load(sys.stdin)
-            assert data.get(\"ok\") is True
-            assert data.get(\"app\") == \"TOAN AAS Web App\"
-            assert data.get(\"entrypoint\") == \"app.py\"
-            assert data.get(\"release_sha\") == \"'\$TARGET_SHA'\"
-            assert data.get(\"runtime_environment_id\") == \"'\$RUNTIME_ENVIRONMENT_ID'\"
-            assert data.get(\"requirements_lock_sha256\") == \"'\$LOCK_SHA'\"
-            assert data.get(\"resolved_packages_sha256\") == \"'\$RESOLVED_PACKAGES_SHA'\"
-            assert data.get(\"attestation_valid\") is True
-            assert data.get(\"runtime_attestation\", {}).get(\"running_executable_under_attested_env\") is True
-            print(\"TARGET_SLOT_HEALTH_VERIFIED:\", data.get(\"release_sha\"), data.get(\"runtime_environment_id\"))
-            '
+            printf '%s' \"\$SLOT_HEALTH\" | \"\$ENV_DIR/bin/python\" -c 'import json, sys; data = json.load(sys.stdin); assert data.get(\"ok\") is True; assert data.get(\"app\") == \"TOAN AAS Web App\"; assert data.get(\"entrypoint\") == \"app.py\"; assert data.get(\"release_sha\") == \"'\$TARGET_SHA'\"; assert data.get(\"runtime_environment_id\") == \"'\$RUNTIME_ENVIRONMENT_ID'\"; assert data.get(\"requirements_lock_sha256\") == \"'\$LOCK_SHA'\"; assert data.get(\"resolved_packages_sha256\") == \"'\$RESOLVED_PACKAGES_SHA'\"; assert data.get(\"attestation_valid\") is True; assert data.get(\"runtime_attestation\", {}).get(\"running_executable_under_attested_env\") is True; print(\"TARGET_SLOT_HEALTH_VERIFIED:\", data.get(\"release_sha\"), data.get(\"runtime_environment_id\"))'
 
             rollback_to_active_slot() {
               local reason=\"\${1:-'Post-switch validation failure'}\"
@@ -355,14 +345,7 @@ print(\"PUBLIC_LIFECYCLE_ROUTE_BLOCK_PREREQUISITE=YES\")
               local RB_VERIFIED=0
               for rb_attempt in {1..20}; do
                 local RB_JSON=\"\$(curl -s -f -H \"Host: app.toanaas.vn\" http://127.0.0.1/health || true)\"
-                if [[ -n \"\$RB_JSON\" ]] && printf '%s' \"\$RB_JSON\" | \"\$ENV_DIR/bin/python\" -c '
-import json, sys
-d = json.load(sys.stdin)
-assert d.get(\"ok\") is True and d.get(\"app\") == \"TOAN AAS Web App\" and d.get(\"entrypoint\") == \"app.py\"
-assert d.get(\"release_sha\") == \"'\$OLD_RELEASE_SHA'\" and d.get(\"runtime_environment_id\") == \"'\$OLD_RUNTIME_ENV'\"
-if \"'\$OLD_ATTESTATION_VALID'\" == \"true\":
-    assert d.get(\"attestation_valid\") is True
-' 2>/dev/null; then
+                if [[ -n \"\$RB_JSON\" ]] && printf '%s' \"\$RB_JSON\" | \"\$ENV_DIR/bin/python\" -c 'import json, sys; d = json.load(sys.stdin); sys.exit(0 if (d.get(\"ok\") is True and d.get(\"app\") == \"TOAN AAS Web App\" and d.get(\"entrypoint\") == \"app.py\" and d.get(\"release_sha\") == \"'\$OLD_RELEASE_SHA'\" and d.get(\"runtime_environment_id\") == \"'\$OLD_RUNTIME_ENV'\" and (\"'\$OLD_ATTESTATION_VALID'\" != \"true\" or d.get(\"attestation_valid\") is True)) else 1)' 2>/dev/null; then
                   RB_VERIFIED=1
                   break
                 fi
@@ -411,14 +394,7 @@ if \"'\$OLD_ATTESTATION_VALID'\" == \"true\":
               echo \"ERROR: Unable to query public ingress health before switch!\" >&2
               exit 1
             fi
-            if ! printf '%s' \"\$PRE_PUB_HEALTH\" | \"\$ENV_DIR/bin/python\" -c '
-import json, sys
-data = json.load(sys.stdin)
-assert data.get(\"ok\") is True
-assert data.get(\"app\") == \"TOAN AAS Web App\"
-assert data.get(\"release_sha\") == \"'\$OLD_RELEASE_SHA'\"
-assert data.get(\"runtime_environment_id\") == \"'\$OLD_RUNTIME_ENV'\"
-' 2>/dev/null; then
+            if ! printf '%s' \"\$PRE_PUB_HEALTH\" | \"\$ENV_DIR/bin/python\" -c 'import json, sys; data = json.load(sys.stdin); sys.exit(0 if (data.get(\"ok\") is True and data.get(\"app\") == \"TOAN AAS Web App\" and data.get(\"release_sha\") == \"'\$OLD_RELEASE_SHA'\" and data.get(\"runtime_environment_id\") == \"'\$OLD_RUNTIME_ENV'\") else 1)' 2>/dev/null; then
               echo \"ERROR: Pre-switch public Nginx health does not match active slot \${ACTIVE_SLOT}! Stopping before traffic switch.\" >&2
               exit 1
             fi
@@ -448,23 +424,7 @@ assert data.get(\"runtime_environment_id\") == \"'\$OLD_RUNTIME_ENV'\"
               if [[ -z \"\$raw_json\" ]]; then
                 return 1
               fi
-              printf '%s' \"\$raw_json\" | \"\$ENV_DIR/bin/python\" -c '
-import json, sys
-try:
-    data = json.load(sys.stdin)
-except Exception:
-    sys.exit(1)
-if not (
-    data.get(\"ok\") is True
-    and data.get(\"app\") == \"TOAN AAS Web App\"
-    and data.get(\"entrypoint\") == \"app.py\"
-    and data.get(\"release_sha\") == \"'\$TARGET_SHA'\"
-    and data.get(\"runtime_environment_id\") == \"'\$RUNTIME_ENVIRONMENT_ID'\"
-    and data.get(\"attestation_valid\") is True
-):
-    sys.exit(1)
-sys.exit(0)
-' 2>/dev/null
+              printf '%s' \"\$raw_json\" | \"\$ENV_DIR/bin/python\" -c 'import json, sys; d = json.load(sys.stdin); sys.exit(0 if (d.get(\"ok\") is True and d.get(\"app\") == \"TOAN AAS Web App\" and d.get(\"entrypoint\") == \"app.py\" and d.get(\"release_sha\") == \"'\$TARGET_SHA'\" and d.get(\"runtime_environment_id\") == \"'\$RUNTIME_ENVIRONMENT_ID'\" and d.get(\"attestation_valid\") is True) else 1)' 2>/dev/null
             }
 
             HEALTH_JSON=''
@@ -518,13 +478,7 @@ sys.exit(0)
 
             RECONCILE_RES=\"\$(curl -s -f -X POST -H \"X-Lifecycle-Token: \${LIFECYCLE_TOKEN}\" \"http://127.0.0.1:\${TARGET_PORT}/api/v1/internal/lifecycle/reconcile-retired-generation\")\"
             echo \"RECONCILIATION_RESPONSE=\$RECONCILE_RES\"
-            printf '%s' \"\$RECONCILE_RES\" | \"\$ENV_DIR/bin/python\" -c '
-            import json, sys
-            res = json.load(sys.stdin)
-            assert res.get(\"ok\") is True
-            assert res.get(\"status\") in (\"RECONCILIATION_STARTED\", \"ALREADY_COMPLETED\", \"RECONCILING_IN_PROGRESS\")
-            print(\"RECONCILIATION_LIFECYCLE_CONFIRMED:\", res.get(\"status\"))
-            '
+            printf '%s' \"\$RECONCILE_RES\" | \"\$ENV_DIR/bin/python\" -c 'import json, sys; res = json.load(sys.stdin); assert res.get(\"ok\") is True and res.get(\"status\") in (\"RECONCILIATION_STARTED\", \"ALREADY_COMPLETED\", \"RECONCILING_IN_PROGRESS\"); print(\"RECONCILIATION_LIFECYCLE_CONFIRMED:\", res.get(\"status\"))'
 
             echo '=== WEB DEPLOY SUCCESS ==='
             echo \"PREVIOUS_HEAD=\$PREV_HEAD\"
