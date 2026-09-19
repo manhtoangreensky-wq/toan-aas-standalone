@@ -462,4 +462,3 @@ class TestP0WebappV203CustomerCommerceSurfaces:
         assert "Gói Thực Tế Canonical" in real_html
         for pkg_name in fake_package_names:
             assert pkg_name not in real_html
-
