@@ -8091,26 +8091,29 @@
         "copyfast_project_packages.py",
         "copyfast_projects.py"
       ],
-      "occurrences": 965,
+      "occurrences": 966,
       "provider": "PayOS"
     },
     {
       "files": [
         "copyfast_provider_policy.py",
+        "reports/audit/WEBAPP_V3_PRODUCT_GAP_MATRIX.json",
         "reports/bundle_analyzer.html",
         "reports/webapp_full_product_truth/defects.json",
         "static/portal/bundle_analyzer.html"
       ],
-      "occurrences": 9,
+      "occurrences": 10,
       "provider": "Key4U"
     },
     {
       "files": [
         "copyfast_provider_policy.py",
+        "docs/audit/WEBAPP_V3_PRODUCT_OPERATING_MODEL.md",
+        "reports/audit/WEBAPP_V3_PRODUCT_GAP_MATRIX.json",
         "reports/webapp_full_product_truth/defects.json",
         "studio/script.js"
       ],
-      "occurrences": 6,
+      "occurrences": 8,
       "provider": "ShopAIKey"
     },
     {
@@ -8184,11 +8187,14 @@
     {
       "files": [
         "copyfast_provider_policy.py",
+        "docs/audit/WEBAPP_V3_ADMIN_WEB_APP_ARCHITECTURE.md",
+        "docs/audit/WEBAPP_V3_PRODUCT_OPERATING_MODEL.md",
+        "reports/audit/WEBAPP_V3_PRODUCT_GAP_MATRIX.json",
         "static/portal/portal.js",
         "studio/index.html",
         "studio/script.js"
       ],
-      "occurrences": 16,
+      "occurrences": 21,
       "provider": "Kling"
     },
     {
@@ -8234,7 +8240,7 @@
         "copyfast_pages.py",
         "copyfast_partner_crm.py"
       ],
-      "occurrences": 1776,
+      "occurrences": 1784,
       "provider": "Telegram"
     }
   ],
@@ -14793,9 +14799,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 227,
-  "source_files_scanned": 227,
-  "source_fingerprint_sha256": "e17533a4069d3ae6f71ae46ec75e77639fe55b278e7ff933d1cd1c25169e1721",
+  "source_files_discovered": 236,
+  "source_files_scanned": 236,
+  "source_fingerprint_sha256": "d3b76e3d569eccc46eb06661220b0bf9b00ecddcac4db3c986b61e8155aaf533",
   "source_root": "repository-root",
   "ui_path_references": [
     {
