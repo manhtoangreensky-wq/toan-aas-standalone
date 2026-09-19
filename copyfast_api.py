@@ -2215,10 +2215,12 @@ class ManualAdminDraftRequest(BaseModel):
                 raise ValueError("Lý do quyết định cần từ 3 đến 300 ký tự")
             data["reason"] = cleaned
         elif action == "approve":
-            cleaned = str(raw_reason or "").strip() if raw_reason is not None else ""
-            if any(ord(c) < 32 for c in cleaned):
-                raise ValueError("Ghi chú quyết định không hợp lệ")
-            data["reason"] = cleaned or "Xác nhận đã nhận tiền qua chuyển khoản ngân hàng"
+            if not isinstance(raw_reason, str):
+                raise ValueError("Lý do phê duyệt không hợp lệ")
+            cleaned = raw_reason.strip()
+            if not 3 <= len(cleaned) <= 300 or any(ord(c) < 32 for c in cleaned):
+                raise ValueError("Lý do phê duyệt cần từ 3 đến 300 ký tự")
+            data["reason"] = cleaned
         return data
 
 
@@ -4816,6 +4818,8 @@ async def manual_topup_qr(
 
 def _manual_topup_request_id(value: Any) -> str | None:
     request_id = str(value or "").strip()
+    if request_id.isdigit():
+        request_id = f"MANUAL-{request_id}"
     if MANUAL_TOPUP_REQUEST_ID_RE.fullmatch(request_id) is None:
         return None
     if int(request_id.split("-", 1)[1]) > MAX_SQLITE_ROW_ID:
@@ -4926,6 +4930,8 @@ def _manual_topup_not_found_response():
 
 def _manual_admin_request_id(value: Any) -> str | None:
     request_id = str(value or "").strip()
+    if request_id.isdigit():
+        request_id = f"MANUAL-{request_id}"
     if MANUAL_TOPUP_REQUEST_ID_RE.fullmatch(request_id) is None:
         return None
     if int(request_id.split("-", 1)[1]) > MAX_SQLITE_ROW_ID:
@@ -5141,12 +5147,42 @@ async def manual_admin_detail(
     )
 
 
+@router.api_route("/admin/topups/pending-count", methods=["GET"])
+@router.api_route("/api/v1/admin/topups/pending-count", methods=["GET"])
+async def admin_topups_pending_count(request: Request, account: dict = Depends(require_canonical_admin)):
+    count = count_pending_web_manual_topups()
+    return envelope(
+        True,
+        "Đã đọc số lượng nạp thủ công chờ đối soát.",
+        data={"count": count, "pending_topups_count": count, "authority": "WEB_SQLITE"},
+        status_name="read_only",
+    )
+
+
+@router.api_route("/admin/wallet", methods=["GET"])
+@router.api_route("/api/v1/admin/wallet", methods=["GET"])
+async def admin_wallet_projection(request: Request, account: dict = Depends(require_canonical_admin)):
+    return await _bridge("GET", "/internal/v1/admin/wallet", account=account, request=request, admin_read=True)
+
+
+@router.api_route("/admin/revenue", methods=["GET"])
+@router.api_route("/api/v1/admin/revenue", methods=["GET"])
+async def admin_revenue_projection(request: Request, account: dict = Depends(require_canonical_admin)):
+    return await _bridge("GET", "/internal/v1/admin/revenue", account=account, request=request, admin_read=True)
+
+
+@router.api_route("/admin/refunds", methods=["GET"])
+@router.api_route("/api/v1/admin/refunds", methods=["GET"])
+async def admin_refunds_projection(request: Request, account: dict = Depends(require_canonical_admin)):
+    return await _bridge("GET", "/internal/v1/admin/refunds", account=account, request=request, admin_read=True)
+
+
 @router.post("/admin/payments/manual/{request_id}/draft")
 async def manual_admin_draft(
     request_id: str,
     payload: ManualAdminDraftRequest,
     request: Request,
-    account: dict = Depends(require_admin_csrf),
+    account: dict = Depends(require_canonical_admin_csrf),
 ):
     canonical_id = _manual_admin_request_id(request_id)
     if canonical_id is None:
@@ -5228,7 +5264,7 @@ async def manual_admin_confirm(
     request_id: str,
     payload: ManualAdminConfirmRequest,
     request: Request,
-    account: dict = Depends(require_admin_csrf),
+    account: dict = Depends(require_canonical_admin_csrf),
 ):
     canonical_id = _manual_admin_request_id(request_id)
     if canonical_id is None:

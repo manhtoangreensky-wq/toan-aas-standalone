@@ -6517,7 +6517,7 @@ _WEB_MANUAL_ADMIN_SELECT = """
            r.decided_by_account_id
     FROM web_manual_topup_requests AS r
     JOIN web_accounts AS a ON a.id = r.account_id
-    JOIN web_account_topup_codes AS c ON c.account_id = r.account_id
+    LEFT JOIN web_account_topup_codes AS c ON c.account_id = r.account_id
 """
 
 
@@ -6532,7 +6532,7 @@ def _web_manual_admin_public_row(row: tuple | None) -> dict | None:
         "currency": str(row[4]),
         "method": str(row[5]),
         "reference": str(row[6] or ""),
-        "payment_code": str(row[7]),
+        "payment_code": str(row[7] or ""),
         "status": str(row[8]),
         "submitted_at": str(row[9]),
         "updated_at": str(row[10]),
