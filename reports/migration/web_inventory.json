@@ -166,13 +166,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 6559,
+      "line": 6730,
       "target": "admin_refund_job"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 6533,
+      "line": 6704,
       "target": "admin_retry_job"
     },
     {
@@ -320,7 +320,7 @@
     "callback_templates": 0,
     "commands": 0,
     "conversations": 0,
-    "database_tables": 229,
+    "database_tables": 232,
     "env_references": 280,
     "providers": 12,
     "routes": 728,
@@ -362,6 +362,12 @@
       "line": 172,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "affiliate_links"
+    },
+    {
+      "file": "copyfast_pricing_policy.py",
+      "line": 444,
+      "operation": "UPDATE",
+      "table": "an"
     },
     {
       "file": "copyfast_auth.py",
@@ -1157,7 +1163,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6362,
+      "line": 6367,
       "operation": "INSERT INTO",
       "table": "web_account_topup_codes"
     },
@@ -1751,19 +1757,19 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6754,
+      "line": 6759,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7259,
+      "line": 7264,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7336,
+      "line": 7341,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
@@ -3647,19 +3653,19 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6823,
+      "line": 6828,
       "operation": "DELETE FROM",
       "table": "web_manual_topup_approve_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 6827,
+      "line": 6832,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_approve_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7252,
+      "line": 7257,
       "operation": "UPDATE",
       "table": "web_manual_topup_approve_receipts"
     },
@@ -3671,31 +3677,31 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 7006,
+      "line": 7011,
       "operation": "UPDATE",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7016,
+      "line": 7021,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7099,
+      "line": 7104,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7144,
+      "line": 7149,
       "operation": "UPDATE",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7224,
+      "line": 7229,
       "operation": "UPDATE",
       "table": "web_manual_topup_credit_operations"
     },
@@ -3707,19 +3713,19 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6658,
+      "line": 6663,
       "operation": "DELETE FROM",
       "table": "web_manual_topup_decision_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 6662,
+      "line": 6667,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_decision_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 6733,
+      "line": 6738,
       "operation": "UPDATE",
       "table": "web_manual_topup_decision_receipts"
     },
@@ -3731,25 +3737,25 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6438,
+      "line": 6443,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 6739,
+      "line": 6744,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7233,
+      "line": 7238,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7319,
+      "line": 7324,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
@@ -4772,6 +4778,60 @@
       "line": 2014,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_password_recovery_challenges"
+    },
+    {
+      "file": "copyfast_pricing_policy.py",
+      "line": 103,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_pricing_change_items"
+    },
+    {
+      "file": "copyfast_pricing_policy.py",
+      "line": 388,
+      "operation": "INSERT INTO",
+      "table": "web_pricing_change_items"
+    },
+    {
+      "file": "copyfast_pricing_policy.py",
+      "line": 489,
+      "operation": "DELETE FROM",
+      "table": "web_pricing_change_items"
+    },
+    {
+      "file": "copyfast_pricing_policy.py",
+      "line": 494,
+      "operation": "INSERT INTO",
+      "table": "web_pricing_change_items"
+    },
+    {
+      "file": "copyfast_pricing_policy.py",
+      "line": 81,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_pricing_change_sets"
+    },
+    {
+      "file": "copyfast_pricing_policy.py",
+      "line": 357,
+      "operation": "UPDATE",
+      "table": "web_pricing_change_sets"
+    },
+    {
+      "file": "copyfast_pricing_policy.py",
+      "line": 366,
+      "operation": "INSERT INTO",
+      "table": "web_pricing_change_sets"
+    },
+    {
+      "file": "copyfast_pricing_policy.py",
+      "line": 481,
+      "operation": "UPDATE",
+      "table": "web_pricing_change_sets"
+    },
+    {
+      "file": "copyfast_pricing_policy.py",
+      "line": 740,
+      "operation": "UPDATE",
+      "table": "web_pricing_change_sets"
     },
     {
       "file": "copyfast_db.py",
@@ -6266,6 +6326,7 @@
     "a",
     "above",
     "affiliate_links",
+    "an",
     "any",
     "b2b_projects",
     "campaigns",
@@ -6433,6 +6494,8 @@
     "web_partner_readiness_profiles",
     "web_partner_readiness_versions",
     "web_password_recovery_challenges",
+    "web_pricing_change_items",
+    "web_pricing_change_sets",
     "web_project_package_events",
     "web_project_packages",
     "web_projects",
@@ -8024,11 +8087,11 @@
         "copyfast_music_media.py",
         "copyfast_pages.py",
         "copyfast_partner_readiness.py",
+        "copyfast_pricing_policy.py",
         "copyfast_project_packages.py",
-        "copyfast_projects.py",
-        "copyfast_prompt_library.py"
+        "copyfast_projects.py"
       ],
-      "occurrences": 964,
+      "occurrences": 965,
       "provider": "PayOS"
     },
     {
@@ -8314,7 +8377,7 @@
     {
       "endpoint": "admin_freeze_feature",
       "file": "copyfast_api.py",
-      "line": 6582,
+      "line": 6753,
       "methods": [
         "POST"
       ],
@@ -8422,7 +8485,7 @@
     {
       "endpoint": "admin_refund_job",
       "file": "copyfast_api.py",
-      "line": 6559,
+      "line": 6730,
       "methods": [
         "POST"
       ],
@@ -8431,7 +8494,7 @@
     {
       "endpoint": "admin_retry_job",
       "file": "copyfast_api.py",
-      "line": 6533,
+      "line": 6704,
       "methods": [
         "POST"
       ],
@@ -8485,7 +8548,7 @@
     {
       "endpoint": "admin_module",
       "file": "copyfast_api.py",
-      "line": 6516,
+      "line": 6687,
       "methods": [
         "GET"
       ],
@@ -14730,9 +14793,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 226,
-  "source_files_scanned": 226,
-  "source_fingerprint_sha256": "9d6e7277c67bce4b1de41d49b2bc5e63a5be507911ffddd8152cf8fa5fb1a401",
+  "source_files_discovered": 227,
+  "source_files_scanned": 227,
+  "source_fingerprint_sha256": "807e81ca3085e761bda9cd1a107c1aa3f15de7d14b08076dcd5ab7decbe06465",
   "source_root": "repository-root",
   "ui_path_references": [
     {
@@ -14952,7 +15015,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 31102,
+      "line": 31262,
       "path": "/features"
     },
     {
