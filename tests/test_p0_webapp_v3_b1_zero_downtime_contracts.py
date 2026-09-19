@@ -391,4 +391,3 @@ class TestP0ZeroDowntimeContracts:
         assert "environment_prefix" not in payload.get("runtime_attestation", {})
         assert "python_executable" not in payload
         assert "environment_prefix" not in payload
-
