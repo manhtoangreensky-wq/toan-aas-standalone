@@ -198,7 +198,7 @@ def test_02_customer_detail_requires_admin(seed_data):
     anon = TestClient(app_module.app)
     assert anon.get(f"/api/v1/admin/customers/{target_id}").status_code in (401, 403)
     assert anon.get(f"/api/v1/admin/customers/{target_id}/crm").status_code in (401, 403)
-    assert anon.get(f"/api/v1/admin/customers/{target_id}/360").status_code in (401, 403)
+    assert anon.get(f"/api/v1/admin/customers/{target_id}?view=360").status_code in (401, 403)
 
 
 def test_03_normal_customer_denied(user_client, seed_data):
@@ -207,7 +207,7 @@ def test_03_normal_customer_denied(user_client, seed_data):
     assert user_client.get("/api/v1/admin/customers").status_code == 403
     assert user_client.get(f"/api/v1/admin/customers/{target_id}").status_code == 403
     assert user_client.get(f"/api/v1/admin/customers/{target_id}/crm").status_code == 403
-    assert user_client.get(f"/api/v1/admin/customers/{target_id}/360").status_code == 403
+    assert user_client.get(f"/api/v1/admin/customers/{target_id}?view=360").status_code == 403
 
 
 # ---------------------------------------------------------------------------
@@ -217,7 +217,7 @@ def test_03_normal_customer_denied(user_client, seed_data):
 def test_04_customer_360_renders_identity_truth(admin_client, seed_data):
     """Invariant 4: Customer 360 renders identity truth without fabrication."""
     target_id = seed_data["target_cust_id"]
-    res = admin_client.get(f"/api/v1/admin/customers/{target_id}/360")
+    res = admin_client.get(f"/api/v1/admin/customers/{target_id}?view=360")
     assert res.status_code == 200
     data = res.json()["data"]
 
@@ -232,7 +232,7 @@ def test_04_customer_360_renders_identity_truth(admin_client, seed_data):
 def test_05_unknown_wallet_not_displayed_as_zero(admin_client, seed_data):
     """Invariant 5: UNKNOWN_WALLET_AS_ZERO=NO. Never map missing bridge wallet -> 0 Xu."""
     target_id = seed_data["target_cust_id"]
-    res = admin_client.get(f"/api/v1/admin/customers/{target_id}/360")
+    res = admin_client.get(f"/api/v1/admin/customers/{target_id}?view=360")
     assert res.status_code == 200
     wallet = res.json()["data"]["wallet"]
 
@@ -245,7 +245,7 @@ def test_05_unknown_wallet_not_displayed_as_zero(admin_client, seed_data):
 def test_06_unknown_spending_not_displayed_as_zero(admin_client, seed_data):
     """Invariant 6: UNPROVEN_LIFETIME_SPEND=0. Spend metrics have strict provenance."""
     target_id = seed_data["target_cust_id"]
-    res = admin_client.get(f"/api/v1/admin/customers/{target_id}/360")
+    res = admin_client.get(f"/api/v1/admin/customers/{target_id}?view=360")
     assert res.status_code == 200
     spend = res.json()["data"]["spend_summary"]
 
@@ -260,7 +260,7 @@ def test_06_unknown_spending_not_displayed_as_zero(admin_client, seed_data):
 def test_07_no_static_vip_tier_ladder(admin_client, seed_data):
     """Invariant 7: STATIC_TIER_LADDER=0, CLIENT_DERIVED_VIP_TIER=0."""
     target_id = seed_data["target_cust_id"]
-    res = admin_client.get(f"/api/v1/admin/customers/{target_id}/360")
+    res = admin_client.get(f"/api/v1/admin/customers/{target_id}?view=360")
     assert res.status_code == 200
     data = res.json()["data"]
 
@@ -273,7 +273,7 @@ def test_07_no_static_vip_tier_ladder(admin_client, seed_data):
 def test_08_no_fake_behavior_or_risk_score(admin_client, seed_data):
     """Invariant 8: FAKE_BEHAVIOR_SCORE=0, FAKE_RISK_SCORE=0, FAKE_LTV=0."""
     target_id = seed_data["target_cust_id"]
-    res = admin_client.get(f"/api/v1/admin/customers/{target_id}/360")
+    res = admin_client.get(f"/api/v1/admin/customers/{target_id}?view=360")
     assert res.status_code == 200
     data = res.json()["data"]
 
@@ -285,7 +285,7 @@ def test_08_no_fake_behavior_or_risk_score(admin_client, seed_data):
 def test_09_real_job_history_projection(admin_client, seed_data):
     """Invariant 9: JOB_STATUS_REWRITTEN_IN_DB=NO, FAKE_JOB_COUNT=0."""
     target_id = seed_data["target_cust_id"]
-    res = admin_client.get(f"/api/v1/admin/customers/{target_id}/360")
+    res = admin_client.get(f"/api/v1/admin/customers/{target_id}?view=360")
     assert res.status_code == 200
     jobs = res.json()["data"]["jobs"]
 
@@ -298,7 +298,7 @@ def test_09_real_job_history_projection(admin_client, seed_data):
 def test_10_and_11_asset_projection_and_v2_04_delivery_truth(admin_client, seed_data):
     """Invariants 10 & 11: V2_04_DELIVERY_REGRESSION=0. Real output references only."""
     target_id = seed_data["target_cust_id"]
-    res = admin_client.get(f"/api/v1/admin/customers/{target_id}/360")
+    res = admin_client.get(f"/api/v1/admin/customers/{target_id}?view=360")
     assert res.status_code == 200
     assets = res.json()["data"]["assets"]
 
@@ -311,7 +311,7 @@ def test_10_and_11_asset_projection_and_v2_04_delivery_truth(admin_client, seed_
 def test_12_support_truth_and_empty_state(admin_client, seed_data):
     """Invariant 12: FAKE_TICKET_COUNT=0, FAKE_SUPPORT_ACTIVITY=0."""
     target_id = seed_data["target_cust_id"]
-    res = admin_client.get(f"/api/v1/admin/customers/{target_id}/360")
+    res = admin_client.get(f"/api/v1/admin/customers/{target_id}?view=360")
     assert res.status_code == 200
     support = res.json()["data"]["support"]
 
@@ -344,11 +344,11 @@ def test_13_and_14_ban_requires_admin_and_non_empty_reason(admin_client, user_cl
     target_id = seed_data["target_cust_id"]
 
     # 1. Normal user denied
-    unauth_res = user_client.post(f"/api/v1/admin/customers/{target_id}/ban", json={"reason": "Vi phạm điều khoản"})
+    unauth_res = user_client.patch(f"/api/v1/admin/customers/{target_id}", json={"action": "ban", "reason": "Vi phạm điều khoản"})
     assert unauth_res.status_code == 403
 
     # 2. Admin client without CSRF or live canonical bridge rejected with 403
-    assert admin_client.post(f"/api/v1/admin/customers/{target_id}/ban", json={"reason": "Test"}).status_code == 403
+    assert admin_client.patch(f"/api/v1/admin/customers/{target_id}", json={"action": "ban", "reason": "Test"}).status_code == 403
 
     # 3. With canonical admin authority, empty reason rejected with 422
     with sqlite3.connect(isolated_env) as conn:
@@ -358,7 +358,7 @@ def test_13_and_14_ban_requires_admin_and_non_empty_reason(admin_client, user_cl
     app_module.app.dependency_overrides[directory.require_canonical_admin_csrf] = lambda: admin_account
     app_module.app.dependency_overrides[copyfast_auth.require_canonical_admin_csrf] = lambda: admin_account
     try:
-        empty_res = admin_client.post(f"/api/v1/admin/customers/{target_id}/ban", json={"reason": "   "})
+        empty_res = admin_client.patch(f"/api/v1/admin/customers/{target_id}", json={"action": "ban", "reason": "   "})
         assert empty_res.status_code == 422
     finally:
         app_module.app.dependency_overrides.pop(directory.require_canonical_admin_csrf, None)
@@ -371,7 +371,7 @@ def test_15_16_17_ban_sets_inactive_and_revokes_sessions(admin_client, isolated_
     other_id = seed_data["other_cust_id"]
 
     # Perform Ban
-    res = admin_client.post(f"/api/v1/admin/customers/{target_id}/ban", json={"reason": "Gian lận thẻ thanh toán"})
+    res = admin_client.patch(f"/api/v1/admin/customers/{target_id}", json={"action": "ban", "reason": "Gian lận thẻ thanh toán"})
     assert res.status_code == 200
     data = res.json()["data"]
     assert data["status"] == "locked"
@@ -400,7 +400,7 @@ def test_18_19_unban_restores_active_without_reviving_old_sessions(admin_client,
     target_id = seed_data["target_cust_id"]
 
     # Perform Unban
-    res = admin_client.post(f"/api/v1/admin/customers/{target_id}/unban", json={"reason": "Đã xác minh KYC hợp lệ"})
+    res = admin_client.patch(f"/api/v1/admin/customers/{target_id}", json={"action": "unban", "reason": "Đã xác minh KYC hợp lệ"})
     assert res.status_code == 200
     data = res.json()["data"]
     assert data["status"] == "active"
@@ -423,23 +423,23 @@ def test_20_and_21_idempotent_ban_and_unban(admin_client, seed_data, override_ad
     target_id = seed_data["target_cust_id"]
 
     # Target is currently active. Unban replay when active:
-    res_unban_replay = admin_client.post(f"/api/v1/admin/customers/{target_id}/unban", json={"reason": "Replay unban"})
+    res_unban_replay = admin_client.patch(f"/api/v1/admin/customers/{target_id}", json={"action": "unban", "reason": "Replay unban"})
     assert res_unban_replay.status_code == 200
     assert res_unban_replay.json()["data"]["idempotent_replay"] is True
 
     # Ban target
-    res_ban_1 = admin_client.post(f"/api/v1/admin/customers/{target_id}/ban", json={"reason": "Ban 1"})
+    res_ban_1 = admin_client.patch(f"/api/v1/admin/customers/{target_id}", json={"action": "ban", "reason": "Ban 1"})
     assert res_ban_1.status_code == 200
     assert res_ban_1.json()["data"]["idempotent_replay"] is False
 
     # Ban replay when already locked:
-    res_ban_replay = admin_client.post(f"/api/v1/admin/customers/{target_id}/ban", json={"reason": "Ban duplicate"})
+    res_ban_replay = admin_client.patch(f"/api/v1/admin/customers/{target_id}", json={"action": "ban", "reason": "Ban duplicate"})
     assert res_ban_replay.status_code == 200
     assert res_ban_replay.json()["data"]["idempotent_replay"] is True
     assert res_ban_replay.json()["data"]["revoked_sessions"] == 0
 
     # Clean up: restore active
-    admin_client.post(f"/api/v1/admin/customers/{target_id}/unban", json={"reason": "Cleanup unban"})
+    admin_client.patch(f"/api/v1/admin/customers/{target_id}", json={"action": "unban", "reason": "Cleanup unban"})
 
 
 def test_22_audit_records_created(admin_client, isolated_env, seed_data):
@@ -463,7 +463,7 @@ def test_22_audit_records_created(admin_client, isolated_env, seed_data):
 def test_23_admin_target_ban_refused(admin_client, seed_data, override_admin_csrf):
     """Invariant 23: ADMIN_TARGET_BAN_ALLOWED=NO. Peer admin cannot be banned via customer 360."""
     admin_target_id = seed_data["admin_target_id"]
-    res = admin_client.post(f"/api/v1/admin/customers/{admin_target_id}/ban", json={"reason": "Attempting to ban admin"})
+    res = admin_client.patch(f"/api/v1/admin/customers/{admin_target_id}", json={"action": "ban", "reason": "Attempting to ban admin"})
     assert res.status_code == 403
     payload = res.json()
     err_msg = payload.get("message") or payload.get("detail") or res.text

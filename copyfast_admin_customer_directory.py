@@ -212,6 +212,8 @@ class CustomerCreateRequest(BaseModel):
 class CustomerUpdateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    action: str | None = Field(default=None, pattern="^(ban|unban|update)$")
+    reason: str | None = Field(default=None, max_length=500)
     display_name: str | None = Field(default=None, max_length=120)
     role: str | None = None
     is_active: bool | None = None
@@ -228,32 +230,14 @@ class CustomerUpdateRequest(BaseModel):
             raise ValueError(f"Vai trò không hợp lệ. Cho phép: {', '.join(ROLE_LABELS.keys())}")
         return cleaned
 
-
-class CustomerBanRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    reason: str = Field(min_length=1, max_length=500)
-
     @field_validator("reason")
     @classmethod
-    def validate_reason(cls, value: str) -> str:
-        cleaned = str(value or "").strip()
+    def validate_reason(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        cleaned = str(value).strip()
         if not cleaned:
-            raise ValueError("Lý do khóa tài khoản không được để trống")
-        return cleaned
-
-
-class CustomerUnbanRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    reason: str = Field(min_length=1, max_length=500)
-
-    @field_validator("reason")
-    @classmethod
-    def validate_reason(cls, value: str) -> str:
-        cleaned = str(value or "").strip()
-        if not cleaned:
-            raise ValueError("Lý do mở khóa tài khoản không được để trống")
+            raise ValueError("Lý do không được để trống")
         return cleaned
 
 
@@ -337,10 +321,145 @@ async def create_customer(
 async def update_customer(
     account_id: str,
     payload: CustomerUpdateRequest,
-    _account: dict[str, Any] = Depends(require_admin),
+    request: Request,
+    _account: dict[str, Any] = Depends(require_canonical_admin_csrf),
 ) -> dict[str, Any]:
     normalized_id = _account_id(account_id)
+    actor_id = str(_account.get("id") or "").strip()
     now = utc_now()
+
+    # Dedicated Account Safety Actions (Ban / Unban)
+    if payload.action == "ban" or (payload.is_active is False and payload.action != "update"):
+        reason = (payload.reason or "").strip()
+        if not reason:
+            raise HTTPException(status_code=422, detail="Lý do khóa tài khoản không được để trống")
+
+        with transaction() as conn:
+            target_row = conn.execute(
+                "SELECT id, role_cache, is_active FROM web_accounts WHERE id=?",
+                (normalized_id,),
+            ).fetchone()
+            if target_row is None:
+                raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản khách hàng")
+
+            target_role = str(target_row[1] or "user").strip().lower()
+            target_is_active = int(target_row[2])
+
+            if normalized_id == actor_id:
+                raise HTTPException(status_code=403, detail="Không thể tự khóa tài khoản của chính mình")
+            if target_role == "admin":
+                raise HTTPException(status_code=403, detail="Không được phép khóa tài khoản Quản trị viên")
+
+            if target_is_active == 0:
+                return envelope(
+                    True,
+                    "Tài khoản khách hàng đã ở trạng thái bị khóa.",
+                    data={
+                        "account_id": normalized_id,
+                        "status": "locked",
+                        "is_active": False,
+                        "idempotent_replay": True,
+                        "revoked_sessions": 0,
+                    },
+                    status_name="ok",
+                )
+
+            conn.execute(
+                "UPDATE web_accounts SET is_active=0, updated_at=? WHERE id=?",
+                (now, normalized_id),
+            )
+            cur = conn.execute(
+                "UPDATE web_sessions SET revoked_at=? WHERE account_id=? AND revoked_at IS NULL",
+                (now, normalized_id),
+            )
+            revoked_count = cur.rowcount if cur and cur.rowcount is not None else 0
+
+            _record_audit(
+                conn,
+                account_id=actor_id or None,
+                canonical_user_id=str(_account.get("canonical_user_id") or "").strip() or None,
+                action="admin.customer.ban",
+                request_id=_request_id(request),
+                target=normalized_id,
+                outcome="ok",
+                detail=f"reason={reason};revoked_sessions={revoked_count}",
+            )
+
+        return envelope(
+            True,
+            "Đã khóa tài khoản khách hàng và thu hồi phiên đăng nhập thành công.",
+            data={
+                "account_id": normalized_id,
+                "status": "locked",
+                "is_active": False,
+                "idempotent_replay": False,
+                "revoked_sessions": revoked_count,
+            },
+            status_name="ok",
+        )
+
+    if payload.action == "unban" or (payload.is_active is True and payload.action != "update" and payload.reason):
+        reason = (payload.reason or "").strip()
+        if not reason:
+            raise HTTPException(status_code=422, detail="Lý do mở khóa tài khoản không được để trống")
+
+        with transaction() as conn:
+            target_row = conn.execute(
+                "SELECT id, role_cache, is_active FROM web_accounts WHERE id=?",
+                (normalized_id,),
+            ).fetchone()
+            if target_row is None:
+                raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản khách hàng")
+
+            target_role = str(target_row[1] or "user").strip().lower()
+            target_is_active = int(target_row[2])
+
+            if target_role == "admin":
+                raise HTTPException(status_code=403, detail="Không áp dụng cho tài khoản Quản trị viên")
+
+            if target_is_active == 1:
+                return envelope(
+                    True,
+                    "Tài khoản khách hàng đã ở trạng thái hoạt động.",
+                    data={
+                        "account_id": normalized_id,
+                        "status": "active",
+                        "is_active": True,
+                        "idempotent_replay": True,
+                    },
+                    status_name="ok",
+                )
+
+            conn.execute(
+                "UPDATE web_accounts SET is_active=1, updated_at=? WHERE id=?",
+                (now, normalized_id),
+            )
+            # CRITICAL: Old revoked sessions remain revoked! Do not reactivate sessions.
+
+            _record_audit(
+                conn,
+                account_id=actor_id or None,
+                canonical_user_id=str(_account.get("canonical_user_id") or "").strip() or None,
+                action="admin.customer.unban",
+                request_id=_request_id(request),
+                target=normalized_id,
+                outcome="ok",
+                detail=f"reason={reason}",
+            )
+
+        return envelope(
+            True,
+            "Đã mở khóa tài khoản khách hàng thành công.",
+            data={
+                "account_id": normalized_id,
+                "status": "active",
+                "is_active": True,
+                "idempotent_replay": False,
+            },
+            status_name="ok",
+        )
+
+    # Standard customer attribute updates
     updates: list[str] = []
     params: list[Any] = []
 
@@ -384,8 +503,8 @@ async def update_customer(
                VALUES (?, ?, NULL, 'admin.customer.update', ?, ?, 'completed', ?, ?)""",
             (
                 str(uuid.uuid4()),
-                str(_account.get("id") or ""),
-                str(uuid.uuid4()),
+                actor_id,
+                _request_id(request),
                 normalized_id,
                 f"updates={','.join(updates)}",
                 now,
@@ -447,21 +566,6 @@ async def get_customer_crm(
             raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản khách hàng")
         return _build_crm_detail_response(conn, row, normalized_id, admin_account=_account)
 
-
-@router.get("/{account_id}/360")
-async def get_customer_360(
-    account_id: str,
-    _account: dict[str, Any] = Depends(require_admin),
-) -> dict[str, Any]:
-    normalized_id = _account_id(account_id)
-    with read_transaction() as conn:
-        row = conn.execute(
-            f"{SELECT_CUSTOMER} WHERE a.id=? LIMIT 1",
-            (normalized_id,),
-        ).fetchone()
-        if row is None:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản khách hàng")
-        return _build_crm_detail_response(conn, row, normalized_id, admin_account=_account)
 
 
 def _build_crm_detail_response(
@@ -625,159 +729,3 @@ def _build_crm_detail_response(
         status_name="read_only",
     )
 
-
-@router.post("/{account_id}/ban")
-async def ban_customer(
-    account_id: str,
-    payload: CustomerBanRequest,
-    request: Request,
-    _account: dict[str, Any] = Depends(require_canonical_admin_csrf),
-) -> dict[str, Any]:
-    normalized_id = _account_id(account_id)
-    actor_id = str(_account.get("id") or "").strip()
-    reason = payload.reason.strip()
-    now = utc_now()
-
-    with transaction() as conn:
-        target_row = conn.execute(
-            "SELECT id, role_cache, is_active FROM web_accounts WHERE id=?",
-            (normalized_id,),
-        ).fetchone()
-        if target_row is None:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản khách hàng")
-
-        target_role = str(target_row[1] or "user").strip().lower()
-        target_is_active = int(target_row[2])
-
-        # Self-ban guard: Admin cannot ban self
-        if normalized_id == actor_id:
-            raise HTTPException(status_code=403, detail="Không thể tự khóa tài khoản của chính mình")
-
-        # Privileged target guard: Admin target ban not allowed
-        if target_role == "admin":
-            raise HTTPException(status_code=403, detail="Không được phép khóa tài khoản Quản trị viên")
-
-        # Idempotency check: if already locked (is_active == 0), no state delta
-        if target_is_active == 0:
-            return envelope(
-                True,
-                "Tài khoản khách hàng đã ở trạng thái bị khóa.",
-                data={
-                    "account_id": normalized_id,
-                    "status": "locked",
-                    "is_active": False,
-                    "idempotent_replay": True,
-                    "revoked_sessions": 0,
-                },
-                status_name="ok",
-            )
-
-        # Active -> Locked transition
-        conn.execute(
-            "UPDATE web_accounts SET is_active=0, updated_at=? WHERE id=?",
-            (now, normalized_id),
-        )
-        # Invalidate active web sessions for target customer only
-        cur = conn.execute(
-            "UPDATE web_sessions SET revoked_at=? WHERE account_id=? AND revoked_at IS NULL",
-            (now, normalized_id),
-        )
-        revoked_count = cur.rowcount if cur and cur.rowcount is not None else 0
-
-        # Audit logging in web_audit_events
-        _record_audit(
-            conn,
-            account_id=actor_id or None,
-            canonical_user_id=str(_account.get("canonical_user_id") or "").strip() or None,
-            action="admin.customer.ban",
-            request_id=_request_id(request),
-            target=normalized_id,
-            outcome="ok",
-            detail=f"reason={reason};revoked_sessions={revoked_count}",
-        )
-
-    return envelope(
-        True,
-        "Đã khóa tài khoản khách hàng và thu hồi phiên đăng nhập thành công.",
-        data={
-            "account_id": normalized_id,
-            "status": "locked",
-            "is_active": False,
-            "idempotent_replay": False,
-            "revoked_sessions": revoked_count,
-        },
-        status_name="ok",
-    )
-
-
-@router.post("/{account_id}/unban")
-async def unban_customer(
-    account_id: str,
-    payload: CustomerUnbanRequest,
-    request: Request,
-    _account: dict[str, Any] = Depends(require_canonical_admin_csrf),
-) -> dict[str, Any]:
-    normalized_id = _account_id(account_id)
-    actor_id = str(_account.get("id") or "").strip()
-    reason = payload.reason.strip()
-    now = utc_now()
-
-    with transaction() as conn:
-        target_row = conn.execute(
-            "SELECT id, role_cache, is_active FROM web_accounts WHERE id=?",
-            (normalized_id,),
-        ).fetchone()
-        if target_row is None:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản khách hàng")
-
-        target_role = str(target_row[1] or "user").strip().lower()
-        target_is_active = int(target_row[2])
-
-        # Privileged target guard: Admin target cannot be targeted
-        if target_role == "admin":
-            raise HTTPException(status_code=403, detail="Không áp dụng cho tài khoản Quản trị viên")
-
-        # Idempotency check: if already active (is_active == 1), no state delta
-        if target_is_active == 1:
-            return envelope(
-                True,
-                "Tài khoản khách hàng đã ở trạng thái hoạt động.",
-                data={
-                    "account_id": normalized_id,
-                    "status": "active",
-                    "is_active": True,
-                    "idempotent_replay": True,
-                },
-                status_name="ok",
-            )
-
-        # Locked -> Active transition
-        conn.execute(
-            "UPDATE web_accounts SET is_active=1, updated_at=? WHERE id=?",
-            (now, normalized_id),
-        )
-        # CRITICAL: Old revoked sessions remain revoked! Do not reactivate sessions.
-
-        # Audit logging in web_audit_events
-        _record_audit(
-            conn,
-            account_id=actor_id or None,
-            canonical_user_id=str(_account.get("canonical_user_id") or "").strip() or None,
-            action="admin.customer.unban",
-            request_id=_request_id(request),
-            target=normalized_id,
-            outcome="ok",
-            detail=f"reason={reason}",
-        )
-
-    return envelope(
-        True,
-        "Đã mở khóa tài khoản khách hàng thành công.",
-        data={
-            "account_id": normalized_id,
-            "status": "active",
-            "is_active": True,
-            "idempotent_replay": False,
-        },
-        status_name="ok",
-    )

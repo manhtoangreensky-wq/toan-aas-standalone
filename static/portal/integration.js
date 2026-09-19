@@ -37800,10 +37800,10 @@
         if (!reason) throw new Error("Vui lòng nhập lý do khóa tài khoản.");
         setActionBusy(action, route, true);
         try {
-          const res = await api(`/admin/customers/${encodeURIComponent(accountId)}/ban`, {
-            method: "POST",
+          const res = await api(`/admin/customers/${encodeURIComponent(accountId)}`, {
+            method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ reason })
+            body: JSON.stringify({ action: "ban", reason })
           });
           if (!res || !res.ok) throw new Error((res && res.message) || "Không thể khóa tài khoản khách hàng.");
           toast(res.message || "Đã khóa tài khoản khách hàng thành công.");
@@ -37822,10 +37822,10 @@
         if (!reason) throw new Error("Vui lòng nhập lý do mở khóa tài khoản.");
         setActionBusy(action, route, true);
         try {
-          const res = await api(`/admin/customers/${encodeURIComponent(accountId)}/unban`, {
-            method: "POST",
+          const res = await api(`/admin/customers/${encodeURIComponent(accountId)}`, {
+            method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ reason })
+            body: JSON.stringify({ action: "unban", reason })
           });
           if (!res || !res.ok) throw new Error((res && res.message) || "Không thể mở khóa tài khoản khách hàng.");
           toast(res.message || "Đã mở khóa tài khoản khách hàng thành công.");
