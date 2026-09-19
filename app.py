@@ -310,6 +310,9 @@ async def lifespan(application: FastAPI):
     copyfast_video_operations.ensure_video_operations_runtime()
     copyfast_frame_video_operations.ensure_frame_video_operations_runtime()
     copyfast_video_transform_operations.ensure_video_transform_operations_runtime()
+    copyfast_storyboard_grid.ensure_storyboard_grid_runtime()
+    if not hasattr(application.state, "reconciliation_lock") or application.state.reconciliation_lock is None:
+        application.state.reconciliation_lock = asyncio.Lock()
     reconciliation_mode = os.environ.get("WEBAPP_STARTUP_RECONCILIATION_MODE", "immediate").strip().lower()
     if reconciliation_mode == "deferred":
         application.state.reconciliation_state = "DEFERRED"
@@ -332,6 +335,7 @@ async def lifespan(application: FastAPI):
 
 
 app = FastAPI(title="TOAN AAS Web App", version="P0.WEBAPP.COPYFAST1", lifespan=lifespan)
+app.state.reconciliation_lock = asyncio.Lock()
 
 
 _auth_rate_windows: dict[str, list[float]] = {}
@@ -2741,15 +2745,26 @@ def _load_release_metadata() -> dict[str, object]:
             try:
                 head_content = git_head.read_text(encoding="utf-8").strip()
                 if head_content.startswith("ref: "):
-                    ref_path = ROOT / ".git" / head_content[5:].strip()
+                    ref_name = head_content[5:].strip()
+                    ref_path = ROOT / ".git" / ref_name
                     if ref_path.is_file():
                         sha = ref_path.read_text(encoding="utf-8").strip()
+                    else:
+                        packed_refs = ROOT / ".git" / "packed-refs"
+                        if packed_refs.is_file():
+                            for line in packed_refs.read_text(encoding="utf-8").splitlines():
+                                line = line.strip()
+                                if line and not line.startswith("#") and not line.startswith("^"):
+                                    parts = line.split()
+                                    if len(parts) >= 2 and parts[1] == ref_name:
+                                        sha = parts[0]
+                                        break
                 else:
                     sha = head_content
             except Exception:
                 pass
     if not sha:
-        sha = "8873e10f2279aec0fb312b70388b9073ba763f13"
+        sha = ""
 
     lock_path = ROOT / "requirements.lock"
     lock_sha = None
@@ -2764,6 +2779,25 @@ def _load_release_metadata() -> dict[str, object]:
         "build_timestamp_utc": None,
         "requirements_lock_sha256": lock_sha or "9490bebca11e7aaf14b7804eba35a6bf2c5bcab7d0a1220771c8fbdc29c14d5f",
     }
+
+
+_DYNAMIC_PACKAGES_SHA_CACHE: str | None = None
+
+
+def _compute_installed_packages_digest() -> str:
+    global _DYNAMIC_PACKAGES_SHA_CACHE
+    if _DYNAMIC_PACKAGES_SHA_CACHE is not None:
+        return _DYNAMIC_PACKAGES_SHA_CACHE
+    try:
+        import importlib.metadata
+        dists = sorted(f"{d.name.lower()}=={d.version}" for d in importlib.metadata.distributions())
+        if dists:
+            raw = "\n".join(dists).encode("utf-8")
+            _DYNAMIC_PACKAGES_SHA_CACHE = hashlib.sha256(raw).hexdigest()
+            return _DYNAMIC_PACKAGES_SHA_CACHE
+    except Exception:
+        pass
+    return ""
 
 
 def _load_runtime_attestation() -> dict[str, object]:
@@ -2783,40 +2817,50 @@ def _load_runtime_attestation() -> dict[str, object]:
         is_under_env = False
 
     attestation_file = sys_prefix / "runtime_env_attestation.json"
+    attestation_valid = False
+    attestation_data: dict[str, object] = {}
     if attestation_file.is_file():
         try:
-            attestation_data = json.loads(attestation_file.read_text(encoding="utf-8"))
-            if isinstance(attestation_data, dict):
-                attestation_data["running_executable_under_attested_env"] = is_under_env
-                attestation_data["python_executable"] = str(sys_executable)
-                attestation_data["environment_prefix"] = str(sys_prefix)
-                return attestation_data
+            raw_data = json.loads(attestation_file.read_text(encoding="utf-8"))
+            if isinstance(raw_data, dict):
+                req_id = raw_data.get("runtime_environment_id")
+                req_lock = raw_data.get("requirements_lock_sha256")
+                req_pkg = raw_data.get("resolved_packages_sha256")
+                if req_id and req_lock and req_pkg:
+                    attestation_valid = True
+                    attestation_data = dict(raw_data)
         except Exception:
             pass
 
     lock_path = ROOT / "requirements.lock"
-    lock_sha = "9490bebca11e7aaf14b7804eba35a6bf2c5bcab7d0a1220771c8fbdc29c14d5f"
+    lock_sha = ""
     if lock_path.is_file():
         try:
             lock_sha = hashlib.sha256(lock_path.read_bytes()).hexdigest()
         except Exception:
             pass
+    if not lock_sha:
+        lock_sha = str(attestation_data.get("requirements_lock_sha256") or "9490bebca11e7aaf14b7804eba35a6bf2c5bcab7d0a1220771c8fbdc29c14d5f")
 
     resolved_packages_sha = (
         os.environ.get("RESOLVED_PACKAGES_SHA")
         or os.environ.get("WEBAPP_RESOLVED_PACKAGES_SHA256")
-        or "54212149fce8c4a88e682ca6af6669525cb61c2cc488edfad4c9dde65d9cfd18"
+        or str(attestation_data.get("resolved_packages_sha256") or "")
+        or _compute_installed_packages_digest()
     )
     python_runtime_id = f"py{platform.python_version()}-{platform.machine().lower()}"
     runtime_env_id = (
         os.environ.get("RUNTIME_ENVIRONMENT_ID")
-        or f"{python_runtime_id}-res-{resolved_packages_sha[:16]}"
+        or str(attestation_data.get("runtime_environment_id") or "")
+        or (f"{python_runtime_id}-res-{resolved_packages_sha[:16]}" if resolved_packages_sha else f"{python_runtime_id}-unattested")
     )
 
+    strict_required = os.environ.get("WEBAPP_RELEASE_ATTESTATION_REQUIRED") == "1"
+
+    # Path Privacy Preservation: Never expose host paths (sys.executable, sys.prefix)
     return {
-        "running_executable_under_attested_env": is_under_env,
-        "python_executable": str(sys_executable),
-        "environment_prefix": str(sys_prefix),
+        "running_executable_under_attested_env": is_under_env and (attestation_valid or not strict_required),
+        "attestation_valid": attestation_valid,
         "python_runtime_id": python_runtime_id,
         "runtime_environment_id": runtime_env_id,
         "requirements_lock_sha256": lock_sha,
@@ -2829,6 +2873,25 @@ def _load_runtime_attestation() -> dict[str, object]:
 async def health():
     release_meta = _load_release_metadata()
     runtime_attestation = _load_runtime_attestation()
+    strict_required = os.environ.get("WEBAPP_RELEASE_ATTESTATION_REQUIRED") == "1"
+    attestation_valid = bool(runtime_attestation.get("attestation_valid"))
+    if strict_required and not attestation_valid:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "ok": False,
+                "app": "TOAN AAS Web App",
+                "entrypoint": "app.py",
+                "version": "P0.WEBAPP.COPYFAST1",
+                "error": "RUNTIME_ATTESTATION_FAILED",
+                "attestation_valid": False,
+                "release_sha": release_meta.get("release_sha", ""),
+                "requirements_lock_sha256": runtime_attestation.get("requirements_lock_sha256", ""),
+                "runtime_environment_id": runtime_attestation.get("runtime_environment_id", ""),
+                "resolved_packages_sha256": runtime_attestation.get("resolved_packages_sha256", ""),
+                "runtime_attestation": runtime_attestation,
+            },
+        )
     return {
         "ok": True,
         "app": "TOAN AAS Web App",
@@ -2838,6 +2901,7 @@ async def health():
         "requirements_lock_sha256": runtime_attestation.get("requirements_lock_sha256", ""),
         "runtime_environment_id": runtime_attestation.get("runtime_environment_id", ""),
         "resolved_packages_sha256": runtime_attestation.get("resolved_packages_sha256", ""),
+        "attestation_valid": attestation_valid,
         "runtime_attestation": runtime_attestation,
     }
 
@@ -2857,46 +2921,52 @@ async def reconcile_retired_generation(request: Request):
     if not token_header or not secrets.compare_digest(token_header, expected_token):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    current_fsm = getattr(app.state, "reconciliation_state", "DEFERRED")
-    if current_fsm == "DEFERRED":
-        app.state.reconciliation_state = "RECONCILING"
-        cutoff = utc_now()
-        app.state.copyfast_startup_reconciliation = {
-            "status": "scheduled",
-            "interrupted_before": cutoff,
-            "current_step": None,
-            "completed_steps": [],
-            "failed_steps": [],
-            "started_at_epoch": None,
-            "finished_at_epoch": None,
-        }
-        task = asyncio.create_task(
-            _run_startup_reconciliation(app, interrupted_before=cutoff),
-            name=STARTUP_RECONCILIATION_TASK_NAME,
-        )
-        app.state.copyfast_startup_reconciliation_task = task
-        return {
-            "ok": True,
-            "status": "RECONCILIATION_STARTED",
-            "task_created": True,
-            "interrupted_cutoff": cutoff,
-        }
-    elif current_fsm == "RECONCILING":
-        status_dict = getattr(app.state, "copyfast_startup_reconciliation", {})
-        return {
-            "ok": True,
-            "status": "RECONCILING_IN_PROGRESS",
-            "task_created": False,
-            "interrupted_cutoff": status_dict.get("interrupted_before"),
-        }
-    else:
-        status_dict = getattr(app.state, "copyfast_startup_reconciliation", {})
-        return {
-            "ok": True,
-            "status": "ALREADY_COMPLETED",
-            "task_created": False,
-            "interrupted_cutoff": status_dict.get("interrupted_before"),
-        }
+    reconciliation_lock = getattr(app.state, "reconciliation_lock", None)
+    if reconciliation_lock is None:
+        reconciliation_lock = asyncio.Lock()
+        app.state.reconciliation_lock = reconciliation_lock
+
+    async with reconciliation_lock:
+        current_fsm = getattr(app.state, "reconciliation_state", "DEFERRED")
+        if current_fsm == "DEFERRED":
+            app.state.reconciliation_state = "RECONCILING"
+            cutoff = utc_now()
+            app.state.copyfast_startup_reconciliation = {
+                "status": "scheduled",
+                "interrupted_before": cutoff,
+                "current_step": None,
+                "completed_steps": [],
+                "failed_steps": [],
+                "started_at_epoch": None,
+                "finished_at_epoch": None,
+            }
+            task = asyncio.create_task(
+                _run_startup_reconciliation(app, interrupted_before=cutoff),
+                name=STARTUP_RECONCILIATION_TASK_NAME,
+            )
+            app.state.copyfast_startup_reconciliation_task = task
+            return {
+                "ok": True,
+                "status": "RECONCILIATION_STARTED",
+                "task_created": True,
+                "interrupted_cutoff": cutoff,
+            }
+        elif current_fsm == "RECONCILING":
+            status_dict = getattr(app.state, "copyfast_startup_reconciliation", {})
+            return {
+                "ok": True,
+                "status": "RECONCILING_IN_PROGRESS",
+                "task_created": False,
+                "interrupted_cutoff": status_dict.get("interrupted_before"),
+            }
+        else:
+            status_dict = getattr(app.state, "copyfast_startup_reconciliation", {})
+            return {
+                "ok": True,
+                "status": "ALREADY_COMPLETED",
+                "task_created": False,
+                "interrupted_cutoff": status_dict.get("interrupted_before"),
+            }
 
 
 @app.get("/manifest.json", include_in_schema=False)

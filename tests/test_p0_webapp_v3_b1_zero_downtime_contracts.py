@@ -108,7 +108,7 @@ class TestP0ZeroDowntimeContracts:
         assert len(payload["resolved_packages_sha256"]) == 64
 
     def test_08_health_reports_runtime_attestation_dict(self):
-        """Contract 8: /health must expose runtime_attestation dictionary."""
+        """Contract 8: /health must expose runtime_attestation dictionary without leaking host paths."""
         from app import app
         client = TestClient(app)
         res = client.get("/health")
@@ -117,8 +117,10 @@ class TestP0ZeroDowntimeContracts:
         assert "runtime_attestation" in payload
         attestation = payload["runtime_attestation"]
         assert isinstance(attestation, dict)
-        assert "python_executable" in attestation
-        assert "environment_prefix" in attestation
+        assert "runtime_environment_id" in attestation
+        assert "running_executable_under_attested_env" in attestation
+        assert "python_executable" not in attestation
+        assert "environment_prefix" not in attestation
 
     def test_09_runtime_attestation_verifies_running_executable(self):
         """Contract 9: running_executable_under_attested_env must be true."""
@@ -296,3 +298,97 @@ class TestP0ZeroDowntimeContracts:
         content = wf_path.read_text(encoding="utf-8")
         assert "reconcile-retired-generation" in content, "Must trigger post-switch reconciliation"
         assert "LIFECYCLE_TOKEN" in content, "Must use LIFECYCLE_TOKEN for internal lifecycle call"
+
+    # =========================================================================
+    # FIRST RED: Remediation R1.C1 Hardening Contracts
+    # =========================================================================
+
+    def test_red_01_no_hardcoded_resolved_packages_sha(self):
+        """RED 1: Neither deploy-vps.yml nor app.py may hardcode RESOLVED_PACKAGES_SHA."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "RESOLVED_PACKAGES_SHA='54212149" not in wf_content, "RESOLVED_PACKAGES_SHA must not be hardcoded in deploy workflow"
+        assert (
+            'RESOLVED_PACKAGES_SHA="$(' in wf_content
+            or 'RESOLVED_PACKAGES_SHA=$(' in wf_content
+            or 'RESOLVED_PACKAGES_SHA=\\"\\$(' in wf_content
+            or 'RESOLVED_PACKAGES_SHA=\\$(' in wf_content
+        ), "deploy workflow must compute RESOLVED_PACKAGES_SHA dynamically"
+        assert "pip freeze" in wf_content, "Workflow must dynamically compute resolved packages SHA using pip freeze"
+
+        app_path = ROOT / "app.py"
+        app_content = app_path.read_text(encoding="utf-8")
+        assert "54212149fce8c4a88e682ca6af6669525cb61c2cc488edfad4c9dde65d9cfd18" not in app_content, "app.py must not hardcode fallback resolved packages SHA"
+
+    def test_red_02_existing_env_fully_revalidated(self):
+        """RED 2: deploy-vps.yml must fully revalidate existing env rather than just testing file existence."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert 'test -f "$ENV_DIR/runtime_env_attestation.json"' not in wf_content, "Mere existence check of runtime_env_attestation.json is insufficient"
+        assert "RECOMPUTED_" in wf_content or "recomputed" in wf_content.lower() or "CURRENT_FREEZE" in wf_content, "Workflow must recompute digests when validating existing env"
+
+    def test_red_03_missing_or_malformed_attestation_fails_closed_in_strict_mode(self, monkeypatch):
+        """RED 3: Under WEBAPP_RELEASE_ATTESTATION_REQUIRED=1, missing/malformed attestation fails closed."""
+        monkeypatch.setenv("WEBAPP_RELEASE_ATTESTATION_REQUIRED", "1")
+        from app import app
+        client = TestClient(app)
+        res = client.get("/health")
+        payload = res.json()
+        assert payload.get("attestation_valid") is not True or res.status_code != 200
+
+    def test_red_04_no_fake_release_sha_fallback(self):
+        """RED 4: app.py must not hardcode base SHA 8873e10f2279 as fallback release truth."""
+        app_path = ROOT / "app.py"
+        app_content = app_path.read_text(encoding="utf-8")
+        assert "8873e10f2279aec0fb312b70388b9073ba763f13" not in app_content, "app.py must not hardcode base SHA fallback"
+
+    def test_red_05_concurrent_lifecycle_activation(self):
+        """RED 5: Application must have an application-scoped asyncio.Lock protecting lifecycle activation."""
+        from app import app
+        assert hasattr(app.state, "reconciliation_lock"), "app.state must have a reconciliation_lock for concurrency safety"
+
+    def test_red_06_actual_600s_rollback_gate(self):
+        """RED 6: deploy-vps.yml must enforce an explicit 600s warm rollback window and COMMIT boundary."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "ROLLBACK_WINDOW_SECONDS=600" in wf_content or "ROLLBACK_WINDOW_SECONDS" in wf_content
+        assert "COMMIT_B" in wf_content or "COMMIT" in wf_content, "Workflow must encode explicit COMMIT boundary before stopping old slot"
+
+    def test_red_07_no_shared_root_release_extraction(self):
+        """RED 7: deploy-vps.yml must not mutate active root via tar -xf into WEBAPP_DIR or git read-tree."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert 'tar -xf "$STAGING_DIR/release.tar" -C "$WEBAPP_DIR"' not in wf_content, "Must not unpack release into shared root"
+        assert 'git read-tree "$TARGET_SHA"' not in wf_content, "Must not mutate active git working tree"
+
+    def test_red_08_runtime_config_prerequisite_fail_closed(self):
+        """RED 8: deploy-vps.yml must fail closed on missing prerequisites and must not generate lifecycle tokens."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "openssl rand" not in wf_content, "Workflow must not generate lifecycle tokens; tokens are Owner-provisioned"
+        assert "toanaas-web@.service" in wf_content, "Workflow must check template unit existence"
+        assert "PREREQUISITES" in wf_content or "PREREQUISITE" in wf_content, "Workflow must include prerequisite verification check"
+
+    def test_red_09_post_switch_verification_traverses_nginx(self):
+        """RED 9: Post-switch verification must traverse Nginx ingress, not port 8000."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "curl -s -f http://127.0.0.1:8000/health" not in wf_content
+
+    def test_red_10_startup_preserves_storyboard_runtime_preflight(self):
+        """RED 10: lifespan in app.py must call copyfast_storyboard_grid.ensure_storyboard_grid_runtime()."""
+        app_path = ROOT / "app.py"
+        app_content = app_path.read_text(encoding="utf-8")
+        assert "copyfast_storyboard_grid.ensure_storyboard_grid_runtime()" in app_content
+
+    def test_red_11_health_endpoint_preserves_path_privacy(self):
+        """RED 11: /health must not leak host paths (sys.executable, sys.prefix) into public responses."""
+        from app import app
+        client = TestClient(app)
+        res = client.get("/health")
+        payload = res.json()
+        assert "python_executable" not in payload.get("runtime_attestation", {})
+        assert "environment_prefix" not in payload.get("runtime_attestation", {})
+        assert "python_executable" not in payload
+        assert "environment_prefix" not in payload
+

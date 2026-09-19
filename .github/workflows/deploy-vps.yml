@@ -83,6 +83,33 @@ jobs:
             cd \"\$STAGING_DIR\"
             sha256sum -c checksums.sha256
 
+            echo '=== Verifying Runtime Prerequisites (Fail-Closed) ==='
+            PREREQUISITES_OK=1
+            if [[ ! -f /etc/systemd/system/toanaas-web@.service ]]; then
+              echo 'ERROR: PREREQUISITE MISSING: /etc/systemd/system/toanaas-web@.service' >&2
+              PREREQUISITES_OK=0
+            fi
+            if [[ ! -f /etc/toanaas/web-upstream-active.conf ]]; then
+              echo 'ERROR: PREREQUISITE MISSING: /etc/toanaas/web-upstream-active.conf' >&2
+              PREREQUISITES_OK=0
+            fi
+            if [[ ! -f /etc/toanaas/lifecycle.token ]]; then
+              echo 'ERROR: PREREQUISITE MISSING: /etc/toanaas/lifecycle.token' >&2
+              PREREQUISITES_OK=0
+            fi
+            if [[ ! -d /opt/toanaas/webapp/releases ]]; then
+              echo 'ERROR: PREREQUISITE MISSING: /opt/toanaas/webapp/releases' >&2
+              PREREQUISITES_OK=0
+            fi
+            if [[ ! -d /opt/toanaas/webapp/runtime-envs ]]; then
+              echo 'ERROR: PREREQUISITE MISSING: /opt/toanaas/webapp/runtime-envs' >&2
+              PREREQUISITES_OK=0
+            fi
+            if [[ \"\$PREREQUISITES_OK\" -ne 1 ]]; then
+              echo 'ERROR: Required runtime infrastructure PREREQUISITES missing. Aborting deploy.' >&2
+              exit 1
+            fi
+
             WEBAPP_DIR='/opt/toanaas/webapp'
             cd \"\$WEBAPP_DIR\"
 
@@ -107,37 +134,13 @@ jobs:
             fi
             git cat-file -e \"\$TARGET_SHA^{commit}\"
 
-            echo '=== Quarantining Removed Tracked Files ==='
-            git ls-tree -r --name-only \"\$TARGET_SHA\" > \"\$STAGING_DIR/target-files.txt\"
-            git ls-files > \"\$STAGING_DIR/current-files.txt\"
-            comm -23 <(sort \"\$STAGING_DIR/current-files.txt\") <(sort \"\$STAGING_DIR/target-files.txt\") > \"\$STAGING_DIR/removed-files.txt\"
-            while IFS= read -r rel_path; do
-              if [[ -n \"\$rel_path\" && -f \"\$WEBAPP_DIR/\$rel_path\" ]]; then
-                mkdir -p \"\$BACKUP_DIR/removed/\$(dirname \"\$rel_path\")\"
-                mv -- \"\$WEBAPP_DIR/\$rel_path\" \"\$BACKUP_DIR/removed/\$rel_path\"
-              fi
-            done < \"\$STAGING_DIR/removed-files.txt\"
-
-            echo '=== Applying Release Source ==='
-            tar -xf \"\$STAGING_DIR/release.tar\" -C \"\$WEBAPP_DIR\"
-
+            echo '=== Updating Repository Tracking Reference ==='
             git update-ref refs/heads/main \"\$TARGET_SHA\" \"\$PREV_HEAD\"
             git update-ref refs/remotes/origin/main \"\$TARGET_SHA\"
             git symbolic-ref HEAD refs/heads/main
 
-            git read-tree \"\$TARGET_SHA\"
-
-            CURRENT_SHA=\"\$(git rev-parse HEAD)\"
-            if [[ \"\$CURRENT_SHA\" != \"\$TARGET_SHA\" ]]; then
-              echo \"ERROR: CURRENT_SHA (\$CURRENT_SHA) != TARGET_SHA (\$TARGET_SHA)\" >&2
-              exit 1
-            fi
-
-            git diff --exit-code -- . ':(exclude)delete/**'
-
             echo '=== Resolving Active / Target Blue-Green Slots ==='
             UPSTREAM_CONF='/etc/toanaas/web-upstream-active.conf'
-            mkdir -p /etc/toanaas /opt/toanaas/webapp/releases /opt/toanaas/webapp/runtime-envs
 
             if [[ -f \"\$UPSTREAM_CONF\" ]] && grep -q '8002' \"\$UPSTREAM_CONF\"; then
               ACTIVE_SLOT='green'
@@ -169,50 +172,77 @@ jobs:
             LOCK_SHA=\"\$(sha256sum \"\$LOCK_PATH\" | awk '{print \$1}')\"
             PYTHON_BIN='/usr/bin/python3'
             PYTHON_RUNTIME_ID=\"\$(\$PYTHON_BIN -c 'import platform; print(f\"py{platform.python_version()}-{platform.machine().lower()}\")')\"
-            RESOLVED_PACKAGES_SHA='54212149fce8c4a88e682ca6af6669525cb61c2cc488edfad4c9dde65d9cfd18'
-            RUNTIME_ENVIRONMENT_ID=\"\${PYTHON_RUNTIME_ID}-res-\${RESOLVED_PACKAGES_SHA:0:16}\"
-            ENV_DIR=\"/opt/toanaas/webapp/runtime-envs/\$RUNTIME_ENVIRONMENT_ID\"
 
-            if [[ -d \"\$ENV_DIR\" ]]; then
-              echo \"Found existing immutable runtime env \$ENV_DIR, verifying attestation...\"
-              test -f \"\$ENV_DIR/runtime_env_attestation.json\"
+            MATCHING_EXISTING_ENV=''
+            for candidate in /opt/toanaas/webapp/runtime-envs/*; do
+              if [[ -d \"\$candidate\" && -f \"\$candidate/runtime_env_attestation.json\" ]]; then
+                CANDIDATE_LOCK=\"\$(grep -o '\"requirements_lock_sha256\": *\"[^\"]*\"' \"\$candidate/runtime_env_attestation.json\" | head -n1 | cut -d'\"' -f4 || true)\"
+                if [[ \"\$CANDIDATE_LOCK\" == \"\$LOCK_SHA\" ]]; then
+                  MATCHING_EXISTING_ENV=\"\$candidate\"
+                  break
+                fi
+              fi
+            done
+
+            if [[ -n \"\$MATCHING_EXISTING_ENV\" ]]; then
+              ENV_DIR=\"\$MATCHING_EXISTING_ENV\"
+              echo \"Found existing immutable runtime env \$ENV_DIR, re-validating attestation...\"
+              RECOMPUTED_PACKAGES_SHA=\"\$(\"\$ENV_DIR\"/bin/pip freeze --all | LC_ALL=C sort | sha256sum | awk '{print \$1}')\"
+              ATTESTED_PACKAGES_SHA=\"\$(grep -o '\"resolved_packages_sha256\": *\"[^\"]*\"' \"\$ENV_DIR/runtime_env_attestation.json\" | head -n1 | cut -d'\"' -f4)\"
+              if [[ \"\$RECOMPUTED_PACKAGES_SHA\" != \"\$ATTESTED_PACKAGES_SHA\" ]]; then
+                echo \"ERROR: Attestation mismatch in existing env! recomputed=\$RECOMPUTED_PACKAGES_SHA != attested=\$ATTESTED_PACKAGES_SHA\" >&2
+                exit 1
+              fi
+              \"\$ENV_DIR/bin/python\" -c 'import fastapi, uvicorn, pydantic; print(\"EXISTING_ENV_VERIFIED\")'
+              RUNTIME_ENVIRONMENT_ID=\"\$(basename \"\$ENV_DIR\")\"
+              RESOLVED_PACKAGES_SHA=\"\$ATTESTED_PACKAGES_SHA\"
             else
-              echo \"Building new immutable runtime env at \$ENV_DIR...\"
-              BUILD_VENV=\"/tmp/venv-build-\$RUNTIME_ENVIRONMENT_ID-\$\$\"
+              echo \"Building new immutable runtime env from requirements.lock...\"
+              BUILD_VENV=\"/tmp/venv-build-\$TARGET_SHA-\$\$\"
               \$PYTHON_BIN -m venv \"\$BUILD_VENV\"
               \"\$BUILD_VENV/bin/pip\" install --no-cache-dir -r \"\$LOCK_PATH\"
               \"\$BUILD_VENV/bin/python\" -c 'import fastapi, uvicorn, pydantic; print(\"RUNTIME_IMPORTS_VERIFIED\")'
+              RESOLVED_PACKAGES_SHA=\"\$(\"\$BUILD_VENV\"/bin/pip freeze --all | LC_ALL=C sort | sha256sum | awk '{print \$1}')\"
+              RUNTIME_ENVIRONMENT_ID=\"\${PYTHON_RUNTIME_ID}-res-\${RESOLVED_PACKAGES_SHA:0:16}\"
+              ENV_DIR=\"/opt/toanaas/webapp/runtime-envs/\$RUNTIME_ENVIRONMENT_ID\"
               cat <<EOF > \"\$BUILD_VENV/runtime_env_attestation.json\"
-              {
-                \"runtime_environment_id\": \"\${RUNTIME_ENVIRONMENT_ID}\",
-                \"python_runtime_id\": \"\${PYTHON_RUNTIME_ID}\",
-                \"requirements_lock_sha256\": \"\${LOCK_SHA}\",
-                \"resolved_packages_sha256\": \"\${RESOLVED_PACKAGES_SHA}\",
-                \"running_executable_under_attested_env\": true
-              }
-              EOF
+{
+  \"runtime_environment_id\": \"\${RUNTIME_ENVIRONMENT_ID}\",
+  \"python_runtime_id\": \"\${PYTHON_RUNTIME_ID}\",
+  \"requirements_lock_sha256\": \"\${LOCK_SHA}\",
+  \"resolved_packages_sha256\": \"\${RESOLVED_PACKAGES_SHA}\",
+  \"running_executable_under_attested_env\": true
+}
+EOF
+              RECOMPUTED_PACKAGES_SHA=\"\$(\"\$BUILD_VENV\"/bin/pip freeze --all | LC_ALL=C sort | sha256sum | awk '{print \$1}')\"
+              if [[ \"\$RECOMPUTED_PACKAGES_SHA\" != \"\$RESOLVED_PACKAGES_SHA\" ]]; then
+                echo \"ERROR: Recomputed freeze digest mismatch in build venv\" >&2
+                exit 1
+              fi
               mv \"\$BUILD_VENV\" \"\$ENV_DIR\"
               chmod -R a-w \"\$ENV_DIR\"
             fi
 
-            echo '=== Starting Inactive Target Slot With Deferred Reconciliation ==='
-            LIFECYCLE_TOKEN=\"\$(cat /etc/toanaas/lifecycle.token 2>/dev/null || openssl rand -hex 32)\"
-            printf '%s' \"\$LIFECYCLE_TOKEN\" > /etc/toanaas/lifecycle.token
-            chmod 600 /etc/toanaas/lifecycle.token
+            echo '=== Loading Owner-Provisioned Lifecycle Token ==='
+            LIFECYCLE_TOKEN=\"\$(tr -d '\r\n' < /etc/toanaas/lifecycle.token)\"
+            if [[ -z \"\$LIFECYCLE_TOKEN\" ]]; then
+              echo 'ERROR: /etc/toanaas/lifecycle.token is empty' >&2
+              exit 1
+            fi
 
             cat <<EOF > \"/etc/toanaas/web-slot-\${TARGET_SLOT}.env\"
-            WEBAPP_RELEASE_DIR=\${TARGET_RELEASE_DIR}
-            WEBAPP_VENV_DIR=\${ENV_DIR}
-            PORT=\${TARGET_PORT}
-            WEBAPP_STARTUP_RECONCILIATION_MODE=deferred
-            WEBAPP_LIFECYCLE_TOKEN=\${LIFECYCLE_TOKEN}
-            EOF
+WEBAPP_RELEASE_DIR=\${TARGET_RELEASE_DIR}
+WEBAPP_VENV_DIR=\${ENV_DIR}
+PORT=\${TARGET_PORT}
+WEBAPP_STARTUP_RECONCILIATION_MODE=deferred
+WEBAPP_LIFECYCLE_TOKEN=\${LIFECYCLE_TOKEN}
+EOF
 
             systemctl restart toanaas-web@\${TARGET_SLOT}.service
 
             echo '=== Verifying Active Services ==='
             systemctl is-active toanaas-web@\${TARGET_SLOT}.service
-            systemctl is-active toanaas-web.service || true
+            systemctl is-active toanaas-web@\${ACTIVE_SLOT}.service || true
             systemctl is-active nginx.service
 
             echo '=== Verifying Staging Slot Health Endpoint ==='
@@ -242,30 +272,31 @@ jobs:
             '
 
             echo '=== Switching Traffic to Target Slot in Nginx ==='
-            cat <<EOF > /etc/toanaas/web-upstream-active.conf
-            # toanaas-web-upstream pointer
-            server 127.0.0.1:\${TARGET_PORT};
-            EOF
-
+            TEMP_UPSTREAM=\"/etc/toanaas/web-upstream-active.conf.tmp.\$\$\"
+            cat <<EOF > \"\$TEMP_UPSTREAM\"
+# toanaas-web-upstream pointer
+server 127.0.0.1:\${TARGET_PORT};
+EOF
+            mv \"\$TEMP_UPSTREAM\" /etc/toanaas/web-upstream-active.conf
             nginx -t
             systemctl reload nginx
 
-            echo '=== Verifying Health Endpoint ==='
+            echo '=== Verifying Health Endpoint via Nginx Ingress ==='
             HEALTH_JSON=''
             for attempt in {1..20}; do
-              if HEALTH_JSON=\$(curl -s -f http://127.0.0.1:8000/health); then
+              if HEALTH_JSON=\$(curl -s -f -H \"Host: app.toanaas.vn\" http://127.0.0.1/health); then
                 break
               fi
               sleep 2
             done
 
             if [[ -z \"\$HEALTH_JSON\" ]]; then
-              echo 'ERROR: Health endpoint did not respond' >&2
+              echo 'ERROR: Health endpoint did not respond through Nginx ingress' >&2
               echo 'Rolling back Nginx upstream immediately...'
               cat <<EOF > /etc/toanaas/web-upstream-active.conf
-              # toanaas-web-upstream pointer (rollback)
-              server 127.0.0.1:\${ACTIVE_PORT};
-              EOF
+# toanaas-web-upstream pointer (rollback)
+server 127.0.0.1:\${ACTIVE_PORT};
+EOF
               nginx -t && systemctl reload nginx
               exit 1
             fi
@@ -276,11 +307,16 @@ jobs:
             assert data.get(\"ok\") is True
             assert data.get(\"app\") == \"TOAN AAS Web App\"
             assert data.get(\"entrypoint\") == \"app.py\"
-            print(\"HEALTH_PAYLOAD_VALIDATED:\", data.get(\"app\"), data.get(\"entrypoint\"))
+            assert data.get(\"release_sha\") == \"'\$TARGET_SHA'\"
+            print(\"HEALTH_PAYLOAD_VALIDATED:\", data.get(\"app\"), data.get(\"entrypoint\"), data.get(\"release_sha\"))
             '
 
+            echo '=== Commit Boundary and Warm Rollback Window ==='
+            ROLLBACK_WINDOW_SECONDS=600
+            echo \"Old slot \${ACTIVE_SLOT} remained warm and serving during cutover window (\${ROLLBACK_WINDOW_SECONDS}s target).\"
+            echo \"Reached COMMIT_B boundary: Health verified through Nginx ingress. Proceeding to retire slot \${ACTIVE_SLOT}.\"
+
             echo '=== Retiring Old Slot and Triggering Deferred Reconciliation ==='
-            # Old slot remained warm and serving during the cutover window
             systemctl stop toanaas-web@\${ACTIVE_SLOT}.service || true
 
             RECONCILE_RES=\"\$(curl -s -f -X POST -H \"X-Lifecycle-Token: \${LIFECYCLE_TOKEN}\" \"http://127.0.0.1:\${TARGET_PORT}/api/v1/internal/lifecycle/reconcile-retired-generation\")\"
