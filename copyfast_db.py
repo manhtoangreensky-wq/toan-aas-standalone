@@ -7380,10 +7380,14 @@ def get_admin_overview_metrics() -> dict[str, int]:
     """
     users_count = 0
     pending_topups_count = 0
+    topups_completed_count = 0
+    revenue_vnd_amount = 0
     open_support_count = 0
     pending_approvals_count = 0
     worker_jobs_count = 0
     engine_jobs_count = 0
+    active_sessions_count = 0
+    failed_jobs_count = 0
     db_file = session_database_path()
 
     try:
@@ -7397,6 +7401,20 @@ def get_admin_overview_metrics() -> dict[str, int]:
                 row = conn.execute("SELECT count(*) FROM web_manual_topup_requests WHERE status = 'pending_admin_review'").fetchone()
                 if row:
                     pending_topups_count = int(row[0])
+                cols = {c[1] for c in conn.execute("PRAGMA table_info(web_manual_topup_requests)").fetchall()}
+                if "amount_vnd" in cols:
+                    row_approved = conn.execute(
+                        "SELECT count(*), COALESCE(sum(amount_vnd), 0) FROM web_manual_topup_requests WHERE status = 'approved'"
+                    ).fetchone()
+                    if row_approved:
+                        topups_completed_count = int(row_approved[0] or 0)
+                        revenue_vnd_amount = int(row_approved[1] or 0)
+                else:
+                    row_approved = conn.execute(
+                        "SELECT count(*) FROM web_manual_topup_requests WHERE status = 'approved'"
+                    ).fetchone()
+                    if row_approved:
+                        topups_completed_count = int(row_approved[0] or 0)
             if "web_support_cases" in tables:
                 row = conn.execute(
                     "SELECT count(*) FROM web_support_cases WHERE state IN ('new', 'reviewing', 'waiting_user', 'waiting_provider', 'refund_pending')"
@@ -7411,6 +7429,10 @@ def get_admin_overview_metrics() -> dict[str, int]:
                 row = conn.execute("SELECT count(*) FROM web_ops_followups WHERE state = 'open'").fetchone()
                 if row:
                     worker_jobs_count = int(row[0])
+            if "web_sessions" in tables:
+                row_sess = conn.execute("SELECT count(*) FROM web_sessions WHERE is_revoked = 0").fetchone()
+                if row_sess:
+                    active_sessions_count = int(row_sess[0] or 0)
     except Exception:
         pass
 
@@ -7426,6 +7448,10 @@ def get_admin_overview_metrics() -> dict[str, int]:
         "action_required": int(action_required_count),
         "worker_jobs": int(worker_jobs_count),
         "engine_jobs": int(engine_jobs_count),
+        "topups_completed": int(topups_completed_count),
+        "revenue_vnd": int(revenue_vnd_amount),
+        "active_sessions": int(active_sessions_count),
+        "failed_jobs": int(failed_jobs_count),
     }
 
 
