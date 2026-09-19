@@ -67,7 +67,8 @@ def _database() -> sqlite3.Connection:
     return conn
 
 
-def _client(conn: sqlite3.Connection, *, actor: str = "admin") -> TestClient:
+@contextmanager
+def _client(conn: sqlite3.Connection, *, actor: str = "admin"):
     app = FastAPI()
     app.include_router(directory.router)
 
@@ -82,9 +83,14 @@ def _client(conn: sqlite3.Connection, *, actor: str = "admin") -> TestClient:
             raise HTTPException(status_code=403, detail="Chỉ quản trị viên được phép truy cập")
         return {"id": "admin-account", "role": "admin"}
 
+    orig_read_tx = directory.read_transaction
     directory.read_transaction = read_transaction
     app.dependency_overrides[directory.require_admin] = guard
-    return TestClient(app)
+    try:
+        with TestClient(app) as client:
+            yield client
+    finally:
+        directory.read_transaction = orig_read_tx
 
 
 def _snapshot(conn: sqlite3.Connection) -> tuple[list[tuple], list[tuple]]:

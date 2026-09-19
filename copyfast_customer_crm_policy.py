@@ -120,8 +120,12 @@ def synthesize_customer_crm_context(
     link_evidence: dict[str, Any] | None = None,
     identity_conflict: bool = False,
     jobs_summary: dict[str, Any] | None = None,
+    active_sessions_count: int = 0,
+    audit_events: list[dict[str, Any]] | None = None,
+    total_approved_topup_vnd: int = 0,
+    admin_actor_id: str | None = None,
 ) -> dict[str, Any]:
-    """Synthesizes the bounded, truthful Customer CRM context answering the 7 canonical sections."""
+    """Synthesizes the bounded, truthful Customer CRM context answering the Customer 360 canonical sections."""
     cases = support_cases or []
     topups = topup_requests or []
     prof = profile or {}
@@ -133,14 +137,26 @@ def synthesize_customer_crm_context(
         has_conflict=identity_conflict,
     )
 
+    if "is_active" in account:
+        is_active = bool(account["is_active"])
+    elif "status" in account:
+        is_active = account["status"] == "active"
+    else:
+        is_active = True
+
+    role = str(account.get("role") or "user").strip().lower()
+    is_admin_target = role == "admin"
+    account_id = str(account.get("id") or account.get("customer_id") or "")
+    is_self = bool(admin_actor_id and str(admin_actor_id) == account_id)
+
     # 1. OVERVIEW
     overview = {
-        "customer_id": str(account.get("id") or ""),
+        "customer_id": account_id,
         "display_name": str(account.get("display_name") or ""),
         "email": str(account.get("email") or ""),
-        "status": "active" if bool(account.get("is_active", True)) else "locked",
+        "status": "active" if is_active else "locked",
         "account_type": str(account.get("account_type") or "standard"),
-        "role": str(account.get("role") or "user"),
+        "role": role,
         "role_label": str(account.get("role_label") or "Khách hàng"),
         "password_login_enabled": bool(account.get("password_login_enabled", True)),
         "created_at": str(account.get("created_at") or ""),
@@ -156,7 +172,21 @@ def synthesize_customer_crm_context(
         "relink_write_actions": IDENTITY_RELINK_WRITE_ACTIONS,
     }
 
-    # 3. SERVICE CONTEXT
+    # 3. ACCOUNT SAFETY (Web-native, truthful, zero unproven claims)
+    account_safety = {
+        "is_active": is_active,
+        "web_access_state": "active" if is_active else "blocked",
+        "active_sessions_count": int(active_sessions_count),
+        "bot_ban_state": STATUS_UNAVAILABLE,
+        "telegram_ban_state": STATUS_UNAVAILABLE,
+        "admin_target_ban_allowed": False,
+        "can_ban": is_active and not is_admin_target and not is_self,
+        "can_unban": (not is_active) and not is_admin_target,
+        "is_self": is_self,
+        "is_admin_target": is_admin_target,
+    }
+
+    # 4. SERVICE CONTEXT
     service_context = {
         "locale": str(prof.get("locale") or "vi"),
         "timezone": str(prof.get("timezone") or "Asia/Ho_Chi_Minh"),
@@ -166,7 +196,7 @@ def synthesize_customer_crm_context(
         "workspace_goal": str(setup.get("goal") or ""),
     }
 
-    # 4. SUPPORT
+    # 5. SUPPORT
     open_cases = [c for c in cases if str(c.get("state") or "") in SUPPORT_OPEN_STATUSES]
     support = {
         "authority": SUPPORT_CASE_AUTHORITY,
@@ -175,7 +205,7 @@ def synthesize_customer_crm_context(
         "recent_cases": cases[:5],
     }
 
-    # 5. PAYMENTS / TOPUPS SUMMARY
+    # 6. PAYMENTS / TOPUPS SUMMARY
     pending_topups = [t for t in topups if str(t.get("status") or "") == "pending_admin_review"]
     payments_topups = {
         "authority": TOPUP_REQUEST_AUTHORITY,
@@ -187,7 +217,18 @@ def synthesize_customer_crm_context(
         "customer_finance_state_mapping_shared": True,
     }
 
-    # 6. WALLET SUMMARY (Read-through, never fake zero)
+    # 7. SPEND SUMMARY (Truthful, non-fabricated metrics)
+    spend_summary = {
+        "authority": "WEB_SQLITE",
+        "total_approved_topup_vnd": int(total_approved_topup_vnd),
+        "total_approved_topup_xu": None,
+        "total_charged_xu": None,
+        "lifetime_spend": None,
+        "unproven_lifetime_spend": 0,
+        "status": "PARTIALLY_AVAILABLE" if int(total_approved_topup_vnd) > 0 else STATUS_UNAVAILABLE,
+    }
+
+    # 8. WALLET SUMMARY (Read-through, never fake zero)
     wallet = {
         "data_source": WALLET_AUTHORITY,
         "status": STATUS_UNAVAILABLE,
@@ -197,7 +238,7 @@ def synthesize_customer_crm_context(
         "fake_zero_wallet_balance": 0,
     }
 
-    # 7. JOBS SUMMARY (Read-through)
+    # 9. JOBS SUMMARY (Read-through, delivery truth)
     if jobs_summary is not None:
         jobs = jobs_summary
     else:
@@ -205,12 +246,30 @@ def synthesize_customer_crm_context(
             "data_source": JOB_AUTHORITY,
             "status_authority": WALLET_AUTHORITY,
             "status": STATUS_UNAVAILABLE,
+            "total_jobs": None,
             "recent_jobs": [],
             "freshness": None,
             "mutation_available": False,
         }
 
-    # 8. AUDIT / ACTION REQUIRED (Derived from concrete facts only)
+    # 10. ASSETS / OUTPUTS SUMMARY (Preserve V2-04 delivery truth)
+    assets = {
+        "data_source": "CORE_BRIDGE_ASSET_VAULT",
+        "status": STATUS_UNAVAILABLE,
+        "total_assets": None,
+        "recent_assets": [],
+        "delivery_truth_preserved": True,
+    }
+
+    # 11. ADMINISTRATIVE AUDIT TRAIL
+    audits = audit_events or []
+    audit_trail = {
+        "authority": "WEB_SQLITE",
+        "total_events": len(audits),
+        "recent_events": audits[:10],
+    }
+
+    # 12. AUDIT / ACTION REQUIRED (Derived from concrete facts only)
     action_reasons: list[str] = []
     if identity_conflict:
         action_reasons.append("Xung đột định danh Telegram cần kiểm tra")
@@ -231,14 +290,19 @@ def synthesize_customer_crm_context(
     }
 
     return {
-        "customer_id": str(account.get("id") or ""),
+        "customer_id": account_id,
         "overview": overview,
         "identity": identity,
+        "account_safety": account_safety,
         "service_context": service_context,
         "support": support,
         "payments_topups": payments_topups,
+        "spend_summary": spend_summary,
         "wallet": wallet,
         "jobs": jobs,
+        "assets": assets,
+        "audit_trail": audit_trail,
+        "membership_tier": STATUS_UNAVAILABLE,
         "action_required": action_required,
         "source": "web_accounts_redacted",
     }

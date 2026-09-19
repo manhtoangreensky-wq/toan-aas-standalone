@@ -6,16 +6,19 @@ from typing import Any
 import secrets
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from copyfast_auth import (
     OAUTH_ONLY_EMAIL_DOMAIN,
     TELEGRAM_ONLY_EMAIL_DOMAIN,
     _password_hash,
+    _record_audit,
+    _request_id,
     envelope,
     normalize_interface_locale,
     require_admin,
+    require_canonical_admin_csrf,
 )
 from copyfast_customer_crm_policy import synthesize_customer_crm_context
 from copyfast_db import (
@@ -226,6 +229,34 @@ class CustomerUpdateRequest(BaseModel):
         return cleaned
 
 
+class CustomerBanRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reason: str = Field(min_length=1, max_length=500)
+
+    @field_validator("reason")
+    @classmethod
+    def validate_reason(cls, value: str) -> str:
+        cleaned = str(value or "").strip()
+        if not cleaned:
+            raise ValueError("Lý do khóa tài khoản không được để trống")
+        return cleaned
+
+
+class CustomerUnbanRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reason: str = Field(min_length=1, max_length=500)
+
+    @field_validator("reason")
+    @classmethod
+    def validate_reason(cls, value: str) -> str:
+        cleaned = str(value or "").strip()
+        if not cleaned:
+            raise ValueError("Lý do mở khóa tài khoản không được để trống")
+        return cleaned
+
+
 @router.post("", status_code=201)
 async def create_customer(
     payload: CustomerCreateRequest,
@@ -390,8 +421,8 @@ async def get_customer(
         if row is None:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản khách hàng")
 
-        if view == "crm":
-            return _build_crm_detail_response(conn, row, normalized_id)
+        if view in ("crm", "360"):
+            return _build_crm_detail_response(conn, row, normalized_id, admin_account=_account)
 
     return envelope(
         True,
@@ -414,83 +445,166 @@ async def get_customer_crm(
         ).fetchone()
         if row is None:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản khách hàng")
-        return _build_crm_detail_response(conn, row, normalized_id)
+        return _build_crm_detail_response(conn, row, normalized_id, admin_account=_account)
 
 
-def _build_crm_detail_response(conn: Any, row: Any, account_id: str) -> dict[str, Any]:
+@router.get("/{account_id}/360")
+async def get_customer_360(
+    account_id: str,
+    _account: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
+    normalized_id = _account_id(account_id)
+    with read_transaction() as conn:
+        row = conn.execute(
+            f"{SELECT_CUSTOMER} WHERE a.id=? LIMIT 1",
+            (normalized_id,),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản khách hàng")
+        return _build_crm_detail_response(conn, row, normalized_id, admin_account=_account)
+
+
+def _build_crm_detail_response(
+    conn: Any,
+    row: Any,
+    account_id: str,
+    admin_account: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     customer_proj = _customer_projection(tuple(row[:12]))
     canonical_user_id = str(row[12] or "").strip() or None
     customer_proj["canonical_user_id"] = canonical_user_id
 
     # Workspace setup
-    setup_row = conn.execute(
-        "SELECT setup_state, role, goal, experience FROM web_workspace_setup_profiles WHERE account_id=? LIMIT 1",
-        (account_id,),
-    ).fetchone()
-    setup_data = {
-        "setup_state": str(setup_row[0]) if setup_row else "not_started",
-        "role": str(setup_row[1]) if setup_row else "",
-        "goal": str(setup_row[2]) if setup_row else "",
-        "experience": str(setup_row[3]) if setup_row else "",
-    } if setup_row else None
+    setup_data = None
+    try:
+        setup_row = conn.execute(
+            "SELECT setup_state, role, goal, experience FROM web_workspace_setup_profiles WHERE account_id=? LIMIT 1",
+            (account_id,),
+        ).fetchone()
+        if setup_row:
+            setup_data = {
+                "setup_state": str(setup_row[0]) if setup_row else "not_started",
+                "role": str(setup_row[1]) if setup_row else "",
+                "goal": str(setup_row[2]) if setup_row else "",
+                "experience": str(setup_row[3]) if setup_row else "",
+            }
+    except Exception:
+        pass
 
     # Support cases
-    case_rows = conn.execute(
-        """SELECT id, category, priority, subject, state, created_at, updated_at
-           FROM web_support_cases
-           WHERE account_id=?
-           ORDER BY updated_at DESC, id DESC LIMIT 10""",
-        (account_id,),
-    ).fetchall()
-    support_cases = [
-        {
-            "id": str(r[0]),
-            "category": str(r[1]),
-            "priority": str(r[2]),
-            "subject": str(r[3]),
-            "state": str(r[4]),
-            "created_at": str(r[5]),
-            "updated_at": str(r[6]),
-        }
-        for r in case_rows
-    ]
+    support_cases: list[dict[str, Any]] = []
+    try:
+        case_rows = conn.execute(
+            """SELECT id, category, priority, subject, state, created_at, updated_at
+               FROM web_support_cases
+               WHERE account_id=?
+               ORDER BY updated_at DESC, id DESC LIMIT 10""",
+            (account_id,),
+        ).fetchall()
+        support_cases = [
+            {
+                "id": str(r[0]),
+                "category": str(r[1]),
+                "priority": str(r[2]),
+                "subject": str(r[3]),
+                "state": str(r[4]),
+                "created_at": str(r[5]),
+                "updated_at": str(r[6]),
+            }
+            for r in case_rows
+        ]
+    except Exception:
+        pass
 
     # Manual topups
-    topup_rows = conn.execute(
-        """SELECT id, amount_vnd, currency, method, reference, status, submitted_at, updated_at
-           FROM web_manual_topup_requests
-           WHERE account_id=?
-           ORDER BY submitted_at DESC, id DESC LIMIT 10""",
-        (account_id,),
-    ).fetchall()
-    topup_requests = [
-        {
-            "id": int(r[0]),
-            "amount_vnd": int(r[1]),
-            "currency": str(r[2]),
-            "method": str(r[3]),
-            "reference": str(r[4]),
-            "status": str(r[5]),
-            "submitted_at": str(r[6]),
-            "updated_at": str(r[7]),
-        }
-        for r in topup_rows
-    ]
+    topup_requests: list[dict[str, Any]] = []
+    try:
+        topup_rows = conn.execute(
+            """SELECT id, amount_vnd, currency, method, reference, status, submitted_at, updated_at
+               FROM web_manual_topup_requests
+               WHERE account_id=?
+               ORDER BY submitted_at DESC, id DESC LIMIT 10""",
+            (account_id,),
+        ).fetchall()
+        topup_requests = [
+            {
+                "id": int(r[0]),
+                "amount_vnd": int(r[1]),
+                "currency": str(r[2]),
+                "method": str(r[3]),
+                "reference": str(r[4]),
+                "status": str(r[5]),
+                "submitted_at": str(r[6]),
+                "updated_at": str(r[7]),
+            }
+            for r in topup_rows
+        ]
+    except Exception:
+        pass
 
     # Telegram link evidence
-    link_row = conn.execute(
-        """SELECT canonical_user_id, bot_confirmed_at, confirmed_display_name, created_at
-           FROM telegram_link_codes
-           WHERE account_id=? AND consumed_at IS NOT NULL
-           ORDER BY bot_confirmed_at DESC LIMIT 1""",
-        (account_id,),
-    ).fetchone()
-    link_evidence = {
-        "canonical_user_id": str(link_row[0] or ""),
-        "bot_confirmed_at": str(link_row[1] or ""),
-        "confirmed_display_name": str(link_row[2] or ""),
-        "created_at": str(link_row[3] or ""),
-    } if link_row else None
+    link_evidence = None
+    try:
+        link_row = conn.execute(
+            """SELECT canonical_user_id, bot_confirmed_at, confirmed_display_name, created_at
+               FROM telegram_link_codes
+               WHERE account_id=? AND consumed_at IS NOT NULL
+               ORDER BY bot_confirmed_at DESC LIMIT 1""",
+            (account_id,),
+        ).fetchone()
+        if link_row:
+            link_evidence = {
+                "canonical_user_id": str(link_row[0] or ""),
+                "bot_confirmed_at": str(link_row[1] or ""),
+                "confirmed_display_name": str(link_row[2] or ""),
+                "created_at": str(link_row[3] or ""),
+            }
+    except Exception:
+        pass
+
+    # Active web sessions count
+    active_sessions_count = 0
+    try:
+        active_sess_row = conn.execute(
+            "SELECT COUNT(*) FROM web_sessions WHERE account_id=? AND revoked_at IS NULL AND expires_at > ?",
+            (account_id, utc_now()),
+        ).fetchone()
+        if active_sess_row:
+            active_sessions_count = int(active_sess_row[0])
+    except Exception:
+        pass
+
+    # Recent audit trail
+    audit_events: list[dict[str, Any]] = []
+    try:
+        audit_rows = conn.execute(
+            """SELECT id, action, account_id, outcome, detail, created_at
+               FROM web_audit_events
+               WHERE target=? OR account_id=?
+               ORDER BY created_at DESC, id DESC LIMIT 10""",
+            (account_id, account_id),
+        ).fetchall()
+        audit_events = [
+            {
+                "id": str(r[0]),
+                "action": str(r[1]),
+                "actor_id": str(r[2] or ""),
+                "outcome": str(r[3] or ""),
+                "detail": str(r[4] or ""),
+                "created_at": str(r[5] or ""),
+            }
+            for r in audit_rows
+        ]
+    except Exception:
+        pass
+
+    # Total approved topup VND
+    total_approved_vnd = sum(
+        int(t["amount_vnd"]) for t in topup_requests
+        if str(t.get("status") or "") in ("approved", "confirmed", "completed")
+    )
+
+    admin_actor_id = str(admin_account.get("id") or "").strip() if admin_account else None
 
     crm_context = synthesize_customer_crm_context(
         customer_proj,
@@ -499,10 +613,171 @@ def _build_crm_detail_response(conn: Any, row: Any, account_id: str) -> dict[str
         support_cases=support_cases,
         topup_requests=topup_requests,
         link_evidence=link_evidence,
+        active_sessions_count=active_sessions_count,
+        audit_events=audit_events,
+        total_approved_topup_vnd=total_approved_vnd,
+        admin_actor_id=admin_actor_id,
     )
     return envelope(
         True,
         "Đã nạp ngữ cảnh CRM khách hàng Web.",
         data=crm_context,
         status_name="read_only",
+    )
+
+
+@router.post("/{account_id}/ban")
+async def ban_customer(
+    account_id: str,
+    payload: CustomerBanRequest,
+    request: Request,
+    _account: dict[str, Any] = Depends(require_canonical_admin_csrf),
+) -> dict[str, Any]:
+    normalized_id = _account_id(account_id)
+    actor_id = str(_account.get("id") or "").strip()
+    reason = payload.reason.strip()
+    now = utc_now()
+
+    with transaction() as conn:
+        target_row = conn.execute(
+            "SELECT id, role_cache, is_active FROM web_accounts WHERE id=?",
+            (normalized_id,),
+        ).fetchone()
+        if target_row is None:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản khách hàng")
+
+        target_role = str(target_row[1] or "user").strip().lower()
+        target_is_active = int(target_row[2])
+
+        # Self-ban guard: Admin cannot ban self
+        if normalized_id == actor_id:
+            raise HTTPException(status_code=403, detail="Không thể tự khóa tài khoản của chính mình")
+
+        # Privileged target guard: Admin target ban not allowed
+        if target_role == "admin":
+            raise HTTPException(status_code=403, detail="Không được phép khóa tài khoản Quản trị viên")
+
+        # Idempotency check: if already locked (is_active == 0), no state delta
+        if target_is_active == 0:
+            return envelope(
+                True,
+                "Tài khoản khách hàng đã ở trạng thái bị khóa.",
+                data={
+                    "account_id": normalized_id,
+                    "status": "locked",
+                    "is_active": False,
+                    "idempotent_replay": True,
+                    "revoked_sessions": 0,
+                },
+                status_name="ok",
+            )
+
+        # Active -> Locked transition
+        conn.execute(
+            "UPDATE web_accounts SET is_active=0, updated_at=? WHERE id=?",
+            (now, normalized_id),
+        )
+        # Invalidate active web sessions for target customer only
+        cur = conn.execute(
+            "UPDATE web_sessions SET revoked_at=? WHERE account_id=? AND revoked_at IS NULL",
+            (now, normalized_id),
+        )
+        revoked_count = cur.rowcount if cur and cur.rowcount is not None else 0
+
+        # Audit logging in web_audit_events
+        _record_audit(
+            conn,
+            account_id=actor_id or None,
+            canonical_user_id=str(_account.get("canonical_user_id") or "").strip() or None,
+            action="admin.customer.ban",
+            request_id=_request_id(request),
+            target=normalized_id,
+            outcome="ok",
+            detail=f"reason={reason};revoked_sessions={revoked_count}",
+        )
+
+    return envelope(
+        True,
+        "Đã khóa tài khoản khách hàng và thu hồi phiên đăng nhập thành công.",
+        data={
+            "account_id": normalized_id,
+            "status": "locked",
+            "is_active": False,
+            "idempotent_replay": False,
+            "revoked_sessions": revoked_count,
+        },
+        status_name="ok",
+    )
+
+
+@router.post("/{account_id}/unban")
+async def unban_customer(
+    account_id: str,
+    payload: CustomerUnbanRequest,
+    request: Request,
+    _account: dict[str, Any] = Depends(require_canonical_admin_csrf),
+) -> dict[str, Any]:
+    normalized_id = _account_id(account_id)
+    actor_id = str(_account.get("id") or "").strip()
+    reason = payload.reason.strip()
+    now = utc_now()
+
+    with transaction() as conn:
+        target_row = conn.execute(
+            "SELECT id, role_cache, is_active FROM web_accounts WHERE id=?",
+            (normalized_id,),
+        ).fetchone()
+        if target_row is None:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản khách hàng")
+
+        target_role = str(target_row[1] or "user").strip().lower()
+        target_is_active = int(target_row[2])
+
+        # Privileged target guard: Admin target cannot be targeted
+        if target_role == "admin":
+            raise HTTPException(status_code=403, detail="Không áp dụng cho tài khoản Quản trị viên")
+
+        # Idempotency check: if already active (is_active == 1), no state delta
+        if target_is_active == 1:
+            return envelope(
+                True,
+                "Tài khoản khách hàng đã ở trạng thái hoạt động.",
+                data={
+                    "account_id": normalized_id,
+                    "status": "active",
+                    "is_active": True,
+                    "idempotent_replay": True,
+                },
+                status_name="ok",
+            )
+
+        # Locked -> Active transition
+        conn.execute(
+            "UPDATE web_accounts SET is_active=1, updated_at=? WHERE id=?",
+            (now, normalized_id),
+        )
+        # CRITICAL: Old revoked sessions remain revoked! Do not reactivate sessions.
+
+        # Audit logging in web_audit_events
+        _record_audit(
+            conn,
+            account_id=actor_id or None,
+            canonical_user_id=str(_account.get("canonical_user_id") or "").strip() or None,
+            action="admin.customer.unban",
+            request_id=_request_id(request),
+            target=normalized_id,
+            outcome="ok",
+            detail=f"reason={reason}",
+        )
+
+    return envelope(
+        True,
+        "Đã mở khóa tài khoản khách hàng thành công.",
+        data={
+            "account_id": normalized_id,
+            "status": "active",
+            "is_active": True,
+            "idempotent_replay": False,
+        },
+        status_name="ok",
     )

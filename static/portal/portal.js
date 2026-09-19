@@ -32153,6 +32153,112 @@
     return '<article class="portal-page portal-admin-crm-manager">' + renderHero(page, context) + '<section class="portal-card portal-card-pad portal-admin-crm-work"><div class="portal-card-header"><div><h2 class="portal-card-title">' + safeText(copy("work.title", "Danh sách cần theo dõi")) + '</h2><p class="portal-card-subtitle">' + safeText(copy("work.body", "Lọc theo giai đoạn để xem tình trạng tổng hợp và thời điểm cập nhật.")) + '</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="partner-crm-refresh" data-portal-route="/admin/crm/leads"' + (loading ? ' disabled aria-busy="true"' : '') + '>' + safeText(copy("action.refresh", "Làm mới")) + '</button></div>' + (guarded ? directoryMarkup : renderPartnerCrmManagerFilter(listing, !guarded) + '<div class="portal-admin-crm-directory-results">' + pagedDirectoryMarkup + '</div>') + '</section><details class="portal-admin-crm-guidance"><summary>' + safeText(copy("guidance.title", "Dữ liệu và giới hạn")) + '</summary><div><p>' + safeText(copy("guidance.body", "Màn hình này chỉ giúp theo dõi tình trạng tổng hợp giữa các giai đoạn.")) + '</p><ul><li>' + safeText(copy("guidance.anonymous", "Danh sách không chứa mã, chủ sở hữu, tên, email, nhu cầu, nhãn hoặc ghi chú.")) + '</li><li>' + safeText(copy("guidance.readOnly", "Không có thao tác sửa, liên hệ, phân công hoặc mở chi tiết từ danh sách này.")) + '</li><li>' + safeText(copy("guidance.external", "Không gọi dịch vụ ngoài, thanh toán, ví Xu hoặc tác vụ tự động.")) + '</li></ul></div></details></article>';
   }
 
+  function renderAdminCustomerSafetyModal(context) {
+    const modal = context && context.adminCustomerSafetyModal;
+    if (!modal) return "";
+    const isBan = modal.mode === "ban";
+    const title = isBan ? "Khóa quyền truy cập Web" : "Mở khóa quyền truy cập Web";
+    const actionName = isBan ? "admin-customer-ban-submit" : "admin-customer-unban-submit";
+    const btnClass = isBan ? "portal-button--danger" : "portal-button--accent";
+    const btnLabel = isBan ? "Khóa tài khoản Web" : "Mở khóa tài khoản";
+    const warning = isBan
+      ? "Tài khoản sẽ bị chuyển sang trạng thái Bị khóa (is_active=0). Toàn bộ phiên đăng nhập Web hiện tại của khách hàng sẽ bị thu hồi ngay lập tức. Thao tác không tự động cấm trên Bot/Telegram."
+      : "Tài khoản sẽ được kích hoạt lại (is_active=1). Lưu ý: Các phiên đăng nhập cũ đã thu hồi sẽ KHÔNG được kích hoạt lại; khách hàng cần đăng nhập mới.";
+
+    return `<div class="portal-admin-manual-topup-modal" data-customer-safety-modal>`
+      + `<div class="portal-admin-manual-topup-backdrop" data-portal-action="admin-customer-safety-close"></div>`
+      + `<section class="portal-admin-manual-topup-dialog" role="dialog" aria-modal="true" aria-labelledby="cust-safety-title" tabindex="-1">`
+      + `<div class="portal-card-header" style="margin-bottom: 0;">`
+      + `<div><span class="portal-section-kicker">Quản trị an toàn</span><h2 id="cust-safety-title" class="portal-card-title">${safeText(title)}</h2></div>`
+      + `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-customer-safety-close" aria-label="Đóng">✕</button>`
+      + `</div>`
+      + `<div class="portal-alert portal-alert--${isBan ? 'warning' : 'info'}" style="margin: 10px 0;"><p>${safeText(warning)}</p></div>`
+      + `<form data-portal-form data-portal-action="${actionName}" data-account-id="${safeText(modal.accountId)}" style="display: grid; gap: 14px;">`
+      + `<div class="portal-form-group"><label for="safety-reason"><strong>Lý do thực hiện <span style="color: var(--portal-danger, #ef4444);">*</span></strong></label>`
+      + `<input class="portal-input" id="safety-reason" name="reason" type="text" required minlength="2" maxlength="250" placeholder="VD: ${isBan ? 'Vi phạm điều khoản dịch vụ / Yêu cầu tạm ngưng' : 'Đã xác minh thông tin / Giải quyết khiếu nại'}"></div>`
+      + `<div class="portal-inline-actions" style="margin-top: 8px;">`
+      + `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-customer-safety-close">Hủy bỏ</button>`
+      + `<button class="portal-button ${btnClass}" type="submit">${safeText(btnLabel)}</button>`
+      + `</div></form></section></div>`;
+  }
+
+  function renderAdminCustomer360Sections(context) {
+    const raw = context && context.adminCustomerDirectory;
+    const c = (raw && raw.customer) || {};
+    const crm = (raw && raw.crm) || {};
+    const safety = crm.account_safety || {};
+    const wallet = crm.wallet || {};
+    const spend = crm.spend_summary || {};
+    const support = crm.support || {};
+    const audit = crm.audit_trail || {};
+
+    const isLocked = c.status === "locked" || safety.web_access_state === "blocked";
+    const activeSessions = typeof safety.active_sessions_count === "number" ? safety.active_sessions_count : 0;
+    const isAdminTarget = c.role === "admin" || Boolean(safety.is_admin_target);
+    const isSelf = Boolean(safety.is_self);
+
+    let dangerActionHtml = "";
+    if (isAdminTarget) {
+      dangerActionHtml = `<div class="portal-alert portal-alert--info" style="margin-top: 12px;"><p>Tài khoản Quản trị viên được bảo vệ. Thao tác khóa bị từ chối qua danh mục khách hàng thông thường.</p></div>`;
+    } else if (isSelf) {
+      dangerActionHtml = `<div class="portal-alert portal-alert--info" style="margin-top: 12px;"><p>Tài khoản của chính bạn. Không thể tự khóa tài khoản hiện tại.</p></div>`;
+    } else if (!isLocked) {
+      dangerActionHtml = `<div class="portal-inline-actions" style="margin-top: 14px;"><button class="portal-button portal-button--danger" type="button" data-portal-action="admin-customer-ban-open" data-account-id="${safeText(c.id)}">Khóa quyền truy cập Web</button></div>`;
+    } else {
+      dangerActionHtml = `<div class="portal-inline-actions" style="margin-top: 14px;"><button class="portal-button portal-button--accent" type="button" data-portal-action="admin-customer-unban-open" data-account-id="${safeText(c.id)}">Mở khóa quyền truy cập Web</button></div>`;
+    }
+
+    const approvedVnd = typeof spend.total_approved_topup_vnd === "number" && spend.total_approved_topup_vnd > 0
+      ? spend.total_approved_topup_vnd.toLocaleString("vi-VN") + " đ"
+      : "Chưa có giao dịch";
+
+    const balanceXuText = typeof wallet.balance_xu === "number"
+      ? wallet.balance_xu.toLocaleString("vi-VN") + " Xu"
+      : '<span class="portal-text-muted">Không khả dụng (Core Bridge)</span>';
+
+    const recentCases = Array.isArray(support.recent_cases) ? support.recent_cases : [];
+    const casesHtml = recentCases.length
+      ? `<ul class="portal-list-reset" style="display: grid; gap: 8px; margin-top: 8px;">` + recentCases.map((cs) => `<li style="padding: 8px 12px; background: var(--portal-surface-subtle, rgba(255,255,255,0.03)); border-radius: 6px; border: 1px solid var(--portal-border, #1e293b);"><div style="display: flex; justify-content: space-between;"><strong>${safeText(cs.subject || "Yêu cầu hỗ trợ")}</strong><span class="portal-badge portal-badge--info">${safeText(cs.state || "new")}</span></div><div class="portal-text-muted" style="font-size: 0.85em; margin-top: 4px;">Mã: <code>${safeText(cs.id)}</code> · ${safeText((cs.created_at || "").slice(0, 10))}</div></li>`).join("") + `</ul>`
+      : `<p class="portal-text-muted" style="margin-top: 8px;">Chưa có yêu cầu hỗ trợ nào.</p>`;
+
+    const recentAudits = Array.isArray(audit.recent_events) ? audit.recent_events : [];
+    const auditHtml = recentAudits.length
+      ? `<ul class="portal-list-reset" style="display: grid; gap: 8px; margin-top: 8px;">` + recentAudits.map((a) => `<li style="padding: 8px 12px; background: var(--portal-surface-subtle, rgba(255,255,255,0.03)); border-radius: 6px; border: 1px solid var(--portal-border, #1e293b);"><div style="display: flex; justify-content: space-between;"><code>${safeText(a.action)}</code><span class="portal-badge portal-badge--neutral">${safeText(a.outcome)}</span></div><div class="portal-text-muted" style="font-size: 0.85em; margin-top: 4px;">${safeText(a.detail || "")} · <time>${safeText((a.created_at || "").slice(0, 19))}</time></div></li>`).join("") + `</ul>`
+      : `<p class="portal-text-muted" style="margin-top: 8px;">Chưa có nhật ký quản trị.</p>`;
+
+    return `<div class="portal-admin-grid" style="margin-top: 16px;">`
+      + `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">An toàn tài khoản & Kiểm soát truy cập</h2><p class="portal-card-subtitle">Trạng thái đăng nhập và thu hồi phiên Web.</p></div>${isLocked ? '<span class="portal-badge portal-badge--warning">Bị khóa</span>' : '<span class="portal-badge portal-badge--success">Hoạt động</span>'}</div>`
+      + `<dl class="portal-summary-list">`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">Trạng thái đăng nhập Web</dt><dd class="portal-summary-value">${isLocked ? '<strong style="color: var(--portal-warning, #f59e0b);">Bị khóa (Từ chối truy cập)</strong>' : '<strong style="color: var(--portal-success, #10b981);">Đang hoạt động (Cho phép)</strong>'}</dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">Phiên Web đang hoạt động</dt><dd class="portal-summary-value"><code>${activeSessions}</code> phiên</dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">Trạng thái Bot / Telegram</dt><dd class="portal-summary-value"><span class="portal-badge portal-badge--neutral">Độc lập (Không suy đoán)</span></dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">Quyền hạn tài khoản</dt><dd class="portal-summary-value">${safeText(c.role_label || "Khách hàng")} (<code>${safeText(c.role || "user")}</code>)</dd></div>`
+      + `</dl>${dangerActionHtml}</section>`
+      + `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ví Xu & Tài chính khách hàng</h2><p class="portal-card-subtitle">Số liệu xác thực từ Core Bridge & nạp tiền Web.</p></div></div>`
+      + `<dl class="portal-summary-list">`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">Số dư Xu xác thực</dt><dd class="portal-summary-value">${balanceXuText}</dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">Tổng nạp tiền đã duyệt</dt><dd class="portal-summary-value"><strong>${approvedVnd}</strong></dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">Tổng chi Xu (Charged)</dt><dd class="portal-summary-value"><span class="portal-text-muted">Không khả dụng (Core Bridge Ledger)</span></dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">Hạng thành viên (Tier)</dt><dd class="portal-summary-value"><span class="portal-badge portal-badge--neutral">Không khả dụng (Chưa cấu hình)</span></dd></div>`
+      + `</dl><p class="portal-text-muted" style="margin-top: 12px; font-size: 0.85em;">Chân thực tài chính: Web không tự lưu số dư Xu độc lập và không tự tính toán thứ hạng hoặc chỉ số hành vi giả định.</p></section>`
+      + `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tác vụ & Tệp bàn giao (V2-04 Truth)</h2><p class="portal-card-subtitle">Quy tắc bàn giao: Job xong ≠ có tệp tải về.</p></div></div>`
+      + `<dl class="portal-summary-list">`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">Lịch sử tác vụ (Jobs)</dt><dd class="portal-summary-value"><span class="portal-text-muted">Không khả dụng qua Web SQLite</span> — <a class="portal-link" href="/admin/jobs">Quản lý Job →</a></dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">Tệp đầu ra (Assets)</dt><dd class="portal-summary-value"><span class="portal-text-muted">Không khả dụng (Core Bridge Asset Vault)</span></dd></div>`
+      + `</dl></section>`
+      + `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Yêu cầu hỗ trợ (Support Desk)</h2><p class="portal-card-subtitle">${typeof support.total_cases === "number" ? support.total_cases : 0} yêu cầu (${typeof support.open_cases_count === "number" ? support.open_cases_count : 0} đang mở).</p></div></div>${casesHtml}</section>`
+      + `<section class="portal-card portal-card-pad" style="grid-column: 1 / -1;"><div class="portal-card-header"><div><h2 class="portal-card-title">Nhật ký quản trị (Audit Trail)</h2><p class="portal-card-subtitle">Lịch sử các thao tác an toàn trên tài khoản này.</p></div></div>${auditHtml}</section>`
+      + `</div>`;
+  }
+
+  function enrichAdminCustomer360Detail(content, page, context) {
+    if (!content || typeof content !== "string" || !content.includes("portal-form-footer")) {
+      return content;
+    }
+    const crmHtml = renderAdminCustomer360Sections(context);
+    return content.replace('<div class="portal-form-footer">', crmHtml + '<div class="portal-form-footer">');
+  }
+
   function renderAdminCustomerCreateModal(context) {
     return `<div class="portal-admin-manual-topup-modal" data-customer-create-modal>`
       + `<div class="portal-admin-manual-topup-backdrop" data-portal-action="admin-customer-create-close"></div>`
@@ -32335,14 +32441,18 @@
       case "admin-customer-directory":
       case "admin-customer-directory-detail":
         if (window.TOANAASAdminCustomerDirectory && typeof window.TOANAASAdminCustomerDirectory.render === "function") {
-          const content = window.TOANAASAdminCustomerDirectory.render(page, context, {
+          let content = window.TOANAASAdminCustomerDirectory.render(page, context, {
             safeText,
             badge,
             renderHero: (p, ctx) => renderHero(p, ctx || context),
             renderEmpty: (title, message) => `<section class="portal-card portal-card-pad"><div class="portal-state" data-state="empty"><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p></div></div></section>`
           });
+          if (page.layout === "admin-customer-directory-detail") {
+            content = enrichAdminCustomer360Detail(content, page, context);
+          }
           const createModal = (context && context.adminCustomerCreateOpen) ? renderAdminCustomerCreateModal(context) : "";
-          return content + createModal;
+          const safetyModal = (context && context.adminCustomerSafetyModal) ? renderAdminCustomerSafetyModal(context) : "";
+          return content + createModal + safetyModal;
         }
         return '<article class="portal-page">' + renderHero(page, context) + '<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><div><h2>Module quản trị tạm thời không khả dụng</h2><p>Không thể nạp UI directory khách hàng. Vui lòng thử lại sau.</p></div></div></section></article>';
       case "membership": return renderMembership(page, context);
