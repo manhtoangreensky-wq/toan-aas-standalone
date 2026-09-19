@@ -1,147 +1,220 @@
-# WEBAPP V3 PRODUCT OPERATING MODEL — CANONICAL ARCHITECTURE AUDIT
-
-> **Mã nhiệm vụ**: `P0.WEBAPP.V3.FULL.PRODUCT.IA.UX.ADMIN.REBASE.AUDIT`
-> **Chương trình**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
+# Web App V3 Product Operating Model & Architectural Truth
+> **Task**: `P0.WEBAPP.V3.AUDIT.CANONICAL.ARCHITECTURE.TRUTH.CLOSURE`
+> **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
 > **Repository**: `manhtoangreensky-wq/toan-aas-standalone`
-> **Trạng thái**: `CANONICAL AUDIT & REPLAN (AUDIT_AND_REPLAN_ONLY)`
-> **Ngày lập**: 19/09/2026
-> **Quy chuẩn**: `owner-governed-codex`, `toanaas-system-design-and-open-apis`
+> **Authoritative Base SHA**: `8873e10f2279aec0fb312b70388b9073ba763f13`
+> **Governance**: `OWNER-GOVERNED`, `AUDIT_DOCUMENTATION_ONLY`, `NO_FEATURE_IMPLEMENTATION`
 
 ---
 
-## 1. NGUYÊN TẮC VẬN HÀNH CỐT LÕI (OWNER OPERATING MODEL)
+## 1. Executive Summary & Source Truth Alignment
 
-Hệ sinh thái TOAN AAS Web App chuyển dịch triệt để từ mô hình **phẳng hóa 135 tính năng kỹ thuật** sang mô hình **các dòng sản phẩm độc lập (Distinct Product Families)**.
+Following the live deployment of `V2-07` on production VPS (`tg.toanaas.vn`), a rigorous independent source code audit and runtime verification was conducted across the Web App codebase (`toan-aas-standalone`), Telegram Bot core (`bot`), and live systemd services.
 
-### 1.1. Triệt Tiêu Khái Niệm Phân Tuyến Kỹ Thuật Ở Giao Diện Khách Hàng
-Khách hàng không bao giờ cần biết hoặc quan tâm đến các khái niệm sở hữu kỹ thuật như:
-- `Web-native` (Xử lý tại Web)
-- `Bot companion` (Đồng hành Bot)
-- `canonical reader` (Đọc canonical)
-- `guarded adapter` (Đang bảo vệ / Tạm dừng)
+The audit establishes the following empirical and architectural truths:
 
-Các khái niệm trên **chỉ được phép lưu hành dưới dạng chẩn đoán nội bộ (internal diagnostics)** dành riêng cho Admin hoặc System Health. Giao diện khách hàng chỉ tập trung vào **giá trị nghiệp vụ và kết quả đầu ra (Outputs)**.
+1. **`copyfast_video_studio.py` is Strictly Planning-Only (`INDEPENDENT_SOURCE_VERIFIED`)**:
+   - Exact source measurements on Base SHA `8873e10f2279aec0fb312b70388b9073ba763f13`:
+     - Total Lines: `10,215`
+     - HTTP Decorator Routes: `39` (not 37)
+     - Implementation Nature: Purely prompt composition and static scene planning (`PLANNING_ONLY=YES`).
+     - Gaps: Zero job creation, zero provider calls, zero MP4 outputs, zero delivery receipts, and zero interaction with the SQLite wallet table.
+2. **Canonical Worker Execution Architecture (`INDEPENDENT_SOURCE_VERIFIED`)**:
+   - Current production execution uses:
+     - SQLite `video_jobs`
+     - `video_dispatch_outbox`
+     - Lease/claim semantics via `services/remote_worker_api.py` and `remote_worker.py`
+     - Endpoints: `POST /api/v1/worker/claim`, `POST /api/v1/worker/complete`, `POST /api/v1/worker/fail`
+     - Workers are systemd-managed daemon processes on Ubuntu VPS.
+     - **Celery and Redis Queue are NOT used** (`CELERY_CURRENTLY_USED=NO`, `REDIS_QUEUE_CURRENTLY_USED=NO`). P0-D must integrate Web jobs with this existing canonical contract.
+3. **Product Video Billing Contract (`INDEPENDENT_SOURCE_VERIFIED`)**:
+   - Preflight / Quote calculation may occur before dispatch.
+   - Customer wallet charge occurs **ONLY after successful final delivery** and canonical charge decision (`FINAL_DELIVERY_REQUIRED_BEFORE_CHARGE=YES`).
+   - Failed or recovered jobs incur zero charge (`FAILED_NO_CHARGE=0_XU`, `RECOVERY_NO_CHARGE=0_XU`). Pre-render debit or pre-render debit-then-refund models are strictly unverified and prohibited.
+4. **Three Distinct Runtime Connectivity Categories (`READ_ONLY_RUNTIME_VERIFIED`)**:
+   - `DEPLOY_RESTART_NGINX_502`: Infrastructure gateway outage during CI/CD auto-deploy `systemctl restart toanaas-web.service` (1-3s socket drop).
+   - `BOT_CORE_ROUTE_MISSING`: Upstream Bot Core 127.0.0.1:8080 lacks `/internal/v1/admin/*` endpoints (returns upstream 404; Web bridge wraps into HTTP 200 guarded envelope). Not an Nginx 502.
+   - `ACCOUNT_TELEGRAM_UNLINKED`: Application state 409 when user lacks linked Telegram ID. Not a gateway failure.
+5. **Pricing & Packages Invariant (`INDEPENDENT_SOURCE_VERIFIED`)**:
+   - Public routes `/api/v1/pricing` and `/api/v1/packages` use canonical bridge reads.
+   - Invariant: `NO_LOCAL_EFFECTIVE_PRICING`, `NO_CLIENT_DERIVED_PRICING`, `NO_STATIC_EFFECTIVE_PRICE_FALLBACK`.
+   - If bridge is unreachable, the system renders a truthful unavailable/guarded state; it never fabricates fallback prices.
 
 ---
 
-## 2. 10 DÒNG SẢN PHẨM MỤC TIÊU (TOP-LEVEL PRODUCT BOUNDARIES)
+## 2. The 10 Customer Product Families
 
-Thay vì một danh mục dàn trải 135 thẻ không phân cấp, Web App quy hoạch thành 10 dòng sản phẩm chuẩn:
+Instead of exposing an uncurated flat catalog of 135 technical subroutines, Web App V3 groups all customer capabilities into **10 Distinct Product Families**:
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        TOAN AAS PRODUCT ECOSYSTEM                      │
-├───────────────────┬───────────────────┬────────────────────────────────┤
-│ 1. PRODUCT VIDEO  │ 2. VOICE STUDIO   │ 3. MUSIC & SFX                 │
-├───────────────────┼───────────────────┼────────────────────────────────┤
-│ 4. LOCALIZATION   │ 5. MANUAL TOOLS   │ 6. AUTOMATED PUBLISHING        │
-│ (Sub/Dub/Trans)   │ (FFmpeg Local)    │ (Multi-platform Social)        │
-├───────────────────┼───────────────────┼────────────────────────────────┤
-│ 7. IMAGE TOOLS    │ 8. FREE TOOLS     │ 9. PROJECTS & OUTPUTS          │
-├───────────────────┴───────────────────┴────────────────────────────────┤
-│ 10. ACCOUNT, WALLET & COMMERCE (Ví Xu, Gói Dịch Vụ & Đối Soát)        │
-└────────────────────────────────────────────────────────────────────────┘
+[1. PRODUCT_VIDEO]                -> AI Product Video Studio (Multi-scene, E2E Render)
+[2. VOICE]                        -> AI Voice & Speech Synthesis (TTS, Clone)
+[3. MUSIC_AND_SFX]                -> Commercial Music & Foley SFX (BGM, Cue Sheets)
+[4. SUBTITLE_DUBBING_TRANSLATION] -> Subtitles, Multilingual Dubbing & Burn-in
+[5. VIDEO_EDIT]                   -> Manual Fast Video Tools (Trim, Crop, Merge)
+[6. PUBLISHING_AUTOMATION]        -> AutoPost (Scheduling, Multi-channel Orchestration)
+[7. FREE_TOOLS]                   -> Free Utility Suite & Viral Prompts (Lead Magnets)
+[8. IMAGE_TOOLS]                  -> AI Product Photography & Creative Visuals
+[9. PROJECTS_MEDIA_LIBRARY]       -> Media Vault, Asset Storage & Version History
+[10. ACCOUNT_WALLET_COMMERCE]     -> PayOS Topup, Balance Ledger, Telegram Pairing
+```
+
+### Boundary & Independence Rules (`TARGET_DESIGN`)
+- **Music & SFX** is strictly separated from **Subtitle/Dubbing/Translation**. They are distinct product engines with separate commercial models, toolsets, and lifecycles.
+- Product families are independent: building Voice, Music, or SubDub does NOT depend on Product Video completion.
+
+---
+
+## 3. Product Video Studio: Gap Analysis & Target Pipeline
+
+### 3.1 Gap Matrix (25 Lifecycle Points)
+Comparing `copyfast_video_studio.py` against Telegram Bot core:
+
+| Lifecycle Step | Telegram Bot Runtime | Web App Source (`copyfast_video_studio.py`) | Evidence Level & Status |
+| :--- | :--- | :--- | :--- |
+| **01. Brief & Prompt** | Interactive Telegram prompts | 39 decorator routes, text-only prompts | `INDEPENDENT_SOURCE_VERIFIED` (PARTIAL) |
+| **02. Asset Upload** | Photo/video upload via TG media | Reference URLs only; no vault storage | `INDEPENDENT_SOURCE_VERIFIED` (MISSING) |
+| **03. Scene Composition** | Script decomposition via LLM | Static templates in Python code | `INDEPENDENT_SOURCE_VERIFIED` (MISSING) |
+| **04. Storyboard Order** | Sequential script array | In-memory array in browser DOM | `INDEPENDENT_SOURCE_VERIFIED` (PARTIAL) |
+| **05. Preflight Quote** | Real-time quote before dispatch | Deterministic mock estimate endpoint | `INDEPENDENT_SOURCE_VERIFIED` (PARTIAL) |
+| **06. Confirmation** | 2-step invoice confirmation | None (stops at text planning) | `INDEPENDENT_SOURCE_VERIFIED` (MISSING) |
+| **07. Job Creation** | Atomic insert in SQLite `video_jobs` | Zero job records created | `INDEPENDENT_SOURCE_VERIFIED` (MISSING) |
+| **08. Worker Dispatch** | `video_dispatch_outbox` lease/claim | None (zero worker invocation) | `INDEPENDENT_SOURCE_VERIFIED` (MISSING) |
+| **09. Execution Monitoring**| Polling scene progress | Mock event log | `INDEPENDENT_SOURCE_VERIFIED` (MISSING) |
+| **10. Final Stitching** | FFmpeg scene + audio assembly | None | `INDEPENDENT_SOURCE_VERIFIED` (MISSING) |
+| **11. Video Preview** | Video message in TG chat | None | `INDEPENDENT_SOURCE_VERIFIED` (MISSING) |
+| **12. Delivery Receipt** | Durable delivery receipt in DB | None | `INDEPENDENT_SOURCE_VERIFIED` (MISSING) |
+| **13. Wallet Charge** | Charged ONLY after delivery | None (no wallet interaction) | `INDEPENDENT_SOURCE_VERIFIED` (MISSING) |
+
+### 3.2 Canonical Target Pipeline (`TARGET_DESIGN`)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as Khách Hàng (Web UI)
+    participant WebAPI as Web App API
+    participant Bridge as Copyfast Bridge
+    participant BotCore as Bot Core & SQLite
+    participant Outbox as video_dispatch_outbox
+    participant Worker as systemd Remote Worker
+
+    Customer->>WebAPI: Nhập brief & cấu hình phân cảnh
+    WebAPI->>Bridge: GET /internal/v1/pricing (Preflight Quote)
+    Bridge->>BotCore: Truy vấn bảng giá SKU
+    BotCore-->>Customer: Hiển thị Báo giá & Preflight Quota
+    Customer->>WebAPI: Xác nhận Hóa đơn (Idempotent Confirm)
+    WebAPI->>Bridge: POST /internal/v1/jobs/create
+    Bridge->>BotCore: Tạo bản ghi video_jobs & outbox
+    BotCore-->>WebAPI: Trả về job_id & tracking token
+    Worker->>Outbox: Claim task (lease/claim semantics)
+    Worker->>Worker: Gọi provider render & FFmpeg stitch
+    Worker->>BotCore: POST /api/v1/worker/complete (kèm MP4 artifact)
+    BotCore->>BotCore: Tạo Delivery Receipt & Quyết định trừ Xu
+    WebAPI->>Customer: Phát MP4 trực tiếp & Kích hoạt Tải về
 ```
 
 ---
 
-## 3. PRODUCT VIDEO: XÂY DỰNG SẢN PHẨM KHÉP KÍN (END-TO-END PRODUCT)
+## 4. AutoPost & Publishing Automation Architecture
 
-### 3.1. Sự Thật Nguồn Hiện Tại (Current Source Fact)
-- `copyfast_video_studio.py` (10.215 dòng, 37 routes) **chỉ sở hữu metadata lập kế hoạch (PLANNING-ONLY)**.
-- Dòng 1-8 ghi nhận rõ ràng:
-  > *"This router owns planning metadata only: a video brief, ordered scene board, self-review lifecycle and immutable revision history... It deliberately does not accept media, source URLs, engine configuration, delivery records or any execution request. A saved plan is never evidence that a video exists."*
-- Hệ quả: Khách hàng lên kịch bản trên Web nhưng **không thể tạo Job, không thể render video, không có tiến độ thực tế, không nhận được file MP4 và không thể tải về**.
+### 4.1 System Role & Ownership Boundaries (`TARGET_DESIGN`)
+AutoPost is an **orchestrator downstream of asset generation**. It consumes finished media artifacts and handles their review, scheduling, dispatch, and delivery receipts.
 
-### 3.2. Ma Trận Khoảng Trống 25 Điểm Vòng Đời (Lifecycle Gap Matrix)
+```
+[WHAT AUTPOST OWNS]
+- Multi-channel orchestration (TikTok, YouTube Shorts, Facebook Reels)
+- Preview & approval workflows
+- Durable schedule persistence across server restarts
+- Channel-specific adapter dispatch & rate limiting
+- Platform receipt binding (post_id, platform_url)
+- Publish-only retry loop (with exponential backoff)
+- Complete publication audit log
 
-| STT | Bước Vòng Đời | Hiện Trạng Web | Hiện Trạng Telegram Bot | Khoảng Trống Cần Khép Kín Trên Web | Đánh Giá Nguồn |
-|:---:|:---|:---|:---|:---|:---:|
-| 01 | **Brief / Input** | Form cơ bản trong Video Studio | Q&A hội thoại tuần tự | Web cần bộ gợi ý AI brief theo ngành hàng | `SOURCE_VERIFIED` |
-| 02 | **Product Assets** | Text links tham chiếu | Upload media qua chat | Cần S3/Local Vault drag-drop nhiều ảnh/video | `SOURCE_VERIFIED` |
-| 03 | **Reference Material** | Ghi chú văn bản | Tải & phân tích link TikTok/YouTube | Cần nhúng phân tích hook/cấu trúc video tham khảo | `SOURCE_VERIFIED` |
-| 04 | **Scene Generation** | Mẫu cố định tĩnh | LLM phân rã cảnh động theo sản phẩm | Cần engine LLM sinh prompt từng scene trên Web | `SOURCE_VERIFIED` |
-| 05 | **Scene Ordering** | Mảng số nguyên | Kịch bản tuyến tính | Cần visual drag-and-drop scene storyboard | `SOURCE_VERIFIED` |
-| 06 | **Prompt Generation** | Template ghép chuỗi | Compiler Veo/Kling/Sora chuẩn hóa | Đồng bộ compiler prompt từ Bot sang Web | `SOURCE_VERIFIED` |
-| 07 | **Duration** | Trường nhập text | Ràng buộc 5s, 10s/scene theo engine | Khóa chặt thời lượng theo năng lực provider | `SOURCE_VERIFIED` |
-| 08 | **Aspect Ratio** | Dropdown (9:16, 16:9, 1:1, 4:5) | Enforce nghiêm ngặt theo model | Cần khung preview tỷ lệ khung hình trực quan | `SOURCE_VERIFIED` |
-| 09 | **Voice** | ID chuỗi opaque | Menu chọn giọng, nghe thử MP3, TTS | Cần bộ chọn giọng có player nghe thử tích hợp | `SOURCE_VERIFIED` |
-| 10 | **Music** | ID chuỗi opaque | Thư viện nhạc, auto-cue, ducking | Cần bộ chọn nhạc nền và thanh cân bằng âm lượng | `SOURCE_VERIFIED` |
-| 11 | **Subtitle** | Checkbox boolean | Whisper ASR, sinh SRT, burn-in ASS | Cần editor chỉnh sửa text phụ đề và font chữ | `SOURCE_VERIFIED` |
-| 12 | **Render Options** | Enum không thực thi | Chọn chất lượng (Standard, High, Master) | Kết nối tùy chọn render với bảng giá Xu | `SOURCE_VERIFIED` |
-| 13 | **Quote** | Ước tính mô phỏng tĩnh | Tính giá canonical (cảnh × giây + addon) | Web phải phát hành `quote_receipt` có thời hạn | `SOURCE_VERIFIED` |
-| 14 | **Confirmation** | Chưa có | Modal xác nhận 2 bước chống bấm nhầm | Cần modal kiểm tra số dư Xu + xác nhận trừ tiền | `SOURCE_VERIFIED` |
-| 15 | **Job Creation** | Nghiêm cấm trong video_studio | Thêm bản ghi `video_jobs` có atomic lock | Web phải gọi Core Bridge tạo Job chuẩn xác | `SOURCE_VERIFIED` |
-| 16 | **Provider Exec** | Chưa có | Điều phối Veo/Kling/ShopAIKey worker | Worker VPS xử lý task theo hàng đợi ưu tiên | `RUNTIME_VERIFIED` |
-| 17 | **Scene Progress** | Log mô phỏng | Polling trạng thái realtime từng cảnh | Web visualizer hiển thị % tiến độ từng scene | `SOURCE_VERIFIED` |
-| 18 | **Retry / Recovery** | Chưa có | Fallback chain khi provider lỗi | Nút 'Thử lại cảnh lỗi' mà không phải chạy lại cả video | `SOURCE_VERIFIED` |
-| 19 | **Finalizer** | Chưa có | FFmpeg ghép cảnh + voice + music + sub | Tiến trình ghép file hoàn thiện trên worker | `RUNTIME_VERIFIED` |
-| 20 | **Preview** | Chưa có | Gửi video preview nén qua Telegram | Trình phát video Web xem trước tức thì | `SOURCE_VERIFIED` |
-| 21 | **Final MP4** | Chưa có | Lưu file MP4 gốc độ nét cao | Lưu trữ bền vững tại `/opt/toanaas/storage/outputs` | `RUNTIME_VERIFIED` |
-| 22 | **Download** | Chưa có | Link tải document không nén | Nút tải trực tiếp MP4 trên trình duyệt Web | `SOURCE_VERIFIED` |
-| 23 | **Delivery** | Chưa có | Ghi nhận biên lai giao hàng thành công | Đánh dấu trạng thái `delivered` minh bạch | `SOURCE_VERIFIED` |
-| 24 | **Billing State** | Chưa có | Trừ Xu đúng 1 lần sau khi giao MP4 | Khóa trừ Xu khi thành công; 0 Xu khi lỗi | `SOURCE_VERIFIED` |
-| 25 | **History / Clone** | Lịch sử nháp | Nhân bản dự án, chỉnh sửa kịch bản | 1-click 'Nhân bản & tạo biến thể mới' | `SOURCE_VERIFIED` |
+[WHAT AUTPOST DOES NOT OWN]
+- Product Video rendering (owned by Product Video Studio)
+- Video Edit trimming/cropping (owned by Video Edit Tools)
+- Subtitle transcription or audio dubbing (owned by SubDub Engine)
+```
 
-### 3.3. Lợi Thế Cốt Lõi Của Web (The Web Advantage)
-Web không được sao chép máy móc giao diện chat Telegram. Trải nghiệm Product Video trên Web phải khai thác triệt để không gian màn hình:
-1. **Quan sát đồng thời nhiều phân cảnh (Multi-scene simultaneous visibility)**: Xem toàn bộ storyboard 5-10 scene trên 1 màn hình.
-2. **Chỉnh sửa hàng loạt (Bulk scene edits)**: Thay đổi phong cách, ánh sáng, góc máy cho toàn bộ cảnh chỉ bằng 1 thao tác.
-3. **Kéo thả sắp xếp (Drag & reorder)**: Thay đổi thứ tự cảnh trực quan.
-4. **So sánh phương án (Side-by-side preview)**: Đặt 2 biến thể video cạnh nhau để đánh giá hiệu quả chuyển đổi.
-5. **Theo dõi tác vụ song song (Concurrent job monitoring)**: Giám sát 5 video đang render đồng thời mà không bị ngập tin nhắn như trên bot chat.
+### 4.2 Common Publishable Artifact Contract (`TARGET_DESIGN`)
+Any producer handing off media to AutoPost must conform to this immutable design contract. User-entered raw Job IDs are strictly prohibited as handoff authority:
 
----
+```json
+{
+  "asset_id": "ast_01j8x8m9k2a4b7c1d3e5f6g7h8",
+  "owner_id": "usr_99182",
+  "source_product": "PRODUCT_VIDEO | VIDEO_EDIT | SUBDUB | EXISTING_FINISHED_VIDEO",
+  "source_job_id": "job_01j8x8m9... | null",
+  "parent_asset_id": "ast_01j8x000... | null",
+  "artifact_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "media_type": "video/mp4",
+  "duration_ms": 32400,
+  "width": 1080,
+  "height": 1920,
+  "artifact_state": "READY",
+  "processing_completed_at": "2026-09-19T10:15:00Z",
+  "caption_candidate": "Trải nghiệm dưỡng trắng chuyên sâu cùng Tinh Chất ToanAAS #skincare #beauty",
+  "canonical_storage_ref": "vault://videos/2026/09/ast_01j8x8m9.mp4",
+  "publish_eligible": true,
+  "publish_blockers": []
+}
+```
 
-## 4. CÁC PHÂN HỆ SẢN PHẨM ĐỘC LẬP KHÁC
+### 4.3 Multi-Step Processing Model (Optional DAG/Recipe) (`DESIGN_PROPOSAL`)
+The publishing workflow supports an optional pipeline recipe. Chaining is strictly optional; there is no mandatory Product $\rightarrow$ Edit $\rightarrow$ SubDub pipeline:
 
-### 4.1. Voice Studio (Giọng Nói AI)
-- **Tách khỏi Video Studio**: Không giấu tính năng giọng nói vào bên trong kịch bản video.
-- **Quy trình chuẩn**:
-  `Chọn Giọng -> Nhập Script -> Tùy Chỉnh (Tốc độ/Cao độ/Cảm xúc) -> Nghe Thử -> Tạo File MP3 -> Lưu Vào Kho Audio`.
-- **Hồ sơ giọng nói (Voice Profile)**: Quản lý các mẫu giọng đã lưu, quản lý quyền sử dụng giọng đọc.
+```mermaid
+flowchart LR
+    A[Product Video] -->|Optional| B[Video Edit]
+    B -->|Optional| C[SubDub]
+    A -->|Direct| D[Review & Approval]
+    B -->|Direct| D
+    C -->|Direct| D
+    E[Existing Video] -->|Direct| D
+    D --> F[Durable Schedule]
+    F --> G[Publish Dispatcher]
+```
 
-### 4.2. Music & SFX Studio (Âm Nhạc & Hiệu Ứng Âm Thanh)
-- Tách biệt hoàn toàn khỏi Voice và Video.
-- **Thành phần**:
-  - `Music Generation`: Tạo nhạc nền theo mood, thể loại, thời lượng.
-  - `Music Library`: Thư viện nhạc bản quyền thương mại có sẵn theo chủ đề (Review, Vlog, Hào hùng, Thư giãn).
-  - `SFX Cue Sheet`: Bảng hiệu ứng âm thanh (tiếng ting, whoosh, pop) đồng bộ theo mốc thời gian.
+**Anti-Rerun Rule**: Retrying a failed publication step must **NEVER rerun a completed producer**. If YouTube upload fails with a network timeout, only the publication attempt is retried; the upstream video render remains untouched.
 
-### 4.3. Localization Suite (Phụ Đề, Lồng Tiếng & Dịch Thuật Đa Ngôn Ngữ)
-- Gom toàn bộ các công cụ phiên dịch, phiên âm, phụ đề thành 1 suite duy nhất:
-  - `Subtitle Transcription (ASR)`: Chuyển đổi giọng nói video thành phụ đề tự động (Whisper).
-  - `Subtitle Editor`: Giao diện dòng thời gian trực quan chỉnh sửa từ ngữ, canh mốc thời gian, sửa lỗi chính tả.
-  - `Translation Engine`: Dịch kịch bản/phụ đề sang 10+ ngôn ngữ mục tiêu.
-  - `AI Dubbing`: Lồng tiếng tự động bằng ngôn ngữ mới, đồng bộ khẩu hình/nhịp điệu.
-  - `Export Options`: Xuất file rời (.SRT, .VTT) hoặc burn-in trực tiếp vào video MP4.
+### 4.4 Durable Publishing Core & State Machine (`TARGET_DESIGN`)
+Entities: `publication`, `publication_attempt`, `schedule`, `outbox`, `receipt`.
 
-### 4.4. Manual Video Tools (Bộ Công Cụ Video Thủ Công Nhanh)
-- **Nguyên tắc phân tầng xử lý**:
-  - `LOCAL_SAFE_OPERATION`: Cắt (trim), ghép (concat), đổi tỷ lệ (crop/resize), nén (compress), tắt tiếng (mute), trích xuất audio/frame. Các tác vụ này **xử lý 100% bằng FFmpeg cục bộ trên server**, không gọi bất kỳ AI Provider bên ngoài nào -> Chi phí 0 Xu hoặc siêu rẻ.
-  - `CANONICAL_JOB_REQUIRED`: Tăng độ nét (Upscaling AI), xóa vật thể (Inpainting), làm mượt chuyển động (Frame Interpolation) -> Bắt buộc tạo Job hàng đợi.
+Lifecycle States:
+```
+[PLANNED] -> [APPROVED] -> [SCHEDULED] -> [CLAIMED/DISPATCHING]
+   |             |              |                    |
+   v             v              v                    v
+[CANCELLED]  [CANCELLED]   [CANCELLED]      [PLATFORM_PROCESSING]
+                                                     |
+                                        +------------+------------+
+                                        |                         |
+                                        v                         v
+                                   [PUBLISHED]           [FAILED_RETRYABLE]
+                                        |                         |
+                               (Receipt Recorded)         (Retry Counter < Max)
+                                                                  |
+                                                                  v
+                                                            [FAILED_FINAL]
+```
 
-### 4.5. Automated Content Publishing (Lịch Đăng & Phân Phối Đa Nền Tảng)
-- Quy trình xuất bản không được đánh đồng giữa "đã lên lịch nội bộ" và "đã đăng thực tế".
-- Bắt buộc 6 trạng thái độc lập:
-  ```
-  [PLANNED] (Đã lên kế hoạch)
-      │
-      ▼
-  [APPROVED] (Đã duyệt nội dung)
-      │
-      ▼
-  [SCHEDULED] (Đã nạp lịch nhắc)
-      │
-      ▼
-  [DISPATCHED] (Đã gửi sang nền tảng: TikTok / Facebook / YouTube)
-      │
-      ├──► [PUBLISHED] (Đã xuất bản thành công kèm link bài viết)
-      │
-      └──► [FAILED] (Thất bại kèm mã lỗi và nút thử lại)
-  ```
+- **Invariant**: `HTTP_200 != PUBLISHED`. A post is only considered published when a verified platform receipt identifier is bound and recorded.
+- **Idempotency**: Every publication attempt carries a unique idempotency key based on `(publication_id, channel_id, scheduled_time)`.
+
+### 4.5 Video Split / Batch Contract (`DESIGN_PROPOSAL`)
+For workflows converting one long master video into multiple short social posts:
+- Structure: **Parent Batch** managing $N$ **Child Publication Units**.
+- Each child independently owns: clip asset, aspect preview, caption, approval status, target channel, scheduled slot, platform receipt, and retry state.
+- **Fault Isolation**: Failure of Child Clip #3 does not affect, pause, or duplicate Child Clips #1, #2, or #4.
 
 ---
 
-## 5. KẾT LUẬN & ĐỊNH HƯỚNG V3
-Mô hình sản phẩm V3 tái định nghĩa lại giá trị thực của Web App: Biến Web App thành một **Production Studio chuyên nghiệp**, nơi người sáng tạo nội dung và doanh nghiệp có thể sản xuất hàng loạt video, âm thanh, giọng nói chất lượng cao với tốc độ và khả năng quản lý vượt trội so với môi trường hội thoại trên Telegram.
+## 5. Web Platform Advantages over Telegram Bot
+
+| Dimension | Telegram Bot Runtime | Web App Studio Target |
+| :--- | :--- | :--- |
+| **Workspace Viewport** | Narrow chat bubble (360–420px) | Full widescreen canvas (1280–1920px) |
+| **Scene Visibility** | One message at a time; lost in scroll history | Multi-scene storyboard grid visible simultaneously |
+| **Ordering & Timing** | Text commands or clunky inline button pagination | Direct drag-and-drop scene reordering with timeline strip |
+| **Bulk Editing** | Edit scene by scene individually | Bulk parameter updates (aspect ratio, style, speaker across all scenes) |
+| **File Delivery** | Bounded by Telegram 50MB Bot API upload limit | Direct streaming & high-bitrate file delivery |

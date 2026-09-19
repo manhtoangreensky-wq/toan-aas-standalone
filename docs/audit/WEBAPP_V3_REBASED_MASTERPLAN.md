@@ -1,22 +1,23 @@
 # Web App V3 Rebased Master Plan & Transition Roadmap
-**Scope:** TOAN AAS Web App (`toan-aas-standalone`)
-**Program:** `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
-**Task:** `P0.WEBAPP.V3.FULL.PRODUCT.IA.UX.ADMIN.REBASE.AUDIT`
-**Status:** Canonical Roadmap Specification (`OWNER-GOVERNED`)
-**Base Commit:** `8873e10f2279aec0fb312b70388b9073ba763f13`
+> **Task**: `P0.WEBAPP.V3.AUDIT.CANONICAL.ARCHITECTURE.TRUTH.CLOSURE`
+> **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
+> **Repository**: `manhtoangreensky-wq/toan-aas-standalone`
+> **Authoritative Base SHA**: `8873e10f2279aec0fb312b70388b9073ba763f13`
+> **Governance**: `OWNER-GOVERNED`, `AUDIT_DOCUMENTATION_ONLY`, `NO_FEATURE_IMPLEMENTATION`
 
 ---
 
 ## 1. Executive Summary & Strategy Pivot
 
 The previous linear sequence (`V2-08` through `V2-15`) suffered from structural limitations:
-1. **Flat Code Catalog vs Real Products:** Lumping 135 technical subroutines into a single flat directory concealed the core product offerings and overwhelmed customers.
-2. **Planning-Only Video Studio:** `copyfast_video_studio.py` remained a text-only prompt generator with zero execution, zero provider dispatch, and zero MP4 outputs.
-3. **Disconnected Admin Model:** Admin pages operated as isolated prototypes without complete customer <-> admin entity linkage and lacked alignment with the 21 internal business domains proven in enterprise operations.
-4. **Theme & Contrast Regressions:** Forced navy blue rail and buttons broke brand identity and violated WCAG AA contrast standards.
-5. **Runtime 502 Failures:** Service reload downtime during deploy, missing Bot admin routes, and unlinked Telegram account states caused gateway errors.
+1. **Catalog Flattening**: Exposing 135 technical subroutines in a flat directory obscured core product offerings and caused user cognitive overload.
+2. **Planning-Only Video Studio**: `copyfast_video_studio.py` (39 routes, 10,215 lines) remained a prompt generator with zero execution, zero worker dispatch, zero MP4 outputs, and zero wallet interaction (`INDEPENDENT_SOURCE_VERIFIED`).
+3. **Invented Execution Claims**: Prior documents assumed Celery/Redis; source verification confirms canonical execution uses **SQLite `video_jobs` outbox lease/claim** via `services/remote_worker_api.py` and `remote_worker.py` on systemd (`INDEPENDENT_SOURCE_VERIFIED`).
+4. **Billing Invariant**: Product Video charges the customer wallet **ONLY after successful final delivery** (`FINAL_DELIVERY_REQUIRED_BEFORE_CHARGE=YES`). Pre-render debit models are unverified and prohibited (`INDEPENDENT_SOURCE_VERIFIED`).
+5. **Theme & Contrast Regressions**: Forced navy blue tokens (`#075985`, `#0b2545`) compromised brand identity and broke WCAG AA contrast rules in active/pressed states.
+6. **Publishing Separation**: Publishing (AutoPost) is a downstream orchestrator consuming finished artifacts, not a sub-feature of video rendering.
 
-This master plan formally retires the old V2 sequence and establishes an evidence-driven, product-centric V3 roadmap.
+This master plan formally retires the old V2 sequence and establishes an evidence-driven, product-centric V3 roadmap organized into **12 Bounded Implementation Tasks**.
 
 ---
 
@@ -24,40 +25,62 @@ This master plan formally retires the old V2 sequence and establishes an evidenc
 
 | Legacy Task ID | Original Title | Disposition | Target V3 Task | Rationale & Architectural Realignment |
 | :--- | :--- | :--- | :--- | :--- |
-| **V2-08** | Admin Customer Detail & Lifetime Analytics Workspace | **SPLIT & MOVED** | `P0-E: Admin Customer 360` & `P0-B: Runtime Connectivity` | Customer 360 profile, CRM leads, and support belong in unified Customer Workspace; financial mutations require 2-man authorization gate. |
-| **V2-09** | Admin System Health, Log Explorer & Audit Telemetry Hub | **MOVED & CONSOLIDATED** | `P0-F: Admin Worker Fleet & System Telemetry` | Merge log explorer and health monitoring directly with VPS worker fleet telemetry (`tg.toanaas.vn`). |
-| **V2-10** | Customer Unified Media Studio (Voice, Video, Music, Subtitle) | **REPLACED & DECOMPOSED** | `P0-D: Video Studio E2E`, `P1-A: Voice Audio`, `P1-B: Music Subtitle` | Combining 4 major product families into a single monolithic page creates cognitive overload and bloated DOM. Decomposed into dedicated product workspaces. |
-| **V2-11** | Customer Multi-Scene Video Production Workflow | **MERGED** | `P0-D: End-to-End Product Video Studio` | Multi-scene storyboard composition is integral to the Video Studio, not a disjointed workflow. Merged into one unified execution pipeline. |
-| **V2-12** | Customer Publishing, Webhook & Distribution Hub | **MOVED to P1** | `P1-C: Automated Publishing & Social Distribution` | Downstream distribution belongs in Phase 1, prioritizing real MP4 video generation first. |
+| **V2-08** | Admin Customer Detail & Lifetime Analytics Workspace | **SPLIT & MOVED** | `P0-E: Admin Customer 360` & `P0-B1/B2: Runtime Connectivity` | Customer 360 profile, CRM leads, and support belong in unified Customer Workspace; financial mutations require canonical bridge adapter. |
+| **V2-09** | Admin System Health, Log Explorer & Audit Telemetry Hub | **MOVED & CONSOLIDATED** | `P0-F: Admin Worker Fleet & System Telemetry` | Monitor live SQLite outbox lease/claim and systemd worker processes on VPS (`tg.toanaas.vn`). |
+| **V2-10** | Customer Unified Media Studio (Voice, Video, Music, Subtitle) | **REPLACED & DECOMPOSED** | `P0-D: Video Studio`, `P1-A: Voice`, `P1-B: Music & SFX`, `P1-C: SubDub` | Grouping 4 distinct product lines into one monolithic page violates family separation. Decomposed into independent product engines. |
+| **V2-11** | Customer Multi-Scene Video Production Workflow | **MERGED** | `P0-D: End-to-End Product Video Studio` | Multi-scene storyboard composition is integral to the Video Studio pipeline, not a detached workflow. |
+| **V2-12** | Customer Publishing, Webhook & Distribution Hub | **REPLACED & UPGRADED** | `P1-D: AutoPost Publishing Automation` | Upgraded to full AutoPost specification (Common Publishable Artifact, durable schedule, multi-channel receipts, publish-only retry). |
 | **V2-13** | Admin Catalog & Pricing Governance Center | **REPLACED** | `P0-C: Customer IA & 10 Product Catalog` | Replaced flat 135-feature catalog with governance over the 10 distinct customer product families. |
 | **V2-14** | Admin Live Delivery Control & Worker Fleet Orchestrator | **MERGED** | `P0-F: Admin Worker Fleet & System Telemetry` | Merged into single operations control center. |
-| **V2-15** | Final Quality, Performance & Production Hardening | **KEPT & EXPANDED** | `P2-A: Locale Purity & E2E Production Hardening` | Retained as final end-to-end verification gate. |
+| **V2-15** | Final Quality, Performance & Production Hardening | **KEPT & EXPANDED** | `P2-A: Locale Purity & E2E Production Hardening` | Retained as final end-to-end verification gate across Web and cross-repo integration. |
 
 ---
 
-## 3. Rebased V3 Implementation Roadmap (Prioritized Backlog)
+## 3. Rebased V3 Implementation Roadmap (12 Bounded Tasks)
 
 ```mermaid
 flowchart TD
-    subgraph Phase 0: Foundations & Core Engines (P0)
-        P0A["P0-A: Teal/Mint Theme Rebase & Contrast (CSS)"] --> P0C["P0-C: Customer IA & 10 Product Catalog"]
-        P0B["P0-B: Zero-Downtime Deploy & Bot Route Parity"] --> P0E["P0-E: Admin Customer 360 & Operations"]
-        P0C --> P0D["P0-D: End-to-End Product Video Studio (Execution)"]
-        P0E --> P0F["P0-F: Admin Worker Fleet & VPS Telemetry"]
+    subgraph Phase 0: Foundations, Connectivity & Video Studio (P0)
+        P0A["P0-A: Theme Rebase to Light Teal/Mint & WCAG AA"]
+        P0B1["P0-B1: Web 502, Zero-Downtime Deploy & Telegram UX (WEB)"]
+        P0B2["P0-B2: Bot Canonical Read Endpoints (BOT)"]
+        P0C["P0-C: Customer IA & 10 Product Catalog"]
+        P0D["P0-D: End-to-End Product Video Studio (Outbox & E2E)"]
+        P0E["P0-E: Admin Customer 360 & Operations Hub"]
+        P0F["P0-F: Admin Worker Fleet & VPS Telemetry"]
+
+        P0A --> P0C
+        P0B1 -. Cross-Repo .- P0B2
+        P0B1 --> P0E
+        P0B2 --> P0E
+        P0C --> P0D
+        P0B1 --> P0D
+        P0E --> P0F
     end
 
-    subgraph Phase 1: Product Expansion & Mobile Admin (P1)
-        P0D --> P1A["P1-A: AI Voice & Audio Engine Studio"]
-        P0D --> P1B["P1-B: Music, SFX & Subtitle Suite"]
-        P0D --> P1C["P1-C: Automated Publishing & Distribution"]
-        P0F --> P1D["P1-D: Internal Admin Mobile App (5-Tab Web)"]
+    subgraph Phase 1: Independent Product Engines & AutoPost (P1)
+        P1A["P1-A: AI Voice & Speech Synthesis Studio"]
+        P1B["P1-B: Music & Foley SFX Studio"]
+        P1C["P1-C: SubDub & Multilingual Translation Suite"]
+        P1D["P1-D: AutoPost Publishing & Distribution Hub"]
+        P1E["P1-E: Internal Admin Mobile App (5-Tab Web)"]
+
+        P0A --> P1A
+        P0A --> P1B
+        P0D --> P1C
+        P0D --> P1D
+        P1C --> P1D
+        P0F --> P1E
     end
 
-    subgraph Phase 2: Production Hardening (P2)
-        P1A --> P2A["P2-A: Locale Purity & Production Readiness"]
+    subgraph Phase 2: Production Hardening & Global Verification (P2)
+        P2A["P2-A: Locale Purity, E2E Regression & Production Hardening"]
+
+        P1A --> P2A
         P1B --> P2A
         P1C --> P2A
         P1D --> P2A
+        P1E --> P2A
     end
 ```
 
@@ -66,104 +89,143 @@ flowchart TD
 ### 3.1 Phase 0: Foundations, Connectivity & Flagship Video Studio (P0)
 
 #### [P0-A] Visual System Rebase to Light Teal / Mint & Contrast Hardening
-- **Task ID:** `P0.WEBAPP.V3-A.TEAL.MINT.THEME.REBASE`
-- **Scope:**
-  - Purge forced navy blue tokens (`--portal-customer-blue-rail`, `--portal-blue-dark-*`) from `portal-theme.css`.
+- **Task ID**: `P0.WEBAPP.V3-A.TEAL.MINT.THEME.REBASE`
+- **Repository**: `toan-aas-standalone` (ONE_REPO, ONE_BRANCH, ONE_PR)
+- **Scope**:
+  - Purge forced navy blue tokens (`--portal-customer-blue-rail: #075985`, `--portal-blue-dark-*`) from `portal-theme.css`.
   - Implement canonical Light Teal / Mint tokens (`#f3fbfc`, `#ffffff`, `#0d9488`, `#14b8a6`, `#073a45`, `#e6f7f6`).
-  - Fix all active/pressed state contrast failures to meet WCAG AA (>= 4.5:1 text, >= 3:1 graphical).
+  - Fix all active/pressed state contrast failures to meet WCAG AA ($\ge 4.5:1$ text, $\ge 3:1$ graphical).
   - Enforce motion budget (120–180ms ease-out, zero layout thrash, `prefers-reduced-motion`).
-- **Dependencies:** None.
-- **Exit Criteria:** Zero blue-rail overrides, 100% WCAG AA contrast compliance in automated audits.
+- **Dependencies**: None.
+- **Exit Criteria**: Zero navy blue rail overrides; 100% WCAG AA contrast compliance in automated audits.
 
-#### [P0-B] Runtime 502 Remediation, Zero-Downtime Deploy & Bot Route Parity
-- **Task ID:** `P0.WEBAPP.V3-B.RUNTIME.CONNECTIVITY.BOT.BRIDGE`
-- **Scope:**
-  - Implement Nginx upstream retry (`proxy_next_upstream error timeout http_502;`) and uvicorn graceful reload to eliminate deploy downtime.
-  - Implement missing Bot Admin Core routes in `bot.py`: `/internal/v1/admin/wallet`, `/revenue`, `/refunds`, `/customers`.
-  - Fix unlinked Telegram account state (`409 ACCOUNT_TELEGRAM_UNLINKED`) with user-friendly Telegram deep-linking card and OTP pairing.
-- **Dependencies:** None.
-- **Exit Criteria:** Zero 502 errors during deployment; admin financial tabs return live data; unlinked accounts display actionable linking workflow.
+#### [P0-B1] Web Runtime 502, Zero-Downtime Deploy & Telegram Linking (WEB)
+- **Task ID**: `P0.WEBAPP.V3-B1.RUNTIME.DEGRADATION.UX`
+- **Repository**: `toan-aas-standalone` (ONE_REPO, ONE_BRANCH, ONE_PR)
+- **Scope**:
+  - Implement zero-downtime deploy reload on Web App (Nginx `proxy_next_upstream error timeout http_502 non_idempotent;`, uvicorn graceful reload).
+  - Resolve `ACCOUNT_TELEGRAM_UNLINKED` (409) application state by rendering a friendly Telegram deep-linking card with 6-digit OTP pairing UI.
+  - Bridge consumer contract: resilient envelope handling for degraded states.
+- **Dependencies**: None.
+- **Exit Criteria**: Zero Nginx 502 during deploy restarts; unlinked accounts display actionable linking workflow.
 
-#### [P0-C] Customer Information Architecture Rebuild & 10 Product Catalog
-- **Task ID:** `P0.WEBAPP.V3-C.CUSTOMER.IA.10.PRODUCTS`
-- **Scope:**
+#### [P0-B2] Bot Core Canonical Admin Read Endpoints (BOT)
+- **Task ID**: `P0.BOT.V3-B2.ADMIN.CANONICAL.READ.ENDPOINTS`
+- **Repository**: `manhtoangreensky-wq/bot` (ONE_REPO, ONE_BRANCH, ONE_PR)
+- **Scope**:
+  - Implement missing authenticated read-only admin endpoints in `bot.py`:
+    - `GET /internal/v1/admin/wallet`
+    - `GET /internal/v1/admin/revenue`
+    - `GET /internal/v1/admin/refunds`
+    - `GET /internal/v1/admin/users`
+  - Enforce authentication via internal loopback token / shared HMAC.
+- **Dependencies**: None.
+- **Exit Criteria**: Bot Core returns HTTP 200 with truthful JSON for all 4 admin endpoints.
+
+#### [P0-C] Customer Information Architecture & 10 Product Hubs
+- **Task ID**: `P0.WEBAPP.V3-C.CUSTOMER.IA.10.PRODUCTS`
+- **Repository**: `toan-aas-standalone` (ONE_REPO, ONE_BRANCH, ONE_PR)
+- **Scope**:
   - Rebuild customer sidebar into 13 canonical items grouped into 4 functional tiers.
-  - Group 135 legacy features under the 10 customer product families.
+  - Reorganize 135 catalog features into 10 distinct product families.
   - Implement primary product landing cards with quick-start templates, asset history, and direct studio links.
-  - Implement secondary tool discovery drawer with search, tag filters, and usage counters.
-- **Dependencies:** `P0-A`.
-- **Exit Criteria:** Customer navigation conforms strictly to the 13-item contract; all 135 features accessible without catalog clutter.
+  - Secondary tool discovery drawers with search, tag filters, and usage counters.
+- **Dependencies**: `P0-A`.
+- **Exit Criteria**: Customer navigation conforms strictly to the 13-item contract; all features accessible without catalog clutter.
 
-#### [P0-D] End-to-End Product Video Studio (Real Pipeline & Execution)
-- **Task ID:** `P0.WEBAPP.V3-D.PRODUCT.VIDEO.STUDIO.E2E`
-- **Scope:**
+#### [P0-D] End-to-End Product Video Studio (Canonical Worker & Billing Integration)
+- **Task ID**: `P0.WEBAPP.V3-D.PRODUCT.VIDEO.STUDIO.E2E`
+- **Repository**: `toan-aas-standalone` (ONE_REPO, ONE_BRANCH, ONE_PR)
+- **Scope**:
   - Upgrade `copyfast_video_studio.py` from prompt-planner into a full-featured video production studio.
-  - Multi-scene storyboard builder: timeline strip, drag-and-drop scene ordering, duration controls, bulk scene editing.
-  - Commercial preflight: capability check, provider resolution, pricing calculator, and quota validation.
-  - Real job dispatch: create job record in SQLite, dispatch task to background worker, deduct Xu ledger balance upon confirmation.
-  - Real MP4 preview & delivery: poll job status, render streaming video player, download links, and export receipts.
-- **Dependencies:** `P0-A`, `P0-B`, `P0-C`.
-- **Exit Criteria:** User can compose a 3-scene video, confirm commercial invoice, trigger actual job run, deduct Xu, and play generated MP4 in-browser.
+  - Multi-scene storyboard grid: drag-and-drop scene ordering, aspect ratio preview, bulk scene edits.
+  - Preflight quote: capability check and price calculation via canonical bridge.
+  - Job creation: atomic insert into canonical SQLite `video_jobs` outbox via bridge (`video_dispatch_outbox` lease/claim).
+  - Monitoring & Delivery: live scene progress polling, HTML5 MP4 player, signed download link.
+  - Billing invariant: verify customer wallet charge occurs ONLY after successful final delivery (`FINAL_DELIVERY_REQUIRED_BEFORE_CHARGE=YES`, `FAILED_NO_CHARGE=0_XU`).
+- **Dependencies**: `P0-A`, `P0-B1`, `P0-B2`, `P0-C`.
+- **Exit Criteria**: User can compose a 3-scene video, confirm quote, trigger job run in SQLite outbox, play generated MP4 in-browser, and verify post-delivery wallet deduction.
 
-#### [P0-E] Admin Operations Hub & Customer 360 Workspace
-- **Task ID:** `P0.WEBAPP.V3-E.ADMIN.CUSTOMER.360.OPERATIONS`
-- **Scope:**
-  - Unified Customer 360 view: account profile, balance, lifetime spending, active jobs, Telegram connection status.
-  - CRM lead management pipeline: contact requests, consultation status, notes.
-  - 2-Man manual wallet adjustment interface with mandatory reason code and immutable audit logging.
-- **Dependencies:** `P0-B`.
-- **Exit Criteria:** Admin can view complete customer history, filter CRM leads, and issue audited balance adjustments.
+#### [P0-E] Admin Customer 360, CRM Leads & Audited Operations Hub
+- **Task ID**: `P0.WEBAPP.V3-E.ADMIN.CUSTOMER.360.OPERATIONS`
+- **Repository**: `toan-aas-standalone` (ONE_REPO, ONE_BRANCH, ONE_PR)
+- **Scope**:
+  - Unified Customer 360 view: account profile, balance, lifetime spending, active jobs, Telegram pairing status.
+  - CRM lead management pipeline: contact requests, consultation tickets, conversion status.
+  - Audited manual topup operations: 3-layer reconciliation proofs, draft approvals, and idempotent credit invocation via bridge.
+  - Enforce boundary: all actions confined strictly to `ADMIN_PRODUCT_CONTROL` (no raw SQL, no arbitrary balance modification).
+- **Dependencies**: `P0-B1`, `P0-B2`.
+- **Exit Criteria**: Admin can inspect customer 360 records, manage CRM leads, and issue audited topup approvals.
 
-#### [P0-F] Admin Worker Fleet, System Telemetry & Live VPS Control
-- **Task ID:** `P0.WEBAPP.V3-F.ADMIN.WORKER.FLEET.TELEMETRY`
-- **Scope:**
-  - Live VPS service monitor: status of `toanaas-bot.service`, `toanaas-web.service`, `nginx.service`.
-  - Celery/Worker fleet status, queue backlog depth, processing throughput, and failure rate.
-  - Dead-letter queue (DLQ) viewer with single-click job retry or refund.
-- **Dependencies:** `P0-B`.
-- **Exit Criteria:** Real-time visibility into VPS services without SSH terminal; DLQ recovery actionable from UI.
-
----
-
-### 3.2 Phase 1: Expanded Product Engines & Internal Mobile App (P1)
-
-#### [P1-A] AI Voice & Audio Engine Studio
-- **Task ID:** `P1.WEBAPP.V3-G.VOICE.AUDIO.STUDIO`
-- **Scope:** Voice selection library, emotional inflection controls, instant audio preview, waveform visualizer, export to MP3/WAV.
-- **Dependencies:** `P0-D`.
-
-#### [P1-B] Music, SFX & Subtitle/Dubbing Suite
-- **Task ID:** `P1.WEBAPP.V3-H.MUSIC.SUBTITLE.SUITE`
-- **Scope:** BGM generation, Foley SFX library, auto-transcription SRT/VTT editor, multilingual audio dubbing synchronization.
-- **Dependencies:** `P0-D`.
-
-#### [P1-C] Automated Social Publishing & Distribution Hub
-- **Task ID:** `P1.WEBAPP.V3-I.PUBLISHING.DISTRIBUTION.HUB`
-- **Scope:** Multi-platform posting scheduler (TikTok, YouTube, Facebook Reels), webhook triggers, postback analytics.
-- **Dependencies:** `P0-D`.
-
-#### [P1-D] Internal Admin Mobile-Optimized Web App (5-Tab Architecture)
-- **Task ID:** `P1.WEBAPP.V3-J.ADMIN.MOBILE.RESPONSIVE.APP`
-- **Scope:** Responsive 5-tab bottom navigation (`Trang chủ`, `Công việc`, `Tạo nhanh`, `Nội bộ`, `Cá nhân`), touch-friendly slide-in inspection drawers, quick emergency controls on mobile.
-- **Dependencies:** `P0-E`, `P0-F`.
+#### [P0-F] Admin Worker Fleet Telemetry & Live VPS Control
+- **Task ID**: `P0.WEBAPP.V3-F.ADMIN.WORKER.FLEET.TELEMETRY`
+- **Repository**: `toan-aas-standalone` (ONE_REPO, ONE_BRANCH, ONE_PR)
+- **Scope**:
+  - Monitor canonical worker fleet: query SQLite `video_dispatch_outbox` lease/claim states and claim heartbeats (`services/remote_worker_api.py`).
+  - Monitor systemd worker processes on VPS (`tg.toanaas.vn`).
+  - Dead-letter queue (DLQ) recovery: view failed tasks with error diagnostics; single-click task re-dispatch to outbox.
+- **Dependencies**: `P0-B1`, `P0-B2`.
+- **Exit Criteria**: Real-time visibility into outbox claim depth and worker status; DLQ recovery actionable from UI.
 
 ---
 
-### 3.3 Phase 2: Production Hardening & Global Readiness (P2)
+### 3.2 Phase 1: Independent Product Engines & AutoPost (P1)
+
+#### [P1-A] AI Voice & Speech Synthesis Studio
+- **Task ID**: `P1.WEBAPP.V3-G.VOICE.AUDIO.STUDIO`
+- **Repository**: `toan-aas-standalone`
+- **Scope**: Voice selection library, emotional inflection controls, audio preview player, waveform visualizer, MP3/WAV downloads.
+- **Dependencies**: `P0-A` (Independent of Product Video).
+
+#### [P1-B] Music & Foley Sound Effects (SFX) Studio
+- **Task ID**: `P1.WEBAPP.V3-H.MUSIC.SFX.STUDIO`
+- **Repository**: `toan-aas-standalone`
+- **Scope**: Strictly separated from SubDub. Background music (BGM) generation, Foley SFX library, volume ducking, audio stem mixer.
+- **Dependencies**: `P0-A` (Independent of Product Video and SubDub).
+
+#### [P1-C] SubDub & Multilingual Translation Suite
+- **Task ID**: `P1.WEBAPP.V3-I.SUBDUB.TRANSLATION.SUITE`
+- **Repository**: `toan-aas-standalone`
+- **Scope**: Strictly separated from Music. Auto-transcription SRT/VTT timeline editor, multilingual speech dubbing, subtitle burn-in. Consumes finished videos or standalone uploads.
+- **Dependencies**: `P0-A`, `P0-D` (for video asset handoff).
+
+#### [P1-D] AutoPost — Publishing Automation, Scheduling & Multi-Channel Distribution
+- **Task ID**: `P1.WEBAPP.V3-J.AUTPOST.PUBLISHING.HUB`
+- **Repository**: `toan-aas-standalone`
+- **Scope**:
+  - Consumes Common Publishable Artifacts from Product Video, Video Edit, SubDub, or existing user media.
+  - AutoPost owns: orchestration, review, approval, schedule, publish, receipt, publish-only retry, and audit.
+  - Multi-channel adapters (TikTok, YouTube Shorts, Facebook Reels) with durable schedule persistence across server restarts.
+  - Enforce: `HTTP_200 != PUBLISHED`; platform receipt binding required.
+  - Retry publication step must NEVER rerun upstream video rendering.
+  - Video split/batching: parent batch managing independent child publication units.
+- **Dependencies**: `P0-D` and Common Publishable Artifact contract.
+
+#### [P1-E] Internal Admin Mobile-Optimized Web App (5-Tab Architecture)
+- **Task ID**: `P1.WEBAPP.V3-K.ADMIN.MOBILE.RESPONSIVE.APP`
+- **Repository**: `toan-aas-standalone`
+- **Scope**: Responsive 5-tab bottom navigation (`Trang chủ`, `Công việc`, `Tạo nhanh`, `Nội bộ`, `Cá nhân`), touch-friendly slide-in inspection sheets, quick emergency controls on mobile.
+- **Dependencies**: `P0-E`, `P0-F`.
+
+---
+
+### 3.3 Phase 2: Production Hardening & Global Verification (P2)
 
 #### [P2-A] Locale Purity, End-to-End Verification & Production Readiness
-- **Task ID:** `P2.WEBAPP.V3-K.LOCALE.E2E.PRODUCTION.HARDENING`
-- **Scope:**
-  - 100% bilingual purity verification (Zero raw English in VI, zero VI in EN, zero raw translation keys).
-  - Comprehensive Playwright/Cypress end-to-end regression tests across desktop and mobile viewports.
-  - Performance audit: Lighthouse score >= 90 across Performance, Accessibility, Best Practices, and SEO.
-- **Dependencies:** All P0 and P1 tasks.
+- **Task ID**: `P2.WEBAPP.V3-L.LOCALE.E2E.PRODUCTION.HARDENING`
+- **Repository**: `toan-aas-standalone`
+- **Scope**:
+  - 100% bilingual locale completeness check (Zero raw English in VI, zero VI in EN, zero raw translation keys).
+  - Playwright end-to-end regression suite across desktop and mobile viewports.
+  - Lighthouse performance audit ($\ge 90$ across Performance, Accessibility, Best Practices, SEO).
+  - Read-only cross-system integration acceptance between Web and Bot.
+- **Dependencies**: All P0 and P1 tasks.
 
 ---
 
 ## 4. Single-Agent & Anti-Overengineering Governance Rules
-1. **Single-Agent by Default:** All tasks must be executed sequentially by 1 agent from A to Z.
-2. **Minimal Code Footprint (`MINIMAL_CODE_FOOTPRINT=ON`):** Changes must be surgical and focused strictly on the assigned task scope.
-3. **No Speculative Frameworks (`YAGNI=ON`):** Do not introduce heavy frontend frameworks (React/Vue/Next.js). Maintain existing vanilla modern JS and performant CSS structure.
-4. **Early Stop (`EARLY_STOP=ON`):** Stop calling tools immediately once verification tests pass.
-5. **Owner Safety Gates:** Zero financial mutations during tests, zero table drops, zero unverified API calls, VPS-only deployment truth.
+1. **Single-Agent by Default**: All tasks executed sequentially by 1 agent from A to Z.
+2. **Minimal Code Footprint (`MINIMAL_CODE_FOOTPRINT=ON`)**: Changes must be surgical and focused strictly on the assigned task scope.
+3. **No Speculative Frameworks (`YAGNI=ON`)**: Do not introduce heavy frontend frameworks (React/Vue/Next.js). Maintain existing vanilla modern JS and performant CSS structure.
+4. **Early Stop (`EARLY_STOP=ON`)**: Stop calling tools immediately once verification tests pass.
+5. **Owner Safety Gates**: Zero financial mutations during tests, zero table drops, zero unverified API calls, VPS-only deployment truth.

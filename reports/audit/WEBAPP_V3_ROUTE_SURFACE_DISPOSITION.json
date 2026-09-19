@@ -1,9 +1,10 @@
 {
   "audit_metadata": {
-    "task": "P0.WEBAPP.V3.FULL.PRODUCT.IA.UX.ADMIN.REBASE.AUDIT",
+    "task": "P0.WEBAPP.V3.AUDIT.CANONICAL.ARCHITECTURE.TRUTH.CLOSURE",
     "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
-    "timestamp_utc": "2026-09-19T09:35:00Z",
-    "total_registry_features": 179
+    "timestamp_utc": "2026-09-19T10:00:00Z",
+    "total_registry_features": 179,
+    "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
   },
   "summary": {
     "total_catalog_features": 179,
@@ -16,9 +17,10 @@
   },
   "product_families": [
     {
-      "family": "PRODUCT_VIDEO",
-      "title": "Video AI Sản Phẩm (Product Video)",
-      "route": "/video",
+      "family_id": "PRODUCT_VIDEO",
+      "title": "Video Sản Phẩm AI (Product Video)",
+      "route": "/studio",
+      "nature": "CORE_PRODUCER",
       "current_features_merged": [
         "video_factory_workflow",
         "story_video_plan",
@@ -34,12 +36,14 @@
         "script_to_screen_planner",
         "long_form_roadmap"
       ],
-      "disposition": "CONSOLIDATE_INTO_ONE_END_TO_END_STUDIO"
+      "disposition": "CONSOLIDATE_INTO_ONE_END_TO_END_STUDIO",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
     },
     {
-      "family": "VOICE",
-      "title": "Giọng Nói AI (Voice)",
+      "family_id": "VOICE",
+      "title": "Giọng Nói & Thuyết Minh AI (Voice)",
       "route": "/voice",
+      "nature": "CORE_PRODUCER",
       "current_features_merged": [
         "voice_studio",
         "voice_direction_composer",
@@ -47,109 +51,148 @@
         "voice_clone",
         "voice_saved_tts"
       ],
-      "disposition": "SEPARATE_INTO_DEDICATED_VOICE_STUDIO"
+      "disposition": "INDEPENDENT_PRODUCT_FAMILY_WORKSTREAM",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
     },
     {
-      "family": "MUSIC_AND_SFX",
-      "title": "Âm Nhạc & Hiệu Ứng (Music & SFX)",
-      "route": "/audio",
+      "family_id": "MUSIC_AND_SFX",
+      "title": "Âm Nhạc & Âm Thanh Hiệu Ứng (Music & SFX)",
+      "route": "/music",
+      "nature": "CORE_PRODUCER",
       "current_features_merged": [
-        "media_workspace",
         "audio_hub",
         "music_prompt_composer",
         "music_direction_presets",
-        "sfx_cue_sheet"
+        "sfx_cue_sheet",
+        "audio_stems"
       ],
-      "disposition": "SEPARATE_INTO_DEDICATED_AUDIO_HUB"
+      "disposition": "INDEPENDENT_PRODUCT_FAMILY_WORKSTREAM_SEPARATE_FROM_SUBDUB",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
     },
     {
-      "family": "SUBTITLE_DUBBING_TRANSLATION",
-      "title": "Phụ Đề, Lồng Tiếng & Dịch Thuật",
-      "route": "/localization",
+      "family_id": "SUBTITLE_DUBBING_TRANSLATION",
+      "title": "Phụ Đề & Lồng Tiếng Đa Ngữ (SubDub & Translation)",
+      "route": "/subdub",
+      "nature": "POST_PROCESSOR_AND_STANDALONE",
       "current_features_merged": [
         "subtitle_studio",
         "subtitle_asset_operations",
-        "subtitle_asr",
-        "subtitle_create",
-        "subtitle_translate"
+        "subtitle_format_tools",
+        "translation_presets",
+        "multilingual_dubbing"
       ],
-      "disposition": "CONSOLIDATE_INTO_LOCALIZATION_SUITE"
+      "disposition": "INDEPENDENT_PRODUCT_FAMILY_WORKSTREAM_SEPARATE_FROM_MUSIC",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
     },
     {
-      "family": "MANUAL_VIDEO_TOOLS",
-      "title": "Công Cụ Video Thủ Công (FFmpeg / Local)",
+      "family_id": "VIDEO_EDIT",
+      "title": "Công Cụ Video Thủ Công & Cắt Ghép (Manual Video Tools)",
       "route": "/tools/video",
+      "nature": "POST_PROCESSOR_AND_UTILITY",
       "current_features_merged": [
-        "documents_pdf_ocr",
-        "documents_ocr",
-        "frame_extraction",
         "video_trim",
-        "video_compress"
+        "video_merge",
+        "video_aspect_crop",
+        "watermark_remover",
+        "speed_ramping",
+        "video_finishing"
       ],
-      "disposition": "NEW_LOCAL_FFMPEG_SUITE"
+      "disposition": "INDEPENDENT_PRODUCT_FAMILY_WORKSTREAM",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
     },
     {
-      "family": "AUTOMATED_PUBLISHING",
-      "title": "Lịch Đăng & Phân Phối Tự Động (Publishing)",
+      "family_id": "PUBLISHING_AUTOMATION",
+      "title": "Xuất Bản Tự Động & Lịch Đăng (AutoPost)",
       "route": "/publishing",
+      "nature": "ORCHESTRATOR_DOWNSTREAM",
       "current_features_merged": [
-        "campaigns",
-        "calendar",
-        "approvals"
+        "workboard_schedule_intents",
+        "publishing_scheduler",
+        "social_distribution",
+        "webhook_dispatch"
       ],
-      "disposition": "CONSOLIDATE_INTO_PUBLISHING_ORCHESTRATOR"
+      "disposition": "INDEPENDENT_ORCHESTRATOR_CONSUMING_PUBLISHABLE_ASSETS",
+      "orchestration_contract": {
+        "owns": [
+          "orchestration",
+          "review",
+          "approval",
+          "schedule",
+          "publish",
+          "receipt",
+          "publish_only_retry",
+          "audit"
+        ],
+        "does_not_own": [
+          "product_video_rendering",
+          "video_edit_processing",
+          "subdub_processing"
+        ],
+        "consumes_finished_output_from": [
+          "VIDEO_PRODUCT",
+          "VIDEO_EDIT",
+          "SUBDUB",
+          "EXISTING_FINISHED_VIDEO"
+        ]
+      },
+      "evidence_level": "TARGET_DESIGN"
     },
     {
-      "family": "IMAGE_TOOLS",
-      "title": "Công Cụ Hình Ảnh AI (Image Tools)",
-      "route": "/images",
+      "family_id": "FREE_TOOLS",
+      "title": "Tiện Ích Miễn Phí & Quà Tặng (Free Utilities)",
+      "route": "/tools/free",
+      "nature": "LEAD_MAGNET",
       "current_features_merged": [
-        "image_studio",
-        "image_hub",
+        "prompt_generator_free",
+        "bitrate_calculator",
+        "aspect_ratio_calculator",
+        "hashtag_helper"
+      ],
+      "disposition": "INDEPENDENT_PRODUCT_FAMILY_WORKSTREAM",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "family_id": "IMAGE_TOOLS",
+      "title": "Hình Ảnh & Tài Nguyên Sáng Tạo (Image & Creative Assets)",
+      "route": "/tools/image",
+      "nature": "PRODUCER_UTILITY",
+      "current_features_merged": [
         "quick_image_planner",
-        "image_prompt_composer",
-        "image_create"
+        "product_enhancer",
+        "thumbnail_creator",
+        "bg_removal"
       ],
-      "disposition": "RETAIN_AS_STANDALONE_IMAGE_STUDIO"
+      "disposition": "RETAINED_PER_PRODUCT_IA",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
     },
     {
-      "family": "FREE_TOOLS",
-      "title": "Tiện Ích Miễn Phí (Free Tools)",
-      "route": "/free-tools",
-      "current_features_merged": [
-        "free_prompt_gallery",
-        "starter_kits",
-        "quick_utilities"
-      ],
-      "disposition": "CONSOLIDATE_AS_LEAD_MAGNET_GROUP"
-    },
-    {
-      "family": "PROJECTS_OUTPUTS",
-      "title": "Dự Án & Thành Phẩm (Projects & Outputs)",
+      "family_id": "PROJECTS_MEDIA_LIBRARY",
+      "title": "Dự Án & Thư Viện Media (Projects & Vault)",
       "route": "/projects",
+      "nature": "STORAGE_AND_LIFECYCLE",
       "current_features_merged": [
-        "projects",
-        "project_packages",
-        "jobs",
-        "assets",
-        "asset_vault"
+        "workboard_portal",
+        "workboard_history",
+        "media_vault",
+        "asset_export"
       ],
-      "disposition": "UNIFIED_PROJECTS_AND_DELIVERY_VAULT"
+      "disposition": "UNIFIED_PROJECTS_AND_COMMON_ARTIFACT_STORAGE",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
     },
     {
-      "family": "ACCOUNT_WALLET_COMMERCE",
-      "title": "Ví Xu, Gói Cước & Tài Khoản",
-      "route": "/wallet",
+      "family_id": "ACCOUNT_WALLET_COMMERCE",
+      "title": "Tài Khoản, Ví Tiền & Thương Mại (Account & Commerce)",
+      "route": "/account",
+      "nature": "COMMERCIAL_PORTAL",
       "current_features_merged": [
-        "wallet",
-        "wallet_topup",
-        "packages",
-        "pricing",
-        "membership",
-        "account",
-        "account_security"
+        "wallet_portal",
+        "manual_topup",
+        "payos_checkout",
+        "invoice_history",
+        "telegram_link"
       ],
-      "disposition": "UNIFIED_BILLING_AND_ACCOUNT_HUB"
+      "disposition": "UNIFIED_COMMERCIAL_WORKSPACE",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
     }
   ]
 }

@@ -1,9 +1,9 @@
 # Web App V3 Visual System, Motion & Locale Contract
-**Scope:** TOAN AAS Web App (`toan-aas-standalone`)
-**Program:** `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
-**Task:** `P0.WEBAPP.V3.FULL.PRODUCT.IA.UX.ADMIN.REBASE.AUDIT`
-**Status:** Audit & Architecture Specification Only (`OWNER-GOVERNED`)
-**Base Commit:** `8873e10f2279aec0fb312b70388b9073ba763f13`
+> **Task**: `P0.WEBAPP.V3.AUDIT.CANONICAL.ARCHITECTURE.TRUTH.CLOSURE`
+> **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
+> **Repository**: `manhtoangreensky-wq/toan-aas-standalone`
+> **Base Commit**: `8873e10f2279aec0fb312b70388b9073ba763f13`
+> **Governance**: `OWNER-GOVERNED`, `AUDIT_DOCUMENTATION_ONLY`, `NO_FEATURE_IMPLEMENTATION`
 
 ---
 
