@@ -9570,6 +9570,17 @@
     "Access Posture": "adminGeneric.securityAccess.route.accessTitle",
     "Bot companion": "shellNav.botCompanion",
     "Video Studio": "shellNav.videoStudio",
+    "Sáng tạo": "shellNav.creation",
+    "Phân phối": "shellNav.distribution",
+    "Tài khoản & Hệ thống": "shellNav.accountSystem",
+    "Video Edit": "shellNav.videoEdit",
+    "Image Suite": "shellNav.imageSuite",
+    "AI Voice": "shellNav.aiVoice",
+    "AI Music": "shellNav.aiMusic",
+    "AI SubDub": "shellNav.aiSubDub",
+    "AutoPost Hub": "shellNav.autoPostHub",
+    "Dự án & Lịch sử": "shellNav.projectsHistory",
+    "Công cụ miễn phí": "shellNav.freeTools",
     "Video Studio · Ý tưởng & kịch bản": "shellNav.videoIdeasScripts",
     "Video Studio · Phim & storyboard": "shellNav.videoFilmStoryboard",
     "Video Studio · Tư liệu & chuyển động": "shellNav.videoReferenceMotion",
@@ -10338,6 +10349,8 @@
     if (path === "/admin" || path.startsWith("/admin/")) return false;
     return customerMobileNavGroupForPath(path) === key;
   }
+
+  const _LEGACY_MOBILE_HOME_LABEL = uiText("mobile.home", "Trang chủ");
 
   function renderMobileNav(page) {
     const items = [
@@ -20851,7 +20864,7 @@
   function renderTelegramUnlinkedCard(options) {
     const opts = options || {};
     const title = opts.title || uiText("telegramUnlinked.title", "Tài khoản chưa liên kết Telegram");
-    const kicker = opts.kicker || uiText("telegramUnlinked.kicker", "LIÊN KẾT BOT CANONICAL");
+    const kicker = opts.kicker || uiText("telegramUnlinked.kicker", "LIÊN KẾT BOT CHÍNH THỨC");
     const subtitle = opts.subtitle || uiText("telegramUnlinked.subtitle", "Liên kết tài khoản Web với Telegram Bot để xem số dư Xu, lịch sử giao dịch và đồng bộ tác vụ an toàn.");
     const ctaCode = opts.ctaCode !== false;
     const ctaBot = opts.ctaBot !== false;
