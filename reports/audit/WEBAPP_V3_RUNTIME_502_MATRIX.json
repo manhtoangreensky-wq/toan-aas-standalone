@@ -1,0 +1,128 @@
+{
+  "audit_metadata": {
+    "task": "P0.WEBAPP.V3.FULL.PRODUCT.IA.UX.ADMIN.REBASE.AUDIT",
+    "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
+    "timestamp_utc": "2026-09-19T09:35:00Z",
+    "base_sha": "8873e10f2279aec0fb312b70388b9073ba763f13",
+    "evidence_tag": "READ_ONLY_RUNTIME_VERIFIED"
+  },
+  "endpoints": [
+    {
+      "browser_route": "/wallet",
+      "api_route": "/api/v1/wallet",
+      "http_status": 200,
+      "public_error_code": null,
+      "upstream_route": "/internal/v1/wallet",
+      "core_bridge_required": true,
+      "bridge_configured": true,
+      "upstream_http_status": 200,
+      "failure_class": "NONE_WHEN_LINKED_409_UNLINKED",
+      "root_cause": "When unlinked, returns 409 ACCOUNT_TELEGRAM_UNLINKED. When linked, proxies to bot 127.0.0.1:8080/internal/v1/wallet. During service reload, nginx returns 502 upstream connection refused.",
+      "remediation_task": "P0-A-RUNTIME-502-CORE-BRIDGE"
+    },
+    {
+      "browser_route": "/wallet/history",
+      "api_route": "/api/v1/wallet/history",
+      "http_status": 200,
+      "public_error_code": null,
+      "upstream_route": "/internal/v1/wallet/history",
+      "core_bridge_required": true,
+      "bridge_configured": true,
+      "upstream_http_status": 200,
+      "failure_class": "NONE_WHEN_LINKED_409_UNLINKED",
+      "root_cause": "When unlinked, returns 409 ACCOUNT_TELEGRAM_UNLINKED. When linked, proxies to bot 127.0.0.1:8080/internal/v1/wallet/history.",
+      "remediation_task": "P0-A-RUNTIME-502-CORE-BRIDGE"
+    },
+    {
+      "browser_route": "/pricing",
+      "api_route": "/api/v1/pricing",
+      "http_status": 200,
+      "public_error_code": null,
+      "upstream_route": "/internal/v1/pricing",
+      "core_bridge_required": false,
+      "bridge_configured": true,
+      "upstream_http_status": 200,
+      "failure_class": "NONE_LOCAL_CACHE_FALLBACK",
+      "root_cause": "Web App has local published pricing fallback; proxies to bot when available.",
+      "remediation_task": "P0-A-RUNTIME-502-CORE-BRIDGE"
+    },
+    {
+      "browser_route": "/packages",
+      "api_route": "/api/v1/packages",
+      "http_status": 200,
+      "public_error_code": null,
+      "upstream_route": "/internal/v1/packages",
+      "core_bridge_required": false,
+      "bridge_configured": true,
+      "upstream_http_status": 200,
+      "failure_class": "NONE_LOCAL_PACKAGES_FALLBACK",
+      "root_cause": "Web App has static default packages fallback.",
+      "remediation_task": "P0-A-RUNTIME-502-CORE-BRIDGE"
+    },
+    {
+      "browser_route": "/admin/wallet",
+      "api_route": "/api/v1/admin/wallet",
+      "http_status": 200,
+      "public_error_code": "CORE_BRIDGE_NOT_AVAILABLE",
+      "upstream_route": "/internal/v1/admin/wallet",
+      "core_bridge_required": true,
+      "bridge_configured": true,
+      "upstream_http_status": 404,
+      "failure_class": "BOT_CORE_ROUTE_MISSING",
+      "root_cause": "Bot Core 127.0.0.1:8080 does not implement GET /internal/v1/admin/wallet. Bridge client receives 404 and returns guarded CORE_BRIDGE_NOT_AVAILABLE.",
+      "remediation_task": "P0-A-RUNTIME-502-CORE-BRIDGE"
+    },
+    {
+      "browser_route": "/admin/revenue",
+      "api_route": "/api/v1/admin/revenue",
+      "http_status": 200,
+      "public_error_code": "CORE_BRIDGE_NOT_AVAILABLE",
+      "upstream_route": "/internal/v1/admin/revenue",
+      "core_bridge_required": true,
+      "bridge_configured": true,
+      "upstream_http_status": 404,
+      "failure_class": "BOT_CORE_ROUTE_MISSING",
+      "root_cause": "Bot Core 127.0.0.1:8080 does not implement GET /internal/v1/admin/revenue. Bridge client receives 404 and returns guarded CORE_BRIDGE_NOT_AVAILABLE.",
+      "remediation_task": "P0-A-RUNTIME-502-CORE-BRIDGE"
+    },
+    {
+      "browser_route": "/admin/refunds",
+      "api_route": "/api/v1/admin/refunds",
+      "http_status": 200,
+      "public_error_code": "CORE_BRIDGE_NOT_AVAILABLE",
+      "upstream_route": "/internal/v1/admin/refunds",
+      "core_bridge_required": true,
+      "bridge_configured": true,
+      "upstream_http_status": 404,
+      "failure_class": "BOT_CORE_ROUTE_MISSING",
+      "root_cause": "Bot Core 127.0.0.1:8080 does not implement GET /internal/v1/admin/refunds. Bridge client receives 404 and returns guarded CORE_BRIDGE_NOT_AVAILABLE.",
+      "remediation_task": "P0-A-RUNTIME-502-CORE-BRIDGE"
+    },
+    {
+      "browser_route": "/admin/customers",
+      "api_route": "/api/v1/admin/customers",
+      "http_status": 200,
+      "public_error_code": "CORE_BRIDGE_NOT_AVAILABLE",
+      "upstream_route": "/internal/v1/admin/users",
+      "core_bridge_required": true,
+      "bridge_configured": true,
+      "upstream_http_status": 404,
+      "failure_class": "BOT_CORE_ROUTE_MISSING",
+      "root_cause": "Bot Core 127.0.0.1:8080 does not implement GET /internal/v1/admin/users. Bridge returns guarded state.",
+      "remediation_task": "P0-A-RUNTIME-502-CORE-BRIDGE"
+    },
+    {
+      "browser_route": "/wallet/topup",
+      "api_route": "/wallet/topup (HTML)",
+      "http_status": 502,
+      "public_error_code": "NGINX_502_BAD_GATEWAY",
+      "upstream_route": "http://127.0.0.1:8000/wallet/topup",
+      "core_bridge_required": false,
+      "bridge_configured": true,
+      "upstream_http_status": null,
+      "failure_class": "DEPLOY_RELOAD_DOWNTIME",
+      "root_cause": "During GitHub Actions auto-deploy 'systemctl restart toanaas-web.service', uvicorn is momentarily offline. Nginx returns 502 Connection Refused to browsers visiting between 0-3s of restart. Needs graceful zero-downtime reload (systemctl reload / gunicorn reload / uvicorn socket passing).",
+      "remediation_task": "P0-A-RUNTIME-502-CORE-BRIDGE"
+    }
+  ]
+}

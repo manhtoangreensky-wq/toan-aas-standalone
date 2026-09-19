@@ -1,0 +1,189 @@
+{
+  "audit_metadata": {
+    "task": "P0.WEBAPP.V3.FULL.PRODUCT.IA.UX.ADMIN.REBASE.AUDIT",
+    "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
+    "timestamp_utc": "2026-09-19T09:35:00Z",
+    "source_verified": "INDEPENDENT_SOURCE_VERIFIED"
+  },
+  "product_video_lifecycle_matrix": {
+    "current_source_state": "PLANNING_ONLY (copyfast_video_studio.py lines 1-8)",
+    "target_source_state": "FULL_END_TO_END_PRODUCT",
+    "points": [
+      {
+        "step": "01_brief_input",
+        "current_web": "Implemented (brief, title, format in video_studio)",
+        "telegram_bot": "Interactive Q&A prompts",
+        "gap": "Web has good form, needs AI auto-brief enhancement",
+        "status": "PARTIAL"
+      },
+      {
+        "step": "02_product_assets",
+        "current_web": "Draft reference links only, no actual upload storage",
+        "telegram_bot": "Photo/video uploads via TG media",
+        "gap": "Requires multi-file drag-drop S3/local vault storage",
+        "status": "MISSING_STORAGE"
+      },
+      {
+        "step": "03_reference_material",
+        "current_web": "Text notes only",
+        "telegram_bot": "Reference video links parsed by yt-dlp",
+        "gap": "Need reference video analysis & preview",
+        "status": "MISSING"
+      },
+      {
+        "step": "04_scene_generation",
+        "current_web": "Static deterministic templates",
+        "telegram_bot": "AI scene decomposition via LLM",
+        "gap": "No dynamic LLM scene generator in Web",
+        "status": "MISSING"
+      },
+      {
+        "step": "05_scene_ordering",
+        "current_web": "Local scene order array",
+        "telegram_bot": "Linear script order",
+        "gap": "Web needs visual drag-and-drop scene board",
+        "status": "PARTIAL"
+      },
+      {
+        "step": "06_prompt_generation",
+        "current_web": "Template-based prompt builder",
+        "telegram_bot": "Dynamic Veo/Kling/Sora prompt compiler",
+        "gap": "Must wire canonical prompt compiler to Web scenes",
+        "status": "PARTIAL"
+      },
+      {
+        "step": "07_duration",
+        "current_web": "Duration metadata field only",
+        "telegram_bot": "5s, 10s per scene, total video math",
+        "gap": "Real duration constraint per provider model missing",
+        "status": "PARTIAL"
+      },
+      {
+        "step": "08_aspect_ratio",
+        "current_web": "Aspect ratio metadata (9:16, 16:9, 1:1, 4:5)",
+        "telegram_bot": "Strict format enforcement per provider",
+        "gap": "Web UI has dropdown, needs visual frame preview",
+        "status": "PARTIAL"
+      },
+      {
+        "step": "09_voice",
+        "current_web": "Opaque voice_id string in brief",
+        "telegram_bot": "Voice selection menu, preview MP3, TTS engine",
+        "gap": "No voice preview player or selection modal in Video Studio",
+        "status": "MISSING"
+      },
+      {
+        "step": "10_music",
+        "current_web": "Opaque music_id string in brief",
+        "telegram_bot": "Music library, auto-cue, volume ducking",
+        "gap": "No music picker or audio cue sheet binding",
+        "status": "MISSING"
+      },
+      {
+        "step": "11_subtitle",
+        "current_web": "Checkbox 'subtitles' boolean",
+        "telegram_bot": "Auto-transcribe, SRT generator, burn-in ASS",
+        "gap": "No subtitle editor or styling controls",
+        "status": "MISSING"
+      },
+      {
+        "step": "12_render_options",
+        "current_web": "None (mock enum)",
+        "telegram_bot": "Quality tiers (standard, high, master), 720p/1080p",
+        "gap": "Render options not connected to pricing engine",
+        "status": "MISSING"
+      },
+      {
+        "step": "13_quote",
+        "current_web": "Deterministic mock estimate endpoint",
+        "telegram_bot": "Canonical invoice calculation (scene × duration + addons)",
+        "gap": "Web quote must query canonical pricing engine with atomic quote receipt",
+        "status": "PARTIAL"
+      },
+      {
+        "step": "14_confirmation",
+        "current_web": "None (planning only)",
+        "telegram_bot": "2-step invoice confirmation with idempotency",
+        "gap": "Web confirm modal with balance check missing",
+        "status": "MISSING"
+      },
+      {
+        "step": "15_job_creation",
+        "current_web": "None (prohibited in copyfast_video_studio)",
+        "telegram_bot": "Atomic job insert in video_jobs table",
+        "gap": "No canonical job creation from Web plan",
+        "status": "MISSING"
+      },
+      {
+        "step": "16_provider_execution",
+        "current_web": "None",
+        "telegram_bot": "Veo / Kling / ShopAIKey / Key4U dispatch loop",
+        "gap": "Web relies on Bot worker; needs bridge job submission",
+        "status": "MISSING"
+      },
+      {
+        "step": "17_scene_progress",
+        "current_web": "Mock events log",
+        "telegram_bot": "Real-time task polling per scene (queued/generating/done)",
+        "gap": "Web needs live multi-scene progress visualizer",
+        "status": "MISSING"
+      },
+      {
+        "step": "18_retry_recovery",
+        "current_web": "None",
+        "telegram_bot": "Worker retry loop with fallback provider chain",
+        "gap": "Web has no retry button for failed scenes",
+        "status": "MISSING"
+      },
+      {
+        "step": "19_finalizer",
+        "current_web": "None",
+        "telegram_bot": "FFmpeg stitch scenes + audio + subtitles -> final MP4",
+        "gap": "Stitch step is purely backend; Web needs status marker",
+        "status": "MISSING"
+      },
+      {
+        "step": "20_preview",
+        "current_web": "None",
+        "telegram_bot": "Low-res video preview sent to TG chat",
+        "gap": "Web video player with scene scrubbing missing",
+        "status": "MISSING"
+      },
+      {
+        "step": "21_final_mp4",
+        "current_web": "None",
+        "telegram_bot": "Durable MP4 file saved on VPS storage",
+        "gap": "Web has no direct MP4 stream or signed delivery URL",
+        "status": "MISSING"
+      },
+      {
+        "step": "22_download",
+        "current_web": "None",
+        "telegram_bot": "TG document upload / download link",
+        "gap": "Direct authenticated browser download button missing",
+        "status": "MISSING"
+      },
+      {
+        "step": "23_delivery",
+        "current_web": "None",
+        "telegram_bot": "Durable delivery receipt recorded in DB",
+        "gap": "Web delivery receipt contract missing",
+        "status": "MISSING"
+      },
+      {
+        "step": "24_billing_state",
+        "current_web": "None",
+        "telegram_bot": "Deduct Xu on successful delivery; 0 Xu on failure",
+        "gap": "Web wallet ledger deduction verification missing",
+        "status": "MISSING"
+      },
+      {
+        "step": "25_history_duplicate",
+        "current_web": "Plan history only",
+        "telegram_bot": "Project cloning, re-run with new prompt",
+        "gap": "One-click 'Duplicate project & re-render' missing",
+        "status": "PARTIAL"
+      }
+    ]
+  }
+}

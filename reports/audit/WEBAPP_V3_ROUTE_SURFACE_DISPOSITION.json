@@ -1,0 +1,155 @@
+{
+  "audit_metadata": {
+    "task": "P0.WEBAPP.V3.FULL.PRODUCT.IA.UX.ADMIN.REBASE.AUDIT",
+    "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
+    "timestamp_utc": "2026-09-19T09:35:00Z",
+    "total_registry_features": 179
+  },
+  "summary": {
+    "total_catalog_features": 179,
+    "admin_features": 40,
+    "customer_visible_workflows": 139,
+    "primary_product_homes": 10,
+    "product_subtools": 45,
+    "secondary_discovery_only": 64,
+    "merge_or_consolidate": 20
+  },
+  "product_families": [
+    {
+      "family": "PRODUCT_VIDEO",
+      "title": "Video AI Sản Phẩm (Product Video)",
+      "route": "/video",
+      "current_features_merged": [
+        "video_factory_workflow",
+        "story_video_plan",
+        "video_studio",
+        "video_prompt_planner",
+        "video_idea_planner",
+        "cinematic_concept",
+        "storyboard_composer",
+        "image_motion_planner",
+        "creative_motion_guide",
+        "reference_format_planner",
+        "self_shot_scene_planner",
+        "script_to_screen_planner",
+        "long_form_roadmap"
+      ],
+      "disposition": "CONSOLIDATE_INTO_ONE_END_TO_END_STUDIO"
+    },
+    {
+      "family": "VOICE",
+      "title": "Giọng Nói AI (Voice)",
+      "route": "/voice",
+      "current_features_merged": [
+        "voice_studio",
+        "voice_direction_composer",
+        "voice_tts",
+        "voice_clone",
+        "voice_saved_tts"
+      ],
+      "disposition": "SEPARATE_INTO_DEDICATED_VOICE_STUDIO"
+    },
+    {
+      "family": "MUSIC_AND_SFX",
+      "title": "Âm Nhạc & Hiệu Ứng (Music & SFX)",
+      "route": "/audio",
+      "current_features_merged": [
+        "media_workspace",
+        "audio_hub",
+        "music_prompt_composer",
+        "music_direction_presets",
+        "sfx_cue_sheet"
+      ],
+      "disposition": "SEPARATE_INTO_DEDICATED_AUDIO_HUB"
+    },
+    {
+      "family": "SUBTITLE_DUBBING_TRANSLATION",
+      "title": "Phụ Đề, Lồng Tiếng & Dịch Thuật",
+      "route": "/localization",
+      "current_features_merged": [
+        "subtitle_studio",
+        "subtitle_asset_operations",
+        "subtitle_asr",
+        "subtitle_create",
+        "subtitle_translate"
+      ],
+      "disposition": "CONSOLIDATE_INTO_LOCALIZATION_SUITE"
+    },
+    {
+      "family": "MANUAL_VIDEO_TOOLS",
+      "title": "Công Cụ Video Thủ Công (FFmpeg / Local)",
+      "route": "/tools/video",
+      "current_features_merged": [
+        "documents_pdf_ocr",
+        "documents_ocr",
+        "frame_extraction",
+        "video_trim",
+        "video_compress"
+      ],
+      "disposition": "NEW_LOCAL_FFMPEG_SUITE"
+    },
+    {
+      "family": "AUTOMATED_PUBLISHING",
+      "title": "Lịch Đăng & Phân Phối Tự Động (Publishing)",
+      "route": "/publishing",
+      "current_features_merged": [
+        "campaigns",
+        "calendar",
+        "approvals"
+      ],
+      "disposition": "CONSOLIDATE_INTO_PUBLISHING_ORCHESTRATOR"
+    },
+    {
+      "family": "IMAGE_TOOLS",
+      "title": "Công Cụ Hình Ảnh AI (Image Tools)",
+      "route": "/images",
+      "current_features_merged": [
+        "image_studio",
+        "image_hub",
+        "quick_image_planner",
+        "image_prompt_composer",
+        "image_create"
+      ],
+      "disposition": "RETAIN_AS_STANDALONE_IMAGE_STUDIO"
+    },
+    {
+      "family": "FREE_TOOLS",
+      "title": "Tiện Ích Miễn Phí (Free Tools)",
+      "route": "/free-tools",
+      "current_features_merged": [
+        "free_prompt_gallery",
+        "starter_kits",
+        "quick_utilities"
+      ],
+      "disposition": "CONSOLIDATE_AS_LEAD_MAGNET_GROUP"
+    },
+    {
+      "family": "PROJECTS_OUTPUTS",
+      "title": "Dự Án & Thành Phẩm (Projects & Outputs)",
+      "route": "/projects",
+      "current_features_merged": [
+        "projects",
+        "project_packages",
+        "jobs",
+        "assets",
+        "asset_vault"
+      ],
+      "disposition": "UNIFIED_PROJECTS_AND_DELIVERY_VAULT"
+    },
+    {
+      "family": "ACCOUNT_WALLET_COMMERCE",
+      "title": "Ví Xu, Gói Cước & Tài Khoản",
+      "route": "/wallet",
+      "current_features_merged": [
+        "wallet",
+        "wallet_topup",
+        "packages",
+        "pricing",
+        "membership",
+        "account",
+        "account_security"
+      ],
+      "disposition": "UNIFIED_BILLING_AND_ACCOUNT_HUB"
+    }
+  ]
+}

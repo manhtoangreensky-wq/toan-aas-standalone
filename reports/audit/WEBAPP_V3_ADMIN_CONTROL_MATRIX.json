@@ -1,0 +1,75 @@
+{
+  "audit_metadata": {
+    "task": "P0.WEBAPP.V3.FULL.PRODUCT.IA.UX.ADMIN.REBASE.AUDIT",
+    "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
+    "timestamp_utc": "2026-09-19T09:35:00Z"
+  },
+  "matrix": [
+    {
+      "customer_capability": "Video Generation",
+      "customer_route": "/studio",
+      "customer_entity": "video_plans / video_jobs",
+      "admin_list_route": "/admin/jobs?type=video",
+      "admin_detail_route": "/admin/jobs/{id}",
+      "admin_observability": "View customer prompt, scene progress, provider task, cost Xu, final MP4",
+      "admin_allowed_action": "Cancel stuck job, retry failed scene, inspect provider response",
+      "audit_source": "web_audit_events + bot job_events",
+      "canonical_authority": "Bot SQLite video_jobs"
+    },
+    {
+      "customer_capability": "Voice Synthesis / TTS",
+      "customer_route": "/voice",
+      "customer_entity": "voice_jobs / audio_assets",
+      "admin_list_route": "/admin/jobs?type=voice",
+      "admin_detail_route": "/admin/jobs/{id}",
+      "admin_observability": "View text script, speaker model, character count, audio duration, output MP3",
+      "admin_allowed_action": "Re-run generation, flag content violation",
+      "audit_source": "web_audit_events",
+      "canonical_authority": "Bot SQLite voice_jobs"
+    },
+    {
+      "customer_capability": "Manual Topup",
+      "customer_route": "/wallet/topup",
+      "customer_entity": "web_manual_topup_requests",
+      "admin_list_route": "/admin/topups",
+      "admin_detail_route": "/admin/topups?id={id}",
+      "admin_observability": "View payment code, proof reference, submitted VND, 3-layer reconciliation state",
+      "admin_allowed_action": "Draft approve, confirm credit, reject with reason",
+      "audit_source": "web_audit_events",
+      "canonical_authority": "Web SQLite web_manual_topup_requests + Bot Core credit_events"
+    },
+    {
+      "customer_capability": "Wallet Balance & History",
+      "customer_route": "/wallet",
+      "customer_entity": "users (balance_xu) + credit_events",
+      "admin_list_route": "/admin/wallet",
+      "admin_detail_route": "/admin/wallet/{user_id}",
+      "admin_observability": "View proven balance, lifetime deposit, ledger events count, reconciliation status",
+      "admin_allowed_action": "Audit ledger only. Arbitrary balance edit PROHIBITED (MANUAL_CREDIT_ACTIONS=0)",
+      "audit_source": "credit_events",
+      "canonical_authority": "Bot SQLite credit_events"
+    },
+    {
+      "customer_capability": "Support Ticket",
+      "customer_route": "/support/tickets",
+      "customer_entity": "web_support_tickets",
+      "admin_list_route": "/admin/tickets",
+      "admin_detail_route": "/admin/tickets/{id}",
+      "admin_observability": "View customer issue, priority, message thread, related job ID",
+      "admin_allowed_action": "Reply, change status (open/in_progress/resolved/closed), assign agent",
+      "audit_source": "web_audit_events",
+      "canonical_authority": "Web SQLite web_support_tickets"
+    },
+    {
+      "customer_capability": "Catalog & Pricing",
+      "customer_route": "/pricing",
+      "customer_entity": "pricing_catalog / dynamic_pricing_drafts",
+      "admin_list_route": "/admin/pricing",
+      "admin_detail_route": "/admin/pricing/{sku}",
+      "admin_observability": "Current live prices, margins, draft revisions, publish history",
+      "admin_allowed_action": "Draft price changes, calculate diff, publish to canonical catalog",
+      "audit_source": "dynamic_pricing_history",
+      "canonical_authority": "dynamic_pricing_catalog"
+    }
+  ]
+}
