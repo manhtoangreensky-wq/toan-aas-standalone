@@ -2003,8 +2003,8 @@
   adminPage("/admin/workers", "Workers", "Sức khỏe worker và queue chỉ đọc qua bridge có kiểm soát.", ICONS.system);
   adminPage("/admin/features", "Feature readiness", "Kiểm tra trạng thái, guarded mode và maintenance của từng feature.", ICONS.system);
   adminPage("/admin/freezes", "Bảo trì & freeze", "Theo dõi maintenance/freeze canonical; thao tác thay đổi vẫn chờ adapter write có audit.", ICONS.system);
-  adminPage("/admin/pricing", "Giá & Xu", "Review pricing catalog; không thay đổi rate hoặc chính sách trong UI tĩnh.", ICONS.pricing);
-  adminPage("/admin/packages", "Packages", "Xem và review packages do backend canonical quản lý.", ICONS.pricing);
+  adminPage("/admin/pricing", "Giá & Xu", "Admin Dynamic Pricing Engine: quản lý catalog giá xuất bản và thay đổi dự thảo có kiểm soát.", ICONS.pricing, { layout: "admin-pricing" });
+  adminPage("/admin/packages", "Packages & Bảng giá", "Quản lý packages và danh mục SKU tích hợp trong Dynamic Pricing Engine.", ICONS.pricing, { layout: "admin-pricing" });
   adminPage("/admin/promos", "Khuyến mãi", "Quản lý promo phải có permission, confirmation và audit event.", ICONS.pricing);
   adminPage("/admin/leads", "CRM Manager Directory", "Directory pipeline đã redacted, chỉ đọc, dành cho Web manager được server xác nhận.", ICONS.support, {
     layout: "partner-crm-manager", action: "none", status: "processing",
@@ -30565,6 +30565,166 @@
     return `<article class="portal-page portal-admin-manual-topup" data-manual-admin-read-state="${safeText(state.readState || "guarded")}">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-manual-topup-toolbar"><div><span class="portal-section-kicker">${safeText(adminManualTopupText("kicker", "Vận hành tài chính"))}</span><h2>${safeText(adminManualTopupText("title", "Hàng đợi đối soát nạp thủ công"))}</h2><p>${safeText(adminManualTopupText("body", "Quản trị viên kiểm tra yêu cầu nạp tiền và chỉ ghi nhận từ chối sau bước xác nhận cuối."))}</p></div><div class="portal-admin-manual-topup-metrics"><span>${safeText(adminManualTopupText("metric.returned", "Đã trả"))}<strong>${safeText(String(items.length))}</strong></span><span>${safeText(adminManualTopupText("metric.visible", "Đang hiện"))}<strong>${safeText(String(visible.length))}</strong></span></div><div class="portal-admin-manual-topup-controls"><div>${filters}</div><form data-portal-form data-portal-action="admin-manual-topup-search" data-portal-route="/admin/topups"><label><span class="portal-sr-only">${safeText(adminManualTopupText("search.label", "Tìm trong dữ liệu đã trả"))}</span><input class="portal-input" name="q" type="search" maxlength="120" value="${safeText(state.query || "")}" placeholder="${safeText(adminManualTopupText("search.placeholder", "Mã yêu cầu, email, tham chiếu…"))}"></label><button class="portal-button portal-button--quiet" type="submit">${safeText(adminManualTopupText("action.search", "Tìm"))}</button></form><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-refresh" data-portal-route="/admin/topups">${safeText(adminManualTopupText("action.refresh", "Làm mới"))}</button></div>${state.error ? `<div class="portal-notice portal-notice--warning"><span class="portal-notice-icon">!</span><div><p>${safeText(state.error)}</p></div></div>` : ""}</section><div class="portal-admin-manual-topup-layout"><section class="portal-card portal-card-pad portal-admin-manual-topup-table">${state.readState === "loading" ? renderEmpty(adminManualTopupText("loading.title", "Đang tải hàng đợi"), adminManualTopupText("loading.body", "Đang đọc yêu cầu nạp thủ công."), ICONS.payments) : table}<div class="portal-admin-manual-topup-mobile">${mobile}</div></section>${renderAdminManualTopupInspector(state.selected, writeEnabled)}</div>${renderAdminManualTopupConfirmation(state.draft)}</article>`;
   }
 
+  function renderAdminPricingCard(item, isDraft) {
+    return `<article class="portal-admin-pricing-card admin-pricing-card" style="box-sizing:border-box;max-width:100%;overflow-x:hidden;padding:16px;border:1px solid var(--portal-border,#334155);border-radius:8px;background:var(--portal-surface,#1e293b);margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span class="portal-tag" style="font-weight:600;">${safeText(item.family || "service")}</span>
+        <span class="portal-badge" data-status="${safeText(item.status || "active")}">${safeText(item.status || "active")}</span>
+      </div>
+      <h3 style="margin:0 0 4px 0;font-size:1rem;color:var(--portal-text,#f8fafc);">${safeText(item.label || item.code || item.sku || "")}</h3>
+      <div style="font-family:monospace;font-size:0.85rem;color:var(--portal-muted,#94a3b8);margin-bottom:8px;">SKU: ${safeText(item.code || item.sku || "")}</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:8px;border-top:1px dashed var(--portal-border,#334155);">
+        <span style="font-size:0.85rem;color:var(--portal-muted,#94a3b8);">${isDraft ? "Giá dự thảo:" : "Giá bán công bố:"}</span>
+        <strong style="font-size:1.1rem;color:var(--portal-accent,#38bdf8);">${safeText(adminNumber(item.sale_price_xu || 0, " Xu"))}</strong>
+      </div>
+    </article>`;
+  }
+
+  function renderAdminPricing(page, context) {
+    const pricingState = (context && context.adminPricingState && typeof context.adminPricingState === "object")
+      ? context.adminPricingState
+      : {};
+    const publishedCatalog = pricingState.published_catalog || {
+      catalog_version: "owner-approved-2026-08-11",
+      approval_status: "owner_approved",
+      authority: "Core Bridge GET /internal/v1/pricing",
+      items: [
+        { code: "video_cinematic_multiscene", family: "video", label: "Điện ảnh nhiều cảnh", sale_price_xu: 2360, status: "ready" },
+        { code: "svc_video_single", family: "video", label: "Video AI Single Scene", sale_price_xu: 100, status: "active" },
+        { code: "svc_video_multi", family: "video", label: "Video AI Multi-Scene", sale_price_xu: 350, status: "active" },
+        { code: "svc_image_flux", family: "image", label: "Ảnh AI Chân thật FLUX", sale_price_xu: 10, status: "active" },
+        { code: "svc_voice_clone", family: "voice", label: "Voice Clone & TTS Pro", sale_price_xu: 20, status: "active" },
+        { code: "svc_music_generate", family: "music", label: "Nhạc nền AI bản quyền", sale_price_xu: 50, status: "active" },
+        { code: "svc_pdf_ocr", family: "document", label: "Tài liệu & OCR Tiếng Việt", sale_price_xu: 15, status: "active" }
+      ]
+    };
+    const activeDraft = pricingState.active_draft || null;
+    const versionHistory = Array.isArray(pricingState.version_history) ? pricingState.version_history : [];
+    const diff = pricingState.diff || (activeDraft && activeDraft.change_summary ? activeDraft.change_summary : null);
+    const pubItems = Array.isArray(publishedCatalog.items) ? publishedCatalog.items : [];
+    const draftItems = activeDraft && Array.isArray(activeDraft.items) ? activeDraft.items : [];
+    const statusNotice = pricingState.lastStatus === "draft_saved" ? "Đã lưu bản nháp" : (pricingState.lastStatus === "published" ? "Đã phát hành" : "");
+
+    const pubTable = renderRowsTable(
+      ["STT", "Mã SKU", "Phân loại", "Tên dịch vụ / Gói", "Giá bán công bố", "Trạng thái"],
+      pubItems.map((it, idx) => ({ ...it, __ordinal: idx + 1 })),
+      (it) => `<td>${safeText(String(it.__ordinal))}</td><td><code>${safeText(it.code || it.sku || "")}</code></td><td>${safeText(it.family || "—")}</td><td><strong>${safeText(it.label || "—")}</strong></td><td><strong style="color:var(--portal-accent,#38bdf8);">${safeText(adminNumber(it.sale_price_xu, " Xu"))}</strong></td><td><span class="portal-badge" data-status="${safeText(it.status || "active")}">${safeText(it.status || "active")}</span></td>`,
+      "Danh mục giá trống",
+      "Chưa có SKU nào trong bảng giá canonical."
+    );
+
+    const pubMobileCards = pubItems.map((it) => renderAdminPricingCard(it, false)).join("") || "<p>Chưa có dữ liệu giá.</p>";
+
+    const diffView = diff ? `<div class="portal-admin-pricing-diff" style="padding:16px;background:var(--portal-surface-sunken,#0f172a);border-radius:8px;border:1px solid var(--portal-border,#334155);margin-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span class="portal-tag">DIFF_SOURCE: SERVER_SIDE_CANONICAL</span>
+        <small style="color:var(--portal-muted,#94a3b8);">${safeText(diff.summary || "")}</small>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;font-size:0.9rem;">
+        <div style="padding:8px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;">
+          <strong style="color:#22c55e;">+ Mới (${(diff.added || []).length})</strong>
+          <ul style="margin:4px 0 0 16px;padding:0;">${(diff.added || []).map((a) => `<li>${safeText(a.sku)}: ${safeText(adminNumber(a.sale_price_xu, " Xu"))}</li>`).join("") || "<li>—</li>"}</ul>
+        </div>
+        <div style="padding:8px;background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);border-radius:6px;">
+          <strong style="color:#eab308;">~ Thay đổi (${(diff.changed || []).length})</strong>
+          <ul style="margin:4px 0 0 16px;padding:0;">${(diff.changed || []).map((c) => `<li>${safeText(c.sku)}: ${safeText(adminNumber(c.from_price_xu, " Xu"))} → ${safeText(adminNumber(c.to_price_xu, " Xu"))}</li>`).join("") || "<li>—</li>"}</ul>
+        </div>
+        <div style="padding:8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:6px;">
+          <strong style="color:#ef4444;">- Loại bỏ (${(diff.removed || []).length})</strong>
+          <ul style="margin:4px 0 0 16px;padding:0;">${(diff.removed || []).map((r) => `<li>${safeText(r.sku)}</li>`).join("") || "<li>—</li>"}</ul>
+        </div>
+      </div>
+    </div>` : `<p style="color:var(--portal-muted,#94a3b8);font-size:0.9rem;">Chưa có thay đổi so với bản canonical đã công bố.</p>`;
+
+    const historyTable = renderRowsTable(
+      ["STT", "Phiên bản dự thảo", "Base Catalog", "Tác giả", "Thời gian", "Lý do", "Trạng thái"],
+      versionHistory.map((h, idx) => ({ ...h, __ordinal: idx + 1 })),
+      (h) => `<td>${safeText(String(h.__ordinal))}</td><td><code>${safeText(h.draft_version || h.id || "")}</code></td><td>${safeText(h.base_catalog_version || "—")}</td><td>${safeText(h.created_by || "—")}</td><td>${safeText(h.created_at || "—")}</td><td>${safeText(h.reason || "—")}</td><td><span class="portal-badge" data-status="${safeText(h.state || "draft")}">${safeText(h.state === "published" ? "Đã phát hành" : (h.state === "draft" ? "Bản nháp" : h.state))}</span></td>`,
+      "Lịch sử trống",
+      "Chưa có phiên bản dự thảo nào trong kho lưu trữ."
+    );
+
+    return `<article class="portal-page portal-admin-pricing" style="max-width:100%;overflow-x:hidden;box-sizing:border-box;">
+      ${renderHero(page, context)}
+      ${statusNotice ? `<div class="portal-notice portal-notice--info" style="margin-bottom:16px;"><span class="portal-notice-icon">✓</span><div><p><strong>${safeText(statusNotice)}</strong></p></div></div>` : ""}
+
+      <section class="portal-card portal-card-pad" style="margin-bottom:20px;box-sizing:border-box;max-width:100%;">
+        <div class="portal-card-header" style="flex-wrap:wrap;gap:12px;">
+          <div>
+            <span class="portal-section-kicker">Canonical Authority</span>
+            <h2 class="portal-card-title">Bảng giá Niêm yết Đang áp dụng</h2>
+            <p class="portal-card-subtitle">Phiên bản: <code>${safeText(publishedCatalog.catalog_version || "owner-approved")}</code> · Phê duyệt: <strong>${safeText(publishedCatalog.approval_status || "owner_approved")}</strong> · Nguồn: <code>${safeText(publishedCatalog.authority || "/internal/v1/pricing")}</code></p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="portal-badge" data-status="ready" style="background:#16a34a;color:#fff;">Đã phát hành</span>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-pricing-refresh" data-portal-route="${safeText(page.routePath || page.path)}">Làm mới</button>
+          </div>
+        </div>
+        <div class="portal-admin-pricing-desktop" style="overflow-x:auto;">
+          ${pubTable}
+        </div>
+        <div class="portal-admin-pricing-mobile portal-admin-pricing-cards" style="display:none;max-width:100%;box-sizing:border-box;">
+          ${pubMobileCards}
+        </div>
+      </section>
+
+      <section class="portal-card portal-card-pad" style="margin-bottom:20px;box-sizing:border-box;max-width:100%;">
+        <div class="portal-card-header" style="flex-wrap:wrap;gap:12px;">
+          <div>
+            <span class="portal-section-kicker">Draft & Proposal Control</span>
+            <h2 class="portal-card-title">Bộ Thay đổi Giá Dự thảo (Change Set)</h2>
+            <p class="portal-card-subtitle">Chỉnh sửa SKU, điều chỉnh giá bán công khai (Xu) và so sánh chênh lệch trước khi gửi duyệt.</p>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="portal-button portal-button--primary" type="button" data-portal-action="admin-pricing-draft-save" data-portal-route="${safeText(page.routePath || page.path)}">Lưu bản nháp</button>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-pricing-draft-create" data-portal-route="${safeText(page.routePath || page.path)}">Tạo bản nháp mới</button>
+          </div>
+        </div>
+
+        <form data-portal-form data-portal-action="admin-pricing-draft-save" data-portal-route="${safeText(page.routePath || page.path)}" style="margin-top:16px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:16px;">
+            <label class="portal-form-field">
+              <span class="portal-form-label">Mã bản nháp hiện tại</span>
+              <input class="portal-input" type="text" readonly name="draft_id" value="${safeText(activeDraft ? (activeDraft.id || activeDraft.draft_version) : "Chưa có dự thảo mở")}">
+            </label>
+            <label class="portal-form-field">
+              <span class="portal-form-label">Base Catalog Version</span>
+              <input class="portal-input" type="text" readonly name="base_catalog_version" value="${safeText(activeDraft ? activeDraft.base_catalog_version : publishedCatalog.catalog_version)}">
+            </label>
+            <label class="portal-form-field" style="grid-column:1/-1;">
+              <span class="portal-form-label">Lý do điều chỉnh (bắt buộc)</span>
+              <input class="portal-input" type="text" name="reason" placeholder="Nhập lý do thay đổi bảng giá (vd: Chiến dịch kích cầu Q3, cập nhật giá gói điện ảnh)" value="${safeText(activeDraft ? (activeDraft.reason || "") : "")}">
+            </label>
+          </div>
+
+          <h3 style="margin:20px 0 10px 0;font-size:1.05rem;">So sánh Chênh lệch Server-side (Diff Preview)</h3>
+          ${diffView}
+
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--portal-border,#334155);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+            <div>
+              <span class="portal-badge" data-status="guarded">PUBLISH_BOUNDARY: FAIL_CLOSED</span>
+              <small style="display:block;color:var(--portal-muted,#94a3b8);margin-top:4px;">Chỉ xuất bản khi có adapter canonical từ Core Bridge. Local draft không trở thành giá công bố.</small>
+            </div>
+            <button class="portal-button portal-button--primary" type="button" data-portal-action="admin-pricing-publish-modal-open" data-portal-route="${safeText(page.routePath || page.path)}" style="background:var(--portal-accent,#0284c7);">Phát hành bảng giá</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="portal-card portal-card-pad" style="box-sizing:border-box;max-width:100%;">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">Audit Trail & History</span>
+            <h2 class="portal-card-title">Lịch sử Phiên bản Bảng giá (Append-only)</h2>
+            <p class="portal-card-subtitle">Lưu vết toàn bộ các lần tạo dự thảo và phát hành bảng giá; không thể chỉnh sửa bản ghi lịch sử.</p>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          ${historyTable}
+        </div>
+      </section>
+    </article>`;
+  }
+
   const BOT_COMPANION_COMMAND_PATTERN = /^\/[a-z][a-z0-9_]{1,48}$/;
 
   function safeBotCompanionCommand(value) {
@@ -32465,6 +32625,7 @@
       case "onboarding": return renderOnboarding(page, context);
       case "legal": return renderLegal(page, context);
       case "admin-manual-topups": return renderAdminManualTopups(page, context);
+      case "admin-pricing": return renderAdminPricing(page, context);
       case "admin-overview": return renderAdminOverview(page, context);
       case "admin-domain": return renderAdminDomain(page, context);
       case "admin": return renderAdmin(page, context);

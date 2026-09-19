@@ -6321,6 +6321,11 @@ def ensure_copyfast_schema() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_partner_readiness_profiles_owner_updated ON web_partner_readiness_profiles(account_id, updated_at DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_partner_readiness_versions_owner_revision ON web_partner_readiness_versions(account_id, revision DESC, profile_id)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_partner_readiness_events_owner_created ON web_partner_readiness_events(account_id, created_at DESC, id DESC)")
+        try:
+            import copyfast_pricing_policy
+            copyfast_pricing_policy.ensure_pricing_schema(conn)
+        except Exception:
+            pass
 
 
 def as_row(row: sqlite3.Row | tuple | None, columns: tuple[str, ...]) -> dict | None:

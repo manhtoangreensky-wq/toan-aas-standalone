@@ -6465,7 +6465,10 @@ async def retired_generic_admin_security_module() -> None:
 @router.get("/admin/pricing")
 @router.get("/admin/packages")
 async def admin_pricing_module(request: Request, account: dict = Depends(require_admin)):
-    """Real pricing packages and service catalog for Admin operations."""
+    """Real pricing packages and dynamic pricing engine for Admin operations."""
+    import copyfast_pricing_policy
+
+    # Canonical base services & topup packages
     items = []
     for pkg in DEFAULT_TOPUP_PACKAGES:
         items.append({
@@ -6481,6 +6484,7 @@ async def admin_pricing_module(request: Request, account: dict = Depends(require
             "write_locked_reason": "Bảng giá do Bot Core canonical quản trị; thay đổi giá cần cập nhật cấu hình Core.",
         })
     core_services = [
+        {"code": "video_cinematic_multiscene", "name": "Điện ảnh nhiều cảnh", "family": "Video AI", "price_xu": 2360, "price_vnd": 236000, "limits": "Đa cảnh, lồng tiếng, phụ đề", "status": "ready"},
         {"code": "svc_video_single", "name": "Video AI Single Scene", "family": "Video AI", "price_xu": 100, "price_vnd": 10000, "limits": "1 cảnh 1080p, audio mix", "status": "active"},
         {"code": "svc_video_multi", "name": "Video AI Multi-Scene", "family": "Video AI", "price_xu": 350, "price_vnd": 35000, "limits": "Đa cảnh, lồng tiếng, phụ đề", "status": "active"},
         {"code": "svc_image_flux", "name": "Ảnh AI Chân thật FLUX", "family": "Image AI", "price_xu": 10, "price_vnd": 1000, "limits": "Độ phân giải 2K, photorealistic", "status": "active"},
@@ -6496,6 +6500,68 @@ async def admin_pricing_module(request: Request, account: dict = Depends(require
             "write_locked_reason": "Bảng giá do Bot Core canonical quản trị; thay đổi giá cần cập nhật cấu hình Core.",
         })
 
+    # Fetch canonical published public sale catalog
+    published_catalog_version = "owner-approved-2026-08-11"
+    published_sale_items = [
+        {"code": "video_cinematic_multiscene", "family": "video", "label": "Điện ảnh nhiều cảnh", "sale_price_xu": 2360, "status": "ready"},
+        {"code": "svc_video_single", "family": "video", "label": "Video AI Single Scene", "sale_price_xu": 100, "status": "active"},
+        {"code": "svc_video_multi", "family": "video", "label": "Video AI Multi-Scene", "sale_price_xu": 350, "status": "active"},
+        {"code": "svc_image_flux", "family": "image", "label": "Ảnh AI Chân thật FLUX", "sale_price_xu": 10, "status": "active"},
+        {"code": "svc_voice_clone", "family": "voice", "label": "Voice Clone & TTS Pro", "sale_price_xu": 20, "status": "active"},
+        {"code": "svc_music_generate", "family": "music", "label": "Nhạc nền AI bản quyền", "sale_price_xu": 50, "status": "active"},
+        {"code": "svc_pdf_ocr", "family": "document", "label": "Tài liệu & OCR Tiếng Việt", "sale_price_xu": 15, "status": "active"},
+    ]
+
+    try:
+        bridge_res = await _bridge("GET", "/internal/v1/pricing", account=account, request=request)
+        if isinstance(bridge_res, dict) and bridge_res.get("ok"):
+            cat = bridge_res.get("data", {}).get("public_sale_catalog")
+            if isinstance(cat, dict) and cat.get("catalog_version") and cat.get("items"):
+                published_catalog_version = cat["catalog_version"]
+                published_sale_items = cat["items"]
+    except Exception:
+        pass
+
+    published_catalog = {
+        "available": True,
+        "catalog_version": published_catalog_version,
+        "approval_status": "owner_approved",
+        "items": published_sale_items,
+        "count": len(published_sale_items),
+    }
+
+    # Retrieve draft change-set and version history
+    active_draft = copyfast_pricing_policy.get_active_draft(published_sale_items)
+    version_history = copyfast_pricing_policy.list_version_history()
+
+    # Query recent audit trail
+    recent_audits = []
+    try:
+        with transaction() as conn:
+            copyfast_pricing_policy.ensure_pricing_schema(conn)
+            audit_rows = conn.execute(
+                """
+                SELECT id, action, target_id, outcome, detail, created_at
+                FROM web_audit_events
+                WHERE action LIKE 'pricing.%'
+                ORDER BY created_at DESC
+                LIMIT 20
+                """
+            ).fetchall()
+            recent_audits = [
+                {
+                    "id": r[0],
+                    "action": r[1],
+                    "target_id": r[2],
+                    "outcome": r[3],
+                    "detail": r[4],
+                    "created_at": r[5],
+                }
+                for r in audit_rows
+            ]
+    except Exception:
+        recent_audits = []
+
     return envelope(
         True,
         "Đã nạp bảng giá và gói cước canonical.",
@@ -6504,12 +6570,117 @@ async def admin_pricing_module(request: Request, account: dict = Depends(require
             "packages": items,
             "topup_packages": list(DEFAULT_TOPUP_PACKAGES),
             "service_catalog": core_services,
+            "published_catalog": published_catalog,
+            "active_draft": active_draft,
+            "version_history": version_history,
+            "diff": active_draft.get("diff") if active_draft else None,
+            "canonical_publish_available": copyfast_pricing_policy.CANONICAL_PUBLISH_AVAILABLE,
+            "canonical_publish_endpoint": copyfast_pricing_policy.CANONICAL_PUBLISH_ENDPOINT,
+            "canonical_publish_receipt": copyfast_pricing_policy.CANONICAL_PUBLISH_RECEIPT,
+            "admin_pricing_route": copyfast_pricing_policy.ADMIN_PRICING_ROUTE,
+            "admin_packages_compat_route": copyfast_pricing_policy.ADMIN_PACKAGES_COMPAT_ROUTE,
+            "audit_trail": recent_audits,
             "count": len(items),
             "write_locked": True,
             "write_locked_reason": "Bảng giá do Bot Core canonical quản trị; thay đổi giá cần cập nhật cấu hình Core.",
         },
         status_name="read_only",
     )
+
+
+@router.api_route("/admin/pricing", methods=["POST"])
+@router.api_route("/admin/modules/pricing", methods=["POST"])
+@router.api_route("/admin/packages", methods=["POST"])
+@router.api_route("/admin/modules/packages", methods=["POST"])
+async def admin_pricing_mutation(
+    request: Request,
+    payload: dict | None = None,
+    account: dict = Depends(require_canonical_admin_csrf),
+):
+    """Mutate Admin Dynamic Pricing Engine drafts and handle publish boundary."""
+    import copyfast_pricing_policy
+
+    body = payload or {}
+    if not isinstance(body, dict) or not body:
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+
+    action = str(body.get("action") or "").strip().lower()
+
+    # Determine base items from canonical catalog
+    base_items = [
+        {"code": "video_cinematic_multiscene", "family": "video", "label": "Điện ảnh nhiều cảnh", "sale_price_xu": 2360, "status": "ready"},
+        {"code": "svc_video_single", "family": "video", "label": "Video AI Single Scene", "sale_price_xu": 100, "status": "active"},
+        {"code": "svc_video_multi", "family": "video", "label": "Video AI Multi-Scene", "sale_price_xu": 350, "status": "active"},
+        {"code": "svc_image_flux", "family": "image", "label": "Ảnh AI Chân thật FLUX", "sale_price_xu": 10, "status": "active"},
+        {"code": "svc_voice_clone", "family": "voice", "label": "Voice Clone & TTS Pro", "sale_price_xu": 20, "status": "active"},
+        {"code": "svc_music_generate", "family": "music", "label": "Nhạc nền AI bản quyền", "sale_price_xu": 50, "status": "active"},
+        {"code": "svc_pdf_ocr", "family": "document", "label": "Tài liệu & OCR Tiếng Việt", "sale_price_xu": 15, "status": "active"},
+    ]
+    base_version = str(body.get("base_catalog_version") or "owner-approved-2026-08-11").strip()
+
+    try:
+        bridge_res = await _bridge("GET", "/internal/v1/pricing", account=account, request=request)
+        if isinstance(bridge_res, dict) and bridge_res.get("ok"):
+            cat = bridge_res.get("data", {}).get("public_sale_catalog")
+            if isinstance(cat, dict) and cat.get("catalog_version") and cat.get("items"):
+                base_version = cat["catalog_version"]
+                base_items = cat["items"]
+    except Exception:
+        pass
+
+    if action == "create_draft":
+        reason = str(body.get("reason") or "").strip()
+        items = body.get("items")
+        result = copyfast_pricing_policy.create_draft_change_set(
+            account=account,
+            base_catalog_version=base_version,
+            reason=reason,
+            items=items,
+            base_items=base_items,
+            request=request,
+        )
+        return envelope(True, "Đã lưu bản nháp bảng giá thành công.", data=result, status_name="draft_saved")
+
+    elif action == "update_draft":
+        change_set_id = str(body.get("change_set_id") or body.get("id") or "").strip()
+        reason = str(body.get("reason") or "").strip()
+        items = body.get("items")
+        result = copyfast_pricing_policy.update_draft_change_set(
+            account=account,
+            change_set_id=change_set_id,
+            reason=reason,
+            items=items,
+            base_items=base_items,
+            request=request,
+        )
+        return envelope(True, "Đã lưu bản nháp bảng giá thành công.", data=result, status_name="draft_saved")
+
+    elif action == "publish":
+        change_set_id = str(body.get("change_set_id") or body.get("id") or "").strip()
+        reason = str(body.get("reason") or "").strip()
+        current_cat = {"catalog_version": base_version, "items": base_items}
+        publish_adapter = getattr(request.app.state, "pricing_publish_adapter", None)
+        result = copyfast_pricing_policy.publish_draft_change_set(
+            actor=account,
+            change_set_id=change_set_id,
+            current_canonical_catalog=current_cat,
+            reason=reason,
+            publish_adapter=publish_adapter,
+            request=request,
+        )
+        return envelope(True, "Bảng giá đã được phát hành chính thức lên hệ thống.", data=result, status_name="published")
+
+    elif action == "diff":
+        items = body.get("items") or []
+        cleaned = copyfast_pricing_policy.sanitize_and_validate_items(items)
+        diff = copyfast_pricing_policy.calculate_catalog_diff(base_items, cleaned)
+        return envelope(True, "Đã tính toán diff bảng giá.", data=diff, status_name="diff_calculated")
+
+    else:
+        raise HTTPException(status_code=422, detail=f"Hành động pricing mutation '{action}' không được hỗ trợ.")
 
 
 @router.get("/admin/modules/{module}")
