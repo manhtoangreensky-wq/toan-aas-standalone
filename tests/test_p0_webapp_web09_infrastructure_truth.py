@@ -179,7 +179,10 @@ def test_deploy_workflow_no_raw_secret_logging() -> None:
     # Verify only safe summary variables are printed at the end
     assert 'echo \\"PREVIOUS_HEAD=\\$PREV_HEAD\\"' in content
     assert 'echo \\"DEPLOYED_SHA=\\$TARGET_SHA\\"' in content
-    assert 'echo \\"BACKUP_DIR=\\$BACKUP_DIR\\"' in content
+    assert (
+        'echo \\"TARGET_RELEASE_DIR=\\$TARGET_RELEASE_DIR\\"' in content
+        or 'echo \\"BACKUP_DIR=\\$BACKUP_DIR\\"' in content
+    )
 
 
 # ==============================================================================
@@ -244,20 +247,24 @@ def test_startup_routines_classification_truth() -> None:
 
 
 # ==============================================================================
-# Case 8: Rollback truth reflects actual implementation (Manual Recovery)
+# Case 8: Rollback truth reflects actual implementation (Zero-Downtime Rollback)
 # ==============================================================================
 def test_deploy_rollback_truth_reflects_actual_implementation() -> None:
     content = WORKFLOW_PATH.read_text(encoding="utf-8")
 
-    # Workflow creates a backup directory with manifest
-    assert 'BACKUP_DIR=\\"\\$WEBAPP_DIR/delete/deploy-\\$TARGET_SHA-\\$UTC_TIMESTAMP\\"' in content
-    assert 'mkdir -p \\"\\$BACKUP_DIR\\"' in content
-    assert 'git ls-files > \\"\\$BACKUP_DIR/tracked-files.txt\\"' in content
-    assert "printf 'previous_head: %s\\ntarget_sha: %s\\nbackup_timestamp_utc: %s\\ntracked_file_count: %s\\n' \\\"\\$PREV_HEAD\\\"" in content
+    # Honest rollback reporting: In zero-downtime blue-green deployments, automated rollback
+    # is handled via atomic pointer restoration (rollback_to_active_slot) with zero shared-root mutation.
+    assert (
+        "rollback_to_active_slot" in content
+        or 'BACKUP_DIR=\\"\\$WEBAPP_DIR/delete/deploy-\\$TARGET_SHA-\\$UTC_TIMESTAMP\\"' in content
+    )
+    assert "SHARED_DEPLOY_ROOT_MUTATION=0" in content
+    assert "SHARED_GIT_METADATA_MUTATION=0" in content or "SOURCE_RELEASE_ISOLATION=YES" in content
 
     # Honest rollback reporting: The workflow does NOT implement an automated rollback hook
-    # on error. Instead, manual recovery is supported via the preserved backup manifest.
+    # on error via a generic error trap.
     assert "trap 'rollback'" not in content, "Workflow must not falsely claim an automated rollback trap when manual recovery is used"
+
 
 
 # ==============================================================================

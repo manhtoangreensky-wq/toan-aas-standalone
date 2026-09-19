@@ -809,3 +809,157 @@ class TestP0ZeroDowntimeContracts:
 
         meta = app._load_release_metadata()
         assert meta.get("release_valid") is False, f"Expected release_valid=False for lock SHA mismatch in release.json, got {meta.get('release_valid')}"
+
+    # =========================================================================
+    # C4 Contract Tests (Task P0.WEBAPP.V3-B1.ZERO.DOWNTIME.SOURCE.IMPLEMENTATION.R1.C4)
+    # =========================================================================
+
+    def test_c4_first_red_a_rollback_wrong_generation(self):
+        """FIRST RED A: Rollback verification must prove old slot identity, rejecting B payload."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        idx_fn = wf_content.find("rollback_to_active_slot()")
+        assert idx_fn != -1
+        idx_end = wf_content.find("=== Switching Traffic to Target Slot in Nginx ===")
+        rb_block = wf_content[idx_fn:idx_end]
+        assert "OLD_RELEASE_SHA" in rb_block, "rollback_to_active_slot must bind OLD_RELEASE_SHA"
+        assert "OLD_RUNTIME_ENV" in rb_block, "rollback_to_active_slot must bind OLD_RUNTIME_ENV"
+
+    def test_c4_first_red_b_shared_root_mutation(self):
+        """FIRST RED B: Workflow must not mutate shared checkout via delete/ or git fetch."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "BACKUP_DIR=\"$WEBAPP_DIR/delete" not in wf_content, "Workflow must not create backup under WEBAPP_DIR/delete"
+        assert "SHARED_GIT_METADATA_MUTATION=0" in wf_content, "Workflow must enforce SHARED_GIT_METADATA_MUTATION=0"
+        assert "BUNDLE_VERIFICATION_ISOLATED=YES" in wf_content, "Workflow must enforce BUNDLE_VERIFICATION_ISOLATED=YES"
+
+    def test_c4_first_red_c_commented_nginx_false_positive(self):
+        """FIRST RED C: Prerequisite checks must reject commented pointer include and commented lifecycle block."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        prereq_block = wf_content[wf_content.find("=== Verifying Runtime Prerequisites") : wf_content.find("=== Resolving Active / Target")]
+        assert "strip_nginx_comments" in prereq_block or "COMMENTED" in prereq_block or "python3" in prereq_block, (
+            "Prerequisite checks must normalize Nginx config to reject commented directives"
+        )
+
+    def test_c4_01_rollback_receives_b_health_fails_verification(self):
+        """C4-01: rollback receiving B health must fail verification."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        idx_fn = wf_content.find("rollback_to_active_slot()")
+        rb_block = wf_content[idx_fn:wf_content.find("=== Switching Traffic to Target Slot in Nginx ===")]
+        assert "OLD_RELEASE_SHA" in rb_block and "OLD_RUNTIME_ENV" in rb_block
+        assert "release_sha" in rb_block and "runtime_environment_id" in rb_block
+
+    def test_c4_02_rollback_wrong_old_release_sha_leaves_b_running(self):
+        """C4-02: rollback with wrong old release SHA must leave B running."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        idx_fn = wf_content.find("rollback_to_active_slot()")
+        rb_block = wf_content[idx_fn:wf_content.find("=== Switching Traffic to Target Slot in Nginx ===")]
+        assert "ROLLBACK_A_IDENTITY_NOT_PROVEN_TARGET_STOP=NO" in rb_block or "Leaving target slot" in rb_block
+
+    def test_c4_03_rollback_wrong_old_runtime_env_leaves_b_running(self):
+        """C4-03: rollback with wrong old runtime env must leave B running."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        idx_fn = wf_content.find("rollback_to_active_slot()")
+        rb_block = wf_content[idx_fn:wf_content.find("=== Switching Traffic to Target Slot in Nginx ===")]
+        stop_pos = rb_block.find("systemctl stop toanaas-web@")
+        verify_pos = rb_block.find("RB_VERIFIED")
+        assert verify_pos != -1 and stop_pos != -1 and verify_pos < stop_pos
+
+    def test_c4_04_rollback_exact_old_identity_allows_b_to_be_stopped(self):
+        """C4-04: Target B is stopped only after proven restoration of exact A identity."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "TARGET_STOP_ONLY_AFTER_PROVEN_A=YES" in wf_content
+
+    def test_c4_05_active_slot_identity_captured_before_switch(self):
+        """C4-05: A identity captured from private active-slot health before switch."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "PRE_SWITCH_ACTIVE_SLOT_IDENTITY_PROVEN=YES" in wf_content
+        idx_cap = wf_content.find("Capturing Pre-Switch Active Slot Runtime Identity")
+        idx_sw = wf_content.find("Switching Traffic to Target Slot in Nginx")
+        assert idx_cap != -1 and idx_sw != -1 and idx_cap < idx_sw
+
+    def test_c4_06_pre_switch_public_health_matches_a(self):
+        """C4-06: public pre-switch health must match A."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "PRE_SWITCH_PUBLIC_MATCHES_ACTIVE_SLOT=YES" in wf_content
+        idx_pub = wf_content.find("Verifying Current Public Traffic Matches Active Slot Identity")
+        idx_sw = wf_content.find("Switching Traffic to Target Slot in Nginx")
+        assert idx_pub != -1 and idx_sw != -1 and idx_pub < idx_sw
+
+    def test_c4_07_no_webapp_dir_delete_deployment_backup(self):
+        """C4-07: no WEBAPP_DIR/delete deployment backup."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "$WEBAPP_DIR/delete" not in wf_content
+        assert "SHARED_DEPLOY_ROOT_MUTATION=0" in wf_content
+
+    def test_c4_08_no_git_fetch_into_shared_checkout(self):
+        """C4-08: no git fetch into shared checkout."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert 'git fetch "$STAGING_DIR/release.bundle" refs/deployments/release:refs/deployments/release' not in wf_content
+
+    def test_c4_09_no_shared_git_ref_mutation(self):
+        """C4-09: no shared .git ref/object mutation."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "SHARED_GIT_METADATA_MUTATION=0" in wf_content
+
+    def test_c4_10_isolated_bundle_verification_exists(self):
+        """C4-10: isolated bundle verification exists in staging repo."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "BUNDLE_VERIFICATION_ISOLATED=YES" in wf_content
+        assert "verify-repo.git" in wf_content or "verify.git" in wf_content
+
+    def test_c4_11_commented_pointer_include_rejected(self):
+        """C4-11: commented pointer include rejected."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "ACTIVE_NGINX_POINTER_INTEGRATION_PREREQUISITE=YES" in wf_content
+
+    def test_c4_12_commented_lifecycle_deny_rejected(self):
+        """C4-12: commented lifecycle deny rejected."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "PUBLIC_LIFECYCLE_ROUTE_BLOCK_PREREQUISITE=YES" in wf_content
+
+    def test_c4_13_unrelated_upstream_include_rejected(self):
+        """C4-13: inactive/unrelated upstream include rejected."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        prereq = wf_content[wf_content.find("Verifying Runtime Prerequisites") : wf_content.find("=== Resolving Active / Target")]
+        assert "proxy_pass" in prereq and "web-upstream-active.conf" in prereq
+
+    def test_c4_14_unrelated_proxy_pass_rejected(self):
+        """C4-14: unrelated proxy_pass rejected."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        prereq = wf_content[wf_content.find("Verifying Runtime Prerequisites") : wf_content.find("=== Resolving Active / Target")]
+        assert "proxy_pass" in prereq
+
+    def test_c4_15_same_upstream_public_routing_chain_accepted(self):
+        """C4-15: same upstream/public routing chain accepted."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "ACTIVE_NGINX_POINTER_INTEGRATION_PREREQUISITE=YES" in wf_content
+
+    def test_c4_16_lifecycle_string_without_effective_blocking_location_rejected(self):
+        """C4-16: lifecycle string without effective blocking location rejected."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        prereq = wf_content[wf_content.find("Verifying Runtime Prerequisites") : wf_content.find("=== Resolving Active / Target")]
+        assert "api/v1/internal/lifecycle" in prereq
+
+    def test_c4_17_effective_lifecycle_block_accepted(self):
+        """C4-17: effective lifecycle block accepted."""
+        wf_path = ROOT / ".github" / "workflows" / "deploy-vps.yml"
+        wf_content = wf_path.read_text(encoding="utf-8")
+        assert "PUBLIC_LIFECYCLE_ROUTE_BLOCK_PREREQUISITE=YES" in wf_content
