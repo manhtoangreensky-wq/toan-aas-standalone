@@ -119,7 +119,7 @@ class TestP0WebappV201CustomerDashboardTransformation:
         assert admin_leaks == [], f"CUSTOMER_ADMIN_ROUTE_LEAK detected on dashboard: {admin_leaks}"
 
     def test_09_v2_00_navigation_rail_preserved(self):
-        """V2-00 streamlined navigation rail (15 customer links across 4 groups) must remain intact."""
+        """V2-00 streamlined navigation rail (13 customer links across 4 groups in V3) must remain intact."""
         start = PORTAL_JS.index("function navGroups(context, currentPage)")
         end = PORTAL_JS.index("const currentGroup = currentCustomerWorkflowGroup")
         nav_block = PORTAL_JS[start:end]
@@ -128,10 +128,10 @@ class TestP0WebappV201CustomerDashboardTransformation:
         assert len(group_matches) == 4, f"Expected 4 customer groups, got {len(group_matches)}"
 
         perm_links = re.findall(r'\["(/[^"]+)",\s*"([^"]+)"', nav_block)
-        assert len(perm_links) == 15, f"Expected 15 permanent customer links, got {len(perm_links)}"
+        assert len(perm_links) == 13, f"Expected 13 permanent customer links, got {len(perm_links)}"
 
     def test_10_blue_visual_system_protected(self):
-        """Blue visual tokens must remain intact without obsidian regression."""
+        """Canonical teal/mint visual tokens must remain intact in portal-theme.css."""
         css_file = ROOT / "static" / "portal" / "portal-theme.css"
         css_text = css_file.read_text(encoding="utf-8")
-        assert "#0b2545" in css_text or "#1d4ed8" in css_text
+        assert "#0d9488" in css_text or "#f3fbfc" in css_text

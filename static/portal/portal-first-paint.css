@@ -1,12 +1,12 @@
 /* portal-first-paint.css - presentation-only minimal shell geometry */
 /* P0.WEBAPP.WEB12 BLACK_FLASH_PREVENTION: Zero initial paint black flash */
 html {
-  background-color: #f0f9ff;
+  background-color: #f3fbfc;
   color-scheme: light;
 }
 
 html[data-portal-theme="dark"] {
-  background-color: #0b2545;
+  background-color: #062026;
   color-scheme: dark;
 }
 

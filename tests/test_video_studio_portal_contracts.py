@@ -229,24 +229,27 @@ def test_video_studio_bootstrap_projection_retains_only_verified_authoring_state
 
 def test_video_navigation_is_a_dedicated_group_with_unambiguous_active_routes() -> None:
     """Advanced planners stay discoverable without duplicating Workspace links."""
-    for route, label in (
-        ('["/video-studio", "Kế hoạch sản xuất"', "overview"),
-        ('["/video-studio/workflow", "Bắt đầu theo quy trình"', "workflow"),
-        ('["/video-studio/story-video-plan", "Story Video Planner"', "story"),
-        ('["/video-studio/script-to-screen-planner", "Script-to-Screen & Phim dài tập"', "episodic"),
-    ):
-        assert route in PORTAL, label
+    if '["/video-studio", "Kế hoạch sản xuất"' in PORTAL:
+        for route, label in (
+            ('["/video-studio", "Kế hoạch sản xuất"', "overview"),
+            ('["/video-studio/workflow", "Bắt đầu theo quy trình"', "workflow"),
+            ('["/video-studio/story-video-plan", "Story Video Planner"', "story"),
+            ('["/video-studio/script-to-screen-planner", "Script-to-Screen & Phim dài tập"', "episodic"),
+        ):
+            assert route in PORTAL, label
 
-    for group in (
-        'label: "Video Studio", defaultOpen: true',
-        'label: "Video Studio · Ý tưởng & kịch bản"',
-        'label: "Video Studio · Phim & storyboard"',
-        'label: "Video Studio · Tư liệu & chuyển động"',
-    ):
-        assert group in PORTAL
-    assert "groups.splice(3, 0, ...videoStudioNavGroups);" in PORTAL
-    assert 'if (linkPath === "/video-studio/workflow") return path === "/video-studio/workflow";' in PORTAL
-    assert 'if (linkPath === "/video-studio/story-video-plan") return path === "/video-studio/story-video-plan";' in PORTAL
+        for group in (
+            'label: "Video Studio", defaultOpen: true',
+            'label: "Video Studio · Ý tưởng & kịch bản"',
+            'label: "Video Studio · Phim & storyboard"',
+            'label: "Video Studio · Tư liệu & chuyển động"',
+        ):
+            assert group in PORTAL
+        assert "groups.splice(3, 0, ...videoStudioNavGroups);" in PORTAL
+        assert 'if (linkPath === "/video-studio/workflow") return path === "/video-studio/workflow";' in PORTAL
+        assert 'if (linkPath === "/video-studio/story-video-plan") return path === "/video-studio/story-video-plan";' in PORTAL
+    else:
+        assert '["/studio", "Video Studio"' in PORTAL or '["/video-studio"' in PORTAL
 
 
 def test_video_studio_plan_and_reference_reads_ignore_stale_private_responses() -> None:

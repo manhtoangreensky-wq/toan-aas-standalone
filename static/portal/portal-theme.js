@@ -115,7 +115,7 @@
   function setMetaColor(theme) {
     if (!global.document || !global.document.querySelector) return;
     const meta = global.document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", theme === "dark" ? "#0b2545" : "#0284c7");
+    if (meta) meta.setAttribute("content", theme === "dark" ? "#062026" : "#0d9488");
   }
 
   function apply(options) {

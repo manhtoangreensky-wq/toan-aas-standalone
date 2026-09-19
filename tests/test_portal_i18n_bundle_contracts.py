@@ -1087,8 +1087,8 @@ def test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear() -> None
         assert not re.search(rf"\b{re.escape(token)}\b", visible_text, re.IGNORECASE), token
 
     for label in (
-        "Không gian làm việc", "Công cụ nội dung",
-        "Công cụ hình ảnh", "Trung tâm làm việc",
+        "Không gian làm việc", "Sáng tạo",
+        "Phân phối", "Công việc",
     ):
         assert label in visible_text
 

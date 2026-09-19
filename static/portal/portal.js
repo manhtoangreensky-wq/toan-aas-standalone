@@ -1176,6 +1176,13 @@
       "Bộ công cụ hoạt động client-side hoàn toàn miễn phí, không tiêu hao Xu.",
       "Xử lý siêu tốc: Làm sạch timestamp phụ đề SRT/VTT, trích xuất thumbnail/tags video, format JSON, tạo mã QR ngân hàng."
     ]
+  }, ["/tools/free"]);
+  customerPage("/publishing", "AutoPost Hub", "Đóng gói copy, rà soát lịch trình và chuẩn bị phân phối đa kênh an toàn.", ICONS.reports, {
+    layout: "publish-review-pack", type: "publish-review-pack", fields: [], action: "none", status: "ready",
+    notes: [
+      "AutoPost Hub đóng gói nội dung và lịch trình để rà soát trước khi xuất bản.",
+      "Không tự động gọi provider hoặc API mạng xã hội khi chưa có cấu hình."
+    ]
   });
   customerPage("/media-workspace", "Audio Library & Briefing", "Tổ chức Audio Asset Vault và music/SFX brief riêng tư với version history, không chạy provider hoặc tạo audio giả.", ICONS.music, {
     layout: "media-workspace", type: "media-workspace", fields: [], action: "none", status: "guarded",
@@ -1192,7 +1199,7 @@
   customerPage("/audio-hub", "Audio Production Hub", "Bảng điều phối app-first cho audio brief, Asset Vault references và review route trên dữ liệu Media Workspace đã owner-check.", ICONS.music, {
     layout: "audio-hub", type: "audio-hub", fields: [], action: "none", status: "guarded",
     notes: ["Hub chỉ là projection của collection Media Workspace; không tạo database, API, player, waveform, provider catalog, generator, job, ví Xu, PayOS hay output mới.", "Mỗi công cụ tiếp theo mở độc lập. Hub không chuyển collection, asset, account data hoặc lệnh thực thi qua URL, query hoặc browser storage."]
-  });
+  }, ["/music"]);
   customerPage("/audio-hub/new", "Audio Production Brief mới", "Tạo collection audio riêng tư từ Audio Production Hub với owner check, policy, revision và audit hiện có của Media Workspace.", ICONS.music, {
     layout: "audio-hub", type: "audio-hub", fields: [], action: "none", status: "guarded",
     notes: ["Form ghi vào collection Media Workspace canonical của Web App; không nhận URL audio, Telegram file ID, provider preview hoặc thông tin thanh toán.", "Sau khi tạo, Hub chỉ mở detail cùng route visual. Audio reference vẫn được gắn riêng từ Asset Vault sau owner check của server."]
@@ -1345,7 +1352,7 @@
   customerPage("/voice-studio", "Voice Studio & Consent Vault", "Tổ chức voice direction, self-attested consent, lời thoại, cue-sheet và version history riêng tư — không tạo audio.", ICONS.voice, {
     layout: "voice-studio", type: "voice-studio", fields: [], action: "none", status: "ready",
     notes: ["Voice Studio không phải Voice Vault canonical của Bot và không lưu audio, provider voice ID, Telegram file ID, preview URL, job, Xu hay PayOS.", "TTS, voice clone, preview và delivery vẫn ở trạng thái guarded cho đến khi có adapter riêng được kiểm tra; cue-sheet chỉ là ước lượng theo text."]
-  });
+  }, ["/voice"]);
   customerPage("/voice-studio/new", "Voice direction mới", "Tạo profile hướng dẫn thể hiện và consent metadata Web-native có owner check, revision và audit.", ICONS.voice, {
     layout: "voice-studio", type: "voice-studio", fields: [], action: "none", status: "ready",
     notes: ["Không nhập hay upload audio, URL, provider profile, Telegram ID/file ID, secret hoặc thông tin thanh toán.", "Consent là self-attestation của người dùng, không phải quyết định quyền sử dụng, clone giọng hoặc phê duyệt provider."]
@@ -1357,7 +1364,7 @@
   customerPage("/video-studio", "Video Production Studio", "Lập brief, scene plan, runtime estimate và self-review trong workspace riêng tư có version history.", ICONS.video, {
     layout: "video-studio", type: "video-studio", fields: [], action: "none", status: "ready",
     notes: ["Video Production Studio chỉ lưu plan và scene metadata thuộc signed Web account. Không upload media, không tạo render, tệp hay delivery.", "Approve là self-review nội bộ, không phải xác nhận sản xuất hoặc kết quả media."]
-  });
+  }, ["/tools/video"]);
   customerPage("/video-studio/new", "Video plan mới", "Tạo kế hoạch sản xuất có cấu trúc, mục tiêu, thời lượng và tỷ lệ khung hình để review nội bộ.", ICONS.video, {
     layout: "video-studio", type: "video-studio", fields: [], action: "none", status: "ready",
     notes: ["Không đưa secret, OTP/CVV, chứng từ thanh toán, URL hoặc thông tin nhận dạng riêng tư vào brief.", "Server kiểm tra signed session, CSRF, owner check, idempotency và optimistic revision cho mỗi thay đổi."]
@@ -1469,7 +1476,7 @@
   customerPage("/subtitle-studio", "Subtitle & Transcript Workspace", "Tổ chức transcript project, cue timeline, bản nháp ngôn ngữ và self-review trong một workspace riêng tư.", ICONS.subtitle, {
     layout: "subtitle-studio", type: "subtitle-studio", fields: [], action: "none", status: "ready",
     notes: ["Không có ASR, dịch máy, TTS, dubbing, upload, player, output hay file URL trong workspace này.", "Preview SRT/VTT là văn bản định dạng từ cue do bạn biên tập; nó không phải tệp xuất hoặc kết quả provider."]
-  });
+  }, ["/subdub"]);
   customerPage("/subtitle-studio/new", "Transcript project mới", "Tạo transcript project có ngôn ngữ, chuẩn caption, review context và cue timeline có version riêng.", ICONS.subtitle, {
     layout: "subtitle-studio", type: "subtitle-studio", fields: [], action: "none", status: "ready",
     notes: ["Không nhập secret, OTP/CVV, chứng từ thanh toán, provider/job/file handle hoặc URL trong metadata dự án.", "Mỗi lần ghi cần signed session, CSRF, ownership, idempotency và optimistic revision do server xác minh."]
@@ -1481,7 +1488,7 @@
   customerPage("/image-studio", "Image Creative Studio", "Tổ chức art direction, Asset Vault reference, biến thể và self-review trong workspace riêng tư.", ICONS.image, {
     layout: "image-studio", type: "image-studio", fields: [], action: "none", status: "ready",
     notes: ["Image Creative Studio chỉ lưu creative brief, direction và metadata Asset Vault đã qua owner check. Không có URL media, upload, provider, render, preview hoặc delivery tại đây.", "Approve là self-review của brief, không phải xác nhận ảnh đã tạo hoặc kết quả xử lý AI."]
-  });
+  }, ["/tools/image"]);
   customerPage("/image-studio/new", "Artboard mới", "Tạo art direction có cấu trúc, tham chiếu Asset Vault an toàn và version history riêng.", ICONS.image, {
     layout: "image-studio", type: "image-studio", fields: [], action: "none", status: "ready",
     notes: ["Chỉ chọn reference thuộc Asset Vault của signed account; không nhập URL, provider/job/file handle, secret, OTP/CVV hoặc chứng từ thanh toán.", "Mỗi lần ghi cần signed session, CSRF, owner check, idempotency và optimistic revision do server xác minh."]
@@ -9563,6 +9570,17 @@
     "Access Posture": "adminGeneric.securityAccess.route.accessTitle",
     "Bot companion": "shellNav.botCompanion",
     "Video Studio": "shellNav.videoStudio",
+    "Sáng tạo": "shellNav.creation",
+    "Phân phối": "shellNav.distribution",
+    "Tài khoản & Hệ thống": "shellNav.accountSystem",
+    "Video Edit": "shellNav.videoEdit",
+    "Image Suite": "shellNav.imageSuite",
+    "AI Voice": "shellNav.aiVoice",
+    "AI Music": "shellNav.aiMusic",
+    "AI SubDub": "shellNav.aiSubDub",
+    "AutoPost Hub": "shellNav.autoPostHub",
+    "Dự án & Lịch sử": "shellNav.projectsHistory",
+    "Công cụ miễn phí": "shellNav.freeTools",
     "Video Studio · Ý tưởng & kịch bản": "shellNav.videoIdeasScripts",
     "Video Studio · Phim & storyboard": "shellNav.videoFilmStoryboard",
     "Video Studio · Tư liệu & chuyển động": "shellNav.videoReferenceMotion",
@@ -10099,92 +10117,45 @@
     const currentRoute = normalizePath(currentPage && (currentPage.routePath || currentPage.path));
     const groups = [
       {
-        label: "Trung tâm làm việc", defaultOpen: true,
+        label: "Sáng tạo", defaultOpen: true,
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/calendar", "Lịch nội dung", ICONS.system]
+          ["/studio", "Video Studio", ICONS.video],
+          ["/voice", "AI Voice", ICONS.voice],
+          ["/music", "AI Music", ICONS.music],
+          ["/subdub", "AI SubDub", ICONS.prompt],
+          ["/tools/video", "Video Edit", ICONS.video],
+          ["/tools/image", "Image Suite", ICONS.image]
         ]
       },
       {
-        label: "Xưởng sáng tạo AI",
+        label: "Phân phối", defaultOpen: true,
         links: [
-          ["/features", "Tất cả công cụ", ICONS.prompt], ["/video-studio", "Xưởng Video", ICONS.video], ["/image-studio", "Image Studio", ICONS.image], ["/content-studio", "Content Studio", ICONS.prompt], ["/voice-studio", "Voice Studio", ICONS.voice]
+          ["/publishing", "AutoPost Hub", ICONS.reports]
         ]
       },
       {
-        label: "Quản lý đầu ra",
+        label: "Công việc", defaultOpen: true,
         links: [
-          ["/jobs", "Job Center", ICONS.jobs], ["/assets", "Tài sản", ICONS.assets]
+          ["/projects", "Dự án & Lịch sử", ICONS.dashboard],
+          ["/tools/free", "Công cụ miễn phí", ICONS.prompt]
         ]
       },
       {
-        label: "Tài chính & tài khoản",
+        label: "Tài khoản & Hệ thống", defaultOpen: true,
         links: [
-          ["/wallet/topup", "Nạp Xu", ICONS.payments], ["/wallet", "Ví Xu", ICONS.wallet], ["/pricing", "Bảng giá", ICONS.pricing], ["/account", "Tài khoản", ICONS.account], ["/support", "Hỗ trợ", ICONS.support]
+          ["/pricing", "Bảng giá", ICONS.pricing],
+          ["/wallet", "Ví Xu", ICONS.wallet],
+          ["/account", "Tài khoản", ICONS.account],
+          ["/support", "Hỗ trợ", ICONS.support]
         ]
       }
     ];
-    // P0.WEBAPP.WEB14 Information Architecture De-bloat Truth:
-    // Admin ERP navigation is strictly isolated from customer workspace navigation.
-    // When on customer portal, the navigation rail remains 100% customer-facing.
-    // Admin users switch to Admin ERP via the header account profile dropdown
-    // (customerUserDropdown) which is guarded by hasLiveCanonicalAdmin / role.
-    // This guarantees CUSTOMER_TO_ADMIN_ROUTE_LEAK = 0 across all customer views.
-    // Preserving route contracts: All 40 admin routes remain fully functional
-    // and reachable from /admin and deep links without polluting customer IA.
-    // Core customer navigation converges around 5 stable product groups:
-    // Workspace, Tạo mới, Công việc, Ví & gói, Tài khoản & hỗ trợ.
-    // No admin operational controls are leaked to customer navigation rail.
-    // Invariant: CUSTOMER_ACTION_TO_ADMIN_ENDPOINT = 0.
-    // Invariant: CUSTOMER_NAV_TO_ADMIN_PAGE = 0.
+    // P0.WEBAPP.V3 Information Architecture Canonical Truth:
+    // Primary customer sidebar has exactly 13 canonical items across 4 Tiers.
+    // Video Studio internal sub-routes live inside /studio workspace tabs,
+    // not spliced into primary navigation rail.
     const currentGroup = currentCustomerWorkflowGroup(currentPage, groups);
     if (currentGroup) groups.unshift(currentGroup);
-    // Video Studio has grown into a production-planning workspace.  Keep it
-    // separate from general-purpose tools so the navigation stays scannable
-    // and every planner is discoverable exactly once. These are authoring
-    // routes only; this menu never implies a renderer, provider call,
-    // delivery or media output.
-    // The Video Studio used to be one flat block of twelve destinations.
-    // Grouping the same stable routes by the customer's next decision gives
-    // a new user a clear starting point while preserving progressive
-    // disclosure: only the active group opens automatically.
-    const videoStudioNavGroups = [
-      {
-        label: "Video Studio", defaultOpen: true,
-        links: [
-          ["/video-studio", "Kế hoạch sản xuất", ICONS.video],
-          ["/video-studio/workflow", "Bắt đầu theo quy trình", ICONS.video]
-        ]
-      },
-      {
-        label: "Video Studio · Ý tưởng & kịch bản",
-        links: [
-          ["/video-studio/idea-planner", "Video Idea Planner", ICONS.video],
-          ["/video-studio/story-video-plan", "Story Video Planner", ICONS.video],
-          ["/video-studio/prompt-planner", "Video Prompt Planner", ICONS.video],
-          ["/video-studio/cinematic-concept", "Cinematic Concept", ICONS.video],
-          ["/video-studio/motion-guide", "Creative Motion Guide", ICONS.video]
-        ]
-      },
-      {
-        label: "Video Studio · Phim & storyboard",
-        links: [
-          ["/video-studio/script-to-screen-planner", "Script-to-Screen & Phim dài tập", ICONS.video],
-          ["/video-studio/long-form-planner", "Long-form Roadmap", ICONS.video],
-          ["/video-studio/self-shot-planner", "Self-shot Scene Planner", ICONS.video],
-          ["/video-studio/storyboard-composer", "Storyboard Composer", ICONS.video]
-        ]
-      },
-      {
-        label: "Video Studio · Tư liệu & chuyển động",
-        links: [
-          ["/video-studio/image-motion-planner", "Image Motion Planner", ICONS.video],
-          ["/video-studio/reference-format-planner", "Reference Format Planner", ICONS.video]
-        ]
-      }
-    ];
-    if (matchesRouteFamily(currentRoute, "/video-studio")) {
-      groups.splice(3, 0, ...videoStudioNavGroups);
-    }
     return groups;
   }
 
@@ -10286,18 +10257,12 @@
   // expose any record. Keep the list deliberately explicit so a newly added
   // route cannot silently change the meaning of a top-level PWA destination.
   const CUSTOMER_MOBILE_NAV_GROUPS = Object.freeze({
-    dashboard: Object.freeze({
-      exact: Object.freeze([
-        "/dashboard", "/onboarding", "/workspace/setup", "/starter-kits",
-        "/workspace-menu", "/guides", "/guides/source-rights", "/community", "/app"
-      ]),
-      prefixes: Object.freeze(["/starter-kits/"])
-    }),
     studio: Object.freeze({
       exact: Object.freeze([
-        "/features", "/tools", "/studio", "/chat", "/prompt-studio",
+        "/studio", "/voice", "/music", "/subdub", "/tools/video", "/tools/image",
+        "/features", "/tools", "/chat", "/prompt-studio",
         "/prompts", "/image", "/image/create", "/video", "/video/create",
-        "/pdf", "/mux", "/voice/tts", "/music", "/subtitle",
+        "/pdf", "/mux", "/voice/tts", "/subtitle",
         "/translate", "/dubbing", "/asr", "/documents", "/content-studio",
         "/content/prompt-pack", "/content/publish-review", "/content/contextual-prompt",
         "/trend-research", "/media-factory", "/creative-flow", "/image-studio",
@@ -10305,6 +10270,7 @@
         "/subtitle-studio"
       ]),
       prefixes: Object.freeze([
+        "/studio/", "/voice/", "/music/", "/subdub/", "/tools/video", "/tools/image",
         "/features/", "/chat/", "/prompt-studio/", "/content/", "/caption",
         "/hashtag", "/hook", "/script", "/storyboard", "/content-pack",
         "/image/", "/video/", "/video-studio", "/voice/", "/tts", "/music/",
@@ -10313,52 +10279,53 @@
         "/document-workspace/", "/subtitle-studio/"
       ])
     }),
-    jobs: Object.freeze({
+    publishing: Object.freeze({
       exact: Object.freeze([
-        "/jobs", "/projects", "/workboard", "/workspace", "/project-packages",
-        "/content/channel-strategy", "/content/handoffs", "/crm/leads",
-        "/campaigns", "/calendar", "/approvals", "/notes", "/reminders",
-        "/analytics", "/partner-readiness", "/growth/ai", "/campaign/report",
-        "/video/progress"
+        "/publishing", "/campaigns", "/calendar", "/approvals", "/content/channel-strategy",
+        "/content/publish-review"
       ]),
       prefixes: Object.freeze([
-        "/jobs/", "/projects/", "/workboard/",
-        "/content/channel-strategy/", "/content/handoffs/", "/crm/leads/",
-        "/campaigns/", "/calendar/", "/approvals/", "/analytics/"
+        "/publishing/", "/campaigns/", "/calendar/", "/approvals/"
       ])
     }),
-    assets: Object.freeze({
+    projects: Object.freeze({
       exact: Object.freeze([
-        "/assets", "/asset-vault", "/prompt-library", "/free-prompt-gallery",
-        "/image-hub", "/image/history",
-        "/image/assets", "/video/preview", "/video/export", "/voice", "/voice-vault",
-        "/voice/preview", "/voice/outputs", "/music/library",
-        "/music-library", "/music/sfx-library", "/subtitle/formats"
+        "/projects", "/tools/free", "/free-tools", "/dashboard", "/jobs", "/assets",
+        "/workboard", "/workspace", "/project-packages", "/content/handoffs", "/crm/leads",
+        "/analytics", "/partner-readiness", "/growth/ai", "/campaign/report",
+        "/free-prompt-gallery", "/prompt-library"
       ]),
       prefixes: Object.freeze([
-        "/assets/", "/asset-vault/", "/prompt-library/", "/image-hub/", "/audio/"
+        "/projects/", "/tools/free", "/free-tools", "/jobs/", "/assets/", "/workboard/",
+        "/workspace/", "/project-packages/", "/analytics/", "/prompt-library/"
+      ])
+    }),
+    wallet: Object.freeze({
+      exact: Object.freeze([
+        "/wallet", "/wallet/topup", "/wallet/history", "/pricing", "/membership", "/packages"
+      ]),
+      prefixes: Object.freeze([
+        "/wallet/", "/pricing/", "/membership/", "/packages/"
       ])
     }),
     account: Object.freeze({
       exact: Object.freeze([
-        "/account", "/history", "/wallet", "/membership", "/packages", "/pricing", "/inbox",
-        "/automation", "/tickets", "/support", "/operations", "/rewards",
-        "/status", "/legal", "/privacy", "/referrals", "/crm/consultations/new"
+        "/account", "/history", "/inbox", "/automation", "/tickets", "/support",
+        "/operations", "/rewards", "/status", "/legal", "/privacy", "/referrals",
+        "/account/security", "/account/activity", "/account/data-controls", "/account/workspace-care"
       ]),
       prefixes: Object.freeze([
-        "/account/", "/history/", "/wallet/", "/membership/", "/packages/", "/pricing/",
-        "/inbox/", "/automation/", "/tickets/", "/support/", "/operations/",
-        "/rewards/", "/status/"
+        "/account/", "/support/", "/tickets/", "/operations/", "/rewards/", "/status/"
       ])
     })
   });
 
   // Some creator routes live below broad URL families such as `/video/` and
   // `/voice/`, while their saved output/history routes live in the Library
-  // and job progress lives in Work.  Resolve the fixed, more specific groups
+  // and job progress lives in Work. Resolve the fixed, more specific groups
   // first so a customer sees one truthful active dock destination at a time.
   const CUSTOMER_MOBILE_NAV_GROUP_ORDER = Object.freeze([
-    "dashboard", "account", "assets", "jobs", "studio"
+    "wallet", "account", "publishing", "projects", "studio"
   ]);
 
   function customerMobileNavGroupMatches(group, path) {
@@ -10380,16 +10347,17 @@
   function isMobileNavCurrent(key, page) {
     const path = normalizePath(page.routePath || page.path);
     if (path === "/admin" || path.startsWith("/admin/")) return false;
-    // Mobile dock groups: "/content/channel-strategy" in workspace dock, "/image-hub" or path.startsWith("/image-hub/") in studio dock, matchesRouteFamily(path, "/video-studio") in studio dock.
     return customerMobileNavGroupForPath(path) === key;
   }
 
+  const _LEGACY_MOBILE_HOME_LABEL = uiText("mobile.home", "Trang chủ");
+
   function renderMobileNav(page) {
     const items = [
-      ["dashboard", "/dashboard", uiText("mobile.home", "Trang chủ"), ICONS.dashboard],
-      ["studio", "/features", uiText("mobile.create", "Tạo"), ICONS.prompt],
-      ["jobs", "/jobs", uiText("mobile.work", "Công việc"), ICONS.jobs],
-      ["assets", "/assets", uiText("mobile.library", "Thư viện"), ICONS.assets],
+      ["studio", "/studio", uiText("mobile.studio", "Studio"), ICONS.video],
+      ["publishing", "/publishing", uiText("mobile.publishing", "AutoPost"), ICONS.reports],
+      ["projects", "/projects", uiText("mobile.projects", "Dự án"), ICONS.dashboard],
+      ["wallet", "/wallet", uiText("mobile.wallet", "Ví Xu"), ICONS.wallet],
       ["account", "/account", uiText("mobile.account", "Tài khoản"), ICONS.account]
     ];
     return items.map(([key, href, label, icon]) => {
@@ -20893,6 +20861,137 @@
     </section>`;
   }
 
+  function renderTelegramUnlinkedCard(arg1, arg2) {
+    const context = (arg1 && typeof arg1 === "object" && ("session" in arg1 || "wallet" in arg1 || "linkFlow" in arg1 || "linkStatus" in arg1))
+      ? arg1
+      : (arg2 && typeof arg2 === "object" && ("session" in arg2 || "wallet" in arg2 || "linkFlow" in arg2 || "linkStatus" in arg2))
+        ? arg2
+        : (typeof base === "function" ? base() : {});
+    const opts = (arg1 && arg1 !== context && typeof arg1 === "object") ? arg1 : ((arg2 && arg2 !== context && typeof arg2 === "object") ? arg2 : {});
+
+    const flow = context.linkFlow && typeof context.linkFlow === "object" ? context.linkFlow : {};
+    const linkStatus = context.linkStatus && typeof context.linkStatus === "object" ? context.linkStatus : {};
+    const data = flow.data && typeof flow.data === "object" ? flow.data : {};
+    const code = typeof data.code === "string" ? data.code.trim() : "";
+    const deepLink = safeTelegramLink(data.deep_link);
+    const botCommand = code ? `/linkweb ${code}` : "";
+    const readyToComplete = linkStatus.ready_to_complete === true || data.ready_to_complete === true;
+    const expired = data.expired === true || flow.errorCode === "LINK_CODE_INVALID";
+    const isPending = Boolean(code) && !readyToComplete && !expired;
+    const currentRoute = typeof currentPortalPath === "function" ? currentPortalPath() : "/dashboard";
+
+    const title = opts.title || (
+      readyToComplete
+        ? uiText("telegramUnlinked.readyTitle", "Bot đã xác nhận — Sẵn sàng hoàn tất liên kết")
+        : isPending
+          ? uiText("telegramUnlinked.pendingTitle", "Đang chờ Bot xác minh Telegram")
+          : expired
+            ? uiText("telegramUnlinked.expiredTitle", "Mã liên kết Telegram đã hết hạn")
+            : uiText("telegramUnlinked.title", "Tài khoản chưa liên kết Telegram")
+    );
+    const kicker = opts.kicker || uiText("telegramUnlinked.kicker", "LIÊN KẾT BOT CHÍNH THỨC");
+    const subtitle = opts.subtitle || (
+      readyToComplete
+        ? uiText("telegramUnlinked.readySubtitle", "Tài khoản Telegram đã được Bot xác minh thành công. Bấm hoàn tất để kích hoạt Ví Xu trên trình duyệt này.")
+        : isPending
+          ? uiText("telegramUnlinked.pendingSubtitle", "Web đã tạo mã liên kết canonical. Vui lòng mở Telegram Bot để xác nhận danh tính an toàn.")
+          : expired
+            ? uiText("telegramUnlinked.expiredSubtitle", "Mã xác thực một lần không còn hiệu lực. Vui lòng tạo mã mới để bắt đầu liên kết.")
+            : uiText("telegramUnlinked.subtitle", "Liên kết tài khoản Web với Telegram Bot để xem số dư Xu, lịch sử giao dịch và đồng bộ tác vụ an toàn.")
+    );
+
+    let contentBody = "";
+
+    if (readyToComplete) {
+      contentBody = `
+        <div style="background:var(--portal-surface, #ffffff); border:1px solid var(--portal-border, #d1eceb); border-radius:var(--portal-radius-md, 10px); padding:14px 16px; margin-bottom:16px;">
+          <p style="font-size:13px; color:var(--portal-ink, #073a45); margin:0; line-height:1.6;">
+            ✅ <strong>Xác thực thành công từ Bot.</strong> Tab hiện tại cần gửi xác nhận cuối cùng để ràng buộc danh tính vào phiên Web an toàn.
+          </p>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+          <button class="portal-button portal-button--primary" type="button" data-portal-action="refresh-link-status" data-portal-route="${safeText(currentRoute)}" style="display:inline-flex; align-items:center; gap:6px;">
+            <span>${safeText(uiText("telegramUnlinked.completeAction", "Hoàn tất liên kết ngay"))}</span>
+            <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
+          </button>
+        </div>`;
+    } else if (isPending) {
+      const minutesText = data.expires_in_minutes ? `${safeText(String(data.expires_in_minutes))} phút` : "15 phút";
+      contentBody = `
+        <div style="background:var(--portal-surface, #ffffff); border:1px solid var(--portal-border, #d1eceb); border-radius:var(--portal-radius-md, 10px); padding:14px 16px; margin-bottom:16px;">
+          <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="font-size:13px; font-weight:700; color:var(--portal-ink, #073a45);">Mã liên kết do Web cấp (hiệu lực ${minutesText}):</span>
+            <span class="portal-badge" data-badge="awaiting_confirm" style="font-size:11px;">Đang chờ Bot xác nhận</span>
+          </div>
+          <p style="font-size:12px; color:var(--portal-muted, #456b77); margin:0 0 10px; line-height:1.5;">
+            Nhấn mở Bot bằng deep link bên dưới. Nếu trình duyệt không mở được Telegram, sao chép lệnh dự phòng và gửi vào Bot.
+          </p>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <code class="portal-link-code" style="font-size:13px; padding:6px 12px; background:var(--portal-canonical-soft-mint, #e6f7f6); border-radius:6px; font-weight:700; color:var(--portal-brand, #0d9488);">${safeText(botCommand)}</code>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-telegram-link-command" data-copy-text="${safeText(botCommand)}" style="font-size:12px; padding:6px 12px;">
+              ${safeText(uiText("onboarding.copyCommand", "Sao chép lệnh"))}
+            </button>
+          </div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+          ${deepLink ? `<a class="portal-button portal-button--primary" href="${safeText(deepLink)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px;"><span>${safeText(uiText("onboarding.openTelegram", "Mở Telegram xác nhận"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>` : ""}
+          <button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-link-status" data-portal-route="${safeText(currentRoute)}">
+            ${safeText(uiText("onboarding.checkNow", "Kiểm tra ngay"))}
+          </button>
+          <button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-link" data-portal-route="${safeText(currentRoute)}" data-portal-confirm="Tạo mã mới sẽ hủy mã đang hiển thị. Bạn có chắc muốn tiếp tục?">
+            ${safeText(uiText("onboarding.newCode", "Tạo mã mới"))}
+          </button>
+        </div>`;
+    } else if (expired) {
+      contentBody = `
+        <div style="background:var(--portal-surface, #ffffff); border:1px solid var(--portal-border, #d1eceb); border-radius:var(--portal-radius-md, 10px); padding:14px 16px; margin-bottom:16px;">
+          <p style="font-size:13px; color:var(--portal-ink, #073a45); margin:0; line-height:1.6;">
+            ⚠️ ${safeText(flow.message || "Mã một lần không còn hiệu lực. Vui lòng bấm tạo mã mới để bắt đầu liên kết.")}
+          </p>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+          <button class="portal-button portal-button--primary" type="button" data-portal-action="start-telegram-link" data-portal-route="${safeText(currentRoute)}" style="display:inline-flex; align-items:center; gap:6px;">
+            <span>${safeText(uiText("onboarding.newCode", "Tạo mã mới"))}</span>
+            <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
+          </button>
+        </div>`;
+    } else {
+      contentBody = `
+        <div style="background:var(--portal-surface, #ffffff); border:1px solid var(--portal-border, #d1eceb); border-radius:var(--portal-radius-md, 10px); padding:14px 16px; margin-bottom:16px;">
+          <h3 style="font-size:13px; font-weight:700; color:var(--portal-ink, #073a45); margin:0 0 8px;">Quy trình liên kết an toàn:</h3>
+          <ol style="margin:0; padding-left:20px; font-size:13px; color:var(--portal-ink, #073a45); line-height:1.7;">
+            <li>Bấm <strong>"Liên kết Telegram ngay"</strong> để máy chủ cấp mã xác thực phiên.</li>
+            <li>Bấm mở <strong>Telegram Bot</strong> chính thức (<a href="https://t.me/toanaas_bot" target="_blank" rel="noopener noreferrer" style="color:var(--portal-brand, #0d9488); font-weight:600;">@toanaas_bot</a>) bằng deep link để xác nhận danh tính.</li>
+            <li>Bot gửi callback đã ký xác nhận danh tính; Web tự động hoàn tất và kích hoạt Ví Xu.</li>
+          </ol>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+          <button class="portal-button portal-button--primary" type="button" data-portal-action="start-telegram-link" data-portal-route="${safeText(currentRoute)}" style="display:inline-flex; align-items:center; gap:6px;">
+            <span>⚡ ${safeText(uiText("telegramUnlinked.startAction", "Liên kết Telegram ngay"))}</span>
+            <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
+          </button>
+          <a class="portal-button portal-button--quiet" href="https://t.me/toanaas_bot" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px;">
+            <span>Mở Bot Telegram</span>
+            <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
+          </a>
+        </div>`;
+    }
+
+    return `<section class="portal-card portal-card-pad portal-telegram-unlinked-card" data-error-code="ACCOUNT_TELEGRAM_UNLINKED" data-portal-link-status style="background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand, #0d9488) 10%, var(--portal-surface-light, #ffffff)) 0%, var(--portal-surface-light, #ffffff) 100%); border:1px solid color-mix(in srgb, var(--portal-brand, #0d9488) 30%, var(--portal-border, #d1eceb)); border-radius:var(--portal-radius-lg, 16px); padding:20px; margin-bottom:20px;">
+      <div style="display:flex; align-items:flex-start; gap:16px; margin-bottom:16px;">
+        <div style="width:44px; height:44px; border-radius:12px; background:var(--portal-canonical-soft-mint, #e6f7f6); display:flex; align-items:center; justify-content:center; color:var(--portal-brand, #0d9488); flex-shrink:0;">
+          ${portalIcon(ICONS.account)}
+        </div>
+        <div>
+          <span class="portal-section-kicker" style="color:var(--portal-brand, #0d9488); font-weight:700;">${safeText(kicker)}</span>
+          <h2 style="font-size:18px; font-weight:800; color:var(--portal-ink, #073a45); margin:4px 0 6px;">${safeText(title)}</h2>
+          <p style="font-size:13px; color:var(--portal-muted, #456b77); margin:0; line-height:1.5;">${safeText(subtitle)}</p>
+        </div>
+      </div>
+      ${contentBody}
+    </section>`;
+  }
+
   function renderDashboard(page, context) {
     const readState = dashboardReadState(context);
 
@@ -20902,12 +21001,14 @@
       const spent = w ? localizedNumber(w.total_spent_xu) : "—";
       const tier = w && w.is_vip ? "VIP" : "Tiêu chuẩn";
       const linked = telegramIdentityLinked(ctx);
+      const isUnlinked = !linked || (ctx.wallet && ctx.wallet.status === "unlinked") || (ctx.wallet && ctx.wallet.error_code === "ACCOUNT_TELEGRAM_UNLINKED");
+      const unlinkedCard = isUnlinked ? renderTelegramUnlinkedCard(ctx) : "";
       const linkedStatus = linked ? "Đã liên kết Telegram" : "Chưa kết nối Telegram";
       const planName = w && w.plan && (w.plan.plan_name || w.plan.current_plan)
         ? String(w.plan.plan_name || w.plan.current_plan)
         : (w && w.is_vip ? "VIP Doanh nghiệp" : "Gói Tiêu Chuẩn");
 
-      return `<section class="portal-card portal-card-pad portal-dashboard-wallet-hero" aria-labelledby="dashboard-wallet-title" style="margin-bottom:24px; background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand) 8%, var(--portal-surface-light)) 0%, var(--portal-surface-light) 100%); border:1px solid color-mix(in srgb, var(--portal-brand) 25%, var(--portal-border)); border-radius:var(--portal-radius-lg);">
+      return `${unlinkedCard}<section class="portal-card portal-card-pad portal-dashboard-wallet-hero" aria-labelledby="dashboard-wallet-title" style="margin-bottom:24px; background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand) 8%, var(--portal-surface-light)) 0%, var(--portal-surface-light) 100%); border:1px solid color-mix(in srgb, var(--portal-brand) 25%, var(--portal-border)); border-radius:var(--portal-radius-lg);">
         <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:20px;">
           <div>
             <span class="portal-section-kicker" style="color:var(--portal-brand); font-weight:700;">TÀI CHÍNH & TRẠNG THÁI TÀI KHOẢN</span>
@@ -21956,8 +22057,9 @@
             <a class="portal-button portal-button--quiet" href="/pricing">${safeText(uiText("customerWallet.action.pricing", "Bảng giá"))}</a>
           </div>
         </div>
-      </section>
-    ` : `<section class="portal-card portal-card-pad portal-wallet-overview"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("customerWallet.status.kicker", "Ví Xu canonical"))}</span><h2 class="portal-card-title">${safeText(uiText("customerWallet.status.unverifiedTitle", "Dữ liệu Ví đang được xác minh"))}</h2><p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(readState)}" role="status" aria-live="polite">${safeText(walletUnavailableCopy)}</p></div></div><div class="portal-form-footer">${refreshControl}</div></section>`;
+    ` : ((!telegramIdentityLinked(context) || (context.wallet && context.wallet.status === "unlinked") || (context.wallet && context.wallet.error_code === "ACCOUNT_TELEGRAM_UNLINKED"))
+      ? renderTelegramUnlinkedCard(context)
+      : `<section class="portal-card portal-card-pad portal-wallet-overview"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("customerWallet.status.kicker", "Ví Xu canonical"))}</span><h2 class="portal-card-title">${safeText(uiText("customerWallet.status.unverifiedTitle", "Dữ liệu Ví đang được xác minh"))}</h2><p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(readState)}" role="status" aria-live="polite">${safeText(walletUnavailableCopy)}</p></div></div><div class="portal-form-footer">${refreshControl}</div></section>`);
 
     const topupFlow = topup
       ? `${renderBillingJourney()}${renderPaymentEntryPoints(context)}${renderPaymentRequestForm(page, context)}${renderManualTopupGuide(context)}`
