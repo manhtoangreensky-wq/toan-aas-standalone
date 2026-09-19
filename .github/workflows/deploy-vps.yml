@@ -205,15 +205,7 @@ jobs:
               RESOLVED_PACKAGES_SHA=\"\$(\"\$BUILD_VENV\"/bin/pip freeze --all | LC_ALL=C sort | sha256sum | awk '{print \$1}')\"
               RUNTIME_ENVIRONMENT_ID=\"\${PYTHON_RUNTIME_ID}-res-\${RESOLVED_PACKAGES_SHA:0:16}\"
               ENV_DIR=\"/opt/toanaas/webapp/runtime-envs/\$RUNTIME_ENVIRONMENT_ID\"
-              cat <<EOF > \"\$BUILD_VENV/runtime_env_attestation.json\"
-{
-  \"runtime_environment_id\": \"\${RUNTIME_ENVIRONMENT_ID}\",
-  \"python_runtime_id\": \"\${PYTHON_RUNTIME_ID}\",
-  \"requirements_lock_sha256\": \"\${LOCK_SHA}\",
-  \"resolved_packages_sha256\": \"\${RESOLVED_PACKAGES_SHA}\",
-  \"running_executable_under_attested_env\": true
-}
-EOF
+              printf '{\n  \"runtime_environment_id\": \"%s\",\n  \"python_runtime_id\": \"%s\",\n  \"requirements_lock_sha256\": \"%s\",\n  \"resolved_packages_sha256\": \"%s\",\n  \"running_executable_under_attested_env\": true\n}\n' \"\$RUNTIME_ENVIRONMENT_ID\" \"\$PYTHON_RUNTIME_ID\" \"\$LOCK_SHA\" \"\$RESOLVED_PACKAGES_SHA\" > \"\$BUILD_VENV/runtime_env_attestation.json\"
               RECOMPUTED_PACKAGES_SHA=\"\$(\"\$BUILD_VENV\"/bin/pip freeze --all | LC_ALL=C sort | sha256sum | awk '{print \$1}')\"
               if [[ \"\$RECOMPUTED_PACKAGES_SHA\" != \"\$RESOLVED_PACKAGES_SHA\" ]]; then
                 echo \"ERROR: Recomputed freeze digest mismatch in build venv\" >&2
@@ -230,13 +222,7 @@ EOF
               exit 1
             fi
 
-            cat <<EOF > \"/etc/toanaas/web-slot-\${TARGET_SLOT}.env\"
-WEBAPP_RELEASE_DIR=\${TARGET_RELEASE_DIR}
-WEBAPP_VENV_DIR=\${ENV_DIR}
-PORT=\${TARGET_PORT}
-WEBAPP_STARTUP_RECONCILIATION_MODE=deferred
-WEBAPP_LIFECYCLE_TOKEN=\${LIFECYCLE_TOKEN}
-EOF
+            printf 'WEBAPP_RELEASE_DIR=%s\nWEBAPP_VENV_DIR=%s\nPORT=%s\nWEBAPP_STARTUP_RECONCILIATION_MODE=deferred\nWEBAPP_LIFECYCLE_TOKEN=%s\n' \"\$TARGET_RELEASE_DIR\" \"\$ENV_DIR\" \"\$TARGET_PORT\" \"\$LIFECYCLE_TOKEN\" > \"/etc/toanaas/web-slot-\${TARGET_SLOT}.env\"
 
             systemctl restart toanaas-web@\${TARGET_SLOT}.service
 
@@ -273,10 +259,7 @@ EOF
 
             echo '=== Switching Traffic to Target Slot in Nginx ==='
             TEMP_UPSTREAM=\"/etc/toanaas/web-upstream-active.conf.tmp.\$\$\"
-            cat <<EOF > \"\$TEMP_UPSTREAM\"
-# toanaas-web-upstream pointer
-server 127.0.0.1:\${TARGET_PORT};
-EOF
+            printf '# toanaas-web-upstream pointer\nserver 127.0.0.1:%s;\n' \"\$TARGET_PORT\" > \"\$TEMP_UPSTREAM\"
             mv \"\$TEMP_UPSTREAM\" /etc/toanaas/web-upstream-active.conf
             nginx -t
             systemctl reload nginx
@@ -293,10 +276,7 @@ EOF
             if [[ -z \"\$HEALTH_JSON\" ]]; then
               echo 'ERROR: Health endpoint did not respond through Nginx ingress' >&2
               echo 'Rolling back Nginx upstream immediately...'
-              cat <<EOF > /etc/toanaas/web-upstream-active.conf
-# toanaas-web-upstream pointer (rollback)
-server 127.0.0.1:\${ACTIVE_PORT};
-EOF
+              printf '# toanaas-web-upstream pointer (rollback)\nserver 127.0.0.1:%s;\n' \"\$ACTIVE_PORT\" > /etc/toanaas/web-upstream-active.conf
               nginx -t && systemctl reload nginx
               exit 1
             fi
