@@ -1097,7 +1097,7 @@
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 268,
+      "line": 283,
       "operation": "INSERT INTO",
       "table": "web_account_profiles"
     },
@@ -1175,13 +1175,25 @@
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 251,
+      "line": 266,
       "operation": "INSERT INTO",
       "table": "web_accounts"
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 346,
+      "line": 368,
+      "operation": "UPDATE",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_admin_customer_directory.py",
+      "line": 434,
+      "operation": "UPDATE",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_admin_customer_directory.py",
+      "line": 496,
       "operation": "UPDATE",
       "table": "web_accounts"
     },
@@ -1715,13 +1727,13 @@
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 274,
+      "line": 289,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 350,
+      "line": 500,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
@@ -4960,6 +4972,12 @@
       "table": "web_prompt_templates"
     },
     {
+      "file": "copyfast_admin_customer_directory.py",
+      "line": 372,
+      "operation": "UPDATE",
+      "table": "web_sessions"
+    },
+    {
       "file": "copyfast_auth.py",
       "line": 1242,
       "operation": "UPDATE",
@@ -8153,7 +8171,7 @@
         "copyfast_pages.py",
         "copyfast_partner_crm.py"
       ],
-      "occurrences": 1774,
+      "occurrences": 1776,
       "provider": "Telegram"
     }
   ],
@@ -14191,7 +14209,7 @@
     {
       "endpoint": "update_customer",
       "file": "copyfast_admin_customer_directory.py",
-      "line": 306,
+      "line": 321,
       "methods": [
         "PATCH"
       ],
@@ -14200,7 +14218,7 @@
     {
       "endpoint": "get_customer",
       "file": "copyfast_admin_customer_directory.py",
-      "line": 379,
+      "line": 529,
       "methods": [
         "GET"
       ],
@@ -14209,7 +14227,7 @@
     {
       "endpoint": "get_customer_crm",
       "file": "copyfast_admin_customer_directory.py",
-      "line": 405,
+      "line": 555,
       "methods": [
         "GET"
       ],
@@ -14542,7 +14560,7 @@
     {
       "endpoint": "list_customers",
       "file": "copyfast_admin_customer_directory.py",
-      "line": 146,
+      "line": 149,
       "methods": [
         "GET"
       ],
@@ -14551,7 +14569,7 @@
     {
       "endpoint": "create_customer",
       "file": "copyfast_admin_customer_directory.py",
-      "line": 230,
+      "line": 245,
       "methods": [
         "POST"
       ],
@@ -14714,7 +14732,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 226,
   "source_files_scanned": 226,
-  "source_fingerprint_sha256": "9e0aee62754d283536011396f4957b547c274b442fd38dd31ca4cbf4ffabeeba",
+  "source_fingerprint_sha256": "9d6e7277c67bce4b1de41d49b2bc5e63a5be507911ffddd8152cf8fa5fb1a401",
   "source_root": "repository-root",
   "ui_path_references": [
     {

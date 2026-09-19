@@ -15946,11 +15946,19 @@
         const norm = mod.normalizeDetail(result.data);
         if (!norm || !norm.customer) throw new Error("Dữ liệu khách hàng không hợp lệ");
         if (!adminCustomerDirectoryRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, isDetail)) return null;
+        let crmData = null;
+        try {
+          const crmResult = await api(`/admin/customers/${encodeURIComponent(accountId)}/crm`);
+          if (crmResult && crmResult.data) {
+            crmData = crmResult.data;
+          }
+        } catch (_) {}
         const current = (base().adminCustomerDirectory && typeof base().adminCustomerDirectory === "object") ? base().adminCustomerDirectory : mod.emptyState();
         merge({
           adminCustomerDirectory: {
             ...current,
             customer: norm.customer,
+            crm: crmData,
             readState: "ready",
             error: ""
           },
@@ -37768,6 +37776,64 @@
       }
       if (action === "admin-customer-create-close") {
         merge({ adminCustomerCreateOpen: false });
+        return;
+      }
+      if (action === "admin-customer-ban-open") {
+        const accountId = String(detail.accountId || "").trim() || (base().adminCustomerDirectory && base().adminCustomerDirectory.customer && base().adminCustomerDirectory.customer.id);
+        merge({ adminCustomerSafetyModal: { mode: "ban", accountId } });
+        return;
+      }
+      if (action === "admin-customer-unban-open") {
+        const accountId = String(detail.accountId || "").trim() || (base().adminCustomerDirectory && base().adminCustomerDirectory.customer && base().adminCustomerDirectory.customer.id);
+        merge({ adminCustomerSafetyModal: { mode: "unban", accountId } });
+        return;
+      }
+      if (action === "admin-customer-safety-close") {
+        merge({ adminCustomerSafetyModal: null });
+        return;
+      }
+      if (action === "admin-customer-ban-submit") {
+        const form = event && event.target && event.target.closest("form");
+        const accountId = (form && form.dataset && form.dataset.accountId) || (base().adminCustomerSafetyModal && base().adminCustomerSafetyModal.accountId);
+        const reasonInput = form && form.querySelector('input[name="reason"]');
+        const reason = reasonInput ? reasonInput.value.trim() : "";
+        if (!reason) throw new Error("Vui lòng nhập lý do khóa tài khoản.");
+        setActionBusy(action, route, true);
+        try {
+          const res = await api(`/admin/customers/${encodeURIComponent(accountId)}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "ban", reason })
+          });
+          if (!res || !res.ok) throw new Error((res && res.message) || "Không thể khóa tài khoản khách hàng.");
+          toast(res.message || "Đã khóa tài khoản khách hàng thành công.");
+          merge({ adminCustomerSafetyModal: null });
+          await hydrateAdminCustomerDirectory(route || `/admin/customers/${accountId}`);
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "admin-customer-unban-submit") {
+        const form = event && event.target && event.target.closest("form");
+        const accountId = (form && form.dataset && form.dataset.accountId) || (base().adminCustomerSafetyModal && base().adminCustomerSafetyModal.accountId);
+        const reasonInput = form && form.querySelector('input[name="reason"]');
+        const reason = reasonInput ? reasonInput.value.trim() : "";
+        if (!reason) throw new Error("Vui lòng nhập lý do mở khóa tài khoản.");
+        setActionBusy(action, route, true);
+        try {
+          const res = await api(`/admin/customers/${encodeURIComponent(accountId)}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "unban", reason })
+          });
+          if (!res || !res.ok) throw new Error((res && res.message) || "Không thể mở khóa tài khoản khách hàng.");
+          toast(res.message || "Đã mở khóa tài khoản khách hàng thành công.");
+          merge({ adminCustomerSafetyModal: null });
+          await hydrateAdminCustomerDirectory(route || `/admin/customers/${accountId}`);
+        } finally {
+          setActionBusy(action, route, false);
+        }
         return;
       }
       if (action === "refresh-admin") {
