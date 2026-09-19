@@ -2593,15 +2593,15 @@ app.include_router(copyfast_api.router)
 @app.middleware("http")
 async def _approve_compat_middleware(request: Request, call_next):
     path = request.url.path
-    if request.method == "POST" and "/api/v1/admin/payments/manual/" in path and "/approve/" in path:
+    if request.method == "POST" and "/api/v1/admin/payments/manual/" in path and (path.endswith("/draft") or path.endswith("/confirm")):
         import re
         from fastapi import HTTPException
         from fastapi.responses import JSONResponse, Response
-        m = re.match(r"^/api/v1/admin/payments/manual/([^/]+)/approve/(draft|confirm)$", path)
+        m = re.match(r"^/api/v1/admin/payments/manual/([^/]+)(?:/approve)?/(draft|confirm)$", path)
         if m:
             req_id, action = m.groups()
             try:
-                account = copyfast_auth.require_admin_csrf(request)
+                account = await copyfast_auth.require_canonical_admin_csrf(request)
             except HTTPException as exc:
                 return JSONResponse(
                     status_code=exc.status_code,
@@ -2619,13 +2619,23 @@ async def _approve_compat_middleware(request: Request, call_next):
                     body = await request.json()
                 except Exception:
                     body = {}
-                reason = (body.get("reason") if isinstance(body, dict) else None) or "Xác nhận đã nhận tiền qua chuyển khoản ngân hàng"
-                payload = copyfast_api.ManualAdminDraftRequest(action="approve", reason=reason)
+                if not isinstance(body, dict):
+                    return JSONResponse(status_code=422, content={"ok": False, "status": "failed", "message": "Dữ liệu yêu cầu không hợp lệ", "error_code": "REQUEST_INVALID"})
+                try:
+                    payload = copyfast_api.ManualAdminDraftRequest(**body)
+                except Exception as exc:
+                    return JSONResponse(status_code=422, content={"ok": False, "status": "failed", "message": str(exc), "error_code": "REQUEST_INVALID"})
                 res = await copyfast_api.manual_admin_draft(req_id, payload, request, account)
                 return res if isinstance(res, Response) else JSONResponse(status_code=200, content=res)
             elif action == "confirm":
-                body = await request.json()
-                payload = copyfast_api.ManualAdminConfirmRequest(**body)
+                try:
+                    body = await request.json()
+                except Exception:
+                    body = {}
+                try:
+                    payload = copyfast_api.ManualAdminConfirmRequest(**body)
+                except Exception as exc:
+                    return JSONResponse(status_code=422, content={"ok": False, "status": "failed", "message": str(exc), "error_code": "REQUEST_INVALID"})
                 res = await copyfast_api.manual_admin_confirm(req_id, payload, request, account)
                 return res if isinstance(res, Response) else JSONResponse(status_code=200, content=res)
     return await call_next(request)

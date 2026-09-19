@@ -10759,6 +10759,7 @@
         ${renderThemeToggle()}
         ${canOfferPwaInstall ? `<button class="portal-pwa-install-trigger" type="button" aria-label="${safeText(uiText("chrome.installApp", "Cài TOAN AAS trên thiết bị"))}" hidden data-portal-install-app><span aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-install-label">${safeText(uiText("chrome.installApp", "Cài app"))}</span></button>` : ""}
         <button class="portal-command-trigger" type="button" aria-label="${safeText(commandSearchLabel)}" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span class="portal-command-trigger-label">${safeText(commandSearchLabel)}</span><kbd>Ctrl K</kbd></button>
+        ${adminSurface && (typeof context.pendingTopupsCount === "number" ? context.pendingTopupsCount : (typeof window !== "undefined" && typeof window.__TOAN_AAS_PENDING_TOPUPS_COUNT__ === "number" ? window.__TOAN_AAS_PENDING_TOPUPS_COUNT__ : 0)) > 0 ? `<a class="portal-admin-pending-badge" href="/admin/topups" title="${safeText(adminManualTopupText("header.pendingTitle", `${typeof context.pendingTopupsCount === "number" ? context.pendingTopupsCount : window.__TOAN_AAS_PENDING_TOPUPS_COUNT__} yêu cầu nạp tiền chờ duyệt`))}" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;background:var(--portal-warning-bg,#fef3c7);color:var(--portal-warning-text,#92400e);font-size:12px;font-weight:700;text-decoration:none;border:1px solid var(--portal-warning-border,#fde68a);"><span aria-hidden="true">🔔</span><span>${safeText(String(typeof context.pendingTopupsCount === "number" ? context.pendingTopupsCount : window.__TOAN_AAS_PENDING_TOPUPS_COUNT__))}</span></a>` : ""}
         ${pageStatusBadge(page, context)}
         ${userDropdown}
       </div>`;
@@ -30453,10 +30454,24 @@
     return uiText(`adminManualTopup.${key}`, fallback, params);
   }
 
-  function adminManualTopupStatusBadge(status) {
+  function adminManualTopupStatusBadge(status, record) {
+    const rec = (record && typeof record === "object") ? record : {};
     const value = ["pending_admin_review", "approved", "rejected"].includes(String(status || "")) ? String(status) : "guarded";
     const labels = { pending_admin_review: adminManualTopupText("status.pending", "Chờ duyệt"), approved: adminManualTopupText("status.approved", "Đã duyệt"), rejected: adminManualTopupText("status.rejected", "Đã từ chối"), guarded: adminManualTopupText("status.guarded", "Được bảo vệ") };
-    return `<span class="portal-badge" data-status="${safeText(value)}">${safeText(labels[value])}</span>`;
+    const reqBadge = `<span class="portal-badge" data-status="${safeText(value)}">${safeText(labels[value])}</span>`;
+    let layers = reqBadge;
+    if (rec.payment_state || rec.settlement_state) {
+      const pay = String(rec.payment_state || "UNKNOWN").toUpperCase();
+      const payBadge = `<span class="portal-badge" data-status="${pay === "CONFIRMED" ? "approved" : (pay === "FAILED" ? "rejected" : "guarded")}" style="font-size:10px;margin-top:2px;">Thanh toán: ${safeText(pay)}</span>`;
+      const setl = String(rec.settlement_state || "UNKNOWN").toUpperCase();
+      const setlBadge = `<span class="portal-badge" data-status="${setl === "CREDITED" ? "approved" : (setl === "PENDING" ? "awaiting_confirm" : "guarded")}" style="font-size:10px;margin-top:2px;">Ví Xu: ${safeText(setl)}</span>`;
+      layers = `<div style="display:flex;flex-direction:column;gap:2px;align-items:flex-start;">${reqBadge}${payBadge}${setlBadge}</div>`;
+    }
+    if (rec.attention_required && Array.isArray(rec.attention_reasons) && rec.attention_reasons.length > 0) {
+      const tooltip = rec.attention_reasons.map((r) => safeText(r)).join("; ");
+      layers += `<div style="margin-top:4px;"><span class="portal-badge" data-status="awaiting_confirm" style="background:var(--portal-warning-bg,#fef3c7);color:var(--portal-warning-text,#92400e);border:1px solid var(--portal-warning-border,#fde68a);font-size:10px;" title="${tooltip}">⚠️ Cần chú ý (${rec.attention_reasons.length})</span></div>`;
+    }
+    return layers;
   }
 
   function adminManualTopupFacts(record) {
@@ -30468,19 +30483,24 @@
       ["field.method", "Phương thức", record.method],
       ["field.reference", "Mã giao dịch / tham chiếu", record.reference],
       ["field.paymentCode", "Mã nạp tiền", record.payment_code],
+      ["field.requestState", "Trạng thái yêu cầu", record.request_state || record.status],
+      ["field.paymentState", "Trạng thái thanh toán", record.payment_state],
+      ["field.settlementState", "Trạng thái ghi nhận Xu", record.settlement_state],
+      ["field.ledgerReceiptId", "Biên nhận Bot Core", record.ledger_event_id || record.ledger_receipt_id],
       ["field.submittedAt", "Yêu cầu lúc", record.submitted_at],
       ["field.updatedAt", "Cập nhật lúc", record.updated_at],
       ["field.decisionAt", "Quyết định lúc", record.decision_at],
-      ["field.reason", "Lý do", record.decision_reason]
+      ["field.reason", "Lý do", record.decision_reason],
+      ["field.attentionReasons", "Vấn đề cần chú ý", Array.isArray(record.attention_reasons) && record.attention_reasons.length > 0 ? record.attention_reasons.join("; ") : ""]
     ].filter((entry) => entry[2] !== undefined && entry[2] !== null && entry[2] !== "");
   }
 
   function renderAdminManualTopupCard(record, selectedId) {
     const selected = String(record.request_id || "") === String(selectedId || "");
     const actionButtons = record.status === "pending_admin_review"
-      ? `<div style="display:flex;gap:6px;margin-top:8px;"><button class="portal-button portal-button--primary portal-button--small" type="button" data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}" data-manual-admin-decision="approve" style="background:var(--portal-success,#16a34a);border-color:var(--portal-success,#16a34a);color:#fff;">Duyệt &amp; Cộng Xu</button><button class="portal-button portal-button--quiet portal-button--small" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></div>`
+      ? `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;"><button class="portal-button portal-button--primary portal-button--small" type="button" data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}" data-manual-admin-decision="approve" style="background:var(--portal-success,#16a34a);border-color:var(--portal-success,#16a34a);color:#fff;">Duyệt &amp; Cộng Xu</button><button class="portal-button portal-button--quiet portal-button--small" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></div>`
       : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button>`;
-    return `<article class="portal-admin-manual-topup-card${selected ? " is-selected" : ""}" data-status="${safeText(record.status || "guarded")}"><div class="portal-admin-manual-topup-card-head"><div><strong>${safeText(record.request_id || "—")}</strong><span>${safeText(record.display_name || record.email || "—")}</span><small>${safeText(record.email || "—")}</small></div>${adminManualTopupStatusBadge(record.status)}</div><dl><div><dt>${safeText(adminManualTopupText("column.amount", "Số tiền"))}</dt><dd>${safeText(adminNumber(record.amount_vnd, ` ${record.currency || "VND"}`))}</dd></div><div><dt>${safeText(adminManualTopupText("column.method", "Phương thức"))}</dt><dd>${safeText(record.method || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("field.paymentCode", "Mã nạp tiền"))}</dt><dd>${safeText(record.payment_code || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("column.submittedAt", "Yêu cầu lúc"))}</dt><dd>${safeText(record.submitted_at || "—")}</dd></div></dl>${actionButtons}</article>`;
+    return `<article class="portal-admin-manual-topup-card${selected ? " is-selected" : ""}" data-status="${safeText(record.status || "guarded")}" style="box-sizing:border-box;max-width:100%;overflow-x:hidden;word-break:break-word;"><div class="portal-admin-manual-topup-card-head" style="box-sizing:border-box;max-width:100%;flex-wrap:wrap;gap:8px;"><div><strong>${safeText(record.request_id || "—")}</strong><span>${safeText(record.display_name || record.email || "—")}</span><small style="word-break:break-all;">${safeText(record.email || "—")}</small></div>${adminManualTopupStatusBadge(record.status, record)}</div><dl style="box-sizing:border-box;max-width:100%;"><div><dt>${safeText(adminManualTopupText("column.amount", "Số tiền"))}</dt><dd>${safeText(adminNumber(record.amount_vnd, ` ${record.currency || "VND"}`))}</dd></div><div><dt>${safeText(adminManualTopupText("column.method", "Phương thức"))}</dt><dd>${safeText(record.method || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("field.paymentCode", "Mã nạp tiền"))}</dt><dd style="word-break:break-all;">${safeText(record.payment_code || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("column.submittedAt", "Yêu cầu lúc"))}</dt><dd>${safeText(record.submitted_at || "—")}</dd></div></dl>${actionButtons}</article>`;
   }
 
   function renderAdminManualTopupActions(record, writeEnabled) {
@@ -30557,7 +30577,7 @@
         const actionBtn = item.status === "pending_admin_review"
           ? `<div style="display:flex;gap:6px;"><button class="portal-button portal-button--primary portal-button--small" type="button" data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(item.request_id)}" data-manual-admin-decision="approve" style="background:var(--portal-success,#16a34a);border-color:var(--portal-success,#16a34a);color:#fff;">Duyệt &amp; Cộng Xu</button><button class="portal-button portal-button--quiet portal-button--small" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(item.request_id)}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></div>`
           : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(item.request_id)}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button>`;
-        return `<td>${safeText(String(item.__ordinal))}</td><td>${safeText(item.request_id)}</td><td>${safeText(item.display_name || item.email || "—")}</td><td>${safeText(item.email || "—")}</td><td>${safeText(adminNumber(item.amount_vnd, ` ${item.currency || "VND"}`))}</td><td>${safeText(item.method || "—")}</td><td>${safeText(item.reference || "—")}</td><td>${safeText(item.payment_code || "—")}</td><td>${safeText(item.submitted_at || "—")}</td><td>${adminManualTopupStatusBadge(item.status)}</td><td>${actionBtn}</td>`;
+        return `<td>${safeText(String(item.__ordinal))}</td><td>${safeText(item.request_id)}</td><td>${safeText(item.display_name || item.email || "—")}</td><td>${safeText(item.email || "—")}</td><td>${safeText(adminNumber(item.amount_vnd, ` ${item.currency || "VND"}`))}</td><td>${safeText(item.method || "—")}</td><td>${safeText(item.reference || "—")}</td><td>${safeText(item.payment_code || "—")}</td><td>${safeText(item.submitted_at || "—")}</td><td>${adminManualTopupStatusBadge(item.status, item)}</td><td>${actionBtn}</td>`;
       },
       adminManualTopupText("empty.title", "Không có yêu cầu phù hợp"), adminManualTopupText("empty.body", "Không tạo record hoặc số liệu thay thế khi queue trống.")
     );

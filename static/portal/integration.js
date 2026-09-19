@@ -15690,6 +15690,19 @@
     if (account && account.role === "admin" && currentPath === "/admin") {
       await hydrateAdminManualTopups("pending", "");
     }
+    if (account && account.role === "admin") {
+      try {
+        const countRes = await api("/admin/topups/pending-count", { cache: "no-store" });
+        if (countRes && countRes.ok && countRes.data && typeof countRes.data.count === "number") {
+          window.__TOAN_AAS_PENDING_TOPUPS_COUNT__ = countRes.data.count;
+          if (typeof portalContext !== "undefined" && portalContext) {
+            portalContext.pendingTopupsCount = countRes.data.count;
+          }
+        }
+      } catch (countErr) {
+        // fail-soft
+      }
+    }
     // Native Support Desk routes have their own narrow API boundary.  Even if
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an

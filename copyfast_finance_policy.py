@@ -101,6 +101,12 @@ WINDOW_BOUNDARY_SOURCE = "SERVER_CANONICAL_UTC"
 # Refund / Compensation semantics (Read-model only, real mutations not implemented)
 REFUND_SEMANTICS = "NOT_IMPLEMENTED"
 COMPENSATION_SEMANTICS = "NOT_IMPLEMENTED"
+TOTAL_REVENUE_AVAILABLE = False
+REFUND_EXECUTION_AVAILABLE = False
+COMPENSATION_EXECUTION_AVAILABLE = False
+MANUAL_CREDIT_AVAILABLE = False
+MANUAL_DEBIT_AVAILABLE = False
+REVENUE_EXPANDED_SCOPE = "WEB_MANUAL_TOPUPS_AND_SETTLED_PAYOS"
 
 # Canonical money definitions
 CURRENT_BALANCE_XU = "CURRENT_BALANCE_XU"
@@ -644,17 +650,21 @@ def reconcile_wallet_ledger(
     reported_balance: int | None,
     ledger_events: list[dict[str, Any]] | None,
     opening_balance: int = 0,
+    ledger_coverage: str = "complete",
+    opening_balance_proven: bool = True,
 ) -> dict[str, Any]:
     """Reconcile reported wallet balance with ledger events.
 
     Invariants:
     - DISCREPANCY_SUPPRESSED = False (never silently overwrite either side).
     - FAKE_ZERO_WALLET_BALANCE = 0 (unavailable balance remains None, never 0).
+    - If ledger_coverage is incomplete or opening balance unproven, do not declare false discrepancy.
     """
     if reported_balance is None:
         return {
             "status": STATUS_UNAVAILABLE,
             "reconciled": False,
+            "discrepancy_detected": False,
             "discrepancy_xu": None,
             "reported_balance_xu": None,
             "expected_balance_xu": None,
@@ -662,6 +672,8 @@ def reconcile_wallet_ledger(
             "total_debits_xu": None,
             "opening_balance_xu": opening_balance,
             "event_count": 0 if ledger_events is None else len(ledger_events),
+            "ledger_coverage": ledger_coverage,
+            "opening_balance_proven": opening_balance_proven,
             "discrepancy_suppressed": DISCREPANCY_SUPPRESSED,
         }
 
@@ -669,12 +681,31 @@ def reconcile_wallet_ledger(
     credits = sum(int(e.get("delta") or 0) for e in events if int(e.get("delta") or 0) > 0)
     debits = sum(abs(int(e.get("delta") or 0)) for e in events if int(e.get("delta") or 0) < 0)
     expected = int(opening_balance) + credits - debits
+
+    if str(ledger_coverage).lower() != "complete" or not opening_balance_proven:
+        return {
+            "status": "partial_or_unavailable",
+            "reconciled": False,
+            "discrepancy_detected": False,
+            "discrepancy_xu": None,
+            "reported_balance_xu": int(reported_balance),
+            "expected_balance_xu": expected,
+            "total_credits_xu": credits,
+            "total_debits_xu": debits,
+            "opening_balance_xu": opening_balance,
+            "event_count": len(events),
+            "ledger_coverage": ledger_coverage,
+            "opening_balance_proven": opening_balance_proven,
+            "discrepancy_suppressed": DISCREPANCY_SUPPRESSED,
+        }
+
     discrepancy = int(reported_balance) - expected
     reconciled = (discrepancy == 0)
 
     return {
         "status": "reconciled" if reconciled else "discrepancy_detected",
         "reconciled": reconciled,
+        "discrepancy_detected": not reconciled,
         "discrepancy_xu": discrepancy,
         "reported_balance_xu": int(reported_balance),
         "expected_balance_xu": expected,
@@ -682,6 +713,8 @@ def reconcile_wallet_ledger(
         "total_debits_xu": debits,
         "opening_balance_xu": opening_balance,
         "event_count": len(events),
+        "ledger_coverage": ledger_coverage,
+        "opening_balance_proven": opening_balance_proven,
         "discrepancy_suppressed": DISCREPANCY_SUPPRESSED,
     }
 
