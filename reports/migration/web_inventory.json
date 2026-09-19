@@ -8036,7 +8036,7 @@
       "files": [
         "static/portal/portal.js"
       ],
-      "occurrences": 5,
+      "occurrences": 6,
       "provider": "MiniMax"
     },
     {
@@ -8107,7 +8107,7 @@
         "studio/index.html",
         "studio/script.js"
       ],
-      "occurrences": 15,
+      "occurrences": 16,
       "provider": "Kling"
     },
     {
@@ -8153,7 +8153,7 @@
         "copyfast_pages.py",
         "copyfast_partner_crm.py"
       ],
-      "occurrences": 1775,
+      "occurrences": 1774,
       "provider": "Telegram"
     }
   ],
@@ -14714,7 +14714,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 226,
   "source_files_scanned": 226,
-  "source_fingerprint_sha256": "1003ac1dcce6c0ba888be7ea43b9fe3615e2b707abfa260d393d479880c545c5",
+  "source_fingerprint_sha256": "36dceb6b9a6fc2848eedef11531c9fe58426584ac2d8a137c8bbff2053c17da9",
   "source_root": "repository-root",
   "ui_path_references": [
     {
@@ -14934,7 +14934,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 31146,
+      "line": 31062,
       "path": "/features"
     },
     {
