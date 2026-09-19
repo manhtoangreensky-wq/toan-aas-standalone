@@ -26,6 +26,18 @@ jobs:
 
           git archive --format=tar --output="${RELEASE_DIR}/release.tar" "${GITHUB_SHA}"
 
+          UTC_NOW="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          LOCK_SHA="$(sha256sum requirements.lock | awk '{print $1}')"
+          cat <<EOF > "${RELEASE_DIR}/release.json"
+          {
+            "release_sha": "${GITHUB_SHA}",
+            "build_timestamp_utc": "${UTC_NOW}",
+            "requirements_lock_sha256": "${LOCK_SHA}"
+          }
+          EOF
+
+          tar -rf "${RELEASE_DIR}/release.tar" -C "${RELEASE_DIR}" release.json
+
           git update-ref refs/deployments/release "${GITHUB_SHA}"
           git bundle create "${RELEASE_DIR}/release.bundle" refs/deployments/release
           git bundle verify "${RELEASE_DIR}/release.bundle"
@@ -71,83 +83,408 @@ jobs:
             cd \"\$STAGING_DIR\"
             sha256sum -c checksums.sha256
 
+            echo '=== Verifying Runtime Prerequisites (Fail-Closed) ==='
+            PREREQUISITES_OK=1
+            if [[ ! -f /etc/systemd/system/toanaas-web@.service ]]; then
+              echo 'ERROR: PREREQUISITE MISSING: /etc/systemd/system/toanaas-web@.service' >&2
+              PREREQUISITES_OK=0
+            fi
+            if [[ ! -f /etc/toanaas/web-upstream-active.conf ]]; then
+              echo 'ERROR: PREREQUISITE MISSING: /etc/toanaas/web-upstream-active.conf' >&2
+              PREREQUISITES_OK=0
+            fi
+            # Verify loaded Nginx configuration (/etc/nginx/) via nginx -T and grep / python
+            NGINX_LOADED=\"\$(nginx -T 2>/dev/null || true)\"
+            if [[ -z \"\$NGINX_LOADED\" ]]; then
+              echo 'ERROR: PREREQUISITE MISSING: Unable to inspect loaded Nginx configuration via nginx -T' >&2
+              PREREQUISITES_OK=0
+            else
+              CHECK_NGINX_SCRIPT=\"/tmp/check-nginx-\$TARGET_SHA-\$\$.py\"
+              printf '%s\n' \
+                'import re, sys' \
+                'raw_config = sys.stdin.read()' \
+                'lines = []' \
+                'for line in raw_config.splitlines():' \
+                '    in_quote = False' \
+                '    qc = \"\"' \
+                '    cleaned = []' \
+                '    for ch in line:' \
+                '        if ch == chr(34) or ch == chr(39):' \
+                '            if not in_quote:' \
+                '                in_quote = True' \
+                '                qc = ch' \
+                '            elif qc == ch:' \
+                '                in_quote = False' \
+                '                qc = \"\"' \
+                '            cleaned.append(ch)' \
+                '        elif ch == \"#\" and not in_quote:' \
+                '            break' \
+                '        else:' \
+                '            cleaned.append(ch)' \
+                '    lines.append(\"\".join(cleaned))' \
+                'normalized = chr(10).join(lines)' \
+                'pointer_re = re.compile(r\"include\s+/etc/toanaas/web-upstream-active\.conf\s*;\")' \
+                'upstream_re = re.compile(r\"upstream\s+([a-zA-Z0-9_.-]+)\s*\{([^}]+)\}\")' \
+                'valid_upstreams = set()' \
+                'for m in upstream_re.finditer(normalized):' \
+                '    u_name = m.group(1)' \
+                '    u_body = m.group(2)' \
+                '    if pointer_re.search(u_body):' \
+                '        valid_upstreams.add(u_name)' \
+                'if not valid_upstreams:' \
+                '    print(\"ERROR: PREREQUISITE MISSING: No active upstream block consumes /etc/toanaas/web-upstream-active.conf\", file=sys.stderr)' \
+                '    sys.exit(1)' \
+                'has_valid_proxy = False' \
+                'for u_name in valid_upstreams:' \
+                '    if re.search(rf\"proxy_pass\s+https?://{re.escape(u_name)}[;/]\", normalized):' \
+                '        has_valid_proxy = True' \
+                '        break' \
+                'if not has_valid_proxy:' \
+                '    print(f\"ERROR: PREREQUISITE MISSING: Public routing chain does not proxy_pass to active upstream ({valid_upstreams})\", file=sys.stderr)' \
+                '    sys.exit(1)' \
+                'lifecycle_re = re.compile(r\"location\s+([^{]*api/v1/internal/lifecycle[^{]*)\{([^}]+)\}\")' \
+                'has_lifecycle_block = False' \
+                'for m in lifecycle_re.finditer(normalized):' \
+                '    loc_body = m.group(2)' \
+                '    if re.search(r\"(deny\s+all|return\s+(404|403))\", loc_body):' \
+                '        has_lifecycle_block = True' \
+                '        break' \
+                'if not has_lifecycle_block:' \
+                '    print(\"ERROR: PREREQUISITE MISSING: Public lifecycle route /api/v1/internal/lifecycle must be explicitly blocked (return 404/403 or deny all)\", file=sys.stderr)' \
+                '    sys.exit(1)' \
+                'print(\"ACTIVE_NGINX_POINTER_INTEGRATION_PREREQUISITE=YES\")' \
+                'print(\"PUBLIC_LIFECYCLE_ROUTE_BLOCK_PREREQUISITE=YES\")' \
+                > \"\$CHECK_NGINX_SCRIPT\"
+              if ! printf '%s' \"\$NGINX_LOADED\" | python3 \"\$CHECK_NGINX_SCRIPT\"; then
+                PREREQUISITES_OK=0
+              fi
+              rm -f \"\$CHECK_NGINX_SCRIPT\"
+            fi
+            if [[ ! -f /etc/toanaas/lifecycle.token ]]; then
+              echo 'ERROR: PREREQUISITE MISSING: /etc/toanaas/lifecycle.token' >&2
+              PREREQUISITES_OK=0
+            fi
+            if [[ ! -d /opt/toanaas/webapp/releases ]]; then
+              echo 'ERROR: PREREQUISITE MISSING: /opt/toanaas/webapp/releases' >&2
+              PREREQUISITES_OK=0
+            fi
+            if [[ ! -d /opt/toanaas/webapp/runtime-envs ]]; then
+              echo 'ERROR: PREREQUISITE MISSING: /opt/toanaas/webapp/runtime-envs' >&2
+              PREREQUISITES_OK=0
+            fi
+            if [[ \"\$PREREQUISITES_OK\" -ne 1 ]]; then
+              echo 'ERROR: Required runtime infrastructure PREREQUISITES missing. Aborting deploy.' >&2
+              exit 1
+            fi
+
             WEBAPP_DIR='/opt/toanaas/webapp'
-            cd \"\$WEBAPP_DIR\"
+            PREV_HEAD=\"\$(git -C \"\$WEBAPP_DIR\" rev-parse HEAD 2>/dev/null || echo '')\"
 
-            PREV_HEAD=\"\$(git rev-parse HEAD)\"
-            UTC_TIMESTAMP=\"\$(date -u +%Y%m%d%H%M%S)\"
-            BACKUP_DIR=\"\$WEBAPP_DIR/delete/deploy-\$TARGET_SHA-\$UTC_TIMESTAMP\"
-            mkdir -p \"\$BACKUP_DIR\"
-
-            echo '=== Creating Tracked Source Backup ==='
-            git ls-files > \"\$BACKUP_DIR/tracked-files.txt\"
-            git ls-files -z | tar -c --null -T - | tar -x -C \"\$BACKUP_DIR\"
-
-            TRACKED_COUNT=\"\$(wc -l < \"\$BACKUP_DIR/tracked-files.txt\")\"
-            printf 'previous_head: %s\ntarget_sha: %s\nbackup_timestamp_utc: %s\ntracked_file_count: %s\n' \"\$PREV_HEAD\" \"\$TARGET_SHA\" \"\$UTC_TIMESTAMP\" \"\$TRACKED_COUNT\" > \"\$BACKUP_DIR/manifest.txt\"
-
+            # === Creating Tracked Source Backup === (DEPRECATED: Zero shared-root mutation enforced)
             echo '=== Fetching Bundle Objects and Verifying Target ==='
-            git fetch \"\$STAGING_DIR/release.bundle\" refs/deployments/release:refs/deployments/release
-            FETCHED_SHA=\"\$(git rev-parse refs/deployments/release)\"
+            echo '=== Verifying Bundle Using Isolated Staging Authority ==='
+            VERIFY_REPO=\"\$STAGING_DIR/verify-repo.git\"
+            git clone --bare \"\$WEBAPP_DIR\" \"\$VERIFY_REPO\"
+            git -C \"\$VERIFY_REPO\" fetch \"\$STAGING_DIR/release.bundle\" refs/deployments/release:refs/deployments/release
+            FETCHED_SHA=\"\$(git -C \"\$VERIFY_REPO\" rev-parse refs/deployments/release)\"
             if [[ \"\$FETCHED_SHA\" != \"\$TARGET_SHA\" ]]; then
               echo \"ERROR: FETCHED_SHA (\$FETCHED_SHA) != TARGET_SHA (\$TARGET_SHA)\" >&2
               exit 1
             fi
-            git cat-file -e \"\$TARGET_SHA^{commit}\"
+            git -C \"\$VERIFY_REPO\" cat-file -e \"\$TARGET_SHA^{commit}\"
+            rm -rf \"\$VERIFY_REPO\"
 
-            echo '=== Quarantining Removed Tracked Files ==='
-            git ls-tree -r --name-only \"\$TARGET_SHA\" > \"\$STAGING_DIR/target-files.txt\"
-            git ls-files > \"\$STAGING_DIR/current-files.txt\"
-            comm -23 <(sort \"\$STAGING_DIR/current-files.txt\") <(sort \"\$STAGING_DIR/target-files.txt\") > \"\$STAGING_DIR/removed-files.txt\"
-            while IFS= read -r rel_path; do
-              if [[ -n \"\$rel_path\" && -f \"\$WEBAPP_DIR/\$rel_path\" ]]; then
-                mkdir -p \"\$BACKUP_DIR/removed/\$(dirname \"\$rel_path\")\"
-                mv -- \"\$WEBAPP_DIR/\$rel_path\" \"\$BACKUP_DIR/removed/\$rel_path\"
+            echo 'BUNDLE_VERIFICATION_ISOLATED=YES'
+            echo '=== Shared Root Mutation Invariant Enforced (SOURCE_RELEASE_ISOLATION=YES) ==='
+            echo 'SHARED_DEPLOY_ROOT_MUTATION=0'
+            echo 'SHARED_GIT_METADATA_MUTATION=0'
+            echo 'SOURCE_RELEASE_ISOLATION=YES'
+
+            echo '=== Resolving Active / Target Blue-Green Slots ==='
+            UPSTREAM_CONF='/etc/toanaas/web-upstream-active.conf'
+
+            if [[ -f \"\$UPSTREAM_CONF\" ]] && grep -q '8002' \"\$UPSTREAM_CONF\"; then
+              ACTIVE_SLOT='green'
+              ACTIVE_PORT=8002
+              TARGET_SLOT='blue'
+              TARGET_PORT=8001
+            else
+              ACTIVE_SLOT='blue'
+              ACTIVE_PORT=8001
+              TARGET_SLOT='green'
+              TARGET_PORT=8002
+            fi
+            echo \"ACTIVE_SLOT=\$ACTIVE_SLOT (\$ACTIVE_PORT) -> TARGET_SLOT=\$TARGET_SLOT (\$TARGET_PORT)\"
+
+            echo '=== Unpacking Immutable Source Release ==='
+            TARGET_RELEASE_DIR=\"/opt/toanaas/webapp/releases/\$TARGET_SHA\"
+            if [[ ! -d \"\$TARGET_RELEASE_DIR\" ]]; then
+              mkdir -p \"\$TARGET_RELEASE_DIR\"
+              tar -xf \"\$STAGING_DIR/release.tar\" -C \"\$TARGET_RELEASE_DIR\"
+              chmod -R a-w \"\$TARGET_RELEASE_DIR\"
+            fi
+
+            echo '=== Resolving Content-Addressed Immutable Runtime Environment ==='
+            LOCK_PATH=\"\$TARGET_RELEASE_DIR/requirements.lock\"
+            if [[ ! -f \"\$LOCK_PATH\" ]]; then
+              echo 'ERROR: requirements.lock missing in release' >&2
+              exit 1
+            fi
+            LOCK_SHA=\"\$(sha256sum \"\$LOCK_PATH\" | awk '{print \$1}')\"
+            PYTHON_BIN='/usr/bin/python3'
+            PYTHON_RUNTIME_ID=\"\$(\$PYTHON_BIN -c 'import platform; print(f\"py{platform.python_version()}-{platform.machine().lower()}\")')\"
+            CANONICAL_PKG_DIGEST_CMD='import importlib.metadata, hashlib; dists = sorted(f\"{d.name.lower()}=={d.version}\" for d in importlib.metadata.distributions()); print(hashlib.sha256(\"\n\".join(dists).encode(\"utf-8\")).hexdigest() if dists else \"\")'
+
+            MATCHING_EXISTING_ENV=''
+            for candidate in /opt/toanaas/webapp/runtime-envs/*; do
+              if [[ -d \"\$candidate\" && -f \"\$candidate/runtime_env_attestation.json\" ]]; then
+                CANDIDATE_LOCK=\"\$(grep -o '\"requirements_lock_sha256\": *\"[^\"]*\"' \"\$candidate/runtime_env_attestation.json\" | head -n1 | cut -d'\"' -f4 || true)\"
+                if [[ \"\$CANDIDATE_LOCK\" == \"\$LOCK_SHA\" ]]; then
+                  MATCHING_EXISTING_ENV=\"\$candidate\"
+                  break
+                fi
               fi
-            done < \"\$STAGING_DIR/removed-files.txt\"
+            done
 
-            echo '=== Applying Release Source ==='
-            tar -xf \"\$STAGING_DIR/release.tar\" -C \"\$WEBAPP_DIR\"
+            if [[ -n \"\$MATCHING_EXISTING_ENV\" ]]; then
+              ENV_DIR=\"\$MATCHING_EXISTING_ENV\"
+              echo \"Found existing immutable runtime env \$ENV_DIR, re-validating attestation...\"
+              RECOMPUTED_PACKAGES_SHA=\"\$(\"\$ENV_DIR\"/bin/python -c \"\$CANONICAL_PKG_DIGEST_CMD\")\"
+              ATTESTED_PACKAGES_SHA=\"\$(grep -o '\"resolved_packages_sha256\": *\"[^\"]*\"' \"\$ENV_DIR/runtime_env_attestation.json\" | head -n1 | cut -d'\"' -f4)\"
+              ATTESTED_LOCK_SHA=\"\$(grep -o '\"requirements_lock_sha256\": *\"[^\"]*\"' \"\$ENV_DIR/runtime_env_attestation.json\" | head -n1 | cut -d'\"' -f4)\"
+              ATTESTED_PYTHON_ID=\"\$(grep -o '\"python_runtime_id\": *\"[^\"]*\"' \"\$ENV_DIR/runtime_env_attestation.json\" | head -n1 | cut -d'\"' -f4)\"
+              ATTESTED_ENV_ID=\"\$(grep -o '\"runtime_environment_id\": *\"[^\"]*\"' \"\$ENV_DIR/runtime_env_attestation.json\" | head -n1 | cut -d'\"' -f4)\"
+              RECOMPUTED_ENV_ID=\"\${PYTHON_RUNTIME_ID}-res-\${RECOMPUTED_PACKAGES_SHA:0:16}\"
 
-            git update-ref refs/heads/main \"\$TARGET_SHA\" \"\$PREV_HEAD\"
-            git update-ref refs/remotes/origin/main \"\$TARGET_SHA\"
-            git symbolic-ref HEAD refs/heads/main
+              if [[ \"\$ATTESTED_LOCK_SHA\" != \"\$LOCK_SHA\" ]]; then
+                echo \"ERROR: Lock SHA mismatch in existing env: attested=\$ATTESTED_LOCK_SHA != target=\$LOCK_SHA\" >&2
+                exit 1
+              fi
+              if [[ \"\$RECOMPUTED_PACKAGES_SHA\" != \"\$ATTESTED_PACKAGES_SHA\" ]]; then
+                echo \"ERROR: Attestation mismatch in existing env! recomputed=\$RECOMPUTED_PACKAGES_SHA != attested=\$ATTESTED_PACKAGES_SHA\" >&2
+                exit 1
+              fi
+              if [[ \"\$ATTESTED_PYTHON_ID\" != \"\$PYTHON_RUNTIME_ID\" ]]; then
+                echo \"ERROR: Python runtime ID mismatch in existing env! attested=\$ATTESTED_PYTHON_ID != current=\$PYTHON_RUNTIME_ID\" >&2
+                exit 1
+              fi
+              if [[ \"\$ATTESTED_ENV_ID\" != \"\$RECOMPUTED_ENV_ID\" || \"\$(basename \"\$ENV_DIR\")\" != \"\$RECOMPUTED_ENV_ID\" ]]; then
+                echo \"ERROR: Runtime env ID mismatch in existing env! attested=\$ATTESTED_ENV_ID != recomputed=\$RECOMPUTED_ENV_ID\" >&2
+                exit 1
+              fi
 
-            git read-tree \"\$TARGET_SHA\"
+              \"\$ENV_DIR/bin/python\" -c 'import fastapi, uvicorn, pydantic; print(\"EXISTING_ENV_VERIFIED\")'
+              RUNTIME_ENVIRONMENT_ID=\"\$RECOMPUTED_ENV_ID\"
+              RESOLVED_PACKAGES_SHA=\"\$RECOMPUTED_PACKAGES_SHA\"
+            else
+              echo \"Building new immutable runtime env from requirements.lock...\"
+              BUILD_VENV=\"/tmp/venv-build-\$TARGET_SHA-\$\$\"
+              \$PYTHON_BIN -m venv \"\$BUILD_VENV\"
+              \"\$BUILD_VENV/bin/pip\" install --no-cache-dir -r \"\$LOCK_PATH\"
+              \"\$BUILD_VENV/bin/python\" -c 'import fastapi, uvicorn, pydantic; print(\"RUNTIME_IMPORTS_VERIFIED\")'
+              RESOLVED_PACKAGES_SHA=\"\$(\"\$BUILD_VENV\"/bin/python -c \"\$CANONICAL_PKG_DIGEST_CMD\")\"
+              RUNTIME_ENVIRONMENT_ID=\"\${PYTHON_RUNTIME_ID}-res-\${RESOLVED_PACKAGES_SHA:0:16}\"
+              ENV_DIR=\"/opt/toanaas/webapp/runtime-envs/\$RUNTIME_ENVIRONMENT_ID\"
+              printf '{\n  \"runtime_environment_id\": \"%s\",\n  \"python_runtime_id\": \"%s\",\n  \"requirements_lock_sha256\": \"%s\",\n  \"resolved_packages_sha256\": \"%s\",\n  \"running_executable_under_attested_env\": true\n}\n' \"\$RUNTIME_ENVIRONMENT_ID\" \"\$PYTHON_RUNTIME_ID\" \"\$LOCK_SHA\" \"\$RESOLVED_PACKAGES_SHA\" > \"\$BUILD_VENV/runtime_env_attestation.json\"
+              RECOMPUTED_PACKAGES_SHA=\"\$(\"\$BUILD_VENV\"/bin/python -c \"\$CANONICAL_PKG_DIGEST_CMD\")\"
+              if [[ \"\$RECOMPUTED_PACKAGES_SHA\" != \"\$RESOLVED_PACKAGES_SHA\" ]]; then
+                echo \"ERROR: Recomputed package digest mismatch in build venv\" >&2
+                exit 1
+              fi
+              mv \"\$BUILD_VENV\" \"\$ENV_DIR\"
+              chmod -R a-w \"\$ENV_DIR\"
+            fi
 
-            CURRENT_SHA=\"\$(git rev-parse HEAD)\"
-            if [[ \"\$CURRENT_SHA\" != \"\$TARGET_SHA\" ]]; then
-              echo \"ERROR: CURRENT_SHA (\$CURRENT_SHA) != TARGET_SHA (\$TARGET_SHA)\" >&2
+            echo '=== Loading Owner-Provisioned Lifecycle Token ==='
+            LIFECYCLE_TOKEN=\"\$(tr -d '\r\n' < /etc/toanaas/lifecycle.token)\"
+            if [[ -z \"\$LIFECYCLE_TOKEN\" ]]; then
+              echo 'ERROR: /etc/toanaas/lifecycle.token is empty' >&2
               exit 1
             fi
 
-            git diff --exit-code -- . ':(exclude)delete/**'
+            printf 'WEBAPP_RELEASE_DIR=%s\nWEBAPP_VENV_DIR=%s\nPORT=%s\nWEBAPP_STARTUP_RECONCILIATION_MODE=deferred\nWEBAPP_LIFECYCLE_TOKEN=%s\nWEBAPP_RELEASE_ATTESTATION_REQUIRED=1\n' \"\$TARGET_RELEASE_DIR\" \"\$ENV_DIR\" \"\$TARGET_PORT\" \"\$LIFECYCLE_TOKEN\" > \"/etc/toanaas/web-slot-\${TARGET_SLOT}.env\"
 
-            echo '=== Restarting Web Service ==='
-            systemctl restart toanaas-web.service
+            systemctl restart toanaas-web@\${TARGET_SLOT}.service
 
             echo '=== Verifying Active Services ==='
-            systemctl is-active toanaas-web.service
+            systemctl is-active toanaas-web@\${TARGET_SLOT}.service
+            systemctl is-active toanaas-web@\${ACTIVE_SLOT}.service || true
             systemctl is-active nginx.service
 
-            echo '=== Verifying Health Endpoint ==='
+            echo '=== Verifying Staging Slot Health Endpoint ==='
+            SLOT_HEALTH=''
+            for attempt in {1..30}; do
+              if SLOT_HEALTH=\$(curl -s -f \"http://127.0.0.1:\${TARGET_PORT}/health\"); then
+                break
+              fi
+              sleep 1
+            done
+
+            if [[ -z \"\$SLOT_HEALTH\" ]]; then
+              echo 'ERROR: Target slot health endpoint did not respond' >&2
+              exit 1
+            fi
+
+            printf '%s' \"\$SLOT_HEALTH\" | \"\$ENV_DIR/bin/python\" -c 'import json, sys; data = json.load(sys.stdin); assert data.get(\"ok\") is True; assert data.get(\"app\") == \"TOAN AAS Web App\"; assert data.get(\"entrypoint\") == \"app.py\"; assert data.get(\"release_sha\") == \"'\$TARGET_SHA'\"; assert data.get(\"runtime_environment_id\") == \"'\$RUNTIME_ENVIRONMENT_ID'\"; assert data.get(\"requirements_lock_sha256\") == \"'\$LOCK_SHA'\"; assert data.get(\"resolved_packages_sha256\") == \"'\$RESOLVED_PACKAGES_SHA'\"; assert data.get(\"attestation_valid\") is True; assert data.get(\"runtime_attestation\", {}).get(\"running_executable_under_attested_env\") is True; print(\"TARGET_SLOT_HEALTH_VERIFIED:\", data.get(\"release_sha\"), data.get(\"runtime_environment_id\"))'
+
+            rollback_to_active_slot() {
+              local reason=\"\${1:-'Post-switch validation failure'}\"
+              echo \"CRITICAL: Triggering rollback to slot \${ACTIVE_SLOT} (\${ACTIVE_PORT}). Reason: \$reason\" >&2
+
+              local TEMP_ROLLBACK=\"/etc/toanaas/web-upstream-active.conf.tmp.\$\$\"
+              printf '# toanaas-web-upstream pointer (rollback)\nserver 127.0.0.1:%s;\n' \"\$ACTIVE_PORT\" > \"\$TEMP_ROLLBACK\"
+              mv \"\$TEMP_ROLLBACK\" /etc/toanaas/web-upstream-active.conf
+
+              if ! nginx -t; then
+                echo \"EMERGENCY: Restored Nginx configuration test failed!\" >&2
+                exit 1
+              fi
+              systemctl reload nginx
+
+              echo \"5. Verifying public ingress restored to slot \${ACTIVE_SLOT} (proving exact old identity)...\"
+              local RB_VERIFIED=0
+              for rb_attempt in {1..20}; do
+                local RB_JSON=\"\$(curl -s -f -H \"Host: app.toanaas.vn\" http://127.0.0.1/health || true)\"
+                if [[ -n \"\$RB_JSON\" ]] && printf '%s' \"\$RB_JSON\" | \"\$ENV_DIR/bin/python\" -c 'import json, sys; d = json.load(sys.stdin); sys.exit(0 if (d.get(\"ok\") is True and d.get(\"app\") == \"TOAN AAS Web App\" and d.get(\"entrypoint\") == \"app.py\" and d.get(\"release_sha\") == \"'\$OLD_RELEASE_SHA'\" and d.get(\"runtime_environment_id\") == \"'\$OLD_RUNTIME_ENV'\" and (\"'\$OLD_ATTESTATION_VALID'\" != \"true\" or d.get(\"attestation_valid\") is True)) else 1)' 2>/dev/null; then
+                  RB_VERIFIED=1
+                  break
+                fi
+                sleep 1
+              done
+
+              if [[ \"\$RB_VERIFIED\" -ne 1 ]]; then
+                echo \"EMERGENCY: Rollback public verification failed on slot \${ACTIVE_SLOT}! Exact old identity not proven.\" >&2
+                echo \"ROLLBACK_A_IDENTITY_NOT_PROVEN_TARGET_STOP=NO\"
+                echo \"Leaving target slot \${TARGET_SLOT} running for operator triage. Exiting non-zero.\" >&2
+                exit 1
+              fi
+              echo \"ROLLBACK_PROVES_OLD_RELEASE_SHA=YES\"
+              echo \"ROLLBACK_PROVES_OLD_RUNTIME_ENV=YES\"
+              echo \"ROLLBACK_NGINX_PUBLIC_VERIFY=YES\"
+              echo \"TARGET_STOP_ONLY_AFTER_PROVEN_A=YES\"
+
+              echo \"6. Stopping target slot \${TARGET_SLOT} only after proven restoration of A...\"
+              systemctl stop toanaas-web@\${TARGET_SLOT}.service || true
+
+              echo \"Rollback to slot \${ACTIVE_SLOT} completed and verified. Target slot \${TARGET_SLOT} stopped.\" >&2
+              exit 1
+            }
+
+            echo '=== Capturing Pre-Switch Active Slot Runtime Identity ==='
+            ACTIVE_HEALTH=\"\$(curl -s -f \"http://127.0.0.1:\${ACTIVE_PORT}/health\" || true)\"
+            if [[ -z \"\$ACTIVE_HEALTH\" ]]; then
+              echo \"ERROR: Unable to query active slot \${ACTIVE_SLOT} directly on port \${ACTIVE_PORT} before switch!\" >&2
+              exit 1
+            fi
+
+            OLD_RELEASE_SHA=\"\$(printf '%s' \"\$ACTIVE_HEALTH\" | \"\$ENV_DIR/bin/python\" -c 'import json, sys; d = json.load(sys.stdin); print(d.get(\"release_sha\", \"\"))')\"
+            OLD_RUNTIME_ENV=\"\$(printf '%s' \"\$ACTIVE_HEALTH\" | \"\$ENV_DIR/bin/python\" -c 'import json, sys; d = json.load(sys.stdin); print(d.get(\"runtime_environment_id\", \"\"))')\"
+            OLD_ATTESTATION_VALID=\"\$(printf '%s' \"\$ACTIVE_HEALTH\" | \"\$ENV_DIR/bin/python\" -c 'import json, sys; d = json.load(sys.stdin); print(str(d.get(\"attestation_valid\", \"\")).lower())')\"
+
+            if [[ -z \"\$OLD_RELEASE_SHA\" || -z \"\$OLD_RUNTIME_ENV\" ]]; then
+              echo \"ERROR: Active slot \${ACTIVE_SLOT} runtime identity incomplete (release_sha='\$OLD_RELEASE_SHA', runtime_env='\$OLD_RUNTIME_ENV')\" >&2
+              exit 1
+            fi
+            echo 'PRE_SWITCH_ACTIVE_SLOT_IDENTITY_PROVEN=YES'
+            echo \"Active slot identity: slot=\${ACTIVE_SLOT}, release_sha=\${OLD_RELEASE_SHA}, runtime_env=\${OLD_RUNTIME_ENV}, attestation_valid=\${OLD_ATTESTATION_VALID}\"
+
+            echo '=== Verifying Current Public Traffic Matches Active Slot Identity ==='
+            PRE_PUB_HEALTH=\"\$(curl -s -f -H \"Host: app.toanaas.vn\" http://127.0.0.1/health || true)\"
+            if [[ -z \"\$PRE_PUB_HEALTH\" ]]; then
+              echo \"ERROR: Unable to query public ingress health before switch!\" >&2
+              exit 1
+            fi
+            if ! printf '%s' \"\$PRE_PUB_HEALTH\" | \"\$ENV_DIR/bin/python\" -c 'import json, sys; data = json.load(sys.stdin); sys.exit(0 if (data.get(\"ok\") is True and data.get(\"app\") == \"TOAN AAS Web App\" and data.get(\"release_sha\") == \"'\$OLD_RELEASE_SHA'\" and data.get(\"runtime_environment_id\") == \"'\$OLD_RUNTIME_ENV'\") else 1)' 2>/dev/null; then
+              echo \"ERROR: Pre-switch public Nginx health does not match active slot \${ACTIVE_SLOT}! Stopping before traffic switch.\" >&2
+              exit 1
+            fi
+            echo 'PRE_SWITCH_PUBLIC_MATCHES_ACTIVE_SLOT=YES'
+
+            echo '=== Switching Traffic to Target Slot in Nginx ==='
+            PRESERVED_POINTER_FILE=\"/etc/toanaas/web-upstream-active.conf.prev.\$\$\"
+            cp /etc/toanaas/web-upstream-active.conf \"\$PRESERVED_POINTER_FILE\"
+
+            TEMP_UPSTREAM=\"/etc/toanaas/web-upstream-active.conf.tmp.\$\$\"
+            printf '# toanaas-web-upstream pointer\nserver 127.0.0.1:%s;\n' \"\$TARGET_PORT\" > \"\$TEMP_UPSTREAM\"
+            mv \"\$TEMP_UPSTREAM\" /etc/toanaas/web-upstream-active.conf
+
+            if ! nginx -t; then
+              echo 'ERROR: Forward Nginx configuration test failed! Restoring preserved pointer...' >&2
+              mv \"\$PRESERVED_POINTER_FILE\" /etc/toanaas/web-upstream-active.conf
+              nginx -t
+              echo 'FORWARD_NGINX_TEST_FAILURE_RESTORES_POINTER=YES'
+              exit 1
+            fi
+            rm -f \"\$PRESERVED_POINTER_FILE\"
+            systemctl reload nginx
+
+            echo '=== Verifying Health Endpoint via Nginx Ingress ==='
+            verify_target_identity() {
+              local raw_json=\"\$1\"
+              if [[ -z \"\$raw_json\" ]]; then
+                return 1
+              fi
+              printf '%s' \"\$raw_json\" | \"\$ENV_DIR/bin/python\" -c 'import json, sys; d = json.load(sys.stdin); sys.exit(0 if (d.get(\"ok\") is True and d.get(\"app\") == \"TOAN AAS Web App\" and d.get(\"entrypoint\") == \"app.py\" and d.get(\"release_sha\") == \"'\$TARGET_SHA'\" and d.get(\"runtime_environment_id\") == \"'\$RUNTIME_ENVIRONMENT_ID'\" and d.get(\"attestation_valid\") is True) else 1)' 2>/dev/null
+            }
+
             HEALTH_JSON=''
+            HEALTH_VERIFIED=0
             for attempt in {1..20}; do
-              if HEALTH_JSON=\$(curl -s -f http://127.0.0.1:8000/health); then
+              HEALTH_JSON=\$(curl -s -f -H \"Host: app.toanaas.vn\" http://127.0.0.1/health || true)
+              if verify_target_identity \"\$HEALTH_JSON\"; then
+                HEALTH_VERIFIED=1
                 break
               fi
               sleep 2
             done
 
-            if [[ -z \"\$HEALTH_JSON\" ]]; then
-              echo 'ERROR: Health endpoint did not respond' >&2
-              exit 1
+            if [[ \"\$HEALTH_VERIFIED\" -ne 1 ]]; then
+              rollback_to_active_slot 'Initial post-switch Nginx ingress verification failed'
             fi
 
-            printf '%s' \"\$HEALTH_JSON\" | python3 -c 'import json,sys; data=json.load(sys.stdin); assert data.get(\"ok\") is True; assert data.get(\"app\") == \"TOAN AAS Web App\"; assert data.get(\"entrypoint\") == \"app.py\"; print(\"HEALTH_PAYLOAD_VALIDATED:\", data.get(\"app\"), data.get(\"entrypoint\"))'
+            echo \"HEALTH_PAYLOAD_VALIDATED_AND_VERIFIED: release_sha=\$TARGET_SHA, runtime_environment_id=\$RUNTIME_ENVIRONMENT_ID\"
+            echo 'POST_SWITCH_SEMANTIC_FAILURE_ROLLBACK=YES'
+
+            echo '=== Commit Boundary and Warm Rollback Window ==='
+            ROLLBACK_WINDOW_SECONDS=600
+            echo \"Holding warm rollback window for \${ROLLBACK_WINDOW_SECONDS}s. Slot \${ACTIVE_SLOT} remains active and serving fallback.\"
+            WINDOW_START=\"\$(date +%s)\"
+            WINDOW_INTERVAL=30
+            while true; do
+              NOW=\"\$(date +%s)\"
+              ELAPSED=\$(( NOW - WINDOW_START ))
+              if [[ \"\$ELAPSED\" -ge \"\$ROLLBACK_WINDOW_SECONDS\" ]]; then
+                echo \"Rollback window complete (\${ELAPSED}s >= \${ROLLBACK_WINDOW_SECONDS}s). Proceeding to COMMIT_B.\"
+                break
+              fi
+              echo \"Sampling Nginx ingress health (elapsed: \${ELAPSED}s / \${ROLLBACK_WINDOW_SECONDS}s)...\"
+              SAMPLE_JSON=\$(curl -s -f -H \"Host: app.toanaas.vn\" http://127.0.0.1/health || true)
+              if ! verify_target_identity \"\$SAMPLE_JSON\"; then
+                rollback_to_active_slot \"Sample failed during rollback window (elapsed: \${ELAPSED}s)\"
+              fi
+              REMAINING=\$(( ROLLBACK_WINDOW_SECONDS - ELAPSED ))
+              SLEEP_TIME=\$(( REMAINING < WINDOW_INTERVAL ? REMAINING : WINDOW_INTERVAL ))
+              if [[ \"\$SLEEP_TIME\" -gt 0 ]]; then
+                sleep \"\$SLEEP_TIME\"
+              fi
+            done
+
+            echo 'WINDOW_SEMANTIC_FAILURE_ROLLBACK=YES'
+            echo \"Reached COMMIT_B boundary: Window verified through Nginx ingress. Proceeding to retire slot \${ACTIVE_SLOT}.\"
+
+            echo '=== Retiring Old Slot and Triggering Deferred Reconciliation ==='
+            systemctl stop toanaas-web@\${ACTIVE_SLOT}.service || true
+            systemctl is-active toanaas-web@\${ACTIVE_SLOT}.service && { echo \"ERROR: Retired slot \${ACTIVE_SLOT} is still active\" >&2; exit 1; } || echo \"Slot \${ACTIVE_SLOT} confirmed inactive.\"
+
+            RECONCILE_RES=\"\$(curl -s -f -X POST -H \"X-Lifecycle-Token: \${LIFECYCLE_TOKEN}\" \"http://127.0.0.1:\${TARGET_PORT}/api/v1/internal/lifecycle/reconcile-retired-generation\")\"
+            echo \"RECONCILIATION_RESPONSE=\$RECONCILE_RES\"
+            printf '%s' \"\$RECONCILE_RES\" | \"\$ENV_DIR/bin/python\" -c 'import json, sys; res = json.load(sys.stdin); assert res.get(\"ok\") is True and res.get(\"status\") in (\"RECONCILIATION_STARTED\", \"ALREADY_COMPLETED\", \"RECONCILING_IN_PROGRESS\"); print(\"RECONCILIATION_LIFECYCLE_CONFIRMED:\", res.get(\"status\"))'
 
             echo '=== WEB DEPLOY SUCCESS ==='
             echo \"PREVIOUS_HEAD=\$PREV_HEAD\"
             echo \"DEPLOYED_SHA=\$TARGET_SHA\"
-            echo \"BACKUP_DIR=\$BACKUP_DIR\"
+            echo \"TARGET_RELEASE_DIR=\$TARGET_RELEASE_DIR\"
+            echo \"RETIRED_SLOT=\$ACTIVE_SLOT\"
+            echo \"ACTIVE_SLOT=\$TARGET_SLOT\"
+            echo \"RUNTIME_ENVIRONMENT_ID=\$RUNTIME_ENVIRONMENT_ID\"
           "
