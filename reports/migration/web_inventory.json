@@ -323,7 +323,7 @@
     "database_tables": 229,
     "env_references": 280,
     "providers": 12,
-    "routes": 728,
+    "routes": 731,
     "ui_path_references": 47
   },
   "database_references": [
@@ -1097,7 +1097,7 @@
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 268,
+      "line": 299,
       "operation": "INSERT INTO",
       "table": "web_account_profiles"
     },
@@ -1175,13 +1175,25 @@
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 251,
+      "line": 282,
       "operation": "INSERT INTO",
       "table": "web_accounts"
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 346,
+      "line": 377,
+      "operation": "UPDATE",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_admin_customer_directory.py",
+      "line": 677,
+      "operation": "UPDATE",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_admin_customer_directory.py",
+      "line": 756,
       "operation": "UPDATE",
       "table": "web_accounts"
     },
@@ -1715,13 +1727,13 @@
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 274,
+      "line": 305,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
     {
       "file": "copyfast_admin_customer_directory.py",
-      "line": 350,
+      "line": 381,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
@@ -4960,6 +4972,12 @@
       "table": "web_prompt_templates"
     },
     {
+      "file": "copyfast_admin_customer_directory.py",
+      "line": 682,
+      "operation": "UPDATE",
+      "table": "web_sessions"
+    },
+    {
       "file": "copyfast_auth.py",
       "line": 1242,
       "operation": "UPDATE",
@@ -8153,7 +8171,7 @@
         "copyfast_pages.py",
         "copyfast_partner_crm.py"
       ],
-      "occurrences": 1774,
+      "occurrences": 1776,
       "provider": "Telegram"
     }
   ],
@@ -14191,7 +14209,7 @@
     {
       "endpoint": "update_customer",
       "file": "copyfast_admin_customer_directory.py",
-      "line": 306,
+      "line": 337,
       "methods": [
         "PATCH"
       ],
@@ -14200,20 +14218,47 @@
     {
       "endpoint": "get_customer",
       "file": "copyfast_admin_customer_directory.py",
-      "line": 379,
+      "line": 410,
       "methods": [
         "GET"
       ],
       "path": "/{account_id}"
     },
     {
+      "endpoint": "get_customer_360",
+      "file": "copyfast_admin_customer_directory.py",
+      "line": 452,
+      "methods": [
+        "GET"
+      ],
+      "path": "/{account_id}/360"
+    },
+    {
+      "endpoint": "ban_customer",
+      "file": "copyfast_admin_customer_directory.py",
+      "line": 630,
+      "methods": [
+        "POST"
+      ],
+      "path": "/{account_id}/ban"
+    },
+    {
       "endpoint": "get_customer_crm",
       "file": "copyfast_admin_customer_directory.py",
-      "line": 405,
+      "line": 436,
       "methods": [
         "GET"
       ],
       "path": "/{account_id}/crm"
+    },
+    {
+      "endpoint": "unban_customer",
+      "file": "copyfast_admin_customer_directory.py",
+      "line": 714,
+      "methods": [
+        "POST"
+      ],
+      "path": "/{account_id}/unban"
     },
     {
       "endpoint": "get_asset",
@@ -14542,7 +14587,7 @@
     {
       "endpoint": "list_customers",
       "file": "copyfast_admin_customer_directory.py",
-      "line": 146,
+      "line": 149,
       "methods": [
         "GET"
       ],
@@ -14551,7 +14596,7 @@
     {
       "endpoint": "create_customer",
       "file": "copyfast_admin_customer_directory.py",
-      "line": 230,
+      "line": 261,
       "methods": [
         "POST"
       ],
@@ -14714,7 +14759,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 226,
   "source_files_scanned": 226,
-  "source_fingerprint_sha256": "9e0aee62754d283536011396f4957b547c274b442fd38dd31ca4cbf4ffabeeba",
+  "source_fingerprint_sha256": "ef458020bd2d2cfe8fedbd40a92ca98aaf581dcf1dafbdae7070d6d19e390b05",
   "source_root": "repository-root",
   "ui_path_references": [
     {
