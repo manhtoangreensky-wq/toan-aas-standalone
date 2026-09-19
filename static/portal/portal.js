@@ -30697,7 +30697,7 @@
       <div style="font-family:monospace;font-size:0.85rem;color:var(--portal-muted,#94a3b8);margin-bottom:8px;">SKU: ${safeText(item.code || item.sku || "")}</div>
       <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:8px;border-top:1px dashed var(--portal-border,#334155);">
         <span style="font-size:0.85rem;color:var(--portal-muted,#94a3b8);">${isDraft ? "Giá dự thảo:" : "Giá bán công bố:"}</span>
-        <strong style="font-size:1.1rem;color:var(--portal-accent,#38bdf8);">${safeText(adminNumber(item.sale_price_xu || 0, " Xu"))}</strong>
+        <strong style="font-size:1.1rem;color:var(--portal-accent,#0d9488);">${safeText(adminNumber(item.sale_price_xu || 0, " Xu"))}</strong>
       </div>
     </article>`;
   }
@@ -30705,7 +30705,7 @@
   function renderAdminPricing(page, context) {
     const pricingState = (context && context.adminPricingState && typeof context.adminPricingState === "object")
       ? context.adminPricingState
-      : {};
+      : ((context && context.adminData && typeof context.adminData === "object") ? context.adminData : {});
     const publishedCatalog = pricingState.published_catalog || {
       catalog_version: "owner-approved-2026-08-11",
       approval_status: "owner_approved",
@@ -30730,7 +30730,7 @@
     const pubTable = renderRowsTable(
       ["STT", "Mã SKU", "Phân loại", "Tên dịch vụ / Gói", "Giá bán công bố", "Trạng thái"],
       pubItems.map((it, idx) => ({ ...it, __ordinal: idx + 1 })),
-      (it) => `<td>${safeText(String(it.__ordinal))}</td><td><code>${safeText(it.code || it.sku || "")}</code></td><td>${safeText(it.family || "—")}</td><td><strong>${safeText(it.label || "—")}</strong></td><td><strong style="color:var(--portal-accent,#38bdf8);">${safeText(adminNumber(it.sale_price_xu, " Xu"))}</strong></td><td><span class="portal-badge" data-status="${safeText(it.status || "active")}">${safeText(it.status || "active")}</span></td>`,
+      (it) => `<td>${safeText(String(it.__ordinal))}</td><td><code>${safeText(it.code || it.sku || "")}</code></td><td>${safeText(it.family || "—")}</td><td><strong>${safeText(it.label || "—")}</strong></td><td><strong style="color:var(--portal-accent,#0d9488);">${safeText(adminNumber(it.sale_price_xu, " Xu"))}</strong></td><td><span class="portal-badge" data-status="${safeText(it.status || "active")}">${safeText(it.status || "active")}</span></td>`,
       "Danh mục giá trống",
       "Chưa có SKU nào trong bảng giá canonical."
     );
@@ -30827,7 +30827,7 @@
               <span class="portal-badge" data-status="guarded">PUBLISH_BOUNDARY: FAIL_CLOSED</span>
               <small style="display:block;color:var(--portal-muted,#94a3b8);margin-top:4px;">Chỉ xuất bản khi có adapter canonical từ Core Bridge. Local draft không trở thành giá công bố.</small>
             </div>
-            <button class="portal-button portal-button--primary" type="button" data-portal-action="admin-pricing-publish-modal-open" data-portal-route="${safeText(page.routePath || page.path)}" style="background:var(--portal-accent,#0284c7);">Phát hành bảng giá</button>
+            <button class="portal-button portal-button--primary" type="button" data-portal-action="admin-pricing-publish-modal-open" data-portal-route="${safeText(page.routePath || page.path)}" style="background:var(--portal-accent,#0d9488);">Phát hành bảng giá</button>
           </div>
         </form>
       </section>

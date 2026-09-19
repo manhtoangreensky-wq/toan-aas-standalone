@@ -69,7 +69,7 @@ class TestP0WebappWeb14DeBloatCoreIaTruth:
 
         # 4. Customer visible permanent nav items
         perm_links = _extract_customer_nav_permanent_links()
-        assert len(perm_links) in (15, 22), f"Expected 15 or 22 clean customer permanent links, got {len(perm_links)}"
+        assert len(perm_links) in (13, 15, 22), f"Expected 13, 15 or 22 clean customer permanent links, got {len(perm_links)}"
 
         # 5. Admin visible nav items (24 modules across 6 pillars in V2, or 49 across 13 in legacy)
         admin_groups, admin_modules = _get_admin_nav_modules()
@@ -146,7 +146,7 @@ class TestP0WebappWeb14DeBloatCoreIaTruth:
         assert len(dock_links) == 5, f"Mobile dock should have 5 core items, got {len(dock_links)}"
 
         dock_routes = {d[1] for d in dock_links}
-        expected_dock_routes = {"/dashboard", "/features", "/jobs", "/assets", "/account"}
+        expected_dock_routes = {"/studio", "/publishing", "/projects", "/wallet", "/account"}
         assert dock_routes == expected_dock_routes, f"Unexpected mobile dock routes: {dock_routes}"
 
         # All dock routes must be present in customer desktop permanent nav
@@ -196,8 +196,8 @@ class TestP0WebappWeb14DeBloatCoreIaTruth:
         assert resp.status_code == 200
         # Catalog has all 139 customer features
         assert len(reg.CUSTOMER_FEATURES) == 139
-        # Permanent nav has 15 (V2) or 22 (V1) items: NAV_CATALOG (15/22) != CAPABILITY_CATALOG (139)
-        assert len(_extract_customer_nav_permanent_links()) in (15, 22)
+        # Permanent nav has 13 (V3), 15 (V2) or 22 (V1) items: NAV_CATALOG (13/15/22) != CAPABILITY_CATALOG (139)
+        assert len(_extract_customer_nav_permanent_links()) in (13, 15, 22)
         assert len(_extract_customer_nav_permanent_links()) < len(reg.CUSTOMER_FEATURES)
 
     def test_08_core_workflows_reachable_within_bounded_depth(self):

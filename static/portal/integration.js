@@ -37916,7 +37916,7 @@
         }
         return;
       }
-      if (action === "refresh-admin") {
+      if (action === "refresh-admin" || action === "admin-pricing-refresh") {
         const path = route.startsWith("/admin") ? route : "/admin";
         if (path === "/admin/audit") {
           await hydrateAdminAudit();
@@ -37943,6 +37943,52 @@
         const result = await hydrateCanonicalAdminData(path);
         if (!result) return;
         toast(result.message || "Đã làm mới dữ liệu vận hành đã được role-check.");
+        return;
+      }
+      if (action === "admin-pricing-draft-create") {
+        setActionBusy(action, route, true);
+        try {
+          const res = await api("/admin/modules/pricing", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "create_draft",
+              reason: "Tạo bản nháp giá mới từ giao diện Admin",
+              base_catalog_version: String(fields.base_catalog_version || "").trim() || "owner-approved-2026-08-11"
+            })
+          });
+          toast(res.message || "Đã tạo bản nháp bảng giá thành công.");
+          await hydrateCanonicalAdminData(route || "/admin/pricing");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "admin-pricing-draft-save") {
+        const draftId = String(fields.draft_id || "").trim();
+        const reason = String(fields.reason || "").trim() || "Cập nhật bản nháp bảng giá";
+        const hasExistingDraft = draftId && draftId !== "Chưa có dự thảo mở";
+        setActionBusy(action, route, true);
+        try {
+          const res = await api("/admin/modules/pricing", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: hasExistingDraft ? "update_draft" : "create_draft",
+              change_set_id: hasExistingDraft ? draftId : undefined,
+              reason: reason,
+              base_catalog_version: String(fields.base_catalog_version || "").trim() || undefined
+            })
+          });
+          toast(res.message || "Đã lưu bản nháp bảng giá thành công.");
+          await hydrateCanonicalAdminData(route || "/admin/pricing");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "admin-pricing-publish-modal-open") {
+        toast("Cổng phát hành giá canonical đang khóa an toàn (FAIL_CLOSED). Bản nháp chỉ được xuất bản khi có adapter từ Core Bridge.", "info");
         return;
       }
       if (action === "admin-retry" || action === "admin-refund") {
