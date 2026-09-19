@@ -429,7 +429,7 @@
     ready: "Sẵn sàng",
     draft: "Bản nháp",
     awaiting_confirm: "Chờ xác nhận",
-    queued: "Đã xếp hàng",
+    queued: "Đang chờ xử lý",
     processing: "Đang xử lý",
     completed: "Hoàn tất",
     backlog: "Backlog",
@@ -455,8 +455,8 @@
     cancelled: "Đã hủy",
     refunded: "Đã hoàn Xu",
     read_only: "Sẵn sàng",
-    failed: "Thất bại",
-    failed_no_charge: "Thất bại · chưa trừ Xu",
+    failed: "Không hoàn tất",
+    failed_no_charge: "Không hoàn tất · chưa trừ Xu",
     guarded: "Được bảo vệ",
     disabled: "Tạm khóa",
     error: "Lỗi kết nối",
@@ -22278,7 +22278,7 @@
   }
 
   const JOB_FILTERS = Object.freeze([
-    ["all", "Tất cả"], ["queued", "Đã xếp hàng"], ["processing", "Đang xử lý"], ["completed", "Hoàn tất"], ["failed", "Thất bại"], ["cancelled", "Đã hủy"], ["refunded", "Đã hoàn Xu"]
+    ["all", "Tất cả"], ["queued", "Đang chờ xử lý"], ["processing", "Đang xử lý"], ["completed", "Hoàn tất"], ["failed", "Không hoàn tất"], ["cancelled", "Đã hủy"], ["refunded", "Đã hoàn Xu"]
   ]);
 
   // These are browser-only views over redacted bridge metadata.  They never
@@ -22437,6 +22437,16 @@
     return `/jobs/${encodeURIComponent(assetId)}`;
   }
 
+  function friendlyJobReference(id) {
+    const raw = String(id || "").trim();
+    if (!raw) return "—";
+    if (/^[A-Z0-9]{4,10}$/i.test(raw)) return raw.toUpperCase();
+    const clean = raw.replace(/^wnj:(?:v1:)?/i, "").replace(/^wna:(?:v1:)?/i, "");
+    const match = clean.match(/[0-9a-fA-F]{8}/);
+    if (match) return `#${match[0].toUpperCase()}`;
+    return clean.length > 12 ? `#${clean.slice(0, 8).toUpperCase()}` : clean;
+  }
+
   function assetJobLink(item) {
     // Bot P0 uses the same opaque canonical identifier for the asset/job
     // projection. Linking only this already-redacted ID gives the customer a
@@ -22446,9 +22456,9 @@
     if (!/^[A-Za-z0-9._:-]{1,160}$/.test(assetId)) return safeText(assetId || "—");
     const identity = assetRecordIdentity(item);
     if (identity.kind === "web_vault") {
-      return `<span class="portal-record-link"><a href="/asset-vault" aria-label="${safeText(`${deliveryCenterText("assets.mobile.openVault", "Mở Asset Vault")}: ${assetId}`)}">${safeText(assetId)}</a>${assetRecordBadge(item)}</span>`;
+      return `<span class="portal-record-link"><a href="/asset-vault" aria-label="${safeText(`${deliveryCenterText("assets.mobile.openVault", "Mở Asset Vault")}: ${assetId}`)}">${safeText(friendlyJobReference(assetId))}</a>${assetRecordBadge(item)}</span>`;
     }
-    return `<span class="portal-record-link"><a href="/jobs/${encodeURIComponent(assetId)}" aria-label="${safeText(`${deliveryCenterText("assets.mobile.openJobCenter", "Mở Job Center")}: ${assetId}`)}">${safeText(assetId)}</a>${assetRecordBadge(item)}</span>`;
+    return `<span class="portal-record-link"><a href="/jobs/${encodeURIComponent(assetId)}" aria-label="${safeText(`${deliveryCenterText("assets.mobile.openJobCenter", "Mở Job Center")}: ${assetId}`)}">${safeText(friendlyJobReference(assetId))}</a>${assetRecordBadge(item)}</span>`;
   }
 
   function assetDeliveryState(item, surface) {
@@ -22529,10 +22539,10 @@
   function localizedDeliveryFilters(group, filters) {
     const labels = group === "jobs" ? {
       all: deliveryCenterText("filter.jobs.all", "Tất cả"),
-      queued: deliveryCenterText("filter.jobs.queued", "Đã xếp hàng"),
+      queued: deliveryCenterText("filter.jobs.queued", "Đang chờ xử lý"),
       processing: deliveryCenterText("filter.jobs.processing", "Đang xử lý"),
       completed: deliveryCenterText("filter.jobs.completed", "Hoàn tất"),
-      failed: deliveryCenterText("filter.jobs.failed", "Thất bại"),
+      failed: deliveryCenterText("filter.jobs.failed", "Không hoàn tất"),
       cancelled: deliveryCenterText("filter.jobs.cancelled", "Đã hủy"),
       refunded: deliveryCenterText("filter.jobs.refunded", "Đã hoàn Xu")
     } : group === "assets" ? {
@@ -22608,12 +22618,12 @@
     const validJobId = /^[A-Za-z0-9._:-]{1,160}$/.test(jobId);
     const status = jobStatus(item);
     const detailLink = validJobId
-      ? `<a class="portal-button portal-button--quiet" href="/jobs/${encodeURIComponent(jobId)}" aria-label="${safeText(`${deliveryCenterText("jobs.mobile.detail", "Mở chi tiết")}: ${jobId}`)}">${deliveryCenterText("jobs.mobile.detail", "Mở chi tiết")}</a>`
+      ? `<a class="portal-button portal-button--quiet" href="/jobs/${encodeURIComponent(jobId)}" aria-label="${safeText(`${deliveryCenterText("jobs.mobile.detail", "Mở chi tiết")}: ${friendlyJobReference(jobId)}`)}">${deliveryCenterText("jobs.mobile.detail", "Mở chi tiết")}</a>`
       : "";
     const progressRow = (typeof item?.progress === "number" && !isNaN(item.progress) && item.progress >= 0 && item.progress <= 100)
       ? `<div><dt>${deliveryCenterText("jobs.mobile.progress", "Tiến độ")}</dt><dd>${item.progress}%</dd></div>`
       : "";
-    return `<article class="portal-delivery-mobile-card" data-delivery-record="job"><div class="portal-delivery-mobile-card-head"><div><span class="portal-section-kicker">${deliveryCenterText("jobs.mobile.kicker", "Job canonical")}</span><strong>${safeText(jobId || "—")}</strong></div>${badge(status)}</div><dl class="portal-delivery-mobile-meta"><div><dt>${deliveryCenterText("jobs.mobile.workflow", "Workflow")}</dt><dd>${safeText(item && (item.feature || item.job_type) || "—")}</dd></div>${progressRow}<div><dt>${deliveryCenterText("jobs.mobile.updated", "Cập nhật")}</dt><dd>${safeText(item && (item.updated_at || item.created_at) || "—")}</dd></div><div><dt>${deliveryCenterText("jobs.mobile.outputEngine", "Output engine")}</dt><dd>${reportedOutput(item)}</dd></div><div><dt>${deliveryCenterText("jobs.mobile.canonicalCost", "Chi phí canonical")}</dt><dd>${jobCost(item)}</dd></div></dl><div class="portal-delivery-mobile-card-footer">${detailLink}</div></article>`;
+    return `<article class="portal-delivery-mobile-card" data-delivery-record="job"><div class="portal-delivery-mobile-card-head"><div><span class="portal-section-kicker">${deliveryCenterText("jobs.mobile.kicker", "Job canonical")}</span><strong>${safeText(friendlyJobReference(jobId))}</strong><small class="portal-delivery-subid" title="${safeText(jobId)}">ID: ${safeText(jobId.length > 16 ? `${jobId.slice(0, 8)}…` : jobId)}</small></div>${badge(status)}</div><dl class="portal-delivery-mobile-meta"><div><dt>${deliveryCenterText("jobs.mobile.workflow", "Workflow")}</dt><dd>${safeText(item && (item.feature || item.job_type) || "—")}</dd></div>${progressRow}<div><dt>${deliveryCenterText("jobs.mobile.updated", "Cập nhật")}</dt><dd>${safeText(item && (item.updated_at || item.created_at) || "—")}</dd></div><div><dt>${deliveryCenterText("jobs.mobile.outputEngine", "Output engine")}</dt><dd>${reportedOutput(item)}</dd></div><div><dt>${deliveryCenterText("jobs.mobile.canonicalCost", "Chi phí canonical")}</dt><dd>${jobCost(item)}</dd></div></dl><div class="portal-delivery-mobile-card-footer">${detailLink}</div></article>`;
   }
 
   function renderAssetMobileCard(item) {
@@ -22624,7 +22634,7 @@
     const primaryAction = href
       ? `<a class="portal-button portal-button--quiet" href="${safeText(href)}" aria-label="${safeText(`${actionLabel}: ${assetId}`)}">${safeText(actionLabel)}</a>`
       : "";
-    return `<article class="portal-delivery-mobile-card" data-delivery-record="asset" data-record-source="${safeText(identity.kind)}"><div class="portal-delivery-mobile-card-head"><div><span class="portal-section-kicker">${safeText(localizedAssetIdentityLabel(identity))}</span><strong>${safeText(assetId || "—")}</strong></div>${badge(assetRecordStatus(item))}</div><p class="portal-delivery-mobile-source">${safeText(localizedAssetIdentityDescription(identity))}</p><dl class="portal-delivery-mobile-meta"><div><dt>${deliveryCenterText("assets.mobile.feature", "Tính năng")}</dt><dd>${safeText(item && item.feature || "—")}</dd></div><div><dt>${deliveryCenterText("assets.mobile.createdAt", "Tạo lúc")}</dt><dd>${safeText(item && item.created_at || "—")}</dd></div><div><dt>${deliveryCenterText("assets.mobile.delivery", "Delivery")}</dt><dd>${assetDeliveryState(item, "asset")}</dd></div></dl><div class="portal-delivery-mobile-card-footer">${primaryAction}</div></article>`;
+    return `<article class="portal-delivery-mobile-card" data-delivery-record="asset" data-record-source="${safeText(identity.kind)}"><div class="portal-delivery-mobile-card-head"><div><span class="portal-section-kicker">${safeText(localizedAssetIdentityLabel(identity))}</span><strong>${safeText(friendlyJobReference(assetId))}</strong><small class="portal-delivery-subid" title="${safeText(assetId)}">ID: ${safeText(assetId.length > 16 ? `${assetId.slice(0, 8)}…` : assetId)}</small></div>${badge(assetRecordStatus(item))}</div><p class="portal-delivery-mobile-source">${safeText(localizedAssetIdentityDescription(identity))}</p><dl class="portal-delivery-mobile-meta"><div><dt>${deliveryCenterText("assets.mobile.feature", "Tính năng")}</dt><dd>${safeText(item && item.feature || "—")}</dd></div><div><dt>${deliveryCenterText("assets.mobile.createdAt", "Tạo lúc")}</dt><dd>${safeText(item && item.created_at || "—")}</dd></div><div><dt>${deliveryCenterText("assets.mobile.delivery", "Delivery")}</dt><dd>${assetDeliveryState(item, "asset")}</dd></div></dl><div class="portal-delivery-mobile-card-footer">${primaryAction}</div></article>`;
   }
 
   function jobStateExplanation(item) {
@@ -22726,7 +22736,7 @@
       ? `<div class="portal-form-footer portal-empty-route-actions"><span class="portal-form-note">${deliveryCenterText("jobs.first.note", "Chưa có job canonical. Hãy bắt đầu bằng một workflow hoặc lưu brief Web; job chỉ xuất hiện sau khi một luồng được server xác nhận, không do browser tự tạo.")}</span><div class="portal-inline-actions"><a class="portal-button portal-button--primary" href="/features">${deliveryCenterText("jobs.first.workflow", "Chọn workflow")}</a><a class="portal-button portal-button--quiet" href="/workspace">${deliveryCenterText("jobs.first.drafts", "Mở bản nháp Web")}</a></div></div>`
       : "";
     const filters = filterBar(localizedDeliveryFilters("jobs", JOB_FILTERS), selected, "filter-jobs", "data-job-filter", deliveryCenterText("filter.jobs", "Lọc job"), counts, (count) => deliveryCenterText("filter.result", "{count} mục đang hiển thị trong bộ lọc hiện tại.", { count })) + firstJobActions;
-    const records = renderDeliveryRecords("jobs", [deliveryCenterText("jobs.table.job", "Job"), deliveryCenterText("jobs.table.feature", "Tính năng"), deliveryCenterText("jobs.table.status", "Trạng thái"), deliveryCenterText("jobs.table.cost", "Chi phí canonical"), deliveryCenterText("jobs.table.updated", "Cập nhật"), deliveryCenterText("jobs.table.output", "Output engine")], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}${(typeof item?.progress === "number" && !isNaN(item.progress) && item.progress >= 0 && item.progress <= 100) ? ` <small>(${item.progress}%)</small>` : ""}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td>`, renderJobMobileCard, selected === "all" ? deliveryCenterText("jobs.empty.title", "Chưa có job được xác minh") : deliveryCenterText("jobs.empty.filteredTitle", "Không có job ở trạng thái này"), selected === "all" ? deliveryCenterText("jobs.empty.body", "Core Bridge sẽ trả job sau khi tạo/confirm thành công.") : deliveryCenterText("jobs.empty.filteredBody", "Đổi bộ lọc hoặc làm mới để nhận trạng thái canonical mới nhất."), receiptAttribute);
+    const records = renderDeliveryRecords("jobs", [deliveryCenterText("jobs.table.job", "Job"), deliveryCenterText("jobs.table.feature", "Tính năng"), deliveryCenterText("jobs.table.status", "Trạng thái"), deliveryCenterText("jobs.table.cost", "Chi phí canonical"), deliveryCenterText("jobs.table.updated", "Cập nhật"), deliveryCenterText("jobs.table.output", "Output engine")], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}" title="${safeText(item.id || "")}">${safeText(friendlyJobReference(item.id))}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}${(typeof item?.progress === "number" && !isNaN(item.progress) && item.progress >= 0 && item.progress <= 100) ? ` <small>(${item.progress}%)</small>` : ""}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td>`, renderJobMobileCard, selected === "all" ? deliveryCenterText("jobs.empty.title", "Chưa có job được xác minh") : deliveryCenterText("jobs.empty.filteredTitle", "Không có job ở trạng thái này"), selected === "all" ? deliveryCenterText("jobs.empty.body", "Core Bridge sẽ trả job sau khi tạo/confirm thành công.") : deliveryCenterText("jobs.empty.filteredBody", "Đổi bộ lọc hoặc làm mới để nhận trạng thái canonical mới nhất."), receiptAttribute);
     return `<article class="portal-page portal-delivery-page" data-delivery-read-state="ready">${renderHero(page, context)}${deliveryNav}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       ${renderDeliveryReceiptSurface(renderJobDeliverySummary(allJobs), receiptAttribute)}
       <section class="portal-card portal-card-pad portal-delivery-center"><div class="portal-card-header"><div><h2 class="portal-card-title">${deliveryCenterText("jobs.section.title", "Job gần đây (tối đa 100)")}</h2><p class="portal-card-subtitle">${deliveryCenterText("jobs.section.subtitle", "Bridge P0 hiện trả tối đa 100 job mới nhất thuộc signed session. Chi phí là metadata canonical; browser không tính Xu, gọi provider hoặc tạo delivery.")}</p></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-jobs" data-portal-route="/jobs" data-delivery-refresh-control="jobs" aria-controls="delivery-jobs-records"${refreshEnabled && !refreshBusy ? "" : " disabled"}${refreshBusy ? " aria-busy=\"true\"" : ""}>${deliveryCenterText("jobs.refresh", "Làm mới")}</button><a class="portal-button portal-button--quiet" href="/assets">${deliveryCenterText("jobs.openAssets", "Mở tài sản →")}</a></div></div><p class="portal-delivery-read-status" data-delivery-read-status="/jobs" role="status" aria-live="polite">${deliveryCenterText("jobs.readStatus", "Danh sách chỉ có metadata canonical thuộc signed session.")}</p>${filters}${records}</section>
@@ -22736,7 +22746,8 @@
   function renderJobDetail(page, context) {
     const deliveryNav = renderDeliveryWorkspaceNav(page.path);
     const record = safeText(page.recordId || "—");
-    const detailTitle = deliveryCenterText("jobDetail.title", "Job {jobId}", { jobId: record }).replace(/\{jobId\}/g, record);
+    const friendlyRecord = safeText(friendlyJobReference(page.recordId));
+    const detailTitle = deliveryCenterText("jobDetail.title", "Job {jobId}", { jobId: friendlyRecord }).replace(/\{jobId\}/g, friendlyRecord);
     const job = context.jobDetail && typeof context.jobDetail === "object" ? context.jobDetail : null;
     const jobAssets = exactJobAssets(job, context.jobAssets);
     const deliveryAsset = jobAssets[0] || null;
