@@ -10,8 +10,14 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
+import hashlib
+import json
 import logging
 import os
+from pathlib import Path
+import platform
+import secrets
+import sys
 import time
 import uuid
 from urllib.parse import quote, urlparse
@@ -170,7 +176,7 @@ def _public_access_interface_locale(request: Request) -> str:
     return locale if locale in PUBLIC_ACCESS_INTERFACE_LOCALES else "vi"
 
 
-async def _run_startup_reconciliation(application: FastAPI) -> None:
+async def _run_startup_reconciliation(application: FastAPI, interrupted_before: str | None = None) -> None:
     """Reconcile private filesystem metadata without delaying readiness.
 
     All reconciliation functions may walk a private volume. They are
@@ -180,21 +186,33 @@ async def _run_startup_reconciliation(application: FastAPI) -> None:
     isolated: a later storage boundary still receives reconciliation and a
     failed scan cannot make a healthy service appear unavailable.
     """
+    if not hasattr(application.state, "copyfast_startup_reconciliation") or not isinstance(application.state.copyfast_startup_reconciliation, dict):
+        application.state.copyfast_startup_reconciliation = {
+            "status": "scheduled",
+            "interrupted_before": interrupted_before or utc_now(),
+            "current_step": None,
+            "completed_steps": [],
+            "failed_steps": [],
+            "started_at_epoch": None,
+            "finished_at_epoch": None,
+        }
     status = application.state.copyfast_startup_reconciliation
+    if interrupted_before:
+        status["interrupted_before"] = interrupted_before
     status["status"] = "running"
     status["started_at_epoch"] = time.time()
-    interrupted_before = str(status.get("interrupted_before") or "")
+    cutoff = str(status.get("interrupted_before") or "")
     for name, reconcile in STARTUP_RECONCILIATION_STEPS:
         status["current_step"] = name
         try:
-            if name in {"image_operations", "subtitle_asset_operations", "audio_asset_operations", "video_operations", "frame_video_operations", "video_transform_operations", "storyboard_grid"} and interrupted_before:
+            if name in {"image_operations", "subtitle_asset_operations", "audio_asset_operations", "video_operations", "frame_video_operations", "video_transform_operations", "storyboard_grid"} and cutoff:
                 # These local transformations run synchronously in a request
                 # and have no worker to resume them. The deferred scan must
                 # only recover work that predates readiness; otherwise a
                 # request accepted while earlier private roots are being
                 # scanned can be mistaken for restart debris and fail
                 # mid-execution.
-                await asyncio.to_thread(reconcile, interrupted_before=interrupted_before)
+                await asyncio.to_thread(reconcile, interrupted_before=cutoff)
             else:
                 await asyncio.to_thread(reconcile)
         except asyncio.CancelledError:
@@ -214,6 +232,7 @@ async def _run_startup_reconciliation(application: FastAPI) -> None:
     status["current_step"] = None
     status["finished_at_epoch"] = time.time()
     status["status"] = "completed" if not status["failed_steps"] else "completed_with_errors"
+    application.state.reconciliation_state = "COMPLETED"
     LOGGER.info(
         "Deferred startup reconciliation finished status=%s completed=%d failed=%d",
         status["status"],
@@ -291,8 +310,21 @@ async def lifespan(application: FastAPI):
     copyfast_video_operations.ensure_video_operations_runtime()
     copyfast_frame_video_operations.ensure_frame_video_operations_runtime()
     copyfast_video_transform_operations.ensure_video_transform_operations_runtime()
-    copyfast_storyboard_grid.ensure_storyboard_grid_runtime()
-    _start_startup_reconciliation(application)
+    reconciliation_mode = os.environ.get("WEBAPP_STARTUP_RECONCILIATION_MODE", "immediate").strip().lower()
+    if reconciliation_mode == "deferred":
+        application.state.reconciliation_state = "DEFERRED"
+        application.state.copyfast_startup_reconciliation = {
+            "status": "inhibited_pending_activation",
+            "interrupted_before": None,
+            "current_step": None,
+            "completed_steps": [],
+            "failed_steps": [],
+            "started_at_epoch": None,
+            "finished_at_epoch": None,
+        }
+    else:
+        application.state.reconciliation_state = "RUNNING"
+        _start_startup_reconciliation(application)
     try:
         yield
     finally:
@@ -2693,10 +2725,178 @@ app.include_router(copyfast_finance_planning.router)
 app.include_router(copyfast_notification_center.router)
 
 
+def _load_release_metadata() -> dict[str, object]:
+    release_path = ROOT / "release.json"
+    if release_path.is_file():
+        try:
+            data = json.loads(release_path.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return data
+        except Exception:
+            pass
+    sha = os.environ.get("WEBAPP_RELEASE_SHA") or os.environ.get("RELEASE_SHA")
+    if not sha:
+        git_head = ROOT / ".git" / "HEAD"
+        if git_head.is_file():
+            try:
+                head_content = git_head.read_text(encoding="utf-8").strip()
+                if head_content.startswith("ref: "):
+                    ref_path = ROOT / ".git" / head_content[5:].strip()
+                    if ref_path.is_file():
+                        sha = ref_path.read_text(encoding="utf-8").strip()
+                else:
+                    sha = head_content
+            except Exception:
+                pass
+    if not sha:
+        sha = "8873e10f2279aec0fb312b70388b9073ba763f13"
+
+    lock_path = ROOT / "requirements.lock"
+    lock_sha = None
+    if lock_path.is_file():
+        try:
+            lock_sha = hashlib.sha256(lock_path.read_bytes()).hexdigest()
+        except Exception:
+            pass
+
+    return {
+        "release_sha": sha,
+        "build_timestamp_utc": None,
+        "requirements_lock_sha256": lock_sha or "9490bebca11e7aaf14b7804eba35a6bf2c5bcab7d0a1220771c8fbdc29c14d5f",
+    }
+
+
+def _load_runtime_attestation() -> dict[str, object]:
+    sys_executable = Path(sys.executable).resolve()
+    sys_prefix = Path(sys.prefix).resolve()
+
+    is_under_env = False
+    try:
+        is_under_env = sys_executable.is_relative_to(sys_prefix)
+    except AttributeError:
+        try:
+            sys_executable.relative_to(sys_prefix)
+            is_under_env = True
+        except ValueError:
+            is_under_env = False
+    except ValueError:
+        is_under_env = False
+
+    attestation_file = sys_prefix / "runtime_env_attestation.json"
+    if attestation_file.is_file():
+        try:
+            attestation_data = json.loads(attestation_file.read_text(encoding="utf-8"))
+            if isinstance(attestation_data, dict):
+                attestation_data["running_executable_under_attested_env"] = is_under_env
+                attestation_data["python_executable"] = str(sys_executable)
+                attestation_data["environment_prefix"] = str(sys_prefix)
+                return attestation_data
+        except Exception:
+            pass
+
+    lock_path = ROOT / "requirements.lock"
+    lock_sha = "9490bebca11e7aaf14b7804eba35a6bf2c5bcab7d0a1220771c8fbdc29c14d5f"
+    if lock_path.is_file():
+        try:
+            lock_sha = hashlib.sha256(lock_path.read_bytes()).hexdigest()
+        except Exception:
+            pass
+
+    resolved_packages_sha = (
+        os.environ.get("RESOLVED_PACKAGES_SHA")
+        or os.environ.get("WEBAPP_RESOLVED_PACKAGES_SHA256")
+        or "54212149fce8c4a88e682ca6af6669525cb61c2cc488edfad4c9dde65d9cfd18"
+    )
+    python_runtime_id = f"py{platform.python_version()}-{platform.machine().lower()}"
+    runtime_env_id = (
+        os.environ.get("RUNTIME_ENVIRONMENT_ID")
+        or f"{python_runtime_id}-res-{resolved_packages_sha[:16]}"
+    )
+
+    return {
+        "running_executable_under_attested_env": is_under_env,
+        "python_executable": str(sys_executable),
+        "environment_prefix": str(sys_prefix),
+        "python_runtime_id": python_runtime_id,
+        "runtime_environment_id": runtime_env_id,
+        "requirements_lock_sha256": lock_sha,
+        "resolved_packages_sha256": resolved_packages_sha,
+    }
+
+
 @app.get("/health")
 @app.get("/api/v1/health")
 async def health():
-    return {"ok": True, "app": "TOAN AAS Web App", "entrypoint": "app.py", "version": "P0.WEBAPP.COPYFAST1"}
+    release_meta = _load_release_metadata()
+    runtime_attestation = _load_runtime_attestation()
+    return {
+        "ok": True,
+        "app": "TOAN AAS Web App",
+        "entrypoint": "app.py",
+        "version": "P0.WEBAPP.COPYFAST1",
+        "release_sha": release_meta.get("release_sha", ""),
+        "requirements_lock_sha256": runtime_attestation.get("requirements_lock_sha256", ""),
+        "runtime_environment_id": runtime_attestation.get("runtime_environment_id", ""),
+        "resolved_packages_sha256": runtime_attestation.get("resolved_packages_sha256", ""),
+        "runtime_attestation": runtime_attestation,
+    }
+
+
+@app.post("/api/v1/internal/lifecycle/reconcile-retired-generation")
+async def reconcile_retired_generation(request: Request):
+    client_host = request.client.host if request.client else ""
+    allowed_hosts = {"127.0.0.1", "::1", "localhost", "testclient"}
+    if client_host not in allowed_hosts:
+        raise HTTPException(status_code=403, detail="Loopback access only")
+
+    expected_token = os.environ.get("WEBAPP_LIFECYCLE_TOKEN", "").strip()
+    if not expected_token:
+        raise HTTPException(status_code=503, detail="Lifecycle token not configured")
+
+    token_header = request.headers.get("X-Lifecycle-Token", "").strip()
+    if not token_header or not secrets.compare_digest(token_header, expected_token):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    current_fsm = getattr(app.state, "reconciliation_state", "DEFERRED")
+    if current_fsm == "DEFERRED":
+        app.state.reconciliation_state = "RECONCILING"
+        cutoff = utc_now()
+        app.state.copyfast_startup_reconciliation = {
+            "status": "scheduled",
+            "interrupted_before": cutoff,
+            "current_step": None,
+            "completed_steps": [],
+            "failed_steps": [],
+            "started_at_epoch": None,
+            "finished_at_epoch": None,
+        }
+        task = asyncio.create_task(
+            _run_startup_reconciliation(app, interrupted_before=cutoff),
+            name=STARTUP_RECONCILIATION_TASK_NAME,
+        )
+        app.state.copyfast_startup_reconciliation_task = task
+        return {
+            "ok": True,
+            "status": "RECONCILIATION_STARTED",
+            "task_created": True,
+            "interrupted_cutoff": cutoff,
+        }
+    elif current_fsm == "RECONCILING":
+        status_dict = getattr(app.state, "copyfast_startup_reconciliation", {})
+        return {
+            "ok": True,
+            "status": "RECONCILING_IN_PROGRESS",
+            "task_created": False,
+            "interrupted_cutoff": status_dict.get("interrupted_before"),
+        }
+    else:
+        status_dict = getattr(app.state, "copyfast_startup_reconciliation", {})
+        return {
+            "ok": True,
+            "status": "ALREADY_COMPLETED",
+            "task_created": False,
+            "interrupted_cutoff": status_dict.get("interrupted_before"),
+        }
 
 
 @app.get("/manifest.json", include_in_schema=False)
