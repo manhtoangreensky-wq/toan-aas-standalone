@@ -904,7 +904,7 @@
   }
 
   function linkChallengeRoute() {
-    return ["/onboarding", "/account"].includes(currentPortalPath());
+    return ["/onboarding", "/account", "/dashboard", "/wallet"].includes(currentPortalPath());
   }
 
   function stopTelegramLoginPolling() {
@@ -26718,16 +26718,24 @@
 
   async function completeTelegramLinkChallenge() {
     stopTelegramLinkPolling();
-    const completed = await api("/auth/telegram/link/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
-    merge({ linkStatus: completed.data || { linked: true }, linkFlow: {} });
-    const requested = requestedPortalRoute();
-    const fallback = requested
-      ? onboardingText("browser.completeResume", "Telegram đã được liên kết. Đang mở lại workflow bạn đã chọn.")
-      : onboardingText("browser.completeDashboard", "Telegram đã được liên kết. Đang mở Dashboard.");
-    toast(completed.message || fallback);
-    await hydrate();
-    window.location.assign(requested || "/dashboard");
-    return true;
+    try {
+      const completed = await api("/auth/telegram/link/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      merge({ linkStatus: completed.data || { linked: true }, linkFlow: {} });
+      const requested = requestedPortalRoute();
+      const fallback = requested
+        ? onboardingText("browser.completeResume", "Telegram đã được liên kết. Đang mở lại workflow bạn đã chọn.")
+        : onboardingText("browser.completeDashboard", "Telegram đã được liên kết. Đang mở Dashboard.");
+      toast(completed.message || fallback);
+      await hydrate();
+      if (requested && requested !== currentPortalPath()) {
+        window.location.assign(requested);
+      }
+      return true;
+    } catch (err) {
+      merge({ linkStatus: { linked: false }, linkFlow: { status: "failed", message: err.message || "Không thể hoàn tất liên kết.", errorCode: err.errorCode || "LINK_FAILED" } });
+      toast(err.message || "Không thể hoàn tất liên kết.", "error");
+      return false;
+    }
   }
 
   function recoverTelegramLinkFlow(result) {
@@ -36877,6 +36885,15 @@
       }
       if (action === "refresh-link-status") {
         await refreshTelegramLinkChallenge();
+        return;
+      }
+      if (action === "complete-telegram-link") {
+        setActionBusy(action, route, true);
+        try {
+          await completeTelegramLinkChallenge();
+        } finally {
+          setActionBusy(action, route, false);
+        }
         return;
       }
       if (action === "refresh-account-activity") {

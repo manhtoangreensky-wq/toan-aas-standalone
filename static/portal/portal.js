@@ -20861,15 +20861,123 @@
     </section>`;
   }
 
-  function renderTelegramUnlinkedCard(options) {
-    const opts = options || {};
-    const title = opts.title || uiText("telegramUnlinked.title", "Tài khoản chưa liên kết Telegram");
-    const kicker = opts.kicker || uiText("telegramUnlinked.kicker", "LIÊN KẾT BOT CHÍNH THỨC");
-    const subtitle = opts.subtitle || uiText("telegramUnlinked.subtitle", "Liên kết tài khoản Web với Telegram Bot để xem số dư Xu, lịch sử giao dịch và đồng bộ tác vụ an toàn.");
-    const ctaCode = opts.ctaCode !== false;
-    const ctaBot = opts.ctaBot !== false;
+  function renderTelegramUnlinkedCard(arg1, arg2) {
+    const context = (arg1 && typeof arg1 === "object" && ("session" in arg1 || "wallet" in arg1 || "linkFlow" in arg1 || "linkStatus" in arg1))
+      ? arg1
+      : (arg2 && typeof arg2 === "object" && ("session" in arg2 || "wallet" in arg2 || "linkFlow" in arg2 || "linkStatus" in arg2))
+        ? arg2
+        : (typeof base === "function" ? base() : {});
+    const opts = (arg1 && arg1 !== context && typeof arg1 === "object") ? arg1 : ((arg2 && arg2 !== context && typeof arg2 === "object") ? arg2 : {});
 
-    return `<section class="portal-card portal-card-pad portal-telegram-unlinked-card" data-error-code="ACCOUNT_TELEGRAM_UNLINKED" style="background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand, #0d9488) 10%, var(--portal-surface-light, #ffffff)) 0%, var(--portal-surface-light, #ffffff) 100%); border:1px solid color-mix(in srgb, var(--portal-brand, #0d9488) 30%, var(--portal-border, #d1eceb)); border-radius:var(--portal-radius-lg, 16px); padding:20px; margin-bottom:20px;">
+    const flow = context.linkFlow && typeof context.linkFlow === "object" ? context.linkFlow : {};
+    const linkStatus = context.linkStatus && typeof context.linkStatus === "object" ? context.linkStatus : {};
+    const data = flow.data && typeof flow.data === "object" ? flow.data : {};
+    const code = typeof data.code === "string" ? data.code.trim() : "";
+    const deepLink = safeTelegramLink(data.deep_link);
+    const botCommand = code ? `/linkweb ${code}` : "";
+    const readyToComplete = linkStatus.ready_to_complete === true || data.ready_to_complete === true;
+    const expired = data.expired === true || flow.errorCode === "LINK_CODE_INVALID";
+    const isPending = Boolean(code) && !readyToComplete && !expired;
+    const currentRoute = typeof currentPortalPath === "function" ? currentPortalPath() : "/dashboard";
+
+    const title = opts.title || (
+      readyToComplete
+        ? uiText("telegramUnlinked.readyTitle", "Bot đã xác nhận — Sẵn sàng hoàn tất liên kết")
+        : isPending
+          ? uiText("telegramUnlinked.pendingTitle", "Đang chờ Bot xác minh Telegram")
+          : expired
+            ? uiText("telegramUnlinked.expiredTitle", "Mã liên kết Telegram đã hết hạn")
+            : uiText("telegramUnlinked.title", "Tài khoản chưa liên kết Telegram")
+    );
+    const kicker = opts.kicker || uiText("telegramUnlinked.kicker", "LIÊN KẾT BOT CHÍNH THỨC");
+    const subtitle = opts.subtitle || (
+      readyToComplete
+        ? uiText("telegramUnlinked.readySubtitle", "Tài khoản Telegram đã được Bot xác minh thành công. Bấm hoàn tất để kích hoạt Ví Xu trên trình duyệt này.")
+        : isPending
+          ? uiText("telegramUnlinked.pendingSubtitle", "Web đã tạo mã liên kết canonical. Vui lòng mở Telegram Bot để xác nhận danh tính an toàn.")
+          : expired
+            ? uiText("telegramUnlinked.expiredSubtitle", "Mã xác thực một lần không còn hiệu lực. Vui lòng tạo mã mới để bắt đầu liên kết.")
+            : uiText("telegramUnlinked.subtitle", "Liên kết tài khoản Web với Telegram Bot để xem số dư Xu, lịch sử giao dịch và đồng bộ tác vụ an toàn.")
+    );
+
+    let contentBody = "";
+
+    if (readyToComplete) {
+      contentBody = `
+        <div style="background:var(--portal-surface, #ffffff); border:1px solid var(--portal-border, #d1eceb); border-radius:var(--portal-radius-md, 10px); padding:14px 16px; margin-bottom:16px;">
+          <p style="font-size:13px; color:var(--portal-ink, #073a45); margin:0; line-height:1.6;">
+            ✅ <strong>Xác thực thành công từ Bot.</strong> Tab hiện tại cần gửi xác nhận cuối cùng để ràng buộc danh tính vào phiên Web an toàn.
+          </p>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+          <button class="portal-button portal-button--primary" type="button" data-portal-action="refresh-link-status" data-portal-route="${safeText(currentRoute)}" style="display:inline-flex; align-items:center; gap:6px;">
+            <span>${safeText(uiText("telegramUnlinked.completeAction", "Hoàn tất liên kết ngay"))}</span>
+            <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
+          </button>
+        </div>`;
+    } else if (isPending) {
+      const minutesText = data.expires_in_minutes ? `${safeText(String(data.expires_in_minutes))} phút` : "15 phút";
+      contentBody = `
+        <div style="background:var(--portal-surface, #ffffff); border:1px solid var(--portal-border, #d1eceb); border-radius:var(--portal-radius-md, 10px); padding:14px 16px; margin-bottom:16px;">
+          <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="font-size:13px; font-weight:700; color:var(--portal-ink, #073a45);">Mã liên kết do Web cấp (hiệu lực ${minutesText}):</span>
+            <span class="portal-badge" data-badge="awaiting_confirm" style="font-size:11px;">Đang chờ Bot xác nhận</span>
+          </div>
+          <p style="font-size:12px; color:var(--portal-muted, #456b77); margin:0 0 10px; line-height:1.5;">
+            Nhấn mở Bot bằng deep link bên dưới. Nếu trình duyệt không mở được Telegram, sao chép lệnh dự phòng và gửi vào Bot.
+          </p>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <code class="portal-link-code" style="font-size:13px; padding:6px 12px; background:var(--portal-canonical-soft-mint, #e6f7f6); border-radius:6px; font-weight:700; color:var(--portal-brand, #0d9488);">${safeText(botCommand)}</code>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-telegram-link-command" data-copy-text="${safeText(botCommand)}" style="font-size:12px; padding:6px 12px;">
+              ${safeText(uiText("onboarding.copyCommand", "Sao chép lệnh"))}
+            </button>
+          </div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+          ${deepLink ? `<a class="portal-button portal-button--primary" href="${safeText(deepLink)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px;"><span>${safeText(uiText("onboarding.openTelegram", "Mở Telegram xác nhận"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>` : ""}
+          <button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-link-status" data-portal-route="${safeText(currentRoute)}">
+            ${safeText(uiText("onboarding.checkNow", "Kiểm tra ngay"))}
+          </button>
+          <button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-link" data-portal-route="${safeText(currentRoute)}" data-portal-confirm="Tạo mã mới sẽ hủy mã đang hiển thị. Bạn có chắc muốn tiếp tục?">
+            ${safeText(uiText("onboarding.newCode", "Tạo mã mới"))}
+          </button>
+        </div>`;
+    } else if (expired) {
+      contentBody = `
+        <div style="background:var(--portal-surface, #ffffff); border:1px solid var(--portal-border, #d1eceb); border-radius:var(--portal-radius-md, 10px); padding:14px 16px; margin-bottom:16px;">
+          <p style="font-size:13px; color:var(--portal-ink, #073a45); margin:0; line-height:1.6;">
+            ⚠️ ${safeText(flow.message || "Mã một lần không còn hiệu lực. Vui lòng bấm tạo mã mới để bắt đầu liên kết.")}
+          </p>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+          <button class="portal-button portal-button--primary" type="button" data-portal-action="start-telegram-link" data-portal-route="${safeText(currentRoute)}" style="display:inline-flex; align-items:center; gap:6px;">
+            <span>${safeText(uiText("onboarding.newCode", "Tạo mã mới"))}</span>
+            <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
+          </button>
+        </div>`;
+    } else {
+      contentBody = `
+        <div style="background:var(--portal-surface, #ffffff); border:1px solid var(--portal-border, #d1eceb); border-radius:var(--portal-radius-md, 10px); padding:14px 16px; margin-bottom:16px;">
+          <h3 style="font-size:13px; font-weight:700; color:var(--portal-ink, #073a45); margin:0 0 8px;">Quy trình liên kết an toàn:</h3>
+          <ol style="margin:0; padding-left:20px; font-size:13px; color:var(--portal-ink, #073a45); line-height:1.7;">
+            <li>Bấm <strong>"Liên kết Telegram ngay"</strong> để máy chủ cấp mã xác thực phiên.</li>
+            <li>Bấm mở <strong>Telegram Bot</strong> chính thức (<a href="https://t.me/toanaas_bot" target="_blank" rel="noopener noreferrer" style="color:var(--portal-brand, #0d9488); font-weight:600;">@toanaas_bot</a>) bằng deep link để xác nhận danh tính.</li>
+            <li>Bot gửi callback đã ký xác nhận danh tính; Web tự động hoàn tất và kích hoạt Ví Xu.</li>
+          </ol>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+          <button class="portal-button portal-button--primary" type="button" data-portal-action="start-telegram-link" data-portal-route="${safeText(currentRoute)}" style="display:inline-flex; align-items:center; gap:6px;">
+            <span>⚡ ${safeText(uiText("telegramUnlinked.startAction", "Liên kết Telegram ngay"))}</span>
+            <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
+          </button>
+          <a class="portal-button portal-button--quiet" href="https://t.me/toanaas_bot" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px;">
+            <span>Mở Bot Telegram</span>
+            <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
+          </a>
+        </div>`;
+    }
+
+    return `<section class="portal-card portal-card-pad portal-telegram-unlinked-card" data-error-code="ACCOUNT_TELEGRAM_UNLINKED" data-portal-link-status style="background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand, #0d9488) 10%, var(--portal-surface-light, #ffffff)) 0%, var(--portal-surface-light, #ffffff) 100%); border:1px solid color-mix(in srgb, var(--portal-brand, #0d9488) 30%, var(--portal-border, #d1eceb)); border-radius:var(--portal-radius-lg, 16px); padding:20px; margin-bottom:20px;">
       <div style="display:flex; align-items:flex-start; gap:16px; margin-bottom:16px;">
         <div style="width:44px; height:44px; border-radius:12px; background:var(--portal-canonical-soft-mint, #e6f7f6); display:flex; align-items:center; justify-content:center; color:var(--portal-brand, #0d9488); flex-shrink:0;">
           ${portalIcon(ICONS.account)}
@@ -20880,18 +20988,7 @@
           <p style="font-size:13px; color:var(--portal-muted, #456b77); margin:0; line-height:1.5;">${safeText(subtitle)}</p>
         </div>
       </div>
-      <div style="background:var(--portal-surface, #ffffff); border:1px solid var(--portal-border, #d1eceb); border-radius:var(--portal-radius-md, 10px); padding:14px 16px; margin-bottom:16px;">
-        <h3 style="font-size:13px; font-weight:700; color:var(--portal-ink, #073a45); margin:0 0 8px;">Hướng dẫn kết nối 3 bước đơn giản:</h3>
-        <ol style="margin:0; padding-left:20px; font-size:13px; color:var(--portal-ink, #073a45); line-height:1.7;">
-          <li>Mở <strong>Telegram Bot</strong> chính thức của TOAN AAS (<a href="https://t.me/toanaas_bot" target="_blank" rel="noopener noreferrer" style="color:var(--portal-brand, #0d9488); font-weight:600;">@toanaas_bot</a>).</li>
-          <li>Gõ lệnh <code>/link</code> để nhận mã xác nhận một lần từ Bot.</li>
-          <li>Nhập mã liên kết vào trang <a href="/account" style="color:var(--portal-brand, #0d9488); font-weight:600;">Tài khoản & bảo mật</a> để kích hoạt Ví Xu.</li>
-        </ol>
-      </div>
-      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
-        ${ctaCode ? `<a class="portal-button portal-button--primary" href="/account" style="display:inline-flex; align-items:center; gap:6px;"><span>Lấy mã & liên kết ngay</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>` : ""}
-        ${ctaBot ? `<a class="portal-button portal-button--quiet" href="https://t.me/toanaas_bot" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px;"><span>Mở Bot Telegram</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>` : ""}
-      </div>
+      ${contentBody}
     </section>`;
   }
 
@@ -20905,7 +21002,7 @@
       const tier = w && w.is_vip ? "VIP" : "Tiêu chuẩn";
       const linked = telegramIdentityLinked(ctx);
       const isUnlinked = !linked || (ctx.wallet && ctx.wallet.status === "unlinked") || (ctx.wallet && ctx.wallet.error_code === "ACCOUNT_TELEGRAM_UNLINKED");
-      const unlinkedCard = isUnlinked ? renderTelegramUnlinkedCard() : "";
+      const unlinkedCard = isUnlinked ? renderTelegramUnlinkedCard(ctx) : "";
       const linkedStatus = linked ? "Đã liên kết Telegram" : "Chưa kết nối Telegram";
       const planName = w && w.plan && (w.plan.plan_name || w.plan.current_plan)
         ? String(w.plan.plan_name || w.plan.current_plan)
@@ -21961,7 +22058,7 @@
           </div>
         </div>
     ` : ((!telegramIdentityLinked(context) || (context.wallet && context.wallet.status === "unlinked") || (context.wallet && context.wallet.error_code === "ACCOUNT_TELEGRAM_UNLINKED"))
-      ? renderTelegramUnlinkedCard()
+      ? renderTelegramUnlinkedCard(context)
       : `<section class="portal-card portal-card-pad portal-wallet-overview"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("customerWallet.status.kicker", "Ví Xu canonical"))}</span><h2 class="portal-card-title">${safeText(uiText("customerWallet.status.unverifiedTitle", "Dữ liệu Ví đang được xác minh"))}</h2><p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(readState)}" role="status" aria-live="polite">${safeText(walletUnavailableCopy)}</p></div></div><div class="portal-form-footer">${refreshControl}</div></section>`);
 
     const topupFlow = topup

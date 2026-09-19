@@ -78,6 +78,38 @@ def _node_classify_error(status: int, payload: dict | None) -> str:
     return res.stdout.strip()
 
 
+def _node_render_unlinked_card(context: dict | None) -> str:
+    """Execute renderTelegramUnlinkedCard from portal.js directly via Node."""
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node is required for card rendering contract")
+    portal_js = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    start_link = portal_js.index("function safeTelegramLink(")
+    end_link = portal_js.index("function telegramConnectionReady(", start_link)
+    safe_link_code = portal_js[start_link:end_link]
+
+    start_card = portal_js.index("function renderTelegramUnlinkedCard(")
+    end_card = portal_js.index("function renderDashboard(", start_card)
+    card_code = portal_js[start_card:end_card]
+
+    context_json = json.dumps(context) if context is not None else "{}"
+    node_script = f"""
+    const uiText = (k, fb) => fb;
+    const safeText = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const portalIcon = (i) => '<svg></svg>';
+    const ICONS = {{ account: '', arrowRight: '' }};
+    const currentPortalPath = () => '/dashboard';
+    const base = () => ({{}});
+    {safe_link_code}
+    {card_code}
+    const context = {context_json};
+    const html = renderTelegramUnlinkedCard(context);
+    process.stdout.write(html);
+    """
+    res = subprocess.run([node, "-e", node_script], capture_output=True, text=True, check=True)
+    return res.stdout.strip()
+
+
 class TestP0WebappV3FirstRedContracts:
     """Rigorous First-Red validation confirming all 7 gaps before implementation."""
 
@@ -208,3 +240,87 @@ class TestP0WebappV3FirstRedContracts:
         assert _node_classify_error(401, {}) == "AUTH_401_403"
         assert _node_classify_error(403, {}) == "AUTH_401_403"
         assert _node_classify_error(422, {}) == "VALIDATION_4XX"
+
+    def test_red_09_telegram_canonical_challenge_contracts(self) -> None:
+        """Gap 9: Telegram unlinked card must use canonical challenge flow instead of stale /link copy."""
+        portal_js = PORTAL_JS_PATH.read_text(encoding="utf-8")
+        integration_js = INTEGRATION_JS_PATH.read_text(encoding="utf-8")
+
+        # 1. Stale /link instructions must NOT be present in renderTelegramUnlinkedCard
+        start = portal_js.index("function renderTelegramUnlinkedCard(")
+        end = portal_js.index("function renderDashboard(", start)
+        card_source = portal_js[start:end]
+
+        assert "<code>/link</code>" not in card_source, "Stale /link instruction still in renderTelegramUnlinkedCard"
+        assert "nhận mã xác nhận một lần từ Bot" not in card_source, "Stale 'receive code from Bot' in renderTelegramUnlinkedCard"
+        assert "Nhập mã liên kết" not in card_source, "Stale 'enter code in account' in renderTelegramUnlinkedCard"
+
+        # 2. No 6-digit browser input box
+        assert "<input" not in card_source, "Found prohibited input element in renderTelegramUnlinkedCard"
+
+        # 3. Must use canonical start action data-portal-action="start-telegram-link"
+        assert 'data-portal-action="start-telegram-link"' in card_source, (
+            "renderTelegramUnlinkedCard missing canonical start-telegram-link trigger"
+        )
+
+        # 4. Must support canonical pending state with server-issued deep_link and /linkweb
+        assert "data-copy-text" in card_source or "botCommand" in card_source or "/linkweb" in card_source, (
+            "renderTelegramUnlinkedCard does not support server-issued /linkweb command"
+        )
+
+        # 5. linkChallengeRoute in integration.js must include /dashboard and /wallet
+        start_route = integration_js.index("function linkChallengeRoute()")
+        end_route = integration_js.index("function stopTelegramLoginPolling()", start_route)
+        route_block = integration_js[start_route:end_route]
+        assert '"/dashboard"' in route_block, "linkChallengeRoute missing /dashboard"
+        assert '"/wallet"' in route_block, "linkChallengeRoute missing /wallet"
+
+        # 6. Rendered states verification via Node
+        # 6a. Initial unlinked state
+        initial_html = _node_render_unlinked_card({"linkFlow": {}, "linkStatus": {}})
+        assert 'data-error-code="ACCOUNT_TELEGRAM_UNLINKED"' in initial_html
+        assert 'data-portal-action="start-telegram-link"' in initial_html
+        assert "Liên kết Telegram ngay" in initial_html
+        assert "<input" not in initial_html
+        assert "<code>/link</code>" not in initial_html
+        assert "/linkweb" not in initial_html
+
+        # 6b. Pending challenge state
+        pending_html = _node_render_unlinked_card({
+            "linkFlow": {
+                "status": "awaiting_confirm",
+                "data": {
+                    "code": "CANONICAL_TOKEN_XYZ",
+                    "deep_link": "https://t.me/toanaas_bot?start=link_canonical_abc",
+                    "expires_in_minutes": 15,
+                },
+            },
+            "linkStatus": {"linked": False},
+        })
+        assert "https://t.me/toanaas_bot?start=link_canonical_abc" in pending_html
+        assert "/linkweb CANONICAL_TOKEN_XYZ" in pending_html
+        assert 'data-copy-text="/linkweb CANONICAL_TOKEN_XYZ"' in pending_html
+        assert 'data-portal-action="copy-telegram-link-command"' in pending_html
+        assert 'data-portal-action="refresh-link-status"' in pending_html
+        assert 'data-badge="awaiting_confirm"' in pending_html
+        assert "15 phút" in pending_html
+
+        # 6c. Ready to complete state
+        ready_html = _node_render_unlinked_card({
+            "linkStatus": {"ready_to_complete": True, "linked": False},
+        })
+        assert "Hoàn tất liên kết ngay" in ready_html
+        assert 'data-portal-action="refresh-link-status"' in ready_html
+
+        # 6d. Expired challenge state
+        expired_html = _node_render_unlinked_card({
+            "linkFlow": {"status": "failed", "data": {"expired": True}},
+        })
+        assert "Mã liên kết Telegram đã hết hạn" in expired_html
+        assert 'data-portal-action="start-telegram-link"' in expired_html
+        assert "Tạo mã mới" in expired_html
+
+        # 7. Complete and Start action endpoints contract in integration.js
+        assert 'api("/auth/telegram/link/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })' in integration_js
+        assert 'api("/auth/telegram/link/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })' in integration_js
+        assert 'action === "complete-telegram-link"' in integration_js
