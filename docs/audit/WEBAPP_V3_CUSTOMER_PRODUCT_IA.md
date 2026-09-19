@@ -1,5 +1,5 @@
 # Web App V3 Customer Information Architecture (IA) Specification
-> **Task**: `P0.WEBAPP.V3.AUDIT.FINAL.ROADMAP.EXECUTION.SAFETY.CLOSURE`
+> **Task**: `P0.WEBAPP.V3.AUDIT.AUTOPOST.SINGLE.AUTHORITY.FINAL.ALIGNMENT`
 > **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
 > **Repository**: `manhtoangreensky-wq/toan-aas-standalone`
 > **Authoritative Base SHA**: `8873e10f2279aec0fb312b70388b9073ba763f13`
@@ -16,7 +16,7 @@ The customer information architecture is redesigned to eliminate catalog flatten
    - **Music & SFX** is strictly separated from **Subtitle/Dubbing/Translation**.
    - **Manual Video Tools (Video Edit)** is an independent utility engine that processes local/server media directly without invoking paid AI generative providers.
    - **Free Utilities** is a separate lead-magnet product family, not absorbed into Video Edit.
-   - **AutoPost (Publishing Automation)** is a downstream orchestrator consuming common publishable artifacts from any finished producer.
+   - **AutoPost (Publishing Automation)** is a downstream control surface and read projection consuming canonical Bot AutoPost APIs; canonical execution authority resides exclusively in `manhtoangreensky-wq/bot`.
 3. **Progressive Disclosure (`TARGET_DESIGN`)**: Primary sidebar provides immediate access to the 10 core product homes. Secondary discovery (tool drawers, format presets, niche calculators) is housed cleanly within product hubs.
 
 ---
@@ -102,9 +102,11 @@ graph TD
 - **Independence**: Independent utility family; never routes cheap local FFmpeg work through expensive paid AI providers.
 - **Scope**: Trimming, merging, aspect cropping, compression, watermark logo overlay, thumbnail extraction, format conversion, speed ramping, audio extraction, and metadata probing.
 
-#### 6. AutoPost (`/publishing`) — Downstream Orchestrator
-- **Independence**: AutoPost core depends on the Common Publishable Asset Handoff Foundation, not on any specific producer.
-- **Target Contract**: Consumes finished media from Product Video, Video Edit, SubDub, or existing user uploads. Owns review, approval, multi-channel scheduling (TikTok, YouTube Shorts, Facebook Reels), platform receipt binding, and publish-only retry loops (`TARGET_DESIGN`).
+#### 6. AutoPost (`/publishing`) — Downstream Control Surface & Publishing Hub
+- **Canonical Execution Authority**: `manhtoangreensky-wq/bot` (Bot Foundation PR #1080). Web App does NOT maintain a second ledger, scheduler, or outbox.
+- **Web App Capabilities**: Rich UI control surface preserving Web advantages (multi-select asset picking, batch caption editing, side-by-side video aspect preview, clip grids, calendar timeline view, multi-channel status cards, and retry triggers).
+- **Target Contract**: Consumes finished media from Product Video, Video Edit, SubDub, or existing user uploads via canonical Bot Handoff APIs. Manages review, draft creation, multi-channel scheduling (TikTok, YouTube Shorts, Facebook Reels), platform receipt inspection, and publish-only retry triggers via Bot API (`TARGET_DESIGN`).
+- **Anti-Rerun Policy**: Publishing failure retries only the publication attempt via Bot API; never reruns upstream producers.
 
 #### 7. Free Utilities (`/tools/free`) — Lead Magnets
 - **Independence**: Preserved as a distinct customer product family, not absorbed into Video Edit.

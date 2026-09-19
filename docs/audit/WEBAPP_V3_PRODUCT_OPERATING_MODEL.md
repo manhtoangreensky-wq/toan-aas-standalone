@@ -1,5 +1,5 @@
 # Web App V3 Product Operating Model & Architectural Truth
-> **Task**: `P0.WEBAPP.V3.AUDIT.FINAL.ROADMAP.EXECUTION.SAFETY.CLOSURE`
+> **Task**: `P0.WEBAPP.V3.AUDIT.AUTOPOST.SINGLE.AUTHORITY.FINAL.ALIGNMENT`
 > **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
 > **Repository**: `manhtoangreensky-wq/toan-aas-standalone`
 > **Authoritative Base SHA**: `8873e10f2279aec0fb312b70388b9073ba763f13`
@@ -44,6 +44,12 @@ The audit establishes the following empirical and architectural truths:
    - Public routes `/api/v1/pricing` and `/api/v1/packages` use canonical bridge reads.
    - Invariant: `NO_LOCAL_EFFECTIVE_PRICING`, `NO_CLIENT_DERIVED_PRICING`, `NO_STATIC_EFFECTIVE_PRICE_FALLBACK`.
    - If bridge is unreachable, the system renders a truthful unavailable/guarded state; it never fabricates fallback prices.
+7. **Single AutoPost Business Authority (`INDEPENDENT_SOURCE_VERIFIED`)**:
+   - `AUTOPOST_CANONICAL_EXECUTION_AUTHORITY = manhtoangreensky-wq/bot`.
+   - Web App must NOT maintain a second authoritative handoff registry, publication ledger, scheduler, outbox, platform receipt store, or idempotency store.
+   - Bot Core owns the durable core: `PublishableAsset` canonical resolution, `HandoffReceipt`, `PublicationDraft` state, `publication`, `publication_attempt`, `schedule`, `outbox`, `receipt`, `claim/lease`, `idempotency`, `publish-only retry`, transport adapters, and platform receipt reconciliation.
+   - Web App acts exclusively as the control surface and read projection, preserving its UX strengths (multi-select, batch actions, parallel status views, side-by-side preview, clip grids, calendar view, multi-channel view, admin monitoring).
+   - Cross-repo contract: `Web -> authenticated internal AutoPost API/bridge -> Bot AutoPost Core -> SQLite Outbox -> platform adapter`.
 
 ---
 
@@ -70,7 +76,7 @@ Web App V3 groups all customer capabilities into **10 Distinct, Independent Prod
 - **SubDub Independence**: Implementable independently for uploaded/existing media (`SUBDUB_PRODUCT_IMPLEMENTATION != PRODUCT_VIDEO_DEPENDENT`). Integrates with Video Product and Video Edit later via Common Artifact Handoff.
 - **Video Edit Independence**: Independent Manual Video Tools family. Fast local/server FFmpeg utility; never routes cheap local FFmpeg work through expensive paid AI providers.
 - **Free Tools Separation**: Free Utilities is a distinct lead-magnet family, not merged into Video Edit.
-- **AutoPost Independence**: AutoPost core depends on the `PUBLISHABLE_ASSET_HANDOFF_FOUNDATION`, NOT on any single producer. It consumes finished output from any producer through the common contract.
+- **AutoPost Authority & Independence**: AutoPost's single canonical execution authority is Bot Core (`AUTOPOST_CANONICAL_EXECUTION_AUTHORITY = manhtoangreensky-wq/bot`). Web App acts exclusively as a rich control surface and read projection, never maintaining a duplicate execution outbox or scheduler. AutoPost depends downstream on the `PUBLISHABLE_ASSET_HANDOFF_FOUNDATION`, NOT on any single producer. It consumes finished output from any producer through the common contract.
 
 ---
 
@@ -121,26 +127,97 @@ Comparing `copyfast_video_studio.py` against Telegram Bot core:
 
 ## 5. AutoPost & Common Publishable Artifact Architecture
 
-### 5.1 System Role & Ownership Boundaries (`TARGET_DESIGN`)
-AutoPost is an **orchestrator downstream of asset generation**. It consumes finished media artifacts and handles their review, scheduling, dispatch, and delivery receipts.
+### 5.1 Single AutoPost Business Authority & Execution Boundaries (`TARGET_DESIGN`)
 
 ```
-[WHAT AUTPOST OWNS]
-- Multi-channel orchestration (TikTok, YouTube Shorts, Facebook Reels)
-- Preview & approval workflows
-- Durable schedule persistence across server restarts
-- Channel-specific adapter dispatch & rate limiting
-- Platform receipt binding (post_id, platform_url)
-- Publish-only retry loop (with exponential backoff)
+AUTOPOST_CANONICAL_EXECUTION_AUTHORITY = manhtoangreensky-wq/bot
+```
+
+AutoPost's single canonical execution authority resides exclusively in **Bot Core (`manhtoangreensky-wq/bot`)**.
+
+The Web App acts strictly as a **control surface and read projection**. Web App must **NOT** maintain a second authoritative:
+- handoff registry
+- publication ledger
+- scheduler
+- outbox
+- platform receipt store
+- idempotency store
+
+#### External Dependency Recording
+- **`BOT_REPOSITORY`**: `manhtoangreensky-wq/bot`
+- **`CURRENT_AUTOPOST_FOUNDATION_PR`**: `1080`
+- **`CURRENT_REMOTE_PR_HEAD`**: `556989ccc0ae6e28d11d2aaacfe11f4cbb06a914`
+- **`CURRENT_STATUS`**: `OPEN / NOT_MERGED / AUTHORITY_CLOSURE_IN_PROGRESS`
+- **Dependency Invariant**: Web V3 masterplan explicitly depends on this Bot PR/program for the canonical AutoPost core. Bot AutoPost is NOT marked as merged or complete; it is an open in-flight foundation PR. The Web repository must NOT mutate the Bot repository.
+
+#### Ownership & Responsibilities
+```
+[WHAT BOT CORE OWNS (CANONICAL EXECUTION AUTHORITY)]
+- PublishableAsset canonical resolution & validation
+- HandoffReceipt generation & ledger
+- PublicationDraft state machine
+- publication & publication_attempt records
+- schedule table & claim/lease polling
+- SQLite publishing outbox & lease worker
+- platform receipt reconciliation (post_id, platform_url)
+- Idempotency key registry & deduplication
+- Publish-only retry loop (exponential backoff)
+- Channel transport adapters (TikTok, YouTube Shorts, FB Reels)
 - Complete publication audit log
 
-[WHAT AUTPOST DOES NOT OWN]
+[WHAT WEB APP OWNS (CONTROL SURFACE & READ PROJECTION)]
+- Multi-select asset selection & batch queuing
+- Rich calendar view with drag-to-reschedule UX
+- Side-by-side video aspect preview & clip grids
+- Parallel multi-channel publication status views
+- Caption template editing & hashtag helpers
+- Approval & pause triggers via canonical Bot API
+- Manual publish-only retry triggers via Bot API
+- Admin publication monitoring read projection
+
+[WHAT AUTPOST NEVER OWNS]
 - Product Video rendering (owned by Product Video Studio)
 - Video Edit trimming/cropping (owned by Video Edit Tools)
 - Subtitle transcription or audio dubbing (owned by SubDub Engine)
 ```
 
-### 5.2 Common Publishable Artifact Contract (`TARGET_DESIGN`)
+#### Cross-Repository Execution Pipeline
+```
++-------------------------------------------------------------------------+
+| WEB APP (Control Surface & Read Projection)                             |
+| - Asset Multi-Select Grid   - Calendar Schedule Matrix                  |
+| - Side-by-Side Preview      - Draft Form & Channel Selectors            |
++-------------------------------------------------------------------------+
+                                    |
+                    Authenticated Internal Bridge
+                    POST /internal/v1/autopost/handoff
+                    POST /internal/v1/autopost/schedule
+                    POST /internal/v1/autopost/retry
+                                    v
++-------------------------------------------------------------------------+
+| BOT AUTOPOST CORE (Canonical Authority: manhtoangreensky-wq/bot)        |
+| - PublishableAsset Resolution     - HandoffReceipt Store                |
+| - PublicationDraft State Machine  - Idempotency Registry                |
+| - SQLite Publishing Outbox        - Lease / Claim Scheduler             |
++-------------------------------------------------------------------------+
+                                    |
+                               Lease / Claim
+                                    v
++-------------------------------------------------------------------------+
+| PLATFORM ADAPTERS & WORKERS (TikTok, YouTube, Facebook)                 |
+| - Transport Dispatch             - Platform Error Mapping               |
+| - Platform Receipt Binding       - Publish-Only Retry Loop              |
++-------------------------------------------------------------------------+
+```
+
+### 5.2 Producer Independence & Common Publishable Artifact Contract (`TARGET_DESIGN`)
+
+All video generation and editing tools produce media independently and expose finished artifacts to Bot handoff:
+- **`VIDEO_PRODUCT`**: Produces multi-scene rendered MP4 $\rightarrow$ hands off artifact.
+- **`VIDEO_EDIT`**: Produces trimmed, cropped, or merged MP4 $\rightarrow$ hands off artifact.
+- **`SUBDUB`**: Produces subtitled or multilingual dubbed MP4 $\rightarrow$ hands off artifact.
+- **`EXISTING_FINISHED_VIDEO`**: Vault or uploaded MP4 $\rightarrow$ hands off artifact.
+
 Any producer handing off media to AutoPost must conform to this immutable contract. Raw user-entered Job IDs are strictly prohibited as handoff authority:
 
 ```json
@@ -164,27 +241,29 @@ Any producer handing off media to AutoPost must conform to this immutable contra
 }
 ```
 
-### 5.3 Multi-Step Processing Model (Optional DAG/Recipe) (`DESIGN_PROPOSAL`)
+### 5.3 Multi-Step Processing Model (Optional DAG/Recipe) & Anti-Rerun Rule (`DESIGN_PROPOSAL`)
+
 The publishing workflow supports an optional pipeline recipe. Chaining is strictly optional; there is no mandatory Product $\rightarrow$ Edit $\rightarrow$ SubDub pipeline:
 
 ```mermaid
 flowchart LR
     A[Product Video] -->|Optional| B[Video Edit]
     B -->|Optional| C[SubDub]
-    A -->|Direct| D[Review & Approval]
-    B -->|Direct| D
-    C -->|Direct| D
-    E[Existing Video] -->|Direct| D
-    D --> F[Durable Schedule]
+    A -->|Direct Handoff| D[Bot AutoPost Bridge]
+    B -->|Direct Handoff| D
+    C -->|Direct Handoff| D
+    E[Existing Video] -->|Direct Handoff| D
+    D --> F[Durable Schedule in Bot Core]
     F --> G[Publish Dispatcher]
 ```
 
-**Anti-Rerun Rule**: Retrying a failed publication step must **NEVER rerun a completed producer**. If YouTube upload fails with a network timeout, only the publication attempt is retried; the upstream video render remains untouched.
+> [!IMPORTANT]
+> **Anti-Rerun Rule (Publish-Only Retry)**: Retrying a failed publication attempt must **NEVER rerun a completed upstream producer**. If a YouTube Shorts upload fails with a network timeout, only the publication attempt is retried through the Bot AutoPost retry API; the upstream video render remains untouched and is not re-billed.
 
 ### 5.4 Durable Publishing Core & State Machine (`TARGET_DESIGN`)
-Entities: `publication`, `publication_attempt`, `schedule`, `outbox`, `receipt`.
+Bot Core Entities: `publication`, `publication_attempt`, `schedule`, `outbox`, `receipt`.
 
-Lifecycle States:
+Lifecycle States in Bot Core:
 ```
 [PLANNED] -> [APPROVED] -> [SCHEDULED] -> [CLAIMED/DISPATCHING]
    |             |              |                    |
@@ -202,7 +281,7 @@ Lifecycle States:
                                                             [FAILED_FINAL]
 ```
 
-- **Invariant**: `HTTP_200 != PUBLISHED`. A post is only considered published when a verified platform receipt identifier is bound and recorded.
+- **Invariant**: `HTTP_200 != PUBLISHED`. A post is only considered published when a verified platform receipt identifier is bound and recorded by Bot Core.
 - **Idempotency**: Every publication attempt carries a unique idempotency key based on `(publication_id, channel_id, scheduled_time)`.
 
 ### 5.5 Video Split / Batch Contract (`DESIGN_PROPOSAL`)
@@ -210,3 +289,4 @@ For workflows converting one long master video into multiple short social posts:
 - Structure: **Parent Batch** managing $N$ **Child Publication Units**.
 - Each child independently owns: clip asset, aspect preview, caption, approval status, target channel, scheduled slot, platform receipt, and retry state.
 - **Fault Isolation**: Failure of Child Clip #3 does not affect, pause, or duplicate Child Clips #1, #2, or #4.
+- **Web UI Role**: Web App renders clip grids, batch caption editing, multi-select channel toggling, and calendar timeline placement, dispatching batch creation requests to the canonical Bot AutoPost API.

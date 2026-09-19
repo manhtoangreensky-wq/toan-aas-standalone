@@ -1,8 +1,8 @@
 {
   "audit_metadata": {
-    "task": "P0.WEBAPP.V3.AUDIT.FINAL.ROADMAP.EXECUTION.SAFETY.CLOSURE",
+    "task": "P0.WEBAPP.V3.AUDIT.AUTOPOST.SINGLE.AUTHORITY.FINAL.ALIGNMENT",
     "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
-    "timestamp_utc": "2026-09-19T10:20:00Z",
+    "timestamp_utc": "2026-09-19T10:40:00Z",
     "total_registry_features": 179,
     "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
   },
@@ -104,36 +104,64 @@
       "family_id": "PUBLISHING_AUTOMATION",
       "title": "Xuất Bản Tự Động & Lịch Đăng (AutoPost)",
       "route": "/publishing",
-      "nature": "ORCHESTRATOR_DOWNSTREAM",
+      "nature": "CONTROL_SURFACE_AND_READ_PROJECTION_DOWNSTREAM",
       "current_features_merged": [
         "workboard_schedule_intents",
         "publishing_scheduler",
         "social_distribution",
         "webhook_dispatch"
       ],
-      "disposition": "INDEPENDENT_ORCHESTRATOR_CONSUMING_PUBLISHABLE_ASSETS",
+      "disposition": "CONTROL_SURFACE_AND_READ_PROJECTION_CONSUMING_BOT_CANONICAL_APIS",
+      "canonical_execution_authority": "manhtoangreensky-wq/bot",
+      "bot_dependency": {
+        "repository": "manhtoangreensky-wq/bot",
+        "current_autopost_foundation_pr": 1080,
+        "current_remote_pr_head": "556989ccc0ae6e28d11d2aaacfe11f4cbb06a914",
+        "current_status": "OPEN / NOT_MERGED / AUTHORITY_CLOSURE_IN_PROGRESS"
+      },
       "orchestration_contract": {
-        "owns": [
-          "orchestration",
-          "review",
-          "approval",
+        "bot_core_owns": [
+          "PublishableAsset canonical resolution",
+          "HandoffReceipt",
+          "PublicationDraft state",
+          "publication",
+          "publication_attempt",
           "schedule",
-          "publish",
+          "outbox",
           "receipt",
-          "publish_only_retry",
-          "audit"
+          "claim/lease",
+          "idempotency",
+          "publish-only retry",
+          "transport adapters",
+          "platform receipt reconciliation"
         ],
-        "does_not_own": [
-          "product_video_rendering",
-          "video_edit_processing",
-          "subdub_processing"
+        "web_app_owns": [
+          "multi-select",
+          "batch actions",
+          "parallel status views",
+          "side-by-side preview",
+          "clip grids",
+          "calendar view",
+          "multi-channel view",
+          "admin monitoring read projection",
+          "trigger retry via Bot API"
         ],
-        "consumes_finished_output_from": [
-          "VIDEO_PRODUCT",
-          "VIDEO_EDIT",
-          "SUBDUB",
-          "EXISTING_FINISHED_VIDEO"
-        ]
+        "web_app_must_not_maintain": [
+          "second authoritative handoff registry",
+          "second publication ledger",
+          "second scheduler",
+          "second outbox",
+          "second platform receipt store",
+          "second idempotency store"
+        ],
+        "cross_repo_contract": "Web -> authenticated internal AutoPost API/bridge -> Bot AutoPost Core -> SQLite Outbox -> platform adapter",
+        "producer_independence": [
+          "VIDEO_PRODUCT (produces artifact independently)",
+          "VIDEO_EDIT (produces artifact independently)",
+          "SUBDUB (produces artifact independently)",
+          "EXISTING_FINISHED_VIDEO (produces artifact independently)"
+        ],
+        "failure_retry_rule": "Publish failure -> retry publish step only (never rerun completed upstream producers)"
       },
       "evidence_level": "TARGET_DESIGN"
     },

@@ -1,5 +1,5 @@
 # Web App V3 Rebased Master Plan & Transition Roadmap
-> **Task**: `P0.WEBAPP.V3.AUDIT.FINAL.ROADMAP.EXECUTION.SAFETY.CLOSURE`
+> **Task**: `P0.WEBAPP.V3.AUDIT.AUTOPOST.SINGLE.AUTHORITY.FINAL.ALIGNMENT`
 > **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
 > **Repository**: `manhtoangreensky-wq/toan-aas-standalone`
 > **Authoritative Base SHA**: `8873e10f2279aec0fb312b70388b9073ba763f13`
@@ -16,13 +16,13 @@ The previous linear sequence (`V2-08` through `V2-15`) suffered from structural 
 3. **Canonical Worker Architecture**: Current production uses **SQLite `video_jobs` outbox lease/claim** via `services/remote_worker_api.py` and `remote_worker.py` on systemd. Celery and Redis Queue are not used (`INDEPENDENT_SOURCE_VERIFIED`).
 4. **Billing Invariant**: Product Video charges the customer wallet **ONLY after successful final delivery** (`FINAL_DELIVERY_REQUIRED_BEFORE_CHARGE=YES`). Pre-render debit models are unverified and prohibited (`INDEPENDENT_SOURCE_VERIFIED`).
 5. **Nginx Upstream Retry Safety**: Blind replay of POST requests risks duplicating financial transactions or job creation. Safe upstream retry is permitted ONLY for idempotent reads (`error timeout http_502` for GET/HEAD). `MUTATION_HTTP_RETRY_POLICY=NO_BLIND_REPLAY`. Principle: `HTTP_RETRY != BUSINESS_OPERATION_RETRY`.
-6. **Product Family Independence**:
+6. **Product Family Independence & Single AutoPost Authority**:
    - `VOICE` does not depend on Product Video.
    - `MUSIC_AND_SFX` does not depend on Product Video or SubDub.
    - `SUBDUB` is independently implementable for uploaded/existing media.
    - `VIDEO_EDIT` (Manual Video Tools) is an independent utility; cheap FFmpeg work is never routed through paid AI providers.
    - `FREE_TOOLS` is a distinct lead-magnet family.
-   - `PUBLISHING_AUTOMATION` (AutoPost) is a downstream orchestrator depending on the `PUBLISHABLE_ASSET_HANDOFF_FOUNDATION`, not on any single producer.
+   - `PUBLISHING_AUTOMATION` (AutoPost) has a **Single Canonical Execution Authority**: `manhtoangreensky-wq/bot`. Web App acts strictly as a control surface and read projection (no duplicate ledger, scheduler, or outbox in Web).
 
 This master plan formally retires the old V2 sequence and establishes an evidence-driven, product-centric V3 roadmap organized into **15 Bounded Implementation Tasks**.
 
@@ -36,7 +36,7 @@ This master plan formally retires the old V2 sequence and establishes an evidenc
 | **V2-09** | Admin System Health, Log Explorer & Audit Telemetry Hub | **MOVED & CONSOLIDATED** | `P0-F: Admin Worker Fleet & System Telemetry` | Monitor live SQLite outbox lease/claim and systemd worker processes on VPS (`tg.toanaas.vn`). |
 | **V2-10** | Customer Unified Media Studio (Voice, Video, Music, Subtitle) | **REPLACED & DECOMPOSED** | `P0-D: Video Studio`, `P1-A: Voice`, `P1-B: Music & SFX`, `P1-C: SubDub`, `P1-D: Video Edit` | Grouping 5 distinct product lines into one monolithic page violates family separation. Decomposed into independent product engines. |
 | **V2-11** | Customer Multi-Scene Video Production Workflow | **MERGED** | `P0-D: End-to-End Product Video Studio` | Multi-scene storyboard composition is integral to the Video Studio pipeline, not a detached workflow. |
-| **V2-12** | Customer Publishing, Webhook & Distribution Hub | **REPLACED & UPGRADED** | `P1-E: Common Handoff Foundation` & `P1-F: AutoPost Hub` | Upgraded to full AutoPost specification (Common Publishable Artifact, durable schedule, multi-channel receipts, publish-only retry). |
+| **V2-12** | Customer Publishing, Webhook & Distribution Hub | **REPLACED & UPGRADED** | `P1-E: AutoPost Handoff Bridge Projection` & `P1-F: AutoPost Publishing Control Surface` | Upgraded to AutoPost dual-layer model: Web provides Handoff Bridge projection and rich Publishing Control Surface; canonical execution outbox/scheduler lives in Bot Core. |
 | **V2-13** | Admin Catalog & Pricing Governance Center | **REPLACED** | `P0-C: Customer IA & 10 Product Catalog` | Replaced flat 135-feature catalog with governance over the 10 distinct customer product families. |
 | **V2-14** | Admin Live Delivery Control & Worker Fleet Orchestrator | **MERGED** | `P0-F: Admin Worker Fleet & System Telemetry` | Merged into single operations control center. |
 | **V2-15** | Final Quality, Performance & Production Hardening | **KEPT & EXPANDED** | `P2-A: Locale Purity & E2E Production Hardening` | Retained as final end-to-end verification gate across Web and cross-repo integration. |
@@ -70,8 +70,8 @@ flowchart TD
         P1B["P1-B: Music & Foley SFX Studio"]
         P1C["P1-C: SubDub & Multilingual Translation Suite"]
         P1D["P1-D: Video Edit & Manual Fast Video Tools"]
-        P1E["P1-E: Common Publishable Asset Handoff Foundation"]
-        P1F["P1-F: AutoPost Publishing & Distribution Hub"]
+        P1E["P1-E: AutoPost Handoff Bridge Projection"]
+        P1F["P1-F: AutoPost Publishing Control Surface"]
         P1G["P1-G: Internal Admin Mobile App (5-Tab Web)"]
 
         P0A --> P1A
@@ -207,23 +207,23 @@ flowchart TD
 - **OWNER_GATE**: Zero routing of local FFmpeg operations through paid AI provider APIs.
 - **PASS_GATE**: Fast local/server FFmpeg operations with instant preview and download.
 
-#### [P1-E] Common Publishable Asset Handoff Foundation
-- **TASK_ID**: `P1.WEBAPP.V3-K.PUBLISHABLE.ASSET.HANDOFF.FOUNDATION`
-- **REPOSITORY**: `toan-aas-standalone`
-- **PURPOSE**: Common Publishable Artifact data contract and producer adapter registry (`asset_id`, `owner_id`, `source_product`, `source_job_id`, `parent_asset_id`, `artifact_sha256`, `media_type`, `duration_ms`, `width`, `height`, `artifact_state`, `processing_completed_at`, `caption_candidate`, `canonical_storage_ref`, `publish_eligible`, `publish_blockers`). Lineage tracking; user-entered Job ID is NOT authority.
-- **DEPENDENCIES**: `P0-C` (Precedes producer-specific AutoPost integration).
-- **SIDE_EFFECT_CLASS**: `COMMON_DATA_CONTRACT_AND_VAULT_METADATA`
-- **OWNER_GATE**: Immutable asset contract; strict eligibility validation.
-- **PASS_GATE**: Canonical asset validation and registry for all producer handoffs.
+#### [P1-E] AutoPost Handoff Bridge Projection
+- **TASK_ID**: `P1.WEBAPP.V3-K.AUTOPOST.HANDOFF.BRIDGE.PROJECTION`
+- **REPOSITORY**: `toan-aas-standalone` (ONE_REPO, ONE_BRANCH, ONE_PR)
+- **PURPOSE**: Web consumes canonical Bot PublishableAsset and Handoff APIs (`POST /internal/v1/autopost/handoff`). Renders asset selection UI, provenance display, and lineage metadata. Acts strictly as a read projection and bridge client; does NOT maintain a second authoritative handoff registry or asset ledger.
+- **DEPENDENCIES**: `P0-C` (Precedes full publishing control surface).
+- **SIDE_EFFECT_CLASS**: `BRIDGE_CONSUMER_AND_PROJECTION_METADATA`
+- **OWNER_GATE**: Canonical Bot API consumption; no duplicate Web registry.
+- **PASS_GATE**: Web renders selectable asset list with lineage/provenance from Bot API.
 
-#### [P1-F] AutoPost — Publishing Automation, Scheduling & Multi-Channel Distribution
-- **TASK_ID**: `P1.WEBAPP.V3-L.AUTPOST.PUBLISHING.HUB`
-- **REPOSITORY**: `toan-aas-standalone`
-- **PURPOSE**: AutoPost downstream orchestrator: review, approval, durable schedule across restarts, multi-channel distribution (TikTok, YouTube Shorts, FB Reels), platform receipt binding, publish-only retry loop (`HTTP_200 != PUBLISHED`), video split batching (parent batch + child units). Does NOT own video rendering or dubbing; retry never reruns producer.
-- **DEPENDENCIES**: `P1-E` (Common Publishable Asset Foundation).
-- **SIDE_EFFECT_CLASS**: `SOCIAL_PUBLISHING_ORCHESTRATION`
-- **OWNER_GATE**: Publish-only retry must never rerun producer; no blind duplicate posting; OAuth tokens secured.
-- **PASS_GATE**: Multi-channel scheduling, durable outbox across restarts, and verified platform receipt binding.
+#### [P1-F] AutoPost Publishing Control Surface & Scheduling UX
+- **TASK_ID**: `P1.WEBAPP.V3-L.AUTOPOST.PUBLISHING.CONTROL.SURFACE`
+- **REPOSITORY**: `toan-aas-standalone` (ONE_REPO, ONE_BRANCH, ONE_PR)
+- **PURPOSE**: Web control surface for social post creation, draft editing, caption generation, multi-channel selection (TikTok, YouTube Shorts, FB Reels), calendar view, clip grids, batch operations, and trigger retry calls via Bot AutoPost API (`POST /internal/v1/autopost/schedule`, `POST /internal/v1/autopost/retry`). Web App does NOT hold an execution outbox, scheduler, or lease worker.
+- **DEPENDENCIES**: `P1-E` (AutoPost Handoff Bridge Projection), Bot PR #1080 foundation.
+- **SIDE_EFFECT_CLASS**: `SOCIAL_PUBLISHING_CONTROL_SURFACE`
+- **OWNER_GATE**: Publish-only retry must never rerun producer; all state writes call canonical Bot API.
+- **PASS_GATE**: Rich calendar and batch UX scheduling posts via Bot Core API and displaying execution receipts.
 
 #### [P1-G] Internal Admin Mobile-Optimized Web App (5-Tab Architecture)
 - **TASK_ID**: `P1.WEBAPP.V3-M.ADMIN.MOBILE.RESPONSIVE.APP`

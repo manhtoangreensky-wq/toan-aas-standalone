@@ -1,5 +1,5 @@
 # Web App V3 Admin Architecture & Operating Model
-> **Task**: `P0.WEBAPP.V3.AUDIT.FINAL.ROADMAP.EXECUTION.SAFETY.CLOSURE`
+> **Task**: `P0.WEBAPP.V3.AUDIT.AUTOPOST.SINGLE.AUTHORITY.FINAL.ALIGNMENT`
 > **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
 > **Repository**: `manhtoangreensky-wq/toan-aas-standalone`
 > **Authoritative Base SHA**: `8873e10f2279aec0fb312b70388b9073ba763f13`
@@ -22,7 +22,7 @@ A fundamental rule of the TOAN AAS ecosystem is the absolute separation between 
 |  - Review and approve manual topup drafts with 3-layer reconciliation proofs   |
 |  - Reply to customer support tickets and assign agents                        |
 |  - Monitor live worker fleet telemetry and queue backlogs (Read-Only)         |
-|  - Pause or retry publication attempts (publish-only, without rerunning video)|
+|  - Pause or retry publication attempts (publish-only via Bot API; never rerunning video)|
 +-------------------------------------------------------------------------------+
                                       ||
                      STRICT SECURITY AIR-GAP / BOUNDARY
@@ -69,7 +69,7 @@ In task `P0-F`, queue operations are divided into two distinct security tiers:
 8. **Worker Fleet Telemetry (`/admin/workers`)**: Status of systemd-managed Product Video workers on VPS (`tg.toanaas.vn`), claim heartbeats, and queue backlog depths (`services/remote_worker_api.py`).
 9. **Catalog & Pricing Governance (`/admin/pricing`)**: Token pricing per model/second, SKU catalog management, and bridge synchronization.
 10. **Delivery & Webhook Postbacks (`/admin/delivery`)**: Outbound platform postbacks, external API delivery receipts.
-11. **AutoPost Publication Monitor (`/admin/publishing`)**: Scheduled social posts, platform attempt history, publication outbox states, and channel receipts.
+11. **AutoPost Publication Monitor (`/admin/publishing`)**: Scheduled social posts, platform attempt history, publication outbox states, and channel receipts projected directly from Bot AutoPost Core (Web App does NOT maintain a separate execution database).
 12. **Operator Audit Logs (`/admin/audit`)**: Immutable chronological log of all administrator actions.
 13. **Support Tickets (`/admin/tickets`)**: Integrated helpdesk for resolving customer inquiries and technical disputes.
 
