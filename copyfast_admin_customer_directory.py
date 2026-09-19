@@ -728,4 +728,3 @@ def _build_crm_detail_response(
         data=crm_context,
         status_name="read_only",
     )
-
