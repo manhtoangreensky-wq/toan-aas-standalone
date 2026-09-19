@@ -26305,9 +26305,18 @@
           pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], snapshot.readiness, base().bridge && base().bridge.featureExecutionFeatures), [path]: "read_only" }
         });
       } else if (path === "/pricing") {
-        const pricing = await api("/pricing");
+        const [pricing, packages, wallet] = await Promise.all([
+          api("/pricing"),
+          api("/packages").catch(() => ({ data: {} })),
+          api("/wallet").catch(() => ({ data: null }))
+        ]);
         if (!isCurrent()) return null;
-        merge({ pricingCatalog: pricing.data || {}, pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
+        merge({
+          pricingCatalog: pricing.data || {},
+          packageCatalog: packages.data || {},
+          wallet: wallet.data || null,
+          pageStates: { ...(base().pageStates || {}), [path]: "read_only" }
+        });
       } else if (path === "/packages") {
         merge({
           pricingCatalog: {},
