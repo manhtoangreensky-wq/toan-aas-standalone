@@ -1,0 +1,253 @@
+{
+  "audit_metadata": {
+    "task": "P0.WEBAPP.V3.AUDIT.EXISTING.PRODUCT.REUSE.AUTOPOST.ADDITIVE.FINAL.ALIGNMENT",
+    "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
+    "timestamp_utc": "2026-09-19T11:00:00Z",
+    "total_registry_features": 179,
+    "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+  },
+  "summary": {
+    "total_catalog_features": 179,
+    "admin_features": 40,
+    "customer_visible_workflows": 139,
+    "primary_product_homes": 10,
+    "product_subtools": 45,
+    "secondary_discovery_only": 64,
+    "merge_or_consolidate": 20
+  },
+  "product_families": [
+    {
+      "family_id": "PRODUCT_VIDEO",
+      "title": "Video Sản Phẩm AI (Product Video)",
+      "route": "/studio",
+      "nature": "CORE_PRODUCER_INCOMPLETE_REQUIRING_FULL_E2E_BUILD",
+      "current_features_merged": [
+        "video_factory_workflow",
+        "story_video_plan",
+        "video_studio",
+        "video_prompt_planner",
+        "video_idea_planner",
+        "cinematic_concept",
+        "storyboard_composer",
+        "image_motion_planner",
+        "creative_motion_guide",
+        "reference_format_planner",
+        "self_shot_scene_planner",
+        "script_to_screen_planner",
+        "long_form_roadmap"
+      ],
+      "disposition": "ONLY_MAJOR_VIDEO_PRODUCT_STILL_REQUIRING_FULL_E2E_COMPLETION",
+      "current_web_truth": "PLANNING_ONLY (39 routes, 10215 lines, no render dispatch, no final MP4 delivery)",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "family_id": "VOICE",
+      "title": "Giọng Nói & Thuyết Minh AI (Voice)",
+      "route": "/voice",
+      "nature": "EXISTING_COMPLETED_ENGINE_INTEGRATION",
+      "current_features_merged": [
+        "voice_studio",
+        "voice_direction_composer",
+        "voice_tts",
+        "voice_clone",
+        "voice_saved_tts"
+      ],
+      "disposition": "REUSE_EXISTING_CANONICAL_VOICE_ENGINE_NO_REBUILD",
+      "canonical_engine_authority": "Bot SQLite voice_jobs + existing TTS engine",
+      "web_task_role": "authoring metadata / scripts / direction UX, progress polling, audio player, MP3/WAV download",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "family_id": "MUSIC_AND_SFX",
+      "title": "Âm Nhạc & Âm Thanh Hiệu Ứng (Music & SFX)",
+      "route": "/music",
+      "nature": "EXISTING_COMPLETED_ENGINE_INTEGRATION",
+      "current_features_merged": [
+        "audio_hub",
+        "music_prompt_composer",
+        "music_direction_presets",
+        "sfx_cue_sheet",
+        "audio_stems"
+      ],
+      "disposition": "REUSE_EXISTING_CANONICAL_MUSIC_ENGINE_NO_REBUILD",
+      "canonical_engine_authority": "Bot existing Music/SFX engine",
+      "web_task_role": "briefing UX, library / media selection, progress/status UI, preview/download",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "family_id": "SUBTITLE_DUBBING_TRANSLATION",
+      "title": "Phụ Đề & Lồng Tiếng Đa Ngữ (SubDub & Translation)",
+      "route": "/subdub",
+      "nature": "EXISTING_COMPLETED_ENGINE_INTEGRATION",
+      "current_features_merged": [
+        "subtitle_studio",
+        "subtitle_asset_operations",
+        "subtitle_format_tools",
+        "translation_presets",
+        "multilingual_dubbing"
+      ],
+      "disposition": "REUSE_EXISTING_CANONICAL_SUBDUB_ENGINE_NO_REBUILD",
+      "canonical_engine_authority": "Bot canonical SubDub processing (provider/local execution, terminal artifact, delivery/job truth)",
+      "web_task_role": "upload/select media UX, mode selection, language/voice/style config, transcript editor, progress display, subtitle/video preview, final result controls",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "family_id": "VIDEO_EDIT",
+      "title": "Công Cụ Video Thủ Công & Cắt Ghép (Manual Video Tools)",
+      "route": "/tools/video",
+      "nature": "DUAL_MODE_EDIT_INTEGRATION",
+      "current_features_merged": [
+        "video_trim",
+        "video_merge",
+        "video_aspect_crop",
+        "watermark_remover",
+        "speed_ramping",
+        "video_finishing"
+      ],
+      "disposition": "REUSE_WEB_SAFE_LOCAL_OPERATIONS_AND_EXISTING_BOT_EDIT_ENGINE_NO_REBUILD",
+      "operational_split": {
+        "LOCAL_WEB_SAFE_OPERATION": "use current Web FFmpeg tooling for fast local cuts/crops/compress",
+        "CANONICAL_VIDEO_EDIT_JOB": "bridge to existing Bot Video Edit engine for background re-encode / batch stitch jobs"
+      },
+      "web_task_role": "orchestrate both fast local Web-safe FFmpeg tools and canonical Bot Video Edit engine jobs",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "family_id": "PUBLISHING_AUTOMATION",
+      "title": "Xuất Bản Tự Động & Lịch Đăng (AutoPost)",
+      "route": "/publishing",
+      "nature": "CONTROL_SURFACE_AND_READ_PROJECTION_DOWNSTREAM",
+      "current_features_merged": [
+        "workboard_schedule_intents",
+        "publishing_scheduler",
+        "social_distribution",
+        "webhook_dispatch"
+      ],
+      "disposition": "CONTROL_SURFACE_AND_READ_PROJECTION_CONSUMING_BOT_CANONICAL_APIS",
+      "canonical_execution_authority": "manhtoangreensky-wq/bot",
+      "bot_dependency": {
+        "repository": "manhtoangreensky-wq/bot",
+        "current_autopost_foundation_pr": 1080,
+        "current_remote_pr_head": "556989ccc0ae6e28d11d2aaacfe11f4cbb06a914",
+        "current_status": "OPEN / NOT_MERGED / AUTHORITY_CLOSURE_IN_PROGRESS"
+      },
+      "orchestration_contract": {
+        "bot_core_owns": [
+          "PublishableAsset canonical resolution",
+          "HandoffReceipt",
+          "PublicationDraft state",
+          "publication",
+          "publication_attempt",
+          "schedule",
+          "outbox",
+          "receipt",
+          "claim/lease",
+          "idempotency",
+          "publish-only retry",
+          "transport adapters",
+          "platform receipt reconciliation"
+        ],
+        "web_app_owns": [
+          "multi-select",
+          "batch actions",
+          "parallel status views",
+          "side-by-side preview",
+          "clip grids",
+          "calendar view",
+          "multi-channel view",
+          "admin monitoring read projection",
+          "trigger retry via Bot API"
+        ],
+        "web_app_must_not_maintain": [
+          "second authoritative handoff registry",
+          "second publication ledger",
+          "second scheduler",
+          "second outbox",
+          "second platform receipt store",
+          "second idempotency store"
+        ],
+        "cross_repo_contract": "Web -> authenticated internal AutoPost API/bridge -> Bot AutoPost Core -> SQLite Outbox -> platform adapter",
+        "autopost_additive_only": true,
+        "autopost_replaces_existing_workflow": false,
+        "autopost_mandatory_for_producers": false,
+        "producers_work_without_autopost": [
+          "VOICE",
+          "MUSIC_AND_SFX",
+          "SUBDUB",
+          "VIDEO_EDIT",
+          "PRODUCT_VIDEO"
+        ],
+        "result_screen_shortcut": "[ 📢 Dùng video này để đăng bài ] (optional action on final result screen, does not rerender/recharge/replace screen)",
+        "eligible_video_handoff_sources": [
+          "VIDEO_PRODUCT (target after product video completion)",
+          "VIDEO_EDIT (direct handoff supported)",
+          "SUBDUB (direct handoff supported)",
+          "EXISTING_FINISHED_VIDEO (direct handoff supported)"
+        ],
+        "independent_audio_producers": [
+          "VOICE (audio producer, not forced into video handoff contract)",
+          "MUSIC_AND_SFX (audio producer, not forced into video handoff contract)"
+        ],
+        "failure_retry_rule": "Publish failure -> retry publish step only (never rerun completed upstream producers)"
+      },
+      "evidence_level": "TARGET_DESIGN"
+    },
+    {
+      "family_id": "FREE_TOOLS",
+      "title": "Tiện Ích Miễn Phí & Quà Tặng (Free Utilities)",
+      "route": "/tools/free",
+      "nature": "LEAD_MAGNET",
+      "current_features_merged": [
+        "prompt_generator_free",
+        "bitrate_calculator",
+        "aspect_ratio_calculator",
+        "hashtag_helper"
+      ],
+      "disposition": "INDEPENDENT_PRODUCT_FAMILY_WORKSTREAM",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "family_id": "IMAGE_TOOLS",
+      "title": "Hình Ảnh & Tài Nguyên Sáng Tạo (Image & Creative Assets)",
+      "route": "/tools/image",
+      "nature": "PRODUCER_UTILITY",
+      "current_features_merged": [
+        "quick_image_planner",
+        "product_enhancer",
+        "thumbnail_creator",
+        "bg_removal"
+      ],
+      "disposition": "RETAINED_PER_PRODUCT_IA",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "family_id": "PROJECTS_MEDIA_LIBRARY",
+      "title": "Dự Án & Thư Viện Media (Projects & Vault)",
+      "route": "/projects",
+      "nature": "STORAGE_AND_LIFECYCLE",
+      "current_features_merged": [
+        "workboard_portal",
+        "workboard_history",
+        "media_vault",
+        "asset_export"
+      ],
+      "disposition": "UNIFIED_PROJECTS_AND_COMMON_ARTIFACT_STORAGE",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "family_id": "ACCOUNT_WALLET_COMMERCE",
+      "title": "Tài Khoản, Ví Tiền & Thương Mại (Account & Commerce)",
+      "route": "/account",
+      "nature": "COMMERCIAL_PORTAL",
+      "current_features_merged": [
+        "wallet_portal",
+        "manual_topup",
+        "payos_checkout",
+        "invoice_history",
+        "telegram_link"
+      ],
+      "disposition": "UNIFIED_COMMERCIAL_WORKSPACE",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    }
+  ]
+}

@@ -1,0 +1,272 @@
+{
+  "audit_metadata": {
+    "task": "P0.WEBAPP.V3.AUDIT.EXISTING.PRODUCT.REUSE.AUTOPOST.ADDITIVE.FINAL.ALIGNMENT",
+    "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
+    "timestamp_utc": "2026-09-19T11:00:00Z",
+    "base_sha": "8873e10f2279aec0fb312b70388b9073ba763f13",
+    "product_completion_classification": {
+      "voice_engine": "EXISTING_CANONICAL_CAPABILITY",
+      "music_engine": "EXISTING_CANONICAL_CAPABILITY",
+      "subdub_engine": "EXISTING_CANONICAL_CAPABILITY",
+      "video_edit_engine": "EXISTING_CANONICAL_CAPABILITY",
+      "product_video_web_e2e": "INCOMPLETE",
+      "voice_rebuild_required": false,
+      "music_rebuild_required": false,
+      "subdub_rebuild_required": false,
+      "video_edit_rebuild_required": false,
+      "voice_web_integration_task": true,
+      "music_web_integration_task": true,
+      "subdub_web_integration_task": true,
+      "video_edit_web_integration_task": true,
+      "product_video_web_e2e_incomplete": true,
+      "autopost_additive_only": true,
+      "autopost_replaces_existing_workflow": false,
+      "autopost_mandatory_for_producers": false,
+      "current_web_surface_truth": {
+        "voice": "authoring metadata / scripts / direction only; not real TTS execution",
+        "music": "library / briefing / deterministic directions only; not real music generation",
+        "subdub": "subtitle/transcript editor and direction metadata only; not real ASR / translation / dubbing execution",
+        "video_edit": "local Web-safe FFmpeg tools + bridge to existing Bot Video Edit engine for canonical jobs",
+        "product_video": "planning-only (39 routes, 10215 lines, no render dispatch, no final MP4 delivery)"
+      }
+    },
+    "copyfast_video_studio_source_facts": {
+      "file": "copyfast_video_studio.py",
+      "base_sha": "8873e10f2279aec0fb312b70388b9073ba763f13",
+      "total_lines": 10215,
+      "http_decorator_routes": 39,
+      "planning_only": true,
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    "canonical_worker_architecture": {
+      "database": "SQLite video_jobs",
+      "outbox": "video_dispatch_outbox",
+      "dispatch_protocol": "lease/claim semantics",
+      "worker_api_file": "services/remote_worker_api.py",
+      "worker_daemon_file": "remote_worker.py",
+      "endpoints": [
+        "POST /api/v1/worker/claim",
+        "POST /api/v1/worker/complete",
+        "POST /api/v1/worker/fail"
+      ],
+      "process_manager": "systemd-managed Product Video workers on VPS",
+      "celery_currently_used": false,
+      "redis_queue_currently_used": false,
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    "canonical_billing_contract": {
+      "quote_timing": "Preflight / Quote occurs before dispatch",
+      "charge_timing": "Customer wallet charge occurs ONLY after successful final delivery and canonical charge decision",
+      "final_delivery_required_before_charge": true,
+      "failed_no_charge": "0_XU",
+      "recovery_no_charge": "0_XU",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    }
+  },
+  "product_video_lifecycle_matrix": {
+    "current_source_state": "PLANNING_ONLY (copyfast_video_studio.py 39 routes, 10215 lines, text-only prompt planning)",
+    "target_source_state": "FULL_END_TO_END_PRODUCT (integration with canonical SQLite video_jobs outbox lease/claim)",
+    "points": [
+      {
+        "step": "01_brief_input",
+        "current_web": "Implemented (brief, title, format in copyfast_video_studio.py)",
+        "telegram_bot": "Interactive Q&A prompts",
+        "gap": "Web has good multi-field input, needs auto-brief enhancement",
+        "status": "PARTIAL",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "02_product_assets",
+        "current_web": "Draft reference links only; no actual upload storage persistence in copyfast_video_studio.py",
+        "telegram_bot": "Photo/video uploads via Telegram media handler",
+        "gap": "TARGET_DESIGN: Requires multi-file upload vault / canonical storage reference",
+        "status": "MISSING_STORAGE",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "03_reference_material",
+        "current_web": "Text notes only",
+        "telegram_bot": "Reference video links parsed by yt-dlp",
+        "gap": "TARGET_DESIGN: Reference video parsing and preview in web canvas",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "04_scene_generation",
+        "current_web": "Deterministic template scripts in copyfast_video_studio.py",
+        "telegram_bot": "AI scene decomposition via LLM prompt planner",
+        "gap": "Web requires live LLM scene decomposition and storyboard generation",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "05_scene_ordering",
+        "current_web": "In-memory scene order array in browser DOM",
+        "telegram_bot": "Linear script order in bot state",
+        "gap": "TARGET_DESIGN: Drag-and-drop storyboard grid with simultaneous multi-scene visibility",
+        "status": "PARTIAL",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "06_prompt_generation",
+        "current_web": "Template-based prompt composer",
+        "telegram_bot": "Dynamic Veo/Kling/Sora prompt compiler in services/",
+        "gap": "Must connect canonical prompt compiler to Web scenes",
+        "status": "PARTIAL",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "07_duration",
+        "current_web": "Duration metadata field only",
+        "telegram_bot": "5s, 10s per scene, total video duration math",
+        "gap": "Real duration validation per provider capability missing in Web",
+        "status": "PARTIAL",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "08_aspect_ratio",
+        "current_web": "Aspect ratio metadata dropdown (9:16, 16:9, 1:1, 4:5)",
+        "telegram_bot": "Strict format enforcement per provider router",
+        "gap": "Web UI has dropdown, needs visual aspect frame overlay in studio",
+        "status": "PARTIAL",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "09_voice",
+        "current_web": "Opaque voice_id string in brief",
+        "telegram_bot": "Voice selection menu, preview MP3, TTS engine",
+        "gap": "No voice preview player or voice asset picker in Video Studio",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "10_music",
+        "current_web": "Opaque music_id string in brief",
+        "telegram_bot": "Music library, auto-cue, audio stem mixing",
+        "gap": "No music picker or audio cue sheet binding in Video Studio",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "11_subtitle",
+        "current_web": "Checkbox 'subtitles' boolean",
+        "telegram_bot": "Auto-transcribe, SRT generator, burn-in ASS filter",
+        "gap": "No subtitle timing editor or style controls in Web",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "12_render_options",
+        "current_web": "None (mock enum)",
+        "telegram_bot": "Quality tiers (standard, high, master) wired to engine route",
+        "gap": "Render options not connected to pricing engine",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "13_quote",
+        "current_web": "Deterministic mock estimate endpoint in copyfast_video_studio.py",
+        "telegram_bot": "Canonical preflight quote (scene × duration + addons)",
+        "gap": "Web quote must query canonical pricing bridge with atomic quote receipt",
+        "status": "PARTIAL",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "14_confirmation",
+        "current_web": "None (planning only)",
+        "telegram_bot": "2-step invoice confirmation with idempotency token",
+        "gap": "Web confirmation modal with preflight quota check missing",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "15_job_creation",
+        "current_web": "None (zero job records created in copyfast_video_studio.py)",
+        "telegram_bot": "Atomic job insert in SQLite video_jobs table",
+        "gap": "Must dispatch job to canonical SQLite video_jobs outbox via bridge",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "16_provider_execution",
+        "current_web": "None (zero worker dispatch in copyfast_video_studio.py)",
+        "telegram_bot": "Remote worker claim/complete/fail loop via services/remote_worker_api.py",
+        "gap": "P0-D must integrate Web jobs into the canonical SQLite video_jobs outbox lease/claim system",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "17_scene_progress",
+        "current_web": "Mock events log",
+        "telegram_bot": "Real-time task polling per scene (queued/generating/done)",
+        "gap": "Web needs live multi-scene progress visualizer polling canonical job state",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "18_retry_recovery",
+        "current_web": "None",
+        "telegram_bot": "Worker retry loop with fallback provider chain (FAILED_NO_CHARGE=0_XU)",
+        "gap": "Web has no retry action for failed scenes",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "19_finalizer",
+        "current_web": "None",
+        "telegram_bot": "FFmpeg stitch scenes + audio + subtitles -> final MP4",
+        "gap": "Backend stitching completion not observable in Web",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "20_preview",
+        "current_web": "None",
+        "telegram_bot": "Video preview sent to Telegram chat",
+        "gap": "TARGET_DESIGN: HTML5 video player with scene timeline scrubbing in Web",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "21_final_mp4",
+        "current_web": "None",
+        "telegram_bot": "Durable MP4 file saved on VPS storage",
+        "gap": "Web has no direct MP4 streaming endpoint or signed delivery URL",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "22_download",
+        "current_web": "None",
+        "telegram_bot": "Telegram document upload / download",
+        "gap": "Direct authenticated browser download button missing in Web",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "23_delivery",
+        "current_web": "None",
+        "telegram_bot": "Durable delivery receipt recorded in SQLite DB",
+        "gap": "Web delivery receipt contract missing",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "24_billing_state",
+        "current_web": "None",
+        "telegram_bot": "Customer wallet charged ONLY after successful final delivery; 0 Xu charged on failure",
+        "gap": "FINAL_DELIVERY_REQUIRED_BEFORE_CHARGE must be enforced: verify delivery receipt before wallet deduction",
+        "status": "MISSING",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      },
+      {
+        "step": "25_history_duplicate",
+        "current_web": "Plan history only (stored in copyfast_video_studio)",
+        "telegram_bot": "Project cloning, re-run with modified prompt",
+        "gap": "TARGET_DESIGN: One-click 'Duplicate project & modify' in Web Projects hub",
+        "status": "PARTIAL",
+        "tag": "INDEPENDENT_SOURCE_VERIFIED"
+      }
+    ]
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "audit_metadata": {
+    "task": "P0.WEBAPP.V3.AUDIT.FINAL.ROADMAP.EXECUTION.SAFETY.CLOSURE",
+    "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
+    "timestamp_utc": "2026-09-19T10:20:00Z",
+    "base_sha": "8873e10f2279aec0fb312b70388b9073ba763f13",
+    "evidence_tag": "READ_ONLY_RUNTIME_VERIFIED"
+  },
+  "runtime_failure_taxonomies": [
+    {
+      "classification": "DEPLOY_RESTART_NGINX_502",
+      "evidence_level": "READ_ONLY_RUNTIME_VERIFIED",
+      "nature": "Infrastructure Gateway Outage during service restart",
+      "symptom": "HTTP 502 Bad Gateway emitted directly by Nginx reverse proxy",
+      "root_cause": "During auto-deploy CI/CD, 'systemctl restart toanaas-web.service' briefly drops uvicorn listening socket (1-3s). Nginx receives '111: Connection refused' when forwarding traffic to 127.0.0.1:8000.",
+      "affected_routes": [
+        "/wallet/topup (HTML)",
+        "/api/v1/health (during restart window)"
+      ],
+      "remediation_policy": {
+        "zero_downtime_target": "TARGET_DESIGN: Investigate and implement graceful service replacement (graceful reload, socket handoff, multi-worker rolling replacement, upstream overlap, health-aware deployment) evaluated during task P0-B1.",
+        "upstream_retry_safety": "Safe upstream retry is permitted ONLY for idempotent read requests (GET/HEAD with 'error timeout http_502').",
+        "mutation_http_retry_policy": "NO_BLIND_REPLAY. Financial, job creation, and state mutation POST requests must NOT be blindly replayed by Nginx. Blind replaying of POST requests risks duplicating business side effects.",
+        "principle": "HTTP_RETRY != BUSINESS_OPERATION_RETRY. Mutation retry is permitted exclusively through endpoint-level proven idempotency semantics."
+      }
+    },
+    {
+      "classification": "BOT_CORE_ROUTE_MISSING",
+      "evidence_level": "READ_ONLY_RUNTIME_VERIFIED",
+      "nature": "Upstream Bot Bridge Missing Route (Not an Nginx 502)",
+      "symptom": "Browser receives HTTP 200 with guarded error payload or guarded envelope containing CORE_BRIDGE_NOT_AVAILABLE",
+      "root_cause": "Web App copyfast_bridge calls Bot Core at http://127.0.0.1:8080/internal/v1/admin/*. Bot Core bot.py only implements /internal/v1/admin/wallet/credit and /compensate. All other admin read endpoints return upstream HTTP 404, which copyfast_bridge maps to a guarded envelope.",
+      "affected_routes": [
+        "/admin/wallet",
+        "/admin/revenue",
+        "/admin/refunds",
+        "/admin/customers (upstream /internal/v1/admin/users)"
+      ],
+      "remediation": "Cross-repo Bot task P0-B2 (manhtoangreensky-wq/bot) to implement canonical read-only authenticated admin endpoints in bot.py."
+    },
+    {
+      "classification": "ACCOUNT_TELEGRAM_UNLINKED",
+      "evidence_level": "READ_ONLY_RUNTIME_VERIFIED",
+      "nature": "Application State Contract (Not an Nginx 502, Not a Gateway Failure)",
+      "symptom": "Browser receives HTTP 409 Conflict with error code ACCOUNT_TELEGRAM_UNLINKED",
+      "root_cause": "User authenticated via Email/Password has not linked their Telegram ID. Web App requires telegram_id to look up wallet balance in Bot SQLite database.",
+      "affected_routes": [
+        "/api/v1/wallet",
+        "/api/v1/wallet/history"
+      ],
+      "remediation": "Web App UX task P0-B1 (toan-aas-standalone) to render clear Telegram deep-link card and 6-digit OTP pairing UI instead of raw error toast."
+    }
+  ],
+  "endpoints": [
+    {
+      "browser_route": "/wallet/topup",
+      "api_route": "/wallet/topup (HTML)",
+      "http_status": 502,
+      "public_error_code": "NGINX_502_BAD_GATEWAY",
+      "upstream_route": "http://127.0.0.1:8000/wallet/topup",
+      "core_bridge_required": false,
+      "bridge_configured": false,
+      "upstream_http_status": null,
+      "failure_class": "DEPLOY_RESTART_NGINX_502",
+      "evidence_level": "READ_ONLY_RUNTIME_VERIFIED",
+      "root_cause": "Nginx connection refused during service restart window (1-3s). Solved via zero-downtime graceful reload, not blind POST retry."
+    },
+    {
+      "browser_route": "/wallet",
+      "api_route": "/api/v1/wallet",
+      "http_status": 200,
+      "public_error_code": null,
+      "upstream_route": "http://127.0.0.1:8080/internal/v1/wallet",
+      "core_bridge_required": true,
+      "bridge_configured": true,
+      "upstream_http_status": 200,
+      "failure_class": "ACCOUNT_TELEGRAM_UNLINKED",
+      "evidence_level": "READ_ONLY_RUNTIME_VERIFIED",
+      "root_cause": "Returns 200 with balance when linked; returns 409 ACCOUNT_TELEGRAM_UNLINKED when unlinked. Not an Nginx 502."
+    },
+    {
+      "browser_route": "/wallet/history",
+      "api_route": "/api/v1/wallet/history",
+      "http_status": 200,
+      "public_error_code": null,
+      "upstream_route": "http://127.0.0.1:8080/internal/v1/wallet/history",
+      "core_bridge_required": true,
+      "bridge_configured": true,
+      "upstream_http_status": 200,
+      "failure_class": "ACCOUNT_TELEGRAM_UNLINKED",
+      "evidence_level": "READ_ONLY_RUNTIME_VERIFIED",
+      "root_cause": "Returns 200 when linked; returns 409 ACCOUNT_TELEGRAM_UNLINKED when unlinked. Not an Nginx 502."
+    },
+    {
+      "browser_route": "/pricing",
+      "api_route": "/api/v1/pricing",
+      "http_status": 200,
+      "public_error_code": null,
+      "upstream_route": "http://127.0.0.1:8080/internal/v1/pricing",
+      "core_bridge_required": true,
+      "bridge_configured": true,
+      "upstream_http_status": 200,
+      "failure_class": "CANONICAL_BRIDGE_READ",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED",
+      "root_cause": "Source verified invariant: NO_LOCAL_EFFECTIVE_PRICING, NO_CLIENT_DERIVED_PRICING, NO_STATIC_EFFECTIVE_PRICE_FALLBACK. Reads canonical catalog via bridge; renders truthful unavailable/guarded state if upstream authority is unreachable."
+    },
+    {
+      "browser_route": "/packages",
+      "api_route": "/api/v1/packages",
+      "http_status": 200,
+      "public_error_code": null,
+      "upstream_route": "http://127.0.0.1:8080/internal/v1/packages",
+      "core_bridge_required": true,
+      "bridge_configured": true,
+      "upstream_http_status": 200,
+      "failure_class": "CANONICAL_BRIDGE_READ",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED",
+      "root_cause": "Source verified invariant: NO_STATIC_EFFECTIVE_PRICE_FALLBACK. Reads canonical packages via bridge; renders truthful unavailable/guarded state if upstream authority is unreachable."
+    },
+    {
+      "browser_route": "/admin/wallet",
+      "api_route": "/api/v1/admin/wallet",
+      "http_status": 200,
+      "public_error_code": "CORE_BRIDGE_NOT_AVAILABLE",
+      "upstream_route": "http://127.0.0.1:8080/internal/v1/admin/wallet",
+      "core_bridge_required": true,
+      "bridge_configured": true,
+      "upstream_http_status": 404,
+      "failure_class": "BOT_CORE_ROUTE_MISSING",
+      "evidence_level": "READ_ONLY_RUNTIME_VERIFIED",
+      "root_cause": "Bot Core 127.0.0.1:8080 does not implement GET /internal/v1/admin/wallet (upstream 404). Web App returns HTTP 200 guarded envelope with CORE_BRIDGE_NOT_AVAILABLE. Not an Nginx 502."
+    },
+    {
+      "browser_route": "/admin/revenue",
+      "api_route": "/api/v1/admin/revenue",
+      "http_status": 200,
+      "public_error_code": "CORE_BRIDGE_NOT_AVAILABLE",
+      "upstream_route": "http://127.0.0.1:8080/internal/v1/admin/revenue",
+      "core_bridge_required": true,
+      "bridge_configured": true,
+      "upstream_http_status": 404,
+      "failure_class": "BOT_CORE_ROUTE_MISSING",
+      "evidence_level": "READ_ONLY_RUNTIME_VERIFIED",
+      "root_cause": "Bot Core 127.0.0.1:8080 does not implement GET /internal/v1/admin/revenue (upstream 404). Web App returns HTTP 200 guarded envelope with CORE_BRIDGE_NOT_AVAILABLE. Not an Nginx 502."
+    },
+    {
+      "browser_route": "/admin/refunds",
+      "api_route": "/api/v1/admin/refunds",
+      "http_status": 200,
+      "public_error_code": "CORE_BRIDGE_NOT_AVAILABLE",
+      "upstream_route": "http://127.0.0.1:8080/internal/v1/admin/refunds",
+      "core_bridge_required": true,
+      "bridge_configured": true,
+      "upstream_http_status": 404,
+      "failure_class": "BOT_CORE_ROUTE_MISSING",
+      "evidence_level": "READ_ONLY_RUNTIME_VERIFIED",
+      "root_cause": "Bot Core 127.0.0.1:8080 does not implement GET /internal/v1/admin/refunds (upstream 404). Web App returns HTTP 200 guarded envelope with CORE_BRIDGE_NOT_AVAILABLE. Not an Nginx 502."
+    },
+    {
+      "browser_route": "/admin/customers",
+      "api_route": "/api/v1/admin/customers",
+      "http_status": 200,
+      "public_error_code": "CORE_BRIDGE_NOT_AVAILABLE",
+      "upstream_route": "http://127.0.0.1:8080/internal/v1/admin/users",
+      "core_bridge_required": true,
+      "bridge_configured": true,
+      "upstream_http_status": 404,
+      "failure_class": "BOT_CORE_ROUTE_MISSING",
+      "evidence_level": "READ_ONLY_RUNTIME_VERIFIED",
+      "root_cause": "Bot Core 127.0.0.1:8080 does not implement GET /internal/v1/admin/users (upstream 404). Web App returns HTTP 200 guarded envelope with CORE_BRIDGE_NOT_AVAILABLE. Not an Nginx 502."
+    }
+  ]
+}

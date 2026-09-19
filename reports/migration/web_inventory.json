@@ -8091,7 +8091,7 @@
         "copyfast_project_packages.py",
         "copyfast_projects.py"
       ],
-      "occurrences": 965,
+      "occurrences": 968,
       "provider": "PayOS"
     },
     {
@@ -8184,11 +8184,12 @@
     {
       "files": [
         "copyfast_provider_policy.py",
+        "reports/audit/WEBAPP_V3_PRODUCT_GAP_MATRIX.json",
         "static/portal/portal.js",
         "studio/index.html",
         "studio/script.js"
       ],
-      "occurrences": 16,
+      "occurrences": 17,
       "provider": "Kling"
     },
     {
@@ -8234,7 +8235,7 @@
         "copyfast_pages.py",
         "copyfast_partner_crm.py"
       ],
-      "occurrences": 1776,
+      "occurrences": 1793,
       "provider": "Telegram"
     }
   ],
@@ -14793,9 +14794,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 227,
-  "source_files_scanned": 227,
-  "source_fingerprint_sha256": "e17533a4069d3ae6f71ae46ec75e77639fe55b278e7ff933d1cd1c25169e1721",
+  "source_files_discovered": 236,
+  "source_files_scanned": 236,
+  "source_fingerprint_sha256": "a4df2b5e8e0cfe9c8178aed83090edcf07d33191d58aa6383c3d473a575e2462",
   "source_root": "repository-root",
   "ui_path_references": [
     {

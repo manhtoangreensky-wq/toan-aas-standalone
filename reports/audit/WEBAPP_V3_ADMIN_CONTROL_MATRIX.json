@@ -1,0 +1,142 @@
+{
+  "audit_metadata": {
+    "task": "P0.WEBAPP.V3.AUDIT.EXISTING.PRODUCT.REUSE.AUTOPOST.ADDITIVE.FINAL.ALIGNMENT",
+    "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
+    "timestamp_utc": "2026-09-19T11:00:00Z",
+    "governance_rule": "DISTINGUISH_ADMIN_PRODUCT_CONTROL_FROM_OWNER_PRODUCTION_GATE",
+    "autopost_canonical_execution_authority": "manhtoangreensky-wq/bot",
+    "web_second_ledger_permitted": false
+  },
+  "governance_boundary": {
+    "admin_product_control": "Permitted operational actions exposing reviewed business workflows where a canonical adapter exists (e.g. view customer 360, inspect job state, approve manual topup draft with 3-layer proof, reply ticket).",
+    "owner_production_gate": "Strictly restricted actions requiring explicit Owner authorization. Includes raw database mutations, arbitrary balance edits, secret/ENV edits, unbounded systemctl console, and production queue mutations.",
+    "production_queue_mutation_policy": {
+      "telemetry_level": "READ_ONLY_OBSERVABILITY_ALLOWED (Worker heartbeats, outbox depths, and lease states are visible in Admin UI).",
+      "mutation_level": "QUEUE_REDISPATCH_OWNER_GATED=YES. Re-queue, re-dispatch, and task retry mutations are production queue mutations. They require a canonical adapter, authorization check, audit receipt, proven idempotency, and fresh Owner authorization where required by production governance. Raw queue mutation is NOT an unrestricted Admin button."
+    },
+    "autopost_authority_policy": {
+      "canonical_execution_authority": "manhtoangreensky-wq/bot (Bot AutoPost Core)",
+      "web_role": "Control surface and read projection only. Web App must NOT maintain a second authoritative asset handoff registry, publication ledger, scheduler, outbox, platform receipt store, or idempotency store.",
+      "autopost_additive_only": true,
+      "autopost_replaces_existing_workflow": false,
+      "autopost_mandatory_for_producers": false,
+      "result_screen_shortcut": "[ 📢 Dùng video này để đăng bài ] (optional action on final result screen, does not rerender/recharge/replace screen)",
+      "bot_owns": "PublishableAsset canonical resolution, HandoffReceipt, PublicationDraft state, publication, publication_attempt, schedule, outbox, receipt, claim/lease, idempotency, publish-only retry, transport adapters, platform receipt reconciliation.",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    }
+  },
+  "matrix": [
+    {
+      "customer_capability": "Video Generation (Product Video)",
+      "customer_route": "/studio",
+      "customer_entity": "video_plans / video_jobs",
+      "admin_list_route": "/admin/jobs?type=video",
+      "admin_detail_route": "/admin/jobs/{id}",
+      "admin_observability": "View customer brief, scene progress, provider task state, Xu charge decision, final MP4 delivery receipt",
+      "control_boundary": "ADMIN_PRODUCT_CONTROL",
+      "admin_allowed_action": "Cancel stuck job, inspect provider response",
+      "owner_production_gate_restrictions": "QUEUE_REDISPATCH_OWNER_GATED=YES: Task re-dispatch requires canonical adapter and audit receipt. NO direct mutation of raw SQLite video_jobs without audit outbox event.",
+      "audit_source": "web_audit_events + bot job_events",
+      "canonical_authority": "Bot SQLite video_jobs + video_dispatch_outbox",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "customer_capability": "Manual Video Tools (Video Edit)",
+      "customer_route": "/tools/video",
+      "customer_entity": "video_edit_tasks / edited_assets",
+      "admin_list_route": "/admin/jobs?type=video_edit",
+      "admin_detail_route": "/admin/jobs/{id}",
+      "admin_observability": "View input media parameters, operation type (trim/concat/crop/watermark), FFmpeg execution state, output asset SHA",
+      "control_boundary": "ADMIN_PRODUCT_CONTROL",
+      "admin_allowed_action": "Inspect processing logs, cancel stuck local/server FFmpeg task",
+      "owner_production_gate_restrictions": "Zero routing of cheap local FFmpeg tasks through paid AI provider APIs",
+      "audit_source": "web_audit_events",
+      "canonical_authority": "Local FFmpeg runner / Media Vault",
+      "evidence_level": "TARGET_DESIGN"
+    },
+    {
+      "customer_capability": "Voice Synthesis / TTS",
+      "customer_route": "/voice",
+      "customer_entity": "voice_jobs / audio_assets",
+      "admin_list_route": "/admin/jobs?type=voice",
+      "admin_detail_route": "/admin/jobs/{id}",
+      "admin_observability": "View text script, speaker model, character count, audio duration, output MP3 delivery receipt",
+      "control_boundary": "ADMIN_PRODUCT_CONTROL",
+      "admin_allowed_action": "Inspect provider payload, flag content policy violation",
+      "owner_production_gate_restrictions": "NO arbitrary provider API credentials mutation",
+      "audit_source": "web_audit_events",
+      "canonical_authority": "Bot SQLite voice_jobs",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "customer_capability": "Publishing Automation (AutoPost)",
+      "customer_route": "/publishing",
+      "customer_entity": "publications / publication_attempts / publishable_assets",
+      "admin_list_route": "/admin/publishing",
+      "admin_detail_route": "/admin/publishing/{publication_id}",
+      "admin_observability": "View canonical publishable asset projection, scheduled timestamp, platform attempt history, platform receipt ID, retry counter (projected from Bot AutoPost Core)",
+      "control_boundary": "ADMIN_PRODUCT_CONTROL",
+      "admin_allowed_action": "Approve scheduled post draft, request pause, trigger publish-only retry via canonical Bot AutoPost bridge",
+      "owner_production_gate_restrictions": "Publish-only retry must NOT rerun completed producer render. Web never issues direct SQL writes to Bot AutoPost tables; all writes call canonical Bot AutoPost API.",
+      "audit_source": "bot_autopost_audit_events (projected to Web)",
+      "canonical_authority": "manhtoangreensky-wq/bot (Bot AutoPost Program)",
+      "evidence_level": "TARGET_DESIGN"
+    },
+    {
+      "customer_capability": "Manual Topup",
+      "customer_route": "/wallet/topup",
+      "customer_entity": "web_manual_topup_requests",
+      "admin_list_route": "/admin/topups",
+      "admin_detail_route": "/admin/topups?id={id}",
+      "admin_observability": "View payment code, proof reference, submitted VND, 3-layer reconciliation state",
+      "control_boundary": "ADMIN_PRODUCT_CONTROL",
+      "admin_allowed_action": "Draft approve, confirm credit via canonical Bot bridge, reject with mandatory reason",
+      "owner_production_gate_restrictions": "Credit write is idempotent and goes exclusively through POST /internal/v1/admin/wallet/credit; NO raw balance table updates",
+      "audit_source": "web_audit_events + credit_events",
+      "canonical_authority": "Web SQLite web_manual_topup_requests + Bot Core credit_events",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "customer_capability": "Wallet Balance & History",
+      "customer_route": "/wallet",
+      "customer_entity": "users (balance_xu) + credit_events",
+      "admin_list_route": "/admin/wallet",
+      "admin_detail_route": "/admin/wallet/{user_id}",
+      "admin_observability": "View proven balance, lifetime deposit, ledger events count, reconciliation status",
+      "control_boundary": "ADMIN_PRODUCT_CONTROL",
+      "admin_allowed_action": "Audit ledger only. Arbitrary balance modification PROHIBITED in UI (MANUAL_CREDIT_ACTIONS=0)",
+      "owner_production_gate_restrictions": "OWNER_PRODUCTION_GATE: Any non-standard wallet mutation requires Owner authorization and audited script",
+      "audit_source": "credit_events",
+      "canonical_authority": "Bot SQLite credit_events",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "customer_capability": "Support Tickets",
+      "customer_route": "/support/tickets",
+      "customer_entity": "web_support_tickets",
+      "admin_list_route": "/admin/tickets",
+      "admin_detail_route": "/admin/tickets/{id}",
+      "admin_observability": "View customer issue, priority, message thread, related job ID / asset ID",
+      "control_boundary": "ADMIN_PRODUCT_CONTROL",
+      "admin_allowed_action": "Reply, change status (open/in_progress/resolved/closed), assign agent",
+      "owner_production_gate_restrictions": "NO deleting ticket history or audit trails",
+      "audit_source": "web_audit_events",
+      "canonical_authority": "Web SQLite web_support_tickets",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    },
+    {
+      "customer_capability": "Catalog & Pricing",
+      "customer_route": "/pricing",
+      "customer_entity": "pricing_catalog / dynamic_pricing_drafts",
+      "admin_list_route": "/admin/pricing",
+      "admin_detail_route": "/admin/pricing/{sku}",
+      "admin_observability": "Current live prices, margins, draft revisions, publish history",
+      "control_boundary": "ADMIN_PRODUCT_CONTROL",
+      "admin_allowed_action": "Draft price changes, calculate diff, publish to canonical catalog via bridge",
+      "owner_production_gate_restrictions": "NO_LOCAL_EFFECTIVE_PRICING, NO_CLIENT_DERIVED_PRICING, NO_STATIC_EFFECTIVE_PRICE_FALLBACK",
+      "audit_source": "dynamic_pricing_history",
+      "canonical_authority": "Bot Core dynamic_pricing_catalog",
+      "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
+    }
+  ]
+}
