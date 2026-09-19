@@ -1,8 +1,8 @@
 {
   "audit_metadata": {
-    "task": "P0.WEBAPP.V3.AUDIT.AUTOPOST.SINGLE.AUTHORITY.FINAL.ALIGNMENT",
+    "task": "P0.WEBAPP.V3.AUDIT.EXISTING.PRODUCT.REUSE.AUTOPOST.ADDITIVE.FINAL.ALIGNMENT",
     "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
-    "timestamp_utc": "2026-09-19T10:40:00Z",
+    "timestamp_utc": "2026-09-19T11:00:00Z",
     "total_registry_features": 179,
     "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
   },
@@ -20,7 +20,7 @@
       "family_id": "PRODUCT_VIDEO",
       "title": "Video Sản Phẩm AI (Product Video)",
       "route": "/studio",
-      "nature": "CORE_PRODUCER",
+      "nature": "CORE_PRODUCER_INCOMPLETE_REQUIRING_FULL_E2E_BUILD",
       "current_features_merged": [
         "video_factory_workflow",
         "story_video_plan",
@@ -36,14 +36,15 @@
         "script_to_screen_planner",
         "long_form_roadmap"
       ],
-      "disposition": "CONSOLIDATE_INTO_ONE_END_TO_END_STUDIO",
+      "disposition": "ONLY_MAJOR_VIDEO_PRODUCT_STILL_REQUIRING_FULL_E2E_COMPLETION",
+      "current_web_truth": "PLANNING_ONLY (39 routes, 10215 lines, no render dispatch, no final MP4 delivery)",
       "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
     },
     {
       "family_id": "VOICE",
       "title": "Giọng Nói & Thuyết Minh AI (Voice)",
       "route": "/voice",
-      "nature": "CORE_PRODUCER",
+      "nature": "EXISTING_COMPLETED_ENGINE_INTEGRATION",
       "current_features_merged": [
         "voice_studio",
         "voice_direction_composer",
@@ -51,14 +52,16 @@
         "voice_clone",
         "voice_saved_tts"
       ],
-      "disposition": "INDEPENDENT_PRODUCT_FAMILY_WORKSTREAM",
+      "disposition": "REUSE_EXISTING_CANONICAL_VOICE_ENGINE_NO_REBUILD",
+      "canonical_engine_authority": "Bot SQLite voice_jobs + existing TTS engine",
+      "web_task_role": "authoring metadata / scripts / direction UX, progress polling, audio player, MP3/WAV download",
       "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
     },
     {
       "family_id": "MUSIC_AND_SFX",
       "title": "Âm Nhạc & Âm Thanh Hiệu Ứng (Music & SFX)",
       "route": "/music",
-      "nature": "CORE_PRODUCER",
+      "nature": "EXISTING_COMPLETED_ENGINE_INTEGRATION",
       "current_features_merged": [
         "audio_hub",
         "music_prompt_composer",
@@ -66,14 +69,16 @@
         "sfx_cue_sheet",
         "audio_stems"
       ],
-      "disposition": "INDEPENDENT_PRODUCT_FAMILY_WORKSTREAM_SEPARATE_FROM_SUBDUB",
+      "disposition": "REUSE_EXISTING_CANONICAL_MUSIC_ENGINE_NO_REBUILD",
+      "canonical_engine_authority": "Bot existing Music/SFX engine",
+      "web_task_role": "briefing UX, library / media selection, progress/status UI, preview/download",
       "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
     },
     {
       "family_id": "SUBTITLE_DUBBING_TRANSLATION",
       "title": "Phụ Đề & Lồng Tiếng Đa Ngữ (SubDub & Translation)",
       "route": "/subdub",
-      "nature": "POST_PROCESSOR_AND_STANDALONE",
+      "nature": "EXISTING_COMPLETED_ENGINE_INTEGRATION",
       "current_features_merged": [
         "subtitle_studio",
         "subtitle_asset_operations",
@@ -81,14 +86,16 @@
         "translation_presets",
         "multilingual_dubbing"
       ],
-      "disposition": "INDEPENDENT_PRODUCT_FAMILY_WORKSTREAM_SEPARATE_FROM_MUSIC",
+      "disposition": "REUSE_EXISTING_CANONICAL_SUBDUB_ENGINE_NO_REBUILD",
+      "canonical_engine_authority": "Bot canonical SubDub processing (provider/local execution, terminal artifact, delivery/job truth)",
+      "web_task_role": "upload/select media UX, mode selection, language/voice/style config, transcript editor, progress display, subtitle/video preview, final result controls",
       "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
     },
     {
       "family_id": "VIDEO_EDIT",
       "title": "Công Cụ Video Thủ Công & Cắt Ghép (Manual Video Tools)",
       "route": "/tools/video",
-      "nature": "POST_PROCESSOR_AND_UTILITY",
+      "nature": "DUAL_MODE_EDIT_INTEGRATION",
       "current_features_merged": [
         "video_trim",
         "video_merge",
@@ -97,7 +104,12 @@
         "speed_ramping",
         "video_finishing"
       ],
-      "disposition": "INDEPENDENT_PRODUCT_FAMILY_WORKSTREAM",
+      "disposition": "REUSE_WEB_SAFE_LOCAL_OPERATIONS_AND_EXISTING_BOT_EDIT_ENGINE_NO_REBUILD",
+      "operational_split": {
+        "LOCAL_WEB_SAFE_OPERATION": "use current Web FFmpeg tooling for fast local cuts/crops/compress",
+        "CANONICAL_VIDEO_EDIT_JOB": "bridge to existing Bot Video Edit engine for background re-encode / batch stitch jobs"
+      },
+      "web_task_role": "orchestrate both fast local Web-safe FFmpeg tools and canonical Bot Video Edit engine jobs",
       "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
     },
     {
@@ -155,11 +167,26 @@
           "second idempotency store"
         ],
         "cross_repo_contract": "Web -> authenticated internal AutoPost API/bridge -> Bot AutoPost Core -> SQLite Outbox -> platform adapter",
-        "producer_independence": [
-          "VIDEO_PRODUCT (produces artifact independently)",
-          "VIDEO_EDIT (produces artifact independently)",
-          "SUBDUB (produces artifact independently)",
-          "EXISTING_FINISHED_VIDEO (produces artifact independently)"
+        "autopost_additive_only": true,
+        "autopost_replaces_existing_workflow": false,
+        "autopost_mandatory_for_producers": false,
+        "producers_work_without_autopost": [
+          "VOICE",
+          "MUSIC_AND_SFX",
+          "SUBDUB",
+          "VIDEO_EDIT",
+          "PRODUCT_VIDEO"
+        ],
+        "result_screen_shortcut": "[ 📢 Dùng video này để đăng bài ] (optional action on final result screen, does not rerender/recharge/replace screen)",
+        "eligible_video_handoff_sources": [
+          "VIDEO_PRODUCT (target after product video completion)",
+          "VIDEO_EDIT (direct handoff supported)",
+          "SUBDUB (direct handoff supported)",
+          "EXISTING_FINISHED_VIDEO (direct handoff supported)"
+        ],
+        "independent_audio_producers": [
+          "VOICE (audio producer, not forced into video handoff contract)",
+          "MUSIC_AND_SFX (audio producer, not forced into video handoff contract)"
         ],
         "failure_retry_rule": "Publish failure -> retry publish step only (never rerun completed upstream producers)"
       },

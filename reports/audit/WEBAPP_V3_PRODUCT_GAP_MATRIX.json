@@ -1,9 +1,35 @@
 {
   "audit_metadata": {
-    "task": "P0.WEBAPP.V3.AUDIT.AUTOPOST.SINGLE.AUTHORITY.FINAL.ALIGNMENT",
+    "task": "P0.WEBAPP.V3.AUDIT.EXISTING.PRODUCT.REUSE.AUTOPOST.ADDITIVE.FINAL.ALIGNMENT",
     "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
-    "timestamp_utc": "2026-09-19T10:40:00Z",
+    "timestamp_utc": "2026-09-19T11:00:00Z",
     "base_sha": "8873e10f2279aec0fb312b70388b9073ba763f13",
+    "product_completion_classification": {
+      "voice_engine": "EXISTING_CANONICAL_CAPABILITY",
+      "music_engine": "EXISTING_CANONICAL_CAPABILITY",
+      "subdub_engine": "EXISTING_CANONICAL_CAPABILITY",
+      "video_edit_engine": "EXISTING_CANONICAL_CAPABILITY",
+      "product_video_web_e2e": "INCOMPLETE",
+      "voice_rebuild_required": false,
+      "music_rebuild_required": false,
+      "subdub_rebuild_required": false,
+      "video_edit_rebuild_required": false,
+      "voice_web_integration_task": true,
+      "music_web_integration_task": true,
+      "subdub_web_integration_task": true,
+      "video_edit_web_integration_task": true,
+      "product_video_web_e2e_incomplete": true,
+      "autopost_additive_only": true,
+      "autopost_replaces_existing_workflow": false,
+      "autopost_mandatory_for_producers": false,
+      "current_web_surface_truth": {
+        "voice": "authoring metadata / scripts / direction only; not real TTS execution",
+        "music": "library / briefing / deterministic directions only; not real music generation",
+        "subdub": "subtitle/transcript editor and direction metadata only; not real ASR / translation / dubbing execution",
+        "video_edit": "local Web-safe FFmpeg tools + bridge to existing Bot Video Edit engine for canonical jobs",
+        "product_video": "planning-only (39 routes, 10215 lines, no render dispatch, no final MP4 delivery)"
+      }
+    },
     "copyfast_video_studio_source_facts": {
       "file": "copyfast_video_studio.py",
       "base_sha": "8873e10f2279aec0fb312b70388b9073ba763f13",

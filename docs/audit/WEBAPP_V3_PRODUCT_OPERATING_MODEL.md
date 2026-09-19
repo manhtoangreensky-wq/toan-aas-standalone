@@ -1,5 +1,5 @@
 # Web App V3 Product Operating Model & Architectural Truth
-> **Task**: `P0.WEBAPP.V3.AUDIT.AUTOPOST.SINGLE.AUTHORITY.FINAL.ALIGNMENT`
+> **Task**: `P0.WEBAPP.V3.AUDIT.EXISTING.PRODUCT.REUSE.AUTOPOST.ADDITIVE.FINAL.ALIGNMENT`
 > **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
 > **Repository**: `manhtoangreensky-wq/toan-aas-standalone`
 > **Authoritative Base SHA**: `8873e10f2279aec0fb312b70388b9073ba763f13`
@@ -50,6 +50,14 @@ The audit establishes the following empirical and architectural truths:
    - Bot Core owns the durable core: `PublishableAsset` canonical resolution, `HandoffReceipt`, `PublicationDraft` state, `publication`, `publication_attempt`, `schedule`, `outbox`, `receipt`, `claim/lease`, `idempotency`, `publish-only retry`, transport adapters, and platform receipt reconciliation.
    - Web App acts exclusively as the control surface and read projection, preserving its UX strengths (multi-select, batch actions, parallel status views, side-by-side preview, clip grids, calendar view, multi-channel view, admin monitoring).
    - Cross-repo contract: `Web -> authenticated internal AutoPost API/bridge -> Bot AutoPost Core -> SQLite Outbox -> platform adapter`.
+8. **Owner Product Truth: Existing Engine Reuse & Additive AutoPost (`INDEPENDENT_SOURCE_VERIFIED`)**:
+   - `VOICE_ENGINE = EXISTING_CANONICAL_CAPABILITY` (Rebuild required: NO; Web integrates authoring UX & bridge).
+   - `MUSIC_ENGINE = EXISTING_CANONICAL_CAPABILITY` (Rebuild required: NO; Web integrates briefing & preview UX).
+   - `SUBDUB_ENGINE = EXISTING_CANONICAL_CAPABILITY` (Rebuild required: NO; Web integrates transcript editor & preview).
+   - `VIDEO_EDIT_ENGINE = EXISTING_CANONICAL_CAPABILITY` (Rebuild required: NO; Dual-mode: Web-safe local FFmpeg + Bot edit engine).
+   - `PRODUCT_VIDEO_WEB_E2E = INCOMPLETE` (`ONLY_MAJOR_VIDEO_PRODUCT_STILL_REQUIRING_FULL_E2E_COMPLETION`).
+   - Current Web modules for Voice, Music, SubDub are authoring metadata and script helpers only; completed execution engines remain in Bot Core. Web work is `INTEGRATE, EXPOSE, VERIFY, POLISH`, not `REBUILD_ENGINE`.
+   - `AUTOPOST_ADDITIVE_ONLY = YES`: AutoPost is strictly additive and optional. All producers work independently without AutoPost. Removing or disabling AutoPost leaves existing producer workflows 100% operational.
 
 ---
 
@@ -70,13 +78,20 @@ Web App V3 groups all customer capabilities into **10 Distinct, Independent Prod
 [10. ACCOUNT_WALLET_COMMERCE]     -> PayOS Topup, Balance Ledger, Telegram Pairing
 ```
 
-### Independence & Non-Blocking Architecture (`TARGET_DESIGN`)
-- **Voice Independence**: Voice synthesis does NOT depend on Product Video.
-- **Music & SFX Independence**: Strictly separated from SubDub and Product Video.
-- **SubDub Independence**: Implementable independently for uploaded/existing media (`SUBDUB_PRODUCT_IMPLEMENTATION != PRODUCT_VIDEO_DEPENDENT`). Integrates with Video Product and Video Edit later via Common Artifact Handoff.
-- **Video Edit Independence**: Independent Manual Video Tools family. Fast local/server FFmpeg utility; never routes cheap local FFmpeg work through expensive paid AI providers.
+### Independence, Engine Reuse & Non-Blocking Architecture (`TARGET_DESIGN`)
+- **Voice Engine Reuse**: `VOICE = EXISTING_COMPLETED_PRODUCT_TO_REUSE`. Web App reuses the existing canonical Voice capability (`Bot SQLite voice_jobs + existing TTS engine`). Web provides authoring metadata, script helpers, and direction UX; it does NOT create a second Voice provider lifecycle in Web (`VOICE_REBUILD_REQUIRED=NO`).
+- **Music & SFX Engine Reuse**: `MUSIC = EXISTING_COMPLETED_PRODUCT_TO_REUSE`. Web App reuses the existing canonical Music/SFX engine. Web owns briefing UX, media selection, progress/status UI, and preview/download (`MUSIC_REBUILD_REQUIRED=NO`). Canonical execution stays with existing Bot engine; no duplicate provider submission or billing authority.
+- **SubDub Engine Reuse**: `SUBDUB = EXISTING_COMPLETED_PRODUCT_TO_REUSE`. Web App reuses existing canonical SubDub processing. Web owns upload/select media UX, mode selection, language/voice/style config, transcript editor, progress display, subtitle/video preview, and final result controls (`SUBDUB_REBUILD_REQUIRED=NO`). Bot owns canonical processing, provider/local execution, terminal artifact, and delivery/job truth.
+- **Video Edit Dual-Mode Reuse**: `VIDEO_EDIT = EXISTING_COMPLETED_PRODUCT_TO_REUSE`. Reuses both existing Web-safe local FFmpeg tooling (`LOCAL_WEB_SAFE_OPERATION`) and existing canonical Bot Video Edit engine (`CANONICAL_VIDEO_EDIT_JOB`) for heavy background jobs. One unified customer-facing Video Edit product orchestrates both (`VIDEO_EDIT_REBUILD_REQUIRED=NO`).
+- **Product Video E2E Completion Required**: `PRODUCT_VIDEO = ONLY_MAJOR_VIDEO_PRODUCT_STILL_REQUIRING_FULL_E2E_COMPLETION`. Unlike Voice, Music, SubDub, and Video Edit, Product Video in Web is strictly planning-only (39 routes, 10,215 lines, zero job creation, zero worker dispatch, zero MP4 outputs). Task P0-D bridges canonical SQLite `video_jobs` outbox lease/claim and post-delivery billing contracts (`PRODUCT_VIDEO_WEB_E2E_INCOMPLETE=YES`).
 - **Free Tools Separation**: Free Utilities is a distinct lead-magnet family, not merged into Video Edit.
-- **AutoPost Authority & Independence**: AutoPost's single canonical execution authority is Bot Core (`AUTOPOST_CANONICAL_EXECUTION_AUTHORITY = manhtoangreensky-wq/bot`). Web App acts exclusively as a rich control surface and read projection, never maintaining a duplicate execution outbox or scheduler. AutoPost depends downstream on the `PUBLISHABLE_ASSET_HANDOFF_FOUNDATION`, NOT on any single producer. It consumes finished output from any producer through the common contract.
+- **AutoPost is Additive Only**: `AUTOPOST_ADDITIVE_ONLY=YES`. AutoPost is strictly an additional capability downstream of media generation. AutoPost must **NEVER** replace or become mandatory for any producer:
+  - Voice works 100% without AutoPost.
+  - Music works 100% without AutoPost.
+  - SubDub works 100% without AutoPost.
+  - Video Edit works 100% without AutoPost.
+  - Product Video works 100% without AutoPost.
+  - Disabling or removing AutoPost leaves all producer generation, preview, download, and storage workflows fully operational (`AUTOPOST_REPLACES_EXISTING_WORKFLOW=NO`, `AUTOPOST_MANDATORY_FOR_PRODUCERS=NO`).
 
 ---
 
@@ -210,10 +225,43 @@ The Web App acts strictly as a **control surface and read projection**. Web App 
 +-------------------------------------------------------------------------+
 ```
 
-### 5.2 Producer Independence & Common Publishable Artifact Contract (`TARGET_DESIGN`)
+### 5.2 Additive-Only AutoPost Contract & Result Screen Shortcut (`TARGET_DESIGN`)
+
+```
+AUTOPOST_ADDITIVE_ONLY = YES
+AUTOPOST_REPLACES_EXISTING_WORKFLOW = NO
+AUTOPOST_MANDATORY_FOR_PRODUCERS = NO
+```
+
+AutoPost is strictly an **additive optional distribution feature**. It never replaces, intercepts, or mandates changes to core producer execution:
+1. **Producer Self-Sufficiency**:
+   - Voice works 100% without AutoPost.
+   - Music & SFX works 100% without AutoPost.
+   - SubDub works 100% without AutoPost.
+   - Video Edit works 100% without AutoPost.
+   - Product Video works 100% without AutoPost.
+   - Removing, disabling, or taking AutoPost offline leaves all producer workflows (prompting, preview, generation, downloads, history, billing receipts) completely intact and functional.
+2. **Result Screen Shortcut**:
+   - On the final result screen of every eligible video producer (`Product Video`, `Video Edit`, `SubDub`, `Existing Finished Video`), an optional secondary action is presented:
+     ```
+     [ 📢 Dùng video này để đăng bài ]
+     ```
+   - Clicking this shortcut opens a pre-filled AutoPost handoff draft modal or routes to `/publishing` with the `asset_id` populated.
+   - **Non-Destructive Invariants**:
+     - `NO_RERENDER`: Never triggers a new video render.
+     - `NO_REPROCESS`: Never invokes FFmpeg or video re-encoding.
+     - `NO_REDUB`: Never re-runs transcription or audio dubbing.
+     - `NO_RECHARGE`: Never deducts additional wallet Xu for opening or preparing the draft.
+     - `NO_SCREEN_REPLACEMENT`: The original producer result screen remains open, fully functional, and accessible with its native download, playback, and version history buttons intact.
+   - `AUTOPOST_ACTION = ADDITIONAL_OPTION`, strictly NOT `NEW_MANDATORY_TERMINAL_STATE`.
+3. **Producer Separation (Video vs Audio)**:
+   - Primary video handoffs to AutoPost are: `VIDEO_PRODUCT`, `VIDEO_EDIT`, `SUBDUB`, `EXISTING_FINISHED_VIDEO`.
+   - `VOICE` and `MUSIC_AND_SFX` are audio products; they are **NOT** forced into the video handoff contract. They remain independent audio producers that export MP3/WAV, usable standalone or within future composition workflows.
+
+### 5.3 Producer Independence & Common Publishable Artifact Contract (`TARGET_DESIGN`)
 
 All video generation and editing tools produce media independently and expose finished artifacts to Bot handoff:
-- **`VIDEO_PRODUCT`**: Produces multi-scene rendered MP4 $\rightarrow$ hands off artifact.
+- **`VIDEO_PRODUCT`**: Produces multi-scene rendered MP4 $\rightarrow$ hands off artifact (Target after Product Video completion).
 - **`VIDEO_EDIT`**: Produces trimmed, cropped, or merged MP4 $\rightarrow$ hands off artifact.
 - **`SUBDUB`**: Produces subtitled or multilingual dubbed MP4 $\rightarrow$ hands off artifact.
 - **`EXISTING_FINISHED_VIDEO`**: Vault or uploaded MP4 $\rightarrow$ hands off artifact.
@@ -241,7 +289,7 @@ Any producer handing off media to AutoPost must conform to this immutable contra
 }
 ```
 
-### 5.3 Multi-Step Processing Model (Optional DAG/Recipe) & Anti-Rerun Rule (`DESIGN_PROPOSAL`)
+### 5.4 Multi-Step Processing Model (Optional DAG/Recipe) & Anti-Rerun Rule (`DESIGN_PROPOSAL`)
 
 The publishing workflow supports an optional pipeline recipe. Chaining is strictly optional; there is no mandatory Product $\rightarrow$ Edit $\rightarrow$ SubDub pipeline:
 
@@ -260,7 +308,7 @@ flowchart LR
 > [!IMPORTANT]
 > **Anti-Rerun Rule (Publish-Only Retry)**: Retrying a failed publication attempt must **NEVER rerun a completed upstream producer**. If a YouTube Shorts upload fails with a network timeout, only the publication attempt is retried through the Bot AutoPost retry API; the upstream video render remains untouched and is not re-billed.
 
-### 5.4 Durable Publishing Core & State Machine (`TARGET_DESIGN`)
+### 5.5 Durable Publishing Core & State Machine (`TARGET_DESIGN`)
 Bot Core Entities: `publication`, `publication_attempt`, `schedule`, `outbox`, `receipt`.
 
 Lifecycle States in Bot Core:
@@ -284,7 +332,7 @@ Lifecycle States in Bot Core:
 - **Invariant**: `HTTP_200 != PUBLISHED`. A post is only considered published when a verified platform receipt identifier is bound and recorded by Bot Core.
 - **Idempotency**: Every publication attempt carries a unique idempotency key based on `(publication_id, channel_id, scheduled_time)`.
 
-### 5.5 Video Split / Batch Contract (`DESIGN_PROPOSAL`)
+### 5.6 Video Split / Batch Contract (`DESIGN_PROPOSAL`)
 For workflows converting one long master video into multiple short social posts:
 - Structure: **Parent Batch** managing $N$ **Child Publication Units**.
 - Each child independently owns: clip asset, aspect preview, caption, approval status, target channel, scheduled slot, platform receipt, and retry state.

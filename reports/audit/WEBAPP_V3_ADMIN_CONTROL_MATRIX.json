@@ -1,8 +1,8 @@
 {
   "audit_metadata": {
-    "task": "P0.WEBAPP.V3.AUDIT.AUTOPOST.SINGLE.AUTHORITY.FINAL.ALIGNMENT",
+    "task": "P0.WEBAPP.V3.AUDIT.EXISTING.PRODUCT.REUSE.AUTOPOST.ADDITIVE.FINAL.ALIGNMENT",
     "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
-    "timestamp_utc": "2026-09-19T10:40:00Z",
+    "timestamp_utc": "2026-09-19T11:00:00Z",
     "governance_rule": "DISTINGUISH_ADMIN_PRODUCT_CONTROL_FROM_OWNER_PRODUCTION_GATE",
     "autopost_canonical_execution_authority": "manhtoangreensky-wq/bot",
     "web_second_ledger_permitted": false
@@ -17,6 +17,10 @@
     "autopost_authority_policy": {
       "canonical_execution_authority": "manhtoangreensky-wq/bot (Bot AutoPost Core)",
       "web_role": "Control surface and read projection only. Web App must NOT maintain a second authoritative asset handoff registry, publication ledger, scheduler, outbox, platform receipt store, or idempotency store.",
+      "autopost_additive_only": true,
+      "autopost_replaces_existing_workflow": false,
+      "autopost_mandatory_for_producers": false,
+      "result_screen_shortcut": "[ 📢 Dùng video này để đăng bài ] (optional action on final result screen, does not rerender/recharge/replace screen)",
       "bot_owns": "PublishableAsset canonical resolution, HandoffReceipt, PublicationDraft state, publication, publication_attempt, schedule, outbox, receipt, claim/lease, idempotency, publish-only retry, transport adapters, platform receipt reconciliation.",
       "evidence_level": "INDEPENDENT_SOURCE_VERIFIED"
     }

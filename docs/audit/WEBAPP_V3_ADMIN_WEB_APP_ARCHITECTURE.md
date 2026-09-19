@@ -1,5 +1,5 @@
 # Web App V3 Admin Architecture & Operating Model
-> **Task**: `P0.WEBAPP.V3.AUDIT.AUTOPOST.SINGLE.AUTHORITY.FINAL.ALIGNMENT`
+> **Task**: `P0.WEBAPP.V3.AUDIT.EXISTING.PRODUCT.REUSE.AUTOPOST.ADDITIVE.FINAL.ALIGNMENT`
 > **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
 > **Repository**: `manhtoangreensky-wq/toan-aas-standalone`
 > **Authoritative Base SHA**: `8873e10f2279aec0fb312b70388b9073ba763f13`

@@ -1,5 +1,5 @@
 # Web App V3 Rebased Master Plan & Transition Roadmap
-> **Task**: `P0.WEBAPP.V3.AUDIT.AUTOPOST.SINGLE.AUTHORITY.FINAL.ALIGNMENT`
+> **Task**: `P0.WEBAPP.V3.AUDIT.EXISTING.PRODUCT.REUSE.AUTOPOST.ADDITIVE.FINAL.ALIGNMENT`
 > **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
 > **Repository**: `manhtoangreensky-wq/toan-aas-standalone`
 > **Authoritative Base SHA**: `8873e10f2279aec0fb312b70388b9073ba763f13`
@@ -16,13 +16,19 @@ The previous linear sequence (`V2-08` through `V2-15`) suffered from structural 
 3. **Canonical Worker Architecture**: Current production uses **SQLite `video_jobs` outbox lease/claim** via `services/remote_worker_api.py` and `remote_worker.py` on systemd. Celery and Redis Queue are not used (`INDEPENDENT_SOURCE_VERIFIED`).
 4. **Billing Invariant**: Product Video charges the customer wallet **ONLY after successful final delivery** (`FINAL_DELIVERY_REQUIRED_BEFORE_CHARGE=YES`). Pre-render debit models are unverified and prohibited (`INDEPENDENT_SOURCE_VERIFIED`).
 5. **Nginx Upstream Retry Safety**: Blind replay of POST requests risks duplicating financial transactions or job creation. Safe upstream retry is permitted ONLY for idempotent reads (`error timeout http_502` for GET/HEAD). `MUTATION_HTTP_RETRY_POLICY=NO_BLIND_REPLAY`. Principle: `HTTP_RETRY != BUSINESS_OPERATION_RETRY`.
-6. **Product Family Independence & Single AutoPost Authority**:
-   - `VOICE` does not depend on Product Video.
-   - `MUSIC_AND_SFX` does not depend on Product Video or SubDub.
-   - `SUBDUB` is independently implementable for uploaded/existing media.
-   - `VIDEO_EDIT` (Manual Video Tools) is an independent utility; cheap FFmpeg work is never routed through paid AI providers.
-   - `FREE_TOOLS` is a distinct lead-magnet family.
-   - `PUBLISHING_AUTOMATION` (AutoPost) has a **Single Canonical Execution Authority**: `manhtoangreensky-wq/bot`. Web App acts strictly as a control surface and read projection (no duplicate ledger, scheduler, or outbox in Web).
+6. **Owner Product Truth & Canonical Engine Reuse**:
+   - `VOICE_ENGINE = EXISTING_CANONICAL_CAPABILITY` (`EXISTING_COMPLETED_PRODUCT_TO_REUSE`, `VOICE_REBUILD_REQUIRED=NO`).
+   - `MUSIC_ENGINE = EXISTING_CANONICAL_CAPABILITY` (`EXISTING_COMPLETED_PRODUCT_TO_REUSE`, `MUSIC_REBUILD_REQUIRED=NO`).
+   - `SUBDUB_ENGINE = EXISTING_CANONICAL_CAPABILITY` (`EXISTING_COMPLETED_PRODUCT_TO_REUSE`, `SUBDUB_REBUILD_REQUIRED=NO`).
+   - `VIDEO_EDIT_ENGINE = EXISTING_CANONICAL_CAPABILITY` (`EXISTING_COMPLETED_PRODUCT_TO_REUSE`, `VIDEO_EDIT_REBUILD_REQUIRED=NO`).
+   - `PRODUCT_VIDEO_WEB_E2E = INCOMPLETE` (`ONLY_MAJOR_VIDEO_PRODUCT_STILL_REQUIRING_FULL_E2E_COMPLETION`).
+   - For existing completed Bot capabilities, Web roadmap work is strictly `INTEGRATE`, `EXPOSE`, `VERIFY`, `POLISH`, not `REBUILD_ENGINE`. Web modules are customer authoring and metadata surfaces, not duplicate backend engines.
+7. **AutoPost Additive Truth**:
+   - `AUTOPOST_ADDITIVE_ONLY = YES`, `AUTOPOST_REPLACES_EXISTING_WORKFLOW = NO`, `AUTOPOST_MANDATORY_FOR_PRODUCERS = NO`.
+   - All producers (Voice, Music, SubDub, Video Edit, Product Video) work 100% without AutoPost.
+   - Result Screen Shortcut: optional `[ 📢 Dùng video này để đăng bài ]` on final video screens (Product Video, Video Edit, SubDub, Existing Video). Does NOT rerender, reprocess, redub, re-edit, recharge, or replace original result screen.
+   - Primary video handoff sources: `VIDEO_PRODUCT`, `VIDEO_EDIT`, `SUBDUB`, `EXISTING_FINISHED_VIDEO`. Voice/Music remain independent audio products, not forced into video handoff contract.
+   - AutoPost has a **Single Canonical Execution Authority**: `manhtoangreensky-wq/bot`. Web App acts strictly as a control surface and read projection (no duplicate ledger, scheduler, or outbox in Web).
 
 This master plan formally retires the old V2 sequence and establishes an evidence-driven, product-centric V3 roadmap organized into **15 Bounded Implementation Tasks**.
 
@@ -34,9 +40,9 @@ This master plan formally retires the old V2 sequence and establishes an evidenc
 | :--- | :--- | :--- | :--- | :--- |
 | **V2-08** | Admin Customer Detail & Lifetime Analytics Workspace | **SPLIT & MOVED** | `P0-E: Admin Customer 360` & `P0-B1/B2: Runtime Connectivity` | Customer 360 profile, CRM leads, and support belong in unified Customer Workspace; financial mutations require canonical bridge adapter. |
 | **V2-09** | Admin System Health, Log Explorer & Audit Telemetry Hub | **MOVED & CONSOLIDATED** | `P0-F: Admin Worker Fleet & System Telemetry` | Monitor live SQLite outbox lease/claim and systemd worker processes on VPS (`tg.toanaas.vn`). |
-| **V2-10** | Customer Unified Media Studio (Voice, Video, Music, Subtitle) | **REPLACED & DECOMPOSED** | `P0-D: Video Studio`, `P1-A: Voice`, `P1-B: Music & SFX`, `P1-C: SubDub`, `P1-D: Video Edit` | Grouping 5 distinct product lines into one monolithic page violates family separation. Decomposed into independent product engines. |
+| **V2-10** | Customer Unified Media Studio (Voice, Video, Music, Subtitle) | **REPLACED & DECOMPOSED** | `P0-D: Video Studio`, `P1-A: Voice`, `P1-B: Music & SFX`, `P1-C: SubDub`, `P1-D: Video Edit` | Grouping 5 distinct product lines into one monolithic page violates family separation. Decomposed into independent product engines; Voice, Music, SubDub, and Video Edit reuse existing canonical Bot engines via bridge integration; Product Video is the only video product requiring full E2E build. |
 | **V2-11** | Customer Multi-Scene Video Production Workflow | **MERGED** | `P0-D: End-to-End Product Video Studio` | Multi-scene storyboard composition is integral to the Video Studio pipeline, not a detached workflow. |
-| **V2-12** | Customer Publishing, Webhook & Distribution Hub | **REPLACED & UPGRADED** | `P1-E: AutoPost Handoff Bridge Projection` & `P1-F: AutoPost Publishing Control Surface` | Upgraded to AutoPost dual-layer model: Web provides Handoff Bridge projection and rich Publishing Control Surface; canonical execution outbox/scheduler lives in Bot Core. |
+| **V2-12** | Customer Publishing, Webhook & Distribution Hub | **REPLACED & UPGRADED** | `P1-E: AutoPost Handoff Bridge Projection` & `P1-F: AutoPost Publishing Control Surface` | Upgraded to AutoPost dual-layer model: Web provides Handoff Bridge projection and rich Publishing Control Surface; canonical execution outbox/scheduler lives in Bot Core. AutoPost is additive only. |
 | **V2-13** | Admin Catalog & Pricing Governance Center | **REPLACED** | `P0-C: Customer IA & 10 Product Catalog` | Replaced flat 135-feature catalog with governance over the 10 distinct customer product families. |
 | **V2-14** | Admin Live Delivery Control & Worker Fleet Orchestrator | **MERGED** | `P0-F: Admin Worker Fleet & System Telemetry` | Merged into single operations control center. |
 | **V2-15** | Final Quality, Performance & Production Hardening | **KEPT & EXPANDED** | `P2-A: Locale Purity & E2E Production Hardening` | Retained as final end-to-end verification gate across Web and cross-repo integration. |
@@ -66,10 +72,10 @@ flowchart TD
     end
 
     subgraph Phase 1: Independent Product Engines & Distribution Core (P1)
-        P1A["P1-A: AI Voice & Speech Synthesis Studio"]
-        P1B["P1-B: Music & Foley SFX Studio"]
-        P1C["P1-C: SubDub & Multilingual Translation Suite"]
-        P1D["P1-D: Video Edit & Manual Fast Video Tools"]
+        P1A["P1-A: AI Voice Existing Engine Integration"]
+        P1B["P1-B: Music & SFX Existing Engine Integration"]
+        P1C["P1-C: SubDub Existing Engine Integration"]
+        P1D["P1-D: Video Edit Dual-Mode & FFmpeg Tools"]
         P1E["P1-E: AutoPost Handoff Bridge Projection"]
         P1F["P1-F: AutoPost Publishing Control Surface"]
         P1G["P1-G: Internal Admin Mobile App (5-Tab Web)"]
@@ -171,46 +177,49 @@ flowchart TD
 
 ### 3.2 Phase 1: Independent Product Engines & Distribution Core (7 Tasks)
 
-#### [P1-A] AI Voice & Speech Synthesis Studio
-- **TASK_ID**: `P1.WEBAPP.V3-G.VOICE.AUDIO.STUDIO`
+#### [P1-A] AI Voice Existing Engine Integration
+- **TASK_ID**: `P1.WEBAPP.V3-G.VOICE.EXISTING.ENGINE.INTEGRATION`
 - **REPOSITORY**: `toan-aas-standalone`
-- **PURPOSE**: Independent Voice Studio: speaker selection library, emotional inflection controls, audio preview player, waveform visualizer, MP3/WAV downloads.
+- **PURPOSE**: Web customer UX (speaker library, pitch/speed/emotion controls, text/SSML script authoring, audio preview player, waveform visualizer, MP3/WAV downloads) connects via authenticated bridge to existing canonical Voice engine (`voice_jobs` + TTS in Bot Core). Preserves Web authoring tools while delegating execution truth. Does NOT implement a second Voice provider lifecycle, execution queue, or billing ledger in Web.
 - **DEPENDENCIES**: `P0-A` (Strictly independent of Product Video).
-- **SIDE_EFFECT_CLASS**: `AUDIO_SYNTHESIS_PRODUCER`
-- **OWNER_GATE**: Standard PR review.
-- **PASS_GATE**: Real-time voice synthesis and audio playback.
+- **SIDE_EFFECT_CLASS**: `AUTHENTICATED_BRIDGE_CONSUMER`
+- **OWNER_GATE**: Standard PR review; zero duplicate provider credentials or billing ledger in Web.
+- **PASS_GATE**: Customer can compose voice script, trigger synthesis via Bot Voice engine, and preview/download audio in Web App.
 
-#### [P1-B] Music & Foley Sound Effects (SFX) Studio
-- **TASK_ID**: `P1.WEBAPP.V3-H.MUSIC.SFX.STUDIO`
+#### [P1-B] Music & Foley Sound Effects (SFX) Existing Engine Integration
+- **TASK_ID**: `P1.WEBAPP.V3-H.MUSIC.SFX.EXISTING.ENGINE.INTEGRATION`
 - **REPOSITORY**: `toan-aas-standalone`
-- **PURPOSE**: Independent Music & SFX Studio: BGM generation, Foley SFX library, volume ducking parameters, audio stem mixer.
+- **PURPOSE**: Web owns brief UX, mood/genre/duration selection, prompt composition, progress/status UI, preview and download. Canonical audio generation execution remains in Bot Music engine (`music_jobs` / BGM generator). Does NOT duplicate provider credentials or billing authority in Web.
 - **DEPENDENCIES**: `P0-A` (Strictly independent of Product Video and SubDub).
-- **SIDE_EFFECT_CLASS**: `MUSIC_AND_SFX_PRODUCER`
-- **OWNER_GATE**: Standard PR review.
-- **PASS_GATE**: BGM generation and Foley cue sheet binding.
+- **SIDE_EFFECT_CLASS**: `AUTHENTICATED_BRIDGE_CONSUMER`
+- **OWNER_GATE**: Standard PR review; zero duplicate provider credentials or billing authority in Web.
+- **PASS_GATE**: Customer can compose BGM/SFX brief, trigger generation via Bot Music engine, and preview/download generated audio stems in Web App.
 
-#### [P1-C] SubDub & Multilingual Translation Suite
-- **TASK_ID**: `P1.WEBAPP.V3-I.SUBDUB.TRANSLATION.SUITE`
+#### [P1-C] SubDub & Multilingual Translation Suite Existing Engine Integration
+- **TASK_ID**: `P1.WEBAPP.V3-I.SUBDUB.EXISTING.ENGINE.INTEGRATION`
 - **REPOSITORY**: `toan-aas-standalone`
-- **PURPOSE**: Independent SubDub Suite for uploaded or existing media: auto-transcription SRT/VTT timeline editor, multilingual audio dubbing sync, subtitle burn-in. (Integrates with Video Product and Video Edit later via Common Artifact Handoff).
+- **PURPOSE**: Web owns media upload/selection UX, mode selection (subtitles only, dubbing only, bilingual, full translate+dub), language/voice/style config, interactive transcript editor, and preview. Bot Core owns processing, provider execution (ASR, translation, TTS dub sync), terminal artifact generation, and delivery truth.
 - **DEPENDENCIES**: `P0-A` (Strictly independent of Product Video for core implementation).
-- **SIDE_EFFECT_CLASS**: `SUBTITLE_AND_DUBBING_PROCESSOR`
-- **OWNER_GATE**: Standard PR review.
-- **PASS_GATE**: Audio transcription, subtitle timeline editing, and burn-in rendering.
+- **SIDE_EFFECT_CLASS**: `AUTHENTICATED_BRIDGE_CONSUMER`
+- **OWNER_GATE**: Standard PR review; zero duplicate ASR/translation pipeline in Web.
+- **PASS_GATE**: Customer can upload media, edit transcription timeline, trigger dubbing via Bot SubDub engine, and preview rendered video in Web App.
 
-#### [P1-D] Video Edit & Manual Fast Video Tools
+#### [P1-D] Video Edit Dual-Mode & Manual Fast Video Tools
 - **TASK_ID**: `P1.WEBAPP.V3-J.VIDEO.EDIT.MANUAL.TOOLS`
 - **REPOSITORY**: `toan-aas-standalone`
-- **PURPOSE**: Independent Manual Video Tools family: trim/cut, concat/merge, crop/resize/aspect, compress, mute/audio replace, watermark/logo, thumbnail/poster, format conversion, speed, audio/frame extraction, probe/metadata. Distinguish `LOCAL_SAFE_OPERATION` vs `CANONICAL_JOB_REQUIRED`. Zero routing of cheap FFmpeg work through paid AI providers.
+- **PURPOSE**: Independent Video Edit family with explicit dual-mode split:
+  1. `LOCAL_WEB_SAFE_OPERATION`: Web FFmpeg utilities for lightweight operations (trim/cut, crop, mute, aspect ratio, metadata probe, frame extraction) running client-side or fast server-side.
+  2. `CANONICAL_VIDEO_EDIT_JOB`: Heavy operations (complex concatenations, watermark burn-in, re-encoding) dispatched via bridge to Bot Video Edit engine.
+  Zero routing of cheap FFmpeg operations through paid AI provider APIs.
 - **DEPENDENCIES**: `P0-A` (Strictly independent of AI Video Product).
-- **SIDE_EFFECT_CLASS**: `FAST_MEDIA_PROCESSING_UTILITY`
+- **SIDE_EFFECT_CLASS**: `DUAL_MODE_MEDIA_PROCESSING_UTILITY`
 - **OWNER_GATE**: Zero routing of local FFmpeg operations through paid AI provider APIs.
-- **PASS_GATE**: Fast local/server FFmpeg operations with instant preview and download.
+- **PASS_GATE**: Fast local FFmpeg tools execute with instant preview; heavy edit jobs dispatch via canonical bridge.
 
 #### [P1-E] AutoPost Handoff Bridge Projection
 - **TASK_ID**: `P1.WEBAPP.V3-K.AUTOPOST.HANDOFF.BRIDGE.PROJECTION`
 - **REPOSITORY**: `toan-aas-standalone` (ONE_REPO, ONE_BRANCH, ONE_PR)
-- **PURPOSE**: Web consumes canonical Bot PublishableAsset and Handoff APIs (`POST /internal/v1/autopost/handoff`). Renders asset selection UI, provenance display, and lineage metadata. Acts strictly as a read projection and bridge client; does NOT maintain a second authoritative handoff registry or asset ledger.
+- **PURPOSE**: Web consumes canonical Bot PublishableAsset and Handoff APIs (`POST /internal/v1/autopost/handoff`). Renders asset selection UI, provenance display, and lineage metadata. Acts strictly as a read projection and bridge client; does NOT maintain a second authoritative handoff registry or asset ledger. AutoPost is additive only (`AUTOPOST_ADDITIVE_ONLY=YES`); producers function 100% without it.
 - **DEPENDENCIES**: `P0-C` (Precedes full publishing control surface).
 - **SIDE_EFFECT_CLASS**: `BRIDGE_CONSUMER_AND_PROJECTION_METADATA`
 - **OWNER_GATE**: Canonical Bot API consumption; no duplicate Web registry.
@@ -246,6 +255,27 @@ flowchart TD
 - **SIDE_EFFECT_CLASS**: `VERIFICATION_AND_PRODUCTION_SIGN_OFF`
 - **OWNER_GATE**: Complete E2E pass, zero lint/locale failures, Lighthouse $\ge 90$.
 - **PASS_GATE**: 100% quality gate pass and production deployment readiness.
+
+---
+
+### 3.4 Canonical Product Completion Classification Matrix
+
+| Product / Capability | Status / Maturity | Web App Role | Execution Authority | Rebuild Required? |
+| :--- | :--- | :--- | :--- | :--- |
+| **VOICE** | `EXISTING_CANONICAL_CAPABILITY` | Authoring UI, TTS script tools, audio preview/download | Bot Core (`voice_jobs` + TTS engine) | **NO** (`INTEGRATE_EXPOSE_VERIFY_POLISH`) |
+| **MUSIC_AND_SFX** | `EXISTING_CANONICAL_CAPABILITY` | Brief composer, mood/genre controls, preview/download | Bot Core (`music_jobs` / BGM engine) | **NO** (`INTEGRATE_EXPOSE_VERIFY_POLISH`) |
+| **SUBDUB** | `EXISTING_CANONICAL_CAPABILITY` | Media upload, language/style config, transcript editor | Bot Core (ASR, translation, dubbing engine) | **NO** (`INTEGRATE_EXPOSE_VERIFY_POLISH`) |
+| **VIDEO_EDIT** | `EXISTING_CANONICAL_CAPABILITY` | Local safe FFmpeg tools + heavy edit job submission | Dual-mode: Web FFmpeg (local) / Bot engine (heavy) | **NO** (`INTEGRATE_EXPOSE_VERIFY_POLISH`) |
+| **PRODUCT_VIDEO** | `INCOMPLETE` (planning-only) | Full multi-scene storyboard studio, live preview | SQLite `video_jobs` outbox lease/claim + remote worker | **YES** (Only major video product needing full E2E build) |
+| **AUTOPOST** | `ADDITIVE_DOWNSTREAM` | Bridge projection + social publishing control surface | Bot Core (PublishableAsset, scheduler, channels) | **NO** (Additive consumer, never mandatory) |
+
+### 3.5 Execution Order & Dependency Discipline
+
+1. **Phase Sequence**: Phase 0 (Foundations) $\to$ Phase 1 (Engines & AutoPost) $\to$ Phase 2 (Hardening).
+2. **AutoPost Dependency Invariant**: `P1-E` (AutoPost Handoff Bridge Projection) MUST pass verification before `P1-F` (AutoPost Publishing Control Surface) begins execution.
+3. **Video Studio Independence**: `P0-D` (Product Video Studio) is an independent workstream; it does NOT block or depend on `P1-A`, `P1-B`, `P1-C`, `P1-D`, `P1-E`, or `P1-F`.
+4. **Producer Non-Mandatory Rule**: Producers NEVER require AutoPost to complete their execution.
+5. **Exact Task Count Enforcement**: `DECLARED_TASK_COUNT = 15`, `ACTUAL_TASK_COUNT = 15`.
 
 ---
 
