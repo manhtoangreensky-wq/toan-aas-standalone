@@ -33,6 +33,12 @@ from tests.test_p0_webapp_v3_browser_false_green_first_red import (
     test_first_red_wrong_screenshot_hash_rejected,
     test_first_red_duplicate_matrix_entry_rejected,
     test_first_red_primary_control_missing_vacuous_pass_purged,
+    test_first_red_parent_head_evidence_rejected,
+    test_first_red_expected_head_resolver_never_returns_evidence_head_from_evidence,
+    test_first_red_unknown_independent_head_authority_fails_closed,
+    test_first_red_local_fresh_evidence_generated_for_git_head_passes,
+    test_first_red_ci_head_sha_overrides_merge_checkout_ambiguity,
+    test_first_red_every_manifest_row_must_match_independently_resolved_head,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -59,9 +65,22 @@ def _load_manifest() -> list[dict]:
 
 
 def _resolve_current_ci_head() -> str:
+    """Resolve independent current head authority without referencing evidence files.
+
+    Hierarchy:
+    1. Explicit HEAD_SHA passed by workflow/test harness.
+    2. pull_request.head.sha from GITHUB_EVENT_PATH.
+    3. For local execution: git rev-parse HEAD.
+    4. GITHUB_SHA (CI fallback with merge-commit awareness).
+
+    If no independent authority can be resolved: FAIL CLOSED.
+    Evidence files must NEVER define the expected head.
+    Parent head acceptance and evidence_head fallback are strictly purged.
+    """
     ci_head = os.environ.get("HEAD_SHA")
     if ci_head and len(ci_head.strip()) >= 7:
         return ci_head.strip()
+
     event_path = os.environ.get("GITHUB_EVENT_PATH")
     if event_path and Path(event_path).exists():
         try:
@@ -71,25 +90,24 @@ def _resolve_current_ci_head() -> str:
                 return pr_head.strip()
         except Exception:
             pass
-    evidence = _load_evidence()
-    evidence_head = evidence.get("head_sha", "")
+
     try:
         import subprocess
         res = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True)
         git_head = res.stdout.strip()
-        if evidence_head and git_head == evidence_head:
-            return git_head
-        res_parent = subprocess.run(["git", "rev-parse", "HEAD~1"], capture_output=True, text=True)
-        if res_parent.returncode == 0 and res_parent.stdout.strip() == evidence_head:
-            return evidence_head
         if git_head and len(git_head) >= 7:
             return git_head
     except Exception:
         pass
-    ci_head = os.environ.get("GITHUB_SHA")
-    if ci_head and len(ci_head.strip()) >= 7:
-        return ci_head.strip()
-    return evidence_head
+
+    ci_sha = os.environ.get("GITHUB_SHA")
+    if ci_sha and len(ci_sha.strip()) >= 7:
+        return ci_sha.strip()
+
+    raise RuntimeError(
+        "FAIL CLOSED: Unable to independently resolve expected current-head authority. "
+        "Evidence files must never define their own expected head authority."
+    )
 
 
 def test_browser_evidence_json_structure_and_zero_runtime_errors():

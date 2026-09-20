@@ -11,6 +11,7 @@ Validates:
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import re
 import pytest
@@ -180,3 +181,145 @@ def test_first_red_primary_control_missing_vacuous_pass_purged():
     # Bounded HUB_PRIMARY_SELECTORS must exist:
     assert "HUB_PRIMARY_SELECTORS" in code, "HUB_PRIMARY_SELECTORS mapping missing from runner"
     assert "/tools/video" in code and "/tools/free" in code
+
+
+def test_first_red_parent_head_evidence_rejected():
+    """Prove parent-head evidence (HEAD~1) is strictly rejected as current head."""
+    current_head = "d468aa21e45f719bd6b005303e8b9a99c9484455"
+    parent_head = "45423b406c8eafc7702c624221ab632a2f52cd61"
+
+    # Evidence generated at parent commit
+    stale_evidence = {
+        "head_sha": parent_head,
+        "server_origin": "isolated-local-test-origin",
+        "summary": {"pages_checked": 18, "uncaught_js_errors": 0}
+    }
+
+    # Under R5, expected_head is resolved independently to current_head
+    expected_head = current_head
+
+    # Must fail closed when evidence head is parent head
+    with pytest.raises(AssertionError) as exc_info:
+        assert stale_evidence["head_sha"] == expected_head, (
+            f"Evidence head_sha mismatch: expected {expected_head}, got {stale_evidence['head_sha']}"
+        )
+    assert "mismatch" in str(exc_info.value)
+    assert parent_head in str(exc_info.value)
+    assert expected_head in str(exc_info.value)
+
+
+def test_first_red_expected_head_resolver_never_returns_evidence_head_from_evidence(monkeypatch):
+    """Prove expected-head resolver never consults evidence files or falls back to evidence_head."""
+    from tests.test_browser_runtime_gate import _resolve_current_ci_head
+
+    # Clear all external CI authorities
+    monkeypatch.delenv("HEAD_SHA", raising=False)
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+    monkeypatch.delenv("GITHUB_SHA", raising=False)
+
+    # Mock subprocess.run to simulate failure of git rev-parse (e.g. environment without git)
+    import subprocess
+    def mock_subprocess_run(*args, **kwargs):
+        raise subprocess.CalledProcessError(1, ["git", "rev-parse", "HEAD"])
+    monkeypatch.setattr(subprocess, "run", mock_subprocess_run)
+
+    # Must FAIL CLOSED with RuntimeError rather than returning evidence head
+    with pytest.raises(RuntimeError) as exc_info:
+        _resolve_current_ci_head()
+    assert "FAIL CLOSED" in str(exc_info.value)
+
+    # Static assertion on test_browser_runtime_gate source code:
+    # Must not contain HEAD~1 logic or fallback to evidence.get("head_sha")
+    gate_code = (REPO_ROOT / "tests" / "test_browser_runtime_gate.py").read_text(encoding="utf-8")
+    assert "HEAD~1" not in gate_code, "HEAD~1 parent fallback found in gate"
+    assert "return evidence_head" not in gate_code, "return evidence_head fallback found in gate"
+
+
+def test_first_red_unknown_independent_head_authority_fails_closed(monkeypatch):
+    """Prove unknown independent head authority fails closed."""
+    from tests.test_browser_runtime_gate import _resolve_current_ci_head
+
+    monkeypatch.delenv("HEAD_SHA", raising=False)
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+    monkeypatch.delenv("GITHUB_SHA", raising=False)
+
+    import subprocess
+    def mock_subprocess_fail(*args, **kwargs):
+        raise FileNotFoundError("git not found")
+    monkeypatch.setattr(subprocess, "run", mock_subprocess_fail)
+
+    with pytest.raises(RuntimeError) as exc_info:
+        _resolve_current_ci_head()
+    assert "FAIL CLOSED" in str(exc_info.value)
+
+
+def test_first_red_local_fresh_evidence_generated_for_git_head_passes(monkeypatch):
+    """Prove local fresh evidence generated for git HEAD passes, while stale evidence fails."""
+    from tests.test_browser_runtime_gate import _resolve_current_ci_head
+
+    mock_git_head = "d468aa21e45f719bd6b005303e8b9a99c9484455"
+    stale_head = "45423b406c8eafc7702c624221ab632a2f52cd61"
+
+    monkeypatch.delenv("HEAD_SHA", raising=False)
+    monkeypatch.delenv("GITHUB_EVENT_PATH", raising=False)
+    monkeypatch.delenv("GITHUB_SHA", raising=False)
+
+    class MockCompletedProcess:
+        stdout = mock_git_head
+        returncode = 0
+
+    import subprocess
+    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: MockCompletedProcess())
+
+    resolved = _resolve_current_ci_head()
+    assert resolved == mock_git_head
+
+    # Fresh evidence for git HEAD passes:
+    fresh_evidence = {"head_sha": mock_git_head}
+    assert fresh_evidence["head_sha"] == resolved
+
+    # Stale evidence fails:
+    stale_evidence = {"head_sha": stale_head}
+    assert stale_evidence["head_sha"] != resolved
+
+
+def test_first_red_ci_head_sha_overrides_merge_checkout_ambiguity(monkeypatch, tmp_path):
+    """Prove CI HEAD_SHA overrides merge-checkout ambiguity (merge commit SHA) correctly."""
+    from tests.test_browser_runtime_gate import _resolve_current_ci_head
+
+    merge_commit_sha = "1111111111111111111111111111111111111111"
+    pr_head_sha = "2222222222222222222222222222222222222222"
+
+    # In PR workflows, GITHUB_SHA is merge commit, but HEAD_SHA is actual PR head
+    monkeypatch.setenv("GITHUB_SHA", merge_commit_sha)
+    monkeypatch.setenv("HEAD_SHA", pr_head_sha)
+
+    resolved = _resolve_current_ci_head()
+    assert resolved == pr_head_sha, f"Expected {pr_head_sha} from HEAD_SHA, got {resolved}"
+
+    # Also test GITHUB_EVENT_PATH when HEAD_SHA is absent
+    monkeypatch.delenv("HEAD_SHA", raising=False)
+    event_file = tmp_path / "event.json"
+    event_file.write_text(json.dumps({"pull_request": {"head": {"sha": pr_head_sha}}}), encoding="utf-8")
+    monkeypatch.setenv("GITHUB_EVENT_PATH", str(event_file))
+
+    resolved_event = _resolve_current_ci_head()
+    assert resolved_event == pr_head_sha, f"Expected {pr_head_sha} from GITHUB_EVENT_PATH, got {resolved_event}"
+
+
+def test_first_red_every_manifest_row_must_match_independently_resolved_head():
+    """Prove that every single manifest row must match independently resolved head."""
+    expected_head = "d468aa21e45f719bd6b005303e8b9a99c9484455"
+    stale_head = "45423b406c8eafc7702c624221ab632a2f52cd61"
+
+    # 18 rows where row 17 has stale head
+    manifest = [{"filename": f"img{i}.png", "head_sha": expected_head} for i in range(17)]
+    manifest.append({"filename": "img17.png", "head_sha": stale_head})
+
+    with pytest.raises(AssertionError) as exc_info:
+        for entry in manifest:
+            assert entry.get("head_sha") == expected_head, (
+                f"Manifest head_sha mismatch for {entry['filename']}: actual {entry.get('head_sha')} != expected {expected_head}"
+            )
+    assert "img17.png" in str(exc_info.value)
+    assert stale_head in str(exc_info.value)

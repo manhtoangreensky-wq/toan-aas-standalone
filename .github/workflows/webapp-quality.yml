@@ -133,6 +133,8 @@ jobs:
           python scripts/ci/run_browser_verification.py --output-dir reports/browser_evidence --head-sha "$HEAD_SHA"
 
       - name: Run browser runtime gate assertions
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           python -m pytest -q tests/test_browser_runtime_gate.py
 
