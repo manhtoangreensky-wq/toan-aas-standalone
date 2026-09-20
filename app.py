@@ -47,6 +47,7 @@ import copyfast_channel_strategy
 import copyfast_community_trust
 import copyfast_content_handoff
 import copyfast_content_studio
+import copyfast_admin_commercial
 import copyfast_chat_workspace
 from copyfast_bridge import ensure_core_bridge_readiness
 import copyfast_data_controls
@@ -2691,6 +2692,7 @@ app.include_router(copyfast_reliability.router)
 app.include_router(copyfast_operations_desk.router)
 app.include_router(copyfast_finance_planning.router)
 app.include_router(copyfast_notification_center.router)
+app.include_router(copyfast_admin_commercial.router)
 
 
 @app.get("/health")

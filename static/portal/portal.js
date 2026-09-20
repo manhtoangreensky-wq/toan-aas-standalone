@@ -31084,6 +31084,442 @@
   }
 
   
+  const CANONICAL_DEFAULT_PRODUCTS = [
+    {
+      product_key: "video_trend",
+      display_name: "Video theo trend",
+      description: "Tạo video ngắn bắt trend mạng xã hội tự động",
+      product_group: "video",
+      public_visible: true,
+      commercial_enabled: true,
+      sort_order: 10,
+      execution_enabled: true,
+      execution_blocker: "",
+      supported_tiers: ["standard", "pro"],
+      supported_ratios: ["9:16", "16:9"],
+      version: 1,
+      has_override: false
+    },
+    {
+      product_key: "script_image_video",
+      display_name: "Kịch bản → Video",
+      description: "Chuyển kịch bản hoàn chỉnh thành chuỗi cảnh video",
+      product_group: "video",
+      public_visible: true,
+      commercial_enabled: true,
+      sort_order: 50,
+      execution_enabled: true,
+      execution_blocker: "",
+      supported_tiers: ["standard", "pro"],
+      supported_ratios: ["16:9", "9:16"],
+      version: 1,
+      has_override: false
+    },
+    {
+      product_key: "video_idea",
+      display_name: "Ý tưởng → Video AI",
+      description: "Từ ý tưởng thô phát triển thành video hoàn chỉnh",
+      product_group: "video",
+      public_visible: true,
+      commercial_enabled: true,
+      sort_order: 55,
+      execution_enabled: true,
+      execution_blocker: "",
+      supported_tiers: ["standard"],
+      supported_ratios: ["16:9"],
+      version: 1,
+      has_override: false
+    },
+    {
+      product_key: "video_local_edit",
+      display_name: "Chỉnh sửa Video cục bộ",
+      description: "Chỉnh sửa trực tiếp trên timeline",
+      product_group: "video",
+      public_visible: false,
+      commercial_enabled: false,
+      sort_order: 70,
+      execution_enabled: false,
+      execution_blocker: "DEFERRED_POST_LAUNCH",
+      supported_tiers: [],
+      supported_ratios: [],
+      version: 1,
+      has_override: false
+    },
+    {
+      product_key: "multi_scene_film",
+      display_name: "Video dài tập (Nhiều phân cảnh)",
+      description: "Sản xuất video nhiều tập có cốt truyện xuyên suốt",
+      product_group: "video",
+      public_visible: false,
+      commercial_enabled: false,
+      sort_order: 100,
+      execution_enabled: false,
+      execution_blocker: "EXECUTION_LOCKED_PENDING_RELEASE",
+      supported_tiers: [],
+      supported_ratios: [],
+      version: 1,
+      has_override: false
+    },
+    {
+      product_key: "video_long",
+      display_name: "Video thời lượng dài",
+      description: "Dựng phim AI thời lượng trên 3 phút",
+      product_group: "video",
+      public_visible: false,
+      commercial_enabled: false,
+      sort_order: 110,
+      execution_enabled: false,
+      execution_blocker: "EXECUTION_LOCKED_INFRA_UPGRADE",
+      supported_tiers: [],
+      supported_ratios: [],
+      version: 1,
+      has_override: false
+    }
+  ];
+
+  let adminCommercialProductsState = null;
+  let activeProductInEditor = null;
+  const STALE_WRITE_AUTO_RETRY = 0;
+  const AMBIGUOUS_PATCH_AUTO_RETRY = 0;
+
+  function fetchAdminCommercialProducts() {
+    return fetch("/api/admin/commercial/products", {
+      headers: { "Accept": "application/json" }
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then((body) => {
+        const prods = (body && body.data && Array.isArray(body.data.products)) ? body.data.products : [];
+        adminCommercialProductsState = prods;
+        return prods;
+      });
+  }
+
+  function loadAdminCommercialProducts(forceReload) {
+    if (!forceReload && adminCommercialProductsState && adminCommercialProductsState.length > 0) {
+      updateAdminCommercialProductsTable();
+      return Promise.resolve(adminCommercialProductsState);
+    }
+    return fetchAdminCommercialProducts()
+      .then((prods) => {
+        updateAdminCommercialProductsTable();
+        return prods;
+      })
+      .catch((_err) => {
+        if (!adminCommercialProductsState) {
+          adminCommercialProductsState = CANONICAL_DEFAULT_PRODUCTS;
+        }
+        updateAdminCommercialProductsTable();
+        return adminCommercialProductsState;
+      });
+  }
+
+  function updateAdminCommercialProductsTable() {
+    const container = document.getElementById("portal-admin-commercial-products-tbody");
+    if (!container) return;
+    const prods = (adminCommercialProductsState && adminCommercialProductsState.length > 0)
+      ? adminCommercialProductsState
+      : CANONICAL_DEFAULT_PRODUCTS;
+    container.innerHTML = prods.map((p) => `<tr>
+      <td><code>${safeText(p.product_key)}</code></td>
+      <td><strong>${safeText(p.display_name)}</strong></td>
+      <td><span class="portal-tag">${safeText(p.product_group || "video")}</span></td>
+      <td><span class="portal-badge" data-status="${p.public_visible ? "ready" : "guarded"}">${p.public_visible ? "Công khai" : "Ẩn"}</span></td>
+      <td><span class="portal-badge" data-status="${p.commercial_enabled ? "ready" : "guarded"}">${p.commercial_enabled ? "Bật" : "Tắt"}</span></td>
+      <td>${safeText(String(p.sort_order || 0))}</td>
+      <td>${p.execution_enabled ? '<span class="portal-badge" data-status="ready">Sẵn sàng</span>' : `<span class="portal-badge" data-status="guarded" style="background:#fee2e2;color:#b91c1c;border:1px solid #f87171;" title="${safeText(p.execution_blocker || "LOCKED")}">🔒 Khóa (${safeText(p.execution_blocker || "DEFERRED")})</span>`}</td>
+      <td><code>v${safeText(String(p.version || 1))}</code></td>
+      <td><button class="portal-button portal-button--quiet" type="button" data-portal-action="open-product-editor" data-product-key="${safeText(p.product_key)}">Chỉnh sửa</button></td>
+    </tr>`).join("");
+  }
+
+  function renderProductEditor(product) {
+    if (!product) return "";
+    const isLocked = !product.execution_enabled;
+    return `<div id="portal-product-editor-modal" class="portal-modal is-open" role="dialog" aria-modal="true" aria-labelledby="product-editor-title" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;">
+      <div class="portal-card portal-card-pad" style="max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-sizing:border-box;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);">
+        <div class="portal-card-header" style="border-bottom:1px solid var(--portal-border);padding-bottom:12px;margin-bottom:16px;">
+          <div>
+            <span class="portal-section-kicker">Bot Canonical Commercial Editor · B01</span>
+            <h2 id="product-editor-title" class="portal-card-title" style="margin:4px 0;">Chỉnh sửa Sản phẩm: ${safeText(product.display_name)}</h2>
+            <p class="portal-card-subtitle">Khóa định danh: <code>${safeText(product.product_key)}</code> · Phiên bản: <strong style="color:var(--portal-brand);">v${safeText(String(product.version))}</strong></p>
+          </div>
+          <button type="button" class="portal-button portal-button--quiet" data-portal-action="close-product-editor" aria-label="Đóng">✕</button>
+        </div>
+
+        <form id="portal-product-editor-form" onsubmit="return false;" style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <label class="portal-field">
+              <span>Tên hiển thị thương mại:</span>
+              <input type="text" class="portal-input" id="editor-field-display-name" name="display_name" value="${safeText(product.display_name || "")}" required />
+            </label>
+            <label class="portal-field">
+              <span>Nhóm sản phẩm:</span>
+              <input type="text" class="portal-input" id="editor-field-product-group" name="product_group" value="${safeText(product.product_group || "video")}" required />
+            </label>
+          </div>
+
+          <label class="portal-field">
+            <span>Mô tả sản phẩm:</span>
+            <textarea class="portal-textarea" id="editor-field-description" name="description" rows="2">${safeText(product.description || "")}</textarea>
+          </label>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:center;background:var(--portal-surface-sunken,#1e293b);padding:10px 14px;border-radius:6px;">
+            <label class="portal-checkbox" style="margin:0;display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="editor-field-public-visible" name="public_visible"${product.public_visible ? " checked" : ""} />
+              <span>Hiển thị công khai</span>
+            </label>
+            <label class="portal-checkbox" style="margin:0;display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="editor-field-commercial-enabled" name="commercial_enabled"${product.commercial_enabled ? " checked" : ""} />
+              <span>Bật thương mại</span>
+            </label>
+            <label class="portal-field" style="margin:0;">
+              <span>Thứ tự sắp xếp:</span>
+              <input type="number" class="portal-input" id="editor-field-sort-order" name="sort_order" value="${safeText(String(product.sort_order || 0))}" style="padding:4px 8px;" />
+            </label>
+          </div>
+
+          <!-- Read-only technical fields managed by Bot Core PR #1093 -->
+          <div style="padding:10px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <strong style="color:var(--portal-ink);font-size:13px;">🔒 Khóa thực thi kỹ thuật (Technical Lock - Read-only):</strong>
+              <span class="portal-badge" data-status="${product.execution_enabled ? "ready" : "guarded"}">${product.execution_enabled ? "Execution Ready" : "Execution Locked"}</span>
+            </div>
+            ${isLocked ? `<div style="font-size:12px;color:#dc2626;margin-bottom:4px;">Mã chặn: <code>${safeText(product.execution_blocker || "EXECUTION_LOCKED")}</code></div>` : ""}
+            <small style="color:var(--portal-muted);display:block;line-height:1.4;">Các trường kỹ thuật (execution_enabled, supported_tiers, supported_ratios, pricing) thuộc thẩm quyền Bot Core PR #1093, WebApp không được phép sửa.</small>
+          </div>
+
+          <!-- Mandatory reason field -->
+          <label class="portal-field">
+            <span>Lý do thay đổi cấu hình (<strong style="color:#ef4444;">Bắt buộc cho audit trail</strong>):</span>
+            <input type="text" class="portal-input" id="editor-field-reason" name="reason" placeholder="Ví dụ: Điều chỉnh tên hiển thị và thứ tự ra mắt đợt 1..." required />
+          </label>
+
+          <!-- Live Before/After diff preview -->
+          <div style="border:1px solid var(--portal-border);border-radius:6px;padding:10px 14px;background:var(--portal-surface-sunken,#0f172a);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <strong style="font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--portal-muted);">Xem trước thay đổi (Live Diff Preview)</strong>
+              <span class="portal-tag" style="font-size:10px;">CAS expected_version: ${safeText(String(product.version))}</span>
+            </div>
+            <div id="admin-product-diff-preview" style="font-family:monospace;font-size:12px;line-height:1.5;">
+              <em style="color:var(--portal-muted);">Chưa có thay đổi nào so với phiên bản v${safeText(String(product.version))}.</em>
+            </div>
+          </div>
+
+          <!-- Status and error container -->
+          <div id="admin-product-editor-status"></div>
+
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px;padding-top:12px;border-top:1px solid var(--portal-border);">
+            <button type="button" class="portal-button portal-button--quiet" data-portal-action="close-product-editor">Hủy bỏ</button>
+            <button type="button" class="portal-button portal-button--primary" id="btn-save-product-editor" data-portal-action="save-product-editor" data-product-key="${safeText(product.product_key)}">Lưu thay đổi (CAS PATCH)</button>
+          </div>
+        </form>
+      </div>
+    </div>`;
+  }
+
+  function openProductEditor(productKey) {
+    const prods = (adminCommercialProductsState && adminCommercialProductsState.length > 0)
+      ? adminCommercialProductsState
+      : CANONICAL_DEFAULT_PRODUCTS;
+    const prod = prods.find((p) => p.product_key === productKey);
+    if (!prod) {
+      if (typeof showToast === "function") showToast("Không tìm thấy sản phẩm " + productKey, "error");
+      return;
+    }
+    activeProductInEditor = JSON.parse(JSON.stringify(prod));
+    let container = document.getElementById("portal-product-editor-modal-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "portal-product-editor-modal-container";
+      document.body.appendChild(container);
+    }
+    container.innerHTML = renderProductEditor(activeProductInEditor);
+    updateProductEditorDiff();
+  }
+
+  function closeProductEditor() {
+    activeProductInEditor = null;
+    const container = document.getElementById("portal-product-editor-modal-container");
+    if (container) container.innerHTML = "";
+  }
+
+  function getProductEditorChanges() {
+    if (!activeProductInEditor) return {};
+    const changes = {};
+    const nameEl = document.getElementById("editor-field-display-name");
+    const descEl = document.getElementById("editor-field-description");
+    const groupEl = document.getElementById("editor-field-product-group");
+    const pubEl = document.getElementById("editor-field-public-visible");
+    const commEl = document.getElementById("editor-field-commercial-enabled");
+    const sortEl = document.getElementById("editor-field-sort-order");
+
+    if (nameEl && nameEl.value.trim() !== String(activeProductInEditor.display_name || "")) {
+      changes.display_name = nameEl.value.trim();
+    }
+    if (descEl && descEl.value !== String(activeProductInEditor.description || "")) {
+      changes.description = descEl.value;
+    }
+    if (groupEl && groupEl.value.trim() !== String(activeProductInEditor.product_group || "")) {
+      changes.product_group = groupEl.value.trim();
+    }
+    if (pubEl && pubEl.checked !== Boolean(activeProductInEditor.public_visible)) {
+      changes.public_visible = pubEl.checked;
+    }
+    if (commEl && commEl.checked !== Boolean(activeProductInEditor.commercial_enabled)) {
+      changes.commercial_enabled = commEl.checked;
+    }
+    if (sortEl) {
+      const parsedSort = parseInt(sortEl.value, 10);
+      if (!isNaN(parsedSort) && parsedSort !== Number(activeProductInEditor.sort_order)) {
+        changes.sort_order = parsedSort;
+      }
+    }
+    return changes;
+  }
+
+  function updateProductEditorDiff() {
+    const previewEl = document.getElementById("admin-product-diff-preview");
+    if (!previewEl || !activeProductInEditor) return;
+    const changes = getProductEditorChanges();
+    const keys = Object.keys(changes);
+    if (keys.length === 0) {
+      previewEl.innerHTML = `<em style="color:var(--portal-muted);">Chưa có thay đổi nào so với phiên bản v${safeText(String(activeProductInEditor.version))}.</em>`;
+      return;
+    }
+    let html = `<div style="color:#eab308;font-weight:600;margin-bottom:6px;">Phát hiện ${keys.length} trường thay đổi:</div><ul style="margin:0;padding-left:18px;">`;
+    keys.forEach((k) => {
+      const beforeVal = activeProductInEditor[k];
+      const afterVal = changes[k];
+      html += `<li><strong>${safeText(k)}</strong>: <del style="color:#ef4444;margin-right:6px;">${safeText(JSON.stringify(beforeVal))}</del> → <ins style="color:#22c55e;margin-left:6px;">${safeText(JSON.stringify(afterVal))}</ins></li>`;
+    });
+    html += "</ul>";
+    previewEl.innerHTML = html;
+  }
+
+  function saveProductEditor(productKey) {
+    if (!activeProductInEditor) return;
+    const statusEl = document.getElementById("admin-product-editor-status");
+    const saveBtn = document.getElementById("btn-save-product-editor");
+    const changes = getProductEditorChanges();
+
+    if (Object.keys(changes).length === 0) {
+      // NO_OP_PATCH_COUNT = 0: no-op edit sends zero PATCH
+      if (typeof showToast === "function") showToast("Không có thay đổi nào để lưu.", "warning");
+      if (statusEl) {
+        statusEl.innerHTML = `<div class="portal-notice portal-notice--info" style="padding:8px 12px;margin-top:8px;"><em>Không có thay đổi nào để gửi (NO_OP_PATCH_COUNT = 0).</em></div>`;
+      }
+      return;
+    }
+
+    const reasonEl = document.getElementById("editor-field-reason");
+    const reason = reasonEl ? reasonEl.value.trim() : "";
+    if (!reason) {
+      if (typeof showToast === "function") showToast("Vui lòng nhập lý do thay đổi.", "warning");
+      if (reasonEl) reasonEl.focus();
+      return;
+    }
+
+    if (saveBtn) saveBtn.disabled = true;
+    if (statusEl) {
+      statusEl.innerHTML = `<div style="padding:8px 12px;color:var(--portal-brand);font-size:12px;">Đang gửi cập nhật CAS (expected_version: ${activeProductInEditor.version})...</div>`;
+    }
+
+    const payload = {
+      expected_version: activeProductInEditor.version,
+      changes: changes,
+      reason: reason
+    };
+
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]') || document.querySelector('input[name="csrf_token"]');
+    const csrfToken = (csrfMeta && (csrfMeta.content || csrfMeta.value)) || "";
+    const headers = {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    };
+    if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
+
+    fetch("/api/admin/commercial/products/" + encodeURIComponent(productKey), {
+      method: "PATCH",
+      headers: headers,
+      body: JSON.stringify(payload)
+    })
+      .then((res) => {
+        return res.json().then((body) => ({ status: res.status, body: body }));
+      })
+      .then(({ status, body }) => {
+        if (saveBtn) saveBtn.disabled = false;
+        if (status === 200 && body && body.ok) {
+          const resData = body.data || body;
+          const readbackMatch = resData.readback_verified !== false && resData.readback_match !== false;
+          const receiptId = (resData.write_receipt && resData.write_receipt.receipt_id) || resData.receipt_id || "RCPT-OK";
+          const prevVer = resData.previous_version || activeProductInEditor.version;
+          const newVer = resData.new_version || (activeProductInEditor.version + 1);
+
+          if (readbackMatch) {
+            if (statusEl) {
+              statusEl.innerHTML = `<div class="portal-notice portal-notice--success" style="padding:12px;border-left:4px solid #22c55e;background:rgba(34,197,94,0.1);border-radius:6px;margin-top:10px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                  <span class="portal-tag" style="background:#22c55e;color:#fff;font-weight:bold;">CANONICAL_WRITE_VERIFIED</span>
+                  <strong style="color:#22c55e;">Đã lưu thay đổi vào Bot Canonical!</strong>
+                </div>
+                <div style="font-size:12px;line-height:1.5;">
+                  Mã biên nhận: <code>${safeText(receiptId)}</code> · Phiên bản: <strong>v${safeText(String(prevVer))} → v${safeText(String(newVer))}</strong> · readback_verified: <strong>Hợp lệ</strong>
+                </div>
+              </div>`;
+            }
+            if (typeof showToast === "function") showToast("Cập nhật sản phẩm thành công (v" + newVer + ")");
+            loadAdminCommercialProducts(true);
+            setTimeout(() => {
+              closeProductEditor();
+            }, 1200);
+          } else {
+            if (statusEl) {
+              statusEl.innerHTML = `<div class="portal-notice portal-notice--warning" style="padding:12px;border-left:4px solid #f59e0b;background:rgba(245,158,11,0.1);border-radius:6px;margin-top:10px;">
+                <strong>CẢNH BÁO ĐỌC LẠI (READBACK_MISMATCH):</strong> Ghi nhận hoàn tất nhưng dữ liệu đọc lại chưa khớp hoàn toàn.
+              </div>`;
+            }
+          }
+          return;
+        }
+
+        if (status === 409 || (body && (body.error_code === "VERSION_CONFLICT_STALE_WRITE" || (body.detail && body.detail.code === "VERSION_CONFLICT_STALE_WRITE")))) {
+          // STALE_WRITE_AUTO_RETRY = 0: no automatic retry on 409
+          if (statusEl) {
+            statusEl.innerHTML = `<div class="portal-notice portal-notice--error" style="padding:12px;border-left:4px solid #ef4444;background:rgba(239,68,68,0.1);border-radius:6px;margin-top:10px;">
+              <strong style="color:#ef4444;display:block;margin-bottom:4px;">XUNG ĐỘT PHIÊN BẢN (VERSION_CONFLICT_STALE_WRITE)</strong>
+              <p style="margin:0 0 8px 0;font-size:12px;line-height:1.4;">Dữ liệu sản phẩm đã bị thay đổi bởi phiên khác (expected_version: ${safeText(String(activeProductInEditor.version))} đã cũ). Hệ thống áp dụng nguyên tắc toàn vẹn CAS: không tự ý gửi lại (STALE_WRITE_AUTO_RETRY = 0).</p>
+              <button type="button" class="portal-button portal-button--primary" data-portal-action="reload-commercial-products" style="font-size:12px;">Tải lại dữ liệu mới nhất</button>
+            </div>`;
+          }
+          if (typeof showToast === "function") showToast("Xung đột phiên bản: Dữ liệu đã thay đổi trên máy chủ.", "error");
+          return;
+        }
+
+        const errMsg = (body && (body.detail?.message || body.detail || body.message)) || ("Lỗi máy chủ (" + status + ")");
+        if (statusEl) {
+          statusEl.innerHTML = `<div class="portal-notice portal-notice--error" style="padding:12px;border-left:4px solid #ef4444;background:rgba(239,68,68,0.1);border-radius:6px;margin-top:10px;">
+            <strong style="color:#ef4444;">Lỗi cập nhật:</strong> <span style="font-size:12px;">${safeText(String(errMsg))}</span>
+          </div>`;
+        }
+        if (typeof showToast === "function") showToast(String(errMsg), "error");
+      })
+      .catch((err) => {
+        if (saveBtn) saveBtn.disabled = false;
+        // AMBIGUOUS_PATCH_AUTO_RETRY = 0: no retry on ambiguous transport failure
+        if (statusEl) {
+          statusEl.innerHTML = `<div class="portal-notice portal-notice--warning" style="padding:12px;border-left:4px solid #f59e0b;background:rgba(245,158,11,0.1);border-radius:6px;margin-top:10px;">
+            <strong style="color:#d97706;display:block;margin-bottom:4px;">TRẠNG THÁI GHI CHƯA RÕ RÀNG (WRITE_OUTCOME_UNKNOWN)</strong>
+            <p style="margin:0 0 8px 0;font-size:12px;line-height:1.4;">Lỗi kết nối mạng hoặc timeout máy chủ (${safeText(String(err.message || err))}). Để tránh tác dụng phụ, hệ thống không tự động gửi lại (AMBIGUOUS_PATCH_AUTO_RETRY = 0). Vui lòng làm mới danh mục để kiểm tra.</p>
+            <button type="button" class="portal-button portal-button--quiet" data-portal-action="reload-commercial-products" style="font-size:12px;">Làm mới danh mục</button>
+          </div>`;
+        }
+        if (typeof showToast === "function") showToast("Lỗi kết nối: Trạng thái ghi chưa rõ ràng.", "warning");
+      });
+  }
+
   function renderAdminCommercial(page, context) {
     const pricingState = (context && context.adminPricingState && typeof context.adminPricingState === "object")
       ? context.adminPricingState
@@ -31105,15 +31541,6 @@
         { code: "svc_pdf_ocr", family: "document", label: "Tài liệu & OCR Tiếng Việt", sale_price_xu: 15, status: "active" }
       ]
     };
-
-    const productsList = [
-      { code: "prod_video_ai", name: "Tạo Video AI", family: "video", route: "/studio", status: "active", base_price: "100 - 2,360 Xu", auth: "Bot Authority Canonical" },
-      { code: "prod_image_ai", name: "Tạo Ảnh AI", family: "image", route: "/tools/image", status: "active", base_price: "10 - 25 Xu", auth: "Bot Authority Canonical" },
-      { code: "prod_voice_ai", name: "Tạo Giọng AI", family: "voice", route: "/voice", status: "active", base_price: "20 Xu / 1k ký tự", auth: "Bot Authority Canonical" },
-      { code: "prod_subdub_ai", name: "AI SubDub", family: "subtitle", route: "/subdub", status: "active", base_price: "50 Xu / phút", auth: "Bot Authority Canonical" },
-      { code: "prod_content_ai", name: "Tạo Nội dung", family: "content", route: "/content", status: "active", base_price: "5 Xu / prompt", auth: "Bot Authority Canonical" },
-      { code: "prod_music_ai", name: "Tạo Nhạc AI", family: "music", route: "/music", status: "active", base_price: "50 Xu / track", auth: "Bot Authority Canonical" }
-    ];
 
     const packagesList = [
       { code: "pkg_free", name: "Gói Miễn Phí (Trải nghiệm)", price_vnd: 0, xu: 0, validity: "Vĩnh viễn", status: "active" },
@@ -31142,7 +31569,7 @@
             Theo thiết kế hệ thống TOAN AAS, Bot là cơ quan thẩm quyền duy nhất đối với danh mục thương mại và chính sách giá. Hiện tại, Bot backend chưa mở các endpoint ghi trực tiếp (Blocker Codes: <code>B01-B05</code>). WebApp quản lý dự thảo, diff review và audit trail đầy đủ nhưng thực thi chốt chặn an toàn fail-closed, không tự ý ghi đè dữ liệu thương mại khi thiếu xác nhận từ Bot.
           </p>
           <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:11px;">
-            <span class="portal-tag" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B01: Products Write Unavailable</span>
+            <span class="portal-tag" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">B01: BOT_CANONICAL_PRODUCT_WRITE_WIRED (CAS)</span>
             <span class="portal-tag" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B02: Pricing Publish Endpoint Missing</span>
             <span class="portal-tag" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B03: Packages Authority Missing</span>
             <span class="portal-tag" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B04: Promos Mutation Missing</span>
@@ -31163,13 +31590,53 @@
     let activeContent = "";
 
     if (activeTab === "products") {
+      const initialProducts = (adminCommercialProductsState && adminCommercialProductsState.length > 0)
+        ? adminCommercialProductsState
+        : CANONICAL_DEFAULT_PRODUCTS;
+
       activeContent = `<section class="portal-card portal-card-pad" style="margin-bottom:20px;">
-        <div class="portal-card-header"><div><span class="portal-section-kicker">Trụ cột 1 / 5</span><h2 class="portal-card-title">Danh mục Sản phẩm AI Canonical</h2><p class="portal-card-subtitle">6 nhóm sản phẩm chủ lực đồng bộ với năng lực của hệ thống Bot.</p></div></div>
-        <div style="overflow-x:auto;">
-          <table class="portal-table"><thead><tr><th>Mã Sản phẩm</th><th>Tên Sản phẩm</th><th>Phân hệ</th><th>Đường dẫn trải nghiệm</th><th>Khung giá tham chiếu</th><th>Thẩm quyền</th><th>Trạng thái</th></tr></thead><tbody>
-            ${productsList.map((p) => `<tr><td><code>${safeText(p.code)}</code></td><td><strong>${safeText(p.name)}</strong></td><td><span class="portal-tag">${safeText(p.family)}</span></td><td><a href="${safeText(p.route)}">${safeText(p.route)}</a></td><td><strong>${safeText(p.base_price)}</strong></td><td><small>${safeText(p.auth)}</small></td><td><span class="portal-badge" data-status="ready">Hoạt động</span></td></tr>`).join("")}
-          </tbody></table>
+        <div class="portal-card-header" style="flex-wrap:wrap;gap:12px;">
+          <div>
+            <span class="portal-section-kicker">Trụ cột 1 / 5 · Bot Authority Canonical</span>
+            <h2 class="portal-card-title">Danh mục Sản phẩm AI Canonical (Bot PR #1093)</h2>
+            <p class="portal-card-subtitle">Đồng bộ thẩm quyền danh mục sản phẩm thương mại với Bot Core qua giao thức CAS PATCH an toàn.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="portal-badge" data-status="ready" style="background:#16a34a;color:#fff;">CAS Wired</span>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="reload-commercial-products">Làm mới danh mục</button>
+          </div>
         </div>
+        <div style="overflow-x:auto;">
+          <table class="portal-table">
+            <thead>
+              <tr>
+                <th>Mã Sản phẩm</th>
+                <th>Tên Sản phẩm</th>
+                <th>Phân hệ</th>
+                <th>Công khai</th>
+                <th>Thương mại</th>
+                <th>Thứ tự</th>
+                <th>Thực thi kỹ thuật</th>
+                <th>Phiên bản</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="portal-admin-commercial-products-tbody">
+              ${initialProducts.map((p) => `<tr>
+                <td><code>${safeText(p.product_key)}</code></td>
+                <td><strong>${safeText(p.display_name)}</strong></td>
+                <td><span class="portal-tag">${safeText(p.product_group || "video")}</span></td>
+                <td><span class="portal-badge" data-status="${p.public_visible ? "ready" : "guarded"}">${p.public_visible ? "Công khai" : "Ẩn"}</span></td>
+                <td><span class="portal-badge" data-status="${p.commercial_enabled ? "ready" : "guarded"}">${p.commercial_enabled ? "Bật" : "Tắt"}</span></td>
+                <td>${safeText(String(p.sort_order || 0))}</td>
+                <td>${p.execution_enabled ? '<span class="portal-badge" data-status="ready">Sẵn sàng</span>' : `<span class="portal-badge" data-status="guarded" style="background:#fee2e2;color:#b91c1c;border:1px solid #f87171;" title="${safeText(p.execution_blocker || "LOCKED")}">🔒 Khóa (${safeText(p.execution_blocker || "DEFERRED")})</span>`}</td>
+                <td><code>v${safeText(String(p.version || 1))}</code></td>
+                <td><button class="portal-button portal-button--quiet" type="button" data-portal-action="open-product-editor" data-product-key="${safeText(p.product_key)}">Chỉnh sửa</button></td>
+              </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>
+        <div id="portal-product-editor-modal-container"></div>
       </section>`;
     } else if (activeTab === "pricing") {
       activeContent = renderAdminPricing(page, context);
@@ -34363,6 +34830,12 @@
   if (typeof window !== "undefined") {
     window.openQrLightboxModal = openQrLightboxModal;
     window.closeQrLightboxModal = closeQrLightboxModal;
+    window.loadAdminCommercialProducts = loadAdminCommercialProducts;
+    window.fetchAdminCommercialProducts = fetchAdminCommercialProducts;
+    window.openProductEditor = openProductEditor;
+    window.closeProductEditor = closeProductEditor;
+    window.renderProductEditor = renderProductEditor;
+    window.saveProductEditor = saveProductEditor;
   }
 
   function dispatchAction(source, context) {
@@ -35881,6 +36354,28 @@
           handleManualTopupChangeSelection(action);
           return;
         }
+        if (actionName === "open-product-editor") {
+          if (event && event.preventDefault) event.preventDefault();
+          const pKey = action.getAttribute("data-product-key") || "";
+          openProductEditor(pKey);
+          return;
+        }
+        if (actionName === "close-product-editor") {
+          if (event && event.preventDefault) event.preventDefault();
+          closeProductEditor();
+          return;
+        }
+        if (actionName === "save-product-editor") {
+          if (event && event.preventDefault) event.preventDefault();
+          const pKey = action.getAttribute("data-product-key") || "";
+          saveProductEditor(pKey);
+          return;
+        }
+        if (actionName === "reload-commercial-products") {
+          if (event && event.preventDefault) event.preventDefault();
+          loadAdminCommercialProducts(true);
+          return;
+        }
         if (action.tagName === "BUTTON" && action.type === "submit") return;
         dispatchAction(action, getBootstrap());
         return;
@@ -35905,6 +36400,9 @@
       }
       if (event.target.matches && event.target.matches("[data-vietqr-input]")) {
         autoUpdateVietQrPreview(false);
+      }
+      if (event.target.closest && event.target.closest("#portal-product-editor-modal")) {
+        updateProductEditorDiff();
       }
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) rememberTransientFormDraft(form);
@@ -35952,6 +36450,9 @@
     document.addEventListener("change", (event) => {
       if (event.target.matches && event.target.matches("[data-vietqr-input]")) {
         autoUpdateVietQrPreview(false);
+      }
+      if (event.target.closest && event.target.closest("#portal-product-editor-modal")) {
+        updateProductEditorDiff();
       }
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) {

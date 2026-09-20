@@ -123,6 +123,8 @@ def _safe_error_code(status_code: int) -> str:
         return "CORE_BRIDGE_FORBIDDEN"
     if status_code == 404:
         return "CORE_BRIDGE_NOT_AVAILABLE"
+    if status_code == 409:
+        return "VERSION_CONFLICT_STALE_WRITE"
     if status_code == 429:
         return "CORE_BRIDGE_RATE_LIMITED"
     return "CORE_BRIDGE_UNAVAILABLE"
@@ -260,7 +262,7 @@ class CoreBridgeClient:
         except ValueError:
             data = None
         if response.status_code >= 400:
-            if isinstance(data, dict) and {"ok", "status", "message"}.issubset(data):
+            if isinstance(data, dict) and ({"ok", "status", "message"}.issubset(data) or {"ok", "message"}.issubset(data) or {"ok", "error_code"}.issubset(data)):
                 return _sanitize_envelope(data, fallback_code=_safe_error_code(response.status_code))
             return envelope(False, PUBLIC_GUARD, status_name="guarded", error_code=_safe_error_code(response.status_code))
         if not isinstance(data, dict):
@@ -307,17 +309,19 @@ def _sanitize_data(value: Any, *, depth: int = 0) -> Any:
 def _sanitize_envelope(value: dict, *, fallback_code: str | None = None) -> dict:
     """Keep bridge contract while preventing raw/debug keys from escaping."""
     raw_data = value.get("data")
+    if raw_data is None:
+        raw_data = {k: v for k, v in value.items() if k not in {"ok", "status", "message", "error_code"}}
     if not isinstance(raw_data, (dict, list)):
         raw_data = {}
     safe_data = _sanitize_data(raw_data)
     if not isinstance(safe_data, (dict, list)):
         safe_data = {}
-    status_name = str(value.get("status") or "failed")
+    status_name = str(value.get("status") or ("completed" if value.get("ok") else "failed"))
     allowed_statuses = {
         "draft", "awaiting_confirm", "queued", "processing", "completed",
         "failed", "failed_no_charge", "guarded", "cancelled", "refunded",
         "read_only", "pending_admin_review", "approved", "rejected",
-        "unverified", "unlinked",
+        "unverified", "unlinked", "conflict",
     }
     if status_name not in allowed_statuses:
         status_name = "failed"
