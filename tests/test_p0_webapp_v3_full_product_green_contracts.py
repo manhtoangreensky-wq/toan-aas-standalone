@@ -98,13 +98,13 @@ def test_green_05_topup_qr_primary_visual_and_size() -> None:
     match = re.search(r'\.portal-manual-payment-method\s*\{([^}]+)\}', PORTAL_CSS)
     assert match is not None
     css_props = match.group(1)
-    assert "minmax(360px, 420px)" in css_props or "minmax(320px, 380px)" in css_props, "QR column must be at least 320px"
+    assert "minmax(360px, 420px)" in css_props, "QR column must be canonical minmax(360px, 420px)"
 
     # Check img width and height in JS
     idx = PORTAL_JS.find("const singleMethodCard =")
     assert idx != -1
     card_str = PORTAL_JS[idx:idx + 1500]
-    assert ('width="380" height="380"' in card_str) or ('width="360" height="360"' in card_str)
+    assert 'width="380" height="380"' in card_str, "QR markup must be canonical 380x380"
     # QR figure is placed before copy
     fig_idx = card_str.find("<figure")
     copy_idx = card_str.find('class="portal-manual-payment-method-copy"')

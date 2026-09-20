@@ -9846,30 +9846,37 @@ html[data-portal-theme="dark"] .portal-manual-topup-form option {
   }
 
   .portal-manual-payment-method img {
-    width: min(340px, 100%);
-    min-width: 300px;
+    width: min(380px, 100%);
     max-width: 100%;
     justify-self: center;
   }
 }
 
 @media (max-width: 480px) {
+  .portal-page.portal-wallet-page .portal-wallet-layout.portal-wallet-command,
+  .portal-wallet-command {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
   .portal-manual-topup-card {
-    padding: 12px;
+    padding: 12px 4px;
   }
 
   .portal-manual-payment-method {
-    padding: 12px;
+    padding: 10px 0;
+    border-left: none;
+    border-right: none;
   }
 
   .portal-manual-payment-method figure {
     justify-self: center;
     width: 100%;
+    margin: 0;
   }
 
   .portal-manual-payment-method img {
-    width: min(330px, 100%);
-    min-width: 300px;
+    width: min(356px, 100%);
     max-width: 100%;
     justify-self: center;
   }

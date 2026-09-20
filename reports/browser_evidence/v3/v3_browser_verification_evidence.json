@@ -1,7 +1,7 @@
 {
-  "head_sha": "5f588ccfd101beccae897ba382c1ab2478c9de57",
+  "head_sha": "0db156d267e3c37a5de9c71feb7a762498cb0227",
   "task": "P0.WEBAPP.V3.WALLET.TOPUP.QR.DEFAULT.LARGE.NO.ZOOM.R1",
-  "timestamp": "2026-09-20T16:50:17Z",
+  "timestamp": "2026-09-20T17:31:05Z",
   "captures": [
     {
       "route": "/dashboard",
@@ -9,7 +9,7 @@
       "viewport": "1440x900",
       "viewport_name": "desktop",
       "screenshot_file": "v3_dashboard_desktop.png",
-      "sha256": "8c922f69802876d2ffeb408861fdcca4b469706f9297c45ea611d116bb6290d2",
+      "sha256": "3d3e715dbe54fc3a13b289ea573c3d035b3ef92bf5af79c7e44a169d4db4afa3",
       "horizontal_overflow": false,
       "console_errors": [],
       "passed": true
@@ -172,10 +172,12 @@
   "qr_checks": {
     "desktop_qr_width": 380,
     "desktop_qr_height": 380,
-    "mobile_qr_width": 300,
-    "mobile_qr_height": 300,
+    "mobile_qr_width": 348,
+    "mobile_qr_height": 348,
     "desktop_width_pass": true,
     "mobile_width_pass": true,
+    "mobile_horizontal_overflow": false,
+    "mobile_horizontal_overflow_pass": true,
     "modal_absent_pass": true,
     "action_absent_pass": true,
     "no_lightbox_fn_pass": true,
@@ -183,7 +185,7 @@
     "desktop_screenshot": "wallet_topup_qr_default_desktop.png",
     "mobile_screenshot": "wallet_topup_qr_default_mobile.png",
     "desktop_sha256": "da8913cc22e722e197b649f861720f2ad79a18c4fb4d33562eebe64977f20a18",
-    "mobile_sha256": "40421c59ed86a4a8e6b8e7e17ad4ee7a4e4a0b8e37ece3ae87ad74c6eb72eee2"
+    "mobile_sha256": "1622869c4f5bf5f5e3c29b2d60ae34813ce7b6b0f2aaa88218a6531c23871036"
   },
   "summary": {
     "total_captures": 15,

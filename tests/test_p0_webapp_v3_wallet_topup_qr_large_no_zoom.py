@@ -75,17 +75,26 @@ def test_09_desktop_qr_size_contract() -> None:
     img_rule = re.search(r"\.portal-manual-payment-method\s+img\s*\{(?P<body>[^}]+)\}", PORTAL_CSS)
     assert img_rule, "Expected .portal-manual-payment-method img rule in CSS"
     body = img_rule.group("body")
-    assert "width: min(380px, 100%)" in body or "width: 380px" in body
+    assert "width: min(380px, 100%)" in body
     assert "max-width: 420px" in body
     assert "aspect-ratio: 1" in body
     assert "object-fit: contain" in body
 
 
 def test_10_mobile_qr_size_contract() -> None:
-    """10: Mobile QR size contract (at 390px viewport, min-width >= 300px)."""
+    """10: Mobile QR size contract (at 390px viewport, rendered width >= 340px)."""
+    import json
+    OWNER_MOBILE_390_MIN = 340
     manual_css = PORTAL_CSS[PORTAL_CSS.index("/* Manual top-up"):]
-    assert "min-width: 300px" in manual_css
+    assert "min-width: 300px" not in manual_css, "Obsolete 300px min-width must be removed"
     assert ".portal-manual-payment-method img" in manual_css
+
+    evidence_path = ROOT / "reports" / "browser_evidence" / "v3" / "v3_browser_verification_evidence.json"
+    if evidence_path.exists():
+        evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+        qr_checks = evidence.get("qr_checks", {})
+        mobile_w = qr_checks.get("mobile_qr_width", 0)
+        assert mobile_w >= OWNER_MOBILE_390_MIN, f"Rendered mobile QR width {mobile_w} < {OWNER_MOBILE_390_MIN}"
 
 
 def test_11_qr_visible_in_payment_card_without_zoom_interaction() -> None:

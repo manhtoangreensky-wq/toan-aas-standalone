@@ -431,21 +431,64 @@ async def main():
             if ARTIFACTS_DIR.exists():
                 (ARTIFACTS_DIR / desktop_filename).write_bytes(desktop_bytes)
 
-            # Measure Mobile QR (390x844)
+            # Measure Mobile QR (390x844) with fresh bounded selection flow
+            print("[*] Testing Top-up Mobile Large Embedded QR (390x844)...")
             await send_page("Emulation.setDeviceMetricsOverride", {
                 "width": 390, "height": 844, "deviceScaleFactor": 2, "mobile": True
             })
-            await asyncio.sleep(0.8)
+            await send_page("Page.navigate", {"url": f"{server_origin}/wallet/topup"})
+            await asyncio.sleep(1.2)
+
+            await send_page("Runtime.evaluate", {
+                "expression": """(async () => {
+                    const manualBtn = document.querySelector('[data-portal-topup-lane="manual"]');
+                    if (manualBtn) manualBtn.click();
+                    await new Promise(r => setTimeout(r, 400));
+
+                    let methodCard = document.querySelector(".portal-manual-payment-method");
+                    if (!methodCard) {
+                        const amtInput = document.querySelector('.portal-manual-topup-form input[name="amount_vnd"]');
+                        if (amtInput) {
+                            amtInput.value = "50000";
+                            amtInput.dispatchEvent(new Event("input", { bubbles: true }));
+                            amtInput.dispatchEvent(new Event("change", { bubbles: true }));
+                        }
+                        const methodSelect = document.querySelector('.portal-manual-topup-form select[name="method"]');
+                        if (methodSelect) {
+                            const opt = Array.from(methodSelect.options).find(o => o.value && !o.disabled);
+                            if (opt) {
+                                methodSelect.value = opt.value;
+                                methodSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                            }
+                        }
+                        await new Promise(r => setTimeout(r, 300));
+                        const confirmBtn = document.querySelector('button[data-portal-action="manual-topup-confirm-selection"]');
+                        if (confirmBtn) {
+                            confirmBtn.click();
+                        } else {
+                            const form = document.querySelector('form.portal-manual-topup-form');
+                            if (form) form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+                        }
+                        await new Promise(r => setTimeout(r, 800));
+                    }
+                })()""",
+                "awaitPromise": True,
+            })
+            await asyncio.sleep(1.2)
 
             mobile_qr_eval = await send_page("Runtime.evaluate", {
                 "expression": """(() => {
                     const qrImg = document.querySelector(".portal-manual-payment-method img");
-                    if (!qrImg) return { found: false };
+                    if (!qrImg) return { found: false, overflow: false };
                     const rect = qrImg.getBoundingClientRect();
+                    const overflow = document.documentElement.scrollWidth > window.innerWidth + 1;
                     return {
                         found: true,
                         width: rect.width,
-                        height: rect.height
+                        height: rect.height,
+                        overflow: overflow,
+                        scroll_width: document.documentElement.scrollWidth,
+                        inner_width: window.innerWidth
                     };
                 })()""",
                 "returnByValue": True,
@@ -463,14 +506,17 @@ async def main():
 
             desktop_w = desktop_qr.get("width", 0)
             mobile_w = mobile_qr.get("width", 0)
+            mobile_overflow = bool(mobile_qr.get("overflow", False))
 
             results["qr_checks"] = {
                 "desktop_qr_width": desktop_w,
                 "desktop_qr_height": desktop_qr.get("height", 0),
                 "mobile_qr_width": mobile_w,
                 "mobile_qr_height": mobile_qr.get("height", 0),
-                "desktop_width_pass": desktop_w >= 360,
-                "mobile_width_pass": mobile_w >= 300,
+                "desktop_width_pass": 370 <= desktop_w <= 390,
+                "mobile_width_pass": mobile_w >= 340,
+                "mobile_horizontal_overflow": mobile_overflow,
+                "mobile_horizontal_overflow_pass": not mobile_overflow,
                 "modal_absent_pass": desktop_qr.get("modal_absent", False),
                 "action_absent_pass": desktop_qr.get("action_absent", False),
                 "no_lightbox_fn_pass": desktop_qr.get("no_lightbox_fn", False),
@@ -498,8 +544,10 @@ async def main():
 
     assert results["summary"]["total_captures"] == 15, "Expected 15 captures"
     assert results["summary"]["console_errors_count"] == 0, f"Expected 0 console errors, got {results['summary']['console_errors_count']}"
-    assert results["qr_checks"]["desktop_width_pass"], f"Expected desktop QR width >= 360, got {results['qr_checks']['desktop_qr_width']}"
-    assert results["qr_checks"]["mobile_width_pass"], f"Expected mobile QR width >= 300, got {results['qr_checks']['mobile_qr_width']}"
+    assert results["summary"]["horizontal_overflow_count"] == 0, f"Expected 0 horizontal overflow, got {results['summary']['horizontal_overflow_count']}"
+    assert results["qr_checks"]["desktop_width_pass"], f"Expected desktop QR width in 370..390, got {results['qr_checks']['desktop_qr_width']}"
+    assert results["qr_checks"]["mobile_width_pass"], f"Expected mobile QR width >= 340, got {results['qr_checks']['mobile_qr_width']}"
+    assert results["qr_checks"]["mobile_horizontal_overflow_pass"], "Expected no mobile horizontal overflow on payment card"
     assert results["qr_checks"]["modal_absent_pass"], "Expected QR lightbox modal to be absent"
     assert results["qr_checks"]["action_absent_pass"], "Expected open-qr-lightbox action to be absent"
     assert results["qr_checks"]["no_lightbox_fn_pass"], "Expected open/close lightbox functions to be absent"
