@@ -1,7 +1,7 @@
 {
-  "head_sha": "670fb4aa0106f615cc4607b14c21243da416e265",
-  "task": "P0.WEBAPP.V3.FULL.PRODUCT.ADMIN.COMMERCIAL.UX.TRUTH.REMEDIATION.R1",
-  "timestamp": "2026-09-20T11:36:46Z",
+  "head_sha": "5f588ccfd101beccae897ba382c1ab2478c9de57",
+  "task": "P0.WEBAPP.V3.WALLET.TOPUP.QR.DEFAULT.LARGE.NO.ZOOM.R1",
+  "timestamp": "2026-09-20T16:50:17Z",
   "captures": [
     {
       "route": "/dashboard",
@@ -9,7 +9,7 @@
       "viewport": "1440x900",
       "viewport_name": "desktop",
       "screenshot_file": "v3_dashboard_desktop.png",
-      "sha256": "b430504b722c579f0e020bc303e1627b2dcfffd5e64d57a7649a646dd468e0ea",
+      "sha256": "8c922f69802876d2ffeb408861fdcca4b469706f9297c45ea611d116bb6290d2",
       "horizontal_overflow": false,
       "console_errors": [],
       "passed": true
@@ -20,7 +20,7 @@
       "viewport": "1024x768",
       "viewport_name": "tablet",
       "screenshot_file": "v3_dashboard_tablet.png",
-      "sha256": "52e06c375df111ff7c1bb2fd7137124338445f0b1a8629abb8be7f0a52f4bcb5",
+      "sha256": "aca07feb37e6e358d93de3c257d512a5956d93276bac9a9d275ef5df255dade0",
       "horizontal_overflow": false,
       "console_errors": [],
       "passed": true
@@ -31,7 +31,7 @@
       "viewport": "390x844",
       "viewport_name": "mobile",
       "screenshot_file": "v3_dashboard_mobile.png",
-      "sha256": "5d684a828312927028cf3f74f1a0fe31dce553b49e396eeb50c3d4d94d47a769",
+      "sha256": "bc05e8e3bcc6843fd00fac5a210923f7482f347c162e512e4794af54a81c00d5",
       "horizontal_overflow": false,
       "console_errors": [],
       "passed": true
@@ -75,7 +75,7 @@
       "viewport": "1440x900",
       "viewport_name": "desktop",
       "screenshot_file": "v3_wallet_topup_desktop.png",
-      "sha256": "97e4f530624e5d9a98d91ebbbfbe6e12d1d67531a6791b94b83c0d0608a2e94c",
+      "sha256": "b96365571abe0da85bcdcf02f6a6be1eb72b6fadfd9e51ab1f4e123b169d0787",
       "horizontal_overflow": false,
       "console_errors": [],
       "passed": true
@@ -86,7 +86,7 @@
       "viewport": "1024x768",
       "viewport_name": "tablet",
       "screenshot_file": "v3_wallet_topup_tablet.png",
-      "sha256": "563b0a529091fa30dc271c259390a8ecc48de6aaf574c9f6f0cef96de3489515",
+      "sha256": "cdf5611364658449a91525550bb9b4b33b2c74f4594ef0cafa3adf8c5b94d689",
       "horizontal_overflow": false,
       "console_errors": [],
       "passed": true
@@ -97,7 +97,7 @@
       "viewport": "390x844",
       "viewport_name": "mobile",
       "screenshot_file": "v3_wallet_topup_mobile.png",
-      "sha256": "9a834bc7ab1ba23eaf3da3e9b1142fc31da11e108f2ff48d96539ed776d24c77",
+      "sha256": "7306272c1587d293ef8b7409e636de17349377a798204e95e563dd6e3691baf2",
       "horizontal_overflow": false,
       "console_errors": [],
       "passed": true
@@ -169,11 +169,21 @@
       "passed": true
     }
   ],
-  "lightbox_checks": {
-    "open_lightbox_pass": true,
-    "close_lightbox_pass": true,
-    "modal_screenshot": "v3_topup_qr_lightbox_desktop.png",
-    "modal_sha256": "e0691e3893c1cc69f46eef3021be9d1f9cf2289b2ec7f5769f138e059130dbe7"
+  "qr_checks": {
+    "desktop_qr_width": 380,
+    "desktop_qr_height": 380,
+    "mobile_qr_width": 300,
+    "mobile_qr_height": 300,
+    "desktop_width_pass": true,
+    "mobile_width_pass": true,
+    "modal_absent_pass": true,
+    "action_absent_pass": true,
+    "no_lightbox_fn_pass": true,
+    "cursor_not_zoom_pass": true,
+    "desktop_screenshot": "wallet_topup_qr_default_desktop.png",
+    "mobile_screenshot": "wallet_topup_qr_default_mobile.png",
+    "desktop_sha256": "da8913cc22e722e197b649f861720f2ad79a18c4fb4d33562eebe64977f20a18",
+    "mobile_sha256": "40421c59ed86a4a8e6b8e7e17ad4ee7a4e4a0b8e37ece3ae87ad74c6eb72eee2"
   },
   "summary": {
     "total_captures": 15,

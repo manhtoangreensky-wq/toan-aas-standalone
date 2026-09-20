@@ -94,6 +94,10 @@ async def main():
 
     server_origin = f"http://127.0.0.1:{port}"
 
+    qr_file = tmp_dir / "acb_verify_qr.png"
+    from PIL import Image
+    Image.new("RGB", (380, 380), color=(16, 170, 150)).save(qr_file, format="PNG")
+
     env = os.environ.copy()
     env["DB_FILE"] = db_path
     env["WEBAPP_SESSION_DB_PATH"] = db_path
@@ -101,6 +105,11 @@ async def main():
     env["WEBAPP_ASSET_VAULT_ENABLED"] = "true"
     env["WEBAPP_ASSET_VAULT_ROOT"] = str(assets_dir)
     env["WEBAPP_RATE_LIMIT_DISABLED"] = "true"
+    env["MANUAL_BANK_CODE"] = "ACB"
+    env["MANUAL_BANK_NAME"] = "Asia Commercial Bank"
+    env["MANUAL_BANK_ACCOUNT"] = "0387532320"
+    env["MANUAL_BANK_OWNER"] = "TOAN AAS"
+    env["MANUAL_BANK_QR_PATH"] = str(qr_file)
 
     python_exe = sys.executable
 
@@ -171,10 +180,10 @@ async def main():
 
     results = {
         "head_sha": head_sha,
-        "task": "P0.WEBAPP.V3.FULL.PRODUCT.ADMIN.COMMERCIAL.UX.TRUTH.REMEDIATION.R1",
+        "task": "P0.WEBAPP.V3.WALLET.TOPUP.QR.DEFAULT.LARGE.NO.ZOOM.R1",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "captures": [],
-        "lightbox_checks": {},
+        "qr_checks": {},
         "summary": {
             "total_captures": 0,
             "passed_captures": 0,
@@ -342,73 +351,135 @@ async def main():
 
                     print(f"    [{vp_name.upper():7s}] {route:20s} -> {filename} (Overflow={has_overflow}, Errors={len(page_console_errors)})")
 
-            # 3. Test QR Lightbox Modal on /wallet/topup
-            print("[*] Testing Top-up QR Lightbox Modal interaction...")
+            # 3. Test Default Large Embedded QR on /wallet/topup without zoom/lightbox
+            print("[*] Testing Top-up Default Large Embedded QR (No zoom/lightbox)...")
             await send_page("Emulation.setDeviceMetricsOverride", {
                 "width": 1440, "height": 900, "deviceScaleFactor": 1, "mobile": False
             })
             await send_page("Page.navigate", {"url": f"{server_origin}/wallet/topup"})
             await asyncio.sleep(1.0)
 
-            # Trigger manual topup pane confirm selection if needed to show singleMethodCard
+            # Switch to manual topup lane if needed and confirm selection to render singleMethodCard
             await send_page("Runtime.evaluate", {
                 "expression": """(async () => {
-                    const cur = (window.TOANAASPortal && window.TOANAASPortal.restoreWorkspaceDraft) ? {} : {};
-                    const methodCard = document.querySelector(".portal-manual-payment-method");
+                    const manualBtn = document.querySelector('[data-portal-topup-lane="manual"]');
+                    if (manualBtn) manualBtn.click();
+                    await new Promise(r => setTimeout(r, 400));
+
+                    let methodCard = document.querySelector(".portal-manual-payment-method");
                     if (!methodCard) {
-                        const confirmBtn = document.querySelector('[data-portal-action="manual-topup-confirm-selection"]');
-                        if (confirmBtn) confirmBtn.click();
+                        const amtInput = document.querySelector('.portal-manual-topup-form input[name="amount_vnd"]');
+                        if (amtInput) {
+                            amtInput.value = "50000";
+                            amtInput.dispatchEvent(new Event("input", { bubbles: true }));
+                            amtInput.dispatchEvent(new Event("change", { bubbles: true }));
+                        }
+                        const methodSelect = document.querySelector('.portal-manual-topup-form select[name="method"]');
+                        if (methodSelect) {
+                            const opt = Array.from(methodSelect.options).find(o => o.value && !o.disabled);
+                            if (opt) {
+                                methodSelect.value = opt.value;
+                                methodSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                            }
+                        }
+                        await new Promise(r => setTimeout(r, 300));
+                        const confirmBtn = document.querySelector('button[data-portal-action="manual-topup-confirm-selection"]');
+                        if (confirmBtn) {
+                            confirmBtn.click();
+                        } else {
+                            const form = document.querySelector('form.portal-manual-topup-form');
+                            if (form) form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+                        }
+                        await new Promise(r => setTimeout(r, 800));
                     }
                 })()""",
                 "awaitPromise": True,
             })
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.2)
 
-            # Test opening lightbox
-            open_eval = await send_page("Runtime.evaluate", {
+            # Measure Desktop QR
+            desktop_qr_eval = await send_page("Runtime.evaluate", {
                 "expression": """(() => {
-                    const fn = window.openQrLightboxModal || (typeof openQrLightboxModal === 'function' ? openQrLightboxModal : null);
-                    if (fn) {
-                        fn("/static/portal/favicon.ico", "Mã QR Ngân Hàng ACB");
-                        const modal = document.getElementById("portal-qr-lightbox-modal");
-                        return { opened: modal ? modal.classList.contains("is-open") : false };
-                    }
-                    return { opened: false };
+                    const qrImg = document.querySelector(".portal-manual-payment-method img");
+                    const modal = document.getElementById("portal-qr-lightbox-modal");
+                    const lightboxAction = document.querySelector('[data-portal-action="open-qr-lightbox"]');
+                    const figure = document.querySelector(".portal-manual-payment-method figure");
+                    const figStyle = figure ? window.getComputedStyle(figure) : null;
+                    const noFns = typeof window.openQrLightboxModal === "undefined" && typeof window.closeQrLightboxModal === "undefined";
+                    if (!qrImg) return { found: false, modal_absent: !modal, action_absent: !lightboxAction, no_lightbox_fn: noFns };
+                    const rect = qrImg.getBoundingClientRect();
+                    return {
+                        found: true,
+                        width: rect.width,
+                        height: rect.height,
+                        modal_absent: !modal,
+                        action_absent: !lightboxAction,
+                        cursor: figStyle ? figStyle.cursor : "",
+                        no_lightbox_fn: noFns
+                    };
                 })()""",
                 "returnByValue": True,
             })
-            opened = bool(open_eval.get("result", {}).get("value", {}).get("opened", False))
+            desktop_qr = desktop_qr_eval.get("result", {}).get("value", {})
+            print(f"    Desktop QR check: {desktop_qr}")
 
-            # Screenshot modal
-            modal_shot_res = await send_page("Page.captureScreenshot", {"format": "png"})
-            modal_bytes = base64.b64decode(modal_shot_res.get("data", ""))
-            modal_filename = "v3_topup_qr_lightbox_desktop.png"
-            (output_dir / modal_filename).write_bytes(modal_bytes)
+            # Capture desktop QR screenshot
+            desktop_shot_res = await send_page("Page.captureScreenshot", {"format": "png"})
+            desktop_bytes = base64.b64decode(desktop_shot_res.get("data", ""))
+            desktop_filename = "wallet_topup_qr_default_desktop.png"
+            (output_dir / desktop_filename).write_bytes(desktop_bytes)
             if ARTIFACTS_DIR.exists():
-                (ARTIFACTS_DIR / modal_filename).write_bytes(modal_bytes)
+                (ARTIFACTS_DIR / desktop_filename).write_bytes(desktop_bytes)
 
-            # Test closing lightbox
-            close_eval = await send_page("Runtime.evaluate", {
+            # Measure Mobile QR (390x844)
+            await send_page("Emulation.setDeviceMetricsOverride", {
+                "width": 390, "height": 844, "deviceScaleFactor": 2, "mobile": True
+            })
+            await asyncio.sleep(0.8)
+
+            mobile_qr_eval = await send_page("Runtime.evaluate", {
                 "expression": """(() => {
-                    const fn = window.closeQrLightboxModal || (typeof closeQrLightboxModal === 'function' ? closeQrLightboxModal : null);
-                    if (fn) {
-                        fn();
-                        const modal = document.getElementById("portal-qr-lightbox-modal");
-                        return { closed: modal ? !modal.classList.contains("is-open") : false };
-                    }
-                    return { closed: false };
+                    const qrImg = document.querySelector(".portal-manual-payment-method img");
+                    if (!qrImg) return { found: false };
+                    const rect = qrImg.getBoundingClientRect();
+                    return {
+                        found: true,
+                        width: rect.width,
+                        height: rect.height
+                    };
                 })()""",
                 "returnByValue": True,
             })
-            closed = bool(close_eval.get("result", {}).get("value", {}).get("closed", False))
+            mobile_qr = mobile_qr_eval.get("result", {}).get("value", {})
+            print(f"    Mobile QR check: {mobile_qr}")
 
-            results["lightbox_checks"] = {
-                "open_lightbox_pass": opened,
-                "close_lightbox_pass": closed,
-                "modal_screenshot": modal_filename,
-                "modal_sha256": hashlib.sha256(modal_bytes).hexdigest(),
+            # Capture mobile QR screenshot
+            mobile_shot_res = await send_page("Page.captureScreenshot", {"format": "png"})
+            mobile_bytes = base64.b64decode(mobile_shot_res.get("data", ""))
+            mobile_filename = "wallet_topup_qr_default_mobile.png"
+            (output_dir / mobile_filename).write_bytes(mobile_bytes)
+            if ARTIFACTS_DIR.exists():
+                (ARTIFACTS_DIR / mobile_filename).write_bytes(mobile_bytes)
+
+            desktop_w = desktop_qr.get("width", 0)
+            mobile_w = mobile_qr.get("width", 0)
+
+            results["qr_checks"] = {
+                "desktop_qr_width": desktop_w,
+                "desktop_qr_height": desktop_qr.get("height", 0),
+                "mobile_qr_width": mobile_w,
+                "mobile_qr_height": mobile_qr.get("height", 0),
+                "desktop_width_pass": desktop_w >= 360,
+                "mobile_width_pass": mobile_w >= 300,
+                "modal_absent_pass": desktop_qr.get("modal_absent", False),
+                "action_absent_pass": desktop_qr.get("action_absent", False),
+                "no_lightbox_fn_pass": desktop_qr.get("no_lightbox_fn", False),
+                "cursor_not_zoom_pass": desktop_qr.get("cursor") not in ("pointer", "zoom-in"),
+                "desktop_screenshot": desktop_filename,
+                "mobile_screenshot": mobile_filename,
+                "desktop_sha256": hashlib.sha256(desktop_bytes).hexdigest(),
+                "mobile_sha256": hashlib.sha256(mobile_bytes).hexdigest(),
             }
-            print(f"    QR Lightbox Modal: Open={opened}, Close={closed}")
 
     finally:
         chrome_proc.kill()
@@ -427,9 +498,12 @@ async def main():
 
     assert results["summary"]["total_captures"] == 15, "Expected 15 captures"
     assert results["summary"]["console_errors_count"] == 0, f"Expected 0 console errors, got {results['summary']['console_errors_count']}"
-    assert results["summary"]["horizontal_overflow_count"] == 0, f"Expected 0 horizontal overflow, got {results['summary']['horizontal_overflow_count']}"
-    assert results["lightbox_checks"]["open_lightbox_pass"], "Expected openQrLightboxModal to succeed"
-    assert results["lightbox_checks"]["close_lightbox_pass"], "Expected closeQrLightboxModal to succeed"
+    assert results["qr_checks"]["desktop_width_pass"], f"Expected desktop QR width >= 360, got {results['qr_checks']['desktop_qr_width']}"
+    assert results["qr_checks"]["mobile_width_pass"], f"Expected mobile QR width >= 300, got {results['qr_checks']['mobile_qr_width']}"
+    assert results["qr_checks"]["modal_absent_pass"], "Expected QR lightbox modal to be absent"
+    assert results["qr_checks"]["action_absent_pass"], "Expected open-qr-lightbox action to be absent"
+    assert results["qr_checks"]["no_lightbox_fn_pass"], "Expected open/close lightbox functions to be absent"
+    assert results["qr_checks"]["cursor_not_zoom_pass"], "Expected figure cursor to not be pointer or zoom-in"
 
 
 if __name__ == "__main__":

@@ -21963,7 +21963,7 @@
         ? manualTopupText("requestAvailable", "Có thể tạo yêu cầu đối soát")
         : manualTopupText("informationalOnly", "Chỉ hiển thị thông tin; chưa nhận yêu cầu VND");
 
-    const singleMethodCard = `<section class="portal-manual-payment-methods" aria-labelledby="manual-payment-methods-title"><h3 id="manual-payment-methods-title">${safeText(manualTopupText("instructionTitle", "Hướng dẫn chuyển tiền"))}</h3><div class="portal-manual-payment-method-grid"><article class="portal-manual-payment-method" data-manual-payment-method="${safeText(confirmedMethodId)}" data-manual-payment-ready="true">${safeQrUrl ? `<figure class="portal-manual-payment-qr-figure" data-portal-action="open-qr-lightbox" data-qr-url="${safeText(safeQrUrl)}" data-qr-title="${safeText(methodLabel)}" title="Bấm để phóng to mã QR" style="cursor:zoom-in;"><img src="${safeText(safeQrUrl)}" alt="${safeText(`${manualTopupText("scanQr", "Quét mã QR")} · ${methodLabel}`)}" width="360" height="360" loading="lazy" decoding="async"><figcaption style="display:flex;align-items:center;justify-content:center;gap:6px;"><span>${safeText(manualTopupText("scanQr", "Quét mã QR · Bấm để phóng to"))}</span></figcaption></figure>` : ""}<div class="portal-manual-payment-method-copy"><span>${safeText(item.currency || "VND")}</span><h4>${safeText(methodLabel)}</h4>${facts.length ? `<dl>${facts.map(([factLabel, factValue]) => `<div><dt>${safeText(factLabel)}</dt><dd>${safeText(factValue)}</dd></div>`).join("")}</dl>` : ""}<p>${safeText(statusText)}</p></div></article></div></section>`;
+    const singleMethodCard = `<section class="portal-manual-payment-methods" aria-labelledby="manual-payment-methods-title"><h3 id="manual-payment-methods-title">${safeText(manualTopupText("instructionTitle", "Hướng dẫn chuyển tiền"))}</h3><div class="portal-manual-payment-method-grid"><article class="portal-manual-payment-method" data-manual-payment-method="${safeText(confirmedMethodId)}" data-manual-payment-ready="true">${safeQrUrl ? `<figure><img src="${safeText(safeQrUrl)}" alt="${safeText(`${manualTopupText("scanQr", "Quét mã QR")} · ${methodLabel}`)}" width="380" height="380" loading="lazy" decoding="async"><figcaption><span>${safeText(manualTopupText("scanQr", "Quét mã QR"))}</span></figcaption></figure>` : ""}<div class="portal-manual-payment-method-copy"><span>${safeText(item.currency || "VND")}</span><h4>${safeText(methodLabel)}</h4>${facts.length ? `<dl>${facts.map(([factLabel, factValue]) => `<div><dt>${safeText(factLabel)}</dt><dd>${safeText(factValue)}</dd></div>`).join("")}</dl>` : ""}<p>${safeText(statusText)}</p></div></article></div></section>`;
 
     const reference = String(transient.reference || "");
     return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="${safeText(submitting ? "submitting" : (flow.status || "form"))}" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("description", "Tạo yêu cầu đối soát trên Web."))}</p></div></div>${infoMarkup}${singleMethodCard}<span class="portal-manual-topup-route" hidden aria-hidden="true"></span><span class="portal-manual-topup-status" hidden aria-hidden="true"></span><p class="portal-manual-topup-warning">${safeText(manualTopupText("automaticCreditWarning", "Web không tự cộng Xu."))}</p><div class="portal-manual-topup-current" role="status" aria-live="polite">${currentRecord || `<span>${safeText(manualTopupStatusLabel(submitting ? "submitting" : (flow.status || "form")))}</span>`}</div><form class="portal-form portal-manual-topup-form" data-portal-form data-portal-action="manual-topup-create" data-portal-route="/wallet/topup" novalidate><input type="hidden" name="topup_lane" value="manual"><input type="hidden" name="manual_selection_confirmed" value="true"><input type="hidden" name="amount_vnd" value="${safeText(String(rawConfirmedAmount))}"><input type="hidden" name="method" value="${safeText(confirmedMethodId)}"><input type="hidden" name="confirmed_amount_vnd" value="${safeText(String(rawConfirmedAmount))}"><input type="hidden" name="confirmed_method" value="${safeText(confirmedMethodId)}"><label><span>${safeText(manualTopupText("referenceLabel", "Mã giao dịch / TXID (không bắt buộc)"))}</span><input name="reference" type="text" maxlength="240" autocomplete="off" placeholder="${safeText(manualTopupText("referencePlaceholder", "Nhập tham chiếu nếu đã có"))}" value="${safeText(reference)}"${submitting ? " disabled" : ""}></label><div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;"><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-change-selection" data-portal-route="/wallet/topup"${submitting ? " disabled" : ""}>${safeText(manualTopupText("changeSelection", "Chọn lại phương thức"))}</button><button class="portal-button portal-button--primary" type="submit"${submitting ? " disabled aria-busy=\"true\"" : ""}>${safeText(manualTopupText(submitting ? "submitting" : "submit", submitting ? "Đang gửi yêu cầu…" : "Gửi yêu cầu đối soát"))}</button></div></form><section class="portal-manual-topup-history" aria-labelledby="manual-topup-history-title"><div class="portal-card-header"><div><h3 id="manual-topup-history-title">${safeText(manualTopupText("historyTitle", "Lịch sử nạp thủ công"))}</h3></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-refresh" data-portal-route="/wallet/topup">${safeText(manualTopupText("refresh", "Làm mới lịch sử"))}</button></div><div class="portal-manual-topup-history-list" role="status" aria-live="polite">${historyMarkup}</div></section></section>`;
@@ -34733,50 +34733,7 @@
     }).filter((id) => validVaultAssetId(id) && !seen.has(id) && (seen.add(id), true)).slice(0, 8);
   }
 
-  function openQrLightboxModal(qrUrl, qrTitle) {
-    if (!qrUrl) return;
-    let modal = document.getElementById("portal-qr-lightbox-modal");
-    if (!modal) {
-      modal = document.createElement("div");
-      modal.id = "portal-qr-lightbox-modal";
-      modal.className = "portal-qr-lightbox-modal";
-      modal.setAttribute("role", "dialog");
-      modal.setAttribute("aria-modal", "true");
-      modal.setAttribute("aria-label", "Mã QR thanh toán phóng to");
-      modal.setAttribute("tabindex", "-1");
-      modal.innerHTML = `
-        <div class="portal-qr-lightbox-backdrop" data-portal-action="close-qr-lightbox"></div>
-        <div class="portal-qr-lightbox-content">
-          <button type="button" class="portal-qr-lightbox-close" data-portal-action="close-qr-lightbox" aria-label="Đóng (ESC)">✕</button>
-          <img class="portal-qr-lightbox-img" src="" alt="Mã QR phóng to" />
-          <p class="portal-qr-lightbox-caption"></p>
-        </div>
-      `;
-      document.body.appendChild(modal);
-    }
-    const img = modal.querySelector(".portal-qr-lightbox-img");
-    const caption = modal.querySelector(".portal-qr-lightbox-caption");
-    if (img) {
-      img.src = qrUrl;
-      img.alt = qrTitle ? `Mã QR: ${qrTitle}` : "Mã QR thanh toán";
-    }
-    if (caption) {
-      caption.textContent = qrTitle ? `${qrTitle} · Bấm bất kỳ đâu hoặc phím ESC để đóng` : "Quét mã để chuyển tiền · Bấm bất kỳ đâu hoặc phím ESC để đóng";
-    }
-    modal.classList.add("is-open");
-    modal.focus();
-  }
-
-  function closeQrLightboxModal() {
-    const modal = document.getElementById("portal-qr-lightbox-modal");
-    if (modal) {
-      modal.classList.remove("is-open");
-    }
-  }
-
   if (typeof window !== "undefined") {
-    window.openQrLightboxModal = openQrLightboxModal;
-    window.closeQrLightboxModal = closeQrLightboxModal;
     window.loadAdminCommercialProducts = loadAdminCommercialProducts;
     window.fetchAdminCommercialProducts = fetchAdminCommercialProducts;
     window.openProductEditor = openProductEditor;
@@ -36281,16 +36238,6 @@
       const action = event.target.closest("[data-portal-action]");
       if (action && action.tagName !== "FORM" && !action.disabled) {
         const actionName = action.getAttribute("data-portal-action");
-        if (actionName === "open-qr-lightbox") {
-          if (event && event.preventDefault) event.preventDefault();
-          openQrLightboxModal(action.getAttribute("data-qr-url") || "", action.getAttribute("data-qr-title") || "");
-          return;
-        }
-        if (actionName === "close-qr-lightbox") {
-          if (event && event.preventDefault) event.preventDefault();
-          closeQrLightboxModal();
-          return;
-        }
         if (actionName === "manual-topup-confirm-selection") {
           if (event && event.preventDefault) event.preventDefault();
           handleManualTopupConfirmSelection(action);
@@ -37514,9 +37461,6 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
   });
 
   bindPwaInstallEvents();
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeQrLightboxModal();
-  });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => mountPortal(), { once: true });
   else mountPortal();
 }());

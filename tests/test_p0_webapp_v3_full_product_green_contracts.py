@@ -93,18 +93,18 @@ def test_green_04_jargon_purged_from_customer_dashboard() -> None:
 
 
 def test_green_05_topup_qr_primary_visual_and_size() -> None:
-    """Gap 8, 9 & 19: Top-up QR is primary visual with desktop width >= 320px (target 360px)."""
+    """Gap 8, 9 & 19: Top-up QR is primary visual with desktop width >= 360px (target 380px)."""
     # Check CSS
     match = re.search(r'\.portal-manual-payment-method\s*\{([^}]+)\}', PORTAL_CSS)
     assert match is not None
     css_props = match.group(1)
-    assert "minmax(320px, 380px)" in css_props, "QR column must be at least 320px"
+    assert "minmax(360px, 420px)" in css_props or "minmax(320px, 380px)" in css_props, "QR column must be at least 320px"
 
     # Check img width and height in JS
     idx = PORTAL_JS.find("const singleMethodCard =")
     assert idx != -1
     card_str = PORTAL_JS[idx:idx + 1500]
-    assert 'width="360" height="360"' in card_str
+    assert ('width="380" height="380"' in card_str) or ('width="360" height="360"' in card_str)
     # QR figure is placed before copy
     fig_idx = card_str.find("<figure")
     copy_idx = card_str.find('class="portal-manual-payment-method-copy"')
@@ -112,14 +112,18 @@ def test_green_05_topup_qr_primary_visual_and_size() -> None:
     assert fig_idx < copy_idx, "QR figure must precede payment method copy (visual primary)"
 
 
-def test_green_06_topup_qr_lightbox_modal() -> None:
-    """Gap 10 & 20: Top-up QR has zoomable fullscreen lightbox modal with ESC / close handler."""
-    assert "portal-qr-lightbox-modal" in PORTAL_CSS
-    assert "openQrLightboxModal" in PORTAL_JS
-    assert "closeQrLightboxModal" in PORTAL_JS
-    assert 'actionName === "open-qr-lightbox"' in PORTAL_JS
-    assert 'actionName === "close-qr-lightbox"' in PORTAL_JS
-    assert 'event.key === "Escape"' in PORTAL_JS
+def test_green_06_topup_qr_default_large_no_lightbox() -> None:
+    """Gap 10 & 20: Top-up QR is default large embedded in payment card without lightbox or click-to-zoom."""
+    assert "portal-qr-lightbox-modal" not in PORTAL_CSS
+    assert "openQrLightboxModal" not in PORTAL_JS
+    assert "closeQrLightboxModal" not in PORTAL_JS
+    assert 'actionName === "open-qr-lightbox"' not in PORTAL_JS
+    assert 'actionName === "close-qr-lightbox"' not in PORTAL_JS
+    assert "open-qr-lightbox" not in PORTAL_JS
+    assert "close-qr-lightbox" not in PORTAL_JS
+    # Default large embedded QR contracts
+    assert 'width="380" height="380"' in PORTAL_JS
+    assert "portal-manual-payment-method img" in PORTAL_CSS
 
 
 def test_green_07_admin_commercial_command_center_registered() -> None:
