@@ -31097,7 +31097,6 @@
     </article>`;
   }
 
-  
   let adminCommercialProductsState = null;
   let adminCommercialProductsLoadError = null;
   let adminCommercialProductsLoading = false;
@@ -34734,7 +34733,6 @@
     }).filter((id) => validVaultAssetId(id) && !seen.has(id) && (seen.add(id), true)).slice(0, 8);
   }
 
-  
   function openQrLightboxModal(qrUrl, qrTitle) {
     if (!qrUrl) return;
     let modal = document.getElementById("portal-qr-lightbox-modal");
