@@ -1,5 +1,5 @@
 {
-  "head_sha": "b8652fbc60a1cbdda10ceb934ff7960c23f8cf61",
+  "head_sha": "45423b406c8eafc7702c624221ab632a2f52cd61",
   "server_origin": "isolated-local-test-origin",
   "pages": [
     {
@@ -354,7 +354,11 @@
   },
   "unhandled_rejection_checks": {
     "instrumentation_installed": true,
-    "sentinel_rejection_detected": true
+    "real_promise_rejection_sentinel": true,
+    "sentinel_rejection_detected": true,
+    "sentinel_manual_event_dispatch": 0,
+    "sentinel_direct_array_push": 0,
+    "sentinel_forced_true_fallback": 0
   },
   "hub_checks": {
     "video_primary_links_verified": true,

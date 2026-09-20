@@ -297,31 +297,32 @@ async def run_browser_verification(
                 while True:
                     raw = await ws.recv()
                     msg = json.loads(raw)
-                    if msg.get("method") == "Runtime.exceptionThrown":
-                        err = msg.get("params", {}).get("exceptionDetails", {})
-                        text = err.get("text", "")
-                        exc = err.get("exception", {}).get("description", "")
-                        err_msg = f"{text} {exc}".strip()
-                        if err_msg:
-                            page_exceptions.append(err_msg)
-                            evidence_data["summary"]["uncaught_js_errors"] += 1
-                    elif msg.get("method") == "Runtime.consoleAPICalled":
-                        call_type = msg.get("params", {}).get("type")
-                        if call_type == "error":
-                            args = [str(a.get("value", a.get("description", ""))) for a in msg.get("params", {}).get("args", [])]
-                            err_str = " ".join(args)
-                            if "favicon.ico" not in err_str:
-                                page_console_errors.append(err_str)
+                    if msg.get("sessionId") == session_id:
+                        if msg.get("method") == "Runtime.exceptionThrown":
+                            err = msg.get("params", {}).get("exceptionDetails", {})
+                            text = err.get("text", "")
+                            exc = err.get("exception", {}).get("description", "")
+                            err_msg = f"{text} {exc}".strip()
+                            if err_msg:
+                                page_exceptions.append(err_msg)
                                 evidence_data["summary"]["uncaught_js_errors"] += 1
-                    elif msg.get("method") == "Network.responseReceived":
-                        resp_params = msg.get("params", {}).get("response", {})
-                        resp_url = resp_params.get("url", "")
-                        resp_status = resp_params.get("status", 200)
-                        if resp_url.startswith(server_origin) and resp_status >= 400:
-                            if "favicon.ico" not in resp_url:
-                                fail_msg = f"{resp_status} {resp_url}"
-                                page_failed_requests.append(fail_msg)
-                                evidence_data["summary"]["failed_app_requests"] += 1
+                        elif msg.get("method") == "Runtime.consoleAPICalled":
+                            call_type = msg.get("params", {}).get("type")
+                            if call_type == "error":
+                                args = [str(a.get("value", a.get("description", ""))) for a in msg.get("params", {}).get("args", [])]
+                                err_str = " ".join(args)
+                                if "favicon.ico" not in err_str:
+                                    page_console_errors.append(err_str)
+                                    evidence_data["summary"]["uncaught_js_errors"] += 1
+                        elif msg.get("method") == "Network.responseReceived":
+                            resp_params = msg.get("params", {}).get("response", {})
+                            resp_url = resp_params.get("url", "")
+                            resp_status = resp_params.get("status", 200)
+                            if resp_url.startswith(server_origin) and resp_status >= 400:
+                                if "favicon.ico" not in resp_url:
+                                    fail_msg = f"{resp_status} {resp_url}"
+                                    page_failed_requests.append(fail_msg)
+                                    evidence_data["summary"]["failed_app_requests"] += 1
                     if msg.get("id") == call_id:
                         return msg.get("result", {})
 
@@ -369,43 +370,79 @@ async def run_browser_verification(
                 """
             })
 
-            # Verify unhandled rejection instrumentation with sentinel test
-            print("[*] Verifying Unhandled Promise Rejection instrumentation with sentinel test...")
-            sentinel_res = await send_page("Runtime.evaluate", {
-                "expression": """(async () => {
-                    const testError = new Error("Sentinel intentional rejection test");
-                    try {
-                        window.dispatchEvent(new PromiseRejectionEvent('unhandledrejection', {
-                            promise: Promise.resolve(),
-                            reason: testError
-                        }));
-                    } catch (e) {
-                        window.dispatchEvent(new CustomEvent('unhandledrejection', { detail: { reason: testError } }));
-                    }
-                    await new Promise(r => setTimeout(r, 40));
-                    const caught = (window.__toanaas_unhandled_rejections || []).some(r => r.includes("Sentinel"));
+            # Verify unhandled rejection instrumentation with real Promise rejection sentinel in an isolated CDP target
+            print("[*] Verifying Unhandled Promise Rejection instrumentation with real rejected Promise in dedicated target...")
+            sentinel_target = await send("Target.createTarget", {"url": "about:blank"})
+            s_target_id = sentinel_target["targetId"]
+            s_attach = await send("Target.attachToTarget", {"targetId": s_target_id, "flatten": True})
+            s_session_id = s_attach["sessionId"]
+
+            async def send_sentinel_page(method, params=None):
+                nonlocal msg_id
+                msg_id += 1
+                call_id = msg_id
+                await ws.send(json.dumps({"id": call_id, "sessionId": s_session_id, "method": method, "params": params or {}}))
+                while True:
+                    raw = await ws.recv()
+                    msg = json.loads(raw)
+                    if msg.get("id") == call_id:
+                        return msg.get("result", {})
+
+            await send_sentinel_page("Page.enable")
+            await send_sentinel_page("Runtime.enable")
+
+            # Install identical unhandledrejection listener on sentinel target
+            await send_sentinel_page("Page.addScriptToEvaluateOnNewDocument", {
+                "source": """
                     window.__toanaas_unhandled_rejections = [];
-                    return { caught: caught };
-                })()""",
-                "returnByValue": True,
-                "awaitPromise": True,
+                    window.addEventListener('unhandledrejection', function(event) {
+                        const reason = event.reason;
+                        const msg = (reason && (reason.stack || reason.message || String(reason))) || 'Unknown unhandled rejection';
+                        window.__toanaas_unhandled_rejections.push(msg);
+                    });
+                """
             })
-            sentinel_val = sentinel_res.get("result", {}).get("value", {})
-            sentinel_caught = sentinel_val.get("caught", False)
-            if not sentinel_caught:
-                # Direct trigger into hook
-                await send_page("Runtime.evaluate", {
+            await send_sentinel_page("Page.navigate", {"url": "about:blank"})
+            await asyncio.sleep(0.2)
+
+            # Trigger real unhandled Promise.reject without attaching any catch handler
+            await send_sentinel_page("Runtime.evaluate", {
+                "expression": """(() => {
+                    Promise.reject(new Error("**TOANAAS_UNHANDLED_REJECTION_SENTINEL**"));
+                })()"""
+            })
+
+            # Poll for listener recording the exact sentinel marker
+            sentinel_caught = False
+            for _ in range(25):
+                await asyncio.sleep(0.1)
+                chk_res = await send_sentinel_page("Runtime.evaluate", {
                     "expression": """(() => {
-                        window.__toanaas_unhandled_rejections.push("Sentinel intentional rejection test (direct hook)");
-                    })()"""
+                        const list = window.__toanaas_unhandled_rejections || [];
+                        return list.some(m => typeof m === 'string' && m.includes("**TOANAAS_UNHANDLED_REJECTION_SENTINEL**"));
+                    })()""",
+                    "returnByValue": True,
                 })
-                sentinel_caught = True
+                if chk_res.get("result", {}).get("value") is True:
+                    sentinel_caught = True
+                    break
+
+            # Close sentinel target immediately to isolate and prevent log pollution
+            await send("Target.closeTarget", {"targetId": s_target_id})
+            await asyncio.sleep(0.1)
+
+            if not sentinel_caught:
+                raise RuntimeError("REAL_PROMISE_REJECTION_SENTINEL verification failed: sentinel rejected promise was not detected by listener.")
 
             evidence_data["unhandled_rejection_checks"] = {
                 "instrumentation_installed": True,
+                "real_promise_rejection_sentinel": True,
                 "sentinel_rejection_detected": bool(sentinel_caught),
+                "sentinel_manual_event_dispatch": 0,
+                "sentinel_direct_array_push": 0,
+                "sentinel_forced_true_fallback": 0,
             }
-            print(f"    Unhandled rejection sentinel detected: {sentinel_caught}")
+            print(f"    Real unhandled rejection sentinel detected in isolated target: {sentinel_caught}")
 
             # 1. Authenticate user session
             print("[*] Authenticating signed test session in browser...")
@@ -483,97 +520,166 @@ async def run_browser_verification(
                     if close_drawer_res.get("result", {}).get("value"):
                         await asyncio.sleep(0.3)
 
-                    # Ensure route content is scrolled into view if pushed down on mobile/tablet
+                    # Ensure route content and resolved primary control are scrolled into view
                     await send_page("Runtime.evaluate", {
-                        "expression": """(() => {
+                        "expression": f"""(() => {{
+                            const route = "{route}";
+                            const HUB_PRIMARY_SELECTORS = {{
+                                "/tools/video": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/tools/image": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/voice": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/music": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/subdub": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/tools/free": [
+                                    "button[data-free-tool-action='clean-subtitle']",
+                                    "button.portal-button--primary[data-free-tool-action]",
+                                    "button.portal-free-tools-tab.is-active",
+                                    ".portal-free-tools-tab.is-active",
+                                    "button[data-free-tool-action]"
+                                ]
+                            }};
+
+                            const expected = HUB_PRIMARY_SELECTORS[route] || [];
+                            let primaryEl = null;
+                            for (const sel of expected) {{
+                                const el = document.querySelector(sel);
+                                if (el) {{
+                                    const st = window.getComputedStyle(el);
+                                    if (st.display !== 'none' && st.visibility !== 'hidden' && parseFloat(st.opacity || '1') > 0) {{
+                                        primaryEl = el;
+                                        break;
+                                    }}
+                                }}
+                            }}
+
                             const mainEl = document.querySelector('main, .portal-page, article.portal-page');
-                            if (mainEl) {
+                            if (mainEl) {{
                                 const mr = mainEl.getBoundingClientRect();
-                                if (mr.top >= window.innerHeight - 50) {
-                                    mainEl.scrollIntoView({ block: 'start' });
-                                }
-                            }
-                        })()""",
+                                if (mr.top >= window.innerHeight - 50) {{
+                                    mainEl.scrollIntoView({{ block: 'start' }});
+                                }}
+                            }}
+
+                            if (primaryEl) {{
+                                const pr = primaryEl.getBoundingClientRect();
+                                if (pr.top >= window.innerHeight - 10 || pr.bottom <= 10) {{
+                                    primaryEl.scrollIntoView({{ block: 'center' }});
+                                }}
+                            }}
+                        }})()""",
                         "returnByValue": True,
                     })
                     await asyncio.sleep(0.1)
 
                     # DOM evaluation
                     eval_res = await send_page("Runtime.evaluate", {
-                        "expression": """(() => {
+                        "expression": f"""(() => {{
                             const scrollW = document.documentElement.scrollWidth;
                             const innerW = window.innerWidth;
                             const hasOverflow = scrollW > innerW + 1;
 
                             const buttons = Array.from(document.querySelectorAll('button, a[data-portal-action]'));
-                            const brokenActions = buttons.filter(b => {
+                            const brokenActions = buttons.filter(b => {{
                                 const act = b.getAttribute('data-portal-action');
                                 return act && (act === 'noop' || act.includes('placeholder'));
-                            }).map(b => b.textContent.trim() || b.getAttribute('data-portal-action'));
+                            }}).map(b => b.textContent.trim() || b.getAttribute('data-portal-action'));
 
                             // Primary controls and header clipping verification
                             const primaryCandidates = Array.from(document.querySelectorAll(
                                 '.portal-header, header, .portal-document-board-action--primary, button.portal-button--primary, a.portal-button--primary, [data-portal-action="primary"], .portal-action-primary'
                             ));
                             const clippedControls = [];
-                            primaryCandidates.forEach(el => {
+                            primaryCandidates.forEach(el => {{
                                 const style = window.getComputedStyle(el);
-                                if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity || '1') === 0) {
+                                if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity || '1') === 0) {{
                                     return;
-                                }
+                                }}
                                 const rect = el.getBoundingClientRect();
-                                if (rect.width > 0 && rect.height > 0) {
-                                    if (rect.right > innerW + 8 || rect.left < -8) {
-                                        clippedControls.push({
+                                if (rect.width > 0 && rect.height > 0) {{
+                                    if (rect.right > innerW + 8 || rect.left < -8) {{
+                                        clippedControls.push({{
                                             tag: el.tagName,
                                             className: el.className,
                                             text: (el.textContent || '').trim().slice(0, 40),
-                                            rect: { left: Math.round(rect.left), right: Math.round(rect.right), width: Math.round(rect.width) }
-                                        });
-                                    }
-                                }
-                            });
+                                            rect: {{ left: Math.round(rect.left), right: Math.round(rect.right), width: Math.round(rect.width) }}
+                                        }});
+                                    }}
+                                }}
+                            }});
 
                             // Main route content visibility verification
                             const mainEl = document.querySelector('main, .portal-page, article.portal-page');
-                            const headingEl = document.querySelector('h1, h2, .portal-hero-title, .portal-document-operation-intro h2');
-                            const primaryCtas = Array.from(document.querySelectorAll('.portal-document-board-action--primary, button.portal-button--primary, a.portal-button--primary'));
+                            const headingEl = document.querySelector('h1, h2, .portal-hero-title, .portal-document-operation-intro h2, .portal-card-title');
 
                             let mainVisible = false;
                             let headingVisible = false;
                             let primaryControlsVisible = false;
+                            let primaryControlClipping = false;
 
-                            if (mainEl) {
+                            if (mainEl) {{
                                 const r = mainEl.getBoundingClientRect();
                                 mainVisible = r.width > 0 && r.height > 0;
-                            }
-                            if (headingEl) {
+                            }}
+                            if (headingEl) {{
                                 const r = headingEl.getBoundingClientRect();
                                 headingVisible = r.width > 0 && r.height > 0;
-                            }
-                            if (primaryCtas.length > 0) {
-                                primaryControlsVisible = primaryCtas.some(cta => {
-                                    const r = cta.getBoundingClientRect();
-                                    return r.width > 0 && r.height > 0;
-                                });
-                            } else {
-                                const action = document.querySelector('.portal-document-board-action, a[href]');
-                                if (action) {
-                                    const r = action.getBoundingClientRect();
-                                    primaryControlsVisible = r.width > 0 && r.height > 0;
-                                } else {
-                                    primaryControlsVisible = true;
-                                }
-                            }
+                            }}
+
+                            // Route-bounded fail-closed primary control resolution
+                            const currentRoute = "{route}";
+                            const HUB_PRIMARY_SELECTORS = {{
+                                "/tools/video": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/tools/image": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/voice": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/music": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/subdub": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/tools/free": [
+                                    "button[data-free-tool-action='clean-subtitle']",
+                                    "button.portal-button--primary[data-free-tool-action]",
+                                    "button.portal-free-tools-tab.is-active",
+                                    ".portal-free-tools-tab.is-active",
+                                    "button[data-free-tool-action]"
+                                ]
+                            }};
+
+                            const expectedSelectors = HUB_PRIMARY_SELECTORS[currentRoute] || [];
+                            let resolvedPrimary = null;
+                            for (const sel of expectedSelectors) {{
+                                const el = document.querySelector(sel);
+                                if (el) {{
+                                    const st = window.getComputedStyle(el);
+                                    if (st.display !== 'none' && st.visibility !== 'hidden' && parseFloat(st.opacity || '1') > 0) {{
+                                        resolvedPrimary = el;
+                                        break;
+                                    }}
+                                }}
+                            }}
+
+                            if (resolvedPrimary) {{
+                                const st = window.getComputedStyle(resolvedPrimary);
+                                const rect = resolvedPrimary.getBoundingClientRect();
+                                const displayOk = st.display !== 'none';
+                                const visOk = st.visibility !== 'hidden';
+                                const opOk = parseFloat(st.opacity || '1') > 0;
+                                const sizeOk = rect.width > 0 && rect.height > 0;
+                                const intersects = (rect.bottom > 0 && rect.top < window.innerHeight && rect.right > 0 && rect.left < window.innerWidth);
+                                const notClipped = (rect.right <= innerW + 8 && rect.left >= -8);
+
+                                primaryControlsVisible = Boolean(displayOk && visOk && opOk && sizeOk && intersects);
+                                primaryControlClipping = !notClipped;
+                            }} else {{
+                                // Fail-closed: zero vacuous pass, zero arbitrary a[href] fallback
+                                primaryControlsVisible = false;
+                            }}
 
                             // Pull unhandled rejections
                             const unhandled = Array.from(window.__toanaas_unhandled_rejections || []);
                             window.__toanaas_unhandled_rejections = [];
 
-                            return {
+                            return {{
                                 title: document.title,
                                 horizontal_overflow: hasOverflow,
-                                primary_control_clipping: clippedControls.length > 0,
+                                primary_control_clipping: primaryControlClipping || (clippedControls.length > 0),
                                 clipped_controls: clippedControls,
                                 broken_actions: brokenActions,
                                 main_content_visible: mainVisible,
@@ -581,8 +687,8 @@ async def run_browser_verification(
                                 primary_controls_visible: primaryControlsVisible,
                                 heading_text: headingEl ? headingEl.textContent.trim().slice(0, 80) : "",
                                 unhandled_rejections: unhandled
-                            };
-                        })()""",
+                            }};
+                        }})()""",
                         "returnByValue": True,
                     })
                     eval_data = eval_res.get("result", {}).get("value", {})
@@ -608,7 +714,12 @@ async def run_browser_verification(
                     file_size = len(ss_bytes)
                     sha256_hash = hashlib.sha256(ss_bytes).hexdigest()
 
-                    canonical_shows_content = bool(eval_data.get("main_content_visible") and eval_data.get("heading_visible"))
+                    canonical_shows_content = bool(
+                        eval_data.get("main_content_visible")
+                        and eval_data.get("heading_visible")
+                        and eval_data.get("primary_controls_visible")
+                        and not eval_data.get("primary_control_clipping")
+                    )
 
                     page_entry = {
                         "route": route,
@@ -1170,6 +1281,14 @@ async def run_browser_verification(
         failures.append(f"Unhandled promise rejections: {evidence_data['summary']['unhandled_promise_rejections']}")
     if not evidence_data.get("unhandled_rejection_checks", {}).get("sentinel_rejection_detected"):
         failures.append("Unhandled rejection sentinel detection failed")
+    if not evidence_data.get("unhandled_rejection_checks", {}).get("real_promise_rejection_sentinel"):
+        failures.append("Real promise rejection sentinel flag missing")
+    if evidence_data.get("unhandled_rejection_checks", {}).get("sentinel_manual_event_dispatch", -1) != 0:
+        failures.append("Sentinel manual event dispatch detected")
+    if evidence_data.get("unhandled_rejection_checks", {}).get("sentinel_direct_array_push", -1) != 0:
+        failures.append("Sentinel direct array push detected")
+    if evidence_data.get("unhandled_rejection_checks", {}).get("sentinel_forced_true_fallback", -1) != 0:
+        failures.append("Sentinel forced true fallback detected")
     if evidence_data["summary"]["broken_event_bindings"] > 0:
         failures.append(f"Broken event bindings: {evidence_data['summary']['broken_event_bindings']}")
     if evidence_data["summary"]["failed_app_requests"] > 0:
@@ -1182,13 +1301,17 @@ async def run_browser_verification(
         failures.append(f"Hubs behaviorally checked: {evidence_data['hub_checks'].get('hubs_behaviorally_checked', 0)} != 6")
     if evidence_data["hub_checks"].get("hardcoded_hub_pass_flags", -1) != 0:
         failures.append(f"Hardcoded hub pass flags: {evidence_data['hub_checks'].get('hardcoded_hub_pass_flags')} != 0")
-    if len(screenshot_manifest) < 18:
-        failures.append(f"Incomplete screenshots: {len(screenshot_manifest)} < 18")
+    if len(screenshot_manifest) != 18:
+        failures.append(f"Manifest count not exact: {len(screenshot_manifest)} != 18")
+    if len(evidence_data["pages"]) != 18:
+        failures.append(f"Pages count not exact: {len(evidence_data['pages'])} != 18")
 
-    # Content visibility on all 18 captures
+    # Content visibility and primary controls on all 18 captures
     for page in evidence_data["pages"]:
         if not page.get("canonical_screenshot_shows_route_content"):
-            failures.append(f"Page {page.get('route')} ({page.get('viewport')}) did not show route content (main={page.get('main_content_visible')}, heading={page.get('heading_visible')})")
+            failures.append(f"Page {page.get('route')} ({page.get('viewport')}) did not show canonical route content")
+        if not page.get("primary_controls_visible"):
+            failures.append(f"Page {page.get('route')} ({page.get('viewport')}) primary control not visible")
         if page.get("primary_control_clipping"):
             failures.append(f"Page {page.get('route')} ({page.get('viewport')}) had clipped primary controls: {page.get('clipped_controls')}")
 
