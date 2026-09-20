@@ -51,14 +51,9 @@ def test_workspace_menu_is_an_explicit_signed_navigation_directory() -> None:
         "function navGroups(context, currentPage)",
         "function matchesRouteFamily(path, root)",
     )
-    if "const videoStudioNavGroups = [" in navigation:
-        permanent_projection = navigation[
-            navigation.index("const groups = ["):navigation.index("const videoStudioNavGroups = [")
-        ]
-    else:
-        permanent_projection = navigation[
-            navigation.index("const groups = ["):navigation.index("const currentGroup = currentCustomerWorkflowGroup")
-        ]
+    permanent_projection = navigation[
+        navigation.index("const groups = ["):navigation.index("const currentGroup = currentCustomerWorkflowGroup")
+    ]
     palette = _between(
         PORTAL,
         "function commandPaletteItems(context, page)",

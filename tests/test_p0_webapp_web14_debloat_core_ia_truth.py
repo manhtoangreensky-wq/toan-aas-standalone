@@ -24,11 +24,7 @@ client = TestClient(app)
 def _extract_customer_nav_permanent_links():
     """Extract permanent customer navigation links from portal.js navGroups."""
     start = PORTAL_JS.index("function navGroups(context, currentPage)")
-    end = (
-        PORTAL_JS.index("const videoStudioNavGroups = [")
-        if "const videoStudioNavGroups = [" in PORTAL_JS
-        else PORTAL_JS.index("const currentGroup = currentCustomerWorkflowGroup")
-    )
+    end = PORTAL_JS.index("const currentGroup = currentCustomerWorkflowGroup")
     nav_block = PORTAL_JS[start:end]
     return re.findall(r'\["(/[^"]+)",\s*"([^"]+)"', nav_block)
 
@@ -88,11 +84,7 @@ class TestP0WebappWeb14DeBloatCoreIaTruth:
 
         # Verify navGroups definition in portal.js does not push admin groups into customer rail
         start = PORTAL_JS.index("function navGroups(context, currentPage)")
-        end = (
-            PORTAL_JS.index("const videoStudioNavGroups = [")
-            if "const videoStudioNavGroups = [" in PORTAL_JS
-            else PORTAL_JS.index("const currentGroup = currentCustomerWorkflowGroup")
-        )
+        end = PORTAL_JS.index("const currentGroup = currentCustomerWorkflowGroup")
         nav_block = PORTAL_JS[start:end]
         assert "Quản trị Admin ERP" not in nav_block, "Customer navGroups must not contain admin ERP group"
         assert 'links.push(["/admin' not in nav_block
@@ -196,8 +188,8 @@ class TestP0WebappWeb14DeBloatCoreIaTruth:
         assert resp.status_code == 200
         # Catalog has all 139 customer features
         assert len(reg.CUSTOMER_FEATURES) == 139
-        # Permanent nav has 13 (V3), 15 (V2) or 22 (V1) items: NAV_CATALOG (13/15/22) != CAPABILITY_CATALOG (139)
-        assert len(_extract_customer_nav_permanent_links()) in (13, 15, 22)
+        # Permanent nav has 13 items (V3 canonical)
+        assert len(_extract_customer_nav_permanent_links()) == 13
         assert len(_extract_customer_nav_permanent_links()) < len(reg.CUSTOMER_FEATURES)
 
     def test_08_core_workflows_reachable_within_bounded_depth(self):

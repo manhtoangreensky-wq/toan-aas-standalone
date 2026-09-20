@@ -570,11 +570,7 @@ class TestP0WebappWeb15FinalBusinessE2eTruth:
 
         # 2. WEB14 Customer-to-admin route leak = 0
         start = PORTAL_JS.index("function navGroups(context, currentPage)")
-        end = (
-            PORTAL_JS.index("const videoStudioNavGroups = [")
-            if "const videoStudioNavGroups = [" in PORTAL_JS
-            else PORTAL_JS.index("const currentGroup = currentCustomerWorkflowGroup")
-        )
+        end = PORTAL_JS.index("const currentGroup = currentCustomerWorkflowGroup")
         nav_block = PORTAL_JS[start:end]
         assert "Quản trị Admin ERP" not in nav_block
         perm_links = re.findall(r'\["(/[^"]+)"', nav_block)

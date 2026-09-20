@@ -350,20 +350,7 @@ def test_sidebar_uses_progressive_disclosure_without_hiding_the_active_workflow(
 
     # The permanent default is intentionally small.
     assert 'label: "Sáng tạo", defaultOpen: true' in navigation
-    if "const videoStudioNavGroups = [" in navigation:
-        for group in (
-            "Video Studio",
-            "Video Studio · Ý tưởng & kịch bản",
-            "Video Studio · Phim & storyboard",
-            "Video Studio · Tư liệu & chuyển động",
-        ):
-            assert f'label: "{group}"' in navigation
-        assert 'label: "Nội dung & kế hoạch"' not in navigation
-        assert 'label: "AI Labs & Media"' not in navigation
-        assert "groups.splice(3, 0, ...videoStudioNavGroups);" in navigation
-        assert 'if (matchesRouteFamily(currentRoute, "/video-studio")) {' in navigation
-    else:
-        assert "videoStudioNavGroups" not in navigation
+    assert "videoStudioNavGroups" not in navigation
     assert "if (isAdminPortalSurface(currentPage)) return adminDesktopNavGroups(context, currentPage);" in navigation
     assert '<details class="portal-nav-group${group.current === true ? " portal-nav-group--current" : ""}"${open ? " open" : ""}>' in sidebar
     assert 'const open = group.defaultOpen === true || preparedLinks.some((link) => link.current);' in sidebar
@@ -381,27 +368,11 @@ def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discove
     # The signed customer rail is a compact orientation surface, rather than
     # a second full catalogue.  All customer destinations remain available
     # through the feature catalogue and command palette below.
-    if "const videoStudioNavGroups = [" in navigation:
-        permanent_projection = navigation[
-            navigation.index("const groups = ["):navigation.index("const videoStudioNavGroups = [")
-        ]
-    else:
-        permanent_projection = navigation[
-            navigation.index("const groups = ["):navigation.index("const currentGroup = currentCustomerWorkflowGroup")
-        ]
-    compact_groups = {
-        "Workspace": ["/dashboard", "/projects", "/workboard", "/campaigns", "/calendar"],
-        "Tạo mới": ["/features", "/chat", "/content-studio", "/image-studio"],
-        "Công việc": ["/workspace", "/jobs", "/assets", "/asset-vault", "/approvals"],
-        "Ví & gói": ["/wallet", "/wallet/topup", "/membership", "/packages", "/pricing"],
-        "Tài khoản & hỗ trợ": ["/account", "/tickets", "/support"],
-    }
-    v2_groups = {
-        "Trung tâm làm việc": ["/dashboard", "/projects", "/calendar"],
-        "Xưởng sáng tạo AI": ["/features", "/video-studio", "/image-studio", "/content-studio", "/voice-studio"],
-        "Quản lý đầu ra": ["/jobs", "/assets"],
-        "Tài chính & tài khoản": ["/wallet/topup", "/wallet", "/pricing", "/account", "/support"],
-    }
+    permanent_projection = navigation[
+        navigation.index("const groups = [") : navigation.index(
+            "const currentGroup = currentCustomerWorkflowGroup"
+        )
+    ]
     v3_groups = {
         "Sáng tạo": ["/studio", "/voice", "/music", "/subdub", "/tools/video", "/tools/image"],
         "Phân phối": ["/publishing"],
@@ -444,27 +415,7 @@ def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discove
     assert "Object.values(manifest)" in palette
     assert "const authorizedAdminRoutes = adminErpNavigation(context).routes;" in palette
     assert 'candidate.access === "admin" && !authorizedAdminRoutes.has(path)' in palette
-
-    # Video keeps its existing planner tree, but only on a Video Studio route when spliced.
-    if "const videoStudioNavGroups = [" in navigation:
-        video_guard = 'if (matchesRouteFamily(currentRoute, "/video-studio")) {'
-        video_insertion = "groups.splice(3, 0, ...videoStudioNavGroups);"
-        assert "const videoStudioNavGroups = [" in navigation
-        assert video_guard in navigation
-        assert video_insertion in navigation
-        guard_open = navigation.index("{", navigation.index(video_guard))
-        guard_depth = 0
-        guard_close = None
-        for position, character in enumerate(navigation[guard_open:], start=guard_open):
-            if character == "{":
-                guard_depth += 1
-            elif character == "}":
-                guard_depth -= 1
-                if guard_depth == 0:
-                    guard_close = position
-                    break
-        assert guard_close is not None
-        assert video_insertion in navigation[guard_open + 1:guard_close]
+    assert "videoStudioNavGroups" not in navigation
 
     # Deep routes retain a single, presentation-only orientation cue rather
     # than expanding the full customer catalogue again.
