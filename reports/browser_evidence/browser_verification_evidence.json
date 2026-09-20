@@ -1,5 +1,5 @@
 {
-  "head_sha": "54caf78a1b29db1eca54a9a3e9fdb9489aa29f3b",
+  "head_sha": "b8652fbc60a1cbdda10ceb934ff7960c23f8cf61",
   "server_origin": "isolated-local-test-origin",
   "pages": [
     {
@@ -14,6 +14,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/video-desktop.png"
     },
     {
@@ -28,6 +33,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/video-tablet.png"
     },
     {
@@ -42,6 +52,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/video-mobile.png"
     },
     {
@@ -56,6 +71,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/image-desktop.png"
     },
     {
@@ -70,6 +90,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/image-tablet.png"
     },
     {
@@ -84,6 +109,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/image-mobile.png"
     },
     {
@@ -98,6 +128,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/voice-desktop.png"
     },
     {
@@ -112,6 +147,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/voice-tablet.png"
     },
     {
@@ -126,6 +166,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/voice-mobile.png"
     },
     {
@@ -140,6 +185,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/music-desktop.png"
     },
     {
@@ -154,6 +204,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/music-tablet.png"
     },
     {
@@ -168,6 +223,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/music-mobile.png"
     },
     {
@@ -182,6 +242,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/subdub-desktop.png"
     },
     {
@@ -196,6 +261,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/subdub-tablet.png"
     },
     {
@@ -210,6 +280,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/subdub-mobile.png"
     },
     {
@@ -224,6 +299,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/free-desktop.png"
     },
     {
@@ -238,6 +318,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/free-tablet.png"
     },
     {
@@ -252,6 +337,11 @@
       "broken_primary_actions": [],
       "horizontal_overflow": false,
       "primary_control_clipping": false,
+      "clipped_controls": [],
+      "main_content_visible": true,
+      "heading_visible": true,
+      "primary_controls_visible": true,
+      "canonical_screenshot_shows_route_content": true,
       "screenshot": "screenshots/free-mobile.png"
     }
   ],
@@ -262,6 +352,10 @@
     "broken_event_bindings": 0,
     "failed_app_requests": 0
   },
+  "unhandled_rejection_checks": {
+    "instrumentation_installed": true,
+    "sentinel_rejection_detected": true
+  },
   "hub_checks": {
     "video_primary_links_verified": true,
     "image_local_ops_verified": true,
@@ -269,6 +363,8 @@
     "music_assets_and_guarded_verified": true,
     "subdub_formats_and_guarded_verified": true,
     "free_tools_verified": true,
+    "hubs_behaviorally_checked": 6,
+    "hardcoded_hub_pass_flags": 0,
     "fake_success_from_guarded_card": 0,
     "broken_primary_hub_links": 0
   },
@@ -298,10 +394,14 @@
     "theme_light_browser_pass": true,
     "theme_dark_browser_pass": true,
     "theme_reload_persistence_browser_pass": true,
-    "first_paint_theme_flicker": "NO"
+    "first_paint_measurement_active": true,
+    "first_paint_theme_flicker": "NO",
+    "flicker_events_count": 0
   },
   "accessibility_checks": {
     "keyboard_primary_action_pass": true,
+    "keyboard_vacuous_pass": 0,
+    "keyboard_failures": [],
     "unlabeled_primary_icon_controls": 0,
     "duplicate_critical_ids": 0
   }

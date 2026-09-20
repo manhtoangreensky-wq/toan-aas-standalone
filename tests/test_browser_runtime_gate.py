@@ -19,6 +19,15 @@ import re
 
 import pytest
 
+from tests.test_p0_webapp_v3_browser_false_green_first_red import (
+    test_remediated_hub_hardcode_purged,
+    test_remediated_unhandled_rejection_captured,
+    test_remediated_first_paint_flicker_actively_measured,
+    test_remediated_primary_clipping_inspects_ctas,
+    test_remediated_responsive_drawer_closed_and_content_verified,
+    test_remediated_keyboard_vacuous_pass_purged,
+)
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE_DIR = REPO_ROOT / "reports" / "browser_evidence"
 EVIDENCE_JSON_PATH = EVIDENCE_DIR / "browser_verification_evidence.json"
@@ -52,6 +61,14 @@ def test_browser_evidence_json_structure_and_zero_runtime_errors():
     assert summary.get("failed_app_requests") == 0, f"Failed app requests: {summary.get('failed_app_requests')}"
 
 
+def test_browser_unhandled_rejection_instrumentation():
+    evidence = _load_evidence()
+    ur = evidence.get("unhandled_rejection_checks", {})
+
+    assert ur.get("instrumentation_installed") is True, "Unhandled rejection hook not installed"
+    assert ur.get("sentinel_rejection_detected") is True, "Unhandled rejection sentinel test not detected"
+
+
 def test_browser_hub_checks_and_truthful_guarded_cards():
     evidence = _load_evidence()
     hub_checks = evidence.get("hub_checks", {})
@@ -62,6 +79,9 @@ def test_browser_hub_checks_and_truthful_guarded_cards():
     assert hub_checks.get("music_assets_and_guarded_verified") is True
     assert hub_checks.get("subdub_formats_and_guarded_verified") is True
     assert hub_checks.get("free_tools_verified") is True
+
+    assert hub_checks.get("hubs_behaviorally_checked") == 6, f"Expected 6 hubs behaviorally checked, got {hub_checks.get('hubs_behaviorally_checked')}"
+    assert hub_checks.get("hardcoded_hub_pass_flags") == 0, f"Hardcoded hub pass flags: {hub_checks.get('hardcoded_hub_pass_flags')}"
 
     assert hub_checks.get("broken_primary_hub_links") == 0
     assert hub_checks.get("fake_success_from_guarded_card") == 0
@@ -83,7 +103,9 @@ def test_browser_theme_and_first_paint_stability():
     assert theme.get("theme_light_browser_pass") is True
     assert theme.get("theme_dark_browser_pass") is True
     assert theme.get("theme_reload_persistence_browser_pass") is True
-    assert theme.get("first_paint_theme_flicker") == "NO"
+    assert theme.get("first_paint_measurement_active") is True, "First paint measurement was not active"
+    assert theme.get("first_paint_theme_flicker") == "NO", f"First paint flicker: {theme.get('first_paint_theme_flicker')}"
+    assert theme.get("flicker_events_count") == 0, f"Flicker events: {theme.get('flicker_events_count')}"
 
 
 def test_browser_accessibility_basic_checks():
@@ -91,8 +113,24 @@ def test_browser_accessibility_basic_checks():
     a11y = evidence.get("accessibility_checks", {})
 
     assert a11y.get("keyboard_primary_action_pass") is True
+    assert a11y.get("keyboard_vacuous_pass") == 0, "Keyboard accessibility used vacuous pass"
+    assert len(a11y.get("keyboard_failures", [])) == 0, f"Keyboard failures: {a11y.get('keyboard_failures')}"
     assert a11y.get("unlabeled_primary_icon_controls") == 0
     assert a11y.get("duplicate_critical_ids") == 0
+
+
+def test_browser_canonical_screenshots_route_content_and_zero_clipping():
+    evidence = _load_evidence()
+    pages = evidence.get("pages", [])
+
+    assert len(pages) >= 18, f"Expected at least 18 pages, got {len(pages)}"
+    for page in pages:
+        route = page.get("route")
+        vp = page.get("viewport")
+        assert page.get("main_content_visible") is True, f"Main content not visible on {route} ({vp})"
+        assert page.get("heading_visible") is True, f"Heading not visible on {route} ({vp})"
+        assert page.get("canonical_screenshot_shows_route_content") is True, f"Canonical screenshot obscured on {route} ({vp})"
+        assert page.get("primary_control_clipping") is False, f"Primary control clipped on {route} ({vp}): {page.get('clipped_controls')}"
 
 
 def test_browser_screenshot_manifest_completeness_and_hashes():
