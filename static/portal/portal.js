@@ -9633,6 +9633,20 @@
     "Contextual Ad Prompt": "shellNav.contextualAdPrompt",
     "Trend Research": "shellNav.trendResearch",
     "Media Factory": "shellNav.mediaFactory",
+    "Cài đặt tài khoản": "nav.account",
+    "Công cụ Miễn phí": "shellNav.freeTools",
+    "Dự án": "nav.projects",
+    "Gói cước & Đăng ký": "shellNav.billing",
+    "Lịch sử giao dịch": "customerTopup.tab.history",
+    "Tiến trình Jobs": "nav.jobs",
+    "Tài liệu": "nav.documents",
+    "Tạo Giọng AI": "shellNav.aiVoice",
+    "Tạo Nhạc AI": "shellNav.aiMusic",
+    "Tạo Nội dung": "nav.contentPlanning",
+    "Tạo Video AI": "shellNav.videoStudio",
+    "Tạo Ảnh AI": "shellNav.imageSuite",
+    "Ví Xu & Nạp tiền": "nav.wallet",
+    "Xuất bản & Lịch đăng": "shellNav.distribution",
     "Creative Flow": "shellNav.creativeFlow",
     "Nguồn & quyền": "shellNav.sourceRights",
     "Analytics Workspace": "shellNav.analyticsWorkspace",
@@ -31084,105 +31098,16 @@
   }
 
   
-  const CANONICAL_DEFAULT_PRODUCTS = [
-    {
-      product_key: "video_trend",
-      display_name: "Video theo trend",
-      description: "Tạo video ngắn bắt trend mạng xã hội tự động",
-      product_group: "video",
-      public_visible: true,
-      commercial_enabled: true,
-      sort_order: 10,
-      execution_enabled: true,
-      execution_blocker: "",
-      supported_tiers: ["standard", "pro"],
-      supported_ratios: ["9:16", "16:9"],
-      version: 1,
-      has_override: false
-    },
-    {
-      product_key: "script_image_video",
-      display_name: "Kịch bản → Video",
-      description: "Chuyển kịch bản hoàn chỉnh thành chuỗi cảnh video",
-      product_group: "video",
-      public_visible: true,
-      commercial_enabled: true,
-      sort_order: 50,
-      execution_enabled: true,
-      execution_blocker: "",
-      supported_tiers: ["standard", "pro"],
-      supported_ratios: ["16:9", "9:16"],
-      version: 1,
-      has_override: false
-    },
-    {
-      product_key: "video_idea",
-      display_name: "Ý tưởng → Video AI",
-      description: "Từ ý tưởng thô phát triển thành video hoàn chỉnh",
-      product_group: "video",
-      public_visible: true,
-      commercial_enabled: true,
-      sort_order: 55,
-      execution_enabled: true,
-      execution_blocker: "",
-      supported_tiers: ["standard"],
-      supported_ratios: ["16:9"],
-      version: 1,
-      has_override: false
-    },
-    {
-      product_key: "video_local_edit",
-      display_name: "Chỉnh sửa Video cục bộ",
-      description: "Chỉnh sửa trực tiếp trên timeline",
-      product_group: "video",
-      public_visible: false,
-      commercial_enabled: false,
-      sort_order: 70,
-      execution_enabled: false,
-      execution_blocker: "DEFERRED_POST_LAUNCH",
-      supported_tiers: [],
-      supported_ratios: [],
-      version: 1,
-      has_override: false
-    },
-    {
-      product_key: "multi_scene_film",
-      display_name: "Video dài tập (Nhiều phân cảnh)",
-      description: "Sản xuất video nhiều tập có cốt truyện xuyên suốt",
-      product_group: "video",
-      public_visible: false,
-      commercial_enabled: false,
-      sort_order: 100,
-      execution_enabled: false,
-      execution_blocker: "EXECUTION_LOCKED_PENDING_RELEASE",
-      supported_tiers: [],
-      supported_ratios: [],
-      version: 1,
-      has_override: false
-    },
-    {
-      product_key: "video_long",
-      display_name: "Video thời lượng dài",
-      description: "Dựng phim AI thời lượng trên 3 phút",
-      product_group: "video",
-      public_visible: false,
-      commercial_enabled: false,
-      sort_order: 110,
-      execution_enabled: false,
-      execution_blocker: "EXECUTION_LOCKED_INFRA_UPGRADE",
-      supported_tiers: [],
-      supported_ratios: [],
-      version: 1,
-      has_override: false
-    }
-  ];
-
   let adminCommercialProductsState = null;
+  let adminCommercialProductsLoadError = null;
+  let adminCommercialProductsLoading = false;
   let activeProductInEditor = null;
   const STALE_WRITE_AUTO_RETRY = 0;
   const AMBIGUOUS_PATCH_AUTO_RETRY = 0;
 
   function fetchAdminCommercialProducts() {
+    adminCommercialProductsLoading = true;
+    adminCommercialProductsLoadError = null;
     return fetch("/api/admin/commercial/products", {
       headers: { "Accept": "application/json" }
     })
@@ -31191,14 +31116,24 @@
         return res.json();
       })
       .then((body) => {
-        const prods = (body && body.data && Array.isArray(body.data.products)) ? body.data.products : [];
-        adminCommercialProductsState = prods;
-        return prods;
+        if (!body || !body.ok || !body.data || !Array.isArray(body.data.products)) {
+          throw new Error("Phản hồi danh mục sản phẩm không hợp lệ");
+        }
+        adminCommercialProductsState = body.data.products;
+        adminCommercialProductsLoadError = null;
+        adminCommercialProductsLoading = false;
+        return adminCommercialProductsState;
+      })
+      .catch((err) => {
+        adminCommercialProductsState = null;
+        adminCommercialProductsLoadError = (err && err.message) || "Không thể tải danh mục sản phẩm";
+        adminCommercialProductsLoading = false;
+        throw err;
       });
   }
 
   function loadAdminCommercialProducts(forceReload) {
-    if (!forceReload && adminCommercialProductsState && adminCommercialProductsState.length > 0) {
+    if (!forceReload && adminCommercialProductsState !== null) {
       updateAdminCommercialProductsTable();
       return Promise.resolve(adminCommercialProductsState);
     }
@@ -31208,31 +31143,53 @@
         return prods;
       })
       .catch((_err) => {
-        if (!adminCommercialProductsState) {
-          adminCommercialProductsState = CANONICAL_DEFAULT_PRODUCTS;
-        }
         updateAdminCommercialProductsTable();
-        return adminCommercialProductsState;
+        return null;
       });
+  }
+
+  function renderProductTableBody() {
+    if (adminCommercialProductsLoading) {
+      return `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--portal-muted);">Đang tải danh mục sản phẩm...</td></tr>`;
+    }
+    if (adminCommercialProductsLoadError) {
+      return `<tr><td colspan="9" style="text-align:center;padding:24px;">
+        <div style="color:#ef4444;margin-bottom:8px;font-weight:500;">Không thể tải danh mục sản phẩm.</div>
+        <button type="button" class="portal-button portal-button--primary portal-button--small" data-portal-action="reload-commercial-products">Thử tải lại</button>
+      </td></tr>`;
+    }
+    if (!adminCommercialProductsState) {
+      return `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--portal-muted);">Đang tải danh mục sản phẩm...</td></tr>`;
+    }
+    if (adminCommercialProductsState.length === 0) {
+      return `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--portal-muted);">Chưa có sản phẩm nào trong danh mục.</td></tr>`;
+    }
+    return adminCommercialProductsState.map((p) => {
+      let technicalExecutionCell = "—";
+      if (p.execution_enabled !== undefined) {
+        technicalExecutionCell = p.execution_enabled
+          ? '<span class="portal-badge" data-status="ready">Sẵn sàng</span>'
+          : `<span class="portal-badge" data-status="guarded" style="background:#fee2e2;color:#b91c1c;border:1px solid #f87171;" title="${safeText(p.execution_blocker || "")}">🔒 Khóa${p.execution_blocker ? ' (' + safeText(p.execution_blocker) + ')' : ''}</span>`;
+      }
+      return `<tr>
+        <td><code>${safeText(p.product_key)}</code></td>
+        <td><strong>${safeText(p.display_name)}</strong></td>
+        <td><span class="portal-tag">${safeText(p.product_group || "video")}</span></td>
+        <td><span class="portal-badge" data-status="${p.public_visible ? "ready" : "guarded"}">${p.public_visible ? "Công khai" : "Ẩn"}</span></td>
+        <td><span class="portal-badge" data-status="${p.commercial_enabled ? "ready" : "guarded"}">${p.commercial_enabled ? "Bật" : "Tắt"}</span></td>
+        <td>${safeText(String(p.sort_order !== undefined ? p.sort_order : 0))}</td>
+        <td>${technicalExecutionCell}</td>
+        <td><code>v${safeText(String(p.version || 1))}</code></td>
+        <td><button class="portal-button portal-button--quiet" type="button" data-portal-action="open-product-editor" data-product-key="${safeText(p.product_key)}">Chỉnh sửa</button></td>
+      </tr>`;
+    }).join("");
   }
 
   function updateAdminCommercialProductsTable() {
     const container = document.getElementById("portal-admin-commercial-products-tbody");
-    if (!container) return;
-    const prods = (adminCommercialProductsState && adminCommercialProductsState.length > 0)
-      ? adminCommercialProductsState
-      : CANONICAL_DEFAULT_PRODUCTS;
-    container.innerHTML = prods.map((p) => `<tr>
-      <td><code>${safeText(p.product_key)}</code></td>
-      <td><strong>${safeText(p.display_name)}</strong></td>
-      <td><span class="portal-tag">${safeText(p.product_group || "video")}</span></td>
-      <td><span class="portal-badge" data-status="${p.public_visible ? "ready" : "guarded"}">${p.public_visible ? "Công khai" : "Ẩn"}</span></td>
-      <td><span class="portal-badge" data-status="${p.commercial_enabled ? "ready" : "guarded"}">${p.commercial_enabled ? "Bật" : "Tắt"}</span></td>
-      <td>${safeText(String(p.sort_order || 0))}</td>
-      <td>${p.execution_enabled ? '<span class="portal-badge" data-status="ready">Sẵn sàng</span>' : `<span class="portal-badge" data-status="guarded" style="background:#fee2e2;color:#b91c1c;border:1px solid #f87171;" title="${safeText(p.execution_blocker || "LOCKED")}">🔒 Khóa (${safeText(p.execution_blocker || "DEFERRED")})</span>`}</td>
-      <td><code>v${safeText(String(p.version || 1))}</code></td>
-      <td><button class="portal-button portal-button--quiet" type="button" data-portal-action="open-product-editor" data-product-key="${safeText(p.product_key)}">Chỉnh sửa</button></td>
-    </tr>`).join("");
+    if (container) {
+      container.innerHTML = renderProductTableBody();
+    }
   }
 
   function renderProductEditor(product) {
@@ -31242,9 +31199,9 @@
       <div class="portal-card portal-card-pad" style="max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-sizing:border-box;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);">
         <div class="portal-card-header" style="border-bottom:1px solid var(--portal-border);padding-bottom:12px;margin-bottom:16px;">
           <div>
-            <span class="portal-section-kicker">Bot Canonical Commercial Editor · B01</span>
+            <span class="portal-section-kicker">Quản lý sản phẩm</span>
             <h2 id="product-editor-title" class="portal-card-title" style="margin:4px 0;">Chỉnh sửa Sản phẩm: ${safeText(product.display_name)}</h2>
-            <p class="portal-card-subtitle">Khóa định danh: <code>${safeText(product.product_key)}</code> · Phiên bản: <strong style="color:var(--portal-brand);">v${safeText(String(product.version))}</strong></p>
+            <p class="portal-card-subtitle">Mã sản phẩm: <code>${safeText(product.product_key)}</code> · Phiên bản: <strong style="color:var(--portal-brand);">v${safeText(String(product.version))}</strong></p>
           </div>
           <button type="button" class="portal-button portal-button--quiet" data-portal-action="close-product-editor" aria-label="Đóng">✕</button>
         </div>
@@ -31281,15 +31238,16 @@
             </label>
           </div>
 
-          <!-- Read-only technical fields managed by Bot Core PR #1093 -->
+          <!-- Technical execution status only if supplied -->
+          ${product.execution_enabled !== undefined ? `
           <div style="padding:10px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:6px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-              <strong style="color:var(--portal-ink);font-size:13px;">🔒 Khóa thực thi kỹ thuật (Technical Lock - Read-only):</strong>
-              <span class="portal-badge" data-status="${product.execution_enabled ? "ready" : "guarded"}">${product.execution_enabled ? "Execution Ready" : "Execution Locked"}</span>
+              <strong style="color:var(--portal-ink);font-size:13px;">🔒 Khóa kỹ thuật:</strong>
+              <span class="portal-badge" data-status="${product.execution_enabled ? "ready" : "guarded"}">${product.execution_enabled ? "Sẵn sàng" : "Không thể chỉnh sửa tại đây"}</span>
             </div>
-            ${isLocked ? `<div style="font-size:12px;color:#dc2626;margin-bottom:4px;">Mã chặn: <code>${safeText(product.execution_blocker || "EXECUTION_LOCKED")}</code></div>` : ""}
-            <small style="color:var(--portal-muted);display:block;line-height:1.4;">Các trường kỹ thuật (execution_enabled, supported_tiers, supported_ratios, pricing) thuộc thẩm quyền Bot Core PR #1093, WebApp không được phép sửa.</small>
-          </div>
+            ${isLocked ? `<div style="font-size:12px;color:#dc2626;margin-bottom:4px;">Trạng thái: <code>${safeText(product.execution_blocker || "Tạm khóa")}</code></div>` : ""}
+            <small style="color:var(--portal-muted);display:block;line-height:1.4;">Các thông số kỹ thuật được cấu hình từ hệ thống trung tâm, không thể chỉnh sửa tại đây.</small>
+          </div>` : ""}
 
           <!-- Mandatory reason field -->
           <label class="portal-field">
@@ -31300,8 +31258,8 @@
           <!-- Live Before/After diff preview -->
           <div style="border:1px solid var(--portal-border);border-radius:6px;padding:10px 14px;background:var(--portal-surface-sunken,#0f172a);">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <strong style="font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--portal-muted);">Xem trước thay đổi (Live Diff Preview)</strong>
-              <span class="portal-tag" style="font-size:10px;">CAS expected_version: ${safeText(String(product.version))}</span>
+              <strong style="font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--portal-muted);">Xem trước thay đổi</strong>
+              <span class="portal-tag" data-cas-version="${safeText(String(product.version))}" style="font-size:10px;">Phiên bản hiện tại: v${safeText(String(product.version))}</span>
             </div>
             <div id="admin-product-diff-preview" style="font-family:monospace;font-size:12px;line-height:1.5;">
               <em style="color:var(--portal-muted);">Chưa có thay đổi nào so với phiên bản v${safeText(String(product.version))}.</em>
@@ -31313,7 +31271,7 @@
 
           <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px;padding-top:12px;border-top:1px solid var(--portal-border);">
             <button type="button" class="portal-button portal-button--quiet" data-portal-action="close-product-editor">Hủy bỏ</button>
-            <button type="button" class="portal-button portal-button--primary" id="btn-save-product-editor" data-portal-action="save-product-editor" data-product-key="${safeText(product.product_key)}">Lưu thay đổi (CAS PATCH)</button>
+            <button type="button" class="portal-button portal-button--primary" id="btn-save-product-editor" data-portal-action="save-product-editor" data-product-key="${safeText(product.product_key)}">Lưu thay đổi</button>
           </div>
         </form>
       </div>
@@ -31321,10 +31279,11 @@
   }
 
   function openProductEditor(productKey) {
-    const prods = (adminCommercialProductsState && adminCommercialProductsState.length > 0)
-      ? adminCommercialProductsState
-      : CANONICAL_DEFAULT_PRODUCTS;
-    const prod = prods.find((p) => p.product_key === productKey);
+    if (!adminCommercialProductsState || !Array.isArray(adminCommercialProductsState)) {
+      if (typeof showToast === "function") showToast("Danh mục sản phẩm chưa sẵn sàng", "error");
+      return;
+    }
+    const prod = adminCommercialProductsState.find((p) => p.product_key === productKey);
     if (!prod) {
       if (typeof showToast === "function") showToast("Không tìm thấy sản phẩm " + productKey, "error");
       return;
@@ -31424,7 +31383,7 @@
 
     if (saveBtn) saveBtn.disabled = true;
     if (statusEl) {
-      statusEl.innerHTML = `<div style="padding:8px 12px;color:var(--portal-brand);font-size:12px;">Đang gửi cập nhật CAS (expected_version: ${activeProductInEditor.version})...</div>`;
+      statusEl.innerHTML = `<div style="padding:8px 12px;color:var(--portal-brand);font-size:12px;">Đang lưu thay đổi...</div>`;
     }
 
     const payload = {
@@ -31460,13 +31419,13 @@
 
           if (readbackMatch) {
             if (statusEl) {
-              statusEl.innerHTML = `<div class="portal-notice portal-notice--success" style="padding:12px;border-left:4px solid #22c55e;background:rgba(34,197,94,0.1);border-radius:6px;margin-top:10px;">
+              statusEl.innerHTML = `<div class="portal-notice portal-notice--success" data-verification-status="CANONICAL_WRITE_VERIFIED" style="padding:12px;border-left:4px solid #22c55e;background:rgba(34,197,94,0.1);border-radius:6px;margin-top:10px;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                  <span class="portal-tag" style="background:#22c55e;color:#fff;font-weight:bold;">CANONICAL_WRITE_VERIFIED</span>
-                  <strong style="color:#22c55e;">Đã lưu thay đổi vào Bot Canonical!</strong>
+                  <span class="portal-tag" style="background:#22c55e;color:#fff;font-weight:bold;">Đã áp dụng</span>
+                  <strong style="color:#22c55e;">Đã lưu thay đổi thành công!</strong>
                 </div>
                 <div style="font-size:12px;line-height:1.5;">
-                  Mã biên nhận: <code>${safeText(receiptId)}</code> · Phiên bản: <strong>v${safeText(String(prevVer))} → v${safeText(String(newVer))}</strong> · readback_verified: <strong>Hợp lệ</strong>
+                  Mã biên nhận: <code>${safeText(receiptId)}</code> · Phiên bản: <strong>v${safeText(String(prevVer))} → v${safeText(String(newVer))}</strong>
                 </div>
               </div>`;
             }
@@ -31478,7 +31437,7 @@
           } else {
             if (statusEl) {
               statusEl.innerHTML = `<div class="portal-notice portal-notice--warning" style="padding:12px;border-left:4px solid #f59e0b;background:rgba(245,158,11,0.1);border-radius:6px;margin-top:10px;">
-                <strong>CẢNH BÁO ĐỌC LẠI (READBACK_MISMATCH):</strong> Ghi nhận hoàn tất nhưng dữ liệu đọc lại chưa khớp hoàn toàn.
+                <strong>Cảnh báo:</strong> Ghi nhận hoàn tất nhưng dữ liệu đọc lại chưa khớp. Vui lòng tải lại danh mục.
               </div>`;
             }
           }
@@ -31488,13 +31447,13 @@
         if (status === 409 || (body && (body.error_code === "VERSION_CONFLICT_STALE_WRITE" || (body.detail && body.detail.code === "VERSION_CONFLICT_STALE_WRITE")))) {
           // STALE_WRITE_AUTO_RETRY = 0: no automatic retry on 409
           if (statusEl) {
-            statusEl.innerHTML = `<div class="portal-notice portal-notice--error" style="padding:12px;border-left:4px solid #ef4444;background:rgba(239,68,68,0.1);border-radius:6px;margin-top:10px;">
-              <strong style="color:#ef4444;display:block;margin-bottom:4px;">XUNG ĐỘT PHIÊN BẢN (VERSION_CONFLICT_STALE_WRITE)</strong>
-              <p style="margin:0 0 8px 0;font-size:12px;line-height:1.4;">Dữ liệu sản phẩm đã bị thay đổi bởi phiên khác (expected_version: ${safeText(String(activeProductInEditor.version))} đã cũ). Hệ thống áp dụng nguyên tắc toàn vẹn CAS: không tự ý gửi lại (STALE_WRITE_AUTO_RETRY = 0).</p>
+            statusEl.innerHTML = `<div class="portal-notice portal-notice--error" data-error-code="VERSION_CONFLICT_STALE_WRITE" style="padding:12px;border-left:4px solid #ef4444;background:rgba(239,68,68,0.1);border-radius:6px;margin-top:10px;">
+              <strong style="color:#ef4444;display:block;margin-bottom:4px;">Dữ liệu đã thay đổi ở phiên khác</strong>
+              <p style="margin:0 0 8px 0;font-size:12px;line-height:1.4;">Dữ liệu sản phẩm đã được cập nhật ở một phiên khác. Vui lòng tải lại trang để xem thông tin mới nhất.</p>
               <button type="button" class="portal-button portal-button--primary" data-portal-action="reload-commercial-products" style="font-size:12px;">Tải lại dữ liệu mới nhất</button>
             </div>`;
           }
-          if (typeof showToast === "function") showToast("Xung đột phiên bản: Dữ liệu đã thay đổi trên máy chủ.", "error");
+          if (typeof showToast === "function") showToast("Dữ liệu đã thay đổi ở phiên khác. Vui lòng tải lại trang.", "error");
           return;
         }
 
@@ -31511,12 +31470,12 @@
         // AMBIGUOUS_PATCH_AUTO_RETRY = 0: no retry on ambiguous transport failure
         if (statusEl) {
           statusEl.innerHTML = `<div class="portal-notice portal-notice--warning" style="padding:12px;border-left:4px solid #f59e0b;background:rgba(245,158,11,0.1);border-radius:6px;margin-top:10px;">
-            <strong style="color:#d97706;display:block;margin-bottom:4px;">TRẠNG THÁI GHI CHƯA RÕ RÀNG (WRITE_OUTCOME_UNKNOWN)</strong>
-            <p style="margin:0 0 8px 0;font-size:12px;line-height:1.4;">Lỗi kết nối mạng hoặc timeout máy chủ (${safeText(String(err.message || err))}). Để tránh tác dụng phụ, hệ thống không tự động gửi lại (AMBIGUOUS_PATCH_AUTO_RETRY = 0). Vui lòng làm mới danh mục để kiểm tra.</p>
+            <strong style="color:#d97706;display:block;margin-bottom:4px;">Không thể kết nối đến máy chủ</strong>
+            <p style="margin:0 0 8px 0;font-size:12px;line-height:1.4;">Lỗi kết nối mạng hoặc máy chủ phản hồi chậm. Vui lòng làm mới danh mục để kiểm tra trạng thái mới nhất.</p>
             <button type="button" class="portal-button portal-button--quiet" data-portal-action="reload-commercial-products" style="font-size:12px;">Làm mới danh mục</button>
           </div>`;
         }
-        if (typeof showToast === "function") showToast("Lỗi kết nối: Trạng thái ghi chưa rõ ràng.", "warning");
+        if (typeof showToast === "function") showToast("Không thể kết nối đến máy chủ.", "warning");
       });
   }
 
@@ -31560,24 +31519,24 @@
       { code: "topup_500k", amount_vnd: 500000, xu: 5800, bonus_xu: 800, rate: "86 đ = 1 Xu", status: "active" }
     ];
 
-    const blockerBanner = `<div class="portal-notice portal-notice--warning" style="margin-bottom:20px; border-left:4px solid #f59e0b; background:rgba(245,158,11,0.08); padding:16px; border-radius:8px;">
+    const blockerBanner = (activeTab !== "products") ? `<div class="portal-notice portal-notice--warning" data-blocker="B01 B02 B03 B04 B05" style="margin-bottom:20px; border-left:4px solid #f59e0b; background:rgba(245,158,11,0.08); padding:16px; border-radius:8px;">
       <div style="display:flex; gap:12px; align-items:flex-start;">
         <span class="portal-notice-icon" style="font-size:20px; color:#f59e0b;">⚠️</span>
         <div>
-          <strong style="color:var(--portal-ink); font-size:14px; display:block; margin-bottom:4px;">BẢN ĐỒNG BỘ THẨM QUYỀN BOT CANONICAL: Chế độ Xem & Dự thảo (Draft / Review)</strong>
+          <strong style="color:var(--portal-ink); font-size:14px; display:block; margin-bottom:4px;">Chế độ Xem & Dự thảo an toàn (B02-B05)</strong>
           <p style="margin:0 0 8px 0; font-size:13px; color:var(--portal-muted); line-height:1.5;">
-            Theo thiết kế hệ thống TOAN AAS, Bot là cơ quan thẩm quyền duy nhất đối với danh mục thương mại và chính sách giá. Hiện tại, Bot backend chưa mở các endpoint ghi trực tiếp (Blocker Codes: <code>B01-B05</code>). WebApp quản lý dự thảo, diff review và audit trail đầy đủ nhưng thực thi chốt chặn an toàn fail-closed, không tự ý ghi đè dữ liệu thương mại khi thiếu xác nhận từ Bot.
+            Các tính năng bảng giá, gói cước và khuyến mãi đang ở chế độ xem an toàn. Hệ thống không tự ý ghi đè dữ liệu thương mại khi chưa có lệnh phê duyệt từ quản trị trung tâm.
           </p>
           <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:11px;">
-            <span class="portal-tag" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">B01: BOT_CANONICAL_PRODUCT_WRITE_WIRED (CAS)</span>
-            <span class="portal-tag" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B02: Pricing Publish Endpoint Missing</span>
-            <span class="portal-tag" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B03: Packages Authority Missing</span>
-            <span class="portal-tag" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B04: Promos Mutation Missing</span>
-            <span class="portal-tag" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B05: Topup Packages Mutation Missing</span>
+            <span class="portal-tag" data-blocker="B01" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">Sản phẩm: Đã kết nối</span>
+            <span class="portal-tag" data-blocker="B02" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B02: Bảng giá</span>
+            <span class="portal-tag" data-blocker="B03" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B03: Gói cước</span>
+            <span class="portal-tag" data-blocker="B04" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B04: Khuyến mãi</span>
+            <span class="portal-tag" data-blocker="B05" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B05: Gói nạp</span>
           </div>
         </div>
       </div>
-    </div>`;
+    </div>` : "";
 
     const tabsNav = `<div class="portal-admin-commercial-tabs" style="display:flex; gap:8px; border-bottom:1px solid var(--portal-border); margin-bottom:20px; overflow-x:auto;">
       <a class="portal-button ${activeTab === 'products' ? 'portal-button--primary' : 'portal-button--quiet'}" href="/admin/commercial?tab=products">1. Sản phẩm AI & Services</a>
@@ -31590,19 +31549,19 @@
     let activeContent = "";
 
     if (activeTab === "products") {
-      const initialProducts = (adminCommercialProductsState && adminCommercialProductsState.length > 0)
-        ? adminCommercialProductsState
-        : CANONICAL_DEFAULT_PRODUCTS;
+      if (adminCommercialProductsState === null && !adminCommercialProductsLoading) {
+        setTimeout(() => loadAdminCommercialProducts(false), 0);
+      }
 
       activeContent = `<section class="portal-card portal-card-pad" style="margin-bottom:20px;">
         <div class="portal-card-header" style="flex-wrap:wrap;gap:12px;">
           <div>
-            <span class="portal-section-kicker">Trụ cột 1 / 5 · Bot Authority Canonical</span>
-            <h2 class="portal-card-title">Danh mục Sản phẩm AI Canonical (Bot PR #1093)</h2>
-            <p class="portal-card-subtitle">Đồng bộ thẩm quyền danh mục sản phẩm thương mại với Bot Core qua giao thức CAS PATCH an toàn.</p>
+            <span class="portal-section-kicker">Quản lý thương mại</span>
+            <h2 class="portal-card-title">Danh mục Sản phẩm AI</h2>
+            <p class="portal-card-subtitle">Quản lý và cấu hình hiển thị thương mại cho các sản phẩm AI trên toàn hệ thống.</p>
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
-            <span class="portal-badge" data-status="ready" style="background:#16a34a;color:#fff;">CAS Wired</span>
+            <span class="portal-badge" data-status="ready" style="background:#16a34a;color:#fff;">Đã kết nối</span>
             <button class="portal-button portal-button--quiet" type="button" data-portal-action="reload-commercial-products">Làm mới danh mục</button>
           </div>
         </div>
@@ -31622,17 +31581,7 @@
               </tr>
             </thead>
             <tbody id="portal-admin-commercial-products-tbody">
-              ${initialProducts.map((p) => `<tr>
-                <td><code>${safeText(p.product_key)}</code></td>
-                <td><strong>${safeText(p.display_name)}</strong></td>
-                <td><span class="portal-tag">${safeText(p.product_group || "video")}</span></td>
-                <td><span class="portal-badge" data-status="${p.public_visible ? "ready" : "guarded"}">${p.public_visible ? "Công khai" : "Ẩn"}</span></td>
-                <td><span class="portal-badge" data-status="${p.commercial_enabled ? "ready" : "guarded"}">${p.commercial_enabled ? "Bật" : "Tắt"}</span></td>
-                <td>${safeText(String(p.sort_order || 0))}</td>
-                <td>${p.execution_enabled ? '<span class="portal-badge" data-status="ready">Sẵn sàng</span>' : `<span class="portal-badge" data-status="guarded" style="background:#fee2e2;color:#b91c1c;border:1px solid #f87171;" title="${safeText(p.execution_blocker || "LOCKED")}">🔒 Khóa (${safeText(p.execution_blocker || "DEFERRED")})</span>`}</td>
-                <td><code>v${safeText(String(p.version || 1))}</code></td>
-                <td><button class="portal-button portal-button--quiet" type="button" data-portal-action="open-product-editor" data-product-key="${safeText(p.product_key)}">Chỉnh sửa</button></td>
-              </tr>`).join("")}
+              ${renderProductTableBody()}
             </tbody>
           </table>
         </div>

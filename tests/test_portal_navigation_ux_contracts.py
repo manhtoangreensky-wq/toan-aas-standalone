@@ -374,10 +374,11 @@ def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discove
         )
     ]
     v3_groups = {
-        "Sáng tạo": ["/studio", "/voice", "/music", "/subdub", "/tools/video", "/tools/image"],
-        "Phân phối": ["/publishing"],
-        "Công việc": ["/projects", "/tools/free"],
-        "Tài khoản & Hệ thống": ["/pricing", "/wallet", "/account", "/support"],
+        "Tổng quan": ["/dashboard"],
+        "Sáng tạo": ["/studio", "/tools/image", "/voice", "/music", "/subdub", "/content", "/documents"],
+        "Công việc": ["/projects", "/publishing", "/jobs"],
+        "Tài khoản": ["/wallet", "/packages", "/history", "/account"],
+        "Tất cả công cụ": ["/features", "/tools/free"],
     }
     group_pattern = re.compile(
         r'label:\s*"(?P<label>[^"]+)"(?P<body>.*?)(?=\s*\]\s*\},?\s*\n\s*\{|\s*\]\s*\}\s*\n\s*\];)',
@@ -393,7 +394,7 @@ def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discove
     assert permanent_groups == list(v3_groups.items())
 
     permanent_routes = [path for _, paths in permanent_groups for path in paths]
-    assert len(permanent_routes) == 13
+    assert len(permanent_routes) == 17
     assert len(permanent_routes) == len(set(permanent_routes))
     # Dense and Bot-companion routes remain discoverable through the manifest
     # and palette, but do not get a permanent signed-customer rail position.

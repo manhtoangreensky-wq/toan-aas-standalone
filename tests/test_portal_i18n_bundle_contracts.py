@@ -1088,7 +1088,7 @@ def test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear() -> None
 
     for label in (
         "Không gian làm việc", "Sáng tạo",
-        "Phân phối", "Công việc",
+        "Công việc", "Tài khoản",
     ):
         assert label in visible_text
 

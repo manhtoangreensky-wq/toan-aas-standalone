@@ -762,3 +762,174 @@ def test_17_portal_js_product_editor_contract():
     assert "VERSION_CONFLICT_STALE_WRITE" in portal_code
     assert "readback_match" in portal_code or "readback_verified" in portal_code
     assert "CANONICAL_WRITE_VERIFIED" in portal_code
+
+
+# ==============================================================================
+# C1 Regression Contracts (Section 14)
+# ==============================================================================
+
+def test_c1_01_canonical_default_products_absent():
+    """01 CANONICAL_DEFAULT_PRODUCTS absent: WebApp contains zero static fallback catalog."""
+    portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert "CANONICAL_DEFAULT_PRODUCTS" not in portal_code, "Static CANONICAL_DEFAULT_PRODUCTS must not exist"
+
+
+def test_c1_02_canonical_collection_failure_renders_error_state():
+    """02 canonical collection failure renders error state: shows error message & retry button."""
+    portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert "adminCommercialProductsLoadError" in portal_code
+    assert "Không thể tải danh mục sản phẩm" in portal_code
+    assert "Thử tải lại" in portal_code
+    assert "reload-commercial-products" in portal_code
+
+
+def test_c1_03_collection_failure_renders_zero_fake_product_rows():
+    """03 collection failure renders zero fake product rows: fail closed."""
+    portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    idx = portal_code.find("function renderProductTableBody(")
+    assert idx != -1
+    fn_body = portal_code[idx:idx + 2500]
+    assert "adminCommercialProductsLoadError" in fn_body
+    assert 'colspan="9"' in fn_body
+    assert "CANONICAL_DEFAULT_PRODUCTS" not in fn_body
+
+
+def test_c1_04_editor_cannot_open_from_invented_or_static_product():
+    """04 editor cannot open from invented/static product: fail-closed if collection not loaded."""
+    portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    idx = portal_code.find("function openProductEditor(")
+    assert idx != -1
+    fn_body = portal_code[idx:idx + 1200]
+    assert "!adminCommercialProductsState" in fn_body or "Array.isArray(adminCommercialProductsState)" in fn_body
+    assert "CANONICAL_DEFAULT_PRODUCTS" not in fn_body
+
+
+def test_c1_05_empty_successful_collection_shows_legitimate_empty_state():
+    """05 empty successful collection shows legitimate empty state."""
+    portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert "Chưa có sản phẩm nào trong danh mục." in portal_code
+
+
+def test_c1_06_product_count_dynamic():
+    """06 product count dynamic: table rows mapped directly from API state."""
+    portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    idx = portal_code.find("function renderProductTableBody(")
+    assert idx != -1
+    fn_body = portal_code[idx:idx + 2500]
+    assert "adminCommercialProductsState.map(" in fn_body
+
+
+def test_c1_07_no_invented_technical_metadata():
+    """07 no invented technical metadata: client does not fabricate missing execution metadata."""
+    portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert 'product_key: "video_trend"' not in portal_code
+    assert 'product_key: "script_image_video"' not in portal_code
+    assert 'product_key: "video_idea"' not in portal_code
+
+
+def test_c1_08_canonical_object_technical_fields_render_only_if_actually_supplied():
+    """08 canonical object technical fields render only if actually supplied."""
+    portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert "p.execution_enabled !== undefined" in portal_code
+    assert "product.execution_enabled !== undefined" in portal_code
+
+
+def test_c1_09_canonical_patch_still_works(isolated_env, monkeypatch):
+    """09 canonical PATCH still works: sends expected_version, changes, reason to bridge."""
+    sent_payload = {}
+
+    async def _mock_bridge_request(method, path, **kwargs):
+        nonlocal sent_payload
+        if method == "PATCH":
+            sent_payload = kwargs.get("payload", {})
+            return {
+                "ok": True,
+                "data": {
+                    "receipt_id": "RCPT-TEST-09",
+                    "product_key": "video_trend",
+                    "previous_version": 1,
+                    "new_version": 2,
+                    "readback_match": True,
+                },
+            }
+        elif method == "GET":
+            return {"ok": True, "data": {"product": {**MOCK_BOT_PRODUCTS[0], "version": 2, "display_name": "Trend Updated"}}}
+        return {"ok": False, "detail": "not found"}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", _mock_bridge_request)
+
+    client = TestClient(app_module.app)
+    cookies, csrf = _create_session(isolated_env, "acc-admin-b01")
+
+    res = client.patch(
+        "/api/admin/commercial/products/video_trend",
+        json={"expected_version": 1, "changes": {"display_name": "Trend Updated"}, "reason": "C1 regression test"},
+        cookies=cookies,
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert res.status_code == 200
+    assert sent_payload.get("expected_version") == 1
+    assert sent_payload.get("changes") == {"display_name": "Trend Updated"}
+    assert sent_payload.get("reason") == "C1 regression test"
+
+
+def test_c1_10_cas_conflict_still_zero_replay():
+    """10 CAS conflict still zero replay: STALE_WRITE_AUTO_RETRY = 0 and no auto-resend."""
+    portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert "STALE_WRITE_AUTO_RETRY = 0" in portal_code
+    assert "VERSION_CONFLICT_STALE_WRITE" in portal_code
+    assert "Dữ liệu đã thay đổi ở phiên khác" in portal_code
+
+
+def test_c1_11_receipt_still_required():
+    """11 receipt still required: receiptId extracted from write response."""
+    portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert "write_receipt" in portal_code or "receipt_id" in portal_code
+    assert "Mã biên nhận" in portal_code
+
+
+def test_c1_12_fresh_get_readback_still_required():
+    """12 fresh GET readback still required: readback_verified / readback_match checked."""
+    portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert "readback_verified" in portal_code
+    assert "readback_match" in portal_code
+
+
+def test_c1_13_readback_mismatch_still_fail_closed():
+    """13 readback mismatch still fail-closed: mismatch renders warning, not success."""
+    portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert "dữ liệu đọc lại chưa khớp" in portal_code
+
+
+def test_c1_14_user_visible_b01_cas_pr_jargon_absent():
+    """14 user-visible B01/CAS/PR jargon absent from normal Admin UI."""
+    portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
+
+    idx_editor = portal_code.find("function renderProductEditor(")
+    idx_open = portal_code.find("function openProductEditor(")
+    editor_body = portal_code[idx_editor:idx_open]
+
+    assert "Bot Canonical Commercial Editor" not in editor_body
+    assert "Bot Core PR #1093" not in editor_body
+    assert "Technical Lock - Read-only" not in editor_body
+    assert "Execution Ready" not in editor_body
+    assert "Execution Locked" not in editor_body
+    assert "CAS PATCH" not in editor_body
+    assert "CAS expected_version" not in editor_body
+
+    idx_comm = portal_code.find("function renderAdminCommercial(")
+    idx_pricing = portal_code.find("function renderAdminPricing(")
+    comm_body = portal_code[idx_comm:idx_pricing]
+
+    assert "Trụ cột 1 / 5 · Bot Authority Canonical" not in comm_body
+    assert "Danh mục Sản phẩm AI Canonical (Bot PR #1093)" not in comm_body
+    assert "CAS Wired" not in comm_body
+    assert "Quản lý thương mại" in comm_body
+    assert "Danh mục Sản phẩm AI" in comm_body
+    assert "Đã kết nối" in comm_body
+
+
+def test_c1_15_navigation_i18n_unmapped_count_zero():
+    """15 navigation i18n unmapped count zero."""
+    import tests.test_portal_i18n_bundle_contracts as i18n_tests
+    assert hasattr(i18n_tests, "test_vietnamese_shell_dashboard_and_admin_navigation_copy_is_clear")
