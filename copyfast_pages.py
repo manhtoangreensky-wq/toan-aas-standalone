@@ -106,6 +106,7 @@ _PORTAL_SHELL_COPY = {
     },
 }
 _PORTAL_SHELL_TITLES = {
+    "/admin/commercial": {"vi": "Trung tâm Thương mại · TOAN AAS", "en": "Commercial Command Center · TOAN AAS", "zh": "商业指挥中心 · TOAN AAS"},
     "/admin/customers": {"vi": "Khách hàng Web · TOAN AAS", "en": "Web Customers · TOAN AAS", "zh": "Web 客户 · TOAN AAS"},
     "/admin/finance": {"vi": "Tài chính & Giao dịch · TOAN AAS", "en": "Finance & Transactions · TOAN AAS", "zh": "财务与交易 · TOAN AAS"},
     "/admin/finance/topups": {"vi": "Yêu cầu nạp tiền · TOAN AAS", "en": "Topup Requests · TOAN AAS", "zh": "充值申请 · TOAN AAS"},
@@ -194,6 +195,11 @@ _PORTAL_SHELL_TITLES = {
 # presentation copy. They must never interpolate account data, request state,
 # identifiers, or other private browser/server projections into first paint.
 _PORTAL_SHELL_DESCRIPTIONS = {
+    "/admin/commercial": {
+        "vi": "Quản lý tập trung 5 trụ cột thương mại: Sản phẩm, Bảng giá, Gói cước, Khuyến mãi và Gói nạp Xu theo thẩm quyền Bot canonical.",
+        "en": "Centralized management of 5 commercial pillars: Products, Pricing, Packages, Promotions, and Topup Packages under Bot authority.",
+        "zh": "在 Bot canonical 授权下集中管理5大商业支柱：产品、价格、套餐、促销与充值包。",
+    },
     "/wallet": {
         "vi": "Xem số dư Xu và lịch sử giao dịch từ ledger canonical của bot.",
         "en": "Review credit balance and transaction history from canonical bot ledger.",

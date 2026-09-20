@@ -47,6 +47,7 @@ _MODULE_DESCRIPTIONS = {
     "topups": "Trạng thái nạp canonical; không nhận bill, QR hay TXID ở Web.",
     "revenue": "Báo cáo doanh thu theo adapter canonical.",
     "refunds": "Xem refund; quyết định write cần policy canonical riêng.",
+    "commercial": "Trung tâm điều hành thương mại: Sản phẩm, Bảng giá SKU, Gói dịch vụ, Khuyến mãi, Gói nạp Xu.",
     "pricing": "Giá và gói theo cấu hình canonical đang được công bố.",
     "packages": "Package read model có role check riêng.",
     "promos": "Danh mục khuyến mãi có guard và audit riêng.",
@@ -616,6 +617,7 @@ def v2_primary_groups() -> list[dict[str, Any]]:
             "Tài chính & Doanh thu",
             authority="canonical_admin",
             modules=[
+                _canonical_module("commercial", "Trung tâm Thương mại", "/admin/commercial"),
                 _module(
                     "manual_topups",
                     "Duyệt nạp tiền",

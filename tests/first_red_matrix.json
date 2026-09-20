@@ -1,0 +1,33 @@
+{
+  "task": "P0.WEBAPP.V3.FULL.PRODUCT.ADMIN.COMMERCIAL.UX.TRUTH.REMEDIATION.R1",
+  "pre_head": "670fb4aa0106f615cc4607b14c21243da416e265",
+  "bot_reference_sha": "e0ce16e5d4ba6816d4f5205aad662eba8c635045",
+  "first_red_matrix": {
+    "CUSTOMER_PRIMARY_NAV_BOT_ALIGNED": "NO",
+    "REDUNDANT_WORKSPACES": 32,
+    "DUPLICATE_PRODUCT_SURFACES": 11,
+    "PLANNING_ONLY_PRODUCT_SURFACES": 9,
+    "READ_ONLY_PRODUCT_SUBSTITUTES": 24,
+    "GUARDED_PRODUCT_SURFACES": 17,
+    "BOT_FUNCTION_WITHOUT_REAL_WEB_EXECUTION": 14,
+    "NORMAL_USER_INTERNAL_JARGON_VISIBLE": 5,
+    "DASHBOARD_PRODUCT_FIRST": "NO",
+    "ADMIN_PRODUCT_EDITOR_REAL": "NO",
+    "ADMIN_EFFECTIVE_PRICE_CONTROL": "NO",
+    "ADMIN_PACKAGE_REAL_WRITE": "NO",
+    "ADMIN_PROMO_REAL_WRITE": "NOT_PROVEN",
+    "ADMIN_TOPUP_PACKAGE_REAL_WRITE": "NO",
+    "ADMIN_COMMERCIAL_CONTROL_COMPLETE": "NO",
+    "TOPUP_QR_PRIMARY_VISUAL": "NO",
+    "TOPUP_QR_TOO_SMALL": "YES"
+  },
+  "empirical_proofs": {
+    "CUSTOMER_PRIMARY_NAV": "portal.js navGroups hardcoded to 13 items across 4 tiers; missing Tong quan, Tat ca cong cu, Jobs & Ket qua, Goi, Lich su",
+    "REDUNDANT_WORKSPACES": "32 paths in copyfast_registry matching workspace/studio/planner/composer/blueprint/hub",
+    "DASHBOARD_HERO": "portal.js renderDashboard renders 'TÀI CHÍNH & TRẠNG THÁI TÀI KHOẢN' as primary top hero; missing 'Bạn muốn làm gì hôm nay?'",
+    "INTERNAL_JARGON": "Visible strings 'Tiêu chuẩn', 'Được bảo vệ', 'Đã liên kết Telegram' banner, 'Guarded', 'Read-only' in customer views",
+    "TOPUP_QR": "portal.css .portal-manual-payment-method defines grid-template-columns: minmax(0, 1fr) minmax(132px, 180px); QR squeezed to 180px max; missing lightbox zoom modal",
+    "ADMIN_COMMERCIAL": "/admin/commercial route does not exist in copyfast_registry; 41 fragmented admin endpoints; missing unified 5-tab command center",
+    "CANONICAL_WRITES": "copyfast_pricing_policy CANONICAL_PUBLISH_AVAILABLE=False; Bot lacks /internal/v1/admin/packages, /promos, /products write endpoints"
+  }
+}

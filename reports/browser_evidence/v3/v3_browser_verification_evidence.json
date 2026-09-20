@@ -1,0 +1,184 @@
+{
+  "head_sha": "670fb4aa0106f615cc4607b14c21243da416e265",
+  "task": "P0.WEBAPP.V3.FULL.PRODUCT.ADMIN.COMMERCIAL.UX.TRUTH.REMEDIATION.R1",
+  "timestamp": "2026-09-20T11:36:46Z",
+  "captures": [
+    {
+      "route": "/dashboard",
+      "route_slug": "dashboard",
+      "viewport": "1440x900",
+      "viewport_name": "desktop",
+      "screenshot_file": "v3_dashboard_desktop.png",
+      "sha256": "b430504b722c579f0e020bc303e1627b2dcfffd5e64d57a7649a646dd468e0ea",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/dashboard",
+      "route_slug": "dashboard",
+      "viewport": "1024x768",
+      "viewport_name": "tablet",
+      "screenshot_file": "v3_dashboard_tablet.png",
+      "sha256": "52e06c375df111ff7c1bb2fd7137124338445f0b1a8629abb8be7f0a52f4bcb5",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/dashboard",
+      "route_slug": "dashboard",
+      "viewport": "390x844",
+      "viewport_name": "mobile",
+      "screenshot_file": "v3_dashboard_mobile.png",
+      "sha256": "5d684a828312927028cf3f74f1a0fe31dce553b49e396eeb50c3d4d94d47a769",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/features",
+      "route_slug": "features",
+      "viewport": "1440x900",
+      "viewport_name": "desktop",
+      "screenshot_file": "v3_features_desktop.png",
+      "sha256": "486fe756da4317ae14dd1bb03e525764e16d0ed6acad9558805f7527ec57a11c",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/features",
+      "route_slug": "features",
+      "viewport": "1024x768",
+      "viewport_name": "tablet",
+      "screenshot_file": "v3_features_tablet.png",
+      "sha256": "da5501e30de4906b8e1e304a6e333ea8f9e2e0f01d38eb05862929bec94adb24",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/features",
+      "route_slug": "features",
+      "viewport": "390x844",
+      "viewport_name": "mobile",
+      "screenshot_file": "v3_features_mobile.png",
+      "sha256": "936642d0852b0f66f6d6472055e56ff6c470fc5b3c36bf93786e3d20265ae78c",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/wallet/topup",
+      "route_slug": "wallet_topup",
+      "viewport": "1440x900",
+      "viewport_name": "desktop",
+      "screenshot_file": "v3_wallet_topup_desktop.png",
+      "sha256": "97e4f530624e5d9a98d91ebbbfbe6e12d1d67531a6791b94b83c0d0608a2e94c",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/wallet/topup",
+      "route_slug": "wallet_topup",
+      "viewport": "1024x768",
+      "viewport_name": "tablet",
+      "screenshot_file": "v3_wallet_topup_tablet.png",
+      "sha256": "563b0a529091fa30dc271c259390a8ecc48de6aaf574c9f6f0cef96de3489515",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/wallet/topup",
+      "route_slug": "wallet_topup",
+      "viewport": "390x844",
+      "viewport_name": "mobile",
+      "screenshot_file": "v3_wallet_topup_mobile.png",
+      "sha256": "9a834bc7ab1ba23eaf3da3e9b1142fc31da11e108f2ff48d96539ed776d24c77",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/admin",
+      "route_slug": "admin",
+      "viewport": "1440x900",
+      "viewport_name": "desktop",
+      "screenshot_file": "v3_admin_desktop.png",
+      "sha256": "3cc2c230b3b62cdbac1fc9f25ac81c10c08e44afd4dd1d6f6d0c31fc0be78035",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/admin",
+      "route_slug": "admin",
+      "viewport": "1024x768",
+      "viewport_name": "tablet",
+      "screenshot_file": "v3_admin_tablet.png",
+      "sha256": "a44674653181b64669f6d8d6601eeafee69f08cecb5b0a98830eabd6587ba767",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/admin",
+      "route_slug": "admin",
+      "viewport": "390x844",
+      "viewport_name": "mobile",
+      "screenshot_file": "v3_admin_mobile.png",
+      "sha256": "a70d105ec31625eb4fa552b4786f3e84f5b763521d7f39570ee09679181e46c7",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/admin/commercial",
+      "route_slug": "admin_commercial",
+      "viewport": "1440x900",
+      "viewport_name": "desktop",
+      "screenshot_file": "v3_admin_commercial_desktop.png",
+      "sha256": "6d3d4676423b8af30553630838ca0c711dad7b505b8e8e36b05563fe81316e82",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/admin/commercial",
+      "route_slug": "admin_commercial",
+      "viewport": "1024x768",
+      "viewport_name": "tablet",
+      "screenshot_file": "v3_admin_commercial_tablet.png",
+      "sha256": "e00697e8fdd1e5f471113b14589885252d35dbdbca9c601c7a84fa330a927710",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/admin/commercial",
+      "route_slug": "admin_commercial",
+      "viewport": "390x844",
+      "viewport_name": "mobile",
+      "screenshot_file": "v3_admin_commercial_mobile.png",
+      "sha256": "a76d874ab6bc3b1d0aaaa0fe9a52245a2d0004a46ae3df83892d4a055e827910",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    }
+  ],
+  "lightbox_checks": {
+    "open_lightbox_pass": true,
+    "close_lightbox_pass": true,
+    "modal_screenshot": "v3_topup_qr_lightbox_desktop.png",
+    "modal_sha256": "e0691e3893c1cc69f46eef3021be9d1f9cf2289b2ec7f5769f138e059130dbe7"
+  },
+  "summary": {
+    "total_captures": 15,
+    "passed_captures": 15,
+    "console_errors_count": 0,
+    "horizontal_overflow_count": 0
+  }
+}

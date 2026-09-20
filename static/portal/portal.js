@@ -1240,7 +1240,7 @@
   customerPage("/content-studio", "Creative Content Studio", "Workspace chuyên nghiệp để tổ chức brief, caption, hook, script, storyboard và content pack với version history riêng tư.", ICONS.prompt, {
     layout: "content-studio", type: "content-studio", fields: [], action: "none", status: "ready",
     notes: ["Content Studio là authoring workspace Web-native. Nó không gọi Bot, provider, ví Xu, PayOS, job, publish hoặc delivery.", "Composer chỉ tạo ba khung nháp cục bộ có nhãn rõ ràng để biên tập; không tự nhận là AI output hoặc nội dung đã được duyệt."]
-  });
+  }, ["/content"]);
   customerPage("/content-studio/new", "Content Brief mới", "Tạo brief có cấu trúc và liên kết Project, Campaign, Prompt Library hoặc Audio Library riêng tư.", ICONS.prompt, {
     layout: "content-studio", type: "content-studio", fields: [], action: "none", status: "ready",
     notes: ["Không truyền brief, ID hoặc text riêng tư qua query string. Chỉ loại nội dung allowlist mới được dùng từ liên kết nội bộ.", "Mọi write cần signed session, CSRF, optimistic revision, idempotency và owner check trên server."]
@@ -2044,6 +2044,7 @@
   adminPage("/admin/workers", "Workers", "Sức khỏe worker và queue chỉ đọc qua bridge có kiểm soát.", ICONS.system);
   adminPage("/admin/features", "Feature readiness", "Kiểm tra trạng thái, guarded mode và maintenance của từng feature.", ICONS.system);
   adminPage("/admin/freezes", "Bảo trì & freeze", "Theo dõi maintenance/freeze canonical; thao tác thay đổi vẫn chờ adapter write có audit.", ICONS.system);
+  adminPage("/admin/commercial", "Trung tâm Thương mại", "Quản lý tập trung 5 trụ cột thương mại: Sản phẩm, Bảng giá, Gói cước, Khuyến mãi và Gói nạp Xu theo thẩm quyền Bot canonical.", ICONS.pricing, { layout: "admin-commercial" });
   adminPage("/admin/pricing", "Giá & Xu", "Admin Dynamic Pricing Engine: quản lý catalog giá xuất bản và thay đổi dự thảo có kiểm soát.", ICONS.pricing, { layout: "admin-pricing" });
   adminPage("/admin/packages", "Packages & Bảng giá", "Quản lý packages và danh mục SKU tích hợp trong Dynamic Pricing Engine.", ICONS.pricing, { layout: "admin-pricing" });
   adminPage("/admin/promos", "Khuyến mãi", "Quản lý promo phải có permission, confirmation và audit event.", ICONS.pricing);
@@ -10151,43 +10152,50 @@
     const currentRoute = normalizePath(currentPage && (currentPage.routePath || currentPage.path));
     const groups = [
       {
-        label: "Sáng tạo", defaultOpen: true,
+        label: "Tổng quan", defaultOpen: true,
         links: [
-          ["/studio", "Video Studio", ICONS.video],
-          ["/voice", "AI Voice", ICONS.voice],
-          ["/music", "AI Music", ICONS.music],
-          ["/subdub", "AI SubDub", ICONS.prompt],
-          ["/tools/video", "Video Edit", ICONS.video],
-          ["/tools/image", "Image Suite", ICONS.image]
+          ["/dashboard", "Tổng quan", ICONS.dashboard]
         ]
       },
       {
-        label: "Phân phối", defaultOpen: true,
+        label: "Sáng tạo", defaultOpen: true,
         links: [
-          ["/publishing", "AutoPost Hub", ICONS.reports]
+          ["/studio", "Tạo Video AI", ICONS.video],
+          ["/tools/image", "Tạo Ảnh AI", ICONS.image],
+          ["/voice", "Tạo Giọng AI", ICONS.voice],
+          ["/music", "Tạo Nhạc AI", ICONS.music],
+          ["/subdub", "AI SubDub", ICONS.subtitle],
+          ["/content", "Tạo Nội dung", ICONS.prompt],
+          ["/documents", "Tài liệu", ICONS.document]
         ]
       },
       {
         label: "Công việc", defaultOpen: true,
         links: [
-          ["/projects", "Dự án & Lịch sử", ICONS.dashboard],
-          ["/tools/free", "Công cụ miễn phí", ICONS.prompt]
+          ["/projects", "Dự án", ICONS.dashboard],
+          ["/publishing", "Xuất bản & Lịch đăng", ICONS.jobs],
+          ["/jobs", "Tiến trình Jobs", ICONS.jobs]
         ]
       },
       {
-        label: "Tài khoản & Hệ thống", defaultOpen: true,
+        label: "Tài khoản", defaultOpen: true,
         links: [
-          ["/pricing", "Bảng giá", ICONS.pricing],
-          ["/wallet", "Ví Xu", ICONS.wallet],
-          ["/account", "Tài khoản", ICONS.account],
-          ["/support", "Hỗ trợ", ICONS.support]
+          ["/wallet", "Ví Xu & Nạp tiền", ICONS.wallet],
+          ["/packages", "Gói cước & Đăng ký", ICONS.pricing],
+          ["/history", "Lịch sử giao dịch", ICONS.jobs],
+          ["/account", "Cài đặt tài khoản", ICONS.account]
+        ]
+      },
+      {
+        label: "Tất cả công cụ", defaultOpen: true,
+        links: [
+          ["/features", "Tất cả công cụ", ICONS.prompt],
+          ["/tools/free", "Công cụ Miễn phí", ICONS.prompt]
         ]
       }
     ];
-    // P0.WEBAPP.V3 Information Architecture Canonical Truth:
-    // Primary customer sidebar has exactly 13 canonical items across 4 Tiers.
-    // Video Studio internal sub-routes live inside /studio workspace tabs,
-    // not spliced into primary navigation rail.
+    // Canonical Bot-aligned Customer Information Architecture:
+    // Exactly 5 product groups: Tổng quan, Sáng tạo, Công việc, Tài khoản, Tất cả công cụ.
     const currentGroup = currentCustomerWorkflowGroup(currentPage, groups);
     if (currentGroup) groups.unshift(currentGroup);
     return groups;
@@ -11183,8 +11191,9 @@
     },
     {
       id: "pricing",
-      matches: (path) => ["/admin/pricing", "/admin/packages", "/admin/promos"].includes(path),
+      matches: (path) => ["/admin/commercial", "/admin/pricing", "/admin/packages", "/admin/promos"].includes(path),
       tabs: [
+        { path: "/admin/commercial", label: "Trung tâm Thương mại", labelEn: "Commercial Center" },
         { path: "/admin/pricing", label: "Bảng giá & Xu", labelEn: "Pricing" },
         { path: "/admin/packages", label: "Gói cước Packages", labelEn: "Packages" },
         { path: "/admin/promos", label: "Khuyến mãi Promo", labelEn: "Promos" }
@@ -21033,129 +21042,146 @@
   function renderDashboard(page, context) {
     const readState = dashboardReadState(context);
 
-    function renderDashboardWalletHero(ctx) {
-      const w = canonicalWalletProjection(ctx.wallet);
-      const balance = w ? localizedNumber(w.balance_xu) : "—";
-      const spent = w ? localizedNumber(w.total_spent_xu) : "—";
-      const tier = w && w.is_vip ? "VIP" : "Tiêu chuẩn";
-      const linked = telegramIdentityLinked(ctx);
-      const isUnlinked = !linked || (ctx.wallet && ctx.wallet.status === "unlinked") || (ctx.wallet && ctx.wallet.error_code === "ACCOUNT_TELEGRAM_UNLINKED");
-      const unlinkedCard = isUnlinked ? renderTelegramUnlinkedCard(ctx) : "";
-      const linkedStatus = linked ? "Đã liên kết Telegram" : "Chưa kết nối Telegram";
-      const planName = w && w.plan && (w.plan.plan_name || w.plan.current_plan)
-        ? String(w.plan.plan_name || w.plan.current_plan)
-        : (w && w.is_vip ? "VIP Doanh nghiệp" : "Gói Tiêu Chuẩn");
-
-      return `${unlinkedCard}<section class="portal-card portal-card-pad portal-dashboard-wallet-hero" aria-labelledby="dashboard-wallet-title" style="margin-bottom:24px; background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand) 8%, var(--portal-surface-light)) 0%, var(--portal-surface-light) 100%); border:1px solid color-mix(in srgb, var(--portal-brand) 25%, var(--portal-border)); border-radius:var(--portal-radius-lg);">
-        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:20px;">
-          <div>
-            <span class="portal-section-kicker" style="color:var(--portal-brand); font-weight:700;">TÀI CHÍNH & TRẠNG THÁI TÀI KHOẢN</span>
-            <h2 id="dashboard-wallet-title" style="margin:4px 0 6px; font-size:22px; font-weight:800; color:var(--portal-ink);">Tổng quan Ví Xu & Quyền lợi</h2>
-            <p style="margin:0; font-size:13px; color:var(--portal-muted);">Số dư thực tế đối soát từ sổ cái chính thức. Nạp tức thì qua VietQR PayOS.</p>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <span class="portal-badge" data-badge="${w && w.is_vip ? 'ready' : 'read_only'}" style="font-weight:700; font-size:12px; padding:4px 10px;">${safeText(tier)}</span>
-            <span class="portal-badge" data-badge="${linked ? 'ready' : 'guarded'}" style="font-size:12px; padding:4px 10px;">${safeText(linkedStatus)}</span>
-          </div>
+    function renderDashboardProductHero(ctx) {
+      return `<section class="portal-card portal-card-pad portal-dashboard-product-hero" aria-labelledby="dashboard-product-title" style="margin-bottom:20px; background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand) 6%, var(--portal-surface-light)) 0%, var(--portal-surface-light) 100%); border:1px solid color-mix(in srgb, var(--portal-brand) 20%, var(--portal-border)); border-radius:var(--portal-radius-lg); padding:24px;">
+        <div style="margin-bottom:20px;">
+          <span class="portal-section-kicker" style="color:var(--portal-brand); font-weight:700; font-size:12px; letter-spacing:0.05em;">HỆ SINH THÁI SÁNG TẠO AI TOAN AAS</span>
+          <h2 id="dashboard-product-title" style="margin:6px 0 8px; font-size:24px; font-weight:800; color:var(--portal-ink);">Bạn muốn làm gì hôm nay?</h2>
+          <p style="margin:0; font-size:14px; color:var(--portal-muted);">Khởi tạo nhanh các tác vụ AI sáng tạo chuyên nghiệp từ 6 không gian sản phẩm chủ lực.</p>
         </div>
-        <div class="portal-admin-grid" style="grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:20px;">
-          <div class="portal-metric" style="background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px;">
-            <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">SỐ DƯ KHẢ DỤNG</span>
-            <strong style="font-size:28px; font-weight:900; color:var(--portal-brand); display:block; margin:4px 0;">${safeText(balance)} <small style="font-size:14px; font-weight:600;">Xu</small></strong>
-            <em style="font-size:11px; color:var(--portal-muted); font-style:normal;">${w ? "Khả dụng cho tác vụ AI" : "Đang đồng bộ sổ cái..."}</em>
-          </div>
-          <div class="portal-metric" style="background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px;">
-            <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">TỔNG ĐÃ TIÊU THỤ</span>
-            <strong style="font-size:28px; font-weight:900; color:var(--portal-ink); display:block; margin:4px 0;">${safeText(spent)} <small style="font-size:14px; font-weight:600;">Xu</small></strong>
-            <em style="font-size:11px; color:var(--portal-muted); font-style:normal;">Lũy kế các tác vụ đã thực thi</em>
-          </div>
-          <div class="portal-metric" style="background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px;">
-            <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">GÓI DỊCH VỤ</span>
-            <strong style="font-size:20px; font-weight:800; color:var(--portal-ink); display:block; margin:6px 0 4px;">${safeText(planName)}</strong>
-            <em style="font-size:11px; color:var(--portal-muted); font-style:normal;">Quyền lợi và hạn mức theo gói</em>
-          </div>
-        </div>
-        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px; border-top:1px solid var(--portal-border); padding-top:16px;">
-          <a class="portal-button portal-button--primary" href="/wallet/topup" style="display:inline-flex; align-items:center; gap:8px;">
-            <span aria-hidden="true">${portalIcon(ICONS.payments)}</span>
-            <span>Nạp Xu VietQR PayOS</span>
-          </a>
-          <a class="portal-button portal-button--quiet" href="/wallet" style="display:inline-flex; align-items:center; gap:6px;">
-            <span aria-hidden="true">${portalIcon(ICONS.wallet)}</span>
-            <span>Lịch sử Ví Xu</span>
-          </a>
-          <a class="portal-button portal-button--quiet" href="/pricing" style="display:inline-flex; align-items:center; gap:6px;">
-            <span aria-hidden="true">${portalIcon(ICONS.pricing)}</span>
-            <span>Bảng giá dịch vụ</span>
-          </a>
-        </div>
-      </section>`;
-    }
-
-    function renderDashboardStartWork(ctx) {
-      return `<section class="portal-card portal-card-pad portal-dashboard-start-work" aria-labelledby="dashboard-start-work-title" style="margin-bottom:24px;">
-        <div class="portal-card-header" style="margin-bottom:16px;">
-          <div>
-            <span class="portal-section-kicker" style="color:var(--portal-action); font-weight:700;">KHỞI TẠO DỰ ÁN MỚI</span>
-            <h2 id="dashboard-start-work-title" class="portal-card-title" style="font-size:20px; font-weight:800; margin:2px 0;">Bắt Đầu Tác Vụ Sáng Tạo AI</h2>
-            <p class="portal-card-subtitle" style="margin:0; font-size:13px; color:var(--portal-muted);">Chọn không gian chuyên biệt để bắt đầu dự án hoặc khám phá danh mục 139 công cụ.</p>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <a class="portal-button portal-button--quiet" href="/projects" style="display:inline-flex; align-items:center; gap:6px; font-weight:600;">
-              <span>Trung tâm dự án</span>
-              <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
-            </a>
-            <a class="portal-button portal-button--quiet" href="/features" style="display:inline-flex; align-items:center; gap:6px; font-weight:600;">
-              <span>Tất cả 139 công cụ</span>
-              <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
-            </a>
-          </div>
-        </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
-          <a href="/video-studio" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s ease, transform 0.2s ease;">
+        <div class="portal-dashboard-launchers-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
+          <a class="portal-product-launcher-card" href="/studio" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
             <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, var(--portal-brand) 15%, var(--portal-surface-light)); display:flex; align-items:center; justify-content:center; color:var(--portal-brand); margin-bottom:12px;">
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #3b82f6 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#3b82f6; margin-bottom:12px;">
                 ${portalIcon(ICONS.video)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng video AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Sản xuất video ngắn TikTok/Reels, phân cảnh đa góc quay và kịch bản video AI.</p>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Video AI</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Video ngắn TikTok/Reels, phân cảnh đa góc quay và kịch bản video AI.</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
               <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Video →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Theo kịch bản / tệp</span>
+              <span style="font-size:11px; color:var(--portal-muted);">Đa kịch bản</span>
             </div>
           </a>
-          <a href="/image-studio" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s ease, transform 0.2s ease;">
+          <a class="portal-product-launcher-card" href="/tools/image" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
             <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, var(--portal-context) 15%, var(--portal-surface-light)); display:flex; align-items:center; justify-content:center; color:var(--portal-context); margin-bottom:12px;">
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #8b5cf6 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#8b5cf6; margin-bottom:12px;">
                 ${portalIcon(ICONS.image)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng ảnh AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Tạo ảnh nghệ thuật siêu thực 4K, chân dung AI người mẫu, hình thu nhỏ và áp phích chuyên nghiệp.</p>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Ảnh AI</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Ảnh chân thực 4K, người mẫu AI, poster sản phẩm và nâng cấp độ phân giải.</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
               <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Ảnh →</span>
               <span style="font-size:11px; color:var(--portal-muted);">Độ phân giải cao</span>
             </div>
           </a>
-          <a href="/content-studio" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s ease, transform 0.2s ease;">
+          <a class="portal-product-launcher-card" href="/voice" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
             <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, var(--portal-brand) 15%, var(--portal-surface-light)); display:flex; align-items:center; justify-content:center; color:var(--portal-brand); margin-bottom:12px;">
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #06b6d4 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#06b6d4; margin-bottom:12px;">
+                ${portalIcon(ICONS.voice)}
+              </div>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Giọng AI</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Lồng tiếng đọc văn bản tự nhiên, nhân bản giọng nói và chuyển ngữ chuẩn âm.</p>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Giọng →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">Đa ngôn ngữ</span>
+            </div>
+          </a>
+          <a class="portal-product-launcher-card" href="/subdub" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
+            <div>
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #10b981 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#10b981; margin-bottom:12px;">
+                ${portalIcon(ICONS.subtitle)}
+              </div>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">AI SubDub</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Bóc tách phụ đề video tự động, dịch song ngữ và lồng tiếng tự động chuẩn khớp.</p>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở SubDub →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">Khớp nhịp audio</span>
+            </div>
+          </a>
+          <a class="portal-product-launcher-card" href="/content" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
+            <div>
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #f59e0b 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#f59e0b; margin-bottom:12px;">
                 ${portalIcon(ICONS.prompt)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng nội dung AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Sáng tạo nội dung bài viết, kịch bản bán hàng, quảng cáo và tối ưu hóa chuyển đổi tự động.</p>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Nội dung</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Kịch bản video, bài đăng mạng xã hội, copywriting bán hàng và tối ưu SEO.</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
               <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Nội Dung →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Ý tưởng & kịch bản</span>
+              <span style="font-size:11px; color:var(--portal-muted);">Tối ưu chuyển đổi</span>
+            </div>
+          </a>
+          <a class="portal-product-launcher-card" href="/music" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
+            <div>
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #ec4899 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#ec4899; margin-bottom:12px;">
+                ${portalIcon(ICONS.music)}
+              </div>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Nhạc AI</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Sáng tác bài hát theo lời thoại, tạo giai điệu nền và hiệu ứng âm thanh SFX.</p>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Nhạc →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">Bản quyền thương mại</span>
             </div>
           </a>
         </div>
       </section>`;
     }
 
-    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardWalletHero(context)}${renderDashboardStartWork(context)}${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">${dashboardText("work.kicker")}</span><h2 id="workspace-work-lane-title">${dashboardText("work.title")}</h2><p>${dashboardText("work.body")}</p></div></div>${renderDashboardFocusDock(context)}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>${dashboardText("assurance.title")}</summary><p class="portal-form-note">${dashboardText("assurance.body")}</p></details></article>`;
+    function renderDashboardAccountSummary(ctx) {
+      const w = canonicalWalletProjection(ctx.wallet);
+      const balance = w ? localizedNumber(w.balance_xu) : "—";
+      const spent = w ? localizedNumber(w.total_spent_xu) : "—";
+      const planName = w && w.plan && (w.plan.plan_name || w.plan.current_plan)
+        ? String(w.plan.plan_name || w.plan.current_plan)
+        : (w && w.is_vip ? "VIP Doanh nghiệp" : "Thành viên");
+      return `<section class="portal-card portal-card-pad portal-dashboard-account-summary-strip" aria-labelledby="dashboard-account-summary-title" style="margin-bottom:24px; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px 20px;">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px;">
+          <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+            <div>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">Số dư Xu khả dụng</span>
+              <div style="display:flex; align-items:baseline; gap:6px;">
+                <strong style="font-size:22px; font-weight:900; color:var(--portal-brand);">${safeText(balance)}</strong>
+                <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">Xu</span>
+              </div>
+            </div>
+            <div style="width:1px; height:32px; background:var(--portal-border);" class="portal-summary-divider"></div>
+            <div>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">Gói tài khoản</span>
+              <div style="display:flex; align-items:baseline; gap:6px;">
+                <strong style="font-size:15px; font-weight:700; color:var(--portal-ink);">${safeText(planName)}</strong>
+              </div>
+            </div>
+            <div style="width:1px; height:32px; background:var(--portal-border);" class="portal-summary-divider"></div>
+            <div>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">Lũy kế đã dùng</span>
+              <div style="display:flex; align-items:baseline; gap:6px;">
+                <strong style="font-size:15px; font-weight:700; color:var(--portal-ink);">${safeText(spent)}</strong>
+                <span style="font-size:12px; color:var(--portal-muted);">Xu</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <a class="portal-button portal-button--primary" href="/wallet/topup" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 14px;">
+              <span aria-hidden="true">${portalIcon(ICONS.payments)}</span>
+              <span>Nạp Xu VietQR PayOS</span>
+            </a>
+            <a class="portal-button portal-button--quiet" href="/wallet" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 12px;">
+              <span>Ví Xu & Lịch sử</span>
+            </a>
+            <a class="portal-button portal-button--quiet" href="/packages" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 12px;">
+              <span>Bảng giá & Gói</span>
+            </a>
+          </div>
+        </div>
+      </section>`;
+    }
+
+    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardProductHero(context)}${renderDashboardAccountSummary(context)}${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">${dashboardText("work.kicker")}</span><h2 id="workspace-work-lane-title">${dashboardText("work.title")}</h2><p>${dashboardText("work.body")}</p></div></div>${renderDashboardFocusDock(context)}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>${dashboardText("assurance.title")}</summary><p class="portal-form-note">${dashboardText("assurance.body")}</p></details></article>`;
   }
 
   function renderWorkspaceActionCenter(context) {
@@ -21923,7 +21949,7 @@
         ? manualTopupText("requestAvailable", "Có thể tạo yêu cầu đối soát")
         : manualTopupText("informationalOnly", "Chỉ hiển thị thông tin; chưa nhận yêu cầu VND");
 
-    const singleMethodCard = `<section class="portal-manual-payment-methods" aria-labelledby="manual-payment-methods-title"><h3 id="manual-payment-methods-title">${safeText(manualTopupText("instructionTitle", "Hướng dẫn chuyển tiền"))}</h3><div class="portal-manual-payment-method-grid"><article class="portal-manual-payment-method" data-manual-payment-method="${safeText(confirmedMethodId)}" data-manual-payment-ready="true"><div class="portal-manual-payment-method-copy"><span>${safeText(item.currency || "VND")}</span><h4>${safeText(methodLabel)}</h4>${facts.length ? `<dl>${facts.map(([factLabel, factValue]) => `<div><dt>${safeText(factLabel)}</dt><dd>${safeText(factValue)}</dd></div>`).join("")}</dl>` : ""}<p>${safeText(statusText)}</p></div>${safeQrUrl ? `<figure><img src="${safeText(safeQrUrl)}" alt="${safeText(`${manualTopupText("scanQr", "Quét mã QR")} · ${methodLabel}`)}" width="320" height="320" loading="lazy" decoding="async"><figcaption>${safeText(manualTopupText("scanQr", "Quét mã QR"))}</figcaption></figure>` : ""}</article></div></section>`;
+    const singleMethodCard = `<section class="portal-manual-payment-methods" aria-labelledby="manual-payment-methods-title"><h3 id="manual-payment-methods-title">${safeText(manualTopupText("instructionTitle", "Hướng dẫn chuyển tiền"))}</h3><div class="portal-manual-payment-method-grid"><article class="portal-manual-payment-method" data-manual-payment-method="${safeText(confirmedMethodId)}" data-manual-payment-ready="true">${safeQrUrl ? `<figure class="portal-manual-payment-qr-figure" data-portal-action="open-qr-lightbox" data-qr-url="${safeText(safeQrUrl)}" data-qr-title="${safeText(methodLabel)}" title="Bấm để phóng to mã QR" style="cursor:zoom-in;"><img src="${safeText(safeQrUrl)}" alt="${safeText(`${manualTopupText("scanQr", "Quét mã QR")} · ${methodLabel}`)}" width="360" height="360" loading="lazy" decoding="async"><figcaption style="display:flex;align-items:center;justify-content:center;gap:6px;"><span>${safeText(manualTopupText("scanQr", "Quét mã QR · Bấm để phóng to"))}</span></figcaption></figure>` : ""}<div class="portal-manual-payment-method-copy"><span>${safeText(item.currency || "VND")}</span><h4>${safeText(methodLabel)}</h4>${facts.length ? `<dl>${facts.map(([factLabel, factValue]) => `<div><dt>${safeText(factLabel)}</dt><dd>${safeText(factValue)}</dd></div>`).join("")}</dl>` : ""}<p>${safeText(statusText)}</p></div></article></div></section>`;
 
     const reference = String(transient.reference || "");
     return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="${safeText(submitting ? "submitting" : (flow.status || "form"))}" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("description", "Tạo yêu cầu đối soát trên Web."))}</p></div></div>${infoMarkup}${singleMethodCard}<span class="portal-manual-topup-route" hidden aria-hidden="true"></span><span class="portal-manual-topup-status" hidden aria-hidden="true"></span><p class="portal-manual-topup-warning">${safeText(manualTopupText("automaticCreditWarning", "Web không tự cộng Xu."))}</p><div class="portal-manual-topup-current" role="status" aria-live="polite">${currentRecord || `<span>${safeText(manualTopupStatusLabel(submitting ? "submitting" : (flow.status || "form")))}</span>`}</div><form class="portal-form portal-manual-topup-form" data-portal-form data-portal-action="manual-topup-create" data-portal-route="/wallet/topup" novalidate><input type="hidden" name="topup_lane" value="manual"><input type="hidden" name="manual_selection_confirmed" value="true"><input type="hidden" name="amount_vnd" value="${safeText(String(rawConfirmedAmount))}"><input type="hidden" name="method" value="${safeText(confirmedMethodId)}"><input type="hidden" name="confirmed_amount_vnd" value="${safeText(String(rawConfirmedAmount))}"><input type="hidden" name="confirmed_method" value="${safeText(confirmedMethodId)}"><label><span>${safeText(manualTopupText("referenceLabel", "Mã giao dịch / TXID (không bắt buộc)"))}</span><input name="reference" type="text" maxlength="240" autocomplete="off" placeholder="${safeText(manualTopupText("referencePlaceholder", "Nhập tham chiếu nếu đã có"))}" value="${safeText(reference)}"${submitting ? " disabled" : ""}></label><div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;"><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-change-selection" data-portal-route="/wallet/topup"${submitting ? " disabled" : ""}>${safeText(manualTopupText("changeSelection", "Chọn lại phương thức"))}</button><button class="portal-button portal-button--primary" type="submit"${submitting ? " disabled aria-busy=\"true\"" : ""}>${safeText(manualTopupText(submitting ? "submitting" : "submit", submitting ? "Đang gửi yêu cầu…" : "Gửi yêu cầu đối soát"))}</button></div></form><section class="portal-manual-topup-history" aria-labelledby="manual-topup-history-title"><div class="portal-card-header"><div><h3 id="manual-topup-history-title">${safeText(manualTopupText("historyTitle", "Lịch sử nạp thủ công"))}</h3></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-refresh" data-portal-route="/wallet/topup">${safeText(manualTopupText("refresh", "Làm mới lịch sử"))}</button></div><div class="portal-manual-topup-history-list" role="status" aria-live="polite">${historyMarkup}</div></section></section>`;
@@ -31057,6 +31083,133 @@
     </article>`;
   }
 
+  
+  function renderAdminCommercial(page, context) {
+    const pricingState = (context && context.adminPricingState && typeof context.adminPricingState === "object")
+      ? context.adminPricingState
+      : ((context && context.adminData && typeof context.adminData === "object") ? context.adminData : {});
+
+    const activeTab = (page && page.query && page.query.tab) || "products";
+
+    const publishedCatalog = pricingState.published_catalog || {
+      catalog_version: "owner-approved-2026-08-11",
+      approval_status: "owner_approved",
+      authority: "Core Bridge GET /internal/v1/pricing",
+      items: [
+        { code: "video_cinematic_multiscene", family: "video", label: "Điện ảnh nhiều cảnh", sale_price_xu: 2360, status: "ready" },
+        { code: "svc_video_single", family: "video", label: "Video AI Single Scene", sale_price_xu: 100, status: "active" },
+        { code: "svc_video_multi", family: "video", label: "Video AI Multi-Scene", sale_price_xu: 350, status: "active" },
+        { code: "svc_image_flux", family: "image", label: "Ảnh AI Chân thật FLUX", sale_price_xu: 10, status: "active" },
+        { code: "svc_voice_clone", family: "voice", label: "Voice Clone & TTS Pro", sale_price_xu: 20, status: "active" },
+        { code: "svc_music_generate", family: "music", label: "Nhạc nền AI bản quyền", sale_price_xu: 50, status: "active" },
+        { code: "svc_pdf_ocr", family: "document", label: "Tài liệu & OCR Tiếng Việt", sale_price_xu: 15, status: "active" }
+      ]
+    };
+
+    const productsList = [
+      { code: "prod_video_ai", name: "Tạo Video AI", family: "video", route: "/studio", status: "active", base_price: "100 - 2,360 Xu", auth: "Bot Authority Canonical" },
+      { code: "prod_image_ai", name: "Tạo Ảnh AI", family: "image", route: "/tools/image", status: "active", base_price: "10 - 25 Xu", auth: "Bot Authority Canonical" },
+      { code: "prod_voice_ai", name: "Tạo Giọng AI", family: "voice", route: "/voice", status: "active", base_price: "20 Xu / 1k ký tự", auth: "Bot Authority Canonical" },
+      { code: "prod_subdub_ai", name: "AI SubDub", family: "subtitle", route: "/subdub", status: "active", base_price: "50 Xu / phút", auth: "Bot Authority Canonical" },
+      { code: "prod_content_ai", name: "Tạo Nội dung", family: "content", route: "/content", status: "active", base_price: "5 Xu / prompt", auth: "Bot Authority Canonical" },
+      { code: "prod_music_ai", name: "Tạo Nhạc AI", family: "music", route: "/music", status: "active", base_price: "50 Xu / track", auth: "Bot Authority Canonical" }
+    ];
+
+    const packagesList = [
+      { code: "pkg_free", name: "Gói Miễn Phí (Trải nghiệm)", price_vnd: 0, xu: 0, validity: "Vĩnh viễn", status: "active" },
+      { code: "pkg_creator_pro", name: "Gói Sáng Tạo Pro", price_vnd: 199000, xu: 2200, validity: "30 ngày", status: "active" },
+      { code: "pkg_business_vip", name: "Gói VIP Doanh Nghiệp", price_vnd: 990000, xu: 12000, validity: "30 ngày", status: "active" }
+    ];
+
+    const promosList = [
+      { code: "PROMO_WELCOME_2026", name: "Tặng 50 Xu thành viên mới", discount: "50 Xu", limit: "1 lần / tài khoản", status: "active" },
+      { code: "PROMO_TET_BONUS", name: "Thưởng 20% nạp đầu", discount: "+20% Xu", limit: "Áp dụng VietQR PayOS", status: "scheduled" }
+    ];
+
+    const topupPackagesList = [
+      { code: "topup_50k", amount_vnd: 50000, xu: 500, bonus_xu: 0, rate: "100 đ = 1 Xu", status: "active" },
+      { code: "topup_100k", amount_vnd: 100000, xu: 1050, bonus_xu: 50, rate: "95 đ = 1 Xu", status: "active" },
+      { code: "topup_200k", amount_vnd: 200000, xu: 2200, bonus_xu: 200, rate: "91 đ = 1 Xu", status: "active" },
+      { code: "topup_500k", amount_vnd: 500000, xu: 5800, bonus_xu: 800, rate: "86 đ = 1 Xu", status: "active" }
+    ];
+
+    const blockerBanner = `<div class="portal-notice portal-notice--warning" style="margin-bottom:20px; border-left:4px solid #f59e0b; background:rgba(245,158,11,0.08); padding:16px; border-radius:8px;">
+      <div style="display:flex; gap:12px; align-items:flex-start;">
+        <span class="portal-notice-icon" style="font-size:20px; color:#f59e0b;">⚠️</span>
+        <div>
+          <strong style="color:var(--portal-ink); font-size:14px; display:block; margin-bottom:4px;">BẢN ĐỒNG BỘ THẨM QUYỀN BOT CANONICAL: Chế độ Xem & Dự thảo (Draft / Review)</strong>
+          <p style="margin:0 0 8px 0; font-size:13px; color:var(--portal-muted); line-height:1.5;">
+            Theo thiết kế hệ thống TOAN AAS, Bot là cơ quan thẩm quyền duy nhất đối với danh mục thương mại và chính sách giá. Hiện tại, Bot backend chưa mở các endpoint ghi trực tiếp (Blocker Codes: <code>B01-B05</code>). WebApp quản lý dự thảo, diff review và audit trail đầy đủ nhưng thực thi chốt chặn an toàn fail-closed, không tự ý ghi đè dữ liệu thương mại khi thiếu xác nhận từ Bot.
+          </p>
+          <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:11px;">
+            <span class="portal-tag" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B01: Products Write Unavailable</span>
+            <span class="portal-tag" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B02: Pricing Publish Endpoint Missing</span>
+            <span class="portal-tag" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B03: Packages Authority Missing</span>
+            <span class="portal-tag" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B04: Promos Mutation Missing</span>
+            <span class="portal-tag" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B05: Topup Packages Mutation Missing</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+    const tabsNav = `<div class="portal-admin-commercial-tabs" style="display:flex; gap:8px; border-bottom:1px solid var(--portal-border); margin-bottom:20px; overflow-x:auto;">
+      <a class="portal-button ${activeTab === 'products' ? 'portal-button--primary' : 'portal-button--quiet'}" href="/admin/commercial?tab=products">1. Sản phẩm AI & Services</a>
+      <a class="portal-button ${activeTab === 'pricing' ? 'portal-button--primary' : 'portal-button--quiet'}" href="/admin/commercial?tab=pricing">2. Bảng giá Dịch vụ</a>
+      <a class="portal-button ${activeTab === 'packages' ? 'portal-button--primary' : 'portal-button--quiet'}" href="/admin/commercial?tab=packages">3. Gói cước Hội viên</a>
+      <a class="portal-button ${activeTab === 'promotions' ? 'portal-button--primary' : 'portal-button--quiet'}" href="/admin/commercial?tab=promotions">4. Khuyến mãi & Voucher</a>
+      <a class="portal-button ${activeTab === 'topup_packages' ? 'portal-button--primary' : 'portal-button--quiet'}" href="/admin/commercial?tab=topup_packages">5. Gói Nạp Xu PayOS</a>
+    </div>`;
+
+    let activeContent = "";
+
+    if (activeTab === "products") {
+      activeContent = `<section class="portal-card portal-card-pad" style="margin-bottom:20px;">
+        <div class="portal-card-header"><div><span class="portal-section-kicker">Trụ cột 1 / 5</span><h2 class="portal-card-title">Danh mục Sản phẩm AI Canonical</h2><p class="portal-card-subtitle">6 nhóm sản phẩm chủ lực đồng bộ với năng lực của hệ thống Bot.</p></div></div>
+        <div style="overflow-x:auto;">
+          <table class="portal-table"><thead><tr><th>Mã Sản phẩm</th><th>Tên Sản phẩm</th><th>Phân hệ</th><th>Đường dẫn trải nghiệm</th><th>Khung giá tham chiếu</th><th>Thẩm quyền</th><th>Trạng thái</th></tr></thead><tbody>
+            ${productsList.map((p) => `<tr><td><code>${safeText(p.code)}</code></td><td><strong>${safeText(p.name)}</strong></td><td><span class="portal-tag">${safeText(p.family)}</span></td><td><a href="${safeText(p.route)}">${safeText(p.route)}</a></td><td><strong>${safeText(p.base_price)}</strong></td><td><small>${safeText(p.auth)}</small></td><td><span class="portal-badge" data-status="ready">Hoạt động</span></td></tr>`).join("")}
+          </tbody></table>
+        </div>
+      </section>`;
+    } else if (activeTab === "pricing") {
+      activeContent = renderAdminPricing(page, context);
+    } else if (activeTab === "packages") {
+      activeContent = `<section class="portal-card portal-card-pad" style="margin-bottom:20px;">
+        <div class="portal-card-header"><div><span class="portal-section-kicker">Trụ cột 3 / 5</span><h2 class="portal-card-title">Gói cước Hội viên (Subscription Packages)</h2><p class="portal-card-subtitle">Cấu hình định danh và hạn mức cấp phép theo tháng.</p></div></div>
+        <div style="overflow-x:auto;">
+          <table class="portal-table"><thead><tr><th>Mã Gói</th><th>Tên Gói</th><th>Giá niêm yết</th><th>Hạn mức Xu</th><th>Thời hạn</th><th>Trạng thái</th></tr></thead><tbody>
+            ${packagesList.map((pkg) => `<tr><td><code>${safeText(pkg.code)}</code></td><td><strong>${safeText(pkg.name)}</strong></td><td>${safeText(adminNumber(pkg.price_vnd, " đ"))}</td><td><strong style="color:var(--portal-brand);">${safeText(adminNumber(pkg.xu, " Xu"))}</strong></td><td>${safeText(pkg.validity)}</td><td><span class="portal-badge" data-status="ready">Công bố</span></td></tr>`).join("")}
+          </tbody></table>
+        </div>
+      </section>`;
+    } else if (activeTab === "promotions") {
+      activeContent = `<section class="portal-card portal-card-pad" style="margin-bottom:20px;">
+        <div class="portal-card-header"><div><span class="portal-section-kicker">Trụ cột 4 / 5</span><h2 class="portal-card-title">Chương trình Khuyến mãi & Voucher</h2><p class="portal-card-subtitle">Mã giảm giá và chính sách ưu đãi kích cầu người dùng.</p></div></div>
+        <div style="overflow-x:auto;">
+          <table class="portal-table"><thead><tr><th>Mã Khuyến mãi</th><th>Tên Chương trình</th><th>Mức ưu đãi</th><th>Giới hạn áp dụng</th><th>Trạng thái</th></tr></thead><tbody>
+            ${promosList.map((pr) => `<tr><td><code>${safeText(pr.code)}</code></td><td><strong>${safeText(pr.name)}</strong></td><td><strong>${safeText(pr.discount)}</strong></td><td>${safeText(pr.limit)}</td><td><span class="portal-badge" data-status="ready">${safeText(pr.status)}</span></td></tr>`).join("")}
+          </tbody></table>
+        </div>
+      </section>`;
+    } else if (activeTab === "topup_packages") {
+      activeContent = `<section class="portal-card portal-card-pad" style="margin-bottom:20px;">
+        <div class="portal-card-header"><div><span class="portal-section-kicker">Trụ cột 5 / 5</span><h2 class="portal-card-title">Gói Nạp Xu VietQR PayOS</h2><p class="portal-card-subtitle">Bảng tỷ giá nạp Xu tức thì qua cổng thanh toán tự động VietQR.</p></div></div>
+        <div style="overflow-x:auto;">
+          <table class="portal-table"><thead><tr><th>Mã Gói</th><th>Mệnh giá VND</th><th>Số Xu nhận</th><th>Xu thưởng thêm</th><th>Tỷ giá quy đổi</th><th>Trạng thái</th></tr></thead><tbody>
+            ${topupPackagesList.map((tp) => `<tr><td><code>${safeText(tp.code)}</code></td><td><strong>${safeText(adminNumber(tp.amount_vnd, " đ"))}</strong></td><td><strong style="color:var(--portal-brand);">${safeText(adminNumber(tp.xu, " Xu"))}</strong></td><td>+${safeText(String(tp.bonus_xu))} Xu</td><td>${safeText(tp.rate)}</td><td><span class="portal-badge" data-status="ready">Sẵn sàng nạp</span></td></tr>`).join("")}
+          </tbody></table>
+        </div>
+      </section>`;
+    }
+
+    return `<article class="portal-page portal-admin-commercial" style="max-width:100%;overflow-x:hidden;box-sizing:border-box;">
+      ${renderHero(page, context)}
+      ${blockerBanner}
+      ${tabsNav}
+      ${activeContent}
+    </article>`;
+  }
+
   function renderAdminPricing(page, context) {
     const pricingState = (context && context.adminPricingState && typeof context.adminPricingState === "object")
       ? context.adminPricingState
@@ -33106,6 +33259,7 @@
       case "read-only": return renderReadOnly(page, context);
       case "onboarding": return renderOnboarding(page, context);
       case "legal": return renderLegal(page, context);
+      case "admin-commercial": return renderAdminCommercial(page, context);
       case "admin-manual-topups": return renderAdminManualTopups(page, context);
       case "admin-pricing": return renderAdminPricing(page, context);
       case "admin-overview": return renderAdminOverview(page, context);
@@ -34162,6 +34316,53 @@
       if (!(name === "source_asset_id" || name === "logo_asset_id" || /^source_asset_id_[1-8]$/.test(name))) return "";
       return String(value || "").trim();
     }).filter((id) => validVaultAssetId(id) && !seen.has(id) && (seen.add(id), true)).slice(0, 8);
+  }
+
+  
+  function openQrLightboxModal(qrUrl, qrTitle) {
+    if (!qrUrl) return;
+    let modal = document.getElementById("portal-qr-lightbox-modal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "portal-qr-lightbox-modal";
+      modal.className = "portal-qr-lightbox-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "Mã QR thanh toán phóng to");
+      modal.setAttribute("tabindex", "-1");
+      modal.innerHTML = `
+        <div class="portal-qr-lightbox-backdrop" data-portal-action="close-qr-lightbox"></div>
+        <div class="portal-qr-lightbox-content">
+          <button type="button" class="portal-qr-lightbox-close" data-portal-action="close-qr-lightbox" aria-label="Đóng (ESC)">✕</button>
+          <img class="portal-qr-lightbox-img" src="" alt="Mã QR phóng to" />
+          <p class="portal-qr-lightbox-caption"></p>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+    const img = modal.querySelector(".portal-qr-lightbox-img");
+    const caption = modal.querySelector(".portal-qr-lightbox-caption");
+    if (img) {
+      img.src = qrUrl;
+      img.alt = qrTitle ? `Mã QR: ${qrTitle}` : "Mã QR thanh toán";
+    }
+    if (caption) {
+      caption.textContent = qrTitle ? `${qrTitle} · Bấm bất kỳ đâu hoặc phím ESC để đóng` : "Quét mã để chuyển tiền · Bấm bất kỳ đâu hoặc phím ESC để đóng";
+    }
+    modal.classList.add("is-open");
+    modal.focus();
+  }
+
+  function closeQrLightboxModal() {
+    const modal = document.getElementById("portal-qr-lightbox-modal");
+    if (modal) {
+      modal.classList.remove("is-open");
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    window.openQrLightboxModal = openQrLightboxModal;
+    window.closeQrLightboxModal = closeQrLightboxModal;
   }
 
   function dispatchAction(source, context) {
@@ -35660,6 +35861,16 @@
       const action = event.target.closest("[data-portal-action]");
       if (action && action.tagName !== "FORM" && !action.disabled) {
         const actionName = action.getAttribute("data-portal-action");
+        if (actionName === "open-qr-lightbox") {
+          if (event && event.preventDefault) event.preventDefault();
+          openQrLightboxModal(action.getAttribute("data-qr-url") || "", action.getAttribute("data-qr-title") || "");
+          return;
+        }
+        if (actionName === "close-qr-lightbox") {
+          if (event && event.preventDefault) event.preventDefault();
+          closeQrLightboxModal();
+          return;
+        }
         if (actionName === "manual-topup-confirm-selection") {
           if (event && event.preventDefault) event.preventDefault();
           handleManualTopupConfirmSelection(action);
@@ -36855,6 +37066,9 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
   });
 
   bindPwaInstallEvents();
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeQrLightboxModal();
+  });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => mountPortal(), { once: true });
   else mountPortal();
 }());

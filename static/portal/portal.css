@@ -9547,12 +9547,13 @@ button, a, input, select, textarea { touch-action: manipulation; }
 
 .portal-manual-payment-method {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(132px, 180px);
-  gap: 16px;
+  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
   min-width: 0;
-  padding: 16px;
+  padding: 20px;
   border: 1px solid var(--portal-border);
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--portal-surface-soft);
 }
 
@@ -9561,36 +9562,87 @@ button, a, input, select, textarea { touch-action: manipulation; }
   opacity: 0.78;
 }
 
+.portal-manual-payment-method figure {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 10px;
+  margin: 0;
+  position: relative;
+  cursor: pointer;
+}
+
+.portal-manual-payment-method figure:hover img {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.portal-manual-payment-method img {
+  display: block;
+  width: 360px;
+  max-width: 420px;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border-radius: 14px;
+  background: #fff;
+  padding: 8px;
+  border: 1px solid var(--portal-border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.portal-manual-payment-method figcaption {
+  color: var(--portal-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .portal-manual-payment-method-copy {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .portal-manual-payment-method-copy > span {
-  color: var(--portal-muted);
-  font-size: 0.72rem;
+  color: var(--portal-brand, #0d9488);
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .portal-manual-payment-method h4 {
-  margin: 5px 0 12px;
+  margin: 0;
   color: var(--portal-ink);
-  font-size: 1rem;
+  font-size: 1.15rem;
+  font-weight: 800;
 }
 
 .portal-manual-payment-method dl {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   margin: 0;
 }
 
 .portal-manual-payment-method dl > div {
   min-width: 0;
+  padding: 8px 12px;
+  background: var(--portal-surface, #fff);
+  border: 1px solid var(--portal-border);
+  border-radius: 8px;
 }
 
 .portal-manual-payment-method dt {
   color: var(--portal-muted);
   font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
 }
 
 .portal-manual-payment-method dd {
@@ -9598,33 +9650,85 @@ button, a, input, select, textarea { touch-action: manipulation; }
   overflow-wrap: anywhere;
   color: var(--portal-ink);
   font-weight: 700;
+  font-size: 0.95rem;
 }
 
-.portal-manual-payment-method p,
-.portal-manual-payment-method figcaption {
-  color: var(--portal-muted);
-  font-size: 0.75rem;
-}
-
-.portal-manual-payment-method figure {
-  display: grid;
-  align-content: start;
-  justify-items: center;
-  gap: 7px;
+.portal-manual-payment-method p {
   margin: 0;
+  color: var(--portal-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 
-.portal-manual-payment-method img {
-  display: block;
-  width: 100%;
-  max-width: 320px;
+/* QR Lightbox Fullscreen Modal */
+.portal-qr-lightbox-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 11, 26, 0.88);
+  backdrop-filter: blur(8px);
+  padding: 24px;
+}
+
+.portal-qr-lightbox-content {
+  position: relative;
+  max-width: 92vw;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: portalFadeIn 0.15s ease-out;
+}
+
+.portal-qr-lightbox-img {
+  max-width: min(540px, 88vw);
+  max-height: 75vh;
+  width: auto;
   height: auto;
   aspect-ratio: 1;
   object-fit: contain;
-  border-radius: 12px;
+  border-radius: 16px;
   background: #fff;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
+
+.portal-qr-lightbox-close {
+  position: absolute;
+  top: -48px;
+  right: -8px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.portal-qr-lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.08);
+}
+
+.portal-qr-lightbox-caption {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
 
 /* Form structure */
 .portal-manual-topup-form {
@@ -9807,6 +9911,17 @@ html[data-portal-theme="dark"] .portal-manual-topup-form option {
   }
 }
 
+@media (max-width: 1024px) {
+  .portal-manual-payment-method {
+    grid-template-columns: minmax(300px, 340px) minmax(0, 1fr);
+  }
+
+  .portal-manual-payment-method img {
+    width: 300px;
+    max-width: 340px;
+  }
+}
+
 @media (max-width: 768px) {
   .portal-manual-payment-method-grid,
   .portal-manual-payment-method {
@@ -9814,15 +9929,17 @@ html[data-portal-theme="dark"] .portal-manual-topup-form option {
   }
 
   .portal-manual-payment-method figure {
-    justify-self: stretch;
+    justify-self: center;
   }
 
   .portal-manual-payment-method img {
-    width: min(100%, 320px);
-    max-width: 320px;
+    width: min(320px, 90vw);
+    min-width: 280px;
+    max-width: 90vw;
     justify-self: center;
   }
 }
+
 
 @media (prefers-reduced-motion: reduce) {
   .portal-manual-topup-card *,
