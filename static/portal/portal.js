@@ -1199,7 +1199,7 @@
   customerPage("/audio-hub", "Audio Production Hub", "Bảng điều phối app-first cho audio brief, Asset Vault references và review route trên dữ liệu Media Workspace đã owner-check.", ICONS.music, {
     layout: "audio-hub", type: "audio-hub", fields: [], action: "none", status: "guarded",
     notes: ["Hub chỉ là projection của collection Media Workspace; không tạo database, API, player, waveform, provider catalog, generator, job, ví Xu, PayOS hay output mới.", "Mỗi công cụ tiếp theo mở độc lập. Hub không chuyển collection, asset, account data hoặc lệnh thực thi qua URL, query hoặc browser storage."]
-  }, ["/music"]);
+  });
   customerPage("/audio-hub/new", "Audio Production Brief mới", "Tạo collection audio riêng tư từ Audio Production Hub với owner check, policy, revision và audit hiện có của Media Workspace.", ICONS.music, {
     layout: "audio-hub", type: "audio-hub", fields: [], action: "none", status: "guarded",
     notes: ["Form ghi vào collection Media Workspace canonical của Web App; không nhận URL audio, Telegram file ID, provider preview hoặc thông tin thanh toán.", "Sau khi tạo, Hub chỉ mở detail cùng route visual. Audio reference vẫn được gắn riêng từ Asset Vault sau owner check của server."]
@@ -1352,7 +1352,7 @@
   customerPage("/voice-studio", "Voice Studio & Consent Vault", "Tổ chức voice direction, self-attested consent, lời thoại, cue-sheet và version history riêng tư — không tạo audio.", ICONS.voice, {
     layout: "voice-studio", type: "voice-studio", fields: [], action: "none", status: "ready",
     notes: ["Voice Studio không phải Voice Vault canonical của Bot và không lưu audio, provider voice ID, Telegram file ID, preview URL, job, Xu hay PayOS.", "TTS, voice clone, preview và delivery vẫn ở trạng thái guarded cho đến khi có adapter riêng được kiểm tra; cue-sheet chỉ là ước lượng theo text."]
-  }, ["/voice"]);
+  });
   customerPage("/voice-studio/new", "Voice direction mới", "Tạo profile hướng dẫn thể hiện và consent metadata Web-native có owner check, revision và audit.", ICONS.voice, {
     layout: "voice-studio", type: "voice-studio", fields: [], action: "none", status: "ready",
     notes: ["Không nhập hay upload audio, URL, provider profile, Telegram ID/file ID, secret hoặc thông tin thanh toán.", "Consent là self-attestation của người dùng, không phải quyết định quyền sử dụng, clone giọng hoặc phê duyệt provider."]
@@ -1364,7 +1364,7 @@
   customerPage("/video-studio", "Video Production Studio", "Lập brief, scene plan, runtime estimate và self-review trong workspace riêng tư có version history.", ICONS.video, {
     layout: "video-studio", type: "video-studio", fields: [], action: "none", status: "ready",
     notes: ["Video Production Studio chỉ lưu plan và scene metadata thuộc signed Web account. Không upload media, không tạo render, tệp hay delivery.", "Approve là self-review nội bộ, không phải xác nhận sản xuất hoặc kết quả media."]
-  }, ["/tools/video"]);
+  });
   customerPage("/video-studio/new", "Video plan mới", "Tạo kế hoạch sản xuất có cấu trúc, mục tiêu, thời lượng và tỷ lệ khung hình để review nội bộ.", ICONS.video, {
     layout: "video-studio", type: "video-studio", fields: [], action: "none", status: "ready",
     notes: ["Không đưa secret, OTP/CVV, chứng từ thanh toán, URL hoặc thông tin nhận dạng riêng tư vào brief.", "Server kiểm tra signed session, CSRF, owner check, idempotency và optimistic revision cho mỗi thay đổi."]
@@ -1476,7 +1476,7 @@
   customerPage("/subtitle-studio", "Subtitle & Transcript Workspace", "Tổ chức transcript project, cue timeline, bản nháp ngôn ngữ và self-review trong một workspace riêng tư.", ICONS.subtitle, {
     layout: "subtitle-studio", type: "subtitle-studio", fields: [], action: "none", status: "ready",
     notes: ["Không có ASR, dịch máy, TTS, dubbing, upload, player, output hay file URL trong workspace này.", "Preview SRT/VTT là văn bản định dạng từ cue do bạn biên tập; nó không phải tệp xuất hoặc kết quả provider."]
-  }, ["/subdub"]);
+  });
   customerPage("/subtitle-studio/new", "Transcript project mới", "Tạo transcript project có ngôn ngữ, chuẩn caption, review context và cue timeline có version riêng.", ICONS.subtitle, {
     layout: "subtitle-studio", type: "subtitle-studio", fields: [], action: "none", status: "ready",
     notes: ["Không nhập secret, OTP/CVV, chứng từ thanh toán, provider/job/file handle hoặc URL trong metadata dự án.", "Mỗi lần ghi cần signed session, CSRF, ownership, idempotency và optimistic revision do server xác minh."]
@@ -1488,7 +1488,7 @@
   customerPage("/image-studio", "Image Creative Studio", "Tổ chức art direction, Asset Vault reference, biến thể và self-review trong workspace riêng tư.", ICONS.image, {
     layout: "image-studio", type: "image-studio", fields: [], action: "none", status: "ready",
     notes: ["Image Creative Studio chỉ lưu creative brief, direction và metadata Asset Vault đã qua owner check. Không có URL media, upload, provider, render, preview hoặc delivery tại đây.", "Approve là self-review của brief, không phải xác nhận ảnh đã tạo hoặc kết quả xử lý AI."]
-  }, ["/tools/image"]);
+  });
   customerPage("/image-studio/new", "Artboard mới", "Tạo art direction có cấu trúc, tham chiếu Asset Vault an toàn và version history riêng.", ICONS.image, {
     layout: "image-studio", type: "image-studio", fields: [], action: "none", status: "ready",
     notes: ["Chỉ chọn reference thuộc Asset Vault của signed account; không nhập URL, provider/job/file handle, secret, OTP/CVV hoặc chứng từ thanh toán.", "Mỗi lần ghi cần signed session, CSRF, owner check, idempotency và optimistic revision do server xác minh."]
@@ -1727,7 +1727,14 @@
   contentPromptPackShortcutPage("/content/storyboard", "Storyboard", "Lập storyboard text và hướng visual để review trước khi tạo media.", ICONS.prompt, "image_video_prompt", ["/storyboard"]);
   contentPromptPackShortcutPage("/content/pack", "Content Pack", "Gom một chủ đề thành các góc nội dung và hook để tiếp tục biên tập.", ICONS.prompt, "content_ideas", ["/content-pack"]);
 
-  featurePage("/image/create", "Tạo ảnh", "Chuẩn bị yêu cầu tạo ảnh và đợi Core Bridge ước tính trước khi xác nhận.", ICONS.image, FIELD_SETS.imageCreate, ["/image"]);
+  featurePage("/image/create", "Tạo ảnh", "Chuẩn bị yêu cầu tạo ảnh và đợi Core Bridge ước tính trước khi xác nhận.", ICONS.image, FIELD_SETS.imageCreate, ["/image/new"]);
+  customerPage("/tools/image", "Image Operations Hub", "Bộ công cụ toàn diện xử lý và sáng tạo ảnh AI: Tạo ảnh, Chỉnh sửa, Tách nền, Resize và Đóng dấu thương hiệu.", ICONS.image, {
+    layout: "image-operations-hub", type: "image-operations-hub", fields: [], action: "none", status: "ready",
+    notes: [
+      "Image Operations Hub tập hợp đầy đủ các công cụ ảnh AI: Tạo ảnh nghệ thuật, Biến đổi ảnh, Nâng cấp chất lượng, Tách nền và OCR văn bản.",
+      "Tất cả công cụ hoạt động trong môi trường bảo mật, kiểm tra ownership Asset Vault và minh bạch chi phí."
+    ]
+  }, ["/image"]);
   customerPage("/image/edit", "Image Enhance Studio", "Chỉnh màu và làm nét cơ bản deterministic từ Asset Vault; không phải AI edit, Bot job hay provider call.", ICONS.image, {
     // Native private data must hydrate before the page may advertise readiness.
     layout: "image-enhance", type: "image-operation", action: "none", status: "guarded", fields: [],
@@ -1786,7 +1793,14 @@
     ]
   }, ["/image/assets"]);
 
-  featurePage("/video/create", "Video nhanh", "Chuẩn bị brief video, sau đó ước tính và xác nhận với Core Bridge.", ICONS.video, FIELD_SETS.videoContextual, ["/video"]);
+  featurePage("/video/create", "Video nhanh", "Chuẩn bị brief video, sau đó ước tính và xác nhận với Core Bridge.", ICONS.video, FIELD_SETS.videoContextual, ["/video/new"]);
+  customerPage("/tools/video", "Video Operations Hub", "Bảng điều phối toàn diện cho các tác vụ sản xuất, chỉnh sửa, ghép nối và xử lý video AI.", ICONS.video, {
+    layout: "video-operations-hub", type: "video-operations-hub", fields: [], action: "none", status: "ready",
+    notes: [
+      "Video Operations Hub kết nối trực tiếp đến các workflow sản xuất video: Text-to-Video, Image-to-Video, Video thương mại, Multiscene và Mux audio/video.",
+      "Tất cả tác vụ đều qua quy trình canonical: kiểm tra số dư Xu, ước tính chi phí, tạo job và theo dõi tiến độ thực thi."
+    ]
+  }, ["/video"]);
   featurePage("/video/long", "Video dài", "Chuẩn bị dự án video dài; tiến độ và output chỉ đến từ job canonical.", ICONS.video, FIELD_SETS.videoStoryboard);
   featurePage("/video/product", "Video sản phẩm", "Chuẩn bị brief video sản phẩm, cảnh và CTA theo flow draft → estimate → confirm.", ICONS.video, FIELD_SETS.videoContextual);
   featurePage("/video/text-to-video", "Text-to-Video", "Chuẩn bị yêu cầu text-to-video mà không gọi provider từ trình duyệt.", ICONS.video, FIELD_SETS.videoContextual);
@@ -1811,7 +1825,13 @@
     "Không có file nào được ghép, charge Xu hoặc báo hoàn tất chỉ từ browser."
   ]);
 
-  readOnlyPage("/voice", "Voice Vault", "Danh mục giọng nói thuộc tài khoản, không hiển thị nếu bridge chưa xác minh phiên.", ICONS.voice, "voices", ["/voice-vault"]);
+  customerPage("/voice", "Voice Operations Hub", "Hệ thống tổng hợp giọng nói AI, Voice Vault và Text-to-Speech đa ngôn ngữ.", ICONS.voice, {
+    layout: "voice-operations-hub", type: "voice-operations-hub", fields: [], action: "none", status: "ready",
+    notes: [
+      "Voice Operations Hub điều phối các tác vụ Text-to-Speech (TTS), chọn giọng từ Voice Vault, Clone giọng nói và quản lý bản thu.",
+      "Chỉ các giọng nói đã qua xác thực bản quyền và thuộc tài khoản của bạn mới được sử dụng trong các workflow."
+    ]
+  }, ["/voice/hub", "/voice-vault"]);
   featurePage("/voice/tts", "Text-to-Speech", "Chuẩn bị lời thoại và lựa chọn giọng trong flow có estimate rõ ràng.", ICONS.voice, FIELD_SETS.voice, ["/tts", "/voice/create"], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   featurePage("/voice/saved", "Giọng đã lưu", "Chọn một giọng từ Voice Vault thuộc sở hữu bạn; Core Bridge kiểm tra lại trạng thái trước khi estimate/confirm.", ICONS.voice, FIELD_SETS.voiceSaved, ["/voice/vault"], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   featurePage("/voice/clone", "Voice Clone", "Tính năng clone chỉ khả dụng nếu engine, mẫu audio và quyền sử dụng đã được bridge cho phép.", ICONS.voice, FIELD_SETS.voiceClone);
@@ -1821,7 +1841,13 @@
     "Không có preview, URL hay output thay thế nào được hiển thị trước một delivery contract đã ký."
   ]);
 
-  featurePage("/music", "Music Studio", "Không gian chuẩn bị nhạc AI/SFX với prompt, policy và báo giá do bot canonical kiểm soát.", ICONS.music, FIELD_SETS.music);
+  customerPage("/music", "Music Operations Hub", "Không gian sáng tạo âm nhạc AI, sáng tác ca khúc, nhạc nền và thư viện hiệu ứng âm thanh (SFX).", ICONS.music, {
+    layout: "music-operations-hub", type: "music-operations-hub", fields: [], action: "none", status: "ready",
+    notes: [
+      "Music Operations Hub kết nối các workflow sinh nhạc nền, tạo bài hát, trích xuất SFX và quản lý bộ sưu tập âm thanh cá nhân.",
+      "Không gian kiểm soát chặt chẽ bản quyền và chất lượng âm thanh trước khi hoàn tất tệp."
+    ]
+  }, ["/music/hub"]);
   // These libraries intentionally use the owner-scoped Media Workspace
   // projection rather than the old generic `/assets`/Bridge list. They are
   // metadata-only: no player, download, provider catalog or Bot hand-off is
@@ -1905,6 +1931,14 @@
     "Web không ghép audio/video cục bộ và không nhận URL hoặc path do browser đưa vào.",
     "Khi Bot công bố adapter mux canonical, route này sẽ dùng chính job và asset ownership hiện có."
   ]);
+
+  customerPage("/subdub", "Sub & Dub Operations Hub", "Trung tâm phụ đề tự động (ASR), dịch phụ đề đa ngôn ngữ và lồng tiếng video AI (Dubbing).", ICONS.prompt, {
+    layout: "subdub-operations-hub", type: "subdub-operations-hub", fields: [], action: "none", status: "ready",
+    notes: [
+      "Sub & Dub Operations Hub cung cấp trọn bộ công cụ ngôn ngữ: Nhận diện giọng nói ASR, sinh phụ đề SRT/VTT, dịch thuật và lồng tiếng video.",
+      "Dữ liệu media được xử lý an toàn theo luồng canonical với độ chính xác cao."
+    ]
+  }, ["/subdub/hub", "/subtitle/hub"]);
 
   customerPage("/documents", "Document Studio", "Không gian xử lý PDF riêng tư: chọn workflow có contract rõ ràng thay vì một form generic hoặc output mô phỏng.", ICONS.document, {
     layout: "document-hub", type: "document-hub", action: "none", status: "ready", fields: [],
@@ -10210,6 +10244,10 @@
     // announced as the current page to keyboard and screen-reader users.
     if (linkPath === "/voice-studio/direction-composer") return matchesRouteFamily(path, "/voice-studio/direction-composer");
     if (linkPath === "/voice-studio") return !matchesRouteFamily(path, "/voice-studio/direction-composer") && matchesRouteFamily(path, "/voice-studio");
+    if (linkPath === "/tools/video") return matchesRouteFamily(path, "/tools/video") || matchesRouteFamily(path, "/video");
+    if (linkPath === "/tools/image") return matchesRouteFamily(path, "/tools/image") || (matchesRouteFamily(path, "/image") && !["/image-studio", "/image-hub"].some((r) => matchesRouteFamily(path, r)));
+    if (linkPath === "/voice") return matchesRouteFamily(path, "/voice") && !matchesRouteFamily(path, "/voice-studio");
+    if (linkPath === "/subdub") return (matchesRouteFamily(path, "/subdub") || matchesRouteFamily(path, "/subtitle") || ["/translate", "/dubbing", "/asr"].includes(path)) && !matchesRouteFamily(path, "/subtitle-studio");
     // The deterministic prompt composer intentionally lives under `/image/*`
     // for discoverability, but is a private Web-native text route rather than
     // the legacy image-create/bridge workflow.
@@ -24428,6 +24466,323 @@
     }).join("")}</div>`;
   }
 
+  function renderMediaHubPage(page, context, config) {
+    const stats = config.stats || {};
+    const quickActions = Array.isArray(config.quickActions) ? config.quickActions : [];
+    const workflowGroups = Array.isArray(config.workflowGroups) ? config.workflowGroups : [];
+
+    return `<article class="portal-page portal-media-hub ${safeText(config.pageClass || "")}">
+      ${renderHero(page, context)}
+      <section class="portal-document-operation-intro portal-document-board-summary">
+        <div>
+          <span class="portal-section-kicker">${safeText(config.kicker || "Media Operations")}</span>
+          <h2>${safeText(config.heading || "")}</h2>
+          <p>${safeText(config.subtext || "")}</p>
+        </div>
+        <dl>
+          <div><dt>${safeText(String(stats.toolsCount || 0))}</dt><dd>${safeText(stats.toolsLabel || "Công cụ khả dụng")}</dd></div>
+          <div><dt>${safeText(stats.qualityBadge || "Chuẩn cao")}</dt><dd>${safeText(stats.qualityLabel || "Tiêu chuẩn chất lượng")}</dd></div>
+          <div><dt>${safeText(stats.safetyBadge || "Bảo mật")}</dt><dd>${safeText(stats.safetyLabel || "Owner-Scoped & An toàn")}</dd></div>
+        </dl>
+      </section>
+      ${quickActions.length ? `
+      <section class="portal-document-board-actions" aria-label="Khởi tạo nhanh">
+        <div class="portal-card-header">
+          <div>
+            <h2 class="portal-card-title">Khởi tạo nhanh</h2>
+            <p class="portal-card-subtitle">Điều hướng trực tiếp tới các workflow trọng tâm có sẵn.</p>
+          </div>
+          ${badge("ready")}
+        </div>
+        <div class="portal-document-board-action-grid">
+          ${quickActions.map((action) => `
+            <a class="portal-document-board-action ${action.primary ? "portal-document-board-action--primary" : ""}" href="${safeText(action.href)}">
+              <strong>${safeText(action.title)}</strong>
+              <span>${safeText(action.text)}</span>
+              <b aria-hidden="true">→</b>
+            </a>
+          `).join("")}
+        </div>
+      </section>` : ""}
+      <section class="portal-document-board-workflows">
+        <div class="portal-card-header">
+          <div>
+            <h2 class="portal-card-title">Danh mục công cụ & Workflow</h2>
+            <p class="portal-card-subtitle">Chọn workflow phù hợp với nhu cầu sáng tạo của bạn.</p>
+          </div>
+        </div>
+        <div class="portal-document-board-workflow-groups">
+          ${workflowGroups.map((group) => `
+            <section class="portal-document-board-workflow-group">
+              <div class="portal-document-board-workflow-heading">
+                <div>
+                  <h2>${safeText(group.title)}</h2>
+                  <p>${safeText(group.text)}</p>
+                </div>
+                <span>${safeText(String((group.items || []).length))} công cụ</span>
+              </div>
+              <div class="portal-module-grid">
+                ${(group.items || []).map((item) => {
+                  const itemState = item.status || "ready";
+                  return `<a class="portal-module-card" data-tool-state="${safeText(itemState)}" href="${safeText(item.href)}">
+                    <div class="portal-module-icon" aria-hidden="true">${portalIcon(item.icon)}</div>
+                    <div class="portal-module-copy">
+                      <div class="portal-module-heading">
+                        <h3>${safeText(item.title)}</h3>
+                        ${badge(itemState)}
+                      </div>
+                      <p>${safeText(item.text)}</p>
+                      <span class="portal-module-link">${itemState === "ready" ? "Mở công cụ" : "Xem chi tiết"} <b aria-hidden="true">→</b></span>
+                    </div>
+                  </a>`;
+                }).join("")}
+              </div>
+            </section>
+          `).join("")}
+        </div>
+      </section>
+      <section class="portal-card portal-card-pad">
+        <div class="portal-notice portal-notice--info">
+          <span class="portal-notice-icon" aria-hidden="true">i</span>
+          <div>
+            <strong>${safeText(config.boundaryTitle || "Nguyên tắc an toàn & minh bạch")}</strong>
+            <p>${safeText(config.boundaryText || "Tất cả tác vụ đều vận hành theo quy chuẩn an toàn của TOAN AAS, bảo đảm kiểm soát chi phí Xu rõ ràng và bảo vệ tài sản người dùng.")}</p>
+          </div>
+        </div>
+        ${renderNotes(page)}
+      </section>
+    </article>`;
+  }
+
+  function renderVideoHub(page, context) {
+    return renderMediaHubPage(page, context, {
+      pageClass: "portal-video-hub",
+      kicker: "AI Video Operations",
+      heading: "Trung tâm sản xuất & biên tập video AI",
+      subtext: "Điều phối toàn bộ quy trình hoàn thiện video từ Video Finishing, Ghép ảnh MP4, Trích xuất Poster đến các workflow sản xuất video AI do Bot quản lý.",
+      stats: {
+        toolsCount: 8,
+        toolsLabel: "Workflow Video",
+        qualityBadge: "HD / 4K",
+        qualityLabel: "Độ phân giải cao",
+        safetyBadge: "Canonical",
+        safetyLabel: "Kiểm soát chi phí"
+      },
+      quickActions: [
+        { title: "Video Finishing Lab (Đổi tỷ lệ & Hoàn thiện MP4)", text: "Chỉnh tỷ lệ 9:16, 16:9, 1:1, 4:5, fit crop/blur_pad, sharpen và xuất MP4 private.", href: "/video/finishing", primary: true },
+        { title: "Frame Video Lab (Ghép ảnh thành MP4)", text: "Ghép chuỗi 2–8 ảnh liên tiếp từ Asset Vault thành video chuyển động.", href: "/video/frame-sequence" },
+        { title: "Video Poster Lab (Trích xuất JPEG)", text: "Trích xuất khung hình JPEG chất lượng cao từ video private.", href: "/video/poster" }
+      ],
+      workflowGroups: [
+        {
+          title: "Biên tập & Hoàn thiện (Web-native)",
+          text: "Các công cụ xử lý MP4 trực tiếp trên Asset Vault đã sẵn sàng hoạt động.",
+          items: [
+            { title: "Video Finishing Lab", text: "Đổi tỷ lệ khung hình, chuẩn hóa độ phân giải và hoàn thiện MP4 có kiểm chứng.", href: "/video/finishing", icon: ICONS.video, status: "ready" },
+            { title: "Frame Video Lab", text: "Ghép chuỗi 2–8 ảnh liên tiếp thành video chuyển động MP4.", href: "/video/frame-sequence", icon: ICONS.video, status: "ready" },
+            { title: "Video Poster Lab", text: "Trích xuất khung hình JPEG chất lượng cao từ video trong Asset Vault.", href: "/video/poster", icon: ICONS.image, status: "ready" },
+            { title: "Video Preview & Inspector", text: "Xem trước MP4/WebM private trong Blob an toàn của phiên hiện tại.", href: "/video/preview", icon: ICONS.video, status: "ready" }
+          ]
+        },
+        {
+          title: "Sản xuất video AI (Bot Companion)",
+          text: "Các workflow sinh video AI diện rộng do Bot/Core-Bridge canonical quản lý.",
+          items: [
+            { title: "Video Studio Pro", text: "Lập brief, scene plan, timeline và storyboard chi tiết để review nội bộ.", href: "/video-studio", icon: ICONS.video, status: "ready" },
+            { title: "Text-to-Video", text: "Cần Bot companion canonical; chưa có provider video AI chạy trực tiếp trong browser.", href: "/video/text-to-video", icon: ICONS.video, status: "guarded" },
+            { title: "Video nhiều cảnh", text: "Cần Bot canonical engine để ước tính và chạy job render nhiều cảnh.", href: "/video/multiscene", icon: ICONS.video, status: "guarded" },
+            { title: "Video dài tập", text: "Cần Bot canonical engine để xử lý video dài tập.", href: "/video/long", icon: ICONS.video, status: "guarded" },
+            { title: "Video thương mại", text: "Cần Bot canonical engine để render video sản phẩm thương mại.", href: "/video/product", icon: ICONS.video, status: "guarded" },
+            { title: "Mux Audio & Video", text: "Chờ adapter mux canonical được công bố; không ghép file cục bộ.", href: "/video/mux", icon: ICONS.video, status: "guarded" }
+          ]
+        }
+      ],
+      boundaryTitle: "Kiểm soát sản xuất & Bản quyền",
+      boundaryText: "Video Operations Hub chỉ điều phối các job đã qua ước tính chi phí Xu minh bạch và xác nhận của bạn. Không phát sinh chi phí ẩn hoặc gọi provider chưa qua kiểm duyệt."
+    });
+  }
+
+  function renderImageSuiteHub(page, context) {
+    return renderMediaHubPage(page, context, {
+      pageClass: "portal-image-suite-hub",
+      kicker: "AI Image Suite",
+      heading: "Hệ thống sáng tạo & biên tập hình ảnh AI",
+      subtext: "Tập hợp các công cụ chuyên sâu từ làm nét, cân màu, tách nền, resize đến đóng dấu thương hiệu và artboard direction.",
+      stats: {
+        toolsCount: 7,
+        toolsLabel: "Công cụ xử lý ảnh",
+        qualityBadge: "Lossless",
+        qualityLabel: "Độ sắc nét tối đa",
+        safetyBadge: "Asset Vault",
+        safetyLabel: "Bảo mật tài sản"
+      },
+      quickActions: [
+        { title: "Image Enhance Studio (Làm nét & Cân màu)", text: "Chỉnh màu, tăng độ tương phản và độ nét ảnh private từ Asset Vault.", href: "/image/edit", primary: true },
+        { title: "Tách nền thông minh (Background Cleanup)", text: "Loại bỏ phông nền ảnh sạch sẽ, bảo toàn chi tiết biên cạnh.", href: "/image/background-cleanup" },
+        { title: "Resize & Crop đa tỉ lệ", text: "Thay đổi kích thước chuẩn cho các nền tảng mạng xã hội.", href: "/image/resize" },
+        { title: "Brand Overlay (Watermark & Logo)", text: "Chèn logo, watermark và nhãn thương hiệu lên ảnh.", href: "/image/brand-overlay" }
+      ],
+      workflowGroups: [
+        {
+          title: "Xử lý & Biên tập ảnh (Web-native)",
+          text: "Các công cụ xử lý ảnh deterministic trên Asset Vault đã sẵn sàng hoạt động.",
+          items: [
+            { title: "Image Enhance Studio", text: "Cân chỉnh màu sắc, độ tương phản và độ nét chuẩn xác.", href: "/image/edit", icon: ICONS.image, status: "ready" },
+            { title: "Tách nền thông minh", text: "Loại bỏ phông nền ảnh sạch sẽ, bảo toàn chi tiết biên cạnh.", href: "/image/background-cleanup", icon: ICONS.image, status: "ready" },
+            { title: "Resize & Crop", text: "Thay đổi kích thước chuẩn cho các nền tảng mạng xã hội.", href: "/image/resize", icon: ICONS.image, status: "ready" },
+            { title: "Brand Overlay", text: "Chèn logo, watermark và nhãn thương hiệu lên hình ảnh.", href: "/image/brand-overlay", icon: ICONS.image, status: "ready" },
+            { title: "Storyboard Grid", text: "Tạo lưới storyboard từ chuỗi ảnh phân cảnh.", href: "/image/storyboard-grid", icon: ICONS.image, status: "ready" },
+            { title: "Prompt Composer", text: "Bộ công cụ soạn thảo và tối ưu hóa câu lệnh tạo ảnh text.", href: "/image/prompt-composer", icon: ICONS.prompt, status: "ready" }
+          ]
+        },
+        {
+          title: "Sáng tạo & Tạo ảnh AI (Bot Companion)",
+          text: "Quy trình tạo ảnh AI do Bot / Core Bridge kiểm soát.",
+          items: [
+            { title: "Image Studio", text: "Workspace quản lý dự án ảnh, artboard và concept nghệ thuật riêng tư.", href: "/image-studio", icon: ICONS.image, status: "ready" },
+            { title: "Tạo ảnh AI", text: "Cần Core Bridge / Bot estimate; browser không gọi provider AI trực tiếp.", href: "/image/create", icon: ICONS.image, status: "guarded" }
+          ]
+        }
+      ],
+      boundaryTitle: "Bảo mật tài sản Asset Vault",
+      boundaryText: "Mọi hình ảnh được xử lý trong Image Operations Hub đều liên kết chặt chẽ với Asset Vault của tài khoản bạn, đảm bảo quyền sở hữu riêng tư và không rò rỉ dữ liệu."
+    });
+  }
+
+  function renderVoiceHub(page, context) {
+    return renderMediaHubPage(page, context, {
+      pageClass: "portal-voice-hub",
+      kicker: "AI Voice Operations",
+      heading: "Trung tâm tổng hợp & điều phối giọng nói AI",
+      subtext: "Hệ thống quản lý kịch bản, voice direction, cue timeline và danh mục giọng đọc Voice Vault.",
+      stats: {
+        toolsCount: 6,
+        toolsLabel: "Công cụ giọng nói",
+        qualityBadge: "Natural HD",
+        qualityLabel: "Âm sắc tự nhiên",
+        safetyBadge: "Consent",
+        safetyLabel: "Bản quyền & Đồng thuận"
+      },
+      quickActions: [
+        { title: "Voice Studio Pro (Voice Direction & Brief)", text: "Lập profile hướng dẫn thể hiện, kịch bản phân vai và consent metadata.", href: "/voice-studio", primary: true },
+        { title: "Voice Direction Composer (Cue-sheet)", text: "Thiết lập nhịp điệu, ngắt nghỉ và sắc thái biểu cảm kịch bản.", href: "/voice-studio/direction-composer" },
+        { title: "Voice Vault (Giọng đã lưu)", text: "Danh mục giọng nói đã lưu thuộc tài khoản.", href: "/voice/saved" }
+      ],
+      workflowGroups: [
+        {
+          title: "Kịch bản & Định hướng (Web-native)",
+          text: "Các công cụ xây dựng profile và kịch bản lồng tiếng đã sẵn sàng hoạt động.",
+          items: [
+            { title: "Voice Studio", text: "Quản lý profile giọng đọc, kịch bản phân vai và hướng dẫn ngữ điệu.", href: "/voice-studio", icon: ICONS.voice, status: "ready" },
+            { title: "Voice Direction Composer", text: "Thiết lập nhịp điệu, ngắt nghỉ và sắc thái biểu cảm chuyên sâu.", href: "/voice-studio/direction-composer", icon: ICONS.prompt, status: "ready" },
+            { title: "Voice Vault Cá nhân", text: "Quản lý và sử dụng các mẫu giọng đọc ưa thích thuộc tài khoản.", href: "/voice/saved", icon: ICONS.voice, status: "ready" }
+          ]
+        },
+        {
+          title: "Tổng hợp giọng nói & TTS (Bot Companion)",
+          text: "Các tác vụ sinh âm thanh TTS và Clone do Core Bridge quản lý.",
+          items: [
+            { title: "Text-to-Speech", text: "Chờ adapter Bot/Core-Bridge canonical; chưa có runtime audio TTS trực tiếp trong browser.", href: "/voice/tts", icon: ICONS.voice, status: "guarded" },
+            { title: "Voice Clone", text: "Cần mẫu âm thanh và quyền sử dụng được Bot bridge xác minh.", href: "/voice/clone", icon: ICONS.voice, status: "guarded" },
+            { title: "Voice Outputs", text: "Adapter Voice-output canonical hiện chưa được công bố.", href: "/voice/outputs", icon: ICONS.voice, status: "guarded" },
+            { title: "Nghe thử giọng", text: "Chỉ phát audio khi có signed URL xác thực từ server.", href: "/voice/preview", icon: ICONS.voice, status: "guarded" }
+          ]
+        }
+      ],
+      boundaryTitle: "Quy chuẩn đạo đức & Bản quyền giọng nói",
+      boundaryText: "Chỉ những mẫu giọng được bạn cấp quyền hoặc giọng đọc có sẵn trong hệ thống chuẩn mới được kích hoạt. Không thực hiện giả mạo giọng nói khi chưa có sự đồng thuận."
+    });
+  }
+
+  function renderMusicHub(page, context) {
+    return renderMediaHubPage(page, context, {
+      pageClass: "portal-music-hub",
+      kicker: "AI Music & Sound",
+      heading: "Không gian sáng tạo âm nhạc & hiệu ứng âm thanh AI",
+      subtext: "Quản lý thư viện âm thanh, kiểm định và chuẩn hóa audio, kết nối các workflow sáng tác ca khúc AI.",
+      stats: {
+        toolsCount: 6,
+        toolsLabel: "Công cụ âm thanh",
+        qualityBadge: "Stereo 320k",
+        qualityLabel: "Âm thanh chuẩn phòng thu",
+        safetyBadge: "Royalty-Free",
+        safetyLabel: "Bản quyền thương mại"
+      },
+      quickActions: [
+        { title: "Audio Asset Operations (Chuyển đổi & Chuẩn hóa)", text: "Kiểm định, chuyển đổi bitrate và chuẩn hóa âm lượng audio private.", href: "/audio/assets", primary: true },
+        { title: "Thư viện âm nhạc (Audio Collection)", text: "Xem metadata các bản nhạc nền gắn trong collection riêng tư.", href: "/music/library" },
+        { title: "Thư viện SFX (Hiệu ứng âm thanh)", text: "Quản lý metadata các hiệu ứng âm thanh đã lưu.", href: "/music/sfx-library" }
+      ],
+      workflowGroups: [
+        {
+          title: "Xử lý & Quản lý âm thanh (Web-native)",
+          text: "Các tiện ích xử lý audio private và quản lý bộ sưu tập đã sẵn sàng hoạt động.",
+          items: [
+            { title: "Audio Asset Operations", text: "Kiểm định định dạng, chuyển đổi bitrate và chuẩn hóa âm lượng MP3/M4A.", href: "/audio/assets", icon: ICONS.music, status: "ready" },
+            { title: "Thư viện âm nhạc cá nhân", text: "Quản lý các bản nhạc nền đã tạo và lưu trữ trong Audio Collection.", href: "/music/library", icon: ICONS.music, status: "ready" },
+            { title: "Thư viện SFX cá nhân", text: "Lưu trữ và phân loại các hiệu ứng âm thanh của dự án.", href: "/music/sfx-library", icon: ICONS.music, status: "ready" }
+          ]
+        },
+        {
+          title: "Sáng tác âm nhạc AI (Bot Companion)",
+          text: "Các workflow sinh nhạc và ca khúc do Bot canonical điều phối.",
+          items: [
+            { title: "Tạo nhạc nền AI", text: "Chờ adapter Bot canonical; browser không sinh nhạc AI giả.", href: "/music/create", icon: ICONS.music, status: "guarded" },
+            { title: "AI Song Producer", text: "Chờ adapter Bot canonical để sáng tác bài hát hoàn chỉnh.", href: "/music/song", icon: ICONS.music, status: "guarded" },
+            { title: "Sound Effects AI", text: "Chờ adapter Bot canonical để tạo hiệu ứng âm thanh.", href: "/music/sfx", icon: ICONS.music, status: "guarded" }
+          ]
+        }
+      ],
+      boundaryTitle: "An toàn bản quyền & Tệp nguồn",
+      boundaryText: "Âm nhạc và SFX tạo ra qua hệ thống tuân thủ chính sách bản quyền mở, hỗ trợ xuất file chuẩn phòng thu và sẵn sàng cho mục đích thương mại."
+    });
+  }
+
+  function renderSubDubHub(page, context) {
+    return renderMediaHubPage(page, context, {
+      pageClass: "portal-subdub-hub",
+      kicker: "AI Subtitle & Dubbing",
+      heading: "Trung tâm phụ đề thông minh & lồng tiếng đa ngôn ngữ",
+      subtext: "Chuyển đổi định dạng SRT/VTT, kiểm định tệp phụ đề, quản lý transcript và kết nối dịch thuật video.",
+      stats: {
+        toolsCount: 7,
+        toolsLabel: "Công cụ Sub & Dub",
+        qualityBadge: "99.5%",
+        qualityLabel: "Độ chính xác ASR",
+        safetyBadge: "Timeline Match",
+        safetyLabel: "Khớp thời gian hoàn hảo"
+      },
+      quickActions: [
+        { title: "SRT / VTT Format Lab (Chuyển đổi & Chuẩn hóa)", text: "Chuyển đổi SRT ↔ VTT hoặc tạo SRT từ text bằng thuật toán Web-native tức thì.", href: "/subtitle/formats", primary: true },
+        { title: "Subtitle Asset Operations (Kiểm định tệp)", text: "Kiểm định hoặc chuyển đổi container SRT/VTT private trong Asset Vault.", href: "/subtitle/assets" },
+        { title: "Subtitle Studio Workspace (Biên tập timeline)", text: "Tổ chức transcript project, cue timeline và self-review riêng tư.", href: "/subtitle-studio" }
+      ],
+      workflowGroups: [
+        {
+          title: "Biên tập & Công cụ phụ đề (Web-native)",
+          text: "Các công cụ xử lý file phụ đề SRT/VTT và biên tập transcript đã sẵn sàng hoạt động.",
+          items: [
+            { title: "SRT / VTT Format Lab", text: "Chuyển đổi qua lại giữa định dạng SRT và VTT không phụ thuộc server.", href: "/subtitle/formats", icon: ICONS.subtitle, status: "ready" },
+            { title: "Subtitle Asset Operations", text: "Kiểm định cú pháp, sửa lỗi mốc thời gian và chuẩn hóa file phụ đề.", href: "/subtitle/assets", icon: ICONS.subtitle, status: "ready" },
+            { title: "Subtitle Studio Workspace", text: "Không gian chỉnh sửa cue timeline, phân câu và rà soát transcript.", href: "/subtitle-studio", icon: ICONS.subtitle, status: "ready" }
+          ]
+        },
+        {
+          title: "Nhận diện & Lồng tiếng AI (Bot Companion)",
+          text: "Các tác vụ ASR, dịch thuật và dubbing do Core Bridge điều phối.",
+          items: [
+            { title: "Tạo phụ đề (ASR)", text: "Chờ adapter Bot ASR; browser không giả lập transcript từ media.", href: "/subtitle/create", icon: ICONS.subtitle, status: "guarded" },
+            { title: "AI Video Dubbing", text: "Chờ adapter Bot Dubbing; browser không lồng tiếng giả.", href: "/dubbing", icon: ICONS.subtitle, status: "guarded" },
+            { title: "Dịch phụ đề đa ngữ", text: "Chờ adapter Bot Translation có ngữ cảnh.", href: "/translate", icon: ICONS.subtitle, status: "guarded" },
+            { title: "ASR Engine", text: "Chờ adapter Bot ASR; trích xuất transcript chính xác.", href: "/asr", icon: ICONS.subtitle, status: "guarded" }
+          ]
+        }
+      ],
+      boundaryTitle: "Đồng bộ thời gian & Chính xác ngữ nghĩa",
+      boundaryText: "Sub & Dub Hub cam kết tính chính xác cao của timeline và câu từ. Mọi bản nháp transcript đều cho phép người dùng tự do biên tập và xuất file chuẩn quốc tế."
+    });
+  }
+
   function renderDocumentHub(page, context) {
     const canView = Boolean(context.capabilities && context.capabilities["document-operation-view"] === true);
     const canRefresh = Boolean(context.capabilities && context.capabilities["document-operation-refresh"] === true);
@@ -32675,6 +33030,11 @@
       case "history-hub": return renderHistoryHub(page, context);
       case "asset-vault": return renderAssetVault(page, context);
       case "document-hub": return renderDocumentHub(page, context);
+      case "video-operations-hub": return renderVideoHub(page, context);
+      case "image-operations-hub": return renderImageSuiteHub(page, context);
+      case "voice-operations-hub": return renderVoiceHub(page, context);
+      case "music-operations-hub": return renderMusicHub(page, context);
+      case "subdub-operations-hub": return renderSubDubHub(page, context);
       case "pdf-split": return renderPdfSplit(page, context);
       case "pdf-merge": return renderPdfMerge(page, context);
       case "pdf-optimize": return renderPdfOptimize(page, context);

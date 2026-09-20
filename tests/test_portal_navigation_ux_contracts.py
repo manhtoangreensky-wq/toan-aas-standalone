@@ -349,7 +349,7 @@ def test_sidebar_uses_progressive_disclosure_without_hiding_the_active_workflow(
     css = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 
     # The permanent default is intentionally small.
-    assert ('label: "Workspace", defaultOpen: true' in navigation or 'label: "Trung tâm làm việc", defaultOpen: true' in navigation or 'label: "Sáng tạo", defaultOpen: true' in navigation)
+    assert 'label: "Sáng tạo", defaultOpen: true' in navigation
     if "const videoStudioNavGroups = [" in navigation:
         for group in (
             "Video Studio",
@@ -419,10 +419,10 @@ def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discove
         )
         for match in group_pattern.finditer(permanent_projection)
     ]
-    assert permanent_groups in (list(compact_groups.items()), list(v2_groups.items()), list(v3_groups.items()))
+    assert permanent_groups == list(v3_groups.items())
 
     permanent_routes = [path for _, paths in permanent_groups for path in paths]
-    assert len(permanent_routes) in (13, 15, 22)
+    assert len(permanent_routes) == 13
     assert len(permanent_routes) == len(set(permanent_routes))
     # Dense and Bot-companion routes remain discoverable through the manifest
     # and palette, but do not get a permanent signed-customer rail position.

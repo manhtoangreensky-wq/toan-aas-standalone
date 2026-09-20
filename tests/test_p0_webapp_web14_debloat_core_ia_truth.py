@@ -69,7 +69,7 @@ class TestP0WebappWeb14DeBloatCoreIaTruth:
 
         # 4. Customer visible permanent nav items
         perm_links = _extract_customer_nav_permanent_links()
-        assert len(perm_links) in (13, 15, 22), f"Expected 13, 15 or 22 clean customer permanent links, got {len(perm_links)}"
+        assert len(perm_links) == 13, f"Expected 13 clean customer permanent links, got {len(perm_links)}"
 
         # 5. Admin visible nav items (24 modules across 6 pillars in V2, or 49 across 13 in legacy)
         admin_groups, admin_modules = _get_admin_nav_modules()
