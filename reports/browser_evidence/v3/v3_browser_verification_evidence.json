@@ -1,7 +1,7 @@
 {
-  "head_sha": "0db156d267e3c37a5de9c71feb7a762498cb0227",
+  "head_sha": "265300d04fc31e0c53d023800ba0d2ffa4a64286",
   "task": "P0.WEBAPP.V3.WALLET.TOPUP.QR.DEFAULT.LARGE.NO.ZOOM.R1",
-  "timestamp": "2026-09-20T17:31:05Z",
+  "timestamp": "2026-09-20T17:47:36Z",
   "captures": [
     {
       "route": "/dashboard",
@@ -9,7 +9,7 @@
       "viewport": "1440x900",
       "viewport_name": "desktop",
       "screenshot_file": "v3_dashboard_desktop.png",
-      "sha256": "3d3e715dbe54fc3a13b289ea573c3d035b3ef92bf5af79c7e44a169d4db4afa3",
+      "sha256": "423190c5ed892a2e86fa54d8a26f17698728b88e2704716464964372517d1bcc",
       "horizontal_overflow": false,
       "console_errors": [],
       "passed": true
@@ -75,7 +75,7 @@
       "viewport": "1440x900",
       "viewport_name": "desktop",
       "screenshot_file": "v3_wallet_topup_desktop.png",
-      "sha256": "b96365571abe0da85bcdcf02f6a6be1eb72b6fadfd9e51ab1f4e123b169d0787",
+      "sha256": "adb571a086b9126572e5007df30b45cb33f902bfaa3fe27a9db3147aabd40ecb",
       "horizontal_overflow": false,
       "console_errors": [],
       "passed": true
@@ -97,7 +97,7 @@
       "viewport": "390x844",
       "viewport_name": "mobile",
       "screenshot_file": "v3_wallet_topup_mobile.png",
-      "sha256": "7306272c1587d293ef8b7409e636de17349377a798204e95e563dd6e3691baf2",
+      "sha256": "40421c59ed86a4a8e6b8e7e17ad4ee7a4e4a0b8e37ece3ae87ad74c6eb72eee2",
       "horizontal_overflow": false,
       "console_errors": [],
       "passed": true
