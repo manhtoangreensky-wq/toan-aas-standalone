@@ -619,4 +619,3 @@ async def patch_admin_commercial_pricing(
             "verification_status": "BOT_CORE_READBACK_VERIFIED",
         },
     }
-
