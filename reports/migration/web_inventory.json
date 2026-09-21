@@ -323,8 +323,8 @@
     "database_tables": 232,
     "env_references": 280,
     "providers": 12,
-    "routes": 734,
-    "ui_path_references": 49
+    "routes": 740,
+    "ui_path_references": 51
   },
   "database_references": [
     {
@@ -8754,9 +8754,36 @@
       "path": "/analyze"
     },
     {
+      "endpoint": "get_admin_commercial_pricing_collection",
+      "file": "copyfast_admin_commercial.py",
+      "line": 371,
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/commercial/pricing"
+    },
+    {
+      "endpoint": "get_admin_commercial_pricing_single",
+      "file": "copyfast_admin_commercial.py",
+      "line": 410,
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/commercial/pricing/{price_key}"
+    },
+    {
+      "endpoint": "patch_admin_commercial_pricing",
+      "file": "copyfast_admin_commercial.py",
+      "line": 446,
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/api/admin/commercial/pricing/{price_key}"
+    },
+    {
       "endpoint": "get_admin_commercial_products",
       "file": "copyfast_admin_commercial.py",
-      "line": 122,
+      "line": 126,
       "methods": [
         "GET"
       ],
@@ -8765,7 +8792,7 @@
     {
       "endpoint": "get_admin_commercial_product_single",
       "file": "copyfast_admin_commercial.py",
-      "line": 160,
+      "line": 164,
       "methods": [
         "GET"
       ],
@@ -8774,16 +8801,43 @@
     {
       "endpoint": "patch_admin_commercial_product",
       "file": "copyfast_admin_commercial.py",
-      "line": 187,
+      "line": 191,
       "methods": [
         "PATCH"
       ],
       "path": "/api/admin/commercial/products/{product_key}"
     },
     {
+      "endpoint": "get_admin_commercial_pricing_collection",
+      "file": "copyfast_admin_commercial.py",
+      "line": 371,
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/v1/admin/commercial/pricing"
+    },
+    {
+      "endpoint": "get_admin_commercial_pricing_single",
+      "file": "copyfast_admin_commercial.py",
+      "line": 410,
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/v1/admin/commercial/pricing/{price_key}"
+    },
+    {
+      "endpoint": "patch_admin_commercial_pricing",
+      "file": "copyfast_admin_commercial.py",
+      "line": 446,
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/api/v1/admin/commercial/pricing/{price_key}"
+    },
+    {
       "endpoint": "get_admin_commercial_products",
       "file": "copyfast_admin_commercial.py",
-      "line": 122,
+      "line": 126,
       "methods": [
         "GET"
       ],
@@ -8792,7 +8846,7 @@
     {
       "endpoint": "get_admin_commercial_product_single",
       "file": "copyfast_admin_commercial.py",
-      "line": 160,
+      "line": 164,
       "methods": [
         "GET"
       ],
@@ -8801,7 +8855,7 @@
     {
       "endpoint": "patch_admin_commercial_product",
       "file": "copyfast_admin_commercial.py",
-      "line": 187,
+      "line": 191,
       "methods": [
         "PATCH"
       ],
@@ -14850,9 +14904,19 @@
   "schema_version": "2.0",
   "source_files_discovered": 230,
   "source_files_scanned": 230,
-  "source_fingerprint_sha256": "7356638bf4deaf76d5f4c803b5034063c33e5470b82778b0ebab6e42e417ae14",
+  "source_fingerprint_sha256": "61527ed185ba03657e211ac7dfda3e7c6f35e9f488421cf6378141de12e096d9",
   "source_root": "repository-root",
   "ui_path_references": [
+    {
+      "file": "static/portal/portal.js",
+      "line": 31489,
+      "path": "/api/admin/commercial/pricing"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "line": 31738,
+      "path": "/api/admin/commercial/pricing/"
+    },
     {
       "file": "static/portal/portal.js",
       "line": 31110,
@@ -15080,7 +15144,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 32307,
+      "line": 32680,
       "path": "/features"
     },
     {
