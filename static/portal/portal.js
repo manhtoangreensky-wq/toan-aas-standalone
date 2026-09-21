@@ -31905,7 +31905,25 @@
 
   function renderPackageEditor(packageItem) {
     if (!packageItem) return "";
-    const isSubscription = packageItem.package_type === "subscription";
+    const fieldClassifications = packageItem.field_classifications || {};
+    const editableCommercial = Array.isArray(fieldClassifications.editable_commercial)
+      ? fieldClassifications.editable_commercial
+      : null;
+    const effectScopes = fieldClassifications.field_effect_scopes || {};
+
+    function isFieldEditable(fieldName) {
+      if (effectScopes[fieldName] === "IMMUTABLE") return false;
+      if (editableCommercial !== null) return editableCommercial.includes(fieldName);
+      return true;
+    }
+
+    const nameEditable = isFieldEditable("display_name");
+    const descEditable = isFieldEditable("description");
+    const priceEditable = isFieldEditable("price_vnd");
+    const pubVisibleEditable = isFieldEditable("public_visible");
+    const commEnabledEditable = isFieldEditable("commercial_enabled");
+    const sortOrderEditable = isFieldEditable("sort_order");
+
     return `<div id="portal-package-editor-modal" class="portal-modal is-open" role="dialog" aria-modal="true" aria-labelledby="package-editor-title" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;">
       <div class="portal-card portal-card-pad" style="max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-sizing:border-box;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);">
         <div class="portal-card-header" style="border-bottom:1px solid var(--portal-border);padding-bottom:12px;margin-bottom:16px;">
@@ -31921,37 +31939,37 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             <label class="portal-field">
               <span>Tên hiển thị thương mại:</span>
-              <input type="text" class="portal-input" id="editor-field-package-display-name" name="display_name" value="${safeText(packageItem.display_name || "")}" required />
+              <input type="text" class="portal-input" id="editor-field-package-display-name" name="display_name" value="${safeText(packageItem.display_name || "")}"${nameEditable ? "" : " disabled"} required />
             </label>
             <label class="portal-field">
               <span>Giá niêm yết (VND):</span>
-              <input type="number" class="portal-input" id="editor-field-package-price-vnd" name="price_vnd" min="0" max="100000000" step="1000" value="${safeText(String(packageItem.price_vnd || 0))}" required />
+              <input type="number" class="portal-input" id="editor-field-package-price-vnd" name="price_vnd" min="0" max="100000000" step="1000" value="${safeText(String(packageItem.price_vnd || 0))}"${priceEditable ? "" : " disabled"} required />
             </label>
           </div>
 
           <label class="portal-field">
             <span>Mô tả gói dịch vụ:</span>
-            <textarea class="portal-textarea" id="editor-field-package-description" name="description" rows="2">${safeText(packageItem.description || "")}</textarea>
+            <textarea class="portal-textarea" id="editor-field-package-description" name="description" rows="2"${descEditable ? "" : " disabled"}>${safeText(packageItem.description || "")}</textarea>
           </label>
 
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:center;background:var(--portal-surface-sunken,#1e293b);padding:10px 14px;border-radius:6px;">
             <label class="portal-checkbox" style="margin:0;display:flex;align-items:center;gap:8px;">
-              <input type="checkbox" id="editor-field-package-public-visible" name="public_visible"${packageItem.public_visible ? " checked" : ""}${isSubscription ? " disabled" : ""} />
-              <span>Hiển thị công khai${isSubscription ? " (Bất biến)" : ""}</span>
+              <input type="checkbox" id="editor-field-package-public-visible" name="public_visible"${packageItem.public_visible ? " checked" : ""}${pubVisibleEditable ? "" : " disabled"} />
+              <span>Hiển thị công khai${pubVisibleEditable ? "" : " (Bất biến)"}</span>
             </label>
             <label class="portal-checkbox" style="margin:0;display:flex;align-items:center;gap:8px;">
-              <input type="checkbox" id="editor-field-package-commercial-enabled" name="commercial_enabled"${packageItem.commercial_enabled ? " checked" : ""} />
+              <input type="checkbox" id="editor-field-package-commercial-enabled" name="commercial_enabled"${packageItem.commercial_enabled ? " checked" : ""}${commEnabledEditable ? "" : " disabled"} />
               <span>Bật thương mại</span>
             </label>
             <label class="portal-field" style="margin:0;">
               <span>Thứ tự sắp xếp:</span>
-              <input type="number" class="portal-input" id="editor-field-package-sort-order" name="sort_order" min="0" max="100000" value="${safeText(String(packageItem.sort_order !== undefined ? packageItem.sort_order : 10))}" style="padding:4px 8px;" />
+              <input type="number" class="portal-input" id="editor-field-package-sort-order" name="sort_order" min="0" max="100000" value="${safeText(String(packageItem.sort_order !== undefined ? packageItem.sort_order : 10))}"${sortOrderEditable ? "" : " disabled"} style="padding:4px 8px;" />
             </label>
           </div>
 
-          ${isSubscription ? `
+          ${!pubVisibleEditable ? `
           <div style="padding:8px 12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:6px;font-size:12px;color:var(--portal-muted);">
-            ℹ️ <strong>Trường hiển thị công khai (public_visible):</strong> Bất biến đối với gói Hội viên (subscription) vì gói hội viên luôn hiển thị qua luồng nâng cấp thành viên của Bot Core.
+            ℹ️ <strong>Trường hiển thị công khai (public_visible):</strong> Bất biến (IMMUTABLE) theo quy chuẩn Bot Core cho gói cước này.
           </div>` : ""}
 
           <!-- Mandatory reason field -->
@@ -32013,7 +32031,18 @@
   function getPackageEditorChanges() {
     if (!activePackageInEditor) return {};
     const changes = {};
-    const isSubscription = activePackageInEditor.package_type === "subscription";
+    const fieldClassifications = activePackageInEditor.field_classifications || {};
+    const editableCommercial = Array.isArray(fieldClassifications.editable_commercial)
+      ? fieldClassifications.editable_commercial
+      : null;
+    const effectScopes = fieldClassifications.field_effect_scopes || {};
+
+    function isFieldEditable(fieldName) {
+      if (effectScopes[fieldName] === "IMMUTABLE") return false;
+      if (editableCommercial !== null) return editableCommercial.includes(fieldName);
+      return true;
+    }
+
     const nameEl = document.getElementById("editor-field-package-display-name");
     const descEl = document.getElementById("editor-field-package-description");
     const priceEl = document.getElementById("editor-field-package-price-vnd");
@@ -32021,25 +32050,25 @@
     const commEl = document.getElementById("editor-field-package-commercial-enabled");
     const sortEl = document.getElementById("editor-field-package-sort-order");
 
-    if (nameEl && nameEl.value.trim() !== String(activePackageInEditor.display_name || "")) {
+    if (isFieldEditable("display_name") && nameEl && nameEl.value.trim() !== String(activePackageInEditor.display_name || "")) {
       changes.display_name = nameEl.value.trim();
     }
-    if (descEl && descEl.value !== String(activePackageInEditor.description || "")) {
+    if (isFieldEditable("description") && descEl && descEl.value !== String(activePackageInEditor.description || "")) {
       changes.description = descEl.value;
     }
-    if (priceEl) {
+    if (isFieldEditable("price_vnd") && priceEl) {
       const parsedPrice = parseInt(priceEl.value, 10);
       if (!isNaN(parsedPrice) && parsedPrice !== Number(activePackageInEditor.price_vnd)) {
         changes.price_vnd = parsedPrice;
       }
     }
-    if (!isSubscription && pubEl && pubEl.checked !== Boolean(activePackageInEditor.public_visible)) {
+    if (isFieldEditable("public_visible") && pubEl && pubEl.checked !== Boolean(activePackageInEditor.public_visible)) {
       changes.public_visible = pubEl.checked;
     }
-    if (commEl && commEl.checked !== Boolean(activePackageInEditor.commercial_enabled)) {
+    if (isFieldEditable("commercial_enabled") && commEl && commEl.checked !== Boolean(activePackageInEditor.commercial_enabled)) {
       changes.commercial_enabled = commEl.checked;
     }
-    if (sortEl) {
+    if (isFieldEditable("sort_order") && sortEl) {
       const parsedSort = parseInt(sortEl.value, 10);
       if (!isNaN(parsedSort) && parsedSort !== Number(activePackageInEditor.sort_order)) {
         changes.sort_order = parsedSort;
@@ -32119,16 +32148,36 @@
       })
       .then(({ status, body }) => {
         if (saveBtn) saveBtn.disabled = false;
-        if (status === 200 && body && body.ok) {
-          const resData = body.data || body;
-          const readbackMatch = resData.readback_verified !== false && resData.readback_match !== false;
-          const receiptId = (resData.write_receipt && resData.write_receipt.receipt_id) || resData.receipt_id || "RCPT-PKG-OK";
-          const prevVer = resData.previous_version || activePackageInEditor.version;
-          const newVer = resData.new_version || (activePackageInEditor.version + 1);
+        if (status === 200 && body && body.ok === true) {
+          const resData = body.data || {};
+          const receiptId = (resData.write_receipt && resData.write_receipt.receipt_id) || resData.receipt_id;
+          const prevVer = resData.previous_version;
+          const newVer = resData.new_version;
+          const readbackVerified = resData.readback_verified === true;
+          const isVerifiedStatus = resData.verification_status === "BOT_CORE_READBACK_VERIFIED";
+          const effectivePackage = resData.effective_package;
+          const hasEffectivePackage = Boolean(effectivePackage && typeof effectivePackage === "object");
 
-          if (readbackMatch) {
+          const isFullyVerifiedSuccess = (
+            Boolean(receiptId) &&
+            typeof newVer === "number" &&
+            readbackVerified &&
+            isVerifiedStatus &&
+            hasEffectivePackage
+          );
+
+          if (isFullyVerifiedSuccess) {
+            // Update local state directly with effective_package
+            if (Array.isArray(adminCommercialPackagesState)) {
+              const idx = adminCommercialPackagesState.findIndex((p) => p.package_key === packageKey);
+              if (idx !== -1) {
+                adminCommercialPackagesState[idx] = effectivePackage;
+              }
+            }
+            updateAdminCommercialPackagesTable();
+
             if (statusEl) {
-              statusEl.innerHTML = `<div class="portal-notice portal-notice--success" data-verification-status="${resData.verification_status || 'BOT_CORE_READBACK_VERIFIED'}" style="padding:12px;border-left:4px solid #22c55e;background:rgba(34,197,94,0.1);border-radius:6px;margin-top:10px;">
+              statusEl.innerHTML = `<div class="portal-notice portal-notice--success" data-verification-status="${safeText(resData.verification_status)}" style="padding:12px;border-left:4px solid #22c55e;background:rgba(34,197,94,0.1);border-radius:6px;margin-top:10px;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
                   <span class="portal-tag" style="background:#22c55e;color:#fff;font-weight:bold;">Đã áp dụng</span>
                   <strong style="color:#22c55e;">Đã lưu thay đổi thành công!</strong>
@@ -32139,17 +32188,26 @@
               </div>`;
             }
             if (typeof showToast === "function") showToast("Cập nhật gói cước thành công (v" + newVer + ")");
+            // Refresh from canonical collection GET
             loadAdminCommercialPackages(true);
             setTimeout(() => {
               closePackageEditor();
             }, 1200);
-          } else {
-            if (statusEl) {
-              statusEl.innerHTML = `<div class="portal-notice portal-notice--warning" style="padding:12px;border-left:4px solid #f59e0b;background:rgba(245,158,11,0.1);border-radius:6px;margin-top:10px;">
-                <strong>Cảnh báo:</strong> Ghi nhận hoàn tất nhưng dữ liệu đọc lại chưa khớp. Vui lòng tải lại danh mục.
-              </div>`;
-            }
+            return;
           }
+
+          // Not fully verified
+          const failReason = !receiptId
+            ? "Thiếu receipt_id xác nhận"
+            : !readbackVerified
+            ? "Đối soát dữ liệu đọc lại thất bại"
+            : "Phản hồi không thỏa mãn tiêu chuẩn xác minh";
+          if (statusEl) {
+            statusEl.innerHTML = `<div class="portal-notice portal-notice--warning" style="padding:12px;border-left:4px solid #f59e0b;background:rgba(245,158,11,0.1);border-radius:6px;margin-top:10px;">
+              <strong>Cảnh báo xác minh:</strong> ${safeText(failReason)}. Vui lòng làm mới danh mục để kiểm tra.
+            </div>`;
+          }
+          if (typeof showToast === "function") showToast("Cảnh báo: " + failReason, "warning");
           return;
         }
 

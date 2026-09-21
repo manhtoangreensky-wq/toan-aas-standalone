@@ -324,9 +324,10 @@ def test_03_patch_package_sends_exact_contract_and_verifies_readback(isolated_en
                 "package": starter_v2,
             }
         elif method == "GET":
+            pkg = starter_v2 if any(c["method"] == "PATCH" for c in bridge_calls) else MOCK_BOT_PACKAGES[0]
             return {
                 "ok": True,
-                "package": starter_v2,
+                "package": pkg,
             }
         return {"ok": False}
 
@@ -362,17 +363,20 @@ def test_03_patch_package_sends_exact_contract_and_verifies_readback(isolated_en
     assert data.get("verification_status") == "BOT_CORE_READBACK_VERIFIED"
     assert data.get("write_receipt", {}).get("receipt_id") == "rcpt_pkg_starter_2_abc12345"
 
-    # Verifies exactly 2 bridge calls: PATCH followed immediately by fresh GET readback
-    assert len(bridge_calls) == 2
-    assert bridge_calls[0]["method"] == "PATCH"
+    # Verifies bridge calls: GET capability check -> PATCH -> fresh GET readback
+    assert len(bridge_calls) == 3
+    assert bridge_calls[0]["method"] == "GET"
     assert bridge_calls[0]["path"] == "/internal/v1/admin/packages/starter"
-    patch_bot_payload = bridge_calls[0]["kwargs"]["payload"]
+
+    assert bridge_calls[1]["method"] == "PATCH"
+    assert bridge_calls[1]["path"] == "/internal/v1/admin/packages/starter"
+    patch_bot_payload = bridge_calls[1]["kwargs"]["payload"]
     assert patch_bot_payload["expected_version"] == 1
     assert patch_bot_payload["changes"] == {"price_vnd": 120000, "display_name": "Gói Khởi động VIP"}
     assert patch_bot_payload["reason"] == "Cập nhật giá và tên gói khởi động cho đợt khuyến mãi Q3"
 
-    assert bridge_calls[1]["method"] == "GET"
-    assert bridge_calls[1]["path"] == "/internal/v1/admin/packages/starter"
+    assert bridge_calls[2]["method"] == "GET"
+    assert bridge_calls[2]["path"] == "/internal/v1/admin/packages/starter"
 
 
 def test_04_patch_package_rejects_missing_or_empty_reason(isolated_env, monkeypatch):
@@ -494,6 +498,8 @@ def test_07_patch_package_handles_409_version_conflict_without_replay(isolated_e
 
     async def _mock_bridge_request(method, path, **kwargs):
         bridge_calls.append({"method": method, "path": path})
+        if method == "GET":
+            return {"ok": True, "package": MOCK_BOT_PACKAGES[0]}
         return {
             "ok": False,
             "error_code": "VERSION_CONFLICT",
@@ -516,12 +522,13 @@ def test_07_patch_package_handles_409_version_conflict_without_replay(isolated_e
     assert res.status_code == 409
     body = res.json()
     assert body.get("error_code") == "VERSION_CONFLICT"
-    # Exactly 1 call: zero retry
-    assert len(bridge_calls) == 1
+    # Exactly 1 PATCH call: zero retry
+    patch_calls = [c for c in bridge_calls if c["method"] == "PATCH"]
+    assert len(patch_calls) == 1
 
 
-def test_08_patch_package_readback_mismatch_fails_closed(isolated_env, monkeypatch):
-    """8. Readback mismatch fails closed with READBACK_VERIFICATION_FAILED."""
+def test_08_patch_package_readback_version_mismatch_fails_closed(isolated_env, monkeypatch):
+    """8. Readback version mismatch fails closed with HTTP 502 and READBACK_VERSION_MISMATCH."""
     bridge_calls = []
 
     async def _mock_bridge_request(method, path, **kwargs):
@@ -537,7 +544,7 @@ def test_08_patch_package_readback_mismatch_fails_closed(isolated_env, monkeypat
                 "package": {**MOCK_BOT_PACKAGES[0], "version": 2, "price_vnd": 125000},
             }
         elif method == "GET":
-            # Bot returns stale version or mismatching price
+            # Preflight returns v1; readback also returns stale v1
             return {
                 "ok": True,
                 "package": {**MOCK_BOT_PACKAGES[0], "version": 1, "price_vnd": 99000},
@@ -555,11 +562,254 @@ def test_08_patch_package_readback_mismatch_fails_closed(isolated_env, monkeypat
         cookies=cookies,
         headers={"X-CSRF-Token": csrf_token},
     )
-    assert res.status_code == 200
+    assert res.status_code == 502
     body = res.json()
     assert body.get("ok") is False
-    assert body.get("error_code") == "READBACK_VERIFICATION_FAILED"
+    assert body.get("error_code") == "READBACK_VERSION_MISMATCH"
     assert body.get("data", {}).get("readback_verified") is False
+
+
+def test_08b_patch_package_readback_field_mismatch_fails_closed(isolated_env, monkeypatch):
+    """8b. Readback field mismatch fails closed with HTTP 502 and READBACK_FIELD_MISMATCH."""
+    bridge_calls = []
+
+    async def _mock_bridge_request(method, path, **kwargs):
+        bridge_calls.append({"method": method, "path": path})
+        if method == "PATCH":
+            return {
+                "ok": True,
+                "receipt_id": "rcpt_pkg_starter_2_field_mismatch",
+                "package_key": "starter",
+                "previous_version": 1,
+                "new_version": 2,
+                "accepted_changes": {"price_vnd": 125000},
+                "package": {**MOCK_BOT_PACKAGES[0], "version": 2, "price_vnd": 125000},
+            }
+        elif method == "GET":
+            if any(c["method"] == "PATCH" for c in bridge_calls):
+                # Readback has version 2 but price wasn't updated
+                return {
+                    "ok": True,
+                    "package": {**MOCK_BOT_PACKAGES[0], "version": 2, "price_vnd": 99000},
+                }
+            return {"ok": True, "package": MOCK_BOT_PACKAGES[0]}
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", _mock_bridge_request)
+
+    client = TestClient(app_module.app)
+    cookies, csrf_token = _create_session(isolated_env, "acc-admin-b03")
+
+    res = client.patch(
+        "/api/admin/commercial/packages/starter",
+        json={"expected_version": 1, "changes": {"price_vnd": 125000}, "reason": "Field mismatch test"},
+        cookies=cookies,
+        headers={"X-CSRF-Token": csrf_token},
+    )
+    assert res.status_code == 502
+    body = res.json()
+    assert body.get("ok") is False
+    assert body.get("error_code") == "READBACK_FIELD_MISMATCH"
+    assert body.get("data", {}).get("readback_verified") is False
+
+
+def test_08c_patch_package_fresh_get_unavailable_fails_closed(isolated_env, monkeypatch):
+    """8c. Fresh GET unavailable fails closed with HTTP 502 and READBACK_UNAVAILABLE."""
+    bridge_calls = []
+
+    async def _mock_bridge_request(method, path, **kwargs):
+        bridge_calls.append({"method": method, "path": path})
+        if method == "PATCH":
+            return {
+                "ok": True,
+                "receipt_id": "rcpt_pkg_starter_2_unavail",
+                "package_key": "starter",
+                "previous_version": 1,
+                "new_version": 2,
+                "accepted_changes": {"price_vnd": 125000},
+                "package": {**MOCK_BOT_PACKAGES[0], "version": 2, "price_vnd": 125000},
+            }
+        elif method == "GET":
+            if any(c["method"] == "PATCH" for c in bridge_calls):
+                # Downstream GET fails after PATCH
+                return {"ok": False, "status": "error", "error_code": "DOWNSTREAM_TIMEOUT"}
+            return {"ok": True, "package": MOCK_BOT_PACKAGES[0]}
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", _mock_bridge_request)
+
+    client = TestClient(app_module.app)
+    cookies, csrf_token = _create_session(isolated_env, "acc-admin-b03")
+
+    res = client.patch(
+        "/api/admin/commercial/packages/starter",
+        json={"expected_version": 1, "changes": {"price_vnd": 125000}, "reason": "Unavail test"},
+        cookies=cookies,
+        headers={"X-CSRF-Token": csrf_token},
+    )
+    assert res.status_code == 502
+    body = res.json()
+    assert body.get("ok") is False
+    assert body.get("error_code") == "READBACK_UNAVAILABLE"
+
+
+def test_08d_patch_package_missing_receipt_id_fails_closed(isolated_env, monkeypatch):
+    """8d. Missing receipt_id fails closed with HTTP 502 and MISSING_RECEIPT_ID."""
+    async def _mock_bridge_request(method, path, **kwargs):
+        if method == "GET":
+            return {"ok": True, "package": MOCK_BOT_PACKAGES[0]}
+        elif method == "PATCH":
+            return {
+                "ok": True,
+                # Missing receipt_id
+                "package_key": "starter",
+                "previous_version": 1,
+                "new_version": 2,
+                "accepted_changes": {"price_vnd": 125000},
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", _mock_bridge_request)
+
+    client = TestClient(app_module.app)
+    cookies, csrf_token = _create_session(isolated_env, "acc-admin-b03")
+
+    res = client.patch(
+        "/api/admin/commercial/packages/starter",
+        json={"expected_version": 1, "changes": {"price_vnd": 125000}, "reason": "No receipt_id"},
+        cookies=cookies,
+        headers={"X-CSRF-Token": csrf_token},
+    )
+    assert res.status_code == 502
+    body = res.json()
+    assert body.get("error_code") == "MISSING_RECEIPT_ID"
+
+
+def test_08e_patch_package_missing_new_version_fails_closed(isolated_env, monkeypatch):
+    """8e. Missing new_version fails closed with HTTP 502 and MISSING_NEW_VERSION."""
+    async def _mock_bridge_request(method, path, **kwargs):
+        if method == "GET":
+            return {"ok": True, "package": MOCK_BOT_PACKAGES[0]}
+        elif method == "PATCH":
+            return {
+                "ok": True,
+                "receipt_id": "rcpt_123",
+                "package_key": "starter",
+                "previous_version": 1,
+                # Missing new_version
+                "accepted_changes": {"price_vnd": 125000},
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", _mock_bridge_request)
+
+    client = TestClient(app_module.app)
+    cookies, csrf_token = _create_session(isolated_env, "acc-admin-b03")
+
+    res = client.patch(
+        "/api/admin/commercial/packages/starter",
+        json={"expected_version": 1, "changes": {"price_vnd": 125000}, "reason": "No new_version"},
+        cookies=cookies,
+        headers={"X-CSRF-Token": csrf_token},
+    )
+    assert res.status_code == 502
+    body = res.json()
+    assert body.get("error_code") == "MISSING_NEW_VERSION"
+
+
+def test_08f_patch_package_invalid_version_advance_fails_closed(isolated_env, monkeypatch):
+    """8f. Invalid version advance (new_version <= prev_version) fails closed with HTTP 502."""
+    async def _mock_bridge_request(method, path, **kwargs):
+        if method == "GET":
+            return {"ok": True, "package": MOCK_BOT_PACKAGES[0]}
+        elif method == "PATCH":
+            return {
+                "ok": True,
+                "receipt_id": "rcpt_123",
+                "package_key": "starter",
+                "previous_version": 2,
+                "new_version": 2,  # Not advancing!
+                "accepted_changes": {"price_vnd": 125000},
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", _mock_bridge_request)
+
+    client = TestClient(app_module.app)
+    cookies, csrf_token = _create_session(isolated_env, "acc-admin-b03")
+
+    res = client.patch(
+        "/api/admin/commercial/packages/starter",
+        json={"expected_version": 1, "changes": {"price_vnd": 125000}, "reason": "No advance"},
+        cookies=cookies,
+        headers={"X-CSRF-Token": csrf_token},
+    )
+    assert res.status_code == 502
+    body = res.json()
+    assert body.get("error_code") == "INVALID_VERSION_ADVANCE"
+
+
+def test_08g_server_defense_rejects_fields_outside_bot_editable_commercial(isolated_env, monkeypatch):
+    """8g. Server-side defense: rejects fields outside Bot canonical editable_commercial."""
+    async def _mock_bridge_request(method, path, **kwargs):
+        if method == "GET":
+            # Bot package has public_visible as IMMUTABLE
+            return {"ok": True, "package": MOCK_BOT_PACKAGES[0]}
+        return {"ok": True}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", _mock_bridge_request)
+
+    client = TestClient(app_module.app)
+    cookies, csrf_token = _create_session(isolated_env, "acc-admin-b03")
+
+    res = client.patch(
+        "/api/admin/commercial/packages/starter",
+        json={"expected_version": 1, "changes": {"public_visible": False}, "reason": "Try editing immutable"},
+        cookies=cookies,
+        headers={"X-CSRF-Token": csrf_token},
+    )
+    assert res.status_code == 400
+    body = res.json()
+    assert body.get("error_code") in {"IMMUTABLE_FIELD_REJECTED", "FIELD_NOT_EDITABLE_FOR_PACKAGE"}
+
+
+def test_08h_combo_monthly_public_visible_editable_because_bot_allows(isolated_env, monkeypatch):
+    """8h. Combo package public_visible is editable because Bot Core allows it in editable_commercial."""
+    bridge_calls = []
+    combo_v2 = {**MOCK_BOT_PACKAGES[1], "version": 2, "public_visible": False}
+
+    async def _mock_bridge_request(method, path, **kwargs):
+        bridge_calls.append({"method": method, "path": path})
+        if method == "PATCH":
+            return {
+                "ok": True,
+                "receipt_id": "rcpt_combo_2_ok",
+                "package_key": "combo_ad_video_588k",
+                "previous_version": 1,
+                "new_version": 2,
+                "accepted_changes": {"public_visible": False},
+                "package": combo_v2,
+            }
+        elif method == "GET":
+            pkg = combo_v2 if any(c["method"] == "PATCH" for c in bridge_calls) else MOCK_BOT_PACKAGES[1]
+            return {"ok": True, "package": pkg}
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", _mock_bridge_request)
+
+    client = TestClient(app_module.app)
+    cookies, csrf_token = _create_session(isolated_env, "acc-admin-b03")
+
+    res = client.patch(
+        "/api/admin/commercial/packages/combo_ad_video_588k",
+        json={"expected_version": 1, "changes": {"public_visible": False}, "reason": "Hide combo"},
+        cookies=cookies,
+        headers={"X-CSRF-Token": csrf_token},
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body.get("ok") is True
+    assert body.get("data", {}).get("readback_verified") is True
 
 
 def test_09_packages_rbac_security(isolated_env):
@@ -634,8 +884,11 @@ def test_12_capability_matrix_b03_wired():
     assert b03.get("authority") == "BOT_CORE"
     assert b03.get("contract_wired_to_bot_pr_1115") is True
     assert b03.get("bot_pr_1115_head") == "1ae49acf213d0ecfb009653eb0e44949cad6108a"
-    assert b03.get("bot_pr_1115_state") == "OPEN"
-    assert b03.get("bot_pr_1115_promoted") is False
+    assert b03.get("bot_pr_1115_merge_sha") == "e130b1b089021275dd53b2ffce54ea807ad0e3e1"
+    assert b03.get("bot_pr_1115_state") == "MERGED"
+    assert b03.get("bot_pr_1115_promoted") is True
+    assert b03.get("bot_pr_1115_deployed") is False
+    assert b03.get("bot_pr_1115_business_live") == "NOT_PROVEN"
     assert "1115" in b03.get("description", "")
 
     # B04-B05 must remain strictly FAIL_CLOSED
@@ -659,18 +912,30 @@ def test_13_portal_js_packages_editor_contract():
     assert "VERSION_CONFLICT" in portal_code
 
 
-def test_14_portal_js_packages_subscription_public_visible_disabled():
-    """14. portal.js renders public_visible disabled for subscription packages."""
+def test_14_portal_js_packages_consumes_bot_field_classifications():
+    """14. portal.js consumes field_classifications and field_effect_scopes from Bot Core, no hardcoded package type rules."""
     assert PORTAL_JS_PATH.exists()
     portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
 
     idx = portal_code.find("function renderPackageEditor(")
     assert idx != -1
-    fn_body = portal_code[idx:idx + 3500]
+    fn_body = portal_code[idx:idx + 4500]
 
-    # Subscription public_visible must be disabled or checked for immutability
-    assert 'packageItem.package_type === "subscription"' in fn_body or "isSubscription" in fn_body
-    assert "disabled" in fn_body
+    # Consumes Bot field classifications and scopes
+    assert "field_classifications" in fn_body
+    assert "editable_commercial" in fn_body
+    assert "field_effect_scopes" in fn_body
+    assert "IMMUTABLE" in fn_body
+
+    # Zero hardcoded package_type rules for editability
+    assert 'packageItem.package_type === "subscription"' not in fn_body
+    assert "isSubscription" not in fn_body
+
+    # Zero fake receipt fallback
+    assert "RCPT-PKG-OK" not in portal_code
+
+    # Positive proof of readback verification
+    assert "readback_verified === true" in portal_code
 
 
 def test_15_portal_js_blocker_banner_removed_for_packages():
