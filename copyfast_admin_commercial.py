@@ -958,10 +958,23 @@ async def patch_admin_commercial_package(
         return bridge_res
 
     # Canonical receipt validation
-    receipt_data = bridge_res.get("receipt") or (bridge_res.get("data") or {}).get("receipt")
-    receipt_id = bridge_res.get("receipt_id") or (receipt_data.get("receipt_id") if isinstance(receipt_data, dict) else None)
-    new_version = bridge_res.get("new_version") or (receipt_data.get("new_version") if isinstance(receipt_data, dict) else None)
-    prev_version = bridge_res.get("previous_version") or (receipt_data.get("previous_version") if isinstance(receipt_data, dict) else None)
+    res_data = bridge_res.get("data") if isinstance(bridge_res.get("data"), dict) else {}
+    receipt_data = bridge_res.get("receipt") or res_data.get("receipt")
+    receipt_id = (
+        bridge_res.get("receipt_id")
+        or res_data.get("receipt_id")
+        or (receipt_data.get("receipt_id") if isinstance(receipt_data, dict) else None)
+    )
+    new_version = (
+        bridge_res.get("new_version")
+        or res_data.get("new_version")
+        or (receipt_data.get("new_version") if isinstance(receipt_data, dict) else None)
+    )
+    prev_version = (
+        bridge_res.get("previous_version")
+        or res_data.get("previous_version")
+        or (receipt_data.get("previous_version") if isinstance(receipt_data, dict) else None)
+    )
 
     if not receipt_id:
         LOGGER.error("Bot Core response missing receipt_id: %s", bridge_res)
@@ -1003,9 +1016,9 @@ async def patch_admin_commercial_package(
             "receipt_id": receipt_id,
             "previous_version": prev_version,
             "new_version": new_version,
-            "accepted_changes": bridge_res.get("accepted_changes") or sanitized_changes,
-            "mutation_digest": bridge_res.get("mutation_digest"),
-            "request_id": bridge_res.get("request_id"),
+            "accepted_changes": bridge_res.get("accepted_changes") or res_data.get("accepted_changes") or sanitized_changes,
+            "mutation_digest": bridge_res.get("mutation_digest") or res_data.get("mutation_digest"),
+            "request_id": bridge_res.get("request_id") or res_data.get("request_id"),
         }
     )
 
