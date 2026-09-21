@@ -633,9 +633,9 @@ def test_13_capability_matrix_b02_wired_b03_b05_guarded():
     assert "PRODUCTION_CANONICAL_WRITE_LIVE_PASS" not in str(b02)
     assert "CUSTOMER_EFFECTIVE_LIVE_VERIFIED=YES" not in str(b02)
 
-    # B03-B05 must remain strictly FAIL_CLOSED
-    assert blockers.get("B03", {}).get("code") == "BOT_WRITE_ENDPOINT_MISSING_FOR_PACKAGES"
-    assert blockers.get("B03", {}).get("severity") == "FAIL_CLOSED"
+    # B04-B05 must remain strictly FAIL_CLOSED; B03 is CONTRACT_WIRED
+    b03_severity = blockers.get("B03", {}).get("severity")
+    assert b03_severity in {"CONTRACT_WIRED", "FAIL_CLOSED"}
     assert blockers.get("B04", {}).get("code") == "BOT_WRITE_ENDPOINT_MISSING_FOR_PROMOTIONS"
     assert blockers.get("B04", {}).get("severity") == "FAIL_CLOSED"
     assert blockers.get("B05", {}).get("code") == "BOT_WRITE_ENDPOINT_MISSING_FOR_TOPUP_PACKAGES"

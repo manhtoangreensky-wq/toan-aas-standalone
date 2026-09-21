@@ -41,10 +41,20 @@
         "remediation_gate": "AUTHENTICATED_ADMIN_LIVE_READ_OR_OWNER_AUTHORIZED_WRITE_CANARY"
       },
       "B03": {
-        "code": "BOT_WRITE_ENDPOINT_MISSING_FOR_PACKAGES",
-        "severity": "FAIL_CLOSED",
-        "description": "Bot lacks /internal/v1/admin/packages mutation API; WebApp displays canonical package tiers and prevents unauthenticated mutations.",
-        "remediation_gate": "WAIT_BOT_CORE_BRIDGE_PACKAGES_WRITE_ENDPOINT"
+        "code": "BOT_CANONICAL_PACKAGES_WRITE_WIRED",
+        "severity": "CONTRACT_WIRED",
+        "write_mode": "CANONICAL_CAS_WRITE",
+        "authority": "BOT_CORE",
+        "live_status": "CONTRACT_WIRED_NOT_LIVE_VERIFIED",
+        "contract_wired_to_bot_pr_1115": true,
+        "bot_pr_1115_head": "1ae49acf213d0ecfb009653eb0e44949cad6108a",
+        "bot_pr_1115_merge_sha": "e130b1b089021275dd53b2ffce54ea807ad0e3e1",
+        "bot_pr_1115_state": "MERGED",
+        "bot_pr_1115_promoted": true,
+        "bot_pr_1115_deployed": false,
+        "bot_pr_1115_business_live": "NOT_PROVEN",
+        "description": "Bot Core PR #1115 CAS write endpoints (/internal/v1/admin/packages/{package_key}) merged to main (merge SHA e130b1b089021275dd53b2ffce54ea807ad0e3e1) and wired to WebApp Admin Commercial Packages editor; mock verified, live write gated.",
+        "remediation_gate": "BOT_PR_1115_MERGED_PENDING_LIVE_PROD_DEPLOY"
       },
       "B04": {
         "code": "BOT_WRITE_ENDPOINT_MISSING_FOR_PROMOTIONS",
