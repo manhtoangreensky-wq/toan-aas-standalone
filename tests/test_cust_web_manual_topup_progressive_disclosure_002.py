@@ -651,8 +651,7 @@ def test_9_instruction_css_matches_the_markup_instead_of_dead_component_classes(
     ):
         assert dead not in manual_css
     desktop = re.search(r"\.portal-manual-payment-method\s*\{(?P<body>.*?)\n\}", manual_css, re.S)
-    assert desktop
-    assert "grid-template-columns: minmax(0, 1fr) minmax(132px, 180px)" in desktop.group("body")
+    assert "grid-template-columns: minmax(360px, 420px) minmax(0, 1fr)" in desktop.group("body")
 
 
 def test_10_confirmed_instruction_focus_stays_visible_below_the_sticky_header():

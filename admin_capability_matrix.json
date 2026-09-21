@@ -1,0 +1,205 @@
+{
+  "task": "P0.WEBAPP.V3.FULL.PRODUCT.ADMIN.COMMERCIAL.UX.TRUTH.REMEDIATION.R1",
+  "total_admin_modules": 25,
+  "pillars": 6,
+  "commercial_command_center": {
+    "route": "/admin/commercial",
+    "pillars_covered": 5,
+    "tabs": [
+      "products",
+      "pricing",
+      "packages",
+      "promotions",
+      "topup_packages"
+    ],
+    "draft_management": "SUPPORTED (Draft create, draft save, diff preview, audit history)",
+    "canonical_write_authority": "FAIL_CLOSED_GUARDED",
+    "upstream_blockers": {
+      "B01": {
+        "code": "BOT_CANONICAL_PRODUCT_WRITE_WIRED",
+        "severity": "CONTRACT_WIRED",
+        "write_mode": "CANONICAL_CAS_WRITE",
+        "authority": "BOT_CORE",
+        "live_status": "CONTRACT_WIRED_NOT_LIVE_VERIFIED",
+        "description": "Bot Core PR #1093 CAS write endpoints (/internal/v1/admin/products/{product_key}) wired to WebApp Admin Commercial Products editor; mock verified, live write gated.",
+        "remediation_gate": "BOT_PR_1093_WIRED_PENDING_LIVE_PROD_DEPLOY"
+      },
+      "B02": {
+        "code": "BOT_WRITE_ENDPOINT_MISSING_FOR_PRICING",
+        "severity": "FAIL_CLOSED",
+        "description": "Bot lacks /internal/v1/admin/pricing/publish endpoint; WebApp enforces CANONICAL_PUBLISH_AVAILABLE=False and preserves diff review.",
+        "remediation_gate": "WAIT_BOT_CORE_BRIDGE_PRICING_PUBLISH_ENDPOINT"
+      },
+      "B03": {
+        "code": "BOT_WRITE_ENDPOINT_MISSING_FOR_PACKAGES",
+        "severity": "FAIL_CLOSED",
+        "description": "Bot lacks /internal/v1/admin/packages mutation API; WebApp displays canonical package tiers and prevents unauthenticated mutations.",
+        "remediation_gate": "WAIT_BOT_CORE_BRIDGE_PACKAGES_WRITE_ENDPOINT"
+      },
+      "B04": {
+        "code": "BOT_WRITE_ENDPOINT_MISSING_FOR_PROMOTIONS",
+        "severity": "FAIL_CLOSED",
+        "description": "Bot lacks /internal/v1/admin/promotions mutation endpoint; WebApp provides audit projection and blocks untracked voucher mutations.",
+        "remediation_gate": "WAIT_BOT_CORE_BRIDGE_PROMOTIONS_WRITE_ENDPOINT"
+      },
+      "B05": {
+        "code": "BOT_WRITE_ENDPOINT_MISSING_FOR_TOPUP_PACKAGES",
+        "severity": "FAIL_CLOSED",
+        "description": "Bot lacks /internal/v1/admin/topup-packages mutation API; WebApp renders VietQR canonical rates and blocks untracked bonus changes.",
+        "remediation_gate": "WAIT_BOT_CORE_BRIDGE_TOPUP_PACKAGES_WRITE_ENDPOINT"
+      }
+    }
+  },
+  "modules": [
+    {
+      "route": "/admin",
+      "title": "Tổng quan ERP",
+      "pillar": "command_center",
+      "write_mode": "READ_ONLY"
+    },
+    {
+      "route": "/admin/operations",
+      "title": "Hàng đợi vận hành",
+      "pillar": "command_center",
+      "write_mode": "GUARDED_OPERATIONS"
+    },
+    {
+      "route": "/admin/work-queue",
+      "title": "Hàng đợi xử lý",
+      "pillar": "command_center",
+      "write_mode": "GUARDED_QUEUE"
+    },
+    {
+      "route": "/admin/reports",
+      "title": "Báo cáo tổng hợp",
+      "pillar": "command_center",
+      "write_mode": "READ_ONLY"
+    },
+    {
+      "route": "/admin/commercial",
+      "title": "Trung tâm Thương mại",
+      "pillar": "commerce_finance",
+      "write_mode": "DRAFT_DIFF_REVIEW_FAIL_CLOSED"
+    },
+    {
+      "route": "/admin/topups",
+      "title": "Duyệt nạp tiền",
+      "pillar": "commerce_finance",
+      "write_mode": "RECONCILIATION_CONFIRM"
+    },
+    {
+      "route": "/admin/wallet",
+      "title": "Điều chỉnh số dư",
+      "pillar": "commerce_finance",
+      "write_mode": "BOT_CREDIT_COMPENSATE_CANONICAL"
+    },
+    {
+      "route": "/admin/revenue",
+      "title": "Báo cáo doanh thu",
+      "pillar": "commerce_finance",
+      "write_mode": "READ_ONLY"
+    },
+    {
+      "route": "/admin/refunds",
+      "title": "Yêu cầu hoàn tiền",
+      "pillar": "commerce_finance",
+      "write_mode": "REFUND_CONFIRM"
+    },
+    {
+      "route": "/admin/pricing",
+      "title": "Chính sách giá",
+      "pillar": "commerce_finance",
+      "write_mode": "DRAFT_POLICY_ENGINE"
+    },
+    {
+      "route": "/admin/customers",
+      "title": "Danh sách khách hàng",
+      "pillar": "customer_growth",
+      "write_mode": "REDACTED_READ"
+    },
+    {
+      "route": "/admin/users",
+      "title": "Tài khoản người dùng",
+      "pillar": "customer_growth",
+      "write_mode": "READ_ONLY"
+    },
+    {
+      "route": "/admin/crm/leads",
+      "title": "Quản lý cơ hội CRM",
+      "pillar": "customer_growth",
+      "write_mode": "MANAGER_KANBAN"
+    },
+    {
+      "route": "/admin/support",
+      "title": "Hỗ trợ khách hàng",
+      "pillar": "customer_growth",
+      "write_mode": "TICKET_DESK"
+    },
+    {
+      "route": "/admin/jobs",
+      "title": "Giám sát tác vụ Jobs",
+      "pillar": "jobs_delivery",
+      "write_mode": "MONITOR_READ"
+    },
+    {
+      "route": "/admin/jobs/failed",
+      "title": "Sự cố tác vụ thất bại",
+      "pillar": "jobs_delivery",
+      "write_mode": "RETRY_DISPATCH"
+    },
+    {
+      "route": "/admin/features",
+      "title": "Bật tắt tính năng",
+      "pillar": "jobs_delivery",
+      "write_mode": "GUARDED_TOGGLE"
+    },
+    {
+      "route": "/admin/providers",
+      "title": "Nhà cung cấp & Chi phí",
+      "pillar": "infrastructure_providers",
+      "write_mode": "READ_ONLY"
+    },
+    {
+      "route": "/admin/workers",
+      "title": "Trạng thái Workers",
+      "pillar": "infrastructure_providers",
+      "write_mode": "READ_ONLY"
+    },
+    {
+      "route": "/admin/system",
+      "title": "Cấu hình hệ thống",
+      "pillar": "infrastructure_providers",
+      "write_mode": "GUARDED_CONFIG"
+    },
+    {
+      "route": "/admin/runtime",
+      "title": "Môi trường Runtime",
+      "pillar": "infrastructure_providers",
+      "write_mode": "READ_ONLY"
+    },
+    {
+      "route": "/admin/audit",
+      "title": "Nhật ký kiểm toán",
+      "pillar": "security_governance",
+      "write_mode": "APPEND_ONLY_AUDIT"
+    },
+    {
+      "route": "/admin/security",
+      "title": "Bảo mật & Phân quyền",
+      "pillar": "security_governance",
+      "write_mode": "ACCESS_POSTURE"
+    },
+    {
+      "route": "/admin/internal-docs",
+      "title": "Tài liệu nội bộ",
+      "pillar": "security_governance",
+      "write_mode": "GOVERNANCE_ARCHIVE"
+    },
+    {
+      "route": "/admin/backups",
+      "title": "Sao lưu dữ liệu",
+      "pillar": "security_governance",
+      "write_mode": "SNAPSHOT_READ"
+    }
+  ]
+}

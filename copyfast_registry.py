@@ -203,6 +203,7 @@ ADMIN_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("admin_workers", "Workers", "admin", "/admin/workers", "admin"),
     WebFeature("admin_features", "Readiness", "admin", "/admin/features", "admin"),
     WebFeature("admin_freezes", "Bảo trì & freeze", "admin", "/admin/freezes", "admin"),
+    WebFeature("admin_commercial", "Trung tâm Thương mại", "admin", "/admin/commercial", "admin", description="Trung tâm điều hành thương mại: Sản phẩm, Bảng giá SKU, Gói dịch vụ, Khuyến mãi, Gói nạp Xu."),
     WebFeature("admin_pricing", "Giá & gói", "admin", "/admin/pricing", "admin"),
     WebFeature("admin_packages", "Packages", "admin", "/admin/packages", "admin", description="Catalog package chỉ đọc theo canonical signed-admin boundary; không grant, revoke, đổi entitlement, tạo checkout hoặc thay đổi Xu/PayOS từ browser."),
     WebFeature("admin_promos", "Khuyến mãi", "admin", "/admin/promos", "admin"),
@@ -558,6 +559,17 @@ def allowed_paths() -> set[str]:
         "/wallet/history",
         "/history",
         "/admin/internal-docs",
+        "/admin/commercial",
+        "/content",
+        "/packages",
+        "/studio",
+        "/publishing",
+        "/voice",
+        "/music",
+        "/subdub",
+        "/tools/video",
+        "/tools/image",
+        "/tools/free",
     }
     for item in ALL_FEATURES:
         result.add(item.route.split("?", 1)[0])

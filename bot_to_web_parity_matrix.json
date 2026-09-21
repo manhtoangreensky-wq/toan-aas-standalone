@@ -1,0 +1,364 @@
+{
+  "task": "P0.WEBAPP.V3.FULL.PRODUCT.ADMIN.COMMERCIAL.UX.TRUTH.REMEDIATION.R1",
+  "bot_reference_sha": "e0ce16e5d4ba6816d4f5205aad662eba8c635045",
+  "total_bot_customer_functions": 39,
+  "mapped_web_functions": 39,
+  "parity_percentage": "100%",
+  "canonical_authority": {
+    "bot": "PRODUCT / COMMERCIAL / FUNCTION AUTHORITY",
+    "webapp": "OPTIMIZED PRODUCT EXPERIENCE"
+  },
+  "mappings": [
+    {
+      "id": "F01",
+      "bot_function": "video_ai_real",
+      "bot_menu": "Video AI Chân thật",
+      "web_route": "/studio",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Core Bridge API / Estimator"
+    },
+    {
+      "id": "F02",
+      "bot_function": "video_cinematic_multiscene",
+      "bot_menu": "Điện ảnh nhiều cảnh",
+      "web_route": "/studio",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Multi-scene Compiler"
+    },
+    {
+      "id": "F03",
+      "bot_function": "video_selfshot",
+      "bot_menu": "Video Tự quay AI",
+      "web_route": "/studio",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Self-shot Planner & Core Bridge"
+    },
+    {
+      "id": "F04",
+      "bot_function": "video_trend",
+      "bot_menu": "Video Trend TikTok",
+      "web_route": "/studio",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Trend Pipeline"
+    },
+    {
+      "id": "F05",
+      "bot_function": "storyboard_prompt",
+      "bot_menu": "Phân cảnh từ Prompt",
+      "web_route": "/studio",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Storyboard Composer"
+    },
+    {
+      "id": "F06",
+      "bot_function": "video_long",
+      "bot_menu": "Video AI Dài",
+      "web_route": "/studio",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Long-form Planner"
+    },
+    {
+      "id": "F07",
+      "bot_function": "video_effects",
+      "bot_menu": "Hiệu ứng & Chuyển cảnh",
+      "web_route": "/studio",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Motion Guide"
+    },
+    {
+      "id": "F08",
+      "bot_function": "video_upscale",
+      "bot_menu": "Nâng cấp độ nét Video",
+      "web_route": "/studio",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Video Finishing Transform"
+    },
+    {
+      "id": "F09",
+      "bot_function": "video_bg_removal",
+      "bot_menu": "Xóa phông nền Video",
+      "web_route": "/studio",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Video Background Remover"
+    },
+    {
+      "id": "F10",
+      "bot_function": "image_generate_flux",
+      "bot_menu": "Tạo ảnh nghệ thuật FLUX",
+      "web_route": "/tools/image",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Image Studio Artboard"
+    },
+    {
+      "id": "F11",
+      "bot_function": "image_upscale_4k",
+      "bot_menu": "Upscale ảnh 4K",
+      "web_route": "/tools/image",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Image Enhance Operation"
+    },
+    {
+      "id": "F12",
+      "bot_function": "image_remove_background",
+      "bot_menu": "Xóa nền ảnh sản phẩm",
+      "web_route": "/tools/image",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Background Cleanup Operation"
+    },
+    {
+      "id": "F13",
+      "bot_function": "image_style_transfer",
+      "bot_menu": "Đổi phong cách ảnh",
+      "web_route": "/tools/image",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Style Preset Filter"
+    },
+    {
+      "id": "F14",
+      "bot_function": "image_model_portrait",
+      "bot_menu": "Chân dung người mẫu AI",
+      "web_route": "/tools/image",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Model Portrait Artboard"
+    },
+    {
+      "id": "F15",
+      "bot_function": "image_prompt_optimizer",
+      "bot_menu": "Tối ưu hóa câu lệnh ảnh",
+      "web_route": "/tools/image",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Prompt Composer Variant Selector"
+    },
+    {
+      "id": "F16",
+      "bot_function": "voice_tts",
+      "bot_menu": "Lồng tiếng văn bản TTS",
+      "web_route": "/voice",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Voice Studio Cue Sheet"
+    },
+    {
+      "id": "F17",
+      "bot_function": "voice_clone",
+      "bot_menu": "Nhân bản giọng nói Pro",
+      "web_route": "/voice",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Voice Vault Compose"
+    },
+    {
+      "id": "F18",
+      "bot_function": "voice_multilingual",
+      "bot_menu": "Chuyển ngữ giọng đọc",
+      "web_route": "/voice",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Voice Studio Multilingual Engine"
+    },
+    {
+      "id": "F19",
+      "bot_function": "voice_vault",
+      "bot_menu": "Kho giọng đã lưu",
+      "web_route": "/voice",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Voice Vault Catalog"
+    },
+    {
+      "id": "F20",
+      "bot_function": "music_suno",
+      "bot_menu": "Sáng tác nhạc Suno AI",
+      "web_route": "/music",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Music Composer Brief"
+    },
+    {
+      "id": "F21",
+      "bot_function": "music_instrumental",
+      "bot_menu": "Nhạc nền không lời bản quyền",
+      "web_route": "/music",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Music Library Browser"
+    },
+    {
+      "id": "F22",
+      "bot_function": "music_sfx",
+      "bot_menu": "Hiệu ứng âm thanh SFX",
+      "web_route": "/music",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Audio Asset Operation"
+    },
+    {
+      "id": "F23",
+      "bot_function": "subdub_transcribe",
+      "bot_menu": "Bóc tách phụ đề tự động",
+      "web_route": "/subdub",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Subtitle Studio Transcribe"
+    },
+    {
+      "id": "F24",
+      "bot_function": "subdub_translate",
+      "bot_menu": "Dịch phụ đề song ngữ",
+      "web_route": "/subdub",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Subtitle Language Source Picker"
+    },
+    {
+      "id": "F25",
+      "bot_function": "subdub_tts_dub",
+      "bot_menu": "Lồng tiếng theo phụ đề",
+      "web_route": "/subdub",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Subtitle Cue Dubbing Engine"
+    },
+    {
+      "id": "F26",
+      "bot_function": "subdub_export_srt",
+      "bot_menu": "Xuất file phụ đề SRT/VTT",
+      "web_route": "/subdub",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Subtitle Format Exporter"
+    },
+    {
+      "id": "F27",
+      "bot_function": "content_scriptwriter",
+      "bot_menu": "Viết kịch bản video TikTok",
+      "web_route": "/content",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Content Brief Composer"
+    },
+    {
+      "id": "F28",
+      "bot_function": "content_copywriting",
+      "bot_menu": "Viết bài quảng cáo bán hàng",
+      "web_route": "/content",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Contextual Ad Prompt Wizard"
+    },
+    {
+      "id": "F29",
+      "bot_function": "content_seo_article",
+      "bot_menu": "Bài viết chuẩn SEO",
+      "web_route": "/content",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Channel Strategy Composer"
+    },
+    {
+      "id": "F30",
+      "bot_function": "content_prompt_pack",
+      "bot_menu": "Bộ Prompt chuyên ngành",
+      "web_route": "/content",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Prompt Library & Pack Generator"
+    },
+    {
+      "id": "F31",
+      "bot_function": "doc_ocr_vietnamese",
+      "bot_menu": "OCR tài liệu Tiếng Việt",
+      "web_route": "/documents",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Document OCR Engine"
+    },
+    {
+      "id": "F32",
+      "bot_function": "doc_pdf_to_word",
+      "bot_menu": "Chuyển PDF sang Word",
+      "web_route": "/documents",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "PDF to Word Converter"
+    },
+    {
+      "id": "F33",
+      "bot_function": "doc_pdf_tools",
+      "bot_menu": "Gộp / Tách / Nén PDF",
+      "web_route": "/documents",
+      "product_group": "Sáng tạo",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "PDF Manipulation Tools"
+    },
+    {
+      "id": "F34",
+      "bot_function": "autopost_schedule",
+      "bot_menu": "Lên lịch đăng bài đa kênh",
+      "web_route": "/publishing",
+      "product_group": "Công việc",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Campaign Calendar & Schedule Intent"
+    },
+    {
+      "id": "F35",
+      "bot_function": "autopost_channels",
+      "bot_menu": "Quản lý kênh & tài khoản",
+      "web_route": "/publishing",
+      "product_group": "Công việc",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Channel Connection Hub"
+    },
+    {
+      "id": "F36",
+      "bot_function": "task_progress_jobs",
+      "bot_menu": "Tiến trình tác vụ & Lịch sử",
+      "web_route": "/jobs",
+      "product_group": "Công việc",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Job Action Center"
+    },
+    {
+      "id": "F37",
+      "bot_function": "wallet_balance",
+      "bot_menu": "Ví Xu & Số dư",
+      "web_route": "/wallet",
+      "product_group": "Tài khoản",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Canonical Wallet Projection"
+    },
+    {
+      "id": "F38",
+      "bot_function": "wallet_topup_vietqr",
+      "bot_menu": "Nạp Xu VietQR PayOS",
+      "web_route": "/wallet/topup",
+      "product_group": "Tài khoản",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "VietQR PayOS + Manual Reconciliation Guide"
+    },
+    {
+      "id": "F39",
+      "bot_function": "packages_catalog",
+      "bot_menu": "Bảng giá & Gói cước",
+      "web_route": "/packages",
+      "product_group": "Tài khoản",
+      "parity": "OPTIMIZED_FLOW",
+      "execution_model": "Dynamic Pricing Catalog Projection"
+    }
+  ]
+}

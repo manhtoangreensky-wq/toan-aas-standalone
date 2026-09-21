@@ -47,6 +47,7 @@ import copyfast_channel_strategy
 import copyfast_community_trust
 import copyfast_content_handoff
 import copyfast_content_studio
+import copyfast_admin_commercial
 import copyfast_chat_workspace
 from copyfast_bridge import ensure_core_bridge_readiness
 import copyfast_data_controls
@@ -2691,6 +2692,7 @@ app.include_router(copyfast_reliability.router)
 app.include_router(copyfast_operations_desk.router)
 app.include_router(copyfast_finance_planning.router)
 app.include_router(copyfast_notification_center.router)
+app.include_router(copyfast_admin_commercial.router)
 
 
 @app.get("/health")
@@ -2786,6 +2788,10 @@ async def page(page_path: str, request: Request):
         return RedirectResponse("/admin/operations", status_code=307)
     if normalized in {"/admin/internal-docs", "/admin/internal-docs/"} or normalized.startswith("/admin/internal-docs/"):
         return RedirectResponse("/admin/internal-documents", status_code=307)
+    if normalized == "/auth":
+        return RedirectResponse("/login", status_code=307)
+    if normalized == "/document":
+        return RedirectResponse("/documents", status_code=307)
     public_pages = {"/welcome", "/legal", "/privacy", "/password-recovery", "/admin/login"}
     if normalized in {"/login", "/register", "/admin/login"}:
         try:

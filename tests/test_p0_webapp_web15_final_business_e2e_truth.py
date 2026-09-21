@@ -570,10 +570,10 @@ class TestP0WebappWeb15FinalBusinessE2eTruth:
 
         # 2. WEB14 Customer-to-admin route leak = 0
         start = PORTAL_JS.index("function navGroups(context, currentPage)")
-        end = PORTAL_JS.index("const videoStudioNavGroups = [")
+        end = PORTAL_JS.index("const currentGroup = currentCustomerWorkflowGroup")
         nav_block = PORTAL_JS[start:end]
         assert "Quản trị Admin ERP" not in nav_block
         perm_links = re.findall(r'\["(/[^"]+)"', nav_block)
         admin_leaks = [p for p in perm_links if p.startswith("/admin")]
         assert admin_leaks == [], f"CUSTOMER_TO_ADMIN_ROUTE_LEAK detected: {admin_leaks}"
-        assert len(perm_links) in (15, 22), f"Expected 15 or 22 customer links, got {len(perm_links)}"
+        assert len(perm_links) == 13, f"Expected 13 customer links, got {len(perm_links)}"

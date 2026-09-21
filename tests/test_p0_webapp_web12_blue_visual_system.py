@@ -1,4 +1,4 @@
-﻿"""Presentation and visual system contracts for P0.WEBAPP.WEB12.
+"""Presentation and visual system contracts for P0.WEBAPP.WEB12.
 
 Task: P0.WEBAPP.WEB12.BLUE.VISUAL.SYSTEM.CUSTOMER.ADMIN.TRUTH
 Master Program: P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1
@@ -29,7 +29,7 @@ FORBIDDEN_OBSIDIAN = {"#09090b", "#0c0c0e", "#121215", "#18181b", "#1c1c21", "#0
 
 
 def test_customer_light_uses_blue_sidebar_rail_and_light_blue_canvas() -> None:
-    """Customer light mode must visibly read as a blue/cyan system with a blue sidebar rail."""
+    """Customer light mode must visibly read as a light teal/mint system with a teal sidebar rail."""
     match = re.search(
         r'\.portal-shell\[data-portal-app-kind="customer"\]\s+\.portal-sidebar\s*\{(?P<rules>[^}]+)\}',
         PORTAL_THEME_CSS,
@@ -37,13 +37,13 @@ def test_customer_light_uses_blue_sidebar_rail_and_light_blue_canvas() -> None:
     assert match is not None, "Customer sidebar rule must exist in portal-theme.css"
 
     assert (
-        "--portal-customer-blue-rail" in PORTAL_THEME_CSS
-        or "ADMIN_BLUE_RAIL" in PORTAL_THEME_CSS
+        "--portal-customer-teal-rail" in PORTAL_THEME_CSS
+        or "--portal-canonical-teal" in PORTAL_THEME_CSS
     )
 
 
 def test_customer_dark_eliminates_black_obsidian_surfaces() -> None:
-    """Customer dark theme must use deep blue-dark layout surfaces, not obsidian black."""
+    """Customer dark theme must use deep teal-dark layout surfaces, not obsidian black."""
     dark_block_match = re.search(
         r'html\[data-portal-theme="dark"\]\s+\.portal-shell,\s*html\[data-portal-theme="dark"\]\s+body[^{]*\{(?P<declarations>[^}]+)\}',
         PORTAL_THEME_CSS,
@@ -64,10 +64,11 @@ def test_customer_dark_eliminates_black_obsidian_surfaces() -> None:
 
 
 def test_admin_ui_uses_clearly_blue_sidebar_rail_and_blue_actions() -> None:
-    """Admin UI must have a clearly blue sidebar rail (ADMIN_BLUE_RAIL=YES, ADMIN_BLACK_SIDEBAR=NO)."""
-    assert "ADMIN_BLUE_RAIL" in PORTAL_THEME_CSS or "--portal-admin-blue-rail" in PORTAL_THEME_CSS, (
-        "Admin blue rail contract marker must be present"
-    )
+    """Admin UI must have a clearly teal sidebar rail and actions."""
+    assert (
+        "--portal-admin-teal-rail" in PORTAL_THEME_CSS
+        or "--portal-canonical-teal" in PORTAL_THEME_CSS
+    ), "Admin teal rail contract marker must be present"
 
 
 def test_zero_initial_paint_or_theme_flash_black() -> None:

@@ -75,22 +75,23 @@ def _get_admin_nav_groups_and_modules():
 class TestP0WebappV200IaNavigationStreamline:
     """Rigorous empirical validation of V2 Information Architecture truth."""
 
-    def test_01_customer_primary_navigation_exact_15_links_and_4_groups(self):
-        """Customer primary navigation must expose exactly 15 core links under 4 groups."""
+    def test_01_customer_primary_navigation_exact_17_links_and_5_groups(self):
+        """Customer primary navigation must expose exactly 17 core links under 5 canonical groups."""
         groups = _extract_customer_nav_groups()
-        assert len(groups) == 4, f"CUSTOMER_NAV_GROUP_COUNT must be 4, got {len(groups)}"
+        assert len(groups) == 5, f"CUSTOMER_NAV_GROUP_COUNT must be 5, got {len(groups)}"
 
         perm_links = _extract_customer_nav_permanent_links()
-        assert len(perm_links) == 15, f"CUSTOMER_PRIMARY_NAV_COUNT must be 15, got {len(perm_links)}"
+        assert len(perm_links) == 17, f"CUSTOMER_PRIMARY_NAV_COUNT must be 17, got {len(perm_links)}"
 
         routes = [link[0] for link in perm_links]
         assert len(routes) == len(set(routes)), f"DUPLICATE_PRIMARY_NAV_ROUTE detected: {routes}"
 
         expected_structure = [
-            ("Trung tâm làm việc", ["/dashboard", "/projects", "/calendar"]),
-            ("Xưởng sáng tạo AI", ["/features", "/video-studio", "/image-studio", "/content-studio", "/voice-studio"]),
-            ("Quản lý đầu ra", ["/jobs", "/assets"]),
-            ("Tài chính & tài khoản", ["/wallet/topup", "/wallet", "/pricing", "/account", "/support"]),
+            ("Tổng quan", ["/dashboard"]),
+            ("Sáng tạo", ["/studio", "/tools/image", "/voice", "/music", "/subdub", "/content", "/documents"]),
+            ("Công việc", ["/projects", "/publishing", "/jobs"]),
+            ("Tài khoản", ["/wallet", "/packages", "/history", "/account"]),
+            ("Tất cả công cụ", ["/features", "/tools/free"]),
         ]
 
         for i, (expected_title, expected_routes) in enumerate(expected_structure):
@@ -110,7 +111,6 @@ class TestP0WebappV200IaNavigationStreamline:
             "/asset-vault",
             "/approvals",
             "/membership",
-            "/packages",
             "/tickets",
         ]
         primary_routes = {link[0] for link in _extract_customer_nav_permanent_links()}
@@ -140,18 +140,18 @@ class TestP0WebappV200IaNavigationStreamline:
         for route in dock_routes:
             assert route in primary_routes, f"Mobile dock route {route} not in desktop primary nav"
 
-    def test_05_admin_primary_navigation_exact_24_modules_and_6_pillars(self):
-        """Admin primary navigation must be organized into exactly 24 primary modules across 6 pillars."""
+    def test_05_admin_primary_navigation_exact_25_modules_and_6_pillars(self):
+        """Admin primary navigation must be organized into exactly 25 primary modules across 6 pillars."""
         groups, modules = _get_admin_nav_groups_and_modules()
         assert len(groups) == 6, f"ADMIN_NAV_GROUP_COUNT must be 6, got {len(groups)}"
-        assert len(modules) == 24, f"ADMIN_PRIMARY_MODULE_COUNT must be 24, got {len(modules)}"
+        assert len(modules) == 25, f"ADMIN_PRIMARY_MODULE_COUNT must be 25, got {len(modules)}"
 
         routes = [m[2] for m in modules]
         assert len(routes) == len(set(routes)), f"DUPLICATE_PRIMARY_NAV_ROUTE in admin: {routes}"
 
         expected_pillars = [
             ("command_center", "Trung tâm điều hành", ["/admin", "/admin/operations", "/admin/work-queue", "/admin/reports"]),
-            ("commerce_finance", "Tài chính & Doanh thu", ["/admin/topups", "/admin/wallet", "/admin/revenue", "/admin/refunds", "/admin/pricing"]),
+            ("commerce_finance", "Tài chính & Doanh thu", ["/admin/commercial", "/admin/topups", "/admin/wallet", "/admin/revenue", "/admin/refunds", "/admin/pricing"]),
             ("customer_growth", "Khách hàng & Bán hàng", ["/admin/customers", "/admin/users", "/admin/crm/leads", "/admin/support"]),
             ("jobs_delivery", "Hàng đợi & Xử lý sản phẩm", ["/admin/jobs", "/admin/jobs/failed", "/admin/features"]),
             ("infrastructure_providers", "Hạ tầng & Nhà cung cấp", ["/admin/providers", "/admin/workers", "/admin/system", "/admin/runtime"]),
@@ -191,12 +191,12 @@ class TestP0WebappV200IaNavigationStreamline:
         leaks = [route for route, title in customer_links if route.startswith("/admin")]
         assert leaks == [], f"CUSTOMER_ADMIN_ROUTE_LEAK detected: {leaks}"
 
-    def test_08_blue_visual_system_protection(self):
-        """Web12 blue visual system variables must remain protected."""
+    def test_08_canonical_light_teal_visual_system_protection(self):
+        """V3 canonical light teal visual system variables must remain protected."""
         css_file = ROOT / "static" / "portal" / "portal-theme.css"
         css_text = css_file.read_text(encoding="utf-8")
-        assert "#0b2545" in css_text or "#1d4ed8" in css_text, "Blue visual system color missing"
+        assert "#f3fbfc" in css_text or "#0d9488" in css_text, "Canonical light teal color missing"
         html_file = ROOT / "templates" / "portal_shell.html"
         html_text = html_file.read_text(encoding="utf-8")
-        assert "#0b2545" in html_text, "Dark theme blue color missing from shell"
-        assert "#f0f9ff" in html_text, "Light theme blue tint missing from shell"
+        assert "#062026" in html_text, "Dark theme teal dark color missing from shell"
+        assert "#0d9488" in html_text, "Light theme teal color missing from shell"

@@ -51,6 +51,8 @@ STANDARD_WEB_AUDIT_EXCLUDED_RELATIVE_DIRS = (
     # Its static parser helpers, provider terms and SQL examples must not
     # inflate a Web App runtime inventory or its source fingerprint.
     Path("scripts") / "migration",
+    Path("scripts") / "ci",
+    Path("reports") / "browser_evidence",
 )
 EXCLUDED_DIRS = {
     ".git",

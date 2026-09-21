@@ -52,7 +52,7 @@ def test_workspace_menu_is_an_explicit_signed_navigation_directory() -> None:
         "function matchesRouteFamily(path, root)",
     )
     permanent_projection = navigation[
-        navigation.index("const groups = ["):navigation.index("const videoStudioNavGroups = [")
+        navigation.index("const groups = ["):navigation.index("const currentGroup = currentCustomerWorkflowGroup")
     ]
     palette = _between(
         PORTAL,

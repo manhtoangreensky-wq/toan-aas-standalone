@@ -327,23 +327,20 @@ def test_sidebar_marks_only_the_direct_account_or_voice_destination_current() ->
 
 def test_mobile_video_studio_highlights_ai_studio_instead_of_dashboard() -> None:
     groups = _section("const CUSTOMER_MOBILE_NAV_GROUPS", "function isMobileNavCurrent(key, page)")
-    dashboard = groups[groups.index("dashboard:"):groups.index("studio:")]
-    studio = groups[groups.index("studio:"):groups.index("jobs:")]
-
-    assert '"/video-studio"' not in dashboard
+    studio = groups[groups.index("studio:"):groups.index("publishing:")]
     assert '"/video-studio"' in studio
 
 
 def test_mobile_memory_center_and_reminders_stay_in_the_workspace_navigation() -> None:
     groups = _section("const CUSTOMER_MOBILE_NAV_GROUPS", "function isMobileNavCurrent(key, page)")
-    jobs = groups[groups.index("jobs:"):groups.index("assets:")]
+    projects = groups[groups.index("projects:"):groups.index("wallet:")]
     account = groups[groups.index("account:"):]
 
     # Memory is an authoring/work-management surface in the desktop
     # Workspace grouping. Mobile must not misleadingly promote it as a
     # profile/account page merely because a customer owns the records.
-    assert '"/notes", "/reminders"' in jobs
-    assert '"/notes", "/reminders"' not in account
+    assert '"/prompt-library"' in projects
+    assert '"/prompt-library"' not in account
 
 
 def test_sidebar_uses_progressive_disclosure_without_hiding_the_active_workflow() -> None:
@@ -351,22 +348,9 @@ def test_sidebar_uses_progressive_disclosure_without_hiding_the_active_workflow(
     sidebar = _section("function renderSidebar(page, context)", "function renderHeader(page, context)")
     css = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 
-    # The permanent default is intentionally small. Video is the one deep
-    # workspace that retains its established contextual disclosure tree; the
-    # general customer catalogue stays in `/features` and the command palette.
-    assert ('label: "Workspace", defaultOpen: true' in navigation or 'label: "Trung tâm làm việc", defaultOpen: true' in navigation)
-    for group in (
-        "Video Studio",
-        "Video Studio · Ý tưởng & kịch bản",
-        "Video Studio · Phim & storyboard",
-        "Video Studio · Tư liệu & chuyển động",
-    ):
-        assert f'label: "{group}"' in navigation
-    assert 'label: "Nội dung & kế hoạch"' not in navigation
-    assert 'label: "AI Labs & Media"' not in navigation
-    assert "const videoStudioNavGroups = [" in navigation
-    assert "groups.splice(3, 0, ...videoStudioNavGroups);" in navigation
-    assert 'if (matchesRouteFamily(currentRoute, "/video-studio")) {' in navigation
+    # The permanent default is intentionally small.
+    assert 'label: "Sáng tạo", defaultOpen: true' in navigation
+    assert "videoStudioNavGroups" not in navigation
     assert "if (isAdminPortalSurface(currentPage)) return adminDesktopNavGroups(context, currentPage);" in navigation
     assert '<details class="portal-nav-group${group.current === true ? " portal-nav-group--current" : ""}"${open ? " open" : ""}>' in sidebar
     assert 'const open = group.defaultOpen === true || preparedLinks.some((link) => link.current);' in sidebar
@@ -385,20 +369,16 @@ def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discove
     # a second full catalogue.  All customer destinations remain available
     # through the feature catalogue and command palette below.
     permanent_projection = navigation[
-        navigation.index("const groups = ["):navigation.index("const videoStudioNavGroups = [")
+        navigation.index("const groups = [") : navigation.index(
+            "const currentGroup = currentCustomerWorkflowGroup"
+        )
     ]
-    compact_groups = {
-        "Workspace": ["/dashboard", "/projects", "/workboard", "/campaigns", "/calendar"],
-        "Tạo mới": ["/features", "/chat", "/content-studio", "/image-studio"],
-        "Công việc": ["/workspace", "/jobs", "/assets", "/asset-vault", "/approvals"],
-        "Ví & gói": ["/wallet", "/wallet/topup", "/membership", "/packages", "/pricing"],
-        "Tài khoản & hỗ trợ": ["/account", "/tickets", "/support"],
-    }
-    v2_groups = {
-        "Trung tâm làm việc": ["/dashboard", "/projects", "/calendar"],
-        "Xưởng sáng tạo AI": ["/features", "/video-studio", "/image-studio", "/content-studio", "/voice-studio"],
-        "Quản lý đầu ra": ["/jobs", "/assets"],
-        "Tài chính & tài khoản": ["/wallet/topup", "/wallet", "/pricing", "/account", "/support"],
+    v3_groups = {
+        "Tổng quan": ["/dashboard"],
+        "Sáng tạo": ["/studio", "/tools/image", "/voice", "/music", "/subdub", "/content", "/documents"],
+        "Công việc": ["/projects", "/publishing", "/jobs"],
+        "Tài khoản": ["/wallet", "/packages", "/history", "/account"],
+        "Tất cả công cụ": ["/features", "/tools/free"],
     }
     group_pattern = re.compile(
         r'label:\s*"(?P<label>[^"]+)"(?P<body>.*?)(?=\s*\]\s*\},?\s*\n\s*\{|\s*\]\s*\}\s*\n\s*\];)',
@@ -411,10 +391,10 @@ def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discove
         )
         for match in group_pattern.finditer(permanent_projection)
     ]
-    assert permanent_groups in (list(compact_groups.items()), list(v2_groups.items()))
+    assert permanent_groups == list(v3_groups.items())
 
     permanent_routes = [path for _, paths in permanent_groups for path in paths]
-    assert len(permanent_routes) in (15, 22)
+    assert len(permanent_routes) == 17
     assert len(permanent_routes) == len(set(permanent_routes))
     # Dense and Bot-companion routes remain discoverable through the manifest
     # and palette, but do not get a permanent signed-customer rail position.
@@ -436,26 +416,7 @@ def test_customer_sidebar_uses_five_compact_groups_and_keeps_deep_routes_discove
     assert "Object.values(manifest)" in palette
     assert "const authorizedAdminRoutes = adminErpNavigation(context).routes;" in palette
     assert 'candidate.access === "admin" && !authorizedAdminRoutes.has(path)' in palette
-
-    # Video keeps its existing planner tree, but only on a Video Studio route.
-    video_guard = 'if (matchesRouteFamily(currentRoute, "/video-studio")) {'
-    video_insertion = "groups.splice(3, 0, ...videoStudioNavGroups);"
-    assert "const videoStudioNavGroups = [" in navigation
-    assert video_guard in navigation
-    assert video_insertion in navigation
-    guard_open = navigation.index("{", navigation.index(video_guard))
-    guard_depth = 0
-    guard_close = None
-    for position, character in enumerate(navigation[guard_open:], start=guard_open):
-        if character == "{":
-            guard_depth += 1
-        elif character == "}":
-            guard_depth -= 1
-            if guard_depth == 0:
-                guard_close = position
-                break
-    assert guard_close is not None
-    assert video_insertion in navigation[guard_open + 1:guard_close]
+    assert "videoStudioNavGroups" not in navigation
 
     # Deep routes retain a single, presentation-only orientation cue rather
     # than expanding the full customer catalogue again.

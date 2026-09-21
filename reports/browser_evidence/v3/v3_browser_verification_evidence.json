@@ -1,0 +1,196 @@
+{
+  "head_sha": "265300d04fc31e0c53d023800ba0d2ffa4a64286",
+  "task": "P0.WEBAPP.V3.WALLET.TOPUP.QR.DEFAULT.LARGE.NO.ZOOM.R1",
+  "timestamp": "2026-09-20T17:47:36Z",
+  "captures": [
+    {
+      "route": "/dashboard",
+      "route_slug": "dashboard",
+      "viewport": "1440x900",
+      "viewport_name": "desktop",
+      "screenshot_file": "v3_dashboard_desktop.png",
+      "sha256": "423190c5ed892a2e86fa54d8a26f17698728b88e2704716464964372517d1bcc",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/dashboard",
+      "route_slug": "dashboard",
+      "viewport": "1024x768",
+      "viewport_name": "tablet",
+      "screenshot_file": "v3_dashboard_tablet.png",
+      "sha256": "aca07feb37e6e358d93de3c257d512a5956d93276bac9a9d275ef5df255dade0",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/dashboard",
+      "route_slug": "dashboard",
+      "viewport": "390x844",
+      "viewport_name": "mobile",
+      "screenshot_file": "v3_dashboard_mobile.png",
+      "sha256": "bc05e8e3bcc6843fd00fac5a210923f7482f347c162e512e4794af54a81c00d5",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/features",
+      "route_slug": "features",
+      "viewport": "1440x900",
+      "viewport_name": "desktop",
+      "screenshot_file": "v3_features_desktop.png",
+      "sha256": "486fe756da4317ae14dd1bb03e525764e16d0ed6acad9558805f7527ec57a11c",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/features",
+      "route_slug": "features",
+      "viewport": "1024x768",
+      "viewport_name": "tablet",
+      "screenshot_file": "v3_features_tablet.png",
+      "sha256": "da5501e30de4906b8e1e304a6e333ea8f9e2e0f01d38eb05862929bec94adb24",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/features",
+      "route_slug": "features",
+      "viewport": "390x844",
+      "viewport_name": "mobile",
+      "screenshot_file": "v3_features_mobile.png",
+      "sha256": "936642d0852b0f66f6d6472055e56ff6c470fc5b3c36bf93786e3d20265ae78c",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/wallet/topup",
+      "route_slug": "wallet_topup",
+      "viewport": "1440x900",
+      "viewport_name": "desktop",
+      "screenshot_file": "v3_wallet_topup_desktop.png",
+      "sha256": "adb571a086b9126572e5007df30b45cb33f902bfaa3fe27a9db3147aabd40ecb",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/wallet/topup",
+      "route_slug": "wallet_topup",
+      "viewport": "1024x768",
+      "viewport_name": "tablet",
+      "screenshot_file": "v3_wallet_topup_tablet.png",
+      "sha256": "cdf5611364658449a91525550bb9b4b33b2c74f4594ef0cafa3adf8c5b94d689",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/wallet/topup",
+      "route_slug": "wallet_topup",
+      "viewport": "390x844",
+      "viewport_name": "mobile",
+      "screenshot_file": "v3_wallet_topup_mobile.png",
+      "sha256": "40421c59ed86a4a8e6b8e7e17ad4ee7a4e4a0b8e37ece3ae87ad74c6eb72eee2",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/admin",
+      "route_slug": "admin",
+      "viewport": "1440x900",
+      "viewport_name": "desktop",
+      "screenshot_file": "v3_admin_desktop.png",
+      "sha256": "3cc2c230b3b62cdbac1fc9f25ac81c10c08e44afd4dd1d6f6d0c31fc0be78035",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/admin",
+      "route_slug": "admin",
+      "viewport": "1024x768",
+      "viewport_name": "tablet",
+      "screenshot_file": "v3_admin_tablet.png",
+      "sha256": "a44674653181b64669f6d8d6601eeafee69f08cecb5b0a98830eabd6587ba767",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/admin",
+      "route_slug": "admin",
+      "viewport": "390x844",
+      "viewport_name": "mobile",
+      "screenshot_file": "v3_admin_mobile.png",
+      "sha256": "a70d105ec31625eb4fa552b4786f3e84f5b763521d7f39570ee09679181e46c7",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/admin/commercial",
+      "route_slug": "admin_commercial",
+      "viewport": "1440x900",
+      "viewport_name": "desktop",
+      "screenshot_file": "v3_admin_commercial_desktop.png",
+      "sha256": "6d3d4676423b8af30553630838ca0c711dad7b505b8e8e36b05563fe81316e82",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/admin/commercial",
+      "route_slug": "admin_commercial",
+      "viewport": "1024x768",
+      "viewport_name": "tablet",
+      "screenshot_file": "v3_admin_commercial_tablet.png",
+      "sha256": "e00697e8fdd1e5f471113b14589885252d35dbdbca9c601c7a84fa330a927710",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    },
+    {
+      "route": "/admin/commercial",
+      "route_slug": "admin_commercial",
+      "viewport": "390x844",
+      "viewport_name": "mobile",
+      "screenshot_file": "v3_admin_commercial_mobile.png",
+      "sha256": "a76d874ab6bc3b1d0aaaa0fe9a52245a2d0004a46ae3df83892d4a055e827910",
+      "horizontal_overflow": false,
+      "console_errors": [],
+      "passed": true
+    }
+  ],
+  "qr_checks": {
+    "desktop_qr_width": 380,
+    "desktop_qr_height": 380,
+    "mobile_qr_width": 348,
+    "mobile_qr_height": 348,
+    "desktop_width_pass": true,
+    "mobile_width_pass": true,
+    "mobile_horizontal_overflow": false,
+    "mobile_horizontal_overflow_pass": true,
+    "modal_absent_pass": true,
+    "action_absent_pass": true,
+    "no_lightbox_fn_pass": true,
+    "cursor_not_zoom_pass": true,
+    "desktop_screenshot": "wallet_topup_qr_default_desktop.png",
+    "mobile_screenshot": "wallet_topup_qr_default_mobile.png",
+    "desktop_sha256": "da8913cc22e722e197b649f861720f2ad79a18c4fb4d33562eebe64977f20a18",
+    "mobile_sha256": "1622869c4f5bf5f5e3c29b2d60ae34813ce7b6b0f2aaa88218a6531c23871036"
+  },
+  "summary": {
+    "total_captures": 15,
+    "passed_captures": 15,
+    "console_errors_count": 0,
+    "horizontal_overflow_count": 0
+  }
+}

@@ -123,7 +123,27 @@ jobs:
             tests/test_motion_webapp_surfaces_live_reopen_contracts.py \
             tests/test_p0_05d_tester_workspace.py \
             tests/test_copyfast_bridge_loopback_base_url.py \
-            tests/test_p0_webapp_spec02_customer_wallet_truth.py
+            tests/test_p0_webapp_spec02_customer_wallet_truth.py \
+            tests/test_p0_media_operational_hubs_contracts.py
+
+      - name: Run browser verification gate and capture evidence
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python scripts/ci/run_browser_verification.py --output-dir reports/browser_evidence --head-sha "$HEAD_SHA"
+
+      - name: Run browser runtime gate assertions
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python -m pytest -q tests/test_browser_runtime_gate.py
+
+      - name: Upload browser verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp-browser-evidence-${{ github.event.pull_request.head.sha || github.sha }}
+          path: reports/browser_evidence/
+          if-no-files-found: error
 
       - name: Check diff whitespace
         run: git diff --check HEAD^ HEAD

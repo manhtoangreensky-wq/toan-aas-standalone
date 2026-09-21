@@ -1176,6 +1176,13 @@
       "Bộ công cụ hoạt động client-side hoàn toàn miễn phí, không tiêu hao Xu.",
       "Xử lý siêu tốc: Làm sạch timestamp phụ đề SRT/VTT, trích xuất thumbnail/tags video, format JSON, tạo mã QR ngân hàng."
     ]
+  }, ["/tools/free"]);
+  customerPage("/publishing", "AutoPost Hub", "Đóng gói copy, rà soát lịch trình và chuẩn bị phân phối đa kênh an toàn.", ICONS.reports, {
+    layout: "publish-review-pack", type: "publish-review-pack", fields: [], action: "none", status: "ready",
+    notes: [
+      "AutoPost Hub đóng gói nội dung và lịch trình để rà soát trước khi xuất bản.",
+      "Không tự động gọi provider hoặc API mạng xã hội khi chưa có cấu hình."
+    ]
   });
   customerPage("/media-workspace", "Audio Library & Briefing", "Tổ chức Audio Asset Vault và music/SFX brief riêng tư với version history, không chạy provider hoặc tạo audio giả.", ICONS.music, {
     layout: "media-workspace", type: "media-workspace", fields: [], action: "none", status: "guarded",
@@ -1233,7 +1240,7 @@
   customerPage("/content-studio", "Creative Content Studio", "Workspace chuyên nghiệp để tổ chức brief, caption, hook, script, storyboard và content pack với version history riêng tư.", ICONS.prompt, {
     layout: "content-studio", type: "content-studio", fields: [], action: "none", status: "ready",
     notes: ["Content Studio là authoring workspace Web-native. Nó không gọi Bot, provider, ví Xu, PayOS, job, publish hoặc delivery.", "Composer chỉ tạo ba khung nháp cục bộ có nhãn rõ ràng để biên tập; không tự nhận là AI output hoặc nội dung đã được duyệt."]
-  });
+  }, ["/content"]);
   customerPage("/content-studio/new", "Content Brief mới", "Tạo brief có cấu trúc và liên kết Project, Campaign, Prompt Library hoặc Audio Library riêng tư.", ICONS.prompt, {
     layout: "content-studio", type: "content-studio", fields: [], action: "none", status: "ready",
     notes: ["Không truyền brief, ID hoặc text riêng tư qua query string. Chỉ loại nội dung allowlist mới được dùng từ liên kết nội bộ.", "Mọi write cần signed session, CSRF, optimistic revision, idempotency và owner check trên server."]
@@ -1720,7 +1727,14 @@
   contentPromptPackShortcutPage("/content/storyboard", "Storyboard", "Lập storyboard text và hướng visual để review trước khi tạo media.", ICONS.prompt, "image_video_prompt", ["/storyboard"]);
   contentPromptPackShortcutPage("/content/pack", "Content Pack", "Gom một chủ đề thành các góc nội dung và hook để tiếp tục biên tập.", ICONS.prompt, "content_ideas", ["/content-pack"]);
 
-  featurePage("/image/create", "Tạo ảnh", "Chuẩn bị yêu cầu tạo ảnh và đợi Core Bridge ước tính trước khi xác nhận.", ICONS.image, FIELD_SETS.imageCreate, ["/image"]);
+  featurePage("/image/create", "Tạo ảnh", "Chuẩn bị yêu cầu tạo ảnh và đợi Core Bridge ước tính trước khi xác nhận.", ICONS.image, FIELD_SETS.imageCreate, ["/image/new"]);
+  customerPage("/tools/image", "Image Operations Hub", "Bộ công cụ toàn diện xử lý và sáng tạo ảnh AI: Tạo ảnh, Chỉnh sửa, Tách nền, Resize và Đóng dấu thương hiệu.", ICONS.image, {
+    layout: "image-operations-hub", type: "image-operations-hub", fields: [], action: "none", status: "ready",
+    notes: [
+      "Image Operations Hub tập hợp đầy đủ các công cụ ảnh AI: Tạo ảnh nghệ thuật, Biến đổi ảnh, Nâng cấp chất lượng, Tách nền và OCR văn bản.",
+      "Tất cả công cụ hoạt động trong môi trường bảo mật, kiểm tra ownership Asset Vault và minh bạch chi phí."
+    ]
+  }, ["/image"]);
   customerPage("/image/edit", "Image Enhance Studio", "Chỉnh màu và làm nét cơ bản deterministic từ Asset Vault; không phải AI edit, Bot job hay provider call.", ICONS.image, {
     // Native private data must hydrate before the page may advertise readiness.
     layout: "image-enhance", type: "image-operation", action: "none", status: "guarded", fields: [],
@@ -1779,7 +1793,14 @@
     ]
   }, ["/image/assets"]);
 
-  featurePage("/video/create", "Video nhanh", "Chuẩn bị brief video, sau đó ước tính và xác nhận với Core Bridge.", ICONS.video, FIELD_SETS.videoContextual, ["/video"]);
+  featurePage("/video/create", "Video nhanh", "Chuẩn bị brief video, sau đó ước tính và xác nhận với Core Bridge.", ICONS.video, FIELD_SETS.videoContextual, ["/video/new"]);
+  customerPage("/tools/video", "Video Operations Hub", "Bảng điều phối toàn diện cho các tác vụ sản xuất, chỉnh sửa, ghép nối và xử lý video AI.", ICONS.video, {
+    layout: "video-operations-hub", type: "video-operations-hub", fields: [], action: "none", status: "ready",
+    notes: [
+      "Video Operations Hub kết nối trực tiếp đến các workflow sản xuất video: Text-to-Video, Image-to-Video, Video thương mại, Multiscene và Mux audio/video.",
+      "Tất cả tác vụ đều qua quy trình canonical: kiểm tra số dư Xu, ước tính chi phí, tạo job và theo dõi tiến độ thực thi."
+    ]
+  }, ["/video"]);
   featurePage("/video/long", "Video dài", "Chuẩn bị dự án video dài; tiến độ và output chỉ đến từ job canonical.", ICONS.video, FIELD_SETS.videoStoryboard);
   featurePage("/video/product", "Video sản phẩm", "Chuẩn bị brief video sản phẩm, cảnh và CTA theo flow draft → estimate → confirm.", ICONS.video, FIELD_SETS.videoContextual);
   featurePage("/video/text-to-video", "Text-to-Video", "Chuẩn bị yêu cầu text-to-video mà không gọi provider từ trình duyệt.", ICONS.video, FIELD_SETS.videoContextual);
@@ -1804,7 +1825,13 @@
     "Không có file nào được ghép, charge Xu hoặc báo hoàn tất chỉ từ browser."
   ]);
 
-  readOnlyPage("/voice", "Voice Vault", "Danh mục giọng nói thuộc tài khoản, không hiển thị nếu bridge chưa xác minh phiên.", ICONS.voice, "voices", ["/voice-vault"]);
+  customerPage("/voice", "Voice Operations Hub", "Hệ thống tổng hợp giọng nói AI, Voice Vault và Text-to-Speech đa ngôn ngữ.", ICONS.voice, {
+    layout: "voice-operations-hub", type: "voice-operations-hub", fields: [], action: "none", status: "ready",
+    notes: [
+      "Voice Operations Hub điều phối các tác vụ Text-to-Speech (TTS), chọn giọng từ Voice Vault, Clone giọng nói và quản lý bản thu.",
+      "Chỉ các giọng nói đã qua xác thực bản quyền và thuộc tài khoản của bạn mới được sử dụng trong các workflow."
+    ]
+  }, ["/voice/hub", "/voice-vault"]);
   featurePage("/voice/tts", "Text-to-Speech", "Chuẩn bị lời thoại và lựa chọn giọng trong flow có estimate rõ ràng.", ICONS.voice, FIELD_SETS.voice, ["/tts", "/voice/create"], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   featurePage("/voice/saved", "Giọng đã lưu", "Chọn một giọng từ Voice Vault thuộc sở hữu bạn; Core Bridge kiểm tra lại trạng thái trước khi estimate/confirm.", ICONS.voice, FIELD_SETS.voiceSaved, ["/voice/vault"], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   featurePage("/voice/clone", "Voice Clone", "Tính năng clone chỉ khả dụng nếu engine, mẫu audio và quyền sử dụng đã được bridge cho phép.", ICONS.voice, FIELD_SETS.voiceClone);
@@ -1814,7 +1841,13 @@
     "Không có preview, URL hay output thay thế nào được hiển thị trước một delivery contract đã ký."
   ]);
 
-  featurePage("/music", "Music Studio", "Không gian chuẩn bị nhạc AI/SFX với prompt, policy và báo giá do bot canonical kiểm soát.", ICONS.music, FIELD_SETS.music);
+  customerPage("/music", "Music Operations Hub", "Không gian sáng tạo âm nhạc AI, sáng tác ca khúc, nhạc nền và thư viện hiệu ứng âm thanh (SFX).", ICONS.music, {
+    layout: "music-operations-hub", type: "music-operations-hub", fields: [], action: "none", status: "ready",
+    notes: [
+      "Music Operations Hub kết nối các workflow sinh nhạc nền, tạo bài hát, trích xuất SFX và quản lý bộ sưu tập âm thanh cá nhân.",
+      "Không gian kiểm soát chặt chẽ bản quyền và chất lượng âm thanh trước khi hoàn tất tệp."
+    ]
+  }, ["/music/hub"]);
   // These libraries intentionally use the owner-scoped Media Workspace
   // projection rather than the old generic `/assets`/Bridge list. They are
   // metadata-only: no player, download, provider catalog or Bot hand-off is
@@ -1898,6 +1931,14 @@
     "Web không ghép audio/video cục bộ và không nhận URL hoặc path do browser đưa vào.",
     "Khi Bot công bố adapter mux canonical, route này sẽ dùng chính job và asset ownership hiện có."
   ]);
+
+  customerPage("/subdub", "Sub & Dub Operations Hub", "Trung tâm phụ đề tự động (ASR), dịch phụ đề đa ngôn ngữ và lồng tiếng video AI (Dubbing).", ICONS.prompt, {
+    layout: "subdub-operations-hub", type: "subdub-operations-hub", fields: [], action: "none", status: "ready",
+    notes: [
+      "Sub & Dub Operations Hub cung cấp trọn bộ công cụ ngôn ngữ: Nhận diện giọng nói ASR, sinh phụ đề SRT/VTT, dịch thuật và lồng tiếng video.",
+      "Dữ liệu media được xử lý an toàn theo luồng canonical với độ chính xác cao."
+    ]
+  }, ["/subdub/hub", "/subtitle/hub"]);
 
   customerPage("/documents", "Document Studio", "Không gian xử lý PDF riêng tư: chọn workflow có contract rõ ràng thay vì một form generic hoặc output mô phỏng.", ICONS.document, {
     layout: "document-hub", type: "document-hub", action: "none", status: "ready", fields: [],
@@ -2003,6 +2044,7 @@
   adminPage("/admin/workers", "Workers", "Sức khỏe worker và queue chỉ đọc qua bridge có kiểm soát.", ICONS.system);
   adminPage("/admin/features", "Feature readiness", "Kiểm tra trạng thái, guarded mode và maintenance của từng feature.", ICONS.system);
   adminPage("/admin/freezes", "Bảo trì & freeze", "Theo dõi maintenance/freeze canonical; thao tác thay đổi vẫn chờ adapter write có audit.", ICONS.system);
+  adminPage("/admin/commercial", "Trung tâm Thương mại", "Quản lý tập trung 5 trụ cột thương mại: Sản phẩm, Bảng giá, Gói cước, Khuyến mãi và Gói nạp Xu theo thẩm quyền Bot canonical.", ICONS.pricing, { layout: "admin-commercial" });
   adminPage("/admin/pricing", "Giá & Xu", "Admin Dynamic Pricing Engine: quản lý catalog giá xuất bản và thay đổi dự thảo có kiểm soát.", ICONS.pricing, { layout: "admin-pricing" });
   adminPage("/admin/packages", "Packages & Bảng giá", "Quản lý packages và danh mục SKU tích hợp trong Dynamic Pricing Engine.", ICONS.pricing, { layout: "admin-pricing" });
   adminPage("/admin/promos", "Khuyến mãi", "Quản lý promo phải có permission, confirmation và audit event.", ICONS.pricing);
@@ -9563,6 +9605,17 @@
     "Access Posture": "adminGeneric.securityAccess.route.accessTitle",
     "Bot companion": "shellNav.botCompanion",
     "Video Studio": "shellNav.videoStudio",
+    "Sáng tạo": "shellNav.creation",
+    "Phân phối": "shellNav.distribution",
+    "Tài khoản & Hệ thống": "shellNav.accountSystem",
+    "Video Edit": "shellNav.videoEdit",
+    "Image Suite": "shellNav.imageSuite",
+    "AI Voice": "shellNav.aiVoice",
+    "AI Music": "shellNav.aiMusic",
+    "AI SubDub": "shellNav.aiSubDub",
+    "AutoPost Hub": "shellNav.autoPostHub",
+    "Dự án & Lịch sử": "shellNav.projectsHistory",
+    "Công cụ miễn phí": "shellNav.freeTools",
     "Video Studio · Ý tưởng & kịch bản": "shellNav.videoIdeasScripts",
     "Video Studio · Phim & storyboard": "shellNav.videoFilmStoryboard",
     "Video Studio · Tư liệu & chuyển động": "shellNav.videoReferenceMotion",
@@ -9580,6 +9633,20 @@
     "Contextual Ad Prompt": "shellNav.contextualAdPrompt",
     "Trend Research": "shellNav.trendResearch",
     "Media Factory": "shellNav.mediaFactory",
+    "Cài đặt tài khoản": "nav.account",
+    "Công cụ Miễn phí": "shellNav.freeTools",
+    "Dự án": "nav.projects",
+    "Gói cước & Đăng ký": "shellNav.billing",
+    "Lịch sử giao dịch": "customerTopup.tab.history",
+    "Tiến trình Jobs": "nav.jobs",
+    "Tài liệu": "nav.documents",
+    "Tạo Giọng AI": "shellNav.aiVoice",
+    "Tạo Nhạc AI": "shellNav.aiMusic",
+    "Tạo Nội dung": "nav.contentPlanning",
+    "Tạo Video AI": "shellNav.videoStudio",
+    "Tạo Ảnh AI": "shellNav.imageSuite",
+    "Ví Xu & Nạp tiền": "nav.wallet",
+    "Xuất bản & Lịch đăng": "shellNav.distribution",
     "Creative Flow": "shellNav.creativeFlow",
     "Nguồn & quyền": "shellNav.sourceRights",
     "Analytics Workspace": "shellNav.analyticsWorkspace",
@@ -10099,92 +10166,52 @@
     const currentRoute = normalizePath(currentPage && (currentPage.routePath || currentPage.path));
     const groups = [
       {
-        label: "Trung tâm làm việc", defaultOpen: true,
+        label: "Tổng quan", defaultOpen: true,
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/calendar", "Lịch nội dung", ICONS.system]
+          ["/dashboard", "Tổng quan", ICONS.dashboard]
         ]
       },
       {
-        label: "Xưởng sáng tạo AI",
+        label: "Sáng tạo", defaultOpen: true,
         links: [
-          ["/features", "Tất cả công cụ", ICONS.prompt], ["/video-studio", "Xưởng Video", ICONS.video], ["/image-studio", "Image Studio", ICONS.image], ["/content-studio", "Content Studio", ICONS.prompt], ["/voice-studio", "Voice Studio", ICONS.voice]
+          ["/studio", "Tạo Video AI", ICONS.video],
+          ["/tools/image", "Tạo Ảnh AI", ICONS.image],
+          ["/voice", "Tạo Giọng AI", ICONS.voice],
+          ["/music", "Tạo Nhạc AI", ICONS.music],
+          ["/subdub", "AI SubDub", ICONS.subtitle],
+          ["/content", "Tạo Nội dung", ICONS.prompt],
+          ["/documents", "Tài liệu", ICONS.document]
         ]
       },
       {
-        label: "Quản lý đầu ra",
+        label: "Công việc", defaultOpen: true,
         links: [
-          ["/jobs", "Job Center", ICONS.jobs], ["/assets", "Tài sản", ICONS.assets]
+          ["/projects", "Dự án", ICONS.dashboard],
+          ["/publishing", "Xuất bản & Lịch đăng", ICONS.jobs],
+          ["/jobs", "Tiến trình Jobs", ICONS.jobs]
         ]
       },
       {
-        label: "Tài chính & tài khoản",
+        label: "Tài khoản", defaultOpen: true,
         links: [
-          ["/wallet/topup", "Nạp Xu", ICONS.payments], ["/wallet", "Ví Xu", ICONS.wallet], ["/pricing", "Bảng giá", ICONS.pricing], ["/account", "Tài khoản", ICONS.account], ["/support", "Hỗ trợ", ICONS.support]
+          ["/wallet", "Ví Xu & Nạp tiền", ICONS.wallet],
+          ["/packages", "Gói cước & Đăng ký", ICONS.pricing],
+          ["/history", "Lịch sử giao dịch", ICONS.jobs],
+          ["/account", "Cài đặt tài khoản", ICONS.account]
+        ]
+      },
+      {
+        label: "Tất cả công cụ", defaultOpen: true,
+        links: [
+          ["/features", "Tất cả công cụ", ICONS.prompt],
+          ["/tools/free", "Công cụ Miễn phí", ICONS.prompt]
         ]
       }
     ];
-    // P0.WEBAPP.WEB14 Information Architecture De-bloat Truth:
-    // Admin ERP navigation is strictly isolated from customer workspace navigation.
-    // When on customer portal, the navigation rail remains 100% customer-facing.
-    // Admin users switch to Admin ERP via the header account profile dropdown
-    // (customerUserDropdown) which is guarded by hasLiveCanonicalAdmin / role.
-    // This guarantees CUSTOMER_TO_ADMIN_ROUTE_LEAK = 0 across all customer views.
-    // Preserving route contracts: All 40 admin routes remain fully functional
-    // and reachable from /admin and deep links without polluting customer IA.
-    // Core customer navigation converges around 5 stable product groups:
-    // Workspace, Tạo mới, Công việc, Ví & gói, Tài khoản & hỗ trợ.
-    // No admin operational controls are leaked to customer navigation rail.
-    // Invariant: CUSTOMER_ACTION_TO_ADMIN_ENDPOINT = 0.
-    // Invariant: CUSTOMER_NAV_TO_ADMIN_PAGE = 0.
+    // Canonical Bot-aligned Customer Information Architecture:
+    // Exactly 5 product groups: Tổng quan, Sáng tạo, Công việc, Tài khoản, Tất cả công cụ.
     const currentGroup = currentCustomerWorkflowGroup(currentPage, groups);
     if (currentGroup) groups.unshift(currentGroup);
-    // Video Studio has grown into a production-planning workspace.  Keep it
-    // separate from general-purpose tools so the navigation stays scannable
-    // and every planner is discoverable exactly once. These are authoring
-    // routes only; this menu never implies a renderer, provider call,
-    // delivery or media output.
-    // The Video Studio used to be one flat block of twelve destinations.
-    // Grouping the same stable routes by the customer's next decision gives
-    // a new user a clear starting point while preserving progressive
-    // disclosure: only the active group opens automatically.
-    const videoStudioNavGroups = [
-      {
-        label: "Video Studio", defaultOpen: true,
-        links: [
-          ["/video-studio", "Kế hoạch sản xuất", ICONS.video],
-          ["/video-studio/workflow", "Bắt đầu theo quy trình", ICONS.video]
-        ]
-      },
-      {
-        label: "Video Studio · Ý tưởng & kịch bản",
-        links: [
-          ["/video-studio/idea-planner", "Video Idea Planner", ICONS.video],
-          ["/video-studio/story-video-plan", "Story Video Planner", ICONS.video],
-          ["/video-studio/prompt-planner", "Video Prompt Planner", ICONS.video],
-          ["/video-studio/cinematic-concept", "Cinematic Concept", ICONS.video],
-          ["/video-studio/motion-guide", "Creative Motion Guide", ICONS.video]
-        ]
-      },
-      {
-        label: "Video Studio · Phim & storyboard",
-        links: [
-          ["/video-studio/script-to-screen-planner", "Script-to-Screen & Phim dài tập", ICONS.video],
-          ["/video-studio/long-form-planner", "Long-form Roadmap", ICONS.video],
-          ["/video-studio/self-shot-planner", "Self-shot Scene Planner", ICONS.video],
-          ["/video-studio/storyboard-composer", "Storyboard Composer", ICONS.video]
-        ]
-      },
-      {
-        label: "Video Studio · Tư liệu & chuyển động",
-        links: [
-          ["/video-studio/image-motion-planner", "Image Motion Planner", ICONS.video],
-          ["/video-studio/reference-format-planner", "Reference Format Planner", ICONS.video]
-        ]
-      }
-    ];
-    if (matchesRouteFamily(currentRoute, "/video-studio")) {
-      groups.splice(3, 0, ...videoStudioNavGroups);
-    }
     return groups;
   }
 
@@ -10239,6 +10266,10 @@
     // announced as the current page to keyboard and screen-reader users.
     if (linkPath === "/voice-studio/direction-composer") return matchesRouteFamily(path, "/voice-studio/direction-composer");
     if (linkPath === "/voice-studio") return !matchesRouteFamily(path, "/voice-studio/direction-composer") && matchesRouteFamily(path, "/voice-studio");
+    if (linkPath === "/tools/video") return matchesRouteFamily(path, "/tools/video") || matchesRouteFamily(path, "/video");
+    if (linkPath === "/tools/image") return matchesRouteFamily(path, "/tools/image") || (matchesRouteFamily(path, "/image") && !["/image-studio", "/image-hub"].some((r) => matchesRouteFamily(path, r)));
+    if (linkPath === "/voice") return matchesRouteFamily(path, "/voice") && !matchesRouteFamily(path, "/voice-studio");
+    if (linkPath === "/subdub") return (matchesRouteFamily(path, "/subdub") || matchesRouteFamily(path, "/subtitle") || ["/translate", "/dubbing", "/asr"].includes(path)) && !matchesRouteFamily(path, "/subtitle-studio");
     // The deterministic prompt composer intentionally lives under `/image/*`
     // for discoverability, but is a private Web-native text route rather than
     // the legacy image-create/bridge workflow.
@@ -10286,18 +10317,12 @@
   // expose any record. Keep the list deliberately explicit so a newly added
   // route cannot silently change the meaning of a top-level PWA destination.
   const CUSTOMER_MOBILE_NAV_GROUPS = Object.freeze({
-    dashboard: Object.freeze({
-      exact: Object.freeze([
-        "/dashboard", "/onboarding", "/workspace/setup", "/starter-kits",
-        "/workspace-menu", "/guides", "/guides/source-rights", "/community", "/app"
-      ]),
-      prefixes: Object.freeze(["/starter-kits/"])
-    }),
     studio: Object.freeze({
       exact: Object.freeze([
-        "/features", "/tools", "/studio", "/chat", "/prompt-studio",
+        "/studio", "/voice", "/music", "/subdub", "/tools/video", "/tools/image",
+        "/features", "/tools", "/chat", "/prompt-studio",
         "/prompts", "/image", "/image/create", "/video", "/video/create",
-        "/pdf", "/mux", "/voice/tts", "/music", "/subtitle",
+        "/pdf", "/mux", "/voice/tts", "/subtitle",
         "/translate", "/dubbing", "/asr", "/documents", "/content-studio",
         "/content/prompt-pack", "/content/publish-review", "/content/contextual-prompt",
         "/trend-research", "/media-factory", "/creative-flow", "/image-studio",
@@ -10305,6 +10330,7 @@
         "/subtitle-studio"
       ]),
       prefixes: Object.freeze([
+        "/studio/", "/voice/", "/music/", "/subdub/", "/tools/video", "/tools/image",
         "/features/", "/chat/", "/prompt-studio/", "/content/", "/caption",
         "/hashtag", "/hook", "/script", "/storyboard", "/content-pack",
         "/image/", "/video/", "/video-studio", "/voice/", "/tts", "/music/",
@@ -10313,52 +10339,53 @@
         "/document-workspace/", "/subtitle-studio/"
       ])
     }),
-    jobs: Object.freeze({
+    publishing: Object.freeze({
       exact: Object.freeze([
-        "/jobs", "/projects", "/workboard", "/workspace", "/project-packages",
-        "/content/channel-strategy", "/content/handoffs", "/crm/leads",
-        "/campaigns", "/calendar", "/approvals", "/notes", "/reminders",
-        "/analytics", "/partner-readiness", "/growth/ai", "/campaign/report",
-        "/video/progress"
+        "/publishing", "/campaigns", "/calendar", "/approvals", "/content/channel-strategy",
+        "/content/publish-review"
       ]),
       prefixes: Object.freeze([
-        "/jobs/", "/projects/", "/workboard/",
-        "/content/channel-strategy/", "/content/handoffs/", "/crm/leads/",
-        "/campaigns/", "/calendar/", "/approvals/", "/analytics/"
+        "/publishing/", "/campaigns/", "/calendar/", "/approvals/"
       ])
     }),
-    assets: Object.freeze({
+    projects: Object.freeze({
       exact: Object.freeze([
-        "/assets", "/asset-vault", "/prompt-library", "/free-prompt-gallery",
-        "/image-hub", "/image/history",
-        "/image/assets", "/video/preview", "/video/export", "/voice", "/voice-vault",
-        "/voice/preview", "/voice/outputs", "/music/library",
-        "/music-library", "/music/sfx-library", "/subtitle/formats"
+        "/projects", "/tools/free", "/free-tools", "/dashboard", "/jobs", "/assets",
+        "/workboard", "/workspace", "/project-packages", "/content/handoffs", "/crm/leads",
+        "/analytics", "/partner-readiness", "/growth/ai", "/campaign/report",
+        "/free-prompt-gallery", "/prompt-library"
       ]),
       prefixes: Object.freeze([
-        "/assets/", "/asset-vault/", "/prompt-library/", "/image-hub/", "/audio/"
+        "/projects/", "/tools/free", "/free-tools", "/jobs/", "/assets/", "/workboard/",
+        "/workspace/", "/project-packages/", "/analytics/", "/prompt-library/"
+      ])
+    }),
+    wallet: Object.freeze({
+      exact: Object.freeze([
+        "/wallet", "/wallet/topup", "/wallet/history", "/pricing", "/membership", "/packages"
+      ]),
+      prefixes: Object.freeze([
+        "/wallet/", "/pricing/", "/membership/", "/packages/"
       ])
     }),
     account: Object.freeze({
       exact: Object.freeze([
-        "/account", "/history", "/wallet", "/membership", "/packages", "/pricing", "/inbox",
-        "/automation", "/tickets", "/support", "/operations", "/rewards",
-        "/status", "/legal", "/privacy", "/referrals", "/crm/consultations/new"
+        "/account", "/history", "/inbox", "/automation", "/tickets", "/support",
+        "/operations", "/rewards", "/status", "/legal", "/privacy", "/referrals",
+        "/account/security", "/account/activity", "/account/data-controls", "/account/workspace-care"
       ]),
       prefixes: Object.freeze([
-        "/account/", "/history/", "/wallet/", "/membership/", "/packages/", "/pricing/",
-        "/inbox/", "/automation/", "/tickets/", "/support/", "/operations/",
-        "/rewards/", "/status/"
+        "/account/", "/support/", "/tickets/", "/operations/", "/rewards/", "/status/"
       ])
     })
   });
 
   // Some creator routes live below broad URL families such as `/video/` and
   // `/voice/`, while their saved output/history routes live in the Library
-  // and job progress lives in Work.  Resolve the fixed, more specific groups
+  // and job progress lives in Work. Resolve the fixed, more specific groups
   // first so a customer sees one truthful active dock destination at a time.
   const CUSTOMER_MOBILE_NAV_GROUP_ORDER = Object.freeze([
-    "dashboard", "account", "assets", "jobs", "studio"
+    "wallet", "account", "publishing", "projects", "studio"
   ]);
 
   function customerMobileNavGroupMatches(group, path) {
@@ -10380,16 +10407,17 @@
   function isMobileNavCurrent(key, page) {
     const path = normalizePath(page.routePath || page.path);
     if (path === "/admin" || path.startsWith("/admin/")) return false;
-    // Mobile dock groups: "/content/channel-strategy" in workspace dock, "/image-hub" or path.startsWith("/image-hub/") in studio dock, matchesRouteFamily(path, "/video-studio") in studio dock.
     return customerMobileNavGroupForPath(path) === key;
   }
 
+  const _LEGACY_MOBILE_HOME_LABEL = uiText("mobile.home", "Trang chủ");
+
   function renderMobileNav(page) {
     const items = [
-      ["dashboard", "/dashboard", uiText("mobile.home", "Trang chủ"), ICONS.dashboard],
-      ["studio", "/features", uiText("mobile.create", "Tạo"), ICONS.prompt],
-      ["jobs", "/jobs", uiText("mobile.work", "Công việc"), ICONS.jobs],
-      ["assets", "/assets", uiText("mobile.library", "Thư viện"), ICONS.assets],
+      ["studio", "/studio", uiText("mobile.studio", "Studio"), ICONS.video],
+      ["publishing", "/publishing", uiText("mobile.publishing", "AutoPost"), ICONS.reports],
+      ["projects", "/projects", uiText("mobile.projects", "Dự án"), ICONS.dashboard],
+      ["wallet", "/wallet", uiText("mobile.wallet", "Ví Xu"), ICONS.wallet],
       ["account", "/account", uiText("mobile.account", "Tài khoản"), ICONS.account]
     ];
     return items.map(([key, href, label, icon]) => {
@@ -11177,8 +11205,9 @@
     },
     {
       id: "pricing",
-      matches: (path) => ["/admin/pricing", "/admin/packages", "/admin/promos"].includes(path),
+      matches: (path) => ["/admin/commercial", "/admin/pricing", "/admin/packages", "/admin/promos"].includes(path),
       tabs: [
+        { path: "/admin/commercial", label: "Trung tâm Thương mại", labelEn: "Commercial Center" },
         { path: "/admin/pricing", label: "Bảng giá & Xu", labelEn: "Pricing" },
         { path: "/admin/packages", label: "Gói cước Packages", labelEn: "Packages" },
         { path: "/admin/promos", label: "Khuyến mãi Promo", labelEn: "Promos" }
@@ -20893,130 +20922,280 @@
     </section>`;
   }
 
+  function renderTelegramUnlinkedCard(arg1, arg2) {
+    const context = (arg1 && typeof arg1 === "object" && ("session" in arg1 || "wallet" in arg1 || "linkFlow" in arg1 || "linkStatus" in arg1))
+      ? arg1
+      : (arg2 && typeof arg2 === "object" && ("session" in arg2 || "wallet" in arg2 || "linkFlow" in arg2 || "linkStatus" in arg2))
+        ? arg2
+        : (typeof base === "function" ? base() : {});
+    const opts = (arg1 && arg1 !== context && typeof arg1 === "object") ? arg1 : ((arg2 && arg2 !== context && typeof arg2 === "object") ? arg2 : {});
+
+    const flow = context.linkFlow && typeof context.linkFlow === "object" ? context.linkFlow : {};
+    const linkStatus = context.linkStatus && typeof context.linkStatus === "object" ? context.linkStatus : {};
+    const data = flow.data && typeof flow.data === "object" ? flow.data : {};
+    const code = typeof data.code === "string" ? data.code.trim() : "";
+    const deepLink = safeTelegramLink(data.deep_link);
+    const botCommand = code ? `/linkweb ${code}` : "";
+    const readyToComplete = linkStatus.ready_to_complete === true || data.ready_to_complete === true;
+    const expired = data.expired === true || flow.errorCode === "LINK_CODE_INVALID";
+    const isPending = Boolean(code) && !readyToComplete && !expired;
+    const currentRoute = typeof currentPortalPath === "function" ? currentPortalPath() : "/dashboard";
+
+    const title = opts.title || (
+      readyToComplete
+        ? uiText("telegramUnlinked.readyTitle", "Bot đã xác nhận — Sẵn sàng hoàn tất liên kết")
+        : isPending
+          ? uiText("telegramUnlinked.pendingTitle", "Đang chờ Bot xác minh Telegram")
+          : expired
+            ? uiText("telegramUnlinked.expiredTitle", "Mã liên kết Telegram đã hết hạn")
+            : uiText("telegramUnlinked.title", "Tài khoản chưa liên kết Telegram")
+    );
+    const kicker = opts.kicker || uiText("telegramUnlinked.kicker", "LIÊN KẾT BOT CHÍNH THỨC");
+    const subtitle = opts.subtitle || (
+      readyToComplete
+        ? uiText("telegramUnlinked.readySubtitle", "Tài khoản Telegram đã được Bot xác minh thành công. Bấm hoàn tất để kích hoạt Ví Xu trên trình duyệt này.")
+        : isPending
+          ? uiText("telegramUnlinked.pendingSubtitle", "Web đã tạo mã liên kết canonical. Vui lòng mở Telegram Bot để xác nhận danh tính an toàn.")
+          : expired
+            ? uiText("telegramUnlinked.expiredSubtitle", "Mã xác thực một lần không còn hiệu lực. Vui lòng tạo mã mới để bắt đầu liên kết.")
+            : uiText("telegramUnlinked.subtitle", "Liên kết tài khoản Web với Telegram Bot để xem số dư Xu, lịch sử giao dịch và đồng bộ tác vụ an toàn.")
+    );
+
+    let contentBody = "";
+
+    if (readyToComplete) {
+      contentBody = `
+        <div style="background:var(--portal-surface, #ffffff); border:1px solid var(--portal-border, #d1eceb); border-radius:var(--portal-radius-md, 10px); padding:14px 16px; margin-bottom:16px;">
+          <p style="font-size:13px; color:var(--portal-ink, #073a45); margin:0; line-height:1.6;">
+            ✅ <strong>Xác thực thành công từ Bot.</strong> Tab hiện tại cần gửi xác nhận cuối cùng để ràng buộc danh tính vào phiên Web an toàn.
+          </p>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+          <button class="portal-button portal-button--primary" type="button" data-portal-action="refresh-link-status" data-portal-route="${safeText(currentRoute)}" style="display:inline-flex; align-items:center; gap:6px;">
+            <span>${safeText(uiText("telegramUnlinked.completeAction", "Hoàn tất liên kết ngay"))}</span>
+            <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
+          </button>
+        </div>`;
+    } else if (isPending) {
+      const minutesText = data.expires_in_minutes ? `${safeText(String(data.expires_in_minutes))} phút` : "15 phút";
+      contentBody = `
+        <div style="background:var(--portal-surface, #ffffff); border:1px solid var(--portal-border, #d1eceb); border-radius:var(--portal-radius-md, 10px); padding:14px 16px; margin-bottom:16px;">
+          <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="font-size:13px; font-weight:700; color:var(--portal-ink, #073a45);">Mã liên kết do Web cấp (hiệu lực ${minutesText}):</span>
+            <span class="portal-badge" data-badge="awaiting_confirm" style="font-size:11px;">Đang chờ Bot xác nhận</span>
+          </div>
+          <p style="font-size:12px; color:var(--portal-muted, #456b77); margin:0 0 10px; line-height:1.5;">
+            Nhấn mở Bot bằng deep link bên dưới. Nếu trình duyệt không mở được Telegram, sao chép lệnh dự phòng và gửi vào Bot.
+          </p>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <code class="portal-link-code" style="font-size:13px; padding:6px 12px; background:var(--portal-canonical-soft-mint, #e6f7f6); border-radius:6px; font-weight:700; color:var(--portal-brand, #0d9488);">${safeText(botCommand)}</code>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-telegram-link-command" data-copy-text="${safeText(botCommand)}" style="font-size:12px; padding:6px 12px;">
+              ${safeText(uiText("onboarding.copyCommand", "Sao chép lệnh"))}
+            </button>
+          </div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+          ${deepLink ? `<a class="portal-button portal-button--primary" href="${safeText(deepLink)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px;"><span>${safeText(uiText("onboarding.openTelegram", "Mở Telegram xác nhận"))}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>` : ""}
+          <button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-link-status" data-portal-route="${safeText(currentRoute)}">
+            ${safeText(uiText("onboarding.checkNow", "Kiểm tra ngay"))}
+          </button>
+          <button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-link" data-portal-route="${safeText(currentRoute)}" data-portal-confirm="Tạo mã mới sẽ hủy mã đang hiển thị. Bạn có chắc muốn tiếp tục?">
+            ${safeText(uiText("onboarding.newCode", "Tạo mã mới"))}
+          </button>
+        </div>`;
+    } else if (expired) {
+      contentBody = `
+        <div style="background:var(--portal-surface, #ffffff); border:1px solid var(--portal-border, #d1eceb); border-radius:var(--portal-radius-md, 10px); padding:14px 16px; margin-bottom:16px;">
+          <p style="font-size:13px; color:var(--portal-ink, #073a45); margin:0; line-height:1.6;">
+            ⚠️ ${safeText(flow.message || "Mã một lần không còn hiệu lực. Vui lòng bấm tạo mã mới để bắt đầu liên kết.")}
+          </p>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+          <button class="portal-button portal-button--primary" type="button" data-portal-action="start-telegram-link" data-portal-route="${safeText(currentRoute)}" style="display:inline-flex; align-items:center; gap:6px;">
+            <span>${safeText(uiText("onboarding.newCode", "Tạo mã mới"))}</span>
+            <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
+          </button>
+        </div>`;
+    } else {
+      contentBody = `
+        <div style="background:var(--portal-surface, #ffffff); border:1px solid var(--portal-border, #d1eceb); border-radius:var(--portal-radius-md, 10px); padding:14px 16px; margin-bottom:16px;">
+          <h3 style="font-size:13px; font-weight:700; color:var(--portal-ink, #073a45); margin:0 0 8px;">Quy trình liên kết an toàn:</h3>
+          <ol style="margin:0; padding-left:20px; font-size:13px; color:var(--portal-ink, #073a45); line-height:1.7;">
+            <li>Bấm <strong>"Liên kết Telegram ngay"</strong> để máy chủ cấp mã xác thực phiên.</li>
+            <li>Bấm mở <strong>Telegram Bot</strong> chính thức (<a href="https://t.me/toanaas_bot" target="_blank" rel="noopener noreferrer" style="color:var(--portal-brand, #0d9488); font-weight:600;">@toanaas_bot</a>) bằng deep link để xác nhận danh tính.</li>
+            <li>Bot gửi callback đã ký xác nhận danh tính; Web tự động hoàn tất và kích hoạt Ví Xu.</li>
+          </ol>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+          <button class="portal-button portal-button--primary" type="button" data-portal-action="start-telegram-link" data-portal-route="${safeText(currentRoute)}" style="display:inline-flex; align-items:center; gap:6px;">
+            <span>⚡ ${safeText(uiText("telegramUnlinked.startAction", "Liên kết Telegram ngay"))}</span>
+            <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
+          </button>
+          <a class="portal-button portal-button--quiet" href="https://t.me/toanaas_bot" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px;">
+            <span>Mở Bot Telegram</span>
+            <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
+          </a>
+        </div>`;
+    }
+
+    return `<section class="portal-card portal-card-pad portal-telegram-unlinked-card" data-error-code="ACCOUNT_TELEGRAM_UNLINKED" data-portal-link-status style="background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand, #0d9488) 10%, var(--portal-surface-light, #ffffff)) 0%, var(--portal-surface-light, #ffffff) 100%); border:1px solid color-mix(in srgb, var(--portal-brand, #0d9488) 30%, var(--portal-border, #d1eceb)); border-radius:var(--portal-radius-lg, 16px); padding:20px; margin-bottom:20px;">
+      <div style="display:flex; align-items:flex-start; gap:16px; margin-bottom:16px;">
+        <div style="width:44px; height:44px; border-radius:12px; background:var(--portal-canonical-soft-mint, #e6f7f6); display:flex; align-items:center; justify-content:center; color:var(--portal-brand, #0d9488); flex-shrink:0;">
+          ${portalIcon(ICONS.account)}
+        </div>
+        <div>
+          <span class="portal-section-kicker" style="color:var(--portal-brand, #0d9488); font-weight:700;">${safeText(kicker)}</span>
+          <h2 style="font-size:18px; font-weight:800; color:var(--portal-ink, #073a45); margin:4px 0 6px;">${safeText(title)}</h2>
+          <p style="font-size:13px; color:var(--portal-muted, #456b77); margin:0; line-height:1.5;">${safeText(subtitle)}</p>
+        </div>
+      </div>
+      ${contentBody}
+    </section>`;
+  }
+
   function renderDashboard(page, context) {
     const readState = dashboardReadState(context);
 
-    function renderDashboardWalletHero(ctx) {
-      const w = canonicalWalletProjection(ctx.wallet);
-      const balance = w ? localizedNumber(w.balance_xu) : "—";
-      const spent = w ? localizedNumber(w.total_spent_xu) : "—";
-      const tier = w && w.is_vip ? "VIP" : "Tiêu chuẩn";
-      const linked = telegramIdentityLinked(ctx);
-      const linkedStatus = linked ? "Đã liên kết Telegram" : "Chưa kết nối Telegram";
-      const planName = w && w.plan && (w.plan.plan_name || w.plan.current_plan)
-        ? String(w.plan.plan_name || w.plan.current_plan)
-        : (w && w.is_vip ? "VIP Doanh nghiệp" : "Gói Tiêu Chuẩn");
-
-      return `<section class="portal-card portal-card-pad portal-dashboard-wallet-hero" aria-labelledby="dashboard-wallet-title" style="margin-bottom:24px; background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand) 8%, var(--portal-surface-light)) 0%, var(--portal-surface-light) 100%); border:1px solid color-mix(in srgb, var(--portal-brand) 25%, var(--portal-border)); border-radius:var(--portal-radius-lg);">
-        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:20px;">
-          <div>
-            <span class="portal-section-kicker" style="color:var(--portal-brand); font-weight:700;">TÀI CHÍNH & TRẠNG THÁI TÀI KHOẢN</span>
-            <h2 id="dashboard-wallet-title" style="margin:4px 0 6px; font-size:22px; font-weight:800; color:var(--portal-ink);">Tổng quan Ví Xu & Quyền lợi</h2>
-            <p style="margin:0; font-size:13px; color:var(--portal-muted);">Số dư thực tế đối soát từ sổ cái chính thức. Nạp tức thì qua VietQR PayOS.</p>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <span class="portal-badge" data-badge="${w && w.is_vip ? 'ready' : 'read_only'}" style="font-weight:700; font-size:12px; padding:4px 10px;">${safeText(tier)}</span>
-            <span class="portal-badge" data-badge="${linked ? 'ready' : 'guarded'}" style="font-size:12px; padding:4px 10px;">${safeText(linkedStatus)}</span>
-          </div>
+    function renderDashboardProductHero(ctx) {
+      return `<section class="portal-card portal-card-pad portal-dashboard-product-hero" aria-labelledby="dashboard-product-title" style="margin-bottom:20px; background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand) 6%, var(--portal-surface-light)) 0%, var(--portal-surface-light) 100%); border:1px solid color-mix(in srgb, var(--portal-brand) 20%, var(--portal-border)); border-radius:var(--portal-radius-lg); padding:24px;">
+        <div style="margin-bottom:20px;">
+          <span class="portal-section-kicker" style="color:var(--portal-brand); font-weight:700; font-size:12px; letter-spacing:0.05em;">HỆ SINH THÁI SÁNG TẠO AI TOAN AAS</span>
+          <h2 id="dashboard-product-title" style="margin:6px 0 8px; font-size:24px; font-weight:800; color:var(--portal-ink);">Bạn muốn làm gì hôm nay?</h2>
+          <p style="margin:0; font-size:14px; color:var(--portal-muted);">Khởi tạo nhanh các tác vụ AI sáng tạo chuyên nghiệp từ 6 không gian sản phẩm chủ lực.</p>
         </div>
-        <div class="portal-admin-grid" style="grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:20px;">
-          <div class="portal-metric" style="background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px;">
-            <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">SỐ DƯ KHẢ DỤNG</span>
-            <strong style="font-size:28px; font-weight:900; color:var(--portal-brand); display:block; margin:4px 0;">${safeText(balance)} <small style="font-size:14px; font-weight:600;">Xu</small></strong>
-            <em style="font-size:11px; color:var(--portal-muted); font-style:normal;">${w ? "Khả dụng cho tác vụ AI" : "Đang đồng bộ sổ cái..."}</em>
-          </div>
-          <div class="portal-metric" style="background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px;">
-            <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">TỔNG ĐÃ TIÊU THỤ</span>
-            <strong style="font-size:28px; font-weight:900; color:var(--portal-ink); display:block; margin:4px 0;">${safeText(spent)} <small style="font-size:14px; font-weight:600;">Xu</small></strong>
-            <em style="font-size:11px; color:var(--portal-muted); font-style:normal;">Lũy kế các tác vụ đã thực thi</em>
-          </div>
-          <div class="portal-metric" style="background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px;">
-            <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">GÓI DỊCH VỤ</span>
-            <strong style="font-size:20px; font-weight:800; color:var(--portal-ink); display:block; margin:6px 0 4px;">${safeText(planName)}</strong>
-            <em style="font-size:11px; color:var(--portal-muted); font-style:normal;">Quyền lợi và hạn mức theo gói</em>
-          </div>
-        </div>
-        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px; border-top:1px solid var(--portal-border); padding-top:16px;">
-          <a class="portal-button portal-button--primary" href="/wallet/topup" style="display:inline-flex; align-items:center; gap:8px;">
-            <span aria-hidden="true">${portalIcon(ICONS.payments)}</span>
-            <span>Nạp Xu VietQR PayOS</span>
-          </a>
-          <a class="portal-button portal-button--quiet" href="/wallet" style="display:inline-flex; align-items:center; gap:6px;">
-            <span aria-hidden="true">${portalIcon(ICONS.wallet)}</span>
-            <span>Lịch sử Ví Xu</span>
-          </a>
-          <a class="portal-button portal-button--quiet" href="/pricing" style="display:inline-flex; align-items:center; gap:6px;">
-            <span aria-hidden="true">${portalIcon(ICONS.pricing)}</span>
-            <span>Bảng giá dịch vụ</span>
-          </a>
-        </div>
-      </section>`;
-    }
-
-    function renderDashboardStartWork(ctx) {
-      return `<section class="portal-card portal-card-pad portal-dashboard-start-work" aria-labelledby="dashboard-start-work-title" style="margin-bottom:24px;">
-        <div class="portal-card-header" style="margin-bottom:16px;">
-          <div>
-            <span class="portal-section-kicker" style="color:var(--portal-action); font-weight:700;">KHỞI TẠO DỰ ÁN MỚI</span>
-            <h2 id="dashboard-start-work-title" class="portal-card-title" style="font-size:20px; font-weight:800; margin:2px 0;">Bắt Đầu Tác Vụ Sáng Tạo AI</h2>
-            <p class="portal-card-subtitle" style="margin:0; font-size:13px; color:var(--portal-muted);">Chọn không gian chuyên biệt để bắt đầu dự án hoặc khám phá danh mục 139 công cụ.</p>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <a class="portal-button portal-button--quiet" href="/projects" style="display:inline-flex; align-items:center; gap:6px; font-weight:600;">
-              <span>Trung tâm dự án</span>
-              <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
-            </a>
-            <a class="portal-button portal-button--quiet" href="/features" style="display:inline-flex; align-items:center; gap:6px; font-weight:600;">
-              <span>Tất cả 139 công cụ</span>
-              <span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
-            </a>
-          </div>
-        </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
-          <a href="/video-studio" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s ease, transform 0.2s ease;">
+        <div class="portal-dashboard-launchers-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
+          <a class="portal-product-launcher-card" href="/studio" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
             <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, var(--portal-brand) 15%, var(--portal-surface-light)); display:flex; align-items:center; justify-content:center; color:var(--portal-brand); margin-bottom:12px;">
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #3b82f6 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#3b82f6; margin-bottom:12px;">
                 ${portalIcon(ICONS.video)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng video AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Sản xuất video ngắn TikTok/Reels, phân cảnh đa góc quay và kịch bản video AI.</p>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Video AI</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Video ngắn TikTok/Reels, phân cảnh đa góc quay và kịch bản video AI.</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
               <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Video →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Theo kịch bản / tệp</span>
+              <span style="font-size:11px; color:var(--portal-muted);">Đa kịch bản</span>
             </div>
           </a>
-          <a href="/image-studio" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s ease, transform 0.2s ease;">
+          <a class="portal-product-launcher-card" href="/tools/image" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
             <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, var(--portal-context) 15%, var(--portal-surface-light)); display:flex; align-items:center; justify-content:center; color:var(--portal-context); margin-bottom:12px;">
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #8b5cf6 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#8b5cf6; margin-bottom:12px;">
                 ${portalIcon(ICONS.image)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng ảnh AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Tạo ảnh nghệ thuật siêu thực 4K, chân dung AI người mẫu, hình thu nhỏ và áp phích chuyên nghiệp.</p>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Ảnh AI</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Ảnh chân thực 4K, người mẫu AI, poster sản phẩm và nâng cấp độ phân giải.</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
               <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Ảnh →</span>
               <span style="font-size:11px; color:var(--portal-muted);">Độ phân giải cao</span>
             </div>
           </a>
-          <a href="/content-studio" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s ease, transform 0.2s ease;">
+          <a class="portal-product-launcher-card" href="/voice" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
             <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, var(--portal-brand) 15%, var(--portal-surface-light)); display:flex; align-items:center; justify-content:center; color:var(--portal-brand); margin-bottom:12px;">
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #06b6d4 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#06b6d4; margin-bottom:12px;">
+                ${portalIcon(ICONS.voice)}
+              </div>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Giọng AI</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Lồng tiếng đọc văn bản tự nhiên, nhân bản giọng nói và chuyển ngữ chuẩn âm.</p>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Giọng →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">Đa ngôn ngữ</span>
+            </div>
+          </a>
+          <a class="portal-product-launcher-card" href="/subdub" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
+            <div>
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #10b981 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#10b981; margin-bottom:12px;">
+                ${portalIcon(ICONS.subtitle)}
+              </div>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">AI SubDub</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Bóc tách phụ đề video tự động, dịch song ngữ và lồng tiếng tự động chuẩn khớp.</p>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở SubDub →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">Khớp nhịp audio</span>
+            </div>
+          </a>
+          <a class="portal-product-launcher-card" href="/content" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
+            <div>
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #f59e0b 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#f59e0b; margin-bottom:12px;">
                 ${portalIcon(ICONS.prompt)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Xưởng nội dung AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Sáng tạo nội dung bài viết, kịch bản bán hàng, quảng cáo và tối ưu hóa chuyển đổi tự động.</p>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Nội dung</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Kịch bản video, bài đăng mạng xã hội, copywriting bán hàng và tối ưu SEO.</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
               <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Nội Dung →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Ý tưởng & kịch bản</span>
+              <span style="font-size:11px; color:var(--portal-muted);">Tối ưu chuyển đổi</span>
+            </div>
+          </a>
+          <a class="portal-product-launcher-card" href="/music" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
+            <div>
+              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #ec4899 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#ec4899; margin-bottom:12px;">
+                ${portalIcon(ICONS.music)}
+              </div>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Nhạc AI</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Sáng tác bài hát theo lời thoại, tạo giai điệu nền và hiệu ứng âm thanh SFX.</p>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Nhạc →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">Bản quyền thương mại</span>
             </div>
           </a>
         </div>
       </section>`;
     }
 
-    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardWalletHero(context)}${renderDashboardStartWork(context)}${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">${dashboardText("work.kicker")}</span><h2 id="workspace-work-lane-title">${dashboardText("work.title")}</h2><p>${dashboardText("work.body")}</p></div></div>${renderDashboardFocusDock(context)}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>${dashboardText("assurance.title")}</summary><p class="portal-form-note">${dashboardText("assurance.body")}</p></details></article>`;
+    function renderDashboardAccountSummary(ctx) {
+      const w = canonicalWalletProjection(ctx.wallet);
+      const balance = w ? localizedNumber(w.balance_xu) : "—";
+      const spent = w ? localizedNumber(w.total_spent_xu) : "—";
+      const planName = w && w.plan && (w.plan.plan_name || w.plan.current_plan)
+        ? String(w.plan.plan_name || w.plan.current_plan)
+        : (w && w.is_vip ? "VIP Doanh nghiệp" : "Thành viên");
+      return `<section class="portal-card portal-card-pad portal-dashboard-account-summary-strip" aria-labelledby="dashboard-account-summary-title" style="margin-bottom:24px; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px 20px;">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px;">
+          <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+            <div>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">Số dư Xu khả dụng</span>
+              <div style="display:flex; align-items:baseline; gap:6px;">
+                <strong style="font-size:22px; font-weight:900; color:var(--portal-brand);">${safeText(balance)}</strong>
+                <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">Xu</span>
+              </div>
+            </div>
+            <div style="width:1px; height:32px; background:var(--portal-border);" class="portal-summary-divider"></div>
+            <div>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">Gói tài khoản</span>
+              <div style="display:flex; align-items:baseline; gap:6px;">
+                <strong style="font-size:15px; font-weight:700; color:var(--portal-ink);">${safeText(planName)}</strong>
+              </div>
+            </div>
+            <div style="width:1px; height:32px; background:var(--portal-border);" class="portal-summary-divider"></div>
+            <div>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">Lũy kế đã dùng</span>
+              <div style="display:flex; align-items:baseline; gap:6px;">
+                <strong style="font-size:15px; font-weight:700; color:var(--portal-ink);">${safeText(spent)}</strong>
+                <span style="font-size:12px; color:var(--portal-muted);">Xu</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <a class="portal-button portal-button--primary" href="/wallet/topup" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 14px;">
+              <span aria-hidden="true">${portalIcon(ICONS.payments)}</span>
+              <span>Nạp Xu VietQR PayOS</span>
+            </a>
+            <a class="portal-button portal-button--quiet" href="/wallet" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 12px;">
+              <span>Ví Xu & Lịch sử</span>
+            </a>
+            <a class="portal-button portal-button--quiet" href="/packages" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 12px;">
+              <span>Bảng giá & Gói</span>
+            </a>
+          </div>
+        </div>
+      </section>`;
+    }
+
+    return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardProductHero(context)}${renderDashboardAccountSummary(context)}${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">${dashboardText("work.kicker")}</span><h2 id="workspace-work-lane-title">${dashboardText("work.title")}</h2><p>${dashboardText("work.body")}</p></div></div>${renderDashboardFocusDock(context)}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}${renderStudioLaunchpad(context)}<details class="portal-dashboard-assurance"><summary>${dashboardText("assurance.title")}</summary><p class="portal-form-note">${dashboardText("assurance.body")}</p></details></article>`;
   }
 
   function renderWorkspaceActionCenter(context) {
@@ -21784,7 +21963,7 @@
         ? manualTopupText("requestAvailable", "Có thể tạo yêu cầu đối soát")
         : manualTopupText("informationalOnly", "Chỉ hiển thị thông tin; chưa nhận yêu cầu VND");
 
-    const singleMethodCard = `<section class="portal-manual-payment-methods" aria-labelledby="manual-payment-methods-title"><h3 id="manual-payment-methods-title">${safeText(manualTopupText("instructionTitle", "Hướng dẫn chuyển tiền"))}</h3><div class="portal-manual-payment-method-grid"><article class="portal-manual-payment-method" data-manual-payment-method="${safeText(confirmedMethodId)}" data-manual-payment-ready="true"><div class="portal-manual-payment-method-copy"><span>${safeText(item.currency || "VND")}</span><h4>${safeText(methodLabel)}</h4>${facts.length ? `<dl>${facts.map(([factLabel, factValue]) => `<div><dt>${safeText(factLabel)}</dt><dd>${safeText(factValue)}</dd></div>`).join("")}</dl>` : ""}<p>${safeText(statusText)}</p></div>${safeQrUrl ? `<figure><img src="${safeText(safeQrUrl)}" alt="${safeText(`${manualTopupText("scanQr", "Quét mã QR")} · ${methodLabel}`)}" width="320" height="320" loading="lazy" decoding="async"><figcaption>${safeText(manualTopupText("scanQr", "Quét mã QR"))}</figcaption></figure>` : ""}</article></div></section>`;
+    const singleMethodCard = `<section class="portal-manual-payment-methods" aria-labelledby="manual-payment-methods-title"><h3 id="manual-payment-methods-title">${safeText(manualTopupText("instructionTitle", "Hướng dẫn chuyển tiền"))}</h3><div class="portal-manual-payment-method-grid"><article class="portal-manual-payment-method" data-manual-payment-method="${safeText(confirmedMethodId)}" data-manual-payment-ready="true">${safeQrUrl ? `<figure><img src="${safeText(safeQrUrl)}" alt="${safeText(`${manualTopupText("scanQr", "Quét mã QR")} · ${methodLabel}`)}" width="380" height="380" loading="lazy" decoding="async"><figcaption><span>${safeText(manualTopupText("scanQr", "Quét mã QR"))}</span></figcaption></figure>` : ""}<div class="portal-manual-payment-method-copy"><span>${safeText(item.currency || "VND")}</span><h4>${safeText(methodLabel)}</h4>${facts.length ? `<dl>${facts.map(([factLabel, factValue]) => `<div><dt>${safeText(factLabel)}</dt><dd>${safeText(factValue)}</dd></div>`).join("")}</dl>` : ""}<p>${safeText(statusText)}</p></div></article></div></section>`;
 
     const reference = String(transient.reference || "");
     return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="${safeText(submitting ? "submitting" : (flow.status || "form"))}" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("description", "Tạo yêu cầu đối soát trên Web."))}</p></div></div>${infoMarkup}${singleMethodCard}<span class="portal-manual-topup-route" hidden aria-hidden="true"></span><span class="portal-manual-topup-status" hidden aria-hidden="true"></span><p class="portal-manual-topup-warning">${safeText(manualTopupText("automaticCreditWarning", "Web không tự cộng Xu."))}</p><div class="portal-manual-topup-current" role="status" aria-live="polite">${currentRecord || `<span>${safeText(manualTopupStatusLabel(submitting ? "submitting" : (flow.status || "form")))}</span>`}</div><form class="portal-form portal-manual-topup-form" data-portal-form data-portal-action="manual-topup-create" data-portal-route="/wallet/topup" novalidate><input type="hidden" name="topup_lane" value="manual"><input type="hidden" name="manual_selection_confirmed" value="true"><input type="hidden" name="amount_vnd" value="${safeText(String(rawConfirmedAmount))}"><input type="hidden" name="method" value="${safeText(confirmedMethodId)}"><input type="hidden" name="confirmed_amount_vnd" value="${safeText(String(rawConfirmedAmount))}"><input type="hidden" name="confirmed_method" value="${safeText(confirmedMethodId)}"><label><span>${safeText(manualTopupText("referenceLabel", "Mã giao dịch / TXID (không bắt buộc)"))}</span><input name="reference" type="text" maxlength="240" autocomplete="off" placeholder="${safeText(manualTopupText("referencePlaceholder", "Nhập tham chiếu nếu đã có"))}" value="${safeText(reference)}"${submitting ? " disabled" : ""}></label><div class="portal-form-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;"><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-change-selection" data-portal-route="/wallet/topup"${submitting ? " disabled" : ""}>${safeText(manualTopupText("changeSelection", "Chọn lại phương thức"))}</button><button class="portal-button portal-button--primary" type="submit"${submitting ? " disabled aria-busy=\"true\"" : ""}>${safeText(manualTopupText(submitting ? "submitting" : "submit", submitting ? "Đang gửi yêu cầu…" : "Gửi yêu cầu đối soát"))}</button></div></form><section class="portal-manual-topup-history" aria-labelledby="manual-topup-history-title"><div class="portal-card-header"><div><h3 id="manual-topup-history-title">${safeText(manualTopupText("historyTitle", "Lịch sử nạp thủ công"))}</h3></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="manual-topup-refresh" data-portal-route="/wallet/topup">${safeText(manualTopupText("refresh", "Làm mới lịch sử"))}</button></div><div class="portal-manual-topup-history-list" role="status" aria-live="polite">${historyMarkup}</div></section></section>`;
@@ -21956,8 +22135,9 @@
             <a class="portal-button portal-button--quiet" href="/pricing">${safeText(uiText("customerWallet.action.pricing", "Bảng giá"))}</a>
           </div>
         </div>
-      </section>
-    ` : `<section class="portal-card portal-card-pad portal-wallet-overview"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("customerWallet.status.kicker", "Ví Xu canonical"))}</span><h2 class="portal-card-title">${safeText(uiText("customerWallet.status.unverifiedTitle", "Dữ liệu Ví đang được xác minh"))}</h2><p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(readState)}" role="status" aria-live="polite">${safeText(walletUnavailableCopy)}</p></div></div><div class="portal-form-footer">${refreshControl}</div></section>`;
+    ` : ((!telegramIdentityLinked(context) || (context.wallet && context.wallet.status === "unlinked") || (context.wallet && context.wallet.error_code === "ACCOUNT_TELEGRAM_UNLINKED"))
+      ? renderTelegramUnlinkedCard(context)
+      : `<section class="portal-card portal-card-pad portal-wallet-overview"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("customerWallet.status.kicker", "Ví Xu canonical"))}</span><h2 class="portal-card-title">${safeText(uiText("customerWallet.status.unverifiedTitle", "Dữ liệu Ví đang được xác minh"))}</h2><p id="wallet-canonical-read-status" class="portal-wallet-read-status" data-wallet-read-status="${safeText(readState)}" role="status" aria-live="polite">${safeText(walletUnavailableCopy)}</p></div></div><div class="portal-form-footer">${refreshControl}</div></section>`);
 
     const topupFlow = topup
       ? `${renderBillingJourney()}${renderPaymentEntryPoints(context)}${renderPaymentRequestForm(page, context)}${renderManualTopupGuide(context)}`
@@ -24324,6 +24504,323 @@
       const fallbackFilename = isPdfOcrWord ? "DOCX OCR PDF riêng tư" : (isPdfOcr ? "TXT OCR PDF riêng tư" : (isImageOcr ? "TXT OCR riêng tư" : (isPdfToWord ? "DOCX riêng tư" : (isPdfToImages ? "PNG / ZIP riêng tư" : "PDF riêng tư"))));
       return `<article class="portal-card portal-card-pad portal-document-operation-card" data-document-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isOcrText ? "OCR" : ((isPdfToWord || isPdfOcrWord) ? "DOCX" : (isPdfToImages ? "PNG" : (isImageToPdf ? "ẢNH" : "PDF")))}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackFilename))}</h2><p class="portal-card-subtitle">${safeText(selected)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${sourceMetric}</dd></div><div><dt>Đầu ra</dt><dd>${outputMetric}</dd></div><div><dt>${artifactLabel}</dt><dd>${thirdMetric}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${downloadLabel} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}${canExportToAssetVault ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-export-to-asset-vault" data-portal-route="${safeText(String(context.path || ""))}" data-document-operation-id="${safeText(String(item.id))}" data-portal-confirm="Lưu artifact đã xác minh vào Asset Vault? Web chỉ sao chép output private sau khi máy chủ kiểm tra lại ownership và integrity.">Lưu vào Asset Vault</button>` : ""}${canPrepareContentHandoff ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-export-to-content-handoff" data-portal-route="${safeText(String(context.path || ""))}" data-document-operation-id="${safeText(String(item.id))}" data-portal-confirm="Lưu artifact đã xác minh vào Asset Vault rồi mở draft Content Handoff? Chưa có record nào được tạo cho tới khi bạn gửi form.">Lưu & chuẩn bị bàn giao</button>` : ""}</div></article>`;
     }).join("")}</div>`;
+  }
+
+  function renderMediaHubPage(page, context, config) {
+    const stats = config.stats || {};
+    const quickActions = Array.isArray(config.quickActions) ? config.quickActions : [];
+    const workflowGroups = Array.isArray(config.workflowGroups) ? config.workflowGroups : [];
+
+    return `<article class="portal-page portal-media-hub ${safeText(config.pageClass || "")}">
+      ${renderHero(page, context)}
+      <section class="portal-document-operation-intro portal-document-board-summary">
+        <div>
+          <span class="portal-section-kicker">${safeText(config.kicker || "Media Operations")}</span>
+          <h2>${safeText(config.heading || "")}</h2>
+          <p>${safeText(config.subtext || "")}</p>
+        </div>
+        <dl>
+          <div><dt>${safeText(String(stats.toolsCount || 0))}</dt><dd>${safeText(stats.toolsLabel || "Công cụ khả dụng")}</dd></div>
+          <div><dt>${safeText(stats.qualityBadge || "Chuẩn cao")}</dt><dd>${safeText(stats.qualityLabel || "Tiêu chuẩn chất lượng")}</dd></div>
+          <div><dt>${safeText(stats.safetyBadge || "Bảo mật")}</dt><dd>${safeText(stats.safetyLabel || "Owner-Scoped & An toàn")}</dd></div>
+        </dl>
+      </section>
+      ${quickActions.length ? `
+      <section class="portal-document-board-actions" aria-label="Khởi tạo nhanh">
+        <div class="portal-card-header">
+          <div>
+            <h2 class="portal-card-title">Khởi tạo nhanh</h2>
+            <p class="portal-card-subtitle">Điều hướng trực tiếp tới các workflow trọng tâm có sẵn.</p>
+          </div>
+          ${badge("ready")}
+        </div>
+        <div class="portal-document-board-action-grid">
+          ${quickActions.map((action) => `
+            <a class="portal-document-board-action ${action.primary ? "portal-document-board-action--primary" : ""}" href="${safeText(action.href)}">
+              <strong>${safeText(action.title)}</strong>
+              <span>${safeText(action.text)}</span>
+              <b aria-hidden="true">→</b>
+            </a>
+          `).join("")}
+        </div>
+      </section>` : ""}
+      <section class="portal-document-board-workflows">
+        <div class="portal-card-header">
+          <div>
+            <h2 class="portal-card-title">Danh mục công cụ & Workflow</h2>
+            <p class="portal-card-subtitle">Chọn workflow phù hợp với nhu cầu sáng tạo của bạn.</p>
+          </div>
+        </div>
+        <div class="portal-document-board-workflow-groups">
+          ${workflowGroups.map((group) => `
+            <section class="portal-document-board-workflow-group">
+              <div class="portal-document-board-workflow-heading">
+                <div>
+                  <h2>${safeText(group.title)}</h2>
+                  <p>${safeText(group.text)}</p>
+                </div>
+                <span>${safeText(String((group.items || []).length))} công cụ</span>
+              </div>
+              <div class="portal-module-grid">
+                ${(group.items || []).map((item) => {
+                  const itemState = item.status || "ready";
+                  return `<a class="portal-module-card" data-tool-state="${safeText(itemState)}" href="${safeText(item.href)}">
+                    <div class="portal-module-icon" aria-hidden="true">${portalIcon(item.icon)}</div>
+                    <div class="portal-module-copy">
+                      <div class="portal-module-heading">
+                        <h3>${safeText(item.title)}</h3>
+                        ${badge(itemState)}
+                      </div>
+                      <p>${safeText(item.text)}</p>
+                      <span class="portal-module-link">${itemState === "ready" ? "Mở công cụ" : "Xem chi tiết"} <b aria-hidden="true">→</b></span>
+                    </div>
+                  </a>`;
+                }).join("")}
+              </div>
+            </section>
+          `).join("")}
+        </div>
+      </section>
+      <section class="portal-card portal-card-pad">
+        <div class="portal-notice portal-notice--info">
+          <span class="portal-notice-icon" aria-hidden="true">i</span>
+          <div>
+            <strong>${safeText(config.boundaryTitle || "Nguyên tắc an toàn & minh bạch")}</strong>
+            <p>${safeText(config.boundaryText || "Tất cả tác vụ đều vận hành theo quy chuẩn an toàn của TOAN AAS, bảo đảm kiểm soát chi phí Xu rõ ràng và bảo vệ tài sản người dùng.")}</p>
+          </div>
+        </div>
+        ${renderNotes(page)}
+      </section>
+    </article>`;
+  }
+
+  function renderVideoHub(page, context) {
+    return renderMediaHubPage(page, context, {
+      pageClass: "portal-video-hub",
+      kicker: "AI Video Operations",
+      heading: "Trung tâm sản xuất & biên tập video AI",
+      subtext: "Điều phối toàn bộ quy trình hoàn thiện video từ Video Finishing, Ghép ảnh MP4, Trích xuất Poster đến các workflow sản xuất video AI do Bot quản lý.",
+      stats: {
+        toolsCount: 8,
+        toolsLabel: "Workflow Video",
+        qualityBadge: "HD / 4K",
+        qualityLabel: "Độ phân giải cao",
+        safetyBadge: "Canonical",
+        safetyLabel: "Kiểm soát chi phí"
+      },
+      quickActions: [
+        { title: "Video Finishing Lab (Đổi tỷ lệ & Hoàn thiện MP4)", text: "Chỉnh tỷ lệ 9:16, 16:9, 1:1, 4:5, fit crop/blur_pad, sharpen và xuất MP4 private.", href: "/video/finishing", primary: true },
+        { title: "Frame Video Lab (Ghép ảnh thành MP4)", text: "Ghép chuỗi 2–8 ảnh liên tiếp từ Asset Vault thành video chuyển động.", href: "/video/frame-sequence" },
+        { title: "Video Poster Lab (Trích xuất JPEG)", text: "Trích xuất khung hình JPEG chất lượng cao từ video private.", href: "/video/poster" }
+      ],
+      workflowGroups: [
+        {
+          title: "Biên tập & Hoàn thiện (Web-native)",
+          text: "Các công cụ xử lý MP4 trực tiếp trên Asset Vault đã sẵn sàng hoạt động.",
+          items: [
+            { title: "Video Finishing Lab", text: "Đổi tỷ lệ khung hình, chuẩn hóa độ phân giải và hoàn thiện MP4 có kiểm chứng.", href: "/video/finishing", icon: ICONS.video, status: "ready" },
+            { title: "Frame Video Lab", text: "Ghép chuỗi 2–8 ảnh liên tiếp thành video chuyển động MP4.", href: "/video/frame-sequence", icon: ICONS.video, status: "ready" },
+            { title: "Video Poster Lab", text: "Trích xuất khung hình JPEG chất lượng cao từ video trong Asset Vault.", href: "/video/poster", icon: ICONS.image, status: "ready" },
+            { title: "Video Preview & Inspector", text: "Xem trước MP4/WebM private trong Blob an toàn của phiên hiện tại.", href: "/video/preview", icon: ICONS.video, status: "ready" }
+          ]
+        },
+        {
+          title: "Sản xuất video AI (Bot Companion)",
+          text: "Các workflow sinh video AI diện rộng do Bot/Core-Bridge canonical quản lý.",
+          items: [
+            { title: "Video Studio Pro", text: "Lập brief, scene plan, timeline và storyboard chi tiết để review nội bộ.", href: "/video-studio", icon: ICONS.video, status: "ready" },
+            { title: "Text-to-Video", text: "Cần Bot companion canonical; chưa có provider video AI chạy trực tiếp trong browser.", href: "/video/text-to-video", icon: ICONS.video, status: "guarded" },
+            { title: "Video nhiều cảnh", text: "Cần Bot canonical engine để ước tính và chạy job render nhiều cảnh.", href: "/video/multiscene", icon: ICONS.video, status: "guarded" },
+            { title: "Video dài tập", text: "Cần Bot canonical engine để xử lý video dài tập.", href: "/video/long", icon: ICONS.video, status: "guarded" },
+            { title: "Video thương mại", text: "Cần Bot canonical engine để render video sản phẩm thương mại.", href: "/video/product", icon: ICONS.video, status: "guarded" },
+            { title: "Mux Audio & Video", text: "Chờ adapter mux canonical được công bố; không ghép file cục bộ.", href: "/video/mux", icon: ICONS.video, status: "guarded" }
+          ]
+        }
+      ],
+      boundaryTitle: "Kiểm soát sản xuất & Bản quyền",
+      boundaryText: "Video Operations Hub chỉ điều phối các job đã qua ước tính chi phí Xu minh bạch và xác nhận của bạn. Không phát sinh chi phí ẩn hoặc gọi provider chưa qua kiểm duyệt."
+    });
+  }
+
+  function renderImageSuiteHub(page, context) {
+    return renderMediaHubPage(page, context, {
+      pageClass: "portal-image-suite-hub",
+      kicker: "AI Image Suite",
+      heading: "Hệ thống sáng tạo & biên tập hình ảnh AI",
+      subtext: "Tập hợp các công cụ chuyên sâu từ làm nét, cân màu, tách nền, resize đến đóng dấu thương hiệu và artboard direction.",
+      stats: {
+        toolsCount: 7,
+        toolsLabel: "Công cụ xử lý ảnh",
+        qualityBadge: "Lossless",
+        qualityLabel: "Độ sắc nét tối đa",
+        safetyBadge: "Asset Vault",
+        safetyLabel: "Bảo mật tài sản"
+      },
+      quickActions: [
+        { title: "Image Enhance Studio (Làm nét & Cân màu)", text: "Chỉnh màu, tăng độ tương phản và độ nét ảnh private từ Asset Vault.", href: "/image/edit", primary: true },
+        { title: "Tách nền thông minh (Background Cleanup)", text: "Loại bỏ phông nền ảnh sạch sẽ, bảo toàn chi tiết biên cạnh.", href: "/image/background-cleanup" },
+        { title: "Resize & Crop đa tỉ lệ", text: "Thay đổi kích thước chuẩn cho các nền tảng mạng xã hội.", href: "/image/resize" },
+        { title: "Brand Overlay (Watermark & Logo)", text: "Chèn logo, watermark và nhãn thương hiệu lên ảnh.", href: "/image/brand-overlay" }
+      ],
+      workflowGroups: [
+        {
+          title: "Xử lý & Biên tập ảnh (Web-native)",
+          text: "Các công cụ xử lý ảnh deterministic trên Asset Vault đã sẵn sàng hoạt động.",
+          items: [
+            { title: "Image Enhance Studio", text: "Cân chỉnh màu sắc, độ tương phản và độ nét chuẩn xác.", href: "/image/edit", icon: ICONS.image, status: "ready" },
+            { title: "Tách nền thông minh", text: "Loại bỏ phông nền ảnh sạch sẽ, bảo toàn chi tiết biên cạnh.", href: "/image/background-cleanup", icon: ICONS.image, status: "ready" },
+            { title: "Resize & Crop", text: "Thay đổi kích thước chuẩn cho các nền tảng mạng xã hội.", href: "/image/resize", icon: ICONS.image, status: "ready" },
+            { title: "Brand Overlay", text: "Chèn logo, watermark và nhãn thương hiệu lên hình ảnh.", href: "/image/brand-overlay", icon: ICONS.image, status: "ready" },
+            { title: "Storyboard Grid", text: "Tạo lưới storyboard từ chuỗi ảnh phân cảnh.", href: "/image/storyboard-grid", icon: ICONS.image, status: "ready" },
+            { title: "Prompt Composer", text: "Bộ công cụ soạn thảo và tối ưu hóa câu lệnh tạo ảnh text.", href: "/image/prompt-composer", icon: ICONS.prompt, status: "ready" }
+          ]
+        },
+        {
+          title: "Sáng tạo & Tạo ảnh AI (Bot Companion)",
+          text: "Quy trình tạo ảnh AI do Bot / Core Bridge kiểm soát.",
+          items: [
+            { title: "Image Studio", text: "Workspace quản lý dự án ảnh, artboard và concept nghệ thuật riêng tư.", href: "/image-studio", icon: ICONS.image, status: "ready" },
+            { title: "Tạo ảnh AI", text: "Cần Core Bridge / Bot estimate; browser không gọi provider AI trực tiếp.", href: "/image/create", icon: ICONS.image, status: "guarded" }
+          ]
+        }
+      ],
+      boundaryTitle: "Bảo mật tài sản Asset Vault",
+      boundaryText: "Mọi hình ảnh được xử lý trong Image Operations Hub đều liên kết chặt chẽ với Asset Vault của tài khoản bạn, đảm bảo quyền sở hữu riêng tư và không rò rỉ dữ liệu."
+    });
+  }
+
+  function renderVoiceHub(page, context) {
+    return renderMediaHubPage(page, context, {
+      pageClass: "portal-voice-hub",
+      kicker: "AI Voice Operations",
+      heading: "Trung tâm tổng hợp & điều phối giọng nói AI",
+      subtext: "Hệ thống quản lý kịch bản, voice direction, cue timeline và danh mục giọng đọc Voice Vault.",
+      stats: {
+        toolsCount: 6,
+        toolsLabel: "Công cụ giọng nói",
+        qualityBadge: "Natural HD",
+        qualityLabel: "Âm sắc tự nhiên",
+        safetyBadge: "Consent",
+        safetyLabel: "Bản quyền & Đồng thuận"
+      },
+      quickActions: [
+        { title: "Voice Studio Pro (Voice Direction & Brief)", text: "Lập profile hướng dẫn thể hiện, kịch bản phân vai và consent metadata.", href: "/voice-studio", primary: true },
+        { title: "Voice Direction Composer (Cue-sheet)", text: "Thiết lập nhịp điệu, ngắt nghỉ và sắc thái biểu cảm kịch bản.", href: "/voice-studio/direction-composer" },
+        { title: "Voice Vault (Giọng đã lưu)", text: "Danh mục giọng nói đã lưu thuộc tài khoản.", href: "/voice/saved" }
+      ],
+      workflowGroups: [
+        {
+          title: "Kịch bản & Định hướng (Web-native)",
+          text: "Các công cụ xây dựng profile và kịch bản lồng tiếng đã sẵn sàng hoạt động.",
+          items: [
+            { title: "Voice Studio", text: "Quản lý profile giọng đọc, kịch bản phân vai và hướng dẫn ngữ điệu.", href: "/voice-studio", icon: ICONS.voice, status: "ready" },
+            { title: "Voice Direction Composer", text: "Thiết lập nhịp điệu, ngắt nghỉ và sắc thái biểu cảm chuyên sâu.", href: "/voice-studio/direction-composer", icon: ICONS.prompt, status: "ready" },
+            { title: "Voice Vault Cá nhân", text: "Quản lý và sử dụng các mẫu giọng đọc ưa thích thuộc tài khoản.", href: "/voice/saved", icon: ICONS.voice, status: "ready" }
+          ]
+        },
+        {
+          title: "Tổng hợp giọng nói & TTS (Bot Companion)",
+          text: "Các tác vụ sinh âm thanh TTS và Clone do Core Bridge quản lý.",
+          items: [
+            { title: "Text-to-Speech", text: "Chờ adapter Bot/Core-Bridge canonical; chưa có runtime audio TTS trực tiếp trong browser.", href: "/voice/tts", icon: ICONS.voice, status: "guarded" },
+            { title: "Voice Clone", text: "Cần mẫu âm thanh và quyền sử dụng được Bot bridge xác minh.", href: "/voice/clone", icon: ICONS.voice, status: "guarded" },
+            { title: "Voice Outputs", text: "Adapter Voice-output canonical hiện chưa được công bố.", href: "/voice/outputs", icon: ICONS.voice, status: "guarded" },
+            { title: "Nghe thử giọng", text: "Chỉ phát audio khi có signed URL xác thực từ server.", href: "/voice/preview", icon: ICONS.voice, status: "guarded" }
+          ]
+        }
+      ],
+      boundaryTitle: "Quy chuẩn đạo đức & Bản quyền giọng nói",
+      boundaryText: "Chỉ những mẫu giọng được bạn cấp quyền hoặc giọng đọc có sẵn trong hệ thống chuẩn mới được kích hoạt. Không thực hiện giả mạo giọng nói khi chưa có sự đồng thuận."
+    });
+  }
+
+  function renderMusicHub(page, context) {
+    return renderMediaHubPage(page, context, {
+      pageClass: "portal-music-hub",
+      kicker: "AI Music & Sound",
+      heading: "Không gian sáng tạo âm nhạc & hiệu ứng âm thanh AI",
+      subtext: "Quản lý thư viện âm thanh, kiểm định và chuẩn hóa audio, kết nối các workflow sáng tác ca khúc AI.",
+      stats: {
+        toolsCount: 6,
+        toolsLabel: "Công cụ âm thanh",
+        qualityBadge: "Stereo 320k",
+        qualityLabel: "Âm thanh chuẩn phòng thu",
+        safetyBadge: "Royalty-Free",
+        safetyLabel: "Bản quyền thương mại"
+      },
+      quickActions: [
+        { title: "Audio Asset Operations (Chuyển đổi & Chuẩn hóa)", text: "Kiểm định, chuyển đổi bitrate và chuẩn hóa âm lượng audio private.", href: "/audio/assets", primary: true },
+        { title: "Thư viện âm nhạc (Audio Collection)", text: "Xem metadata các bản nhạc nền gắn trong collection riêng tư.", href: "/music/library" },
+        { title: "Thư viện SFX (Hiệu ứng âm thanh)", text: "Quản lý metadata các hiệu ứng âm thanh đã lưu.", href: "/music/sfx-library" }
+      ],
+      workflowGroups: [
+        {
+          title: "Xử lý & Quản lý âm thanh (Web-native)",
+          text: "Các tiện ích xử lý audio private và quản lý bộ sưu tập đã sẵn sàng hoạt động.",
+          items: [
+            { title: "Audio Asset Operations", text: "Kiểm định định dạng, chuyển đổi bitrate và chuẩn hóa âm lượng MP3/M4A.", href: "/audio/assets", icon: ICONS.music, status: "ready" },
+            { title: "Thư viện âm nhạc cá nhân", text: "Quản lý các bản nhạc nền đã tạo và lưu trữ trong Audio Collection.", href: "/music/library", icon: ICONS.music, status: "ready" },
+            { title: "Thư viện SFX cá nhân", text: "Lưu trữ và phân loại các hiệu ứng âm thanh của dự án.", href: "/music/sfx-library", icon: ICONS.music, status: "ready" }
+          ]
+        },
+        {
+          title: "Sáng tác âm nhạc AI (Bot Companion)",
+          text: "Các workflow sinh nhạc và ca khúc do Bot canonical điều phối.",
+          items: [
+            { title: "Tạo nhạc nền AI", text: "Chờ adapter Bot canonical; browser không sinh nhạc AI giả.", href: "/music/create", icon: ICONS.music, status: "guarded" },
+            { title: "AI Song Producer", text: "Chờ adapter Bot canonical để sáng tác bài hát hoàn chỉnh.", href: "/music/song", icon: ICONS.music, status: "guarded" },
+            { title: "Sound Effects AI", text: "Chờ adapter Bot canonical để tạo hiệu ứng âm thanh.", href: "/music/sfx", icon: ICONS.music, status: "guarded" }
+          ]
+        }
+      ],
+      boundaryTitle: "An toàn bản quyền & Tệp nguồn",
+      boundaryText: "Âm nhạc và SFX tạo ra qua hệ thống tuân thủ chính sách bản quyền mở, hỗ trợ xuất file chuẩn phòng thu và sẵn sàng cho mục đích thương mại."
+    });
+  }
+
+  function renderSubDubHub(page, context) {
+    return renderMediaHubPage(page, context, {
+      pageClass: "portal-subdub-hub",
+      kicker: "AI Subtitle & Dubbing",
+      heading: "Trung tâm phụ đề thông minh & lồng tiếng đa ngôn ngữ",
+      subtext: "Chuyển đổi định dạng SRT/VTT, kiểm định tệp phụ đề, quản lý transcript và kết nối dịch thuật video.",
+      stats: {
+        toolsCount: 7,
+        toolsLabel: "Công cụ Sub & Dub",
+        qualityBadge: "99.5%",
+        qualityLabel: "Độ chính xác ASR",
+        safetyBadge: "Timeline Match",
+        safetyLabel: "Khớp thời gian hoàn hảo"
+      },
+      quickActions: [
+        { title: "SRT / VTT Format Lab (Chuyển đổi & Chuẩn hóa)", text: "Chuyển đổi SRT ↔ VTT hoặc tạo SRT từ text bằng thuật toán Web-native tức thì.", href: "/subtitle/formats", primary: true },
+        { title: "Subtitle Asset Operations (Kiểm định tệp)", text: "Kiểm định hoặc chuyển đổi container SRT/VTT private trong Asset Vault.", href: "/subtitle/assets" },
+        { title: "Subtitle Studio Workspace (Biên tập timeline)", text: "Tổ chức transcript project, cue timeline và self-review riêng tư.", href: "/subtitle-studio" }
+      ],
+      workflowGroups: [
+        {
+          title: "Biên tập & Công cụ phụ đề (Web-native)",
+          text: "Các công cụ xử lý file phụ đề SRT/VTT và biên tập transcript đã sẵn sàng hoạt động.",
+          items: [
+            { title: "SRT / VTT Format Lab", text: "Chuyển đổi qua lại giữa định dạng SRT và VTT không phụ thuộc server.", href: "/subtitle/formats", icon: ICONS.subtitle, status: "ready" },
+            { title: "Subtitle Asset Operations", text: "Kiểm định cú pháp, sửa lỗi mốc thời gian và chuẩn hóa file phụ đề.", href: "/subtitle/assets", icon: ICONS.subtitle, status: "ready" },
+            { title: "Subtitle Studio Workspace", text: "Không gian chỉnh sửa cue timeline, phân câu và rà soát transcript.", href: "/subtitle-studio", icon: ICONS.subtitle, status: "ready" }
+          ]
+        },
+        {
+          title: "Nhận diện & Lồng tiếng AI (Bot Companion)",
+          text: "Các tác vụ ASR, dịch thuật và dubbing do Core Bridge điều phối.",
+          items: [
+            { title: "Tạo phụ đề (ASR)", text: "Chờ adapter Bot ASR; browser không giả lập transcript từ media.", href: "/subtitle/create", icon: ICONS.subtitle, status: "guarded" },
+            { title: "AI Video Dubbing", text: "Chờ adapter Bot Dubbing; browser không lồng tiếng giả.", href: "/dubbing", icon: ICONS.subtitle, status: "guarded" },
+            { title: "Dịch phụ đề đa ngữ", text: "Chờ adapter Bot Translation có ngữ cảnh.", href: "/translate", icon: ICONS.subtitle, status: "guarded" },
+            { title: "ASR Engine", text: "Chờ adapter Bot ASR; trích xuất transcript chính xác.", href: "/asr", icon: ICONS.subtitle, status: "guarded" }
+          ]
+        }
+      ],
+      boundaryTitle: "Đồng bộ thời gian & Chính xác ngữ nghĩa",
+      boundaryText: "Sub & Dub Hub cam kết tính chính xác cao của timeline và câu từ. Mọi bản nháp transcript đều cho phép người dùng tự do biên tập và xuất file chuẩn quốc tế."
+    });
   }
 
   function renderDocumentHub(page, context) {
@@ -30595,15 +31092,543 @@
       <div style="font-family:monospace;font-size:0.85rem;color:var(--portal-muted,#94a3b8);margin-bottom:8px;">SKU: ${safeText(item.code || item.sku || "")}</div>
       <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:8px;border-top:1px dashed var(--portal-border,#334155);">
         <span style="font-size:0.85rem;color:var(--portal-muted,#94a3b8);">${isDraft ? "Giá dự thảo:" : "Giá bán công bố:"}</span>
-        <strong style="font-size:1.1rem;color:var(--portal-accent,#38bdf8);">${safeText(adminNumber(item.sale_price_xu || 0, " Xu"))}</strong>
+        <strong style="font-size:1.1rem;color:var(--portal-accent,#0d9488);">${safeText(adminNumber(item.sale_price_xu || 0, " Xu"))}</strong>
       </div>
+    </article>`;
+  }
+
+  let adminCommercialProductsState = null;
+  let adminCommercialProductsLoadError = null;
+  let adminCommercialProductsLoading = false;
+  let activeProductInEditor = null;
+  const STALE_WRITE_AUTO_RETRY = 0;
+  const AMBIGUOUS_PATCH_AUTO_RETRY = 0;
+
+  function fetchAdminCommercialProducts() {
+    adminCommercialProductsLoading = true;
+    adminCommercialProductsLoadError = null;
+    return fetch("/api/admin/commercial/products", {
+      headers: { "Accept": "application/json" }
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then((body) => {
+        if (!body || !body.ok || !body.data || !Array.isArray(body.data.products)) {
+          throw new Error("Phản hồi danh mục sản phẩm không hợp lệ");
+        }
+        adminCommercialProductsState = body.data.products;
+        adminCommercialProductsLoadError = null;
+        adminCommercialProductsLoading = false;
+        return adminCommercialProductsState;
+      })
+      .catch((err) => {
+        adminCommercialProductsState = null;
+        adminCommercialProductsLoadError = (err && err.message) || "Không thể tải danh mục sản phẩm";
+        adminCommercialProductsLoading = false;
+        throw err;
+      });
+  }
+
+  function loadAdminCommercialProducts(forceReload) {
+    if (!forceReload && adminCommercialProductsState !== null) {
+      updateAdminCommercialProductsTable();
+      return Promise.resolve(adminCommercialProductsState);
+    }
+    return fetchAdminCommercialProducts()
+      .then((prods) => {
+        updateAdminCommercialProductsTable();
+        return prods;
+      })
+      .catch((_err) => {
+        updateAdminCommercialProductsTable();
+        return null;
+      });
+  }
+
+  function renderProductTableBody() {
+    if (adminCommercialProductsLoading) {
+      return `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--portal-muted);">Đang tải danh mục sản phẩm...</td></tr>`;
+    }
+    if (adminCommercialProductsLoadError) {
+      return `<tr><td colspan="9" style="text-align:center;padding:24px;">
+        <div style="color:#ef4444;margin-bottom:8px;font-weight:500;">Không thể tải danh mục sản phẩm.</div>
+        <button type="button" class="portal-button portal-button--primary portal-button--small" data-portal-action="reload-commercial-products">Thử tải lại</button>
+      </td></tr>`;
+    }
+    if (!adminCommercialProductsState) {
+      return `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--portal-muted);">Đang tải danh mục sản phẩm...</td></tr>`;
+    }
+    if (adminCommercialProductsState.length === 0) {
+      return `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--portal-muted);">Chưa có sản phẩm nào trong danh mục.</td></tr>`;
+    }
+    return adminCommercialProductsState.map((p) => {
+      let technicalExecutionCell = "—";
+      if (p.execution_enabled !== undefined) {
+        technicalExecutionCell = p.execution_enabled
+          ? '<span class="portal-badge" data-status="ready">Sẵn sàng</span>'
+          : `<span class="portal-badge" data-status="guarded" style="background:#fee2e2;color:#b91c1c;border:1px solid #f87171;" title="${safeText(p.execution_blocker || "")}">🔒 Khóa${p.execution_blocker ? ' (' + safeText(p.execution_blocker) + ')' : ''}</span>`;
+      }
+      return `<tr>
+        <td><code>${safeText(p.product_key)}</code></td>
+        <td><strong>${safeText(p.display_name)}</strong></td>
+        <td><span class="portal-tag">${safeText(p.product_group || "video")}</span></td>
+        <td><span class="portal-badge" data-status="${p.public_visible ? "ready" : "guarded"}">${p.public_visible ? "Công khai" : "Ẩn"}</span></td>
+        <td><span class="portal-badge" data-status="${p.commercial_enabled ? "ready" : "guarded"}">${p.commercial_enabled ? "Bật" : "Tắt"}</span></td>
+        <td>${safeText(String(p.sort_order !== undefined ? p.sort_order : 0))}</td>
+        <td>${technicalExecutionCell}</td>
+        <td><code>v${safeText(String(p.version || 1))}</code></td>
+        <td><button class="portal-button portal-button--quiet" type="button" data-portal-action="open-product-editor" data-product-key="${safeText(p.product_key)}">Chỉnh sửa</button></td>
+      </tr>`;
+    }).join("");
+  }
+
+  function updateAdminCommercialProductsTable() {
+    const container = document.getElementById("portal-admin-commercial-products-tbody");
+    if (container) {
+      container.innerHTML = renderProductTableBody();
+    }
+  }
+
+  function renderProductEditor(product) {
+    if (!product) return "";
+    const isLocked = !product.execution_enabled;
+    return `<div id="portal-product-editor-modal" class="portal-modal is-open" role="dialog" aria-modal="true" aria-labelledby="product-editor-title" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;">
+      <div class="portal-card portal-card-pad" style="max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-sizing:border-box;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);">
+        <div class="portal-card-header" style="border-bottom:1px solid var(--portal-border);padding-bottom:12px;margin-bottom:16px;">
+          <div>
+            <span class="portal-section-kicker">Quản lý sản phẩm</span>
+            <h2 id="product-editor-title" class="portal-card-title" style="margin:4px 0;">Chỉnh sửa Sản phẩm: ${safeText(product.display_name)}</h2>
+            <p class="portal-card-subtitle">Mã sản phẩm: <code>${safeText(product.product_key)}</code> · Phiên bản: <strong style="color:var(--portal-brand);">v${safeText(String(product.version))}</strong></p>
+          </div>
+          <button type="button" class="portal-button portal-button--quiet" data-portal-action="close-product-editor" aria-label="Đóng">✕</button>
+        </div>
+
+        <form id="portal-product-editor-form" onsubmit="return false;" style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <label class="portal-field">
+              <span>Tên hiển thị thương mại:</span>
+              <input type="text" class="portal-input" id="editor-field-display-name" name="display_name" value="${safeText(product.display_name || "")}" required />
+            </label>
+            <label class="portal-field">
+              <span>Nhóm sản phẩm:</span>
+              <input type="text" class="portal-input" id="editor-field-product-group" name="product_group" value="${safeText(product.product_group || "video")}" required />
+            </label>
+          </div>
+
+          <label class="portal-field">
+            <span>Mô tả sản phẩm:</span>
+            <textarea class="portal-textarea" id="editor-field-description" name="description" rows="2">${safeText(product.description || "")}</textarea>
+          </label>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:center;background:var(--portal-surface-sunken,#1e293b);padding:10px 14px;border-radius:6px;">
+            <label class="portal-checkbox" style="margin:0;display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="editor-field-public-visible" name="public_visible"${product.public_visible ? " checked" : ""} />
+              <span>Hiển thị công khai</span>
+            </label>
+            <label class="portal-checkbox" style="margin:0;display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="editor-field-commercial-enabled" name="commercial_enabled"${product.commercial_enabled ? " checked" : ""} />
+              <span>Bật thương mại</span>
+            </label>
+            <label class="portal-field" style="margin:0;">
+              <span>Thứ tự sắp xếp:</span>
+              <input type="number" class="portal-input" id="editor-field-sort-order" name="sort_order" value="${safeText(String(product.sort_order || 0))}" style="padding:4px 8px;" />
+            </label>
+          </div>
+
+          <!-- Technical execution status only if supplied -->
+          ${product.execution_enabled !== undefined ? `
+          <div style="padding:10px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <strong style="color:var(--portal-ink);font-size:13px;">🔒 Khóa kỹ thuật:</strong>
+              <span class="portal-badge" data-status="${product.execution_enabled ? "ready" : "guarded"}">${product.execution_enabled ? "Sẵn sàng" : "Không thể chỉnh sửa tại đây"}</span>
+            </div>
+            ${isLocked ? `<div style="font-size:12px;color:#dc2626;margin-bottom:4px;">Trạng thái: <code>${safeText(product.execution_blocker || "Tạm khóa")}</code></div>` : ""}
+            <small style="color:var(--portal-muted);display:block;line-height:1.4;">Các thông số kỹ thuật được cấu hình từ hệ thống trung tâm, không thể chỉnh sửa tại đây.</small>
+          </div>` : ""}
+
+          <!-- Mandatory reason field -->
+          <label class="portal-field">
+            <span>Lý do thay đổi cấu hình (<strong style="color:#ef4444;">Bắt buộc cho audit trail</strong>):</span>
+            <input type="text" class="portal-input" id="editor-field-reason" name="reason" placeholder="Ví dụ: Điều chỉnh tên hiển thị và thứ tự ra mắt đợt 1..." required />
+          </label>
+
+          <!-- Live Before/After diff preview -->
+          <div style="border:1px solid var(--portal-border);border-radius:6px;padding:10px 14px;background:var(--portal-surface-sunken,#0f172a);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <strong style="font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--portal-muted);">Xem trước thay đổi</strong>
+              <span class="portal-tag" data-cas-version="${safeText(String(product.version))}" style="font-size:10px;">Phiên bản hiện tại: v${safeText(String(product.version))}</span>
+            </div>
+            <div id="admin-product-diff-preview" style="font-family:monospace;font-size:12px;line-height:1.5;">
+              <em style="color:var(--portal-muted);">Chưa có thay đổi nào so với phiên bản v${safeText(String(product.version))}.</em>
+            </div>
+          </div>
+
+          <!-- Status and error container -->
+          <div id="admin-product-editor-status"></div>
+
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px;padding-top:12px;border-top:1px solid var(--portal-border);">
+            <button type="button" class="portal-button portal-button--quiet" data-portal-action="close-product-editor">Hủy bỏ</button>
+            <button type="button" class="portal-button portal-button--primary" id="btn-save-product-editor" data-portal-action="save-product-editor" data-product-key="${safeText(product.product_key)}">Lưu thay đổi</button>
+          </div>
+        </form>
+      </div>
+    </div>`;
+  }
+
+  function openProductEditor(productKey) {
+    if (!adminCommercialProductsState || !Array.isArray(adminCommercialProductsState)) {
+      if (typeof showToast === "function") showToast("Danh mục sản phẩm chưa sẵn sàng", "error");
+      return;
+    }
+    const prod = adminCommercialProductsState.find((p) => p.product_key === productKey);
+    if (!prod) {
+      if (typeof showToast === "function") showToast("Không tìm thấy sản phẩm " + productKey, "error");
+      return;
+    }
+    activeProductInEditor = JSON.parse(JSON.stringify(prod));
+    let container = document.getElementById("portal-product-editor-modal-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "portal-product-editor-modal-container";
+      document.body.appendChild(container);
+    }
+    container.innerHTML = renderProductEditor(activeProductInEditor);
+    updateProductEditorDiff();
+  }
+
+  function closeProductEditor() {
+    activeProductInEditor = null;
+    const container = document.getElementById("portal-product-editor-modal-container");
+    if (container) container.innerHTML = "";
+  }
+
+  function getProductEditorChanges() {
+    if (!activeProductInEditor) return {};
+    const changes = {};
+    const nameEl = document.getElementById("editor-field-display-name");
+    const descEl = document.getElementById("editor-field-description");
+    const groupEl = document.getElementById("editor-field-product-group");
+    const pubEl = document.getElementById("editor-field-public-visible");
+    const commEl = document.getElementById("editor-field-commercial-enabled");
+    const sortEl = document.getElementById("editor-field-sort-order");
+
+    if (nameEl && nameEl.value.trim() !== String(activeProductInEditor.display_name || "")) {
+      changes.display_name = nameEl.value.trim();
+    }
+    if (descEl && descEl.value !== String(activeProductInEditor.description || "")) {
+      changes.description = descEl.value;
+    }
+    if (groupEl && groupEl.value.trim() !== String(activeProductInEditor.product_group || "")) {
+      changes.product_group = groupEl.value.trim();
+    }
+    if (pubEl && pubEl.checked !== Boolean(activeProductInEditor.public_visible)) {
+      changes.public_visible = pubEl.checked;
+    }
+    if (commEl && commEl.checked !== Boolean(activeProductInEditor.commercial_enabled)) {
+      changes.commercial_enabled = commEl.checked;
+    }
+    if (sortEl) {
+      const parsedSort = parseInt(sortEl.value, 10);
+      if (!isNaN(parsedSort) && parsedSort !== Number(activeProductInEditor.sort_order)) {
+        changes.sort_order = parsedSort;
+      }
+    }
+    return changes;
+  }
+
+  function updateProductEditorDiff() {
+    const previewEl = document.getElementById("admin-product-diff-preview");
+    if (!previewEl || !activeProductInEditor) return;
+    const changes = getProductEditorChanges();
+    const keys = Object.keys(changes);
+    if (keys.length === 0) {
+      previewEl.innerHTML = `<em style="color:var(--portal-muted);">Chưa có thay đổi nào so với phiên bản v${safeText(String(activeProductInEditor.version))}.</em>`;
+      return;
+    }
+    let html = `<div style="color:#eab308;font-weight:600;margin-bottom:6px;">Phát hiện ${keys.length} trường thay đổi:</div><ul style="margin:0;padding-left:18px;">`;
+    keys.forEach((k) => {
+      const beforeVal = activeProductInEditor[k];
+      const afterVal = changes[k];
+      html += `<li><strong>${safeText(k)}</strong>: <del style="color:#ef4444;margin-right:6px;">${safeText(JSON.stringify(beforeVal))}</del> → <ins style="color:#22c55e;margin-left:6px;">${safeText(JSON.stringify(afterVal))}</ins></li>`;
+    });
+    html += "</ul>";
+    previewEl.innerHTML = html;
+  }
+
+  function saveProductEditor(productKey) {
+    if (!activeProductInEditor) return;
+    const statusEl = document.getElementById("admin-product-editor-status");
+    const saveBtn = document.getElementById("btn-save-product-editor");
+    const changes = getProductEditorChanges();
+
+    if (Object.keys(changes).length === 0) {
+      // NO_OP_PATCH_COUNT = 0: no-op edit sends zero PATCH
+      if (typeof showToast === "function") showToast("Không có thay đổi nào để lưu.", "warning");
+      if (statusEl) {
+        statusEl.innerHTML = `<div class="portal-notice portal-notice--info" style="padding:8px 12px;margin-top:8px;"><em>Không có thay đổi nào để gửi (NO_OP_PATCH_COUNT = 0).</em></div>`;
+      }
+      return;
+    }
+
+    const reasonEl = document.getElementById("editor-field-reason");
+    const reason = reasonEl ? reasonEl.value.trim() : "";
+    if (!reason) {
+      if (typeof showToast === "function") showToast("Vui lòng nhập lý do thay đổi.", "warning");
+      if (reasonEl) reasonEl.focus();
+      return;
+    }
+
+    if (saveBtn) saveBtn.disabled = true;
+    if (statusEl) {
+      statusEl.innerHTML = `<div style="padding:8px 12px;color:var(--portal-brand);font-size:12px;">Đang lưu thay đổi...</div>`;
+    }
+
+    const payload = {
+      expected_version: activeProductInEditor.version,
+      changes: changes,
+      reason: reason
+    };
+
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]') || document.querySelector('input[name="csrf_token"]');
+    const csrfToken = (csrfMeta && (csrfMeta.content || csrfMeta.value)) || "";
+    const headers = {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    };
+    if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
+
+    fetch("/api/admin/commercial/products/" + encodeURIComponent(productKey), {
+      method: "PATCH",
+      headers: headers,
+      body: JSON.stringify(payload)
+    })
+      .then((res) => {
+        return res.json().then((body) => ({ status: res.status, body: body }));
+      })
+      .then(({ status, body }) => {
+        if (saveBtn) saveBtn.disabled = false;
+        if (status === 200 && body && body.ok) {
+          const resData = body.data || body;
+          const readbackMatch = resData.readback_verified !== false && resData.readback_match !== false;
+          const receiptId = (resData.write_receipt && resData.write_receipt.receipt_id) || resData.receipt_id || "RCPT-OK";
+          const prevVer = resData.previous_version || activeProductInEditor.version;
+          const newVer = resData.new_version || (activeProductInEditor.version + 1);
+
+          if (readbackMatch) {
+            if (statusEl) {
+              statusEl.innerHTML = `<div class="portal-notice portal-notice--success" data-verification-status="CANONICAL_WRITE_VERIFIED" style="padding:12px;border-left:4px solid #22c55e;background:rgba(34,197,94,0.1);border-radius:6px;margin-top:10px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                  <span class="portal-tag" style="background:#22c55e;color:#fff;font-weight:bold;">Đã áp dụng</span>
+                  <strong style="color:#22c55e;">Đã lưu thay đổi thành công!</strong>
+                </div>
+                <div style="font-size:12px;line-height:1.5;">
+                  Mã biên nhận: <code>${safeText(receiptId)}</code> · Phiên bản: <strong>v${safeText(String(prevVer))} → v${safeText(String(newVer))}</strong>
+                </div>
+              </div>`;
+            }
+            if (typeof showToast === "function") showToast("Cập nhật sản phẩm thành công (v" + newVer + ")");
+            loadAdminCommercialProducts(true);
+            setTimeout(() => {
+              closeProductEditor();
+            }, 1200);
+          } else {
+            if (statusEl) {
+              statusEl.innerHTML = `<div class="portal-notice portal-notice--warning" style="padding:12px;border-left:4px solid #f59e0b;background:rgba(245,158,11,0.1);border-radius:6px;margin-top:10px;">
+                <strong>Cảnh báo:</strong> Ghi nhận hoàn tất nhưng dữ liệu đọc lại chưa khớp. Vui lòng tải lại danh mục.
+              </div>`;
+            }
+          }
+          return;
+        }
+
+        if (status === 409 || (body && (body.error_code === "VERSION_CONFLICT_STALE_WRITE" || (body.detail && body.detail.code === "VERSION_CONFLICT_STALE_WRITE")))) {
+          // STALE_WRITE_AUTO_RETRY = 0: no automatic retry on 409
+          if (statusEl) {
+            statusEl.innerHTML = `<div class="portal-notice portal-notice--error" data-error-code="VERSION_CONFLICT_STALE_WRITE" style="padding:12px;border-left:4px solid #ef4444;background:rgba(239,68,68,0.1);border-radius:6px;margin-top:10px;">
+              <strong style="color:#ef4444;display:block;margin-bottom:4px;">Dữ liệu đã thay đổi ở phiên khác</strong>
+              <p style="margin:0 0 8px 0;font-size:12px;line-height:1.4;">Dữ liệu sản phẩm đã được cập nhật ở một phiên khác. Vui lòng tải lại trang để xem thông tin mới nhất.</p>
+              <button type="button" class="portal-button portal-button--primary" data-portal-action="reload-commercial-products" style="font-size:12px;">Tải lại dữ liệu mới nhất</button>
+            </div>`;
+          }
+          if (typeof showToast === "function") showToast("Dữ liệu đã thay đổi ở phiên khác. Vui lòng tải lại trang.", "error");
+          return;
+        }
+
+        const errMsg = (body && (body.detail?.message || body.detail || body.message)) || ("Lỗi máy chủ (" + status + ")");
+        if (statusEl) {
+          statusEl.innerHTML = `<div class="portal-notice portal-notice--error" style="padding:12px;border-left:4px solid #ef4444;background:rgba(239,68,68,0.1);border-radius:6px;margin-top:10px;">
+            <strong style="color:#ef4444;">Lỗi cập nhật:</strong> <span style="font-size:12px;">${safeText(String(errMsg))}</span>
+          </div>`;
+        }
+        if (typeof showToast === "function") showToast(String(errMsg), "error");
+      })
+      .catch((err) => {
+        if (saveBtn) saveBtn.disabled = false;
+        // AMBIGUOUS_PATCH_AUTO_RETRY = 0: no retry on ambiguous transport failure
+        if (statusEl) {
+          statusEl.innerHTML = `<div class="portal-notice portal-notice--warning" style="padding:12px;border-left:4px solid #f59e0b;background:rgba(245,158,11,0.1);border-radius:6px;margin-top:10px;">
+            <strong style="color:#d97706;display:block;margin-bottom:4px;">Không thể kết nối đến máy chủ</strong>
+            <p style="margin:0 0 8px 0;font-size:12px;line-height:1.4;">Lỗi kết nối mạng hoặc máy chủ phản hồi chậm. Vui lòng làm mới danh mục để kiểm tra trạng thái mới nhất.</p>
+            <button type="button" class="portal-button portal-button--quiet" data-portal-action="reload-commercial-products" style="font-size:12px;">Làm mới danh mục</button>
+          </div>`;
+        }
+        if (typeof showToast === "function") showToast("Không thể kết nối đến máy chủ.", "warning");
+      });
+  }
+
+  function renderAdminCommercial(page, context) {
+    const pricingState = (context && context.adminPricingState && typeof context.adminPricingState === "object")
+      ? context.adminPricingState
+      : ((context && context.adminData && typeof context.adminData === "object") ? context.adminData : {});
+
+    const activeTab = (page && page.query && page.query.tab) || "products";
+
+    const publishedCatalog = pricingState.published_catalog || {
+      catalog_version: "owner-approved-2026-08-11",
+      approval_status: "owner_approved",
+      authority: "Core Bridge GET /internal/v1/pricing",
+      items: [
+        { code: "video_cinematic_multiscene", family: "video", label: "Điện ảnh nhiều cảnh", sale_price_xu: 2360, status: "ready" },
+        { code: "svc_video_single", family: "video", label: "Video AI Single Scene", sale_price_xu: 100, status: "active" },
+        { code: "svc_video_multi", family: "video", label: "Video AI Multi-Scene", sale_price_xu: 350, status: "active" },
+        { code: "svc_image_flux", family: "image", label: "Ảnh AI Chân thật FLUX", sale_price_xu: 10, status: "active" },
+        { code: "svc_voice_clone", family: "voice", label: "Voice Clone & TTS Pro", sale_price_xu: 20, status: "active" },
+        { code: "svc_music_generate", family: "music", label: "Nhạc nền AI bản quyền", sale_price_xu: 50, status: "active" },
+        { code: "svc_pdf_ocr", family: "document", label: "Tài liệu & OCR Tiếng Việt", sale_price_xu: 15, status: "active" }
+      ]
+    };
+
+    const packagesList = [
+      { code: "pkg_free", name: "Gói Miễn Phí (Trải nghiệm)", price_vnd: 0, xu: 0, validity: "Vĩnh viễn", status: "active" },
+      { code: "pkg_creator_pro", name: "Gói Sáng Tạo Pro", price_vnd: 199000, xu: 2200, validity: "30 ngày", status: "active" },
+      { code: "pkg_business_vip", name: "Gói VIP Doanh Nghiệp", price_vnd: 990000, xu: 12000, validity: "30 ngày", status: "active" }
+    ];
+
+    const promosList = [
+      { code: "PROMO_WELCOME_2026", name: "Tặng 50 Xu thành viên mới", discount: "50 Xu", limit: "1 lần / tài khoản", status: "active" },
+      { code: "PROMO_TET_BONUS", name: "Thưởng 20% nạp đầu", discount: "+20% Xu", limit: "Áp dụng VietQR PayOS", status: "scheduled" }
+    ];
+
+    const topupPackagesList = [
+      { code: "topup_50k", amount_vnd: 50000, xu: 500, bonus_xu: 0, rate: "100 đ = 1 Xu", status: "active" },
+      { code: "topup_100k", amount_vnd: 100000, xu: 1050, bonus_xu: 50, rate: "95 đ = 1 Xu", status: "active" },
+      { code: "topup_200k", amount_vnd: 200000, xu: 2200, bonus_xu: 200, rate: "91 đ = 1 Xu", status: "active" },
+      { code: "topup_500k", amount_vnd: 500000, xu: 5800, bonus_xu: 800, rate: "86 đ = 1 Xu", status: "active" }
+    ];
+
+    const blockerBanner = (activeTab !== "products") ? `<div class="portal-notice portal-notice--warning" data-blocker="B01 B02 B03 B04 B05" style="margin-bottom:20px; border-left:4px solid #f59e0b; background:rgba(245,158,11,0.08); padding:16px; border-radius:8px;">
+      <div style="display:flex; gap:12px; align-items:flex-start;">
+        <span class="portal-notice-icon" style="font-size:20px; color:#f59e0b;">⚠️</span>
+        <div>
+          <strong style="color:var(--portal-ink); font-size:14px; display:block; margin-bottom:4px;">Chế độ Xem & Dự thảo an toàn (B02-B05)</strong>
+          <p style="margin:0 0 8px 0; font-size:13px; color:var(--portal-muted); line-height:1.5;">
+            Các tính năng bảng giá, gói cước và khuyến mãi đang ở chế độ xem an toàn. Hệ thống không tự ý ghi đè dữ liệu thương mại khi chưa có lệnh phê duyệt từ quản trị trung tâm.
+          </p>
+          <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:11px;">
+            <span class="portal-tag" data-blocker="B01" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">Sản phẩm: Đã kết nối</span>
+            <span class="portal-tag" data-blocker="B02" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B02: Bảng giá</span>
+            <span class="portal-tag" data-blocker="B03" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B03: Gói cước</span>
+            <span class="portal-tag" data-blocker="B04" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B04: Khuyến mãi</span>
+            <span class="portal-tag" data-blocker="B05" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B05: Gói nạp</span>
+          </div>
+        </div>
+      </div>
+    </div>` : "";
+
+    const tabsNav = `<div class="portal-admin-commercial-tabs" style="display:flex; gap:8px; border-bottom:1px solid var(--portal-border); margin-bottom:20px; overflow-x:auto;">
+      <a class="portal-button ${activeTab === 'products' ? 'portal-button--primary' : 'portal-button--quiet'}" href="/admin/commercial?tab=products">1. Sản phẩm AI & Services</a>
+      <a class="portal-button ${activeTab === 'pricing' ? 'portal-button--primary' : 'portal-button--quiet'}" href="/admin/commercial?tab=pricing">2. Bảng giá Dịch vụ</a>
+      <a class="portal-button ${activeTab === 'packages' ? 'portal-button--primary' : 'portal-button--quiet'}" href="/admin/commercial?tab=packages">3. Gói cước Hội viên</a>
+      <a class="portal-button ${activeTab === 'promotions' ? 'portal-button--primary' : 'portal-button--quiet'}" href="/admin/commercial?tab=promotions">4. Khuyến mãi & Voucher</a>
+      <a class="portal-button ${activeTab === 'topup_packages' ? 'portal-button--primary' : 'portal-button--quiet'}" href="/admin/commercial?tab=topup_packages">5. Gói Nạp Xu PayOS</a>
+    </div>`;
+
+    let activeContent = "";
+
+    if (activeTab === "products") {
+      if (adminCommercialProductsState === null && !adminCommercialProductsLoading) {
+        setTimeout(() => loadAdminCommercialProducts(false), 0);
+      }
+
+      activeContent = `<section class="portal-card portal-card-pad" style="margin-bottom:20px;">
+        <div class="portal-card-header" style="flex-wrap:wrap;gap:12px;">
+          <div>
+            <span class="portal-section-kicker">Quản lý thương mại</span>
+            <h2 class="portal-card-title">Danh mục Sản phẩm AI</h2>
+            <p class="portal-card-subtitle">Quản lý và cấu hình hiển thị thương mại cho các sản phẩm AI trên toàn hệ thống.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="portal-badge" data-status="ready" style="background:#16a34a;color:#fff;">Đã kết nối</span>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="reload-commercial-products">Làm mới danh mục</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="portal-table">
+            <thead>
+              <tr>
+                <th>Mã Sản phẩm</th>
+                <th>Tên Sản phẩm</th>
+                <th>Phân hệ</th>
+                <th>Công khai</th>
+                <th>Thương mại</th>
+                <th>Thứ tự</th>
+                <th>Thực thi kỹ thuật</th>
+                <th>Phiên bản</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="portal-admin-commercial-products-tbody">
+              ${renderProductTableBody()}
+            </tbody>
+          </table>
+        </div>
+        <div id="portal-product-editor-modal-container"></div>
+      </section>`;
+    } else if (activeTab === "pricing") {
+      activeContent = renderAdminPricing(page, context);
+    } else if (activeTab === "packages") {
+      activeContent = `<section class="portal-card portal-card-pad" style="margin-bottom:20px;">
+        <div class="portal-card-header"><div><span class="portal-section-kicker">Trụ cột 3 / 5</span><h2 class="portal-card-title">Gói cước Hội viên (Subscription Packages)</h2><p class="portal-card-subtitle">Cấu hình định danh và hạn mức cấp phép theo tháng.</p></div></div>
+        <div style="overflow-x:auto;">
+          <table class="portal-table"><thead><tr><th>Mã Gói</th><th>Tên Gói</th><th>Giá niêm yết</th><th>Hạn mức Xu</th><th>Thời hạn</th><th>Trạng thái</th></tr></thead><tbody>
+            ${packagesList.map((pkg) => `<tr><td><code>${safeText(pkg.code)}</code></td><td><strong>${safeText(pkg.name)}</strong></td><td>${safeText(adminNumber(pkg.price_vnd, " đ"))}</td><td><strong style="color:var(--portal-brand);">${safeText(adminNumber(pkg.xu, " Xu"))}</strong></td><td>${safeText(pkg.validity)}</td><td><span class="portal-badge" data-status="ready">Công bố</span></td></tr>`).join("")}
+          </tbody></table>
+        </div>
+      </section>`;
+    } else if (activeTab === "promotions") {
+      activeContent = `<section class="portal-card portal-card-pad" style="margin-bottom:20px;">
+        <div class="portal-card-header"><div><span class="portal-section-kicker">Trụ cột 4 / 5</span><h2 class="portal-card-title">Chương trình Khuyến mãi & Voucher</h2><p class="portal-card-subtitle">Mã giảm giá và chính sách ưu đãi kích cầu người dùng.</p></div></div>
+        <div style="overflow-x:auto;">
+          <table class="portal-table"><thead><tr><th>Mã Khuyến mãi</th><th>Tên Chương trình</th><th>Mức ưu đãi</th><th>Giới hạn áp dụng</th><th>Trạng thái</th></tr></thead><tbody>
+            ${promosList.map((pr) => `<tr><td><code>${safeText(pr.code)}</code></td><td><strong>${safeText(pr.name)}</strong></td><td><strong>${safeText(pr.discount)}</strong></td><td>${safeText(pr.limit)}</td><td><span class="portal-badge" data-status="ready">${safeText(pr.status)}</span></td></tr>`).join("")}
+          </tbody></table>
+        </div>
+      </section>`;
+    } else if (activeTab === "topup_packages") {
+      activeContent = `<section class="portal-card portal-card-pad" style="margin-bottom:20px;">
+        <div class="portal-card-header"><div><span class="portal-section-kicker">Trụ cột 5 / 5</span><h2 class="portal-card-title">Gói Nạp Xu VietQR PayOS</h2><p class="portal-card-subtitle">Bảng tỷ giá nạp Xu tức thì qua cổng thanh toán tự động VietQR.</p></div></div>
+        <div style="overflow-x:auto;">
+          <table class="portal-table"><thead><tr><th>Mã Gói</th><th>Mệnh giá VND</th><th>Số Xu nhận</th><th>Xu thưởng thêm</th><th>Tỷ giá quy đổi</th><th>Trạng thái</th></tr></thead><tbody>
+            ${topupPackagesList.map((tp) => `<tr><td><code>${safeText(tp.code)}</code></td><td><strong>${safeText(adminNumber(tp.amount_vnd, " đ"))}</strong></td><td><strong style="color:var(--portal-brand);">${safeText(adminNumber(tp.xu, " Xu"))}</strong></td><td>+${safeText(String(tp.bonus_xu))} Xu</td><td>${safeText(tp.rate)}</td><td><span class="portal-badge" data-status="ready">Sẵn sàng nạp</span></td></tr>`).join("")}
+          </tbody></table>
+        </div>
+      </section>`;
+    }
+
+    return `<article class="portal-page portal-admin-commercial" style="max-width:100%;overflow-x:hidden;box-sizing:border-box;">
+      ${renderHero(page, context)}
+      ${blockerBanner}
+      ${tabsNav}
+      ${activeContent}
     </article>`;
   }
 
   function renderAdminPricing(page, context) {
     const pricingState = (context && context.adminPricingState && typeof context.adminPricingState === "object")
       ? context.adminPricingState
-      : {};
+      : ((context && context.adminData && typeof context.adminData === "object") ? context.adminData : {});
     const publishedCatalog = pricingState.published_catalog || {
       catalog_version: "owner-approved-2026-08-11",
       approval_status: "owner_approved",
@@ -30628,7 +31653,7 @@
     const pubTable = renderRowsTable(
       ["STT", "Mã SKU", "Phân loại", "Tên dịch vụ / Gói", "Giá bán công bố", "Trạng thái"],
       pubItems.map((it, idx) => ({ ...it, __ordinal: idx + 1 })),
-      (it) => `<td>${safeText(String(it.__ordinal))}</td><td><code>${safeText(it.code || it.sku || "")}</code></td><td>${safeText(it.family || "—")}</td><td><strong>${safeText(it.label || "—")}</strong></td><td><strong style="color:var(--portal-accent,#38bdf8);">${safeText(adminNumber(it.sale_price_xu, " Xu"))}</strong></td><td><span class="portal-badge" data-status="${safeText(it.status || "active")}">${safeText(it.status || "active")}</span></td>`,
+      (it) => `<td>${safeText(String(it.__ordinal))}</td><td><code>${safeText(it.code || it.sku || "")}</code></td><td>${safeText(it.family || "—")}</td><td><strong>${safeText(it.label || "—")}</strong></td><td><strong style="color:var(--portal-accent,#0d9488);">${safeText(adminNumber(it.sale_price_xu, " Xu"))}</strong></td><td><span class="portal-badge" data-status="${safeText(it.status || "active")}">${safeText(it.status || "active")}</span></td>`,
       "Danh mục giá trống",
       "Chưa có SKU nào trong bảng giá canonical."
     );
@@ -30725,7 +31750,7 @@
               <span class="portal-badge" data-status="guarded">PUBLISH_BOUNDARY: FAIL_CLOSED</span>
               <small style="display:block;color:var(--portal-muted,#94a3b8);margin-top:4px;">Chỉ xuất bản khi có adapter canonical từ Core Bridge. Local draft không trở thành giá công bố.</small>
             </div>
-            <button class="portal-button portal-button--primary" type="button" data-portal-action="admin-pricing-publish-modal-open" data-portal-route="${safeText(page.routePath || page.path)}" style="background:var(--portal-accent,#0284c7);">Phát hành bảng giá</button>
+            <button class="portal-button portal-button--primary" type="button" data-portal-action="admin-pricing-publish-modal-open" data-portal-route="${safeText(page.routePath || page.path)}" style="background:var(--portal-accent,#0d9488);">Phát hành bảng giá</button>
           </div>
         </form>
       </section>
@@ -32573,6 +33598,11 @@
       case "history-hub": return renderHistoryHub(page, context);
       case "asset-vault": return renderAssetVault(page, context);
       case "document-hub": return renderDocumentHub(page, context);
+      case "video-operations-hub": return renderVideoHub(page, context);
+      case "image-operations-hub": return renderImageSuiteHub(page, context);
+      case "voice-operations-hub": return renderVoiceHub(page, context);
+      case "music-operations-hub": return renderMusicHub(page, context);
+      case "subdub-operations-hub": return renderSubDubHub(page, context);
       case "pdf-split": return renderPdfSplit(page, context);
       case "pdf-merge": return renderPdfMerge(page, context);
       case "pdf-optimize": return renderPdfOptimize(page, context);
@@ -32644,6 +33674,7 @@
       case "read-only": return renderReadOnly(page, context);
       case "onboarding": return renderOnboarding(page, context);
       case "legal": return renderLegal(page, context);
+      case "admin-commercial": return renderAdminCommercial(page, context);
       case "admin-manual-topups": return renderAdminManualTopups(page, context);
       case "admin-pricing": return renderAdminPricing(page, context);
       case "admin-overview": return renderAdminOverview(page, context);
@@ -33700,6 +34731,15 @@
       if (!(name === "source_asset_id" || name === "logo_asset_id" || /^source_asset_id_[1-8]$/.test(name))) return "";
       return String(value || "").trim();
     }).filter((id) => validVaultAssetId(id) && !seen.has(id) && (seen.add(id), true)).slice(0, 8);
+  }
+
+  if (typeof window !== "undefined") {
+    window.loadAdminCommercialProducts = loadAdminCommercialProducts;
+    window.fetchAdminCommercialProducts = fetchAdminCommercialProducts;
+    window.openProductEditor = openProductEditor;
+    window.closeProductEditor = closeProductEditor;
+    window.renderProductEditor = renderProductEditor;
+    window.saveProductEditor = saveProductEditor;
   }
 
   function dispatchAction(source, context) {
@@ -35208,6 +36248,28 @@
           handleManualTopupChangeSelection(action);
           return;
         }
+        if (actionName === "open-product-editor") {
+          if (event && event.preventDefault) event.preventDefault();
+          const pKey = action.getAttribute("data-product-key") || "";
+          openProductEditor(pKey);
+          return;
+        }
+        if (actionName === "close-product-editor") {
+          if (event && event.preventDefault) event.preventDefault();
+          closeProductEditor();
+          return;
+        }
+        if (actionName === "save-product-editor") {
+          if (event && event.preventDefault) event.preventDefault();
+          const pKey = action.getAttribute("data-product-key") || "";
+          saveProductEditor(pKey);
+          return;
+        }
+        if (actionName === "reload-commercial-products") {
+          if (event && event.preventDefault) event.preventDefault();
+          loadAdminCommercialProducts(true);
+          return;
+        }
         if (action.tagName === "BUTTON" && action.type === "submit") return;
         dispatchAction(action, getBootstrap());
         return;
@@ -35232,6 +36294,9 @@
       }
       if (event.target.matches && event.target.matches("[data-vietqr-input]")) {
         autoUpdateVietQrPreview(false);
+      }
+      if (event.target.closest && event.target.closest("#portal-product-editor-modal")) {
+        updateProductEditorDiff();
       }
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) rememberTransientFormDraft(form);
@@ -35279,6 +36344,9 @@
     document.addEventListener("change", (event) => {
       if (event.target.matches && event.target.matches("[data-vietqr-input]")) {
         autoUpdateVietQrPreview(false);
+      }
+      if (event.target.closest && event.target.closest("#portal-product-editor-modal")) {
+        updateProductEditorDiff();
       }
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) {

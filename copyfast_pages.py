@@ -106,6 +106,7 @@ _PORTAL_SHELL_COPY = {
     },
 }
 _PORTAL_SHELL_TITLES = {
+    "/admin/commercial": {"vi": "Trung tâm Thương mại · TOAN AAS", "en": "Commercial Command Center · TOAN AAS", "zh": "商业指挥中心 · TOAN AAS"},
     "/admin/customers": {"vi": "Khách hàng Web · TOAN AAS", "en": "Web Customers · TOAN AAS", "zh": "Web 客户 · TOAN AAS"},
     "/admin/finance": {"vi": "Tài chính & Giao dịch · TOAN AAS", "en": "Finance & Transactions · TOAN AAS", "zh": "财务与交易 · TOAN AAS"},
     "/admin/finance/topups": {"vi": "Yêu cầu nạp tiền · TOAN AAS", "en": "Topup Requests · TOAN AAS", "zh": "充值申请 · TOAN AAS"},
@@ -183,12 +184,22 @@ _PORTAL_SHELL_TITLES = {
     "/operations": {"vi": "Operations Autopilot", "en": "Operations Autopilot", "zh": "Operations Autopilot"},
     "/admin/operations": {"vi": "Operations Autopilot", "en": "Operations Autopilot", "zh": "Operations Autopilot"},
     "/history": {"vi": "Lịch sử & Nhật ký · TOAN AAS", "en": "History & Logs · TOAN AAS", "zh": "历史与日志 · TOAN AAS"},
+    "/tools/video": {"vi": "Video Studio & Tác vụ · TOAN AAS", "en": "Video Operations · TOAN AAS", "zh": "视频工作台 · TOAN AAS"},
+    "/tools/image": {"vi": "Image Suite & Tác vụ · TOAN AAS", "en": "Image Suite · TOAN AAS", "zh": "图像工作台 · TOAN AAS"},
+    "/voice": {"vi": "Voice Hub & TTS · TOAN AAS", "en": "Voice Hub & TTS · TOAN AAS", "zh": "语音工作台 · TOAN AAS"},
+    "/music": {"vi": "Music & SFX Hub · TOAN AAS", "en": "Music & SFX Hub · TOAN AAS", "zh": "音乐与音效工作台 · TOAN AAS"},
+    "/subdub": {"vi": "Sub & Dub Hub · TOAN AAS", "en": "Sub & Dub Hub · TOAN AAS", "zh": "字幕与配音工作台 · TOAN AAS"},
 }
 
 # Route-specific descriptions are intentionally limited to reviewed, public
 # presentation copy. They must never interpolate account data, request state,
 # identifiers, or other private browser/server projections into first paint.
 _PORTAL_SHELL_DESCRIPTIONS = {
+    "/admin/commercial": {
+        "vi": "Quản lý tập trung 5 trụ cột thương mại: Sản phẩm, Bảng giá, Gói cước, Khuyến mãi và Gói nạp Xu theo thẩm quyền Bot canonical.",
+        "en": "Centralized management of 5 commercial pillars: Products, Pricing, Packages, Promotions, and Topup Packages under Bot authority.",
+        "zh": "在 Bot canonical 授权下集中管理5大商业支柱：产品、价格、套餐、促销与充值包。",
+    },
     "/wallet": {
         "vi": "Xem số dư Xu và lịch sử giao dịch từ ledger canonical của bot.",
         "en": "Review credit balance and transaction history from canonical bot ledger.",
@@ -530,7 +541,7 @@ def render_portal(path: str, *, interface_locale: str | None = None) -> HTMLResp
     if normalized.startswith("/tickets/") and not TICKET_DETAIL_PATH.fullmatch(normalized):
         raise HTTPException(status_code=404, detail="Trang không tồn tại")
     is_starter_kit_detail = normalized.startswith("/starter-kits/") and normalized.removeprefix("/starter-kits/") in STARTER_KIT_KEYS
-    if normalized not in allowed_paths() and normalized not in {"/chat/new", "/analytics/new", "/workboard/new", "/content/handoffs/new", "/crm/leads/new", "/audio-hub/new", "/image-hub/new", CAMPAIGN_CREATE_PATH, PROJECT_CREATE_PATH, "/starter-kits"} and not is_starter_kit_detail and not JOB_DETAIL_PATH.fullmatch(normalized) and not ASSET_DETAIL_PATH.fullmatch(normalized) and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not AUDIO_HUB_PATH.fullmatch(normalized) and not IMAGE_HUB_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not SUBTITLE_STUDIO_PATH.fullmatch(normalized) and not IMAGE_STUDIO_PATH.fullmatch(normalized) and not DOCUMENT_WORKSPACE_PATH.fullmatch(normalized) and not CHAT_WORKSPACE_PATH.fullmatch(normalized) and not ANALYTICS_WORKSPACE_PATH.fullmatch(normalized) and not WORKBOARD_PATH.fullmatch(normalized) and not CONTENT_HANDOFF_PATH.fullmatch(normalized) and not PARTNER_CRM_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/assets", "/wallet", "/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/document-workspace", "/support", "/tickets", "/admin", "/features", "/content", "/crm", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/subtitle-studio", "/image-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
+    if normalized not in allowed_paths() and normalized not in {"/chat/new", "/analytics/new", "/workboard/new", "/content/handoffs/new", "/crm/leads/new", "/audio-hub/new", "/image-hub/new", CAMPAIGN_CREATE_PATH, PROJECT_CREATE_PATH, "/starter-kits"} and not is_starter_kit_detail and not JOB_DETAIL_PATH.fullmatch(normalized) and not ASSET_DETAIL_PATH.fullmatch(normalized) and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not AUDIO_HUB_PATH.fullmatch(normalized) and not IMAGE_HUB_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not SUBTITLE_STUDIO_PATH.fullmatch(normalized) and not IMAGE_STUDIO_PATH.fullmatch(normalized) and not DOCUMENT_WORKSPACE_PATH.fullmatch(normalized) and not CHAT_WORKSPACE_PATH.fullmatch(normalized) and not ANALYTICS_WORKSPACE_PATH.fullmatch(normalized) and not WORKBOARD_PATH.fullmatch(normalized) and not CONTENT_HANDOFF_PATH.fullmatch(normalized) and not PARTNER_CRM_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/studio", "/publishing", "/assets", "/wallet", "/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/document-workspace", "/support", "/tickets", "/admin", "/features", "/content", "/crm", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/subtitle-studio", "/image-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard", "/subdub")):
         raise HTTPException(status_code=404, detail="Trang không tồn tại")
     locale = _interface_locale(interface_locale)
     motion_route = "dashboard" if normalized == "/dashboard" else "default"

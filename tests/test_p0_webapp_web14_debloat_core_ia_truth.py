@@ -24,7 +24,7 @@ client = TestClient(app)
 def _extract_customer_nav_permanent_links():
     """Extract permanent customer navigation links from portal.js navGroups."""
     start = PORTAL_JS.index("function navGroups(context, currentPage)")
-    end = PORTAL_JS.index("const videoStudioNavGroups = [")
+    end = PORTAL_JS.index("const currentGroup = currentCustomerWorkflowGroup")
     nav_block = PORTAL_JS[start:end]
     return re.findall(r'\["(/[^"]+)",\s*"([^"]+)"', nav_block)
 
@@ -65,7 +65,7 @@ class TestP0WebappWeb14DeBloatCoreIaTruth:
 
         # 4. Customer visible permanent nav items
         perm_links = _extract_customer_nav_permanent_links()
-        assert len(perm_links) in (15, 22), f"Expected 15 or 22 clean customer permanent links, got {len(perm_links)}"
+        assert len(perm_links) == 13, f"Expected 13 clean customer permanent links, got {len(perm_links)}"
 
         # 5. Admin visible nav items (24 modules across 6 pillars in V2, or 49 across 13 in legacy)
         admin_groups, admin_modules = _get_admin_nav_modules()
@@ -84,7 +84,7 @@ class TestP0WebappWeb14DeBloatCoreIaTruth:
 
         # Verify navGroups definition in portal.js does not push admin groups into customer rail
         start = PORTAL_JS.index("function navGroups(context, currentPage)")
-        end = PORTAL_JS.index("const videoStudioNavGroups = [")
+        end = PORTAL_JS.index("const currentGroup = currentCustomerWorkflowGroup")
         nav_block = PORTAL_JS[start:end]
         assert "Quản trị Admin ERP" not in nav_block, "Customer navGroups must not contain admin ERP group"
         assert 'links.push(["/admin' not in nav_block
@@ -138,7 +138,7 @@ class TestP0WebappWeb14DeBloatCoreIaTruth:
         assert len(dock_links) == 5, f"Mobile dock should have 5 core items, got {len(dock_links)}"
 
         dock_routes = {d[1] for d in dock_links}
-        expected_dock_routes = {"/dashboard", "/features", "/jobs", "/assets", "/account"}
+        expected_dock_routes = {"/studio", "/publishing", "/projects", "/wallet", "/account"}
         assert dock_routes == expected_dock_routes, f"Unexpected mobile dock routes: {dock_routes}"
 
         # All dock routes must be present in customer desktop permanent nav
@@ -188,8 +188,8 @@ class TestP0WebappWeb14DeBloatCoreIaTruth:
         assert resp.status_code == 200
         # Catalog has all 139 customer features
         assert len(reg.CUSTOMER_FEATURES) == 139
-        # Permanent nav has 15 (V2) or 22 (V1) items: NAV_CATALOG (15/22) != CAPABILITY_CATALOG (139)
-        assert len(_extract_customer_nav_permanent_links()) in (15, 22)
+        # Permanent nav has 13 items (V3 canonical)
+        assert len(_extract_customer_nav_permanent_links()) == 13
         assert len(_extract_customer_nav_permanent_links()) < len(reg.CUSTOMER_FEATURES)
 
     def test_08_core_workflows_reachable_within_bounded_depth(self):
