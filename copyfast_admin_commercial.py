@@ -387,7 +387,9 @@ async def get_admin_commercial_pricing_collection(
         return bridge_res
 
     pricing_list = bridge_res.get("pricing") or (bridge_res.get("data") or {}).get("pricing") or []
-    catalog_version = bridge_res.get("catalog_version") or (bridge_res.get("data") or {}).get("catalog_version") or "2026.09.b02.canonical"
+    catalog_version = bridge_res.get("catalog_version")
+    if catalog_version is None and isinstance(bridge_res.get("data"), dict):
+        catalog_version = bridge_res["data"].get("catalog_version")
 
     return {
         "ok": True,
@@ -596,6 +598,8 @@ async def patch_admin_commercial_pricing(
             "data": {
                 "price_key": clean_key,
                 "readback_verified": False,
+                "customer_effective_live_verified": False,
+                "verification_status": "READBACK_VERIFICATION_FAILED",
             },
         }
 
@@ -611,7 +615,8 @@ async def patch_admin_commercial_pricing(
             "write_receipt": patch_receipt,
             "effective_pricing": readback_pricing,
             "readback_verified": True,
-            "verification_status": "CANONICAL_WRITE_VERIFIED",
+            "customer_effective_live_verified": False,
+            "verification_status": "BOT_CORE_READBACK_VERIFIED",
         },
     }
 

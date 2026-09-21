@@ -31754,7 +31754,7 @@
 
           if (readbackMatch) {
             if (statusEl) {
-              statusEl.innerHTML = `<div class="portal-notice portal-notice--success" data-verification-status="CANONICAL_WRITE_VERIFIED" style="padding:12px;border-left:4px solid #22c55e;background:rgba(34,197,94,0.1);border-radius:6px;margin-top:10px;">
+              statusEl.innerHTML = `<div class="portal-notice portal-notice--success" data-verification-status="${resData.verification_status || 'BOT_CORE_READBACK_VERIFIED'}" style="padding:12px;border-left:4px solid #22c55e;background:rgba(34,197,94,0.1);border-radius:6px;margin-top:10px;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
                   <span class="portal-tag" style="background:#22c55e;color:#fff;font-weight:bold;">Đã áp dụng</span>
                   <strong style="color:#22c55e;">Đã lưu thay đổi thành công!</strong>
@@ -31864,7 +31864,7 @@
           </p>
           <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:11px;">
             <span class="portal-tag" data-blocker="B01" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">Sản phẩm: Đã kết nối</span>
-            <span class="portal-tag" data-blocker="B02" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">B02: Bảng giá (Đã kết nối)</span>
+            <span class="portal-tag" data-blocker="B02" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">Bảng giá: Đã nối Bot Core · chưa xác minh live</span>
             <span class="portal-tag" data-blocker="B03" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B03: Gói cước</span>
             <span class="portal-tag" data-blocker="B04" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B04: Khuyến mãi</span>
             <span class="portal-tag" data-blocker="B05" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B05: Gói nạp</span>
@@ -31932,7 +31932,7 @@
           <div>
             <span class="portal-section-kicker">Quản lý thương mại</span>
             <h2 class="portal-card-title">Bảng giá Dịch vụ & SKU</h2>
-            <p class="portal-card-subtitle">Cấu hình giá niêm yết và giá thực tế (Xu) cho toàn bộ 38 SKU dịch vụ canonical theo chuẩn thẩm quyền Bot Core.</p>
+            <p class="portal-card-subtitle">Cấu hình giá niêm yết và giá thực tế (Xu) cho các dịch vụ theo chuẩn thẩm quyền Bot Core.</p>
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
             <span class="portal-badge" data-status="ready" style="background:#16a34a;color:#fff;">Đã kết nối</span>

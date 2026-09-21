@@ -363,7 +363,8 @@ def test_03_patch_pricing_sends_exact_contract_and_verifies_readback(isolated_en
 
     data = body.get("data") or {}
     assert data.get("readback_verified") is True
-    assert data.get("verification_status") == "CANONICAL_WRITE_VERIFIED"
+    assert data.get("customer_effective_live_verified") is False
+    assert data.get("verification_status") == "BOT_CORE_READBACK_VERIFIED"
     assert data.get("new_version") == 2
     assert data.get("previous_version") == 1
 
@@ -516,6 +517,10 @@ def test_08_patch_pricing_readback_mismatch_fails_closed(isolated_env, monkeypat
     body = res.json()
     assert body.get("ok") is False
     assert body.get("error_code") == "READBACK_VERIFICATION_FAILED"
+    data = body.get("data") or {}
+    assert data.get("readback_verified") is False
+    assert data.get("customer_effective_live_verified") is False
+    assert data.get("verification_status") == "READBACK_VERIFICATION_FAILED"
 
 
 def test_09_patch_pricing_immutable_key_rejected(isolated_env, monkeypatch):
@@ -612,6 +617,11 @@ def test_13_capability_matrix_b02_wired_b03_b05_guarded():
     assert b02.get("write_mode") == "CANONICAL_CAS_WRITE"
     assert b02.get("authority") == "BOT_CORE"
     assert b02.get("live_status") == "CONTRACT_WIRED_NOT_LIVE_VERIFIED"
+    assert b02.get("contract_wired_to_bot_pr_1098") is True
+    assert b02.get("bot_pr_1098_head") == "50218b7c69413e5be47e48517cb4a397c3026578"
+    assert b02.get("bot_pr_1098_state") == "OPEN_UNMERGED"
+    assert b02.get("bot_pr_1098_promoted") is False
+    assert b02.get("remediation_gate") == "BOT_PR_1098_OPEN_UNMERGED_PENDING_PROMOTION"
     assert "1098" in b02.get("description", "")
 
     # B03-B05 must remain strictly FAIL_CLOSED
@@ -651,10 +661,62 @@ def test_15_portal_js_pricing_blocker_banner_removed_for_pricing():
     # Blocker banner expression does not show on products or pricing tabs
     assert 'activeTab !== "products" && activeTab !== "pricing"' in comm_block
 
-    # B02 tag shows connected status
+    # B02 tag shows connected status with zero internal B02 jargon in visible text
     assert 'data-blocker="B02"' in comm_block
-    assert "B02: Bảng giá (Đã kết nối)" in comm_block
+    assert "Bảng giá: Đã nối Bot Core · chưa xác minh live" in comm_block
+    assert "B02: Bảng giá (Đã kết nối)" not in comm_block
 
     # B03-B05 tags remain present
     for b in ["B03", "B04", "B05"]:
         assert f'data-blocker="{b}"' in comm_block
+
+
+def test_16_get_pricing_catalog_version_passthrough_and_no_fallback(isolated_env, monkeypatch):
+    """16. C1-C: Web layer passes through Bot catalog_version without web-authored fallback."""
+    # Sub-case A: Bot provides catalog_version -> passed through
+    async def _mock_with_version(method, path, **kwargs):
+        return {
+            "ok": True,
+            "status": "completed",
+            "message": "Nạp danh mục thành công",
+            "pricing": MOCK_BOT_PRICING,
+            "catalog_version": "2026.09.bot.pr1098.canonical",
+        }
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", _mock_with_version)
+    client = TestClient(app_module.app)
+    cookies, _ = _create_session(isolated_env, "acc-admin-b02")
+
+    res = client.get("/api/admin/commercial/pricing", cookies=cookies)
+    assert res.status_code == 200
+    assert res.json().get("data", {}).get("catalog_version") == "2026.09.bot.pr1098.canonical"
+
+    # Sub-case B: Bot omits catalog_version -> returns None, NOT fallback string
+    async def _mock_without_version(method, path, **kwargs):
+        return {
+            "ok": True,
+            "status": "completed",
+            "message": "Nạp danh mục thành công",
+            "pricing": MOCK_BOT_PRICING,
+        }
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", _mock_without_version)
+    res2 = client.get("/api/admin/commercial/pricing", cookies=cookies)
+    assert res2.status_code == 200
+    assert res2.json().get("data", {}).get("catalog_version") is None
+
+
+def test_17_no_jargon_or_hardcoded_sku_count_in_pricing_ui():
+    """17. C1-D: UI text has zero internal blocker codes and no hardcoded 38 SKU count."""
+    assert PORTAL_JS_PATH.exists()
+    portal_code = PORTAL_JS_PATH.read_text(encoding="utf-8")
+
+    idx_comm = portal_code.find("function renderAdminCommercial(")
+    idx_pricing = portal_code.find("function renderAdminPricing(")
+    comm_block = portal_code[idx_comm:idx_pricing]
+
+    # No hardcoded "38 SKU"
+    assert "38 SKU" not in comm_block
+    # No visible B02 jargon in text content
+    assert "B02: Bảng giá" not in comm_block
+    assert "Bảng giá: Đã nối Bot Core · chưa xác minh live" in comm_block

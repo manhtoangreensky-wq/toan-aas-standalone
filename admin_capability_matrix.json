@@ -30,8 +30,12 @@
         "write_mode": "CANONICAL_CAS_WRITE",
         "authority": "BOT_CORE",
         "live_status": "CONTRACT_WIRED_NOT_LIVE_VERIFIED",
+        "contract_wired_to_bot_pr_1098": true,
+        "bot_pr_1098_head": "50218b7c69413e5be47e48517cb4a397c3026578",
+        "bot_pr_1098_state": "OPEN_UNMERGED",
+        "bot_pr_1098_promoted": false,
         "description": "Bot Core PR #1098 CAS write endpoints (/internal/v1/admin/pricing/{price_key}) wired to WebApp Admin Commercial Pricing editor; mock verified, live write gated.",
-        "remediation_gate": "BOT_PR_1098_WIRED_PENDING_LIVE_PROD_DEPLOY"
+        "remediation_gate": "BOT_PR_1098_OPEN_UNMERGED_PENDING_PROMOTION"
       },
       "B03": {
         "code": "BOT_WRITE_ENDPOINT_MISSING_FOR_PACKAGES",
