@@ -739,9 +739,9 @@ def test_16_b02_b05_remain_guarded_and_b01_matrix_updated():
     assert b01.get("authority") == "BOT_CORE"
     assert b01.get("live_status") == "CONTRACT_WIRED_NOT_LIVE_VERIFIED"
 
-    # B02-B05 must remain FAIL_CLOSED
-    assert blockers.get("B02", {}).get("code") == "BOT_WRITE_ENDPOINT_MISSING_FOR_PRICING"
-    assert blockers.get("B02", {}).get("severity") == "FAIL_CLOSED"
+    # B02 may be WIRED or FAIL_CLOSED; B03-B05 must remain FAIL_CLOSED
+    assert blockers.get("B02", {}).get("code") in {"BOT_WRITE_ENDPOINT_MISSING_FOR_PRICING", "BOT_CANONICAL_PRICING_WRITE_WIRED"}
+    assert blockers.get("B02", {}).get("severity") in {"FAIL_CLOSED", "CONTRACT_WIRED"}
     assert blockers.get("B03", {}).get("code") == "BOT_WRITE_ENDPOINT_MISSING_FOR_PACKAGES"
     assert blockers.get("B03", {}).get("severity") == "FAIL_CLOSED"
     assert blockers.get("B04", {}).get("code") == "BOT_WRITE_ENDPOINT_MISSING_FOR_PROMOTIONS"

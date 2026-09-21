@@ -25,10 +25,13 @@
         "remediation_gate": "BOT_PR_1093_WIRED_PENDING_LIVE_PROD_DEPLOY"
       },
       "B02": {
-        "code": "BOT_WRITE_ENDPOINT_MISSING_FOR_PRICING",
-        "severity": "FAIL_CLOSED",
-        "description": "Bot lacks /internal/v1/admin/pricing/publish endpoint; WebApp enforces CANONICAL_PUBLISH_AVAILABLE=False and preserves diff review.",
-        "remediation_gate": "WAIT_BOT_CORE_BRIDGE_PRICING_PUBLISH_ENDPOINT"
+        "code": "BOT_CANONICAL_PRICING_WRITE_WIRED",
+        "severity": "CONTRACT_WIRED",
+        "write_mode": "CANONICAL_CAS_WRITE",
+        "authority": "BOT_CORE",
+        "live_status": "CONTRACT_WIRED_NOT_LIVE_VERIFIED",
+        "description": "Bot Core PR #1098 CAS write endpoints (/internal/v1/admin/pricing/{price_key}) wired to WebApp Admin Commercial Pricing editor; mock verified, live write gated.",
+        "remediation_gate": "BOT_PR_1098_WIRED_PENDING_LIVE_PROD_DEPLOY"
       },
       "B03": {
         "code": "BOT_WRITE_ENDPOINT_MISSING_FOR_PACKAGES",
