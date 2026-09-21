@@ -31814,6 +31814,380 @@
       });
   }
 
+  let adminCommercialPackagesState = null;
+  let adminCommercialPackagesLoadError = null;
+  let adminCommercialPackagesLoading = false;
+  let activePackageInEditor = null;
+
+  function fetchAdminCommercialPackages() {
+    adminCommercialPackagesLoading = true;
+    adminCommercialPackagesLoadError = null;
+    return fetch("/api/admin/commercial/packages", {
+      headers: { "Accept": "application/json" }
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then((body) => {
+        if (!body || !body.ok || !body.data || !Array.isArray(body.data.packages)) {
+          throw new Error("Phản hồi danh mục gói cước không hợp lệ");
+        }
+        adminCommercialPackagesState = body.data.packages;
+        adminCommercialPackagesLoadError = null;
+        adminCommercialPackagesLoading = false;
+        return adminCommercialPackagesState;
+      })
+      .catch((err) => {
+        adminCommercialPackagesState = null;
+        adminCommercialPackagesLoadError = (err && err.message) || "Không thể tải danh mục gói cước";
+        adminCommercialPackagesLoading = false;
+        throw err;
+      });
+  }
+
+  function loadAdminCommercialPackages(forceReload) {
+    if (!forceReload && adminCommercialPackagesState !== null) {
+      updateAdminCommercialPackagesTable();
+      return Promise.resolve(adminCommercialPackagesState);
+    }
+    return fetchAdminCommercialPackages()
+      .then((pkgs) => {
+        updateAdminCommercialPackagesTable();
+        return pkgs;
+      })
+      .catch((_err) => {
+        updateAdminCommercialPackagesTable();
+        return null;
+      });
+  }
+
+  function renderPackageTableBody() {
+    if (adminCommercialPackagesLoading) {
+      return `<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--portal-muted);">Đang tải danh mục gói cước...</td></tr>`;
+    }
+    if (adminCommercialPackagesLoadError) {
+      return `<tr><td colspan="10" style="text-align:center;padding:24px;">
+        <div style="color:#ef4444;margin-bottom:8px;font-weight:500;">Không thể tải danh mục gói cước.</div>
+        <button type="button" class="portal-button portal-button--primary portal-button--small" data-portal-action="reload-commercial-packages">Thử tải lại</button>
+      </td></tr>`;
+    }
+    if (!adminCommercialPackagesState) {
+      return `<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--portal-muted);">Đang tải danh mục gói cước...</td></tr>`;
+    }
+    if (adminCommercialPackagesState.length === 0) {
+      return `<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--portal-muted);">Chưa có gói cước nào trong danh mục.</td></tr>`;
+    }
+    return adminCommercialPackagesState.map((p) => {
+      const typeLabel = p.package_type === "subscription" ? "Hội viên" : (p.package_type === "combo" ? "Combo" : "Gói tháng");
+      const durationLabel = p.duration_days ? `${p.duration_days} ngày` : "Vĩnh viễn";
+      return `<tr>
+        <td><code>${safeText(p.package_key)}</code></td>
+        <td><strong>${safeText(p.display_name)}</strong></td>
+        <td><span class="portal-tag">${safeText(typeLabel)}</span></td>
+        <td><strong style="color:var(--portal-brand);">${safeText(adminNumber(p.price_vnd, " đ"))}</strong></td>
+        <td>${safeText(durationLabel)}</td>
+        <td><span class="portal-badge" data-status="${p.public_visible ? "ready" : "guarded"}">${p.public_visible ? "Công khai" : "Ẩn"}</span></td>
+        <td><span class="portal-badge" data-status="${p.commercial_enabled ? "ready" : "guarded"}">${p.commercial_enabled ? "Bật" : "Tắt"}</span></td>
+        <td>${safeText(String(p.sort_order !== undefined ? p.sort_order : 10))}</td>
+        <td><code>v${safeText(String(p.version || 1))}</code></td>
+        <td><button class="portal-button portal-button--quiet" type="button" data-portal-action="open-package-editor" data-package-key="${safeText(p.package_key)}">Chỉnh sửa</button></td>
+      </tr>`;
+    }).join("");
+  }
+
+  function updateAdminCommercialPackagesTable() {
+    const container = document.getElementById("portal-admin-commercial-packages-tbody");
+    if (container) {
+      container.innerHTML = renderPackageTableBody();
+    }
+  }
+
+  function renderPackageEditor(packageItem) {
+    if (!packageItem) return "";
+    const isSubscription = packageItem.package_type === "subscription";
+    return `<div id="portal-package-editor-modal" class="portal-modal is-open" role="dialog" aria-modal="true" aria-labelledby="package-editor-title" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;">
+      <div class="portal-card portal-card-pad" style="max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-sizing:border-box;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);">
+        <div class="portal-card-header" style="border-bottom:1px solid var(--portal-border);padding-bottom:12px;margin-bottom:16px;">
+          <div>
+            <span class="portal-section-kicker">Quản lý gói cước</span>
+            <h2 id="package-editor-title" class="portal-card-title" style="margin:4px 0;">Chỉnh sửa Gói dịch vụ: ${safeText(packageItem.display_name)}</h2>
+            <p class="portal-card-subtitle">Mã gói: <code>${safeText(packageItem.package_key)}</code> · Phân loại: <strong>${safeText(packageItem.package_type)}</strong> · Phiên bản: <strong style="color:var(--portal-brand);">v${safeText(String(packageItem.version))}</strong></p>
+          </div>
+          <button type="button" class="portal-button portal-button--quiet" data-portal-action="close-package-editor" aria-label="Đóng">✕</button>
+        </div>
+
+        <form id="portal-package-editor-form" onsubmit="return false;" style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <label class="portal-field">
+              <span>Tên hiển thị thương mại:</span>
+              <input type="text" class="portal-input" id="editor-field-package-display-name" name="display_name" value="${safeText(packageItem.display_name || "")}" required />
+            </label>
+            <label class="portal-field">
+              <span>Giá niêm yết (VND):</span>
+              <input type="number" class="portal-input" id="editor-field-package-price-vnd" name="price_vnd" min="0" max="100000000" step="1000" value="${safeText(String(packageItem.price_vnd || 0))}" required />
+            </label>
+          </div>
+
+          <label class="portal-field">
+            <span>Mô tả gói dịch vụ:</span>
+            <textarea class="portal-textarea" id="editor-field-package-description" name="description" rows="2">${safeText(packageItem.description || "")}</textarea>
+          </label>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:center;background:var(--portal-surface-sunken,#1e293b);padding:10px 14px;border-radius:6px;">
+            <label class="portal-checkbox" style="margin:0;display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="editor-field-package-public-visible" name="public_visible"${packageItem.public_visible ? " checked" : ""}${isSubscription ? " disabled" : ""} />
+              <span>Hiển thị công khai${isSubscription ? " (Bất biến)" : ""}</span>
+            </label>
+            <label class="portal-checkbox" style="margin:0;display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="editor-field-package-commercial-enabled" name="commercial_enabled"${packageItem.commercial_enabled ? " checked" : ""} />
+              <span>Bật thương mại</span>
+            </label>
+            <label class="portal-field" style="margin:0;">
+              <span>Thứ tự sắp xếp:</span>
+              <input type="number" class="portal-input" id="editor-field-package-sort-order" name="sort_order" min="0" max="100000" value="${safeText(String(packageItem.sort_order !== undefined ? packageItem.sort_order : 10))}" style="padding:4px 8px;" />
+            </label>
+          </div>
+
+          ${isSubscription ? `
+          <div style="padding:8px 12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:6px;font-size:12px;color:var(--portal-muted);">
+            ℹ️ <strong>Trường hiển thị công khai (public_visible):</strong> Bất biến đối với gói Hội viên (subscription) vì gói hội viên luôn hiển thị qua luồng nâng cấp thành viên của Bot Core.
+          </div>` : ""}
+
+          <!-- Mandatory reason field -->
+          <label class="portal-field">
+            <span>Lý do thay đổi cấu hình (<strong style="color:#ef4444;">Bắt buộc cho audit trail</strong>):</span>
+            <input type="text" class="portal-input" id="editor-field-package-reason" name="reason" placeholder="Ví dụ: Cập nhật giá và mô tả gói theo quyết định thương mại đợt 2..." required />
+          </label>
+
+          <!-- Live Before/After diff preview -->
+          <div style="border:1px solid var(--portal-border);border-radius:6px;padding:10px 14px;background:var(--portal-surface-sunken,#0f172a);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <strong style="font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--portal-muted);">Xem trước thay đổi</strong>
+              <span class="portal-tag" data-cas-version="${safeText(String(packageItem.version))}" style="font-size:10px;">Phiên bản hiện tại: v${safeText(String(packageItem.version))}</span>
+            </div>
+            <div id="admin-package-diff-preview" style="font-family:monospace;font-size:12px;line-height:1.5;">
+              <em style="color:var(--portal-muted);">Chưa có thay đổi nào so với phiên bản v${safeText(String(packageItem.version))}.</em>
+            </div>
+          </div>
+
+          <!-- Status and error container -->
+          <div id="admin-package-editor-status"></div>
+
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px;padding-top:12px;border-top:1px solid var(--portal-border);">
+            <button type="button" class="portal-button portal-button--quiet" data-portal-action="close-package-editor">Hủy bỏ</button>
+            <button type="button" class="portal-button portal-button--primary" id="btn-save-package-editor" data-portal-action="save-package-editor" data-package-key="${safeText(packageItem.package_key)}">Lưu thay đổi</button>
+          </div>
+        </form>
+      </div>
+    </div>`;
+  }
+
+  function openPackageEditor(packageKey) {
+    if (!adminCommercialPackagesState || !Array.isArray(adminCommercialPackagesState)) {
+      if (typeof showToast === "function") showToast("Danh mục gói cước chưa sẵn sàng", "error");
+      return;
+    }
+    const pkg = adminCommercialPackagesState.find((p) => p.package_key === packageKey);
+    if (!pkg) {
+      if (typeof showToast === "function") showToast("Không tìm thấy gói cước " + packageKey, "error");
+      return;
+    }
+    activePackageInEditor = JSON.parse(JSON.stringify(pkg));
+    let container = document.getElementById("portal-package-editor-modal-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "portal-package-editor-modal-container";
+      document.body.appendChild(container);
+    }
+    container.innerHTML = renderPackageEditor(activePackageInEditor);
+    updatePackageEditorDiff();
+  }
+
+  function closePackageEditor() {
+    activePackageInEditor = null;
+    const container = document.getElementById("portal-package-editor-modal-container");
+    if (container) container.innerHTML = "";
+  }
+
+  function getPackageEditorChanges() {
+    if (!activePackageInEditor) return {};
+    const changes = {};
+    const isSubscription = activePackageInEditor.package_type === "subscription";
+    const nameEl = document.getElementById("editor-field-package-display-name");
+    const descEl = document.getElementById("editor-field-package-description");
+    const priceEl = document.getElementById("editor-field-package-price-vnd");
+    const pubEl = document.getElementById("editor-field-package-public-visible");
+    const commEl = document.getElementById("editor-field-package-commercial-enabled");
+    const sortEl = document.getElementById("editor-field-package-sort-order");
+
+    if (nameEl && nameEl.value.trim() !== String(activePackageInEditor.display_name || "")) {
+      changes.display_name = nameEl.value.trim();
+    }
+    if (descEl && descEl.value !== String(activePackageInEditor.description || "")) {
+      changes.description = descEl.value;
+    }
+    if (priceEl) {
+      const parsedPrice = parseInt(priceEl.value, 10);
+      if (!isNaN(parsedPrice) && parsedPrice !== Number(activePackageInEditor.price_vnd)) {
+        changes.price_vnd = parsedPrice;
+      }
+    }
+    if (!isSubscription && pubEl && pubEl.checked !== Boolean(activePackageInEditor.public_visible)) {
+      changes.public_visible = pubEl.checked;
+    }
+    if (commEl && commEl.checked !== Boolean(activePackageInEditor.commercial_enabled)) {
+      changes.commercial_enabled = commEl.checked;
+    }
+    if (sortEl) {
+      const parsedSort = parseInt(sortEl.value, 10);
+      if (!isNaN(parsedSort) && parsedSort !== Number(activePackageInEditor.sort_order)) {
+        changes.sort_order = parsedSort;
+      }
+    }
+    return changes;
+  }
+
+  function updatePackageEditorDiff() {
+    const previewEl = document.getElementById("admin-package-diff-preview");
+    if (!previewEl || !activePackageInEditor) return;
+    const changes = getPackageEditorChanges();
+    const keys = Object.keys(changes);
+    if (keys.length === 0) {
+      previewEl.innerHTML = `<em style="color:var(--portal-muted);">Chưa có thay đổi nào so với phiên bản v${safeText(String(activePackageInEditor.version))}.</em>`;
+      return;
+    }
+    let html = `<div style="color:#eab308;font-weight:600;margin-bottom:6px;">Phát hiện ${keys.length} trường thay đổi:</div><ul style="margin:0;padding-left:18px;">`;
+    keys.forEach((k) => {
+      const beforeVal = activePackageInEditor[k];
+      const afterVal = changes[k];
+      html += `<li><strong>${safeText(k)}</strong>: <del style="color:#ef4444;margin-right:6px;">${safeText(JSON.stringify(beforeVal))}</del> → <ins style="color:#22c55e;margin-left:6px;">${safeText(JSON.stringify(afterVal))}</ins></li>`;
+    });
+    html += "</ul>";
+    previewEl.innerHTML = html;
+  }
+
+  function savePackageEditor(packageKey) {
+    if (!activePackageInEditor) return;
+    const statusEl = document.getElementById("admin-package-editor-status");
+    const saveBtn = document.getElementById("btn-save-package-editor");
+    const changes = getPackageEditorChanges();
+
+    if (Object.keys(changes).length === 0) {
+      // NO_OP_PATCH_COUNT = 0: no-op edit sends zero PATCH
+      if (typeof showToast === "function") showToast("Không có thay đổi nào để lưu.", "warning");
+      if (statusEl) {
+        statusEl.innerHTML = `<div class="portal-notice portal-notice--info" style="padding:8px 12px;margin-top:8px;"><em>Không có thay đổi nào để gửi (NO_OP_PATCH_COUNT = 0).</em></div>`;
+      }
+      return;
+    }
+
+    const reasonEl = document.getElementById("editor-field-package-reason");
+    const reason = reasonEl ? reasonEl.value.trim() : "";
+    if (!reason) {
+      if (typeof showToast === "function") showToast("Vui lòng nhập lý do thay đổi.", "warning");
+      if (reasonEl) reasonEl.focus();
+      return;
+    }
+
+    if (saveBtn) saveBtn.disabled = true;
+    if (statusEl) {
+      statusEl.innerHTML = `<div style="padding:8px 12px;color:var(--portal-brand);font-size:12px;">Đang lưu thay đổi...</div>`;
+    }
+
+    const payload = {
+      expected_version: activePackageInEditor.version,
+      changes: changes,
+      reason: reason
+    };
+
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]') || document.querySelector('input[name="csrf_token"]');
+    const csrfToken = (csrfMeta && (csrfMeta.content || csrfMeta.value)) || "";
+    const headers = {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    };
+    if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
+
+    fetch("/api/admin/commercial/packages/" + encodeURIComponent(packageKey), {
+      method: "PATCH",
+      headers: headers,
+      body: JSON.stringify(payload)
+    })
+      .then((res) => {
+        return res.json().then((body) => ({ status: res.status, body: body }));
+      })
+      .then(({ status, body }) => {
+        if (saveBtn) saveBtn.disabled = false;
+        if (status === 200 && body && body.ok) {
+          const resData = body.data || body;
+          const readbackMatch = resData.readback_verified !== false && resData.readback_match !== false;
+          const receiptId = (resData.write_receipt && resData.write_receipt.receipt_id) || resData.receipt_id || "RCPT-PKG-OK";
+          const prevVer = resData.previous_version || activePackageInEditor.version;
+          const newVer = resData.new_version || (activePackageInEditor.version + 1);
+
+          if (readbackMatch) {
+            if (statusEl) {
+              statusEl.innerHTML = `<div class="portal-notice portal-notice--success" data-verification-status="${resData.verification_status || 'BOT_CORE_READBACK_VERIFIED'}" style="padding:12px;border-left:4px solid #22c55e;background:rgba(34,197,94,0.1);border-radius:6px;margin-top:10px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                  <span class="portal-tag" style="background:#22c55e;color:#fff;font-weight:bold;">Đã áp dụng</span>
+                  <strong style="color:#22c55e;">Đã lưu thay đổi thành công!</strong>
+                </div>
+                <div style="font-size:12px;line-height:1.5;">
+                  Mã biên nhận: <code>${safeText(receiptId)}</code> · Phiên bản: <strong>v${safeText(String(prevVer))} → v${safeText(String(newVer))}</strong>
+                </div>
+              </div>`;
+            }
+            if (typeof showToast === "function") showToast("Cập nhật gói cước thành công (v" + newVer + ")");
+            loadAdminCommercialPackages(true);
+            setTimeout(() => {
+              closePackageEditor();
+            }, 1200);
+          } else {
+            if (statusEl) {
+              statusEl.innerHTML = `<div class="portal-notice portal-notice--warning" style="padding:12px;border-left:4px solid #f59e0b;background:rgba(245,158,11,0.1);border-radius:6px;margin-top:10px;">
+                <strong>Cảnh báo:</strong> Ghi nhận hoàn tất nhưng dữ liệu đọc lại chưa khớp. Vui lòng tải lại danh mục.
+              </div>`;
+            }
+          }
+          return;
+        }
+
+        if (status === 409 || (body && (body.error_code === "VERSION_CONFLICT" || (body.detail && body.detail.code === "VERSION_CONFLICT")))) {
+          // STALE_WRITE_AUTO_RETRY = 0: no automatic retry on 409
+          if (statusEl) {
+            statusEl.innerHTML = `<div class="portal-notice portal-notice--error" data-error-code="VERSION_CONFLICT" style="padding:12px;border-left:4px solid #ef4444;background:rgba(239,68,68,0.1);border-radius:6px;margin-top:10px;">
+              <strong style="color:#ef4444;display:block;margin-bottom:4px;">Dữ liệu đã thay đổi ở phiên khác</strong>
+              <p style="margin:0 0 8px 0;font-size:12px;line-height:1.4;">Dữ liệu gói cước đã được cập nhật ở một phiên khác. Vui lòng tải lại trang để xem thông tin mới nhất.</p>
+              <button type="button" class="portal-button portal-button--primary" data-portal-action="reload-commercial-packages" style="font-size:12px;">Tải lại dữ liệu mới nhất</button>
+            </div>`;
+          }
+          if (typeof showToast === "function") showToast("Dữ liệu đã thay đổi ở phiên khác. Vui lòng tải lại trang.", "error");
+          return;
+        }
+
+        const errMsg = (body && (body.detail?.message || body.detail || body.message)) || ("Lỗi máy chủ (" + status + ")");
+        if (statusEl) {
+          statusEl.innerHTML = `<div class="portal-notice portal-notice--error" style="padding:12px;border-left:4px solid #ef4444;background:rgba(239,68,68,0.1);border-radius:6px;margin-top:10px;">
+            <strong style="color:#ef4444;">Lỗi cập nhật:</strong> <span style="font-size:12px;">${safeText(String(errMsg))}</span>
+          </div>`;
+        }
+        if (typeof showToast === "function") showToast(String(errMsg), "error");
+      })
+      .catch((err) => {
+        if (saveBtn) saveBtn.disabled = false;
+        // AMBIGUOUS_PATCH_AUTO_RETRY = 0: no retry on ambiguous transport failure
+        if (statusEl) {
+          statusEl.innerHTML = `<div class="portal-notice portal-notice--warning" style="padding:12px;border-left:4px solid #f59e0b;background:rgba(245,158,11,0.1);border-radius:6px;margin-top:10px;">
+            <strong style="color:#d97706;display:block;margin-bottom:4px;">Không thể kết nối đến máy chủ</strong>
+            <p style="margin:0 0 8px 0;font-size:12px;line-height:1.4;">Lỗi kết nối mạng hoặc máy chủ phản hồi chậm. Vui lòng làm mới danh mục để kiểm tra trạng thái mới nhất.</p>
+            <button type="button" class="portal-button portal-button--quiet" data-portal-action="reload-commercial-packages" style="font-size:12px;">Làm mới danh mục</button>
+          </div>`;
+        }
+        if (typeof showToast === "function") showToast("Không thể kết nối đến máy chủ.", "warning");
+      });
+  }
+
   function renderAdminCommercial(page, context) {
     const pricingState = (context && context.adminPricingState && typeof context.adminPricingState === "object")
       ? context.adminPricingState
@@ -31836,12 +32210,6 @@
       ]
     };
 
-    const packagesList = [
-      { code: "pkg_free", name: "Gói Miễn Phí (Trải nghiệm)", price_vnd: 0, xu: 0, validity: "Vĩnh viễn", status: "active" },
-      { code: "pkg_creator_pro", name: "Gói Sáng Tạo Pro", price_vnd: 199000, xu: 2200, validity: "30 ngày", status: "active" },
-      { code: "pkg_business_vip", name: "Gói VIP Doanh Nghiệp", price_vnd: 990000, xu: 12000, validity: "30 ngày", status: "active" }
-    ];
-
     const promosList = [
       { code: "PROMO_WELCOME_2026", name: "Tặng 50 Xu thành viên mới", discount: "50 Xu", limit: "1 lần / tài khoản", status: "active" },
       { code: "PROMO_TET_BONUS", name: "Thưởng 20% nạp đầu", discount: "+20% Xu", limit: "Áp dụng VietQR PayOS", status: "scheduled" }
@@ -31854,18 +32222,18 @@
       { code: "topup_500k", amount_vnd: 500000, xu: 5800, bonus_xu: 800, rate: "86 đ = 1 Xu", status: "active" }
     ];
 
-    const blockerBanner = (activeTab !== "products" && activeTab !== "pricing") ? `<div class="portal-notice portal-notice--warning" data-blocker="B01 B02 B03 B04 B05" style="margin-bottom:20px; border-left:4px solid #f59e0b; background:rgba(245,158,11,0.08); padding:16px; border-radius:8px;">
+    const blockerBanner = (activeTab !== "products" && activeTab !== "pricing" && activeTab !== "packages") ? `<div class="portal-notice portal-notice--warning" data-blocker="B01 B02 B03 B04 B05" style="margin-bottom:20px; border-left:4px solid #f59e0b; background:rgba(245,158,11,0.08); padding:16px; border-radius:8px;">
       <div style="display:flex; gap:12px; align-items:flex-start;">
         <span class="portal-notice-icon" style="font-size:20px; color:#f59e0b;">⚠️</span>
         <div>
-          <strong style="color:var(--portal-ink); font-size:14px; display:block; margin-bottom:4px;">Chế độ Xem & Dự thảo an toàn (B03-B05)</strong>
+          <strong style="color:var(--portal-ink); font-size:14px; display:block; margin-bottom:4px;">Chế độ Xem & Dự thảo an toàn (B04-B05)</strong>
           <p style="margin:0 0 8px 0; font-size:13px; color:var(--portal-muted); line-height:1.5;">
-            Các tính năng gói cước và khuyến mãi đang ở chế độ xem an toàn. Hệ thống không tự ý ghi đè dữ liệu thương mại khi chưa có lệnh phê duyệt từ quản trị trung tâm.
+            Các tính năng khuyến mãi và gói nạp đang ở chế độ xem an toàn. Hệ thống không tự ý ghi đè dữ liệu thương mại khi chưa có lệnh phê duyệt từ quản trị trung tâm.
           </p>
           <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:11px;">
             <span class="portal-tag" data-blocker="B01" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">Sản phẩm: Đã kết nối</span>
             <span class="portal-tag" data-blocker="B02" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">Bảng giá: Đã nối Bot Core · chưa xác minh live</span>
-            <span class="portal-tag" data-blocker="B03" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B03: Gói cước</span>
+            <span class="portal-tag" data-blocker="B03" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">Gói cước: Đã nối Bot Core</span>
             <span class="portal-tag" data-blocker="B04" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B04: Khuyến mãi</span>
             <span class="portal-tag" data-blocker="B05" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B05: Gói nạp</span>
           </div>
@@ -31962,13 +32330,44 @@
         <div id="portal-pricing-editor-modal-container"></div>
       </section>`;
     } else if (activeTab === "packages") {
+      if (adminCommercialPackagesState === null && !adminCommercialPackagesLoading) {
+        setTimeout(() => loadAdminCommercialPackages(false), 0);
+      }
+
       activeContent = `<section class="portal-card portal-card-pad" style="margin-bottom:20px;">
-        <div class="portal-card-header"><div><span class="portal-section-kicker">Trụ cột 3 / 5</span><h2 class="portal-card-title">Gói cước Hội viên (Subscription Packages)</h2><p class="portal-card-subtitle">Cấu hình định danh và hạn mức cấp phép theo tháng.</p></div></div>
-        <div style="overflow-x:auto;">
-          <table class="portal-table"><thead><tr><th>Mã Gói</th><th>Tên Gói</th><th>Giá niêm yết</th><th>Hạn mức Xu</th><th>Thời hạn</th><th>Trạng thái</th></tr></thead><tbody>
-            ${packagesList.map((pkg) => `<tr><td><code>${safeText(pkg.code)}</code></td><td><strong>${safeText(pkg.name)}</strong></td><td>${safeText(adminNumber(pkg.price_vnd, " đ"))}</td><td><strong style="color:var(--portal-brand);">${safeText(adminNumber(pkg.xu, " Xu"))}</strong></td><td>${safeText(pkg.validity)}</td><td><span class="portal-badge" data-status="ready">Công bố</span></td></tr>`).join("")}
-          </tbody></table>
+        <div class="portal-card-header" style="flex-wrap:wrap;gap:12px;">
+          <div>
+            <span class="portal-section-kicker">Quản lý thương mại</span>
+            <h2 class="portal-card-title">Gói cước & Hội viên</h2>
+            <p class="portal-card-subtitle">Cấu hình định danh, giá niêm yết và thời hạn cho các gói hội viên, combo và dịch vụ tháng theo thẩm quyền Bot Core.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="portal-badge" data-status="ready" style="background:#16a34a;color:#fff;">Đã kết nối</span>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="reload-commercial-packages">Làm mới gói cước</button>
+          </div>
         </div>
+        <div style="overflow-x:auto;">
+          <table class="portal-table">
+            <thead>
+              <tr>
+                <th>Mã Gói</th>
+                <th>Tên Gói</th>
+                <th>Phân loại</th>
+                <th>Giá niêm yết</th>
+                <th>Thời hạn</th>
+                <th>Hiển thị</th>
+                <th>Thương mại</th>
+                <th>Thứ tự</th>
+                <th>Phiên bản</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="portal-admin-commercial-packages-tbody">
+              ${renderPackageTableBody()}
+            </tbody>
+          </table>
+        </div>
+        <div id="portal-package-editor-modal-container"></div>
       </section>`;
     } else if (activeTab === "promotions") {
       activeContent = `<section class="portal-card portal-card-pad" style="margin-bottom:20px;">
@@ -35113,6 +35512,18 @@
     window.closeProductEditor = closeProductEditor;
     window.renderProductEditor = renderProductEditor;
     window.saveProductEditor = saveProductEditor;
+    window.loadAdminCommercialPricing = loadAdminCommercialPricing;
+    window.fetchAdminCommercialPricing = fetchAdminCommercialPricing;
+    window.openPricingEditor = openPricingEditor;
+    window.closePricingEditor = closePricingEditor;
+    window.renderPricingEditor = renderPricingEditor;
+    window.savePricingEditor = savePricingEditor;
+    window.loadAdminCommercialPackages = loadAdminCommercialPackages;
+    window.fetchAdminCommercialPackages = fetchAdminCommercialPackages;
+    window.openPackageEditor = openPackageEditor;
+    window.closePackageEditor = closePackageEditor;
+    window.renderPackageEditor = renderPackageEditor;
+    window.savePackageEditor = savePackageEditor;
   }
 
   function dispatchAction(source, context) {
@@ -36665,6 +37076,28 @@
           loadAdminCommercialPricing(true);
           return;
         }
+        if (actionName === "open-package-editor") {
+          if (event && event.preventDefault) event.preventDefault();
+          const pKey = action.getAttribute("data-package-key") || "";
+          openPackageEditor(pKey);
+          return;
+        }
+        if (actionName === "close-package-editor") {
+          if (event && event.preventDefault) event.preventDefault();
+          closePackageEditor();
+          return;
+        }
+        if (actionName === "save-package-editor") {
+          if (event && event.preventDefault) event.preventDefault();
+          const pKey = action.getAttribute("data-package-key") || "";
+          savePackageEditor(pKey);
+          return;
+        }
+        if (actionName === "reload-commercial-packages") {
+          if (event && event.preventDefault) event.preventDefault();
+          loadAdminCommercialPackages(true);
+          return;
+        }
         if (action.tagName === "BUTTON" && action.type === "submit") return;
         dispatchAction(action, getBootstrap());
         return;
@@ -36695,6 +37128,9 @@
       }
       if (event.target.closest && event.target.closest("#portal-pricing-editor-modal")) {
         updatePricingEditorDiff();
+      }
+      if (event.target.closest && event.target.closest("#portal-package-editor-modal")) {
+        updatePackageEditorDiff();
       }
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) rememberTransientFormDraft(form);
@@ -36748,6 +37184,9 @@
       }
       if (event.target.closest && event.target.closest("#portal-pricing-editor-modal")) {
         updatePricingEditorDiff();
+      }
+      if (event.target.closest && event.target.closest("#portal-package-editor-modal")) {
+        updatePackageEditorDiff();
       }
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) {
