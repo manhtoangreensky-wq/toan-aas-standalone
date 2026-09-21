@@ -616,13 +616,22 @@ def test_13_capability_matrix_b02_wired_b03_b05_guarded():
     assert b02.get("severity") == "CONTRACT_WIRED"
     assert b02.get("write_mode") == "CANONICAL_CAS_WRITE"
     assert b02.get("authority") == "BOT_CORE"
-    assert b02.get("live_status") == "CONTRACT_WIRED_NOT_LIVE_VERIFIED"
+    assert b02.get("live_status") == "DEPLOYED_PRODUCTION_READONLY_PARTIAL"
     assert b02.get("contract_wired_to_bot_pr_1098") is True
     assert b02.get("bot_pr_1098_head") == "50218b7c69413e5be47e48517cb4a397c3026578"
-    assert b02.get("bot_pr_1098_state") == "OPEN_UNMERGED"
-    assert b02.get("bot_pr_1098_promoted") is False
-    assert b02.get("remediation_gate") == "BOT_PR_1098_OPEN_UNMERGED_PENDING_PROMOTION"
+    assert b02.get("bot_pr_1098_state") == "MERGED"
+    assert b02.get("bot_pr_1098_promoted") is True
+    assert b02.get("bot_pr_1098_merge_sha") == "83dffd9a8043ccbe7423b3006e58af2847375157"
+    assert b02.get("web_pr_488_state") == "MERGED"
+    assert b02.get("web_pr_488_merge_sha") == "ffba79a4bab194c46b12bf82431e1156167dd278"
+    assert b02.get("remediation_gate") == "AUTHENTICATED_ADMIN_LIVE_READ_OR_OWNER_AUTHORIZED_WRITE_CANARY"
     assert "1098" in b02.get("description", "")
+    assert "488" in b02.get("description", "")
+
+    # Guard against live overclaims
+    assert b02.get("live_status") not in {"FULL_LIVE_PASS", "CUSTOMER_EFFECTIVE_LIVE_VERIFIED", "PRODUCTION_WRITE_VERIFIED"}
+    assert "PRODUCTION_CANONICAL_WRITE_LIVE_PASS" not in str(b02)
+    assert "CUSTOMER_EFFECTIVE_LIVE_VERIFIED=YES" not in str(b02)
 
     # B03-B05 must remain strictly FAIL_CLOSED
     assert blockers.get("B03", {}).get("code") == "BOT_WRITE_ENDPOINT_MISSING_FOR_PACKAGES"
