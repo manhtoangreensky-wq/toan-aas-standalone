@@ -320,11 +320,11 @@
     "callback_templates": 0,
     "commands": 0,
     "conversations": 0,
-    "database_tables": 232,
+    "database_tables": 233,
     "env_references": 280,
     "providers": 12,
-    "routes": 740,
-    "ui_path_references": 51
+    "routes": 746,
+    "ui_path_references": 53
   },
   "database_references": [
     {
@@ -818,6 +818,12 @@
       "line": 1678,
       "operation": "UPDATE",
       "table": "schema"
+    },
+    {
+      "file": "copyfast_admin_commercial.py",
+      "line": 857,
+      "operation": "UPDATE",
+      "table": "single"
     },
     {
       "file": "billing.py",
@@ -6361,6 +6367,7 @@
     "request",
     "routing",
     "schema",
+    "single",
     "storage_entitlements",
     "storage_events",
     "storage_usage",
@@ -8754,6 +8761,33 @@
       "path": "/analyze"
     },
     {
+      "endpoint": "get_admin_commercial_packages_collection",
+      "file": "copyfast_admin_commercial.py",
+      "line": 770,
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/commercial/packages"
+    },
+    {
+      "endpoint": "get_admin_commercial_package_single",
+      "file": "copyfast_admin_commercial.py",
+      "line": 814,
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/commercial/packages/{package_key}"
+    },
+    {
+      "endpoint": "patch_admin_commercial_package",
+      "file": "copyfast_admin_commercial.py",
+      "line": 850,
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/api/admin/commercial/packages/{package_key}"
+    },
+    {
       "endpoint": "get_admin_commercial_pricing_collection",
       "file": "copyfast_admin_commercial.py",
       "line": 371,
@@ -8806,6 +8840,33 @@
         "PATCH"
       ],
       "path": "/api/admin/commercial/products/{product_key}"
+    },
+    {
+      "endpoint": "get_admin_commercial_packages_collection",
+      "file": "copyfast_admin_commercial.py",
+      "line": 770,
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/v1/admin/commercial/packages"
+    },
+    {
+      "endpoint": "get_admin_commercial_package_single",
+      "file": "copyfast_admin_commercial.py",
+      "line": 814,
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/v1/admin/commercial/packages/{package_key}"
+    },
+    {
+      "endpoint": "patch_admin_commercial_package",
+      "file": "copyfast_admin_commercial.py",
+      "line": 850,
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/api/v1/admin/commercial/packages/{package_key}"
     },
     {
       "endpoint": "get_admin_commercial_pricing_collection",
@@ -14904,9 +14965,19 @@
   "schema_version": "2.0",
   "source_files_discovered": 230,
   "source_files_scanned": 230,
-  "source_fingerprint_sha256": "1a5b246edf9fbdadd88578813ae2fc0226e0c6bb1c6795c670fbf2e966c6ae3c",
+  "source_fingerprint_sha256": "3a07318b9ec597a4ec3267f29cf6c0e545d6b39f58db766471c952a1627192ad",
   "source_root": "repository-root",
   "ui_path_references": [
+    {
+      "file": "static/portal/portal.js",
+      "line": 31825,
+      "path": "/api/admin/commercial/packages"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "line": 32141,
+      "path": "/api/admin/commercial/packages/"
+    },
     {
       "file": "static/portal/portal.js",
       "line": 31489,
@@ -15144,7 +15215,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 32680,
+      "line": 33137,
       "path": "/features"
     },
     {
