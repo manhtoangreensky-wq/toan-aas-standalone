@@ -29,13 +29,16 @@
         "severity": "CONTRACT_WIRED",
         "write_mode": "CANONICAL_CAS_WRITE",
         "authority": "BOT_CORE",
-        "live_status": "CONTRACT_WIRED_NOT_LIVE_VERIFIED",
+        "live_status": "DEPLOYED_PRODUCTION_READONLY_PARTIAL",
         "contract_wired_to_bot_pr_1098": true,
         "bot_pr_1098_head": "50218b7c69413e5be47e48517cb4a397c3026578",
-        "bot_pr_1098_state": "OPEN_UNMERGED",
-        "bot_pr_1098_promoted": false,
-        "description": "Bot Core PR #1098 CAS write endpoints (/internal/v1/admin/pricing/{price_key}) wired to WebApp Admin Commercial Pricing editor; mock verified, live write gated.",
-        "remediation_gate": "BOT_PR_1098_OPEN_UNMERGED_PENDING_PROMOTION"
+        "bot_pr_1098_state": "MERGED",
+        "bot_pr_1098_promoted": true,
+        "bot_pr_1098_merge_sha": "83dffd9a8043ccbe7423b3006e58af2847375157",
+        "web_pr_488_state": "MERGED",
+        "web_pr_488_merge_sha": "ffba79a4bab194c46b12bf82431e1156167dd278",
+        "description": "Bot Core PR #1098 and WebApp PR #488 promoted and deployed to production; source acceptance pass, isolated integration pass, production read-only partial (authenticated Admin live read blocked by session unavailable, production write canary not run).",
+        "remediation_gate": "AUTHENTICATED_ADMIN_LIVE_READ_OR_OWNER_AUTHORIZED_WRITE_CANARY"
       },
       "B03": {
         "code": "BOT_WRITE_ENDPOINT_MISSING_FOR_PACKAGES",
