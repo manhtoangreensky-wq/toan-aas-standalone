@@ -126,6 +126,15 @@ from copyfast_workspace_draft_contract import (
     FEATURE_UPLOAD_REQUIRED,
     is_workspace_draft_feature,
 )
+from copyfast_product_video_job_bridge import (
+    CANONICAL_PRODUCT_KEY as PRODUCT_VIDEO_PRODUCT_KEY,
+    SUPPORTED_CANONICAL_JOB_ADAPTERS as PRODUCT_VIDEO_ADAPTER_KEYS,
+    create_or_replay_product_video_job,
+    get_product_video_job,
+    is_product_video_job_other_account,
+    list_product_video_jobs,
+    product_video_job_to_native_compat,
+)
 
 
 router = APIRouter(prefix="/api/v1", tags=["COPYFAST Core"])
@@ -1975,6 +1984,18 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
         values["target_language"] = target_language
     if feature == "documents_split" and not CONTIGUOUS_PAGE_RANGE_PATTERN.fullmatch(str(values.get("page_range") or "").strip()):
         return "page_range_invalid"
+    if feature == "video_ai_prompt":
+        from copyfast_product_video_job_bridge import validate_product_video_input
+        if action == "confirm":
+            is_valid, err, _ = validate_product_video_input(values)
+            if not is_valid:
+                return err
+        else:
+            prompt = str(values.get("prompt") or values.get("text") or values.get("brief") or "").strip()
+            if not prompt:
+                return "text_required"
+            if len(prompt) > 2000:
+                return "PROMPT_TOO_LONG"
     if action == "confirm" and feature in FEATURE_TIER_REQUIRED_ON_CONFIRM:
         tier = str(values.get("tier") or "").strip()
         if not CANONICAL_IDENTIFIER_PATTERN.fullmatch(tier):
@@ -1988,6 +2009,14 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
 def _feature_input_contract_response(feature: str, reason: str) -> dict:
     messages = {
         "authority_field_not_allowed": "Yêu cầu feature có trường hệ thống không được phép; Web không nhận identity, Xu, provider, job hoặc output từ browser.",
+        "PROMPT_REQUIRED": "Prompt là bắt buộc đối với Video AI Prompt.",
+        "PROMPT_TOO_LONG": "Prompt video không được vượt quá 2000 ký tự.",
+        "TIER_REQUIRED": "Quality tier là bắt buộc (200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500).",
+        "INVALID_QUALITY_TIER": "Quality tier không hợp lệ. Phải thuộc (200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500).",
+        "ASPECT_RATIO_REQUIRED": "Aspect ratio là bắt buộc ('9:16', '16:9', '1:1').",
+        "INVALID_ASPECT_RATIO": "Aspect ratio không hợp lệ. Phải thuộc ('9:16', '16:9', '1:1').",
+        "DURATION_REQUIRED": "Thời lượng duration_seconds là bắt buộc (5, 10, 15).",
+        "INVALID_DURATION": "Thời lượng không hợp lệ. Phải thuộc (5, 10, 15) giây.",
         "upload_ids_invalid": "Tham chiếu tệp staging không hợp lệ. Hãy chọn lại tệp để Web gửi qua luồng canonical.",
         "web_native_image_to_pdf_required": "Ảnh sang PDF là tiện ích Web-native riêng tư. Hãy dùng /documents/image-to-pdf để tạo output đã được kiểm tra.",
         "web_native_pdf_to_word_required": "PDF có text → Word là tiện ích Web-native riêng tư. Hãy dùng /documents/pdf-to-word; PDF scan hoặc layout ảnh không được giả OCR.",
@@ -3251,14 +3280,20 @@ def _merge_read_items(*groups: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _native_jobs_for_account(account: dict) -> list[dict[str, Any]]:
-    return [
+    account_id = str(account.get("id") or "")
+    native_jobs = [
         item
         for item in (
             _native_job_compatibility_record(record)
-            for record in list_native_jobs(str(account.get("id") or ""), limit=100)
+            for record in list_native_jobs(account_id, limit=100)
         )
         if item
     ]
+    pv_jobs = [
+        product_video_job_to_native_compat(job)
+        for job in list_product_video_jobs(account_id, limit=100)
+    ]
+    return _merge_read_items(pv_jobs, native_jobs)
 
 
 def _native_assets_for_account(account: dict) -> list[dict[str, Any]]:
@@ -5832,6 +5867,25 @@ async def list_jobs(request: Request, account: dict = Depends(require_account)):
 
 @router.get("/jobs/{job_id}")
 async def job_detail(job_id: str, request: Request, account: dict = Depends(require_account)):
+    account_id = str(account.get("id") or "")
+    pv_job = get_product_video_job(account_id, job_id)
+    if pv_job is not None:
+        compat_item = product_video_job_to_native_compat(pv_job)
+        return envelope(
+            True,
+            "Đã tải dữ liệu Job Web-native của tài khoản hiện tại.",
+            data={**compat_item, "job_record": pv_job, "read_model": "jobs", "canonical_available": False},
+            status_name="read_only",
+        )
+    if is_product_video_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    if str(job_id or "").strip().startswith("pvj_"):
+        return envelope(
+            False,
+            "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_JOB_NOT_FOUND",
+        )
     native_job = parse_native_job_id(job_id)
     if native_job is not None:
         record = get_native_job(str(account.get("id") or ""), job_id)
@@ -6052,6 +6106,39 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
         )
         if quote_state != "claimed":
             return _feature_quote_required_response(quote_state)
+        if feature == "video_ai_prompt":
+            account_id = str(account.get("id") or "")
+            try:
+                job_result = create_or_replay_product_video_job(
+                    account_id=account_id,
+                    payload=values,
+                    idempotency_key=key,
+                )
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=True,
+                )
+                return envelope(
+                    True,
+                    "Đã tạo tác vụ Video AI Prompt thành công, chờ runtime xử lý.",
+                    data=job_result,
+                    status_name="queued",
+                )
+            except HTTPException as exc:
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=False,
+                )
+                if exc.status_code == 409:
+                    raise exc
+                return envelope(
+                    False,
+                    exc.detail,
+                    status_name="guarded",
+                    error_code="PRODUCT_VIDEO_JOB_VALIDATION_FAILED",
+                )
         scope = f"feature:{account['id']}:{feature}:confirm"
         result = await _run_idempotent(
             scope,
@@ -6110,6 +6197,64 @@ async def feature_estimate(feature: str, payload: FeatureRequest, request: Reque
 @router.post("/features/{feature}/confirm")
 async def feature_confirm(feature: str, payload: FeatureRequest, request: Request, account: dict = Depends(require_csrf)):
     return await _feature_action("confirm", feature, payload, request, account, session_id=_feature_session_id(request, account))
+
+
+@router.post("/features/video_ai_prompt/jobs")
+async def create_product_video_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    request_id = str(payload.input.get("request_id") or "")
+    job = create_or_replay_product_video_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        request_id=request_id,
+        idempotency_key=key,
+    )
+    return envelope(
+        True,
+        "Đã tạo tác vụ Video AI Prompt thành công, chờ runtime xử lý.",
+        data=job,
+        status_name="queued",
+    )
+
+
+@router.get("/features/video_ai_prompt/jobs")
+async def list_product_video_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = list_product_video_jobs(account_id, limit=100)
+    return envelope(
+        True,
+        "Đã tải danh sách job Video AI Prompt của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/video_ai_prompt/jobs/{job_id}")
+async def get_product_video_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    job = get_product_video_job(account_id, job_id)
+    if job is not None:
+        return envelope(
+            True,
+            "Đã tải chi tiết job Video AI Prompt.",
+            data=job,
+            status_name="read_only",
+        )
+    if is_product_video_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Video AI Prompt của tài khoản.")
 
 
 @router.get("/admin/summary")

@@ -15,7 +15,7 @@ from copyfast_registry import FEATURE_BY_KEY
 
 FEATURE_TEXT_REQUIRED = frozenset({
     "chat", "prompt_studio", "caption", "hashtag", "hook", "script", "storyboard", "content_pack",
-    "image_create", "image_transform", "video_single", "video_product", "video_trend",
+    "image_create", "image_transform", "video_single", "video_ai_prompt", "video_product", "video_trend",
     "video_text_to_video", "video_quick", "video_image_to_video", "video_multiscene", "video_long",
     "voice_tts", "voice_saved_tts", "music_background", "music_song", "music_sfx",
 })
