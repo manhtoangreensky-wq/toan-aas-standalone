@@ -29869,6 +29869,13 @@
     return "";
   }
 
+  const PRODUCT_VIDEO_TERMINAL_STATES = Object.freeze(new Set([
+    "completed", "failed", "failed_no_charge", "cancelled", "refunded"
+  ]));
+  if (typeof window !== "undefined") {
+    window.__PRODUCT_VIDEO_TERMINAL_STATES__ = PRODUCT_VIDEO_TERMINAL_STATES;
+  }
+
   function isSafeOutputUrl(url) {
     if (!url || typeof url !== "string") return false;
     const raw = url.trim();
@@ -29881,37 +29888,46 @@
 
     if (raw.includes("\\")) return false;
 
-    const lower = raw.toLowerCase();
-    for (const bad of ["javascript:", "data:", "file:", "vbscript:", "blob:", "about:", "gopher:"]) {
-      if (lower.startsWith(bad)) return false;
-    }
-
-    let unquoted = raw;
-    try {
-      for (let i = 0; i < 3; i++) {
-        const prev = unquoted;
-        unquoted = decodeURIComponent(unquoted);
-        if (unquoted === prev) break;
+    let decoded = raw;
+    for (let i = 0; i < 5; i++) {
+      try {
+        const next = decodeURIComponent(decoded);
+        if (next === decoded) break;
+        decoded = next;
+      } catch (e) {
+        return false;
       }
-    } catch (e) {
-      return false;
     }
-    if (unquoted.includes("..")) return false;
 
-    if (raw.startsWith("/api/v1/")) {
-      return true;
-    }
+    if (decoded.includes("..")) return false;
+
     if (raw.startsWith("/")) {
-      return false;
+      if (raw.startsWith("//")) return false;
+      return raw.startsWith("/api/v1/");
     }
 
     try {
       const parsed = new URL(raw);
-      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;
-      if (!parsed.hostname) return false;
+      const scheme = parsed.protocol.toLowerCase();
+      if (scheme === "javascript:" || scheme === "data:" || scheme === "file:" || scheme === "vbscript:" || scheme === "blob:" || scheme === "about:" || scheme === "gopher:") {
+        return false;
+      }
+
       if (parsed.username || parsed.password) return false;
-      if (parsed.protocol === "http:") {
-        if (parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1" && parsed.hostname !== "testserver") {
+
+      const hostname = parsed.hostname.toLowerCase();
+      if (!hostname) return false;
+
+      const isLocal = (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "testserver");
+      if (scheme === "http:") {
+        return isLocal;
+      }
+
+      if (scheme !== "https:") return false;
+
+      const pathToCheck = (parsed.pathname + parsed.search).toLowerCase();
+      for (const ctrl of ["\x00", "\r", "\n", "\t", "\\"]) {
+        if (pathToCheck.includes(ctrl)) {
           return false;
         }
       }
@@ -29929,11 +29945,15 @@
     const requestId = String(job.request_id || "").trim();
     const prompt = String(job.prompt || (flow.input && flow.input.prompt) || "").trim();
 
-    let statusLabel = "Đang chờ xử lý";
-    let statusDesc = "Tác vụ đã được đưa vào hàng đợi xử lý canonical. Đang chờ worker nhận tác vụ.";
-    let statusBadgeType = "queued";
+    let statusLabel = "";
+    let statusDesc = "";
+    let statusBadgeType = "";
 
-    if (status === "processing") {
+    if (status === "queued") {
+      statusLabel = "Đang chờ xử lý";
+      statusDesc = "Tác vụ đã được đưa vào hàng đợi xử lý canonical. Đang chờ worker nhận tác vụ.";
+      statusBadgeType = "queued";
+    } else if (status === "processing") {
       statusLabel = "Đang xử lý";
       statusDesc = "Worker đang xử lý video. Tiến trình thực tế được cập nhật trực tiếp từ máy chủ.";
       statusBadgeType = "processing";
@@ -29942,9 +29962,21 @@
       statusDesc = "Video AI đã hoàn thành và sẵn sàng.";
       statusBadgeType = "completed";
     } else if (status === "failed" || status === "failed_no_charge") {
-      statusLabel = "Thất bại";
-      statusDesc = safeText(job.status_reason || "Tác vụ không thể hoàn tất.");
-      statusBadgeType = "failed";
+      statusLabel = status === "failed_no_charge" ? "Thất bại (chưa trừ Xu)" : "Thất bại";
+      statusDesc = safeText(job.status_reason || (status === "failed_no_charge" ? "Yêu cầu không tạo kết quả; tài khoản chưa bị trừ Xu." : "Tác vụ không thể hoàn tất."));
+      statusBadgeType = status === "failed_no_charge" ? "failed_no_charge" : "failed";
+    } else if (status === "cancelled") {
+      statusLabel = "Đã hủy";
+      statusDesc = safeText(job.status_reason || "Tác vụ đã được hủy theo yêu cầu. Không tạo video đầu ra.");
+      statusBadgeType = "cancelled";
+    } else if (status === "refunded") {
+      statusLabel = "Đã hoàn Xu";
+      statusDesc = safeText(job.status_reason || "Tác vụ đã dừng và trạng thái hoàn Xu đã được ghi nhận.");
+      statusBadgeType = "refunded";
+    } else {
+      statusLabel = "Trạng thái chưa được hỗ trợ";
+      statusDesc = safeText(job.status_reason || `Trạng thái '${status || "không xác định"}' từ máy chủ chưa được hỗ trợ hiển thị hoặc yêu cầu kiểm tra kỹ thuật.`);
+      statusBadgeType = "guarded";
     }
 
     const headerMarkup = `<div class="portal-card-header">
@@ -30006,16 +30038,60 @@
           <button class="portal-button portal-button--quiet" type="button" data-portal-action="product-video-new">Tạo video khác</button>
         </div>`;
       }
-    } else if (status === "failed" || status === "failed_no_charge") {
+    } else if (status === "failed") {
       bodyMarkup = `<div class="portal-notice portal-notice--error" role="alert">
         <span class="portal-notice-icon" aria-hidden="true">⚠️</span>
         <div>
           <strong>Tác vụ không hoàn thành</strong>
-          <p style="margin:0; font-size:13px;">${safeText(job.status_reason || "Hệ thống ghi nhận lỗi khi xử lý video. Xu chưa bị trừ hoặc đã được hoàn trả.")}</p>
+          <p style="margin:0; font-size:13px;">${safeText(job.status_reason || "Hệ thống ghi nhận lỗi khi xử lý video.")}</p>
         </div>
       </div>
       <div class="portal-form-footer" style="margin-top:16px;">
         <button class="portal-button portal-button--primary" type="button" data-portal-action="product-video-new">Thử lại với yêu cầu mới</button>
+      </div>`;
+    } else if (status === "failed_no_charge") {
+      bodyMarkup = `<div class="portal-notice portal-notice--error" role="alert">
+        <span class="portal-notice-icon" aria-hidden="true">⚠️</span>
+        <div>
+          <strong>Tác vụ không hoàn thành · Chưa trừ Xu</strong>
+          <p style="margin:0; font-size:13px;">${safeText(job.status_reason || "Yêu cầu không tạo kết quả; tài khoản chưa bị trừ Xu.")}</p>
+        </div>
+      </div>
+      <div class="portal-form-footer" style="margin-top:16px;">
+        <button class="portal-button portal-button--primary" type="button" data-portal-action="product-video-new">Thử lại với yêu cầu mới</button>
+      </div>`;
+    } else if (status === "cancelled") {
+      bodyMarkup = `<div class="portal-notice portal-notice--info" role="status">
+        <span class="portal-notice-icon" aria-hidden="true">✕</span>
+        <div>
+          <strong>Tác vụ đã hủy</strong>
+          <p style="margin:0; font-size:13px;">${safeText(job.status_reason || "Tác vụ đã được hủy theo yêu cầu. Không có video được tạo ra và không có tệp để tải.")}</p>
+        </div>
+      </div>
+      <div class="portal-form-footer" style="margin-top:16px;">
+        <button class="portal-button portal-button--primary" type="button" data-portal-action="product-video-new">Tạo yêu cầu mới</button>
+      </div>`;
+    } else if (status === "refunded") {
+      bodyMarkup = `<div class="portal-notice portal-notice--info" role="status">
+        <span class="portal-notice-icon" aria-hidden="true">↺</span>
+        <div>
+          <strong>Tác vụ đã hoàn Xu</strong>
+          <p style="margin:0; font-size:13px;">${safeText(job.status_reason || "Tác vụ đã dừng và trạng thái hoàn Xu đã được ghi nhận. Không có video đầu ra để tải.")}</p>
+        </div>
+      </div>
+      <div class="portal-form-footer" style="margin-top:16px;">
+        <button class="portal-button portal-button--primary" type="button" data-portal-action="product-video-new">Tạo yêu cầu mới</button>
+      </div>`;
+    } else {
+      bodyMarkup = `<div class="portal-notice portal-notice--warning" role="alert">
+        <span class="portal-notice-icon" aria-hidden="true">⚠️</span>
+        <div>
+          <strong>Trạng thái chưa được hỗ trợ</strong>
+          <p style="margin:0; font-size:13px;">${safeText(job.status_reason || `Trạng thái '${status || "không xác định"}' từ máy chủ chưa được hỗ trợ hiển thị hoặc yêu cầu kiểm tra kỹ thuật.`)}</p>
+        </div>
+      </div>
+      <div class="portal-form-footer" style="margin-top:16px;">
+        <button class="portal-button portal-button--quiet" type="button" data-portal-action="product-video-new">Tạo yêu cầu mới</button>
       </div>`;
     }
 

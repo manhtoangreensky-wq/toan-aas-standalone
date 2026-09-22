@@ -3182,9 +3182,12 @@
   let productVideoPollEpoch = 0;
   let productVideoLastStatus = "";
 
-  const PRODUCT_VIDEO_TERMINAL_STATES = new Set([
+  const PRODUCT_VIDEO_TERMINAL_STATES = (typeof window !== "undefined" && window.__PRODUCT_VIDEO_TERMINAL_STATES__) || Object.freeze(new Set([
     "completed", "failed", "failed_no_charge", "cancelled", "refunded"
-  ]);
+  ]));
+  if (typeof window !== "undefined") {
+    window.__PRODUCT_VIDEO_TERMINAL_STATES__ = PRODUCT_VIDEO_TERMINAL_STATES;
+  }
 
   function stopProductVideoPolling() {
     productVideoPollEpoch += 1;

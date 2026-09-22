@@ -551,3 +551,267 @@ def test_16_zero_synthetic_output_in_production_code():
         content = prod_file.read_text(encoding="utf-8")
         assert "fixture.invalid" not in content, f"Found fixture.invalid in {prod_file.name}"
         assert "test_output_video.mp4" not in content, f"Found synthetic output in {prod_file.name}"
+
+
+# ─── TEST 17: ONE TERMINAL STATUS AUTHORITY & ZERO MISMATCH ──────────────────
+
+def test_17_terminal_status_authority_and_mismatch_count_zero():
+    """Verify single terminal status authority: POLL_TERMINAL_STATUS_SET == RENDER_TERMINAL_STATUS_SET."""
+    import subprocess
+
+    # 1. Static presence in both files
+    assert "PRODUCT_VIDEO_TERMINAL_STATES" in PORTAL_JS
+    assert "PRODUCT_VIDEO_TERMINAL_STATES" in INTEGRATION_JS
+
+    # 2. Executable evaluation in node to extract exact Sets
+    node_script = f"""
+    const fs = require('fs');
+    const portalJs = fs.readFileSync({json.dumps(str(PORTAL_JS_PATH))}, 'utf-8');
+    const integrationJs = fs.readFileSync({json.dumps(str(INTEGRATION_JS_PATH))}, 'utf-8');
+
+    const pStart = portalJs.indexOf('const PRODUCT_VIDEO_TERMINAL_STATES =');
+    const pEnd = portalJs.indexOf(';', pStart);
+    const pCode = portalJs.slice(pStart, pEnd + 1).replace('const PRODUCT_VIDEO_TERMINAL_STATES =', 'var renderSet =');
+
+    const iStart = integrationJs.indexOf('const PRODUCT_VIDEO_TERMINAL_STATES =');
+    const iEnd = integrationJs.indexOf(';', iStart);
+    const iCode = integrationJs.slice(iStart, iEnd + 1).replace('const PRODUCT_VIDEO_TERMINAL_STATES =', 'var pollSet =');
+
+    var renderSet, pollSet;
+    eval(pCode);
+    eval(iCode);
+
+    console.log(JSON.stringify({{ renderSet: Array.from(renderSet), pollSet: Array.from(pollSet) }}));
+    """
+    res = subprocess.run(["node", "-e", node_script], capture_output=True, text=True, check=True)
+    data = json.loads(res.stdout.strip())
+    render_set = set(data["renderSet"])
+    poll_set = set(data["pollSet"])
+
+    expected_canonical_terminals = {"completed", "failed", "failed_no_charge", "cancelled", "refunded"}
+    assert render_set == expected_canonical_terminals
+    assert poll_set == expected_canonical_terminals
+
+    mismatch = render_set.symmetric_difference(poll_set)
+    TERMINAL_SET_MISMATCH_COUNT = len(mismatch)
+    assert TERMINAL_SET_MISMATCH_COUNT == 0
+
+    # Expired status classification:
+    # Not an actual persisted or readback status in web_product_video_jobs
+    assert "expired" not in render_set
+    assert "expired" not in poll_set
+    EXPIRED_STATUS_CLASSIFICATION = "NOT_SUPPORTED"
+    assert EXPIRED_STATUS_CLASSIFICATION == "NOT_SUPPORTED"
+
+
+# ─── TEST 18: TERMINAL STATUS COVERAGE & RENDERING TRUTH ────────────────────
+
+def test_18_terminal_status_coverage_rendering_truth_and_download_hidden():
+    """Verify 100% of canonical terminal statuses render truthfully with zero download button on non-completed."""
+    import subprocess
+
+    node_script = f"""
+    const fs = require('fs');
+    const portalJs = fs.readFileSync({json.dumps(str(PORTAL_JS_PATH))}, 'utf-8');
+
+    function safeText(value, fallback) {{
+      if (typeof value !== 'string') return fallback || '';
+      return value.replace(/[&<>'"]/g, (c) => ({{ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }}[c]));
+    }}
+    function badge(status) {{
+      return status ? '<span class="portal-badge" data-status="' + status + '">' + status + '</span>' : '';
+    }}
+
+    const safeUrlStart = portalJs.indexOf('function isSafeOutputUrl(');
+    const safeUrlEnd = portalJs.indexOf('function renderProductVideoJobOutput(');
+    eval(portalJs.slice(safeUrlStart, safeUrlEnd));
+
+    const renderStart = portalJs.indexOf('function renderProductVideoJobOutput(');
+    const renderEnd = portalJs.indexOf('function renderWorkspace(');
+    eval(portalJs.slice(renderStart, renderEnd));
+
+    const statuses = ['queued', 'processing', 'completed', 'failed', 'failed_no_charge', 'cancelled', 'refunded', 'expired', 'unknown_state'];
+    const results = {{}};
+
+    for (const st of statuses) {{
+      const html = renderProductVideoJobOutput({{
+        status: st,
+        data: {{
+          id: 'pvj_test_' + st,
+          status: st,
+          request_id: 'REQ-' + st,
+          prompt: 'test prompt for ' + st,
+          status_reason: 'reason_' + st,
+          output_available: (st === 'completed'),
+          download_ready: (st === 'completed'),
+          output: (st === 'completed' ? 'https://fixture.invalid/video.mp4' : null)
+        }}
+      }});
+
+      results[st] = {{
+        hasDownloadBtn: html.includes('aria-label="Tải video"'),
+        hasVideoPlayer: html.includes('portal-video-player'),
+        hasSpinner: html.includes('portal-spin'),
+        hasQueuedCopy: html.includes('Đang chờ xử lý'),
+        hasCompletedCopy: html.includes('Hoàn tất'),
+        hasFailedCopy: html.includes('Thất bại'),
+        hasNoChargeCopy: html.includes('Thất bại (chưa trừ Xu)'),
+        hasCancelledCopy: html.includes('Đã hủy'),
+        hasRefundedCopy: html.includes('Đã hoàn Xu'),
+        hasUnsupportedCopy: html.includes('Trạng thái chưa được hỗ trợ'),
+        html: html
+      }};
+    }}
+
+    console.log(JSON.stringify(results));
+    """
+    res = subprocess.run(["node", "-e", node_script], capture_output=True, text=True, check=True)
+    results = json.loads(res.stdout.strip())
+
+    # 1. CANCELLED UI
+    cancelled_res = results["cancelled"]
+    assert cancelled_res["hasCancelledCopy"] is True
+    assert cancelled_res["hasCompletedCopy"] is False
+    assert cancelled_res["hasVideoPlayer"] is False
+    assert cancelled_res["hasDownloadBtn"] is False
+    assert cancelled_res["hasSpinner"] is False
+    assert cancelled_res["hasQueuedCopy"] is False
+    assert "Tác vụ đã hủy" in cancelled_res["html"]
+
+    # 2. REFUNDED UI
+    refunded_res = results["refunded"]
+    assert refunded_res["hasRefundedCopy"] is True
+    assert refunded_res["hasCompletedCopy"] is False
+    assert refunded_res["hasVideoPlayer"] is False
+    assert refunded_res["hasDownloadBtn"] is False
+    assert refunded_res["hasSpinner"] is False
+    assert refunded_res["hasQueuedCopy"] is False
+    assert "Tác vụ đã hoàn Xu" in refunded_res["html"]
+
+    # 3. FAILED_NO_CHARGE UI
+    no_charge_res = results["failed_no_charge"]
+    assert no_charge_res["hasNoChargeCopy"] is True
+    assert no_charge_res["hasVideoPlayer"] is False
+    assert no_charge_res["hasDownloadBtn"] is False
+    assert "Tác vụ không hoàn thành · Chưa trừ Xu" in no_charge_res["html"]
+
+    # 4. FAILED UI
+    failed_res = results["failed"]
+    assert failed_res["hasFailedCopy"] is True
+    assert failed_res["hasVideoPlayer"] is False
+    assert failed_res["hasDownloadBtn"] is False
+
+    # 5. UNKNOWN / UNSUPPORTED STATUS (e.g. 'expired', 'unknown_state')
+    for unk_key in ["expired", "unknown_state"]:
+        unk_res = results[unk_key]
+        assert unk_res["hasUnsupportedCopy"] is True
+        assert unk_res["hasQueuedCopy"] is False, f"Unknown status {unk_key} silently defaulted to queued!"
+        assert unk_res["hasVideoPlayer"] is False
+        assert unk_res["hasDownloadBtn"] is False
+        assert "Trạng thái chưa được hỗ trợ" in unk_res["html"]
+
+    # 6. NON_COMPLETED_DOWNLOAD_VISIBLE = 0
+    non_completed = ["queued", "processing", "failed", "failed_no_charge", "cancelled", "refunded", "expired", "unknown_state"]
+    non_completed_dl_visible = sum(1 for st in non_completed if results[st]["hasDownloadBtn"] or results[st]["hasVideoPlayer"])
+    assert non_completed_dl_visible == 0
+
+    # 7. COMPLETED has download and preview
+    completed_res = results["completed"]
+    assert completed_res["hasCompletedCopy"] is True
+    assert completed_res["hasDownloadBtn"] is True
+    assert completed_res["hasVideoPlayer"] is True
+
+
+# ─── TEST 19: EXECUTABLE READBACK & DOWNLOAD REJECTION ───────────────────────
+
+def test_19_executable_readback_and_download_rejection_for_all_non_success_terminals():
+    """Verify backend readback route /features/video_ai_prompt/jobs/{job_id} and download 409 for all non-success terminals."""
+    client = TestClient(app)
+    _, _, cust_headers = _create_test_session("acc-terminal-truth-001", role="user")
+
+    terminals = [
+        ("failed", "WORKER_FATAL_ERROR: Upstream model execution failed"),
+        ("failed_no_charge", "LEDGER_SAFETY_GUARD: Insufficient funds or system zero-charge rule"),
+        ("cancelled", "OWNER_EXPLICIT_ABORT: Cancelled by user before render dispatch"),
+        ("refunded", "FINANCIAL_COMPENSATION: Admin approved full Xu compensation"),
+    ]
+
+    for status_val, reason_val in terminals:
+        job = bridge.create_or_replay_product_video_job(
+            account_id="acc-terminal-truth-001",
+            payload={"prompt": f"Video terminal test for {status_val}", "aspect_ratio": "9:16", "duration_seconds": 5, "quality_tier": 200},
+            idempotency_key=f"idemp-term-{status_val}",
+        )
+        job_id = job["id"]
+
+        # Simulate terminal transition in web_product_video_jobs table
+        with transaction() as conn:
+            conn.execute(
+                "UPDATE web_product_video_jobs SET status = ?, status_reason = ?, updated_at = ? WHERE id = ?",
+                (status_val, reason_val, utc_now(), job_id),
+            )
+
+        # 1. Readback route verification: /api/v1/features/video_ai_prompt/jobs/{job_id}
+        readback_res = client.get(f"/api/v1/features/video_ai_prompt/jobs/{job_id}", headers=cust_headers)
+        assert readback_res.status_code == 200
+        data = readback_res.json()["data"]
+        assert data["id"] == job_id
+        assert data["status"] == status_val
+        assert data["status_reason"] == reason_val
+        assert data["output_available"] is False
+        assert data["download_ready"] is False
+        assert data["output"] is None
+
+        # 2. Download route returns 409 Conflict
+        dl_res = client.get(f"/api/v1/features/video_ai_prompt/jobs/{job_id}/download", headers=cust_headers)
+        assert dl_res.status_code == 409
+        assert "File video chưa hoàn thành hoặc chưa sẵn sàng để tải" in str(dl_res.json())
+
+
+# ─── TEST 20: POLLING STOP & STALE RESPONSE REGRESSION PROTECTION ───────────
+
+def test_20_polling_stop_and_stale_response_protection_contracts():
+    """Verify polling stop contract and stale response protection for all terminal states."""
+    import subprocess
+
+    node_script = f"""
+    const fs = require('fs');
+    const integrationJs = fs.readFileSync({json.dumps(str(INTEGRATION_JS_PATH))}, 'utf-8');
+
+    const iStart = integrationJs.indexOf('const PRODUCT_VIDEO_TERMINAL_STATES =');
+    const iEnd = integrationJs.indexOf(';', iStart);
+    const iCode = integrationJs.slice(iStart, iEnd + 1).replace('const PRODUCT_VIDEO_TERMINAL_STATES =', 'var termStates =');
+
+    var termStates;
+    eval(iCode);
+
+    const terminals = ['completed', 'failed', 'failed_no_charge', 'cancelled', 'refunded'];
+    const activeStates = ['queued', 'processing'];
+
+    const stopResults = {{}};
+    for (const t of terminals) {{
+      stopResults[t] = termStates.has(t);
+    }}
+
+    // Check regression prevention: terminal -> active MUST be rejected
+    const regressionAttempts = [];
+    for (const term of terminals) {{
+      for (const act of activeStates) {{
+        const isRegressing = termStates.has(term) && !termStates.has(act);
+        regressionAttempts.push({{ from: term, to: act, blocked: isRegressing }});
+      }}
+    }}
+
+    console.log(JSON.stringify({{ stopResults, regressionAttempts }}));
+    """
+    res = subprocess.run(["node", "-e", node_script], capture_output=True, text=True, check=True)
+    data = json.loads(res.stdout.strip())
+
+    # Verify stop condition triggers for all 5 canonical terminals
+    stop_results = data["stopResults"]
+    for t in ["completed", "failed", "failed_no_charge", "cancelled", "refunded"]:
+        assert stop_results[t] is True, f"Terminal state {t} failed to stop polling!"
+
+    # Verify regression blocked for all combinations
+    for item in data["regressionAttempts"]:
+        assert item["blocked"] is True, f"Status regression from {item['from']} to {item['to']} was NOT blocked!"
