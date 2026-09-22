@@ -70,10 +70,18 @@
         "remediation_gate": "NEW_PROMOTION_ENGINE_PROGRAM_REQUIRED"
       },
       "B05": {
-        "code": "BOT_WRITE_ENDPOINT_MISSING_FOR_TOPUP_PACKAGES",
-        "severity": "FAIL_CLOSED",
-        "description": "Bot lacks /internal/v1/admin/topup-packages mutation API; WebApp renders VietQR canonical rates and blocks untracked bonus changes.",
-        "remediation_gate": "WAIT_BOT_CORE_BRIDGE_TOPUP_PACKAGES_WRITE_ENDPOINT"
+        "code": "BOT_CANONICAL_TOPUP_CONFIG_AUTHORITY_NOT_MUTABLE",
+        "severity": "READ_ONLY",
+        "write_mode": "READ_ONLY",
+        "authority": "BOT_RUNTIME_STATIC",
+        "bot_discovery_pr": 1121,
+        "bot_discovery_merge_sha": "c157db5596c818a16e98d472872c829ef2225f90",
+        "authority_discovered": false,
+        "runtime_topup_package_count": 6,
+        "no_model_invented": true,
+        "live_status": "READ_ONLY_RUNTIME_TRUTH",
+        "description": "Bot Core discovery (PR #1121, SHA c157db5596c818a16e98d472872c829ef2225f90) confirms 6 canonical runtime top-up tiers with 100 VND = 1 Xu base conversion and hardcoded bonus rules (+30% first, +20% second). There is no mutable canonical Admin authority for those values. Web Admin Commercial displays them in factual READ_ONLY mode without fake editing.",
+        "remediation_gate": "MUTABLE_TOPUP_CONFIG_PROGRAM_REQUIRED"
       }
     }
   },

@@ -748,8 +748,8 @@ def test_16_b02_b05_remain_guarded_and_b01_matrix_updated():
     assert blockers.get("B03", {}).get("severity") in {"CONTRACT_WIRED", "FAIL_CLOSED"}
     assert blockers.get("B04", {}).get("code") in {"BOT_WRITE_ENDPOINT_MISSING_FOR_PROMOTIONS", "BOT_CANONICAL_PROMOTIONS_AUTHORITY_NOT_IMPLEMENTED"}
     assert blockers.get("B04", {}).get("severity") in {"FAIL_CLOSED", "NOT_IMPLEMENTED"}
-    assert blockers.get("B05", {}).get("code") == "BOT_WRITE_ENDPOINT_MISSING_FOR_TOPUP_PACKAGES"
-    assert blockers.get("B05", {}).get("severity") == "FAIL_CLOSED"
+    assert blockers.get("B05", {}).get("code") in {"BOT_WRITE_ENDPOINT_MISSING_FOR_TOPUP_PACKAGES", "BOT_CANONICAL_TOPUP_CONFIG_AUTHORITY_NOT_MUTABLE"}
+    assert blockers.get("B05", {}).get("severity") in {"FAIL_CLOSED", "READ_ONLY"}
 
 
 def test_17_portal_js_product_editor_contract():

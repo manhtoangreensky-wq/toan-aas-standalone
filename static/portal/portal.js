@@ -32269,10 +32269,12 @@
     };
 
     const topupPackagesList = [
-      { code: "topup_50k", amount_vnd: 50000, xu: 500, bonus_xu: 0, rate: "100 đ = 1 Xu", status: "active" },
-      { code: "topup_100k", amount_vnd: 100000, xu: 1050, bonus_xu: 50, rate: "95 đ = 1 Xu", status: "active" },
-      { code: "topup_200k", amount_vnd: 200000, xu: 2200, bonus_xu: 200, rate: "91 đ = 1 Xu", status: "active" },
-      { code: "topup_500k", amount_vnd: 500000, xu: 5800, bonus_xu: 800, rate: "86 đ = 1 Xu", status: "active" }
+      { code: "topup_10k", amount_vnd: 10000, xu: 100, bonus_xu: 0, rate: "100 đ = 1 Xu", status: "read_only" },
+      { code: "topup_20k", amount_vnd: 20000, xu: 200, bonus_xu: 0, rate: "100 đ = 1 Xu", status: "read_only" },
+      { code: "topup_50k", amount_vnd: 50000, xu: 500, bonus_xu: 0, rate: "100 đ = 1 Xu", status: "read_only" },
+      { code: "topup_100k", amount_vnd: 100000, xu: 1000, bonus_xu: 0, rate: "100 đ = 1 Xu", status: "read_only" },
+      { code: "topup_200k", amount_vnd: 200000, xu: 2000, bonus_xu: 0, rate: "100 đ = 1 Xu", status: "read_only" },
+      { code: "topup_500k", amount_vnd: 500000, xu: 5000, bonus_xu: 0, rate: "100 đ = 1 Xu", status: "read_only" }
     ];
 
     const blockerBanner = (activeTab !== "products" && activeTab !== "pricing" && activeTab !== "packages") ? `<div class="portal-notice portal-notice--warning" data-blocker="B01 B02 B03 B04 B05" style="margin-bottom:20px; border-left:4px solid #f59e0b; background:rgba(245,158,11,0.08); padding:16px; border-radius:8px;">
@@ -32288,7 +32290,7 @@
             <span class="portal-tag" data-blocker="B02" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">Bảng giá: Đã nối Bot Core · chưa xác minh live</span>
             <span class="portal-tag" data-blocker="B03" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">Gói cước: Đã nối Bot Core</span>
             <span class="portal-tag" data-blocker="B04" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;">B04: Khuyến mãi (Chưa hỗ trợ)</span>
-            <span class="portal-tag" data-blocker="B05" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B05: Gói nạp</span>
+            <span class="portal-tag" data-blocker="B05" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;">B05: Gói nạp (Chỉ đọc)</span>
           </div>
         </div>
       </div>
@@ -32454,11 +32456,70 @@
       </section>`;
     } else if (activeTab === "topup_packages") {
       activeContent = `<section class="portal-card portal-card-pad" style="margin-bottom:20px;">
-        <div class="portal-card-header"><div><span class="portal-section-kicker">Trụ cột 5 / 5</span><h2 class="portal-card-title">Gói Nạp Xu VietQR PayOS</h2><p class="portal-card-subtitle">Bảng tỷ giá nạp Xu tức thì qua cổng thanh toán tự động VietQR.</p></div></div>
+        <div class="portal-card-header" style="flex-wrap:wrap;gap:12px;">
+          <div>
+            <span class="portal-section-kicker">Trụ cột 5 / 5</span>
+            <h2 class="portal-card-title">Gói Nạp Xu VietQR PayOS</h2>
+            <p class="portal-card-subtitle">Cấu hình 6 mệnh giá nạp Xu chuẩn runtime qua cổng thanh toán tự động PayOS.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="portal-badge" data-status="read_only" style="background:#64748b;color:#fff;">Chỉ đọc</span>
+          </div>
+        </div>
+
+        <div class="portal-notice portal-notice--neutral" style="background:var(--portal-surface-alt, #f8fafc);border:1px solid var(--portal-border, #e2e8f0);border-radius:8px;padding:16px;margin:16px 0;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <span style="font-size:20px;">ℹ️</span>
+            <div style="font-size:13px;line-height:1.6;color:var(--portal-muted);">
+              <strong style="color:var(--portal-ink);font-size:14px;display:block;margin-bottom:6px;">Thẩm quyền cấu hình nạp Xu thuộc Bot Core Runtime (Chỉ đọc)</strong>
+              <p style="margin:0 0 8px 0;">
+                Theo kết quả điều tra độc lập từ Bot Core (PR #1121, SHA <code>c157db5596c818a16e98d472872c829ef2225f90</code>), hệ thống vận hành 6 gói nạp runtime cố định với tỷ giá gốc <strong>100 đ = 1 Xu</strong> (<code>bot.package_base_xu</code>). Hiện không có API cho phép chỉnh sửa bảng tỷ giá nạp này từ Web Admin.
+              </p>
+              <div style="background:rgba(0,0,0,0.03);padding:10px 14px;border-radius:6px;margin:8px 0;">
+                <strong style="color:var(--portal-ink);display:block;margin-bottom:4px;">Chính sách thưởng nạp tự động (Auto-Bonus Policy):</strong>
+                <ul style="margin:0;padding-left:18px;">
+                  <li><strong>Lần nạp 1:</strong> Thưởng +30% Xu</li>
+                  <li><strong>Lần nạp 2:</strong> Thưởng +20% Xu</li>
+                  <li><strong>Lần nạp 3 trở đi:</strong> Không thưởng theo số thứ tự nạp</li>
+                  <li><strong>Mức tối thiểu:</strong> Áp dụng từ 10.000 đ</li>
+                  <li><strong>Thưởng theo mệnh giá (Launch Bonus):</strong> Hiện đang tắt</li>
+                </ul>
+              </div>
+              <p style="margin:8px 0 4px 0;">
+                <strong>Phân định B04/B05:</strong> Thưởng nạp Xu là chính sách nạp tiền, không phải voucher giảm giá dịch vụ/gói cước.
+              </p>
+              <p style="margin:0;color:#dc2626;">
+                <strong>Chốt chặn an toàn tài chính:</strong> Mọi dữ liệu giao dịch PayOS, lịch sử nạp, số dư ví Xu và nhật ký kế toán đều là bất biến, không thể chỉnh sửa.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div style="overflow-x:auto;">
-          <table class="portal-table"><thead><tr><th>Mã Gói</th><th>Mệnh giá VND</th><th>Số Xu nhận</th><th>Xu thưởng thêm</th><th>Tỷ giá quy đổi</th><th>Trạng thái</th></tr></thead><tbody>
-            ${topupPackagesList.map((tp) => `<tr><td><code>${safeText(tp.code)}</code></td><td><strong>${safeText(adminNumber(tp.amount_vnd, " đ"))}</strong></td><td><strong style="color:var(--portal-brand);">${safeText(adminNumber(tp.xu, " Xu"))}</strong></td><td>+${safeText(String(tp.bonus_xu))} Xu</td><td>${safeText(tp.rate)}</td><td><span class="portal-badge" data-status="ready">Sẵn sàng nạp</span></td></tr>`).join("")}
-          </tbody></table>
+          <table class="portal-table">
+            <thead>
+              <tr>
+                <th>Mã Gói</th>
+                <th>Mệnh giá VND</th>
+                <th>Số Xu nhận gốc</th>
+                <th>Tỷ giá quy đổi</th>
+                <th>Chính sách thưởng</th>
+                <th>Thẩm quyền</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${topupPackagesList.map((tp) => `<tr>
+                <td><code>${safeText(tp.code)}</code></td>
+                <td><strong>${safeText(adminNumber(tp.amount_vnd, " đ"))}</strong></td>
+                <td><strong style="color:var(--portal-brand);">${safeText(adminNumber(tp.xu, " Xu"))}</strong></td>
+                <td>${safeText(tp.rate)}</td>
+                <td>Tự động (+30% L1, +20% L2)</td>
+                <td><span class="portal-tag">Bot Core Runtime</span></td>
+                <td><span class="portal-badge" data-status="read_only" style="background:#64748b;color:#fff;">Chỉ đọc</span></td>
+              </tr>`).join("")}
+            </tbody>
+          </table>
         </div>
       </section>`;
     }

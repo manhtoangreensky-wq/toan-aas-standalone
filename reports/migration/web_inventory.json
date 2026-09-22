@@ -8098,7 +8098,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 970,
+      "occurrences": 972,
       "provider": "PayOS"
     },
     {
@@ -14965,7 +14965,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 230,
   "source_files_scanned": 230,
-  "source_fingerprint_sha256": "6c738081fba00c0546ace27b8a4c4232970b8e273d8c2075684a528284a35ded",
+  "source_fingerprint_sha256": "09c797e16609570d1ce8cfa718f592c7f64efd27119ec8c6d80eb668cb7a4271",
   "source_root": "repository-root",
   "ui_path_references": [
     {
@@ -15215,7 +15215,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33153,
+      "line": 33214,
       "path": "/features"
     },
     {
