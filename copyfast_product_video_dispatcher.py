@@ -627,6 +627,7 @@ def _format_claimed_job(row: tuple) -> dict[str, Any]:
 
     return {
         "id": str(row[0]),
+        "job_id": str(row[0]),
         "request_id": str(row[1]),
         "account_id": str(row[2]),
         "product_key": str(row[3]),
@@ -651,4 +652,12 @@ def _format_claimed_job(row: tuple) -> dict[str, Any]:
         "lease_expires_at": str(row[20]) if len(row) > 20 and row[20] else None,
         "attempts": int(row[21]) if len(row) > 21 and row[21] is not None else 0,
         "output_url": output_url_val if is_completed else None,
+        "payload": {
+            "prompt": str(row[5]),
+            "aspect_ratio": str(row[6]),
+            "duration": float(row[7]),
+            "duration_seconds": int(row[7]),
+            "quality_tier": str(row[8]),
+            "scene_count": int(row[9]),
+        },
     }
