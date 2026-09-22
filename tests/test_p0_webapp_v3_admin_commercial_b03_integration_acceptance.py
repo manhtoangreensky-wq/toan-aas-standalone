@@ -73,11 +73,13 @@ import os
 from pathlib import Path
 import re
 import sqlite3
+import subprocess
 import sys
 import tempfile
 import uuid
 from typing import Any
 
+import anyio
 import httpx
 import pytest
 from fastapi import FastAPI, HTTPException, Request
@@ -86,7 +88,57 @@ from fastapi.testclient import TestClient
 
 # Ensure root paths are in sys.path
 STANDALONE_ROOT = Path(__file__).resolve().parent.parent
-BOT_REPO_DIR = Path(r"d:\TOANAAS\bot telegram")
+
+# Pinned Bot Authority Revision & Source Gate
+EXPECTED_BOT_SHA = "e130b1b089021275dd53b2ffce54ea807ad0e3e1"
+
+BOT_REPO_ENV = os.environ.get("TOAN_AAS_BOT_REPO_ROOT")
+if not BOT_REPO_ENV:
+    pytest.skip(
+        "BOT_SOURCE_AVAILABLE=NO: TOAN_AAS_BOT_REPO_ROOT environment variable not supplied",
+        allow_module_level=True,
+    )
+
+BOT_REPO_DIR = Path(BOT_REPO_ENV).resolve()
+if not BOT_REPO_DIR.exists() or not BOT_REPO_DIR.is_dir():
+    pytest.fail(f"BOT_SOURCE_AVAILABLE=NO: Directory '{BOT_REPO_DIR}' does not exist")
+
+# Verify Bot Source SHA
+try:
+    sha_proc = subprocess.run(
+        ["git", "-C", str(BOT_REPO_DIR), "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    ACTUAL_BOT_SHA = sha_proc.stdout.strip()
+except Exception as exc:
+    pytest.fail(f"BOT_SOURCE_AVAILABLE=NO: Failed to inspect git HEAD in '{BOT_REPO_DIR}': {exc}")
+
+if ACTUAL_BOT_SHA != EXPECTED_BOT_SHA:
+    pytest.fail(
+        f"BOT_SOURCE_SHA_MISMATCH: expected {EXPECTED_BOT_SHA}, got {ACTUAL_BOT_SHA}"
+    )
+
+BOT_SOURCE_SHA_MATCH = "YES"
+
+# Verify Clean Source
+try:
+    status_proc = subprocess.run(
+        ["git", "-C", str(BOT_REPO_DIR), "status", "--porcelain"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    porcelain_out = status_proc.stdout.strip()
+    BOT_WORKTREE_DIRTY = "YES" if porcelain_out else "NO"
+except Exception as exc:
+    pytest.fail(f"BOT_SOURCE_AVAILABLE=NO: Failed to inspect git status in '{BOT_REPO_DIR}': {exc}")
+
+if BOT_WORKTREE_DIRTY != "NO":
+    pytest.fail(
+        f"BOT_WORKTREE_DIRTY=YES: Bot repository at '{BOT_REPO_DIR}' has uncommitted changes:\n{porcelain_out}"
+    )
 
 if str(STANDALONE_ROOT) in sys.path:
     sys.path.remove(str(STANDALONE_ROOT))
@@ -312,25 +364,36 @@ def _create_session(db_path: str, account_id: str) -> tuple[dict[str, str], str]
 # ─── TESTS ───────────────────────────────────────────────────────────────────
 
 def test_01_verify_current_truth_and_route_mapping():
-    """Section 1 & 2: Empirical verification of SHAs and 0 route mapping gaps."""
-    # 1. Truth values
-    WEB_MAIN = "e75a381ffc5aea912133ef61fb1096b1f5fcdf76"
-    BOT_MAIN = "e130b1b089021275dd53b2ffce54ea807ad0e3e1"
-    WEB_PR490 = "MERGED"
-    BOT_PR1115 = "MERGED"
-    WEB_PRODUCTION_SHA = "ffba79a4bab194c46b12bf82431e1156167dd278"
-    BOT_PRODUCTION_SHA = "e923f1fd9843165fa9bbcdd3567528c5998d83e8"
-    B03_WEB_PRODUCTION_STATUS = "NOT_DEPLOYED"
-    B03_BOT_PRODUCTION_STATUS = "NOT_DEPLOYED"
+    """Section 1 & 2: Empirical verification of pinned Bot source and 0 route mapping gaps."""
+    # 1. Real probe: verify Bot repository git HEAD matches exact pinned SHA
+    proc_sha = subprocess.run(
+        ["git", "-C", str(BOT_REPO_DIR), "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    actual_head = proc_sha.stdout.strip()
+    assert actual_head == EXPECTED_BOT_SHA, f"BOT_SOURCE_SHA_MISMATCH: expected {EXPECTED_BOT_SHA}, got {actual_head}"
 
-    assert WEB_MAIN == "e75a381ffc5aea912133ef61fb1096b1f5fcdf76"
-    assert BOT_MAIN == "e130b1b089021275dd53b2ffce54ea807ad0e3e1"
-    assert WEB_PR490 == "MERGED"
-    assert BOT_PR1115 == "MERGED"
-    assert B03_WEB_PRODUCTION_STATUS == "NOT_DEPLOYED"
-    assert B03_BOT_PRODUCTION_STATUS == "NOT_DEPLOYED"
+    # 2. Real probe: verify Bot worktree is clean
+    proc_status = subprocess.run(
+        ["git", "-C", str(BOT_REPO_DIR), "status", "--porcelain"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert proc_status.stdout.strip() == "", f"Bot worktree is dirty:\n{proc_status.stdout}"
 
-    # 2. Source route mapping check in Web copyfast_admin_commercial.py
+    # 3. Real probe: verify admin capability matrix records B03 truth
+    matrix_file = STANDALONE_ROOT / "admin_capability_matrix.json"
+    assert matrix_file.exists(), "admin_capability_matrix.json not found"
+    matrix = json.loads(matrix_file.read_text(encoding="utf-8"))
+    b03_meta = matrix["commercial_command_center"]["upstream_blockers"]["B03"]
+    assert b03_meta["contract_wired_to_bot_pr_1115"] is True
+    assert b03_meta["bot_pr_1115_merge_sha"] == EXPECTED_BOT_SHA
+    assert b03_meta["bot_pr_1115_state"] == "MERGED"
+
+    # 4. Source route mapping check in Web copyfast_admin_commercial.py
     src_file = STANDALONE_ROOT / "copyfast_admin_commercial.py"
     content = src_file.read_text(encoding="utf-8")
 
@@ -343,46 +406,37 @@ def test_01_verify_current_truth_and_route_mapping():
         "/internal/v1/admin/packages/{clean_key}",
     ]
 
-    for wr in web_routes:
-        assert wr in content, f"Web route {wr} missing in copyfast_admin_commercial.py"
-    for bt in bot_targets:
-        assert bt in content, f"Bot target route {bt} missing in copyfast_admin_commercial.py"
+    missing_web = [wr for wr in web_routes if wr not in content]
+    missing_bot = [bt for bt in bot_targets if bt not in content]
+    assert len(missing_web) == 0, f"Web routes missing in copyfast_admin_commercial.py: {missing_web}"
+    assert len(missing_bot) == 0, f"Bot target routes missing in copyfast_admin_commercial.py: {missing_bot}"
 
-    ROUTE_MAPPING_GAPS = 0
-    assert ROUTE_MAPPING_GAPS == 0
+    # 5. Probe mounted routes on FastAPI app
+    mounted_paths = {route.path for route in app_module.app.routes}
+    assert "/api/admin/commercial/packages" in mounted_paths
+    assert "/api/admin/commercial/packages/{package_key}" in mounted_paths
 
 
 def test_02_real_response_contract_and_field_parity():
     """Section 3 & 6: Validate exact real Bot response fields and field capability parity."""
-    # Real fields returned by update_canonical_package
-    bot_fields = {
+    canonical_receipt_fields = [
         "receipt_id",
         "previous_version",
         "new_version",
         "accepted_changes",
         "mutation_digest",
-        "request_id",
-        "actor_id",
-        "timestamp",
-        "idempotent_replay",
-        "package",
-    }
+    ]
 
     src_file = STANDALONE_ROOT / "copyfast_admin_commercial.py"
     content = src_file.read_text(encoding="utf-8")
 
-    # Confirm Web accepts these real fields
-    assert "receipt_id" in content
-    assert "previous_version" in content
-    assert "new_version" in content
-    assert "accepted_changes" in content
-    assert "mutation_digest" in content
+    # Confirm Web accepts these canonical receipt fields
+    missing_receipt_fields = [f for f in canonical_receipt_fields if f not in content]
+    assert len(missing_receipt_fields) == 0, f"Missing fields in copyfast_admin_commercial.py: {missing_receipt_fields}"
 
     # Verify no invented required field like accepted=true
     assert "bridge_res.get('accepted') is True" not in content
     assert 'bridge_res.get("accepted") is True' not in content
-    BOT_RESPONSE_CONTRACT_MISMATCH = 0
-    assert BOT_RESPONSE_CONTRACT_MISMATCH == 0
 
     # Section 6: Field capability parity
     # subscription: public_visible = IMMUTABLE
@@ -408,9 +462,6 @@ def test_02_real_response_contract_and_field_parity():
     portal_js = (STANDALONE_ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
     assert 'effectScopes[fieldName] === "IMMUTABLE"' in portal_js
     assert "public_visible" in portal_js
-
-    FIELD_CAPABILITY_PARITY_GAPS = 0
-    assert FIELD_CAPABILITY_PARITY_GAPS == 0
 
 
 def test_03_isolated_real_bot_collection_read(isolated_web_db, wire_bridge_to_bot):
@@ -536,7 +587,7 @@ def test_05_isolated_web_to_bot_cas_mutation_and_receipt(isolated_web_db, isolat
         assert audits[0]["mutation_digest"] is not None
 
 
-def test_06_isolated_cas_stale_conflict_409(isolated_web_db, wire_bridge_to_bot):
+def test_06_isolated_cas_stale_conflict_409(isolated_web_db, isolated_bot_db, wire_bridge_to_bot):
     """Section 7: Repeating PATCH with stale expected_version returns HTTP 409 and 0 retry."""
     client = TestClient(app_module.app)
     cookies, csrf_token = _create_session(isolated_web_db, "acc-admin-b03")
@@ -576,8 +627,10 @@ def test_06_isolated_cas_stale_conflict_409(isolated_web_db, wire_bridge_to_bot)
     assert body.get("ok") is False
     assert body.get("error_code") == "VERSION_CONFLICT"
 
-    STALE_AUTO_RETRY = 0
-    assert STALE_AUTO_RETRY == 0
+    # Verify database state was not modified or advanced by stale request
+    ok_get, cur_db_pkg, _ = aps.get_canonical_package_single("combo_ad_video_588k", db_path=isolated_bot_db)
+    assert ok_get is True
+    assert cur_db_pkg["package"]["version"] == 2
 
 
 def test_07_isolated_idempotent_replay(isolated_web_db, isolated_bot_db):
@@ -625,9 +678,6 @@ def test_07_isolated_idempotent_replay(isolated_web_db, isolated_bot_db):
         cur.execute("SELECT COUNT(*) FROM admin_package_audit WHERE request_id = ?", (req_id,))
         count = cur.fetchone()[0]
         assert count == 1, f"Audit row was duplicated! Expected 1, got {count}"
-
-    DUPLICATE_WRITE_COUNT = 0
-    assert DUPLICATE_WRITE_COUNT == 0
 
 
 def test_08_receipt_and_readback_negative_cases(isolated_web_db, monkeypatch):
@@ -853,8 +903,6 @@ def test_10_customer_effect_scope_isolated(isolated_bot_db):
 
     # Reset cache to restore clean runtime state
     aps.clear_runtime_package_cache()
-    CUSTOMER_EFFECT_SCOPE_CONTRACT = "PASS"
-    assert CUSTOMER_EFFECT_SCOPE_CONTRACT == "PASS"
 
 
 def test_11_security_boundaries(isolated_web_db, wire_bridge_to_bot):
@@ -887,8 +935,6 @@ def test_11_security_boundaries(isolated_web_db, wire_bridge_to_bot):
     body_text = json.dumps(res_admin.json())
     assert os.environ.get("CORE_BRIDGE_TOKEN", "") not in body_text
     assert os.environ.get("CORE_BRIDGE_HMAC_SECRET", "") not in body_text
-    BRIDGE_SECRET_EXPOSURE = 0
-    assert BRIDGE_SECRET_EXPOSURE == 0
 
     # 6. Arbitrary bridge path forwarding / path traversal rejected
     res_traversal = client.get(
@@ -896,29 +942,33 @@ def test_11_security_boundaries(isolated_web_db, wire_bridge_to_bot):
         cookies=admin_cookies,
     )
     assert res_traversal.status_code in {400, 404}
-    ARBITRARY_BRIDGE_FORWARDING = 0
-    assert ARBITRARY_BRIDGE_FORWARDING == 0
 
 
 def test_12_production_read_only_classification():
-    """Section 12 & 14: Factual classification of VPS production runtime without false passes."""
-    B03_WEB_PRODUCTION_STATUS = "NOT_DEPLOYED"
-    PRODUCTION_READ_PASS = "BLOCKED_BY_AUTH_OR_RUNTIME_ACCESS"
-    PRODUCTION_WRITE_PASS = "SKIPPED_BY_SAFETY_GATE"
-    BUSINESS_LIVE_PASS = "PENDING_PRODUCTION_PROMOTION"
+    """Section 12 & 14: Factual classification and behavioral guards for production safety."""
+    # 1. Real probe: capability matrix classifies B03 production status as NOT deployed
+    matrix_file = STANDALONE_ROOT / "admin_capability_matrix.json"
+    assert matrix_file.exists()
+    matrix = json.loads(matrix_file.read_text(encoding="utf-8"))
+    b03 = matrix["commercial_command_center"]["upstream_blockers"]["B03"]
+    assert b03.get("bot_pr_1115_deployed") is False
+    assert b03.get("bot_pr_1115_business_live") == "NOT_PROVEN"
+    assert b03.get("live_status") == "CONTRACT_WIRED_NOT_LIVE_VERIFIED"
 
-    PROVIDER_CALLS = 0
-    PACKAGE_PURCHASES = 0
-    WALLET_MUTATIONS = 0
-    PAYMENT_MUTATIONS = 0
-    PRODUCTION_DB_MUTATIONS = 0
+    # 2. Behavioral probe: Web App package routes do not invoke external paid providers
+    content = (STANDALONE_ROOT / "copyfast_admin_commercial.py").read_text(encoding="utf-8").lower()
+    for forbidden in ["shopaikey", "key4u", "payos_create_payment"]:
+        assert forbidden not in content, f"Forbidden external provider call found: {forbidden}"
 
-    assert B03_WEB_PRODUCTION_STATUS == "NOT_DEPLOYED"
-    assert PRODUCTION_READ_PASS == "BLOCKED_BY_AUTH_OR_RUNTIME_ACCESS"
-    assert PRODUCTION_WRITE_PASS == "SKIPPED_BY_SAFETY_GATE"
-    assert BUSINESS_LIVE_PASS == "PENDING_PRODUCTION_PROMOTION"
-    assert PROVIDER_CALLS == 0
-    assert PACKAGE_PURCHASES == 0
-    assert WALLET_MUTATIONS == 0
-    assert PAYMENT_MUTATIONS == 0
-    assert PRODUCTION_DB_MUTATIONS == 0
+    # 3. Behavioral probe: Unconfigured bridge client fails closed without network egress
+    unconfigured_bridge = copyfast_bridge.CoreBridgeClient(base_url="", token="", hmac_secret="")
+    assert unconfigured_bridge.configured is False
+    assert unconfigured_bridge.configuration_error == "CORE_BRIDGE_NOT_CONFIGURED"
+    res = anyio.run(unconfigured_bridge.request, "GET", "/internal/v1/admin/packages")
+    assert res.get("ok") is False
+    assert res.get("error_code") == "CORE_BRIDGE_NOT_CONFIGURED"
+    assert res.get("status") == "guarded"
+
+    # 4. Behavioral probe: Web DB path in test/local execution does not target production VPS paths
+    configured_db = os.environ.get("WEBAPP_SESSION_DB_PATH", "")
+    assert "/opt/toanaas" not in configured_db
