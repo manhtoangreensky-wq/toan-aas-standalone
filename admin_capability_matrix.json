@@ -57,10 +57,17 @@
         "remediation_gate": "BOT_PR_1115_MERGED_PENDING_LIVE_PROD_DEPLOY"
       },
       "B04": {
-        "code": "BOT_WRITE_ENDPOINT_MISSING_FOR_PROMOTIONS",
-        "severity": "FAIL_CLOSED",
-        "description": "Bot lacks /internal/v1/admin/promotions mutation endpoint; WebApp provides audit projection and blocks untracked voucher mutations.",
-        "remediation_gate": "WAIT_BOT_CORE_BRIDGE_PROMOTIONS_WRITE_ENDPOINT"
+        "code": "BOT_CANONICAL_PROMOTIONS_AUTHORITY_NOT_IMPLEMENTED",
+        "severity": "NOT_IMPLEMENTED",
+        "write_mode": "READ_ONLY",
+        "authority": "NONE",
+        "bot_discovery_pr": 1118,
+        "bot_discovery_merge_sha": "edcce9e2bb949ea3b935cf58c20b30a834c9a819",
+        "authority_discovered": false,
+        "no_model_invented": true,
+        "live_status": "NOT_IMPLEMENTED",
+        "description": "Bot Core discovery confirms there is currently no standalone commercial service/package promotion authority. PayOS top-up deposit bonuses remain strictly isolated in B05 Topup authority. Fake promotion mocks removed from Web Admin UI.",
+        "remediation_gate": "NEW_PROMOTION_ENGINE_PROGRAM_REQUIRED"
       },
       "B05": {
         "code": "BOT_WRITE_ENDPOINT_MISSING_FOR_TOPUP_PACKAGES",

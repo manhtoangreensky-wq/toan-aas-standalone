@@ -636,8 +636,8 @@ def test_13_capability_matrix_b02_wired_b03_b05_guarded():
     # B04-B05 must remain strictly FAIL_CLOSED; B03 is CONTRACT_WIRED
     b03_severity = blockers.get("B03", {}).get("severity")
     assert b03_severity in {"CONTRACT_WIRED", "FAIL_CLOSED"}
-    assert blockers.get("B04", {}).get("code") == "BOT_WRITE_ENDPOINT_MISSING_FOR_PROMOTIONS"
-    assert blockers.get("B04", {}).get("severity") == "FAIL_CLOSED"
+    assert blockers.get("B04", {}).get("code") in {"BOT_WRITE_ENDPOINT_MISSING_FOR_PROMOTIONS", "BOT_CANONICAL_PROMOTIONS_AUTHORITY_NOT_IMPLEMENTED"}
+    assert blockers.get("B04", {}).get("severity") in {"FAIL_CLOSED", "NOT_IMPLEMENTED"}
     assert blockers.get("B05", {}).get("code") == "BOT_WRITE_ENDPOINT_MISSING_FOR_TOPUP_PACKAGES"
     assert blockers.get("B05", {}).get("severity") == "FAIL_CLOSED"
 

@@ -32268,11 +32268,6 @@
       ]
     };
 
-    const promosList = [
-      { code: "PROMO_WELCOME_2026", name: "Tặng 50 Xu thành viên mới", discount: "50 Xu", limit: "1 lần / tài khoản", status: "active" },
-      { code: "PROMO_TET_BONUS", name: "Thưởng 20% nạp đầu", discount: "+20% Xu", limit: "Áp dụng VietQR PayOS", status: "scheduled" }
-    ];
-
     const topupPackagesList = [
       { code: "topup_50k", amount_vnd: 50000, xu: 500, bonus_xu: 0, rate: "100 đ = 1 Xu", status: "active" },
       { code: "topup_100k", amount_vnd: 100000, xu: 1050, bonus_xu: 50, rate: "95 đ = 1 Xu", status: "active" },
@@ -32292,7 +32287,7 @@
             <span class="portal-tag" data-blocker="B01" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">Sản phẩm: Đã kết nối</span>
             <span class="portal-tag" data-blocker="B02" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">Bảng giá: Đã nối Bot Core · chưa xác minh live</span>
             <span class="portal-tag" data-blocker="B03" style="background:#dcfce7; color:#16a34a; border:1px solid #86efac;">Gói cước: Đã nối Bot Core</span>
-            <span class="portal-tag" data-blocker="B04" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B04: Khuyến mãi</span>
+            <span class="portal-tag" data-blocker="B04" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;">B04: Khuyến mãi (Chưa hỗ trợ)</span>
             <span class="portal-tag" data-blocker="B05" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">B05: Gói nạp</span>
           </div>
         </div>
@@ -32429,11 +32424,32 @@
       </section>`;
     } else if (activeTab === "promotions") {
       activeContent = `<section class="portal-card portal-card-pad" style="margin-bottom:20px;">
-        <div class="portal-card-header"><div><span class="portal-section-kicker">Trụ cột 4 / 5</span><h2 class="portal-card-title">Chương trình Khuyến mãi & Voucher</h2><p class="portal-card-subtitle">Mã giảm giá và chính sách ưu đãi kích cầu người dùng.</p></div></div>
-        <div style="overflow-x:auto;">
-          <table class="portal-table"><thead><tr><th>Mã Khuyến mãi</th><th>Tên Chương trình</th><th>Mức ưu đãi</th><th>Giới hạn áp dụng</th><th>Trạng thái</th></tr></thead><tbody>
-            ${promosList.map((pr) => `<tr><td><code>${safeText(pr.code)}</code></td><td><strong>${safeText(pr.name)}</strong></td><td><strong>${safeText(pr.discount)}</strong></td><td>${safeText(pr.limit)}</td><td><span class="portal-badge" data-status="ready">${safeText(pr.status)}</span></td></tr>`).join("")}
-          </tbody></table>
+        <div class="portal-card-header" style="flex-wrap:wrap;gap:12px;">
+          <div>
+            <span class="portal-section-kicker">Trụ cột 4 / 5</span>
+            <h2 class="portal-card-title">Chương trình Khuyến mãi & Voucher</h2>
+            <p class="portal-card-subtitle">Quản lý mã ưu đãi, voucher và chính sách giảm giá dịch vụ.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="portal-badge" data-status="not_implemented" style="background:#64748b;color:#fff;">Chưa hỗ trợ</span>
+          </div>
+        </div>
+        <div class="portal-notice portal-notice--neutral" style="background:var(--portal-surface-alt, #f8fafc);border:1px solid var(--portal-border, #e2e8f0);border-radius:8px;padding:20px;margin-top:16px;">
+          <div style="display:flex;gap:16px;align-items:flex-start;">
+            <span style="font-size:24px;">ℹ️</span>
+            <div>
+              <strong style="color:var(--portal-ink);font-size:15px;display:block;margin-bottom:8px;">Hệ thống hiện chưa hỗ trợ voucher/khuyến mãi giảm giá riêng cho dịch vụ hoặc gói cước.</strong>
+              <p style="margin:0 0 12px 0;font-size:13px;color:var(--portal-muted);line-height:1.6;">
+                Theo kết quả điều tra độc lập từ Bot Core (PR #1118), hệ thống hiện tại chưa có thẩm quyền định giá khuyến mãi runtime cho các dịch vụ AI hoặc gói hội viên. Mọi bảng giá dịch vụ và gói cước đang áp dụng trực tiếp theo thẩm quyền niêm yết chuẩn tại Trụ cột 2 (Bảng giá) và Trụ cột 3 (Gói cước).
+              </p>
+              <p style="margin:0 0 16px 0;font-size:13px;color:var(--portal-muted);line-height:1.6;">
+                Khuyến mãi nạp Xu thuộc mục Gói nạp / Top-up, không thuộc mục này.
+              </p>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <a class="portal-button portal-button--secondary" href="/admin/commercial?tab=topup_packages">Xem cấu hình Gói nạp Xu PayOS (Trụ cột 5) →</a>
+              </div>
+            </div>
+          </div>
         </div>
       </section>`;
     } else if (activeTab === "topup_packages") {
