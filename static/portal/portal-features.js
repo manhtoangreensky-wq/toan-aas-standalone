@@ -283,17 +283,42 @@
 
   function signal(className, attribute, value, label) { return set(make("span", className, label), attribute, value); }
 
+  function classifyCatalogBoundary(feature) {
+    if (!feature) return "other";
+    const k = feature.key || "";
+    const r = feature.route || "";
+    if (k === "video_ai_prompt" || k === "video_single" || r === "/video/create" || r === "/video/new") {
+      return "canonical_bridge";
+    }
+    if (feature.engine && feature.engine.mode === "web_native") return "web_planning";
+    if (feature.readiness && feature.readiness.status === "planning_only") return "web_planning";
+    if (r.startsWith("/video-studio/") || r.startsWith("/content/") || ["dashboard", "projects", "workspace_drafts", "notes", "reminders", "inbox", "workboard", "campaign_planner", "prompt_studio", "prompt_library", "free_prompt_gallery", "content_studio", "chat", "cskh_help"].includes(k)) {
+      return "web_planning";
+    }
+    return "runtime_generator";
+  }
+
   function featureCard(feature, copy) {
+    const boundary = classifyCatalogBoundary(feature);
     const wrapper = make("div", "portal-catalog-item");
     set(wrapper, "data-catalog-item", ""); set(wrapper, "data-feature-key", feature.key); set(wrapper, "data-feature-route", feature.route);
-    set(wrapper, "data-catalog-text", [feature.title, feature.description, feature.key, feature.route, feature.group].join(" ").toLocaleLowerCase());
+    set(wrapper, "data-boundary", boundary);
+    const boundaryKeywords = boundary === "canonical_bridge"
+      ? "job bridge canonical thực thi trực tiếp"
+      : (boundary === "web_planning"
+        ? "kế hoạch workspace bản nháp draft web planning"
+        : "bộ tạo ai bot generator runtime");
+    set(wrapper, "data-catalog-text", [feature.title, feature.description, feature.key, feature.route, feature.group, boundary, boundaryKeywords].join(" ").toLocaleLowerCase());
     const card = set(make("a", "portal-module-card"), "href", feature.route);
     set(card, "data-feature-key", feature.key); set(card, "data-feature-route", feature.route);
+    set(card, "data-boundary", boundary);
     const top = make("div", "portal-module-card-top"), signals = make("span", "portal-module-card-signals");
     const engineIndex = ["web_native", "bot_companion", "guarded"].indexOf(feature.engine.mode);
     const readinessIndex = ["available", "planning_only", "local_execution", "canonical_read", "guarded", "disabled"].indexOf(feature.readiness.status);
+    const boundaryLabels = { canonical_bridge: "Job Bridge", web_planning: "Kế hoạch Web", runtime_generator: "Bộ tạo AI" };
     add(signals, signal("portal-engine-label", "data-engine-mode", feature.engine.mode, copy.engine[Math.max(0, engineIndex)]),
-      signal("portal-readiness-label", "data-readiness", feature.readiness.status, copy.readiness[Math.max(0, readinessIndex)]));
+      signal("portal-readiness-label", "data-readiness", feature.readiness.status, copy.readiness[Math.max(0, readinessIndex)]),
+      signal("portal-boundary-label", "data-boundary", boundary, boundaryLabels[boundary] || boundary));
     add(top, make("span", "portal-module-icon", "◇"), signals);
     const details = make("div"), description = make("p", "", feature.description || copy.fallback);
     if (!feature.description) set(description, "data-catalog-description-fallback", "true");

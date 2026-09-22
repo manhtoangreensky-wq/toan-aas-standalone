@@ -9543,7 +9543,92 @@
     return "";
   }
 
+  function classifyPageBoundary(page, context) {
+    if (!page) return "other";
+    const route = normalizePath((page && (page.routePath || page.path)) || "");
+    const feature = typeof featureKeyForPage === "function" ? featureKeyForPage(page, context) : "";
+
+    if (feature === "video_ai_prompt" || feature === "video_single" || route === "/video/create" || route === "/video/new") {
+      return "canonical_bridge";
+    }
+
+    const PLANNING_FEATURES = new Set([
+      "dashboard", "projects", "workspace_drafts", "notes", "reminders", "inbox",
+      "automation", "workboard", "campaign_planner", "prompt_studio", "prompt_library",
+      "free_prompt_gallery", "content_studio", "channel_strategy", "content_prompt_pack",
+      "publish_review_pack", "contextual_ad_prompt", "trend_research", "media_factory",
+      "creative_flow", "video_factory_workflow", "story_video_plan", "source_rights_guide",
+      "media_workspace", "audio_hub", "music_prompt_composer", "music_direction_presets",
+      "sfx_cue_sheet", "chat", "analytics_workspace", "partner_readiness", "video_idea",
+      "video_ai_video_reference", "script_image_video", "storyboard_prompt",
+      "self_shot_scene_change", "self_shot_cinematic_transform", "autopost_dashboard",
+      "autopost_content_plan", "autopost_brand_profile", "autopost_publish_queue",
+      "autopost_affiliate", "cskh_help"
+    ]);
+
+    const PLANNING_PATHS = new Set([
+      "/campaigns", "/campaigns/new", "/calendar", "/approvals", "/projects", "/projects/new",
+      "/workspace", "/notes", "/reminders", "/inbox", "/workboard", "/automation", "/chat",
+      "/analytics", "/prompt-studio", "/prompt-library", "/free-prompt-gallery",
+      "/content-studio", "/content/channel-strategy", "/content/prompt-pack",
+      "/content/publish-review", "/content/contextual-prompt", "/trend-research",
+      "/media-factory", "/creative-flow", "/media-workspace", "/audio-hub"
+    ]);
+
+    if (
+      PLANNING_FEATURES.has(feature)
+      || PLANNING_PATHS.has(route)
+      || route.startsWith("/video-studio/")
+      || page.type === "content-prompt-pack"
+      || page.layout === "campaign-planner"
+      || page.layout === "guide-center"
+      || page.layout === "workboard"
+    ) {
+      return "web_planning";
+    }
+
+    const RUNTIME_GENERATOR_FEATURES = new Set([
+      "video_trend", "video_long", "video_multiscene", "video_text_to_video",
+      "video_image_to_video", "video_product", "video_quick", "image_create",
+      "image_upscale", "image_transform", "image_remove_background",
+      "voice_tts", "voice_clone", "voice_saved_tts", "music_background",
+      "music_song", "music_sfx"
+    ]);
+
+    const RUNTIME_GENERATOR_PATHS = new Set([
+      "/video/trend", "/video/long", "/video/multiscene", "/video/text-to-video",
+      "/video/image-to-video", "/video/product", "/video/quick", "/image/create",
+      "/image/upscale", "/image/transform", "/image/remove-background",
+      "/voice/create", "/voice/tts", "/voice/clone", "/voice/saved",
+      "/music/ai", "/music/create", "/music/song", "/music/sfx"
+    ]);
+
+    if (
+      RUNTIME_GENERATOR_FEATURES.has(feature)
+      || RUNTIME_GENERATOR_PATHS.has(route)
+      || (page.type === "feature" && !page.layout)
+    ) {
+      return "runtime_generator";
+    }
+
+    return "other";
+  }
+
   function pageStatusBadge(page, context) {
+    if (!page) return "";
+    const boundary = classifyPageBoundary(page, context);
+    if (boundary === "canonical_bridge") {
+      return `<span class="portal-badge" data-status="ready" data-boundary="canonical_bridge">Job Bridge Sẵn sàng</span>`;
+    }
+    if (boundary === "web_planning") {
+      return `<span class="portal-badge" data-status="draft" data-boundary="web_planning">Kế hoạch &amp; Bản nháp Web</span>`;
+    }
+    if (boundary === "runtime_generator") {
+      const executionReady = typeof featureConfirmExecutionReady === "function" && featureConfirmExecutionReady(page, context);
+      return executionReady
+        ? `<span class="portal-badge" data-status="ready" data-boundary="runtime_generator">AI Generator</span>`
+        : `<span class="portal-badge" data-status="guarded" data-boundary="runtime_generator">Bộ tạo AI (Chờ Adapter)</span>`;
+    }
     return "";
   }
 
@@ -11131,7 +11216,19 @@
     const fieldValues = { ...(flow && flow.input && typeof flow.input === "object" ? flow.input : {}), ...transientFormValues(route) };
     const primaryActionLabel = localAuthoringOnly ? localDraftLabel : (page.actionLabel || "Tiếp tục");
     const primaryDisabled = localAuthoringOnly || enabled ? "" : ` disabled title="${safeText(reason)}"`;
+    const boundary = classifyPageBoundary(page, context);
+    let boundaryNotice = "";
+    if (boundary === "canonical_bridge") {
+      boundaryNotice = `<div class="portal-notice portal-notice--boundary" data-ux-boundary="canonical_bridge"><strong>Cầu nối Job Canonical:</strong> Luồng này kết nối trực tiếp với hàng đợi xử lý canonical (/video/create). Khi gửi yêu cầu, job thực thi và trạng thái tiến trình được quản lý an toàn.</div>`;
+    } else if (boundary === "web_planning") {
+      boundaryNotice = `<div class="portal-notice portal-notice--boundary" data-ux-boundary="web_planning"><strong>Không gian Kế hoạch Web:</strong> Đây là công cụ lập kế hoạch, kịch bản và lưu trữ bản nháp trên Web. Không trừ Xu khi soạn thảo.</div>`;
+    } else if (boundary === "runtime_generator") {
+      boundaryNotice = executionReady
+        ? `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>Bộ tạo AI:</strong> Bộ tạo này đã sẵn sàng kết nối thực thi runtime.</div>`
+        : `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>Bộ tạo AI (Chế độ An toàn):</strong> Tính năng này thuộc Bot AI và đang trong chế độ an toàn trên Web. Thông số của bạn được lưu thành Bản nháp Web an toàn mà không trừ Xu.</div>`;
+    }
     return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.layout === "auth" ? "Thông tin xác thực" : "Chuẩn bị yêu cầu"}</h2><p class="portal-card-subtitle">${enabled ? "Yêu cầu sẽ được chuyển tới lớp tích hợp thông qua custom event, không gọi trực tiếp từ UI." : (workspaceDraftEnabled ? "Bạn có thể soạn và lưu brief Web; estimate, job và integration ngoài chỉ bật theo capability riêng." : safeText(reason))}</p></div>${badge(flowStatus || stateFor(page, context))}</div>
+      ${boundaryNotice}
       <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>${renderFields(page.fields, formFieldsEnabled, context, fieldValues)}
         <div class="portal-form-footer"><span class="portal-form-note">${enabled ? "Máy chủ vẫn phải xác minh phiên, CSRF, schema, ownership và idempotency." : (workspaceDraftEnabled ? "Bản nháp chỉ giữ brief scalar trên Web; không lưu file, upload ID, quote, job, Xu hoặc provider." : "Các trường bị khóa cho tới khi máy chủ cấp khả năng cần thiết.")}</span>
           ${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button>

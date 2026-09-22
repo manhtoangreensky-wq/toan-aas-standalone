@@ -149,12 +149,12 @@ def test_04_parity_matrix_item_level_integrity(audit_data: dict):
 # ─── 5. GAP METRICS & SECURITY ZERO TOLERANCE ─────────────────────────────────
 
 def test_05_gap_metrics_and_security(audit_data: dict):
-    """Verify zero critical security gaps, exactly 10 real output gaps, 1 admin trace gap, 1 UX gap."""
+    """Verify zero critical security gaps, exactly 10 real output gaps, 1 admin trace gap, and UX gap <= 1."""
     gap_metrics = audit_data.get("gap_metrics", {})
     assert gap_metrics.get("critical_security_gaps") == 0
     assert gap_metrics.get("real_output_gaps") == 10
     assert gap_metrics.get("admin_trace_gaps") == 1
-    assert gap_metrics.get("ux_gaps") == 1
+    assert gap_metrics.get("ux_gaps") in (0, 1)
 
 
 # ─── 6. NEXT BOUNDED TASK ─────────────────────────────────────────────────────

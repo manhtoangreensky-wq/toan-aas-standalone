@@ -990,6 +990,13 @@ a { color: inherit; text-decoration: none; }
 .portal-notice p { margin: 0; color: #e0c98e; font-size: 10px; line-height: 1.5; }
 .portal-notice--info { border-color: rgba(131, 197, 255, .18); background: rgba(30, 85, 124, .14); color: #b6dcff; }
 .portal-notice--info p { color: #a6cae7; }
+.portal-notice--boundary { margin-bottom: 16px; font-size: 12px; line-height: 1.5; display: block; }
+.portal-notice--boundary[data-ux-boundary="canonical_bridge"] { border-color: rgba(90, 220, 156, .28); background: rgba(14, 69, 44, .18); color: #95e6be; }
+.portal-notice--boundary[data-ux-boundary="web_planning"] { border-color: rgba(131, 197, 255, .28); background: rgba(30, 85, 124, .18); color: #b6dcff; }
+.portal-notice--boundary[data-ux-boundary="runtime_generator"] { border-color: rgba(255, 211, 122, .28); background: rgba(99, 69, 14, .18); color: #f6db9c; }
+.portal-badge[data-boundary="canonical_bridge"] { color: #95e6be; background: rgba(90, 220, 156, .14); border: 1px solid rgba(90, 220, 156, .25); }
+.portal-badge[data-boundary="web_planning"] { color: #b6dcff; background: rgba(131, 197, 255, .14); border: 1px solid rgba(131, 197, 255, .25); }
+.portal-badge[data-boundary="runtime_generator"] { color: #f6db9c; background: rgba(255, 211, 122, .14); border: 1px solid rgba(255, 211, 122, .25); }
 .portal-notice-icon { display: grid; width: 20px; height: 20px; flex: 0 0 20px; place-items: center; color: currentColor; font-size: 15px; }
 .portal-notice-icon .portal-icon { width: 17px; height: 17px; }
 
