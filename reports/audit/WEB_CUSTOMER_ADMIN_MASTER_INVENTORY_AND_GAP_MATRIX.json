@@ -1,0 +1,401 @@
+{
+  "task": "P0.WEBAPP.V3.CUSTOMER.ADMIN.MASTER.EXECUTION.R1",
+  "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
+  "web_base_sha": "ca51e21596a5d299bdc69de4ec70de2b342cd1ff",
+  "bot_reference_sha": "f8b3ce6ed73995fb4e3e893d03269af662541e58",
+  "mode": "OWNER_GOVERNED",
+  "master_inventory_complete": true,
+  "parity_matrix_complete": true,
+  "unclassified_customer_capabilities": 0,
+  "unclassified_parity_gaps": 0,
+  "old_checklist": {
+    "open_items": 0,
+    "residuals": 0,
+    "unclassified_blockers": 0,
+    "status": "ALL_CLOSED",
+    "items": {
+      "B01": "CLOSED",
+      "B02": "CLOSED_PARTIAL_READONLY",
+      "B03": "CLOSED_PARTIAL_READONLY",
+      "B04": "CLOSED_NOT_IMPLEMENTED",
+      "B05": "CLOSED_READ_ONLY"
+    }
+  },
+  "summary_metrics": {
+    "total_customer_capabilities": 31,
+    "total_web_customer_entrypoints": 139,
+    "total_admin_surfaces": 41,
+    "total_web_registry_features": 180,
+    "total_fastapi_routes": 677,
+    "pass_count": 7,
+    "partial_count": 13,
+    "missing_count": 1,
+    "mock_count": 0,
+    "stale_count": 0,
+    "blocked_by_runtime_count": 10
+  },
+  "gap_metrics": {
+    "critical_security_gaps": 0,
+    "real_output_gaps": 10,
+    "admin_trace_gaps": 1,
+    "ux_gaps": 1
+  },
+  "priority_classification": {
+    "priority_p0": [
+      "P0.1: Establish canonical Job Bridge Adapter between WebApp and Bot for primary AI products (starting with Product Video)",
+      "P0.2: Clarify UX status distinctions: Web-Native Planning Tools (Workspace Drafts) vs Runtime AI Generators"
+    ],
+    "priority_p1": [
+      "P1.1: Unified Jobs & Assets Read Model across Bot SQLite and Web Admin",
+      "P1.2: End-to-end Job status polling and output download in Web Customer Portal"
+    ],
+    "priority_p2": [
+      "P2.1: Autopost Omnichannel social accounts & publishing bridge",
+      "P2.2: CSKH Support ticket API bridge"
+    ]
+  },
+  "next_bounded_task": "P0.WEBAPP.V3.CUSTOMER.PRODUCT_VIDEO.CANONICAL.JOB_BRIDGE.ADAPTER.R1",
+  "parity_matrix": [
+    {
+      "bot_capability": "video_trend",
+      "category": "product_video",
+      "web_customer_entrypoint": "/video/trend",
+      "web_api": "/api/v1/features/video_trend/*",
+      "bot_runtime_consumer": "services.video_tail9.PRODUCT_ADAPTERS['video_trend']",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "ADMIN_COMMERCIAL_B01",
+      "status": "BLOCKED_BY_RUNTIME",
+      "blocker": "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+    },
+    {
+      "bot_capability": "video_ai_prompt",
+      "category": "product_video",
+      "web_customer_entrypoint": "/video/create",
+      "web_api": "/api/v1/features/video_ai_prompt/*",
+      "bot_runtime_consumer": "services.product_video_one_scene_engine",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "ADMIN_COMMERCIAL_B01",
+      "status": "BLOCKED_BY_RUNTIME",
+      "blocker": "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+    },
+    {
+      "bot_capability": "video_ai_image",
+      "category": "product_video",
+      "web_customer_entrypoint": "/video/image-to-video",
+      "web_api": "/api/v1/features/video_ai_image/*",
+      "bot_runtime_consumer": "services.video_tail9.PRODUCT_ADAPTERS['image_video']",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "ADMIN_COMMERCIAL_B01",
+      "status": "BLOCKED_BY_RUNTIME",
+      "blocker": "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+    },
+    {
+      "bot_capability": "video_ai_video_reference",
+      "category": "product_video",
+      "web_customer_entrypoint": "/video-studio/reference-format-planner",
+      "web_api": "/api/v1/video-studio/*",
+      "bot_runtime_consumer": "services.video_tail9.PRODUCT_ADAPTERS['video_video']",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "LOCAL_WORKSPACE_DRAFT",
+      "status": "PARTIAL",
+      "blocker": "WEB_NATIVE_PLANNING_ONLY"
+    },
+    {
+      "bot_capability": "script_image_video",
+      "category": "product_video",
+      "web_customer_entrypoint": "/video-studio/script-to-screen-planner",
+      "web_api": "/api/v1/video-studio/*",
+      "bot_runtime_consumer": "services.video_tail9.PRODUCT_ADAPTERS['script_to_video']",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "LOCAL_WORKSPACE_DRAFT",
+      "status": "PARTIAL",
+      "blocker": "WEB_NATIVE_PLANNING_ONLY"
+    },
+    {
+      "bot_capability": "storyboard_prompt",
+      "category": "product_video",
+      "web_customer_entrypoint": "/video-studio/storyboard-composer",
+      "web_api": "/api/v1/video-studio/*",
+      "bot_runtime_consumer": "services.video_tail9.PRODUCT_ADAPTERS['storyboard_prompt']",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "LOCAL_WORKSPACE_DRAFT",
+      "status": "PARTIAL",
+      "blocker": "WEB_NATIVE_PLANNING_ONLY"
+    },
+    {
+      "bot_capability": "self_shot_scene_change",
+      "category": "product_video",
+      "web_customer_entrypoint": "/video-studio/self-shot-planner",
+      "web_api": "/api/v1/video-studio/*",
+      "bot_runtime_consumer": "services.video_tail9.PRODUCT_ADAPTERS['selfshot_scene_change']",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "LOCAL_WORKSPACE_DRAFT",
+      "status": "PARTIAL",
+      "blocker": "WEB_NATIVE_PLANNING_ONLY"
+    },
+    {
+      "bot_capability": "self_shot_cinematic_transform",
+      "category": "product_video",
+      "web_customer_entrypoint": "/video-studio/cinematic-concept",
+      "web_api": "/api/v1/video-studio/*",
+      "bot_runtime_consumer": "services.video_tail9.PRODUCT_ADAPTERS['selfshot_cinematic']",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "LOCAL_WORKSPACE_DRAFT",
+      "status": "PARTIAL",
+      "blocker": "WEB_NATIVE_PLANNING_ONLY"
+    },
+    {
+      "bot_capability": "multi_scene_film",
+      "category": "product_video",
+      "web_customer_entrypoint": "/video/multiscene",
+      "web_api": "/api/v1/features/video_multiscene/*",
+      "bot_runtime_consumer": "services.product_video_multiscene_engine",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "ADMIN_COMMERCIAL_B01",
+      "status": "BLOCKED_BY_RUNTIME",
+      "blocker": "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+    },
+    {
+      "bot_capability": "video_idea",
+      "category": "product_video",
+      "web_customer_entrypoint": "/video-studio/idea-planner",
+      "web_api": "/api/v1/video-studio/*",
+      "bot_runtime_consumer": "services.video_tail9.PRODUCT_ADAPTERS['video_idea_to_product']",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "LOCAL_WORKSPACE_DRAFT",
+      "status": "PARTIAL",
+      "blocker": "WEB_NATIVE_PLANNING_ONLY"
+    },
+    {
+      "bot_capability": "video_local_edit",
+      "category": "product_video",
+      "web_customer_entrypoint": "/video/poster, /video/frame-sequence, /video/finishing",
+      "web_api": "/api/v1/video-operations/*, /api/v1/frame-video-operations/*, /api/v1/video-transform-operations/*",
+      "bot_runtime_consumer": "Local FFmpeg / PyPDF2 Web Executor",
+      "real_output": "VERIFIED_MP4_JPG",
+      "admin_trace": "LOCAL_DB_OPERATIONS",
+      "status": "PASS",
+      "blocker": "NONE"
+    },
+    {
+      "bot_capability": "video_long",
+      "category": "product_video",
+      "web_customer_entrypoint": "/video/long",
+      "web_api": "/api/v1/features/video_long/*",
+      "bot_runtime_consumer": "services.video_tail9.PRODUCT_ADAPTERS['long_video']",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "ADMIN_COMMERCIAL_B01",
+      "status": "BLOCKED_BY_RUNTIME",
+      "blocker": "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+    },
+    {
+      "bot_capability": "image_generation",
+      "category": "image_ai",
+      "web_customer_entrypoint": "/image/create",
+      "web_api": "/api/v1/features/image_create/*",
+      "bot_runtime_consumer": "services.video_ai_real_pricing.public_image_quality_catalog",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "ADMIN_COMMERCIAL_B01",
+      "status": "BLOCKED_BY_RUNTIME",
+      "blocker": "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+    },
+    {
+      "bot_capability": "voice_tts",
+      "category": "voice_ai",
+      "web_customer_entrypoint": "/voice/create",
+      "web_api": "/api/v1/features/voice_tts/*",
+      "bot_runtime_consumer": "bot.get_tts_provider_readiness",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "ADMIN_COMMERCIAL_B01",
+      "status": "BLOCKED_BY_RUNTIME",
+      "blocker": "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+    },
+    {
+      "bot_capability": "voice_clone",
+      "category": "voice_ai",
+      "web_customer_entrypoint": "/voice/clone",
+      "web_api": "/api/v1/features/voice_clone/*",
+      "bot_runtime_consumer": "bot.get_minimax_voice_clone_readiness",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "ADMIN_COMMERCIAL_B01",
+      "status": "BLOCKED_BY_RUNTIME",
+      "blocker": "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+    },
+    {
+      "bot_capability": "music_generation",
+      "category": "music_ai",
+      "web_customer_entrypoint": "/music/ai",
+      "web_api": "/api/v1/features/music_background/*",
+      "bot_runtime_consumer": "services.video_ai_real_pricing.music_model_catalog",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "ADMIN_COMMERCIAL_B01",
+      "status": "BLOCKED_BY_RUNTIME",
+      "blocker": "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+    },
+    {
+      "bot_capability": "subdub_service",
+      "category": "subdub_ai",
+      "web_customer_entrypoint": "/subtitle, /dubbing, /translate",
+      "web_api": "/api/v1/features/subtitle_asr/*, /api/v1/subtitle-asset-operations/*",
+      "bot_runtime_consumer": "services.subtitle_dub_product_pipeline",
+      "real_output": "SRT_VTT_LOCAL_ONLY",
+      "admin_trace": "LOCAL_DB_OPERATIONS",
+      "status": "PARTIAL",
+      "blocker": "AI_DUBBING_BLOCKED_BY_RUNTIME"
+    },
+    {
+      "bot_capability": "chat_pro",
+      "category": "productivity",
+      "web_customer_entrypoint": "/chat",
+      "web_api": "/api/v1/chat-workspace/*",
+      "bot_runtime_consumer": "services.chat_pro_pricing.CLAUDE_OPUS_MODEL",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "LOCAL_WORKSPACE_DRAFT",
+      "status": "PARTIAL",
+      "blocker": "LOCAL_WORKSPACE_DRAFT_ONLY"
+    },
+    {
+      "bot_capability": "wallet_balance",
+      "category": "commercial_wallet",
+      "web_customer_entrypoint": "/wallet",
+      "web_api": "/api/v1/wallet",
+      "bot_runtime_consumer": "GET /internal/v1/wallet",
+      "real_output": "REAL_XU_BALANCE",
+      "admin_trace": "ADMIN_COMMERCIAL_WALLET",
+      "status": "PASS",
+      "blocker": "NONE"
+    },
+    {
+      "bot_capability": "wallet_topup",
+      "category": "commercial_wallet",
+      "web_customer_entrypoint": "/wallet/topup",
+      "web_api": "/api/v1/payments/create",
+      "bot_runtime_consumer": "POST /webhook/payos",
+      "real_output": "REAL_PAYOS_QR",
+      "admin_trace": "PAYOS_ORDERS_ADMIN_TOPUPS",
+      "status": "PASS",
+      "blocker": "NONE"
+    },
+    {
+      "bot_capability": "wallet_history",
+      "category": "commercial_wallet",
+      "web_customer_entrypoint": "/wallet",
+      "web_api": "/api/v1/wallet/history",
+      "bot_runtime_consumer": "GET /internal/v1/wallet/history",
+      "real_output": "REAL_TRANSACTION_LEDGER",
+      "admin_trace": "ADMIN_PAYMENTS_WALLET",
+      "status": "PASS",
+      "blocker": "NONE"
+    },
+    {
+      "bot_capability": "commercial_packages",
+      "category": "commercial_wallet",
+      "web_customer_entrypoint": "/packages",
+      "web_api": "/api/v1/packages",
+      "bot_runtime_consumer": "GET /internal/v1/packages",
+      "real_output": "CANONICAL_PACKAGE_CATALOG",
+      "admin_trace": "ADMIN_COMMERCIAL_B03",
+      "status": "PASS",
+      "blocker": "NONE"
+    },
+    {
+      "bot_capability": "commercial_pricing",
+      "category": "commercial_wallet",
+      "web_customer_entrypoint": "/pricing",
+      "web_api": "/api/v1/pricing",
+      "bot_runtime_consumer": "GET /internal/v1/pricing",
+      "real_output": "CANONICAL_PRICING_CATALOG",
+      "admin_trace": "ADMIN_COMMERCIAL_B02",
+      "status": "PASS",
+      "blocker": "NONE"
+    },
+    {
+      "bot_capability": "autopost_dashboard",
+      "category": "autopost_social",
+      "web_customer_entrypoint": "/automation",
+      "web_api": "/api/v1/inbox/*",
+      "bot_runtime_consumer": "services.autopost_ui.autopost_main_dashboard_text",
+      "real_output": "NONE_ON_WEB",
+      "admin_trace": "ADMIN_AUTOMATION_MONITOR",
+      "status": "PARTIAL",
+      "blocker": "WEB_NATIVE_AUTOMATION_ONLY"
+    },
+    {
+      "bot_capability": "autopost_content_plan",
+      "category": "autopost_social",
+      "web_customer_entrypoint": "/campaigns, /content-studio",
+      "web_api": "/api/v1/content-studio/*",
+      "bot_runtime_consumer": "services.autopost_strategy.create_content_plan",
+      "real_output": "LOCAL_PLAN_ONLY",
+      "admin_trace": "LOCAL_CAMPAIGN_CENTER",
+      "status": "PARTIAL",
+      "blocker": "WEB_NATIVE_PLANNING_ONLY"
+    },
+    {
+      "bot_capability": "autopost_brand_profile",
+      "category": "autopost_social",
+      "web_customer_entrypoint": "/content/channel-strategy",
+      "web_api": "/api/v1/channel-strategy/*",
+      "bot_runtime_consumer": "services.autopost_brand.get_effective_brand_profile",
+      "real_output": "LOCAL_PROFILE_ONLY",
+      "admin_trace": "LOCAL_DB",
+      "status": "PARTIAL",
+      "blocker": "WEB_NATIVE_PLANNING_ONLY"
+    },
+    {
+      "bot_capability": "autopost_channels",
+      "category": "autopost_social",
+      "web_customer_entrypoint": "/content/channel-strategy",
+      "web_api": "/api/v1/channel-strategy/*",
+      "bot_runtime_consumer": "services.autopost_publish.TelegramAdapter",
+      "real_output": "NONE",
+      "admin_trace": "NONE",
+      "status": "MISSING",
+      "blocker": "NO_SOCIAL_CHANNEL_CONNECTION"
+    },
+    {
+      "bot_capability": "autopost_publish_queue",
+      "category": "autopost_social",
+      "web_customer_entrypoint": "/workboard",
+      "web_api": "/api/v1/workboard/*",
+      "bot_runtime_consumer": "services.autopost_publish.OmnichannelPublishQueue",
+      "real_output": "LOCAL_QUEUE_ONLY",
+      "admin_trace": "LOCAL_WORKBOARD",
+      "status": "PARTIAL",
+      "blocker": "NO_DISPATCH_TO_BOT_QUEUE"
+    },
+    {
+      "bot_capability": "autopost_affiliate",
+      "category": "autopost_social",
+      "web_customer_entrypoint": "/referrals, /crm/leads",
+      "web_api": "/api/v1/partner-crm/*",
+      "bot_runtime_consumer": "services.autopost_affiliate",
+      "real_output": "LOCAL_LEADS_ONLY",
+      "admin_trace": "ADMIN_CRM_LEADS",
+      "status": "PARTIAL",
+      "blocker": "NO_AFFILIATE_VAULT_BRIDGE"
+    },
+    {
+      "bot_capability": "cskh_help",
+      "category": "support_cskh",
+      "web_customer_entrypoint": "/guides, /help, /support",
+      "web_api": "/api/v1/guides/*",
+      "bot_runtime_consumer": "config/cskh_knowledge_base.json",
+      "real_output": "KNOWLEDGE_ARTICLES",
+      "admin_trace": "NONE_NEEDED",
+      "status": "PASS",
+      "blocker": "NONE"
+    },
+    {
+      "bot_capability": "cskh_ticket",
+      "category": "support_cskh",
+      "web_customer_entrypoint": "/tickets, /support",
+      "web_api": "/api/v1/support/tickets",
+      "bot_runtime_consumer": "POST /internal/v1/support/tickets",
+      "real_output": "NONE",
+      "admin_trace": "ADMIN_TICKETS",
+      "status": "BLOCKED_BY_RUNTIME",
+      "blocker": "BOT_SUPPORT_TICKETS_ENDPOINT_MISSING"
+    }
+  ]
+}

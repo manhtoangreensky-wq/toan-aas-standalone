@@ -32,10 +32,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import sys
 
 import pytest
 
 STANDALONE_ROOT = Path(__file__).resolve().parents[1]
+if str(STANDALONE_ROOT) not in sys.path:
+    sys.path.insert(0, str(STANDALONE_ROOT))
+
 CAPABILITY_MATRIX_PATH = STANDALONE_ROOT / "admin_capability_matrix.json"
 PORTAL_JS_PATH = STANDALONE_ROOT / "static" / "portal" / "portal.js"
 ADMIN_COMMERCIAL_PY = STANDALONE_ROOT / "copyfast_admin_commercial.py"
