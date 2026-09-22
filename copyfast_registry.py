@@ -236,6 +236,15 @@ ADMIN_FEATURES: tuple[WebFeature, ...] = (
 ALL_FEATURES: tuple[WebFeature, ...] = CUSTOMER_FEATURES + ADMIN_FEATURES
 FEATURE_BY_KEY = {item.key: item for item in ALL_FEATURES}
 
+# Canonical Bot capability aliases to maintain 1:1 identity consistency with Bot runtime authority
+# without modifying total public features count (180 total, 139 customer, 41 admin).
+FEATURE_ALIASES: dict[str, str] = {
+    "video_ai_prompt": "video_single",
+}
+FEATURE_BY_KEY["video_ai_prompt"] = WebFeature(
+    "video_ai_prompt", "Video AI Prompt", "video", "/video/create", input_hint="Prompt hoặc brief video."
+)
+
 # A small, reviewed subset of the Web catalog that can be used as a genuine
 # application navigation menu.  It deliberately excludes raw Telegram button
 # labels, pending-state transitions, provider controls, canonical wallet
