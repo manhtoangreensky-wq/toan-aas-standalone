@@ -38,7 +38,7 @@
     "critical_security_gaps": 0,
     "real_output_gaps": 10,
     "admin_trace_gaps": 1,
-    "ux_gaps": 1
+    "ux_gaps": 0
   },
   "priority_classification": {
     "priority_p0": [

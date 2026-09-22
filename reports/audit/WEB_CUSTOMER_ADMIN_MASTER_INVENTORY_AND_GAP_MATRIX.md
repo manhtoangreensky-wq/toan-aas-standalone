@@ -39,7 +39,7 @@ This master audit reconciles the entire Web customer-facing application and Web 
 | `CRITICAL_SECURITY_GAPS` | **0** | Auth, RBAC, CSRF, IDOR, Path Traversal, Bridge HMAC all verified secure |
 | `REAL_OUTPUT_GAPS` | **10** | Bot AI generator products cannot yet dispatch real jobs from Web UI |
 | `ADMIN_TRACE_GAPS` | **1** | Web Admin only traces local Web-native jobs; Bot jobs are not surfaced over bridge |
-| `UX_GAPS` | **1** | Customers see ambiguous "adapter required" error instead of clear status on AI generation |
+| `UX_GAPS` | **0** | Remediated via Truthful UX Boundary Differentiation (P0.WEBAPP.V3.CUSTOMER.TRUTHFUL_UX_BOUNDARY.DIFFERENTIATION.R1) |
 
 ---
 
@@ -100,8 +100,8 @@ This master audit reconciles the entire Web customer-facing application and Web 
 - **Finding**: Safe mutation isolation enforced. B01/B02/B03 CAS writes proxy to Bot core; B04 and B05 mutations are blocked at HTTP router level (`405 Method Not Allowed`).
 
 ### STAGE S11: Customer UX/UI Consistency & Clear Feedback
-- **Audit**: User interaction flows and error toasts.
-- **Finding**: Customers attempting to create AI videos receive generic "adapter required" or "draft only" alerts. Needs clear UX distinguishing Workspace Drafts vs Runtime AI Generation (`UX_GAPS = 1`).
+- **Audit**: User interaction flows, status badges, boundary banners, and catalog search signals.
+- **Finding**: Remediated. Clear UX boundary differentiation implemented across WebApp Customer Portal (`portal.js`, `portal-features.js`, and `portal.css`) clearly distinguishing Canonical Job Bridge (`/video/create`), Web-Native Planning Workspaces & Drafts, and Bot AI Generators awaiting runtime bridge (`UX_GAPS = 0`).
 
 ### STAGE S12: Accessibility (A11y) Baseline
 - **Audit**: Form controls, labels, and aria attributes in `portal.js` and HTML templates.
