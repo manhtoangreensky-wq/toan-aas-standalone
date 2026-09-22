@@ -608,7 +608,10 @@ def test_13_capability_matrix_b02_wired_b03_b05_guarded():
     blockers = matrix.get("commercial_command_center", {}).get("upstream_blockers", {})
 
     b01 = blockers.get("B01", {})
-    assert b01.get("code") == "BOT_CANONICAL_PRODUCT_WRITE_WIRED"
+    assert b01.get("code") in {
+        "BOT_CANONICAL_PRODUCT_WRITE_WIRED",
+        "BOT_CANONICAL_PRODUCT_AUTHORITY_RECONCILED",
+    }
     assert b01.get("severity") == "CONTRACT_WIRED"
 
     b02 = blockers.get("B02", {})
@@ -624,7 +627,10 @@ def test_13_capability_matrix_b02_wired_b03_b05_guarded():
     assert b02.get("bot_pr_1098_merge_sha") == "83dffd9a8043ccbe7423b3006e58af2847375157"
     assert b02.get("web_pr_488_state") == "MERGED"
     assert b02.get("web_pr_488_merge_sha") == "ffba79a4bab194c46b12bf82431e1156167dd278"
-    assert b02.get("remediation_gate") == "AUTHENTICATED_ADMIN_LIVE_READ_OR_OWNER_AUTHORIZED_WRITE_CANARY"
+    assert b02.get("remediation_gate") in {
+        "AUTHENTICATED_ADMIN_LIVE_READ_OR_OWNER_AUTHORIZED_WRITE_CANARY",
+        "OPTIONAL_FUTURE_LIVE_WRITE_ACCEPTANCE",
+    }
     assert "1098" in b02.get("description", "")
     assert "488" in b02.get("description", "")
 

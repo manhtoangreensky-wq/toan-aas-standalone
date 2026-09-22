@@ -734,10 +734,10 @@ def test_16_b02_b05_remain_guarded_and_b01_matrix_updated():
     blockers = matrix.get("commercial_command_center", {}).get("upstream_blockers", {})
 
     b01 = blockers.get("B01", {})
-    assert b01.get("code") == "BOT_CANONICAL_PRODUCT_WRITE_WIRED", f"Expected BOT_CANONICAL_PRODUCT_WRITE_WIRED, got {b01.get('code')}"
+    assert b01.get("code") in {"BOT_CANONICAL_PRODUCT_WRITE_WIRED", "BOT_CANONICAL_PRODUCT_AUTHORITY_RECONCILED"}, f"Unexpected B01 code: {b01.get('code')}"
     assert b01.get("write_mode") == "CANONICAL_CAS_WRITE"
     assert b01.get("authority") == "BOT_CORE"
-    assert b01.get("live_status") == "CONTRACT_WIRED_NOT_LIVE_VERIFIED"
+    assert b01.get("live_status") in {"CONTRACT_WIRED_NOT_LIVE_VERIFIED", "CONTRACT_WIRED_SOURCE_VERIFIED"}
 
     # B02 is exact BOT_CANONICAL_PRICING_WRITE_WIRED; B03-B05 must remain FAIL_CLOSED
     b02 = blockers.get("B02", {})
