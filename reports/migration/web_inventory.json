@@ -8063,6 +8063,7 @@
         "TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md",
         "TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md",
         "admin.html",
+        "admin_capability_matrix.json",
         "admin_ops.py",
         "app.py",
         "billing.py",
@@ -8095,10 +8096,9 @@
         "copyfast_music_media.py",
         "copyfast_pages.py",
         "copyfast_partner_readiness.py",
-        "copyfast_pricing_policy.py",
-        "copyfast_project_packages.py"
+        "copyfast_pricing_policy.py"
       ],
-      "occurrences": 969,
+      "occurrences": 970,
       "provider": "PayOS"
     },
     {
@@ -14965,7 +14965,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 230,
   "source_files_scanned": 230,
-  "source_fingerprint_sha256": "e5d9eaf2703763c6241de325800a300f3f56e3702fb843d094d70901a4855338",
+  "source_fingerprint_sha256": "6c738081fba00c0546ace27b8a4c4232970b8e273d8c2075684a528284a35ded",
   "source_root": "repository-root",
   "ui_path_references": [
     {
@@ -15215,7 +15215,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33137,
+      "line": 33153,
       "path": "/features"
     },
     {
