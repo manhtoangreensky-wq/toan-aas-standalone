@@ -6349,6 +6349,18 @@ def ensure_copyfast_schema() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_product_video_jobs_account_created ON web_product_video_jobs(account_id, created_at DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_product_video_jobs_request ON web_product_video_jobs(request_id)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_product_video_jobs_account_idempotency ON web_product_video_jobs(account_id, idempotency_key_hash)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_product_video_jobs_status_created ON web_product_video_jobs(status, created_at ASC)")
+        for col_name, col_type in [
+            ("worker_id", "TEXT"),
+            ("claimed_at", "TEXT"),
+            ("lease_expires_at", "TEXT"),
+            ("attempts", "INTEGER NOT NULL DEFAULT 0"),
+            ("output_url", "TEXT"),
+        ]:
+            try:
+                conn.execute(f"ALTER TABLE web_product_video_jobs ADD COLUMN {col_name} {col_type}")
+            except sqlite3.OperationalError:
+                pass
         try:
             import copyfast_pricing_policy
             copyfast_pricing_policy.ensure_pricing_schema(conn)

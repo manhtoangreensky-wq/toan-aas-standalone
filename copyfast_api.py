@@ -135,6 +135,15 @@ from copyfast_product_video_job_bridge import (
     list_product_video_jobs,
     product_video_job_to_native_compat,
 )
+from copyfast_product_video_dispatcher import (
+    claim_product_video_job,
+    complete_product_video_job,
+    fail_product_video_job,
+    get_product_video_dispatcher_metrics,
+    heartbeat_product_video_job,
+    reconcile_stalled_product_video_jobs,
+    verify_worker_access,
+)
 
 
 router = APIRouter(prefix="/api/v1", tags=["COPYFAST Core"])
@@ -6958,3 +6967,139 @@ async def admin_freeze_feature(feature: str, payload: FreezeRequest, request: Re
     )
     _record_admin_write_audit(account, request, "admin.feature.freeze", feature, result)
     return result
+
+
+class ProductVideoWorkerClaimRequest(BaseModel):
+    worker_id: str = Field(min_length=3, max_length=64)
+    lease_seconds: int = Field(default=300, ge=30, le=3600)
+
+
+class ProductVideoWorkerHeartbeatRequest(BaseModel):
+    job_id: str = Field(min_length=8, max_length=128)
+    worker_id: str = Field(min_length=3, max_length=64)
+    lease_seconds: int = Field(default=300, ge=30, le=3600)
+
+
+class ProductVideoWorkerCompleteRequest(BaseModel):
+    job_id: str = Field(min_length=8, max_length=128)
+    worker_id: str = Field(min_length=3, max_length=64)
+    output_url: str = Field(min_length=5, max_length=2048)
+    output_metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class ProductVideoWorkerFailRequest(BaseModel):
+    job_id: str = Field(min_length=8, max_length=128)
+    worker_id: str = Field(min_length=3, max_length=64)
+    error_code: str = Field(default="WORKER_FAILED", max_length=64)
+    error_message: str = Field(default="", max_length=1000)
+    fatal: bool = Field(default=False)
+
+
+class ProductVideoAdminReconcileRequest(BaseModel):
+    lease_grace_seconds: int = Field(default=30, ge=0, le=3600)
+    max_attempts: int = Field(default=3, ge=1, le=10)
+    idempotency_key: str = Field(default="", max_length=160)
+
+
+@router.post("/worker/product-video/claim")
+async def worker_product_video_claim(payload: ProductVideoWorkerClaimRequest, request: Request):
+    worker_id = verify_worker_access(request, payload.model_dump())
+    job = claim_product_video_job(worker_id=worker_id, lease_seconds=payload.lease_seconds)
+    if job is None:
+        return envelope(
+            True,
+            "Không có job nào trong hàng đợi.",
+            data={"job": None, "idle": True},
+            status_name="idle",
+        )
+    return envelope(
+        True,
+        "Nhận job Product Video thành công.",
+        data={"job": job, "idle": False},
+        status_name="claimed",
+    )
+
+
+@router.post("/worker/product-video/heartbeat")
+async def worker_product_video_heartbeat(payload: ProductVideoWorkerHeartbeatRequest, request: Request):
+    worker_id = verify_worker_access(request, payload.model_dump())
+    success = heartbeat_product_video_job(
+        job_id=payload.job_id,
+        worker_id=worker_id,
+        lease_seconds=payload.lease_seconds,
+    )
+    if not success:
+        raise HTTPException(status_code=404, detail="Job không tồn tại, không thuộc worker này hoặc không ở trạng thái processing")
+    return envelope(
+        True,
+        "Gia hạn lease job thành công.",
+        data={"job_id": payload.job_id, "worker_id": worker_id, "lease_extended": True},
+        status_name="heartbeat_ok",
+    )
+
+
+@router.post("/worker/product-video/complete")
+async def worker_product_video_complete(payload: ProductVideoWorkerCompleteRequest, request: Request):
+    worker_id = verify_worker_access(request, payload.model_dump())
+    result = complete_product_video_job(
+        job_id=payload.job_id,
+        worker_id=worker_id,
+        output_metadata=payload.output_metadata,
+        output_url=payload.output_url,
+    )
+    return envelope(
+        True,
+        "Hoàn thành job Product Video thành công.",
+        data=result,
+        status_name="completed",
+    )
+
+
+@router.post("/worker/product-video/fail")
+async def worker_product_video_fail(payload: ProductVideoWorkerFailRequest, request: Request):
+    worker_id = verify_worker_access(request, payload.model_dump())
+    error_reason = f"{payload.error_code}: {payload.error_message}".strip(": ")
+    result = fail_product_video_job(
+        job_id=payload.job_id,
+        worker_id=worker_id,
+        error_reason=error_reason,
+        fatal=payload.fatal,
+    )
+    return envelope(
+        True,
+        "Cập nhật lỗi job Product Video thành công.",
+        data=result,
+        status_name=str(result.get("status", "failed")),
+    )
+
+
+@router.get("/admin/product-video/metrics")
+async def admin_product_video_metrics(request: Request, account: dict = Depends(require_canonical_admin)):
+    metrics = get_product_video_dispatcher_metrics()
+    return envelope(
+        True,
+        "Đã tải chỉ số điều phối Product Video.",
+        data=metrics,
+        status_name="read_only",
+    )
+
+
+@router.post("/admin/product-video/reconcile")
+async def admin_product_video_reconcile(
+    payload: ProductVideoAdminReconcileRequest,
+    request: Request,
+    account: dict = Depends(require_canonical_admin_csrf),
+):
+    result = reconcile_stalled_product_video_jobs(
+        lease_grace_seconds=payload.lease_grace_seconds,
+        max_attempts=payload.max_attempts,
+    )
+    res_envelope = envelope(
+        True,
+        "Đã hoàn thành đối soát job Video AI Prompt treo.",
+        data=result,
+        status_name="reconciled",
+    )
+    _record_admin_write_audit(account, request, "admin.product_video.reconcile", "dispatcher", res_envelope)
+    return res_envelope
+
