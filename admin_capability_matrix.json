@@ -16,13 +16,17 @@
     "canonical_write_authority": "FAIL_CLOSED_GUARDED",
     "upstream_blockers": {
       "B01": {
-        "code": "BOT_CANONICAL_PRODUCT_WRITE_WIRED",
+        "code": "BOT_CANONICAL_PRODUCT_AUTHORITY_RECONCILED",
         "severity": "CONTRACT_WIRED",
         "write_mode": "CANONICAL_CAS_WRITE",
         "authority": "BOT_CORE",
-        "live_status": "CONTRACT_WIRED_NOT_LIVE_VERIFIED",
-        "description": "Bot Core PR #1093 CAS write endpoints (/internal/v1/admin/products/{product_key}) wired to WebApp Admin Commercial Products editor; mock verified, live write gated.",
-        "remediation_gate": "BOT_PR_1093_WIRED_PENDING_LIVE_PROD_DEPLOY"
+        "reconciliation_pr": 1124,
+        "reconciliation_merge_sha": "f8b3ce6ed73995fb4e3e893d03269af662541e58",
+        "legacy_pr_1093_state": "CLOSED_SUPERSEDED",
+        "live_status": "CONTRACT_WIRED_SOURCE_VERIFIED",
+        "old_checklist_status": "CLOSED",
+        "description": "Bot Core reconciliation PR #1124 (merge SHA f8b3ce6ed73995fb4e3e893d03269af662541e58) reconciled canonical product authority and dynamic discovery; legacy PR #1093 closed and superseded; WebApp wired with CAS write endpoints.",
+        "remediation_gate": "NONE_FOR_OLD_CHECKLIST"
       },
       "B02": {
         "code": "BOT_CANONICAL_PRICING_WRITE_WIRED",
@@ -37,24 +41,28 @@
         "bot_pr_1098_merge_sha": "83dffd9a8043ccbe7423b3006e58af2847375157",
         "web_pr_488_state": "MERGED",
         "web_pr_488_merge_sha": "ffba79a4bab194c46b12bf82431e1156167dd278",
+        "old_checklist_status": "CLOSED_PARTIAL_READONLY",
         "description": "Bot Core PR #1098 and WebApp PR #488 promoted and deployed to production; source acceptance pass, isolated integration pass, production read-only partial (authenticated Admin live read blocked by session unavailable, production write canary not run).",
-        "remediation_gate": "AUTHENTICATED_ADMIN_LIVE_READ_OR_OWNER_AUTHORIZED_WRITE_CANARY"
+        "remediation_gate": "OPTIONAL_FUTURE_LIVE_WRITE_ACCEPTANCE"
       },
       "B03": {
         "code": "BOT_CANONICAL_PACKAGES_WRITE_WIRED",
         "severity": "CONTRACT_WIRED",
         "write_mode": "CANONICAL_CAS_WRITE",
         "authority": "BOT_CORE",
-        "live_status": "CONTRACT_WIRED_NOT_LIVE_VERIFIED",
         "contract_wired_to_bot_pr_1115": true,
         "bot_pr_1115_head": "1ae49acf213d0ecfb009653eb0e44949cad6108a",
         "bot_pr_1115_merge_sha": "e130b1b089021275dd53b2ffce54ea807ad0e3e1",
         "bot_pr_1115_state": "MERGED",
         "bot_pr_1115_promoted": true,
-        "bot_pr_1115_deployed": false,
-        "bot_pr_1115_business_live": "NOT_PROVEN",
-        "description": "Bot Core PR #1115 CAS write endpoints (/internal/v1/admin/packages/{package_key}) merged to main (merge SHA e130b1b089021275dd53b2ffce54ea807ad0e3e1) and wired to WebApp Admin Commercial Packages editor; mock verified, live write gated.",
-        "remediation_gate": "BOT_PR_1115_MERGED_PENDING_LIVE_PROD_DEPLOY"
+        "bot_pr_1115_deployed": true,
+        "production_readonly_acceptance": "PASS",
+        "production_write_acceptance": "NOT_RUN",
+        "business_live": "PARTIAL_READONLY",
+        "live_status": "DEPLOYED_PRODUCTION_READONLY_PASS",
+        "old_checklist_status": "CLOSED_PARTIAL_READONLY",
+        "description": "Bot Core PR #1115 CAS write endpoints (/internal/v1/admin/packages/{package_key}) promoted to production; WebApp PR #490 and PR #491 merged; production read-only acceptance pass, production write not run.",
+        "remediation_gate": "OPTIONAL_OWNER_AUTHORIZED_WRITE_CANARY"
       },
       "B04": {
         "code": "BOT_CANONICAL_PROMOTIONS_AUTHORITY_NOT_IMPLEMENTED",
@@ -66,6 +74,7 @@
         "authority_discovered": false,
         "no_model_invented": true,
         "live_status": "NOT_IMPLEMENTED",
+        "old_checklist_status": "CLOSED_NOT_IMPLEMENTED",
         "description": "Bot Core discovery confirms there is currently no standalone commercial service/package promotion authority. PayOS top-up deposit bonuses remain strictly isolated in B05 Topup authority. Fake promotion mocks removed from Web Admin UI.",
         "remediation_gate": "NEW_PROMOTION_ENGINE_PROGRAM_REQUIRED"
       },
@@ -80,8 +89,22 @@
         "runtime_topup_package_count": 6,
         "no_model_invented": true,
         "live_status": "READ_ONLY_RUNTIME_TRUTH",
+        "old_checklist_status": "CLOSED_READ_ONLY",
         "description": "Bot Core discovery (PR #1121, SHA c157db5596c818a16e98d472872c829ef2225f90) confirms 6 canonical runtime top-up tiers with 100 VND = 1 Xu base conversion and hardcoded bonus rules (+30% first, +20% second). There is no mutable canonical Admin authority for those values. Web Admin Commercial displays them in factual READ_ONLY mode without fake editing.",
         "remediation_gate": "MUTABLE_TOPUP_CONFIG_PROGRAM_REQUIRED"
+      }
+    },
+    "old_commercial_checklist": {
+      "status": "ALL_CLOSED",
+      "open_items": 0,
+      "residuals": 0,
+      "unclassified_blockers": 0,
+      "items": {
+        "B01": "CLOSED",
+        "B02": "CLOSED_PARTIAL_READONLY",
+        "B03": "CLOSED_PARTIAL_READONLY",
+        "B04": "CLOSED_NOT_IMPLEMENTED",
+        "B05": "CLOSED_READ_ONLY"
       }
     }
   },
