@@ -26,8 +26,8 @@ This master audit reconciles the entire Web customer-facing application and Web 
 | `TOTAL_ADMIN_SURFACES` | **41** | Distinct registered admin feature surfaces in `copyfast_registry.py` |
 | `TOTAL_FASTAPI_ROUTES` | **677** | 578 customer routes, 99 admin routes in `app.py` |
 | `PASS_COUNT` | **7** | Wallet balance, top-up QR, history, packages, pricing, local video edit, guides |
-| `PARTIAL_COUNT` | **13** | Web-native planning tools (Video Studio, Content Studio, Chat draft, local Subtitle) |
-| `BLOCKED_BY_RUNTIME_COUNT` | **10** | Bot AI generation products lacking Web-to-Bot confirm job bridge adapter |
+| `PARTIAL_COUNT` | **14** | Web-native planning tools (Video Studio, Content Studio, Chat draft, local Subtitle) & Provider-Blocked Canonical Adapters |
+| `BLOCKED_BY_RUNTIME_COUNT` | **9** | Bot AI generation products lacking Web-to-Bot confirm job bridge adapter |
 | `MISSING_COUNT` | **1** | Autopost social channel connection / token bridge |
 | `MOCK_COUNT` | **0** | Fake promotion vouchers & fake top-up bonuses completely eliminated |
 | `STALE_COUNT` | **0** | Stale PR #1093 & legacy mock references eliminated |
@@ -37,8 +37,8 @@ This master audit reconciles the entire Web customer-facing application and Web 
 | `UNCLASSIFIED_CUSTOMER_CAPABILITIES` | **0** | 100% of Bot customer capabilities inventoried |
 | `UNCLASSIFIED_PARITY_GAPS` | **0** | Complete parity matrix populated |
 | `CRITICAL_SECURITY_GAPS` | **0** | Auth, RBAC, CSRF, IDOR, Path Traversal, Bridge HMAC all verified secure |
-| `REAL_OUTPUT_GAPS` | **10** | Bot AI generator products cannot yet dispatch real jobs from Web UI |
-| `ADMIN_TRACE_GAPS` | **1** | Web Admin only traces local Web-native jobs; Bot jobs are not surfaced over bridge |
+| `REAL_OUTPUT_GAPS` | **9** | Bot AI generator products cannot yet dispatch real jobs from Web UI (Product Video gated at provider-free boundary) |
+| `ADMIN_TRACE_GAPS` | **0** | Web Admin traces local Web-native jobs and Product Video worker queue via `/admin/product-video/*` |
 | `UX_GAPS` | **0** | Remediated via Truthful UX Boundary Differentiation (P0.WEBAPP.V3.CUSTOMER.TRUTHFUL_UX_BOUNDARY.DIFFERENTIATION.R1) |
 
 ---
@@ -130,7 +130,7 @@ This master audit reconciles the entire Web customer-facing application and Web 
 | # | Bot Capability | Category | Web Entrypoint | Web API | Bot Runtime | Real Output | Admin Trace | Status |
 |---|---|---|---|---|---|---|---|---|
 | 1 | `video_trend` | Video AI | `/video/trend` | `/api/v1/features/video_trend/*` | `services.video_tail9` | None on Web | Admin B01 | `BLOCKED_BY_RUNTIME` |
-| 2 | `video_ai_prompt` | Video AI | `/video/create` | `/api/v1/features/video_ai_prompt/*` | `services.product_video_one_scene_engine` | None on Web | Admin B01 | `BLOCKED_BY_RUNTIME` |
+| 2 | `video_ai_prompt` | Video AI | `/video/create` | `/api/v1/features/video_ai_prompt/*` | `services.web_product_video_worker_consumer` | Provider-blocked | Admin Metrics/Reconcile | `PARTIAL_PROVIDER_BLOCKED` |
 | 3 | `video_ai_image` | Video AI | `/video/image-to-video` | `/api/v1/features/video_ai_image/*` | `services.video_tail9` | None on Web | Admin B01 | `BLOCKED_BY_RUNTIME` |
 | 4 | `video_ai_video_reference` | Video AI | `/video-studio/reference-format-planner` | `/api/v1/video-studio/*` | Planning only | None on Web | Local draft | `PARTIAL` |
 | 5 | `script_image_video` | Video AI | `/video-studio/script-to-screen-planner` | `/api/v1/video-studio/*` | Planning only | None on Web | Local draft | `PARTIAL` |
@@ -177,6 +177,6 @@ This master audit reconciles the entire Web customer-facing application and Web 
 
 ### Selected Next Bounded Task
 ```
-TASK=P0.WEBAPP.V3.CUSTOMER.PRODUCT_VIDEO.CANONICAL.JOB_BRIDGE.ADAPTER.R1
+TASK=P1.WEBAPP.V3.CUSTOMER.PRODUCT_VIDEO.OUTPUT_POLLING.DOWNLOAD.R1
 ```
-**Rationale**: Product Video is TOAN AAS's primary commercial customer value proposition. The Bot has a fully operational worker and engine pipeline for Product Video. Implementing this single bounded adapter fulfills the core invariant: *Bot creates real video => WebApp must deliver users to real video*.
+**Rationale**: With the Web dispatcher, Bot worker consumer, and isolated E2E loop fully verified provider-free (`PARTIAL_PROVIDER_BLOCKED`), the next bounded step is implementing customer output polling and genuine MP4 artifact download delivery upon job completion.

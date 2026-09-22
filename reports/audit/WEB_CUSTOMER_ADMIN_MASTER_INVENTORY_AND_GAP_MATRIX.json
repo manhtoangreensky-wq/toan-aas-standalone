@@ -28,22 +28,22 @@
     "total_web_registry_features": 180,
     "total_fastapi_routes": 677,
     "pass_count": 7,
-    "partial_count": 13,
+    "partial_count": 14,
     "missing_count": 1,
     "mock_count": 0,
     "stale_count": 0,
-    "blocked_by_runtime_count": 10
+    "blocked_by_runtime_count": 9
   },
   "gap_metrics": {
     "critical_security_gaps": 0,
-    "real_output_gaps": 10,
-    "admin_trace_gaps": 1,
+    "real_output_gaps": 9,
+    "admin_trace_gaps": 0,
     "ux_gaps": 0
   },
   "priority_classification": {
     "priority_p0": [
-      "P0.1: Establish canonical Job Bridge Adapter between WebApp and Bot for primary AI products (starting with Product Video)",
-      "P0.2: Clarify UX status distinctions: Web-Native Planning Tools (Workspace Drafts) vs Runtime AI Generators"
+      "P0.1: Establish canonical Job Bridge Adapter between WebApp and Bot for primary AI products (starting with Product Video) [VERIFIED ISOLATED E2E PASS]",
+      "P0.2: Clarify UX status distinctions: Web-Native Planning Tools (Workspace Drafts) vs Runtime AI Generators [REMEDIATED]"
     ],
     "priority_p1": [
       "P1.1: Unified Jobs & Assets Read Model across Bot SQLite and Web Admin",
@@ -54,7 +54,7 @@
       "P2.2: CSKH Support ticket API bridge"
     ]
   },
-  "next_bounded_task": "P0.WEBAPP.V3.CUSTOMER.PRODUCT_VIDEO.CANONICAL.JOB_BRIDGE.ADAPTER.R1",
+  "next_bounded_task": "P1.WEBAPP.V3.CUSTOMER.PRODUCT_VIDEO.OUTPUT_POLLING.DOWNLOAD.R1",
   "parity_matrix": [
     {
       "bot_capability": "video_trend",
@@ -72,11 +72,11 @@
       "category": "product_video",
       "web_customer_entrypoint": "/video/create",
       "web_api": "/api/v1/features/video_ai_prompt/*",
-      "bot_runtime_consumer": "services.product_video_one_scene_engine",
-      "real_output": "NONE_ON_WEB",
-      "admin_trace": "ADMIN_COMMERCIAL_B01",
-      "status": "BLOCKED_BY_RUNTIME",
-      "blocker": "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+      "bot_runtime_consumer": "services.web_product_video_worker_consumer",
+      "real_output": "PROVIDER_FREE_PREPARED_BLOCKED",
+      "admin_trace": "ADMIN_PRODUCT_VIDEO_METRICS_AND_RECONCILE",
+      "status": "PARTIAL_PROVIDER_BLOCKED",
+      "blocker": "PAID_PROVIDER_CALLS_PREVENTED_ZERO_COST_GATE"
     },
     {
       "bot_capability": "video_ai_image",
