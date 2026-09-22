@@ -29869,13 +29869,141 @@
     return "";
   }
 
+  function isSafeOutputUrl(url) {
+    if (!url || typeof url !== "string") return false;
+    const trimmed = url.trim().toLowerCase();
+    if (
+      trimmed.startsWith("javascript:")
+      || trimmed.startsWith("data:")
+      || trimmed.startsWith("file:")
+      || trimmed.startsWith("vbscript:")
+      || trimmed.includes("..")
+      || trimmed.startsWith("\\")
+    ) {
+      return false;
+    }
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("/api/v1/")) {
+      return true;
+    }
+    return false;
+  }
+
+  function renderProductVideoJobOutput(flow, context) {
+    const data = flow && flow.data && typeof flow.data === "object" ? flow.data : {};
+    const job = (data.id ? data : (data.job && typeof data.job === "object" ? data.job : data)) || {};
+    const jobId = String(job.id || "").trim();
+    const status = String(job.status || flow.status || "").trim().toLowerCase();
+    const requestId = String(job.request_id || "").trim();
+    const prompt = String(job.prompt || (flow.input && flow.input.prompt) || "").trim();
+
+    let statusLabel = "Đang chờ xử lý";
+    let statusDesc = "Tác vụ đã được đưa vào hàng đợi xử lý canonical. Đang chờ worker nhận tác vụ.";
+    let statusBadgeType = "queued";
+
+    if (status === "processing") {
+      statusLabel = "Đang xử lý";
+      statusDesc = "Worker đang xử lý video. Tiến trình thực tế được cập nhật trực tiếp từ máy chủ.";
+      statusBadgeType = "processing";
+    } else if (status === "completed") {
+      statusLabel = "Hoàn tất";
+      statusDesc = "Video AI đã hoàn thành và sẵn sàng.";
+      statusBadgeType = "completed";
+    } else if (status === "failed" || status === "failed_no_charge") {
+      statusLabel = "Thất bại";
+      statusDesc = safeText(job.status_reason || "Tác vụ không thể hoàn tất.");
+      statusBadgeType = "failed";
+    }
+
+    const headerMarkup = `<div class="portal-card-header">
+      <div>
+        <h3 class="portal-card-title">${safeText(statusLabel)}</h3>
+        <p class="portal-card-subtitle">${safeText(statusDesc)}</p>
+      </div>
+      ${badge(statusBadgeType)}
+    </div>`;
+
+    const metaMarkup = `<div class="portal-summary-list" style="margin: 12px 0;">
+      ${jobId ? `<div class="portal-summary-item"><span class="portal-summary-key">Mã Job</span><code class="portal-link-code">${safeText(jobId)}</code></div>` : ""}
+      ${requestId ? `<div class="portal-summary-item"><span class="portal-summary-key">Mã Yêu cầu</span><span class="portal-summary-value">${safeText(requestId)}</span></div>` : ""}
+      ${prompt ? `<div class="portal-summary-item"><span class="portal-summary-key">Prompt</span><span class="portal-summary-value">${safeText(prompt.length > 80 ? prompt.slice(0, 80) + "..." : prompt)}</span></div>` : ""}
+    </div>`;
+
+    let bodyMarkup = "";
+    if (status === "queued" || status === "processing") {
+      bodyMarkup = `<div class="portal-notice portal-notice--info" style="display:flex; align-items:center; gap:10px;">
+        <span class="portal-state-icon portal-spin" aria-hidden="true">⏳</span>
+        <div>
+          <strong>${status === "queued" ? "Đang chờ xử lý" : "Đang xử lý tác vụ"}</strong>
+          <p style="margin:0; font-size:13px; color:var(--portal-text-muted);">Trạng thái cập nhật tự động từ máy chủ. Không hiển thị phần trăm tiến trình giả lập.</p>
+        </div>
+      </div>`;
+    } else if (status === "completed") {
+      const outputUrl = String(job.output || job.output_url || "").trim();
+      const outputAvailable = Boolean(job.output_available && job.download_ready && outputUrl);
+      const safeUrl = isSafeOutputUrl(outputUrl) ? outputUrl : "";
+
+      if (outputAvailable && safeUrl) {
+        const meta = job.output_metadata && typeof job.output_metadata === "object" ? job.output_metadata : {};
+        const isMp4 = (meta.format === "mp4") || (meta.content_type === "video/mp4") || safeUrl.endsWith(".mp4") || safeUrl.includes(".mp4");
+
+        const previewMarkup = isMp4
+          ? `<div class="portal-video-container" style="margin: 16px 0;">
+              <video class="portal-video-player" controls preload="metadata" src="${safeText(safeUrl)}" style="max-width:100%; width:100%; border-radius:var(--portal-radius-md); background:#000; display:block;" aria-label="Xem video kết quả"></video>
+            </div>`
+          : "";
+
+        const downloadRoute = `/api/v1/features/video_ai_prompt/jobs/${encodeURIComponent(jobId)}/download`;
+        const effectiveDownloadHref = safeUrl.startsWith("/api/v1/") ? safeUrl : downloadRoute;
+
+        bodyMarkup = `${previewMarkup}
+        <div class="portal-form-footer" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;">
+          <a class="portal-button portal-button--primary" href="${safeText(effectiveDownloadHref)}" download="video_${safeText(jobId)}.mp4" aria-label="Tải video">Tải video</a>
+          <a class="portal-button portal-button--quiet" href="/jobs/${encodeURIComponent(jobId)}">Xem trong Job Center</a>
+          <button class="portal-button portal-button--quiet" type="button" data-portal-action="product-video-new">Tạo video khác</button>
+        </div>`;
+      } else {
+        bodyMarkup = `<div class="portal-notice portal-notice--error" role="alert">
+          <span class="portal-notice-icon" aria-hidden="true">⚠️</span>
+          <div>
+            <strong>Lỗi phân phối file kết quả</strong>
+            <p style="margin:0; font-size:13px;">Tác vụ được báo cáo hoàn tất nhưng file video không khả dụng để tải hoặc URL không an toàn.</p>
+          </div>
+        </div>
+        <div class="portal-form-footer" style="margin-top:16px;">
+          <button class="portal-button portal-button--quiet" type="button" data-portal-action="product-video-new">Tạo video khác</button>
+        </div>`;
+      }
+    } else if (status === "failed" || status === "failed_no_charge") {
+      bodyMarkup = `<div class="portal-notice portal-notice--error" role="alert">
+        <span class="portal-notice-icon" aria-hidden="true">⚠️</span>
+        <div>
+          <strong>Tác vụ không hoàn thành</strong>
+          <p style="margin:0; font-size:13px;">${safeText(job.status_reason || "Hệ thống ghi nhận lỗi khi xử lý video. Xu chưa bị trừ hoặc đã được hoàn trả.")}</p>
+        </div>
+      </div>
+      <div class="portal-form-footer" style="margin-top:16px;">
+        <button class="portal-button portal-button--primary" type="button" data-portal-action="product-video-new">Thử lại với yêu cầu mới</button>
+      </div>`;
+    }
+
+    return `<section class="portal-card portal-card-pad portal-product-video-output" aria-live="polite" role="status" data-product-video-job-id="${safeText(jobId)}" data-product-video-status="${safeText(status)}">
+      ${headerMarkup}
+      ${metaMarkup}
+      ${bodyMarkup}
+    </section>`;
+  }
+
   function renderWorkspace(page, context) {
     const route = page.routePath || page.path;
     const subtitleStudioCompanion = renderSubtitleStudioCompanionLink(page);
     const flow = context.featureFlows && context.featureFlows[route];
-    const flowOutput = flow
-      ? `<div class="portal-state" data-state="${safeText(flow.status || "guarded")}"><span class="portal-state-icon" aria-hidden="true">○</span><div><h3>${safeText(flow.message || "Core Bridge đã cập nhật trạng thái.")}</h3><p>Trạng thái canonical: ${safeText(STATE_LABELS[flow.status] || flow.status || "guarded")}. ${flow.status === "completed" ? "Output chỉ được cấp qua asset đã xác minh." : "Bản nháp planning có thể hiển thị; output engine vẫn phải qua job và asset hợp lệ."}</p></div></div>${renderCanonicalFlow(flow, route)}${renderFeatureTracking(flow)}`
-      : renderEmpty("Chờ Engine Web hoặc integration tùy chọn", "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○");
+    const isProductVideo = (route === "/video/create" || route === "/video/new" || (typeof featureKeyForPage === "function" && featureKeyForPage(page, context) === "video_ai_prompt"));
+    const hasProductVideoJob = Boolean(isProductVideo && flow && flow.data && (flow.data.id || flow.data.job));
+    const flowOutput = hasProductVideoJob
+      ? renderProductVideoJobOutput(flow, context)
+      : (flow
+        ? `<div class="portal-state" data-state="${safeText(flow.status || "guarded")}"><span class="portal-state-icon" aria-hidden="true">○</span><div><h3>${safeText(flow.message || "Core Bridge đã cập nhật trạng thái.")}</h3><p>Trạng thái canonical: ${safeText(STATE_LABELS[flow.status] || flow.status || "guarded")}. ${flow.status === "completed" ? "Output chỉ được cấp qua asset đã xác minh." : "Bản nháp planning có thể hiển thị; output engine vẫn phải qua job và asset hợp lệ."}</p></div></div>${renderCanonicalFlow(flow, route)}${renderFeatureTracking(flow)}`
+        : renderEmpty("Chờ Engine Web hoặc integration tùy chọn", "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○"));
     const isCanonicalVoiceRoute = page.path === "/voice" || page.path.startsWith("/voice/");
     const voiceVault = isCanonicalVoiceRoute && page.path !== "/voice/outputs" ? renderVoiceVault(context) : "";
     const interactiveWorkbench = renderInteractiveFeatureWorkbench(page, context);
