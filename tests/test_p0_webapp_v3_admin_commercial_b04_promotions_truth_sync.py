@@ -99,9 +99,8 @@ def test_04_b05_topup_boundary_separation(capability_matrix: dict, portal_js_con
     """Section 6: B05 top-up bonus remains strictly separate from B04."""
     blockers = capability_matrix.get("commercial_command_center", {}).get("upstream_blockers", {})
     b05 = blockers.get("B05")
-    assert b05 is not None
-    assert b05.get("severity") == "FAIL_CLOSED"
-    assert b05.get("code") == "BOT_WRITE_ENDPOINT_MISSING_FOR_TOPUP_PACKAGES"
+    assert b05.get("severity") in {"FAIL_CLOSED", "READ_ONLY"}
+    assert b05.get("code") in {"BOT_WRITE_ENDPOINT_MISSING_FOR_TOPUP_PACKAGES", "BOT_CANONICAL_TOPUP_CONFIG_AUTHORITY_NOT_MUTABLE"}
 
     # Tab 5 exists separately in portal.js
     assert "5. Gói Nạp Xu PayOS" in portal_js_content

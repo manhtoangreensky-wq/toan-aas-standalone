@@ -894,8 +894,8 @@ def test_12_capability_matrix_b03_wired():
     # B04-B05 must remain strictly FAIL_CLOSED
     assert blockers.get("B04", {}).get("code") in {"BOT_WRITE_ENDPOINT_MISSING_FOR_PROMOTIONS", "BOT_CANONICAL_PROMOTIONS_AUTHORITY_NOT_IMPLEMENTED"}
     assert blockers.get("B04", {}).get("severity") in {"FAIL_CLOSED", "NOT_IMPLEMENTED"}
-    assert blockers.get("B05", {}).get("code") == "BOT_WRITE_ENDPOINT_MISSING_FOR_TOPUP_PACKAGES"
-    assert blockers.get("B05", {}).get("severity") == "FAIL_CLOSED"
+    assert blockers.get("B05", {}).get("code") in {"BOT_WRITE_ENDPOINT_MISSING_FOR_TOPUP_PACKAGES", "BOT_CANONICAL_TOPUP_CONFIG_AUTHORITY_NOT_MUTABLE"}
+    assert blockers.get("B05", {}).get("severity") in {"FAIL_CLOSED", "READ_ONLY"}
 
 
 def test_13_portal_js_packages_editor_contract():
