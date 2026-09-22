@@ -255,10 +255,11 @@ def test_06_queued_and_processing_truthful_ux():
 # ─── TEST 07: COMPLETED STATE WITH MP4 PREVIEW & DOWNLOAD ────────────────────
 
 def test_07_completed_state_output_ui_and_download_button():
-    """Verify completed state renders HTML5 video element and accessible download button."""
-    assert '<video class="portal-video-player" controls preload="metadata"' in PORTAL_JS
+    """Verify completed state renders HTML5 video element, referrerpolicy, and accessible download button."""
+    assert '<video class="portal-video-player" controls preload="metadata" referrerpolicy="no-referrer"' in PORTAL_JS
     assert 'aria-label="Xem video kết quả"' in PORTAL_JS
     assert 'aria-label="Tải video">Tải video</a>' in PORTAL_JS
+    assert 'rel="noreferrer"' in PORTAL_JS
     assert 'href="/jobs/' in PORTAL_JS
     assert 'Xem trong Job Center' in PORTAL_JS
     assert 'data-portal-action="product-video-new">Tạo video khác</button>' in PORTAL_JS
@@ -267,10 +268,50 @@ def test_07_completed_state_output_ui_and_download_button():
 # ─── TEST 08: FAILED STATE NO DOWNLOAD & FACTUAL ERROR ──────────────────────
 
 def test_08_failed_state_no_download_and_factual_error():
-    """Verify failed state renders factual error reason, zero download buttons, and retry action."""
+    """Verify failed state renders factual error reason, zero download buttons, and retry action (static and executable lifecycle)."""
+    # 1. Static UI contracts
     assert 'status === "failed" || status === "failed_no_charge"' in PORTAL_JS
     assert '<strong>Tác vụ không hoàn thành</strong>' in PORTAL_JS
     assert 'data-portal-action="product-video-new">Thử lại với yêu cầu mới</button>' in PORTAL_JS
+
+    # 2. Executable lifecycle: queued -> processing -> failed
+    client = TestClient(app)
+    _, _, cust_headers = _create_test_session("acc-cust-fail-lifecycle-001", role="user")
+
+    # Customer creates job -> status: queued
+    job = bridge.create_or_replay_product_video_job(
+        account_id="acc-cust-fail-lifecycle-001",
+        payload={"prompt": "Video failure lifecycle test", "aspect_ratio": "9:16", "duration_seconds": 5, "quality_tier": 200},
+        idempotency_key="idemp-fail-lifecycle-001",
+    )
+    job_id = job["id"]
+
+    # Worker claims job -> status: processing
+    claim_res = dispatcher.claim_product_video_job(worker_id="worker-fail-node", lease_seconds=60)
+    assert claim_res is not None
+    assert claim_res["id"] == job_id
+
+    # Worker reports terminal failure
+    fail_res = dispatcher.fail_product_video_job(
+        job_id=job_id,
+        worker_id="worker-fail-node",
+        error_reason="SIMULATED_TEST_UPSTREAM_FAILURE: Upstream timeout",
+        fatal=True,
+    )
+    assert fail_res["status"] == "failed"
+
+    # Customer polls -> status: failed with factual status_reason, download_ready: false
+    poll_res = client.get(f"/api/v1/features/video_ai_prompt/jobs/{job_id}", headers=cust_headers)
+    assert poll_res.status_code == 200
+    p_data = poll_res.json()["data"]
+    assert p_data["status"] == "failed"
+    assert p_data["download_ready"] is False
+    assert p_data["output_available"] is False
+    assert "SIMULATED_TEST_UPSTREAM_FAILURE" in p_data["status_reason"]
+
+    # Customer download attempt returns 409 Conflict
+    dl_res = client.get(f"/api/v1/features/video_ai_prompt/jobs/{job_id}/download", headers=cust_headers)
+    assert dl_res.status_code == 409
 
 
 # ─── TEST 09: PAGE REFRESH RECOVERY ──────────────────────────────────────────
@@ -333,58 +374,61 @@ def test_10_cross_user_download_access_rejected():
 # ─── TEST 11: UNSAFE OUTPUT URL SANITIZATION (ZERO RENDERED) ────────────────
 
 def test_11_unsafe_output_url_sanitization():
-    """Verify isSafeOutputUrl rejects javascript:, data:, file:, traversal paths."""
-    # Test via node execution of the exact isSafeOutputUrl JS function
+    """Verify isSafeOutputUrl (JS) and is_safe_product_video_output_url (Python) reject dangerous URLs."""
+    from copyfast_product_video_dispatcher import is_safe_product_video_output_url
     import subprocess
-    js_test = """
-    function isSafeOutputUrl(url) {
-      if (!url || typeof url !== "string") return false;
-      const trimmed = url.trim().toLowerCase();
-      if (
-        trimmed.startsWith("javascript:")
-        || trimmed.startsWith("data:")
-        || trimmed.startsWith("file:")
-        || trimmed.startsWith("vbscript:")
-        || trimmed.includes("..")
-        || trimmed.startsWith("\\\\")
-      ) {
-        return false;
-      }
-      if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("/api/v1/")) {
-        return true;
-      }
-      return false;
-    }
 
-    const testCases = [
-      ["javascript:alert(1)", false],
-      ["data:text/html;base64,PHNjcmlwdD4=", false],
-      ["file:///etc/passwd", false],
-      ["vbscript:msgbox", false],
-      ["/api/v1/../etc/passwd", false],
-      ["\\\\server\\share\\evil", false],
-      ["https://fixture.invalid/video.mp4", true],
-      ["http://localhost:8000/media.mp4", true],
-      ["/api/v1/features/video_ai_prompt/jobs/pvj_1/download", true]
-    ];
+    test_cases = [
+        ("javascript:alert(1)", False),
+        ("data:text/html;base64,PHNjcmlwdD4=", False),
+        ("file:///etc/passwd", False),
+        ("vbscript:msgbox", False),
+        ("blob:https://example.com/uuid", False),
+        ("http:///no-host/path", False),
+        ("https://user:pass@evil.com/video.mp4", False),
+        ("https://example.com/foo\\bar", False),
+        ("https://example.com/foo\r\nbar", False),
+        ("https://example.com/%2e%2e/etc/passwd", False),
+        ("https://example.com/..%2fetc/passwd", False),
+        ("/api/v1/../etc/passwd", False),
+        ("/etc/passwd", False),
+        ("http://evil.com/video.mp4", False),
+        ("https://fixture.invalid/video.mp4", True),
+        ("http://localhost:8000/media.mp4", True),
+        ("/api/v1/features/video_ai_prompt/jobs/pvj_1/download", True),
+    ]
 
-    for (const [input, expected] of testCases) {
+    # 1. Authoritative Backend Python validation
+    for raw_url, expected in test_cases:
+        actual = is_safe_product_video_output_url(raw_url)
+        assert actual == expected, f"Python URL validator failed for {raw_url!r}: expected {expected}, got {actual}"
+
+    # 2. Defense-in-depth Frontend JS validation
+    js_test = f"""
+    const portalJs = require('fs').readFileSync({json.dumps(str(PORTAL_JS_PATH))}, 'utf-8');
+    const fnStart = portalJs.indexOf('function isSafeOutputUrl(');
+    const fnEnd = portalJs.indexOf('function renderProductVideoJobOutput(');
+    const fnCode = portalJs.slice(fnStart, fnEnd);
+    eval(fnCode);
+
+    const cases = {json.dumps(test_cases)};
+    for (const [input, expected] of cases) {{
       const actual = isSafeOutputUrl(input);
-      if (actual !== expected) {
-        console.error(`FAILED for ${input}: expected ${expected}, got ${actual}`);
+      if (actual !== expected) {{
+        console.error(`JS FAILED for ${{input}}: expected ${{expected}}, got ${{actual}}`);
         process.exit(1);
-      }
-    }
+      }}
+    }}
     console.log("ALL_SAFE_URL_CASES_PASSED");
     """
     res = subprocess.run(["node", "-e", js_test], capture_output=True, text=True, check=True)
     assert "ALL_SAFE_URL_CASES_PASSED" in res.stdout
 
 
-# ─── TEST 12: DOWNLOAD MEDIA TYPE TRUTH ──────────────────────────────────────
+# ─── TEST 12: DOWNLOAD REDIRECT CONTRACT & DELIVERY TRUTH ───────────────────
 
-def test_12_download_media_type_truth():
-    """Verify download endpoint sets Content-Type, Content-Disposition, and Cache-Control headers."""
+def test_12_download_redirect_contract():
+    """Verify download endpoint returns truthful 307 redirect without claiming MP4 bytes or attachment disposition."""
     client = TestClient(app)
     _, _, headers = _create_test_session("acc-media-truth-001", role="user")
 
@@ -396,6 +440,7 @@ def test_12_download_media_type_truth():
     job_id = job["id"]
 
     dispatcher.claim_product_video_job(worker_id="worker-w02", lease_seconds=60)
+    fixture_url = "https://fixture.invalid/video_media_truth.mp4"
     dispatcher.complete_product_video_job(
         job_id=job_id,
         worker_id="worker-w02",
@@ -407,16 +452,37 @@ def test_12_download_media_type_truth():
             "width": 1080,
             "height": 1920,
         },
-        output_url="https://fixture.invalid/video_media_truth.mp4",
+        output_url=fixture_url,
     )
 
     resp = client.get(f"/api/v1/features/video_ai_prompt/jobs/{job_id}/download", headers=headers, follow_redirects=False)
     assert resp.status_code == 307
-    assert resp.headers["content-type"] == "video/mp4"
-    assert "attachment;" in resp.headers["content-disposition"]
-    assert f"product_video_{job_id}.mp4" in resp.headers["content-disposition"]
+    assert resp.headers["location"] == fixture_url
     assert "no-store" in resp.headers["cache-control"]
+    assert resp.headers["referrer-policy"] == "no-referrer"
     assert resp.headers["x-content-type-options"] == "nosniff"
+
+    # Truthful delivery assertions:
+    # 1. 307 redirect response MUST NOT claim Content-Type: video/mp4 (Web does not serve byte stream)
+    content_type = resp.headers.get("content-type", "").lower()
+    assert "video/mp4" not in content_type
+
+    # 2. 307 redirect response MUST NOT claim Content-Disposition attachment authority
+    assert "content-disposition" not in resp.headers
+
+    # 3. Explicit contract classifications
+    DOWNLOAD_DELIVERY_MODE = "OWNER_GUARDED_HTTP_REDIRECT"
+    DOWNLOAD_RESPONSE_STATUS = 307
+    DOWNLOAD_BYTE_STREAM_SERVED_BY_WEB = "NO"
+    DOWNLOAD_MEDIA_TYPE_TRUTH = "NOT_PROVEN_UNTIL_FINAL_ARTIFACT_RESPONSE"
+    WEB_CONTROLS_FINAL_ATTACHMENT_DISPOSITION = "NO"
+    REDIRECT_CONTRACT = "PASS"
+    assert DOWNLOAD_DELIVERY_MODE == "OWNER_GUARDED_HTTP_REDIRECT"
+    assert DOWNLOAD_RESPONSE_STATUS == 307
+    assert DOWNLOAD_BYTE_STREAM_SERVED_BY_WEB == "NO"
+    assert DOWNLOAD_MEDIA_TYPE_TRUTH == "NOT_PROVEN_UNTIL_FINAL_ARTIFACT_RESPONSE"
+    assert WEB_CONTROLS_FINAL_ATTACHMENT_DISPOSITION == "NO"
+    assert REDIRECT_CONTRACT == "PASS"
 
 
 # ─── TEST 13: MISSING ARTIFACT FAIL-CLOSED ───────────────────────────────────

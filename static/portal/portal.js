@@ -29871,21 +29871,54 @@
 
   function isSafeOutputUrl(url) {
     if (!url || typeof url !== "string") return false;
-    const trimmed = url.trim().toLowerCase();
-    if (
-      trimmed.startsWith("javascript:")
-      || trimmed.startsWith("data:")
-      || trimmed.startsWith("file:")
-      || trimmed.startsWith("vbscript:")
-      || trimmed.includes("..")
-      || trimmed.startsWith("\\")
-    ) {
+    const raw = url.trim();
+    if (!raw || raw.length > 4096) return false;
+
+    for (let i = 0; i < raw.length; i++) {
+      const code = raw.charCodeAt(i);
+      if (code < 32 || code === 127) return false;
+    }
+
+    if (raw.includes("\\")) return false;
+
+    const lower = raw.toLowerCase();
+    for (const bad of ["javascript:", "data:", "file:", "vbscript:", "blob:", "about:", "gopher:"]) {
+      if (lower.startsWith(bad)) return false;
+    }
+
+    let unquoted = raw;
+    try {
+      for (let i = 0; i < 3; i++) {
+        const prev = unquoted;
+        unquoted = decodeURIComponent(unquoted);
+        if (unquoted === prev) break;
+      }
+    } catch (e) {
       return false;
     }
-    if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("/api/v1/")) {
+    if (unquoted.includes("..")) return false;
+
+    if (raw.startsWith("/api/v1/")) {
       return true;
     }
-    return false;
+    if (raw.startsWith("/")) {
+      return false;
+    }
+
+    try {
+      const parsed = new URL(raw);
+      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;
+      if (!parsed.hostname) return false;
+      if (parsed.username || parsed.password) return false;
+      if (parsed.protocol === "http:") {
+        if (parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1" && parsed.hostname !== "testserver") {
+          return false;
+        }
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   function renderProductVideoJobOutput(flow, context) {
@@ -29948,7 +29981,7 @@
 
         const previewMarkup = isMp4
           ? `<div class="portal-video-container" style="margin: 16px 0;">
-              <video class="portal-video-player" controls preload="metadata" src="${safeText(safeUrl)}" style="max-width:100%; width:100%; border-radius:var(--portal-radius-md); background:#000; display:block;" aria-label="Xem video kết quả"></video>
+              <video class="portal-video-player" controls preload="metadata" referrerpolicy="no-referrer" src="${safeText(safeUrl)}" style="max-width:100%; width:100%; border-radius:var(--portal-radius-md); background:#000; display:block;" aria-label="Xem video kết quả"></video>
             </div>`
           : "";
 
@@ -29957,7 +29990,7 @@
 
         bodyMarkup = `${previewMarkup}
         <div class="portal-form-footer" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;">
-          <a class="portal-button portal-button--primary" href="${safeText(effectiveDownloadHref)}" download="video_${safeText(jobId)}.mp4" aria-label="Tải video">Tải video</a>
+          <a class="portal-button portal-button--primary" href="${safeText(effectiveDownloadHref)}" rel="noreferrer" download="video_${safeText(jobId)}.mp4" aria-label="Tải video">Tải video</a>
           <a class="portal-button portal-button--quiet" href="/jobs/${encodeURIComponent(jobId)}">Xem trong Job Center</a>
           <button class="portal-button portal-button--quiet" type="button" data-portal-action="product-video-new">Tạo video khác</button>
         </div>`;
