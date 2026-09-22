@@ -611,4 +611,3 @@ def test_17_fastapi_http_endpoints_and_cross_user_security():
     # User 2 calling /jobs/{job_id} must receive 403
     cross_res2 = client2.get(f"/api/v1/jobs/{job_id}")
     assert cross_res2.status_code == 403
-
