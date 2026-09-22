@@ -205,7 +205,8 @@ def create_or_replay_product_video_job(
             SELECT id, request_id, account_id, product_key, routing_product_key,
                    prompt, aspect_ratio, duration_seconds, quality_tier, scene_count,
                    status, status_reason, idempotency_key_hash, payload_hash,
-                   bridge_envelope, output_metadata, created_at, updated_at
+                   bridge_envelope, output_metadata, created_at, updated_at,
+                   worker_id, claimed_at, lease_expires_at, attempts, output_url
             FROM web_product_video_jobs
             WHERE account_id = ? AND (
                 (? != '' AND request_id = ?)
@@ -319,6 +320,14 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
     except Exception:
         output_meta = None
 
+    status_str = str(row[10])
+    is_completed = status_str == "completed"
+    output_url_val = (
+        str(row[22])
+        if len(row) > 22 and row[22]
+        else (f"/api/v1/assets/{row[0]}/download" if is_completed else None)
+    )
+
     return {
         "id": str(row[0]),
         "request_id": str(row[1]),
@@ -330,17 +339,22 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
         "duration_seconds": int(row[7]),
         "quality_tier": int(row[8]),
         "scene_count": int(row[9]),
-        "status": str(row[10]),
+        "status": status_str,
         "status_reason": str(row[11]),
-        "output_available": False,
-        "download_ready": False,
-        "delivery_ready": False,
-        "output": None,
+        "output_available": is_completed,
+        "download_ready": is_completed,
+        "delivery_ready": is_completed,
+        "output": output_url_val if is_completed else None,
         "output_metadata": output_meta,
         "created_at": str(row[16]),
         "updated_at": str(row[17]),
         "bridge_envelope": env,
         "idempotent_replay": idempotent_replay,
+        "worker_id": str(row[18]) if len(row) > 18 and row[18] else None,
+        "claimed_at": str(row[19]) if len(row) > 19 and row[19] else None,
+        "lease_expires_at": str(row[20]) if len(row) > 20 and row[20] else None,
+        "attempts": int(row[21]) if len(row) > 21 and row[21] is not None else 0,
+        "output_url": output_url_val if is_completed else None,
     }
 
 
@@ -357,7 +371,8 @@ def get_product_video_job(account_id: str, job_id_or_request_id: str) -> dict[st
             SELECT id, request_id, account_id, product_key, routing_product_key,
                    prompt, aspect_ratio, duration_seconds, quality_tier, scene_count,
                    status, status_reason, idempotency_key_hash, payload_hash,
-                   bridge_envelope, output_metadata, created_at, updated_at
+                   bridge_envelope, output_metadata, created_at, updated_at,
+                   worker_id, claimed_at, lease_expires_at, attempts, output_url
             FROM web_product_video_jobs
             WHERE account_id = ? AND (id = ? OR request_id = ?)
             LIMIT 1
@@ -402,7 +417,8 @@ def list_product_video_jobs(account_id: str, limit: int = 100) -> list[dict[str,
             SELECT id, request_id, account_id, product_key, routing_product_key,
                    prompt, aspect_ratio, duration_seconds, quality_tier, scene_count,
                    status, status_reason, idempotency_key_hash, payload_hash,
-                   bridge_envelope, output_metadata, created_at, updated_at
+                   bridge_envelope, output_metadata, created_at, updated_at,
+                   worker_id, claimed_at, lease_expires_at, attempts, output_url
             FROM web_product_video_jobs
             WHERE account_id = ?
             ORDER BY created_at DESC LIMIT ?
@@ -415,6 +431,9 @@ def list_product_video_jobs(account_id: str, limit: int = 100) -> list[dict[str,
 
 def product_video_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
     """Adapt a Product Video job record for inclusion in generic GET /api/v1/jobs."""
+    is_completed = job.get("status") == "completed"
+    is_processing = job.get("status") == "processing"
+    source_state = "completed" if is_completed else ("processing_by_worker" if is_processing else "queued_locally")
     return {
         "id": job["id"],
         "feature": "video_ai_prompt",
@@ -423,13 +442,14 @@ def product_video_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
         "status_reason": job["status_reason"],
         "created_at": job["created_at"],
         "updated_at": job["updated_at"],
-        "output_available": False,
-        "download_ready": False,
-        "delivery_ready": False,
+        "output_available": is_completed,
+        "download_ready": is_completed,
+        "delivery_ready": is_completed,
         "source": "web_canonical_bridge",
-        "source_state": "queued_locally",
+        "source_state": source_state,
         "native_kind": "product-video-job",
-        "output": None,
+        "output": job.get("output") if is_completed else None,
+        "output_metadata": job.get("output_metadata"),
         "summary": {
             "prompt": job.get("prompt", "")[:100],
             "aspect_ratio": job.get("aspect_ratio", ""),
