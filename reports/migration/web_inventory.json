@@ -70,7 +70,7 @@
     {
       "file": "copyfast_multi_scene_film_job_bridge.py",
       "kind": "function",
-      "line": 523,
+      "line": 521,
       "target": "_format_multi_scene_film_job_record"
     },
     {
@@ -232,7 +232,7 @@
     {
       "file": "copyfast_multi_scene_film_job_bridge.py",
       "kind": "function",
-      "line": 297,
+      "line": 295,
       "target": "create_or_replay_multi_scene_film_job"
     },
     {
@@ -292,7 +292,7 @@
     {
       "file": "copyfast_multi_scene_film_job_bridge.py",
       "kind": "function",
-      "line": 130,
+      "line": 128,
       "target": "generate_multi_scene_film_job_id"
     },
     {
@@ -316,7 +316,7 @@
     {
       "file": "copyfast_multi_scene_film_job_bridge.py",
       "kind": "function",
-      "line": 422,
+      "line": 420,
       "target": "get_multi_scene_film_job"
     },
     {
@@ -382,7 +382,7 @@
     {
       "file": "copyfast_multi_scene_film_job_bridge.py",
       "kind": "function",
-      "line": 463,
+      "line": 461,
       "target": "is_multi_scene_film_job_other_account"
     },
     {
@@ -418,7 +418,7 @@
     {
       "file": "copyfast_multi_scene_film_job_bridge.py",
       "kind": "function",
-      "line": 441,
+      "line": 439,
       "target": "list_multi_scene_film_jobs"
     },
     {
@@ -478,7 +478,7 @@
     {
       "file": "copyfast_multi_scene_film_job_bridge.py",
       "kind": "function",
-      "line": 484,
+      "line": 482,
       "target": "multi_scene_film_job_to_native_compat"
     },
     {
@@ -4331,13 +4331,13 @@
     },
     {
       "file": "copyfast_multi_scene_film_job_bridge.py",
-      "line": 257,
+      "line": 255,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_multi_scene_film_jobs"
     },
     {
       "file": "copyfast_multi_scene_film_job_bridge.py",
-      "line": 368,
+      "line": 366,
       "operation": "INSERT INTO",
       "table": "web_multi_scene_film_jobs"
     },
@@ -15565,7 +15565,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 237,
   "source_files_scanned": 237,
-  "source_fingerprint_sha256": "5a91514572c2dd092813e92cae8a9bad3165da9f100244d4646ce53e7de0f7cd",
+  "source_fingerprint_sha256": "06c3f394f12ac1c578c9363c2eef972d4a0ecc89cf4bd19d7e31d251f8d702c8",
   "source_root": "repository-root",
   "ui_path_references": [
     {
