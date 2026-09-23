@@ -76,7 +76,7 @@
     {
       "file": "copyfast_video_ai_image_job_bridge.py",
       "kind": "function",
-      "line": 435,
+      "line": 488,
       "target": "_format_public_job"
     },
     {
@@ -220,7 +220,7 @@
     {
       "file": "copyfast_video_ai_image_job_bridge.py",
       "kind": "function",
-      "line": 270,
+      "line": 323,
       "target": "create_or_replay_video_ai_image_job"
     },
     {
@@ -262,7 +262,7 @@
     {
       "file": "copyfast_video_ai_image_job_bridge.py",
       "kind": "function",
-      "line": 218,
+      "line": 271,
       "target": "generate_video_ai_image_job_id"
     },
     {
@@ -286,7 +286,7 @@
     {
       "file": "copyfast_video_ai_image_job_bridge.py",
       "kind": "function",
-      "line": 484,
+      "line": 538,
       "target": "get_video_ai_image_job"
     },
     {
@@ -316,7 +316,7 @@
     {
       "file": "copyfast_video_ai_image_job_bridge.py",
       "kind": "function",
-      "line": 513,
+      "line": 567,
       "target": "is_video_ai_image_job_other_account"
     },
     {
@@ -352,7 +352,7 @@
     {
       "file": "copyfast_video_ai_image_job_bridge.py",
       "kind": "function",
-      "line": 533,
+      "line": 587,
       "target": "list_video_ai_image_jobs"
     },
     {
@@ -466,7 +466,7 @@
     {
       "file": "copyfast_video_ai_image_job_bridge.py",
       "kind": "function",
-      "line": 560,
+      "line": 614,
       "target": "video_ai_image_job_to_native_compat"
     },
     {
@@ -5957,13 +5957,13 @@
     },
     {
       "file": "copyfast_video_ai_image_job_bridge.py",
-      "line": 227,
+      "line": 280,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_video_ai_image_jobs"
     },
     {
       "file": "copyfast_video_ai_image_job_bridge.py",
-      "line": 374,
+      "line": 427,
       "operation": "INSERT INTO",
       "table": "web_video_ai_image_jobs"
     },
@@ -15353,7 +15353,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 235,
   "source_files_scanned": 235,
-  "source_fingerprint_sha256": "3ecea20e0ebb1b3ec2fe0b2fa03d7bef64ec214a6dd072a12dee127e818f04fb",
+  "source_fingerprint_sha256": "bc684bcfdad62f0e6c0336cde7cb45a8213daa38fd0f85603f51324b2c95e8de",
   "source_root": "repository-root",
   "ui_path_references": [
     {
