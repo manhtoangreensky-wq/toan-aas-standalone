@@ -398,8 +398,13 @@ def complete_product_video_job(
 
     now = now_dt or datetime.now(timezone.utc)
     now_iso = now.isoformat()
-    effective_url = str(output_url or "").strip() or f"/api/v1/assets/{clean_job}/download"
-    if not is_safe_product_video_output_url(effective_url):
+    clean_url = str(output_url or "").strip()
+    if not clean_url:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="URL output video không được để trống: OUTPUT_URL_REQUIRED",
+        )
+    if not is_safe_product_video_output_url(clean_url):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="URL output video không an toàn hoặc không hợp lệ: UNSAFE_OUTPUT_URL",
@@ -447,7 +452,7 @@ def complete_product_video_job(
                 STATUS_COMPLETED,
                 STATUS_REASON_COMPLETED,
                 meta_json,
-                effective_url,
+                clean_url,
                 now_iso,
                 clean_job,
                 clean_worker,
@@ -709,11 +714,13 @@ def _format_claimed_job(row: tuple) -> dict[str, Any]:
 
     status_str = str(row[10])
     is_completed = status_str == STATUS_COMPLETED
-    output_url_val = (
-        str(row[22])
+    persisted_output_url = (
+        str(row[22]).strip()
         if len(row) > 22 and row[22]
-        else (f"/api/v1/assets/{row[0]}/download" if is_completed else None)
+        else ""
     )
+    has_real_output = bool(is_completed and persisted_output_url)
+    output_url_val = persisted_output_url if has_real_output else None
 
     return {
         "id": str(row[0]),
@@ -729,10 +736,10 @@ def _format_claimed_job(row: tuple) -> dict[str, Any]:
         "scene_count": int(row[9]),
         "status": status_str,
         "status_reason": str(row[11]),
-        "output_available": is_completed,
-        "download_ready": is_completed,
-        "delivery_ready": is_completed,
-        "output": output_url_val if is_completed else None,
+        "output_available": has_real_output,
+        "download_ready": has_real_output,
+        "delivery_ready": has_real_output,
+        "output": output_url_val,
         "output_metadata": output_meta,
         "created_at": str(row[16]),
         "updated_at": str(row[17]),
@@ -741,7 +748,7 @@ def _format_claimed_job(row: tuple) -> dict[str, Any]:
         "claimed_at": str(row[19]) if len(row) > 19 and row[19] else None,
         "lease_expires_at": str(row[20]) if len(row) > 20 and row[20] else None,
         "attempts": int(row[21]) if len(row) > 21 and row[21] is not None else 0,
-        "output_url": output_url_val if is_completed else None,
+        "output_url": output_url_val,
         "payload": {
             "prompt": str(row[5]),
             "aspect_ratio": str(row[6]),

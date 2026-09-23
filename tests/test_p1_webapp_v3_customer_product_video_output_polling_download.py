@@ -489,6 +489,7 @@ def test_12_download_redirect_contract():
 
 def test_13_missing_artifact_fail_closed():
     """Completed job with missing output URL returns error, not broken download button."""
+    import subprocess
     client = TestClient(app)
     _, _, headers = _create_test_session("acc-missing-art-001", role="user")
 
@@ -504,9 +505,86 @@ def test_13_missing_artifact_fail_closed():
     res = client.get(f"/api/v1/features/video_ai_prompt/jobs/{job_id}/download", headers=headers)
     assert res.status_code == 409
 
-    # In portal.js: missing artifact branch renders failure alert
-    assert "Lỗi phân phối file kết quả" in PORTAL_JS
-    assert "Tác vụ được báo cáo hoàn tất nhưng file video không khả dụng để tải hoặc URL không an toàn." in PORTAL_JS
+    # Now force job to status='completed' but output_url=NULL in DB
+    with transaction() as conn:
+        conn.execute(
+            "UPDATE web_product_video_jobs SET status = 'completed', output_url = NULL, updated_at = ? WHERE id = ?",
+            (utc_now(), job_id),
+        )
+
+    # 1. Job bridge readback fails closed: no synthetic fallback, output_available=False
+    public_job = bridge.get_product_video_job("acc-missing-art-001", job_id)
+    assert public_job is not None
+    assert public_job["status"] == "completed"
+    assert public_job["output_available"] is False
+    assert public_job["download_ready"] is False
+    assert public_job["delivery_ready"] is False
+    assert public_job["output"] is None
+    assert public_job["output_url"] is None
+
+    # 2. Native compat adapter inherits fail-closed flags
+    native_compat = bridge.product_video_job_to_native_compat(public_job)
+    assert native_compat["output_available"] is False
+    assert native_compat["download_ready"] is False
+    assert native_compat["delivery_ready"] is False
+    assert native_compat["output"] is None
+
+    # 3. HTTP readback endpoint returns truthful fail-closed status
+    poll_res = client.get(f"/api/v1/features/video_ai_prompt/jobs/{job_id}", headers=headers)
+    assert poll_res.status_code == 200
+    poll_data = poll_res.json()["data"]
+    assert poll_data["status"] == "completed"
+    assert poll_data["output_available"] is False
+    assert poll_data["download_ready"] is False
+    assert poll_data["output"] is None
+
+    # 4. HTTP download route rejects with 409 Conflict
+    res_dl = client.get(f"/api/v1/features/video_ai_prompt/jobs/{job_id}/download", headers=headers)
+    assert res_dl.status_code == 409
+    assert "File video chưa hoàn thành hoặc chưa sẵn sàng để tải" in str(res_dl.json())
+
+    # 5. Portal.js rendering execution via Node.js
+    node_render_test = f"""
+    const fs = require('fs');
+    const portalJs = fs.readFileSync({json.dumps(str(PORTAL_JS_PATH))}, 'utf-8');
+
+    function safeText(value, fallback) {{
+      if (typeof value !== 'string') return fallback || '';
+      return value.replace(/[&<>'"]/g, (c) => ({{ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }}[c]));
+    }}
+    function badge(status) {{
+      return status ? '<span class="portal-badge" data-status="' + status + '">' + status + '</span>' : '';
+    }}
+
+    const safeUrlStart = portalJs.indexOf('function isSafeOutputUrl(');
+    const safeUrlEnd = portalJs.indexOf('function renderProductVideoJobOutput(');
+    eval(portalJs.slice(safeUrlStart, safeUrlEnd));
+
+    const renderStart = portalJs.indexOf('function renderProductVideoJobOutput(');
+    const renderEnd = portalJs.indexOf('function renderWorkspace(');
+    eval(portalJs.slice(renderStart, renderEnd));
+
+    const job = {json.dumps(public_job)};
+    const html = renderProductVideoJobOutput({{ status: job.status, data: job }}, {{}});
+
+    const out = {{
+      hasDeliveryError: html.includes('Lỗi phân phối file kết quả'),
+      hasDeliveryErrorDesc: html.includes('Tác vụ được báo cáo hoàn tất nhưng file video không khả dụng để tải hoặc URL không an toàn.'),
+      hasDownloadBtn: html.includes('aria-label="Tải video"') || html.includes('download='),
+      hasVideoPlayer: html.includes('portal-video-player'),
+      hasCompletedHeader: html.includes('Hoàn tất'),
+      hasFailedHeader: html.includes('Thất bại'),
+    }};
+    console.log(JSON.stringify(out));
+    """
+    node_res = subprocess.run(["node", "-e", node_render_test], capture_output=True, text=True, check=True)
+    ui_eval = json.loads(node_res.stdout.strip())
+    assert ui_eval["hasDeliveryError"] is True
+    assert ui_eval["hasDeliveryErrorDesc"] is True
+    assert ui_eval["hasDownloadBtn"] is False
+    assert ui_eval["hasVideoPlayer"] is False
+    assert ui_eval["hasCompletedHeader"] is True
+    assert ui_eval["hasFailedHeader"] is False
 
 
 # ─── TEST 14: ACCESSIBILITY & MOBILE CONTRACTS ──────────────────────────────
@@ -540,7 +618,7 @@ def test_15_master_inventory_matrix_invariant_preserved():
 # ─── TEST 16: ZERO SYNTHETIC OUTPUT IN PRODUCTION CODE ──────────────────────
 
 def test_16_zero_synthetic_output_in_production_code():
-    """Verify no synthetic fixture URLs or mock video files are hardcoded in production source."""
+    """Verify no synthetic fixture URLs, mock video files, or fake asset fallbacks in production source."""
     for prod_file in [
         ROOT / "copyfast_api.py",
         ROOT / "copyfast_product_video_job_bridge.py",
@@ -551,6 +629,14 @@ def test_16_zero_synthetic_output_in_production_code():
         content = prod_file.read_text(encoding="utf-8")
         assert "fixture.invalid" not in content, f"Found fixture.invalid in {prod_file.name}"
         assert "test_output_video.mp4" not in content, f"Found synthetic output in {prod_file.name}"
+
+    # Verify zero synthetic /api/v1/assets/ fallbacks in Product Video bridge and dispatcher
+    for pv_file in [
+        ROOT / "copyfast_product_video_job_bridge.py",
+        ROOT / "copyfast_product_video_dispatcher.py",
+    ]:
+        text = pv_file.read_text(encoding="utf-8")
+        assert "/api/v1/assets/" not in text, f"Found synthetic asset fallback in {pv_file.name}"
 
 
 # ─── TEST 17: ONE TERMINAL STATUS AUTHORITY & ZERO MISMATCH ──────────────────
@@ -815,3 +901,77 @@ def test_20_polling_stop_and_stale_response_protection_contracts():
     # Verify regression blocked for all combinations
     for item in data["regressionAttempts"]:
         assert item["blocked"] is True, f"Status regression from {item['from']} to {item['to']} was NOT blocked!"
+
+
+# ─── TEST 21: DISPATCHER COMPLETE REQUIRES REAL OUTPUT URL ───────────────────
+
+def test_21_dispatcher_complete_requires_output_url_and_safe_url():
+    """Verify complete_product_video_job strictly rejects empty or unsafe output_url with HTTP 422."""
+    from fastapi import HTTPException
+
+    _create_test_session("acc-disp-comp-001", role="user")
+    job = bridge.create_or_replay_product_video_job(
+        account_id="acc-disp-comp-001",
+        payload={"prompt": "Video complete dispatcher test", "aspect_ratio": "9:16", "duration_seconds": 5, "quality_tier": 300},
+        idempotency_key="idemp-disp-comp-001",
+    )
+    job_id = job["id"]
+
+    claimed = dispatcher.claim_product_video_job(worker_id="worker-c2-01", lease_seconds=120)
+    assert claimed is not None
+    assert claimed["id"] == job_id
+
+    synth_meta = {
+        "format": "mp4",
+        "codec": "h264",
+        "file_size_bytes": 1048576,
+        "duration_seconds": 5.0,
+        "width": 1080,
+        "height": 1920,
+    }
+
+    # 1. Empty output_url is rejected with 422 OUTPUT_URL_REQUIRED
+    with pytest.raises(HTTPException) as exc_info:
+        dispatcher.complete_product_video_job(
+            job_id=job_id,
+            worker_id="worker-c2-01",
+            output_metadata=synth_meta,
+            output_url="",
+        )
+    assert exc_info.value.status_code == 422
+    assert "OUTPUT_URL_REQUIRED" in exc_info.value.detail
+
+    # 2. Unsafe output_url (javascript:) is rejected with 422 UNSAFE_OUTPUT_URL
+    with pytest.raises(HTTPException) as exc_info:
+        dispatcher.complete_product_video_job(
+            job_id=job_id,
+            worker_id="worker-c2-01",
+            output_metadata=synth_meta,
+            output_url="javascript:alert('xss')",
+        )
+    assert exc_info.value.status_code == 422
+    assert "UNSAFE_OUTPUT_URL" in exc_info.value.detail
+
+    # 3. Valid safe output_url succeeds and populates real delivery flags
+    valid_url = "https://fixture.invalid/artifacts/c2_verified.mp4"
+    res = dispatcher.complete_product_video_job(
+        job_id=job_id,
+        worker_id="worker-c2-01",
+        output_metadata=synth_meta,
+        output_url=valid_url,
+    )
+    assert res["status"] == "completed"
+    assert res["output_url"] == valid_url
+    assert res["output_available"] is True
+    assert res["download_ready"] is True
+    assert res["delivery_ready"] is True
+    assert res["output"] == valid_url
+
+    # 4. Verified public read model reflects completed state with delivery ready
+    public_job = bridge.get_product_video_job("acc-disp-comp-001", job_id)
+    assert public_job is not None
+    assert public_job["output_available"] is True
+    assert public_job["download_ready"] is True
+    assert public_job["delivery_ready"] is True
+    assert public_job["output"] == valid_url
+    assert public_job["output_url"] == valid_url
