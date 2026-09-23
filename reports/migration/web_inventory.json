@@ -76,7 +76,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 404,
+      "line": 403,
       "target": "_format_public_job"
     },
     {
@@ -220,7 +220,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 257,
+      "line": 254,
       "target": "create_or_replay_video_trend_job"
     },
     {
@@ -262,7 +262,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 220,
+      "line": 217,
       "target": "generate_video_trend_job_id"
     },
     {
@@ -286,7 +286,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 446,
+      "line": 445,
       "target": "get_video_trend_job"
     },
     {
@@ -316,7 +316,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 473,
+      "line": 472,
       "target": "is_video_trend_job_other_account"
     },
     {
@@ -352,7 +352,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 493,
+      "line": 492,
       "target": "list_video_trend_jobs"
     },
     {
@@ -466,7 +466,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 518,
+      "line": 517,
       "target": "video_trend_job_to_native_compat"
     },
     {
@@ -6227,13 +6227,13 @@
     },
     {
       "file": "copyfast_video_trend_job_bridge.py",
-      "line": 229,
+      "line": 226,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_video_trend_jobs"
     },
     {
       "file": "copyfast_video_trend_job_bridge.py",
-      "line": 353,
+      "line": 352,
       "operation": "INSERT INTO",
       "table": "web_video_trend_jobs"
     },
@@ -15353,7 +15353,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 235,
   "source_files_scanned": 235,
-  "source_fingerprint_sha256": "43e8f1e294be6547194fd09062d75d3b4b288b97995f553de17810b5ff1dda82",
+  "source_fingerprint_sha256": "796b03dbf90ea72c7b5066e0cb617eb698422f3c4c655a0df3f53a084da66ffb",
   "source_root": "repository-root",
   "ui_path_references": [
     {
