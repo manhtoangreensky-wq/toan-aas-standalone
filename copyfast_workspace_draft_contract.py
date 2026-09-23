@@ -15,12 +15,12 @@ from copyfast_registry import FEATURE_BY_KEY
 
 FEATURE_TEXT_REQUIRED = frozenset({
     "chat", "prompt_studio", "caption", "hashtag", "hook", "script", "storyboard", "content_pack",
-    "image_create", "image_transform", "video_single", "video_ai_prompt", "video_product", "video_trend",
+    "image_create", "image_transform", "video_single", "video_ai_prompt", "video_ai_image", "video_product", "video_trend",
     "video_text_to_video", "video_quick", "video_image_to_video", "video_multiscene", "video_long",
     "voice_tts", "voice_saved_tts", "music_background", "music_song", "music_sfx",
 })
 FEATURE_UPLOAD_REQUIRED = frozenset({
-    "image_edit", "image_upscale", "image_transform", "image_remove_background", "video_image_to_video",
+    "image_edit", "image_upscale", "image_transform", "image_remove_background", "video_image_to_video", "video_ai_image",
     "voice_clone", "music_upload", "subtitle_asr", "subtitle_create", "asr", "subtitle_translate",
     "video_dub", "documents", "documents_pdf", "documents_ocr", "documents_merge", "documents_split",
     "documents_compress", "documents_translate",

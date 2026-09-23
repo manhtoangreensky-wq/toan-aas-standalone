@@ -6361,6 +6361,43 @@ def ensure_copyfast_schema() -> None:
                 conn.execute(f"ALTER TABLE web_product_video_jobs ADD COLUMN {col_name} {col_type}")
             except sqlite3.OperationalError:
                 pass
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_video_ai_image_jobs (
+                id TEXT PRIMARY KEY,
+                request_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                product_key TEXT NOT NULL DEFAULT 'video_ai_image',
+                routing_product_key TEXT NOT NULL DEFAULT 'video_ai_canonical',
+                prompt TEXT NOT NULL,
+                source_image_url TEXT NOT NULL,
+                aspect_ratio TEXT NOT NULL,
+                duration_seconds INTEGER NOT NULL,
+                quality_tier INTEGER NOT NULL,
+                scene_count INTEGER NOT NULL DEFAULT 1,
+                platform TEXT,
+                goal TEXT,
+                status TEXT NOT NULL DEFAULT 'queued',
+                status_reason TEXT NOT NULL DEFAULT 'AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION',
+                idempotency_key_hash TEXT,
+                payload_hash TEXT NOT NULL,
+                bridge_envelope TEXT NOT NULL,
+                output_metadata TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                worker_id TEXT,
+                claimed_at TEXT,
+                lease_expires_at TEXT,
+                attempts INTEGER NOT NULL DEFAULT 0,
+                output_url TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_video_ai_image_jobs_account_created ON web_video_ai_image_jobs(account_id, created_at DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_video_ai_image_jobs_request ON web_video_ai_image_jobs(request_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_video_ai_image_jobs_account_idempotency ON web_video_ai_image_jobs(account_id, idempotency_key_hash)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_video_ai_image_jobs_status_created ON web_video_ai_image_jobs(status, created_at ASC)")
         try:
             import copyfast_pricing_policy
             copyfast_pricing_policy.ensure_pricing_schema(conn)
