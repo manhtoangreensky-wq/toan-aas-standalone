@@ -592,3 +592,161 @@ def test_18_master_matrix_invariants():
     assert entry["web_customer_entrypoint"] == "/video/image-to-video"
     assert entry["web_api"] == "/api/v1/features/video_ai_image/*"
     assert entry["bot_runtime_consumer"] == "services.video_tail9.PRODUCT_ADAPTERS['image_video']"
+
+
+# ─── TEST 19: MALFORMED COMPLETED WITHOUT ARTIFACT (FAIL-CLOSED) ──────────────
+
+def test_19_completed_without_artifact_fail_closed():
+    """Verify status=completed with output_url=NULL preserves fail-closed delivery truth.
+
+    Both canonical read and native compat must return:
+      status = 'completed'
+      output_available = False
+      download_ready = False
+      delivery_ready = False
+      output = None
+      output_url = None
+    """
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "vai_fc@test.local", "password": "secure-password-1234", "display_name": "VAI FailClosed"})
+    login = client.post("/api/v1/auth/login", json={"email": "vai_fc@test.local", "password": "secure-password-1234"})
+    assert login.status_code == 200
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf}
+
+    with read_transaction() as conn:
+        row = conn.execute("SELECT id FROM web_accounts WHERE email = 'vai_fc@test.local'").fetchone()
+        account_id = row[0]
+
+    payload = _valid_payload()
+    create_res = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload, "idempotency_key": "vai-fc-0001"},
+        headers=headers,
+    )
+    assert create_res.status_code == 200
+    job_id = create_res.json()["data"]["id"]
+
+    # Force malformed completed state: completed with NULL output_url
+    with transaction() as conn:
+        conn.execute("UPDATE web_video_ai_image_jobs SET status = 'completed', output_url = NULL WHERE id = ?", (job_id,))
+
+    # 1. Canonical job readback
+    canonical_job = bridge.get_video_ai_image_job(account_id, job_id)
+    assert canonical_job is not None
+    assert canonical_job["status"] == "completed"
+    assert canonical_job["output_available"] is False
+    assert canonical_job["download_ready"] is False
+    assert canonical_job["delivery_ready"] is False
+    assert canonical_job["output"] is None
+    assert canonical_job["output_url"] is None
+
+    # 2. Native compat projection
+    compat = bridge.video_ai_image_job_to_native_compat(canonical_job)
+    assert compat["status"] == "completed"
+    assert compat["output_available"] is False
+    assert compat["download_ready"] is False
+    assert compat["delivery_ready"] is False
+    assert compat["output"] is None
+
+    # 3. Generic list GET /api/v1/jobs
+    resp_list = client.get("/api/v1/jobs")
+    assert resp_list.status_code == 200
+    items = resp_list.json().get("data", {}).get("items", [])
+    matched = [i for i in items if i.get("id") == job_id]
+    assert len(matched) == 1
+    assert matched[0]["status"] == "completed"
+    assert matched[0]["output_available"] is False
+    assert matched[0]["download_ready"] is False
+    assert matched[0]["delivery_ready"] is False
+    assert matched[0]["output"] is None
+
+    # 4. Generic detail GET /api/v1/jobs/{job_id}
+    resp_detail = client.get(f"/api/v1/jobs/{job_id}")
+    assert resp_detail.status_code == 200
+    detail = resp_detail.json().get("data", {})
+    assert detail["status"] == "completed"
+    assert detail["output_available"] is False
+    assert detail["download_ready"] is False
+    assert detail["delivery_ready"] is False
+    assert detail["output"] is None
+
+
+# ─── TEST 20: VALID FUTURE ARTIFACT PROJECTION ────────────────────────────────
+
+def test_20_valid_future_artifact_projection():
+    """Verify status=completed with valid safe persisted output preserves canonical flags/output.
+
+    Both canonical read and native compat must return:
+      status = 'completed'
+      output_available = True
+      download_ready = True
+      delivery_ready = True
+      output = verified_url
+      output_url = verified_url
+    """
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "vai_art@test.local", "password": "secure-password-1234", "display_name": "VAI Artifact"})
+    login = client.post("/api/v1/auth/login", json={"email": "vai_art@test.local", "password": "secure-password-1234"})
+    assert login.status_code == 200
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf}
+
+    with read_transaction() as conn:
+        row = conn.execute("SELECT id FROM web_accounts WHERE email = 'vai_art@test.local'").fetchone()
+        account_id = row[0]
+
+    payload = _valid_payload()
+    create_res = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload, "idempotency_key": "vai-art-0001"},
+        headers=headers,
+    )
+    assert create_res.status_code == 200
+    job_id = create_res.json()["data"]["id"]
+
+    valid_url = "https://storage.toanaas.vn/videos/vaij_verified_render_output.mp4"
+
+    # Persist completed state with valid output_url
+    with transaction() as conn:
+        conn.execute("UPDATE web_video_ai_image_jobs SET status = 'completed', output_url = ? WHERE id = ?", (valid_url, job_id))
+
+    # 1. Canonical job readback
+    canonical_job = bridge.get_video_ai_image_job(account_id, job_id)
+    assert canonical_job is not None
+    assert canonical_job["status"] == "completed"
+    assert canonical_job["output_available"] is True
+    assert canonical_job["download_ready"] is True
+    assert canonical_job["delivery_ready"] is True
+    assert canonical_job["output"] == valid_url
+    assert canonical_job["output_url"] == valid_url
+
+    # 2. Native compat projection
+    compat = bridge.video_ai_image_job_to_native_compat(canonical_job)
+    assert compat["status"] == "completed"
+    assert compat["output_available"] is True
+    assert compat["download_ready"] is True
+    assert compat["delivery_ready"] is True
+    assert compat["output"] == valid_url
+
+    # 3. Generic list GET /api/v1/jobs
+    resp_list = client.get("/api/v1/jobs")
+    assert resp_list.status_code == 200
+    items = resp_list.json().get("data", {}).get("items", [])
+    matched = [i for i in items if i.get("id") == job_id]
+    assert len(matched) == 1
+    assert matched[0]["status"] == "completed"
+    assert matched[0]["output_available"] is True
+    assert matched[0]["download_ready"] is True
+    assert matched[0]["delivery_ready"] is True
+    assert matched[0]["output"] == valid_url
+
+    # 4. Generic detail GET /api/v1/jobs/{job_id}
+    resp_detail = client.get(f"/api/v1/jobs/{job_id}")
+    assert resp_detail.status_code == 200
+    detail = resp_detail.json().get("data", {})
+    assert detail["status"] == "completed"
+    assert detail["output_available"] is True
+    assert detail["download_ready"] is True
+    assert detail["delivery_ready"] is True
+    assert detail["output"] == valid_url

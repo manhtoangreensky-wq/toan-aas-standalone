@@ -444,11 +444,9 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
 
     status_str = str(row[13])
     is_completed = status_str == "completed"
-    output_url_val = (
-        str(row[25])
-        if len(row) > 25 and row[25]
-        else (f"/api/v1/assets/{row[0]}/download" if is_completed else None)
-    )
+    persisted_output_url = str(row[25]).strip() if len(row) > 25 and row[25] else None
+    has_real_output = bool(is_completed and persisted_output_url)
+    output_url_val = persisted_output_url if has_real_output else None
 
     return {
         "id": str(row[0]),
@@ -466,10 +464,10 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
         "goal": str(row[12]) if row[12] else None,
         "status": status_str,
         "status_reason": str(row[14]),
-        "output_available": is_completed,
-        "download_ready": is_completed,
-        "delivery_ready": is_completed,
-        "output": output_url_val if is_completed else None,
+        "output_available": has_real_output,
+        "download_ready": has_real_output,
+        "delivery_ready": has_real_output,
+        "output": output_url_val,
         "output_metadata": output_meta,
         "created_at": str(row[19]),
         "updated_at": str(row[20]),
@@ -479,7 +477,7 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
         "claimed_at": str(row[22]) if len(row) > 22 and row[22] else None,
         "lease_expires_at": str(row[23]) if len(row) > 23 and row[23] else None,
         "attempts": int(row[24]) if len(row) > 24 and row[24] is not None else 0,
-        "output_url": output_url_val if is_completed else None,
+        "output_url": output_url_val,
     }
 
 
@@ -564,6 +562,12 @@ def video_ai_image_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
     is_completed = job.get("status") == "completed"
     is_processing = job.get("status") == "processing"
     source_state = "completed" if is_completed else ("processing_by_worker" if is_processing else "queued_locally")
+
+    canonical_output_available = bool(job.get("output_available"))
+    canonical_download_ready = bool(job.get("download_ready"))
+    canonical_delivery_ready = bool(job.get("delivery_ready"))
+    can_deliver = bool(canonical_output_available and canonical_delivery_ready)
+
     return {
         "id": job["id"],
         "feature": "video_ai_image",
@@ -572,13 +576,13 @@ def video_ai_image_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
         "status_reason": job["status_reason"],
         "created_at": job["created_at"],
         "updated_at": job["updated_at"],
-        "output_available": is_completed,
-        "download_ready": is_completed,
-        "delivery_ready": is_completed,
+        "output_available": canonical_output_available,
+        "download_ready": canonical_download_ready,
+        "delivery_ready": canonical_delivery_ready,
         "source": "web_canonical_bridge",
         "source_state": source_state,
         "native_kind": "video-ai-image-job",
-        "output": job.get("output") if is_completed else None,
+        "output": job.get("output") if can_deliver else None,
         "output_metadata": job.get("output_metadata"),
         "summary": {
             "prompt": job.get("prompt", "")[:100],
