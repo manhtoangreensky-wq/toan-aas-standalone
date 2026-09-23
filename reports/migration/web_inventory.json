@@ -76,7 +76,7 @@
     {
       "file": "copyfast_video_long_job_bridge.py",
       "kind": "function",
-      "line": 453,
+      "line": 433,
       "target": "_format_public_job"
     },
     {
@@ -226,7 +226,7 @@
     {
       "file": "copyfast_video_long_job_bridge.py",
       "kind": "function",
-      "line": 305,
+      "line": 285,
       "target": "create_or_replay_video_long_job"
     },
     {
@@ -280,7 +280,7 @@
     {
       "file": "copyfast_video_long_job_bridge.py",
       "kind": "function",
-      "line": 150,
+      "line": 139,
       "target": "generate_video_long_job_id"
     },
     {
@@ -310,7 +310,7 @@
     {
       "file": "copyfast_video_long_job_bridge.py",
       "kind": "function",
-      "line": 520,
+      "line": 500,
       "target": "get_video_long_job"
     },
     {
@@ -352,7 +352,7 @@
     {
       "file": "copyfast_video_long_job_bridge.py",
       "kind": "function",
-      "line": 544,
+      "line": 524,
       "target": "is_video_long_job_other_account"
     },
     {
@@ -394,7 +394,7 @@
     {
       "file": "copyfast_video_long_job_bridge.py",
       "kind": "function",
-      "line": 562,
+      "line": 542,
       "target": "list_video_long_jobs"
     },
     {
@@ -520,7 +520,7 @@
     {
       "file": "copyfast_video_long_job_bridge.py",
       "kind": "function",
-      "line": 585,
+      "line": 565,
       "target": "video_long_job_to_native_compat"
     },
     {
@@ -6017,13 +6017,13 @@
     },
     {
       "file": "copyfast_video_long_job_bridge.py",
-      "line": 277,
+      "line": 257,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_video_long_jobs"
     },
     {
       "file": "copyfast_video_long_job_bridge.py",
-      "line": 405,
+      "line": 385,
       "operation": "INSERT INTO",
       "table": "web_video_long_jobs"
     },
@@ -15459,7 +15459,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 236,
   "source_files_scanned": 236,
-  "source_fingerprint_sha256": "fca1be426fd3ae6acb8e18a6f0e8229d2aec53236a5173d1c5399f9b9b670aae",
+  "source_fingerprint_sha256": "1739499062b78b302a0235d1c10d6ce34a51d490d23b34ccff130aaa9cbdf376",
   "source_root": "repository-root",
   "ui_path_references": [
     {
