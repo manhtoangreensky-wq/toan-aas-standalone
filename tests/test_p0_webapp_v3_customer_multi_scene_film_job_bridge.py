@@ -902,4 +902,3 @@ def test_y_api_endpoints_wired_and_owner_scoped():
         cookies=cookies2,
     )
     assert generic_detail_other.status_code == 403
-
