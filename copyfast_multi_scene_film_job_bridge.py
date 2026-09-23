@@ -84,8 +84,6 @@ ALLOWED_INPUT_FIELDS: frozenset[str] = frozenset({
     "tier",
     "quality_tier",
     "scene_count",
-    "idempotency_key",
-    "request_id",
 })
 
 FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED: frozenset[str] = frozenset({

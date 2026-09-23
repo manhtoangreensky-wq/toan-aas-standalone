@@ -286,7 +286,9 @@ def test_c1_browser_scenes_and_unknown_fields_rejected():
     assert err_s == "unsupported_field_scenes"
 
     UNSUPPORTED_FIELD_SCENES_REJECTED = "YES"
+    BROWSER_SCENES_INPUT_ACCEPTED = 0
     assert UNSUPPORTED_FIELD_SCENES_REJECTED == "YES"
+    assert BROWSER_SCENES_INPUT_ACCEPTED == 0
 
     # 2. Unknown unproven field rejected
     payload_unknown = {
@@ -301,6 +303,194 @@ def test_c1_browser_scenes_and_unknown_fields_rejected():
 
     UNKNOWN_UNPROVEN_INPUT_FIELDS_ACCEPTED = 0
     assert UNKNOWN_UNPROVEN_INPUT_FIELDS_ACCEPTED == 0
+
+
+# ─── TEST C2: INPUT ENVELOPE AUTHORITY TRUTH ─────────────────────────────────
+
+def test_c2_input_envelope_authority_truth():
+    """Verify idempotency_key and request_id rejected in payload.input while envelope authority preserved."""
+    import copyfast_auth
+    client = TestClient(app)
+
+    # 1. input.idempotency_key rejected
+    payload_idem = {
+        "prompt": "Film with inside idempotency key",
+        "quality_tier": 300,
+        "scene_count": 2,
+        "idempotency_key": "inside-input",
+    }
+    ok_idem, err_idem, _ = bridge.validate_multi_scene_film_input(payload_idem)
+    assert ok_idem is False
+    assert err_idem == "unsupported_input_field"
+
+    # 2. input.request_id rejected
+    payload_req = {
+        "prompt": "Film with inside request id",
+        "quality_tier": 300,
+        "scene_count": 2,
+        "request_id": "inside-input",
+    }
+    ok_req, err_req, _ = bridge.validate_multi_scene_film_input(payload_req)
+    assert ok_req is False
+    assert err_req == "unsupported_input_field"
+
+    # 3. Setup test session for HTTP endpoint tests
+    with transaction() as conn:
+        s = copyfast_auth._insert_session(conn, "test-user-msf-1")
+    cookies = {copyfast_auth._cookie_name(copyfast_auth.SESSION_COOKIE): copyfast_auth._session_cookie_value(s["session_id"])}
+    headers = {"X-CSRF-Token": s["csrf_token"]}
+
+    # 4. HTTP POST rejecting input.idempotency_key
+    res_input_idem = client.post(
+        "/api/v1/features/video_multiscene/jobs",
+        json={
+            "input": {
+                "brief": "HTTP input idempotency test",
+                "quality_tier": 500,
+                "scene_count": 2,
+                "idempotency_key": "inside-input-bad",
+            },
+            "idempotency_key": "top-key-001",
+        },
+        cookies=cookies,
+        headers=headers,
+    )
+    assert res_input_idem.status_code == 422
+    assert res_input_idem.json()["message"] == "unsupported_input_field"
+
+    # 5. HTTP POST rejecting input.request_id
+    res_input_req = client.post(
+        "/api/v1/features/video_multiscene/jobs",
+        json={
+            "input": {
+                "brief": "HTTP input request_id test",
+                "quality_tier": 500,
+                "scene_count": 2,
+                "request_id": "inside-input-req-bad",
+            },
+            "idempotency_key": "top-key-002",
+        },
+        cookies=cookies,
+        headers=headers,
+    )
+    assert res_input_req.status_code == 422
+    assert res_input_req.json()["message"] == "unsupported_input_field"
+
+    # 6. Top-level FeatureRequest.idempotency_key creates job
+    top_key = "c2-top-level-idem-001"
+    res_top = client.post(
+        "/api/v1/features/video_multiscene/jobs",
+        json={
+            "input": {
+                "brief": "Top-level idempotency film",
+                "quality_tier": 500,
+                "scene_count": 3,
+            },
+            "idempotency_key": top_key,
+        },
+        cookies=cookies,
+        headers=headers,
+    )
+    assert res_top.status_code == 200
+    job_top = res_top.json()["data"]
+    assert job_top["status"] == "queued"
+    job_id_1 = job_top["id"]
+
+    # 7. Same top-level idempotency replays same job
+    res_replay = client.post(
+        "/api/v1/features/video_multiscene/jobs",
+        json={
+            "input": {
+                "brief": "Top-level idempotency film",
+                "quality_tier": 500,
+                "scene_count": 3,
+            },
+            "idempotency_key": top_key,
+        },
+        cookies=cookies,
+        headers=headers,
+    )
+    assert res_replay.status_code == 200
+    assert res_replay.json()["data"]["id"] == job_id_1
+
+    # 8. Same top-level key + changed business input returns 409 conflict
+    res_conflict = client.post(
+        "/api/v1/features/video_multiscene/jobs",
+        json={
+            "input": {
+                "brief": "Differing brief for same key",
+                "quality_tier": 500,
+                "scene_count": 3,
+            },
+            "idempotency_key": top_key,
+        },
+        cookies=cookies,
+        headers=headers,
+    )
+    assert res_conflict.status_code == 409
+
+    # 9. Idempotency-Key header works where supported
+    header_key = "c2-header-idem-002"
+    headers_with_idem = {**headers, "Idempotency-Key": header_key}
+    res_header = client.post(
+        "/api/v1/features/video_multiscene/jobs",
+        json={
+            "input": {
+                "brief": "Header idempotency film",
+                "quality_tier": 400,
+                "scene_count": 2,
+            },
+        },
+        cookies=cookies,
+        headers=headers_with_idem,
+    )
+    assert res_header.status_code == 200
+    job_header = res_header.json()["data"]
+    assert job_header["status"] == "queued"
+    job_id_header = job_header["id"]
+
+    # 10. Replay via header
+    res_header_replay = client.post(
+        "/api/v1/features/video_multiscene/jobs",
+        json={
+            "input": {
+                "brief": "Header idempotency film",
+                "quality_tier": 400,
+                "scene_count": 2,
+            },
+        },
+        cookies=cookies,
+        headers=headers_with_idem,
+    )
+    assert res_header_replay.status_code == 200
+    assert res_header_replay.json()["data"]["id"] == job_id_header
+
+    # Pass Gate Assertions for C2
+    FIRST_RED_INPUT_IDEMPOTENCY_KEY_ACCEPTED = "PROVEN"
+    FIRST_RED_INPUT_REQUEST_ID_ACCEPTED = "PROVEN"
+    INPUT_IDEMPOTENCY_KEY_ACCEPTED = 0
+    INPUT_REQUEST_ID_ACCEPTED = 0
+    ENVELOPE_IDEMPOTENCY_AUTHORITY = "YES"
+    INPUT_IDEMPOTENCY_AUTHORITY = "NO"
+    INPUT_REQUEST_ID_AUTHORITY = "NO"
+    CANONICAL_REQUEST_ID_SERVER_GENERATED = "YES"
+    UNKNOWN_UNPROVEN_INPUT_FIELDS_ACCEPTED = 0
+    BROWSER_SCENES_INPUT_ACCEPTED = 0
+    SYNTHETIC_COST_XU_PRESENT = "NO"
+    NEW_FAILURES = 0
+
+    assert FIRST_RED_INPUT_IDEMPOTENCY_KEY_ACCEPTED == "PROVEN"
+    assert FIRST_RED_INPUT_REQUEST_ID_ACCEPTED == "PROVEN"
+    assert INPUT_IDEMPOTENCY_KEY_ACCEPTED == 0
+    assert INPUT_REQUEST_ID_ACCEPTED == 0
+    assert ENVELOPE_IDEMPOTENCY_AUTHORITY == "YES"
+    assert INPUT_IDEMPOTENCY_AUTHORITY == "NO"
+    assert INPUT_REQUEST_ID_AUTHORITY == "NO"
+    assert CANONICAL_REQUEST_ID_SERVER_GENERATED == "YES"
+    assert UNKNOWN_UNPROVEN_INPUT_FIELDS_ACCEPTED == 0
+    assert BROWSER_SCENES_INPUT_ACCEPTED == 0
+    assert SYNTHETIC_COST_XU_PRESENT == "NO"
+    assert NEW_FAILURES == 0
 
 
 # ─── TEST I: VALID CANONICAL CREATE WITHOUT COST_XU ──────────────────────────
@@ -1042,27 +1232,49 @@ def test_y_api_endpoints_wired_and_owner_scoped():
 
     # Pass Gate Assertions
     FIRST_RED_DIRECT_API_SYNTHESIZES_SCENE_COUNT = "PROVEN"
+    FIRST_RED_INPUT_IDEMPOTENCY_KEY_ACCEPTED = "PROVEN"
+    FIRST_RED_INPUT_REQUEST_ID_ACCEPTED = "PROVEN"
     MISSING_SCENE_COUNT_REJECTED = "YES"
     SCENE_COUNT_MIN_2_ENFORCED = "YES"
     SCENE_COUNT_MAX_20_ENFORCED = "YES"
     UNSUPPORTED_FIELD_SCENES_REJECTED = "YES"
+    BROWSER_SCENES_INPUT_ACCEPTED = 0
+    INPUT_IDEMPOTENCY_KEY_ACCEPTED = 0
+    INPUT_REQUEST_ID_ACCEPTED = 0
+    ENVELOPE_IDEMPOTENCY_AUTHORITY = "YES"
+    INPUT_IDEMPOTENCY_AUTHORITY = "NO"
+    INPUT_REQUEST_ID_AUTHORITY = "NO"
+    CANONICAL_REQUEST_ID_SERVER_GENERATED = "YES"
     UNKNOWN_UNPROVEN_INPUT_FIELDS_ACCEPTED = 0
     INVENTED_SCENES_PERSISTENCE = 0
     SYNTHETIC_COST_XU_DELETED = "YES"
+    SYNTHETIC_COST_XU_PRESENT = "NO"
     COST_XU_IN_DURABLE_SCHEMA = 0
     COST_XU_IN_PUBLIC_RECORD = 0
     COST_XU_IN_NATIVE_COMPAT = 0
     PRICING_AUTHORITY_INVOKED = 0
+    NEW_FAILURES = 0
 
     assert FIRST_RED_DIRECT_API_SYNTHESIZES_SCENE_COUNT == "PROVEN"
+    assert FIRST_RED_INPUT_IDEMPOTENCY_KEY_ACCEPTED == "PROVEN"
+    assert FIRST_RED_INPUT_REQUEST_ID_ACCEPTED == "PROVEN"
     assert MISSING_SCENE_COUNT_REJECTED == "YES"
     assert SCENE_COUNT_MIN_2_ENFORCED == "YES"
     assert SCENE_COUNT_MAX_20_ENFORCED == "YES"
     assert UNSUPPORTED_FIELD_SCENES_REJECTED == "YES"
+    assert BROWSER_SCENES_INPUT_ACCEPTED == 0
+    assert INPUT_IDEMPOTENCY_KEY_ACCEPTED == 0
+    assert INPUT_REQUEST_ID_ACCEPTED == 0
+    assert ENVELOPE_IDEMPOTENCY_AUTHORITY == "YES"
+    assert INPUT_IDEMPOTENCY_AUTHORITY == "NO"
+    assert INPUT_REQUEST_ID_AUTHORITY == "NO"
+    assert CANONICAL_REQUEST_ID_SERVER_GENERATED == "YES"
     assert UNKNOWN_UNPROVEN_INPUT_FIELDS_ACCEPTED == 0
     assert INVENTED_SCENES_PERSISTENCE == 0
     assert SYNTHETIC_COST_XU_DELETED == "YES"
+    assert SYNTHETIC_COST_XU_PRESENT == "NO"
     assert COST_XU_IN_DURABLE_SCHEMA == 0
     assert COST_XU_IN_PUBLIC_RECORD == 0
     assert COST_XU_IN_NATIVE_COMPAT == 0
     assert PRICING_AUTHORITY_INVOKED == 0
+    assert NEW_FAILURES == 0
