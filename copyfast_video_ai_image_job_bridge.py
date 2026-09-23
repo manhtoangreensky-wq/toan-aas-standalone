@@ -35,6 +35,7 @@ import hmac
 import json
 import re
 from typing import Any
+from urllib.parse import urlsplit
 import uuid
 
 from fastapi import HTTPException
@@ -67,6 +68,58 @@ FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED = frozenset({
 })
 
 SAFE_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,255}$")
+SAFE_HOSTNAME_PATTERN = re.compile(r"^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
+FORBIDDEN_OUTPUT_URL_SCHEMES = frozenset({"javascript:", "vbscript:", "data:", "file:", "blob:", "about:"})
+
+
+def is_safe_video_output_url(url: Any) -> bool:
+    """Validate that a candidate video output/artifact URL is safe to deliver.
+
+    Fail-closed security contract:
+    - Must be a non-empty string with length <= 2048 and no leading/trailing whitespace.
+    - Zero control characters (ASCII < 32 or ASCII == 127).
+    - Zero backslashes (prevents authority/path confusion bypasses).
+    - Zero directory traversal sequences ('..' or '%2e' / '%2E').
+    - Strict scheme check: must be 'https' (lowercase).
+    - Rejects dangerous schemes: javascript:, vbscript:, data:, file:, blob:, about:, etc.
+    - Rejects embedded credentials (username, password, '@' in authority/netloc).
+    - Hostname must be non-empty, valid domain/label characters without illegal punctuation/spaces.
+    - Port must be None or 443.
+    """
+    if not isinstance(url, str):
+        return False
+    trimmed = url.strip()
+    if not trimmed or len(trimmed) > 2048 or trimmed != url:
+        return False
+    if any(ord(c) < 32 or ord(c) == 127 for c in trimmed):
+        return False
+    if "\\" in trimmed:
+        return False
+    lowered = trimmed.lower()
+    if ".." in lowered or "%2e" in lowered:
+        return False
+    if any(lowered.startswith(s) or s in lowered for s in FORBIDDEN_OUTPUT_URL_SCHEMES):
+        return False
+    try:
+        parsed = urlsplit(trimmed)
+    except Exception:
+        return False
+    if parsed.scheme.lower() != "https":
+        return False
+    if not parsed.netloc:
+        return False
+    if parsed.username or parsed.password or "@" in parsed.netloc:
+        return False
+    hostname = (parsed.hostname or "").lower()
+    if not hostname or not SAFE_HOSTNAME_PATTERN.fullmatch(hostname):
+        return False
+    try:
+        port = parsed.port
+    except ValueError:
+        return False
+    if port not in (None, 443):
+        return False
+    return True
 
 
 def _contains_authority_field(value: Any) -> bool:
@@ -444,9 +497,10 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
 
     status_str = str(row[13])
     is_completed = status_str == "completed"
-    persisted_output_url = str(row[25]).strip() if len(row) > 25 and row[25] else None
-    has_real_output = bool(is_completed and persisted_output_url)
-    output_url_val = persisted_output_url if has_real_output else None
+    raw_output_url = str(row[25]) if len(row) > 25 and row[25] is not None else None
+    is_safe_url = bool(raw_output_url and is_safe_video_output_url(raw_output_url))
+    has_real_output = bool(is_completed and is_safe_url)
+    output_url_val = raw_output_url if has_real_output else None
 
     return {
         "id": str(row[0]),
@@ -563,9 +617,12 @@ def video_ai_image_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
     is_processing = job.get("status") == "processing"
     source_state = "completed" if is_completed else ("processing_by_worker" if is_processing else "queued_locally")
 
-    canonical_output_available = bool(job.get("output_available"))
-    canonical_download_ready = bool(job.get("download_ready"))
-    canonical_delivery_ready = bool(job.get("delivery_ready"))
+    raw_output = job.get("output")
+    is_safe_output = bool(raw_output and is_safe_video_output_url(str(raw_output)))
+
+    canonical_output_available = bool(job.get("output_available")) and is_safe_output
+    canonical_download_ready = bool(job.get("download_ready")) and is_safe_output
+    canonical_delivery_ready = bool(job.get("delivery_ready")) and is_safe_output
     can_deliver = bool(canonical_output_available and canonical_delivery_ready)
 
     return {

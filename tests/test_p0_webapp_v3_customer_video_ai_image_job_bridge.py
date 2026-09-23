@@ -114,6 +114,11 @@ def test_01_first_red_documented_and_proven():
     # Supported canonical adapters contains video_ai_image
     assert "video_ai_image" in bridge.SUPPORTED_CANONICAL_JOB_ADAPTERS
 
+    # C2 FIRST RED documented:
+    # A malformed completed state with an unsafe output URL (e.g. javascript:alert(1))
+    # must fail closed and never project as delivery_ready / output_available.
+    assert bridge.is_safe_video_output_url("javascript:alert(1)") is False
+
 
 # ─── TEST 2: CANONICAL IDENTITY & ENTRYPOINT ─────────────────────────────────
 
@@ -750,3 +755,178 @@ def test_20_valid_future_artifact_projection():
     assert detail["download_ready"] is True
     assert detail["delivery_ready"] is True
     assert detail["output"] == valid_url
+
+
+# ─── TEST 21: UNSAFE ARTIFACT URL FAIL-CLOSED ────────────────────────────────
+
+def test_21_unsafe_artifact_url_fail_closed():
+    """Verify status=completed with unsafe persisted output_url fails closed.
+
+    Enforces that candidate output URLs cannot establish delivery truth
+    unless they pass the authoritative output-URL safety contract.
+
+    Covers representative unsafe forms:
+    - javascript: schemes (javascript:alert(1), javascript:void(0), JavaScript:prompt())
+    - vbscript: schemes (vbscript:msgbox(1))
+    - data: schemes (data:video/mp4;base64,AAAA)
+    - file: schemes (file:///etc/passwd, file://localhost/c$/boot.ini)
+    - blob: schemes (blob:https://example.com/uuid)
+    - about: schemes (about:blank)
+    - embedded credentials (https://user:pass@evil.com/video.mp4, https://attacker@toanaas.vn/video.mp4)
+    - path traversal (https://storage.toanaas.vn/videos/..%2f..%2fpasswords.txt, https://storage.toanaas.vn/videos/../video.mp4)
+    - backslash bypass (https://evil.com\\attacker.com/video.mp4)
+    - insecure HTTP (http://insecure.example.com/video.mp4)
+    - control characters & whitespace (\\n, leading/trailing spaces)
+    - port anomalies (https://storage.toanaas.vn:8080/video.mp4)
+    - malformed schemes/hosts (https://, not-a-url)
+
+    Both canonical read and native compat must return:
+      status = 'completed'
+      output_available = False
+      download_ready = False
+      delivery_ready = False
+      output = None
+      output_url = None
+    """
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "vai_unsafe@test.local", "password": "secure-password-1234", "display_name": "VAI Unsafe"})
+    login = client.post("/api/v1/auth/login", json={"email": "vai_unsafe@test.local", "password": "secure-password-1234"})
+    assert login.status_code == 200
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf}
+
+    with read_transaction() as conn:
+        row = conn.execute("SELECT id FROM web_accounts WHERE email = 'vai_unsafe@test.local'").fetchone()
+        account_id = row[0]
+
+    payload = _valid_payload()
+    create_res = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload, "idempotency_key": "vai-unsafe-0001"},
+        headers=headers,
+    )
+    assert create_res.status_code == 200
+    job_id = create_res.json()["data"]["id"]
+
+    unsafe_urls = [
+        "javascript:alert(1)",
+        "javascript:void(0)",
+        "JavaScript:prompt()",
+        "vbscript:msgbox(1)",
+        "data:video/mp4;base64,AAAA",
+        "file:///etc/passwd",
+        "file://localhost/c$/boot.ini",
+        "blob:https://example.com/uuid",
+        "about:blank",
+        "https://user:pass@evil.com/video.mp4",
+        "https://attacker@toanaas.vn/video.mp4",
+        "https://storage.toanaas.vn/videos/..%2f..%2fpasswords.txt",
+        "https://storage.toanaas.vn/videos/../video.mp4",
+        "https://evil.com\\attacker.com/video.mp4",
+        "http://insecure.example.com/video.mp4",
+        " https://storage.toanaas.vn/video.mp4",
+        "https://storage.toanaas.vn/video.mp4 ",
+        "https://storage.toanaas.vn/video\n.mp4",
+        "https://storage.toanaas.vn:8080/video.mp4",
+        "https://",
+    ]
+
+    for unsafe_url in unsafe_urls:
+        # Persist completed state with unsafe output_url
+        with transaction() as conn:
+            conn.execute(
+                "UPDATE web_video_ai_image_jobs SET status = 'completed', output_url = ? WHERE id = ?",
+                (unsafe_url, job_id),
+            )
+
+        # 1. Canonical job readback: must retain completed status but fail-closed delivery
+        canonical_job = bridge.get_video_ai_image_job(account_id, job_id)
+        assert canonical_job is not None, f"Failed to fetch job for {unsafe_url}"
+        assert canonical_job["status"] == "completed"
+        assert canonical_job["output_available"] is False, f"output_available must be False for {unsafe_url}"
+        assert canonical_job["download_ready"] is False, f"download_ready must be False for {unsafe_url}"
+        assert canonical_job["delivery_ready"] is False, f"delivery_ready must be False for {unsafe_url}"
+        assert canonical_job["output"] is None, f"output must be None for {unsafe_url}"
+        assert canonical_job["output_url"] is None, f"output_url must be None for {unsafe_url}"
+
+        # 2. Native compat projection: must inherit exact same fail-closed delivery truth
+        compat = bridge.video_ai_image_job_to_native_compat(canonical_job)
+        assert compat["status"] == "completed"
+        assert compat["output_available"] is False, f"compat output_available must be False for {unsafe_url}"
+        assert compat["download_ready"] is False, f"compat download_ready must be False for {unsafe_url}"
+        assert compat["delivery_ready"] is False, f"compat delivery_ready must be False for {unsafe_url}"
+        assert compat["output"] is None, f"compat output must be None for {unsafe_url}"
+
+        # 3. Generic list GET /api/v1/jobs
+        resp_list = client.get("/api/v1/jobs")
+        assert resp_list.status_code == 200
+        items = resp_list.json().get("data", {}).get("items", [])
+        matched = [i for i in items if i.get("id") == job_id]
+        assert len(matched) == 1
+        assert matched[0]["status"] == "completed"
+        assert matched[0]["output_available"] is False, f"generic list output_available must be False for {unsafe_url}"
+        assert matched[0]["download_ready"] is False, f"generic list download_ready must be False for {unsafe_url}"
+        assert matched[0]["delivery_ready"] is False, f"generic list delivery_ready must be False for {unsafe_url}"
+        assert matched[0]["output"] is None, f"generic list output must be None for {unsafe_url}"
+
+        # 4. Generic detail GET /api/v1/jobs/{job_id}
+        resp_detail = client.get(f"/api/v1/jobs/{job_id}")
+        assert resp_detail.status_code == 200
+        detail = resp_detail.json().get("data", {})
+        assert detail["status"] == "completed"
+        assert detail["output_available"] is False, f"generic detail output_available must be False for {unsafe_url}"
+        assert detail["download_ready"] is False, f"generic detail download_ready must be False for {unsafe_url}"
+        assert detail["delivery_ready"] is False, f"generic detail delivery_ready must be False for {unsafe_url}"
+        assert detail["output"] is None, f"generic detail output must be None for {unsafe_url}"
+
+
+# ─── TEST 22: IS_SAFE_VIDEO_OUTPUT_URL UNIT CONTRACT ─────────────────────────
+
+def test_22_is_safe_video_output_url_unit_contract():
+    """Unit test the authoritative output URL validator across all boundary cases."""
+    # Safe HTTPS URLs
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn/videos/output.mp4") is True
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn:443/videos/output.mp4") is True
+    assert bridge.is_safe_video_output_url("https://static.toanaas.vn/artifacts/video/vaij_12345.mp4?exp=1700000000&sig=abc") is True
+    assert bridge.is_safe_video_output_url("https://example.com/video.mp4") is True
+
+    # Dangerous schemes
+    assert bridge.is_safe_video_output_url("javascript:alert(1)") is False
+    assert bridge.is_safe_video_output_url("JavaScript:prompt()") is False
+    assert bridge.is_safe_video_output_url("javascript:void(0)") is False
+    assert bridge.is_safe_video_output_url("vbscript:msgbox(1)") is False
+    assert bridge.is_safe_video_output_url("data:video/mp4;base64,AAAA") is False
+    assert bridge.is_safe_video_output_url("file:///etc/passwd") is False
+    assert bridge.is_safe_video_output_url("file://localhost/c$/boot.ini") is False
+    assert bridge.is_safe_video_output_url("blob:https://example.com/uuid") is False
+    assert bridge.is_safe_video_output_url("about:blank") is False
+
+    # Insecure scheme
+    assert bridge.is_safe_video_output_url("http://insecure.example.com/video.mp4") is False
+    assert bridge.is_safe_video_output_url("ftp://files.example.com/video.mp4") is False
+
+    # Credential injection
+    assert bridge.is_safe_video_output_url("https://user:pass@evil.com/video.mp4") is False
+    assert bridge.is_safe_video_output_url("https://attacker@toanaas.vn/video.mp4") is False
+
+    # Traversal & backslash
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn/videos/..%2f..%2fpasswords.txt") is False
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn/videos/../video.mp4") is False
+    assert bridge.is_safe_video_output_url("https://evil.com\\attacker.com/video.mp4") is False
+
+    # Non-strings, empty, whitespace & control chars
+    assert bridge.is_safe_video_output_url(None) is False
+    assert bridge.is_safe_video_output_url("") is False
+    assert bridge.is_safe_video_output_url("   ") is False
+    assert bridge.is_safe_video_output_url(" https://storage.toanaas.vn/video.mp4") is False
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn/video.mp4 ") is False
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn/video\n.mp4") is False
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn/video\x00.mp4") is False
+
+    # Port anomalies
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn:8080/video.mp4") is False
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn:80/video.mp4") is False
+
+    # Incomplete / unparseable
+    assert bridge.is_safe_video_output_url("https://") is False
+    assert bridge.is_safe_video_output_url("not-a-url") is False
