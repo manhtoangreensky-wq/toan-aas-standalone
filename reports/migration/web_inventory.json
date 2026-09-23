@@ -64,7 +64,7 @@
     {
       "file": "copyfast_product_video_dispatcher.py",
       "kind": "function",
-      "line": 699,
+      "line": 704,
       "target": "_format_claimed_job"
     },
     {
@@ -238,7 +238,7 @@
     {
       "file": "copyfast_product_video_dispatcher.py",
       "kind": "function",
-      "line": 480,
+      "line": 485,
       "target": "fail_product_video_job"
     },
     {
@@ -256,7 +256,7 @@
     {
       "file": "copyfast_product_video_job_bridge.py",
       "kind": "function",
-      "line": 361,
+      "line": 363,
       "target": "get_product_video_job"
     },
     {
@@ -280,7 +280,7 @@
     {
       "file": "copyfast_product_video_job_bridge.py",
       "kind": "function",
-      "line": 388,
+      "line": 390,
       "target": "is_product_video_job_other_account"
     },
     {
@@ -304,7 +304,7 @@
     {
       "file": "copyfast_product_video_job_bridge.py",
       "kind": "function",
-      "line": 407,
+      "line": 409,
       "target": "list_product_video_jobs"
     },
     {
@@ -352,7 +352,7 @@
     {
       "file": "copyfast_product_video_job_bridge.py",
       "kind": "function",
-      "line": 432,
+      "line": 434,
       "target": "product_video_job_to_native_compat"
     },
     {
@@ -364,7 +364,7 @@
     {
       "file": "copyfast_product_video_dispatcher.py",
       "kind": "function",
-      "line": 564,
+      "line": 569,
       "target": "reconcile_stalled_product_video_jobs"
     },
     {
@@ -4997,25 +4997,25 @@
     },
     {
       "file": "copyfast_product_video_dispatcher.py",
-      "line": 437,
+      "line": 442,
       "operation": "UPDATE",
       "table": "web_product_video_jobs"
     },
     {
       "file": "copyfast_product_video_dispatcher.py",
-      "line": 531,
+      "line": 536,
       "operation": "UPDATE",
       "table": "web_product_video_jobs"
     },
     {
       "file": "copyfast_product_video_dispatcher.py",
-      "line": 599,
+      "line": 604,
       "operation": "UPDATE",
       "table": "web_product_video_jobs"
     },
     {
       "file": "copyfast_product_video_dispatcher.py",
-      "line": 613,
+      "line": 618,
       "operation": "UPDATE",
       "table": "web_product_video_jobs"
     },
@@ -15262,7 +15262,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 234,
   "source_files_scanned": 234,
-  "source_fingerprint_sha256": "5bd5c496de028b3d4e9e3da1cac288832eafa2593b9b8474b3c464ac4fb13288",
+  "source_fingerprint_sha256": "443d50b983a4b9fa067f4b11676a1454be194941dfb622d671ba5289394f4733",
   "source_root": "repository-root",
   "ui_path_references": [
     {
