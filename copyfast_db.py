@@ -6389,6 +6389,34 @@ def ensure_copyfast_schema() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_video_trend_jobs_request ON web_video_trend_jobs(request_id)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_video_trend_jobs_account_idempotency ON web_video_trend_jobs(account_id, idempotency_key_hash)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_video_trend_jobs_status_created ON web_video_trend_jobs(status, created_at ASC)")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_video_long_jobs (
+                id TEXT PRIMARY KEY,
+                request_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                product_key TEXT NOT NULL DEFAULT 'video_long',
+                routing_product_key TEXT NOT NULL DEFAULT 'video_long',
+                prompt TEXT NOT NULL,
+                quality_tier INTEGER NOT NULL,
+                scene_count INTEGER NOT NULL,
+                status TEXT NOT NULL DEFAULT 'queued',
+                status_reason TEXT NOT NULL DEFAULT 'AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION',
+                idempotency_key_hash TEXT,
+                payload_hash TEXT NOT NULL,
+                bridge_envelope TEXT NOT NULL,
+                output_metadata TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                output_url TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_video_long_jobs_account_created ON web_video_long_jobs(account_id, created_at DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_video_long_jobs_request ON web_video_long_jobs(request_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_video_long_jobs_account_idempotency ON web_video_long_jobs(account_id, idempotency_key_hash)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_video_long_jobs_status_created ON web_video_long_jobs(status, created_at ASC)")
         try:
             import copyfast_pricing_policy
             copyfast_pricing_policy.ensure_pricing_schema(conn)
