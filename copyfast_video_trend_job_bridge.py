@@ -52,8 +52,6 @@ CANONICAL_CUSTOMER_ENTRYPOINT = "/video/trend"
 SUPPORTED_CANONICAL_JOB_ADAPTERS = frozenset({"video_trend"})
 
 ALLOWED_QUALITY_TIERS = frozenset({200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500})
-DEFAULT_QUALITY_TIER = 200
-DEFAULT_SCENE_COUNT = 1
 MAX_PROMPT_LENGTH = 2000
 
 STATUS_QUEUED = "queued"
@@ -157,29 +155,27 @@ def validate_video_trend_input(values: dict[str, Any]) -> tuple[bool, str, dict[
     if len(prompt) > MAX_PROMPT_LENGTH:
         return False, "PROMPT_TOO_LONG", {}
 
-    # Extract & validate quality tier (200..1500) if supplied, else default
+    # Extract & validate quality tier (200..1500, strictly required, no defaults)
     tier_raw = values.get("quality_tier") if "quality_tier" in values else values.get("tier")
-    if tier_raw is not None and str(tier_raw).strip() != "":
-        try:
-            tier = int(tier_raw)
-        except (TypeError, ValueError):
-            return False, "INVALID_QUALITY_TIER", {}
-        if tier not in ALLOWED_QUALITY_TIERS:
-            return False, "INVALID_QUALITY_TIER", {}
-    else:
-        tier = DEFAULT_QUALITY_TIER
+    if tier_raw is None or str(tier_raw).strip() == "":
+        return False, "TIER_REQUIRED", {}
+    try:
+        tier = int(tier_raw)
+    except (TypeError, ValueError):
+        return False, "INVALID_QUALITY_TIER", {}
+    if tier not in ALLOWED_QUALITY_TIERS:
+        return False, "INVALID_QUALITY_TIER", {}
 
-    # Extract & validate scene_count (1..20) if supplied, else default 1
+    # Extract & validate scene_count (1..20, strictly required, no defaults)
     scene_raw = values.get("scene_count")
-    if scene_raw is not None and str(scene_raw).strip() != "":
-        try:
-            scene_count = int(scene_raw)
-        except (TypeError, ValueError):
-            return False, "INVALID_SCENE_COUNT", {}
-        if scene_count < 1 or scene_count > 20:
-            return False, "INVALID_SCENE_COUNT", {}
-    else:
-        scene_count = DEFAULT_SCENE_COUNT
+    if scene_raw is None or str(scene_raw).strip() == "":
+        return False, "SCENE_COUNT_REQUIRED", {}
+    try:
+        scene_count = int(scene_raw)
+    except (TypeError, ValueError):
+        return False, "INVALID_SCENE_COUNT", {}
+    if scene_count < 1 or scene_count > 20:
+        return False, "INVALID_SCENE_COUNT", {}
 
     normalized = {
         "prompt": prompt,
@@ -197,8 +193,9 @@ def compute_payload_hash(payload: dict[str, Any]) -> str:
     core = {
         "product_key": str(payload.get("product_key") or CANONICAL_PRODUCT_KEY),
         "prompt": str(payload.get("prompt") or "").strip(),
-        "quality_tier": int(payload.get("quality_tier") or DEFAULT_QUALITY_TIER),
-        "scene_count": int(payload.get("scene_count") or DEFAULT_SCENE_COUNT),
+        "quality_tier": int(payload.get("quality_tier") or 0),
+        "routing_product_key": str(payload.get("routing_product_key") or CANONICAL_ROUTING_KEY),
+        "scene_count": int(payload.get("scene_count") or 0),
     }
     serialized = json.dumps(core, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(serialized).hexdigest()
@@ -279,7 +276,9 @@ def create_or_replay_video_trend_job(
             "authority_field_not_allowed": "Yêu cầu chứa trường authority bị cấm.",
             "PROMPT_REQUIRED": "Prompt hoặc trend_prompt là bắt buộc đối với Video theo trend.",
             "PROMPT_TOO_LONG": f"Prompt không được vượt quá {MAX_PROMPT_LENGTH} ký tự.",
+            "TIER_REQUIRED": "Quality tier là bắt buộc (200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500).",
             "INVALID_QUALITY_TIER": "Quality tier không hợp lệ. Phải thuộc (200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500).",
+            "SCENE_COUNT_REQUIRED": "Số cảnh scene_count là bắt buộc (1..20).",
             "INVALID_SCENE_COUNT": "Số cảnh không hợp lệ. Phải thuộc từ 1 đến 20 cảnh.",
         }
         raise HTTPException(status_code=400, detail=error_messages.get(error_code, error_code))

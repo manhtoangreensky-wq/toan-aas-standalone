@@ -2021,7 +2021,6 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
             is_valid, err, _ = validate_video_trend_input(values)
             if not is_valid:
                 return err
-            return ""
         else:
             prompt = str(values.get("trend_prompt") or values.get("prompt") or values.get("brief") or values.get("text") or "").strip()
             if not prompt:
@@ -2029,7 +2028,7 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
             if len(prompt) > 2000:
                 return "PROMPT_TOO_LONG"
     if action == "confirm" and feature in FEATURE_TIER_REQUIRED_ON_CONFIRM:
-        tier = str(values.get("tier") or "").strip()
+        tier = str(values.get("tier") or values.get("quality_tier") or "").strip()
         if not CANONICAL_IDENTIFIER_PATTERN.fullmatch(tier):
             return "tier_required"
     if action == "confirm" and feature in FEATURE_VIDEO_SCENE_REQUIRED_ON_CONFIRM:
@@ -2045,6 +2044,7 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
         "PROMPT_TOO_LONG": "Prompt video không được vượt quá 2000 ký tự.",
         "TIER_REQUIRED": "Quality tier là bắt buộc (200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500).",
         "INVALID_QUALITY_TIER": "Quality tier không hợp lệ. Phải thuộc (200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500).",
+        "SCENE_COUNT_REQUIRED": "Số cảnh scene_count là bắt buộc (1..20).",
         "INVALID_SCENE_COUNT": "Số cảnh không hợp lệ. Phải thuộc từ 1 đến 20 cảnh.",
         "ASPECT_RATIO_REQUIRED": "Aspect ratio là bắt buộc ('9:16', '16:9', '1:1').",
         "INVALID_ASPECT_RATIO": "Aspect ratio không hợp lệ. Phải thuộc ('9:16', '16:9', '1:1').",

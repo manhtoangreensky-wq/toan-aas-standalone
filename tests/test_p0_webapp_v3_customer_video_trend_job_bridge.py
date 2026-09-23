@@ -58,6 +58,9 @@ def setup_db_and_clean(monkeypatch):
     monkeypatch.setenv("WEBAPP_PROVIDER_CALLS_ENABLED", "true")
     monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTER_ENABLED", "true")
     monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTERS", "video_ai_prompt,video_single,video_trend")
+    monkeypatch.setenv("CORE_BRIDGE_BASE_URL", "http://127.0.0.1:8000")
+    monkeypatch.setenv("CORE_BRIDGE_TOKEN", "test-token")
+    monkeypatch.setenv("CORE_BRIDGE_HMAC_SECRET", "test-secret")
     ensure_copyfast_schema()
     bridge.ensure_video_trend_schema()
     with transaction() as conn:
@@ -98,17 +101,40 @@ def test_a_first_red_entrypoint_and_matrix_baseline():
     assert len(reg.ALL_FEATURES) == 180
 
 
-# ─── TEST B: INPUT VALIDATION - VALID INPUTS & DEFAULTS ──────────────────────
+# ─── TEST B: INPUT VALIDATION - SOURCE-DERIVED CONTRACT ─────────────────────
 
-def test_b_input_validation_valid_and_defaults():
-    """Verify validation passes with source-derived fields and applies correct defaults."""
-    # 1. Full payload with trend_prompt
-    is_valid, err, normalized = bridge.validate_video_trend_input({
+def test_b_input_validation_source_derived_contract():
+    """Verify source-derived validation: tier and scene_count required, no silent defaults."""
+    # 1. Missing tier rejected
+    ok, err, _ = bridge.validate_video_trend_input({
+        "prompt": "Trend prompt without tier",
+        "scene_count": 2,
+    })
+    assert ok is False
+    assert err == "TIER_REQUIRED"
+
+    # 2. Missing scene_count rejected
+    ok, err, _ = bridge.validate_video_trend_input({
+        "prompt": "Trend prompt without scene_count",
+        "tier": 300,
+    })
+    assert ok is False
+    assert err == "SCENE_COUNT_REQUIRED"
+
+    # 3. Both missing rejected
+    ok, err, _ = bridge.validate_video_trend_input({
+        "prompt": "Trend prompt with neither",
+    })
+    assert ok is False
+    assert err == "TIER_REQUIRED"
+
+    # 4. Valid tier + scene_count accepted
+    ok, err, normalized = bridge.validate_video_trend_input({
         "trend_prompt": "Hot trend review biến hình anime",
         "quality_tier": 500,
         "scene_count": 3,
     })
-    assert is_valid is True
+    assert ok is True
     assert err == ""
     assert normalized["prompt"] == "Hot trend review biến hình anime"
     assert normalized["quality_tier"] == 500
@@ -116,27 +142,20 @@ def test_b_input_validation_valid_and_defaults():
     assert normalized["product_key"] == "video_trend"
     assert normalized["routing_product_key"] == "trend_video"
 
-    # 2. Alias prompt & tier
-    is_valid, err, normalized = bridge.validate_video_trend_input({
+    # 5. Alias quality_tier and prompt accepted when valid
+    ok, err, normalized = bridge.validate_video_trend_input({
         "prompt": "Trend makeup biến hình",
         "tier": "400",
+        "scene_count": "1",
     })
-    assert is_valid is True
+    assert ok is True
     assert normalized["prompt"] == "Trend makeup biến hình"
     assert normalized["quality_tier"] == 400
-    assert normalized["scene_count"] == 1  # defaulted
+    assert normalized["scene_count"] == 1
 
-    # 3. Defaults when tier and scene_count missing
-    is_valid, err, normalized = bridge.validate_video_trend_input({
-        "prompt": "Minimal trend prompt",
-    })
-    assert is_valid is True
-    assert normalized["quality_tier"] == 200  # default tier
-    assert normalized["scene_count"] == 1    # default scene count
-
-    # 4. Verify all supported quality tiers
+    # 6. Verify all supported quality tiers
     for tier in bridge.ALLOWED_QUALITY_TIERS:
-        ok, _, norm = bridge.validate_video_trend_input({"prompt": "test", "quality_tier": tier})
+        ok, _, norm = bridge.validate_video_trend_input({"prompt": "test", "quality_tier": tier, "scene_count": 1})
         assert ok is True
         assert norm["quality_tier"] == tier
 
@@ -146,11 +165,11 @@ def test_b_input_validation_valid_and_defaults():
 def test_c_input_validation_missing_prompt():
     """Verify missing, empty, or whitespace-only prompt is rejected."""
     for empty_val in [None, "", "   ", "\t\n"]:
-        is_valid, err, _ = bridge.validate_video_trend_input({"trend_prompt": empty_val})
+        is_valid, err, _ = bridge.validate_video_trend_input({"trend_prompt": empty_val, "tier": 200, "scene_count": 1})
         assert is_valid is False
         assert err == "PROMPT_REQUIRED"
 
-        is_valid, err, _ = bridge.validate_video_trend_input({"prompt": empty_val})
+        is_valid, err, _ = bridge.validate_video_trend_input({"prompt": empty_val, "tier": 200, "scene_count": 1})
         assert is_valid is False
         assert err == "PROMPT_REQUIRED"
 
@@ -160,12 +179,12 @@ def test_c_input_validation_missing_prompt():
 def test_d_input_validation_prompt_too_long():
     """Verify prompt length boundary (max 2000 chars)."""
     # 2000 chars -> valid
-    ok, err, norm = bridge.validate_video_trend_input({"prompt": "A" * 2000})
+    ok, err, norm = bridge.validate_video_trend_input({"prompt": "A" * 2000, "tier": 200, "scene_count": 1})
     assert ok is True
     assert len(norm["prompt"]) == 2000
 
     # 2001 chars -> rejected
-    ok, err, _ = bridge.validate_video_trend_input({"prompt": "A" * 2001})
+    ok, err, _ = bridge.validate_video_trend_input({"prompt": "A" * 2001, "tier": 200, "scene_count": 1})
     assert ok is False
     assert err == "PROMPT_TOO_LONG"
 
@@ -178,6 +197,7 @@ def test_e_input_validation_invalid_quality_tier():
         is_valid, err, _ = bridge.validate_video_trend_input({
             "prompt": "Trend prompt",
             "quality_tier": bad_tier,
+            "scene_count": 1,
         })
         assert is_valid is False
         assert err == "INVALID_QUALITY_TIER"
@@ -187,17 +207,18 @@ def test_e_input_validation_invalid_quality_tier():
 
 def test_f_input_validation_invalid_scene_count():
     """Verify scene_count outside 1..20 is rejected."""
-    for bad_count in [0, -1, 21, 50, "five", None if False else 100]:
+    for bad_count in [0, -1, 21, 50, "five", 100]:
         is_valid, err, _ = bridge.validate_video_trend_input({
             "prompt": "Trend prompt",
+            "tier": 200,
             "scene_count": bad_count,
         })
         assert is_valid is False
         assert err == "INVALID_SCENE_COUNT"
 
     # Boundaries 1 and 20 are valid
-    assert bridge.validate_video_trend_input({"prompt": "Trend", "scene_count": 1})[0] is True
-    assert bridge.validate_video_trend_input({"prompt": "Trend", "scene_count": 20})[0] is True
+    assert bridge.validate_video_trend_input({"prompt": "Trend", "tier": 200, "scene_count": 1})[0] is True
+    assert bridge.validate_video_trend_input({"prompt": "Trend", "tier": 200, "scene_count": 20})[0] is True
 
 
 # ─── TEST G: CLIENT AUTHORITY REJECTION ──────────────────────────────────────
@@ -222,7 +243,7 @@ def test_g_client_authority_rejection():
         {"id": "vtj_injected"},
     ]
     for probe in authority_probes:
-        payload = {"prompt": "Valid trend prompt", **probe}
+        payload = {"prompt": "Valid trend prompt", "tier": 300, "scene_count": 1, **probe}
         is_valid, err, _ = bridge.validate_video_trend_input(payload)
         assert is_valid is False
         assert err == "authority_field_not_allowed"
@@ -292,7 +313,7 @@ def test_h_durable_job_creation():
 
 def test_i_idempotency_replay():
     """Verify replay with exact same idempotency_key returns identical job without duplicates."""
-    payload = {"prompt": "Idempotent trend dance", "tier": 300}
+    payload = {"prompt": "Idempotent trend dance", "tier": 300, "scene_count": 1}
     idem_key = "idem-trend-safe-001"
 
     job1 = bridge.create_or_replay_video_trend_job(
@@ -323,14 +344,14 @@ def test_j_idempotency_conflict():
     idem_key = "idem-conflict-key-999"
     bridge.create_or_replay_video_trend_job(
         account_id="test-user-1",
-        payload={"prompt": "Original prompt", "tier": 200},
+        payload={"prompt": "Original prompt", "tier": 200, "scene_count": 1},
         idempotency_key=idem_key,
     )
 
     with pytest.raises(HTTPException) as exc_info:
         bridge.create_or_replay_video_trend_job(
             account_id="test-user-1",
-            payload={"prompt": "Differing prompt mutation", "tier": 200},
+            payload={"prompt": "Differing prompt mutation", "tier": 200, "scene_count": 1},
             idempotency_key=idem_key,
         )
     assert exc_info.value.status_code == 409
@@ -342,7 +363,7 @@ def test_k_owner_scoping_and_cross_account_isolation():
     """Verify jobs are strictly owner-scoped and cross-account access is prevented."""
     job = bridge.create_or_replay_video_trend_job(
         account_id="test-user-1",
-        payload={"prompt": "User 1 exclusive trend job"},
+        payload={"prompt": "User 1 exclusive trend job", "tier": 300, "scene_count": 1},
     )
     job_id = job["id"]
 
@@ -431,7 +452,7 @@ def test_m_generic_jobs_integration():
 
     create_res = client1.post(
         "/api/v1/features/video_trend/jobs",
-        json={"input": {"trend_prompt": "Generic jobs test trend"}},
+        json={"input": {"trend_prompt": "Generic jobs test trend", "quality_tier": 500, "scene_count": 2}},
         headers=headers1,
     )
     job_id = create_res.json()["data"]["id"]
@@ -479,7 +500,7 @@ def test_n_artifact_truth_safe_and_unsafe_urls():
     # 2. Database row with status=completed but output_url=NULL
     job = bridge.create_or_replay_video_trend_job(
         account_id="test-user-1",
-        payload={"prompt": "Artifact truth test 1"},
+        payload={"prompt": "Artifact truth test 1", "tier": 200, "scene_count": 1},
     )
     job_id = job["id"]
 
@@ -569,3 +590,227 @@ def test_p_parity_matrix_truth_verification():
         if item.get("bot_capability") == "video_ai_image":
             assert item["status"] == "BLOCKED_BY_RUNTIME"
             assert item["blocker"] == "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+
+
+# ─── TEST Q: DIRECT JOB & CONFIRM MISSING TIER/SCENE REJECTED ────────────────
+
+def test_q_direct_job_and_confirm_missing_tier_and_scene_rejected():
+    """Verify both direct job POST and confirm flow reject missing tier and missing scene_count."""
+    from copyfast_api import _feature_input_contract_error
+
+    # 1. Direct unit-level confirm contract error verification
+    # Missing tier
+    err1 = _feature_input_contract_error("video_trend", {"prompt": "Trend prompt", "scene_count": 2}, action="confirm")
+    assert err1 == "TIER_REQUIRED"
+
+    # Missing scene_count
+    err2 = _feature_input_contract_error("video_trend", {"prompt": "Trend prompt", "tier": 300}, action="confirm")
+    assert err2 == "SCENE_COUNT_REQUIRED"
+
+    # Both missing
+    err3 = _feature_input_contract_error("video_trend", {"prompt": "Trend prompt"}, action="confirm")
+    assert err3 == "TIER_REQUIRED"
+
+    # Valid tier and scene_count
+    err_ok = _feature_input_contract_error("video_trend", {"prompt": "Trend prompt", "tier": 300, "scene_count": 2}, action="confirm")
+    assert err_ok == ""
+
+    # 2. HTTP direct canonical job POST validation
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "contract_u1@test.local", "password": "secure-pwd-1234", "display_name": "ContractU1"})
+    login = client.post("/api/v1/auth/login", json={"email": "contract_u1@test.local", "password": "secure-pwd-1234"})
+    headers = {"X-CSRF-Token": login.json()["data"]["csrf_token"]}
+
+    # Direct job POST missing tier -> 400
+    res_no_tier = client.post(
+        "/api/v1/features/video_trend/jobs",
+        json={"input": {"trend_prompt": "Trend test prompt", "scene_count": 2}},
+        headers=headers,
+    )
+    assert res_no_tier.status_code == 400
+    assert "Quality tier là bắt buộc" in res_no_tier.json()["message"]
+
+    # Direct job POST missing scene_count -> 400
+    res_no_scene = client.post(
+        "/api/v1/features/video_trend/jobs",
+        json={"input": {"trend_prompt": "Trend test prompt", "quality_tier": 400}},
+        headers=headers,
+    )
+    assert res_no_scene.status_code == 400
+    assert "Số cảnh scene_count là bắt buộc" in res_no_scene.json()["message"]
+
+    # Direct job POST missing both -> 400
+    res_no_both = client.post(
+        "/api/v1/features/video_trend/jobs",
+        json={"input": {"trend_prompt": "Trend test prompt"}},
+        headers=headers,
+    )
+    assert res_no_both.status_code == 400
+    assert "Quality tier là bắt buộc" in res_no_both.json()["message"]
+
+    # 3. HTTP confirm endpoint validation
+    # HTTP confirm missing tier -> guarded with TIER_REQUIRED
+    res_confirm_no_tier = client.post(
+        "/api/v1/features/video_trend/confirm",
+        json={"input": {"trend_prompt": "Trend test prompt", "scene_count": 2}, "idempotency_key": "cfm-key-01"},
+        headers=headers,
+    )
+    assert res_confirm_no_tier.status_code == 200
+    body_no_tier = res_confirm_no_tier.json()
+    assert body_no_tier["ok"] is False
+    assert body_no_tier["error_code"] == "FEATURE_INPUT_CONTRACT_REQUIRED"
+    assert body_no_tier["data"]["reason"] == "TIER_REQUIRED"
+
+    # HTTP confirm missing scene_count -> guarded with SCENE_COUNT_REQUIRED
+    res_confirm_no_scene = client.post(
+        "/api/v1/features/video_trend/confirm",
+        json={"input": {"trend_prompt": "Trend test prompt", "quality_tier": 300}, "idempotency_key": "cfm-key-02"},
+        headers=headers,
+    )
+    assert res_confirm_no_scene.status_code == 200
+    body_no_scene = res_confirm_no_scene.json()
+    assert body_no_scene["ok"] is False
+    assert body_no_scene["error_code"] == "FEATURE_INPUT_CONTRACT_REQUIRED"
+    assert body_no_scene["data"]["reason"] == "SCENE_COUNT_REQUIRED"
+
+
+# ─── TEST R: CONCURRENT IDENTICAL IDEMPOTENCY PROOF ──────────────────────────
+
+def test_r_concurrent_identical_idempotency_proof():
+    """Verify 10 concurrent calls with identical idempotency key yield 1 created row, 0 duplicates, identical job ID."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    idem_key = "concurrent-identical-idem-001"
+    account_id = "test-user-1"
+    payload = {
+        "trend_prompt": "Concurrent 10-thread identical idempotency test",
+        "quality_tier": 500,
+        "scene_count": 3,
+    }
+
+    num_threads = 10
+    results: list[dict[str, Any]] = []
+    errors: list[Any] = []
+
+    def worker():
+        try:
+            res = bridge.create_or_replay_video_trend_job(
+                account_id=account_id,
+                payload=payload,
+                idempotency_key=idem_key,
+            )
+            return ("ok", res)
+        except Exception as e:
+            return ("err", e)
+
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        futures = [executor.submit(worker) for _ in range(num_threads)]
+        for f in futures:
+            status, val = f.result()
+            if status == "ok":
+                results.append(val)
+            else:
+                errors.append(val)
+
+    assert len(errors) == 0, f"Expected 0 errors, got: {errors}"
+    assert len(results) == num_threads
+
+    # All threads must observe the exact same job ID
+    job_ids = set(r["id"] for r in results)
+    assert len(job_ids) == 1, f"Expected exactly 1 unique job ID, got: {job_ids}"
+    identical_job_id = results[0]["id"]
+
+    # Verify database: exactly 1 row created, 0 duplicates
+    with read_transaction() as conn:
+        cursor = conn.execute(
+            "SELECT id, idempotency_key_hash FROM web_video_trend_jobs WHERE idempotency_key_hash = ?",
+            (bridge.compute_idempotency_hash(idem_key),),
+        )
+        rows = cursor.fetchall()
+
+    created_rows_count = len(rows)
+    assert created_rows_count == 1
+    assert rows[0][0] == identical_job_id
+
+    CONCURRENT_IDENTICAL_CREATED_ROWS = created_rows_count
+    CONCURRENT_DUPLICATE_JOB_CREATED = created_rows_count - 1
+    CONCURRENT_REPLAY = "PASS" if (created_rows_count == 1 and len(job_ids) == 1) else "FAIL"
+
+    assert CONCURRENT_IDENTICAL_CREATED_ROWS == 1
+    assert CONCURRENT_DUPLICATE_JOB_CREATED == 0
+    assert CONCURRENT_REPLAY == "PASS"
+
+
+# ─── TEST S: CONCURRENT CONFLICT IDEMPOTENCY PROOF ───────────────────────────
+
+def test_s_concurrent_conflict_idempotency_proof():
+    """Verify concurrent calls with same key but differing payload: exactly one succeeds, others raise 409."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    idem_key = "concurrent-conflict-idem-002"
+    account_id = "test-user-1"
+
+    payload_a = {
+        "trend_prompt": "Concurrent conflict payload A",
+        "quality_tier": 400,
+        "scene_count": 2,
+    }
+    payload_b = {
+        "trend_prompt": "Concurrent conflict payload B differing",
+        "quality_tier": 500,
+        "scene_count": 4,
+    }
+
+    # First call succeeds
+    job_a = bridge.create_or_replay_video_trend_job(
+        account_id=account_id,
+        payload=payload_a,
+        idempotency_key=idem_key,
+    )
+    assert job_a is not None
+
+    # Concurrent 10 calls with differing payload under same idempotency_key
+    num_threads = 10
+    conflict_409_count = 0
+    unexpected_results: list[Any] = []
+
+    def conflict_worker():
+        try:
+            bridge.create_or_replay_video_trend_job(
+                account_id=account_id,
+                payload=payload_b,
+                idempotency_key=idem_key,
+            )
+            return "unexpected_success"
+        except HTTPException as exc:
+            if exc.status_code == 409:
+                return "409_conflict"
+            return f"unexpected_status_{exc.status_code}"
+        except Exception as e:
+            return f"unexpected_exc_{e}"
+
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        futures = [executor.submit(conflict_worker) for _ in range(num_threads)]
+        for f in futures:
+            res = f.result()
+            if res == "409_conflict":
+                conflict_409_count += 1
+            else:
+                unexpected_results.append(res)
+
+    assert conflict_409_count == num_threads, f"Expected {num_threads} 409 conflicts, got {conflict_409_count}, unexpected: {unexpected_results}"
+    assert len(unexpected_results) == 0
+
+    # Verify database: exactly 1 row exists
+    with read_transaction() as conn:
+        cursor = conn.execute(
+            "SELECT id, idempotency_key_hash FROM web_video_trend_jobs WHERE idempotency_key_hash = ?",
+            (bridge.compute_idempotency_hash(idem_key),),
+        )
+        rows = cursor.fetchall()
+
+    assert len(rows) == 1
+    assert rows[0][0] == job_a["id"]
+
+    CONCURRENT_CONFLICT = "PASS"
+    assert CONCURRENT_CONFLICT == "PASS"
