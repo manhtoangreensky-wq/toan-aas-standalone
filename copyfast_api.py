@@ -135,6 +135,16 @@ from copyfast_product_video_job_bridge import (
     list_product_video_jobs,
     product_video_job_to_native_compat,
 )
+from copyfast_video_trend_job_bridge import (
+    CANONICAL_PRODUCT_KEY as VIDEO_TREND_PRODUCT_KEY,
+    SUPPORTED_CANONICAL_JOB_ADAPTERS as VIDEO_TREND_ADAPTER_KEYS,
+    create_or_replay_video_trend_job,
+    get_video_trend_job,
+    is_video_trend_job_other_account,
+    list_video_trend_jobs,
+    video_trend_job_to_native_compat,
+    validate_video_trend_input,
+)
 from copyfast_product_video_dispatcher import (
     claim_product_video_job,
     complete_product_video_job,
@@ -418,7 +428,7 @@ FEATURE_AUTHORITY_FIELDS_NORMALIZED = frozenset(
     "".join(character for character in field.lower() if character.isalnum())
     for field in FEATURE_AUTHORITY_FIELDS
 )
-FEATURE_TEXT_KEYS = ("request", "prompt", "brief", "script", "text", "topic", "description", "instructions", "notes")
+FEATURE_TEXT_KEYS = ("request", "prompt", "brief", "script", "text", "topic", "description", "instructions", "notes", "trend_prompt")
 FEATURE_TIER_REQUIRED_ON_CONFIRM = frozenset({
     "image_create", "image_edit", "image_upscale", "image_transform", "image_remove_background",
     "video_single", "video_product", "video_trend", "video_text_to_video", "video_quick",
@@ -2005,6 +2015,19 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
                 return "text_required"
             if len(prompt) > 2000:
                 return "PROMPT_TOO_LONG"
+    if feature == "video_trend":
+        from copyfast_video_trend_job_bridge import validate_video_trend_input
+        if action == "confirm":
+            is_valid, err, _ = validate_video_trend_input(values)
+            if not is_valid:
+                return err
+            return ""
+        else:
+            prompt = str(values.get("trend_prompt") or values.get("prompt") or values.get("brief") or values.get("text") or "").strip()
+            if not prompt:
+                return "text_required"
+            if len(prompt) > 2000:
+                return "PROMPT_TOO_LONG"
     if action == "confirm" and feature in FEATURE_TIER_REQUIRED_ON_CONFIRM:
         tier = str(values.get("tier") or "").strip()
         if not CANONICAL_IDENTIFIER_PATTERN.fullmatch(tier):
@@ -2022,6 +2045,7 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
         "PROMPT_TOO_LONG": "Prompt video không được vượt quá 2000 ký tự.",
         "TIER_REQUIRED": "Quality tier là bắt buộc (200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500).",
         "INVALID_QUALITY_TIER": "Quality tier không hợp lệ. Phải thuộc (200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500).",
+        "INVALID_SCENE_COUNT": "Số cảnh không hợp lệ. Phải thuộc từ 1 đến 20 cảnh.",
         "ASPECT_RATIO_REQUIRED": "Aspect ratio là bắt buộc ('9:16', '16:9', '1:1').",
         "INVALID_ASPECT_RATIO": "Aspect ratio không hợp lệ. Phải thuộc ('9:16', '16:9', '1:1').",
         "DURATION_REQUIRED": "Thời lượng duration_seconds là bắt buộc (5, 10, 15).",
@@ -3302,7 +3326,11 @@ def _native_jobs_for_account(account: dict) -> list[dict[str, Any]]:
         product_video_job_to_native_compat(job)
         for job in list_product_video_jobs(account_id, limit=100)
     ]
-    return _merge_read_items(pv_jobs, native_jobs)
+    vt_jobs = [
+        video_trend_job_to_native_compat(job)
+        for job in list_video_trend_jobs(account_id, limit=100)
+    ]
+    return _merge_read_items(vt_jobs, pv_jobs, native_jobs)
 
 
 def _native_assets_for_account(account: dict) -> list[dict[str, Any]]:
@@ -5895,6 +5923,24 @@ async def job_detail(job_id: str, request: Request, account: dict = Depends(requ
             status_name="guarded",
             error_code="WEB_NATIVE_JOB_NOT_FOUND",
         )
+    vt_job = get_video_trend_job(account_id, job_id)
+    if vt_job is not None:
+        compat_item = video_trend_job_to_native_compat(vt_job)
+        return envelope(
+            True,
+            "Đã tải dữ liệu Job Web-native của tài khoản hiện tại.",
+            data={**compat_item, "job_record": vt_job, "read_model": "jobs", "canonical_available": False},
+            status_name="read_only",
+        )
+    if is_video_trend_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    if str(job_id or "").strip().startswith("vtj_"):
+        return envelope(
+            False,
+            "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_JOB_NOT_FOUND",
+        )
     native_job = parse_native_job_id(job_id)
     if native_job is not None:
         record = get_native_job(str(account.get("id") or ""), job_id)
@@ -6148,6 +6194,39 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
                     status_name="guarded",
                     error_code="PRODUCT_VIDEO_JOB_VALIDATION_FAILED",
                 )
+        if feature == "video_trend":
+            account_id = str(account.get("id") or "")
+            try:
+                job_result = create_or_replay_video_trend_job(
+                    account_id=account_id,
+                    payload=values,
+                    idempotency_key=key,
+                )
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=True,
+                )
+                return envelope(
+                    True,
+                    "Đã tạo tác vụ Video Trend thành công, chờ runtime xử lý.",
+                    data=job_result,
+                    status_name="queued",
+                )
+            except HTTPException as exc:
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=False,
+                )
+                if exc.status_code == 409:
+                    raise exc
+                return envelope(
+                    False,
+                    exc.detail,
+                    status_name="guarded",
+                    error_code="VIDEO_TREND_JOB_VALIDATION_FAILED",
+                )
         scope = f"feature:{account['id']}:{feature}:confirm"
         result = await _run_idempotent(
             scope,
@@ -6264,6 +6343,65 @@ async def get_product_video_job_route(
     if is_product_video_job_other_account(job_id, account_id):
         raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
     raise HTTPException(status_code=404, detail="Không tìm thấy job Video AI Prompt của tài khoản.")
+
+
+@router.post("/features/video_trend/jobs")
+async def create_video_trend_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    request_id = str(payload.input.get("request_id") or "")
+    job = create_or_replay_video_trend_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        request_id=request_id,
+        idempotency_key=key,
+    )
+    return envelope(
+        True,
+        "Đã tạo tác vụ Video Trend thành công, chờ runtime xử lý.",
+        data=job,
+        status_name="queued",
+    )
+
+
+@router.get("/features/video_trend/jobs")
+async def list_video_trend_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = list_video_trend_jobs(account_id, limit=100)
+    return envelope(
+        True,
+        "Đã tải danh sách job Video Trend của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/video_trend/jobs/{job_id}")
+async def get_video_trend_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    job = get_video_trend_job(account_id, job_id)
+    if job is not None:
+        return envelope(
+            True,
+            "Đã tải chi tiết job Video Trend.",
+            data=job,
+            status_name="read_only",
+        )
+    if is_video_trend_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Video Trend của tài khoản.")
+
 
 
 @router.get("/admin/summary")

@@ -129,7 +129,7 @@ This master audit reconciles the entire Web customer-facing application and Web 
 
 | # | Bot Capability | Category | Web Entrypoint | Web API | Bot Runtime | Real Output | Admin Trace | Status |
 |---|---|---|---|---|---|---|---|---|
-| 1 | `video_trend` | Video AI | `/video/trend` | `/api/v1/features/video_trend/*` | `services.video_tail9` | None on Web | Admin B01 | `BLOCKED_BY_RUNTIME` |
+| 1 | `video_trend` | Video AI | `/video/trend` | `/api/v1/features/video_trend/*` | `services.video_tail9` | None on Web | Admin B01 | `PARTIAL` |
 | 2 | `video_ai_prompt` | Video AI | `/video/create` | `/api/v1/features/video_ai_prompt/*` | `services.web_product_video_worker_consumer` | Provider-blocked | Admin Metrics/Reconcile | `PARTIAL_PROVIDER_BLOCKED` |
 | 3 | `video_ai_image` | Video AI | `/video/image-to-video` | `/api/v1/features/video_ai_image/*` | `services.video_tail9` | None on Web | Admin B01 | `BLOCKED_BY_RUNTIME` |
 | 4 | `video_ai_video_reference` | Video AI | `/video-studio/reference-format-planner` | `/api/v1/video-studio/*` | Planning only | None on Web | Local draft | `PARTIAL` |
