@@ -6434,8 +6434,6 @@ def ensure_copyfast_schema() -> None:
                 prompt TEXT NOT NULL,
                 quality_tier INTEGER NOT NULL,
                 scene_count INTEGER NOT NULL,
-                cost_xu INTEGER NOT NULL DEFAULT 0,
-                scenes_json TEXT,
                 status TEXT NOT NULL DEFAULT 'queued',
                 status_reason TEXT NOT NULL DEFAULT 'AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION',
                 idempotency_key_hash TEXT,

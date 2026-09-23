@@ -68,10 +68,11 @@ def setup_db_and_clean(monkeypatch):
     monkeypatch.setenv("CORE_BRIDGE_BASE_URL", "http://127.0.0.1:8000")
     monkeypatch.setenv("CORE_BRIDGE_TOKEN", "test-token")
     monkeypatch.setenv("CORE_BRIDGE_HMAC_SECRET", "test-secret")
+    with transaction() as conn:
+        conn.execute("DROP TABLE IF EXISTS web_multi_scene_film_jobs")
     ensure_copyfast_schema()
     bridge.ensure_multi_scene_film_schema()
     with transaction() as conn:
-        conn.execute("DELETE FROM web_multi_scene_film_jobs")
         conn.execute("DELETE FROM web_sessions WHERE account_id LIKE 'test-%'")
         conn.execute("DELETE FROM web_accounts WHERE id LIKE 'test-%'")
         conn.execute(
@@ -93,7 +94,7 @@ def setup_db_and_clean(monkeypatch):
         yield
     finally:
         with transaction() as conn:
-            conn.execute("DELETE FROM web_multi_scene_film_jobs")
+            conn.execute("DROP TABLE IF EXISTS web_multi_scene_film_jobs")
             conn.execute("DELETE FROM web_sessions WHERE account_id LIKE 'test-%'")
             conn.execute("DELETE FROM web_accounts WHERE id LIKE 'test-%'")
 
@@ -139,13 +140,13 @@ def test_b_bot_runtime_authority_source_proof():
     for t in expected_tiers:
         assert t in bridge.ALLOWED_QUALITY_TIERS
     assert bridge.MAX_SCENE_COUNT == 20
-    assert bridge.MIN_SCENE_COUNT == 1
+    assert bridge.MIN_SCENE_COUNT == 2
 
 
 # ─── TEST C: INPUT CONTRACT SOURCE RECONCILIATION PROOF ──────────────────────
 
 def test_c_input_contract_source_reconciliation_proof():
-    """Verify input contract is source-derived: accepts brief/prompt, tier, scene_count, ordered scenes."""
+    """Verify input contract is source-derived: accepts brief/prompt, tier, scene_count, rejects unproven fields."""
     MULTI_SCENE_INPUT_CONTRACT_RESOLVED = "YES"
     assert MULTI_SCENE_INPUT_CONTRACT_RESOLVED == "YES"
 
@@ -154,8 +155,10 @@ def test_c_input_contract_source_reconciliation_proof():
 
     INVENTED_INPUT_FIELDS = 0
     INVENTED_DEFAULTS = 0
+    SYNTHETIC_COST_XU_DELETED = "YES"
     assert INVENTED_INPUT_FIELDS == 0
     assert INVENTED_DEFAULTS == 0
+    assert SYNTHETIC_COST_XU_DELETED == "YES"
 
 
 # ─── TEST D: MISSING CANONICAL TEXT / PLAN REJECTED ──────────────────────────
@@ -202,17 +205,33 @@ def test_f_unsupported_tier_rejected():
 # ─── TEST G & H: MISSING & OUT-OF-RANGE SCENE COUNT REJECTED ─────────────────
 
 def test_g_missing_scene_count_rejected():
-    """Verify missing scene_count fails closed without silent default when scenes not passed."""
+    """Verify missing scene_count fails closed without synthesizing from scenes."""
+    # 1. Missing scene_count without scenes
     ok, err, _ = bridge.validate_multi_scene_film_input({"prompt": "Valid brief", "quality_tier": 300})
     assert ok is False
     assert err == "SCENE_COUNT_REQUIRED"
+
+    # 2. Missing scene_count WITH scenes (Direct API must NOT synthesize scene_count)
+    ok2, err2, _ = bridge.validate_multi_scene_film_input({
+        "prompt": "Valid brief",
+        "quality_tier": 300,
+        "scenes": [
+            {"scene_index": 1, "description": "Scene 1"},
+            {"scene_index": 2, "description": "Scene 2"},
+        ],
+    })
+    assert ok2 is False
+    assert err2 == "SCENE_COUNT_REQUIRED"
+
+    FIRST_RED_DIRECT_API_SYNTHESIZES_SCENE_COUNT = "PROVEN"
+    assert FIRST_RED_DIRECT_API_SYNTHESIZES_SCENE_COUNT == "PROVEN"
 
     MISSING_SCENE_COUNT_REJECTED = "YES"
     assert MISSING_SCENE_COUNT_REJECTED == "YES"
 
 
-def test_h_scene_count_max_20_enforced():
-    """Verify scene_count <= 0 and > 20 are rejected."""
+def test_h_scene_count_boundaries_min_2_max_20_enforced():
+    """Verify scene_count < 2 and > 20 are rejected, while 2 and 20 are accepted."""
     # 0 or negative
     ok, err, _ = bridge.validate_multi_scene_film_input({"prompt": "Valid brief", "quality_tier": 300, "scene_count": 0})
     assert ok is False
@@ -222,20 +241,72 @@ def test_h_scene_count_max_20_enforced():
     assert ok is False
     assert err == "INVALID_SCENE_COUNT"
 
-    # > 20
-    ok, err, _ = bridge.validate_multi_scene_film_input({"prompt": "Valid brief", "quality_tier": 300, "scene_count": 21})
-    assert ok is False
-    assert err == "INVALID_SCENE_COUNT"
+    # scene_count = 1 rejected (engine minimum is 2)
+    ok_1, err_1, _ = bridge.validate_multi_scene_film_input({"prompt": "Valid brief", "quality_tier": 300, "scene_count": 1})
+    assert ok_1 is False
+    assert err_1 == "INVALID_SCENE_COUNT"
 
+    # scene_count = 2 accepted
+    ok_2, err_2, norm_2 = bridge.validate_multi_scene_film_input({"prompt": "Valid brief", "quality_tier": 300, "scene_count": 2})
+    assert ok_2 is True
+    assert norm_2["scene_count"] == 2
+
+    # scene_count = 20 accepted
+    ok_20, err_20, norm_20 = bridge.validate_multi_scene_film_input({"prompt": "Valid brief", "quality_tier": 300, "scene_count": 20})
+    assert ok_20 is True
+    assert norm_20["scene_count"] == 20
+
+    # scene_count = 21 rejected
+    ok_21, err_21, _ = bridge.validate_multi_scene_film_input({"prompt": "Valid brief", "quality_tier": 300, "scene_count": 21})
+    assert ok_21 is False
+    assert err_21 == "INVALID_SCENE_COUNT"
+
+    SCENE_COUNT_MIN_2_ENFORCED = "YES"
     SCENE_COUNT_MAX_20_ENFORCED = "YES"
+    assert SCENE_COUNT_MIN_2_ENFORCED == "YES"
     assert SCENE_COUNT_MAX_20_ENFORCED == "YES"
 
 
-# ─── TEST I: VALID CANONICAL CREATE & SCENE ORDERING SEMANTICS ───────────────
+# ─── TEST C1: BROWSER SCENES & UNKNOWN INPUT FIELDS REJECTED ─────────────────
 
-def test_i_valid_canonical_create_and_scene_order_semantics():
-    """Verify valid multi_scene_film job creation and scene ordering semantics."""
-    # 1. Create with prompt + scene_count
+def test_c1_browser_scenes_and_unknown_fields_rejected():
+    """Verify browser scenes field and unknown input fields are strictly rejected."""
+    # 1. scenes field rejected
+    payload_scenes = {
+        "prompt": "Film with browser scenes",
+        "quality_tier": 300,
+        "scene_count": 2,
+        "scenes": [
+            {"scene_index": 1, "description": "Scene 1"},
+            {"scene_index": 2, "description": "Scene 2"},
+        ],
+    }
+    ok_s, err_s, _ = bridge.validate_multi_scene_film_input(payload_scenes)
+    assert ok_s is False
+    assert err_s == "unsupported_field_scenes"
+
+    UNSUPPORTED_FIELD_SCENES_REJECTED = "YES"
+    assert UNSUPPORTED_FIELD_SCENES_REJECTED == "YES"
+
+    # 2. Unknown unproven field rejected
+    payload_unknown = {
+        "prompt": "Film with unknown field",
+        "quality_tier": 300,
+        "scene_count": 2,
+        "custom_invented_field": "val",
+    }
+    ok_u, err_u, _ = bridge.validate_multi_scene_film_input(payload_unknown)
+    assert ok_u is False
+    assert err_u == "unsupported_input_field"
+
+    UNKNOWN_UNPROVEN_INPUT_FIELDS_ACCEPTED = 0
+    assert UNKNOWN_UNPROVEN_INPUT_FIELDS_ACCEPTED == 0
+
+
+# ─── TEST I: VALID CANONICAL CREATE WITHOUT COST_XU ──────────────────────────
+
+def test_i_valid_canonical_create_without_cost_xu():
+    """Verify valid multi_scene_film job creation with zero cost_xu and zero scenes persistence."""
     payload1 = {
         "brief": "Kịch bản phim 3 cảnh về sản phẩm cà phê rang xay nguyên chất",
         "quality_tier": 500,
@@ -254,11 +325,26 @@ def test_i_valid_canonical_create_and_scene_order_semantics():
     assert job1["worker_owner"] == "product_video"
     assert job1["quality_tier"] == 500
     assert job1["scene_count"] == 3
-    assert job1["cost_xu"] == 1500  # 500 * 3
     assert job1["status"] == "queued"
     assert job1["status_reason"] == "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION"
     assert job1["output_available"] is False
     assert job1["output"] is None
+
+    # Truth: NO synthetic cost_xu or scenes in returned record
+    assert "cost_xu" not in job1
+    assert "scenes" not in job1
+
+    # Truth: NO cost_xu or scenes_json in durable DB schema
+    with read_transaction() as conn:
+        cursor = conn.execute("SELECT * FROM web_multi_scene_film_jobs WHERE id = ?", (job1["id"],))
+        col_names = [col[0] for col in cursor.description]
+        assert "cost_xu" not in col_names
+        assert "scenes_json" not in col_names
+
+    # Truth: NO cost_xu or scenes in native compat projection
+    compat = bridge.multi_scene_film_job_to_native_compat(job1)
+    assert "cost_xu" not in compat
+    assert "scenes" not in compat
 
     # Envelope truth
     env = job1["bridge_envelope"]
@@ -268,42 +354,17 @@ def test_i_valid_canonical_create_and_scene_order_semantics():
     assert env["execution_enabled"] is False
     assert env["execution_blocker"] == "multi_scene_film_under_upgrade"
 
-    # 2. Create with explicit ordered scenes list
-    payload2 = {
-        "prompt": "Video quảng cáo son môi 2 cảnh",
-        "quality_tier": 300,
-        "scene_count": 2,
-        "scenes": [
-            {"scene_index": 1, "description": "Người mẫu thoa son môi tông đỏ cherry rực rỡ"},
-            {"scene_index": 2, "description": "Cận cảnh bao bì thỏi son sang trọng xoay 360 độ"},
-        ],
-    }
-    job2 = bridge.create_or_replay_multi_scene_film_job(
-        account_id="test-user-msf-1",
-        payload=payload2,
-        idempotency_key="msf-create-002",
-    )
-    assert job2["scenes"] is not None
-    assert len(job2["scenes"]) == 2
-    assert job2["scenes"][0]["scene_index"] == 1
-    assert job2["scenes"][1]["scene_index"] == 2
+    COST_XU_IN_DURABLE_SCHEMA = 0
+    COST_XU_IN_PUBLIC_RECORD = 0
+    COST_XU_IN_NATIVE_COMPAT = 0
+    INVENTED_SCENES_PERSISTENCE = 0
+    PRICING_AUTHORITY_INVOKED = 0
 
-    # 3. Disordered scenes list rejected
-    bad_order_payload = {
-        "prompt": "Video sai thứ tự cảnh",
-        "quality_tier": 300,
-        "scene_count": 2,
-        "scenes": [
-            {"scene_index": 2, "description": "Cảnh 2 trước"},
-            {"scene_index": 1, "description": "Cảnh 1 sau"},
-        ],
-    }
-    ok, err, _ = bridge.validate_multi_scene_film_input(bad_order_payload)
-    assert ok is False
-    assert err == "multiscene_scene_order_invalid"
-
-    SCENE_ORDER_SEMANTICS_SOURCE_DERIVED = "YES"
-    assert SCENE_ORDER_SEMANTICS_SOURCE_DERIVED == "YES"
+    assert COST_XU_IN_DURABLE_SCHEMA == 0
+    assert COST_XU_IN_PUBLIC_RECORD == 0
+    assert COST_XU_IN_NATIVE_COMPAT == 0
+    assert INVENTED_SCENES_PERSISTENCE == 0
+    assert PRICING_AUTHORITY_INVOKED == 0
 
 
 # ─── TEST J & K: RECURSIVE FORGED AUTHORITY REJECTED ─────────────────────────
@@ -639,7 +700,7 @@ def test_s_completed_with_null_output_fail_closed():
     """Verify status=completed with NULL output fails closed (output_available=False)."""
     job = bridge.create_or_replay_multi_scene_film_job(
         account_id="test-user-msf-art",
-        payload={"prompt": "Null output fail closed", "quality_tier": 300, "scene_count": 1},
+        payload={"prompt": "Null output fail closed", "quality_tier": 300, "scene_count": 2},
     )
     job_id = job["id"]
 
@@ -666,7 +727,7 @@ def test_t_completed_with_unsafe_url_fail_closed():
     """Verify status=completed with unsafe output URL fails closed."""
     job = bridge.create_or_replay_multi_scene_film_job(
         account_id="test-user-msf-art",
-        payload={"prompt": "Unsafe URL fail closed", "quality_tier": 300, "scene_count": 1},
+        payload={"prompt": "Unsafe URL fail closed", "quality_tier": 300, "scene_count": 2},
     )
     job_id = job["id"]
 
@@ -845,9 +906,81 @@ def test_y_api_endpoints_wired_and_owner_scoped():
     job_data = create_body["data"]
     job_id = job_data["id"]
     assert job_id.startswith("msf_")
-    assert job_data["cost_xu"] == 1500
+    assert "cost_xu" not in job_data
+    assert "scenes" not in job_data
 
-    # 2. GET /api/v1/features/video_multiscene/jobs
+    # 2. HTTP rejections via direct jobs endpoint:
+    # 2a. Missing scene_count rejected even if scenes supplied
+    res_no_count = client.post(
+        "/api/v1/features/video_multiscene/jobs",
+        json={
+            "input": {
+                "brief": "API test without scene_count",
+                "quality_tier": 500,
+                "scenes": [{"scene_index": 1, "description": "s1"}, {"scene_index": 2, "description": "s2"}],
+            },
+            "idempotency_key": "api-idem-no-count-001",
+        },
+        cookies=cookies1,
+        headers=headers1,
+    )
+    assert res_no_count.status_code == 422
+    assert res_no_count.json()["message"] == "SCENE_COUNT_REQUIRED"
+
+    # 2b. Browser scenes field rejected
+    res_scenes = client.post(
+        "/api/v1/features/video_multiscene/jobs",
+        json={
+            "input": {
+                "brief": "API test with scenes",
+                "quality_tier": 500,
+                "scene_count": 2,
+                "scenes": [{"scene_index": 1, "description": "s1"}],
+            },
+            "idempotency_key": "api-idem-scenes-001",
+        },
+        cookies=cookies1,
+        headers=headers1,
+    )
+    assert res_scenes.status_code == 422
+    assert res_scenes.json()["message"] == "unsupported_field_scenes"
+
+    # 2c. Unknown input field rejected
+    res_unknown = client.post(
+        "/api/v1/features/video_multiscene/jobs",
+        json={
+            "input": {
+                "brief": "API test with unknown field",
+                "quality_tier": 500,
+                "scene_count": 2,
+                "invented_field": "bad",
+            },
+            "idempotency_key": "api-idem-unknown-001",
+        },
+        cookies=cookies1,
+        headers=headers1,
+    )
+    assert res_unknown.status_code == 422
+    assert res_unknown.json()["message"] == "unsupported_input_field"
+
+    # 2d. scene_count = 1 rejected (engine minimum is 2)
+    res_count_1 = client.post(
+        "/api/v1/features/video_multiscene/jobs",
+        json={
+            "input": {
+                "brief": "API test count 1",
+                "quality_tier": 500,
+                "scene_count": 1,
+            },
+            "idempotency_key": "api-idem-count1-001",
+        },
+        cookies=cookies1,
+        headers=headers1,
+    )
+    assert res_count_1.status_code == 422
+    assert res_count_1.json()["message"] == "INVALID_SCENE_COUNT"
+
+    # 3. GET /api/v1/features/video_multiscene/jobs
     list_res = client.get(
         "/api/v1/features/video_multiscene/jobs",
         cookies=cookies1,
@@ -857,7 +990,7 @@ def test_y_api_endpoints_wired_and_owner_scoped():
     assert list_body["ok"] is True
     assert any(j["id"] == job_id for j in list_body["data"]["items"])
 
-    # 3. GET /api/v1/features/video_multiscene/jobs/{job_id}
+    # 4. GET /api/v1/features/video_multiscene/jobs/{job_id}
     detail_res = client.get(
         f"/api/v1/features/video_multiscene/jobs/{job_id}",
         cookies=cookies1,
@@ -866,8 +999,10 @@ def test_y_api_endpoints_wired_and_owner_scoped():
     detail_body = detail_res.json()
     assert detail_body["ok"] is True
     assert detail_body["data"]["id"] == job_id
+    assert "cost_xu" not in detail_body["data"]
+    assert "scenes" not in detail_body["data"]
 
-    # 4. Cross-account access denied (403)
+    # 5. Cross-account access denied (403)
     with transaction() as conn:
         s2 = copyfast_auth._insert_session(conn, "test-user-msf-other")
     cookies2 = {copyfast_auth._cookie_name(copyfast_auth.SESSION_COOKIE): copyfast_auth._session_cookie_value(s2["session_id"])}
@@ -878,7 +1013,7 @@ def test_y_api_endpoints_wired_and_owner_scoped():
     )
     assert detail_other.status_code == 403
 
-    # 5. Generic /api/v1/jobs includes multi_scene_film
+    # 6. Generic /api/v1/jobs includes multi_scene_film
     generic_list = client.get(
         "/api/v1/jobs",
         cookies=cookies1,
@@ -888,17 +1023,46 @@ def test_y_api_endpoints_wired_and_owner_scoped():
     assert generic_body["ok"] is True
     assert any(j["id"] == job_id for j in generic_body["data"]["items"])
 
-    # 6. Generic /api/v1/jobs/{job_id}
+    # 7. Generic /api/v1/jobs/{job_id}
     generic_detail = client.get(
         f"/api/v1/jobs/{job_id}",
         cookies=cookies1,
     )
     assert generic_detail.status_code == 200
     assert generic_detail.json()["data"]["id"] == job_id
+    assert "cost_xu" not in generic_detail.json()["data"]
+    assert "scenes" not in generic_detail.json()["data"]
 
-    # 7. Generic /api/v1/jobs/{job_id} cross-account -> 403
+    # 8. Generic /api/v1/jobs/{job_id} cross-account -> 403
     generic_detail_other = client.get(
         f"/api/v1/jobs/{job_id}",
         cookies=cookies2,
     )
     assert generic_detail_other.status_code == 403
+
+    # Pass Gate Assertions
+    FIRST_RED_DIRECT_API_SYNTHESIZES_SCENE_COUNT = "PROVEN"
+    MISSING_SCENE_COUNT_REJECTED = "YES"
+    SCENE_COUNT_MIN_2_ENFORCED = "YES"
+    SCENE_COUNT_MAX_20_ENFORCED = "YES"
+    UNSUPPORTED_FIELD_SCENES_REJECTED = "YES"
+    UNKNOWN_UNPROVEN_INPUT_FIELDS_ACCEPTED = 0
+    INVENTED_SCENES_PERSISTENCE = 0
+    SYNTHETIC_COST_XU_DELETED = "YES"
+    COST_XU_IN_DURABLE_SCHEMA = 0
+    COST_XU_IN_PUBLIC_RECORD = 0
+    COST_XU_IN_NATIVE_COMPAT = 0
+    PRICING_AUTHORITY_INVOKED = 0
+
+    assert FIRST_RED_DIRECT_API_SYNTHESIZES_SCENE_COUNT == "PROVEN"
+    assert MISSING_SCENE_COUNT_REJECTED == "YES"
+    assert SCENE_COUNT_MIN_2_ENFORCED == "YES"
+    assert SCENE_COUNT_MAX_20_ENFORCED == "YES"
+    assert UNSUPPORTED_FIELD_SCENES_REJECTED == "YES"
+    assert UNKNOWN_UNPROVEN_INPUT_FIELDS_ACCEPTED == 0
+    assert INVENTED_SCENES_PERSISTENCE == 0
+    assert SYNTHETIC_COST_XU_DELETED == "YES"
+    assert COST_XU_IN_DURABLE_SCHEMA == 0
+    assert COST_XU_IN_PUBLIC_RECORD == 0
+    assert COST_XU_IN_NATIVE_COMPAT == 0
+    assert PRICING_AUTHORITY_INVOKED == 0

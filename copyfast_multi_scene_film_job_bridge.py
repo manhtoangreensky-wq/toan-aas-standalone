@@ -71,9 +71,22 @@ SUPPORTED_CANONICAL_JOB_ADAPTERS: frozenset[str] = frozenset({
 ALLOWED_QUALITY_TIERS: tuple[int, ...] = (
     200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500,
 )
-MIN_SCENE_COUNT = 1
+MIN_SCENE_COUNT = 2
 MAX_SCENE_COUNT = 20
 MAX_PROMPT_LENGTH = 2000
+
+ALLOWED_INPUT_FIELDS: frozenset[str] = frozenset({
+    "brief",
+    "long_form_plan",
+    "prompt",
+    "script",
+    "text",
+    "tier",
+    "quality_tier",
+    "scene_count",
+    "idempotency_key",
+    "request_id",
+})
 
 FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED: frozenset[str] = frozenset({
     # Video Trend and common canonical financial/job authority fields
@@ -144,7 +157,6 @@ def compute_payload_hash(normalized_payload: dict[str, Any]) -> str:
             "prompt": normalized_payload.get("prompt", ""),
             "quality_tier": normalized_payload.get("quality_tier"),
             "scene_count": normalized_payload.get("scene_count"),
-            "scenes": normalized_payload.get("scenes"),
             "product_key": CANONICAL_PRODUCT_KEY,
             "routing_key": CANONICAL_ROUTING_KEY,
         },
@@ -164,9 +176,9 @@ def validate_multi_scene_film_input(payload: dict[str, Any]) -> tuple[bool, str,
     - Rejects forged client authority fields recursively.
     - Requires prompt/brief/script text with 1 <= len <= MAX_PROMPT_LENGTH (2000).
     - Requires quality_tier in ALLOWED_QUALITY_TIERS (no silent defaults).
-    - Requires scene_count in MIN_SCENE_COUNT..MAX_SCENE_COUNT (1..20, no silent defaults).
-    - If scenes list is provided, enforces ordering semantics (scene_index consecutive 1..N)
-      and max scene count 20.
+    - Requires explicit scene_count in MIN_SCENE_COUNT..MAX_SCENE_COUNT (2..20, no silent defaults, no synthesis).
+    - Rejects browser scenes field (unsupported_field_scenes).
+    - Rejects unknown unproven input fields (unsupported_input_field).
 
     Returns:
         (is_valid, error_code, normalized_payload)
@@ -204,61 +216,31 @@ def validate_multi_scene_film_input(payload: dict[str, Any]) -> tuple[bool, str,
     if tier_val not in ALLOWED_QUALITY_TIERS:
         return False, "INVALID_QUALITY_TIER", {}
 
-    # 4. Scene count validation (strict: no silent default)
-    raw_scenes = payload.get("scenes")
-    parsed_scenes: list[dict[str, Any]] | None = None
-    if raw_scenes is not None:
-        if not isinstance(raw_scenes, (list, tuple)):
-            return False, "INVALID_SCENE_PLAN", {}
-        if len(raw_scenes) < MIN_SCENE_COUNT or len(raw_scenes) > MAX_SCENE_COUNT:
-            return False, "INVALID_SCENE_COUNT", {}
-        parsed_scenes = []
-        for expected_idx, item in enumerate(raw_scenes, start=1):
-            if isinstance(item, dict):
-                idx = item.get("scene_index")
-                if idx is not None:
-                    try:
-                        parsed_idx = int(idx)
-                    except (ValueError, TypeError):
-                        return False, "multiscene_scene_order_invalid", {}
-                    if parsed_idx != expected_idx:
-                        return False, "multiscene_scene_order_invalid", {}
-                scene_desc = str(item.get("description") or item.get("prompt") or item.get("scene_specification") or "").strip()
-                parsed_scenes.append({
-                    "scene_index": expected_idx,
-                    "scene_specification": scene_desc[:MAX_PROMPT_LENGTH],
-                })
-            elif isinstance(item, str):
-                parsed_scenes.append({
-                    "scene_index": expected_idx,
-                    "scene_specification": str(item).strip()[:MAX_PROMPT_LENGTH],
-                })
-            else:
-                return False, "INVALID_SCENE_PLAN", {}
-
+    # 4. Scene count validation (strict: no silent default, never synthesized)
     raw_scene_count = payload.get("scene_count")
     if raw_scene_count is None or str(raw_scene_count).strip() == "":
-        if parsed_scenes is not None:
-            scene_count_val = len(parsed_scenes)
-        else:
-            return False, "SCENE_COUNT_REQUIRED", {}
-    else:
-        try:
-            scene_count_val = int(raw_scene_count)
-        except (ValueError, TypeError):
-            return False, "INVALID_SCENE_COUNT", {}
+        return False, "SCENE_COUNT_REQUIRED", {}
+    try:
+        scene_count_val = int(raw_scene_count)
+    except (ValueError, TypeError):
+        return False, "INVALID_SCENE_COUNT", {}
 
     if scene_count_val < MIN_SCENE_COUNT or scene_count_val > MAX_SCENE_COUNT:
         return False, "INVALID_SCENE_COUNT", {}
 
-    if parsed_scenes is not None and len(parsed_scenes) != scene_count_val:
-        return False, "INVALID_SCENE_COUNT", {}
+    # 5. Browser scenes rejection
+    if "scenes" in payload:
+        return False, "unsupported_field_scenes", {}
+
+    # 6. Strict allowlist: reject unknown unproven input fields
+    for key in payload.keys():
+        if key not in ALLOWED_INPUT_FIELDS:
+            return False, "unsupported_input_field", {}
 
     normalized_payload = {
         "prompt": prompt,
         "quality_tier": tier_val,
         "scene_count": scene_count_val,
-        "scenes": parsed_scenes,
         "product_key": CANONICAL_PRODUCT_KEY,
         "routing_key": CANONICAL_ROUTING_KEY,
     }
@@ -287,8 +269,6 @@ def ensure_multi_scene_film_schema(conn: Any = None) -> None:
                 prompt TEXT NOT NULL,
                 quality_tier INTEGER NOT NULL,
                 scene_count INTEGER NOT NULL,
-                cost_xu INTEGER NOT NULL DEFAULT 0,
-                scenes_json TEXT,
                 status TEXT NOT NULL DEFAULT 'queued',
                 status_reason TEXT NOT NULL DEFAULT 'AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION',
                 idempotency_key_hash TEXT,
@@ -343,8 +323,6 @@ def create_or_replay_multi_scene_film_job(
     key_hash = compute_idempotency_hash(clean_key) if clean_key else ""
     payload_hash = compute_payload_hash(normalized_payload)
 
-    cost_xu = normalized_payload["quality_tier"] * normalized_payload["scene_count"]
-
     with transaction() as conn:
         ensure_multi_scene_film_schema(conn)
         # 1. Check idempotency replay within transaction
@@ -391,7 +369,7 @@ def create_or_replay_multi_scene_film_job(
                 id, canonical_job_id, request_id, account_id,
                 product_key, routing_product_key, flow_owner, worker_owner,
                 executor_product_type, engine_route, input_type,
-                prompt, quality_tier, scene_count, cost_xu, scenes_json,
+                prompt, quality_tier, scene_count,
                 status, status_reason, idempotency_key_hash, payload_hash,
                 bridge_envelope_json, output_url, output_metadata_json,
                 created_at, updated_at
@@ -399,7 +377,7 @@ def create_or_replay_multi_scene_film_job(
                 ?, ?, ?, ?,
                 ?, ?, ?, ?,
                 ?, ?, ?,
-                ?, ?, ?, ?, ?,
+                ?, ?, ?,
                 ?, ?, ?, ?,
                 ?, ?, ?,
                 ?, ?
@@ -420,8 +398,6 @@ def create_or_replay_multi_scene_film_job(
                 normalized_payload["prompt"],
                 normalized_payload["quality_tier"],
                 normalized_payload["scene_count"],
-                cost_xu,
-                json.dumps(normalized_payload.get("scenes")) if normalized_payload.get("scenes") else None,
                 STATUS_QUEUED,
                 STATUS_REASON_AWAITING,
                 key_hash if key_hash else None,
@@ -534,8 +510,6 @@ def multi_scene_film_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]
         "worker_owner": CANONICAL_WORKER_OWNER,
         "quality_tier": job.get("quality_tier"),
         "scene_count": job.get("scene_count"),
-        "cost_xu": job.get("cost_xu"),
-        "scenes": job.get("scenes"),
         "output_available": output_available,
         "download_ready": output_available,
         "delivery_ready": output_available,
@@ -566,13 +540,6 @@ def _format_multi_scene_film_job_record(row: dict[str, Any]) -> dict[str, Any]:
         except Exception:
             output_metadata = None
 
-    scenes: list[dict[str, Any]] | None = None
-    if row.get("scenes_json"):
-        try:
-            scenes = json.loads(row["scenes_json"])
-        except Exception:
-            scenes = None
-
     clean_output = output_url if output_available else None
 
     return {
@@ -590,8 +557,6 @@ def _format_multi_scene_film_job_record(row: dict[str, Any]) -> dict[str, Any]:
         "prompt": row.get("prompt"),
         "quality_tier": row.get("quality_tier"),
         "scene_count": row.get("scene_count"),
-        "cost_xu": row.get("cost_xu"),
-        "scenes": scenes,
         "status": row.get("status"),
         "status_reason": row.get("status_reason"),
         "output": clean_output,

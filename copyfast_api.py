@@ -2084,14 +2084,16 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
 def _feature_input_contract_response(feature: str, reason: str) -> dict:
     messages = {
         "authority_field_not_allowed": "Yêu cầu feature có trường hệ thống không được phép; Web không nhận identity, Xu, provider, job hoặc output từ browser.",
+        "unsupported_field_scenes": "Web không nhận danh sách scenes từ client trong R1 canonical bridge.",
+        "unsupported_input_field": "Trường đầu vào không được hỗ trợ trong hợp đồng canonical.",
         "multiscene_scene_order_invalid": "Thứ tự cảnh không hợp lệ. Các cảnh phải có scene_index liên tiếp từ 1.",
         "INVALID_SCENE_PLAN": "Cấu trúc danh sách cảnh không hợp lệ.",
         "PROMPT_REQUIRED": "Prompt là bắt buộc đối với Video AI Prompt.",
         "PROMPT_TOO_LONG": "Prompt video không được vượt quá 2000 ký tự.",
         "TIER_REQUIRED": "Quality tier là bắt buộc (200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500).",
         "INVALID_QUALITY_TIER": "Quality tier không hợp lệ. Phải thuộc (200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500).",
-        "SCENE_COUNT_REQUIRED": "Số cảnh scene_count là bắt buộc (1..20).",
-        "INVALID_SCENE_COUNT": "Số cảnh không hợp lệ. Phải thuộc từ 1 đến 20 cảnh.",
+        "SCENE_COUNT_REQUIRED": "Số cảnh scene_count là bắt buộc (2..20).",
+        "INVALID_SCENE_COUNT": "Số cảnh không hợp lệ. Phải thuộc từ 2 đến 20 cảnh.",
         "ASPECT_RATIO_REQUIRED": "Aspect ratio là bắt buộc ('9:16', '16:9', '1:1').",
         "INVALID_ASPECT_RATIO": "Aspect ratio không hợp lệ. Phải thuộc ('9:16', '16:9', '1:1').",
         "DURATION_REQUIRED": "Thời lượng duration_seconds là bắt buộc (5, 10, 15).",
