@@ -3178,6 +3178,103 @@
     }, delay);
   }
 
+  let productVideoPollTimer = 0;
+  let productVideoPollEpoch = 0;
+  let productVideoLastStatus = "";
+
+  const PRODUCT_VIDEO_TERMINAL_STATES = (typeof window !== "undefined" && window.__PRODUCT_VIDEO_TERMINAL_STATES__) || Object.freeze(new Set([
+    "completed", "failed", "failed_no_charge", "cancelled", "refunded"
+  ]));
+  if (typeof window !== "undefined") {
+    window.__PRODUCT_VIDEO_TERMINAL_STATES__ = PRODUCT_VIDEO_TERMINAL_STATES;
+  }
+
+  function stopProductVideoPolling() {
+    productVideoPollEpoch += 1;
+    if (productVideoPollTimer) {
+      window.clearTimeout(productVideoPollTimer);
+      productVideoPollTimer = 0;
+    }
+  }
+
+  function scheduleProductVideoPolling(jobId, delayMs) {
+    if (!jobId || typeof window === "undefined") return;
+    if (productVideoPollTimer) {
+      window.clearTimeout(productVideoPollTimer);
+      productVideoPollTimer = 0;
+    }
+    const currentPath = currentPortalPath();
+    if (currentPath !== "/video/create" && currentPath !== "/video/new") return;
+
+    const requestEpoch = ++productVideoPollEpoch;
+    const delay = Number.isFinite(Number(delayMs)) ? Math.max(0, Number(delayMs)) : 2500;
+
+    productVideoPollTimer = window.setTimeout(async () => {
+      productVideoPollTimer = 0;
+      if (requestEpoch !== productVideoPollEpoch) return;
+      const pathNow = currentPortalPath();
+      if (pathNow !== "/video/create" && pathNow !== "/video/new") return;
+
+      try {
+        const response = await api(`/features/video_ai_prompt/jobs/${encodeURIComponent(jobId)}`);
+        if (requestEpoch !== productVideoPollEpoch) return;
+        const freshPath = currentPortalPath();
+        if (freshPath !== "/video/create" && freshPath !== "/video/new") return;
+
+        const job = response && response.data;
+        if (!job || !job.id) return;
+
+        const newStatus = String(job.status || "").toLowerCase();
+
+        // Stale response / status regression protection:
+        // Never regress from terminal to active
+        if (PRODUCT_VIDEO_TERMINAL_STATES.has(productVideoLastStatus) && !PRODUCT_VIDEO_TERMINAL_STATES.has(newStatus)) {
+          return;
+        }
+
+        productVideoLastStatus = newStatus;
+
+        const prior = priorFeatureFlow("/video/create");
+        merge({
+          pageStates: { ...(base().pageStates || {}), ["/video/create"]: newStatus },
+          featureFlows: {
+            ...(base().featureFlows || {}),
+            ["/video/create"]: {
+              feature: "video_ai_prompt",
+              phase: "confirm",
+              status: newStatus,
+              message: response.message || ("Trạng thái job: " + newStatus),
+              data: job,
+              input: (prior && prior.input) || {
+                prompt: job.prompt,
+                aspect_ratio: job.aspect_ratio,
+                duration_seconds: job.duration_seconds,
+                quality_tier: job.quality_tier,
+              },
+              inputFingerprint: (prior && prior.inputFingerprint) || "",
+              estimateFingerprint: (prior && prior.estimateFingerprint) || "",
+              webQuoteReceipt: (prior && prior.webQuoteReceipt) || ""
+            }
+          }
+        });
+
+        if (PRODUCT_VIDEO_TERMINAL_STATES.has(newStatus)) {
+          stopProductVideoPolling();
+          return;
+        }
+
+        scheduleProductVideoPolling(jobId, 2500);
+      } catch (err) {
+        if (requestEpoch !== productVideoPollEpoch) return;
+        if (err && err.status && (err.status === 403 || err.status === 404)) {
+          stopProductVideoPolling();
+          return;
+        }
+        scheduleProductVideoPolling(jobId, 5000);
+      }
+    }, delay);
+  }
+
   function paymentIdFromData(data) {
     const source = data && typeof data === "object" ? data : {};
     return String(source.payment_id || source.order_code || source.id || "").trim();
@@ -26495,6 +26592,66 @@
         // Native image operations hydrate separately from Asset Vault. Do not
         // request pricing/readiness from the bridge or overwrite the strict
         // server-side guarded/ready state with a generic image feature badge.
+      } else if (path === "/video/create" || path === "/video/new") {
+        const [pricing, readiness] = await Promise.all([api("/pricing"), api("/features/status")]);
+        if (!isCurrent()) return null;
+        let candidateJobId = "";
+        try {
+          if (typeof window !== "undefined" && window.location) {
+            const urlParams = new URLSearchParams(window.location.search);
+            candidateJobId = urlParams.get("job_id") || "";
+          }
+          if (!candidateJobId && typeof sessionStorage !== "undefined") {
+            candidateJobId = sessionStorage.getItem("toanaas_last_product_video_job_id") || "";
+          }
+        } catch (_) {}
+
+        let restoredFlow = null;
+        let restoredStatus = "read_only";
+        if (candidateJobId && /^[A-Za-z0-9._:-]{1,160}$/.test(candidateJobId)) {
+          try {
+            const jobRes = await api(`/features/video_ai_prompt/jobs/${encodeURIComponent(candidateJobId)}`);
+            if (jobRes && jobRes.data && jobRes.data.id === candidateJobId) {
+              const jobData = jobRes.data;
+              restoredStatus = String(jobData.status || "").toLowerCase();
+              productVideoLastStatus = restoredStatus;
+              restoredFlow = {
+                feature: "video_ai_prompt",
+                phase: "confirm",
+                status: restoredStatus,
+                message: jobRes.message || ("Trạng thái job: " + restoredStatus),
+                data: jobData,
+                input: {
+                  prompt: jobData.prompt,
+                  aspect_ratio: jobData.aspect_ratio,
+                  duration_seconds: jobData.duration_seconds,
+                  quality_tier: jobData.quality_tier,
+                },
+                inputFingerprint: "",
+                estimateFingerprint: "",
+                webQuoteReceipt: ""
+              };
+              if (!PRODUCT_VIDEO_TERMINAL_STATES.has(restoredStatus)) {
+                scheduleProductVideoPolling(candidateJobId, 1000);
+              }
+            }
+          } catch (err) {
+            try {
+              if (typeof sessionStorage !== "undefined") sessionStorage.removeItem("toanaas_last_product_video_job_id");
+            } catch (_) {}
+          }
+        }
+
+        const currentFlows = (base().featureFlows || {});
+        merge({
+          pricingCatalog: pricing.data || {},
+          readiness: readiness.data || {},
+          pageStates: {
+            ...featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures),
+            [path]: restoredFlow ? restoredStatus : "read_only"
+          },
+          featureFlows: restoredFlow ? { ...currentFlows, [path]: restoredFlow } : currentFlows
+        });
       } else if ((path === "/image" || (path.startsWith("/image/") && path !== "/image/history")) || (canonicalBotVideoRoute && !["/video/progress", "/video/preview", "/video/export"].includes(path))) {
         const [pricing, readiness] = await Promise.all([api("/pricing"), api("/features/status")]);
         if (!isCurrent()) return null;
@@ -38193,6 +38350,36 @@
       if (route === "/image/edit" && ["feature-draft", "feature-estimate", "feature-confirm"].includes(action)) {
         throw new Error("Image Enhance Studio chỉ dùng thao tác private native; không tạo draft, quote hay Job bridge.");
       }
+      if (action === "product-video-new") {
+        stopProductVideoPolling();
+        try {
+          if (typeof sessionStorage !== "undefined") {
+            sessionStorage.removeItem("toanaas_last_product_video_job_id");
+          }
+          if (typeof window !== "undefined" && window.history && window.history.replaceState) {
+            window.history.replaceState({}, "", "/video/create");
+          }
+        } catch (_) {}
+        productVideoLastStatus = "";
+        merge({
+          pageStates: { ...(base().pageStates || {}), ["/video/create"]: "draft" },
+          featureFlows: {
+            ...(base().featureFlows || {}),
+            ["/video/create"]: {
+              feature: "video_ai_prompt",
+              phase: "draft",
+              status: "draft",
+              message: "",
+              data: {},
+              input: {},
+              inputFingerprint: "",
+              estimateFingerprint: "",
+              webQuoteReceipt: ""
+            }
+          }
+        });
+        return;
+      }
       if (action === "feature-draft" || action === "feature-estimate" || action === "feature-confirm") {
         const feature = FEATURE_BY_PATH[route];
         if (!feature) throw new Error("Tính năng này chưa có mapping bridge an toàn.");
@@ -38249,6 +38436,19 @@
             }
           }
         });
+        if ((feature === "video_ai_prompt" || route === "/video/create") && result.data && result.data.id) {
+          const newJobId = String(result.data.id);
+          try {
+            if (typeof sessionStorage !== "undefined") {
+              sessionStorage.setItem("toanaas_last_product_video_job_id", newJobId);
+            }
+            if (typeof window !== "undefined" && window.history && window.history.replaceState) {
+              window.history.replaceState({}, "", "/video/create?job_id=" + encodeURIComponent(newJobId));
+            }
+          } catch (_) {}
+          productVideoLastStatus = String(result.data.status || result.status || "queued").toLowerCase();
+          scheduleProductVideoPolling(newJobId, 2500);
+        }
         return;
       }
       toast("Thao tác này đang chờ adapter canonical được xác minh.", "error");
@@ -38472,6 +38672,7 @@
     // destination while the next owner-scoped read is pending.
     const route = String(window.location.pathname || "/").split("?")[0] || "/";
     if (route === currentPortalPath()) return;
+    stopProductVideoPolling();
     const projectRoute = projectIdFromPath(route) ? route : "";
     // `merge()` remounts synchronously.  Clear only the Project projection
     // for a Project destination; unrelated Back/Forward routes keep their

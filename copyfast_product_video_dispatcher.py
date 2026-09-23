@@ -25,6 +25,7 @@ import logging
 import os
 import re
 from typing import Any
+import urllib.parse
 
 from fastapi import HTTPException, Request, status
 
@@ -166,6 +167,90 @@ def validate_video_artifact_metadata(metadata: Any) -> tuple[bool, str, dict[str
         "verified_at": utc_now(),
     }
     return True, "", sanitized
+
+
+def is_safe_product_video_output_url(url: Any) -> bool:
+    """Validate that a Product Video output URL is safe to store, redirect to, or preview.
+
+    Authoritative security check:
+    - Must be a non-empty string <= 4096 characters.
+    - No control characters (0x00 - 0x1F, 0x7F).
+    - No backslash characters (\\).
+    - Rejects dangerous schemes: javascript:, data:, file:, vbscript:, blob:, etc.
+    - Rejects decoded path traversal ('..' or '%2e%2e' in any path segment).
+    - Internal paths must strictly start with '/api/v1/'.
+    - External URLs must be valid HTTP/HTTPS with a non-empty hostname.
+    - Rejects embedded credentials (username:password@hostname).
+    - In production, HTTPS is required; HTTP is permitted ONLY for local test environments
+      (localhost, 127.0.0.1, testserver).
+    """
+    if not isinstance(url, str):
+        return False
+    raw = url.strip()
+    if not raw or len(raw) > 4096:
+        return False
+
+    # Control characters
+    if any(ord(c) < 32 or ord(c) == 127 for c in raw):
+        return False
+
+    # Backslash tricks
+    if "\\" in raw:
+        return False
+
+    lower = raw.lower()
+    for bad_scheme in ("javascript:", "data:", "file:", "vbscript:", "blob:", "about:", "gopher:"):
+        if lower.startswith(bad_scheme):
+            return False
+
+    # Decoded traversal check (iteratively unquote to catch nested encoding like %252e%252e)
+    unquoted = raw
+    for _ in range(3):
+        prev = unquoted
+        unquoted = urllib.parse.unquote(unquoted)
+        if unquoted == prev:
+            break
+
+    if ".." in unquoted:
+        return False
+
+    # Internal API route
+    if raw.startswith("/api/v1/"):
+        return True
+
+    # Reject other relative paths or paths starting with /
+    if raw.startswith("/"):
+        return False
+
+    # External URL parsing
+    try:
+        parsed = urllib.parse.urlsplit(raw)
+    except Exception:
+        return False
+
+    if parsed.scheme not in ("https", "http"):
+        return False
+
+    # Missing hostname
+    if not parsed.hostname:
+        return False
+
+    # Embedded credentials
+    if parsed.username or parsed.password:
+        return False
+
+    # HTTP only permitted for local test hosts
+    if parsed.scheme == "http":
+        if parsed.hostname not in ("localhost", "127.0.0.1", "testserver"):
+            return False
+
+    # Ensure path segments don't contain traversal
+    path_decoded = urllib.parse.unquote(parsed.path)
+    segments = [s for s in path_decoded.split("/") if s]
+    if any(s in ("..", ".") for s in segments):
+        return False
+
+    return True
 
 
 def claim_product_video_job(
@@ -313,7 +398,17 @@ def complete_product_video_job(
 
     now = now_dt or datetime.now(timezone.utc)
     now_iso = now.isoformat()
-    effective_url = str(output_url or "").strip() or f"/api/v1/assets/{clean_job}/download"
+    clean_url = str(output_url or "").strip()
+    if not clean_url:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="URL output video không được để trống: OUTPUT_URL_REQUIRED",
+        )
+    if not is_safe_product_video_output_url(clean_url):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="URL output video không an toàn hoặc không hợp lệ: UNSAFE_OUTPUT_URL",
+        )
     meta_json = json.dumps(sanitized_meta, separators=(",", ":"), ensure_ascii=False)
 
     with transaction() as conn:
@@ -357,7 +452,7 @@ def complete_product_video_job(
                 STATUS_COMPLETED,
                 STATUS_REASON_COMPLETED,
                 meta_json,
-                effective_url,
+                clean_url,
                 now_iso,
                 clean_job,
                 clean_worker,
@@ -619,11 +714,13 @@ def _format_claimed_job(row: tuple) -> dict[str, Any]:
 
     status_str = str(row[10])
     is_completed = status_str == STATUS_COMPLETED
-    output_url_val = (
-        str(row[22])
+    persisted_output_url = (
+        str(row[22]).strip()
         if len(row) > 22 and row[22]
-        else (f"/api/v1/assets/{row[0]}/download" if is_completed else None)
+        else ""
     )
+    has_real_output = bool(is_completed and persisted_output_url)
+    output_url_val = persisted_output_url if has_real_output else None
 
     return {
         "id": str(row[0]),
@@ -639,10 +736,10 @@ def _format_claimed_job(row: tuple) -> dict[str, Any]:
         "scene_count": int(row[9]),
         "status": status_str,
         "status_reason": str(row[11]),
-        "output_available": is_completed,
-        "download_ready": is_completed,
-        "delivery_ready": is_completed,
-        "output": output_url_val if is_completed else None,
+        "output_available": has_real_output,
+        "download_ready": has_real_output,
+        "delivery_ready": has_real_output,
+        "output": output_url_val,
         "output_metadata": output_meta,
         "created_at": str(row[16]),
         "updated_at": str(row[17]),
@@ -651,7 +748,7 @@ def _format_claimed_job(row: tuple) -> dict[str, Any]:
         "claimed_at": str(row[19]) if len(row) > 19 and row[19] else None,
         "lease_expires_at": str(row[20]) if len(row) > 20 and row[20] else None,
         "attempts": int(row[21]) if len(row) > 21 and row[21] is not None else 0,
-        "output_url": output_url_val if is_completed else None,
+        "output_url": output_url_val,
         "payload": {
             "prompt": str(row[5]),
             "aspect_ratio": str(row[6]),

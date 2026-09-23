@@ -2303,13 +2303,21 @@ async def security_headers(request: Request, call_next):
     # Keep their cross-origin resource boundary explicit; the generic API
     # no-store rule below keeps them out of browser/PWA caches.
     private_governance = request.url.path.startswith("/api/v1/admin/governance/")
+    private_feature_video_job_download = (
+        request.url.path.startswith("/api/v1/features/video_ai_prompt/jobs/")
+        and request.url.path.endswith("/download")
+    )
     private_download = (
         private_asset_download or private_asset_vault_video_preview or private_native_asset_download or private_package_download or private_document_download
         or private_image_download or private_subtitle_asset_download or private_audio_asset_download or private_video_download or private_frame_video_download or private_video_transform_download or private_storyboard_grid_download
         or private_support_evidence_download or private_media_workspace_preview or private_prompt_export
         or private_manual_analytics_csv_export or private_data_controls_export or private_admin_document_archive_download
+        or private_feature_video_job_download
     )
-    response.headers["Referrer-Policy"] = "no-referrer" if private_download or mailbox_confirmation else "same-origin"
+    response.headers["Referrer-Policy"] = (
+        response.headers.get("Referrer-Policy")
+        or ("no-referrer" if private_download or mailbox_confirmation else "same-origin")
+    )
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     response.headers["Content-Security-Policy"] = (
         "sandbox"

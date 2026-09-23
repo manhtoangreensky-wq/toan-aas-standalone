@@ -141,6 +141,7 @@ from copyfast_product_video_dispatcher import (
     fail_product_video_job,
     get_product_video_dispatcher_metrics,
     heartbeat_product_video_job,
+    is_safe_product_video_output_url,
     reconcile_stalled_product_video_jobs,
     verify_worker_access,
 )
@@ -3413,6 +3414,24 @@ async def _native_asset_delivery(asset_id: str, account: dict):
         # This direct call retains the Asset Vault handler's account/state and
         # integrity checks without exposing a decoded raw ID in a redirect.
         return await download_asset(native_asset_id, account)
+    account_id = str(account.get("id") or "").strip()
+    if is_product_video_job_other_account(asset_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    pv_job = get_product_video_job(account_id, asset_id)
+    if pv_job is not None:
+        if pv_job.get("status") != "completed" or not pv_job.get("download_ready") or not pv_job.get("output_available"):
+            return envelope(False, "Tác vụ video chưa hoàn thành hoặc chưa sẵn sàng để tải.", status_name="guarded", error_code="PRODUCT_VIDEO_OUTPUT_UNAVAILABLE")
+        out_url = str(pv_job.get("output_url") or pv_job.get("output") or "").strip()
+        if not out_url or out_url.startswith("/api/v1/assets/"):
+            return envelope(False, "File kết quả video không tồn tại.", status_name="unavailable", error_code="PRODUCT_VIDEO_OUTPUT_NOT_FOUND")
+        if not is_safe_product_video_output_url(out_url):
+            return envelope(False, "Đường dẫn file video không an toàn.", status_name="guarded", error_code="UNSAFE_OUTPUT_URL")
+        if out_url.startswith("https://") or out_url.startswith("http://"):
+            redirect = RedirectResponse(out_url, status_code=307)
+            redirect.headers["Cache-Control"] = "no-store"
+            redirect.headers["Referrer-Policy"] = "no-referrer"
+            redirect.headers["X-Content-Type-Options"] = "nosniff"
+            return redirect
     return None
 
 
@@ -6264,6 +6283,37 @@ async def get_product_video_job_route(
     if is_product_video_job_other_account(job_id, account_id):
         raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
     raise HTTPException(status_code=404, detail="Không tìm thấy job Video AI Prompt của tài khoản.")
+
+
+@router.get("/features/video_ai_prompt/jobs/{job_id}/download")
+async def download_product_video_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "").strip()
+    clean_job_id = str(job_id or "").strip()
+    if not clean_job_id:
+        raise HTTPException(status_code=400, detail="Mã job không được để trống.")
+    if is_product_video_job_other_account(clean_job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    job = get_product_video_job(account_id, clean_job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy job Video AI Prompt của tài khoản.")
+    if job.get("status") != "completed" or not job.get("download_ready") or not job.get("output_available"):
+        raise HTTPException(status_code=409, detail="File video chưa hoàn thành hoặc chưa sẵn sàng để tải.")
+    output_url = str(job.get("output_url") or job.get("output") or "").strip()
+    if not output_url:
+        raise HTTPException(status_code=404, detail="File kết quả video không tồn tại.")
+    if not is_safe_product_video_output_url(output_url):
+        raise HTTPException(status_code=400, detail="Đường dẫn file video không an toàn hoặc không hợp lệ.")
+    if output_url.startswith("https://") or output_url.startswith("http://"):
+        redirect = RedirectResponse(output_url, status_code=307)
+        redirect.headers["Cache-Control"] = "no-store"
+        redirect.headers["Referrer-Policy"] = "no-referrer"
+        redirect.headers["X-Content-Type-Options"] = "nosniff"
+        return redirect
+    raise HTTPException(status_code=404, detail="Không tìm thấy file kết quả video.")
 
 
 @router.get("/admin/summary")
