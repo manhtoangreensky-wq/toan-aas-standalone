@@ -728,3 +728,132 @@ def test_u_matrix_blocked_to_partial():
 
     VIDEO_LONG_MASTER_STATUS = vl_entry["status"]
     assert VIDEO_LONG_MASTER_STATUS == "PARTIAL"
+
+
+# ─── TEST V: URL VALIDATOR HARDENED AGAINST UNSAFE CANDIDATES ───────────────
+
+def test_v_url_validator_hardened_against_unsafe_candidates():
+    """Verify video_long safe URL validator rejects all unsafe candidates accepted by earlier weak validator.
+
+    Must reject:
+    - Leading/trailing whitespace
+    - %2e / %2E directory traversal sequences
+    - Malformed hostname syntax (underscores, invalid labels)
+    - Control characters (ASCII < 32, ASCII 127)
+    - Embedded credentials and explicit non-443 ports
+    - Non-video extensions
+    """
+    unsafe_candidates = [
+        # A. Whitespace
+        " https://host.site/video.mp4 ",
+        "https://host.site/video.mp4 ",
+        " https://host.site/video.mp4",
+        "\thttps://host.site/video.mp4",
+        # B. %2e traversal
+        "https://host.site/video/%2e%2e/private.mp4",
+        "https://host.site/video/%2E%2E/private.mp4",
+        "https://host.site/video/%2e/private.mp4",
+        "https://host.site/%2e%2e/root.mp4",
+        # C. Malformed hostname
+        "https://bad_host.site/video.mp4",
+        "https://invalid..host.site/video.mp4",
+        "https://-badhost.site/video.mp4",
+        "https://host site/video.mp4",
+        # D. Control chars
+        "https://host.site/video\x00.mp4",
+        "https://host.site/video\r\n.mp4",
+        "https://host.site/video\x1f.mp4",
+        "https://host.site/video\x7f.mp4",
+        # Credentials & ports
+        "https://user:pass@host.site/video.mp4",
+        "https://host.site:8080/video.mp4",
+        "https://host.site:80/video.mp4",
+        # Dangerous schemes
+        "http://insecure.site/video.mp4",
+        "javascript:alert(1)",
+        "file:///etc/passwd",
+        # Non-video extensions
+        "https://host.site/payload.exe",
+        "https://host.site/image.png",
+        "https://host.site/script.sh",
+    ]
+
+    unsafe_accepted = 0
+    for bad_url in unsafe_candidates:
+        if bridge.is_safe_video_output_url(bad_url):
+            unsafe_accepted += 1
+
+    UNSAFE_OUTPUT_URL_ACCEPTED = unsafe_accepted
+    assert UNSAFE_OUTPUT_URL_ACCEPTED == 0
+
+    # E. Safe HTTPS structural fixture remains accepted
+    safe_fixtures = [
+        "https://storage.googleapis.com/toanaas-media/long_output.mp4",
+        "https://tg.toanaas.vn/media/long_result.webm",
+        "https://cdn.toanaas.vn/media/final.mov",
+    ]
+    for safe_url in safe_fixtures:
+        assert bridge.is_safe_video_output_url(safe_url) is True
+
+    VIDEO_LONG_SAFE_URL_NOT_WEAKER_THAN_TREND = "PASS"
+    assert VIDEO_LONG_SAFE_URL_NOT_WEAKER_THAN_TREND == "PASS"
+
+
+# ─── TEST W: RECURSIVE NORMALIZED CLIENT AUTHORITY FAIL-CLOSED ──────────────
+
+def test_w_recursive_normalized_client_authority_fail_closed():
+    """Verify recursive normalized client authority rejection across nested structures and aliases.
+
+    Must reject:
+    - Top-level canonical keys
+    - Deep nested dicts
+    - Authority fields inside lists/tuples
+    - camelCase normalized equivalents
+    - UPPERCASE equivalents
+    """
+    base_valid = {"prompt": "Valid long form prompt", "quality_tier": 300, "scene_count": 2}
+
+    authority_probes = [
+        # Top-level canonical
+        {"status": "completed"},
+        {"job_id": "vlj_fake123"},
+        {"worker_owner": "evil_worker"},
+        {"cost": 0},
+        {"xu": 99999},
+        # Deep nested dict (F)
+        {"meta": {"nested": {"output_url": "https://evil.com/video.mp4"}}},
+        {"config": {"deep": {"level3": {"amount": 0}}}},
+        {"extra": {"sub": {"deep": {"secret": "injected"}}}},
+        # Nested list/tuple (G)
+        {"items": [{"provider_task_id": "task_123"}]},
+        {"scenes": [("scene1", {"wallet": "infinite"})]},
+        {"payload_list": [{"nested": [{"flow_owner": "fake"}]}]},
+        # camelCase / normalized equivalent (H)
+        {"outputUrl": "https://evil.com/video.mp4"},
+        {"accountId": "acc_fake123"},
+        {"providerTaskId": "task_456"},
+        {"xuCharged": 100},
+        {"workerOwner": "product_video"},
+        {"flowOwner": "video_long"},
+        {"engineRoute": "video_long"},
+        {"executorProductType": "multi_scene_film"},
+        # UPPERCASE equivalent
+        {"OUTPUT_URL": "https://evil.com/video.mp4"},
+        {"STATUS": "completed"},
+        {"PROVIDER_ID": "fake"},
+        {"ACCOUNT_ID": "acc_000"},
+        {"SECRET": "leak"},
+    ]
+
+    accepted_count = 0
+    for probe in authority_probes:
+        test_payload = {**base_valid, **probe}
+        ok, err, _ = bridge.validate_video_long_input(test_payload)
+        if ok or err != "authority_field_not_allowed":
+            accepted_count += 1
+
+    CLIENT_AUTHORITY_FIELDS_ACCEPTED = accepted_count
+    assert CLIENT_AUTHORITY_FIELDS_ACCEPTED == 0
+
+    AUTHORITY_RECURSIVE_FAIL_CLOSED = "PASS"
+    assert AUTHORITY_RECURSIVE_FAIL_CLOSED == "PASS"

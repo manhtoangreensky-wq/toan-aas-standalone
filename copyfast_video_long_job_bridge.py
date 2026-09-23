@@ -44,6 +44,7 @@ from urllib.parse import urlsplit
 from fastapi import HTTPException
 
 from copyfast_db import read_transaction, transaction
+from copyfast_video_trend_job_bridge import is_safe_video_output_url as _is_safe_trend_video_output_url
 
 
 # ─── CANONICAL CONSTANTS ─────────────────────────────────────────────────────
@@ -69,80 +70,68 @@ MIN_SCENE_COUNT = 1
 MAX_SCENE_COUNT = 20
 MAX_PROMPT_LENGTH = 2000
 
-FORBIDDEN_CLIENT_AUTHORITY_KEYS: frozenset[str] = frozenset({
-    "account_id",
-    "owner_id",
-    "user_id",
-    "canonical_user_id",
-    "job_id",
-    "id",
-    "status",
-    "status_reason",
-    "provider",
-    "provider_id",
-    "provider_task_id",
-    "output",
-    "output_url",
-    "download_url",
-    "wallet",
-    "wallet_id",
-    "balance",
-    "xu",
-    "xu_charged",
-    "price",
-    "cost",
-    "amount",
-    "payment",
-    "payment_id",
-    "refund",
-    "worker_id",
-    "worker_owner",
-    "bridge_envelope",
-    "output_metadata",
+FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED: frozenset[str] = frozenset({
+    # Video Trend and common canonical financial/job authority fields
+    "id", "amount", "amountvnd", "price", "cost", "currency", "paymentid", "ordercode",
+    "checkouturl", "webhook", "provider", "providerid", "providertaskid", "apikey", "apitoken", "token",
+    "secret", "jobid", "jobstatus", "status", "statusreason", "output", "outputurl",
+    "assetid", "downloadurl", "role", "balance", "xu", "wallet", "authority",
+    "accountid", "ownerid", "userid", "user_id", "account_id", "owner_id", "refund", "refundstatus",
+    "refund_status", "bridgeenvelope", "outputmetadata",
+    # Video Long specific authority fields (normalized)
+    "createdat", "updatedat", "flowowner", "workerowner", "engineroute",
+    "executorproducttype", "inputtype", "customerid", "xucharged", "workerid", "walletid",
 })
+FORBIDDEN_CLIENT_AUTHORITY_KEYS: frozenset[str] = FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED
 
 SAFE_VIDEO_EXTENSIONS: frozenset[str] = frozenset({".mp4", ".webm", ".mov"})
 
 
+def _contains_authority_field(value: Any) -> bool:
+    """Recursively find forged authority fields in incoming client input.
+
+    Recursively walks dicts and lists/tuples.
+    Normalizes keys (lower-case alphanumeric only) to block camelCase, snake_case,
+    UPPERCASE, or delimiter-spaced authority aliases.
+    """
+    if isinstance(value, dict):
+        for key, child in value.items():
+            normalized = "".join(ch for ch in str(key or "").lower() if ch.isalnum())
+            if normalized in FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED:
+                return True
+            if _contains_authority_field(child):
+                return True
+    elif isinstance(value, (list, tuple)):
+        return any(_contains_authority_field(child) for child in value)
+    return False
+
+
 # ─── SAFE OUTPUT URL VALIDATOR ───────────────────────────────────────────────
 
-def is_safe_video_output_url(url: str | None) -> bool:
+def is_safe_video_output_url(url: Any) -> bool:
     """Validate that an output URL meets strict safety constraints.
 
-    Must be:
-    - Non-empty string <= 2048 chars
-    - Scheme must be HTTPS
-    - Hostname must be present and not contain credentials (@)
-    - Port must be standard 443 (or None)
-    - No relative path traversal ('..') or backslashes
-    - Path must end in an allowed safe video extension (.mp4, .webm, .mov)
+    Reuses and enforces all fail-closed security guarantees from Video Trend:
+    - Must be a non-empty string with length <= 2048 and no leading/trailing whitespace.
+    - Zero control characters (ASCII < 32 or ASCII == 127).
+    - Zero backslashes (prevents authority/path confusion bypasses).
+    - Zero directory traversal sequences ('..' or '%2e' / '%2E').
+    - Strict scheme check: must be 'https' (lowercase).
+    - Rejects dangerous schemes: javascript:, vbscript:, data:, file:, blob:, about:, etc.
+    - Rejects embedded credentials (username, password, '@' in authority/netloc).
+    - Hostname must be non-empty, valid domain/label characters without illegal punctuation/spaces.
+    - Port must be None or 443.
+
+    Additionally enforces valid video extension (.mp4, .webm, .mov).
     """
-    if not url or not isinstance(url, str):
-        return False
-    clean_url = url.strip()
-    if len(clean_url) > 2048 or len(clean_url) < 8:
+    if not _is_safe_trend_video_output_url(url):
         return False
     try:
-        parts = urlsplit(clean_url)
+        parsed = urlsplit(str(url))
+        path = parsed.path.lower()
+        return any(path.endswith(ext) for ext in SAFE_VIDEO_EXTENSIONS)
     except Exception:
         return False
-
-    if parts.scheme.lower() != "https":
-        return False
-    if not parts.netloc or "@" in parts.netloc:
-        return False
-    if parts.port is not None and parts.port != 443:
-        return False
-    hostname = parts.hostname or ""
-    if not hostname or "." not in hostname:
-        return False
-
-    path = parts.path
-    if ".." in path or "\\" in path:
-        return False
-
-    lower_path = path.lower()
-    return any(lower_path.endswith(ext) for ext in SAFE_VIDEO_EXTENSIONS)
 
 
 # ─── ID & HASH GENERATORS ────────────────────────────────────────────────────
@@ -205,18 +194,9 @@ def validate_video_long_input(
     if not isinstance(payload, dict):
         return False, "invalid_payload_format", {}
 
-    # 1. Client authority rejection
-    for key in payload:
-        clean_key = key.strip().lower()
-        if clean_key in FORBIDDEN_CLIENT_AUTHORITY_KEYS:
-            return False, "authority_field_not_allowed", {}
-
-    # Check nested values for authority injection
-    for v in payload.values():
-        if isinstance(v, dict):
-            for nested_k in v:
-                if nested_k.strip().lower() in FORBIDDEN_CLIENT_AUTHORITY_KEYS:
-                    return False, "authority_field_not_allowed", {}
+    # 1. Recursive normalized client authority rejection
+    if _contains_authority_field(payload):
+        return False, "authority_field_not_allowed", {}
 
     # 2. Text / prompt extraction
     raw_prompt = (
