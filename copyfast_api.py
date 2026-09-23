@@ -165,6 +165,16 @@ from copyfast_multi_scene_film_job_bridge import (
     multi_scene_film_job_to_native_compat,
     validate_multi_scene_film_input,
 )
+from copyfast_image_generation_job_bridge import (
+    CANONICAL_PRODUCT_KEY as IMAGE_GENERATION_PRODUCT_KEY,
+    SUPPORTED_CANONICAL_JOB_ADAPTERS as IMAGE_GENERATION_ADAPTER_KEYS,
+    create_or_replay_image_generation_job,
+    get_image_generation_job,
+    is_image_generation_job_other_account,
+    list_image_generation_jobs,
+    image_generation_job_to_native_compat,
+    validate_image_generation_input,
+)
 from copyfast_product_video_dispatcher import (
     claim_product_video_job,
     complete_product_video_job,
@@ -2071,8 +2081,20 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
                 return "text_required"
             if len(prompt) > 2000:
                 return "PROMPT_TOO_LONG"
+    if feature == "image_create":
+        from copyfast_image_generation_job_bridge import validate_image_generation_input
+        if action == "confirm":
+            is_valid, err, _ = validate_image_generation_input(values)
+            if not is_valid:
+                return err
+        else:
+            prompt = str(values.get("prompt") or values.get("text") or values.get("request") or values.get("description") or "").strip()
+            if not prompt:
+                return "text_required"
+            if len(prompt) > 2000:
+                return "PROMPT_TOO_LONG"
     if action == "confirm" and feature in FEATURE_TIER_REQUIRED_ON_CONFIRM:
-        tier = str(values.get("tier") or values.get("quality_tier") or "").strip()
+        tier = str(values.get("tier_key") or values.get("tier") or values.get("quality_tier") or "").strip()
         if not CANONICAL_IDENTIFIER_PATTERN.fullmatch(tier):
             return "tier_required"
     if action == "confirm" and feature in FEATURE_VIDEO_SCENE_REQUIRED_ON_CONFIRM:
@@ -2086,6 +2108,7 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
         "authority_field_not_allowed": "Yêu cầu feature có trường hệ thống không được phép; Web không nhận identity, Xu, provider, job hoặc output từ browser.",
         "unsupported_field_scenes": "Web không nhận danh sách scenes từ client trong R1 canonical bridge.",
         "unsupported_input_field": "Trường đầu vào không được hỗ trợ trong hợp đồng canonical.",
+        "INVALID_IMAGE_TIER": "Quality tier không hợp lệ cho Tạo ảnh AI (low, standard, standard_warranty, common, common_warranty, high, high_warranty).",
         "multiscene_scene_order_invalid": "Thứ tự cảnh không hợp lệ. Các cảnh phải có scene_index liên tiếp từ 1.",
         "INVALID_SCENE_PLAN": "Cấu trúc danh sách cảnh không hợp lệ.",
         "PROMPT_REQUIRED": "Prompt là bắt buộc đối với Video AI Prompt.",
@@ -3386,7 +3409,11 @@ def _native_jobs_for_account(account: dict) -> list[dict[str, Any]]:
         multi_scene_film_job_to_native_compat(job)
         for job in list_multi_scene_film_jobs(account_id, limit=100)
     ]
-    return _merge_read_items(msf_jobs, vl_jobs, vt_jobs, pv_jobs, native_jobs)
+    img_jobs = [
+        image_generation_job_to_native_compat(job)
+        for job in list_image_generation_jobs(account_id, limit=100)
+    ]
+    return _merge_read_items(img_jobs, msf_jobs, vl_jobs, vt_jobs, pv_jobs, native_jobs)
 
 
 def _native_assets_for_account(account: dict) -> list[dict[str, Any]]:
@@ -6033,6 +6060,24 @@ async def job_detail(job_id: str, request: Request, account: dict = Depends(requ
             status_name="guarded",
             error_code="WEB_NATIVE_JOB_NOT_FOUND",
         )
+    img_job = get_image_generation_job(account_id, job_id)
+    if img_job is not None:
+        compat_item = image_generation_job_to_native_compat(img_job)
+        return envelope(
+            True,
+            "Đã tải dữ liệu Job Web-native của tài khoản hiện tại.",
+            data={**compat_item, "job_record": img_job, "read_model": "jobs", "canonical_available": False},
+            status_name="read_only",
+        )
+    if is_image_generation_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    if str(job_id or "").strip().startswith("img_"):
+        return envelope(
+            False,
+            "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_JOB_NOT_FOUND",
+        )
     native_job = parse_native_job_id(job_id)
     if native_job is not None:
         record = get_native_job(str(account.get("id") or ""), job_id)
@@ -6385,6 +6430,39 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
                     status_name="guarded",
                     error_code="MULTI_SCENE_FILM_JOB_VALIDATION_FAILED",
                 )
+        if feature == "image_create":
+            account_id = str(account.get("id") or "")
+            try:
+                job_result = create_or_replay_image_generation_job(
+                    account_id=account_id,
+                    payload=values,
+                    idempotency_key=key,
+                )
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=True,
+                )
+                return envelope(
+                    True,
+                    "Đã tạo tác vụ Tạo ảnh AI thành công, chờ runtime xử lý.",
+                    data=job_result,
+                    status_name="queued",
+                )
+            except HTTPException as exc:
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=False,
+                )
+                if exc.status_code == 409:
+                    raise exc
+                return envelope(
+                    False,
+                    exc.detail,
+                    status_name="guarded",
+                    error_code="IMAGE_GENERATION_JOB_VALIDATION_FAILED",
+                )
         scope = f"feature:{account['id']}:{feature}:confirm"
         result = await _run_idempotent(
             scope,
@@ -6673,6 +6751,62 @@ async def get_multi_scene_film_job_route(
     if is_multi_scene_film_job_other_account(job_id, account_id):
         raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
     raise HTTPException(status_code=404, detail="Không tìm thấy job Video nhiều cảnh của tài khoản.")
+
+
+@router.post("/features/image_create/jobs")
+async def create_image_generation_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    job = create_or_replay_image_generation_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        idempotency_key=key,
+    )
+    return envelope(
+        True,
+        "Đã tạo tác vụ Tạo ảnh AI thành công, chờ runtime xử lý.",
+        data=job,
+        status_name="queued",
+    )
+
+
+@router.get("/features/image_create/jobs")
+async def list_image_generation_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = list_image_generation_jobs(account_id, limit=100)
+    return envelope(
+        True,
+        "Đã tải danh sách job Tạo ảnh AI của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/image_create/jobs/{job_id}")
+async def get_image_generation_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    job = get_image_generation_job(account_id, job_id)
+    if job is not None:
+        return envelope(
+            True,
+            "Đã tải chi tiết job Tạo ảnh AI.",
+            data=job,
+            status_name="read_only",
+        )
+    if is_image_generation_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Tạo ảnh AI của tài khoản.")
 
 
 @router.get("/admin/summary")

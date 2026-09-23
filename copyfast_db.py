@@ -6451,6 +6451,35 @@ def ensure_copyfast_schema() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_multi_scene_film_jobs_request ON web_multi_scene_film_jobs(request_id)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_multi_scene_film_jobs_account_idempotency ON web_multi_scene_film_jobs(account_id, idempotency_key_hash)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_multi_scene_film_jobs_status_created ON web_multi_scene_film_jobs(status, created_at ASC)")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_image_generation_jobs (
+                id TEXT PRIMARY KEY,
+                canonical_job_id TEXT NOT NULL,
+                request_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                product_key TEXT NOT NULL DEFAULT 'image_create',
+                routing_product_key TEXT NOT NULL DEFAULT 'image_generation',
+                prompt TEXT NOT NULL,
+                tier_key TEXT NOT NULL,
+                aspect_ratio TEXT,
+                status TEXT NOT NULL DEFAULT 'queued',
+                status_reason TEXT NOT NULL DEFAULT 'AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION',
+                idempotency_key_hash TEXT,
+                payload_hash TEXT NOT NULL,
+                bridge_envelope_json TEXT NOT NULL,
+                output_url TEXT,
+                output_metadata_json TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_image_generation_jobs_account_created ON web_image_generation_jobs(account_id, created_at DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_image_generation_jobs_request ON web_image_generation_jobs(request_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_image_generation_jobs_account_idempotency ON web_image_generation_jobs(account_id, idempotency_key_hash)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_image_generation_jobs_status_created ON web_image_generation_jobs(status, created_at ASC)")
         try:
             import copyfast_pricing_policy
             copyfast_pricing_policy.ensure_pricing_schema(conn)
