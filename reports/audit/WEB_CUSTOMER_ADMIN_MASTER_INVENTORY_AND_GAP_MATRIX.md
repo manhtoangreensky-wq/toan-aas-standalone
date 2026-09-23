@@ -137,7 +137,7 @@ This master audit reconciles the entire Web customer-facing application and Web 
 | 6 | `storyboard_prompt` | Video AI | `/video-studio/storyboard-composer` | `/api/v1/video-studio/*` | Planning only | None on Web | Local draft | `PARTIAL` |
 | 7 | `self_shot_scene_change` | Video AI | `/video-studio/self-shot-planner` | `/api/v1/video-studio/*` | Planning only | None on Web | Local draft | `PARTIAL` |
 | 8 | `self_shot_cinematic_transform` | Video AI | `/video-studio/cinematic-concept` | `/api/v1/video-studio/*` | Planning only | None on Web | Local draft | `PARTIAL` |
-| 9 | `multi_scene_film` | Video AI | `/video/multiscene` | `/api/v1/features/video_multiscene/*` | `services.product_video_multiscene_engine` | None on Web | Admin B01 | `BLOCKED_BY_RUNTIME` |
+| 9 | `multi_scene_film` | Video AI | `/video/multiscene` | `/api/v1/features/video_multiscene/*` | `services.product_video_multiscene_engine` | None on Web | Admin B01 | `PARTIAL` |
 | 10 | `video_idea` | Video AI | `/video-studio/idea-planner` | `/api/v1/video-studio/*` | Planning only | None on Web | Local draft | `PARTIAL` |
 | 11 | `video_local_edit` | Video AI | `/video/poster, /video/finishing` | `/api/v1/video-operations/*` | Local FFmpeg | Verified MP4/JPG | Local DB | `PASS` |
 | 12 | `video_long` | Video AI | `/video/long` | `/api/v1/features/video_long/*` | `services.video_tail9` | None on Web | Admin B01 | `PARTIAL` |

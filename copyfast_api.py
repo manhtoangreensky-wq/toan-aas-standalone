@@ -155,6 +155,16 @@ from copyfast_video_long_job_bridge import (
     video_long_job_to_native_compat,
     validate_video_long_input,
 )
+from copyfast_multi_scene_film_job_bridge import (
+    CANONICAL_PRODUCT_KEY as MULTI_SCENE_FILM_PRODUCT_KEY,
+    SUPPORTED_CANONICAL_JOB_ADAPTERS as MULTI_SCENE_FILM_ADAPTER_KEYS,
+    create_or_replay_multi_scene_film_job,
+    get_multi_scene_film_job,
+    is_multi_scene_film_job_other_account,
+    list_multi_scene_film_jobs,
+    multi_scene_film_job_to_native_compat,
+    validate_multi_scene_film_input,
+)
 from copyfast_product_video_dispatcher import (
     claim_product_video_job,
     complete_product_video_job,
@@ -2049,6 +2059,18 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
                 return "text_required"
             if len(prompt) > 2000:
                 return "PROMPT_TOO_LONG"
+    if feature == "video_multiscene":
+        from copyfast_multi_scene_film_job_bridge import validate_multi_scene_film_input
+        if action == "confirm":
+            is_valid, err, _ = validate_multi_scene_film_input(values)
+            if not is_valid:
+                return err
+        else:
+            prompt = str(values.get("brief") or values.get("long_form_plan") or values.get("prompt") or values.get("script") or values.get("text") or "").strip()
+            if not prompt:
+                return "text_required"
+            if len(prompt) > 2000:
+                return "PROMPT_TOO_LONG"
     if action == "confirm" and feature in FEATURE_TIER_REQUIRED_ON_CONFIRM:
         tier = str(values.get("tier") or values.get("quality_tier") or "").strip()
         if not CANONICAL_IDENTIFIER_PATTERN.fullmatch(tier):
@@ -2062,6 +2084,8 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
 def _feature_input_contract_response(feature: str, reason: str) -> dict:
     messages = {
         "authority_field_not_allowed": "Yêu cầu feature có trường hệ thống không được phép; Web không nhận identity, Xu, provider, job hoặc output từ browser.",
+        "multiscene_scene_order_invalid": "Thứ tự cảnh không hợp lệ. Các cảnh phải có scene_index liên tiếp từ 1.",
+        "INVALID_SCENE_PLAN": "Cấu trúc danh sách cảnh không hợp lệ.",
         "PROMPT_REQUIRED": "Prompt là bắt buộc đối với Video AI Prompt.",
         "PROMPT_TOO_LONG": "Prompt video không được vượt quá 2000 ký tự.",
         "TIER_REQUIRED": "Quality tier là bắt buộc (200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500).",
@@ -3356,7 +3380,11 @@ def _native_jobs_for_account(account: dict) -> list[dict[str, Any]]:
         video_long_job_to_native_compat(job)
         for job in list_video_long_jobs(account_id, limit=100)
     ]
-    return _merge_read_items(vl_jobs, vt_jobs, pv_jobs, native_jobs)
+    msf_jobs = [
+        multi_scene_film_job_to_native_compat(job)
+        for job in list_multi_scene_film_jobs(account_id, limit=100)
+    ]
+    return _merge_read_items(msf_jobs, vl_jobs, vt_jobs, pv_jobs, native_jobs)
 
 
 def _native_assets_for_account(account: dict) -> list[dict[str, Any]]:
@@ -5985,6 +6013,24 @@ async def job_detail(job_id: str, request: Request, account: dict = Depends(requ
             status_name="guarded",
             error_code="WEB_NATIVE_JOB_NOT_FOUND",
         )
+    msf_job = get_multi_scene_film_job(account_id, job_id)
+    if msf_job is not None:
+        compat_item = multi_scene_film_job_to_native_compat(msf_job)
+        return envelope(
+            True,
+            "Đã tải dữ liệu Job Web-native của tài khoản hiện tại.",
+            data={**compat_item, "job_record": msf_job, "read_model": "jobs", "canonical_available": False},
+            status_name="read_only",
+        )
+    if is_multi_scene_film_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    if str(job_id or "").strip().startswith("msf_"):
+        return envelope(
+            False,
+            "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_JOB_NOT_FOUND",
+        )
     native_job = parse_native_job_id(job_id)
     if native_job is not None:
         record = get_native_job(str(account.get("id") or ""), job_id)
@@ -6304,6 +6350,39 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
                     status_name="guarded",
                     error_code="VIDEO_LONG_JOB_VALIDATION_FAILED",
                 )
+        if feature == "video_multiscene":
+            account_id = str(account.get("id") or "")
+            try:
+                job_result = create_or_replay_multi_scene_film_job(
+                    account_id=account_id,
+                    payload=values,
+                    idempotency_key=key,
+                )
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=True,
+                )
+                return envelope(
+                    True,
+                    "Đã tạo tác vụ Video nhiều cảnh thành công, chờ runtime xử lý.",
+                    data=job_result,
+                    status_name="queued",
+                )
+            except HTTPException as exc:
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=False,
+                )
+                if exc.status_code == 409:
+                    raise exc
+                return envelope(
+                    False,
+                    exc.detail,
+                    status_name="guarded",
+                    error_code="MULTI_SCENE_FILM_JOB_VALIDATION_FAILED",
+                )
         scope = f"feature:{account['id']}:{feature}:confirm"
         result = await _run_idempotent(
             scope,
@@ -6536,6 +6615,62 @@ async def get_video_long_job_route(
     if is_video_long_job_other_account(job_id, account_id):
         raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
     raise HTTPException(status_code=404, detail="Không tìm thấy job Video Dài của tài khoản.")
+
+
+@router.post("/features/video_multiscene/jobs")
+async def create_multi_scene_film_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    job = create_or_replay_multi_scene_film_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        idempotency_key=key,
+    )
+    return envelope(
+        True,
+        "Đã tạo tác vụ Video nhiều cảnh thành công, chờ runtime xử lý.",
+        data=job,
+        status_name="queued",
+    )
+
+
+@router.get("/features/video_multiscene/jobs")
+async def list_multi_scene_film_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = list_multi_scene_film_jobs(account_id, limit=100)
+    return envelope(
+        True,
+        "Đã tải danh sách job Video nhiều cảnh của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/video_multiscene/jobs/{job_id}")
+async def get_multi_scene_film_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    job = get_multi_scene_film_job(account_id, job_id)
+    if job is not None:
+        return envelope(
+            True,
+            "Đã tải chi tiết job Video nhiều cảnh.",
+            data=job,
+            status_name="read_only",
+        )
+    if is_multi_scene_film_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Video nhiều cảnh của tài khoản.")
 
 
 @router.get("/admin/summary")

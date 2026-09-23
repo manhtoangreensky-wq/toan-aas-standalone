@@ -28,11 +28,11 @@
     "total_web_registry_features": 180,
     "total_fastapi_routes": 677,
     "pass_count": 7,
-    "partial_count": 16,
+    "partial_count": 17,
     "missing_count": 1,
     "mock_count": 0,
     "stale_count": 0,
-    "blocked_by_runtime_count": 7
+    "blocked_by_runtime_count": 6
   },
   "gap_metrics": {
     "critical_security_gaps": 0,
@@ -152,8 +152,8 @@
       "bot_runtime_consumer": "services.product_video_multiscene_engine",
       "real_output": "NONE_ON_WEB",
       "admin_trace": "ADMIN_COMMERCIAL_B01",
-      "status": "BLOCKED_BY_RUNTIME",
-      "blocker": "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+      "status": "PARTIAL",
+      "blocker": "MULTI_SCENE_FILM_RUNTIME_EXECUTION_NOT_ACTIVATED"
     },
     {
       "bot_capability": "video_idea",
