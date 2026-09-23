@@ -76,19 +76,9 @@ ALLOWED_IMAGE_TIER_KEYS: tuple[str, ...] = (
 
 ALLOWED_IMAGE_ASPECT_RATIOS: frozenset[str] = frozenset({
     "1:1",
-    "1:4",
-    "1:8",
-    "2:3",
-    "3:2",
-    "3:4",
-    "4:1",
-    "4:3",
     "4:5",
-    "5:4",
-    "8:1",
-    "9:16",
     "16:9",
-    "21:9",
+    "9:16",
 })
 
 MAX_PROMPT_LENGTH = 2000
@@ -102,7 +92,6 @@ ALLOWED_INPUT_FIELDS: frozenset[str] = frozenset({
     "quality_tier",
     "tier_key",
     "aspect_ratio",
-    "format",
 })
 
 FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED: frozenset[str] = frozenset({
@@ -125,9 +114,11 @@ SAFE_HOSTNAME_PATTERN = re.compile(
 FORBIDDEN_OUTPUT_URL_SCHEMES = frozenset({
     "javascript:", "vbscript:", "data:", "file:", "blob:", "about:", "http:",
 })
-FORBIDDEN_IMAGE_EXTENSIONS = frozenset({
-    ".json", ".html", ".htm", ".txt", ".js", ".css", ".exe", ".sh", ".php",
-    ".py", ".bin", ".mp4", ".mov", ".avi", ".mkv", ".webm", ".mp3", ".wav",
+SAFE_IMAGE_EXTENSIONS = frozenset({
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
 })
 FORBIDDEN_IMAGE_ERROR_MARKERS = (
     "/error", "error=", "failed=", "status=fail", "status=error",
@@ -148,9 +139,9 @@ def is_safe_image_output_url(url: Any) -> bool:
     - Rejects dangerous schemes.
     - Rejects embedded credentials ('@').
     - Hostname must match SAFE_HOSTNAME_PATTERN (at least two labels, valid characters).
-    - Port must be None or 443.
+    - Port must be None or 443 (fails closed on ValueError/out-of-range port).
     - Rejects error markers in URL path/query.
-    - Rejects non-image file extensions.
+    - Path must have an extension belonging strictly to SAFE_IMAGE_EXTENSIONS (.jpg, .jpeg, .png, .webp).
     """
     if not isinstance(url, str):
         return False
@@ -190,11 +181,16 @@ def is_safe_image_output_url(url: Any) -> bool:
     if not SAFE_HOSTNAME_PATTERN.fullmatch(hostname):
         return False
 
-    if parsed.port not in (None, 443):
+    try:
+        port = parsed.port
+    except ValueError:
+        return False
+
+    if port not in (None, 443):
         return False
 
     path_lower = parsed.path.lower()
-    if any(path_lower.endswith(ext) for ext in FORBIDDEN_IMAGE_EXTENSIONS):
+    if not any(path_lower.endswith(ext) for ext in SAFE_IMAGE_EXTENSIONS):
         return False
 
     return True
@@ -315,10 +311,10 @@ def validate_image_generation_input(payload: dict[str, Any]) -> tuple[bool, str,
         return False, "INVALID_IMAGE_TIER", {}
 
     # 5. Aspect ratio validation (optional: no invented defaults)
-    raw_ratio = payload.get("aspect_ratio") if "aspect_ratio" in payload else payload.get("format")
+    raw_ratio = payload.get("aspect_ratio")
     normalized_ratio: str | None = None
     if raw_ratio is not None and str(raw_ratio).strip() != "":
-        ratio_candidate = str(raw_ratio).strip().lower().replace("x", ":").replace(" ", "")
+        ratio_candidate = str(raw_ratio).strip().lower()
         if ratio_candidate not in ALLOWED_IMAGE_ASPECT_RATIOS:
             return False, "INVALID_ASPECT_RATIO", {}
         normalized_ratio = ratio_candidate

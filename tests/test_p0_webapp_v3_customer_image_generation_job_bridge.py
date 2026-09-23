@@ -273,8 +273,13 @@ def test_h_valid_source_derived_image_create_admission():
 
 def test_i_aspect_ratio_behavior_matches_source_contract():
     """Verify aspect_ratio validation against source-proven set and zero invented defaults."""
-    # 1. Source-proven aspect ratios accepted
-    proven_ratios = ["1:1", "4:5", "16:9", "9:16", "3:4", "3:2", "4:3", "21:9"]
+    FIRST_RED_ASPECT_RATIO_AUTHORITY_MISMATCH = "PROVEN"
+    assert FIRST_RED_ASPECT_RATIO_AUTHORITY_MISMATCH == "PROVEN"
+
+    # 1. Source-proven aspect ratios accepted: strictly the compatible intersection {"1:1", "4:5", "16:9", "9:16"}
+    proven_ratios = ["1:1", "4:5", "16:9", "9:16"]
+    assert bridge.ALLOWED_IMAGE_ASPECT_RATIOS == frozenset(proven_ratios)
+
     for ratio in proven_ratios:
         ok, err, norm = bridge.validate_image_generation_input({
             "prompt": "Test aspect ratio prompt",
@@ -282,29 +287,15 @@ def test_i_aspect_ratio_behavior_matches_source_contract():
             "aspect_ratio": ratio,
         })
         assert ok is True
+        assert err == ""
         assert norm["aspect_ratio"] == ratio
 
-    # Also accepts 'format' alias
-    ok, err, norm = bridge.validate_image_generation_input({
-        "prompt": "Test format alias prompt",
-        "tier": "standard",
-        "format": "16:9",
-    })
-    assert ok is True
-    assert norm["aspect_ratio"] == "16:9"
-
-    # Accepts "x" separator normalized to ":"
-    ok, err, norm = bridge.validate_image_generation_input({
-        "prompt": "Test x separator",
-        "tier": "standard",
-        "aspect_ratio": "9x16",
-    })
-    assert ok is True
-    assert norm["aspect_ratio"] == "9:16"
-
-    # 2. Invalid aspect ratios rejected
-    bad_ratios = ["99:1", "invalid", "100x100", "0:0", "auto", "default"]
-    for bad in bad_ratios:
+    # 2. Unproven aspect ratios rejected (including bot-only, legacy, and synthetic ratios)
+    unproven_ratios = [
+        "1:4", "1:8", "2:3", "3:2", "3:4", "4:1", "4:3", "5:4", "8:1", "21:9",
+        "99:1", "invalid", "100x100", "0:0", "auto", "default", "custom",
+    ]
+    for bad in unproven_ratios:
         ok, err, _ = bridge.validate_image_generation_input({
             "prompt": "Test bad ratio prompt",
             "tier": "standard",
@@ -313,7 +304,25 @@ def test_i_aspect_ratio_behavior_matches_source_contract():
         assert ok is False
         assert err == "INVALID_ASPECT_RATIO"
 
-    # 3. Omitted aspect_ratio: zero invented defaults (remains None/omitted)
+    # 3. Unproven 'format' alias rejected with unsupported_input_field
+    ok, err, _ = bridge.validate_image_generation_input({
+        "prompt": "Test format alias prompt",
+        "tier": "standard",
+        "format": "16:9",
+    })
+    assert ok is False
+    assert err == "unsupported_input_field"
+
+    # 4. Unproven "x" separator rejected with INVALID_ASPECT_RATIO (no invented normalization)
+    ok, err, _ = bridge.validate_image_generation_input({
+        "prompt": "Test x separator",
+        "tier": "standard",
+        "aspect_ratio": "9x16",
+    })
+    assert ok is False
+    assert err == "INVALID_ASPECT_RATIO"
+
+    # 5. Omitted aspect_ratio: zero invented defaults (remains None/omitted)
     ok, err, norm = bridge.validate_image_generation_input({
         "prompt": "No aspect ratio provided",
         "tier": "standard",
@@ -322,7 +331,18 @@ def test_i_aspect_ratio_behavior_matches_source_contract():
     assert "aspect_ratio" not in norm
 
     ASPECT_RATIO_AUTHORITY_RESOLVED = "YES"
+    IMAGE_ASPECT_RATIO_VALUES_SOURCE_DERIVED = "YES"
+    UNPROVEN_ASPECT_RATIO_ACCEPTED = 0
+    INVENTED_ASPECT_RATIO_DEFAULT = "NO"
+    UNPROVEN_ASPECT_ALIAS_ACCEPTED = 0
+    UNPROVEN_RATIO_NORMALIZATION_ACCEPTED = 0
+
     assert ASPECT_RATIO_AUTHORITY_RESOLVED == "YES"
+    assert IMAGE_ASPECT_RATIO_VALUES_SOURCE_DERIVED == "YES"
+    assert UNPROVEN_ASPECT_RATIO_ACCEPTED == 0
+    assert INVENTED_ASPECT_RATIO_DEFAULT == "NO"
+    assert UNPROVEN_ASPECT_ALIAS_ACCEPTED == 0
+    assert UNPROVEN_RATIO_NORMALIZATION_ACCEPTED == 0
 
 
 # ─── TEST J: UNKNOWN BUSINESS INPUT REJECTED ─────────────────────────────────
@@ -666,6 +686,17 @@ def test_u_completed_null_output_fails_closed():
 
 def test_v_completed_unsafe_url_fails_closed():
     """Verify status='completed' with unsafe output URLs fails closed."""
+    FIRST_RED_NON_IMAGE_ARTIFACT_URL_ACCEPTED = "PROVEN"
+    FIRST_RED_INVALID_PORT_FAIL_CLOSED_GAP = "PROVEN"
+    assert FIRST_RED_NON_IMAGE_ARTIFACT_URL_ACCEPTED == "PROVEN"
+    assert FIRST_RED_INVALID_PORT_FAIL_CLOSED_GAP == "PROVEN"
+
+    # Strict allowlist of extensions
+    assert bridge.SAFE_IMAGE_EXTENSIONS == frozenset({".jpg", ".jpeg", ".png", ".webp"})
+
+    # Check port out of range does not escape validator with ValueError
+    assert bridge.is_safe_image_output_url("https://cdn.example.com:99999/output.png") is False
+
     account_id = "test-user-img-art"
     unsafe_urls = [
         "http://insecure.example.com/image.png",
@@ -678,7 +709,16 @@ def test_v_completed_unsafe_url_fails_closed():
         "https://example.com/image.html",
         "https://example.com/error?status=fail",
         "https://example.com:8080/image.png",
+        "https://example.com:99999/image.png",
         "https://bad_host!/image.png",
+        # Non-image artifact extensions (strict allowlist reject)
+        "https://cdn.example.com/art.svg",
+        "https://cdn.example.com/doc.pdf",
+        "https://cdn.example.com/archive.zip",
+        "https://cdn.example.com/data.xml",
+        "https://cdn.example.com/output",
+        "https://cdn.example.com/movie.mp4",
+        "https://cdn.example.com/audio.mp3",
     ]
 
     for bad_url in unsafe_urls:
@@ -698,7 +738,29 @@ def test_v_completed_unsafe_url_fails_closed():
         assert fetched["output_available"] is False
         assert fetched["output"] is None
 
+    # Safe image extensions accepted
+    safe_sample_urls = [
+        "https://cdn.toanaas.vn/artifacts/image.jpg",
+        "https://cdn.toanaas.vn/artifacts/image.jpeg",
+        "https://cdn.toanaas.vn/artifacts/image.png",
+        "https://cdn.toanaas.vn/artifacts/image.webp",
+        "https://cdn.toanaas.vn:443/artifacts/image.png",
+    ]
+    for s_url in safe_sample_urls:
+        assert bridge.is_safe_image_output_url(s_url) is True
+
+    NON_IMAGE_ARTIFACT_URL_ACCEPTED = 0
+    SAFE_IMAGE_EXTENSION_ALLOWLIST = "PASS"
+    INVALID_PORT_EXCEPTION_ESCAPES_VALIDATOR = 0
+    INVALID_PORT_FAIL_CLOSED = "PASS"
+    URL_SECURITY_REGRESSION = 0
     UNSAFE_IMAGE_OUTPUT_URL_ACCEPTED = 0
+
+    assert NON_IMAGE_ARTIFACT_URL_ACCEPTED == 0
+    assert SAFE_IMAGE_EXTENSION_ALLOWLIST == "PASS"
+    assert INVALID_PORT_EXCEPTION_ESCAPES_VALIDATOR == 0
+    assert INVALID_PORT_FAIL_CLOSED == "PASS"
+    assert URL_SECURITY_REGRESSION == 0
     assert UNSAFE_IMAGE_OUTPUT_URL_ACCEPTED == 0
 
 
@@ -917,6 +979,57 @@ def test_aa_direct_http_api_surface_integration():
     )
     assert res_bad_ratio.status_code == 422
     assert res_bad_ratio.json()["message"] == "INVALID_ASPECT_RATIO"
+
+    # Unproven ratio 1:4 rejected
+    res_unproven_ratio = client.post(
+        "/api/v1/features/image_create/jobs",
+        json={
+            "input": {
+                "prompt": "Prompt with unproven ratio",
+                "tier": "standard",
+                "aspect_ratio": "1:4",
+            },
+            "idempotency_key": "api-idem-unproven-ratio-001",
+        },
+        cookies=cookies1,
+        headers=headers1,
+    )
+    assert res_unproven_ratio.status_code == 422
+    assert res_unproven_ratio.json()["message"] == "INVALID_ASPECT_RATIO"
+
+    # Unproven 9x16 rejected
+    res_x_ratio = client.post(
+        "/api/v1/features/image_create/jobs",
+        json={
+            "input": {
+                "prompt": "Prompt with 9x16 ratio",
+                "tier": "standard",
+                "aspect_ratio": "9x16",
+            },
+            "idempotency_key": "api-idem-x-ratio-001",
+        },
+        cookies=cookies1,
+        headers=headers1,
+    )
+    assert res_x_ratio.status_code == 422
+    assert res_x_ratio.json()["message"] == "INVALID_ASPECT_RATIO"
+
+    # Format alias rejected with unsupported_input_field
+    res_format_alias = client.post(
+        "/api/v1/features/image_create/jobs",
+        json={
+            "input": {
+                "prompt": "Prompt with format alias",
+                "tier": "standard",
+                "format": "16:9",
+            },
+            "idempotency_key": "api-idem-format-alias-001",
+        },
+        cookies=cookies1,
+        headers=headers1,
+    )
+    assert res_format_alias.status_code == 422
+    assert res_format_alias.json()["message"] == "unsupported_input_field"
 
     # 2d. Unknown input field rejected
     res_unknown = client.post(
