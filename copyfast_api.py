@@ -2146,13 +2146,9 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
         "tier_required": "Hãy chọn tier canonical rồi tạo estimate mới trước khi xác nhận job.",
         "scene_count_required": "Video cần số cảnh nguyên từ 1 đến 20 trước khi xác nhận job canonical.",
     }
-    if feature == "image_create" and reason == "INVALID_ASPECT_RATIO":
-        msg = "Aspect ratio không hợp lệ cho Tạo ảnh AI. Phải thuộc ('1:1', '4:5', '16:9', '9:16')."
-    else:
-        msg = messages.get(reason, "Input chưa đáp ứng contract an toàn của workflow.")
     return envelope(
         False,
-        msg,
+        messages.get(reason, "Input chưa đáp ứng contract an toàn của workflow."),
         status_name="guarded",
         data={"feature": feature, "reason": reason},
         error_code="FEATURE_INPUT_CONTRACT_REQUIRED",

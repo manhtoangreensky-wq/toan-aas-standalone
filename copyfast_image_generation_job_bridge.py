@@ -74,13 +74,6 @@ ALLOWED_IMAGE_TIER_KEYS: tuple[str, ...] = (
     "high_warranty",
 )
 
-ALLOWED_IMAGE_ASPECT_RATIOS: frozenset[str] = frozenset({
-    "1:1",
-    "4:5",
-    "16:9",
-    "9:16",
-})
-
 MAX_PROMPT_LENGTH = 2000
 
 ALLOWED_INPUT_FIELDS: frozenset[str] = frozenset({
@@ -91,7 +84,6 @@ ALLOWED_INPUT_FIELDS: frozenset[str] = frozenset({
     "tier",
     "quality_tier",
     "tier_key",
-    "aspect_ratio",
 })
 
 FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED: frozenset[str] = frozenset({
@@ -245,8 +237,6 @@ def compute_payload_hash(normalized_payload: dict[str, Any]) -> str:
         "routing_key": CANONICAL_ROUTING_KEY,
         "tier_key": normalized_payload.get("tier_key"),
     }
-    if "aspect_ratio" in normalized_payload and normalized_payload["aspect_ratio"] is not None:
-        core["aspect_ratio"] = normalized_payload["aspect_ratio"]
     stable_repr = json.dumps(
         core,
         ensure_ascii=True,
@@ -266,8 +256,7 @@ def validate_image_generation_input(payload: dict[str, Any]) -> tuple[bool, str,
     - Rejects unknown unproven input fields (unsupported_input_field).
     - Requires prompt/text with 1 <= len <= MAX_PROMPT_LENGTH (2000).
     - Requires tier_key in ALLOWED_IMAGE_TIER_KEYS (no silent defaults, rejects numeric video tiers).
-    - Optional aspect_ratio; if provided, must be in ALLOWED_IMAGE_ASPECT_RATIOS.
-    - Zero invented defaults: aspect_ratio omitted means None, not defaulted to 1:1.
+    - Aspect ratio has no committed Web authority enum and is rejected fail-closed (unsupported_input_field).
 
     Returns:
         (is_valid, error_code, normalized_payload)
@@ -310,23 +299,12 @@ def validate_image_generation_input(payload: dict[str, Any]) -> tuple[bool, str,
     if tier_str not in ALLOWED_IMAGE_TIER_KEYS:
         return False, "INVALID_IMAGE_TIER", {}
 
-    # 5. Aspect ratio validation (optional: no invented defaults)
-    raw_ratio = payload.get("aspect_ratio")
-    normalized_ratio: str | None = None
-    if raw_ratio is not None and str(raw_ratio).strip() != "":
-        ratio_candidate = str(raw_ratio).strip().lower()
-        if ratio_candidate not in ALLOWED_IMAGE_ASPECT_RATIOS:
-            return False, "INVALID_ASPECT_RATIO", {}
-        normalized_ratio = ratio_candidate
-
     normalized_payload: dict[str, Any] = {
         "prompt": prompt,
         "tier_key": tier_str,
         "product_key": CANONICAL_PRODUCT_KEY,
         "routing_product_key": CANONICAL_ROUTING_KEY,
     }
-    if normalized_ratio is not None:
-        normalized_payload["aspect_ratio"] = normalized_ratio
 
     return True, "", normalized_payload
 
@@ -347,7 +325,6 @@ def ensure_image_generation_schema(conn: Any = None) -> None:
                 routing_product_key TEXT NOT NULL DEFAULT 'image_generation',
                 prompt TEXT NOT NULL,
                 tier_key TEXT NOT NULL,
-                aspect_ratio TEXT,
                 status TEXT NOT NULL DEFAULT 'queued',
                 status_reason TEXT NOT NULL DEFAULT 'AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION',
                 idempotency_key_hash TEXT,
@@ -441,13 +418,13 @@ def create_or_replay_image_generation_job(
             """
             INSERT INTO web_image_generation_jobs (
                 id, canonical_job_id, request_id, account_id,
-                product_key, routing_product_key, prompt, tier_key, aspect_ratio,
+                product_key, routing_product_key, prompt, tier_key,
                 status, status_reason, idempotency_key_hash, payload_hash,
                 bridge_envelope_json, output_url, output_metadata_json,
                 created_at, updated_at
             ) VALUES (
                 ?, ?, ?, ?,
-                ?, ?, ?, ?, ?,
+                ?, ?, ?, ?,
                 ?, ?, ?, ?,
                 ?, ?, ?,
                 ?, ?
@@ -462,7 +439,6 @@ def create_or_replay_image_generation_job(
                 CANONICAL_ROUTING_KEY,
                 normalized_payload["prompt"],
                 normalized_payload["tier_key"],
-                normalized_payload.get("aspect_ratio"),
                 STATUS_QUEUED,
                 STATUS_REASON_AWAITING,
                 key_hash if key_hash else None,
@@ -572,7 +548,6 @@ def image_generation_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]
         "status": job.get("status"),
         "status_reason": job.get("status_reason"),
         "tier_key": job.get("tier_key"),
-        "aspect_ratio": job.get("aspect_ratio"),
         "output_available": output_available,
         "download_ready": output_available,
         "delivery_ready": output_available,
@@ -614,7 +589,6 @@ def _format_image_generation_job_record(row: dict[str, Any]) -> dict[str, Any]:
         "routing_product_key": row.get("routing_product_key"),
         "prompt": row.get("prompt"),
         "tier_key": row.get("tier_key"),
-        "aspect_ratio": row.get("aspect_ratio"),
         "status": row.get("status"),
         "status_reason": row.get("status_reason"),
         "output": clean_output,

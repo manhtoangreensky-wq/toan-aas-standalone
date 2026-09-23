@@ -6462,7 +6462,6 @@ def ensure_copyfast_schema() -> None:
                 routing_product_key TEXT NOT NULL DEFAULT 'image_generation',
                 prompt TEXT NOT NULL,
                 tier_key TEXT NOT NULL,
-                aspect_ratio TEXT,
                 status TEXT NOT NULL DEFAULT 'queued',
                 status_reason TEXT NOT NULL DEFAULT 'AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION',
                 idempotency_key_hash TEXT,

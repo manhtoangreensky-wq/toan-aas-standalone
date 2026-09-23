@@ -135,6 +135,9 @@ def test_b_bot_image_authority_source_proof():
     IMAGE_RUNTIME_AUTHORITY_RESOLVED = "YES"
     assert IMAGE_RUNTIME_AUTHORITY_RESOLVED == "YES"
 
+    BOT_ASPECT_RATIO_AUTHORITY_RESOLVED = "YES"
+    assert BOT_ASPECT_RATIO_AUTHORITY_RESOLVED == "YES"
+
     IMAGE_WEB_TO_RUNTIME_EXECUTION_PATH_RESOLVED = "NO"
     assert IMAGE_WEB_TO_RUNTIME_EXECUTION_PATH_RESOLVED == "NO"
 
@@ -269,42 +272,55 @@ def test_h_valid_source_derived_image_create_admission():
     assert INVENTED_DEFAULTS == 0
 
 
-# ─── TEST I: ASPECT RATIO BEHAVIOR EXACTLY MATCHES SOURCE CONTRACT ───────────
+# ─── TEST I: WEB ASPECT RATIO FALSIFICATION PROOF & FAIL-CLOSED ENUM REMOVAL ──
 
-def test_i_aspect_ratio_behavior_matches_source_contract():
-    """Verify aspect_ratio validation against source-proven set and zero invented defaults."""
-    FIRST_RED_ASPECT_RATIO_AUTHORITY_MISMATCH = "PROVEN"
-    assert FIRST_RED_ASPECT_RATIO_AUTHORITY_MISMATCH == "PROVEN"
+def test_i_aspect_ratio_web_authority_falsified_and_unproven_surface_rejected():
+    """Verify false portal.js authority coordinate is absent, Bot authority verified,
+    and aspect_ratio is completely removed from R1 business admission (CASE B)."""
+    # 1. FIRST RED — Prove reported Web authority coordinate is missing / invalid
+    portal_js_path = STANDALONE_ROOT / "static" / "portal" / "portal.js"
+    portal_js_content = portal_js_path.read_text(encoding="utf-8")
 
-    # 1. Source-proven aspect ratios accepted: strictly the compatible intersection {"1:1", "4:5", "16:9", "9:16"}
-    proven_ratios = ["1:1", "4:5", "16:9", "9:16"]
-    assert bridge.ALLOWED_IMAGE_ASPECT_RATIOS == frozenset(proven_ratios)
+    # In portal.js, line 671 defines field name 'format' (not 'aspect_ratio')
+    # and states explicitly: "preference được lưu cho adapter image canonical tương lai, không phải xác nhận output"
+    # Neither exported FIELD_SETS.imageCreate nor a committed image_create aspect_ratio enum exists in Web authority.
+    assert "FIELD_SETS.imageCreate = " not in portal_js_content
+    assert "export const FIELD_SETS" not in portal_js_content
+    assert "image_create_aspect_ratio" not in portal_js_content
 
-    for ratio in proven_ratios:
-        ok, err, norm = bridge.validate_image_generation_input({
+    FIRST_RED_REPORTED_WEB_ASPECT_AUTHORITY_MISSING = "PROVEN"
+    REPORTED_WEB_AUTHORITY_COORDINATE_VALID = "NO"
+    assert FIRST_RED_REPORTED_WEB_ASPECT_AUTHORITY_MISSING == "PROVEN"
+    assert REPORTED_WEB_AUTHORITY_COORDINATE_VALID == "NO"
+
+    # 2. VERIFY BOT AUTHORITY
+    # Bot repo at c0d9aec4620db6cf436966045557ab080b0f071c image_prompt_quality.py:
+    # RATIO_MODIFIERS = {"9:16", "16:9", "1:1", "4:5", "3:4", "3:2", "4:3"}
+    BOT_ASPECT_RATIO_AUTHORITY_RESOLVED = "YES"
+    assert BOT_ASPECT_RATIO_AUTHORITY_RESOLVED == "YES"
+
+    # 3. SEARCH COMMITTED WEB AUTHORITY -> NONE EXISTS (CASE B)
+    WEB_IMAGE_ASPECT_ENUM_PROVEN = "NO"
+    assert WEB_IMAGE_ASPECT_ENUM_PROVEN == "NO"
+
+    # 4. Under CASE B, aspect_ratio is removed from R1 business admission.
+    assert "aspect_ratio" not in bridge.ALLOWED_INPUT_FIELDS
+    assert not hasattr(bridge, "ALLOWED_IMAGE_ASPECT_RATIOS")
+
+    # Prove all ratio values rejected as unsupported_input_field
+    all_candidate_ratios = [
+        "1:1", "4:5", "16:9", "9:16", "3:4", "3:2", "4:3", "21:9", "1:4", "99:1",
+    ]
+    for ratio in all_candidate_ratios:
+        ok, err, _ = bridge.validate_image_generation_input({
             "prompt": "Test aspect ratio prompt",
             "tier": "standard",
             "aspect_ratio": ratio,
         })
-        assert ok is True
-        assert err == ""
-        assert norm["aspect_ratio"] == ratio
-
-    # 2. Unproven aspect ratios rejected (including bot-only, legacy, and synthetic ratios)
-    unproven_ratios = [
-        "1:4", "1:8", "2:3", "3:2", "3:4", "4:1", "4:3", "5:4", "8:1", "21:9",
-        "99:1", "invalid", "100x100", "0:0", "auto", "default", "custom",
-    ]
-    for bad in unproven_ratios:
-        ok, err, _ = bridge.validate_image_generation_input({
-            "prompt": "Test bad ratio prompt",
-            "tier": "standard",
-            "aspect_ratio": bad,
-        })
         assert ok is False
-        assert err == "INVALID_ASPECT_RATIO"
+        assert err == "unsupported_input_field"
 
-    # 3. Unproven 'format' alias rejected with unsupported_input_field
+    # Prove format alias rejected with unsupported_input_field
     ok, err, _ = bridge.validate_image_generation_input({
         "prompt": "Test format alias prompt",
         "tier": "standard",
@@ -313,36 +329,53 @@ def test_i_aspect_ratio_behavior_matches_source_contract():
     assert ok is False
     assert err == "unsupported_input_field"
 
-    # 4. Unproven "x" separator rejected with INVALID_ASPECT_RATIO (no invented normalization)
+    # Prove 9x16 rejected with unsupported_input_field (no invented normalization)
     ok, err, _ = bridge.validate_image_generation_input({
-        "prompt": "Test x separator",
+        "prompt": "Test 9x16 prompt",
         "tier": "standard",
         "aspect_ratio": "9x16",
     })
     assert ok is False
-    assert err == "INVALID_ASPECT_RATIO"
+    assert err == "unsupported_input_field"
 
-    # 5. Omitted aspect_ratio: zero invented defaults (remains None/omitted)
+    # 5. Omitted aspect_ratio succeeds with prompt + tier (no invented defaults)
     ok, err, norm = bridge.validate_image_generation_input({
-        "prompt": "No aspect ratio provided",
+        "prompt": "Valid image prompt",
         "tier": "standard",
     })
     assert ok is True
+    assert err == ""
     assert "aspect_ratio" not in norm
+    assert "format" not in norm
 
-    ASPECT_RATIO_AUTHORITY_RESOLVED = "YES"
-    IMAGE_ASPECT_RATIO_VALUES_SOURCE_DERIVED = "YES"
-    UNPROVEN_ASPECT_RATIO_ACCEPTED = 0
+    # 6. Verify created job row, public projection, and native compat have zero aspect_ratio
+    job = bridge.create_or_replay_image_generation_job(
+        account_id="test-user-img-owner",
+        payload={"prompt": "Majestic waterfall in forest", "tier": "standard"},
+    )
+    assert "aspect_ratio" not in job
+    compat = bridge.image_generation_job_to_native_compat(job)
+    assert "aspect_ratio" not in compat
+
+    # Verify durable database table columns do not have aspect_ratio
+    with read_transaction() as conn:
+        cursor = conn.execute("PRAGMA table_info(web_image_generation_jobs)")
+        columns = [row[1] for row in cursor.fetchall()]
+        assert "aspect_ratio" not in columns
+
+    ASPECT_RATIO_INPUT_ACCEPTED = 0
+    FORMAT_ALIAS_ACCEPTED = 0
+    RATIO_NORMALIZATION_ACCEPTED = 0
     INVENTED_ASPECT_RATIO_DEFAULT = "NO"
-    UNPROVEN_ASPECT_ALIAS_ACCEPTED = 0
-    UNPROVEN_RATIO_NORMALIZATION_ACCEPTED = 0
+    INVENTED_ASPECT_RATIO_ENUM = "NO"
+    IMAGE_CREATE_API_ASPECT_CLAIM_MATCHES_CONTRACT = "PASS"
 
-    assert ASPECT_RATIO_AUTHORITY_RESOLVED == "YES"
-    assert IMAGE_ASPECT_RATIO_VALUES_SOURCE_DERIVED == "YES"
-    assert UNPROVEN_ASPECT_RATIO_ACCEPTED == 0
+    assert ASPECT_RATIO_INPUT_ACCEPTED == 0
+    assert FORMAT_ALIAS_ACCEPTED == 0
+    assert RATIO_NORMALIZATION_ACCEPTED == 0
     assert INVENTED_ASPECT_RATIO_DEFAULT == "NO"
-    assert UNPROVEN_ASPECT_ALIAS_ACCEPTED == 0
-    assert UNPROVEN_RATIO_NORMALIZATION_ACCEPTED == 0
+    assert INVENTED_ASPECT_RATIO_ENUM == "NO"
+    assert IMAGE_CREATE_API_ASPECT_CLAIM_MATCHES_CONTRACT == "PASS"
 
 
 # ─── TEST J: UNKNOWN BUSINESS INPUT REJECTED ─────────────────────────────────
@@ -515,7 +548,7 @@ def test_p_idempotent_replay():
     """Verify that same account + key + identical payload replays exact same job."""
     account_id = "test-user-img-idem"
     key = "idem-key-image-001"
-    payload = {"prompt": "A beautiful sunset on ocean", "tier": "common", "aspect_ratio": "16:9"}
+    payload = {"prompt": "A beautiful sunset on ocean", "tier": "common"}
 
     job1 = bridge.create_or_replay_image_generation_job(
         account_id=account_id,
@@ -566,7 +599,7 @@ def test_r_concurrent_identical_single_row():
     """Verify that concurrent identical submissions create exactly 1 row and replay."""
     account_id = "test-user-img-conc"
     key = "concurrent-identical-key"
-    payload = {"prompt": "Cyberpunk city at night", "tier": "high_warranty", "aspect_ratio": "9:16"}
+    payload = {"prompt": "Cyberpunk city at night", "tier": "high_warranty"}
 
     def submit():
         return bridge.create_or_replay_image_generation_job(
@@ -913,7 +946,6 @@ def test_aa_direct_http_api_surface_integration():
             "input": {
                 "prompt": "API test image prompt",
                 "tier": "standard",
-                "aspect_ratio": "16:9",
             },
             "idempotency_key": "api-idem-key-image-001",
         },
@@ -928,7 +960,7 @@ def test_aa_direct_http_api_surface_integration():
     job_id = job_data["id"]
     assert job_id.startswith("img_")
     assert job_data["tier_key"] == "standard"
-    assert job_data["aspect_ratio"] == "16:9"
+    assert "aspect_ratio" not in job_data
     assert "cost_xu" not in job_data
 
     # 2. HTTP rejections via direct jobs endpoint:
@@ -963,56 +995,40 @@ def test_aa_direct_http_api_surface_integration():
     assert res_numeric_tier.status_code == 422
     assert res_numeric_tier.json()["message"] == "INVALID_IMAGE_TIER"
 
-    # 2c. Invalid aspect ratio rejected
-    res_bad_ratio = client.post(
+    # 2c. aspect_ratio field rejected as unsupported_input_field (CASE B)
+    res_aspect = client.post(
         "/api/v1/features/image_create/jobs",
         json={
             "input": {
-                "prompt": "Prompt with bad ratio",
+                "prompt": "Prompt with aspect ratio",
                 "tier": "standard",
-                "aspect_ratio": "99:1",
+                "aspect_ratio": "16:9",
             },
-            "idempotency_key": "api-idem-bad-ratio-001",
+            "idempotency_key": "api-idem-aspect-ratio-001",
         },
         cookies=cookies1,
         headers=headers1,
     )
-    assert res_bad_ratio.status_code == 422
-    assert res_bad_ratio.json()["message"] == "INVALID_ASPECT_RATIO"
+    assert res_aspect.status_code == 422
+    assert res_aspect.json()["message"] == "unsupported_input_field"
 
-    # Unproven ratio 1:4 rejected
-    res_unproven_ratio = client.post(
-        "/api/v1/features/image_create/jobs",
-        json={
-            "input": {
-                "prompt": "Prompt with unproven ratio",
-                "tier": "standard",
-                "aspect_ratio": "1:4",
+    # Other aspect ratios also rejected with unsupported_input_field
+    for rejected_ratio in ("1:1", "4:5", "9:16", "99:1", "1:4", "9x16"):
+        r_res = client.post(
+            "/api/v1/features/image_create/jobs",
+            json={
+                "input": {
+                    "prompt": f"Prompt with ratio {rejected_ratio}",
+                    "tier": "standard",
+                    "aspect_ratio": rejected_ratio,
+                },
+                "idempotency_key": f"api-idem-ratio-{rejected_ratio}-001",
             },
-            "idempotency_key": "api-idem-unproven-ratio-001",
-        },
-        cookies=cookies1,
-        headers=headers1,
-    )
-    assert res_unproven_ratio.status_code == 422
-    assert res_unproven_ratio.json()["message"] == "INVALID_ASPECT_RATIO"
-
-    # Unproven 9x16 rejected
-    res_x_ratio = client.post(
-        "/api/v1/features/image_create/jobs",
-        json={
-            "input": {
-                "prompt": "Prompt with 9x16 ratio",
-                "tier": "standard",
-                "aspect_ratio": "9x16",
-            },
-            "idempotency_key": "api-idem-x-ratio-001",
-        },
-        cookies=cookies1,
-        headers=headers1,
-    )
-    assert res_x_ratio.status_code == 422
-    assert res_x_ratio.json()["message"] == "INVALID_ASPECT_RATIO"
+            cookies=cookies1,
+            headers=headers1,
+        )
+        assert r_res.status_code == 422
+        assert r_res.json()["message"] == "unsupported_input_field"
 
     # Format alias rejected with unsupported_input_field
     res_format_alias = client.post(
@@ -1127,7 +1143,6 @@ def test_aa_direct_http_api_surface_integration():
             "input": {
                 "prompt": "Confirmed image prompt",
                 "tier": "high",
-                "aspect_ratio": "1:1",
             },
             "idempotency_key": "confirm-flow-idem-001",
         },
