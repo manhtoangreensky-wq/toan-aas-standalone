@@ -286,7 +286,7 @@
     {
       "file": "copyfast_video_ai_image_job_bridge.py",
       "kind": "function",
-      "line": 486,
+      "line": 484,
       "target": "get_video_ai_image_job"
     },
     {
@@ -316,7 +316,7 @@
     {
       "file": "copyfast_video_ai_image_job_bridge.py",
       "kind": "function",
-      "line": 515,
+      "line": 513,
       "target": "is_video_ai_image_job_other_account"
     },
     {
@@ -352,7 +352,7 @@
     {
       "file": "copyfast_video_ai_image_job_bridge.py",
       "kind": "function",
-      "line": 535,
+      "line": 533,
       "target": "list_video_ai_image_jobs"
     },
     {
@@ -466,7 +466,7 @@
     {
       "file": "copyfast_video_ai_image_job_bridge.py",
       "kind": "function",
-      "line": 562,
+      "line": 560,
       "target": "video_ai_image_job_to_native_compat"
     },
     {
@@ -15353,7 +15353,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 235,
   "source_files_scanned": 235,
-  "source_fingerprint_sha256": "441eabf705930fdc50f6621149e39309a48a099778db56134dace0e95c6e8432",
+  "source_fingerprint_sha256": "3ecea20e0ebb1b3ec2fe0b2fa03d7bef64ec214a6dd072a12dee127e818f04fb",
   "source_root": "repository-root",
   "ui_path_references": [
     {
