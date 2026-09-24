@@ -8623,32 +8623,29 @@
       "files": [
         "copyfast_provider_policy.py",
         "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
-        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.md",
         "reports/bundle_analyzer.html",
         "reports/webapp_full_product_truth/defects.json",
         "static/portal/bundle_analyzer.html"
       ],
-      "occurrences": 15,
+      "occurrences": 11,
       "provider": "Key4U"
     },
     {
       "files": [
         "copyfast_provider_policy.py",
         "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
-        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.md",
         "reports/webapp_full_product_truth/defects.json",
         "studio/script.js"
       ],
-      "occurrences": 12,
+      "occurrences": 8,
       "provider": "ShopAIKey"
     },
     {
       "files": [
         "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
-        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.md",
         "static/portal/portal.js"
       ],
-      "occurrences": 10,
+      "occurrences": 7,
       "provider": "MiniMax"
     },
     {
@@ -8665,7 +8662,7 @@
         "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
         "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.md"
       ],
-      "occurrences": 4,
+      "occurrences": 2,
       "provider": "DeepL"
     },
     {
@@ -8689,7 +8686,7 @@
         "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.md",
         "studio/script.js"
       ],
-      "occurrences": 5,
+      "occurrences": 3,
       "provider": "OpenAI"
     },
     {
@@ -8776,7 +8773,7 @@
         "copyfast_pages.py",
         "copyfast_partner_crm.py"
       ],
-      "occurrences": 1794,
+      "occurrences": 1795,
       "provider": "Telegram"
     }
   ],
@@ -15688,7 +15685,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 240,
   "source_files_scanned": 240,
-  "source_fingerprint_sha256": "185335e24374490fcd8f84035b773ed5fbe4e904b1eb48a0d368deb8cd82e30f",
+  "source_fingerprint_sha256": "a7a7aee2bdba4b230e57dcd48e3c9d93f1d82fe0233e3e47f0489ad923805bfd",
   "source_root": "repository-root",
   "ui_path_references": [
     {
