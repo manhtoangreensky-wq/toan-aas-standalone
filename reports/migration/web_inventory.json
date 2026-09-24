@@ -694,7 +694,7 @@
     "conversations": 0,
     "database_tables": 238,
     "env_references": 284,
-    "providers": 12,
+    "providers": 13,
     "routes": 767,
     "ui_path_references": 53
   },
@@ -8563,6 +8563,7 @@
     "ShopAIKey",
     "MiniMax",
     "Deepgram",
+    "DeepL",
     "Gemini",
     "OpenAI",
     "ElevenLabs",
@@ -8621,28 +8622,33 @@
     {
       "files": [
         "copyfast_provider_policy.py",
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.md",
         "reports/bundle_analyzer.html",
         "reports/webapp_full_product_truth/defects.json",
         "static/portal/bundle_analyzer.html"
       ],
-      "occurrences": 9,
+      "occurrences": 15,
       "provider": "Key4U"
     },
     {
       "files": [
         "copyfast_provider_policy.py",
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.md",
         "reports/webapp_full_product_truth/defects.json",
         "studio/script.js"
       ],
-      "occurrences": 6,
+      "occurrences": 12,
       "provider": "ShopAIKey"
     },
     {
       "files": [
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
         "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.md",
         "static/portal/portal.js"
       ],
-      "occurrences": 7,
+      "occurrences": 10,
       "provider": "MiniMax"
     },
     {
@@ -8653,6 +8659,14 @@
       ],
       "occurrences": 5,
       "provider": "Deepgram"
+    },
+    {
+      "files": [
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.md"
+      ],
+      "occurrences": 4,
+      "provider": "DeepL"
     },
     {
       "files": [
@@ -8671,9 +8685,11 @@
     },
     {
       "files": [
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.md",
         "studio/script.js"
       ],
-      "occurrences": 1,
+      "occurrences": 5,
       "provider": "OpenAI"
     },
     {
@@ -15672,7 +15688,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 240,
   "source_files_scanned": 240,
-  "source_fingerprint_sha256": "0d770133457ff9691c0cdf9ea4c1514b73b6c4a5993483ae5634221670368de5",
+  "source_fingerprint_sha256": "185335e24374490fcd8f84035b773ed5fbe4e904b1eb48a0d368deb8cd82e30f",
   "source_root": "repository-root",
   "ui_path_references": [
     {
