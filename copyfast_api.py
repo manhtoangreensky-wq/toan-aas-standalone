@@ -6357,11 +6357,9 @@ async def create_video_ai_image_job_route(
 ):
     account_id = str(account.get("id") or "")
     key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
-    request_id = str(payload.input.get("request_id") or "")
     job = create_or_replay_video_ai_image_job(
         account_id=account_id,
         payload=dict(payload.input),
-        request_id=request_id,
         idempotency_key=key,
     )
     return envelope(

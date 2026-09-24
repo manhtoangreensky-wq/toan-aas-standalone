@@ -61,11 +61,81 @@ STATUS_BLOCKED = "blocked"
 STATUS_REASON_AWAITING = "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION"
 
 FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED = frozenset({
-    "amount", "amountvnd", "price", "cost", "currency", "paymentid", "ordercode",
-    "checkouturl", "webhook", "provider", "providerid", "apikey", "apitoken", "token",
-    "secret", "jobid", "jobstatus", "status", "statusreason", "output", "outputurl",
-    "assetid", "downloadurl", "role", "balance", "xu", "wallet", "authority",
+    "accountid",
+    "amount",
+    "amountvnd",
+    "apikey",
+    "apitoken",
+    "assetid",
+    "authority",
+    "balance",
+    "checkouturl",
+    "cost",
+    "currency",
+    "downloadurl",
+    "idempotency",
+    "idempotencykey",
+    "jobid",
+    "jobstatus",
+    "model",
+    "modelname",
+    "ordercode",
+    "output",
+    "outputurl",
+    "ownerid",
+    "payment",
+    "paymentid",
+    "price",
+    "provider",
+    "providerid",
+    "providertaskid",
+    "refund",
+    "requestid",
+    "role",
+    "secret",
+    "status",
+    "statusreason",
+    "token",
+    "userid",
+    "wallet",
+    "webhook",
+    "xu",
 })
+
+ALLOWED_INPUT_FIELDS = frozenset({
+    "prompt",
+    "brief",
+    "source_image_url",
+    "source",
+    "upload_ids",
+    "quality_tier",
+    "tier",
+    "aspect_ratio",
+    "format",
+    "duration_seconds",
+    "scene_count",
+    "platform",
+    "goal",
+})
+
+
+def _has_unknown_or_invalid_nested_structure(values: Any) -> bool:
+    """Detect unproven fields, unknown keys, or invalid nested structures."""
+    if not isinstance(values, dict):
+        return True
+    for key, val in values.items():
+        if key not in ALLOWED_INPUT_FIELDS:
+            return True
+        if isinstance(val, dict):
+            return True
+        if key == "upload_ids":
+            if not isinstance(val, (list, tuple)):
+                return True
+            if any(isinstance(item, (dict, list)) for item in val):
+                return True
+        elif isinstance(val, (list, tuple)):
+            return True
+    return False
 
 SAFE_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,255}$")
 SAFE_HOSTNAME_PATTERN = re.compile(r"^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
@@ -142,18 +212,24 @@ def validate_video_ai_image_input(values: dict[str, Any]) -> tuple[bool, str, di
     Returns:
         (is_valid, error_code, normalized_values)
     """
+    if not isinstance(values, dict):
+        return False, "INVALID_PAYLOAD", {}
+
     if _contains_authority_field(values):
         return False, "authority_field_not_allowed", {}
 
+    if _has_unknown_or_invalid_nested_structure(values):
+        return False, "unsupported_field_not_allowed", {}
+
     # Extract & validate prompt/brief (required, 1..2000 chars)
-    prompt = str(values.get("prompt") or values.get("text") or values.get("brief") or "").strip()
+    prompt = str(values.get("prompt") or values.get("brief") or "").strip()
     if not prompt:
         return False, "PROMPT_REQUIRED", {}
     if len(prompt) > MAX_PROMPT_LENGTH:
         return False, "PROMPT_TOO_LONG", {}
 
     # Extract & validate source image (required, safe URL or staging ID)
-    source_img = str(values.get("source_image_url") or values.get("source") or values.get("image_url") or "").strip()
+    source_img = str(values.get("source_image_url") or values.get("source") or "").strip()
     if not source_img:
         uploads = values.get("upload_ids")
         if isinstance(uploads, (list, tuple)) and uploads:
@@ -184,20 +260,14 @@ def validate_video_ai_image_input(values: dict[str, Any]) -> tuple[bool, str, di
         return False, "INVALID_QUALITY_TIER", {}
 
     # Extract & validate aspect ratio ("9:16", "16:9", "1:1", "4:5")
-    ratio_raw = str(
-        values.get("aspect_ratio")
-        or values.get("aspectRatio")
-        or values.get("ratio")
-        or values.get("format")
-        or ""
-    ).strip()
+    ratio_raw = str(values.get("aspect_ratio") or values.get("format") or "").strip()
     if not ratio_raw:
         return False, "ASPECT_RATIO_REQUIRED", {}
     if ratio_raw not in ALLOWED_ASPECT_RATIOS:
         return False, "INVALID_ASPECT_RATIO", {}
 
     # Extract & validate duration (seconds 1..600, default 5)
-    dur_raw = values.get("duration_seconds") if "duration_seconds" in values else values.get("duration")
+    dur_raw = values.get("duration_seconds")
     if dur_raw is None:
         dur = DEFAULT_DURATION_SECONDS
     else:
@@ -344,6 +414,8 @@ def create_or_replay_video_ai_image_job(
     if not is_valid:
         error_messages = {
             "authority_field_not_allowed": "Yêu cầu chứa trường authority bị cấm.",
+            "unsupported_field_not_allowed": "Yêu cầu chứa trường không được hỗ trợ hoặc bí danh chưa được kiểm chứng.",
+            "INVALID_PAYLOAD": "Payload yêu cầu không hợp lệ.",
             "PROMPT_REQUIRED": "Prompt hoặc brief là bắt buộc đối với Video AI Image.",
             "PROMPT_TOO_LONG": f"Prompt không được vượt quá {MAX_PROMPT_LENGTH} ký tự.",
             "SOURCE_IMAGE_REQUIRED": "Ảnh nguồn source_image_url hoặc source là bắt buộc.",
@@ -358,8 +430,8 @@ def create_or_replay_video_ai_image_job(
         raise HTTPException(status_code=400, detail=error_messages.get(error_code, error_code))
 
     payload_hash = compute_payload_hash(normalized)
-    effective_req_id = str(request_id or payload.get("request_id") or "").strip()
-    effective_idem_key = str(idempotency_key or payload.get("idempotency_key") or "").strip()
+    effective_req_id = str(request_id or "").strip()
+    effective_idem_key = str(idempotency_key or "").strip()
     idem_hash = compute_idempotency_hash(effective_idem_key) if effective_idem_key else ""
 
     with transaction() as conn:

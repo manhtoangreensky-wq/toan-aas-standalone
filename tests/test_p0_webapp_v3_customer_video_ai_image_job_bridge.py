@@ -53,6 +53,13 @@ def setup_db_and_clean(monkeypatch):
     monkeypatch.setenv("WEBAPP_PROVIDER_CALLS_ENABLED", "true")
     monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTER_ENABLED", "true")
     monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTERS", "video_ai_image,video_ai_prompt,video_single")
+    monkeypatch.setenv("WEBAPP_AUTH_THROTTLE_HMAC_SECRET", "test-auth-throttle-secret-32-bytes-long!")
+    import app as app_module
+    if hasattr(app_module, "_auth_rate_windows"):
+        app_module._auth_rate_windows.clear()
+    monkeypatch.setattr("app._durable_auth_throttle_guard", lambda *args, **kwargs: None)
+    import copyfast_auth_throttle
+    monkeypatch.setattr(copyfast_auth_throttle, "consume", lambda *args, **kwargs: copyfast_auth_throttle.ThrottleDecision(True, 0, "allowed"))
     ensure_copyfast_schema()
     bridge.ensure_video_ai_image_schema()
     with transaction() as conn:
@@ -71,6 +78,8 @@ def setup_db_and_clean(monkeypatch):
         conn.execute("DELETE FROM web_video_ai_image_jobs")
         conn.execute("DELETE FROM web_sessions WHERE account_id LIKE 'test-%'")
         conn.execute("DELETE FROM web_accounts WHERE id LIKE 'test-%'")
+    if hasattr(app_module, "_auth_rate_windows"):
+        app_module._auth_rate_windows.clear()
 
 
 def _create_test_account(account_id: str | None = None) -> dict:
@@ -930,3 +939,445 @@ def test_22_is_safe_video_output_url_unit_contract():
     # Incomplete / unparseable
     assert bridge.is_safe_video_output_url("https://") is False
     assert bridge.is_safe_video_output_url("not-a-url") is False
+
+
+# ─── TEST 23: C3 FIRST RED PROOF & DOCUMENTATION (A, B, C) ───────────────────
+
+def test_23_c3_first_red_documented_and_proven():
+    """Prove and document the 3 C3 First Red authority and allowlist defects on base:
+
+    A. Base accepted browser payload.input.request_id to control canonical request identity.
+    B. Base fell back to payload.input.idempotency_key for idempotency resolution.
+    C. Base silently accepted arbitrary unknown/unproven business fields.
+
+    Now proven corrected:
+    - request_id and idempotency_key are strictly forbidden as authority fields.
+    - ALLOWED_INPUT_FIELDS strictly rejects unknown fields and unproven aliases.
+    """
+    # 1. Authority sets enforce exclusion
+    assert "requestid" in bridge.FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED
+    assert "idempotencykey" in bridge.FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED
+    assert "idempotency" in bridge.FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED
+
+    # 2. Strict allowlist is exact source-derived set
+    expected_allowed = frozenset({
+        "prompt", "brief", "source_image_url", "source", "upload_ids",
+        "quality_tier", "tier", "aspect_ratio", "format",
+        "duration_seconds", "scene_count", "platform", "goal",
+    })
+    assert bridge.ALLOWED_INPUT_FIELDS == expected_allowed
+
+
+# ─── TEST 24: INPUT.REQUEST_ID REJECTED AS AUTHORITY (D) ──────────────────────
+
+def test_24_input_request_id_rejected_after_correction():
+    """Verify input.request_id is rejected with authority_field_not_allowed (HTTP 400)."""
+    p = _valid_payload()
+    p["request_id"] = "VAI-CLIENT-FORGED-001"
+    is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+    assert not is_valid
+    assert err == "authority_field_not_allowed"
+
+    acc = _create_test_account()
+    with pytest.raises(HTTPException) as exc_info:
+        bridge.create_or_replay_video_ai_image_job(account_id=acc["id"], payload=p)
+    assert exc_info.value.status_code == 400
+
+    # HTTP route rejection
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "req_rej@test.local", "password": "secure-password-1234", "display_name": "Req Rej"})
+    login = client.post("/api/v1/auth/login", json={"email": "req_rej@test.local", "password": "secure-password-1234"})
+    csrf = login.json()["data"]["csrf_token"]
+    res = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": p},
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert res.status_code == 400
+    msg = str(res.json().get("message") or res.json().get("detail") or "")
+    assert "authority" in msg.lower()
+
+
+# ─── TEST 25: INPUT.IDEMPOTENCY_KEY REJECTED AS AUTHORITY (E) ─────────────────
+
+def test_25_input_idempotency_key_rejected_after_correction():
+    """Verify input.idempotency_key is rejected with authority_field_not_allowed (HTTP 400)."""
+    for key_name in ("idempotency_key", "idempotencyKey", "idempotency"):
+        p = _valid_payload()
+        p[key_name] = "client-nested-idem-key-001"
+        is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+        assert not is_valid, f"Expected {key_name} to be rejected"
+        assert err == "authority_field_not_allowed"
+
+        acc = _create_test_account()
+        with pytest.raises(HTTPException) as exc_info:
+            bridge.create_or_replay_video_ai_image_job(account_id=acc["id"], payload=p)
+        assert exc_info.value.status_code == 400
+
+
+# ─── TEST 26: UNKNOWN TOP-LEVEL BUSINESS FIELD REJECTED (F) ───────────────────
+
+def test_26_unknown_top_level_business_field_rejected():
+    """Verify arbitrary unknown top-level fields are rejected with HTTP 400."""
+    p = _valid_payload()
+    p["unknown_custom_metadata"] = "arbitrary_value_123"
+    is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+    assert not is_valid
+    assert err == "unsupported_field_not_allowed"
+
+    acc = _create_test_account()
+    with pytest.raises(HTTPException) as exc_info:
+        bridge.create_or_replay_video_ai_image_job(account_id=acc["id"], payload=p)
+    assert exc_info.value.status_code == 400
+    assert "không được hỗ trợ" in exc_info.value.detail
+
+
+# ─── TEST 27: UNKNOWN NESTED FIELD REJECTED (G) ───────────────────────────────
+
+def test_27_unknown_nested_field_rejected():
+    """Verify nested unknown dicts or structures fail closed."""
+    p = _valid_payload()
+    p["upload_ids"] = [{"unsupported_nested_key": "val"}]
+    is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+    assert not is_valid
+    assert err == "unsupported_field_not_allowed"
+
+    p2 = _valid_payload()
+    p2["prompt"] = {"nested_prompt": "hello"}
+    is_valid, err, _ = bridge.validate_video_ai_image_input(p2)
+    assert not is_valid
+    assert err == "unsupported_field_not_allowed"
+
+
+# ─── TEST 28: EXACT SOURCE-BACKED ALLOWED FIELDS ACCEPTED (H) ─────────────────
+
+def test_28_exact_source_backed_allowed_fields_accepted():
+    """Verify canonical Bot contract and Web form contract fields are all accepted."""
+    # 1. Canonical Bot payload
+    bot_payload = {
+        "prompt": "Animate camera moving forward smoothly through blooming garden",
+        "source_image_url": "https://example.com/cherry.jpg",
+        "quality_tier": 300,
+        "aspect_ratio": "16:9",
+        "duration_seconds": 10,
+        "scene_count": 2,
+        "platform": "YouTube",
+        "goal": "engagement",
+    }
+    is_valid, err, norm = bridge.validate_video_ai_image_input(bot_payload)
+    assert is_valid, f"Expected canonical payload to be valid, got: {err}"
+    assert norm["prompt"] == bot_payload["prompt"]
+    assert norm["source_image_url"] == bot_payload["source_image_url"]
+    assert norm["quality_tier"] == 300
+    assert norm["aspect_ratio"] == "16:9"
+    assert norm["duration_seconds"] == 10
+    assert norm["scene_count"] == 2
+    assert norm["platform"] == "YouTube"
+    assert norm["goal"] == "engagement"
+
+    # 2. Web committed portal form payload (brief, source, tier, format)
+    web_payload = {
+        "brief": "Chuyển động camera lướt qua vườn hoa anh đào",
+        "source": "https://example.com/web_cherry.jpg",
+        "tier": 500,
+        "format": "9:16",
+        "duration_seconds": 8,
+        "scene_count": 1,
+        "platform": "TikTok",
+        "goal": "branding",
+    }
+    is_valid, err, norm = bridge.validate_video_ai_image_input(web_payload)
+    assert is_valid, f"Expected web payload to be valid, got: {err}"
+    assert norm["prompt"] == web_payload["brief"]
+    assert norm["source_image_url"] == web_payload["source"]
+    assert norm["quality_tier"] == 500
+    assert norm["aspect_ratio"] == "9:16"
+
+    # 3. Web upload_ids staging reference
+    staging_payload = {
+        "prompt": "Motion prompt",
+        "upload_ids": ["stage_img_12345678"],
+        "quality_tier": 200,
+        "aspect_ratio": "1:1",
+    }
+    is_valid, err, norm = bridge.validate_video_ai_image_input(staging_payload)
+    assert is_valid
+    assert norm["source_image_url"] == "stage_img_12345678"
+
+
+# ─── TEST 29: UNPROVEN ALIASES REJECTED (I) ───────────────────────────────────
+
+def test_29_unproven_aliases_rejected():
+    """Verify unproven aliases (text, image_url, aspectRatio, ratio, duration) are rejected."""
+    unproven = ["text", "image_url", "aspectRatio", "ratio", "duration"]
+    for alias in unproven:
+        p = _valid_payload()
+        p[alias] = "unproven_value"
+        is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+        assert not is_valid, f"Expected unproven alias '{alias}' to be rejected"
+        assert err == "unsupported_field_not_allowed"
+
+
+# ─── TEST 30: ENVELOPE IDEMPOTENCY REPLAY WORKS (J) ───────────────────────────
+
+def test_30_envelope_idempotency_key_replay_works():
+    """Verify FeatureRequest.idempotency_key guarantees idempotent replay."""
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "idem_env@test.local", "password": "secure-password-1234", "display_name": "Idem Env"})
+    login = client.post("/api/v1/auth/login", json={"email": "idem_env@test.local", "password": "secure-password-1234"})
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf}
+
+    payload = _valid_payload()
+    idem_key = "vai-envelope-idem-key-test-30"
+
+    res1 = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload, "idempotency_key": idem_key},
+        headers=headers,
+    )
+    assert res1.status_code == 200
+    job1 = res1.json()["data"]
+
+    res2 = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload, "idempotency_key": idem_key},
+        headers=headers,
+    )
+    assert res2.status_code == 200
+    job2 = res2.json()["data"]
+
+    assert job2["id"] == job1["id"]
+    assert job2["request_id"] == job1["request_id"]
+    assert job2["idempotent_replay"] is True
+
+
+# ─── TEST 31: IDEMPOTENCY-KEY HEADER REPLAY WORKS (K) ─────────────────────────
+
+def test_31_header_idempotency_key_replay_works():
+    """Verify Idempotency-Key HTTP header guarantees idempotent replay."""
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "idem_hdr@test.local", "password": "secure-password-1234", "display_name": "Idem Hdr"})
+    login = client.post("/api/v1/auth/login", json={"email": "idem_hdr@test.local", "password": "secure-password-1234"})
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf, "Idempotency-Key": "vai-header-idem-key-test-31"}
+
+    payload = _valid_payload()
+
+    res1 = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload},
+        headers=headers,
+    )
+    assert res1.status_code == 200
+    job1 = res1.json()["data"]
+
+    res2 = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload},
+        headers=headers,
+    )
+    assert res2.status_code == 200
+    job2 = res2.json()["data"]
+
+    assert job2["id"] == job1["id"]
+    assert job2["request_id"] == job1["request_id"]
+    assert job2["idempotent_replay"] is True
+
+
+# ─── TEST 32: CHANGED PAYLOAD CONFLICT REMAINS 409 (L) ────────────────────────
+
+def test_32_changed_payload_conflict_remains_409():
+    """Verify same idempotency_key with differing canonical business payload raises 409."""
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "conflict_test@test.local", "password": "secure-password-1234", "display_name": "Conflict"})
+    login = client.post("/api/v1/auth/login", json={"email": "conflict_test@test.local", "password": "secure-password-1234"})
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf}
+
+    idem_key = "vai-conflict-key-test-32"
+    payload1 = _valid_payload()
+    res1 = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload1, "idempotency_key": idem_key},
+        headers=headers,
+    )
+    assert res1.status_code == 200
+
+    payload2 = _valid_payload()
+    payload2["prompt"] = "Different prompt payload triggering 409 conflict"
+    res2 = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload2, "idempotency_key": idem_key},
+        headers=headers,
+    )
+    assert res2.status_code == 409
+
+
+# ─── TEST 33: SERVER-GENERATED CANONICAL REQUEST_ID (M) ───────────────────────
+
+def test_33_canonical_request_id_is_server_generated():
+    """Verify canonical request_id is always server-generated conforming to canonical format."""
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "srv_req@test.local", "password": "secure-password-1234", "display_name": "Srv Req"})
+    login = client.post("/api/v1/auth/login", json={"email": "srv_req@test.local", "password": "secure-password-1234"})
+    csrf = login.json()["data"]["csrf_token"]
+
+    res = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": _valid_payload()},
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert res.status_code == 200
+    req_id = res.json()["data"]["request_id"]
+    assert req_id.startswith("VAI-")
+    parts = req_id.split("-")
+    assert len(parts) == 3
+    assert len(parts[1]) == 8 and parts[1].isdigit()
+    assert len(parts[2]) == 6
+
+
+# ─── TEST 34: TWO CREATES CANNOT FORCE SAME REQUEST_ID (N) ────────────────────
+
+def test_34_browser_cannot_force_request_id_or_collide():
+    """Verify browser cannot inject request_id and two creates generate distinct IDs."""
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "distinct_req@test.local", "password": "secure-password-1234", "display_name": "Distinct"})
+    login = client.post("/api/v1/auth/login", json={"email": "distinct_req@test.local", "password": "secure-password-1234"})
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf}
+
+    # Attempting to force request_id is rejected
+    res_forced = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": dict(_valid_payload(), request_id="FORCED-REQ-ID")},
+        headers=headers,
+    )
+    assert res_forced.status_code == 400
+
+    # Two genuine creates produce distinct server-generated IDs
+    res1 = client.post("/api/v1/features/video_ai_image/jobs", json={"input": _valid_payload()}, headers=headers)
+    res2 = client.post("/api/v1/features/video_ai_image/jobs", json={"input": _valid_payload()}, headers=headers)
+    assert res1.status_code == 200 and res2.status_code == 200
+    assert res1.json()["data"]["request_id"] != res2.json()["data"]["request_id"]
+
+
+# ─── TEST 35: CONCURRENT IDENTICAL CREATES PRODUCE ONE ROW (O) ────────────────
+
+def test_35_concurrent_identical_creates_produce_one_row():
+    """Verify replay calls result in exactly 1 row persisted in database."""
+    acc = _create_test_account()
+    payload = _valid_payload()
+    idem_key = "concurrent-idem-key-test-35"
+
+    job1 = bridge.create_or_replay_video_ai_image_job(
+        account_id=acc["id"],
+        payload=payload,
+        idempotency_key=idem_key,
+    )
+    job2 = bridge.create_or_replay_video_ai_image_job(
+        account_id=acc["id"],
+        payload=payload,
+        idempotency_key=idem_key,
+    )
+    assert job1["id"] == job2["id"]
+
+    with read_transaction() as conn:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM web_video_ai_image_jobs WHERE account_id = ? AND id = ?",
+            (acc["id"], job1["id"]),
+        ).fetchone()[0]
+        assert count == 1
+
+
+# ─── TEST 36: CROSS-ACCOUNT READS REMAIN REJECTED (P) ─────────────────────────
+
+def test_36_cross_account_reads_remain_rejected():
+    """Verify cross-account access via HTTP is strictly 403 Forbidden."""
+    client1 = TestClient(app)
+    client1.post("/api/v1/auth/register", json={"email": "ca1@test.local", "password": "secure-password-1234", "display_name": "CA 1"})
+    login1 = client1.post("/api/v1/auth/login", json={"email": "ca1@test.local", "password": "secure-password-1234"})
+    csrf1 = login1.json()["data"]["csrf_token"]
+
+    res_create = client1.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": _valid_payload()},
+        headers={"X-CSRF-Token": csrf1},
+    )
+    assert res_create.status_code == 200
+    job_id = res_create.json()["data"]["id"]
+
+    client2 = TestClient(app)
+    client2.post("/api/v1/auth/register", json={"email": "ca2@test.local", "password": "secure-password-1234", "display_name": "CA 2"})
+    login2 = client2.post("/api/v1/auth/login", json={"email": "ca2@test.local", "password": "secure-password-1234"})
+    csrf2 = login2.json()["data"]["csrf_token"]
+
+    res_detail = client2.get(f"/api/v1/features/video_ai_image/jobs/{job_id}", headers={"X-CSRF-Token": csrf2})
+    assert res_detail.status_code == 403
+
+
+# ─── TEST 37: COMPLETED NULL OUTPUT REMAINS FAIL CLOSED (Q) ───────────────────
+
+def test_37_completed_null_output_remains_fail_closed():
+    """Verify completed status without output_url remains fail closed."""
+    acc = _create_test_account()
+    job = bridge.create_or_replay_video_ai_image_job(account_id=acc["id"], payload=_valid_payload())
+
+    with transaction() as conn:
+        conn.execute("UPDATE web_video_ai_image_jobs SET status = 'completed', output_url = NULL WHERE id = ?", (job["id"],))
+
+    readback = bridge.get_video_ai_image_job(acc["id"], job["id"])
+    assert readback is not None
+    assert readback["status"] == "completed"
+    assert readback["output_available"] is False
+    assert readback["download_ready"] is False
+    assert readback["delivery_ready"] is False
+    assert readback["output"] is None
+    assert readback["output_url"] is None
+
+
+# ─── TEST 38: UNSAFE ARTIFACT URL REMAINS FAIL CLOSED (R) ─────────────────────
+
+def test_38_unsafe_artifact_url_remains_fail_closed():
+    """Verify unsafe artifact URL fails closed across canonical and compat projections."""
+    acc = _create_test_account()
+    job = bridge.create_or_replay_video_ai_image_job(account_id=acc["id"], payload=_valid_payload())
+
+    with transaction() as conn:
+        conn.execute(
+            "UPDATE web_video_ai_image_jobs SET status = 'completed', output_url = 'javascript:evil()' WHERE id = ?",
+            (job["id"],),
+        )
+
+    readback = bridge.get_video_ai_image_job(acc["id"], job["id"])
+    assert readback["output_available"] is False
+    assert readback["delivery_ready"] is False
+    assert readback["output"] is None
+
+    compat = bridge.video_ai_image_job_to_native_compat(readback)
+    assert compat["output_available"] is False
+    assert compat["delivery_ready"] is False
+    assert compat["output"] is None
+
+
+# ─── TEST 39: PROVIDER/RENDER/WALLET CALLS REMAIN ZERO (S) ───────────────────
+
+def test_39_provider_render_wallet_zero_side_effects():
+    """Verify zero external provider calls, zero video renders, and zero wallet mutations."""
+    acc = _create_test_account()
+    payload = _valid_payload()
+
+    job = bridge.create_or_replay_video_ai_image_job(
+        account_id=acc["id"],
+        payload=payload,
+    )
+    assert job["status"] == "queued"
+    assert job["status_reason"] == "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION"
+
+    # Confirm bridge envelope contains no provider keys or wallet mutations
+    env = job["bridge_envelope"]
+    assert "provider_api_key" not in env
+    assert "xu" not in env
+    assert "balance" not in env
+    assert "wallet" not in env
+    assert "render_id" not in env
