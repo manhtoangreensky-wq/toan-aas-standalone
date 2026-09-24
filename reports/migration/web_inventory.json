@@ -8639,9 +8639,10 @@
     },
     {
       "files": [
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.md",
         "static/portal/portal.js"
       ],
-      "occurrences": 6,
+      "occurrences": 7,
       "provider": "MiniMax"
     },
     {
@@ -8759,7 +8760,7 @@
         "copyfast_pages.py",
         "copyfast_partner_crm.py"
       ],
-      "occurrences": 1793,
+      "occurrences": 1794,
       "provider": "Telegram"
     }
   ],
@@ -15669,9 +15670,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 238,
-  "source_files_scanned": 238,
-  "source_fingerprint_sha256": "c057af4ad355adb3c4024a260eec30d67fdac3bbd69e43cba2600991f96f6724",
+  "source_files_discovered": 240,
+  "source_files_scanned": 240,
+  "source_fingerprint_sha256": "0d770133457ff9691c0cdf9ea4c1514b73b6c4a5993483ae5634221670368de5",
   "source_root": "repository-root",
   "ui_path_references": [
     {
