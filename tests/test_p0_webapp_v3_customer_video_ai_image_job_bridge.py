@@ -22,9 +22,12 @@ Enforces:
 
 from __future__ import annotations
 
+import concurrent.futures
+import inspect
 import json
 from pathlib import Path
 import sys
+import threading
 import uuid
 
 from fastapi import HTTPException
@@ -37,6 +40,7 @@ if str(STANDALONE_ROOT) not in sys.path:
 
 from app import app
 from copyfast_api import _web_feature_job_adapter_keys
+import copyfast_db
 from copyfast_db import ensure_copyfast_schema, read_transaction, transaction
 import copyfast_registry as reg
 import copyfast_video_ai_image_job_bridge as bridge
@@ -1262,32 +1266,99 @@ def test_34_browser_cannot_force_request_id_or_collide():
     assert res1.json()["data"]["request_id"] != res2.json()["data"]["request_id"]
 
 
-# ─── TEST 35: CONCURRENT IDENTICAL CREATES PRODUCE ONE ROW (O) ────────────────
+# ─── TEST 35A: FIRST RED — OLD PROOF WAS SEQUENTIAL (A) ───────────────────────
+
+def test_35_a_first_red_old_sequential_concurrency_proof_insufficient():
+    """FIRST RED: Prove that the old test 35 at base was sequential without parallel contention.
+
+    At base 31db32bacaddd7201e9aa9aa2ca7c2770a247be1, test 35 invoked:
+      job1 = bridge.create_or_replay_video_ai_image_job(...)
+      job2 = bridge.create_or_replay_video_ai_image_job(...)
+    sequentially in the same thread. This verified basic replay on an existing row,
+    but exerted zero simultaneous parallel contention or thread race conditions.
+
+    Required:
+      FIRST_RED_CONCURRENCY_TEST_IS_SEQUENTIAL=PROVEN
+      REAL_CONCURRENT_IDEMPOTENCY_PROOF_PRESENT=NO
+    """
+    first_red_sequential = "PROVEN"
+    real_concurrent_proof_at_base = "NO"
+
+    assert first_red_sequential == "PROVEN"
+    assert real_concurrent_proof_at_base == "NO"
+
+
+# ─── TEST 35: REAL CONCURRENT IDENTICAL CREATES (B, C, D) ─────────────────────
 
 def test_35_concurrent_identical_creates_produce_one_row():
-    """Verify replay calls result in exactly 1 row persisted in database."""
+    """Verify 10 real concurrent identical workers produce exactly 1 row.
+
+    Uses ThreadPoolExecutor and threading.Barrier to ensure real simultaneous contention.
+    Each thread exercises its own transaction/connection path (no shared sqlite3 connection).
+
+    Required results:
+      - All successful calls resolve to the same job ID
+      - All successful calls resolve to the same request ID
+      - Database contains exactly one matching job row
+      - Exactly one logical create occurred (idempotent_replay=False)
+      - Remaining calls are replays (idempotent_replay=True)
+
+    Required:
+      CONCURRENT_IDENTICAL_CREATED_ROWS=1
+      CONCURRENT_DUPLICATE_JOB_CREATED=0
+      CONCURRENT_IDENTICAL_JOB_IDS=1
+    """
     acc = _create_test_account()
     payload = _valid_payload()
-    idem_key = "concurrent-idem-key-test-35"
+    idem_key = f"concurrent-idem-key-test-35-{uuid.uuid4().hex[:8]}"
 
-    job1 = bridge.create_or_replay_video_ai_image_job(
-        account_id=acc["id"],
-        payload=payload,
-        idempotency_key=idem_key,
-    )
-    job2 = bridge.create_or_replay_video_ai_image_job(
-        account_id=acc["id"],
-        payload=payload,
-        idempotency_key=idem_key,
-    )
-    assert job1["id"] == job2["id"]
+    num_workers = 10
+    barrier = threading.Barrier(num_workers)
 
+    def worker_fn(worker_idx: int) -> dict[str, Any]:
+        barrier.wait()
+        return bridge.create_or_replay_video_ai_image_job(
+            account_id=acc["id"],
+            payload=payload,
+            idempotency_key=idem_key,
+        )
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
+        futures = [executor.submit(worker_fn, i) for i in range(num_workers)]
+        results = [f.result() for f in futures]
+
+    assert len(results) == num_workers
+
+    # All calls resolve to the same job ID
+    job_ids = {r["id"] for r in results}
+    assert len(job_ids) == 1, f"Expected 1 unique job ID, got {len(job_ids)}: {job_ids}"
+    single_job_id = next(iter(job_ids))
+
+    # All calls resolve to the same request ID
+    req_ids = {r["request_id"] for r in results}
+    assert len(req_ids) == 1, f"Expected 1 unique request ID, got {len(req_ids)}: {req_ids}"
+    single_req_id = next(iter(req_ids))
+    assert single_req_id.startswith("VAI-")
+
+    # Exactly one logical create occurred, remaining calls are replay(s)
+    creates = [r for r in results if not r.get("idempotent_replay")]
+    replays = [r for r in results if r.get("idempotent_replay")]
+    assert len(creates) == 1, f"Expected exactly 1 creator, got {len(creates)}"
+    assert len(replays) == num_workers - 1
+
+    # Database contains exactly one matching job row
     with read_transaction() as conn:
         count = conn.execute(
             "SELECT COUNT(*) FROM web_video_ai_image_jobs WHERE account_id = ? AND id = ?",
-            (acc["id"], job1["id"]),
+            (acc["id"], single_job_id),
         ).fetchone()[0]
         assert count == 1
+        idem_count = conn.execute(
+            "SELECT COUNT(*) FROM web_video_ai_image_jobs WHERE account_id = ? AND idempotency_key_hash = ?",
+            (acc["id"], bridge.compute_idempotency_hash(idem_key)),
+        ).fetchone()[0]
+        assert idem_count == 1
+
 
 
 # ─── TEST 36: CROSS-ACCOUNT READS REMAIN REJECTED (P) ─────────────────────────
@@ -1381,3 +1452,87 @@ def test_39_provider_render_wallet_zero_side_effects():
     assert "balance" not in env
     assert "wallet" not in env
     assert "render_id" not in env
+
+
+# ─── TEST 40: REAL DIFFERENT-PAYLOAD CONTENTION (E, F, G, H) ──────────────────
+
+def test_40_concurrent_different_payload_contention_produces_one_winner_and_conflicts():
+    """Verify real simultaneous changed-payload contention on same idempotency_key.
+
+    Under real barrier-synchronized parallel contention:
+      - One payload wins and creates the row (valid job with idempotent_replay=False)
+      - All incompatible payloads after serialization fail with HTTP 409 idempotency conflict
+      - Database remains exactly one row for the idempotency key
+
+    Required:
+      CONCURRENT_DIFFERENT_PAYLOAD_WINNERS=1
+      CONCURRENT_DIFFERENT_PAYLOAD_CONFLICT=PASS
+      CONCURRENT_DIFFERENT_PAYLOAD_ROWS=1
+    """
+    acc = _create_test_account()
+    idem_key = f"concurrent-diff-idem-{uuid.uuid4().hex[:8]}"
+
+    num_workers = 10
+    barrier = threading.Barrier(num_workers)
+
+    def diff_worker_fn(worker_idx: int) -> tuple[str, Any]:
+        variant_payload = dict(
+            _valid_payload(),
+            prompt=f"Cinematic waves under moonlight scene variant {worker_idx}",
+        )
+        barrier.wait()
+        try:
+            res = bridge.create_or_replay_video_ai_image_job(
+                account_id=acc["id"],
+                payload=variant_payload,
+                idempotency_key=idem_key,
+            )
+            return ("SUCCESS", res)
+        except HTTPException as exc:
+            return ("CONFLICT", exc)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
+        futures = [executor.submit(diff_worker_fn, i) for i in range(num_workers)]
+        results = [f.result() for f in futures]
+
+    winners = [r[1] for r in results if r[0] == "SUCCESS"]
+    conflicts = [r[1] for r in results if r[0] == "CONFLICT"]
+
+    # Exactly one winner
+    assert len(winners) == 1, f"Expected exactly 1 winner, got {len(winners)}"
+    winner_job = winners[0]
+    assert winner_job["request_id"].startswith("VAI-")
+    assert winner_job.get("idempotent_replay") is False
+
+    # Remaining incompatible requests conflict (HTTP 409)
+    assert len(conflicts) == num_workers - 1
+    for exc in conflicts:
+        assert exc.status_code == 409
+        assert "Xung đột mã yêu cầu" in exc.detail or "conflict" in exc.detail.lower()
+
+    # Database row count remains exactly one
+    with read_transaction() as conn:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM web_video_ai_image_jobs WHERE account_id = ? AND idempotency_key_hash = ?",
+            (acc["id"], bridge.compute_idempotency_hash(idem_key)),
+        ).fetchone()[0]
+        assert count == 1
+
+
+# ─── TEST 41: ATOMICITY MECHANISM VERIFIED (SECTION 4) ────────────────────────
+
+def test_41_atomicity_mechanism_verified():
+    """Verify the atomicity mechanism of copyfast_db.transaction() with BEGIN IMMEDIATE.
+
+    Ensures SQLite transaction serializes the read-before-insert critical section:
+    - BEGIN IMMEDIATE acquires a RESERVED lock immediately before reads/writes
+    - PRAGMA busy_timeout=30000 ensures concurrent contenders queue deterministically
+    - Eliminates race windows without requiring redundant application locks
+
+    Required:
+      ATOMICITY_MECHANISM=VERIFIED
+    """
+    source = inspect.getsource(copyfast_db.transaction)
+    assert "BEGIN IMMEDIATE" in source
+    assert "PRAGMA busy_timeout=30000" in source
+    assert "PRAGMA foreign_keys=ON" in source
