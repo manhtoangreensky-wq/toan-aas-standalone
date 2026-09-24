@@ -1,47 +1,61 @@
-# P0 WebApp SubDub Canonical Product Authority Reconciliation (R1/C2)
+# P0 WebApp SubDub Canonical Product Authority Reconciliation (R1/C3)
 
-- **Task**: `P0.WEBAPP.V3.SUBDUB.C2.INDEPENDENT.AUTHORITY.EVIDENCE.COMPLETION`
+- **Task**: `P0.WEBAPP.V3.SUBDUB.C3.UPLOAD.INPUT.RUNTIME.AUTHORITY.TRUTH`
 - **Parent Task**: `P0.WEBAPP.V3.SUBDUB.CANONICAL.PRODUCT.AUTHORITY.RECONCILIATION.R1`
 - **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
-- **Web Repository**: `manhtoangreensky-wq/toan-aas-standalone` (`WEB_BASE_SHA=db21c395eda8a2a23bbfac1ac9258f2c1840dce2`)
+- **Web Repository**: `manhtoangreensky-wq/toan-aas-standalone` (`BASE_OF_CORRECTION=5e3da90b67bb44ded204b551872ea32a31a31b7a`)
 - **Bot Authority Repository**: `manhtoangreensky-wq/bot` (`BOT_AUTHORITY_SHA=661c0de773a68177f5c258843485a0177eb6b6e2`)
-- **Mode**: `CORRECTION_ONLY`, `SAME_PR`, `EVIDENCE_COMPLETION`, `NO_PRODUCT_UI_CHANGE`, `NO_RUNTIME_EXECUTION`, `MINIMAL_CODE_FOOTPRINT`
+- **Mode**: `CORRECTION_ONLY`, `SAME_PR`, `AUTHORITY_TRUTH_ONLY`, `NO_PRODUCT_UI_CHANGE`, `NO_RUNTIME_EXECUTION`, `MINIMAL_CODE_FOOTPRINT`
 - **Invariants**: `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`, `MERGE=NO`, `DEPLOY=NO`, `RESTART=NO`
 
 ---
 
-## 1. Preserved Verified Invariants & C2 Resolutions
+## 1. Preserved Verified Invariants & C3 Truth Table
 
 | Invariant / Finding Flag | Value | Canonical Source & Empirical Verification |
 |---|---|---|
-| `FIRST_RED_BOT_SOURCE_ASSERTION_OPTIONAL` | **PROVEN** | C1 `test_b` looped over candidates and passed silently if missing; now strictly required. |
-| `FIRST_RED_SELF_REFERENTIAL_BOT_EVIDENCE` | **PROVEN** | C1 `test_m`, `test_n`, `test_p` asserted against the audit JSON; now asserted directly against Bot git commit. |
-| `BOT_AUTHORITY_COMMIT_REQUIRED` | **YES** | Mandatory git object inspection at `661c0de773a68177f5c258843485a0177eb6b6e2^{commit}`. |
-| `BOT_SOURCE_MISSING_FAILS_FOCUSED_SUITE` | **YES** | Test suite raises `pytest.fail` if Bot pinned commit is missing. |
-| `FIRST_RED_SUBDUB_HUB_IS_UTILITY_FIRST` | **PROVEN** | `copyfast_pages.py:191`, `static/portal/portal.js:1935-1941, 24878-24921` (`layout: "subdub-operations-hub"`, `fields: []`, `action: "none"`). |
-| `SUBDUB_CANONICAL_LANES` | **4** | `bot.py:233106-233120`, `services/subdub_blackboxes/base.py` (`subtitle_create`, `subtitle_translate`, `dub`, `subtitle_plus_dub`). |
-| `STATUS_ONLY_SUCCESS_AUTHORITY` | **NO** | `services/subtitle_dub_product_pipeline.py:546-557` (fails closed if `not (srt_bytes or audio_bytes or video_output)`). |
-| `REAL_ARTIFACT_REQUIRED_FOR_COMPLETION` | **YES** | `services/subtitle_dub_product_pipeline.py:560-648` (verifies physical bytes before completion). |
-| `SUBDUB_INPUT_CONTRACT_RESOLVED` | **YES** | Exact Web fields mapped to Bot runtime parameters across all 4 lanes. |
-| `SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED` | **YES** | Web uploads go to owner-scoped Asset Vault (`asset_id`), NEVER raw client paths or untrusted URLs. |
-| `ASR_RUNTIME_AUTHORITY_RESOLVED` | **YES** | Backed by Key4U/ShopAIKey Whisper in `services/subdub_blackboxes`. |
-| `TRANSLATION_RUNTIME_AUTHORITY_RESOLVED` | **YES** | Backed by Key4U/DeepL/OpenAI in `services/subdub_blackboxes`. |
-| `TTS_RUNTIME_AUTHORITY_RESOLVED` | **YES** | Backed by MiniMax / ShopAIKey in `services/subdub_blackboxes` & `subdub_tts_language_routing`. |
-| `MUX_RENDER_RUNTIME_AUTHORITY_RESOLVED` | **YES** | Backed by local FFmpeg render & ducking in `services/subtitle_dub_product_pipeline.py`. |
-| `ADMIN_SUBDUB_JOB_TRACE_RESOLVED` | **NO** | Generic jobs table lacks lane differentiation and multi-stage pipeline breakdown. |
-| `ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED` | **NO** | Incident view lacks stage-level failure attribution and specific subdub error codes. |
-| `ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED` | **NO** | Provider view is global; not linked to subdub lane routing or stage-level fallback. |
-| `ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED` | **NO** | Delivery center only tracks generic output presence, not individual stage artifacts. |
-| `FICTIONAL_SUBTITLE_STUDIO_WORKBENCH_PRESENT` | **YES** | `static/portal/portal.js:20022-20120` (`portal-interactive-subdub-workbench`). |
-| `UNSOURCED_99_5_ASR_BADGE_PRESENT` | **YES** | `static/portal/portal.js:24887-24888` (`qualityBadge: "99.5%"`). |
-| `UNSOURCED_TIMELINE_MATCH_BADGE_PRESENT` | **YES** | `static/portal/portal.js:24889-24890` (`safetyBadge: "Timeline Match"`). |
-| `SUBDUB_VI_LOCALE_PURITY` | **FAIL** | Mixed English labels in Vietnamese view (`portal.js:20021` "Transcript projects"). |
+| `FIRST_RED_BOT_SOURCE_ASSERTION_OPTIONAL` | **PROVEN** | Mandatory inspection of Bot git commit at `661c0de773a68177f5c258843485a0177eb6b6e2`. |
+| `FIRST_RED_SELF_REFERENTIAL_BOT_EVIDENCE` | **PROVEN** | All Bot authorities asserted directly from Bot source files at pinned commit, not local JSON mirrors. |
+| `FIRST_RED_ASSET_VAULT_FEATURE_UPLOAD_AUTHORITY_CLAIM_FALSE` | **PROVEN** | Asset Vault (`asset_id`) was falsely claimed in C2; Web feature uploads actually use `upload_id` transferred to Bot staging. |
+| `CURRENT_WEB_FEATURE_UPLOAD_IDENTIFIER` | **upload_id** | `copyfast_api.py:1927-1938` (`_canonical_upload_ids`), `FEATURE_UPLOAD_REQUIRED` checks `upload_ids`. |
+| `CURRENT_WEB_FEATURE_UPLOAD_STORAGE_AUTHORITY` | **BOT_OWNED_STAGING** | `copyfast_api.py:6200-6235` transfers file bytes directly to `/internal/v1/uploads`; Web DB stores 0 file bytes and 0 provider paths. |
+| `ASSET_ID_IS_GENERIC_SUBDUB_UPLOAD_AUTHORITY` | **NO** | Asset Vault is a private Web-native container for PDF/format conversions, NOT the generic feature upload authority. |
+| `BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED` | **NO** | Pinned Bot commit lacks `/internal/v1/uploads` route entirely. |
+| `BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED` | **NO** | Pinned Bot commit lacks `GET /internal/v1/uploads/{id}` or staging consume endpoint. |
+| `SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED` | **NO** | Cannot mark upload authority resolved when Bot lacks the staging upload consume contract. |
+| `SECOND_SUBDUB_UPLOAD_AUTHORITY_CREATED` | **NO** | No shadow upload table created; no local storage mirror added. |
+| `RAW_BROWSER_PATH_ACCEPTED` | **0** | Strict rejection of local browser filesystem paths. |
+| `REMOTE_MEDIA_URL_ACCEPTED` | **0** | Strict rejection of unverified YouTube/TikTok URLs. |
+| `CURRENT_WEB_OUTPUT_FORMAT_CONTRACT_COMPATIBLE_WITH_BOT` | **NO** | Web forms hardcode `output_format: ["srt"]`, directly contradicting Bot runtime outputs (`video`, `audio`, `video_subtitle`). |
+| `WEB_DUBBING_SRT_ONLY_SEMANTIC_GAP` | **PROVEN** | Web dubbing asking for `srt` only cannot yield dubbed media from Bot runtime. |
+| `R2_OUTPUT_AUTHORITY_DECISION_REQUIRED` | **YES** | R2 durable bridge must reconcile and override the SRT-only form restriction. |
+| `SUBDUB_INPUT_CONTRACT_RESOLVED` | **NO** | Fail-closed due to upload staging consume gap, output format contradiction, duration probe gap, and voice profile gap. |
+| `WEB_DURATION_SECONDS_IS_MEDIA_TRUTH` | **NO** | Web client supplies arbitrary integer (1..14400) without media probe. |
+| `BOT_MEDIA_DURATION_PROBE_AUTHORITY_RESOLVED` | **YES** | Bot enforces `ffprobe_duration` probe in `bot.py:241236-241339` and `subdub_duration_gate_payload`. |
+| `R2_MUST_REVALIDATE_MEDIA_DURATION` | **YES** | Server-side FFprobe duration validation is mandatory in R2 bridge. |
+| `WEB_VOICE_PROFILE_SELECTION_AUTHORITY_RESOLVED` | **NO** | Web proxies `GET /api/v1/voice/profiles` to nonexistent Bot endpoint `GET /internal/v1/voice/profiles`. |
+| `CLIENT_PROVIDER_VOICE_ID_AUTHORITY` | **NO** | Browser client has zero authority to supply raw provider voice IDs. |
+| `BOT_VOICE_RESOLUTION_AUTHORITY_SEPARATE` | **YES** | Voice resolution is purely server-side / Bot-owned. |
+| `ASR_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF` | **PASS** | `services/subtitle_dub_product_pipeline.py:175, 223, 571` (`prepare_subtitles`, `asr_provider`). |
+| `TRANSLATION_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF` | **PASS** | `services/subtitle_dub_product_pipeline.py:175, 223, 572` (`prepare_subtitles`, `translation_provider`). |
+| `TTS_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF` | **PASS** | `services/subdub_tts_language_routing.py:1-287`, `services/subdub_auto_word_pricing.py:1-58`, `services/subtitle_dub_product_pipeline.py:180-182`. |
+| `MUX_RENDER_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF` | **PASS** | `services/subtitle_dub_product_pipeline.py:187-188, 516-535` (`ffmpeg_ready`, `dub_mux_enabled`, `render_video`). |
+| `SELF_REFERENTIAL_AUTHORITY_GATE_COUNT` | **0** | Zero self-referential or circular boolean assertions remain in the test suite. |
+| `SUBDUB_I18N_KEY_PARITY` | **PASS** | Exactly 79 VI keys and 79 EN keys in `portal-i18n.js`. |
+| `SUBDUB_VI_VISIBLE_COPY_PURITY` | **FAIL** | 12 mixed English visible labels in Vietnamese view identified in `portal.js`. |
+| `MIXED_VI_VISIBLE_LABEL_COUNT` | **12** | Exactly 12 unlocalized strings enumerated and verified in DOM renderers. |
+| `ADMIN_SUBDUB_TRACE_GAPS_DIRECT_SOURCE_PROOF` | **PASS** | Generic admin tables lack lane differentiation, stage breakdown, stage-specific errors, and intermediate artifacts. |
+| `ADMIN_SUBDUB_JOB_TRACE_RESOLVED` | **NO** | Jobs view lacks multi-stage pipeline tracking (ASR -> translation -> TTS -> mux). |
+| `ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED` | **NO** | Incident view lacks stage-level failure attribution. |
+| `ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED` | **NO** | Provider view is global; not linked to SubDub lane routing. |
+| `ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED` | **NO** | Delivery center tracks only generic output presence. |
+| `R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY` | **NO** | Blocked by missing Bot upload staging consume contract, output format contradiction, and voice profile lookup gap. |
 
 ---
 
 ## 2. Direct Bot Git Source Authority (`661c0de773a68177f5c258843485a0177eb6b6e2`)
 
-The test suite now directly accesses the Bot git object database via:
+The test suite directly accesses the Bot git object database:
 - Commit validation: `git -C <BOT_ROOT> cat-file -e "661c0de773a68177f5c258843485a0177eb6b6e2^{commit}"`
 - File inspection: `git -C <BOT_ROOT> show 661c0de773a68177f5c258843485a0177eb6b6e2:<path>`
 
@@ -63,7 +77,7 @@ The test suite now directly accesses the Bot git object database via:
 
 ### C. SubDub Auto Word Pricing Scope (`services/subdub_auto_word_pricing.py:1-58`)
 - `AUTO_XU_PER_WORD = Decimal("0.5")` (0.5 Xu/word).
-- Scope: Dedicated purely to Auto speaker diarization and casting (`subdub_auto_speaker`, `subdub_auto_settlement`). It is NOT generic dubbing pricing.
+- Scope: Dedicated purely to Auto speaker casting (`subdub_auto_speaker`, `subdub_auto_settlement`). It is NOT generic dubbing pricing.
 
 ### D. Default Output Types & Fail-Closed Logic (`services/subtitle_dub_product_pipeline.py:81-93, 546-557`)
 - `subtitle_create`: video -> `burn`, non-video -> `srt`
@@ -74,116 +88,98 @@ The test suite now directly accesses the Bot git object database via:
 
 ---
 
-## 3. Web Customer Form Authority vs. Bot Canonical Runtime Authority
+## 3. Four-Part Input Authority Reconciliation
 
-### TABLE A: Current Web Customer Form Specifications
-- **Source**: `static/portal/portal.js:752-771` (`FIELD_SETS`)
+### 1. `current_web_fields` (`static/portal/portal.js:752-771`)
+- **`subtitleCreate`**: `source` (file, audio/video), `duration_seconds` (number, 1..14400), `output_format` (select, `["srt"]`).
+- **`subtitleTranslate`**: `source` (file, text/media), `target_language` (select, `LANGUAGE_OPTIONS`), `duration_seconds` (number, 1..14400), `output_format` (select, `["srt"]`).
+- **`dubbing`**: `source` (file, audio/video), `mode` (select, `["dubbing", "subtitle_plus_dubbing"]`), `target_language` (select, `LANGUAGE_OPTIONS`), `voice_profile_id` (select, `voiceProfiles`), `speed` (select, `["1.0", "0.9", "1.5"]`), `duration_seconds` (number, 1..14400), `output_format` (select, `["srt"]`).
 
-| Form Name | Route(s) | Field Name | Control Type | Complete Specification | Semantic Note |
-|---|---|---|---|---|---|
-| `subtitleCreate` | `/subtitle`, `/subtitle/create`, `/asr` | `source` | `file` | `accept`: audio/video MIME types, `requiredUpload: true` | Required media file |
-| | | `duration_seconds` | `number` | `min: 1`, `max: 14400`, `step: 1`, `required: true`, `inputMode: "numeric"` | Probed duration |
-| | | `output_format` | `select` | `options: ["srt"]`, `required: false` | Restricts to SRT |
-| `subtitleTranslate` | `/translate` | `source` | `file` | `accept`: `.srt,.vtt,.txt`, audio/video MIME types, `requiredUpload: true` | Required text or media |
-| | | `target_language` | `select` | `options: LANGUAGE_OPTIONS`, `required: true` | Canonical language |
-| | | `duration_seconds` | `number` | `min: 1`, `max: 14400`, `step: 1`, `required: true`, `inputMode: "numeric"` | Probed duration |
-| | | `output_format` | `select` | `options: ["srt"]`, `required: false` | Restricts to SRT |
-| `dubbing` | `/dubbing` | `source` | `file` | `accept`: audio/video MIME types, `requiredUpload: true` | Required media file |
-| | | `mode` | `select` | `options: ["dubbing", "subtitle_plus_dubbing"]`, `required: false` | Combo option present! |
-| | | `target_language` | `select` | `options: LANGUAGE_OPTIONS`, `required: true` | Canonical language |
-| | | `voice_profile_id` | `select` | `optionsFrom: "voiceProfiles"` (Voice Vault), `required: false` | Owner-scoped profile |
-| | | `speed` | `select` | `options`: `1.0` (Bình thường), `0.9` (Chậm), `1.5` (Nhanh), `required: false` | Fixed speed presets |
-| | | `duration_seconds` | `number` | `min: 1`, `max: 14400`, `step: 1`, `required: true`, `inputMode: "numeric"` | Probed duration |
-| | | `output_format` | `select` | `options: ["srt"]`, `required: false` | **Semantic GAP: srt for dubbing** |
+### 2. `current_bot_inputs` (`bot.py`, `services/subtitle_dub_product_pipeline.py:170-224`)
+- `content_type`: MIME type (`video/*`, `audio/*`, `text/plain`).
+- `source_bytes`: Raw binary payload from verified storage or Telegram file.
+- `input_duration_seconds`: Probed duration extracted via FFmpeg (`probe_duration` / `ffprobe_duration`).
+- `mode`: `subtitle_create`, `subtitle_translate`, `dub`, `subtitle_plus_dub`.
+- `target_language`: Resolved target language code (`vi`, `en`, `zh`, `ja`, etc.).
+- `voice_selection_mode`: `manual`, `auto_speaker`, `auto_speaker_gender`, `multi`.
+- `voice_style`: Resolved speaker character / provider voice ID.
+- `voice_speed`: Float multiplier between 0.7 and 1.8.
+- `auto_speaker_lane`: `single`, `multi`.
+- `keep_original_audio`: Boolean flag (`True` kept low volume vs `False` muted).
+- `dub_text_source`: `source` vs `translated`.
+- `output_type`: `burn`, `both`, `srt`, `vtt`, `txt`, `video`, `audio`, `video_subtitle`.
 
-### TABLE B: Bot Canonical Runtime Input Authority
-- **Source**: `bot.py`, `services/subtitle_dub_product_pipeline.py:170-224`
+### 3. `r2_required_mapping`
+- **Lane 1 (`subtitle_create`)**: Web `source` -> resolve staged `upload_id` via Bot staging consume contract -> `source_bytes`, `content_type`. Web `duration_seconds` -> revalidate with FFprobe -> `input_duration_seconds`. Web `output_format` -> re-map to Bot `output_type` ("burn" for video, "srt" for audio). Mode: `"subtitle_create"`.
+- **Lane 2 (`subtitle_translate`)**: Web `source` -> resolve staged `upload_id` -> `source_bytes`, `content_type`. Web `target_language` -> canonical code -> `target_language`. Web `duration_seconds` -> revalidate with FFprobe -> `input_duration_seconds`. Web `output_format` -> re-map to "burn" for video, "srt" for non-video. Mode: `"subtitle_translate"`.
+- **Lane 3 (`dub`)**: Web `source` -> resolve staged `upload_id` -> `source_bytes`, `content_type`. Web `mode="dubbing"` -> maps to `mode="dub"`. Web `target_language` -> canonical code -> `target_language`. Web `voice_profile_id` -> resolve via Voice Vault to provider voice -> `voice_style`, `voice_selection_mode="manual"`. Web `speed` -> validate float multiplier (0.7..1.8) -> `voice_speed`. Web `output_format` -> **OVERRIDE** srt form option with canonical media output ("video" for video, "audio" for non-video).
+- **Lane 4 (`subtitle_plus_dub`)**: Web `source` -> resolve staged `upload_id` -> `source_bytes`, `content_type`. Web `mode="subtitle_plus_dubbing"` -> maps to `mode="subtitle_plus_dub"`. Web `target_language` -> canonical code -> `target_language`. Web `voice_profile_id` -> resolve via Voice Vault -> `voice_style`. Web `speed` -> float multiplier -> `voice_speed`. Web `output_format` -> **OVERRIDE** srt form option with combo output ("video_subtitle" for video, "audio" for non-video).
 
-| Bot Runtime Parameter | Type | Valid Values | Functional Purpose |
-|---|---|---|---|
-| `content_type` | `str` | `video/*`, `audio/*`, `text/plain` | Media discriminator |
-| `source_bytes` | `bytes` | Raw binary bytes from verified storage | Pipeline media payload |
-| `input_duration_seconds` | `float` | Probe duration | Timeline boundary & padding |
-| `mode` | `str` | `subtitle_create`, `subtitle_translate`, `dub`, `subtitle_plus_dub` | 4-lane router |
-| `target_language` | `str` | Canonical code (`vi`, `en`, `zh`, etc.) | Translation & TTS routing |
-| `voice_selection_mode` | `str` | `manual`, `auto_speaker`, `auto_speaker_gender`, `multi` | Speaker casting strategy |
-| `voice_style` | `str` | Provider voice ID / voice label | Speech timbre selection |
-| `voice_speed` | `float` | `0.7` to `1.8` | Time-stretching parameter |
-| `keep_original_audio` | `bool` | `True` (low volume) / `False` (muted) | Audio ducking policy |
-| `dub_text_source` | `str` | `source` vs `translated` | TTS segment source |
-| `output_type` | `str` | `burn`, `both`, `srt`, `vtt`, `txt`, `video`, `audio`, `video_subtitle` | Output artifact selector |
+### 4. `unresolved_semantic_gaps`
+1. **`BOT_STAGING_UPLOAD_CONSUME_CONTRACT_MISSING`**: Pinned Bot commit `661c0de7...` lacks `POST /internal/v1/uploads` and `GET /internal/v1/uploads/{id}`. Web cannot verify or consume staged uploads before job dispatch.
+2. **`WEB_DUBBING_SRT_ONLY_CONTRADICTION`**: Web forms for dubbing hardcode `output_format: ["srt"]`, which cannot yield dubbed audio or video from Bot runtime.
+3. **`UNVALIDATED_CLIENT_DURATION_SECONDS`**: Web client sends arbitrary unvalidated `duration_seconds`. Bot requires `ffprobe_duration`. R2 bridge must enforce server-side FFprobe duration validation.
+4. **`WEB_VOICE_PROFILE_RESOLUTION_ABSENT_ON_BOT`**: Web proxies `GET /api/v1/voice/profiles` to nonexistent Bot endpoint `GET /internal/v1/voice/profiles`. Bot has no server-side route to map `voice_profile_id` to `provider_voice_id`.
+5. **`ADMIN_SUBDUB_TRACE_GAPS`**: Admin jobs, failed jobs, and provider views lack SubDub lane breakdown, stage-level failure attribution, and intermediate artifact tracking.
 
 ---
 
-## 4. Web-to-Bot Parameter Mapping & Upload Authority
+## 4. Upload Authority Truth & Asset Vault Demarcation
 
-### A. Web-to-Bot Lane Mapping (`SUBDUB_INPUT_CONTRACT_RESOLVED = YES`)
-1. **Lane 1: `subtitle_create`**
-   - Web `source` -> server resolves `asset_id` -> `source_bytes`, `content_type`.
-   - Web `duration_seconds` -> verified by server probe -> `input_duration_seconds`.
-   - Web `output_format` -> mapped to `output_type` ("burn" for video, "srt" for non-video).
-   - Invariants: `mode="subtitle_create"`, `needs_subtitle=True`, `needs_dub=False`.
-
-2. **Lane 2: `subtitle_translate`**
-   - Web `source` -> server resolves `asset_id` (.srt/.vtt/.txt or media) -> `source_bytes`, `content_type`.
-   - Web `target_language` -> canonical code -> `target_language`.
-   - Web `duration_seconds` -> verified by server probe -> `input_duration_seconds`.
-   - Web `output_format` -> mapped to `output_type` ("burn" for video, "srt" for non-video).
-   - Invariants: `mode="subtitle_translate"`, `needs_subtitle=True`, `needs_dub=False`.
-
-3. **Lane 3: `dub`**
-   - Web `source` -> server resolves `asset_id` -> `source_bytes`, `content_type`.
-   - Web `mode="dubbing"` -> maps to `mode="dub"`.
-   - Web `target_language` -> canonical code -> `target_language`.
-   - Web `voice_profile_id` -> server resolves provider voice from Voice Vault -> `voice_style`, `voice_selection_mode="manual"`.
-   - Web `speed` -> float multiplier (1.0, 0.9, 1.5) -> `voice_speed`.
-   - Web `output_format` -> overridden by canonical media output ("video" for video, "audio" for non-video).
-   - Invariants: `mode="dub"`, `needs_subtitle=False`, `needs_dub=True`.
-
-4. **Lane 4: `subtitle_plus_dub`**
-   - Web `source` -> server resolves `asset_id` -> `source_bytes`, `content_type`.
-   - Web `mode="subtitle_plus_dubbing"` -> maps to `mode="subtitle_plus_dub"`.
-   - Web `target_language` -> canonical code -> `target_language`.
-   - Web `voice_profile_id` -> server resolves provider voice -> `voice_style`.
-   - Web `speed` -> float multiplier -> `voice_speed`.
-   - Web `output_format` -> mapped to combo output ("video_subtitle" for video, "audio" for non-video).
-   - Invariants: `mode="subtitle_plus_dub"`, `needs_subtitle=True`, `needs_dub=True`.
-
-### B. Web Upload Authority (`SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED = YES`)
-- Uploads MUST go through owner-scoped Asset Vault (`asset_id`), NEVER raw client paths or untrusted URLs.
-- Server validates signed session, account ownership, MIME whitelist, and file size before bridge ingestion.
+- **Web Upload Mechanism**: `copyfast_api.py:6200-6235` (`upload_to_canonical_staging`) forwards uploaded bytes directly to Bot `/internal/v1/uploads`. The standalone Web SQLite DB records neither raw file bytes nor provider paths.
+- **Identifier Contract**: `copyfast_api.py:1927-1938` (`_canonical_upload_ids`) validates and extracts opaque Bot staging identifiers (`upload_ids`).
+- **Asset Vault Demarcation**: Asset Vault (`asset_id`) is a private Web-native container used exclusively by format conversion tools (`/api/v1/subtitle-asset-operations/*`) and PDF operations. It is NOT the feature upload authority for generic SubDub jobs (`ASSET_ID_IS_GENERIC_SUBDUB_UPLOAD_AUTHORITY = NO`).
+- **First Red**: The previous claim in C2 that Asset Vault was the canonical generic SubDub feature-upload authority is PROVEN FALSE (`FIRST_RED_ASSET_VAULT_FEATURE_UPLOAD_AUTHORITY_CLAIM_FALSE = PROVEN`).
+- **Staging Status on Bot**: At pinned SHA `661c0de773a68177f5c258843485a0177eb6b6e2`, Bot does not implement `POST /internal/v1/uploads` or staging lookup routes. Therefore, `SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED = NO`.
+- **Invariants**: Zero raw browser paths accepted (`RAW_BROWSER_PATH_ACCEPTED = 0`), zero remote URLs accepted (`REMOTE_MEDIA_URL_ACCEPTED = 0`).
 
 ---
 
-## 5. Stage Runtime Authorities & Admin Gaps
+## 5. Direct Source Stage Runtime Authorities
 
-### A. Stage Runtime Authorities
-- **ASR**: Backed by Key4U / ShopAIKey Whisper (`ASR_RUNTIME_AUTHORITY_RESOLVED = YES`).
-- **Translation**: Backed by Key4U / DeepL / OpenAI (`TRANSLATION_RUNTIME_AUTHORITY_RESOLVED = YES`).
-- **TTS**: Backed by MiniMax / ShopAIKey in `subdub_blackboxes` & `subdub_tts_language_routing.py` (`TTS_RUNTIME_AUTHORITY_RESOLVED = YES`).
-- **Mux/Render**: Backed by local FFmpeg subprocess rendering in `subtitle_dub_product_pipeline.py` (`MUX_RENDER_RUNTIME_AUTHORITY_RESOLVED = YES`).
-
-### B. Admin Traceability Status (Fail-Closed NO)
-- `ADMIN_SUBDUB_JOB_TRACE_RESOLVED = NO`: Generic jobs table lacks lane differentiation and multi-stage pipeline breakdown.
-- `ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED = NO`: Incident view lacks stage-level failure attribution and specific subdub error codes.
-- `ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED = NO`: Provider view is global; not linked to subdub lane routing or stage-level fallback.
-- `ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED = NO`: Delivery center only tracks generic output presence, not individual stage artifacts.
+- **ASR**: Backed by Whisper via `prepare_subtitles` in `services/subtitle_dub_product_pipeline.py:175, 223, 571` (`ASR_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF = PASS`).
+- **Translation**: Backed by DeepL / OpenAI via `prepare_subtitles` in `services/subtitle_dub_product_pipeline.py:175, 223, 572` (`TRANSLATION_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF = PASS`).
+- **TTS**: Backed by `resolve_subdub_tts_language_route` in `services/subdub_tts_language_routing.py:1-287`, `AUTO_XU_PER_WORD = Decimal("0.5")` in `services/subdub_auto_word_pricing.py:1-58`, and `synthesize_segments` / `resolve_voice_id` in `services/subtitle_dub_product_pipeline.py:180-182` (`TTS_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF = PASS`).
+- **Mux/Render**: Backed by local FFmpeg subprocess rendering in `services/subtitle_dub_product_pipeline.py:187-188, 516-535` (`ffmpeg_ready`, `dub_mux_enabled`, `render_video`) (`MUX_RENDER_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF = PASS`).
+- **Zero Self-Referential Assertions**: Circular boolean flags have been eliminated from authority verification (`SELF_REFERENTIAL_AUTHORITY_GATE_COUNT = 0`).
 
 ---
 
-## 6. Locale Purity & Key Counts
+## 6. Locale Copy Audit (Key Parity vs Visible Copy Purity)
 
-- **VI keys**: 79 SubDub keys in `static/portal/portal-i18n.js` (out of 345 total).
-- **EN keys**: 79 SubDub keys in `static/portal/portal-i18n.js` (out of 333 total).
-- **Key Parity**: 100% parity between VI and EN SubDub bundles.
+- **Key Parity**: Exactly 79 SubDub keys in Vietnamese and 79 SubDub keys in English in `static/portal/portal-i18n.js` (`SUBDUB_I18N_KEY_PARITY = PASS`).
 - **Interpolation Leaks**: 0 raw placeholder leaks.
-- **DOM Purity**: Mixed English text in Vietnamese DOM (e.g., `portal.js:20021` "Transcript projects" in Subtitle Studio metrics) is recorded and queued for remediation in milestone R4 (`P0.WEBAPP.V3.SUBDUB.CUSTOMER.LOCALE.IA.CLEANUP.R1`).
+- **Visible Copy Purity**: `SUBDUB_VI_VISIBLE_COPY_PURITY = FAIL`.
+- **Enumerated Mixed English Labels in Vietnamese Views (12 items)**:
+  1. `portal.js:20025`: `"🟢 Neural SubDub Engine Sẵn Sàng"`
+  2. `portal.js:20026`: `"🎙️ AI SubDub Studio — Tạo Phụ Đề & Lồng Tiếng Chuyên Nghiệp"`
+  3. `portal.js:24889`: `"Timeline Match"`
+  4. `portal.js:20021`: `"Transcript projects"`
+  5. `portal.js:20021`: `"Web-native subtitle authoring"`
+  6. `portal.js:20287`: `"Manual cue authoring"`
+  7. `portal.js:19002`: `"Web-native deterministic tool"`
+  8. `portal.js:1935`: `"Sub & Dub Operations Hub"`
+  9. `portal.js:24881`: `"AI Subtitle & Dubbing"`
+  10. `portal.js:1923, 24893`: `"SRT / VTT Format Lab"`
+  11. `portal.js:1916, 24894`: `"Subtitle Asset Operations"`
+  12. `portal.js:24895`: `"Subtitle Studio Workspace"`
+- **Remediation Queue**: Queued for milestone R4 (`P0.WEBAPP.V3.SUBDUB.CUSTOMER.LOCALE.IA.CLEANUP.R1`).
 
 ---
 
-## 7. Ordered Remediation Queue
+## 7. Admin Traceability Status & Gaps
 
-- **R2**: `P0.WEBAPP.V3.SUBDUB.CANONICAL.DURABLE.JOB_BRIDGE.R1`
+- `ADMIN_SUBDUB_TRACE_GAPS_DIRECT_SOURCE_PROOF = PASS`.
+- `ADMIN_SUBDUB_JOB_TRACE_RESOLVED = NO`: Generic jobs table (`/admin/jobs`) lacks `subdub_lane` differentiation and multi-stage tracking (`asr_stage`, `translation_stage`, `tts_stage`, `mux_stage`).
+- `ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED = NO`: Incident queue (`/admin/jobs/failed`) lacks stage-level failure attribution and specific SubDub error codes.
+- `ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED = NO`: Provider view (`/admin/providers`) is global; not linked to SubDub lane routing or stage fallbacks.
+- `ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED = NO`: Delivery center tracks only generic output presence, not individual stage artifacts.
+
+---
+
+## 8. Ordered Remediation Queue
+
+- **R2**: `P0.WEBAPP.V3.SUBDUB.CANONICAL.DURABLE.JOB_BRIDGE.R1` (**BLOCKED**: `R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY = NO`)
 - **R3**: `P0.WEBAPP.V3.SUBDUB.CUSTOMER.HUB.FOUR_LANE.PRODUCT.R1`
 - **R4**: `P0.WEBAPP.V3.SUBDUB.CUSTOMER.LOCALE.IA.CLEANUP.R1`
 - **R5**: `P0.WEBAPP.V3.SUBDUB.ADMIN.RUNTIME.TRACE.R1`

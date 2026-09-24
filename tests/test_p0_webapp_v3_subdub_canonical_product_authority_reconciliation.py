@@ -1,7 +1,7 @@
 """Contract and Evidence Suite for SubDub Canonical Product Authority Reconciliation.
 
 Program: P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1
-Task: P0.WEBAPP.V3.SUBDUB.C2.INDEPENDENT.AUTHORITY.EVIDENCE.COMPLETION
+Task: P0.WEBAPP.V3.SUBDUB.C3.UPLOAD.INPUT.RUNTIME.AUTHORITY.TRUTH
 Parent Task: P0.WEBAPP.V3.SUBDUB.CANONICAL.PRODUCT.AUTHORITY.RECONCILIATION.R1
 
 Enforces:
@@ -404,10 +404,10 @@ def test_o_web_static_display_rows_are_not_canonical_bot_authority(audit_data: d
 
 
 # -----------------------------------------------------------------------------
-# P. WEB AND BOT INPUT/OUTPUT CONTRACTS ARE SEPARATED & ALL C2 FLAGS RESOLVED
+# P. WEB AND BOT INPUT/OUTPUT CONTRACTS ARE SEPARATED & ALL C3 FLAGS RESOLVED
 # -----------------------------------------------------------------------------
 def test_p_web_and_bot_input_output_authority_separated(audit_data: dict):
-    """Prove input and output authorities are strictly separated between Web and Bot, with all C2 decisions resolved."""
+    """Prove input and output authorities are strictly separated between Web and Bot, with all C3 decisions resolved."""
     flags = audit_data["flags"]
 
     # First Red & Bot Git Fixture Flags
@@ -416,13 +416,15 @@ def test_p_web_and_bot_input_output_authority_separated(audit_data: dict):
     assert flags["BOT_AUTHORITY_COMMIT_REQUIRED"] == "YES"
     assert flags["BOT_SOURCE_MISSING_FAILS_FOCUSED_SUITE"] == "YES"
 
-    # Input, Upload, and Runtime Stage Authority Resolutions
-    assert flags["SUBDUB_INPUT_CONTRACT_RESOLVED"] == "YES"
-    assert flags["SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED"] == "YES"
-    assert flags["ASR_RUNTIME_AUTHORITY_RESOLVED"] == "YES"
-    assert flags["TRANSLATION_RUNTIME_AUTHORITY_RESOLVED"] == "YES"
-    assert flags["TTS_RUNTIME_AUTHORITY_RESOLVED"] == "YES"
-    assert flags["MUX_RENDER_RUNTIME_AUTHORITY_RESOLVED"] == "YES"
+    # Input and Upload Authority Reality (Fail-closed NO due to unresolved semantic & staging gaps)
+    assert flags["SUBDUB_INPUT_CONTRACT_RESOLVED"] == "NO"
+    assert flags["SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED"] == "NO"
+    assert flags["BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED"] == "NO"
+    assert flags["BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED"] == "NO"
+    assert flags["R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY"] == "NO"
+
+    # Zero Self-Referential Authority Gates
+    assert flags["SELF_REFERENTIAL_AUTHORITY_GATE_COUNT"] == 0
 
     # Admin Traceability Truth (Fail-closed NO until Admin is built)
     assert flags["ADMIN_SUBDUB_JOB_TRACE_RESOLVED"] == "NO"
@@ -438,7 +440,7 @@ def test_p_web_and_bot_input_output_authority_separated(audit_data: dict):
     assert flags["WEB_REMOTE_MEDIA_URL_AUTHORITY"] == "NO"
     assert flags["BOT_OUTPUT_CAPABILITY_RESOLVED"] == "YES"
     assert flags["WEB_CANONICAL_SUBDUB_RUNTIME_OUTPUT_PROVEN"] == "NO"
-    assert flags["WEB_VOICE_PROFILE_AUTHORITY_RESOLVED"] == "YES"
+    assert flags["WEB_VOICE_PROFILE_SELECTION_AUTHORITY_RESOLVED"] == "NO"
     assert flags["CLIENT_PROVIDER_VOICE_ID_AUTHORITY"] == "NO"
     assert flags["BOT_VOICE_RESOLUTION_AUTHORITY_SEPARATE"] == "YES"
 
@@ -486,3 +488,200 @@ def test_r_subdub_locale_key_counts_and_purity(portal_i18n_source: str, audit_da
     assert audit_data["locale_purity"]["subdub_vi_keys_count"] == 79
     assert audit_data["locale_purity"]["subdub_en_keys_count"] == 79
     assert audit_data["locale_purity"]["raw_placeholder_leaks"] == 0
+
+
+# -----------------------------------------------------------------------------
+# S. FIRST RED: ASSET VAULT FEATURE UPLOAD AUTHORITY CLAIM FALSE
+# -----------------------------------------------------------------------------
+def test_s_first_red_asset_vault_feature_upload_authority_claim_false(audit_data: dict):
+    """Prove Asset Vault is NOT the canonical feature upload authority for SubDub jobs."""
+    flags = audit_data["flags"]
+    assert flags["FIRST_RED_ASSET_VAULT_FEATURE_UPLOAD_AUTHORITY_CLAIM_FALSE"] == "PROVEN"
+    assert flags["CURRENT_WEB_FEATURE_UPLOAD_IDENTIFIER"] == "upload_id"
+    assert flags["CURRENT_WEB_FEATURE_UPLOAD_STORAGE_AUTHORITY"] == "BOT_OWNED_STAGING"
+    assert flags["ASSET_ID_IS_GENERIC_SUBDUB_UPLOAD_AUTHORITY"] == "NO"
+
+    # Verify copyfast_api source: uses _canonical_upload_ids and transfers to bot-owned staging
+    copyfast_api_path = STANDALONE_ROOT / "copyfast_api.py"
+    copyfast_api_src = copyfast_api_path.read_text(encoding="utf-8")
+    assert "def _canonical_upload_ids(value: Any) -> list[str] | None:" in copyfast_api_src
+    assert "Accept only opaque bot staging identifiers, never paths or handles." in copyfast_api_src
+    assert "The standalone Web DB records neither raw file bytes nor provider paths." in copyfast_api_src
+    assert '"/internal/v1/uploads"' in copyfast_api_src
+
+
+# -----------------------------------------------------------------------------
+# T. BOT STAGING UPLOAD CONTRACT STATUS (FAIL-CLOSED NO)
+# -----------------------------------------------------------------------------
+def test_t_bot_staging_upload_contract_status(bot_git_repo: Path, audit_data: dict):
+    """Prove Bot at pinned commit lacks /internal/v1/uploads and staging lookup route."""
+    flags = audit_data["flags"]
+    assert flags["BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED"] == "NO"
+    assert flags["BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED"] == "NO"
+    assert flags["SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED"] == "NO"
+    assert flags["SECOND_SUBDUB_UPLOAD_AUTHORITY_CREATED"] == "NO"
+    assert flags["RAW_BROWSER_PATH_ACCEPTED"] == 0
+    assert flags["REMOTE_MEDIA_URL_ACCEPTED"] == 0
+
+    # Pinned Bot commit verification: bot.py does not define /internal/v1/uploads
+    bot_py = read_bot_git_file(bot_git_repo, "bot.py")
+    assert "/internal/v1/uploads" not in bot_py
+    assert "/internal/v1/voice/profiles" not in bot_py
+
+
+# -----------------------------------------------------------------------------
+# U. OUTPUT FORMAT CONTRADICTION & UNRESOLVED INPUT CONTRACT
+# -----------------------------------------------------------------------------
+def test_u_output_format_contradiction_and_unresolved_input_contract(portal_js_source: str, bot_git_repo: Path, audit_data: dict):
+    """Prove Web forms hardcode srt-only while Bot canonical pipeline requires media/burn output."""
+    flags = audit_data["flags"]
+    assert flags["CURRENT_WEB_OUTPUT_FORMAT_CONTRACT_COMPATIBLE_WITH_BOT"] == "NO"
+    assert flags["WEB_DUBBING_SRT_ONLY_SEMANTIC_GAP"] == "PROVEN"
+    assert flags["R2_OUTPUT_AUTHORITY_DECISION_REQUIRED"] == "YES"
+    assert flags["SUBDUB_INPUT_CONTRACT_RESOLVED"] == "NO"
+
+    # Web hardcodes srt in dubbing form
+    dub_start = portal_js_source.find("dubbing:")
+    dub_end = portal_js_source.find("documentPdf:")
+    field_sets_snippet = portal_js_source[dub_start:dub_end]
+    assert 'options: ["srt"]' in field_sets_snippet
+
+    # Bot outputs video or audio for dubbing
+    pipeline_py = read_bot_git_file(bot_git_repo, "services/subtitle_dub_product_pipeline.py")
+    assert "if mode == VIDEO_SUBTITLE_MODE_DUB:" in pipeline_py
+    assert 'return "video" if is_video_source else "audio"' in pipeline_py
+
+
+# -----------------------------------------------------------------------------
+# V. DURATION SECONDS AUTHORITY TRUTH
+# -----------------------------------------------------------------------------
+def test_v_duration_seconds_authority_truth(portal_js_source: str, bot_git_repo: Path, audit_data: dict):
+    """Prove Web client duration_seconds is unvalidated user input, while Bot enforces ffprobe duration."""
+    flags = audit_data["flags"]
+    assert flags["WEB_DURATION_SECONDS_IS_MEDIA_TRUTH"] == "NO"
+    assert flags["BOT_MEDIA_DURATION_PROBE_AUTHORITY_RESOLVED"] == "YES"
+    assert flags["R2_MUST_REVALIDATE_MEDIA_DURATION"] == "YES"
+
+    # Web accepts arbitrary numeric 1..14400 from client
+    assert 'name: "duration_seconds"' in portal_js_source
+    assert "min: 1" in portal_js_source
+    assert "max: 14_400" in portal_js_source
+
+    # Bot probes duration via ffprobe
+    bot_py = read_bot_git_file(bot_git_repo, "bot.py")
+    assert "ffprobe_duration" in bot_py
+    assert "subdub_duration_gate_payload" in bot_py
+
+
+# -----------------------------------------------------------------------------
+# W. VOICE PROFILE SELECTION AUTHORITY
+# -----------------------------------------------------------------------------
+def test_w_voice_profile_selection_authority(portal_js_source: str, bot_git_repo: Path, audit_data: dict):
+    """Prove Web voice profile selection proxies to missing Bot endpoint, and client has no provider voice ID authority."""
+    flags = audit_data["flags"]
+    assert flags["WEB_VOICE_PROFILE_SELECTION_AUTHORITY_RESOLVED"] == "NO"
+    assert flags["CLIENT_PROVIDER_VOICE_ID_AUTHORITY"] == "NO"
+
+    # Web form references voiceProfiles
+    assert 'optionsFrom: "voiceProfiles"' in portal_js_source
+
+    # Bot pinned commit lacks /internal/v1/voice/profiles
+    bot_py = read_bot_git_file(bot_git_repo, "bot.py")
+    assert "/internal/v1/voice/profiles" not in bot_py
+
+
+# -----------------------------------------------------------------------------
+# X. DIRECT SOURCE RUNTIME STAGE AUTHORITIES (REPLACING CIRCULAR ASSERTIONS)
+# -----------------------------------------------------------------------------
+def test_x_direct_source_runtime_stage_authorities(bot_git_repo: Path, audit_data: dict):
+    """Prove ASR, Translation, TTS, and Mux/Render authorities directly from Bot source files."""
+    flags = audit_data["flags"]
+    assert flags["ASR_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF"] == "PASS"
+    assert flags["TRANSLATION_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF"] == "PASS"
+    assert flags["TTS_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF"] == "PASS"
+    assert flags["MUX_RENDER_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF"] == "PASS"
+    assert flags["SELF_REFERENTIAL_AUTHORITY_GATE_COUNT"] == 0
+
+    pipeline_py = read_bot_git_file(bot_git_repo, "services/subtitle_dub_product_pipeline.py")
+    tts_routing_py = read_bot_git_file(bot_git_repo, "services/subdub_tts_language_routing.py")
+    auto_pricing_py = read_bot_git_file(bot_git_repo, "services/subdub_auto_word_pricing.py")
+
+    # ASR source proof
+    assert "prepare_subtitles" in pipeline_py
+    assert "asr_provider" in pipeline_py
+
+    # Translation source proof
+    assert "translation_provider" in pipeline_py
+
+    # TTS source proof
+    assert "def resolve_subdub_tts_language_route" in tts_routing_py
+    assert 'AUTO_XU_PER_WORD = Decimal("0.5")' in auto_pricing_py
+    assert "synthesize_segments" in pipeline_py
+    assert "resolve_voice_id" in pipeline_py
+
+    # Mux / Render source proof
+    assert "ffmpeg_ready" in pipeline_py
+    assert "dub_mux_enabled" in pipeline_py
+    assert "render_video" in pipeline_py
+
+
+# -----------------------------------------------------------------------------
+# Y. LOCALE VISIBLE COPY PURITY & UNLOCALIZED LABELS ENUMERATION
+# -----------------------------------------------------------------------------
+def test_y_locale_visible_copy_purity(portal_js_source: str, audit_data: dict):
+    """Prove visible copy purity FAIL with exactly 12 unlocalized strings in Vietnamese views."""
+    flags = audit_data["flags"]
+    assert flags["SUBDUB_I18N_KEY_PARITY"] == "PASS"
+    assert flags["SUBDUB_VI_VISIBLE_COPY_PURITY"] == "FAIL"
+    assert flags["MIXED_VI_VISIBLE_LABEL_COUNT"] == 12
+
+    unlocalized_labels = [
+        "🟢 Neural SubDub Engine Sẵn Sàng",
+        "🎙️ AI SubDub Studio — Tạo Phụ Đề & Lồng Tiếng Chuyên Nghiệp",
+        "Timeline Match",
+        "Transcript projects",
+        "Web-native subtitle authoring",
+        "Manual cue authoring",
+        "Web-native deterministic tool",
+        "Sub & Dub Operations Hub",
+        "AI Subtitle & Dubbing",
+        "SRT / VTT Format Lab",
+        "Subtitle Asset Operations",
+        "Subtitle Studio Workspace",
+    ]
+    for label in unlocalized_labels:
+        assert label in portal_js_source, f"Expected unlocalized label '{label}' in portal.js"
+
+
+# -----------------------------------------------------------------------------
+# Z. ADMIN SUBDUB TRACE GAPS DIRECT SOURCE PROOF
+# -----------------------------------------------------------------------------
+def test_z_admin_subdub_trace_gaps_direct_source_proof(portal_js_source: str, audit_data: dict):
+    """Prove generic admin views lack SubDub lane, multi-stage, failure attribution, and artifact traces."""
+    flags = audit_data["flags"]
+    assert flags["ADMIN_SUBDUB_TRACE_GAPS_DIRECT_SOURCE_PROOF"] == "PASS"
+    assert flags["ADMIN_SUBDUB_JOB_TRACE_RESOLVED"] == "NO"
+    assert flags["ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED"] == "NO"
+    assert flags["ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED"] == "NO"
+    assert flags["ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED"] == "NO"
+
+    # portal.js registers admin jobs routes
+    assert 'adminPage("/admin/jobs"' in portal_js_source
+    assert 'adminPage("/admin/jobs/failed"' in portal_js_source
+
+    # Admin table renderer around lines 30830-30850 lacks subdub_lane and multi-stage tracking
+    jobs_start = portal_js_source.find('if (module === "failed-jobs")')
+    jobs_end = portal_js_source.find('if (module === "providers")')
+    admin_jobs_section = portal_js_source[jobs_start:jobs_end]
+    assert "subdub_lane" not in admin_jobs_section
+    assert "asr_stage" not in admin_jobs_section
+    assert "stage_pipeline" not in admin_jobs_section
+
+
+# -----------------------------------------------------------------------------
+# AA. R2 DURABLE JOB BRIDGE AUTHORITY READINESS (FAIL-CLOSED NO)
+# -----------------------------------------------------------------------------
+def test_aa_r2_durable_job_bridge_authority_readiness(audit_data: dict):
+    """Prove R2 durable job bridge cannot be marked ready due to unresolved upload, output format, duration, and voice gaps."""
+    flags = audit_data["flags"]
+    assert flags["R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY"] == "NO"
