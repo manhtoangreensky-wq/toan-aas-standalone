@@ -724,7 +724,7 @@ def test_u_matrix_blocked_to_partial():
             assert item["blocker"] == "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
         elif item.get("bot_capability") == "cskh_ticket":
             assert item["status"] == "BLOCKED_BY_RUNTIME"
-            assert item["blocker"] == "BOT_SUPPORT_TICKETS_ENDPOINT_MISSING"
+            assert item["blocker"] == "BOT_SUPPORT_TICKET_CATEGORY_AUTHORITY_CORRECTION_UNMERGED"
 
     VIDEO_LONG_MASTER_STATUS = vl_entry["status"]
     assert VIDEO_LONG_MASTER_STATUS == "PARTIAL"
