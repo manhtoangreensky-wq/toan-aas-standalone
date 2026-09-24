@@ -175,6 +175,16 @@ from copyfast_image_generation_job_bridge import (
     image_generation_job_to_native_compat,
     validate_image_generation_input,
 )
+from copyfast_voice_clone_job_bridge import (
+    CANONICAL_PRODUCT_KEY as VOICE_CLONE_PRODUCT_KEY,
+    create_or_replay_voice_clone_job,
+    get_voice_clone_job,
+    is_voice_clone_job_other_account,
+    list_voice_clone_jobs,
+    stage_upload_for_account,
+    validate_voice_clone_input,
+    voice_clone_job_to_native_compat,
+)
 from copyfast_product_video_dispatcher import (
     claim_product_video_job,
     complete_product_video_job,
@@ -3413,7 +3423,11 @@ def _native_jobs_for_account(account: dict) -> list[dict[str, Any]]:
         image_generation_job_to_native_compat(job)
         for job in list_image_generation_jobs(account_id, limit=100)
     ]
-    return _merge_read_items(img_jobs, msf_jobs, vl_jobs, vt_jobs, pv_jobs, native_jobs)
+    vc_jobs = [
+        voice_clone_job_to_native_compat(job)
+        for job in list_voice_clone_jobs(account_id, limit=100)
+    ]
+    return _merge_read_items(vc_jobs, img_jobs, msf_jobs, vl_jobs, vt_jobs, pv_jobs, native_jobs)
 
 
 def _native_assets_for_account(account: dict) -> list[dict[str, Any]]:
@@ -6078,6 +6092,24 @@ async def job_detail(job_id: str, request: Request, account: dict = Depends(requ
             status_name="guarded",
             error_code="WEB_NATIVE_JOB_NOT_FOUND",
         )
+    vc_job = get_voice_clone_job(account_id, job_id)
+    if vc_job is not None:
+        compat_item = voice_clone_job_to_native_compat(vc_job)
+        return envelope(
+            True,
+            "Đã tải dữ liệu Job Web-native của tài khoản hiện tại.",
+            data={**compat_item, "job_record": vc_job, "read_model": "jobs", "canonical_available": False},
+            status_name="read_only",
+        )
+    if is_voice_clone_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    if str(job_id or "").strip().startswith("vcj_"):
+        return envelope(
+            False,
+            "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_JOB_NOT_FOUND",
+        )
     native_job = parse_native_job_id(job_id)
     if native_job is not None:
         record = get_native_job(str(account.get("id") or ""), job_id)
@@ -6216,10 +6248,8 @@ async def upload_to_canonical_staging(
         name, media_type, content, checksum = await _read_validated_upload(file)
     finally:
         await file.close()
-    return await _run_idempotent(
-        scope,
-        key,
-        lambda: _bridge(
+    async def _do_upload():
+        resp = await _bridge(
             "POST",
             "/internal/v1/uploads",
             account=account,
@@ -6231,7 +6261,26 @@ async def upload_to_canonical_staging(
                 "sha256": checksum,
                 "idempotency_key": key,
             },
-        ),
+        )
+        if isinstance(resp, dict) and resp.get("ok"):
+            data = resp.get("data")
+            if isinstance(data, dict):
+                stg_id = str(data.get("upload_id") or data.get("id") or "").strip()
+                if stg_id:
+                    stage_upload_for_account(
+                        account_id=str(account["id"]),
+                        filename=name,
+                        content_type=media_type,
+                        byte_size=len(content),
+                        sha256=checksum,
+                        upload_id=stg_id,
+                    )
+        return resp
+
+    return await _run_idempotent(
+        scope,
+        key,
+        _do_upload,
     )
 
 
@@ -6462,6 +6511,39 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
                     exc.detail,
                     status_name="guarded",
                     error_code="IMAGE_GENERATION_JOB_VALIDATION_FAILED",
+                )
+        if feature == "voice_clone":
+            account_id = str(account.get("id") or "")
+            try:
+                job_result = create_or_replay_voice_clone_job(
+                    account_id=account_id,
+                    payload=values,
+                    idempotency_key=key,
+                )
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=True,
+                )
+                return envelope(
+                    True,
+                    "Đã tạo tác vụ Clone giọng AI thành công, chờ runtime xử lý.",
+                    data=job_result,
+                    status_name="queued",
+                )
+            except HTTPException as exc:
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=False,
+                )
+                if exc.status_code == 409:
+                    raise exc
+                return envelope(
+                    False,
+                    exc.detail,
+                    status_name="guarded",
+                    error_code="VOICE_CLONE_JOB_VALIDATION_FAILED",
                 )
         scope = f"feature:{account['id']}:{feature}:confirm"
         result = await _run_idempotent(
@@ -6807,6 +6889,62 @@ async def get_image_generation_job_route(
     if is_image_generation_job_other_account(job_id, account_id):
         raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
     raise HTTPException(status_code=404, detail="Không tìm thấy job Tạo ảnh AI của tài khoản.")
+
+
+@router.post("/features/voice_clone/jobs")
+async def create_voice_clone_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    job = create_or_replay_voice_clone_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        idempotency_key=key,
+    )
+    return envelope(
+        True,
+        "Đã tạo tác vụ Clone giọng AI thành công, chờ runtime xử lý.",
+        data=job,
+        status_name="queued",
+    )
+
+
+@router.get("/features/voice_clone/jobs")
+async def list_voice_clone_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = list_voice_clone_jobs(account_id, limit=100)
+    return envelope(
+        True,
+        "Đã tải danh sách job Clone giọng AI của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/voice_clone/jobs/{job_id}")
+async def get_voice_clone_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    job = get_voice_clone_job(account_id, job_id)
+    if job is not None:
+        return envelope(
+            True,
+            "Đã tải chi tiết job Clone giọng AI.",
+            data=job,
+            status_name="read_only",
+        )
+    if is_voice_clone_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Clone giọng AI của tài khoản.")
 
 
 @router.get("/admin/summary")
