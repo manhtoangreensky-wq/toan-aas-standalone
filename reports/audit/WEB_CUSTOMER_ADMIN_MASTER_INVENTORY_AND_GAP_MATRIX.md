@@ -143,7 +143,7 @@ This master audit reconciles the entire Web customer-facing application and Web 
 | 12 | `video_long` | Video AI | `/video/long` | `/api/v1/features/video_long/*` | `services.video_tail9` | None on Web | Admin B01 | `PARTIAL` |
 | 13 | `image_generation` | Image AI | `/image/create` | `/api/v1/features/image_create/*` | `services.video_ai_real_pricing` | None on Web | Admin B01 | `PARTIAL` |
 | 14 | `voice_tts` | Voice AI | `/voice/create` | `/api/v1/features/voice_tts/*` | `bot.get_tts_provider_readiness` | None on Web | Admin B01 | `BLOCKED_BY_RUNTIME` |
-| 15 | `voice_clone` | Voice AI | `/voice/clone` | `/api/v1/features/voice_clone/*` | `bot.get_minimax_voice_clone_readiness` | None on Web | Admin B01 | `PARTIAL` |
+| 15 | `voice_clone` | Voice AI | `/voice/clone` | `/api/v1/features/voice_clone/*` | `bot.get_minimax_voice_clone_readiness` | None on Web | Admin B01 | `BLOCKED_BY_RUNTIME` |
 | 16 | `music_generation` | Music AI | `/music/ai` | `/api/v1/features/music_background/*` | `services.video_ai_real_pricing` | None on Web | Admin B01 | `BLOCKED_BY_RUNTIME` |
 | 17 | `subdub_service` | SubDub AI | `/subtitle, /dubbing` | `/api/v1/subtitle-asset-operations/*` | Local SRT/VTT converter | SRT/VTT only | Local DB | `PARTIAL` |
 | 18 | `chat_pro` | Chat AI | `/chat` | `/api/v1/chat-workspace/*` | Planning only | None on Web | Local draft | `PARTIAL` |
