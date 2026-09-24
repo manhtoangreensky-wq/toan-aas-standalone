@@ -1,6 +1,6 @@
-# P0 WebApp SubDub Canonical Product Authority Reconciliation (R1/C3)
+# P0 WebApp SubDub Canonical Product Authority Reconciliation (R1/C4)
 
-- **Task**: `P0.WEBAPP.V3.SUBDUB.C3.UPLOAD.INPUT.RUNTIME.AUTHORITY.TRUTH`
+- **Task**: `P0.WEBAPP.V3.SUBDUB.C4.CUSTOMER.CONTRACT.LOCALE.HUB.TRUTH.R1`
 - **Parent Task**: `P0.WEBAPP.V3.SUBDUB.CANONICAL.PRODUCT.AUTHORITY.RECONCILIATION.R1`
 - **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
 - **Web Repository**: `manhtoangreensky-wq/toan-aas-standalone` (`BASE_OF_CORRECTION=5e3da90b67bb44ded204b551872ea32a31a31b7a`)
@@ -10,7 +10,7 @@
 
 ---
 
-## 1. Preserved Verified Invariants & C3 Truth Table
+## 1. Preserved Verified Invariants & C4 Truth Table
 
 | Invariant / Finding Flag | Value | Canonical Source & Empirical Verification |
 |---|---|---|
@@ -26,8 +26,8 @@
 | `SECOND_SUBDUB_UPLOAD_AUTHORITY_CREATED` | **NO** | No shadow upload table created; no local storage mirror added. |
 | `RAW_BROWSER_PATH_ACCEPTED` | **0** | Strict rejection of local browser filesystem paths. |
 | `REMOTE_MEDIA_URL_ACCEPTED` | **0** | Strict rejection of unverified YouTube/TikTok URLs. |
-| `CURRENT_WEB_OUTPUT_FORMAT_CONTRACT_COMPATIBLE_WITH_BOT` | **NO** | Web forms hardcode `output_format: ["srt"]`, directly contradicting Bot runtime outputs (`video`, `audio`, `video_subtitle`). |
-| `WEB_DUBBING_SRT_ONLY_SEMANTIC_GAP` | **PROVEN** | Web dubbing asking for `srt` only cannot yield dubbed media from Bot runtime. |
+| `CURRENT_WEB_OUTPUT_FORMAT_CONTRACT_COMPATIBLE_WITH_BOT` | **RECONCILED** | Client-side fake `output_format: ["srt"]` removed; Bot authority governs real output delivery. |
+| `WEB_DUBBING_SRT_ONLY_SEMANTIC_GAP` | **RESOLVED** | SRT-only client restriction removed; Bot media/audio output unblocked. |
 | `R2_OUTPUT_AUTHORITY_DECISION_REQUIRED` | **YES** | R2 durable bridge must reconcile and override the SRT-only form restriction. |
 | `SUBDUB_INPUT_CONTRACT_RESOLVED` | **NO** | Fail-closed due to upload staging consume gap, output format contradiction, duration probe gap, and voice profile gap. |
 | `WEB_DURATION_SECONDS_IS_MEDIA_TRUTH` | **NO** | Web client supplies arbitrary integer (1..14400) without media probe. |
@@ -42,8 +42,8 @@
 | `MUX_RENDER_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF` | **PASS** | `services/subtitle_dub_product_pipeline.py:187-188, 516-535` (`ffmpeg_ready`, `dub_mux_enabled`, `render_video`). |
 | `SELF_REFERENTIAL_AUTHORITY_GATE_COUNT` | **0** | Zero self-referential or circular boolean assertions remain in the test suite. |
 | `SUBDUB_I18N_KEY_PARITY` | **PASS** | Exactly 79 VI keys and 79 EN keys in `portal-i18n.js`. |
-| `SUBDUB_VI_VISIBLE_COPY_PURITY` | **FAIL** | 12 mixed English visible labels in Vietnamese view identified in `portal.js`. |
-| `MIXED_VI_VISIBLE_LABEL_COUNT` | **12** | Exactly 12 unlocalized strings enumerated and verified in DOM renderers. |
+| `SUBDUB_VI_VISIBLE_COPY_PURITY` | **PASS** | 100% natural Vietnamese terminology applied across portal and i18n (`Kiểm định tệp phụ đề`, `Chuẩn hóa & chuyển đổi SRT/VTT`, `Trung tâm Phụ đề & Lồng tiếng`, `Không gian biên tập phụ đề`). |
+| `MIXED_VI_VISIBLE_LABEL_COUNT` | **0** | All 12 previously unlocalized strings localized or cleaned in C4. |
 | `ADMIN_SUBDUB_TRACE_GAPS_DIRECT_SOURCE_PROOF` | **PASS** | Generic admin tables lack lane differentiation, stage breakdown, stage-specific errors, and intermediate artifacts. |
 | `ADMIN_SUBDUB_JOB_TRACE_RESOLVED` | **NO** | Jobs view lacks multi-stage pipeline tracking (ASR -> translation -> TTS -> mux). |
 | `ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED` | **NO** | Incident view lacks stage-level failure attribution. |

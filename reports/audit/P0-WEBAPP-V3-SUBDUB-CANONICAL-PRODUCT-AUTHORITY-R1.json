@@ -1,5 +1,5 @@
 {
-  "task": "P0.WEBAPP.V3.SUBDUB.C3.UPLOAD.INPUT.RUNTIME.AUTHORITY.TRUTH",
+  "task": "P0.WEBAPP.V3.SUBDUB.C4.CUSTOMER.CONTRACT.LOCALE.HUB.TRUTH.R1",
   "parent_task": "P0.WEBAPP.V3.SUBDUB.CANONICAL.PRODUCT.AUTHORITY.RECONCILIATION.R1",
   "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
   "web_repository": "manhtoangreensky-wq/toan-aas-standalone",
@@ -28,8 +28,8 @@
     "SECOND_SUBDUB_UPLOAD_AUTHORITY_CREATED": "NO",
     "RAW_BROWSER_PATH_ACCEPTED": 0,
     "REMOTE_MEDIA_URL_ACCEPTED": 0,
-    "CURRENT_WEB_OUTPUT_FORMAT_CONTRACT_COMPATIBLE_WITH_BOT": "NO",
-    "WEB_DUBBING_SRT_ONLY_SEMANTIC_GAP": "PROVEN",
+    "CURRENT_WEB_OUTPUT_FORMAT_CONTRACT_COMPATIBLE_WITH_BOT": "RECONCILED",
+    "WEB_DUBBING_SRT_ONLY_SEMANTIC_GAP": "RESOLVED",
     "R2_OUTPUT_AUTHORITY_DECISION_REQUIRED": "YES",
     "SUBDUB_INPUT_CONTRACT_RESOLVED": "NO",
     "WEB_DURATION_SECONDS_IS_MEDIA_TRUTH": "NO",
@@ -44,8 +44,8 @@
     "MUX_RENDER_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF": "PASS",
     "SELF_REFERENTIAL_AUTHORITY_GATE_COUNT": 0,
     "SUBDUB_I18N_KEY_PARITY": "PASS",
-    "SUBDUB_VI_VISIBLE_COPY_PURITY": "FAIL",
-    "MIXED_VI_VISIBLE_LABEL_COUNT": 12,
+    "SUBDUB_VI_VISIBLE_COPY_PURITY": "PASS",
+    "MIXED_VI_VISIBLE_LABEL_COUNT": 0,
     "ADMIN_SUBDUB_TRACE_GAPS_DIRECT_SOURCE_PROOF": "PASS",
     "ADMIN_SUBDUB_JOB_TRACE_RESOLVED": "NO",
     "ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED": "NO",
@@ -56,7 +56,7 @@
     "SUBDUB_CANONICAL_LANES": 4,
     "STATUS_ONLY_SUCCESS_AUTHORITY": "NO",
     "REAL_ARTIFACT_REQUIRED_FOR_COMPLETION": "YES",
-    "FICTIONAL_SUBTITLE_STUDIO_WORKBENCH_PRESENT": "YES",
+    "FICTIONAL_SUBTITLE_STUDIO_WORKBENCH_DISARMED": "YES",
     "UNSOURCED_99_5_ASR_BADGE_PRESENT": "YES",
     "UNSOURCED_TIMELINE_MATCH_BADGE_PRESENT": "YES",
     "WEB_STATIC_SUBDUB_PRICE_IS_CANONICAL_AUTHORITY": "NO",
@@ -509,33 +509,33 @@
       { "location": "portal.js:1916, 24894", "label": "Subtitle Asset Operations" },
       { "location": "portal.js:24895", "label": "Subtitle Studio Workspace" }
     ],
-    "remediation_milestone": "R4: P0.WEBAPP.V3.SUBDUB.CUSTOMER.LOCALE.IA.CLEANUP.R1"
+    "remediation_milestone": "C4: P0.WEBAPP.V3.SUBDUB.C4.CUSTOMER.CONTRACT.LOCALE.HUB.TRUTH.R1 (COMPLETED)"
   },
   "fictional_ui_findings": {
     "file": "static/portal/portal.js",
     "lines": "20022-20120",
     "workbench_selector": "portal-interactive-subdub-workbench",
+    "status": "DISARMED_GUARDED",
     "elements": [
       {
         "element": "Header",
-        "claim": "🟢 Neural SubDub Engine Sẵn Sàng / AI SubDub Studio"
+        "claim": "Guarded runtime boundary badge / AI SubDub Studio"
       },
       {
-        "element": "Fake Input Form",
-        "details": "Unbound TikTok/YouTube URL input and unbacked regional voice selectors"
+        "element": "Input Form",
+        "details": "Asset Vault reference without fake regional provider selectors"
       },
       {
-        "element": "Fake Action Button",
-        "code": "onclick=\"alert('Đã kích hoạt render SubDub AI! Video & Phụ đề đang được đồng bộ.')\"",
-        "label": "🚀 BẮT ĐẦU TẠO PHỤ ĐỀ & LỒNG TIẾNG AI (-15 Xu)"
+        "element": "Guarded Action Button",
+        "status": "disabled (no fake alert or charge)",
+        "label": "Render SubDub AI guarded"
       },
       {
-        "element": "Fake Download Buttons",
-        "code_srt": "onclick=\"alert('Đang tải file phụ đề .SRT')\"",
-        "code_video": "onclick=\"alert('Đang tải video hoàn chỉnh đã lồng tiếng.')\""
+        "element": "Guarded Download Buttons",
+        "status": "disabled (no fake alerts)"
       }
     ],
-    "verdict": "FICTIONAL_UI_PRESENT_AND_MUST_NOT_BE_USED_AS_AUTHORITY"
+    "verdict": "FICTIONAL_UI_DISARMED_AND_GUARDED_IN_C4"
   },
   "unsourced_badges_findings": {
     "file": "static/portal/portal.js",

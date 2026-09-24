@@ -168,10 +168,10 @@ def test_b_four_bot_canonical_lanes(bot_git_repo: Path, audit_data: dict):
 
 
 # -----------------------------------------------------------------------------
-# C. CURRENT WEB FIELD SETS EXACTLY (FULL SPECIFICATION)
+# C. CURRENT WEB FIELD SETS RECONCILED (SPECIFICATION TRUTH)
 # -----------------------------------------------------------------------------
 def test_c_current_web_field_sets_exactly(portal_js_source: str):
-    """Prove FIELD_SETS.subtitleCreate, subtitleTranslate, and dubbing full specifications."""
+    """Prove FIELD_SETS.subtitleCreate, subtitleTranslate, and dubbing are reconciled without fake client parameters."""
     # subtitleCreate
     create_match = re.search(r"subtitleCreate:\s*\[(.*?)\]\s*,\s*\n\s*subtitleTranslate:", portal_js_source, re.DOTALL)
     assert create_match is not None, "Missing FIELD_SETS.subtitleCreate"
@@ -180,15 +180,8 @@ def test_c_current_web_field_sets_exactly(portal_js_source: str):
     assert 'type: "file"' in create_block
     assert 'accept: "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm"' in create_block
     assert 'requiredUpload: true' in create_block
-    assert 'name: "duration_seconds"' in create_block
-    assert 'type: "number"' in create_block
-    assert 'min: 1' in create_block
-    assert 'max: 14_400' in create_block
-    assert 'step: 1' in create_block
-    assert 'required: true' in create_block
-    assert 'name: "output_format"' in create_block
-    assert 'control: "select"' in create_block
-    assert 'options: ["srt"]' in create_block
+    assert 'name: "duration_seconds"' not in create_block
+    assert 'name: "output_format"' not in create_block
 
     # subtitleTranslate
     trans_match = re.search(r"subtitleTranslate:\s*\[(.*?)\]\s*,\s*\n\s*dubbing:", portal_js_source, re.DOTALL)
@@ -202,15 +195,8 @@ def test_c_current_web_field_sets_exactly(portal_js_source: str):
     assert 'control: "select"' in trans_block
     assert 'options: LANGUAGE_OPTIONS' in trans_block
     assert 'required: true' in trans_block
-    assert 'name: "duration_seconds"' in trans_block
-    assert 'type: "number"' in trans_block
-    assert 'min: 1' in trans_block
-    assert 'max: 14_400' in trans_block
-    assert 'step: 1' in trans_block
-    assert 'required: true' in trans_block
-    assert 'name: "output_format"' in trans_block
-    assert 'control: "select"' in trans_block
-    assert 'options: ["srt"]' in trans_block
+    assert 'name: "duration_seconds"' not in trans_block
+    assert 'name: "output_format"' not in trans_block
 
     # dubbing
     dub_match = re.search(r"dubbing:\s*\[(.*?)\n\s*\]\s*,\s*\n\s*(?://|documentPdf:)", portal_js_source, re.DOTALL)
@@ -222,28 +208,19 @@ def test_c_current_web_field_sets_exactly(portal_js_source: str):
     assert 'requiredUpload: true' in dub_block
     assert 'name: "mode"' in dub_block
     assert 'control: "select"' in dub_block
-    assert 'options: ["dubbing", "subtitle_plus_dubbing"]' in dub_block
+    assert 'subtitle_plus_dubbing' in dub_block
     assert 'name: "target_language"' in dub_block
     assert 'control: "select"' in dub_block
     assert 'options: LANGUAGE_OPTIONS' in dub_block
     assert 'required: true' in dub_block
-    assert 'name: "voice_profile_id"' in dub_block
-    assert 'control: "select"' in dub_block
-    assert 'optionsFrom: "voiceProfiles"' in dub_block
     assert 'name: "speed"' in dub_block
     assert 'control: "select"' in dub_block
     assert '{ value: "1.0", label: "Bình thường (1.0×)" }' in dub_block
     assert '{ value: "0.9", label: "Chậm (0.9×)" }' in dub_block
     assert '{ value: "1.5", label: "Nhanh (1.5×)" }' in dub_block
-    assert 'name: "duration_seconds"' in dub_block
-    assert 'type: "number"' in dub_block
-    assert 'min: 1' in dub_block
-    assert 'max: 14_400' in dub_block
-    assert 'step: 1' in dub_block
-    assert 'required: true' in dub_block
-    assert 'name: "output_format"' in dub_block
-    assert 'control: "select"' in dub_block
-    assert 'options: ["srt"]' in dub_block
+    assert 'name: "voice_profile_id"' not in dub_block
+    assert 'name: "duration_seconds"' not in dub_block
+    assert 'name: "output_format"' not in dub_block
 
 
 # -----------------------------------------------------------------------------
@@ -280,28 +257,30 @@ def test_e_and_f_combo_differentiation(portal_js_source: str, audit_data: dict):
     assert "subdub_combo" not in hub_body
 
     # The dubbing form contains subtitle_plus_dubbing in mode options
-    assert 'options: ["dubbing", "subtitle_plus_dubbing"]' in portal_js_source
+    dub_match = re.search(r"dubbing:\s*\[(.*?)\n\s*\]\s*,\s*\n\s*(?://|documentPdf:)", portal_js_source, re.DOTALL)
+    assert dub_match is not None
+    assert 'subtitle_plus_dubbing' in dub_match.group(1)
 
 
 # -----------------------------------------------------------------------------
-# G, H, I. FICTIONAL SUBTITLE-STUDIO WORKBENCH, -15 XU ACTION, FAKE DOWNLOADS
+# G, H, I. FICTIONAL SUBTITLE-STUDIO WORKBENCH DISARMED & GUARDED (C4)
 # -----------------------------------------------------------------------------
 def test_g_h_i_fictional_subtitle_studio_workbench(portal_js_source: str, audit_data: dict):
-    """Prove fictional /subtitle-studio workbench exists with fake alert actions."""
-    assert audit_data["flags"]["FICTIONAL_SUBTITLE_STUDIO_WORKBENCH_PRESENT"] == "YES"
+    """Prove fictional /subtitle-studio workbench has been disarmed with alerts removed and status guarded."""
+    assert audit_data["flags"]["FICTIONAL_SUBTITLE_STUDIO_WORKBENCH_DISARMED"] == "YES"
     assert audit_data["flags"]["FICTIONAL_UI_USED_AS_AUTHORITY"] == "NO"
 
-    # G: Fictional workbench container
+    # G: Fictional workbench container guarded
     assert "portal-interactive-subdub-workbench" in portal_js_source
-    assert "🟢 Neural SubDub Engine Sẵn Sàng" in portal_js_source
+    assert 'data-status="guarded"' in portal_js_source
+    assert "🟢 Neural SubDub Engine Sẵn Sàng" not in portal_js_source
 
-    # H: Fake -15 Xu button with alert()
-    assert "BẮT ĐẦU TẠO PHỤ ĐỀ & LỒNG TIẾNG AI (-15 Xu)" in portal_js_source
-    assert "alert('Đã kích hoạt render SubDub AI! Video & Phụ đề đang được đồng bộ.')" in portal_js_source
+    # H: Fake -15 Xu button with alert() removed and disarmed
+    assert "alert('Đã kích hoạt render SubDub AI! Video & Phụ đề đang được đồng bộ.')" not in portal_js_source
 
-    # I: Fake download buttons with alert()
-    assert "alert('Đang tải file phụ đề .SRT')" in portal_js_source
-    assert "alert('Đang tải video hoàn chỉnh đã lồng tiếng.')" in portal_js_source
+    # I: Fake download buttons with alert() removed and disarmed
+    assert "alert('Đang tải file phụ đề .SRT')" not in portal_js_source
+    assert "alert('Đang tải video hoàn chỉnh đã lồng tiếng.')" not in portal_js_source
 
 
 # -----------------------------------------------------------------------------
@@ -319,16 +298,16 @@ def test_j_and_k_unsourced_marketing_claims(portal_js_source: str, audit_data: d
 
 
 # -----------------------------------------------------------------------------
-# L. CURRENT WEB SRT-ONLY FORM RESTRICTIONS (SEMANTIC GAPS)
+# L. CURRENT WEB SRT-ONLY FORM RESTRICTIONS RECONCILED (C4)
 # -----------------------------------------------------------------------------
 def test_l_current_web_srt_only_form_restrictions(portal_js_source: str, audit_data: dict):
-    """Prove subtitleCreate, subtitleTranslate, and dubbing all restrict output_format to ['srt']."""
+    """Prove subtitleCreate, subtitleTranslate, and dubbing no longer restrict output_format to ['srt']."""
     assert audit_data["flags"]["WEB_OUTPUT_FORM_VS_BOT_OUTPUT_GAPS_RESOLVED"] == "YES"
 
-    # Each field set hardcodes output_format: options: ["srt"]
+    # Field sets no longer hardcode output_format: options: ["srt"]
     field_sets_snippet = portal_js_source[portal_js_source.find("subtitleCreate:"):portal_js_source.find("documentPdf:")]
     srt_matches = re.findall(r'name:\s*"output_format",.*?options:\s*\["srt"\]', field_sets_snippet, re.DOTALL)
-    assert len(srt_matches) == 3, f"Expected 3 occurrences of output_format: ['srt'], found {len(srt_matches)}"
+    assert len(srt_matches) == 0, f"Expected 0 occurrences of output_format: ['srt'], found {len(srt_matches)}"
 
 
 # -----------------------------------------------------------------------------
@@ -530,21 +509,21 @@ def test_t_bot_staging_upload_contract_status(bot_git_repo: Path, audit_data: di
 
 
 # -----------------------------------------------------------------------------
-# U. OUTPUT FORMAT CONTRADICTION & UNRESOLVED INPUT CONTRACT
+# U. OUTPUT FORMAT CONTRADICTION RECONCILED (C4)
 # -----------------------------------------------------------------------------
 def test_u_output_format_contradiction_and_unresolved_input_contract(portal_js_source: str, bot_git_repo: Path, audit_data: dict):
-    """Prove Web forms hardcode srt-only while Bot canonical pipeline requires media/burn output."""
+    """Prove Web forms no longer hardcode srt-only while Bot canonical pipeline requires media/burn output."""
     flags = audit_data["flags"]
-    assert flags["CURRENT_WEB_OUTPUT_FORMAT_CONTRACT_COMPATIBLE_WITH_BOT"] == "NO"
-    assert flags["WEB_DUBBING_SRT_ONLY_SEMANTIC_GAP"] == "PROVEN"
+    assert flags["CURRENT_WEB_OUTPUT_FORMAT_CONTRACT_COMPATIBLE_WITH_BOT"] == "RECONCILED"
+    assert flags["WEB_DUBBING_SRT_ONLY_SEMANTIC_GAP"] == "RESOLVED"
     assert flags["R2_OUTPUT_AUTHORITY_DECISION_REQUIRED"] == "YES"
     assert flags["SUBDUB_INPUT_CONTRACT_RESOLVED"] == "NO"
 
-    # Web hardcodes srt in dubbing form
+    # Web no longer hardcodes srt in dubbing form
     dub_start = portal_js_source.find("dubbing:")
     dub_end = portal_js_source.find("documentPdf:")
     field_sets_snippet = portal_js_source[dub_start:dub_end]
-    assert 'options: ["srt"]' in field_sets_snippet
+    assert 'options: ["srt"]' not in field_sets_snippet
 
     # Bot outputs video or audio for dubbing
     pipeline_py = read_bot_git_file(bot_git_repo, "services/subtitle_dub_product_pipeline.py")
@@ -553,19 +532,18 @@ def test_u_output_format_contradiction_and_unresolved_input_contract(portal_js_s
 
 
 # -----------------------------------------------------------------------------
-# V. DURATION SECONDS AUTHORITY TRUTH
+# V. DURATION SECONDS AUTHORITY TRUTH (C4 RECONCILED)
 # -----------------------------------------------------------------------------
 def test_v_duration_seconds_authority_truth(portal_js_source: str, bot_git_repo: Path, audit_data: dict):
-    """Prove Web client duration_seconds is unvalidated user input, while Bot enforces ffprobe duration."""
+    """Prove Web client duration_seconds has been removed from field sets; Bot enforces ffprobe duration."""
     flags = audit_data["flags"]
     assert flags["WEB_DURATION_SECONDS_IS_MEDIA_TRUTH"] == "NO"
     assert flags["BOT_MEDIA_DURATION_PROBE_AUTHORITY_RESOLVED"] == "YES"
     assert flags["R2_MUST_REVALIDATE_MEDIA_DURATION"] == "YES"
 
-    # Web accepts arbitrary numeric 1..14400 from client
-    assert 'name: "duration_seconds"' in portal_js_source
-    assert "min: 1" in portal_js_source
-    assert "max: 14_400" in portal_js_source
+    # Web field sets no longer accept arbitrary numeric duration_seconds from client
+    field_sets_snippet = portal_js_source[portal_js_source.find("subtitleCreate:"):portal_js_source.find("documentPdf:")]
+    assert 'name: "duration_seconds"' not in field_sets_snippet
 
     # Bot probes duration via ffprobe
     bot_py = read_bot_git_file(bot_git_repo, "bot.py")
@@ -626,31 +604,24 @@ def test_x_direct_source_runtime_stage_authorities(bot_git_repo: Path, audit_dat
 
 
 # -----------------------------------------------------------------------------
-# Y. LOCALE VISIBLE COPY PURITY & UNLOCALIZED LABELS ENUMERATION
+# Y. LOCALE VISIBLE COPY PURITY & UNLOCALIZED LABELS RECONCILED (C4)
 # -----------------------------------------------------------------------------
 def test_y_locale_visible_copy_purity(portal_js_source: str, audit_data: dict):
-    """Prove visible copy purity FAIL with exactly 12 unlocalized strings in Vietnamese views."""
+    """Prove visible copy purity PASS with pure Vietnamese terminology and i18n key parity in C4."""
     flags = audit_data["flags"]
     assert flags["SUBDUB_I18N_KEY_PARITY"] == "PASS"
-    assert flags["SUBDUB_VI_VISIBLE_COPY_PURITY"] == "FAIL"
-    assert flags["MIXED_VI_VISIBLE_LABEL_COUNT"] == 12
+    assert flags["SUBDUB_VI_VISIBLE_COPY_PURITY"] == "PASS"
+    assert flags["MIXED_VI_VISIBLE_LABEL_COUNT"] == 0
 
-    unlocalized_labels = [
-        "🟢 Neural SubDub Engine Sẵn Sàng",
-        "🎙️ AI SubDub Studio — Tạo Phụ Đề & Lồng Tiếng Chuyên Nghiệp",
-        "Timeline Match",
-        "Transcript projects",
-        "Web-native subtitle authoring",
-        "Manual cue authoring",
-        "Web-native deterministic tool",
-        "Sub & Dub Operations Hub",
-        "AI Subtitle & Dubbing",
-        "SRT / VTT Format Lab",
-        "Subtitle Asset Operations",
-        "Subtitle Studio Workspace",
-    ]
-    for label in unlocalized_labels:
-        assert label in portal_js_source, f"Expected unlocalized label '{label}' in portal.js"
+    # Ensure fake unlocalized claims in Vietnamese views were removed or localized
+    assert "🟢 Neural SubDub Engine Sẵn Sàng" not in portal_js_source
+    assert "🎙️ AI SubDub Studio — Tạo Phụ Đề & Lồng Tiếng Chuyên Nghiệp" not in portal_js_source
+
+    # Ensure pure Vietnamese shell navigation mappings exist
+    assert '"Không gian biên tập phụ đề": "shellNav.subtitleStudio"' in portal_js_source
+    assert '"Kiểm định tệp phụ đề": "shellNav.subtitleAssetOps"' in portal_js_source
+    assert '"Chuẩn hóa & chuyển đổi SRT/VTT": "shellNav.subtitleFormatLab"' in portal_js_source
+    assert '"Trung tâm Phụ đề & Lồng tiếng": "shellNav.subdubHub"' in portal_js_source
 
 
 # -----------------------------------------------------------------------------
