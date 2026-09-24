@@ -26,8 +26,8 @@ This master audit reconciles the entire Web customer-facing application and Web 
 | `TOTAL_ADMIN_SURFACES` | **41** | Distinct registered admin feature surfaces in `copyfast_registry.py` |
 | `TOTAL_FASTAPI_ROUTES` | **677** | 578 customer routes, 99 admin routes in `app.py` |
 | `PASS_COUNT` | **7** | Wallet balance, top-up QR, history, packages, pricing, local video edit, guides |
-| `PARTIAL_COUNT` | **14** | Web-native planning tools (Video Studio, Content Studio, Chat draft, local Subtitle) & Provider-Blocked Canonical Adapters |
-| `BLOCKED_BY_RUNTIME_COUNT` | **9** | Bot AI generation products lacking Web-to-Bot confirm job bridge adapter |
+| `PARTIAL_COUNT` | **15** | Web-native planning tools (Video Studio, Content Studio, Chat draft, local Subtitle) & Provider-Blocked Canonical Adapters |
+| `BLOCKED_BY_RUNTIME_COUNT` | **8** | Bot AI generation products lacking Web-to-Bot confirm job bridge adapter |
 | `MISSING_COUNT` | **1** | Autopost social channel connection / token bridge |
 | `MOCK_COUNT` | **0** | Fake promotion vouchers & fake top-up bonuses completely eliminated |
 | `STALE_COUNT` | **0** | Stale PR #1093 & legacy mock references eliminated |
@@ -131,7 +131,7 @@ This master audit reconciles the entire Web customer-facing application and Web 
 |---|---|---|---|---|---|---|---|---|
 | 1 | `video_trend` | Video AI | `/video/trend` | `/api/v1/features/video_trend/*` | `services.video_tail9` | None on Web | Admin B01 | `BLOCKED_BY_RUNTIME` |
 | 2 | `video_ai_prompt` | Video AI | `/video/create` | `/api/v1/features/video_ai_prompt/*` | `services.web_product_video_worker_consumer` | Provider-blocked | Admin Metrics/Reconcile | `PARTIAL_PROVIDER_BLOCKED` |
-| 3 | `video_ai_image` | Video AI | `/video/image-to-video` | `/api/v1/features/video_ai_image/*` | `services.video_tail9` | None on Web | Admin B01 | `BLOCKED_BY_RUNTIME` |
+| 3 | `video_ai_image` | Video AI | `/video/image-to-video` | `/api/v1/features/video_ai_image/*` | `services.video_tail9` | None on Web | Admin B01 | `PARTIAL` |
 | 4 | `video_ai_video_reference` | Video AI | `/video-studio/reference-format-planner` | `/api/v1/video-studio/*` | Planning only | None on Web | Local draft | `PARTIAL` |
 | 5 | `script_image_video` | Video AI | `/video-studio/script-to-screen-planner` | `/api/v1/video-studio/*` | Planning only | None on Web | Local draft | `PARTIAL` |
 | 6 | `storyboard_prompt` | Video AI | `/video-studio/storyboard-composer` | `/api/v1/video-studio/*` | Planning only | None on Web | Local draft | `PARTIAL` |

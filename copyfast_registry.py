@@ -240,9 +240,13 @@ FEATURE_BY_KEY = {item.key: item for item in ALL_FEATURES}
 # without modifying total public features count (180 total, 139 customer, 41 admin).
 FEATURE_ALIASES: dict[str, str] = {
     "video_ai_prompt": "video_single",
+    "video_ai_image": "video_image_to_video",
 }
 FEATURE_BY_KEY["video_ai_prompt"] = WebFeature(
     "video_ai_prompt", "Video AI Prompt", "video", "/video/create", input_hint="Prompt hoặc brief video."
+)
+FEATURE_BY_KEY["video_ai_image"] = WebFeature(
+    "video_ai_image", "Video AI Image", "video", "/video/image-to-video", input_hint="Ảnh nguồn và chuyển động mong muốn."
 )
 
 # A small, reviewed subset of the Web catalog that can be used as a genuine

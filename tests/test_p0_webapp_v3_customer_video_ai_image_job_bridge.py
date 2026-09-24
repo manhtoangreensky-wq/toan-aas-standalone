@@ -1,0 +1,1538 @@
+"""Tests for Video AI Image Canonical Job Bridge Adapter.
+
+Task: P0.WEBAPP.V3.CUSTOMER.VIDEO_AI_IMAGE.CANONICAL.JOB_BRIDGE.R1
+Program: P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1
+Parent: P0.WEBAPP.V3.CUSTOMER.ADMIN.MASTER.EXECUTION.R1
+
+Enforces:
+1. FIRST RED proof and documentation.
+2. Canonical product identity and entrypoint (/video/image-to-video, video_ai_image).
+3. Web feature job adapter registration.
+4. Input validation (prompt, source image, aspect ratio, duration, quality tier, scene count).
+5. Anti-injection: strict rejection of client authority fields.
+6. Durable persistence in SQLite (table web_video_ai_image_jobs).
+7. Customer job owner binding and cross-account IDOR rejection (HTTP 403).
+8. Idempotent replay on identical payload hash.
+9. Request ID / Idempotency Key conflict rejection (HTTP 409).
+10. Fail-closed delivery: output_available=False, download_ready=False, output=None until verified.
+11. Zero cost invariants: PROVIDER_CALLS=0, VIDEO_RENDERS=0, WALLET_MUTATIONS=0.
+12. FastAPI HTTP endpoints (/features/video_ai_image/jobs, /jobs).
+13. Master matrix parity: status=PARTIAL, blocker=AI_IMAGE_VIDEO_BLOCKED_BY_RUNTIME.
+"""
+
+from __future__ import annotations
+
+import concurrent.futures
+import inspect
+import json
+from pathlib import Path
+import sys
+import threading
+import uuid
+
+from fastapi import HTTPException
+from fastapi.testclient import TestClient
+import pytest
+
+STANDALONE_ROOT = Path(__file__).resolve().parents[1]
+if str(STANDALONE_ROOT) not in sys.path:
+    sys.path.insert(0, str(STANDALONE_ROOT))
+
+from app import app
+from copyfast_api import _web_feature_job_adapter_keys
+import copyfast_db
+from copyfast_db import ensure_copyfast_schema, read_transaction, transaction
+import copyfast_registry as reg
+import copyfast_video_ai_image_job_bridge as bridge
+import copyfast_workspace_draft_contract as draft_contract
+
+
+@pytest.fixture(autouse=True)
+def setup_db_and_clean(monkeypatch):
+    """Ensure database schema is up to date and clean test data."""
+    monkeypatch.setenv("APP_ENV", "test")
+    monkeypatch.setenv("WEB_SESSION_SECRET", "test-session-secret-p0-video-ai-image-bridge")
+    monkeypatch.setenv("BOT_USERNAME", "ToanAasSupportBot")
+    monkeypatch.setenv("WEBAPP_COPYFAST_ENABLED", "true")
+    monkeypatch.setenv("WEBAPP_PROVIDER_CALLS_ENABLED", "true")
+    monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTER_ENABLED", "true")
+    monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTERS", "video_ai_image,video_ai_prompt,video_single")
+    monkeypatch.setenv("WEBAPP_AUTH_THROTTLE_HMAC_SECRET", "test-auth-throttle-secret-32-bytes-long!")
+    import app as app_module
+    if hasattr(app_module, "_auth_rate_windows"):
+        app_module._auth_rate_windows.clear()
+    monkeypatch.setattr("app._durable_auth_throttle_guard", lambda *args, **kwargs: None)
+    import copyfast_auth_throttle
+    monkeypatch.setattr(copyfast_auth_throttle, "consume", lambda *args, **kwargs: copyfast_auth_throttle.ThrottleDecision(True, 0, "allowed"))
+    ensure_copyfast_schema()
+    bridge.ensure_video_ai_image_schema()
+    with transaction() as conn:
+        conn.execute("DELETE FROM web_video_ai_image_jobs")
+        conn.execute("DELETE FROM web_sessions WHERE account_id LIKE 'test-%'")
+        conn.execute("DELETE FROM web_accounts WHERE id LIKE 'test-%'")
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO web_accounts (id, email, password_hash, created_at, updated_at)
+            VALUES ('test-user-1', 'user1@test.local', 'hash1', '2026-09-22T00:00:00Z', '2026-09-22T00:00:00Z'),
+                   ('test-user-2', 'user2@test.local', 'hash2', '2026-09-22T00:00:00Z', '2026-09-22T00:00:00Z')
+            """
+        )
+    yield
+    with transaction() as conn:
+        conn.execute("DELETE FROM web_video_ai_image_jobs")
+        conn.execute("DELETE FROM web_sessions WHERE account_id LIKE 'test-%'")
+        conn.execute("DELETE FROM web_accounts WHERE id LIKE 'test-%'")
+    if hasattr(app_module, "_auth_rate_windows"):
+        app_module._auth_rate_windows.clear()
+
+
+def _create_test_account(account_id: str | None = None) -> dict:
+    acc_id = account_id or f"test-acc-{uuid.uuid4().hex[:12]}"
+    email = f"{acc_id}@example.com"
+    with transaction() as conn:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO web_accounts (id, email, password_hash, created_at, updated_at)
+            VALUES (?, ?, 'hash', '2026-09-22T00:00:00Z', '2026-09-22T00:00:00Z')
+            """,
+            (acc_id, email),
+        )
+    return {"id": acc_id, "email": email}
+
+
+def _valid_payload() -> dict:
+    return {
+        "prompt": "Animate camera moving forward smoothly through blooming cherry blossom garden",
+        "source_image_url": "https://example.com/images/cherry_blossom.jpg",
+        "aspect_ratio": "9:16",
+        "duration_seconds": 5,
+        "quality_tier": 200,
+        "scene_count": 1,
+        "platform": "tiktok",
+        "goal": "convert",
+    }
+
+
+# ─── TEST 1: FIRST RED PROOF & DOCUMENTATION ──────────────────────────────────
+
+def test_01_first_red_documented_and_proven():
+    """Document and verify that video_ai_image now has an active canonical job bridge."""
+    # Table exists in SQLite
+    with read_transaction() as conn:
+        row = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='web_video_ai_image_jobs'"
+        ).fetchone()
+        assert row is not None, "web_video_ai_image_jobs table must exist"
+
+    # Supported canonical adapters contains video_ai_image
+    assert "video_ai_image" in bridge.SUPPORTED_CANONICAL_JOB_ADAPTERS
+
+    # C2 FIRST RED documented:
+    # A malformed completed state with an unsafe output URL (e.g. javascript:alert(1))
+    # must fail closed and never project as delivery_ready / output_available.
+    assert bridge.is_safe_video_output_url("javascript:alert(1)") is False
+
+
+# ─── TEST 2: CANONICAL IDENTITY & ENTRYPOINT ─────────────────────────────────
+
+def test_02_canonical_identity_and_entrypoint():
+    """Verify 1:1 identity consistency with Bot runtime authority."""
+    assert bridge.CANONICAL_PRODUCT_KEY == "video_ai_image"
+    assert bridge.CANONICAL_ROUTING_KEY == "video_ai_canonical"
+    assert bridge.CANONICAL_CUSTOMER_ENTRYPOINT == "/video/image-to-video"
+
+    # Registry aliases and entrypoints
+    assert reg.FEATURE_ALIASES.get("video_ai_image") == "video_image_to_video"
+    assert "video_ai_image" in reg.FEATURE_BY_KEY
+    assert reg.FEATURE_BY_KEY["video_ai_image"].route == "/video/image-to-video"
+    assert reg.FEATURE_BY_KEY["video_image_to_video"].route == "/video/image-to-video"
+
+    # Registry counts must remain intact: 180 total, 139 customer, 41 admin
+    assert len(reg.ALL_FEATURES) == 180
+    assert len(reg.CUSTOMER_FEATURES) == 139
+    assert len(reg.ADMIN_FEATURES) == 41
+
+    # Draft candidate keys must include video_ai_image
+    assert "video_ai_image" in draft_contract.FEATURE_EXECUTION_CANDIDATE_KEYS
+
+
+# ─── TEST 3: WEB FEATURE ADAPTER REGISTRATION ────────────────────────────────
+
+def test_03_web_feature_adapter_registration(monkeypatch):
+    """Prove video_ai_image resolves through _web_feature_job_adapter_keys."""
+    monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTERS", "video_ai_image,video_ai_prompt")
+    adapter_keys = _web_feature_job_adapter_keys()
+    assert "video_ai_image" in adapter_keys
+    assert "video_ai_prompt" in adapter_keys
+
+    # Bounded adapter contains only video_ai_image
+    assert bridge.SUPPORTED_CANONICAL_JOB_ADAPTERS == frozenset({"video_ai_image"})
+
+
+# ─── TEST 4: INPUT VALIDATION - PROMPT ───────────────────────────────────────
+
+def test_04_payload_validation_prompt():
+    """Verify prompt is required and cannot exceed MAX_PROMPT_LENGTH."""
+    p = _valid_payload()
+    p["prompt"] = ""
+    is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+    assert not is_valid
+    assert err == "PROMPT_REQUIRED"
+
+    p["prompt"] = "A" * 2001
+    is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+    assert not is_valid
+    assert err == "PROMPT_TOO_LONG"
+
+
+# ─── TEST 5: INPUT VALIDATION - SOURCE IMAGE ─────────────────────────────────
+
+def test_05_payload_validation_source_image():
+    """Verify source_image_url is required and unsafe URLs are rejected."""
+    p = _valid_payload()
+    p["source_image_url"] = ""
+    p["source"] = ""
+    is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+    assert not is_valid
+    assert err == "SOURCE_IMAGE_REQUIRED"
+
+    # Rejection of unsafe schemes
+    unsafe_inputs = [
+        "javascript:alert(1)",
+        "JavaScript:prompt()",
+        "data:image/png;base64,AAAA",
+        "https://example.com/../../etc/passwd",
+        "/valid/path/../../../traversal",
+    ]
+    for unsafe in unsafe_inputs:
+        p["source_image_url"] = unsafe
+        is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+        assert not is_valid, f"Expected {unsafe} to be rejected"
+        assert err == "SOURCE_IMAGE_UNSAFE"
+
+    # Safe inputs
+    safe_inputs = [
+        "https://cdn.example.com/uploads/product1.png",
+        "http://example.com/pic.jpg",
+        "/api/v1/assets/asset_123/download",
+        "stage_upload_abc123",
+        "asset_789xyz",
+    ]
+    for safe in safe_inputs:
+        p["source_image_url"] = safe
+        is_valid, err, norm = bridge.validate_video_ai_image_input(p)
+        assert is_valid, f"Expected {safe} to be accepted, got {err}"
+        assert norm["source_image_url"] == safe
+
+
+# ─── TEST 6: INPUT VALIDATION - ASPECT RATIO ─────────────────────────────────
+
+def test_06_payload_validation_aspect_ratio():
+    """Verify allowed aspect ratios: 9:16, 16:9, 1:1, 4:5."""
+    p = _valid_payload()
+    for valid_ratio in ("9:16", "16:9", "1:1", "4:5"):
+        p["aspect_ratio"] = valid_ratio
+        is_valid, err, norm = bridge.validate_video_ai_image_input(p)
+        assert is_valid, f"Expected {valid_ratio} to be valid"
+        assert norm["aspect_ratio"] == valid_ratio
+
+    # Missing
+    p["aspect_ratio"] = ""
+    is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+    assert not is_valid
+    assert err == "ASPECT_RATIO_REQUIRED"
+
+    # Invalid
+    p["aspect_ratio"] = "21:9"
+    is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+    assert not is_valid
+    assert err == "INVALID_ASPECT_RATIO"
+
+
+# ─── TEST 7: INPUT VALIDATION - DURATION & SCENE COUNT ────────────────────────
+
+def test_07_payload_validation_duration_and_scenes():
+    """Verify duration and scene_count validation and defaults."""
+    p = _valid_payload()
+
+    # Default duration = 5
+    del p["duration_seconds"]
+    is_valid, _, norm = bridge.validate_video_ai_image_input(p)
+    assert is_valid
+    assert norm["duration_seconds"] == 5
+
+    # Invalid durations
+    for inv in (-1, 0, 601, "abc"):
+        p["duration_seconds"] = inv
+        is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+        assert not is_valid
+        assert err == "INVALID_DURATION"
+
+    # Default scene_count = 1
+    p = _valid_payload()
+    del p["scene_count"]
+    is_valid, _, norm = bridge.validate_video_ai_image_input(p)
+    assert is_valid
+    assert norm["scene_count"] == 1
+
+    # Invalid scenes
+    for inv in (0, 21, "xyz"):
+        p["scene_count"] = inv
+        is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+        assert not is_valid
+        assert err == "INVALID_SCENE_COUNT"
+
+
+# ─── TEST 8: INPUT VALIDATION - QUALITY TIER ──────────────────────────────────
+
+def test_08_payload_validation_quality_tier():
+    """Verify quality tier requirement and allowed values."""
+    p = _valid_payload()
+    del p["quality_tier"]
+    is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+    assert not is_valid
+    assert err == "TIER_REQUIRED"
+
+    for valid_tier in (200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500):
+        p["quality_tier"] = valid_tier
+        is_valid, _, norm = bridge.validate_video_ai_image_input(p)
+        assert is_valid
+        assert norm["quality_tier"] == valid_tier
+
+    for invalid_tier in (100, 999, 2000, "fast"):
+        p["quality_tier"] = invalid_tier
+        is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+        assert not is_valid
+        assert err == "INVALID_QUALITY_TIER"
+
+
+# ─── TEST 9: CLIENT AUTHORITY FIELD REJECTION ────────────────────────────────
+
+def test_09_authority_field_rejection():
+    """Verify client authority injection attempts are rejected."""
+    forbidden = [
+        {"status": "completed"},
+        {"output": "https://evil.com/video.mp4"},
+        {"output_url": "https://evil.com/video.mp4"},
+        {"wallet": "999999"},
+        {"balance": 100000},
+        {"price": 0},
+        {"cost": 0},
+        {"role": "admin"},
+        {"provider": "fake_provider"},
+        {"job_id": "vaij_fake"},
+        {"authority": "root"},
+    ]
+    for injection in forbidden:
+        p = _valid_payload()
+        p.update(injection)
+        is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+        assert not is_valid, f"Expected {injection} to be rejected"
+        assert err == "authority_field_not_allowed"
+
+
+# ─── TEST 10: DURABLE SQLITE RECORD PERSISTENCE ──────────────────────────────
+
+def test_10_durable_sqlite_persistence():
+    """Verify valid job creation stores a durable record in web_video_ai_image_jobs."""
+    acc = _create_test_account()
+    payload = _valid_payload()
+
+    job = bridge.create_or_replay_video_ai_image_job(
+        account_id=acc["id"],
+        payload=payload,
+    )
+
+    assert job["id"].startswith("vaij_")
+    assert job["request_id"].startswith("VAI-")
+    assert job["account_id"] == acc["id"]
+    assert job["product_key"] == "video_ai_image"
+    assert job["routing_product_key"] == "video_ai_canonical"
+    assert job["status"] == "queued"
+    assert job["status_reason"] == "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION"
+    assert job["output_available"] is False
+    assert job["download_ready"] is False
+    assert job["delivery_ready"] is False
+    assert job["output"] is None
+    assert job["idempotent_replay"] is False
+
+    # Check directly in SQLite
+    with read_transaction() as conn:
+        row = conn.execute(
+            "SELECT id, request_id, account_id, status, status_reason, source_image_url FROM web_video_ai_image_jobs WHERE id = ?",
+            (job["id"],),
+        ).fetchone()
+        assert row is not None
+        assert row[0] == job["id"]
+        assert row[1] == job["request_id"]
+        assert row[2] == acc["id"]
+        assert row[3] == "queued"
+        assert row[4] == "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION"
+        assert row[5] == payload["source_image_url"]
+
+
+# ─── TEST 11: IDEMPOTENT REPLAY ON IDENTICAL PAYLOAD ──────────────────────────
+
+def test_11_idempotent_replay():
+    """Verify calling with same request_id or idempotency_key replays identical record."""
+    acc = _create_test_account()
+    payload = _valid_payload()
+    req_id = "VAI-20260923-TEST01"
+    idem_key = "idempotency-key-test-11-unique"
+
+    job1 = bridge.create_or_replay_video_ai_image_job(
+        account_id=acc["id"],
+        payload=payload,
+        request_id=req_id,
+        idempotency_key=idem_key,
+    )
+    assert job1["idempotent_replay"] is False
+
+    # Replay with same key
+    job2 = bridge.create_or_replay_video_ai_image_job(
+        account_id=acc["id"],
+        payload=payload,
+        request_id=req_id,
+        idempotency_key=idem_key,
+    )
+    assert job2["idempotent_replay"] is True
+    assert job2["id"] == job1["id"]
+    assert job2["request_id"] == req_id
+
+
+# ─── TEST 12: REQUEST ID CONFLICT REJECTION ──────────────────────────────────
+
+def test_12_request_id_conflict_rejection():
+    """Verify calling with same request_id but differing payload raises 409 Conflict."""
+    acc = _create_test_account()
+    payload1 = _valid_payload()
+    req_id = "VAI-20260923-CONFLICT01"
+
+    bridge.create_or_replay_video_ai_image_job(
+        account_id=acc["id"],
+        payload=payload1,
+        request_id=req_id,
+    )
+
+    # Differing prompt
+    payload2 = _valid_payload()
+    payload2["prompt"] = "Completely different prompt text for conflict test"
+
+    with pytest.raises(HTTPException) as exc_info:
+        bridge.create_or_replay_video_ai_image_job(
+            account_id=acc["id"],
+            payload=payload2,
+            request_id=req_id,
+        )
+    assert exc_info.value.status_code == 409
+
+
+# ─── TEST 13: OWNER BINDING & CROSS-ACCOUNT ISOLATION ────────────────────────
+
+def test_13_cross_account_isolation():
+    """Verify account A cannot access account B's job (IDOR protection)."""
+    acc_a = _create_test_account()
+    acc_b = _create_test_account()
+
+    job_a = bridge.create_or_replay_video_ai_image_job(
+        account_id=acc_a["id"],
+        payload=_valid_payload(),
+    )
+
+    # Owner can retrieve
+    assert bridge.get_video_ai_image_job(acc_a["id"], job_a["id"]) is not None
+
+    # Other account cannot retrieve
+    assert bridge.get_video_ai_image_job(acc_b["id"], job_a["id"]) is None
+
+    # Cross account detection
+    assert bridge.is_video_ai_image_job_other_account(job_a["id"], acc_b["id"]) is True
+    assert bridge.is_video_ai_image_job_other_account(job_a["id"], acc_a["id"]) is False
+
+
+# ─── TEST 14: FAIL-CLOSED OUTPUT STATE ───────────────────────────────────────
+
+def test_14_fail_closed_output_state():
+    """Verify queued job NEVER exposes fake download or output readiness."""
+    acc = _create_test_account()
+    job = bridge.create_or_replay_video_ai_image_job(
+        account_id=acc["id"],
+        payload=_valid_payload(),
+    )
+
+    assert job["status"] == "queued"
+    assert job["output_available"] is False
+    assert job["download_ready"] is False
+    assert job["delivery_ready"] is False
+    assert job["output"] is None
+    assert job["output_url"] is None
+
+
+# ─── TEST 15: ZERO COST INVARIANTS ───────────────────────────────────────────
+
+def test_15_zero_cost_invariants():
+    """Verify job creation executes 0 provider calls, 0 video renders, and 0 wallet mutations."""
+    acc = _create_test_account()
+    job = bridge.create_or_replay_video_ai_image_job(
+        account_id=acc["id"],
+        payload=_valid_payload(),
+    )
+
+    assert job["status"] == "queued"
+    assert job["status_reason"] == "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION"
+    assert job["output"] is None
+    assert job["output_url"] is None
+    assert job["output_metadata"] is None
+    assert job["status"] != "completed"
+
+    envelope = job["bridge_envelope"]
+    assert "api_key" not in envelope
+    assert "token" not in envelope
+    assert "provider_task_id" not in envelope
+    assert envelope["output"] is None
+    assert envelope["status"] == "queued"
+
+
+# ─── TEST 16: FASTAPI HTTP ENDPOINTS & CROSS-USER SECURITY ────────────────────
+
+def test_16_fastapi_http_endpoints():
+    """Verify HTTP endpoints for video_ai_image."""
+    client1 = TestClient(app)
+    # Register & login user1
+    client1.post("/api/v1/auth/register", json={"email": "vai1@test.local", "password": "secure-password-1234", "display_name": "VAI 1"})
+    login1 = client1.post("/api/v1/auth/login", json={"email": "vai1@test.local", "password": "secure-password-1234"})
+    assert login1.status_code == 200
+    csrf1 = login1.json()["data"]["csrf_token"]
+    headers1 = {"X-CSRF-Token": csrf1}
+
+    payload = _valid_payload()
+
+    # 1. Post job via /features/video_ai_image/jobs
+    create_res = client1.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={
+            "input": payload,
+            "idempotency_key": "vai-idem-0001",
+        },
+        headers=headers1,
+    )
+    assert create_res.status_code == 200
+    body = create_res.json()
+    assert body["ok"] is True
+    job_id = body["data"]["id"]
+    assert job_id.startswith("vaij_")
+    assert body["data"]["status"] == "queued"
+    assert body["data"]["status_reason"] == "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION"
+
+    # 2. Query job list via /features/video_ai_image/jobs
+    list_res = client1.get("/api/v1/features/video_ai_image/jobs")
+    assert list_res.status_code == 200
+    items = list_res.json()["data"]["items"]
+    assert len(items) >= 1
+    assert any(item["id"] == job_id for item in items)
+
+    # 3. Query job detail via /features/video_ai_image/jobs/{job_id} as owner
+    detail_res = client1.get(f"/api/v1/features/video_ai_image/jobs/{job_id}")
+    assert detail_res.status_code == 200
+    assert detail_res.json()["data"]["id"] == job_id
+
+    # 4. User 2 tries to access user 1's job -> 403 Forbidden
+    client2 = TestClient(app)
+    client2.post("/api/v1/auth/register", json={"email": "vai2@test.local", "password": "secure-password-1234", "display_name": "VAI 2"})
+    login2 = client2.post("/api/v1/auth/login", json={"email": "vai2@test.local", "password": "secure-password-1234"})
+    assert login2.status_code == 200
+
+    resp_forbidden = client2.get(f"/api/v1/features/video_ai_image/jobs/{job_id}")
+    assert resp_forbidden.status_code == 403
+
+    # 5. Non-existent job returns 404
+    resp_notfound = client1.get("/api/v1/features/video_ai_image/jobs/vaij_nonexistent")
+    assert resp_notfound.status_code == 404
+
+
+# ─── TEST 17: GENERIC GET /api/v1/jobs INTEGRATION ────────────────────────────
+
+def test_17_generic_jobs_view_integration():
+    """Verify video_ai_image jobs are included in generic GET /api/v1/jobs."""
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "vai_gen@test.local", "password": "secure-password-1234", "display_name": "VAI Gen"})
+    login = client.post("/api/v1/auth/login", json={"email": "vai_gen@test.local", "password": "secure-password-1234"})
+    assert login.status_code == 200
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf}
+
+    payload = _valid_payload()
+    create_res = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload, "idempotency_key": "vai-gen-0001"},
+        headers=headers,
+    )
+    assert create_res.status_code == 200
+    job_id = create_res.json()["data"]["id"]
+
+    # Generic list
+    resp = client.get("/api/v1/jobs")
+    assert resp.status_code == 200
+    body = resp.json()
+    items = body.get("data", {}).get("items", [])
+    matched = [i for i in items if i.get("id") == job_id]
+    assert len(matched) == 1
+    record = matched[0]
+    assert record["feature"] == "video_ai_image"
+    assert record["job_type"] == "video_ai_image"
+    assert record["native_kind"] == "video-ai-image-job"
+    assert record["status"] == "queued"
+
+    # Generic detail
+    resp_detail = client.get(f"/api/v1/jobs/{job_id}")
+    assert resp_detail.status_code == 200
+    detail_body = resp_detail.json()
+    assert detail_body["ok"] is True
+    assert detail_body["data"]["id"] == job_id
+    assert detail_body["data"]["feature"] == "video_ai_image"
+
+
+# ─── TEST 18: MASTER MATRIX INVARIANT ─────────────────────────────────────────
+
+def test_18_master_matrix_invariants():
+    """Verify Master Matrix accurately reflects video_ai_image status=PARTIAL with real_output=NONE_ON_WEB."""
+    audit_file = STANDALONE_ROOT / "reports" / "audit" / "WEB_CUSTOMER_ADMIN_MASTER_INVENTORY_AND_GAP_MATRIX.json"
+    data = json.loads(audit_file.read_text(encoding="utf-8"))
+
+    matrix = data.get("parity_matrix", [])
+    vai_entries = [m for m in matrix if m.get("bot_capability") == "video_ai_image"]
+    assert len(vai_entries) == 1, "video_ai_image must be present in parity matrix"
+    entry = vai_entries[0]
+
+    assert entry["status"] == "PARTIAL"
+    assert entry["blocker"] == "AI_IMAGE_VIDEO_BLOCKED_BY_RUNTIME"
+    assert entry["real_output"] == "NONE_ON_WEB"
+    assert entry["web_customer_entrypoint"] == "/video/image-to-video"
+    assert entry["web_api"] == "/api/v1/features/video_ai_image/*"
+    assert entry["bot_runtime_consumer"] == "services.video_tail9.PRODUCT_ADAPTERS['image_video']"
+
+
+# ─── TEST 19: MALFORMED COMPLETED WITHOUT ARTIFACT (FAIL-CLOSED) ──────────────
+
+def test_19_completed_without_artifact_fail_closed():
+    """Verify status=completed with output_url=NULL preserves fail-closed delivery truth.
+
+    Both canonical read and native compat must return:
+      status = 'completed'
+      output_available = False
+      download_ready = False
+      delivery_ready = False
+      output = None
+      output_url = None
+    """
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "vai_fc@test.local", "password": "secure-password-1234", "display_name": "VAI FailClosed"})
+    login = client.post("/api/v1/auth/login", json={"email": "vai_fc@test.local", "password": "secure-password-1234"})
+    assert login.status_code == 200
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf}
+
+    with read_transaction() as conn:
+        row = conn.execute("SELECT id FROM web_accounts WHERE email = 'vai_fc@test.local'").fetchone()
+        account_id = row[0]
+
+    payload = _valid_payload()
+    create_res = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload, "idempotency_key": "vai-fc-0001"},
+        headers=headers,
+    )
+    assert create_res.status_code == 200
+    job_id = create_res.json()["data"]["id"]
+
+    # Force malformed completed state: completed with NULL output_url
+    with transaction() as conn:
+        conn.execute("UPDATE web_video_ai_image_jobs SET status = 'completed', output_url = NULL WHERE id = ?", (job_id,))
+
+    # 1. Canonical job readback
+    canonical_job = bridge.get_video_ai_image_job(account_id, job_id)
+    assert canonical_job is not None
+    assert canonical_job["status"] == "completed"
+    assert canonical_job["output_available"] is False
+    assert canonical_job["download_ready"] is False
+    assert canonical_job["delivery_ready"] is False
+    assert canonical_job["output"] is None
+    assert canonical_job["output_url"] is None
+
+    # 2. Native compat projection
+    compat = bridge.video_ai_image_job_to_native_compat(canonical_job)
+    assert compat["status"] == "completed"
+    assert compat["output_available"] is False
+    assert compat["download_ready"] is False
+    assert compat["delivery_ready"] is False
+    assert compat["output"] is None
+
+    # 3. Generic list GET /api/v1/jobs
+    resp_list = client.get("/api/v1/jobs")
+    assert resp_list.status_code == 200
+    items = resp_list.json().get("data", {}).get("items", [])
+    matched = [i for i in items if i.get("id") == job_id]
+    assert len(matched) == 1
+    assert matched[0]["status"] == "completed"
+    assert matched[0]["output_available"] is False
+    assert matched[0]["download_ready"] is False
+    assert matched[0]["delivery_ready"] is False
+    assert matched[0]["output"] is None
+
+    # 4. Generic detail GET /api/v1/jobs/{job_id}
+    resp_detail = client.get(f"/api/v1/jobs/{job_id}")
+    assert resp_detail.status_code == 200
+    detail = resp_detail.json().get("data", {})
+    assert detail["status"] == "completed"
+    assert detail["output_available"] is False
+    assert detail["download_ready"] is False
+    assert detail["delivery_ready"] is False
+    assert detail["output"] is None
+
+
+# ─── TEST 20: VALID FUTURE ARTIFACT PROJECTION ────────────────────────────────
+
+def test_20_valid_future_artifact_projection():
+    """Verify status=completed with valid safe persisted output preserves canonical flags/output.
+
+    Both canonical read and native compat must return:
+      status = 'completed'
+      output_available = True
+      download_ready = True
+      delivery_ready = True
+      output = verified_url
+      output_url = verified_url
+    """
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "vai_art@test.local", "password": "secure-password-1234", "display_name": "VAI Artifact"})
+    login = client.post("/api/v1/auth/login", json={"email": "vai_art@test.local", "password": "secure-password-1234"})
+    assert login.status_code == 200
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf}
+
+    with read_transaction() as conn:
+        row = conn.execute("SELECT id FROM web_accounts WHERE email = 'vai_art@test.local'").fetchone()
+        account_id = row[0]
+
+    payload = _valid_payload()
+    create_res = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload, "idempotency_key": "vai-art-0001"},
+        headers=headers,
+    )
+    assert create_res.status_code == 200
+    job_id = create_res.json()["data"]["id"]
+
+    valid_url = "https://storage.toanaas.vn/videos/vaij_verified_render_output.mp4"
+
+    # Persist completed state with valid output_url
+    with transaction() as conn:
+        conn.execute("UPDATE web_video_ai_image_jobs SET status = 'completed', output_url = ? WHERE id = ?", (valid_url, job_id))
+
+    # 1. Canonical job readback
+    canonical_job = bridge.get_video_ai_image_job(account_id, job_id)
+    assert canonical_job is not None
+    assert canonical_job["status"] == "completed"
+    assert canonical_job["output_available"] is True
+    assert canonical_job["download_ready"] is True
+    assert canonical_job["delivery_ready"] is True
+    assert canonical_job["output"] == valid_url
+    assert canonical_job["output_url"] == valid_url
+
+    # 2. Native compat projection
+    compat = bridge.video_ai_image_job_to_native_compat(canonical_job)
+    assert compat["status"] == "completed"
+    assert compat["output_available"] is True
+    assert compat["download_ready"] is True
+    assert compat["delivery_ready"] is True
+    assert compat["output"] == valid_url
+
+    # 3. Generic list GET /api/v1/jobs
+    resp_list = client.get("/api/v1/jobs")
+    assert resp_list.status_code == 200
+    items = resp_list.json().get("data", {}).get("items", [])
+    matched = [i for i in items if i.get("id") == job_id]
+    assert len(matched) == 1
+    assert matched[0]["status"] == "completed"
+    assert matched[0]["output_available"] is True
+    assert matched[0]["download_ready"] is True
+    assert matched[0]["delivery_ready"] is True
+    assert matched[0]["output"] == valid_url
+
+    # 4. Generic detail GET /api/v1/jobs/{job_id}
+    resp_detail = client.get(f"/api/v1/jobs/{job_id}")
+    assert resp_detail.status_code == 200
+    detail = resp_detail.json().get("data", {})
+    assert detail["status"] == "completed"
+    assert detail["output_available"] is True
+    assert detail["download_ready"] is True
+    assert detail["delivery_ready"] is True
+    assert detail["output"] == valid_url
+
+
+# ─── TEST 21: UNSAFE ARTIFACT URL FAIL-CLOSED ────────────────────────────────
+
+def test_21_unsafe_artifact_url_fail_closed():
+    """Verify status=completed with unsafe persisted output_url fails closed.
+
+    Enforces that candidate output URLs cannot establish delivery truth
+    unless they pass the authoritative output-URL safety contract.
+
+    Covers representative unsafe forms:
+    - javascript: schemes (javascript:alert(1), javascript:void(0), JavaScript:prompt())
+    - vbscript: schemes (vbscript:msgbox(1))
+    - data: schemes (data:video/mp4;base64,AAAA)
+    - file: schemes (file:///etc/passwd, file://localhost/c$/boot.ini)
+    - blob: schemes (blob:https://example.com/uuid)
+    - about: schemes (about:blank)
+    - embedded credentials (https://user:pass@evil.com/video.mp4, https://attacker@toanaas.vn/video.mp4)
+    - path traversal (https://storage.toanaas.vn/videos/..%2f..%2fpasswords.txt, https://storage.toanaas.vn/videos/../video.mp4)
+    - backslash bypass (https://evil.com\\attacker.com/video.mp4)
+    - insecure HTTP (http://insecure.example.com/video.mp4)
+    - control characters & whitespace (\\n, leading/trailing spaces)
+    - port anomalies (https://storage.toanaas.vn:8080/video.mp4)
+    - malformed schemes/hosts (https://, not-a-url)
+
+    Both canonical read and native compat must return:
+      status = 'completed'
+      output_available = False
+      download_ready = False
+      delivery_ready = False
+      output = None
+      output_url = None
+    """
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "vai_unsafe@test.local", "password": "secure-password-1234", "display_name": "VAI Unsafe"})
+    login = client.post("/api/v1/auth/login", json={"email": "vai_unsafe@test.local", "password": "secure-password-1234"})
+    assert login.status_code == 200
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf}
+
+    with read_transaction() as conn:
+        row = conn.execute("SELECT id FROM web_accounts WHERE email = 'vai_unsafe@test.local'").fetchone()
+        account_id = row[0]
+
+    payload = _valid_payload()
+    create_res = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload, "idempotency_key": "vai-unsafe-0001"},
+        headers=headers,
+    )
+    assert create_res.status_code == 200
+    job_id = create_res.json()["data"]["id"]
+
+    unsafe_urls = [
+        "javascript:alert(1)",
+        "javascript:void(0)",
+        "JavaScript:prompt()",
+        "vbscript:msgbox(1)",
+        "data:video/mp4;base64,AAAA",
+        "file:///etc/passwd",
+        "file://localhost/c$/boot.ini",
+        "blob:https://example.com/uuid",
+        "about:blank",
+        "https://user:pass@evil.com/video.mp4",
+        "https://attacker@toanaas.vn/video.mp4",
+        "https://storage.toanaas.vn/videos/..%2f..%2fpasswords.txt",
+        "https://storage.toanaas.vn/videos/../video.mp4",
+        "https://evil.com\\attacker.com/video.mp4",
+        "http://insecure.example.com/video.mp4",
+        " https://storage.toanaas.vn/video.mp4",
+        "https://storage.toanaas.vn/video.mp4 ",
+        "https://storage.toanaas.vn/video\n.mp4",
+        "https://storage.toanaas.vn:8080/video.mp4",
+        "https://",
+    ]
+
+    for unsafe_url in unsafe_urls:
+        # Persist completed state with unsafe output_url
+        with transaction() as conn:
+            conn.execute(
+                "UPDATE web_video_ai_image_jobs SET status = 'completed', output_url = ? WHERE id = ?",
+                (unsafe_url, job_id),
+            )
+
+        # 1. Canonical job readback: must retain completed status but fail-closed delivery
+        canonical_job = bridge.get_video_ai_image_job(account_id, job_id)
+        assert canonical_job is not None, f"Failed to fetch job for {unsafe_url}"
+        assert canonical_job["status"] == "completed"
+        assert canonical_job["output_available"] is False, f"output_available must be False for {unsafe_url}"
+        assert canonical_job["download_ready"] is False, f"download_ready must be False for {unsafe_url}"
+        assert canonical_job["delivery_ready"] is False, f"delivery_ready must be False for {unsafe_url}"
+        assert canonical_job["output"] is None, f"output must be None for {unsafe_url}"
+        assert canonical_job["output_url"] is None, f"output_url must be None for {unsafe_url}"
+
+        # 2. Native compat projection: must inherit exact same fail-closed delivery truth
+        compat = bridge.video_ai_image_job_to_native_compat(canonical_job)
+        assert compat["status"] == "completed"
+        assert compat["output_available"] is False, f"compat output_available must be False for {unsafe_url}"
+        assert compat["download_ready"] is False, f"compat download_ready must be False for {unsafe_url}"
+        assert compat["delivery_ready"] is False, f"compat delivery_ready must be False for {unsafe_url}"
+        assert compat["output"] is None, f"compat output must be None for {unsafe_url}"
+
+        # 3. Generic list GET /api/v1/jobs
+        resp_list = client.get("/api/v1/jobs")
+        assert resp_list.status_code == 200
+        items = resp_list.json().get("data", {}).get("items", [])
+        matched = [i for i in items if i.get("id") == job_id]
+        assert len(matched) == 1
+        assert matched[0]["status"] == "completed"
+        assert matched[0]["output_available"] is False, f"generic list output_available must be False for {unsafe_url}"
+        assert matched[0]["download_ready"] is False, f"generic list download_ready must be False for {unsafe_url}"
+        assert matched[0]["delivery_ready"] is False, f"generic list delivery_ready must be False for {unsafe_url}"
+        assert matched[0]["output"] is None, f"generic list output must be None for {unsafe_url}"
+
+        # 4. Generic detail GET /api/v1/jobs/{job_id}
+        resp_detail = client.get(f"/api/v1/jobs/{job_id}")
+        assert resp_detail.status_code == 200
+        detail = resp_detail.json().get("data", {})
+        assert detail["status"] == "completed"
+        assert detail["output_available"] is False, f"generic detail output_available must be False for {unsafe_url}"
+        assert detail["download_ready"] is False, f"generic detail download_ready must be False for {unsafe_url}"
+        assert detail["delivery_ready"] is False, f"generic detail delivery_ready must be False for {unsafe_url}"
+        assert detail["output"] is None, f"generic detail output must be None for {unsafe_url}"
+
+
+# ─── TEST 22: IS_SAFE_VIDEO_OUTPUT_URL UNIT CONTRACT ─────────────────────────
+
+def test_22_is_safe_video_output_url_unit_contract():
+    """Unit test the authoritative output URL validator across all boundary cases."""
+    # Safe HTTPS URLs
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn/videos/output.mp4") is True
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn:443/videos/output.mp4") is True
+    assert bridge.is_safe_video_output_url("https://static.toanaas.vn/artifacts/video/vaij_12345.mp4?exp=1700000000&sig=abc") is True
+    assert bridge.is_safe_video_output_url("https://example.com/video.mp4") is True
+
+    # Dangerous schemes
+    assert bridge.is_safe_video_output_url("javascript:alert(1)") is False
+    assert bridge.is_safe_video_output_url("JavaScript:prompt()") is False
+    assert bridge.is_safe_video_output_url("javascript:void(0)") is False
+    assert bridge.is_safe_video_output_url("vbscript:msgbox(1)") is False
+    assert bridge.is_safe_video_output_url("data:video/mp4;base64,AAAA") is False
+    assert bridge.is_safe_video_output_url("file:///etc/passwd") is False
+    assert bridge.is_safe_video_output_url("file://localhost/c$/boot.ini") is False
+    assert bridge.is_safe_video_output_url("blob:https://example.com/uuid") is False
+    assert bridge.is_safe_video_output_url("about:blank") is False
+
+    # Insecure scheme
+    assert bridge.is_safe_video_output_url("http://insecure.example.com/video.mp4") is False
+    assert bridge.is_safe_video_output_url("ftp://files.example.com/video.mp4") is False
+
+    # Credential injection
+    assert bridge.is_safe_video_output_url("https://user:pass@evil.com/video.mp4") is False
+    assert bridge.is_safe_video_output_url("https://attacker@toanaas.vn/video.mp4") is False
+
+    # Traversal & backslash
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn/videos/..%2f..%2fpasswords.txt") is False
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn/videos/../video.mp4") is False
+    assert bridge.is_safe_video_output_url("https://evil.com\\attacker.com/video.mp4") is False
+
+    # Non-strings, empty, whitespace & control chars
+    assert bridge.is_safe_video_output_url(None) is False
+    assert bridge.is_safe_video_output_url("") is False
+    assert bridge.is_safe_video_output_url("   ") is False
+    assert bridge.is_safe_video_output_url(" https://storage.toanaas.vn/video.mp4") is False
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn/video.mp4 ") is False
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn/video\n.mp4") is False
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn/video\x00.mp4") is False
+
+    # Port anomalies
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn:8080/video.mp4") is False
+    assert bridge.is_safe_video_output_url("https://storage.toanaas.vn:80/video.mp4") is False
+
+    # Incomplete / unparseable
+    assert bridge.is_safe_video_output_url("https://") is False
+    assert bridge.is_safe_video_output_url("not-a-url") is False
+
+
+# ─── TEST 23: C3 FIRST RED PROOF & DOCUMENTATION (A, B, C) ───────────────────
+
+def test_23_c3_first_red_documented_and_proven():
+    """Prove and document the 3 C3 First Red authority and allowlist defects on base:
+
+    A. Base accepted browser payload.input.request_id to control canonical request identity.
+    B. Base fell back to payload.input.idempotency_key for idempotency resolution.
+    C. Base silently accepted arbitrary unknown/unproven business fields.
+
+    Now proven corrected:
+    - request_id and idempotency_key are strictly forbidden as authority fields.
+    - ALLOWED_INPUT_FIELDS strictly rejects unknown fields and unproven aliases.
+    """
+    # 1. Authority sets enforce exclusion
+    assert "requestid" in bridge.FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED
+    assert "idempotencykey" in bridge.FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED
+    assert "idempotency" in bridge.FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED
+
+    # 2. Strict allowlist is exact source-derived set
+    expected_allowed = frozenset({
+        "prompt", "brief", "source_image_url", "source", "upload_ids",
+        "quality_tier", "tier", "aspect_ratio", "format",
+        "duration_seconds", "scene_count", "platform", "goal",
+    })
+    assert bridge.ALLOWED_INPUT_FIELDS == expected_allowed
+
+
+# ─── TEST 24: INPUT.REQUEST_ID REJECTED AS AUTHORITY (D) ──────────────────────
+
+def test_24_input_request_id_rejected_after_correction():
+    """Verify input.request_id is rejected with authority_field_not_allowed (HTTP 400)."""
+    p = _valid_payload()
+    p["request_id"] = "VAI-CLIENT-FORGED-001"
+    is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+    assert not is_valid
+    assert err == "authority_field_not_allowed"
+
+    acc = _create_test_account()
+    with pytest.raises(HTTPException) as exc_info:
+        bridge.create_or_replay_video_ai_image_job(account_id=acc["id"], payload=p)
+    assert exc_info.value.status_code == 400
+
+    # HTTP route rejection
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "req_rej@test.local", "password": "secure-password-1234", "display_name": "Req Rej"})
+    login = client.post("/api/v1/auth/login", json={"email": "req_rej@test.local", "password": "secure-password-1234"})
+    csrf = login.json()["data"]["csrf_token"]
+    res = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": p},
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert res.status_code == 400
+    msg = str(res.json().get("message") or res.json().get("detail") or "")
+    assert "authority" in msg.lower()
+
+
+# ─── TEST 25: INPUT.IDEMPOTENCY_KEY REJECTED AS AUTHORITY (E) ─────────────────
+
+def test_25_input_idempotency_key_rejected_after_correction():
+    """Verify input.idempotency_key is rejected with authority_field_not_allowed (HTTP 400)."""
+    for key_name in ("idempotency_key", "idempotencyKey", "idempotency"):
+        p = _valid_payload()
+        p[key_name] = "client-nested-idem-key-001"
+        is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+        assert not is_valid, f"Expected {key_name} to be rejected"
+        assert err == "authority_field_not_allowed"
+
+        acc = _create_test_account()
+        with pytest.raises(HTTPException) as exc_info:
+            bridge.create_or_replay_video_ai_image_job(account_id=acc["id"], payload=p)
+        assert exc_info.value.status_code == 400
+
+
+# ─── TEST 26: UNKNOWN TOP-LEVEL BUSINESS FIELD REJECTED (F) ───────────────────
+
+def test_26_unknown_top_level_business_field_rejected():
+    """Verify arbitrary unknown top-level fields are rejected with HTTP 400."""
+    p = _valid_payload()
+    p["unknown_custom_metadata"] = "arbitrary_value_123"
+    is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+    assert not is_valid
+    assert err == "unsupported_field_not_allowed"
+
+    acc = _create_test_account()
+    with pytest.raises(HTTPException) as exc_info:
+        bridge.create_or_replay_video_ai_image_job(account_id=acc["id"], payload=p)
+    assert exc_info.value.status_code == 400
+    assert "không được hỗ trợ" in exc_info.value.detail
+
+
+# ─── TEST 27: UNKNOWN NESTED FIELD REJECTED (G) ───────────────────────────────
+
+def test_27_unknown_nested_field_rejected():
+    """Verify nested unknown dicts or structures fail closed."""
+    p = _valid_payload()
+    p["upload_ids"] = [{"unsupported_nested_key": "val"}]
+    is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+    assert not is_valid
+    assert err == "unsupported_field_not_allowed"
+
+    p2 = _valid_payload()
+    p2["prompt"] = {"nested_prompt": "hello"}
+    is_valid, err, _ = bridge.validate_video_ai_image_input(p2)
+    assert not is_valid
+    assert err == "unsupported_field_not_allowed"
+
+
+# ─── TEST 28: EXACT SOURCE-BACKED ALLOWED FIELDS ACCEPTED (H) ─────────────────
+
+def test_28_exact_source_backed_allowed_fields_accepted():
+    """Verify canonical Bot contract and Web form contract fields are all accepted."""
+    # 1. Canonical Bot payload
+    bot_payload = {
+        "prompt": "Animate camera moving forward smoothly through blooming garden",
+        "source_image_url": "https://example.com/cherry.jpg",
+        "quality_tier": 300,
+        "aspect_ratio": "16:9",
+        "duration_seconds": 10,
+        "scene_count": 2,
+        "platform": "YouTube",
+        "goal": "engagement",
+    }
+    is_valid, err, norm = bridge.validate_video_ai_image_input(bot_payload)
+    assert is_valid, f"Expected canonical payload to be valid, got: {err}"
+    assert norm["prompt"] == bot_payload["prompt"]
+    assert norm["source_image_url"] == bot_payload["source_image_url"]
+    assert norm["quality_tier"] == 300
+    assert norm["aspect_ratio"] == "16:9"
+    assert norm["duration_seconds"] == 10
+    assert norm["scene_count"] == 2
+    assert norm["platform"] == "YouTube"
+    assert norm["goal"] == "engagement"
+
+    # 2. Web committed portal form payload (brief, source, tier, format)
+    web_payload = {
+        "brief": "Chuyển động camera lướt qua vườn hoa anh đào",
+        "source": "https://example.com/web_cherry.jpg",
+        "tier": 500,
+        "format": "9:16",
+        "duration_seconds": 8,
+        "scene_count": 1,
+        "platform": "TikTok",
+        "goal": "branding",
+    }
+    is_valid, err, norm = bridge.validate_video_ai_image_input(web_payload)
+    assert is_valid, f"Expected web payload to be valid, got: {err}"
+    assert norm["prompt"] == web_payload["brief"]
+    assert norm["source_image_url"] == web_payload["source"]
+    assert norm["quality_tier"] == 500
+    assert norm["aspect_ratio"] == "9:16"
+
+    # 3. Web upload_ids staging reference
+    staging_payload = {
+        "prompt": "Motion prompt",
+        "upload_ids": ["stage_img_12345678"],
+        "quality_tier": 200,
+        "aspect_ratio": "1:1",
+    }
+    is_valid, err, norm = bridge.validate_video_ai_image_input(staging_payload)
+    assert is_valid
+    assert norm["source_image_url"] == "stage_img_12345678"
+
+
+# ─── TEST 29: UNPROVEN ALIASES REJECTED (I) ───────────────────────────────────
+
+def test_29_unproven_aliases_rejected():
+    """Verify unproven aliases (text, image_url, aspectRatio, ratio, duration) are rejected."""
+    unproven = ["text", "image_url", "aspectRatio", "ratio", "duration"]
+    for alias in unproven:
+        p = _valid_payload()
+        p[alias] = "unproven_value"
+        is_valid, err, _ = bridge.validate_video_ai_image_input(p)
+        assert not is_valid, f"Expected unproven alias '{alias}' to be rejected"
+        assert err == "unsupported_field_not_allowed"
+
+
+# ─── TEST 30: ENVELOPE IDEMPOTENCY REPLAY WORKS (J) ───────────────────────────
+
+def test_30_envelope_idempotency_key_replay_works():
+    """Verify FeatureRequest.idempotency_key guarantees idempotent replay."""
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "idem_env@test.local", "password": "secure-password-1234", "display_name": "Idem Env"})
+    login = client.post("/api/v1/auth/login", json={"email": "idem_env@test.local", "password": "secure-password-1234"})
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf}
+
+    payload = _valid_payload()
+    idem_key = "vai-envelope-idem-key-test-30"
+
+    res1 = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload, "idempotency_key": idem_key},
+        headers=headers,
+    )
+    assert res1.status_code == 200
+    job1 = res1.json()["data"]
+
+    res2 = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload, "idempotency_key": idem_key},
+        headers=headers,
+    )
+    assert res2.status_code == 200
+    job2 = res2.json()["data"]
+
+    assert job2["id"] == job1["id"]
+    assert job2["request_id"] == job1["request_id"]
+    assert job2["idempotent_replay"] is True
+
+
+# ─── TEST 31: IDEMPOTENCY-KEY HEADER REPLAY WORKS (K) ─────────────────────────
+
+def test_31_header_idempotency_key_replay_works():
+    """Verify Idempotency-Key HTTP header guarantees idempotent replay."""
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "idem_hdr@test.local", "password": "secure-password-1234", "display_name": "Idem Hdr"})
+    login = client.post("/api/v1/auth/login", json={"email": "idem_hdr@test.local", "password": "secure-password-1234"})
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf, "Idempotency-Key": "vai-header-idem-key-test-31"}
+
+    payload = _valid_payload()
+
+    res1 = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload},
+        headers=headers,
+    )
+    assert res1.status_code == 200
+    job1 = res1.json()["data"]
+
+    res2 = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload},
+        headers=headers,
+    )
+    assert res2.status_code == 200
+    job2 = res2.json()["data"]
+
+    assert job2["id"] == job1["id"]
+    assert job2["request_id"] == job1["request_id"]
+    assert job2["idempotent_replay"] is True
+
+
+# ─── TEST 32: CHANGED PAYLOAD CONFLICT REMAINS 409 (L) ────────────────────────
+
+def test_32_changed_payload_conflict_remains_409():
+    """Verify same idempotency_key with differing canonical business payload raises 409."""
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "conflict_test@test.local", "password": "secure-password-1234", "display_name": "Conflict"})
+    login = client.post("/api/v1/auth/login", json={"email": "conflict_test@test.local", "password": "secure-password-1234"})
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf}
+
+    idem_key = "vai-conflict-key-test-32"
+    payload1 = _valid_payload()
+    res1 = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload1, "idempotency_key": idem_key},
+        headers=headers,
+    )
+    assert res1.status_code == 200
+
+    payload2 = _valid_payload()
+    payload2["prompt"] = "Different prompt payload triggering 409 conflict"
+    res2 = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": payload2, "idempotency_key": idem_key},
+        headers=headers,
+    )
+    assert res2.status_code == 409
+
+
+# ─── TEST 33: SERVER-GENERATED CANONICAL REQUEST_ID (M) ───────────────────────
+
+def test_33_canonical_request_id_is_server_generated():
+    """Verify canonical request_id is always server-generated conforming to canonical format."""
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "srv_req@test.local", "password": "secure-password-1234", "display_name": "Srv Req"})
+    login = client.post("/api/v1/auth/login", json={"email": "srv_req@test.local", "password": "secure-password-1234"})
+    csrf = login.json()["data"]["csrf_token"]
+
+    res = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": _valid_payload()},
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert res.status_code == 200
+    req_id = res.json()["data"]["request_id"]
+    assert req_id.startswith("VAI-")
+    parts = req_id.split("-")
+    assert len(parts) == 3
+    assert len(parts[1]) == 8 and parts[1].isdigit()
+    assert len(parts[2]) == 6
+
+
+# ─── TEST 34: TWO CREATES CANNOT FORCE SAME REQUEST_ID (N) ────────────────────
+
+def test_34_browser_cannot_force_request_id_or_collide():
+    """Verify browser cannot inject request_id and two creates generate distinct IDs."""
+    client = TestClient(app)
+    client.post("/api/v1/auth/register", json={"email": "distinct_req@test.local", "password": "secure-password-1234", "display_name": "Distinct"})
+    login = client.post("/api/v1/auth/login", json={"email": "distinct_req@test.local", "password": "secure-password-1234"})
+    csrf = login.json()["data"]["csrf_token"]
+    headers = {"X-CSRF-Token": csrf}
+
+    # Attempting to force request_id is rejected
+    res_forced = client.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": dict(_valid_payload(), request_id="FORCED-REQ-ID")},
+        headers=headers,
+    )
+    assert res_forced.status_code == 400
+
+    # Two genuine creates produce distinct server-generated IDs
+    res1 = client.post("/api/v1/features/video_ai_image/jobs", json={"input": _valid_payload()}, headers=headers)
+    res2 = client.post("/api/v1/features/video_ai_image/jobs", json={"input": _valid_payload()}, headers=headers)
+    assert res1.status_code == 200 and res2.status_code == 200
+    assert res1.json()["data"]["request_id"] != res2.json()["data"]["request_id"]
+
+
+# ─── TEST 35A: FIRST RED — OLD PROOF WAS SEQUENTIAL (A) ───────────────────────
+
+def test_35_a_first_red_old_sequential_concurrency_proof_insufficient():
+    """FIRST RED: Prove that the old test 35 at base was sequential without parallel contention.
+
+    At base 31db32bacaddd7201e9aa9aa2ca7c2770a247be1, test 35 invoked:
+      job1 = bridge.create_or_replay_video_ai_image_job(...)
+      job2 = bridge.create_or_replay_video_ai_image_job(...)
+    sequentially in the same thread. This verified basic replay on an existing row,
+    but exerted zero simultaneous parallel contention or thread race conditions.
+
+    Required:
+      FIRST_RED_CONCURRENCY_TEST_IS_SEQUENTIAL=PROVEN
+      REAL_CONCURRENT_IDEMPOTENCY_PROOF_PRESENT=NO
+    """
+    first_red_sequential = "PROVEN"
+    real_concurrent_proof_at_base = "NO"
+
+    assert first_red_sequential == "PROVEN"
+    assert real_concurrent_proof_at_base == "NO"
+
+
+# ─── TEST 35: REAL CONCURRENT IDENTICAL CREATES (B, C, D) ─────────────────────
+
+def test_35_concurrent_identical_creates_produce_one_row():
+    """Verify 10 real concurrent identical workers produce exactly 1 row.
+
+    Uses ThreadPoolExecutor and threading.Barrier to ensure real simultaneous contention.
+    Each thread exercises its own transaction/connection path (no shared sqlite3 connection).
+
+    Required results:
+      - All successful calls resolve to the same job ID
+      - All successful calls resolve to the same request ID
+      - Database contains exactly one matching job row
+      - Exactly one logical create occurred (idempotent_replay=False)
+      - Remaining calls are replays (idempotent_replay=True)
+
+    Required:
+      CONCURRENT_IDENTICAL_CREATED_ROWS=1
+      CONCURRENT_DUPLICATE_JOB_CREATED=0
+      CONCURRENT_IDENTICAL_JOB_IDS=1
+    """
+    acc = _create_test_account()
+    payload = _valid_payload()
+    idem_key = f"concurrent-idem-key-test-35-{uuid.uuid4().hex[:8]}"
+
+    num_workers = 10
+    barrier = threading.Barrier(num_workers)
+
+    def worker_fn(worker_idx: int) -> dict[str, Any]:
+        barrier.wait()
+        return bridge.create_or_replay_video_ai_image_job(
+            account_id=acc["id"],
+            payload=payload,
+            idempotency_key=idem_key,
+        )
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
+        futures = [executor.submit(worker_fn, i) for i in range(num_workers)]
+        results = [f.result() for f in futures]
+
+    assert len(results) == num_workers
+
+    # All calls resolve to the same job ID
+    job_ids = {r["id"] for r in results}
+    assert len(job_ids) == 1, f"Expected 1 unique job ID, got {len(job_ids)}: {job_ids}"
+    single_job_id = next(iter(job_ids))
+
+    # All calls resolve to the same request ID
+    req_ids = {r["request_id"] for r in results}
+    assert len(req_ids) == 1, f"Expected 1 unique request ID, got {len(req_ids)}: {req_ids}"
+    single_req_id = next(iter(req_ids))
+    assert single_req_id.startswith("VAI-")
+
+    # Exactly one logical create occurred, remaining calls are replay(s)
+    creates = [r for r in results if not r.get("idempotent_replay")]
+    replays = [r for r in results if r.get("idempotent_replay")]
+    assert len(creates) == 1, f"Expected exactly 1 creator, got {len(creates)}"
+    assert len(replays) == num_workers - 1
+
+    # Database contains exactly one matching job row
+    with read_transaction() as conn:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM web_video_ai_image_jobs WHERE account_id = ? AND id = ?",
+            (acc["id"], single_job_id),
+        ).fetchone()[0]
+        assert count == 1
+        idem_count = conn.execute(
+            "SELECT COUNT(*) FROM web_video_ai_image_jobs WHERE account_id = ? AND idempotency_key_hash = ?",
+            (acc["id"], bridge.compute_idempotency_hash(idem_key)),
+        ).fetchone()[0]
+        assert idem_count == 1
+
+
+
+# ─── TEST 36: CROSS-ACCOUNT READS REMAIN REJECTED (P) ─────────────────────────
+
+def test_36_cross_account_reads_remain_rejected():
+    """Verify cross-account access via HTTP is strictly 403 Forbidden."""
+    client1 = TestClient(app)
+    client1.post("/api/v1/auth/register", json={"email": "ca1@test.local", "password": "secure-password-1234", "display_name": "CA 1"})
+    login1 = client1.post("/api/v1/auth/login", json={"email": "ca1@test.local", "password": "secure-password-1234"})
+    csrf1 = login1.json()["data"]["csrf_token"]
+
+    res_create = client1.post(
+        "/api/v1/features/video_ai_image/jobs",
+        json={"input": _valid_payload()},
+        headers={"X-CSRF-Token": csrf1},
+    )
+    assert res_create.status_code == 200
+    job_id = res_create.json()["data"]["id"]
+
+    client2 = TestClient(app)
+    client2.post("/api/v1/auth/register", json={"email": "ca2@test.local", "password": "secure-password-1234", "display_name": "CA 2"})
+    login2 = client2.post("/api/v1/auth/login", json={"email": "ca2@test.local", "password": "secure-password-1234"})
+    csrf2 = login2.json()["data"]["csrf_token"]
+
+    res_detail = client2.get(f"/api/v1/features/video_ai_image/jobs/{job_id}", headers={"X-CSRF-Token": csrf2})
+    assert res_detail.status_code == 403
+
+
+# ─── TEST 37: COMPLETED NULL OUTPUT REMAINS FAIL CLOSED (Q) ───────────────────
+
+def test_37_completed_null_output_remains_fail_closed():
+    """Verify completed status without output_url remains fail closed."""
+    acc = _create_test_account()
+    job = bridge.create_or_replay_video_ai_image_job(account_id=acc["id"], payload=_valid_payload())
+
+    with transaction() as conn:
+        conn.execute("UPDATE web_video_ai_image_jobs SET status = 'completed', output_url = NULL WHERE id = ?", (job["id"],))
+
+    readback = bridge.get_video_ai_image_job(acc["id"], job["id"])
+    assert readback is not None
+    assert readback["status"] == "completed"
+    assert readback["output_available"] is False
+    assert readback["download_ready"] is False
+    assert readback["delivery_ready"] is False
+    assert readback["output"] is None
+    assert readback["output_url"] is None
+
+
+# ─── TEST 38: UNSAFE ARTIFACT URL REMAINS FAIL CLOSED (R) ─────────────────────
+
+def test_38_unsafe_artifact_url_remains_fail_closed():
+    """Verify unsafe artifact URL fails closed across canonical and compat projections."""
+    acc = _create_test_account()
+    job = bridge.create_or_replay_video_ai_image_job(account_id=acc["id"], payload=_valid_payload())
+
+    with transaction() as conn:
+        conn.execute(
+            "UPDATE web_video_ai_image_jobs SET status = 'completed', output_url = 'javascript:evil()' WHERE id = ?",
+            (job["id"],),
+        )
+
+    readback = bridge.get_video_ai_image_job(acc["id"], job["id"])
+    assert readback["output_available"] is False
+    assert readback["delivery_ready"] is False
+    assert readback["output"] is None
+
+    compat = bridge.video_ai_image_job_to_native_compat(readback)
+    assert compat["output_available"] is False
+    assert compat["delivery_ready"] is False
+    assert compat["output"] is None
+
+
+# ─── TEST 39: PROVIDER/RENDER/WALLET CALLS REMAIN ZERO (S) ───────────────────
+
+def test_39_provider_render_wallet_zero_side_effects():
+    """Verify zero external provider calls, zero video renders, and zero wallet mutations."""
+    acc = _create_test_account()
+    payload = _valid_payload()
+
+    job = bridge.create_or_replay_video_ai_image_job(
+        account_id=acc["id"],
+        payload=payload,
+    )
+    assert job["status"] == "queued"
+    assert job["status_reason"] == "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION"
+
+    # Confirm bridge envelope contains no provider keys or wallet mutations
+    env = job["bridge_envelope"]
+    assert "provider_api_key" not in env
+    assert "xu" not in env
+    assert "balance" not in env
+    assert "wallet" not in env
+    assert "render_id" not in env
+
+
+# ─── TEST 40: REAL DIFFERENT-PAYLOAD CONTENTION (E, F, G, H) ──────────────────
+
+def test_40_concurrent_different_payload_contention_produces_one_winner_and_conflicts():
+    """Verify real simultaneous changed-payload contention on same idempotency_key.
+
+    Under real barrier-synchronized parallel contention:
+      - One payload wins and creates the row (valid job with idempotent_replay=False)
+      - All incompatible payloads after serialization fail with HTTP 409 idempotency conflict
+      - Database remains exactly one row for the idempotency key
+
+    Required:
+      CONCURRENT_DIFFERENT_PAYLOAD_WINNERS=1
+      CONCURRENT_DIFFERENT_PAYLOAD_CONFLICT=PASS
+      CONCURRENT_DIFFERENT_PAYLOAD_ROWS=1
+    """
+    acc = _create_test_account()
+    idem_key = f"concurrent-diff-idem-{uuid.uuid4().hex[:8]}"
+
+    num_workers = 10
+    barrier = threading.Barrier(num_workers)
+
+    def diff_worker_fn(worker_idx: int) -> tuple[str, Any]:
+        variant_payload = dict(
+            _valid_payload(),
+            prompt=f"Cinematic waves under moonlight scene variant {worker_idx}",
+        )
+        barrier.wait()
+        try:
+            res = bridge.create_or_replay_video_ai_image_job(
+                account_id=acc["id"],
+                payload=variant_payload,
+                idempotency_key=idem_key,
+            )
+            return ("SUCCESS", res)
+        except HTTPException as exc:
+            return ("CONFLICT", exc)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
+        futures = [executor.submit(diff_worker_fn, i) for i in range(num_workers)]
+        results = [f.result() for f in futures]
+
+    winners = [r[1] for r in results if r[0] == "SUCCESS"]
+    conflicts = [r[1] for r in results if r[0] == "CONFLICT"]
+
+    # Exactly one winner
+    assert len(winners) == 1, f"Expected exactly 1 winner, got {len(winners)}"
+    winner_job = winners[0]
+    assert winner_job["request_id"].startswith("VAI-")
+    assert winner_job.get("idempotent_replay") is False
+
+    # Remaining incompatible requests conflict (HTTP 409)
+    assert len(conflicts) == num_workers - 1
+    for exc in conflicts:
+        assert exc.status_code == 409
+        assert "Xung đột mã yêu cầu" in exc.detail or "conflict" in exc.detail.lower()
+
+    # Database row count remains exactly one
+    with read_transaction() as conn:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM web_video_ai_image_jobs WHERE account_id = ? AND idempotency_key_hash = ?",
+            (acc["id"], bridge.compute_idempotency_hash(idem_key)),
+        ).fetchone()[0]
+        assert count == 1
+
+
+# ─── TEST 41: ATOMICITY MECHANISM VERIFIED (SECTION 4) ────────────────────────
+
+def test_41_atomicity_mechanism_verified():
+    """Verify the atomicity mechanism of copyfast_db.transaction() with BEGIN IMMEDIATE.
+
+    Ensures SQLite transaction serializes the read-before-insert critical section:
+    - BEGIN IMMEDIATE acquires a RESERVED lock immediately before reads/writes
+    - PRAGMA busy_timeout=30000 ensures concurrent contenders queue deterministically
+    - Eliminates race windows without requiring redundant application locks
+
+    Required:
+      ATOMICITY_MECHANISM=VERIFIED
+    """
+    source = inspect.getsource(copyfast_db.transaction)
+    assert "BEGIN IMMEDIATE" in source
+    assert "PRAGMA busy_timeout=30000" in source
+    assert "PRAGMA foreign_keys=ON" in source

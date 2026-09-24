@@ -18,8 +18,8 @@ Enforces:
    - TOTAL_WEB_REGISTRY_FEATURES == 180 (139 Customer + 41 Admin)
 3. Quantitative Capability Classification:
    - PASS_COUNT == 7
-   - PARTIAL_COUNT == 13
-   - BLOCKED_BY_RUNTIME_COUNT == 10
+   - PARTIAL_COUNT == 15
+   - BLOCKED_BY_RUNTIME_COUNT == 8
    - MISSING_COUNT == 1
    - MOCK_COUNT == 0
    - STALE_COUNT == 0
@@ -111,8 +111,8 @@ def test_03_quantitative_capability_breakdown(audit_data: dict):
     stale_count = metrics.get("stale_count")
 
     assert pass_count == 7
-    assert partial_count == 14
-    assert blocked_count == 9
+    assert partial_count == 15
+    assert blocked_count == 8
     assert missing_count == 1
     assert mock_count == 0
     assert stale_count == 0
@@ -141,9 +141,9 @@ def test_04_parity_matrix_item_level_integrity(audit_data: dict):
         status_counts[status] += 1
 
     assert status_counts["PASS"] == 7
-    assert status_counts["PARTIAL"] == 13
+    assert status_counts["PARTIAL"] == 14
     assert status_counts["PARTIAL_PROVIDER_BLOCKED"] == 1
-    assert status_counts["BLOCKED_BY_RUNTIME"] == 9
+    assert status_counts["BLOCKED_BY_RUNTIME"] == 8
     assert status_counts["MISSING"] == 1
 
 
