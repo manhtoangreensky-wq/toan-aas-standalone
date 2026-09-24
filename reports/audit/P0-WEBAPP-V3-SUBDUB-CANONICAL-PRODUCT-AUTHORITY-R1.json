@@ -1,5 +1,5 @@
 {
-  "task": "P0.WEBAPP.V3.SUBDUB.C1.INPUT.PRICING.EVIDENCE.AUTHORITY.TRUTH",
+  "task": "P0.WEBAPP.V3.SUBDUB.C2.INDEPENDENT.AUTHORITY.EVIDENCE.COMPLETION",
   "parent_task": "P0.WEBAPP.V3.SUBDUB.CANONICAL.PRODUCT.AUTHORITY.RECONCILIATION.R1",
   "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
   "web_repository": "manhtoangreensky-wq/toan-aas-standalone",
@@ -14,6 +14,20 @@
     "RESTART": "NO"
   },
   "flags": {
+    "FIRST_RED_BOT_SOURCE_ASSERTION_OPTIONAL": "PROVEN",
+    "FIRST_RED_SELF_REFERENTIAL_BOT_EVIDENCE": "PROVEN",
+    "BOT_AUTHORITY_COMMIT_REQUIRED": "YES",
+    "BOT_SOURCE_MISSING_FAILS_FOCUSED_SUITE": "YES",
+    "SUBDUB_INPUT_CONTRACT_RESOLVED": "YES",
+    "SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED": "YES",
+    "ASR_RUNTIME_AUTHORITY_RESOLVED": "YES",
+    "TRANSLATION_RUNTIME_AUTHORITY_RESOLVED": "YES",
+    "TTS_RUNTIME_AUTHORITY_RESOLVED": "YES",
+    "MUX_RENDER_RUNTIME_AUTHORITY_RESOLVED": "YES",
+    "ADMIN_SUBDUB_JOB_TRACE_RESOLVED": "NO",
+    "ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED": "NO",
+    "ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED": "NO",
+    "ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED": "NO",
     "FIRST_RED_SUBDUB_HUB_IS_UTILITY_FIRST": "PROVEN",
     "SUBDUB_CANONICAL_LANES": 4,
     "STATUS_ONLY_SUCCESS_AUTHORITY": "NO",
@@ -197,14 +211,17 @@
               "name": "source",
               "type": "file",
               "accept": "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm",
-              "required": true
+              "requiredUpload": true,
+              "help": "Core Bridge kiểm tra ownership, MIME và kích thước trước khi nhận tệp; không tự sinh transcript."
             },
             {
               "name": "duration_seconds",
               "type": "number",
+              "placeholder": "Ví dụ: 75",
               "min": 1,
               "max": 14400,
               "step": 1,
+              "inputMode": "numeric",
               "required": true
             },
             {
@@ -222,20 +239,24 @@
               "name": "source",
               "type": "file",
               "accept": ".srt,.vtt,.txt,text/plain,text/vtt,application/x-subrip,audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm",
-              "required": true
+              "requiredUpload": true,
+              "help": "Bridge nhận tệp thuộc sở hữu bạn; không tạo bản dịch giả trong browser."
             },
             {
               "name": "target_language",
               "control": "select",
               "optionsFrom": "LANGUAGE_OPTIONS",
+              "emptyLabel": "Chọn ngôn ngữ canonical",
               "required": true
             },
             {
               "name": "duration_seconds",
               "type": "number",
+              "placeholder": "Ví dụ: 75",
               "min": 1,
               "max": 14400,
               "step": 1,
+              "inputMode": "numeric",
               "required": true
             },
             {
@@ -253,24 +274,28 @@
               "name": "source",
               "type": "file",
               "accept": "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm",
-              "required": true
+              "requiredUpload": true,
+              "help": "Tệp cần qua staging canonical trước khi bot báo giá hoặc quyết định khả năng xử lý."
             },
             {
               "name": "mode",
               "control": "select",
               "options": ["dubbing", "subtitle_plus_dubbing"],
+              "help": "Chọn rõ lồng tiếng hoặc phụ đề + lồng tiếng; bridge dùng mode canonical của bot.",
               "required": false
             },
             {
               "name": "target_language",
               "control": "select",
               "optionsFrom": "LANGUAGE_OPTIONS",
+              "emptyLabel": "Chọn ngôn ngữ canonical",
               "required": true
             },
             {
               "name": "voice_profile_id",
               "control": "select",
               "optionsFrom": "voiceProfiles (owner-scoped Voice Vault)",
+              "emptyLabel": "Dùng giọng mặc định do bot chọn",
               "required": false
             },
             {
@@ -286,9 +311,11 @@
             {
               "name": "duration_seconds",
               "type": "number",
+              "placeholder": "Ví dụ: 75",
               "min": 1,
               "max": 14400,
               "step": 1,
+              "inputMode": "numeric",
               "required": true
             },
             {
@@ -318,6 +345,126 @@
         "output_type": "burn | both | srt | vtt | txt | video | audio | video_subtitle"
       }
     }
+  },
+  "web_to_bot_lane_input_mapping": {
+    "status": "SUBDUB_INPUT_CONTRACT_RESOLVED",
+    "lanes": {
+      "subtitle_create": {
+        "web_form": "subtitleCreate",
+        "mapping": {
+          "source": "asset_id -> server resolves verified media bytes -> source_bytes, content_type",
+          "duration_seconds": "Validated against FFmpeg probe -> input_duration_seconds",
+          "output_format": "srt -> mapped to output_type ('burn' for video, 'srt' for non-video)"
+        },
+        "bot_invariants": {
+          "mode": "subtitle_create",
+          "pipeline_needs_subtitle": true,
+          "pipeline_needs_dub": false
+        }
+      },
+      "subtitle_translate": {
+        "web_form": "subtitleTranslate",
+        "mapping": {
+          "source": "asset_id -> server resolves verified srt/vtt/txt or media -> source_bytes, content_type",
+          "target_language": "Canonical language code -> target_language",
+          "duration_seconds": "Validated against FFmpeg probe -> input_duration_seconds",
+          "output_format": "srt -> mapped to output_type ('burn' for video, 'srt' for non-video)"
+        },
+        "bot_invariants": {
+          "mode": "subtitle_translate",
+          "pipeline_needs_subtitle": true,
+          "pipeline_needs_dub": false
+        }
+      },
+      "dub": {
+        "web_form": "dubbing (mode='dubbing')",
+        "mapping": {
+          "source": "asset_id -> server resolves verified media -> source_bytes, content_type",
+          "target_language": "Canonical language code -> target_language",
+          "voice_profile_id": "Voice Vault profile -> server resolves provider voice -> voice_style, voice_selection_mode='manual'",
+          "speed": "Numeric speed -> voice_speed (float 0.7..1.8)",
+          "duration_seconds": "Validated against FFmpeg probe -> input_duration_seconds",
+          "output_format": "srt form option overridden by canonical media output ('video' for video, 'audio' for non-video)"
+        },
+        "bot_invariants": {
+          "mode": "dub",
+          "pipeline_needs_subtitle": false,
+          "pipeline_needs_dub": true
+        }
+      },
+      "subtitle_plus_dub": {
+        "web_form": "dubbing (mode='subtitle_plus_dubbing')",
+        "mapping": {
+          "source": "asset_id -> server resolves verified media -> source_bytes, content_type",
+          "target_language": "Canonical language code -> target_language",
+          "voice_profile_id": "Voice Vault profile -> server resolves provider voice -> voice_style",
+          "speed": "Numeric speed -> voice_speed",
+          "duration_seconds": "Validated against FFmpeg probe -> input_duration_seconds",
+          "output_format": "Canonical combo output ('video_subtitle' for video, 'audio' for non-video)"
+        },
+        "bot_invariants": {
+          "mode": "subtitle_plus_dub",
+          "pipeline_needs_subtitle": true,
+          "pipeline_needs_dub": true
+        }
+      }
+    }
+  },
+  "web_upload_authority": {
+    "status": "SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED",
+    "mechanism": "Owner-scoped Asset Vault (asset_id)",
+    "security_invariants": [
+      "Web client NEVER sends raw filesystem paths",
+      "Web client NEVER sends untrusted remote media URLs (YouTube/TikTok)",
+      "Server validates signed session, account ownership, MIME whitelist, and file size before bridge ingestion",
+      "Staged media reference is passed to job engine by durable asset identifier"
+    ]
+  },
+  "stage_runtime_authorities": {
+    "asr": {
+      "status": "ASR_RUNTIME_AUTHORITY_RESOLVED",
+      "providers": "Key4U / ShopAIKey Whisper",
+      "implementation": "services/subdub_blackboxes, services/subtitle_dub_product_pipeline.py",
+      "fallback": "Standard Whisper API -> secondary provider routing"
+    },
+    "translation": {
+      "status": "TRANSLATION_RUNTIME_AUTHORITY_RESOLVED",
+      "providers": "Key4U / DeepL / OpenAI",
+      "implementation": "services/subdub_blackboxes",
+      "fallback": "DeepL -> OpenAI GPT fallback"
+    },
+    "tts": {
+      "status": "TTS_RUNTIME_AUTHORITY_RESOLVED",
+      "providers": "MiniMax / ShopAIKey",
+      "implementation": "services/subdub_blackboxes, services/subdub_tts_language_routing.py",
+      "voice_resolution": "Voice Vault profile ID -> MiniMax voice_id; Auto casting via subdub_auto_word_pricing"
+    },
+    "mux_render": {
+      "status": "MUX_RENDER_RUNTIME_AUTHORITY_RESOLVED",
+      "implementation": "Local FFmpeg subprocess rendering in services/subtitle_dub_product_pipeline.py",
+      "capabilities": ["Audio replacement", "Audio ducking (original audio kept low)", "Hardcoded subtitle burning", "Dual combo rendering"]
+    }
+  },
+  "admin_traceability_status": {
+    "ADMIN_SUBDUB_JOB_TRACE_RESOLVED": "NO",
+    "ADMIN_SUBDUB_JOB_TRACE_REASON": "Generic jobs table lacks lane differentiation and multi-stage pipeline breakdown (ASR -> translation -> TTS -> mux).",
+    "ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED": "NO",
+    "ADMIN_SUBDUB_FAILURE_TRACE_REASON": "Incident view lacks stage-level failure attribution and specific subdub error codes.",
+    "ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED": "NO",
+    "ADMIN_SUBDUB_PROVIDER_READINESS_REASON": "Provider view is global; not linked to subdub lane routing or stage-level fallback.",
+    "ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED": "NO",
+    "ADMIN_SUBDUB_ARTIFACT_TRACE_REASON": "Delivery center only tracks generic output presence, not individual stage artifacts."
+  },
+  "locale_purity": {
+    "subdub_vi_keys_count": 79,
+    "subdub_en_keys_count": 79,
+    "raw_placeholder_leaks": 0,
+    "key_parity": "100%",
+    "dom_mixed_english_labels_found": true,
+    "dom_mixed_english_locations": [
+      "portal.js:20021 ('Transcript projects' inside Subtitle Studio counters)"
+    ],
+    "remediation_milestone": "R4: P0.WEBAPP.V3.SUBDUB.CUSTOMER.LOCALE.IA.CLEANUP.R1"
   },
   "fictional_ui_findings": {
     "file": "static/portal/portal.js",
