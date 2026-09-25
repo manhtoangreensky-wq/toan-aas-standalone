@@ -188,7 +188,7 @@ _PORTAL_SHELL_TITLES = {
     "/tools/image": {"vi": "Image Suite & Tác vụ · TOAN AAS", "en": "Image Suite · TOAN AAS", "zh": "图像工作台 · TOAN AAS"},
     "/voice": {"vi": "Voice Hub & TTS · TOAN AAS", "en": "Voice Hub & TTS · TOAN AAS", "zh": "语音工作台 · TOAN AAS"},
     "/music": {"vi": "Music & SFX Hub · TOAN AAS", "en": "Music & SFX Hub · TOAN AAS", "zh": "音乐与音效工作台 · TOAN AAS"},
-    "/subdub": {"vi": "Sub & Dub Hub · TOAN AAS", "en": "Sub & Dub Hub · TOAN AAS", "zh": "字幕与配音工作台 · TOAN AAS"},
+    "/subdub": {"vi": "Trung tâm Phụ đề & Lồng tiếng · TOAN AAS", "en": "Subtitles & Dubbing Center · TOAN AAS", "zh": "字幕与配音中心 · TOAN AAS"},
 }
 
 # Route-specific descriptions are intentionally limited to reviewed, public
