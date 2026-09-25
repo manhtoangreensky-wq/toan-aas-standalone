@@ -1,0 +1,626 @@
+[
+  {
+    "route": "/",
+    "viewport": "1440x900",
+    "filename": "screenshots/cust_dashboard-desktop.png",
+    "file_size": 180235,
+    "sha256": "b1f466736a1d0d1665cd84efb02d8ad631aa4c6c87cebea32b3d34b3c3dc5cf2",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/",
+    "viewport": "768x1024",
+    "filename": "screenshots/cust_dashboard-tablet.png",
+    "file_size": 49327,
+    "sha256": "38e814beb2f3518539bd44d822eef229ca2da498a68bbbd7dde8faac864b9113",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/",
+    "viewport": "375x812",
+    "filename": "screenshots/cust_dashboard-mobile.png",
+    "file_size": 97748,
+    "sha256": "f3d14971cb582010df5762220c299bdd199d9c967908e3b4b2ed85cd623d0fd3",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/wallet",
+    "viewport": "1440x900",
+    "filename": "screenshots/cust_wallet-desktop.png",
+    "file_size": 117452,
+    "sha256": "446f4218ca02f592fa3f882360ebe200520d610ca4ec69308b899fae38b466c7",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/wallet",
+    "viewport": "768x1024",
+    "filename": "screenshots/cust_wallet-tablet.png",
+    "file_size": 49106,
+    "sha256": "6db48fceec8009c999c3d5042d4af78d2e414d525395e26b719082e36f46251e",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/wallet",
+    "viewport": "375x812",
+    "filename": "screenshots/cust_wallet-mobile.png",
+    "file_size": 96308,
+    "sha256": "b8fa527197e385be7dd759d11def23cbb8a22c78578080b3e08c83f66b4870ee",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/wallet/topup",
+    "viewport": "1440x900",
+    "filename": "screenshots/cust_wallet_topup-desktop.png",
+    "file_size": 148276,
+    "sha256": "a025db81ac307c3e8a02cbd69e9defad949c9d4d444c634159290e1de4423f87",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/wallet/topup",
+    "viewport": "768x1024",
+    "filename": "screenshots/cust_wallet_topup-tablet.png",
+    "file_size": 49272,
+    "sha256": "9a6b298070c664c0e7077387998822300ea7557e64fb242f9a3777d42bd7b41a",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/wallet/topup",
+    "viewport": "375x812",
+    "filename": "screenshots/cust_wallet_topup-mobile.png",
+    "file_size": 95250,
+    "sha256": "13aaf7f8b7dd511b0d7be4c4f0cbe1213bee328428d4d4d358093263215823a2",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/packages",
+    "viewport": "1440x900",
+    "filename": "screenshots/cust_packages-desktop.png",
+    "file_size": 118485,
+    "sha256": "c751485103a47eac5af9e5f97a047b339cca22805f628c767ccc4fd251ef6518",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/packages",
+    "viewport": "768x1024",
+    "filename": "screenshots/cust_packages-tablet.png",
+    "file_size": 49329,
+    "sha256": "9b6ca272f2adf07dcc72ea484536ff5ba9f208fdaa40623aa0f62dde16a1fd7c",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/packages",
+    "viewport": "375x812",
+    "filename": "screenshots/cust_packages-mobile.png",
+    "file_size": 96308,
+    "sha256": "b8fa527197e385be7dd759d11def23cbb8a22c78578080b3e08c83f66b4870ee",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/pricing",
+    "viewport": "1440x900",
+    "filename": "screenshots/cust_pricing-desktop.png",
+    "file_size": 114344,
+    "sha256": "324f01f9b72b6c7efa7c740a314e3201c55174246c9c014798a2ef0170ee877b",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/pricing",
+    "viewport": "768x1024",
+    "filename": "screenshots/cust_pricing-tablet.png",
+    "file_size": 49485,
+    "sha256": "e964b9f655321a2ba3ae5fc81f3a2563fa1b7b736049198cd721864bd8ea66da",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/pricing",
+    "viewport": "375x812",
+    "filename": "screenshots/cust_pricing-mobile.png",
+    "file_size": 95558,
+    "sha256": "2463baf71b972df3c44f2ed998f376fd076b011d8468b0b3e0031ec453e31206",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/subdub",
+    "viewport": "1440x900",
+    "filename": "screenshots/cust_subdub-desktop.png",
+    "file_size": 133054,
+    "sha256": "a1937da08b133560f828e0184d500bf234ba11a03ba00085db55bf4b9cf0813a",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/subdub",
+    "viewport": "768x1024",
+    "filename": "screenshots/cust_subdub-tablet.png",
+    "file_size": 49255,
+    "sha256": "1854e1638df678d9697177fa9069e36469dfb901b3df8ddd5597378f35c0512e",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/subdub",
+    "viewport": "375x812",
+    "filename": "screenshots/cust_subdub-mobile.png",
+    "file_size": 97967,
+    "sha256": "dfedd98d01082babbc6795eb563fac28411fdf1a7530bf8b8f3404e9cb50cea9",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/subtitle/create",
+    "viewport": "1440x900",
+    "filename": "screenshots/cust_subtitle_create-desktop.png",
+    "file_size": 148726,
+    "sha256": "ef0c639a92dd547c83a3a8bee61be231f8306757c9c6d9ae13f3f35feeeff61a",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/subtitle/create",
+    "viewport": "768x1024",
+    "filename": "screenshots/cust_subtitle_create-tablet.png",
+    "file_size": 49255,
+    "sha256": "1854e1638df678d9697177fa9069e36469dfb901b3df8ddd5597378f35c0512e",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/subtitle/create",
+    "viewport": "375x812",
+    "filename": "screenshots/cust_subtitle_create-mobile.png",
+    "file_size": 97965,
+    "sha256": "78a30ae764edd3f1f99198f5a94090a5d1cc52511292251ef108b5dd7a6dc80a",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/translate",
+    "viewport": "1440x900",
+    "filename": "screenshots/cust_translate-desktop.png",
+    "file_size": 142883,
+    "sha256": "c0376b541fb571aad47e78c694067713dacdca139d73cd0aae8b68ab7fe5b911",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/translate",
+    "viewport": "768x1024",
+    "filename": "screenshots/cust_translate-tablet.png",
+    "file_size": 49255,
+    "sha256": "1854e1638df678d9697177fa9069e36469dfb901b3df8ddd5597378f35c0512e",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/translate",
+    "viewport": "375x812",
+    "filename": "screenshots/cust_translate-mobile.png",
+    "file_size": 97967,
+    "sha256": "dfedd98d01082babbc6795eb563fac28411fdf1a7530bf8b8f3404e9cb50cea9",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/dubbing",
+    "viewport": "1440x900",
+    "filename": "screenshots/cust_dubbing-desktop.png",
+    "file_size": 141412,
+    "sha256": "45efcbc3eda36cb681d35b3210b71eeff52ab7f547c9df81ab704a161ea4cbf8",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/dubbing",
+    "viewport": "768x1024",
+    "filename": "screenshots/cust_dubbing-tablet.png",
+    "file_size": 49255,
+    "sha256": "1854e1638df678d9697177fa9069e36469dfb901b3df8ddd5597378f35c0512e",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/dubbing",
+    "viewport": "375x812",
+    "filename": "screenshots/cust_dubbing-mobile.png",
+    "file_size": 97965,
+    "sha256": "78a30ae764edd3f1f99198f5a94090a5d1cc52511292251ef108b5dd7a6dc80a",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/dubbing?mode=subtitle_plus_dubbing",
+    "viewport": "1440x900",
+    "filename": "screenshots/cust_dubbing_combo-desktop.png",
+    "file_size": 141428,
+    "sha256": "652d771b4c62690af2b0fc5297c27abc4c29acbd01056119d68293fa131924ac",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/dubbing?mode=subtitle_plus_dubbing",
+    "viewport": "768x1024",
+    "filename": "screenshots/cust_dubbing_combo-tablet.png",
+    "file_size": 49255,
+    "sha256": "1854e1638df678d9697177fa9069e36469dfb901b3df8ddd5597378f35c0512e",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/dubbing?mode=subtitle_plus_dubbing",
+    "viewport": "375x812",
+    "filename": "screenshots/cust_dubbing_combo-mobile.png",
+    "file_size": 97965,
+    "sha256": "78a30ae764edd3f1f99198f5a94090a5d1cc52511292251ef108b5dd7a6dc80a",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/subtitle/assets",
+    "viewport": "1440x900",
+    "filename": "screenshots/cust_subtitle_assets-desktop.png",
+    "file_size": 150164,
+    "sha256": "f40de4a49a8b94a0cbba567c5e263994f32222e5abc22d9bd552a0e2db6584a5",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/subtitle/assets",
+    "viewport": "768x1024",
+    "filename": "screenshots/cust_subtitle_assets-tablet.png",
+    "file_size": 49255,
+    "sha256": "1854e1638df678d9697177fa9069e36469dfb901b3df8ddd5597378f35c0512e",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/subtitle/assets",
+    "viewport": "375x812",
+    "filename": "screenshots/cust_subtitle_assets-mobile.png",
+    "file_size": 97965,
+    "sha256": "78a30ae764edd3f1f99198f5a94090a5d1cc52511292251ef108b5dd7a6dc80a",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/asset-vault",
+    "viewport": "1440x900",
+    "filename": "screenshots/cust_asset_vault-desktop.png",
+    "file_size": 142102,
+    "sha256": "56ae7aba62dff99d46d30f89c4453568622cecc389ddc98c724a61f019a0e167",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/asset-vault",
+    "viewport": "768x1024",
+    "filename": "screenshots/cust_asset_vault-tablet.png",
+    "file_size": 49662,
+    "sha256": "80eaaa52249a09b3bf9e0bc51a2dc7b61facb75dc9f62a934f2f23d876d0d41b",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/asset-vault",
+    "viewport": "375x812",
+    "filename": "screenshots/cust_asset_vault-mobile.png",
+    "file_size": 95842,
+    "sha256": "f4b07520278aaab55345998fd8a3321bcd1aff4fa00429d2c31fe4c382e7c93b",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/account",
+    "viewport": "1440x900",
+    "filename": "screenshots/cust_account-desktop.png",
+    "file_size": 132643,
+    "sha256": "1affd9c52ed4a37a50077a5a79618d7aeb10719a0d6c557db1802dfc8237b4c7",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/account",
+    "viewport": "768x1024",
+    "filename": "screenshots/cust_account-tablet.png",
+    "file_size": 48510,
+    "sha256": "afb1f60bf37538a076f8c894b15987b504f1502f44890a054e5101d72d18f570",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/account",
+    "viewport": "375x812",
+    "filename": "screenshots/cust_account-mobile.png",
+    "file_size": 97824,
+    "sha256": "6520f0d78960f0ec7d9735e47b6627ff42019bcbc2cdb2d7d6c02c00d09fce20",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin",
+    "viewport": "1440x900",
+    "filename": "screenshots/admin_admin-desktop.png",
+    "file_size": 114601,
+    "sha256": "f9952bd16128d77a4cb8cee5742af2bd581586c5dc8abc6a30134c1f4397c587",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin",
+    "viewport": "768x1024",
+    "filename": "screenshots/admin_admin-tablet.png",
+    "file_size": 72892,
+    "sha256": "e8660f00eb2d12fd27a3beba29ca32ddbadfcd7543e906b1a5507591d3d1f9b2",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin",
+    "viewport": "375x812",
+    "filename": "screenshots/admin_admin-mobile.png",
+    "file_size": 144568,
+    "sha256": "14efd3569f67dcc38c0c40c4701e7f55d4a688967399a66546f98e0a5354dd7f",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/topups",
+    "viewport": "1440x900",
+    "filename": "screenshots/admin_admin_topups-desktop.png",
+    "file_size": 114259,
+    "sha256": "e91048ac9c03decfa30fa4ef965ee38d53a550d9297e2842524e5ff8a8363a76",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/topups",
+    "viewport": "768x1024",
+    "filename": "screenshots/admin_admin_topups-tablet.png",
+    "file_size": 70165,
+    "sha256": "8780d3a99fd598951887e456fa1ec015fffa2f4ab79993c985b33d63beb37084",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/topups",
+    "viewport": "375x812",
+    "filename": "screenshots/admin_admin_topups-mobile.png",
+    "file_size": 105215,
+    "sha256": "efeb3ced4a40517bdae68e8da2cec22a2b7bc06ee9c7007a9710cdc3f80a0085",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/customers",
+    "viewport": "1440x900",
+    "filename": "screenshots/admin_admin_customers-desktop.png",
+    "file_size": 92861,
+    "sha256": "dc940de5d55c2be6854542a0a302c9963508e1c621ab93254c0cd72e9c755c0f",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/customers",
+    "viewport": "768x1024",
+    "filename": "screenshots/admin_admin_customers-tablet.png",
+    "file_size": 48305,
+    "sha256": "d68621b74dd246b805e54f9149873fb4ce4489f62b75b17193cb9dea239aed8f",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/customers",
+    "viewport": "375x812",
+    "filename": "screenshots/admin_admin_customers-mobile.png",
+    "file_size": 112910,
+    "sha256": "e77282b30b6065a98425a996e0845e79df8f4188aa03c3b23c3879dcb4a1bf28",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/wallet",
+    "viewport": "1440x900",
+    "filename": "screenshots/admin_admin_wallet-desktop.png",
+    "file_size": 112536,
+    "sha256": "e13fc51af73939e3ae51248a1f9d206d9c8f99217151bb38471f5c953cabb6dc",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/wallet",
+    "viewport": "768x1024",
+    "filename": "screenshots/admin_admin_wallet-tablet.png",
+    "file_size": 69935,
+    "sha256": "bf838ffaca1638549561d3b8cf3f6540f08a008ef591bc852f28b0ad50d7e8dc",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/wallet",
+    "viewport": "375x812",
+    "filename": "screenshots/admin_admin_wallet-mobile.png",
+    "file_size": 146187,
+    "sha256": "7a78530b195c996ba6c399569e00e109571095f464c6c39863bcf1e1fd6ce109",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/payments",
+    "viewport": "1440x900",
+    "filename": "screenshots/admin_admin_payments-desktop.png",
+    "file_size": 116013,
+    "sha256": "ff71954bb826d9cb8db1eee984b3787bab34e00d34c1cd4e946d6de415e5c29e",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/payments",
+    "viewport": "768x1024",
+    "filename": "screenshots/admin_admin_payments-tablet.png",
+    "file_size": 74239,
+    "sha256": "2ff3619349bc86680d67632a34aa866afdbd7eefc8eb5f4d164550dd0d62adbe",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/payments",
+    "viewport": "375x812",
+    "filename": "screenshots/admin_admin_payments-mobile.png",
+    "file_size": 153224,
+    "sha256": "36c7d3a2e421dbcd4deaff444d10e7562d4218ba3252691f2f724666274b09e2",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/pricing",
+    "viewport": "1440x900",
+    "filename": "screenshots/admin_admin_pricing-desktop.png",
+    "file_size": 117402,
+    "sha256": "bea3599aa86a2dc78891e3258145701d8010b3a86b5266ce9fc47c2b14ed3fd1",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/pricing",
+    "viewport": "768x1024",
+    "filename": "screenshots/admin_admin_pricing-tablet.png",
+    "file_size": 70913,
+    "sha256": "e79dbe1b75dc0dc1264e0f34f825040c4aeff1c429fdf8b2583812ae40451e5a",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/pricing",
+    "viewport": "375x812",
+    "filename": "screenshots/admin_admin_pricing-mobile.png",
+    "file_size": 117131,
+    "sha256": "ab82693ddbd5c8ac176b73d480c944530c92803f17c364c6dafe2d578f1f67d7",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/packages",
+    "viewport": "1440x900",
+    "filename": "screenshots/admin_admin_packages-desktop.png",
+    "file_size": 116954,
+    "sha256": "5b7f75f47f8a98a47e01158acd33502e40e2cce0540ae401c07b5f2877bc5100",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/packages",
+    "viewport": "768x1024",
+    "filename": "screenshots/admin_admin_packages-tablet.png",
+    "file_size": 70571,
+    "sha256": "36ad8c511d38c089bb6bf55c8610b3ef6fd1aab7c5d3dd5d38d44a4e0b7b7986",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/packages",
+    "viewport": "375x812",
+    "filename": "screenshots/admin_admin_packages-mobile.png",
+    "file_size": 116410,
+    "sha256": "e43541a5330ca1cae774b044e48425a16b13b21dee38d92d6e6320c388e19e90",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/promos",
+    "viewport": "1440x900",
+    "filename": "screenshots/admin_admin_promos-desktop.png",
+    "file_size": 112300,
+    "sha256": "abdf36e04b5367a4c88bbdf8e1e95e020d92758908f2d630f89948f672ef02e5",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/promos",
+    "viewport": "768x1024",
+    "filename": "screenshots/admin_admin_promos-tablet.png",
+    "file_size": 71949,
+    "sha256": "79718e791398aeb9a5c47682c86a8eef82bb85b17453b57967cd50a88d192fb0",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/promos",
+    "viewport": "375x812",
+    "filename": "screenshots/admin_admin_promos-mobile.png",
+    "file_size": 148534,
+    "sha256": "6efc463b7ff07d2a099a04c8cb9d22b0d1674ff51ec7d876ae5511895d1be45e",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/jobs",
+    "viewport": "1440x900",
+    "filename": "screenshots/admin_admin_jobs-desktop.png",
+    "file_size": 116839,
+    "sha256": "24ee761e5f907f53082dd356cb8d5f012f5d32ba5645333ed714d5cb0a279249",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/jobs",
+    "viewport": "768x1024",
+    "filename": "screenshots/admin_admin_jobs-tablet.png",
+    "file_size": 76578,
+    "sha256": "195bbe353be411b8ba88e9def2e95e699bc7ca69fe0d2f50bb94d0bf50939847",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/jobs",
+    "viewport": "375x812",
+    "filename": "screenshots/admin_admin_jobs-mobile.png",
+    "file_size": 152464,
+    "sha256": "9cb1af68fd51edb8c8f947f7ce8df442a1266ea480ce3e77fa3470f11bf325d6",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/runtime",
+    "viewport": "1440x900",
+    "filename": "screenshots/admin_admin_runtime-desktop.png",
+    "file_size": 119566,
+    "sha256": "e076843d11561e376f62da7ec5a19aef8826e3c0df3eb267dcce3383963ffd93",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/runtime",
+    "viewport": "768x1024",
+    "filename": "screenshots/admin_admin_runtime-tablet.png",
+    "file_size": 77880,
+    "sha256": "b9bbfbbc088ac2741f513f1a54d3049b5e1500d008ceba2e2a38209125e058e2",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/runtime",
+    "viewport": "375x812",
+    "filename": "screenshots/admin_admin_runtime-mobile.png",
+    "file_size": 150284,
+    "sha256": "8ae45e5d1486212e6c16ee7e4467e269d9083d1ddf98295fc6df3b573f32cb69",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/providers",
+    "viewport": "1440x900",
+    "filename": "screenshots/admin_admin_providers-desktop.png",
+    "file_size": 119144,
+    "sha256": "f495c8a6a63d7f898d0916ee7fe787e3de6c4e1e055e9342ee0f2353e489ecf6",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/providers",
+    "viewport": "768x1024",
+    "filename": "screenshots/admin_admin_providers-tablet.png",
+    "file_size": 73169,
+    "sha256": "90397892960cdfffcc1b70551b23a6d4ed1e58defdd872daa56e7a28f7d3df5d",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/providers",
+    "viewport": "375x812",
+    "filename": "screenshots/admin_admin_providers-mobile.png",
+    "file_size": 155333,
+    "sha256": "9d7abe757a919931d27cf05fb4b681415cb26fe1e27047f8fdffa9aa87c1a24d",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/support",
+    "viewport": "1440x900",
+    "filename": "screenshots/admin_admin_support-desktop.png",
+    "file_size": 127909,
+    "sha256": "30c9a8f366303ab20257e90126764a0439b419e0c9954020f8b2511f1c7b64bc",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/support",
+    "viewport": "768x1024",
+    "filename": "screenshots/admin_admin_support-tablet.png",
+    "file_size": 78510,
+    "sha256": "aa3c2409753c2e68c520ea8e1d0abec8d23fd25a5f8eed43ce3f9142b04af57f",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/support",
+    "viewport": "375x812",
+    "filename": "screenshots/admin_admin_support-mobile.png",
+    "file_size": 146910,
+    "sha256": "89829d54e250cac1120ffa26cbac2aa7745fcbb19d1381c2a33dafc6d809ff1a",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/tickets",
+    "viewport": "1440x900",
+    "filename": "screenshots/admin_admin_tickets-desktop.png",
+    "file_size": 115071,
+    "sha256": "4432028ca47f7f0192790edc5f323703ddeee7bc55f5d000c09897e1202cfb8f",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/tickets",
+    "viewport": "768x1024",
+    "filename": "screenshots/admin_admin_tickets-tablet.png",
+    "file_size": 72021,
+    "sha256": "4eea24b8dba25b71447ce4ec8dd17c236daec49662139e663c0d7b57245b4285",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  },
+  {
+    "route": "/admin/tickets",
+    "viewport": "375x812",
+    "filename": "screenshots/admin_admin_tickets-mobile.png",
+    "file_size": 149212,
+    "sha256": "eafb02dbf172734070642746b0652d5ce51e22ed98f7577b87c4334ce2bf20ef",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3"
+  }
+]
