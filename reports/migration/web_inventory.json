@@ -694,7 +694,7 @@
     "conversations": 0,
     "database_tables": 238,
     "env_references": 284,
-    "providers": 12,
+    "providers": 13,
     "routes": 767,
     "ui_path_references": 53
   },
@@ -8563,6 +8563,7 @@
     "ShopAIKey",
     "MiniMax",
     "Deepgram",
+    "DeepL",
     "Gemini",
     "OpenAI",
     "ElevenLabs",
@@ -8621,27 +8622,30 @@
     {
       "files": [
         "copyfast_provider_policy.py",
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
         "reports/bundle_analyzer.html",
         "reports/webapp_full_product_truth/defects.json",
         "static/portal/bundle_analyzer.html"
       ],
-      "occurrences": 9,
+      "occurrences": 11,
       "provider": "Key4U"
     },
     {
       "files": [
         "copyfast_provider_policy.py",
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
         "reports/webapp_full_product_truth/defects.json",
         "studio/script.js"
       ],
-      "occurrences": 6,
+      "occurrences": 8,
       "provider": "ShopAIKey"
     },
     {
       "files": [
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
         "static/portal/portal.js"
       ],
-      "occurrences": 6,
+      "occurrences": 7,
       "provider": "MiniMax"
     },
     {
@@ -8652,6 +8656,14 @@
       ],
       "occurrences": 5,
       "provider": "Deepgram"
+    },
+    {
+      "files": [
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.md"
+      ],
+      "occurrences": 2,
+      "provider": "DeepL"
     },
     {
       "files": [
@@ -8670,9 +8682,11 @@
     },
     {
       "files": [
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
+        "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.md",
         "studio/script.js"
       ],
-      "occurrences": 1,
+      "occurrences": 3,
       "provider": "OpenAI"
     },
     {
@@ -8759,7 +8773,7 @@
         "copyfast_pages.py",
         "copyfast_partner_crm.py"
       ],
-      "occurrences": 1793,
+      "occurrences": 1795,
       "provider": "Telegram"
     }
   ],
@@ -15669,39 +15683,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 238,
-  "source_files_scanned": 238,
-  "source_fingerprint_sha256": "c057af4ad355adb3c4024a260eec30d67fdac3bbd69e43cba2600991f96f6724",
+  "source_files_discovered": 240,
+  "source_files_scanned": 240,
+  "source_fingerprint_sha256": "c471249994d9e1674d67cca59600f29ffec2f481bb7ec0b238e1adb718b0108e",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 31922,
+      "line": 31937,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 32238,
+      "line": 32253,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 31586,
+      "line": 31601,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 31835,
+      "line": 31850,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 31207,
+      "line": 31222,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 31499,
+      "line": 31514,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -15921,7 +15935,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33311,
+      "line": 33326,
       "path": "/features"
     },
     {
