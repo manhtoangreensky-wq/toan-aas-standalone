@@ -679,3 +679,188 @@ def test_canonical_credit_authority_and_no_direct_bot_sqlite_write():
     assert "UPDATE users SET credits" not in db_code
     assert "INSERT INTO credit_events" not in api_code
     assert "INSERT INTO credit_events" not in db_code
+
+
+def test_10_full_e2e_customer_create_admin_approve_and_customer_refresh(web03_env, monkeypatch):
+    """Section 20 Full E2E Lifecycle Truth:
+    1. Customer checks wallet balance (initially 0 Xu).
+    2. Customer submits manual topup request (500,000 VND -> 5,000 Xu).
+    3. Customer sees request pending_admin_review with generated request_id.
+    4. Admin sees request in pending review queue (/api/v1/admin/payments/manual?status=pending).
+    5. Admin clicks 'Duyệt & Cộng Xu' -> Step 1: Draft approval creates confirmation receipt.
+    6. Admin confirms approval modal -> Step 2: Confirm approval credits Xu via Bot Core Ledger bridge.
+    7. Double-click & replay idempotency: Admin confirms again with same idempotency key -> returns idempotent replay.
+    8. Customer reads request status -> approved.
+    9. Customer refreshes wallet balance & history -> reflects credited Xu from Bot ledger.
+    10. Admin detail shows status approved with immutable audit fields.
+    """
+    admin_client = web03_env["admin_client"]
+    cust_client = web03_env["cust_client"]
+    db_path = web03_env["db_path"]
+
+    # Mock Bot Core Bridge for wallet and credit
+    customer_balance = {"xu": 0, "history": []}
+    bridge_calls = []
+
+    async def fake_bridge(method, path, **kwargs):
+        bridge_calls.append({"method": method, "path": path, "kwargs": kwargs})
+        if path == "/internal/v1/admin/wallet/credit":
+            payload = kwargs.get("payload") or {}
+            amt = payload.get("amount_xu", 0)
+            customer_balance["xu"] += amt
+            event_id = "core-tx-e2e-approved-999"
+            customer_balance["history"].append({
+                "id": event_id,
+                "event_type": "manual_topup_credit",
+                "delta_xu": amt,
+                "balance_after_xu": customer_balance["xu"],
+                "reason": payload.get("reason", ""),
+                "created_at": "2026-09-25T10:00:00Z",
+            })
+            return {
+                "ok": True,
+                "status": "completed",
+                "message": "Credited in Bot Core Ledger",
+                "data": {"tx_id": event_id, "ledger_event_id": event_id},
+            }
+        elif path == "/internal/v1/wallet":
+            return {
+                "ok": True,
+                "status": "available",
+                "data": {
+                    "balance_xu": customer_balance["xu"],
+                    "currency": "XU",
+                    "status": "active",
+                },
+            }
+        elif path == "/internal/v1/wallet/history":
+            return {
+                "ok": True,
+                "status": "available",
+                "data": {
+                    "items": customer_balance["history"],
+                    "total": len(customer_balance["history"]),
+                },
+            }
+        return {"ok": False, "error_code": "NOT_FOUND"}
+
+    monkeypatch.setattr(copyfast_api, "bridge_configured", lambda: True)
+    monkeypatch.setattr(copyfast_api, "bridge_request", fake_bridge)
+    monkeypatch.setattr(copyfast_api, "_manual_payment_destinations", lambda: {
+        "bank_acb_vietqr": {
+            "label": "ACB VietQR",
+            "currency": "VND",
+            "mode": "transfer",
+            "display_ready": True,
+            "request_enabled": True,
+        }
+    })
+    if hasattr(app_module, "copyfast_api"):
+        monkeypatch.setattr(app_module.copyfast_api, "bridge_configured", lambda: True)
+        monkeypatch.setattr(app_module.copyfast_api, "bridge_request", fake_bridge)
+        monkeypatch.setattr(app_module.copyfast_api, "_manual_payment_destinations", lambda: {
+            "bank_acb_vietqr": {
+                "label": "ACB VietQR",
+                "currency": "VND",
+                "mode": "transfer",
+                "display_ready": True,
+                "request_enabled": True,
+            }
+        })
+
+    # 1. Customer checks initial wallet balance (0 Xu)
+    init_wallet = cust_client.get("/api/v1/wallet")
+    assert init_wallet.status_code == 200
+    assert init_wallet.json()["data"]["balance_xu"] == 0
+
+    # 2. Customer creates manual topup request (500,000 VND -> 5,000 Xu)
+    create_res = cust_client.post(
+        "/api/v1/payments/manual",
+        json={
+            "amount_vnd": 500_000,
+            "method": "bank_acb_vietqr",
+            "reference": "REF-E2E-FULL-LIFECYCLE-001",
+            "idempotency_key": "idemp-cust-e2e-full-001",
+        },
+    )
+    assert create_res.status_code == 200
+    create_data = create_res.json()["data"]
+    request_id = create_data["request_id"]
+    assert create_data["status"] == "pending_admin_review"
+    assert create_data["amount_vnd"] == 500_000
+
+    # 3. Customer checks individual topup status
+    cust_view = cust_client.get(f"/api/v1/payments/manual/{request_id}")
+    assert cust_view.status_code == 200
+    assert cust_view.json()["data"]["status"] == "pending_admin_review"
+
+    # 4. Admin views pending queue and finds the request
+    admin_queue = admin_client.get("/api/v1/admin/payments/manual?status=pending")
+    assert admin_queue.status_code == 200
+    found = [it for it in admin_queue.json()["data"]["items"] if it["request_id"] == request_id]
+    assert len(found) == 1
+    assert found[0]["status"] == "pending_admin_review"
+
+    # 5. Admin clicks "Duyệt & Cộng Xu" -> Step 1: Draft approval
+    draft_res = admin_client.post(
+        f"/api/v1/admin/payments/manual/{request_id}/draft",
+        json={"action": "approve", "reason": "Xác nhận đã nhận chuyển khoản ngân hàng 500.000đ"},
+    )
+    assert draft_res.status_code == 200
+    draft_data = draft_res.json()["data"]
+    assert draft_data["action"] == "approve"
+    assert draft_data["approved_xu"] == 5000
+    receipt = draft_data["confirmation_receipt"]
+    assert receipt
+
+    # 6. Admin confirms in modal -> Step 2: Confirm approval & credit Xu
+    confirm_key = "idemp-admin-confirm-e2e-001"
+    credit_calls_before = len([c for c in bridge_calls if c["path"] == "/internal/v1/admin/wallet/credit"])
+    confirm_res = admin_client.post(
+        f"/api/v1/admin/payments/manual/{request_id}/confirm",
+        json={"confirmation_receipt": receipt, "idempotency_key": confirm_key},
+    )
+    assert confirm_res.status_code == 200
+    confirm_body = confirm_res.json()
+    assert confirm_body["ok"] is True
+    assert confirm_body["status"] == "approved"
+    assert confirm_body["data"]["approved_xu"] == 5000
+    assert confirm_body["data"]["ledger_event_id"] == "core-tx-e2e-approved-999"
+
+    credit_calls_after = len([c for c in bridge_calls if c["path"] == "/internal/v1/admin/wallet/credit"])
+    assert credit_calls_after == credit_calls_before + 1
+
+    # 7. Double-click & replay idempotency: Admin confirms again with same idempotency key
+    replay_res = admin_client.post(
+        f"/api/v1/admin/payments/manual/{request_id}/confirm",
+        json={"confirmation_receipt": receipt, "idempotency_key": confirm_key},
+    )
+    assert replay_res.status_code == 200
+    assert replay_res.json()["data"]["idempotent_replay"] is True
+    assert len([c for c in bridge_calls if c["path"] == "/internal/v1/admin/wallet/credit"]) == credit_calls_after
+
+    # 8. Customer checks request status -> approved
+    cust_view_approved = cust_client.get(f"/api/v1/payments/manual/{request_id}")
+    assert cust_view_approved.status_code == 200
+    assert cust_view_approved.json()["data"]["status"] == "approved"
+
+    # 9. Customer refreshes wallet balance & history -> 5,000 Xu credited!
+    refreshed_wallet = cust_client.get("/api/v1/wallet")
+    assert refreshed_wallet.status_code == 200
+    assert refreshed_wallet.json()["data"]["balance_xu"] == 5000
+
+    refreshed_history = cust_client.get("/api/v1/wallet/history")
+    assert refreshed_history.status_code == 200
+    history_items = refreshed_history.json()["data"]["items"]
+    assert len(history_items) == 1
+    assert history_items[0]["delta_xu"] == 5000
+    assert history_items[0]["balance_after_xu"] == 5000
+
+    # 10. Admin checks detail -> status approved, audit fields immutable
+    admin_detail = admin_client.get(f"/api/v1/admin/payments/manual/{request_id}")
+    assert admin_detail.status_code == 200
+    detail_data = admin_detail.json()["data"]
+    assert detail_data["status"] == "approved"
+    assert detail_data["ledger_event_id"] == "core-tx-e2e-approved-999"
+    assert detail_data["decision_reason"] == "Xác nhận đã nhận chuyển khoản ngân hàng 500.000đ"
+    assert detail_data["approved_xu"] == 5000

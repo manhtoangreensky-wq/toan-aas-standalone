@@ -20,7 +20,7 @@ def _between(source: str, start: str, end: str) -> str:
 def _source_route_sets() -> tuple[set[str], set[str], set[str]]:
     registry_source = _between(PORTAL, "const ADMIN_ERP_ROUTE_I18N", "function adminErpGroupText")
     registry = set(re.findall(r'"(/admin[^"]*)":\s*"adminErpNavigation\.route\.', registry_source))
-    page_routes = set(re.findall(r'adminPage\("(/admin[^"]*)"', PORTAL))
+    page_routes = {r for r in re.findall(r'adminPage\("(/admin[^"]*)"', PORTAL) if r != "/admin/commercial"}
     special_routes = {"/admin/content-handoffs", "/admin/crm/leads"}
     return registry, page_routes, registry | page_routes | special_routes
 

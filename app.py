@@ -2622,6 +2622,8 @@ async def _approve_compat_middleware(request: Request, call_next):
                     body = {}
                 if not isinstance(body, dict):
                     return JSONResponse(status_code=422, content={"ok": False, "status": "failed", "message": "Dữ liệu yêu cầu không hợp lệ", "error_code": "REQUEST_INVALID"})
+                if "/approve" in path:
+                    body.setdefault("action", "approve")
                 try:
                     payload = copyfast_api.ManualAdminDraftRequest(**body)
                 except Exception as exc:
@@ -2792,7 +2794,7 @@ async def page(page_path: str, request: Request):
         return RedirectResponse("/login", status_code=307)
     if normalized == "/document":
         return RedirectResponse("/documents", status_code=307)
-    public_pages = {"/welcome", "/legal", "/privacy", "/password-recovery", "/admin/login"}
+    public_pages = {"/welcome", "/legal", "/privacy", "/password-recovery"}
     if normalized in {"/login", "/register", "/admin/login"}:
         try:
             session = current_session(request)
