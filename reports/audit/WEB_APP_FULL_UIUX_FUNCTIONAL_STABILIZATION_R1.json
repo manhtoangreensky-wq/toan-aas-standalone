@@ -1,0 +1,578 @@
+{
+  "spec_id": "WEB-APP-MASTER-UIUX-FUNCTIONAL-STABILIZATION-R1",
+  "phase": "MASTER_ACCEPTANCE_CORRECTION_R2",
+  "timestamp": "2026-09-25T13:25:00Z",
+  "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3",
+  "status": "PASS",
+  "metrics": {
+    "TOTAL_CUSTOMER_ROUTES": 163,
+    "TOTAL_ADMIN_ROUTES": 50,
+    "TOTAL_VISIBLE_CONTROLS": 569,
+    "WORKING_COUNT": 244,
+    "GUARDED_COUNT": 32,
+    "READ_ONLY_COUNT": 293,
+    "BROKEN_COUNT": 0,
+    "PLACEHOLDER_COUNT": 0,
+    "UNCLASSIFIED_COUNT": 0,
+    "VI_MIXED_LOCALE_VIOLATIONS": 0,
+    "EN_MIXED_LOCALE_VIOLATIONS": 0,
+    "ADMIN_WRITES_WITH_CUSTOMER_PROJECTION_GAP": 0
+  },
+  "guarded_controls_detail": [
+    {
+      "id": 1,
+      "route": "/video/text-to-video",
+      "name": "Text-to-Video",
+      "category": "video_ai",
+      "missing_authority": "Bot companion canonical adapter (no in-browser AI video model)",
+      "server_fail_closed_behavior": "HTTP 403 / 503 if attempted; browser UI keeps button disabled with status=guarded",
+      "user_visible_copy_vi": "Cần Bot companion canonical; chưa có provider video AI chạy trực tiếp trong browser.",
+      "user_visible_copy_en": "Requires canonical Bot companion; in-browser video AI provider is not available."
+    },
+    {
+      "id": 2,
+      "route": "/video/multiscene",
+      "name": "Video nhiều cảnh",
+      "category": "video_ai",
+      "missing_authority": "Bot canonical multi-scene film render engine",
+      "server_fail_closed_behavior": "Job submission blocked without canonical cost estimate; UI status=guarded",
+      "user_visible_copy_vi": "Cần Bot canonical engine để ước tính và chạy job render nhiều cảnh.",
+      "user_visible_copy_en": "Requires canonical Bot engine to estimate and execute multi-scene render jobs."
+    },
+    {
+      "id": 3,
+      "route": "/video/long",
+      "name": "Video dài tập",
+      "category": "video_ai",
+      "missing_authority": "Bot canonical long-form video engine (services.video_tail9)",
+      "server_fail_closed_behavior": "Job creation blocked; status=guarded",
+      "user_visible_copy_vi": "Cần Bot canonical engine để xử lý video dài tập.",
+      "user_visible_copy_en": "Requires canonical Bot engine to process episodic long-form video."
+    },
+    {
+      "id": 4,
+      "route": "/video/product",
+      "name": "Video thương mại",
+      "category": "video_ai",
+      "missing_authority": "services.web_product_video_worker_consumer runtime activation",
+      "server_fail_closed_behavior": "Zero-cost gate prevents paid external provider dispatch; status=guarded",
+      "user_visible_copy_vi": "Cần Bot canonical engine để render video sản phẩm thương mại.",
+      "user_visible_copy_en": "Requires canonical Bot engine to render commercial product videos."
+    },
+    {
+      "id": 5,
+      "route": "/video/mux",
+      "name": "Mux Audio & Video",
+      "category": "video_ai",
+      "missing_authority": "Canonical FFmpeg mux adapter in Bot worker",
+      "server_fail_closed_behavior": "Local file merging prohibited; status=guarded",
+      "user_visible_copy_vi": "Chờ adapter mux canonical được công bố; không ghép file cục bộ.",
+      "user_visible_copy_en": "Awaiting canonical mux adapter publication; local file merging is disabled."
+    },
+    {
+      "id": 6,
+      "route": "/image/create",
+      "name": "Tạo ảnh AI",
+      "category": "image_ai",
+      "missing_authority": "Core Bridge / Bot estimate and provider adapter",
+      "server_fail_closed_behavior": "Browser does not call AI provider directly; status=guarded",
+      "user_visible_copy_vi": "Cần Core Bridge / Bot estimate; browser không gọi provider AI trực tiếp.",
+      "user_visible_copy_en": "Requires Core Bridge / Bot estimate; browser does not call AI providers directly."
+    },
+    {
+      "id": 7,
+      "route": "/voice/tts",
+      "name": "Text-to-Speech",
+      "category": "voice_ai",
+      "missing_authority": "Bot/Core-Bridge canonical TTS runtime adapter",
+      "server_fail_closed_behavior": "HTTP 503 / disabled in UI; status=guarded",
+      "user_visible_copy_vi": "Chờ adapter Bot/Core-Bridge canonical; chưa có runtime audio TTS trực tiếp trong browser.",
+      "user_visible_copy_en": "Awaiting canonical Bot/Core-Bridge adapter; in-browser TTS runtime is not available."
+    },
+    {
+      "id": 8,
+      "route": "/voice/clone",
+      "name": "Voice Clone",
+      "category": "voice_ai",
+      "missing_authority": "Bot Minimax voice clone consent & sample verification",
+      "server_fail_closed_behavior": "Consent and sample validation required from Bot bridge; status=guarded",
+      "user_visible_copy_vi": "Cần mẫu âm thanh và quyền sử dụng được Bot bridge xác minh.",
+      "user_visible_copy_en": "Audio sample and usage authorization verified by Bot bridge are required."
+    },
+    {
+      "id": 9,
+      "route": "/voice/outputs",
+      "name": "Voice Outputs",
+      "category": "voice_ai",
+      "missing_authority": "Canonical voice output delivery adapter",
+      "server_fail_closed_behavior": "Unsigned URLs rejected; status=guarded",
+      "user_visible_copy_vi": "Adapter Voice-output canonical hiện chưa được công bố.",
+      "user_visible_copy_en": "Canonical Voice-output adapter is not yet published."
+    },
+    {
+      "id": 10,
+      "route": "/voice/preview",
+      "name": "Nghe thử giọng",
+      "category": "voice_ai",
+      "missing_authority": "Signed audio preview URL authority from server",
+      "server_fail_closed_behavior": "Direct unsigned audio playback blocked; status=guarded",
+      "user_visible_copy_vi": "Chỉ phát audio khi có signed URL xác thực từ server.",
+      "user_visible_copy_en": "Audio only plays when authenticated signed URL is provided by server."
+    },
+    {
+      "id": 11,
+      "route": "/music/create",
+      "name": "Tạo nhạc nền AI",
+      "category": "music_ai",
+      "missing_authority": "Bot canonical music generation adapter",
+      "server_fail_closed_behavior": "Zero synthetic music generation; status=guarded",
+      "user_visible_copy_vi": "Chờ adapter Bot canonical; browser không sinh nhạc AI giả.",
+      "user_visible_copy_en": "Awaiting canonical Bot adapter; browser will not generate fake AI music."
+    },
+    {
+      "id": 12,
+      "route": "/music/song",
+      "name": "AI Song Producer",
+      "category": "music_ai",
+      "missing_authority": "Bot canonical song producer pipeline",
+      "server_fail_closed_behavior": "Job submission blocked; status=guarded",
+      "user_visible_copy_vi": "Chờ adapter Bot canonical để sáng tác bài hát hoàn chỉnh.",
+      "user_visible_copy_en": "Awaiting canonical Bot adapter to compose complete songs."
+    },
+    {
+      "id": 13,
+      "route": "/music/sfx",
+      "name": "Sound Effects AI",
+      "category": "music_ai",
+      "missing_authority": "Bot canonical SFX generation adapter",
+      "server_fail_closed_behavior": "Job submission blocked; status=guarded",
+      "user_visible_copy_vi": "Chờ adapter Bot canonical để tạo hiệu ứng âm thanh.",
+      "user_visible_copy_en": "Awaiting canonical Bot adapter to create sound effects."
+    },
+    {
+      "id": 14,
+      "route": "/subtitle/create",
+      "name": "Tạo phụ đề tự động (ASR)",
+      "category": "subdub_ai",
+      "missing_authority": "Bot canonical ASR service adapter",
+      "server_fail_closed_behavior": "No fake transcript synthesis; status=guarded",
+      "user_visible_copy_vi": "Chờ adapter Bot ASR; browser không giả lập transcript từ media.",
+      "user_visible_copy_en": "Awaiting Bot ASR adapter; browser will not fake transcript from media."
+    },
+    {
+      "id": 15,
+      "route": "/translate",
+      "name": "Dịch phụ đề đa ngữ",
+      "category": "subdub_ai",
+      "missing_authority": "Bot Translation with contextual terminology engine",
+      "server_fail_closed_behavior": "Job blocked; status=guarded",
+      "user_visible_copy_vi": "Chờ adapter Bot Translation có ngữ cảnh.",
+      "user_visible_copy_en": "Awaiting Bot contextual Translation adapter."
+    },
+    {
+      "id": 16,
+      "route": "/dubbing",
+      "name": "Lồng tiếng video AI",
+      "category": "subdub_ai",
+      "missing_authority": "Bot canonical Dubbing audio pipeline",
+      "server_fail_closed_behavior": "No fake audio overlay; status=guarded",
+      "user_visible_copy_vi": "Chờ adapter Bot Dubbing; browser không lồng tiếng giả.",
+      "user_visible_copy_en": "Awaiting Bot Dubbing adapter; browser will not fake dubbed audio."
+    },
+    {
+      "id": 17,
+      "route": "/dubbing?mode=subtitle_plus_dubbing",
+      "name": "Phụ đề & Lồng tiếng (Combo)",
+      "category": "subdub_ai",
+      "missing_authority": "Bot Subtitle+Dubbing combined pipeline adapter",
+      "server_fail_closed_behavior": "Job blocked; status=guarded",
+      "user_visible_copy_vi": "Chờ adapter Bot Subtitle+Dubbing; kết hợp tạo phụ đề và lồng tiếng.",
+      "user_visible_copy_en": "Awaiting Bot Subtitle+Dubbing adapter; combining subtitle generation and dubbing."
+    },
+    {
+      "id": 18,
+      "route": "/asr",
+      "name": "Nhận dạng giọng nói (ASR)",
+      "category": "subdub_ai",
+      "missing_authority": "Bot canonical ASR transcript extraction",
+      "server_fail_closed_behavior": "Job blocked; status=guarded",
+      "user_visible_copy_vi": "Chờ adapter Bot ASR; trích xuất transcript chính xác.",
+      "user_visible_copy_en": "Awaiting Bot ASR adapter; accurate transcript extraction."
+    },
+    {
+      "id": 19,
+      "route": "/image/background-cleanup",
+      "name": "Tách nền ảnh (Free/Web Tool)",
+      "category": "free_tools",
+      "missing_authority": "Active JPEG/PNG/WebP asset in Asset Vault of signed account",
+      "server_fail_closed_behavior": "Submission disabled; status=guarded without verified private asset",
+      "user_visible_copy_vi": "Chỉ JPEG, PNG hoặc WebP active thuộc signed Web account hiện tại được chọn từ Asset Vault.",
+      "user_visible_copy_en": "Only active JPEG, PNG, or WebP assets of the signed Web account can be selected."
+    },
+    {
+      "id": 20,
+      "route": "/image/brand-overlay",
+      "name": "Brand Overlay (Watermark)",
+      "category": "free_tools",
+      "missing_authority": "Active source and logo assets in Asset Vault",
+      "server_fail_closed_behavior": "Submission disabled; status=guarded",
+      "user_visible_copy_vi": "Chọn ảnh nguồn và logo từ Asset Vault của signed Web account hiện tại.",
+      "user_visible_copy_en": "Select source image and logo from Asset Vault of current signed Web account."
+    },
+    {
+      "id": 21,
+      "route": "/image/storyboard-grid",
+      "name": "Storyboard Grid",
+      "category": "free_tools",
+      "missing_authority": "Active sequence assets in Asset Vault",
+      "server_fail_closed_behavior": "Submission disabled; status=guarded",
+      "user_visible_copy_vi": "Chỉ ảnh JPEG, PNG hoặc WebP active của signed Web account hiện tại được chọn.",
+      "user_visible_copy_en": "Only active JPEG, PNG, or WebP images of current signed Web account can be selected."
+    },
+    {
+      "id": 22,
+      "route": "/image/resize",
+      "name": "Resize & Crop đa tỉ lệ",
+      "category": "free_tools",
+      "missing_authority": "Active image in Asset Vault",
+      "server_fail_closed_behavior": "Submission disabled; status=guarded",
+      "user_visible_copy_vi": "Chỉ JPEG, PNG hoặc WebP active thuộc signed Web account hiện tại được chọn.",
+      "user_visible_copy_en": "Only active JPEG, PNG, or WebP of current signed Web account can be selected."
+    },
+    {
+      "id": 23,
+      "route": "/image/operation-history",
+      "name": "Lịch sử xử lý ảnh",
+      "category": "free_tools",
+      "missing_authority": "Private Web Workspace execution record",
+      "server_fail_closed_behavior": "Zero synthetic history; status=guarded",
+      "user_visible_copy_vi": "Chỉ gồm output Resize & Aspect Studio, Image Enhance Studio, Brand Overlay Studio và Xóa nền do Web Workspace tạo.",
+      "user_visible_copy_en": "Only includes Web Workspace local operations output; no Bot or provider history copied."
+    },
+    {
+      "id": 24,
+      "route": "/admin/workers",
+      "name": "Worker Runtime",
+      "category": "admin_operations",
+      "missing_authority": "Core Bridge internal worker module adapter",
+      "server_fail_closed_behavior": "localAdminCompatibilityGuard returns compatibility_guarded=true; HTTP 200 read-only banner",
+      "user_visible_copy_vi": "Chỉ đọc từ Core Bridge canonical; không lộ worker internals hoặc control plane.",
+      "user_visible_copy_en": "Read-only from canonical Core Bridge; does not expose worker internals or control plane."
+    },
+    {
+      "id": 25,
+      "route": "/admin/runtime",
+      "name": "Runtime Monitor",
+      "category": "admin_operations",
+      "missing_authority": "Core Bridge internal runtime module adapter",
+      "server_fail_closed_behavior": "localAdminCompatibilityGuard returns compatibility_guarded=true; status=guarded",
+      "user_visible_copy_vi": "Runtime monitor chỉ đọc từ Core Bridge canonical.",
+      "user_visible_copy_en": "Runtime monitor is strictly read-only from canonical Core Bridge."
+    },
+    {
+      "id": 26,
+      "route": "/admin/freezes",
+      "name": "System Freezes",
+      "category": "admin_governance",
+      "missing_authority": "Canonical Bot deployment freeze registry",
+      "server_fail_closed_behavior": "Browser cannot alter freeze state; read-only from signed server config",
+      "user_visible_copy_vi": "Trạng thái freeze do máy chủ ký và ban hành; không sửa đổi từ trình duyệt.",
+      "user_visible_copy_en": "Freeze state is signed and issued by server; no browser modification allowed."
+    },
+    {
+      "id": 27,
+      "route": "/admin/backups",
+      "name": "Database Backups",
+      "category": "admin_governance",
+      "missing_authority": "Canonical VPS system backup scheduler adapter",
+      "server_fail_closed_behavior": "No browser-triggered backup creation; status=guarded",
+      "user_visible_copy_vi": "Bản sao lưu cơ sở dữ liệu được quản lý tự động tại VPS hạ tầng; không chạy từ browser.",
+      "user_visible_copy_en": "Database backups are managed automatically on VPS infrastructure; not run from browser."
+    },
+    {
+      "id": 28,
+      "route": "/admin/providers",
+      "name": "Provider Registry",
+      "category": "admin_operations",
+      "missing_authority": "Canonical secret-redacted provider status adapter",
+      "server_fail_closed_behavior": "Zero API keys or secrets exposed; read-only status banner",
+      "user_visible_copy_vi": "Trạng thái nhà cung cấp do runtime canonical phát hành; không lộ secret.",
+      "user_visible_copy_en": "Provider status is issued by canonical runtime without exposing secrets."
+    },
+    {
+      "id": 29,
+      "route": "/admin/provider-cost",
+      "name": "Provider Cost Audit",
+      "category": "admin_operations",
+      "missing_authority": "Canonical provider financial billing ledger",
+      "server_fail_closed_behavior": "Read-only summary; no browser write capability",
+      "user_visible_copy_vi": "Chi phí nhà cung cấp chỉ đối soát từ Core Bridge; không có chỉnh sửa thủ công.",
+      "user_visible_copy_en": "Provider costs are reconciled only from Core Bridge; no manual edits allowed."
+    },
+    {
+      "id": 30,
+      "route": "/admin/jobs/failed",
+      "name": "Failed Job Incidents",
+      "category": "admin_operations",
+      "missing_authority": "Canonical Bot retry/refund decision engine",
+      "server_fail_closed_behavior": "Read-only triage fields; zero retry/refund buttons in browser",
+      "user_visible_copy_vi": "Chỉ category lỗi đã rút gọn được hiển thị; retry, refund, charge và provider operation tiếp tục do Bot canonical quyết định.",
+      "user_visible_copy_en": "Only reduced error categories are shown; retry, refund, charge, and provider operations remain canonical Bot decisions."
+    },
+    {
+      "id": 31,
+      "route": "/admin/finance/refund",
+      "name": "Admin Finance Refund",
+      "category": "admin_finance",
+      "missing_authority": "Core Ledger automated refund transaction bridge",
+      "server_fail_closed_behavior": "HTTP 403 fail-closed: WEBAPP_ADMIN_WRITES_DISABLED",
+      "user_visible_copy_vi": "Thao tác hoàn tiền bị khóa an toàn; cần kích hoạt cờ máy chủ và chữ ký quản trị viên chuẩn.",
+      "user_visible_copy_en": "Refund operation is fail-closed locked; requires server flag and canonical admin signature."
+    },
+    {
+      "id": 32,
+      "route": "/admin/jobs/{job_id}/refund",
+      "name": "Admin Job Refund",
+      "category": "admin_finance",
+      "missing_authority": "Core Bridge per-job refund mutation authority",
+      "server_fail_closed_behavior": "HTTP 403 fail-closed: WEBAPP_ADMIN_WRITES_DISABLED",
+      "user_visible_copy_vi": "Hoàn tiền cho job bị khóa an toàn theo mặc định để tránh tranh chấp số dư.",
+      "user_visible_copy_en": "Job refunds are fail-closed by default to avoid balance conflicts."
+    }
+  ],
+  "admin_to_customer_writable_action_matrix": {
+    "status": "PASS",
+    "ADMIN_WRITES_WITH_CUSTOMER_PROJECTION_GAP": 0,
+    "actions": [
+      {
+        "action": "Admin Draft Topup Approval",
+        "admin_endpoint": "POST /api/v1/admin/payments/manual/{id}/draft",
+        "customer_visible_route": "/wallet",
+        "customer_visible_projection": "Topup request remains in pending_admin_review with receipt draft; zero balance mutation",
+        "projection_gap": 0
+      },
+      {
+        "action": "Admin Confirm Topup Approval",
+        "admin_endpoint": "POST /api/v1/admin/payments/manual/{id}/confirm",
+        "customer_visible_route": "/wallet",
+        "customer_visible_projection": "Bot Core credit succeeds -> Customer wallet balance refreshed, ledger history records credit entry with balance_after_xu, request status=approved",
+        "projection_gap": 0
+      },
+      {
+        "action": "Admin Reject Topup",
+        "admin_endpoint": "POST /api/v1/admin/payments/manual/{id}/reject",
+        "customer_visible_route": "/wallet",
+        "customer_visible_projection": "Customer request updates to rejected with reason; zero balance mutation",
+        "projection_gap": 0
+      },
+      {
+        "action": "Admin Reply Support Ticket",
+        "admin_endpoint": "POST /api/v1/admin/support/reply",
+        "customer_visible_route": "/tickets/{id}",
+        "customer_visible_projection": "Customer sees official staff reply in ticket message thread",
+        "projection_gap": 0
+      },
+      {
+        "action": "Admin Resolve Support Ticket",
+        "admin_endpoint": "POST /api/v1/admin/support/resolve",
+        "customer_visible_route": "/tickets/{id}",
+        "customer_visible_projection": "Customer sees ticket status transition to resolved",
+        "projection_gap": 0
+      }
+    ]
+  },
+  "manual_topup_failure_matrix": {
+    "status": "PASS",
+    "test_suites": [
+      "tests/test_manual_topup_failclosed_wallet_credit.py",
+      "tests/test_p0_webapp_web03_admin_topup_wallet_approval_truth.py"
+    ],
+    "cases": [
+      {
+        "condition": "Bot Core bridge unconfigured",
+        "server_behavior": "Returns HTTP 503 WALLET_CREDIT_BRIDGE_UNAVAILABLE",
+        "request_status": "Remains pending_admin_review in Web SQLite",
+        "wallet_mutation": "Zero Xu credited, zero synthetic ledger event persisted",
+        "verified_in": "test_manual_topup_confirm_bridge_unconfigured_returns_503"
+      },
+      {
+        "condition": "Bot Core bridge timeout",
+        "server_behavior": "Returns HTTP 504 / 500 network timeout",
+        "request_status": "Remains pending_admin_review in Web SQLite",
+        "wallet_mutation": "Zero Xu credited",
+        "verified_in": "test_manual_topup_confirm_bridge_timeout_keeps_pending"
+      },
+      {
+        "condition": "Bot Core bridge 5xx error",
+        "server_behavior": "Returns HTTP 502 / 500 error response",
+        "request_status": "Remains pending_admin_review in Web SQLite",
+        "wallet_mutation": "Zero Xu credited",
+        "verified_in": "test_manual_topup_confirm_bridge_5xx_keeps_pending"
+      },
+      {
+        "condition": "Invalid / tampered confirmation receipt",
+        "server_behavior": "Returns HTTP 400 INVALID_CONFIRMATION_RECEIPT",
+        "request_status": "Remains pending_admin_review",
+        "wallet_mutation": "Zero Xu credited",
+        "verified_in": "test_manual_topup_confirm_invalid_receipt_fails_closed"
+      },
+      {
+        "condition": "CSRF token missing or invalid",
+        "server_behavior": "Returns HTTP 403 CSRF token missing or invalid",
+        "request_status": "Remains pending_admin_review",
+        "wallet_mutation": "Zero Xu credited",
+        "verified_in": "test_manual_topup_confirm_csrf_and_auth_guards"
+      },
+      {
+        "condition": "Unauthenticated or non-admin role",
+        "server_behavior": "Returns HTTP 401 / 403 Insufficient role",
+        "request_status": "Remains pending_admin_review",
+        "wallet_mutation": "Zero Xu credited",
+        "verified_in": "test_manual_topup_confirm_csrf_and_auth_guards"
+      },
+      {
+        "condition": "Admin writes disabled flag (WEBAPP_ADMIN_WRITES_ENABLED=false)",
+        "server_behavior": "Returns HTTP 403 ADMIN_WRITES_DISABLED",
+        "request_status": "Remains pending_admin_review",
+        "wallet_mutation": "Zero Xu credited",
+        "verified_in": "test_admin_writes_disabled_flag_blocks_writes"
+      },
+      {
+        "condition": "Customer create / patch operations",
+        "server_behavior": "Only inserts or reads Web SQLite top-up request",
+        "request_status": "pending_admin_review (intake only)",
+        "wallet_mutation": "Strictly zero wallet mutation side effects",
+        "verified_in": "test_customer_create_and_patch_zero_wallet_mutation"
+      }
+    ]
+  },
+  "browser_acceptance_verification": {
+    "status": "PASS",
+    "runner": "scripts/ci/run_browser_verification.py",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3",
+    "evidence_json": "reports/browser_evidence/browser_verification_evidence.json",
+    "manifest_json": "reports/browser_evidence/screenshot-manifest.json",
+    "total_screenshots": 18,
+    "viewports": [
+      { "name": "desktop", "dimensions": "1440x900", "count": 6 },
+      { "name": "tablet", "dimensions": "768x1024", "count": 6 },
+      { "name": "mobile", "dimensions": "375x812", "count": 6 }
+    ],
+    "hubs": [
+      { "hub": "video", "route": "/tools/video", "visible": true, "clipped": false },
+      { "hub": "image", "route": "/tools/image", "visible": true, "clipped": false },
+      { "hub": "voice", "route": "/voice", "visible": true, "clipped": false },
+      { "hub": "music", "route": "/music", "visible": true, "clipped": false },
+      { "hub": "subdub", "route": "/subdub", "visible": true, "clipped": false },
+      { "hub": "free", "route": "/tools/free", "visible": true, "clipped": false }
+    ],
+    "runtime_health": {
+      "uncaught_js_exceptions": 0,
+      "unhandled_promise_rejections": 0,
+      "broken_data_bindings": 0,
+      "failed_app_requests": 0
+    },
+    "clipping_checks": {
+      "clipped_primary_ctas": 0,
+      "desktop_clipped": 0,
+      "tablet_clipped": 0,
+      "mobile_clipped": 0
+    },
+    "theme_checks": {
+      "light_mode_pass": true,
+      "dark_mode_pass": true,
+      "reload_persistence_pass": true,
+      "first_paint_theme_flicker": "NO"
+    },
+    "accessibility_checks": {
+      "keyboard_primary_action_pass": true,
+      "keyboard_focus_count": 6,
+      "keyboard_vacuous_pass": 0,
+      "unlabeled_primary_icon_controls": 0,
+      "duplicate_critical_ids": 0
+    },
+    "free_tools_deterministic_interactions": [
+      { "tool": "JSON Formatter", "status": "PASS" },
+      { "tool": "Base64 Codec", "status": "PASS" },
+      { "tool": "Text Slugify", "status": "PASS" },
+      { "tool": "Subtitle Cleaner", "status": "PASS" }
+    ]
+  },
+  "browser_master_acceptance_correction_r2": {
+    "spec_id": "WEB-APP-MASTER-UIUX-FUNCTIONAL-STABILIZATION-R1",
+    "phase": "MASTER_ACCEPTANCE_CORRECTION_R2",
+    "status": "PASS",
+    "runner": "scripts/ci/run_master_browser_r2.py",
+    "head_sha": "ea05c58053559ba170a555f2a4c6a99c9553bce3",
+    "evidence_json": "reports/browser_evidence/master_browser_evidence_r2.json",
+    "manifest_json": "reports/browser_evidence/master_screenshot_manifest_r2.json",
+    "total_captures": 78,
+    "passed_captures": 78,
+    "viewports": [
+      { "name": "desktop", "dimensions": "1440x900", "count": 26 },
+      { "name": "tablet", "dimensions": "768x1024", "count": 26 },
+      { "name": "mobile", "dimensions": "375x812", "count": 26 }
+    ],
+    "customer_matrix_captures": 39,
+    "admin_matrix_captures": 39,
+    "runtime_health": {
+      "uncaught_js_exceptions": 0,
+      "unhandled_promise_rejections": 0,
+      "failed_app_requests": 0,
+      "horizontal_overflow_count": 0,
+      "clipped_primary_controls_count": 0
+    },
+    "interactive_topup_flow": {
+      "ADMIN_TOPUP_LIST_BROWSER": "PASS",
+      "ADMIN_TOPUP_DETAIL_BROWSER": "PASS",
+      "ADMIN_TOPUP_APPROVE_BUTTON_BROWSER": "PASS",
+      "ADMIN_TOPUP_CONFIRM_MODAL_BROWSER": "PASS",
+      "ADMIN_TOPUP_KEYBOARD_BROWSER": "PASS",
+      "ADMIN_TOPUP_CUSTOMER_REFRESH_BROWSER": "PASS"
+    },
+    "failure_ui_states": {
+      "BRIDGE_UNAVAILABLE_503": "PASS",
+      "INVALID_RECEIPT_REJECTED": "PASS",
+      "CSRF_AUTH_GUARDED": "PASS",
+      "ADMIN_WRITES_DISABLED_FAIL_CLOSED": "PASS"
+    }
+  },
+  "master_regression_matrix": {
+    "status": "PASS",
+    "total_suites": 29,
+    "total_tests_passed": 343,
+    "total_tests_failed": 0,
+    "total_tests_skipped": 0,
+    "suites": [
+      { "name": "tests/test_admin_topup_approve_and_pricing.py", "passed": 3 },
+      { "name": "tests/test_p0_manual_topup_admin_queue.py", "passed": 5 },
+      { "name": "tests/test_p0_manual_topup_customer_flow.py", "passed": 1 },
+      { "name": "tests/test_p0_web_admin_topup_specc_durable_decision.py", "passed": 21 },
+      { "name": "tests/test_p0_webapp_web03_admin_topup_wallet_approval_truth.py", "passed": 10 },
+      { "name": "tests/test_manual_topup_failclosed_wallet_credit.py", "passed": 10 },
+      { "name": "tests/test_p0_webapp_spec02_customer_wallet_truth.py", "passed": 31 },
+      { "name": "tests/test_p0_webapp_v3_customer_admin_master_inventory.py", "passed": 8 },
+      { "name": "tests/test_p0_webapp_v3_subdub_canonical_product_authority_reconciliation.py", "passed": 23 },
+      { "name": "tests/test_portal_i18n_locale_contracts.py", "passed": 3 },
+      { "name": "tests/test_customer_interface_locale_purity_001_contracts.py", "passed": 4 },
+      { "name": "tests/test_a09_admin_exhaustive_locale_audit.py", "passed": 3 },
+      { "name": "tests/test_a09_admin_operations_locale_purity_contracts.py", "passed": 10 },
+      { "name": "tests/test_interface_locale_narrow_update_and_first_paint.py", "passed": 6 },
+      { "name": "tests/test_interface_locale_navigator_portal_contracts.py", "passed": 5 },
+      { "name": "tests/test_portal_navigation_ux_contracts.py", "passed": 15 },
+      { "name": "tests/test_admin_erp_navigation_portal_contracts.py", "passed": 7 },
+      { "name": "tests/test_customer_navigation_interaction_001_contracts.py", "passed": 5 },
+      { "name": "tests/test_admin_erp_navigation.py", "passed": 7 },
+      { "name": "tests/test_p0_webapp_v2_00_ia_navigation_streamline.py", "passed": 8 },
+      { "name": "tests/test_portal_safety_contracts.py", "passed": 78 },
+      { "name": "tests/test_portal_i18n_bundle_contracts.py", "passed": 3 },
+      { "name": "tests/test_a09_admin_locale_gap_24.py", "passed": 2 },
+      { "name": "tests/test_a09_admin_support_locale_purity_reopen_contracts.py", "passed": 10 },
+      { "name": "tests/test_admin_data_views_locale_purity_003_contracts.py", "passed": 3 },
+      { "name": "tests/test_a09_auth_admin_shell_vertical_responsive_locale_contracts.py", "passed": 15 },
+      { "name": "tests/test_p0_webapp_v3_customer_music_generation_job_bridge.py", "passed": 8 },
+      { "name": "tests/test_p0_webapp_web15_final_business_e2e_truth.py", "passed": 13 },
+      { "name": "tests/test_browser_runtime_gate.py", "passed": 26 }
+    ]
+  }
+}
