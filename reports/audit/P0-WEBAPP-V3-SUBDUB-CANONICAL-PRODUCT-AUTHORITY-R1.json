@@ -5,7 +5,7 @@
   "web_repository": "manhtoangreensky-wq/toan-aas-standalone",
   "web_base_sha": "5e3da90b67bb44ded204b551872ea32a31a31b7a",
   "bot_authority_repo": "manhtoangreensky-wq/bot",
-  "bot_authority_sha": "661c0de773a68177f5c258843485a0177eb6b6e2",
+  "bot_authority_sha": "ffaf41144134a24615407b59492409012c687f31",
   "invariants": {
     "PROVIDER_CALLS": 0,
     "WALLET_MUTATIONS": 0,
@@ -22,9 +22,9 @@
     "CURRENT_WEB_FEATURE_UPLOAD_IDENTIFIER": "upload_id",
     "CURRENT_WEB_FEATURE_UPLOAD_STORAGE_AUTHORITY": "BOT_OWNED_STAGING",
     "ASSET_ID_IS_GENERIC_SUBDUB_UPLOAD_AUTHORITY": "NO",
-    "BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED": "NO",
-    "BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED": "NO",
-    "SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED": "NO",
+    "BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED": "YES",
+    "BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED": "YES",
+    "SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED": "YES",
     "SECOND_SUBDUB_UPLOAD_AUTHORITY_CREATED": "NO",
     "RAW_BROWSER_PATH_ACCEPTED": 0,
     "REMOTE_MEDIA_URL_ACCEPTED": 0,
@@ -412,10 +412,6 @@
     },
     "unresolved_semantic_gaps": [
       {
-        "code": "BOT_STAGING_UPLOAD_CONSUME_CONTRACT_MISSING",
-        "description": "Bot repository at pinned SHA 661c0de773a68177f5c258843485a0177eb6b6e2 does not define POST /internal/v1/uploads or GET /internal/v1/uploads/{id}. Web cannot truthfully verify or consume staged uploads before job dispatch."
-      },
-      {
         "code": "WEB_DUBBING_SRT_ONLY_CONTRADICTION",
         "description": "Web forms for dubbing and subtitle_plus_dubbing hardcode output_format: ['srt'], which directly contradicts Bot runtime capability that outputs video, audio, and video_subtitle."
       },
@@ -441,13 +437,13 @@
     "SECOND_SUBDUB_UPLOAD_AUTHORITY_CREATED": "NO",
     "RAW_BROWSER_PATH_ACCEPTED": 0,
     "REMOTE_MEDIA_URL_ACCEPTED": 0,
-    "BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED": "NO",
-    "BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED": "NO",
-    "SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED": "NO",
+    "BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED": "YES",
+    "BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED": "YES",
+    "SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED": "YES",
     "details": {
       "web_upload_mechanism": "copyfast_api.py:upload_to_canonical_staging forwards bytes to Bot /internal/v1/uploads without recording raw bytes or provider paths in Web DB.",
       "feature_upload_contract": "copyfast_api.py:_canonical_upload_ids consumes opaque upload_ids; Asset Vault (asset_id) is exclusively for Web-native PDF and format utility tools.",
-      "bot_status_at_pinned_sha": "Bot at 661c0de773a68177f5c258843485a0177eb6b6e2 lacks /internal/v1/uploads route entirely.",
+      "bot_status_at_pinned_sha": "Bot at ffaf41144134a24615407b59492409012c687f31 defines POST /internal/v1/uploads (create) and GET /internal/v1/uploads/{upload_id} (consume) canonical staging endpoints.",
       "invariants": "Zero raw browser paths, zero remote YouTube/TikTok media URLs accepted."
     }
   },

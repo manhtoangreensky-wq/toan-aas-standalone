@@ -4,7 +4,7 @@
 - **Parent Task**: `P0.WEBAPP.V3.SUBDUB.CANONICAL.PRODUCT.AUTHORITY.RECONCILIATION.R1`
 - **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
 - **Web Repository**: `manhtoangreensky-wq/toan-aas-standalone` (`BASE_OF_CORRECTION=5e3da90b67bb44ded204b551872ea32a31a31b7a`)
-- **Bot Authority Repository**: `manhtoangreensky-wq/bot` (`BOT_AUTHORITY_SHA=661c0de773a68177f5c258843485a0177eb6b6e2`)
+- **Bot Authority Repository**: `manhtoangreensky-wq/bot` (`BOT_AUTHORITY_SHA=ffaf41144134a24615407b59492409012c687f31`)
 - **Mode**: `CORRECTION_ONLY`, `SAME_PR`, `AUTHORITY_TRUTH_ONLY`, `NO_PRODUCT_UI_CHANGE`, `NO_RUNTIME_EXECUTION`, `MINIMAL_CODE_FOOTPRINT`
 - **Invariants**: `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`, `MERGE=NO`, `DEPLOY=NO`, `RESTART=NO`
 
@@ -14,22 +14,22 @@
 
 | Invariant / Finding Flag | Value | Canonical Source & Empirical Verification |
 |---|---|---|
-| `FIRST_RED_BOT_SOURCE_ASSERTION_OPTIONAL` | **PROVEN** | Mandatory inspection of Bot git commit at `661c0de773a68177f5c258843485a0177eb6b6e2`. |
+| `FIRST_RED_BOT_SOURCE_ASSERTION_OPTIONAL` | **PROVEN** | Mandatory inspection of Bot git commit at `ffaf41144134a24615407b59492409012c687f31`. |
 | `FIRST_RED_SELF_REFERENTIAL_BOT_EVIDENCE` | **PROVEN** | All Bot authorities asserted directly from Bot source files at pinned commit, not local JSON mirrors. |
 | `FIRST_RED_ASSET_VAULT_FEATURE_UPLOAD_AUTHORITY_CLAIM_FALSE` | **PROVEN** | Asset Vault (`asset_id`) was falsely claimed in C2; Web feature uploads actually use `upload_id` transferred to Bot staging. |
 | `CURRENT_WEB_FEATURE_UPLOAD_IDENTIFIER` | **upload_id** | `copyfast_api.py:1927-1938` (`_canonical_upload_ids`), `FEATURE_UPLOAD_REQUIRED` checks `upload_ids`. |
 | `CURRENT_WEB_FEATURE_UPLOAD_STORAGE_AUTHORITY` | **BOT_OWNED_STAGING** | `copyfast_api.py:6200-6235` transfers file bytes directly to `/internal/v1/uploads`; Web DB stores 0 file bytes and 0 provider paths. |
 | `ASSET_ID_IS_GENERIC_SUBDUB_UPLOAD_AUTHORITY` | **NO** | Asset Vault is a private Web-native container for PDF/format conversions, NOT the generic feature upload authority. |
-| `BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED` | **NO** | Pinned Bot commit lacks `/internal/v1/uploads` route entirely. |
-| `BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED` | **NO** | Pinned Bot commit lacks `GET /internal/v1/uploads/{id}` or staging consume endpoint. |
-| `SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED` | **NO** | Cannot mark upload authority resolved when Bot lacks the staging upload consume contract. |
+| `BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED` | **YES** | Bot D1 at `ffaf4114` defines `POST /internal/v1/uploads` with canonical `create_staged_upload`. |
+| `BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED` | **YES** | Bot D1 at `ffaf4114` defines `GET /internal/v1/uploads/{upload_id}` with canonical `get_staged_upload`. |
+| `SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED` | **YES** | Web bridges to Bot D1 staging endpoints; upload create+consume contract resolved. |
 | `SECOND_SUBDUB_UPLOAD_AUTHORITY_CREATED` | **NO** | No shadow upload table created; no local storage mirror added. |
 | `RAW_BROWSER_PATH_ACCEPTED` | **0** | Strict rejection of local browser filesystem paths. |
 | `REMOTE_MEDIA_URL_ACCEPTED` | **0** | Strict rejection of unverified YouTube/TikTok URLs. |
 | `CURRENT_WEB_OUTPUT_FORMAT_CONTRACT_COMPATIBLE_WITH_BOT` | **RECONCILED** | Client-side fake `output_format: ["srt"]` removed; Bot authority governs real output delivery. |
 | `WEB_DUBBING_SRT_ONLY_SEMANTIC_GAP` | **RESOLVED** | SRT-only client restriction removed; Bot media/audio output unblocked. |
 | `R2_OUTPUT_AUTHORITY_DECISION_REQUIRED` | **YES** | R2 durable bridge must reconcile and override the SRT-only form restriction. |
-| `SUBDUB_INPUT_CONTRACT_RESOLVED` | **NO** | Fail-closed due to upload staging consume gap, output format contradiction, duration probe gap, and voice profile gap. |
+| `SUBDUB_INPUT_CONTRACT_RESOLVED` | **NO** | Fail-closed due to output format contradiction, duration probe gap, and voice profile gap. |
 | `WEB_DURATION_SECONDS_IS_MEDIA_TRUTH` | **NO** | Web client supplies arbitrary integer (1..14400) without media probe. |
 | `BOT_MEDIA_DURATION_PROBE_AUTHORITY_RESOLVED` | **YES** | Bot enforces `ffprobe_duration` probe in `bot.py:241236-241339` and `subdub_duration_gate_payload`. |
 | `R2_MUST_REVALIDATE_MEDIA_DURATION` | **YES** | Server-side FFprobe duration validation is mandatory in R2 bridge. |
@@ -49,15 +49,15 @@
 | `ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED` | **NO** | Incident view lacks stage-level failure attribution. |
 | `ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED` | **NO** | Provider view is global; not linked to SubDub lane routing. |
 | `ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED` | **NO** | Delivery center tracks only generic output presence. |
-| `R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY` | **NO** | Blocked by missing Bot upload staging consume contract, output format contradiction, and voice profile lookup gap. |
+| `R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY` | **NO** | Blocked by output format contradiction and voice profile lookup gap. |
 
 ---
 
-## 2. Direct Bot Git Source Authority (`661c0de773a68177f5c258843485a0177eb6b6e2`)
+## 2. Direct Bot Git Source Authority (`ffaf41144134a24615407b59492409012c687f31`)
 
 The test suite directly accesses the Bot git object database:
-- Commit validation: `git -C <BOT_ROOT> cat-file -e "661c0de773a68177f5c258843485a0177eb6b6e2^{commit}"`
-- File inspection: `git -C <BOT_ROOT> show 661c0de773a68177f5c258843485a0177eb6b6e2:<path>`
+- Commit validation: `git -C <BOT_ROOT> cat-file -e "ffaf41144134a24615407b59492409012c687f31^{commit}"`
+- File inspection: `git -C <BOT_ROOT> show ffaf41144134a24615407b59492409012c687f31:<path>`
 
 ### A. 4 Canonical Lanes (`bot.py:233105-233120`)
 - `VIDEO_SUBTITLE_MODE_CREATE = "subtitle_create"`
@@ -116,11 +116,10 @@ The test suite directly accesses the Bot git object database:
 - **Lane 4 (`subtitle_plus_dub`)**: Web `source` -> resolve staged `upload_id` -> `source_bytes`, `content_type`. Web `mode="subtitle_plus_dubbing"` -> maps to `mode="subtitle_plus_dub"`. Web `target_language` -> canonical code -> `target_language`. Web `voice_profile_id` -> resolve via Voice Vault -> `voice_style`. Web `speed` -> float multiplier -> `voice_speed`. Web `output_format` -> **OVERRIDE** srt form option with combo output ("video_subtitle" for video, "audio" for non-video).
 
 ### 4. `unresolved_semantic_gaps`
-1. **`BOT_STAGING_UPLOAD_CONSUME_CONTRACT_MISSING`**: Pinned Bot commit `661c0de7...` lacks `POST /internal/v1/uploads` and `GET /internal/v1/uploads/{id}`. Web cannot verify or consume staged uploads before job dispatch.
-2. **`WEB_DUBBING_SRT_ONLY_CONTRADICTION`**: Web forms for dubbing hardcode `output_format: ["srt"]`, which cannot yield dubbed audio or video from Bot runtime.
-3. **`UNVALIDATED_CLIENT_DURATION_SECONDS`**: Web client sends arbitrary unvalidated `duration_seconds`. Bot requires `ffprobe_duration`. R2 bridge must enforce server-side FFprobe duration validation.
-4. **`WEB_VOICE_PROFILE_RESOLUTION_ABSENT_ON_BOT`**: Web proxies `GET /api/v1/voice/profiles` to nonexistent Bot endpoint `GET /internal/v1/voice/profiles`. Bot has no server-side route to map `voice_profile_id` to `provider_voice_id`.
-5. **`ADMIN_SUBDUB_TRACE_GAPS`**: Admin jobs, failed jobs, and provider views lack SubDub lane breakdown, stage-level failure attribution, and intermediate artifact tracking.
+1. **`WEB_DUBBING_SRT_ONLY_CONTRADICTION`**: Web forms for dubbing hardcode `output_format: ["srt"]`, which cannot yield dubbed audio or video from Bot runtime.
+2. **`UNVALIDATED_CLIENT_DURATION_SECONDS`**: Web client sends arbitrary unvalidated `duration_seconds`. Bot requires `ffprobe_duration`. R2 bridge must enforce server-side FFprobe duration validation.
+3. **`WEB_VOICE_PROFILE_RESOLUTION_ABSENT_ON_BOT`**: Web proxies `GET /api/v1/voice/profiles` to nonexistent Bot endpoint `GET /internal/v1/voice/profiles`. Bot has no server-side route to map `voice_profile_id` to `provider_voice_id`.
+4. **`ADMIN_SUBDUB_TRACE_GAPS`**: Admin jobs, failed jobs, and provider views lack SubDub lane breakdown, stage-level failure attribution, and intermediate artifact tracking.
 
 ---
 
@@ -130,7 +129,7 @@ The test suite directly accesses the Bot git object database:
 - **Identifier Contract**: `copyfast_api.py:1927-1938` (`_canonical_upload_ids`) validates and extracts opaque Bot staging identifiers (`upload_ids`).
 - **Asset Vault Demarcation**: Asset Vault (`asset_id`) is a private Web-native container used exclusively by format conversion tools (`/api/v1/subtitle-asset-operations/*`) and PDF operations. It is NOT the feature upload authority for generic SubDub jobs (`ASSET_ID_IS_GENERIC_SUBDUB_UPLOAD_AUTHORITY = NO`).
 - **First Red**: The previous claim in C2 that Asset Vault was the canonical generic SubDub feature-upload authority is PROVEN FALSE (`FIRST_RED_ASSET_VAULT_FEATURE_UPLOAD_AUTHORITY_CLAIM_FALSE = PROVEN`).
-- **Staging Status on Bot**: At pinned SHA `661c0de773a68177f5c258843485a0177eb6b6e2`, Bot does not implement `POST /internal/v1/uploads` or staging lookup routes. Therefore, `SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED = NO`.
+- **Staging Status on Bot**: At D1 SHA `ffaf41144134a24615407b59492409012c687f31`, Bot defines canonical `POST /internal/v1/uploads` (create staging) and `GET /internal/v1/uploads/{upload_id}` (consume staging) endpoints. Therefore, `SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED = YES`.
 - **Invariants**: Zero raw browser paths accepted (`RAW_BROWSER_PATH_ACCEPTED = 0`), zero remote URLs accepted (`REMOTE_MEDIA_URL_ACCEPTED = 0`).
 
 ---

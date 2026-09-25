@@ -42,7 +42,7 @@ MASTER_MATRIX_PATH = STANDALONE_ROOT / "reports" / "audit" / "WEB_CUSTOMER_ADMIN
 PORTAL_JS_PATH = STANDALONE_ROOT / "static" / "portal" / "portal.js"
 PORTAL_I18N_JS_PATH = STANDALONE_ROOT / "static" / "portal" / "portal-i18n.js"
 
-BOT_AUTHORITY_COMMIT = "661c0de773a68177f5c258843485a0177eb6b6e2"
+BOT_AUTHORITY_COMMIT = "ffaf41144134a24615407b59492409012c687f31"
 
 
 @pytest.fixture(scope="session")
@@ -395,11 +395,11 @@ def test_p_web_and_bot_input_output_authority_separated(audit_data: dict):
     assert flags["BOT_AUTHORITY_COMMIT_REQUIRED"] == "YES"
     assert flags["BOT_SOURCE_MISSING_FAILS_FOCUSED_SUITE"] == "YES"
 
-    # Input and Upload Authority Reality (Fail-closed NO due to unresolved semantic & staging gaps)
+    # Input and Upload Authority Reality
     assert flags["SUBDUB_INPUT_CONTRACT_RESOLVED"] == "NO"
-    assert flags["SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED"] == "NO"
-    assert flags["BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED"] == "NO"
-    assert flags["BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED"] == "NO"
+    assert flags["SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED"] == "YES"
+    assert flags["BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED"] == "YES"
+    assert flags["BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED"] == "YES"
     assert flags["R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY"] == "NO"
 
     # Zero Self-Referential Authority Gates
@@ -493,18 +493,18 @@ def test_s_first_red_asset_vault_feature_upload_authority_claim_false(audit_data
 # T. BOT STAGING UPLOAD CONTRACT STATUS (FAIL-CLOSED NO)
 # -----------------------------------------------------------------------------
 def test_t_bot_staging_upload_contract_status(bot_git_repo: Path, audit_data: dict):
-    """Prove Bot at pinned commit lacks /internal/v1/uploads and staging lookup route."""
+    """Prove Bot at pinned D1 commit contains canonical /internal/v1/uploads staging contract."""
     flags = audit_data["flags"]
-    assert flags["BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED"] == "NO"
-    assert flags["BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED"] == "NO"
-    assert flags["SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED"] == "NO"
+    assert flags["BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED"] == "YES"
+    assert flags["BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED"] == "YES"
+    assert flags["SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED"] == "YES"
     assert flags["SECOND_SUBDUB_UPLOAD_AUTHORITY_CREATED"] == "NO"
     assert flags["RAW_BROWSER_PATH_ACCEPTED"] == 0
     assert flags["REMOTE_MEDIA_URL_ACCEPTED"] == 0
 
-    # Pinned Bot commit verification: bot.py does not define /internal/v1/uploads
+    # Pinned Bot D1 commit verification: bot.py defines /internal/v1/uploads
     bot_py = read_bot_git_file(bot_git_repo, "bot.py")
-    assert "/internal/v1/uploads" not in bot_py
+    assert "/internal/v1/uploads" in bot_py
     assert "/internal/v1/voice/profiles" not in bot_py
 
 
