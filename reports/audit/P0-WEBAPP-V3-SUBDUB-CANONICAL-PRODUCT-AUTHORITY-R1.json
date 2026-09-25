@@ -57,8 +57,8 @@
     "STATUS_ONLY_SUCCESS_AUTHORITY": "NO",
     "REAL_ARTIFACT_REQUIRED_FOR_COMPLETION": "YES",
     "FICTIONAL_SUBTITLE_STUDIO_WORKBENCH_DISARMED": "YES",
-    "UNSOURCED_99_5_ASR_BADGE_PRESENT": "YES",
-    "UNSOURCED_TIMELINE_MATCH_BADGE_PRESENT": "YES",
+    "UNSOURCED_99_5_ASR_BADGE_PRESENT": "NO",
+    "UNSOURCED_TIMELINE_MATCH_BADGE_PRESENT": "NO",
     "WEB_STATIC_SUBDUB_PRICE_IS_CANONICAL_AUTHORITY": "NO",
     "SUBDUB_AUTO_WORD_PRICE_SCOPE_RESOLVED": "YES",
     "SUBDUB_PRICING_KEYS_RESOLVED": "YES",
@@ -72,7 +72,7 @@
     "WEB_PROVIDER_VOICE_ID_AUTHORITY": "NO",
     "WEB_REMOTE_MEDIA_URL_AUTHORITY": "NO",
     "SUBDUB_HUB_BUSINESS_INPUT_SURFACE": "NO",
-    "HUB_COMBO_LAUNCHER_MISSING": "YES",
+    "HUB_COMBO_LAUNCHER_MISSING": "NO",
     "WEB_DUBBING_FORM_COMBO_MODE_PRESENT": "YES",
     "BOT_OUTPUT_CAPABILITY_RESOLVED": "YES",
     "WEB_CANONICAL_SUBDUB_RUNTIME_OUTPUT_PROVEN": "NO",
@@ -538,14 +538,14 @@
     "lines": "24887-24890",
     "badges": [
       {
-        "badge": "qualityBadge: '99.5%'",
-        "label": "qualityLabel: 'Độ chính xác ASR'",
-        "status": "UNSOURCED_CLAIM"
+        "badge": "qualityBadge: 'SRT / VTT'",
+        "label": "qualityLabel: 'Định dạng tệp'",
+        "status": "PURGED_AND_RECONCILED"
       },
       {
-        "badge": "safetyBadge: 'Timeline Match'",
-        "label": "safetyLabel: 'Khớp thời gian hoàn hảo'",
-        "status": "UNSOURCED_CLAIM"
+        "badge": "safetyBadge: 'Kiểm định'",
+        "label": "safetyLabel: 'An toàn mốc thời gian'",
+        "status": "PURGED_AND_RECONCILED"
       }
     ]
   },

@@ -13,6 +13,7 @@ PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
 SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 PORTAL_CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+I18N = (ROOT / "static" / "portal" / "portal-i18n.js").read_text(encoding="utf-8")
 
 
 def test_portal_never_offers_download_for_reported_output_metadata() -> None:
@@ -231,8 +232,11 @@ def test_video_music_and_dubbing_forms_forward_the_bot_planning_controls() -> No
     assert 'name: "song_length_mode"' in music_song
     assert "Bắt buộc khi chọn Theo số giây" in music_song
     dubbing = PORTAL[PORTAL.index("dubbing: ["):PORTAL.index("documentPdf:")]
-    assert 'name: "voice_profile_id"' in dubbing
-    assert 'optionsFrom: "voiceProfiles"' in dubbing
+    assert 'name: "mode"' in dubbing
+    assert 'name: "target_language"' in dubbing
+    voice = PORTAL[PORTAL.index("voice: ["):PORTAL.index("voiceSaved:")]
+    assert 'name: "voice_profile_id"' in voice
+    assert 'optionsFrom: "voiceProfiles"' in voice
     assert 'const canonicalVoicePath = path === "/tts" || path === "/dubbing" || canonicalBotVoiceRoute;' in INTEGRATION
     assert 'api("/voice/profiles")' in INTEGRATION
     assert "if (feature === \"music_song\")" in INTEGRATION
@@ -277,7 +281,7 @@ def test_keyboard_forms_and_mobile_navigation_are_accessible() -> None:
     assert "prefers-reduced-motion" in css
     assert 'data-portal-close-menu' in PORTAL
     assert "function setSidebarMenuState(button, opened)" in PORTAL
-    assert 'button.setAttribute("aria-label", opened ? "Đóng điều hướng" : "Mở điều hướng")' in PORTAL
+    assert 'button.setAttribute("aria-label", opened ? uiText("chrome.closeNavigation", "Đóng điều hướng") : uiText("chrome.openNavigation", "Mở điều hướng"))' in PORTAL
     assert "function closeSidebarAboveMobileBreakpoint()" in PORTAL
     assert 'window.addEventListener("resize", closeSidebarAboveMobileBreakpoint);' in PORTAL
     assert 'window.matchMedia("(min-width: 981px)")' in PORTAL
@@ -307,7 +311,7 @@ def test_mobile_workspace_dock_is_signed_session_only_and_navigation_only() -> N
     # represents the complete Workspace family via ``isMobileNavCurrent``.
     # This changes presentation wording only; the fixed route list and
     # navigation-only contract remain intact.
-    for label in ("Trang chủ", "Tạo", "Công việc", "Thư viện", "Tài khoản"):
+    for label in ("Studio", "AutoPost", "Dự án", "Ví Xu", "Tài khoản"):
         assert label in dock
     assert "fetch(" not in dock
     assert "dispatchAction(" not in dock
@@ -452,7 +456,7 @@ def test_hero_never_submits_an_empty_duplicate_feature_form_action() -> None:
 
 
 def test_pending_link_code_hides_duplicate_hero_action_and_requires_confirmation() -> None:
-    assert "const linkPending = page.action === \"start-telegram-link\"" in PORTAL
+    assert 'page && page.action === "start-telegram-link"' in PORTAL
     assert 'onboardingText("replaceCodeConfirm", "Tạo mã mới sẽ hủy mã đang hiển thị.' in PORTAL
     assert 'data-portal-confirm="${safeText(onboardingText("replaceCodeConfirm"' in PORTAL
     # The confirmation branch also clears password fields for the one
@@ -471,7 +475,7 @@ def test_account_uses_scoped_profile_metadata_and_server_side_logout() -> None:
     assert "Hồ sơ & phương thức truy cập" in PORTAL
     assert 'data-portal-action="update-profile"' in PORTAL
     assert 'badge(profileEnabled ? "ready" : "guarded")' in PORTAL
-    assert "Telegram identity, role, Xu, PayOS và provider" in PORTAL
+    assert "Telegram identity, role, Xu, PayOS" in PORTAL
     assert 'data-portal-action="auth-logout"' in PORTAL
     assert '"auth-logout": Boolean(account && me.csrf_token)' in INTEGRATION
     assert 'api("/auth/logout"' in INTEGRATION
@@ -791,7 +795,7 @@ def test_payment_entry_ux_keeps_manual_and_payos_as_isolated_web_actions() -> No
     assert "TICKET_MANUAL_PAYMENT_PROOF_PATTERN" in (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
     assert "SUPPORT_MANUAL_PAYMENT_PROOF_PATTERN" in INTEGRATION
     assert 'api("/payments/options")' in INTEGRATION
-    assert 'if (account && telegramLinked && currentPath === "/wallet/topup") {' in INTEGRATION
+    assert 'if (account && currentPath === "/wallet/topup") {' in INTEGRATION
     assert "await hydratePaymentOptions();" in INTEGRATION
     assert "/api/v1/billing/create-payment-link" not in PORTAL
     assert "/api/v1/billing/create-payment-link" not in INTEGRATION
@@ -909,9 +913,9 @@ def test_admin_route_aliases_use_existing_read_only_bridge_modules() -> None:
     # Providers has a dedicated canonical, redacted read endpoint; it is not
     # widened into a generic module request from the browser.
     assert '"/admin/providers": "/admin/providers"' in INTEGRATION
-    assert "compatibility_guarded" in PORTAL
-    assert "Web không gọi một module Bot chưa công bố" in PORTAL
-    assert '"Worker jobs"' in PORTAL
+    assert "compatibilityGuarded" in PORTAL
+    assert "adminGeneric.access.compatibilityBody" in I18N
+    assert '"worker_jobs"' in PORTAL
     assert 'adminPage("/admin/provider-cost"' in PORTAL
     assert 'adminPage("/admin/freezes"' in PORTAL
     assert 'adminPage("/admin/backups"' in PORTAL
@@ -921,7 +925,7 @@ def test_admin_route_aliases_use_existing_read_only_bridge_modules() -> None:
     assert "const groups = authorized.groups;" in PORTAL
     assert "if (!groups.length) return \"\";" in PORTAL
     assert "renderAdminDirectory(context)" in PORTAL
-    assert "Danh mục Admin ERP" in PORTAL
+    assert "Danh mục phân hệ" in PORTAL
 
 
 def test_failed_job_incidents_are_read_only_and_show_only_redacted_canonical_triage_fields() -> None:
@@ -935,7 +939,7 @@ def test_failed_job_incidents_are_read_only_and_show_only_redacted_canonical_tri
     assert "download_url" not in incident
     assert "provider_task" not in incident
     assert "const incidentReadOnly = module === \"failed-jobs\";" in PORTAL
-    assert "Bot giữ retry/refund/charge" in PORTAL
+    assert "adminGeneric.failedJobs.noticeBody" in I18N
 
 
 def test_content_operations_admin_modules_are_explicit_navigation_not_browser_automation() -> None:
@@ -1251,7 +1255,7 @@ def test_normalized_portal_context_keeps_hydrated_oauth_telegram_and_payment_sta
 def test_account_profile_editor_only_targets_web_owned_defaults() -> None:
     assert 'data-portal-action="update-profile"' in PORTAL
     assert "Tuỳ chỉnh hồ sơ Web" in PORTAL
-    assert "Telegram identity, role, Xu, PayOS và provider" in PORTAL
+    assert "Telegram identity, role, Xu, PayOS" in PORTAL
     assert '"update-profile": Boolean(account && me.csrf_token)' in INTEGRATION
     assert 'api("/auth/profile"' in INTEGRATION
     auth = (ROOT / "copyfast_auth.py").read_text(encoding="utf-8")
@@ -1506,7 +1510,7 @@ def test_dashboard_uses_an_application_workspace_shell_with_owner_scoped_drafts(
     assert 'class="portal-sidebar-create" href="/features"' in PORTAL
     assert 'botCompanionPage("/referrals", "Giới thiệu"' in PORTAL
     assert 'label: "Bot companion"' not in PORTAL
-    assert 'label: "Workspace"' in PORTAL
+    assert 'label: "Sáng tạo"' in PORTAL
     assert '["/workspace", "/dashboard"].includes(currentPath)' in INTEGRATION
     for selector in (".portal-dashboard-overview", ".portal-dashboard-draft", ".portal-sidebar-create"):
         assert selector in PORTAL_CSS

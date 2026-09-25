@@ -21423,7 +21423,6 @@ html:not([data-portal-theme="dark"]) .portal-auth-page--admin .portal-auth-card 
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transform: none;
 }
 
 .portal-auth-page--access .portal-auth-card button,

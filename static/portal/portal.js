@@ -1906,17 +1906,17 @@
   featurePage("/translate", "Dịch nội dung", "Chuẩn bị yêu cầu dịch, giữ nguyên tên thương hiệu và ngôn ngữ mục tiêu.", ICONS.subtitle, FIELD_SETS.subtitleTranslate);
   featurePage("/dubbing", "Lồng tiếng", "Chuẩn bị dubbing với giọng/đích ngôn ngữ do Core Bridge xác minh.", ICONS.subtitle, FIELD_SETS.dubbing);
   featurePage("/asr", "Nhận dạng giọng nói", "Bản nháp ASR chờ output hợp lệ; không tự sinh transcript trong UI.", ICONS.subtitle, FIELD_SETS.subtitleCreate);
-  customerPage("/subtitle/assets", "Subtitle Asset Operations", "Kiểm định hoặc chuyển SRT/VTT private đã có trong Asset Vault; chỉ phát file sau khi server xác minh output.", ICONS.subtitle, {
+  customerPage("/subtitle/assets", "Kiểm định tệp phụ đề", "Kiểm định hoặc chuyển SRT/VTT private đã có trong Asset Vault; chỉ phát file sau khi server xác minh output.", ICONS.subtitle, {
     layout: "subtitle-asset-operations", type: "subtitle-asset-operations", fields: [], action: "none", status: "processing",
     notes: [
       "Chỉ chọn SRT/VTT active thuộc Asset Vault của signed Web account hiện tại. Browser không gửi text, bytes, path, URL, hash hay storage key.",
       "Kiểm định không tạo file. Chuyển đổi chỉ đổi container SRT/VTT và chỉ cho tải attachment private khi server đã kiểm tra lại integrity và semantic cue."
     ]
   });
-  customerPage("/subtitle/formats", "SRT / VTT Format Lab", "Chuyển đổi SRT ↔ VTT hoặc tạo SRT từ text bằng thuật toán Web-native, không cần Bot hay provider.", ICONS.subtitle, {
+  customerPage("/subtitle/formats", "Chuyển đổi định dạng SRT / VTT", "Chuyển đổi SRT ↔ VTT hoặc tạo SRT từ text bằng thuật toán cục bộ trên Web, không cần Bot hay provider.", ICONS.subtitle, {
     layout: "subtitle-format-lab", type: "subtitle-format-lab", fields: [], action: "none", status: "ready",
     notes: [
-      "Format Lab chỉ nhận văn bản bạn dán, chuẩn hóa cue và trả lại plain text để sao chép. Không có chọn file, upload, URL nguồn, media hay delivery.",
+      "Công cụ chuyển đổi định dạng chỉ nhận văn bản bạn dán, chuẩn hóa cue và trả lại plain text để sao chép. Không có chọn file, upload, URL nguồn, media hay delivery.",
       "ASR, dịch máy, TTS, dubbing, provider, Bot, job, Xu và PayOS không nằm trong thao tác này; kết quả không phải transcript được tạo từ media."
     ]
   });
@@ -2038,7 +2038,7 @@
   adminPage("/admin/features", "Feature readiness", "Kiểm tra trạng thái, guarded mode và maintenance của từng feature.", ICONS.system);
   adminPage("/admin/freezes", "Bảo trì & freeze", "Theo dõi maintenance/freeze canonical; thao tác thay đổi vẫn chờ adapter write có audit.", ICONS.system);
   adminPage("/admin/commercial", "Trung tâm Thương mại", "Quản lý tập trung 5 trụ cột thương mại: Sản phẩm, Bảng giá, Gói cước, Khuyến mãi và Gói nạp Xu theo thẩm quyền Bot canonical.", ICONS.pricing, { layout: "admin-commercial" });
-  adminPage("/admin/pricing", "Giá & Xu", "Admin Dynamic Pricing Engine: quản lý catalog giá xuất bản và thay đổi dự thảo có kiểm soát.", ICONS.pricing, { layout: "admin-pricing" });
+  adminPage("/admin/pricing", "Giá & Xu", "Công cụ định giá Admin: quản lý catalog giá xuất bản và thay đổi dự thảo có kiểm soát.", ICONS.pricing, { layout: "admin-pricing" });
   adminPage("/admin/packages", "Packages & Bảng giá", "Quản lý packages và danh mục SKU tích hợp trong Dynamic Pricing Engine.", ICONS.pricing, { layout: "admin-pricing" });
   adminPage("/admin/promos", "Khuyến mãi", "Quản lý promo phải có permission, confirmation và audit event.", ICONS.pricing);
   adminPage("/admin/leads", "CRM Manager Directory", "Directory pipeline đã redacted, chỉ đọc, dành cho Web manager được server xác nhận.", ICONS.support, {
@@ -7968,10 +7968,14 @@
     const rawDraft = source.draft && typeof source.draft === "object" && !Array.isArray(source.draft) ? source.draft : null;
     const draftRecord = normalizeAdminManualTopupRecord(rawDraft);
     const receipt = rawDraft && typeof rawDraft.confirmation_receipt === "string" && /^[A-Za-z0-9_-]{32,160}$/.test(rawDraft.confirmation_receipt) ? rawDraft.confirmation_receipt : "";
-    const action = rawDraft && String(rawDraft.action || "") === "reject" ? "reject" : "";
+    const action = rawDraft && (String(rawDraft.action || "") === "reject" || String(rawDraft.action || "") === "approve") ? String(rawDraft.action) : "";
     const reason = rawDraft && typeof rawDraft.reason === "string" && rawDraft.reason.length <= 300 ? rawDraft.reason : "";
     const expiresAt = rawDraft && typeof rawDraft.expires_at === "string" && rawDraft.expires_at.length <= 64 ? rawDraft.expires_at : "";
-    const draft = draftRecord && receipt && action && reason && expiresAt ? { ...draftRecord, action, confirmation_receipt: receipt, reason, expires_at: expiresAt } : null;
+    const approvedXu = rawDraft && Number.isSafeInteger(rawDraft.approved_xu) && rawDraft.approved_xu >= 0 ? rawDraft.approved_xu : 0;
+    const expectedXu = rawDraft && Number.isSafeInteger(rawDraft.expected_xu) && rawDraft.expected_xu >= 0 ? rawDraft.expected_xu : 0;
+    const draft = draftRecord && receipt && action && (action === "approve" || reason) && expiresAt
+      ? { ...draftRecord, action, confirmation_receipt: receipt, reason, expires_at: expiresAt, approved_xu: approvedXu, expected_xu: expectedXu }
+      : null;
     return {
       readState: ["loading", "ready", "empty", "guarded", "failed"].includes(String(source.readState || "")) ? String(source.readState) : "guarded",
       filterStatus: ["pending", "approved", "rejected"].includes(String(source.filterStatus || "")) ? String(source.filterStatus) : "pending",
@@ -24727,7 +24731,7 @@
       ],
       workflowGroups: [
         {
-          title: "Biên tập & Hoàn thiện (Web-native)",
+          title: "Biên tập & Hoàn thiện (Cục bộ trên Web)",
           text: "Các công cụ xử lý MP4 trực tiếp trên Asset Vault đã sẵn sàng hoạt động.",
           items: [
             { title: "Video Finishing Lab", text: "Đổi tỷ lệ khung hình, chuẩn hóa độ phân giải và hoàn thiện MP4 có kiểm chứng.", href: "/video/finishing", icon: ICONS.video, status: "ready" },
@@ -24737,7 +24741,7 @@
           ]
         },
         {
-          title: "Sản xuất video AI (Bot Companion)",
+          title: "Sản xuất video AI (Bot điều phối)",
           text: "Các workflow sinh video AI diện rộng do Bot/Core-Bridge canonical quản lý.",
           items: [
             { title: "Video Studio Pro", text: "Lập brief, scene plan, timeline và storyboard chi tiết để review nội bộ.", href: "/video-studio", icon: ICONS.video, status: "ready" },
@@ -24776,7 +24780,7 @@
       ],
       workflowGroups: [
         {
-          title: "Xử lý & Biên tập ảnh (Web-native)",
+          title: "Xử lý & Biên tập ảnh (Cục bộ trên Web)",
           text: "Các công cụ xử lý ảnh deterministic trên Asset Vault đã sẵn sàng hoạt động.",
           items: [
             { title: "Image Enhance Studio", text: "Cân chỉnh màu sắc, độ tương phản và độ nét chuẩn xác.", href: "/image/edit", icon: ICONS.image, status: "ready" },
@@ -24788,7 +24792,7 @@
           ]
         },
         {
-          title: "Sáng tạo & Tạo ảnh AI (Bot Companion)",
+          title: "Sáng tạo & Tạo ảnh AI (Bot điều phối)",
           text: "Quy trình tạo ảnh AI do Bot / Core Bridge kiểm soát.",
           items: [
             { title: "Image Studio", text: "Workspace quản lý dự án ảnh, artboard và concept nghệ thuật riêng tư.", href: "/image-studio", icon: ICONS.image, status: "ready" },
@@ -24822,7 +24826,7 @@
       ],
       workflowGroups: [
         {
-          title: "Kịch bản & Định hướng (Web-native)",
+          title: "Kịch bản & Định hướng (Cục bộ trên Web)",
           text: "Các công cụ xây dựng profile và kịch bản lồng tiếng đã sẵn sàng hoạt động.",
           items: [
             { title: "Voice Studio", text: "Quản lý profile giọng đọc, kịch bản phân vai và hướng dẫn ngữ điệu.", href: "/voice-studio", icon: ICONS.voice, status: "ready" },
@@ -24831,7 +24835,7 @@
           ]
         },
         {
-          title: "Tổng hợp giọng nói & TTS (Bot Companion)",
+          title: "Tổng hợp giọng nói & TTS (Bot điều phối)",
           text: "Các tác vụ sinh âm thanh TTS và Clone do Core Bridge quản lý.",
           items: [
             { title: "Text-to-Speech", text: "Chờ adapter Bot/Core-Bridge canonical; chưa có runtime audio TTS trực tiếp trong browser.", href: "/voice/tts", icon: ICONS.voice, status: "guarded" },
@@ -24867,7 +24871,7 @@
       ],
       workflowGroups: [
         {
-          title: "Xử lý & Quản lý âm thanh (Web-native)",
+          title: "Xử lý & Quản lý âm thanh (Cục bộ trên Web)",
           text: "Các tiện ích xử lý audio private và quản lý bộ sưu tập đã sẵn sàng hoạt động.",
           items: [
             { title: "Audio Asset Operations", text: "Kiểm định định dạng, chuyển đổi bitrate và chuẩn hóa âm lượng MP3/M4A.", href: "/audio/assets", icon: ICONS.music, status: "ready" },
@@ -24876,7 +24880,7 @@
           ]
         },
         {
-          title: "Sáng tác âm nhạc AI (Bot Companion)",
+          title: "Sáng tác âm nhạc AI (Bot điều phối)",
           text: "Các workflow sinh nhạc và ca khúc do Bot canonical điều phối.",
           items: [
             { title: "Tạo nhạc nền AI", text: "Chờ adapter Bot canonical; browser không sinh nhạc AI giả.", href: "/music/create", icon: ICONS.music, status: "guarded" },
@@ -24897,36 +24901,37 @@
       heading: "Trung tâm phụ đề thông minh & lồng tiếng đa ngôn ngữ",
       subtext: "Chuyển đổi định dạng SRT/VTT, kiểm định tệp phụ đề, quản lý transcript và kết nối dịch thuật video.",
       stats: {
-        toolsCount: 7,
+        toolsCount: 8,
         toolsLabel: "Công cụ Sub & Dub",
-        qualityBadge: "99.5%",
-        qualityLabel: "Độ chính xác ASR",
-        safetyBadge: "Timeline Match",
-        safetyLabel: "Khớp thời gian hoàn hảo"
+        qualityBadge: "SRT / VTT",
+        qualityLabel: "Định dạng tệp",
+        safetyBadge: "Kiểm định",
+        safetyLabel: "An toàn mốc thời gian"
       },
       quickActions: [
-        { title: "SRT / VTT Format Lab (Chuyển đổi & Chuẩn hóa)", text: "Chuyển đổi SRT ↔ VTT hoặc tạo SRT từ text bằng thuật toán Web-native tức thì.", href: "/subtitle/formats", primary: true },
-        { title: "Subtitle Asset Operations (Kiểm định tệp)", text: "Kiểm định hoặc chuyển đổi container SRT/VTT private trong Asset Vault.", href: "/subtitle/assets" },
-        { title: "Subtitle Studio Workspace (Biên tập timeline)", text: "Tổ chức transcript project, cue timeline và self-review riêng tư.", href: "/subtitle-studio" }
+        { title: "Chuyển đổi định dạng SRT / VTT (Chuẩn hóa tệp)", text: "Chuyển đổi SRT ↔ VTT hoặc tạo SRT từ text bằng thuật toán cục bộ tức thì.", href: "/subtitle/formats", primary: true },
+        { title: "Kiểm định tệp phụ đề (Thao tác tệp)", text: "Kiểm định hoặc chuyển đổi container SRT/VTT private trong Asset Vault.", href: "/subtitle/assets" },
+        { title: "Không gian biên tập phụ đề (Biên tập mốc thời gian)", text: "Tổ chức transcript project, cue timeline và self-review riêng tư.", href: "/subtitle-studio" }
       ],
       workflowGroups: [
         {
-          title: "Biên tập & Công cụ phụ đề (Web-native)",
+          title: "Biên tập & Công cụ phụ đề (Cục bộ trên Web)",
           text: "Các công cụ xử lý file phụ đề SRT/VTT và biên tập transcript đã sẵn sàng hoạt động.",
           items: [
-            { title: "SRT / VTT Format Lab", text: "Chuyển đổi qua lại giữa định dạng SRT và VTT không phụ thuộc server.", href: "/subtitle/formats", icon: ICONS.subtitle, status: "ready" },
-            { title: "Subtitle Asset Operations", text: "Kiểm định cú pháp, sửa lỗi mốc thời gian và chuẩn hóa file phụ đề.", href: "/subtitle/assets", icon: ICONS.subtitle, status: "ready" },
-            { title: "Subtitle Studio Workspace", text: "Không gian chỉnh sửa cue timeline, phân câu và rà soát transcript.", href: "/subtitle-studio", icon: ICONS.subtitle, status: "ready" }
+            { title: "Chuyển đổi định dạng SRT / VTT", text: "Chuyển đổi qua lại giữa định dạng SRT và VTT không phụ thuộc server.", href: "/subtitle/formats", icon: ICONS.subtitle, status: "ready" },
+            { title: "Kiểm định tệp phụ đề", text: "Kiểm định cú pháp, sửa lỗi mốc thời gian và chuẩn hóa file phụ đề.", href: "/subtitle/assets", icon: ICONS.subtitle, status: "ready" },
+            { title: "Không gian biên tập phụ đề", text: "Không gian chỉnh sửa cue timeline, phân câu và rà soát transcript.", href: "/subtitle-studio", icon: ICONS.subtitle, status: "ready" }
           ]
         },
         {
-          title: "Nhận diện & Lồng tiếng AI (Bot Companion)",
+          title: "Nhận diện & Lồng tiếng AI (Bot điều phối)",
           text: "Các tác vụ ASR, dịch thuật và dubbing do Core Bridge điều phối.",
           items: [
-            { title: "Tạo phụ đề (ASR)", text: "Chờ adapter Bot ASR; browser không giả lập transcript từ media.", href: "/subtitle/create", icon: ICONS.subtitle, status: "guarded" },
-            { title: "AI Video Dubbing", text: "Chờ adapter Bot Dubbing; browser không lồng tiếng giả.", href: "/dubbing", icon: ICONS.subtitle, status: "guarded" },
+            { title: "Tạo phụ đề tự động (ASR)", text: "Chờ adapter Bot ASR; browser không giả lập transcript từ media.", href: "/subtitle/create", icon: ICONS.subtitle, status: "guarded" },
             { title: "Dịch phụ đề đa ngữ", text: "Chờ adapter Bot Translation có ngữ cảnh.", href: "/translate", icon: ICONS.subtitle, status: "guarded" },
-            { title: "ASR Engine", text: "Chờ adapter Bot ASR; trích xuất transcript chính xác.", href: "/asr", icon: ICONS.subtitle, status: "guarded" }
+            { title: "Lồng tiếng video AI", text: "Chờ adapter Bot Dubbing; browser không lồng tiếng giả.", href: "/dubbing", icon: ICONS.subtitle, status: "guarded" },
+            { title: "Phụ đề & Lồng tiếng (Combo)", text: "Chờ adapter Bot Subtitle+Dubbing; kết hợp tạo phụ đề và lồng tiếng.", href: "/dubbing?mode=subtitle_plus_dubbing", icon: ICONS.subtitle, status: "guarded" },
+            { title: "Nhận dạng giọng nói (ASR)", text: "Chờ adapter Bot ASR; trích xuất transcript chính xác.", href: "/asr", icon: ICONS.subtitle, status: "guarded" }
           ]
         }
       ],
@@ -29200,7 +29205,9 @@
     const oauthHandoff = (!isAdminLogin && oauthReason && oauthReason !== "unavailable" && oauthMessages[oauthReason])
       ? `<div class="portal-notice${["linked", "already-linked"].includes(oauthReason) ? " portal-notice--info" : ""}"><span class="portal-notice-icon" aria-hidden="true">${["linked", "already-linked"].includes(oauthReason) ? "✓" : "i"}</span><div><strong>${safeText(accessText("oauth.title", "OAuth"))}</strong><p>${safeText(oauthMessages[oauthReason])}</p></div></div>`
       : "";
-    const registerSetup = "";
+    const registerSetup = page.path === "/register"
+      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Hồ sơ mặc định sau khi tạo</strong><p>Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient. Email + mật khẩu (có thể dùng Gmail) đang hoạt động. Telegram dùng xác minh một lần qua bot. Không nhập ID Telegram thô. Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật.</p></div></div>`
+      : "";
     const rawMfaFlow = context.mfaLoginFlow && typeof context.mfaLoginFlow === "object" ? context.mfaLoginFlow : {};
     const mfaChallengeId = String(rawMfaFlow.challenge_id || "").trim().toLowerCase();
     const mfaChallengeToken = String(rawMfaFlow.challenge_token || "").trim();

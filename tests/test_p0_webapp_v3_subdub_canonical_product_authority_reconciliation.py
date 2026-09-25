@@ -238,11 +238,11 @@ def test_d_subdub_hub_has_no_business_input_form(portal_js_source: str, audit_da
 
 
 # -----------------------------------------------------------------------------
-# E & F. HUB LACKS COMBO LAUNCHER BUT DUBBING FORM HAS SUBTITLE_PLUS_DUBBING
+# E & F. HUB HAS COMBO LAUNCHER AND DUBBING FORM HAS SUBTITLE_PLUS_DUBBING
 # -----------------------------------------------------------------------------
 def test_e_and_f_combo_differentiation(portal_js_source: str, audit_data: dict):
-    """Prove /subdub Hub lacks an explicit Combo launcher, while the /dubbing form DOES contain subtitle_plus_dubbing."""
-    assert audit_data["flags"]["HUB_COMBO_LAUNCHER_MISSING"] == "YES"
+    """Prove /subdub Hub exposes Combo launcher, and the /dubbing form DOES contain subtitle_plus_dubbing."""
+    assert audit_data["flags"]["HUB_COMBO_LAUNCHER_MISSING"] == "NO"
     assert audit_data["flags"]["WEB_DUBBING_FORM_COMBO_MODE_PRESENT"] == "YES"
 
     # Hub workflow items in renderSubDubHub
@@ -253,8 +253,7 @@ def test_e_and_f_combo_differentiation(portal_js_source: str, audit_data: dict):
     assert '"/dubbing"' in hub_body
     assert '"/translate"' in hub_body
     assert '"/asr"' in hub_body
-    assert "subtitle_plus_dub" not in hub_body
-    assert "subdub_combo" not in hub_body
+    assert "subtitle_plus_dubbing" in hub_body
 
     # The dubbing form contains subtitle_plus_dubbing in mode options
     dub_match = re.search(r"dubbing:\s*\[(.*?)\n\s*\]\s*,\s*\n\s*(?://|documentPdf:)", portal_js_source, re.DOTALL)
@@ -284,17 +283,17 @@ def test_g_h_i_fictional_subtitle_studio_workbench(portal_js_source: str, audit_
 
 
 # -----------------------------------------------------------------------------
-# J & K. UNSOURCED 99.5% ASR AND TIMELINE MATCH CLAIMS
+# J & K. UNSOURCED 99.5% ASR AND TIMELINE MATCH CLAIMS PURGED
 # -----------------------------------------------------------------------------
 def test_j_and_k_unsourced_marketing_claims(portal_js_source: str, audit_data: dict):
-    """Prove unbacked marketing claims are hardcoded in renderSubDubHub."""
-    assert audit_data["flags"]["UNSOURCED_99_5_ASR_BADGE_PRESENT"] == "YES"
-    assert audit_data["flags"]["UNSOURCED_TIMELINE_MATCH_BADGE_PRESENT"] == "YES"
+    """Prove unbacked marketing claims are purged and replaced with truthful technical capabilities in renderSubDubHub."""
+    assert audit_data["flags"]["UNSOURCED_99_5_ASR_BADGE_PRESENT"] == "NO"
+    assert audit_data["flags"]["UNSOURCED_TIMELINE_MATCH_BADGE_PRESENT"] == "NO"
 
-    assert 'qualityBadge: "99.5%"' in portal_js_source
-    assert 'qualityLabel: "Độ chính xác ASR"' in portal_js_source
-    assert 'safetyBadge: "Timeline Match"' in portal_js_source
-    assert 'safetyLabel: "Khớp thời gian hoàn hảo"' in portal_js_source
+    assert 'qualityBadge: "99.5%"' not in portal_js_source
+    assert 'safetyBadge: "Timeline Match"' not in portal_js_source
+    assert 'qualityBadge: "SRT / VTT"' in portal_js_source
+    assert 'safetyBadge: "Kiểm định"' in portal_js_source
 
 
 # -----------------------------------------------------------------------------
