@@ -750,24 +750,17 @@
       { name: "notes", label: "Ghi chú dùng nhạc", control: "textarea", placeholder: "Ví dụ: chỉ dùng làm nhạc nền, cần loop…" }
     ],
     subtitleCreate: [
-      { name: "source", label: "Tệp audio / video nguồn", type: "file", accept: "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm", requiredUpload: true, help: "Core Bridge kiểm tra ownership, MIME và kích thước trước khi nhận tệp; không tự sinh transcript." },
-      { name: "duration_seconds", label: "Thời lượng (giây)", type: "number", placeholder: "Ví dụ: 75", help: "Dùng cho estimate canonical; bot áp dụng mức tối thiểu theo phút.", required: true, min: 1, max: 14_400, step: 1, inputMode: "numeric" },
-      { name: "output_format", label: "Định dạng phụ đề", control: "select", options: ["srt"], help: "SRT là định dạng output currently mapped. VTT vẫn được giữ guarded cho tới khi Bot adapter xác nhận delivery riêng." }
+      { name: "source", label: "Tệp audio / video nguồn", type: "file", accept: "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm", requiredUpload: true, help: "Core Bridge kiểm tra ownership, MIME và kích thước trước khi nhận tệp; không tự sinh transcript." }
     ],
     subtitleTranslate: [
       { name: "source", label: "Nguồn SRT/VTT/TXT hoặc audio/video", type: "file", accept: ".srt,.vtt,.txt,text/plain,text/vtt,application/x-subrip,audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm", requiredUpload: true, help: "Bridge nhận tệp thuộc sở hữu bạn; không tạo bản dịch giả trong browser." },
-      { name: "target_language", label: "Ngôn ngữ đích", control: "select", options: LANGUAGE_OPTIONS, emptyLabel: "Chọn ngôn ngữ canonical", required: true },
-      { name: "duration_seconds", label: "Thời lượng (giây)", type: "number", placeholder: "Ví dụ: 75", required: true, min: 1, max: 14_400, step: 1, inputMode: "numeric" },
-      { name: "output_format", label: "Định dạng xuất", control: "select", options: ["srt"], help: "VTT chưa có delivery adapter canonical được xác nhận; không hứa output VTT ở Web." }
+      { name: "target_language", label: "Ngôn ngữ đích", control: "select", options: LANGUAGE_OPTIONS, emptyLabel: "Chọn ngôn ngữ canonical", required: true }
     ],
     dubbing: [
       { name: "source", label: "Tệp audio / video nguồn", type: "file", accept: "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm", requiredUpload: true, help: "Tệp cần qua staging canonical trước khi bot báo giá hoặc quyết định khả năng xử lý." },
-      { name: "mode", label: "Workflow", control: "select", options: ["dubbing", "subtitle_plus_dubbing"], help: "Chọn rõ lồng tiếng hoặc phụ đề + lồng tiếng; bridge dùng mode canonical của bot." },
+      { name: "mode", label: "Loại tác vụ lồng tiếng", control: "select", options: [{ value: "dubbing", label: "Lồng tiếng" }, { value: "subtitle_plus_dubbing", label: "Phụ đề & Lồng tiếng" }], help: "Chọn rõ lồng tiếng độc lập hoặc kết hợp tạo phụ đề và lồng tiếng theo chuẩn Bot canonical." },
       { name: "target_language", label: "Ngôn ngữ đích", control: "select", options: LANGUAGE_OPTIONS, emptyLabel: "Chọn ngôn ngữ canonical", required: true },
-      { name: "voice_profile_id", label: "Giọng từ Voice Vault (tuỳ chọn)", control: "select", optionsFrom: "voiceProfiles", emptyLabel: "Dùng giọng mặc định do bot chọn", help: "Chỉ profile thuộc tài khoản và sẵn sàng TTS mới xuất hiện. Browser gửi ID canonical, không gửi provider voice ID hoặc tên giọng tự do." },
-      { name: "speed", label: "Tốc độ đọc", control: "select", options: [{ value: "1.0", label: "Bình thường (1.0×)" }, { value: "0.9", label: "Chậm (0.9×)" }, { value: "1.5", label: "Nhanh (1.5×)" }], help: "Bot canonical chỉ nhận tốc độ số từ 0.7× đến 1.8× cho dubbing." },
-      { name: "duration_seconds", label: "Thời lượng (giây)", type: "number", placeholder: "Ví dụ: 75", required: true, min: 1, max: 14_400, step: 1, inputMode: "numeric" },
-      { name: "output_format", label: "Định dạng phụ đề", control: "select", options: ["srt"], help: "VTT đang guarded cho tới khi canonical delivery adapter xác nhận." }
+      { name: "speed", label: "Tốc độ đọc", control: "select", options: [{ value: "1.0", label: "Bình thường (1.0×)" }, { value: "0.9", label: "Chậm (0.9×)" }, { value: "1.5", label: "Nhanh (1.5×)" }], help: "Bot canonical chỉ nhận tốc độ số từ 0.7× đến 1.8× cho dubbing." }
     ],
     // PDF utility routes now use owner-scoped Asset Vault sources and their
     // own server contracts. Keep this empty legacy field set so no generic
@@ -9536,7 +9529,21 @@
   }
 
   function subtitleAssetOperationsReadBadge(value) {
-    return "";
+    const readState = ["loading", "ready", "failed", "guarded"].includes(String(value || ""))
+      ? String(value) : "guarded";
+    const presentation = {
+      loading: { status: "read_only", label: "Đang tải metadata private" },
+      ready: { status: "ready", label: "Sẵn sàng" },
+      failed: { status: "failed", label: "Chưa tải được metadata" },
+      guarded: { status: "guarded", label: "Đang bảo vệ" }
+    }[readState];
+    return `<span class="portal-badge" data-status="${presentation.status}">${safeText(presentation.label)}</span>`;
+  }
+
+  function pageStatusBadge(page, context) {
+    const route = String((page && (page.routePath || page.path)) || "").split("?")[0];
+    if (route === "/subtitle/assets") return subtitleAssetOperationsReadBadge(context && context.subtitleAssetOperationsReadState);
+    return badge(stateFor(page, context));
   }
 
   function audioAssetOperationsReadBadge(value) {
@@ -9744,9 +9751,15 @@
     "Image Operations Hub": "shellNav.imageOperationsHub",
     "Image Studio": "shellNav.imageStudio",
     "Document Workspace": "shellNav.documentWorkspace",
+    "Không gian biên tập phụ đề": "shellNav.subtitleStudio",
+    "Kiểm định tệp phụ đề": "shellNav.subtitleAssetOps",
+    "Chuẩn hóa & chuyển đổi SRT/VTT": "shellNav.subtitleFormatLab",
+    "Trung tâm Phụ đề & Lồng tiếng": "shellNav.subdubHub",
     "Subtitle Studio": "shellNav.subtitleStudio",
     "Subtitle Asset Operations": "shellNav.subtitleAssetOps",
     "SRT/VTT Lab": "shellNav.subtitleFormatLab",
+    "Sub & Dub Operations Hub": "shellNav.subdubHub",
+    "Subtitles & Dubbing Center": "shellNav.subdubHub",
     "Voice Studio": "shellNav.voiceStudio",
     "Voice Direction Composer": "shellNav.voiceDirectionComposer",
     "Audio Library": "shellNav.audioLibrary",
@@ -18994,12 +19007,13 @@
 
   function renderSubtitleFormatLab(page, context) {
     const canConvert = Boolean(context.capabilities && context.capabilities["subtitle-format-convert"] === true);
+    const isEn = context && context.locale === "en";
     const result = context.subtitleFormatResult && typeof context.subtitleFormatResult === "object" ? context.subtitleFormatResult : {};
     const hasResult = typeof result.text === "string" && result.text.length > 0;
     const defaultValues = { mode: "srt_to_vtt", duration_seconds: "0" };
     const resultMarkup = hasResult ? `<section class="portal-card portal-card-pad portal-subtitle-format-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Text transform receipt</span><h2 class="portal-card-title">Kết quả đã chuẩn hóa</h2><p class="portal-card-subtitle">${safeText(subtitleFormatModeLabel(result.mode))} · ${safeText(String(result.cue_count || 0))} cues · ${safeText(String(result.format || "srt").toUpperCase())}. Đây là plain text để sao chép, không phải file hay delivery.</p></div>${badge("read_only")}</div><textarea class="portal-subtitle-format-output" readonly aria-label="Kết quả SRT/VTT đã chuẩn hóa">${safeText(result.text)}</textarea><p class="portal-form-note">Không có job, thanh toán, output media hoặc trạng thái delivery nào được tạo từ kết quả này.</p></section>` : `<section class="portal-card portal-card-pad portal-subtitle-format-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Text-only result</span><h2 class="portal-card-title">Chưa có văn bản đã chuẩn hóa</h2><p class="portal-card-subtitle">Dán nội dung và chạy chuyển đổi để nhận plain text ở đây. Browser không tự tạo SRT/VTT trước khi server xác nhận.</p></div>${badge("empty")}</div></section>`;
     return `<article class="portal-page portal-subtitle-format-lab">${renderHero(page, context)}
-      <section class="portal-subtitle-format-lab-intro"><div><span class="portal-section-kicker">Web-native deterministic tool</span><h2>Chuẩn hóa caption text, không giả media output.</h2><p>Format Lab chuyển đổi định dạng cue bằng thuật toán cục bộ trên server. Nó không nghe video/audio, không dịch, không đọc provider và không tạo tệp.</p></div><dl><div><dt>SRT</dt><dd>Numbered cues · comma timing</dd></div><div><dt>VTT</dt><dd>WEBVTT · dot timing</dd></div><div><dt>Text</dt><dd>12 words per cue</dd></div></dl></section>
+      <section class="portal-subtitle-format-lab-intro"><div><span class="portal-section-kicker">${isEn ? "Web-native deterministic tool" : "Công cụ xác định Web-native"}</span><h2>Chuẩn hóa caption text, không giả media output.</h2><p>Format Lab chuyển đổi định dạng cue bằng thuật toán cục bộ trên server. Nó không nghe video/audio, không dịch, không đọc provider và không tạo tệp.</p></div><dl><div><dt>SRT</dt><dd>Numbered cues · comma timing</dd></div><div><dt>VTT</dt><dd>WEBVTT · dot timing</dd></div><div><dt>Text</dt><dd>12 words per cue</dd></div></dl></section>
       <div class="portal-subtitle-format-lab-layout"><section class="portal-card portal-card-pad portal-subtitle-format-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Format converter</span><h2 class="portal-card-title">Dán text để chuyển đổi</h2><p class="portal-card-subtitle">Session và CSRF được server kiểm tra trước khi xử lý. Nội dung không được lưu thành project, asset, job hoặc audit detail.</p></div>${badge(canConvert ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="subtitle-format-convert" data-portal-route="/subtitle/formats" novalidate>${renderFields(subtitleFormatLabFields(), canConvert, context, defaultValues, "subtitle-format-lab")}<div class="portal-form-footer"><span class="portal-form-note">Không nhập secret, mã thanh toán hoặc nội dung không có quyền sử dụng. SRT/VTT metadata và style không được giữ lại.</span><button class="portal-button portal-button--primary" type="submit"${canConvert ? "" : " disabled"}>Chuyển đổi văn bản</button></div></form></section><aside class="portal-card portal-card-pad portal-subtitle-format-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Không gọi engine bên ngoài</h2><p class="portal-card-subtitle">Module này chỉ parse và render text. Với media, ASR, dịch, TTS hoặc dubbing, dùng workflow guarded có contract riêng.</p></div>${badge("guarded")}</div><div class="portal-subtitle-studio-guard-list"><span><strong>Media / upload</strong><em>off</em></span><span><strong>Provider / Bot</strong><em>off</em></span><span><strong>Job / payment</strong><em>off</em></span><span><strong>File delivery</strong><em>off</em></span></div></aside></div>
       ${resultMarkup}
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Đúng việc của Format Lab</h2><p class="portal-card-subtitle">Sử dụng kết quả để review hoặc dán vào công cụ khác; nếu cần file media hoặc transcript từ audio/video, trang sẽ giữ guarded cho đến khi engine có contract riêng.</p></div></div>${renderNotes(page)}</section>
@@ -20016,19 +20030,20 @@
       intent: isTranslationIntake ? "translation" : (draft.intent || newProjectIntent),
       caption_format: draft.caption_format || "srt",
       source_mode: draft.source_mode || "manual"
-    }, true, { translationPreset: isTranslationIntake, translationPair });
+    });
+    const isEn = context && context.locale === "en";
     return `<article class="portal-page portal-subtitle-studio">${renderHero(page, context)}
-      <section class="portal-subtitle-studio-intro"><div><span class="portal-section-kicker">Web-native subtitle authoring</span><h2>Biên tập transcript và caption có cấu trúc, dễ review.</h2><p>Tổ chức cue, timing, bản nháp ngôn ngữ và self-review trong không gian riêng tư. Đây là dữ liệu biên tập, không phải kết quả ASR, dịch, TTS, dubbing hay file xuất.</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>Transcript projects</dd></div><div><dt>${safeText(String(review))}</dt><dd>Đang review</dd></div><div><dt>${safeText(String(approved))}</dt><dd>Self-review xong</dd></div></dl></section>
+      <section class="portal-subtitle-studio-intro"><div><span class="portal-section-kicker">${isEn ? "Web-native subtitle authoring" : "Biên tập phụ đề Web-native"}</span><h2>${isEn ? "Structured transcript and caption editing, ready for review." : "Biên tập transcript và caption có cấu trúc, dễ review."}</h2><p>${isEn ? "Organize cues, timing, language drafts, and self-review in a private workspace. This is authoring metadata, not ASR, translation, TTS, dubbing, or export files." : "Tổ chức cue, timing, bản nháp ngôn ngữ và self-review trong không gian riêng tư. Đây là dữ liệu biên tập, không phải kết quả ASR, dịch, TTS, dubbing hay file xuất."}</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>${isEn ? "Subtitle projects" : "Dự án phụ đề"}</dd></div><div><dt>${safeText(String(review))}</dt><dd>${isEn ? "In review" : "Đang review"}</dd></div><div><dt>${safeText(String(approved))}</dt><dd>${isEn ? "Self-reviewed" : "Self-review xong"}</dd></div></dl></section>
       <div class="portal-interactive-subdub-workbench" style="margin-bottom: 24px;">
         <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,78,59,0.2)); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:18px 24px; margin-bottom:18px;">
           <div>
-            <span class="portal-badge" data-status="ready">🟢 Neural SubDub Engine Sẵn Sàng</span>
-            <h2 style="margin:6px 0 4px; font-size:20px; color:#f8fafc;">🎙️ AI SubDub Studio — Tạo Phụ Đề & Lồng Tiếng Chuyên Nghiệp</h2>
-            <p style="margin:0; font-size:13px; color:#94a3b8;">Bóc băng tự động (ASR), Dịch thuật ngữ cảnh đa ngôn ngữ, Lồng tiếng AI truyền cảm và Xuất phụ đề SRT/VTT/Hardsub TikTok.</p>
+            <span class="portal-badge" data-status="guarded">${isEn ? "SubDub runtime is not fully activated" : "Runtime SubDub chưa được kích hoạt đầy đủ"}</span>
+            <h2 style="margin:6px 0 4px; font-size:20px; color:#f8fafc;">🎙️ ${isEn ? "AI SubDub Studio — Subtitle Authoring & Preview" : "AI SubDub Studio — Không gian biên tập phụ đề & xem trước"}</h2>
+            <p style="margin:0; font-size:13px; color:#94a3b8;">${isEn ? "Structured transcript authoring, cue timing preview, and self-review. Canonical ASR and dubbing are governed by Bot authority." : "Biên tập transcript có cấu trúc, xem trước timing và tự rà soát. Luồng ASR và lồng tiếng chuẩn do Bot thẩm quyền điều phối."}</p>
           </div>
           <div>
             <a href="/studio" class="portal-button portal-button--primary" style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #10b981, #059669); color:#fff; font-weight:700; border-radius:10px; text-decoration:none; padding:10px 18px; min-height:42px;">
-              🎬 Mở Toàn Bộ Studio Pro
+              🎬 ${isEn ? "Open Studio Pro" : "Mở Toàn Bộ Studio Pro"}
             </a>
           </div>
         </div>
@@ -20037,12 +20052,12 @@
           <!-- Panel Form Cấu Hình -->
           <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
             <h3 style="margin-top:0; font-size:15px; color:#10b981; display:flex; align-items:center; gap:8px;">
-              <span>1. Tải Lên Media & Cấu Hình Ngôn Ngữ</span>
+              <span>1. ${isEn ? "Media Reference & Language Config" : "Tải Lên Media & Cấu Hình Ngôn Ngữ"}</span>
             </h3>
             <div class="portal-fields" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
               <label class="portal-field">
-                <span>Dán Link Video (YouTube / TikTok / Facebook) hoặc Tải File</span>
-                <input class="portal-input" type="text" placeholder="https://www.tiktok.com/@user/video/..." value="https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4">
+                <span>${isEn ? "Media reference (Asset Vault / Canonical)" : "Dán Link Video (YouTube / TikTok / Facebook) hoặc Tải File"}</span>
+                <input class="portal-input" type="text" placeholder="${isEn ? "Enter media reference or select from Asset Vault" : "Dán link video tham chiếu hoặc chọn từ Asset Vault"}" value="">
               </label>
               <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                 <label class="portal-field">
@@ -20089,8 +20104,8 @@
               </label>
             </div>
             <div style="margin-top:14px;">
-              <button type="button" class="portal-button portal-button--primary" style="width:100%; min-height:44px; font-weight:700; background:linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; border-radius:10px; cursor:pointer;" onclick="alert('Đã kích hoạt render SubDub AI! Video & Phụ đề đang được đồng bộ.')">
-                🚀 BẮT ĐẦU TẠO PHỤ ĐỀ & LỒNG TIẾNG AI (-15 Xu)
+              <button class="portal-button portal-button--primary" type="button" disabled style="width:100%; min-height:44px; font-weight:700; opacity:0.7; cursor:not-allowed;">
+                ${isEn ? "SubDub AI rendering is guarded" : "Chức năng render SubDub AI đang ở chế độ bảo vệ"}
               </button>
             </div>
           </div>
@@ -20103,8 +20118,8 @@
                 <small style="color:#94a3b8;">Xem trước realtime, sửa câu thoại trực tiếp</small>
               </div>
               <div style="display:flex; gap:6px;">
-                <button type="button" class="portal-button portal-button--quiet" style="font-size:11px; padding:4px 10px; border-radius:6px;" onclick="alert('Đang tải file phụ đề .SRT')">⬇️ Tải .SRT</button>
-                <button type="button" class="portal-button portal-button--primary" style="font-size:11px; padding:4px 10px; border-radius:6px; background:#0284c7; color:#fff;" onclick="alert('Đang tải video hoàn chỉnh đã lồng tiếng.')">⬇️ Tải Video</button>
+                <button class="portal-button portal-button--quiet" type="button" disabled style="font-size:11px; padding:4px 10px; border-radius:6px; opacity:0.6; cursor:not-allowed;">${isEn ? "Export SRT (guarded)" : "Xuất SRT (đang bảo vệ)"}</button>
+                <button class="portal-button portal-button--primary" type="button" disabled style="font-size:11px; padding:4px 10px; border-radius:6px; opacity:0.6; cursor:not-allowed;">${isEn ? "Export Video (guarded)" : "Xuất Video (đang bảo vệ)"}</button>
               </div>
             </div>
             <div style="position:relative; width:100%; height:140px; background:#000; border-radius:10px; overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:10px; border:1px solid rgba(255,255,255,0.1);">
