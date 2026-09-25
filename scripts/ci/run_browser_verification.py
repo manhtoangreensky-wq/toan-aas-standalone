@@ -29,6 +29,8 @@ import sys
 import tempfile
 import time
 import urllib.request
+import uuid
+from typing import NamedTuple
 
 import websockets
 
@@ -95,6 +97,165 @@ def get_head_sha() -> str:
         return out.decode().strip()
     except Exception:
         return "UNKNOWN_HEAD_SHA"
+
+
+MAX_CHROME_START_ATTEMPTS = 2
+CHROME_CDP_POLL_TIMEOUT_SEC = 25.0
+CHROME_CDP_POLL_INTERVAL_SEC = 0.4
+MAX_STDERR_TAIL_CHARS = 2000
+
+
+class ChromeLaunchResult(NamedTuple):
+    proc: subprocess.Popen
+    port: int
+    ws_url: str
+    attempts: int
+    profile_dir: Path
+    stderr_log_path: Path
+
+
+def launch_headless_chrome(
+    chrome_path: str,
+    tmp_dir: Path,
+    custom_cdp_port: int | None = None,
+    max_attempts: int = MAX_CHROME_START_ATTEMPTS,
+    poll_timeout_sec: float = CHROME_CDP_POLL_TIMEOUT_SEC,
+    poll_interval_sec: float = CHROME_CDP_POLL_INTERVAL_SEC,
+) -> ChromeLaunchResult:
+    """Launch headless Chrome with robust CDP startup state machine.
+
+    Contract:
+    - Capture Chrome stderr into temporary diagnostic log.
+    - Check early process exit during polling.
+    - Bounded poll timeout (~25s) per attempt.
+    - Exactly max_attempts (default 2). Attempt 1 fails -> terminate/reap, fresh profile dir,
+      fresh CDP port (if internally allocated; explicit custom_cdp_port is preserved).
+    - If final attempt fails, raise RuntimeError with structured diagnostic evidence:
+      attempts, last_port, exit_code, reason (early_exit | cdp_timeout), bounded stderr_tail.
+    """
+    attempt_diagnostics = []
+
+    for attempt in range(1, max_attempts + 1):
+        if custom_cdp_port is not None:
+            cdp_port = custom_cdp_port
+        else:
+            cdp_port = find_free_port()
+
+        profile_dir = tmp_dir / f"chrome_profile_att{attempt}_{uuid.uuid4().hex[:8]}"
+        profile_dir.mkdir(parents=True, exist_ok=True)
+
+        stderr_log_path = tmp_dir / f"chrome_stderr_att{attempt}.log"
+        stderr_file = open(stderr_log_path, "w+", encoding="utf-8", errors="replace")
+
+        print(f"[*] Launching Headless Chrome via CDP (attempt {attempt}/{max_attempts}) on port {cdp_port}...")
+        chrome_proc = subprocess.Popen(
+            [
+                chrome_path,
+                "--headless=new",
+                f"--remote-debugging-port={cdp_port}",
+                "--disable-gpu",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--no-first-run",
+                "--no-default-browser-check",
+                f"--user-data-dir={profile_dir}",
+                "about:blank",
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=stderr_file,
+        )
+
+        ws_url = None
+        early_exit = False
+        exit_code = None
+        deadline = time.monotonic() + poll_timeout_sec
+
+        while time.monotonic() < deadline:
+            poll_ret = chrome_proc.poll()
+            if poll_ret is not None:
+                early_exit = True
+                exit_code = poll_ret
+                break
+
+            try:
+                with urllib.request.urlopen(f"http://127.0.0.1:{cdp_port}/json/version", timeout=1.0) as resp:
+                    data = json.loads(resp.read().decode())
+                    ws_url = data.get("webSocketDebuggerUrl")
+                    if ws_url:
+                        break
+            except Exception:
+                pass
+
+            time.sleep(poll_interval_sec)
+
+        if ws_url:
+            try:
+                stderr_file.flush()
+                stderr_file.close()
+            except Exception:
+                pass
+            print(f"[*] Headless Chrome CDP ready at {ws_url} (attempt {attempt}/{max_attempts})")
+            return ChromeLaunchResult(
+                proc=chrome_proc,
+                port=cdp_port,
+                ws_url=ws_url,
+                attempts=attempt,
+                profile_dir=profile_dir,
+                stderr_log_path=stderr_log_path,
+            )
+
+        # Cleanup failed attempt
+        try:
+            chrome_proc.terminate()
+            chrome_proc.wait(timeout=3)
+        except Exception:
+            try:
+                chrome_proc.kill()
+                chrome_proc.wait()
+            except Exception:
+                pass
+
+        try:
+            stderr_file.flush()
+            stderr_file.close()
+        except Exception:
+            pass
+
+        stderr_tail = ""
+        if stderr_log_path.exists():
+            try:
+                stderr_tail = stderr_log_path.read_text(encoding="utf-8", errors="replace")[-MAX_STDERR_TAIL_CHARS:]
+            except Exception:
+                pass
+
+        if exit_code is None and chrome_proc.returncode is not None:
+            exit_code = chrome_proc.returncode
+
+        diag = {
+            "attempt": attempt,
+            "port": cdp_port,
+            "early_exit": early_exit,
+            "exit_code": exit_code,
+            "stderr_tail": stderr_tail.strip(),
+        }
+        attempt_diagnostics.append(diag)
+
+        reason = "early_exit" if early_exit else "cdp_timeout"
+        if attempt < max_attempts:
+            print(
+                f"[!] Headless Chrome attempt {attempt} failed ({reason=}, {exit_code=}, port={cdp_port}). "
+                f"Retrying with fresh profile..."
+            )
+        else:
+            evidence_summary = (
+                f"Headless Chrome failed to bind CDP port after {max_attempts} attempts. "
+                f"last_port={cdp_port}, reason={reason}, exit_code={exit_code}, attempts={max_attempts}"
+            )
+            if stderr_tail.strip():
+                evidence_summary += f", stderr_tail={stderr_tail.strip()[:500]!r}"
+            raise RuntimeError(evidence_summary)
+
+    raise RuntimeError(f"Headless Chrome failed to bind CDP port after {max_attempts} attempts.")
 
 
 async def run_browser_verification(
@@ -180,41 +341,21 @@ async def run_browser_verification(
         raise RuntimeError(f"FastAPI server failed to start on port {port}: {server_err}")
     print(f"[*] FastAPI server is ready at {server_origin}")
 
-    print(f"[*] Launching Headless Chrome via CDP on port {cdp_port}...")
-    chrome_proc = subprocess.Popen(
-        [
-            chrome_path,
-            "--headless=new",
-            f"--remote-debugging-port={cdp_port}",
-            "--disable-gpu",
-            "--no-sandbox",
-            "--disable-dev-shm-usage",
-            "--no-first-run",
-            "--no-default-browser-check",
-            f"--user-data-dir={user_data}",
-            "about:blank",
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-
-    ws_url = None
-    for _ in range(30):
-        try:
-            with urllib.request.urlopen(f"http://127.0.0.1:{cdp_port}/json/version", timeout=1) as resp:
-                data = json.loads(resp.read().decode())
-                ws_url = data.get("webSocketDebuggerUrl")
-                if ws_url:
-                    break
-        except Exception:
-            time.sleep(0.3)
-
-    if not ws_url:
-        chrome_proc.kill()
+    try:
+        chrome_result = launch_headless_chrome(
+            chrome_path=chrome_path,
+            tmp_dir=tmp_dir,
+            custom_cdp_port=custom_cdp_port,
+            max_attempts=MAX_CHROME_START_ATTEMPTS,
+        )
+        chrome_proc = chrome_result.proc
+        cdp_port = chrome_result.port
+        ws_url = chrome_result.ws_url
+    except Exception as exc:
         server_proc.kill()
+        server_log_file.close()
         shutil.rmtree(tmp_dir, ignore_errors=True)
-        raise RuntimeError(f"Headless Chrome failed to bind CDP port {cdp_port}")
-    print(f"[*] Headless Chrome CDP ready at {ws_url}")
+        raise exc
 
     evidence_data = {
         "head_sha": head_sha,

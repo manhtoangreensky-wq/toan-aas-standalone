@@ -576,4 +576,4 @@ class TestP0WebappWeb15FinalBusinessE2eTruth:
         perm_links = re.findall(r'\["(/[^"]+)"', nav_block)
         admin_leaks = [p for p in perm_links if p.startswith("/admin")]
         assert admin_leaks == [], f"CUSTOMER_TO_ADMIN_ROUTE_LEAK detected: {admin_leaks}"
-        assert len(perm_links) == 13, f"Expected 13 customer links, got {len(perm_links)}"
+        assert len(perm_links) == 17, f"Expected 17 customer links, got {len(perm_links)}"

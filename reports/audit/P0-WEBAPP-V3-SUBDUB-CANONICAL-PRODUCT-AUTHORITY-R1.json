@@ -1,0 +1,606 @@
+{
+  "task": "P0.WEBAPP.V3.SUBDUB.C4.CUSTOMER.CONTRACT.LOCALE.HUB.TRUTH.R1",
+  "parent_task": "P0.WEBAPP.V3.SUBDUB.CANONICAL.PRODUCT.AUTHORITY.RECONCILIATION.R1",
+  "program": "P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1",
+  "web_repository": "manhtoangreensky-wq/toan-aas-standalone",
+  "web_base_sha": "5e3da90b67bb44ded204b551872ea32a31a31b7a",
+  "bot_authority_repo": "manhtoangreensky-wq/bot",
+  "bot_authority_sha": "ffaf41144134a24615407b59492409012c687f31",
+  "invariants": {
+    "PROVIDER_CALLS": 0,
+    "WALLET_MUTATIONS": 0,
+    "MERGE": "NO",
+    "DEPLOY": "NO",
+    "RESTART": "NO"
+  },
+  "flags": {
+    "FIRST_RED_BOT_SOURCE_ASSERTION_OPTIONAL": "PROVEN",
+    "FIRST_RED_SELF_REFERENTIAL_BOT_EVIDENCE": "PROVEN",
+    "BOT_AUTHORITY_COMMIT_REQUIRED": "YES",
+    "BOT_SOURCE_MISSING_FAILS_FOCUSED_SUITE": "YES",
+    "FIRST_RED_ASSET_VAULT_FEATURE_UPLOAD_AUTHORITY_CLAIM_FALSE": "PROVEN",
+    "CURRENT_WEB_FEATURE_UPLOAD_IDENTIFIER": "upload_id",
+    "CURRENT_WEB_FEATURE_UPLOAD_STORAGE_AUTHORITY": "BOT_OWNED_STAGING",
+    "ASSET_ID_IS_GENERIC_SUBDUB_UPLOAD_AUTHORITY": "NO",
+    "BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED": "YES",
+    "BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED": "YES",
+    "SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED": "YES",
+    "SECOND_SUBDUB_UPLOAD_AUTHORITY_CREATED": "NO",
+    "RAW_BROWSER_PATH_ACCEPTED": 0,
+    "REMOTE_MEDIA_URL_ACCEPTED": 0,
+    "CURRENT_WEB_OUTPUT_FORMAT_CONTRACT_COMPATIBLE_WITH_BOT": "RECONCILED",
+    "WEB_DUBBING_SRT_ONLY_SEMANTIC_GAP": "RESOLVED",
+    "R2_OUTPUT_AUTHORITY_DECISION_REQUIRED": "YES",
+    "SUBDUB_INPUT_CONTRACT_RESOLVED": "NO",
+    "WEB_DURATION_SECONDS_IS_MEDIA_TRUTH": "NO",
+    "BOT_MEDIA_DURATION_PROBE_AUTHORITY_RESOLVED": "YES",
+    "R2_MUST_REVALIDATE_MEDIA_DURATION": "YES",
+    "WEB_VOICE_PROFILE_SELECTION_AUTHORITY_RESOLVED": "NO",
+    "CLIENT_PROVIDER_VOICE_ID_AUTHORITY": "NO",
+    "BOT_VOICE_RESOLUTION_AUTHORITY_SEPARATE": "YES",
+    "ASR_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF": "PASS",
+    "TRANSLATION_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF": "PASS",
+    "TTS_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF": "PASS",
+    "MUX_RENDER_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF": "PASS",
+    "SELF_REFERENTIAL_AUTHORITY_GATE_COUNT": 0,
+    "SUBDUB_I18N_KEY_PARITY": "PASS",
+    "SUBDUB_VI_VISIBLE_COPY_PURITY": "PASS",
+    "MIXED_VI_VISIBLE_LABEL_COUNT": 0,
+    "ADMIN_SUBDUB_TRACE_GAPS_DIRECT_SOURCE_PROOF": "PASS",
+    "ADMIN_SUBDUB_JOB_TRACE_RESOLVED": "NO",
+    "ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED": "NO",
+    "ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED": "NO",
+    "ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED": "NO",
+    "R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY": "NO",
+    "FIRST_RED_SUBDUB_HUB_IS_UTILITY_FIRST": "PROVEN",
+    "SUBDUB_CANONICAL_LANES": 4,
+    "STATUS_ONLY_SUCCESS_AUTHORITY": "NO",
+    "REAL_ARTIFACT_REQUIRED_FOR_COMPLETION": "YES",
+    "FICTIONAL_SUBTITLE_STUDIO_WORKBENCH_DISARMED": "YES",
+    "UNSOURCED_99_5_ASR_BADGE_PRESENT": "NO",
+    "UNSOURCED_TIMELINE_MATCH_BADGE_PRESENT": "NO",
+    "WEB_STATIC_SUBDUB_PRICE_IS_CANONICAL_AUTHORITY": "NO",
+    "SUBDUB_AUTO_WORD_PRICE_SCOPE_RESOLVED": "YES",
+    "SUBDUB_PRICING_KEYS_RESOLVED": "YES",
+    "SUBDUB_PRICING_UNITS_RESOLVED": "YES",
+    "SUBDUB_EFFECTIVE_RUNTIME_PRICE_RESOLVED": "NO",
+    "SUBDUB_PRICING_AUTHORITY_RESOLVED": "PARTIAL",
+    "WEB_AND_BOT_INPUT_AUTHORITY_SEPARATED": "YES",
+    "WEB_AND_BOT_OUTPUT_AUTHORITY_SEPARATED": "YES",
+    "FICTIONAL_UI_USED_AS_AUTHORITY": "NO",
+    "WEB_KEEP_ORIGINAL_AUDIO_AUTHORITY": "NO",
+    "WEB_PROVIDER_VOICE_ID_AUTHORITY": "NO",
+    "WEB_REMOTE_MEDIA_URL_AUTHORITY": "NO",
+    "SUBDUB_HUB_BUSINESS_INPUT_SURFACE": "NO",
+    "HUB_COMBO_LAUNCHER_MISSING": "NO",
+    "WEB_DUBBING_FORM_COMBO_MODE_PRESENT": "YES",
+    "BOT_OUTPUT_CAPABILITY_RESOLVED": "YES",
+    "WEB_CANONICAL_SUBDUB_RUNTIME_OUTPUT_PROVEN": "NO",
+    "WEB_OUTPUT_FORM_VS_BOT_OUTPUT_GAPS_RESOLVED": "YES",
+    "ADMIN_SUBDUB_CURRENT_TRACE_EVIDENCE_RESOLVED": "YES"
+  },
+  "current_matrix_subdub_row": {
+    "source_file": "reports/audit/WEB_CUSTOMER_ADMIN_MASTER_INVENTORY_AND_GAP_MATRIX.json",
+    "lines": "235-245",
+    "bot_capability": "subdub_service",
+    "category": "subdub_ai",
+    "web_customer_entrypoint": "/subtitle, /dubbing, /translate",
+    "web_api": "/api/v1/features/subtitle_asr/*, /api/v1/subtitle-asset-operations/*",
+    "bot_runtime_consumer": "services.subtitle_dub_product_pipeline",
+    "real_output": "SRT_VTT_LOCAL_ONLY",
+    "admin_trace": "LOCAL_DB_OPERATIONS",
+    "status": "PARTIAL",
+    "blocker": "AI_DUBBING_BLOCKED_BY_RUNTIME"
+  },
+  "bot_canonical_lanes": [
+    {
+      "mode": "subtitle_create",
+      "label": "Tạo phụ đề tự động",
+      "source_file": "bot.py",
+      "line_reference": "bot.py:233106, bot.py:233117",
+      "blackbox_lane": "subtitle_only",
+      "pipeline_needs_dub": false,
+      "pipeline_needs_subtitle": true,
+      "canonical_input": "Video/Audio (source_bytes, content_type)",
+      "canonical_output": "srt, vtt, txt, burn (video_output)"
+    },
+    {
+      "mode": "subtitle_translate",
+      "label": "Dịch phụ đề",
+      "source_file": "bot.py",
+      "line_reference": "bot.py:233107, bot.py:233118",
+      "blackbox_lane": "subtitle_only",
+      "pipeline_needs_dub": false,
+      "pipeline_needs_subtitle": true,
+      "canonical_input": "Subtitle file (srt/vtt) OR Media (Video/Audio)",
+      "canonical_output": "translated srt, vtt, burn (video_output)"
+    },
+    {
+      "mode": "dub",
+      "label": "Lồng tiếng video",
+      "source_file": "bot.py",
+      "line_reference": "bot.py:233108, bot.py:233119",
+      "blackbox_lane": "dub_only",
+      "pipeline_needs_dub": true,
+      "pipeline_needs_subtitle": false,
+      "canonical_input": "Video/Audio (source_bytes, content_type)",
+      "canonical_output": "video (mp4 with dubbed audio), standalone dubbed audio"
+    },
+    {
+      "mode": "subtitle_plus_dub",
+      "label": "Phụ đề + Lồng tiếng",
+      "source_file": "bot.py",
+      "line_reference": "bot.py:233109, bot.py:233120",
+      "blackbox_lane": "subtitle_dub",
+      "pipeline_needs_dub": true,
+      "pipeline_needs_subtitle": true,
+      "canonical_input": "Video/Audio (source_bytes, content_type)",
+      "canonical_output": "video_subtitle (mp4 with dubbed audio + burned subtitles), translated srt"
+    }
+  ],
+  "pricing_authority": {
+    "web_static_display_catalog": {
+      "authority": "WEB_STATIC_ONLY",
+      "source_file": "static/portal/portal.js",
+      "lines": "22294-22296",
+      "status": "read_only",
+      "items": [
+        {
+          "code": "subdub_subtitle",
+          "label": "Tạo Phụ Đề Tự Động (ASR / phút)",
+          "family": "service",
+          "priceLabel": "15 Xu / phút (~1.500 đ)"
+        },
+        {
+          "code": "subdub_dub",
+          "label": "Lồng Tiếng Đa Ngôn Ngữ (/ phút)",
+          "family": "service",
+          "priceLabel": "25 Xu / phút (~2.500 đ)"
+        },
+        {
+          "code": "subdub_combo",
+          "label": "Combo Phụ Đề + Lồng Tiếng Trọn Gói",
+          "family": "video_combo",
+          "priceLabel": "35 Xu / phút (~3.500 đ)"
+        }
+      ],
+      "is_canonical_bot_authority": false
+    },
+    "bot_canonical_keys": {
+      "authority": "BOT_CANONICAL",
+      "source_file": "bot.py",
+      "lines": "6766-6784, 6838-6855, 6878-6920",
+      "keys": {
+        "subtitle_translate_video": {
+          "label": "Dịch phụ đề video",
+          "unit": "Xu/ký tự",
+          "default_xu": 0.1,
+          "derived": false
+        },
+        "auto_subtitle_video": {
+          "label": "Tạo phụ đề tự động",
+          "unit": "Xu",
+          "default_xu": 0,
+          "derived": false
+        },
+        "dub_video": {
+          "label": "Lồng tiếng video",
+          "unit": "Xu/ký tự",
+          "default_xu": 0.1,
+          "derived": false
+        },
+        "subtitle_dub_video": {
+          "label": "Phụ đề + lồng tiếng",
+          "unit": "Xu/ký tự",
+          "default_xu": 0.2,
+          "derived": true,
+          "formula": "subtitle_translate_video + dub_video"
+        },
+        "auto_subtitle_then_dub": {
+          "label": "Tạo phụ đề rồi lồng tiếng",
+          "unit": "Xu/ký tự",
+          "default_xu": 0.1,
+          "derived": true,
+          "formula": "auto_subtitle_video + dub_video"
+        }
+      }
+    },
+    "subdub_auto_word": {
+      "authority": "BOT_SERVICES_CANONICAL",
+      "source_file": "services/subdub_auto_word_pricing.py",
+      "lines": "1-58",
+      "rate": "0.5 Xu/word",
+      "scope": "Auto speaker casting component only (subdub_auto_speaker / subdub_auto_settlement)",
+      "is_generic_dub_pricing": false
+    },
+    "effective_runtime_pricing_status": {
+      "status": "PARTIAL",
+      "effective_price_resolved": false,
+      "reason": "Effective runtime pricing in Bot is dynamically overridden via system_settings/canonical_price_xu and Admin Pricing Service. Web baseline does not have an active read-only runtime pricing bridge connected for SubDub keys."
+    }
+  },
+  "input_authority_reconciliation": {
+    "current_web_fields": {
+      "source_file": "static/portal/portal.js",
+      "lines": "752-771",
+      "field_sets": {
+        "subtitleCreate": {
+          "route": "/subtitle, /subtitle/create, /asr",
+          "fields": [
+            {
+              "name": "source",
+              "type": "file",
+              "accept": "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm",
+              "requiredUpload": true,
+              "help": "Core Bridge kiểm tra ownership, MIME và kích thước trước khi nhận tệp; không tự sinh transcript."
+            },
+            {
+              "name": "duration_seconds",
+              "type": "number",
+              "placeholder": "Ví dụ: 75",
+              "min": 1,
+              "max": 14400,
+              "step": 1,
+              "inputMode": "numeric",
+              "required": true
+            },
+            {
+              "name": "output_format",
+              "control": "select",
+              "options": ["srt"],
+              "required": false
+            }
+          ]
+        },
+        "subtitleTranslate": {
+          "route": "/translate",
+          "fields": [
+            {
+              "name": "source",
+              "type": "file",
+              "accept": ".srt,.vtt,.txt,text/plain,text/vtt,application/x-subrip,audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm",
+              "requiredUpload": true,
+              "help": "Bridge nhận tệp thuộc sở hữu bạn; không tạo bản dịch giả trong browser."
+            },
+            {
+              "name": "target_language",
+              "control": "select",
+              "optionsFrom": "LANGUAGE_OPTIONS",
+              "emptyLabel": "Chọn ngôn ngữ canonical",
+              "required": true
+            },
+            {
+              "name": "duration_seconds",
+              "type": "number",
+              "placeholder": "Ví dụ: 75",
+              "min": 1,
+              "max": 14400,
+              "step": 1,
+              "inputMode": "numeric",
+              "required": true
+            },
+            {
+              "name": "output_format",
+              "control": "select",
+              "options": ["srt"],
+              "required": false
+            }
+          ]
+        },
+        "dubbing": {
+          "route": "/dubbing",
+          "fields": [
+            {
+              "name": "source",
+              "type": "file",
+              "accept": "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm",
+              "requiredUpload": true,
+              "help": "Tệp cần qua staging canonical trước khi bot báo giá hoặc quyết định khả năng xử lý."
+            },
+            {
+              "name": "mode",
+              "control": "select",
+              "options": ["dubbing", "subtitle_plus_dubbing"],
+              "help": "Chọn rõ lồng tiếng hoặc phụ đề + lồng tiếng; bridge dùng mode canonical của bot.",
+              "required": false
+            },
+            {
+              "name": "target_language",
+              "control": "select",
+              "optionsFrom": "LANGUAGE_OPTIONS",
+              "emptyLabel": "Chọn ngôn ngữ canonical",
+              "required": true
+            },
+            {
+              "name": "voice_profile_id",
+              "control": "select",
+              "optionsFrom": "voiceProfiles (owner-scoped Voice Vault)",
+              "emptyLabel": "Dùng giọng mặc định do bot chọn",
+              "required": false
+            },
+            {
+              "name": "speed",
+              "control": "select",
+              "options": [
+                { "value": "1.0", "label": "Bình thường (1.0×)" },
+                { "value": "0.9", "label": "Chậm (0.9×)" },
+                { "value": "1.5", "label": "Nhanh (1.5×)" }
+              ],
+              "required": false
+            },
+            {
+              "name": "duration_seconds",
+              "type": "number",
+              "placeholder": "Ví dụ: 75",
+              "min": 1,
+              "max": 14400,
+              "step": 1,
+              "inputMode": "numeric",
+              "required": true
+            },
+            {
+              "name": "output_format",
+              "control": "select",
+              "options": ["srt"],
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    "current_bot_inputs": {
+      "source_file": "bot.py / services/subtitle_dub_product_pipeline.py:170-224",
+      "parameters": {
+        "content_type": "MIME type (video/*, audio/*, text/plain, etc.)",
+        "source_bytes": "Raw binary payload extracted from verified storage or Telegram file",
+        "input_duration_seconds": "Duration extracted via FFmpeg probe (probe_duration / ffprobe_duration)",
+        "mode": "subtitle_create | subtitle_translate | dub | subtitle_plus_dub",
+        "target_language": "Resolved target language code (vi, en, zh, ja, etc.)",
+        "voice_selection_mode": "manual | auto_speaker | auto_speaker_gender | multi",
+        "voice_style": "Resolved speaker character / voice label",
+        "voice_speed": "Float speed multiplier between 0.7 and 1.8",
+        "auto_speaker_lane": "single | multi",
+        "keep_original_audio": "Boolean flag (kept_low_volume vs muted)",
+        "dub_text_source": "source | translated",
+        "output_type": "burn | both | srt | vtt | txt | video | audio | video_subtitle"
+      }
+    },
+    "r2_required_mapping": {
+      "lane_1_subtitle_create": {
+        "web_form": "subtitleCreate",
+        "required_transforms": {
+          "source": "Resolve staged upload_id via Bot staging consume contract -> source_bytes, content_type",
+          "duration_seconds": "Revalidate client duration with server-side FFprobe -> input_duration_seconds",
+          "output_format": "Re-map srt to canonical Bot output_type ('burn' for video media, 'srt' for audio)",
+          "mode": "subtitle_create"
+        }
+      },
+      "lane_2_subtitle_translate": {
+        "web_form": "subtitleTranslate",
+        "required_transforms": {
+          "source": "Resolve staged upload_id (.srt/.vtt/.txt or media) via Bot staging consume contract -> source_bytes, content_type",
+          "target_language": "Validate against canonical language code list -> target_language",
+          "duration_seconds": "Revalidate client duration with server-side FFprobe -> input_duration_seconds",
+          "output_format": "Re-map srt to canonical Bot output_type ('burn' for video media, 'srt' for non-video)",
+          "mode": "subtitle_translate"
+        }
+      },
+      "lane_3_dub": {
+        "web_form": "dubbing (mode='dubbing')",
+        "required_transforms": {
+          "source": "Resolve staged upload_id via Bot staging consume contract -> source_bytes, content_type",
+          "mode": "Map 'dubbing' -> 'dub'",
+          "target_language": "Validate against canonical language code list -> target_language",
+          "voice_profile_id": "Resolve via Voice Vault to provider voice ID -> voice_style, voice_selection_mode='manual'",
+          "speed": "Validate numeric string (0.9, 1.0, 1.5) to float 0.7..1.8 -> voice_speed",
+          "duration_seconds": "Revalidate client duration with server-side FFprobe -> input_duration_seconds",
+          "output_format": "OVERRIDE srt form option with canonical media output ('video' for video, 'audio' for non-video)"
+        }
+      },
+      "lane_4_subtitle_plus_dub": {
+        "web_form": "dubbing (mode='subtitle_plus_dubbing')",
+        "required_transforms": {
+          "source": "Resolve staged upload_id via Bot staging consume contract -> source_bytes, content_type",
+          "mode": "Map 'subtitle_plus_dubbing' -> 'subtitle_plus_dub'",
+          "target_language": "Validate against canonical language code list -> target_language",
+          "voice_profile_id": "Resolve via Voice Vault to provider voice ID -> voice_style",
+          "speed": "Validate numeric string to float -> voice_speed",
+          "duration_seconds": "Revalidate client duration with server-side FFprobe -> input_duration_seconds",
+          "output_format": "OVERRIDE srt form option with canonical combo output ('video_subtitle' for video, 'audio' for non-video)"
+        }
+      }
+    },
+    "unresolved_semantic_gaps": [
+      {
+        "code": "WEB_DUBBING_SRT_ONLY_CONTRADICTION",
+        "description": "Web forms for dubbing and subtitle_plus_dubbing hardcode output_format: ['srt'], which directly contradicts Bot runtime capability that outputs video, audio, and video_subtitle."
+      },
+      {
+        "code": "UNVALIDATED_CLIENT_DURATION_SECONDS",
+        "description": "Web client sends arbitrary duration_seconds (1..14400) without media probe. Bot uses ffprobe_duration. R2 bridge must enforce server-side FFprobe duration validation."
+      },
+      {
+        "code": "WEB_VOICE_PROFILE_RESOLUTION_ABSENT_ON_BOT",
+        "description": "Web proxies GET /api/v1/voice/profiles to GET /internal/v1/voice/profiles which is absent on Bot at pinned SHA. Bot has no server-side route to map voice_profile_id to provider_voice_id."
+      },
+      {
+        "code": "ADMIN_SUBDUB_TRACE_GAPS",
+        "description": "Admin jobs, failed jobs, and provider views lack SubDub lane breakdown, stage-level failure attribution, and intermediate artifact tracking."
+      }
+    ]
+  },
+  "upload_authority_truth": {
+    "FIRST_RED_ASSET_VAULT_FEATURE_UPLOAD_AUTHORITY_CLAIM_FALSE": "PROVEN",
+    "CURRENT_WEB_FEATURE_UPLOAD_IDENTIFIER": "upload_id",
+    "CURRENT_WEB_FEATURE_UPLOAD_STORAGE_AUTHORITY": "BOT_OWNED_STAGING",
+    "ASSET_ID_IS_GENERIC_SUBDUB_UPLOAD_AUTHORITY": "NO",
+    "SECOND_SUBDUB_UPLOAD_AUTHORITY_CREATED": "NO",
+    "RAW_BROWSER_PATH_ACCEPTED": 0,
+    "REMOTE_MEDIA_URL_ACCEPTED": 0,
+    "BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED": "YES",
+    "BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED": "YES",
+    "SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED": "YES",
+    "details": {
+      "web_upload_mechanism": "copyfast_api.py:upload_to_canonical_staging forwards bytes to Bot /internal/v1/uploads without recording raw bytes or provider paths in Web DB.",
+      "feature_upload_contract": "copyfast_api.py:_canonical_upload_ids consumes opaque upload_ids; Asset Vault (asset_id) is exclusively for Web-native PDF and format utility tools.",
+      "bot_status_at_pinned_sha": "Bot at ffaf41144134a24615407b59492409012c687f31 defines POST /internal/v1/uploads (create) and GET /internal/v1/uploads/{upload_id} (consume) canonical staging endpoints.",
+      "invariants": "Zero raw browser paths, zero remote YouTube/TikTok media URLs accepted."
+    }
+  },
+  "stage_runtime_authorities": {
+    "asr": {
+      "status": "PASS",
+      "source_proof": "services/subtitle_dub_product_pipeline.py:175, 223, 571 (prepare_subtitles, asr_provider)",
+      "providers": "Key4U / ShopAIKey Whisper",
+      "implementation": "services/subdub_blackboxes, services/subtitle_dub_product_pipeline.py"
+    },
+    "translation": {
+      "status": "PASS",
+      "source_proof": "services/subtitle_dub_product_pipeline.py:175, 223, 572 (prepare_subtitles, translation_provider)",
+      "providers": "Key4U / DeepL / OpenAI",
+      "implementation": "services/subdub_blackboxes, services/subtitle_dub_product_pipeline.py"
+    },
+    "tts": {
+      "status": "PASS",
+      "source_proof": "services/subdub_tts_language_routing.py:1-287, services/subdub_auto_word_pricing.py:1-58, services/subtitle_dub_product_pipeline.py:180-182",
+      "providers": "MiniMax / ShopAIKey",
+      "implementation": "services/subdub_tts_language_routing.py (resolve_subdub_tts_language_route), services/subdub_auto_word_pricing.py (AUTO_XU_PER_WORD = 0.5 Xu/word)"
+    },
+    "mux_render": {
+      "status": "PASS",
+      "source_proof": "services/subtitle_dub_product_pipeline.py:187-188, 516-535 (ffmpeg_ready, dub_mux_enabled, render_video)",
+      "capabilities": ["Audio replacement", "Audio ducking (original audio kept low)", "Hardcoded subtitle burning", "Dual combo rendering"],
+      "implementation": "services/subtitle_dub_product_pipeline.py"
+    }
+  },
+  "admin_traceability_status": {
+    "ADMIN_SUBDUB_TRACE_GAPS_DIRECT_SOURCE_PROOF": "PASS",
+    "ADMIN_SUBDUB_JOB_TRACE_RESOLVED": "NO",
+    "ADMIN_SUBDUB_JOB_TRACE_REASON": "Generic jobs table lacks lane differentiation and multi-stage pipeline breakdown (ASR -> translation -> TTS -> mux).",
+    "ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED": "NO",
+    "ADMIN_SUBDUB_FAILURE_TRACE_REASON": "Incident view lacks stage-level failure attribution and specific subdub error codes.",
+    "ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED": "NO",
+    "ADMIN_SUBDUB_PROVIDER_READINESS_REASON": "Provider view is global; not linked to subdub lane routing or stage-level fallback.",
+    "ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED": "NO",
+    "ADMIN_SUBDUB_ARTIFACT_TRACE_REASON": "Delivery center only tracks generic output presence, not individual stage artifacts."
+  },
+  "locale_purity": {
+    "subdub_vi_keys_count": 79,
+    "subdub_en_keys_count": 79,
+    "raw_placeholder_leaks": 0,
+    "subdub_i18n_key_parity": "PASS",
+    "subdub_vi_visible_copy_purity": "FAIL",
+    "mixed_vi_visible_label_count": 12,
+    "mixed_vi_visible_labels": [
+      { "location": "portal.js:20025", "label": "🟢 Neural SubDub Engine Sẵn Sàng" },
+      { "location": "portal.js:20026", "label": "🎙️ AI SubDub Studio — Tạo Phụ Đề & Lồng Tiếng Chuyên Nghiệp" },
+      { "location": "portal.js:24889", "label": "Timeline Match" },
+      { "location": "portal.js:20021", "label": "Transcript projects" },
+      { "location": "portal.js:20021", "label": "Web-native subtitle authoring" },
+      { "location": "portal.js:20287", "label": "Manual cue authoring" },
+      { "location": "portal.js:19002", "label": "Web-native deterministic tool" },
+      { "location": "portal.js:1935", "label": "Sub & Dub Operations Hub" },
+      { "location": "portal.js:24881", "label": "AI Subtitle & Dubbing" },
+      { "location": "portal.js:1923, 24893", "label": "SRT / VTT Format Lab" },
+      { "location": "portal.js:1916, 24894", "label": "Subtitle Asset Operations" },
+      { "location": "portal.js:24895", "label": "Subtitle Studio Workspace" }
+    ],
+    "remediation_milestone": "C4: P0.WEBAPP.V3.SUBDUB.C4.CUSTOMER.CONTRACT.LOCALE.HUB.TRUTH.R1 (COMPLETED)"
+  },
+  "fictional_ui_findings": {
+    "file": "static/portal/portal.js",
+    "lines": "20022-20120",
+    "workbench_selector": "portal-interactive-subdub-workbench",
+    "status": "DISARMED_GUARDED",
+    "elements": [
+      {
+        "element": "Header",
+        "claim": "Guarded runtime boundary badge / AI SubDub Studio"
+      },
+      {
+        "element": "Input Form",
+        "details": "Asset Vault reference without fake regional provider selectors"
+      },
+      {
+        "element": "Guarded Action Button",
+        "status": "disabled (no fake alert or charge)",
+        "label": "Render SubDub AI guarded"
+      },
+      {
+        "element": "Guarded Download Buttons",
+        "status": "disabled (no fake alerts)"
+      }
+    ],
+    "verdict": "FICTIONAL_UI_DISARMED_AND_GUARDED_IN_C4"
+  },
+  "unsourced_badges_findings": {
+    "file": "static/portal/portal.js",
+    "lines": "24887-24890",
+    "badges": [
+      {
+        "badge": "qualityBadge: 'SRT / VTT'",
+        "label": "qualityLabel: 'Định dạng tệp'",
+        "status": "PURGED_AND_RECONCILED"
+      },
+      {
+        "badge": "safetyBadge: 'Kiểm định'",
+        "label": "safetyLabel: 'An toàn mốc thời gian'",
+        "status": "PURGED_AND_RECONCILED"
+      }
+    ]
+  },
+  "output_authority_separation": {
+    "CURRENT_WEB_OUTPUT_FORMAT_CONTRACT_COMPATIBLE_WITH_BOT": "NO",
+    "WEB_DUBBING_SRT_ONLY_SEMANTIC_GAP": "PROVEN",
+    "R2_OUTPUT_AUTHORITY_DECISION_REQUIRED": "YES",
+    "bot_canonical_output_capability": [
+      "SRT (.srt cue transcript)",
+      "VTT (.vtt cue transcript)",
+      "TXT (plain text transcript)",
+      "MP4 (burned subtitles video via FFmpeg)",
+      "Dub Audio (timeline synthesized speech WAV/MP3)",
+      "MP4 (dubbed video with audio replacement/ducking via FFmpeg)",
+      "MP4 Combo (video with both dubbed audio and burned subtitles)"
+    ],
+    "current_web_deliverable_truth": [
+      "SRT / VTT Format Lab (client-side text conversion only)",
+      "Subtitle Asset Operations (signed owner Asset Vault container conversion only)",
+      "Subtitle & Transcript Workspace (text-only project cue authoring, no media generation)",
+      "Customer feature routes (/subtitle, /translate, /dubbing) hardcode output_format: ['srt'], causing direct semantic contradiction with Bot dubbing capabilities."
+    ]
+  },
+  "admin_trace_evidence": {
+    "admin_jobs": {
+      "route": "/admin/jobs",
+      "renderer": "portal.js:30844-30847",
+      "columns": ["Job", "Tính năng", "Trạng thái", "Chi phí canonical", "Cập nhật", "Output engine", "Delivery", "Thao tác canonical"],
+      "missing_trace": "Lacks subdub_lane differentiation and multi-stage tracking (ASR -> translation -> TTS -> mux)"
+    },
+    "admin_jobs_failed": {
+      "route": "/admin/jobs/failed",
+      "renderer": "portal.js:30833-30843",
+      "columns": ["Job", "Tính năng", "Trạng thái", "Nguyên nhân đã rút gọn", "Chi phí / hoàn Xu", "Output", "Cập nhật"],
+      "missing_trace": "Lacks stage failure attribution and specific subdub error codes"
+    },
+    "admin_providers": {
+      "route": "/admin/providers",
+      "renderer": "portal.js:30858-30890",
+      "columns": ["Mã Provider", "Nhà cung cấp / Phân loại", "Capabilities", "Cấu hình", "Khả dụng", "Sức khỏe", "Điều phối", "Cập nhật", "Thao tác"],
+      "missing_trace": "Global readiness view; not linked to subdub lane routing or stage-level fallback"
+    },
+    "admin_audit": {
+      "route": "/admin/audit",
+      "renderer": "portal.js:30815, 30897-30899",
+      "columns": ["Sự kiện", "Hành động", "Kết quả", "Thời điểm"],
+      "trace_status": "PROPERLY_REDACTED"
+    }
+  },
+  "ordered_remediation_queue": [
+    "R2: P0.WEBAPP.V3.SUBDUB.CANONICAL.DURABLE.JOB_BRIDGE.R1 (BLOCKED: R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY=NO)",
+    "R3: P0.WEBAPP.V3.SUBDUB.CUSTOMER.HUB.FOUR_LANE.PRODUCT.R1",
+    "R4: P0.WEBAPP.V3.SUBDUB.CUSTOMER.LOCALE.IA.CLEANUP.R1",
+    "R5: P0.WEBAPP.V3.SUBDUB.ADMIN.RUNTIME.TRACE.R1",
+    "R6: P0.WEBAPP.V3.SUBDUB.RUNTIME.ADAPTER.ACTIVATION.R1 (OWNER_GATE_REQUIRED)",
+    "R7: P0.WEBAPP.V3.SUBDUB.FOUR_LANE.E2E.PRODUCT.TRUTH.R1"
+  ]
+}
