@@ -395,7 +395,7 @@
       "real_output": "NONE",
       "admin_trace": "ADMIN_TICKETS",
       "status": "BLOCKED_BY_RUNTIME",
-      "blocker": "BOT_SUPPORT_TICKETS_ENDPOINT_MISSING"
+      "blocker": "BOT_SUPPORT_TICKET_CATEGORY_AUTHORITY_CORRECTION_UNMERGED"
     }
   ]
 }
