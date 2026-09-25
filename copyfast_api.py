@@ -2348,11 +2348,12 @@ class ManualAdminDraftRequest(BaseModel):
                 raise ValueError("Lý do quyết định cần từ 3 đến 300 ký tự")
             data["reason"] = cleaned
         elif action == "approve":
-            if not isinstance(raw_reason, str):
-                raise ValueError("Lý do phê duyệt không hợp lệ")
-            cleaned = raw_reason.strip()
-            if not 3 <= len(cleaned) <= 300 or any(ord(c) < 32 for c in cleaned):
-                raise ValueError("Lý do phê duyệt cần từ 3 đến 300 ký tự")
+            cleaned = str(raw_reason or "").strip() if raw_reason is not None else ""
+            if any(ord(c) < 32 for c in cleaned):
+                raise ValueError("Ghi chú quyết định không hợp lệ")
+            cleaned = cleaned or "Xác nhận đã nhận tiền qua chuyển khoản ngân hàng"
+            if len(cleaned) > 300:
+                raise ValueError("Lý do phê duyệt tối đa 300 ký tự")
             data["reason"] = cleaned
         return data
 
@@ -5303,7 +5304,6 @@ async def manual_admin_detail(
 
 
 @router.api_route("/admin/topups/pending-count", methods=["GET"])
-@router.api_route("/api/v1/admin/topups/pending-count", methods=["GET"])
 async def admin_topups_pending_count(request: Request, account: dict = Depends(require_canonical_admin)):
     count = count_pending_web_manual_topups()
     return envelope(
@@ -5315,19 +5315,16 @@ async def admin_topups_pending_count(request: Request, account: dict = Depends(r
 
 
 @router.api_route("/admin/wallet", methods=["GET"])
-@router.api_route("/api/v1/admin/wallet", methods=["GET"])
 async def admin_wallet_projection(request: Request, account: dict = Depends(require_canonical_admin)):
     return await _bridge("GET", "/internal/v1/admin/wallet", account=account, request=request, admin_read=True)
 
 
 @router.api_route("/admin/revenue", methods=["GET"])
-@router.api_route("/api/v1/admin/revenue", methods=["GET"])
 async def admin_revenue_projection(request: Request, account: dict = Depends(require_canonical_admin)):
     return await _bridge("GET", "/internal/v1/admin/revenue", account=account, request=request, admin_read=True)
 
 
 @router.api_route("/admin/refunds", methods=["GET"])
-@router.api_route("/api/v1/admin/refunds", methods=["GET"])
 async def admin_refunds_projection(request: Request, account: dict = Depends(require_canonical_admin)):
     return await _bridge("GET", "/internal/v1/admin/refunds", account=account, request=request, admin_read=True)
 

@@ -159,7 +159,7 @@ This master audit reconciles the entire Web customer-facing application and Web 
 | 28 | `autopost_publish_queue` | Autopost | `/workboard` | `/api/v1/workboard/*` | Web Workboard only | Local Queue only | Local DB | `PARTIAL` |
 | 29 | `autopost_affiliate` | Autopost | `/referrals, /crm/leads` | `/api/v1/partner-crm/*` | Web CRM only | Local Leads only | Admin CRM | `PARTIAL` |
 | 30 | `cskh_help` | CSKH | `/guides, /help` | `/api/v1/guides/*` | Web Guides | Knowledge Articles | None needed | `PASS` |
-| 31 | `cskh_ticket` | CSKH | `/tickets, /support` | `/api/v1/support/tickets` | Missing Endpoint | None | Admin Tickets | `BLOCKED_BY_RUNTIME` |
+| 31 | `cskh_ticket` | CSKH | `/tickets, /support` | `/api/v1/support/tickets` | `POST /internal/v1/support/tickets` | None | Admin Tickets | `BLOCKED_BY_RUNTIME` |
 
 ---
 
