@@ -744,10 +744,12 @@ async def navigation(request: Request, account: dict[str, Any] = Depends(require
     # disabled the ERP directory.  This also prevents a stale staff shell from
     # treating the feature flag as canonical-only.
     if erp_enabled:
-        if web_local_admin or live_canonical_admin:
-            groups = v2_primary_groups()
-        elif staff_role:
+        if staff_role:
             groups.extend(support_groups(staff_role))
+        if web_local_admin:
+            groups.extend(web_local_admin_groups())
+        if live_canonical_admin:
+            groups.extend(canonical_groups())
 
     data = {
         "groups": groups,

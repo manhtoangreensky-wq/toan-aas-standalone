@@ -209,8 +209,14 @@ def test_manual_admin_routes_use_local_dependencies_and_unsigned_is_401(tmp_path
     ]
     assert routes[0][3] == (copyfast_auth.require_admin,)
     assert routes[1][3] == (copyfast_auth.require_admin,)
-    assert routes[2][3] == (copyfast_auth.require_admin_csrf,)
-    assert routes[3][3] == (copyfast_auth.require_admin_csrf,)
+    assert routes[2][3] in (
+        (copyfast_auth.require_admin_csrf,),
+        (copyfast_auth.require_canonical_admin_csrf,),
+    )
+    assert routes[3][3] in (
+        (copyfast_auth.require_admin_csrf,),
+        (copyfast_auth.require_canonical_admin_csrf,),
+    )
     with make_client(tmp_path, monkeypatch) as client:
         assert client.get("/api/v1/admin/payments/manual").status_code == 401
         assert client.post(
