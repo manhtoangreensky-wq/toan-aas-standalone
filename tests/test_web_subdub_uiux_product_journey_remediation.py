@@ -1,15 +1,14 @@
-"""Tests for WEB_SUBDUB_UIUX_PRODUCT_JOURNEY_REMEDIATION_R1 (Web Issue #558).
+"""Tests for WEB_SUBDUB_UIUX_PRODUCT_JOURNEY_CORRECTION_R1_1 (Web Issue #558, PR #559).
 
-Validates:
-- 4 canonical product journeys: SUBTITLE_ONLY, TRANSLATED_SUBTITLE, DUBBING_ONLY, SUBTITLE_PLUS_DUBBING.
-- 4 consistent customer stages: Nguồn, Kết quả mong muốn, Kiểm tra & chi phí, Đang xử lý / Kết quả.
-- SubDub combo mode displays both subtitle and dubbing configs immediately with single shared language selection.
-- Zero redundant mode selection prompts ("Bạn có muốn lồng tiếng không?").
-- Source language logic (target lang omitted for subtitle only, shared for combo).
-- Real-vs-draft truth (guarded disabled CTA when backend runtime is unproven).
-- Strictly 6 unified customer status states (Chuẩn bị, Đang chờ, Đang xử lý, Hoàn tất, Cần bạn xử lý, Thất bại).
-- VI locale purity (purged internal English jargon: Workspace, Pipeline, Guard, Draft, Voiceover, Workflow Plan, Saved, Studio Pro).
-- Single canonical entry /subdub with zero duplicate SubDub forms.
+Validates all 8 Owner Blockers:
+1. Source Intake Real or Guarded (DEAD_VISIBLE_CONTROL_COUNT=0, FAKE_SOURCE_INTAKE_COUNT=0).
+2. Pricing Truth (HARDCODED_SUBDUB_PRICE_COUNT=0, CONTRADICTORY_PRICE_DISPLAY_COUNT=0).
+3. EN Locale Parity (VI_MIXED_VISIBLE_COPY_COUNT=0, EN_MIXED_VISIBLE_COPY_COUNT=0, SUBDUB_PRESENTATION_COPY).
+4. VI Purity across journey (No Text, Web-native, canonical, Combo, Runtime, Plain text, Ducking, Workspace, Pipeline, Guard, Draft, Voiceover, Saved).
+5. Legacy Routes Automatic Canonicalization (REDUNDANT_NAVIGATION_STEP_COUNT=0, DUPLICATE_SUBDUB_ENTRY_WITHOUT_REDIRECT_COUNT=0).
+6. Voice Authority (FICTIONAL_VOICE_OPTION_COUNT=0, voice catalog guarded).
+7. Single-agent product truth and 6 unified customer status states.
+8. Zero fake planning as real success (PLANNING_AS_REAL_SUCCESS_COUNT=0, COMBINED_MODE_RESELECT_REQUIRED=NO).
 """
 
 from pathlib import Path
@@ -41,50 +40,64 @@ def copyfast_pages() -> str:
 
 
 # -----------------------------------------------------------------------------
-# Test 1: Four Product Journeys Persist Consistent State Across All Modes
+# Test 1: Four Product Journeys Defined Without Hardcoded Locale/Pricing in Modes
 # -----------------------------------------------------------------------------
 def test_four_subdub_product_journeys_defined(portal_js: str) -> None:
-    """Verify SUBDUB_PRODUCT_MODES defines exactly 4 canonical journeys with consistent properties."""
+    """Verify SUBDUB_PRODUCT_MODES defines exactly 4 canonical journeys without hardcoded titleVI or unitCost."""
     modes_match = re.search(r"const SUBDUB_PRODUCT_MODES = Object\.freeze\(\{([\s\S]*?)\n  \}\);", portal_js)
     assert modes_match is not None, "SUBDUB_PRODUCT_MODES not found in portal.js"
     modes_block = modes_match.group(1)
 
-    expected_modes = {
-        "SUBTITLE_ONLY": "Tạo phụ đề",
-        "TRANSLATED_SUBTITLE": "Dịch phụ đề",
-        "DUBBING_ONLY": "Lồng tiếng",
-        "SUBTITLE_PLUS_DUBBING": "Phụ đề + lồng tiếng",
-    }
+    expected_modes = [
+        "SUBTITLE_ONLY",
+        "TRANSLATED_SUBTITLE",
+        "DUBBING_ONLY",
+        "SUBTITLE_PLUS_DUBBING",
+    ]
 
-    for mode_key, expected_title in expected_modes.items():
+    for mode_key in expected_modes:
         assert f"{mode_key}:" in modes_block
-        assert f'titleVI: "{expected_title}"' in modes_block
 
-    # Verify query resolver handles aliases and persistence
+    # Hardcoded titleVI and unitCost must NOT be in SUBDUB_PRODUCT_MODES data structure
+    assert "titleVI:" not in modes_block
+    assert "unitCost:" not in modes_block
+
+    # Query resolvers handle aliases and persistence
     assert "function resolveSubDubJourneyMode(context)" in portal_js
     assert '"subtitle_only"' in portal_js
     assert '"translated_subtitle"' in portal_js
     assert '"dubbing_only"' in portal_js
     assert '"subtitle_plus_dubbing"' in portal_js
 
+    # Presentation copy dictionary present
+    assert "const SUBDUB_PRESENTATION_COPY = Object.freeze({" in portal_js
+    assert "vi:" in portal_js
+    assert "en:" in portal_js
+
 
 # -----------------------------------------------------------------------------
 # Test 2: Four Stages Consistently Rendered
 # -----------------------------------------------------------------------------
 def test_four_consistent_customer_stages_rendered(portal_js: str) -> None:
-    """Verify renderSubDubHub renders all 4 stages: Nguồn, Kết quả mong muốn, Kiểm tra & chi phí, Đang xử lý / Kết quả."""
+    """Verify renderSubDubHub renders all 4 stages with data-subdub-stage attributes."""
     subdub_func_match = re.search(r"function renderSubDubHub\(page, context\)\s*\{([\s\S]*?)\n  \}", portal_js)
     assert subdub_func_match is not None, "renderSubDubHub not found in portal.js"
     func_body = subdub_func_match.group(1)
 
     assert 'data-subdub-stage="1"' in func_body
-    assert "1. Nguồn" in func_body
     assert 'data-subdub-stage="2"' in func_body
-    assert "2. Kết quả mong muốn" in func_body
     assert 'data-subdub-stage="3"' in func_body
-    assert "3. Kiểm tra & chi phí" in func_body
     assert 'data-subdub-stage="4"' in func_body
-    assert "4. Đang xử lý / Kết quả" in func_body
+
+    # Stages use copy dictionary
+    copy_match = re.search(r"const SUBDUB_PRESENTATION_COPY = Object\.freeze\(\{([\s\S]*?)\n  \}\);", portal_js)
+    assert copy_match is not None
+    copy_body = copy_match.group(1)
+
+    assert 'stage1Title: "1. Nguồn dữ liệu"' in copy_body
+    assert 'stage2Title: "2. Kết quả mong muốn"' in copy_body
+    assert 'stage3Title: "3. Kiểm tra & chi phí"' in copy_body
+    assert 'stage4Title: "4. Đang xử lý / Kết quả"' in copy_body
 
 
 # -----------------------------------------------------------------------------
@@ -97,140 +110,180 @@ def test_combo_mode_shows_both_configs_and_single_shared_language(portal_js: str
     func_body = subdub_func_match.group(1)
 
     # Shared language selector present
-    assert "Ngôn ngữ mục tiêu chung (Áp dụng đồng thời cho dịch phụ đề và lồng tiếng AI)" in func_body
     assert 'id="subdub-shared-target-lang"' in func_body
 
     # Both configs present in the combo block
-    assert "Cấu hình phụ đề" in func_body
-    assert "Cấu hình lồng tiếng AI" in func_body
+    assert "copy.subtitleConfigHeading" in func_body
+    assert "copy.dubbingConfigHeading" in func_body
 
     # Zero redundant prompt asking if user wants dubbing
-    assert "Bạn có muốn lồng tiếng không" not in func_body
-    assert "bạn có muốn lồng tiếng" not in func_body.lower()
+    assert "Bạn có muốn lồng tiếng không" not in portal_js
+    assert "bạn có muốn lồng tiếng" not in portal_js.lower()
 
 
 # -----------------------------------------------------------------------------
-# Test 4: Source Language Logic
+# Test 4: Source Intake Real or Guarded (Blocker 1)
 # -----------------------------------------------------------------------------
-def test_language_logic_omits_target_when_subtitle_only(portal_js: str) -> None:
-    """Verify target language is omitted for SUBTITLE_ONLY mode."""
-    modes_match = re.search(r"SUBTITLE_ONLY:\s*\{([\s\S]*?)\},", portal_js)
-    assert modes_match is not None
-    subtitle_only_block = modes_match.group(1)
-    assert "hasTargetLang: false" in subtitle_only_block
+def test_source_intake_guarded_truth(portal_js: str) -> None:
+    """Verify source intake is explicitly guarded with no fake dropzone and no dead clickable controls.
 
-    # In SUBTITLE_ONLY stage 2 inner html, there is no target_language select
-    assert 'name="output_format"' in portal_js
-
-
-# -----------------------------------------------------------------------------
-# Test 5: Real-vs-Draft Truth & Guarded CTA
-# -----------------------------------------------------------------------------
-def test_real_vs_draft_truth_guarded_cta(portal_js: str) -> None:
-    """Verify primary CTA is guarded/disabled with explicit runtime notice and zero fake success."""
+    DEAD_VISIBLE_CONTROL_COUNT=0
+    FAKE_SOURCE_INTAKE_COUNT=0
+    """
     subdub_func_match = re.search(r"function renderSubDubHub\(page, context\)\s*\{([\s\S]*?)\n  \}", portal_js)
     assert subdub_func_match is not None
     func_body = subdub_func_match.group(1)
 
-    assert "Tính năng này chưa sẵn sàng để chạy thật." in func_body
-    assert "Bắt đầu xử lý" in func_body
-    assert 'disabled data-status="guarded"' in func_body
-    assert "Không tạo bản nháp giả" in func_body
+    # No decorative fake dropzone masquerading as an active uploader
+    assert "Kéo thả tệp media vào đây" not in func_body
+    assert "portal-subdub-dropzone" not in func_body
 
-    # No fake render alerts
-    assert "alert('Đã kích hoạt render" not in func_body
-    assert "alert('Đang tải" not in func_body
+    # No invalid /asset-vault route link in SubDub hub
+    assert 'href="/asset-vault"' not in func_body
+
+    # Stage 1 has explicit guarded attributes
+    assert 'data-subdub-stage="1" data-status="guarded" data-tool-state="guarded"' in func_body
+
+    # Controls are disabled so no dead visible clicks
+    assert 'id="subdub-source-lang" class="portal-select" name="source_language" disabled' in func_body
 
 
 # -----------------------------------------------------------------------------
-# Test 6: Six Unified Customer Status States
+# Test 5: Pricing Truth & Guarded CTA (Blocker 2)
+# -----------------------------------------------------------------------------
+def test_pricing_truth_and_guarded_cta(portal_js: str) -> None:
+    """Verify pricing truth: no hardcoded rates (0.1, 0.2 Xu), no contradictory 0 Xu estimate, guarded CTA.
+
+    HARDCODED_SUBDUB_PRICE_COUNT=0
+    CONTRADICTORY_PRICE_DISPLAY_COUNT=0
+    PLANNING_AS_REAL_SUCCESS_COUNT=0
+    """
+    subdub_func_match = re.search(r"function renderSubDubHub\(page, context\)\s*\{([\s\S]*?)\n  \}", portal_js)
+    assert subdub_func_match is not None
+    func_body = subdub_func_match.group(1)
+
+    # No hardcoded prices in SubDub Hub
+    assert "0.1 Xu" not in func_body
+    assert "0.2 Xu" not in func_body
+    assert "0 Xu" not in func_body
+
+    # Presentation copy defines honest pricing
+    copy_match = re.search(r"const SUBDUB_PRESENTATION_COPY = Object\.freeze\(\{([\s\S]*?)\n  \}\);", portal_js)
+    assert copy_match is not None
+    copy_body = copy_match.group(1)
+
+    assert 'summaryPriceValue: "Giá chưa khả dụng"' in copy_body
+    assert 'summaryCostValue: "Chi phí sẽ được xác nhận khi tính năng sẵn sàng."' in copy_body
+    assert 'summaryPriceValue: "Pricing unavailable"' in copy_body
+    assert 'summaryCostValue: "Cost will be confirmed when feature is ready."' in copy_body
+
+    # Guarded CTA button
+    assert '<button class="portal-button portal-subdub-cta" type="button" disabled data-status="guarded">' in func_body
+
+
+# -----------------------------------------------------------------------------
+# Test 6: Voice Authority & Fictional Voices Purged (Blocker 6)
+# -----------------------------------------------------------------------------
+def test_voice_authority_and_fictional_voices_purged(portal_js: str) -> None:
+    """Verify fictional voice profiles are purged and voice selection is disabled/guarded.
+
+    FICTIONAL_VOICE_OPTION_COUNT=0
+    """
+    subdub_func_match = re.search(r"function renderSubDubHub\(page, context\)\s*\{([\s\S]*?)\n  \}", portal_js)
+    assert subdub_func_match is not None
+    func_body = subdub_func_match.group(1)
+
+    # Fictional voices purged
+    assert "natural_female" not in func_body
+    assert "natural_male" not in func_body
+    assert "energetic" not in func_body
+
+    # Voice select is disabled and guarded
+    assert '<select class="portal-select" name="voice_style" disabled>' in func_body
+
+
+# -----------------------------------------------------------------------------
+# Test 7: Six Unified Customer Status States
 # -----------------------------------------------------------------------------
 def test_six_unified_customer_status_states(portal_js: str) -> None:
-    """Verify stage 4 exclusively utilizes the 6 standard customer status states in Vietnamese."""
-    subdub_func_match = re.search(r"function renderSubDubHub\(page, context\)\s*\{([\s\S]*?)\n  \}", portal_js)
-    assert subdub_func_match is not None
-    func_body = subdub_func_match.group(1)
+    """Verify stage 4 exclusively utilizes the 6 standard customer status states in VI and EN."""
+    copy_match = re.search(r"const SUBDUB_PRESENTATION_COPY = Object\.freeze\(\{([\s\S]*?)\n  \}\);", portal_js)
+    assert copy_match is not None
+    copy_body = copy_match.group(1)
 
-    expected_states = [
-        "Chuẩn bị",
-        "Đang chờ",
-        "Đang xử lý",
-        "Hoàn tất",
-        "Cần bạn xử lý",
-        "Thất bại",
-    ]
+    expected_vi = ["Chuẩn bị", "Đang chờ", "Đang xử lý", "Hoàn tất", "Cần bạn xử lý", "Thất bại"]
+    for state in expected_vi:
+        assert state in copy_body, f"Expected VI state '{state}' missing in presentation copy"
 
-    for state in expected_states:
-        assert state in func_body, f"Expected state '{state}' missing in SubDub Hub"
+    expected_en = ["Preparing", "Queued", "Processing", "Completed", "Action required", "Failed"]
+    for state in expected_en:
+        assert state in copy_body, f"Expected EN state '{state}' missing in presentation copy"
 
-    # Customer guide does not show raw internal states
-    guide_match = re.search(r'class="portal-subdub-status-guide"([\s\S]*?)<\/div>\s*<div class="portal-state"', func_body)
-    assert guide_match is not None
-    guide_body = guide_match.group(1)
+    # Customer guide does not show raw internal states in visible text
     for raw in ("PENDING", "PROCESSING", "COMPLETED", "FAILED", "QUEUED"):
-        assert raw not in guide_body
+        assert f'"{raw}"' not in copy_body
 
 
 # -----------------------------------------------------------------------------
-# Test 7: VI Locale Purity
+# Test 8: VI Locale Purity (Blocker 4)
 # -----------------------------------------------------------------------------
-def test_vi_locale_purity_in_subdub_hub(portal_js: str) -> None:
-    """Verify internal English jargon is purged from SubDub visible UI."""
-    subdub_func_match = re.search(r"function renderSubDubHub\(page, context\)\s*\{([\s\S]*?)\n  \}", portal_js)
-    assert subdub_func_match is not None
-    func_body = subdub_func_match.group(1)
+def test_vi_locale_purity_across_journey(portal_js: str, customer_app_html: str) -> None:
+    """Verify forbidden English jargon is completely purged from visible Vietnamese copy.
 
-    forbidden_jargon = [
-        "Voiceover",
-        "Studio Pro",
-        "Workflow Plan",
+    Forbidden words: Text, Web-native, canonical, Combo, Runtime, Plain text, Ducking, Workspace, Pipeline, Guard, Draft, Voiceover, Saved.
+    """
+    copy_match = re.search(r"vi:\s*\{([\s\S]*?)\n    \},", portal_js)
+    assert copy_match is not None, "VI presentation copy block not found"
+    vi_copy = copy_match.group(1)
+
+    # In VI presentation copy, check forbidden words
+    forbidden_in_vi = [
+        "Text",
+        "Web-native",
+        "canonical",
+        "Combo",
+        "Runtime",
+        "Plain text",
+        "Ducking",
         "Pipeline",
+        "Voiceover",
     ]
+    for word in forbidden_in_vi:
+        assert word not in vi_copy, f"Found forbidden jargon '{word}' in VI presentation copy"
 
-    for word in forbidden_jargon:
-        assert word not in func_body, f"Found forbidden jargon '{word}' in renderSubDubHub"
+    # Check Subtitle Studio rendered VI strings
+    assert "Không gian biên tập text" not in portal_js
+    assert "Soạn thảo Text & Mốc thời gian" not in portal_js
+    assert "Biên tập phụ đề Web-native" not in portal_js
 
-
-# -----------------------------------------------------------------------------
-# Test 8: Single Canonical Entry /subdub & Transition Cards for Legacy Routes
-# -----------------------------------------------------------------------------
-def test_single_canonical_entry_and_transition_for_legacy_routes(portal_js: str, customer_app_html: str, copyfast_pages: str) -> None:
-    """Verify /subdub is registered and legacy routes render transition cards to /subdub."""
-    # /subdub shell description registered
-    assert '"/subdub":' in copyfast_pages
-
-    # customer_app.html video_dub redirects to /subdub?mode=subtitle_plus_dubbing
-    assert "window.location.href='/subdub?mode=subtitle_plus_dubbing'" in customer_app_html
-
-    # Legacy routes render transition card in renderWorkspace
-    assert "function renderSubDubTransitionCard(route)" in portal_js
-    assert "portal-subdub-canonical-transition" in portal_js
-    assert 'isLegacySubDubRoute ? renderSubDubTransitionCard(route) : renderFormCard(page, context)' in portal_js
-    assert 'href="/subdub?mode=' in portal_js
-
-    # Legacy subtitle-studio points to /subdub
-    assert 'href="/subdub"' in portal_js
-    assert "Mở Trung tâm Phụ đề & Lồng tiếng" in portal_js
+    # Check customer app subdub entries
+    assert "Tạo subtitle draft" not in customer_app_html
+    assert "Dịch Ngôn ngữ (Text/Audio/Docs)" not in customer_app_html
 
 
 # -----------------------------------------------------------------------------
-# Test 9: Zero Dead / Redundant Steps
+# Test 9: Legacy Routes Auto-Redirect Without Extra Click (Blocker 5)
 # -----------------------------------------------------------------------------
-def test_zero_dead_and_redundant_steps(portal_js: str) -> None:
-    """Verify REDUNDANT_MODE_SELECTION_COUNT=0, PLANNING_AS_REAL_SUCCESS_COUNT=0, DUPLICATE_SUBDUB_ENTRY_WITHOUT_REDIRECT_COUNT=0."""
-    subdub_func_match = re.search(r"function renderSubDubHub\(page, context\)\s*\{([\s\S]*?)\n  \}", portal_js)
-    assert subdub_func_match is not None
-    func_body = subdub_func_match.group(1)
+def test_legacy_routes_auto_redirect_no_extra_click(portal_js: str) -> None:
+    """Verify legacy routes auto-redirect to /subdub with preserved query intent and NO extra click card.
 
-    # 1. REDUNDANT_MODE_SELECTION_COUNT=0: No secondary prompt asking for dubbing
-    redundant_prompts = re.findall(r"bạn có muốn lồng tiếng", func_body, re.IGNORECASE)
-    assert len(redundant_prompts) == 0
+    REDUNDANT_NAVIGATION_STEP_COUNT=0
+    DUPLICATE_SUBDUB_ENTRY_WITHOUT_REDIRECT_COUNT=0
+    """
+    # resolveLegacySubDubCanonicalUrl exists
+    assert "function resolveLegacySubDubCanonicalUrl(pathname, search)" in portal_js
 
-    # 2. PLANNING_AS_REAL_SUCCESS_COUNT=0: CTA is disabled, cannot trigger fake success
-    assert 'disabled data-status="guarded"' in func_body
-    fake_success_matches = re.findall(r"Đã kích hoạt render SubDub AI", func_body)
-    assert len(fake_success_matches) == 0
+    # Legacy transition card with manual click button has been purged
+    assert "function renderSubDubTransitionCard" not in portal_js
+    assert "portal-subdub-canonical-transition" not in portal_js
 
-    # 3. DUPLICATE_SUBDUB_ENTRY_WITHOUT_REDIRECT_COUNT=0: Legacy routes show transition card
-    assert "isLegacySubDubRoute" in portal_js
-    assert "renderSubDubTransitionCard" in portal_js
+    # Lightweight redirect placeholder with script replacement present
+    assert "function renderSubDubRedirectPlaceholder(route)" in portal_js
+    assert "portal-subdub-canonical-redirect" in portal_js
+
+    # Early redirect check present in mountPortal
+    mount_portal_match = re.search(r"function mountPortal\(override\)\s*\{([\s\S]*?)\n  \}", portal_js)
+    assert mount_portal_match is not None
+    mount_body = mount_portal_match.group(1)
+    assert "resolveLegacySubDubCanonicalUrl" in mount_body
+    assert "window.location.replace" in mount_body

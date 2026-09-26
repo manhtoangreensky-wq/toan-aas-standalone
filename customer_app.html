@@ -234,13 +234,13 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
                         <div onclick="openWorkflow('translation_hub')" class="bg-white border border-slate-200 p-6 rounded-xl tool-card cursor-pointer">
                             <div class="h-12 w-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-4"><i class="fas fa-language text-xl"></i></div>
-                            <h3 class="font-bold text-slate-800 mb-2">Dịch Ngôn ngữ (Text/Audio/Docs)</h3>
-                            <p class="text-sm text-slate-500">Dịch văn bản 2 chiều, tài liệu, đoạn hội thoại hoặc file ghi âm.</p>
+                            <h3 class="font-bold text-slate-800 mb-2">Dịch Ngôn ngữ (Văn bản / Âm thanh / Tài liệu)</h3>
+                            <p class="text-sm text-slate-500">Dịch văn bản 2 chiều, tài liệu, đoạn hội thoại hoặc tệp ghi âm.</p>
                         </div>
                         <div onclick="window.location.href='/subdub?mode=subtitle_plus_dubbing'" class="bg-white border border-slate-200 p-6 rounded-xl tool-card cursor-pointer">
                             <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center mb-4"><i class="fas fa-closed-captioning text-xl"></i></div>
                             <h3 class="font-bold text-slate-800 mb-2">Dịch / Lồng tiếng Video</h3>
-                            <p class="text-sm text-slate-500">Sinh phụ đề tự động, dịch phụ đề, lồng tiếng Voice AI đè lên video gốc.</p>
+                            <p class="text-sm text-slate-500">Sinh phụ đề tự động, dịch phụ đề, lồng tiếng AI đè lên video gốc.</p>
                         </div>
                     </div>
                 </div>
@@ -465,7 +465,7 @@
             post_pack: { title: 'Gói đăng bài', category: 'post_pack', desc: 'Đóng gói caption, hashtag, CTA và lịch đăng.', guard: 'planning' },
             prompt_library: { title: 'Kho Prompt mẫu', category: 'library', desc: 'Gợi ý prompt mẫu theo nhóm tác vụ.', guard: 'planning' },
             temporary_media: { title: 'Lưu Media tạm', category: 'storage', desc: 'Chuẩn hóa mô tả/tags để lưu media tạm. Upload thật nối storage quota.', guard: 'storage' },
-            translation_hub: { title: 'Dịch Ngôn ngữ', category: 'translate', desc: 'Chuẩn bị yêu cầu dịch text/audio/docs theo cặp ngôn ngữ.', guard: 'provider' },
+            translation_hub: { title: 'Dịch Ngôn ngữ', category: 'translate', desc: 'Chuẩn bị yêu cầu dịch văn bản/âm thanh/tài liệu theo cặp ngôn ngữ.', guard: 'provider' },
             video_dub: { title: 'Dịch / Lồng tiếng Video', category: 'dub', desc: 'Tạo phụ đề tự động, dịch phụ đề và lồng tiếng AI đồng thời.', guard: 'provider' },
             quick_image: { title: 'Tạo ảnh nhanh', category: 'image', desc: 'Gợi ý chủ đề, prompt ảnh, tỉ lệ và tier giá trước khi tạo ảnh thật.', guard: 'render_image' },
             image_prompt: { title: 'Tạo prompt ảnh', category: 'image', desc: 'Sinh prompt ảnh chất lượng cao, negative prompt và kiểm soát bố cục.', guard: 'planning' },
@@ -582,8 +582,8 @@
                 reference: ['Học cấu trúc hook', 'Học nhịp dựng', 'Học caption/hashtag', 'Học CTA kênh', 'Học shot style', 'Đóng gói bài đăng'],
                 post_pack: ['Post bán hàng', 'Post giáo dục', 'Post affiliate', 'Post UGC', 'Post ra mắt sản phẩm', 'Post remarketing'],
                 library: ['Prompt logo', 'Prompt banner', 'Prompt video quảng cáo', 'Prompt phim AI', 'Prompt voice', 'Prompt caption'],
-                transcript: ['Bóc băng cuộc gọi', 'Bóc băng video', 'Tóm tắt audio', 'Trích ý chính', 'Tạo subtitle draft', 'Dịch transcript'],
-                account: ['Xem combo/lượt còn lại', 'Nhập gift code', 'Lấy link giới thiệu', 'Xem lịch sử quyền lợi', 'Kiểm tra hạng thành viên', 'Liên hệ admin']
+                transcript: ['Bóc băng cuộc gọi', 'Bóc băng video', 'Tóm tắt audio', 'Trích ý chính', 'Tạo tệp phụ đề', 'Dịch transcript'],
+                account: ['Xem gói ưu đãi/lượt còn lại', 'Nhập gift code', 'Lấy link giới thiệu', 'Xem lịch sử quyền lợi', 'Kiểm tra hạng thành viên', 'Liên hệ admin']
             };
             return banks[category] || banks.content;
         }
