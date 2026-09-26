@@ -195,6 +195,11 @@ _PORTAL_SHELL_TITLES = {
 # presentation copy. They must never interpolate account data, request state,
 # identifiers, or other private browser/server projections into first paint.
 _PORTAL_SHELL_DESCRIPTIONS = {
+    "/subdub": {
+        "vi": "Hành trình sản phẩm phụ đề & lồng tiếng 4 bước chuẩn: Tạo phụ đề, Dịch phụ đề, Lồng tiếng, Phụ đề + lồng tiếng.",
+        "en": "Authoritative 4-stage SubDub product journey: Subtitle only, Translated subtitle, Dubbing only, Subtitles & Dubbing.",
+        "zh": "标准4步字幕与配音产品流程：生成字幕、翻译字幕、仅配音、字幕+配音。",
+    },
     "/admin/commercial": {
         "vi": "Quản lý tập trung 5 trụ cột thương mại: Sản phẩm, Bảng giá, Gói cước, Khuyến mãi và Gói nạp Xu theo thẩm quyền Bot canonical.",
         "en": "Centralized management of 5 commercial pillars: Products, Pricing, Packages, Promotions, and Topup Packages under Bot authority.",

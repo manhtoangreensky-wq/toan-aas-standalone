@@ -237,7 +237,7 @@
                             <h3 class="font-bold text-slate-800 mb-2">Dịch Ngôn ngữ (Text/Audio/Docs)</h3>
                             <p class="text-sm text-slate-500">Dịch văn bản 2 chiều, tài liệu, đoạn hội thoại hoặc file ghi âm.</p>
                         </div>
-                        <div onclick="openWorkflow('video_dub')" class="bg-white border border-slate-200 p-6 rounded-xl tool-card cursor-pointer">
+                        <div onclick="window.location.href='/subdub?mode=subtitle_plus_dubbing'" class="bg-white border border-slate-200 p-6 rounded-xl tool-card cursor-pointer">
                             <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center mb-4"><i class="fas fa-closed-captioning text-xl"></i></div>
                             <h3 class="font-bold text-slate-800 mb-2">Dịch / Lồng tiếng Video</h3>
                             <p class="text-sm text-slate-500">Sinh phụ đề tự động, dịch phụ đề, lồng tiếng Voice AI đè lên video gốc.</p>
@@ -466,7 +466,7 @@
             prompt_library: { title: 'Kho Prompt mẫu', category: 'library', desc: 'Gợi ý prompt mẫu theo nhóm tác vụ.', guard: 'planning' },
             temporary_media: { title: 'Lưu Media tạm', category: 'storage', desc: 'Chuẩn hóa mô tả/tags để lưu media tạm. Upload thật nối storage quota.', guard: 'storage' },
             translation_hub: { title: 'Dịch Ngôn ngữ', category: 'translate', desc: 'Chuẩn bị yêu cầu dịch text/audio/docs theo cặp ngôn ngữ.', guard: 'provider' },
-            video_dub: { title: 'Dịch / Lồng tiếng Video', category: 'dub', desc: 'Tạo pipeline phụ đề, dịch phụ đề, TTS/lồng tiếng và confirm trước xử lý.', guard: 'provider' },
+            video_dub: { title: 'Dịch / Lồng tiếng Video', category: 'dub', desc: 'Tạo phụ đề tự động, dịch phụ đề và lồng tiếng AI đồng thời.', guard: 'provider' },
             quick_image: { title: 'Tạo ảnh nhanh', category: 'image', desc: 'Gợi ý chủ đề, prompt ảnh, tỉ lệ và tier giá trước khi tạo ảnh thật.', guard: 'render_image' },
             image_prompt: { title: 'Tạo prompt ảnh', category: 'image', desc: 'Sinh prompt ảnh chất lượng cao, negative prompt và kiểm soát bố cục.', guard: 'planning' },
             image_edit: { title: 'Chỉnh sửa ảnh', category: 'image_edit', desc: 'Chuẩn bị yêu cầu crop, resize, thêm chữ/logo, chỉnh màu/nâng nét.', guard: 'local_worker' },
@@ -526,6 +526,10 @@
         }
 
         function openWorkflow(key) {
+            if(key === 'video_dub') {
+                window.location.href = '/subdub?mode=subtitle_plus_dubbing';
+                return;
+            }
             const cfg = WORKFLOW_CONFIGS[key];
             if(!cfg) return showToast('Workflow này đang được chuẩn hóa.', 'warning');
             activeWorkflowKey = key;
@@ -566,9 +570,9 @@
                 caption: ['Caption bán hàng mềm', 'Caption kể chuyện', 'Caption list 3 lợi ích', 'Caption phản biện nỗi đau', 'Caption UGC đời thường', 'Caption ưu đãi ngắn'],
                 content: ['Hook gây tò mò', 'Kịch bản 15 giây', 'Ý tưởng series 5 bài', 'Bài giải thích cho người mới', 'Bài case study ngắn', 'Bài so sánh trước/sau'],
                 meta: ['Prompt ảnh Meta AI', 'Prompt video Meta AI', 'Prompt quảng cáo sản phẩm', 'Prompt UGC creator', 'Prompt cinematic', 'Prompt banner'],
-                music: ['Piano cinematic', 'Ambient luxury', 'Electronic future', 'Upbeat viral', 'SFX chuyển cảnh nhẹ', 'Lo-fi sạch cho voiceover'],
+                music: ['Piano cinematic', 'Ambient luxury', 'Electronic future', 'Upbeat viral', 'SFX chuyển cảnh nhẹ', 'Lo-fi sạch cho giọng đọc'],
                 translate: ['Dịch văn bản 2 chiều', 'Dịch tài liệu ngắn', 'Dịch transcript', 'Dịch hội thoại', 'Dịch voice/audio', 'Dịch phụ đề'],
-                dub: ['Tạo phụ đề', 'Dịch phụ đề', 'Lồng tiếng', 'Phụ đề + lồng tiếng', 'Giữ giọng gốc tham khảo', 'Voiceover mới'],
+                dub: ['Tạo phụ đề', 'Dịch phụ đề', 'Lồng tiếng', 'Phụ đề + lồng tiếng', 'Giữ giọng gốc', 'Lồng tiếng mới'],
                 support: ['Hướng dẫn nạp Xu', 'Tư vấn gói video', 'Kiểm tra lỗi thanh toán', 'Hỏi cách tạo ảnh', 'Hỏi cách tạo video', 'Liên hệ admin'],
                 support_payment: ['PayOS tự động', 'Nạp thủ công qua QR', 'USDT quốc tế', 'ZaloPay/MoMo thủ công', 'Lịch sử nạp', 'Ưu đãi nội địa'],
                 support_video: ['Prompt -> Video AI', 'Video theo trend', 'Storyboard nhiều cảnh', 'Phụ đề/lồng tiếng', 'Gói 200/300/400', 'Kiểm tra trạng thái job'],
@@ -638,10 +642,10 @@
                 return `${title}\n\nChủ đề: ${topic}\n\nHook:\nBạn đang bỏ lỡ điều này nếu chưa thử ${topic}.\n\nNội dung chính:\n- Nêu vấn đề người xem đang gặp\n- Đưa ${topic} như giải pháp rõ ràng\n- Chứng minh bằng lợi ích cụ thể\n\nCaption mẫu:\n${topic} không cần phức tạp. Bắt đầu từ một bước nhỏ, đo kết quả, rồi tối ưu dần.\n\nHashtag:\n#toanaas #aiworkflow #contentmarketing #automation\n\nCTA:\nLưu lại để dùng khi cần và nhắn TOAN AAS nếu muốn biến ý tưởng này thành ảnh/video.`;
             }
             if(['music','voice','transcript'].includes(cfg.category)) {
-                return `${title}\n\nNội dung: ${topic}\n\nGợi ý xử lý:\n- Mood: ${idea}\n- Nhịp: rõ lời, không lấn voice\n- Voice: tự nhiên, tốc độ vừa\n- Nếu là TTS/STT thật: cần upload/text đầu vào, báo Xu và xác nhận trước khi gọi provider\n\nPrompt nhạc/voice:\n${idea} cho nội dung ${topic}, sạch, hiện đại, phù hợp video ngắn, không quá ồn, hỗ trợ voiceover rõ.`;
+                return `${title}\n\nNội dung: ${topic}\n\nGợi ý xử lý:\n- Mood: ${idea}\n- Nhịp: rõ lời, không lấn voice\n- Voice: tự nhiên, tốc độ vừa\n- Nếu là TTS/STT thật: cần upload/text đầu vào, báo Xu và xác nhận trước khi gọi provider\n\nPrompt nhạc/voice:\n${idea} cho nội dung ${topic}, sạch, hiện đại, phù hợp video ngắn, không quá ồn, hỗ trợ giọng đọc AI rõ.`;
             }
             if(['translate','dub'].includes(cfg.category)) {
-                return `${title}\n\nNội dung: ${topic}\n\nPipeline đề xuất:\n1. Nhận text/audio/video/tài liệu\n2. Chọn ngôn ngữ gốc và ngôn ngữ đích\n3. Tạo bản dịch hoặc phụ đề nháp\n4. Nếu lồng tiếng: chọn giọng, báo Xu, xác nhận\n5. Xử lý và gửi kết quả\n\nGuard:\nTác vụ dài hoặc cần STT/TTS/provider phải báo giá trước, chưa tự trừ Xu.`;
+                return `${title}\n\nNội dung: ${topic}\n\nQuy trình xử lý đề xuất:\n1. Nhận text/audio/video/tài liệu\n2. Chọn ngôn ngữ gốc và ngôn ngữ đích\n3. Tạo bản dịch hoặc phụ đề nháp\n4. Nếu lồng tiếng: chọn giọng, báo Xu, xác nhận\n5. Xử lý và gửi kết quả\n\nBảo vệ an toàn:\nTác vụ dài hoặc cần STT/TTS/provider phải báo giá trước, chưa tự trừ Xu.`;
             }
             if(['support','support_payment','support_video'].includes(cfg.category)) {
                 return `${title}\n\nCâu hỏi: ${topic}\n\nTrả lời nhanh:\nTOAN AAS sẽ hướng dẫn trực tiếp trước. Nếu cần admin kiểm tra, hệ thống mới lưu ticket để theo dõi.\n\nGợi ý xử lý:\n- Nạp Xu: dùng PayOS tự động hoặc QR/thủ công theo hướng dẫn trong app\n- Video: đi theo chuỗi prompt -> add-on -> giá -> xác nhận -> job -> kết quả\n- Nếu gặp lỗi: gửi ảnh màn hình/tình huống, hệ thống lưu ticket cho admin\n\nTrạng thái:\nWeb app đang chuẩn hóa ticket/CSKH tự động, chưa tự tạo ticket từ modal này.`;
