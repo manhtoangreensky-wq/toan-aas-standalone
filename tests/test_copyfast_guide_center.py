@@ -172,4 +172,3 @@ def test_telegram_link_copy_is_truthful_and_contains_no_overclaims() -> None:
         full_text = " ".join([topic["title"], topic["summary"], *topic["steps"], topic.get("route_label", "")])
         for forbidden in ("100%", "1 cú nhấp", "ngay lập tức", "one click", "instantly", "一键", "数字资产", "digital assets", "tài sản số"):
             assert forbidden not in full_text
-
