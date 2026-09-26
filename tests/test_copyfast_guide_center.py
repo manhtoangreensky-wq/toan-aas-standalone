@@ -145,3 +145,31 @@ def test_snapshot_is_fresh_closed_data_without_runtime_adapters(monkeypatch) -> 
     source = (WEB_ROOT / "copyfast_guide_center.py").read_text(encoding="utf-8")
     for forbidden in ("copyfast_bridge", "copyfast_api", "copyfast_provider", "requests", "httpx"):
         assert forbidden not in source
+
+
+def test_telegram_link_copy_is_truthful_and_contains_no_overclaims() -> None:
+    import copyfast_guide_center as guides
+
+    vi = guides.guide_catalog("vi")
+    en = guides.guide_catalog("en")
+    zh = guides.guide_catalog("zh")
+
+    vi_topic = next(t for g in vi["groups"] for t in g["topics"] if t["id"] == "telegram_link")
+    en_topic = next(t for g in en["groups"] for t in g["topics"] if t["id"] == "telegram_link")
+    zh_topic = next(t for g in zh["groups"] for t in g["topics"] if t["id"] == "telegram_link")
+
+    assert vi_topic["summary"] == "Kết nối tài khoản Web với Telegram Bot để dùng chung số dư Xu và làm việc liền mạch giữa Web và Bot."
+    assert vi_topic["steps"][2] == "Nhấn 'Bắt đầu' (Start) trong Bot, sau đó quay lại tab Web để hoàn tất liên kết an toàn."
+
+    assert en_topic["summary"] == "Connect your Web account with the Telegram Bot to share your Xu wallet balance and move between Web and Telegram."
+    assert en_topic["steps"][2] == "Press 'Start' in the Bot, then return to the Web tab to complete the link securely."
+
+    assert zh_topic["summary"] == "将 Web 账户与 Telegram 机器人关联，共享 Xu 余额，并在 Web 与 Telegram 之间顺畅使用。"
+    assert zh_topic["steps"][2] == "在机器人中点击“开始”（Start），然后返回 Web 标签页安全完成关联。"
+
+    # Ensure overclaims are absent across all locales
+    for topic in (vi_topic, en_topic, zh_topic):
+        full_text = " ".join([topic["title"], topic["summary"], *topic["steps"], topic.get("route_label", "")])
+        for forbidden in ("100%", "1 cú nhấp", "ngay lập tức", "one click", "instantly", "一键", "数字资产", "digital assets", "tài sản số"):
+            assert forbidden not in full_text
+
