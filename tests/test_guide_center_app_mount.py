@@ -80,7 +80,7 @@ def test_production_entrypoint_mounts_the_signed_profile_localized_guide_center(
     assert response.headers["vary"] == "Cookie"
     data = response.json()["data"]
     assert data["locale"] == "zh"
-    assert sum(len(group["topics"]) for group in data["groups"]) == 10
+    assert sum(len(group["topics"]) for group in data["groups"]) == 11
     assert data["boundaries"]["bot_called"] is False
     assert data["boundaries"]["bridge_called"] is False
     assert data["boundaries"]["job_created"] is False

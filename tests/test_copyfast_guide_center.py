@@ -88,6 +88,7 @@ def test_catalog_requires_signed_session_and_has_a_closed_web_snapshot(tmp_path,
     assert [topic["id"] for group in data["groups"] for topic in group["topics"]] == [
         "getting_started",
         "find_tools",
+        "telegram_link",
         "content_brief",
         "prompt_library",
         "image_preparation",

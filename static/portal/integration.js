@@ -6407,7 +6407,7 @@
   // execution claim into the browser.
   const GUIDE_CENTER_GROUP_IDS = new Set(["start", "create", "media", "organize", "safe"]);
   const GUIDE_CENTER_TOPIC_IDS = new Set([
-    "getting_started", "find_tools", "content_brief", "prompt_library", "image_preparation",
+    "getting_started", "find_tools", "telegram_link", "content_brief", "prompt_library", "image_preparation",
     "audio_brief", "notes", "reminders", "safe_workspace", "get_support"
   ]);
   const GUIDE_CENTER_ROUTE_ALLOWLIST = new Set([
