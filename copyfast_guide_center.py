@@ -252,31 +252,31 @@ TOPICS: tuple[GuideTopic, ...] = (
         _localized(
             vi={
                 "title": "Liên kết Telegram Bot",
-                "summary": "Kết nối tài khoản Web với Telegram Bot để đồng bộ ví Xu, công việc và tài sản số chỉ với 1 cú nhấp.",
+                "summary": "Kết nối tài khoản Web với Telegram Bot để dùng chung số dư Xu và làm việc liền mạch giữa Web và Bot.",
                 "steps": (
                     "Mở trang Liên kết Telegram hoặc Hồ sơ tài khoản trên Web.",
                     "Nhấn nút 'Liên kết Telegram ngay' để mở Bot @toanaasbot.",
-                    "Nhấn 'Bắt đầu' (Start) trong Bot để hoàn tất liên kết tự động ngay lập tức.",
+                    "Nhấn 'Bắt đầu' (Start) trong Bot, sau đó quay lại tab Web để hoàn tất liên kết an toàn.",
                 ),
                 "route_label": "Mở Liên kết Telegram",
             },
             en={
                 "title": "Link Telegram Bot",
-                "summary": "Connect your Web account with the Telegram Bot to sync Xu wallet, jobs and digital assets in one click.",
+                "summary": "Connect your Web account with the Telegram Bot to share your Xu wallet balance and move between Web and Telegram.",
                 "steps": (
                     "Open the Telegram Link page or Account Settings on the Web.",
                     "Click 'Link Telegram Now' to open @toanaasbot.",
-                    "Press 'Start' in the Bot to complete automatic linking instantly.",
+                    "Press 'Start' in the Bot, then return to the Web tab to complete the link securely.",
                 ),
                 "route_label": "Open Telegram Link",
             },
             zh={
                 "title": "关联 Telegram 机器人",
-                "summary": "将 Web 账户与 Telegram 机器人关联，一键同步 Xu 钱包、任务和数字资产。",
+                "summary": "将 Web 账户与 Telegram 机器人关联，共享 Xu 余额，并在 Web 与 Telegram 之间顺畅使用。",
                 "steps": (
                     "在 Web 上打开关联 Telegram 页面或账户设置。",
                     "点击'立即关联 Telegram'打开 @toanaasbot。",
-                    "在机器人中点击'开始'（Start）即可立即自动完成关联。",
+                    "在机器人中点击“开始”（Start），然后返回 Web 标签页安全完成关联。",
                 ),
                 "route_label": "打开关联 Telegram",
             },

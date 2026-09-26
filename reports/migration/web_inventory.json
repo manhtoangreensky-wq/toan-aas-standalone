@@ -8775,7 +8775,7 @@
         "copyfast_pages.py",
         "copyfast_partner_crm.py"
       ],
-      "occurrences": 1813,
+      "occurrences": 1815,
       "provider": "Telegram"
     }
   ],
@@ -15687,7 +15687,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 242,
   "source_files_scanned": 242,
-  "source_fingerprint_sha256": "58a4de4046bcb04b27fddcc046ede078bdba3fcaeb758a270938ab535d947ee1",
+  "source_fingerprint_sha256": "8e2c04b3db3ee3f473f7179bbdcdd2b593d634565d49f8d72551a9e3cf9c3f46",
   "source_root": "repository-root",
   "ui_path_references": [
     {
