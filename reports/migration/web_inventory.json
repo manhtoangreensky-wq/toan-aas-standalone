@@ -8775,7 +8775,7 @@
         "copyfast_pages.py",
         "copyfast_partner_crm.py"
       ],
-      "occurrences": 1798,
+      "occurrences": 1813,
       "provider": "Telegram"
     }
   ],
@@ -10421,7 +10421,7 @@
     {
       "endpoint": "get_catalog",
       "file": "copyfast_guide_center.py",
-      "line": 539,
+      "line": 578,
       "methods": [
         "GET"
       ],
@@ -15687,7 +15687,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 242,
   "source_files_scanned": 242,
-  "source_fingerprint_sha256": "87db0d557717414e40edddec714d544c23eab67482430088046cb3b9fabed08c",
+  "source_fingerprint_sha256": "58a4de4046bcb04b27fddcc046ede078bdba3fcaeb758a270938ab535d947ee1",
   "source_root": "repository-root",
   "ui_path_references": [
     {
