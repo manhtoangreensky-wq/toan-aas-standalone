@@ -1,3 +1,38 @@
+/* U01.A: compact dashboard launchers; existing brand/theme tokens only. */
+@media (max-width: 980px) {
+  .portal-shell[data-portal-app-kind="customer"] { display: block; }
+  .portal-shell[data-portal-app-kind="customer"] .portal-sidebar {
+    position: fixed;
+    z-index: 100;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: min(304px, calc(100vw - 42px));
+    height: 100vh;
+    height: 100dvh;
+    padding-block: calc(20px + var(--portal-safe-top)) calc(16px + var(--portal-safe-bottom));
+    transform: translateX(-105%);
+    transition: transform 200ms ease;
+  }
+  .portal-shell[data-portal-app-kind="customer"] .portal-sidebar.is-open { transform: translateX(0); }
+  .portal-shell[data-portal-app-kind="customer"] .portal-workspace { width: 100%; min-width: 0; }
+}
+.portal-dashboard-product-hero { margin-block-end: 20px; }
+.portal-dashboard-product-hero .portal-dashboard-product-heading { margin-block-end: 16px; }
+.portal-dashboard-product-hero .portal-dashboard-product-heading h2 { margin: 0 0 8px; font-size: clamp(20px, 2vw, 26px); color: var(--portal-ink); }
+.portal-dashboard-product-hero .portal-dashboard-product-heading p { margin: 0; max-width: 72ch; color: var(--portal-muted); font-size: 14px; line-height: 1.6; }
+.portal-dashboard-product-hero .portal-dashboard-launchers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
+.portal-dashboard-product-hero .portal-product-launcher-card { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 16px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-md); background: var(--portal-surface); color: var(--portal-ink); text-decoration: none; }
+.portal-dashboard-product-hero .portal-product-launcher-icon { display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 36px; border-radius: 10px; background: color-mix(in srgb, var(--portal-brand) 10%, var(--portal-surface)); color: var(--portal-brand); }
+.portal-dashboard-product-hero .portal-product-launcher-copy { display: grid; gap: 5px; min-width: 0; overflow-wrap: anywhere; }
+.portal-dashboard-product-hero .portal-product-launcher-copy strong { font-size: 15px; }
+.portal-dashboard-product-hero .portal-product-launcher-copy > span { color: var(--portal-muted); font-size: 13px; line-height: 1.5; }
+.portal-dashboard-product-hero .portal-product-launcher-arrow { margin-inline-start: auto; color: var(--portal-brand); }
+.portal-dashboard-product-hero .portal-product-launcher-card:hover { border-color: var(--portal-brand); }
+.portal-dashboard-product-hero .portal-product-launcher-card:focus-visible { outline: 2px solid var(--portal-brand); outline-offset: 3px; }
+@media (prefers-reduced-motion: no-preference) {
+  .portal-dashboard-product-hero .portal-product-launcher-card { transition: border-color 160ms ease, background-color 160ms ease; }
+}
+
 /* Canonical teal–cyan Portal system.
    This is intentionally loaded after portal.css so existing route, component,
    security and JavaScript contracts retain their DOM ownership. */
@@ -2645,6 +2680,8 @@ body {
   line-height: 1;
   transition: background var(--portal-transition), color var(--portal-transition);
 }
+
+.portal-landing-locale-short { display: none; }
 
 .portal-landing-locale-link:hover,
 .portal-landing-locale-link[aria-current="true"] {
@@ -16356,6 +16393,29 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
    Aura switcher instead of clipping a second copy of the same action. */
 @media (max-width: 420px) {
   .portal-landing-nav-primary { display: none; }
+
+  .portal-landing-nav { gap: 8px; }
+  .portal-landing-nav-actions { gap: 4px; }
+  .portal-landing-locale-nav { gap: 0; }
+  .portal-landing-brand { gap: 6px; }
+  .portal-landing-brand .portal-brand-mark { width: 38px; height: 38px; }
+  .portal-landing-brand small { display: none; }
+  .portal-landing-locale-full { display: none; }
+  .portal-landing-locale-short { display: inline; }
+  .portal-landing-locale-link { min-width: 44px; padding-inline: 2px; white-space: nowrap; }
+}
+
+@media (max-width: 380px) {
+  .portal-landing-nav {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    gap: 4px 8px;
+  }
+
+  .portal-landing-nav-actions { display: contents; }
+  .portal-landing-brand { grid-column: 1; grid-row: 1; }
+  .portal-landing-locale-nav { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+  .portal-landing-theme-switch { grid-column: 2; grid-row: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

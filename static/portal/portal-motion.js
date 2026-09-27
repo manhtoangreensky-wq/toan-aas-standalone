@@ -295,7 +295,8 @@
     });
     const pendingTargets = targets.filter((target) => target.classList.contains("is-pending"));
     const revealReadablePendingTargets = () => {
-      pendingTargets.filter(targetIsInReadableViewport).forEach(revealTarget);
+      pendingTargets.filter((target) => target.classList.contains("is-pending")
+        && targetIsInReadableViewport(target)).forEach(revealTarget);
     };
     const scheduleViewportFallback = () => {
       if (!isCurrentMount()) return;
@@ -395,6 +396,10 @@
   function mountLanding(root) {
     unmountLanding();
     if (!root || typeof window !== "object") return;
+
+    const workspaceScroller = typeof root.closest === "function" ? root.closest(".portal-workspace") : null;
+    const scrollTarget = workspaceScroller || window;
+    const scrollPosition = () => Math.max(0, Number(workspaceScroller ? workspaceScroller.scrollTop : window.scrollY) || 0);
 
     const documentElement = typeof document === "object" && document ? document.documentElement : null;
     root.setAttribute("data-landing-motion", "cinematic-mini");
@@ -515,6 +520,7 @@
       });
       pointerHandlers.forEach(({ target, move, leave }) => {
         if (!target || typeof target.removeEventListener !== "function") return;
+        leave();
         target.removeEventListener("pointermove", move);
         target.removeEventListener("pointerleave", leave);
         target.removeEventListener("pointercancel", leave);
@@ -550,26 +556,28 @@
 
     const syncScrollMotion = () => {
       if (!isCurrentMount()) return;
-      const viewportHeight = Math.max(1, Number(window.innerHeight) || 800);
-      const scrollY = Math.max(0, Number(window.scrollY) || 0);
+      const viewportHeight = Math.max(1, Number(workspaceScroller ? workspaceScroller.clientHeight : window.innerHeight) || 800);
+      const scrollY = scrollPosition();
       const documentElement = typeof document === "object" && document ? document.documentElement : null;
-      const documentHeight = Math.max(viewportHeight, Number(documentElement && documentElement.scrollHeight) || viewportHeight);
+      const documentHeight = Math.max(viewportHeight, Number(workspaceScroller ? workspaceScroller.scrollHeight : documentElement && documentElement.scrollHeight) || viewportHeight);
       const pageProgress = clamp(scrollY / Math.max(1, documentHeight - viewportHeight), 0, 1);
-      setStyleProperty(root, "--landing-scroll-progress", pageProgress.toFixed(4));
-      root.setAttribute("data-landing-scroll-progress", String(Math.round(pageProgress * 100)));
-
+      // Snapshot all geometry before changing presentation variables. Reading
+      // the next section after a style write forces repeated style flushes.
       const heroRect = hero && typeof hero.getBoundingClientRect === "function" ? hero.getBoundingClientRect() : null;
+      const layerRects = scrollLayers
+        .filter((layer) => layer && typeof layer.getBoundingClientRect === "function")
+        .map((layer) => ({ layer, rect: layer.getBoundingClientRect() }));
       const heroProgress = heroRect
         ? clamp((viewportHeight * 0.38 - Number(heroRect.top || 0)) / Math.max(1, Number(heroRect.height || viewportHeight) * 0.86), 0, 1)
         : pageProgress;
+      setStyleProperty(root, "--landing-scroll-progress", pageProgress.toFixed(4));
+      root.setAttribute("data-landing-scroll-progress", String(Math.round(pageProgress * 100)));
       setStyleProperty(root, "--landing-hero-progress", heroProgress.toFixed(4));
       setStyleProperty(hero, "--landing-hero-progress", heroProgress.toFixed(4));
 
       let activeLayer = "hero";
       let activeDistance = Number.POSITIVE_INFINITY;
-      scrollLayers.forEach((layer) => {
-        if (!layer || typeof layer.getBoundingClientRect !== "function") return;
-        const rect = layer.getBoundingClientRect();
+      layerRects.forEach(({ layer, rect }) => {
         const height = Math.max(1, Number(rect.height) || viewportHeight);
         const center = Number(rect.top || 0) + (height / 2);
         const travel = Math.max(1, (height + viewportHeight) * 0.55);
@@ -622,7 +630,11 @@
             if (target.classList && typeof target.classList.add === "function") target.classList.add("is-pointer-active");
           });
         };
-        const leave = () => resetPointer(target);
+        const leave = () => {
+          if (pointerFrame) window.cancelAnimationFrame(pointerFrame);
+          pointerFrame = 0;
+          resetPointer(target);
+        };
         target.addEventListener("pointermove", move, { passive: true });
         target.addEventListener("pointerleave", leave, { passive: true });
         target.addEventListener("pointercancel", leave, { passive: true });
@@ -740,13 +752,13 @@
     const syncHeader = () => {
       scrollFrame = 0;
       if (!isCurrentMount()) return;
+      syncScrollMotion();
       if (header) {
         header.setAttribute(
           "data-landing-motion-header",
-          window.scrollY > 20 ? "compact" : "default"
+          scrollPosition() > 20 ? "compact" : "default"
         );
       }
-      syncScrollMotion();
     };
     const onScroll = () => {
       if (!isCurrentMount()) return;
@@ -756,7 +768,7 @@
 
     if (header) {
       syncHeader();
-      window.addEventListener("scroll", onScroll, { passive: true });
+      scrollTarget.addEventListener("scroll", onScroll, { passive: true });
     }
 
     if (!header) syncScrollMotion();
@@ -811,7 +823,7 @@
     landingCleanup = () => {
       clearIntroSchedule();
       if (scrollFrame) window.cancelAnimationFrame(scrollFrame);
-      if (header) window.removeEventListener("scroll", onScroll);
+      if (header) scrollTarget.removeEventListener("scroll", onScroll);
       revealTargets.forEach((target) => target.removeEventListener("focusin", onRevealFocus));
       if (replayControl) replayControl.removeEventListener("click", replayIntro);
       if (observer) observer.disconnect();

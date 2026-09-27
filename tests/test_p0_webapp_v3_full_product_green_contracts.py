@@ -65,19 +65,19 @@ def test_green_02_zero_duplicate_routes_in_primary_nav() -> None:
 
 
 def test_green_03_dashboard_product_first_and_6_launchers() -> None:
-    """Gap 4 & 5: Dashboard hero is product-first with 'Bạn muốn làm gì hôm nay?' and 6 launchers."""
+    """Dashboard stays product-first; actual href output is covered by U01 render tests."""
     idx = PORTAL_JS.find("function renderDashboard(")
     assert idx != -1
     dashboard_block = PORTAL_JS[idx:idx + 15000]
 
-    assert "Bạn muốn làm gì hôm nay?" in dashboard_block
+    assert "Bạn muốn tạo gì hôm nay?" in dashboard_block
     assert "renderDashboardProductHero" in dashboard_block
     assert "renderDashboardAccountSummary" in dashboard_block
 
     # Check 6 launchers are present
     launcher_routes = ["/studio", "/tools/image", "/voice", "/subdub", "/content", "/music"]
     for r in launcher_routes:
-        assert f'href="{r}"' in dashboard_block, f"Launcher {r} missing from dashboard hero"
+        assert f'["{r}", ICONS.' in dashboard_block, f"Launcher {r} missing from dashboard hero"
 
 
 def test_green_04_jargon_purged_from_customer_dashboard() -> None:

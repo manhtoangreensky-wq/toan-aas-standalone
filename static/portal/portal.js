@@ -21078,91 +21078,65 @@
     const readState = dashboardReadState(context);
 
     function renderDashboardProductHero(ctx) {
-      return `<section class="portal-card portal-card-pad portal-dashboard-product-hero" aria-labelledby="dashboard-product-title" style="margin-bottom:20px; background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand) 6%, var(--portal-surface-light)) 0%, var(--portal-surface-light) 100%); border:1px solid color-mix(in srgb, var(--portal-brand) 20%, var(--portal-border)); border-radius:var(--portal-radius-lg); padding:24px;">
-        <div style="margin-bottom:20px;">
-          <span class="portal-section-kicker" style="color:var(--portal-brand); font-weight:700; font-size:12px; letter-spacing:0.05em;">HỆ SINH THÁI SÁNG TẠO AI TOAN AAS</span>
-          <h2 id="dashboard-product-title" style="margin:6px 0 8px; font-size:24px; font-weight:800; color:var(--portal-ink);">Bạn muốn làm gì hôm nay?</h2>
-          <p style="margin:0; font-size:14px; color:var(--portal-muted);">Khởi tạo nhanh các tác vụ AI sáng tạo chuyên nghiệp từ 6 không gian sản phẩm chủ lực.</p>
+      const copy = {
+        vi: {
+          title: "Bạn muốn tạo gì hôm nay?",
+          description: "Chọn công cụ để chuẩn bị nội dung. Khả năng tạo và chi phí được kiểm tra trong từng công cụ.",
+          open: "Mở công cụ",
+          products: [
+            ["Video", "Kịch bản, phân cảnh và nội dung video."],
+            ["Hình ảnh", "Ý tưởng, ảnh tham chiếu và thiết kế."],
+            ["Giọng nói", "Lời đọc, giọng nói và ngôn ngữ."],
+            ["Phụ đề & lồng tiếng", "Phụ đề, bản dịch và lời lồng tiếng."],
+            ["Nội dung", "Bài viết, câu dẫn và kịch bản."],
+            ["Âm nhạc", "Lời bài hát, nhạc nền và âm thanh."]
+          ]
+        },
+        en: {
+          title: "What would you like to create?",
+          description: "Choose a tool to prepare your content. Generation availability and costs are checked inside each tool.",
+          open: "Open tool",
+          products: [
+            ["Video", "Scripts, scenes and video content."],
+            ["Images", "Ideas, reference images and designs."],
+            ["Voice", "Narration, voices and languages."],
+            ["Subtitles & dubbing", "Subtitles, translations and dubbed speech."],
+            ["Content", "Posts, hooks and scripts."],
+            ["Music", "Lyrics, background music and sound."]
+          ]
+        },
+        zh: {
+          title: "今天想创作什么？",
+          description: "选择工具来准备内容。生成能力和费用将在各工具中核实。",
+          open: "打开工具",
+          products: [
+            ["视频", "脚本、分镜和视频内容。"],
+            ["图像", "创意、参考图像和设计。"],
+            ["语音", "旁白、声音和语言。"],
+            ["字幕与配音", "字幕、翻译和配音。"],
+            ["内容", "文章、开场文案和脚本。"],
+            ["音乐", "歌词、背景音乐和音效。"]
+          ]
+        }
+      };
+      const text = copy[interfaceLocaleFor(ctx)] || copy.vi;
+      const destinations = [
+        ["/studio", ICONS.video], ["/tools/image", ICONS.image],
+        ["/voice", ICONS.voice], ["/subdub", ICONS.subtitle],
+        ["/content", ICONS.prompt], ["/music", ICONS.music]
+      ];
+      return `<section class="portal-card portal-card-pad portal-dashboard-product-hero" aria-labelledby="dashboard-product-title">
+        <div class="portal-dashboard-product-heading">
+          <h2 id="dashboard-product-title">${safeText(text.title)}</h2>
+          <p>${safeText(text.description)}</p>
         </div>
-        <div class="portal-dashboard-launchers-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
-          <a class="portal-product-launcher-card" href="/studio" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
-            <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #3b82f6 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#3b82f6; margin-bottom:12px;">
-                ${portalIcon(ICONS.video)}
-              </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Video AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Video ngắn TikTok/Reels, phân cảnh đa góc quay và kịch bản video AI.</p>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Video →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Đa kịch bản</span>
-            </div>
-          </a>
-          <a class="portal-product-launcher-card" href="/tools/image" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
-            <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #8b5cf6 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#8b5cf6; margin-bottom:12px;">
-                ${portalIcon(ICONS.image)}
-              </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Ảnh AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Ảnh chân thực 4K, người mẫu AI, poster sản phẩm và nâng cấp độ phân giải.</p>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Ảnh →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Độ phân giải cao</span>
-            </div>
-          </a>
-          <a class="portal-product-launcher-card" href="/voice" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
-            <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #06b6d4 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#06b6d4; margin-bottom:12px;">
-                ${portalIcon(ICONS.voice)}
-              </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Giọng AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Lồng tiếng đọc văn bản tự nhiên, nhân bản giọng nói và chuyển ngữ chuẩn âm.</p>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Giọng →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Đa ngôn ngữ</span>
-            </div>
-          </a>
-          <a class="portal-product-launcher-card" href="/subdub" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
-            <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #10b981 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#10b981; margin-bottom:12px;">
-                ${portalIcon(ICONS.subtitle)}
-              </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">AI SubDub</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Bóc tách phụ đề video tự động, dịch song ngữ và lồng tiếng tự động chuẩn khớp.</p>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở SubDub →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Khớp nhịp audio</span>
-            </div>
-          </a>
-          <a class="portal-product-launcher-card" href="/content" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
-            <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #f59e0b 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#f59e0b; margin-bottom:12px;">
-                ${portalIcon(ICONS.prompt)}
-              </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Nội dung</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Kịch bản video, bài đăng mạng xã hội, copywriting bán hàng và tối ưu SEO.</p>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Nội Dung →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Tối ưu chuyển đổi</span>
-            </div>
-          </a>
-          <a class="portal-product-launcher-card" href="/music" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
-            <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #ec4899 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#ec4899; margin-bottom:12px;">
-                ${portalIcon(ICONS.music)}
-              </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Nhạc AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Sáng tác bài hát theo lời thoại, tạo giai điệu nền và hiệu ứng âm thanh SFX.</p>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Nhạc →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Bản quyền thương mại</span>
-            </div>
-          </a>
+        <div class="portal-dashboard-launchers-grid">
+          ${destinations.map(([href, icon], index) => `<a class="portal-product-launcher-card" href="${href}">
+            <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(icon)}</span>
+            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[index][0])}</strong><span>${safeText(text.products[index][1])}</span></span>
+            <span class="portal-product-launcher-arrow" aria-hidden="true">↗</span>
+            <span class="portal-sr-only">${safeText(text.open)}</span>
+          </a>`).join("")}
         </div>
       </section>`;
     }
@@ -33894,7 +33868,10 @@
       { icon: ICONS.assets, key: "private" }
     ];
     const trustMarkup = trustCards.map((item) => `<article><span class="portal-landing-trust-icon" aria-hidden="true">${portalIcon(item.icon)}</span><strong>${text(`trust.${item.key}.title`)}</strong><p>${text(`trust.${item.key}.body`)}</p></article>`).join("");
-    const localeMarkup = languageLinks.map((item) => `<a class="portal-landing-locale-link" href="${item.href}"${locale === item.code ? ' aria-current="true"' : ""}>${item.label}</a>`).join("");
+    const localeMarkup = languageLinks.map((item) => {
+      const shortLabel = item.code === "zh" ? "中文" : String(item.code || "").toUpperCase();
+      return `<a class="portal-landing-locale-link" href="${item.href}" aria-label="${safeText(item.label)}"${locale === item.code ? ' aria-current="true"' : ""}><span class="portal-landing-locale-full">${safeText(item.label)}</span><span class="portal-landing-locale-short" aria-hidden="true">${safeText(shortLabel)}</span></a>`;
+    }).join("");
     return `<article class="portal-landing portal-landing-public-container" aria-label="TOAN AAS">
       <header class="portal-landing-header">
         <nav class="portal-landing-nav" aria-label="${text("nav.language")}"><a class="portal-landing-brand" href="/welcome"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>${text("brand.workspace")}</small></span></a><div class="portal-landing-nav-links"><a href="#features">${text("nav.features")}</a><a href="#content-workspace">${text("nav.content")}</a><a href="#audio-workspace">${text("nav.audio")}</a><a href="#studios">${text("nav.tools")}</a><a href="#workflow">${text("nav.workflow")}</a></div><div class="portal-landing-nav-actions"><nav class="portal-landing-locale-nav" aria-label="${text("nav.language")}">${localeMarkup}</nav>${renderLandingThemeSwitch()}${secondaryAction}${navigationAction}</div></nav>

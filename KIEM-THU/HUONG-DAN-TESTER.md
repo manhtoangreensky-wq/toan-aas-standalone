@@ -3,9 +3,9 @@
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
-2. Chọn đúng một ID trong `WA-01..WA-48` cho mỗi lượt test; WA-44 kiểm Operations readiness, WA-45 Reliability, WA-46 hàng chờ bàn giao nội dung, WA-47 hàng việc điều hành, WA-48 danh sách khách hàng tiềm năng ẩn danh.
+2. Chọn đúng một ID trong `WA-01..WA-51` cho mỗi lượt test; WA-44 kiểm Operations readiness, WA-45 Reliability, WA-46 hàng chờ bàn giao nội dung, WA-47 hàng việc điều hành, WA-48 danh sách khách hàng tiềm năng ẩn danh, WA-49..WA-51 thuộc batch M01/U01.
 3. Nếu cần đổi case, sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
-4. Tracker batch là GitHub issue `#412` của repo `manhtoangreensky-wq/toan-aas-standalone`.
+4. Issue `#412` chỉ theo dõi manual top-up/P0-05; batch giao diện M01/U01 WA-49..WA-51 dùng [issue #571](https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/571) trong [Tester Project #2](https://github.com/users/manhtoangreensky-wq/projects/2). Issue #571 đang chờ candidate SHA cố định và chưa có Tester verdict.
 5. Không dùng chat/Zalo làm nơi lưu kết quả duy nhất.
 
 ## 2. Ghi đúng phiên bản
@@ -186,3 +186,24 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 110. DTO/DOM không được có ID, owner, tên, email, nội dung nhu cầu, tag hoặc note; route không có link detail hay action ghi cross-account.
 111. Ở `768/390/360`, mỗi hàng hiển thị dọc với nhãn cột; không cuộn ngang cấp trang hoặc ép chữ. Contrast tối thiểu `4.5:1`, target tối thiểu `44px`.
 112. Browser receipt bắt buộc overflow/table overflow/clipping/private leak/framework overlay/relevant console/write request `0`; filter `review` trả đúng tập con ẩn danh.
+
+## 17. M01: Motion landing theo cuộn
+
+113. Chạy WA-49 trên `/welcome`, desktop `1280×720` và mobile `390×844`; ghi runtime SHA cho live. Không dùng ảnh tĩnh hoặc replay riêng lẻ thay cho kiểm chứng cuộn.
+114. Cuộn `.portal-workspace` từ đầu trang và lưu trước/sau `scrollTop`, progress, active section và phase. Progress phải tăng từ `0`, active section phải rời `hero`; đọc DOM sau mỗi tương tác và chụp trạng thái đầu+giữa trang.
+115. Bấm replay một lần, run counter tăng đúng một; trong lúc chuyển cảnh người dùng vẫn cuộn và kích hoạt được điều khiển. Đo CLS `≤0.1`; kiểm overflow, console/page errors, failed/foreign requests đều `0`.
+116. Bật `prefers-reduced-motion: reduce`: nội dung phải hiện đầy đủ ngay cả khi chưa cuộn và motion trang trí bị tắt. Production chưa phát hành hoặc runtime SHA không khớp thì ghi `BLOCKED`/`FAILED_LIVE`, không đánh dấu đạt.
+
+## 18. M01: Header landing responsive và ngôn ngữ
+
+117. Chạy WA-50 ở `1280/390/375/360`, VI/EN/ZH, sáng/tối. Ghi `scrollWidth/clientWidth`, rect của nút, line count và accessible name.
+118. Ở mobile không tràn ngang; nhãn gọn một dòng hoặc nhãn rút gọn có accessible name đầy đủ; nút tối thiểu `44×44px`, focus-visible và theme switch thực sự đổi theme. Contrast chữ thường `≥4.5:1`.
+119. Lưu ảnh 390px light/dark và một desktop; nếu nhãn bị bẻ dòng hoặc chỉ đúng trên local trong khi production cũ còn chạy, case vẫn `FAILED_LIVE`/`BLOCKED`, không nghiệm thu.
+
+## 19. U01: Dashboard khách đã xác thực
+
+120. Chạy WA-51 local với fixture QA tách biệt trước. Live chỉ dùng signed session QA có sẵn; không tự đăng ký production, không lấy/chia sẻ credential.
+121. Trên `/dashboard`, kiểm nội dung và drawer: role dialog/aria-modal/inert; Tab và Shift+Tab tuần hoàn trong drawer; Escape đóng và focus trở lại nút menu.
+122. Kiểm đúng sáu route theo thứ tự `/studio`, `/tools/image`, `/voice`, `/subdub`, `/content`, `/music`; phiên vẫn signed, không redirect login và mỗi trang có nội dung thật. Chỉ mở màn hình, không tạo job, upload, checkout, gọi provider hoặc ghi dữ liệu.
+123. Kiểm locale VI/EN/ZH trên dashboard và theme; mobile `390×844` không tràn ngang, target ≥44px; app icon SVG phải trả `200`, không phát sinh favicon 404.
+124. Ghi route/status matrix, screenshot desktop/mobile, DOM snapshot, console/network failures, runtime SHA và mutation counters. Nếu thiếu session QA, ghi `BLOCKED_AUTH`; không suy live PASS từ local fixture.

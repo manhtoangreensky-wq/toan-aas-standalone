@@ -1,6 +1,7 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
-Tracker điều phối: `manhtoangreensky-wq/toan-aas-standalone#412`.
+Tracker cũ `#412` chỉ theo dõi batch nạp tiền P0-05; không dùng làm nghiệm thu cho batch giao diện này.
+Các case M01/U01 `WA-49..WA-51` được theo dõi tại [issue #571](https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/571) và [Tester Project #2](https://github.com/users/manhtoangreensky-wq/projects/2). Issue hiện `BLOCKED / PENDING CANDIDATE`; chưa phải nghiệm thu.
 
 Đây là nguồn duy nhất của case; sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 
@@ -54,6 +55,9 @@ Tracker điều phối: `manhtoangreensky-wq/toan-aas-standalone#412`.
 | WA-46 | A09-ADMIN-CONTENT-HANDOFFS-UX-LOCALE | 🟠 nặng | local-render + live-after-deploy | `/admin/content-handoffs` · signed Admin · `1440/1024/768/390/360` · VI/EN · light/dark; ZH renderer | Hàng chờ bàn giao dễ duyệt | Filter đứng trước bản ghi; decision form giữ transition ID/revision; quy trình thu gọn; browser `20/20` trạng thái đạt locale/contrast/touch/overflow/console, minimum contrast `7.26:1`, staff write request `0`. | Trang từng trộn `Customer Care/Content Handoff/Role/Manager/write/decision/publish/...`, nhãn form gần như trắng và guard tự suy thiếu quyền. | `tests/test_a09_admin_content_handoffs_ux_locale.py`; `tests/test_copyfast_content_handoff.py`; `evidence/a09-admin-content-handoffs-20260911/browser/`. |
 | WA-47 | A09-ADMIN-WORK-QUEUE-UX-LOCALE | 🟠 nặng | local-render + live-after-deploy | `/admin/work-queue` · signed Admin/Support staff · `1440/1024/768/390/360` · VI/EN · light/dark; ZH renderer | Hàng việc điều hành task-first | Bộ lọc và việc cần xử lý đứng trước nguồn; source count guarded/unavailable giữ `—`; VI/EN/ZH fixed copy không trộn; toast success/failure/permission cũng thuần locale; hàng bảng chuyển thẻ dọc ở `≤900px`; details giới hạn đóng ban đầu; pagination/route allow-list giữ nguyên; browser `20/20`, minimum contrast `7.62:1`, overflow/clipping/framework overlay/console/write request `0`. | Trang từng phơi `Operations Desk`, `metadata`, `server-side`, `staff`, `redaction`, `control plane`, `retry`, `provider`, `delivery`, `deploy`; nguồn và giải thích đứng trước công việc; cột đầu bị ép trên mobile; toast thao tác còn hard-code. | `tests/test_a09_admin_work_queue_ux_locale.py`; `tests/test_operations_desk_portal_contracts.py`; `tests/test_operations_desk_read_model_contracts.py`; `evidence/a09-admin-work-queue-20260911/browser/`. |
 | WA-48 | A09-ADMIN-CRM-LEADS-UX-LOCALE | 🟠 nặng | local-render + local-temp-only + live-after-deploy | `/admin/crm/leads` · signed Web Admin · `1440/1024/768/390/360` · VI/EN · light/dark; ZH renderer | Theo dõi khách hàng tiềm năng ẩn danh | Filter đứng trước directory; fixed copy và toast refresh/filter/page thuần VI/EN/ZH; loading khác failure; DTO không có ID/owner/name/email/opportunity/tag/note; hàng chuyển thẻ dọc ở `≤900px`; browser `20/20`, minimum contrast `5.28:1`, overflow/clipping/private leak/framework/console/write request `0`. | Renderer từng ném `PARTNER_CRM_STAGES is not defined`; bản Việt trộn `CRM Manager Directory/Server-redacted/stage/lead/metadata/...`; filter label light contrast `1.15:1`; bảng mobile nằm ngang. | `tests/test_a09_admin_crm_leads_ux_locale.py`; `tests/test_content_handoff_partner_crm_portal_contracts.py`; `tests/test_copyfast_partner_crm.py`; `evidence/a09-admin-crm-leads-20260912/browser/`. |
+| WA-49 | M01-LANDING-MOTION | 🟠 nặng | local-render + live-after-deploy-read-only | `/welcome` · guest · `1280×720/390×844` · light/dark · normal/reduced motion | Motion landing theo cuộn và replay | Cuộn `.portal-workspace` làm progress tăng từ `0`, section active rời `hero`; replay tăng run và phát lại; reduced-motion giữ nội dung hiện rõ, tắt motion trình bày; CLS `≤0.1`, overflow/console/page error/failed hoặc foreign request `0`. Ghi số đo scroll/progress/section/phase, ảnh đầu+giữa trang và runtime SHA khi live. | Production từng cuộn thật nhưng progress vẫn `0`, section giữ `hero`; replay độc lập vẫn chạy. | `tests/test_uiux_m01_motion_measured_regression.py`; `tests/test_landing_scroll_motion_contracts.py`; `evidence/tester/WA-49/<runtime-sha>/`. |
+| WA-50 | M01-RSP-390 | 🟠 nặng | local-render + live-after-deploy-read-only | `/welcome` · guest · `1280/390/375/360` · VI/EN/ZH · light/dark | Header landing trên màn nhỏ | Ở 390/375/360 không tràn ngang; nhãn ngôn ngữ một dòng hoặc nhãn gọn có accessible name đầy đủ; từng nút ≥44×44px, focus nhìn thấy, theme light/dark hoạt động, contrast đạt WCAG AA. Chụp 390px sáng+tối và ghi DOM/các kích thước thực đo. | Production từng bẻ nhãn cả ba ngôn ngữ thành hai dòng; bản rút gọn chỉ có trong local. | `tests/test_uiux_m01_mobile_header_controls.py`; `evidence/tester/WA-50/<runtime-sha>/`. |
+| WA-51 | U01-A-DASHBOARD-LAUNCHERS | 🟠 nặng | local-auth-fixture + live-after-deploy-read-only | `/dashboard` · signed customer QA · `1280×720/390×844` · VI/EN/ZH | Dashboard, drawer và sáu lối tắt | Phiên khách giữ đăng nhập qua sáu route `/studio`, `/tools/image`, `/voice`, `/subdub`, `/content`, `/music`; dashboard và fixed copy đúng locale; drawer có dialog/inert, Tab/Shift+Tab trap, Escape đóng và trả focus; icon trả `200`, 404/request lỗi/overflow/console `0`. Live chỉ dùng phiên QA sẵn có, chỉ đọc; không tự đăng ký tài khoản production, tạo nội dung, gọi provider hay sửa ví. | Local fixture đã đạt nhưng dashboard production chưa được xác minh; favicon cũ từng gọi `/favicon.ico` và trả 404. | `tests/test_uiux_u01_dashboard_launchers.py`; `tests/test_uiux_portal_shell_favicon.py`; `evidence/tester/WA-51/<runtime-sha>/`. |
 
 Evidence local đặt dưới `D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/`. PASS cuối phải tách PR merge SHA, CI run, deploy run, runtime SHA và live output.
 
@@ -84,3 +88,26 @@ Evidence local đặt dưới `D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/`. PASS cu�
 - Manager review giữ đúng `approved_for_handoff` + `blocked`; record ID/revision/cursor giữ nguyên; guarded/empty không có review action.
 - Bắt buộc: contrast ≥4.5:1, target ≥44px, overflow/clipping/framework overlay/relevant event/staff write request `0`.
 - Live sau deploy chỉ đọc queue hiện có; cấm bấm quyết định hoặc tạo dữ liệu production chỉ để lấy ảnh.
+
+## WA-49 — M01-LANDING-MOTION
+
+- Chạy `/welcome` ở 1280×720 và 390×844, lần lượt light/dark; ghi đúng scroll owner `.portal-workspace`.
+- Cuộn bằng wheel/keyboard từ đầu trang; lưu trước/sau `scrollTop`, `data-landing-scroll-progress`, `data-landing-motion-section` và `data-landing-motion-phase`. Progress phải tăng và active section phải rời `hero`; không chấp nhận chỉ có animation intro/replay.
+- Bấm “Xem lại chuyển cảnh” riêng; run counter phải tăng đúng một lần. Kiểm tra có thể cuộn/nhấn ngay trong lúc motion chạy.
+- Với `prefers-reduced-motion: reduce`, nội dung phải visible ngay, không chờ cuộn; animation presentation tắt. Ghi CLS, overflow, console/page errors, failed/foreign requests và ảnh đầu+giữa trang.
+- Live chỉ đọc sau khi có release; ghi runtime SHA thật. Nếu runtime SHA không khớp bản được nghiệm thu hoặc progress không đổi, verdict `FAILED_LIVE`, không tick case.
+
+## WA-50 — M01-RSP-390
+
+- Chạy header ở 1280/390/375/360, cả light/dark và VI/EN/ZH; tại mobile ghi `scrollWidth/clientWidth`, rect từng nút, số dòng nhãn, accessible name và focus-visible.
+- Không tràn ngang; label phải gọn trên một dòng hoặc có visual abbreviation cùng accessible name đầy đủ; mỗi target tối thiểu 44×44px. Theme switch phải đổi trạng thái thực, không chỉ đổi icon.
+- Contrast chữ thường tối thiểu 4.5:1; không ép chữ, chồng nút hoặc cắt logo. Chụp tối thiểu 390px light/dark và một desktop.
+- Production read-only chỉ kết luận sau khi asset/runtime SHA được ghi. Nhãn xuống dòng như baseline là `FAILED_LIVE`.
+
+## WA-51 — U01-A-DASHBOARD-LAUNCHERS
+
+- Local dùng fixture QA tách biệt; live chỉ dùng phiên khách QA đã được cấp sẵn, không tự tạo account production hoặc yêu cầu lộ mật khẩu/token.
+- Mở `/dashboard`, xác nhận page identity và nội dung thật; mở drawer bằng nút menu, kiểm role dialog/aria-modal/inert, focus đầu, Tab cuối→đầu, Shift+Tab đầu→cuối, Escape đóng và focus trả về nút mở.
+- Theo thứ tự kiểm sáu href canonical `/studio`, `/tools/image`, `/voice`, `/subdub`, `/content`, `/music`; mỗi route phải giữ signed session, không redirect sang login, có nội dung đầu trang và locale đúng. Chỉ mở màn hình, không tạo job/upload/checkout hay gọi provider.
+- Kiểm VI/EN/ZH trên dashboard và trạng thái theme; tại 390px không tràn ngang, target tương tác ≥44px. Network phải xác nhận icon app SVG `200` và không có favicon 404.
+- Ghi desktop/mobile screenshots, DOM snapshot, route/status matrix, runtime SHA, console/network errors, provider calls `0`, wallet/data writes `0`. Không có session QA an toàn thì verdict `BLOCKED_AUTH`, không dùng browser fixture local thay cho live acceptance.

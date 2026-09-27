@@ -148,5 +148,7 @@ def test_landing_anchor_navigation_is_smooth_only_when_motion_is_safe() -> None:
         "--portal-landing-anchor-gap: 16px;",
     ):
         assert token in THEME
-    for forbidden in ("scrollIntoView", "scrollTo", "history.pushState"):
-        assert forbidden not in MOTION
+    # Forbid imperative scrolling, not reading the scrollTop position of the
+    # actual workspace scroll container.
+    for forbidden in (r"\bscrollIntoView\s*\(", r"\bscrollTo\s*\(", r"\bhistory\s*\.\s*pushState\s*\("):
+        assert not re.search(forbidden, MOTION)

@@ -62,9 +62,25 @@ def test_rendered_shell_shares_one_public_build_id_with_assets(monkeypatch) -> N
     payload = json.loads(bootstrap.group(1))
     assert payload["buildId"] == "pwa-rollout-42"
     assert "/static/portal/portal.js?v=pwa-rollout-42" in body
-    assert "/static/portal/integration.js?v=pwa-rollout-42" in body
+    assert "/static/portal/integration.js?v=pwa-rollout-42" not in body
     assert "/static/portal/portal-first-paint.css?v=pwa-rollout-42" in body
     assert "/static/portal/portal.css?v=pwa-rollout-42" in body
+
+
+def test_public_welcome_skips_integration_bundle_but_customer_and_admin_shells_keep_it() -> None:
+    welcome = copyfast_pages.render_portal("/welcome").body.decode("utf-8")
+    dashboard = copyfast_pages.render_portal("/dashboard").body.decode("utf-8")
+    admin_login = copyfast_pages.render_portal("/admin/login").body.decode("utf-8")
+
+    assert "/static/portal/integration.js" not in welcome
+    for required_public_asset in (
+        "/static/portal/portal-i18n.js",
+        "/static/portal/portal-motion.js",
+        "/static/portal/portal.js",
+    ):
+        assert required_public_asset in welcome
+    assert "/static/portal/integration.js" in dashboard
+    assert "/static/portal/integration.js" in admin_login
 
 
 def test_fallback_shell_keeps_first_paint_asset_order() -> None:
