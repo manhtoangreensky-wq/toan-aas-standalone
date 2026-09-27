@@ -1,11 +1,12 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
-> Phạm vi đo: `origin/main` và production Web đến SHA `cc3b4689f85d7c18ebb31b500b1eda1aca20cb6f` ngày 10/09/2026; A09 Admin Operations được đo local trên đúng BASE này. Tham chiếu Bot chỉ mô tả ranh giới bridge đã nghiệm thu trước đó.
-> Tài liệu này mô tả hành vi có bằng chứng trong source; không thay thế hướng dẫn deploy hay quyền phê duyệt của Owner.
+> Cập nhật nguồn ngày 27/09/2026: GitHub `main` đã được xác minh qua trang commit ở SHA `04161fc0a74ae92f3ae4356fa5764aae35ab59b2`; candidate M01/U01 `3dafa19f2cae1292a090dc30ebccc4c6c1de89be` còn local, chưa push. Runtime production SHA hiện `UNKNOWN`; các số đo deploy cũ bên dưới là bằng chứng lịch sử tại thời điểm ghi, không chứng minh runtime hiện tại.
+> Tài liệu này mô tả hành vi có bằng chứng trong source; không thay thế hướng dẫn deploy hay quyền phê duyệt của Owner. Tham chiếu Bot chỉ mô tả ranh giới bridge đã nghiệm thu trước đó.
 
 ## 1. Trạng thái và định danh nguồn
 
-- Web production/main: `cc3b4689f85d7c18ebb31b500b1eda1aca20cb6f` (PR #424); Web/nginx active+enabled, tracked diff `0` tại readback.
+- GitHub main hiện hành: `04161fc0a74ae92f3ae4356fa5764aae35ab59b2` (PR #567, xác minh 27/09/2026); runtime production SHA chưa xác minh.
+- Snapshot production gần nhất được ghi trong phần lịch sử: `cc3b4689f85d7c18ebb31b500b1eda1aca20cb6f` (PR #424); trạng thái service/diff bên dưới chỉ đúng tại readback cũ, không coi là live hiện tại.
 - Bot comparator BASE/HEAD: `6476f20bdd9f8728a5db0b1d62a245b0d612aea8`.
 - Inventory P0-05B: `reports/migration/p0-05-prepush-inventory.json`.
 - Inventory SHA-256: `b2f6549380826d2688fc648b46237acfe56d20d6512578dead00e3cd131cd7e3`.
@@ -436,3 +437,12 @@ Các số liệu local bên dưới mô tả batch PR #425 trước khi ship.
 - Fresh focused gate: `151 passed`, `2` dependency warnings, `0` failed. Protected exact-main/candidate đều `68 passed / 2` CSS-tail baseline failures; `NEW_FAILURES=0`. Node syntax `3/3`, diff-check `0`.
 - Signed local Browser: `20` trạng thái = VI/EN × sáng/tối × `1440/1024/768/390/360`; `14/14` assertions đạt, console/network sau readiness `0`, request ghi Operations `0`, page overflow/clipping/high-level horizontal scroller `0`, contrast và touch target đạt.
 - Codex Security scan `8bc4f21a-ed08-46ed-a7ba-ec0a0ae6e8ed` lưu partial draft với `0` finding trên `7` changed-file surfaces; Workbench inventory lỗi `destination escaped its bound context`, nên đây không phải plugin PASS.
+
+## 21. Candidate M01/U01 — snapshot trước khi công bố nhánh, ngày 27/09/2026
+
+- Tại thời điểm snapshot: BASE `04161fc0a74ae92f3ae4356fa5764aae35ab59b2`; candidate code commit `3dafa19f2cae1292a090dc30ebccc4c6c1de89be` trên `fix/uiux-motion-layout-20260927`, local ahead `1`, **chưa push/PR/merge/deploy**. Issue Tester công khai #571 ghi candidate và giữ `BLOCKED`; Project #2 ở `Todo`. Theo dõi trạng thái công bố sau snapshot tại issue #571.
+- Local `/welcome` tại `1280×720`: cuộn thật `scrollTop 0→629.6`, progress `0→19`, active section `hero→features`; phase settled; console error/warning `0`. Replay được kiểm riêng, không thay bằng chứng scroll.
+- Local mobile `390×844`: ngang không tràn; nhãn VI/EN/ZH mỗi nhãn một dòng, accessible name đầy đủ; nút `44px`; light/dark đều đã kiểm. Production vẫn RED: progress `0`, section `hero` sau khi cuộn; nhãn ngôn ngữ vẫn xuống hai dòng. Build ID asset không được coi là runtime SHA.
+- Local authenticated fixture: `/dashboard` và sáu route `/studio`, `/tools/image`, `/voice`, `/subdub`, `/content`, `/music` giữ session; drawer mobile và vòng focus được kiểm; icon `200`, console errors `0`. Production dashboard vẫn đang phục vụ nội dung launcher cũ; drawer production chưa nghiệm thu.
+- Focused test: `38 passed, 1 deselected, 2 warnings`; chạy không lọc `38 passed, 1 failed, 2 warnings`. Lỗi duy nhất là assertion PWA baseline: test cấm `skipWaiting`, trong khi service worker đã có trên BASE `04161fc` gọi `self.skipWaiting()`. `node --check`, YAML parse và `git diff --check` đều `0`.
+- WA-49/50/51 chưa được Tester độc lập chạy; U02 vẫn khóa tới khi U01 được chấp nhận. Provider calls, wallet mutations, production-data mutations và ENV/secret changes trong batch này đều `0`.
