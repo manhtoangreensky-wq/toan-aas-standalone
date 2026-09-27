@@ -70,31 +70,31 @@
     {
       "file": "copyfast_image_generation_job_bridge.py",
       "kind": "function",
-      "line": 566,
+      "line": 583,
       "target": "_format_image_generation_job_record"
     },
     {
       "file": "copyfast_multi_scene_film_job_bridge.py",
       "kind": "function",
-      "line": 526,
+      "line": 543,
       "target": "_format_multi_scene_film_job_record"
     },
     {
       "file": "copyfast_product_video_job_bridge.py",
       "kind": "function",
-      "line": 313,
+      "line": 324,
       "target": "_format_public_job"
     },
     {
       "file": "copyfast_video_long_job_bridge.py",
       "kind": "function",
-      "line": 433,
+      "line": 444,
       "target": "_format_public_job"
     },
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 403,
+      "line": 414,
       "target": "_format_public_job"
     },
     {
@@ -370,7 +370,7 @@
     {
       "file": "copyfast_product_video_job_bridge.py",
       "kind": "function",
-      "line": 361,
+      "line": 393,
       "target": "get_product_video_job"
     },
     {
@@ -382,7 +382,7 @@
     {
       "file": "copyfast_video_long_job_bridge.py",
       "kind": "function",
-      "line": 500,
+      "line": 528,
       "target": "get_video_long_job"
     },
     {
@@ -394,7 +394,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 445,
+      "line": 477,
       "target": "get_video_trend_job"
     },
     {
@@ -436,19 +436,19 @@
     {
       "file": "copyfast_product_video_job_bridge.py",
       "kind": "function",
-      "line": 388,
+      "line": 420,
       "target": "is_product_video_job_other_account"
     },
     {
       "file": "copyfast_video_long_job_bridge.py",
       "kind": "function",
-      "line": 524,
+      "line": 552,
       "target": "is_video_long_job_other_account"
     },
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 472,
+      "line": 504,
       "target": "is_video_trend_job_other_account"
     },
     {
@@ -496,7 +496,7 @@
     {
       "file": "copyfast_product_video_job_bridge.py",
       "kind": "function",
-      "line": 407,
+      "line": 439,
       "target": "list_product_video_jobs"
     },
     {
@@ -508,7 +508,7 @@
     {
       "file": "copyfast_video_long_job_bridge.py",
       "kind": "function",
-      "line": 542,
+      "line": 570,
       "target": "list_video_long_jobs"
     },
     {
@@ -520,7 +520,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 492,
+      "line": 524,
       "target": "list_video_trend_jobs"
     },
     {
@@ -574,7 +574,7 @@
     {
       "file": "copyfast_product_video_job_bridge.py",
       "kind": "function",
-      "line": 432,
+      "line": 464,
       "target": "product_video_job_to_native_compat"
     },
     {
@@ -640,13 +640,13 @@
     {
       "file": "copyfast_video_long_job_bridge.py",
       "kind": "function",
-      "line": 565,
+      "line": 593,
       "target": "video_long_job_to_native_compat"
     },
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 517,
+      "line": 549,
       "target": "video_trend_job_to_native_compat"
     },
     {
@@ -15705,7 +15705,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 242,
   "source_files_scanned": 242,
-  "source_fingerprint_sha256": "82aee0dd7fa6dfcb0b3e3ec30e47c924542451bebfffd0b599877066052ec257",
+  "source_fingerprint_sha256": "e1afcb76a247c7d9aee3a04535450573cdae3059138efc6c223bb58c4bfd90e1",
   "source_root": "repository-root",
   "ui_path_references": [
     {
