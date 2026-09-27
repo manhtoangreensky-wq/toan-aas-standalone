@@ -883,10 +883,10 @@
     const status = String(source.status || "");
     if (!["pending_admin_review", "approved", "rejected"].includes(status)) return null;
     const record = { request_id: String(source.request_id), status };
-    ["amount_vnd"].forEach((field) => {
+    ["amount_vnd", "expected_xu", "approved_xu"].forEach((field) => {
       if (Number.isSafeInteger(source[field]) && source[field] >= 0) record[field] = source[field];
     });
-    ["display_name", "email", "currency", "method", "payment_code", "reference", "submitted_at", "updated_at", "decision_at", "decision_reason"].forEach((field) => {
+    ["display_name", "email", "currency", "method", "payment_code", "reference", "submitted_at", "updated_at", "decision_at", "decision_reason", "ledger_event_id", "ledger_receipt_id", "transfer_content", "request_state", "payment_state", "settlement_state"].forEach((field) => {
       if (typeof source[field] === "string" && source[field].length <= 300) record[field] = source[field];
     });
     return record;
@@ -27311,9 +27311,27 @@
           if (draftAction === "approve") {
             body = { action: "approve", reason: reason || "Xác nhận đã nhận tiền qua chuyển khoản ngân hàng" };
           }
+          const draftScope = `manual-admin-draft:${requestId}`;
+          const draftSubmission = acquireSubmission(draftScope, draftAction + ":" + (reason || "default"));
+          if (!draftSubmission) throw new Error(adminManualTopupText("error.inProgress", "Yêu cầu nháp đang được xử lý."));
           const expectedPath = currentPortalPath();
           const sessionEpoch = canonicalSessionEpoch;
           const writeEpoch = ++adminManualTopupWriteEpoch;
+          const existingItem = (Array.isArray(adminManualTopupState.items) ? adminManualTopupState.items : []).find(
+            (it) => it && it.request_id === requestId
+          );
+          const currentSelected = (adminManualTopupState.selected && adminManualTopupState.selected.request_id === requestId)
+            ? adminManualTopupState.selected
+            : (existingItem || { request_id: requestId, status: "pending_admin_review" });
+
+          ++adminManualTopupDetailEpoch;
+          adminManualTopupState = {
+            ...adminManualTopupState,
+            selected: currentSelected,
+            draft: null,
+            error: ""
+          };
+          merge({ adminManualTopupState });
           setActionBusy(action, route, true);
           try {
             const result = await api(`/admin/payments/manual/${encodeURIComponent(requestId)}/draft`, {
@@ -27321,10 +27339,22 @@
             });
             if (!adminManualTopupWriteIsCurrent(writeEpoch, sessionEpoch, expectedPath, requestId, "")) return;
             const draftData = result.data && typeof result.data === "object" ? result.data : {};
-            if (!MANUAL_TOPUP_RECEIPT_PATTERN.test(String(draftData.confirmation_receipt || ""))) throw new Error(adminManualTopupText("error.receipt", "Máy chủ chưa trả biên nhận xác nhận hợp lệ."));
-            adminManualTopupState = { ...adminManualTopupState, draft: draftData, error: "" };
+            if (String(draftData.request_id || "") !== requestId || !MANUAL_TOPUP_RECEIPT_PATTERN.test(String(draftData.confirmation_receipt || ""))) {
+              throw new Error(adminManualTopupText("error.receipt", "Máy chủ chưa trả biên nhận xác nhận hợp lệ."));
+            }
+            const mergedSelected = {
+              ...(adminManualTopupState.selected || {}),
+              ...draftData,
+              request_id: requestId,
+              status: adminManualTopupState.selected ? adminManualTopupState.selected.status : "pending_admin_review"
+            };
+            adminManualTopupState = { ...adminManualTopupState, selected: mergedSelected, draft: draftData, error: "" };
             merge({ adminManualTopupState });
-          } finally { setActionBusy(action, route, false); }
+          } finally {
+            releaseSubmission(draftSubmission);
+            discardSubmission(draftScope, draftSubmission);
+            setActionBusy(action, route, false);
+          }
           return;
         }
         if (action === "admin-manual-topup-confirm") {
@@ -27348,7 +27378,18 @@
             if (!adminManualTopupWriteIsCurrent(writeEpoch, sessionEpoch, expectedPath, requestId, receipt)) return;
             terminal = String(result.status || "") === "rejected" || String(result.status || "") === "approved";
             if (terminal) {
-              adminManualTopupState = { ...adminManualTopupState, readState: "loading", draft: null, selected: adminManualTopupRecord(result.data), error: "" };
+              const updatedRecord = adminManualTopupRecord(result.data) || {
+                ...(adminManualTopupState.selected || {}),
+                status: String(result.status),
+                ...(result.data && typeof result.data === "object" ? result.data : {})
+              };
+              adminManualTopupState = {
+                ...adminManualTopupState,
+                readState: "loading",
+                draft: null,
+                selected: updatedRecord,
+                error: ""
+              };
               merge({ adminManualTopupState });
               await hydrateAdminManualTopups(adminManualTopupState.filterStatus, adminManualTopupState.query);
               toast(result.message || (String(result.status) === "approved" ? "Đã xác nhận nạp tiền và cộng Xu thành công." : adminManualTopupText("success.confirm", "Đã ghi nhận từ chối trên Web.")));
