@@ -36999,6 +36999,8 @@
   }
 
   function closeSidebarAboveMobileBreakpoint() {
+    const sidebar = document.querySelector("[data-portal-sidebar]");
+    const sidebarIsOpen = Boolean(sidebar && sidebar.classList.contains("is-open"));
     if (!desktopFocusNavigationSupported()) {
       // The dedicated mobile drawer already owns this breakpoint. Do not keep
       // a desktop-only focus preference active if the layout changes while a
@@ -37007,11 +37009,10 @@
         desktopNavigationFocusEnabled = false;
         syncDesktopFocusNavigation();
       }
-      setSidebarAccessibilityState(false);
+      setSidebarAccessibilityState(sidebarIsOpen);
       return;
     }
-    const sidebar = document.querySelector("[data-portal-sidebar]");
-    if (sidebar && sidebar.classList.contains("is-open")) closeSidebar({ restoreFocus: false });
+    if (sidebarIsOpen) closeSidebar({ restoreFocus: false });
     else setSidebarAccessibilityState(false);
   }
 

@@ -55,3 +55,38 @@ def test_dashboard_launcher_layout_is_scoped_and_motion_safe():
     assert '@media (prefers-reduced-motion: no-preference)' in css
     assert '.portal-shell[data-portal-app-kind="customer"] .portal-sidebar.is-open { transform: translateX(0); }' in css
     assert '.portal-shell[data-portal-app-kind="customer"] .portal-workspace { width: 100%; min-width: 0; }' in css
+
+
+def test_mobile_resize_preserves_open_drawer_accessibility_state():
+    source = (ROOT / 'static/portal/portal.js').read_text(encoding='utf-8')
+    start = source.index('  function closeSidebarAboveMobileBreakpoint() {')
+    end = source.index('\n  function commandPaletteFocusables', start)
+    resize_handler = source[start:end]
+    script = r"""
+const vm = require('vm');
+const handler = JSON.parse(process.argv[1]);
+function run(mobile, isOpen) {
+  const calls = [];
+  const sidebar = { classList: { contains: name => name === 'is-open' && isOpen } };
+  const context = {
+    desktopNavigationFocusEnabled: true,
+    desktopFocusNavigationSupported: () => !mobile,
+    document: { querySelector: selector => selector === '[data-portal-sidebar]' ? sidebar : null },
+    syncDesktopFocusNavigation: () => calls.push(['sync']),
+    setSidebarAccessibilityState: opened => calls.push(['accessibility', opened]),
+    closeSidebar: options => calls.push(['close', options]),
+  };
+  vm.runInNewContext(`${handler}; closeSidebarAboveMobileBreakpoint();`, context);
+  return { enabled: context.desktopNavigationFocusEnabled, calls };
+}
+console.log(JSON.stringify([run(true, true), run(true, false), run(false, true), run(false, false)]));
+"""
+    result = subprocess.run(
+        ['node', '-e', script, json.dumps(resize_handler)],
+        check=True, capture_output=True, text=True, encoding='utf-8', timeout=20,
+    )
+    mobile_open, mobile_closed, desktop_open, desktop_closed = json.loads(result.stdout)
+    assert mobile_open['calls'] == [['sync'], ['accessibility', True]]
+    assert mobile_closed['calls'] == [['sync'], ['accessibility', False]]
+    assert desktop_open['calls'] == [['close', {'restoreFocus': False}]]
+    assert desktop_closed['calls'] == [['accessibility', False]]
