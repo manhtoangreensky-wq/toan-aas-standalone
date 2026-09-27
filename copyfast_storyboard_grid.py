@@ -380,7 +380,7 @@ def _record_event(conn, *, operation_id: str, state: str, when: str | None = Non
     )
 
 
-def _public_cell(row: tuple[Any, ...]) -> dict[str, Any]:
+def _public_cell(row: tuple[Any, ...], download_ready: bool = False) -> dict[str, Any]:
     return {
         "id": str(row[0]),
         "scene_no": int(row[2]),
@@ -390,12 +390,16 @@ def _public_cell(row: tuple[Any, ...]) -> dict[str, Any]:
         "height": int(row[8]),
         "original_filename": str(row[9]),
         "byte_size": int(row[10]),
-        "download_ready": True,
+        "download_ready": bool(download_ready),
     }
 
 
 def _public_operation(row: tuple[Any, ...], cells: list[tuple[Any, ...]] | None = None) -> dict[str, Any]:
     state = str(row[4])
+    download_ready = (
+        state == "completed"
+        and verified_storyboard_grid_output_available(row, cells)
+    )
     result: dict[str, Any] = {
         "id": str(row[0]),
         "source_asset_id": str(row[2]),
@@ -418,10 +422,10 @@ def _public_operation(row: tuple[Any, ...], cells: list[tuple[Any, ...]] | None 
         "started_at": str(row[25]) if row[25] else None,
         "completed_at": str(row[26]) if row[26] else None,
         "updated_at": str(row[27]),
-        "download_ready": state == "completed" and bool(row[17]) and row[20] is not None,
+        "download_ready": download_ready,
     }
     if cells is not None:
-        result["cells"] = [_public_cell(cell) for cell in cells]
+        result["cells"] = [_public_cell(cell, download_ready=download_ready) for cell in cells]
     return result
 
 
@@ -1136,6 +1140,56 @@ def _safe_output_details(operation: tuple[Any, ...], cells: list[tuple[Any, ...]
     if len(expected) != int(operation[16]):
         raise StoryboardGridError("Metadata cảnh Storyboard Grid không còn hợp lệ", code="STORYBOARD_GRID_OUTPUT_INVALID")
     return _output_path(_feature_root(), storage_key), _manifest_for_operation(operation, cells)
+
+
+def verified_storyboard_grid_output_available(
+    operation: tuple[Any, ...],
+    cells: list[tuple[Any, ...]] | None = None,
+) -> bool:
+    """Read-only verification of storyboard grid ZIP archive, manifest and cells.
+
+    Preserves read truth without mutating SQLite metadata or demoting rows.
+    """
+    if not (storyboard_grid_enabled() and asset_vault_enabled()):
+        return False
+    try:
+        state = str(operation[4] or "")
+        if state != "completed":
+            return False
+        storage_key = str(operation[17] or "")
+        content_type = str(operation[19] or "")
+        byte_size = int(operation[20] or 0)
+        digest = str(operation[21] or "")
+        if content_type != ZIP_MEDIA_TYPE:
+            return False
+        if not storage_key or byte_size < 1 or byte_size > _maximum_output_bytes():
+            return False
+        if not re.fullmatch(r"^[0-9a-f]{64}$", digest.lower()):
+            return False
+        if cells is None:
+            ensure_copyfast_schema()
+            with transaction() as conn:
+                cell_rows = conn.execute(
+                    f"SELECT {CELL_SELECT} FROM web_storyboard_grid_cells WHERE operation_id=? ORDER BY scene_no ASC, id ASC",
+                    (str(operation[0]),),
+                ).fetchall()
+            cells = [tuple(c) for c in cell_rows]
+        if len(cells) != int(operation[16]):
+            return False
+        private_path, manifest = _safe_output_details(operation, cells)
+        verified_stream = _open_verified_archive_stream(
+            private_path,
+            expected_bytes=byte_size,
+            expected_digest=digest.lower(),
+            expected_cells=_expected_cells_from_rows(cells),
+            expected_manifest=manifest,
+        )
+        if verified_stream is not None:
+            verified_stream.close()
+            return True
+        return False
+    except (StoryboardGridError, OSError, RuntimeError, ValueError):
+        return False
 
 
 def reconcile_storyboard_grid_storage(*, interrupted_before: str | None = None) -> None:

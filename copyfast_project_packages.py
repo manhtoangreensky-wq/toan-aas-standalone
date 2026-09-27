@@ -22,7 +22,7 @@ import tempfile
 import uuid
 from typing import Any, BinaryIO, Iterator
 from urllib.parse import quote
-from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
+from zipfile import BadZipFile, ZIP_DEFLATED, ZipFile, ZipInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
@@ -45,6 +45,7 @@ PACKAGE_STATES = frozenset({"queued", "processing", "completed", "failed", "unav
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 STORAGE_KEY_PATTERN = re.compile(r"^packages/[0-9a-f]{32}\.zip$")
+SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 MAX_DOCUMENTS = 100
 MAX_ASSET_REFERENCES = 100
 ORPHAN_RETENTION_SECONDS = 60 * 60
@@ -354,9 +355,63 @@ def _private_package_attachment_response(stream: BinaryIO, *, byte_size: int, fi
     )
 
 
+def verified_project_package_output_available(
+    storage_key: str | None,
+    byte_size: int | None,
+    sha256: str | None,
+) -> bool:
+    """Read-only verification of project package output bytes and ZIP container.
+
+    Preserves read truth without mutating SQLite metadata or demoting rows.
+    """
+    if not project_package_enabled():
+        return False
+    if not storage_key or not isinstance(storage_key, str) or not STORAGE_KEY_PATTERN.fullmatch(storage_key):
+        return False
+    if not isinstance(byte_size, int) or byte_size < 1 or byte_size > _maximum_bytes():
+        return False
+    if not sha256 or not isinstance(sha256, str) or not SHA256_PATTERN.fullmatch(sha256.lower()):
+        return False
+    stream = None
+    try:
+        path = _storage_path(project_package_directory(), storage_key)
+        stream = _open_verified_private_package_file(
+            path,
+            expected_bytes=byte_size,
+            expected_digest=sha256.lower(),
+        )
+        if stream is None:
+            return False
+        with ZipFile(stream, "r") as archive:
+            if archive.testzip() is not None:
+                return False
+            names = archive.namelist()
+            if "manifest.json" not in names:
+                return False
+        return True
+    except (RuntimeError, OSError, ValueError, BadZipFile):
+        return False
+    finally:
+        if stream is not None:
+            try:
+                stream.close()
+            except OSError:
+                pass
+
+
 def _package_public(row: tuple[Any, ...]) -> dict[str, Any]:
     state = str(row[2])
     byte_size = int(row[7]) if row[7] is not None else None
+    storage_key = str(row[14]) if row[14] else None
+    sha256 = str(row[15]) if len(row) > 15 and row[15] else None
+    download_ready = (
+        state == "completed"
+        and verified_project_package_output_available(
+            storage_key=storage_key,
+            byte_size=byte_size,
+            sha256=sha256,
+        )
+    )
     return {
         "id": str(row[0]),
         "project_id": str(row[1]),
@@ -373,7 +428,7 @@ def _package_public(row: tuple[Any, ...]) -> dict[str, Any]:
         "updated_at": str(row[12]),
         # A browser may offer a same-origin attachment only after a verified
         # completed state.  It never receives a storage key, SHA or path.
-        "download_ready": state == "completed" and bool(row[14]) and byte_size is not None,
+        "download_ready": download_ready,
     }
 
 

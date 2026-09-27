@@ -89,7 +89,7 @@ REPLICA_COUNT_ENV_NAMES = ("RAILWAY_REPLICA_COUNT", "RAILWAY_REPLICAS", "WEBAPP_
 OPERATION_SELECT = """id, source_asset_id, kind, state, poster_position,
                       source_duration_ms, source_width, source_height,
                       frame_timestamp_ms, output_width, output_height,
-                      original_filename, content_type, byte_size, sha256,
+                      storage_key, original_filename, content_type, byte_size, sha256,
                       created_at, queued_at, started_at, completed_at, updated_at"""
 
 
@@ -625,24 +625,94 @@ def _quota_available(conn: Any, *, account_id: str, additional_bytes: int) -> bo
     return used + additional_bytes <= _maximum_account_bytes()
 
 
+def verified_video_operation_output_available(
+    storage_key: str | None,
+    byte_size: int | None,
+    sha256: str | None,
+    output_width: int | None = None,
+    output_height: int | None = None,
+    content_type: str | None = None,
+) -> bool:
+    """Read-only verification of video poster output JPEG bytes and dimensions.
+
+    Preserves read truth without mutating SQLite metadata or demoting rows.
+    """
+    if not (video_operations_enabled() and video_poster_enabled()):
+        return False
+    if not storage_key or not isinstance(storage_key, str) or not OUTPUT_STORAGE_KEY_PATTERN.fullmatch(storage_key):
+        return False
+    if not isinstance(byte_size, int) or byte_size < 1 or byte_size > _maximum_output_bytes():
+        return False
+    if not sha256 or not isinstance(sha256, str) or not SHA256_PATTERN.fullmatch(sha256.lower()):
+        return False
+    if content_type is not None and str(content_type).strip().lower() != "image/jpeg":
+        return False
+    width = int(output_width) if output_width is not None else None
+    height = int(output_height) if output_height is not None else None
+    stream = None
+    try:
+        path = _output_path(video_operations_directory(), storage_key)
+        if width is not None and height is not None and width > 0 and height > 0:
+            stream = _open_verified_output(
+                path,
+                expected_bytes=byte_size,
+                expected_digest=sha256.lower(),
+                expected_width=width,
+                expected_height=height,
+            )
+            return stream is not None
+        else:
+            flags = os.O_RDONLY | int(getattr(os, "O_NOFOLLOW", 0))
+            stream = os.fdopen(os.open(path, flags), "rb", closefd=True)
+            metadata = os.fstat(stream.fileno())
+            if not stat.S_ISREG(metadata.st_mode) or int(metadata.st_size) != byte_size:
+                return False
+            magic = stream.read(3)
+            if magic != b"\xff\xd8\xff":
+                return False
+            stream.seek(0)
+            if not hmac.compare_digest(_digest_open_stream(stream), sha256.lower()):
+                return False
+            return True
+    except (VideoOperationError, OSError, RuntimeError, ValueError):
+        return False
+    finally:
+        if stream is not None:
+            try:
+                stream.close()
+            except OSError:
+                pass
+
+
 def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
-    (
-        operation_id, source_asset_id, kind, state, poster_position,
-        source_duration_ms, source_width, source_height, frame_timestamp_ms,
-        output_width, output_height, original_filename, content_type,
-        byte_size, sha256, created_at, queued_at, started_at, completed_at,
-        updated_at,
-    ) = row
+    if len(row) >= 21:
+        (
+            operation_id, source_asset_id, kind, state, poster_position,
+            source_duration_ms, source_width, source_height, frame_timestamp_ms,
+            output_width, output_height, storage_key, original_filename, content_type,
+            byte_size, sha256, created_at, queued_at, started_at, completed_at,
+            updated_at,
+        ) = row[:21]
+    else:
+        (
+            operation_id, source_asset_id, kind, state, poster_position,
+            source_duration_ms, source_width, source_height, frame_timestamp_ms,
+            output_width, output_height, original_filename, content_type,
+            byte_size, sha256, created_at, queued_at, started_at, completed_at,
+            updated_at,
+        ) = row[:20]
+        storage_key = None
     completed = str(state or "") == "completed"
     output_ready = (
         completed
-        and isinstance(byte_size, int)
-        and byte_size > 0
-        and isinstance(sha256, str)
-        and bool(SHA256_PATTERN.fullmatch(sha256.lower()))
-        and str(content_type or "") == "image/jpeg"
-        and int(output_width or 0) > 0
-        and int(output_height or 0) > 0
+        and verified_video_operation_output_available(
+            storage_key=str(storage_key or "") if storage_key else None,
+            byte_size=int(byte_size) if byte_size is not None else None,
+            sha256=str(sha256 or "") if sha256 else None,
+            output_width=int(output_width) if output_width is not None else None,
+            output_height=int(output_height) if output_height is not None else None,
+            content_type=str(content_type or "") if content_type else None,
+        )
     )
     return {
         "id": str(operation_id),
