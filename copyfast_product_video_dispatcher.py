@@ -29,8 +29,7 @@ from typing import Any
 from fastapi import HTTPException, Request, status
 
 from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, utc_now
-from copyfast_product_video_job_bridge import CANONICAL_PRODUCT_KEY
-from copyfast_video_long_job_bridge import is_safe_video_output_url
+from copyfast_product_video_job_bridge import CANONICAL_PRODUCT_KEY, is_safe_video_output_url
 
 LOGGER = logging.getLogger("copyfast_product_video_dispatcher")
 

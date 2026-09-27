@@ -22,13 +22,102 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import hashlib
 import hmac
+import ipaddress
 import json
+import re
 from typing import Any
+from urllib.parse import urlsplit
 import uuid
 
 from fastapi import HTTPException
 from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, utc_now
-from copyfast_video_long_job_bridge import is_safe_video_output_url
+
+SAFE_VIDEO_EXTENSIONS: frozenset[str] = frozenset({".mp4", ".webm", ".mov"})
+SAFE_HOSTNAME_PATTERN = re.compile(
+    r"^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$"
+)
+FORBIDDEN_OUTPUT_URL_SCHEMES = frozenset({"javascript:", "vbscript:", "data:", "file:", "blob:", "about:"})
+
+
+def is_safe_video_output_url(url: Any) -> bool:
+    """Validate that a candidate Product Video output URL is safe to deliver.
+
+    Strict fail-closed security contract:
+    - Must be a non-empty string with length <= 2048 and no leading/trailing whitespace.
+    - Zero control characters (ASCII < 32 or ASCII == 127).
+    - Zero backslashes (prevents authority/path confusion bypasses).
+    - Zero directory traversal sequences ('..' or '%2e' / '%2E').
+    - Strict scheme check: must be 'https' (lowercase).
+    - Rejects dangerous schemes: javascript:, vbscript:, data:, file:, blob:, about:, etc.
+    - Rejects embedded credentials (username, password, '@' in authority/netloc).
+    - Hostname must be non-empty.
+    - Rejects localhost and *.localhost.
+    - Rejects non-global IP literals (loopback, private, link-local, unspecified, etc.).
+    - Hostname must match SAFE_HOSTNAME_PATTERN if not an IP literal.
+    - Port must be None or 443.
+    - Path must end with a valid video extension (.mp4, .webm, .mov).
+    """
+    if not isinstance(url, str):
+        return False
+    trimmed = url.strip()
+    if not trimmed or len(trimmed) > 2048 or trimmed != url:
+        return False
+    if any(ord(c) < 32 or ord(c) == 127 for c in trimmed):
+        return False
+    if "\\" in trimmed:
+        return False
+    lowered = trimmed.lower()
+    if ".." in lowered or "%2e" in lowered:
+        return False
+    if any(lowered.startswith(s) or s in lowered for s in FORBIDDEN_OUTPUT_URL_SCHEMES):
+        return False
+    try:
+        parsed = urlsplit(trimmed)
+    except Exception:
+        return False
+    if parsed.scheme.lower() != "https":
+        return False
+    if not parsed.netloc:
+        return False
+    if parsed.username or parsed.password or "@" in parsed.netloc:
+        return False
+
+    hostname = (parsed.hostname or "").lower()
+    if not hostname:
+        return False
+
+    # Reject localhost and *.localhost
+    if hostname == "localhost" or hostname.endswith(".localhost"):
+        return False
+
+    # Check IP literal
+    try:
+        ip = ipaddress.ip_address(hostname)
+    except ValueError:
+        ip = None
+
+    if ip is not None:
+        # Non-global IP literals (loopback, private, link-local, multicast, etc.) are strictly rejected
+        if not ip.is_global:
+            return False
+    else:
+        # Must be valid domain name
+        if not SAFE_HOSTNAME_PATTERN.fullmatch(hostname):
+            return False
+
+    try:
+        port = parsed.port
+    except ValueError:
+        return False
+    if port not in (None, 443):
+        return False
+
+    # Enforce safe video extension (.mp4, .webm, .mov)
+    path = parsed.path.lower()
+    if not any(path.endswith(ext) for ext in SAFE_VIDEO_EXTENSIONS):
+        return False
+
+    return True
 
 CANONICAL_PRODUCT_KEY = "video_ai_prompt"
 CANONICAL_ROUTING_KEY = "video_ai_canonical"

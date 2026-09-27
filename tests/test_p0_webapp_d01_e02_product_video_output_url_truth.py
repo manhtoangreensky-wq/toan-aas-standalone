@@ -85,20 +85,39 @@ def test_is_safe_video_output_url_contract():
     assert bridge.is_safe_video_output_url("https://storage.googleapis.com/toanaas-media/video.mp4") is True
     assert bridge.is_safe_video_output_url("https://tg.toanaas.vn/media/render.mp4") is True
     assert bridge.is_safe_video_output_url("https://cdn.example.com/asset.webm") is True
+    assert bridge.is_safe_video_output_url("https://cdn.example.com/asset.mov") is True
 
-    # Rejections
+    # Rejections: empty / invalid types
     assert bridge.is_safe_video_output_url(None) is False
     assert bridge.is_safe_video_output_url("") is False
     assert bridge.is_safe_video_output_url("   ") is False
+
+    # Rejections: scheme & protocol
     assert bridge.is_safe_video_output_url("http://storage.googleapis.com/video.mp4") is False
     assert bridge.is_safe_video_output_url("ftp://server/video.mp4") is False
     assert bridge.is_safe_video_output_url("javascript:alert(1)") is False
     assert bridge.is_safe_video_output_url("data:video/mp4;base64,AAAA") is False
+
+    # Rejections: credentials, traversal, path injection, nonstandard port
     assert bridge.is_safe_video_output_url("https://user:pass@example.com/video.mp4") is False
     assert bridge.is_safe_video_output_url("https://example.com/path/../secret.mp4") is False
     assert bridge.is_safe_video_output_url("https://example.com/path%2esecret.mp4") is False
     assert bridge.is_safe_video_output_url("https://example.com/path\\video.mp4") is False
     assert bridge.is_safe_video_output_url("https://example.com:8080/video.mp4") is False
+
+    # Rejections: non-video extensions
+    assert bridge.is_safe_video_output_url("https://storage.googleapis.com/toanaas-media/video.txt") is False
+    assert bridge.is_safe_video_output_url("https://storage.googleapis.com/toanaas-media/video.exe") is False
+    assert bridge.is_safe_video_output_url("https://storage.googleapis.com/toanaas-media/video") is False
+
+    # Rejections: private, loopback, link-local IPs and localhost (SSRF protection)
+    assert bridge.is_safe_video_output_url("https://127.0.0.1/video.mp4") is False
+    assert bridge.is_safe_video_output_url("https://10.0.0.1/video.mp4") is False
+    assert bridge.is_safe_video_output_url("https://192.168.0.1/video.mp4") is False
+    assert bridge.is_safe_video_output_url("https://169.254.169.254/video.mp4") is False
+    assert bridge.is_safe_video_output_url("https://[::1]/video.mp4") is False
+    assert bridge.is_safe_video_output_url("https://localhost/video.mp4") is False
+    assert bridge.is_safe_video_output_url("https://app.localhost/video.mp4") is False
 
 
 # =============================================================================
@@ -148,6 +167,13 @@ def test_format_public_job_completed_with_unsafe_url_fails_closed():
         "https://cdn.example.com/video\\back.mp4",
         "https://cdn.example.com:8443/video.mp4",
         "data:video/mp4;base64,1234",
+        "https://127.0.0.1/video.mp4",
+        "https://10.0.0.1/video.mp4",
+        "https://192.168.0.1/video.mp4",
+        "https://169.254.169.254/video.mp4",
+        "https://localhost/video.mp4",
+        "https://sub.localhost/video.mp4",
+        "https://storage.googleapis.com/toanaas-media/video.txt",
     ]
     for unsafe_url in unsafe_urls:
         row = _make_row(status="completed", output_url=unsafe_url)
@@ -344,3 +370,94 @@ def test_dispatcher_complete_without_output_url_does_not_fabricate(tmp_path, mon
     assert public_job["output"] is None
     assert public_job["output_url"] is None
     assert "/api/v1/assets/" not in str(public_job)
+
+
+def test_private_and_loopback_output_urls_rejected_in_all_surfaces(tmp_path, monkeypatch):
+    """Explicitly verify 127.0.0.1, 10.0.0.1, 192.168.0.1, 169.254.169.254, localhost fail closed across bridge, compat, and dispatcher."""
+    private_urls = [
+        "https://127.0.0.1/video.mp4",
+        "https://10.0.0.1/video.mp4",
+        "https://192.168.0.1/video.mp4",
+        "https://169.254.169.254/video.mp4",
+        "https://localhost/video.mp4",
+        "https://app.localhost/video.mp4",
+    ]
+
+    db_file = str(tmp_path / "test_private_ip_surfaces.db")
+    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(db_file))
+    ensure_copyfast_schema()
+
+    account_id = "acc-priv-test"
+    _seed_account(account_id)
+
+    for idx, bad_url in enumerate(private_urls):
+        # 1. Bridge public job formatter
+        row = _make_row(job_id=f"pvj-priv-{idx}", account_id=account_id, status="completed", output_url=bad_url)
+        job = bridge._format_public_job(row)
+        assert job["output_available"] is False
+        assert job["download_ready"] is False
+        assert job["delivery_ready"] is False
+        assert job["output"] is None
+        assert job["output_url"] is None
+
+        # 2. Native compat projection
+        compat = bridge.product_video_job_to_native_compat(job)
+        assert compat["output_available"] is False
+        assert compat["download_ready"] is False
+        assert compat["delivery_ready"] is False
+        assert compat["output"] is None
+
+        # 3. Dispatcher completion
+        created = bridge.create_or_replay_product_video_job(
+            account_id=account_id,
+            request_id=f"req-priv-{idx}",
+            payload={"prompt": "test private url", "aspect_ratio": "16:9", "duration_seconds": 5, "quality_tier": 200},
+        )
+        j_id = created["id"]
+        dispatcher.claim_product_video_job(worker_id=f"worker-priv-{idx}")
+        meta = dispatcher.generate_synthetic_product_video_output({"id": j_id, "aspect_ratio": "16:9", "duration_seconds": 5})
+
+        with pytest.raises(HTTPException) as exc_info:
+            dispatcher.complete_product_video_job(
+                job_id=j_id,
+                worker_id=f"worker-priv-{idx}",
+                output_url=bad_url,
+                output_metadata=meta,
+            )
+        assert exc_info.value.status_code == 422
+        assert "Output URL không an toàn" in str(exc_info.value.detail)
+
+    # Positive safe external HTTPS case across all surfaces
+    safe_external = "https://storage.googleapis.com/toanaas-media/video.mp4"
+    safe_row = _make_row(job_id="pvj-safe-ext", account_id=account_id, status="completed", output_url=safe_external)
+    safe_job = bridge._format_public_job(safe_row)
+    assert safe_job["output_available"] is True
+    assert safe_job["download_ready"] is True
+    assert safe_job["delivery_ready"] is True
+    assert safe_job["output"] == safe_external
+    assert safe_job["output_url"] == safe_external
+
+    safe_compat = bridge.product_video_job_to_native_compat(safe_job)
+    assert safe_compat["output_available"] is True
+    assert safe_compat["download_ready"] is True
+    assert safe_compat["delivery_ready"] is True
+    assert safe_compat["output"] == safe_external
+
+    safe_created = bridge.create_or_replay_product_video_job(
+        account_id=account_id,
+        request_id="req-safe-ext",
+        payload={"prompt": "test safe ext url", "aspect_ratio": "16:9", "duration_seconds": 5, "quality_tier": 200},
+    )
+    safe_jid = safe_created["id"]
+    dispatcher.claim_product_video_job(worker_id="worker-safe-ext")
+    safe_meta = dispatcher.generate_synthetic_product_video_output({"id": safe_jid, "aspect_ratio": "16:9", "duration_seconds": 5})
+    complete_res = dispatcher.complete_product_video_job(
+        job_id=safe_jid,
+        worker_id="worker-safe-ext",
+        output_url=safe_external,
+        output_metadata=safe_meta,
+    )
+    assert complete_res["status"] == "completed"
+    assert complete_res["output_available"] is True
+    assert complete_res["output_url"] == safe_external
+    assert complete_res["output"] == safe_external
