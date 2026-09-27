@@ -430,6 +430,17 @@ def create_or_replay_video_long_job(
         return _format_public_job(created_row, idempotent_replay=False)
 
 
+def _is_runtime_execution_active(feature: str = "video_long") -> bool:
+    try:
+        import sys
+        copyfast_api = sys.modules.get("copyfast_api")
+        if copyfast_api is None:
+            import copyfast_api
+        return feature in getattr(copyfast_api, "WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES", frozenset())
+    except Exception:
+        return False
+
+
 def _format_public_job(row: Any, idempotent_replay: bool = False) -> dict[str, Any]:
     """Project SQLite tuple into truthful public API schema."""
     (
@@ -466,10 +477,25 @@ def _format_public_job(row: Any, idempotent_replay: bool = False) -> dict[str, A
         except Exception:
             metadata_dict = {}
 
-    # Strict safe artifact verification
-    is_safe_artifact = is_safe_video_output_url(output_url)
-    effective_output = output_url if (status == "completed" and is_safe_artifact) else None
-    output_ready = bool(status == "completed" and is_safe_artifact)
+    status_str = str(status)
+    is_completed = status_str == "completed"
+    is_terminal_failure = status_str in ("failed", "cancelled", "rejected")
+    is_non_terminal = not is_completed and not is_terminal_failure
+    runtime_active = _is_runtime_execution_active("video_long")
+
+    if is_non_terminal and not runtime_active:
+        runtime_execution_active = False
+        projected_status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED"
+        source_state = "guarded_runtime_unavailable"
+        output_ready = False
+        effective_output = None
+    else:
+        runtime_execution_active = runtime_active
+        projected_status_reason = status_reason
+        source_state = "completed" if is_completed else ("failed" if is_terminal_failure else "queued_locally")
+        is_safe_artifact = is_safe_video_output_url(output_url)
+        effective_output = output_url if (is_completed and is_safe_artifact) else None
+        output_ready = bool(is_completed and is_safe_artifact)
 
     return {
         "id": job_id,
@@ -482,8 +508,10 @@ def _format_public_job(row: Any, idempotent_replay: bool = False) -> dict[str, A
         "long_form_plan": prompt,
         "quality_tier": quality_tier,
         "scene_count": scene_count,
-        "status": status,
-        "status_reason": status_reason,
+        "status": status_str,
+        "status_reason": projected_status_reason,
+        "source_state": source_state,
+        "runtime_execution_active": runtime_execution_active,
         "created_at": created_at,
         "updated_at": updated_at,
         "output": effective_output,
@@ -491,7 +519,7 @@ def _format_public_job(row: Any, idempotent_replay: bool = False) -> dict[str, A
         "output_available": output_ready,
         "download_ready": output_ready,
         "delivery_ready": output_ready,
-        "output_metadata": metadata_dict if is_safe_artifact else {},
+        "output_metadata": metadata_dict if output_ready else {},
         "bridge_envelope": envelope_dict,
         "idempotent_replay": idempotent_replay,
     }
@@ -569,8 +597,14 @@ def video_long_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
     effective_output = job.get("output_url") if (status == "completed" and is_safe) else None
     output_ready = bool(status == "completed" and is_safe)
     is_queued = status not in ("completed", "processing")
-    source_state = "guarded_runtime_unavailable" if is_queued else ("completed" if status == "completed" else "processing_by_worker")
-    status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED" if is_queued else job.get("status_reason", STATUS_REASON_AWAITING)
+    runtime_active = _is_runtime_execution_active("video_long")
+    if is_queued and not runtime_active:
+        source_state = "guarded_runtime_unavailable"
+        status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED"
+        runtime_active = False
+    else:
+        source_state = job.get("source_state") or ("completed" if status == "completed" else ("processing_by_worker" if status == "processing" else "queued_locally"))
+        status_reason = job.get("status_reason") or STATUS_REASON_AWAITING
 
     return {
         "id": job["id"],
@@ -594,5 +628,5 @@ def video_long_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
         "delivery_ready": output_ready,
         "canonical_entrypoint": CANONICAL_CUSTOMER_ENTRYPOINT,
         "source_state": source_state,
-        "runtime_execution_active": False,
+        "runtime_execution_active": runtime_active,
     }

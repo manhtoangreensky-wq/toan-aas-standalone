@@ -97,7 +97,7 @@ def _clean_test_data():
 
 
 def _login(client: TestClient, email: str, password: str) -> dict:
-    """Register + login, return csrf_token and headers."""
+    """Register + login, return csrf_token, account_id, and headers."""
     client.post(
         "/api/v1/auth/register",
         json={"email": email, "password": password, "display_name": "G02 Test"},
@@ -109,7 +109,17 @@ def _login(client: TestClient, email: str, password: str) -> dict:
     assert res.status_code == 200, f"Login failed {res.status_code}: {res.text[:300]}"
     data = res.json()["data"]
     assert "csrf_token" in data, f"No csrf_token in login data: {list(data.keys())}"
-    return {"csrf_token": data["csrf_token"], "headers": {"X-CSRF-Token": data["csrf_token"]}}
+    conn = sqlite3.connect(session_database_path())
+    try:
+        row = conn.execute("SELECT id FROM web_accounts WHERE email = ?", (email.strip().lower(),)).fetchone()
+        account_id = str(row[0]) if row else data.get("account", {}).get("id", "")
+    finally:
+        conn.close()
+    return {
+        "csrf_token": data["csrf_token"],
+        "account_id": account_id,
+        "headers": {"X-CSRF-Token": data["csrf_token"]},
+    }
 
 
 # ─── TEST 1: COMPILE-TIME ALLOWLIST IS EMPTY ─────────────────────────────────
@@ -450,3 +460,236 @@ def test_14_zero_provider_and_paid_calls():
         # Guard returns immediately, no bridge function is called, hence no provider call
         assert body["ok"] is False
         assert body["error_code"] == "WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED"
+
+
+# ─── FIXTURE HELPER FOR HISTORICAL ROWS ───────────────────────────────────────
+
+def _insert_historical_fixture(
+    table: str,
+    job_id: str,
+    account_id: str,
+    status: str = "queued",
+    status_reason: str = "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION",
+    output_url: str | None = None,
+):
+    db_path = session_database_path()
+    conn = sqlite3.connect(db_path)
+    try:
+        now = "2026-09-27T10:00:00Z"
+        if table == "web_product_video_jobs":
+            conn.execute(
+                """
+                INSERT INTO web_product_video_jobs (
+                    id, request_id, account_id, product_key, routing_product_key,
+                    prompt, aspect_ratio, duration_seconds, quality_tier, scene_count,
+                    status, status_reason, payload_hash, bridge_envelope, created_at, updated_at, output_url
+                ) VALUES (?, ?, ?, 'video_ai_prompt', 'product_video', 'prompt', '9:16', 5, 200, 1, ?, ?, 'hash', '{}', ?, ?, ?)
+                """,
+                (job_id, f"req_{job_id}", account_id, status, status_reason, now, now, output_url),
+            )
+        elif table == "web_video_trend_jobs":
+            conn.execute(
+                """
+                INSERT INTO web_video_trend_jobs (
+                    id, request_id, account_id, product_key, routing_product_key,
+                    prompt, quality_tier, scene_count,
+                    status, status_reason, payload_hash, bridge_envelope, created_at, updated_at, output_url
+                ) VALUES (?, ?, ?, 'video_trend', 'trend_video', 'prompt', 200, 1, ?, ?, 'hash', '{}', ?, ?, ?)
+                """,
+                (job_id, f"req_{job_id}", account_id, status, status_reason, now, now, output_url),
+            )
+        elif table == "web_video_long_jobs":
+            conn.execute(
+                """
+                INSERT INTO web_video_long_jobs (
+                    id, request_id, account_id, product_key, routing_product_key,
+                    prompt, quality_tier, scene_count,
+                    status, status_reason, payload_hash, bridge_envelope, created_at, updated_at, output_url
+                ) VALUES (?, ?, ?, 'video_long', 'video_long', 'prompt', 200, 3, ?, ?, 'hash', '{}', ?, ?, ?)
+                """,
+                (job_id, f"req_{job_id}", account_id, status, status_reason, now, now, output_url),
+            )
+        elif table == "web_multi_scene_film_jobs":
+            conn.execute(
+                """
+                INSERT INTO web_multi_scene_film_jobs (
+                    id, canonical_job_id, request_id, account_id, product_key, routing_product_key,
+                    prompt, quality_tier, scene_count,
+                    status, status_reason, payload_hash, bridge_envelope_json, created_at, updated_at, output_url
+                ) VALUES (?, ?, ?, ?, 'video_multiscene', 'multi_scene_film', 'prompt', 200, 3, ?, ?, 'hash', '{}', ?, ?, ?)
+                """,
+                (job_id, f"can_{job_id}", f"req_{job_id}", account_id, status, status_reason, now, now, output_url),
+            )
+        elif table == "web_image_generation_jobs":
+            conn.execute(
+                """
+                INSERT INTO web_image_generation_jobs (
+                    id, canonical_job_id, request_id, account_id, product_key, routing_product_key,
+                    prompt, tier_key,
+                    status, status_reason, payload_hash, bridge_envelope_json, created_at, updated_at, output_url
+                ) VALUES (?, ?, ?, ?, 'image_create', 'image_generation', 'prompt', 'standard', ?, ?, 'hash', '{}', ?, ?, ?)
+                """,
+                (job_id, f"can_{job_id}", f"req_{job_id}", account_id, status, status_reason, now, now, output_url),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+# ─── TEST 15: PRODUCT-SPECIFIC & GENERIC READ PARITY (ALL 5 FAMILIES) ────────
+
+def test_15_product_specific_and_generic_read_parity_all_5_families():
+    """Prove that for ALL FIVE families:
+    1. GET /features/<family>/jobs (list)
+    2. GET /features/<family>/jobs/{job_id} (detail)
+    3. GET /jobs (generic list)
+    4. GET /jobs/{job_id} (generic detail)
+    ALL expose runtime_execution_active=False, source_state=guarded_runtime_unavailable,
+    status_reason=RUNTIME_EXECUTION_NOT_ACTIVATED, output_available=False.
+    Achieving 5/5 parity across list and detail.
+    """
+    client = TestClient(app)
+    auth = _login(client, "g02t15@test.local", "secure-g02-pwd-1234")
+    account_id = auth["account_id"]
+    headers = auth["headers"]
+
+    families = [
+        ("video_ai_prompt", "web_product_video_jobs", "pvj_parity_test_001"),
+        ("video_trend", "web_video_trend_jobs", "vtj_parity_test_001"),
+        ("video_long", "web_video_long_jobs", "vlj_parity_test_001"),
+        ("video_multiscene", "web_multi_scene_film_jobs", "msf_parity_test_001"),
+        ("image_create", "web_image_generation_jobs", "img_parity_test_001"),
+    ]
+
+    for family, table, job_id in families:
+        _insert_historical_fixture(table, job_id, account_id, status="queued")
+
+        # 1. Product-specific GET list
+        list_res = client.get(f"/api/v1/features/{family}/jobs", headers=headers)
+        assert list_res.status_code == 200, f"Failed list for {family}: {list_res.text}"
+        items = list_res.json()["data"]["items"]
+        matching = [item for item in items if item.get("id") == job_id]
+        assert len(matching) == 1, f"Fixture {job_id} not found in {family} list"
+        item = matching[0]
+        assert item["runtime_execution_active"] is False, f"{family} list runtime_execution_active not False"
+        assert item["source_state"] == "guarded_runtime_unavailable", f"{family} list source_state mismatch: {item.get('source_state')}"
+        assert item["status_reason"] == "RUNTIME_EXECUTION_NOT_ACTIVATED", f"{family} list status_reason mismatch: {item.get('status_reason')}"
+        assert item["output_available"] is False
+        assert item["download_ready"] is False
+        assert item["delivery_ready"] is False
+
+        # 2. Product-specific GET detail
+        detail_res = client.get(f"/api/v1/features/{family}/jobs/{job_id}", headers=headers)
+        assert detail_res.status_code == 200, f"Failed detail for {family}: {detail_res.text}"
+        detail_item = detail_res.json()["data"]
+        assert detail_item["runtime_execution_active"] is False, f"{family} detail runtime_execution_active not False"
+        assert detail_item["source_state"] == "guarded_runtime_unavailable", f"{family} detail source_state mismatch"
+        assert detail_item["status_reason"] == "RUNTIME_EXECUTION_NOT_ACTIVATED", f"{family} detail status_reason mismatch"
+        assert detail_item["output_available"] is False
+        assert detail_item["download_ready"] is False
+        assert detail_item["delivery_ready"] is False
+
+        # 3. Generic GET /jobs list
+        generic_list_res = client.get("/api/v1/jobs", headers=headers)
+        assert generic_list_res.status_code == 200, f"Failed generic list: {generic_list_res.text}"
+        g_items = generic_list_res.json()["data"]["items"]
+        g_matching = [it for it in g_items if it.get("id") == job_id]
+        assert len(g_matching) == 1, f"Fixture {job_id} not found in generic /jobs list"
+        g_item = g_matching[0]
+        assert g_item["runtime_execution_active"] is False, f"{family} generic list runtime_execution_active not False"
+        assert g_item["source_state"] == "guarded_runtime_unavailable", f"{family} generic list source_state mismatch"
+        assert g_item["status_reason"] == "RUNTIME_EXECUTION_NOT_ACTIVATED", f"{family} generic list status_reason mismatch"
+        assert g_item["output_available"] is False
+        assert g_item["download_ready"] is False
+        assert g_item["delivery_ready"] is False
+
+        # 4. Generic GET /jobs/{job_id} detail
+        generic_detail_res = client.get(f"/api/v1/jobs/{job_id}", headers=headers)
+        assert generic_detail_res.status_code == 200, f"Failed generic detail: {generic_detail_res.text}"
+        g_detail = generic_detail_res.json()["data"]
+        assert g_detail["runtime_execution_active"] is False, f"{family} generic detail runtime_execution_active not False"
+        assert g_detail["source_state"] == "guarded_runtime_unavailable", f"{family} generic detail source_state mismatch"
+        assert g_detail["status_reason"] == "RUNTIME_EXECUTION_NOT_ACTIVATED", f"{family} generic detail status_reason mismatch"
+        assert g_detail["output_available"] is False
+        assert g_detail["download_ready"] is False
+        assert g_detail["delivery_ready"] is False
+
+
+# ─── TEST 16: COMPLETED HISTORICAL ROWS PRESERVED ────────────────────────────
+
+def test_16_completed_historical_rows_preserved():
+    """Prove truthful completed historical rows preserve their completed status,
+    verified output, original status_reason, and are NOT downgraded to runtime-disabled."""
+    client = TestClient(app)
+    auth = _login(client, "g02t16@test.local", "secure-g02-pwd-1234")
+    account_id = auth["account_id"]
+    headers = auth["headers"]
+
+    completed_job_id = "pvj_completed_hist_001"
+    _insert_historical_fixture(
+        "web_product_video_jobs",
+        completed_job_id,
+        account_id,
+        status="completed",
+        status_reason="RENDER_SUCCESS_ORIGINAL",
+        output_url="https://cdn.example.com/rendered_historical.mp4",
+    )
+
+    # Product-specific detail
+    res = client.get(f"/api/v1/features/video_ai_prompt/jobs/{completed_job_id}", headers=headers)
+    assert res.status_code == 200
+    data = res.json()["data"]
+    assert data["status"] == "completed"
+    assert data["output_available"] is True
+    assert data["download_ready"] is True
+    assert data["delivery_ready"] is True
+    assert data["status_reason"] == "RENDER_SUCCESS_ORIGINAL"
+    assert data["source_state"] == "completed"
+    assert data["output"] == "https://cdn.example.com/rendered_historical.mp4"
+
+    # Generic detail
+    res_g = client.get(f"/api/v1/jobs/{completed_job_id}", headers=headers)
+    assert res_g.status_code == 200
+    data_g = res_g.json()["data"]
+    assert data_g["status"] == "completed"
+    assert data_g["output_available"] is True
+    assert data_g["status_reason"] == "RENDER_SUCCESS_ORIGINAL"
+    assert data_g["source_state"] == "completed"
+
+
+# ─── TEST 17: OWNER ISOLATION FOR HISTORICAL ROWS ────────────────────────────
+
+def test_17_owner_isolation_for_historical_rows():
+    """Prove Customer B cannot read Customer A's historical queued job
+    via product-specific list/detail or generic list/detail."""
+    client_a = TestClient(app)
+    auth_a = _login(client_a, "g02t17_a@test.local", "secure-g02-pwd-1234")
+    account_a_id = auth_a["account_id"]
+
+    job_id = "pvj_isolated_owner_a_001"
+    _insert_historical_fixture("web_product_video_jobs", job_id, account_a_id, status="queued")
+
+    # Customer B logs in
+    client_b = TestClient(app)
+    auth_b = _login(client_b, "g02t17_b@test.local", "secure-g02-pwd-5678")
+    headers_b = auth_b["headers"]
+
+    # Customer B cannot read via product-specific detail
+    res_b_detail = client_b.get(f"/api/v1/features/video_ai_prompt/jobs/{job_id}", headers=headers_b)
+    assert res_b_detail.status_code in (403, 404)
+
+    # Customer B cannot see in product-specific list
+    res_b_list = client_b.get("/api/v1/features/video_ai_prompt/jobs", headers=headers_b)
+    assert res_b_list.status_code == 200
+    items_b = res_b_list.json()["data"]["items"]
+    assert not any(it["id"] == job_id for it in items_b)
+
+    # Customer B cannot read via generic detail
+    res_b_g_detail = client_b.get(f"/api/v1/jobs/{job_id}", headers=headers_b)
+    assert res_b_g_detail.status_code in (403, 404) or res_b_g_detail.json().get("ok") is False
+
+    # Customer B cannot see in generic list
+    res_b_g_list = client_b.get("/api/v1/jobs", headers=headers_b)
+    assert res_b_g_list.status_code == 200
+    g_items_b = res_b_g_list.json()["data"]["items"]
+    assert not any(it["id"] == job_id for it in g_items_b)

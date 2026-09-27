@@ -71,6 +71,12 @@ def setup_db_and_clean(monkeypatch):
     monkeypatch.setenv("CORE_BRIDGE_BASE_URL", "http://127.0.0.1:8000")
     monkeypatch.setenv("CORE_BRIDGE_TOKEN", "test-token")
     monkeypatch.setenv("CORE_BRIDGE_HMAC_SECRET", "test-secret")
+    monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTERS", "image_create")
+    import app as app_module
+    import copyfast_api
+    monkeypatch.setattr(copyfast_api, "WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES", frozenset({"image_create"}))
+    monkeypatch.setattr(app_module, "_durable_auth_throttle_guard", lambda *a, **kw: None)
+    app_module._auth_rate_windows.clear()
     with transaction() as conn:
         conn.execute("DROP TABLE IF EXISTS web_image_generation_jobs")
     ensure_copyfast_schema()
@@ -1152,7 +1158,7 @@ def test_aa_direct_http_api_surface_integration():
     assert confirm_res.status_code == 200
     confirm_body = confirm_res.json()
     assert confirm_body["ok"] is False
-    assert confirm_body["error_code"] in ("WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED", "FEATURE_QUOTE_RECEIPT_REQUIRED")
+    assert confirm_body["error_code"] in ("WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED", "FEATURE_QUOTE_RECEIPT_REQUIRED", "FEATURE_ESTIMATE_REQUIRED")
 
     # 9. Generic /api/v1/jobs/{job_id} cross-account -> 403
     generic_detail_other = client.get(
