@@ -203,7 +203,7 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 ## 19. U01: Dashboard khách đã xác thực
 
 120. Chạy WA-51 local với fixture QA tách biệt trước. Live chỉ dùng signed session QA có sẵn; không tự đăng ký production, không lấy/chia sẻ credential.
-121. Trên `/dashboard`, kiểm nội dung và drawer: role dialog/aria-modal/inert; Tab và Shift+Tab tuần hoàn trong drawer; Escape đóng và focus trở lại nút menu.
+121. Trên `/dashboard`, ở 390px mở drawer bằng Enter và xác nhận `role=dialog`, `aria-modal=true`, `aria-expanded=true`, `aria-hidden` không phải `true`, `inert=false` nếu trình duyệt hỗ trợ; focus nằm trong drawer. Kiểm Tab và Shift+Tab tuần hoàn. Khi vẫn mở, đổi viewport lần lượt `390→375→390`: drawer phải vẫn mở, `aria-expanded` vẫn `true`, `aria-hidden` không được thành `true`, `inert` vẫn `false` nếu hỗ trợ và focus không được rơi ra `BODY`. Sau đó nhấn Escape: drawer đóng, trạng thái dialog/modal được gỡ, nội dung nền hết inert/ẩn và focus trở lại nút menu. Ghi từng viewport, trạng thái thuộc tính và phần tử đang focus; chỉ chụp ảnh không thay được các phép đo này.
 122. Kiểm đúng sáu route theo thứ tự `/studio`, `/tools/image`, `/voice`, `/subdub`, `/content`, `/music`; phiên vẫn signed, không redirect login và mỗi trang có nội dung thật. Chỉ mở màn hình, không tạo job, upload, checkout, gọi provider hoặc ghi dữ liệu.
 123. Kiểm locale VI/EN/ZH trên dashboard và theme; mobile `390×844` không tràn ngang, target ≥44px; app icon SVG phải trả `200`, không phát sinh favicon 404.
 124. Ghi route/status matrix, screenshot desktop/mobile, DOM snapshot, console/network failures, runtime SHA và mutation counters. Nếu thiếu session QA, ghi `BLOCKED_AUTH`; không suy live PASS từ local fixture.
