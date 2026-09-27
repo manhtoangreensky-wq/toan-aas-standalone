@@ -5,7 +5,7 @@
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
 2. Chọn đúng một ID trong `WA-01..WA-51` cho mỗi lượt test; WA-44 kiểm Operations readiness, WA-45 Reliability, WA-46 hàng chờ bàn giao nội dung, WA-47 hàng việc điều hành, WA-48 danh sách khách hàng tiềm năng ẩn danh, WA-49..WA-51 thuộc batch M01/U01.
 3. Nếu cần đổi case, sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
-4. Issue `#412` chỉ theo dõi manual top-up/P0-05; batch giao diện M01/U01 WA-49..WA-51 dùng [issue #571](https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/571) trong [Tester Project #2](https://github.com/users/manhtoangreensky-wq/projects/2). Issue #571 đang chờ candidate SHA cố định và chưa có Tester verdict.
+4. Issue `#412` chỉ theo dõi manual top-up/P0-05; batch giao diện M01/U01 WA-49..WA-51 dùng [issue #571](https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/571) trong [Tester Project #2](https://github.com/users/manhtoangreensky-wq/projects/2). Candidate `3dafa19f2cae1292a090dc30ebccc4c6c1de89be` đã được đẩy trên branch `fix/uiux-motion-layout-20260927`; lần kiểm tra độc lập mới nhất chỉ đạt tập hợp đồng cục bộ, còn WA-49..WA-51 đều `BLOCKED` ở nghiệm thu browser/live. Không diễn giải 20 kiểm tra cục bộ thành acceptance.
 5. Không dùng chat/Zalo làm nơi lưu kết quả duy nhất.
 
 ## 2. Ghi đúng phiên bản
