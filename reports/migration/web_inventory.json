@@ -160,7 +160,7 @@
     {
       "file": "copyfast_notification_center.py",
       "kind": "function",
-      "line": 298,
+      "line": 305,
       "target": "_scheduler_preflight_code"
     },
     {
@@ -2135,19 +2135,19 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6980,
+      "line": 7068,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7485,
+      "line": 7583,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7562,
+      "line": 7671,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
@@ -2255,25 +2255,25 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1100,
+      "line": 1107,
       "operation": "UPDATE",
       "table": "web_campaign_schedule_intents"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1159,
+      "line": 1166,
       "operation": "UPDATE",
       "table": "web_campaign_schedule_intents"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1547,
+      "line": 1554,
       "operation": "UPDATE",
       "table": "web_campaign_schedule_intents"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1566,
+      "line": 1573,
       "operation": "UPDATE",
       "table": "web_campaign_schedule_intents"
     },
@@ -3629,13 +3629,13 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1844,
+      "line": 1851,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1861,
+      "line": 1868,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
@@ -4049,19 +4049,19 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 7049,
+      "line": 7147,
       "operation": "DELETE FROM",
       "table": "web_manual_topup_approve_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7053,
+      "line": 7151,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_approve_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7478,
+      "line": 7576,
       "operation": "UPDATE",
       "table": "web_manual_topup_approve_receipts"
     },
@@ -4073,31 +4073,31 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 7232,
+      "line": 7330,
       "operation": "UPDATE",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7242,
+      "line": 7340,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7325,
+      "line": 7423,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7370,
+      "line": 7468,
       "operation": "UPDATE",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7450,
+      "line": 7548,
       "operation": "UPDATE",
       "table": "web_manual_topup_credit_operations"
     },
@@ -4109,19 +4109,19 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6884,
+      "line": 6972,
       "operation": "DELETE FROM",
       "table": "web_manual_topup_decision_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 6888,
+      "line": 6976,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_decision_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 6959,
+      "line": 7047,
       "operation": "UPDATE",
       "table": "web_manual_topup_decision_receipts"
     },
@@ -4139,31 +4139,31 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6641,
+      "line": 6720,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 6664,
+      "line": 6743,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 6965,
+      "line": 7053,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7459,
+      "line": 7557,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7545,
+      "line": 7654,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
@@ -4439,7 +4439,7 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1304,
+      "line": 1311,
       "operation": "DELETE FROM",
       "table": "web_notification_dedupes"
     },
@@ -4450,38 +4450,44 @@
       "table": "web_notification_events"
     },
     {
+      "file": "copyfast_db.py",
+      "line": 6669,
+      "operation": "INSERT INTO",
+      "table": "web_notification_events"
+    },
+    {
       "file": "copyfast_notification_center.py",
-      "line": 1293,
+      "line": 1300,
       "operation": "DELETE FROM",
       "table": "web_notification_events"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1369,
+      "line": 1376,
       "operation": "INSERT INTO",
       "table": "web_notification_events"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1473,
+      "line": 1480,
       "operation": "INSERT INTO",
       "table": "web_notification_events"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1577,
+      "line": 1584,
       "operation": "INSERT INTO",
       "table": "web_notification_events"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1626,
+      "line": 1633,
       "operation": "INSERT INTO",
       "table": "web_notification_events"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 2168,
+      "line": 2175,
       "operation": "INSERT INTO",
       "table": "web_notification_events"
     },
@@ -4493,25 +4499,25 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1297,
+      "line": 1304,
       "operation": "DELETE FROM",
       "table": "web_notification_items"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1357,
+      "line": 1364,
       "operation": "INSERT INTO",
       "table": "web_notification_items"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1616,
+      "line": 1623,
       "operation": "UPDATE",
       "table": "web_notification_items"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 2155,
+      "line": 2162,
       "operation": "UPDATE",
       "table": "web_notification_items"
     },
@@ -4523,19 +4529,19 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 654,
+      "line": 661,
       "operation": "UPDATE",
       "table": "web_notification_leases"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 660,
+      "line": 667,
       "operation": "INSERT INTO",
       "table": "web_notification_leases"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 708,
+      "line": 715,
       "operation": "DELETE FROM",
       "table": "web_notification_leases"
     },
@@ -4547,25 +4553,25 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 573,
+      "line": 580,
       "operation": "DELETE FROM",
       "table": "web_notification_nonces"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 578,
+      "line": 585,
       "operation": "INSERT INTO",
       "table": "web_notification_nonces"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 608,
+      "line": 615,
       "operation": "DELETE FROM",
       "table": "web_notification_nonces"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 613,
+      "line": 620,
       "operation": "INSERT INTO",
       "table": "web_notification_nonces"
     },
@@ -4577,13 +4583,13 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 774,
+      "line": 781,
       "operation": "DELETE FROM",
       "table": "web_notification_run_steps"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 821,
+      "line": 828,
       "operation": "INSERT INTO",
       "table": "web_notification_run_steps"
     },
@@ -4595,43 +4601,43 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 585,
+      "line": 592,
       "operation": "INSERT INTO",
       "table": "web_notification_runs"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 626,
+      "line": 633,
       "operation": "INSERT INTO",
       "table": "web_notification_runs"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 644,
+      "line": 651,
       "operation": "UPDATE",
       "table": "web_notification_runs"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 665,
+      "line": 672,
       "operation": "INSERT INTO",
       "table": "web_notification_runs"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 690,
+      "line": 697,
       "operation": "UPDATE",
       "table": "web_notification_runs"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 700,
+      "line": 707,
       "operation": "UPDATE",
       "table": "web_notification_runs"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 778,
+      "line": 785,
       "operation": "DELETE FROM",
       "table": "web_notification_runs"
     },
@@ -6725,25 +6731,25 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1077,
+      "line": 1084,
       "operation": "UPDATE",
       "table": "web_workboard_schedule_intents"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1130,
+      "line": 1137,
       "operation": "UPDATE",
       "table": "web_workboard_schedule_intents"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1443,
+      "line": 1450,
       "operation": "UPDATE",
       "table": "web_workboard_schedule_intents"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 1462,
+      "line": 1469,
       "operation": "UPDATE",
       "table": "web_workboard_schedule_intents"
     },
@@ -7140,7 +7146,7 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 217,
+      "line": 224,
       "name": "APP_ENV"
     },
     {
@@ -7255,7 +7261,7 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 218,
+      "line": 225,
       "name": "ENVIRONMENT"
     },
     {
@@ -7375,7 +7381,7 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 219,
+      "line": 226,
       "name": "RAILWAY_ENVIRONMENT"
     },
     {
@@ -8035,12 +8041,12 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 265,
+      "line": 272,
       "name": "WEBAPP_NOTIFICATION_MAX_ACTIONS_PER_RUN"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 260,
+      "line": 267,
       "name": "WEBAPP_NOTIFICATION_MAX_RUN_SECONDS"
     },
     {
@@ -8050,22 +8056,22 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 233,
+      "line": 240,
       "name": "WEBAPP_NOTIFICATION_REQUIRE_REPLICA_ATTESTATION"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 287,
+      "line": 294,
       "name": "WEBAPP_NOTIFICATION_RUN_PRUNE_BATCH_SIZE"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 281,
+      "line": 288,
       "name": "WEBAPP_NOTIFICATION_RUN_RETENTION_DAYS"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 380,
+      "line": 387,
       "name": "WEBAPP_NOTIFICATION_TICK_KEY_ID"
     },
     {
@@ -8080,7 +8086,7 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 373,
+      "line": 380,
       "name": "WEBAPP_NOTIFICATION_TICK_SECRET"
     },
     {
@@ -8095,12 +8101,12 @@
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 304,
+      "line": 311,
       "name": "WEBAPP_NOTIFICATION_TOPOLOGY"
     },
     {
       "file": "copyfast_notification_center.py",
-      "line": 340,
+      "line": 347,
       "name": "WEBAPP_NOTIFICATION_TOPOLOGY"
     },
     {
@@ -9551,7 +9557,7 @@
     {
       "endpoint": "items",
       "file": "copyfast_notification_center.py",
-      "line": 2079,
+      "line": 2086,
       "methods": [
         "GET"
       ],
@@ -9560,7 +9566,7 @@
     {
       "endpoint": "dismiss_item",
       "file": "copyfast_notification_center.py",
-      "line": 2195,
+      "line": 2202,
       "methods": [
         "POST"
       ],
@@ -9569,7 +9575,7 @@
     {
       "endpoint": "read_item",
       "file": "copyfast_notification_center.py",
-      "line": 2190,
+      "line": 2197,
       "methods": [
         "POST"
       ],
@@ -9578,7 +9584,7 @@
     {
       "endpoint": "policy",
       "file": "copyfast_notification_center.py",
-      "line": 2014,
+      "line": 2021,
       "methods": [
         "GET"
       ],
@@ -9587,7 +9593,7 @@
     {
       "endpoint": "summary",
       "file": "copyfast_notification_center.py",
-      "line": 2037,
+      "line": 2044,
       "methods": [
         "GET"
       ],
@@ -11612,7 +11618,7 @@
     {
       "endpoint": "tick",
       "file": "copyfast_notification_center.py",
-      "line": 1869,
+      "line": 1876,
       "methods": [
         "POST"
       ],
@@ -15699,7 +15705,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 242,
   "source_files_scanned": 242,
-  "source_fingerprint_sha256": "13fa063b532d06b72d5c67a04bcf66e0ceb2f87e7f2e32dd019ea482072ceb6b",
+  "source_fingerprint_sha256": "aa94904726fd9b19639b6a26a6e61b960ad2b9bf58dc5722feca64427edc45cb",
   "source_root": "repository-root",
   "ui_path_references": [
     {

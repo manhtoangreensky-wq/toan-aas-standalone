@@ -93,7 +93,14 @@ REPLICA_COUNT_ENV_NAMES = ("RAILWAY_REPLICA_COUNT", "RAILWAY_REPLICAS", "WEBAPP_
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 SIGNATURE_PATTERN = re.compile(r"^[0-9a-f]{64}$", re.IGNORECASE)
 ITEM_STATES = frozenset({"unread", "read", "dismissed"})
-ITEM_KINDS = frozenset({"reminder_due", "workboard_schedule_due", "campaign_schedule_due"})
+ITEM_KINDS = frozenset({
+    "reminder_due",
+    "workboard_schedule_due",
+    "campaign_schedule_due",
+    "manual_topup_pending",
+    "manual_topup_approved",
+    "manual_topup_rejected",
+})
 SEVERITIES = frozenset({"warning", "urgent"})
 
 

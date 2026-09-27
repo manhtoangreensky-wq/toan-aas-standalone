@@ -15,7 +15,7 @@ import hmac
 import os
 from pathlib import Path
 import sqlite3
-from typing import Callable
+from typing import Any, Callable
 import uuid
 
 
@@ -6595,6 +6595,85 @@ def _web_manual_topup_public_row(
     return record
 
 
+def _materialize_web_manual_topup_notification(
+    conn: Any,
+    *,
+    account_id: str,
+    kind: str,
+    request_number: int,
+    source_revision: int,
+    occurrence_at: str,
+    now: str | None = None,
+) -> bool:
+    """Materialize exactly one customer-owned in-app record for manual top-up lifecycle.
+
+    Guarantees:
+    - Customer ownership: account_id must be the customer owning the topup request.
+    - Opaque event coordinate: stores only kind, source_id, source_revision, occurrence_at.
+    - Zero sensitive fields: no bank account, QR payload, reference, secret, or ledger ID.
+    - Deterministic dedupe: SHA256 over exact event coordinate prevents replay duplication.
+    - Atomic within same SQLite transaction: does not open new connection or commit early.
+    """
+    valid_kinds = {
+        "manual_topup_pending": 1,
+        "manual_topup_approved": 2,
+        "manual_topup_rejected": 3,
+    }
+    if kind not in valid_kinds or valid_kinds[kind] != int(source_revision):
+        return False
+    clean_account_id = str(account_id or "").strip()
+    if not clean_account_id:
+        return False
+    source_id = f"MANUAL-{int(request_number)}"
+    clean_occurrence = str(occurrence_at or "").strip()
+    if not clean_occurrence:
+        return False
+    current_time = str(now or utc_now())
+
+    material = (
+        f"v1\nmanual_topup\n{kind}\n{clean_account_id}\n{source_id}\n{source_revision}\n{clean_occurrence}"
+    ).encode("utf-8")
+    fingerprint = hashlib.sha256(material).hexdigest()
+
+    dedupe_cursor = conn.execute(
+        """INSERT OR IGNORE INTO web_notification_dedupes
+           (dedupe_fingerprint, account_id, source_kind, source_id, source_revision, occurrence_at, created_at)
+           VALUES (?, ?, 'manual_topup', ?, ?, ?, ?)""",
+        (fingerprint, clean_account_id, source_id, source_revision, clean_occurrence, current_time),
+    )
+    if int(dedupe_cursor.rowcount or 0) != 1:
+        return False
+
+    item_id = str(uuid.uuid4())
+    item_cursor = conn.execute(
+        """INSERT OR IGNORE INTO web_notification_items
+           (id, account_id, kind, source_kind, source_id, source_revision, occurrence_at,
+            severity, state, revision, dedupe_fingerprint, created_by_run_id, created_at, updated_at)
+           VALUES (?, ?, ?, 'manual_topup', ?, ?, ?, 'warning', 'unread', 1, ?, NULL, ?, ?)""",
+        (
+            item_id,
+            clean_account_id,
+            kind,
+            source_id,
+            source_revision,
+            clean_occurrence,
+            fingerprint,
+            current_time,
+            current_time,
+        ),
+    )
+    if int(item_cursor.rowcount or 0) != 1:
+        return False
+
+    conn.execute(
+        """INSERT INTO web_notification_events
+           (id, notification_id, account_id, actor_account_id, action, state, revision, created_at)
+           VALUES (?, ?, ?, NULL, 'materialized', 'unread', 1, ?)""",
+        (str(uuid.uuid4()), item_id, clean_account_id, current_time),
+    )
+    return True
+
+
 def create_web_manual_topup_request(
     *,
     account_id: str,
@@ -6665,6 +6744,15 @@ def create_web_manual_topup_request(
                SET transfer_content_snapshot=?
                WHERE id=?""",
             (transfer_content, req_num),
+        )
+        _materialize_web_manual_topup_notification(
+            conn,
+            account_id=owner,
+            kind="manual_topup_pending",
+            request_number=req_num,
+            source_revision=1,
+            occurrence_at=now,
+            now=now,
         )
         created = (
             req_num,
@@ -6989,6 +7077,16 @@ def confirm_web_manual_topup_reject(
                 f"MANUAL-{int(request_number)}",
                 current_time,
             ),
+        )
+        customer_account_id = str(record[13])
+        _materialize_web_manual_topup_notification(
+            conn,
+            account_id=customer_account_id,
+            kind="manual_topup_rejected",
+            request_number=int(request_number),
+            source_revision=3,
+            occurrence_at=current_time,
+            now=current_time,
         )
         updated = conn.execute(
             _WEB_MANUAL_ADMIN_SELECT + " WHERE r.id=?",
@@ -7497,6 +7595,17 @@ def finalize_web_manual_topup_approval_with_operation(
             ),
         )
 
+        customer_account_id = str(record[13])
+        _materialize_web_manual_topup_notification(
+            conn,
+            account_id=customer_account_id,
+            kind="manual_topup_approved",
+            request_number=int(request_number),
+            source_revision=2,
+            occurrence_at=current_time,
+            now=current_time,
+        )
+
         updated = conn.execute(
             _WEB_MANUAL_ADMIN_SELECT + " WHERE r.id=?",
             (int(request_number),),
@@ -7572,6 +7681,16 @@ def approve_web_manual_topup(
                 f"approved_xu={int(approved_xu)};ledger_event_id={str(ledger_event_id)}",
                 current_time,
             ),
+        )
+        customer_account_id = str(record[13])
+        _materialize_web_manual_topup_notification(
+            conn,
+            account_id=customer_account_id,
+            kind="manual_topup_approved",
+            request_number=int(request_number),
+            source_revision=2,
+            occurrence_at=current_time,
+            now=current_time,
         )
         updated = conn.execute(
             _WEB_MANUAL_ADMIN_SELECT + " WHERE r.id=?",
