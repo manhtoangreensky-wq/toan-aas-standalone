@@ -534,6 +534,15 @@ def image_generation_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]
 
     output_available = bool(is_safe and job.get("status") == STATUS_COMPLETED)
     clean_output = output_url if output_available else None
+    is_queued = job.get("status") not in (STATUS_COMPLETED, "processing")
+    runtime_active = _is_runtime_execution_active("image_create")
+    if is_queued and not runtime_active:
+        source_state = "guarded_runtime_unavailable"
+        status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED"
+        runtime_active = False
+    else:
+        source_state = job.get("source_state") or ("completed" if job.get("status") == STATUS_COMPLETED else ("processing_by_worker" if job.get("status") == "processing" else "queued_locally"))
+        status_reason = job.get("status_reason")
 
     return {
         "id": job.get("id"),
@@ -546,7 +555,7 @@ def image_generation_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]
         "service_context": "image_create",
         "canonical_entrypoint": CANONICAL_CUSTOMER_ENTRYPOINT,
         "status": job.get("status"),
-        "status_reason": job.get("status_reason"),
+        "status_reason": status_reason,
         "tier_key": job.get("tier_key"),
         "output_available": output_available,
         "download_ready": output_available,
@@ -555,14 +564,48 @@ def image_generation_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]
         "output_url": clean_output,
         "created_at": job.get("created_at"),
         "updated_at": job.get("updated_at"),
+        "source_state": source_state,
+        "runtime_execution_active": runtime_active,
     }
+
+
+def _is_runtime_execution_active(feature: str = "image_create") -> bool:
+    try:
+        import sys
+        copyfast_api = sys.modules.get("copyfast_api")
+        if copyfast_api is None:
+            import copyfast_api
+        return feature in getattr(copyfast_api, "WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES", frozenset())
+    except Exception:
+        return False
 
 
 def _format_image_generation_job_record(row: dict[str, Any]) -> dict[str, Any]:
     """Format raw database row into clean owner-scoped API dictionary."""
-    output_url = row.get("output_url")
-    is_safe_artifact = is_safe_image_output_url(output_url)
-    output_available = bool(is_safe_artifact and row.get("status") == STATUS_COMPLETED)
+    status_str = str(row.get("status") or "")
+    is_completed = status_str == STATUS_COMPLETED
+    is_terminal_failure = status_str in ("failed", "cancelled", "rejected")
+    is_non_terminal = not is_completed and not is_terminal_failure
+    runtime_active = _is_runtime_execution_active("image_create")
+
+    if is_non_terminal and not runtime_active:
+        runtime_execution_active = False
+        projected_status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED"
+        source_state = "guarded_runtime_unavailable"
+        output_available = False
+        download_ready = False
+        delivery_ready = False
+        clean_output = None
+    else:
+        runtime_execution_active = runtime_active
+        projected_status_reason = row.get("status_reason")
+        source_state = "completed" if is_completed else ("failed" if is_terminal_failure else "queued_locally")
+        output_url = row.get("output_url")
+        is_safe_artifact = is_safe_image_output_url(output_url)
+        output_available = bool(is_safe_artifact and is_completed)
+        download_ready = output_available
+        delivery_ready = output_available
+        clean_output = output_url if output_available else None
 
     envelope: dict[str, Any] = {}
     if row.get("bridge_envelope_json"):
@@ -578,8 +621,6 @@ def _format_image_generation_job_record(row: dict[str, Any]) -> dict[str, Any]:
         except Exception:
             output_metadata = None
 
-    clean_output = output_url if output_available else None
-
     return {
         "id": row.get("id"),
         "canonical_job_id": row.get("canonical_job_id"),
@@ -589,13 +630,15 @@ def _format_image_generation_job_record(row: dict[str, Any]) -> dict[str, Any]:
         "routing_product_key": row.get("routing_product_key"),
         "prompt": row.get("prompt"),
         "tier_key": row.get("tier_key"),
-        "status": row.get("status"),
-        "status_reason": row.get("status_reason"),
+        "status": status_str,
+        "status_reason": projected_status_reason,
+        "source_state": source_state,
+        "runtime_execution_active": runtime_execution_active,
         "output": clean_output,
         "output_url": clean_output,
         "output_available": output_available,
-        "download_ready": output_available,
-        "delivery_ready": output_available,
+        "download_ready": download_ready,
+        "delivery_ready": delivery_ready,
         "output_metadata": output_metadata if output_available else None,
         "bridge_envelope": envelope,
         "created_at": row.get("created_at"),

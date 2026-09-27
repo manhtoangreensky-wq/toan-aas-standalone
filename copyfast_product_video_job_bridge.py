@@ -310,6 +310,17 @@ def create_or_replay_product_video_job(
         }
 
 
+def _is_runtime_execution_active(feature: str = "video_ai_prompt") -> bool:
+    try:
+        import sys
+        copyfast_api = sys.modules.get("copyfast_api")
+        if copyfast_api is None:
+            import copyfast_api
+        return feature in getattr(copyfast_api, "WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES", frozenset())
+    except Exception:
+        return False
+
+
 def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[str, Any]:
     try:
         env = json.loads(str(row[14])) if row[14] else {}
@@ -322,11 +333,30 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
 
     status_str = str(row[10])
     is_completed = status_str == "completed"
-    output_url_val = (
-        str(row[22])
-        if len(row) > 22 and row[22]
-        else (f"/api/v1/assets/{row[0]}/download" if is_completed else None)
-    )
+    is_terminal_failure = status_str in ("failed", "cancelled", "rejected")
+    is_non_terminal = not is_completed and not is_terminal_failure
+    runtime_active = _is_runtime_execution_active("video_ai_prompt")
+
+    if is_non_terminal and not runtime_active:
+        runtime_execution_active = False
+        projected_status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED"
+        source_state = "guarded_runtime_unavailable"
+        output_available = False
+        download_ready = False
+        delivery_ready = False
+        output_url_val = None
+    else:
+        runtime_execution_active = runtime_active
+        projected_status_reason = str(row[11])
+        source_state = "completed" if is_completed else ("failed" if is_terminal_failure else "queued_locally")
+        output_available = is_completed
+        download_ready = is_completed
+        delivery_ready = is_completed
+        output_url_val = (
+            str(row[22])
+            if len(row) > 22 and row[22]
+            else (f"/api/v1/assets/{row[0]}/download" if is_completed else None)
+        )
 
     return {
         "id": str(row[0]),
@@ -340,12 +370,14 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
         "quality_tier": int(row[8]),
         "scene_count": int(row[9]),
         "status": status_str,
-        "status_reason": str(row[11]),
-        "output_available": is_completed,
-        "download_ready": is_completed,
-        "delivery_ready": is_completed,
-        "output": output_url_val if is_completed else None,
-        "output_metadata": output_meta,
+        "status_reason": projected_status_reason,
+        "source_state": source_state,
+        "runtime_execution_active": runtime_execution_active,
+        "output_available": output_available,
+        "download_ready": download_ready,
+        "delivery_ready": delivery_ready,
+        "output": output_url_val if output_available else None,
+        "output_metadata": output_meta if output_available else None,
         "created_at": str(row[16]),
         "updated_at": str(row[17]),
         "bridge_envelope": env,
@@ -354,7 +386,7 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
         "claimed_at": str(row[19]) if len(row) > 19 and row[19] else None,
         "lease_expires_at": str(row[20]) if len(row) > 20 and row[20] else None,
         "attempts": int(row[21]) if len(row) > 21 and row[21] is not None else 0,
-        "output_url": output_url_val if is_completed else None,
+        "output_url": output_url_val if output_available else None,
     }
 
 
@@ -433,23 +465,33 @@ def product_video_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
     """Adapt a Product Video job record for inclusion in generic GET /api/v1/jobs."""
     is_completed = job.get("status") == "completed"
     is_processing = job.get("status") == "processing"
-    source_state = "completed" if is_completed else ("processing_by_worker" if is_processing else "queued_locally")
+    is_queued = not is_completed and not is_processing
+    runtime_active = _is_runtime_execution_active("video_ai_prompt")
+    if is_queued and not runtime_active:
+        source_state = "guarded_runtime_unavailable"
+        status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED"
+        runtime_execution_active = False
+    else:
+        source_state = job.get("source_state") or ("completed" if is_completed else ("processing_by_worker" if is_processing else "queued_locally"))
+        status_reason = job.get("status_reason", "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION")
+        runtime_execution_active = job.get("runtime_execution_active", runtime_active)
     return {
         "id": job["id"],
         "feature": "video_ai_prompt",
         "job_type": "product_video_one_scene",
         "status": job["status"],
-        "status_reason": job["status_reason"],
+        "status_reason": status_reason,
         "created_at": job["created_at"],
         "updated_at": job["updated_at"],
-        "output_available": is_completed,
-        "download_ready": is_completed,
-        "delivery_ready": is_completed,
+        "output_available": is_completed and job.get("output_available", True),
+        "download_ready": is_completed and job.get("download_ready", True),
+        "delivery_ready": is_completed and job.get("delivery_ready", True),
         "source": "web_canonical_bridge",
         "source_state": source_state,
         "native_kind": "product-video-job",
         "output": job.get("output") if is_completed else None,
         "output_metadata": job.get("output_metadata"),
+        "runtime_execution_active": runtime_execution_active,
         "summary": {
             "prompt": job.get("prompt", "")[:100],
             "aspect_ratio": job.get("aspect_ratio", ""),

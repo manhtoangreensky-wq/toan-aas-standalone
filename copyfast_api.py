@@ -190,6 +190,16 @@ router = APIRouter(prefix="/api/v1", tags=["COPYFAST Core"])
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 TELEGRAM_BOT_USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_]{5,32}$")
 CANONICAL_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
+
+# ── Source-Reviewed Runtime Execution Authority ──────────────────────────────
+# Only features whose Web-to-runtime execution bridge has been source-reviewed,
+# integration-tested, and Owner-authorized may appear here.  The environment
+# variable ``WEBAPP_FEATURE_JOB_ADAPTERS`` alone is NOT sufficient — a feature
+# must also be present in this compile-time allowlist.  When this set is EMPTY,
+# no Web feature can create a durable runtime job, regardless of environment
+# configuration.  This is the intended production baseline until each feature's
+# runtime bridge is independently verified.
+WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES: frozenset[str] = frozenset()
 CONTIGUOUS_PAGE_RANGE_PATTERN = re.compile(r"^\d+(?:-\d+)?$")
 TICKET_SECRET_ASSIGNMENT_PATTERN = re.compile(
     r"\b(?:api[ _-]?(?:key|token)|access[ _-]?token|refresh[ _-]?token|"
@@ -880,6 +890,10 @@ def _web_feature_execution_available(feature: str | None = None) -> bool:
     deployment accepts Web confirms.  The adapter flag must therefore remain
     false until that endpoint independently verifies the canonical quote,
     owner, idempotency and charge/job lifecycle.
+
+    Additionally, the feature MUST appear in the compile-time source-reviewed
+    ``WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES`` allowlist.  Environment-only
+    configuration cannot activate runtime execution for an unreviewed feature.
     """
     flags = _flags()
     common_ready = bool(
@@ -892,8 +906,21 @@ def _web_feature_execution_available(feature: str | None = None) -> bool:
         return False
     adapter_keys = _web_feature_job_adapter_keys()
     if feature is None:
-        return bool(adapter_keys)
-    return str(feature or "").strip() in adapter_keys
+        return bool(adapter_keys & WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES)
+    feature_key = str(feature or "").strip()
+    return feature_key in adapter_keys and feature_key in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+
+
+def _web_feature_runtime_active(feature: str) -> bool:
+    """Check if a specific feature's runtime execution is source-activated.
+
+    Used by direct ``POST /features/{feature}/jobs`` routes to enforce the
+    same source-reviewed runtime authority gate as the confirm path.
+    """
+    return (
+        _web_feature_execution_available(feature)
+        and str(feature or "").strip() in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+    )
 
 
 def _linked(account: dict) -> str:
@@ -6285,6 +6312,8 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
         if not _flags()["provider_calls_enabled"]:
             return envelope(False, "Tính năng đang ở chế độ an toàn và chưa gọi engine từ Web.", status_name="guarded", error_code="WEBAPP_PROVIDER_CALLS_DISABLED")
         if not _web_feature_execution_available(feature):
+            if _flags()["feature_job_adapter_enabled"] and str(feature or "").strip() in _web_feature_job_adapter_keys():
+                return envelope(False, "Web App chưa có runtime execution được kích hoạt cho tính năng này; chỉ draft và estimate đang khả dụng.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
             return envelope(False, "Web App chưa có adapter tạo job canonical đã được phê duyệt; chỉ draft và estimate đang khả dụng.", status_name="guarded", error_code="WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED")
         contract_error = _feature_input_contract_error(feature, values, action=action)
         if contract_error:
@@ -6531,6 +6560,8 @@ async def create_product_video_job_route(
     request: Request,
     account: dict = Depends(require_csrf),
 ):
+    if not _web_feature_runtime_active("video_ai_prompt"):
+        return envelope(False, "Runtime execution chưa được kích hoạt cho tính năng này.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
     account_id = str(account.get("id") or "")
     key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
     request_id = str(payload.input.get("request_id") or "")
@@ -6589,6 +6620,8 @@ async def create_video_trend_job_route(
     request: Request,
     account: dict = Depends(require_csrf),
 ):
+    if not _web_feature_runtime_active("video_trend"):
+        return envelope(False, "Runtime execution chưa được kích hoạt cho tính năng này.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
     account_id = str(account.get("id") or "")
     key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
     request_id = str(payload.input.get("request_id") or "")
@@ -6647,6 +6680,8 @@ async def create_video_long_job_route(
     request: Request,
     account: dict = Depends(require_csrf),
 ):
+    if not _web_feature_runtime_active("video_long"):
+        return envelope(False, "Runtime execution chưa được kích hoạt cho tính năng này.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
     account_id = str(account.get("id") or "")
     key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
     request_id = str(payload.input.get("request_id") or "")
@@ -6705,6 +6740,8 @@ async def create_multi_scene_film_job_route(
     request: Request,
     account: dict = Depends(require_csrf),
 ):
+    if not _web_feature_runtime_active("video_multiscene"):
+        return envelope(False, "Runtime execution chưa được kích hoạt cho tính năng này.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
     account_id = str(account.get("id") or "")
     key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
     job = create_or_replay_multi_scene_film_job(
@@ -6761,6 +6798,8 @@ async def create_image_generation_job_route(
     request: Request,
     account: dict = Depends(require_csrf),
 ):
+    if not _web_feature_runtime_active("image_create"):
+        return envelope(False, "Runtime execution chưa được kích hoạt cho tính năng này.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
     account_id = str(account.get("id") or "")
     key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
     job = create_or_replay_image_generation_job(

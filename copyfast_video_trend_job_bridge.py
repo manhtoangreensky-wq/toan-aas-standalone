@@ -400,6 +400,17 @@ def create_or_replay_video_trend_job(
         }
 
 
+def _is_runtime_execution_active(feature: str = "video_trend") -> bool:
+    try:
+        import sys
+        copyfast_api = sys.modules.get("copyfast_api")
+        if copyfast_api is None:
+            import copyfast_api
+        return feature in getattr(copyfast_api, "WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES", frozenset())
+    except Exception:
+        return False
+
+
 def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[str, Any]:
     try:
         env = json.loads(str(row[12])) if row[12] else {}
@@ -412,10 +423,29 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
 
     status_str = str(row[8])
     is_completed = status_str == STATUS_COMPLETED
-    raw_output_url = str(row[16]) if len(row) > 16 and row[16] is not None else None
-    is_safe_url = bool(raw_output_url and is_safe_video_output_url(raw_output_url))
-    has_real_output = bool(is_completed and is_safe_url)
-    output_url_val = raw_output_url if has_real_output else None
+    is_terminal_failure = status_str in ("failed", "cancelled", "rejected")
+    is_non_terminal = not is_completed and not is_terminal_failure
+    runtime_active = _is_runtime_execution_active("video_trend")
+
+    if is_non_terminal and not runtime_active:
+        runtime_execution_active = False
+        projected_status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED"
+        source_state = "guarded_runtime_unavailable"
+        output_available = False
+        download_ready = False
+        delivery_ready = False
+        output_url_val = None
+    else:
+        runtime_execution_active = runtime_active
+        projected_status_reason = str(row[9])
+        source_state = "completed" if is_completed else ("failed" if is_terminal_failure else "queued_locally")
+        raw_output_url = str(row[16]) if len(row) > 16 and row[16] is not None else None
+        is_safe_url = bool(raw_output_url and is_safe_video_output_url(raw_output_url))
+        has_real_output = bool(is_completed and is_safe_url)
+        output_available = has_real_output
+        download_ready = has_real_output
+        delivery_ready = has_real_output
+        output_url_val = raw_output_url if has_real_output else None
 
     return {
         "id": str(row[0]),
@@ -428,12 +458,14 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
         "quality_tier": int(row[6]),
         "scene_count": int(row[7]),
         "status": status_str,
-        "status_reason": str(row[9]),
-        "output_available": has_real_output,
-        "download_ready": has_real_output,
-        "delivery_ready": has_real_output,
+        "status_reason": projected_status_reason,
+        "source_state": source_state,
+        "runtime_execution_active": runtime_execution_active,
+        "output_available": output_available,
+        "download_ready": download_ready,
+        "delivery_ready": delivery_ready,
         "output": output_url_val,
-        "output_metadata": output_meta,
+        "output_metadata": output_meta if output_available else None,
         "created_at": str(row[14]),
         "updated_at": str(row[15]),
         "bridge_envelope": env,
@@ -518,7 +550,15 @@ def video_trend_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
     """Adapt a Video Trend job record for inclusion in generic GET /api/v1/jobs."""
     is_completed = job.get("status") == STATUS_COMPLETED
     is_processing = job.get("status") == "processing"
-    source_state = "completed" if is_completed else ("processing_by_worker" if is_processing else "queued_locally")
+    is_queued = not is_completed and not is_processing
+    runtime_active = _is_runtime_execution_active("video_trend")
+    if is_queued and not runtime_active:
+        source_state = "guarded_runtime_unavailable"
+        status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED"
+        runtime_active = False
+    else:
+        source_state = job.get("source_state") or ("completed" if is_completed else ("processing_by_worker" if is_processing else "queued_locally"))
+        status_reason = job.get("status_reason") or "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION"
 
     raw_output = job.get("output")
     is_safe_output = bool(raw_output and is_safe_video_output_url(str(raw_output)))
@@ -533,7 +573,7 @@ def video_trend_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
         "feature": "video_trend",
         "job_type": "trend_video",
         "status": job["status"],
-        "status_reason": job["status_reason"],
+        "status_reason": status_reason,
         "created_at": job["created_at"],
         "updated_at": job["updated_at"],
         "output_available": canonical_output_available,
@@ -544,6 +584,7 @@ def video_trend_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
         "native_kind": "video-trend-job",
         "output": job.get("output") if can_deliver else None,
         "output_metadata": job.get("output_metadata"),
+        "runtime_execution_active": runtime_active,
         "summary": {
             "prompt": job.get("prompt", "")[:100],
             "trend_prompt": job.get("trend_prompt", job.get("prompt", ""))[:100],

@@ -69,6 +69,11 @@ def setup_db_and_clean(monkeypatch):
     monkeypatch.setenv("CORE_BRIDGE_BASE_URL", "http://127.0.0.1:8000")
     monkeypatch.setenv("CORE_BRIDGE_TOKEN", "test-token")
     monkeypatch.setenv("CORE_BRIDGE_HMAC_SECRET", "test-secret")
+    import app as app_module
+    import copyfast_api
+    monkeypatch.setattr(copyfast_api, "WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES", frozenset({"video_long"}))
+    monkeypatch.setattr(app_module, "_durable_auth_throttle_guard", lambda *a, **kw: None)
+    app_module._auth_rate_windows.clear()
     ensure_copyfast_schema()
     bridge.ensure_video_long_schema()
     with transaction() as conn:
