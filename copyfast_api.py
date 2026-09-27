@@ -1000,6 +1000,7 @@ MANUAL_ADMIN_PROJECTION_FIELDS = (
     "decision_at",
     "decided_by_admin_id",
     "admin_note",
+    "decision_reason",
 )
 MANUAL_ADMIN_RECEIPT_PATTERN = re.compile(r"^[A-Za-z0-9_-]{32,160}$")
 MANUAL_ADMIN_RECEIPT_TTL_SECONDS = 300
@@ -4973,9 +4974,10 @@ async def manual_topup_qr(
 
 
 def _manual_topup_request_id(value: Any) -> str | None:
-    request_id = str(value or "").strip()
-    if request_id.isdigit():
-        request_id = f"MANUAL-{request_id}"
+    if isinstance(value, int) and not isinstance(value, bool):
+        request_id = f"MANUAL-{value}"
+    else:
+        request_id = str(value or "").strip()
     if MANUAL_TOPUP_REQUEST_ID_RE.fullmatch(request_id) is None:
         return None
     if int(request_id.split("-", 1)[1]) > MAX_SQLITE_ROW_ID:
@@ -5085,9 +5087,10 @@ def _manual_topup_not_found_response():
 
 
 def _manual_admin_request_id(value: Any) -> str | None:
-    request_id = str(value or "").strip()
-    if request_id.isdigit():
-        request_id = f"MANUAL-{request_id}"
+    if isinstance(value, int) and not isinstance(value, bool):
+        request_id = f"MANUAL-{value}"
+    else:
+        request_id = str(value or "").strip()
     if MANUAL_TOPUP_REQUEST_ID_RE.fullmatch(request_id) is None:
         return None
     if int(request_id.split("-", 1)[1]) > MAX_SQLITE_ROW_ID:
@@ -5118,7 +5121,7 @@ def _manual_admin_public_record(value: Any) -> dict[str, Any]:
         record["method"] = method
     for field in (
         "display_name", "transfer_content", "reference", "submitted_at",
-        "decision_at", "decided_by_admin_id", "admin_note",
+        "decision_at", "decided_by_admin_id", "admin_note", "decision_reason",
     ):
         scalar = _browser_scalar(value.get(field), maximum=300)
         if isinstance(scalar, str):
@@ -5506,6 +5509,7 @@ async def manual_admin_confirm(
                         "amount_xu": op["amount_xu"],
                         "reason": f"Manual topup {canonical_id}",
                         "idempotency_key": op["idempotency_key"],
+                        "actor_id": str(account.get("id") or ""),
                     },
                     actor_id=str(account.get("id") or ""),
                 )
