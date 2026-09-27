@@ -1687,6 +1687,9 @@ def ensure_copyfast_schema() -> None:
                 decision_reason TEXT,
                 approved_xu INTEGER,
                 ledger_event_id TEXT,
+                payment_code_snapshot TEXT,
+                transfer_content_snapshot TEXT,
+                instruction_version TEXT,
                 UNIQUE(account_id, idempotency_key_hash),
                 FOREIGN KEY(account_id) REFERENCES web_accounts(id),
                 FOREIGN KEY(decided_by_account_id) REFERENCES web_accounts(id)
@@ -1696,6 +1699,41 @@ def ensure_copyfast_schema() -> None:
         conn.execute(
             """CREATE INDEX IF NOT EXISTS idx_web_manual_topup_owner_submitted
                ON web_manual_topup_requests(account_id, submitted_at DESC, id DESC)"""
+        )
+        manual_topup_cols = {
+            col[1]
+            for col in conn.execute(
+                "PRAGMA table_info(web_manual_topup_requests)"
+            ).fetchall()
+        }
+        if "payment_code_snapshot" not in manual_topup_cols:
+            conn.execute(
+                "ALTER TABLE web_manual_topup_requests ADD COLUMN payment_code_snapshot TEXT"
+            )
+        if "transfer_content_snapshot" not in manual_topup_cols:
+            conn.execute(
+                "ALTER TABLE web_manual_topup_requests ADD COLUMN transfer_content_snapshot TEXT"
+            )
+        if "instruction_version" not in manual_topup_cols:
+            conn.execute(
+                "ALTER TABLE web_manual_topup_requests ADD COLUMN instruction_version TEXT"
+            )
+        conn.execute(
+            """
+            UPDATE web_manual_topup_requests
+            SET payment_code_snapshot = COALESCE(
+                    (SELECT c.payment_code FROM web_account_topup_codes AS c
+                     WHERE c.account_id = web_manual_topup_requests.account_id),
+                    ''
+                ),
+                transfer_content_snapshot = COALESCE(
+                    (SELECT c.payment_code FROM web_account_topup_codes AS c
+                     WHERE c.account_id = web_manual_topup_requests.account_id),
+                    ''
+                ),
+                instruction_version = 'legacy_account_code_v1'
+            WHERE instruction_version IS NULL
+            """
         )
         conn.execute(
             """
@@ -6573,10 +6611,12 @@ def create_web_manual_topup_request(
     with transaction() as conn:
         existing = conn.execute(
             """SELECT r.id, r.amount_vnd, r.currency, r.method, r.reference,
-                      r.status, r.submitted_at, r.updated_at, c.payment_code,
-                      r.request_fingerprint
+                      r.status, r.submitted_at, r.updated_at,
+                      COALESCE(r.transfer_content_snapshot, r.payment_code_snapshot, ''),
+                      r.request_fingerprint,
+                      COALESCE(r.payment_code_snapshot, ''),
+                      COALESCE(r.instruction_version, '')
                FROM web_manual_topup_requests AS r
-               JOIN web_account_topup_codes AS c ON c.account_id=r.account_id
                WHERE r.account_id=? AND r.idempotency_key_hash=?""",
             (owner, idempotency_key_hash),
         ).fetchone()
@@ -6600,8 +6640,9 @@ def create_web_manual_topup_request(
         cursor = conn.execute(
             """INSERT INTO web_manual_topup_requests
                (account_id, amount_vnd, currency, method, reference, status,
-                idempotency_key_hash, request_fingerprint, submitted_at, updated_at)
-               VALUES (?, ?, 'VND', ?, ?, 'pending_admin_review', ?, ?, ?, ?)""",
+                idempotency_key_hash, request_fingerprint, submitted_at, updated_at,
+                payment_code_snapshot, transfer_content_snapshot, instruction_version)
+               VALUES (?, ?, 'VND', ?, ?, 'pending_admin_review', ?, ?, ?, ?, ?, ?, ?)""",
             (
                 owner,
                 amount_vnd,
@@ -6611,10 +6652,22 @@ def create_web_manual_topup_request(
                 request_fingerprint,
                 now,
                 now,
+                payment_code,
+                "",
+                "request_bound_v2",
             ),
         )
+        req_num = int(cursor.lastrowid)
+        canonical_request_id = f"MANUAL-{req_num}"
+        transfer_content = f"{payment_code} {canonical_request_id}"
+        conn.execute(
+            """UPDATE web_manual_topup_requests
+               SET transfer_content_snapshot=?
+               WHERE id=?""",
+            (transfer_content, req_num),
+        )
         created = (
-            int(cursor.lastrowid),
+            req_num,
             amount_vnd,
             "VND",
             method,
@@ -6622,7 +6675,10 @@ def create_web_manual_topup_request(
             "pending_admin_review",
             now,
             now,
+            transfer_content,
+            request_fingerprint,
             payment_code,
+            "request_bound_v2",
         )
         return _web_manual_topup_public_row(created)
 
@@ -6634,9 +6690,9 @@ def list_web_manual_topup_requests(account_id: str, *, limit: int) -> list[dict]
     with read_transaction() as conn:
         rows = conn.execute(
             """SELECT r.id, r.amount_vnd, r.currency, r.method, r.reference,
-                      r.status, r.submitted_at, r.updated_at, c.payment_code
+                      r.status, r.submitted_at, r.updated_at,
+                      COALESCE(r.transfer_content_snapshot, r.payment_code_snapshot, '')
                FROM web_manual_topup_requests AS r
-               JOIN web_account_topup_codes AS c ON c.account_id=r.account_id
                WHERE r.account_id=?
                ORDER BY r.submitted_at DESC, r.id DESC LIMIT ?""",
             (str(account_id or ""), bounded_limit),
@@ -6650,9 +6706,9 @@ def get_web_manual_topup_request(account_id: str, request_number: int) -> dict |
     with read_transaction() as conn:
         row = conn.execute(
             """SELECT r.id, r.amount_vnd, r.currency, r.method, r.reference,
-                      r.status, r.submitted_at, r.updated_at, c.payment_code
+                      r.status, r.submitted_at, r.updated_at,
+                      COALESCE(r.transfer_content_snapshot, r.payment_code_snapshot, '')
                FROM web_manual_topup_requests AS r
-               JOIN web_account_topup_codes AS c ON c.account_id=r.account_id
                WHERE r.account_id=? AND r.id=?""",
             (str(account_id or ""), int(request_number)),
         ).fetchone()
@@ -6669,13 +6725,14 @@ class WebManualTopupAdminGuard(Exception):
 
 _WEB_MANUAL_ADMIN_SELECT = """
     SELECT r.id, a.display_name, a.email, r.amount_vnd, r.currency,
-           r.method, r.reference, c.payment_code, r.status,
+           r.method, r.reference, COALESCE(r.payment_code_snapshot, ''), r.status,
            r.submitted_at, r.updated_at, r.decision_at, r.decision_reason,
            r.account_id, a.canonical_user_id, r.approved_xu, r.ledger_event_id,
-           r.decided_by_account_id
+           r.decided_by_account_id,
+           COALESCE(r.transfer_content_snapshot, r.payment_code_snapshot, ''),
+           COALESCE(r.instruction_version, '')
     FROM web_manual_topup_requests AS r
     JOIN web_accounts AS a ON a.id = r.account_id
-    LEFT JOIN web_account_topup_codes AS c ON c.account_id = r.account_id
 """
 
 
@@ -6704,6 +6761,12 @@ def _web_manual_admin_public_row(row: tuple | None) -> dict | None:
             result["approved_xu"] = int(row[15])
         if len(row) > 16 and row[16]:
             result["ledger_event_id"] = str(row[16])
+    if len(row) > 18 and row[18]:
+        result["transfer_content"] = str(row[18])
+    elif result["payment_code"]:
+        result["transfer_content"] = result["payment_code"]
+    if len(row) > 19 and row[19]:
+        result["instruction_version"] = str(row[19])
     return result
 
 
@@ -7703,12 +7766,14 @@ def query_finance_topups_list(
                 query_params = list(params) + [bounded_limit, bounded_offset]
                 rows = conn.execute(
                     f"""SELECT r.id, a.display_name, a.email, r.amount_vnd, r.currency,
-                               r.method, r.reference, c.payment_code, r.status,
+                               r.method, r.reference, COALESCE(r.payment_code_snapshot, ''), r.status,
                                r.submitted_at, r.updated_at, r.decision_at, r.decision_reason,
-                               r.account_id
+                               r.account_id, a.canonical_user_id, r.approved_xu, r.ledger_event_id,
+                               r.decided_by_account_id,
+                               COALESCE(r.transfer_content_snapshot, r.payment_code_snapshot, ''),
+                               COALESCE(r.instruction_version, '')
                         FROM web_manual_topup_requests AS r
                         LEFT JOIN web_accounts AS a ON a.id = r.account_id
-                        LEFT JOIN web_account_topup_codes AS c ON c.account_id = r.account_id
                         {where_sql}
                         ORDER BY r.submitted_at DESC, r.id DESC
                         LIMIT ? OFFSET ?""",
@@ -7716,7 +7781,7 @@ def query_finance_topups_list(
                 ).fetchall()
 
                 for row in rows:
-                    item = _web_manual_admin_public_row(row[:13])
+                    item = _web_manual_admin_public_row(row)
                     if item:
                         if len(row) > 13 and row[13]:
                             item["account_id"] = str(row[13])

@@ -160,7 +160,7 @@ async def test_manual_web_local_flow_uses_signed_owner_without_bridge_identity(t
     assert created["status"] == "pending_admin_review"
     record = created["data"]
     assert record["request_id"].startswith("MANUAL-")
-    assert record["transfer_content"].isascii() and record["transfer_content"].isdigit()
+    assert record["transfer_content"].isascii() and record["transfer_content"] == f"10000000 {record['request_id']}"
     assert "account_id" not in record
     assert "expected_xu" not in record
     assert "approved_xu" not in record
