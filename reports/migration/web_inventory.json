@@ -64,7 +64,7 @@
     {
       "file": "copyfast_product_video_dispatcher.py",
       "kind": "function",
-      "line": 609,
+      "line": 619,
       "target": "_format_claimed_job"
     },
     {
@@ -82,7 +82,7 @@
     {
       "file": "copyfast_product_video_job_bridge.py",
       "kind": "function",
-      "line": 324,
+      "line": 325,
       "target": "_format_public_job"
     },
     {
@@ -214,7 +214,7 @@
     {
       "file": "copyfast_product_video_dispatcher.py",
       "kind": "function",
-      "line": 171,
+      "line": 172,
       "target": "claim_product_video_job"
     },
     {
@@ -226,7 +226,7 @@
     {
       "file": "copyfast_product_video_dispatcher.py",
       "kind": "function",
-      "line": 292,
+      "line": 293,
       "target": "complete_product_video_job"
     },
     {
@@ -256,7 +256,7 @@
     {
       "file": "copyfast_product_video_job_bridge.py",
       "kind": "function",
-      "line": 164,
+      "line": 165,
       "target": "create_or_replay_product_video_job"
     },
     {
@@ -304,7 +304,7 @@
     {
       "file": "copyfast_product_video_dispatcher.py",
       "kind": "function",
-      "line": 390,
+      "line": 400,
       "target": "fail_product_video_job"
     },
     {
@@ -322,7 +322,7 @@
     {
       "file": "copyfast_product_video_job_bridge.py",
       "kind": "function",
-      "line": 160,
+      "line": 161,
       "target": "generate_product_video_job_id"
     },
     {
@@ -406,7 +406,7 @@
     {
       "file": "copyfast_product_video_dispatcher.py",
       "kind": "function",
-      "line": 257,
+      "line": 258,
       "target": "heartbeat_product_video_job"
     },
     {
@@ -586,7 +586,7 @@
     {
       "file": "copyfast_product_video_dispatcher.py",
       "kind": "function",
-      "line": 474,
+      "line": 484,
       "target": "reconcile_stalled_product_video_jobs"
     },
     {
@@ -610,7 +610,7 @@
     {
       "file": "copyfast_product_video_dispatcher.py",
       "kind": "function",
-      "line": 72,
+      "line": 73,
       "target": "sanitize_worker_id"
     },
     {
@@ -634,7 +634,7 @@
     {
       "file": "copyfast_product_video_dispatcher.py",
       "kind": "function",
-      "line": 82,
+      "line": 83,
       "target": "verify_worker_access"
     },
     {
@@ -5273,43 +5273,43 @@
     },
     {
       "file": "copyfast_product_video_dispatcher.py",
-      "line": 205,
+      "line": 206,
       "operation": "UPDATE",
       "table": "web_product_video_jobs"
     },
     {
       "file": "copyfast_product_video_dispatcher.py",
-      "line": 279,
+      "line": 280,
       "operation": "UPDATE",
       "table": "web_product_video_jobs"
     },
     {
       "file": "copyfast_product_video_dispatcher.py",
-      "line": 347,
+      "line": 357,
       "operation": "UPDATE",
       "table": "web_product_video_jobs"
     },
     {
       "file": "copyfast_product_video_dispatcher.py",
-      "line": 441,
+      "line": 451,
       "operation": "UPDATE",
       "table": "web_product_video_jobs"
     },
     {
       "file": "copyfast_product_video_dispatcher.py",
-      "line": 509,
+      "line": 519,
       "operation": "UPDATE",
       "table": "web_product_video_jobs"
     },
     {
       "file": "copyfast_product_video_dispatcher.py",
-      "line": 523,
+      "line": 533,
       "operation": "UPDATE",
       "table": "web_product_video_jobs"
     },
     {
       "file": "copyfast_product_video_job_bridge.py",
-      "line": 260,
+      "line": 261,
       "operation": "INSERT INTO",
       "table": "web_product_video_jobs"
     },
@@ -7201,7 +7201,7 @@
     },
     {
       "file": "copyfast_product_video_dispatcher.py",
-      "line": 96,
+      "line": 97,
       "name": "CORE_BRIDGE_TOKEN"
     },
     {
@@ -7356,7 +7356,7 @@
     },
     {
       "file": "copyfast_product_video_dispatcher.py",
-      "line": 94,
+      "line": 95,
       "name": "PRODUCT_VIDEO_WORKER_SECRET"
     },
     {
@@ -7421,7 +7421,7 @@
     },
     {
       "file": "copyfast_product_video_dispatcher.py",
-      "line": 97,
+      "line": 98,
       "name": "TOANAAS_WORKER_SECRET"
     },
     {
@@ -8496,7 +8496,7 @@
     },
     {
       "file": "copyfast_product_video_dispatcher.py",
-      "line": 95,
+      "line": 96,
       "name": "WORKER_AUTH_TOKEN"
     }
   ],
@@ -15705,7 +15705,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 242,
   "source_files_scanned": 242,
-  "source_fingerprint_sha256": "8466c9e73739d3664bbde720b06549d002eb594e19033137c42dcb06e7f9f3ef",
+  "source_fingerprint_sha256": "0a85b5144fd53e4125f9983aa674bff255f2d1db7d1f703590def40449a4368d",
   "source_root": "repository-root",
   "ui_path_references": [
     {
