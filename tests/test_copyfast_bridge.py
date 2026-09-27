@@ -281,6 +281,8 @@ async def test_feature_confirm_adapter_is_explicitly_gated_and_idempotent(tmp_pa
     assert calls == []
 
     monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTERS", "video_single")
+    import copyfast_api
+    monkeypatch.setattr(copyfast_api, "WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES", frozenset({"video_single"}))
     missing = await _feature_action("confirm", "video_single", payload, request, account, session_id="feature-session-1")
     assert missing["error_code"] == "FEATURE_ESTIMATE_REQUIRED"
     assert calls == []

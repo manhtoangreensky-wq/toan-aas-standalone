@@ -433,13 +433,18 @@ def product_video_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
     """Adapt a Product Video job record for inclusion in generic GET /api/v1/jobs."""
     is_completed = job.get("status") == "completed"
     is_processing = job.get("status") == "processing"
+    is_queued = not is_completed and not is_processing
     source_state = "completed" if is_completed else ("processing_by_worker" if is_processing else "queued_locally")
+    status_reason = job["status_reason"]
+    if is_queued:
+        source_state = "guarded_runtime_unavailable"
+        status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED"
     return {
         "id": job["id"],
         "feature": "video_ai_prompt",
         "job_type": "product_video_one_scene",
         "status": job["status"],
-        "status_reason": job["status_reason"],
+        "status_reason": status_reason,
         "created_at": job["created_at"],
         "updated_at": job["updated_at"],
         "output_available": is_completed,
@@ -450,6 +455,7 @@ def product_video_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
         "native_kind": "product-video-job",
         "output": job.get("output") if is_completed else None,
         "output_metadata": job.get("output_metadata"),
+        "runtime_execution_active": False,
         "summary": {
             "prompt": job.get("prompt", "")[:100],
             "aspect_ratio": job.get("aspect_ratio", ""),

@@ -534,6 +534,9 @@ def image_generation_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]
 
     output_available = bool(is_safe and job.get("status") == STATUS_COMPLETED)
     clean_output = output_url if output_available else None
+    is_queued = job.get("status") not in (STATUS_COMPLETED, "processing")
+    source_state = "guarded_runtime_unavailable" if is_queued else ("completed" if job.get("status") == STATUS_COMPLETED else "processing_by_worker")
+    status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED" if is_queued else job.get("status_reason")
 
     return {
         "id": job.get("id"),
@@ -546,7 +549,7 @@ def image_generation_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]
         "service_context": "image_create",
         "canonical_entrypoint": CANONICAL_CUSTOMER_ENTRYPOINT,
         "status": job.get("status"),
-        "status_reason": job.get("status_reason"),
+        "status_reason": status_reason,
         "tier_key": job.get("tier_key"),
         "output_available": output_available,
         "download_ready": output_available,
@@ -555,6 +558,8 @@ def image_generation_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]
         "output_url": clean_output,
         "created_at": job.get("created_at"),
         "updated_at": job.get("updated_at"),
+        "source_state": source_state,
+        "runtime_execution_active": False,
     }
 
 

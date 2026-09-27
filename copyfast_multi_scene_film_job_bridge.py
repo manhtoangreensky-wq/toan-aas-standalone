@@ -491,6 +491,9 @@ def multi_scene_film_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]
 
     output_available = bool(is_safe and job.get("status") == "completed")
     clean_output = output_url if output_available else None
+    is_queued = job.get("status") not in ("completed", "processing")
+    source_state = "guarded_runtime_unavailable" if is_queued else ("completed" if job.get("status") == "completed" else "processing_by_worker")
+    status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED" if is_queued else job.get("status_reason")
 
     return {
         "id": job.get("id"),
@@ -503,7 +506,7 @@ def multi_scene_film_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]
         "service_context": "video_multiscene",
         "canonical_entrypoint": CANONICAL_CUSTOMER_ENTRYPOINT,
         "status": job.get("status"),
-        "status_reason": job.get("status_reason"),
+        "status_reason": status_reason,
         "flow_owner": CANONICAL_FLOW_OWNER,
         "worker_owner": CANONICAL_WORKER_OWNER,
         "quality_tier": job.get("quality_tier"),
@@ -515,6 +518,8 @@ def multi_scene_film_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]
         "output_url": clean_output,
         "created_at": job.get("created_at"),
         "updated_at": job.get("updated_at"),
+        "source_state": source_state,
+        "runtime_execution_active": False,
     }
 
 

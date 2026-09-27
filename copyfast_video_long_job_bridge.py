@@ -568,6 +568,9 @@ def video_long_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
     status = job.get("status", STATUS_QUEUED)
     effective_output = job.get("output_url") if (status == "completed" and is_safe) else None
     output_ready = bool(status == "completed" and is_safe)
+    is_queued = status not in ("completed", "processing")
+    source_state = "guarded_runtime_unavailable" if is_queued else ("completed" if status == "completed" else "processing_by_worker")
+    status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED" if is_queued else job.get("status_reason", STATUS_REASON_AWAITING)
 
     return {
         "id": job["id"],
@@ -576,7 +579,7 @@ def video_long_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
         "product_key": CANONICAL_PRODUCT_KEY,
         "routing_product_key": CANONICAL_ROUTING_KEY,
         "status": status,
-        "status_reason": job.get("status_reason", STATUS_REASON_AWAITING),
+        "status_reason": status_reason,
         "prompt": job.get("prompt", ""),
         "script": job.get("script", ""),
         "long_form_plan": job.get("long_form_plan", ""),
@@ -590,4 +593,6 @@ def video_long_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
         "download_ready": output_ready,
         "delivery_ready": output_ready,
         "canonical_entrypoint": CANONICAL_CUSTOMER_ENTRYPOINT,
+        "source_state": source_state,
+        "runtime_execution_active": False,
     }
