@@ -16,13 +16,34 @@ from typing import Any
 
 from copyfast_db import (
     audio_asset_operations_enabled,
+    document_operations_enabled,
     frame_video_operations_enabled,
+    image_background_cleanup_enabled,
+    image_brand_overlay_enabled,
+    image_enhance_enabled,
+    image_ocr_enabled,
+    image_operations_enabled,
+    image_resize_enabled,
+    image_to_pdf_enabled,
+    pdf_ocr_enabled,
+    pdf_ocr_word_enabled,
+    pdf_to_images_enabled,
+    pdf_to_word_enabled,
+    project_package_enabled,
     read_transaction,
     subtitle_asset_operations_enabled,
+    video_operations_enabled,
+    video_poster_enabled,
     video_transform_operations_enabled,
 )
 from copyfast_audio_asset_operations import verified_audio_asset_output_available
+from copyfast_document_operations import verified_document_operation_output_available
+from copyfast_frame_video_operations import verified_frame_video_output_available
+from copyfast_image_operations import verified_image_operation_output_available
+from copyfast_project_packages import verified_project_package_output_available
 from copyfast_subtitle_asset_operations import verified_subtitle_asset_output_available
+from copyfast_video_operations import verified_video_operation_output_available
+from copyfast_video_transform_operations import verified_video_transform_output_available
 
 
 MAX_LIST_LIMIT = 100
@@ -74,13 +95,54 @@ _DOCUMENT_OUTPUT_SPECS: dict[str, tuple[str, str, str]] = {
     ),
     "image_ocr": (".txt", "text/plain; charset=utf-8", "toan-aas-image-ocr.txt"),
     "pdf_ocr": (".txt", "text/plain; charset=utf-8", "toan-aas-pdf-ocr.txt"),
+    "pdf_ocr_word": (
+        ".docx",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "toan-aas-pdf-ocr.docx",
+    ),
 }
 _PDF_TO_IMAGES_SINGLE_PAGE_SPEC = (".png", "image/png", "toan-aas-pdf-page-001.png")
 _PACKAGE_OUTPUT_SPEC = (".zip", "application/zip", "project-package.zip")
 _IMAGE_OUTPUT_SPECS: dict[str, tuple[str, str, str]] = {
     "image_resize": (".png", "image/png", "toan-aas-image-resized.png"),
     "image_enhance": (".png", "image/png", "toan-aas-image-enhanced.png"),
+    "image_brand_overlay": (".png", "image/png", "toan-aas-image-brand-overlay.png"),
+    "image_background_cleanup": (".png", "image/png", "toan-aas-image-background-cleanup.png"),
 }
+
+
+def _document_kind_enabled(kind: str) -> bool:
+    if not document_operations_enabled():
+        return False
+    if kind in {"pdf_split", "pdf_merge", "pdf_optimize"}:
+        return document_operations_enabled()
+    if kind == "image_to_pdf":
+        return image_to_pdf_enabled()
+    if kind == "pdf_to_images":
+        return pdf_to_images_enabled()
+    if kind == "pdf_to_word_text":
+        return pdf_to_word_enabled()
+    if kind == "image_ocr":
+        return image_ocr_enabled()
+    if kind == "pdf_ocr":
+        return pdf_ocr_enabled()
+    if kind == "pdf_ocr_word":
+        return pdf_ocr_word_enabled()
+    return False
+
+
+def _image_kind_enabled(kind: str) -> bool:
+    if not image_operations_enabled():
+        return False
+    if kind == "image_resize":
+        return image_resize_enabled()
+    if kind == "image_enhance":
+        return image_enhance_enabled()
+    if kind == "image_brand_overlay":
+        return image_brand_overlay_enabled()
+    if kind == "image_background_cleanup":
+        return image_background_cleanup_enabled()
+    return False
 _SUBTITLE_OUTPUT_SPECS: dict[str, tuple[str, str, str]] = {
     "srt": (".srt", "application/x-subrip", "toan-aas-subtitle.srt"),
     "vtt": (".vtt", "text/vtt", "toan-aas-subtitle.vtt"),
@@ -318,6 +380,29 @@ def _project_package(row: tuple[Any, ...]) -> dict[str, Any]:
         updated_at,
     ) = row
     exact_state = str(state or "")
+    output = None
+    if (
+        project_package_enabled()
+        and verified_project_package_output_available(
+            storage_key=storage_key,
+            byte_size=byte_size,
+            sha256=sha256,
+        )
+    ):
+        output = _sealed_output(
+            state=state,
+            storage_key=storage_key,
+            storage_pattern=_PACKAGE_STORAGE_KEY_PATTERN,
+            content_type=content_type,
+            byte_size=byte_size,
+            sha256=sha256,
+            expected_suffix=_PACKAGE_OUTPUT_SPEC[0],
+            expected_content_type=_PACKAGE_OUTPUT_SPEC[1],
+            filename=_safe_filename(filename) or _PACKAGE_OUTPUT_SPEC[2],
+            # The direct package downloader always serves a ZIP and does not
+            # treat its descriptive table MIME as delivery authority.
+            require_stored_content_type=False,
+        )
     return {
         "id": encode_native_job_id("project-package", record_id),
         "kind": "project-package",
@@ -332,20 +417,7 @@ def _project_package(row: tuple[Any, ...]) -> dict[str, Any]:
             "document_count": _non_negative_int(document_count),
             "asset_reference_count": _non_negative_int(asset_reference_count),
         },
-        "output": _sealed_output(
-            state=state,
-            storage_key=storage_key,
-            storage_pattern=_PACKAGE_STORAGE_KEY_PATTERN,
-            content_type=content_type,
-            byte_size=byte_size,
-            sha256=sha256,
-            expected_suffix=_PACKAGE_OUTPUT_SPEC[0],
-            expected_content_type=_PACKAGE_OUTPUT_SPEC[1],
-            filename=_safe_filename(filename) or _PACKAGE_OUTPUT_SPEC[2],
-            # The direct package downloader always serves a ZIP and does not
-            # treat its descriptive table MIME as delivery authority.
-            require_stored_content_type=False,
-        ),
+        "output": output,
     }
 
 
@@ -373,6 +445,29 @@ def _project_document_operation(row: tuple[Any, ...]) -> dict[str, Any]:
     exact_state = str(state or "")
     kind = str(operation_kind or "")
     output_spec = _document_output_spec(kind, output_page_count)
+    output = None
+    if (
+        _document_kind_enabled(kind)
+        and output_spec is not None
+        and verified_document_operation_output_available(
+            storage_key=storage_key,
+            byte_size=byte_size,
+            sha256=sha256,
+            kind=kind,
+            output_page_count=_positive_int(output_page_count),
+        )
+    ):
+        output = _sealed_output(
+            state=state,
+            storage_key=storage_key,
+            storage_pattern=_DOCUMENT_STORAGE_KEY_PATTERN,
+            content_type=content_type,
+            byte_size=byte_size,
+            sha256=sha256,
+            expected_suffix=output_spec[0],
+            expected_content_type=output_spec[1],
+            filename=output_spec[2],
+        )
     return {
         "id": encode_native_job_id("document-operation", record_id),
         "kind": "document-operation",
@@ -391,21 +486,7 @@ def _project_document_operation(row: tuple[Any, ...]) -> dict[str, Any]:
             "source_page_count": _positive_int(source_page_count),
             "output_page_count": _positive_int(output_page_count),
         },
-        "output": (
-            _sealed_output(
-                state=state,
-                storage_key=storage_key,
-                storage_pattern=_DOCUMENT_STORAGE_KEY_PATTERN,
-                content_type=content_type,
-                byte_size=byte_size,
-                sha256=sha256,
-                expected_suffix=output_spec[0],
-                expected_content_type=output_spec[1],
-                filename=output_spec[2],
-            )
-            if output_spec is not None
-            else None
-        ),
+        "output": output,
     }
 
 
@@ -434,6 +515,31 @@ def _project_image_operation(row: tuple[Any, ...]) -> dict[str, Any]:
     exact_state = str(state or "")
     kind = str(operation_kind or "")
     output_spec = _IMAGE_OUTPUT_SPECS.get(kind)
+    output = None
+    if (
+        _image_kind_enabled(kind)
+        and output_spec is not None
+        and verified_image_operation_output_available(
+            storage_key=storage_key,
+            byte_size=byte_size,
+            sha256=sha256,
+            kind=kind,
+            target_width=_positive_int(target_width),
+            target_height=_positive_int(target_height),
+        )
+    ):
+        output = _sealed_output(
+            state=state,
+            storage_key=storage_key,
+            storage_pattern=_IMAGE_STORAGE_KEY_PATTERN,
+            content_type=content_type,
+            byte_size=byte_size,
+            sha256=sha256,
+            expected_suffix=output_spec[0],
+            expected_content_type=output_spec[1],
+            filename=output_spec[2],
+            required_positive_values=(target_width, target_height),
+        )
     return {
         "id": encode_native_job_id("image-operation", record_id),
         "kind": "image-operation",
@@ -453,22 +559,7 @@ def _project_image_operation(row: tuple[Any, ...]) -> dict[str, Any]:
             "source_width": _positive_int(source_width),
             "source_height": _positive_int(source_height),
         },
-        "output": (
-            _sealed_output(
-                state=state,
-                storage_key=storage_key,
-                storage_pattern=_IMAGE_STORAGE_KEY_PATTERN,
-                content_type=content_type,
-                byte_size=byte_size,
-                sha256=sha256,
-                expected_suffix=output_spec[0],
-                expected_content_type=output_spec[1],
-                filename=output_spec[2],
-                required_positive_values=(target_width, target_height),
-            )
-            if output_spec is not None
-            else None
-        ),
+        "output": output,
     }
 
 
@@ -675,6 +766,32 @@ def _project_video_operation(row: tuple[Any, ...]) -> dict[str, Any]:
     exact_state = str(state or "")
     kind = str(operation_kind or "")
     output_spec = _VIDEO_POSTER_OUTPUT_SPEC if kind == "video_poster" else None
+    output = None
+    if (
+        video_operations_enabled()
+        and video_poster_enabled()
+        and output_spec is not None
+        and verified_video_operation_output_available(
+            storage_key=storage_key,
+            byte_size=byte_size,
+            sha256=sha256,
+            output_width=_positive_int(output_width),
+            output_height=_positive_int(output_height),
+            content_type=content_type,
+        )
+    ):
+        output = _sealed_output(
+            state=state,
+            storage_key=storage_key,
+            storage_pattern=_VIDEO_STORAGE_KEY_PATTERN,
+            content_type=content_type,
+            byte_size=byte_size,
+            sha256=sha256,
+            expected_suffix=output_spec[0],
+            expected_content_type=output_spec[1],
+            filename=output_spec[2],
+            required_positive_values=(output_width, output_height),
+        )
     return {
         "id": encode_native_job_id("video-operation", record_id),
         "kind": "video-operation",
@@ -698,22 +815,7 @@ def _project_video_operation(row: tuple[Any, ...]) -> dict[str, Any]:
             "output_width": _positive_int(output_width),
             "output_height": _positive_int(output_height),
         },
-        "output": (
-            _sealed_output(
-                state=state,
-                storage_key=storage_key,
-                storage_pattern=_VIDEO_STORAGE_KEY_PATTERN,
-                content_type=content_type,
-                byte_size=byte_size,
-                sha256=sha256,
-                expected_suffix=output_spec[0],
-                expected_content_type=output_spec[1],
-                filename=output_spec[2],
-                required_positive_values=(output_width, output_height),
-            )
-            if output_spec is not None
-            else None
-        ),
+        "output": output,
     }
 
 
@@ -745,6 +847,28 @@ def _project_frame_video_operation(row: tuple[Any, ...]) -> dict[str, Any]:
     ) = row
     exact_state = str(state or "")
     kind = str(operation_kind or "")
+    output = None
+    if (
+        frame_video_operations_enabled()
+        and kind == "frame_video"
+        and verified_frame_video_output_available(
+            storage_key=storage_key,
+            byte_size=byte_size,
+            sha256=sha256,
+        )
+    ):
+        output = _sealed_output(
+            state=state,
+            storage_key=storage_key,
+            storage_pattern=_FRAME_VIDEO_STORAGE_KEY_PATTERN,
+            content_type=content_type,
+            byte_size=byte_size,
+            sha256=sha256,
+            expected_suffix=_FRAME_VIDEO_OUTPUT_SPEC[0],
+            expected_content_type=_FRAME_VIDEO_OUTPUT_SPEC[1],
+            filename=_FRAME_VIDEO_OUTPUT_SPEC[2],
+            required_positive_values=(output_duration_ms, output_width, output_height),
+        )
     return {
         "id": encode_native_job_id("frame-video-operation", record_id),
         "kind": "frame-video-operation",
@@ -766,22 +890,7 @@ def _project_frame_video_operation(row: tuple[Any, ...]) -> dict[str, Any]:
             "output_width": _positive_int(output_width),
             "output_height": _positive_int(output_height),
         },
-        "output": (
-            _sealed_output(
-                state=state,
-                storage_key=storage_key,
-                storage_pattern=_FRAME_VIDEO_STORAGE_KEY_PATTERN,
-                content_type=content_type,
-                byte_size=byte_size,
-                sha256=sha256,
-                expected_suffix=_FRAME_VIDEO_OUTPUT_SPEC[0],
-                expected_content_type=_FRAME_VIDEO_OUTPUT_SPEC[1],
-                filename=_FRAME_VIDEO_OUTPUT_SPEC[2],
-                required_positive_values=(output_duration_ms, output_width, output_height),
-            )
-            if kind == "frame_video"
-            else None
-        ),
+        "output": output,
     }
 
 
@@ -817,6 +926,28 @@ def _project_video_transform_operation(row: tuple[Any, ...]) -> dict[str, Any]:
     ) = row
     exact_state = str(state or "")
     kind = str(operation_kind or "")
+    output = None
+    if (
+        video_transform_operations_enabled()
+        and kind == "video_transform"
+        and verified_video_transform_output_available(
+            storage_key=storage_key,
+            byte_size=byte_size,
+            sha256=sha256,
+        )
+    ):
+        output = _sealed_output(
+            state=state,
+            storage_key=storage_key,
+            storage_pattern=_VIDEO_TRANSFORM_STORAGE_KEY_PATTERN,
+            content_type=content_type,
+            byte_size=byte_size,
+            sha256=sha256,
+            expected_suffix=_VIDEO_TRANSFORM_OUTPUT_SPEC[0],
+            expected_content_type=_VIDEO_TRANSFORM_OUTPUT_SPEC[1],
+            filename=_VIDEO_TRANSFORM_OUTPUT_SPEC[2],
+            required_positive_values=(output_duration_ms, output_width, output_height),
+        )
     return {
         "id": encode_native_job_id("video-transform-operation", record_id),
         "kind": "video-transform-operation",
@@ -842,22 +973,7 @@ def _project_video_transform_operation(row: tuple[Any, ...]) -> dict[str, Any]:
             "output_height": _positive_int(output_height),
             "output_has_audio": bool(_integer(output_has_audio)) if _integer(output_has_audio) is not None else None,
         },
-        "output": (
-            _sealed_output(
-                state=state,
-                storage_key=storage_key,
-                storage_pattern=_VIDEO_TRANSFORM_STORAGE_KEY_PATTERN,
-                content_type=content_type,
-                byte_size=byte_size,
-                sha256=sha256,
-                expected_suffix=_VIDEO_TRANSFORM_OUTPUT_SPEC[0],
-                expected_content_type=_VIDEO_TRANSFORM_OUTPUT_SPEC[1],
-                filename=_VIDEO_TRANSFORM_OUTPUT_SPEC[2],
-                required_positive_values=(output_duration_ms, output_width, output_height),
-            )
-            if kind == "video_transform"
-            else None
-        ),
+        "output": output,
     }
 
 

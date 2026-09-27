@@ -584,6 +584,38 @@ def _replay_matches(operation: tuple[Any, ...], rows: list[tuple[Any, ...]], pay
     return hmac.compare_digest(str(operation[5] or ""), fingerprint)
 
 
+def verified_frame_video_output_available(
+    storage_key: str | None,
+    byte_size: int | None,
+    sha256: str | None,
+) -> bool:
+    """Read-only verification of frame video output MP4 bytes and magic.
+
+    Preserves read truth without mutating SQLite metadata or demoting rows.
+    """
+    if not frame_video_operations_enabled():
+        return False
+    if not storage_key or not isinstance(storage_key, str) or not OUTPUT_STORAGE_KEY_PATTERN.fullmatch(storage_key):
+        return False
+    if not isinstance(byte_size, int) or byte_size < 128 or byte_size > _maximum_output_bytes():
+        return False
+    if not sha256 or not isinstance(sha256, str) or not SHA256_PATTERN.fullmatch(sha256.lower()):
+        return False
+    stream = None
+    try:
+        path = _output_path(frame_video_operations_directory(), storage_key)
+        stream = _open_verified_output(path, expected_bytes=byte_size, expected_digest=sha256.lower())
+        return stream is not None
+    except (FrameVideoError, OSError, RuntimeError, ValueError):
+        return False
+    finally:
+        if stream is not None:
+            try:
+                stream.close()
+            except OSError:
+                pass
+
+
 def _public_operation(operation: tuple[Any, ...]) -> dict[str, Any]:
     try:
         state = str(operation[3])
@@ -593,8 +625,18 @@ def _public_operation(operation: tuple[Any, ...]) -> dict[str, Any]:
         width = int(operation[12]) if operation[12] is not None else None
         height = int(operation[13]) if operation[13] is not None else None
         duration_ms = int(operation[11]) if operation[11] is not None else None
+        storage_key = str(operation[14]) if len(operation) > 14 and operation[14] else None
+        sha256 = str(operation[18]) if len(operation) > 18 and operation[18] else None
     except (IndexError, TypeError, ValueError):
         raise FrameVideoError("Receipt Frame Video không hợp lệ", code="FRAME_VIDEO_RECEIPT_INVALID")
+    output_available = (
+        state == "completed"
+        and verified_frame_video_output_available(
+            storage_key=storage_key,
+            byte_size=byte_size,
+            sha256=sha256,
+        )
+    )
     return {
         "id": str(operation[0]),
         "kind": FRAME_VIDEO_KIND,
@@ -606,7 +648,7 @@ def _public_operation(operation: tuple[Any, ...]) -> dict[str, Any]:
         "source_count": int(operation[9]),
         "source_total_bytes": int(operation[10]),
         "output": {
-            "available": state == "completed" and byte_size is not None,
+            "available": output_available,
             "filename": str(operation[15]) if operation[15] else None,
             "content_type": str(operation[16]) if operation[16] else None,
             "byte_size": byte_size,

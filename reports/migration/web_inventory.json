@@ -10,43 +10,43 @@
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 1642,
+      "line": 1727,
       "target": "_background_cleanup_edge_coordinates"
     },
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 1666,
+      "line": 1751,
       "target": "_background_cleanup_matches"
     },
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 1655,
+      "line": 1740,
       "target": "_background_cleanup_neighbors"
     },
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 893,
+      "line": 894,
       "target": "_background_cleanup_request_fingerprint"
     },
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 917,
+      "line": 918,
       "target": "_background_cleanup_settings"
     },
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 928,
+      "line": 929,
       "target": "_background_cleanup_settings_are_valid"
     },
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 2791,
+      "line": 2876,
       "target": "_build_background_cleanup_output"
     },
     {
@@ -100,7 +100,7 @@
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 1753,
+      "line": 1838,
       "target": "_inspect_background_cleanup_geometry"
     },
     {
@@ -118,7 +118,7 @@
     {
       "file": "copyfast_native_read_models.py",
       "kind": "function",
-      "line": 1019,
+      "line": 1135,
       "target": "_projected_jobs_for_account"
     },
     {
@@ -130,13 +130,13 @@
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 1671,
+      "line": 1756,
       "target": "_render_background_cleanup"
     },
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 510,
+      "line": 511,
       "target": "_require_background_cleanup_enabled"
     },
     {
@@ -220,7 +220,7 @@
     {
       "file": "copyfast_image_operations.py",
       "kind": "function",
-      "line": 3477,
+      "line": 3562,
       "target": "cleanup_plain_background"
     },
     {
@@ -292,7 +292,7 @@
     {
       "file": "copyfast_native_read_models.py",
       "kind": "function",
-      "line": 211,
+      "line": 273,
       "target": "encode_native_job_id"
     },
     {
@@ -364,7 +364,7 @@
     {
       "file": "copyfast_native_read_models.py",
       "kind": "function",
-      "line": 1194,
+      "line": 1310,
       "target": "get_native_job"
     },
     {
@@ -490,7 +490,7 @@
     {
       "file": "copyfast_native_read_models.py",
       "kind": "function",
-      "line": 1107,
+      "line": 1223,
       "target": "list_native_jobs"
     },
     {
@@ -568,7 +568,7 @@
     {
       "file": "copyfast_native_read_models.py",
       "kind": "function",
-      "line": 222,
+      "line": 284,
       "target": "parse_native_job_id"
     },
     {
@@ -598,7 +598,7 @@
     {
       "file": "copyfast_native_read_models.py",
       "kind": "function",
-      "line": 1144,
+      "line": 1260,
       "target": "resolve_native_job"
     },
     {
@@ -1931,25 +1931,25 @@
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 2463,
+      "line": 2570,
       "operation": "UPDATE",
       "table": "web_asset_files"
     },
     {
       "file": "copyfast_frame_video_operations.py",
-      "line": 717,
+      "line": 759,
       "operation": "UPDATE",
       "table": "web_asset_files"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 1328,
+      "line": 1413,
       "operation": "UPDATE",
       "table": "web_asset_files"
     },
     {
       "file": "copyfast_storyboard_grid.py",
-      "line": 510,
+      "line": 514,
       "operation": "UPDATE",
       "table": "web_asset_files"
     },
@@ -1961,7 +1961,7 @@
     },
     {
       "file": "copyfast_video_transform_operations.py",
-      "line": 711,
+      "line": 753,
       "operation": "UPDATE",
       "table": "web_asset_files"
     },
@@ -2693,7 +2693,7 @@
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 1572,
+      "line": 1679,
       "operation": "INSERT INTO",
       "table": "web_document_operation_events"
     },
@@ -2705,13 +2705,13 @@
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4404,
+      "line": 4511,
       "operation": "INSERT INTO",
       "table": "web_document_operation_sources"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4564,
+      "line": 4671,
       "operation": "INSERT INTO",
       "table": "web_document_operation_sources"
     },
@@ -2723,205 +2723,205 @@
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 2396,
+      "line": 2503,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 2427,
+      "line": 2534,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 2448,
+      "line": 2555,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4052,
+      "line": 4159,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4171,
+      "line": 4278,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4184,
+      "line": 4291,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4212,
+      "line": 4319,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4391,
+      "line": 4498,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4414,
+      "line": 4521,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4447,
+      "line": 4554,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4551,
+      "line": 4658,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4574,
+      "line": 4681,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4616,
+      "line": 4723,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4759,
+      "line": 4866,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4773,
+      "line": 4880,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4797,
+      "line": 4904,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 4845,
+      "line": 4952,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5045,
+      "line": 5152,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5063,
+      "line": 5170,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5087,
+      "line": 5194,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5132,
+      "line": 5239,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5288,
+      "line": 5395,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5306,
+      "line": 5413,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5330,
+      "line": 5437,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5376,
+      "line": 5483,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5514,
+      "line": 5621,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5537,
+      "line": 5644,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5577,
+      "line": 5684,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5709,
+      "line": 5816,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5732,
+      "line": 5839,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5771,
+      "line": 5878,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5891,
+      "line": 5998,
       "operation": "INSERT INTO",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5904,
+      "line": 6011,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 5931,
+      "line": 6038,
       "operation": "UPDATE",
       "table": "web_document_operations"
     },
@@ -3197,25 +3197,25 @@
     },
     {
       "file": "copyfast_frame_video_operations.py",
-      "line": 677,
+      "line": 719,
       "operation": "UPDATE",
       "table": "web_frame_video_operation_attempts"
     },
     {
       "file": "copyfast_frame_video_operations.py",
-      "line": 1538,
+      "line": 1580,
       "operation": "INSERT INTO",
       "table": "web_frame_video_operation_attempts"
     },
     {
       "file": "copyfast_frame_video_operations.py",
-      "line": 1610,
+      "line": 1652,
       "operation": "UPDATE",
       "table": "web_frame_video_operation_attempts"
     },
     {
       "file": "copyfast_frame_video_operations.py",
-      "line": 1796,
+      "line": 1838,
       "operation": "UPDATE",
       "table": "web_frame_video_operation_attempts"
     },
@@ -3239,7 +3239,7 @@
     },
     {
       "file": "copyfast_frame_video_operations.py",
-      "line": 1514,
+      "line": 1556,
       "operation": "INSERT INTO",
       "table": "web_frame_video_operation_sources"
     },
@@ -3251,37 +3251,37 @@
     },
     {
       "file": "copyfast_frame_video_operations.py",
-      "line": 671,
+      "line": 713,
       "operation": "UPDATE",
       "table": "web_frame_video_operations"
     },
     {
       "file": "copyfast_frame_video_operations.py",
-      "line": 704,
+      "line": 746,
       "operation": "UPDATE",
       "table": "web_frame_video_operations"
     },
     {
       "file": "copyfast_frame_video_operations.py",
-      "line": 1491,
+      "line": 1533,
       "operation": "INSERT INTO",
       "table": "web_frame_video_operations"
     },
     {
       "file": "copyfast_frame_video_operations.py",
-      "line": 1532,
+      "line": 1574,
       "operation": "UPDATE",
       "table": "web_frame_video_operations"
     },
     {
       "file": "copyfast_frame_video_operations.py",
-      "line": 1590,
+      "line": 1632,
       "operation": "UPDATE",
       "table": "web_frame_video_operations"
     },
     {
       "file": "copyfast_frame_video_operations.py",
-      "line": 1790,
+      "line": 1832,
       "operation": "UPDATE",
       "table": "web_frame_video_operations"
     },
@@ -3929,7 +3929,7 @@
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 1268,
+      "line": 1353,
       "operation": "INSERT INTO",
       "table": "web_image_operation_events"
     },
@@ -3941,91 +3941,91 @@
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 1306,
+      "line": 1391,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 1345,
+      "line": 1430,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 2863,
+      "line": 2948,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3060,
+      "line": 3145,
       "operation": "INSERT INTO",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3087,
+      "line": 3172,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3132,
+      "line": 3217,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3355,
+      "line": 3440,
       "operation": "INSERT INTO",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3383,
+      "line": 3468,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3408,
+      "line": 3493,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3635,
+      "line": 3720,
       "operation": "INSERT INTO",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3663,
+      "line": 3748,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3688,
+      "line": 3773,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 3989,
+      "line": 4074,
       "operation": "INSERT INTO",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 4017,
+      "line": 4102,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 4048,
+      "line": 4133,
       "operation": "UPDATE",
       "table": "web_image_operations"
     },
@@ -5321,7 +5321,7 @@
     },
     {
       "file": "copyfast_project_packages.py",
-      "line": 416,
+      "line": 471,
       "operation": "INSERT INTO",
       "table": "web_project_package_events"
     },
@@ -5333,31 +5333,31 @@
     },
     {
       "file": "copyfast_project_packages.py",
-      "line": 594,
+      "line": 649,
       "operation": "UPDATE",
       "table": "web_project_packages"
     },
     {
       "file": "copyfast_project_packages.py",
-      "line": 615,
+      "line": 670,
       "operation": "UPDATE",
       "table": "web_project_packages"
     },
     {
       "file": "copyfast_project_packages.py",
-      "line": 773,
+      "line": 828,
       "operation": "INSERT INTO",
       "table": "web_project_packages"
     },
     {
       "file": "copyfast_project_packages.py",
-      "line": 786,
+      "line": 841,
       "operation": "UPDATE",
       "table": "web_project_packages"
     },
     {
       "file": "copyfast_project_packages.py",
-      "line": 807,
+      "line": 862,
       "operation": "UPDATE",
       "table": "web_project_packages"
     },
@@ -5585,7 +5585,7 @@
     },
     {
       "file": "copyfast_storyboard_grid.py",
-      "line": 1458,
+      "line": 1512,
       "operation": "INSERT INTO",
       "table": "web_storyboard_grid_cells"
     },
@@ -5609,37 +5609,37 @@
     },
     {
       "file": "copyfast_storyboard_grid.py",
-      "line": 470,
+      "line": 474,
       "operation": "UPDATE",
       "table": "web_storyboard_grid_operations"
     },
     {
       "file": "copyfast_storyboard_grid.py",
-      "line": 497,
+      "line": 501,
       "operation": "UPDATE",
       "table": "web_storyboard_grid_operations"
     },
     {
       "file": "copyfast_storyboard_grid.py",
-      "line": 1170,
+      "line": 1224,
       "operation": "UPDATE",
       "table": "web_storyboard_grid_operations"
     },
     {
       "file": "copyfast_storyboard_grid.py",
-      "line": 1396,
+      "line": 1450,
       "operation": "INSERT INTO",
       "table": "web_storyboard_grid_operations"
     },
     {
       "file": "copyfast_storyboard_grid.py",
-      "line": 1427,
+      "line": 1481,
       "operation": "UPDATE",
       "table": "web_storyboard_grid_operations"
     },
     {
       "file": "copyfast_storyboard_grid.py",
-      "line": 1478,
+      "line": 1532,
       "operation": "UPDATE",
       "table": "web_storyboard_grid_operations"
     },
@@ -6209,25 +6209,25 @@
     },
     {
       "file": "copyfast_video_operations.py",
-      "line": 758,
+      "line": 828,
       "operation": "UPDATE",
       "table": "web_video_operation_attempts"
     },
     {
       "file": "copyfast_video_operations.py",
-      "line": 850,
+      "line": 920,
       "operation": "INSERT INTO",
       "table": "web_video_operation_attempts"
     },
     {
       "file": "copyfast_video_operations.py",
-      "line": 928,
+      "line": 998,
       "operation": "UPDATE",
       "table": "web_video_operation_attempts"
     },
     {
       "file": "copyfast_video_operations.py",
-      "line": 1446,
+      "line": 1516,
       "operation": "UPDATE",
       "table": "web_video_operation_attempts"
     },
@@ -6251,49 +6251,49 @@
     },
     {
       "file": "copyfast_video_operations.py",
-      "line": 751,
+      "line": 821,
       "operation": "UPDATE",
       "table": "web_video_operations"
     },
     {
       "file": "copyfast_video_operations.py",
-      "line": 785,
+      "line": 855,
       "operation": "UPDATE",
       "table": "web_video_operations"
     },
     {
       "file": "copyfast_video_operations.py",
-      "line": 814,
+      "line": 884,
       "operation": "UPDATE",
       "table": "web_video_operations"
     },
     {
       "file": "copyfast_video_operations.py",
-      "line": 831,
+      "line": 901,
       "operation": "UPDATE",
       "table": "web_video_operations"
     },
     {
       "file": "copyfast_video_operations.py",
-      "line": 841,
+      "line": 911,
       "operation": "UPDATE",
       "table": "web_video_operations"
     },
     {
       "file": "copyfast_video_operations.py",
-      "line": 914,
+      "line": 984,
       "operation": "UPDATE",
       "table": "web_video_operations"
     },
     {
       "file": "copyfast_video_operations.py",
-      "line": 1335,
+      "line": 1405,
       "operation": "INSERT INTO",
       "table": "web_video_operations"
     },
     {
       "file": "copyfast_video_operations.py",
-      "line": 1440,
+      "line": 1510,
       "operation": "UPDATE",
       "table": "web_video_operations"
     },
@@ -6407,19 +6407,19 @@
     },
     {
       "file": "copyfast_video_transform_operations.py",
-      "line": 671,
+      "line": 713,
       "operation": "UPDATE",
       "table": "web_video_transform_operation_attempts"
     },
     {
       "file": "copyfast_video_transform_operations.py",
-      "line": 1505,
+      "line": 1547,
       "operation": "INSERT INTO",
       "table": "web_video_transform_operation_attempts"
     },
     {
       "file": "copyfast_video_transform_operations.py",
-      "line": 1577,
+      "line": 1619,
       "operation": "UPDATE",
       "table": "web_video_transform_operation_attempts"
     },
@@ -6443,31 +6443,31 @@
     },
     {
       "file": "copyfast_video_transform_operations.py",
-      "line": 665,
+      "line": 707,
       "operation": "UPDATE",
       "table": "web_video_transform_operations"
     },
     {
       "file": "copyfast_video_transform_operations.py",
-      "line": 698,
+      "line": 740,
       "operation": "UPDATE",
       "table": "web_video_transform_operations"
     },
     {
       "file": "copyfast_video_transform_operations.py",
-      "line": 1467,
+      "line": 1509,
       "operation": "INSERT INTO",
       "table": "web_video_transform_operations"
     },
     {
       "file": "copyfast_video_transform_operations.py",
-      "line": 1499,
+      "line": 1541,
       "operation": "UPDATE",
       "table": "web_video_transform_operations"
     },
     {
       "file": "copyfast_video_transform_operations.py",
-      "line": 1556,
+      "line": 1598,
       "operation": "UPDATE",
       "table": "web_video_transform_operations"
     },
@@ -7771,12 +7771,12 @@
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 906,
+      "line": 907,
       "name": "WEBAPP_DOCUMENT_OPERATIONS_MAX_OUTPUT_MB"
     },
     {
       "file": "copyfast_document_operations.py",
-      "line": 915,
+      "line": 916,
       "name": "WEBAPP_DOCUMENT_OPERATIONS_QUOTA_MB"
     },
     {
@@ -7926,12 +7926,12 @@
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 1785,
+      "line": 1870,
       "name": "WEBAPP_IMAGE_BRAND_OVERLAY_FONT_PATH"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 1797,
+      "line": 1882,
       "name": "WEBAPP_IMAGE_BRAND_OVERLAY_FONT_PATH"
     },
     {
@@ -7946,12 +7946,12 @@
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 541,
+      "line": 542,
       "name": "WEBAPP_IMAGE_OPERATIONS_MAX_OUTPUT_MB"
     },
     {
       "file": "copyfast_image_operations.py",
-      "line": 550,
+      "line": 551,
       "name": "WEBAPP_IMAGE_OPERATIONS_QUOTA_MB"
     },
     {
@@ -8166,12 +8166,12 @@
     },
     {
       "file": "copyfast_project_packages.py",
-      "line": 75,
+      "line": 76,
       "name": "WEBAPP_PROJECT_PACKAGE_MAX_MB"
     },
     {
       "file": "copyfast_project_packages.py",
-      "line": 84,
+      "line": 85,
       "name": "WEBAPP_PROJECT_PACKAGE_QUOTA_MB"
     },
     {
@@ -10007,7 +10007,7 @@
     {
       "endpoint": "cleanup_plain_background",
       "file": "copyfast_image_operations.py",
-      "line": 3477,
+      "line": 3562,
       "methods": [
         "POST"
       ],
@@ -10052,7 +10052,7 @@
     {
       "endpoint": "create_brand_overlay",
       "file": "copyfast_image_operations.py",
-      "line": 3757,
+      "line": 3842,
       "methods": [
         "POST"
       ],
@@ -11114,7 +11114,7 @@
     {
       "endpoint": "enhance_image",
       "file": "copyfast_image_operations.py",
-      "line": 3198,
+      "line": 3283,
       "methods": [
         "POST"
       ],
@@ -11141,7 +11141,7 @@
     {
       "endpoint": "estimate_frame_video",
       "file": "copyfast_frame_video_operations.py",
-      "line": 1338,
+      "line": 1380,
       "methods": [
         "POST"
       ],
@@ -11150,7 +11150,7 @@
     {
       "endpoint": "estimate_video_transform",
       "file": "copyfast_video_transform_operations.py",
-      "line": 1328,
+      "line": 1370,
       "methods": [
         "POST"
       ],
@@ -11573,7 +11573,7 @@
     {
       "endpoint": "image_to_pdf",
       "file": "copyfast_document_operations.py",
-      "line": 4501,
+      "line": 4608,
       "methods": [
         "POST"
       ],
@@ -12176,7 +12176,7 @@
     {
       "endpoint": "ocr_image",
       "file": "copyfast_document_operations.py",
-      "line": 4682,
+      "line": 4789,
       "methods": [
         "POST"
       ],
@@ -12185,7 +12185,7 @@
     {
       "endpoint": "ocr_pdf",
       "file": "copyfast_document_operations.py",
-      "line": 4924,
+      "line": 5031,
       "methods": [
         "POST"
       ],
@@ -12383,7 +12383,7 @@
     {
       "endpoint": "merge_pdf",
       "file": "copyfast_document_operations.py",
-      "line": 4352,
+      "line": 4459,
       "methods": [
         "POST"
       ],
@@ -12392,7 +12392,7 @@
     {
       "endpoint": "pdf_ocr_to_word",
       "file": "copyfast_document_operations.py",
-      "line": 5214,
+      "line": 5321,
       "methods": [
         "POST"
       ],
@@ -12401,7 +12401,7 @@
     {
       "endpoint": "optimize_pdf",
       "file": "copyfast_document_operations.py",
-      "line": 5845,
+      "line": 5952,
       "methods": [
         "POST"
       ],
@@ -12410,7 +12410,7 @@
     {
       "endpoint": "split_pdf",
       "file": "copyfast_document_operations.py",
-      "line": 4127,
+      "line": 4234,
       "methods": [
         "POST"
       ],
@@ -12419,7 +12419,7 @@
     {
       "endpoint": "pdf_to_images",
       "file": "copyfast_document_operations.py",
-      "line": 5459,
+      "line": 5566,
       "methods": [
         "POST"
       ],
@@ -12428,7 +12428,7 @@
     {
       "endpoint": "pdf_to_word",
       "file": "copyfast_document_operations.py",
-      "line": 5653,
+      "line": 5760,
       "methods": [
         "POST"
       ],
@@ -12770,7 +12770,7 @@
     {
       "endpoint": "create_video_poster",
       "file": "copyfast_video_operations.py",
-      "line": 1303,
+      "line": 1373,
       "methods": [
         "POST"
       ],
@@ -12950,7 +12950,7 @@
     {
       "endpoint": "list_all_project_packages",
       "file": "copyfast_project_packages.py",
-      "line": 688,
+      "line": 743,
       "methods": [
         "GET"
       ],
@@ -12959,7 +12959,7 @@
     {
       "endpoint": "get_project_package",
       "file": "copyfast_project_packages.py",
-      "line": 887,
+      "line": 942,
       "methods": [
         "GET"
       ],
@@ -12968,7 +12968,7 @@
     {
       "endpoint": "download_project_package",
       "file": "copyfast_project_packages.py",
-      "line": 842,
+      "line": 897,
       "methods": [
         "GET"
       ],
@@ -13139,7 +13139,7 @@
     {
       "endpoint": "list_project_packages",
       "file": "copyfast_project_packages.py",
-      "line": 654,
+      "line": 709,
       "methods": [
         "GET"
       ],
@@ -13148,7 +13148,7 @@
     {
       "endpoint": "create_project_package",
       "file": "copyfast_project_packages.py",
-      "line": 716,
+      "line": 771,
       "methods": [
         "POST"
       ],
@@ -13634,7 +13634,7 @@
     {
       "endpoint": "resize_image",
       "file": "copyfast_image_operations.py",
-      "line": 2970,
+      "line": 3055,
       "methods": [
         "POST"
       ],
@@ -15281,7 +15281,7 @@
     {
       "endpoint": "get_document_operation",
       "file": "copyfast_document_operations.py",
-      "line": 6246,
+      "line": 6353,
       "methods": [
         "GET"
       ],
@@ -15290,7 +15290,7 @@
     {
       "endpoint": "get_frame_video",
       "file": "copyfast_frame_video_operations.py",
-      "line": 1735,
+      "line": 1777,
       "methods": [
         "GET"
       ],
@@ -15299,7 +15299,7 @@
     {
       "endpoint": "get_image_operation",
       "file": "copyfast_image_operations.py",
-      "line": 4318,
+      "line": 4403,
       "methods": [
         "GET"
       ],
@@ -15308,7 +15308,7 @@
     {
       "endpoint": "get_storyboard_grid",
       "file": "copyfast_storyboard_grid.py",
-      "line": 1683,
+      "line": 1737,
       "methods": [
         "GET"
       ],
@@ -15326,7 +15326,7 @@
     {
       "endpoint": "get_video_operation",
       "file": "copyfast_video_operations.py",
-      "line": 1278,
+      "line": 1348,
       "methods": [
         "GET"
       ],
@@ -15335,7 +15335,7 @@
     {
       "endpoint": "get_video_transform_operation",
       "file": "copyfast_video_transform_operations.py",
-      "line": 1767,
+      "line": 1809,
       "methods": [
         "GET"
       ],
@@ -15344,7 +15344,7 @@
     {
       "endpoint": "download_storyboard_grid_cell",
       "file": "copyfast_storyboard_grid.py",
-      "line": 1587,
+      "line": 1641,
       "methods": [
         "GET"
       ],
@@ -15362,7 +15362,7 @@
     {
       "endpoint": "download_document_operation",
       "file": "copyfast_document_operations.py",
-      "line": 6295,
+      "line": 6402,
       "methods": [
         "GET"
       ],
@@ -15371,7 +15371,7 @@
     {
       "endpoint": "download_frame_video",
       "file": "copyfast_frame_video_operations.py",
-      "line": 1664,
+      "line": 1706,
       "methods": [
         "GET"
       ],
@@ -15380,7 +15380,7 @@
     {
       "endpoint": "download_image_operation",
       "file": "copyfast_image_operations.py",
-      "line": 4268,
+      "line": 4353,
       "methods": [
         "GET"
       ],
@@ -15389,7 +15389,7 @@
     {
       "endpoint": "download_storyboard_grid",
       "file": "copyfast_storyboard_grid.py",
-      "line": 1641,
+      "line": 1695,
       "methods": [
         "GET"
       ],
@@ -15407,7 +15407,7 @@
     {
       "endpoint": "download_video_operation_route",
       "file": "copyfast_video_operations.py",
-      "line": 1408,
+      "line": 1478,
       "methods": [
         "GET"
       ],
@@ -15416,7 +15416,7 @@
     {
       "endpoint": "download_video_transform_operation_route",
       "file": "copyfast_video_transform_operations.py",
-      "line": 1762,
+      "line": 1804,
       "methods": [
         "GET"
       ],
@@ -15434,7 +15434,7 @@
     {
       "endpoint": "export_document_operation_to_asset_vault",
       "file": "copyfast_document_operations.py",
-      "line": 6278,
+      "line": 6385,
       "methods": [
         "POST"
       ],
@@ -15443,7 +15443,7 @@
     {
       "endpoint": "export_image_operation_to_asset_vault",
       "file": "copyfast_image_operations.py",
-      "line": 4122,
+      "line": 4207,
       "methods": [
         "POST"
       ],
@@ -15569,7 +15569,7 @@
     {
       "endpoint": "list_document_operations",
       "file": "copyfast_document_operations.py",
-      "line": 4077,
+      "line": 4184,
       "methods": [
         "GET"
       ],
@@ -15578,7 +15578,7 @@
     {
       "endpoint": "list_frame_videos",
       "file": "copyfast_frame_video_operations.py",
-      "line": 1372,
+      "line": 1414,
       "methods": [
         "GET"
       ],
@@ -15587,7 +15587,7 @@
     {
       "endpoint": "create_frame_video",
       "file": "copyfast_frame_video_operations.py",
-      "line": 1405,
+      "line": 1447,
       "methods": [
         "POST"
       ],
@@ -15596,7 +15596,7 @@
     {
       "endpoint": "list_image_operations",
       "file": "copyfast_image_operations.py",
-      "line": 2928,
+      "line": 3013,
       "methods": [
         "GET"
       ],
@@ -15632,7 +15632,7 @@
     {
       "endpoint": "list_storyboard_grids",
       "file": "copyfast_storyboard_grid.py",
-      "line": 1225,
+      "line": 1279,
       "methods": [
         "GET"
       ],
@@ -15641,7 +15641,7 @@
     {
       "endpoint": "create_storyboard_grid",
       "file": "copyfast_storyboard_grid.py",
-      "line": 1265,
+      "line": 1319,
       "methods": [
         "POST"
       ],
@@ -15659,7 +15659,7 @@
     {
       "endpoint": "list_video_operations",
       "file": "copyfast_video_operations.py",
-      "line": 1256,
+      "line": 1326,
       "methods": [
         "GET"
       ],
@@ -15668,7 +15668,7 @@
     {
       "endpoint": "list_video_transform_operations",
       "file": "copyfast_video_transform_operations.py",
-      "line": 1365,
+      "line": 1407,
       "methods": [
         "GET"
       ],
@@ -15677,7 +15677,7 @@
     {
       "endpoint": "create_video_transform",
       "file": "copyfast_video_transform_operations.py",
-      "line": 1398,
+      "line": 1440,
       "methods": [
         "POST"
       ],
@@ -15705,7 +15705,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 242,
   "source_files_scanned": 242,
-  "source_fingerprint_sha256": "e1afcb76a247c7d9aee3a04535450573cdae3059138efc6c223bb58c4bfd90e1",
+  "source_fingerprint_sha256": "8466c9e73739d3664bbde720b06549d002eb594e19033137c42dcb06e7f9f3ef",
   "source_root": "repository-root",
   "ui_path_references": [
     {

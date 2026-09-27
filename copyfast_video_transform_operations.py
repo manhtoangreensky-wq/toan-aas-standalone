@@ -569,6 +569,38 @@ def _replay_matches(operation: tuple[Any, ...], payload: VideoTransformRequest) 
     )
 
 
+def verified_video_transform_output_available(
+    storage_key: str | None,
+    byte_size: int | None,
+    sha256: str | None,
+) -> bool:
+    """Read-only verification of video transform output MP4 bytes and magic.
+
+    Preserves read truth without mutating SQLite metadata or demoting rows.
+    """
+    if not video_transform_operations_enabled():
+        return False
+    if not storage_key or not isinstance(storage_key, str) or not OUTPUT_STORAGE_KEY_PATTERN.fullmatch(storage_key):
+        return False
+    if not isinstance(byte_size, int) or byte_size < 128 or byte_size > _maximum_output_bytes():
+        return False
+    if not sha256 or not isinstance(sha256, str) or not SHA256_PATTERN.fullmatch(sha256.lower()):
+        return False
+    stream = None
+    try:
+        path = _output_path(video_transform_operations_directory(), storage_key)
+        stream = _open_verified_output(path, expected_bytes=byte_size, expected_digest=sha256.lower())
+        return stream is not None
+    except (VideoTransformError, OSError, RuntimeError, ValueError):
+        return False
+    finally:
+        if stream is not None:
+            try:
+                stream.close()
+            except OSError:
+                pass
+
+
 def _public_operation(operation: tuple[Any, ...]) -> dict[str, Any]:
     try:
         state = str(operation[4])
@@ -583,8 +615,18 @@ def _public_operation(operation: tuple[Any, ...]) -> dict[str, Any]:
         preserve_audio = bool(_safe_int(operation[15]) or 0)
         raw_output_has_audio = _safe_int(operation[22])
         output_has_audio = bool(raw_output_has_audio) if raw_output_has_audio is not None else None
+        storage_key = str(operation[23]) if len(operation) > 23 and operation[23] else None
+        sha256 = str(operation[27]) if len(operation) > 27 and operation[27] else None
     except (IndexError, TypeError, ValueError) as exc:
         raise VideoTransformError("Receipt Video Finishing không hợp lệ", code="VIDEO_TRANSFORM_RECEIPT_INVALID") from exc
+    output_available = (
+        state == "completed"
+        and verified_video_transform_output_available(
+            storage_key=storage_key,
+            byte_size=output_bytes,
+            sha256=sha256,
+        )
+    )
     return {
         "id": str(operation[0]),
         "kind": VIDEO_TRANSFORM_KIND,
@@ -600,7 +642,7 @@ def _public_operation(operation: tuple[Any, ...]) -> dict[str, Any]:
             "height": source_height,
         },
         "output": {
-            "available": state == "completed" and output_bytes is not None,
+            "available": output_available,
             "filename": str(operation[24]) if operation[24] else None,
             "content_type": str(operation[25]) if operation[25] else None,
             "byte_size": output_bytes,

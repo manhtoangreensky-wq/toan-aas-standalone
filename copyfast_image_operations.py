@@ -107,6 +107,7 @@ IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 ASSET_STORAGE_KEY_PATTERN = re.compile(r"^objects/[0-9a-f]{32}\.blob$")
 OUTPUT_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.png$")
+SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 CHUNK_BYTES = 1024 * 1024
 
 # Asset Vault normally limits uploads to 20 MiB.  Repeat the smaller bound at
@@ -1138,17 +1139,101 @@ def _operation_output_filename(kind: str) -> str:
     return OUTPUT_FILENAME
 
 
+def verified_image_operation_output_available(
+    storage_key: str | None,
+    byte_size: int | None,
+    sha256: str | None,
+    kind: str | None = None,
+    target_width: int | None = None,
+    target_height: int | None = None,
+) -> bool:
+    """Read-only verification of image operation output PNG bytes and dimensions.
+
+    Preserves read truth without mutating SQLite metadata or demoting rows.
+    """
+    if not image_operations_enabled():
+        return False
+    if kind is not None:
+        if kind not in SUPPORTED_KINDS:
+            return False
+        if kind == IMAGE_RESIZE_KIND and not image_resize_enabled():
+            return False
+        if kind == IMAGE_ENHANCE_KIND and not image_enhance_enabled():
+            return False
+        if kind == IMAGE_BRAND_OVERLAY_KIND and not image_brand_overlay_enabled():
+            return False
+        if kind == IMAGE_BACKGROUND_CLEANUP_KIND and not image_background_cleanup_enabled():
+            return False
+    if not storage_key or not isinstance(storage_key, str) or not OUTPUT_STORAGE_KEY_PATTERN.fullmatch(storage_key):
+        return False
+    if not isinstance(byte_size, int) or byte_size < 1 or byte_size > _maximum_output_bytes():
+        return False
+    if not sha256 or not isinstance(sha256, str) or not SHA256_PATTERN.fullmatch(sha256.lower()):
+        return False
+    stream = None
+    try:
+        path = _output_path(image_operations_directory(), storage_key)
+        if target_width is not None and target_height is not None and int(target_width) > 0 and int(target_height) > 0:
+            stream = _open_verified_output_stream(
+                path,
+                expected_bytes=byte_size,
+                expected_digest=sha256.lower(),
+                expected_width=int(target_width),
+                expected_height=int(target_height),
+                expected_mode="RGBA" if kind == IMAGE_BACKGROUND_CLEANUP_KIND else "RGB",
+                require_transparent_pixel=kind == IMAGE_BACKGROUND_CLEANUP_KIND,
+            )
+            return stream is not None
+        else:
+            flags = os.O_RDONLY | int(getattr(os, "O_NOFOLLOW", 0))
+            stream = os.fdopen(os.open(path, flags), "rb", closefd=True)
+            metadata = os.fstat(stream.fileno())
+            if not stat.S_ISREG(metadata.st_mode) or int(metadata.st_size) != byte_size:
+                return False
+            magic = stream.read(8)
+            if magic != b"\x89PNG\r\n\x1a\n":
+                return False
+            stream.seek(0)
+            if not hmac.compare_digest(_digest_open_stream(stream), sha256.lower()):
+                return False
+            return True
+    except (ImageOperationError, OSError, RuntimeError, ValueError):
+        return False
+    finally:
+        if stream is not None:
+            try:
+                stream.close()
+            except OSError:
+                pass
+
+
 def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
     state = str(row[4])
+    kind = str(row[3])
     byte_size = int(row[13]) if row[13] is not None else None
+    storage_key = str(row[20]) if len(row) > 20 and row[20] else None
+    sha256 = str(row[21]) if len(row) > 21 and row[21] else None
+    target_width = int(row[5]) if row[5] is not None else None
+    target_height = int(row[6]) if row[6] is not None else None
+    download_ready = (
+        state == "completed"
+        and verified_image_operation_output_available(
+            storage_key=storage_key,
+            byte_size=byte_size,
+            sha256=sha256,
+            kind=kind,
+            target_width=target_width,
+            target_height=target_height,
+        )
+    )
     return {
         "id": str(row[0]),
         "source_asset_id": str(row[1]),
         "project_id": str(row[2]) if row[2] else None,
-        "kind": str(row[3]),
+        "kind": kind,
         "state": state,
-        "target_width": int(row[5]),
-        "target_height": int(row[6]),
+        "target_width": target_width,
+        "target_height": target_height,
         "preset": str(row[7]),
         "fit_mode": str(row[8]),
         "source_width": int(row[9]) if row[9] is not None else None,
@@ -1161,7 +1246,7 @@ def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
         "started_at": str(row[16]) if row[16] else None,
         "completed_at": str(row[17]) if row[17] else None,
         "updated_at": str(row[18]),
-        "download_ready": state == "completed" and bool(row[20]) and byte_size is not None,
+        "download_ready": download_ready,
         "settings": _operation_settings(str(row[3]), row[24] if len(row) > 24 else "{}"),
     }
 

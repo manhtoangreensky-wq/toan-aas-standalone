@@ -85,6 +85,7 @@ UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9
 PAGE_RANGE_PATTERN = re.compile(r"^\s*(\d+)\s*(?:-\s*(\d+)\s*)?$")
 ASSET_STORAGE_KEY_PATTERN = re.compile(r"^objects/[0-9a-f]{32}\.blob$")
 OUTPUT_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.(?P<suffix>pdf|docx|png|txt|zip)$")
+SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 CHUNK_BYTES = 1024 * 1024
 MAX_INPUT_BYTES = 20 * 1024 * 1024  # Mirrors the current Bot PDF limit.
 MAX_PAGES = 30  # Mirrors Bot `DOC_MAX_PAGES` and bounds parser work.
@@ -1442,6 +1443,99 @@ def _selected_pages(page_range: str, page_count: int) -> tuple[list[int], int, i
     return selected, start, end
 
 
+def verified_document_operation_output_available(
+    storage_key: str | None,
+    byte_size: int | None,
+    sha256: str | None,
+    kind: str | None = None,
+    output_page_count: int | None = None,
+) -> bool:
+    """Read-only verification of document operation output bytes and container structure.
+
+    Preserves read truth without mutating SQLite metadata or demoting rows.
+    """
+    if not document_operations_enabled():
+        return False
+    if kind is not None:
+        if kind not in SUPPORTED_KINDS:
+            return False
+        if kind in {PDF_SPLIT_KIND, PDF_MERGE_KIND, PDF_OPTIMIZE_KIND} and not document_operations_enabled():
+            return False
+        if kind == IMAGE_TO_PDF_KIND and not image_to_pdf_enabled():
+            return False
+        if kind == PDF_TO_IMAGES_KIND and not pdf_to_images_enabled():
+            return False
+        if kind == PDF_TO_WORD_KIND and not pdf_to_word_enabled():
+            return False
+        if kind == IMAGE_OCR_KIND and not image_ocr_enabled():
+            return False
+        if kind == PDF_OCR_KIND and not pdf_ocr_enabled():
+            return False
+        if kind == PDF_OCR_WORD_KIND and not pdf_ocr_word_enabled():
+            return False
+    if not storage_key or not isinstance(storage_key, str):
+        return False
+    match = OUTPUT_STORAGE_KEY_PATTERN.fullmatch(storage_key)
+    if not match:
+        return False
+    suffix = f".{match.group('suffix')}"
+    if not isinstance(byte_size, int) or byte_size < 1 or byte_size > _maximum_output_bytes():
+        return False
+    if not sha256 or not isinstance(sha256, str) or not SHA256_PATTERN.fullmatch(sha256.lower()):
+        return False
+    stream = None
+    try:
+        path = _output_path(document_operations_directory(), storage_key, expected_suffix=suffix)
+        stream = _open_verified_operation_output(
+            path,
+            expected_bytes=byte_size,
+            expected_digest=sha256.lower(),
+        )
+        if stream is None:
+            return False
+        # Container and format verification per suffix / kind
+        if suffix == ".pdf":
+            stream.seek(0)
+            prefix = stream.read(5)
+            if prefix != b"%PDF-":
+                return False
+        elif suffix == ".png":
+            stream.seek(0)
+            prefix = stream.read(8)
+            if prefix != b"\x89PNG\r\n\x1a\n":
+                return False
+        elif suffix == ".zip":
+            with ZipFile(stream, "r") as archive:
+                if archive.testzip() is not None:
+                    return False
+                names = archive.namelist()
+                if not any(n.endswith(".png") for n in names):
+                    return False
+        elif suffix == ".docx":
+            with ZipFile(stream, "r") as archive:
+                if archive.testzip() is not None:
+                    return False
+                names = set(archive.namelist())
+                if {"[Content_Types].xml", "word/document.xml"} - names:
+                    return False
+        elif suffix == ".txt":
+            stream.seek(0)
+            content = stream.read()
+            try:
+                content.decode("utf-8")
+            except UnicodeDecodeError:
+                return False
+        return True
+    except (RuntimeError, OSError, ValueError, BadZipFile):
+        return False
+    finally:
+        if stream is not None:
+            try:
+                stream.close()
+            except OSError:
+                pass
+
+
 def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
     state = str(row[4])
     kind = str(row[3])
@@ -1462,6 +1556,19 @@ def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
         if kind == PDF_OPTIMIZE_KIND and source_byte_size is not None and byte_size is not None and state == "completed"
         else None
     )
+    storage_key = str(row[19]) if len(row) > 19 and row[19] else None
+    sha256 = str(row[20]) if len(row) > 20 and row[20] else None
+    output_page_count = int(row[9]) if row[9] is not None else None
+    download_ready = (
+        state == "completed"
+        and verified_document_operation_output_available(
+            storage_key=storage_key,
+            byte_size=byte_size,
+            sha256=sha256,
+            kind=kind,
+            output_page_count=output_page_count,
+        )
+    )
     return {
         "id": str(row[0]),
         "source_asset_id": str(row[1]),
@@ -1474,7 +1581,7 @@ def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
         "selected_start_page": int(row[6]) if row[6] is not None else None,
         "selected_end_page": int(row[7]) if row[7] is not None else None,
         "source_page_count": int(row[8]) if row[8] is not None else None,
-        "output_page_count": int(row[9]) if row[9] is not None else None,
+        "output_page_count": output_page_count,
         "original_filename": str(row[10]) if row[10] else None,
         "content_type": str(row[11]) if row[11] else None,
         "byte_size": byte_size,
@@ -1483,7 +1590,7 @@ def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
         "started_at": str(row[15]) if row[15] else None,
         "completed_at": str(row[16]) if row[16] else None,
         "updated_at": str(row[17]),
-        "download_ready": state == "completed" and bool(row[19]) and byte_size is not None,
+        "download_ready": download_ready,
         # These derived values are exposed only for a completed optimize
         # artifact. They are safe account-owned measurements, not a storage
         # key, hash, path or source blob projection.

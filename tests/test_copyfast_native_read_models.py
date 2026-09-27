@@ -23,6 +23,23 @@ VALID_SHA256 = "d" * 64
 SECRET = "provider-token-ultra-secret"
 
 
+@pytest.fixture(autouse=True)
+def _mock_native_read_model_verifiers(monkeypatch):
+    monkeypatch.setattr(models, "project_package_enabled", lambda: True)
+    monkeypatch.setattr(models, "document_operations_enabled", lambda: True)
+    monkeypatch.setattr(models, "image_operations_enabled", lambda: True)
+    monkeypatch.setattr(models, "video_operations_enabled", lambda: True)
+    monkeypatch.setattr(models, "video_poster_enabled", lambda: True)
+    monkeypatch.setattr(models, "_document_kind_enabled", lambda _k: True)
+    monkeypatch.setattr(models, "_image_kind_enabled", lambda _k: True)
+    monkeypatch.setattr(models, "verified_project_package_output_available", lambda **_kw: True)
+    monkeypatch.setattr(models, "verified_document_operation_output_available", lambda **_kw: True)
+    monkeypatch.setattr(models, "verified_image_operation_output_available", lambda **_kw: True)
+    monkeypatch.setattr(models, "verified_video_operation_output_available", lambda **_kw: True)
+    monkeypatch.setattr(models, "verified_frame_video_output_available", lambda **_kw: True)
+    monkeypatch.setattr(models, "verified_video_transform_output_available", lambda **_kw: True)
+
+
 def _database() -> sqlite3.Connection:
     connection = sqlite3.connect(":memory:", check_same_thread=False)
     connection.executescript(
