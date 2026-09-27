@@ -217,6 +217,30 @@ def test_document_operation_fault_matrix(tmp_path, monkeypatch):
         bad_key, len(bad_docx.read_bytes()), _sha256(bad_docx.read_bytes()), kind="pdf_ocr_word"
     ) is False
 
+    # DOCX missing word/document.xml (has only [Content_Types].xml) -> False
+    only_types_key = _hex_key("outputs", "docx")
+    only_types_file = doc_root / only_types_key
+    buf_types = BytesIO()
+    with zipfile.ZipFile(buf_types, "w") as zf:
+        zf.writestr("[Content_Types].xml", "<Types/>")
+    only_types_data = buf_types.getvalue()
+    only_types_file.write_bytes(only_types_data)
+    assert doc_mod.verified_document_operation_output_available(
+        only_types_key, len(only_types_data), _sha256(only_types_data), kind="pdf_ocr_word"
+    ) is False
+
+    # DOCX missing [Content_Types].xml (has only word/document.xml) -> False
+    only_doc_key = _hex_key("outputs", "docx")
+    only_doc_file = doc_root / only_doc_key
+    buf_doc = BytesIO()
+    with zipfile.ZipFile(buf_doc, "w") as zf:
+        zf.writestr("word/document.xml", "<document/>")
+    only_doc_data = buf_doc.getvalue()
+    only_doc_file.write_bytes(only_doc_data)
+    assert doc_mod.verified_document_operation_output_available(
+        only_doc_key, len(only_doc_data), _sha256(only_doc_data), kind="pdf_ocr_word"
+    ) is False
+
     # Size mismatch -> False
     assert doc_mod.verified_document_operation_output_available(
         docx_key, docx_size + 1, docx_sha, kind="pdf_ocr_word"
@@ -243,6 +267,55 @@ def test_document_operation_fault_matrix(tmp_path, monkeypatch):
     assert doc_mod.verified_document_operation_output_available(
         fake_key, len(b"NOT A PDF"), _sha256(b"NOT A PDF"), kind="pdf_split"
     ) is False
+
+
+def test_document_operation_docx_required_members(tmp_path, monkeypatch):
+    """DOCX structural truth: requires BOTH [Content_Types].xml AND word/document.xml."""
+    doc_root = tmp_path / "doc_ops"
+    doc_root.mkdir()
+    monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_ROOT", str(doc_root))
+    monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_ENABLED", "true")
+    monkeypatch.setenv("WEBAPP_PDF_OCR_WORD_ENABLED", "true")
+
+    outputs_dir = doc_root / "outputs"
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+
+    # 1. Valid ZIP containing ONLY [Content_Types].xml -> MUST return False
+    key_types = _hex_key("outputs", "docx")
+    file_types = doc_root / key_types
+    buf1 = BytesIO()
+    with zipfile.ZipFile(buf1, "w") as zf:
+        zf.writestr("[Content_Types].xml", "<Types/>")
+    data_types = buf1.getvalue()
+    file_types.write_bytes(data_types)
+    assert doc_mod.verified_document_operation_output_available(
+        key_types, len(data_types), _sha256(data_types), kind="pdf_ocr_word"
+    ) is False
+
+    # 2. Valid ZIP containing ONLY word/document.xml -> MUST return False
+    key_doc = _hex_key("outputs", "docx")
+    file_doc = doc_root / key_doc
+    buf2 = BytesIO()
+    with zipfile.ZipFile(buf2, "w") as zf:
+        zf.writestr("word/document.xml", "<document/>")
+    data_doc = buf2.getvalue()
+    file_doc.write_bytes(data_doc)
+    assert doc_mod.verified_document_operation_output_available(
+        key_doc, len(data_doc), _sha256(data_doc), kind="pdf_ocr_word"
+    ) is False
+
+    # 3. Valid ZIP containing BOTH -> MUST return True
+    key_both = _hex_key("outputs", "docx")
+    file_both = doc_root / key_both
+    buf3 = BytesIO()
+    with zipfile.ZipFile(buf3, "w") as zf:
+        zf.writestr("[Content_Types].xml", "<Types/>")
+        zf.writestr("word/document.xml", "<document/>")
+    data_both = buf3.getvalue()
+    file_both.write_bytes(data_both)
+    assert doc_mod.verified_document_operation_output_available(
+        key_both, len(data_both), _sha256(data_both), kind="pdf_ocr_word"
+    ) is True
 
 
 # =============================================================================
@@ -786,4 +859,3 @@ def test_generic_jobs_and_completed_assets_filtering(monkeypatch):
     output_ids = {item["id"] for item in completed_outputs}
     assert verified_id in output_ids
     assert unverified_id not in output_ids
-

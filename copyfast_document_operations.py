@@ -1516,7 +1516,7 @@ def verified_document_operation_output_available(
                 if archive.testzip() is not None:
                     return False
                 names = set(archive.namelist())
-                if "[Content_Types].xml" not in names and "word/document.xml" not in names:
+                if {"[Content_Types].xml", "word/document.xml"} - names:
                     return False
         elif suffix == ".txt":
             stream.seek(0)
