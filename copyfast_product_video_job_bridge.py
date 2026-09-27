@@ -28,6 +28,7 @@ import uuid
 
 from fastapi import HTTPException
 from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, utc_now
+from copyfast_video_long_job_bridge import is_safe_video_output_url
 
 CANONICAL_PRODUCT_KEY = "video_ai_prompt"
 CANONICAL_ROUTING_KEY = "video_ai_canonical"
@@ -349,14 +350,13 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
         runtime_execution_active = runtime_active
         projected_status_reason = str(row[11])
         source_state = "completed" if is_completed else ("failed" if is_terminal_failure else "queued_locally")
-        output_available = is_completed
-        download_ready = is_completed
-        delivery_ready = is_completed
-        output_url_val = (
-            str(row[22])
-            if len(row) > 22 and row[22]
-            else (f"/api/v1/assets/{row[0]}/download" if is_completed else None)
-        )
+        raw_output_url = str(row[22]) if len(row) > 22 and row[22] is not None else None
+        is_safe_url = bool(raw_output_url and is_safe_video_output_url(raw_output_url))
+        has_real_output = bool(is_completed and is_safe_url)
+        output_available = has_real_output
+        download_ready = has_real_output
+        delivery_ready = has_real_output
+        output_url_val = raw_output_url if has_real_output else None
 
     return {
         "id": str(row[0]),
@@ -483,14 +483,14 @@ def product_video_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
         "status_reason": status_reason,
         "created_at": job["created_at"],
         "updated_at": job["updated_at"],
-        "output_available": is_completed and job.get("output_available", True),
-        "download_ready": is_completed and job.get("download_ready", True),
-        "delivery_ready": is_completed and job.get("delivery_ready", True),
+        "output_available": bool(is_completed and job.get("output_available", False)),
+        "download_ready": bool(is_completed and job.get("download_ready", False)),
+        "delivery_ready": bool(is_completed and job.get("delivery_ready", False)),
         "source": "web_canonical_bridge",
         "source_state": source_state,
         "native_kind": "product-video-job",
-        "output": job.get("output") if is_completed else None,
-        "output_metadata": job.get("output_metadata"),
+        "output": job.get("output") if bool(is_completed and job.get("output_available", False)) else None,
+        "output_metadata": job.get("output_metadata") if bool(is_completed and job.get("output_available", False)) else None,
         "runtime_execution_active": runtime_execution_active,
         "summary": {
             "prompt": job.get("prompt", "")[:100],
