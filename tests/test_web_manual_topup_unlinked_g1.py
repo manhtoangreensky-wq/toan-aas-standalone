@@ -273,7 +273,7 @@ def test_create_replay_conflict_owner_scope_redaction_and_zero_external_calls(tm
         assert record["request_id"].startswith("MANUAL-")
         assert record["status"] == "pending_admin_review"
         assert record["currency"] == "VND"
-        assert record["transfer_content"] == payment_code
+        assert record["transfer_content"] == f"{payment_code} {record['request_id']}"
         datetime.fromisoformat(record["submitted_at"])
         datetime.fromisoformat(record["updated_at"])
 
@@ -367,7 +367,7 @@ def test_read_helpers_never_open_a_write_transaction(tmp_path, monkeypatch):
         idempotency_key_hash=key_hash,
         request_fingerprint=fingerprint,
     )
-    assert created["transfer_content"] == code
+    assert created["transfer_content"] == f"{code} {created['request_id']}"
 
     def forbidden_write():
         raise AssertionError("read helper opened a write transaction")

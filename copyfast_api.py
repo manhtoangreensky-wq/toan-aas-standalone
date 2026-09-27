@@ -992,6 +992,7 @@ MANUAL_ADMIN_PROJECTION_FIELDS = (
     "currency",
     "method",
     "transfer_content",
+    "payment_code",
     "reference",
     "status",
     "expected_xu",
@@ -5120,7 +5121,7 @@ def _manual_admin_public_record(value: Any) -> dict[str, Any]:
     if re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,39}", method):
         record["method"] = method
     for field in (
-        "display_name", "transfer_content", "reference", "submitted_at",
+        "display_name", "transfer_content", "payment_code", "reference", "submitted_at",
         "decision_at", "decided_by_admin_id", "admin_note", "decision_reason",
     ):
         scalar = _browser_scalar(value.get(field), maximum=300)

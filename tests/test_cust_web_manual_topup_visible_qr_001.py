@@ -406,7 +406,7 @@ def test_configured_vnd_request_is_pending_and_visible_to_web_admin(tmp_path, mo
         assert replay_record.pop("idempotent_replay") is True
         assert replay_record == record
         assert record["status"] == "pending_admin_review"
-        assert record["transfer_content"] == manual["payment_code"]
+        assert record["transfer_content"] == f"{manual['payment_code']} {record['request_id']}"
         assert "expected_xu" not in record and "approved_xu" not in record
         monkeypatch.setenv("MANUAL_BANK_QR_PATH", str(tmp_path / "now-missing.png"))
         replay_after_config_loss = customer.post(

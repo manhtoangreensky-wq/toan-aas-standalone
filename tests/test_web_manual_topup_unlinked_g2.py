@@ -37,6 +37,7 @@ PUBLIC_ADMIN_FIELDS = {
     "method",
     "reference",
     "payment_code",
+    "transfer_content",
     "status",
     "submitted_at",
     "updated_at",
@@ -139,7 +140,8 @@ def test_web_local_admin_routes_page_list_detail_and_zero_bridge(tmp_path, monke
             item = detail.json()["data"]
             assert set(item) <= PUBLIC_ADMIN_FIELDS
             assert not set(item) & FORBIDDEN_ADMIN_FIELDS
-            assert item["payment_code"] == record["transfer_content"]
+            assert item["transfer_content"] == record["transfer_content"]
+            assert item["payment_code"] == "10000000"
             assert item["email"] == "g2-customer@example.com"
 
             for invalid in ("1", "MANUAL-0", "MANUAL-abc", "MANUAL-9999999999999999999"):
