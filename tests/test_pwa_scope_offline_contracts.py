@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import json
 from pathlib import Path
+import struct
 import sys
 
 from fastapi.testclient import TestClient
@@ -170,3 +171,64 @@ def test_offline_document_is_generic_and_contains_no_portal_bootstrap_or_private
         "api/",
     ):
         assert forbidden.lower() not in OFFLINE.lower()
+
+
+def test_pwa_manifest_and_apple_touch_icons_truth(tmp_path, monkeypatch) -> None:
+    """Every manifest icon and apple-touch-icon resolves to valid image bytes."""
+    # manifest id/scope/start_url remain unchanged
+    assert MANIFEST["id"] == "/"
+    assert MANIFEST["scope"] == "/"
+    assert MANIFEST["start_url"] == "/dashboard"
+
+    # every /static/portal/ manifest icon path exists
+    icons = MANIFEST.get("icons", [])
+    assert len(icons) >= 4
+    for icon in icons:
+        src = icon.get("src", "")
+        if src.startswith("/static/portal/"):
+            rel_path = src.lstrip("/")
+            file_path = ROOT / rel_path
+            assert file_path.exists(), f"Manifest icon missing on disk: {src}"
+            assert file_path.stat().st_size > 0, f"Manifest icon empty: {src}"
+
+    # app-icon.svg remains valid
+    svg_path = ROOT / "static" / "portal" / "app-icon.svg"
+    assert svg_path.exists()
+    svg_text = svg_path.read_text(encoding="utf-8")
+    assert "<svg" in svg_text and "</svg>" in svg_text
+
+    # icon-192.png has valid PNG signature and IHDR = 192x192
+    p192 = ROOT / "static" / "portal" / "icon-192.png"
+    assert p192.exists()
+    d192 = p192.read_bytes()
+    assert d192[:8] == b"\x89PNG\r\n\x1a\n", "icon-192.png missing PNG signature"
+    assert d192[12:16] == b"IHDR", "icon-192.png missing IHDR chunk"
+    w192, h192 = struct.unpack(">II", d192[16:24])
+    assert (w192, h192) == (192, 192), f"icon-192.png wrong dimensions: {(w192, h192)}"
+
+    # icon-512.png has valid PNG signature and IHDR = 512x512
+    p512 = ROOT / "static" / "portal" / "icon-512.png"
+    assert p512.exists()
+    d512 = p512.read_bytes()
+    assert d512[:8] == b"\x89PNG\r\n\x1a\n", "icon-512.png missing PNG signature"
+    assert d512[12:16] == b"IHDR", "icon-512.png missing IHDR chunk"
+    w512, h512 = struct.unpack(">II", d512[16:24])
+    assert (w512, h512) == (512, 512), f"icon-512.png wrong dimensions: {(w512, h512)}"
+
+    # both apple-touch-icon references resolve
+    shell_html = (ROOT / "templates" / "portal_shell.html").read_text(encoding="utf-8")
+    assert '<link rel="apple-touch-icon" sizes="192x192" href="/static/portal/icon-192.png">' in shell_html
+    assert '<link rel="apple-touch-icon" sizes="512x512" href="/static/portal/icon-512.png">' in shell_html
+
+    # TestClient GET icon-192.png => HTTP 200 + image/png
+    # TestClient GET icon-512.png => HTTP 200 + image/png
+    client = _worker_client(tmp_path, monkeypatch)
+    resp192 = client.get("/static/portal/icon-192.png")
+    assert resp192.status_code == 200
+    assert "image/png" in resp192.headers.get("content-type", "")
+    assert resp192.content[:8] == b"\x89PNG\r\n\x1a\n"
+
+    resp512 = client.get("/static/portal/icon-512.png")
+    assert resp512.status_code == 200
+    assert "image/png" in resp512.headers.get("content-type", "")
+    assert resp512.content[:8] == b"\x89PNG\r\n\x1a\n"
