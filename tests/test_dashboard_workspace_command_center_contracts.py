@@ -61,14 +61,15 @@ def test_dashboard_separates_web_native_account_and_canonical_lanes() -> None:
     root = surface[surface.index("function renderDashboard(page, context)"):]
     for token in (
         'dashboardText("work.kicker")',
+        "renderDashboardProductHero(context)",
         "renderDashboardRecentProjects(context)",
         "renderDashboardRecentDrafts(context)",
         "renderDashboardAccountLane(context)",
         "renderDashboardCanonicalLane(context, readState)",
         "renderDashboardStartGuide(context)",
-        "renderStudioLaunchpad(context)",
     ):
         assert token in root
+    assert "renderStudioLaunchpad(context)" not in root
     for token in ('dashboardText("account.kicker")', "function renderDashboardCanonicalLane"):
         assert token in surface
     for forbidden in ("fetch(", "api(", "localStorage", "sessionStorage", "bridge_request", "CORE_BRIDGE"):
@@ -546,5 +547,5 @@ def test_signed_workspace_primary_actions_keep_the_shared_teal_hierarchy() -> No
 
 
 def test_signed_shell_document_theme_color_matches_the_deep_teal_pwa_shell() -> None:
-    assert '<meta name="theme-color" content="#063b47">' in PORTAL_SHELL_TEMPLATE
+    assert '<meta name="theme-color" content="#062026"' in PORTAL_SHELL_TEMPLATE
     assert "#07141d" not in PORTAL_SHELL_TEMPLATE
