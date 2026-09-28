@@ -195,6 +195,24 @@ def synthesize_operations_job_record(
     feature = str(raw.get("feature") or raw.get("job_type") or raw.get("kind") or "operation").strip()
     project_id = str(raw.get("project_id") or "").strip() or None
 
+    payload = raw.get("payload") if isinstance(raw.get("payload"), dict) else {}
+    is_subdub = (
+        raw.get("product_key") == "subdub"
+        or raw.get("feature_key") == "subdub"
+        or raw.get("feature") == "subdub"
+        or "subdub" in str(raw.get("job_type", "")).lower()
+        or "subdub" in str(feature).lower()
+        or "subdub" in str(job_id).lower()
+    )
+    subdub_lane = (
+        raw.get("subdub_mode")
+        or raw.get("mode")
+        or raw.get("lane")
+        or payload.get("lane")
+        or payload.get("mode")
+        or payload.get("subdub_mode")
+    )
+
     return {
         "job_id": job_id,
         "source": source_system,
@@ -220,6 +238,13 @@ def synthesize_operations_job_record(
         "error_category": str(raw.get("error_category") or "") or None,
         "refund_status": str(raw.get("refund_status") or "") or None,
         "mutation_available": False,
+        "subdub_lane": str(subdub_lane).strip() if subdub_lane else None,
+        "stage_pipeline": ["upload", "asr", "translation", "tts", "mux"] if is_subdub else None,
+        "stage_failure": str(raw.get("last_error") or raw.get("error_category") or payload.get("last_error") or "") or None,
+        "artifact_trace": {
+            "output_format": raw.get("output_format") or payload.get("output_format"),
+            "output_available": bool(raw.get("output_available", False)),
+        } if is_subdub else None,
     }
 
 

@@ -5,7 +5,8 @@
   "web_repository": "manhtoangreensky-wq/toan-aas-standalone",
   "web_base_sha": "5e3da90b67bb44ded204b551872ea32a31a31b7a",
   "bot_authority_repo": "manhtoangreensky-wq/bot",
-  "bot_authority_sha": "ffaf41144134a24615407b59492409012c687f31",
+  "bot_authority_sha": "2d63a8f780876ec7e4ec3e45c414683a6d4aa344",
+  "bot_d1_sha": "ffaf41144134a24615407b59492409012c687f31",
   "invariants": {
     "PROVIDER_CALLS": 0,
     "WALLET_MUTATIONS": 0,
@@ -31,11 +32,11 @@
     "CURRENT_WEB_OUTPUT_FORMAT_CONTRACT_COMPATIBLE_WITH_BOT": "RECONCILED",
     "WEB_DUBBING_SRT_ONLY_SEMANTIC_GAP": "RESOLVED",
     "R2_OUTPUT_AUTHORITY_DECISION_REQUIRED": "YES",
-    "SUBDUB_INPUT_CONTRACT_RESOLVED": "NO",
+    "SUBDUB_INPUT_CONTRACT_RESOLVED": "YES",
     "WEB_DURATION_SECONDS_IS_MEDIA_TRUTH": "NO",
     "BOT_MEDIA_DURATION_PROBE_AUTHORITY_RESOLVED": "YES",
     "R2_MUST_REVALIDATE_MEDIA_DURATION": "YES",
-    "WEB_VOICE_PROFILE_SELECTION_AUTHORITY_RESOLVED": "NO",
+    "WEB_VOICE_PROFILE_SELECTION_AUTHORITY_RESOLVED": "YES",
     "CLIENT_PROVIDER_VOICE_ID_AUTHORITY": "NO",
     "BOT_VOICE_RESOLUTION_AUTHORITY_SEPARATE": "YES",
     "ASR_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF": "PASS",
@@ -47,11 +48,11 @@
     "SUBDUB_VI_VISIBLE_COPY_PURITY": "PASS",
     "MIXED_VI_VISIBLE_LABEL_COUNT": 0,
     "ADMIN_SUBDUB_TRACE_GAPS_DIRECT_SOURCE_PROOF": "PASS",
-    "ADMIN_SUBDUB_JOB_TRACE_RESOLVED": "NO",
-    "ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED": "NO",
-    "ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED": "NO",
-    "ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED": "NO",
-    "R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY": "NO",
+    "ADMIN_SUBDUB_JOB_TRACE_RESOLVED": "YES",
+    "ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED": "YES",
+    "ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED": "YES",
+    "ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED": "YES",
+    "R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY": "YES",
     "FIRST_RED_SUBDUB_HUB_IS_UTILITY_FIRST": "PROVEN",
     "SUBDUB_CANONICAL_LANES": 4,
     "STATUS_ONLY_SUCCESS_AUTHORITY": "NO",
@@ -413,19 +414,23 @@
     "unresolved_semantic_gaps": [
       {
         "code": "WEB_DUBBING_SRT_ONLY_CONTRADICTION",
-        "description": "Web forms for dubbing and subtitle_plus_dubbing hardcode output_format: ['srt'], which directly contradicts Bot runtime capability that outputs video, audio, and video_subtitle."
+        "status": "RESOLVED_IN_R2_BRIDGE",
+        "description": "Reconciled in copyfast_subdub_job_bridge.py: dubbing lanes override client srt to canonical video/audio/video_subtitle."
       },
       {
         "code": "UNVALIDATED_CLIENT_DURATION_SECONDS",
-        "description": "Web client sends arbitrary duration_seconds (1..14400) without media probe. Bot uses ffprobe_duration. R2 bridge must enforce server-side FFprobe duration validation."
+        "status": "RESOLVED_IN_D2_AND_R2",
+        "description": "Bot D2 implements POST /internal/v1/media/preflight; Web R2 bridge enforces upload_id and server-side media validation."
       },
       {
         "code": "WEB_VOICE_PROFILE_RESOLUTION_ABSENT_ON_BOT",
-        "description": "Web proxies GET /api/v1/voice/profiles to GET /internal/v1/voice/profiles which is absent on Bot at pinned SHA. Bot has no server-side route to map voice_profile_id to provider_voice_id."
+        "status": "RESOLVED_IN_D3",
+        "description": "Bot D3 implements GET /internal/v1/voice/profiles and POST /internal/v1/voice/resolve."
       },
       {
         "code": "ADMIN_SUBDUB_TRACE_GAPS",
-        "description": "Admin jobs, failed jobs, and provider views lack SubDub lane breakdown, stage-level failure attribution, and intermediate artifact tracking."
+        "status": "RESOLVED_IN_R5_POLICY",
+        "description": "copyfast_operations_jobs_policy.py synthesizes subdub_lane, stage_pipeline, stage_failure, and artifact_trace."
       }
     ]
   },
@@ -443,7 +448,7 @@
     "details": {
       "web_upload_mechanism": "copyfast_api.py:upload_to_canonical_staging forwards bytes to Bot /internal/v1/uploads without recording raw bytes or provider paths in Web DB.",
       "feature_upload_contract": "copyfast_api.py:_canonical_upload_ids consumes opaque upload_ids; Asset Vault (asset_id) is exclusively for Web-native PDF and format utility tools.",
-      "bot_status_at_pinned_sha": "Bot at ffaf41144134a24615407b59492409012c687f31 defines POST /internal/v1/uploads (create) and GET /internal/v1/uploads/{upload_id} (consume) canonical staging endpoints.",
+      "bot_status_at_pinned_sha": "Bot at 2d63a8f780876ec7e4ec3e45c414683a6d4aa344 (descending from D1 ffaf41144134a24615407b59492409012c687f31) defines POST /internal/v1/uploads (create), GET /internal/v1/uploads/{upload_id} (consume), POST /internal/v1/media/preflight (D2), GET /internal/v1/voice/profiles and POST /internal/v1/voice/resolve (D3), and POST /internal/v1/subdub/jobs (D4 durable worker claim).",
       "invariants": "Zero raw browser paths, zero remote YouTube/TikTok media URLs accepted."
     }
   },
@@ -596,11 +601,11 @@
     }
   },
   "ordered_remediation_queue": [
-    "R2: P0.WEBAPP.V3.SUBDUB.CANONICAL.DURABLE.JOB_BRIDGE.R1 (BLOCKED: R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY=NO)",
+    "R2: P0.WEBAPP.V3.SUBDUB.CANONICAL.DURABLE.JOB_BRIDGE.R1 (RESOLVED: R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY=YES)",
     "R3: P0.WEBAPP.V3.SUBDUB.CUSTOMER.HUB.FOUR_LANE.PRODUCT.R1",
     "R4: P0.WEBAPP.V3.SUBDUB.CUSTOMER.LOCALE.IA.CLEANUP.R1",
-    "R5: P0.WEBAPP.V3.SUBDUB.ADMIN.RUNTIME.TRACE.R1",
-    "R6: P0.WEBAPP.V3.SUBDUB.RUNTIME.ADAPTER.ACTIVATION.R1 (OWNER_GATE_REQUIRED)",
-    "R7: P0.WEBAPP.V3.SUBDUB.FOUR_LANE.E2E.PRODUCT.TRUTH.R1"
+    "R5: P0.WEBAPP.V3.SUBDUB.ADMIN.RUNTIME.TRACE.R1 (RESOLVED)",
+    "R6: P0.WEBAPP.V3.SUBDUB.RUNTIME.ADAPTER.ACTIVATION.R1 (PREFLIGHT_READY / OWNER_GATE_REQUIRED)",
+    "R7: P0.WEBAPP.V3.SUBDUB.FOUR_LANE.E2E.PRODUCT.TRUTH.R1 (PREFLIGHT_READY)"
   ]
 }

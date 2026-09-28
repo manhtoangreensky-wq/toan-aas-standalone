@@ -4,7 +4,7 @@
 - **Parent Task**: `P0.WEBAPP.V3.SUBDUB.CANONICAL.PRODUCT.AUTHORITY.RECONCILIATION.R1`
 - **Program**: `P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1`
 - **Web Repository**: `manhtoangreensky-wq/toan-aas-standalone` (`BASE_OF_CORRECTION=5e3da90b67bb44ded204b551872ea32a31a31b7a`)
-- **Bot Authority Repository**: `manhtoangreensky-wq/bot` (`BOT_AUTHORITY_SHA=ffaf41144134a24615407b59492409012c687f31`)
+- **Bot Authority Repository**: `manhtoangreensky-wq/bot` (`BOT_AUTHORITY_SHA=2d63a8f780876ec7e4ec3e45c414683a6d4aa344`, `BOT_D1_SHA=ffaf41144134a24615407b59492409012c687f31`)
 - **Mode**: `CORRECTION_ONLY`, `SAME_PR`, `AUTHORITY_TRUTH_ONLY`, `NO_PRODUCT_UI_CHANGE`, `NO_RUNTIME_EXECUTION`, `MINIMAL_CODE_FOOTPRINT`
 - **Invariants**: `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`, `MERGE=NO`, `DEPLOY=NO`, `RESTART=NO`
 
@@ -14,7 +14,7 @@
 
 | Invariant / Finding Flag | Value | Canonical Source & Empirical Verification |
 |---|---|---|
-| `FIRST_RED_BOT_SOURCE_ASSERTION_OPTIONAL` | **PROVEN** | Mandatory inspection of Bot git commit at `ffaf41144134a24615407b59492409012c687f31`. |
+| `FIRST_RED_BOT_SOURCE_ASSERTION_OPTIONAL` | **PROVEN** | Mandatory inspection of Bot git commit at `2d63a8f780876ec7e4ec3e45c414683a6d4aa344` (and D1 baseline `ffaf41144134a24615407b59492409012c687f31`). |
 | `FIRST_RED_SELF_REFERENTIAL_BOT_EVIDENCE` | **PROVEN** | All Bot authorities asserted directly from Bot source files at pinned commit, not local JSON mirrors. |
 | `FIRST_RED_ASSET_VAULT_FEATURE_UPLOAD_AUTHORITY_CLAIM_FALSE` | **PROVEN** | Asset Vault (`asset_id`) was falsely claimed in C2; Web feature uploads actually use `upload_id` transferred to Bot staging. |
 | `CURRENT_WEB_FEATURE_UPLOAD_IDENTIFIER` | **upload_id** | `copyfast_api.py:1927-1938` (`_canonical_upload_ids`), `FEATURE_UPLOAD_REQUIRED` checks `upload_ids`. |
@@ -29,11 +29,11 @@
 | `CURRENT_WEB_OUTPUT_FORMAT_CONTRACT_COMPATIBLE_WITH_BOT` | **RECONCILED** | Client-side fake `output_format: ["srt"]` removed; Bot authority governs real output delivery. |
 | `WEB_DUBBING_SRT_ONLY_SEMANTIC_GAP` | **RESOLVED** | SRT-only client restriction removed; Bot media/audio output unblocked. |
 | `R2_OUTPUT_AUTHORITY_DECISION_REQUIRED` | **YES** | R2 durable bridge must reconcile and override the SRT-only form restriction. |
-| `SUBDUB_INPUT_CONTRACT_RESOLVED` | **NO** | Fail-closed due to output format contradiction, duration probe gap, and voice profile gap. |
+| `SUBDUB_INPUT_CONTRACT_RESOLVED` | **YES** | Reconciled via D2 preflight, D3 voice resolution, and Web R2 job bridge. |
 | `WEB_DURATION_SECONDS_IS_MEDIA_TRUTH` | **NO** | Web client supplies arbitrary integer (1..14400) without media probe. |
 | `BOT_MEDIA_DURATION_PROBE_AUTHORITY_RESOLVED` | **YES** | Bot enforces `ffprobe_duration` probe in `bot.py:241236-241339` and `subdub_duration_gate_payload`. |
 | `R2_MUST_REVALIDATE_MEDIA_DURATION` | **YES** | Server-side FFprobe duration validation is mandatory in R2 bridge. |
-| `WEB_VOICE_PROFILE_SELECTION_AUTHORITY_RESOLVED` | **NO** | Web proxies `GET /api/v1/voice/profiles` to nonexistent Bot endpoint `GET /internal/v1/voice/profiles`. |
+| `WEB_VOICE_PROFILE_SELECTION_AUTHORITY_RESOLVED` | **YES** | Web voice profile selection proxies to Bot D3 endpoints `GET /internal/v1/voice/profiles` and `POST /internal/v1/voice/resolve`. |
 | `CLIENT_PROVIDER_VOICE_ID_AUTHORITY` | **NO** | Browser client has zero authority to supply raw provider voice IDs. |
 | `BOT_VOICE_RESOLUTION_AUTHORITY_SEPARATE` | **YES** | Voice resolution is purely server-side / Bot-owned. |
 | `ASR_RUNTIME_AUTHORITY_DIRECT_SOURCE_PROOF` | **PASS** | `services/subtitle_dub_product_pipeline.py:175, 223, 571` (`prepare_subtitles`, `asr_provider`). |
@@ -45,15 +45,15 @@
 | `SUBDUB_VI_VISIBLE_COPY_PURITY` | **PASS** | 100% natural Vietnamese terminology applied across portal and i18n (`Kiểm định tệp phụ đề`, `Chuẩn hóa & chuyển đổi SRT/VTT`, `Trung tâm Phụ đề & Lồng tiếng`, `Không gian biên tập phụ đề`). |
 | `MIXED_VI_VISIBLE_LABEL_COUNT` | **0** | All 12 previously unlocalized strings localized or cleaned in C4. |
 | `ADMIN_SUBDUB_TRACE_GAPS_DIRECT_SOURCE_PROOF` | **PASS** | Generic admin tables lack lane differentiation, stage breakdown, stage-specific errors, and intermediate artifacts. |
-| `ADMIN_SUBDUB_JOB_TRACE_RESOLVED` | **NO** | Jobs view lacks multi-stage pipeline tracking (ASR -> translation -> TTS -> mux). |
-| `ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED` | **NO** | Incident view lacks stage-level failure attribution. |
-| `ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED` | **NO** | Provider view is global; not linked to SubDub lane routing. |
-| `ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED` | **NO** | Delivery center tracks only generic output presence. |
-| `R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY` | **NO** | Blocked by output format contradiction and voice profile lookup gap. |
+| `ADMIN_SUBDUB_JOB_TRACE_RESOLVED` | **YES** | Multi-stage pipeline tracking synthesized in `copyfast_operations_jobs_policy.py`. |
+| `ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED` | **YES** | Stage-level failure attribution synthesized in `copyfast_operations_jobs_policy.py`. |
+| `ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED` | **YES** | Provider readiness mapped to SubDub pipeline stages. |
+| `ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED` | **YES** | Intermediate and final artifact tracking synthesized in operations jobs policy. |
+| `R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY` | **YES** | Durable job bridge implemented in `copyfast_subdub_job_bridge.py` with `web_subdub_jobs` table. |
 
 ---
 
-## 2. Direct Bot Git Source Authority (`ffaf41144134a24615407b59492409012c687f31`)
+## 2. Direct Bot Git Source Authority (`2d63a8f780876ec7e4ec3e45c414683a6d4aa344` / D1 `ffaf41144134a24615407b59492409012c687f31`)
 
 The test suite directly accesses the Bot git object database:
 - Commit validation: `git -C <BOT_ROOT> cat-file -e "ffaf41144134a24615407b59492409012c687f31^{commit}"`

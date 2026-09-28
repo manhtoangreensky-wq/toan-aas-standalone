@@ -175,6 +175,16 @@ from copyfast_image_generation_job_bridge import (
     image_generation_job_to_native_compat,
     validate_image_generation_input,
 )
+from copyfast_subdub_job_bridge import (
+    CANONICAL_PRODUCT_KEY as SUBDUB_PRODUCT_KEY,
+    SUPPORTED_CANONICAL_JOB_ADAPTERS as SUBDUB_ADAPTER_KEYS,
+    create_or_replay_subdub_job,
+    get_subdub_job,
+    is_subdub_job_other_account,
+    list_subdub_jobs,
+    subdub_job_to_native_compat,
+    validate_subdub_input,
+)
 from copyfast_product_video_dispatcher import (
     claim_product_video_job,
     complete_product_video_job,
@@ -878,7 +888,8 @@ def _web_feature_job_adapter_keys() -> frozenset[str]:
     return frozenset(
         feature
         for feature in requested
-        if feature in FEATURE_EXECUTION_CANDIDATE_KEYS and feature in FEATURE_BY_KEY
+        if (feature in FEATURE_EXECUTION_CANDIDATE_KEYS or feature in SUBDUB_ADAPTER_KEYS)
+        and (feature in FEATURE_BY_KEY or feature in SUBDUB_ADAPTER_KEYS)
     )
 
 
@@ -917,10 +928,9 @@ def _web_feature_runtime_active(feature: str) -> bool:
     Used by direct ``POST /features/{feature}/jobs`` routes to enforce the
     same source-reviewed runtime authority gate as the confirm path.
     """
-    return (
-        _web_feature_execution_available(feature)
-        and str(feature or "").strip() in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
-    )
+    clean = str(feature or "").strip()
+    is_active = clean in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES or (clean in SUBDUB_ADAPTER_KEYS and "subdub" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES)
+    return _web_feature_execution_available(feature) and is_active
 
 
 def _linked(account: dict) -> str:
@@ -3443,7 +3453,11 @@ def _native_jobs_for_account(account: dict) -> list[dict[str, Any]]:
         image_generation_job_to_native_compat(job)
         for job in list_image_generation_jobs(account_id, limit=100)
     ]
-    return _merge_read_items(img_jobs, msf_jobs, vl_jobs, vt_jobs, pv_jobs, native_jobs)
+    sd_jobs = [
+        subdub_job_to_native_compat(job)
+        for job in list_subdub_jobs(account_id, limit=100)
+    ]
+    return _merge_read_items(sd_jobs, img_jobs, msf_jobs, vl_jobs, vt_jobs, pv_jobs, native_jobs)
 
 
 def _native_assets_for_account(account: dict) -> list[dict[str, Any]]:
@@ -6107,6 +6121,24 @@ async def job_detail(job_id: str, request: Request, account: dict = Depends(requ
             status_name="guarded",
             error_code="WEB_NATIVE_JOB_NOT_FOUND",
         )
+    sd_job = get_subdub_job(account_id, job_id)
+    if sd_job is not None:
+        compat_item = subdub_job_to_native_compat(sd_job)
+        return envelope(
+            True,
+            "Đã tải dữ liệu Job Web-native của tài khoản hiện tại.",
+            data={**compat_item, "job_record": sd_job, "read_model": "jobs", "canonical_available": False},
+            status_name="read_only",
+        )
+    if is_subdub_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    if str(job_id or "").strip().startswith("sdj_"):
+        return envelope(
+            False,
+            "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_JOB_NOT_FOUND",
+        )
     native_job = parse_native_job_id(job_id)
     if native_job is not None:
         record = get_native_job(str(account.get("id") or ""), job_id)
@@ -6494,6 +6526,39 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
                     status_name="guarded",
                     error_code="IMAGE_GENERATION_JOB_VALIDATION_FAILED",
                 )
+        if feature in SUBDUB_ADAPTER_KEYS:
+            account_id = str(account.get("id") or "")
+            try:
+                job_result = create_or_replay_subdub_job(
+                    account_id=account_id,
+                    payload=values,
+                    idempotency_key=key,
+                )
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=True,
+                )
+                return envelope(
+                    True,
+                    "Đã tạo tác vụ Phụ đề & Lồng tiếng thành công, chờ runtime xử lý.",
+                    data=job_result,
+                    status_name="queued",
+                )
+            except HTTPException as exc:
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=False,
+                )
+                if exc.status_code == 409:
+                    raise exc
+                return envelope(
+                    False,
+                    exc.detail,
+                    status_name="guarded",
+                    error_code="SUBDUB_JOB_VALIDATION_FAILED",
+                )
         scope = f"feature:{account['id']}:{feature}:confirm"
         result = await _run_idempotent(
             scope,
@@ -6848,6 +6913,153 @@ async def get_image_generation_job_route(
     if is_image_generation_job_other_account(job_id, account_id):
         raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
     raise HTTPException(status_code=404, detail="Không tìm thấy job Tạo ảnh AI của tài khoản.")
+
+
+@router.post("/features/subdub/jobs")
+async def create_subdub_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if not _web_feature_runtime_active("subdub"):
+        return envelope(False, "Runtime execution chưa được kích hoạt cho tính năng này.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    request_id = str(payload.input.get("request_id") or "")
+    job = create_or_replay_subdub_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        request_id=request_id,
+        idempotency_key=key,
+    )
+    return envelope(
+        True,
+        "Đã tạo tác vụ Phụ đề & Lồng tiếng thành công, chờ runtime xử lý.",
+        data=job,
+        status_name="queued",
+    )
+
+
+@router.get("/features/subdub/jobs")
+async def list_subdub_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = list_subdub_jobs(account_id, limit=100)
+    return envelope(
+        True,
+        "Đã tải danh sách job Phụ đề & Lồng tiếng của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/subdub/jobs/{job_id}")
+async def get_subdub_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    job = get_subdub_job(account_id, job_id)
+    if job is not None:
+        return envelope(
+            True,
+            "Đã tải chi tiết job Phụ đề & Lồng tiếng.",
+            data=job,
+            status_name="read_only",
+        )
+    if is_subdub_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Phụ đề & Lồng tiếng của tài khoản.")
+
+
+@router.post("/features/video_dub/jobs")
+async def create_video_dub_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    inp = dict(payload.input)
+    inp.setdefault("mode", "dub")
+    payload.input = inp
+    return await create_subdub_job_route(payload, request, account)
+
+
+@router.get("/features/video_dub/jobs")
+async def list_video_dub_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await list_subdub_jobs_route(request, account)
+
+
+@router.get("/features/video_dub/jobs/{job_id}")
+async def get_video_dub_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await get_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/subtitle_create/jobs")
+async def create_subtitle_create_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    inp = dict(payload.input)
+    inp.setdefault("mode", "subtitle_create")
+    payload.input = inp
+    return await create_subdub_job_route(payload, request, account)
+
+
+@router.get("/features/subtitle_create/jobs")
+async def list_subtitle_create_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await list_subdub_jobs_route(request, account)
+
+
+@router.get("/features/subtitle_create/jobs/{job_id}")
+async def get_subtitle_create_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await get_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/subtitle_translate/jobs")
+async def create_subtitle_translate_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    inp = dict(payload.input)
+    inp.setdefault("mode", "subtitle_translate")
+    payload.input = inp
+    return await create_subdub_job_route(payload, request, account)
+
+
+@router.get("/features/subtitle_translate/jobs")
+async def list_subtitle_translate_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await list_subdub_jobs_route(request, account)
+
+
+@router.get("/features/subtitle_translate/jobs/{job_id}")
+async def get_subtitle_translate_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await get_subdub_job_route(job_id, request, account)
 
 
 @router.get("/admin/summary")
