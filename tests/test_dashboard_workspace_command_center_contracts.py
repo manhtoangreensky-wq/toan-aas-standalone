@@ -547,6 +547,5 @@ def test_signed_workspace_primary_actions_keep_the_shared_teal_hierarchy() -> No
 
 
 def test_signed_shell_document_theme_color_matches_the_deep_teal_pwa_shell() -> None:
-    assert ('<meta name="theme-color" content="#062026"' in PORTAL_SHELL_TEMPLATE
-            or '<meta name="theme-color" content="#063b47">' in PORTAL_SHELL_TEMPLATE)
+    assert '<meta name="theme-color" content="#062026"' in PORTAL_SHELL_TEMPLATE
     assert "#07141d" not in PORTAL_SHELL_TEMPLATE
