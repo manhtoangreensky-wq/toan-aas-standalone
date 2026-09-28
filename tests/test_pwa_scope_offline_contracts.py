@@ -99,7 +99,7 @@ def test_manifest_shortcuts_are_fixed_in_scope_navigation_without_private_data()
 def test_install_offer_uses_only_an_explicit_browser_prompt_for_a_signed_pwa_session() -> None:
     """Installing the shell never creates an automatic or account-data action."""
     assert "let pwaInstallPrompt = null;" in PORTAL
-    assert 'const canOfferPwaInstall = context.pwaEnabled === true && context.session.authenticated === true;' in PORTAL
+    assert 'const canOfferPwaInstall = Boolean(!adminSurface && context && context.pwaEnabled === true && context.session && context.session.authenticated === true);' in PORTAL
     assert 'data-portal-install-app' in PORTAL
     # The install control keeps a real accessible name, while its reviewed
     # label follows the interface locale rather than being fixed to Vietnamese.
