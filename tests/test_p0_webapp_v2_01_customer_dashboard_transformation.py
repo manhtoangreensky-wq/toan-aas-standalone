@@ -1,20 +1,22 @@
 """
 P0.WEBAPP.V2-01: CUSTOMER DASHBOARD TRANSFORMATION FOCUSED TEST SUITE
 Proves:
-1. WALLET_BLOCK_PRIMARY == YES (Wallet & financial state is the #1 dashboard block)
-2. CANONICAL_WALLET_SOURCE_PRESERVED == YES
-3. UNKNOWN_WALLET_NOT_RENDERED_AS_ZERO == YES
-4. START_WORK_PRIMARY_CTA_COUNT == 3 (/video-studio, /image-studio, /content-studio)
-5. START_WORK_ROUTES == ['/video-studio', '/image-studio', '/content-studio']
+1. DASHBOARD_FIRST_CALL == renderDashboardProductHero (Consolidated creative launcher is #1 block)
+2. DASHBOARD_SECOND_CALL == renderDashboardAccountSummary (Wallet & financial summary is #2 block)
+3. CANONICAL_WALLET_SOURCE_PRESERVED == YES
+4. UNKNOWN_WALLET_NOT_RENDERED_AS_ZERO == YES
+5. RETAINED_HERO_ROUTES == ['/studio', '/tools/image', '/voice', '/subdub', '/content', '/music']
 6. FEATURE_CATALOG_CTA == /features
 7. DASHBOARD_STATIC_PRODUCTIVITY_CARD_COUNT == 0 (Bloat removed)
-8. CUSTOMER_FEATURE_CATALOG == 139 (Preserved)
-9. ACTIVE_JOB_TRUTH_PRESERVED == YES
-10. FAILED_JOB_FAKE_SUCCESS == 0
-11. PROJECT_CONTINUATION_ROUTE == /projects
-12. CUSTOMER_ADMIN_ROUTE_LEAK == 0
-13. V2_00_NAV_REGRESSION == 0
-14. BLUE_VISUAL_REGRESSION == 0
+8. DASHBOARD_RENDER_STUDIO_LAUNCHPAD_CALL_COUNT == 0 (Duplicate launcher removed)
+9. CUSTOMER_FEATURE_CATALOG == 139 (Preserved)
+10. ACTIVE_JOB_TRUTH_PRESERVED == YES
+11. FAILED_JOB_FAKE_SUCCESS == 0
+12. PROJECT_CONTINUATION_ROUTE == /projects
+13. CUSTOMER_ADMIN_ROUTE_LEAK == 0
+14. CUSTOMER_NAV_GROUP_COUNT == 5
+15. PERMANENT_CUSTOMER_NAV_LINK_COUNT == 17
+16. BLUE_VISUAL_REGRESSION == 0
 """
 
 import re
@@ -52,13 +54,14 @@ class TestP0WebappV201CustomerDashboardTransformation:
     """Empirical verification of V2-01 Customer Dashboard Transformation truth."""
 
     def test_01_wallet_block_is_first_primary_dashboard_position(self):
-        """Wallet/Xu financial summary must be prominent in the dashboard header flow."""
+        """Dashboard must place Product Hero first and Account/Wallet summary second."""
         calls = _get_dashboard_sections_order()
         assert len(calls) > 1, "renderDashboard must contain rendered section calls"
-        # The financial summary block follows the creation hero in primary position
-        financial_calls = [c for c in calls[:2] if "Wallet" in c or "Financial" in c or "AccountSummary" in c]
-        assert len(financial_calls) > 0, (
-            f"WALLET_BLOCK_PRIMARY must be YES. Currently first two calls are '{calls[:2]}', missing wallet summary block."
+        assert calls[0] == "renderDashboardProductHero", (
+            f"DASHBOARD_FIRST_CALL must be 'renderDashboardProductHero'. Got '{calls[0]}'."
+        )
+        assert calls[1] == "renderDashboardAccountSummary", (
+            f"DASHBOARD_SECOND_CALL must be 'renderDashboardAccountSummary'. Got '{calls[1]}'."
         )
 
     def test_02_canonical_wallet_source_preserved_and_unknown_not_zero(self):
@@ -71,17 +74,20 @@ class TestP0WebappV201CustomerDashboardTransformation:
         assert "canonicalNonnegativeInteger(value.balance_xu)" in PORTAL_JS
 
     def test_03_start_work_primary_cta_count_and_routes(self):
-        """Primary start-work block must expose canonical creative studios and features discovery."""
-        body = _get_render_dashboard_body()
-        assert "renderDashboardStartWork" in body or "renderDashboardCreationHero" in body or "renderStartWork" in body or "renderDashboardProductHero" in body, (
-            "Dashboard must include a dedicated primary start-work CTA section"
-        )
-        # Check routes present in creation hero
+        """Product hero must expose exactly 6 canonical creative routes."""
         hero_start = PORTAL_JS.index("function renderDashboardProductHero(ctx)")
         hero_end = PORTAL_JS.index("function renderDashboardAccountSummary(ctx)")
         hero_body = PORTAL_JS[hero_start:hero_end]
-        for route in ("/studio", "/tools/image", "/voice", "/subdub", "/content", "/music"):
-            assert route in hero_body, f"Start-work block missing primary creation route: {route}"
+        expected_routes = [
+            "/studio",
+            "/tools/image",
+            "/voice",
+            "/subdub",
+            "/content",
+            "/music",
+        ]
+        hrefs = re.findall(r'href=["\'](/[^"\']+)["\']', hero_body)
+        assert hrefs == expected_routes, f"Retained hero routes mismatch: {hrefs} != {expected_routes}"
 
     def test_04_static_productivity_hub_bloat_eliminated(self):
         """Static 'Productivity Hub' and duplicate Studio Launchpad must be removed from /dashboard."""
@@ -127,16 +133,16 @@ class TestP0WebappV201CustomerDashboardTransformation:
         assert admin_leaks == [], f"CUSTOMER_ADMIN_ROUTE_LEAK detected on dashboard: {admin_leaks}"
 
     def test_09_v2_00_navigation_rail_preserved(self):
-        """V2-00 streamlined navigation rail must remain intact."""
+        """Customer navigation rail must contain exactly 5 groups and 17 permanent links."""
         start = PORTAL_JS.index("function navGroups(context, currentPage)")
         end = PORTAL_JS.index("const currentGroup = currentCustomerWorkflowGroup")
         nav_block = PORTAL_JS[start:end]
 
         group_matches = re.findall(r'label:\s*"([^"]+)"[^[]*links:\s*\[(.*?)\]\s*\}', nav_block, re.DOTALL)
-        assert len(group_matches) in (4, 5), f"Expected 4 or 5 customer groups, got {len(group_matches)}"
+        assert len(group_matches) == 5, f"CUSTOMER_NAV_GROUP_COUNT must be 5, got {len(group_matches)}"
 
         perm_links = re.findall(r'\["(/[^"]+)",\s*"([^"]+)"', nav_block)
-        assert len(perm_links) >= 13, f"Expected at least 13 permanent customer links, got {len(perm_links)}"
+        assert len(perm_links) == 17, f"PERMANENT_CUSTOMER_NAV_LINK_COUNT must be 17, got {len(perm_links)}"
 
     def test_10_blue_visual_system_protected(self):
         """Canonical teal/mint visual tokens must remain intact in portal-theme.css."""
