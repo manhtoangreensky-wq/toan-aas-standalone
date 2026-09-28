@@ -61,14 +61,15 @@ def test_dashboard_separates_web_native_account_and_canonical_lanes() -> None:
     root = surface[surface.index("function renderDashboard(page, context)"):]
     for token in (
         'dashboardText("work.kicker")',
+        "renderDashboardProductHero(context)",
         "renderDashboardRecentProjects(context)",
         "renderDashboardRecentDrafts(context)",
         "renderDashboardAccountLane(context)",
         "renderDashboardCanonicalLane(context, readState)",
         "renderDashboardStartGuide(context)",
-        "renderStudioLaunchpad(context)",
     ):
         assert token in root
+    assert "renderStudioLaunchpad(context)" not in root
     for token in ('dashboardText("account.kicker")', "function renderDashboardCanonicalLane"):
         assert token in surface
     for forbidden in ("fetch(", "api(", "localStorage", "sessionStorage", "bridge_request", "CORE_BRIDGE"):
