@@ -109,7 +109,7 @@ class TestR6RuntimeAdapterActivationPreflight:
 
     def test_r6_preflight_fail_closed_runtime_output_invariant_preserved(self, audit_data: dict[str, Any]):
         """Proves WEB_CANONICAL_SUBDUB_RUNTIME_OUTPUT_PROVEN remains strictly NO.
-        
+
         Runtime output can ONLY be proven when live worker execution is authorized by Owner.
         """
         flags = audit_data["flags"]
