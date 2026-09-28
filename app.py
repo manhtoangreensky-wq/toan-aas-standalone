@@ -2711,10 +2711,13 @@ async def pwa_manifest():
 
 
 @app.get("/portal-sw.js", include_in_schema=False)
-@app.get("/service-worker.js", include_in_schema=False)
 async def pwa_service_worker():
     sw_path = ROOT / "static" / "portal" / "service-worker.js"
-    return FileResponse(sw_path, media_type="application/javascript", headers={"Service-Worker-Allowed": "/"})
+    return FileResponse(sw_path, media_type="application/javascript", headers={
+        "Cache-Control": "no-cache, no-store, max-age=0, must-revalidate",
+        "Service-Worker-Allowed": "/",
+        "X-Content-Type-Options": "nosniff",
+    })
 
 
 @app.get("/offline.html", include_in_schema=False)
