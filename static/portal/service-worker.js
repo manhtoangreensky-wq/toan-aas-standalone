@@ -258,7 +258,6 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
 ]);
 
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_CACHE_REQUESTS)));
 });
 
@@ -271,7 +270,6 @@ self.addEventListener("activate", (event) => {
           .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
           .map((key) => caches.delete(key))
       ))
-      .then(() => self.clients && typeof self.clients.claim === "function" ? self.clients.claim() : undefined)
   );
 });
 

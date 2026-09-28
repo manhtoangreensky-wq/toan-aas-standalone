@@ -124,7 +124,10 @@ jobs:
             tests/test_p0_05d_tester_workspace.py \
             tests/test_copyfast_bridge_loopback_base_url.py \
             tests/test_p0_webapp_spec02_customer_wallet_truth.py \
-            tests/test_p0_media_operational_hubs_contracts.py
+            tests/test_p0_media_operational_hubs_contracts.py \
+            tests/test_portal_service_worker_lifecycle.py \
+            tests/test_pwa_rollout_versioning.py \
+            tests/test_pwa_scope_offline_contracts.py
 
       - name: Run browser verification gate and capture evidence
         env:
