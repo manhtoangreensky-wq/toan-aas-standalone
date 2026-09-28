@@ -5,8 +5,13 @@ CSS variables/classes, but it must not call APIs, persist browser data, or
 change the route's authority/data boundary.
 """
 
+from __future__ import annotations
+
+import json
 from pathlib import Path
 import re
+import shutil
+import subprocess
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -150,3 +155,251 @@ def test_landing_anchor_navigation_is_smooth_only_when_motion_is_safe() -> None:
         assert token in THEME
     for forbidden in ("scrollIntoView", "scrollTo", "history.pushState"):
         assert forbidden not in MOTION
+
+
+def _run_landing_scroll_harness() -> dict[str, object]:
+    node = shutil.which("node")
+    assert node is not None, "Node is required for the Portal motion runtime contract."
+    harness = r'''
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync(process.argv[1], "utf8");
+
+function classList() {
+  const values = new Set();
+  return {
+    add(...items) { items.forEach((item) => values.add(String(item))); },
+    remove(...items) { items.forEach((item) => values.delete(String(item))); },
+    has(item) { return values.has(String(item)); }
+  };
+}
+
+function element(kind = "generic", options = {}) {
+  const attributes = new Map();
+  const listeners = new Map();
+  const styles = new Map();
+  const children = [];
+  return {
+    kind,
+    classList: classList(),
+    children,
+    style: {
+      setProperty(name, value) { styles.set(name, String(value)); },
+      removeProperty(name) { styles.delete(name); },
+      getPropertyValue(name) { return styles.get(name) || ""; }
+    },
+    styles,
+    setAttribute(name, value) { attributes.set(name, String(value)); },
+    removeAttribute(name) { attributes.delete(name); },
+    getAttribute(name) { return attributes.get(name) || null; },
+    hasAttribute(name) { return attributes.has(name); },
+    addEventListener(name, callback) {
+      if (!listeners.has(name)) listeners.set(name, new Set());
+      listeners.get(name).add(callback);
+    },
+    removeEventListener(name, callback) {
+      if (listeners.has(name)) listeners.get(name).delete(callback);
+    },
+    listenerCount(name) { return listeners.has(name) ? listeners.get(name).size : 0; },
+    dispatchEvent(name) {
+      if (listeners.has(name)) {
+        listeners.get(name).forEach((cb) => cb({ currentTarget: this }));
+      }
+    },
+    scrollTop: options.scrollTop || 0,
+    scrollHeight: options.scrollHeight || 800,
+    clientHeight: options.clientHeight || 800,
+    getBoundingClientRect() {
+      if (typeof options.getRect === "function") return options.getRect();
+      return { top: 0, bottom: 800, height: 800, width: 1200, left: 0, right: 1200 };
+    },
+    closest(selector) {
+      if (options.closest) return options.closest(selector);
+      return null;
+    },
+    querySelector(selector) {
+      if (options.querySelector) return options.querySelector(selector);
+      return null;
+    },
+    querySelectorAll(selector) {
+      if (options.querySelectorAll) return options.querySelectorAll(selector);
+      return [];
+    },
+    matches(selector) {
+      return (selector === ".portal-landing-workflow" && kind === "workflow")
+        || (selector === ".portal-landing-final" && kind === "final")
+        || (selector === ".portal-landing-section" && kind === "section")
+        || (selector === ".portal-landing-feature-strip" && kind === "feature-strip")
+        || (selector === ".portal-landing-spotlights" && kind === "spotlights");
+    }
+  };
+}
+
+const scheduledFrames = [];
+const window = {
+  scrollY: 0,
+  innerHeight: 800,
+  matchMedia() { return { matches: false }; },
+  requestAnimationFrame(callback) {
+    const id = scheduledFrames.length + 1;
+    scheduledFrames.push({ id, callback });
+    return id;
+  },
+  cancelAnimationFrame(id) {},
+  setTimeout(callback) { return 0; },
+  clearTimeout(id) {},
+  addEventListener(name, callback) {
+    window._listeners = window._listeners || new Map();
+    if (!window._listeners.has(name)) window._listeners.set(name, new Set());
+    window._listeners.get(name).add(callback);
+  },
+  removeEventListener(name, callback) {
+    if (window._listeners && window._listeners.has(name)) window._listeners.get(name).delete(callback);
+  }
+};
+const document = {
+  documentElement: {
+    scrollHeight: 3000,
+    clientHeight: 800,
+    classList: classList()
+  }
+};
+
+vm.runInNewContext(source, { window, document, console });
+const motion = window.TOANAASPortalMotion;
+
+const workspace = element("workspace", {
+  scrollHeight: 3200,
+  clientHeight: 800,
+  getRect: () => ({ top: 0, bottom: 800, height: 800, width: 1200, left: 0, right: 1200 })
+});
+workspace.scrollTop = 0;
+
+let currentScrollTop = 0;
+const header = element("header");
+const hero = element("hero", {
+  getRect: () => ({ top: 0 - currentScrollTop, bottom: 600 - currentScrollTop, height: 600, width: 1200 })
+});
+const preview = element("preview");
+preview.steps = [element("step"), element("step")];
+
+const layerHero = element("layer-hero", {
+  getRect: () => ({ top: 0 - currentScrollTop, height: 600, width: 1200 })
+});
+layerHero.setAttribute("data-landing-layer", "hero");
+
+const layerStudios = element("layer-studios", {
+  getRect: () => ({ top: 600 - currentScrollTop, height: 800, width: 1200 })
+});
+layerStudios.setAttribute("data-landing-layer", "studios");
+
+const layerWorkflow = element("layer-workflow", {
+  getRect: () => ({ top: 1400 - currentScrollTop, height: 800, width: 1200 })
+});
+layerWorkflow.setAttribute("data-landing-layer", "workflow");
+
+const scrollLayers = [layerHero, layerStudios, layerWorkflow];
+
+const root = element("root", {
+  closest: (selector) => (selector === ".portal-workspace" ? workspace : null),
+  querySelector: (selector) => {
+    if (selector === ".portal-landing-header") return header;
+    if (selector === ".portal-landing-hero") return hero;
+    if (selector === ".portal-landing-preview") return preview;
+    return null;
+  },
+  querySelectorAll: (selector) => {
+    if (selector === "[data-landing-layer]") return scrollLayers;
+    return [];
+  }
+});
+
+motion.mountLanding(root);
+
+const windowScrollYBefore = window.scrollY;
+const workspaceScrollTopBefore = workspace.scrollTop;
+const scrollOwnerResolved = workspace.listenerCount("scroll") === 1 ? "PORTAL_WORKSPACE" : "WINDOW";
+const progressBefore = root.getAttribute("data-landing-scroll-progress");
+const sectionBefore = root.getAttribute("data-landing-motion-section");
+const headerMotionStateBefore = header.getAttribute("data-landing-motion-header");
+
+workspace.scrollTop = 1200;
+currentScrollTop = 1200;
+workspace.dispatchEvent("scroll");
+scheduledFrames.splice(0).forEach((frame) => frame.callback());
+
+const windowScrollYAfter = window.scrollY;
+const workspaceScrollTopAfter = workspace.scrollTop;
+const progressAfter = root.getAttribute("data-landing-scroll-progress");
+const cssProgressAfter = root.styles.get("--landing-scroll-progress");
+const sectionAfter = root.getAttribute("data-landing-motion-section");
+const headerMotionStateAfter = header.getAttribute("data-landing-motion-header");
+
+motion.unmountLanding();
+const workspaceListenerCountAfterUnmount = workspace.listenerCount("scroll");
+
+const fallbackHeader = element("fallback-header");
+const fallbackRoot = element("fallback-root", {
+  closest: () => null,
+  querySelector: (s) => (s === ".portal-landing-header" ? fallbackHeader : null),
+  querySelectorAll: () => []
+});
+motion.mountLanding(fallbackRoot);
+const fallbackWindowListenersBefore = window._listeners && window._listeners.has("scroll") ? window._listeners.get("scroll").size : 0;
+window.scrollY = 150;
+if (window._listeners && window._listeners.has("scroll")) {
+  window._listeners.get("scroll").forEach((cb) => cb());
+}
+scheduledFrames.splice(0).forEach((frame) => frame.callback());
+const fallbackHeaderStateAfter = fallbackHeader.getAttribute("data-landing-motion-header");
+motion.unmountLanding();
+const fallbackWindowListenersAfter = window._listeners && window._listeners.has("scroll") ? window._listeners.get("scroll").size : 0;
+
+console.log(JSON.stringify({
+  windowScrollYBefore,
+  windowScrollYAfter,
+  workspaceScrollTopBefore,
+  workspaceScrollTopAfter,
+  scrollOwnerResolved,
+  progressBefore,
+  progressAfter: Number(progressAfter),
+  cssProgressAfter: Number(cssProgressAfter),
+  sectionBefore,
+  sectionAfter,
+  headerMotionStateBefore,
+  headerMotionStateAfter,
+  workspaceListenerCountAfterUnmount,
+  fallbackWindowListenersBefore,
+  fallbackHeaderStateAfter,
+  fallbackWindowListenersAfter
+}));
+'''
+    result = subprocess.run(
+        [node, "-e", harness, str(ROOT / "static" / "portal" / "portal-motion.js")],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)
+
+
+def test_landing_scroll_owner_syncs_with_workspace_container_and_falls_back_safely() -> None:
+    data = _run_landing_scroll_harness()
+    assert data["windowScrollYBefore"] == 0
+    assert data["windowScrollYAfter"] == 0
+    assert data["workspaceScrollTopBefore"] == 0
+    assert data["workspaceScrollTopAfter"] > 20
+    assert data["scrollOwnerResolved"] == "PORTAL_WORKSPACE"
+    assert data["progressBefore"] == "0"
+    assert data["progressAfter"] > 0
+    assert data["cssProgressAfter"] > 0
+    assert data["sectionBefore"] == "hero"
+    assert data["sectionAfter"] != "hero"
+    assert data["headerMotionStateBefore"] == "default"
+    assert data["headerMotionStateAfter"] == "compact"
+    assert data["workspaceListenerCountAfterUnmount"] == 0
+    assert data["fallbackWindowListenersBefore"] == 1
+    assert data["fallbackHeaderStateAfter"] == "compact"
+    assert data["fallbackWindowListenersAfter"] == 0

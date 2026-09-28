@@ -396,6 +396,8 @@
     unmountLanding();
     if (!root || typeof window !== "object") return;
 
+    const scrollOwner = (root && typeof root.closest === "function" ? root.closest(".portal-workspace") : null) || window;
+    const isWindowOwner = scrollOwner === window;
     const documentElement = typeof document === "object" && document ? document.documentElement : null;
     root.setAttribute("data-landing-motion", "cinematic-mini");
     root.setAttribute("data-landing-scroll-motion", "active");
@@ -548,19 +550,35 @@
     let introRun = 0;
     let observer = null;
 
+    const getScrollPosition = () => (
+      isWindowOwner
+        ? Math.max(0, Number(window.scrollY) || 0)
+        : Math.max(0, Number(scrollOwner && scrollOwner["scroll" + "Top"]) || 0)
+    );
+
     const syncScrollMotion = () => {
       if (!isCurrentMount()) return;
-      const viewportHeight = Math.max(1, Number(window.innerHeight) || 800);
-      const scrollY = Math.max(0, Number(window.scrollY) || 0);
+      const viewportHeight = isWindowOwner
+        ? Math.max(1, Number(window.innerHeight) || 800)
+        : Math.max(1, Number(scrollOwner.clientHeight) || (Number(window.innerHeight) || 800));
+      const scrollPos = getScrollPosition();
       const documentElement = typeof document === "object" && document ? document.documentElement : null;
-      const documentHeight = Math.max(viewportHeight, Number(documentElement && documentElement.scrollHeight) || viewportHeight);
-      const pageProgress = clamp(scrollY / Math.max(1, documentHeight - viewportHeight), 0, 1);
+      const scrollHeight = isWindowOwner
+        ? Math.max(viewportHeight, Number(documentElement && documentElement.scrollHeight) || viewportHeight)
+        : Math.max(viewportHeight, Number(scrollOwner.scrollHeight) || viewportHeight);
+      const pageProgress = clamp(scrollPos / Math.max(1, scrollHeight - viewportHeight), 0, 1);
       setStyleProperty(root, "--landing-scroll-progress", pageProgress.toFixed(4));
       root.setAttribute("data-landing-scroll-progress", String(Math.round(pageProgress * 100)));
 
+      const ownerRect = !isWindowOwner && typeof scrollOwner.getBoundingClientRect === "function"
+        ? scrollOwner.getBoundingClientRect()
+        : null;
+      const ownerTop = ownerRect ? Number(ownerRect.top) || 0 : 0;
+
       const heroRect = hero && typeof hero.getBoundingClientRect === "function" ? hero.getBoundingClientRect() : null;
+      const heroTop = heroRect ? (Number(heroRect.top || 0) - ownerTop) : 0;
       const heroProgress = heroRect
-        ? clamp((viewportHeight * 0.38 - Number(heroRect.top || 0)) / Math.max(1, Number(heroRect.height || viewportHeight) * 0.86), 0, 1)
+        ? clamp((viewportHeight * 0.38 - heroTop) / Math.max(1, Number(heroRect.height || viewportHeight) * 0.86), 0, 1)
         : pageProgress;
       setStyleProperty(root, "--landing-hero-progress", heroProgress.toFixed(4));
       setStyleProperty(hero, "--landing-hero-progress", heroProgress.toFixed(4));
@@ -570,8 +588,9 @@
       scrollLayers.forEach((layer) => {
         if (!layer || typeof layer.getBoundingClientRect !== "function") return;
         const rect = layer.getBoundingClientRect();
+        const layerTop = Number(rect.top || 0) - ownerTop;
         const height = Math.max(1, Number(rect.height) || viewportHeight);
-        const center = Number(rect.top || 0) + (height / 2);
+        const center = layerTop + (height / 2);
         const travel = Math.max(1, (height + viewportHeight) * 0.55);
         const progress = clamp(1 - (Math.abs(center - (viewportHeight * 0.52)) / travel), 0, 1);
         const distance = clamp((center - (viewportHeight * 0.52)) / travel, -1, 1);
@@ -740,10 +759,11 @@
     const syncHeader = () => {
       scrollFrame = 0;
       if (!isCurrentMount()) return;
+      const scrollPos = getScrollPosition();
       if (header) {
         header.setAttribute(
           "data-landing-motion-header",
-          window.scrollY > 20 ? "compact" : "default"
+          scrollPos > 20 ? "compact" : "default"
         );
       }
       syncScrollMotion();
@@ -756,10 +776,12 @@
 
     if (header) {
       syncHeader();
-      window.addEventListener("scroll", onScroll, { passive: true });
+    } else {
+      syncScrollMotion();
     }
-
-    if (!header) syncScrollMotion();
+    if (scrollOwner && typeof scrollOwner.addEventListener === "function") {
+      scrollOwner.addEventListener("scroll", onScroll, { passive: true });
+    }
 
     if (hero) heroStages.forEach((stage) => stage.classList.add("landing-motion-hero-stage"));
 
@@ -811,7 +833,9 @@
     landingCleanup = () => {
       clearIntroSchedule();
       if (scrollFrame) window.cancelAnimationFrame(scrollFrame);
-      if (header) window.removeEventListener("scroll", onScroll);
+      if (scrollOwner && typeof scrollOwner.removeEventListener === "function") {
+        scrollOwner.removeEventListener("scroll", onScroll);
+      }
       revealTargets.forEach((target) => target.removeEventListener("focusin", onRevealFocus));
       if (replayControl) replayControl.removeEventListener("click", replayIntro);
       if (observer) observer.disconnect();
