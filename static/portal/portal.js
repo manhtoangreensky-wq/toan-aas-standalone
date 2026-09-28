@@ -21145,14 +21145,29 @@
       const w = canonicalWalletProjection(ctx.wallet);
       const balance = w ? localizedNumber(w.balance_xu) : "—";
       const spent = w ? localizedNumber(w.total_spent_xu) : "—";
+      const copyByLocale = {
+        vi: {
+          balance: "Số dư Xu khả dụng", plan: "Gói tài khoản", vip: "VIP Doanh nghiệp", member: "Thành viên",
+          spent: "Lũy kế đã dùng", topup: "Nạp Xu", wallet: "Ví Xu & Lịch sử", pricing: "Bảng giá & Gói"
+        },
+        en: {
+          balance: "Available Xu balance", plan: "Account plan", vip: "Business VIP", member: "Member",
+          spent: "Total used", topup: "Top up Xu", wallet: "Xu wallet & history", pricing: "Pricing & packages"
+        },
+        zh: {
+          balance: "可用 Xu 余额", plan: "账户套餐", vip: "企业 VIP", member: "会员",
+          spent: "累计使用", topup: "充值 Xu", wallet: "Xu 钱包与记录", pricing: "价格与套餐"
+        }
+      };
+      const copy = copyByLocale[interfaceLocaleFor(ctx)] || copyByLocale.vi;
       const planName = w && w.plan && (w.plan.plan_name || w.plan.current_plan)
         ? String(w.plan.plan_name || w.plan.current_plan)
-        : (w && w.is_vip ? "VIP Doanh nghiệp" : "Thành viên");
+        : (w && w.is_vip ? copy.vip : copy.member);
       return `<section class="portal-card portal-card-pad portal-dashboard-account-summary-strip" aria-labelledby="dashboard-account-summary-title" style="margin-bottom:24px; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px 20px;">
         <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px;">
           <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
             <div>
-              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">Số dư Xu khả dụng</span>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${safeText(copy.balance)}</span>
               <div style="display:flex; align-items:baseline; gap:6px;">
                 <strong style="font-size:22px; font-weight:900; color:var(--portal-brand);">${safeText(balance)}</strong>
                 <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">Xu</span>
@@ -21160,14 +21175,14 @@
             </div>
             <div style="width:1px; height:32px; background:var(--portal-border);" class="portal-summary-divider"></div>
             <div>
-              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">Gói tài khoản</span>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${safeText(copy.plan)}</span>
               <div style="display:flex; align-items:baseline; gap:6px;">
                 <strong style="font-size:15px; font-weight:700; color:var(--portal-ink);">${safeText(planName)}</strong>
               </div>
             </div>
             <div style="width:1px; height:32px; background:var(--portal-border);" class="portal-summary-divider"></div>
             <div>
-              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">Lũy kế đã dùng</span>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${safeText(copy.spent)}</span>
               <div style="display:flex; align-items:baseline; gap:6px;">
                 <strong style="font-size:15px; font-weight:700; color:var(--portal-ink);">${safeText(spent)}</strong>
                 <span style="font-size:12px; color:var(--portal-muted);">Xu</span>
@@ -21177,13 +21192,13 @@
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <a class="portal-button portal-button--primary" href="/wallet/topup" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 14px;">
               <span aria-hidden="true">${portalIcon(ICONS.payments)}</span>
-              <span>Nạp Xu VietQR PayOS</span>
+              <span>${safeText(copy.topup)}</span>
             </a>
             <a class="portal-button portal-button--quiet" href="/wallet" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 12px;">
-              <span>Ví Xu & Lịch sử</span>
+              <span>${safeText(copy.wallet)}</span>
             </a>
             <a class="portal-button portal-button--quiet" href="/packages" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 12px;">
-              <span>Bảng giá & Gói</span>
+              <span>${safeText(copy.pricing)}</span>
             </a>
           </div>
         </div>
