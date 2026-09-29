@@ -179,9 +179,11 @@ from copyfast_subdub_job_bridge import (
     CANONICAL_PRODUCT_KEY as SUBDUB_PRODUCT_KEY,
     SUPPORTED_CANONICAL_JOB_ADAPTERS as SUBDUB_ADAPTER_KEYS,
     create_or_replay_subdub_job,
+    dispatch_subdub_job_to_canonical_runtime,
     get_subdub_job,
     is_subdub_job_other_account,
     list_subdub_jobs,
+    reconcile_subdub_job_status,
     subdub_job_to_native_compat,
     validate_subdub_input,
 )
@@ -6537,6 +6539,14 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
                     payload=values,
                     idempotency_key=key,
                 )
+                if not job_result.get("idempotent_replay"):
+                    dispatched = await dispatch_subdub_job_to_canonical_runtime(
+                        job_id=job_result["id"],
+                        account=account,
+                        request=request,
+                    )
+                    if dispatched:
+                        job_result = dispatched
                 _settle_feature_quote_receipt(
                     receipt=payload.web_quote_receipt,
                     idempotency_key=key,
@@ -6935,6 +6945,14 @@ async def create_subdub_job_route(
         request_id=request_id,
         idempotency_key=key,
     )
+    if not job.get("idempotent_replay"):
+        dispatched = await dispatch_subdub_job_to_canonical_runtime(
+            job_id=job["id"],
+            account=account,
+            request=request,
+        )
+        if dispatched:
+            job = dispatched
     return envelope(
         True,
         "Đã tạo tác vụ Phụ đề & Lồng tiếng thành công, chờ runtime xử lý.",
@@ -6965,7 +6983,9 @@ async def get_subdub_job_route(
     account: dict = Depends(require_account),
 ):
     account_id = str(account.get("id") or "")
-    job = get_subdub_job(account_id, job_id)
+    if is_subdub_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    job = await reconcile_subdub_job_status(job_id, account=account, request=request)
     if job is not None:
         return envelope(
             True,
@@ -6973,8 +6993,6 @@ async def get_subdub_job_route(
             data=job,
             status_name="read_only",
         )
-    if is_subdub_job_other_account(job_id, account_id):
-        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
     raise HTTPException(status_code=404, detail="Không tìm thấy job Phụ đề & Lồng tiếng của tài khoản.")
 
 

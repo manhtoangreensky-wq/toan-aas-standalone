@@ -282,7 +282,7 @@ def generate_subdub_job_id() -> str:
 
 
 def ensure_subdub_schema() -> None:
-    """Initialize dedicated web_subdub_jobs SQLite table and indexes."""
+    """Initialize dedicated web_subdub_jobs SQLite table, indexes, and runtime linkage columns."""
     with transaction() as conn:
         conn.execute(
             """
@@ -311,14 +311,42 @@ def ensure_subdub_schema() -> None:
                 claimed_at TEXT,
                 lease_expires_at TEXT,
                 attempts INTEGER NOT NULL DEFAULT 0,
+                runtime_job_id TEXT,
+                runtime_dispatch_status TEXT DEFAULT 'pending',
+                runtime_dispatched_at TEXT,
+                runtime_request_id TEXT,
+                runtime_last_error TEXT,
                 FOREIGN KEY(account_id) REFERENCES web_accounts(id)
             )
             """
         )
+        existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(web_subdub_jobs)").fetchall()}
+        runtime_cols = [
+            ("runtime_job_id", "TEXT"),
+            ("runtime_dispatch_status", "TEXT DEFAULT 'pending'"),
+            ("runtime_dispatched_at", "TEXT"),
+            ("runtime_request_id", "TEXT"),
+            ("runtime_last_error", "TEXT"),
+        ]
+        for col_name, col_def in runtime_cols:
+            if col_name not in existing_cols:
+                conn.execute(f"ALTER TABLE web_subdub_jobs ADD COLUMN {col_name} {col_def}")
+
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_account_created ON web_subdub_jobs(account_id, created_at DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_request ON web_subdub_jobs(request_id)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_account_idempotency ON web_subdub_jobs(account_id, idempotency_key_hash)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_status_created ON web_subdub_jobs(status, created_at ASC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_runtime_job ON web_subdub_jobs(runtime_job_id)")
+
+
+_SUBDUB_JOB_COLUMNS = (
+    "id, request_id, account_id, product_key, subdub_mode, "
+    "upload_id, source_language, target_language, voice_profile_id, "
+    "output_format, speed, status, status_reason, "
+    "idempotency_key_hash, payload_hash, bridge_envelope, output_metadata, "
+    "created_at, updated_at, output_url, "
+    "runtime_job_id, runtime_dispatch_status, runtime_dispatched_at, runtime_request_id, runtime_last_error"
+)
 
 
 def create_or_replay_subdub_job(
@@ -358,12 +386,8 @@ def create_or_replay_subdub_job(
     idem_hash = compute_idempotency_hash(effective_idem_key) if effective_idem_key else ""
 
     with transaction() as conn:
-        query = """
-            SELECT id, request_id, account_id, product_key, subdub_mode,
-                   upload_id, source_language, target_language, voice_profile_id,
-                   output_format, speed, status, status_reason,
-                   idempotency_key_hash, payload_hash, bridge_envelope, output_metadata,
-                   created_at, updated_at, output_url
+        query = f"""
+            SELECT {_SUBDUB_JOB_COLUMNS}
             FROM web_subdub_jobs
             WHERE account_id = ? AND (
                 (? != '' AND request_id = ?)
@@ -422,8 +446,10 @@ def create_or_replay_subdub_job(
                 upload_id, source_language, target_language, voice_profile_id,
                 output_format, speed, status, status_reason,
                 idempotency_key_hash, payload_hash, bridge_envelope,
-                output_metadata, created_at, updated_at, output_url
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL)
+                output_metadata, created_at, updated_at, output_url,
+                runtime_job_id, runtime_dispatch_status, runtime_dispatched_at,
+                runtime_request_id, runtime_last_error
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, NULL, 'pending', NULL, NULL, NULL)
             """,
             (
                 job_id,
@@ -472,6 +498,11 @@ def create_or_replay_subdub_job(
             "updated_at": now,
             "bridge_envelope": bridge_envelope,
             "idempotent_replay": False,
+            "runtime_job_id": None,
+            "runtime_dispatch_status": "pending",
+            "runtime_dispatched_at": None,
+            "runtime_request_id": None,
+            "runtime_last_error": None,
         }
 
 
@@ -543,6 +574,11 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
         "updated_at": str(row[18]),
         "bridge_envelope": env,
         "idempotent_replay": idempotent_replay,
+        "runtime_job_id": str(row[20]) if len(row) > 20 and row[20] else None,
+        "runtime_dispatch_status": str(row[21]) if len(row) > 21 and row[21] else "pending",
+        "runtime_dispatched_at": str(row[22]) if len(row) > 22 and row[22] else None,
+        "runtime_request_id": str(row[23]) if len(row) > 23 and row[23] else None,
+        "runtime_last_error": str(row[24]) if len(row) > 24 and row[24] else None,
     }
 
 
@@ -556,12 +592,8 @@ def get_subdub_job(account_id: str, job_id: str) -> dict[str, Any] | None:
 
     with read_transaction() as conn:
         row = conn.execute(
-            """
-            SELECT id, request_id, account_id, product_key, subdub_mode,
-                   upload_id, source_language, target_language, voice_profile_id,
-                   output_format, speed, status, status_reason,
-                   idempotency_key_hash, payload_hash, bridge_envelope, output_metadata,
-                   created_at, updated_at, output_url
+            f"""
+            SELECT {_SUBDUB_JOB_COLUMNS}
             FROM web_subdub_jobs
             WHERE id = ? AND account_id = ?
             LIMIT 1
@@ -602,12 +634,8 @@ def list_subdub_jobs(account_id: str, limit: int = 100) -> list[dict[str, Any]]:
     safe_limit = max(1, min(int(limit), 200))
     with read_transaction() as conn:
         rows = conn.execute(
-            """
-            SELECT id, request_id, account_id, product_key, subdub_mode,
-                   upload_id, source_language, target_language, voice_profile_id,
-                   output_format, speed, status, status_reason,
-                   idempotency_key_hash, payload_hash, bridge_envelope, output_metadata,
-                   created_at, updated_at, output_url
+            f"""
+            SELECT {_SUBDUB_JOB_COLUMNS}
             FROM web_subdub_jobs
             WHERE account_id = ?
             ORDER BY created_at DESC
@@ -617,6 +645,273 @@ def list_subdub_jobs(account_id: str, limit: int = 100) -> list[dict[str, Any]]:
         ).fetchall()
 
         return [_format_public_job(row) for row in rows]
+
+
+HISTORICAL_R7_FAILED_JOB_ID = "sdj_0058b35d35ff42b2823ddf9c0068645c"
+
+
+async def dispatch_subdub_job_to_canonical_runtime(
+    *,
+    job_id: str,
+    account: dict[str, Any],
+    request: Any = None,
+) -> dict[str, Any]:
+    """Dispatch an admitted SubDub job to canonical Bot Core runtime.
+
+    Invariants:
+    - Bounded execution: exactly one dispatch attempt per job.
+    - Preconditions: _is_runtime_execution_active('subdub') and bridge_configured() and canonical_user_id.
+    - Historical R7 job sdj_0058b35d35ff42b2823ddf9c0068645c is preserved and NEVER dispatched.
+    - Signed call: binds actor_id and owner_id to canonical Telegram user ID.
+    - Zero provider credentials, zero local financial mutation.
+    - Ambiguous network outcome: records 'uncertain' status, NO BLIND RETRY.
+    """
+    ensure_subdub_schema()
+    clean_job_id = str(job_id or "").strip()
+    account_id = str(account.get("id") or "").strip()
+    canonical_user_id = str(account.get("canonical_user_id") or "").strip()
+
+    if not clean_job_id or not account_id:
+        return {}
+
+    # Historical failed R7 job invariant: do not mutate or dispatch
+    if clean_job_id == HISTORICAL_R7_FAILED_JOB_ID:
+        return get_subdub_job(account_id, clean_job_id) or {}
+
+    # Precondition 1: Runtime execution gate
+    if not _is_runtime_execution_active("subdub"):
+        return get_subdub_job(account_id, clean_job_id) or {}
+
+    # Precondition 2: Bridge configured
+    from copyfast_bridge import bridge_configured, bridge_request
+    if not bridge_configured():
+        return get_subdub_job(account_id, clean_job_id) or {}
+
+    # Precondition 3: Canonical actor linkage exists
+    if not canonical_user_id:
+        return get_subdub_job(account_id, clean_job_id) or {}
+
+    # Precondition 4: Job exists, belongs to account, and has not yet been dispatched
+    with read_transaction() as conn:
+        row = conn.execute(
+            """
+            SELECT id, request_id, account_id, subdub_mode, upload_id,
+                   source_language, target_language, voice_profile_id, output_format, speed,
+                   runtime_job_id, runtime_dispatch_status
+            FROM web_subdub_jobs
+            WHERE id = ? AND account_id = ?
+            LIMIT 1
+            """,
+            (clean_job_id, account_id),
+        ).fetchone()
+
+    if not row:
+        return {}
+
+    existing_rt_id = str(row[10]) if len(row) > 10 and row[10] else None
+    existing_dispatch_status = str(row[11]) if len(row) > 11 and row[11] else "pending"
+
+    # Idempotent guard: already dispatched
+    if existing_rt_id or existing_dispatch_status in ("dispatched", "uncertain"):
+        return get_subdub_job(account_id, clean_job_id) or {}
+
+    # Prepare canonical payload strictly from server-validated fields
+    req_id = str(row[1])
+    dispatch_req_id = f"DISPATCH-{req_id}"
+    canonical_payload = {
+        "mode": str(row[3]),
+        "payload": {
+            "upload_id": str(row[4]),
+            "source_language": str(row[5] or "auto"),
+            "target_language": str(row[6] or ""),
+            "voice_profile_id": str(row[7] or ""),
+            "output_format": str(row[8] or "vtt"),
+            "speed": float(row[9] or 1.0),
+            "web_job_id": clean_job_id,
+            "request_id": req_id,
+        },
+        "max_attempts": 3,
+    }
+
+    try:
+        res = await bridge_request(
+            "POST",
+            "/internal/v1/subdub/jobs",
+            json_data=canonical_payload,
+            request_id=dispatch_req_id,
+            actor_id=canonical_user_id,
+            owner_id=canonical_user_id,
+            timeout_seconds=15.0,
+        )
+    except Exception as exc:
+        # Ambiguous network outcome: fail-closed without blind retry
+        now_ts = utc_now()
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET runtime_dispatch_status='uncertain',
+                    runtime_last_error=?,
+                    updated_at=?
+                WHERE id=? AND (runtime_job_id IS NULL OR runtime_job_id='')
+                """,
+                (f"NETWORK_TIMEOUT_OR_ERROR:{type(exc).__name__}", now_ts, clean_job_id),
+            )
+        return get_subdub_job(account_id, clean_job_id) or {}
+
+    now_ts = utc_now()
+    if res.get("ok"):
+        rt_job = (res.get("data") or {}).get("job") or res.get("job") or {}
+        rt_job_id = str(rt_job.get("job_id") or "").strip()
+        rt_status = str(rt_job.get("status") or "queued").strip().lower()
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET runtime_job_id=?,
+                    runtime_dispatch_status='dispatched',
+                    runtime_dispatched_at=?,
+                    runtime_request_id=?,
+                    status=?,
+                    status_reason='DISPATCHED_TO_CANONICAL_RUNTIME',
+                    updated_at=?
+                WHERE id=?
+                """,
+                (rt_job_id, now_ts, dispatch_req_id, rt_status, now_ts, clean_job_id),
+            )
+    else:
+        err_msg = str(res.get("error_code") or res.get("message") or "BRIDGE_DISPATCH_REJECTED")
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET runtime_dispatch_status='failed',
+                    runtime_last_error=?,
+                    updated_at=?
+                WHERE id=?
+                """,
+                (err_msg, now_ts, clean_job_id),
+            )
+
+    return get_subdub_job(account_id, clean_job_id) or {}
+
+
+async def reconcile_subdub_job_status(
+    job_id: str,
+    *,
+    account: dict[str, Any],
+    request: Any = None,
+) -> dict[str, Any] | None:
+    """Reconcile local SubDub job status against canonical Bot Core runtime on read.
+
+    If job has a valid runtime_job_id and is currently non-terminal, queries
+    GET /internal/v1/subdub/jobs/{runtime_job_id} and reconciles state and artifact.
+    """
+    ensure_subdub_schema()
+    clean_job_id = str(job_id or "").strip()
+    account_id = str(account.get("id") or "").strip()
+    canonical_user_id = str(account.get("canonical_user_id") or "").strip()
+
+    if not clean_job_id or not account_id:
+        return None
+
+    # Retrieve current local state
+    job = get_subdub_job(account_id, clean_job_id)
+    if not job:
+        return None
+
+    # Historical job is never reconciled from remote
+    if clean_job_id == HISTORICAL_R7_FAILED_JOB_ID:
+        return job
+
+    rt_job_id = str(job.get("runtime_job_id") or "").strip()
+    current_status = str(job.get("status") or "").strip().lower()
+
+    # Reconcile only if dispatched to runtime and currently non-terminal
+    if not rt_job_id or current_status in ("completed", "failed", "cancelled", "rejected"):
+        return job
+
+    from copyfast_bridge import bridge_configured, bridge_request
+    if not bridge_configured() or not canonical_user_id:
+        return job
+
+    recon_req_id = f"RECON-{clean_job_id}-{uuid.uuid4().hex[:6]}"
+    try:
+        res = await bridge_request(
+            "GET",
+            f"/internal/v1/subdub/jobs/{rt_job_id}",
+            request_id=recon_req_id,
+            actor_id=canonical_user_id,
+            owner_id=canonical_user_id,
+            timeout_seconds=5.0,
+        )
+    except Exception:
+        # On read-timeout, keep existing local state fail-closed
+        return job
+
+    if not res.get("ok"):
+        return job
+
+    rt_job = (res.get("data") or {}).get("job") or res.get("job") or {}
+    rt_status = str(rt_job.get("status") or "").strip().lower()
+    now_ts = utc_now()
+
+    if rt_status == "processing":
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET status='processing',
+                    status_reason='CANONICAL_RUNTIME_PROCESSING',
+                    updated_at=?
+                WHERE id=? AND status != 'completed'
+                """,
+                (now_ts, clean_job_id),
+            )
+    elif rt_status == "completed":
+        result = rt_job.get("result") if isinstance(rt_job.get("result"), dict) else {}
+        raw_url = str(result.get("output_url") or result.get("download_url") or result.get("url") or "").strip()
+        if raw_url and is_safe_subdub_output_url(raw_url):
+            with transaction() as conn:
+                conn.execute(
+                    """
+                    UPDATE web_subdub_jobs
+                    SET status='completed',
+                        status_reason='COMPLETED',
+                        output_url=?,
+                        output_metadata=?,
+                        updated_at=?
+                    WHERE id=?
+                    """,
+                    (raw_url, json.dumps(result, ensure_ascii=False), now_ts, clean_job_id),
+                )
+        else:
+            # Completed without valid/safe artifact: fail-closed, do NOT mark completed
+            with transaction() as conn:
+                conn.execute(
+                    """
+                    UPDATE web_subdub_jobs
+                    SET status_reason='COMPLETED_WITHOUT_SAFE_ARTIFACT',
+                        updated_at=?
+                    WHERE id=?
+                    """,
+                    (now_ts, clean_job_id),
+                )
+    elif rt_status in ("failed", "error"):
+        err_msg = str(rt_job.get("last_error") or rt_job.get("error_code") or "CANONICAL_RUNTIME_FAILED").strip()
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET status='failed',
+                    status_reason=?,
+                    updated_at=?
+                WHERE id=?
+                """,
+                (err_msg, now_ts, clean_job_id),
+            )
+
+    return get_subdub_job(account_id, clean_job_id)
 
 
 def subdub_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
