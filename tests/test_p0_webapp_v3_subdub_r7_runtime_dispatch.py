@@ -101,6 +101,46 @@ def _login_as(client: TestClient, account_id: str, email: str, canonical_user_id
     return csrf
 
 
+def make_strict_bridge_mock(handler):
+    """Enforces exact copyfast_bridge.bridge_request signature. Rejects any unexpected kwargs."""
+    async def strict_bridge_request(
+        method: str,
+        path: str,
+        *,
+        payload: dict | None = None,
+        params: dict | None = None,
+        request_id: str | None = None,
+        actor_id: str = "",
+        owner_id: str = "",
+    ) -> dict:
+        return await handler(
+            method=method,
+            path=path,
+            payload=payload,
+            params=params,
+            request_id=request_id,
+            actor_id=actor_id,
+            owner_id=owner_id,
+        )
+    return strict_bridge_request
+
+
+# ─── TEST 0: PRODUCTION BRIDGE SIGNATURE PARITY (PHASE B & I) ───────────────
+
+def test_00_bridge_request_signature_parity():
+    """Verify that bridge_request signature matches expected production contract."""
+    import inspect
+    sig = inspect.signature(bridge_mod.bridge_request)
+    params = list(sig.parameters.keys())
+    assert params == ["method", "path", "payload", "params", "request_id", "actor_id", "owner_id"]
+    assert "json_data" not in params
+    assert "timeout_seconds" not in params
+
+    strict = make_strict_bridge_mock(lambda **kw: {"ok": True})
+    strict_sig = inspect.signature(strict)
+    assert list(strict_sig.parameters.keys()) == params
+
+
 # ─── TEST 1 & 4 & 5: ACCEPTED DISPATCH, RUNTIME JOB ID STORED, DURABLE LINKAGE ─
 
 def test_01_and_04_05_accepted_canonical_dispatch_persists_linkage(monkeypatch):
@@ -111,8 +151,16 @@ def test_01_and_04_05_accepted_canonical_dispatch_persists_linkage(monkeypatch):
     csrf = _login_as(client, "test-user-r7", "user-r7@test.local", canonical_user_id="7126111111")
     bridge_calls = []
 
-    async def mock_bridge_request(method, path, **kwargs):
-        bridge_calls.append({"method": method, "path": path, "kwargs": kwargs})
+    async def handle_dispatch(method, path, payload, params, request_id, actor_id, owner_id):
+        bridge_calls.append({
+            "method": method,
+            "path": path,
+            "payload": payload,
+            "params": params,
+            "request_id": request_id,
+            "actor_id": actor_id,
+            "owner_id": owner_id,
+        })
         return {
             "ok": True,
             "job": {
@@ -122,7 +170,7 @@ def test_01_and_04_05_accepted_canonical_dispatch_persists_linkage(monkeypatch):
             },
         }
 
-    monkeypatch.setattr(bridge_mod, "bridge_request", mock_bridge_request)
+    monkeypatch.setattr(bridge_mod, "bridge_request", make_strict_bridge_mock(handle_dispatch))
 
     res = client.post(
         "/api/v1/features/subdub/jobs",
@@ -152,8 +200,14 @@ def test_01_and_04_05_accepted_canonical_dispatch_persists_linkage(monkeypatch):
     call = bridge_calls[0]
     assert call["method"] == "POST"
     assert call["path"] == "/internal/v1/subdub/jobs"
-    assert call["kwargs"]["actor_id"] == "7126111111"
-    assert call["kwargs"]["owner_id"] == "7126111111"
+    assert call["actor_id"] == "7126111111"
+    assert call["owner_id"] == "7126111111"
+    assert call["payload"]["mode"] == "subtitle_create"
+    assert call["payload"]["payload"]["upload_id"] == "upl_dispatch_test_01"
+    assert call["payload"]["payload"]["output_format"] == "vtt"
+    assert call["payload"]["payload"]["web_job_id"] == data["id"]
+    assert call["payload"]["payload"]["request_id"]
+    assert call["payload"]["max_attempts"] == 1
 
     # Verify durable database row
     with read_transaction() as conn:
@@ -173,6 +227,7 @@ def test_01_and_04_05_accepted_canonical_dispatch_persists_linkage(monkeypatch):
         assert row[5] is None
 
 
+
 # ─── TEST 2: RUNTIME GATE OFF -> ZERO DISPATCH ───────────────────────────────
 
 def test_02_gate_disabled_yields_zero_dispatch(monkeypatch):
@@ -186,11 +241,11 @@ def test_02_gate_disabled_yields_zero_dispatch(monkeypatch):
 
     bridge_calls = []
 
-    async def mock_bridge_request(method, path, **kwargs):
+    async def handle_request(method, path, payload, params, request_id, actor_id, owner_id):
         bridge_calls.append({"method": method, "path": path})
         return {"ok": True}
 
-    monkeypatch.setattr(bridge_mod, "bridge_request", mock_bridge_request)
+    monkeypatch.setattr(bridge_mod, "bridge_request", make_strict_bridge_mock(handle_request))
 
     res = client.post(
         "/api/v1/features/subdub/jobs",
@@ -271,13 +326,13 @@ def test_06_identical_replay_no_second_dispatch(monkeypatch):
 
     dispatch_count = 0
 
-    async def mock_bridge_request(method, path, **kwargs):
+    async def handle_replay(method, path, payload, params, request_id, actor_id, owner_id):
         nonlocal dispatch_count
         if path == "/internal/v1/subdub/jobs":
             dispatch_count += 1
         return {"ok": True, "job": {"job_id": "subdub_rt_replay_01", "status": "queued"}}
 
-    monkeypatch.setattr(bridge_mod, "bridge_request", mock_bridge_request)
+    monkeypatch.setattr(bridge_mod, "bridge_request", make_strict_bridge_mock(handle_replay))
 
     payload = {
         "feature": "subdub",
@@ -340,19 +395,19 @@ def test_07_conflicting_payload_returns_409():
 # ─── TEST 8: NETWORK AMBIGUITY / TIMEOUT -> NO BLIND RETRY ──────────────────
 
 def test_08_network_ambiguity_no_blind_retry(monkeypatch):
-    """Test 8: Exception during bridge call marks uncertain, does NOT retry."""
+    """Test 8: Transport exception during bridge call marks uncertain, does NOT retry."""
     from app import app
     client = TestClient(app)
     csrf = _login_as(client, "test-user-r7", "user-r7@test.local", canonical_user_id="7126111111")
 
     attempt_count = 0
 
-    async def mock_bridge_timeout(*args, **kwargs):
+    async def handle_timeout(method, path, payload, params, request_id, actor_id, owner_id):
         nonlocal attempt_count
         attempt_count += 1
         raise TimeoutError("Simulated bridge gateway timeout")
 
-    monkeypatch.setattr(bridge_mod, "bridge_request", mock_bridge_timeout)
+    monkeypatch.setattr(bridge_mod, "bridge_request", make_strict_bridge_mock(handle_timeout))
 
     res = client.post(
         "/api/v1/features/subdub/jobs",
@@ -372,6 +427,29 @@ def test_08_network_ambiguity_no_blind_retry(monkeypatch):
     assert "TimeoutError" in (data["runtime_last_error"] or "")
 
 
+def test_08b_typeerror_not_masked_as_network_ambiguity(monkeypatch):
+    """Verify that a TypeError (contract defect) is immediately raised, not masked as uncertain."""
+    from app import app
+    client = TestClient(app)
+    csrf = _login_as(client, "test-user-r7", "user-r7@test.local", canonical_user_id="7126111111")
+
+    async def mock_buggy_bridge(*args, **kw):
+        raise TypeError("Unexpected argument defect")
+
+    monkeypatch.setattr(bridge_mod, "bridge_request", mock_buggy_bridge)
+
+    with pytest.raises(TypeError, match="Unexpected argument defect"):
+        client.post(
+            "/api/v1/features/subdub/jobs",
+            json={
+                "feature": "subdub",
+                "input": {"upload_id": "upl_typeerr_01", "mode": "subtitle_create", "output_format": "vtt"},
+                "idempotency_key": "idem-typeerr-01",
+            },
+            headers={"x-csrf-token": csrf},
+        )
+
+
 # ─── TEST 9 & 10 & 11: STATUS RECONCILIATION ────────────────────────────────
 
 def test_09_10_11_status_reconciliation(monkeypatch):
@@ -381,10 +459,10 @@ def test_09_10_11_status_reconciliation(monkeypatch):
     csrf = _login_as(client, "test-user-r7", "user-r7@test.local", canonical_user_id="7126111111")
 
     # Mock dispatch
-    async def mock_dispatch(*args, **kwargs):
+    async def handle_dispatch(method, path, payload, params, request_id, actor_id, owner_id):
         return {"ok": True, "job": {"job_id": "subdub_rt_recon_01", "status": "queued"}}
 
-    monkeypatch.setattr(bridge_mod, "bridge_request", mock_dispatch)
+    monkeypatch.setattr(bridge_mod, "bridge_request", make_strict_bridge_mock(handle_dispatch))
 
     res_create = client.post(
         "/api/v1/features/subdub/jobs",
@@ -398,20 +476,28 @@ def test_09_10_11_status_reconciliation(monkeypatch):
     job_id = res_create.json()["data"]["id"]
 
     # Case A: Remote runtime is processing
-    async def mock_get_processing(*args, **kwargs):
+    async def handle_get_processing(method, path, payload, params, request_id, actor_id, owner_id):
+        assert method == "GET"
+        assert path == "/internal/v1/subdub/jobs/subdub_rt_recon_01"
+        assert actor_id == "7126111111"
+        assert owner_id == "7126111111"
         return {"ok": True, "job": {"job_id": "subdub_rt_recon_01", "status": "processing"}}
 
-    monkeypatch.setattr(bridge_mod, "bridge_request", mock_get_processing)
+    monkeypatch.setattr(bridge_mod, "bridge_request", make_strict_bridge_mock(handle_get_processing))
 
     res_proc = client.get(f"/api/v1/features/subdub/jobs/{job_id}")
     assert res_proc.status_code == 200
     assert res_proc.json()["data"]["status"] == "processing"
 
     # Case B: Remote runtime failed
-    async def mock_get_failed(*args, **kwargs):
+    async def handle_get_failed(method, path, payload, params, request_id, actor_id, owner_id):
+        assert method == "GET"
+        assert path == "/internal/v1/subdub/jobs/subdub_rt_recon_01"
+        assert actor_id == "7126111111"
+        assert owner_id == "7126111111"
         return {"ok": True, "job": {"job_id": "subdub_rt_recon_01", "status": "failed", "last_error": "ASR_PROVIDER_TIMEOUT"}}
 
-    monkeypatch.setattr(bridge_mod, "bridge_request", mock_get_failed)
+    monkeypatch.setattr(bridge_mod, "bridge_request", make_strict_bridge_mock(handle_get_failed))
 
     res_fail = client.get(f"/api/v1/features/subdub/jobs/{job_id}")
     assert res_fail.status_code == 200
@@ -427,10 +513,10 @@ def test_12_13_artifact_projection_and_safety(monkeypatch):
     client = TestClient(app)
     csrf = _login_as(client, "test-user-r7", "user-r7@test.local", canonical_user_id="7126111111")
 
-    async def mock_dispatch(*args, **kwargs):
+    async def handle_dispatch(method, path, payload, params, request_id, actor_id, owner_id):
         return {"ok": True, "job": {"job_id": "subdub_rt_art_01", "status": "queued"}}
 
-    monkeypatch.setattr(bridge_mod, "bridge_request", mock_dispatch)
+    monkeypatch.setattr(bridge_mod, "bridge_request", make_strict_bridge_mock(handle_dispatch))
 
     res_create = client.post(
         "/api/v1/features/subdub/jobs",
@@ -444,20 +530,20 @@ def test_12_13_artifact_projection_and_safety(monkeypatch):
     job_id = res_create.json()["data"]["id"]
 
     # 1. Completed without output URL -> download_ready must remain False
-    async def mock_completed_no_artifact(*args, **kwargs):
+    async def handle_completed_no_artifact(method, path, payload, params, request_id, actor_id, owner_id):
         return {"ok": True, "job": {"job_id": "subdub_rt_art_01", "status": "completed", "result": {}}}
 
-    monkeypatch.setattr(bridge_mod, "bridge_request", mock_completed_no_artifact)
+    monkeypatch.setattr(bridge_mod, "bridge_request", make_strict_bridge_mock(handle_completed_no_artifact))
     res_no_art = client.get(f"/api/v1/features/subdub/jobs/{job_id}")
     assert res_no_art.status_code == 200
     assert res_no_art.json()["data"]["download_ready"] is False
     assert res_no_art.json()["data"]["output_available"] is False
 
     # 2. Completed with private loopback URL -> rejected, fail closed
-    async def mock_completed_loopback(*args, **kwargs):
+    async def handle_completed_loopback(method, path, payload, params, request_id, actor_id, owner_id):
         return {"ok": True, "job": {"job_id": "subdub_rt_art_01", "status": "completed", "result": {"output_url": "http://127.0.0.1:8000/private.vtt"}}}
 
-    monkeypatch.setattr(bridge_mod, "bridge_request", mock_completed_loopback)
+    monkeypatch.setattr(bridge_mod, "bridge_request", make_strict_bridge_mock(handle_completed_loopback))
     res_loopback = client.get(f"/api/v1/features/subdub/jobs/{job_id}")
     assert res_loopback.status_code == 200
     assert res_loopback.json()["data"]["download_ready"] is False
@@ -465,10 +551,10 @@ def test_12_13_artifact_projection_and_safety(monkeypatch):
     # 3. Completed with valid safe HTTPS URL -> download_ready=True, output_url exposed
     safe_url = "https://cdn.toanaas.vn/artifacts/subdub/r7_output.vtt"
 
-    async def mock_completed_safe(*args, **kwargs):
+    async def handle_completed_safe(method, path, payload, params, request_id, actor_id, owner_id):
         return {"ok": True, "job": {"job_id": "subdub_rt_art_01", "status": "completed", "result": {"output_url": safe_url}}}
 
-    monkeypatch.setattr(bridge_mod, "bridge_request", mock_completed_safe)
+    monkeypatch.setattr(bridge_mod, "bridge_request", make_strict_bridge_mock(handle_completed_safe))
     res_safe = client.get(f"/api/v1/features/subdub/jobs/{job_id}")
     assert res_safe.status_code == 200
     assert res_safe.json()["data"]["status"] == "completed"
@@ -484,10 +570,10 @@ def test_14_cross_user_security_denied(monkeypatch):
     client1 = TestClient(app)
     csrf1 = _login_as(client1, "test-user-r7", "user-r7@test.local", canonical_user_id="7126111111")
 
-    async def mock_dispatch(*args, **kwargs):
+    async def handle_dispatch(method, path, payload, params, request_id, actor_id, owner_id):
         return {"ok": True, "job": {"job_id": "subdub_rt_sec_01", "status": "queued"}}
 
-    monkeypatch.setattr(bridge_mod, "bridge_request", mock_dispatch)
+    monkeypatch.setattr(bridge_mod, "bridge_request", make_strict_bridge_mock(handle_dispatch))
 
     res = client1.post(
         "/api/v1/features/subdub/jobs",
@@ -542,3 +628,61 @@ def test_15_historical_r7_job_never_dispatched():
     assert job["id"] == hist_id
     assert job["runtime_job_id"] is None
     assert job["runtime_dispatch_status"] == "pending"
+
+
+# ─── TEST 16: CANONICAL REJECTED RESPONSE ────────────────────────────────────
+
+def test_16_canonical_response_rejected_failed_dispatch(monkeypatch):
+    """Test 16: Rejected canonical response sets runtime_dispatch_status='failed' with error reason."""
+    from app import app
+    client = TestClient(app)
+    csrf = _login_as(client, "test-user-r7", "user-r7@test.local", canonical_user_id="7126111111")
+
+    async def handle_reject(method, path, payload, params, request_id, actor_id, owner_id):
+        return {"ok": False, "error_code": "CANONICAL_QUEUE_OVERFLOW", "message": "Queue is full"}
+
+    monkeypatch.setattr(bridge_mod, "bridge_request", make_strict_bridge_mock(handle_reject))
+
+    res = client.post(
+        "/api/v1/features/subdub/jobs",
+        json={
+            "feature": "subdub",
+            "input": {"upload_id": "upl_reject_01", "mode": "subtitle_create", "output_format": "vtt"},
+            "idempotency_key": "idem-reject-01",
+        },
+        headers={"x-csrf-token": csrf},
+    )
+    assert res.status_code == 200
+    data = res.json()["data"]
+    assert data["runtime_dispatch_status"] == "failed"
+    assert "CANONICAL_QUEUE_OVERFLOW" in (data["runtime_last_error"] or "")
+
+
+# ─── TEST 17: PHASE G MAX ATTEMPTS BOUNDED TO ONE ────────────────────────────
+
+def test_17_max_attempts_bound_to_one(monkeypatch):
+    """Test 17: Phase G invariant - max_attempts sent in canonical payload is strictly 1 (ensuring at most 1 provider submit)."""
+    from app import app
+    client = TestClient(app)
+    csrf = _login_as(client, "test-user-r7", "user-r7@test.local", canonical_user_id="7126111111")
+
+    captured_payload = {}
+
+    async def handle_dispatch(method, path, payload, params, request_id, actor_id, owner_id):
+        nonlocal captured_payload
+        captured_payload = payload
+        return {"ok": True, "job": {"job_id": "subdub_rt_maxatt_01", "status": "queued"}}
+
+    monkeypatch.setattr(bridge_mod, "bridge_request", make_strict_bridge_mock(handle_dispatch))
+
+    res = client.post(
+        "/api/v1/features/subdub/jobs",
+        json={
+            "feature": "subdub",
+            "input": {"upload_id": "upl_maxatt_01", "mode": "subtitle_create", "output_format": "vtt"},
+            "idempotency_key": "idem-maxatt-01",
+        },
+        headers={"x-csrf-token": csrf},
+    )
+    assert res.status_code == 200
+    assert captured_payload.get("max_attempts") == 1

@@ -730,19 +730,20 @@ async def dispatch_subdub_job_to_canonical_runtime(
             "web_job_id": clean_job_id,
             "request_id": req_id,
         },
-        "max_attempts": 3,
+        "max_attempts": 1,
     }
 
     try:
         res = await bridge_request(
             "POST",
             "/internal/v1/subdub/jobs",
-            json_data=canonical_payload,
+            payload=canonical_payload,
             request_id=dispatch_req_id,
             actor_id=canonical_user_id,
             owner_id=canonical_user_id,
-            timeout_seconds=15.0,
         )
+    except (TypeError, ValueError, AttributeError, KeyError):
+        raise
     except Exception as exc:
         # Ambiguous network outcome: fail-closed without blind retry
         now_ts = utc_now()
@@ -843,8 +844,9 @@ async def reconcile_subdub_job_status(
             request_id=recon_req_id,
             actor_id=canonical_user_id,
             owner_id=canonical_user_id,
-            timeout_seconds=5.0,
         )
+    except (TypeError, ValueError, AttributeError, KeyError):
+        raise
     except Exception:
         # On read-timeout, keep existing local state fail-closed
         return job
