@@ -209,7 +209,7 @@ CANONICAL_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
 # no Web feature can create a durable runtime job, regardless of environment
 # configuration.  This is the intended production baseline until each feature's
 # runtime bridge is independently verified.
-WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES: frozenset[str] = frozenset()
+WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES: frozenset[str] = frozenset({"subdub"})
 CONTIGUOUS_PAGE_RANGE_PATTERN = re.compile(r"^\d+(?:-\d+)?$")
 TICKET_SECRET_ASSIGNMENT_PATTERN = re.compile(
     r"\b(?:api[ _-]?(?:key|token)|access[ _-]?token|refresh[ _-]?token|"
@@ -919,7 +919,10 @@ def _web_feature_execution_available(feature: str | None = None) -> bool:
     if feature is None:
         return bool(adapter_keys & WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES)
     feature_key = str(feature or "").strip()
-    return feature_key in adapter_keys and feature_key in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+    is_active = feature_key in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES or (
+        feature_key in SUBDUB_ADAPTER_KEYS and "subdub" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+    )
+    return feature_key in adapter_keys and is_active
 
 
 def _web_feature_runtime_active(feature: str) -> bool:
