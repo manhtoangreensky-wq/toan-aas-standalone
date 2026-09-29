@@ -6517,6 +6517,41 @@ def ensure_copyfast_schema() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_image_generation_jobs_request ON web_image_generation_jobs(request_id)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_image_generation_jobs_account_idempotency ON web_image_generation_jobs(account_id, idempotency_key_hash)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_image_generation_jobs_status_created ON web_image_generation_jobs(status, created_at ASC)")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_subdub_jobs (
+                id TEXT PRIMARY KEY,
+                request_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                product_key TEXT NOT NULL DEFAULT 'subdub',
+                subdub_mode TEXT NOT NULL DEFAULT 'subtitle_create',
+                upload_id TEXT NOT NULL,
+                source_language TEXT DEFAULT 'auto',
+                target_language TEXT DEFAULT '',
+                voice_profile_id TEXT DEFAULT '',
+                output_format TEXT NOT NULL DEFAULT 'srt',
+                speed REAL DEFAULT 1.0,
+                status TEXT NOT NULL DEFAULT 'queued',
+                status_reason TEXT NOT NULL DEFAULT 'AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION',
+                idempotency_key_hash TEXT,
+                payload_hash TEXT NOT NULL,
+                bridge_envelope TEXT NOT NULL,
+                output_metadata TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                output_url TEXT,
+                worker_id TEXT,
+                claimed_at TEXT,
+                lease_expires_at TEXT,
+                attempts INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_account_created ON web_subdub_jobs(account_id, created_at DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_request ON web_subdub_jobs(request_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_account_idempotency ON web_subdub_jobs(account_id, idempotency_key_hash)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_status_created ON web_subdub_jobs(status, created_at ASC)")
         try:
             import copyfast_pricing_policy
             copyfast_pricing_policy.ensure_pricing_schema(conn)

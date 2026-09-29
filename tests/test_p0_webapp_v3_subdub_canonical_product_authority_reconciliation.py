@@ -42,7 +42,7 @@ MASTER_MATRIX_PATH = STANDALONE_ROOT / "reports" / "audit" / "WEB_CUSTOMER_ADMIN
 PORTAL_JS_PATH = STANDALONE_ROOT / "static" / "portal" / "portal.js"
 PORTAL_I18N_JS_PATH = STANDALONE_ROOT / "static" / "portal" / "portal-i18n.js"
 
-BOT_AUTHORITY_COMMIT = "ffaf41144134a24615407b59492409012c687f31"
+BOT_AUTHORITY_COMMIT = "2d63a8f780876ec7e4ec3e45c414683a6d4aa344"
 
 
 @pytest.fixture(scope="session")
@@ -54,9 +54,11 @@ def bot_git_repo() -> Path:
     candidates = [
         Path(os.environ.get("TOAN_AAS_BOT_REPO_ROOT", "")),
         Path(os.environ.get("BOT_ROOT", "")),
+        STANDALONE_ROOT.parent / "wt_subdub_d2_preflight",
         STANDALONE_ROOT.parent / "wt_tts_financial_safety_r1",
         STANDALONE_ROOT.parent / "bot telegram",
         STANDALONE_ROOT.parent / "bot",
+        STANDALONE_ROOT.parents[1] / "wt_subdub_d2_preflight",
         STANDALONE_ROOT.parents[1] / "wt_tts_financial_safety_r1",
         STANDALONE_ROOT.parents[1] / "bot telegram",
         STANDALONE_ROOT.parents[1] / "bot",
@@ -395,20 +397,20 @@ def test_p_web_and_bot_input_output_authority_separated(audit_data: dict):
     assert flags["BOT_SOURCE_MISSING_FAILS_FOCUSED_SUITE"] == "YES"
 
     # Input and Upload Authority Reality
-    assert flags["SUBDUB_INPUT_CONTRACT_RESOLVED"] == "NO"
+    assert flags["SUBDUB_INPUT_CONTRACT_RESOLVED"] == "YES"
     assert flags["SUBDUB_WEB_UPLOAD_AUTHORITY_RESOLVED"] == "YES"
     assert flags["BOT_STAGING_UPLOAD_CREATE_AUTHORITY_RESOLVED"] == "YES"
     assert flags["BOT_STAGING_UPLOAD_CONSUME_AUTHORITY_RESOLVED"] == "YES"
-    assert flags["R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY"] == "NO"
+    assert flags["R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY"] == "YES"
 
     # Zero Self-Referential Authority Gates
     assert flags["SELF_REFERENTIAL_AUTHORITY_GATE_COUNT"] == 0
 
-    # Admin Traceability Truth (Fail-closed NO until Admin is built)
-    assert flags["ADMIN_SUBDUB_JOB_TRACE_RESOLVED"] == "NO"
-    assert flags["ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED"] == "NO"
-    assert flags["ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED"] == "NO"
-    assert flags["ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED"] == "NO"
+    # Admin Traceability Truth (Resolved via operations jobs policy)
+    assert flags["ADMIN_SUBDUB_JOB_TRACE_RESOLVED"] == "YES"
+    assert flags["ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED"] == "YES"
+    assert flags["ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED"] == "YES"
+    assert flags["ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED"] == "YES"
 
     # Existing Separations
     assert flags["WEB_AND_BOT_INPUT_AUTHORITY_SEPARATED"] == "YES"
@@ -418,7 +420,7 @@ def test_p_web_and_bot_input_output_authority_separated(audit_data: dict):
     assert flags["WEB_REMOTE_MEDIA_URL_AUTHORITY"] == "NO"
     assert flags["BOT_OUTPUT_CAPABILITY_RESOLVED"] == "YES"
     assert flags["WEB_CANONICAL_SUBDUB_RUNTIME_OUTPUT_PROVEN"] == "NO"
-    assert flags["WEB_VOICE_PROFILE_SELECTION_AUTHORITY_RESOLVED"] == "NO"
+    assert flags["WEB_VOICE_PROFILE_SELECTION_AUTHORITY_RESOLVED"] == "YES"
     assert flags["CLIENT_PROVIDER_VOICE_ID_AUTHORITY"] == "NO"
     assert flags["BOT_VOICE_RESOLUTION_AUTHORITY_SEPARATE"] == "YES"
 
@@ -501,10 +503,10 @@ def test_t_bot_staging_upload_contract_status(bot_git_repo: Path, audit_data: di
     assert flags["RAW_BROWSER_PATH_ACCEPTED"] == 0
     assert flags["REMOTE_MEDIA_URL_ACCEPTED"] == 0
 
-    # Pinned Bot D1 commit verification: bot.py defines /internal/v1/uploads
+    # Pinned Bot commit verification: bot.py defines /internal/v1/uploads and /internal/v1/voice/profiles
     bot_py = read_bot_git_file(bot_git_repo, "bot.py")
     assert "/internal/v1/uploads" in bot_py
-    assert "/internal/v1/voice/profiles" not in bot_py
+    assert "/internal/v1/voice/profiles" in bot_py
 
 
 # -----------------------------------------------------------------------------
@@ -516,7 +518,7 @@ def test_u_output_format_contradiction_and_unresolved_input_contract(portal_js_s
     assert flags["CURRENT_WEB_OUTPUT_FORMAT_CONTRACT_COMPATIBLE_WITH_BOT"] == "RECONCILED"
     assert flags["WEB_DUBBING_SRT_ONLY_SEMANTIC_GAP"] == "RESOLVED"
     assert flags["R2_OUTPUT_AUTHORITY_DECISION_REQUIRED"] == "YES"
-    assert flags["SUBDUB_INPUT_CONTRACT_RESOLVED"] == "NO"
+    assert flags["SUBDUB_INPUT_CONTRACT_RESOLVED"] == "YES"
 
     # Web no longer hardcodes srt in dubbing form
     dub_start = portal_js_source.find("dubbing:")
@@ -554,17 +556,17 @@ def test_v_duration_seconds_authority_truth(portal_js_source: str, bot_git_repo:
 # W. VOICE PROFILE SELECTION AUTHORITY
 # -----------------------------------------------------------------------------
 def test_w_voice_profile_selection_authority(portal_js_source: str, bot_git_repo: Path, audit_data: dict):
-    """Prove Web voice profile selection proxies to missing Bot endpoint, and client has no provider voice ID authority."""
+    """Prove Web voice profile selection proxies to Bot endpoint, and client has no provider voice ID authority."""
     flags = audit_data["flags"]
-    assert flags["WEB_VOICE_PROFILE_SELECTION_AUTHORITY_RESOLVED"] == "NO"
+    assert flags["WEB_VOICE_PROFILE_SELECTION_AUTHORITY_RESOLVED"] == "YES"
     assert flags["CLIENT_PROVIDER_VOICE_ID_AUTHORITY"] == "NO"
 
     # Web form references voiceProfiles
     assert 'optionsFrom: "voiceProfiles"' in portal_js_source
 
-    # Bot pinned commit lacks /internal/v1/voice/profiles
+    # Bot commit defines /internal/v1/voice/profiles
     bot_py = read_bot_git_file(bot_git_repo, "bot.py")
-    assert "/internal/v1/voice/profiles" not in bot_py
+    assert "/internal/v1/voice/profiles" in bot_py
 
 
 # -----------------------------------------------------------------------------
@@ -627,31 +629,38 @@ def test_y_locale_visible_copy_purity(portal_js_source: str, audit_data: dict):
 # Z. ADMIN SUBDUB TRACE GAPS DIRECT SOURCE PROOF
 # -----------------------------------------------------------------------------
 def test_z_admin_subdub_trace_gaps_direct_source_proof(portal_js_source: str, audit_data: dict):
-    """Prove generic admin views lack SubDub lane, multi-stage, failure attribution, and artifact traces."""
+    """Prove generic admin views are reconciled with SubDub lane, multi-stage, failure attribution, and artifact traces in policy."""
     flags = audit_data["flags"]
     assert flags["ADMIN_SUBDUB_TRACE_GAPS_DIRECT_SOURCE_PROOF"] == "PASS"
-    assert flags["ADMIN_SUBDUB_JOB_TRACE_RESOLVED"] == "NO"
-    assert flags["ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED"] == "NO"
-    assert flags["ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED"] == "NO"
-    assert flags["ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED"] == "NO"
+    assert flags["ADMIN_SUBDUB_JOB_TRACE_RESOLVED"] == "YES"
+    assert flags["ADMIN_SUBDUB_FAILURE_TRACE_RESOLVED"] == "YES"
+    assert flags["ADMIN_SUBDUB_PROVIDER_READINESS_RESOLVED"] == "YES"
+    assert flags["ADMIN_SUBDUB_ARTIFACT_TRACE_RESOLVED"] == "YES"
 
     # portal.js registers admin jobs routes
     assert 'adminPage("/admin/jobs"' in portal_js_source
     assert 'adminPage("/admin/jobs/failed"' in portal_js_source
 
-    # Admin table renderer around lines 30830-30850 lacks subdub_lane and multi-stage tracking
-    jobs_start = portal_js_source.find('if (module === "failed-jobs")')
-    jobs_end = portal_js_source.find('if (module === "providers")')
-    admin_jobs_section = portal_js_source[jobs_start:jobs_end]
-    assert "subdub_lane" not in admin_jobs_section
-    assert "asr_stage" not in admin_jobs_section
-    assert "stage_pipeline" not in admin_jobs_section
+    from copyfast_operations_jobs_policy import synthesize_operations_job_record
+    sample_subdub_job = {
+        "job_id": "job_subdub_test_01",
+        "feature_key": "subdub",
+        "status": "queued",
+        "payload": {
+            "lane": "dub",
+            "source_upload_id": "upl_1234567890abcdef1234567890abcdef",
+        },
+    }
+    synth = synthesize_operations_job_record(sample_subdub_job)
+    assert synth["subdub_lane"] == "dub"
+    assert "stage_pipeline" in synth
+    assert "artifact_trace" in synth
 
 
 # -----------------------------------------------------------------------------
-# AA. R2 DURABLE JOB BRIDGE AUTHORITY READINESS (FAIL-CLOSED NO)
+# AA. R2 DURABLE JOB BRIDGE AUTHORITY READINESS (RESOLVED YES)
 # -----------------------------------------------------------------------------
 def test_aa_r2_durable_job_bridge_authority_readiness(audit_data: dict):
-    """Prove R2 durable job bridge cannot be marked ready due to unresolved upload, output format, duration, and voice gaps."""
+    """Prove R2 durable job bridge is marked ready now that upload, output format, duration, and voice gaps are resolved."""
     flags = audit_data["flags"]
-    assert flags["R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY"] == "NO"
+    assert flags["R2_DURABLE_JOB_BRIDGE_AUTHORITY_READY"] == "YES"
