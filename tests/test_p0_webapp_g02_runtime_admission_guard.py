@@ -60,8 +60,11 @@ def setup_db_and_env(monkeypatch):
     monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTER_ENABLED", "true")
     monkeypatch.setenv(
         "WEBAPP_FEATURE_JOB_ADAPTERS",
-        "video_ai_prompt,video_single,video_trend,video_long,video_multiscene,image_create",
+        "video_ai_prompt,video_single,video_trend,video_long,video_multiscene,image_create,subdub",
     )
+    monkeypatch.setenv("CORE_BRIDGE_BASE_URL", "http://127.0.0.1:8000")
+    monkeypatch.setenv("CORE_BRIDGE_TOKEN", "test-token")
+    monkeypatch.setenv("CORE_BRIDGE_HMAC_SECRET", "test-secret")
     # Bypass auth throttle to avoid 429 across 14 tests
     monkeypatch.setattr(app_module, "_durable_auth_throttle_guard", lambda *a, **kw: None)
     # Clear in-process middleware rate limiter so each test starts fresh
@@ -122,37 +125,43 @@ def _login(client: TestClient, email: str, password: str) -> dict:
     }
 
 
-# ─── TEST 1: COMPILE-TIME ALLOWLIST IS EMPTY ─────────────────────────────────
+# ─── TEST 1: COMPILE-TIME ALLOWLIST EXACT ACTIVATION SET ─────────────────────
 
-def test_01_allowlist_is_empty():
-    """Prove WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES is an empty frozenset."""
+def test_01_allowlist_exact_activation_set():
+    """Prove WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES contains exactly subdub and video_ai_prompt."""
     assert isinstance(WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES, frozenset)
-    assert len(WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES) == 0
+    assert WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES == frozenset({"subdub", "video_ai_prompt"})
 
 
 # ─── TEST 2: ENV ALONE CANNOT ACTIVATE RUNTIME ──────────────────────────────
 
 def test_02_env_alone_cannot_activate_runtime():
     """Prove that even with all env flags enabled, runtime stays inactive
-    because the compile-time allowlist is empty."""
-    for feature in ["video_ai_prompt", "video_trend", "video_long", "video_multiscene", "image_create"]:
+    for unactivated features (video_trend, video_long, video_multiscene, image_create)
+    because they are not in the compile-time allowlist."""
+    for feature in ["video_trend", "video_long", "video_multiscene", "image_create"]:
         assert _web_feature_execution_available(feature) is False
         assert _web_feature_runtime_active(feature) is False
-    # Even the generic check must be False
-    assert _web_feature_execution_available(None) is False
+    # Activated features are available
+    assert _web_feature_execution_available("video_ai_prompt") is True
+    assert _web_feature_runtime_active("video_ai_prompt") is True
+    assert _web_feature_execution_available("subdub") is True
+    assert _web_feature_runtime_active("subdub") is True
+    # Generic check is True because active features exist
+    assert _web_feature_execution_available(None) is True
 
 
-# ─── TEST 3: DIRECT POST GUARDED — video_ai_prompt ──────────────────────────
+# ─── TEST 3: DIRECT POST ACTIVE — video_ai_prompt ───────────────────────────
 
-def test_03_direct_post_guarded_video_ai_prompt():
-    """Prove POST /features/video_ai_prompt/jobs returns guarded when runtime inactive."""
+def test_03_direct_post_video_ai_prompt_active():
+    """Prove POST /features/video_ai_prompt/jobs succeeds and queues a job when runtime is active."""
     client = TestClient(app)
     auth = _login(client, "g02t03@test.local", "secure-g02-pwd-1234")
     res = client.post(
         "/api/v1/features/video_ai_prompt/jobs",
         json={
             "input": {
-                "prompt": "Test product video",
+                "prompt": "Test product video active",
                 "quality_tier": 200,
                 "aspect_ratio": "9:16",
                 "duration_seconds": 5,
@@ -163,9 +172,11 @@ def test_03_direct_post_guarded_video_ai_prompt():
     )
     assert res.status_code == 200
     body = res.json()
-    assert body["ok"] is False
-    assert body["status"] == "guarded"
-    assert body["error_code"] == "WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED"
+    assert body["ok"] is True
+    assert body["status"] == "queued"
+    assert "data" in body
+    assert body["data"]["status"] == "queued"
+    assert body["data"]["routing_product_key"] == "video_ai_canonical"
 
 
 # ─── TEST 4: DIRECT POST GUARDED — video_trend ──────────────────────────────
@@ -263,14 +274,13 @@ def test_07_direct_post_guarded_image_create():
     assert body["error_code"] == "WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED"
 
 
-# ─── TEST 8: ZERO DURABLE ROWS AFTER ALL GUARDS ─────────────────────────────
+# ─── TEST 8: ZERO DURABLE ROWS AFTER GUARDED POSTS ──────────────────────────
 
 def test_08_zero_durable_rows_created():
-    """After attempting all 5 direct POST routes, prove no durable rows exist."""
+    """After attempting the 4 guarded direct POST routes, prove no durable rows exist in their tables."""
     client = TestClient(app)
     auth = _login(client, "g02t08@test.local", "secure-g02-pwd-1234")
     for route in [
-        "/api/v1/features/video_ai_prompt/jobs",
         "/api/v1/features/video_trend/jobs",
         "/api/v1/features/video_long/jobs",
         "/api/v1/features/video_multiscene/jobs",
@@ -280,7 +290,6 @@ def test_08_zero_durable_rows_created():
 
     with read_transaction() as conn:
         for tbl in [
-            "web_product_video_jobs",
             "web_video_trend_jobs",
             "web_video_long_jobs",
             "web_multi_scene_film_jobs",
@@ -293,13 +302,13 @@ def test_08_zero_durable_rows_created():
                 pass  # table may not exist yet
 
 
-# ─── TEST 9: CONFIRM PATH ALSO GUARDED ──────────────────────────────────────
+# ─── TEST 9: CONFIRM PATH GUARDED FOR UNACTIVATED FEATURES ──────────────────
 
 def test_09_confirm_path_guarded():
-    """Prove POST /features/{feature}/confirm returns guarded error_code."""
+    """Prove POST /features/{feature}/confirm returns guarded error_code for unactivated features."""
     client = TestClient(app)
     auth = _login(client, "g02t09@test.local", "secure-g02-pwd-1234")
-    for feature in ["video_ai_prompt", "video_trend", "video_long", "video_multiscene", "image_create"]:
+    for feature in ["video_trend", "video_long", "video_multiscene", "image_create"]:
         res = client.post(
             f"/api/v1/features/{feature}/confirm",
             json={
@@ -320,9 +329,9 @@ def test_09_confirm_path_guarded():
 
 def test_10_native_compat_queued_projection():
     """Prove *_to_native_compat() for queued rows projects:
-    - runtime_execution_active = False
-    - source_state = guarded_runtime_unavailable
-    - status_reason = RUNTIME_EXECUTION_NOT_ACTIVATED
+    - video_ai_prompt (active): runtime_execution_active=True, source_state=queued_locally
+    - other features (guarded): runtime_execution_active=False, source_state=guarded_runtime_unavailable,
+      status_reason=RUNTIME_EXECUTION_NOT_ACTIVATED
     """
     queued_base = {
         "id": "test-job-001",
@@ -338,11 +347,11 @@ def test_10_native_compat_queued_projection():
         "quality_tier": 200,
     }
 
-    # video_ai_prompt
+    # video_ai_prompt (now active)
     compat = video_bridge.product_video_job_to_native_compat(queued_base)
-    assert compat["runtime_execution_active"] is False
-    assert compat["source_state"] == "guarded_runtime_unavailable"
-    assert compat["status_reason"] == "RUNTIME_EXECUTION_NOT_ACTIVATED"
+    assert compat["runtime_execution_active"] is True
+    assert compat["source_state"] == "queued_locally"
+    assert compat["status_reason"] == "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION"
 
     # video_trend
     trend_job = {**queued_base, "trend_prompt": "test trend", "scene_count": 1,
@@ -386,6 +395,9 @@ def test_11_native_compat_completed_projection():
         "updated_at": "2026-09-27T01:00:00Z",
         "output": "https://cdn.example.com/video.mp4",
         "output_metadata": None,
+        "output_available": True,
+        "download_ready": True,
+        "delivery_ready": True,
         "prompt": "test completed",
         "aspect_ratio": "9:16",
         "duration_seconds": 5,
@@ -393,7 +405,7 @@ def test_11_native_compat_completed_projection():
     }
 
     compat = video_bridge.product_video_job_to_native_compat(completed_base)
-    assert compat["runtime_execution_active"] is False  # Still False — allowlist is empty
+    assert compat["runtime_execution_active"] is True  # True — video_ai_prompt is in active allowlist
     assert compat["source_state"] == "completed"  # NOT overridden for completed
     assert compat["status_reason"] == "COMPLETED_SUCCESSFULLY"  # Preserved
     assert compat["output_available"] is True
@@ -440,12 +452,11 @@ def test_13_draft_and_estimate_still_pass():
 
 def test_14_zero_provider_and_paid_calls():
     """Confirm no external provider calls are made during the guard flow.
-    This is an assertion of the guard's behavior — it returns immediately
-    without dispatching to any bridge create function."""
+    For unactivated features, the guard returns immediately.
+    For activated video_ai_prompt, direct POST queues locally in SQLite with zero provider calls."""
     client = TestClient(app)
     auth = _login(client, "g02t14@test.local", "secure-g02-pwd-1234")
     for route in [
-        "/api/v1/features/video_ai_prompt/jobs",
         "/api/v1/features/video_trend/jobs",
         "/api/v1/features/video_long/jobs",
         "/api/v1/features/video_multiscene/jobs",
@@ -460,6 +471,24 @@ def test_14_zero_provider_and_paid_calls():
         # Guard returns immediately, no bridge function is called, hence no provider call
         assert body["ok"] is False
         assert body["error_code"] == "WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED"
+
+    # Activated video_ai_prompt queues locally with 0 provider calls
+    vap_res = client.post(
+        "/api/v1/features/video_ai_prompt/jobs",
+        json={
+            "input": {
+                "prompt": "zero provider test",
+                "aspect_ratio": "9:16",
+                "duration_seconds": 5,
+                "quality_tier": 200,
+            },
+            "idempotency_key": "np-vap-001",
+        },
+        headers=auth["headers"],
+    )
+    vap_body = vap_res.json()
+    assert vap_body["ok"] is True
+    assert vap_body["status"] == "queued"
 
 
 # ─── FIXTURE HELPER FOR HISTORICAL ROWS ───────────────────────────────────────
@@ -544,9 +573,11 @@ def test_15_product_specific_and_generic_read_parity_all_5_families():
     2. GET /features/<family>/jobs/{job_id} (detail)
     3. GET /jobs (generic list)
     4. GET /jobs/{job_id} (generic detail)
-    ALL expose runtime_execution_active=False, source_state=guarded_runtime_unavailable,
-    status_reason=RUNTIME_EXECUTION_NOT_ACTIVATED, output_available=False.
-    Achieving 5/5 parity across list and detail.
+    maintain complete parity across list and detail.
+    For active features (video_ai_prompt):
+      runtime_execution_active=True, source_state=queued_locally, status_reason=AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION
+    For guarded features (video_trend, video_long, video_multiscene, image_create):
+      runtime_execution_active=False, source_state=guarded_runtime_unavailable, status_reason=RUNTIME_EXECUTION_NOT_ACTIVATED
     """
     client = TestClient(app)
     auth = _login(client, "g02t15@test.local", "secure-g02-pwd-1234")
@@ -563,6 +594,10 @@ def test_15_product_specific_and_generic_read_parity_all_5_families():
 
     for family, table, job_id in families:
         _insert_historical_fixture(table, job_id, account_id, status="queued")
+        is_active = family in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+        exp_active = is_active
+        exp_source_state = "queued_locally" if is_active else "guarded_runtime_unavailable"
+        exp_status_reason = "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION" if is_active else "RUNTIME_EXECUTION_NOT_ACTIVATED"
 
         # 1. Product-specific GET list
         list_res = client.get(f"/api/v1/features/{family}/jobs", headers=headers)
@@ -571,9 +606,9 @@ def test_15_product_specific_and_generic_read_parity_all_5_families():
         matching = [item for item in items if item.get("id") == job_id]
         assert len(matching) == 1, f"Fixture {job_id} not found in {family} list"
         item = matching[0]
-        assert item["runtime_execution_active"] is False, f"{family} list runtime_execution_active not False"
-        assert item["source_state"] == "guarded_runtime_unavailable", f"{family} list source_state mismatch: {item.get('source_state')}"
-        assert item["status_reason"] == "RUNTIME_EXECUTION_NOT_ACTIVATED", f"{family} list status_reason mismatch: {item.get('status_reason')}"
+        assert item["runtime_execution_active"] is exp_active, f"{family} list runtime_execution_active mismatch"
+        assert item["source_state"] == exp_source_state, f"{family} list source_state mismatch: {item.get('source_state')}"
+        assert item["status_reason"] == exp_status_reason, f"{family} list status_reason mismatch: {item.get('status_reason')}"
         assert item["output_available"] is False
         assert item["download_ready"] is False
         assert item["delivery_ready"] is False
@@ -582,9 +617,9 @@ def test_15_product_specific_and_generic_read_parity_all_5_families():
         detail_res = client.get(f"/api/v1/features/{family}/jobs/{job_id}", headers=headers)
         assert detail_res.status_code == 200, f"Failed detail for {family}: {detail_res.text}"
         detail_item = detail_res.json()["data"]
-        assert detail_item["runtime_execution_active"] is False, f"{family} detail runtime_execution_active not False"
-        assert detail_item["source_state"] == "guarded_runtime_unavailable", f"{family} detail source_state mismatch"
-        assert detail_item["status_reason"] == "RUNTIME_EXECUTION_NOT_ACTIVATED", f"{family} detail status_reason mismatch"
+        assert detail_item["runtime_execution_active"] is exp_active, f"{family} detail runtime_execution_active mismatch"
+        assert detail_item["source_state"] == exp_source_state, f"{family} detail source_state mismatch"
+        assert detail_item["status_reason"] == exp_status_reason, f"{family} detail status_reason mismatch"
         assert detail_item["output_available"] is False
         assert detail_item["download_ready"] is False
         assert detail_item["delivery_ready"] is False
@@ -596,9 +631,9 @@ def test_15_product_specific_and_generic_read_parity_all_5_families():
         g_matching = [it for it in g_items if it.get("id") == job_id]
         assert len(g_matching) == 1, f"Fixture {job_id} not found in generic /jobs list"
         g_item = g_matching[0]
-        assert g_item["runtime_execution_active"] is False, f"{family} generic list runtime_execution_active not False"
-        assert g_item["source_state"] == "guarded_runtime_unavailable", f"{family} generic list source_state mismatch"
-        assert g_item["status_reason"] == "RUNTIME_EXECUTION_NOT_ACTIVATED", f"{family} generic list status_reason mismatch"
+        assert g_item["runtime_execution_active"] is exp_active, f"{family} generic list runtime_execution_active mismatch"
+        assert g_item["source_state"] == exp_source_state, f"{family} generic list source_state mismatch"
+        assert g_item["status_reason"] == exp_status_reason, f"{family} generic list status_reason mismatch"
         assert g_item["output_available"] is False
         assert g_item["download_ready"] is False
         assert g_item["delivery_ready"] is False
@@ -607,9 +642,9 @@ def test_15_product_specific_and_generic_read_parity_all_5_families():
         generic_detail_res = client.get(f"/api/v1/jobs/{job_id}", headers=headers)
         assert generic_detail_res.status_code == 200, f"Failed generic detail: {generic_detail_res.text}"
         g_detail = generic_detail_res.json()["data"]
-        assert g_detail["runtime_execution_active"] is False, f"{family} generic detail runtime_execution_active not False"
-        assert g_detail["source_state"] == "guarded_runtime_unavailable", f"{family} generic detail source_state mismatch"
-        assert g_detail["status_reason"] == "RUNTIME_EXECUTION_NOT_ACTIVATED", f"{family} generic detail status_reason mismatch"
+        assert g_detail["runtime_execution_active"] is exp_active, f"{family} generic detail runtime_execution_active mismatch"
+        assert g_detail["source_state"] == exp_source_state, f"{family} generic detail source_state mismatch"
+        assert g_detail["status_reason"] == exp_status_reason, f"{family} generic detail status_reason mismatch"
         assert g_detail["output_available"] is False
         assert g_detail["download_ready"] is False
         assert g_detail["delivery_ready"] is False

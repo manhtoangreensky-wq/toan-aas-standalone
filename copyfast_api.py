@@ -211,7 +211,7 @@ CANONICAL_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
 # no Web feature can create a durable runtime job, regardless of environment
 # configuration.  This is the intended production baseline until each feature's
 # runtime bridge is independently verified.
-WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES: frozenset[str] = frozenset({"subdub"})
+WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES: frozenset[str] = frozenset({"subdub", "video_ai_prompt"})
 CONTIGUOUS_PAGE_RANGE_PATTERN = re.compile(r"^\d+(?:-\d+)?$")
 TICKET_SECRET_ASSIGNMENT_PATTERN = re.compile(
     r"\b(?:api[ _-]?(?:key|token)|access[ _-]?token|refresh[ _-]?token|"
