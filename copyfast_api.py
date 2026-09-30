@@ -7789,6 +7789,7 @@ async def admin_freeze_feature(feature: str, payload: FreezeRequest, request: Re
 class ProductVideoWorkerClaimRequest(BaseModel):
     worker_id: str = Field(min_length=3, max_length=64)
     lease_seconds: int = Field(default=300, ge=30, le=3600)
+    target_job_id: str | None = Field(default=None, max_length=128)
 
 
 class ProductVideoWorkerHeartbeatRequest(BaseModel):
@@ -7821,7 +7822,11 @@ class ProductVideoAdminReconcileRequest(BaseModel):
 @router.post("/worker/product-video/claim")
 async def worker_product_video_claim(payload: ProductVideoWorkerClaimRequest, request: Request):
     worker_id = verify_worker_access(request, payload.model_dump())
-    job = claim_product_video_job(worker_id=worker_id, lease_seconds=payload.lease_seconds)
+    job = claim_product_video_job(
+        worker_id=worker_id,
+        lease_seconds=payload.lease_seconds,
+        target_job_id=payload.target_job_id,
+    )
     if job is None:
         return envelope(
             True,

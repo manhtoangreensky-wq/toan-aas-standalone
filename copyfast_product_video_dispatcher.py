@@ -173,30 +173,51 @@ def claim_product_video_job(
     worker_id: str,
     lease_seconds: int = DEFAULT_LEASE_SECONDS,
     now_dt: datetime | None = None,
+    target_job_id: str | None = None,
 ) -> dict[str, Any] | None:
-    """Atomically claim one queued or lease-expired product video job for a worker."""
+    """Atomically claim one queued or lease-expired product video job for a worker.
+
+    When target_job_id is provided, claims ONLY that exact job without falling
+    through to any other queued job.
+    """
     ensure_copyfast_schema()
     clean_worker = sanitize_worker_id(worker_id)
     bounded_lease = max(MIN_LEASE_SECONDS, min(int(lease_seconds or DEFAULT_LEASE_SECONDS), MAX_LEASE_SECONDS))
     now = now_dt or datetime.now(timezone.utc)
     now_iso = now.isoformat()
     expires_iso = (now + timedelta(seconds=bounded_lease)).isoformat()
+    clean_target_id = str(target_job_id or "").strip()
 
     with transaction() as conn:
-        # Find oldest queued job or stalled job whose lease expired
-        query_candidate = """
-            SELECT id, request_id, account_id, product_key, routing_product_key,
-                   prompt, aspect_ratio, duration_seconds, quality_tier, scene_count,
-                   status, status_reason, idempotency_key_hash, payload_hash,
-                   bridge_envelope, output_metadata, created_at, updated_at,
-                   worker_id, claimed_at, lease_expires_at, attempts, output_url
-            FROM web_product_video_jobs
-            WHERE status = 'queued'
-               OR (status = 'processing' AND lease_expires_at IS NOT NULL AND lease_expires_at < ? AND attempts < ?)
-            ORDER BY created_at ASC, id ASC
-            LIMIT 1
-        """
-        row = conn.execute(query_candidate, (now_iso, MAX_DISPATCH_ATTEMPTS)).fetchone()
+        if clean_target_id:
+            query_candidate = """
+                SELECT id, request_id, account_id, product_key, routing_product_key,
+                       prompt, aspect_ratio, duration_seconds, quality_tier, scene_count,
+                       status, status_reason, idempotency_key_hash, payload_hash,
+                       bridge_envelope, output_metadata, created_at, updated_at,
+                       worker_id, claimed_at, lease_expires_at, attempts, output_url
+                FROM web_product_video_jobs
+                WHERE id = ?
+                  AND (status = 'queued'
+                       OR (status = 'processing' AND lease_expires_at IS NOT NULL AND lease_expires_at < ? AND attempts < ?))
+                LIMIT 1
+            """
+            row = conn.execute(query_candidate, (clean_target_id, now_iso, MAX_DISPATCH_ATTEMPTS)).fetchone()
+        else:
+            # Find oldest queued job or stalled job whose lease expired
+            query_candidate = """
+                SELECT id, request_id, account_id, product_key, routing_product_key,
+                       prompt, aspect_ratio, duration_seconds, quality_tier, scene_count,
+                       status, status_reason, idempotency_key_hash, payload_hash,
+                       bridge_envelope, output_metadata, created_at, updated_at,
+                       worker_id, claimed_at, lease_expires_at, attempts, output_url
+                FROM web_product_video_jobs
+                WHERE status = 'queued'
+                   OR (status = 'processing' AND lease_expires_at IS NOT NULL AND lease_expires_at < ? AND attempts < ?)
+                ORDER BY created_at ASC, id ASC
+                LIMIT 1
+            """
+            row = conn.execute(query_candidate, (now_iso, MAX_DISPATCH_ATTEMPTS)).fetchone()
         if row is None:
             return None
 
