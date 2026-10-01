@@ -929,4 +929,3 @@ async def settle_product_video_job_completion(
             "error_code": err_code,
             "message": str(bridge_res.get("message") or "Settlement failed on canonical core"),
         }
-
