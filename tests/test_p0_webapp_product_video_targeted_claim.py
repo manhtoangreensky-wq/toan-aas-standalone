@@ -44,6 +44,7 @@ def setup_db_and_clean(monkeypatch):
     monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTERS", "video_ai_prompt,video_single")
     ensure_copyfast_schema()
     with transaction() as conn:
+        conn.execute("DELETE FROM web_product_video_settlement_projections")
         conn.execute("DELETE FROM web_product_video_jobs")
         conn.execute(
             """
@@ -53,6 +54,7 @@ def setup_db_and_clean(monkeypatch):
         )
     yield
     with transaction() as conn:
+        conn.execute("DELETE FROM web_product_video_settlement_projections")
         conn.execute("DELETE FROM web_product_video_jobs")
         conn.execute("DELETE FROM web_accounts WHERE id = 'acc_owner_001'")
 

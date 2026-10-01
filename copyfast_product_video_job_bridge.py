@@ -140,6 +140,27 @@ MAX_PROMPT_LENGTH = 2000
 STATUS_QUEUED = "queued"
 STATUS_BLOCKED = "blocked"
 STATUS_REASON_AWAITING = "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION"
+STATUS_REASON_BLOCKED_ACCEPTANCE = "AWAITING_OWNER_AUTHORIZED_LIVE_ACCEPTANCE"
+STATUS_REASON_RELEASED_ACCEPTANCE = "RELEASED_FOR_OWNER_TARGETED_LIVE_ACCEPTANCE"
+V2V_PRODUCT_KEY = "video_ai_video_reference"
+V2V_ROUTING_KEY = "video_ai_video_reference"
+V2V_ROUTE_ID = "product_video_v2v_owner_acceptance_v1"
+V2V_ENGINE_ADAPTER = "fal_wan_v2v_acceptance_v1"
+
+
+def is_valid_canonical_source_video_path(path: Any) -> bool:
+    """Validate that source_video_path is a canonical absolute video file path."""
+    if not isinstance(path, str):
+        return False
+    trimmed = path.strip()
+    if not trimmed or len(trimmed) > 1024 or trimmed != path:
+        return False
+    if "\\" in trimmed or ".." in trimmed or "%2e" in trimmed.lower():
+        return False
+    if not (trimmed.startswith("/") or re.match(r"^[a-zA-Z]:[/\\]", trimmed)):
+        return False
+    lowered = trimmed.lower()
+    return any(lowered.endswith(ext) for ext in SAFE_VIDEO_EXTENSIONS)
 
 FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED = frozenset({
     "amount", "amountvnd", "price", "cost", "currency", "paymentid", "ordercode",
@@ -230,6 +251,8 @@ def compute_payload_hash(payload: dict[str, Any]) -> str:
         "quality_tier": int(payload.get("quality_tier") or 0),
         "scene_count": int(payload.get("scene_count") or 1),
     }
+    if payload.get("source_video_path"):
+        core["source_video_path"] = str(payload["source_video_path"]).strip()
     serialized = json.dumps(core, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(serialized).hexdigest()
 
@@ -400,6 +423,254 @@ def create_or_replay_product_video_job(
         }
 
 
+def create_owner_acceptance_video_reference_job(
+    *,
+    account_id: str,
+    prompt: str,
+    source_video_path: str,
+    aspect_ratio: str = "9:16",
+    duration_seconds: int = 5,
+    quality_tier: int = 500,
+    scene_count: int = 1,
+    request_id: str = "",
+    idempotency_key: str = "",
+) -> dict[str, Any]:
+    """Create a dedicated Owner-acceptance-only video_ai_video_reference job in blocked status.
+
+    Contract:
+    - product_key: video_ai_video_reference
+    - routing_product_key: video_ai_video_reference
+    - duration_seconds: 5
+    - quality_tier: 500
+    - scene_count: 1
+    - aspect_ratio: 9:16
+    - initial_status: blocked
+    - initial_status_reason: AWAITING_OWNER_AUTHORIZED_LIVE_ACCEPTANCE
+    - bridge_envelope binds acceptance_only=True and source_video_path
+    - strictly internal / not exposed to public customer API routes
+    """
+    ensure_copyfast_schema()
+    owner_id = str(account_id or "").strip()
+    if not owner_id:
+        raise ValueError("ACCOUNT_ID_REQUIRED: account_id is required")
+
+    clean_prompt = str(prompt or "").strip()
+    if not clean_prompt:
+        raise ValueError("PROMPT_REQUIRED: prompt is required")
+    if len(clean_prompt) > MAX_PROMPT_LENGTH:
+        raise ValueError(f"PROMPT_TOO_LONG: prompt cannot exceed {MAX_PROMPT_LENGTH} characters")
+
+    clean_source_path = str(source_video_path or "").strip()
+    if not clean_source_path or not is_valid_canonical_source_video_path(clean_source_path):
+        raise ValueError(
+            f"INVALID_SOURCE_VIDEO_PATH: source_video_path must be a canonical absolute video path, got {source_video_path!r}"
+        )
+
+    if str(aspect_ratio).strip() != "9:16":
+        raise ValueError(f"INVALID_ASPECT_RATIO: video_ai_video_reference requires 9:16, got {aspect_ratio!r}")
+
+    try:
+        dur_int = int(duration_seconds)
+    except (ValueError, TypeError):
+        dur_int = 0
+    if dur_int != 5:
+        raise ValueError(f"INVALID_DURATION_SECONDS: video_ai_video_reference requires 5, got {duration_seconds!r}")
+
+    try:
+        tier_int = int(quality_tier)
+    except (ValueError, TypeError):
+        tier_int = 0
+    if tier_int != 500:
+        raise ValueError(f"INVALID_QUALITY_TIER: video_ai_video_reference requires 500, got {quality_tier!r}")
+
+    try:
+        scene_int = int(scene_count)
+    except (ValueError, TypeError):
+        scene_int = 0
+    if scene_int != 1:
+        raise ValueError(f"INVALID_SCENE_COUNT: video_ai_video_reference requires 1, got {scene_count!r}")
+
+    normalized = {
+        "prompt": clean_prompt,
+        "aspect_ratio": "9:16",
+        "duration_seconds": 5,
+        "quality_tier": 500,
+        "scene_count": 1,
+        "product_key": V2V_PRODUCT_KEY,
+        "routing_product_key": V2V_ROUTING_KEY,
+        "source_video_path": clean_source_path,
+    }
+
+    payload_hash = compute_payload_hash(normalized)
+    effective_req_id = str(request_id or "").strip()
+    effective_idem_key = str(idempotency_key or "").strip()
+    idem_hash = compute_idempotency_hash(effective_idem_key) if effective_idem_key else ""
+
+    with transaction() as conn:
+        query = """
+            SELECT id, request_id, account_id, product_key, routing_product_key,
+                   prompt, aspect_ratio, duration_seconds, quality_tier, scene_count,
+                   status, status_reason, idempotency_key_hash, payload_hash,
+                   bridge_envelope, output_metadata, created_at, updated_at,
+                   worker_id, claimed_at, lease_expires_at, attempts, output_url
+            FROM web_product_video_jobs
+            WHERE account_id = ? AND (
+                (? != '' AND request_id = ?)
+                OR (? != '' AND idempotency_key_hash = ?)
+            )
+            ORDER BY created_at DESC LIMIT 1
+        """
+        row = conn.execute(
+            query,
+            (owner_id, effective_req_id, effective_req_id, idem_hash, idem_hash),
+        ).fetchone()
+
+        if row is not None:
+            existing_payload_hash = str(row[13])
+            if not hmac.compare_digest(existing_payload_hash, payload_hash):
+                raise ValueError(
+                    "CONFLICT: request_id or idempotency_key is already associated with differing payload"
+                )
+            return _format_public_job(row, idempotent_replay=True)
+
+        job_id = generate_product_video_job_id()
+        final_req_id = effective_req_id or generate_canonical_request_id()
+        now = utc_now()
+
+        bridge_envelope = {
+            "version": "p0.product-video.canonical-bridge.v1",
+            "route_id": V2V_ROUTE_ID,
+            "product_family": "product_video",
+            "mode": "video_to_video",
+            "engine_adapter": V2V_ENGINE_ADAPTER,
+            "product_key": V2V_PRODUCT_KEY,
+            "routing_product_key": V2V_ROUTING_KEY,
+            "request_id": final_req_id,
+            "job_id": job_id,
+            "account_id": owner_id,
+            "prompt": clean_prompt,
+            "aspect_ratio": "9:16",
+            "duration_seconds": 5,
+            "quality_tier": 500,
+            "scene_count": 1,
+            "source_video_path": clean_source_path,
+            "acceptance_only": True,
+            "status": STATUS_BLOCKED,
+            "status_reason": STATUS_REASON_BLOCKED_ACCEPTANCE,
+            "created_at": now,
+            "output": None,
+        }
+        envelope_json = json.dumps(bridge_envelope, ensure_ascii=True, sort_keys=True)
+
+        conn.execute(
+            """
+            INSERT INTO web_product_video_jobs (
+                id, request_id, account_id, product_key, routing_product_key,
+                prompt, aspect_ratio, duration_seconds, quality_tier, scene_count,
+                status, status_reason, idempotency_key_hash, payload_hash,
+                bridge_envelope, output_metadata, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
+            """,
+            (
+                job_id,
+                final_req_id,
+                owner_id,
+                V2V_PRODUCT_KEY,
+                V2V_ROUTING_KEY,
+                clean_prompt,
+                "9:16",
+                5,
+                500,
+                1,
+                STATUS_BLOCKED,
+                STATUS_REASON_BLOCKED_ACCEPTANCE,
+                idem_hash or None,
+                payload_hash,
+                envelope_json,
+                now,
+                now,
+            ),
+        )
+
+        return {
+            "id": job_id,
+            "request_id": final_req_id,
+            "account_id": owner_id,
+            "product_key": V2V_PRODUCT_KEY,
+            "routing_product_key": V2V_ROUTING_KEY,
+            "prompt": clean_prompt,
+            "aspect_ratio": "9:16",
+            "duration_seconds": 5,
+            "quality_tier": 500,
+            "scene_count": 1,
+            "status": STATUS_BLOCKED,
+            "status_reason": STATUS_REASON_BLOCKED_ACCEPTANCE,
+            "output_available": False,
+            "download_ready": False,
+            "delivery_ready": False,
+            "output": None,
+            "output_metadata": None,
+            "created_at": now,
+            "updated_at": now,
+            "bridge_envelope": bridge_envelope,
+            "idempotent_replay": False,
+        }
+
+
+def release_owner_acceptance_video_reference_job(target_job_id: str) -> dict[str, Any] | None:
+    """Atomically release exactly one blocked video_ai_video_reference acceptance job to queued status.
+
+    Predicates:
+    - WHERE id = :target_job_id
+    - AND product_key = 'video_ai_video_reference'
+    - AND status = 'blocked'
+
+    Transitions:
+    - status: 'blocked' -> 'queued'
+    - status_reason: 'RELEASED_FOR_OWNER_TARGETED_LIVE_ACCEPTANCE'
+
+    Returns formatted job dict on success, None on wrong ID, wrong product, wrong status, or repeat.
+    """
+    ensure_copyfast_schema()
+    clean_id = str(target_job_id or "").strip()
+    if not clean_id:
+        return None
+
+    now = utc_now()
+    with transaction() as conn:
+        cursor = conn.execute(
+            """
+            UPDATE web_product_video_jobs
+            SET status = 'queued',
+                status_reason = 'RELEASED_FOR_OWNER_TARGETED_LIVE_ACCEPTANCE',
+                updated_at = ?
+            WHERE id = ?
+              AND product_key = 'video_ai_video_reference'
+              AND status = 'blocked'
+            """,
+            (now, clean_id),
+        )
+        if cursor.rowcount == 0:
+            return None
+
+        row = conn.execute(
+            """
+            SELECT id, request_id, account_id, product_key, routing_product_key,
+                   prompt, aspect_ratio, duration_seconds, quality_tier, scene_count,
+                   status, status_reason, idempotency_key_hash, payload_hash,
+                   bridge_envelope, output_metadata, created_at, updated_at,
+                   worker_id, claimed_at, lease_expires_at, attempts, output_url
+            FROM web_product_video_jobs
+            WHERE id = ?
+            LIMIT 1
+            """,
+            (clean_id,),
+        ).fetchone()
+        if row is None:
+            return None
+        return _format_public_job(row)
+
+
 def _is_runtime_execution_active(feature: str = "video_ai_prompt") -> bool:
     try:
         import sys
@@ -426,8 +697,20 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
     is_terminal_failure = status_str in ("failed", "cancelled", "rejected")
     is_non_terminal = not is_completed and not is_terminal_failure
     runtime_active = _is_runtime_execution_active("video_ai_prompt")
+    is_v2v = str(row[3]) == V2V_PRODUCT_KEY
 
-    if is_non_terminal and not runtime_active:
+    if is_v2v:
+        runtime_execution_active = False
+        projected_status_reason = str(row[11])
+        source_state = "blocked_owner_acceptance" if status_str == "blocked" else ("completed" if is_completed else ("failed" if is_terminal_failure else "queued_locally"))
+        raw_output_url = str(row[22]) if len(row) > 22 and row[22] is not None else None
+        is_safe_url = bool(raw_output_url and is_safe_video_output_url(raw_output_url))
+        has_real_output = bool(is_completed and is_safe_url)
+        output_available = has_real_output
+        download_ready = has_real_output
+        delivery_ready = has_real_output
+        output_url_val = raw_output_url if has_real_output else None
+    elif is_non_terminal and not runtime_active:
         runtime_execution_active = False
         projected_status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED"
         source_state = "guarded_runtime_unavailable"
