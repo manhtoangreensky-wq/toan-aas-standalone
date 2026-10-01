@@ -13,13 +13,17 @@ Scope:
 
 from datetime import datetime, timezone
 import json
+from typing import Any
+from unittest.mock import AsyncMock, patch
 import pytest
 
 import copyfast_db
 from copyfast_product_video_dispatcher import (
     _format_claimed_job,
     claim_product_video_job,
+    complete_product_video_job,
     reconcile_stalled_product_video_jobs,
+    settle_product_video_job_completion,
 )
 from copyfast_product_video_job_bridge import (
     CANONICAL_PRODUCT_KEY,
@@ -40,9 +44,9 @@ def test_db(monkeypatch, tmp_path):
     with copyfast_db.transaction() as conn:
         conn.execute(
             """
-            INSERT OR REPLACE INTO web_accounts (id, email, password_hash, role_cache, created_at, updated_at)
-            VALUES ('acc_owner_v2v', 'owner@test.local', 'hash_owner', 'admin', '2026-10-01T00:00:00Z', '2026-10-01T00:00:00Z'),
-                   ('acc_cust_normal', 'customer@test.local', 'hash_cust', 'user', '2026-10-01T00:00:00Z', '2026-10-01T00:00:00Z')
+            INSERT OR REPLACE INTO web_accounts (id, email, password_hash, canonical_user_id, role_cache, created_at, updated_at)
+            VALUES ('acc_owner_v2v', 'owner@test.local', 'hash_owner', 'telegram-999999', 'admin', '2026-10-01T00:00:00Z', '2026-10-01T00:00:00Z'),
+                   ('acc_cust_normal', 'customer@test.local', 'hash_cust', 'telegram-888888', 'user', '2026-10-01T00:00:00Z', '2026-10-01T00:00:00Z')
             """
         )
     return db_file
@@ -395,3 +399,360 @@ def test_normal_video_ai_prompt_claimed_payload_unchanged(test_db):
     assert "source_video_path" not in payload
     assert payload["prompt"] == "Perfume commercial bottle"
     assert payload["quality_tier"] == "200"
+
+
+# ─── 6. CLAIM-TIME SOURCE VIDEO VALIDATION CONTRACT (R16.09G1) ────────────────
+
+def _create_mock_v2v_claim_row(source_video_val: Any) -> tuple:
+    env = {"product_key": "video_ai_video_reference", "acceptance_only": True}
+    if source_video_val is not None:
+        env["source_video_path"] = source_video_val
+    return (
+        "pvj_val_001",
+        "req_val_001",
+        "acc_owner_v2v",
+        "video_ai_video_reference",
+        "video_ai_video_reference",
+        "Validation test prompt",
+        "9:16",
+        5,
+        500,
+        1,
+        "processing",
+        "CLAIMED",
+        None,
+        "fakehash",
+        json.dumps(env),
+        None,
+        "2026-10-01T00:00:00Z",
+        "2026-10-01T00:00:00Z",
+        "worker-1",
+        "2026-10-01T00:00:00Z",
+        "2026-10-01T00:05:00Z",
+        1,
+        None,
+    )
+
+
+def test_claimed_job_formatting_rejects_relative_source_video_path():
+    """Relative persisted V2V source path must fail claim formatting."""
+    row = _create_mock_v2v_claim_row("relative/fixture.mp4")
+    with pytest.raises(ValueError, match="MALFORMED_V2V_ENVELOPE"):
+        _format_claimed_job(row)
+
+
+def test_claimed_job_formatting_rejects_non_video_extension():
+    """Non-video extension must fail claim formatting."""
+    for bad_ext_path in ["/opt/fixtures/canonical.txt", "/opt/fixtures/canonical.jpg", "/opt/fixtures/canonical.png"]:
+        row = _create_mock_v2v_claim_row(bad_ext_path)
+        with pytest.raises(ValueError, match="MALFORMED_V2V_ENVELOPE"):
+            _format_claimed_job(row)
+
+
+def test_claimed_job_formatting_rejects_missing_or_empty_path():
+    """Missing or empty path must fail claim formatting."""
+    for empty_val in ["", None, "   "]:
+        row = _create_mock_v2v_claim_row(empty_val)
+        with pytest.raises(ValueError, match="MALFORMED_V2V_ENVELOPE"):
+            _format_claimed_job(row)
+
+
+def test_claimed_job_formatting_rejects_traversal_and_backslash():
+    """Directory traversal sequences and backslashes must fail claim formatting."""
+    for bad_path in [
+        "/opt/fixtures/../canonical.mp4",
+        "/opt/fixtures/%2e%2e/canonical.mp4",
+        "C:\\opt\\fixtures\\canonical.mp4",
+        "/opt\\fixtures\\canonical.mp4",
+    ]:
+        row = _create_mock_v2v_claim_row(bad_path)
+        with pytest.raises(ValueError, match="MALFORMED_V2V_ENVELOPE"):
+            _format_claimed_job(row)
+
+
+def test_claimed_job_formatting_accepts_canonical_absolute_mp4():
+    """Canonical absolute .mp4 must succeed claim formatting."""
+    good_path = "/opt/toanaas-worker/acceptance/fixtures/video_ai_video_reference/r16_09_canonical_v1.mp4"
+    row = _create_mock_v2v_claim_row(good_path)
+    claimed = _format_claimed_job(row)
+    assert claimed["payload"]["source_video_path"] == good_path
+
+
+# ─── 7. ZERO-WALLET SETTLEMENT EXEMPTION CONTRACT (R16.09G1) ─────────────────
+
+@pytest.mark.anyio
+async def test_acceptance_v2v_completion_returns_exempt_settlement_zero_wallet(test_db):
+    """Owner acceptance V2V completion must return explicit exempt settlement with 0 Xu and no bridge call."""
+    fixture_path = "/opt/toanaas-worker/acceptance/fixtures/video_ai_video_reference/r16_09_canonical_v1.mp4"
+    job = create_owner_acceptance_video_reference_job(
+        account_id="acc_owner_v2v",
+        prompt="V2V test prompt for settlement exemption",
+        source_video_path=fixture_path,
+        request_id="req_v2v_settle_001",
+    )
+    # Release and claim
+    release_owner_acceptance_video_reference_job(job["id"])
+    claimed = claim_product_video_job(
+        worker_id="test-acceptance-worker",
+        lease_seconds=300,
+        target_job_id=job["id"],
+    )
+    assert claimed is not None
+
+    # Complete with valid metadata and safe URL
+    valid_meta = {
+        "duration_seconds": 5.0,
+        "width": 720,
+        "height": 1280,
+        "file_size_bytes": 1048576,
+        "format": "mp4",
+        "codec": "h264",
+    }
+    safe_output_url = "https://storage.googleapis.com/toanaas-acceptance/output.mp4"
+    completed = complete_product_video_job(
+        job_id=job["id"],
+        worker_id="test-acceptance-worker",
+        output_metadata=valid_meta,
+        output_url=safe_output_url,
+    )
+    assert completed["status"] == "completed"
+
+    with patch("copyfast_bridge.bridge_request", new=AsyncMock()) as mock_bridge:
+        settlement = await settle_product_video_job_completion(completed)
+
+        # 1. Hard guarantee: CoreBridge private settlement endpoint is NEVER called
+        mock_bridge.assert_not_called()
+
+        # 2. Required outcome
+        assert settlement["ok"] is True
+        assert settlement["status"] == "exempt"
+        assert settlement["amount_xu"] == 0
+        assert settlement["exempt"] is True
+        assert settlement["duplicate"] is False
+        assert settlement["web_job_id"] == job["id"]
+
+    # 3. Verified in projection database table
+    with copyfast_db.read_transaction() as conn:
+        proj = conn.execute(
+            "SELECT status, amount_xu, error_code FROM web_product_video_settlement_projections WHERE web_job_id = ?",
+            (job["id"],),
+        ).fetchone()
+        assert proj is not None
+        assert proj[0] == "exempt"
+        assert proj[1] == 0
+        assert proj[2] is None
+
+
+@pytest.mark.anyio
+async def test_acceptance_v2v_completion_duplicate_settlement_replay(test_db):
+    """Replaying settlement on already exempt V2V job returns duplicate=True and exempt=True."""
+    fixture_path = "/opt/toanaas-worker/acceptance/fixtures/video_ai_video_reference/r16_09_canonical_v1.mp4"
+    job = create_owner_acceptance_video_reference_job(
+        account_id="acc_owner_v2v",
+        prompt="V2V test duplicate replay",
+        source_video_path=fixture_path,
+        request_id="req_v2v_replay_001",
+    )
+    release_owner_acceptance_video_reference_job(job["id"])
+    claim_product_video_job(
+        worker_id="test-replay-worker",
+        lease_seconds=300,
+        target_job_id=job["id"],
+    )
+    valid_meta = {
+        "duration_seconds": 5.0,
+        "width": 720,
+        "height": 1280,
+        "file_size_bytes": 1048576,
+        "format": "mp4",
+        "codec": "h264",
+    }
+    completed = complete_product_video_job(
+        job_id=job["id"],
+        worker_id="test-replay-worker",
+        output_metadata=valid_meta,
+        output_url="https://storage.googleapis.com/toanaas-acceptance/output2.mp4",
+    )
+
+    with patch("copyfast_bridge.bridge_request", new=AsyncMock()) as mock_bridge:
+        res1 = await settle_product_video_job_completion(completed)
+        assert res1["ok"] is True
+        assert res1["status"] == "exempt"
+        assert res1["duplicate"] is False
+
+        # Replay
+        res2 = await settle_product_video_job_completion(completed)
+        assert res2["ok"] is True
+        assert res2["status"] == "exempt"
+        assert res2["amount_xu"] == 0
+        assert res2["exempt"] is True
+        assert res2["duplicate"] is True
+        mock_bridge.assert_not_called()
+
+
+@pytest.mark.anyio
+async def test_ordinary_video_ai_prompt_settlement_remains_unchanged(test_db):
+    """Ordinary video_ai_prompt job must continue to call CoreBridge settlement and charge Xu."""
+    job = create_or_replay_product_video_job(
+        account_id="acc_cust_normal",
+        payload={
+            "prompt": "Prompt for normal customer job",
+            "aspect_ratio": "9:16",
+            "duration_seconds": 5,
+            "quality_tier": 200,
+        },
+        request_id="req_cust_settle_001",
+    )
+    claimed = claim_product_video_job(
+        worker_id="test-normal-worker",
+        lease_seconds=300,
+        target_job_id=job["id"],
+    )
+    valid_meta = {
+        "duration_seconds": 5.0,
+        "width": 720,
+        "height": 1280,
+        "file_size_bytes": 1048576,
+        "format": "mp4",
+        "codec": "h264",
+    }
+    completed = complete_product_video_job(
+        job_id=job["id"],
+        worker_id="test-normal-worker",
+        output_metadata=valid_meta,
+        output_url="https://storage.googleapis.com/toanaas-acceptance/cust_output.mp4",
+    )
+
+    mock_bridge_resp = {
+        "ok": True,
+        "status": "settled",
+        "settlement_id": "wpvs_normal_mock_001",
+        "web_job_id": job["id"],
+        "amount_xu": 259,
+        "duplicate": False,
+        "exempt": False,
+        "settled_at": datetime.now(timezone.utc).isoformat(),
+    }
+    with patch("copyfast_bridge.bridge_request", new=AsyncMock(return_value=mock_bridge_resp)) as mock_bridge:
+        settlement = await settle_product_video_job_completion(completed)
+        mock_bridge.assert_called_once()
+        assert settlement["ok"] is True
+        assert settlement["status"] == "settled"
+        assert settlement["amount_xu"] == 259
+        assert settlement["exempt"] is False
+
+
+@pytest.mark.anyio
+async def test_v2v_without_acceptance_only_marker_does_not_trigger_exemption(test_db):
+    """V2V job lacking acceptance_only=True marker must NOT trigger zero-wallet exemption."""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    valid_meta = {
+        "duration_seconds": 5.0,
+        "width": 720,
+        "height": 1280,
+        "file_size_bytes": 1048576,
+        "format": "mp4",
+        "codec": "h264",
+    }
+    meta_json = json.dumps(valid_meta)
+    job_id = "pvj_v2v_unmarked"
+    with copyfast_db.transaction() as conn:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO web_product_video_jobs
+            (id, request_id, account_id, product_key, routing_product_key, prompt,
+             aspect_ratio, duration_seconds, quality_tier, scene_count, status,
+             status_reason, payload_hash, bridge_envelope, output_metadata,
+             output_url, created_at, updated_at)
+            VALUES (?, 'req_unmarked_01', 'acc_cust_normal', 'video_ai_video_reference',
+                    'video_ai_video_reference', 'Unmarked V2V', '9:16', 5, 500, 1,
+                    'completed', 'COMPLETED', 'hash', '{"source_video_path": "/opt/canonical.mp4"}',
+                    ?, 'https://storage.googleapis.com/test/out.mp4', ?, ?)
+            """,
+            (job_id, meta_json, now_iso, now_iso),
+        )
+
+    completed_job = {
+        "id": job_id,
+        "account_id": "acc_cust_normal",
+        "product_key": "video_ai_video_reference",
+        "status": "completed",
+        "output_url": "https://storage.googleapis.com/test/out.mp4",
+        "output_metadata": valid_meta,
+        "bridge_envelope": {"source_video_path": "/opt/canonical.mp4"},
+    }
+
+    mock_bridge_resp = {
+        "ok": True,
+        "status": "settled",
+        "settlement_id": "wpvs_unmarked_001",
+        "web_job_id": job_id,
+        "amount_xu": 500,
+        "duplicate": False,
+        "exempt": False,
+        "settled_at": now_iso,
+    }
+    with patch("copyfast_bridge.bridge_request", new=AsyncMock(return_value=mock_bridge_resp)) as mock_bridge:
+        settlement = await settle_product_video_job_completion(completed_job)
+        mock_bridge.assert_called_once()
+        assert settlement["status"] == "settled"
+        assert settlement["amount_xu"] == 500
+        assert settlement["exempt"] is False
+
+
+@pytest.mark.anyio
+async def test_video_ai_prompt_with_fake_acceptance_marker_not_exempt(test_db):
+    """Ordinary video_ai_prompt job with injected acceptance_only=True must NOT be exempt."""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    valid_meta = {
+        "duration_seconds": 5.0,
+        "width": 720,
+        "height": 1280,
+        "file_size_bytes": 1048576,
+        "format": "mp4",
+        "codec": "h264",
+    }
+    meta_json = json.dumps(valid_meta)
+    job_id = "pvj_fake_acceptance_marker"
+    with copyfast_db.transaction() as conn:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO web_product_video_jobs
+            (id, request_id, account_id, product_key, routing_product_key, prompt,
+             aspect_ratio, duration_seconds, quality_tier, scene_count, status,
+             status_reason, payload_hash, bridge_envelope, output_metadata,
+             output_url, created_at, updated_at)
+            VALUES (?, 'req_fake_marker_01', 'acc_cust_normal', 'video_ai_prompt',
+                    'video_ai_prompt', 'Prompt with fake marker', '9:16', 5, 200, 1,
+                    'completed', 'COMPLETED', 'hash', '{"acceptance_only": true}',
+                    ?, 'https://storage.googleapis.com/test/out.mp4', ?, ?)
+            """,
+            (job_id, meta_json, now_iso, now_iso),
+        )
+
+    completed_job = {
+        "id": job_id,
+        "account_id": "acc_cust_normal",
+        "product_key": "video_ai_prompt",
+        "status": "completed",
+        "output_url": "https://storage.googleapis.com/test/out.mp4",
+        "output_metadata": valid_meta,
+        "bridge_envelope": {"acceptance_only": True},
+    }
+
+    mock_bridge_resp = {
+        "ok": True,
+        "status": "settled",
+        "settlement_id": "wpvs_fake_marker_001",
+        "web_job_id": job_id,
+        "amount_xu": 259,
+        "duplicate": False,
+        "exempt": False,
+        "settled_at": now_iso,
+    }
+    with patch("copyfast_bridge.bridge_request", new=AsyncMock(return_value=mock_bridge_resp)) as mock_bridge:
+        settlement = await settle_product_video_job_completion(completed_job)
+        mock_bridge.assert_called_once()
+        assert settlement["status"] == "settled"
+        assert settlement["amount_xu"] == 259
+        assert settlement["exempt"] is False

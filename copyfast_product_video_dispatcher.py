@@ -34,6 +34,7 @@ from copyfast_product_video_job_bridge import (
     CANONICAL_PRODUCT_KEY,
     create_owner_acceptance_video_reference_job,
     is_safe_video_output_url,
+    is_valid_canonical_source_video_path,
     release_owner_acceptance_video_reference_job,
 )
 
@@ -674,20 +675,14 @@ def _format_claimed_job(row: tuple) -> dict[str, Any]:
     }
 
     if product_key_val == "video_ai_video_reference":
-        source_video = str(
-            env.get("source_video_path")
-            or env.get("source_video")
-            or ""
-        ).strip()
-        if not source_video:
+        raw_source_video = env.get("source_video_path")
+        if raw_source_video is None:
+            raw_source_video = env.get("source_video")
+        if not is_valid_canonical_source_video_path(raw_source_video):
             raise ValueError(
-                f"MALFORMED_V2V_ENVELOPE: missing or empty source_video_path for job {row[0]}"
+                f"MALFORMED_V2V_ENVELOPE: invalid or missing canonical source_video_path for job {row[0]}"
             )
-        if ".." in source_video or "\\" in source_video or "%2e" in source_video.lower():
-            raise ValueError(
-                f"MALFORMED_V2V_ENVELOPE: invalid traversal or backslash in source_video_path for job {row[0]}"
-            )
-        payload["source_video_path"] = source_video
+        payload["source_video_path"] = str(raw_source_video)
 
     return {
         "id": str(row[0]),
@@ -781,6 +776,122 @@ async def settle_product_video_job_completion(
             "status": "failed",
             "error_code": "INVALID_OUTPUT_METADATA",
             "message": f"Output metadata validation failed: {meta_err}",
+        }
+
+    # 2b. Authoritative server-persisted job check for Owner acceptance exemption
+    persisted_product_key = ""
+    persisted_env: dict[str, Any] = {}
+    persisted_account_id = ""
+
+    with read_transaction() as conn:
+        job_row = conn.execute(
+            """
+            SELECT id, product_key, bridge_envelope, account_id
+            FROM web_product_video_jobs
+            WHERE id = ?
+            """,
+            (job_id,),
+        ).fetchone()
+
+    if job_row:
+        persisted_product_key = str(job_row[1] or "")
+        raw_env = job_row[2]
+        if isinstance(raw_env, str):
+            try:
+                persisted_env = json.loads(raw_env) if raw_env else {}
+            except Exception:
+                persisted_env = {}
+        elif isinstance(raw_env, dict):
+            persisted_env = raw_env
+        else:
+            persisted_env = {}
+        persisted_account_id = str(job_row[3] or "")
+    else:
+        persisted_product_key = str(completed_job.get("product_key") or "")
+        raw_env = completed_job.get("bridge_envelope")
+        persisted_env = raw_env if isinstance(raw_env, dict) else {}
+        persisted_account_id = str(completed_job.get("account_id") or "")
+
+    is_v2v_acceptance = (
+        persisted_product_key == "video_ai_video_reference"
+        and bool(persisted_env.get("acceptance_only") is True)
+    )
+
+    if is_v2v_acceptance:
+        idempotency_key = f"web_product_video_final_delivery:{job_id}"
+        effective_acc_id = persisted_account_id or str(completed_job.get("account_id") or "").strip()
+        clean_uid = ""
+        if effective_acc_id:
+            with read_transaction() as conn:
+                acc_row = conn.execute(
+                    "SELECT canonical_user_id FROM web_accounts WHERE id = ?",
+                    (effective_acc_id,),
+                ).fetchone()
+                if acc_row and acc_row[0]:
+                    clean_uid = str(acc_row[0]).replace("telegram-", "").strip()
+        if not clean_uid:
+            clean_uid = f"owner_acceptance_{effective_acc_id}" if effective_acc_id else "owner_acceptance"
+
+        with read_transaction() as conn:
+            existing_proj = conn.execute(
+                """
+                SELECT id, canonical_settlement_id, status, amount_xu, settled_at, error_code
+                FROM web_product_video_settlement_projections
+                WHERE web_job_id = ?
+                """,
+                (job_id,),
+            ).fetchone()
+
+        if existing_proj and existing_proj[2] == "exempt":
+            return {
+                "ok": True,
+                "status": "exempt",
+                "settlement_id": existing_proj[1],
+                "web_job_id": job_id,
+                "canonical_user_id": clean_uid,
+                "amount_xu": 0,
+                "settled_at": existing_proj[4],
+                "duplicate": True,
+                "exempt": True,
+            }
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        settlement_id = f"wpvs_exempt_{job_id}"
+        proj_id = str(existing_proj[0]) if existing_proj else f"pvsp_{uuid.uuid4().hex}"
+        with transaction() as conn:
+            conn.execute(
+                """
+                INSERT INTO web_product_video_settlement_projections
+                (id, web_job_id, canonical_settlement_id, canonical_user_id, idempotency_key,
+                 amount_xu, status, settled_at, error_code, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, 0, 'exempt', ?, NULL, ?, ?)
+                ON CONFLICT(web_job_id) DO UPDATE SET
+                    canonical_settlement_id = excluded.canonical_settlement_id,
+                    canonical_user_id = excluded.canonical_user_id,
+                    amount_xu = 0,
+                    status = 'exempt',
+                    settled_at = excluded.settled_at,
+                    error_code = NULL,
+                    updated_at = excluded.updated_at
+                """,
+                (proj_id, job_id, settlement_id, clean_uid, idempotency_key, now_iso, now_iso, now_iso),
+            )
+
+        LOGGER.info(
+            "Owner acceptance V2V job completed with zero-wallet settlement exemption: job_id=%s",
+            job_id,
+        )
+
+        return {
+            "ok": True,
+            "status": "exempt",
+            "settlement_id": settlement_id,
+            "web_job_id": job_id,
+            "canonical_user_id": clean_uid,
+            "amount_xu": 0,
+            "settled_at": now_iso,
+            "duplicate": False,
+            "exempt": True,
         }
 
     # 3. Derive canonical_user_id strictly from server mapping (web_accounts)
