@@ -6401,6 +6401,26 @@ def ensure_copyfast_schema() -> None:
                 pass
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS web_product_video_settlement_projections (
+                id TEXT PRIMARY KEY,
+                web_job_id TEXT UNIQUE NOT NULL,
+                canonical_settlement_id TEXT,
+                canonical_user_id TEXT NOT NULL,
+                idempotency_key TEXT UNIQUE NOT NULL,
+                amount_xu INTEGER NOT NULL DEFAULT 0,
+                status TEXT NOT NULL DEFAULT 'pending',
+                settled_at TEXT,
+                error_code TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(web_job_id) REFERENCES web_product_video_jobs(id)
+            )
+            """
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_pv_settlement_job ON web_product_video_settlement_projections(web_job_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_pv_settlement_idemp ON web_product_video_settlement_projections(idempotency_key)")
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS web_video_trend_jobs (
                 id TEXT PRIMARY KEY,
                 request_id TEXT NOT NULL,

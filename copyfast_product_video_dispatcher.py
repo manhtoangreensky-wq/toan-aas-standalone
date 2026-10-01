@@ -25,6 +25,7 @@ import logging
 import os
 import re
 from typing import Any
+import uuid
 
 from fastapi import HTTPException, Request, status
 
@@ -150,7 +151,7 @@ def validate_video_artifact_metadata(metadata: Any) -> tuple[bool, str, dict[str
     if fmt not in ACCEPTED_VIDEO_FORMATS:
         return False, "INVALID_FORMAT", {}
 
-    codec = str(metadata.get("codec") or "").strip().lower()
+    codec = str(metadata.get("codec") or metadata.get("video_codec") or "").strip().lower()
     if codec not in ACCEPTED_VIDEO_CODECS:
         return False, "INVALID_CODEC", {}
 
@@ -693,3 +694,239 @@ def _format_claimed_job(row: tuple) -> dict[str, Any]:
             "scene_count": int(row[9]),
         },
     }
+
+
+async def settle_product_video_job_completion(
+    completed_job: dict[str, Any],
+    *,
+    request_id: str | None = None,
+) -> dict[str, Any]:
+    """Request canonical financial settlement from Bot Core after validated completion.
+
+    Invariants:
+    - SETTLEMENT_TRIGGER=AFTER_VALIDATED_WEB_COMPLETION
+    - SETTLEMENT_BEFORE_VALID_ARTIFACT=NO
+    - SETTLEMENT_ON_FAILED_JOB=NO
+    - SETTLEMENT_ON_UNSAFE_OUTPUT=NO
+    - SETTLEMENT_ON_INVALID_METADATA=NO
+    - CUSTOMER_CANONICAL_USER_ID_FROM_SERVER_MAPPING=YES
+    - CUSTOMER_CANONICAL_USER_ID_FROM_PAYLOAD=NO
+    - CROSS_ACCOUNT_SETTLEMENT=BLOCKED
+    - RETRY_USES_SAME_IDEMPOTENCY_KEY=YES
+    - RETRY_CAN_DOUBLE_CHARGE=NO
+    - CORE_BRIDGE_FAILURE_FAKE_SETTLEMENT=NO
+    - WEB_DIRECT_WALLET_MUTATION=NO
+    """
+    ensure_copyfast_schema()
+    job_id = str(completed_job.get("id") or "").strip()
+    if not job_id:
+        return {"ok": False, "status": "failed", "error_code": "JOB_ID_REQUIRED"}
+
+    # 1. Verification of job status: must be COMPLETED
+    job_status = str(completed_job.get("status") or "").strip()
+    if job_status != STATUS_COMPLETED:
+        return {
+            "ok": False,
+            "status": "failed",
+            "error_code": "SETTLEMENT_NOT_ALLOWED_ON_NON_COMPLETED_JOB",
+            "message": f"Job status is '{job_status}', expected '{STATUS_COMPLETED}'",
+        }
+
+    # 2. Verification of output artifact
+    output_url = str(completed_job.get("output_url") or "").strip()
+    if not output_url or not is_safe_video_output_url(output_url):
+        return {
+            "ok": False,
+            "status": "failed",
+            "error_code": "UNSAFE_OUTPUT_URL",
+            "message": "Output URL is unsafe or missing",
+        }
+
+    output_meta = completed_job.get("output_metadata")
+    if not isinstance(output_meta, dict):
+        return {
+            "ok": False,
+            "status": "failed",
+            "error_code": "INVALID_OUTPUT_METADATA",
+            "message": "Output metadata must be a dictionary",
+        }
+    is_valid_meta, meta_err, sanitized_meta = validate_video_artifact_metadata(output_meta)
+    if not is_valid_meta:
+        return {
+            "ok": False,
+            "status": "failed",
+            "error_code": "INVALID_OUTPUT_METADATA",
+            "message": f"Output metadata validation failed: {meta_err}",
+        }
+
+    # 3. Derive canonical_user_id strictly from server mapping (web_accounts)
+    account_id = str(completed_job.get("account_id") or "").strip()
+    if not account_id:
+        return {
+            "ok": False,
+            "status": "failed",
+            "error_code": "ACCOUNT_ID_REQUIRED",
+            "message": "Job does not possess an account_id",
+        }
+
+    canonical_user_id = ""
+    with read_transaction() as conn:
+        row = conn.execute(
+            "SELECT canonical_user_id FROM web_accounts WHERE id = ?",
+            (account_id,),
+        ).fetchone()
+        if row and row[0]:
+            canonical_user_id = str(row[0]).strip()
+
+    if not canonical_user_id:
+        # Fail closed: record failed projection
+        now_iso = datetime.now(timezone.utc).isoformat()
+        proj_id = f"pvsp_{uuid.uuid4().hex}"
+        idempotency_key = f"web_product_video_final_delivery:{job_id}"
+        with transaction() as conn:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO web_product_video_settlement_projections
+                (id, web_job_id, canonical_settlement_id, canonical_user_id, idempotency_key,
+                 amount_xu, status, settled_at, error_code, created_at, updated_at)
+                VALUES (?, ?, NULL, '', ?, 0, 'failed', NULL, 'CANONICAL_USER_MAPPING_MISSING', ?, ?)
+                """,
+                (proj_id, job_id, idempotency_key, now_iso, now_iso),
+            )
+        return {
+            "ok": False,
+            "status": "failed",
+            "error_code": "CANONICAL_USER_MAPPING_MISSING",
+            "message": "Web account is not linked to a canonical Telegram user ID",
+        }
+
+    # Clean numeric canonical_user_id
+    clean_uid = canonical_user_id.replace("telegram-", "").strip()
+
+    # 4. Check existing projection (idempotency)
+    idempotency_key = f"web_product_video_final_delivery:{job_id}"
+    with read_transaction() as conn:
+        existing_proj = conn.execute(
+            """
+            SELECT id, canonical_settlement_id, status, amount_xu, settled_at, error_code
+            FROM web_product_video_settlement_projections
+            WHERE web_job_id = ?
+            """,
+            (job_id,),
+        ).fetchone()
+
+    if existing_proj and existing_proj[2] in ("settled", "exempt"):
+        return {
+            "ok": True,
+            "status": existing_proj[2],
+            "settlement_id": existing_proj[1],
+            "web_job_id": job_id,
+            "canonical_user_id": clean_uid,
+            "amount_xu": existing_proj[3],
+            "settled_at": existing_proj[4],
+            "duplicate": True,
+        }
+
+    # Record or update projection as 'pending'
+    now_iso = datetime.now(timezone.utc).isoformat()
+    proj_id = str(existing_proj[0]) if existing_proj else f"pvsp_{uuid.uuid4().hex}"
+    with transaction() as conn:
+        conn.execute(
+            """
+            INSERT INTO web_product_video_settlement_projections
+            (id, web_job_id, canonical_settlement_id, canonical_user_id, idempotency_key,
+             amount_xu, status, settled_at, error_code, created_at, updated_at)
+            VALUES (?, ?, NULL, ?, ?, 0, 'pending', NULL, NULL, ?, ?)
+            ON CONFLICT(web_job_id) DO UPDATE SET
+                status = 'pending',
+                error_code = NULL,
+                updated_at = excluded.updated_at
+            """,
+            (proj_id, job_id, clean_uid, idempotency_key, now_iso, now_iso),
+        )
+
+    # 5. Call CoreBridge private settlement endpoint
+    effective_req_id = str(request_id or completed_job.get("request_id") or uuid.uuid4())
+    tier_id = int(completed_job.get("quality_tier") or 200)
+    scene_count = max(1, int(completed_job.get("scene_count") or 1))
+
+    try:
+        from copyfast_bridge import bridge_request
+
+        bridge_res = await bridge_request(
+            "POST",
+            "/internal/v1/web-product-video/settle",
+            payload={
+                "web_job_id": job_id,
+                "web_request_id": effective_req_id,
+                "canonical_user_id": clean_uid,
+                "product_key": CANONICAL_PRODUCT_KEY,
+                "tier_id": tier_id,
+                "scene_count": scene_count,
+                "output_url": output_url,
+                "validated_output_metadata": sanitized_meta,
+                "idempotency_key": idempotency_key,
+            },
+            request_id=effective_req_id,
+            actor_id=clean_uid,
+        )
+    except Exception as exc:
+        LOGGER.exception("CoreBridge settlement request failed for job %s: %s", job_id, exc)
+        bridge_res = {
+            "ok": False,
+            "error_code": "CORE_BRIDGE_REQUEST_FAILED",
+            "message": str(exc),
+        }
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    if bridge_res.get("ok"):
+        res_status = str(bridge_res.get("status") or "settled")
+        settlement_id = str(bridge_res.get("settlement_id") or "")
+        amount_xu = int(bridge_res.get("amount_xu") or 0)
+        settled_at = str(bridge_res.get("settled_at") or now_iso)
+
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_product_video_settlement_projections
+                SET canonical_settlement_id = ?,
+                    amount_xu = ?,
+                    status = ?,
+                    settled_at = ?,
+                    error_code = NULL,
+                    updated_at = ?
+                WHERE web_job_id = ?
+                """,
+                (settlement_id, amount_xu, res_status, settled_at, now_iso, job_id),
+            )
+        return {
+            "ok": True,
+            "status": res_status,
+            "settlement_id": settlement_id,
+            "web_job_id": job_id,
+            "canonical_user_id": clean_uid,
+            "amount_xu": amount_xu,
+            "settled_at": settled_at,
+            "duplicate": bool(bridge_res.get("duplicate")),
+            "exempt": bool(bridge_res.get("exempt")),
+        }
+    else:
+        err_code = str(bridge_res.get("error_code") or "SETTLEMENT_FAILED")
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_product_video_settlement_projections
+                SET status = 'failed',
+                    error_code = ?,
+                    updated_at = ?
+                WHERE web_job_id = ?
+                """,
+                (err_code, now_iso, job_id),
+            )
+        return {
+            "ok": False,
+            "status": "failed",
+            "error_code": err_code,
+            "message": str(bridge_res.get("message") or "Settlement failed on canonical core"),
+        }
+
