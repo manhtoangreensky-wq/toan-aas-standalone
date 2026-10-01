@@ -194,6 +194,7 @@ from copyfast_product_video_dispatcher import (
     get_product_video_dispatcher_metrics,
     heartbeat_product_video_job,
     reconcile_stalled_product_video_jobs,
+    settle_product_video_job_completion,
     verify_worker_access,
 )
 
@@ -7869,6 +7870,11 @@ async def worker_product_video_complete(payload: ProductVideoWorkerCompleteReque
         output_metadata=payload.output_metadata,
         output_url=payload.output_url,
     )
+    settlement = await settle_product_video_job_completion(
+        result,
+        request_id=_request_id(request),
+    )
+    result["settlement"] = settlement
     return envelope(
         True,
         "Hoàn thành job Product Video thành công.",
