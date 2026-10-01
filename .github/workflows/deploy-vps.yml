@@ -93,6 +93,15 @@ jobs:
 
             PREV_HEAD=\"\$(git rev-parse HEAD)\"
 
+            echo '=== Fetching Bundle Objects and Verifying Target ==='
+            git fetch \"\$STAGING_DIR/release.bundle\" refs/deployments/release:refs/deployments/release
+            FETCHED_SHA=\"\$(git rev-parse refs/deployments/release)\"
+            if [[ \"\$FETCHED_SHA\" != \"\$TARGET_SHA\" ]]; then
+              echo \"ERROR: FETCHED_SHA (\$FETCHED_SHA) != TARGET_SHA (\$TARGET_SHA)\" >&2
+              exit 1
+            fi
+            git cat-file -e \"\$TARGET_SHA^{commit}\"
+
             echo '=== Forward-Only Deploy Guard ==='
             if ! git merge-base --is-ancestor \"\$PREV_HEAD\" \"\$TARGET_SHA\"; then
               echo \"ERROR: BLOCKED_NON_FORWARD_WEB_DEPLOY: PREV_HEAD (\$PREV_HEAD) is not an ancestor of TARGET_SHA (\$TARGET_SHA)\" >&2
@@ -112,15 +121,6 @@ jobs:
 
             TRACKED_COUNT=\"\$(wc -l < \"\$BACKUP_DIR/tracked-files.txt\")\"
             printf 'previous_head: %s\ntarget_sha: %s\nbackup_timestamp_utc: %s\ntracked_file_count: %s\n' \"\$PREV_HEAD\" \"\$TARGET_SHA\" \"\$UTC_TIMESTAMP\" \"\$TRACKED_COUNT\" > \"\$BACKUP_DIR/manifest.txt\"
-
-            echo '=== Fetching Bundle Objects and Verifying Target ==='
-            git fetch \"\$STAGING_DIR/release.bundle\" refs/deployments/release:refs/deployments/release
-            FETCHED_SHA=\"\$(git rev-parse refs/deployments/release)\"
-            if [[ \"\$FETCHED_SHA\" != \"\$TARGET_SHA\" ]]; then
-              echo \"ERROR: FETCHED_SHA (\$FETCHED_SHA) != TARGET_SHA (\$TARGET_SHA)\" >&2
-              exit 1
-            fi
-            git cat-file -e \"\$TARGET_SHA^{commit}\"
 
             echo '=== Quarantining Removed Tracked Files ==='
             git ls-tree -r --name-only \"\$TARGET_SHA\" > \"\$STAGING_DIR/target-files.txt\"

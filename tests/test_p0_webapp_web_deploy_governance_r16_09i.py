@@ -214,3 +214,130 @@ def test_deploy_workflow_preserves_existing_safety() -> None:
         assert marker in text, (
             f"deploy-vps.yml must preserve safety mechanism: '{marker}'"
         )
+
+
+# ---------------------------------------------------------------------------
+# §R16.09I1  EXECUTION ORDER CORRECTNESS
+# ---------------------------------------------------------------------------
+
+
+def _ssh_block(text: str) -> str:
+    """Extract the remote SSH execution block from deploy-vps.yml."""
+    # The SSH heredoc block starts after the last ssh command line that opens
+    # a quoted heredoc string and ends at the closing quote.
+    # We locate it by finding the 'Deploy Web to VPS via SSH' step.
+    marker = "Deploy Web to VPS via SSH"
+    idx = text.index(marker)
+    return text[idx:]
+
+
+def _line_index(block: str, needle: str) -> int:
+    """Return the line number (0-based) of the first line containing needle."""
+    for i, line in enumerate(block.splitlines()):
+        if needle in line:
+            return i
+    raise ValueError(f"Needle '{needle}' not found in block")
+
+
+def test_fetch_bundle_before_forward_guard() -> None:
+    """git fetch release.bundle must precede Forward-Only Deploy Guard."""
+    block = _ssh_block(DEPLOY_WORKFLOW.read_text(encoding="utf-8"))
+    fetch_idx = _line_index(block, "release.bundle")
+    guard_idx = _line_index(block, "Forward-Only Deploy Guard")
+    assert fetch_idx < guard_idx, (
+        f"release.bundle fetch (line {fetch_idx}) must precede "
+        f"Forward-Only Deploy Guard (line {guard_idx})"
+    )
+
+
+def test_target_object_verify_before_forward_guard() -> None:
+    """git cat-file -e TARGET_SHA must precede Forward-Only Deploy Guard."""
+    block = _ssh_block(DEPLOY_WORKFLOW.read_text(encoding="utf-8"))
+    catfile_idx = _line_index(block, "git cat-file -e")
+    guard_idx = _line_index(block, "Forward-Only Deploy Guard")
+    assert catfile_idx < guard_idx, (
+        f"git cat-file -e (line {catfile_idx}) must precede "
+        f"Forward-Only Deploy Guard (line {guard_idx})"
+    )
+
+
+def test_forward_guard_before_source_apply() -> None:
+    """Forward-Only Deploy Guard must precede Applying Release Source."""
+    block = _ssh_block(DEPLOY_WORKFLOW.read_text(encoding="utf-8"))
+    guard_idx = _line_index(block, "Forward-Only Deploy Guard")
+    apply_idx = _line_index(block, "Applying Release Source")
+    assert guard_idx < apply_idx, (
+        f"Forward-Only Deploy Guard (line {guard_idx}) must precede "
+        f"Applying Release Source (line {apply_idx})"
+    )
+
+
+def test_forward_guard_before_web_restart() -> None:
+    """Forward-Only Deploy Guard must precede systemctl restart."""
+    block = _ssh_block(DEPLOY_WORKFLOW.read_text(encoding="utf-8"))
+    guard_idx = _line_index(block, "Forward-Only Deploy Guard")
+    restart_idx = _line_index(block, "systemctl restart toanaas-web.service")
+    assert guard_idx < restart_idx, (
+        f"Forward-Only Deploy Guard (line {guard_idx}) must precede "
+        f"systemctl restart (line {restart_idx})"
+    )
+
+
+def test_forward_guard_before_backup() -> None:
+    """Forward-Only Deploy Guard must precede backup creation."""
+    block = _ssh_block(DEPLOY_WORKFLOW.read_text(encoding="utf-8"))
+    guard_idx = _line_index(block, "Forward-Only Deploy Guard")
+    backup_idx = _line_index(block, "Creating Tracked Source Backup")
+    assert guard_idx < backup_idx, (
+        f"Forward-Only Deploy Guard (line {guard_idx}) must precede "
+        f"Creating Tracked Source Backup (line {backup_idx})"
+    )
+
+
+def test_no_source_mutation_before_guard() -> None:
+    """No source-mutating operations may appear before the forward guard.
+
+    Source mutations: tar extraction, git update-ref (heads/main),
+    systemctl restart, file quarantine moves.
+    """
+    block = _ssh_block(DEPLOY_WORKFLOW.read_text(encoding="utf-8"))
+    guard_idx = _line_index(block, "Forward-Only Deploy Guard")
+    mutation_markers = [
+        "Applying Release Source",
+        "Restarting Web Service",
+        "Quarantining Removed",
+        "Creating Tracked Source Backup",
+    ]
+    for marker in mutation_markers:
+        marker_idx = _line_index(block, marker)
+        assert marker_idx > guard_idx, (
+            f"Mutation '{marker}' (line {marker_idx}) must not appear "
+            f"before Forward-Only Deploy Guard (line {guard_idx})"
+        )
+
+
+def test_full_safe_execution_order() -> None:
+    """Verify the complete safe execution order:
+    fetch_bundle < target_verify < forward_guard < backup < quarantine < apply < restart.
+    """
+    block = _ssh_block(DEPLOY_WORKFLOW.read_text(encoding="utf-8"))
+    ordered_markers = [
+        ("release.bundle", "fetch bundle"),
+        ("git cat-file -e", "target verify"),
+        ("Forward-Only Deploy Guard", "forward guard"),
+        ("Creating Tracked Source Backup", "backup"),
+        ("Quarantining Removed", "quarantine"),
+        ("Applying Release Source", "apply"),
+        ("systemctl restart toanaas-web.service", "restart"),
+    ]
+    indices = []
+    for marker, label in ordered_markers:
+        idx = _line_index(block, marker)
+        indices.append((idx, label))
+    for i in range(len(indices) - 1):
+        curr_idx, curr_label = indices[i]
+        next_idx, next_label = indices[i + 1]
+        assert curr_idx < next_idx, (
+            f"Order violation: '{curr_label}' (line {curr_idx}) must precede "
+            f"'{next_label}' (line {next_idx})"
+        )
