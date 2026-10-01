@@ -676,8 +676,6 @@ def _format_claimed_job(row: tuple) -> dict[str, Any]:
 
     if product_key_val == "video_ai_video_reference":
         raw_source_video = env.get("source_video_path")
-        if raw_source_video is None:
-            raw_source_video = env.get("source_video")
         if not is_valid_canonical_source_video_path(raw_source_video):
             raise ValueError(
                 f"MALFORMED_V2V_ENVELOPE: invalid or missing canonical source_video_path for job {row[0]}"
@@ -778,11 +776,7 @@ async def settle_product_video_job_completion(
             "message": f"Output metadata validation failed: {meta_err}",
         }
 
-    # 2b. Authoritative server-persisted job check for Owner acceptance exemption
-    persisted_product_key = ""
-    persisted_env: dict[str, Any] = {}
-    persisted_account_id = ""
-
+    # 2b. Authoritative server-persisted job check (persisted row is the only authority)
     with read_transaction() as conn:
         job_row = conn.execute(
             """
@@ -793,24 +787,26 @@ async def settle_product_video_job_completion(
             (job_id,),
         ).fetchone()
 
-    if job_row:
-        persisted_product_key = str(job_row[1] or "")
-        raw_env = job_row[2]
-        if isinstance(raw_env, str):
-            try:
-                persisted_env = json.loads(raw_env) if raw_env else {}
-            except Exception:
-                persisted_env = {}
-        elif isinstance(raw_env, dict):
-            persisted_env = raw_env
-        else:
+    if not job_row:
+        return {
+            "ok": False,
+            "status": "failed",
+            "error_code": "PERSISTED_JOB_NOT_FOUND",
+            "message": f"Persisted job record not found for job_id '{job_id}'",
+        }
+
+    persisted_product_key = str(job_row[1] or "")
+    raw_env = job_row[2]
+    if isinstance(raw_env, str):
+        try:
+            persisted_env = json.loads(raw_env) if raw_env else {}
+        except Exception:
             persisted_env = {}
-        persisted_account_id = str(job_row[3] or "")
+    elif isinstance(raw_env, dict):
+        persisted_env = raw_env
     else:
-        persisted_product_key = str(completed_job.get("product_key") or "")
-        raw_env = completed_job.get("bridge_envelope")
-        persisted_env = raw_env if isinstance(raw_env, dict) else {}
-        persisted_account_id = str(completed_job.get("account_id") or "")
+        persisted_env = {}
+    persisted_account_id = str(job_row[3] or "")
 
     is_v2v_acceptance = (
         persisted_product_key == "video_ai_video_reference"

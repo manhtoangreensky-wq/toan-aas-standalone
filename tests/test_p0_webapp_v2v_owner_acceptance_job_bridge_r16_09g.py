@@ -470,6 +470,42 @@ def test_claimed_job_formatting_rejects_traversal_and_backslash():
             _format_claimed_job(row)
 
 
+def test_claimed_job_formatting_rejects_missing_source_video_path_even_if_alias_present():
+    """Missing source_video_path + valid source_video alias must still fail claim formatting."""
+    env = {
+        "product_key": "video_ai_video_reference",
+        "acceptance_only": True,
+        "source_video": "/opt/toanaas-worker/acceptance/fixtures/video_ai_video_reference/r16_09_canonical_v1.mp4",
+    }
+    row = (
+        "pvj_alias_001",
+        "req_alias_001",
+        "acc_owner_v2v",
+        "video_ai_video_reference",
+        "video_ai_video_reference",
+        "Alias test prompt",
+        "9:16",
+        5,
+        500,
+        1,
+        "processing",
+        "CLAIMED",
+        None,
+        "fakehash",
+        json.dumps(env),
+        None,
+        "2026-10-01T00:00:00Z",
+        "2026-10-01T00:00:00Z",
+        "worker-1",
+        "2026-10-01T00:00:00Z",
+        "2026-10-01T00:05:00Z",
+        1,
+        None,
+    )
+    with pytest.raises(ValueError, match="MALFORMED_V2V_ENVELOPE"):
+        _format_claimed_job(row)
+
+
 def test_claimed_job_formatting_accepts_canonical_absolute_mp4():
     """Canonical absolute .mp4 must succeed claim formatting."""
     good_path = "/opt/toanaas-worker/acceptance/fixtures/video_ai_video_reference/r16_09_canonical_v1.mp4"
@@ -756,3 +792,41 @@ async def test_video_ai_prompt_with_fake_acceptance_marker_not_exempt(test_db):
         assert settlement["status"] == "settled"
         assert settlement["amount_xu"] == 259
         assert settlement["exempt"] is False
+
+
+@pytest.mark.anyio
+async def test_settle_fails_closed_when_persisted_job_row_missing(test_db):
+    """Forged completed_job with v2v and acceptance_only=true but NO persisted row must fail closed."""
+    valid_meta = {
+        "duration_seconds": 5.0,
+        "width": 720,
+        "height": 1280,
+        "file_size_bytes": 1048576,
+        "format": "mp4",
+        "codec": "h264",
+    }
+    forged_job = {
+        "id": "pvj_forged_no_db_row",
+        "account_id": "acc_owner_v2v",
+        "product_key": "video_ai_video_reference",
+        "status": "completed",
+        "output_url": "https://storage.googleapis.com/test/out.mp4",
+        "output_metadata": valid_meta,
+        "bridge_envelope": {"acceptance_only": True, "source_video_path": "/opt/canonical.mp4"},
+    }
+    with patch("copyfast_bridge.bridge_request", new=AsyncMock()) as mock_bridge:
+        res = await settle_product_video_job_completion(forged_job)
+        # 1. Hard guarantee: CoreBridge is NEVER called on missing persisted row
+        mock_bridge.assert_not_called()
+        # 2. Hard guarantee: Caller data cannot authorize acceptance exemption
+        assert res["ok"] is False
+        assert res["status"] == "failed"
+        assert res["error_code"] == "PERSISTED_JOB_NOT_FOUND"
+        assert res.get("exempt") is not True
+
+    # 3. Verify no projection record created
+    with copyfast_db.read_transaction() as conn:
+        proj = conn.execute(
+            "SELECT 1 FROM web_product_video_settlement_projections WHERE web_job_id = 'pvj_forged_no_db_row'"
+        ).fetchone()
+        assert proj is None
