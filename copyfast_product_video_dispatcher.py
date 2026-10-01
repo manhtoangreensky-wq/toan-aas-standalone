@@ -30,7 +30,12 @@ import uuid
 from fastapi import HTTPException, Request, status
 
 from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, utc_now
-from copyfast_product_video_job_bridge import CANONICAL_PRODUCT_KEY, is_safe_video_output_url
+from copyfast_product_video_job_bridge import (
+    CANONICAL_PRODUCT_KEY,
+    create_owner_acceptance_video_reference_job,
+    is_safe_video_output_url,
+    release_owner_acceptance_video_reference_job,
+)
 
 LOGGER = logging.getLogger("copyfast_product_video_dispatcher")
 
@@ -658,6 +663,32 @@ def _format_claimed_job(row: tuple) -> dict[str, Any]:
     delivery_ready = has_real_output
     output_url_val = raw_output_url if has_real_output else None
 
+    product_key_val = str(row[3])
+    payload: dict[str, Any] = {
+        "prompt": str(row[5]),
+        "aspect_ratio": str(row[6]),
+        "duration": float(row[7]),
+        "duration_seconds": int(row[7]),
+        "quality_tier": str(row[8]),
+        "scene_count": int(row[9]),
+    }
+
+    if product_key_val == "video_ai_video_reference":
+        source_video = str(
+            env.get("source_video_path")
+            or env.get("source_video")
+            or ""
+        ).strip()
+        if not source_video:
+            raise ValueError(
+                f"MALFORMED_V2V_ENVELOPE: missing or empty source_video_path for job {row[0]}"
+            )
+        if ".." in source_video or "\\" in source_video or "%2e" in source_video.lower():
+            raise ValueError(
+                f"MALFORMED_V2V_ENVELOPE: invalid traversal or backslash in source_video_path for job {row[0]}"
+            )
+        payload["source_video_path"] = source_video
+
     return {
         "id": str(row[0]),
         "job_id": str(row[0]),
@@ -685,14 +716,7 @@ def _format_claimed_job(row: tuple) -> dict[str, Any]:
         "lease_expires_at": str(row[20]) if len(row) > 20 and row[20] else None,
         "attempts": int(row[21]) if len(row) > 21 and row[21] is not None else 0,
         "output_url": output_url_val if output_available else None,
-        "payload": {
-            "prompt": str(row[5]),
-            "aspect_ratio": str(row[6]),
-            "duration": float(row[7]),
-            "duration_seconds": int(row[7]),
-            "quality_tier": str(row[8]),
-            "scene_count": int(row[9]),
-        },
+        "payload": payload,
     }
 
 
