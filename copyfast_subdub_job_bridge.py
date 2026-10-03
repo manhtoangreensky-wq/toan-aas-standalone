@@ -61,6 +61,12 @@ CANONICAL_SUBDUB_MODES = frozenset({
     "subtitle_plus_dub",
 })
 
+PAID_SUBDUB_MODES = frozenset({
+    "subtitle_translate",
+    "dub",
+    "subtitle_plus_dub",
+})
+
 STATUS_QUEUED = "queued"
 STATUS_COMPLETED = "completed"
 STATUS_BLOCKED = "blocked"
@@ -547,21 +553,38 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
     is_non_terminal = not is_completed and not is_terminal_failure
     runtime_active = _is_runtime_execution_active("subdub")
 
+    subdub_mode = str(row[4] or "subtitle_create").strip()
+    is_paid_lane = subdub_mode in PAID_SUBDUB_MODES
+    settlement_status_str = str(row[25]) if len(row) > 25 and row[25] else "pending"
+
     if is_non_terminal and not runtime_active:
         projected_status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED"
         output_available = False
         download_ready = False
         delivery_ready = False
         output_url_val = None
+        public_output_meta = None
     else:
         projected_status_reason = str(row[12])
+        if is_paid_lane and settlement_status_str == "insufficient_funds":
+            projected_status_reason = "SETTLEMENT_PAYMENT_REQUIRED"
+
         raw_output_url = str(row[19]) if len(row) > 19 and row[19] is not None else None
         is_safe_url = bool(raw_output_url and is_safe_subdub_output_url(raw_output_url))
-        has_real_output = bool(is_completed and is_safe_url)
+
+        # Delivery Gate:
+        # - Free lane (subtitle_create): completed + safe URL
+        # - Paid lanes: completed + safe URL + settlement_status == 'settled'
+        if is_paid_lane:
+            has_real_output = bool(is_completed and is_safe_url and settlement_status_str == "settled")
+        else:
+            has_real_output = bool(is_completed and is_safe_url)
+
         output_available = has_real_output
         download_ready = has_real_output
         delivery_ready = has_real_output
         output_url_val = raw_output_url if has_real_output else None
+        public_output_meta = output_meta if has_real_output else None
 
     return {
         "id": str(row[0]),
@@ -583,7 +606,7 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
         "delivery_ready": delivery_ready,
         "output": output_url_val,
         "output_url": output_url_val,
-        "output_metadata": output_meta,
+        "output_metadata": public_output_meta,
         "created_at": str(row[17]),
         "updated_at": str(row[18]),
         "bridge_envelope": env,
@@ -593,7 +616,7 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
         "runtime_dispatched_at": str(row[22]) if len(row) > 22 and row[22] else None,
         "runtime_request_id": str(row[23]) if len(row) > 23 and row[23] else None,
         "runtime_last_error": str(row[24]) if len(row) > 24 and row[24] else None,
-        "settlement_status": str(row[25]) if len(row) > 25 and row[25] else "pending",
+        "settlement_status": settlement_status_str,
         "settlement_id": str(row[26]) if len(row) > 26 and row[26] else None,
         "charged_xu": int(row[27] or 0) if len(row) > 27 and row[27] is not None else 0,
         "settled_at": str(row[28]) if len(row) > 28 and row[28] else None,
@@ -622,6 +645,72 @@ def get_subdub_job(account_id: str, job_id: str) -> dict[str, Any] | None:
         if row is None:
             return None
         return _format_public_job(row)
+
+
+def get_internal_subdub_job(account_id: str, job_id: str) -> dict[str, Any] | None:
+    """Retrieve raw internal SubDub job state with unmasked artifact truth for server authority."""
+    ensure_subdub_schema()
+    owner_id = str(account_id or "").strip()
+    clean_job_id = str(job_id or "").strip()
+    if not owner_id or not clean_job_id:
+        return None
+
+    with read_transaction() as conn:
+        row = conn.execute(
+            f"""
+            SELECT {_SUBDUB_JOB_COLUMNS}
+            FROM web_subdub_jobs
+            WHERE id = ? AND account_id = ?
+            LIMIT 1
+            """,
+            (clean_job_id, owner_id),
+        ).fetchone()
+
+        if row is None:
+            return None
+
+    try:
+        env = json.loads(str(row[15])) if len(row) > 15 and row[15] else {}
+    except Exception:
+        env = {}
+    try:
+        output_meta = json.loads(str(row[16])) if len(row) > 16 and row[16] else None
+    except Exception:
+        output_meta = None
+
+    raw_output_url = str(row[19]) if len(row) > 19 and row[19] is not None else None
+
+    return {
+        "id": str(row[0]),
+        "request_id": str(row[1]),
+        "account_id": str(row[2]),
+        "product_key": str(row[3]),
+        "subdub_mode": str(row[4]),
+        "mode": str(row[4]),
+        "upload_id": str(row[5]),
+        "source_language": str(row[6]),
+        "target_language": str(row[7]),
+        "voice_profile_id": str(row[8]),
+        "output_format": str(row[9]),
+        "speed": float(row[10]),
+        "status": str(row[11]),
+        "status_reason": str(row[12]),
+        "output_url": raw_output_url,
+        "raw_output_url": raw_output_url,
+        "output_metadata": output_meta,
+        "created_at": str(row[17]),
+        "updated_at": str(row[18]),
+        "bridge_envelope": env,
+        "runtime_job_id": str(row[20]) if len(row) > 20 and row[20] else None,
+        "runtime_dispatch_status": str(row[21]) if len(row) > 21 and row[21] else "pending",
+        "runtime_dispatched_at": str(row[22]) if len(row) > 22 and row[22] else None,
+        "runtime_request_id": str(row[23]) if len(row) > 23 and row[23] else None,
+        "runtime_last_error": str(row[24]) if len(row) > 24 and row[24] else None,
+        "settlement_status": str(row[25]) if len(row) > 25 and row[25] else "pending",
+        "settlement_id": str(row[26]) if len(row) > 26 and row[26] else None,
+        "charged_xu": int(row[27] or 0) if len(row) > 27 and row[27] is not None else 0,
+        "settled_at": str(row[28]) if len(row) > 28 and row[28] else None,
+    }
 
 
 def is_subdub_job_other_account(job_id: str, account_id: str) -> bool:
@@ -976,20 +1065,21 @@ async def settle_subdub_job_completion(
     if clean_job_id == HISTORICAL_R7_FAILED_JOB_ID:
         return get_subdub_job(account_id, clean_job_id)
 
-    job = get_subdub_job(account_id, clean_job_id)
-    if not job:
+    # Use internal job authority so server accesses real artifact truth
+    internal_job = get_internal_subdub_job(account_id, clean_job_id)
+    if not internal_job:
         return None
 
-    status_str = str(job.get("status") or "").strip().lower()
-    raw_url = str(job.get("output_url") or "").strip()
+    status_str = str(internal_job.get("status") or "").strip().lower()
+    raw_url = str(internal_job.get("output_url") or "").strip()
     has_safe_url = bool(raw_url and is_safe_subdub_output_url(raw_url))
 
     # Invariant: Must be completed with safe output URL
     if status_str != "completed" or not has_safe_url:
-        return job
+        return get_subdub_job(account_id, clean_job_id)
 
-    subdub_mode = str(job.get("subdub_mode") or "subtitle_create")
-    current_settlement = str(job.get("settlement_status") or "pending")
+    subdub_mode = str(internal_job.get("subdub_mode") or "subtitle_create")
+    current_settlement = str(internal_job.get("settlement_status") or "pending")
     now_ts = utc_now()
 
     # Free helper lane: mark exempt_free with 0 Xu
@@ -1011,20 +1101,20 @@ async def settle_subdub_job_completion(
 
     # Idempotent replay: already settled
     if current_settlement == "settled":
-        return job
+        return get_subdub_job(account_id, clean_job_id)
 
     from copyfast_bridge import bridge_configured, bridge_request
     if not bridge_configured() or not canonical_user_id:
-        return job
+        return get_subdub_job(account_id, clean_job_id)
 
-    validated_metadata = job.get("output_metadata") if isinstance(job.get("output_metadata"), dict) else {}
+    validated_metadata = internal_job.get("output_metadata") if isinstance(internal_job.get("output_metadata"), dict) else {}
     if not validated_metadata:
         validated_metadata = {"output_url": raw_url, "mode": subdub_mode}
 
     # EXACT CANONICAL SETTLEMENT WIRE SCHEMA
     settle_payload = {
         "web_job_id": clean_job_id,
-        "web_request_id": str(job.get("request_id") or ""),
+        "web_request_id": str(internal_job.get("request_id") or ""),
         "canonical_user_id": canonical_user_id,
         "subdub_mode": subdub_mode,
         "output_url": raw_url,
@@ -1043,7 +1133,7 @@ async def settle_subdub_job_completion(
         )
     except Exception:
         # Ambiguous network outcome: fail-closed, keep settlement pending for idempotent retry
-        return job
+        return get_subdub_job(account_id, clean_job_id)
 
     if isinstance(settle_res, dict) and settle_res.get("ok"):
         s_data = settle_res.get("data") if isinstance(settle_res.get("data"), dict) else settle_res
@@ -1070,6 +1160,7 @@ async def settle_subdub_job_completion(
                 UPDATE web_subdub_jobs
                 SET settlement_status='insufficient_funds',
                     status_reason='SETTLEMENT_PAYMENT_REQUIRED',
+                    charged_xu=0,
                     updated_at=?
                 WHERE id=?
                 """,

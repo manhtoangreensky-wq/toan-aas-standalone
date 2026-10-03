@@ -7010,7 +7010,7 @@ async def reconcile_and_settle_subdub_job_route(
     job = await reconcile_subdub_job_status(job_id, account=account, request=request)
     if job is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy job Phụ đề & Lồng tiếng của tài khoản.")
-    if job.get("status") == "completed" and job.get("output_available"):
+    if job.get("status") == "completed":
         settled_job = await settle_subdub_job_completion(job_id, account=account, request=request)
         if settled_job:
             job = settled_job

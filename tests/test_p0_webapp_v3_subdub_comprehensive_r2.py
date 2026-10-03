@@ -253,14 +253,27 @@ def test_04_cross_account_isolation_and_unauthenticated():
         job_a = d_a.get("data") if isinstance(d_a.get("data"), dict) and "id" in d_a.get("data", {}) else (d_a.get("data") or {}).get("job") or d_a.get("job") or d_a
         job_a_id = job_a["id"]
 
-    # 3. User B attempts to access User A's job
+    # 3. User B attempts to access User A's job via GET detail, GET list, and POST reconcile
     csrf_b = _login_client(client, "test-foreign-subdub-r2")
     res_b = client.get(f"/api/v1/features/subdub/jobs/{job_a_id}")
     assert res_b.status_code in (403, 404)
 
+    res_b_list = client.get("/api/v1/features/subdub/jobs")
+    assert res_b_list.status_code == 200
+    b_data = res_b_list.json().get("data") or {}
+    b_items = b_data.get("items") or b_data.get("jobs") or []
+    assert all(item["id"] != job_a_id for item in b_items)
 
-def test_05_get_routes_strictly_read_only_zero_settlement_calls():
-    """PHASE C CONTRACT: Prove GET job-detail and GET list perform ZERO settlement calls."""
+    res_b_recon = client.post(f"/api/v1/features/subdub/jobs/{job_a_id}/reconcile", headers={"X-CSRF-Token": csrf_b})
+    assert res_b_recon.status_code in (403, 404)
+
+    # 4. Prove internal helper get_internal_subdub_job strictly enforces account isolation
+    foreign_internal = subdub_bridge.get_internal_subdub_job("test-foreign-subdub-r2", job_a_id)
+    assert foreign_internal is None
+
+
+def test_05_get_routes_strictly_read_only_and_unsettled_paid_output_hidden():
+    """PHASES B & C CONTRACT: Prove GET job-detail and GET list perform ZERO settlement calls and HIDE unsettled paid artifacts."""
     import app as app_module
     client = TestClient(app_module.app)
     csrf = _login_client(client, "test-user-subdub-r2")
@@ -298,21 +311,37 @@ def test_05_get_routes_strictly_read_only_zero_settlement_calls():
         # Settlement must still be pending because GET is strictly read-only
         assert job_data1["settlement_status"] == "pending"
 
-        # 2. Repeated GET job detail
+        # PAID DELIVERY GATE ASSERTIONS: Unsettled paid job MUST hide artifact
+        assert job_data1["output_available"] is False
+        assert job_data1["download_ready"] is False
+        assert job_data1["delivery_ready"] is False
+        assert job_data1["output"] is None
+        assert job_data1["output_url"] is None
+        assert job_data1["output_metadata"] is None
+
+        # 2. Repeated GET job detail: still 0 settlement calls and output remains hidden
         res2 = client.get(f"/api/v1/features/subdub/jobs/{job_id}")
         assert res2.status_code == 200
+        job_data2 = res2.json().get("data") or {}
+        assert job_data2["output_available"] is False
+        assert job_data2["output_url"] is None
 
-        # 3. GET job list
+        # 3. GET job list: output remains hidden
         res3 = client.get("/api/v1/features/subdub/jobs")
         assert res3.status_code == 200
+        list_items = (res3.json().get("data") or {}).get("items") or []
+        for item in list_items:
+            if item["id"] == job_id:
+                assert item["output_available"] is False
+                assert item["output_url"] is None
 
         # ASSERTION: Zero calls to /web-subdub/settle during any GET call
         settle_calls = [c for c in mock_bridge.call_args_list if "/web-subdub/settle" in str(c)]
         assert len(settle_calls) == 0, f"Expected 0 settlement calls on GET, got {len(settle_calls)}"
 
 
-def test_06_server_mutation_wire_contract_exact_match():
-    """PHASES B & E CONTRACT: Capture exact settlement wire payload and assert all 7 fields."""
+def test_06_server_mutation_wire_contract_exact_match_and_reveals_output():
+    """PHASES B, D & E CONTRACT: Capture exact settlement wire payload and assert all 7 fields, then verify output is revealed after settlement."""
     async def _test():
         account = {"id": "test-user-subdub-r2", "canonical_user_id": "7126111111"}
         job = subdub_bridge.create_or_replay_subdub_job(
@@ -321,7 +350,7 @@ def test_06_server_mutation_wire_contract_exact_match():
         )
         job_id = job["id"]
 
-        # Mark job as completed with safe artifact
+        # Mark job as completed with safe artifact in DB (internal truth)
         with transaction() as conn:
             conn.execute(
                 """
@@ -335,6 +364,12 @@ def test_06_server_mutation_wire_contract_exact_match():
                 """,
                 (json.dumps({"character_count": 250, "duration": 20.0}), job_id),
             )
+
+        # Before settlement: public projection must hide artifact
+        pre_public = subdub_bridge.get_subdub_job(account["id"], job_id)
+        assert pre_public["output_available"] is False
+        assert pre_public["output_url"] is None
+        assert pre_public["output"] is None
 
         captured_calls = []
 
@@ -356,6 +391,13 @@ def test_06_server_mutation_wire_contract_exact_match():
             assert settled["settlement_status"] == "settled"
             assert settled["charged_xu"] == 25
             assert settled["settlement_id"] == "stl_wire_999"
+
+            # OUTPUT IS REVEALED ONLY AFTER SETTLED
+            assert settled["output_available"] is True
+            assert settled["download_ready"] is True
+            assert settled["delivery_ready"] is True
+            assert settled["output_url"] == "https://tg.toanaas.vn/subdub/outputs/dub_wire_01.mp4"
+            assert settled["output"] == "https://tg.toanaas.vn/subdub/outputs/dub_wire_01.mp4"
 
             # 1. Exactly 1 settlement call
             assert len(captured_calls) == 1
@@ -381,7 +423,7 @@ def test_06_server_mutation_wire_contract_exact_match():
 
 
 def test_07_duplicate_mutation_transition_zero_second_debit():
-    """PHASE C CONTRACT: Duplicate call to settlement transition returns duplicate=True and 0 second debit."""
+    """PHASE C & E CONTRACT: Duplicate call to settlement transition returns duplicate=True and 0 second debit."""
     async def _test():
         account = {"id": "test-user-subdub-r2", "canonical_user_id": "7126111111"}
         job = subdub_bridge.create_or_replay_subdub_job(
@@ -411,14 +453,16 @@ def test_07_duplicate_mutation_transition_zero_second_debit():
             assert settled["status"] == "completed"
             assert settled["settlement_status"] == "settled"
             assert settled["charged_xu"] == 20
-            # Zero bridge calls since already settled
+            assert settled["output_available"] is True
+            assert settled["output_url"] == "https://tg.toanaas.vn/subdub/outputs/dub_dup_01.mp4"
+            # Zero bridge calls since already settled (MAX_CANONICAL_DEBITS_PER_JOB=1, SECOND_DEBIT_COUNT=0)
             assert mock_bridge.call_count == 0
 
     asyncio.run(_test())
 
 
-def test_08_insufficient_funds_error_contract():
-    """PHASE D CONTRACT: Settle call with INSUFFICIENT_FUNDS maps to 402 and settlement_status='insufficient_funds'."""
+def test_08_insufficient_funds_error_contract_and_hides_output():
+    """PHASE B, D & E CONTRACT: Settle call with INSUFFICIENT_FUNDS sets 402 reason, 0 xu, and keeps output hidden."""
     async def _test():
         account = {"id": "test-user-subdub-r2", "canonical_user_id": "7126111111"}
         job = subdub_bridge.create_or_replay_subdub_job(
@@ -458,16 +502,24 @@ def test_08_insufficient_funds_error_contract():
             assert settled["status_reason"] == "SETTLEMENT_PAYMENT_REQUIRED"
             assert settled["charged_xu"] == 0
 
+            # OUTPUT MUST REMAIN HIDDEN ON INSUFFICIENT FUNDS
+            assert settled["output_available"] is False
+            assert settled["download_ready"] is False
+            assert settled["delivery_ready"] is False
+            assert settled["output"] is None
+            assert settled["output_url"] is None
+            assert settled["output_metadata"] is None
+
     asyncio.run(_test())
 
 
-def test_09_subtitle_create_free_policy_zero_settlement_calls():
-    """PHASE F CONTRACT: subtitle_create is exempt from settlement charges (exempt_free, 0 Xu)."""
+def test_09_bridge_timeout_or_ambiguous_settlement_hides_output():
+    """PHASE B & E CONTRACT: Bridge timeout/exception keeps settlement pending and output hidden."""
     async def _test():
         account = {"id": "test-user-subdub-r2", "canonical_user_id": "7126111111"}
         job = subdub_bridge.create_or_replay_subdub_job(
             account_id=account["id"],
-            payload={"upload_id": "up_free_safe", "mode": "subtitle_create"},
+            payload={"upload_id": "up_timeout_web", "mode": "subtitle_translate", "target_language": "en"},
         )
         job_id = job["id"]
 
@@ -475,29 +527,34 @@ def test_09_subtitle_create_free_policy_zero_settlement_calls():
             conn.execute(
                 """
                 UPDATE web_subdub_jobs
-                SET runtime_job_id='rt_free_01',
+                SET runtime_job_id='rt_timeout_01',
                     status='completed',
                     status_reason='COMPLETED',
-                    output_url='https://tg.toanaas.vn/subdub/outputs/sub_free.vtt',
-                    output_metadata='{"character_count": 300}'
+                    output_url='https://tg.toanaas.vn/subdub/outputs/sub_trans_timeout.srt',
+                    output_metadata='{"character_count": 500}'
                 WHERE id=?
                 """,
                 (job_id,),
             )
 
-        with patch("copyfast_bridge.bridge_request", new_callable=AsyncMock) as mock_bridge:
+        with patch("copyfast_bridge.bridge_request", side_effect=TimeoutError("Bridge timeout")):
             settled = await subdub_bridge.settle_subdub_job_completion(job_id, account=account)
-            assert settled["status"] == "completed"
-            assert settled["settlement_status"] == "exempt_free"
+            # Settlement remains pending
+            assert settled["settlement_status"] == "pending"
             assert settled["charged_xu"] == 0
-            # Zero bridge settlement calls
-            assert mock_bridge.call_count == 0
+
+            # OUTPUT MUST REMAIN HIDDEN
+            assert settled["output_available"] is False
+            assert settled["download_ready"] is False
+            assert settled["delivery_ready"] is False
+            assert settled["output"] is None
+            assert settled["output_url"] is None
 
     asyncio.run(_test())
 
 
-def test_10_unsafe_artifact_or_failure_zero_settlement_calls():
-    """PHASE C CONTRACT: Job not completed or with unsafe artifact rejects settlement."""
+def test_10_unsafe_artifact_or_failure_zero_settlement_calls_and_hides_output():
+    """PHASE C & G CONTRACT: Job not completed or with unsafe artifact rejects settlement and hides output."""
     async def _test():
         account = {"id": "test-user-subdub-r2", "canonical_user_id": "7126111111"}
         job = subdub_bridge.create_or_replay_subdub_job(
@@ -523,6 +580,117 @@ def test_10_unsafe_artifact_or_failure_zero_settlement_calls():
             settled = await subdub_bridge.settle_subdub_job_completion(job_id, account=account)
             # Must remain un-settled and not invoke settlement
             assert settled["settlement_status"] == "pending"
+            assert settled["output_available"] is False
+            assert settled["output_url"] is None
             assert mock_bridge.call_count == 0
 
     asyncio.run(_test())
+
+
+def test_11_subtitle_create_free_policy_delivers_safe_artifact_with_zero_debits():
+    """PHASE C CONTRACT: subtitle_create is exempt from settlement charges (exempt_free, 0 Xu) and delivers safe artifact."""
+    async def _test():
+        account = {"id": "test-user-subdub-r2", "canonical_user_id": "7126111111"}
+        job = subdub_bridge.create_or_replay_subdub_job(
+            account_id=account["id"],
+            payload={"upload_id": "up_free_safe", "mode": "subtitle_create"},
+        )
+        job_id = job["id"]
+
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET runtime_job_id='rt_free_01',
+                    status='completed',
+                    status_reason='COMPLETED',
+                    output_url='https://tg.toanaas.vn/subdub/outputs/sub_free.vtt',
+                    output_metadata='{"character_count": 300}'
+                WHERE id=?
+                """,
+                (job_id,),
+            )
+
+        # For free lane: public projection before settle still exposes output if completed + safe
+        free_pub = subdub_bridge.get_subdub_job(account["id"], job_id)
+        assert free_pub["output_available"] is True
+        assert free_pub["output_url"] == "https://tg.toanaas.vn/subdub/outputs/sub_free.vtt"
+
+        with patch("copyfast_bridge.bridge_request", new_callable=AsyncMock) as mock_bridge:
+            settled = await subdub_bridge.settle_subdub_job_completion(job_id, account=account)
+            assert settled["status"] == "completed"
+            assert settled["settlement_status"] == "exempt_free"
+            assert settled["charged_xu"] == 0
+            assert settled["output_available"] is True
+            assert settled["download_ready"] is True
+            assert settled["delivery_ready"] is True
+            assert settled["output_url"] == "https://tg.toanaas.vn/subdub/outputs/sub_free.vtt"
+            # Zero bridge settlement calls (SUBTITLE_CREATE_CANONICAL_DEBIT_COUNT=0)
+            assert mock_bridge.call_count == 0
+
+    asyncio.run(_test())
+
+
+def test_12_all_aliases_direct_route_reconcile_parity_and_paid_delivery_gate():
+    """PHASE G & H CONTRACT: Prove all paid aliases enforce the delivery gate via their explicit /reconcile endpoints."""
+    import app as app_module
+    client = TestClient(app_module.app)
+    csrf = _login_client(client, "test-user-subdub-r2")
+
+    account = {"id": "test-user-subdub-r2", "canonical_user_id": "7126111111"}
+
+    aliases = [
+        "video_dub",
+        "subtitle_translate",
+        "subtitle_plus_dub",
+        "dubbing",
+        "subtitle_plus_dubbing",
+    ]
+
+    for alias in aliases:
+        job = subdub_bridge.create_or_replay_subdub_job(
+            account_id=account["id"],
+            payload={"upload_id": f"up_alias_{alias}", "mode": alias, "target_language": "vi"},
+        )
+        job_id = job["id"]
+
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET runtime_job_id=?,
+                    status='completed',
+                    status_reason='COMPLETED',
+                    output_url=?,
+                    output_metadata='{"duration": 15.0}'
+                WHERE id=?
+                """,
+                (f"rt_{alias}", f"https://tg.toanaas.vn/subdub/outputs/{alias}.mp4", job_id),
+            )
+
+        # 1. Before POST /reconcile: GET detail hides artifact
+        get_res = client.get(f"/api/v1/features/{alias}/jobs/{job_id}")
+        assert get_res.status_code == 200
+        get_data = get_res.json().get("data") or {}
+        assert get_data["output_available"] is False
+        assert get_data["output_url"] is None
+
+        # 2. Call POST /features/{alias}/jobs/{job_id}/reconcile with successful settlement
+        with patch("copyfast_bridge.bridge_request", new_callable=AsyncMock) as mock_bridge:
+            mock_bridge.return_value = {
+                "ok": True,
+                "settlement_id": f"stl_{alias}",
+                "amount_xu": 30,
+                "settled_at": "2026-10-03T11:00:00Z",
+            }
+            recon_res = client.post(
+                f"/api/v1/features/{alias}/jobs/{job_id}/reconcile",
+                headers={"X-CSRF-Token": csrf},
+            )
+            assert recon_res.status_code == 200
+            recon_data = recon_res.json().get("data") or {}
+            assert recon_data["settlement_status"] == "settled"
+            assert recon_data["charged_xu"] == 30
+            # Delivery gate opened after confirmed settlement
+            assert recon_data["output_available"] is True
+            assert recon_data["output_url"] == f"https://tg.toanaas.vn/subdub/outputs/{alias}.mp4"
