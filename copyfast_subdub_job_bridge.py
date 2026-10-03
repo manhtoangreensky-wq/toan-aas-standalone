@@ -905,77 +905,6 @@ async def reconcile_subdub_job_status(
                     """,
                     (raw_url, json.dumps(result, ensure_ascii=False), now_ts, clean_job_id),
                 )
-
-            # Canonical financial settlement bridge
-            subdub_mode = str(job.get("subdub_mode") or "subtitle_create")
-            current_settlement = str(job.get("settlement_status") or "pending")
-
-            if current_settlement not in ("settled", "exempt_free"):
-                if subdub_mode == "subtitle_create":
-                    with transaction() as conn:
-                        conn.execute(
-                            """
-                            UPDATE web_subdub_jobs
-                            SET settlement_status='exempt_free',
-                                charged_xu=0,
-                                settled_at=?,
-                                updated_at=?
-                            WHERE id=?
-                            """,
-                            (now_ts, now_ts, clean_job_id),
-                        )
-                else:
-                    # Paid lane: subtitle_translate, dub, subtitle_plus_dub
-                    settle_payload = {
-                        "web_job_id": clean_job_id,
-                        "request_id": str(job.get("request_id") or ""),
-                        "mode": subdub_mode,
-                        "character_count": int(result.get("character_count") or 0),
-                        "duration_seconds": float(result.get("duration") or result.get("duration_seconds") or 0.0),
-                        "voice_profile_id": str(job.get("voice_profile_id") or ""),
-                    }
-                    try:
-                        settle_res = await bridge_request(
-                            "POST",
-                            "/internal/v1/web-subdub/settle",
-                            payload=settle_payload,
-                            request_id=f"SETTLE-{clean_job_id}",
-                            actor_id=canonical_user_id,
-                            owner_id=canonical_user_id,
-                        )
-                        if isinstance(settle_res, dict) and settle_res.get("ok"):
-                            s_data = settle_res.get("data") if isinstance(settle_res.get("data"), dict) else settle_res
-                            settle_id = str(s_data.get("settlement_id") or f"stl_{clean_job_id}")
-                            amount_xu = int(s_data.get("amount_xu") or 0)
-                            settled_ts = str(s_data.get("settled_at") or now_ts)
-                            with transaction() as conn:
-                                conn.execute(
-                                    """
-                                    UPDATE web_subdub_jobs
-                                    SET settlement_status='settled',
-                                        settlement_id=?,
-                                        charged_xu=?,
-                                        settled_at=?,
-                                        updated_at=?
-                                    WHERE id=?
-                                    """,
-                                    (settle_id, amount_xu, settled_ts, now_ts, clean_job_id),
-                                )
-                        elif isinstance(settle_res, dict) and settle_res.get("error_code") == "INSUFFICIENT_BALANCE":
-                            with transaction() as conn:
-                                conn.execute(
-                                    """
-                                    UPDATE web_subdub_jobs
-                                    SET settlement_status='insufficient_balance',
-                                        status_reason='SETTLEMENT_PAYMENT_REQUIRED',
-                                        updated_at=?
-                                    WHERE id=?
-                                    """,
-                                    (now_ts, clean_job_id),
-                                )
-                    except Exception:
-                        # Ambiguous network outcome: fail-closed, keep settlement pending for idempotent retry
-                        pass
         else:
             # Completed without valid/safe artifact: fail-closed, do NOT mark completed, do NOT settle
             with transaction() as conn:
@@ -1004,6 +933,147 @@ async def reconcile_subdub_job_status(
                 WHERE id=?
                 """,
                 (err_msg, now_ts, clean_job_id),
+            )
+
+    return get_subdub_job(account_id, clean_job_id)
+
+
+async def settle_subdub_job_completion(
+    job_id: str,
+    *,
+    account: dict[str, Any],
+    request: Any = None,
+) -> dict[str, Any] | None:
+    """Execute canonical financial settlement for a completed SubDub job.
+
+    Invariants:
+    - Server-authoritative mutation transition only, never invoked by GET routes.
+    - Exact canonical wire schema:
+        {
+            "web_job_id": "...",
+            "web_request_id": "...",
+            "canonical_user_id": "...",
+            "subdub_mode": "...",
+            "output_url": "https://...",
+            "validated_output_metadata": {...},
+            "idempotency_key": "..."
+        }
+    - 0 debits for subtitle_create (exempt_free).
+    - 0 debits on failed job, unsafe artifact, or missing output.
+    - Exactly 1 debit for completed paid lane.
+    - Idempotent: duplicate settlement returns existing receipt with duplicate=True.
+    - Insufficient funds: maps to settlement_status='insufficient_funds', 402, 0 wallet debit.
+    """
+    ensure_subdub_schema()
+    clean_job_id = str(job_id or "").strip()
+    account_id = str(account.get("id") or "").strip()
+    canonical_user_id = str(account.get("canonical_user_id") or "").strip()
+
+    if not clean_job_id or not account_id:
+        return None
+
+    # Historical job is never settled
+    if clean_job_id == HISTORICAL_R7_FAILED_JOB_ID:
+        return get_subdub_job(account_id, clean_job_id)
+
+    job = get_subdub_job(account_id, clean_job_id)
+    if not job:
+        return None
+
+    status_str = str(job.get("status") or "").strip().lower()
+    raw_url = str(job.get("output_url") or "").strip()
+    has_safe_url = bool(raw_url and is_safe_subdub_output_url(raw_url))
+
+    # Invariant: Must be completed with safe output URL
+    if status_str != "completed" or not has_safe_url:
+        return job
+
+    subdub_mode = str(job.get("subdub_mode") or "subtitle_create")
+    current_settlement = str(job.get("settlement_status") or "pending")
+    now_ts = utc_now()
+
+    # Free helper lane: mark exempt_free with 0 Xu
+    if subdub_mode == "subtitle_create":
+        if current_settlement != "exempt_free":
+            with transaction() as conn:
+                conn.execute(
+                    """
+                    UPDATE web_subdub_jobs
+                    SET settlement_status='exempt_free',
+                        charged_xu=0,
+                        settled_at=?,
+                        updated_at=?
+                    WHERE id=?
+                    """,
+                    (now_ts, now_ts, clean_job_id),
+                )
+        return get_subdub_job(account_id, clean_job_id)
+
+    # Idempotent replay: already settled
+    if current_settlement == "settled":
+        return job
+
+    from copyfast_bridge import bridge_configured, bridge_request
+    if not bridge_configured() or not canonical_user_id:
+        return job
+
+    validated_metadata = job.get("output_metadata") if isinstance(job.get("output_metadata"), dict) else {}
+    if not validated_metadata:
+        validated_metadata = {"output_url": raw_url, "mode": subdub_mode}
+
+    # EXACT CANONICAL SETTLEMENT WIRE SCHEMA
+    settle_payload = {
+        "web_job_id": clean_job_id,
+        "web_request_id": str(job.get("request_id") or ""),
+        "canonical_user_id": canonical_user_id,
+        "subdub_mode": subdub_mode,
+        "output_url": raw_url,
+        "validated_output_metadata": validated_metadata,
+        "idempotency_key": f"subdub_settle:{clean_job_id}:{subdub_mode}",
+    }
+
+    try:
+        settle_res = await bridge_request(
+            "POST",
+            "/internal/v1/web-subdub/settle",
+            payload=settle_payload,
+            request_id=f"SETTLE-{clean_job_id}",
+            actor_id=canonical_user_id,
+            owner_id=canonical_user_id,
+        )
+    except Exception:
+        # Ambiguous network outcome: fail-closed, keep settlement pending for idempotent retry
+        return job
+
+    if isinstance(settle_res, dict) and settle_res.get("ok"):
+        s_data = settle_res.get("data") if isinstance(settle_res.get("data"), dict) else settle_res
+        settle_id = str(s_data.get("settlement_id") or f"stl_{clean_job_id}")
+        amount_xu = int(s_data.get("amount_xu") or 0)
+        settled_ts = str(s_data.get("settled_at") or now_ts)
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET settlement_status='settled',
+                    settlement_id=?,
+                    charged_xu=?,
+                    settled_at=?,
+                    updated_at=?
+                WHERE id=?
+                """,
+                (settle_id, amount_xu, settled_ts, now_ts, clean_job_id),
+            )
+    elif isinstance(settle_res, dict) and settle_res.get("error_code") == "INSUFFICIENT_FUNDS":
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET settlement_status='insufficient_funds',
+                    status_reason='SETTLEMENT_PAYMENT_REQUIRED',
+                    updated_at=?
+                WHERE id=?
+                """,
+                (now_ts, clean_job_id),
             )
 
     return get_subdub_job(account_id, clean_job_id)

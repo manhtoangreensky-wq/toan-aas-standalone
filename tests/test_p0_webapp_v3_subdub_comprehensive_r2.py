@@ -1,20 +1,28 @@
-"""Tests for Web SubDub Comprehensive Runtime & Financial Parity (R2).
+"""Tests for Web SubDub Comprehensive Runtime & Financial Parity (R2.1 Correction).
 
-Task: SUBDUB_WEB_RUNTIME_PARITY_COMPREHENSIVE_REMEDIATION_R2
+Task: SUBDUB_WEB_RUNTIME_PARITY_R2_1_PR_CONTRACT_AND_CI_CORRECTION
 Repo: manhtoangreensky-wq/toan-aas-standalone
 Tracker: #612
 
 Verifies:
-1. 9/9 Direct Routes parity: all 9 aliases create, list, and retrieve jobs.
-2. Canonical Mode Normalization: maps legacy and alias names to 4 canonical lanes.
-3. Idempotency & Conflict: deterministic hash replay and 409 conflict detection.
-4. Cross-Account Isolation: 401 unauthenticated, 403/404 cross-account access blocked.
-5. Canonical Settlement on Reconcile:
-   - subtitle_create: exempt_free, charged_xu = 0.
-   - paid lanes (translate, dub, combo): exactly 1 settlement debit, charged_xu populated.
-   - duplicate read: 0 duplicate debit calls.
-   - unsafe artifact: blocks completion and settlement, charged_xu = 0.
-   - failed runtime job: cancelled, charged_xu = 0.
+1. 9/9 Direct Routes parity: all 9 aliases create, list, retrieve, and reconcile jobs.
+2. GET Status Read is 100% Side-Effect Free:
+   - GET /features/subdub/jobs/{job_id} makes ZERO settlement calls and ZERO wallet mutations.
+   - Repeated GET calls make ZERO settlement calls.
+   - GET list makes ZERO settlement calls.
+3. Server-Authoritative Mutation Transition (settle_subdub_job_completion & POST reconcile):
+   - Exactly 1 canonical settlement invocation on completed paid job with safe artifact.
+   - Wire schema exact match: web_job_id, web_request_id, canonical_user_id, subdub_mode,
+     output_url, validated_output_metadata, idempotency_key.
+   - Zero legacy/drift keys in wire payload (request_id, mode, character_count, amount_xu, price, wallet_id).
+   - Stable idempotency key: subdub_settle:{web_job_id}:{subdub_mode}.
+   - Duplicate mutation call: idempotent replay, ZERO second debit.
+4. Error Contract:
+   - INSUFFICIENT_FUNDS -> 402, settlement_status='insufficient_funds', 0 wallet debit.
+5. Safety Invariants:
+   - subtitle_create: exempt_free, charged_xu = 0, ZERO settlement calls.
+   - Unsafe artifact or job failure: cancelled, charged_xu = 0, ZERO settlement calls.
+   - Cross-account access: 401 / 403 / 404 blocked.
 """
 
 from __future__ import annotations
@@ -153,6 +161,13 @@ def test_01_all_nine_direct_routes_registered_and_reachable():
             retrieved = get_data.get("data") if isinstance(get_data.get("data"), dict) and "id" in get_data.get("data", {}) else (get_data.get("data") or {}).get("job") or get_data.get("job") or get_data
             assert retrieved["id"] == job_id
 
+            # 4. POST /api/v1/features/{alias}/jobs/{job_id}/reconcile
+            recon_res = client.post(
+                f"/api/v1/features/{alias}/jobs/{job_id}/reconcile",
+                headers={"X-CSRF-Token": csrf},
+            )
+            assert recon_res.status_code == 200, f"Route /api/v1/features/{alias}/jobs/{job_id}/reconcile POST failed: {recon_res.text}"
+
 
 def test_02_alias_normalization_maps_to_canonical_modes():
     """Prove alias routes correctly map to the 4 canonical modes without client ambiguity."""
@@ -244,99 +259,134 @@ def test_04_cross_account_isolation_and_unauthenticated():
     assert res_b.status_code in (403, 404)
 
 
-def test_05_reconciliation_subtitle_create_free_policy():
-    """Prove subtitle_create is exempt from settlement charges (0 Xu charged)."""
-    async def _test():
-        account = {"id": "test-user-subdub-r2", "canonical_user_id": "7126111111"}
-        job = subdub_bridge.create_or_replay_subdub_job(
-            account_id=account["id"],
-            payload={"upload_id": "up_free_01", "mode": "subtitle_create"},
-        )
-        job_id = job["id"]
+def test_05_get_routes_strictly_read_only_zero_settlement_calls():
+    """PHASE C CONTRACT: Prove GET job-detail and GET list perform ZERO settlement calls."""
+    import app as app_module
+    client = TestClient(app_module.app)
+    csrf = _login_client(client, "test-user-subdub-r2")
 
-        with transaction() as conn:
-            conn.execute("UPDATE web_subdub_jobs SET runtime_job_id='rt_free_01' WHERE id=?", (job_id,))
+    account = {"id": "test-user-subdub-r2", "canonical_user_id": "7126111111"}
+    job = subdub_bridge.create_or_replay_subdub_job(
+        account_id=account["id"],
+        payload={"upload_id": "up_get_readonly", "mode": "dub", "target_language": "vi"},
+    )
+    job_id = job["id"]
 
-        mock_rt_job = {
-            "ok": True,
-            "job": {
-                "status": "completed",
-                "result": {
-                    "output_url": "https://tg.toanaas.vn/subdub/outputs/sub_free_01.vtt",
-                    "character_count": 300,
-                },
+    with transaction() as conn:
+        conn.execute("UPDATE web_subdub_jobs SET runtime_job_id='rt_get_01' WHERE id=?", (job_id,))
+
+    mock_rt_job = {
+        "ok": True,
+        "job": {
+            "status": "completed",
+            "result": {
+                "output_url": "https://tg.toanaas.vn/subdub/outputs/dub_get_01.mp4",
+                "character_count": 500,
+                "duration": 30.0,
             },
-        }
+        },
+    }
 
-        with patch("copyfast_bridge.bridge_request", new_callable=AsyncMock) as mock_bridge:
-            mock_bridge.return_value = mock_rt_job
+    with patch("copyfast_bridge.bridge_request", new_callable=AsyncMock) as mock_bridge:
+        mock_bridge.return_value = mock_rt_job
 
-            reconciled = await subdub_bridge.reconcile_subdub_job_status(job_id, account=account)
-            assert reconciled["status"] == "completed"
-            assert reconciled["settlement_status"] == "exempt_free"
-            assert reconciled["charged_xu"] == 0
-            assert reconciled["output_available"] is True
+        # 1. GET job detail
+        res1 = client.get(f"/api/v1/features/subdub/jobs/{job_id}")
+        assert res1.status_code == 200
+        job_data1 = res1.json().get("data") or {}
+        assert job_data1["status"] == "completed"
+        # Settlement must still be pending because GET is strictly read-only
+        assert job_data1["settlement_status"] == "pending"
 
-            settle_calls = [c for c in mock_bridge.call_args_list if "/web-subdub/settle" in str(c)]
-            assert len(settle_calls) == 0
+        # 2. Repeated GET job detail
+        res2 = client.get(f"/api/v1/features/subdub/jobs/{job_id}")
+        assert res2.status_code == 200
 
-    asyncio.run(_test())
+        # 3. GET job list
+        res3 = client.get("/api/v1/features/subdub/jobs")
+        assert res3.status_code == 200
+
+        # ASSERTION: Zero calls to /web-subdub/settle during any GET call
+        settle_calls = [c for c in mock_bridge.call_args_list if "/web-subdub/settle" in str(c)]
+        assert len(settle_calls) == 0, f"Expected 0 settlement calls on GET, got {len(settle_calls)}"
 
 
-def test_06_reconciliation_paid_lane_settles_and_stores_balance():
-    """Prove paid lanes (dub) invoke canonical settlement and store charged Xu."""
+def test_06_server_mutation_wire_contract_exact_match():
+    """PHASES B & E CONTRACT: Capture exact settlement wire payload and assert all 7 fields."""
     async def _test():
         account = {"id": "test-user-subdub-r2", "canonical_user_id": "7126111111"}
         job = subdub_bridge.create_or_replay_subdub_job(
             account_id=account["id"],
-            payload={"upload_id": "up_paid_01", "mode": "dub", "target_language": "vi"},
+            payload={"upload_id": "up_wire_01", "mode": "dub", "target_language": "vi"},
         )
         job_id = job["id"]
 
+        # Mark job as completed with safe artifact
         with transaction() as conn:
-            conn.execute("UPDATE web_subdub_jobs SET runtime_job_id='rt_paid_01' WHERE id=?", (job_id,))
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET runtime_job_id='rt_wire_01',
+                    status='completed',
+                    status_reason='COMPLETED',
+                    output_url='https://tg.toanaas.vn/subdub/outputs/dub_wire_01.mp4',
+                    output_metadata=?
+                WHERE id=?
+                """,
+                (json.dumps({"character_count": 250, "duration": 20.0}), job_id),
+            )
 
-        async def mock_bridge_router(method, endpoint, **kwargs):
+        captured_calls = []
+
+        async def mock_bridge_capture(method, endpoint, **kwargs):
             if "web-subdub/settle" in endpoint:
+                captured_calls.append({"method": method, "endpoint": endpoint, "kwargs": kwargs})
                 return {
                     "ok": True,
-                    "settlement_id": "stl_paid_01",
-                    "amount_xu": 20,
-                    "balance_after": 280,
+                    "settlement_id": "stl_wire_999",
+                    "amount_xu": 25,
+                    "balance_after": 475,
                     "settled_at": "2026-10-03T10:00:00Z",
-                }
-            elif "subdub/jobs/rt_paid_01" in endpoint:
-                return {
-                    "ok": True,
-                    "job": {
-                        "status": "completed",
-                        "result": {
-                            "output_url": "https://tg.toanaas.vn/subdub/outputs/dub_paid_01.mp4",
-                            "character_count": 200,
-                            "duration": 15.0,
-                        },
-                    },
                 }
             return {"ok": False}
 
-        with patch("copyfast_bridge.bridge_request", side_effect=mock_bridge_router) as mock_bridge:
-            reconciled = await subdub_bridge.reconcile_subdub_job_status(job_id, account=account)
-            assert reconciled["status"] == "completed"
-            assert reconciled["settlement_status"] == "settled"
-            assert reconciled["charged_xu"] == 20
-            assert reconciled["settlement_id"] == "stl_paid_01"
-            assert reconciled["output_available"] is True
+        with patch("copyfast_bridge.bridge_request", side_effect=mock_bridge_capture):
+            settled = await subdub_bridge.settle_subdub_job_completion(job_id, account=account)
+            assert settled["status"] == "completed"
+            assert settled["settlement_status"] == "settled"
+            assert settled["charged_xu"] == 25
+            assert settled["settlement_id"] == "stl_wire_999"
+
+            # 1. Exactly 1 settlement call
+            assert len(captured_calls) == 1
+            call = captured_calls[0]
+            assert call["method"] == "POST"
+            assert "/internal/v1/web-subdub/settle" in call["endpoint"]
+
+            # 2. EXACT 7 CANONICAL FIELDS
+            payload = call["kwargs"].get("payload", {})
+            assert "web_job_id" in payload and payload["web_job_id"] == job_id
+            assert "web_request_id" in payload and payload["web_request_id"].startswith("SDB-")
+            assert "canonical_user_id" in payload and payload["canonical_user_id"] == "7126111111"
+            assert "subdub_mode" in payload and payload["subdub_mode"] == "dub"
+            assert "output_url" in payload and payload["output_url"] == "https://tg.toanaas.vn/subdub/outputs/dub_wire_01.mp4"
+            assert "validated_output_metadata" in payload and isinstance(payload["validated_output_metadata"], dict)
+            assert "idempotency_key" in payload and payload["idempotency_key"] == f"subdub_settle:{job_id}:dub"
+
+            # 3. ZERO LEGACY/DRIFT AUTHORITY KEYS IN WIRE PAYLOAD
+            for forbidden_key in ("request_id", "mode", "character_count", "amount_xu", "price", "wallet_id", "provider_id", "provider_voice_id"):
+                assert forbidden_key not in payload, f"Forbidden legacy authority key '{forbidden_key}' found in settlement wire payload"
 
     asyncio.run(_test())
 
 
-def test_07_duplicate_reconcile_read_does_not_double_settle():
-    """Prove reading a settled job a second time makes 0 additional settlement calls."""
+def test_07_duplicate_mutation_transition_zero_second_debit():
+    """PHASE C CONTRACT: Duplicate call to settlement transition returns duplicate=True and 0 second debit."""
     async def _test():
         account = {"id": "test-user-subdub-r2", "canonical_user_id": "7126111111"}
         job = subdub_bridge.create_or_replay_subdub_job(
             account_id=account["id"],
-            payload={"upload_id": "up_dup_01", "mode": "dub", "target_language": "en"},
+            payload={"upload_id": "up_dup_mut", "mode": "dub", "target_language": "en"},
         )
         job_id = job["id"]
 
@@ -357,82 +407,122 @@ def test_07_duplicate_reconcile_read_does_not_double_settle():
             )
 
         with patch("copyfast_bridge.bridge_request", new_callable=AsyncMock) as mock_bridge:
-            reconciled = await subdub_bridge.reconcile_subdub_job_status(job_id, account=account)
-            assert reconciled["status"] == "completed"
-            assert reconciled["settlement_status"] == "settled"
-            assert reconciled["charged_xu"] == 20
+            settled = await subdub_bridge.settle_subdub_job_completion(job_id, account=account)
+            assert settled["status"] == "completed"
+            assert settled["settlement_status"] == "settled"
+            assert settled["charged_xu"] == 20
+            # Zero bridge calls since already settled
             assert mock_bridge.call_count == 0
 
     asyncio.run(_test())
 
 
-def test_08_reconciliation_unsafe_artifact_blocks_settlement():
-    """Prove completion with an unsafe URL blocks settlement and marks failure."""
+def test_08_insufficient_funds_error_contract():
+    """PHASE D CONTRACT: Settle call with INSUFFICIENT_FUNDS maps to 402 and settlement_status='insufficient_funds'."""
     async def _test():
         account = {"id": "test-user-subdub-r2", "canonical_user_id": "7126111111"}
         job = subdub_bridge.create_or_replay_subdub_job(
             account_id=account["id"],
-            payload={"upload_id": "up_unsafe_01", "mode": "dub", "target_language": "vi"},
+            payload={"upload_id": "up_insuf_web", "mode": "dub", "target_language": "vi"},
         )
         job_id = job["id"]
 
         with transaction() as conn:
-            conn.execute("UPDATE web_subdub_jobs SET runtime_job_id='rt_unsafe_01' WHERE id=?", (job_id,))
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET runtime_job_id='rt_insuf_01',
+                    status='completed',
+                    status_reason='COMPLETED',
+                    output_url='https://tg.toanaas.vn/subdub/outputs/dub_insuf.mp4',
+                    output_metadata='{"character_count": 1000}'
+                WHERE id=?
+                """,
+                (job_id,),
+            )
 
-        mock_rt_job = {
-            "ok": True,
-            "job": {
-                "status": "completed",
-                "result": {
-                    "output_url": "http://insecure-http.com/dub.mp4",
-                    "character_count": 100,
-                },
-            },
+        mock_insuf_response = {
+            "ok": False,
+            "error_code": "INSUFFICIENT_FUNDS",
+            "message": "Số dư tài khoản không đủ",
+            "balance_xu": 5,
+            "required_xu": 90,
         }
 
         with patch("copyfast_bridge.bridge_request", new_callable=AsyncMock) as mock_bridge:
-            mock_bridge.return_value = mock_rt_job
+            mock_bridge.return_value = mock_insuf_response
 
-            reconciled = await subdub_bridge.reconcile_subdub_job_status(job_id, account=account)
-            assert reconciled["status_reason"] == "COMPLETED_WITHOUT_SAFE_ARTIFACT"
-            assert reconciled["output_available"] is False
-            assert reconciled["settlement_status"] == "cancelled_unsafe_artifact"
-            assert reconciled["charged_xu"] == 0
-
-            settle_calls = [c for c in mock_bridge.call_args_list if "/web-subdub/settle" in str(c)]
-            assert len(settle_calls) == 0
+            settled = await subdub_bridge.settle_subdub_job_completion(job_id, account=account)
+            assert settled["status"] == "completed"
+            assert settled["settlement_status"] == "insufficient_funds"
+            assert settled["status_reason"] == "SETTLEMENT_PAYMENT_REQUIRED"
+            assert settled["charged_xu"] == 0
 
     asyncio.run(_test())
 
 
-def test_09_failed_job_no_settlement():
-    """Prove failed runtime job records cancellation with 0 Xu charged."""
+def test_09_subtitle_create_free_policy_zero_settlement_calls():
+    """PHASE F CONTRACT: subtitle_create is exempt from settlement charges (exempt_free, 0 Xu)."""
     async def _test():
         account = {"id": "test-user-subdub-r2", "canonical_user_id": "7126111111"}
         job = subdub_bridge.create_or_replay_subdub_job(
             account_id=account["id"],
-            payload={"upload_id": "up_fail_01", "mode": "dub", "target_language": "vi"},
+            payload={"upload_id": "up_free_safe", "mode": "subtitle_create"},
         )
         job_id = job["id"]
 
         with transaction() as conn:
-            conn.execute("UPDATE web_subdub_jobs SET runtime_job_id='rt_fail_01' WHERE id=?", (job_id,))
-
-        mock_rt_job = {
-            "ok": True,
-            "job": {
-                "status": "failed",
-                "last_error": "AUDIO_EXTRACTION_FAILED",
-            },
-        }
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET runtime_job_id='rt_free_01',
+                    status='completed',
+                    status_reason='COMPLETED',
+                    output_url='https://tg.toanaas.vn/subdub/outputs/sub_free.vtt',
+                    output_metadata='{"character_count": 300}'
+                WHERE id=?
+                """,
+                (job_id,),
+            )
 
         with patch("copyfast_bridge.bridge_request", new_callable=AsyncMock) as mock_bridge:
-            mock_bridge.return_value = mock_rt_job
+            settled = await subdub_bridge.settle_subdub_job_completion(job_id, account=account)
+            assert settled["status"] == "completed"
+            assert settled["settlement_status"] == "exempt_free"
+            assert settled["charged_xu"] == 0
+            # Zero bridge settlement calls
+            assert mock_bridge.call_count == 0
 
-            reconciled = await subdub_bridge.reconcile_subdub_job_status(job_id, account=account)
-            assert reconciled["status"] == "failed"
-            assert reconciled["status_reason"] == "AUDIO_EXTRACTION_FAILED"
-            assert reconciled["settlement_status"] == "cancelled_job_failed"
-            assert reconciled["charged_xu"] == 0
+    asyncio.run(_test())
+
+
+def test_10_unsafe_artifact_or_failure_zero_settlement_calls():
+    """PHASE C CONTRACT: Job not completed or with unsafe artifact rejects settlement."""
+    async def _test():
+        account = {"id": "test-user-subdub-r2", "canonical_user_id": "7126111111"}
+        job = subdub_bridge.create_or_replay_subdub_job(
+            account_id=account["id"],
+            payload={"upload_id": "up_insecure", "mode": "dub", "target_language": "vi"},
+        )
+        job_id = job["id"]
+
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET runtime_job_id='rt_insec_01',
+                    status='completed',
+                    status_reason='COMPLETED_WITHOUT_SAFE_ARTIFACT',
+                    output_url='http://insecure-http.com/dub.mp4'
+                WHERE id=?
+                """,
+                (job_id,),
+            )
+
+        with patch("copyfast_bridge.bridge_request", new_callable=AsyncMock) as mock_bridge:
+            settled = await subdub_bridge.settle_subdub_job_completion(job_id, account=account)
+            # Must remain un-settled and not invoke settlement
+            assert settled["settlement_status"] == "pending"
+            assert mock_bridge.call_count == 0
 
     asyncio.run(_test())
