@@ -26,11 +26,15 @@ import ipaddress
 import json
 import re
 from typing import Any
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 import uuid
 
 from fastapi import HTTPException
 from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, utc_now
+
+SHOPAIKEY_EXACT_HOST: str = "api.shopaikey.com"
+SHOPAIKEY_TASK_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_\-]{1,128}$")
+SHOPAIKEY_PATH_PATTERN = re.compile(r"^/v1/videos/([a-zA-Z0-9_\-]+)/content$")
 
 SAFE_VIDEO_EXTENSIONS: frozenset[str] = frozenset({".mp4", ".webm", ".mov"})
 SAFE_HOSTNAME_PATTERN = re.compile(
@@ -39,26 +43,90 @@ SAFE_HOSTNAME_PATTERN = re.compile(
 FORBIDDEN_OUTPUT_URL_SCHEMES = frozenset({"javascript:", "vbscript:", "data:", "file:", "blob:", "about:"})
 
 
+def is_safe_shopaikey_content_url(url: Any) -> bool:
+    """Validate that candidate URL matches the exact ShopAIKey signed content endpoint policy.
+
+    Required Policy:
+    - https scheme only (HTTP_ALLOWED=NO)
+    - exact host == "api.shopaikey.com" (HOST_WILDCARD_ALLOWED=NO, SUBDOMAIN_MATCH_ALLOWED=NO, HOST_SUFFIX_MATCH_ALLOWED=NO)
+    - port 443 or default None (NON_443_PORT_ALLOWED=NO)
+    - no userinfo / no '@' in netloc (USERINFO_ALLOWED=NO)
+    - no fragment (FRAGMENT_ALLOWED=NO)
+    - exact path shape: /v1/videos/<safe-task-id>/content
+    - signed query: both 'exp' and 'sig' parameters must be present and non-empty
+    - no directory traversal (.. or %2e) or backslashes
+    """
+    if not isinstance(url, str):
+        return False
+    trimmed = url.strip()
+    if not trimmed or len(trimmed) > 2048 or trimmed != url:
+        return False
+    if any(ord(c) < 32 or ord(c) == 127 for c in trimmed):
+        return False
+    if "\\" in trimmed:
+        return False
+    lowered = trimmed.lower()
+    if ".." in lowered or "%2e" in lowered:
+        return False
+    if any(lowered.startswith(s) or s in lowered for s in FORBIDDEN_OUTPUT_URL_SCHEMES):
+        return False
+
+    try:
+        parsed = urlsplit(trimmed)
+    except Exception:
+        return False
+
+    if parsed.scheme.lower() != "https":
+        return False
+    if not parsed.netloc:
+        return False
+    if parsed.username or parsed.password or "@" in parsed.netloc:
+        return False
+    if parsed.fragment:
+        return False
+
+    hostname = (parsed.hostname or "").lower()
+    if hostname != SHOPAIKEY_EXACT_HOST:
+        return False
+
+    try:
+        port = parsed.port
+    except ValueError:
+        return False
+    if port not in (None, 443):
+        return False
+
+    match = SHOPAIKEY_PATH_PATTERN.match(parsed.path)
+    if not match:
+        return False
+    task_id = match.group(1)
+    if not SHOPAIKEY_TASK_ID_PATTERN.match(task_id):
+        return False
+
+    query_params = parse_qs(parsed.query, keep_blank_values=True)
+    exp_vals = query_params.get("exp")
+    sig_vals = query_params.get("sig")
+    if not exp_vals or not exp_vals[0].strip():
+        return False
+    if not sig_vals or not sig_vals[0].strip():
+        return False
+
+    return True
+
+
 def is_safe_video_output_url(url: Any) -> bool:
     """Validate that a candidate Product Video output URL is safe to deliver.
 
     Strict fail-closed security contract:
-    - Must be a non-empty string with length <= 2048 and no leading/trailing whitespace.
-    - Zero control characters (ASCII < 32 or ASCII == 127).
-    - Zero backslashes (prevents authority/path confusion bypasses).
-    - Zero directory traversal sequences ('..' or '%2e' / '%2E').
-    - Strict scheme check: must be 'https' (lowercase).
-    - Rejects dangerous schemes: javascript:, vbscript:, data:, file:, blob:, about:, etc.
-    - Rejects embedded credentials (username, password, '@' in authority/netloc).
-    - Hostname must be non-empty.
-    - Rejects localhost and *.localhost.
-    - Rejects non-global IP literals (loopback, private, link-local, unspecified, etc.).
-    - Hostname must match SAFE_HOSTNAME_PATTERN if not an IP literal.
-    - Port must be None or 443.
-    - Path must end with a valid video extension (.mp4, .webm, .mov).
+    - Accepts exact ShopAIKey signed content endpoint.
+    - Otherwise enforces legacy safe HTTPS video URL (.mp4, .webm, .mov).
     """
     if not isinstance(url, str):
         return False
+
+    if is_safe_shopaikey_content_url(url):
+        return True
+
     trimmed = url.strip()
     if not trimmed or len(trimmed) > 2048 or trimmed != url:
         return False
@@ -80,6 +148,8 @@ def is_safe_video_output_url(url: Any) -> bool:
     if not parsed.netloc:
         return False
     if parsed.username or parsed.password or "@" in parsed.netloc:
+        return False
+    if parsed.fragment:
         return False
 
     hostname = (parsed.hostname or "").lower()
