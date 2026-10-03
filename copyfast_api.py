@@ -184,6 +184,7 @@ from copyfast_subdub_job_bridge import (
     is_subdub_job_other_account,
     list_subdub_jobs,
     reconcile_subdub_job_status,
+    settle_subdub_job_completion,
     subdub_job_to_native_compat,
     validate_subdub_input,
 )
@@ -6997,6 +6998,30 @@ async def get_subdub_job_route(
     raise HTTPException(status_code=404, detail="Không tìm thấy job Phụ đề & Lồng tiếng của tài khoản.")
 
 
+@router.post("/features/subdub/jobs/{job_id}/reconcile")
+async def reconcile_and_settle_subdub_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    if is_subdub_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    job = await reconcile_subdub_job_status(job_id, account=account, request=request)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy job Phụ đề & Lồng tiếng của tài khoản.")
+    if job.get("status") == "completed":
+        settled_job = await settle_subdub_job_completion(job_id, account=account, request=request)
+        if settled_job:
+            job = settled_job
+    return envelope(
+        True,
+        "Reconcile và quyết toán SubDub job thành công.",
+        data=job,
+        status_name=job.get("status", "completed"),
+    )
+
+
 @router.post("/features/video_dub/jobs")
 async def create_video_dub_job_route(
     payload: FeatureRequest,
@@ -7082,6 +7107,191 @@ async def get_subtitle_translate_job_route(
     account: dict = Depends(require_account),
 ):
     return await get_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/subtitle_plus_dub/jobs")
+async def create_subtitle_plus_dub_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    inp = dict(payload.input)
+    inp.setdefault("mode", "subtitle_plus_dub")
+    payload.input = inp
+    return await create_subdub_job_route(payload, request, account)
+
+
+@router.get("/features/subtitle_plus_dub/jobs")
+async def list_subtitle_plus_dub_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await list_subdub_jobs_route(request, account)
+
+
+@router.get("/features/subtitle_plus_dub/jobs/{job_id}")
+async def get_subtitle_plus_dub_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await get_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/dubbing/jobs")
+async def create_dubbing_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    inp = dict(payload.input)
+    inp.setdefault("mode", "dub")
+    payload.input = inp
+    return await create_subdub_job_route(payload, request, account)
+
+
+@router.get("/features/dubbing/jobs")
+async def list_dubbing_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await list_subdub_jobs_route(request, account)
+
+
+@router.get("/features/dubbing/jobs/{job_id}")
+async def get_dubbing_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await get_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/subtitle_plus_dubbing/jobs")
+async def create_subtitle_plus_dubbing_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    inp = dict(payload.input)
+    inp.setdefault("mode", "subtitle_plus_dub")
+    payload.input = inp
+    return await create_subdub_job_route(payload, request, account)
+
+
+@router.get("/features/subtitle_plus_dubbing/jobs")
+async def list_subtitle_plus_dubbing_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await list_subdub_jobs_route(request, account)
+
+
+@router.get("/features/subtitle_plus_dubbing/jobs/{job_id}")
+async def get_subtitle_plus_dubbing_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await get_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/subtitle_asr/jobs")
+async def create_subtitle_asr_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    inp = dict(payload.input)
+    inp.setdefault("mode", "subtitle_create")
+    payload.input = inp
+    return await create_subdub_job_route(payload, request, account)
+
+
+@router.get("/features/subtitle_asr/jobs")
+async def list_subtitle_asr_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await list_subdub_jobs_route(request, account)
+
+
+@router.get("/features/subtitle_asr/jobs/{job_id}")
+async def get_subtitle_asr_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await get_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/asr/jobs")
+async def create_asr_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    inp = dict(payload.input)
+    inp.setdefault("mode", "subtitle_create")
+    payload.input = inp
+    return await create_subdub_job_route(payload, request, account)
+
+
+@router.get("/features/asr/jobs")
+async def list_asr_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await list_subdub_jobs_route(request, account)
+
+
+@router.get("/features/asr/jobs/{job_id}")
+async def get_asr_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await get_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/video_dub/jobs/{job_id}/reconcile")
+async def reconcile_and_settle_video_dub_job_route(job_id: str, request: Request, account: dict = Depends(require_csrf)):
+    return await reconcile_and_settle_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/subtitle_create/jobs/{job_id}/reconcile")
+async def reconcile_and_settle_subtitle_create_job_route(job_id: str, request: Request, account: dict = Depends(require_csrf)):
+    return await reconcile_and_settle_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/subtitle_translate/jobs/{job_id}/reconcile")
+async def reconcile_and_settle_subtitle_translate_job_route(job_id: str, request: Request, account: dict = Depends(require_csrf)):
+    return await reconcile_and_settle_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/subtitle_plus_dub/jobs/{job_id}/reconcile")
+async def reconcile_and_settle_subtitle_plus_dub_job_route(job_id: str, request: Request, account: dict = Depends(require_csrf)):
+    return await reconcile_and_settle_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/dubbing/jobs/{job_id}/reconcile")
+async def reconcile_and_settle_dubbing_job_route(job_id: str, request: Request, account: dict = Depends(require_csrf)):
+    return await reconcile_and_settle_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/subtitle_plus_dubbing/jobs/{job_id}/reconcile")
+async def reconcile_and_settle_subtitle_plus_dubbing_job_route(job_id: str, request: Request, account: dict = Depends(require_csrf)):
+    return await reconcile_and_settle_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/subtitle_asr/jobs/{job_id}/reconcile")
+async def reconcile_and_settle_subtitle_asr_job_route(job_id: str, request: Request, account: dict = Depends(require_csrf)):
+    return await reconcile_and_settle_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/asr/jobs/{job_id}/reconcile")
+async def reconcile_and_settle_asr_job_route(job_id: str, request: Request, account: dict = Depends(require_csrf)):
+    return await reconcile_and_settle_subdub_job_route(job_id, request, account)
 
 
 @router.get("/admin/summary")

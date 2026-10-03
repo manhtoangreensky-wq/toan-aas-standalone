@@ -61,6 +61,12 @@ CANONICAL_SUBDUB_MODES = frozenset({
     "subtitle_plus_dub",
 })
 
+PAID_SUBDUB_MODES = frozenset({
+    "subtitle_translate",
+    "dub",
+    "subtitle_plus_dub",
+})
+
 STATUS_QUEUED = "queued"
 STATUS_COMPLETED = "completed"
 STATUS_BLOCKED = "blocked"
@@ -316,6 +322,10 @@ def ensure_subdub_schema() -> None:
                 runtime_dispatched_at TEXT,
                 runtime_request_id TEXT,
                 runtime_last_error TEXT,
+                settlement_status TEXT DEFAULT 'pending',
+                settlement_id TEXT,
+                charged_xu INTEGER DEFAULT 0,
+                settled_at TEXT,
                 FOREIGN KEY(account_id) REFERENCES web_accounts(id)
             )
             """
@@ -327,6 +337,10 @@ def ensure_subdub_schema() -> None:
             ("runtime_dispatched_at", "TEXT"),
             ("runtime_request_id", "TEXT"),
             ("runtime_last_error", "TEXT"),
+            ("settlement_status", "TEXT DEFAULT 'pending'"),
+            ("settlement_id", "TEXT"),
+            ("charged_xu", "INTEGER DEFAULT 0"),
+            ("settled_at", "TEXT"),
         ]
         for col_name, col_def in runtime_cols:
             if col_name not in existing_cols:
@@ -337,6 +351,7 @@ def ensure_subdub_schema() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_account_idempotency ON web_subdub_jobs(account_id, idempotency_key_hash)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_status_created ON web_subdub_jobs(status, created_at ASC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_runtime_job ON web_subdub_jobs(runtime_job_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_settlement ON web_subdub_jobs(settlement_status)")
 
 
 _SUBDUB_JOB_COLUMNS = (
@@ -345,7 +360,8 @@ _SUBDUB_JOB_COLUMNS = (
     "output_format, speed, status, status_reason, "
     "idempotency_key_hash, payload_hash, bridge_envelope, output_metadata, "
     "created_at, updated_at, output_url, "
-    "runtime_job_id, runtime_dispatch_status, runtime_dispatched_at, runtime_request_id, runtime_last_error"
+    "runtime_job_id, runtime_dispatch_status, runtime_dispatched_at, runtime_request_id, runtime_last_error, "
+    "settlement_status, settlement_id, charged_xu, settled_at"
 )
 
 
@@ -503,6 +519,10 @@ def create_or_replay_subdub_job(
             "runtime_dispatched_at": None,
             "runtime_request_id": None,
             "runtime_last_error": None,
+            "settlement_status": "pending",
+            "settlement_id": None,
+            "charged_xu": 0,
+            "settled_at": None,
         }
 
 
@@ -533,21 +553,38 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
     is_non_terminal = not is_completed and not is_terminal_failure
     runtime_active = _is_runtime_execution_active("subdub")
 
+    subdub_mode = str(row[4] or "subtitle_create").strip()
+    is_paid_lane = subdub_mode in PAID_SUBDUB_MODES
+    settlement_status_str = str(row[25]) if len(row) > 25 and row[25] else "pending"
+
     if is_non_terminal and not runtime_active:
         projected_status_reason = "RUNTIME_EXECUTION_NOT_ACTIVATED"
         output_available = False
         download_ready = False
         delivery_ready = False
         output_url_val = None
+        public_output_meta = None
     else:
         projected_status_reason = str(row[12])
+        if is_paid_lane and settlement_status_str == "insufficient_funds":
+            projected_status_reason = "SETTLEMENT_PAYMENT_REQUIRED"
+
         raw_output_url = str(row[19]) if len(row) > 19 and row[19] is not None else None
         is_safe_url = bool(raw_output_url and is_safe_subdub_output_url(raw_output_url))
-        has_real_output = bool(is_completed and is_safe_url)
+
+        # Delivery Gate:
+        # - Free lane (subtitle_create): completed + safe URL
+        # - Paid lanes: completed + safe URL + settlement_status == 'settled'
+        if is_paid_lane:
+            has_real_output = bool(is_completed and is_safe_url and settlement_status_str == "settled")
+        else:
+            has_real_output = bool(is_completed and is_safe_url)
+
         output_available = has_real_output
         download_ready = has_real_output
         delivery_ready = has_real_output
         output_url_val = raw_output_url if has_real_output else None
+        public_output_meta = output_meta if has_real_output else None
 
     return {
         "id": str(row[0]),
@@ -569,7 +606,7 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
         "delivery_ready": delivery_ready,
         "output": output_url_val,
         "output_url": output_url_val,
-        "output_metadata": output_meta,
+        "output_metadata": public_output_meta,
         "created_at": str(row[17]),
         "updated_at": str(row[18]),
         "bridge_envelope": env,
@@ -579,6 +616,10 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
         "runtime_dispatched_at": str(row[22]) if len(row) > 22 and row[22] else None,
         "runtime_request_id": str(row[23]) if len(row) > 23 and row[23] else None,
         "runtime_last_error": str(row[24]) if len(row) > 24 and row[24] else None,
+        "settlement_status": settlement_status_str,
+        "settlement_id": str(row[26]) if len(row) > 26 and row[26] else None,
+        "charged_xu": int(row[27] or 0) if len(row) > 27 and row[27] is not None else 0,
+        "settled_at": str(row[28]) if len(row) > 28 and row[28] else None,
     }
 
 
@@ -604,6 +645,72 @@ def get_subdub_job(account_id: str, job_id: str) -> dict[str, Any] | None:
         if row is None:
             return None
         return _format_public_job(row)
+
+
+def get_internal_subdub_job(account_id: str, job_id: str) -> dict[str, Any] | None:
+    """Retrieve raw internal SubDub job state with unmasked artifact truth for server authority."""
+    ensure_subdub_schema()
+    owner_id = str(account_id or "").strip()
+    clean_job_id = str(job_id or "").strip()
+    if not owner_id or not clean_job_id:
+        return None
+
+    with read_transaction() as conn:
+        row = conn.execute(
+            f"""
+            SELECT {_SUBDUB_JOB_COLUMNS}
+            FROM web_subdub_jobs
+            WHERE id = ? AND account_id = ?
+            LIMIT 1
+            """,
+            (clean_job_id, owner_id),
+        ).fetchone()
+
+        if row is None:
+            return None
+
+    try:
+        env = json.loads(str(row[15])) if len(row) > 15 and row[15] else {}
+    except Exception:
+        env = {}
+    try:
+        output_meta = json.loads(str(row[16])) if len(row) > 16 and row[16] else None
+    except Exception:
+        output_meta = None
+
+    raw_output_url = str(row[19]) if len(row) > 19 and row[19] is not None else None
+
+    return {
+        "id": str(row[0]),
+        "request_id": str(row[1]),
+        "account_id": str(row[2]),
+        "product_key": str(row[3]),
+        "subdub_mode": str(row[4]),
+        "mode": str(row[4]),
+        "upload_id": str(row[5]),
+        "source_language": str(row[6]),
+        "target_language": str(row[7]),
+        "voice_profile_id": str(row[8]),
+        "output_format": str(row[9]),
+        "speed": float(row[10]),
+        "status": str(row[11]),
+        "status_reason": str(row[12]),
+        "output_url": raw_output_url,
+        "raw_output_url": raw_output_url,
+        "output_metadata": output_meta,
+        "created_at": str(row[17]),
+        "updated_at": str(row[18]),
+        "bridge_envelope": env,
+        "runtime_job_id": str(row[20]) if len(row) > 20 and row[20] else None,
+        "runtime_dispatch_status": str(row[21]) if len(row) > 21 and row[21] else "pending",
+        "runtime_dispatched_at": str(row[22]) if len(row) > 22 and row[22] else None,
+        "runtime_request_id": str(row[23]) if len(row) > 23 and row[23] else None,
+        "runtime_last_error": str(row[24]) if len(row) > 24 and row[24] else None,
+        "settlement_status": str(row[25]) if len(row) > 25 and row[25] else "pending",
+        "settlement_id": str(row[26]) if len(row) > 26 and row[26] else None,
+        "charged_xu": int(row[27] or 0) if len(row) > 27 and row[27] is not None else 0,
+        "settled_at": str(row[28]) if len(row) > 28 and row[28] else None,
+    }
 
 
 def is_subdub_job_other_account(job_id: str, account_id: str) -> bool:
@@ -888,12 +995,14 @@ async def reconcile_subdub_job_status(
                     (raw_url, json.dumps(result, ensure_ascii=False), now_ts, clean_job_id),
                 )
         else:
-            # Completed without valid/safe artifact: fail-closed, do NOT mark completed
+            # Completed without valid/safe artifact: fail-closed, do NOT mark completed, do NOT settle
             with transaction() as conn:
                 conn.execute(
                     """
                     UPDATE web_subdub_jobs
                     SET status_reason='COMPLETED_WITHOUT_SAFE_ARTIFACT',
+                        settlement_status='cancelled_unsafe_artifact',
+                        charged_xu=0,
                         updated_at=?
                     WHERE id=?
                     """,
@@ -907,10 +1016,155 @@ async def reconcile_subdub_job_status(
                 UPDATE web_subdub_jobs
                 SET status='failed',
                     status_reason=?,
+                    settlement_status='cancelled_job_failed',
+                    charged_xu=0,
                     updated_at=?
                 WHERE id=?
                 """,
                 (err_msg, now_ts, clean_job_id),
+            )
+
+    return get_subdub_job(account_id, clean_job_id)
+
+
+async def settle_subdub_job_completion(
+    job_id: str,
+    *,
+    account: dict[str, Any],
+    request: Any = None,
+) -> dict[str, Any] | None:
+    """Execute canonical financial settlement for a completed SubDub job.
+
+    Invariants:
+    - Server-authoritative mutation transition only, never invoked by GET routes.
+    - Exact canonical wire schema:
+        {
+            "web_job_id": "...",
+            "web_request_id": "...",
+            "canonical_user_id": "...",
+            "subdub_mode": "...",
+            "output_url": "https://...",
+            "validated_output_metadata": {...},
+            "idempotency_key": "..."
+        }
+    - 0 debits for subtitle_create (exempt_free).
+    - 0 debits on failed job, unsafe artifact, or missing output.
+    - Exactly 1 debit for completed paid lane.
+    - Idempotent: duplicate settlement returns existing receipt with duplicate=True.
+    - Insufficient funds: maps to settlement_status='insufficient_funds', 402, 0 wallet debit.
+    """
+    ensure_subdub_schema()
+    clean_job_id = str(job_id or "").strip()
+    account_id = str(account.get("id") or "").strip()
+    canonical_user_id = str(account.get("canonical_user_id") or "").strip()
+
+    if not clean_job_id or not account_id:
+        return None
+
+    # Historical job is never settled
+    if clean_job_id == HISTORICAL_R7_FAILED_JOB_ID:
+        return get_subdub_job(account_id, clean_job_id)
+
+    # Use internal job authority so server accesses real artifact truth
+    internal_job = get_internal_subdub_job(account_id, clean_job_id)
+    if not internal_job:
+        return None
+
+    status_str = str(internal_job.get("status") or "").strip().lower()
+    raw_url = str(internal_job.get("output_url") or "").strip()
+    has_safe_url = bool(raw_url and is_safe_subdub_output_url(raw_url))
+
+    # Invariant: Must be completed with safe output URL
+    if status_str != "completed" or not has_safe_url:
+        return get_subdub_job(account_id, clean_job_id)
+
+    subdub_mode = str(internal_job.get("subdub_mode") or "subtitle_create")
+    current_settlement = str(internal_job.get("settlement_status") or "pending")
+    now_ts = utc_now()
+
+    # Free helper lane: mark exempt_free with 0 Xu
+    if subdub_mode == "subtitle_create":
+        if current_settlement != "exempt_free":
+            with transaction() as conn:
+                conn.execute(
+                    """
+                    UPDATE web_subdub_jobs
+                    SET settlement_status='exempt_free',
+                        charged_xu=0,
+                        settled_at=?,
+                        updated_at=?
+                    WHERE id=?
+                    """,
+                    (now_ts, now_ts, clean_job_id),
+                )
+        return get_subdub_job(account_id, clean_job_id)
+
+    # Idempotent replay: already settled
+    if current_settlement == "settled":
+        return get_subdub_job(account_id, clean_job_id)
+
+    from copyfast_bridge import bridge_configured, bridge_request
+    if not bridge_configured() or not canonical_user_id:
+        return get_subdub_job(account_id, clean_job_id)
+
+    validated_metadata = internal_job.get("output_metadata") if isinstance(internal_job.get("output_metadata"), dict) else {}
+    if not validated_metadata:
+        validated_metadata = {"output_url": raw_url, "mode": subdub_mode}
+
+    # EXACT CANONICAL SETTLEMENT WIRE SCHEMA
+    settle_payload = {
+        "web_job_id": clean_job_id,
+        "web_request_id": str(internal_job.get("request_id") or ""),
+        "canonical_user_id": canonical_user_id,
+        "subdub_mode": subdub_mode,
+        "output_url": raw_url,
+        "validated_output_metadata": validated_metadata,
+        "idempotency_key": f"subdub_settle:{clean_job_id}:{subdub_mode}",
+    }
+
+    try:
+        settle_res = await bridge_request(
+            "POST",
+            "/internal/v1/web-subdub/settle",
+            payload=settle_payload,
+            request_id=f"SETTLE-{clean_job_id}",
+            actor_id=canonical_user_id,
+            owner_id=canonical_user_id,
+        )
+    except Exception:
+        # Ambiguous network outcome: fail-closed, keep settlement pending for idempotent retry
+        return get_subdub_job(account_id, clean_job_id)
+
+    if isinstance(settle_res, dict) and settle_res.get("ok"):
+        s_data = settle_res.get("data") if isinstance(settle_res.get("data"), dict) else settle_res
+        settle_id = str(s_data.get("settlement_id") or f"stl_{clean_job_id}")
+        amount_xu = int(s_data.get("amount_xu") or 0)
+        settled_ts = str(s_data.get("settled_at") or now_ts)
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET settlement_status='settled',
+                    settlement_id=?,
+                    charged_xu=?,
+                    settled_at=?,
+                    updated_at=?
+                WHERE id=?
+                """,
+                (settle_id, amount_xu, settled_ts, now_ts, clean_job_id),
+            )
+    elif isinstance(settle_res, dict) and settle_res.get("error_code") == "INSUFFICIENT_FUNDS":
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_subdub_jobs
+                SET settlement_status='insufficient_funds',
+                    status_reason='SETTLEMENT_PAYMENT_REQUIRED',
+                    charged_xu=0,
+                    updated_at=?
+                WHERE id=?
+                """,
+                (now_ts, clean_job_id),
             )
 
     return get_subdub_job(account_id, clean_job_id)
@@ -931,6 +1185,8 @@ def subdub_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
         "updated_at": job["updated_at"],
         "output_available": job.get("output_available", False),
         "output_url": job.get("output_url"),
+        "settlement_status": job.get("settlement_status", "pending"),
+        "charged_xu": job.get("charged_xu", 0),
         "read_model": "jobs",
         "canonical_available": False,
     }
