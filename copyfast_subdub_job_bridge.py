@@ -316,6 +316,10 @@ def ensure_subdub_schema() -> None:
                 runtime_dispatched_at TEXT,
                 runtime_request_id TEXT,
                 runtime_last_error TEXT,
+                settlement_status TEXT DEFAULT 'pending',
+                settlement_id TEXT,
+                charged_xu INTEGER DEFAULT 0,
+                settled_at TEXT,
                 FOREIGN KEY(account_id) REFERENCES web_accounts(id)
             )
             """
@@ -327,6 +331,10 @@ def ensure_subdub_schema() -> None:
             ("runtime_dispatched_at", "TEXT"),
             ("runtime_request_id", "TEXT"),
             ("runtime_last_error", "TEXT"),
+            ("settlement_status", "TEXT DEFAULT 'pending'"),
+            ("settlement_id", "TEXT"),
+            ("charged_xu", "INTEGER DEFAULT 0"),
+            ("settled_at", "TEXT"),
         ]
         for col_name, col_def in runtime_cols:
             if col_name not in existing_cols:
@@ -337,6 +345,7 @@ def ensure_subdub_schema() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_account_idempotency ON web_subdub_jobs(account_id, idempotency_key_hash)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_status_created ON web_subdub_jobs(status, created_at ASC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_runtime_job ON web_subdub_jobs(runtime_job_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_settlement ON web_subdub_jobs(settlement_status)")
 
 
 _SUBDUB_JOB_COLUMNS = (
@@ -345,7 +354,8 @@ _SUBDUB_JOB_COLUMNS = (
     "output_format, speed, status, status_reason, "
     "idempotency_key_hash, payload_hash, bridge_envelope, output_metadata, "
     "created_at, updated_at, output_url, "
-    "runtime_job_id, runtime_dispatch_status, runtime_dispatched_at, runtime_request_id, runtime_last_error"
+    "runtime_job_id, runtime_dispatch_status, runtime_dispatched_at, runtime_request_id, runtime_last_error, "
+    "settlement_status, settlement_id, charged_xu, settled_at"
 )
 
 
@@ -503,6 +513,10 @@ def create_or_replay_subdub_job(
             "runtime_dispatched_at": None,
             "runtime_request_id": None,
             "runtime_last_error": None,
+            "settlement_status": "pending",
+            "settlement_id": None,
+            "charged_xu": 0,
+            "settled_at": None,
         }
 
 
@@ -579,6 +593,10 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
         "runtime_dispatched_at": str(row[22]) if len(row) > 22 and row[22] else None,
         "runtime_request_id": str(row[23]) if len(row) > 23 and row[23] else None,
         "runtime_last_error": str(row[24]) if len(row) > 24 and row[24] else None,
+        "settlement_status": str(row[25]) if len(row) > 25 and row[25] else "pending",
+        "settlement_id": str(row[26]) if len(row) > 26 and row[26] else None,
+        "charged_xu": int(row[27] or 0) if len(row) > 27 and row[27] is not None else 0,
+        "settled_at": str(row[28]) if len(row) > 28 and row[28] else None,
     }
 
 
@@ -887,13 +905,86 @@ async def reconcile_subdub_job_status(
                     """,
                     (raw_url, json.dumps(result, ensure_ascii=False), now_ts, clean_job_id),
                 )
+
+            # Canonical financial settlement bridge
+            subdub_mode = str(job.get("subdub_mode") or "subtitle_create")
+            current_settlement = str(job.get("settlement_status") or "pending")
+
+            if current_settlement not in ("settled", "exempt_free"):
+                if subdub_mode == "subtitle_create":
+                    with transaction() as conn:
+                        conn.execute(
+                            """
+                            UPDATE web_subdub_jobs
+                            SET settlement_status='exempt_free',
+                                charged_xu=0,
+                                settled_at=?,
+                                updated_at=?
+                            WHERE id=?
+                            """,
+                            (now_ts, now_ts, clean_job_id),
+                        )
+                else:
+                    # Paid lane: subtitle_translate, dub, subtitle_plus_dub
+                    settle_payload = {
+                        "web_job_id": clean_job_id,
+                        "request_id": str(job.get("request_id") or ""),
+                        "mode": subdub_mode,
+                        "character_count": int(result.get("character_count") or 0),
+                        "duration_seconds": float(result.get("duration") or result.get("duration_seconds") or 0.0),
+                        "voice_profile_id": str(job.get("voice_profile_id") or ""),
+                    }
+                    try:
+                        settle_res = await bridge_request(
+                            "POST",
+                            "/internal/v1/web-subdub/settle",
+                            payload=settle_payload,
+                            request_id=f"SETTLE-{clean_job_id}",
+                            actor_id=canonical_user_id,
+                            owner_id=canonical_user_id,
+                        )
+                        if isinstance(settle_res, dict) and settle_res.get("ok"):
+                            s_data = settle_res.get("data") if isinstance(settle_res.get("data"), dict) else settle_res
+                            settle_id = str(s_data.get("settlement_id") or f"stl_{clean_job_id}")
+                            amount_xu = int(s_data.get("amount_xu") or 0)
+                            settled_ts = str(s_data.get("settled_at") or now_ts)
+                            with transaction() as conn:
+                                conn.execute(
+                                    """
+                                    UPDATE web_subdub_jobs
+                                    SET settlement_status='settled',
+                                        settlement_id=?,
+                                        charged_xu=?,
+                                        settled_at=?,
+                                        updated_at=?
+                                    WHERE id=?
+                                    """,
+                                    (settle_id, amount_xu, settled_ts, now_ts, clean_job_id),
+                                )
+                        elif isinstance(settle_res, dict) and settle_res.get("error_code") == "INSUFFICIENT_BALANCE":
+                            with transaction() as conn:
+                                conn.execute(
+                                    """
+                                    UPDATE web_subdub_jobs
+                                    SET settlement_status='insufficient_balance',
+                                        status_reason='SETTLEMENT_PAYMENT_REQUIRED',
+                                        updated_at=?
+                                    WHERE id=?
+                                    """,
+                                    (now_ts, clean_job_id),
+                                )
+                    except Exception:
+                        # Ambiguous network outcome: fail-closed, keep settlement pending for idempotent retry
+                        pass
         else:
-            # Completed without valid/safe artifact: fail-closed, do NOT mark completed
+            # Completed without valid/safe artifact: fail-closed, do NOT mark completed, do NOT settle
             with transaction() as conn:
                 conn.execute(
                     """
                     UPDATE web_subdub_jobs
                     SET status_reason='COMPLETED_WITHOUT_SAFE_ARTIFACT',
+                        settlement_status='cancelled_unsafe_artifact',
+                        charged_xu=0,
                         updated_at=?
                     WHERE id=?
                     """,
@@ -907,6 +998,8 @@ async def reconcile_subdub_job_status(
                 UPDATE web_subdub_jobs
                 SET status='failed',
                     status_reason=?,
+                    settlement_status='cancelled_job_failed',
+                    charged_xu=0,
                     updated_at=?
                 WHERE id=?
                 """,
@@ -931,6 +1024,8 @@ def subdub_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
         "updated_at": job["updated_at"],
         "output_available": job.get("output_available", False),
         "output_url": job.get("output_url"),
+        "settlement_status": job.get("settlement_status", "pending"),
+        "charged_xu": job.get("charged_xu", 0),
         "read_model": "jobs",
         "canonical_available": False,
     }

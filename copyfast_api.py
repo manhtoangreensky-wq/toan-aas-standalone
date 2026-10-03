@@ -7084,6 +7084,151 @@ async def get_subtitle_translate_job_route(
     return await get_subdub_job_route(job_id, request, account)
 
 
+@router.post("/features/subtitle_plus_dub/jobs")
+async def create_subtitle_plus_dub_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    inp = dict(payload.input)
+    inp.setdefault("mode", "subtitle_plus_dub")
+    payload.input = inp
+    return await create_subdub_job_route(payload, request, account)
+
+
+@router.get("/features/subtitle_plus_dub/jobs")
+async def list_subtitle_plus_dub_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await list_subdub_jobs_route(request, account)
+
+
+@router.get("/features/subtitle_plus_dub/jobs/{job_id}")
+async def get_subtitle_plus_dub_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await get_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/dubbing/jobs")
+async def create_dubbing_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    inp = dict(payload.input)
+    inp.setdefault("mode", "dub")
+    payload.input = inp
+    return await create_subdub_job_route(payload, request, account)
+
+
+@router.get("/features/dubbing/jobs")
+async def list_dubbing_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await list_subdub_jobs_route(request, account)
+
+
+@router.get("/features/dubbing/jobs/{job_id}")
+async def get_dubbing_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await get_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/subtitle_plus_dubbing/jobs")
+async def create_subtitle_plus_dubbing_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    inp = dict(payload.input)
+    inp.setdefault("mode", "subtitle_plus_dub")
+    payload.input = inp
+    return await create_subdub_job_route(payload, request, account)
+
+
+@router.get("/features/subtitle_plus_dubbing/jobs")
+async def list_subtitle_plus_dubbing_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await list_subdub_jobs_route(request, account)
+
+
+@router.get("/features/subtitle_plus_dubbing/jobs/{job_id}")
+async def get_subtitle_plus_dubbing_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await get_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/subtitle_asr/jobs")
+async def create_subtitle_asr_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    inp = dict(payload.input)
+    inp.setdefault("mode", "subtitle_create")
+    payload.input = inp
+    return await create_subdub_job_route(payload, request, account)
+
+
+@router.get("/features/subtitle_asr/jobs")
+async def list_subtitle_asr_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await list_subdub_jobs_route(request, account)
+
+
+@router.get("/features/subtitle_asr/jobs/{job_id}")
+async def get_subtitle_asr_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await get_subdub_job_route(job_id, request, account)
+
+
+@router.post("/features/asr/jobs")
+async def create_asr_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    inp = dict(payload.input)
+    inp.setdefault("mode", "subtitle_create")
+    payload.input = inp
+    return await create_subdub_job_route(payload, request, account)
+
+
+@router.get("/features/asr/jobs")
+async def list_asr_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await list_subdub_jobs_route(request, account)
+
+
+@router.get("/features/asr/jobs/{job_id}")
+async def get_asr_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await get_subdub_job_route(job_id, request, account)
+
+
 @router.get("/admin/summary")
 async def admin_summary(request: Request, account: dict = Depends(require_canonical_admin)):
     response = await _bridge("GET", "/internal/v1/admin/summary", account=account, request=request, admin_read=True)
