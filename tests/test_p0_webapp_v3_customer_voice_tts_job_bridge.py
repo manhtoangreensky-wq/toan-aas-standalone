@@ -910,3 +910,492 @@ def test_19_bot_prepare_non_ok_or_malformed_zero_confirm_provider_wallet(monkeyp
         asyncio.run(confirm_voice_tts_job(job_b["id"], account=account))
     assert exc_b.value.status_code == 502
     assert get_voice_tts_job(account_id, job_b["id"])["status"] != "processing"
+
+
+def test_20_winner_completed_and_loser_concurrent_confirm_in_progress_final_status_completed(monkeypatch):
+    """1. Winner completed + loser CONCURRENT_CONFIRM_IN_PROGRESS -> final Web status completed."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Race order 1 test", "voice_source": "default", "default_voice_gender": "male"},
+    )
+    job_id = job["id"]
+
+    import copyfast_bridge
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+
+    async def mock_dispatch(*args, **kwargs):
+        return {"ok": True, "job": {"job_id": f"bot_{job_id}", "status": "awaiting_confirmation", "quote_xu": 0}}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_dispatch)
+    asyncio.run(dispatch_voice_tts_job_to_canonical_runtime(job_id=job_id, account=account))
+
+    # Winner completes
+    async def mock_winner_confirm(method, path, **kwargs):
+        if "confirm" in path:
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": f"bot_{job_id}",
+                    "status": "completed",
+                    "status_reason": "COMPLETED",
+                    "charged_xu": 0,
+                    "has_artifact": True,
+                },
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_winner_confirm)
+    winner_res = asyncio.run(confirm_voice_tts_job(job_id, account=account))
+    assert winner_res["status"] == "completed"
+
+    # Loser gets 409 CONCURRENT_CONFIRM_IN_PROGRESS
+    async def mock_loser_confirm(method, path, **kwargs):
+        if "confirm" in path:
+            return {
+                "ok": False,
+                "error_code": "CONCURRENT_CONFIRM_IN_PROGRESS",
+                "message": "Job is currently being processed by another execution request",
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_loser_confirm)
+    loser_res = asyncio.run(confirm_voice_tts_job(job_id, account=account))
+    assert loser_res["status"] == "completed"
+
+    # Verify final Web DB status remains completed
+    final_job = get_voice_tts_job(account_id, job_id)
+    assert final_job["status"] == "completed"
+    assert final_job["has_artifact"] is True
+
+
+def test_21_loser_409_handled_first_no_terminal_failed_later_reconcile_completed(monkeypatch):
+    """2. Loser 409 handled first -> no terminal failed -> later read-only reconcile Bot completed -> Web completed."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Race order 2 test", "voice_source": "default", "default_voice_gender": "female"},
+    )
+    job_id = job["id"]
+
+    import copyfast_bridge
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+
+    async def mock_dispatch(*args, **kwargs):
+        return {"ok": True, "job": {"job_id": f"bot_{job_id}", "status": "awaiting_confirmation", "quote_xu": 0}}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_dispatch)
+    asyncio.run(dispatch_voice_tts_job_to_canonical_runtime(job_id=job_id, account=account))
+
+    # Loser gets 409 CONCURRENT_CONFIRM_IN_PROGRESS before winner writes completed
+    async def mock_loser_first(method, path, **kwargs):
+        if "confirm" in path:
+            return {
+                "ok": False,
+                "error_code": "CONCURRENT_CONFIRM_IN_PROGRESS",
+                "message": "Job is currently being processed by another execution request",
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_loser_first)
+    with pytest.raises(HTTPException) as excinfo:
+        asyncio.run(confirm_voice_tts_job(job_id, account=account))
+    assert excinfo.value.status_code == 409
+
+    # Local status must be processing / transient, NOT terminal failed!
+    job_after_loser = get_voice_tts_job(account_id, job_id)
+    assert job_after_loser["status"] == "processing"
+    assert job_after_loser["status"] != "failed"
+    assert job_after_loser["status_reason"] == "CONCURRENT_CONFIRM_IN_PROGRESS"
+
+    # Later, read-only reconcile discovers Bot has completed
+    async def mock_reconcile_get(method, path, **kwargs):
+        if method == "GET":
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": f"bot_{job_id}",
+                    "status": "completed",
+                    "status_reason": "COMPLETED",
+                    "charged_xu": 0,
+                    "has_artifact": True,
+                },
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_reconcile_get)
+    reconciled = asyncio.run(reconcile_voice_tts_job_status(job_id, account=account))
+    assert reconciled["status"] == "completed"
+    assert reconciled["has_artifact"] is True
+    assert reconciled["output_url"] == f"/api/v1/features/voice_tts/jobs/{job_id}/artifact"
+
+    final_db = get_voice_tts_job(account_id, job_id)
+    assert final_db["status"] == "completed"
+
+
+def test_22_winner_writes_completed_first_delayed_loser_409_completed_remains_completed(monkeypatch):
+    """3. Winner writes completed first -> delayed loser 409 -> completed remains completed."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Race order 3 test", "voice_source": "default", "default_voice_gender": "female"},
+    )
+    job_id = job["id"]
+
+    # Seed job directly as completed in DB
+    from copyfast_db import transaction, utc_now
+    with transaction() as conn:
+        conn.execute(
+            """
+            UPDATE web_voice_tts_jobs
+            SET status = 'completed', status_reason = 'COMPLETED',
+                runtime_dispatch_status = 'dispatched', runtime_job_id = 'bot_j123',
+                charged_xu = 0, output_url = '/api/v1/features/voice_tts/jobs/j123/artifact',
+                completed_at = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (utc_now(), utc_now(), job_id),
+        )
+
+    import copyfast_bridge
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+
+    async def mock_delayed_409(method, path, **kwargs):
+        return {
+            "ok": False,
+            "error_code": "CONCURRENT_CONFIRM_IN_PROGRESS",
+            "message": "Conflict",
+        }
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_delayed_409)
+
+    res = asyncio.run(confirm_voice_tts_job(job_id, account=account))
+    assert res["status"] == "completed"
+
+    final_db = get_voice_tts_job(account_id, job_id)
+    assert final_db["status"] == "completed"
+    assert final_db["status_reason"] == "COMPLETED"
+
+
+def test_23_winner_writes_completed_first_delayed_bridge_exception_completed_remains_completed(monkeypatch):
+    """4. Winner writes completed first -> delayed bridge/network exception -> completed remains completed."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Race order 4 test", "voice_source": "default", "default_voice_gender": "female"},
+    )
+    job_id = job["id"]
+
+    from copyfast_db import transaction, utc_now
+    with transaction() as conn:
+        conn.execute(
+            """
+            UPDATE web_voice_tts_jobs
+            SET status = 'completed', status_reason = 'COMPLETED',
+                runtime_dispatch_status = 'dispatched', runtime_job_id = 'bot_j456',
+                charged_xu = 0, output_url = '/api/v1/features/voice_tts/jobs/j456/artifact',
+                completed_at = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (utc_now(), utc_now(), job_id),
+        )
+
+    import copyfast_bridge
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+
+    async def mock_crash(*args, **kwargs):
+        raise ConnectionResetError("Bridge disconnected")
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_crash)
+
+    res = asyncio.run(confirm_voice_tts_job(job_id, account=account))
+    assert res["status"] == "completed"
+
+    final_db = get_voice_tts_job(account_id, job_id)
+    assert final_db["status"] == "completed"
+    assert final_db["status"] != "ambiguous"
+
+
+def test_24_seeded_local_failed_concurrent_confirm_bot_completed_reconcile_repairs_completed(monkeypatch):
+    """5. Seeded local failed/CONCURRENT_CONFIRM_IN_PROGRESS + Bot GET completed -> reconcile repairs completed."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Race order 5 test", "voice_source": "saved", "voice_profile_id": "1"},
+    )
+    job_id = job["id"]
+
+    # Seed false local failed
+    from copyfast_db import transaction, utc_now
+    with transaction() as conn:
+        conn.execute(
+            """
+            UPDATE web_voice_tts_jobs
+            SET status = 'failed', status_reason = 'CONCURRENT_CONFIRM_IN_PROGRESS',
+                runtime_dispatch_status = 'dispatched', runtime_job_id = 'bot_seeded',
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (utc_now(), job_id),
+        )
+
+    import copyfast_bridge
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+
+    async def mock_bot_get(method, path, **kwargs):
+        if method == "GET" and "jobs" in path:
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": "bot_seeded",
+                    "status": "completed",
+                    "status_reason": "COMPLETED",
+                    "charged_xu": 2,
+                    "has_artifact": True,
+                },
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bot_get)
+
+    reconciled = asyncio.run(reconcile_voice_tts_job_status(job_id, account=account))
+    assert reconciled["status"] == "completed"
+    assert reconciled["status_reason"] == "COMPLETED"
+    assert reconciled["charged_xu"] == 2
+    assert reconciled["has_artifact"] is True
+    assert reconciled["output_url"] == f"/api/v1/features/voice_tts/jobs/{job_id}/artifact"
+
+    final_db = get_voice_tts_job(account_id, job_id)
+    assert final_db["status"] == "completed"
+
+
+def test_25_bot_get_genuinely_failed_local_remains_failed(monkeypatch):
+    """6. Bot GET genuinely failed -> local remains failed."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Race order 6 test", "voice_source": "default", "default_voice_gender": "male"},
+    )
+    job_id = job["id"]
+
+    from copyfast_db import transaction, utc_now
+    with transaction() as conn:
+        conn.execute(
+            """
+            UPDATE web_voice_tts_jobs
+            SET status = 'failed', status_reason = 'PROVIDER_EXECUTION_FAILED',
+                runtime_dispatch_status = 'dispatched', runtime_job_id = 'bot_failed',
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (utc_now(), job_id),
+        )
+
+    import copyfast_bridge
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+
+    async def mock_bot_get(method, path, **kwargs):
+        if method == "GET" and "jobs" in path:
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": "bot_failed",
+                    "status": "failed",
+                    "status_reason": "PROVIDER_TIMEOUT",
+                },
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bot_get)
+
+    reconciled = asyncio.run(reconcile_voice_tts_job_status(job_id, account=account))
+    assert reconciled["status"] == "failed"
+    assert reconciled["status_reason"] == "PROVIDER_TIMEOUT"
+
+
+def test_26_loser_causes_zero_second_provider_or_wallet_execution(monkeypatch):
+    """7. Loser causes zero second provider/wallet execution."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Race order 7 test", "voice_source": "saved", "voice_profile_id": "1"},
+    )
+    job_id = job["id"]
+
+    provider_calls = 0
+    wallet_debits = 0
+    bot_confirm_calls = 0
+
+    import copyfast_bridge
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+
+    async def mock_bridge(method, path, **kwargs):
+        nonlocal provider_calls, wallet_debits, bot_confirm_calls
+        if "jobs" in path and method == "POST" and "confirm" not in path:
+            return {"ok": True, "job": {"job_id": f"bot_{job_id}", "status": "awaiting_confirmation", "quote_xu": 5}}
+        elif "confirm" in path:
+            bot_confirm_calls += 1
+            return {
+                "ok": False,
+                "error_code": "CONCURRENT_CONFIRM_IN_PROGRESS",
+                "message": "Processing by other request",
+            }
+        elif method == "GET" and "jobs" in path:
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": f"bot_{job_id}",
+                    "status": "completed",
+                    "status_reason": "COMPLETED",
+                    "charged_xu": 5,
+                    "has_artifact": True,
+                },
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge)
+    asyncio.run(dispatch_voice_tts_job_to_canonical_runtime(job_id=job_id, account=account))
+
+    # Loser attempts confirm -> raises 409
+    with pytest.raises(HTTPException):
+        asyncio.run(confirm_voice_tts_job(job_id, account=account))
+
+    # Reconcile is read-only
+    asyncio.run(reconcile_voice_tts_job_status(job_id, account=account))
+
+    assert provider_calls == 0
+    assert wallet_debits == 0
+    assert bot_confirm_calls == 1  # Exactly 1 confirm call from loser, 0 subsequent retry
+
+
+def test_27_recovered_completed_job_exposes_normal_safe_artifact_route(monkeypatch):
+    """8. Recovered completed job exposes normal safe artifact route."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Race order 8 test", "voice_source": "default", "default_voice_gender": "female"},
+    )
+    job_id = job["id"]
+
+    # Mark completed with artifact
+    from copyfast_db import transaction, utc_now
+    with transaction() as conn:
+        conn.execute(
+            """
+            UPDATE web_voice_tts_jobs
+            SET status = 'completed', status_reason = 'COMPLETED',
+                output_url = ?, completed_at = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (f"/api/v1/features/voice_tts/jobs/{job_id}/artifact", utc_now(), utc_now(), job_id),
+        )
+
+    from fastapi.testclient import TestClient
+    from app import app
+    import copyfast_bridge
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+
+    import httpx
+    fake_audio_bytes = b"FAKE_MP3_AUDIO_STREAM_DATA"
+
+    class MockHttpxClient:
+        def __init__(self, *args, **kwargs):
+            pass
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *args):
+            pass
+        async def get(self, url, headers=None):
+            return httpx.Response(status_code=200, content=fake_audio_bytes)
+
+    monkeypatch.setattr("httpx.AsyncClient", MockHttpxClient)
+
+    from copyfast_api import require_account
+    app.dependency_overrides[require_account] = lambda: {"id": account_id, "canonical_user_id": can_user_id}
+
+    client = TestClient(app)
+    try:
+        resp = client.get(f"/api/v1/features/voice_tts/jobs/{job_id}/artifact")
+        assert resp.status_code == 200
+        assert resp.content == fake_audio_bytes
+        assert resp.headers["content-type"] == "audio/mpeg"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_28_insufficient_funds_still_maps_payment_required_and_cannot_downgrade_completed(monkeypatch):
+    """9. INSUFFICIENT_FUNDS still maps payment_required and cannot overwrite completed."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Insufficient funds test", "voice_source": "saved", "voice_profile_id": "1"},
+    )
+    job_id = job["id"]
+
+    import copyfast_bridge
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+
+    async def mock_dispatch(*args, **kwargs):
+        return {"ok": True, "job": {"job_id": f"bot_{job_id}", "status": "awaiting_confirmation", "quote_xu": 100}}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_dispatch)
+    asyncio.run(dispatch_voice_tts_job_to_canonical_runtime(job_id=job_id, account=account))
+
+    # Bot confirm returns INSUFFICIENT_FUNDS
+    async def mock_insufficient(*args, **kwargs):
+        return {"ok": False, "error_code": "INSUFFICIENT_FUNDS", "message": "Số dư Xu không đủ"}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_insufficient)
+
+    with pytest.raises(HTTPException) as excinfo:
+        asyncio.run(confirm_voice_tts_job(job_id, account=account))
+    assert excinfo.value.status_code == 402
+
+    db_job = get_voice_tts_job(account_id, job_id)
+    assert db_job["status"] == "payment_required"
+    assert db_job["status_reason"] == "INSUFFICIENT_FUNDS"
+
+    # Now verify: if job was already completed, confirm cannot overwrite to payment_required
+    from copyfast_db import transaction, utc_now
+    with transaction() as conn:
+        conn.execute(
+            """
+            UPDATE web_voice_tts_jobs
+            SET status = 'completed', status_reason = 'COMPLETED',
+                output_url = '/api/v1/artifact', updated_at = ?
+            WHERE id = ?
+            """,
+            (utc_now(), job_id),
+        )
+
+    res = asyncio.run(confirm_voice_tts_job(job_id, account=account))
+    assert res["status"] == "completed"
+    assert get_voice_tts_job(account_id, job_id)["status"] == "completed"
+
