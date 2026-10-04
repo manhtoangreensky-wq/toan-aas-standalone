@@ -518,3 +518,395 @@ def test_12_pass_contract_authority_resolution_invariants():
     assert RAW_BOT_FILESYSTEM_PATH_PUBLICLY_EXPOSED == "NO"
     assert STALE_VOICE_TTS_WEB_TEST_AUTHORITY_REMOVED == "YES"
     assert STALE_VOICE_TTS_BOT_TEST_EXPECTATIONS_RECONCILED == "YES"
+
+
+# -----------------------------------------------------------------------------
+# R1.5 Canonical Prepare Gate and Replay Repair Tests
+# -----------------------------------------------------------------------------
+
+
+def test_13_default_initial_prepare_success_then_confirm_success(monkeypatch):
+    """1. default initial prepare success -> confirm success."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Test default prepare success", "voice_source": "default", "default_voice_gender": "female"},
+    )
+    job_id = job["id"]
+
+    prepare_calls = 0
+    confirm_calls = 0
+
+    import copyfast_bridge
+    async def mock_bridge(method, path, **kwargs):
+        nonlocal prepare_calls, confirm_calls
+        if method == "POST" and path == "/internal/v1/web-voice-tts/jobs":
+            prepare_calls += 1
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": f"bot_{job_id}",
+                    "status": "prepared",
+                    "status_reason": "PREPARED",
+                    "quote_xu": 0,
+                },
+            }
+        elif method == "POST" and f"/internal/v1/web-voice-tts/jobs/{job_id}/confirm" in path:
+            confirm_calls += 1
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": f"bot_{job_id}",
+                    "status": "completed",
+                    "status_reason": "COMPLETED",
+                    "charged_xu": 0,
+                    "has_artifact": True,
+                },
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge)
+
+    # 1. Initial prepare
+    dispatched = asyncio.run(dispatch_voice_tts_job_to_canonical_runtime(job_id=job_id, account=account))
+    assert dispatched["runtime_dispatch_status"] == "dispatched"
+    assert dispatched["runtime_job_id"] == f"bot_{job_id}"
+    assert prepare_calls == 1
+
+    # 2. Confirm succeeds without re-preparing
+    confirmed = asyncio.run(confirm_voice_tts_job(job_id, account=account))
+    assert confirmed["status"] == STATUS_COMPLETED
+    assert confirmed["charged_xu"] == 0
+    assert confirm_calls == 1
+    assert prepare_calls == 1  # No duplicate prepare needed
+
+
+def test_14_default_initial_prepare_exception_then_confirm_retries_prepare(monkeypatch):
+    """2. default initial prepare exception -> confirm retries prepare and succeeds."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Test default prepare exception retry", "voice_source": "default", "default_voice_gender": "female"},
+    )
+    job_id = job["id"]
+
+    prepare_attempts = 0
+    confirm_calls = 0
+
+    import copyfast_bridge
+    async def mock_bridge(method, path, **kwargs):
+        nonlocal prepare_attempts, confirm_calls
+        if method == "POST" and path == "/internal/v1/web-voice-tts/jobs":
+            prepare_attempts += 1
+            if prepare_attempts == 1:
+                raise Exception("Initial bridge network timeout")
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": f"bot_{job_id}",
+                    "status": "prepared",
+                    "status_reason": "PREPARED",
+                    "quote_xu": 0,
+                },
+            }
+        elif method == "POST" and f"/internal/v1/web-voice-tts/jobs/{job_id}/confirm" in path:
+            confirm_calls += 1
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": f"bot_{job_id}",
+                    "status": "completed",
+                    "status_reason": "COMPLETED",
+                    "charged_xu": 0,
+                    "has_artifact": True,
+                },
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge)
+
+    # 1. Initial prepare fails with exception -> marked 'uncertain'
+    unproven = asyncio.run(dispatch_voice_tts_job_to_canonical_runtime(job_id=job_id, account=account))
+    assert unproven["runtime_dispatch_status"] == "uncertain"
+    assert not unproven["runtime_job_id"]
+    assert prepare_attempts == 1
+
+    # 2. Confirm detects unproven prepare -> retries prepare and then confirms
+    confirmed = asyncio.run(confirm_voice_tts_job(job_id, account=account))
+    assert confirmed["status"] == STATUS_COMPLETED
+    assert prepare_attempts == 2
+    assert confirm_calls == 1
+
+
+def test_15_default_prepare_remains_unavailable_fails_502_before_processing(monkeypatch):
+    """3. default prepare remains unavailable -> 502 before processing, 0 confirm calls, 0 processing transition."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Test default prepare unavailable 502", "voice_source": "default", "default_voice_gender": "female"},
+    )
+    job_id = job["id"]
+
+    confirm_calls = 0
+
+    import copyfast_bridge
+    async def mock_bridge(method, path, **kwargs):
+        nonlocal confirm_calls
+        if method == "POST" and path == "/internal/v1/web-voice-tts/jobs":
+            raise Exception("Bot prepare service down 503")
+        elif "confirm" in path:
+            confirm_calls += 1
+            return {"ok": True}
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge)
+
+    with pytest.raises(HTTPException) as excinfo:
+        asyncio.run(confirm_voice_tts_job(job_id, account=account))
+
+    assert excinfo.value.status_code == 502
+
+    # Invariants
+    assert confirm_calls == 0  # BOT_CONFIRM_CALL_COUNT = 0
+    saved_in_db = get_voice_tts_job(account_id, job_id)
+    assert saved_in_db["status"] != "processing"  # WEB_STATUS_MUST_NOT_BECOME_PROCESSING = YES
+    assert saved_in_db["runtime_dispatch_status"] != "dispatched"
+
+
+def test_16_default_exact_replay_after_uncertain_prepare_repairs_without_duplicate_job(monkeypatch):
+    """4. default exact replay after uncertain prepare -> repair without duplicate job."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+    shared_idem_key = f"key_replay_repair_{uuid.uuid4().hex[:8]}"
+
+    prepare_calls = 0
+
+    import copyfast_bridge
+    async def mock_bridge(method, path, **kwargs):
+        nonlocal prepare_calls
+        if method == "POST" and path == "/internal/v1/web-voice-tts/jobs":
+            prepare_calls += 1
+            if prepare_calls == 1:
+                raise Exception("First create dispatch failure")
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": "bot_job_hydrated_r4",
+                    "status": "prepared",
+                    "status_reason": "PREPARED",
+                    "quote_xu": 0,
+                },
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge)
+    monkeypatch.setattr("copyfast_api._web_feature_runtime_active", lambda f: True)
+
+    from fastapi.testclient import TestClient
+    from app import app
+    from copyfast_api import require_csrf, require_account
+    client = TestClient(app)
+
+    headers = {"x-account-id": account_id, "Idempotency-Key": shared_idem_key}
+    app.dependency_overrides[require_csrf] = lambda: account
+    app.dependency_overrides[require_account] = lambda: account
+
+    # 1. First create call via API route: prepare fails
+    res1 = client.post(
+        "/api/v1/features/voice_tts/jobs",
+        json={"input": {"script": "Replay repair script", "voice_source": "default", "default_voice_gender": "female"}},
+        headers=headers,
+    )
+    assert res1.status_code == 200
+    job1 = res1.json()["data"]
+    assert job1["runtime_dispatch_status"] == "uncertain"
+    assert not job1["runtime_job_id"]
+    assert not job1["idempotent_replay"]
+    assert prepare_calls == 1
+
+    # Check exactly 1 job in DB
+    all_jobs_1 = list_voice_tts_jobs(account_id)
+    assert len(all_jobs_1) == 1
+
+    # 2. Exact replay: repairs unproven runtime prepare without duplicate job
+    res2 = client.post(
+        "/api/v1/features/voice_tts/jobs",
+        json={"input": {"script": "Replay repair script", "voice_source": "default", "default_voice_gender": "female"}},
+        headers=headers,
+    )
+    assert res2.status_code == 200
+    job2 = res2.json()["data"]
+    assert job2["idempotent_replay"] is True
+    assert job2["id"] == job1["id"]
+    assert job2["runtime_dispatch_status"] == "dispatched"
+    assert job2["runtime_job_id"] == "bot_job_hydrated_r4"
+    assert prepare_calls == 2
+
+    # Invariant: IDEMPOTENT_REPLAY_CREATES_SECOND_WEB_JOB = NO
+    all_jobs_2 = list_voice_tts_jobs(account_id)
+    assert len(all_jobs_2) == 1
+
+    app.dependency_overrides.clear()
+
+
+def test_17_saved_prepare_unavailable_retries_and_requires_positive_quote(monkeypatch):
+    """5. saved prepare unavailable -> retry + positive canonical quote required."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Nội dung giọng đã lưu", "voice_source": "saved", "voice_profile_id": "99"},
+    )
+    job_id = job["id"]
+
+    prepare_calls = 0
+    confirm_calls = 0
+
+    import copyfast_bridge
+    async def mock_bridge(method, path, **kwargs):
+        nonlocal prepare_calls, confirm_calls
+        if method == "POST" and path == "/internal/v1/web-voice-tts/jobs":
+            prepare_calls += 1
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": f"bot_{job_id}",
+                    "status": "awaiting_confirmation",
+                    "status_reason": "AWAITING_CUSTOMER_CONFIRMATION",
+                    "quote_xu": 5,
+                },
+            }
+        elif "confirm" in path:
+            confirm_calls += 1
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": f"bot_{job_id}",
+                    "status": "completed",
+                    "status_reason": "COMPLETED",
+                    "charged_xu": 5,
+                    "has_artifact": True,
+                },
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge)
+
+    confirmed = asyncio.run(confirm_voice_tts_job(job_id, account=account))
+    assert confirmed["status"] == STATUS_COMPLETED
+    assert confirmed["quote_xu"] == 5
+    assert confirmed["charged_xu"] == 5
+    assert prepare_calls == 1
+    assert confirm_calls == 1
+
+
+def test_18_saved_bot_quote_zero_fails_closed_before_processing(monkeypatch):
+    """6. saved Bot quote=0 -> fail closed 502 before processing, 0 confirm calls."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Nội dung giọng đã lưu quote zero", "voice_source": "saved", "voice_profile_id": "99"},
+    )
+    job_id = job["id"]
+
+    confirm_calls = 0
+
+    import copyfast_bridge
+    async def mock_bridge(method, path, **kwargs):
+        nonlocal confirm_calls
+        if method == "POST" and path == "/internal/v1/web-voice-tts/jobs":
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": f"bot_{job_id}",
+                    "status": "awaiting_confirmation",
+                    "quote_xu": 0,  # Invalid 0 Xu quote for saved voice!
+                },
+            }
+        elif "confirm" in path:
+            confirm_calls += 1
+            return {"ok": True}
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge)
+
+    with pytest.raises(HTTPException) as excinfo:
+        asyncio.run(confirm_voice_tts_job(job_id, account=account))
+
+    assert excinfo.value.status_code == 502
+    assert "CANONICAL_BOT_QUOTE_XU_GT_ZERO=YES" in excinfo.value.detail or "lớn hơn 0 Xu" in excinfo.value.detail
+
+    # Invariants
+    assert confirm_calls == 0
+    saved_in_db = get_voice_tts_job(account_id, job_id)
+    assert saved_in_db["status"] != "processing"
+
+
+def test_19_bot_prepare_non_ok_or_malformed_zero_confirm_provider_wallet(monkeypatch):
+    """7. Bot prepare non-ok/malformed -> zero confirm/provider/wallet, not considered dispatched."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    # Case 7a: Bot returns ok=True but job_id is missing
+    job_a = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Malformed test A", "voice_source": "default", "default_voice_gender": "female"},
+    )
+
+    import copyfast_bridge
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+
+    async def mock_malformed(*args, **kwargs):
+        return {"ok": True, "job": {"quote_xu": 0}}  # Missing job_id!
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_malformed)
+    res_a = asyncio.run(dispatch_voice_tts_job_to_canonical_runtime(job_id=job_a["id"], account=account))
+    assert res_a["runtime_dispatch_status"] == "failed"
+    assert res_a["status_reason"] == "BOT_JOB_ID_MISSING"
+
+    # Confirm must fail with 502
+    with pytest.raises(HTTPException) as exc_a:
+        asyncio.run(confirm_voice_tts_job(job_a["id"], account=account))
+    assert exc_a.value.status_code == 502
+    assert get_voice_tts_job(account_id, job_a["id"])["status"] != "processing"
+
+    # Case 7b: Bot returns ok=False
+    job_b = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Non-ok test B", "voice_source": "default", "default_voice_gender": "female"},
+    )
+
+    async def mock_non_ok(*args, **kwargs):
+        return {"ok": False, "error_code": "PROVIDER_CONFIG_ERROR"}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_non_ok)
+    res_b = asyncio.run(dispatch_voice_tts_job_to_canonical_runtime(job_id=job_b["id"], account=account))
+    assert res_b["runtime_dispatch_status"] == "failed"
+    assert res_b["status_reason"] == "PROVIDER_CONFIG_ERROR"
+
+    with pytest.raises(HTTPException) as exc_b:
+        asyncio.run(confirm_voice_tts_job(job_b["id"], account=account))
+    assert exc_b.value.status_code == 502
+    assert get_voice_tts_job(account_id, job_b["id"])["status"] != "processing"

@@ -581,30 +581,63 @@ async def dispatch_voice_tts_job_to_canonical_runtime(
             actor_id=canonical_user_id,
             owner_id=canonical_user_id,
         )
-        if res.get("ok"):
+        if isinstance(res, dict) and res.get("ok"):
             bot_job = (res.get("data") or {}).get("job") or res.get("job") or {}
-            rt_id = bot_job.get("job_id") or clean_job_id
-            bot_quote = int(bot_job.get("quote_xu") or 0)
-            bot_status = str(bot_job.get("status") or "")
-            bot_reason = str(bot_job.get("status_reason") or "")
+            rt_id = str(bot_job.get("job_id") or "").strip() if isinstance(bot_job, dict) else ""
+            if rt_id:
+                bot_quote = int(bot_job.get("quote_xu") or 0)
+                bot_status = str(bot_job.get("status") or "")
+                bot_reason = str(bot_job.get("status_reason") or "")
+                with transaction() as conn:
+                    conn.execute(
+                        """
+                        UPDATE web_voice_tts_jobs
+                        SET runtime_job_id = ?,
+                            quote_xu = ?,
+                            status = CASE WHEN ? != '' THEN ? ELSE status END,
+                            status_reason = CASE WHEN ? != '' THEN ? ELSE status_reason END,
+                            runtime_dispatch_status = 'dispatched',
+                            runtime_dispatched_at = ?, updated_at = ?
+                        WHERE id = ?
+                        """,
+                        (rt_id, bot_quote, bot_status, bot_status, bot_reason, bot_reason, utc_now(), utc_now(), clean_job_id),
+                    )
+            else:
+                # Malformed Bot response: ok=True but missing Bot job_id! Must NOT be marked dispatched
+                with transaction() as conn:
+                    conn.execute(
+                        """
+                        UPDATE web_voice_tts_jobs
+                        SET runtime_dispatch_status = 'failed',
+                            status_reason = 'BOT_JOB_ID_MISSING',
+                            updated_at = ?
+                        WHERE id = ?
+                        """,
+                        (utc_now(), clean_job_id),
+                    )
+        else:
+            err_reason = str((res.get("error_code") if isinstance(res, dict) else "") or "BOT_PREPARE_FAILED")
             with transaction() as conn:
                 conn.execute(
                     """
                     UPDATE web_voice_tts_jobs
-                    SET runtime_job_id = ?,
-                        quote_xu = ?,
-                        status = CASE WHEN ? != '' THEN ? ELSE status END,
-                        status_reason = CASE WHEN ? != '' THEN ? ELSE status_reason END,
-                        runtime_dispatch_status = 'dispatched',
-                        runtime_dispatched_at = ?, updated_at = ?
+                    SET runtime_dispatch_status = 'failed',
+                        status_reason = ?,
+                        updated_at = ?
                     WHERE id = ?
                     """,
-                    (rt_id, bot_quote, bot_status, bot_status, bot_reason, bot_reason, utc_now(), utc_now(), clean_job_id),
+                    (err_reason, utc_now(), clean_job_id),
                 )
     except Exception:
         with transaction() as conn:
             conn.execute(
-                "UPDATE web_voice_tts_jobs SET runtime_dispatch_status = 'uncertain', updated_at = ? WHERE id = ?",
+                """
+                UPDATE web_voice_tts_jobs
+                SET runtime_dispatch_status = 'uncertain',
+                    status_reason = 'BRIDGE_DISPATCH_EXCEPTION',
+                    updated_at = ?
+                WHERE id = ?
+                """,
                 (utc_now(), clean_job_id),
             )
 
@@ -643,21 +676,37 @@ async def confirm_voice_tts_job(
     if not canonical_user_id:
         raise HTTPException(status_code=403, detail="Tài khoản chưa liên kết Telegram canonical user ID")
 
-    # Blocker 1: Paid confirm strictly requires canonical Bot quote
+    # Canonical prepare gate for all voice sources (default and saved)
+    needs_prepare = (
+        job.get("runtime_dispatch_status") != "dispatched"
+        or not str(job.get("runtime_job_id") or "").strip()
+    )
     if job.get("voice_source") == "saved":
-        if job.get("runtime_dispatch_status") != "dispatched" or int(job.get("quote_xu") or 0) <= 0:
-            dispatched = await dispatch_voice_tts_job_to_canonical_runtime(job_id=clean_job_id, account=account, request=request)
-            if not dispatched or dispatched.get("runtime_dispatch_status") != "dispatched":
-                raise HTTPException(
-                    status_code=502,
-                    detail="Chưa nhận được báo giá chính thức từ Bot Core runtime. Không được phép xác nhận (PAID_CONFIRM_ALLOWED_BEFORE_CANONICAL_QUOTE=NO).",
-                )
+        needs_prepare = needs_prepare or int(job.get("quote_xu") or 0) <= 0
+
+    if needs_prepare:
+        dispatched = await dispatch_voice_tts_job_to_canonical_runtime(
+            job_id=clean_job_id, account=account, request=request
+        )
+        if dispatched:
             job = dispatched
-            if int(job.get("quote_xu") or 0) <= 0:
-                raise HTTPException(
-                    status_code=502,
-                    detail="Báo giá chính thức từ Bot Core runtime không hợp lệ.",
-                )
+
+    # Confirm only allowed if runtime_dispatch_status == 'dispatched' AND runtime_job_id is present
+    if (
+        job.get("runtime_dispatch_status") != "dispatched"
+        or not str(job.get("runtime_job_id") or "").strip()
+    ):
+        raise HTTPException(
+            status_code=502,
+            detail="Chưa nhận được xác nhận chuẩn bị chính thức từ Bot Core runtime. Không được phép xác nhận (PAID_CONFIRM_ALLOWED_BEFORE_CANONICAL_QUOTE=NO).",
+        )
+
+    if job.get("voice_source") == "saved":
+        if int(job.get("quote_xu") or 0) <= 0:
+            raise HTTPException(
+                status_code=502,
+                detail="Báo giá chính thức từ Bot Core runtime cho giọng đã lưu phải lớn hơn 0 Xu (CANONICAL_BOT_QUOTE_XU_GT_ZERO=YES).",
+            )
 
     # Update local status to processing
     with transaction() as conn:
