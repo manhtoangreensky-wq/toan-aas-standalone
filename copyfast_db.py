@@ -6572,6 +6572,42 @@ def ensure_copyfast_schema() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_request ON web_subdub_jobs(request_id)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_account_idempotency ON web_subdub_jobs(account_id, idempotency_key_hash)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_subdub_jobs_status_created ON web_subdub_jobs(status, created_at ASC)")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_voice_tts_jobs (
+                id TEXT PRIMARY KEY,
+                request_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                product_key TEXT NOT NULL DEFAULT 'voice_tts',
+                voice_source TEXT NOT NULL,
+                script TEXT NOT NULL,
+                default_voice_gender TEXT,
+                voice_profile_id TEXT,
+                speed TEXT NOT NULL DEFAULT '1.0',
+                volume_percent INTEGER NOT NULL DEFAULT 100,
+                language TEXT NOT NULL DEFAULT 'vi',
+                status TEXT NOT NULL DEFAULT 'prepared',
+                status_reason TEXT NOT NULL DEFAULT '',
+                idempotency_key_hash TEXT,
+                payload_hash TEXT NOT NULL,
+                quote_xu INTEGER NOT NULL DEFAULT 0,
+                charged_xu INTEGER NOT NULL DEFAULT 0,
+                output_url TEXT,
+                bridge_envelope TEXT NOT NULL,
+                runtime_job_id TEXT,
+                runtime_dispatch_status TEXT DEFAULT 'pending',
+                runtime_dispatched_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                completed_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_voice_tts_jobs_account_created ON web_voice_tts_jobs(account_id, created_at DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_voice_tts_jobs_request ON web_voice_tts_jobs(request_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_voice_tts_jobs_account_idempotency ON web_voice_tts_jobs(account_id, idempotency_key_hash)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_voice_tts_jobs_status ON web_voice_tts_jobs(status)")
         try:
             import copyfast_pricing_policy
             copyfast_pricing_policy.ensure_pricing_schema(conn)

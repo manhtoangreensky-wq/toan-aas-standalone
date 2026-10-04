@@ -715,13 +715,15 @@
     ],
     voice: [
       { name: "script", label: "Nội dung lời thoại", control: "textarea", placeholder: "Nhập văn bản để chuẩn bị giọng nói…", required: true, minLength: 1 },
-      { name: "voice_profile_id", label: "Giọng đã lưu (tuỳ chọn)", control: "select", optionsFrom: "voiceProfiles", emptyLabel: "Dùng giọng mặc định do bot cấp", help: "Danh sách chỉ gồm metadata Voice Vault đã qua ownership check. Core Bridge luôn kiểm tra lại lựa chọn khi estimate/confirm." },
-      { name: "speed", label: "Tốc độ đọc", control: "select", options: ["normal", "slow", "fast"], help: "Thời lượng hiển thị trong estimate được tính bởi helper canonical của bot." }
+      { name: "default_voice_gender", label: "Giọng đọc mặc định", control: "select", options: [{ value: "female", label: "Nữ (female)" }, { value: "male", label: "Nam (male)" }], required: true, help: "Chọn giọng đọc mặc định miễn phí (bắt buộc chọn 'female' hoặc 'male')." },
+      { name: "speed", label: "Tốc độ đọc", control: "select", options: ["1.0", "0.85", "1.2", "normal", "slow", "fast"], help: "Tốc độ đọc chuẩn canonical (0.5x đến 2.0x)." },
+      { name: "volume_percent", label: "Âm lượng (%)", type: "number", min: 0, max: 200, step: 10, placeholder: "100", help: "Âm lượng đọc canonical (0% đến 200%)." }
     ],
     voiceSaved: [
       { name: "script", label: "Nội dung lời thoại", control: "textarea", placeholder: "Nhập văn bản để chuẩn bị giọng nói…", required: true, minLength: 1 },
       { name: "voice_profile_id", label: "Giọng từ Voice Vault", control: "select", optionsFrom: "voiceProfiles", emptyLabel: "Chọn một giọng đã sẵn sàng", help: "Saved TTS chỉ estimate khi Voice Vault canonical xác nhận profile này thuộc tài khoản và sẵn sàng.", required: true },
-      { name: "speed", label: "Tốc độ đọc", control: "select", options: ["normal", "slow", "fast"], help: "Thời lượng hiển thị trong estimate được tính bởi helper canonical của bot." }
+      { name: "speed", label: "Tốc độ đọc", control: "select", options: ["1.0", "0.85", "1.2", "normal", "slow", "fast"], help: "Tốc độ đọc chuẩn canonical (0.5x đến 2.0x)." },
+      { name: "volume_percent", label: "Âm lượng (%)", type: "number", min: 0, max: 200, step: 10, placeholder: "100", help: "Âm lượng đọc canonical (0% đến 200%)." }
     ],
     voiceClone: [
       { name: "display_name", label: "Tên giọng (tuỳ chọn)", placeholder: "Ví dụ: Giọng thương hiệu TOAN AAS", maxLength: 120, help: "Nếu để trống, Bot canonical đặt tên mặc định an toàn; tên này không phải provider voice ID." },

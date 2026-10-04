@@ -188,6 +188,19 @@ from copyfast_subdub_job_bridge import (
     subdub_job_to_native_compat,
     validate_subdub_input,
 )
+from copyfast_voice_tts_job_bridge import (
+    CANONICAL_PRODUCT_KEY as VOICE_TTS_PRODUCT_KEY,
+    SUPPORTED_CANONICAL_JOB_ADAPTERS as VOICE_TTS_ADAPTER_KEYS,
+    create_or_replay_voice_tts_job,
+    dispatch_voice_tts_job_to_canonical_runtime,
+    get_voice_tts_job,
+    is_voice_tts_job_other_account,
+    list_voice_tts_jobs,
+    confirm_voice_tts_job,
+    reconcile_voice_tts_job_status,
+    voice_tts_job_to_native_compat,
+    validate_voice_tts_input,
+)
 from copyfast_product_video_dispatcher import (
     claim_product_video_job,
     complete_product_video_job,
@@ -213,7 +226,7 @@ CANONICAL_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
 # no Web feature can create a durable runtime job, regardless of environment
 # configuration.  This is the intended production baseline until each feature's
 # runtime bridge is independently verified.
-WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES: frozenset[str] = frozenset({"subdub", "video_ai_prompt"})
+WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES: frozenset[str] = frozenset({"subdub", "video_ai_prompt", "voice_tts"})
 CONTIGUOUS_PAGE_RANGE_PATTERN = re.compile(r"^\d+(?:-\d+)?$")
 TICKET_SECRET_ASSIGNMENT_PATTERN = re.compile(
     r"\b(?:api[ _-]?(?:key|token)|access[ _-]?token|refresh[ _-]?token|"
@@ -892,8 +905,8 @@ def _web_feature_job_adapter_keys() -> frozenset[str]:
     return frozenset(
         feature
         for feature in requested
-        if (feature in FEATURE_EXECUTION_CANDIDATE_KEYS or feature in SUBDUB_ADAPTER_KEYS)
-        and (feature in FEATURE_BY_KEY or feature in SUBDUB_ADAPTER_KEYS)
+        if (feature in FEATURE_EXECUTION_CANDIDATE_KEYS or feature in SUBDUB_ADAPTER_KEYS or feature in VOICE_TTS_ADAPTER_KEYS)
+        and (feature in FEATURE_BY_KEY or feature in SUBDUB_ADAPTER_KEYS or feature in VOICE_TTS_ADAPTER_KEYS)
     )
 
 
@@ -925,6 +938,8 @@ def _web_feature_execution_available(feature: str | None = None) -> bool:
     feature_key = str(feature or "").strip()
     is_active = feature_key in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES or (
         feature_key in SUBDUB_ADAPTER_KEYS and "subdub" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+    ) or (
+        feature_key in VOICE_TTS_ADAPTER_KEYS and "voice_tts" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
     )
     return feature_key in adapter_keys and is_active
 
@@ -936,7 +951,11 @@ def _web_feature_runtime_active(feature: str) -> bool:
     same source-reviewed runtime authority gate as the confirm path.
     """
     clean = str(feature or "").strip()
-    is_active = clean in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES or (clean in SUBDUB_ADAPTER_KEYS and "subdub" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES)
+    is_active = (
+        clean in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+        or (clean in SUBDUB_ADAPTER_KEYS and "subdub" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES)
+        or (clean in VOICE_TTS_ADAPTER_KEYS and "voice_tts" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES)
+    )
     return _web_feature_execution_available(feature) and is_active
 
 
@@ -3464,7 +3483,11 @@ def _native_jobs_for_account(account: dict) -> list[dict[str, Any]]:
         subdub_job_to_native_compat(job)
         for job in list_subdub_jobs(account_id, limit=100)
     ]
-    return _merge_read_items(sd_jobs, img_jobs, msf_jobs, vl_jobs, vt_jobs, pv_jobs, native_jobs)
+    vtts_jobs = [
+        voice_tts_job_to_native_compat(job)
+        for job in list_voice_tts_jobs(account_id, limit=100)
+    ]
+    return _merge_read_items(vtts_jobs, sd_jobs, img_jobs, msf_jobs, vl_jobs, vt_jobs, pv_jobs, native_jobs)
 
 
 def _native_assets_for_account(account: dict) -> list[dict[str, Any]]:
@@ -6146,6 +6169,24 @@ async def job_detail(job_id: str, request: Request, account: dict = Depends(requ
             status_name="guarded",
             error_code="WEB_NATIVE_JOB_NOT_FOUND",
         )
+    vtts_job = get_voice_tts_job(account_id, job_id)
+    if vtts_job is not None:
+        compat_item = voice_tts_job_to_native_compat(vtts_job)
+        return envelope(
+            True,
+            "Đã tải dữ liệu Job Web-native của tài khoản hiện tại.",
+            data={**compat_item, "job_record": vtts_job, "read_model": "jobs", "canonical_available": False},
+            status_name="read_only",
+        )
+    if is_voice_tts_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    if str(job_id or "").strip().startswith("vtj_"):
+        return envelope(
+            False,
+            "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_JOB_NOT_FOUND",
+        )
     native_job = parse_native_job_id(job_id)
     if native_job is not None:
         record = get_native_job(str(account.get("id") or ""), job_id)
@@ -7020,6 +7061,156 @@ async def reconcile_and_settle_subdub_job_route(
         data=job,
         status_name=job.get("status", "completed"),
     )
+
+
+@router.post("/features/voice_tts/jobs")
+async def create_voice_tts_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if not _web_feature_runtime_active("voice_tts"):
+        return envelope(False, "Runtime execution chưa được kích hoạt cho tính năng này.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    request_id = str(payload.input.get("request_id") or "")
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        request_id=request_id,
+        idempotency_key=key,
+    )
+    if not job.get("idempotent_replay"):
+        dispatched = await dispatch_voice_tts_job_to_canonical_runtime(
+            job_id=job["id"],
+            account=account,
+            request=request,
+        )
+        if dispatched:
+            job = dispatched
+    return envelope(
+        True,
+        "Đã tạo tác vụ Voice TTS thành công, chờ runtime xử lý.",
+        data=job,
+        status_name=job.get("status", "prepared"),
+    )
+
+
+@router.get("/features/voice_tts/jobs")
+async def list_voice_tts_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = list_voice_tts_jobs(account_id, limit=100)
+    return envelope(
+        True,
+        "Đã tải danh sách job Voice TTS của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/voice_tts/jobs/{job_id}")
+async def get_voice_tts_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    if is_voice_tts_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    job = await reconcile_voice_tts_job_status(job_id, account=account, request=request)
+    if job is not None:
+        return envelope(
+            True,
+            "Đã tải chi tiết job Voice TTS.",
+            data=job,
+            status_name="read_only",
+        )
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Voice TTS của tài khoản.")
+
+
+@router.post("/features/voice_tts/jobs/{job_id}/confirm")
+async def confirm_voice_tts_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    if is_voice_tts_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    job = await confirm_voice_tts_job(job_id, account=account, request=request)
+    return envelope(
+        True,
+        "Đã xác nhận và thực thi tạo âm thanh Voice TTS thành công.",
+        data=job,
+        status_name=job.get("status", "completed"),
+    )
+
+
+@router.post("/features/voice_tts/jobs/{job_id}/reconcile")
+async def reconcile_voice_tts_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    if is_voice_tts_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    job = await reconcile_voice_tts_job_status(job_id, account=account, request=request)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy job Voice TTS của tài khoản.")
+    return envelope(
+        True,
+        "Reconcile Voice TTS job thành công.",
+        data=job,
+        status_name=job.get("status", "completed"),
+    )
+
+
+@router.get("/features/voice_tts/jobs/{job_id}/artifact")
+async def get_voice_tts_job_artifact_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    from fastapi.responses import Response
+    from copyfast_bridge import bridge_configured, get_bridge
+    account_id = str(account.get("id") or "")
+    canonical_user_id = str(account.get("canonical_user_id") or "").strip()
+
+    if is_voice_tts_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+
+    job = get_voice_tts_job(account_id, job_id)
+    if not job or job.get("status") != "completed":
+        raise HTTPException(status_code=404, detail="Không tìm thấy tệp âm thanh hoàn tất")
+
+    if not bridge_configured() or not canonical_user_id:
+        raise HTTPException(status_code=503, detail="Bridge chưa được cấu hình hoặc tài khoản chưa liên kết Telegram")
+
+    bridge = get_bridge()
+    headers = bridge._headers("GET", f"/internal/v1/web-voice-tts/jobs/{job_id}/artifact", actor_id=canonical_user_id)
+    url = f"{bridge.base_url}/internal/v1/web-voice-tts/jobs/{job_id}/artifact"
+    import httpx
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.get(url, headers=headers)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=resp.status_code, detail="Không thể tải tệp âm thanh từ Bot Core")
+        return Response(content=resp.content, media_type="audio/mpeg", headers={"Content-Disposition": f'attachment; filename="voice_tts_{job_id}.mp3"'})
+
+
+@router.post("/features/voice_saved_tts/jobs")
+async def create_voice_saved_tts_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    inp = dict(payload.input)
+    inp.setdefault("voice_source", "saved")
+    payload.input = inp
+    return await create_voice_tts_job_route(payload, request, account)
 
 
 @router.post("/features/video_dub/jobs")

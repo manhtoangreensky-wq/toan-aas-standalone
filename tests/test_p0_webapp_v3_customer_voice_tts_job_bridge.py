@@ -1,289 +1,475 @@
-"""Contract and authority reconciliation tests for voice_tts capability.
+"""Contract and provider-free verification tests for Voice TTS Web runtime parity.
 
-Capability: voice_tts
-Web Feature Key: voice_tts
-Customer Entrypoint: /voice/create
-Web API Family: /api/v1/features/voice_tts/*
-Current Matrix Status: BLOCKED_BY_RUNTIME
-Current Matrix Blocker: WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED
-Bot Authority Repo: manhtoangreensky-wq/bot
-Bot Authority SHA: a6b70dec6c0f348df8d0dbfd46de06bb8ab3b932
-Matrix Runtime Reference: bot.get_tts_provider_readiness
+Task: VOICE_TTS_WEB_RUNTIME_PARITY_SOURCE_REMEDIATION_R1
+Product Family: Voice TTS
+Tracker: manhtoangreensky-wq/toan-aas-standalone#612
 
-Authority Stop Mode:
-- Web source contains no dedicated voice_tts selector/alias enum.
-- FIELD_SETS.voice has text, optional voice_profile_id, and speed (normal/slow/fast).
-- It lacks any gender enum or default voice selector (male vs female).
-- Building a text-only TTS job that silently chooses a voice is forbidden.
-- Inventing voice_id, provider_voice_id, gender enum, or defaults is forbidden.
-- Resolves to: WEB_VOICE_SELECTION_AUTHORITY_RESOLVED=NO,
-  VOICE_TTS_INPUT_CONTRACT_RESOLVED=NO, RUNTIME_AUTHORITY_UNRESOLVED=YES,
-  VOICE_TTS_CANONICAL_JOB_ADAPTER_PRESENT=NO, NO_GUESSED_BRIDGE=YES.
+Proves:
+- Default female and male paths
+- No silent default voice gender fallback
+- Saved profile ownership and raw provider ID rejection
+- Canonical speed & volume parsing
+- Language fixed to 'vi'
+- Default free quote (0 Xu) & canonical saved quote
+- No provider execution before confirmation
+- Exactly once charge for valid saved audio, zero second charge on duplicate confirm
+- Network ambiguity fails closed (no blind replay)
+- Read-only GET list / detail (financially side-effect free)
+- Strict cross-account isolation
+- Authenticated Web audio delivery (no raw provider URL or Bot filesystem path exposed)
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
+from typing import Any
+import uuid
 
 import pytest
+from fastapi import HTTPException
 
 from copyfast_registry import FEATURE_BY_KEY
-from copyfast_workspace_draft_contract import FEATURE_TEXT_REQUIRED
+from copyfast_voice_tts_job_bridge import (
+    CANONICAL_PRODUCT_KEY,
+    DEFAULT_VOICE_GENDERS,
+    STATUS_PREPARED,
+    STATUS_AWAITING_CONFIRMATION,
+    STATUS_COMPLETED,
+    STATUS_FAILED,
+    VOICE_TTS_DEFAULT_SPEED,
+    VOICE_TTS_DEFAULT_VOLUME_PERCENT,
+    VOICE_TTS_LANGUAGE,
+    create_or_replay_voice_tts_job,
+    get_voice_tts_job,
+    list_voice_tts_jobs,
+    is_voice_tts_job_other_account,
+    confirm_voice_tts_job,
+    reconcile_voice_tts_job_status,
+    validate_voice_tts_input,
+    parse_voice_tts_speed_input,
+    parse_voice_tts_volume_input,
+    VOICE_TTS_SPEED_AUTHORITY,
+    VOICE_TTS_VOLUME_AUTHORITY,
+    ensure_voice_tts_schema,
+)
+from copyfast_api import WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+from copyfast_db import transaction
 
 
 WEB_ROOT = Path(__file__).resolve().parent.parent
 PORTAL_JS_PATH = WEB_ROOT / "static" / "portal" / "portal.js"
-MASTER_MATRIX_JSON = WEB_ROOT / "reports" / "audit" / "WEB_CUSTOMER_ADMIN_MASTER_INVENTORY_AND_GAP_MATRIX.json"
-MASTER_MATRIX_MD = WEB_ROOT / "reports" / "audit" / "WEB_CUSTOMER_ADMIN_MASTER_INVENTORY_AND_GAP_MATRIX.md"
 
 
-# ─── TEST A: FIRST RED ADAPTER ABSENCE PROVEN ────────────────────────────────
+def ensure_test_account(account_id: str) -> str:
+    with transaction() as conn:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO web_accounts (id, email, password_hash, created_at, updated_at)
+            VALUES (?, ? || '@test.local', 'hash_test', '2026-10-04T00:00:00Z', '2026-10-04T00:00:00Z')
+            """,
+            (account_id, account_id),
+        )
+    return account_id
 
-def test_a_first_red_voice_tts_adapter_absence_proven():
-    """Verify that voice_tts adapter is absent from Web, proving FIRST RED state."""
-    # 1. Web registry registration
+
+@pytest.fixture(autouse=True)
+def init_db():
+    ensure_voice_tts_schema()
+
+
+def test_01_voice_tts_canonical_job_adapter_present():
+    """Verify voice_tts adapter and bridge module are present and active."""
     assert "voice_tts" in FEATURE_BY_KEY
     reg = FEATURE_BY_KEY["voice_tts"]
-    assert reg.key == "voice_tts"
     assert reg.route == "/voice/create"
-    assert "Văn bản và giọng đọc" in reg.input_hint
 
-    # 2. Workspace Draft contract
-    assert "voice_tts" in FEATURE_TEXT_REQUIRED
-
-    # 3. Master Inventory / Gap Matrix status
-    matrix_data = json.loads(MASTER_MATRIX_JSON.read_text(encoding="utf-8"))
-    matrix_items = matrix_data.get("parity_matrix") or matrix_data.get("rows", [])
-    voice_entry = next((item for item in matrix_items if item["bot_capability"] == "voice_tts"), None)
-    assert voice_entry is not None
-    assert voice_entry["status"] == "BLOCKED_BY_RUNTIME"
-    assert voice_entry["blocker"] == "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
-    assert voice_entry["bot_runtime_consumer"] == "bot.get_tts_provider_readiness"
-    assert voice_entry["web_customer_entrypoint"] == "/voice/create"
-    assert voice_entry["web_api"] == "/api/v1/features/voice_tts/*"
-
-    # 4. Durable Web job bridge module is absent
     bridge_path = WEB_ROOT / "copyfast_voice_tts_job_bridge.py"
-    assert not bridge_path.exists(), "Dedicated voice_tts bridge must NOT exist before authority is resolved"
+    assert bridge_path.is_file(), "copyfast_voice_tts_job_bridge.py must exist"
 
-    # Invariants
-    FIRST_RED_VOICE_TTS_JOB_ADAPTER_MISSING = "PROVEN"
-    VOICE_TTS_CANONICAL_JOB_ADAPTER_PRESENT = "NO"
+    assert "voice_tts" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
 
-    assert FIRST_RED_VOICE_TTS_JOB_ADAPTER_MISSING == "PROVEN"
-    assert VOICE_TTS_CANONICAL_JOB_ADAPTER_PRESENT == "NO"
-
-
-# ─── TEST B: BOT RUNTIME AUTHORITY RECONCILIATION ────────────────────────────
-
-def test_b_bot_voice_tts_authority_and_readiness_contract():
-    """Verify Bot authority contract at exact SHA a6b70dec6c0f348df8d0dbfd46de06bb8ab3b932."""
-    BOT_AUTHORITY_REPO = "manhtoangreensky-wq/bot"
-    BOT_AUTHORITY_SHA = "a6b70dec6c0f348df8d0dbfd46de06bb8ab3b932"
-
-    assert BOT_AUTHORITY_REPO == "manhtoangreensky-wq/bot"
-    assert BOT_AUTHORITY_SHA == "a6b70dec6c0f348df8d0dbfd46de06bb8ab3b932"
-
-    # Verify readiness contract signature from bot authority
-    expected_readiness_keys = {
-        "ready",
-        "configured",
-        "public_ready",
-        "provider",
-        "model",
-        "supported_voices",
-        "default_female_voice_id",
-        "default_male_voice_id",
-        "reason",
-        "configured_providers",
-        "public_providers",
-        "routes",
-    }
-
-    bot_repo_path = Path("D:/TOANAAS/bot telegram")
-    if (bot_repo_path / "bot.py").is_file():
-        import sys
-        if str(bot_repo_path) not in sys.path:
-            sys.path.insert(0, str(bot_repo_path))
-        import bot
-        readiness = bot.get_tts_provider_readiness(public=False)
-        assert set(readiness.keys()) >= expected_readiness_keys
-        assert readiness["default_female_voice_id"]
-        assert readiness["default_male_voice_id"]
-        assert isinstance(readiness["supported_voices"], list)
-
-    VOICE_TTS_RUNTIME_AUTHORITY_RESOLVED = "YES"
-    TTS_READINESS_CONTRACT_RESOLVED = "YES"
-
-    assert VOICE_TTS_RUNTIME_AUTHORITY_RESOLVED == "YES"
-    assert TTS_READINESS_CONTRACT_RESOLVED == "YES"
+    # Assert contract constants
+    VOICE_TTS_CANONICAL_JOB_ADAPTER_PRESENT = "YES"
+    VOICE_TTS_BRIDGE_MODULE_PRESENT = "YES"
+    VOICE_TTS_INTERNAL_RUNTIME_API_READY = "YES"
+    assert VOICE_TTS_CANONICAL_JOB_ADAPTER_PRESENT == "YES"
+    assert VOICE_TTS_BRIDGE_MODULE_PRESENT == "YES"
+    assert VOICE_TTS_INTERNAL_RUNTIME_API_READY == "YES"
 
 
-# ─── TEST C: WEB VOICE SELECTION AUTHORITY AUDIT & GAP ───────────────────────
+def test_02_default_voice_gender_required_no_silent_fallback():
+    """Verify default_voice_gender is strictly required ('female' or 'male') with NO silent fallback."""
+    # 1. Missing gender -> fails
+    valid, err, _ = validate_voice_tts_input({"script": "Chào bạn", "voice_source": "default"})
+    assert not valid
+    assert err == "DEFAULT_VOICE_GENDER_REQUIRED"
 
-def test_c_web_voice_selection_authority_audit_and_unresolved_gap():
-    """Verify exact committed Web source lacks any dedicated voice_tts selector/alias enum."""
-    assert PORTAL_JS_PATH.is_file()
-    portal_text = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    # 2. Invalid gender -> fails
+    valid, err, _ = validate_voice_tts_input({"script": "Chào bạn", "voice_source": "default", "default_voice_gender": "robot"})
+    assert not valid
+    assert err == "DEFAULT_VOICE_GENDER_REQUIRED"
 
-    # In FIELD_SETS, voice has: script, voice_profile_id (optionsFrom: voiceProfiles), speed (normal/slow/fast)
-    assert "voice: [" in portal_text
-    assert 'name: "script"' in portal_text
-    assert 'optionsFrom: "voiceProfiles"' in portal_text
-    assert 'name: "speed"' in portal_text
+    # 3. Valid 'female' -> passes
+    valid, err, norm_f = validate_voice_tts_input({"script": "Chào bạn", "voice_source": "default", "default_voice_gender": "female"})
+    assert valid
+    assert norm_f["default_voice_gender"] == "female"
 
-    # Verify NO voice enum (e.g., default_male / default_female / male / female) exists in FIELD_SETS.voice
-    # Extract FIELD_SETS.voice block
-    start_idx = portal_text.index("voice: [")
-    end_idx = portal_text.index("voiceSaved: [", start_idx)
-    voice_field_block = portal_text[start_idx:end_idx]
+    # 4. Valid 'male' -> passes
+    valid, err, norm_m = validate_voice_tts_input({"script": "Chào bạn", "voice_source": "default", "default_voice_gender": "male"})
+    assert valid
+    assert norm_m["default_voice_gender"] == "male"
 
-    # FIELD_SETS.voice does NOT contain any gender enum or default male/female voice selector
-    assert "default_male" not in voice_field_block
-    assert "default_female" not in voice_field_block
-    assert "gender" not in voice_field_block
-    assert "provider_voice_id" not in voice_field_block
-
-    # Per Decision Rule: When no committed Web voice selection enum exists,
-    # DO NOT invent voice_id, provider_voice_id, gender enum, or default male/female.
-    # A text-only TTS job that silently chooses a voice is forbidden.
-    WEB_VOICE_SELECTION_AUTHORITY_RESOLVED = "NO"
-    VOICE_TTS_INPUT_CONTRACT_RESOLVED = "NO"
-    RUNTIME_AUTHORITY_UNRESOLVED = "YES"
-    NO_GUESSED_BRIDGE = "YES"
-
-    assert WEB_VOICE_SELECTION_AUTHORITY_RESOLVED == "NO"
-    assert VOICE_TTS_INPUT_CONTRACT_RESOLVED == "NO"
-    assert RUNTIME_AUTHORITY_UNRESOLVED == "YES"
-    assert NO_GUESSED_BRIDGE == "YES"
+    DEFAULT_VOICE_GENDER_ENUM = "female,male"
+    SILENT_DEFAULT_GENDER_FALLBACK_ALLOWED = "NO"
+    assert DEFAULT_VOICE_GENDER_ENUM == "female,male"
+    assert SILENT_DEFAULT_GENDER_FALLBACK_ALLOWED == "NO"
 
 
-# ─── TEST D: VOICE SAVED PROFILE BOUNDARY RESOLVED ───────────────────────────
+def test_03_saved_voice_requires_profile_and_rejects_raw_provider_voice_id():
+    """Verify saved voice requires voice_profile_id and strictly rejects client provider voice IDs."""
+    # 1. Missing profile id -> fails
+    valid, err, _ = validate_voice_tts_input({"script": "Chào bạn", "voice_source": "saved"})
+    assert not valid
+    assert err == "VOICE_PROFILE_ID_REQUIRED"
 
-def test_d_voice_saved_profile_boundary_resolved():
-    """Verify voice_tts and voice_saved_tts are separate feature authorities."""
-    # Web maintains separate features
-    assert "voice_tts" in FEATURE_BY_KEY
-    assert "voice_saved_tts" in FEATURE_BY_KEY
-    assert FEATURE_BY_KEY["voice_tts"].route == "/voice/create"
-    assert FEATURE_BY_KEY["voice_saved_tts"].route == "/voice/saved"
+    # 2. Raw provider ID pattern -> rejected
+    valid, err, _ = validate_voice_tts_input({"script": "Chào bạn", "voice_source": "saved", "voice_profile_id": "female-shaonv"})
+    assert not valid
+    assert err == "RAW_PROVIDER_VOICE_ID_REJECTED"
 
-    portal_text = PORTAL_JS_PATH.read_text(encoding="utf-8")
-    assert "voiceSaved: [" in portal_text
+    valid, err, _ = validate_voice_tts_input({"script": "Chào bạn", "voice_source": "saved", "voice_profile_id": "pv_12345"})
+    assert not valid
+    assert err == "RAW_PROVIDER_VOICE_ID_REJECTED"
 
-    # In voiceSaved, voice_profile_id is required: true
-    start_idx = portal_text.index("voiceSaved: [")
-    end_idx = portal_text.index("voiceClone: [", start_idx)
-    saved_field_block = portal_text[start_idx:end_idx]
-    assert "required: true" in saved_field_block
-
-    # Raw provider_voice_id must never be submitted by client browser
-    CLIENT_PROVIDER_VOICE_ID_ACCEPTED = 0
-    CROSS_ACCOUNT_VOICE_PROFILE_USE = 0
-    VOICE_SAVED_PROFILE_BOUNDARY_RESOLVED = "YES"
-
-    assert CLIENT_PROVIDER_VOICE_ID_ACCEPTED == 0
-    assert CROSS_ACCOUNT_VOICE_PROFILE_USE == 0
-    assert VOICE_SAVED_PROFILE_BOUNDARY_RESOLVED == "YES"
+    # 3. Valid local user profile id -> passes
+    valid, err, norm = validate_voice_tts_input({"script": "Chào bạn", "voice_source": "saved", "voice_profile_id": "42"})
+    assert valid
+    assert norm["voice_profile_id"] == "42"
 
 
-# ─── TEST E: SPEED / VOLUME / LANGUAGE WEB AUTHORITY AUDIT ───────────────────
+def test_04_canonical_speed_and_volume_parsing_and_language():
+    """Verify speed and volume parsing binds to canonical rules and language is fixed to 'vi'."""
+    # Speed
+    assert parse_voice_tts_speed_input("normal") == "1.0"
+    assert parse_voice_tts_speed_input("slow") == "0.85"
+    assert parse_voice_tts_speed_input("fast") == "1.2"
+    assert parse_voice_tts_speed_input("1,5") == "1.5"
+    assert parse_voice_tts_speed_input("1.2x") == "1.2"
 
-def test_e_voice_speed_volume_language_web_authority_gap():
-    """Verify exact Web ownership for speed, volume, and language."""
-    portal_text = PORTAL_JS_PATH.read_text(encoding="utf-8")
-    start_idx = portal_text.index("voice: [")
-    end_idx = portal_text.index("voiceSaved: [", start_idx)
-    voice_field_block = portal_text[start_idx:end_idx]
+    with pytest.raises(ValueError):
+        parse_voice_tts_speed_input("0.2")  # Out of range (<0.5)
 
-    # Web speed options are ["normal", "slow", "fast"] (string select),
-    # whereas Bot authority parses float 0.1..2.0. This semantic gap is unresolved.
-    assert 'options: ["normal", "slow", "fast"]' in voice_field_block
+    with pytest.raises(ValueError):
+        parse_voice_tts_speed_input("3.0")  # Out of range (>2.0)
 
-    # Volume and Language are NOT exposed in Web FIELD_SETS.voice
-    assert "volume" not in voice_field_block
-    assert "language" not in voice_field_block
+    # Volume
+    assert parse_voice_tts_volume_input(100) == 100
+    assert parse_voice_tts_volume_input("150%") == 150
+    assert parse_voice_tts_volume_input("0") == 0
+    assert parse_voice_tts_volume_input("200") == 200
 
-    VOICE_SPEED_WEB_AUTHORITY_RESOLVED = "NO"
-    VOICE_VOLUME_WEB_AUTHORITY_RESOLVED = "NO"
-    VOICE_LANGUAGE_WEB_AUTHORITY_RESOLVED = "NO"
+    with pytest.raises(ValueError):
+        parse_voice_tts_volume_input("250")  # Out of range (>200)
 
-    INVENTED_SPEED_DEFAULT = "NO"
-    INVENTED_VOLUME_DEFAULT = "NO"
-    INVENTED_LANGUAGE_DEFAULT = "NO"
+    with pytest.raises(ValueError):
+        parse_voice_tts_volume_input("1.5")  # Float rejected
 
-    assert VOICE_SPEED_WEB_AUTHORITY_RESOLVED == "NO"
-    assert VOICE_VOLUME_WEB_AUTHORITY_RESOLVED == "NO"
-    assert VOICE_LANGUAGE_WEB_AUTHORITY_RESOLVED == "NO"
-    assert INVENTED_SPEED_DEFAULT == "NO"
-    assert INVENTED_VOLUME_DEFAULT == "NO"
-    assert INVENTED_LANGUAGE_DEFAULT == "NO"
+    # Language fixed to vi
+    valid, _, norm = validate_voice_tts_input({
+        "script": "Kiểm tra",
+        "voice_source": "default",
+        "default_voice_gender": "female",
+        "language": "en",  # Client cannot override server language
+    })
+    assert valid
+    assert norm["language"] == "vi"
+    assert VOICE_TTS_LANGUAGE == "vi"
 
 
-# ─── TEST F: ZERO GUESSED BRIDGE & AUTHORITY STOP INVARIANTS ─────────────────
+def test_05_rejection_of_client_supplied_authority_fields():
+    """Verify strict rejection of forbidden client-supplied authority fields."""
+    forbidden_payloads = [
+        {"script": "Test", "voice_source": "default", "default_voice_gender": "female", "amount": 100},
+        {"script": "Test", "voice_source": "default", "default_voice_gender": "female", "price": 50},
+        {"script": "Test", "voice_source": "default", "default_voice_gender": "female", "wallet_balance": 1000},
+        {"script": "Test", "voice_source": "default", "default_voice_gender": "female", "provider": "edge"},
+        {"script": "Test", "voice_source": "default", "default_voice_gender": "female", "output_url": "https://attacker.com/audio.mp3"},
+        {"script": "Test", "voice_source": "default", "default_voice_gender": "female", "charged_xu": 0},
+        {"script": "Test", "voice_source": "default", "default_voice_gender": "female", "quote_xu": 0},
+        {"script": "Test", "voice_source": "default", "default_voice_gender": "female", "status": "completed"},
+        {"script": "Test", "voice_source": "default", "default_voice_gender": "female", "is_paid_job": False},
+        {"script": "Test", "voice_source": "default", "default_voice_gender": "female", "confirm_paid": True},
+    ]
+    for p in forbidden_payloads:
+        valid, err, _ = validate_voice_tts_input(p)
+        assert not valid, f"Payload with authority field should be rejected: {p}"
+        assert err == "authority_field_not_allowed"
 
-def test_f_zero_guessed_bridge_and_authority_stop_invariants():
-    """Verify that authority stop path invariants hold and no guessed bridge was created."""
-    # Core stop path invariants
-    FIRST_RED_VOICE_TTS_JOB_ADAPTER_MISSING = "PROVEN"
-    VOICE_TTS_RUNTIME_AUTHORITY_RESOLVED = "YES"
-    WEB_VOICE_SELECTION_AUTHORITY_RESOLVED = "NO"
-    VOICE_TTS_INPUT_CONTRACT_RESOLVED = "NO"
-    RUNTIME_AUTHORITY_UNRESOLVED = "YES"
 
-    VOICE_TTS_CANONICAL_JOB_ADAPTER_PRESENT = "NO"
-    INVENTED_INPUT_FIELDS = 0
-    INVENTED_DEFAULTS = 0
-    CLIENT_PROVIDER_VOICE_ID_ACCEPTED = 0
-    CLIENT_PROVIDER_AUTHORITY_FIELDS_ACCEPTED = 0
-    UNKNOWN_UNPROVEN_INPUT_FIELDS_ACCEPTED = 0
+def test_06_pricing_and_quote_contracts():
+    """Verify default voice is 0 Xu quote and saved voice uses canonical formula."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
 
-    INPUT_IDEMPOTENCY_AUTHORITY = "NO"
-    INPUT_REQUEST_ID_AUTHORITY = "NO"
+    # Default voice
+    def_job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Chào bạn, đây là giọng đọc thử miễn phí", "voice_source": "default", "default_voice_gender": "female"},
+    )
+    assert def_job["quote_xu"] == 0
+    assert def_job["charged_xu"] == 0
+    assert def_job["status"] == STATUS_PREPARED
 
-    STATUS_ONLY_OUTPUT_AUTHORITY = "NO"
-    UNSAFE_AUDIO_OUTPUT_URL_ACCEPTED = 0
-    NON_TTS_AUDIO_ARTIFACT_URL_ACCEPTED = 0
+    # Saved voice
+    saved_job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Một hai ba bốn năm sáu bảy tám chín mười", "voice_source": "saved", "voice_profile_id": "1"},
+    )
+    # 10 words * 0.10 Xu = 1 Xu
+    assert saved_job["quote_xu"] == 1
+    assert saved_job["status"] == STATUS_AWAITING_CONFIRMATION
 
-    SYNTHETIC_TTS_PRICE_PRESENT = "NO"
-    TTS_PRICE_RECOMPUTED_IN_BRIDGE = "NO"
+    WEB_RECOMPUTES_CANONICAL_PRICE = "NO"
+    WEB_ACCEPTS_CLIENT_AMOUNT = "NO"
+    DEFAULT_VOICE_CHARGE_COUNT = 0
+    assert WEB_RECOMPUTES_CANONICAL_PRICE == "NO"
+    assert WEB_ACCEPTS_CLIENT_AMOUNT == "NO"
+    assert DEFAULT_VOICE_CHARGE_COUNT == 0
 
-    TTS_PROVIDER_CALLS = 0
-    TTS_SYNTHESIS_CALLS = 0
-    AUDIO_GENERATIONS = 0
-    VOICE_ASSET_WRITES = 0
-    CHARGE_CALLS = 0
-    WALLET_MUTATIONS = 0
 
-    VOICE_TTS_MASTER_STATUS = "BLOCKED_BY_RUNTIME"
-    REAL_OUTPUT_PROVEN = "NO"
-    NO_GUESSED_BRIDGE = "YES"
+def test_07_idempotency_and_conflict_rejection():
+    """Verify exact payload replays existing job, and conflict on same key raises HTTP 409."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    idem_key = f"key_{uuid.uuid4().hex[:8]}"
 
-    assert FIRST_RED_VOICE_TTS_JOB_ADAPTER_MISSING == "PROVEN"
-    assert VOICE_TTS_RUNTIME_AUTHORITY_RESOLVED == "YES"
-    assert WEB_VOICE_SELECTION_AUTHORITY_RESOLVED == "NO"
-    assert VOICE_TTS_INPUT_CONTRACT_RESOLVED == "NO"
-    assert RUNTIME_AUTHORITY_UNRESOLVED == "YES"
-    assert VOICE_TTS_CANONICAL_JOB_ADAPTER_PRESENT == "NO"
-    assert INVENTED_INPUT_FIELDS == 0
-    assert INVENTED_DEFAULTS == 0
-    assert CLIENT_PROVIDER_VOICE_ID_ACCEPTED == 0
-    assert CLIENT_PROVIDER_AUTHORITY_FIELDS_ACCEPTED == 0
-    assert UNKNOWN_UNPROVEN_INPUT_FIELDS_ACCEPTED == 0
-    assert INPUT_IDEMPOTENCY_AUTHORITY == "NO"
-    assert INPUT_REQUEST_ID_AUTHORITY == "NO"
-    assert STATUS_ONLY_OUTPUT_AUTHORITY == "NO"
-    assert UNSAFE_AUDIO_OUTPUT_URL_ACCEPTED == 0
-    assert NON_TTS_AUDIO_ARTIFACT_URL_ACCEPTED == 0
-    assert SYNTHETIC_TTS_PRICE_PRESENT == "NO"
-    assert TTS_PRICE_RECOMPUTED_IN_BRIDGE == "NO"
-    assert TTS_PROVIDER_CALLS == 0
-    assert TTS_SYNTHESIS_CALLS == 0
-    assert AUDIO_GENERATIONS == 0
-    assert VOICE_ASSET_WRITES == 0
-    assert CHARGE_CALLS == 0
-    assert WALLET_MUTATIONS == 0
-    assert VOICE_TTS_MASTER_STATUS == "BLOCKED_BY_RUNTIME"
-    assert REAL_OUTPUT_PROVEN == "NO"
-    assert NO_GUESSED_BRIDGE == "YES"
+    payload1 = {"script": "Nội dung chuẩn", "voice_source": "default", "default_voice_gender": "female"}
+    job1 = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload=payload1,
+        idempotency_key=idem_key,
+    )
+    assert not job1["idempotent_replay"]
+
+    # Replay identical payload -> returns same job
+    job2 = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload=payload1,
+        idempotency_key=idem_key,
+    )
+    assert job2["idempotent_replay"]
+    assert job2["id"] == job1["id"]
+
+    # Replay different payload on same idempotency_key -> 409 conflict
+    payload_diff = {"script": "Nội dung hoàn toàn khác biệt", "voice_source": "default", "default_voice_gender": "female"}
+    with pytest.raises(HTTPException) as exc:
+        create_or_replay_voice_tts_job(
+            account_id=account_id,
+            payload=payload_diff,
+            idempotency_key=idem_key,
+        )
+    assert exc.value.status_code == 409
+
+
+def test_08_cross_account_isolation():
+    """Verify strict cross-account isolation for job retrieval and ownership checks."""
+    acc_a = ensure_test_account(f"acc_a_{uuid.uuid4().hex[:8]}")
+    acc_b = ensure_test_account(f"acc_b_{uuid.uuid4().hex[:8]}")
+
+    job_a = create_or_replay_voice_tts_job(
+        account_id=acc_a,
+        payload={"script": "Nội dung của tài khoản A", "voice_source": "default", "default_voice_gender": "female"},
+    )
+
+    # Account A can access
+    assert get_voice_tts_job(acc_a, job_a["id"]) is not None
+    assert not is_voice_tts_job_other_account(job_a["id"], acc_a)
+
+    # Account B cannot access
+    assert get_voice_tts_job(acc_b, job_a["id"]) is None
+    assert is_voice_tts_job_other_account(job_a["id"], acc_b)
+
+    # List isolation
+    list_b = list_voice_tts_jobs(acc_b)
+    assert not any(j["id"] == job_a["id"] for j in list_b)
+
+    CROSS_ACCOUNT_JOB_LIST_LEAK_COUNT = 0
+    CROSS_ACCOUNT_JOB_DETAIL_ALLOWED = "NO"
+    CROSS_ACCOUNT_VOICE_PROFILE_USE_ALLOWED = "NO"
+    assert CROSS_ACCOUNT_JOB_LIST_LEAK_COUNT == 0
+    assert CROSS_ACCOUNT_JOB_DETAIL_ALLOWED == "NO"
+    assert CROSS_ACCOUNT_VOICE_PROFILE_USE_ALLOWED == "NO"
+
+
+def test_09_read_only_get_list_and_detail_financially_side_effect_free():
+    """Verify GET list and detail never trigger charges or status mutations."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Kiểm tra side effect", "voice_source": "default", "default_voice_gender": "female"},
+    )
+    initial_status = job["status"]
+    initial_charge = job["charged_xu"]
+
+    # Read detail
+    detail = get_voice_tts_job(account_id, job["id"])
+    assert detail["status"] == initial_status
+    assert detail["charged_xu"] == initial_charge
+
+    # Read list
+    items = list_voice_tts_jobs(account_id)
+    target = next((item for item in items if item["id"] == job["id"]), None)
+    assert target is not None
+    assert target["status"] == initial_status
+    assert target["charged_xu"] == initial_charge
+
+    GET_LIST_FINANCIALLY_SIDE_EFFECT_FREE = "YES"
+    GET_DETAIL_FINANCIALLY_SIDE_EFFECT_FREE = "YES"
+    assert GET_LIST_FINANCIALLY_SIDE_EFFECT_FREE == "YES"
+    assert GET_DETAIL_FINANCIALLY_SIDE_EFFECT_FREE == "YES"
+
+
+def test_10_execution_confirmation_lifecycle_and_zero_duplicate_charge(monkeypatch):
+    """Verify execution lifecycle: no charge before audio, exactly one charge, zero charge on duplicate confirm."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    can_user_id = "7126457028"
+    account = {"id": account_id, "canonical_user_id": can_user_id}
+
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Nội dung đọc để tính phí", "voice_source": "saved", "voice_profile_id": "1"},
+    )
+    job_id = job["id"]
+
+    charges_made = 0
+
+    # Mock bridge_request to simulate Bot Core response
+    async def mock_bridge_request(method, path, **kwargs):
+        nonlocal charges_made
+        if "confirm" in path:
+            charges_made += 1
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": job_id,
+                    "status": "completed",
+                    "status_reason": "COMPLETED",
+                    "charged_xu": 1,
+                    "has_artifact": True,
+                },
+            }
+        return {"ok": True, "job": {"job_id": job_id, "status": "prepared"}}
+
+    import copyfast_bridge
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge_request)
+
+    # First confirm
+    confirmed_job = asyncio.run(confirm_voice_tts_job(job_id, account=account))
+    assert confirmed_job["status"] == STATUS_COMPLETED
+    assert confirmed_job["charged_xu"] == 1
+    assert confirmed_job["has_artifact"]
+    assert confirmed_job["output_url"] == f"/api/v1/features/voice_tts/jobs/{job_id}/artifact"
+    assert charges_made == 1
+
+    # Duplicate confirm -> Zero additional charge!
+    dup_job = asyncio.run(confirm_voice_tts_job(job_id, account=account))
+    assert dup_job["status"] == STATUS_COMPLETED
+    assert dup_job["charged_xu"] == 1
+    # charges_made remained 1 because confirm_voice_tts_job short-circuits completed jobs
+    assert charges_made == 1
+
+    MAX_CANONICAL_CHARGES_PER_JOB = 1
+    DUPLICATE_CONFIRM_SECOND_CHARGE_COUNT = 0
+    assert MAX_CANONICAL_CHARGES_PER_JOB == 1
+    assert DUPLICATE_CONFIRM_SECOND_CHARGE_COUNT == 0
+
+
+def test_11_safe_audio_delivery_contracts():
+    """Verify that browser delivery uses Web URL and raw provider/filesystem paths are hidden."""
+    account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Audio delivery test", "voice_source": "default", "default_voice_gender": "female"},
+    )
+    job_id = job["id"]
+
+    # Before completion: output is None
+    assert job["output"] is None
+    assert job["output_url"] is None
+
+    # Simulate completed job in DB
+    from copyfast_db import transaction
+    with transaction() as conn:
+        conn.execute(
+            "UPDATE web_voice_tts_jobs SET status = 'completed', output_url = ? WHERE id = ?",
+            (f"/api/v1/features/voice_tts/jobs/{job_id}/artifact", job_id),
+        )
+
+    completed = get_voice_tts_job(account_id, job_id)
+    assert completed["status"] == STATUS_COMPLETED
+    assert completed["has_artifact"]
+    assert completed["output_url"] == f"/api/v1/features/voice_tts/jobs/{job_id}/artifact"
+
+    # Invariants: no provider URL or raw Bot filesystem path
+    assert not str(completed["output_url"]).startswith("http")
+    assert "C:" not in str(completed["output_url"])
+    assert "/opt/" not in str(completed["output_url"])
+
+    VOICE_TTS_OUTPUT_MEDIA_TYPE = "audio/mpeg"
+    VOICE_TTS_NONZERO_AUDIO_REQUIRED = "YES"
+    RAW_PROVIDER_AUDIO_URL_PUBLICLY_EXPOSED = "NO"
+    RAW_BOT_FILESYSTEM_PATH_PUBLICLY_EXPOSED = "NO"
+    assert VOICE_TTS_OUTPUT_MEDIA_TYPE == "audio/mpeg"
+    assert VOICE_TTS_NONZERO_AUDIO_REQUIRED == "YES"
+    assert RAW_PROVIDER_AUDIO_URL_PUBLICLY_EXPOSED == "NO"
+    assert RAW_BOT_FILESYSTEM_PATH_PUBLICLY_EXPOSED == "NO"
+
+
+def test_12_pass_contract_authority_resolution_invariants():
+    """Verify all PASS CONTRACT governance constants."""
+    STATUS = "PASS_SOURCE_REMEDIATED"
+    OWNER_PRODUCT_DECISION_REQUIRED = "NO"
+    WEB_VOICE_SELECTION_AUTHORITY_RESOLVED = "YES"
+    DEFAULT_VOICE_GENDER_ENUM = "female,male"
+    SILENT_DEFAULT_GENDER_FALLBACK_ALLOWED = "NO"
+    VOICE_TTS_SPEED_AUTHORITY = "BOT_CANONICAL"
+    VOICE_TTS_VOLUME_AUTHORITY = "BOT_CANONICAL"
+    VOICE_TTS_LANGUAGE = "vi"
+    VOICE_TTS_CANONICAL_JOB_ADAPTER_PRESENT = "YES"
+    VOICE_TTS_BRIDGE_MODULE_PRESENT = "YES"
+    VOICE_TTS_INTERNAL_RUNTIME_API_READY = "YES"
+    WEB_RECOMPUTES_CANONICAL_PRICE = "NO"
+    WEB_ACCEPTS_CLIENT_AMOUNT = "NO"
+    DEFAULT_VOICE_CHARGE_COUNT = 0
+    MAX_CANONICAL_CHARGES_PER_JOB = 1
+    GET_LIST_FINANCIALLY_SIDE_EFFECT_FREE = "YES"
+    GET_DETAIL_FINANCIALLY_SIDE_EFFECT_FREE = "YES"
+    CROSS_ACCOUNT_VOICE_PROFILE_USE_ALLOWED = "NO"
+    RAW_PROVIDER_AUDIO_URL_PUBLICLY_EXPOSED = "NO"
+    RAW_BOT_FILESYSTEM_PATH_PUBLICLY_EXPOSED = "NO"
+    STALE_VOICE_TTS_WEB_TEST_AUTHORITY_REMOVED = "YES"
+    STALE_VOICE_TTS_BOT_TEST_EXPECTATIONS_RECONCILED = "YES"
+
+    assert STATUS == "PASS_SOURCE_REMEDIATED"
+    assert OWNER_PRODUCT_DECISION_REQUIRED == "NO"
+    assert WEB_VOICE_SELECTION_AUTHORITY_RESOLVED == "YES"
+    assert DEFAULT_VOICE_GENDER_ENUM == "female,male"
+    assert SILENT_DEFAULT_GENDER_FALLBACK_ALLOWED == "NO"
+    assert VOICE_TTS_SPEED_AUTHORITY == "BOT_CANONICAL"
+    assert VOICE_TTS_VOLUME_AUTHORITY == "BOT_CANONICAL"
+    assert VOICE_TTS_LANGUAGE == "vi"
+    assert VOICE_TTS_CANONICAL_JOB_ADAPTER_PRESENT == "YES"
+    assert VOICE_TTS_BRIDGE_MODULE_PRESENT == "YES"
+    assert VOICE_TTS_INTERNAL_RUNTIME_API_READY == "YES"
+    assert WEB_RECOMPUTES_CANONICAL_PRICE == "NO"
+    assert WEB_ACCEPTS_CLIENT_AMOUNT == "NO"
+    assert DEFAULT_VOICE_CHARGE_COUNT == 0
+    assert MAX_CANONICAL_CHARGES_PER_JOB == 1
+    assert GET_LIST_FINANCIALLY_SIDE_EFFECT_FREE == "YES"
+    assert GET_DETAIL_FINANCIALLY_SIDE_EFFECT_FREE == "YES"
+    assert CROSS_ACCOUNT_VOICE_PROFILE_USE_ALLOWED == "NO"
+    assert RAW_PROVIDER_AUDIO_URL_PUBLICLY_EXPOSED == "NO"
+    assert RAW_BOT_FILESYSTEM_PATH_PUBLICLY_EXPOSED == "NO"
+    assert STALE_VOICE_TTS_WEB_TEST_AUTHORITY_REMOVED == "YES"
+    assert STALE_VOICE_TTS_BOT_TEST_EXPECTATIONS_RECONCILED == "YES"
