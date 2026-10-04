@@ -205,10 +205,10 @@
       "web_customer_entrypoint": "/voice/create",
       "web_api": "/api/v1/features/voice_tts/*",
       "bot_runtime_consumer": "bot.get_tts_provider_readiness",
-      "real_output": "NONE_ON_WEB",
+      "real_output": "AUTHENTICATED_WEB_AUDIO_DELIVERY",
       "admin_trace": "ADMIN_COMMERCIAL_B01",
-      "status": "BLOCKED_BY_RUNTIME",
-      "blocker": "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+      "status": "PASS_SOURCE_REMEDIATED",
+      "blocker": ""
     },
     {
       "bot_capability": "voice_clone",
