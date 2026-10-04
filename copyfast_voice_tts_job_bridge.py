@@ -336,6 +336,8 @@ def _format_public_job(row: Any, idempotent_replay: bool = False) -> dict[str, A
         "output": public_output_url,
         "output_url": public_output_url,
         "has_artifact": has_artifact,
+        "runtime_job_id": str(row[19] or ""),
+        "runtime_dispatch_status": str(row[20] or ""),
         "created_at": str(row[22]),
         "updated_at": str(row[23]),
         "completed_at": str(row[24] or ""),
@@ -404,15 +406,12 @@ def create_or_replay_voice_tts_job(
         final_req_id = effective_req_id or generate_canonical_request_id()
         now = utc_now()
 
-        # Quote computation: 0 Xu for default free, canonical quote for saved
+        # Blocker 1: Zero Web-local price formula (WEB_LOCAL_VOICE_TTS_PRICE_FORMULA_COUNT=0).
+        # Default voice is always 0 Xu (free).
+        # Saved voice quote is strictly hydrated from Bot canonical authority.
         quote_xu = 0
-        if normalized["voice_source"] == "saved":
-            # Canonical quote: 0.10 Xu/word, min 1 Xu
-            words = len(re.findall(r"\b\w+\b", normalized["script"]))
-            quote_xu = max(1, int(round(words * 0.10)))
-
-        initial_status = STATUS_AWAITING_CONFIRMATION if quote_xu > 0 else STATUS_PREPARED
-        status_reason = "AWAITING_CUSTOMER_CONFIRMATION" if quote_xu > 0 else "PREPARED"
+        initial_status = STATUS_PREPARED
+        status_reason = "PREPARED"
 
         bridge_envelope = {
             "version": "p0.voice_tts.canonical-bridge.v1",
@@ -557,6 +556,8 @@ async def dispatch_voice_tts_job_to_canonical_runtime(
     job = get_voice_tts_job(account_id, clean_job_id)
     if not job:
         return {}
+    if job.get("status") == STATUS_COMPLETED:
+        return job
 
     # Prepare canonical payload strictly from server-validated fields
     canonical_payload = {
@@ -582,23 +583,63 @@ async def dispatch_voice_tts_job_to_canonical_runtime(
             actor_id=canonical_user_id,
             owner_id=canonical_user_id,
         )
-        if res.get("ok"):
+        if isinstance(res, dict) and res.get("ok"):
             bot_job = (res.get("data") or {}).get("job") or res.get("job") or {}
-            rt_id = bot_job.get("job_id") or clean_job_id
+            rt_id = str(bot_job.get("job_id") or "").strip() if isinstance(bot_job, dict) else ""
+            if rt_id:
+                bot_quote = int(bot_job.get("quote_xu") or 0)
+                bot_status = str(bot_job.get("status") or "")
+                bot_reason = str(bot_job.get("status_reason") or "")
+                with transaction() as conn:
+                    conn.execute(
+                        """
+                        UPDATE web_voice_tts_jobs
+                        SET runtime_job_id = ?,
+                            quote_xu = ?,
+                            status = CASE WHEN ? != '' THEN ? ELSE status END,
+                            status_reason = CASE WHEN ? != '' THEN ? ELSE status_reason END,
+                            runtime_dispatch_status = 'dispatched',
+                            runtime_dispatched_at = ?, updated_at = ?
+                        WHERE id = ? AND status != 'completed'
+                        """,
+                        (rt_id, bot_quote, bot_status, bot_status, bot_reason, bot_reason, utc_now(), utc_now(), clean_job_id),
+                    )
+            else:
+                # Malformed Bot response: ok=True but missing Bot job_id! Must NOT be marked dispatched
+                with transaction() as conn:
+                    conn.execute(
+                        """
+                        UPDATE web_voice_tts_jobs
+                        SET runtime_dispatch_status = 'failed',
+                            status_reason = 'BOT_JOB_ID_MISSING',
+                            updated_at = ?
+                        WHERE id = ? AND status != 'completed'
+                        """,
+                        (utc_now(), clean_job_id),
+                    )
+        else:
+            err_reason = str((res.get("error_code") if isinstance(res, dict) else "") or "BOT_PREPARE_FAILED")
             with transaction() as conn:
                 conn.execute(
                     """
                     UPDATE web_voice_tts_jobs
-                    SET runtime_job_id = ?, runtime_dispatch_status = 'dispatched',
-                        runtime_dispatched_at = ?, updated_at = ?
-                    WHERE id = ?
+                    SET runtime_dispatch_status = 'failed',
+                        status_reason = ?,
+                        updated_at = ?
+                    WHERE id = ? AND status != 'completed'
                     """,
-                    (rt_id, utc_now(), utc_now(), clean_job_id),
+                    (err_reason, utc_now(), clean_job_id),
                 )
     except Exception:
         with transaction() as conn:
             conn.execute(
-                "UPDATE web_voice_tts_jobs SET runtime_dispatch_status = 'uncertain', updated_at = ? WHERE id = ?",
+                """
+                UPDATE web_voice_tts_jobs
+                SET runtime_dispatch_status = 'uncertain',
+                    status_reason = 'BRIDGE_DISPATCH_EXCEPTION',
+                    updated_at = ?
+                WHERE id = ? AND status != 'completed'
+                """,
                 (utc_now(), clean_job_id),
             )
 
@@ -637,15 +678,52 @@ async def confirm_voice_tts_job(
     if not canonical_user_id:
         raise HTTPException(status_code=403, detail="Tài khoản chưa liên kết Telegram canonical user ID")
 
-    # Update local status to processing
-    with transaction() as conn:
-        conn.execute(
-            "UPDATE web_voice_tts_jobs SET status = 'processing', status_reason = 'PROCESSING', updated_at = ? WHERE id = ?",
-            (utc_now(), clean_job_id),
+    # Canonical prepare gate for all voice sources (default and saved)
+    needs_prepare = (
+        job.get("runtime_dispatch_status") != "dispatched"
+        or not str(job.get("runtime_job_id") or "").strip()
+    )
+    if job.get("voice_source") == "saved":
+        needs_prepare = needs_prepare or int(job.get("quote_xu") or 0) <= 0
+
+    if needs_prepare:
+        dispatched = await dispatch_voice_tts_job_to_canonical_runtime(
+            job_id=clean_job_id, account=account, request=request
+        )
+        if dispatched:
+            job = dispatched
+
+    # Confirm only allowed if runtime_dispatch_status == 'dispatched' AND runtime_job_id is present
+    if (
+        job.get("runtime_dispatch_status") != "dispatched"
+        or not str(job.get("runtime_job_id") or "").strip()
+    ):
+        raise HTTPException(
+            status_code=502,
+            detail="Chưa nhận được xác nhận chuẩn bị chính thức từ Bot Core runtime. Không được phép xác nhận (PAID_CONFIRM_ALLOWED_BEFORE_CANONICAL_QUOTE=NO).",
         )
 
-    # First ensure job is prepared on Bot Core
-    await dispatch_voice_tts_job_to_canonical_runtime(job_id=clean_job_id, account=account, request=request)
+    if job.get("voice_source") == "saved":
+        if int(job.get("quote_xu") or 0) <= 0:
+            raise HTTPException(
+                status_code=502,
+                detail="Báo giá chính thức từ Bot Core runtime cho giọng đã lưu phải lớn hơn 0 Xu (CANONICAL_BOT_QUOTE_XU_GT_ZERO=YES).",
+            )
+
+    # Update local status to processing monotonically (cannot downgrade completed)
+    with transaction() as conn:
+        cursor = conn.execute(
+            """
+            UPDATE web_voice_tts_jobs
+            SET status = 'processing', status_reason = 'PROCESSING', updated_at = ?
+            WHERE id = ? AND status != 'completed'
+            """,
+            (utc_now(), clean_job_id),
+        )
+        if cursor.rowcount == 0:
+            row = conn.execute("SELECT status FROM web_voice_tts_jobs WHERE id = ?", (clean_job_id,)).fetchone()
+            if row and row[0] == STATUS_COMPLETED:
+                return get_voice_tts_job(account_id, clean_job_id) or {}
 
     # Now call confirm endpoint on Bot Core
     try:
@@ -660,35 +738,96 @@ async def confirm_voice_tts_job(
     except Exception as exc:
         with transaction() as conn:
             conn.execute(
-                "UPDATE web_voice_tts_jobs SET status = 'ambiguous', status_reason = 'NETWORK_UNCERTAIN', updated_at = ? WHERE id = ?",
+                """
+                UPDATE web_voice_tts_jobs
+                SET status = 'ambiguous', status_reason = 'NETWORK_UNCERTAIN', updated_at = ?
+                WHERE id = ? AND status != 'completed'
+                """,
                 (utc_now(), clean_job_id),
             )
+        latest = get_voice_tts_job(account_id, clean_job_id)
+        if latest and latest.get("status") == STATUS_COMPLETED:
+            return latest
         raise HTTPException(status_code=502, detail=f"Lỗi kết nối tới Bot Core: {exc}")
 
-    if not res.get("ok"):
-        err_code = res.get("error_code") or "PROVIDER_EXECUTION_FAILED"
-        with transaction() as conn:
-            conn.execute(
-                "UPDATE web_voice_tts_jobs SET status = 'failed', status_reason = ?, updated_at = ? WHERE id = ?",
-                (err_code, utc_now(), clean_job_id),
-            )
-        msg = res.get("message") or "Tạo âm thanh thất bại"
-        raise HTTPException(status_code=422 if err_code != "INSUFFICIENT_FUNDS" else 402, detail=msg)
+    if not isinstance(res, dict) or not res.get("ok"):
+        latest = get_voice_tts_job(account_id, clean_job_id)
+        if latest and latest.get("status") == STATUS_COMPLETED:
+            return latest
+
+        err_code = str((res.get("error_code") if isinstance(res, dict) else "") or "PROVIDER_EXECUTION_FAILED").strip()
+        if not err_code:
+            err_code = "PROVIDER_EXECUTION_FAILED"
+
+        if err_code in ("CONCURRENT_CONFIRM_IN_PROGRESS", "VERSION_CONFLICT_STALE_WRITE"):
+            with transaction() as conn:
+                conn.execute(
+                    """
+                    UPDATE web_voice_tts_jobs
+                    SET status = 'processing',
+                        status_reason = 'CONCURRENT_CONFIRM_IN_PROGRESS',
+                        updated_at = ?
+                    WHERE id = ? AND status != 'completed'
+                    """,
+                    (utc_now(), clean_job_id),
+                )
+            latest = get_voice_tts_job(account_id, clean_job_id)
+            if latest and latest.get("status") == STATUS_COMPLETED:
+                return latest
+            msg = (res.get("message") if isinstance(res, dict) else None) or "Tác vụ đang được xử lý bởi yêu cầu khác"
+            raise HTTPException(status_code=409, detail=msg)
+
+        elif err_code == "INSUFFICIENT_FUNDS":
+            with transaction() as conn:
+                conn.execute(
+                    """
+                    UPDATE web_voice_tts_jobs
+                    SET status = 'payment_required',
+                        status_reason = 'INSUFFICIENT_FUNDS',
+                        updated_at = ?
+                    WHERE id = ? AND status != 'completed'
+                    """,
+                    (utc_now(), clean_job_id),
+                )
+            latest = get_voice_tts_job(account_id, clean_job_id)
+            if latest and latest.get("status") == STATUS_COMPLETED:
+                return latest
+            msg = (res.get("message") if isinstance(res, dict) else None) or "Số dư Xu không đủ để thực hiện yêu cầu"
+            raise HTTPException(status_code=402, detail=msg)
+
+        else:
+            with transaction() as conn:
+                conn.execute(
+                    """
+                    UPDATE web_voice_tts_jobs
+                    SET status = 'failed',
+                        status_reason = ?,
+                        updated_at = ?
+                    WHERE id = ? AND status != 'completed'
+                    """,
+                    (err_code, utc_now(), clean_job_id),
+                )
+            latest = get_voice_tts_job(account_id, clean_job_id)
+            if latest and latest.get("status") == STATUS_COMPLETED:
+                return latest
+            msg = (res.get("message") if isinstance(res, dict) else None) or "Tạo âm thanh thất bại"
+            raise HTTPException(status_code=422, detail=msg)
 
     bot_job = (res.get("data") or {}).get("job") or res.get("job") or {}
     charged_xu = int(bot_job.get("charged_xu") or 0)
     has_artifact = bool(bot_job.get("has_artifact"))
     safe_output_url = f"/api/v1/features/voice_tts/jobs/{clean_job_id}/artifact" if has_artifact else None
+    now_ts = utc_now()
 
     with transaction() as conn:
         conn.execute(
             """
             UPDATE web_voice_tts_jobs
             SET status = 'completed', status_reason = 'COMPLETED',
-                charged_xu = ?, output_url = ?, completed_at = ?, updated_at = ?
+                charged_xu = ?, output_url = ?, completed_at = COALESCE(completed_at, ?), updated_at = ?
             WHERE id = ?
             """,
-            (charged_xu, safe_output_url, utc_now(), utc_now(), clean_job_id),
+            (charged_xu, safe_output_url, now_ts, now_ts, clean_job_id),
         )
 
     return get_voice_tts_job(account_id, clean_job_id) or {}
@@ -716,7 +855,8 @@ async def reconcile_voice_tts_job_status(
     if not job:
         return None
 
-    if job.get("status") in (STATUS_COMPLETED, STATUS_FAILED):
+    # Completed jobs are monotonic and cannot be downgraded
+    if job.get("status") == STATUS_COMPLETED:
         return job
 
     from copyfast_bridge import bridge_configured, bridge_request
@@ -731,25 +871,74 @@ async def reconcile_voice_tts_job_status(
             actor_id=canonical_user_id,
             owner_id=canonical_user_id,
         )
-        if res.get("ok"):
-            bot_job = (res.get("data") or {}).get("job") or res.get("job") or {}
-            rt_status = bot_job.get("status")
-            if rt_status and rt_status != job.get("status"):
-                has_artifact = bool(bot_job.get("has_artifact"))
-                safe_output_url = f"/api/v1/features/voice_tts/jobs/{clean_job_id}/artifact" if has_artifact else None
-                charged_xu = int(bot_job.get("charged_xu") or 0)
-                with transaction() as conn:
-                    conn.execute(
-                        """
-                        UPDATE web_voice_tts_jobs
-                        SET status = ?, status_reason = ?, charged_xu = ?,
-                            output_url = ?, updated_at = ?
-                        WHERE id = ?
-                        """,
-                        (rt_status, bot_job.get("status_reason", ""), charged_xu, safe_output_url, utc_now(), clean_job_id),
-                    )
     except Exception:
-        pass
+        # On connection error, keep existing local state fail-closed (do not invent success or failure)
+        return job
+
+    if not isinstance(res, dict) or not res.get("ok"):
+        return job
+
+    bot_job = (res.get("data") or {}).get("job") or res.get("job") or {}
+    rt_status = str(bot_job.get("status") or "").strip().lower()
+    if not rt_status:
+        return job
+
+    now_ts = utc_now()
+    if rt_status == "completed":
+        has_artifact = bool(bot_job.get("has_artifact"))
+        safe_output_url = f"/api/v1/features/voice_tts/jobs/{clean_job_id}/artifact" if has_artifact else None
+        charged_xu = int(bot_job.get("charged_xu") or 0)
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_voice_tts_jobs
+                SET status = 'completed',
+                    status_reason = 'COMPLETED',
+                    charged_xu = ?,
+                    output_url = ?,
+                    completed_at = COALESCE(completed_at, ?),
+                    updated_at = ?
+                WHERE id = ?
+                """,
+                (charged_xu, safe_output_url, now_ts, now_ts, clean_job_id),
+            )
+    elif rt_status == "processing":
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_voice_tts_jobs
+                SET status = 'processing',
+                    status_reason = ?,
+                    updated_at = ?
+                WHERE id = ? AND status != 'completed'
+                """,
+                (bot_job.get("status_reason") or "CANONICAL_PROCESSING", now_ts, clean_job_id),
+            )
+    elif rt_status in ("failed", "error"):
+        bot_reason = str(bot_job.get("status_reason") or "FAILED")
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_voice_tts_jobs
+                SET status = 'failed',
+                    status_reason = ?,
+                    updated_at = ?
+                WHERE id = ? AND status != 'completed'
+                """,
+                (bot_reason, now_ts, clean_job_id),
+            )
+    elif rt_status == "payment_required":
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_voice_tts_jobs
+                SET status = 'payment_required',
+                    status_reason = ?,
+                    updated_at = ?
+                WHERE id = ? AND status != 'completed'
+                """,
+                (bot_job.get("status_reason") or "INSUFFICIENT_FUNDS", now_ts, clean_job_id),
+            )
 
     return get_voice_tts_job(account_id, clean_job_id)
 

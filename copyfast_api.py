@@ -7080,7 +7080,9 @@ async def create_voice_tts_job_route(
         request_id=request_id,
         idempotency_key=key,
     )
-    if not job.get("idempotent_replay"):
+    is_replay = bool(job.get("idempotent_replay"))
+    # Repair unproven runtime preparation on create replay or dispatch fresh job
+    if not is_replay or job.get("runtime_dispatch_status") != "dispatched" or not str(job.get("runtime_job_id") or "").strip():
         dispatched = await dispatch_voice_tts_job_to_canonical_runtime(
             job_id=job["id"],
             account=account,
@@ -7088,6 +7090,8 @@ async def create_voice_tts_job_route(
         )
         if dispatched:
             job = dispatched
+            if is_replay:
+                job["idempotent_replay"] = True
     return envelope(
         True,
         "Đã tạo tác vụ Voice TTS thành công, chờ runtime xử lý.",
@@ -7176,7 +7180,7 @@ async def get_voice_tts_job_artifact_route(
     account: dict = Depends(require_account),
 ):
     from fastapi.responses import Response
-    from copyfast_bridge import bridge_configured, get_bridge
+    from copyfast_bridge import bridge_configured, CoreBridgeClient
     account_id = str(account.get("id") or "")
     canonical_user_id = str(account.get("canonical_user_id") or "").strip()
 
@@ -7190,8 +7194,8 @@ async def get_voice_tts_job_artifact_route(
     if not bridge_configured() or not canonical_user_id:
         raise HTTPException(status_code=503, detail="Bridge chưa được cấu hình hoặc tài khoản chưa liên kết Telegram")
 
-    bridge = get_bridge()
-    headers = bridge._headers("GET", f"/internal/v1/web-voice-tts/jobs/{job_id}/artifact", actor_id=canonical_user_id)
+    bridge = CoreBridgeClient()
+    headers = bridge._headers("GET", f"/internal/v1/web-voice-tts/jobs/{job_id}/artifact", b"", request_id=f"ART-{job_id}", actor_id=canonical_user_id)
     url = f"{bridge.base_url}/internal/v1/web-voice-tts/jobs/{job_id}/artifact"
     import httpx
     async with httpx.AsyncClient(timeout=30.0) as client:
