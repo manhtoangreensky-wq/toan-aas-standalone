@@ -1398,4 +1398,3 @@ def test_28_insufficient_funds_still_maps_payment_required_and_cannot_downgrade_
     res = asyncio.run(confirm_voice_tts_job(job_id, account=account))
     assert res["status"] == "completed"
     assert get_voice_tts_job(account_id, job_id)["status"] == "completed"
-
