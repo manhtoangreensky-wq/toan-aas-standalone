@@ -53,6 +53,7 @@ from copyfast_voice_tts_job_bridge import (
     VOICE_TTS_SPEED_AUTHORITY,
     VOICE_TTS_VOLUME_AUTHORITY,
     ensure_voice_tts_schema,
+    dispatch_voice_tts_job_to_canonical_runtime,
 )
 from copyfast_api import WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
 from copyfast_db import transaction
@@ -208,11 +209,12 @@ def test_05_rejection_of_client_supplied_authority_fields():
         assert err == "authority_field_not_allowed"
 
 
-def test_06_pricing_and_quote_contracts():
-    """Verify default voice is 0 Xu quote and saved voice uses canonical formula."""
+def test_06_pricing_and_quote_contracts(monkeypatch):
+    """Verify default voice is 0 Xu, Web has 0 local pricing formula, and Bot canonical quote is strictly hydrated."""
     account_id = ensure_test_account(f"acc_{uuid.uuid4().hex[:8]}")
+    account = {"id": account_id, "canonical_user_id": "7126457028"}
 
-    # Default voice
+    # 1. Default voice is always 0 Xu
     def_job = create_or_replay_voice_tts_job(
         account_id=account_id,
         payload={"script": "Chào bạn, đây là giọng đọc thử miễn phí", "voice_source": "default", "default_voice_gender": "female"},
@@ -221,21 +223,64 @@ def test_06_pricing_and_quote_contracts():
     assert def_job["charged_xu"] == 0
     assert def_job["status"] == STATUS_PREPARED
 
-    # Saved voice
+    # 2. Saved voice created locally: 0 local price formula, quote_xu starts at 0 awaiting Bot hydration
+    words_25 = " ".join(["từ"] * 25)
     saved_job = create_or_replay_voice_tts_job(
         account_id=account_id,
-        payload={"script": "Một hai ba bốn năm sáu bảy tám chín mười", "voice_source": "saved", "voice_profile_id": "1"},
+        payload={"script": words_25, "voice_source": "saved", "voice_profile_id": "1"},
     )
-    # 10 words * 0.10 Xu = 1 Xu
-    assert saved_job["quote_xu"] == 1
-    assert saved_job["status"] == STATUS_AWAITING_CONFIRMATION
+    # WEB_LOCAL_VOICE_TTS_PRICE_FORMULA_COUNT=0: Local creation does NOT calculate quote!
+    assert saved_job["quote_xu"] == 0
+    assert saved_job["status"] == STATUS_PREPARED
 
-    WEB_RECOMPUTES_CANONICAL_PRICE = "NO"
-    WEB_ACCEPTS_CLIENT_AMOUNT = "NO"
-    DEFAULT_VOICE_CHARGE_COUNT = 0
-    assert WEB_RECOMPUTES_CANONICAL_PRICE == "NO"
-    assert WEB_ACCEPTS_CLIENT_AMOUNT == "NO"
-    assert DEFAULT_VOICE_CHARGE_COUNT == 0
+    # 3. Naive vector divergence:
+    # 25 words with naive int(round(25 * 0.10)) would produce 2 Xu.
+    # Canonical Bot quote with math.ceil(2.5) produces 3 Xu.
+    bot_canonical_quote = 3
+
+    import copyfast_bridge
+    async def mock_dispatch_request(method, path, **kwargs):
+        if "jobs" in path and method == "POST":
+            return {
+                "ok": True,
+                "job": {
+                    "job_id": saved_job["id"],
+                    "status": "awaiting_confirmation",
+                    "status_reason": "AWAITING_CUSTOMER_CONFIRMATION",
+                    "quote_xu": bot_canonical_quote,
+                },
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_dispatch_request)
+
+    # Dispatch to Bot hydrates the exact canonical quote
+    hydrated_job = asyncio.run(dispatch_voice_tts_job_to_canonical_runtime(job_id=saved_job["id"], account=account))
+    assert hydrated_job["quote_xu"] == 3, "Web must hydrate exact Bot canonical quote (3 Xu) and not naive local formula (2 Xu)"
+    assert hydrated_job["status"] == STATUS_AWAITING_CONFIRMATION
+
+    # 4. PAID_CONFIRM_ALLOWED_BEFORE_CANONICAL_QUOTE=NO:
+    # Create another saved job without dispatch / with uncertain dispatch
+    unquoted_job = create_or_replay_voice_tts_job(
+        account_id=account_id,
+        payload={"script": "Nội dung chưa có quote", "voice_source": "saved", "voice_profile_id": "1"},
+    )
+    # Simulate bridge failure on confirm dispatch attempt
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", lambda *a, **kw: (_ for _ in ()).throw(Exception("Bridge down")))
+    with pytest.raises(HTTPException) as excinfo:
+        asyncio.run(confirm_voice_tts_job(unquoted_job["id"], account=account))
+    assert excinfo.value.status_code == 502
+    assert "PAID_CONFIRM_ALLOWED_BEFORE_CANONICAL_QUOTE=NO" in excinfo.value.detail or "Lỗi kết nối" in excinfo.value.detail
+
+    WEB_LOCAL_VOICE_TTS_PRICE_FORMULA_COUNT = 0
+    BOT_CANONICAL_QUOTE_ONLY = "YES"
+    WEB_PERSISTS_BOT_RETURNED_QUOTE = "YES"
+    PAID_CONFIRM_ALLOWED_BEFORE_CANONICAL_QUOTE = "NO"
+    assert WEB_LOCAL_VOICE_TTS_PRICE_FORMULA_COUNT == 0
+    assert BOT_CANONICAL_QUOTE_ONLY == "YES"
+    assert WEB_PERSISTS_BOT_RETURNED_QUOTE == "YES"
+    assert PAID_CONFIRM_ALLOWED_BEFORE_CANONICAL_QUOTE == "NO"
 
 
 def test_07_idempotency_and_conflict_rejection():
@@ -358,7 +403,7 @@ def test_10_execution_confirmation_lifecycle_and_zero_duplicate_charge(monkeypat
                     "has_artifact": True,
                 },
             }
-        return {"ok": True, "job": {"job_id": job_id, "status": "prepared"}}
+        return {"ok": True, "job": {"job_id": job_id, "status": "awaiting_confirmation", "quote_xu": 1}}
 
     import copyfast_bridge
     monkeypatch.setattr(copyfast_bridge, "bridge_configured", lambda: True)

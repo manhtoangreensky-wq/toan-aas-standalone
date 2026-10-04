@@ -336,6 +336,8 @@ def _format_public_job(row: Any, idempotent_replay: bool = False) -> dict[str, A
         "output": public_output_url,
         "output_url": public_output_url,
         "has_artifact": has_artifact,
+        "runtime_job_id": str(row[19] or ""),
+        "runtime_dispatch_status": str(row[20] or ""),
         "created_at": str(row[22]),
         "updated_at": str(row[23]),
         "completed_at": str(row[24] or ""),
@@ -404,15 +406,12 @@ def create_or_replay_voice_tts_job(
         final_req_id = effective_req_id or generate_canonical_request_id()
         now = utc_now()
 
-        # Quote computation: 0 Xu for default free, canonical quote for saved
+        # Blocker 1: Zero Web-local price formula (WEB_LOCAL_VOICE_TTS_PRICE_FORMULA_COUNT=0).
+        # Default voice is always 0 Xu (free).
+        # Saved voice quote is strictly hydrated from Bot canonical authority.
         quote_xu = 0
-        if normalized["voice_source"] == "saved":
-            # Canonical quote: 0.10 Xu/word, min 1 Xu
-            words = len(re.findall(r"\b\w+\b", normalized["script"]))
-            quote_xu = max(1, int(round(words * 0.10)))
-
-        initial_status = STATUS_AWAITING_CONFIRMATION if quote_xu > 0 else STATUS_PREPARED
-        status_reason = "AWAITING_CUSTOMER_CONFIRMATION" if quote_xu > 0 else "PREPARED"
+        initial_status = STATUS_PREPARED
+        status_reason = "PREPARED"
 
         bridge_envelope = {
             "version": "p0.voice_tts.canonical-bridge.v1",
@@ -585,15 +584,22 @@ async def dispatch_voice_tts_job_to_canonical_runtime(
         if res.get("ok"):
             bot_job = (res.get("data") or {}).get("job") or res.get("job") or {}
             rt_id = bot_job.get("job_id") or clean_job_id
+            bot_quote = int(bot_job.get("quote_xu") or 0)
+            bot_status = str(bot_job.get("status") or "")
+            bot_reason = str(bot_job.get("status_reason") or "")
             with transaction() as conn:
                 conn.execute(
                     """
                     UPDATE web_voice_tts_jobs
-                    SET runtime_job_id = ?, runtime_dispatch_status = 'dispatched',
+                    SET runtime_job_id = ?,
+                        quote_xu = ?,
+                        status = CASE WHEN ? != '' THEN ? ELSE status END,
+                        status_reason = CASE WHEN ? != '' THEN ? ELSE status_reason END,
+                        runtime_dispatch_status = 'dispatched',
                         runtime_dispatched_at = ?, updated_at = ?
                     WHERE id = ?
                     """,
-                    (rt_id, utc_now(), utc_now(), clean_job_id),
+                    (rt_id, bot_quote, bot_status, bot_status, bot_reason, bot_reason, utc_now(), utc_now(), clean_job_id),
                 )
     except Exception:
         with transaction() as conn:
@@ -637,15 +643,28 @@ async def confirm_voice_tts_job(
     if not canonical_user_id:
         raise HTTPException(status_code=403, detail="Tài khoản chưa liên kết Telegram canonical user ID")
 
+    # Blocker 1: Paid confirm strictly requires canonical Bot quote
+    if job.get("voice_source") == "saved":
+        if job.get("runtime_dispatch_status") != "dispatched" or int(job.get("quote_xu") or 0) <= 0:
+            dispatched = await dispatch_voice_tts_job_to_canonical_runtime(job_id=clean_job_id, account=account, request=request)
+            if not dispatched or dispatched.get("runtime_dispatch_status") != "dispatched":
+                raise HTTPException(
+                    status_code=502,
+                    detail="Chưa nhận được báo giá chính thức từ Bot Core runtime. Không được phép xác nhận (PAID_CONFIRM_ALLOWED_BEFORE_CANONICAL_QUOTE=NO).",
+                )
+            job = dispatched
+            if int(job.get("quote_xu") or 0) <= 0:
+                raise HTTPException(
+                    status_code=502,
+                    detail="Báo giá chính thức từ Bot Core runtime không hợp lệ.",
+                )
+
     # Update local status to processing
     with transaction() as conn:
         conn.execute(
             "UPDATE web_voice_tts_jobs SET status = 'processing', status_reason = 'PROCESSING', updated_at = ? WHERE id = ?",
             (utc_now(), clean_job_id),
         )
-
-    # First ensure job is prepared on Bot Core
-    await dispatch_voice_tts_job_to_canonical_runtime(job_id=clean_job_id, account=account, request=request)
 
     # Now call confirm endpoint on Bot Core
     try:
@@ -667,13 +686,14 @@ async def confirm_voice_tts_job(
 
     if not res.get("ok"):
         err_code = res.get("error_code") or "PROVIDER_EXECUTION_FAILED"
+        new_status = "payment_required" if err_code == "INSUFFICIENT_FUNDS" else "failed"
         with transaction() as conn:
             conn.execute(
-                "UPDATE web_voice_tts_jobs SET status = 'failed', status_reason = ?, updated_at = ? WHERE id = ?",
-                (err_code, utc_now(), clean_job_id),
+                "UPDATE web_voice_tts_jobs SET status = ?, status_reason = ?, updated_at = ? WHERE id = ?",
+                (new_status, err_code, utc_now(), clean_job_id),
             )
         msg = res.get("message") or "Tạo âm thanh thất bại"
-        raise HTTPException(status_code=422 if err_code != "INSUFFICIENT_FUNDS" else 402, detail=msg)
+        raise HTTPException(status_code=402 if err_code == "INSUFFICIENT_FUNDS" else 422, detail=msg)
 
     bot_job = (res.get("data") or {}).get("job") or res.get("job") or {}
     charged_xu = int(bot_job.get("charged_xu") or 0)
