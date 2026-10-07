@@ -51,6 +51,9 @@ verification:
   direction_composer_browser: 12_of_12_complete_0_failures
   direction_composer_text_min_contrast: 5.944
   direction_composer_control_border_min_contrast: 3.399
+  voice_bridge_readonly_matrix: 60_of_60_complete_0_failures
+  voice_bridge_text_min_contrast: 4.515
+  voice_bridge_control_border_min_contrast: 3.399
   incomplete_studio_networkidle_run: 8_of_24_not_accepted
   browser_method: Playwright_existing_QA_runner_Browser_plugin_skill_absent
   earlier_core_matrix: 72_cases_on_its_recorded_prior_source_snapshot
