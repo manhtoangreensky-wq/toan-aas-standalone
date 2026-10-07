@@ -9629,6 +9629,10 @@
 
   function pageStatusBadge(page, context) {
     if (!page) return "";
+    if (["/voice/tts", "/voice/saved", "/voice/clone", "/voice/outputs"].includes(page.routePath || page.path)) {
+      const allowed = canAct(page, context);
+      return `<span class="portal-badge" data-status="${allowed ? "ready" : "guarded"}">${safeText(voiceUiText(allowed ? "status.ready" : "status.guarded", ""))}</span>`;
+    }
     if (["/video/create", "/video/multiscene"].includes(page.routePath || page.path)) {
       const ready = featureConfirmExecutionReady(page, context);
       return `<span class="portal-badge" data-status="${ready ? "ready" : "guarded"}">${safeText(uiText(`videoUi.status.${ready ? "ready" : "guarded"}`, ""))}</span>`;
@@ -9845,6 +9849,10 @@
     const fallback = displayPageTitle(page, context);
     const path = normalizePath(page && (page.routePath || page.path));
     if (path === "/tools/video") return uiText("mediaHub.video.page.title", fallback);
+    if (path === "/voice") return voiceUiText("hub.title", fallback);
+    if (path === "/voice-studio" || path === "/voice-studio/new") return voiceStudioText(path.endsWith("/new") ? "page.newTitle" : "page.title", fallback);
+    if (path.startsWith("/voice-studio/") && path !== "/voice-studio/direction-composer") return voiceStudioText("detail.title", fallback);
+    if (["/voice/tts", "/voice/saved", "/voice/clone", "/voice/preview", "/voice/outputs"].includes(path)) return voiceUiText(`tool.${path.split("/").pop()}.title`, fallback);
     if (path === "/video/create" || path === "/video/multiscene") return uiText(`videoUi.${path.endsWith("multiscene") ? "multi" : "quick"}.title`, fallback);
     const featureFamily = featureFamilyForPath(path);
     if (path === "/admin/support") return adminSupportText("page.list.title", fallback);
@@ -9920,6 +9928,10 @@
     const fallback = typeof page.description === "string" ? page.description : "";
     const path = normalizePath(page && (page.routePath || page.path));
     if (path === "/tools/video") return uiText("mediaHub.video.page.description", fallback);
+    if (path === "/voice") return voiceUiText("hub.description", fallback);
+    if (path === "/voice-studio" || path === "/voice-studio/new") return voiceStudioText("page.description", fallback);
+    if (path.startsWith("/voice-studio/") && path !== "/voice-studio/direction-composer") return voiceStudioText("page.description", fallback);
+    if (["/voice/tts", "/voice/saved", "/voice/clone", "/voice/preview", "/voice/outputs"].includes(path)) return voiceUiText(`tool.${path.split("/").pop()}.description`, fallback);
     if (path === "/video/create" || path === "/video/multiscene") return uiText(`videoUi.${path.endsWith("multiscene") ? "multi" : "quick"}.description`, fallback);
     const featureFamily = featureFamilyForPath(path);
     if (path === "/admin/support") return adminSupportText("page.list.description", fallback);
@@ -10084,7 +10096,9 @@
     const route = safeCatalogRoute(currentPage && (currentPage.routePath || currentPage.path));
     if (!currentPage || currentPage.access !== "member" || currentPage.layout === "not-found" || currentPage.path === "/not-found" || !route || !CUSTOMER_APPLICATION_ROUTE.test(route)) return null;
     if (groups.some((group) => group.links.some(([path]) => isNavCurrent(path, currentPage)))) return null;
-    const title = String(currentPage && currentPage.title || "").trim().slice(0, 96);
+    const title = String(route === "/voice-studio" || route === "/voice-studio/new"
+      ? voiceStudioText(route.endsWith("/new") ? "page.newTitle" : "page.title", currentPage.title)
+      : currentPage && currentPage.title || "").trim().slice(0, 96);
     if (!title) return null;
     return {
       label: uiText("nav.currentWorkflow", "Đang mở"), defaultOpen: true, current: true,
@@ -11219,6 +11233,7 @@
     );
     const formFieldsEnabled = enabled || workspaceDraftEnabled;
     const videoTask = route === "/video/create" || route === "/video/multiscene";
+    const voiceTask = ["/voice/tts", "/voice/saved", "/voice/clone"].includes(route);
     const videoText = (key, fallback) => uiText(`videoUi.${key}`, fallback);
     // When an external engine is not enabled, the primary form action is a
     // real, owner-scoped Web draft—not a disabled Bot action. This also makes
@@ -11227,6 +11242,7 @@
     const localDraftAction = workspaceDraftId ? "workspace-draft-update" : "workspace-draft-save";
     const localDraftLabel = videoTask
       ? videoText(workspaceDraftId ? "draft.update" : "draft.save", "Lưu bản nháp")
+      : voiceTask ? voiceUiText(workspaceDraftId ? "draft.update" : "draft.save", "Lưu bản nháp")
       : (workspaceDraftId ? "Cập nhật bản nháp Web" : "Lưu bản nháp Web");
     const formAction = localAuthoringOnly ? localDraftAction : page.action;
     const workspaceDraftControl = workspaceDraftEnabled && !localAuthoringOnly
@@ -11235,17 +11251,17 @@
         : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Lưu bản nháp Web</button>`)
       : "";
     const estimateControl = canEstimate && page.action !== "feature-estimate"
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="feature-estimate" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Ước tính Xu</button>`
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="feature-estimate" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("action.estimate", "Ước tính Xu")) : "Ước tính Xu"}</button>`
       : "";
     const executionReady = featureConfirmExecutionReady(page, context);
     const confirmControl = hasFreshEstimate
       ? (executionReady
-        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-portal-confirm="Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định.">Xác nhận chạy</button>`
-        : `<span class="portal-flow-note" role="status">Đã có estimate canonical. Web App đang chờ adapter tạo job canonical; chưa thể xác nhận chạy hoặc trừ Xu.</span>`)
+        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-portal-confirm="${voiceTask ? safeText(voiceUiText("action.confirmPrompt", "")) : "Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định."}">${voiceTask ? safeText(voiceUiText("action.confirm", "Xác nhận chạy")) : "Xác nhận chạy"}</button>`
+        : `<span class="portal-flow-note" role="status">${voiceTask ? safeText(voiceUiText("action.waiting", "")) : "Đã có estimate canonical. Web App đang chờ adapter tạo job canonical; chưa thể xác nhận chạy hoặc trừ Xu."}</span>`)
       : "";
     const flowControls = estimateControl || confirmControl ? `<div class="portal-flow-actions">${estimateControl}${confirmControl}</div>` : "";
     const fieldValues = { ...(flow && flow.input && typeof flow.input === "object" ? flow.input : {}), ...transientFormValues(route) };
-    const primaryActionLabel = localAuthoringOnly ? localDraftLabel : (videoTask ? videoText("action.continue", "Tiếp tục") : (page.actionLabel || "Tiếp tục"));
+    const primaryActionLabel = localAuthoringOnly ? localDraftLabel : (videoTask ? videoText("action.continue", "Tiếp tục") : voiceTask ? voiceUiText(page.action === "feature-estimate" ? "action.estimate" : "action.continue", "Tiếp tục") : (page.actionLabel || "Tiếp tục"));
     const primaryDisabled = localAuthoringOnly || enabled ? "" : ` disabled title="${safeText(reason)}"`;
     const boundary = classifyPageBoundary(page, context);
     let boundaryNotice = "";
@@ -11257,6 +11273,35 @@
       boundaryNotice = executionReady
         ? `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>Bộ tạo AI:</strong> Bộ tạo này đã sẵn sàng kết nối thực thi runtime.</div>`
         : `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>Bộ tạo AI (Chế độ An toàn):</strong> Tính năng này thuộc Bot AI và đang trong chế độ an toàn trên Web. Thông số của bạn được lưu thành Bản nháp Web an toàn mà không trừ Xu.</div>`;
+    }
+    if (voiceTask) {
+      const fields = page.fields.map((field) => ({
+        ...field,
+        labelKey: `voiceUi.field.${field.name}.label`,
+        placeholderKey: field.placeholder ? `voiceUi.field.${field.name}.placeholder` : undefined,
+        helpKey: field.help ? `voiceUi.field.${field.name}.help` : undefined,
+        checkboxLabelKey: field.type === "checkbox" ? "voiceUi.field.consent.confirm" : undefined,
+        emptyLabel: field.emptyLabel || field.name === "default_voice_gender" ? voiceUiText(`field.${field.name}.empty`, field.emptyLabel || "") : undefined,
+        disabled: field.disabled === true || (field.type === "file" && !enabled),
+        optionsFrom: field.optionsFrom === "voiceProfiles" ? undefined : field.optionsFrom,
+        options: field.optionsFrom === "voiceProfiles"
+          ? (Array.isArray(context.voiceProfiles) ? context.voiceProfiles : [])
+            .filter((profile) => profile && profile.id && profile.tts_ready)
+            .map((profile) => ({ value: String(profile.id), label: `${profile.display_name || voiceUiText("library.unnamed", "Giọng chưa đặt tên")}${profile.is_default ? ` · ${voiceUiText("library.default", "Mặc định")}` : ""}` }))
+          : Array.isArray(field.options) ? field.options.map((option) => {
+          const value = typeof option === "object" ? option.value : option;
+          const label = typeof option === "object" ? option.label : option;
+          return { value, label: voiceUiText(`option.${field.name}.${value}`, label) };
+        }) : field.options
+      }));
+      const orderedFields = route === "/voice/clone"
+        ? ["consent", "sample", "display_name"].map((name) => fields.find((field) => field.name === name)).filter(Boolean)
+        : fields;
+      return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(voiceUiText("form.title", "Chuẩn bị giọng đọc"))}</h2><p class="portal-card-subtitle">${safeText(voiceUiText(localAuthoringOnly ? "form.draft" : enabled ? "form.ready" : "form.guarded", reason))}</p></div></div>
+        <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>
+          ${renderFields(orderedFields, formFieldsEnabled, context, fieldValues)}
+          <div class="portal-form-footer"><span class="portal-form-note">${safeText(voiceUiText(localAuthoringOnly ? "form.draftNote" : "form.processingNote", ""))}</span>${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button></div>
+        </form>${flowControls}</section>`;
     }
     if (videoTask) {
       const fields = page.fields.map((field) => ({
@@ -11465,6 +11510,8 @@
   function supportTicketHeroSection(page) {
     const routeKey = supportTicketHeroRouteKey(page);
     const route = normalizePath(page && (page.routePath || page.path) || "/");
+    if (route.startsWith("/voice/")) return voiceUiText("section", "GIỌNG NÓI");
+    if (route === "/voice-studio" || route === "/voice-studio/new" || route.startsWith("/voice-studio/")) return voiceStudioText("intro.kicker", "");
     const source = page && typeof page.section === "string" ? page.section : "TOAN AAS";
     const fallback = localizedNavigationLabel(source);
     if (adminDataViewRouteKey(page)) return adminDataViewRouteText(page, "section", fallback);
@@ -16800,10 +16847,11 @@
   }
 
   function renderVoiceDirectionComposerResult(raw) {
+    const t = voiceStudioText;
     const result = normalizeVoiceDirectionComposerResult(raw);
     const composer = result.composer && typeof result.composer === "object" ? result.composer : null;
     if (!composer) {
-      return `<section class="portal-card portal-card-pad portal-voice-direction-composer-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Reviewable direction receipt</span><h2 class="portal-card-title">Chưa có voice direction</h2><p class="portal-card-subtitle">Nhập nội dung để server trả ba hướng thể hiện và delivery notes theo contract Web-native. Browser không tự dựng giọng, audio, player hoặc kết quả thay thế.</p></div>${badge("empty")}</div></section>`;
+      return `<section class="portal-card portal-card-pad portal-voice-direction-composer-result"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(t("composer.direction.empty", ""))}</span><h2 class="portal-card-title">${safeText(t("composer.direction.empty", ""))}</h2><p class="portal-card-subtitle">${safeText(t("composer.direction.scope.description", ""))}</p></div>${badge("empty")}</div></section>`;
     }
     const suggestions = Array.isArray(composer.suggestions) ? composer.suggestions : [];
     const selected = composer.selected_direction && typeof composer.selected_direction === "object" ? composer.selected_direction : {};
@@ -16811,17 +16859,18 @@
     const noteLabels = Object.freeze([
       ["pace_adjustment", "Nhịp đọc"], ["pause_notes", "Khoảng nghỉ"], ["emphasis_notes", "Điểm nhấn"], ["cta_notes", "CTA"]
     ]);
-    return `<section class="portal-card portal-card-pad portal-voice-direction-composer-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native deterministic direction</span><h2 class="portal-card-title">${safeText(String(composer.title || "Voice Direction"))}</h2><p class="portal-card-subtitle">${safeText(String(composer.text || ""))} Đây là hướng thể hiện để biên tập, không phải preview, audio, giọng nói, TTS, clone hoặc output từ provider.</p></div>${badge("read_only")}</div><div class="portal-voice-direction-composer-meta"><span>${safeText(String(composer.language || "").toUpperCase())}</span><span>${safeText(voiceDirectionComposerOptionLabel(VOICE_DIRECTION_COMPOSER_SET_OPTIONS, composer.suggestion_set, "Direction set"))}</span><span>${safeText(voiceDirectionComposerOptionLabel(VOICE_DIRECTION_COMPOSER_SPEED_OPTIONS, composer.reading_speed, "Nhịp đọc"))}</span><span>Chọn hướng ${safeText(String(composer.selected_suggestion || ""))}</span></div><section class="portal-voice-direction-composer-suggestions"><div class="portal-card-header"><div><span class="portal-section-kicker">Three delivery directions</span><h3 class="portal-card-title">So sánh ba cách thể hiện</h3><p class="portal-card-subtitle">Các card là mô tả biên tập bằng text, không phải voice profile, file audio, sample hoặc player.</p></div></div><ol>${suggestions.map((item) => `<li${Number(item.choice) === Number(selected.choice) ? " data-selected=\"true\"" : ""}><span class="portal-voice-direction-composer-index">${safeText(String(item.choice || "").padStart(2, "0"))}</span><div><div class="portal-voice-direction-composer-suggestion-head"><strong>${safeText(String(item.name || ""))}</strong>${Number(item.choice) === Number(selected.choice) ? "<em>Đã chọn</em>" : ""}</div><div class="portal-voice-direction-composer-tags"><span>${safeText(String(item.id || ""))}</span><span>${safeText(String(item.tone || ""))}</span><span>${safeText(String(item.pace || ""))}</span></div><dl><div><dt>Use case</dt><dd>${safeText(String(item.use_case || ""))}</dd></div><div><dt>Direction</dt><dd>${safeText(String(item.direction || ""))}</dd></div><div><dt>Style prompt</dt><dd><pre>${safeText(String(item.style_prompt || ""))}</pre></dd></div></dl></div></li>`).join("")}</ol></section><section class="portal-voice-direction-composer-delivery"><div><span class="portal-section-kicker">Delivery notes</span><h3>Hướng dẫn biên tập cho lựa chọn đã chọn</h3><p>Delivery notes giúp người review chỉnh text hoặc brief thủ công. Chúng không khởi tạo bất kỳ lần đọc, chuyển giọng, preview hay file nào.</p></div><dl>${noteLabels.map(([key, label]) => `<div><dt>${safeText(label)}</dt><dd>${safeText(String(notes[key] || ""))}</dd></div>`).join("")}</dl></section><section class="portal-voice-direction-composer-review"><strong>Cảnh báo và checklist trước khi dùng ở workflow khác</strong>${voiceDirectionComposerListMarkup(composer.cautions, "Không có cảnh báo bổ sung; vẫn cần kiểm tra quyền và consent.")}<div>${voiceDirectionComposerListMarkup(composer.review_before_use, "Luôn rà soát claim, consent, thương hiệu và mục đích sử dụng trước khi tạo audio ở một workflow được duyệt riêng.")}</div></section><div class="portal-form-footer"><span class="portal-form-note">Kết quả chỉ tồn tại trong state phiên đã xác thực; trang này không tự lưu, xuất, tải xuống, gửi text đến engine hoặc tạo audio.</span><a class="portal-button portal-button--quiet" href="/voice-studio">Mở Voice Studio</a></div></section>`;
+    return `<section class="portal-card portal-card-pad portal-voice-direction-composer-result"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(t("composer.direction.title", ""))}</span><h2 class="portal-card-title">${safeText(String(composer.title || t("composer.direction.title", "")))}</h2><p class="portal-card-subtitle">${safeText(String(composer.text || ""))} ${safeText(t("composer.direction.scope.description", ""))}</p></div>${badge("read_only")}</div><div class="portal-voice-direction-composer-meta"><span>${safeText(String(composer.language || "").toUpperCase())}</span><span>${safeText(voiceDirectionComposerOptionLabel(VOICE_DIRECTION_COMPOSER_SET_OPTIONS, composer.suggestion_set, t("composer.direction.meta.set", "")))}</span><span>${safeText(voiceDirectionComposerOptionLabel(VOICE_DIRECTION_COMPOSER_SPEED_OPTIONS, composer.reading_speed, t("composer.direction.meta.speed", "")))}</span><span>${safeText(t("composer.direction.meta.selected", ""))} ${safeText(String(composer.selected_suggestion || ""))}</span></div><section class="portal-voice-direction-composer-suggestions"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(t("composer.direction.compare.title", ""))}</span><h3 class="portal-card-title">${safeText(t("composer.direction.compare.title", ""))}</h3><p class="portal-card-subtitle">${safeText(t("composer.direction.scope.description", ""))}</p></div></div><ol>${suggestions.map((item) => `<li${Number(item.choice) === Number(selected.choice) ? " data-selected=\"true\"" : ""}><span class="portal-voice-direction-composer-index">${safeText(String(item.choice || "").padStart(2, "0"))}</span><div><div class="portal-voice-direction-composer-suggestion-head"><strong>${safeText(String(item.name || ""))}</strong>${Number(item.choice) === Number(selected.choice) ? `<em>${safeText(t("composer.direction.selected", ""))}</em>` : ""}</div><div class="portal-voice-direction-composer-tags"><span>${safeText(String(item.id || ""))}</span><span>${safeText(String(item.tone || ""))}</span><span>${safeText(String(item.pace || ""))}</span></div><dl><div><dt>${safeText(t("composer.direction.useCase", ""))}</dt><dd>${safeText(String(item.use_case || ""))}</dd></div><div><dt>${safeText(t("composer.direction.direction", ""))}</dt><dd>${safeText(String(item.direction || ""))}</dd></div><div><dt>${safeText(t("composer.direction.stylePrompt", ""))}</dt><dd><pre>${safeText(String(item.style_prompt || ""))}</pre></dd></div></dl></div></li>`).join("")}</ol></section><section class="portal-voice-direction-composer-delivery"><div><span class="portal-section-kicker">${safeText(t("composer.direction.notes.title", ""))}</span><h3>${safeText(t("composer.direction.notes.title", ""))}</h3><p>${safeText(t("composer.direction.notes.description", ""))}</p></div><dl>${noteLabels.map(([key]) => `<div><dt>${safeText(key)}</dt><dd>${safeText(String(notes[key] || ""))}</dd></div>`).join("")}</dl></section><section class="portal-voice-direction-composer-review"><strong>${safeText(t("composer.direction.review.title", ""))}</strong>${voiceDirectionComposerListMarkup(composer.cautions, t("composer.direction.review.empty", ""))}<div>${voiceDirectionComposerListMarkup(composer.review_before_use, t("composer.direction.review.empty", ""))}</div></section><div class="portal-form-footer"><span class="portal-form-note">${safeText(t("composer.direction.scope.description", ""))}</span><a class="portal-button portal-button--quiet" href="/voice-studio">${safeText(t("card.open", ""))}</a></div></section>`;
   }
 
   function renderVoiceDirectionComposer(page, context) {
+    const t = voiceStudioText;
     const canCompose = Boolean(context.capabilities && context.capabilities["voice-direction-compose"] === true);
     const values = { text: "", language: "vi", suggestion_set: "core", selected_suggestion: "1", reading_speed: "normal" };
     return `<article class="portal-page portal-voice-direction-composer">${renderHero(page, context)}
-      <section class="portal-voice-direction-composer-intro"><div><span class="portal-section-kicker">Web-native voice planning</span><h2>Chọn cách thể hiện rõ ràng trước khi bất kỳ audio nào được tạo ở nơi khác.</h2><p>Composer chuyển grammar direction của Bot thành màn hình review chuyên nghiệp: ba lựa chọn dễ so sánh, một lựa chọn được phát triển và delivery notes có thể chuyển cho biên tập viên. Mọi phần chỉ là text planning do bạn kiểm tra.</p></div><dl><div><dt>3</dt><dd>Hướng thể hiện</dd></div><div><dt>4</dt><dd>Delivery notes</dd></div><div><dt>0</dt><dd>Audio được tạo</dd></div></dl></section>
-      <div class="portal-voice-direction-composer-layout"><section class="portal-card portal-card-pad portal-voice-direction-composer-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Direction brief</span><h2 class="portal-card-title">Lập Voice Direction</h2><p class="portal-card-subtitle">Server xác minh signed session và CSRF rồi trả template deterministic. Text/kết quả không được lưu vào Voice Vault, Project, audit detail hoặc browser draft.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="voice-direction-compose" data-portal-route="/voice-studio/direction-composer" novalidate>${renderFields(voiceDirectionComposerFields(), canCompose, context, values, "voice-direction-composer")}<div class="portal-form-footer"><span class="portal-form-note">Nút này chỉ lập ba voice direction và delivery notes để review; không tạo preview, audio, TTS, clone, voice profile, asset hoặc output.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Lập 3 voice direction</button></div></form></section><aside class="portal-card portal-card-pad portal-voice-direction-composer-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Lập direction, không tạo giọng</h2><p class="portal-card-subtitle">Không có raw audio, consent record, TTS, clone, preview, audio, provider voice ID, job, wallet, payment, asset, output hoặc Telegram action trong tool này.</p></div>${badge("guarded")}</div><div class="portal-voice-direction-composer-guard-list"><span><strong>Raw audio / voice ID</strong><em>off</em></span><span><strong>TTS / clone / preview</strong><em>off</em></span><span><strong>Audio / output</strong><em>off</em></span><span><strong>Provider / Telegram</strong><em>off</em></span><span><strong>Job / wallet / payment</strong><em>off</em></span><span><strong>Asset / persistent record</strong><em>off</em></span></div></aside></div>
+      <section class="portal-voice-direction-composer-intro"><div><span class="portal-section-kicker">${safeText(t("composer.direction.title", ""))}</span><h2>${safeText(t("composer.direction.intro.title", ""))}</h2><p>${safeText(t("composer.direction.intro.description", ""))}</p></div><dl><div><dt>3</dt><dd>${safeText(t("composer.direction.metrics.options", ""))}</dd></div><div><dt>4</dt><dd>${safeText(t("composer.direction.metrics.notes", ""))}</dd></div><div><dt>0</dt><dd>${safeText(t("composer.direction.metrics.audio", ""))}</dd></div></dl></section>
+      <div class="portal-voice-direction-composer-layout"><section class="portal-card portal-card-pad portal-voice-direction-composer-form"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(t("composer.direction.title", ""))}</span><h2 class="portal-card-title">${safeText(t("composer.direction.form.title", ""))}</h2><p class="portal-card-subtitle">${safeText(t("composer.direction.form.description", ""))}</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="voice-direction-compose" data-portal-route="/voice-studio/direction-composer" novalidate>${renderFields(voiceDirectionComposerFields(), canCompose, context, values, "voice-direction-composer")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(t("composer.direction.form.note", ""))}</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>${safeText(t("composer.direction.form.submit", ""))}</button></div></form></section><aside class="portal-card portal-card-pad portal-voice-direction-composer-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(t("composer.direction.scope.title", ""))}</span><h2 class="portal-card-title">${safeText(t("composer.direction.scope.title", ""))}</h2><p class="portal-card-subtitle">${safeText(t("composer.direction.scope.description", ""))}</p></div>${badge("guarded")}</div><div class="portal-voice-direction-composer-guard-list"><span><strong>${safeText(t("composer.direction.guard.text", ""))}</strong><em>off</em></span><span><strong>${safeText(t("composer.direction.guard.audio", ""))}</strong><em>off</em></span><span><strong>${safeText(t("composer.direction.guard.provider", ""))}</strong><em>off</em></span><span><strong>${safeText(t("composer.direction.guard.job", ""))}</strong><em>off</em></span></div></aside></div>
       ${renderVoiceDirectionComposerResult(context.voiceDirectionComposerResult)}
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Review direction trước, thực thi bằng contract riêng sau</h2><p class="portal-card-subtitle">Dùng direction như một brief để kiểm tra quyền sử dụng, consent, phát âm thương hiệu, claim và CTA. Khi cần quản lý version history, dùng Voice Studio riêng; việc đó cũng không tạo audio.</p></div></div>${renderNotes(page)}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(t("composer.direction.scope.title", ""))}</span><h2 class="portal-card-title">${safeText(t("composer.direction.scope.title", ""))}</h2><p class="portal-card-subtitle">${safeText(t("composer.direction.scope.description", ""))}</p></div></div></section>
     </article>`;
   }
 
@@ -16833,24 +16882,33 @@
     ["delivery_style", "Hướng thể hiện"], ["brand_narration", "Narration thương hiệu"], ["consented_reference", "Reference có self-attestation"]
   ]);
   const VOICE_STUDIO_SCRIPT_KINDS = Object.freeze([
-    ["narration", "Lời dẫn"], ["ad", "Quảng cáo / CTA"], ["explainer", "Giải thích"], ["podcast", "Podcast"], ["training", "Đào tạo"], ["custom", "Tùy chỉnh"]
+    ["narration", "script.kind.narration", "Lời dẫn"], ["ad", "script.kind.ad", "Quảng cáo"], ["explainer", "script.kind.explainer", "Giải thích"], ["podcast", "script.kind.podcast", "Podcast"], ["training", "script.kind.training", "Đào tạo"], ["custom", "script.kind.custom", "Tùy chỉnh"]
   ]);
   const VOICE_STUDIO_CONSENT_STATUSES = Object.freeze([
     ["not_required", "Không cần consent"], ["self_attested", "Tự xác nhận quyền sử dụng"], ["revoked", "Đã thu hồi"]
   ]);
 
+  function voiceStudioText(key, fallback, params) {
+    return uiText(`customerVoiceStudio.${key}`, fallback, params);
+  }
   function validVoiceVaultId(value) { return validProjectId(value); }
   function voiceStudioVaultKindLabel(value) {
     const found = VOICE_STUDIO_VAULT_KINDS.find(([key]) => key === String(value || ""));
-    return found ? found[1] : "Voice direction";
+    const keys = { delivery_style: "deliveryStyle", brand_narration: "brandNarration", consented_reference: "consentedReference" };
+    return found ? voiceStudioText(`vaultKind.${keys[found[0]]}`, found[1]) : voiceStudioText("card.titleFallback", "Hồ sơ giọng nói");
   }
   function voiceStudioScriptKindLabel(value) {
     const found = VOICE_STUDIO_SCRIPT_KINDS.find(([key]) => key === String(value || ""));
-    return found ? found[1] : "Script";
+    return found ? voiceStudioText(found[1], found[2]) : voiceStudioText("script.kind.custom", "Tùy chỉnh");
+  }
+  function voiceStudioScriptSourceLabel(value) {
+    const key = String(value || "manual").toLowerCase().replace(/[^a-z_]/g, "");
+    return voiceStudioText(key === "composer" ? "script.source.composer" : "script.source.manual", key === "composer" ? "Từ bộ soạn thảo" : "Thủ công");
   }
   function voiceStudioConsentLabel(value) {
     const found = VOICE_STUDIO_CONSENT_STATUSES.find(([key]) => key === String(value || ""));
-    return found ? found[1] : "Chưa khai báo";
+    const keys = { not_required: "notRequired", self_attested: "selfAttested", revoked: "revoked" };
+    return found ? voiceStudioText(`consent.${keys[found[0]]}`, found[1]) : voiceStudioText("status.unknown", "Chưa khai báo");
   }
   function voiceStudioTags(value) {
     return Array.isArray(value) ? value.filter((item) => typeof item === "string" && item.trim()).slice(0, 20) : [];
@@ -16874,27 +16932,34 @@
     };
   }
   function renderVoiceStudioPagination(listing) {
-    return renderMemoryPagination(listing, "voice direction", "voice-studio-page", "/voice-studio", "data-voice-studio-offset", "portal-voice-studio-pagination");
+    const p = listing && listing.pagination && typeof listing.pagination === "object" ? listing.pagination : {};
+    const offset = Number.isInteger(p.offset) ? p.offset : 0;
+    const returned = Number.isInteger(p.returned) ? p.returned : 0;
+    const previous = Number.isInteger(p.previous_offset) && p.previous_offset >= 0 ? p.previous_offset : null;
+    const next = p.has_more === true && Number.isInteger(p.next_offset) && p.next_offset > offset ? p.next_offset : null;
+    if (previous === null && next === null) return "";
+    const range = returned ? voiceStudioText("pagination.showing", "", { start: offset + 1, end: offset + returned }) : voiceStudioText("pagination.noItems", "");
+    return `<nav class="portal-voice-studio-pagination" aria-label="${safeText(voiceStudioText("pagination.aria", ""))}"><span>${safeText(range)}</span><div>${previous === null ? "" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-studio-page" data-portal-route="/voice-studio" data-voice-studio-offset="${previous}">← ${safeText(voiceStudioText("pagination.previous", ""))}</button>`}${next === null ? "" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-studio-page" data-portal-route="/voice-studio" data-voice-studio-offset="${next}">${safeText(voiceStudioText("pagination.next", ""))} →</button>`}</div></nav>`;
   }
   function voiceStudioReferenceOptions(context, key) {
     const refs = context && context.voiceStudioReferences && typeof context.voiceStudioReferences === "object" ? context.voiceStudioReferences : {};
     const source = key === "content_brief_id" ? refs.content_briefs : refs.projects;
     return (Array.isArray(source) ? source : []).filter((item) => item && validVoiceVaultId(item.id)).slice(0, 100)
-      .map((item) => ({ value: String(item.id), label: String(item.title || "Reference Web riêng tư") }));
+      .map((item) => ({ value: String(item.id), label: String(item.title || voiceStudioText("reference.fallback", "Tài liệu riêng tư")) }));
   }
   function voiceStudioVaultFields(context) {
     return [
-      { name: "title", label: "Tên voice direction", placeholder: "Ví dụ: Narration thương hiệu · ra mắt mùa hè", required: true, minLength: 2, maxLength: 180 },
-      { name: "vault_kind", label: "Loại direction", control: "select", required: true, options: VOICE_STUDIO_VAULT_KINDS },
-      { name: "language", label: "Ngôn ngữ", placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
-      { name: "style_notes", label: "Cách thể hiện", control: "textarea", placeholder: "Nhịp, mức độ rõ ràng, năng lượng, khoảng nghỉ và các nguyên tắc biên tập…", maxLength: 1600, wide: true, help: "Mô tả direction nguyên gốc, không yêu cầu mô phỏng hoặc nhái một người cụ thể." },
-      { name: "use_context", label: "Ngữ cảnh sử dụng", control: "textarea", placeholder: "Ví dụ: lời dẫn video giới thiệu sản phẩm, bản nội bộ cần review…", maxLength: 1600, wide: true },
-      { name: "consent_status", label: "Trạng thái consent", control: "select", required: true, options: VOICE_STUDIO_CONSENT_STATUSES, help: "Reference chỉ dùng self-attested hoặc Đã thu hồi. Đây là metadata do bạn khai báo, không phải phê duyệt quyền hay clone." },
-      { name: "consent_note", label: "Ghi chú consent", control: "textarea", placeholder: "Nếu là reference: mô tả self-attestation hoặc việc thu hồi (ít nhất 12 ký tự).", maxLength: 1400, wide: true },
-      { name: "is_default", label: "Direction mặc định trong Voice Studio", type: "checkbox", help: "Chỉ là ưu tiên local của workspace này; không đổi default TTS/Voice Vault của Bot hoặc provider." },
-      { name: "tags", label: "Tags", placeholder: "brand, launch, review", maxLength: 1000 },
-      { name: "project_id", label: "Project (tùy chọn)", control: "select", options: voiceStudioReferenceOptions(context, "project_id"), emptyLabel: "Không liên kết Project" },
-      { name: "content_brief_id", label: "Content Brief (tùy chọn)", control: "select", options: voiceStudioReferenceOptions(context, "content_brief_id"), emptyLabel: "Không liên kết Content Brief" }
+      { name: "title", label: voiceStudioText("field.title.label", "Tên hồ sơ"), placeholder: voiceStudioText("field.title.placeholder", ""), required: true, minLength: 2, maxLength: 180 },
+      { name: "vault_kind", label: voiceStudioText("field.kind.label", "Loại hồ sơ"), control: "select", required: true, options: VOICE_STUDIO_VAULT_KINDS.map(([value]) => [value, voiceStudioVaultKindLabel(value)]) },
+      { name: "language", label: voiceStudioText("field.language.label", "Ngôn ngữ"), placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
+      { name: "style_notes", label: voiceStudioText("field.style.label", "Cách thể hiện"), control: "textarea", placeholder: voiceStudioText("field.style.placeholder", ""), maxLength: 1600, wide: true, help: voiceStudioText("field.style.help", "") },
+      { name: "use_context", label: voiceStudioText("field.context.label", "Ngữ cảnh sử dụng"), control: "textarea", placeholder: voiceStudioText("field.context.placeholder", ""), maxLength: 1600, wide: true },
+      { name: "consent_status", label: voiceStudioText("field.consent.label", "Xác nhận quyền sử dụng"), control: "select", required: true, options: VOICE_STUDIO_CONSENT_STATUSES.map(([value]) => [value, voiceStudioConsentLabel(value)]), help: voiceStudioText("field.consent.help", "") },
+      { name: "consent_note", label: voiceStudioText("field.consentNote.label", "Ghi chú xác nhận quyền"), control: "textarea", placeholder: voiceStudioText("field.consentNote.placeholder", ""), maxLength: 1400, wide: true },
+      { name: "is_default", label: voiceStudioText("field.isDefault.label", "Ưu tiên hồ sơ này"), type: "checkbox", checkboxLabelKey: "customerVoiceStudio.field.isDefault.confirm", help: voiceStudioText("field.isDefault.help", "") },
+      { name: "tags", label: voiceStudioText("field.tags.label", "Từ khóa"), placeholder: voiceStudioText("field.tags.placeholder", ""), maxLength: 1000 },
+      { name: "project_id", label: voiceStudioText("field.project.label", "Dự án"), control: "select", options: voiceStudioReferenceOptions(context, "project_id"), emptyLabel: voiceStudioText("field.project.empty", "") },
+      { name: "content_brief_id", label: voiceStudioText("field.contentBrief.label", "Đề cương nội dung"), control: "select", options: voiceStudioReferenceOptions(context, "content_brief_id"), emptyLabel: voiceStudioText("field.contentBrief.empty", "") }
     ];
   }
   function voiceStudioVaultValues(value) {
@@ -16910,15 +16975,15 @@
   }
   function voiceStudioScriptFields() {
     return [
-      { name: "title", label: "Tên script", placeholder: "Ví dụ: Mở đầu video launch", required: true, minLength: 2, maxLength: 180 },
-      { name: "script_kind", label: "Loại script", control: "select", required: true, options: VOICE_STUDIO_SCRIPT_KINDS },
-      { name: "language", label: "Ngôn ngữ", placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
-      { name: "audience", label: "Người nghe", placeholder: "Ví dụ: khách hàng mới", maxLength: 500 },
-      { name: "pace_wpm", label: "Nhịp đọc ước lượng (WPM)", type: "number", required: true, min: 80, max: 240, step: 1, inputMode: "numeric", help: "Dùng riêng cho cue-sheet theo text; không phản ánh giọng, tốc độ provider hoặc audio thật." },
-      { name: "script_text", label: "Lời thoại", control: "textarea", placeholder: "Viết bản lời thoại để review…", required: true, minLength: 1, maxLength: 24000, wide: true },
-      { name: "delivery_notes", label: "Chỉ dẫn thể hiện", control: "textarea", placeholder: "Khoảng nghỉ, nhấn ý, cách nói rõ ràng…", maxLength: 5000, wide: true },
-      { name: "pronunciation_notes", label: "Ghi chú phát âm", control: "textarea", placeholder: "Tên sản phẩm hoặc thuật ngữ cần kiểm tra…", maxLength: 3000, wide: true },
-      { name: "tags", label: "Tags", placeholder: "launch, intro, review", maxLength: 1000 }
+      { name: "title", label: voiceStudioText("script.field.title", "Tên lời thoại"), placeholder: voiceStudioText("script.field.titlePlaceholder", ""), required: true, minLength: 2, maxLength: 180 },
+      { name: "script_kind", label: voiceStudioText("script.field.kind", "Loại lời thoại"), control: "select", required: true, options: VOICE_STUDIO_SCRIPT_KINDS.map(([value, key, fallback]) => [value, voiceStudioText(key, fallback)]) },
+      { name: "language", label: voiceStudioText("script.field.language", "Ngôn ngữ"), placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
+      { name: "audience", label: voiceStudioText("script.field.audience", "Người nghe"), placeholder: voiceStudioText("script.field.audiencePlaceholder", ""), maxLength: 500 },
+      { name: "pace_wpm", label: voiceStudioText("script.field.pace", "Nhịp đọc ước lượng"), type: "number", required: true, min: 80, max: 240, step: 1, inputMode: "numeric", help: voiceStudioText("script.field.paceHelp", "") },
+      { name: "script_text", label: voiceStudioText("script.field.text", "Lời thoại"), control: "textarea", placeholder: voiceStudioText("script.field.textPlaceholder", ""), required: true, minLength: 1, maxLength: 24000, wide: true },
+      { name: "delivery_notes", label: voiceStudioText("script.field.delivery", "Cách thể hiện"), control: "textarea", placeholder: voiceStudioText("script.field.deliveryPlaceholder", ""), maxLength: 5000, wide: true },
+      { name: "pronunciation_notes", label: voiceStudioText("script.field.pronunciation", "Ghi chú phát âm"), placeholder: voiceStudioText("script.field.pronunciationPlaceholder", ""), control: "textarea", maxLength: 3000, wide: true },
+      { name: "tags", label: voiceStudioText("field.tags.label", "Từ khóa"), placeholder: voiceStudioText("field.tags.placeholder", ""), maxLength: 1000 }
     ];
   }
   function voiceStudioScriptValues(value) {
@@ -16933,158 +16998,73 @@
   }
   function voiceStudioEventLabel(value) {
     const labels = {
-      vault_created: "Đã tạo voice direction", vault_updated: "Đã lưu voice direction", vault_archived: "Đã archive voice direction", vault_restored: "Đã khôi phục voice direction", vault_duplicated: "Đã nhân bản voice direction", vault_version_restored: "Đã khôi phục version voice direction", default_cleared: "Đã cập nhật default local",
-      script_created: "Đã tạo script", script_updated: "Đã lưu script", script_archived: "Đã archive script", script_restored: "Đã khôi phục script", script_duplicated: "Đã nhân bản script", script_version_restored: "Đã khôi phục version script", scripts_composed: "Đã tạo khung script cục bộ"
+      vault_created: ["event.vaultCreated", "Đã tạo hồ sơ"], vault_updated: ["event.vaultUpdated", "Đã cập nhật hồ sơ"], vault_archived: ["event.vaultArchived", "Đã lưu trữ hồ sơ"], vault_restored: ["event.vaultRestored", "Đã khôi phục hồ sơ"], vault_duplicated: ["event.vaultDuplicated", "Đã sao chép hồ sơ"], vault_version_restored: ["event.vaultVersionRestored", "Đã khôi phục phiên bản hồ sơ"], default_cleared: ["event.defaultCleared", "Đã cập nhật hồ sơ ưu tiên"],
+      script_created: ["event.scriptCreated", "Đã thêm lời thoại"], script_updated: ["event.scriptUpdated", "Đã cập nhật lời thoại"], script_archived: ["event.scriptArchived", "Đã lưu trữ lời thoại"], script_restored: ["event.scriptRestored", "Đã khôi phục lời thoại"], script_duplicated: ["event.scriptDuplicated", "Đã sao chép lời thoại"], script_version_restored: ["event.scriptVersionRestored", "Đã khôi phục phiên bản lời thoại"], scripts_composed: ["event.scriptsComposed", "Đã tạo khung lời thoại"]
     };
-    return labels[String(value || "")] || String(value || "voice_studio_updated").replace(/_/g, " ");
+    const label = labels[String(value || "")];
+    return label ? voiceStudioText(label[0], label[1]) : voiceStudioText("event.unknown", "Đã cập nhật");
+  }
+  function voiceStudioPolicyState(value) {
+    const state = String(value || "guarded").trim().toLowerCase();
+    if (["ready", "available", "enabled"].includes(state)) return voiceStudioText("status.available", "Sẵn sàng");
+    if (["disabled", "off"].includes(state)) return voiceStudioText("status.disabled", "Đang tắt");
+    if (["guarded", "unavailable", "blocked"].includes(state)) return voiceStudioText("status.unavailable", "Chưa khả dụng");
+    return voiceStudioText("status.unknown", "Chưa xác định");
   }
   function renderVoiceStudioPolicy(context) {
     const policy = context.voiceStudioPolicy && typeof context.voiceStudioPolicy === "object" ? context.voiceStudioPolicy : {};
     const guardItems = [
-      ["TTS", policy.tts || "guarded"], ["Voice clone", policy.voice_clone || "guarded"], ["Preview", policy.preview || "guarded"], ["Delivery", policy.output_delivery || "guarded"]
+      [voiceStudioText("policy.features.speech", "Chuyển văn bản thành giọng nói"), policy.tts || "guarded"],
+      [voiceStudioText("policy.features.clone", "Nhân bản giọng nói"), policy.voice_clone || "guarded"],
+      [voiceStudioText("policy.features.preview", "Nghe thử"), policy.preview || "guarded"],
+      [voiceStudioText("policy.features.delivery", "Bàn giao tệp"), policy.output_delivery || "guarded"]
     ];
-    return `<aside class="portal-card portal-card-pad portal-voice-studio-policy"><div class="portal-card-header"><div><span class="portal-section-kicker">Ranh giới thực thi</span><h2 class="portal-card-title">Soạn direction, không tạo giọng</h2><p class="portal-card-subtitle">Vault này chỉ lưu metadata riêng tư, self-attestation và script. Không có raw audio, provider profile, URL preview, Bot job, Xu hoặc PayOS.</p></div>${badge("guarded")}</div><div class="portal-voice-studio-guard-list">${guardItems.map(([label, state]) => `<span><strong>${safeText(label)}</strong><em>${safeText(String(state).replace(/_/g, " "))}</em></span>`).join("")}</div><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Consent là self-attestation</strong><p>Web lưu nội dung bạn tự xác nhận để review nội bộ; nó không xác minh danh tính, không cấp quyền sử dụng và không kích hoạt clone.</p></div></div></aside>`;
+    return `<aside class="portal-card portal-card-pad portal-voice-studio-policy"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceStudioText("policy.kicker", "GIỚI HẠN CỦA TRANG"))}</span><h2 class="portal-card-title">${safeText(voiceStudioText("policy.title", "Soạn và lưu hồ sơ, không tạo giọng nói"))}</h2><p class="portal-card-subtitle">${safeText(voiceStudioText("policy.description", "Trang chỉ giữ thông tin riêng tư và lời thoại. Không tải lên âm thanh hoặc kết nối dịch vụ tạo giọng."))}</p></div>${badge("guarded")}</div><div class="portal-voice-studio-guard-list">${guardItems.map(([label, state]) => `<span><strong>${safeText(label)}</strong><em>${safeText(voiceStudioPolicyState(state))}</em></span>`).join("")}</div><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(voiceStudioText("policy.consent.title", "Xác nhận quyền là do bạn tự khai báo"))}</strong><p>${safeText(voiceStudioText("policy.consent.description", "Hệ thống lưu lời xác nhận để tham khảo nội bộ; không xác minh danh tính, cấp quyền sử dụng hoặc mở tính năng nhân bản giọng."))}</p></div></div></aside>`;
   }
   function renderVoiceVaultCards(items, context) {
     const canView = Boolean(context.capabilities && context.capabilities["voice-studio-view"] === true);
-    if (!items.length) return renderEmpty("Chưa có voice direction", "Tạo direction đầu tiên để lưu guideline, consent metadata và các bản script riêng tư. Không có audio, preview hoặc output được tạo ở đây.", ICONS.voice);
+    if (!items.length) return renderEmpty(voiceStudioText("empty.vaults.title", "Chưa có hồ sơ giọng nói"), voiceStudioText("empty.vaults.description", "Tạo hồ sơ đầu tiên để lưu cách thể hiện, xác nhận quyền và lời thoại. Trang này không tạo âm thanh."), ICONS.voice);
     return `<div class="portal-voice-vault-grid">${items.map((item) => {
       const id = String(item.id || "");
       const active = String(item.state || "active") === "active";
       const isDefault = item.is_default === true;
       const policy = item.policy && typeof item.policy === "object" ? item.policy : {};
-      const warning = policy.status === "guarded" ? `<span class="portal-voice-policy-flag">Cần review direction</span>` : "";
-      return `<article class="portal-card portal-card-pad portal-voice-vault-card${isDefault ? " is-default" : ""}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceStudioVaultKindLabel(item.vault_kind))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Voice direction"))}</h3><p class="portal-card-subtitle">${safeText(String(item.style_excerpt || item.use_context_excerpt || "Chưa có mô tả hiển thị."))}</p></div>${isDefault ? "<span class=\"portal-voice-default\">Default local</span>" : badge(active ? "ready" : "read_only")}</div><div class="portal-voice-vault-meta"><span>${safeText(String(item.language || "vi"))}</span><span>${safeText(voiceStudioConsentLabel(item.consent_status))}</span><span>v${safeText(String(item.revision || 1))}</span></div>${warning}${renderVoiceStudioTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">${active ? "Metadata-only · provider chưa kết nối" : "Đã archive · chỉ đọc"}</span>${canView && validVoiceVaultId(id) ? `<a class="portal-button portal-button--quiet" href="/voice-studio/${encodeURIComponent(id)}">Mở direction <span aria-hidden="true">→</span></a>` : ""}</div></article>`;
+      const warning = policy.status === "guarded" ? `<span class="portal-voice-policy-flag">${safeText(voiceStudioText("card.needsReview", "Cần rà soát cách thể hiện"))}</span>` : "";
+      return `<article class="portal-card portal-card-pad portal-voice-vault-card${isDefault ? " is-default" : ""}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceStudioVaultKindLabel(item.vault_kind))}</span><h3 class="portal-card-title">${safeText(String(item.title || voiceStudioText("card.titleFallback", "Hồ sơ giọng nói")))}</h3><p class="portal-card-subtitle">${safeText(String(item.style_excerpt || item.use_context_excerpt || voiceStudioText("card.descriptionFallback", "Chưa có mô tả hiển thị.")))}</p></div>${isDefault ? `<span class="portal-voice-default">${safeText(voiceStudioText("card.default", "Đang ưu tiên"))}</span>` : badge(active ? "ready" : "read_only")}</div><div class="portal-voice-vault-meta"><span>${safeText(String(item.language || "vi"))}</span><span>${safeText(voiceStudioConsentLabel(item.consent_status))}</span><span>v${safeText(String(item.revision || 1))}</span></div>${warning}${renderVoiceStudioTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(active ? voiceStudioText("card.metadataOnly", "Chỉ lưu thông tin · chưa kết nối dịch vụ xử lý") : voiceStudioText("card.archivedReadOnly", "Đã lưu trữ · chỉ xem"))}</span>${canView && validVoiceVaultId(id) ? `<a class="portal-button portal-button--quiet" href="/voice-studio/${encodeURIComponent(id)}">${safeText(voiceStudioText("card.open", "Mở hồ sơ"))} <span aria-hidden="true">→</span></a>` : ""}</div></article>`;
     }).join("")}</div>`;
   }
   function renderVoiceStudio(page, context) {
+    const t = voiceStudioText;
     const canView = Boolean(context.capabilities && context.capabilities["voice-studio-view"] === true);
     const canCreate = Boolean(context.capabilities && context.capabilities["voice-vault-create"] === true);
-    if (!canView) return `<article class="portal-page portal-voice-studio">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Voice Studio đang được bảo vệ", "Đăng nhập bằng signed session để mở voice direction và script riêng tư. Route này không đọc Bot Voice Vault hoặc nhận Telegram ID thô.", ICONS.voice)}</section></article>`;
-    const summary = context.voiceStudioSummary && typeof context.voiceStudioSummary === "object" ? context.voiceStudioSummary : {};
-    const vaults = summary.vaults && typeof summary.vaults === "object" ? summary.vaults : {};
-    const scripts = summary.scripts && typeof summary.scripts === "object" ? summary.scripts : {};
-    const execution = summary.execution && typeof summary.execution === "object" ? summary.execution : {};
+    if (!canView) return `<article class="portal-page portal-voice-studio">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(t("access.title", ""), t("access.description", ""), ICONS.voice)}</section></article>`;
     const listing = voiceStudioListing(context);
-    const filter = listing.filters;
     const formValues = voiceStudioVaultValues(transientFormValues(page.routePath || page.path));
     const filterFields = [
-      { name: "q", label: "Tìm direction", placeholder: "Tên, style hoặc ngữ cảnh…", maxLength: 100, wide: true },
-      { name: "tag", label: "Tag", placeholder: "Ví dụ: launch", maxLength: 48 },
-      { name: "state", label: "Trạng thái", control: "select", options: [["all", "Tất cả"], ["active", "Đang hoạt động"], ["archived", "Đã archive"]] }
+      { name: "q", label: t("filter.q.label", ""), placeholder: t("filter.q.placeholder", ""), maxLength: 100, wide: true },
+      { name: "tag", label: t("filter.tag.label", ""), placeholder: t("filter.tag.placeholder", ""), maxLength: 48 },
+      { name: "state", label: t("filter.state.label", ""), control: "select", options: [["all", t("filter.state.all", "")], ["active", t("filter.state.active", "")], ["archived", t("filter.state.archived", "")]] }
     ];
     const events = Array.isArray(context.voiceStudioEvents) ? context.voiceStudioEvents.filter((item) => item && typeof item === "object").slice(0, 8) : [];
-    const eventMarkup = events.length ? `<div class="portal-voice-studio-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(voiceStudioEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : renderEmpty("Chưa có hoạt động", "Audit feed chỉ giữ nhãn thao tác, revision và thời điểm; không lộ script, consent note, provider hoặc dữ liệu Bot.", "○");
+    const eventMarkup = events.length ? `<div class="portal-voice-studio-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(voiceStudioEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : renderEmpty(t("empty.events.title", ""), t("empty.events.description", ""), "○");
     const readState = String(context.voiceStudioReadState || "guarded");
-    const vaultListing = readState === "loading"
-      ? renderEmpty("Đang nạp direction riêng tư", "Chờ server xác minh signed account; Web không hiển thị fallback từ Bot Voice Vault.", "…")
-      : readState === "failed"
-        ? renderEmpty("Chưa thể nạp Voice Studio", "Dữ liệu cũ không được giữ lại hoặc thay bằng dữ liệu Bot. Hãy làm mới sau khi signed API sẵn sàng.", "!")
-        : readState === "guarded"
-          ? renderEmpty("Voice Studio đang ở chế độ an toàn", "Owner-scoped hydration chưa sẵn sàng nên không hiển thị danh sách hoặc nội dung cũ.", "○")
-          : renderVoiceVaultCards(Array.isArray(context.voiceVaults) ? context.voiceVaults : [], context) + renderVoiceStudioPagination(listing);
+    const vaultListing = ["loading", "failed", "guarded"].includes(readState)
+      ? renderEmpty(t(`read.${readState}.title`, ""), t(`read.${readState}.description`, ""), readState === "failed" ? "!" : "○")
+      : renderVoiceVaultCards(Array.isArray(context.voiceVaults) ? context.voiceVaults : [], context) + renderVoiceStudioPagination(listing);
+    const createPanel = `<details class="portal-card portal-voice-studio-create-panel" data-voice-studio-create${page.path === "/voice-studio/new" ? " open" : ""}><summary>${safeText(t("create.toggle", ""))}</summary><div class="portal-card-pad portal-voice-studio-create"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("create.title", ""))}</h2><p class="portal-card-subtitle">${safeText(t("create.description", ""))}</p></div></div><form class="portal-form" data-portal-form data-portal-action="voice-vault-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(voiceStudioVaultFields(context), canCreate, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(t("create.note", ""))}</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>${safeText(t("create.submit", ""))}</button></div></form><details class="portal-voice-studio-notice"><summary>${safeText(t("policy.toggle", ""))}</summary>${renderVoiceStudioPolicy(context)}</details></div></details>`;
+    const listPanel = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("filter.title", ""))}</h2><p class="portal-card-subtitle">${safeText(t("filter.description", ""))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-studio-refresh" data-portal-route="/voice-studio">${safeText(t("filter.refresh", ""))}</button></div><form class="portal-voice-studio-filter" data-portal-form data-portal-no-transient data-portal-action="voice-studio-filter" data-portal-route="/voice-studio" novalidate>${renderFields(filterFields.slice(0, 1), true, context, listing.filters)}<details class="portal-voice-studio-filters" data-voice-studio-filters><summary>${safeText(t("filter.more", ""))}</summary>${renderFields(filterFields.slice(1), true, context, listing.filters)}</details><div class="portal-form-footer"><span class="portal-form-note">${safeText(t("filter.note", ""))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-studio-filter-clear" data-portal-route="/voice-studio">${safeText(t("filter.clear", ""))}</button><button class="portal-button portal-button--primary" type="submit">${safeText(t("filter.submit", ""))}</button></div></div></form>${vaultListing}</section>`;
     return `<article class="portal-page portal-voice-studio">${renderHero(page, context)}
-      <section class="portal-voice-studio-intro"><div><span class="portal-section-kicker">Private Voice Direction & Script Workspace</span><h2>Giữ nhất quán cách kể, kiểm soát consent và review lời thoại trước khi đưa sang bất kỳ engine nào</h2><p>Voice Studio là workspace Web-native cho direction, consent metadata và script. Nó không phải TTS, voice clone, trình nghe thử hay khu vực delivery.</p></div><dl><div><dt>${safeText(String(Number(vaults.active || 0)))}</dt><dd>Direction hoạt động</dd></div><div><dt>${safeText(String(Number(scripts.active || 0)))}</dt><dd>Script hoạt động</dd></div><div><dt>${safeText(String(Number(vaults.archived || 0)))}</dt><dd>Đã archive</dd></div></dl></section>
-      <div class="portal-interactive-voice-workbench" style="margin-bottom: 24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,78,59,0.2)); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:18px 24px; margin-bottom:18px;">
-          <div>
-            <span class="portal-badge" data-status="ready">🟢 Neural Voice Engine Sẵn Sàng</span>
-            <h2 style="margin:6px 0 4px; font-size:20px; color:#f8fafc;">🗣️ Voice Studio — Tạo Giọng Đọc & Thuyết Minh AI</h2>
-            <p style="margin:0; font-size:13px; color:#94a3b8;">Chuyển văn bản thành giọng nói (TTS) truyền cảm 100% tự nhiên với 15+ diễn viên lồng tiếng đa vùng miền và quốc tế.</p>
-          </div>
-          <div>
-            <a href="/studio" class="portal-button portal-button--primary" style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #10b981, #059669); color:#fff; font-weight:700; border-radius:10px; text-decoration:none; padding:10px 18px; min-height:42px;">
-              🎬 Mở Toàn Bộ Studio Pro
-            </a>
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap:18px;">
-          <!-- Panel Form Nhập Kịch Bản & Chọn Giọng -->
-          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
-            <h3 style="margin-top:0; font-size:15px; color:#10b981;">1. Nhập Lời Thoại & Chọn Giọng</h3>
-            <div class="portal-fields" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
-              <label class="portal-field">
-                <span>Văn bản / Kịch bản thuyết minh</span>
-                <textarea class="portal-input" rows="3" placeholder="Nhập đoạn văn bản bạn muốn tạo giọng đọc...">TOAN AAS là nền tảng sáng tạo nội dung và tự động hóa AI hàng đầu. Giọng đọc được tạo ra với độ tự nhiên cao, ngắt nghỉ đúng ngữ điệu và chuẩn phòng thu.</textarea>
-              </label>
-
-              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <label class="portal-field">
-                  <span>Diễn viên lồng tiếng (Voice Actor)</span>
-                  <select class="portal-input">
-                    <option selected>🎙️ Nam Hà Nội — MC Mạnh Hùng (Trầm ấm)</option>
-                    <option>🎙️ Nữ Hà Nội — BTV Mai Anh (Dịu dàng)</option>
-                    <option>🎙️ Nam Sài Gòn — Minh Khôi (Review)</option>
-                    <option>🎙️ Nữ Sài Gòn — Thảo Vy (Kể chuyện)</option>
-                    <option>🎙️ English US — Professional Voice</option>
-                  </select>
-                </label>
-                <label class="portal-field">
-                  <span>Tốc độ đọc (Speed)</span>
-                  <select class="portal-input">
-                    <option selected>1.0x (Tốc độ tiêu chuẩn)</option>
-                    <option>1.15x (Hơi nhanh — TikTok/Reels)</option>
-                    <option>1.25x (Nhanh, cuốn hút)</option>
-                    <option>0.85x (Chậm rãi, truyền cảm)</option>
-                  </select>
-                </label>
-              </div>
-            </div>
-
-            <div style="margin-top:14px;">
-              <button type="button" class="portal-button portal-button--primary" style="width:100%; min-height:44px; font-weight:700; background:linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; border-radius:10px; cursor:pointer;" onclick="alert('Đã tạo giọng đọc AI! Bạn có thể nghe thử trên Audio Player.')">
-                🎙️ TẠO GIỌNG ĐỌC AI & NGHE THỬ (-5 Xu)
-              </button>
-            </div>
-          </div>
-
-          <!-- Panel Audio Player & Tải File -->
-          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-              <div>
-                <h3 style="margin:0; font-size:15px; color:#38bdf8;">2. Trình Phát Âm Thanh & Tải File</h3>
-                <small style="color:#94a3b8;">Nghe thử realtime & Tải file MP3 320kbps</small>
-              </div>
-              <button type="button" class="portal-button portal-button--primary" style="font-size:11px; padding:4px 12px; border-radius:6px; background:#10b981; color:#fff;" onclick="alert('Đang tải file MP3 chất lượng cao 320kbps.')">⬇️ Tải MP3</button>
-            </div>
-
-            <div style="padding:14px; background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
-              <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-                <div style="width:40px; height:40px; border-radius:10px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); display:grid; place-items:center; color:#10b981; font-size:18px;">
-                  🎧
-                </div>
-                <div>
-                  <strong style="display:block; font-size:13px; color:#f8fafc;">toanaas_voice_speech_sample.mp3</strong>
-                  <small style="color:#94a3b8; font-size:11px;">MP3 Stereo · 44.1kHz · 320kbps · Mastered</small>
-                </div>
-              </div>
-
-              <div class="portal-audio-player-stub" style="height:38px; border-radius:6px; background:rgba(255,255,255,0.06); display:flex; align-items:center; padding:0 12px; gap:8px;">
-                <span style="color:#10b981; font-size:12px;" aria-hidden="true">▶</span>
-                <div style="flex:1; height:4px; border-radius:2px; background:rgba(255,255,255,0.15); position:relative;"><div style="width:35%; height:100%; border-radius:2px; background:#10b981;"></div></div>
-                <span style="font-size:10px; color:#94a3b8;">0:14 / 0:45</span>
-              </div>
-
-              <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:11px; color:#64748b;">
-                <span>🟢 Engine: FastNeural TTS v3</span>
-                <span>⚡ Tốc độ render: 0.82s</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="portal-voice-studio-layout"><section class="portal-card portal-card-pad portal-voice-studio-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo voice direction</h2><p class="portal-card-subtitle">Lưu metadata có owner check, CSRF, idempotency, audit và version history. Chưa có request TTS, clone, preview hay audio output.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="voice-vault-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(voiceStudioVaultFields(context), canCreate, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">Reference có self-attestation cần ghi chú tối thiểu 12 ký tự. Không dùng trường này để yêu cầu nhái giọng.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo voice direction</button></div></form></section>${renderVoiceStudioPolicy(context)}</div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tìm và tiếp tục direction</h2><p class="portal-card-subtitle">Danh sách chỉ có metadata/excerpt thuộc signed account; consent note và script đầy đủ chỉ nạp sau owner check khi mở direction.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-studio-refresh" data-portal-route="/voice-studio">Làm mới</button></div><form class="portal-voice-studio-filter" data-portal-form data-portal-no-transient data-portal-action="voice-studio-filter" data-portal-route="/voice-studio" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ tồn tại ở state phiên trang, không vào URL, localStorage, Telegram hoặc provider.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-studio-filter-clear" data-portal-route="/voice-studio">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm direction</button></div></div></form>${vaultListing}</section>
-      <section class="portal-card portal-card-pad portal-voice-studio-activity"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Không có raw script, consent note, raw audio, provider ID, URL preview, job, Xu hoặc payment trong feed này.</p></div><span class="portal-form-note">${safeText(String(execution.authoring || "authoring_only"))}</span></div>${eventMarkup}</section>
+      ${page.path === "/voice-studio/new" ? createPanel + listPanel : listPanel + createPanel}
+      <section class="portal-card portal-card-pad portal-voice-studio-activity"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("activity.title", ""))}</h2><p class="portal-card-subtitle">${safeText(t("activity.description", ""))}</p></div><span class="portal-form-note">${safeText(t("status.authoringOnly", ""))}</span></div>${eventMarkup}</section>
     </article>`;
   }
   function renderVoiceCueSheet(cue, scriptId) {
     if (!cue || typeof cue !== "object" || String(cue.script_id || "") !== String(scriptId || "") || cue.execution !== "local_deterministic_writing_aid" || cue.provider_called !== false || cue.audio_created !== false) return "";
     const metrics = cue.metrics && typeof cue.metrics === "object" ? cue.metrics : {};
     const entries = Array.isArray(cue.items) ? cue.items.filter((item) => item && typeof item === "object").slice(0, 200) : [];
+    const t = voiceStudioText;
     const timing = (value) => Number.isFinite(Number(value)) ? `${Number(value).toFixed(2)}s` : "—";
-    return `<section class="portal-voice-cue-sheet"><div class="portal-card-header"><div><span class="portal-section-kicker">Local deterministic writing aid</span><h4>Cue-sheet để review nhịp lời thoại</h4><p>Ước lượng theo text và WPM, không phải transcript, audio preview, SRT hoặc output TTS.</p></div>${badge("read_only")}</div><div class="portal-voice-cue-metrics"><span>${safeText(String(metrics.words || 0))} từ</span><span>${safeText(String(metrics.sentences || 0))} câu</span><span>~${safeText(String(metrics.estimated_seconds || 0))} giây</span><span>${safeText(String(metrics.pace_wpm || "—"))} WPM</span></div>${entries.length ? `<ol>${entries.map((item) => `<li><span>${safeText(String(item.index || "•"))}</span><time>${safeText(timing(item.start_seconds))}–${safeText(timing(item.end_seconds))}</time><p>${safeText(String(item.text || ""))}</p><small>${safeText(String(item.word_count || 0))} từ</small></li>`).join("")}</ol>` : `<p class="portal-form-note">Script chưa có câu nào để chia cue.</p>`}</section>`;
+    return `<section class="portal-voice-cue-sheet"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(t("cue.title", ""))}</span><h4>${safeText(t("cue.title", ""))}</h4><p>${safeText(t("cue.description", ""))}</p></div>${badge("read_only")}</div><div class="portal-voice-cue-metrics"><span>${safeText(String(metrics.words || 0))} ${safeText(t("cue.words", ""))}</span><span>${safeText(String(metrics.sentences || 0))} ${safeText(t("cue.sentences", ""))}</span><span>~${safeText(String(metrics.estimated_seconds || 0))} ${safeText(t("cue.seconds", ""))}</span><span>${safeText(String(metrics.pace_wpm || "—"))} ${safeText(t("cue.pace", ""))}</span></div>${entries.length ? `<ol>${entries.map((item) => `<li><span>${safeText(String(item.index || "•"))}</span><time>${safeText(timing(item.start_seconds))}–${safeText(timing(item.end_seconds))}</time><p>${safeText(String(item.text || ""))}</p><small>${safeText(String(item.word_count || 0))} ${safeText(t("cue.words", ""))}</small></li>`).join("")}</ol>` : `<p class="portal-form-note">${safeText(t("cue.empty", ""))}</p>`}</section>`;
   }
   function renderVoiceScriptCard(script, vault, context, route) {
     const scriptId = String(script.id || "");
@@ -17099,12 +17079,13 @@
     const canCueSheet = Boolean(context.capabilities && context.capabilities["voice-script-cue-sheet"] === true && active && vaultActive && !consentRevoked);
     const scriptVersions = Array.isArray(script.versions) ? script.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 50) : [];
     const policy = script.policy && typeof script.policy === "object" ? script.policy : {};
+    const t = voiceStudioText;
     const stateAction = active
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-script-archive" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-voice-script-id="${safeText(scriptId)}" data-voice-script-revision="${safeText(String(script.revision))}" data-portal-confirm="Archive script này? Nội dung và lịch sử vẫn giữ riêng tư cho đến khi khôi phục."${canArchive ? "" : " disabled"}>Archive</button>`
-      : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-script-restore" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-voice-script-id="${safeText(scriptId)}" data-voice-script-revision="${safeText(String(script.revision))}"${canRestore ? "" : " disabled"}>Khôi phục</button>`;
-    const versionMarkup = scriptVersions.length ? `<div class="portal-voice-script-history"><strong>Lịch sử script</strong>${scriptVersions.map((version) => `<div><span>v${safeText(String(version.revision))} · ${safeText(String(version.created_at || "—"))}</span>${Number(version.revision) === Number(script.revision) ? "<em>Đang mở</em>" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-script-restore-version" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-voice-script-id="${safeText(scriptId)}" data-voice-script-revision="${safeText(String(script.revision))}" data-voice-script-version="${safeText(String(version.revision))}" data-portal-confirm="Khôi phục v${safeText(String(version.revision))} thành một revision script mới?"${canRestoreVersion ? "" : " disabled"}>Khôi phục v${safeText(String(version.revision))}</button>`}</div>`).join("")}</div>` : "";
-    const guard = policy.status === "guarded" ? `<div class="portal-notice portal-notice--warning"><span class="portal-notice-icon" aria-hidden="true">!</span><div><strong>Script cần review direction</strong><p>Loại bỏ yêu cầu mô phỏng hoặc nhái giọng trước khi lưu. Voice Studio không đánh giá hay tự xác nhận quyền.</p></div></div>` : "";
-    return `<article class="portal-voice-script-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceStudioScriptKindLabel(script.script_kind))} · ${safeText(String(script.source_kind || "manual").replace(/_/g, " "))}</span><h3 class="portal-card-title">${safeText(String(script.title || "Voice script"))}</h3><p class="portal-card-subtitle">${safeText(String(script.script_excerpt || "Chưa có lời thoại hiển thị."))}</p></div>${badge(active ? "ready" : "read_only")}</div><div class="portal-voice-script-meta"><span>${safeText(String(script.language || "vi"))}</span><span>${safeText(String(script.metrics && script.metrics.words || 0))} từ</span><span>~${safeText(String(script.metrics && script.metrics.estimated_seconds || 0))} giây</span><span>v${safeText(String(script.revision || 1))}</span></div>${renderVoiceStudioTags(script.tags)}${guard}<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-script-cue-sheet" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-voice-script-id="${safeText(scriptId)}" data-voice-script-revision="${safeText(String(script.revision))}"${canCueSheet ? "" : " disabled"}>Xem cue-sheet</button>${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-script-duplicate" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-voice-script-id="${safeText(scriptId)}" data-voice-script-revision="${safeText(String(script.revision))}"${canDuplicate ? "" : " disabled"}>Nhân bản script</button></div><form class="portal-form portal-voice-script-form" data-portal-form data-portal-action="voice-script-update" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-voice-script-id="${safeText(scriptId)}" data-voice-script-revision="${safeText(String(script.revision))}" novalidate>${renderFields(voiceStudioScriptFields(), canUpdate, context, voiceStudioScriptValues(script))}<div class="portal-form-footer"><span class="portal-form-note">Lưu script không gửi text tới TTS, clone, preview, provider hoặc Job Center.</span><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu revision script</button></div></form>${renderVoiceCueSheet(context.voiceCueSheet, scriptId)}${versionMarkup}</article>`;
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-script-archive" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-voice-script-id="${safeText(scriptId)}" data-voice-script-revision="${safeText(String(script.revision))}" data-portal-confirm="${safeText(t("script.confirm.archive", ""))}"${canArchive ? "" : " disabled"}>${safeText(t("script.action.archive", ""))}</button>`
+      : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-script-restore" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-voice-script-id="${safeText(scriptId)}" data-voice-script-revision="${safeText(String(script.revision))}"${canRestore ? "" : " disabled"}>${safeText(t("script.action.restore", ""))}</button>`;
+    const versionMarkup = scriptVersions.length ? `<div class="portal-voice-script-history"><strong>${safeText(t("detail.sections.history", ""))}</strong>${scriptVersions.map((version) => `<div><span>v${safeText(String(version.revision))} · ${safeText(String(version.created_at || "—"))}</span>${Number(version.revision) === Number(script.revision) ? `<em>${safeText(t("detail.status.active", ""))}</em>` : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-script-restore-version" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-voice-script-id="${safeText(scriptId)}" data-voice-script-revision="${safeText(String(script.revision))}" data-voice-script-version="${safeText(String(version.revision))}" data-portal-confirm="${safeText(t("script.confirm.restoreVersion", ""))}"${canRestoreVersion ? "" : " disabled"}>${safeText(t("script.action.restoreVersion", ""))} v${safeText(String(version.revision))}</button>`}</div>`).join("")}</div>` : "";
+    const guard = policy.status === "guarded" ? `<div class="portal-notice portal-notice--warning"><span class="portal-notice-icon" aria-hidden="true">!</span><div><strong>${safeText(t("script.guard.title", ""))}</strong><p>${safeText(t("script.guard.description", ""))}</p></div></div>` : "";
+    return `<article class="portal-voice-script-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceStudioScriptKindLabel(script.script_kind))} · ${safeText(voiceStudioScriptSourceLabel(script.source_kind))}</span><h3 class="portal-card-title">${safeText(String(script.title || t("script.field.title", "")))}</h3><p class="portal-card-subtitle">${safeText(String(script.script_excerpt || ""))}</p></div>${badge(active ? "ready" : "read_only")}</div><div class="portal-voice-script-meta"><span>${safeText(String(script.language || "vi"))}</span><span>${safeText(String(script.metrics && script.metrics.words || 0))} ${safeText(t("cue.words", ""))}</span><span>~${safeText(String(script.metrics && script.metrics.estimated_seconds || 0))} ${safeText(t("cue.seconds", ""))}</span><span>v${safeText(String(script.revision || 1))}</span></div>${renderVoiceStudioTags(script.tags)}${guard}<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-script-cue-sheet" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-voice-script-id="${safeText(scriptId)}" data-voice-script-revision="${safeText(String(script.revision))}"${canCueSheet ? "" : " disabled"}>${safeText(t("script.action.cue", ""))}</button>${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-script-duplicate" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-voice-script-id="${safeText(scriptId)}" data-voice-script-revision="${safeText(String(script.revision))}"${canDuplicate ? "" : " disabled"}>${safeText(t("script.action.duplicate", ""))}</button></div><form class="portal-form portal-voice-script-form" data-portal-form data-portal-action="voice-script-update" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-voice-script-id="${safeText(scriptId)}" data-voice-script-revision="${safeText(String(script.revision))}" novalidate>${renderFields(voiceStudioScriptFields(), canUpdate, context, voiceStudioScriptValues(script))}<div class="portal-form-footer"><span class="portal-form-note">${safeText(t("script.form.note", ""))}</span><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>${safeText(t("script.action.save", ""))}</button></div></form>${renderVoiceCueSheet(context.voiceCueSheet, scriptId)}${versionMarkup}</article>`;
   }
   function renderVoiceStudioDetail(page, context) {
     const detail = context.voiceVaultDetail && typeof context.voiceVaultDetail === "object" ? context.voiceVaultDetail : {};
@@ -17112,14 +17093,14 @@
     const canView = Boolean(context.capabilities && context.capabilities["voice-studio-view"] === true);
     if (!canView || !vault) {
       const readState = String(context.voiceStudioReadState || "guarded");
-      const title = !canView ? "Voice Studio đang được bảo vệ" : readState === "loading" ? "Đang nạp voice direction riêng tư" : readState === "failed" ? "Chưa thể nạp voice direction" : readState === "guarded" ? "Voice direction đang ở chế độ an toàn" : "Không tìm thấy voice direction";
+      const title = !canView ? voiceStudioText("access.title", "") : readState === "loading" ? voiceStudioText("detail.read.loading", "") : readState === "failed" ? voiceStudioText("detail.read.failed", "") : readState === "guarded" ? voiceStudioText("detail.read.guarded", "") : voiceStudioText("detail.missing.title", "");
       const text = !canView
-        ? "Đăng nhập bằng signed session để mở metadata và script riêng tư. Web không fallback sang Bot Voice Vault."
+        ? voiceStudioText("access.description", "")
         : readState === "loading"
-          ? "Chờ server xác minh owner trước khi hiển thị consent metadata hoặc script."
+          ? voiceStudioText("read.loading.description", "")
           : readState === "failed" || readState === "guarded"
-            ? "Dữ liệu cũ không được giữ lại hoặc thay bằng dữ liệu Bot khi signed API chưa sẵn sàng."
-            : "Direction có thể không thuộc Web account hiện tại hoặc đã bị gỡ; Web sẽ không fallback sang Bot Voice Vault.";
+            ? voiceStudioText("read.guarded.description", "")
+            : voiceStudioText("detail.missing.description", "");
       return `<article class="portal-page portal-voice-studio-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(title, text, ICONS.voice)}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/voice-studio">Về Voice Studio</a></div></section></article>`;
     }
     const route = page.routePath || page.path;
@@ -17136,20 +17117,20 @@
     const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 100) : [];
     const references = detail.references && typeof detail.references === "object" ? detail.references : {};
     const stateAction = writable
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-vault-archive" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-portal-confirm="Archive voice direction này? Direction, script và version history vẫn giữ riêng tư cho đến khi khôi phục."${canArchive ? "" : " disabled"}>Archive direction</button>`
-      : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-vault-restore" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}"${canRestore ? "" : " disabled"}>Khôi phục direction</button>`;
-    const versionMarkup = versions.length ? `<div class="portal-voice-version-list">${versions.map((version) => `<article><div><strong>v${safeText(String(version.revision))} · ${safeText(String(version.title || "Voice direction"))}</strong><p>${safeText(String(version.style_excerpt || ""))}</p><small>${safeText(String(version.created_at || "—"))}</small></div>${Number(version.revision) === Number(vault.revision) ? "<span class=\"portal-form-note\">Đang mở</span>" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-vault-restore-version" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-voice-vault-version="${safeText(String(version.revision))}" data-portal-confirm="Khôi phục v${safeText(String(version.revision))} thành một revision direction mới?"${canRestoreVersion ? "" : " disabled"}>Khôi phục v${safeText(String(version.revision))}</button>`}</article>`).join("")}</div>` : renderEmpty("Chưa có history", "Version đầu tiên được tạo khi direction được lưu và không bị ghi đè âm thầm.", "↺");
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-vault-archive" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-portal-confirm="${safeText(voiceStudioText("detail.confirm.archive", ""))}"${canArchive ? "" : " disabled"}>${safeText(voiceStudioText("detail.actions.archive", ""))}</button>`
+      : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-vault-restore" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}"${canRestore ? "" : " disabled"}>${safeText(voiceStudioText("detail.actions.restore", ""))}</button>`;
+    const versionMarkup = versions.length ? `<div class="portal-voice-version-list"><strong>${safeText(voiceStudioText("detail.sections.history", ""))}</strong>${versions.map((version) => `<article><div><strong>v${safeText(String(version.revision))} · ${safeText(String(version.title || voiceStudioText("card.titleFallback", "")))}</strong><p>${safeText(String(version.style_excerpt || ""))}</p><small>${safeText(String(version.created_at || "—"))}</small></div>${Number(version.revision) === Number(vault.revision) ? `<span class="portal-form-note">${safeText(voiceStudioText("detail.status.active", ""))}</span>` : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-vault-restore-version" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" data-voice-vault-version="${safeText(String(version.revision))}" data-portal-confirm="${safeText(voiceStudioText("detail.confirm.restoreVersion", ""))}"${canRestoreVersion ? "" : " disabled"}>${safeText(voiceStudioText("detail.actions.restoreVersion", ""))} v${safeText(String(version.revision))}</button>`}</article>`).join("")}</div>` : renderEmpty(voiceStudioText("detail.emptyHistory.title", ""), voiceStudioText("detail.emptyHistory.description", ""), "↺");
     const events = Array.isArray(detail.events) ? detail.events.filter((item) => item && typeof item === "object").slice(0, 18) : [];
-    const referencesMarkup = [references.project, references.content_brief].filter((item) => item && typeof item === "object").map((item) => `<span>${safeText(String(item.title || "Reference Web"))}</span>`).join("") || "<span>Chưa liên kết reference</span>";
-    const consentRevokedNotice = consentRevoked ? `<section class="portal-notice portal-notice--warning"><span class="portal-notice-icon" aria-hidden="true">!</span><div><strong>Consent đã được thu hồi</strong><p>Direction vẫn được giữ để audit. Bạn có thể archive hoặc cập nhật một self-attestation mới; mọi thao tác soạn, nhân bản, cue-sheet và khôi phục script đang bị khóa.</p></div></section>` : "";
+    const referencesMarkup = [references.project, references.content_brief].filter((item) => item && typeof item === "object").map((item) => `<span>${safeText(String(item.title || voiceStudioText("reference.fallback", "")))}</span>`).join("") || `<span>${safeText(voiceStudioText("detail.emptyReference", ""))}</span>`;
+    const consentRevokedNotice = consentRevoked ? `<section class="portal-notice portal-notice--warning"><span class="portal-notice-icon" aria-hidden="true">!</span><div><strong>${safeText(voiceStudioText("detail.consent.revoked.title", ""))}</strong><p>${safeText(voiceStudioText("detail.consent.revoked.description", ""))}</p></div></section>` : "";
     return `<article class="portal-page portal-voice-studio-detail">${renderHero(page, context)}
-      <section class="portal-voice-studio-detail-summary"><div><span class="portal-section-kicker">${safeText(voiceStudioVaultKindLabel(vault.vault_kind))}${vault.is_default ? " · Default local" : ""}</span><h2>${safeText(String(vault.title || "Voice direction"))}</h2><p>${safeText(String(vault.style_notes || vault.style_excerpt || "Chưa có mô tả direction."))}</p><div class="portal-voice-reference-list">${referencesMarkup}</div></div><dl><div><dt>Trạng thái</dt><dd>${safeText(writable ? "Đang hoạt động" : "Đã archive")}</dd></div><div><dt>Revision</dt><dd>v${safeText(String(vault.revision || 1))}</dd></div><div><dt>Scripts</dt><dd>${safeText(String(Number(detail.script_count || scripts.length)))}/${safeText(String(Number(detail.script_limit || 250)))}</dd></div></dl></section>${consentRevokedNotice}
-      <div class="portal-voice-studio-detail-grid"><section class="portal-card portal-card-pad portal-voice-studio-editor"><div class="portal-card-header"><div><h2 class="portal-card-title">Direction & consent metadata</h2><p class="portal-card-subtitle">Mỗi lần lưu tạo revision mới. Server xác minh owner, CSRF, idempotency, reference và optimistic revision trước khi ghi.</p></div>${badge(writable ? "ready" : "read_only")}</div><form class="portal-form" data-portal-form data-portal-action="voice-vault-update" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" novalidate>${renderFields(voiceStudioVaultFields(context), canUpdate, context, voiceStudioVaultValues(vault))}<div class="portal-form-footer"><span class="portal-form-note">Default ở đây chỉ là local preference; không chạm default của Bot, TTS hoặc provider.</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-vault-duplicate" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}"${canDuplicate ? "" : " disabled"}>Nhân bản direction</button><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu revision mới</button></div></div></form></section>${renderVoiceStudioPolicy(context)}</div>
-      <section class="portal-card portal-card-pad portal-voice-studio-composer"><div class="portal-card-header"><div><span class="portal-section-kicker">Local deterministic drafts</span><h2 class="portal-card-title">Tạo 3 khung script để biên tập</h2><p class="portal-card-subtitle">Composer chỉ tạo scaffold text có nhãn rõ ràng. Không phải AI output, audio preview, TTS, clone, job, charge, asset hay delivery.</p></div>${badge(canCompose ? "read_only" : "guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">Các khung được lưu thành script riêng tư để review thủ công; claim và quyền sử dụng vẫn cần được người biên tập xác minh.</span><button class="portal-button portal-button--primary" type="button" data-portal-action="voice-vault-compose" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}"${canCompose ? "" : " disabled"}>Tạo 3 khung script</button></div></section>
-      <section class="portal-card portal-card-pad portal-voice-script-create"><div class="portal-card-header"><div><span class="portal-section-kicker">Manual authoring</span><h2 class="portal-card-title">Thêm script thủ công</h2><p class="portal-card-subtitle">Lời thoại được giữ trong signed Web account, có version history và cue-sheet cục bộ. Nó không được gửi tới engine chỉ vì bạn lưu.</p></div>${badge(canScriptCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="voice-script-create" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" novalidate>${renderFields(voiceStudioScriptFields(), canScriptCreate, context, { script_kind: "narration", language: String(vault.language || "vi"), pace_wpm: "145" })}<div class="portal-form-footer"><span class="portal-form-note">Không nhập secret, OTP, payment proof, URL provider hoặc chỉ dẫn mô phỏng người cụ thể.</span><button class="portal-button portal-button--primary" type="submit"${canScriptCreate ? "" : " disabled"}>Thêm script</button></div></form></section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Scripts & cue-sheet</h2><p class="portal-card-subtitle">Mỗi script có revision riêng. Cue-sheet chỉ xuất hiện khi bạn yêu cầu và chỉ ước lượng thời lượng từ text/WPM.</p></div></div><div class="portal-voice-script-grid">${scripts.length ? scripts.map((script) => renderVoiceScriptCard(script, vault, context, route)).join("") : renderEmpty("Chưa có script", "Dùng composer hoặc thêm script thủ công để bắt đầu review. Không có audio được sinh thay thế.", ICONS.voice)}</div></section>
-      <div class="portal-voice-studio-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử direction</h2><p class="portal-card-subtitle">Khôi phục tạo revision mới và không xoá lịch sử cũ.</p></div></div>${versionMarkup}</section><section class="portal-card portal-card-pad portal-voice-studio-activity"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động trong direction</h2><p class="portal-card-subtitle">Feed chỉ hiển thị nhãn thao tác, revision và thời điểm; không có raw script hoặc consent note.</p></div></div>${events.length ? `<div class="portal-voice-studio-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(voiceStudioEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : "<p class=\"portal-form-note\">Chưa có hoạt động được ghi nhận.</p>"}</section></div>
-      <section class="portal-card portal-card-pad portal-voice-studio-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Provider / delivery boundary</span><h2 class="portal-card-title">Không có audio giả trong Voice Studio</h2><p class="portal-card-subtitle">TTS, voice clone, preview, saved voice, raw audio upload và delivery phải đi qua contract riêng. Workspace này sẽ hiển thị guarded thay vì tạo player, URL hoặc output giả.</p></div>${badge("guarded")}</div>${renderNotes(page)}</section>
+      <section class="portal-voice-studio-detail-summary"><div><span class="portal-section-kicker">${safeText(voiceStudioVaultKindLabel(vault.vault_kind))}${vault.is_default ? ` · ${safeText(voiceStudioText("card.default", ""))}` : ""}</span><h2>${safeText(String(vault.title || voiceStudioText("card.titleFallback", "")))}</h2><p>${safeText(String(vault.style_notes || vault.style_excerpt || voiceStudioText("card.descriptionFallback", "")))}</p><div class="portal-voice-reference-list">${referencesMarkup}</div></div><dl><div><dt>${safeText(voiceStudioText("library.status", ""))}</dt><dd>${safeText(writable ? voiceStudioText("detail.status.active", "") : voiceStudioText("detail.status.archived", ""))}</dd></div><div><dt>${safeText(voiceStudioText("detail.revision", "Phiên bản"))}</dt><dd>v${safeText(String(vault.revision || 1))}</dd></div><div><dt>${safeText(voiceStudioText("detail.scriptCount", "Lời thoại"))}</dt><dd>${safeText(String(Number(detail.script_count || scripts.length)))}/${safeText(String(Number(detail.script_limit || 250)))}</dd></div></dl></section>${consentRevokedNotice}
+      <div class="portal-voice-studio-detail-grid"><section class="portal-card portal-card-pad portal-voice-studio-editor"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(voiceStudioText("detail.editor.title", ""))}</h2><p class="portal-card-subtitle">${safeText(voiceStudioText("detail.editor.description", ""))}</p></div>${badge(writable ? "ready" : "read_only")}</div><form class="portal-form" data-portal-form data-portal-action="voice-vault-update" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" novalidate>${renderFields(voiceStudioVaultFields(context), canUpdate, context, voiceStudioVaultValues(vault))}<div class="portal-form-footer"><span class="portal-form-note">${safeText(voiceStudioText("detail.editor.note", ""))}</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="voice-vault-duplicate" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}"${canDuplicate ? "" : " disabled"}>${safeText(voiceStudioText("detail.actions.duplicate", ""))}</button><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>${safeText(voiceStudioText("detail.actions.save", ""))}</button></div></div></form></section>${renderVoiceStudioPolicy(context)}</div>
+      <section class="portal-card portal-card-pad portal-voice-studio-composer"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceStudioText("composer.kicker", ""))}</span><h2 class="portal-card-title">${safeText(voiceStudioText("composer.title", ""))}</h2><p class="portal-card-subtitle">${safeText(voiceStudioText("composer.description", ""))}</p></div>${badge(canCompose ? "read_only" : "guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">${safeText(voiceStudioText("composer.note", ""))}</span><button class="portal-button portal-button--primary" type="button" data-portal-action="voice-vault-compose" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}"${canCompose ? "" : " disabled"}>${safeText(voiceStudioText("composer.action", ""))}</button></div></section>
+      <section class="portal-card portal-card-pad portal-voice-script-create"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceStudioText("detail.scripts.create.title", ""))}</span><h2 class="portal-card-title">${safeText(voiceStudioText("detail.scripts.create.title", ""))}</h2><p class="portal-card-subtitle">${safeText(voiceStudioText("detail.scripts.create.description", ""))}</p></div>${badge(canScriptCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="voice-script-create" data-portal-route="${safeText(route)}" data-voice-vault-id="${safeText(String(vault.id))}" data-voice-vault-revision="${safeText(String(vault.revision))}" novalidate>${renderFields(voiceStudioScriptFields(), canScriptCreate, context, { script_kind: "narration", language: String(vault.language || "vi"), pace_wpm: "145" })}<div class="portal-form-footer"><span class="portal-form-note">${safeText(voiceStudioText("script.form.note", ""))}</span><button class="portal-button portal-button--primary" type="submit"${canScriptCreate ? "" : " disabled"}>${safeText(voiceStudioText("script.action.save", ""))}</button></div></form></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(voiceStudioText("detail.sections.scripts", ""))}</h2><p class="portal-card-subtitle">${safeText(voiceStudioText("detail.scripts.description", ""))}</p></div></div><div class="portal-voice-script-grid">${scripts.length ? scripts.map((script) => renderVoiceScriptCard(script, vault, context, route)).join("") : renderEmpty(voiceStudioText("detail.scripts.empty", ""), voiceStudioText("detail.scripts.emptyDescription", ""), ICONS.voice)}</div></section>
+      <div class="portal-voice-studio-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceStudioText("detail.sections.history", ""))}</span><h2 class="portal-card-title">${safeText(voiceStudioText("detail.sections.history", ""))}</h2><p class="portal-card-subtitle">${safeText(voiceStudioText("detail.history.description", ""))}</p></div></div>${versionMarkup}</section><section class="portal-card portal-card-pad portal-voice-studio-activity"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceStudioText("detail.sections.activity", ""))}</span><h2 class="portal-card-title">${safeText(voiceStudioText("detail.sections.activity", ""))}</h2><p class="portal-card-subtitle">${safeText(voiceStudioText("activity.description", ""))}</p></div></div>${events.length ? `<div class="portal-voice-studio-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(voiceStudioEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : `<p class="portal-form-note">${safeText(voiceStudioText("empty.events.title", ""))}</p>`}</section></div>
+      <section class="portal-card portal-card-pad portal-voice-studio-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceStudioText("detail.sections.policy", ""))}</span><h2 class="portal-card-title">${safeText(voiceStudioText("detail.boundary.title", ""))}</h2><p class="portal-card-subtitle">${safeText(voiceStudioText("detail.boundary.description", ""))}</p></div>${badge("guarded")}</div><div class="portal-panel-list"><div class="portal-panel-row"><strong>${safeText(voiceStudioText("detail.notes.integrationTitle", ""))}</strong><span>${safeText(voiceStudioText("detail.notes.integration", ""))}</span></div><div class="portal-panel-row"><strong>${safeText(voiceStudioText("detail.notes.safetyTitle", ""))}</strong><span>${safeText(voiceStudioText("detail.notes.safety", ""))}</span></div></div></section>
     </article>`;
   }
 
@@ -24731,49 +24712,23 @@
     });
   }
 
+  function voiceUiText(key, fallback, params) {
+    return uiText(`voiceUi.${key}`, fallback, params);
+  }
+
   function renderVoiceHub(page, context) {
-    return renderMediaHubPage(page, context, {
-      pageClass: "portal-voice-hub",
-      kicker: "AI Voice Operations",
-      heading: "Trung tâm tổng hợp & điều phối giọng nói AI",
-      subtext: "Hệ thống quản lý kịch bản, voice direction, cue timeline và danh mục giọng đọc Voice Vault.",
-      stats: {
-        toolsCount: 6,
-        toolsLabel: "Công cụ giọng nói",
-        qualityBadge: "Natural HD",
-        qualityLabel: "Âm sắc tự nhiên",
-        safetyBadge: "Consent",
-        safetyLabel: "Bản quyền & Đồng thuận"
-      },
-      quickActions: [
-        { title: "Voice Studio Pro (Voice Direction & Brief)", text: "Lập profile hướng dẫn thể hiện, kịch bản phân vai và consent metadata.", href: "/voice-studio", primary: true },
-        { title: "Voice Direction Composer (Cue-sheet)", text: "Thiết lập nhịp điệu, ngắt nghỉ và sắc thái biểu cảm kịch bản.", href: "/voice-studio/direction-composer" },
-        { title: "Voice Vault (Giọng đã lưu)", text: "Danh mục giọng nói đã lưu thuộc tài khoản.", href: "/voice/saved" }
-      ],
-      workflowGroups: [
-        {
-          title: "Kịch bản & Định hướng (Cục bộ trên Web)",
-          text: "Các công cụ xây dựng profile và kịch bản lồng tiếng đã sẵn sàng hoạt động.",
-          items: [
-            { title: "Voice Studio", text: "Quản lý profile giọng đọc, kịch bản phân vai và hướng dẫn ngữ điệu.", href: "/voice-studio", icon: ICONS.voice, status: "ready" },
-            { title: "Voice Direction Composer", text: "Thiết lập nhịp điệu, ngắt nghỉ và sắc thái biểu cảm chuyên sâu.", href: "/voice-studio/direction-composer", icon: ICONS.prompt, status: "ready" },
-            { title: "Voice Vault Cá nhân", text: "Quản lý và sử dụng các mẫu giọng đọc ưa thích thuộc tài khoản.", href: "/voice/saved", icon: ICONS.voice, status: "ready" }
-          ]
-        },
-        {
-          title: "Tổng hợp giọng nói & TTS (Bot điều phối)",
-          text: "Các tác vụ sinh âm thanh TTS và Clone do Core Bridge quản lý.",
-          items: [
-            { title: "Text-to-Speech", text: "Chờ adapter Bot/Core-Bridge canonical; chưa có runtime audio TTS trực tiếp trong browser.", href: "/voice/tts", icon: ICONS.voice, status: "guarded" },
-            { title: "Voice Clone", text: "Cần mẫu âm thanh và quyền sử dụng được Bot bridge xác minh.", href: "/voice/clone", icon: ICONS.voice, status: "guarded" },
-            { title: "Voice Outputs", text: "Adapter Voice-output canonical hiện chưa được công bố.", href: "/voice/outputs", icon: ICONS.voice, status: "guarded" },
-            { title: "Nghe thử giọng", text: "Chỉ phát audio khi có signed URL xác thực từ server.", href: "/voice/preview", icon: ICONS.voice, status: "guarded" }
-          ]
-        }
-      ],
-      boundaryTitle: "Quy chuẩn đạo đức & Bản quyền giọng nói",
-      boundaryText: "Chỉ những mẫu giọng được bạn cấp quyền hoặc giọng đọc có sẵn trong hệ thống chuẩn mới được kích hoạt. Không thực hiện giả mạo giọng nói khi chưa có sự đồng thuận."
-    });
+    const tools = [
+      ["tts", "/voice/tts"], ["saved", "/voice/saved"], ["clone", "/voice/clone"],
+      ["preview", "/voice/preview"], ["outputs", "/voice/outputs"],
+      ["studio", "/voice-studio"], ["direction", "/voice-studio/direction-composer"]
+    ];
+    return `<article class="portal-page portal-media-hub portal-voice-hub">
+      ${renderHero(page, context)}
+      <section class="portal-card portal-card-pad"><h2 class="portal-card-title">${safeText(voiceUiText("hub.choose", "Bạn muốn làm gì với giọng nói?"))}</h2>
+        <div class="portal-module-grid">${tools.map(([key, href]) => `<a class="portal-module-card" href="${safeText(href)}"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.voice)}</span><div class="portal-module-copy"><h3>${safeText(voiceUiText(`tool.${key}.title`, key))}</h3><p>${safeText(voiceUiText(`tool.${key}.description`, ""))}</p><span class="portal-module-link">${safeText(voiceUiText("hub.open", "Mở công cụ"))} →</span></div></a>`).join("")}</div>
+      </section>
+      <section class="portal-card portal-card-pad"><h2 class="portal-card-title">${safeText(voiceUiText("hub.rights.title", "Quyền sử dụng giọng"))}</h2><p>${safeText(voiceUiText("hub.rights.description", "Chỉ dùng mẫu giọng và nội dung bạn có quyền sử dụng."))}</p></section>
+    </article>`;
   }
 
   function renderMusicHub(page, context) {
@@ -30422,32 +30377,33 @@
   function renderWorkspace(page, context) {
     const route = page.routePath || page.path;
     const videoTask = route === "/video/create" || route === "/video/multiscene";
+    const voiceTask = ["/voice/tts", "/voice/saved", "/voice/clone", "/voice/outputs"].includes(route);
     const subtitleStudioCompanion = renderSubtitleStudioCompanionLink(page);
     const flow = context.featureFlows && context.featureFlows[route];
     const flowOutput = flow
       ? `<div class="portal-state" data-state="${safeText(flow.status || "guarded")}"><span class="portal-state-icon" aria-hidden="true">○</span><div><h3>${safeText(flow.message || "Core Bridge đã cập nhật trạng thái.")}</h3><p>Trạng thái canonical: ${safeText(STATE_LABELS[flow.status] || flow.status || "guarded")}. ${flow.status === "completed" ? "Output chỉ được cấp qua asset đã xác minh." : "Bản nháp planning có thể hiển thị; output engine vẫn phải qua job và asset hợp lệ."}</p></div></div>${renderCanonicalFlow(flow, route)}${renderFeatureTracking(flow)}`
-      : renderEmpty(videoTask ? uiText("videoUi.output.empty", "Chưa có kết quả video") : "Chờ Engine Web hoặc integration tùy chọn", videoTask ? uiText("videoUi.output.waiting", "") : "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○");
-    const isCanonicalVoiceRoute = page.path === "/voice" || page.path.startsWith("/voice/");
-    const voiceVault = isCanonicalVoiceRoute && page.path !== "/voice/outputs" ? renderVoiceVault(context) : "";
+      : renderEmpty(videoTask ? uiText("videoUi.output.empty", "Chưa có kết quả video") : voiceTask ? voiceUiText("output.empty", "Chưa có kết quả") : "Chờ Engine Web hoặc integration tùy chọn", videoTask ? uiText("videoUi.output.waiting", "") : voiceTask ? voiceUiText("output.waiting", "") : "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○");
+    const voiceVault = page.path === "/voice/saved" ? renderVoiceVault(context) : "";
     const interactiveWorkbench = videoTask ? "" : renderInteractiveFeatureWorkbench(page, context);
     const isLegacySubDubRoute = ["/subtitle", "/subtitle/create", "/translate", "/dubbing", "/asr"].includes(route);
-    const formContent = isLegacySubDubRoute ? renderSubDubRedirectPlaceholder(route) : renderFormCard(page, context);
-    return `<article class="portal-page${videoTask ? " portal-feature-workspace--video-task" : ""}">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
+    const formContent = route === "/voice/outputs"
+      ? `<section class="portal-card portal-card-pad"><p>${safeText(voiceUiText("output.help", ""))}</p><a class="portal-button portal-button--quiet" href="/jobs">${safeText(voiceUiText("output.jobs", "Xem công việc"))}</a></section>`
+      : isLegacySubDubRoute ? renderSubDubRedirectPlaceholder(route) : renderFormCard(page, context);
+    return `<article class="portal-page${videoTask ? " portal-feature-workspace--video-task" : voiceTask ? " portal-feature-workspace--voice-task" : ""}">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       ${interactiveWorkbench}
       <div class="portal-work-grid"><div>${formContent}${subtitleStudioCompanion}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside></div>
-      ${voiceVault}${videoTask ? "" : renderFeatureBotHandoff(page, context, flow)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${videoTask ? safeText(uiText("videoUi.output.title", "")) : "Output & trạng thái"}</h2>${videoTask ? "" : '<p class="portal-card-subtitle">Không tạo text, media, transcript hoặc file giả để thay thế engine thật.</p>'}</div>${badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section></article>`;
+      ${voiceVault}${videoTask || voiceTask ? "" : renderFeatureBotHandoff(page, context, flow)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${videoTask ? safeText(uiText("videoUi.output.title", "")) : voiceTask ? safeText(voiceUiText("output.title", "")) : "Output & trạng thái"}</h2>${videoTask || voiceTask ? "" : '<p class="portal-card-subtitle">Không tạo text, media, transcript hoặc file giả để thay thế engine thật.</p>'}</div>${badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section></article>`;
   }
 
   function renderVoiceVault(context) {
     const profiles = Array.isArray(context.voiceProfiles) ? context.voiceProfiles : [];
-    const consentLabel = (profile) => {
-      const labels = { granted: "Đã đồng ý", confirmed: "Đã xác nhận", required: "Chờ xác nhận", pending: "Chờ xác nhận", revoked: "Đã thu hồi" };
-      return labels[String(profile && profile.consent_status || "").toLowerCase()] || "Chưa được bot xác nhận";
-    };
-    const previewLabel = (profile) => profile && profile.preview_ready
-      ? "Có preview canonical · chờ adapter URL ký"
-      : "Chưa có preview canonical";
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Voice Vault canonical</h2><p class="portal-card-subtitle">Tên, consent và trạng thái dùng giọng được bot kiểm tra; Web chưa có adapter URL ký để phát preview.</p></div></div>${renderRowsTable(["Giọng", "Trạng thái", "TTS", "Preview", "Consent", "Cập nhật"], profiles, (profile) => `<td>${safeText(profile.display_name || "Giọng chưa đặt tên")}${profile.is_default ? " · Mặc định" : ""}</td><td>${badge(profile.status || "guarded")}</td><td>${profile.tts_ready ? "Sẵn sàng" : "Chưa sẵn sàng"}</td><td>${safeText(previewLabel(profile))}</td><td>${safeText(consentLabel(profile))}</td><td>${safeText(profile.updated_at || profile.created_at || "—")}</td>`, "Chưa có giọng đã được bot cấp", "Voice Vault sẽ chỉ hiển thị metadata thuộc signed session hiện tại.")}</section>`;
+    const t = voiceUiText;
+    const consent = (value) => t(`consent.${["granted", "confirmed", "required", "pending", "revoked"].includes(value) ? value : "unknown"}`, "");
+    const statusLabel = (value) => t(`library.state.${["ready", "read_only", "guarded", "disabled", "queued", "processing", "completed", "failed", "error", "archived", "pending"].includes(value) ? value : "unknown"}`, "");
+    const list = profiles.length
+      ? `<div class="portal-voice-inventory-list">${profiles.map((profile) => `<details class="portal-voice-inventory-card"><summary><strong>${safeText(profile.display_name || t("library.unnamed", "Giọng chưa đặt tên"))}${profile.is_default ? ` · ${safeText(t("library.default", "Mặc định"))}` : ""}</strong><span>${safeText(t(profile.tts_ready ? "library.ready" : "library.guarded", ""))}</span></summary><dl><div><dt>${safeText(t("library.status", "Trạng thái"))}</dt><dd><span data-status="${safeText(profile.status || "guarded")}">${safeText(statusLabel(String(profile.status || "guarded")))}</span></dd></div><div><dt>${safeText(t("library.consent", "Quyền sử dụng"))}</dt><dd>${safeText(consent(String(profile.consent_status || "")))}</dd></div><div><dt>${safeText(t("library.preview", "Nghe thử"))}</dt><dd>${safeText(t(profile.preview_ready ? "library.previewMetadata" : "library.noPreview", ""))}</dd></div><div><dt>${safeText(t("library.updated", "Cập nhật"))}</dt><dd>${safeText(profile.updated_at || profile.created_at || "—")}</dd></div></dl></details>`).join("")}</div>`
+      : renderEmpty(t("library.empty", "Chưa có giọng đã lưu"), t("library.emptyHelp", ""), ICONS.voice);
+    return `<section class="portal-card portal-card-pad portal-voice-inventory"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("library.title", "Giọng của bạn"))}</h2><p class="portal-card-subtitle">${safeText(t("library.description", ""))}</p></div></div>${list}</section>`;
   }
 
   function resolveLegacySubDubCanonicalUrl(pathname, search) {
@@ -30509,6 +30465,9 @@
   }
 
   function renderReadOnly(page, context) {
+    if (page.path === "/voice/preview") {
+      return `<article class="portal-page portal-voice-preview">${renderHero(page, context)}${renderVoiceVault(context)}</article>`;
+    }
     const assets = Array.isArray(context.assets) ? context.assets : [];
     const jobs = Array.isArray(context.jobs) ? context.jobs : [];
     const scope = page.path === "/music/sfx-library" ? "sfx" : page.path.startsWith("/image") ? "image" : page.path.startsWith("/video") ? "video" : (page.path === "/voice" || page.path.startsWith("/voice/")) ? "voice" : page.path.startsWith("/music") ? "music" : page.path.startsWith("/subtitle") ? "subtitle" : "";

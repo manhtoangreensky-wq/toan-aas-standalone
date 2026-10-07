@@ -1,0 +1,89 @@
+task: WEBAPP-VOICE-UI-CLOSEOUT-20261007
+phase: VERIFY
+status: COMPOSER_LOCAL_VERIFIED_VOICE_FLOW_FIXTURES_NEXT
+goal_status: ACTIVE
+workspace: C:/Users/toann/Documents/Codex/2026-07-10/1-ngu-n-ch-nh-v/work/toanaas-video-ui-release-20261007
+branch: fix/voice-ui-closeout-20261007
+base_sha: 8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952
+head_sha: CURRENT_GIT_HEAD_RESOLVE_WITH_GIT_REV_PARSE
+code_status: COMMITTED_LOCAL_UNPUSHED_NOT_DEPLOYED
+checkpoint_commit: LOCAL_CHECKPOINT_RESOLVE_WITH_GIT_REV_PARSE
+spec: docs/superpowers/specs/2026-10-07-voice-ui-closeout.md
+master_checklist: ../toanaas-webapp-ui-closeout-20260929/reports/audit/P0-WEB-ERP-MASTER-CHECKLIST.md
+prior_checkpoint:
+  pr: https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/616
+  merge_and_runtime_sha: 8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952
+  deploy: https://github.com/manhtoangreensky-wq/toan-aas-standalone/actions/runs/37632060634
+  recheck: GitHub_MERGED_deploy_SUCCESS_SSH_SHA_MATCH_Web_nginx_ACTIVE
+  accepted_routes: /tools/video /video/create /video/multiscene
+completed_local:
+  - Remove simulated TTS panel inside renderVoiceStudio; retain real authoring controls.
+  - Voice hub has seven unique destinations; core form names/actions/limits remain unchanged.
+  - Consent/sample/name sequence preserved; sample disabled when the engine capability is absent.
+  - Mobile assistant sits in the header; installation remains accessible through Account.
+  - Saved-voice inventory retains localized default/status, consent, preview and update metadata.
+  - Saved-voice selector retains existing profile ID/readiness filtering and required semantics.
+  - Voice Studio list/new use natural localized forms, profile labels, read states, events and pagination; only these Studio routes accepted locally.
+  - List-first search, optional filter/create disclosures, vertical form/cards; existing fields/values/limits/actions/rights unchanged.
+  - Current Voice Studio nav cue is localized; whole shared sidebar still open.
+  - Voice Studio detail/script/version/cue-sheet fixed copy is localized and
+    active/revoked UI-only fixtures have passed; detail keeps private action IDs.
+  - Direction Composer fixed copy/result guard uses localized catalogue keys;
+    current 12-case browser matrix passes.
+verification:
+  node: 44_PASS_0_FAIL
+  python_targeted: 42_PASS_in_3.54s
+  python_extended: 117_PASS_2_BASELINE_MATCHING_FAILURES_in_4.65s
+  new_failing_ids: 0
+  baseline_failure_ids:
+    - test_video_music_and_dubbing_forms_forward_the_bot_planning_controls
+    - test_guarded_feature_execution_keeps_web_authoring_primary_and_bot_companion_optional
+  syntax_and_diff: PASS
+  protected_API_DB_engine_integration_motion_CI_paths: unchanged_against_HEAD
+  inventory_browser: 48_cases_0_failures_0_overflow_0_route_runtime_errors
+  studio_list_new_browser: 48_of_48_complete_0_failures_matching_source_hashes
+  studio_text_min_contrast: 4.515
+  studio_control_border_min_contrast: 3.399
+  studio_detail_active_browser: 12_of_12_complete_0_failures
+  studio_detail_revoked_browser: 12_of_12_complete_0_failures
+  studio_detail_text_min_contrast: 4.515
+  studio_detail_control_border_min_contrast: 3.399
+  direction_composer_browser: 12_of_12_complete_0_failures
+  direction_composer_text_min_contrast: 5.944
+  direction_composer_control_border_min_contrast: 3.399
+  incomplete_studio_networkidle_run: 8_of_24_not_accepted
+  browser_method: Playwright_existing_QA_runner_Browser_plugin_skill_absent
+  earlier_core_matrix: 72_cases_on_its_recorded_prior_source_snapshot
+  earlier_mobile_overlay_matrix: 72_cases_on_its_recorded_prior_source_snapshot
+qa:
+  origin: http://127.0.0.1:4186
+  storage: isolated_existing_QA_only
+  account: one_existing_synthetic_account_no_new_account
+  server_session: 98415
+  voice_fixture: UI_only_no_voice_DB_write_no_capability_override_no_audio
+  populated_evidence: ../../qa/20261007-video-uiux/voice-inventory-populated-final/browser-review.json
+  empty_evidence: ../../qa/20261007-video-uiux/voice-inventory-empty-final/browser-review.json
+  inventory_evidence_scope: earlier_recorded_snapshot_not_current_Studio_source
+  studio_populated_evidence: ../../qa/20261007-video-uiux/voice-studio-compact-populated-final/browser-review.json
+  studio_empty_evidence: ../../qa/20261007-video-uiux/voice-studio-compact-empty-final/browser-review.json
+  portal_js_sha256: 9308f79ae19742c7038f85d26141e9675c470d468b02f5e1d35a5622c7cc2a57
+  portal_i18n_sha256: 87e0da741318ec16551f4aa3e111def9b0375c52550036d793129618f64c001f
+  portal_theme_sha256: 64a906584e998d6635f7e427eaecc73a7310dafe1797df101a6f337072846a81
+remaining:
+  - Next single slice is safe Composer result/missing/failed and cue receipt fixtures, then Voice TTS quote/progress/result states.
+  - Shared shell locale and global motion gate remain open.
+  - Existing QA background core/auth/telegram GETs remain pending 17-to-64 seconds; health 200 and visible UI do not prove those reads complete. No API change within UI scope.
+  - Quote/confirmation/progress/result/error presentation acceptance.
+  - Shared English navigation still contains Vietnamese labels; screenshot recorded, no shell locale PASS claimed.
+  - Existing ViewTransition InvalidStateError during login/setup; final motion gate remains open.
+  - Full Voice release verification and CI before commit/push/merge/deploy.
+next_order: Voice_then_Music_then_SubDub_other_features_then_remaining_Video_then_global_motion
+safety:
+  provider_calls: 0
+  wallet_mutations: 0
+  production_data_mutations: 0
+  API_engine_changes: false
+  production_ENV_changes: false
+  commit: false
+  push: false
+  deploy: false
