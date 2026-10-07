@@ -21493,6 +21493,9 @@ html[data-portal-theme="dark"] .portal-feature-workspace--voice-task form .porta
 .portal-voice-studio-detail .portal-button--quiet { color: var(--portal-ink) !important; border-color: var(--portal-border-strong) !important; }
 .portal-voice-direction-composer { display: grid; gap: 20px; }
 .portal-voice-direction-composer .portal-eyebrow { color: var(--portal-ink) !important; }
+.portal-voice-direction-composer :is(.portal-voice-direction-composer-layout, .portal-fields) { grid-template-columns: minmax(0, 1fr); }
+.portal-voice-direction-composer .portal-voice-direction-composer-suggestions > ol { grid-template-columns: minmax(0, 1fr); }
+.portal-voice-direction-composer-boundary > summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-weight: 700; }
 .portal-voice-direction-composer :is(.portal-card, .portal-empty, .portal-notice) { background: var(--portal-surface-light); color: var(--portal-ink); border-color: var(--portal-border); }
 .portal-voice-direction-composer :is(.portal-card-title, .portal-card-subtitle, .portal-section-kicker, .portal-field > label, .portal-field-help, .portal-form-note, .portal-voice-direction-composer-meta span, dt, dd, strong, p, summary) { color: var(--portal-ink) !important; }
 .portal-voice-direction-composer :is(.portal-input, .portal-select, .portal-textarea):not(:disabled):not(:focus) { border-color: color-mix(in srgb, var(--portal-muted) 75%, var(--portal-surface-light)) !important; }
@@ -21535,17 +21538,18 @@ html[data-portal-theme="dark"] .portal-voice-studio-detail .portal-button--prima
 html:not([data-portal-theme="dark"]) .portal-voice-studio form .portal-button--primary { background: var(--portal-action-hover) !important; background-image: none !important; color: var(--portal-on-action) !important; }
 html[data-portal-theme="dark"] .portal-voice-studio form .portal-button--primary { background: var(--portal-dark-action) !important; background-image: none !important; color: var(--portal-dark-on-action) !important; }
 @media (max-width: 700px) {
-  body:has(.portal-voice-studio) [data-portal-pwa-fab],
-  body:has(.portal-voice-studio) [data-portal-smart-install-banner] { display: none; }
-  body:has(.portal-voice-studio) .portal-header-actions { padding-right: 52px; }
-  body:has(.portal-voice-studio) #portal-copilot-root .portal-copilot-btn {
+  body:has(:is(.portal-voice-studio, .portal-voice-studio-detail, .portal-voice-direction-composer)) [data-portal-pwa-fab],
+  body:has(:is(.portal-voice-studio, .portal-voice-studio-detail, .portal-voice-direction-composer)) [data-portal-smart-install-banner] { display: none; }
+  body:has(:is(.portal-voice-studio, .portal-voice-studio-detail, .portal-voice-direction-composer)) .portal-header-actions { padding-right: 52px; }
+  body:has(:is(.portal-voice-studio, .portal-voice-studio-detail, .portal-voice-direction-composer)) #portal-copilot-root .portal-copilot-btn {
     position: fixed; top: max(10px, env(safe-area-inset-top)); right: 16px;
     bottom: auto; width: 44px; height: 44px; min-width: 44px; padding: 0;
     border-radius: 12px; background: var(--portal-surface-light);
     border: 1px solid var(--portal-border); color: var(--portal-ink);
     box-shadow: none; z-index: 95;
   }
-  body:has(.portal-voice-studio) #portal-copilot-root .portal-copilot-btn > span { display: none; }
+  body:has(:is(.portal-voice-studio, .portal-voice-studio-detail, .portal-voice-direction-composer)) #portal-copilot-root .portal-copilot-btn > .portal-copilot-btn-label { display: none; }
+  body:has(:is(.portal-voice-studio, .portal-voice-studio-detail, .portal-voice-direction-composer)) #portal-copilot-root .portal-copilot-btn-icon { display: inline-flex; }
 }
 /* AUTH-LOGIN-BRAND-VIEWPORT-001 */
 .portal-shell--auth .portal-main {

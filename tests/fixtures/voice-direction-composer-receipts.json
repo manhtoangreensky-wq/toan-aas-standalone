@@ -1,0 +1,338 @@
+{
+  "vi:core": {
+    "execution": "web_native_deterministic_voice_direction_only",
+    "input_persisted": false,
+    "raw_audio_stored": false,
+    "consent_attestation_recorded": false,
+    "provider_called": false,
+    "provider_voice_id_stored": false,
+    "tts_called": false,
+    "voice_clone_called": false,
+    "preview_created": false,
+    "audio_created": false,
+    "job_created": false,
+    "wallet_mutated": false,
+    "payment_started": false,
+    "asset_saved": false,
+    "output_created": false,
+    "telegram_called": false,
+    "composer": {
+      "title": "Gợi ý hướng giọng đọc",
+      "text": "QA_CUSTOM_TEXT_UNCHANGED",
+      "language": "vi",
+      "suggestion_set": "core",
+      "selected_suggestion": 2,
+      "reading_speed": "normal",
+      "suggestions": [
+        {
+          "choice": 1,
+          "id": "female-soft",
+          "name": "Nữ nhẹ nhàng",
+          "tone": "ấm, rõ chữ, thân thiện",
+          "pace": "vừa phải",
+          "use_case": "hướng dẫn, giải thích, review chân thật",
+          "direction": "Đọc rõ từng ý, giữ nụ cười nhẹ trong giọng và tránh nhịp quảng cáo gấp.",
+          "style_prompt": "Nữ nhẹ nhàng: ấm, rõ chữ, thân thiện; tốc độ vừa phải; phù hợp hướng dẫn, giải thích, review chân thật. Hướng thể hiện: Đọc rõ từng ý, giữ nụ cười nhẹ trong giọng và tránh nhịp quảng cáo gấp."
+        },
+        {
+          "choice": 2,
+          "id": "male-deep",
+          "name": "Nam trầm tin cậy",
+          "tone": "chắc, trầm, đáng tin",
+          "pace": "chậm vừa",
+          "use_case": "dịch vụ cao cấp, sản phẩm cần niềm tin, thương hiệu",
+          "direction": "Giữ nhịp chắc, nhấn nhẹ lợi ích chính và để câu kết có khoảng thở.",
+          "style_prompt": "Nam trầm tin cậy: chắc, trầm, đáng tin; tốc độ chậm vừa; phù hợp dịch vụ cao cấp, sản phẩm cần niềm tin, thương hiệu. Hướng thể hiện: Giữ nhịp chắc, nhấn nhẹ lợi ích chính và để câu kết có khoảng thở."
+        },
+        {
+          "choice": 3,
+          "id": "youth-sales",
+          "name": "Trẻ trung bán hàng",
+          "tone": "năng lượng, gần gũi, có nhịp CTA",
+          "pace": "nhanh vừa",
+          "use_case": "TikTok/Reels/Shorts, affiliate, ưu đãi ngắn",
+          "direction": "Mở đầu bắt nhịp nhanh, giữ câu ngắn, rồi chốt CTA gọn và tự nhiên.",
+          "style_prompt": "Trẻ trung bán hàng: năng lượng, gần gũi, có nhịp CTA; tốc độ nhanh vừa; phù hợp TikTok/Reels/Shorts, affiliate, ưu đãi ngắn. Hướng thể hiện: Mở đầu bắt nhịp nhanh, giữ câu ngắn, rồi chốt CTA gọn và tự nhiên."
+        }
+      ],
+      "selected_direction": {
+        "choice": 2,
+        "id": "male-deep",
+        "name": "Nam trầm tin cậy",
+        "tone": "chắc, trầm, đáng tin",
+        "pace": "chậm vừa",
+        "use_case": "dịch vụ cao cấp, sản phẩm cần niềm tin, thương hiệu",
+        "direction": "Giữ nhịp chắc, nhấn nhẹ lợi ích chính và để câu kết có khoảng thở.",
+        "style_prompt": "Nam trầm tin cậy: chắc, trầm, đáng tin; tốc độ chậm vừa; phù hợp dịch vụ cao cấp, sản phẩm cần niềm tin, thương hiệu. Hướng thể hiện: Giữ nhịp chắc, nhấn nhẹ lợi ích chính và để câu kết có khoảng thở."
+      },
+      "delivery_notes": {
+        "pace_adjustment": "Giữ nhịp hội thoại tự nhiên, ưu tiên rõ nghĩa hơn tốc độ.",
+        "pause_notes": "Dừng ngắn sau câu mở, trước ý chính và trước CTA; không biến dấu nghỉ thành hiệu ứng âm thanh.",
+        "emphasis_notes": "Chỉ nhấn tên sản phẩm, lợi ích đã được review và một hành động chính; tránh nhấn claim tuyệt đối.",
+        "cta_notes": "Để CTA ngắn, trung thực và cần được đội ngũ duyệt trước khi sử dụng trong bản ghi âm riêng."
+      },
+      "cautions": [
+        "Đây là hướng biên tập bằng văn bản, không phải giọng nói, audio, preview hoặc output TTS.",
+        "Không dùng để mô phỏng, clone hoặc gắn với danh tính giọng của người thật/người nổi tiếng.",
+        "Kiểm tra sự thật, quyền sử dụng, phát âm thương hiệu và CTA trước khi dùng trong một workflow được phê duyệt riêng."
+      ],
+      "review_before_use": [
+        "Đọc lại nội dung để phát hiện claim, tên riêng, dữ liệu nhạy cảm hoặc lời hứa chưa được kiểm chứng.",
+        "Đảm bảo lựa chọn giọng là mô tả nguyên bản, không là yêu cầu bắt chước một người cụ thể.",
+        "Xác nhận nhịp đọc và khoảng nghỉ phù hợp với kênh phát hành trước khi tạo bất kỳ audio nào ở workflow khác."
+      ]
+    }
+  },
+  "vi:extended": {
+    "execution": "web_native_deterministic_voice_direction_only",
+    "input_persisted": false,
+    "raw_audio_stored": false,
+    "consent_attestation_recorded": false,
+    "provider_called": false,
+    "provider_voice_id_stored": false,
+    "tts_called": false,
+    "voice_clone_called": false,
+    "preview_created": false,
+    "audio_created": false,
+    "job_created": false,
+    "wallet_mutated": false,
+    "payment_started": false,
+    "asset_saved": false,
+    "output_created": false,
+    "telegram_called": false,
+    "composer": {
+      "title": "Gợi ý hướng giọng đọc",
+      "text": "QA_CUSTOM_TEXT_UNCHANGED",
+      "language": "vi",
+      "suggestion_set": "extended",
+      "selected_suggestion": 2,
+      "reading_speed": "normal",
+      "suggestions": [
+        {
+          "choice": 1,
+          "id": "luxury-cinematic",
+          "name": "Luxury cinematic",
+          "tone": "sang, tiết chế, cảm xúc nhẹ",
+          "pace": "chậm",
+          "use_case": "nước hoa, mỹ phẩm, thời trang, concept thương hiệu",
+          "direction": "Nói ít nhưng có trọng lượng, đặt khoảng nghỉ rõ và tránh giọng bán hàng gấp.",
+          "style_prompt": "Luxury cinematic: sang, tiết chế, cảm xúc nhẹ; tốc độ chậm; phù hợp nước hoa, mỹ phẩm, thời trang, concept thương hiệu. Hướng thể hiện: Nói ít nhưng có trọng lượng, đặt khoảng nghỉ rõ và tránh giọng bán hàng gấp."
+        },
+        {
+          "choice": 2,
+          "id": "tutorial-clear",
+          "name": "AI tutorial rõ ràng",
+          "tone": "rõ, sạch, logic",
+          "pace": "vừa",
+          "use_case": "hướng dẫn dùng app, SaaS, công cụ AI",
+          "direction": "Chia nhịp theo bước, nhấn từ khóa thao tác và không đọc quá nhanh.",
+          "style_prompt": "AI tutorial rõ ràng: rõ, sạch, logic; tốc độ vừa; phù hợp hướng dẫn dùng app, SaaS, công cụ AI. Hướng thể hiện: Chia nhịp theo bước, nhấn từ khóa thao tác và không đọc quá nhanh."
+        },
+        {
+          "choice": 3,
+          "id": "faceless-story",
+          "name": "Faceless kể chuyện",
+          "tone": "tò mò, tự nhiên, dẫn chuyện",
+          "pace": "vừa chậm",
+          "use_case": "video kể chuyện, before/after, chia sẻ kinh nghiệm",
+          "direction": "Dẫn người xem theo mạch chuyện, mở bằng móc câu hỏi và kết bằng lời mời nhẹ.",
+          "style_prompt": "Faceless kể chuyện: tò mò, tự nhiên, dẫn chuyện; tốc độ vừa chậm; phù hợp video kể chuyện, before/after, chia sẻ kinh nghiệm. Hướng thể hiện: Dẫn người xem theo mạch chuyện, mở bằng móc câu hỏi và kết bằng lời mời nhẹ."
+        }
+      ],
+      "selected_direction": {
+        "choice": 2,
+        "id": "tutorial-clear",
+        "name": "AI tutorial rõ ràng",
+        "tone": "rõ, sạch, logic",
+        "pace": "vừa",
+        "use_case": "hướng dẫn dùng app, SaaS, công cụ AI",
+        "direction": "Chia nhịp theo bước, nhấn từ khóa thao tác và không đọc quá nhanh.",
+        "style_prompt": "AI tutorial rõ ràng: rõ, sạch, logic; tốc độ vừa; phù hợp hướng dẫn dùng app, SaaS, công cụ AI. Hướng thể hiện: Chia nhịp theo bước, nhấn từ khóa thao tác và không đọc quá nhanh."
+      },
+      "delivery_notes": {
+        "pace_adjustment": "Giữ nhịp hội thoại tự nhiên, ưu tiên rõ nghĩa hơn tốc độ.",
+        "pause_notes": "Dừng ngắn sau câu mở, trước ý chính và trước CTA; không biến dấu nghỉ thành hiệu ứng âm thanh.",
+        "emphasis_notes": "Chỉ nhấn tên sản phẩm, lợi ích đã được review và một hành động chính; tránh nhấn claim tuyệt đối.",
+        "cta_notes": "Để CTA ngắn, trung thực và cần được đội ngũ duyệt trước khi sử dụng trong bản ghi âm riêng."
+      },
+      "cautions": [
+        "Đây là hướng biên tập bằng văn bản, không phải giọng nói, audio, preview hoặc output TTS.",
+        "Không dùng để mô phỏng, clone hoặc gắn với danh tính giọng của người thật/người nổi tiếng.",
+        "Kiểm tra sự thật, quyền sử dụng, phát âm thương hiệu và CTA trước khi dùng trong một workflow được phê duyệt riêng."
+      ],
+      "review_before_use": [
+        "Đọc lại nội dung để phát hiện claim, tên riêng, dữ liệu nhạy cảm hoặc lời hứa chưa được kiểm chứng.",
+        "Đảm bảo lựa chọn giọng là mô tả nguyên bản, không là yêu cầu bắt chước một người cụ thể.",
+        "Xác nhận nhịp đọc và khoảng nghỉ phù hợp với kênh phát hành trước khi tạo bất kỳ audio nào ở workflow khác."
+      ]
+    }
+  },
+  "en:core": {
+    "execution": "web_native_deterministic_voice_direction_only",
+    "input_persisted": false,
+    "raw_audio_stored": false,
+    "consent_attestation_recorded": false,
+    "provider_called": false,
+    "provider_voice_id_stored": false,
+    "tts_called": false,
+    "voice_clone_called": false,
+    "preview_created": false,
+    "audio_created": false,
+    "job_created": false,
+    "wallet_mutated": false,
+    "payment_started": false,
+    "asset_saved": false,
+    "output_created": false,
+    "telegram_called": false,
+    "composer": {
+      "title": "Voice direction suggestions",
+      "text": "QA_CUSTOM_TEXT_UNCHANGED",
+      "language": "en",
+      "suggestion_set": "core",
+      "selected_suggestion": 2,
+      "reading_speed": "normal",
+      "suggestions": [
+        {
+          "choice": 1,
+          "id": "female-soft",
+          "name": "Gentle female",
+          "tone": "warm, clear and friendly",
+          "pace": "moderate",
+          "use_case": "guides, explainers and grounded reviews",
+          "direction": "Articulate each point, keep a light warmth, and avoid rushed sales pacing.",
+          "style_prompt": "Gentle female: warm, clear and friendly; pace moderate; suitable for guides, explainers and grounded reviews. Delivery direction: Articulate each point, keep a light warmth, and avoid rushed sales pacing."
+        },
+        {
+          "choice": 2,
+          "id": "male-deep",
+          "name": "Trustworthy deep male",
+          "tone": "grounded, deep and trustworthy",
+          "pace": "measured",
+          "use_case": "premium services, trust-led products and brand narration",
+          "direction": "Maintain a steady rhythm, lightly emphasize the central benefit, and leave room at the close.",
+          "style_prompt": "Trustworthy deep male: grounded, deep and trustworthy; pace measured; suitable for premium services, trust-led products and brand narration. Delivery direction: Maintain a steady rhythm, lightly emphasize the central benefit, and leave room at the close."
+        },
+        {
+          "choice": 3,
+          "id": "youth-sales",
+          "name": "Youthful sales",
+          "tone": "energetic, approachable and CTA-aware",
+          "pace": "brisk but clear",
+          "use_case": "TikTok/Reels/Shorts, affiliate and short offers",
+          "direction": "Start with a quick hook, keep sentences short, then land a concise natural CTA.",
+          "style_prompt": "Youthful sales: energetic, approachable and CTA-aware; pace brisk but clear; suitable for TikTok/Reels/Shorts, affiliate and short offers. Delivery direction: Start with a quick hook, keep sentences short, then land a concise natural CTA."
+        }
+      ],
+      "selected_direction": {
+        "choice": 2,
+        "id": "male-deep",
+        "name": "Trustworthy deep male",
+        "tone": "grounded, deep and trustworthy",
+        "pace": "measured",
+        "use_case": "premium services, trust-led products and brand narration",
+        "direction": "Maintain a steady rhythm, lightly emphasize the central benefit, and leave room at the close.",
+        "style_prompt": "Trustworthy deep male: grounded, deep and trustworthy; pace measured; suitable for premium services, trust-led products and brand narration. Delivery direction: Maintain a steady rhythm, lightly emphasize the central benefit, and leave room at the close."
+      },
+      "delivery_notes": {
+        "pace_adjustment": "Keep a natural conversational rhythm and prioritize clarity over speed.",
+        "pause_notes": "Use short rests after the opening, before the main idea, and before the CTA; do not treat pauses as audio effects.",
+        "emphasis_notes": "Emphasize only the product name, reviewed benefit, and one primary action; avoid absolute claims.",
+        "cta_notes": "Keep the CTA brief and truthful; obtain editorial approval before it is used in any separate audio workflow."
+      },
+      "cautions": [
+        "This is an editorial text direction, not speech, audio, a preview, or a TTS output.",
+        "Do not use it to imitate, clone, or attach a real or public person's vocal identity.",
+        "Review facts, usage rights, brand pronunciation, and the CTA before using a separately approved workflow."
+      ],
+      "review_before_use": [
+        "Read the text again for unverified claims, names, sensitive data, or unsupported promises.",
+        "Confirm the selected direction is original and is not an instruction to imitate a specific person.",
+        "Confirm reading rhythm and rests fit the release channel before any separate audio workflow is considered."
+      ]
+    }
+  },
+  "en:extended": {
+    "execution": "web_native_deterministic_voice_direction_only",
+    "input_persisted": false,
+    "raw_audio_stored": false,
+    "consent_attestation_recorded": false,
+    "provider_called": false,
+    "provider_voice_id_stored": false,
+    "tts_called": false,
+    "voice_clone_called": false,
+    "preview_created": false,
+    "audio_created": false,
+    "job_created": false,
+    "wallet_mutated": false,
+    "payment_started": false,
+    "asset_saved": false,
+    "output_created": false,
+    "telegram_called": false,
+    "composer": {
+      "title": "Voice direction suggestions",
+      "text": "QA_CUSTOM_TEXT_UNCHANGED",
+      "language": "en",
+      "suggestion_set": "extended",
+      "selected_suggestion": 2,
+      "reading_speed": "normal",
+      "suggestions": [
+        {
+          "choice": 1,
+          "id": "luxury-cinematic",
+          "name": "Luxury cinematic",
+          "tone": "premium, restrained and lightly emotional",
+          "pace": "slow",
+          "use_case": "fragrance, beauty, fashion and brand concepts",
+          "direction": "Use fewer words with weight, leave clear rests, and avoid urgent sales delivery.",
+          "style_prompt": "Luxury cinematic: premium, restrained and lightly emotional; pace slow; suitable for fragrance, beauty, fashion and brand concepts. Delivery direction: Use fewer words with weight, leave clear rests, and avoid urgent sales delivery."
+        },
+        {
+          "choice": 2,
+          "id": "tutorial-clear",
+          "name": "Clear AI tutorial",
+          "tone": "clear, clean and logical",
+          "pace": "moderate",
+          "use_case": "app, SaaS and AI-tool tutorials",
+          "direction": "Break delivery by steps, emphasize action keywords, and do not rush instructions.",
+          "style_prompt": "Clear AI tutorial: clear, clean and logical; pace moderate; suitable for app, SaaS and AI-tool tutorials. Delivery direction: Break delivery by steps, emphasize action keywords, and do not rush instructions."
+        },
+        {
+          "choice": 3,
+          "id": "faceless-story",
+          "name": "Faceless storytelling",
+          "tone": "curious, natural and narrative",
+          "pace": "moderately slow",
+          "use_case": "story videos, before/after and experience sharing",
+          "direction": "Lead viewers through a story arc, open with a question hook, and close with a gentle invitation.",
+          "style_prompt": "Faceless storytelling: curious, natural and narrative; pace moderately slow; suitable for story videos, before/after and experience sharing. Delivery direction: Lead viewers through a story arc, open with a question hook, and close with a gentle invitation."
+        }
+      ],
+      "selected_direction": {
+        "choice": 2,
+        "id": "tutorial-clear",
+        "name": "Clear AI tutorial",
+        "tone": "clear, clean and logical",
+        "pace": "moderate",
+        "use_case": "app, SaaS and AI-tool tutorials",
+        "direction": "Break delivery by steps, emphasize action keywords, and do not rush instructions.",
+        "style_prompt": "Clear AI tutorial: clear, clean and logical; pace moderate; suitable for app, SaaS and AI-tool tutorials. Delivery direction: Break delivery by steps, emphasize action keywords, and do not rush instructions."
+      },
+      "delivery_notes": {
+        "pace_adjustment": "Keep a natural conversational rhythm and prioritize clarity over speed.",
+        "pause_notes": "Use short rests after the opening, before the main idea, and before the CTA; do not treat pauses as audio effects.",
+        "emphasis_notes": "Emphasize only the product name, reviewed benefit, and one primary action; avoid absolute claims.",
+        "cta_notes": "Keep the CTA brief and truthful; obtain editorial approval before it is used in any separate audio workflow."
+      },
+      "cautions": [
+        "This is an editorial text direction, not speech, audio, a preview, or a TTS output.",
+        "Do not use it to imitate, clone, or attach a real or public person's vocal identity.",
+        "Review facts, usage rights, brand pronunciation, and the CTA before using a separately approved workflow."
+      ],
+      "review_before_use": [
+        "Read the text again for unverified claims, names, sensitive data, or unsupported promises.",
+        "Confirm the selected direction is original and is not an instruction to imitate a specific person.",
+        "Confirm reading rhythm and rests fit the release channel before any separate audio workflow is considered."
+      ]
+    }
+  }
+}

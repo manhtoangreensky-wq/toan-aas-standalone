@@ -190,6 +190,7 @@ _PORTAL_SHELL_TITLES = {
     "/voice/tts": {"vi": "Đọc văn bản thành giọng nói · TOAN AAS", "en": "Text to speech · TOAN AAS", "zh": "文字转语音 · TOAN AAS"},
     "/voice-studio": {"vi": "Hồ sơ giọng và lời thoại · TOAN AAS", "en": "Voice profiles and scripts · TOAN AAS", "zh": "声音档案与台词 · TOAN AAS"},
     "/voice-studio/new": {"vi": "Tạo hồ sơ giọng · TOAN AAS", "en": "Create a voice profile · TOAN AAS", "zh": "创建声音档案 · TOAN AAS"},
+    "/voice-studio/direction-composer": {"vi": "Soạn cách thể hiện · TOAN AAS", "en": "Plan vocal delivery · TOAN AAS", "zh": "规划声音表现 · TOAN AAS"},
     "/voice/saved": {"vi": "Dùng giọng đã lưu · TOAN AAS", "en": "Use a saved voice · TOAN AAS", "zh": "使用已保存的声音 · TOAN AAS"},
     "/voice/clone": {"vi": "Nhân bản giọng nói · TOAN AAS", "en": "Voice cloning · TOAN AAS", "zh": "声音克隆 · TOAN AAS"},
     "/voice/preview": {"vi": "Nghe thử giọng · TOAN AAS", "en": "Voice preview · TOAN AAS", "zh": "声音试听 · TOAN AAS"},
