@@ -213,3 +213,13 @@ and `voice-studio-detail-revoked-final4`. These are isolated QA fixtures only.
   result UI for TTS and final all-site motion gate remain open.
 
 Composer evidence: `qa/20261007-video-uiux/voice-direction-composer-final3`.
+
+## Voice bridge-backed state readback
+
+- [x] Fresh read-only matrix for `/voice/tts`, `/voice/saved`, `/voice/clone`,
+  `/voice/preview`, `/voice/outputs`: 60/60 complete, VI/EN/ZH × light/dark ×
+  1440/375; no overflow/runtime errors, text minimum 4.515:1 and border
+  minimum 3.399:1. This proves presentation/readiness surfaces only.
+- [ ] Quote/confirmation/progress/result/error states still need UI-only flow
+  fixtures. No real estimate, confirm, provider, wallet or audio request was
+  made; do not infer those states from the 60 read-only cases.
