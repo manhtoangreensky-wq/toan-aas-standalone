@@ -4,6 +4,17 @@ Tracker điều phối: `manhtoangreensky-wq/toan-aas-standalone#412`.
 
 Đây là nguồn duy nhất của case; sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 
+## VIDEO-UI-CHECKPOINT-20261007
+
+Case: ba route `/tools/video`, `/video/create`, `/video/multiscene`; VI/EN/ZH,
+sáng/tối, 1440×900 và 375×812. Xác nhận nội dung thật, 10 link hub duy nhất,
+thẻ/form dọc, ô đầu xuất hiện ngay, hướng dẫn và thiết lập thêm mở bằng Enter,
+menu mobile đóng lúc đầu/mở được/đóng bằng Escape. Không có khung RTX4090/video
+mẫu hoặc nút báo trừ Xu giả; chữ nhỏ ≥4.5:1, viền input ≥3:1, không tràn ngang.
+Giữ nguyên tên/value/ràng buộc field, action và quyền xử lý. Chỉ kiểm tra giao
+diện; không gửi lệnh tạo video hoặc giao dịch production. Ghi lỗi về PR của
+checkpoint và giữ các trang Video khác/motion ở trạng thái còn mở.
+
 | ID | SPEC_ID | Mức | Môi trường | Route / role / viewport | Case | PASS bắt buộc | Canh lỗi cũ | Evidence |
 |---|---|---|---|---|---|---|---|---|
 | WA-01 | MOTION-TOANAAS-BATCH-001 | 🟡 vừa | local-render | `/dashboard` · customer · `1440×900` | Dashboard desktop | CLS, overlap, overflow, clip, console/page error và non-read request đều `0`; hydrate không replay. | Motion biến mất hoặc nội dung first paint mờ. | `evidence/motion-live-final-20260827/` và artifact mới `evidence/tester/WA-01/<runtime-sha>/`. |

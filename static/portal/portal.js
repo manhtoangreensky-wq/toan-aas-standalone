@@ -9629,6 +9629,10 @@
 
   function pageStatusBadge(page, context) {
     if (!page) return "";
+    if (["/video/create", "/video/multiscene"].includes(page.routePath || page.path)) {
+      const ready = featureConfirmExecutionReady(page, context);
+      return `<span class="portal-badge" data-status="${ready ? "ready" : "guarded"}">${safeText(uiText(`videoUi.status.${ready ? "ready" : "guarded"}`, ""))}</span>`;
+    }
     const boundary = classifyPageBoundary(page, context);
     if (boundary === "canonical_bridge") {
       return `<span class="portal-badge" data-status="ready" data-boundary="canonical_bridge">Job Bridge Sẵn sàng</span>`;
@@ -9840,6 +9844,8 @@
   function localizedPageTitle(page, context) {
     const fallback = displayPageTitle(page, context);
     const path = normalizePath(page && (page.routePath || page.path));
+    if (path === "/tools/video") return uiText("mediaHub.video.page.title", fallback);
+    if (path === "/video/create" || path === "/video/multiscene") return uiText(`videoUi.${path.endsWith("multiscene") ? "multi" : "quick"}.title`, fallback);
     const featureFamily = featureFamilyForPath(path);
     if (path === "/admin/support") return adminSupportText("page.list.title", fallback);
     if (path.startsWith("/admin/support/")) return adminSupportText("page.detail.title", fallback);
@@ -9913,6 +9919,8 @@
   function localizedPageDescription(page) {
     const fallback = typeof page.description === "string" ? page.description : "";
     const path = normalizePath(page && (page.routePath || page.path));
+    if (path === "/tools/video") return uiText("mediaHub.video.page.description", fallback);
+    if (path === "/video/create" || path === "/video/multiscene") return uiText(`videoUi.${path.endsWith("multiscene") ? "multi" : "quick"}.description`, fallback);
     const featureFamily = featureFamilyForPath(path);
     if (path === "/admin/support") return adminSupportText("page.list.description", fallback);
     if (path.startsWith("/admin/support/")) return adminSupportText("page.detail.description", fallback);
@@ -11210,12 +11218,16 @@
       context.session.csrfReady === true && context.capabilities && context.capabilities["workspace-draft-save"] === true
     );
     const formFieldsEnabled = enabled || workspaceDraftEnabled;
+    const videoTask = route === "/video/create" || route === "/video/multiscene";
+    const videoText = (key, fallback) => uiText(`videoUi.${key}`, fallback);
     // When an external engine is not enabled, the primary form action is a
     // real, owner-scoped Web draft—not a disabled Bot action. This also makes
     // Enter submit the same safe action as the visible primary button.
     const localAuthoringOnly = !enabled && workspaceDraftEnabled;
     const localDraftAction = workspaceDraftId ? "workspace-draft-update" : "workspace-draft-save";
-    const localDraftLabel = workspaceDraftId ? "Cập nhật bản nháp Web" : "Lưu bản nháp Web";
+    const localDraftLabel = videoTask
+      ? videoText(workspaceDraftId ? "draft.update" : "draft.save", "Lưu bản nháp")
+      : (workspaceDraftId ? "Cập nhật bản nháp Web" : "Lưu bản nháp Web");
     const formAction = localAuthoringOnly ? localDraftAction : page.action;
     const workspaceDraftControl = workspaceDraftEnabled && !localAuthoringOnly
       ? (workspaceDraftId
@@ -11233,7 +11245,7 @@
       : "";
     const flowControls = estimateControl || confirmControl ? `<div class="portal-flow-actions">${estimateControl}${confirmControl}</div>` : "";
     const fieldValues = { ...(flow && flow.input && typeof flow.input === "object" ? flow.input : {}), ...transientFormValues(route) };
-    const primaryActionLabel = localAuthoringOnly ? localDraftLabel : (page.actionLabel || "Tiếp tục");
+    const primaryActionLabel = localAuthoringOnly ? localDraftLabel : (videoTask ? videoText("action.continue", "Tiếp tục") : (page.actionLabel || "Tiếp tục"));
     const primaryDisabled = localAuthoringOnly || enabled ? "" : ` disabled title="${safeText(reason)}"`;
     const boundary = classifyPageBoundary(page, context);
     let boundaryNotice = "";
@@ -11245,6 +11257,31 @@
       boundaryNotice = executionReady
         ? `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>Bộ tạo AI:</strong> Bộ tạo này đã sẵn sàng kết nối thực thi runtime.</div>`
         : `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>Bộ tạo AI (Chế độ An toàn):</strong> Tính năng này thuộc Bot AI và đang trong chế độ an toàn trên Web. Thông số của bạn được lưu thành Bản nháp Web an toàn mà không trừ Xu.</div>`;
+    }
+    if (videoTask) {
+      const fields = page.fields.map((field) => ({
+        ...field,
+        labelKey: `videoUi.field.${field.name}.label`,
+        placeholderKey: field.placeholder ? `videoUi.field.${field.name}.placeholder` : undefined,
+        helpKey: field.help ? `videoUi.field.${field.name}.help` : undefined,
+        emptyLabel: field.emptyLabel ? videoText(`field.${field.name}.empty`, field.emptyLabel) : undefined,
+        options: Array.isArray(field.options) ? field.options.map((option) => {
+          const value = Array.isArray(option) ? option[0] : option;
+          const label = Array.isArray(option) ? option[1] : option;
+          return { value, label: videoText(`option.${field.name}.${value}`, label) };
+        }) : field.options
+      }));
+      const coreNames = ["brief", "scene_count", "format"];
+      const coreFields = coreNames.map((name) => fields.find((field) => field.name === name)).filter(Boolean);
+      const optionalFields = fields.filter((field) => !coreNames.includes(field.name));
+      const steps = ["input", "plan", "quote", "confirm", "progress", "result", "recovery"];
+      const guidance = `<details class="portal-video-flow-disclosure" data-video-flow-help><summary>${safeText(videoText("guide.title", "Xem quy trình xử lý"))}</summary><ol>${steps.map((key) => `<li>${safeText(videoText(`guide.${key}`, key))}</li>`).join("")}</ol></details>`;
+      return `${guidance}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(videoText("form.title", "Chuẩn bị video"))}</h2><p class="portal-card-subtitle">${safeText(videoText(localAuthoringOnly ? "form.draft" : enabled ? "form.ready" : "form.guarded", reason))}</p></div></div>
+        <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>
+          ${renderFields(coreFields, formFieldsEnabled, context, fieldValues)}
+          <details class="portal-video-settings-disclosure" data-video-optional-settings><summary>${safeText(videoText("settings.title", "Thiết lập thêm"))}</summary>${renderFields(optionalFields, formFieldsEnabled, context, fieldValues)}</details>
+          <div class="portal-form-footer"><span class="portal-form-note">${safeText(videoText(localAuthoringOnly ? "form.draftNote" : "form.processingNote", ""))}</span>${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button></div>
+        </form>${flowControls}</section>`;
     }
     return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.layout === "auth" ? "Thông tin xác thực" : "Chuẩn bị yêu cầu"}</h2><p class="portal-card-subtitle">${enabled ? "Yêu cầu sẽ được chuyển tới lớp tích hợp thông qua custom event, không gọi trực tiếp từ UI." : (workspaceDraftEnabled ? "Bạn có thể soạn và lưu brief Web; estimate, job và integration ngoài chỉ bật theo capability riêng." : safeText(reason))}</p></div>${badge(flowStatus || stateFor(page, context))}</div>
       ${boundaryNotice}
@@ -24618,51 +24655,33 @@
   }
 
   function renderVideoHub(page, context) {
-    return renderMediaHubPage(page, context, {
-      pageClass: "portal-video-hub",
-      kicker: "AI Video Operations",
-      heading: "Trung tâm sản xuất & biên tập video AI",
-      subtext: "Điều phối toàn bộ quy trình hoàn thiện video từ Video Finishing, Ghép ảnh MP4, Trích xuất Poster đến các workflow sản xuất video AI do Bot quản lý.",
-      stats: {
-        toolsCount: 8,
-        toolsLabel: "Workflow Video",
-        qualityBadge: "HD / 4K",
-        qualityLabel: "Độ phân giải cao",
-        safetyBadge: "Canonical",
-        safetyLabel: "Kiểm soát chi phí"
-      },
-      quickActions: [
-        { title: "Video Finishing Lab (Đổi tỷ lệ & Hoàn thiện MP4)", text: "Chỉnh tỷ lệ 9:16, 16:9, 1:1, 4:5, fit crop/blur_pad, sharpen và xuất MP4 private.", href: "/video/finishing", primary: true },
-        { title: "Frame Video Lab (Ghép ảnh thành MP4)", text: "Ghép chuỗi 2–8 ảnh liên tiếp từ Asset Vault thành video chuyển động.", href: "/video/frame-sequence" },
-        { title: "Video Poster Lab (Trích xuất JPEG)", text: "Trích xuất khung hình JPEG chất lượng cao từ video private.", href: "/video/poster" }
-      ],
-      workflowGroups: [
-        {
-          title: "Biên tập & Hoàn thiện (Cục bộ trên Web)",
-          text: "Các công cụ xử lý MP4 trực tiếp trên Asset Vault đã sẵn sàng hoạt động.",
-          items: [
-            { title: "Video Finishing Lab", text: "Đổi tỷ lệ khung hình, chuẩn hóa độ phân giải và hoàn thiện MP4 có kiểm chứng.", href: "/video/finishing", icon: ICONS.video, status: "ready" },
-            { title: "Frame Video Lab", text: "Ghép chuỗi 2–8 ảnh liên tiếp thành video chuyển động MP4.", href: "/video/frame-sequence", icon: ICONS.video, status: "ready" },
-            { title: "Video Poster Lab", text: "Trích xuất khung hình JPEG chất lượng cao từ video trong Asset Vault.", href: "/video/poster", icon: ICONS.image, status: "ready" },
-            { title: "Video Preview & Inspector", text: "Xem trước MP4/WebM private trong Blob an toàn của phiên hiện tại.", href: "/video/preview", icon: ICONS.video, status: "ready" }
-          ]
-        },
-        {
-          title: "Sản xuất video AI (Bot điều phối)",
-          text: "Các workflow sinh video AI diện rộng do Bot/Core-Bridge canonical quản lý.",
-          items: [
-            { title: "Video Studio Pro", text: "Lập brief, scene plan, timeline và storyboard chi tiết để review nội bộ.", href: "/video-studio", icon: ICONS.video, status: "ready" },
-            { title: "Text-to-Video", text: "Cần Bot companion canonical; chưa có provider video AI chạy trực tiếp trong browser.", href: "/video/text-to-video", icon: ICONS.video, status: "guarded" },
-            { title: "Video nhiều cảnh", text: "Cần Bot canonical engine để ước tính và chạy job render nhiều cảnh.", href: "/video/multiscene", icon: ICONS.video, status: "guarded" },
-            { title: "Video dài tập", text: "Cần Bot canonical engine để xử lý video dài tập.", href: "/video/long", icon: ICONS.video, status: "guarded" },
-            { title: "Video thương mại", text: "Cần Bot canonical engine để render video sản phẩm thương mại.", href: "/video/product", icon: ICONS.video, status: "guarded" },
-            { title: "Mux Audio & Video", text: "Chờ adapter mux canonical được công bố; không ghép file cục bộ.", href: "/video/mux", icon: ICONS.video, status: "guarded" }
-          ]
-        }
-      ],
-      boundaryTitle: "Kiểm soát sản xuất & Bản quyền",
-      boundaryText: "Video Operations Hub chỉ điều phối các job đã qua ước tính chi phí Xu minh bạch và xác nhận của bạn. Không phát sinh chi phí ẩn hoặc gọi provider chưa qua kiểm duyệt."
-    });
+    const t = (key, fallback, params) => uiText(`mediaHub.video.${key}`, fallback, params);
+    const quick = [
+      ["finishing", "/video/finishing"],
+      ["frames", "/video/frame-sequence"],
+      ["poster", "/video/poster"]
+    ];
+    const groups = [
+      ["editing", [["preview", "/video/preview", "ready"]]],
+      ["creation", [
+        ["planning", "/video-studio", "ready"], ["textVideo", "/video/text-to-video", "guarded"],
+        ["multiscene", "/video/multiscene", "guarded"], ["long", "/video/long", "guarded"],
+        ["product", "/video/product", "guarded"], ["mux", "/video/mux", "guarded"]
+      ]]
+    ];
+    const count = new Set(quick.map((item) => item[1]).concat(groups.flatMap((group) => group[1].map((item) => item[1])))).size;
+    return `<article class="portal-page portal-media-hub portal-video-hub">
+      ${renderHero(page, context)}
+      <section class="portal-media-hub-compact-summary"><dl><div><dt>${count}</dt><dd>${safeText(t("toolsLabel", "công cụ video"))}</dd></div></dl><p>${safeText(t("subtext", "Mở công cụ để xem thông số và khả năng xử lý."))}</p></section>
+      <section class="portal-document-board-actions" aria-label="${safeText(t("quick.title", "Biên tập video"))}">
+        <div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("quick.title", "Biên tập video"))}</h2><p class="portal-card-subtitle">${safeText(t("quick.description", "Chọn tác vụ bạn cần."))}</p></div></div>
+        <div class="portal-document-board-action-grid">${quick.map(([key, href], index) => `<a class="portal-document-board-action ${index === 0 ? "portal-document-board-action--primary" : ""}" href="${safeText(href)}"><strong>${safeText(t(`${key}.title`, key))}</strong><span>${safeText(t(`${key}.description`, ""))}</span><b aria-hidden="true">→</b></a>`).join("")}</div>
+      </section>
+      <section class="portal-document-board-workflows"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("catalog.title", "Các công cụ khác"))}</h2><p class="portal-card-subtitle">${safeText(t("catalog.description", "Chọn theo mục tiêu của video."))}</p></div></div>
+        <div class="portal-document-board-workflow-groups">${groups.map(([group, items]) => `<section class="portal-document-board-workflow-group"><div class="portal-document-board-workflow-heading"><div><h2>${safeText(t(`${group}.title`, group))}</h2><p>${safeText(t(`${group}.description`, ""))}</p></div><span>${safeText(t("count", "{count} công cụ", { count: items.length }))}</span></div><div class="portal-module-grid">${items.map(([key, href, state]) => `<a class="portal-module-card" data-tool-state="${safeText(state)}" href="${safeText(href)}"><div class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.video)}</div><div class="portal-module-copy"><h3>${safeText(t(`${key}.title`, key))}</h3><p>${safeText(t(`${key}.description`, ""))}</p><span class="portal-module-link">${safeText(t(state === "ready" ? "actions.open" : "actions.details", "Mở công cụ"))} <b aria-hidden="true">→</b></span></div></a>`).join("")}</div></section>`).join("")}</div>
+      </section>
+      <section class="portal-card portal-card-pad"><h2 class="portal-card-title">${safeText(t("boundary.title", "Trước khi xử lý"))}</h2><p>${safeText(t("boundary.description", ""))}</p></section>
+    </article>`;
   }
 
   function renderImageSuiteHub(page, context) {
@@ -30402,20 +30421,21 @@
 
   function renderWorkspace(page, context) {
     const route = page.routePath || page.path;
+    const videoTask = route === "/video/create" || route === "/video/multiscene";
     const subtitleStudioCompanion = renderSubtitleStudioCompanionLink(page);
     const flow = context.featureFlows && context.featureFlows[route];
     const flowOutput = flow
       ? `<div class="portal-state" data-state="${safeText(flow.status || "guarded")}"><span class="portal-state-icon" aria-hidden="true">○</span><div><h3>${safeText(flow.message || "Core Bridge đã cập nhật trạng thái.")}</h3><p>Trạng thái canonical: ${safeText(STATE_LABELS[flow.status] || flow.status || "guarded")}. ${flow.status === "completed" ? "Output chỉ được cấp qua asset đã xác minh." : "Bản nháp planning có thể hiển thị; output engine vẫn phải qua job và asset hợp lệ."}</p></div></div>${renderCanonicalFlow(flow, route)}${renderFeatureTracking(flow)}`
-      : renderEmpty("Chờ Engine Web hoặc integration tùy chọn", "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○");
+      : renderEmpty(videoTask ? uiText("videoUi.output.empty", "Chưa có kết quả video") : "Chờ Engine Web hoặc integration tùy chọn", videoTask ? uiText("videoUi.output.waiting", "") : "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○");
     const isCanonicalVoiceRoute = page.path === "/voice" || page.path.startsWith("/voice/");
     const voiceVault = isCanonicalVoiceRoute && page.path !== "/voice/outputs" ? renderVoiceVault(context) : "";
-    const interactiveWorkbench = renderInteractiveFeatureWorkbench(page, context);
+    const interactiveWorkbench = videoTask ? "" : renderInteractiveFeatureWorkbench(page, context);
     const isLegacySubDubRoute = ["/subtitle", "/subtitle/create", "/translate", "/dubbing", "/asr"].includes(route);
     const formContent = isLegacySubDubRoute ? renderSubDubRedirectPlaceholder(route) : renderFormCard(page, context);
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
+    return `<article class="portal-page${videoTask ? " portal-feature-workspace--video-task" : ""}">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       ${interactiveWorkbench}
       <div class="portal-work-grid"><div>${formContent}${subtitleStudioCompanion}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside></div>
-      ${voiceVault}${renderFeatureBotHandoff(page, context, flow)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Output & trạng thái</h2><p class="portal-card-subtitle">Không tạo text, media, transcript hoặc file giả để thay thế engine thật.</p></div>${badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section></article>`;
+      ${voiceVault}${videoTask ? "" : renderFeatureBotHandoff(page, context, flow)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${videoTask ? safeText(uiText("videoUi.output.title", "")) : "Output & trạng thái"}</h2>${videoTask ? "" : '<p class="portal-card-subtitle">Không tạo text, media, transcript hoặc file giả để thay thế engine thật.</p>'}</div>${badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section></article>`;
   }
 
   function renderVoiceVault(context) {

@@ -1,5 +1,19 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Checkpoint giao diện Video — 2026-10-07
+
+Ứng viên phát hành từ main `9f2ba35a85608495cb34d918dfc0af62f4dc2414`.
+Ba màn hình đang khép: `/tools/video`, `/video/create`, `/video/multiscene`.
+Hub giữ 10 điểm đến duy nhất và xếp thẻ dọc. Hai form giữ nguyên input/action
+của main; nội dung, số cảnh và tỷ lệ hiện trước phần thiết lập tùy chọn. Hướng
+dẫn có thể mở bằng bàn phím; khung Video mẫu không còn xuất hiện ở hai route.
+Thẩm quyền xử lý/giá/Xu vẫn do máy chủ xác nhận. Đây là bản sửa UI; trạng thái
+merge/deploy/live phải đối chiếu riêng trong PR, không suy từ kiểm thử localhost.
+Voice → Music → SubDub được ưu tiên sau khi checkpoint này merge; các màn hình
+Video còn lại tiếp tục sau các tính năng khác.
+
+Các phần có ngày/SHA cũ dưới đây là lịch sử, không xác nhận runtime hiện tại.
+
 > Phạm vi đo: `origin/main` và production Web đến SHA `cc3b4689f85d7c18ebb31b500b1eda1aca20cb6f` ngày 10/09/2026; A09 Admin Operations được đo local trên đúng BASE này. Tham chiếu Bot chỉ mô tả ranh giới bridge đã nghiệm thu trước đó.
 > Tài liệu này mô tả hành vi có bằng chứng trong source; không thay thế hướng dẫn deploy hay quyền phê duyệt của Owner.
 

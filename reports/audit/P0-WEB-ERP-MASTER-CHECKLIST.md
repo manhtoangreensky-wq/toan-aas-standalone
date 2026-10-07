@@ -1,5 +1,29 @@
 # MASTER CHECKLIST: P0.WEB.ERP.PRODUCTION_COMPLETION
 
+## VIDEO UI CHECKPOINT — 2026-10-07
+
+Owner chốt: merge phần Video đang làm rồi ưu tiên Voice → Music → SubDub →
+các tính năng khác, quay lại Video còn lại sau cùng. Các dòng SHA bên dưới là
+mốc lịch sử; bản phát hành này dựa trên standalone main `9f2ba35`.
+
+- [x] Hub Video, Video nhanh và Video nhiều cảnh: VI/EN/ZH × sáng/tối ×
+  1440×900/375×812 = 36/36 kiểm tra giao diện thật trên QA cô lập.
+- [x] 10 điểm đến duy nhất; tool/input đầu tiên hiện trong viewport, form dọc,
+  hướng dẫn và thiết lập thêm thao tác bằng Enter, menu đóng/mở/Escape đúng.
+- [x] Không tràn ngang, drawer đóng không che nội dung, không có khung mẫu
+  RTX4090/video tạo sẵn hoặc tuyên bố trừ Xu giả trên hai form.
+- [x] Màu computed: chữ nhỏ nhất 4.515:1; viền input nhỏ nhất 3.399:1.
+- [x] 60 ảnh QA gắn hash nguồn/ảnh; runtime của ba route 0 lỗi.
+- [x] Cập nhật spec, nghiệp vụ, đối chiếu tài liệu gốc và case nguồn Tester.
+- [ ] Official Web contracts và PR CI; commit/push/merge/deploy ghi bằng chứng
+  riêng trong PR khi hoàn tất, không suy từ HTTP 200 hay test local.
+- [ ] Lỗi ViewTransition ở bước đăng nhập/điều hướng và cổng motion cuối còn mở.
+- [ ] Self-shot/trend/storyboard/Video dài/motion-guide và các công cụ biên tập
+  chưa thuộc checkpoint này, giữ mở để quay lại đúng điểm đang làm.
+- Spec: `docs/superpowers/specs/2026-10-07-video-ui-checkpoint-release.md`.
+- `PROVIDER_CALLS=0 WALLET_MUTATIONS=0 PRODUCTION_DATA_MUTATIONS=0`;
+  API/engine của main được giữ nguyên, parent goal ACTIVE.
+
 **Hệ sinh thái:** TOAN AAS Web App & Admin ERP  
 **Runtime Target:** tg.toanaas.vn (/opt/toanaas/webapp)  
 **Base / Runtime SHA:** 03325cf577de4fd090abea9088c8980a6a028e29  
