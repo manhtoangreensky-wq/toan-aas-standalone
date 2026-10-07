@@ -184,7 +184,7 @@ _PORTAL_SHELL_TITLES = {
     "/operations": {"vi": "Operations Autopilot", "en": "Operations Autopilot", "zh": "Operations Autopilot"},
     "/admin/operations": {"vi": "Operations Autopilot", "en": "Operations Autopilot", "zh": "Operations Autopilot"},
     "/history": {"vi": "Lịch sử & Nhật ký · TOAN AAS", "en": "History & Logs · TOAN AAS", "zh": "历史与日志 · TOAN AAS"},
-    "/tools/video": {"vi": "Video Studio & Tác vụ · TOAN AAS", "en": "Video Operations · TOAN AAS", "zh": "视频工作台 · TOAN AAS"},
+    "/tools/video": {"vi": "Xưởng video · TOAN AAS", "en": "Video workspace · TOAN AAS", "zh": "视频工作台 · TOAN AAS"},
     "/tools/image": {"vi": "Image Suite & Tác vụ · TOAN AAS", "en": "Image Suite · TOAN AAS", "zh": "图像工作台 · TOAN AAS"},
     "/voice": {"vi": "Voice Hub & TTS · TOAN AAS", "en": "Voice Hub & TTS · TOAN AAS", "zh": "语音工作台 · TOAN AAS"},
     "/music": {"vi": "Music & SFX Hub · TOAN AAS", "en": "Music & SFX Hub · TOAN AAS", "zh": "音乐与音效工作台 · TOAN AAS"},

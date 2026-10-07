@@ -1,5 +1,16 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Đối chiếu checkpoint Video — 2026-10-07
+
+- Khung mẫu từng ghi “RTX 4090 VIDEO RENDER ENGINE SẴN SÀNG”, kịch bản mẫu và
+  nút tuyên bố `-10 Xu`. Đây không phải bằng chứng xử lý thực; hai màn hình
+  `/video/create` và `/video/multiscene` hiện dùng form và kết quả thật của máy chủ.
+- Hub từng ghi 8 công cụ dù 10 điểm đến khác nhau và lặp 3 link; hiện đếm từ
+  chính danh mục, mỗi điểm đến một lần.
+- Các bước hướng dẫn giải thích thứ tự; việc nhìn thấy hướng dẫn không có nghĩa
+  dịch vụ đã chạy hoặc kết quả đã được tạo. API/engine giữ nguyên main.
+- Toàn bộ nhóm Video và motion chưa hoàn tất; bản sửa này chỉ khép ba route trên.
+
 > Mục đích: đối chiếu yêu cầu nguồn với hành vi có bằng chứng ở source hiện tại.
 > Trạng thái production/main: `cc3b4689f85d7c18ebb31b500b1eda1aca20cb6f`; manual top-up PR #420, `/admin/login` PR #421 và progressive disclosure PR #422 đã accepted live; A09 shell PR #423 và Support PR #424 đã deploy nhưng A09 toàn Admin còn mở. Production `MANUAL-1` vẫn pending và không được sửa/duyệt/cộng Xu.
 

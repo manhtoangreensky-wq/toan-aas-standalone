@@ -42,7 +42,7 @@ def test_behavioral_video_finishing_e2e(tmp_path: Path, monkeypatch: pytest.Monk
     """UI route /tools/video & /video/finishing -> POST /api/v1/video-transform-operations -> verified MP4 artifact."""
     shell = copyfast_pages.render_portal("/tools/video")
     assert shell.status_code == 200
-    assert b"Video Operations" in shell.body or b"Video Studio" in shell.body
+    assert "Xưởng video · TOAN AAS".encode("utf-8") in shell.body
 
     finishing_shell = copyfast_pages.render_portal("/video/finishing")
     assert finishing_shell.status_code == 200
