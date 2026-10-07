@@ -1,12 +1,13 @@
 task: WEBAPP-VOICE-UI-CLOSEOUT-20261007
 phase: VERIFY
-status: COMPOSER_LOCAL_VERIFIED_VOICE_FLOW_FIXTURES_NEXT
+status: COMPOSER_RECEIPTS_DETAIL_BEHAVIOR_VERIFIED_TTS_FLOW_STATES_NEXT
 goal_status: ACTIVE
 workspace: C:/Users/toann/Documents/Codex/2026-07-10/1-ngu-n-ch-nh-v/work/toanaas-video-ui-release-20261007
 branch: fix/voice-ui-closeout-20261007
 base_sha: 8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952
 head_sha: CURRENT_GIT_HEAD_RESOLVE_WITH_GIT_REV_PARSE
-code_status: COMMITTED_LOCAL_UNPUSHED_NOT_DEPLOYED
+code_status: COMMITTED_LOCAL_RECEIPT_REAUDIT_CHECKPOINT_UNPUSHED_NOT_DEPLOYED
+code_checkpoint_sha: 2983174f33cde489a182b2523b328f8ce0b01c4d
 checkpoint_commit: LOCAL_CHECKPOINT_RESOLVE_WITH_GIT_REV_PARSE
 spec: docs/superpowers/specs/2026-10-07-voice-ui-closeout.md
 master_checklist: ../toanaas-webapp-ui-closeout-20260929/reports/audit/P0-WEB-ERP-MASTER-CHECKLIST.md
@@ -31,9 +32,9 @@ completed_local:
   - Direction Composer fixed copy/result guard uses localized catalogue keys;
     current 12-case browser matrix passes.
 verification:
-  node: 44_PASS_0_FAIL
-  python_targeted: 42_PASS_in_3.54s
-  python_extended: 117_PASS_2_BASELINE_MATCHING_FAILURES_in_4.65s
+  node: 65_PASS_0_FAIL_direct_renderer_behavior
+  python_targeted: 41_PASS_in_2.70s
+  python_extended: 117_PASS_2_BASELINE_MATCHING_FAILURES_in_4.39s
   new_failing_ids: 0
   baseline_failure_ids:
     - test_video_music_and_dubbing_forms_forward_the_bot_planning_controls
@@ -51,6 +52,10 @@ verification:
   direction_composer_browser: 12_of_12_complete_0_failures
   direction_composer_text_min_contrast: 5.944
   direction_composer_control_border_min_contrast: 3.399
+  composer_actual_receipt_core: 12_of_12
+  composer_actual_receipt_extended_and_invalid_clear: 12_of_12
+  final_combined_composer_detail: 24_of_24_source_stable_zero_overflow_zero_route_runtime_errors
+  settled_mobile_visual: light_dark_375px_opacity_1_no_finite_animation_running
   voice_bridge_readonly_matrix: 60_of_60_complete_0_failures
   voice_bridge_text_min_contrast: 4.515
   voice_bridge_control_border_min_contrast: 3.399
@@ -62,18 +67,21 @@ qa:
   origin: http://127.0.0.1:4186
   storage: isolated_existing_QA_only
   account: one_existing_synthetic_account_no_new_account
-  server_session: 98415
+  server_session: 23534
   voice_fixture: UI_only_no_voice_DB_write_no_capability_override_no_audio
   populated_evidence: ../../qa/20261007-video-uiux/voice-inventory-populated-final/browser-review.json
   empty_evidence: ../../qa/20261007-video-uiux/voice-inventory-empty-final/browser-review.json
   inventory_evidence_scope: earlier_recorded_snapshot_not_current_Studio_source
   studio_populated_evidence: ../../qa/20261007-video-uiux/voice-studio-compact-populated-final/browser-review.json
   studio_empty_evidence: ../../qa/20261007-video-uiux/voice-studio-compact-empty-final/browser-review.json
-  portal_js_sha256: 9308f79ae19742c7038f85d26141e9675c470d468b02f5e1d35a5622c7cc2a57
-  portal_i18n_sha256: 87e0da741318ec16551f4aa3e111def9b0375c52550036d793129618f64c001f
-  portal_theme_sha256: 64a906584e998d6635f7e427eaecc73a7310dafe1797df101a6f337072846a81
+  current_evidence: ../../qa/20261007-video-uiux/voice-receipt-detail-settled-20261008/browser-review.json
+  receipt_fixtures: tests/fixtures/voice-direction-composer-receipts.json
+  receipt_generator: ../../qa/20261007-video-uiux/voice_direction_receipt.py
+  portal_js_sha256: ffb3be79dc7da5267a2f80e2f040bdce83e1a7b615492732a0e9db9ecd88f102
+  portal_i18n_sha256: 8596a30060fee4065c657b772db0e0773d00092ca60a6e340ed41248bf95c6fa
+  portal_theme_sha256: 81baff5e721857125c2ecf633559e1aa5d51445985fee1eec022281de514368b
 remaining:
-  - Next single slice is safe Composer result/missing/failed and cue receipt fixtures, then Voice TTS quote/progress/result states.
+  - Next single slice is Voice TTS quote/confirmation/progress/result/error presentation using UI-only fixtures; no provider or wallet actions.
   - Shared shell locale and global motion gate remain open.
   - Existing QA background core/auth/telegram GETs remain pending 17-to-64 seconds; health 200 and visible UI do not prove those reads complete. No API change within UI scope.
   - Quote/confirmation/progress/result/error presentation acceptance.
@@ -87,6 +95,6 @@ safety:
   production_data_mutations: 0
   API_engine_changes: false
   production_ENV_changes: false
-  commit: false
+  commit: true
   push: false
   deploy: false

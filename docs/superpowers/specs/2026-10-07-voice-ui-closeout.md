@@ -36,7 +36,7 @@ Scope: Voice presentation and fixed feedback text only. Paid provider calls,
 production business actions, API/engine/wallet/ENV changes remain zero.
 Do not reuse the older dirty UI worktree as the engine/runtime authority.
 
-Status: `CORE_AND_INVENTORY_CHECKPOINT / STUDIO_LIST_NEW_LOCAL_VERIFIED / DETAIL_COMPOSER_NEXT`.
+Status: `COMPOSER_RECEIPT_AND_DETAIL_BEHAVIOR_VERIFIED / TTS_FLOW_STATES_NEXT`.
 
 ## Initial real-render findings
 
@@ -186,9 +186,10 @@ production mutations or create audio. Direction composer follows this slice.
 - [x] Detail Node locale contract: 3/3. Aggregate current Voice Node tests:
   41 passed/0 failed. Python focused current run: 117 passed plus the same two
   baseline failures; no new failure ID.
-- [ ] Missing/failed/no-detail server states and mismatched cue receipt need a
-  direct UI-only fixture check; do not infer them from active/revoked evidence.
-- [ ] Direction composer is the next single Voice slice.
+- [x] Missing/loading/failed/guarded/wrong-record and mismatched cue receipts
+  verified by direct production-renderer behavioral tests in the 2026-10-08
+  re-audit below; not inferred from active/revoked screenshots.
+- [x] Direction Composer progressed to actual-receipt re-audit below.
 
 Detail evidence: `qa/20261007-video-uiux/voice-studio-detail-populated-final7`
 and `voice-studio-detail-revoked-final4`. These are isolated QA fixtures only.
@@ -206,9 +207,8 @@ and `voice-studio-detail-revoked-final4`. These are isolated QA fixtures only.
   3.399:1. No provider, audio, wallet or persistence action was submitted.
 - [x] Aggregate current Node Voice tests: 44 passed/0 failed. Python focused
   current run: 117 passed plus the same two baseline failures; no new failure ID.
-- [ ] Composer result fixture with a real deterministic server receipt, and
-  final missing/failed/mismatched cue receipts. These require safe QA fixtures,
-  not production/provider calls.
+- [x] Actual server-composer receipts and negative receipt clearing verified
+  in the 2026-10-08 re-audit below. Provider/audio/DB I/O blocked in generator.
 - [ ] Shared shell locale, known setup ViewTransition warning, quote/progress/
   result UI for TTS and final all-site motion gate remain open.
 
@@ -223,3 +223,57 @@ Composer evidence: `qa/20261007-video-uiux/voice-direction-composer-final3`.
 - [ ] Quote/confirmation/progress/result/error states still need UI-only flow
   fixtures. No real estimate, confirm, provider, wallet or audio request was
   made; do not infer those states from the 60 read-only cases.
+
+## Receipt/locale re-audit — 2026-10-08
+
+The prior Composer 12-case pass covered the empty/form screen, not a valid
+result. The old QA runner mounted two fixtures; the second overwrote the full
+receipt with `{composer: ...}`. Removing that QA duplication and using receipts
+from the unchanged server composer exposed real presentation defects; this
+checkpoint supersedes broad earlier Composer-copy claims.
+
+- [x] Server-generated core/extended receipts retained in
+  `tests/fixtures/voice-direction-composer-receipts.json`. Generator calls only
+  the deterministic server functions with network/SQLite disabled; no account,
+  persistence, provider, job, wallet or engine API action.
+- [x] Replace source-grep locale tests with direct execution of the production
+  normalizer, form and result renderer. Initial RED: 9 failed/3 passed. Form
+  options/help mixed languages; result exposed internal option IDs and four
+  note keys. Field names/values/limits and strict receipt validation unchanged.
+- [x] Translate five fields/options, page/document/current-nav titles and
+  four note labels; hide internal IDs, translate `off`; display exact canned
+  guidance through UI catalogue without changing user text, unknown text or
+  the source receipt. Invalid/provider-called/mismatched receipts stay empty.
+- [x] Remove repeated intro/count panels; form first, vertical fields/options,
+  scope disclosure keyboard-operable. Mobile first textarea is now visible
+  around y=364–388 instead of y≈1,100. Blue/navy palette unchanged.
+- [x] Fix the empty assistant button: hide its label only, retain the chat SVG.
+  Mobile icon visible in header; installation remains available on Account.
+- [x] Core receipt matrix: 12/12. Extended receipt + valid→invalid clearing:
+  12/12. Both VI/EN/ZH × light/dark × 1440/375, three choices, preserved custom
+  input, no fake audio/table, no overflow/runtime, keyboard scope/selection.
+  Invalid state clears the prior sample instead of displaying stale output.
+- [x] Final combined core+detail matrix `voice-receipt-detail-settled-20261008`
+  is 24/24, source-stable, zero overflow/route runtime, text min 4.515:1 and
+  control border min 3.399:1. Known setup ViewTransition warning retained.
+- [x] Independent settled mobile visual: both themes, computed opacity 1 for
+  all checked text/ancestors, no finite animation running. This is screenshot
+  readiness only; not the final motion smoothness/performance gate.
+- [x] Detail behavioral renderer tests now cover missing/loading/failed/wrong
+  record, revoked/archived capability locks and mismatched/provider/audio cue
+  receipts. Also fix blank status label, missing version-restore label and
+  mislabeling `local_deterministic_draft_only` as manual. Source/IDs unchanged.
+- [x] Node aggregate 65 passed/0 failed; Python contracts 41 passed; extended
+  safety run 117 passed/2 matching baseline failures. API/DB/engine/integration/
+  motion/CI protected paths byte-identical to Video merge base `8a040d0`.
+- [ ] TTS quote/confirmation/progress/result/error presentation is NEXT.
+- [ ] Whole-site shared locale and motion gates remain open. No Voice release
+  or live-production outcome is inferred from these isolated QA results.
+
+Current evidence: `qa/20261007-video-uiux/voice-receipt-detail-settled-20261008`,
+`voice-direction-extended-invalid-final`, `voice-composer-settled-visual`.
+Earlier failed/incomplete fixture attempts are retained and are NOT PASS.
+
+Code checkpoint: `2983174f33cde489a182b2523b328f8ce0b01c4d`, local only.
+Next allowed work: TTS flow-state presentation and its fixtures. Music remains
+after Voice, and remaining Video/motion stay in the Owner's ordered queue.
