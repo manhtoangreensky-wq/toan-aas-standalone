@@ -211,3 +211,5 @@ and `voice-studio-detail-revoked-final4`. These are isolated QA fixtures only.
   not production/provider calls.
 - [ ] Shared shell locale, known setup ViewTransition warning, quote/progress/
   result UI for TTS and final all-site motion gate remain open.
+
+Composer evidence: `qa/20261007-video-uiux/voice-direction-composer-final3`.
