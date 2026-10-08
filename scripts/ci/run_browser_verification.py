@@ -1341,7 +1341,9 @@ async def run_browser_verification(
 
                         // Fail-closed resolution of primary CTA
                         const primaryCta = document.querySelector(
-                            '.portal-document-board-action--primary, button.portal-button--primary, a.portal-button--primary, button[data-free-tool-action], .portal-document-board-action'
+                            location.pathname === '/voice'
+                                ? ".portal-voice-hub a[data-voice-primary][href='/voice/tts']"
+                                : '.portal-document-board-action--primary, button.portal-button--primary, a.portal-button--primary, button[data-free-tool-action], .portal-document-board-action'
                         );
                         if (!primaryCta) {
                             return {
