@@ -732,12 +732,16 @@
     ],
     music: [
       { name: "brief", label: "Brief âm nhạc", control: "textarea", placeholder: "Bối cảnh, mood, nhịp độ, công cụ, đối tượng nghe…", help: "Bot sẽ chặn yêu cầu mô phỏng nghệ sĩ/bài hát hoặc giai điệu có bản quyền.", required: true, minLength: 1 },
+      { name: "tier", label: "Gói chất lượng (Tier)", control: "select", options: [{ value: "basic", label: "🎵 Cơ bản — 130 Xu" }, { value: "standard", label: "🎶 Tiêu chuẩn — 150 Xu" }, { value: "premium", label: "💎 Cao cấp — 200 Xu" }], emptyLabel: "Chọn gói chất lượng canonical", required: true, help: "Bắt buộc chọn gói chất lượng; không mặc định âm thầm." },
       { name: "mode", label: "Loại định hướng", control: "select", options: ["background", "melody", "custom"], help: "Chỉ tạo gợi ý prompt canonical; chưa gọi provider tạo nhạc." },
       { name: "duration_seconds", label: "Thời lượng dự kiến (giây)", type: "number", placeholder: "Ví dụ: 30", help: "Tuỳ chọn planning; Bot dùng mặc định canonical khi để trống. Browser không tính Xu.", min: 1, max: 600, step: 1, inputMode: "numeric" }
     ],
     musicSong: [
       { name: "brief", label: "Brief bài hát", control: "textarea", placeholder: "Thông điệp, mood, cấu trúc, CTA và lời gốc mong muốn…", help: "Không yêu cầu cover, remix hoặc bắt chước nghệ sĩ/bài hát cụ thể.", required: true, minLength: 1 },
+      { name: "tier", label: "Gói chất lượng (Tier)", control: "select", options: [{ value: "basic", label: "🎵 Cơ bản — 200 Xu" }, { value: "standard", label: "🎶 Tiêu chuẩn — 250 Xu" }, { value: "premium", label: "💎 Cao cấp — 300 Xu" }], emptyLabel: "Chọn gói chất lượng canonical", required: true, help: "Bắt buộc chọn gói bài hát; không mặc định âm thầm." },
       { name: "mode", label: "Kiểu sáng tác", control: "select", options: [{ value: "lyrics", label: "Bài hát có lời gốc" }, { value: "melody", label: "Giai điệu / instrumental" }, { value: "custom", label: "Tuỳ biến theo brief" }], help: "Giá trị này được gửi trực tiếp tới helper prompt canonical của bot.", required: true },
+      { name: "vocal_mode", label: "Giọng hát (Vocal Mode)", control: "select", options: [{ value: "auto", label: "Tự động" }, { value: "male", label: "Giọng Nam" }, { value: "female", label: "Giọng Nữ" }, { value: "duet", label: "Song ca Nam & Nữ" }], emptyLabel: "Chọn kiểu giọng hát canonical", help: "Tuỳ chọn kiểu vocal thực thi." },
+      { name: "lyrics", label: "Lời bài hát (Lyrics)", control: "textarea", placeholder: "Lời bài hát gốc (Verse 1, Chorus, Verse 2...). Nếu để trống sẽ tạo từ brief.", help: "Lời bài hát tùy chọn hoặc bot tự phát triển từ brief." },
       { name: "song_length_mode", label: "Dạng bài hát", control: "select", options: [{ value: "seconds", label: "Theo số giây" }, { value: "half", label: "Bản nửa" }, { value: "full", label: "Bản đầy đủ" }], emptyLabel: "Chọn dạng bài hát canonical", help: "Chế độ half/full được bot quy đổi theo product kind canonical.", required: true },
       { name: "duration_seconds", label: "Thời lượng khi chọn theo số giây", type: "number", placeholder: "Ví dụ: 30", min: 1, max: 600, step: 1, inputMode: "numeric", help: "Bắt buộc khi chọn Theo số giây; half/full dùng product kind canonical." }
     ],
