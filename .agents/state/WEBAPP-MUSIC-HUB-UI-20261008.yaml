@@ -1,10 +1,21 @@
 task: WEBAPP-MUSIC-HUB-UI-20261008
-phase: VERIFY
-status: MUSIC_EXACT_UI_QA_PASS_RELEASE_CI_PENDING
+phase: REPORT
+status: MUSIC_PR_618_DEPLOYED_SOURCE_VERIFIED_CLOSED_LOCKED
 goal_status: ACTIVE
 workspace: C:/Users/toann/Documents/Codex/2026-07-10/1-ngu-n-ch-nh-v/work/toanaas-video-ui-release-20261007
 branch: fix/music-ui-closeout-20261008
 base_sha: e405cbee28f0687f528eab7d66a71ef1623125f4
+merge_sha: e70175a5f8b4d30bdf99de939b80d2de2e54ee18
+pr: 618
+pr_ci_run: 37729576486
+main_ci_run: 37729895916
+deploy_run: 37730228430
+runtime_sha: e70175a5f8b4d30bdf99de939b80d2de2e54ee18
+runtime_web: active
+runtime_nginx: active
+runtime_tracked_diff: 0
+production_asset_git_blob_matches: 3_of_3
+production_readback: ../../qa/20261007-video-uiux/music-production-e70175a/readback.json
 protected_closed_checkpoint:
   voice_pr: 617
   video_pr: 616
@@ -81,7 +92,7 @@ verification:
   wallet_mutations: 0
   production_data_mutations: 0
   browser_plugin: unavailable_playwright_fallback_expected
-next_order: music_then_subdub_then_other_features_then_remaining_video_then_global_motion
+next_order: subdub_then_other_features_then_remaining_video_then_global_motion
 shared_open_items:
   - standalone_shared_shell_locale_mixed_on_English_and_Chinese_views
   - existing_ViewTransition_setup_warning
@@ -89,7 +100,12 @@ shared_open_items:
   - one_unchanged_Music_Python_contract_test_uses_legacy_source_regex
 delivery:
   commit: true
-  push: false
-  pr: none
-  merge: false
-  deploy: false
+  push: true
+  pr: 618
+  merge: true
+  deploy: true
+closed_scope:
+  status: CLOSED_LOCKED
+  github_notice: https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/618#issuecomment-6052708871
+  no_edits_after_close: true
+  open_separate: global_motion_view_transition_12_reproductions

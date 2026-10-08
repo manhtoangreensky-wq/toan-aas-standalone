@@ -1,0 +1,64 @@
+spec_id: SUBDUB-SINGLE-SCREEN-UI-20261008
+status: NEXT_IN_ORDER_AFTER_MUSIC_CLOSED
+phase: CONTRACT
+base_sha: e70175a5f8b4d30bdf99de939b80d2de2e54ee18
+protected_closed_checkpoint:
+  voice_pr: 617
+  music_pr: 618
+  video_pr: 616
+  rule: no_edits_to_closed_product_blocks_read_only_regression_only
+video_checkpoint:
+  status: MERGED_AND_DEPLOYED_RECORDED
+  pr: 616
+  merge_sha: 8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952
+  deploy_run: 37632060634
+current_scope:
+  - one /subdub screen with four accessible product choices
+  - local-only original and dubbed audio presentation controls
+  - truthful empty report and vi/en/zh copy
+protected:
+  - API routes, uploads, engine inputs, Bot bridge, jobs and provider calls
+  - prices, Xu wallet, admin runtime trace, database and production data
+  - global theme, shared shell, portal-motion.js, unrelated dirty Voice/Music work
+checklist:
+  S1_one_screen_mode_selection: LOCAL_VERIFIED_48_KEYBOARD_AND_POINTER_TOUCH_SELECTIONS
+  S2_local_audio_controls_guarded_execution: LOCAL_VERIFIED_INDEPENDENT_VALUES_ZERO_ACTIONS
+  S3_truthful_report_locales_responsive: LOCAL_VERIFIED_VI_EN_ZH_CONTENT_LIGHT_DARK_1440_360
+verification:
+  renderer_tests: PASS_9_OF_9
+  voice_music_subdub_regression: PASS_61_OF_61
+  existing_python_ui_contract: PASS_9_OF_9
+  node_syntax: PASS
+  browser_desktop_mobile: PASS_12_CASES_ACTUAL_PORTAL_TEMPLATE_JS_THEME_AND_MOTION_ISOLATED_QA
+  browser_mode_summary_url_volume: PASS_48_MODE_CHANGES_ENTER_CLICK_TOUCH_LOCAL_VOLUME_99_PERCENT
+  browser_interaction_requests: 0
+  browser_console_errors: 0
+  browser_action_events: 0
+  horizontal_overflow_cases: 0
+  duplicate_element_ids: 0
+  minimum_text_contrast: 5.23
+  minimum_control_boundary_contrast: 3.51
+  minimum_touch_target_height_px: 44
+  diff_review: PASS_SUBDUB_SCOPE_AND_PREEXISTING_VOICE_MUSIC_PRESERVED
+  browser_plugin: NOT_AVAILABLE_PLAYWRIGHT_CHROME_USED
+  evidence: ../../qa/20261007-video-uiux/subdub-shell-verified-20261008/browser-review.json
+  screenshot_count: 48
+  production_live_verified: false
+  integration_js_in_qa: EXCLUDED_PRESENTATION_ONLY_NO_SERVER_DB_AUTHORITY
+safety:
+  provider_calls: 0
+  wallet_mutations: 0
+  production_data_mutations: 0
+  route_engine_changes: 0
+  deploy: NO
+delivery:
+  commit: NO
+  push: NO
+  merge: NO
+  deploy: NO
+remaining:
+  - Branch CI, release and production browser verification are pending.
+  - Shared shell navigation locale, floating controls and whole-site motion remain separate open checklist items.
+  - Actual source upload, quote, job and media output remain with the route/engine workstream.
+next: Preserve existing local SubDub UI code; prepare one exact candidate from Music runtime SHA, then run release CI/merge/deploy/readback. Keep portal-motion.js and closed Voice/Music/Video product blocks untouched.
+parent_goal: ACTIVE

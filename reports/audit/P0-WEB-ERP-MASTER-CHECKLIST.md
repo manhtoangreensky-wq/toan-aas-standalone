@@ -70,20 +70,23 @@ Gate kiểm tra có đăng nhập là một mục chỉ-đọc còn mở riêng.
 
 ## MUSIC HUB UI — 2026-10-08
 
-**SPEC_ID:** `MUSIC-HUB-UI-CLOSEOUT-20261008` · **STATUS:** Music UI đã được
-kiểm chứng cục bộ; chưa commit/push/merge/deploy. SubDub cũng đã qua QA cục bộ.
-Thứ tự tiếp: Music → SubDub → các tính năng khác → quay
-lại phần Video còn lại → motion toàn site.
+**SPEC_ID:** `MUSIC-HUB-UI-CLOSEOUT-20261008` · **STATUS:** `DEPLOYED_SOURCE_VERIFIED_CLOSED_LOCKED`.
+Music đã merge/deploy và ghi CLOSED/LOCKED trên [PR #618](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/618#issuecomment-6052708871). Không sửa lại Music renderer/catalogue/CSS trong các checkpoint sau. SubDub đã qua QA cục bộ nhưng chưa release.
+Thứ tự tiếp: SubDub → các tính năng khác → quay lại phần Video còn lại → motion toàn site.
 
-- [ ] Close Music release on `fix/music-ui-closeout-20261008`, BASE
+- [x] Close Music release on `fix/music-ui-closeout-20261008`, BASE
   `e405cbee28f0687f528eab7d66a71ef1623125f4`; exact-candidate renderer/browser/
   Web CI, one PR and separate deploy/source readback.
-- [ ] Music CI primary-link selection must follow its real first creation card;
+- [x] Music CI primary-link selection follows its real first creation card;
   preserve every Voice selector and all fail-closed focus/visibility assertions.
 - [x] Exact candidate `431e851`: 12/12 Music UI cases, vertical groups and
   primary visibility 12/12; contrast light 4.635:1 / dark 5.522:1, card touch
   height minimum 154px; Enter reaches `/music/create` with confirm still gated.
   Node Music/Voice 117/117; official QA 18 captures, 6/6 focus, runtime 26/26.
+- [x] Main CI `37729895916` and deploy `37730228430` succeeded; runtime SHA
+  `e70175a5f8b4d30bdf99de939b80d2de2e54ee18`; Web/nginx active, health OK,
+  source diff 0, production asset Git-blob match 3/3. Anonymous public entry
+  at 1440/375 shows login form with zero overflow/errors/POSTs.
 - [ ] Global motion remains OPEN: fresh matrix records 12 uncaught
   ViewTransition invalid-state errors on navigation. `portal-motion.js` is
   unchanged; do not report whole-site motion PASS from Music UI tests.
@@ -115,6 +118,43 @@ lại phần Video còn lại → motion toàn site.
 - Bằng chứng ảnh/JSON: `../../qa/20261007-video-uiux/music-hub-ui-closeout-20261008/`.
 - Spec: `docs/superpowers/specs/2026-10-08-music-hub-ui-closeout.md`.
 - Baseline: `../../qa/20261007-video-uiux/music-hub-audit-20261008/` (12/12).
+- `PROVIDER_CALLS=0 WALLET_MUTATIONS=0 PRODUCTION_DATA_MUTATIONS=0`.
+
+## SUBDUB SINGLE-SCREEN UI — 2026-10-08
+
+**SPEC_ID:** `SUBDUB-SINGLE-SCREEN-UI-20261008` · **STATUS:** `LOCAL_QA_PASS_PENDING_RELEASE`.
+Video checkpoint PR #616 is already recorded merged/deployed. Keep this slice
+strictly to the customer presentation layer; the media engine and route
+integration remain outside this UI/UX work.
+
+- [x] Confirm the current four lanes and guarded source/price/run gates from
+  `renderSubDubHub` and the canonical SubDub authority report.
+- [x] Record current gaps: mode changes reload `/subdub`; no independent
+  original/dubbed level controls; empty state says “Preparing”; `zh` falls back
+  to Vietnamese; current tracked screenshots predate this source by months.
+- [x] S1: four accessible mode choices switch the visible configuration in one
+  screen and keep the selected mode/review summary aligned.
+- [x] S2: separate local-only original and dubbed audio levels; no request,
+  persistence, upload, quote, task, output, or wallet effect.
+- [x] S3: honest empty report, complete VI/EN/ZH copy, preserved blue–teal
+  theme, keyboard/touch support, 360px no-overflow and contrast checks.
+- [x] Renderer/handler contracts 9/9; Voice/Music/SubDub regression 61/61;
+  existing Python SubDub UI contract 9/9; JS syntax and diff checks pass.
+- [x] Actual Portal template, JavaScript handlers, i18n, theme and motion in QA:
+  12 locale/theme/viewport cases, 48 mode changes with Enter and click/touch.
+  Exactly one panel, preserved query and independent local volume values;
+  no action event, request, runtime error, failed resource, duplicate ID or
+  horizontal overflow. Minimum text 5.23:1, boundary 3.51:1, target height 44px.
+- [x] Saved 48 screenshots and source hashes in
+  `../../qa/20261007-video-uiux/subdub-shell-verified-20261008/browser-review.json`.
+  Initial incomplete-wrapper images are superseded.
+- [ ] Release queue: verify and ship Voice, Music, then SubDub one checkpoint
+  at a time; CI, merge/deploy and production browser proof still pending.
+- [ ] Shared shell locale/floating controls and whole-site motion remain open;
+  QA here proves SubDub content only. `integration.js` was excluded from the
+  isolated fixture; no execution, signed-session or real-output claim.
+- Spec: `docs/superpowers/specs/2026-10-08-subdub-single-screen-ui.md`.
+- State: `.agents/state/WEBAPP-SUBDUB-HUB-UI-20261008.yaml`.
 - `PROVIDER_CALLS=0 WALLET_MUTATIONS=0 PRODUCTION_DATA_MUTATIONS=0`.
 
 ---
