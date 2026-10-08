@@ -1,14 +1,14 @@
 task: WEBAPP-VOICE-UI-CLOSEOUT-20261007
-phase: REPORT
-status: VOICE_UI_LOCAL_REVIEW_PASS_RELEASE_PENDING
+phase: VERIFY
+status: VOICE_UI_EXACT_COMMIT_RELEASE_GATES_RUNNING
 goal_status: ACTIVE
 workspace: C:/Users/toann/Documents/Codex/2026-07-10/1-ngu-n-ch-nh-v/work/toanaas-video-ui-release-20261007
 branch: fix/voice-ui-closeout-20261007
 base_sha: 8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952
-head_sha: 13d4a06f2f63217d9a1a682b7df950bacc5a62b2
-code_status: TTS_FLOW_CHANGES_VERIFIED_LOCAL_UNCOMMITTED_NOT_PUSHED_NOT_DEPLOYED
-code_checkpoint_sha: 2983174f33cde489a182b2523b328f8ce0b01c4d
-checkpoint_commit: 13d4a06f2f63217d9a1a682b7df950bacc5a62b2
+head_sha: c162e9b6e584876f71492d17e9b11d7ca61f9658
+code_status: VOICE_ONLY_COMMITTED_NOT_PUSHED_NOT_DEPLOYED
+code_checkpoint_sha: c162e9b6e584876f71492d17e9b11d7ca61f9658
+checkpoint_commit: c162e9b6e584876f71492d17e9b11d7ca61f9658
 spec: docs/superpowers/specs/2026-10-07-voice-ui-closeout.md
 master_checklist: ../toanaas-webapp-ui-closeout-20260929/reports/audit/P0-WEB-ERP-MASTER-CHECKLIST.md
 prior_checkpoint:
@@ -32,6 +32,12 @@ completed_local:
   - Direction Composer fixed copy/result guard uses localized catalogue keys;
     current 12-case browser matrix passes.
 verification:
+  release_source_sha: c162e9b6e584876f71492d17e9b11d7ca61f9658
+  release_web_fingerprint: 7414a417bfed8bf19ee856e6934978b05d7129e9b6f859808776ef93de9b772d
+  release_provenance: WEB_ONLY_REFRESHED_245_SOURCE_FILES_BOT_RECORDS_UNCHANGED
+  release_compile_js_node: PASS_COMPILE_7_JS_SYNTAX_110_VOICE_RENDERERS
+  release_web_contracts: RUNNING_AFTER_COMPOSER_SELECTOR_CORRECTION
+  release_browser_gate: RUNNING_AFTER_VOICE_PRIMARY_TARGET_CORRECTION
   node_voice_aggregate: 110_PASS_0_FAIL_six_voice_UI_test_files
   resumed_draft_save_new_labels: RED_EMPTY_THEN_GREEN_VI_EN_ZH
   public_quote_vs_internal_cost: RED_THEN_GREEN_PUBLIC_QUOTE_PRESERVED_COST_ONLY_UNKNOWN
