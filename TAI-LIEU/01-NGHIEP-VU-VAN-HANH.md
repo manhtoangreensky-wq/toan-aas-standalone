@@ -1,5 +1,24 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Checkpoint giao diện SubDub — ứng viên 08/10/2026
+
+Nguồn cục bộ: nhánh `fix/subdub-ui-closeout-20261008`, HEAD
+`e4070e3bf6710be1e5388c12e20800aae0ee5ea3`, dựa trên `origin/main`
+`e70175a5f8b4d30bdf99de939b80d2de2e54ee18`. `/subdub` có một màn hình với
+bốn chế độ: phụ đề gốc, phụ đề dịch, lồng tiếng, và phụ đề kèm lồng tiếng.
+Mức âm lượng gốc/giọng đọc chỉ là thiết lập hiển thị cục bộ; tải tệp, báo giá,
+tạo tác vụ và đầu ra vẫn đóng cho tới khi có thẩm quyền xử lý thật. Không đổi
+đường dẫn, bộ máy xử lý, giá, ví hay dữ liệu.
+
+Đã đo trên bản nguồn này: 12/12 tổ hợp tiếng Việt/Anh/Trung × sáng/tối × 1440/360; 48/48
+lần đổi chế độ; lỗi runtime, request ngoài ý muốn, sự kiện thao tác và tràn
+ngang đều 0. Độ tương phản chữ tối thiểu 5.23:1, viền điều khiển 3.61:1,
+vùng chạm nhỏ nhất 44px. Đây là kiểm thử cục bộ; tạo yêu cầu hợp nhất mã,
+kiểm tra tự động, hợp nhất, triển khai và xác minh trên hệ thống thật chưa hoàn
+tất. Bằng chứng: `../../qa/qa/subdub-exact-e4070e3/`.
+PR #617 (Voice), #618 (Music), #616 (Video) vẫn CLOSED/LOCKED; không sửa lại
+các phần mã sản phẩm đã khóa. Hiệu ứng toàn trang còn là mục riêng chưa đóng.
+
 ## Checkpoint giao diện Music — ứng viên 08/10/2026
 
 BASE là main Voice `e405cbee28f0687f528eab7d66a71ef1623125f4`.

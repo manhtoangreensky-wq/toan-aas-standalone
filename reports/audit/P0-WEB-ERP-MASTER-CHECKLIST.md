@@ -127,6 +127,11 @@ Video checkpoint PR #616 is already recorded merged/deployed. Keep this slice
 strictly to the customer presentation layer; the media engine and route
 integration remain outside this UI/UX work.
 
+**Current exact snapshot:** branch `fix/subdub-ui-closeout-20261008`, HEAD
+`e4070e3bf6710be1e5388c12e20800aae0ee5ea3`, based on current `origin/main`
+`e70175a5f8b4d30bdf99de939b80d2de2e54ee18`. This is local source evidence;
+the PR/CI/merge/deploy/runtime gates are still pending.
+
 - [x] Confirm the current four lanes and guarded source/price/run gates from
   `renderSubDubHub` and the canonical SubDub authority report.
 - [x] Record current gaps: mode changes reload `/subdub`; no independent
@@ -148,11 +153,14 @@ integration remain outside this UI/UX work.
 - [x] Saved 48 screenshots and source hashes in
   `../../qa/20261007-video-uiux/subdub-shell-verified-20261008/browser-review.json`.
   Initial incomplete-wrapper images are superseded.
-- [x] Fresh snapshot `40b3ce7`: 12 configurations, 48 local mode changes,
-  text 5.23:1, boundary 3.51:1, target 44px; no request or action event.
-  Exact evidence: `../../qa/subdub-exact-40b3ce7/browser-review.json`.
-- [ ] Place only SubDub commits on Music squash main, refresh provenance, then
-  publish one PR → CI → merge → deploy → source/runtime readback.
+- [x] Rechecked exact snapshot `e4070e3`: 12 configurations, 48 local mode
+  changes, text 5.23:1, control boundary 3.61:1, target 44px; no request or
+  action event. Exact evidence: `../../qa/qa/subdub-exact-e4070e3/browser-review.json`.
+- [x] Re-ran exact UI contracts on this snapshot: Node renderer 9/9,
+  Python UI contract 9/9, JavaScript syntax and `git diff --check` pass.
+- [ ] Publish one SubDub-only PR from the current-main branch → CI → merge;
+  deploy and production readback remain separately gated. Do not reuse or reopen
+  closed PR #617 (Voice), #618 (Music), or #616 (Video).
   Voice/Music/Video product blocks are CLOSED/LOCKED.
 - [ ] Shared shell locale/floating controls and whole-site motion remain open;
   QA here proves SubDub content only. `integration.js` was excluded from the

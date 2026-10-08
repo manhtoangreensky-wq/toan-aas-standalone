@@ -129,9 +129,10 @@ Release-source candidate `40b3ce7` repeated the full template/handler matrix:
 3.51:1, target 44px. Exact snapshot evidence is at
 `../../qa/subdub-exact-40b3ce7/browser-review.json`. Official browser proof
 for the same snapshot is at `../../qa/subdub-release-40b3ce7/reports/browser_evidence/`.
-Before publishing, place only this SubDub change on Music squash main and
-refresh Web provenance from a clean final snapshot. This does not reopen the
-Voice/Music/Video product blocks marked CLOSED/LOCKED.
+The current release branch is already based on current `origin/main`
+`e70175a5f8b4d30bdf99de939b80d2de2e54ee18`; the SubDub change is isolated from
+the Voice/Music/Video product blocks marked CLOSED/LOCKED. This does not reopen
+those product blocks.
 
 - Four in-page choices keep exactly one settings panel visible. Enter and
   click/touch keep selected state, review summary and URL mode aligned while
@@ -162,9 +163,30 @@ Voice/Music/Video product blocks marked CLOSED/LOCKED.
   The earlier incomplete-wrapper screenshots are superseded and are not used
   for acceptance. Browser plugin was unavailable; regular Playwright was used.
 
+### Exact current-branch recheck — 2026-10-08
+
+- Current branch `fix/subdub-ui-closeout-20261008`, exact HEAD
+  `e4070e3bf6710be1e5388c12e20800aae0ee5ea3`, is based on current
+  `origin/main` `e70175a5f8b4d30bdf99de939b80d2de2e54ee18`.
+- Re-ran `node --test tests/subdub-hub-presentation.test.mjs`: **9 passed,
+  0 failed**. Re-ran the Python SubDub UI contract using the isolated QA venv
+  with cache writing disabled: **9 passed, 0 failed**. `node --check
+  static/portal/portal.js` and `git diff --check` both exited 0.
+- Rechecked the exact-source browser JSON: **12/12** locale × theme × viewport
+  cases and **48/48** mode interactions; runtime errors, failed requests,
+  post-load requests, action events, duplicate IDs and horizontal overflow are
+  all `0`. Text contrast is **5.23:1**, control boundary **3.61:1**, and
+  minimum touch target **44px**. The six UI source hashes are stable.
+- Exact evidence: `../../qa/qa/subdub-exact-e4070e3/browser-review.json`;
+  48 screenshots remain outside the repository. This is local rendered QA only;
+  it does not prove signed-session behavior, real media execution, deployment,
+  or production live behavior.
+
 ### Release and remaining scope
 
-- [ ] Commit/push/CI/merge/deploy and production browser verification.
+- [x] Local code commit and exact-source QA complete.
+- [ ] Push/PR/CI/merge and production browser verification remain pending.
+- [ ] Production deployment requires its own explicit Owner authorization.
 - [ ] Shared navigation locale and floating controls, followed by the global
   motion gate, remain open in the parent UI checklist.
 

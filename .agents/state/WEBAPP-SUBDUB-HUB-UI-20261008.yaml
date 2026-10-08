@@ -37,15 +37,17 @@ verification:
   horizontal_overflow_cases: 0
   duplicate_element_ids: 0
   minimum_text_contrast: 5.23
-  minimum_control_boundary_contrast: 3.51
+  minimum_control_boundary_contrast: 3.61
   minimum_touch_target_height_px: 44
   diff_review: PASS_SUBDUB_SCOPE_AND_PREEXISTING_VOICE_MUSIC_PRESERVED
   browser_plugin: NOT_AVAILABLE_PLAYWRIGHT_CHROME_USED
-  exact_candidate_sha: 40b3ce7aa707bc3ab1350a99c97ed71a07b11b91
+  exact_candidate_sha: e4070e3bf6710be1e5388c12e20800aae0ee5ea3
   official_browser_gate: PASS_18_CAPTURES_6_HUBS_6_PRIMARY_FOCUS_4_FREE_TOOLS
   browser_runtime_assertions: PASS_26_OF_26
   exact_custom_matrix: PASS_12_CASES_48_MODE_CHANGES_VERTICAL_LOCALES_CONTRAST
-  exact_custom_evidence: ../../qa/20261007-video-uiux/subdub-exact-40b3ce7/browser-review.json
+  exact_custom_evidence: ../../qa/qa/subdub-exact-e4070e3/browser-review.json
+  current_exact_contracts: NODE_RENDERER_9_OF_9_PYTHON_UI_CONTRACT_9_OF_9
+  current_exact_python_warning: NONE_CACHE_PROVIDER_DISABLED
   global_motion_error_count: OPEN_SEPARATE_VIEWTRANSITION_GATE
   evidence: ../../qa/20261007-video-uiux/subdub-shell-verified-20261008/browser-review.json
   screenshot_count: 48
@@ -63,8 +65,8 @@ delivery:
   merge: NO
   deploy: NO
 remaining:
-  - Branch CI, release and production browser verification are pending.
+  - Branch push/PR/CI/merge, release and production browser verification are pending.
   - Shared shell navigation locale, floating controls and whole-site motion remain separate open checklist items.
   - Actual source upload, quote, job and media output remain with the route/engine workstream.
-next: Publish one exact SubDub PR from 40b3ce7, require Ubuntu CI, then merge/deploy/readback. Keep portal-motion.js and closed Voice/Music/Video product blocks untouched.
+next: Publish one SubDub-only PR from exact HEAD e4070e3, require Ubuntu CI, merge only after CI passes, then request/obtain deployment approval before production readback. Keep portal-motion.js and closed Voice/Music/Video product blocks untouched.
 parent_goal: ACTIVE
