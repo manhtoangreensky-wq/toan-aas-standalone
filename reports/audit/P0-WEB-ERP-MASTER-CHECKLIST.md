@@ -122,7 +122,7 @@ Thứ tự tiếp: SubDub → các tính năng khác → quay lại phần Video
 
 ## SUBDUB SINGLE-SCREEN UI — 2026-10-08
 
-**SPEC_ID:** `SUBDUB-SINGLE-SCREEN-UI-20261008` · **STATUS:** `EXACT_UI_QA_PASS_CI_GREEN_MERGE_PENDING`.
+**SPEC_ID:** `SUBDUB-SINGLE-SCREEN-UI-20261008` · **STATUS:** `EXACT_UI_QA_PASS_FINAL_CI_PENDING_PROVENANCE`.
 Video checkpoint PR #616 is already recorded merged/deployed. Keep this slice
 strictly to the customer presentation layer; the media engine and route
 integration remain outside this UI/UX work.
@@ -170,7 +170,13 @@ CI run. Merge, deployment, and production runtime readback remain pending.
   `7203a61e7c2c9c7bd25fde42f4aca5b895eb11eb`: migration evidence, Python compile,
   JavaScript syntax, bounded Web contracts, browser verification/runtime assertions,
   evidence upload, and diff whitespace checks all succeeded. PR #619 is mergeable;
-  merge remains pending. Deployment and production readback remain separately gated.
+  merge remained pending at that HEAD. Deployment and production readback remain separately gated.
+- [ ] Follow-up run `37754429472` on documentation-only HEAD
+  `107f8180421473a1711d89a583ee3fc76e432949` failed at migration evidence before
+  product tests: the checklist/state update changed the eligible source fingerprint
+  from recorded `2f666de233f5…` to current `ee5cbdd4cbda…`. Refresh only Web
+  provenance after the final documentation update, verify locally, and require a
+  fresh green PR run. No product test ran in the failed attempt; do not merge yet.
   Voice/Music/Video product blocks are CLOSED/LOCKED.
 - [ ] Shared shell locale/floating controls and whole-site motion remain open;
   QA here proves SubDub content only. `integration.js` was excluded from the
