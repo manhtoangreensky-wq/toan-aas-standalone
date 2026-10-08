@@ -92,10 +92,12 @@ ci_corrective:
   observed: 286_PASSED_1_FAILED_ASSERTION_DANH_SACH_CASE_LINES_128_VS_142
   correction_file: reports/migration/p0-05d-tester-workspace.json
   corrected_case_file_metadata: 142_LINES_34854_BYTES_SHA256_612f3bbeaa2660f8d1cd48cf67f7221e275f9c240406e7090c105ec4e91d10c8
+  correction_commit: ddc7ca0a3fe794288d3709a0ad1e1b359f94c3ea
   assertion_change: NONE
   target_test: 1_PASSED_EXIT_0
   windows_full_module: 32_PASSED_1_BASELINE_FAIL_POSIX_MODE_0600_EXPECTED_WINDOWS_0666
-  next: commit_local_correction_refresh_web_only_provenance_then_push_and_require_fresh_pr_ci
+  web_provenance_evidence: reports/migration/preflight.json_and_web_inventory.json
+  next: push_corrective_commit_and_require_fresh_pr_ci
   provider_calls: 0
   wallet_mutations: 0
   production_data_mutations: 0
