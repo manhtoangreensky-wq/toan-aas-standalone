@@ -1,5 +1,33 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Checkpoint giao diện Voice — 2026-10-08
+
+Remote main đã đọc lại ở `8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952`
+(checkpoint Video PR #616). Checkpoint Voice trên nhánh
+`fix/voice-ui-closeout-20261007` đang chuẩn bị release; các mục dưới đây mô tả
+mã ứng viên và QA cục bộ, chưa xác nhận production đã đổi.
+
+- Hub giữ 7 điểm đến hiện có. Các màn TTS, giọng đã lưu, nhân bản, nghe thử,
+  kết quả, hồ sơ/lời thoại và soạn cách thể hiện dùng nội dung VI/EN/ZH.
+- Biểu mẫu/card dọc; thiết lập phụ và thông tin quyền có thể mở bằng bàn phím.
+  Trạng thái báo giá/công việc được đặt trước biểu mẫu cũ; sau xác nhận xử lý,
+  biểu mẫu trước được thu gọn nhưng vẫn có thể mở lại.
+- Chỉ giá công khai `estimated_xu`/`quote_xu` được ghi là giá bán. 0 Xu là một
+  giá đã biết; giá thiếu/mâu thuẫn là “—”. `cost_xu`, giá provider và nguồn giá
+  nội bộ không được dùng thay giá bán hoặc đưa lên phần chi tiết.
+- Nút xác nhận giữ kiểm tra quyền phiên, khả năng xử lý, fingerprint và receipt
+  hiện có; không xuất hiện khi thiếu giá công khai. ID công việc chỉ dùng khi
+  khớp feature/trạng thái; trạng thái hoàn tất không tự cấp audio/download.
+- “Lưu thành bản mới” khi mở lại bản nháp có nhãn đầy đủ ở cả 3 ngôn ngữ.
+  Các action, tên trường, payload và xử lý backend giữ nguyên.
+- Sáu bộ renderer Voice: **110/110 đạt** trên source hiện tại. Bằng chứng browser
+  theo từng lát được dẫn trong `docs/superpowers/specs/2026-10-07-voice-ui-closeout.md`
+  và `2026-10-08-voice-flow-state-presentation.md`; CI và live có cổng riêng.
+- Music/SubDub chưa thuộc release Voice này. Shared-shell locale, nút nổi và
+  motion toàn site vẫn mở; không suy ra đã sửa chúng từ checkpoint Voice.
+
+Các số liệu runtime/nghiệp vụ cũ phía dưới là snapshot lịch sử có ngày/SHA.
+
 ## Checkpoint giao diện Video — 2026-10-07
 
 Ứng viên phát hành từ main `9f2ba35a85608495cb34d918dfc0af62f4dc2414`.

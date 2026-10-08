@@ -1,14 +1,14 @@
 task: WEBAPP-VOICE-UI-CLOSEOUT-20261007
-phase: VERIFY
-status: COMPOSER_RECEIPTS_DETAIL_BEHAVIOR_VERIFIED_TTS_FLOW_STATES_NEXT
+phase: REPORT
+status: VOICE_UI_LOCAL_REVIEW_PASS_RELEASE_PENDING
 goal_status: ACTIVE
 workspace: C:/Users/toann/Documents/Codex/2026-07-10/1-ngu-n-ch-nh-v/work/toanaas-video-ui-release-20261007
 branch: fix/voice-ui-closeout-20261007
 base_sha: 8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952
-head_sha: CURRENT_GIT_HEAD_RESOLVE_WITH_GIT_REV_PARSE
-code_status: COMMITTED_LOCAL_RECEIPT_REAUDIT_CHECKPOINT_UNPUSHED_NOT_DEPLOYED
+head_sha: 13d4a06f2f63217d9a1a682b7df950bacc5a62b2
+code_status: TTS_FLOW_CHANGES_VERIFIED_LOCAL_UNCOMMITTED_NOT_PUSHED_NOT_DEPLOYED
 code_checkpoint_sha: 2983174f33cde489a182b2523b328f8ce0b01c4d
-checkpoint_commit: LOCAL_CHECKPOINT_RESOLVE_WITH_GIT_REV_PARSE
+checkpoint_commit: 13d4a06f2f63217d9a1a682b7df950bacc5a62b2
 spec: docs/superpowers/specs/2026-10-07-voice-ui-closeout.md
 master_checklist: ../toanaas-webapp-ui-closeout-20260929/reports/audit/P0-WEB-ERP-MASTER-CHECKLIST.md
 prior_checkpoint:
@@ -32,7 +32,23 @@ completed_local:
   - Direction Composer fixed copy/result guard uses localized catalogue keys;
     current 12-case browser matrix passes.
 verification:
-  node: 65_PASS_0_FAIL_direct_renderer_behavior
+  node_voice_aggregate: 110_PASS_0_FAIL_six_voice_UI_test_files
+  resumed_draft_save_new_labels: RED_EMPTY_THEN_GREEN_VI_EN_ZH
+  public_quote_vs_internal_cost: RED_THEN_GREEN_PUBLIC_QUOTE_PRESERVED_COST_ONLY_UNKNOWN
+  node_tts_flow_focused: 45_PASS_0_FAIL
+  browser_tts_primary: 72_of_72_complete_source_stable_zero_overflow_zero_route_runtime_errors
+  browser_tts_boundary: 36_of_36_complete_source_stable_zero_overflow_zero_route_runtime_errors
+  browser_tts_text_contrast: light_min_5.473_dark_min_4.515_no_text_below_4.5
+  browser_tts_control_border_contrast: min_3.399
+  browser_tts_flow_gates: fresh_visible_quote_1_confirm_zero_Xu_allowed_unknown_stale_result_error_0_confirm
+  browser_saved_clone_primary: 144_of_144_complete_source_stable_zero_overflow_zero_route_runtime_errors
+  browser_saved_clone_text_contrast: light_min_5.282_dark_min_4.515_no_text_below_4.5
+  browser_saved_clone_control_border_contrast: light_min_3.399_dark_min_3.762
+  browser_saved_clone_interaction: 48_of_48_complete_all_six_states_flow_before_form_keyboard_and_collapsed_form_correct
+  browser_saved_clone_cost_and_media_guard: no_provider_cost_leak_zero_audio_players
+  browser_saved_clone_runner_fix: flow_order_measurement_now_includes_voice_clone_form
+  browser_setup_runtime: one_existing_ViewTransition_invalid_state_warning_during_login_setup
+  browser_pending_requests: two_to_five_background_auth_GETs_unresolved_at_matrix_close_max_observed_age_273_seconds
   python_targeted: 41_PASS_in_2.70s
   python_extended: 117_PASS_2_BASELINE_MATCHING_FAILURES_in_4.39s
   new_failing_ids: 0
@@ -74,21 +90,26 @@ qa:
   inventory_evidence_scope: earlier_recorded_snapshot_not_current_Studio_source
   studio_populated_evidence: ../../qa/20261007-video-uiux/voice-studio-compact-populated-final/browser-review.json
   studio_empty_evidence: ../../qa/20261007-video-uiux/voice-studio-compact-empty-final/browser-review.json
-  current_evidence: ../../qa/20261007-video-uiux/voice-receipt-detail-settled-20261008/browser-review.json
+  current_evidence: ../../../../qa/20261007-video-uiux/voice-saved-clone-interaction-20261008/browser-review.json
+  tts_primary_evidence: ../../../../qa/20261007-video-uiux/voice-tts-flow-final-20261008/browser-review.json
+  tts_boundary_evidence: ../../../../qa/20261007-video-uiux/voice-tts-boundary-final-20261008/browser-review.json
+  saved_clone_primary_evidence: ../../../../qa/20261007-video-uiux/voice-saved-clone-flow-20261008/browser-review.json
+  saved_clone_interaction_evidence: ../../../../qa/20261007-video-uiux/voice-saved-clone-interaction-20261008/browser-review.json
   receipt_fixtures: tests/fixtures/voice-direction-composer-receipts.json
   receipt_generator: ../../qa/20261007-video-uiux/voice_direction_receipt.py
-  portal_js_sha256: ffb3be79dc7da5267a2f80e2f040bdce83e1a7b615492732a0e9db9ecd88f102
-  portal_i18n_sha256: 8596a30060fee4065c657b772db0e0773d00092ca60a6e340ed41248bf95c6fa
-  portal_theme_sha256: 81baff5e721857125c2ecf633559e1aa5d51445985fee1eec022281de514368b
+  portal_js_sha256: fe2dbf7a80c3ebfd61cec17f33009f1e8f52b32fc631ca310c728feddbe7f4aa
+  portal_i18n_sha256: 6a931e4e1fb133c36119e40dfc8888854eb83b6ae198a3f0c1b88e3469c04fd8
+  portal_theme_sha256: e210a72e0c5a050dc187e68b9bd9837bc0af6dd21572851b2696eb61c627dec7
 remaining:
-  - Next single slice is Voice TTS quote/confirmation/progress/result/error presentation using UI-only fixtures; no provider or wallet actions.
+  - Voice, Music and SubDub UI checkpoints are verified locally; close their release gates sequentially in that order before the next product UI item.
+  - Voice/Music branch release and CI are still pending; local verification is not a merge or live-runtime claim.
   - Shared shell locale and global motion gate remain open.
-  - Existing QA background core/auth/telegram GETs remain pending 17-to-64 seconds; health 200 and visible UI do not prove those reads complete. No API change within UI scope.
-  - Quote/confirmation/progress/result/error presentation acceptance.
+  - Existing QA background core/auth/telegram GETs remained pending up to 273 seconds in some matrices; visible UI does not prove those reads completed. No API change within UI scope.
+  - Voice UI states are fixture-verified only; no live estimate/job/audio outcome is claimed.
   - Shared English navigation still contains Vietnamese labels; screenshot recorded, no shell locale PASS claimed.
   - Existing ViewTransition InvalidStateError during login/setup; final motion gate remains open.
   - Full Voice release verification and CI before commit/push/merge/deploy.
-next_order: Voice_then_Music_then_SubDub_other_features_then_remaining_Video_then_global_motion
+next_order: Release_Voice_then_Music_then_SubDub_then_other_features_then_remaining_Video_then_global_motion
 safety:
   provider_calls: 0
   wallet_mutations: 0

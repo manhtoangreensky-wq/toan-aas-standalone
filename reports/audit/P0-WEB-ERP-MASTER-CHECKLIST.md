@@ -2,9 +2,9 @@
 
 ## VIDEO UI CHECKPOINT — 2026-10-07
 
-Owner chốt: merge phần Video đang làm rồi ưu tiên Voice → Music → SubDub →
-các tính năng khác, quay lại Video còn lại sau cùng. Các dòng SHA bên dưới là
-mốc lịch sử; bản phát hành này dựa trên standalone main `9f2ba35`.
+Owner chốt: merge checkpoint Video đang làm, sau đó ưu tiên Voice → Music →
+SubDub → các tính năng khác, rồi quay lại Video còn lại sau cùng. Checkpoint
+đã squash-merge vào standalone main tại `8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952`.
 
 - [x] Hub Video, Video nhanh và Video nhiều cảnh: VI/EN/ZH × sáng/tối ×
   1440×900/375×812 = 36/36 kiểm tra giao diện thật trên QA cô lập.
@@ -15,18 +15,41 @@ mốc lịch sử; bản phát hành này dựa trên standalone main `9f2ba35`.
 - [x] Màu computed: chữ nhỏ nhất 4.515:1; viền input nhỏ nhất 3.399:1.
 - [x] 60 ảnh QA gắn hash nguồn/ảnh; runtime của ba route 0 lỗi.
 - [x] Cập nhật spec, nghiệp vụ, đối chiếu tài liệu gốc và case nguồn Tester.
-- [ ] Official Web contracts và PR CI; commit/push/merge/deploy ghi bằng chứng
-  riêng trong PR khi hoàn tất, không suy từ HTTP 200 hay test local.
+- [x] Official Web contracts, PR #616 CI, squash merge và deploy đã có bằng
+  chứng riêng: PR CI 389 Web contracts + 26 runtime assertions + 18 CI
+  screenshots; Main CI và deploy đều thành công. Runtime SHA được đối chiếu
+  với Web nginx ACTIVE trong hồ sơ đóng PR #616.
 - [ ] Lỗi ViewTransition ở bước đăng nhập/điều hướng và cổng motion cuối còn mở.
 - [ ] Self-shot/trend/storyboard/Video dài/motion-guide và các công cụ biên tập
   chưa thuộc checkpoint này, giữ mở để quay lại đúng điểm đang làm.
 - Spec: `docs/superpowers/specs/2026-10-07-video-ui-checkpoint-release.md`.
+- Hồ sơ merge/deploy: [PR #616](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/616),
+  PR CI run `37630929796`, Main CI run `37631528823`, deploy run `37632060634`.
 - `PROVIDER_CALLS=0 WALLET_MUTATIONS=0 PRODUCTION_DATA_MUTATIONS=0`;
   API/engine của main được giữ nguyên, parent goal ACTIVE.
 
+## VOICE UI RELEASE — 2026-10-08
+
+**SPEC_ID:** `WEBAPP-VOICE-UI-CLOSEOUT-20261007` · **STATUS:** `LOCAL_QA_PASS_RELEASE_PENDING`.
+
+- [x] Voice hub/forms/inventory/Studio/detail/Composer/flow-state presentation
+  checkpoints reviewed; six renderer suites 110/110 pass.
+- [x] Pre-release review reproduced and fixed two additional UI defects:
+  resumed-draft save-new label empty in VI/EN/ZH; ambiguous `cost_xu` used as a
+  price fallback. Existing action/field/server authority contracts preserved.
+- [x] Update operating/source-comparison docs and VUI-01..04 case source before
+  push. Existing labels and issue templates were read; Projects lacks
+  `read:project`, so no automatic scope refresh or Project-write claim.
+- [ ] Stage only Voice hunks; verify exact commit tree with Web quality gates.
+- [ ] One Voice PR → CI → merge → deploy → runtime/browser readback. Music and
+  SubDub worktree changes remain separate and preserved for their later PRs.
+- [ ] Shared shell locale, floating controls and whole-site motion remain open.
+
+---
+
 **Hệ sinh thái:** TOAN AAS Web App & Admin ERP  
 **Runtime Target:** tg.toanaas.vn (/opt/toanaas/webapp)  
-**Base / Runtime SHA:** 03325cf577de4fd090abea9088c8980a6a028e29  
+**Historical ERP baseline SHA (not current runtime verification):** 03325cf577de4fd090abea9088c8980a6a028e29
 **Tiêu chuẩn vận hành:** owner-governed-codex & locked-focus-engineering  
 **Quy tắc:** Làm tuần tự từng SPEC, không làm PR khổng lồ, soi lại checklist này mỗi khi bắt đầu và kết thúc một SPEC mới.
 

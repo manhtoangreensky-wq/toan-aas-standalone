@@ -11249,22 +11249,23 @@
     const formAction = localAuthoringOnly ? localDraftAction : page.action;
     const workspaceDraftControl = workspaceDraftEnabled && !localAuthoringOnly
       ? (workspaceDraftId
-        ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-update" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-workspace-draft-id="${safeText(workspaceDraftId)}">Cập nhật bản nháp Web</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Lưu thành bản mới</button>`
-        : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Lưu bản nháp Web</button>`)
+        ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-update" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-workspace-draft-id="${safeText(workspaceDraftId)}">${voiceTask ? safeText(voiceUiText("draft.update", "")) : "Cập nhật bản nháp Web"}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("draft.saveNew", "")) : "Lưu thành bản mới"}</button>`
+        : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("draft.save", "")) : "Lưu bản nháp Web"}</button>`)
       : "";
     const estimateControl = canEstimate && page.action !== "feature-estimate"
       ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="feature-estimate" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("action.estimate", "Ước tính Xu")) : "Ước tính Xu"}</button>`
       : "";
     const executionReady = featureConfirmExecutionReady(page, context);
+    const voiceQuoteVisible = !voiceTask || !hasFreshEstimate || voiceQuoteAmount(flow) !== null;
     const confirmControl = hasFreshEstimate
-      ? (executionReady
+      ? (executionReady && voiceQuoteVisible
         ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-portal-confirm="${voiceTask ? safeText(voiceUiText("action.confirmPrompt", "")) : "Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định."}">${voiceTask ? safeText(voiceUiText("action.confirm", "Xác nhận chạy")) : "Xác nhận chạy"}</button>`
-        : `<span class="portal-flow-note" role="status">${voiceTask ? safeText(voiceUiText("action.waiting", "")) : "Đã có estimate canonical. Web App đang chờ adapter tạo job canonical; chưa thể xác nhận chạy hoặc trừ Xu."}</span>`)
+        : `<span class="portal-flow-note" role="status">${voiceTask ? safeText(voiceUiText(voiceQuoteVisible ? "action.waiting" : "flow.priceUnknown", "")) : "Đã có estimate canonical. Web App đang chờ adapter tạo job canonical; chưa thể xác nhận chạy hoặc trừ Xu."}</span>`)
       : "";
     const flowControls = estimateControl || confirmControl ? `<div class="portal-flow-actions">${estimateControl}${confirmControl}</div>` : "";
     const fieldValues = { ...(flow && flow.input && typeof flow.input === "object" ? flow.input : {}), ...transientFormValues(route) };
     const primaryActionLabel = localAuthoringOnly ? localDraftLabel : (videoTask ? videoText("action.continue", "Tiếp tục") : voiceTask ? voiceUiText(page.action === "feature-estimate" ? "action.estimate" : "action.continue", "Tiếp tục") : (page.actionLabel || "Tiếp tục"));
-    const primaryDisabled = localAuthoringOnly || enabled ? "" : ` disabled title="${safeText(reason)}"`;
+    const primaryDisabled = localAuthoringOnly || enabled ? "" : ` disabled title="${safeText(voiceTask ? voiceUiText("form.guarded", reason) : reason)}"`;
     const boundary = classifyPageBoundary(page, context);
     let boundaryNotice = "";
     if (boundary === "canonical_bridge") {
@@ -30006,6 +30007,53 @@
     return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h3 class="portal-card-title">Theo dõi công việc</h3><p class="portal-card-subtitle">Mã job được Core Bridge cấp rõ ràng cho chính request đã xác nhận.</p></div>${badge(tracking.status)}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Job canonical</span><code class="portal-link-code">${safeText(tracking.id)}</code></div><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái</span><span class="portal-summary-value">${safeText(STATE_LABELS[tracking.status] || tracking.status)}</span></div></div><div class="portal-form-footer"><span class="portal-form-note">Job detail tiếp tục kiểm tra ownership qua signed session; Web không dùng ID này để cấp file, Xu hoặc quyền provider.</span><a class="portal-button portal-button--primary" href="${safeText(href)}">Theo dõi job</a></div></section>`;
   }
 
+  function voiceQuoteAmount(flow) {
+    const payload = flow && flow.data && flow.data.estimate;
+    if (!payload || typeof payload !== "object" || payload.available !== true) return null;
+    const values = payload.content && typeof payload.content === "object" ? payload.content : payload;
+    const amounts = [values.estimated_xu, values.quote_xu, payload.estimated_xu, payload.quote_xu]
+      .filter((value) => typeof value === "number" && Number.isFinite(value) && value >= 0);
+    const distinct = [...new Set(amounts)];
+    return distinct.length === 1 ? distinct[0] : null;
+  }
+
+  function renderVoiceFlowState(flow, route) {
+    const t = voiceUiText;
+    const status = ALLOWED_STATES.has(flow && flow.status) ? flow.status : "guarded";
+    const data = flow && flow.data && typeof flow.data === "object" ? flow.data : {};
+    const payload = data.estimate || data.draft;
+    const content = payload && typeof payload === "object" && payload.content && typeof payload.content === "object" ? payload.content : payload;
+    const values = content && typeof content === "object" && !Array.isArray(content) ? content : {};
+    const needsRefresh = status === "awaiting_confirm" && flow && flow.phase === "estimate" && (!flowHasFreshEstimate(flow) || voiceQuoteAmount(flow) === null);
+    const heading = needsRefresh ? t("flow.quoteNeedsRefresh", "") : t(`flow.state.${status}`, t("flow.state.guarded", "Chưa thể tiếp tục"));
+    const message = typeof flow.message === "string" ? flow.message.trim() : "";
+    const isQuote = Boolean(data.estimate && typeof data.estimate === "object");
+    const amount = voiceQuoteAmount(flow);
+    const price = amount !== null ? `${amount} Xu` : "—";
+    const fields = ["script", "text", "display_name", "default_voice_gender", "speed", "volume_percent", "character_count", "characters", "duration_seconds", "sample_staged", "consent_confirmed", "next_step"];
+    const fieldValue = (key, value) => {
+      if (typeof value === "boolean") return t(value ? "flow.yes" : "flow.no", "");
+      if (key === "default_voice_gender" && ["female", "male"].includes(value)) return t(`option.default_voice_gender.${value}`, value);
+      if (key === "speed" && ["normal", "slow", "fast"].includes(value)) return t(`option.speed.${value}`, value);
+      return String(value);
+    };
+    // Display customer planning/quote fields only. Provider ledger prices,
+    // source/catalog IDs, private URLs and extra backend metadata stay hidden.
+    const rows = fields.filter((key) => Object.prototype.hasOwnProperty.call(values, key) && ["string", "number", "boolean"].includes(typeof values[key]))
+      .map((key) => `<div><dt>${safeText(t(`flow.field.${key}`, ""))}</dt><dd>${safeText(fieldValue(key, values[key]))}</dd></div>`).join("");
+    const quote = isQuote ? `<section class="portal-voice-quote" data-voice-quote><h4>${safeText(t("flow.quote", "Báo giá"))}</h4><dl><div><dt>${safeText(t("flow.price", "Giá bán"))}</dt><dd data-voice-sale-price>${safeText(price)}</dd></div></dl><p>${safeText(t(price === "—" ? "flow.priceUnknown" : "flow.quoteNote", ""))}</p></section>` : "";
+    const planning = rows ? `<details class="portal-voice-flow-details"><summary>${safeText(t("flow.details", "Chi tiết yêu cầu"))}</summary><dl>${rows}</dl></details>` : "";
+    const preferred = canonicalPreferredText(values);
+    const targetField = featureDraftTarget(flow, route);
+    const textActions = preferred && targetField ? `<div class="portal-canonical-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-canonical-draft" data-canonical-text="${safeText(preferred)}">${safeText(t("flow.copy", "Sao chép"))}</button><button class="portal-button portal-button--primary" type="button" data-portal-action="apply-canonical-draft" data-canonical-text="${safeText(preferred)}" data-canonical-route="${safeText(route)}" data-canonical-field="${safeText(targetField)}">${safeText(t("flow.apply", "Dùng trong biểu mẫu"))}</button></div>` : "";
+    const feedback = message ? `<details class="portal-voice-flow-feedback"><summary>${safeText(t("flow.feedback", "Thông báo xử lý"))}</summary><p>${safeText(message)}</p></details>` : "";
+    const tracking = flow && flow.phase === "confirm" ? safeFeatureTracking(flow) : null;
+    const trackingMarkup = flow && flow.phase === "confirm"
+      ? `<div class="portal-voice-tracking"><p>${safeText(t(tracking ? "flow.trackingReady" : "flow.trackingPending", ""))}</p>${tracking ? `<dl><div><dt>${safeText(t("flow.jobId", "Mã công việc"))}</dt><dd><code>${safeText(tracking.id)}</code></dd></div></dl>` : ""}<a class="portal-button portal-button--quiet" href="${tracking ? `/jobs/${encodeURIComponent(tracking.id)}` : "/jobs"}">${safeText(t(tracking ? "flow.track" : "output.jobs", "Xem công việc"))}</a></div>`
+      : "";
+    return `<div class="portal-voice-flow" data-voice-flow-state="${safeText(status)}"><div class="portal-state" data-state="${safeText(status)}"><div><h3>${safeText(heading)}</h3><p>${safeText(needsRefresh ? t("flow.quoteNeedsRefreshNote", "") : t(`flow.note.${status}`, t("flow.note.guarded", "")))}</p></div></div>${quote}${planning}${textActions}${feedback}${trackingMarkup}</div>`;
+  }
+
   function renderFeatureBotHandoff(page, context, flow) {
     // Planning may be available before an execution adapter is approved. The
     // default next step is Web authoring, not Telegram. A Bot companion stays
@@ -30417,7 +30465,7 @@
     const voiceTask = ["/voice/tts", "/voice/saved", "/voice/clone", "/voice/outputs"].includes(route);
     const subtitleStudioCompanion = renderSubtitleStudioCompanionLink(page);
     const flow = context.featureFlows && context.featureFlows[route];
-    const flowOutput = flow
+    const flowOutput = voiceTask && flow ? renderVoiceFlowState(flow, route) : flow
       ? `<div class="portal-state" data-state="${safeText(flow.status || "guarded")}"><span class="portal-state-icon" aria-hidden="true">○</span><div><h3>${safeText(flow.message || "Core Bridge đã cập nhật trạng thái.")}</h3><p>Trạng thái canonical: ${safeText(STATE_LABELS[flow.status] || flow.status || "guarded")}. ${flow.status === "completed" ? "Output chỉ được cấp qua asset đã xác minh." : "Bản nháp planning có thể hiển thị; output engine vẫn phải qua job và asset hợp lệ."}</p></div></div>${renderCanonicalFlow(flow, route)}${renderFeatureTracking(flow)}`
       : renderEmpty(videoTask ? uiText("videoUi.output.empty", "Chưa có kết quả video") : voiceTask ? voiceUiText("output.empty", "Chưa có kết quả") : "Chờ Engine Web hoặc integration tùy chọn", videoTask ? uiText("videoUi.output.waiting", "") : voiceTask ? voiceUiText("output.waiting", "") : "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○");
     const voiceVault = page.path === "/voice/saved" ? renderVoiceVault(context) : "";
@@ -30426,10 +30474,14 @@
     const formContent = route === "/voice/outputs"
       ? `<section class="portal-card portal-card-pad"><p>${safeText(voiceUiText("output.help", ""))}</p><a class="portal-button portal-button--quiet" href="/jobs">${safeText(voiceUiText("output.jobs", "Xem công việc"))}</a></section>`
       : isLegacySubDubRoute ? renderSubDubRedirectPlaceholder(route) : renderFormCard(page, context);
-    return `<article class="portal-page${videoTask ? " portal-feature-workspace--video-task" : voiceTask ? " portal-feature-workspace--voice-task" : ""}">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
-      ${interactiveWorkbench}
-      <div class="portal-work-grid"><div>${formContent}${subtitleStudioCompanion}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside></div>
-      ${voiceVault}${videoTask || voiceTask ? "" : renderFeatureBotHandoff(page, context, flow)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${videoTask ? safeText(uiText("videoUi.output.title", "")) : voiceTask ? safeText(voiceUiText("output.title", "")) : "Output & trạng thái"}</h2>${videoTask || voiceTask ? "" : '<p class="portal-card-subtitle">Không tạo text, media, transcript hoặc file giả để thay thế engine thật.</p>'}</div>${badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section></article>`;
+    const flowFirst = Boolean(voiceTask && flow && flow.phase !== "draft");
+    const previousFormCollapsed = Boolean(voiceTask && flow && flow.phase === "confirm" && FEATURE_TRACKING_JOB_STATES.has(flow.status));
+    const visibleForm = previousFormCollapsed ? `<details class="portal-voice-task-form" data-voice-task-form><summary>${safeText(voiceUiText("flow.form", "Biểu mẫu giọng đọc"))}</summary>${formContent}</details>` : formContent;
+    const outputSection = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${videoTask ? safeText(uiText("videoUi.output.title", "")) : voiceTask ? safeText(voiceUiText("output.title", "")) : "Output & trạng thái"}</h2>${videoTask || voiceTask ? "" : '<p class="portal-card-subtitle">Không tạo text, media, transcript hoặc file giả để thay thế engine thật.</p>'}</div>${voiceTask ? "" : badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section>`;
+    return `<article class="portal-page${videoTask ? " portal-feature-workspace--video-task" : voiceTask ? " portal-feature-workspace--voice-task" : ""}">${renderHero(page, context)}${voiceTask ? "" : `<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>`}
+      ${interactiveWorkbench}${flowFirst ? outputSection : ""}
+      <div class="portal-work-grid"><div>${visibleForm}${subtitleStudioCompanion}</div>${voiceTask ? "" : `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside>`}</div>
+      ${voiceVault}${videoTask || voiceTask ? "" : renderFeatureBotHandoff(page, context, flow)}${flowFirst ? "" : outputSection}</article>`;
   }
 
   function renderVoiceVault(context) {

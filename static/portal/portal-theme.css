@@ -21448,6 +21448,22 @@ html:not([data-portal-theme="dark"]) .portal-feature-workspace--voice-task form 
 html[data-portal-theme="dark"] .portal-feature-workspace--voice-task form .portal-button--primary { background: var(--portal-dark-action) !important; background-image: none !important; color: var(--portal-dark-on-action) !important; }
 html[data-portal-theme="dark"] .portal-feature-workspace--voice-task form .portal-button--primary:hover:not(:disabled) { background: var(--portal-dark-action-hover) !important; background-image: none !important; color: var(--portal-dark-on-action) !important; filter: none !important; }
 .portal-voice-inventory-list { display: grid; gap: 12px; }
+.portal-voice-flow { display: grid; gap: 16px; color: var(--portal-ink); }
+.portal-voice-flow .portal-state { margin: 0; }
+.portal-voice-flow :is(h3, h4, dt, dd, p, summary) { color: var(--portal-ink); }
+.portal-voice-flow :is(.portal-voice-quote, .portal-voice-tracking) { background: var(--portal-surface-soft); border: 1px solid var(--portal-border); border-radius: 12px; padding: 16px; }
+.portal-voice-flow dl { display: grid; gap: 12px; margin: 0; }
+.portal-voice-flow dl > div { display: grid; gap: 4px; }
+.portal-voice-flow dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.portal-voice-flow [data-voice-sale-price] { font-size: 24px; font-weight: 750; line-height: 1.3; }
+.portal-voice-flow :is(.portal-voice-flow-details, .portal-voice-flow-feedback) > summary { min-height: 44px; padding: 12px 0; cursor: pointer; font-weight: 650; }
+.portal-voice-flow code { color: var(--portal-ink); overflow-wrap: anywhere; }
+.portal-voice-task-form > summary { padding: 16px; min-height: 44px; cursor: pointer; font-weight: 700; color: var(--portal-ink); }
+.portal-voice-task-form { border: 1px solid var(--portal-border); border-radius: var(--portal-radius); background: var(--portal-surface-light); }
+:root .portal-feature-workspace--voice-task .portal-badge { color: var(--portal-ink); background: var(--portal-surface-soft); }
+:root .portal-feature-workspace--voice-task .portal-voice-flow :is(h3, h4, dt, dd, p, summary, code) { color: var(--portal-ink) !important; }
+html:not([data-portal-theme="dark"]) .portal-feature-workspace--voice-task .portal-button--primary { background: var(--portal-action-hover) !important; background-image: none !important; color: var(--portal-on-action) !important; }
+html[data-portal-theme="dark"] .portal-feature-workspace--voice-task .portal-button--primary { background: var(--portal-dark-action) !important; background-image: none !important; color: var(--portal-dark-on-action) !important; }
 .portal-voice-inventory-card { min-width: 0; border: 1px solid var(--portal-border); border-radius: var(--portal-radius); background: var(--portal-surface-light); }
 .portal-voice-inventory-card > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 14px 16px; color: var(--portal-ink); cursor: pointer; }
 .portal-voice-inventory-card > summary strong { overflow-wrap: anywhere; }

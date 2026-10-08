@@ -22,21 +22,28 @@ actions. Remove only proven contradictory demo panels and technical UI copy.
   (`voice-current-before`, 32 cases; retained source hashes).
 - [x] Voice hub: compact navigation, unique destinations, complete VI/EN/ZH
   (`voice-core-after`, 72-case core matrix; seven unique hub destinations).
-- [ ] TTS and saved voice: content → voice → speed → volume, vertical inputs,
-  visible primary action, truthful readiness and quote/confirmation states.
-- [ ] Clone: supported consent/sample/name sequence and clear availability.
-- [ ] Preview/output: genuine result/delivery state without fabricated audio.
-- [ ] Voice Studio/composer: separate metadata/text planning from speech creation;
-  layout and fixed copy natural and localized, preserve actual private controls.
-- [ ] Per-route VI/EN/ZH × light/dark × desktop/mobile browser checks, keyboard,
-  text/control contrast, overflow and visual screenshot review.
-- [ ] Source contract/syntax checks, updated checklist/evidence then review.
+- [x] TTS `/voice/tts`: content → voice → speed → volume, vertical inputs,
+  visible primary action, localized price/status and truthful quote/confirmation
+  states. See the 2026-10-08 TTS flow-state evidence below.
+- [x] Saved voice `/voice/saved`: keep the ready-profile filter and form flow;
+  quote/progress/result states now have route-specific browser evidence below.
+- [x] Clone `/voice/clone`: supported consent/sample/name sequence, clear
+  capability availability and disabled sample upload when not authorized.
+- [x] Preview/output: genuine status/delivery presentation without fabricated
+  audio; preserve ownership and access boundaries.
+- [x] Voice Studio/composer: separate metadata/text planning from speech
+  creation; localized list/detail/cue sheet/composer and preserved private
+  controls. Evidence is recorded in the Studio, detail and Composer checkpoints.
+- [x] Voice route matrices: VI/EN/ZH × light/dark × desktop/mobile, keyboard,
+  text/control contrast, overflow and screenshots are recorded by route family.
+- [x] Source contract/syntax checks and completion evidence are recorded below.
+  Shared shell language purity and whole-site motion remain open separately.
 
 Scope: Voice presentation and fixed feedback text only. Paid provider calls,
 production business actions, API/engine/wallet/ENV changes remain zero.
 Do not reuse the older dirty UI worktree as the engine/runtime authority.
 
-Status: `COMPOSER_RECEIPT_AND_DETAIL_BEHAVIOR_VERIFIED / TTS_FLOW_STATES_NEXT`.
+Status: `VOICE_PRESENTATION_VERIFIED_LOCAL_RELEASE_CI_PENDING`.
 
 ## Initial real-render findings
 
@@ -220,9 +227,39 @@ Composer evidence: `qa/20261007-video-uiux/voice-direction-composer-final3`.
   `/voice/preview`, `/voice/outputs`: 60/60 complete, VI/EN/ZH × light/dark ×
   1440/375; no overflow/runtime errors, text minimum 4.515:1 and border
   minimum 3.399:1. This proves presentation/readiness surfaces only.
-- [ ] Quote/confirmation/progress/result/error states still need UI-only flow
-  fixtures. No real estimate, confirm, provider, wallet or audio request was
-  made; do not infer those states from the 60 read-only cases.
+- [x] TTS quote/confirmation/progress/result/error presentation verified with
+  UI-only fixtures on `/voice/tts`: 72 primary cases + 36 boundary cases,
+  VI/EN/ZH × light/dark × 1440/375; dark/light text contrast 4.515:1 / 5.473:1,
+  zero overflow and route runtime errors. The 60 read-only cases remain the
+  separate evidence for `/voice/preview` and `/voice/outputs`; they do not
+  prove quote-state behavior on saved voice or clone.
+- [x] Saved-voice and clone quote/progress/result states have separate
+  route-specific evidence: 144/144 cases on `/voice/saved` and `/voice/clone`
+  across VI/EN/ZH × light/dark × 1440/375. A corrected interaction matrix
+  verified flow-before-form for all six states, keyboard disclosures, the
+  collapsed prior form, quote gating, no cost leak, zero overflow and zero
+  route runtime errors (48/48 interactions).
+
+## TTS flow-state checkpoint — 2026-10-08
+
+- [x] Direct renderer tests: 45/45 passed; six-file Voice UI aggregate:
+  110/110 passed. `node --check` passed for `portal.js` and `portal-i18n.js`;
+  `git diff --check` passed.
+- [x] Localized the disabled Voice form tooltip for VI/EN/ZH. Dark-mode Voice
+  flow text now uses the readable semantic foreground rather than the muted
+  shared page color that measured 3.51:1 before this fix.
+- [x] Existing submit/confirm gates, action IDs, feature aliases, receipts,
+  tracking match rules and form fields remain covered by direct behavior tests.
+- [x] QA artifacts: `voice-tts-flow-final-20261008/browser-review.json` and
+  `voice-tts-boundary-final-20261008/browser-review.json` under
+  `qa/20261007-video-uiux/`. Both are isolated presentation fixtures; no
+  business POST or paid action was made. Four background auth GETs remained
+  pending, and the setup `ViewTransition` warning remains an open motion item.
+- [ ] Voice release/CI, shared English-shell copy, remaining route-state
+  evidence and whole-site motion/performance checks remain open.
+
+Saved-voice and clone evidence: `../../../../../qa/20261007-video-uiux/voice-saved-clone-flow-20261008/`
+and `../../../../../qa/20261007-video-uiux/voice-saved-clone-interaction-20261008/`.
 
 ## Receipt/locale re-audit — 2026-10-08
 
@@ -266,7 +303,8 @@ checkpoint supersedes broad earlier Composer-copy claims.
 - [x] Node aggregate 65 passed/0 failed; Python contracts 41 passed; extended
   safety run 117 passed/2 matching baseline failures. API/DB/engine/integration/
   motion/CI protected paths byte-identical to Video merge base `8a040d0`.
-- [ ] TTS quote/confirmation/progress/result/error presentation is NEXT.
+- [x] TTS quote/confirmation/progress/result/error presentation is completed
+  in the 2026-10-08 checkpoint below.
 - [ ] Whole-site shared locale and motion gates remain open. No Voice release
   or live-production outcome is inferred from these isolated QA results.
 
@@ -275,5 +313,7 @@ Current evidence: `qa/20261007-video-uiux/voice-receipt-detail-settled-20261008`
 Earlier failed/incomplete fixture attempts are retained and are NOT PASS.
 
 Code checkpoint: `2983174f33cde489a182b2523b328f8ce0b01c4d`, local only.
-Next allowed work: TTS flow-state presentation and its fixtures. Music remains
-after Voice, and remaining Video/motion stay in the Owner's ordered queue.
+TTS flow-state presentation is complete in the checkpoint above. The ordered
+Music UI slice is now separately verified locally; SubDub is next. Voice and
+Music are not yet committed, pushed, merged or deployed; remaining Video and
+the site-wide motion gate stay in the Owner's queue.
