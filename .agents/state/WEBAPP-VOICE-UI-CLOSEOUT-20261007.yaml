@@ -1,14 +1,14 @@
 task: WEBAPP-VOICE-UI-CLOSEOUT-20261007
 phase: VERIFY
-status: VOICE_UI_EXACT_COMMIT_RELEASE_GATES_RUNNING
+status: VOICE_UI_BROWSER_PASS_UBUNTU_CI_REQUIRED_BEFORE_MERGE
 goal_status: ACTIVE
 workspace: C:/Users/toann/Documents/Codex/2026-07-10/1-ngu-n-ch-nh-v/work/toanaas-video-ui-release-20261007
 branch: fix/voice-ui-closeout-20261007
 base_sha: 8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952
-head_sha: c162e9b6e584876f71492d17e9b11d7ca61f9658
+head_sha: b7628a8c1457f9c8c4fef294dc66368aa01dc2a3
 code_status: VOICE_ONLY_COMMITTED_NOT_PUSHED_NOT_DEPLOYED
-code_checkpoint_sha: c162e9b6e584876f71492d17e9b11d7ca61f9658
-checkpoint_commit: c162e9b6e584876f71492d17e9b11d7ca61f9658
+code_checkpoint_sha: b7628a8c1457f9c8c4fef294dc66368aa01dc2a3
+checkpoint_commit: b7628a8c1457f9c8c4fef294dc66368aa01dc2a3
 spec: docs/superpowers/specs/2026-10-07-voice-ui-closeout.md
 master_checklist: ../toanaas-webapp-ui-closeout-20260929/reports/audit/P0-WEB-ERP-MASTER-CHECKLIST.md
 prior_checkpoint:
@@ -32,12 +32,17 @@ completed_local:
   - Direction Composer fixed copy/result guard uses localized catalogue keys;
     current 12-case browser matrix passes.
 verification:
-  release_source_sha: c162e9b6e584876f71492d17e9b11d7ca61f9658
+  release_source_sha: b7628a8c1457f9c8c4fef294dc66368aa01dc2a3
   release_web_fingerprint: 7414a417bfed8bf19ee856e6934978b05d7129e9b6f859808776ef93de9b772d
   release_provenance: WEB_ONLY_REFRESHED_245_SOURCE_FILES_BOT_RECORDS_UNCHANGED
   release_compile_js_node: PASS_COMPILE_7_JS_SYNTAX_110_VOICE_RENDERERS
-  release_web_contracts: RUNNING_AFTER_COMPOSER_SELECTOR_CORRECTION
-  release_browser_gate: RUNNING_AFTER_VOICE_PRIMARY_TARGET_CORRECTION
+  release_web_contracts_windows: 387_PASS_2_FAIL_POSIX_0600_AND_NEW_CASE_SOURCE_METADATA
+  release_tester_metadata_correction: MEASURED_116_LINES_32264_BYTES_HASH_UPDATED_TARGET_RECHECK_PENDING
+  release_posix_test: UNCHANGED_FROM_MAIN_BLOB_0eafeb48_WINDOWS_REPORTS_0666_EXPECTED_LINUX_0600
+  release_browser_gate: PASS_18_CAPTURED_PAGES_6_OF_6_HUBS_6_OF_6_KEYBOARD_4_FREE_TOOLS
+  release_runtime_assertions: PASS_26_OF_26
+  release_browser_fixture: qa/voice-ui-verify-b7628a8/reports/browser_evidence
+  release_ci_ubuntu: PENDING_REQUIRED_BEFORE_MERGE
   node_voice_aggregate: 110_PASS_0_FAIL_six_voice_UI_test_files
   resumed_draft_save_new_labels: RED_EMPTY_THEN_GREEN_VI_EN_ZH
   public_quote_vs_internal_cost: RED_THEN_GREEN_PUBLIC_QUOTE_PRESERVED_COST_ONLY_UNKNOWN

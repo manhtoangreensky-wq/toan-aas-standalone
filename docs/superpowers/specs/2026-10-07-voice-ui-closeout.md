@@ -5,6 +5,26 @@ Base main: `8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952` after Video PR #616.
 
 ## Contract
 
+## Release gate result — 2026-10-08
+
+- Voice source snapshot `b7628a8c1457f9c8c4fef294dc66368aa01dc2a3`:
+  compile/JS syntax and 110 renderer tests pass.
+- Official browser runner on this snapshot: 18 page captures, all 6 hubs
+  visible, primary links checked, 6/6 keyboard-focus checks, 4/4 deterministic
+  free tools, light/dark persistence and no first-paint theme flicker. Runtime
+  assertions **26/26** pass. QA server/Chrome were shut down by the runner.
+- Bounded Windows suite completed: **387 passed, 2 failed**. One new failure
+  was stale Tester case-source line/byte/hash metadata after VUI additions;
+  refresh measured 116 lines, 32264 bytes and portable hash. Target retest and
+  CI are required. The other is the unchanged POSIX temporary-file mode test
+  (Windows reports 0666; test expects 0600); keep the assertion intact and use
+  the repository's Ubuntu CI as the release gate.
+- Generated browser evidence is retained in
+  `../../qa/voice-ui-verify-b7628a8/reports/browser_evidence/`.
+  This is isolated QA evidence, not production live acceptance. No paid
+  provider, wallet, engine, ENV or production-data action.
+- [ ] Publish one Voice PR and require Ubuntu CI before merge/deploy.
+
 Release verification also covers the existing CI runner's Voice DOM selectors
 and Web-only migration provenance JSON. Candidate `cddf617` reproduced two
 gate failures: Composer additions lacked the page ancestor required by the
