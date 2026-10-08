@@ -29,8 +29,19 @@ Base: `9f2ba35a85608495cb34d918dfc0af62f4dc2414` (fresh standalone main).
   by Enter, fields remain present, menus open and close with Escape.
 - [x] No horizontal overflow or closed drawer covering content.
 - [x] Measured small text >=4.5:1 and active input borders >=3:1.
-- [ ] JS/Python syntax, source tests and the official bounded Web CI gate.
-- [ ] Commit/push, one PR, CI then squash merge. Record deployment separately.
+- [x] JS/Python syntax, source tests and official Web CI: PR CI passed 389 Web
+  contracts, 26 browser runtime assertions, 18 CI screenshots, plus
+  compilation/syntax/provenance gates; Main CI passed.
+- [x] One PR, CI, squash merge and separate deployment record: PR #616 merged at
+  `8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952`; deploy run `37632060634`
+  succeeded and the exact Web runtime SHA was verified.
+
+## Release record
+
+PR #616 is merged and its deployment/runtime verification is recorded in the
+PR closeout. This closes only the selected Video presentation checkpoint; it
+does not close the remaining Video product screens or the site-wide motion and
+performance gate.
 
 ## Test compatibility
 

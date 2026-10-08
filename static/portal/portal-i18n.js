@@ -12481,6 +12481,449 @@
     VIDEO_TASK_COPY_ROWS.forEach((row) => { MESSAGES[locale][`videoUi.${row[0]}`] = row[index + 1]; });
   });
 
+  const VOICE_STUDIO_UI_COPY_ROWS = [
+    ["page.title","Hồ sơ giọng và lời thoại","Voice profiles and scripts","声音档案与台词"],
+    ["page.newTitle","Tạo hồ sơ giọng","Create a voice profile","创建声音档案"],
+    ["create.toggle","Tạo hồ sơ mới","Create a profile","创建档案"],
+    ["policy.toggle","Quyền sử dụng và phạm vi của hồ sơ","Usage rights and profile scope","使用权与档案范围"],
+    ["field.isDefault.confirm","Ưu tiên hồ sơ này","Prefer this profile","优先使用此档案"],
+    ["page.description","Soạn cách thể hiện, quản lý xác nhận quyền sử dụng và lời thoại; không tạo hoặc phát tệp âm thanh.","Create voice directions, manage usage-rights confirmations and scripts; this workspace does not generate or play audio.","编写表达方式、管理使用权确认和台词；此工作区不会生成或播放音频。"],
+    ["access.title","Hồ sơ giọng nói đang được bảo vệ","Voice profiles are protected","语音档案受到保护"],
+    ["access.description","Đăng nhập để mở hồ sơ và lời thoại riêng tư. Trang này không đọc kho giọng của Bot hoặc nhận mã Telegram thô.","Sign in to open private profiles and scripts. This page does not read the Bot voice library or accept raw Telegram IDs.","登录后可查看私密档案和台词。此页面不会读取 Bot 语音库，也不会接收原始 Telegram 编号。"],
+    ["activity.kicker","HOẠT ĐỘNG TÀI KHOẢN","ACCOUNT ACTIVITY","账户活动"],
+    ["activity.title","Hoạt động gần đây","Recent activity","近期活动"],
+    ["activity.description","Lịch sử chỉ ghi lại thao tác và thời điểm; không hiển thị lời thoại, ghi chú quyền sử dụng hoặc nội dung âm thanh.","History records actions and timestamps only; it does not show scripts, rights notes or audio content.","历史仅记录操作和时间，不显示台词、使用权说明或音频内容。"],
+    ["intro.kicker","HỒ SƠ GIỌNG NÓI & LỜI THOẠI","VOICE DIRECTION & SCRIPT WORKSPACE","语音表达与台词工作区"],
+    ["intro.title","Giữ cách kể nhất quán, quản lý quyền sử dụng và lời thoại trước khi chuyển sang bước xử lý.","Keep delivery consistent and manage usage rights and scripts before production.","统一表达方式，管理使用权和台词，再进入后续制作环节。"],
+    ["intro.description","Không gian này giúp bạn lưu hướng dẫn thể hiện, xác nhận quyền sử dụng và lời thoại. Trang không tạo giọng nói, bản nghe thử hay tệp âm thanh.","Save delivery guidance, usage-rights confirmations and scripts in one place. This workspace does not create voices, previews or audio files.","在此保存表达指导、使用权确认和台词。此工作区不会创建语音、试听内容或音频文件。"],
+    ["metrics.vaults","Hồ sơ đang dùng","Active profiles","启用中的档案"],
+    ["metrics.scripts","Lời thoại đang dùng","Active scripts","启用中的台词"],
+    ["metrics.archived","Đã lưu trữ","Archived","已归档"],
+    ["create.title","Tạo hồ sơ giọng nói","Create a voice profile","创建语音档案"],
+    ["create.description","Lưu cách thể hiện, ngữ cảnh sử dụng và xác nhận quyền trong tài khoản của bạn.","Save delivery style, usage context and rights confirmation to your account.","在账户中保存表达方式、使用场景和使用权确认。"],
+    ["create.note","Mẫu giọng tham khảo cần có xác nhận quyền sử dụng. Không dùng biểu mẫu này để yêu cầu bắt chước người thật.","Reference voices require your rights confirmation. Do not use this form to request imitation of a real person.","参考语音需要您确认拥有使用权。请勿在此申请模仿真实人物。"],
+    ["create.submit","Lưu hồ sơ giọng nói","Save voice profile","保存语音档案"],
+    ["filter.title","Tìm hồ sơ giọng nói","Find a voice profile","查找语音档案"],
+    ["filter.more","Lọc theo từ khóa và trạng thái","Filter by tag and status","按标签与状态筛选"],
+    ["filter.description","Tìm theo tên, cách thể hiện hoặc từ khóa.","Search by name, delivery style or keyword.","按名称、表达方式或关键词查找。"],
+    ["filter.refresh","Làm mới danh sách","Refresh list","刷新列表"],
+    ["filter.q.label","Từ khóa tìm kiếm","Search terms","搜索内容"],
+    ["filter.q.placeholder","Tên hồ sơ, cách thể hiện hoặc ngữ cảnh…","Profile name, delivery style or context…","档案名称、表达方式或使用场景…"],
+    ["filter.tag.label","Từ khóa","Keyword","关键词"],
+    ["filter.tag.placeholder","Ví dụ: ra mắt","For example: launch","例如：发布"],
+    ["filter.state.label","Trạng thái","Status","状态"],
+    ["filter.state.all","Tất cả","All","全部"],
+    ["filter.state.active","Đang dùng","Active","使用中"],
+    ["filter.state.archived","Đã lưu trữ","Archived","已归档"],
+    ["filter.note","Bộ lọc chỉ áp dụng trong lượt xem này; không đưa nội dung nhập vào liên kết hoặc nơi khác.","Filters apply only to this view; entered text is not added to a link or sent elsewhere.","筛选仅作用于当前页面；输入内容不会写入链接或发送到其他位置。"],
+    ["filter.clear","Xóa bộ lọc","Clear filters","清除筛选"],
+    ["filter.submit","Tìm hồ sơ","Search profiles","查找档案"],
+    ["empty.vaults.title","Chưa có hồ sơ giọng nói","No voice profiles yet","还没有语音档案"],
+    ["empty.vaults.description","Tạo hồ sơ đầu tiên để lưu cách thể hiện, xác nhận quyền và lời thoại. Trang này không tạo âm thanh.","Create your first profile to save delivery guidance, rights confirmations and scripts. This page does not create audio.","创建首个档案以保存表达指导、使用权确认和台词。此页面不会生成音频。"],
+    ["empty.events.title","Chưa có hoạt động","No recent activity","暂无近期活动"],
+    ["empty.events.description","Lịch sử chỉ ghi lại thao tác và thời điểm; không hiển thị lời thoại hoặc ghi chú quyền sử dụng.","History records actions and timestamps only; it does not show scripts or rights notes.","历史记录仅显示操作和时间，不显示台词或使用权说明。"],
+    ["read.loading.title","Đang tải hồ sơ riêng tư","Loading private profiles","正在加载私密档案"],
+    ["read.loading.description","Chờ máy chủ xác minh tài khoản; không dùng dữ liệu cũ hoặc hồ sơ từ Bot để thay thế.","Waiting for the server to verify your account; old or Bot profiles are never used as a fallback.","等待服务器验证账户；不会使用旧数据或 Bot 档案作为替代。"],
+    ["read.failed.title","Chưa thể tải hồ sơ","Profiles could not be loaded","无法加载档案"],
+    ["read.failed.description","Dữ liệu cũ không được giữ lại hoặc thay bằng dữ liệu từ Bot. Hãy thử làm mới sau.","Old data is not retained or replaced with Bot data. Try refreshing later.","不会保留旧数据或用 Bot 数据替代。请稍后刷新。"],
+    ["read.guarded.title","Danh sách đang được bảo vệ","Profile list is protected","档案列表受到保护"],
+    ["read.guarded.description","Chưa sẵn sàng xác minh quyền sở hữu nên nội dung riêng tư chưa được hiển thị.","Private content stays hidden until ownership can be verified.","在确认所有权之前，私密内容不会显示。"],
+    ["policy.kicker","GIỚI HẠN CỦA TRANG","WORKSPACE LIMITS","工作区范围"],
+    ["policy.title","Soạn và lưu hồ sơ, không tạo giọng nói","Manage profiles; do not generate voices","管理档案，不生成语音"],
+    ["policy.description","Trang chỉ giữ thông tin riêng tư và lời thoại. Không tải lên âm thanh hoặc kết nối dịch vụ tạo giọng.","This workspace stores private information and scripts only. It does not accept audio uploads or connect to voice-generation services.","此工作区仅保存私密信息和台词，不接收音频上传，也不连接语音生成服务。"],
+    ["policy.consent.title","Xác nhận quyền là do bạn tự khai báo","Rights confirmation is self-reported","使用权由您自行声明"],
+    ["policy.consent.description","Hệ thống lưu lời xác nhận để tham khảo nội bộ; không xác minh danh tính, cấp quyền sử dụng hoặc mở tính năng nhân bản giọng.","The workspace stores your statement for internal review; it does not verify identity, grant usage rights or enable voice cloning.","工作区保存您的声明供内部审核；不会验证身份、授予使用权或启用语音克隆。"],
+    ["policy.features.speech","Chuyển văn bản thành giọng nói","Text-to-speech","文字转语音"],
+    ["policy.features.clone","Nhân bản giọng nói","Voice cloning","语音克隆"],
+    ["policy.features.preview","Nghe thử","Audio preview","试听"],
+    ["policy.features.delivery","Bàn giao tệp","File delivery","文件交付"],
+    ["status.available","Sẵn sàng","Available","可用"],
+    ["status.unavailable","Chưa khả dụng","Unavailable","暂不可用"],
+    ["status.disabled","Đang tắt","Disabled","已关闭"],
+    ["status.unknown","Chưa xác định","Unknown","未知"],
+    ["status.authoringOnly","Chỉ quản lý thông tin","Profile management only","仅管理档案"],
+    ["vaultKind.deliveryStyle","Cách thể hiện","Delivery style","表达方式"],
+    ["vaultKind.brandNarration","Lời dẫn thương hiệu","Brand narration","品牌旁白"],
+    ["vaultKind.consentedReference","Mẫu giọng có xác nhận quyền","Rights-confirmed voice sample","已确认使用权的语音样本"],
+    ["consent.notRequired","Không yêu cầu xác nhận","Not required","无需确认"],
+    ["consent.selfAttested","Tự xác nhận quyền sử dụng","Rights self-confirmed","自行确认使用权"],
+    ["consent.revoked","Đã thu hồi xác nhận","Confirmation revoked","确认已撤销"],
+    ["field.title.label","Tên hồ sơ","Profile name","档案名称"],
+    ["field.title.placeholder","Ví dụ: Giọng đọc giới thiệu sản phẩm","For example: Product introduction voice","例如：产品介绍旁白"],
+    ["field.kind.label","Loại hồ sơ","Profile type","档案类型"],
+    ["field.language.label","Ngôn ngữ","Language","语言"],
+    ["field.language.placeholder","Ví dụ: Tiếng Việt","For example: English","例如：中文"],
+    ["field.style.label","Cách thể hiện","Delivery style","表达方式"],
+    ["field.style.placeholder","Nhịp đọc, độ rõ, cảm xúc, khoảng nghỉ và quy tắc biên tập…","Pacing, clarity, emotion, pauses and editorial rules…","语速、清晰度、情绪、停顿和编辑规则…"],
+    ["field.style.help","Mô tả cách thể hiện nguyên bản; không yêu cầu bắt chước một người cụ thể.","Describe an original delivery style; do not request imitation of a specific person.","请描述原创表达方式；不要申请模仿特定人物。"],
+    ["field.context.label","Ngữ cảnh sử dụng","Usage context","使用场景"],
+    ["field.context.placeholder","Ví dụ: lời dẫn video giới thiệu sản phẩm hoặc nội dung cần duyệt nội bộ…","For example: product introduction video narration or copy for internal review…","例如：产品介绍视频旁白或需要内部审核的内容…"],
+    ["field.consent.label","Xác nhận quyền sử dụng","Usage-rights confirmation","使用权确认"],
+    ["field.consent.help","Mẫu giọng chỉ dùng khi bạn tự xác nhận có quyền. Đây chưa phải phê duyệt hoặc cho phép nhân bản giọng.","Use a reference voice only when you confirm you have the rights. This is not approval or permission to clone a voice.","仅在您确认拥有使用权后才使用参考语音。此声明不是审批，也不代表允许克隆语音。"],
+    ["field.consentNote.label","Ghi chú xác nhận quyền","Rights confirmation note","使用权确认说明"],
+    ["field.consentNote.placeholder","Ghi rõ căn cứ xác nhận hoặc việc thu hồi quyền (ít nhất 12 ký tự).","Describe the basis for your confirmation or its revocation (at least 12 characters).","说明确认依据或撤销情况（至少 12 个字符）。"],
+    ["field.isDefault.label","Ưu tiên hồ sơ này trong phòng thu","Prefer this profile in Voice Studio","在语音工作室优先使用此档案"],
+    ["field.isDefault.help","Chỉ áp dụng trong không gian này; không thay đổi lựa chọn của Bot hoặc dịch vụ bên ngoài.","This applies only in this workspace; it does not change Bot or external-service preferences.","此设置仅用于当前工作区，不会更改 Bot 或外部服务中的偏好。"],
+    ["field.tags.label","Từ khóa","Keywords","关键词"],
+    ["field.tags.placeholder","thương hiệu, ra mắt, duyệt","brand, launch, review","品牌、发布、审核"],
+    ["field.project.label","Dự án (không bắt buộc)","Project (optional)","项目（可选）"],
+    ["field.project.empty","Không liên kết dự án","No linked project","不关联项目"],
+    ["field.contentBrief.label","Đề cương nội dung (không bắt buộc)","Content brief (optional)","内容提纲（可选）"],
+    ["field.contentBrief.empty","Không liên kết đề cương","No linked brief","不关联提纲"],
+    ["reference.fallback","Tài liệu riêng tư","Private document","私密文档"],
+    ["pagination.aria","Phân trang hồ sơ giọng nói","Voice profile pages","语音档案分页"],
+    ["pagination.showing","Đang hiển thị {start}–{end} hồ sơ","Showing profiles {start}–{end}","正在显示第 {start}–{end} 个档案"],
+    ["pagination.noItems","Không có hồ sơ ở trang này","No profiles on this page","此页没有档案"],
+    ["pagination.previous","Trang trước","Previous page","上一页"],
+    ["pagination.next","Trang sau","Next page","下一页"],
+    ["event.vaultCreated","Đã tạo hồ sơ","Profile created","已创建档案"],
+    ["event.vaultUpdated","Đã cập nhật hồ sơ","Profile updated","已更新档案"],
+    ["event.vaultArchived","Đã lưu trữ hồ sơ","Profile archived","已归档档案"],
+    ["event.vaultRestored","Đã khôi phục hồ sơ","Profile restored","已恢复档案"],
+    ["event.vaultDuplicated","Đã sao chép hồ sơ","Profile copied","已复制档案"],
+    ["event.vaultVersionRestored","Đã khôi phục phiên bản hồ sơ","Profile version restored","已恢复档案版本"],
+    ["event.defaultCleared","Đã cập nhật hồ sơ ưu tiên","Preferred profile updated","已更新优先档案"],
+    ["event.scriptCreated","Đã thêm lời thoại","Script added","已添加台词"],
+    ["event.scriptUpdated","Đã cập nhật lời thoại","Script updated","已更新台词"],
+    ["event.scriptArchived","Đã lưu trữ lời thoại","Script archived","已归档台词"],
+    ["event.scriptRestored","Đã khôi phục lời thoại","Script restored","已恢复台词"],
+    ["event.scriptDuplicated","Đã sao chép lời thoại","Script copied","已复制台词"],
+    ["event.scriptVersionRestored","Đã khôi phục phiên bản lời thoại","Script version restored","已恢复台词版本"],
+    ["event.scriptsComposed","Đã tạo khung lời thoại","Script outline created","已创建台词提纲"],
+    ["event.unknown","Đã cập nhật","Updated","已更新"],
+    ["card.titleFallback","Hồ sơ giọng nói","Voice profile","语音档案"],
+    ["card.descriptionFallback","Chưa có mô tả hiển thị.","No description available.","暂无可显示的说明。"],
+    ["card.default","Đang ưu tiên","Preferred","优先使用"],
+    ["card.needsReview","Cần rà soát cách thể hiện","Delivery style needs review","需要检查表达方式"],
+    ["card.metadataOnly","Chỉ lưu thông tin · chưa kết nối dịch vụ xử lý","Private information only · no processing service connected","仅保存信息 · 未连接处理服务"],
+    ["card.archivedReadOnly","Đã lưu trữ · chỉ xem","Archived · view only","已归档 · 仅查看"],
+    ["card.open","Mở hồ sơ","Open profile","打开档案"]
+    ,["script.kind.narration","Lời dẫn","Narration","旁白"]
+    ,["script.kind.ad","Quảng cáo","Advertisement","广告"]
+    ,["script.kind.explainer","Giải thích","Explainer","说明"]
+    ,["script.kind.podcast","Podcast","Podcast","播客"]
+    ,["script.kind.training","Đào tạo","Training","培训"]
+    ,["script.kind.custom","Tùy chỉnh","Custom","自定义"]
+    ,["detail.title","Chi tiết hồ sơ","Profile details","档案详情"]
+    ,["detail.status.active","Đang hoạt động","Active","使用中"]
+    ,["detail.status.archived","Đã lưu trữ","Archived","已归档"]
+    ,["detail.status.readOnly","Chỉ xem","View only","仅查看"]
+    ,["detail.actions.archive","Lưu trữ hồ sơ","Archive profile","归档档案"]
+    ,["detail.actions.restore","Khôi phục hồ sơ","Restore profile","恢复档案"]
+    ,["detail.actions.duplicate","Sao chép hồ sơ","Copy profile","复制档案"]
+    ,["detail.actions.save","Lưu phiên bản mới","Save new version","保存新版本"]
+    ,["detail.actions.open","Mở hồ sơ","Open profile","打开档案"]
+    ,["detail.statusLabel","Trạng thái","Status","状态"]
+    ,["detail.actions.restoreVersion","Khôi phục phiên bản","Restore version","恢复版本"]
+    ,["detail.actions.back","Về danh sách hồ sơ","Back to profiles","返回档案列表"]
+    ,["detail.confirm.archive","Lưu trữ hồ sơ này? Nội dung và lịch sử vẫn được giữ riêng tư.","Archive this profile? Its content and history remain private.","要归档此档案吗？内容和历史仍会保持私密。"]
+    ,["detail.confirm.restoreVersion","Khôi phục phiên bản này thành một phiên bản hồ sơ mới?","Restore this version as a new profile version?","要将此版本恢复为新的档案版本吗？"]
+    ,["detail.emptyHistory.title","Chưa có lịch sử phiên bản","No version history yet","暂无版本历史"]
+    ,["detail.emptyHistory.description","Lịch sử xuất hiện sau lần lưu đầu tiên và không bị ghi đè âm thầm.","History appears after the first save and is never silently overwritten.","首次保存后会出现历史记录，且不会被静默覆盖。"]
+    ,["detail.emptyReference","Chưa liên kết tài liệu","No linked reference","未关联文档"]
+    ,["detail.revision","Phiên bản","Version","版本"]
+    ,["detail.scriptCount","Lời thoại","Scripts","台词"]
+    ,["composer.kicker","Soạn khung lời thoại","Script outline","台词提纲"]
+    ,["composer.title","Tạo khung lời thoại để biên tập","Create script outlines for editing","创建台词提纲供编辑"]
+    ,["composer.description","Chỉ tạo khung văn bản có nhãn rõ ràng; không tạo âm thanh hay công việc xử lý.","Creates labeled text outlines only; no audio or processing job is created.","仅创建带标签的文本提纲；不会生成音频或处理任务。"]
+    ,["composer.note","Khung được lưu riêng tư để rà soát thủ công.","Outlines are saved privately for manual review.","提纲会私密保存以供人工审核。"]
+    ,["composer.action","Tạo khung lời thoại","Create script outlines","创建台词提纲"]
+    ,["detail.scripts.create.title","Thêm lời thoại","Add a script","添加台词"]
+    ,["detail.scripts.create.description","Lời thoại được lưu trong tài khoản riêng tư và có lịch sử phiên bản.","Scripts are stored privately with version history.","台词会私密保存并保留版本历史。"]
+    ,["composer.direction.title","Hướng thể hiện","Delivery direction","表达方式"]
+    ,["composer.direction.empty","Chưa có hướng thể hiện","No delivery direction yet","暂无表达方式"]
+    ,["composer.direction.meta.set","Nhóm hướng","Direction set","表达组"]
+    ,["composer.direction.meta.speed","Nhịp đọc","Reading pace","语速"]
+    ,["composer.direction.compare.title","So sánh ba cách thể hiện","Compare three delivery options","比较三种表达方式"]
+    ,["composer.direction.useCase","Mục đích dùng","Use case","使用场景"]
+    ,["composer.direction.direction","Cách thể hiện","Direction","表达方式"]
+    ,["composer.direction.stylePrompt","Gợi ý phong cách","Style prompt","风格提示"]
+    ,["composer.direction.notes.title","Ghi chú thể hiện","Delivery notes","表达说明"]
+    ,["composer.direction.notes.description","Ghi chú giúp biên tập viên rà soát văn bản; không tạo âm thanh.","Notes help editors review text; no audio is created.","说明用于帮助编辑审核文本；不会生成音频。"]
+    ,["composer.direction.review.title","Cảnh báo và kiểm tra trước khi dùng","Warnings and checks before use","使用前的警告与检查"]
+    ,["composer.direction.scope.title","Ranh giới của công cụ","Tool boundary","工具范围"]
+    ,["composer.direction.scope.description","Chỉ lập kế hoạch bằng văn bản; không tạo giọng, âm thanh, công việc hay thanh toán.","Text planning only; no voice, audio, job or payment is created.","仅进行文本规划；不会创建语音、音频、任务或付款。"]
+    ,["composer.direction.meta.selected","Đã chọn hướng","Selected direction","已选择方向"]
+    ,["composer.field.text","Nội dung cần thể hiện","Text to deliver","需要表达的文本"]
+    ,["composer.page.title","Soạn cách thể hiện","Plan vocal delivery","规划声音表现"]
+    ,["composer.page.description","Nhập lời thoại, chọn nhịp đọc rồi so sánh ba cách thể hiện bằng văn bản.","Enter your script, choose a pace, then compare three written delivery options.","输入台词，选择语速，然后比较三种文字表达方案。"]
+    ,["composer.field.textPlaceholder","Ví dụ: Giới thiệu sản phẩm, lợi ích đã kiểm tra và lời kêu gọi trung thực.","For example: Introduce a product, verified benefits and a truthful call to action.","例如：介绍产品、已验证的优点及真实的行动呼吁。"]
+    ,["composer.field.textHelp","Chỉ dùng nội dung bạn có quyền sử dụng. Không nhập thông tin nhạy cảm hoặc yêu cầu bắt chước người cụ thể.","Use only text you have rights to. Do not enter sensitive information or request imitation of a specific person.","仅使用您有权使用的文本。请勿输入敏感信息或要求模仿特定人物。"]
+    ,["composer.field.language","Ngôn ngữ nội dung","Content language","内容语言"]
+    ,["composer.language.vi","Tiếng Việt","Vietnamese","越南语"]
+    ,["composer.language.en","Tiếng Anh","English","英语"]
+    ,["composer.field.set","Nhóm hướng thể hiện","Delivery group","表达组"]
+    ,["composer.set.core","Ba hướng cơ bản","Three basic directions","三种基础表达方式"]
+    ,["composer.set.extended","Ba hướng chuyên biệt","Three specialized directions","三种专门表达方式"]
+    ,["composer.field.setHelp","Mỗi nhóm có ba cách thể hiện bằng văn bản để so sánh; không chọn giọng nói thực tế.","Each group has three written delivery options to compare, not real voices.","每组提供三种文本表达方案进行比较，不是实际声音。"]
+    ,["composer.field.selection","Hướng cần phát triển","Direction to develop","需要发展的方向"]
+    ,["composer.choice","Hướng {choice}","Direction {choice}","方向 {choice}"]
+    ,["composer.field.selectionHelp","Bạn vẫn nhận đủ ba hướng; hướng đã chọn có ghi chú biên tập riêng.","All three directions are returned; your selection has its own editing notes.","仍会返回全部三种方案，所选方向附有编辑说明。"]
+    ,["composer.field.speed","Nhịp đọc gợi ý","Suggested pace","建议语速"]
+    ,["composer.speed.slow","Chậm, rõ ý","Slow and clear","缓慢清晰"]
+    ,["composer.speed.normal","Tự nhiên","Natural","自然"]
+    ,["composer.speed.fast","Nhanh, tách câu rõ","Fast with clear breaks","快速且停顿清晰"]
+    ,["composer.field.speedHelp","Đây là chỉ dẫn biên tập bằng văn bản, không tạo bản nghe thử hay âm thanh.","Written editing guidance only; no preview or audio is generated.","仅提供文字编辑指导，不会生成试听或音频。"]
+    ,["composer.note.pace_adjustment","Nhịp đọc","Pacing","语速"]
+    ,["composer.note.pause_notes","Khoảng nghỉ","Pauses","停顿"]
+    ,["composer.note.emphasis_notes","Điểm nhấn","Emphasis","重点"]
+    ,["composer.note.cta_notes","Lời kêu gọi hành động","Call to action","行动呼吁"]
+    ,["composer.off","Không thực hiện","Not performed","不执行"]
+    ,["composer.guidance.option.clearUse","hướng dẫn, giải thích, đánh giá chân thật","guides, explainers and grounded reviews","教程、讲解及真实评价"]
+    ,["composer.guidance.option.clearStyle","Nữ nhẹ nhàng: ấm, rõ chữ, thân thiện; tốc độ vừa phải; phù hợp hướng dẫn, giải thích, đánh giá chân thật. Hướng thể hiện: Đọc rõ từng ý, giữ nụ cười nhẹ trong giọng và tránh nhịp quảng cáo gấp.","Gentle female: warm, clear and friendly; pace moderate; suitable for guides, explainers and grounded reviews. Delivery direction: Articulate each point, keep a light warmth, and avoid rushed sales pacing.","温柔的女声：温暖、清晰、友善，语速适中，适合教程、讲解及真实评价。逐项清晰表达，保持轻微笑意，避免急促的广告节奏。"]
+    ,["composer.guidance.option.salesUse","TikTok/Reels/Shorts, tiếp thị liên kết, ưu đãi ngắn","TikTok/Reels/Shorts, affiliate and short offers","TikTok/Reels/Shorts、联盟营销及简短优惠信息"]
+    ,["composer.guidance.option.salesStyle","Trẻ trung bán hàng: năng lượng, gần gũi, có nhịp lời kêu gọi hành động; tốc độ nhanh vừa; phù hợp TikTok/Reels/Shorts, tiếp thị liên kết, ưu đãi ngắn. Hướng thể hiện: Mở đầu bắt nhịp nhanh, giữ câu ngắn, rồi chốt lời kêu gọi hành động gọn và tự nhiên.","Youthful sales: energetic, approachable and CTA-aware; pace brisk but clear; suitable for TikTok/Reels/Shorts, affiliate and short offers. Delivery direction: Start with a quick hook, keep sentences short, then land a concise natural CTA.","年轻的销售声线：有活力、亲切，行动呼吁节奏明确，语速适度偏快，适合 TikTok/Reels/Shorts、联盟营销及简短优惠。开场快速抓住节奏、句子简短，结尾行动呼吁简洁自然。"]
+    ,["composer.guidance.caution.textOnly","Đây là hướng biên tập bằng văn bản, không phải giọng nói, âm thanh hay bản nghe thử.","This is an editorial text direction, not speech, audio, a preview, or a TTS output.","这是文字编辑指导，不是语音、音频或试听内容。"]
+    ,["composer.guidance.caution.imitation","Không dùng để bắt chước, nhân bản hoặc mạo danh giọng của người thật hay người nổi tiếng.","Do not use it to imitate, clone, or attach a real or public person's vocal identity.","不得用来模仿、克隆或冒充真实人物或公众人物的声音。"]
+    ,["composer.guidance.caution.review","Kiểm tra sự thật, quyền sử dụng, phát âm thương hiệu và lời kêu gọi hành động trước khi dùng trong quy trình đã được phê duyệt riêng.","Review facts, usage rights, brand pronunciation, and the CTA before using a separately approved workflow.","用于另行批准的流程之前，请核对事实、使用权、品牌发音及行动呼吁。"]
+    ,["composer.guidance.review.facts","Đọc lại nội dung để phát hiện tuyên bố chưa kiểm chứng, tên riêng, dữ liệu nhạy cảm hoặc lời hứa chưa có căn cứ.","Read the text again for unverified claims, names, sensitive data, or unsupported promises.","重新阅读文本，检查未经验证的声明、名称、敏感数据或无依据的承诺。"]
+    ,["composer.guidance.review.original","Đảm bảo cách thể hiện là nguyên bản, không yêu cầu bắt chước một người cụ thể.","Confirm the selected direction is original and is not an instruction to imitate a specific person.","确认表达方式为原创，且不是模仿特定人物的指示。"]
+    ,["composer.guidance.review.pacing","Xác nhận nhịp đọc và khoảng nghỉ phù hợp với kênh phát hành trước khi tạo âm thanh ở quy trình khác.","Confirm reading rhythm and rests fit the release channel before any separate audio workflow is considered.","在其他流程生成音频之前，确认语速和停顿适合发布渠道。"]
+    ,["composer.guidance.notes.pauses","Dừng ngắn sau câu mở, trước ý chính và trước lời kêu gọi hành động; không biến khoảng nghỉ thành hiệu ứng âm thanh.","Use short rests after the opening, before the main idea, and before the CTA; do not treat pauses as audio effects.","在开场、主要观点及行动呼吁前短暂停顿，不将停顿作为音效。"]
+    ,["composer.guidance.notes.emphasis","Chỉ nhấn tên sản phẩm, lợi ích đã được rà soát và một hành động chính; tránh tuyên bố tuyệt đối.","Emphasize only the product name, reviewed benefit, and one primary action; avoid absolute claims.","仅强调产品名称、已审核的优点及一个主要行动，避免绝对声明。"]
+    ,["composer.guidance.notes.action","Lời kêu gọi hành động cần ngắn, trung thực và được đội ngũ duyệt trước khi dùng trong bản ghi âm riêng.","Keep the CTA brief and truthful; obtain editorial approval before it is used in any separate audio workflow.","行动呼吁须简短真实，并在单独录音中使用之前获得编辑批准。"]
+    ,["composer.direction.selected","Đã chọn","Selected","已选择"]
+    ,["composer.direction.review.empty","Không có cảnh báo bổ sung; vẫn cần rà soát quyền và nội dung.","No additional warnings; rights and content still require review.","没有其他警告；仍需审核使用权和内容。"]
+    ,["composer.direction.intro.title","Chọn cách thể hiện rõ ràng trước khi chuyển sang bước tạo âm thanh.","Choose a clear delivery direction before any audio step.","在进入音频制作前先选择清晰的表达方式。"]
+    ,["composer.direction.intro.description","So sánh ba lựa chọn và ghi chú biên tập bằng văn bản; công cụ không tạo giọng hoặc tệp âm thanh.","Compare three written options and editing notes; this tool does not create voices or audio files.","比较三种文本方案和编辑说明；此工具不会创建语音或音频文件。"]
+    ,["composer.direction.metrics.options","Hướng thể hiện","Delivery options","表达方案"]
+    ,["composer.direction.metrics.notes","Ghi chú biên tập","Editing notes","编辑说明"]
+    ,["composer.direction.metrics.audio","Âm thanh được tạo","Audio created","已创建音频"]
+    ,["composer.direction.form.title","Lập hướng thể hiện","Create a delivery direction","创建表达方式"]
+    ,["composer.direction.form.description","Máy chủ trả về mẫu văn bản có thể rà soát; nội dung không được lưu thành hồ sơ hoặc gửi đến dịch vụ ngoài.","The server returns reviewable text; it is not saved as a profile or sent to an external service.","服务器返回可审核文本；不会保存为档案或发送到外部服务。"]
+    ,["composer.direction.form.note","Chỉ lập kế hoạch bằng văn bản; không tạo bản nghe thử, giọng, công việc hoặc tệp.","Text planning only; no preview, voice, job or file is created.","仅进行文本规划；不会创建试听、语音、任务或文件。"]
+    ,["composer.direction.form.submit","Lập ba hướng thể hiện","Create three directions","创建三种表达方式"]
+    ,["composer.direction.guard.text","Văn bản gốc và mã giọng","Raw text and voice IDs","原始文本与语音编号"]
+    ,["composer.direction.guard.audio","Bản nghe thử và âm thanh","Preview and audio","试听与音频"]
+    ,["composer.direction.guard.provider","Dịch vụ ngoài và Telegram","External service and Telegram","外部服务与 Telegram"]
+    ,["composer.direction.guard.job","Công việc, ví và thanh toán","Jobs, wallet and payment","任务、钱包与付款"]
+    ,["detail.scripts.description","Mỗi lời thoại có phiên bản riêng; cue-sheet chỉ ước lượng từ văn bản và nhịp đọc.","Each script has its own version; cue sheets estimate text pacing only.","每条台词都有独立版本；提示表只估算文本节奏。"]
+    ,["detail.scripts.empty","Chưa có lời thoại","No scripts yet","暂无台词"]
+    ,["detail.scripts.emptyDescription","Thêm lời thoại hoặc tạo khung để bắt đầu rà soát. Không có âm thanh thay thế được tạo.","Add a script or create an outline to begin review. No substitute audio is created.","添加台词或创建提纲以开始审核。不会生成替代音频。"]
+    ,["detail.history.description","Khôi phục sẽ tạo phiên bản mới và không xóa lịch sử cũ.","Restoring creates a new version and never deletes old history.","恢复会创建新版本，不会删除旧历史。"]
+    ,["detail.sections.scripts","Lời thoại và cue-sheet","Scripts and cue sheets","台词与提示表"]
+    ,["detail.sections.history","Lịch sử phiên bản","Version history","版本历史"]
+    ,["detail.sections.activity","Hoạt động trong hồ sơ","Profile activity","档案活动"]
+    ,["detail.sections.policy","Giới hạn xử lý","Processing limits","处理范围"]
+    ,["detail.editor.title","Cách thể hiện và quyền sử dụng","Delivery style and usage rights","表达方式与使用权"]
+    ,["detail.editor.description","Mỗi lần lưu tạo một phiên bản mới. Máy chủ kiểm tra quyền sở hữu và phiên bản trước khi ghi.","Each save creates a new version. The server checks ownership and revision before writing.","每次保存都会创建新版本。服务器写入前会检查所有权和版本。"]
+    ,["detail.editor.note","Ưu tiên hồ sơ chỉ áp dụng trong không gian này; không đổi lựa chọn của Bot hoặc dịch vụ khác.","The preference applies only in this workspace; it does not change Bot or external-service choices.","此偏好仅用于当前工作区，不会更改 Bot 或外部服务的选择。"]
+    ,["detail.consent.revoked.title","Quyền sử dụng đã thu hồi","Usage rights were revoked","使用权已撤销"]
+    ,["detail.consent.revoked.description","Hồ sơ vẫn được giữ để kiểm tra. Các thao tác tạo nội dung, sao chép và cue-sheet đang bị khóa.","The profile remains for review. Authoring, copying and cue-sheet actions are locked.","档案仍保留供审核。编写、复制和提示表操作已锁定。"]
+    ,["script.action.cue","Xem cue-sheet","View cue sheet","查看提示表"]
+    ,["script.action.archive","Lưu trữ lời thoại","Archive script","归档台词"]
+    ,["script.action.restore","Khôi phục lời thoại","Restore script","恢复台词"]
+    ,["script.action.duplicate","Sao chép lời thoại","Copy script","复制台词"]
+    ,["script.action.save","Lưu phiên bản lời thoại","Save script version","保存台词版本"]
+    ,["script.action.restoreVersion","Khôi phục phiên bản","Restore version","恢复版本"]
+    ,["script.guard.title","Lời thoại cần rà soát","Script needs review","需要检查台词"]
+    ,["script.guard.description","Hãy bỏ yêu cầu mô phỏng người cụ thể trước khi lưu. Hồ sơ không tự xác nhận quyền sử dụng.","Remove requests to imitate a specific person before saving. The profile does not verify rights automatically.","保存前请删除模仿特定人物的要求。档案不会自动验证使用权。"]
+    ,["script.confirm.archive","Lưu trữ lời thoại này? Nội dung và lịch sử vẫn được giữ riêng tư.","Archive this script? Its content and history remain private.","要归档此台词吗？内容和历史仍会保持私密。"]
+    ,["script.confirm.restoreVersion","Khôi phục phiên bản này thành một phiên bản lời thoại mới?","Restore this version as a new script version?","要将此版本恢复为新的台词版本吗？"]
+    ,["script.form.note","Lưu lời thoại không gửi nội dung tới dịch vụ tạo giọng, bản nghe thử hoặc công việc xử lý.","Saving a script does not send it to voice generation, preview or processing jobs.","保存台词不会将内容发送到语音生成、试听或处理任务。"]
+    ,["cue.title","Cue-sheet nhịp lời thoại","Speech pacing cue sheet","语音节奏提示表"]
+    ,["cue.description","Chỉ là ước lượng từ văn bản và nhịp đọc; không phải âm thanh, phụ đề hoặc bản nghe thử.","An estimate from text and reading pace; not audio, subtitles or a preview.","根据文本和语速估算；不是音频、字幕或试听内容。"]
+    ,["cue.empty","Chưa có câu để chia cue","No sentences to cue yet","暂无可分配提示的句子"]
+    ,["cue.words","từ","words","词"]
+    ,["cue.sentences","câu","sentences","句"]
+    ,["cue.seconds","giây","seconds","秒"]
+    ,["cue.pace","nhịp/phút","WPM","词/分钟"]
+    ,["detail.boundary.title","Không tạo âm thanh giả","No fabricated audio","不生成虚假音频"]
+    ,["detail.boundary.description","Tạo giọng, nghe thử và bàn giao tệp phải đi qua phạm vi riêng. Trang này chỉ quản lý hồ sơ và lời thoại.","Voice generation, preview and delivery use a separate contract. This page only manages profiles and scripts.","语音生成、试听和交付使用独立契约。此页面仅管理档案和台词。"]
+    ,["detail.notes.integrationTitle","Phạm vi của hồ sơ","Profile scope","档案范围"]
+    ,["detail.notes.integration","Hồ sơ này là thông tin do Web quản lý, không phải kho giọng của Bot hoặc hồ sơ dịch vụ bên ngoài.","This profile is Web-managed information, not a Bot voice library or external-service profile.","此档案由 Web 管理，不是 Bot 语音库或外部服务档案。"]
+    ,["detail.notes.safetyTitle","Nguyên tắc an toàn","Safety boundary","安全范围"]
+    ,["detail.notes.safety","Cue-sheet chỉ ước lượng từ văn bản; không gọi tạo giọng, nghe thử, tải âm thanh, công việc xử lý hoặc thanh toán.","Cue sheets estimate text only; no voice generation, preview, audio upload, processing job or payment is called.","提示表仅估算文本；不会调用语音生成、试听、音频上传、处理任务或付款。"]
+    ,["script.source.manual","Thủ công","Manual","手动"]
+    ,["script.source.composer","Từ bộ soạn thảo","Composer","来自编排器"]
+    ,["detail.missing.title","Không tìm thấy hồ sơ","Profile not found","未找到档案"]
+    ,["detail.missing.description","Hồ sơ không thuộc tài khoản hiện tại hoặc đã được gỡ. Không dùng dữ liệu thay thế từ Bot.","This profile is not in the current account or was removed. No Bot data is used as a fallback.","此档案不属于当前账户或已被删除。不会使用 Bot 数据替代。"]
+    ,["detail.read.loading","Đang nạp hồ sơ riêng tư","Loading private profile","正在加载私密档案"]
+    ,["detail.read.failed","Chưa thể nạp hồ sơ","Profile could not be loaded","无法加载档案"]
+    ,["detail.read.guarded","Hồ sơ đang được bảo vệ","Profile is protected","档案受到保护"]
+    ,["script.field.title","Tên lời thoại","Script title","台词名称"]
+    ,["script.field.titlePlaceholder","Ví dụ: Mở đầu giới thiệu sản phẩm","For example: Product introduction opening","例如：产品介绍开场"]
+    ,["script.field.kind","Loại lời thoại","Script type","台词类型"]
+    ,["script.field.language","Ngôn ngữ","Language","语言"]
+    ,["script.field.audience","Người nghe","Audience","听众"]
+    ,["script.field.audiencePlaceholder","Ví dụ: khách hàng mới","For example: new customers","例如：新客户"]
+    ,["script.field.pace","Nhịp đọc ước lượng","Estimated reading pace","预计语速"]
+    ,["script.field.paceHelp","Chỉ dùng để ước lượng cue-sheet từ văn bản; không phản ánh âm thanh thật.","Used only to estimate a text cue sheet; it does not represent real audio.","仅用于根据文本估算提示表；不代表真实音频。"]
+    ,["script.field.text","Lời thoại","Script text","台词内容"]
+    ,["script.field.textPlaceholder","Viết lời thoại để rà soát…","Write the script for review…","输入台词以供审核…"]
+    ,["script.field.delivery","Cách thể hiện","Delivery notes","表达说明"]
+    ,["script.field.deliveryPlaceholder","Khoảng nghỉ, điểm nhấn và cách nói rõ ràng…","Pauses, emphasis and clarity notes…","停顿、重点和清晰度说明…"]
+    ,["script.field.pronunciation","Ghi chú phát âm","Pronunciation notes","发音说明"]
+    ,["script.field.pronunciationPlaceholder","Tên sản phẩm hoặc thuật ngữ cần kiểm tra…","Product names or terms to verify…","需要核对的产品名称或术语…"]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    VOICE_STUDIO_UI_COPY_ROWS.forEach((row) => { MESSAGES[locale][`customerVoiceStudio.${row[0]}`] = row[index + 1]; });
+  });
+
+  const VOICE_UI_COPY_ROWS = [
+    ["section","GIỌNG NÓI","VOICE","语音"],
+    ["hub.title","Giọng nói AI","AI voice","AI 语音"],
+    ["hub.description","Đọc văn bản, dùng giọng đã lưu hoặc chuẩn bị cách thể hiện cho lời thoại.","Read text aloud, use saved voices or plan a script's delivery.","将文字转为语音、使用已保存的声音或规划台词的表现方式。"],
+    ["hub.choose","Chọn tác vụ giọng nói","Choose a voice task","选择语音任务"],
+    ["hub.open","Mở công cụ","Open tool","打开工具"],
+    ["hub.rights.title","Quyền sử dụng giọng","Voice usage rights","声音使用权"],
+    ["hub.rights.description","Chỉ dùng mẫu giọng và nội dung bạn có quyền sử dụng. Không mạo danh người khác.","Use only voice samples and content you have the right to use. Do not impersonate others.","请仅使用你有权使用的声音样本和内容，不得冒充他人。"],
+    ["tool.tts.title","Đọc văn bản thành giọng nói","Text to speech","文字转语音"],
+    ["tool.tts.description","Nhập lời thoại, chọn giọng đọc, tốc độ và âm lượng; xem báo giá trước khi xác nhận.","Enter a script, choose a voice, speed and volume, then review the quote before confirming.","输入台词，选择声音、语速和音量，确认前查看报价。"],
+    ["tool.saved.title","Dùng giọng đã lưu","Use a saved voice","使用已保存的声音"],
+    ["tool.saved.description","Chuẩn bị lời thoại với một giọng đã được tài khoản của bạn cấp quyền sử dụng.","Prepare a script with a saved voice your account is allowed to use.","使用此账户获准使用的已保存声音准备台词。"],
+    ["tool.clone.title","Nhân bản giọng nói","Voice cloning","声音克隆"],
+    ["tool.clone.description","Xác nhận quyền sử dụng mẫu, chọn tệp và đặt tên giọng; chỉ tiếp tục khi hệ thống cho phép.","Confirm rights to the sample, choose a file and name the voice; continue only when the service allows it.","确认样本使用权，选择文件并命名；服务允许后才能继续。"],
+    ["tool.preview.title","Nghe thử giọng","Voice preview","声音试听"],
+    ["tool.preview.description","Xem các giọng đã lưu và thông tin bản nghe thử được hệ thống xác nhận.","View saved voices and preview information confirmed by the system.","查看已保存的声音及系统确认的试听信息。"],
+    ["tool.outputs.title","Kết quả giọng đọc","Speech results","语音结果"],
+    ["tool.outputs.description","Theo dõi công việc giọng đọc và mở tệp âm thanh khi kết quả đã được xác nhận.","Track speech tasks and open audio files after the result is confirmed.","查看语音任务，结果确认后打开音频文件。"],
+    ["tool.studio.title","Quản lý kịch bản giọng nói","Manage voice scripts","管理语音脚本"],
+    ["tool.studio.description","Lưu cách thể hiện, quyền sử dụng và lời thoại riêng tư; đây là nơi soạn nội dung.","Store delivery directions, usage rights and private scripts; this is a planning workspace.","保存表现方向、使用权和私有台词；此处用于内容规划。"],
+    ["tool.direction.title","Soạn cách thể hiện","Plan vocal delivery","规划声音表现"],
+    ["tool.direction.description","Chọn nhịp đọc, ngắt nghỉ và sắc thái cho lời thoại bằng hướng dẫn viết.","Choose pacing, pauses and expression with written delivery guidance.","通过文字说明选择台词的节奏、停顿和情绪。"],
+    ["form.title","Chuẩn bị giọng đọc","Prepare speech","准备语音"],
+    ["form.draft","Bạn có thể soạn và lưu bản nháp. Việc gửi xử lý chỉ mở khi phiên của bạn có đủ quyền.","You can prepare and save a draft. Processing opens only when your session has the required access.","可编写并保存草稿；当前会话具备相应权限后才能提交处理。"],
+    ["form.ready","Rà soát lựa chọn, xem báo giá rồi xác nhận trước khi tạo giọng.","Review your settings and quote before confirming speech generation.","检查参数与报价，再确认生成语音。"],
+    ["form.guarded","Chưa thể gửi yêu cầu trong phiên này. Hãy kiểm tra đăng nhập và quyền sử dụng giọng.","Requests cannot be submitted in this session. Check your sign-in and voice access.","当前会话尚不能提交请求，请检查登录状态与声音使用权限。"],
+    ["form.draftNote","Bản nháp chưa tạo âm thanh hoặc trừ Xu. Tệp mẫu và quyền sử dụng cần kiểm tra lại khi gửi xử lý.","A draft does not create audio or spend Xu. Recheck sample files and usage rights before processing.","草稿不会生成音频或扣除 Xu，处理前需重新检查样本文件与使用权。"],
+    ["form.processingNote","Chỉ tạo âm thanh sau khi hệ thống xác nhận lựa chọn và bạn đồng ý báo giá.","Audio is created only after the server validates your settings and you accept the quote.","系统确认参数且你同意报价后才生成音频。"],
+    ["draft.save","Lưu bản nháp","Save draft","保存草稿"],
+    ["draft.update","Cập nhật bản nháp","Update draft","更新草稿"],
+    ["draft.saveNew","Lưu thành bản mới","Save as a new draft","另存为新草稿"],
+    ["action.estimate","Xem báo giá","View quote","查看报价"],
+    ["action.confirm","Xác nhận tạo giọng","Confirm speech generation","确认生成语音"],
+    ["action.continue","Tiếp tục","Continue","继续"],
+    ["action.confirmPrompt","Xác nhận gửi yêu cầu tạo giọng với báo giá đã hiển thị?","Submit speech generation with the displayed quote?","按显示的报价提交语音生成请求吗？"],
+    ["action.waiting","Báo giá đã có; hiện chưa thể xác nhận xử lý. Hãy thử lại khi dịch vụ sẵn sàng.","A quote is available, but processing cannot be confirmed yet. Try again when the service is ready.","已有报价，但目前还不能确认处理；服务就绪后请重试。"],
+    ["flow.state.draft","Bản nháp đã chuẩn bị","Draft prepared","草稿已准备"],
+    ["flow.state.awaiting_confirm","Báo giá chờ xác nhận","Quote awaiting confirmation","报价等待确认"],
+    ["flow.state.queued","Yêu cầu đang chờ xử lý","Request queued","请求排队中"],
+    ["flow.state.processing","Đang tạo giọng đọc","Generating speech","正在生成语音"],
+    ["flow.state.completed","Xử lý đã hoàn tất","Processing completed","处理已完成"],
+    ["flow.state.failed","Yêu cầu chưa hoàn tất","Request failed","请求未完成"],
+    ["flow.state.failed_no_charge","Không hoàn tất — chưa trừ Xu","Failed — no Xu charged","未完成 — 未扣除 Xu"],
+    ["flow.state.error","Chưa thể kiểm tra yêu cầu","Unable to check the request","暂时无法检查请求"],
+    ["flow.state.guarded","Chưa thể tiếp tục trong phiên này","Cannot continue in this session","当前会话无法继续"],
+    ["flow.state.cancelled","Yêu cầu đã hủy","Request cancelled","请求已取消"],
+    ["flow.state.refunded","Hoàn Xu đã được ghi nhận","Xu refund recorded","已记录 Xu 退款"],
+    ["flow.note.draft","Chưa tạo âm thanh. Rà soát nội dung và xem báo giá trước khi xác nhận.","No audio has been created. Review the text and quote before confirming.","尚未生成音频。请先检查文本与报价，再确认。"],
+    ["flow.note.awaiting_confirm","Kiểm tra giá và lựa chọn trước khi gửi xử lý. Chỉ xác nhận khi phiên có đủ quyền.","Check the price and settings before processing. Confirm only when your session has access.","处理前请检查价格与设置。会话具备权限后才能确认。"],
+    ["flow.note.queued","Theo dõi công việc để nhận trạng thái mới; không gửi lại cùng yêu cầu.","Track the task for updates; do not resubmit the same request.","查看任务以获取更新，请勿重复提交同一请求。"],
+    ["flow.note.processing","Hệ thống đang xử lý. Kết quả chỉ mở khi tệp và quyền truy cập đã được xác nhận.","Processing is in progress. Results open only after the file and access are verified.","系统正在处理。文件与访问权限确认后才能打开结果。"],
+    ["flow.note.completed","Hoàn tất xử lý chưa đồng nghĩa tệp đã được cấp quyền tải. Mở công việc để xem trạng thái bàn giao.","Processing completion does not grant a download. Open the task to check delivery.","处理完成不代表可下载。请打开任务查看交付状态。"],
+    ["flow.note.failed","Xem thông báo xử lý và trạng thái công việc trước khi thử lại.","Check processing feedback and task status before retrying.","重试前请检查处理说明与任务状态。"],
+    ["flow.note.failed_no_charge","Trạng thái máy chủ xác nhận chưa trừ Xu cho lần xử lý này.","The server status confirms no Xu was charged for this attempt.","服务器状态确认此处理未扣除 Xu。"],
+    ["flow.note.error","Không coi lỗi kiểm tra là đã tạo giọng. Xem thông báo hoặc kiểm tra lại công việc.","A check error is not speech generation success. Review feedback or check the task again.","检查错误不代表语音生成成功。请查看说明或再次检查任务。"],
+    ["flow.note.guarded","Yêu cầu chưa được phép gửi xử lý. Bản nháp vẫn có thể được lưu nếu tài khoản được cấp quyền.","Processing is not authorized. Drafts can still be saved when the account has permission.","尚未获准处理。账户具备权限时仍可保存草稿。"],
+    ["flow.note.cancelled","Kiểm tra công việc để biết trạng thái cuối cùng và thông tin tính phí.","Check the task for final status and billing information.","请查看任务的最终状态与计费信息。"],
+    ["flow.note.refunded","Số Xu và trạng thái hoàn tiền được xác nhận trong công việc và lịch sử tài khoản.","Refund amount and status are confirmed in the task and account history.","退款金额和状态会在任务及账户历史中确认。"],
+    ["flow.quote","Báo giá","Quote","报价"],
+    ["flow.quoteNeedsRefresh","Báo giá cần làm mới","Quote needs a refresh","需要重新获取报价"],
+    ["flow.quoteNeedsRefreshNote","Thông tin xác nhận không còn đầy đủ. Xem báo giá mới trước khi gửi xử lý.","Confirmation information is no longer complete. Request a new quote before processing.","确认信息已不完整。处理前请重新获取报价。"],
+    ["flow.form","Biểu mẫu giọng đọc","Speech form","语音表单"],
+    ["flow.state.ready","Có thể tiếp tục","Ready to continue","可以继续"],
+    ["flow.note.ready","Tiếp tục theo khả năng được hệ thống cấp; chưa tự suy ra âm thanh đã được tạo.","Continue using the access granted by the system; do not infer that audio was created.","按系统授权继续，请勿自行认为音频已生成。"],
+    ["flow.state.empty","Chưa có dữ liệu","No data yet","暂无数据"],
+    ["flow.note.empty","Chưa có kết quả được xác nhận cho yêu cầu này.","No confirmed result is available for this request.","此请求尚无已确认的结果。"],
+    ["flow.price","Giá bán","Price","价格"],
+    ["flow.priceUnknown","Chưa có giá được xác nhận. Không tự suy ra giá hoặc coi là miễn phí.","No confirmed price is available. Do not infer a price or assume it is free.","暂无已确认价格，请勿自行推算或认为免费。"],
+    ["flow.quoteNote","Đây là giá hệ thống trả về; chưa phải xác nhận đã trừ Xu.","This is the server-provided price, not proof of a charge.","这是服务器返回的价格，不代表已扣费。"],
+    ["flow.details","Chi tiết yêu cầu","Request details","请求详情"],
+    ["flow.feedback","Thông báo xử lý","Processing feedback","处理说明"],
+    ["flow.copy","Sao chép lời thoại","Copy script","复制台词"],
+    ["flow.apply","Dùng trong biểu mẫu","Use in form","用于表单"],
+    ["flow.trackingReady","Mã công việc khớp với yêu cầu và trạng thái này.","The task reference matches this request and status.","任务编号与此请求及状态一致。"],
+    ["flow.trackingPending","Chưa có mã công việc đã xác minh cho yêu cầu này. Không ghép công việc theo tên hoặc thời gian.","No verified task reference is available. Tasks are not matched by name or time.","此请求尚无已验证的任务编号，不会按名称或时间匹配任务。"],
+    ["flow.jobId","Mã công việc","Task ID","任务编号"],
+    ["flow.track","Theo dõi công việc","Track task","查看任务进度"],
+    ["flow.yes","Có","Yes","是"],
+    ["flow.no","Không","No","否"],
+    ["flow.field.script","Lời thoại","Script","台词"],
+    ["flow.field.text","Nội dung","Text","内容"],
+    ["flow.field.display_name","Tên giọng","Voice name","声音名称"],
+    ["flow.field.default_voice_gender","Giọng đọc","Voice","声音"],
+    ["flow.field.speed","Tốc độ","Speed","语速"],
+    ["flow.field.volume_percent","Âm lượng (%)","Volume (%)","音量（%）"],
+    ["flow.field.character_count","Số ký tự","Character count","字符数"],
+    ["flow.field.characters","Số ký tự","Character count","字符数"],
+    ["flow.field.duration_seconds","Thời lượng (giây)","Duration (seconds)","时长（秒）"],
+    ["flow.field.sample_staged","Mẫu giọng đã tải","Voice sample uploaded","声音样本已上传"],
+    ["flow.field.consent_confirmed","Quyền sử dụng đã xác nhận","Usage rights confirmed","使用权已确认"],
+    ["flow.field.next_step","Bước tiếp theo","Next step","下一步"],
+    ["status.ready","Có thể tiếp tục","Ready to continue","可以继续"],
+    ["status.guarded","Chưa thể gửi xử lý","Processing unavailable","尚不能提交处理"],
+    ["field.script.label","Nội dung lời thoại","Script text","台词内容"],
+    ["field.script.placeholder","Nhập nội dung bạn muốn đọc thành giọng nói…","Enter the text you want read aloud…","输入需要朗读的内容…"],
+    ["field.default_voice_gender.label","Giọng đọc","Voice","声音"],
+    ["field.default_voice_gender.empty","Chọn giọng đọc","Choose a voice","选择声音"],
+    ["field.default_voice_gender.help","Chọn giọng nam hoặc nữ có sẵn trong hệ thống.","Choose an available male or female voice.","选择系统提供的男声或女声。"],
+    ["option.default_voice_gender.female","Nữ","Female","女声"],
+    ["option.default_voice_gender.male","Nam","Male","男声"],
+    ["field.voice_profile_id.label","Giọng đã lưu","Saved voice","已保存的声音"],
+    ["field.voice_profile_id.empty","Chọn một giọng đã sẵn sàng","Choose an available voice","选择可用声音"],
+    ["field.voice_profile_id.help","Chỉ các giọng thuộc tài khoản và được phép sử dụng mới xuất hiện.","Only account-owned voices available for use are listed.","仅显示此账户拥有且获准使用的声音。"],
+    ["field.speed.label","Tốc độ đọc","Reading speed","语速"],
+    ["field.speed.help","Chọn tốc độ phù hợp với cách nghe. Hệ thống xác minh lựa chọn trước khi xử lý.","Choose a comfortable pace. The server validates your setting before processing.","选择合适的语速，处理前系统会验证参数。"],
+    ["option.speed.1.0","1,0× — mức chuẩn","1.0× — standard","1.0× — 标准"],
+    ["option.speed.0.85","0,85× — chậm hơn","0.85× — slower","0.85× — 较慢"],
+    ["option.speed.1.2","1,2× — nhanh hơn","1.2× — faster","1.2× — 较快"],
+    ["option.speed.normal","Tự nhiên","Natural","自然"],
+    ["option.speed.slow","Chậm","Slow","慢速"],
+    ["option.speed.fast","Nhanh","Fast","快速"],
+    ["field.volume_percent.label","Âm lượng (%)","Volume (%)","音量（%）"],
+    ["field.volume_percent.placeholder","100","100","100"],
+    ["field.volume_percent.help","100% là mức tiêu chuẩn. Khoảng được hỗ trợ: 0–200%.","100% is the standard level. Supported range: 0–200%.","100% 为标准音量，支持范围为 0–200%。"],
+    ["field.display_name.label","Tên giọng (tùy chọn)","Voice name (optional)","声音名称（可选）"],
+    ["field.display_name.placeholder","Ví dụ: Giọng thương hiệu TOAN AAS","For example: TOAN AAS brand voice","例如：TOAN AAS 品牌声音"],
+    ["field.display_name.help","Đặt tên dễ nhận biết; để trống nếu muốn dùng tên do hệ thống cấp.","Use a recognizable name, or leave blank for a system-provided name.","请使用易识别的名称，或留空以使用系统名称。"],
+    ["field.sample.label","Mẫu giọng","Voice sample","声音样本"],
+    ["field.sample.help","Tải mẫu chỉ được mở khi dịch vụ cho phép và xác minh quyền sử dụng.","Sample upload opens only when the service allows it and validates usage rights.","服务允许且确认使用权后才能上传样本。"],
+    ["field.consent.label","Quyền sử dụng mẫu giọng","Sample usage rights","样本使用权"],
+    ["field.consent.help","Tôi có quyền sử dụng mẫu giọng này và không mạo danh người khác.","I have the right to use this voice sample and am not impersonating anyone.","我有权使用此声音样本，且不冒充他人。"],
+    ["field.consent.confirm","Tôi xác nhận","I confirm","我确认"],
+    ["output.title","Kết quả và trạng thái","Results and status","结果与状态"],
+    ["output.empty","Chưa có kết quả âm thanh","No audio result yet","尚无音频结果"],
+    ["output.waiting","Kết quả chỉ hiển thị sau khi máy chủ xác nhận tệp âm thanh và quyền truy cập.","Results appear only after the server confirms the audio file and access.","服务器确认音频文件与访问权限后才显示结果。"],
+    ["output.help","Kết quả được gắn với từng công việc. Chỉ nghe hoặc tải tệp khi hệ thống xác nhận đã có kết quả và cấp quyền truy cập.","Results belong to individual tasks. Play or download only after the server confirms delivery and grants access.","结果属于各个任务，系统确认交付并授权访问后才能试听或下载。"],
+    ["output.jobs","Xem công việc","View tasks","查看任务"],
+    ["library.title","Giọng của bạn","Your voices","你的声音"],
+    ["library.description","Danh sách giọng thuộc tài khoản. Mở từng giọng để xem quyền sử dụng và thông tin nghe thử.","Account-owned voices. Open a voice to view usage rights and preview information.","此账户拥有的声音，可展开查看使用权与试听信息。"],
+    ["library.empty","Chưa có giọng đã lưu","No saved voices","暂无已保存的声音"],
+    ["library.emptyHelp","Giọng chỉ xuất hiện khi hệ thống xác nhận thuộc tài khoản và cho phép hiển thị.","Voices appear only after the system confirms ownership and visibility.","系统确认归此账户所有且允许显示后才列出声音。"],
+    ["library.unnamed","Giọng chưa đặt tên","Unnamed voice","未命名声音"],
+    ["library.default","Mặc định","Default","默认"],
+    ["library.status","Trạng thái","Status","状态"],
+    ["library.state.read_only","Chỉ xem","View only","仅查看"],
+    ["library.state.ready","Sẵn sàng","Ready","就绪"],
+    ["library.state.guarded","Chưa khả dụng","Unavailable","暂不可用"],
+    ["library.state.disabled","Tạm khóa","Temporarily disabled","暂时停用"],
+    ["library.state.queued","Đang chờ xử lý","Queued","排队中"],
+    ["library.state.processing","Đang xử lý","Processing","处理中"],
+    ["library.state.completed","Đã hoàn tất","Completed","已完成"],
+    ["library.state.failed","Không hoàn tất","Failed","未完成"],
+    ["library.state.error","Lỗi kết nối","Connection error","连接错误"],
+    ["library.state.archived","Đã lưu trữ","Archived","已归档"],
+    ["library.state.pending","Chờ xác nhận","Pending confirmation","等待确认"],
+    ["library.state.unknown","Chưa xác nhận","Unconfirmed","尚未确认"],
+    ["library.ready","Có thể dùng để đọc","Available for speech","可用于朗读"],
+    ["library.guarded","Chưa thể dùng để đọc","Not available for speech yet","暂不可用于朗读"],
+    ["library.consent","Quyền sử dụng","Usage rights","使用权"],
+    ["library.preview","Nghe thử","Preview","试听"],
+    ["library.previewMetadata","Có thông tin bản nghe thử; cần đường dẫn được cấp quyền để phát.","Preview information exists; playback requires an authorized link.","已有试听信息，播放需要授权链接。"],
+    ["library.noPreview","Chưa có thông tin bản nghe thử.","No preview information yet.","暂无试听信息。"],
+    ["library.updated","Cập nhật","Updated","更新时间"],
+    ["consent.granted","Đã cấp quyền","Granted","已授权"],
+    ["consent.confirmed","Đã xác nhận","Confirmed","已确认"],
+    ["consent.required","Cần xác nhận","Confirmation required","需要确认"],
+    ["consent.pending","Chờ xác nhận","Awaiting confirmation","等待确认"],
+    ["consent.revoked","Đã thu hồi","Revoked","已撤销"],
+    ["consent.unknown","Chưa xác nhận","Unconfirmed","尚未确认"]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    VOICE_UI_COPY_ROWS.forEach((row) => { MESSAGES[locale][`voiceUi.${row[0]}`] = row[index + 1]; });
+  });
+
   function verifyEqualKeysets() {
     const reference = Object.keys(MESSAGES[DEFAULT_LOCALE]).sort();
     Object.keys(LOCALES).forEach((locale) => {

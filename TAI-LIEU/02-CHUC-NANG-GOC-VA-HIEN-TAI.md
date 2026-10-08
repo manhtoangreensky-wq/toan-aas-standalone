@@ -1,5 +1,20 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Đối chiếu checkpoint Voice — 2026-10-08
+
+| Hiện trạng nguồn trước sửa | Mã ứng viên hiện tại | Bằng chứng |
+|---|---|---|
+| Workbench TTS mô phỏng trong trang hồ sơ giọng | Bỏ workbench mô phỏng; giữ các thao tác hồ sơ/lời thoại hiện có | `tests/voice-planning-truth.test.mjs` |
+| Nhãn danh mục, hồ sơ, phiên bản và cue sheet lẫn ngôn ngữ | VI/EN/ZH cho phần chữ cố định; dữ liệu người dùng/máy chủ giữ nguyên | 5 bộ renderer catalogue/studio/detail/composer/inventory |
+| Mô tả preview có thể bị hiểu là đã có file nghe | Metadata readiness tách khỏi link phát/tải được xác minh | `tests/test_portal_safety_contracts.py::test_voice_output_preview_and_history_views_do_not_overclaim_unmapped_delivery` |
+| Kết quả generic dùng thuật ngữ nội bộ và nằm sau biểu mẫu cũ | Kết quả Voice được bản địa hóa, đặt trước khi có báo giá/tracking | `tests/voice-flow-state-presentation.test.mjs` |
+| Nút lưu bản mới có thể trống khi mở lại bản nháp | Khóa `voiceUi.draft.saveNew` và test bản nháp đã mở lại ở 3 ngôn ngữ | Cùng bộ flow-state; 110/110 renderer Voice đạt |
+| Fallback `cost_xu` có thể làm mất/bị dùng thay báo giá công khai | Chỉ `estimated_xu`/`quote_xu`; chi phí nội bộ không thay giá bán | Test giá công khai + cost, cost-only, 0/unknown |
+
+Đây là thay đổi trình bày. Chưa khẳng định TTS/clone/provider/audio thật đã chạy;
+route/engine và thẩm quyền dữ liệu không nằm trong checkpoint này. Chỉ đánh dấu
+release/live sau khi có CI, merge/deploy và browser readback tương ứng.
+
 ## Đối chiếu checkpoint Video — 2026-10-07
 
 - Khung mẫu từng ghi “RTX 4090 VIDEO RENDER ENGINE SẴN SÀNG”, kịch bản mẫu và

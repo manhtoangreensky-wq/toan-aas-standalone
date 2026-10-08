@@ -668,7 +668,7 @@ async def run_browser_verification(
                             const HUB_PRIMARY_SELECTORS = {{
                                 "/tools/video": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
                                 "/tools/image": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
-                                "/voice": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/voice": [".portal-voice-hub a[data-voice-primary][href='/voice/tts']"],
                                 "/music": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
                                 "/subdub": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
                                 "/tools/free": [
@@ -771,7 +771,7 @@ async def run_browser_verification(
                             const HUB_PRIMARY_SELECTORS = {{
                                 "/tools/video": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
                                 "/tools/image": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
-                                "/voice": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/voice": [".portal-voice-hub a[data-voice-primary][href='/voice/tts']"],
                                 "/music": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
                                 "/subdub": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
                                 "/tools/free": [
@@ -999,14 +999,14 @@ async def run_browser_verification(
                         if (txt.includes('Hoàn thành') || txt.includes('Đã sẵn sàng tải')) fakeSuccess++;
                     });
 
-                    const primaryAction = document.querySelector('.portal-document-board-action--primary, button.portal-button--primary, a.portal-button--primary');
+                    const primaryAction = document.querySelector(".portal-voice-hub a[data-voice-primary][href='/voice/tts']");
                     const primaryHref = primaryAction ? primaryAction.getAttribute('href') : '';
 
                     return {
                         hasVoiceStudio, hasDirection, hasSaved,
                         guardedCount: guardedCards.length,
                         fakeSuccess,
-                        primaryMatches: primaryHref === '/voice-studio'
+                        primaryMatches: primaryHref === '/voice/tts'
                     };
                 })()""",
                 "returnByValue": True,
@@ -1341,7 +1341,9 @@ async def run_browser_verification(
 
                         // Fail-closed resolution of primary CTA
                         const primaryCta = document.querySelector(
-                            '.portal-document-board-action--primary, button.portal-button--primary, a.portal-button--primary, button[data-free-tool-action], .portal-document-board-action'
+                            location.pathname === '/voice'
+                                ? ".portal-voice-hub a[data-voice-primary][href='/voice/tts']"
+                                : '.portal-document-board-action--primary, button.portal-button--primary, a.portal-button--primary, button[data-free-tool-action], .portal-document-board-action'
                         );
                         if (!primaryCta) {
                             return {

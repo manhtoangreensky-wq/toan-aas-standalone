@@ -1348,7 +1348,12 @@ def test_voice_output_preview_and_history_views_do_not_overclaim_unmapped_delive
     assert 'guardedFeaturePage("/voice/outputs"' in PORTAL
     assert 'path === "/voice/outputs"' in INTEGRATION
     assert '"/voice/outputs", "/music/library"' not in INTEGRATION
-    assert "Có preview canonical · chờ adapter URL ký" in PORTAL
+    inventory = PORTAL[PORTAL.index("function renderVoiceVault(context)"):PORTAL.index("function resolveLegacySubDubCanonicalUrl(")]
+    assert 'profile.preview_ready ? "library.previewMetadata" : "library.noPreview"' in inventory
+    assert '"library.previewMetadata"' in I18N
+    assert "playback requires an authorized link" in I18N
+    for playback_control in ("<audio", "src=", "href=", "onclick=", "data-portal-action"):
+        assert playback_control not in inventory
     assert "consent_status" in PORTAL
     assert "tối đa 100" in PORTAL
 

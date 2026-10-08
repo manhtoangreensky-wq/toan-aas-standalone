@@ -1,0 +1,132 @@
+task: WEBAPP-VOICE-UI-CLOSEOUT-20261007
+phase: VERIFY
+status: VOICE_UI_BROWSER_PASS_UBUNTU_CI_REQUIRED_BEFORE_MERGE
+goal_status: ACTIVE
+workspace: C:/Users/toann/Documents/Codex/2026-07-10/1-ngu-n-ch-nh-v/work/toanaas-video-ui-release-20261007
+branch: fix/voice-ui-closeout-20261007
+base_sha: 8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952
+head_sha: b7628a8c1457f9c8c4fef294dc66368aa01dc2a3
+code_status: VOICE_ONLY_COMMITTED_NOT_PUSHED_NOT_DEPLOYED
+code_checkpoint_sha: b7628a8c1457f9c8c4fef294dc66368aa01dc2a3
+checkpoint_commit: b7628a8c1457f9c8c4fef294dc66368aa01dc2a3
+spec: docs/superpowers/specs/2026-10-07-voice-ui-closeout.md
+master_checklist: ../toanaas-webapp-ui-closeout-20260929/reports/audit/P0-WEB-ERP-MASTER-CHECKLIST.md
+prior_checkpoint:
+  pr: https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/616
+  merge_and_runtime_sha: 8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952
+  deploy: https://github.com/manhtoangreensky-wq/toan-aas-standalone/actions/runs/37632060634
+  recheck: GitHub_MERGED_deploy_SUCCESS_SSH_SHA_MATCH_Web_nginx_ACTIVE
+  accepted_routes: /tools/video /video/create /video/multiscene
+completed_local:
+  - Remove simulated TTS panel inside renderVoiceStudio; retain real authoring controls.
+  - Voice hub has seven unique destinations; core form names/actions/limits remain unchanged.
+  - Consent/sample/name sequence preserved; sample disabled when the engine capability is absent.
+  - Mobile assistant sits in the header; installation remains accessible through Account.
+  - Saved-voice inventory retains localized default/status, consent, preview and update metadata.
+  - Saved-voice selector retains existing profile ID/readiness filtering and required semantics.
+  - Voice Studio list/new use natural localized forms, profile labels, read states, events and pagination; only these Studio routes accepted locally.
+  - List-first search, optional filter/create disclosures, vertical form/cards; existing fields/values/limits/actions/rights unchanged.
+  - Current Voice Studio nav cue is localized; whole shared sidebar still open.
+  - Voice Studio detail/script/version/cue-sheet fixed copy is localized and
+    active/revoked UI-only fixtures have passed; detail keeps private action IDs.
+  - Direction Composer fixed copy/result guard uses localized catalogue keys;
+    current 12-case browser matrix passes.
+verification:
+  release_source_sha: b7628a8c1457f9c8c4fef294dc66368aa01dc2a3
+  release_web_fingerprint: 7414a417bfed8bf19ee856e6934978b05d7129e9b6f859808776ef93de9b772d
+  release_provenance: WEB_ONLY_REFRESHED_245_SOURCE_FILES_BOT_RECORDS_UNCHANGED
+  release_compile_js_node: PASS_COMPILE_7_JS_SYNTAX_110_VOICE_RENDERERS
+  release_web_contracts_windows: 387_PASS_2_FAIL_POSIX_0600_AND_NEW_CASE_SOURCE_METADATA
+  release_tester_metadata_correction: MEASURED_116_LINES_32264_BYTES_HASH_UPDATED_TARGET_RECHECK_PENDING
+  release_posix_test: UNCHANGED_FROM_MAIN_BLOB_0eafeb48_WINDOWS_REPORTS_0666_EXPECTED_LINUX_0600
+  release_browser_gate: PASS_18_CAPTURED_PAGES_6_OF_6_HUBS_6_OF_6_KEYBOARD_4_FREE_TOOLS
+  release_runtime_assertions: PASS_26_OF_26
+  release_browser_fixture: qa/voice-ui-verify-b7628a8/reports/browser_evidence
+  release_ci_ubuntu: PENDING_REQUIRED_BEFORE_MERGE
+  node_voice_aggregate: 110_PASS_0_FAIL_six_voice_UI_test_files
+  resumed_draft_save_new_labels: RED_EMPTY_THEN_GREEN_VI_EN_ZH
+  public_quote_vs_internal_cost: RED_THEN_GREEN_PUBLIC_QUOTE_PRESERVED_COST_ONLY_UNKNOWN
+  node_tts_flow_focused: 45_PASS_0_FAIL
+  browser_tts_primary: 72_of_72_complete_source_stable_zero_overflow_zero_route_runtime_errors
+  browser_tts_boundary: 36_of_36_complete_source_stable_zero_overflow_zero_route_runtime_errors
+  browser_tts_text_contrast: light_min_5.473_dark_min_4.515_no_text_below_4.5
+  browser_tts_control_border_contrast: min_3.399
+  browser_tts_flow_gates: fresh_visible_quote_1_confirm_zero_Xu_allowed_unknown_stale_result_error_0_confirm
+  browser_saved_clone_primary: 144_of_144_complete_source_stable_zero_overflow_zero_route_runtime_errors
+  browser_saved_clone_text_contrast: light_min_5.282_dark_min_4.515_no_text_below_4.5
+  browser_saved_clone_control_border_contrast: light_min_3.399_dark_min_3.762
+  browser_saved_clone_interaction: 48_of_48_complete_all_six_states_flow_before_form_keyboard_and_collapsed_form_correct
+  browser_saved_clone_cost_and_media_guard: no_provider_cost_leak_zero_audio_players
+  browser_saved_clone_runner_fix: flow_order_measurement_now_includes_voice_clone_form
+  browser_setup_runtime: one_existing_ViewTransition_invalid_state_warning_during_login_setup
+  browser_pending_requests: two_to_five_background_auth_GETs_unresolved_at_matrix_close_max_observed_age_273_seconds
+  python_targeted: 41_PASS_in_2.70s
+  python_extended: 117_PASS_2_BASELINE_MATCHING_FAILURES_in_4.39s
+  new_failing_ids: 0
+  baseline_failure_ids:
+    - test_video_music_and_dubbing_forms_forward_the_bot_planning_controls
+    - test_guarded_feature_execution_keeps_web_authoring_primary_and_bot_companion_optional
+  syntax_and_diff: PASS
+  protected_API_DB_engine_integration_motion_CI_paths: unchanged_against_HEAD
+  inventory_browser: 48_cases_0_failures_0_overflow_0_route_runtime_errors
+  studio_list_new_browser: 48_of_48_complete_0_failures_matching_source_hashes
+  studio_text_min_contrast: 4.515
+  studio_control_border_min_contrast: 3.399
+  studio_detail_active_browser: 12_of_12_complete_0_failures
+  studio_detail_revoked_browser: 12_of_12_complete_0_failures
+  studio_detail_text_min_contrast: 4.515
+  studio_detail_control_border_min_contrast: 3.399
+  direction_composer_browser: 12_of_12_complete_0_failures
+  direction_composer_text_min_contrast: 5.944
+  direction_composer_control_border_min_contrast: 3.399
+  composer_actual_receipt_core: 12_of_12
+  composer_actual_receipt_extended_and_invalid_clear: 12_of_12
+  final_combined_composer_detail: 24_of_24_source_stable_zero_overflow_zero_route_runtime_errors
+  settled_mobile_visual: light_dark_375px_opacity_1_no_finite_animation_running
+  voice_bridge_readonly_matrix: 60_of_60_complete_0_failures
+  voice_bridge_text_min_contrast: 4.515
+  voice_bridge_control_border_min_contrast: 3.399
+  incomplete_studio_networkidle_run: 8_of_24_not_accepted
+  browser_method: Playwright_existing_QA_runner_Browser_plugin_skill_absent
+  earlier_core_matrix: 72_cases_on_its_recorded_prior_source_snapshot
+  earlier_mobile_overlay_matrix: 72_cases_on_its_recorded_prior_source_snapshot
+qa:
+  origin: http://127.0.0.1:4186
+  storage: isolated_existing_QA_only
+  account: one_existing_synthetic_account_no_new_account
+  server_session: 23534
+  voice_fixture: UI_only_no_voice_DB_write_no_capability_override_no_audio
+  populated_evidence: ../../qa/20261007-video-uiux/voice-inventory-populated-final/browser-review.json
+  empty_evidence: ../../qa/20261007-video-uiux/voice-inventory-empty-final/browser-review.json
+  inventory_evidence_scope: earlier_recorded_snapshot_not_current_Studio_source
+  studio_populated_evidence: ../../qa/20261007-video-uiux/voice-studio-compact-populated-final/browser-review.json
+  studio_empty_evidence: ../../qa/20261007-video-uiux/voice-studio-compact-empty-final/browser-review.json
+  current_evidence: ../../../../qa/20261007-video-uiux/voice-saved-clone-interaction-20261008/browser-review.json
+  tts_primary_evidence: ../../../../qa/20261007-video-uiux/voice-tts-flow-final-20261008/browser-review.json
+  tts_boundary_evidence: ../../../../qa/20261007-video-uiux/voice-tts-boundary-final-20261008/browser-review.json
+  saved_clone_primary_evidence: ../../../../qa/20261007-video-uiux/voice-saved-clone-flow-20261008/browser-review.json
+  saved_clone_interaction_evidence: ../../../../qa/20261007-video-uiux/voice-saved-clone-interaction-20261008/browser-review.json
+  receipt_fixtures: tests/fixtures/voice-direction-composer-receipts.json
+  receipt_generator: ../../qa/20261007-video-uiux/voice_direction_receipt.py
+  portal_js_sha256: fe2dbf7a80c3ebfd61cec17f33009f1e8f52b32fc631ca310c728feddbe7f4aa
+  portal_i18n_sha256: 6a931e4e1fb133c36119e40dfc8888854eb83b6ae198a3f0c1b88e3469c04fd8
+  portal_theme_sha256: e210a72e0c5a050dc187e68b9bd9837bc0af6dd21572851b2696eb61c627dec7
+remaining:
+  - Voice, Music and SubDub UI checkpoints are verified locally; close their release gates sequentially in that order before the next product UI item.
+  - Voice/Music branch release and CI are still pending; local verification is not a merge or live-runtime claim.
+  - Shared shell locale and global motion gate remain open.
+  - Existing QA background core/auth/telegram GETs remained pending up to 273 seconds in some matrices; visible UI does not prove those reads completed. No API change within UI scope.
+  - Voice UI states are fixture-verified only; no live estimate/job/audio outcome is claimed.
+  - Shared English navigation still contains Vietnamese labels; screenshot recorded, no shell locale PASS claimed.
+  - Existing ViewTransition InvalidStateError during login/setup; final motion gate remains open.
+  - Full Voice release verification and CI before commit/push/merge/deploy.
+next_order: Release_Voice_then_Music_then_SubDub_then_other_features_then_remaining_Video_then_global_motion
+safety:
+  provider_calls: 0
+  wallet_mutations: 0
+  production_data_mutations: 0
+  API_engine_changes: false
+  production_ENV_changes: false
+  commit: true
+  push: false
+  deploy: false

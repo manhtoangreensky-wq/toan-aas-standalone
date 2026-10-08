@@ -4,6 +4,25 @@ Tracker điều phối: `manhtoangreensky-wq/toan-aas-standalone#412`.
 
 Đây là nguồn duy nhất của case; sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 
+## VOICE-UI-CLOSEOUT-20261008 — checkpoint UI riêng
+
+Sửa case tại mục này trước; nhận xét Tester/PR dẫn lại file nguồn. Chạy lần lượt
+trên đúng candidate SHA, VI/EN/ZH, sáng/tối, 1440×900 và 375×812. Live chỉ đọc;
+không submit estimate/confirm, upload mẫu, tạo job, dùng provider hay đổi ví.
+
+| ID | Phạm vi | Thao tác | Kết quả cần ghi |
+|---|---|---|---|
+| VUI-01 | `/voice`, `/voice/tts`, `/voice/saved`, `/voice/clone`, `/voice/preview`, `/voice/outputs` | Mở từng route; mở hướng dẫn/thiết lập bằng Enter; kiểm tra tên, thứ tự trường, consent/sample và inventory | Nội dung đúng locale; form/card dọc, không tràn ngang, không mô phỏng âm thanh; action/field/quyền không đổi |
+| VUI-02 | `/voice-studio`, `/voice-studio/new`, chi tiết hồ sơ QA | Kiểm tra list/filter/create, hồ sơ active/revoked/archived, lời thoại/phiên bản/cue sheet | Quyền server vẫn khóa đúng; fixed copy sạch; accordion, menu và focus dùng được |
+| VUI-03 | `/voice-studio/direction-composer` | QA: trường hợp chưa có/có receipt thật từ helper local; mở kết quả bằng bàn phím | Danh mục và kết quả đúng locale; chỉ kế hoạch văn bản, không hứa hay tạo audio |
+| VUI-04 | TTS/saved/clone flow-state QA | Fixture draft/quote/stale/queued/processing/completed/failed-no-charge/error; mở lại draft và kiểm tra lưu bản mới | Giá công khai hiển thị, cost-only là unknown; nút xác nhận chỉ có khi các gate hiện có đạt; tracking khớp ID/feature/status; không có audio/download suy đoán |
+
+Mỗi case ghi candidate/runtime SHA, Tester, viewport/locale/theme, expected/actual,
+ảnh, console/network, tương phản chữ ≥4.5:1, viền ≥3:1, target ≥44px và verdict.
+110 renderer tests là bằng chứng tự kiểm, không thay live/runtime hay verdict
+Tester. Projects chưa được đọc/gắn ở lượt này vì credential thiếu `read:project`;
+không tự refresh scope. Case vẫn nằm trong repo và được dẫn từ PR Voice.
+
 ## VIDEO-UI-CHECKPOINT-20261007
 
 Case: ba route `/tools/video`, `/video/create`, `/video/multiscene`; VI/EN/ZH,
