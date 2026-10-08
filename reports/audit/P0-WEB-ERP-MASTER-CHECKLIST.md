@@ -59,9 +59,9 @@ main CI `37770140237` SUCCESS. Deploy/signed live SubDub chưa thực hiện.
   files + CSS/catalogue/Portal ngoài Image không đổi. Python vẫn 18P/1F nền.
 - [ ] Theo dõi lỗi test mobile/PWA trên đúng CSS boundary trong scope nghiệm thu
   phù hợp; không nới hoặc sửa test ngoài I01-A để biến baseline thành xanh.
-- [x] Web-only provenance refresh/verify đạt trên code SHA `e91cfc42`; fingerprint
-  `dd40b0ad7e47da4b…`; chỉ `preflight.json` và `web_inventory.json` thay đổi.
-- [ ] Commit provenance report, push/PR/CI/release còn mở; chưa deploy.
+- [x] Web-only provenance refresh/verify đạt; `reports/migration` chỉ ghi
+  `preflight.json` và `web_inventory.json`, không đọc/ghi bằng chứng Bot.
+- [ ] Push nhánh, PR, CI, merge/release còn mở; chưa deploy.
 - [ ] Shared-shell locale/nút nổi, Video hoãn và whole-site motion giữ thứ tự;
   ViewTransition lỗi vẫn mở, không báo PASS từ kiểm thử Image/SubDub.
 - State: `.agents/state/IMAGE-UI-TRUTH-LOCALE-001-20261008.yaml`.
