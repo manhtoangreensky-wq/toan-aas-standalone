@@ -13022,6 +13022,108 @@
     VOICE_UI_COPY_ROWS.forEach((row) => { MESSAGES[locale][`voiceUi.${row[0]}`] = row[index + 1]; });
   });
 
+  const IMAGE_SUITE_HUB_COPY_ROWS = [
+    ["page.title", "Công cụ ảnh", "Image tools", "图像工具"],
+    ["page.description", "Tạo ảnh, chỉnh sửa ảnh hoặc chuẩn bị nội dung. Chọn công cụ phù hợp để bắt đầu.", "Create or edit an image, or prepare its description. Choose a tool to get started.", "生成、编辑图像或准备描述，选择合适的工具开始。"],
+    ["group.create", "Sáng tạo và dự án ảnh", "Creation and image projects", "创作与图像项目"],
+    ["group.edit", "Chỉnh sửa ảnh", "Edit an image", "编辑图像"],
+    ["group.prepare", "Chuẩn bị nội dung", "Prepare your content", "准备内容"],
+    ["tool.create.title", "Tạo ảnh", "Create an image", "创建图像"],
+    ["tool.create.description", "Mô tả ý tưởng và xem báo giá trước khi xác nhận tạo ảnh.", "Describe your idea and review the quote before confirming generation.", "描述创意，确认生成前查看报价。"],
+    ["tool.studio.title", "Không gian ảnh", "Image workspace", "图像工作区"],
+    ["tool.studio.description", "Sắp xếp ý tưởng, biến thể và tài liệu tham chiếu của dự án ảnh.", "Organize ideas, variants and references for an image project.", "整理图像项目的创意、变体和参考资料。"],
+    ["tool.edit.title", "Chỉnh màu và độ nét", "Adjust color and sharpness", "调整颜色与清晰度"],
+    ["tool.edit.description", "Cân màu, độ tương phản và làm nét cơ bản cho ảnh đã lưu.", "Adjust color, contrast and basic sharpness for a saved image.", "调整已保存图像的颜色、对比度和基础锐度。"],
+    ["tool.cleanup.title", "Xóa nền màu trơn", "Remove a plain-color background", "移除纯色背景"],
+    ["tool.cleanup.description", "Làm trong suốt vùng nền màu trơn nối với mép ảnh.", "Make a plain-color background connected to the image edge transparent.", "将与图像边缘相连的纯色背景设为透明。"],
+    ["tool.resize.title", "Đổi kích thước và cắt ảnh", "Resize and crop", "调整大小与裁剪"],
+    ["tool.resize.description", "Chọn kích thước và tỷ lệ phù hợp với nơi sử dụng ảnh.", "Choose dimensions and an aspect ratio for where the image will be used.", "按用途选择图像尺寸和比例。"],
+    ["tool.overlay.title", "Thêm nhận diện thương hiệu", "Add brand identity", "添加品牌标识"],
+    ["tool.overlay.description", "Thêm chữ hoặc logo lên một bản sao ảnh.", "Add text or a logo to a copy of your image.", "在图像副本上添加文字或标志。"],
+    ["tool.storyboard.title", "Ghép bảng ảnh", "Create an image grid", "创建图像网格"],
+    ["tool.storyboard.description", "Sắp xếp chuỗi ảnh thành một bảng để xem lại.", "Arrange a series of images in a grid for review.", "将一组图像排列成网格，便于查看。"],
+    ["tool.prompt.title", "Soạn mô tả ảnh", "Compose an image description", "编写图像描述"],
+    ["tool.prompt.description", "Chuẩn bị và biên tập nội dung mô tả trước khi tạo ảnh.", "Prepare and refine the description before generating an image.", "生成图像前准备并完善描述。"],
+    ["open", "Mở công cụ", "Open tool", "打开工具"],
+    ["boundary.title", "Trước khi xử lý", "Before processing", "处理前须知"],
+    ["boundary.description", "Mỗi công cụ kiểm tra quyền truy cập, tệp nguồn và điều kiện xử lý khi bạn mở. Chỉ dùng ảnh bạn có quyền sử dụng.", "Each tool checks access, source files and processing requirements when opened. Use only images you have the right to use.", "打开工具后会检查访问权限、源文件和处理条件。请仅使用有权使用的图像。"]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    IMAGE_SUITE_HUB_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageHub.${row[0]}`] = row[index + 1]; });
+  });
+
+  const IMAGE_CREATE_COPY_ROWS = [
+    ["page.title", "Tạo ảnh", "Create an image", "创建图像"],
+    ["page.description", "Mô tả hình ảnh, chọn loại ảnh và tỷ lệ. Xem báo giá trước khi xác nhận tạo ảnh.", "Describe your image, choose the image type and aspect ratio, then review the quote before confirming.", "描述图像，选择类型和比例，确认生成前请查看报价。"],
+    ["section", "HÌNH ẢNH", "IMAGES", "图像"],
+    ["status.ready", "Có thể gửi yêu cầu", "Requests available", "可提交请求"],
+    ["status.guarded", "Chưa thể tạo ảnh", "Image generation unavailable", "暂无法生成图像"],
+    ["form.title", "Mô tả hình ảnh", "Image description", "图像描述"],
+    ["form.ready", "Kiểm tra nội dung và các lựa chọn trước khi tiếp tục.", "Review your description and settings before continuing.", "继续前请检查描述和设置。"],
+    ["form.draft", "Bạn có thể soạn và lưu bản nháp để tiếp tục sau. Lưu bản nháp chưa tạo ảnh.", "Write and save a draft to continue later. Saving a draft does not create an image.", "可填写并保存草稿，稍后继续。保存草稿不会生成图像。"],
+    ["form.guarded", "Tạo ảnh chưa khả dụng với tài khoản hiện tại. Biểu mẫu sẽ mở khi tài khoản được cấp quyền cần thiết.", "Image generation is unavailable for this account. The form opens when the required access is available.", "当前账户暂无法生成图像，获得所需权限后可使用表单。"],
+    ["form.draftNote", "Bản nháp chỉ lưu nội dung và lựa chọn; chưa xử lý ảnh hoặc trừ Xu.", "A draft saves your description and settings; it does not process an image or spend Xu.", "草稿仅保存描述和设置，不会处理图像或扣除 Xu。"],
+    ["form.processingNote", "Chi phí và quyền xử lý được máy chủ kiểm tra trước khi xác nhận.", "The server checks the cost and processing access before confirmation.", "确认前由服务器检查费用和处理权限。"],
+    ["form.previous", "Xem lại thông tin đã gửi", "Review submitted details", "查看已提交的信息"],
+    ["field.prompt.label", "Mô tả hình ảnh", "Image description", "图像描述"],
+    ["field.prompt.placeholder", "Chủ thể, phong cách, bối cảnh, tỷ lệ…", "Subject, style, setting, aspect ratio…", "主体、风格、场景、比例…"],
+    ["field.tier.label", "Loại ảnh", "Image type", "图像类型"],
+    ["field.tier.empty", "Chọn sau khi có danh mục", "Choose when options are available", "选项可用后再选择"],
+    ["field.tier.help", "Có thể để trống khi soạn bản nháp. Chọn loại ảnh được cung cấp trước khi xác nhận tạo ảnh.", "You may leave this blank for a draft. Select an available image type before confirming generation.", "保存草稿时可留空，确认生成前请选择可用的图像类型。"],
+    ["field.format.label", "Tỷ lệ ảnh", "Aspect ratio", "图像比例"],
+    ["field.format.help", "Đây là tỷ lệ bạn muốn dùng. Kết quả thực tế chỉ được xác nhận sau khi xử lý.", "This is your preferred aspect ratio. The actual result is confirmed only after processing.", "这是你希望使用的比例，实际结果需在处理后确认。"],
+    ["draft.save", "Lưu bản nháp", "Save draft", "保存草稿"],
+    ["draft.update", "Cập nhật bản nháp", "Update draft", "更新草稿"],
+    ["draft.saveNew", "Lưu thành bản mới", "Save as a new draft", "另存为新草稿"],
+    ["action.continue", "Tiếp tục", "Continue", "继续"],
+    ["action.estimate", "Xem báo giá", "Get a quote", "获取报价"],
+    ["action.confirm", "Xác nhận tạo ảnh", "Confirm image generation", "确认生成图像"],
+    ["action.confirmPrompt", "Xác nhận tạo ảnh theo báo giá hiện tại? Máy chủ kiểm tra lại chi phí trước khi xử lý.", "Confirm image generation using the current quote? The server checks the cost again before processing.", "确认按当前报价生成图像吗？处理前服务器会再次核对费用。"],
+    ["action.waiting", "Đã nhận báo giá nhưng bước tạo ảnh chưa được mở.", "The quote is available, but image generation is not enabled yet.", "已收到报价，但图像生成尚未开放。"],
+    ["output.title", "Báo cáo và kết quả", "Report and results", "报告与结果"],
+    ["output.empty", "Chưa có yêu cầu xử lý", "No processing request yet", "尚无处理请求"],
+    ["output.waiting", "Sau khi gửi yêu cầu, bạn sẽ thấy báo giá và trạng thái xử lý tại đây.", "After submitting a request, its quote and processing status will appear here.", "提交请求后，可在此查看报价和处理状态。"],
+    ["flow.state.guarded", "Chưa thể tiếp tục", "Unavailable", "暂不可用"],
+    ["flow.state.draft", "Đã nhận bản nháp", "Draft received", "已收到草稿"],
+    ["flow.state.ready", "Đã kiểm tra yêu cầu", "Request checked", "已检查请求"],
+    ["flow.state.awaiting_confirm", "Chờ bạn xác nhận", "Awaiting your confirmation", "等待确认"],
+    ["flow.state.queued", "Đang chờ xử lý", "Queued", "等待处理"],
+    ["flow.state.processing", "Đang tạo ảnh", "Generating image", "正在生成图像"],
+    ["flow.state.completed", "Xử lý hoàn tất", "Processing completed", "处理完成"],
+    ["flow.state.failed", "Xử lý không thành công", "Processing failed", "处理失败"],
+    ["flow.state.failed_no_charge", "Không thành công, chưa trừ Xu", "Failed without spending Xu", "处理失败，未扣除 Xu"],
+    ["flow.state.error", "Cần kiểm tra lại yêu cầu", "Review your request", "请检查请求"],
+    ["flow.state.cancelled", "Đã hủy", "Cancelled", "已取消"],
+    ["flow.state.refunded", "Đã hoàn Xu", "Xu refunded", "已退还 Xu"],
+    ["flow.quote", "Báo giá", "Quote", "报价"],
+    ["flow.price", "Giá bán", "Sale price", "售价"],
+    ["flow.priceUnknown", "Chưa có giá bán được xác nhận. Vui lòng lấy lại báo giá trước khi tiếp tục.", "A confirmed sale price is unavailable. Refresh the quote before continuing.", "暂无已确认的售价，请重新获取报价后继续。"],
+    ["flow.quoteNote", "Xem lại báo giá trước khi xác nhận; việc tạo ảnh vẫn cần quyền xử lý hợp lệ.", "Review this quote before confirming; image generation still requires valid processing access.", "确认前请核对报价，生成图像仍需有效的处理权限。"],
+    ["flow.details", "Chi tiết yêu cầu", "Request details", "请求详情"],
+    ["flow.field.prompt", "Mô tả hình ảnh", "Image description", "图像描述"],
+    ["flow.field.tier", "Loại ảnh", "Image type", "图像类型"],
+    ["flow.field.format", "Tỷ lệ đã chọn", "Selected aspect ratio", "所选比例"],
+    ["flow.field.next_step", "Bước tiếp theo", "Next step", "下一步"],
+    ["flow.suggestions", "Gợi ý mô tả ảnh", "Image description suggestions", "图像描述建议"],
+    ["flow.suggestion", "Gợi ý {number}", "Suggestion {number}", "建议 {number}"],
+    ["flow.draftNote", "Đây là nội dung để bạn biên tập, chưa phải hình ảnh đã tạo.", "This is text for you to edit, not a generated image.", "这是可编辑的文字内容，并非已生成的图像。"],
+    ["flow.copy", "Sao chép mô tả", "Copy description", "复制描述"],
+    ["flow.apply", "Dùng trong biểu mẫu", "Use in form", "用于表单"],
+    ["flow.feedback", "Thông báo xử lý", "Processing feedback", "处理反馈"],
+    ["flow.jobId", "Mã công việc", "Job ID", "任务编号"],
+    ["flow.trackingReady", "Đã nhận mã công việc cho yêu cầu này.", "A job reference has been received for this request.", "已收到此请求的任务编号。"],
+    ["flow.trackingPending", "Chưa có mã công việc được xác nhận cho yêu cầu này.", "No confirmed job reference is available for this request.", "此请求尚无已确认的任务编号。"],
+    ["flow.track", "Theo dõi công việc", "Track job", "跟踪任务"],
+    ["output.jobs", "Xem công việc", "View jobs", "查看任务"],
+    ["companion.title", "Dùng công cụ ảnh trong Telegram", "Use image tools in Telegram", "在 Telegram 中使用图像工具"],
+    ["companion.note", "Tùy chọn cho người đang dùng Bot. Liên kết chỉ mở cuộc trò chuyện, không gửi mô tả hoặc thông tin tài khoản.", "Optional for existing Bot users. This link only opens the conversation; it does not send your description or account details.", "现有 Bot 用户可选用。此链接仅打开对话，不会发送描述或账户信息。"],
+    ["companion.open", "Mở Telegram", "Open Telegram", "打开 Telegram"],
+    ["companion.copy", "Sao chép lệnh", "Copy command", "复制命令"]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    IMAGE_CREATE_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageUi.${row[0]}`] = row[index + 1]; });
+  });
+
   function verifyEqualKeysets() {
     const reference = Object.keys(MESSAGES[DEFAULT_LOCALE]).sort();
     Object.keys(LOCALES).forEach((locale) => {

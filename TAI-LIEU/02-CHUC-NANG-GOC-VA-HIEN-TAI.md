@@ -1,5 +1,21 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Đối chiếu Image — ứng viên cục bộ 08/10/2026
+
+| Nguồn trước sửa | Candidate hiện tại | Bằng chứng |
+|---|---|---|
+| Workbench dùng alert thành công, giá -5 Xu và banner giả output 4K | Bỏ khối demo trước biểu mẫu thật; field/action/quyền server giữ nguyên | `tests/image-workbench-truth.test.mjs` |
+| Trang tạo ảnh lẫn thuật ngữ và ngôn ngữ | Catalogue VI/EN/ZH cho form, báo giá, báo cáo, gợi ý và tracking | `tests/image-create-locale-presentation.test.mjs`; 48 trạng thái browser |
+| Hub có 12 link/8 đích, ghi count 7 và hứa Lossless | 8 đích duy nhất, tạo ảnh trước, không claim chất lượng/ready từ route tồn tại | `tests/image-hub-locale-presentation.test.mjs`; 12 cấu hình hub |
+| Report sau form, mobile nhiều cột, text/target thiếu chuẩn | Report trước khi có quote/confirm; form cũ thu gọn; fields dọc, màu semantic xanh–teal | I03 JSON/ảnh; chữ ≥5.944:1, target ≥45px, summary 48px |
+
+BASE `dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c`; chưa push/deploy. Tài liệu
+hoặc ảnh cũ nói Image đã sinh/download 4K, Lossless hay -5 Xu không còn đúng.
+Đầu ra thật và quyền thực thi vẫn do server quyết định; checkpoint này chỉ
+sửa hai màn hình trình bày. 12 lỗi ViewTransition còn mở trong scope motion.
+PR #619 SubDub đã merge/đóng mã, CI đạt, chưa deploy; các đoạn checkpoint
+SubDub cũ phía dưới là lịch sử trước khi merge.
+
 ## Đối chiếu SubDub một màn hình — ứng viên 08/10/2026
 
 | Trước | Hiện tại trên ứng viên cục bộ | Bằng chứng / ranh giới |

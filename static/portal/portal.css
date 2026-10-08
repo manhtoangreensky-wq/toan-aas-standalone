@@ -10193,3 +10193,204 @@ html[data-portal-theme="dark"] .portal-manual-topup-form option {
     transition: none;
   }
 }
+
+/* Image-only product layout. Global theme and scroll ownership stay intact. */
+.portal-page:is(.portal-image-create, .portal-image-suite-hub) {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+
+.portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(.portal-fields, .portal-module-grid, .portal-image-suite-groups, .portal-suggestion-grid) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 16px;
+  min-width: 0;
+}
+
+.portal-image-suite-groups {
+  gap: 24px !important;
+}
+
+.portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(.portal-card, .portal-module-card) {
+  min-width: 0;
+  background: var(--portal-surface) !important;
+  border-color: var(--portal-border) !important;
+}
+
+.portal-image-suite-hub .portal-module-card {
+  min-height: 96px;
+  align-items: flex-start;
+  text-decoration: none;
+}
+
+.portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(h1, h2, h3, h4, label, legend, strong, dt, dd, summary, .portal-label, .portal-title, .portal-card-title, .portal-module-link) {
+  color: var(--portal-ink) !important;
+}
+
+.portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(p, small, .portal-description, .portal-card-subtitle, .portal-field-help, .portal-form-note, .portal-flow-note, .portal-module-copy > p) {
+  color: var(--portal-muted-strong, var(--portal-muted)) !important;
+  font-size: 14px;
+  line-height: 1.625;
+}
+
+.portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(.portal-title, h1) {
+  font-size: clamp(32px, 3.4vw, 44px);
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(h2, .portal-card-title) {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(h3, h4, .portal-module-copy h3) {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(label, .portal-label, .portal-field > label, legend) {
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(.portal-section-kicker, .portal-eyebrow, .portal-badge, .portal-required-marker, .portal-required-marker *) {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--portal-muted-strong, var(--portal-muted)) !important;
+}
+
+.portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(.portal-input, .portal-select, .portal-textarea) {
+  min-height: 44px;
+  min-width: 0;
+  width: 100%;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--portal-ink) !important;
+  background: var(--portal-surface) !important;
+  border-color: var(--portal-muted) !important;
+}
+
+.portal-image-create :is(input, select, textarea):disabled {
+  opacity: 1;
+  background: var(--portal-surface-soft) !important;
+  color: var(--portal-muted-strong, var(--portal-muted)) !important;
+  cursor: not-allowed;
+}
+
+.portal-image-create :is(input, textarea)::placeholder {
+  color: var(--portal-muted) !important;
+  opacity: 1;
+}
+
+.portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(.portal-button, summary) {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.portal-image-create .portal-button {
+  color: var(--portal-ink) !important;
+  background: var(--portal-surface-soft) !important;
+  background-image: none !important;
+  border: 1px solid var(--portal-muted) !important;
+  box-shadow: none !important;
+}
+
+.portal-image-create .portal-button--primary {
+  color: var(--portal-on-action) !important;
+  background: var(--portal-action) !important;
+}
+
+.portal-image-create .portal-button:disabled {
+  opacity: 1;
+  color: var(--portal-muted-strong, var(--portal-muted)) !important;
+  background: var(--portal-surface-soft) !important;
+  cursor: not-allowed;
+}
+
+.portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--portal-focus);
+  outline-offset: 3px;
+}
+
+.portal-image-create :is(.portal-image-create-quote dl, .portal-image-create-details dl, .portal-image-create-tracking dl) {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.portal-image-create :is(.portal-image-create-quote dl > div, .portal-image-create-details dl > div, .portal-image-create-tracking dl > div) {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  background: var(--portal-surface-soft);
+}
+
+.portal-image-create :is(dt, dd, code, .portal-result-text) {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--portal-ink) !important;
+  overflow-wrap: anywhere;
+}
+
+.portal-image-create .portal-image-create-quote [data-image-sale-price] {
+  font-size: 24px;
+  font-weight: 750;
+}
+
+.portal-image-create .portal-image-create-report .portal-state {
+  background: var(--portal-surface-soft);
+  border-color: var(--portal-border);
+}
+
+.portal-page.portal-image-create .portal-image-create-report .portal-state p {
+  color: var(--portal-ink) !important;
+}
+
+.portal-page.portal-image-create .portal-empty {
+  color: var(--portal-ink) !important;
+  background: var(--portal-surface-soft) !important;
+}
+
+.portal-page.portal-image-create .portal-empty p {
+  color: var(--portal-ink) !important;
+}
+
+:root .portal-page.portal-image-create summary {
+  min-height: 48px;
+}
+
+.portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(.portal-description, .portal-eyebrow) {
+  color: var(--portal-ink) !important;
+}
+
+html:not([data-portal-theme="dark"]) .portal-page.portal-image-create .portal-button--primary {
+  background: var(--portal-action-hover) !important;
+  background-image: none !important;
+  color: var(--portal-on-action) !important;
+  filter: none !important;
+}
+
+html[data-portal-theme="dark"] .portal-page.portal-image-create .portal-button--primary {
+  background: var(--portal-dark-action) !important;
+  background-image: none !important;
+  color: var(--portal-dark-on-action) !important;
+  filter: none !important;
+}
+
+html .portal-page.portal-image-create .portal-button--primary:disabled {
+  background: var(--portal-surface-soft) !important;
+  color: var(--portal-muted-strong, var(--portal-muted)) !important;
+}

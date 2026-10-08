@@ -667,7 +667,7 @@ async def run_browser_verification(
                             const route = "{route}";
                             const HUB_PRIMARY_SELECTORS = {{
                                 "/tools/video": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
-                                "/tools/image": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/tools/image": [".portal-image-suite-hub a[data-image-primary][href='/image/create']"],
                                 "/voice": [".portal-voice-hub a[data-voice-primary][href='/voice/tts']"],
                                 "/music": [".portal-music-hub a[data-music-primary][href='/music/create']"],
                                 "/subdub": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
@@ -770,7 +770,7 @@ async def run_browser_verification(
                             const currentRoute = "{route}";
                             const HUB_PRIMARY_SELECTORS = {{
                                 "/tools/video": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
-                                "/tools/image": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/tools/image": [".portal-image-suite-hub a[data-image-primary][href='/image/create']"],
                                 "/voice": [".portal-voice-hub a[data-voice-primary][href='/voice/tts']"],
                                 "/music": [".portal-music-hub a[data-music-primary][href='/music/create']"],
                                 "/subdub": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
@@ -959,14 +959,14 @@ async def run_browser_verification(
                         if (txt.includes('Hoàn thành') || txt.includes('Đã sẵn sàng tải')) fakeSuccess++;
                     });
 
-                    const primaryAction = document.querySelector('.portal-document-board-action--primary, button.portal-button--primary, a.portal-button--primary');
+                    const primaryAction = document.querySelector(".portal-image-suite-hub a[data-image-primary][href='/image/create']");
                     const primaryHref = primaryAction ? primaryAction.getAttribute('href') : '';
 
                     return {
                         hasEdit, hasCleanup, hasResize, hasOverlay,
                         guardedCount: guardedCards.length,
                         fakeSuccess,
-                        primaryMatches: primaryHref === '/image/edit'
+                        primaryMatches: primaryHref === '/image/create'
                     };
                 })()""",
                 "returnByValue": True,
@@ -1343,6 +1343,8 @@ async def run_browser_verification(
                         const primaryCta = document.querySelector(
                             location.pathname === '/voice'
                                 ? ".portal-voice-hub a[data-voice-primary][href='/voice/tts']"
+                                : location.pathname === '/tools/image'
+                                    ? ".portal-image-suite-hub a[data-image-primary][href='/image/create']"
                                 : location.pathname === '/music'
                                     ? ".portal-music-hub a[data-music-primary][href='/music/create']"
                                 : '.portal-document-board-action--primary, button.portal-button--primary, a.portal-button--primary, button[data-free-tool-action], .portal-document-board-action'
