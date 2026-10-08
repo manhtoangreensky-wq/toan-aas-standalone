@@ -2,7 +2,7 @@
 
 ## IMAGE UI — 2026-10-08
 
-**SPEC_ID:** `IMAGE-UI-TRUTH-LOCALE-001` · **STATUS:** `I03_LOCAL_SHA_BOUND_GATE_PASS_WEB_PROVENANCE_REFRESHED`.
+**SPEC_ID:** `IMAGE-UI-TRUTH-LOCALE-001` · **STATUS:** `I03_LOCAL_PASS_CI_METADATA_REPAIR_LOCAL_PASS_FRESH_PR_CI_PENDING`.
 Nhánh local `fix/image-ui-truth-locale-20261008`, BASE
 `dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c`. SubDub #619 đã merge và ghi
 ĐÓNG/KHÓA trên GitHub; candidate tree = merge tree; PR CI `37755956582` và
@@ -61,7 +61,16 @@ main CI `37770140237` SUCCESS. Deploy/signed live SubDub chưa thực hiện.
   phù hợp; không nới hoặc sửa test ngoài I01-A để biến baseline thành xanh.
 - [x] Web-only provenance refresh/verify đạt; `reports/migration` chỉ ghi
   `preflight.json` và `web_inventory.json`, không đọc/ghi bằng chứng Bot.
-- [ ] Push nhánh, PR, CI, merge/release còn mở; chưa deploy.
+- [x] PR #620 CI run `37806139441` được đối chiếu log: 286 đạt, 1 lỗi duy
+  nhất do readiness JSON khai 128 dòng trong khi `DANH-SACH-CASE.md` có 142.
+- [x] Chỉ sửa metadata readiness của file case: 142 dòng, 34.854 byte,
+  SHA-256 `612f3bbe…e91d10c8`; assertion giữ nguyên. Test metadata tái hiện
+  đỏ trước sửa và xanh `1 passed` sau sửa.
+- [x] Suite `test_p0_05d_tester_workspace.py` trên Windows: 32 đạt, 1 lỗi
+  nền do test mode Unix `0600` nhưng Windows báo `0666`; đây không phải lỗi
+  của metadata và không sửa/nới test. CI Linux mới sẽ là cổng kết luận.
+- [ ] Đưa corrective commit lên nhánh PR #620, chạy lại CI trên HEAD mới;
+  chỉ xem xét merge khi check mới xanh. Chưa deploy.
 - [ ] Shared-shell locale/nút nổi, Video hoãn và whole-site motion giữ thứ tự;
   ViewTransition lỗi vẫn mở, không báo PASS từ kiểm thử Image/SubDub.
 - State: `.agents/state/IMAGE-UI-TRUTH-LOCALE-001-20261008.yaml`.

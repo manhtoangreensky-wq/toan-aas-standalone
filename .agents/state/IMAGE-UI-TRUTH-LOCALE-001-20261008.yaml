@@ -1,6 +1,6 @@
 spec_id: IMAGE-UI-TRUTH-LOCALE-001
 phase: VERIFY
-status: I03_LOCAL_SHA_BOUND_GATE_PASS_WEB_PROVENANCE_REFRESHED
+status: I03_LOCAL_PASS_CI_METADATA_REPAIR_LOCAL_PASS_FRESH_PR_CI_PENDING
 base_sha: dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c
 branch: fix/image-ui-truth-locale-20261008
 goal: truthful understandable Image UI using the existing form and server authority
@@ -51,9 +51,11 @@ safety:
   route_engine_changes: 0
   deploy: NO
 delivery:
-  commit: e91cfc42d9c574ce6a8d01bbc1e6bfdabb0478fe_LOCAL_CANDIDATE
-  push: NO
-  new_pr: NO
+  current_pre_fix_head: a66019b71881f523642fa73f72ee61184cc2c066
+  current_pr: 620
+  current_pr_state: OPEN
+  current_pr_ci: RUN_37806139441_FAILED_BEFORE_METADATA_CORRECTION
+  correction_local: YES_NOT_YET_PUSHED
   github_channel: Codex_Web_only_except_Owner_one_time_PR619_CLI
 parent_goal: ACTIVE
 i03_verification:
@@ -84,6 +86,20 @@ i03_verification:
     portal_js: 20e63c09321ba16ca2645822301b4a3804c5595ed26ece5fcec1a7f4f3569af2
     portal_i18n_js: 61c9b33604d499541f44401fe438553d619860da729d5f73975d5ad46a26d390
     portal_css: 95126850878898007cc283e1306ee4269984d738a44fc45bfa15e997b0d23b2c
+ci_corrective:
+  failed_run: 37806139441
+  failed_head: a66019b71881f523642fa73f72ee61184cc2c066
+  observed: 286_PASSED_1_FAILED_ASSERTION_DANH_SACH_CASE_LINES_128_VS_142
+  correction_file: reports/migration/p0-05d-tester-workspace.json
+  corrected_case_file_metadata: 142_LINES_34854_BYTES_SHA256_612f3bbeaa2660f8d1cd48cf67f7221e275f9c240406e7090c105ec4e91d10c8
+  assertion_change: NONE
+  target_test: 1_PASSED_EXIT_0
+  windows_full_module: 32_PASSED_1_BASELINE_FAIL_POSIX_MODE_0600_EXPECTED_WINDOWS_0666
+  next: commit_local_correction_refresh_web_only_provenance_then_push_and_require_fresh_pr_ci
+  provider_calls: 0
+  wallet_mutations: 0
+  production_data_mutations: 0
+  deploy: NO
 i01_b_verification:
   initial_red: 6_PASS_12_FAIL_EXIT_1_AFTER_HARNESS_DEPENDENCIES_FIXED
   green: 22_IMAGE_TESTS_PASS_EXIT_0
