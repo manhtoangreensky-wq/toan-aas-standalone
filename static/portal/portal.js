@@ -24888,19 +24888,27 @@
   function resolveSubDubLocale(context) {
     if (typeof window !== "undefined" && window.location) {
       const qLocale = new URLSearchParams(window.location.search || "").get("lang") || new URLSearchParams(window.location.search || "").get("locale");
-      if (qLocale && ["vi", "en"].includes(qLocale.toLowerCase())) {
+      if (qLocale && ["vi", "en", "zh"].includes(qLocale.toLowerCase())) {
         return qLocale.toLowerCase();
       }
     }
     const resolved = interfaceLocaleFor(context);
-    return resolved === "en" ? "en" : "vi";
+    return ["vi", "en", "zh"].includes(resolved) ? resolved : "vi";
   }
 
   const SUBDUB_PRESENTATION_COPY = Object.freeze({
     vi: {
       heroKicker: "Trung tâm Phụ đề & Lồng tiếng",
       heroTitle: "Hành trình phụ đề & lồng tiếng thông minh",
-      heroSubtitle: "Quy trình 4 giai đoạn chuẩn hóa: Tạo phụ đề, Dịch phụ đề, Lồng tiếng và Đồng bộ kép với kiểm soát chi phí minh bạch.",
+      heroSubtitle: "Chọn phụ đề, lồng tiếng hoặc kết hợp cả hai. Thiết lập và xem kết quả trong cùng một màn hình.",
+      modeSelectorLabel: "Bạn muốn tạo gì?",
+      audioOriginalLabel: "Âm lượng âm thanh gốc",
+      audioDubbingLabel: "Âm lượng giọng lồng tiếng",
+      audioControlsHeading: "Cân chỉnh âm thanh",
+      audioControlsNote: "Bạn có thể chọn mức âm lượng trên màn hình. Các mức này chưa áp dụng vào video khi tính năng xử lý chưa mở.",
+      reportEmptyTitle: "Chưa có báo cáo xử lý",
+      reportEmptyBody: "Khi có kết quả thật, báo cáo sẽ hiển thị mã yêu cầu, từng bước xử lý và tệp có thể tải xuống.",
+      reportEmptyLabel: "Chưa có tác vụ",
       toolsCountLabel: "Hành trình xử lý",
       qualityBadge: "SRT / VTT",
       qualityLabel: "Định dạng tệp chuẩn",
@@ -24931,12 +24939,12 @@
       stage1Kicker: "Giai đoạn 1",
       stage1Title: "1. Nguồn dữ liệu",
       stage1Subtitle: "Cung cấp tệp âm thanh hoặc video cần xử lý.",
-      sourceGuardedTitle: "Tiếp nhận nguồn media đang ở trạng thái an toàn",
-      sourceGuardedBody: "Hệ thống tiếp nhận tệp âm thanh và video đang tạm khóa cho đến khi tích hợp bộ xử lý media hoàn tất. Giao diện không tạo tải lên giả mạo.",
+      sourceGuardedTitle: "Tính năng tải tệp chưa mở",
+      sourceGuardedBody: "Bạn sẽ có thể chọn tệp âm thanh hoặc video khi tính năng xử lý sẵn sàng.",
       sourceMetaEngine: "Cơ chế xử lý chưa khả dụng",
       sourceMetaGuarded: "Không có tệp giả",
       sourceMetaProtection: "Bảo vệ an toàn",
-      sourceLanguageLabel: "Ngôn ngữ nguồn của media",
+      sourceLanguageLabel: "Ngôn ngữ trong tệp gốc",
       langVi: "Tiếng Việt",
       langEn: "Tiếng Anh",
       langZh: "Tiếng Trung",
@@ -24954,8 +24962,8 @@
       ruleShort: "Ngắn gọn cho video ngắn (Tối đa 25 ký tự/dòng, 1 dòng)",
       targetLangLabel: "Ngôn ngữ dịch mục tiêu",
       targetLangDubLabel: "Ngôn ngữ lồng tiếng mục tiêu",
-      sharedTargetLangLabel: "Ngôn ngữ mục tiêu chung (Áp dụng đồng bộ cho phụ đề và lồng tiếng)",
-      sharedTargetLangHint: "Ngôn ngữ được chọn một lần duy nhất cho cả hai luồng xử lý đồng bộ.",
+      sharedTargetLangLabel: "Ngôn ngữ đầu ra",
+      sharedTargetLangHint: "Dùng chung cho phụ đề và giọng lồng tiếng.",
       subDisplayLabel: "Kiểu hiển thị phụ đề",
       subDisplaySingle: "Phụ đề đơn ngữ (Chỉ bản dịch)",
       subDisplayBilingual: "Phụ đề song ngữ (Gốc + Dịch)",
@@ -24963,28 +24971,28 @@
       dubbingConfigHeading: "Cấu hình lồng tiếng AI",
       voiceStyleLabel: "Giọng đọc lồng tiếng AI",
       voiceGuardedTitle: "Hệ thống giọng đọc đang tạm khóa",
-      voiceGuardedBody: "Danh mục giọng đọc AI chỉ được kích hoạt khi hệ thống giọng đã sẵn sàng. Không cung cấp cấu hình giọng giả lập.",
-      voiceUnavailableOption: "Giọng đọc chưa khả dụng (Đang bảo vệ)",
+      voiceGuardedBody: "Các giọng đọc sẽ hiển thị tại đây khi tính năng lồng tiếng được mở.",
+      voiceUnavailableOption: "Chưa thể chọn giọng đọc",
       audioBalanceLabel: "Cân bằng âm thanh gốc",
       audioBalanceLower: "Giảm nhỏ âm lượng nền khi có tiếng nói (20%)",
       audioBalanceMute: "Tắt hoàn toàn âm thanh gốc (100% Giọng lồng tiếng)",
       stage3Kicker: "Giai đoạn 3",
-      stage3Title: "3. Kiểm tra & chi phí",
-      stage3Subtitle: "Đối soát thông số và chi phí trước khi bắt đầu xử lý.",
-      summaryModeKey: "Hành trình đã chọn",
-      summaryPriceKey: "Đơn giá quy định",
+      stage3Title: "3. Kiểm tra trước khi tạo",
+      stage3Subtitle: "Xem lại lựa chọn và chi phí trước khi bắt đầu.",
+      summaryModeKey: "Chế độ đã chọn",
+      summaryPriceKey: "Đơn giá",
       summaryPriceValue: "Giá chưa khả dụng",
       summaryCostKey: "Ước tính chi phí tác vụ",
       summaryCostValue: "Chi phí sẽ được xác nhận khi tính năng sẵn sàng.",
       summaryBalanceKey: "Số dư ví Xu hiện tại",
-      stage3GuardedTitle: "Tính năng này chưa sẵn sàng để chạy thật.",
-      stage3GuardedBody: "Hệ thống SubDub đang trong quá trình hoàn thiện tích hợp xử lý media. Để đảm bảo an toàn ví và dữ liệu, hệ thống không tạo dữ liệu thử nghiệm giả mạo hoặc báo hoàn tất khi chưa xử lý thực tế.",
+      stage3GuardedTitle: "Chưa thể bắt đầu xử lý",
+      stage3GuardedBody: "Khi tính năng được mở, bạn sẽ thấy chi phí cần xác nhận tại đây trước khi tạo tác vụ.",
       stage3MetaEngine: "Cơ chế xử lý chưa khả dụng",
       stage3MetaNoDraft: "Không tạo dữ liệu thử nghiệm giả",
       stage3MetaSafety: "Bảo vệ an toàn",
       ctaButton: "Bắt đầu xử lý",
       stage4Kicker: "Giai đoạn 4",
-      stage4Title: "4. Đang xử lý / Kết quả",
+      stage4Title: "4. Báo cáo và kết quả",
       stage4Subtitle: "Theo dõi trạng thái tiến trình và tải tệp kết quả sau khi hoàn tất.",
       statusPreparingTitle: "Chuẩn bị",
       statusPreparingDesc: "Kiểm tra tệp & thông số",
@@ -25003,8 +25011,8 @@
       emptyStateStatus: "Trạng thái: Chuẩn bị",
       emptyStateNoFake: "Không có tiến trình giả",
       emptyStateSafety: "Bảo vệ an toàn",
-      quickToolsKicker: "Công cụ phụ trợ & Tham chiếu",
-      quickToolsTitle: "Bộ công cụ tệp phụ đề & điều phối",
+      quickToolsKicker: "Công cụ phụ đề",
+      quickToolsTitle: "Tiện ích tệp phụ đề",
       quickToolsSubtitle: "Các tiện ích chuyển đổi định dạng và kiểm định tệp phụ đề cục bộ trên trình duyệt.",
       toolFormatsTitle: "Chuyển đổi định dạng SRT / VTT",
       toolFormatsDesc: "Chuyển đổi SRT ↔ VTT hoặc tạo SRT từ văn bản bằng thuật toán cục bộ tức thì.",
@@ -25016,7 +25024,15 @@
     en: {
       heroKicker: "Subtitles & Dubbing Center",
       heroTitle: "Intelligent Subtitle & Dubbing Journey",
-      heroSubtitle: "Standardized 4-stage process: Subtitle only, Translated subtitle, Dubbing only, and All-in-one with transparent cost control.",
+      heroSubtitle: "Choose subtitles, dubbing, or both. Set up your output and view results in one place.",
+      modeSelectorLabel: "What do you want to create?",
+      audioOriginalLabel: "Original audio level",
+      audioDubbingLabel: "Dubbed voice level",
+      audioControlsHeading: "Audio levels",
+      audioControlsNote: "You can adjust these levels first; they will not be applied to a real output until media processing is available.",
+      reportEmptyTitle: "No processing report yet",
+      reportEmptyBody: "When a real result is available, the report will show the request ID, processing steps, and downloadable files.",
+      reportEmptyLabel: "No task yet",
       toolsCountLabel: "Product journeys",
       qualityBadge: "SRT / VTT",
       qualityLabel: "Standard formats",
@@ -25047,8 +25063,8 @@
       stage1Kicker: "Stage 1",
       stage1Title: "1. Media Source",
       stage1Subtitle: "Provide the audio or video file to be processed.",
-      sourceGuardedTitle: "Media source intake is safely guarded",
-      sourceGuardedBody: "Audio and video file intake is held in safe mode until the media processing engine integration is complete. No fake uploads are simulated.",
+      sourceGuardedTitle: "File uploads are not available yet",
+      sourceGuardedBody: "You will be able to select an audio or video file when processing is available.",
       sourceMetaEngine: "Engine not ready",
       sourceMetaGuarded: "No synthetic files",
       sourceMetaProtection: "Safety protected",
@@ -25070,8 +25086,8 @@
       ruleShort: "Short for short-form video (Max 25 chars/line, 1 line)",
       targetLangLabel: "Target translation language",
       targetLangDubLabel: "Target dubbing language",
-      sharedTargetLangLabel: "Shared target language (Applied to both subtitles and AI dubbing)",
-      sharedTargetLangHint: "Language selected once for both synchronized processing pipelines.",
+      sharedTargetLangLabel: "Output language",
+      sharedTargetLangHint: "Used for both subtitles and the dubbed voice.",
       subDisplayLabel: "Subtitle display layout",
       subDisplaySingle: "Single language (Target translation only)",
       subDisplayBilingual: "Bilingual (Source + Target)",
@@ -25079,8 +25095,8 @@
       dubbingConfigHeading: "AI Dubbing Configuration",
       voiceStyleLabel: "AI Dubbing Voice",
       voiceGuardedTitle: "Voice catalog is safely guarded",
-      voiceGuardedBody: "AI voice options are enabled only after TTS/Voice Vault engine integration is verified. No fictional voice profiles are provided.",
-      voiceUnavailableOption: "Voice catalog unavailable (Guarded)",
+      voiceGuardedBody: "Available voices will appear here when dubbing is enabled.",
+      voiceUnavailableOption: "Voice selection is not available yet",
       audioBalanceLabel: "Original audio balance",
       audioBalanceLower: "Lower background audio during speech (20%)",
       audioBalanceMute: "Mute original audio completely (100% Dubbed voice)",
@@ -25093,8 +25109,8 @@
       summaryCostKey: "Estimated task cost",
       summaryCostValue: "Cost will be confirmed when feature is ready.",
       summaryBalanceKey: "Current Xu balance",
-      stage3GuardedTitle: "This feature is not yet ready for production execution.",
-      stage3GuardedBody: "The SubDub system is finalizing media bridge engine integration. To safeguard wallet and data integrity, no synthetic trial data is generated and no fake completion is declared.",
+      stage3GuardedTitle: "Processing is not available yet",
+      stage3GuardedBody: "When processing is available, you will review and confirm the cost here before creating a task.",
       stage3MetaEngine: "Engine not ready",
       stage3MetaNoDraft: "No synthetic trial data",
       stage3MetaSafety: "Safety protected",
@@ -25128,36 +25144,196 @@
       toolAssetsDesc: "Inspect or convert private SRT/VTT files in storage.",
       toolStudioTitle: "Subtitle Editor",
       toolStudioDesc: "Manage subtitle projects, cue timelines, and private reviews."
+    },
+    zh: {
+      heroKicker: "字幕与配音",
+      heroTitle: "字幕与配音，一站式处理",
+      heroSubtitle: "选择所需的处理方式，设置输出选项，并在同一页面查看真实任务报告。",
+      modeSelectorLabel: "选择需要的处理方式",
+      audioOriginalLabel: "原始音频音量",
+      audioDubbingLabel: "配音音量",
+      audioControlsHeading: "音量调节",
+      audioControlsNote: "您可以先调整音量；媒体处理尚未开放，因此这些设置暂不会应用到实际结果。",
+      reportEmptyTitle: "暂无处理报告",
+      reportEmptyBody: "获得真实结果后，报告将在此显示请求编号、处理步骤和可下载文件。",
+      reportEmptyLabel: "暂无任务",
+      toolsCountLabel: "处理方式",
+      qualityBadge: "SRT / VTT",
+      qualityLabel: "字幕文件格式",
+      safetyBadge: "状态",
+      safetyLabel: "处理尚未开放",
+      modes: {
+        SUBTITLE_ONLY: {
+          title: "原语言字幕",
+          subtitle: "从音频或视频中识别原语言字幕",
+          badge: "原语言"
+        },
+        TRANSLATED_SUBTITLE: {
+          title: "翻译字幕",
+          subtitle: "将字幕翻译成目标语言，并选择单语或双语格式",
+          badge: "字幕翻译"
+        },
+        DUBBING_ONLY: {
+          title: "仅配音",
+          subtitle: "为音频或视频设置目标语言和配音选项",
+          badge: "配音"
+        },
+        SUBTITLE_PLUS_DUBBING: {
+          title: "字幕与配音",
+          subtitle: "在同一任务中生成字幕并进行配音",
+          badge: "组合处理"
+        }
+      },
+      stage1Kicker: "第 1 步",
+      stage1Title: "1. 选择来源",
+      stage1Subtitle: "选择需要处理的音频或视频。",
+      sourceGuardedTitle: "媒体文件接入暂未开放",
+      sourceGuardedBody: "处理功能开放后，您可以在此选择音频或视频文件。",
+      sourceMetaEngine: "处理功能尚未开放",
+      sourceMetaGuarded: "没有模拟文件",
+      sourceMetaProtection: "安全保护中",
+      sourceLanguageLabel: "原始语言",
+      langVi: "越南语",
+      langEn: "英语",
+      langZh: "中文",
+      langJa: "日语",
+      langKo: "韩语",
+      langAuto: "自动识别",
+      stage2Kicker: "第 2 步",
+      stage2Title: "2. 设置输出",
+      outputFormatLabel: "字幕文件格式",
+      formatSrt: "SRT（标准格式）",
+      formatVtt: "VTT（网页视频）",
+      formatTxt: "TXT（分段文本）",
+      segmentRuleLabel: "字幕换行规则",
+      ruleStandard: "标准（每行最多 42 个字符，最多 2 行）",
+      ruleShort: "短视频（每行最多 25 个字符，仅 1 行）",
+      targetLangLabel: "字幕目标语言",
+      targetLangDubLabel: "配音目标语言",
+      sharedTargetLangLabel: "输出语言",
+      sharedTargetLangHint: "只需选择一次，即可同时用于字幕和配音。",
+      subDisplayLabel: "字幕显示方式",
+      subDisplaySingle: "单语字幕（仅显示译文）",
+      subDisplayBilingual: "双语字幕（原文 + 译文）",
+      subtitleConfigHeading: "字幕设置",
+      dubbingConfigHeading: "配音设置",
+      voiceStyleLabel: "配音音色",
+      voiceGuardedTitle: "配音音色暂不可用",
+      voiceGuardedBody: "配音功能开放后，可用音色将在此显示。",
+      voiceUnavailableOption: "音色暂不可用",
+      audioBalanceLabel: "原始音频音量",
+      audioBalanceLower: "说话时降低背景音量（20%）",
+      audioBalanceMute: "完全静音原始音频（仅保留配音）",
+      stage3Kicker: "第 3 步",
+      stage3Title: "3. 检查设置和费用",
+      stage3Subtitle: "开始前确认所选模式和费用信息。",
+      summaryModeKey: "已选处理方式",
+      summaryPriceKey: "单价",
+      summaryPriceValue: "暂不可用",
+      summaryCostKey: "预计费用",
+      summaryCostValue: "功能开放后将显示确认费用。",
+      summaryBalanceKey: "当前积分余额",
+      stage3GuardedTitle: "当前暂不能开始处理",
+      stage3GuardedBody: "功能开放后，您将在创建任务前于此确认费用。",
+      stage3MetaEngine: "处理功能尚未开放",
+      stage3MetaNoDraft: "不会创建模拟任务",
+      stage3MetaSafety: "安全保护中",
+      ctaButton: "开始处理",
+      stage4Kicker: "第 4 步",
+      stage4Title: "4. 处理报告",
+      stage4Subtitle: "处理完成后，在此查看每一步状态和真实输出。",
+      statusPreparingTitle: "准备中",
+      statusPreparingDesc: "检查文件和设置",
+      statusQueuedTitle: "排队中",
+      statusQueuedDesc: "等待处理",
+      statusProcessingTitle: "处理中",
+      statusProcessingDesc: "识别字幕并合成语音",
+      statusCompletedTitle: "已完成",
+      statusCompletedDesc: "结果可下载",
+      statusActionRequiredTitle: "需要操作",
+      statusActionRequiredDesc: "需要您确认",
+      statusFailedTitle: "处理失败",
+      statusFailedDesc: "请查看失败原因",
+      emptyStateTitle: "暂无正在运行的任务",
+      emptyStateBody: "真实任务的处理进度和输出文件会显示在此处。",
+      emptyStateStatus: "暂无处理状态",
+      emptyStateNoFake: "不显示模拟任务",
+      emptyStateSafety: "安全保护中",
+      quickToolsKicker: "其他字幕工具",
+      quickToolsTitle: "字幕文件工具",
+      quickToolsSubtitle: "打开字幕文件格式转换、校验或编辑工具。",
+      toolFormatsTitle: "转换 SRT / VTT 格式",
+      toolFormatsDesc: "转换 SRT 与 VTT，或在浏览器中将文本整理为 SRT。",
+      toolAssetsTitle: "检查字幕文件",
+      toolAssetsDesc: "检查或转换个人存储中的 SRT / VTT 文件。",
+      toolStudioTitle: "字幕编辑器",
+      toolStudioDesc: "管理字幕项目、时间点和个人审核。"
     }
   });
+
+  function updateSubDubModeSelection(modeButton, browserWindow) {
+    if (!modeButton) return false;
+    const subDubPage = modeButton.closest(".portal-subdub-hub");
+    const nextMode = modeButton.getAttribute("data-subdub-mode-select") || "";
+    const nextQueryMode = modeButton.getAttribute("data-subdub-mode-query") || "";
+    if (!subDubPage || !nextMode || !nextQueryMode) return false;
+    subDubPage.querySelectorAll("[data-subdub-mode-select]").forEach((button) => {
+      const selected = button === modeButton;
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+      button.classList.toggle("portal-subdub-mode-choice--active", selected);
+    });
+    subDubPage.querySelectorAll("[data-subdub-mode-panel]").forEach((panel) => {
+      panel.hidden = panel.getAttribute("data-subdub-mode-panel") !== nextMode;
+    });
+    const selectedLabel = modeButton.getAttribute("data-subdub-summary-label") || "";
+    const summary = subDubPage.querySelector("[data-subdub-summary-mode]");
+    if (summary) summary.textContent = selectedLabel;
+    if (browserWindow.history && typeof browserWindow.history.replaceState === "function") {
+      const nextUrl = new URL(browserWindow.location.href);
+      nextUrl.searchParams.set("mode", nextQueryMode);
+      browserWindow.history.replaceState(browserWindow.history.state, "", nextUrl.toString());
+    }
+    return true;
+  }
+
+  function updateSubDubLocalVolume(volumeInput) {
+    if (!volumeInput) return false;
+    const panel = volumeInput.closest("[data-subdub-mode-panel]");
+    const output = panel && panel.querySelector(`[data-subdub-volume-output="${volumeInput.getAttribute("data-subdub-local-volume")}"]`);
+    if (!output) return false;
+    output.textContent = `${volumeInput.value}%`;
+    return true;
+  }
 
   function renderSubDubHub(page, context) {
     const locale = resolveSubDubLocale(context);
     const copy = SUBDUB_PRESENTATION_COPY[locale] || SUBDUB_PRESENTATION_COPY.vi;
 
-    const stats = {
-      toolsCount: 4,
-      toolsLabel: copy.toolsCountLabel,
-      qualityBadge: "SRT / VTT",
-      qualityLabel: copy.qualityLabel,
-      safetyBadge: "Kiểm định",
-      safetyLabel: copy.safetyLabel
-    };
-
     const currentModeKey = resolveSubDubJourneyMode(context);
-    const activeMode = SUBDUB_PRODUCT_MODES[currentModeKey] || SUBDUB_PRODUCT_MODES.SUBTITLE_ONLY;
     const modeCopy = copy.modes[currentModeKey] || copy.modes.SUBTITLE_ONLY;
-    const balanceXu = (context && context.wallet && typeof context.wallet.balance_xu === "number") ? context.wallet.balance_xu : 0;
-    const formattedBalance = locale === "en" ? balanceXu.toLocaleString("en-US") : balanceXu.toLocaleString("vi-VN");
+    const balanceXu = context && context.wallet && Number.isFinite(context.wallet.balance_xu) && context.wallet.balance_xu >= 0 ? context.wallet.balance_xu : null;
+    const formattedBalance = balanceXu === null ? "—" : balanceXu.toLocaleString(locale === "zh" ? "zh-CN" : locale === "en" ? "en-US" : "vi-VN");
 
     const modeTabs = Object.values(SUBDUB_PRODUCT_MODES).map((item) => {
       const isSelected = item.key === currentModeKey;
       const itemCopy = copy.modes[item.key] || copy.modes.SUBTITLE_ONLY;
-      return `<a class="portal-subdub-mode-tab ${isSelected ? "portal-subdub-mode-tab--active" : ""}" href="/subdub?mode=${safeText(item.queryMode)}" data-subdub-mode="${safeText(item.key)}">
+      return `<button class="portal-subdub-mode-choice ${isSelected ? "portal-subdub-mode-choice--active" : ""}" type="button" data-subdub-mode-select="${safeText(item.key)}" data-subdub-mode-query="${safeText(item.queryMode)}" data-subdub-summary-label="${safeText(`${itemCopy.title} (${itemCopy.badge})`)}" aria-pressed="${isSelected ? "true" : "false"}" aria-controls="subdub-mode-panel-${safeText(item.queryMode)}">
         <strong>${safeText(itemCopy.title)}</strong>
         <span>${safeText(itemCopy.badge)}</span>
-      </a>`;
+      </button>`;
     }).join("");
+    const localVolumeControlsHtml = (suffix) => `<fieldset class="portal-subdub-volume-controls" aria-describedby="subdub-volume-note-${safeText(suffix)}">
+      <legend>${safeText(copy.audioControlsHeading)}</legend>
+      <div class="portal-subdub-volume-control">
+        <label for="subdub-original-volume-${safeText(suffix)}">${safeText(copy.audioOriginalLabel)}</label>
+        <span class="portal-subdub-volume-control__value"><input id="subdub-original-volume-${safeText(suffix)}" type="range" min="0" max="100" value="100" data-subdub-local-volume="original"><output data-subdub-volume-output="original">100%</output></span>
+      </div>
+      <div class="portal-subdub-volume-control">
+        <label for="subdub-dubbing-volume-${safeText(suffix)}">${safeText(copy.audioDubbingLabel)}</label>
+        <span class="portal-subdub-volume-control__value"><input id="subdub-dubbing-volume-${safeText(suffix)}" type="range" min="0" max="100" value="100" data-subdub-local-volume="dubbing"><output data-subdub-volume-output="dubbing">100%</output></span>
+      </div>
+      <p class="portal-subdub-volume-note" id="subdub-volume-note-${safeText(suffix)}">${safeText(copy.audioControlsNote)}</p>
+    </fieldset>`;
 
     const stage1Html = `<section class="portal-card portal-card-pad portal-subdub-stage" data-subdub-stage="1" data-status="guarded" data-tool-state="guarded">
       <div class="portal-card-header">
@@ -25174,11 +25350,6 @@
           <div>
             <h3>${safeText(copy.sourceGuardedTitle)}</h3>
             <p>${safeText(copy.sourceGuardedBody)}</p>
-            <div class="portal-state-meta">
-              <span>${safeText(copy.sourceMetaEngine)}</span>
-              <span>${safeText(copy.sourceMetaGuarded)}</span>
-              <span>${safeText(copy.sourceMetaProtection)}</span>
-            </div>
           </div>
         </div>
         <div class="portal-field">
@@ -25195,15 +25366,16 @@
       </div>
     </section>`;
 
-    let stage2InnerHtml = "";
-    if (currentModeKey === "SUBTITLE_ONLY") {
+    const stage2InnerHtmlByMode = Object.fromEntries(Object.keys(SUBDUB_PRODUCT_MODES).map((modeKey) => {
+      let stage2InnerHtml = "";
+    if (modeKey === "SUBTITLE_ONLY") {
       stage2InnerHtml = `
         <div class="portal-field">
           <label class="portal-label">${safeText(copy.outputFormatLabel)}</label>
-          <div style="display:flex; gap:16px;">
-            <label><input type="radio" name="output_format" value="srt" checked> ${safeText(copy.formatSrt)}</label>
-            <label><input type="radio" name="output_format" value="vtt"> ${safeText(copy.formatVtt)}</label>
-            <label><input type="radio" name="output_format" value="txt"> ${safeText(copy.formatTxt)}</label>
+          <div class="portal-subdub-radio-options">
+            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-source-output-format" value="srt" checked> ${safeText(copy.formatSrt)}</label>
+            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-source-output-format" value="vtt"> ${safeText(copy.formatVtt)}</label>
+            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-source-output-format" value="txt"> ${safeText(copy.formatTxt)}</label>
           </div>
         </div>
         <div class="portal-field">
@@ -25213,7 +25385,7 @@
             <option value="short">${safeText(copy.ruleShort)}</option>
           </select>
         </div>`;
-    } else if (currentModeKey === "TRANSLATED_SUBTITLE") {
+    } else if (modeKey === "TRANSLATED_SUBTITLE") {
       stage2InnerHtml = `
         <div class="portal-field">
           <label class="portal-label" for="subdub-target-lang">${safeText(copy.targetLangLabel)}</label>
@@ -25227,19 +25399,19 @@
         </div>
         <div class="portal-field">
           <label class="portal-label">${safeText(copy.subDisplayLabel)}</label>
-          <div style="display:flex; gap:16px;">
-            <label><input type="radio" name="sub_display_type" value="single" checked> ${safeText(copy.subDisplaySingle)}</label>
-            <label><input type="radio" name="sub_display_type" value="bilingual"> ${safeText(copy.subDisplayBilingual)}</label>
+          <div class="portal-subdub-radio-options">
+            <label class="portal-subdub-radio-option"><input type="radio" name="sub_display_type" value="single" checked> ${safeText(copy.subDisplaySingle)}</label>
+            <label class="portal-subdub-radio-option"><input type="radio" name="sub_display_type" value="bilingual"> ${safeText(copy.subDisplayBilingual)}</label>
           </div>
         </div>
         <div class="portal-field">
           <label class="portal-label">${safeText(copy.outputFormatLabel)}</label>
-          <div style="display:flex; gap:16px;">
-            <label><input type="radio" name="output_format" value="srt" checked> SRT</label>
-            <label><input type="radio" name="output_format" value="vtt"> VTT</label>
+          <div class="portal-subdub-radio-options">
+            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-translated-output-format" value="srt" checked> SRT</label>
+            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-translated-output-format" value="vtt"> VTT</label>
           </div>
         </div>`;
-    } else if (currentModeKey === "DUBBING_ONLY") {
+    } else if (modeKey === "DUBBING_ONLY") {
       stage2InnerHtml = `
         <div class="portal-field">
           <label class="portal-label" for="subdub-target-lang-dub">${safeText(copy.targetLangDubLabel)}</label>
@@ -25261,14 +25433,8 @@
             <option value="" selected>${safeText(copy.voiceUnavailableOption)}</option>
           </select>
         </div>
-        <div class="portal-field">
-          <label class="portal-label">${safeText(copy.audioBalanceLabel)}</label>
-          <select class="portal-select" name="audio_balance">
-            <option value="ducking" selected>${safeText(copy.audioBalanceLower)}</option>
-            <option value="mute_original">${safeText(copy.audioBalanceMute)}</option>
-          </select>
-        </div>`;
-    } else if (currentModeKey === "SUBTITLE_PLUS_DUBBING") {
+        ${localVolumeControlsHtml("dub")}`;
+    } else if (modeKey === "SUBTITLE_PLUS_DUBBING") {
       stage2InnerHtml = `
         <div class="portal-field" style="background:var(--portal-bg-card-subtle, rgba(255,255,255,0.02)); padding:16px; border-radius:8px; border:1px solid var(--portal-border, #2d3748);">
           <label class="portal-label" for="subdub-shared-target-lang"><strong>${safeText(copy.sharedTargetLangLabel)}</strong></label>
@@ -25281,9 +25447,9 @@
             <option value="ko">${safeText(copy.langKo)}</option>
           </select>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:12px;">
-          <div style="background:var(--portal-bg-card-subtle, rgba(255,255,255,0.02)); padding:16px; border-radius:8px; border:1px solid var(--portal-border, #2d3748);">
-            <h4 style="margin:0 0 12px; color:var(--portal-accent, #00f2fe);">${safeText(copy.subtitleConfigHeading)}</h4>
+        <div class="portal-subdub-config-pair">
+          <div class="portal-subdub-config-card">
+            <h4>${safeText(copy.subtitleConfigHeading)}</h4>
             <div class="portal-field">
               <label class="portal-label">${safeText(copy.subDisplayLabel)}</label>
               <select class="portal-select" name="sub_display_type">
@@ -25293,14 +25459,14 @@
             </div>
             <div class="portal-field">
               <label class="portal-label">${safeText(copy.outputFormatLabel)}</label>
-              <div style="display:flex; gap:12px;">
-                <label><input type="radio" name="output_format" value="srt" checked> SRT</label>
-                <label><input type="radio" name="output_format" value="vtt"> VTT</label>
+              <div class="portal-subdub-radio-options">
+                <label class="portal-subdub-radio-option"><input type="radio" name="subdub-combined-output-format" value="srt" checked> SRT</label>
+                <label class="portal-subdub-radio-option"><input type="radio" name="subdub-combined-output-format" value="vtt"> VTT</label>
               </div>
             </div>
           </div>
-          <div style="background:var(--portal-bg-card-subtle, rgba(255,255,255,0.02)); padding:16px; border-radius:8px; border:1px solid var(--portal-border, #2d3748);">
-            <h4 style="margin:0 0 12px; color:var(--portal-accent, #00f2fe);">${safeText(copy.dubbingConfigHeading)}</h4>
+          <div class="portal-subdub-config-card">
+            <h4>${safeText(copy.dubbingConfigHeading)}</h4>
             <div class="portal-field" data-status="guarded">
               <label class="portal-label">${safeText(copy.voiceStyleLabel)}</label>
               <div class="portal-state" data-state="guarded" style="margin:4px 0 8px; padding:12px; font-size:13px;">
@@ -25311,30 +25477,30 @@
                 <option value="" selected>${safeText(copy.voiceUnavailableOption)}</option>
               </select>
             </div>
-            <div class="portal-field">
-              <label class="portal-label">${safeText(copy.audioBalanceLabel)}</label>
-              <select class="portal-select" name="audio_balance">
-                <option value="ducking" selected>${safeText(copy.audioBalanceLower)}</option>
-                <option value="mute_original">${safeText(copy.audioBalanceMute)}</option>
-              </select>
-            </div>
+            ${localVolumeControlsHtml("combo")}
           </div>
         </div>`;
     }
+      return [modeKey, stage2InnerHtml];
+    }));
 
-    const stage2Html = `<section class="portal-card portal-card-pad portal-subdub-stage" data-subdub-stage="2">
+    const stage2Html = Object.values(SUBDUB_PRODUCT_MODES).map((item) => {
+      const panelModeCopy = copy.modes[item.key] || copy.modes.SUBTITLE_ONLY;
+      const isActive = item.key === currentModeKey;
+      return `<section class="portal-card portal-card-pad portal-subdub-stage portal-subdub-mode-panel" id="subdub-mode-panel-${safeText(item.queryMode)}" data-subdub-stage="2" data-subdub-mode-panel="${safeText(item.key)}" ${isActive ? "" : "hidden"} aria-labelledby="subdub-mode-heading-${safeText(item.queryMode)}">
       <div class="portal-card-header">
         <div>
           <span class="portal-section-kicker">${safeText(copy.stage2Kicker)}</span>
-          <h2 class="portal-card-title">${safeText(copy.stage2Title)}</h2>
-          <p class="portal-card-subtitle">${safeText(modeCopy.subtitle)}</p>
+          <h2 class="portal-card-title" id="subdub-mode-heading-${safeText(item.queryMode)}">${safeText(panelModeCopy.title)}</h2>
+          <p class="portal-card-subtitle">${safeText(panelModeCopy.subtitle)}</p>
         </div>
         ${badge("ready")}
       </div>
       <div class="portal-form-grid" style="display:grid; gap:16px;">
-        ${stage2InnerHtml}
+        ${stage2InnerHtmlByMode[item.key] || ""}
       </div>
     </section>`;
+    }).join("");
 
     const stage3Html = `<section class="portal-card portal-card-pad portal-subdub-stage" data-subdub-stage="3" data-status="guarded" data-tool-state="guarded">
       <div class="portal-card-header">
@@ -25348,7 +25514,7 @@
       <div class="portal-summary-list" style="margin-bottom:16px;">
         <div class="portal-summary-item">
           <span class="portal-summary-key">${safeText(copy.summaryModeKey)}</span>
-          <span class="portal-summary-value">${safeText(modeCopy.title)} (${safeText(modeCopy.badge)})</span>
+          <span class="portal-summary-value" data-subdub-summary-mode>${safeText(modeCopy.title)} (${safeText(modeCopy.badge)})</span>
         </div>
         <div class="portal-summary-item">
           <span class="portal-summary-key">${safeText(copy.summaryPriceKey)}</span>
@@ -25360,7 +25526,7 @@
         </div>
         <div class="portal-summary-item">
           <span class="portal-summary-key">${safeText(copy.summaryBalanceKey)}</span>
-          <span class="portal-summary-value">${safeText(formattedBalance)} Xu</span>
+          <span class="portal-summary-value">${safeText(formattedBalance)}${balanceXu === null ? "" : " Xu"}</span>
         </div>
       </div>
       <div class="portal-state" data-state="guarded" style="margin-bottom:16px;">
@@ -25368,11 +25534,6 @@
         <div>
           <h3>${safeText(copy.stage3GuardedTitle)}</h3>
           <p>${safeText(copy.stage3GuardedBody)}</p>
-          <div class="portal-state-meta">
-            <span>${safeText(copy.stage3MetaEngine)}</span>
-            <span>${safeText(copy.stage3MetaNoDraft)}</span>
-            <span>${safeText(copy.stage3MetaSafety)}</span>
-          </div>
         </div>
       </div>
       <div class="portal-form-footer">
@@ -25389,42 +25550,11 @@
         </div>
         ${badge("guarded")}
       </div>
-      <div class="portal-subdub-status-guide" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:8px; margin-bottom:16px;">
-        <div style="background:var(--portal-bg-card-subtle, rgba(255,255,255,0.02)); padding:10px; border-radius:6px; text-align:center;">
-          <strong style="color:var(--portal-text-muted, #a0aec0);">${safeText(copy.statusPreparingTitle)}</strong>
-          <p style="font-size:11px; margin:4px 0 0; color:var(--portal-muted, #718096);">${safeText(copy.statusPreparingDesc)}</p>
-        </div>
-        <div style="background:var(--portal-bg-card-subtle, rgba(255,255,255,0.02)); padding:10px; border-radius:6px; text-align:center;">
-          <strong style="color:#f59e0b;">${safeText(copy.statusQueuedTitle)}</strong>
-          <p style="font-size:11px; margin:4px 0 0; color:var(--portal-muted, #718096);">${safeText(copy.statusQueuedDesc)}</p>
-        </div>
-        <div style="background:var(--portal-bg-card-subtle, rgba(255,255,255,0.02)); padding:10px; border-radius:6px; text-align:center;">
-          <strong style="color:#00f2fe;">${safeText(copy.statusProcessingTitle)}</strong>
-          <p style="font-size:11px; margin:4px 0 0; color:var(--portal-muted, #718096);">${safeText(copy.statusProcessingDesc)}</p>
-        </div>
-        <div style="background:var(--portal-bg-card-subtle, rgba(255,255,255,0.02)); padding:10px; border-radius:6px; text-align:center;">
-          <strong style="color:#10b981;">${safeText(copy.statusCompletedTitle)}</strong>
-          <p style="font-size:11px; margin:4px 0 0; color:var(--portal-muted, #718096);">${safeText(copy.statusCompletedDesc)}</p>
-        </div>
-        <div style="background:var(--portal-bg-card-subtle, rgba(255,255,255,0.02)); padding:10px; border-radius:6px; text-align:center;">
-          <strong style="color:#f59e0b;">${safeText(copy.statusActionRequiredTitle)}</strong>
-          <p style="font-size:11px; margin:4px 0 0; color:var(--portal-muted, #718096);">${safeText(copy.statusActionRequiredDesc)}</p>
-        </div>
-        <div style="background:var(--portal-bg-card-subtle, rgba(255,255,255,0.02)); padding:10px; border-radius:6px; text-align:center;">
-          <strong style="color:#ef4444;">${safeText(copy.statusFailedTitle)}</strong>
-          <p style="font-size:11px; margin:4px 0 0; color:var(--portal-muted, #718096);">${safeText(copy.statusFailedDesc)}</p>
-        </div>
-      </div>
-      <div class="portal-state" data-state="ready">
-        <span class="portal-state-icon" aria-hidden="true">✓</span>
+      <div class="portal-state portal-subdub-report-empty" data-state="empty" data-subdub-report-empty>
+        <span class="portal-state-icon" aria-hidden="true">○</span>
         <div>
-          <h3>${safeText(copy.emptyStateTitle)}</h3>
-          <p>${safeText(copy.emptyStateBody)}</p>
-          <div class="portal-state-meta">
-            <span>${safeText(copy.emptyStateStatus)}</span>
-            <span>${safeText(copy.emptyStateNoFake)}</span>
-            <span>${safeText(copy.emptyStateSafety)}</span>
-          </div>
+          <h3>${safeText(copy.reportEmptyTitle)}</h3>
+          <p>${safeText(copy.reportEmptyBody)}</p>
         </div>
       </div>
     </section>`;
@@ -25464,23 +25594,14 @@
       </div>
     </section>`;
 
-    return `<article class="portal-page portal-subdub-hub portal-subdub-journey-view">
-      ${renderHero(page, context)}
-      <section class="portal-document-operation-intro portal-document-board-summary">
-        <div>
-          <span class="portal-section-kicker">${safeText(copy.heroKicker)}</span>
-          <h2>${safeText(copy.heroTitle)}</h2>
-          <p>${safeText(copy.heroSubtitle)}</p>
-        </div>
-        <dl>
-          <div><dt>${safeText(String(stats.toolsCount))}</dt><dd>${safeText(stats.toolsLabel)}</dd></div>
-          <div><dt>${safeText(stats.qualityBadge)}</dt><dd>${safeText(stats.qualityLabel)}</dd></div>
-          <div><dt>${safeText(stats.safetyBadge)}</dt><dd>${safeText(stats.safetyLabel)}</dd></div>
-        </dl>
-      </section>
-      <nav class="portal-subdub-mode-nav" aria-label="${safeText(copy.heroKicker)}" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:20px;">
+    return `<article class="portal-page portal-subdub-hub portal-subdub-journey-view" lang="${safeText(locale)}">
+      ${renderHero({ ...page, description: copy.heroSubtitle }, context)}
+      <section class="portal-subdub-mode-picker" aria-labelledby="subdub-mode-picker-title">
+        <h2 class="portal-card-title" id="subdub-mode-picker-title">${safeText(copy.modeSelectorLabel)}</h2>
+      <nav class="portal-subdub-mode-nav" aria-label="${safeText(copy.modeSelectorLabel)}">
         ${modeTabs}
       </nav>
+      </section>
       ${stage1Html}
       ${stage2Html}
       ${stage3Html}
@@ -37715,7 +37836,13 @@
     // prevents duplicate register/payment/feature events after re-mounting.
     if (interactionsBound) return;
     interactionsBound = true;
+    document.addEventListener("input", (event) => {
+      const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume]");
+      updateSubDubLocalVolume(volumeInput);
+    });
     document.addEventListener("click", (event) => {
+      const subDubModeButton = event.target.closest("[data-subdub-mode-select]");
+      if (updateSubDubModeSelection(subDubModeButton, window)) return;
       const navSummary = event.target.closest(".portal-nav-summary");
       if (navSummary) {
         const navGroup = navSummary.closest(".portal-nav-group");

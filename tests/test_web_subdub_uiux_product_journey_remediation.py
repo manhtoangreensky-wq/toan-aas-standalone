@@ -96,8 +96,8 @@ def test_four_consistent_customer_stages_rendered(portal_js: str) -> None:
 
     assert 'stage1Title: "1. Nguồn dữ liệu"' in copy_body
     assert 'stage2Title: "2. Kết quả mong muốn"' in copy_body
-    assert 'stage3Title: "3. Kiểm tra & chi phí"' in copy_body
-    assert 'stage4Title: "4. Đang xử lý / Kết quả"' in copy_body
+    assert 'stage3Title: "3. Kiểm tra trước khi tạo"' in copy_body
+    assert 'stage4Title: "4. Báo cáo và kết quả"' in copy_body
 
 
 # -----------------------------------------------------------------------------

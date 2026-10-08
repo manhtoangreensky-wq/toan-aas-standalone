@@ -1,5 +1,22 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Đối chiếu SubDub một màn hình — ứng viên 08/10/2026
+
+| Trước | Hiện tại trên ứng viên cục bộ | Bằng chứng / ranh giới |
+|---|---|---|
+| Mỗi chế độ mở lại `/subdub`; phụ đề, lồng tiếng và kết hợp gây cảm giác là các sản phẩm rời. | Bốn chế độ chọn ngay trên cùng màn hình; phần thiết lập đổi theo lựa chọn và giữ nguyên ngôn ngữ đã chọn. | `tests/subdub-hub-presentation.test.mjs`; 48 lần tương tác trên 12 cấu hình trình duyệt. |
+| Chỉ có lựa chọn âm thanh gốc tổng quát; mức âm thanh giọng đọc không tách riêng. | Khi có lồng tiếng, có hai thanh mức âm lượng độc lập, chỉ cập nhật con số trên màn hình. | Không có dữ liệu gửi đi, lưu trữ, yêu cầu mạng hay thay đổi hợp đồng bộ máy xử lý. |
+| Trạng thái “Preparing” và biểu tượng thành công có thể bị hiểu là đã có tác vụ. | Trạng thái chưa có báo cáo được nói rõ; tải tệp, báo giá, bắt đầu xử lý và đầu ra vẫn khóa. | Python contract 9/9; không kiểm thử phiên đăng nhập hoặc media thật. |
+| Tiếng Trung rơi về tiếng Việt; một số nhãn/độ tương phản chưa đạt. | Nội dung tĩnh tiếng Việt/Anh/Trung, màu xanh–lam hiện có, bố cục dọc và vùng chạm được giữ. | 12/12 tổ hợp ba ngôn ngữ × sáng/tối × 1440/360; chữ ≥5.23:1, viền ≥3.61:1, mục tiêu chạm ≥44px. |
+
+Mã giao diện đã kiểm thử `e4070e3bf6710be1e5388c12e20800aae0ee5ea3`, bằng chứng
+trình duyệt `../../qa/qa/subdub-exact-e4070e3/browser-review.json`. Đây là
+thay đổi trình bày; PR #619 đang mở nhưng lượt kiểm tra đầu dừng ở cổng dấu vân
+tay hồ sơ di trú cũ. Chưa hợp nhất vào nhánh chính, triển khai hay kiểm tra trên
+hệ thống thật. Các luồng
+thực tế của SubDub vẫn thuộc phần xử lý nền. Không mở lại mã Voice,
+Music hoặc Video đã được đánh dấu CLOSED/LOCKED.
+
 ## Đối chiếu Music — ứng viên 08/10/2026
 
 - Cũ: ba lối tắt lặp lại danh mục, số liệu/chất lượng/bản quyền chưa có nguồn.
