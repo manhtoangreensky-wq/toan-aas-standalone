@@ -5,6 +5,16 @@ Base main: `8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952` after Video PR #616.
 
 ## Contract
 
+Release verification also covers the existing CI runner's Voice DOM selectors
+and Web-only migration provenance JSON. Candidate `cddf617` reproduced two
+gate failures: Composer additions lacked the page ancestor required by the
+theme contract; CI still searched for the old primary Studio shortcut.
+Corrective changes scope Composer CSS under its actual page and target the
+explicit TTS hub link for content/focus/behavior checks. Guarded metadata is
+retained on speech/delivery cards. No gate is disabled or given a vacuous pass.
+The Web provenance refresh uses only the clean Voice Git snapshot; Bot records
+are preserved. A fresh exact-candidate gate run is required after these fixes.
+
 Review the real signed-in `/voice`, `/voice/tts`, `/voice/saved`, `/voice/clone`,
 `/voice/preview`, `/voice/outputs`, `/voice-studio` and direction composer.
 Keep existing action IDs, engine guards, field names, values and numeric limits.

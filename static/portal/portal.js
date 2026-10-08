@@ -24763,7 +24763,7 @@
     return `<article class="portal-page portal-media-hub portal-voice-hub">
       ${renderHero(page, context)}
       <section class="portal-card portal-card-pad"><h2 class="portal-card-title">${safeText(voiceUiText("hub.choose", "Bạn muốn làm gì với giọng nói?"))}</h2>
-        <div class="portal-module-grid">${tools.map(([key, href]) => `<a class="portal-module-card" href="${safeText(href)}"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.voice)}</span><div class="portal-module-copy"><h3>${safeText(voiceUiText(`tool.${key}.title`, key))}</h3><p>${safeText(voiceUiText(`tool.${key}.description`, ""))}</p><span class="portal-module-link">${safeText(voiceUiText("hub.open", "Mở công cụ"))} →</span></div></a>`).join("")}</div>
+        <div class="portal-module-grid">${tools.map(([key, href]) => `<a class="portal-module-card" href="${safeText(href)}" data-tool-state="${["studio", "direction"].includes(key) ? "ready" : "guarded"}"${key === "tts" ? " data-voice-primary" : ""}><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.voice)}</span><div class="portal-module-copy"><h3>${safeText(voiceUiText(`tool.${key}.title`, key))}</h3><p>${safeText(voiceUiText(`tool.${key}.description`, ""))}</p><span class="portal-module-link">${safeText(voiceUiText("hub.open", "Mở công cụ"))} →</span></div></a>`).join("")}</div>
       </section>
       <section class="portal-card portal-card-pad"><h2 class="portal-card-title">${safeText(voiceUiText("hub.rights.title", "Quyền sử dụng giọng"))}</h2><p>${safeText(voiceUiText("hub.rights.description", "Chỉ dùng mẫu giọng và nội dung bạn có quyền sử dụng."))}</p></section>
     </article>`;

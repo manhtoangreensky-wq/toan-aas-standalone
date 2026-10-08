@@ -21507,17 +21507,17 @@ html[data-portal-theme="dark"] .portal-feature-workspace--voice-task .portal-but
 .portal-voice-studio-detail :is(.portal-card-subtitle, .portal-field-help, .portal-form-note, .portal-empty p) { color: var(--portal-ink); line-height: 1.6; }
 .portal-voice-studio-detail :is(dt, dd, p, small, .portal-section-kicker, .portal-card-subtitle, .portal-form-note) { color: var(--portal-ink) !important; }
 .portal-voice-studio-detail .portal-button--quiet { color: var(--portal-ink) !important; border-color: var(--portal-border-strong) !important; }
-.portal-voice-direction-composer { display: grid; gap: 20px; }
-.portal-voice-direction-composer .portal-eyebrow { color: var(--portal-ink) !important; }
-.portal-voice-direction-composer :is(.portal-voice-direction-composer-layout, .portal-fields) { grid-template-columns: minmax(0, 1fr); }
-.portal-voice-direction-composer .portal-voice-direction-composer-suggestions > ol { grid-template-columns: minmax(0, 1fr); }
-.portal-voice-direction-composer-boundary > summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-weight: 700; }
-.portal-voice-direction-composer :is(.portal-card, .portal-empty, .portal-notice) { background: var(--portal-surface-light); color: var(--portal-ink); border-color: var(--portal-border); }
-.portal-voice-direction-composer :is(.portal-card-title, .portal-card-subtitle, .portal-section-kicker, .portal-field > label, .portal-field-help, .portal-form-note, .portal-voice-direction-composer-meta span, dt, dd, strong, p, summary) { color: var(--portal-ink) !important; }
-.portal-voice-direction-composer :is(.portal-input, .portal-select, .portal-textarea):not(:disabled):not(:focus) { border-color: color-mix(in srgb, var(--portal-muted) 75%, var(--portal-surface-light)) !important; }
-.portal-voice-direction-composer :is(input, textarea)::placeholder { color: var(--portal-muted); opacity: 1; }
-html:not([data-portal-theme="dark"]) .portal-voice-direction-composer .portal-button--primary { background: var(--portal-action-hover) !important; background-image: none !important; color: var(--portal-on-action) !important; }
-html[data-portal-theme="dark"] .portal-voice-direction-composer .portal-button--primary { background: var(--portal-dark-action) !important; background-image: none !important; color: var(--portal-dark-on-action) !important; }
+.portal-page.portal-voice-direction-composer { display: grid; gap: 20px; }
+.portal-page.portal-voice-direction-composer .portal-eyebrow { color: var(--portal-ink) !important; }
+.portal-page.portal-voice-direction-composer :is(.portal-voice-direction-composer-layout, .portal-fields) { grid-template-columns: minmax(0, 1fr); }
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-suggestions > ol { grid-template-columns: minmax(0, 1fr); }
+.portal-page.portal-voice-direction-composer .portal-voice-direction-composer-boundary > summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-weight: 700; }
+.portal-page.portal-voice-direction-composer :is(.portal-card, .portal-empty, .portal-notice) { background: var(--portal-surface-light); color: var(--portal-ink); border-color: var(--portal-border); }
+.portal-page.portal-voice-direction-composer :is(.portal-card-title, .portal-card-subtitle, .portal-section-kicker, .portal-field > label, .portal-field-help, .portal-form-note, .portal-voice-direction-composer-meta span, dt, dd, strong, p, summary) { color: var(--portal-ink) !important; }
+.portal-page.portal-voice-direction-composer :is(.portal-input, .portal-select, .portal-textarea):not(:disabled):not(:focus) { border-color: color-mix(in srgb, var(--portal-muted) 75%, var(--portal-surface-light)) !important; }
+.portal-page.portal-voice-direction-composer :is(input, textarea)::placeholder { color: var(--portal-muted); opacity: 1; }
+html:not([data-portal-theme="dark"]) .portal-page.portal-voice-direction-composer .portal-button--primary { background: var(--portal-action-hover) !important; background-image: none !important; color: var(--portal-on-action) !important; }
+html[data-portal-theme="dark"] .portal-page.portal-voice-direction-composer .portal-button--primary { background: var(--portal-dark-action) !important; background-image: none !important; color: var(--portal-dark-on-action) !important; }
 .portal-voice-studio-detail :is(.portal-card, .portal-empty, .portal-notice, .portal-voice-script-card, .portal-voice-cue-sheet) { background: var(--portal-surface-light); color: var(--portal-ink); border-color: var(--portal-border); }
 .portal-voice-studio-detail .portal-notice :is(p, span, strong) { color: var(--portal-ink); }
 .portal-voice-studio-detail .portal-notice--warning :is(p, span, strong) { color: var(--portal-ink); }
