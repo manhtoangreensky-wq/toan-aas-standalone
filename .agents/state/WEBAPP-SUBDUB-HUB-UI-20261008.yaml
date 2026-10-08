@@ -1,6 +1,6 @@
 spec_id: SUBDUB-SINGLE-SCREEN-UI-20261008
-status: NEXT_IN_ORDER_AFTER_MUSIC_CLOSED
-phase: CONTRACT
+status: SUBDUB_EXACT_UI_QA_PASS_RELEASE_CI_PENDING
+phase: VERIFY
 base_sha: e70175a5f8b4d30bdf99de939b80d2de2e54ee18
 protected_closed_checkpoint:
   voice_pr: 617
@@ -41,6 +41,12 @@ verification:
   minimum_touch_target_height_px: 44
   diff_review: PASS_SUBDUB_SCOPE_AND_PREEXISTING_VOICE_MUSIC_PRESERVED
   browser_plugin: NOT_AVAILABLE_PLAYWRIGHT_CHROME_USED
+  exact_candidate_sha: 40b3ce7aa707bc3ab1350a99c97ed71a07b11b91
+  official_browser_gate: PASS_18_CAPTURES_6_HUBS_6_PRIMARY_FOCUS_4_FREE_TOOLS
+  browser_runtime_assertions: PASS_26_OF_26
+  exact_custom_matrix: PASS_12_CASES_48_MODE_CHANGES_VERTICAL_LOCALES_CONTRAST
+  exact_custom_evidence: ../../qa/20261007-video-uiux/subdub-exact-40b3ce7/browser-review.json
+  global_motion_error_count: OPEN_SEPARATE_VIEWTRANSITION_GATE
   evidence: ../../qa/20261007-video-uiux/subdub-shell-verified-20261008/browser-review.json
   screenshot_count: 48
   production_live_verified: false
@@ -52,7 +58,7 @@ safety:
   route_engine_changes: 0
   deploy: NO
 delivery:
-  commit: NO
+  commit: true
   push: NO
   merge: NO
   deploy: NO
@@ -60,5 +66,5 @@ remaining:
   - Branch CI, release and production browser verification are pending.
   - Shared shell navigation locale, floating controls and whole-site motion remain separate open checklist items.
   - Actual source upload, quote, job and media output remain with the route/engine workstream.
-next: Preserve existing local SubDub UI code; prepare one exact candidate from Music runtime SHA, then run release CI/merge/deploy/readback. Keep portal-motion.js and closed Voice/Music/Video product blocks untouched.
+next: Publish one exact SubDub PR from 40b3ce7, require Ubuntu CI, then merge/deploy/readback. Keep portal-motion.js and closed Voice/Music/Video product blocks untouched.
 parent_goal: ACTIVE

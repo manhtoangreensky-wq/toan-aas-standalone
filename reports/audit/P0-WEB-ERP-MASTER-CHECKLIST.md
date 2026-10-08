@@ -122,7 +122,7 @@ Thứ tự tiếp: SubDub → các tính năng khác → quay lại phần Video
 
 ## SUBDUB SINGLE-SCREEN UI — 2026-10-08
 
-**SPEC_ID:** `SUBDUB-SINGLE-SCREEN-UI-20261008` · **STATUS:** `LOCAL_QA_PASS_PENDING_RELEASE`.
+**SPEC_ID:** `SUBDUB-SINGLE-SCREEN-UI-20261008` · **STATUS:** `EXACT_UI_QA_PASS_RELEASE_PENDING`.
 Video checkpoint PR #616 is already recorded merged/deployed. Keep this slice
 strictly to the customer presentation layer; the media engine and route
 integration remain outside this UI/UX work.
@@ -148,8 +148,12 @@ integration remain outside this UI/UX work.
 - [x] Saved 48 screenshots and source hashes in
   `../../qa/20261007-video-uiux/subdub-shell-verified-20261008/browser-review.json`.
   Initial incomplete-wrapper images are superseded.
-- [ ] Release queue: verify and ship Voice, Music, then SubDub one checkpoint
-  at a time; CI, merge/deploy and production browser proof still pending.
+- [x] Fresh snapshot `40b3ce7`: 12 configurations, 48 local mode changes,
+  text 5.23:1, boundary 3.51:1, target 44px; no request or action event.
+  Exact evidence: `../../qa/subdub-exact-40b3ce7/browser-review.json`.
+- [ ] Place only SubDub commits on Music squash main, refresh provenance, then
+  publish one PR → CI → merge → deploy → source/runtime readback.
+  Voice/Music/Video product blocks are CLOSED/LOCKED.
 - [ ] Shared shell locale/floating controls and whole-site motion remain open;
   QA here proves SubDub content only. `integration.js` was excluded from the
   isolated fixture; no execution, signed-session or real-output claim.

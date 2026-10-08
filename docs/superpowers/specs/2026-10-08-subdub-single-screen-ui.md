@@ -1,8 +1,9 @@
 # SubDub single-screen UI closeout — 2026-10-08
 
 **SPEC_ID:** `SUBDUB-SINGLE-SCREEN-UI-20261008`
-**STATUS:** `LOCAL_QA_PASS_PENDING_RELEASE`
-**BASE_SHA:** `13d4a06f2f63217d9a1a682b7df950bacc5a62b2`
+**STATUS:** `EXACT_UI_QA_PASS_RELEASE_PENDING`
+**BASE_SHA:** `e70175a5f8b4d30bdf99de939b80d2de2e54ee18`
+**AUDIT_BASE_SHA:** `13d4a06f2f63217d9a1a682b7df950bacc5a62b2`
 **VIDEO CHECKPOINT:** PR #616 is recorded as merged at
 `8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952`; this spec does not reopen that
 checkpoint or claim the remaining Video family is complete.
@@ -122,6 +123,15 @@ change.
 ## Result
 
 ### Verified local checkpoint — 2026-10-08
+
+Release-source candidate `40b3ce7` repeated the full template/handler matrix:
+12/12 configurations and 48 selections passed; minimum text 5.23:1, boundary
+3.51:1, target 44px. Exact snapshot evidence is at
+`../../qa/subdub-exact-40b3ce7/browser-review.json`. Official browser proof
+for the same snapshot is at `../../qa/subdub-release-40b3ce7/reports/browser_evidence/`.
+Before publishing, place only this SubDub change on Music squash main and
+refresh Web provenance from a clean final snapshot. This does not reopen the
+Voice/Music/Video product blocks marked CLOSED/LOCKED.
 
 - Four in-page choices keep exactly one settings panel visible. Enter and
   click/touch keep selected state, review summary and URL mode aligned while
