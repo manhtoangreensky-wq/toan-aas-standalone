@@ -163,11 +163,13 @@ those product blocks.
   The earlier incomplete-wrapper screenshots are superseded and are not used
   for acceptance. Browser plugin was unavailable; regular Playwright was used.
 
-### Exact current-branch recheck — 2026-10-08
+### Exact tested-code recheck — 2026-10-08
 
-- Current branch `fix/subdub-ui-closeout-20261008`, exact HEAD
-  `e4070e3bf6710be1e5388c12e20800aae0ee5ea3`, is based on current
+- Tested UI code snapshot `e4070e3bf6710be1e5388c12e20800aae0ee5ea3` is on
+  branch `fix/subdub-ui-closeout-20261008`, based on current
   `origin/main` `e70175a5f8b4d30bdf99de939b80d2de2e54ee18`.
+- A later local commit refreshes documentation only; the six UI source hashes
+  match the exact tested snapshot above.
 - Re-ran `node --test tests/subdub-hub-presentation.test.mjs`: **9 passed,
   0 failed**. Re-ran the Python SubDub UI contract using the isolated QA venv
   with cache writing disabled: **9 passed, 0 failed**. `node --check

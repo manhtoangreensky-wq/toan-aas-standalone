@@ -68,5 +68,5 @@ remaining:
   - Branch push/PR/CI/merge, release and production browser verification are pending.
   - Shared shell navigation locale, floating controls and whole-site motion remain separate open checklist items.
   - Actual source upload, quote, job and media output remain with the route/engine workstream.
-next: Publish one SubDub-only PR from exact HEAD e4070e3, require Ubuntu CI, merge only after CI passes, then request/obtain deployment approval before production readback. Keep portal-motion.js and closed Voice/Music/Video product blocks untouched.
+next: Publish one SubDub-only PR containing the exact tested UI code snapshot e4070e3 and documentation-only closeout, require Ubuntu CI, merge only after CI passes, then request/obtain deployment approval before production readback. Keep portal-motion.js and closed Voice/Music/Video product blocks untouched.
 parent_goal: ACTIVE

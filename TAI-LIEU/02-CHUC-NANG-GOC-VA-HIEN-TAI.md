@@ -9,7 +9,7 @@
 | Trạng thái “Preparing” và biểu tượng thành công có thể bị hiểu là đã có tác vụ. | Trạng thái chưa có báo cáo được nói rõ; tải tệp, báo giá, bắt đầu xử lý và đầu ra vẫn khóa. | Python contract 9/9; không kiểm thử phiên đăng nhập hoặc media thật. |
 | Tiếng Trung rơi về tiếng Việt; một số nhãn/độ tương phản chưa đạt. | Nội dung tĩnh tiếng Việt/Anh/Trung, màu xanh–lam hiện có, bố cục dọc và vùng chạm được giữ. | 12/12 tổ hợp ba ngôn ngữ × sáng/tối × 1440/360; chữ ≥5.23:1, viền ≥3.61:1, mục tiêu chạm ≥44px. |
 
-Ứng viên với mã đầy đủ `e4070e3bf6710be1e5388c12e20800aae0ee5ea3`, bằng chứng
+Mã giao diện đã kiểm thử `e4070e3bf6710be1e5388c12e20800aae0ee5ea3`, bằng chứng
 trình duyệt `../../qa/qa/subdub-exact-e4070e3/browser-review.json`. Đây là
 thay đổi trình bày trên máy hiện tại; chưa có yêu cầu hợp nhất mã, kiểm tra tự động,
 hợp nhất vào nhánh chính, triển khai hay kiểm tra trên hệ thống thật. Các luồng

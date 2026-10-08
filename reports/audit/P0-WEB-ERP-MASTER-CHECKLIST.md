@@ -127,9 +127,10 @@ Video checkpoint PR #616 is already recorded merged/deployed. Keep this slice
 strictly to the customer presentation layer; the media engine and route
 integration remain outside this UI/UX work.
 
-**Current exact snapshot:** branch `fix/subdub-ui-closeout-20261008`, HEAD
-`e4070e3bf6710be1e5388c12e20800aae0ee5ea3`, based on current `origin/main`
-`e70175a5f8b4d30bdf99de939b80d2de2e54ee18`. This is local source evidence;
+**Exact tested code snapshot:** `e4070e3bf6710be1e5388c12e20800aae0ee5ea3`,
+on branch `fix/subdub-ui-closeout-20261008` based on current `origin/main`
+`e70175a5f8b4d30bdf99de939b80d2de2e54ee18`. The later local commit only
+refreshes release documentation. This is local source evidence;
 the PR/CI/merge/deploy/runtime gates are still pending.
 
 - [x] Confirm the current four lanes and guarded source/price/run gates from

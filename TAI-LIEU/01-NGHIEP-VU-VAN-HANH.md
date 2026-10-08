@@ -2,8 +2,8 @@
 
 ## Checkpoint giao diện SubDub — ứng viên 08/10/2026
 
-Nguồn cục bộ: nhánh `fix/subdub-ui-closeout-20261008`, HEAD
-`e4070e3bf6710be1e5388c12e20800aae0ee5ea3`, dựa trên `origin/main`
+Mã giao diện đã kiểm thử: `e4070e3bf6710be1e5388c12e20800aae0ee5ea3`, trên
+nhánh `fix/subdub-ui-closeout-20261008`, dựa trên `origin/main`
 `e70175a5f8b4d30bdf99de939b80d2de2e54ee18`. `/subdub` có một màn hình với
 bốn chế độ: phụ đề gốc, phụ đề dịch, lồng tiếng, và phụ đề kèm lồng tiếng.
 Mức âm lượng gốc/giọng đọc chỉ là thiết lập hiển thị cục bộ; tải tệp, báo giá,
