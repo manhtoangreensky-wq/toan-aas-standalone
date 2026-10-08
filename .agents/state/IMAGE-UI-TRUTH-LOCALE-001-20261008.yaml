@@ -1,6 +1,6 @@
 spec_id: IMAGE-UI-TRUTH-LOCALE-001
 phase: VERIFY
-status: I03_LOCAL_VERIFIED_OFFICIAL_GATE_PASS_SHA_BINDING_PENDING
+status: I03_LOCAL_SHA_BOUND_GATE_PASS_WEB_PROVENANCE_REFRESHED
 base_sha: dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c
 branch: fix/image-ui-truth-locale-20261008
 goal: truthful understandable Image UI using the existing form and server authority
@@ -51,7 +51,7 @@ safety:
   route_engine_changes: 0
   deploy: NO
 delivery:
-  commit: NO
+  commit: e91cfc42d9c574ce6a8d01bbc1e6bfdabb0478fe_LOCAL_CANDIDATE
   push: NO
   new_pr: NO
   github_channel: Codex_Web_only_except_Owner_one_time_PR619_CLI
@@ -75,7 +75,11 @@ i03_verification:
   protected: COMPARATOR_PASS_10_FILES_AND_EXISTING_CSS_CATALOGUE_PORTAL_OUTSIDE_IMAGE
   python: 18_PASSED_1_UNCHANGED_BASELINE_FAILURE_EXIT_1
   global_motion: OPEN_12_NAVIGATION_VIEWTRANSITION_ERRORS
-  official_browser: LOCAL_PASS_18_ROUTES_6_HUBS_4_FREE_TOOLS_UNCOMMITTED_WORKTREE
+  official_browser: PASS_18_ROUTES_18_SCREENSHOTS_SHA_BOUND_TO_e91cfc42d9c574ce6a8d01bbc1e6bfdabb0478fe
+  official_browser_evidence: ../../qa/20261007-video-uiux/image-i03-official-e91cfc42-20261008/browser_verification_evidence.json
+  official_browser_manifest: ../../qa/20261007-video-uiux/image-i03-official-e91cfc42-20261008/screenshot-manifest.json
+  official_browser_summary: HUBS_6_OF_6_FREE_TOOLS_4_OF_4_THEME_FLICKER_0_KEYBOARD_6_OF_6_RUNTIME_ERRORS_0
+  web_provenance: REFRESH_VERIFY_PASS_SHA_e91cfc42_FINGERPRINT_dd40b0ad7e47da4b250bc174dc39314be9e742fa83999ce1c120f5c97d9c5623_REPORT_FILES_PENDING_COMMIT
   source_hashes:
     portal_js: 20e63c09321ba16ca2645822301b4a3804c5595ed26ece5fcec1a7f4f3569af2
     portal_i18n_js: 61c9b33604d499541f44401fe438553d619860da729d5f73975d5ad46a26d390

@@ -24,10 +24,10 @@ nhỏ hơn chuẩn. Đã tăng specificity riêng Image, không thay theme toàn
 QA đo sau khi article cũ rời DOM và animation main ổn định, giữ ngưỡng 44px.
 
 Motion điều hướng toàn site vẫn ghi 12 lỗi ViewTransition và còn mở. Gate
-browser chính thức đã đạt trên worktree local (18 trang, 6/6 hub, 4/4 tiện
-ích, không lỗi JS/request, không nháy theme); manifest ghi BASE SHA vì
-candidate chưa commit. Cần chạy lại gate gắn SHA candidate trước CI/release.
-Bằng chứng: `../../evidence/IMAGE-I03-VERIFY-20261008.md`.
+browser chính thức đạt trên code SHA `e91cfc42d9c574ce6a8d01bbc1e6bfdabb0478fe`:
+18 trang/ảnh, 6/6 hub, 4/4 tiện ích, không lỗi JS/request, không nháy theme,
+bàn phím 6/6. Web-only provenance refresh/verify cũng đạt; push/PR/CI/release
+còn mở. Bằng chứng: `../../evidence/IMAGE-I03-VERIFY-20261008.md`.
 Đây là checkpoint trình bày cục bộ; các số liệu production phía dưới có ngày
 riêng, không chứng minh runtime đang dùng candidate Image.
 

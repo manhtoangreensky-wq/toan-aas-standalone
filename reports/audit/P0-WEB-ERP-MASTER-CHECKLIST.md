@@ -2,7 +2,7 @@
 
 ## IMAGE UI — 2026-10-08
 
-**SPEC_ID:** `IMAGE-UI-TRUTH-LOCALE-001` · **STATUS:** `I03_LOCAL_VERIFIED_OFFICIAL_GATE_PASS_SHA_BINDING_PENDING`.
+**SPEC_ID:** `IMAGE-UI-TRUTH-LOCALE-001` · **STATUS:** `I03_LOCAL_SHA_BOUND_GATE_PASS_WEB_PROVENANCE_REFRESHED`.
 Nhánh local `fix/image-ui-truth-locale-20261008`, BASE
 `dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c`. SubDub #619 đã merge và ghi
 ĐÓNG/KHÓA trên GitHub; candidate tree = merge tree; PR CI `37755956582` và
@@ -42,10 +42,11 @@ main CI `37770140237` SUCCESS. Deploy/signed live SubDub chưa thực hiện.
   Source hashes ổn định; 12 ViewTransition errors còn mở ở gate motion.
 - [x] Amendment CI: đúng 4 Image selector/expected-href thay đổi để tìm mục
   tạo ảnh thực; giữ visibility/focus/scroll/fake-success checks. Syntax/diff đạt.
-- [x] Official browser gate chạy trên worktree sau I03: 18 trang desktop/tablet/
+- [x] Official browser gate chạy trên candidate code `e91cfc42d9c574ce6a8d01bbc1e6bfdabb0478fe`:
+  18 trang desktop/tablet/
   mobile; 6/6 kiểm tra hành vi hub; 4/4 tiện ích xác định; theme reload không
-  nháy; bàn phím 6/6; lỗi JS/rejection/binding/request lỗi đều 0.
-  Gate ghi HEAD nền vì candidate chưa commit; phải chạy lại gắn SHA candidate.
+  nháy; bàn phím 6/6; lỗi JS/rejection/binding/request lỗi đều 0. 18/18 ảnh
+  manifest ghi đúng SHA này.
 - [x] I03 tạo ảnh: 48/48 trạng thái VI/EN/ZH × sáng/tối × 1440/360; chữ thường
   tối thiểu 5.944:1, chữ lớn 8.837:1, viền input 5.522:1; target ≥45px,
   summary 48px. Low-text/boundary/target/overflow đều 0; fields dọc.
@@ -58,8 +59,9 @@ main CI `37770140237` SUCCESS. Deploy/signed live SubDub chưa thực hiện.
   files + CSS/catalogue/Portal ngoài Image không đổi. Python vẫn 18P/1F nền.
 - [ ] Theo dõi lỗi test mobile/PWA trên đúng CSS boundary trong scope nghiệm thu
   phù hợp; không nới hoặc sửa test ngoài I01-A để biến baseline thành xanh.
-- [ ] Final Image provenance, SHA-bound gate, CI, PR và release còn mở; chưa
-  commit/push/deploy.
+- [x] Web-only provenance refresh/verify đạt trên code SHA `e91cfc42`; fingerprint
+  `dd40b0ad7e47da4b…`; chỉ `preflight.json` và `web_inventory.json` thay đổi.
+- [ ] Commit provenance report, push/PR/CI/release còn mở; chưa deploy.
 - [ ] Shared-shell locale/nút nổi, Video hoãn và whole-site motion giữ thứ tự;
   ViewTransition lỗi vẫn mở, không báo PASS từ kiểm thử Image/SubDub.
 - State: `.agents/state/IMAGE-UI-TRUTH-LOCALE-001-20261008.yaml`.
@@ -67,9 +69,9 @@ main CI `37770140237` SUCCESS. Deploy/signed live SubDub chưa thực hiện.
   `../../evidence/IMAGE-UI-TRUTH-LOCALE-001-DRAFT-20261008.md`.
 - I03 evidence: `../../evidence/IMAGE-I03-VERIFY-20261008.md`; JSON/ảnh ở
   `../../qa/20261007-video-uiux/image-i03-final-20261008/` và
-  `image-i03-hub-final-20261008/`. Official browser gate đã PASS trên
-  candidate worktree; bằng chứng ghi BASE SHA vì source chưa commit.
-  SHA-bound gate/CI/PR/release còn mở.
+  `image-i03-hub-final-20261008/`; official gate SHA-bound ở
+  `../../qa/20261007-video-uiux/image-i03-official-e91cfc42-20261008/`.
+  CI/PR/release còn mở.
 - `PROVIDER_CALLS=0 WALLET_MUTATIONS=0 PRODUCTION_DATA_MUTATIONS=0`.
 
 ## VIDEO UI CHECKPOINT — 2026-10-07
