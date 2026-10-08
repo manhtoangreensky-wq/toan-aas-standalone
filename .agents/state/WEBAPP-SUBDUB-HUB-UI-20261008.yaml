@@ -1,6 +1,6 @@
 spec_id: SUBDUB-SINGLE-SCREEN-UI-20261008
-status: SUBDUB_EXACT_UI_QA_PASS_RELEASE_CI_PENDING
-phase: VERIFY
+status: SUBDUB_EXACT_UI_QA_PASS_CI_GREEN_MERGE_PENDING
+phase: RELEASE_REVIEW
 base_sha: e70175a5f8b4d30bdf99de939b80d2de2e54ee18
 protected_closed_checkpoint:
   voice_pr: 617
@@ -50,7 +50,10 @@ verification:
   current_exact_python_warning: NONE_CACHE_PROVIDER_DISABLED
   initial_pr_ci_run: "37751231194"
   initial_pr_ci_result: FAIL_BEFORE_PRODUCT_TESTS_STALE_MIGRATION_WEB_FINGERPRINT
-  migration_web_provenance_recheck: PENDING_FINAL_CLEAN_HEAD_REFRESH_AND_CI_RERUN
+  migration_web_provenance_recheck: PASS_EXACT_CURRENT_WEB_FINGERPRINT
+  migration_web_fingerprint: 2f666de233f59299528546fb04bf87d45a0c9a8d3e0906630a1fdb0f016db746
+  final_pr_ci_run: "37752312011"
+  final_pr_ci_result: PASS_ALL_STEPS_ON_7203a61e7c2c9c7bd25fde42f4aca5b895eb11eb
   global_motion_error_count: OPEN_SEPARATE_VIEWTRANSITION_GATE
   evidence: ../../qa/20261007-video-uiux/subdub-shell-verified-20261008/browser-review.json
   screenshot_count: 48
@@ -70,10 +73,10 @@ delivery:
   merge: NO
   deploy: NO
 remaining:
-  - Commit the exact Web migration provenance refresh and obtain a green CI rerun before merge.
+  - Squash-merge PR #619 after confirming its current green check remains attached to the exact HEAD.
   - Production browser verification remains pending and deployment requires explicit approval.
   - Shared shell navigation locale, floating controls and whole-site motion remain separate open checklist items.
   - Tester project read scope is missing; do not refresh authentication or modify issue #571, which tracks WA-49/50/51 separately.
   - Actual source upload, quote, job and media output remain with the route/engine workstream.
-next: Refresh and commit only Web migration provenance for the final clean branch state, push to PR #619, rerun Ubuntu CI, and merge only after all checks pass. Do not deploy without explicit approval. Keep portal-motion.js and closed Voice/Music/Video product blocks untouched.
+next: Squash-merge PR #619 after the current green check is confirmed on its exact HEAD; then continue the remaining customer UI slices, the explicitly deferred Video tools, and finally shared-shell locale/floating controls and whole-site motion in checklist order. Do not deploy without explicit approval. Keep portal-motion.js and closed Voice/Music/Video product blocks untouched until their ordered motion checkpoint.
 parent_goal: ACTIVE

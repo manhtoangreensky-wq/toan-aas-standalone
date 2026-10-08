@@ -122,7 +122,7 @@ Thứ tự tiếp: SubDub → các tính năng khác → quay lại phần Video
 
 ## SUBDUB SINGLE-SCREEN UI — 2026-10-08
 
-**SPEC_ID:** `SUBDUB-SINGLE-SCREEN-UI-20261008` · **STATUS:** `EXACT_UI_QA_PASS_RELEASE_PENDING`.
+**SPEC_ID:** `SUBDUB-SINGLE-SCREEN-UI-20261008` · **STATUS:** `EXACT_UI_QA_PASS_CI_GREEN_MERGE_PENDING`.
 Video checkpoint PR #616 is already recorded merged/deployed. Keep this slice
 strictly to the customer presentation layer; the media engine and route
 integration remain outside this UI/UX work.
@@ -130,8 +130,9 @@ integration remain outside this UI/UX work.
 **Exact tested code snapshot:** `e4070e3bf6710be1e5388c12e20800aae0ee5ea3`,
 on branch `fix/subdub-ui-closeout-20261008` based on current `origin/main`
 `e70175a5f8b4d30bdf99de939b80d2de2e54ee18`. The later local commit only
-refreshes release documentation. This is local source evidence;
-the PR/CI/merge/deploy/runtime gates are still pending.
+refreshes Web migration provenance and release documentation. PR #619 is open;
+its exact current HEAD `7203a61e7c2c9c7bd25fde42f4aca5b895eb11eb` has a green
+CI run. Merge, deployment, and production runtime readback remain pending.
 
 - [x] Confirm the current four lanes and guarded source/price/run gates from
   `renderSubDubHub` and the canonical SubDub authority report.
@@ -159,14 +160,17 @@ the PR/CI/merge/deploy/runtime gates are still pending.
   action event. Exact evidence: `../../qa/qa/subdub-exact-e4070e3/browser-review.json`.
 - [x] Re-ran exact UI contracts on this snapshot: Node renderer 9/9,
   Python UI contract 9/9, JavaScript syntax and `git diff --check` pass.
-- [ ] PR CI run `37751231194` stopped before product tests because committed
-  migration Web provenance still described an older source fingerprint. Root
-  cause identified; regenerate only Web provenance from the final clean branch,
-  verify it locally, push that evidence, and require a fresh green PR run.
+- [x] Initial PR CI run `37751231194` stopped before product tests because
+  committed migration Web provenance still described an older source fingerprint.
+  Refreshed only Web provenance from the final clean branch and verified it locally;
+  current fingerprint is `2f666de233f59299528546fb04bf87d45a0c9a8d3e0906630a1fdb0f016db746`.
 - [x] Pushed one SubDub-only branch and opened PR #619; closed PR #617 (Voice),
   #618 (Music), and #616 (Video) were not reused or reopened.
-- [ ] Rerun PR CI after the exact Web provenance refresh and require all checks
-  green before merge. Deployment and production readback remain separately gated.
+- [x] Fresh PR CI run `37752312011` passed on HEAD
+  `7203a61e7c2c9c7bd25fde42f4aca5b895eb11eb`: migration evidence, Python compile,
+  JavaScript syntax, bounded Web contracts, browser verification/runtime assertions,
+  evidence upload, and diff whitespace checks all succeeded. PR #619 is mergeable;
+  merge remains pending. Deployment and production readback remain separately gated.
   Voice/Music/Video product blocks are CLOSED/LOCKED.
 - [ ] Shared shell locale/floating controls and whole-site motion remain open;
   QA here proves SubDub content only. `integration.js` was excluded from the
