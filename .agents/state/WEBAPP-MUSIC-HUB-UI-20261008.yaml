@@ -1,0 +1,95 @@
+task: WEBAPP-MUSIC-HUB-UI-20261008
+phase: VERIFY
+status: MUSIC_EXACT_UI_QA_PASS_RELEASE_CI_PENDING
+goal_status: ACTIVE
+workspace: C:/Users/toann/Documents/Codex/2026-07-10/1-ngu-n-ch-nh-v/work/toanaas-video-ui-release-20261007
+branch: fix/music-ui-closeout-20261008
+base_sha: e405cbee28f0687f528eab7d66a71ef1623125f4
+protected_closed_checkpoint:
+  voice_pr: 617
+  video_pr: 616
+  source_release_status: CLOSED_LOCKED
+  rule: no_edits_to_closed_product_blocks_read_only_regression_only
+audit_source_sha: 13d4a06f2f63217d9a1a682b7df950bacc5a62b2
+spec: docs/superpowers/specs/2026-10-08-music-hub-ui-closeout.md
+master_checklist: reports/audit/P0-WEB-ERP-MASTER-CHECKLIST.md
+scope:
+  routes: [/music]
+  allowed: [portal.js, portal-i18n.js, route-scoped portal-theme.css if needed, focused tests, spec, checklist, state]
+  protected: [all API and engine routes, integration.js, provider and wallet behavior, all non-Music renderers and shared theme tokens]
+baseline:
+  expected_cases: 12
+  completed: 12
+  locales: [vi, en, zh]
+  themes: [light, dark]
+  viewports: [1440x900, 375x812]
+  overflow: false
+  route_runtime_errors: 0
+  known_defects:
+    - mixed_language_copy
+    - unsupported_quality_and_license_claims
+    - creation_choices_below_large_hero
+    - duplicate_quick_start_and_catalog_cards
+  evidence: ../../qa/20261007-video-uiux/music-hub-audit-20261008/browser-review.json
+  screenshots: ../../qa/20261007-video-uiux/music-hub-audit-20261008/
+acceptance:
+  - all_fixed_copy_localized_vi_en_zh
+  - three_guarded_creation_routes_first_with_truthful_status
+  - three_available_library_or_file_tools_after_creation
+  - exactly_six_unique_existing_destinations
+  - no_duplicate_cards_or_unsupported_quality_license_claims
+  - blue_teal_light_dark_theme_preserved
+  - fresh_12_case_browser_matrix_zero_overflow_or_route_errors
+  - no_form_submission_or_business_side_effect
+verification:
+  latest_source_sha: b9d4aa60344889ca4cf6041f33f14a166ea64f7f
+  fresh_exact_music_matrix: 12_OF_12_UI_PASS_WITH_EXISTING_GLOBAL_MOTION_ERROR_RECORDED
+  fresh_vertical_card_groups: 12_OF_12
+  fresh_primary_fully_visible: 12_OF_12
+  fresh_minimum_text_contrast: 4.635
+  fresh_dark_minimum_text_contrast: 5.522
+  fresh_minimum_card_touch_height_px: 154
+  final_official_browser_gate: PASS_18_CAPTURES_6_HUBS_6_PRIMARY_FOCUS_4_FREE_TOOLS
+  final_official_runtime_assertions: PASS_26_OF_26
+  fresh_source_stable: true
+  fresh_music_matrix_evidence: ../../qa/20261007-video-uiux/music-ui-exact-b9d4aa6/browser-review.json
+  global_motion_error_count: 12
+  global_motion_pass: false
+  global_motion_source: UNCHANGED_FROM_CLOSED_VOICE_BASE
+  final_renderer_music_voice: 117_PASS_0_FAIL
+  web_provenance_fingerprint: 56f355d7081ce4b9e8ffd9cf166ffcaca941b3b0a3dc922031cf0226b4ec518c
+  final_foundation_i18n_tester_contracts: PASS_108_OF_108
+  closed_checkpoint_comparison: PASS_43_FUNCTIONS_3_CATALOGUES_VOICE_VIDEO_PRODUCT_CSS_UNCHANGED
+  music_primary_entry: GREEN_VI_EN_ZH_AFTER_EXPECTED_RED
+  browser_gate_selectors: MUSIC_ONLY_UPDATED_VOICE_AND_VIDEO_UNCHANGED
+  tester_case_metadata: PASS_128_LINES_33290_BYTES_PORTABLE_HASH
+  music_renderer_node: 7_PASS_0_FAIL
+  combined_music_voice_ui_node: 117_PASS_0_FAIL
+  music_python_contracts: 23_PASS_1_KNOWN_BASELINE_FAILURE
+  baseline_failure_id: test_library_routes_do_not_fall_back_to_generic_assets_or_audio_execution
+  baseline_failure_proof: integration_js_and_test_file_identical_to_origin_main
+  javascript_syntax: PASS
+  git_diff_check: PASS
+  browser_matrix: 12_OF_12_COMPLETE
+  browser_missing_headings_overflow_route_runtime_blocked: 0
+  text_contrast_min: light_4.635_dark_4.812_no_samples_below_4.5
+  navigation_interaction: guarded_music_create_link_reached_exact_route_without_form_submit
+  screenshot_evidence: ../../qa/20261007-video-uiux/music-hub-ui-closeout-20261008/browser-review.json
+  browser_pending_requests: read_only_background_auth_catalog_GETs_pending_at_close
+  setup_warning: existing_ViewTransition_invalid_state_during_login_setup
+  provider_calls: 0
+  wallet_mutations: 0
+  production_data_mutations: 0
+  browser_plugin: unavailable_playwright_fallback_expected
+next_order: music_then_subdub_then_other_features_then_remaining_video_then_global_motion
+shared_open_items:
+  - standalone_shared_shell_locale_mixed_on_English_and_Chinese_views
+  - existing_ViewTransition_setup_warning
+  - whole_site_motion_and_performance_gate
+  - one_unchanged_Music_Python_contract_test_uses_legacy_source_regex
+delivery:
+  commit: true
+  push: false
+  pr: none
+  merge: false
+  deploy: false

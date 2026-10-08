@@ -195,7 +195,7 @@ _PORTAL_SHELL_TITLES = {
     "/voice/clone": {"vi": "Nhân bản giọng nói · TOAN AAS", "en": "Voice cloning · TOAN AAS", "zh": "声音克隆 · TOAN AAS"},
     "/voice/preview": {"vi": "Nghe thử giọng · TOAN AAS", "en": "Voice preview · TOAN AAS", "zh": "声音试听 · TOAN AAS"},
     "/voice/outputs": {"vi": "Kết quả giọng đọc · TOAN AAS", "en": "Speech results · TOAN AAS", "zh": "语音结果 · TOAN AAS"},
-    "/music": {"vi": "Music & SFX Hub · TOAN AAS", "en": "Music & SFX Hub · TOAN AAS", "zh": "音乐与音效工作台 · TOAN AAS"},
+    "/music": {"vi": "Âm nhạc · TOAN AAS", "en": "Music · TOAN AAS", "zh": "音乐创作 · TOAN AAS"},
     "/subdub": {"vi": "Trung tâm Phụ đề & Lồng tiếng · TOAN AAS", "en": "Subtitles & Dubbing Center · TOAN AAS", "zh": "字幕与配音中心 · TOAN AAS"},
 }
 

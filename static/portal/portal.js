@@ -9849,6 +9849,7 @@
     const fallback = displayPageTitle(page, context);
     const path = normalizePath(page && (page.routePath || page.path));
     if (path === "/tools/video") return uiText("mediaHub.video.page.title", fallback);
+    if (path === "/music") return uiText("musicHub.page.title", fallback);
     if (path === "/voice") return voiceUiText("hub.title", fallback);
     if (path === "/voice-studio" || path === "/voice-studio/new") return voiceStudioText(path.endsWith("/new") ? "page.newTitle" : "page.title", fallback);
     if (path === "/voice-studio/direction-composer") return voiceStudioText("composer.page.title", fallback);
@@ -9929,6 +9930,7 @@
     const fallback = typeof page.description === "string" ? page.description : "";
     const path = normalizePath(page && (page.routePath || page.path));
     if (path === "/tools/video") return uiText("mediaHub.video.page.description", fallback);
+    if (path === "/music") return uiText("musicHub.page.description", fallback);
     if (path === "/voice") return voiceUiText("hub.description", fallback);
     if (path === "/voice-studio" || path === "/voice-studio/new") return voiceStudioText("page.description", fallback);
     if (path === "/voice-studio/direction-composer") return voiceStudioText("composer.page.description", fallback);
@@ -24754,6 +24756,10 @@
     return uiText(`voiceUi.${key}`, fallback, params);
   }
 
+  function musicHubText(key, fallback, params) {
+    return uiText(`musicHub.${key}`, fallback, params);
+  }
+
   function renderVoiceHub(page, context) {
     const tools = [
       ["tts", "/voice/tts"], ["saved", "/voice/saved"], ["clone", "/voice/clone"],
@@ -24770,47 +24776,69 @@
   }
 
   function renderMusicHub(page, context) {
-    return renderMediaHubPage(page, context, {
-      pageClass: "portal-music-hub",
-      kicker: "AI Music & Sound",
-      heading: "Không gian sáng tạo âm nhạc & hiệu ứng âm thanh AI",
-      subtext: "Quản lý thư viện âm thanh, kiểm định và chuẩn hóa audio, kết nối các workflow sáng tác ca khúc AI.",
-      stats: {
-        toolsCount: 6,
-        toolsLabel: "Công cụ âm thanh",
-        qualityBadge: "Stereo 320k",
-        qualityLabel: "Âm thanh chuẩn phòng thu",
-        safetyBadge: "Royalty-Free",
-        safetyLabel: "Bản quyền thương mại"
+    const t = (key, fallback, params) => musicHubText(key, fallback, params);
+    const groups = [
+      {
+        key: "creation",
+        guarded: true,
+        items: [
+          { key: "create.background", href: "/music/create", state: "guarded" },
+          { key: "create.song", href: "/music/song", state: "guarded" },
+          { key: "create.sfx", href: "/music/sfx", state: "guarded" }
+        ]
       },
-      quickActions: [
-        { title: "Audio Asset Operations (Chuyển đổi & Chuẩn hóa)", text: "Kiểm định, chuyển đổi bitrate và chuẩn hóa âm lượng audio private.", href: "/audio/assets", primary: true },
-        { title: "Thư viện âm nhạc (Audio Collection)", text: "Xem metadata các bản nhạc nền gắn trong collection riêng tư.", href: "/music/library" },
-        { title: "Thư viện SFX (Hiệu ứng âm thanh)", text: "Quản lý metadata các hiệu ứng âm thanh đã lưu.", href: "/music/sfx-library" }
-      ],
-      workflowGroups: [
-        {
-          title: "Xử lý & Quản lý âm thanh (Cục bộ trên Web)",
-          text: "Các tiện ích xử lý audio private và quản lý bộ sưu tập đã sẵn sàng hoạt động.",
-          items: [
-            { title: "Audio Asset Operations", text: "Kiểm định định dạng, chuyển đổi bitrate và chuẩn hóa âm lượng MP3/M4A.", href: "/audio/assets", icon: ICONS.music, status: "ready" },
-            { title: "Thư viện âm nhạc cá nhân", text: "Quản lý các bản nhạc nền đã tạo và lưu trữ trong Audio Collection.", href: "/music/library", icon: ICONS.music, status: "ready" },
-            { title: "Thư viện SFX cá nhân", text: "Lưu trữ và phân loại các hiệu ứng âm thanh của dự án.", href: "/music/sfx-library", icon: ICONS.music, status: "ready" }
-          ]
-        },
-        {
-          title: "Sáng tác âm nhạc AI (Bot điều phối)",
-          text: "Các workflow sinh nhạc và ca khúc do Bot canonical điều phối.",
-          items: [
-            { title: "Tạo nhạc nền AI", text: "Chờ adapter Bot canonical; browser không sinh nhạc AI giả.", href: "/music/create", icon: ICONS.music, status: "guarded" },
-            { title: "AI Song Producer", text: "Chờ adapter Bot canonical để sáng tác bài hát hoàn chỉnh.", href: "/music/song", icon: ICONS.music, status: "guarded" },
-            { title: "Sound Effects AI", text: "Chờ adapter Bot canonical để tạo hiệu ứng âm thanh.", href: "/music/sfx", icon: ICONS.music, status: "guarded" }
-          ]
-        }
-      ],
-      boundaryTitle: "An toàn bản quyền & Tệp nguồn",
-      boundaryText: "Âm nhạc và SFX tạo ra qua hệ thống tuân thủ chính sách bản quyền mở, hỗ trợ xuất file chuẩn phòng thu và sẵn sàng cho mục đích thương mại."
-    });
+      {
+        key: "library",
+        guarded: false,
+        items: [
+          { key: "library.assets", href: "/audio/assets", state: "ready" },
+          { key: "library.music", href: "/music/library", state: "ready" },
+          { key: "library.sfx", href: "/music/sfx-library", state: "ready" }
+        ]
+      }
+    ];
+    const routes = new Set(groups.flatMap((group) => group.items.map((item) => item.href)));
+    const groupHtml = groups.map((group) => `
+      <section class="portal-document-board-workflow-group" data-music-group="${safeText(group.key)}">
+        <div class="portal-document-board-workflow-heading">
+          <div><h2>${safeText(t(`group.${group.key}.title`, ""))}</h2><p>${safeText(t(`group.${group.key}.description`, ""))}</p></div>
+          ${group.guarded ? `<span class="portal-badge" data-status="guarded">${safeText(t("status.unavailable", ""))}</span>` : ""}
+          <span>${safeText(t("count", "{count}", { count: group.items.length }))}</span>
+        </div>
+        <div class="portal-module-grid">
+          ${group.items.map((item) => {
+            const itemCopy = t(item.key + ".title", "");
+            const itemState = item.state === "ready" ? "available" : "unavailable";
+            const actionKey = item.state === "ready" ? "actions.open" : "actions.details";
+            return `<a class="portal-module-card" data-tool-state="${safeText(item.state)}" href="${safeText(item.href)}"${item.key === "create.background" ? " data-music-primary" : ""}>
+              <div class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.music)}</div>
+              <div class="portal-module-copy">
+                <div class="portal-module-heading"><h3>${safeText(itemCopy)}</h3>${item.state === "guarded" ? `<span class="portal-badge" data-status="guarded">${safeText(t("status.unavailable", ""))}</span>` : ""}</div>
+                <p>${safeText(t(item.key + ".description", ""))}</p>
+                <span class="portal-module-link">${safeText(t(actionKey, ""))} <b aria-hidden="true">→</b></span>
+              </div>
+              <span class="portal-sr-only">${safeText(t(`status.${itemState}`, ""))}</span>
+            </a>`;
+          }).join("")}
+        </div>
+      </section>`).join("");
+
+    return `<article class="portal-page portal-media-hub portal-music-hub" data-music-route-count="${routes.size}">
+      <section class="portal-hero">
+        <div class="portal-hero-copy">
+          <div class="portal-eyebrow">${safeText(t("kicker", ""))}</div>
+          <h1 class="portal-title">${safeText(t("page.title", page && page.title ? page.title : "Music"))}</h1>
+          <p class="portal-description">${safeText(t("page.description", page && page.description ? page.description : ""))}</p>
+        </div>
+      </section>
+      <section class="portal-document-board-workflows" aria-label="${safeText(t("catalog.title", ""))}">
+        <div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("catalog.title", ""))}</h2><p class="portal-card-subtitle">${safeText(t("catalog.description", ""))}</p></div></div>
+        <div class="portal-document-board-workflow-groups">${groupHtml}</div>
+      </section>
+      <section class="portal-card portal-card-pad">
+        <div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(t("boundary.title", ""))}</strong><p>${safeText(t("boundary.description", ""))}</p></div></div>
+      </section>
+    </article>`;
   }
 
   const SUBDUB_PRODUCT_MODES = Object.freeze({

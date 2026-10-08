@@ -1,14 +1,49 @@
 task: WEBAPP-VOICE-UI-CLOSEOUT-20261007
-phase: VERIFY
-status: VOICE_UI_BROWSER_PASS_UBUNTU_CI_REQUIRED_BEFORE_MERGE
+phase: REPORT
+status: VOICE_PR_617_DEPLOYED_SOURCE_VERIFIED_AUTHENTICATED_LIVE_OPEN
+ui_source_release_closure: CLOSED_LOCKED
+github_closure_notice: https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/617#issuecomment-6051970822
+closed_scope_no_edits:
+  - Voice product renderer, quote and tracking presentation, inventory and Studio/Composer
+  - Voice fixed-copy catalogue and product CSS
+  - Closed Video hub, quick and multiscene product presentation
 goal_status: ACTIVE
 workspace: C:/Users/toann/Documents/Codex/2026-07-10/1-ngu-n-ch-nh-v/work/toanaas-video-ui-release-20261007
 branch: fix/voice-ui-closeout-20261007
 base_sha: 8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952
 head_sha: b7628a8c1457f9c8c4fef294dc66368aa01dc2a3
-code_status: VOICE_ONLY_COMMITTED_NOT_PUSHED_NOT_DEPLOYED
+code_status: VOICE_ONLY_MERGED_AND_DEPLOYED_PRODUCTION_SOURCE_VERIFIED
 code_checkpoint_sha: b7628a8c1457f9c8c4fef294dc66368aa01dc2a3
 checkpoint_commit: b7628a8c1457f9c8c4fef294dc66368aa01dc2a3
+published_head_sha: 6ef97e15d4f560054bf7648ab9e3c6020aea6fa5
+pull_request: https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/617
+pr_ci_run: 37724197462
+merge_sha: e405cbee28f0687f528eab7d66a71ef1623125f4
+main_ci_run: 37724519640
+deploy_run: 37724809429
+runtime_sha: e405cbee28f0687f528eab7d66a71ef1623125f4
+runtime_web: active
+runtime_nginx: active
+runtime_tracked_diff: 0
+runtime_asset_git_blob_matches: 3_of_3_portal_js_i18n_theme
+production_public_entry:
+  viewports: 1440x900_375x900
+  auth_form_visible: true
+  overflow_errors_and_posts: 0
+  redirects: login_next_voice
+authenticated_production_voice_ui: NOT_VERIFIED_ANONYMOUS_BROWSER_SESSION
+production_readback_evidence: ../../qa/20261007-video-uiux/voice-production-e405cbe/readback.json
+merge_tree_comparison: IDENTICAL_TO_PUBLISHED_CANDIDATE_6ef97e1
+rollback_anchor:
+  previous_runtime_sha: 8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952
+  mechanism: existing_pipeline_source_backup_and_forward_revert_after_owner_gate
+  backup_location: /opt/toanaas/webapp/delete/deploy-e405cbee28f0687f528eab7d66a71ef1623125f4-20261008035332
+pre_release_runtime_readback:
+  sha: 8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952
+  web: active
+  nginx: active
+  working_directory: /opt/toanaas/webapp
+  verified_on: 2026-10-08
 spec: docs/superpowers/specs/2026-10-07-voice-ui-closeout.md
 master_checklist: ../toanaas-webapp-ui-closeout-20260929/reports/audit/P0-WEB-ERP-MASTER-CHECKLIST.md
 prior_checkpoint:
@@ -37,12 +72,12 @@ verification:
   release_provenance: WEB_ONLY_REFRESHED_245_SOURCE_FILES_BOT_RECORDS_UNCHANGED
   release_compile_js_node: PASS_COMPILE_7_JS_SYNTAX_110_VOICE_RENDERERS
   release_web_contracts_windows: 387_PASS_2_FAIL_POSIX_0600_AND_NEW_CASE_SOURCE_METADATA
-  release_tester_metadata_correction: MEASURED_116_LINES_32264_BYTES_HASH_UPDATED_TARGET_RECHECK_PENDING
+  release_tester_metadata_correction: MEASURED_116_LINES_32264_BYTES_HASH_UPDATED_TARGET_RETEST_PASS
   release_posix_test: UNCHANGED_FROM_MAIN_BLOB_0eafeb48_WINDOWS_REPORTS_0666_EXPECTED_LINUX_0600
   release_browser_gate: PASS_18_CAPTURED_PAGES_6_OF_6_HUBS_6_OF_6_KEYBOARD_4_FREE_TOOLS
   release_runtime_assertions: PASS_26_OF_26
   release_browser_fixture: qa/voice-ui-verify-b7628a8/reports/browser_evidence
-  release_ci_ubuntu: PENDING_REQUIRED_BEFORE_MERGE
+  release_ci_ubuntu: PR_37724197462_SUCCESS_389_CONTRACTS_26_RUNTIME_18_SCREENSHOTS
   node_voice_aggregate: 110_PASS_0_FAIL_six_voice_UI_test_files
   resumed_draft_save_new_labels: RED_EMPTY_THEN_GREEN_VI_EN_ZH
   public_quote_vs_internal_cost: RED_THEN_GREEN_PUBLIC_QUOTE_PRESERVED_COST_ONLY_UNKNOWN
@@ -113,14 +148,14 @@ qa:
   portal_theme_sha256: e210a72e0c5a050dc187e68b9bd9837bc0af6dd21572851b2696eb61c627dec7
 remaining:
   - Voice, Music and SubDub UI checkpoints are verified locally; close their release gates sequentially in that order before the next product UI item.
-  - Voice/Music branch release and CI are still pending; local verification is not a merge or live-runtime claim.
+  - Voice PR 617 merged/deployed at e405cbe; PR and main CI succeeded. Music/SubDub remain local.
   - Shared shell locale and global motion gate remain open.
   - Existing QA background core/auth/telegram GETs remained pending up to 273 seconds in some matrices; visible UI does not prove those reads completed. No API change within UI scope.
   - Voice UI states are fixture-verified only; no live estimate/job/audio outcome is claimed.
   - Shared English navigation still contains Vietnamese labels; screenshot recorded, no shell locale PASS claimed.
   - Existing ViewTransition InvalidStateError during login/setup; final motion gate remains open.
-  - Full Voice release verification and CI before commit/push/merge/deploy.
-next_order: Release_Voice_then_Music_then_SubDub_then_other_features_then_remaining_Video_then_global_motion
+  - Voice production source/service readback passed; authenticated production presentation remains open (browser session was anonymous).
+next_order: Preserve_Voice_release_evidence_and_open_authenticated_live_case_then_Music_then_SubDub_then_other_features_then_remaining_Video_then_global_motion
 safety:
   provider_calls: 0
   wallet_mutations: 0
@@ -128,5 +163,5 @@ safety:
   API_engine_changes: false
   production_ENV_changes: false
   commit: true
-  push: false
-  deploy: false
+  push: true
+  deploy: true
