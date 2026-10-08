@@ -2,7 +2,7 @@
 
 ## IMAGE UI — 2026-10-08
 
-**SPEC_ID:** `IMAGE-UI-TRUTH-LOCALE-001` · **STATUS:** `I03_LOCAL_PASS_CI_METADATA_REPAIR_LOCAL_PASS_FRESH_PR_CI_PENDING`.
+**SPEC_ID:** `IMAGE-UI-TRUTH-LOCALE-001` · **STATUS:** `I03_PR620_CI_PASS_READY_TO_MERGE_NO_DEPLOY`.
 Nhánh local `fix/image-ui-truth-locale-20261008`, BASE
 `dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c`. SubDub #619 đã merge và ghi
 ĐÓNG/KHÓA trên GitHub; candidate tree = merge tree; PR CI `37755956582` và
@@ -68,9 +68,14 @@ main CI `37770140237` SUCCESS. Deploy/signed live SubDub chưa thực hiện.
   đỏ trước sửa và xanh `1 passed` sau sửa.
 - [x] Suite `test_p0_05d_tester_workspace.py` trên Windows: 32 đạt, 1 lỗi
   nền do test mode Unix `0600` nhưng Windows báo `0666`; đây không phải lỗi
-  của metadata và không sửa/nới test. CI Linux mới sẽ là cổng kết luận.
-- [ ] Đưa corrective commit lên nhánh PR #620, chạy lại CI trên HEAD mới;
-  chỉ xem xét merge khi check mới xanh. Chưa deploy.
+  của metadata và không sửa/nới test. Hai tệp test/nguồn giống hệt `origin/main`;
+  CI Linux là cổng kết luận cho nhánh PR.
+- [x] Corrective commits đã push lên PR #620; run `37809597058` trên HEAD
+  `5e720824c9b4f6aab3b826956334eeb1b76165b6` SUCCESS: bounded contracts
+  `389 passed, 16 warnings`; browser gate 18 ảnh/6 hub × 3 viewport, hub
+  `6/6`, tiện ích `4/4`, runtime `26 passed`, diff whitespace sạch.
+- [x] PR #620 được GitHub xác nhận `OPEN`, `CLEAN`, một check `SUCCESS`;
+  checkpoint này ở trạng thái sẵn sàng merge, chưa deploy.
 - [ ] Shared-shell locale/nút nổi, Video hoãn và whole-site motion giữ thứ tự;
   ViewTransition lỗi vẫn mở, không báo PASS từ kiểm thử Image/SubDub.
 - State: `.agents/state/IMAGE-UI-TRUTH-LOCALE-001-20261008.yaml`.

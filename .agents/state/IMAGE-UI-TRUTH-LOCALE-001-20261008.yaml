@@ -1,6 +1,6 @@
 spec_id: IMAGE-UI-TRUTH-LOCALE-001
 phase: VERIFY
-status: I03_LOCAL_PASS_CI_METADATA_REPAIR_LOCAL_PASS_FRESH_PR_CI_PENDING
+status: I03_PR620_CI_PASS_READY_TO_MERGE_NO_DEPLOY
 base_sha: dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c
 branch: fix/image-ui-truth-locale-20261008
 goal: truthful understandable Image UI using the existing form and server authority
@@ -53,9 +53,10 @@ safety:
 delivery:
   current_pre_fix_head: a66019b71881f523642fa73f72ee61184cc2c066
   current_pr: 620
-  current_pr_state: OPEN
-  current_pr_ci: RUN_37806139441_FAILED_BEFORE_METADATA_CORRECTION
-  correction_local: YES_NOT_YET_PUSHED
+  current_pr_head_at_checkpoint: 5e720824c9b4f6aab3b826956334eeb1b76165b6
+  current_pr_state_at_checkpoint: OPEN_CLEAN_READY_TO_MERGE
+  current_pr_ci_at_checkpoint: 37809597058_SUCCESS
+  correction_delivery: PUSHED
   github_channel: Codex_Web_only_except_Owner_one_time_PR619_CLI
 parent_goal: ACTIVE
 i03_verification:
@@ -95,9 +96,13 @@ ci_corrective:
   correction_commit: ddc7ca0a3fe794288d3709a0ad1e1b359f94c3ea
   assertion_change: NONE
   target_test: 1_PASSED_EXIT_0
-  windows_full_module: 32_PASSED_1_BASELINE_FAIL_POSIX_MODE_0600_EXPECTED_WINDOWS_0666
+  windows_full_module: 32_PASSED_1_PLATFORM_FAILURE_POSIX_MODE_0600_WINDOWS_0666_TEST_AND_SOURCE_IDENTICAL_TO_ORIGIN_MAIN
+  current_ci: 37809597058_SUCCESS_ON_5e720824c9b4f6aab3b826956334eeb1b76165b6
+  current_ci_bounded: 389_PASSED_16_WARNINGS
+  current_ci_browser: 18_SCREENSHOTS_6_HUBS_6_OF_6_4_TOOLS_4_OF_4_NO_CLIP_OR_THEME_FLICKER
+  current_ci_runtime: 26_PASSED
   web_provenance_evidence: reports/migration/preflight.json_and_web_inventory.json
-  next: push_corrective_commit_and_require_fresh_pr_ci
+  next: merge_Image_checkpoint_after_latest_head_checks_then_continue_ordered_shell_Video_motion_items
   provider_calls: 0
   wallet_mutations: 0
   production_data_mutations: 0
