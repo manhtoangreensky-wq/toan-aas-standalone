@@ -183,11 +183,18 @@ those product blocks.
   48 screenshots remain outside the repository. This is local rendered QA only;
   it does not prove signed-session behavior, real media execution, deployment,
   or production live behavior.
+- Initial PR CI run `37751231194` failed before product tests in the committed
+  migration-provenance check: the stored Web fingerprint belonged to older
+  source. Rebuild the generated Web-only inventory from the final clean PR
+  revision, verify it locally, then rerun the PR checks. This is not a license
+  to skip or weaken that gate.
 
 ### Release and remaining scope
 
 - [x] Local code commit and exact-source QA complete.
-- [ ] Push/PR/CI/merge and production browser verification remain pending.
+- [x] Pushed the isolated SubDub branch and opened PR #619.
+- [ ] PR CI needs a green rerun after the exact Web provenance refresh; merge
+  waits for all required checks.
 - [ ] Production deployment requires its own explicit Owner authorization.
 - [ ] Shared navigation locale and floating controls, followed by the global
   motion gate, remain open in the parent UI checklist.

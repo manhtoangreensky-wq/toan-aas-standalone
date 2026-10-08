@@ -11,8 +11,9 @@
 
 Mã giao diện đã kiểm thử `e4070e3bf6710be1e5388c12e20800aae0ee5ea3`, bằng chứng
 trình duyệt `../../qa/qa/subdub-exact-e4070e3/browser-review.json`. Đây là
-thay đổi trình bày trên máy hiện tại; chưa có yêu cầu hợp nhất mã, kiểm tra tự động,
-hợp nhất vào nhánh chính, triển khai hay kiểm tra trên hệ thống thật. Các luồng
+thay đổi trình bày; PR #619 đang mở nhưng lượt kiểm tra đầu dừng ở cổng dấu vân
+tay hồ sơ di trú cũ. Chưa hợp nhất vào nhánh chính, triển khai hay kiểm tra trên
+hệ thống thật. Các luồng
 thực tế của SubDub vẫn thuộc phần xử lý nền. Không mở lại mã Voice,
 Music hoặc Video đã được đánh dấu CLOSED/LOCKED.
 

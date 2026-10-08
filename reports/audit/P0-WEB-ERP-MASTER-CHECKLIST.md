@@ -159,9 +159,14 @@ the PR/CI/merge/deploy/runtime gates are still pending.
   action event. Exact evidence: `../../qa/qa/subdub-exact-e4070e3/browser-review.json`.
 - [x] Re-ran exact UI contracts on this snapshot: Node renderer 9/9,
   Python UI contract 9/9, JavaScript syntax and `git diff --check` pass.
-- [ ] Publish one SubDub-only PR from the current-main branch → CI → merge;
-  deploy and production readback remain separately gated. Do not reuse or reopen
-  closed PR #617 (Voice), #618 (Music), or #616 (Video).
+- [ ] PR CI run `37751231194` stopped before product tests because committed
+  migration Web provenance still described an older source fingerprint. Root
+  cause identified; regenerate only Web provenance from the final clean branch,
+  verify it locally, push that evidence, and require a fresh green PR run.
+- [x] Pushed one SubDub-only branch and opened PR #619; closed PR #617 (Voice),
+  #618 (Music), and #616 (Video) were not reused or reopened.
+- [ ] Rerun PR CI after the exact Web provenance refresh and require all checks
+  green before merge. Deployment and production readback remain separately gated.
   Voice/Music/Video product blocks are CLOSED/LOCKED.
 - [ ] Shared shell locale/floating controls and whole-site motion remain open;
   QA here proves SubDub content only. `integration.js` was excluded from the

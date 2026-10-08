@@ -48,6 +48,9 @@ verification:
   exact_custom_evidence: ../../qa/qa/subdub-exact-e4070e3/browser-review.json
   current_exact_contracts: NODE_RENDERER_9_OF_9_PYTHON_UI_CONTRACT_9_OF_9
   current_exact_python_warning: NONE_CACHE_PROVIDER_DISABLED
+  initial_pr_ci_run: "37751231194"
+  initial_pr_ci_result: FAIL_BEFORE_PRODUCT_TESTS_STALE_MIGRATION_WEB_FINGERPRINT
+  migration_web_provenance_recheck: PENDING_FINAL_CLEAN_HEAD_REFRESH_AND_CI_RERUN
   global_motion_error_count: OPEN_SEPARATE_VIEWTRANSITION_GATE
   evidence: ../../qa/20261007-video-uiux/subdub-shell-verified-20261008/browser-review.json
   screenshot_count: 48
@@ -61,12 +64,16 @@ safety:
   deploy: NO
 delivery:
   commit: true
-  push: NO
+  push: true
+  pr: 619
+  pr_url: https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/619
   merge: NO
   deploy: NO
 remaining:
-  - Branch push/PR/CI/merge, release and production browser verification are pending.
+  - Commit the exact Web migration provenance refresh and obtain a green CI rerun before merge.
+  - Production browser verification remains pending and deployment requires explicit approval.
   - Shared shell navigation locale, floating controls and whole-site motion remain separate open checklist items.
+  - Tester project read scope is missing; do not refresh authentication or modify issue #571, which tracks WA-49/50/51 separately.
   - Actual source upload, quote, job and media output remain with the route/engine workstream.
-next: Publish one SubDub-only PR containing the exact tested UI code snapshot e4070e3 and documentation-only closeout, require Ubuntu CI, merge only after CI passes, then request/obtain deployment approval before production readback. Keep portal-motion.js and closed Voice/Music/Video product blocks untouched.
+next: Refresh and commit only Web migration provenance for the final clean branch state, push to PR #619, rerun Ubuntu CI, and merge only after all checks pass. Do not deploy without explicit approval. Keep portal-motion.js and closed Voice/Music/Video product blocks untouched.
 parent_goal: ACTIVE

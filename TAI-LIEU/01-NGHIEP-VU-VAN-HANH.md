@@ -13,9 +13,10 @@ tạo tác vụ và đầu ra vẫn đóng cho tới khi có thẩm quyền xử
 Đã đo trên bản nguồn này: 12/12 tổ hợp tiếng Việt/Anh/Trung × sáng/tối × 1440/360; 48/48
 lần đổi chế độ; lỗi runtime, request ngoài ý muốn, sự kiện thao tác và tràn
 ngang đều 0. Độ tương phản chữ tối thiểu 5.23:1, viền điều khiển 3.61:1,
-vùng chạm nhỏ nhất 44px. Đây là kiểm thử cục bộ; tạo yêu cầu hợp nhất mã,
-kiểm tra tự động, hợp nhất, triển khai và xác minh trên hệ thống thật chưa hoàn
-tất. Bằng chứng: `../../qa/qa/subdub-exact-e4070e3/`.
+vùng chạm nhỏ nhất 44px. Đây là kiểm thử cục bộ. PR #619 đang mở; lượt CI đầu
+dừng ở cổng kiểm tra dấu vân tay hồ sơ cũ, cần chạy lại sau khi cập nhật bằng
+chứng Web. Chưa hợp nhất, triển khai hoặc xác minh trên hệ thống thật. Bằng
+chứng: `../../qa/qa/subdub-exact-e4070e3/`.
 PR #617 (Voice), #618 (Music), #616 (Video) vẫn CLOSED/LOCKED; không sửa lại
 các phần mã sản phẩm đã khóa. Hiệu ứng toàn trang còn là mục riêng chưa đóng.
 
