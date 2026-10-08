@@ -90,6 +90,7 @@ for (const locale of ['vi', 'en', 'zh']) {
 }
 
 test('Music text and status colors stay route-scoped and readable in both themes', () => {
+  assert.match(theme, /\.portal-music-hub \.portal-module-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
   assert.match(theme, /\.portal-page\.portal-music-hub \.portal-eyebrow\s*\{[^}]*color:\s*var\(--portal-context\)/s);
   assert.match(theme, /html\[data-portal-theme="dark"\] \.portal-page\.portal-music-hub \.portal-eyebrow\s*\{[^}]*color:\s*var\(--portal-teal-dark-border-strong\)/s);
   assert.match(theme, /\.portal-music-hub \.portal-badge\[data-status="guarded"\]\s*\{[^}]*color:\s*var\(--portal-ink\)/s);

@@ -65,7 +65,9 @@ Required behavior:
    links.
 4. Use short, action-oriented copy; keep the current blue–teal light/dark theme,
    page shell, heading hierarchy, keyboard navigation, and responsive card
-   styling. Do not add decorative animation or change global motion behavior.
+   styling. Both tool groups must use a single vertical card column on desktop
+   and mobile, as required by Owner. Do not add decorative animation or change
+   global motion behavior.
 5. Preserve all server routes, fields, actions, bridge/engine boundaries and
    data permissions. Do not create audio, a player, a job, an estimate, a
    provider request, a wallet action, or any production record.
@@ -101,6 +103,11 @@ Fresh exact-candidate QA `b85b39c` found the file-rights notice heading at
 Correct only the Music notice heading with the existing ink token and rerun
 the 12-case matrix. This is new RED evidence for Music, not a reason to reopen
 the closed Voice/Video blocks.
+
+Visual review of `0bfbb3c` also showed a three-column desktop tool grid despite
+the Owner's vertical-list requirement. Add one Music-only grid override and
+verify each group's card geometry in every viewport. No layout PASS/closure
+can be claimed for the previous horizontal screenshots.
 
 - [ ] Verify fresh candidate on the Voice release BASE and preserve SubDub
   worktree changes outside this commit.
