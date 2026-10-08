@@ -1,6 +1,6 @@
 # Music hub UI closeout — 2026-10-08
 
-Status: `MUSIC_RELEASE_PREPARATION`.
+Status: `MUSIC_UI_LOCAL_VERIFIED_RELEASE_CI_PENDING`.
 Release BASE: `e405cbee28f0687f528eab7d66a71ef1623125f4`.
 Branch: `fix/music-ui-closeout-20261008`.
 Voice PR #617 and selected Video PR #616 product source/release are CLOSED/
@@ -97,6 +97,24 @@ Required behavior:
 ## Verification results — 2026-10-08
 
 ### Release review gates
+
+Final local source `431e8512b420bcd252d616fa5227af2b2103c66d`:
+12/12 Music presentation cases, each with vertical card groups, six unique
+links, clean locale copy and primary card fully visible. Minimum text contrast
+4.635:1; Enter reaches the exact creation route with confirmation disabled and
+no POST. Source hashes stayed stable. 117 Music/Voice renderers passed.
+Evidence: `../../qa/20261007-video-uiux/music-ui-exact-431e851/browser-review.json`.
+Light minimum 4.635:1 / dark minimum 5.522:1; minimum whole-card touch height
+154px. The official isolated FastAPI browser runner also passed all 18 hub
+captures, 6/6 primary focus checks and 4 Free Tools on this exact source;
+browser runtime assertions passed 26/26. Ubuntu CI and release still pending.
+
+This matrix also reproduces the existing uncaught ViewTransition error on
+each of the 12 navigations. It is recorded unfiltered as
+`knownGlobalMotion`, and `globalMotionPass=false`; no whole-site runtime/
+motion PASS is claimed. `portal-motion.js` is byte-identical to the Voice
+release BASE. The UI-hub release gate and the open global-motion repair remain
+separate named checklist items, not hidden exceptions.
 
 Fresh exact-candidate QA `b85b39c` found the file-rights notice heading at
 1.145:1 in light mode; earlier sampling omitted that strong element.

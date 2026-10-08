@@ -80,6 +80,13 @@ lại phần Video còn lại → motion toàn site.
   Web CI, one PR and separate deploy/source readback.
 - [ ] Music CI primary-link selection must follow its real first creation card;
   preserve every Voice selector and all fail-closed focus/visibility assertions.
+- [x] Exact candidate `431e851`: 12/12 Music UI cases, vertical groups and
+  primary visibility 12/12; contrast light 4.635:1 / dark 5.522:1, card touch
+  height minimum 154px; Enter reaches `/music/create` with confirm still gated.
+  Node Music/Voice 117/117; official QA 18 captures, 6/6 focus, runtime 26/26.
+- [ ] Global motion remains OPEN: fresh matrix records 12 uncaught
+  ViewTransition invalid-state errors on navigation. `portal-motion.js` is
+  unchanged; do not report whole-site motion PASS from Music UI tests.
 
 - [x] Đối chiếu ảnh và ma trận nền `/music`: 12/12 locale × sáng/tối ×
   1440×900/375×812; chưa thấy tràn ngang hoặc lỗi runtime của route.

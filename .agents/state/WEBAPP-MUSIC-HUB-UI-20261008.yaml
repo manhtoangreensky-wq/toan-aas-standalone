@@ -1,6 +1,6 @@
 task: WEBAPP-MUSIC-HUB-UI-20261008
-phase: REVIEW
-status: MUSIC_RELEASE_PREPARATION_VOICE_VIDEO_CLOSED_LOCKED
+phase: VERIFY
+status: MUSIC_EXACT_UI_QA_PASS_RELEASE_CI_PENDING
 goal_status: ACTIVE
 workspace: C:/Users/toann/Documents/Codex/2026-07-10/1-ngu-n-ch-nh-v/work/toanaas-video-ui-release-20261007
 branch: fix/music-ui-closeout-20261008
@@ -42,6 +42,22 @@ acceptance:
   - fresh_12_case_browser_matrix_zero_overflow_or_route_errors
   - no_form_submission_or_business_side_effect
 verification:
+  latest_source_sha: 431e8512b420bcd252d616fa5227af2b2103c66d
+  fresh_exact_music_matrix: 12_OF_12_UI_PASS_WITH_EXISTING_GLOBAL_MOTION_ERROR_RECORDED
+  fresh_vertical_card_groups: 12_OF_12
+  fresh_primary_fully_visible: 12_OF_12
+  fresh_minimum_text_contrast: 4.635
+  fresh_dark_minimum_text_contrast: 5.522
+  fresh_minimum_card_touch_height_px: 154
+  final_official_browser_gate: PASS_18_CAPTURES_6_HUBS_6_PRIMARY_FOCUS_4_FREE_TOOLS
+  final_official_runtime_assertions: PASS_26_OF_26
+  fresh_source_stable: true
+  fresh_music_matrix_evidence: ../../qa/20261007-video-uiux/music-ui-exact-431e851/browser-review.json
+  global_motion_error_count: 12
+  global_motion_pass: false
+  global_motion_source: UNCHANGED_FROM_CLOSED_VOICE_BASE
+  final_renderer_music_voice: 117_PASS_0_FAIL
+  web_provenance_fingerprint: e84b308067a235526fd24d003853bf520e84f304f2bf3f057c71676723236f7a
   closed_checkpoint_comparison: PASS_43_FUNCTIONS_3_CATALOGUES_VOICE_VIDEO_PRODUCT_CSS_UNCHANGED
   music_primary_entry: GREEN_VI_EN_ZH_AFTER_EXPECTED_RED
   browser_gate_selectors: MUSIC_ONLY_UPDATED_VOICE_AND_VIDEO_UNCHANGED
@@ -71,7 +87,7 @@ shared_open_items:
   - whole_site_motion_and_performance_gate
   - one_unchanged_Music_Python_contract_test_uses_legacy_source_regex
 delivery:
-  commit: false
+  commit: true
   push: false
   pr: none
   merge: false
