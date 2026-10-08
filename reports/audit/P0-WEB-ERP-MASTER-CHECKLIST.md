@@ -122,7 +122,7 @@ Thứ tự tiếp: SubDub → các tính năng khác → quay lại phần Video
 
 ## SUBDUB SINGLE-SCREEN UI — 2026-10-08
 
-**SPEC_ID:** `SUBDUB-SINGLE-SCREEN-UI-20261008` · **STATUS:** `EXACT_UI_QA_PASS_FINAL_CI_PENDING_PROVENANCE`.
+**SPEC_ID:** `SUBDUB-SINGLE-SCREEN-UI-20261008` · **STATUS:** `EXACT_UI_QA_PASS_CI_GATED_MERGE_PENDING`.
 Video checkpoint PR #616 is already recorded merged/deployed. Keep this slice
 strictly to the customer presentation layer; the media engine and route
 integration remain outside this UI/UX work.
@@ -177,6 +177,12 @@ CI run. Merge, deployment, and production runtime readback remain pending.
   from recorded `2f666de233f5…` to current `ee5cbdd4cbda…`. Refresh only Web
   provenance after the final documentation update, verify locally, and require a
   fresh green PR run. No product test ran in the failed attempt; do not merge yet.
+- [x] Recorded the failure cause in commit `845cab9` and confirmed the official
+  clean-tree Web refresh plus local verifier pass on that intermediate tree
+  (fingerprint `1ab5ba0082010393612012980580d46e2c512b97a41f38cc7034d617a606adf8`).
+  This is historical/intermediate evidence, not the final fingerprint after this
+  checklist update. The current exact-HEAD CI result is authoritative on PR #619;
+  merge only when that check is green. Deployment remains separately gated.
   Voice/Music/Video product blocks are CLOSED/LOCKED.
 - [ ] Shared shell locale/floating controls and whole-site motion remain open;
   QA here proves SubDub content only. `integration.js` was excluded from the
