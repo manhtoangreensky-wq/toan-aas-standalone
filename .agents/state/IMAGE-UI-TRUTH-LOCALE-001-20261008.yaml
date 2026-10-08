@@ -1,0 +1,167 @@
+spec_id: IMAGE-UI-TRUTH-LOCALE-001
+phase: VERIFY
+status: I03_PR620_CI_PASS_READY_TO_MERGE_NO_DEPLOY
+base_sha: dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c
+branch: fix/image-ui-truth-locale-20261008
+goal: truthful understandable Image UI using the existing form and server authority
+current_slice: I03_layout_contrast_accessibility
+allowed_files:
+  - static/portal/portal.js: Image demo branch and Image-only title badge form workspace result and renderImageSuiteHub
+  - static/portal/portal-i18n.js: Image-owned catalogue rows only
+  - static/portal/portal.css: appended Image-suite and Image-create selectors only
+  - tests/image-workbench-truth.test.mjs
+  - tests/image-create-locale-presentation.test.mjs
+  - tests/image-hub-locale-presentation.test.mjs
+  - scripts/ci/run_browser_verification.py: Image primary selector and expected href only
+  - reports/audit/P0-WEB-ERP-MASTER-CHECKLIST.md
+  - TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md: Image candidate checkpoint only
+  - TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md: Image comparison only
+  - KIEM-THU/DANH-SACH-CASE.md: Image UI cases only
+  - .agents/state/IMAGE-UI-TRUTH-LOCALE-001-20261008.yaml
+protected:
+  - closed Voice Music SubDub and Video UI blocks
+  - non_Image branches of renderInteractiveFeatureWorkbench
+  - real form fields quote confirmation tracking API integration and routes
+  - pricing wallet provider database auth global theme and portal-motion.js
+acceptance:
+  - no demo-only readiness price success image specifications or download controls
+  - existing Image form and real flow output remain visible and unchanged
+tests:
+  - node --test tests/image-workbench-truth.test.mjs
+  - node --check static/portal/portal.js
+  - protected Image Python contracts
+  - actual_template_Image_browser_matrix_no_submission
+  - byte_compare_protected_paths_and_non_Image_renderer_branches
+sequence:
+  I01_A_demo_truth: LOCAL_VERIFIED_4_RED_TO_GREEN_12_BROWSER_CASES
+  I01_B_creation_locale: LOCAL_VERIFIED_22_IMAGE_TESTS_48_BROWSER_STATES
+  I02_hub_locale_unique_routes: LOCAL_VERIFIED_9_RED_TO_GREEN_12_BROWSER_CONFIGURATIONS
+  I03_layout_contrast_accessibility: LOCAL_VERIFIED_48_CREATE_STATES_24_HUB_STATES
+  release: NOT_STARTED
+prerequisite:
+  subdub_pr: 619
+  status: MERGED_CODE_RELEASE_CLOSED_LOCKED_DEPLOY_NOT_PERFORMED
+  merge_sha: dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c
+  exact_pr_ci: 37755956582_SUCCESS
+  main_ci: 37770140237_SUCCESS
+safety:
+  provider_calls: 0
+  wallet_mutations: 0
+  production_data_mutations: 0
+  route_engine_changes: 0
+  deploy: NO
+delivery:
+  current_pre_fix_head: a66019b71881f523642fa73f72ee61184cc2c066
+  current_pr: 620
+  current_pr_head_at_checkpoint: 5e720824c9b4f6aab3b826956334eeb1b76165b6
+  current_pr_state_at_checkpoint: OPEN_CLEAN_READY_TO_MERGE
+  current_pr_ci_at_checkpoint: 37809597058_SUCCESS
+  correction_delivery: PUSHED
+  github_channel: Codex_Web_only_except_Owner_one_time_PR619_CLI
+parent_goal: ACTIVE
+i03_verification:
+  target_root_cause: is_button_summary_selector_specificity_overrode_48px_summary_rule_with_44px_and_entry_scale_reduced_visual_height
+  target_fix: root_scoped_Image_summary_selector_min_height_48px
+  qa_sync: wait_for_old_article_detach_and_main_subtree_finite_animations_before_stable_layout_measurement
+  renderer: 163_PASSED_0_FAILED_EXIT_0
+  create_browser: 48_STATES_48_SCREENSHOTS_PASS_EXIT_0
+  create_evidence: ../../qa/20261007-video-uiux/image-i03-final-20261008/image-create-review.json
+  hub_browser: 12_CONFIGURATIONS_24_STATES_24_SCREENSHOTS_STYLE_PASS_EXIT_0
+  hub_evidence: ../../qa/20261007-video-uiux/image-i03-hub-final-20261008/image-baseline.json
+  body_contrast_minimum: 5.944
+  large_text_contrast_minimum: 8.837
+  input_boundary_contrast_minimum: 5.522
+  target_height_minimum_px: 45
+  summary_height_minimum_px: 48
+  low_text_small_targets_low_boundary_overflow: ZERO
+  source_stable: true
+  protected: COMPARATOR_PASS_10_FILES_AND_EXISTING_CSS_CATALOGUE_PORTAL_OUTSIDE_IMAGE
+  python: 18_PASSED_1_UNCHANGED_BASELINE_FAILURE_EXIT_1
+  global_motion: OPEN_12_NAVIGATION_VIEWTRANSITION_ERRORS
+  official_browser: PASS_18_ROUTES_18_SCREENSHOTS_SHA_BOUND_TO_e91cfc42d9c574ce6a8d01bbc1e6bfdabb0478fe
+  official_browser_evidence: ../../qa/20261007-video-uiux/image-i03-official-e91cfc42-20261008/browser_verification_evidence.json
+  official_browser_manifest: ../../qa/20261007-video-uiux/image-i03-official-e91cfc42-20261008/screenshot-manifest.json
+  official_browser_summary: HUBS_6_OF_6_FREE_TOOLS_4_OF_4_THEME_FLICKER_0_KEYBOARD_6_OF_6_RUNTIME_ERRORS_0
+  web_provenance: WEB_ONLY_REFRESH_VERIFY_PASS; preflight_and_web_inventory_only; no_Bot_evidence_read_or_written
+  source_hashes:
+    portal_js: 20e63c09321ba16ca2645822301b4a3804c5595ed26ece5fcec1a7f4f3569af2
+    portal_i18n_js: 61c9b33604d499541f44401fe438553d619860da729d5f73975d5ad46a26d390
+    portal_css: 95126850878898007cc283e1306ee4269984d738a44fc45bfa15e997b0d23b2c
+ci_corrective:
+  failed_run: 37806139441
+  failed_head: a66019b71881f523642fa73f72ee61184cc2c066
+  observed: 286_PASSED_1_FAILED_ASSERTION_DANH_SACH_CASE_LINES_128_VS_142
+  correction_file: reports/migration/p0-05d-tester-workspace.json
+  corrected_case_file_metadata: 142_LINES_34854_BYTES_SHA256_612f3bbeaa2660f8d1cd48cf67f7221e275f9c240406e7090c105ec4e91d10c8
+  correction_commit: ddc7ca0a3fe794288d3709a0ad1e1b359f94c3ea
+  assertion_change: NONE
+  target_test: 1_PASSED_EXIT_0
+  windows_full_module: 32_PASSED_1_PLATFORM_FAILURE_POSIX_MODE_0600_WINDOWS_0666_TEST_AND_SOURCE_IDENTICAL_TO_ORIGIN_MAIN
+  current_ci: 37809597058_SUCCESS_ON_5e720824c9b4f6aab3b826956334eeb1b76165b6
+  current_ci_bounded: 389_PASSED_16_WARNINGS
+  current_ci_browser: 18_SCREENSHOTS_6_HUBS_6_OF_6_4_TOOLS_4_OF_4_NO_CLIP_OR_THEME_FLICKER
+  current_ci_runtime: 26_PASSED
+  web_provenance_evidence: reports/migration/preflight.json_and_web_inventory.json
+  next: merge_Image_checkpoint_after_latest_head_checks_then_continue_ordered_shell_Video_motion_items
+  provider_calls: 0
+  wallet_mutations: 0
+  production_data_mutations: 0
+  deploy: NO
+i01_b_verification:
+  initial_red: 6_PASS_12_FAIL_EXIT_1_AFTER_HARNESS_DEPENDENCIES_FIXED
+  green: 22_IMAGE_TESTS_PASS_EXIT_0
+  renderer_regression: 148_PASS_EXIT_0
+  browser: 48_STATES_PASS_EXIT_0_REAL_TEMPLATE_FOUR_DISPLAY_FIXTURES
+  browser_evidence: ../../qa/20261007-video-uiux/image-i01b-browser-20261008/image-create-review.json
+  browser_fixture_correction: replaced_wrong_feature_submit_capability_with_real_feature_draft_and_reset_transient_form_between_scenarios
+  browser_requests: ZERO_NON_GET_ZERO_EXTERNAL_ZERO_FAILED_RESOURCE
+  source_protected: PORTAL_OUTSIDE_DECLARED_FUNCTIONS_EXISTING_CATALOGUE_AND_11_FILES_UNCHANGED
+  python: 37_PASS_1_BASELINE_FAIL_1_PYDANTIC_WARNING
+  confirm_presentation_amendment: Image_confirm_hidden_without_an_explicit_public_sale_amount_backend_and_wallet_unchanged
+  price_display: no_provider_cost_or_source_metadata_unknown_not_zero
+  remaining: Image_hub_I02_then_I03_contrast_layout_then_shared_shell_and_global_motion
+i02_scope_amendment:
+  reason: Image_hub_primary_changed_from_old_edit_quick_link_to_creation_first
+  ci_update: strict_Image_primary_selector_href_only_preserve_visibility_keyboard_scroll_fake_success_checks
+  creation_card_readiness: reuse_existing_featureConfirmExecutionReady_without_API_or_authority_change
+i02_verification:
+  red: NODE_9_FAILED_EXIT_1_AFTER_HERO_HARNESS_REFERENCE_ERROR_FIXED
+  green: IMAGE_TOTAL_31_PASSED_EXIT_0
+  regression: RENDERER_157_PASSED_EXIT_0
+  browser: 12_CONFIGURATIONS_24_STATES_24_SCREENSHOTS
+  browser_evidence: ../../qa/20261007-video-uiux/image-i02-final-20261008/image-baseline.json
+  browser_unique_routes: 8_OF_8_IN_ALL_12_HUB_CASES
+  browser_first_destination: /image/create
+  browser_heading_and_product_copy: VI_EN_ZH_PASS_CASE_SENSITIVE_CHECK
+  evaluator_correction: PowerShell_IgnoreCase_accent_range_false_positive_fixed_to_case_sensitive_no_source_change
+  protected: PREEXISTING_PORTAL_AND_CATALOGUE_OUTSIDE_DECLARED_IMAGE_SCOPE_PLUS_11_FILES_UNCHANGED
+  ci_selector: FOUR_IMAGE_ONLY_MAPPING_CHANGES_SYNTAX_AND_DIFF_REVIEW_PASS_FULL_GATE_PENDING
+  global_motion: OPEN_12_NAVIGATION_VIEWTRANSITION_ERRORS
+  source_hashes:
+    portal_js: 0bbffee7f7378d88a7e4fa4995a6d2abbf0f0520eaf9c4aa34ce7be7a5ff6c6f
+    portal_i18n_js: 7c377114e432728a4382dc6682839e4ad1124f67125fe5816b68eb871cc06620
+verification:
+  red: NODE_4_FAILED_EXIT_1_EXPECTED_DEMO_DEFECT
+  green: NODE_4_PASSED_EXIT_0
+  protected_renderer: NODE_130_PASSED_EXIT_0
+  protected_source: PORTAL_OUTSIDE_IMAGE_DEMO_AND_11_FILES_UNCHANGED
+  baseline_python: 18_PASSED_1_FAILED
+  branch_python: 18_PASSED_1_FAILED_SAME_TEST_ID
+  baseline_failure: tests/test_image_operations_hub_portal_contracts.py::test_image_hub_private_pwa_scope_and_phone_touch_targets
+  baseline_failure_cause: test_slices_last_700px_media_query_not_the_Image_rules
+  new_failures: 0
+  javascript_syntax: PASS_EXIT_0
+  diff_check: PASS_EXIT_0
+  browser: COMPLETE_EXIT_0_12_CONFIGURATIONS_24_STATES_24_SCREENSHOTS
+  browser_evidence: ../../qa/20261007-video-uiux/image-i01a-local-20261008/image-baseline.json
+  browser_fake_controls: 0
+  browser_real_form_fields: PROMPT_TIER_FORMAT_PRESERVED_12_OF_12
+  browser_non_get_requests: 0
+  browser_failed_resources: 0
+  browser_horizontal_overflow: 0
+  browser_source_stable: true
+  portal_source_sha256: c125290ef126c9700ae565752e205211c96bf66ae3348ce618b0d1e1ad89bf02
+  global_motion: OPEN_12_VIEWTRANSITION_ERRORS_NOT_FIXED_OR_HIDDEN
+  remaining_image_contrast: OPEN_LIGHT_THEME_LABELS_AND_GUARDED_COPY
+  code_diff: 3_INSERTIONS_67_DELETIONS_ONLY_IMAGE_DEMO_BRANCH
+  next: I01_B_creation_locale_then_I02_hub_then_I03_layout_contrast

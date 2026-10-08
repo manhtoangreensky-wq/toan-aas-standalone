@@ -1,5 +1,93 @@
 # MASTER CHECKLIST: P0.WEB.ERP.PRODUCTION_COMPLETION
 
+## IMAGE UI — 2026-10-08
+
+**SPEC_ID:** `IMAGE-UI-TRUTH-LOCALE-001` · **STATUS:** `I03_PR620_CI_PASS_READY_TO_MERGE_NO_DEPLOY`.
+Nhánh local `fix/image-ui-truth-locale-20261008`, BASE
+`dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c`. SubDub #619 đã merge và ghi
+ĐÓNG/KHÓA trên GitHub; candidate tree = merge tree; PR CI `37755956582` và
+main CI `37770140237` SUCCESS. Deploy/signed live SubDub chưa thực hiện.
+
+- [x] Audit `/image` và `/image/create`: 24 trạng thái/ảnh, fake-ready/fake-output,
+  giá -5 Xu tự đặt, copy VI trong EN/ZH, banner tương phản thấp và grid mobile bị ép.
+- [x] I01-A RED: 4 kiểm thử bắt fake creation/download/readiness/price/output
+  của `/image/create` và alias `/image/new` cùng lỗi đúng kỳ vọng.
+- [x] I01-A code: bỏ riêng Image demo trước form thật; 3 thêm/67 xóa trong
+  `portal.js`. Giữ nguyên fields/quote/confirm/tracking, backend và các sản phẩm khóa.
+- [x] I01-A GREEN 4/4; Node regression 130/130; JS syntax/diff exit 0;
+  Portal ngoài Image demo + 11 protected files trùng BASE.
+- [x] Python BASE/candidate đều 18P/1F, exact cùng test
+  `test_image_hub_private_pwa_scope_and_phone_touch_targets`. Test lấy nhầm
+  media query 700px cuối file; CSS/test không đổi, `NEW_FAILURES=0`.
+- [x] I01-A browser: 12 cấu hình/24 trạng thái/24 ảnh; đọc JSON + ảnh light
+  desktop/dark mobile. Fake-ready/output/download/-5 Xu mất 12/12, trường thật
+  `prompt/tier/format` còn 12/12; request ghi/failed resource/overflow 0;
+  source hash `c125290e…` stable. Global ViewTransition vẫn có 12 lỗi, scope riêng mở.
+- [x] I03 đã sửa light label/guarded-copy contrast; không suy ra toàn bộ nhóm
+  công cụ Image hoàn thiện từ phạm vi hai màn hình này.
+- [x] I01-B: copy cố định hành trình tạo ảnh VI/EN/ZH; Image suite 22/22,
+  regression 148/148. Trường/payload/action names không đổi; gợi ý có copy/apply,
+  tracking chỉ nhận ID khớp. Không đưa cost/source/private URL thành nội dung.
+- [x] I01-B template QA: 48 trạng thái VI/EN/ZH × sáng/tối × 1440/360 ×
+  guarded/local-draft/quote/confirmed-report; requests/resource/runtime/overflow
+  0 trong ma trận same-page. Chạy lại sau sửa fixture `feature-submit` sai thành
+  capability thật `feature-draft`, reset transient form trước từng kịch bản.
+- [x] Amendment trình bày: Image không hiện nút xác nhận khi thiếu giá bán rõ
+  nghĩa; không thay backend, giá, ví hoặc engine. Unknown không đổi thành 0.
+- [x] I02: đủ 8 đích duy nhất, tạo ảnh trước, catalogue VI/EN/ZH; bỏ 4 mục lặp,
+  Lossless/count 7 và mô tả xử lý/bảo đảm không có nguồn. RED 9F → GREEN 9P;
+  tổng Image 31P, regression 157P.
+- [x] I02 template: 12 cấu hình/24 trạng thái/24 ảnh, tám đích duy nhất và
+  heading/copy đúng locale 12/12; Enter tới `/image/create` 12/12, overflow 0.
+  Source hashes ổn định; 12 ViewTransition errors còn mở ở gate motion.
+- [x] Amendment CI: đúng 4 Image selector/expected-href thay đổi để tìm mục
+  tạo ảnh thực; giữ visibility/focus/scroll/fake-success checks. Syntax/diff đạt.
+- [x] Official browser gate chạy trên candidate code `e91cfc42d9c574ce6a8d01bbc1e6bfdabb0478fe`:
+  18 trang desktop/tablet/
+  mobile; 6/6 kiểm tra hành vi hub; 4/4 tiện ích xác định; theme reload không
+  nháy; bàn phím 6/6; lỗi JS/rejection/binding/request lỗi đều 0. 18/18 ảnh
+  manifest ghi đúng SHA này.
+- [x] I03 tạo ảnh: 48/48 trạng thái VI/EN/ZH × sáng/tối × 1440/360; chữ thường
+  tối thiểu 5.944:1, chữ lớn 8.837:1, viền input 5.522:1; target ≥45px,
+  summary 48px. Low-text/boundary/target/overflow đều 0; fields dọc.
+- [x] Sửa đúng specificity summary Image: `:is(.portal-button, summary)` từng
+  thắng rule 48px và để 44px bị co trong entry. QA đợi article cũ detach và
+  animation hữu hạn trên main hoàn tất, không nới ngưỡng đo 44px.
+- [x] I03 hub: 12 cấu hình/24 trạng thái/24 ảnh; style đạt, 8 đích duy nhất.
+  12 lỗi ViewTransition điều hướng được giữ nguyên trong bằng chứng motion mở.
+- [x] Hồi quy renderer 163/163; JS syntax/diff PASS; comparator 10 protected
+  files + CSS/catalogue/Portal ngoài Image không đổi. Python vẫn 18P/1F nền.
+- [ ] Theo dõi lỗi test mobile/PWA trên đúng CSS boundary trong scope nghiệm thu
+  phù hợp; không nới hoặc sửa test ngoài I01-A để biến baseline thành xanh.
+- [x] Web-only provenance refresh/verify đạt; `reports/migration` chỉ ghi
+  `preflight.json` và `web_inventory.json`, không đọc/ghi bằng chứng Bot.
+- [x] PR #620 CI run `37806139441` được đối chiếu log: 286 đạt, 1 lỗi duy
+  nhất do readiness JSON khai 128 dòng trong khi `DANH-SACH-CASE.md` có 142.
+- [x] Chỉ sửa metadata readiness của file case: 142 dòng, 34.854 byte,
+  SHA-256 `612f3bbe…e91d10c8`; assertion giữ nguyên. Test metadata tái hiện
+  đỏ trước sửa và xanh `1 passed` sau sửa.
+- [x] Suite `test_p0_05d_tester_workspace.py` trên Windows: 32 đạt, 1 lỗi
+  nền do test mode Unix `0600` nhưng Windows báo `0666`; đây không phải lỗi
+  của metadata và không sửa/nới test. Hai tệp test/nguồn giống hệt `origin/main`;
+  CI Linux là cổng kết luận cho nhánh PR.
+- [x] Corrective commits đã push lên PR #620; run `37809597058` trên HEAD
+  `5e720824c9b4f6aab3b826956334eeb1b76165b6` SUCCESS: bounded contracts
+  `389 passed, 16 warnings`; browser gate 18 ảnh/6 hub × 3 viewport, hub
+  `6/6`, tiện ích `4/4`, runtime `26 passed`, diff whitespace sạch.
+- [x] PR #620 được GitHub xác nhận `OPEN`, `CLEAN`, một check `SUCCESS`;
+  checkpoint này ở trạng thái sẵn sàng merge, chưa deploy.
+- [ ] Shared-shell locale/nút nổi, Video hoãn và whole-site motion giữ thứ tự;
+  ViewTransition lỗi vẫn mở, không báo PASS từ kiểm thử Image/SubDub.
+- State: `.agents/state/IMAGE-UI-TRUTH-LOCALE-001-20261008.yaml`.
+- Audit/spec/evidence local: `../../evidence/IMAGE-UI-AUDIT-20261008.md`,
+  `../../evidence/IMAGE-UI-TRUTH-LOCALE-001-DRAFT-20261008.md`.
+- I03 evidence: `../../evidence/IMAGE-I03-VERIFY-20261008.md`; JSON/ảnh ở
+  `../../qa/20261007-video-uiux/image-i03-final-20261008/` và
+  `image-i03-hub-final-20261008/`; official gate SHA-bound ở
+  `../../qa/20261007-video-uiux/image-i03-official-e91cfc42-20261008/`.
+  CI/PR/release còn mở.
+- `PROVIDER_CALLS=0 WALLET_MUTATIONS=0 PRODUCTION_DATA_MUTATIONS=0`.
+
 ## VIDEO UI CHECKPOINT — 2026-10-07
 
 **UI RELEASE:** `CLOSED_LOCKED` — giữ nguyên ba màn sản phẩm đã nghiệm thu.
@@ -122,7 +210,14 @@ Thứ tự tiếp: SubDub → các tính năng khác → quay lại phần Video
 
 ## SUBDUB SINGLE-SCREEN UI — 2026-10-08
 
-**SPEC_ID:** `SUBDUB-SINGLE-SCREEN-UI-20261008` · **STATUS:** `EXACT_UI_QA_PASS_CI_GATED_MERGE_PENDING`.
+**SPEC_ID:** `SUBDUB-SINGLE-SCREEN-UI-20261008` · **STATUS:** `MERGED_CODE_RELEASE_CLOSED_LOCKED_DEPLOY_NOT_PERFORMED`.
+
+Current closeout: PR #619 MERGED at `dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c`,
+candidate `fb7ce0175be8be0a6189ac9e99a957a63423591d`; both trees
+`841cfe730d45b59e1e71cc85d14fe2239dcfd9af` match exactly. PR CI `37755956582`
+and main CI `37770140237` SUCCESS. GitHub description records ĐÓNG/KHÓA;
+do not reopen or edit SubDub product code. Deploy and authenticated live remain
+separate open gates. The earlier intermediate CI/HEAD notes below are historical.
 Video checkpoint PR #616 is already recorded merged/deployed. Keep this slice
 strictly to the customer presentation layer; the media engine and route
 integration remain outside this UI/UX work.

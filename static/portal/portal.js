@@ -9629,6 +9629,10 @@
 
   function pageStatusBadge(page, context) {
     if (!page) return "";
+    if (["/image/create", "/image/new"].includes(page.routePath || page.path)) {
+      const ready = featureConfirmExecutionReady(page, context);
+      return `<span class="portal-badge" data-status="${ready ? "ready" : "guarded"}">${safeText(imageUiText(`status.${ready ? "ready" : "guarded"}`, ""))}</span>`;
+    }
     if (["/voice/tts", "/voice/saved", "/voice/clone", "/voice/outputs"].includes(page.routePath || page.path)) {
       const allowed = canAct(page, context);
       return `<span class="portal-badge" data-status="${allowed ? "ready" : "guarded"}">${safeText(voiceUiText(allowed ? "status.ready" : "status.guarded", ""))}</span>`;
@@ -9848,6 +9852,8 @@
   function localizedPageTitle(page, context) {
     const fallback = displayPageTitle(page, context);
     const path = normalizePath(page && (page.routePath || page.path));
+    if (["/image/create", "/image/new"].includes(path)) return imageUiText("page.title", fallback);
+    if (["/image", "/tools/image"].includes(path)) return uiText("imageHub.page.title", fallback);
     if (path === "/tools/video") return uiText("mediaHub.video.page.title", fallback);
     if (path === "/music") return uiText("musicHub.page.title", fallback);
     if (path === "/voice") return voiceUiText("hub.title", fallback);
@@ -9929,6 +9935,8 @@
   function localizedPageDescription(page) {
     const fallback = typeof page.description === "string" ? page.description : "";
     const path = normalizePath(page && (page.routePath || page.path));
+    if (["/image/create", "/image/new"].includes(path)) return imageUiText("page.description", fallback);
+    if (["/image", "/tools/image"].includes(path)) return uiText("imageHub.page.description", fallback);
     if (path === "/tools/video") return uiText("mediaHub.video.page.description", fallback);
     if (path === "/music") return uiText("musicHub.page.description", fallback);
     if (path === "/voice") return voiceUiText("hub.description", fallback);
@@ -11236,6 +11244,7 @@
       context.session.csrfReady === true && context.capabilities && context.capabilities["workspace-draft-save"] === true
     );
     const formFieldsEnabled = enabled || workspaceDraftEnabled;
+    const imageTask = route === "/image/create" || route === "/image/new";
     const videoTask = route === "/video/create" || route === "/video/multiscene";
     const voiceTask = ["/voice/tts", "/voice/saved", "/voice/clone"].includes(route);
     const videoText = (key, fallback) => uiText(`videoUi.${key}`, fallback);
@@ -11247,27 +11256,29 @@
     const localDraftLabel = videoTask
       ? videoText(workspaceDraftId ? "draft.update" : "draft.save", "Lưu bản nháp")
       : voiceTask ? voiceUiText(workspaceDraftId ? "draft.update" : "draft.save", "Lưu bản nháp")
+      : imageTask ? imageUiText(workspaceDraftId ? "draft.update" : "draft.save", "Lưu bản nháp")
       : (workspaceDraftId ? "Cập nhật bản nháp Web" : "Lưu bản nháp Web");
     const formAction = localAuthoringOnly ? localDraftAction : page.action;
     const workspaceDraftControl = workspaceDraftEnabled && !localAuthoringOnly
       ? (workspaceDraftId
-        ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-update" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-workspace-draft-id="${safeText(workspaceDraftId)}">${voiceTask ? safeText(voiceUiText("draft.update", "")) : "Cập nhật bản nháp Web"}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("draft.saveNew", "")) : "Lưu thành bản mới"}</button>`
-        : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("draft.save", "")) : "Lưu bản nháp Web"}</button>`)
+        ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-update" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-workspace-draft-id="${safeText(workspaceDraftId)}">${voiceTask ? safeText(voiceUiText("draft.update", "")) : imageTask ? safeText(imageUiText("draft.update", "")) : "Cập nhật bản nháp Web"}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("draft.saveNew", "")) : imageTask ? safeText(imageUiText("draft.saveNew", "")) : "Lưu thành bản mới"}</button>`
+        : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("draft.save", "")) : imageTask ? safeText(imageUiText("draft.save", "")) : "Lưu bản nháp Web"}</button>`)
       : "";
     const estimateControl = canEstimate && page.action !== "feature-estimate"
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="feature-estimate" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("action.estimate", "Ước tính Xu")) : "Ước tính Xu"}</button>`
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="feature-estimate" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("action.estimate", "Ước tính Xu")) : imageTask ? safeText(imageUiText("action.estimate", "")) : "Ước tính Xu"}</button>`
       : "";
     const executionReady = featureConfirmExecutionReady(page, context);
     const voiceQuoteVisible = !voiceTask || !hasFreshEstimate || voiceQuoteAmount(flow) !== null;
+    const imageQuoteVisible = !imageTask || !hasFreshEstimate || voiceQuoteAmount(flow) !== null;
     const confirmControl = hasFreshEstimate
-      ? (executionReady && voiceQuoteVisible
-        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-portal-confirm="${voiceTask ? safeText(voiceUiText("action.confirmPrompt", "")) : "Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định."}">${voiceTask ? safeText(voiceUiText("action.confirm", "Xác nhận chạy")) : "Xác nhận chạy"}</button>`
-        : `<span class="portal-flow-note" role="status">${voiceTask ? safeText(voiceUiText(voiceQuoteVisible ? "action.waiting" : "flow.priceUnknown", "")) : "Đã có estimate canonical. Web App đang chờ adapter tạo job canonical; chưa thể xác nhận chạy hoặc trừ Xu."}</span>`)
+      ? (executionReady && voiceQuoteVisible && imageQuoteVisible
+        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-portal-confirm="${voiceTask ? safeText(voiceUiText("action.confirmPrompt", "")) : imageTask ? safeText(imageUiText("action.confirmPrompt", "")) : "Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định."}">${voiceTask ? safeText(voiceUiText("action.confirm", "Xác nhận chạy")) : imageTask ? safeText(imageUiText("action.confirm", "")) : "Xác nhận chạy"}</button>`
+        : `<span class="portal-flow-note" role="status">${voiceTask ? safeText(voiceUiText(voiceQuoteVisible ? "action.waiting" : "flow.priceUnknown", "")) : imageTask ? safeText(imageUiText(imageQuoteVisible ? "action.waiting" : "flow.priceUnknown", "")) : "Đã có estimate canonical. Web App đang chờ adapter tạo job canonical; chưa thể xác nhận chạy hoặc trừ Xu."}</span>`)
       : "";
     const flowControls = estimateControl || confirmControl ? `<div class="portal-flow-actions">${estimateControl}${confirmControl}</div>` : "";
     const fieldValues = { ...(flow && flow.input && typeof flow.input === "object" ? flow.input : {}), ...transientFormValues(route) };
-    const primaryActionLabel = localAuthoringOnly ? localDraftLabel : (videoTask ? videoText("action.continue", "Tiếp tục") : voiceTask ? voiceUiText(page.action === "feature-estimate" ? "action.estimate" : "action.continue", "Tiếp tục") : (page.actionLabel || "Tiếp tục"));
-    const primaryDisabled = localAuthoringOnly || enabled ? "" : ` disabled title="${safeText(voiceTask ? voiceUiText("form.guarded", reason) : reason)}"`;
+    const primaryActionLabel = localAuthoringOnly ? localDraftLabel : (videoTask ? videoText("action.continue", "Tiếp tục") : voiceTask ? voiceUiText(page.action === "feature-estimate" ? "action.estimate" : "action.continue", "Tiếp tục") : imageTask ? imageUiText(page.action === "feature-estimate" ? "action.estimate" : "action.continue", "Tiếp tục") : (page.actionLabel || "Tiếp tục"));
+    const primaryDisabled = localAuthoringOnly || enabled ? "" : ` disabled title="${safeText(voiceTask ? voiceUiText("form.guarded", reason) : imageTask ? imageUiText("form.guarded", reason) : reason)}"`;
     const boundary = classifyPageBoundary(page, context);
     let boundaryNotice = "";
     if (boundary === "canonical_bridge") {
@@ -11278,6 +11289,19 @@
       boundaryNotice = executionReady
         ? `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>Bộ tạo AI:</strong> Bộ tạo này đã sẵn sàng kết nối thực thi runtime.</div>`
         : `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>Bộ tạo AI (Chế độ An toàn):</strong> Tính năng này thuộc Bot AI và đang trong chế độ an toàn trên Web. Thông số của bạn được lưu thành Bản nháp Web an toàn mà không trừ Xu.</div>`;
+    }
+    if (imageTask) {
+      const fields = page.fields.map((field) => ({
+        ...field,
+        labelKey: `imageUi.field.${field.name}.label`,
+        placeholderKey: field.placeholder ? `imageUi.field.${field.name}.placeholder` : undefined,
+        helpKey: field.help ? `imageUi.field.${field.name}.help` : undefined,
+        emptyLabel: field.emptyLabel ? imageUiText(`field.${field.name}.empty`, field.emptyLabel) : undefined
+      }));
+      return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(imageUiText("form.title", ""))}</h2><p class="portal-card-subtitle">${safeText(imageUiText(localAuthoringOnly ? "form.draft" : enabled ? "form.ready" : "form.guarded", ""))}</p></div></div>
+        <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>${renderFields(fields, formFieldsEnabled, context, fieldValues)}
+          <div class="portal-form-footer"><span class="portal-form-note">${safeText(imageUiText(localAuthoringOnly ? "form.draftNote" : "form.processingNote", ""))}</span>${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button></div>
+        </form>${flowControls}</section>`;
     }
     if (voiceTask) {
       const fields = page.fields.map((field) => ({
@@ -11515,6 +11539,7 @@
   function supportTicketHeroSection(page) {
     const routeKey = supportTicketHeroRouteKey(page);
     const route = normalizePath(page && (page.routePath || page.path) || "/");
+    if (["/image", "/tools/image", "/image/create", "/image/new"].includes(route)) return imageUiText("section", "HÌNH ẢNH");
     if (route.startsWith("/voice/")) return voiceUiText("section", "GIỌNG NÓI");
     if (route === "/voice-studio" || route === "/voice-studio/new" || route.startsWith("/voice-studio/")) return voiceStudioText("intro.kicker", "");
     const source = page && typeof page.section === "string" ? page.section : "TOAN AAS";
@@ -24706,50 +24731,18 @@
   }
 
   function renderImageSuiteHub(page, context) {
-    return renderMediaHubPage(page, context, {
-      pageClass: "portal-image-suite-hub",
-      kicker: "AI Image Suite",
-      heading: "Hệ thống sáng tạo & biên tập hình ảnh AI",
-      subtext: "Tập hợp các công cụ chuyên sâu từ làm nét, cân màu, tách nền, resize đến đóng dấu thương hiệu và artboard direction.",
-      stats: {
-        toolsCount: 7,
-        toolsLabel: "Công cụ xử lý ảnh",
-        qualityBadge: "Lossless",
-        qualityLabel: "Độ sắc nét tối đa",
-        safetyBadge: "Asset Vault",
-        safetyLabel: "Bảo mật tài sản"
-      },
-      quickActions: [
-        { title: "Image Enhance Studio (Làm nét & Cân màu)", text: "Chỉnh màu, tăng độ tương phản và độ nét ảnh private từ Asset Vault.", href: "/image/edit", primary: true },
-        { title: "Tách nền thông minh (Background Cleanup)", text: "Loại bỏ phông nền ảnh sạch sẽ, bảo toàn chi tiết biên cạnh.", href: "/image/background-cleanup" },
-        { title: "Resize & Crop đa tỉ lệ", text: "Thay đổi kích thước chuẩn cho các nền tảng mạng xã hội.", href: "/image/resize" },
-        { title: "Brand Overlay (Watermark & Logo)", text: "Chèn logo, watermark và nhãn thương hiệu lên ảnh.", href: "/image/brand-overlay" }
-      ],
-      workflowGroups: [
-        {
-          title: "Xử lý & Biên tập ảnh (Cục bộ trên Web)",
-          text: "Các công cụ xử lý ảnh deterministic trên Asset Vault đã sẵn sàng hoạt động.",
-          items: [
-            { title: "Image Enhance Studio", text: "Cân chỉnh màu sắc, độ tương phản và độ nét chuẩn xác.", href: "/image/edit", icon: ICONS.image, status: "ready" },
-            { title: "Tách nền thông minh", text: "Loại bỏ phông nền ảnh sạch sẽ, bảo toàn chi tiết biên cạnh.", href: "/image/background-cleanup", icon: ICONS.image, status: "ready" },
-            { title: "Resize & Crop", text: "Thay đổi kích thước chuẩn cho các nền tảng mạng xã hội.", href: "/image/resize", icon: ICONS.image, status: "ready" },
-            { title: "Brand Overlay", text: "Chèn logo, watermark và nhãn thương hiệu lên hình ảnh.", href: "/image/brand-overlay", icon: ICONS.image, status: "ready" },
-            { title: "Storyboard Grid", text: "Tạo lưới storyboard từ chuỗi ảnh phân cảnh.", href: "/image/storyboard-grid", icon: ICONS.image, status: "ready" },
-            { title: "Prompt Composer", text: "Bộ công cụ soạn thảo và tối ưu hóa câu lệnh tạo ảnh text.", href: "/image/prompt-composer", icon: ICONS.prompt, status: "ready" }
-          ]
-        },
-        {
-          title: "Sáng tạo & Tạo ảnh AI (Bot điều phối)",
-          text: "Quy trình tạo ảnh AI do Bot / Core Bridge kiểm soát.",
-          items: [
-            { title: "Image Studio", text: "Workspace quản lý dự án ảnh, artboard và concept nghệ thuật riêng tư.", href: "/image-studio", icon: ICONS.image, status: "ready" },
-            { title: "Tạo ảnh AI", text: "Cần Core Bridge / Bot estimate; browser không gọi provider AI trực tiếp.", href: "/image/create", icon: ICONS.image, status: "guarded" }
-          ]
-        }
-      ],
-      boundaryTitle: "Bảo mật tài sản Asset Vault",
-      boundaryText: "Mọi hình ảnh được xử lý trong Image Operations Hub đều liên kết chặt chẽ với Asset Vault của tài khoản bạn, đảm bảo quyền sở hữu riêng tư và không rò rỉ dữ liệu."
-    });
+    const t = (key) => uiText(`imageHub.${key}`, "");
+    const creationReady = featureConfirmExecutionReady(resolvePage("/image/create"), context);
+    const groups = [
+      { key: "create", items: [["create", "/image/create"], ["studio", "/image-studio"]] },
+      { key: "edit", items: [["edit", "/image/edit"], ["cleanup", "/image/background-cleanup"], ["resize", "/image/resize"], ["overlay", "/image/brand-overlay"]] },
+      { key: "prepare", items: [["storyboard", "/image/storyboard-grid"], ["prompt", "/image/prompt-composer"]] }
+    ];
+    return `<article class="portal-page portal-media-hub portal-image-suite-hub">
+      ${renderHero({ ...page, title: t("page.title"), description: t("page.description") }, context)}
+      <div class="portal-image-suite-groups">${groups.map((group) => `<section class="portal-card portal-card-pad portal-image-suite-group"><h2 class="portal-card-title">${safeText(t(`group.${group.key}`))}</h2><div class="portal-module-grid">${group.items.map(([key, href]) => `<a class="portal-module-card" href="${safeText(href)}"${key === "create" ? ` data-image-primary data-tool-state="${creationReady ? "ready" : "guarded"}"` : ""}><span class="portal-module-icon" aria-hidden="true">${portalIcon(key === "prompt" ? ICONS.prompt : ICONS.image)}</span><div class="portal-module-copy"><h3>${safeText(t(`tool.${key}.title`))}</h3><p>${safeText(t(`tool.${key}.description`))}</p><span class="portal-module-link">${safeText(t("open"))} <span aria-hidden="true">→</span></span></div></a>`).join("")}</div></section>`).join("")}</div>
+      <section class="portal-card portal-card-pad"><h2 class="portal-card-title">${safeText(t("boundary.title"))}</h2><p class="portal-card-subtitle">${safeText(t("boundary.description"))}</p></section>
+    </article>`;
   }
 
   function voiceUiText(key, fallback, params) {
@@ -30203,6 +30196,59 @@
     return `<div class="portal-voice-flow" data-voice-flow-state="${safeText(status)}"><div class="portal-state" data-state="${safeText(status)}"><div><h3>${safeText(heading)}</h3><p>${safeText(needsRefresh ? t("flow.quoteNeedsRefreshNote", "") : t(`flow.note.${status}`, t("flow.note.guarded", "")))}</p></div></div>${quote}${planning}${textActions}${feedback}${trackingMarkup}</div>`;
   }
 
+  function imageUiText(key, fallback, params) {
+    return uiText(`imageUi.${key}`, fallback, params);
+  }
+
+  function renderImageCreateFlowState(flow, route) {
+    const t = imageUiText;
+    if (!flow) return renderEmpty(t("output.empty", ""), t("output.waiting", ""), "○");
+    const validFeature = flow.feature === "image_create";
+    const statuses = ["draft", "ready", "awaiting_confirm", "queued", "processing", "completed", "failed", "failed_no_charge", "error", "cancelled", "refunded"];
+    const status = validFeature && statuses.includes(flow.status) ? flow.status : "guarded";
+    const data = validFeature && flow.data && typeof flow.data === "object" ? flow.data : {};
+    const payload = data.draft || data.estimate;
+    const values = payload && payload.available !== false && typeof payload === "object"
+      ? (payload.content && typeof payload.content === "object" ? payload.content : payload) : {};
+    const isQuote = Boolean(data.estimate && typeof data.estimate === "object");
+    const amount = validFeature ? voiceQuoteAmount(flow) : null;
+    const quote = isQuote ? `<section class="portal-image-create-quote" data-image-quote><h4>${safeText(t("flow.quote", ""))}</h4><dl><div><dt>${safeText(t("flow.price", ""))}</dt><dd data-image-sale-price>${amount === null ? "—" : safeText(`${amount} Xu`)}</dd></div></dl><p>${safeText(t(amount === null ? "flow.priceUnknown" : "flow.quoteNote", ""))}</p></section>` : "";
+    // Customer description/settings are displayed; provider costs, private
+    // URLs and arbitrary backend metadata never become product copy.
+    const fields = ["prompt", "tier", "format", "next_step"];
+    const rows = fields.filter((key) => Object.prototype.hasOwnProperty.call(values, key) && ["string", "number"].includes(typeof values[key]))
+      .map((key) => `<div><dt>${safeText(t(`flow.field.${key}`, ""))}</dt><dd>${safeText(String(values[key]))}</dd></div>`).join("");
+    const details = rows ? `<details class="portal-image-create-details"><summary>${safeText(t("flow.details", ""))}</summary><dl>${rows}</dl></details>` : "";
+    const field = validFeature ? featureDraftTarget(flow, route) : "";
+    const textActions = (text) => {
+      const content = canonicalDraftText(text);
+      return content && field ? `<div class="portal-canonical-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-canonical-draft" data-canonical-text="${safeText(content)}">${safeText(t("flow.copy", ""))}</button><button class="portal-button portal-button--primary" type="button" data-portal-action="apply-canonical-draft" data-canonical-text="${safeText(content)}" data-canonical-route="${safeText(route)}" data-canonical-field="${safeText(field)}">${safeText(t("flow.apply", ""))}</button></div>` : "";
+    };
+    const suggestions = Array.isArray(values.suggestions) ? values.suggestions.slice(0, 3).filter((item) => item && canonicalDraftText(item.prompt)) : [];
+    const suggestionMarkup = suggestions.length ? `<section class="portal-canonical-suggestions"><h4>${safeText(t("flow.suggestions", ""))}</h4><p>${safeText(t("flow.draftNote", ""))}</p><div class="portal-suggestion-grid">${suggestions.map((item, index) => `<article class="portal-suggestion-card"><strong>${safeText(item.name || t("flow.suggestion", "", { number: index + 1 }))}</strong><div class="portal-result-text">${safeText(canonicalDraftText(item.prompt))}</div>${textActions(item.prompt)}</article>`).join("")}</div></section>` : textActions(canonicalPreferredText(values));
+    const message = validFeature && typeof flow.message === "string" ? flow.message.trim() : "";
+    const feedback = message ? `<details class="portal-image-create-feedback"><summary>${safeText(t("flow.feedback", ""))}</summary><p>${safeText(message)}</p></details>` : "";
+    const tracking = validFeature && flow.phase === "confirm" ? safeFeatureTracking(flow) : null;
+    const trackingMarkup = validFeature && flow.phase === "confirm"
+      ? `<div class="portal-image-create-tracking"><p>${safeText(t(tracking ? "flow.trackingReady" : "flow.trackingPending", ""))}</p>${tracking ? `<dl><div><dt>${safeText(t("flow.jobId", ""))}</dt><dd><code>${safeText(tracking.id)}</code></dd></div></dl>` : ""}<a class="portal-button portal-button--quiet" href="${tracking ? `/jobs/${encodeURIComponent(tracking.id)}` : "/jobs"}">${safeText(t(tracking ? "flow.track" : "output.jobs", ""))}</a></div>` : "";
+    return `<div class="portal-image-create-flow" data-image-flow-state="${safeText(status)}"><div class="portal-state" data-state="${safeText(status)}"><div><h3>${safeText(t(`flow.state.${status}`, ""))}</h3></div></div>${quote}${details}${suggestionMarkup}${feedback}${trackingMarkup}</div>`;
+  }
+
+  function renderImageCreateWorkspace(page, context) {
+    const route = page.routePath || page.path;
+    const flow = context.featureFlows && context.featureFlows[route];
+    const t = imageUiText;
+    const botUrl = safeTelegramLink(context.telegramConnection && context.telegramConnection.bot_chat_url);
+    const command = FEATURE_BOT_HANDOFFS.image_create.command;
+    const companion = botUrl && !featureConfirmExecutionReady(page, context)
+      ? `<details class="portal-image-create-companion"><summary>${safeText(t("companion.title", ""))}</summary><p>${safeText(t("companion.note", ""))}</p><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="${safeText(botUrl)}" target="_blank" rel="noopener noreferrer">${safeText(t("companion.open", ""))}</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-bot-companion-command" data-copy-text="${safeText(command)}">${safeText(t("companion.copy", ""))}</button></div></details>` : "";
+    const report = `<section class="portal-card portal-card-pad portal-image-create-report"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("output.title", ""))}</h2></div></div>${renderImageCreateFlowState(flow, route)}</section>`;
+    const reportFirst = Boolean(flow && flow.feature === "image_create" && (flow.phase === "estimate" || flow.phase === "confirm"));
+    const oldTaskForm = Boolean(flow && flow.feature === "image_create" && flow.phase === "confirm" && FEATURE_TRACKING_JOB_STATES.has(String(flow.status || "").toLowerCase()));
+    const form = oldTaskForm ? `<details class="portal-card portal-card-pad portal-image-create-task-form" data-image-task-form><summary>${safeText(t("form.previous", ""))}</summary>${renderFormCard(page, context)}</details>` : renderFormCard(page, context);
+    return `<article class="portal-page portal-image-create">${renderHero(page, context)}${reportFirst ? report : ""}${form}${reportFirst ? "" : report}${companion}</article>`;
+  }
+
   function renderFeatureBotHandoff(page, context, flow) {
     // Planning may be available before an execution adapter is approved. The
     // default next step is Web authoring, not Telegram. A Bot companion stays
@@ -30250,73 +30296,9 @@
     const family = String((page && page.featureFamily) || "").toLowerCase();
 
     if (path.startsWith("/image") || family === "image") {
-      return `<div class="portal-interactive-feature-workbench" style="margin-bottom: 24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(236,72,153,0.15), rgba(157,23,77,0.2)); border:1px solid rgba(236,72,153,0.3); border-radius:14px; padding:18px 24px; margin-bottom:18px;">
-          <div>
-            <span class="portal-badge" data-status="ready">🟢 Midjourney & Flux AI Engine Sẵn Sàng</span>
-            <h2 style="margin:6px 0 4px; font-size:20px; color:#f8fafc;">🎨 AI Image Studio — Tạo & Chỉnh Sửa Ảnh Nghệ Thuật 4K</h2>
-            <p style="margin:0; font-size:13px; color:#94a3b8;">Biến ý tưởng thành hình ảnh nghệ thuật, chân dung AI người mẫu, thumbnail YouTube, banner bán hàng siêu nét.</p>
-          </div>
-          <div>
-            <a href="/studio" class="portal-button portal-button--primary" style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #ec4899, #be185d); color:#fff; font-weight:700; border-radius:10px; text-decoration:none; padding:10px 18px; min-height:42px;">
-              🎬 Mở Studio Pro
-            </a>
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap:18px;">
-          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
-            <h3 style="margin-top:0; font-size:15px; color:#ec4899;">1. Mô Tả Ý Tưởng & Phong Cách</h3>
-            <div class="portal-fields" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
-              <label class="portal-field">
-                <span>Prompt / Mô tả chi tiết bức ảnh</span>
-                <textarea class="portal-input" rows="3" placeholder="Mô tả bức ảnh bạn muốn tạo...">Chân dung nữ doanh nhân Việt Nam hiện đại, phong cách tự tin, ánh sáng studio điện ảnh, trang phục công sở cao cấp, độ phân giải 8k photorealistic.</textarea>
-              </label>
-              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <label class="portal-field">
-                  <span>Phong cách nghệ thuật</span>
-                  <select class="portal-input">
-                    <option selected>📸 Siêu Thực (Photorealistic 8K)</option>
-                    <option>🎨 3D Pixar / Animation</option>
-                    <option>🌸 Anime Nhật Bản Cao Cấp</option>
-                    <option>🌆 Cyberpunk Neon Cinematic</option>
-                  </select>
-                </label>
-                <label class="portal-field">
-                  <span>Tỉ lệ khung hình</span>
-                  <select class="portal-input">
-                    <option selected>1:1 (Vuông Social Post)</option>
-                    <option>9:16 (Dọc TikTok / Reels)</option>
-                    <option>16:9 (Ngang YouTube Thumbnail)</option>
-                    <option>4:5 (Instagram Portrait)</option>
-                  </select>
-                </label>
-              </div>
-            </div>
-            <div style="margin-top:14px;">
-              <button type="button" class="portal-button portal-button--primary" style="width:100%; min-height:44px; font-weight:700; background:linear-gradient(135deg, #ec4899, #be185d); color:#fff; border:none; border-radius:10px; cursor:pointer;" onclick="alert('Đã tạo ảnh AI thành công! Ảnh 4K đã sẵn sàng.')">
-                🎨 TẠO ẢNH NGHỆ THUẬT AI (-5 Xu)
-              </button>
-            </div>
-          </div>
-
-          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-              <div>
-                <h3 style="margin:0; font-size:15px; color:#f472b6;">2. Tác Phẩm AI Sẵn Sàng</h3>
-                <small style="color:#94a3b8;">Độ phân giải: 4096 x 4096 px · 300 DPI</small>
-              </div>
-              <button type="button" class="portal-button portal-button--primary" style="font-size:11px; padding:4px 12px; border-radius:6px; background:#ec4899; color:#fff;" onclick="alert('Đang tải ảnh gốc chất lượng cao 4K.')">⬇️ Tải Ảnh 4K</button>
-            </div>
-            <div style="position:relative; width:100%; height:200px; background:#000; border-radius:10px; overflow:hidden; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1);">
-              <img src="/static/assets/toanaas_banner_cinematic.jpg" style="width:100%; height:100%; object-fit:cover;" alt="AI Generated Image">
-              <div style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.65); padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; color:#10b981;">
-                🟢 Render RTX 4090 · 1.4s
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>`;
+      // Image creation already has its authoritative form and receipt in the
+      // workspace. A decorative demo must not invent availability or output.
+      return "";
     }
 
     if (path.startsWith("/video") || family === "video") {
@@ -30610,6 +30592,7 @@
 
   function renderWorkspace(page, context) {
     const route = page.routePath || page.path;
+    if (route === "/image/create" || route === "/image/new") return renderImageCreateWorkspace(page, context);
     const videoTask = route === "/video/create" || route === "/video/multiscene";
     const voiceTask = ["/voice/tts", "/voice/saved", "/voice/clone", "/voice/outputs"].includes(route);
     const subtitleStudioCompanion = renderSubtitleStudioCompanionLink(page);

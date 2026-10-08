@@ -1,5 +1,36 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Checkpoint giao diện Image — ứng viên cục bộ 08/10/2026
+
+BASE `dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c` là merge SubDub PR #619;
+checkpoint SubDub đã đóng/khóa mã, CI đạt, chưa triển khai. Phần Image đang
+trên nhánh `fix/image-ui-truth-locale-20261008`, chưa push hoặc triển khai.
+
+`/image` và `/tools/image` có 8 đích duy nhất, tạo ảnh đứng đầu. `/image/create`
+và alias `/image/new` dùng biểu mẫu thật `prompt/tier/format`, nội dung cố định
+VI/EN/ZH. Báo giá đứng trước nút xác nhận; sau xác nhận, báo cáo đứng trước
+biểu mẫu cũ có thể mở lại. Chỉ hiện giá bán công khai đã có và ID tracking
+khớp; không giả ảnh, download, thành công, giá -5 Xu hoặc chất lượng 4K.
+
+Đã đo cục bộ: renderer 163/163; tạo ảnh 48 trạng thái/48 ảnh; hub 12 cấu hình,
+24 trạng thái/24 ảnh. Chữ thường ≥5.944:1, chữ lớn ≥8.837:1, viền input
+≥5.522:1; target nhỏ nhất 45px, summary 48px; tràn ngang 0. Comparator chứng
+minh 10 file bảo vệ và phần CSS/catalogue/Portal ngoài Image giữ nguyên.
+Python giữ đúng 18 đạt/1 lỗi nền do test lấy nhầm media-query 700px cuối file.
+
+Bẫy CSS đã xác minh: `:is(.portal-button, summary)` có specificity class,
+thắng rule summary 48px cũ và giữ 44px; entry scale có thể làm vùng chạm
+nhỏ hơn chuẩn. Đã tăng specificity riêng Image, không thay theme toàn cục.
+QA đo sau khi article cũ rời DOM và animation main ổn định, giữ ngưỡng 44px.
+
+Motion điều hướng toàn site vẫn ghi 12 lỗi ViewTransition và còn mở. Gate
+browser chính thức đạt trên code SHA `e91cfc42d9c574ce6a8d01bbc1e6bfdabb0478fe`:
+18 trang/ảnh, 6/6 hub, 4/4 tiện ích, không lỗi JS/request, không nháy theme,
+bàn phím 6/6. Web-only provenance refresh/verify cũng đạt; push/PR/CI/release
+còn mở. Bằng chứng: `../../evidence/IMAGE-I03-VERIFY-20261008.md`.
+Đây là checkpoint trình bày cục bộ; các số liệu production phía dưới có ngày
+riêng, không chứng minh runtime đang dùng candidate Image.
+
 ## Checkpoint giao diện SubDub — ứng viên 08/10/2026
 
 Mã giao diện đã kiểm thử: `e4070e3bf6710be1e5388c12e20800aae0ee5ea3`, trên
