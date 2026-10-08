@@ -201,6 +201,19 @@ from copyfast_voice_tts_job_bridge import (
     voice_tts_job_to_native_compat,
     validate_voice_tts_input,
 )
+from copyfast_music_job_bridge import (
+    CANONICAL_PRODUCT_KEY as MUSIC_PRODUCT_KEY,
+    SUPPORTED_CANONICAL_JOB_ADAPTERS as MUSIC_ADAPTER_KEYS,
+    create_or_replay_music_job,
+    dispatch_music_job_to_canonical_runtime,
+    get_music_job,
+    is_music_job_other_account,
+    list_music_jobs,
+    confirm_music_job,
+    reconcile_music_job_status,
+    music_job_to_native_compat,
+    validate_music_input,
+)
 from copyfast_product_video_dispatcher import (
     claim_product_video_job,
     complete_product_video_job,
@@ -226,7 +239,10 @@ CANONICAL_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
 # no Web feature can create a durable runtime job, regardless of environment
 # configuration.  This is the intended production baseline until each feature's
 # runtime bridge is independently verified.
-WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES: frozenset[str] = frozenset({"subdub", "video_ai_prompt", "voice_tts"})
+WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES: frozenset[str] = frozenset({
+    "subdub", "video_ai_prompt", "voice_tts",
+    "music", "music_background", "music_song",
+})
 CONTIGUOUS_PAGE_RANGE_PATTERN = re.compile(r"^\d+(?:-\d+)?$")
 TICKET_SECRET_ASSIGNMENT_PATTERN = re.compile(
     r"\b(?:api[ _-]?(?:key|token)|access[ _-]?token|refresh[ _-]?token|"
@@ -500,6 +516,7 @@ FEATURE_TIER_REQUIRED_ON_CONFIRM = frozenset({
     "image_create", "image_edit", "image_upscale", "image_transform", "image_remove_background",
     "video_single", "video_product", "video_trend", "video_text_to_video", "video_quick",
     "video_image_to_video", "video_multiscene", "video_long",
+    "music", "music_background", "music_song",
 })
 FEATURE_VIDEO_SCENE_REQUIRED_ON_CONFIRM = frozenset({
     "video_single", "video_product", "video_trend", "video_text_to_video", "video_quick",
@@ -905,8 +922,8 @@ def _web_feature_job_adapter_keys() -> frozenset[str]:
     return frozenset(
         feature
         for feature in requested
-        if (feature in FEATURE_EXECUTION_CANDIDATE_KEYS or feature in SUBDUB_ADAPTER_KEYS or feature in VOICE_TTS_ADAPTER_KEYS)
-        and (feature in FEATURE_BY_KEY or feature in SUBDUB_ADAPTER_KEYS or feature in VOICE_TTS_ADAPTER_KEYS)
+        if (feature in FEATURE_EXECUTION_CANDIDATE_KEYS or feature in SUBDUB_ADAPTER_KEYS or feature in VOICE_TTS_ADAPTER_KEYS or feature in MUSIC_ADAPTER_KEYS)
+        and (feature in FEATURE_BY_KEY or feature in SUBDUB_ADAPTER_KEYS or feature in VOICE_TTS_ADAPTER_KEYS or feature in MUSIC_ADAPTER_KEYS)
     )
 
 
@@ -940,6 +957,8 @@ def _web_feature_execution_available(feature: str | None = None) -> bool:
         feature_key in SUBDUB_ADAPTER_KEYS and "subdub" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
     ) or (
         feature_key in VOICE_TTS_ADAPTER_KEYS and "voice_tts" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+    ) or (
+        feature_key in MUSIC_ADAPTER_KEYS and ("music" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES or feature_key in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES)
     )
     return feature_key in adapter_keys and is_active
 
@@ -955,6 +974,7 @@ def _web_feature_runtime_active(feature: str) -> bool:
         clean in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
         or (clean in SUBDUB_ADAPTER_KEYS and "subdub" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES)
         or (clean in VOICE_TTS_ADAPTER_KEYS and "voice_tts" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES)
+        or (clean in MUSIC_ADAPTER_KEYS and ("music" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES or clean in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES))
     )
     return _web_feature_execution_available(feature) and is_active
 
@@ -6615,6 +6635,50 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
                     status_name="guarded",
                     error_code="SUBDUB_JOB_VALIDATION_FAILED",
                 )
+        if feature in MUSIC_ADAPTER_KEYS:
+            account_id = str(account.get("id") or "")
+            try:
+                job_result = create_or_replay_music_job(
+                    feature_key=feature,
+                    account_id=account_id,
+                    payload=values,
+                    idempotency_key=key,
+                )
+                if not job_result.get("idempotent_replay"):
+                    dispatched = await dispatch_music_job_to_canonical_runtime(
+                        job_id=job_result["id"],
+                        account=account,
+                        request=request,
+                    )
+                    if dispatched:
+                        job_result = dispatched
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=True,
+                )
+                return envelope(
+                    True,
+                    "Đã tạo tác vụ Âm nhạc AI thành công, chờ runtime xử lý.",
+                    data=job_result,
+                    status_name="queued",
+                )
+            except HTTPException as exc:
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=False,
+                )
+                if exc.status_code == 409:
+                    raise exc
+                detail_msg = exc.detail if isinstance(exc.detail, str) else str((exc.detail.get("message") if isinstance(exc.detail, dict) else "") or exc.detail)
+                err_code = (exc.detail.get("error_code") if isinstance(exc.detail, dict) else None) or "MUSIC_JOB_VALIDATION_FAILED"
+                return envelope(
+                    False,
+                    detail_msg,
+                    status_name="guarded",
+                    error_code=err_code,
+                )
         scope = f"feature:{account['id']}:{feature}:confirm"
         result = await _run_idempotent(
             scope,
@@ -7487,6 +7551,216 @@ async def reconcile_and_settle_subtitle_asr_job_route(job_id: str, request: Requ
 @router.post("/features/asr/jobs/{job_id}/reconcile")
 async def reconcile_and_settle_asr_job_route(job_id: str, request: Request, account: dict = Depends(require_csrf)):
     return await reconcile_and_settle_subdub_job_route(job_id, request, account)
+
+
+# ─── MUSIC CANONICAL JOB ROUTES ──────────────────────────────────────────────
+
+@router.post("/features/music/jobs")
+async def create_music_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if not _web_feature_runtime_active("music"):
+        return envelope(False, "Runtime execution chưa được kích hoạt cho tính năng này.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    request_id = str(payload.input.get("request_id") or "")
+    feature = str(payload.input.get("feature_key") or "music").strip()
+    job = create_or_replay_music_job(
+        feature_key=feature,
+        account_id=account_id,
+        payload=dict(payload.input),
+        request_id=request_id,
+        idempotency_key=key,
+    )
+    is_replay = bool(job.get("idempotent_replay"))
+    if not is_replay or job.get("runtime_dispatch_status") != "dispatched" or not str(job.get("runtime_job_id") or "").strip():
+        dispatched = await dispatch_music_job_to_canonical_runtime(
+            job_id=job["id"],
+            account=account,
+            request=request,
+        )
+        if dispatched:
+            job = dispatched
+            if is_replay:
+                job["idempotent_replay"] = True
+    return envelope(
+        True,
+        "Đã tạo tác vụ Âm nhạc AI thành công, chờ runtime xử lý.",
+        data=job,
+        status_name=job.get("status", "prepared"),
+    )
+
+
+@router.get("/features/music/jobs")
+async def list_music_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = list_music_jobs(account_id, limit=100)
+    return envelope(
+        True,
+        "Đã tải danh sách job Âm nhạc AI của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/music/jobs/{job_id}")
+async def get_music_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    if is_music_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    job = await reconcile_music_job_status(job_id, account=account, request=request)
+    if job is not None:
+        return envelope(
+            True,
+            "Đã tải chi tiết job Âm nhạc AI.",
+            data=job,
+            status_name="read_only",
+        )
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Âm nhạc AI của tài khoản.")
+
+
+@router.post("/features/music/jobs/{job_id}/confirm")
+async def confirm_music_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    if is_music_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    job = await confirm_music_job(job_id, account=account, request=request)
+    return envelope(
+        True,
+        "Đã xác nhận và thực thi tạo âm thanh AI Music thành công.",
+        data=job,
+        status_name=job.get("status", "completed"),
+    )
+
+
+@router.post("/features/music/jobs/{job_id}/reconcile")
+async def reconcile_music_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    if is_music_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    job = await reconcile_music_job_status(job_id, account=account, request=request)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy job Âm nhạc AI của tài khoản.")
+    return envelope(
+        True,
+        "Reconcile Âm nhạc AI job thành công.",
+        data=job,
+        status_name=job.get("status", "completed"),
+    )
+
+
+@router.get("/features/music/jobs/{job_id}/artifact")
+async def get_music_job_artifact_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    from fastapi.responses import Response
+    from copyfast_bridge import bridge_configured, CoreBridgeClient
+    account_id = str(account.get("id") or "")
+    canonical_user_id = str(account.get("canonical_user_id") or "").strip()
+
+    if is_music_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+
+    job = get_music_job(account_id, job_id)
+    if not job or job.get("status") != "completed":
+        raise HTTPException(status_code=404, detail="Không tìm thấy tệp âm thanh hoàn tất")
+
+    if not bridge_configured() or not canonical_user_id:
+        raise HTTPException(status_code=503, detail="Bridge chưa được cấu hình hoặc tài khoản chưa liên kết Telegram")
+
+    bridge = CoreBridgeClient()
+    rt_id = str(job.get("runtime_job_id") or job_id).strip()
+    headers = bridge._headers("GET", f"/internal/v1/web-music/jobs/{rt_id}/artifact", b"", request_id=f"ART-{job_id}", actor_id=canonical_user_id)
+    url = f"{bridge.base_url}/internal/v1/web-music/jobs/{rt_id}/artifact"
+    import httpx
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.get(url, headers=headers)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=resp.status_code, detail="Không thể tải tệp âm thanh từ Bot Core")
+        return Response(content=resp.content, media_type="audio/mpeg", headers={"Content-Disposition": f'attachment; filename="music_{job_id}.mp3"'})
+
+
+# Forwarders for music_background:
+@router.post("/features/music_background/jobs")
+async def create_music_background_job_route(payload: FeatureRequest, request: Request, account: dict = Depends(require_csrf)):
+    inp = dict(payload.input)
+    inp.setdefault("feature_key", "music_background")
+    inp.setdefault("product_kind", "background")
+    payload.input = inp
+    return await create_music_job_route(payload, request, account)
+
+@router.get("/features/music_background/jobs")
+async def list_music_background_jobs_route(request: Request, account: dict = Depends(require_account)):
+    account_id = str(account.get("id") or "")
+    jobs = list_music_jobs(account_id, feature_key="music_background", limit=100)
+    return envelope(True, "Đã tải danh sách job Nhạc nền AI của tài khoản.", data={"items": jobs}, status_name="read_only")
+
+@router.get("/features/music_background/jobs/{job_id}")
+async def get_music_background_job_route(job_id: str, request: Request, account: dict = Depends(require_account)):
+    return await get_music_job_route(job_id, request, account)
+
+@router.post("/features/music_background/jobs/{job_id}/confirm")
+async def confirm_music_background_job_route(job_id: str, request: Request, account: dict = Depends(require_csrf)):
+    return await confirm_music_job_route(job_id, request, account)
+
+@router.post("/features/music_background/jobs/{job_id}/reconcile")
+async def reconcile_music_background_job_route(job_id: str, request: Request, account: dict = Depends(require_csrf)):
+    return await reconcile_music_job_route(job_id, request, account)
+
+@router.get("/features/music_background/jobs/{job_id}/artifact")
+async def get_music_background_job_artifact_route(job_id: str, request: Request, account: dict = Depends(require_account)):
+    return await get_music_job_artifact_route(job_id, request, account)
+
+
+# Forwarders for music_song:
+@router.post("/features/music_song/jobs")
+async def create_music_song_job_route(payload: FeatureRequest, request: Request, account: dict = Depends(require_csrf)):
+    inp = dict(payload.input)
+    inp.setdefault("feature_key", "music_song")
+    inp.setdefault("product_kind", "song")
+    payload.input = inp
+    return await create_music_job_route(payload, request, account)
+
+@router.get("/features/music_song/jobs")
+async def list_music_song_jobs_route(request: Request, account: dict = Depends(require_account)):
+    account_id = str(account.get("id") or "")
+    jobs = list_music_jobs(account_id, feature_key="music_song", limit=100)
+    return envelope(True, "Đã tải danh sách job Bài hát AI của tài khoản.", data={"items": jobs}, status_name="read_only")
+
+@router.get("/features/music_song/jobs/{job_id}")
+async def get_music_song_job_route(job_id: str, request: Request, account: dict = Depends(require_account)):
+    return await get_music_job_route(job_id, request, account)
+
+@router.post("/features/music_song/jobs/{job_id}/confirm")
+async def confirm_music_song_job_route(job_id: str, request: Request, account: dict = Depends(require_csrf)):
+    return await confirm_music_job_route(job_id, request, account)
+
+@router.post("/features/music_song/jobs/{job_id}/reconcile")
+async def reconcile_music_song_job_route(job_id: str, request: Request, account: dict = Depends(require_csrf)):
+    return await reconcile_music_job_route(job_id, request, account)
+
+@router.get("/features/music_song/jobs/{job_id}/artifact")
+async def get_music_song_job_artifact_route(job_id: str, request: Request, account: dict = Depends(require_account)):
+    return await get_music_job_artifact_route(job_id, request, account)
 
 
 @router.get("/admin/summary")
