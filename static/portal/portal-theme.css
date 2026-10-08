@@ -21651,6 +21651,7 @@ html[data-portal-theme="dark"] .portal-voice-studio form .portal-button--primary
 .portal-page.portal-music-hub .portal-eyebrow { color: var(--portal-context); }
 .portal-music-hub .portal-badge[data-status="guarded"] { color: var(--portal-ink); }
 .portal-music-hub .portal-notice--info p { color: var(--portal-muted); }
+.portal-music-hub .portal-notice--info strong { color: var(--portal-ink); }
 html[data-portal-theme="dark"] .portal-page.portal-music-hub .portal-eyebrow { color: var(--portal-teal-dark-border-strong); }
 html[data-portal-theme="dark"] .portal-music-hub .portal-module-card p,
 html[data-portal-theme="dark"] .portal-music-hub .portal-notice--info p { color: var(--portal-teal-dark-ink); }

@@ -96,6 +96,12 @@ Required behavior:
 
 ### Release review gates
 
+Fresh exact-candidate QA `b85b39c` found the file-rights notice heading at
+1.145:1 in light mode; earlier sampling omitted that strong element.
+Correct only the Music notice heading with the existing ink token and rerun
+the 12-case matrix. This is new RED evidence for Music, not a reason to reopen
+the closed Voice/Video blocks.
+
 - [ ] Verify fresh candidate on the Voice release BASE and preserve SubDub
   worktree changes outside this commit.
 - [x] Identify the Music primary card and align Music-only CI selectors;

@@ -94,6 +94,7 @@ test('Music text and status colors stay route-scoped and readable in both themes
   assert.match(theme, /html\[data-portal-theme="dark"\] \.portal-page\.portal-music-hub \.portal-eyebrow\s*\{[^}]*color:\s*var\(--portal-teal-dark-border-strong\)/s);
   assert.match(theme, /\.portal-music-hub \.portal-badge\[data-status="guarded"\]\s*\{[^}]*color:\s*var\(--portal-ink\)/s);
   assert.match(theme, /\.portal-music-hub \.portal-notice--info p\s*\{[^}]*color:\s*var\(--portal-muted\)/s);
+  assert.match(theme, /\.portal-music-hub \.portal-notice--info strong\s*\{[^}]*color:\s*var\(--portal-ink\)/s);
   assert.match(theme, /html\[data-portal-theme="dark"\] \.portal-music-hub \.portal-notice--info p\s*\{[^}]*color:\s*var\(--portal-teal-dark-ink\)/s);
   assert.match(theme, /html\[data-portal-theme="dark"\]\s+\.portal-music-hub \.portal-module-card p,\s*html\[data-portal-theme="dark"\]\s+\.portal-music-hub \.portal-notice--info p\s*\{[^}]*color:\s*var\(--portal-teal-dark-ink\)/s);
 });
