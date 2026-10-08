@@ -127,6 +127,12 @@ the Owner's vertical-list requirement. Add one Music-only grid override and
 verify each group's card geometry in every viewport. No layout PASS/closure
 can be claimed for the previous horizontal screenshots.
 
+Pre-push foundation contracts also rely on the existing final auth media
+block as an EOF boundary. Move only the new Music rules before that block;
+preserve all existing auth/Voice/Video declarations and their ordering.
+Refresh provenance after the last master-checklist update because that
+Markdown file is eligible audit source; do not reuse a pre-update fingerprint.
+
 - [ ] Verify fresh candidate on the Voice release BASE and preserve SubDub
   worktree changes outside this commit.
 - [x] Identify the Music primary card and align Music-only CI selectors;
