@@ -1,5 +1,16 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Checkpoint giao diện Music — ứng viên 08/10/2026
+
+BASE là main Voice `e405cbee28f0687f528eab7d66a71ef1623125f4`.
+Hub `/music` giữ đúng 6 điểm đến hiện có: 3 lối sáng tác AI đang khóa đặt
+trước, sau đó là công cụ tệp âm thanh và 2 thư viện. Mỗi điểm đến chỉ có một
+thẻ, dùng chữ VI/EN/ZH; bỏ số liệu “Stereo 320k” và tuyên bố bản quyền/chất
+lượng không có nguồn. Thẻ đầu dẫn tới `/music/create` để xem điều kiện, không
+tạo nhạc hay mở quyền xử lý. Các action/API/engine/giá/ví giữ nguyên.
+Voice PR #617 và checkpoint Video PR #616 đã đóng/khóa mã sản phẩm; Music
+không sửa các block đó. Music chỉ được ghi release/live sau cổng riêng.
+
 ## Checkpoint giao diện Voice — 2026-10-08
 
 Remote main đã đọc lại ở `8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952`

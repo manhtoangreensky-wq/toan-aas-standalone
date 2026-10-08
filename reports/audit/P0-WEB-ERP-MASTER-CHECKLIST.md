@@ -2,6 +2,9 @@
 
 ## VIDEO UI CHECKPOINT — 2026-10-07
 
+**UI RELEASE:** `CLOSED_LOCKED` — giữ nguyên ba màn sản phẩm đã nghiệm thu.
+Video ngoài ba màn này và motion toàn site vẫn mở bên dưới.
+
 Owner chốt: merge checkpoint Video đang làm, sau đó ưu tiên Voice → Music →
 SubDub → các tính năng khác, rồi quay lại Video còn lại sau cùng. Checkpoint
 đã squash-merge vào standalone main tại `8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952`.
@@ -30,7 +33,11 @@ SubDub → các tính năng khác, rồi quay lại Video còn lại sau cùng. 
 
 ## VOICE UI RELEASE — 2026-10-08
 
-**SPEC_ID:** `WEBAPP-VOICE-UI-CLOSEOUT-20261007` · **STATUS:** `LOCAL_QA_PASS_RELEASE_PENDING`.
+**SPEC_ID:** `WEBAPP-VOICE-UI-CLOSEOUT-20261007` · **STATUS:** `DEPLOYED_SOURCE_VERIFIED_AUTHENTICATED_LIVE_OPEN`.
+
+**UI SOURCE/RELEASE:** `CLOSED_LOCKED`; đã ghi trên đầu PR #617.
+Không sửa lại renderer/khóa dịch/CSS sản phẩm Voice trong các checkpoint sau.
+Gate kiểm tra có đăng nhập là một mục chỉ-đọc còn mở riêng.
 
 - [x] Voice hub/forms/inventory/Studio/detail/Composer/flow-state presentation
   checkpoints reviewed; six renderer suites 110/110 pass.
@@ -40,10 +47,68 @@ SubDub → các tính năng khác, rồi quay lại Video còn lại sau cùng. 
 - [x] Update operating/source-comparison docs and VUI-01..04 case source before
   push. Existing labels and issue templates were read; Projects lacks
   `read:project`, so no automatic scope refresh or Project-write claim.
-- [ ] Stage only Voice hunks; verify exact commit tree with Web quality gates.
-- [ ] One Voice PR → CI → merge → deploy → runtime/browser readback. Music and
-  SubDub worktree changes remain separate and preserved for their later PRs.
+- [x] Stage only Voice hunks and publish candidate `6ef97e1` as draft
+  [PR #617](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/617).
+  Local official browser gate: 18 pages, 6/6 primary keyboard checks, 4 tools;
+  runtime assertions 26/26. Provenance gate passes on exact release HEAD.
+- [x] Ubuntu Web CI run `37724197462` passed: 389 Web contracts, 26 runtime
+  assertions and 18 browser screenshots; 6/6 primary keyboard checks.
+  PR #617 squash-merged at `e405cbee28f0687f528eab7d66a71ef1623125f4`;
+  merge tree matches tested candidate exactly. Windows suite completed
+  387 passed/2 failed before case metadata was corrected (target retest now
+  passed); the unchanged POSIX assertion passed in Ubuntu CI.
+- [x] Main CI `37724519640` SUCCESS; deploy `37724809429` SUCCESS; runtime
+  SHA `e405cbee28f0687f528eab7d66a71ef1623125f4`; tracked diff 0 and Web/nginx
+  active. Three production assets match immutable Git blobs exactly.
+- [x] Anonymous production entry at 1440×900/375×900 redirects to login with
+  visible auth form; no overflow, page error or POST. Evidence:
+  `../../qa/20261007-video-uiux/voice-production-e405cbe/readback.json`.
+- [ ] Authenticated production Voice presentation remains open; QA logged-in
+  results do not replace this gate. No claim of real audio, job or delivery.
+- [x] Voice code release closed; Music/SubDub changes remain separate.
 - [ ] Shared shell locale, floating controls and whole-site motion remain open.
+
+## MUSIC HUB UI — 2026-10-08
+
+**SPEC_ID:** `MUSIC-HUB-UI-CLOSEOUT-20261008` · **STATUS:** Music UI đã được
+kiểm chứng cục bộ; chưa commit/push/merge/deploy. SubDub cũng đã qua QA cục bộ.
+Thứ tự tiếp: Music → SubDub → các tính năng khác → quay
+lại phần Video còn lại → motion toàn site.
+
+- [ ] Close Music release on `fix/music-ui-closeout-20261008`, BASE
+  `e405cbee28f0687f528eab7d66a71ef1623125f4`; exact-candidate renderer/browser/
+  Web CI, one PR and separate deploy/source readback.
+- [ ] Music CI primary-link selection must follow its real first creation card;
+  preserve every Voice selector and all fail-closed focus/visibility assertions.
+
+- [x] Đối chiếu ảnh và ma trận nền `/music`: 12/12 locale × sáng/tối ×
+  1440×900/375×812; chưa thấy tràn ngang hoặc lỗi runtime của route.
+- [x] Ghi defect đã xác nhận: lẫn ngôn ngữ, số liệu/chất lượng/bản quyền không
+  có nguồn, lựa chọn sáng tác nằm sâu, nhóm lối tắt lặp lại danh mục.
+- [x] Bản địa hóa toàn bộ chữ cố định của trang Music VI/EN/ZH; không để Anh–Việt trộn trong
+  cùng giao diện.
+- [x] Đưa ba lối sáng tác hiện có lên trước, giữ trạng thái chưa khả dụng đúng
+  sự thật; thư viện/tệp âm thanh đang dùng được đặt sau.
+- [x] Bỏ thẻ trùng và mọi tuyên bố “Stereo 320k”, “Royalty-Free”, chuẩn phòng
+  thu hoặc bản quyền thương mại chưa có căn cứ; chỉ giữ số đếm đích đến duy
+  nhất nếu tính từ route thực.
+- [x] Rà lại màn hình 375×812 và 1440×900 ở hai giao diện sáng/tối; màu xanh–teal,
+  12/12 trường hợp, không tràn ngang/lỗi route, sáu đường dẫn đúng; tương phản
+  chữ tối thiểu 4.635:1 sáng / 4.812:1 tối.
+- [x] Không gửi form sáng tác, không tạo nhạc/âm thanh, không gọi provider,
+  không sửa route/engine/ví; QA chỉ kiểm tra phần trình bày.
+- [ ] Sửa locale dùng chung: ảnh EN/ZH vẫn thấy tiếng Việt ở thanh điều hướng/
+  thanh công cụ; đây là lỗi shared shell, chưa nằm trong Music slice.
+- [ ] Rà vị trí nút nổi trợ lý/cài ứng dụng và cảnh báo ViewTransition trong
+  checkpoint shared shell/motion; không tự vá bằng CSS cục bộ của Music.
+- [ ] Ghi nhận QA nền: 23 Python contract đạt; một bài cũ
+  `test_library_routes_do_not_fall_back_to_generic_assets_or_audio_execution`
+  lỗi vì đòi nhánh `/assets` legacy. `integration.js` và file test trùng hệt
+  `origin/main`, nên không tính là hồi quy; chưa sửa test ngoài phạm vi.
+- Bằng chứng ảnh/JSON: `../../qa/20261007-video-uiux/music-hub-ui-closeout-20261008/`.
+- Spec: `docs/superpowers/specs/2026-10-08-music-hub-ui-closeout.md`.
+- Baseline: `../../qa/20261007-video-uiux/music-hub-audit-20261008/` (12/12).
+- `PROVIDER_CALLS=0 WALLET_MUTATIONS=0 PRODUCTION_DATA_MUTATIONS=0`.
 
 ---
 

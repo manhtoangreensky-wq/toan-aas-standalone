@@ -1,5 +1,15 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Đối chiếu Music — ứng viên 08/10/2026
+
+- Cũ: ba lối tắt lặp lại danh mục, số liệu/chất lượng/bản quyền chưa có nguồn.
+  Mới: 6 đường dẫn duy nhất, nhóm sáng tác trước/thư viện sau; bỏ các lời hứa đó.
+- Cũ: Anh–Việt trộn trong phần chữ cố định. Mới: catalogue Music VI/EN/ZH
+  theo locale; trạng thái chưa khả dụng rõ và không có trình phát/nhạc mẫu.
+- Bằng chứng nguồn: `tests/music-hub-presentation.test.mjs` và spec
+  `2026-10-08-music-hub-ui-closeout.md`. Đây là UI hub, không khẳng định ba
+  tính năng sinh nhạc đã hoạt động. Shared-shell locale/motion vẫn mở riêng.
+
 ## Đối chiếu checkpoint Voice — 2026-10-08
 
 | Hiện trạng nguồn trước sửa | Mã ứng viên hiện tại | Bằng chứng |

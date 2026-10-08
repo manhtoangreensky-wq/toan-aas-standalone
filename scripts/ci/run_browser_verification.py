@@ -669,7 +669,7 @@ async def run_browser_verification(
                                 "/tools/video": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
                                 "/tools/image": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
                                 "/voice": [".portal-voice-hub a[data-voice-primary][href='/voice/tts']"],
-                                "/music": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/music": [".portal-music-hub a[data-music-primary][href='/music/create']"],
                                 "/subdub": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
                                 "/tools/free": [
                                     "button[data-free-tool-action='clean-subtitle']",
@@ -772,7 +772,7 @@ async def run_browser_verification(
                                 "/tools/video": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
                                 "/tools/image": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
                                 "/voice": [".portal-voice-hub a[data-voice-primary][href='/voice/tts']"],
-                                "/music": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
+                                "/music": [".portal-music-hub a[data-music-primary][href='/music/create']"],
                                 "/subdub": [".portal-document-board-action--primary", "a.portal-document-board-action--primary", "button.portal-button--primary", "a.portal-button--primary"],
                                 "/tools/free": [
                                     "button[data-free-tool-action='clean-subtitle']",
@@ -1038,14 +1038,14 @@ async def run_browser_verification(
                         if (txt.includes('Hoàn thành') || txt.includes('Đã sẵn sàng tải')) fakeSuccess++;
                     });
 
-                    const primaryAction = document.querySelector('.portal-document-board-action--primary, button.portal-button--primary, a.portal-button--primary');
+                    const primaryAction = document.querySelector(".portal-music-hub a[data-music-primary][href='/music/create']");
                     const primaryHref = primaryAction ? primaryAction.getAttribute('href') : '';
 
                     return {
                         hasAudioAssets, hasLibrary, hasSfx,
                         guardedCount: guardedCards.length,
                         fakeSuccess,
-                        primaryMatches: primaryHref === '/audio/assets'
+                        primaryMatches: primaryHref === '/music/create'
                     };
                 })()""",
                 "returnByValue": True,
@@ -1343,6 +1343,8 @@ async def run_browser_verification(
                         const primaryCta = document.querySelector(
                             location.pathname === '/voice'
                                 ? ".portal-voice-hub a[data-voice-primary][href='/voice/tts']"
+                                : location.pathname === '/music'
+                                    ? ".portal-music-hub a[data-music-primary][href='/music/create']"
                                 : '.portal-document-board-action--primary, button.portal-button--primary, a.portal-button--primary, button[data-free-tool-action], .portal-document-board-action'
                         );
                         if (!primaryCta) {

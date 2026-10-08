@@ -3,7 +3,25 @@
 Owner order: Voice → Music → SubDub → other features → unfinished Video.
 Base main: `8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952` after Video PR #616.
 
-## Contract
+## Voice release checkpoint — 2026-10-08
+
+PR #617 is merged and deployed at
+`e405cbee28f0687f528eab7d66a71ef1623125f4`.
+PR CI `37724197462` and main CI `37724519640` both succeeded;
+deploy `37724809429` succeeded. SSH readback confirms that exact SHA,
+tracked diff 0, Web and nginx active. Production JS/i18n/theme bytes match
+immutable Git blobs 3/3. Anonymous 1440×900/375×900 entry renders the login
+form without overflow or page errors. Authenticated production Voice UI is
+still open; no real audio/quote/job/provider/charge claim.
+
+Backup source:
+`/opt/toanaas/webapp/delete/deploy-e405cbee28f0687f528eab7d66a71ef1623125f4-20261008035332`.
+Readback: `../../qa/20261007-video-uiux/voice-production-e405cbe/readback.json`.
+Compare deployment bytes to Git blobs rather than Windows checkout bytes,
+which can contain CRLF. The mobile login deliberately hides the desktop hero;
+test the actual visible auth card instead of requiring the first h1 to show.
+
+## Contract and historical release checks
 
 ## Release gate result — 2026-10-08
 
@@ -23,7 +41,8 @@ Base main: `8a040d0c2af0cdcb2ebd89a27f5f2caa9beff952` after Video PR #616.
   `../../qa/voice-ui-verify-b7628a8/reports/browser_evidence/`.
   This is isolated QA evidence, not production live acceptance. No paid
   provider, wallet, engine, ENV or production-data action.
-- [ ] Publish one Voice PR and require Ubuntu CI before merge/deploy.
+- [x] Publish one Voice PR; Ubuntu CI passed 389 contracts + 26 runtime
+  assertions and 18 captures before merge/deploy. See the release checkpoint.
 
 Release verification also covers the existing CI runner's Voice DOM selectors
 and Web-only migration provenance JSON. Candidate `cddf617` reproduced two

@@ -4,6 +4,18 @@ Tracker điều phối: `manhtoangreensky-wq/toan-aas-standalone#412`.
 
 Đây là nguồn duy nhất của case; sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 
+## MUSIC-HUB-UI-CLOSEOUT-20261008
+
+| ID | Kiểm tra trên đúng candidate SHA | PASS cần ghi |
+|---|---|---|
+| MUI-01 | `/music`, VI/EN/ZH × sáng/tối × 1440×900/375×812 | 6 đích duy nhất, 3 thẻ sáng tác khóa trước, 3 thư viện/công cụ sau; chữ cố định sạch, không hứa chất lượng/bản quyền không có nguồn |
+| MUI-02 | Focus thẻ đầu bằng bàn phím, Enter/chạm | Đến đúng `/music/create`, form/action xử lý vẫn giữ quyền server; không submit, không tạo nhạc/job/giá/ví |
+| MUI-03 | Desktop/mobile, ảnh và tương phản | Không tràn ngang/lỗi trang; chữ ≥4.5:1, target ≥44px; giữ màu xanh–teal. Voice/Video đã đóng không có thay đổi source sản phẩm |
+
+Sửa case tại đây trước. Đây là kiểm tra UI hub; live có đăng nhập và kết quả
+âm thanh thật là các gate riêng. Ghi candidate/runtime SHA, expected/actual,
+ảnh, console/network và verdict; không tự gửi tác vụ production.
+
 ## VOICE-UI-CLOSEOUT-20261008 — checkpoint UI riêng
 
 Sửa case tại mục này trước; nhận xét Tester/PR dẫn lại file nguồn. Chạy lần lượt
