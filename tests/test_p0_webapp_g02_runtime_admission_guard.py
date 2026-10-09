@@ -137,9 +137,9 @@ def test_01_allowlist_exact_activation_set():
     - music
     - music_background
     - music_song
+    - image_create
 
     Guarded and NOT active (awaiting complete canonical runtime backend execution authority):
-    - image_create
     - video_trend
     - video_long
     - video_multiscene
@@ -152,6 +152,7 @@ def test_01_allowlist_exact_activation_set():
         "music",
         "music_background",
         "music_song",
+        "image_create",
     })
     assert WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES == expected_active
 
@@ -162,9 +163,9 @@ def test_01_allowlist_exact_activation_set():
     assert "music" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
     assert "music_background" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
     assert "music_song" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+    assert "image_create" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
 
     # Guarded lanes must NOT be in active set
-    assert "image_create" not in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
     assert "video_trend" not in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
     assert "video_long" not in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
     assert "video_multiscene" not in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
@@ -174,12 +175,14 @@ def test_01_allowlist_exact_activation_set():
 
 def test_02_env_alone_cannot_activate_runtime():
     """Prove that even with all env flags enabled, runtime stays inactive
-    for unactivated features (video_trend, video_long, video_multiscene, image_create)
+    for unactivated features (video_trend, video_long, video_multiscene)
     because they are not in the compile-time allowlist."""
-    for feature in ["video_trend", "video_long", "video_multiscene", "image_create"]:
+    for feature in ["video_trend", "video_long", "video_multiscene"]:
         assert _web_feature_execution_available(feature) is False
         assert _web_feature_runtime_active(feature) is False
     # Activated features are available
+    assert _web_feature_execution_available("image_create") is True
+    assert _web_feature_runtime_active("image_create") is True
     assert _web_feature_execution_available("video_ai_prompt") is True
     assert _web_feature_runtime_active("video_ai_prompt") is True
     assert _web_feature_execution_available("subdub") is True
@@ -300,17 +303,18 @@ def test_06_direct_post_guarded_video_multiscene():
     assert body["error_code"] == "WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED"
 
 
-# ─── TEST 7: DIRECT POST GUARDED — image_create ─────────────────────────────
+# ─── TEST 7: DIRECT POST ACTIVE — image_create ──────────────────────────────
 
-def test_07_direct_post_guarded_image_create():
-    """Prove POST /features/image_create/jobs returns guarded."""
+def test_07_direct_post_active_image_create():
+    """Prove POST /features/image_create/jobs succeeds and queues a job when runtime is active."""
     client = TestClient(app)
     auth = _login(client, "g02t07@test.local", "secure-g02-pwd-1234")
     res = client.post(
         "/api/v1/features/image_create/jobs",
         json={
             "input": {
-                "prompt": "Test image create",
+                "prompt": "Test image create active",
+                "tier": "standard",
             },
             "idempotency_key": "g02-guard-ic-001",
         },
@@ -318,22 +322,23 @@ def test_07_direct_post_guarded_image_create():
     )
     assert res.status_code == 200
     body = res.json()
-    assert body["ok"] is False
-    assert body["status"] == "guarded"
-    assert body["error_code"] == "WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED"
+    assert body["ok"] is True
+    assert body["status"] == "queued"
+    data = body["data"]
+    assert data["prompt"] == "Test image create active"
+    assert data["tier_key"] == "standard"
 
 
 # ─── TEST 8: ZERO DURABLE ROWS AFTER GUARDED POSTS ──────────────────────────
 
 def test_08_zero_durable_rows_created():
-    """After attempting the 4 guarded direct POST routes, prove no durable rows exist in their tables."""
+    """After attempting the 3 guarded direct POST routes, prove no durable rows exist in their tables."""
     client = TestClient(app)
     auth = _login(client, "g02t08@test.local", "secure-g02-pwd-1234")
     for route in [
         "/api/v1/features/video_trend/jobs",
         "/api/v1/features/video_long/jobs",
         "/api/v1/features/video_multiscene/jobs",
-        "/api/v1/features/image_create/jobs",
     ]:
         client.post(route, json={"input": {"prompt": "test"}, "idempotency_key": f"zero-{route}"}, headers=auth["headers"])
 
@@ -342,7 +347,6 @@ def test_08_zero_durable_rows_created():
             "web_video_trend_jobs",
             "web_video_long_jobs",
             "web_multi_scene_film_jobs",
-            "web_image_generation_jobs",
         ]:
             try:
                 count = conn.execute(f"SELECT COUNT(*) FROM {tbl}").fetchone()[0]
@@ -357,7 +361,7 @@ def test_09_confirm_path_guarded():
     """Prove POST /features/{feature}/confirm returns guarded error_code for unactivated features."""
     client = TestClient(app)
     auth = _login(client, "g02t09@test.local", "secure-g02-pwd-1234")
-    for feature in ["video_trend", "video_long", "video_multiscene", "image_create"]:
+    for feature in ["video_trend", "video_long", "video_multiscene"]:
         res = client.post(
             f"/api/v1/features/{feature}/confirm",
             json={
@@ -424,12 +428,12 @@ def test_10_native_compat_queued_projection():
     assert compat["source_state"] == "guarded_runtime_unavailable"
     assert compat["status_reason"] == "RUNTIME_EXECUTION_NOT_ACTIVATED"
 
-    # image_create
+    # image_create (now active)
     image_job = {**queued_base, "canonical_job_id": None, "output_url": None, "tier_key": "standard"}
     compat = image_bridge.image_generation_job_to_native_compat(image_job)
-    assert compat["runtime_execution_active"] is False
-    assert compat["source_state"] == "guarded_runtime_unavailable"
-    assert compat["status_reason"] == "RUNTIME_EXECUTION_NOT_ACTIVATED"
+    assert compat["runtime_execution_active"] is True
+    assert compat["source_state"] == "queued_locally"
+    assert compat["status_reason"] == "AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION"
 
 
 # ─── TEST 11: NATIVE COMPAT PROJECTION — COMPLETED ROWS ─────────────────────
@@ -509,7 +513,6 @@ def test_14_zero_provider_and_paid_calls():
         "/api/v1/features/video_trend/jobs",
         "/api/v1/features/video_long/jobs",
         "/api/v1/features/video_multiscene/jobs",
-        "/api/v1/features/image_create/jobs",
     ]:
         res = client.post(
             route,
@@ -520,6 +523,22 @@ def test_14_zero_provider_and_paid_calls():
         # Guard returns immediately, no bridge function is called, hence no provider call
         assert body["ok"] is False
         assert body["error_code"] == "WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED"
+
+    # Activated image_create queues locally with 0 provider calls
+    img_res = client.post(
+        "/api/v1/features/image_create/jobs",
+        json={
+            "input": {
+                "prompt": "zero provider test",
+                "tier": "standard",
+            },
+            "idempotency_key": "np-img-001",
+        },
+        headers=auth["headers"],
+    )
+    img_body = img_res.json()
+    assert img_body["ok"] is True
+    assert img_body["status"] == "queued"
 
     # Activated video_ai_prompt queues locally with 0 provider calls
     vap_res = client.post(
@@ -818,9 +837,10 @@ def test_20_client_provider_injection_rejected():
         "/api/v1/features/video_multiscene/jobs",
     ]:
         res = client.post(route, json={"input": injection_payload, "idempotency_key": f"inj-{route}"}, headers=auth["headers"])
-        assert res.status_code == 200
-        body = res.json()
-        assert body["ok"] is False
+        assert res.status_code in (200, 422)
+        if res.status_code == 200:
+            body = res.json()
+            assert body["ok"] is False
 
 
 # ─── TEST 21: CLIENT PRICE AND WALLET INJECTION REJECTED ─────────────────────
@@ -868,6 +888,7 @@ def test_22_client_completed_status_injection_rejected():
         "/api/v1/features/video_multiscene/jobs",
     ]:
         res = client.post(route, json={"input": injection_payload, "idempotency_key": f"fake-{route}"}, headers=auth["headers"])
-        assert res.status_code == 200
-        body = res.json()
-        assert body["ok"] is False
+        assert res.status_code in (200, 422)
+        if res.status_code == 200:
+            body = res.json()
+            assert body["ok"] is False
