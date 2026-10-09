@@ -1444,6 +1444,12 @@
       "table": "defects"
     },
     {
+      "file": "scripts/build_r5_matrix.py",
+      "line": 1118,
+      "operation": "UPDATE",
+      "table": "defects"
+    },
+    {
       "file": "erp_core.py",
       "line": 36,
       "operation": "CREATE TABLE IF NOT EXISTS",
@@ -9571,7 +9577,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 979,
+      "occurrences": 985,
       "provider": "PayOS"
     },
     {
@@ -9731,7 +9737,7 @@
         "copyfast_notification_center.py",
         "copyfast_pages.py"
       ],
-      "occurrences": 1837,
+      "occurrences": 1842,
       "provider": "Telegram"
     }
   ],
@@ -17208,9 +17214,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 248,
-  "source_files_scanned": 248,
-  "source_fingerprint_sha256": "179cec34e07c0b267f73ede6de9a6370993a7cb1f28df49c2d94c224f4b9650f",
+  "source_files_discovered": 250,
+  "source_files_scanned": 250,
+  "source_fingerprint_sha256": "f8ac2fe1008612aa4c8f2c02bddff14c3fcec5ad453a168332619365469b88d5",
   "source_root": "repository-root",
   "ui_path_references": [
     {
