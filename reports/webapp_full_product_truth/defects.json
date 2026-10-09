@@ -45,5 +45,21 @@
     "STATUS": "RESOLVED_TERMINAL_CLASSIFICATION",
     "RESOLUTION": "Classified as BLOCKED_CANONICAL_BACKEND_MISSING under ADMIN_INTERNAL_ONLY. Provider health/cost/balance probe returns truthful unconfigured status without fabricating mock balances.",
     "TERMINAL_CLASSIFICATION": "BLOCKED_CANONICAL_BACKEND_MISSING"
+  },
+  {
+    "DEFECT_ID": "DEFECT-R5-001",
+    "SPEC": "SPEC-00-R5",
+    "ROLE": "customer",
+    "ROUTE": "/video/{poster,frame-sequence,finishing,add-ons,export}",
+    "CONTROL": "Video Local & Companion Operations False Block",
+    "REPRO_STEPS": "Audit 18 routes previously marked BLOCKED_CANONICAL_BACKEND_MISSING.",
+    "EXPECTED": "Recognize existing Web-native video operations and companion delivery portals.",
+    "ACTUAL": "R4 prematurely classified 5 operational/companion surfaces as missing canonical bot backend.",
+    "DATA_SOURCE": "WEB_NATIVE_AND_ASSET_VAULT",
+    "FIRST_RED": "Local operations already mounted in copyfast_video_operations.py, copyfast_frame_video_operations.py, copyfast_video_transform_operations.py, and portal.js.",
+    "ROOT_CAUSE": "Coarse classification lumped local video transformation, poster extraction, frame sequence synthesis, add-ons planner, and export views with unmounted generative video adapters.",
+    "STATUS": "REPAIRED_IN_R5",
+    "RESOLUTION": "Promoted /video/poster, /video/frame-sequence, /video/finishing, and /video/add-ons to RELEASED_WEB_NATIVE_RUNTIME, and /video/export to RELEASED_READ_ONLY_CANONICAL_COMPANION. Exact root gaps recorded for remaining 13 blocked routes.",
+    "TERMINAL_CLASSIFICATION": "RELEASED_WEB_NATIVE_RUNTIME_AND_COMPANION"
   }
 ]
