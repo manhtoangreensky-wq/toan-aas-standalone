@@ -1,7 +1,7 @@
 {
   "summary": {
-    "CURRENT_MAIN_SHA": "b5b12b3775109e804bea236752c02e396fd0fb48",
-    "WEB_RUNTIME_SHA": "b5b12b3775109e804bea236752c02e396fd0fb48",
+    "CURRENT_MAIN_SHA": "d734e3cb86edf44d4be6fa96a161c4d6de389947",
+    "WEB_RUNTIME_SHA": "d734e3cb86edf44d4be6fa96a161c4d6de389947",
     "SOURCE_RUNTIME_MATCH": "YES",
     "TOTAL_PUBLIC_ROUTES": 1,
     "TOTAL_CUSTOMER_ROUTES": 172,
@@ -11,14 +11,14 @@
     "PLACEHOLDER_SURFACES": 0,
     "BROKEN_SURFACES": 0,
     "DUPLICATE_SURFACES": 0,
-    "REAL_DATA_SURFACES": 198,
+    "REAL_DATA_SURFACES": 201,
     "HARDCODED_DATA_SURFACES": 16,
     "DEMO_DATA_SURFACES": 0,
     "UNKNOWN_DATA_SURFACES": 0,
-    "FIRST_RED": "NONE - R5 WHOLE APP TRUTH MATRIX RECONCILED",
+    "FIRST_RED": "NONE - R7 WHOLE APP FINAL RESIDUAL RUNTIME CLOSURE COMPLETE",
     "HIGHEST_RISK_FAKE_DATA": "NONE - ZERO FAKE DATA TOLERATED",
     "HIGHEST_RISK_FAKE_SUCCESS": "NONE - ZERO FAKE SUCCESS TOLERATED",
-    "NEXT_SPEC": "WHOLE_APP_RUNTIME_TRUTH_CLOSED"
+    "NEXT_SPEC": "WHOLE_APP_FINAL_RESIDUAL_RUNTIME_CLOSED"
   },
   "database_tables_count": 168,
   "proven_tables": [
@@ -46,5 +46,7 @@
     "/internal/v1/admin/modules/pricing",
     "/internal/v1/admin/modules/packages",
     "/internal/v1/admin/modules/promos"
-  ]
+  ],
+  "current_main_sha": "d734e3cb86edf44d4be6fa96a161c4d6de389947",
+  "verified_at": "2026-10-09T10:14:55.106340+00:00"
 }

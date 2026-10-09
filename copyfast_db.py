@@ -6637,6 +6637,35 @@ def ensure_copyfast_schema() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_doc_tr_jobs_request ON web_document_translate_jobs(request_id)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_doc_tr_jobs_account_idempotency ON web_document_translate_jobs(account_id, idempotency_key_hash)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_doc_tr_jobs_status_created ON web_document_translate_jobs(status, created_at ASC)")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_image_remove_background_jobs (
+                id TEXT PRIMARY KEY,
+                request_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                product_key TEXT NOT NULL DEFAULT 'image_remove_background',
+                routing_product_key TEXT NOT NULL DEFAULT 'image_remove_background',
+                image_asset_id TEXT NOT NULL,
+                image_name TEXT NOT NULL,
+                package TEXT NOT NULL DEFAULT 'standard',
+                xu_cost INTEGER NOT NULL DEFAULT 80,
+                status TEXT NOT NULL DEFAULT 'queued',
+                status_reason TEXT NOT NULL DEFAULT 'AWAITING_OWNER_AUTHORIZED_RUNTIME_EXECUTION',
+                idempotency_key_hash TEXT,
+                payload_hash TEXT NOT NULL,
+                bridge_envelope TEXT NOT NULL,
+                output_metadata TEXT,
+                output_url TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_img_rmbg_jobs_account_created ON web_image_remove_background_jobs(account_id, created_at DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_img_rmbg_jobs_request ON web_image_remove_background_jobs(request_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_img_rmbg_jobs_account_idempotency ON web_image_remove_background_jobs(account_id, idempotency_key_hash)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_img_rmbg_jobs_status_created ON web_image_remove_background_jobs(status, created_at ASC)")
         try:
             import copyfast_pricing_policy
             copyfast_pricing_policy.ensure_pricing_schema(conn)

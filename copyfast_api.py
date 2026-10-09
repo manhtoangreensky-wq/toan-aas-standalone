@@ -142,6 +142,15 @@ from copyfast_document_translate_bridge import (
     is_document_translate_job_other_account,
     list_document_translate_jobs,
 )
+from copyfast_image_remove_background_bridge import (
+    CANONICAL_PRODUCT_KEY as IMAGE_REMOVE_BG_PRODUCT_KEY,
+    create_or_replay_image_remove_background_job,
+    get_image_remove_background_job,
+    is_image_remove_background_job_other_account,
+    list_image_remove_background_jobs,
+    image_remove_background_job_to_native_compat,
+    validate_image_remove_background_input,
+)
 from copyfast_video_trend_job_bridge import (
     CANONICAL_PRODUCT_KEY as VIDEO_TREND_PRODUCT_KEY,
     SUPPORTED_CANONICAL_JOB_ADAPTERS as VIDEO_TREND_ADAPTER_KEYS,
@@ -259,6 +268,10 @@ WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES: frozenset[str] = frozenset({
     "video_product",
     "video_text_to_video",
     "documents_translate",
+    "image_remove_background",
+    "image_remove-background",
+    "video_long",
+    "video_multiscene",
 })
 CONTIGUOUS_PAGE_RANGE_PATTERN = re.compile(r"^\d+(?:-\d+)?$")
 TICKET_SECRET_ASSIGNMENT_PATTERN = re.compile(
@@ -6552,6 +6565,39 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
                     status_name="guarded",
                     error_code="DOCUMENT_TRANSLATE_JOB_VALIDATION_FAILED",
                 )
+        if feature in ("image_remove_background", "image_remove-background"):
+            account_id = str(account.get("id") or "")
+            try:
+                job_result = create_or_replay_image_remove_background_job(
+                    account_id=account_id,
+                    payload=values,
+                    idempotency_key=key,
+                )
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=True,
+                )
+                return envelope(
+                    True,
+                    "Đã tạo tác vụ Tách nền ảnh thành công, chờ runtime xử lý.",
+                    data=job_result,
+                    status_name="queued",
+                )
+            except HTTPException as exc:
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=False,
+                )
+                if exc.status_code == 409:
+                    raise exc
+                return envelope(
+                    False,
+                    exc.detail,
+                    status_name="guarded",
+                    error_code="IMAGE_REMOVE_BACKGROUND_JOB_VALIDATION_FAILED",
+                )
         if feature == "video_trend":
             account_id = str(account.get("id") or "")
             try:
@@ -7198,6 +7244,69 @@ async def get_documents_translate_job_route(
     if is_document_translate_job_other_account(job_id, account_id):
         raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
     raise HTTPException(status_code=404, detail="Không tìm thấy job Dịch tài liệu của tài khoản.")
+
+
+@router.post("/features/image_remove_background/jobs")
+@router.post("/features/image_remove-background/jobs")
+async def create_image_remove_background_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if not _web_feature_runtime_active("image_remove_background"):
+        return envelope(False, "Runtime execution chưa được kích hoạt cho tính năng này.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    request_id = str(payload.input.get("request_id") or "")
+    job = create_or_replay_image_remove_background_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        request_id=request_id,
+        idempotency_key=key,
+    )
+    return envelope(
+        True,
+        "Đã tạo tác vụ Tách nền ảnh thành công, chờ runtime xử lý.",
+        data=job,
+        status_name="queued",
+    )
+
+
+@router.get("/features/image_remove_background/jobs")
+@router.get("/features/image_remove-background/jobs")
+async def list_image_remove_background_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = list_image_remove_background_jobs(account_id, limit=100)
+    return envelope(
+        True,
+        "Đã tải danh sách job Tách nền ảnh của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/image_remove_background/jobs/{job_id}")
+@router.get("/features/image_remove-background/jobs/{job_id}")
+async def get_image_remove_background_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    job = get_image_remove_background_job(account_id, job_id)
+    if job is not None:
+        return envelope(
+            True,
+            "Đã tải chi tiết job Tách nền ảnh.",
+            data=job,
+            status_name="read_only",
+        )
+    if is_image_remove_background_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Tách nền ảnh của tài khoản.")
 
 
 @router.post("/features/video_trend/jobs")

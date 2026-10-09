@@ -93,5 +93,53 @@
     "STATUS": "REPAIRED_IN_R6",
     "RESOLUTION": "Reclassified /video/mux as NOT_A_PRODUCT_ACTION_INFORMATIONAL_ONLY and /music/sfx, /image/upscale, /image/transform, /image/remove-background as BLOCKED_EXTERNAL_CAPABILITY_OR_GRANT_REQUIRED.",
     "TERMINAL_CLASSIFICATION": "INFORMATIONAL_AND_GRANT_REQUIRED"
+  },
+  {
+    "DEFECT_ID": "DEFECT-R7-001",
+    "SPEC": "SPEC-00-R7",
+    "ROLE": "customer",
+    "ROUTE": "/video/{poster,frame-sequence,finishing,add-ons,export}",
+    "CONTROL": "False-Block Residue and Output Delivery Contradiction Elimination",
+    "REPRO_STEPS": "Audit 5 routes previously carrying FALSE_BLOCK_WEB_NATIVE_RUNTIME_ALREADY_EXISTS or OUTPUT_DELIVERY_GAP.",
+    "EXPECTED": "Normalized root gaps to NONE_RELEASED_RUNTIME following source and runtime delivery proof.",
+    "ACTUAL": "R6 carried non-clean root-gap labels despite released implementations existing.",
+    "DATA_SOURCE": "WEB_NATIVE_AND_ASSET_DELIVERY",
+    "FIRST_RED": "Root gap fields showed residual blocker flags on already-released endpoints.",
+    "ROOT_CAUSE": "Classification update in R5/R6 left diagnostic root gap labels unnormalized.",
+    "STATUS": "REPAIRED_IN_R7",
+    "RESOLUTION": "Normalized root gaps for all 4 web-native video operations and /video/export to NONE_RELEASED_RUNTIME.",
+    "TERMINAL_CLASSIFICATION": "RELEASED_WEB_NATIVE_AND_COMPANION"
+  },
+  {
+    "DEFECT_ID": "DEFECT-R7-002",
+    "SPEC": "SPEC-00-R7",
+    "ROLE": "customer",
+    "ROUTE": "/video/long, /video/multiscene",
+    "CONTROL": "Video Long and Multi-Scene Film Runtime Activation",
+    "REPRO_STEPS": "Audit /video/long and /video/multiscene worker consumer and active runtime state.",
+    "EXPECTED": "Activated canonical job bridges in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES with durable SQLite ledgers.",
+    "ACTUAL": "Remained classified as blocked canonical backend missing pending worker consumer activation.",
+    "DATA_SOURCE": "CANONICAL_JOB_BRIDGES_AND_DISPATCHER",
+    "FIRST_RED": "Worker consumer was not active in compile-time allowlist.",
+    "ROOT_CAUSE": "Execution flags in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES were omitted in R6.",
+    "STATUS": "REPAIRED_IN_R7",
+    "RESOLUTION": "Added video_long and video_multiscene to WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES, mounted endpoints with full idempotency, and promoted to RELEASED_ACTIVE_CANONICAL_RUNTIME.",
+    "TERMINAL_CLASSIFICATION": "RELEASED_ACTIVE_CANONICAL_RUNTIME"
+  },
+  {
+    "DEFECT_ID": "DEFECT-R7-003",
+    "SPEC": "SPEC-00-R7",
+    "ROLE": "customer",
+    "ROUTE": "/image/remove-background",
+    "CONTROL": "Image Remove Background Canonical Bridge Implementation",
+    "REPRO_STEPS": "Audit /image/remove-background against Bot remove_bg canonical engine.",
+    "EXPECTED": "Web bridge exposes Bot RemoveBG HD / Cutout.pro engine with owner-scoped Asset Vault input.",
+    "ACTUAL": "R6 classified route as blocked external capability missing despite Bot engine existing.",
+    "DATA_SOURCE": "BOT_REMOVE_BG_ENGINE",
+    "FIRST_RED": "No web bridge existed to expose canonical remove_bg engine.",
+    "ROOT_CAUSE": "Missing bridge adapter between Web customer portal and Bot remove_bg engine.",
+    "STATUS": "REPAIRED_IN_R7",
+    "RESOLUTION": "Implemented copyfast_image_remove_background_bridge.py with durable SQLite ledger, mounted endpoints in copyfast_api.py, and promoted to RELEASED_ACTIVE_CANONICAL_RUNTIME.",
+    "TERMINAL_CLASSIFICATION": "RELEASED_ACTIVE_CANONICAL_RUNTIME"
   }
 ]

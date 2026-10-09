@@ -1812,7 +1812,15 @@
     "fallback_data": false,
     "business_status": "GRANT_REQUIRED",
     "helper": "featurePage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "BLOCKED_EXTERNAL_CAPABILITY_OR_GRANT_REQUIRED",
+    "actual_root_gap": "EXTERNAL_PROVIDER_CAPABILITY_MISSING",
+    "proof": "Stability upscale integration is explicitly marked ADMIN_ONLY / NOT_IMPLEMENTED in bot.py; Replicate upscale adapter absent.",
+    "current_implementation_class": "copyfast_image_ops_view",
+    "runtime_execution_enabled": false,
+    "web_api_implemented": false,
+    "canonical_output_delivery_exists": false,
+    "canonical_worker_consumer_exists": false
   },
   {
     "path": "/image/transform",
@@ -1827,7 +1835,15 @@
     "fallback_data": false,
     "business_status": "GRANT_REQUIRED",
     "helper": "featurePage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "BLOCKED_EXTERNAL_CAPABILITY_OR_GRANT_REQUIRED",
+    "actual_root_gap": "EXTERNAL_PROVIDER_CAPABILITY_MISSING",
+    "proof": "Image-to-image AI transform generative adapter is not implemented across configured image routers; requires Midjourney or Stable Diffusion img2img provider grant.",
+    "current_implementation_class": "copyfast_image_ops_view",
+    "runtime_execution_enabled": false,
+    "web_api_implemented": false,
+    "canonical_output_delivery_exists": false,
+    "canonical_worker_consumer_exists": false
   },
   {
     "path": "/image/remove-background",
@@ -1836,13 +1852,21 @@
     "purpose": "Tạo quote xóa nền từ ảnh nguồn; job chỉ xuất hiện sau adapter canonical.",
     "data_source": "WEBAPP_LOCAL_DRAFTS_OR_STATIC",
     "database_table": "web_workspace_drafts",
-    "real_data": false,
+    "real_data": true,
     "hardcoded_data": false,
     "demo_data": false,
     "fallback_data": false,
-    "business_status": "GRANT_REQUIRED",
+    "business_status": "ACTIVE_RUNTIME",
     "helper": "featurePage",
-    "layout": "image-operation-history"
+    "layout": "image-operation-history",
+    "final_classification": "RELEASED_ACTIVE_CANONICAL_RUNTIME",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME",
+    "proof": "Dedicated Web bridge copyfast_image_remove_background_bridge.py mounted in copyfast_api.py and active in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES; canonical RemoveBG HD (150 Xu) and Cutout fallback (80 Xu) engines with durable SQLite job ledger.",
+    "current_implementation_class": "copyfast_image_remove_background_bridge",
+    "runtime_execution_enabled": true,
+    "web_api_implemented": true,
+    "canonical_output_delivery_exists": true,
+    "canonical_worker_consumer_exists": true
   },
   {
     "path": "/image/history",
@@ -1872,7 +1896,9 @@
     "fallback_data": false,
     "business_status": "ACTIVE_RUNTIME",
     "helper": "featurePage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "RELEASED_ACTIVE_CANONICAL_RUNTIME",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME"
   },
   {
     "path": "/video/long",
@@ -1881,13 +1907,21 @@
     "purpose": "Chuẩn bị dự án video dài; tiến độ và output chỉ đến từ job canonical.",
     "data_source": "WEBAPP_LOCAL_DRAFTS_OR_STATIC",
     "database_table": "web_workspace_drafts",
-    "real_data": false,
+    "real_data": true,
     "hardcoded_data": false,
     "demo_data": false,
     "fallback_data": false,
-    "business_status": "BACKEND_MISSING",
+    "business_status": "ACTIVE_RUNTIME",
     "helper": "featurePage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "RELEASED_ACTIVE_CANONICAL_RUNTIME",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME",
+    "proof": "Dedicated Web bridge copyfast_video_long_job_bridge.py active in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES; canonical chapter plan decomposition and durable SQLite job ledger active with owner isolation.",
+    "current_implementation_class": "copyfast_video_long_job_bridge",
+    "runtime_execution_enabled": true,
+    "web_api_implemented": true,
+    "canonical_output_delivery_exists": true,
+    "canonical_worker_consumer_exists": true
   },
   {
     "path": "/video/product",
@@ -1902,7 +1936,15 @@
     "fallback_data": false,
     "business_status": "ACTIVE_RUNTIME",
     "helper": "featurePage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "RELEASED_ACTIVE_CANONICAL_RUNTIME",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME",
+    "proof": "Direct canonical route over video_ai_prompt mounted at /features/video_product/jobs in copyfast_api.py with full idempotency and receipt settlement.",
+    "current_implementation_class": "copyfast_product_video_job_bridge",
+    "runtime_execution_enabled": true,
+    "web_api_implemented": true,
+    "canonical_output_delivery_exists": true,
+    "canonical_worker_consumer_exists": true
   },
   {
     "path": "/video/text-to-video",
@@ -1917,7 +1959,15 @@
     "fallback_data": false,
     "business_status": "ACTIVE_RUNTIME",
     "helper": "featurePage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "RELEASED_ACTIVE_CANONICAL_RUNTIME",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME",
+    "proof": "Direct canonical route over video_ai_prompt mounted at /features/video_text_to_video/jobs in copyfast_api.py with full idempotency and receipt settlement.",
+    "current_implementation_class": "copyfast_product_video_job_bridge",
+    "runtime_execution_enabled": true,
+    "web_api_implemented": true,
+    "canonical_output_delivery_exists": true,
+    "canonical_worker_consumer_exists": true
   },
   {
     "path": "/video/image-to-video",
@@ -1932,7 +1982,15 @@
     "fallback_data": false,
     "business_status": "ACTIVE_RUNTIME",
     "helper": "featurePage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "RELEASED_ACTIVE_CANONICAL_RUNTIME",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME",
+    "proof": "Dedicated Web bridge create_or_replay_image_to_video_job active in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES with Asset Vault input validation; Bot adapter services.video_tail9 PRODUCT_ADAPTERS['video_ai_image'] enabled and worker consumer active.",
+    "current_implementation_class": "copyfast_product_video_job_bridge",
+    "runtime_execution_enabled": true,
+    "web_api_implemented": true,
+    "canonical_output_delivery_exists": true,
+    "canonical_worker_consumer_exists": true
   },
   {
     "path": "/video/trend",
@@ -1947,7 +2005,15 @@
     "fallback_data": false,
     "business_status": "ACTIVE_RUNTIME",
     "helper": "featurePage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "RELEASED_ACTIVE_CANONICAL_RUNTIME",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME",
+    "proof": "Dedicated Web bridge copyfast_video_trend_job_bridge.py active in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES; Bot adapter services.video_tail9 PRODUCT_ADAPTERS['video_trend'] enabled and worker consumer active.",
+    "current_implementation_class": "copyfast_video_trend_job_bridge",
+    "runtime_execution_enabled": true,
+    "web_api_implemented": true,
+    "canonical_output_delivery_exists": true,
+    "canonical_worker_consumer_exists": true
   },
   {
     "path": "/video/quick",
@@ -1962,7 +2028,15 @@
     "fallback_data": false,
     "business_status": "ACTIVE_RUNTIME",
     "helper": "featurePage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "RELEASED_ACTIVE_CANONICAL_RUNTIME",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME",
+    "proof": "Canonical composition over video_ai_prompt mounted at /features/video_quick/jobs in copyfast_api.py with full idempotency and receipt settlement.",
+    "current_implementation_class": "copyfast_product_video_job_bridge",
+    "runtime_execution_enabled": true,
+    "web_api_implemented": true,
+    "canonical_output_delivery_exists": true,
+    "canonical_worker_consumer_exists": true
   },
   {
     "path": "/video/multiscene",
@@ -1971,13 +2045,21 @@
     "purpose": "Chuẩn bị nhiều cảnh và các thành phần media trước bước estimate.",
     "data_source": "WEBAPP_LOCAL_DRAFTS_OR_STATIC",
     "database_table": "web_workspace_drafts",
-    "real_data": false,
+    "real_data": true,
     "hardcoded_data": false,
     "demo_data": false,
     "fallback_data": false,
-    "business_status": "BACKEND_MISSING",
+    "business_status": "ACTIVE_RUNTIME",
     "helper": "featurePage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "RELEASED_ACTIVE_CANONICAL_RUNTIME",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME",
+    "proof": "Dedicated Web bridge copyfast_multi_scene_film_job_bridge.py active in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES; canonical scene plan decomposition, scene order preservation, and durable SQLite job ledger active with owner isolation.",
+    "current_implementation_class": "copyfast_multi_scene_film_job_bridge",
+    "runtime_execution_enabled": true,
+    "web_api_implemented": true,
+    "canonical_output_delivery_exists": true,
+    "canonical_worker_consumer_exists": true
   },
   {
     "path": "/video/progress",
@@ -2022,7 +2104,15 @@
     "fallback_data": false,
     "business_status": "CANONICAL_COMPANION",
     "helper": "readOnlyPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "RELEASED_READ_ONLY_CANONICAL_COMPANION",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME",
+    "proof": "Delivery companion portal view (readOnlyPage assets) reading and downloading completed canonical video assets from Asset Vault with signed URL contract.",
+    "current_implementation_class": "copyfast_canonical_companion",
+    "runtime_execution_enabled": true,
+    "web_api_implemented": true,
+    "canonical_output_delivery_exists": true,
+    "canonical_worker_consumer_exists": true
   },
   {
     "path": "/video/add-ons",
@@ -2037,7 +2127,15 @@
     "fallback_data": false,
     "business_status": "ACTIVE_RUNTIME",
     "helper": "guidedFeaturePage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "RELEASED_WEB_NATIVE_RUNTIME",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME",
+    "proof": "Web-native guided planning workspace for finalization add-ons (subtitles, audio, branding) in portal.js; client draft state.",
+    "current_implementation_class": "copyfast_video_studio",
+    "runtime_execution_enabled": true,
+    "web_api_implemented": true,
+    "canonical_output_delivery_exists": false,
+    "canonical_worker_consumer_exists": false
   },
   {
     "path": "/voice",
@@ -2097,7 +2195,15 @@
     "fallback_data": false,
     "business_status": "GRANT_REQUIRED",
     "helper": "featurePage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "BLOCKED_EXTERNAL_CAPABILITY_OR_GRANT_REQUIRED",
+    "actual_root_gap": "EXTERNAL_PROVIDER_CAPABILITY_MISSING",
+    "proof": "Voice clone runtime requires verified Owner grant and provider capability entitlement before live execution.",
+    "current_implementation_class": "copyfast_voice_clone_view",
+    "runtime_execution_enabled": false,
+    "web_api_implemented": false,
+    "canonical_output_delivery_exists": false,
+    "canonical_worker_consumer_exists": false
   },
   {
     "path": "/voice/preview",
@@ -2187,7 +2293,15 @@
     "fallback_data": false,
     "business_status": "GRANT_REQUIRED",
     "helper": "featurePage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "BLOCKED_EXTERNAL_CAPABILITY_OR_GRANT_REQUIRED",
+    "actual_root_gap": "EXTERNAL_PROVIDER_CAPABILITY_MISSING",
+    "proof": "Bot provides Freesound library search but lacks generative AI sound-effect creation backend; requires ElevenLabs Sound Effects or Stability Audio provider grant.",
+    "current_implementation_class": "copyfast_sfx_catalog",
+    "runtime_execution_enabled": false,
+    "web_api_implemented": false,
+    "canonical_output_delivery_exists": false,
+    "canonical_worker_consumer_exists": false
   },
   {
     "path": "/music/create",
@@ -2262,7 +2376,15 @@
     "fallback_data": false,
     "business_status": "ACTIVE_RUNTIME",
     "helper": "customerPage",
-    "layout": "video-transform-operations"
+    "layout": "video-transform-operations",
+    "final_classification": "RELEASED_WEB_NATIVE_RUNTIME",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME",
+    "proof": "Web-native video ratio transform finishing implemented in copyfast_video_transform_operations.py (/api/v1/video/finishing) adapting 16:9 to 9:16/1:1.",
+    "current_implementation_class": "copyfast_video_transform_operations",
+    "runtime_execution_enabled": true,
+    "web_api_implemented": true,
+    "canonical_output_delivery_exists": true,
+    "canonical_worker_consumer_exists": false
   },
   {
     "path": "/video/frame-sequence",
@@ -2277,7 +2399,15 @@
     "fallback_data": false,
     "business_status": "ACTIVE_RUNTIME",
     "helper": "customerPage",
-    "layout": "frame-video-operations"
+    "layout": "frame-video-operations",
+    "final_classification": "RELEASED_WEB_NATIVE_RUNTIME",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME",
+    "proof": "Web-native frame sequence synthesis engine implemented in copyfast_frame_video_operations.py (/api/v1/video/frame-sequence) synthesizing verified images into MP4.",
+    "current_implementation_class": "copyfast_frame_video_operations",
+    "runtime_execution_enabled": true,
+    "web_api_implemented": true,
+    "canonical_output_delivery_exists": true,
+    "canonical_worker_consumer_exists": false
   },
   {
     "path": "/video/poster",
@@ -2292,7 +2422,15 @@
     "fallback_data": false,
     "business_status": "ACTIVE_RUNTIME",
     "helper": "customerPage",
-    "layout": "video-poster-operations"
+    "layout": "video-poster-operations",
+    "final_classification": "RELEASED_WEB_NATIVE_RUNTIME",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME",
+    "proof": "Web-native poster frame extraction engine implemented in copyfast_video_operations.py (/api/v1/video/poster) on verified private Asset Vault MP4.",
+    "current_implementation_class": "copyfast_video_operations",
+    "runtime_execution_enabled": true,
+    "web_api_implemented": true,
+    "canonical_output_delivery_exists": true,
+    "canonical_worker_consumer_exists": false
   },
   {
     "path": "/subtitle",
@@ -2412,7 +2550,15 @@
     "fallback_data": false,
     "business_status": "INFORMATIONAL",
     "helper": "guidedFeaturePage",
-    "layout": "document-hub"
+    "layout": "document-hub",
+    "final_classification": "NOT_A_PRODUCT_ACTION_INFORMATIONAL_ONLY",
+    "actual_root_gap": "NOT_APPLICABLE_INFORMATIONAL",
+    "proof": "In Bot, muxing is an internal stage of SubDub/video_dub pipeline, not an independent standalone customer action. Rendered via guidedFeaturePage with layout 'video-finalization' as companion guidance.",
+    "current_implementation_class": "copyfast_video_studio",
+    "runtime_execution_enabled": false,
+    "web_api_implemented": false,
+    "canonical_output_delivery_exists": false,
+    "canonical_worker_consumer_exists": false
   },
   {
     "path": "/documents",
@@ -2592,7 +2738,15 @@
     "fallback_data": false,
     "business_status": "ACTIVE_RUNTIME",
     "helper": "featurePage",
-    "layout": "admin-overview"
+    "layout": "admin-overview",
+    "final_classification": "RELEASED_ACTIVE_CANONICAL_RUNTIME",
+    "actual_root_gap": "NONE_RELEASED_RUNTIME",
+    "proof": "Dedicated canonical job bridge copyfast_document_translate_bridge.py mounted in copyfast_api.py with Asset Vault document ownership validation, durable SQLite ledger, and fail-closed admission.",
+    "current_implementation_class": "copyfast_document_translate_bridge",
+    "runtime_execution_enabled": true,
+    "web_api_implemented": true,
+    "canonical_output_delivery_exists": true,
+    "canonical_worker_consumer_exists": true
   },
   {
     "path": "/admin",
@@ -2607,7 +2761,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-overview"
+    "layout": "admin-overview",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/customers",
@@ -2622,7 +2778,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-customer-directory"
+    "layout": "admin-customer-directory",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/users",
@@ -2637,7 +2795,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-manual-topups"
+    "layout": "admin-manual-topups",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/wallet",
@@ -2652,7 +2812,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-manual-topups"
+    "layout": "admin-manual-topups",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/payments",
@@ -2667,7 +2829,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-manual-topups"
+    "layout": "admin-manual-topups",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/topups",
@@ -2682,7 +2846,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-manual-topups"
+    "layout": "admin-manual-topups",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/revenue",
@@ -2697,7 +2863,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/refunds",
@@ -2712,7 +2880,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/jobs",
@@ -2727,7 +2897,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/jobs/failed",
@@ -2742,7 +2914,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/providers",
@@ -2757,7 +2931,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/provider-cost",
@@ -2772,7 +2948,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/workers",
@@ -2787,7 +2965,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/features",
@@ -2802,7 +2982,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/freezes",
@@ -2817,7 +2999,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/pricing",
@@ -2832,7 +3016,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "partner-crm-manager"
+    "layout": "partner-crm-manager",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/packages",
@@ -2847,7 +3033,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "partner-crm-manager"
+    "layout": "partner-crm-manager",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/promos",
@@ -2862,7 +3050,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "partner-crm-manager"
+    "layout": "partner-crm-manager",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/leads",
@@ -2877,7 +3067,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "partner-crm-manager"
+    "layout": "partner-crm-manager",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/tickets",
@@ -2892,7 +3084,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "support-admin"
+    "layout": "support-admin",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/support",
@@ -2907,7 +3101,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "support-admin"
+    "layout": "support-admin",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/operations",
@@ -2922,7 +3118,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "operations-admin"
+    "layout": "operations-admin",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/automation",
@@ -2937,7 +3135,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-automation-monitor"
+    "layout": "admin-automation-monitor",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/security",
@@ -2952,7 +3152,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-security-access-posture"
+    "layout": "admin-security-access-posture",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/access",
@@ -2967,7 +3169,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-security-access-posture"
+    "layout": "admin-security-access-posture",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/reliability",
@@ -2982,7 +3186,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "reliability-admin"
+    "layout": "reliability-admin",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/work-queue",
@@ -2997,7 +3203,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "operations-desk"
+    "layout": "operations-desk",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/governance",
@@ -3012,7 +3220,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "governance-documents"
+    "layout": "governance-documents",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/internal-documents",
@@ -3027,7 +3237,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-document-archive"
+    "layout": "admin-document-archive",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/campaigns",
@@ -3042,7 +3254,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/calendar",
@@ -3057,7 +3271,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/approvals",
@@ -3072,7 +3288,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-domain"
+    "layout": "admin-domain",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/publishing",
@@ -3087,7 +3305,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-domain"
+    "layout": "admin-domain",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/analytics",
@@ -3102,7 +3322,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-domain"
+    "layout": "admin-domain",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/growth",
@@ -3117,7 +3339,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-domain"
+    "layout": "admin-domain",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/growth/postback-readiness",
@@ -3132,7 +3356,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-postback-readiness"
+    "layout": "admin-postback-readiness",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/finance",
@@ -3147,7 +3373,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-domain"
+    "layout": "admin-domain",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/finance/planning",
@@ -3162,7 +3390,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-finance-planning"
+    "layout": "admin-finance-planning",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/finance/tax-readiness",
@@ -3177,7 +3407,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-tax-readiness"
+    "layout": "admin-tax-readiness",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/job-recovery-guide",
@@ -3192,7 +3424,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-job-recovery-guide"
+    "layout": "admin-job-recovery-guide",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/trends",
@@ -3207,7 +3441,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-domain"
+    "layout": "admin-domain",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/audit",
@@ -3222,7 +3458,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/reports",
@@ -3237,7 +3475,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/export",
@@ -3252,7 +3492,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/runtime",
@@ -3267,7 +3509,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "standard"
+    "layout": "standard",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/system",
@@ -3282,7 +3526,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-system-stewardship"
+    "layout": "admin-system-stewardship",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/backups",
@@ -3297,7 +3543,9 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-system-stewardship"
+    "layout": "admin-system-stewardship",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   },
   {
     "path": "/admin/system-stewardship",
@@ -3312,6 +3560,8 @@
     "fallback_data": false,
     "business_status": "ADMIN_CONSOLE",
     "helper": "adminPage",
-    "layout": "admin-system-stewardship"
+    "layout": "admin-system-stewardship",
+    "final_classification": "ADMIN_INTERNAL_ONLY",
+    "actual_root_gap": "ADMIN_INTERNAL_BOUNDARY"
   }
 ]
