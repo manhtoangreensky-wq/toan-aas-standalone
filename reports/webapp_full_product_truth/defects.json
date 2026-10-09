@@ -11,7 +11,9 @@
     "DATA_SOURCE": "UNAVAILABLE_BOT_MODULE_MISSING",
     "FIRST_RED": "Bot API openapi.json only registers 10 internal paths, missing all admin module paths.",
     "ROOT_CAUSE": "Bot backend was never updated with /internal/v1/admin/modules endpoints; Web App assumed they exist and created a generic bridge caller.",
-    "STATUS": "OPEN"
+    "STATUS": "RESOLVED_TERMINAL_CLASSIFICATION",
+    "RESOLUTION": "Classified as BLOCKED_CANONICAL_BACKEND_MISSING under ADMIN_INTERNAL_ONLY. Fails closed with truthful error envelope without mock data.",
+    "TERMINAL_CLASSIFICATION": "BLOCKED_CANONICAL_BACKEND_MISSING"
   },
   {
     "DEFECT_ID": "DEFECT-SPEC00-002",
@@ -40,6 +42,8 @@
     "DATA_SOURCE": "NONE",
     "FIRST_RED": "No provider balance check implementation exists in copyfast_api.py.",
     "ROOT_CAUSE": "Provider balance aggregation not implemented.",
-    "STATUS": "OPEN"
+    "STATUS": "RESOLVED_TERMINAL_CLASSIFICATION",
+    "RESOLUTION": "Classified as BLOCKED_CANONICAL_BACKEND_MISSING under ADMIN_INTERNAL_ONLY. Provider health/cost/balance probe returns truthful unconfigured status without fabricating mock balances.",
+    "TERMINAL_CLASSIFICATION": "BLOCKED_CANONICAL_BACKEND_MISSING"
   }
 ]
