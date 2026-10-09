@@ -189,5 +189,37 @@
     "STATUS": "REPAIRED_IN_R9",
     "RESOLUTION": "Reconciled all provenance records to Web SHA 73d3ee7085fa8450826efe43ce32ec021888cbde, pruned legacy root keys, published R9_FINAL_ROUTE_RUNTIME_MATRIX.json, and truthfully documented Bot source/runtime split without unauthorized bot deploy.",
     "TERMINAL_CLASSIFICATION": "PROVENANCE_AND_RUNTIME_RECONCILED"
+  },
+  {
+    "DEFECT_ID": "DEFECT-R10-001",
+    "SPEC": "SPEC-00-R10",
+    "ROLE": "system",
+    "ROUTE": "reports/webapp_full_product_truth/*",
+    "CONTROL": "Elimination of Pre-Merge Self-Referential Squash SHA Assertions in Provenance Schema",
+    "REPRO_STEPS": "Audit provenance reporting model where committed files attempted to assert their own future squash-merge SHA.",
+    "EXPECTED": "Committed reports record generation-time evidence baseline (REPORT_SCHEMA_VERSION, REPORT_GENERATED_FROM_WEB_BASE_SHA, observed runtime SHAs) while post-merge authority belongs in GitHub execution receipts.",
+    "ACTUAL": "R8/R9 reports required committed files to match future squash merge commits, creating a circular git dependency.",
+    "DATA_SOURCE": "PROVENANCE_SCHEMA_ARCHITECTURE",
+    "FIRST_RED": "Provenance drift detected on main post-merge due to squash-merge hash difference.",
+    "ROOT_CAUSE": "Coupling pre-merge committed report contents with post-merge synthetic squash commit hashes.",
+    "STATUS": "REPAIRED_IN_R10",
+    "RESOLUTION": "Refactored provenance schema to record generation-time observation baseline, eliminated self-referential merge SHA checks from tests, and established execution receipts as the source of post-merge truth.",
+    "TERMINAL_CLASSIFICATION": "PROVENANCE_SCHEMA_REPAIRED"
+  },
+  {
+    "DEFECT_ID": "DEFECT-R10-002",
+    "SPEC": "SPEC-00-R10",
+    "ROLE": "customer",
+    "ROUTE": "/voice/clone",
+    "CONTROL": "Voice Clone Incident Hold Taxonomy Realignment",
+    "REPRO_STEPS": "Audit /voice/clone terminal classification against empirical MiniMax 503 capacity incident.",
+    "EXPECTED": "Classified as IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD with root gap EXTERNAL_PROVIDER_INCIDENT_MINIMAX_503.",
+    "ACTUAL": "R9 classified route as IMPLEMENTED_DEPLOYED_WAIT_OWNER_LIVE_GRANT despite prior grant execution reaching provider and failing on 503.",
+    "DATA_SOURCE": "CANONICAL_VOICE_CLONE_RECEIPTS_6065464856_AND_6065661158",
+    "FIRST_RED": "Re-opening of live grant requirement for an already-attempted provider lane under active incident hold.",
+    "ROOT_CAUSE": "Overwriting incident hold taxonomy with generic wait-grant label during R8/R9 batch reconciliation.",
+    "STATUS": "REPAIRED_IN_R10",
+    "RESOLUTION": "Corrected terminal classification to IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD with EXTERNAL_PROVIDER_INCIDENT_MINIMAX_503, releasing lane without blocking other product families.",
+    "TERMINAL_CLASSIFICATION": "IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD"
   }
 ]
