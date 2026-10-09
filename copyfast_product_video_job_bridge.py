@@ -195,9 +195,14 @@ CANONICAL_ROUTE_ID = "product_video_one_scene_v1"
 CANONICAL_ENGINE_ADAPTER = "b13_r18c_product_one_scene_v1"
 CANONICAL_CUSTOMER_ENTRYPOINT = "/video/create"
 
-# Only video_ai_prompt is supported in this bounded adapter.
-# All other 9 video generators remain unbridged and fail-closed.
 SUPPORTED_CANONICAL_JOB_ADAPTERS = frozenset({"video_ai_prompt"})
+SUPPORTED_PRODUCT_VIDEO_JOB_ADAPTERS = frozenset({
+    "video_ai_prompt",
+    "video_quick",
+    "video_product",
+    "video_text_to_video",
+    "video_ai_image",
+})
 
 ALLOWED_ASPECT_RATIOS = frozenset({"9:16", "16:9", "1:1"})
 ALLOWED_DURATIONS = frozenset({5, 10, 15})
@@ -216,6 +221,13 @@ V2V_PRODUCT_KEY = "video_ai_video_reference"
 V2V_ROUTING_KEY = "video_ai_video_reference"
 V2V_ROUTE_ID = "product_video_v2v_owner_acceptance_v1"
 V2V_ENGINE_ADAPTER = "fal_wan_v2v_acceptance_v1"
+
+IMAGE_TO_VIDEO_PRODUCT_KEY = "video_ai_image"
+IMAGE_TO_VIDEO_ROUTING_KEY = "video_ai_image"
+IMAGE_TO_VIDEO_ROUTE_ID = "product_video_image_to_video_v1"
+IMAGE_TO_VIDEO_ENGINE_ADAPTER = "b13_r18c_image_to_video_v1"
+SAFE_IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".webp"})
+
 
 
 def is_valid_canonical_source_video_path(path: Any) -> bool:
@@ -323,6 +335,8 @@ def compute_payload_hash(payload: dict[str, Any]) -> str:
     }
     if payload.get("source_video_path"):
         core["source_video_path"] = str(payload["source_video_path"]).strip()
+    if payload.get("image_asset_id"):
+        core["image_asset_id"] = str(payload["image_asset_id"]).strip()
     serialized = json.dumps(core, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(serialized).hexdigest()
 
@@ -350,6 +364,7 @@ def create_or_replay_product_video_job(
     payload: dict[str, Any],
     request_id: str = "",
     idempotency_key: str = "",
+    product_key: str = CANONICAL_PRODUCT_KEY,
 ) -> dict[str, Any]:
     """Create a new canonical Product Video job or replay existing one idempotently.
 
@@ -377,6 +392,9 @@ def create_or_replay_product_video_job(
         }
         raise HTTPException(status_code=400, detail=error_messages.get(error_code, error_code))
 
+    effective_product_key = product_key if product_key in SUPPORTED_PRODUCT_VIDEO_JOB_ADAPTERS else CANONICAL_PRODUCT_KEY
+    normalized["product_key"] = effective_product_key
+
     payload_hash = compute_payload_hash(normalized)
     effective_req_id = str(request_id or payload.get("request_id") or "").strip()
     effective_idem_key = str(idempotency_key or payload.get("idempotency_key") or "").strip()
@@ -391,7 +409,7 @@ def create_or_replay_product_video_job(
                    bridge_envelope, output_metadata, created_at, updated_at,
                    worker_id, claimed_at, lease_expires_at, attempts, output_url
             FROM web_product_video_jobs
-            WHERE account_id = ? AND (
+            WHERE account_id = ? AND product_key = ? AND (
                 (? != '' AND request_id = ?)
                 OR (? != '' AND idempotency_key_hash = ?)
             )
@@ -399,7 +417,7 @@ def create_or_replay_product_video_job(
         """
         row = conn.execute(
             query,
-            (owner_id, effective_req_id, effective_req_id, idem_hash, idem_hash),
+            (owner_id, effective_product_key, effective_req_id, effective_req_id, idem_hash, idem_hash),
         ).fetchone()
 
         if row is not None:
@@ -421,7 +439,7 @@ def create_or_replay_product_video_job(
             "product_family": "product_video",
             "mode": "one_scene",
             "engine_adapter": CANONICAL_ENGINE_ADAPTER,
-            "product_key": CANONICAL_PRODUCT_KEY,
+            "product_key": effective_product_key,
             "routing_product_key": CANONICAL_ROUTING_KEY,
             "request_id": final_req_id,
             "job_id": job_id,
@@ -451,7 +469,7 @@ def create_or_replay_product_video_job(
                 job_id,
                 final_req_id,
                 owner_id,
-                CANONICAL_PRODUCT_KEY,
+                effective_product_key,
                 CANONICAL_ROUTING_KEY,
                 normalized["prompt"],
                 normalized["aspect_ratio"],
@@ -472,7 +490,7 @@ def create_or_replay_product_video_job(
             "id": job_id,
             "request_id": final_req_id,
             "account_id": owner_id,
-            "product_key": CANONICAL_PRODUCT_KEY,
+            "product_key": effective_product_key,
             "routing_product_key": CANONICAL_ROUTING_KEY,
             "prompt": normalized["prompt"],
             "aspect_ratio": normalized["aspect_ratio"],
@@ -491,6 +509,226 @@ def create_or_replay_product_video_job(
             "bridge_envelope": bridge_envelope,
             "idempotent_replay": False,
         }
+
+
+def validate_image_to_video_input(
+    account_id: str, values: dict[str, Any]
+) -> tuple[bool, str, dict[str, Any]]:
+    """Validate input payload for Image to Video (video_ai_image) job bridge."""
+    if _contains_authority_field(values):
+        return False, "authority_field_not_allowed", {}
+
+    # Extract image identifier: image_asset_id or asset_id or image or source_image_id
+    image_asset_id = str(
+        values.get("image_asset_id")
+        or values.get("asset_id")
+        or values.get("image")
+        or values.get("source_image_id")
+        or ""
+    ).strip()
+
+    if not image_asset_id:
+        return False, "IMAGE_ASSET_REQUIRED", {}
+
+    # Check asset ownership in Asset Vault
+    with read_transaction() as conn:
+        row = conn.execute(
+            """SELECT id, original_filename, extension, byte_size, state
+               FROM web_asset_files
+               WHERE id = ? AND account_id = ?""",
+            (image_asset_id, account_id),
+        ).fetchone()
+
+        if row is None:
+            return False, "IMAGE_ASSET_NOT_FOUND_OR_UNAUTHORIZED", {}
+
+        ext = str(row[2] or "").lower()
+        if ext not in SAFE_IMAGE_EXTENSIONS:
+            return False, "INVALID_IMAGE_ASSET_TYPE", {}
+
+    prompt = str(values.get("prompt") or values.get("text") or values.get("motion_prompt") or "").strip()
+    if len(prompt) > MAX_PROMPT_LENGTH:
+        return False, "PROMPT_TOO_LONG", {}
+
+    tier_raw = values.get("quality_tier") if "quality_tier" in values else values.get("tier", DEFAULT_QUALITY_TIER)
+    try:
+        tier = int(tier_raw)
+    except (TypeError, ValueError):
+        return False, "INVALID_QUALITY_TIER", {}
+    if tier not in ALLOWED_QUALITY_TIERS:
+        return False, "INVALID_QUALITY_TIER", {}
+
+    ratio_raw = str(values.get("aspect_ratio") or values.get("aspectRatio") or values.get("ratio") or DEFAULT_ASPECT_RATIO).strip()
+    if ratio_raw not in ALLOWED_ASPECT_RATIOS:
+        return False, "INVALID_ASPECT_RATIO", {}
+
+    dur_raw = values.get("duration_seconds") if "duration_seconds" in values else values.get("duration", DEFAULT_DURATION_SECONDS)
+    try:
+        dur = int(dur_raw)
+    except (TypeError, ValueError):
+        return False, "INVALID_DURATION", {}
+    if dur not in ALLOWED_DURATIONS:
+        return False, "INVALID_DURATION", {}
+
+    normalized = {
+        "prompt": prompt,
+        "image_asset_id": image_asset_id,
+        "aspect_ratio": ratio_raw,
+        "duration_seconds": dur,
+        "quality_tier": tier,
+        "scene_count": 1,
+        "product_key": IMAGE_TO_VIDEO_PRODUCT_KEY,
+        "routing_product_key": IMAGE_TO_VIDEO_ROUTING_KEY,
+    }
+    return True, "", normalized
+
+
+def create_or_replay_image_to_video_job(
+    *,
+    account_id: str,
+    payload: dict[str, Any],
+    request_id: str = "",
+    idempotency_key: str = "",
+) -> dict[str, Any]:
+    """Create a new canonical Image to Video job or replay existing one idempotently."""
+    ensure_copyfast_schema()
+    owner_id = str(account_id or "").strip()
+    if not owner_id:
+        raise HTTPException(status_code=401, detail="Xác thực tài khoản Web là bắt buộc")
+
+    is_valid, error_code, normalized = validate_image_to_video_input(owner_id, payload)
+    if not is_valid:
+        error_messages = {
+            "authority_field_not_allowed": "Yêu cầu chứa trường authority bị cấm.",
+            "IMAGE_ASSET_REQUIRED": "Tệp ảnh đầu vào từ Asset Vault là bắt buộc đối với Image to Video.",
+            "IMAGE_ASSET_NOT_FOUND_OR_UNAUTHORIZED": "Không tìm thấy tệp ảnh trong Asset Vault của tài khoản hoặc không có quyền truy cập.",
+            "INVALID_IMAGE_ASSET_TYPE": "Định dạng ảnh không hợp lệ. Phải thuộc (.png, .jpg, .jpeg, .webp).",
+            "PROMPT_TOO_LONG": f"Motion prompt không được vượt quá {MAX_PROMPT_LENGTH} ký tự.",
+            "INVALID_QUALITY_TIER": "Quality tier không hợp lệ. Phải thuộc (200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500).",
+            "INVALID_ASPECT_RATIO": "Aspect ratio không hợp lệ. Phải thuộc ('9:16', '16:9', '1:1').",
+            "INVALID_DURATION": "Thời lượng không hợp lệ. Phải thuộc (5, 10, 15) giây.",
+        }
+        raise HTTPException(status_code=400, detail=error_messages.get(error_code, error_code))
+
+    payload_hash = compute_payload_hash(normalized)
+    effective_req_id = str(request_id or payload.get("request_id") or "").strip()
+    effective_idem_key = str(idempotency_key or payload.get("idempotency_key") or "").strip()
+    idem_hash = compute_idempotency_hash(effective_idem_key) if effective_idem_key else ""
+
+    with transaction() as conn:
+        query = """
+            SELECT id, request_id, account_id, product_key, routing_product_key,
+                   prompt, aspect_ratio, duration_seconds, quality_tier, scene_count,
+                   status, status_reason, idempotency_key_hash, payload_hash,
+                   bridge_envelope, output_metadata, created_at, updated_at,
+                   worker_id, claimed_at, lease_expires_at, attempts, output_url
+            FROM web_product_video_jobs
+            WHERE account_id = ? AND product_key = ? AND (
+                (? != '' AND request_id = ?)
+                OR (? != '' AND idempotency_key_hash = ?)
+            )
+            ORDER BY created_at DESC LIMIT 1
+        """
+        row = conn.execute(
+            query,
+            (owner_id, IMAGE_TO_VIDEO_PRODUCT_KEY, effective_req_id, effective_req_id, idem_hash, idem_hash),
+        ).fetchone()
+
+        if row is not None:
+            existing_payload_hash = str(row[13])
+            if not hmac.compare_digest(existing_payload_hash, payload_hash):
+                raise HTTPException(
+                    status_code=409,
+                    detail="Xung đột mã yêu cầu: request_id hoặc idempotency_key đã gắn với payload khác.",
+                )
+            return _format_public_job(row, idempotent_replay=True)
+
+        job_id = generate_product_video_job_id()
+        final_req_id = effective_req_id or generate_canonical_request_id()
+        now = utc_now()
+
+        bridge_envelope = {
+            "version": "p0.product-video.canonical-bridge.v1",
+            "route_id": IMAGE_TO_VIDEO_ROUTE_ID,
+            "product_family": "product_video",
+            "mode": "image_to_video",
+            "engine_adapter": IMAGE_TO_VIDEO_ENGINE_ADAPTER,
+            "product_key": IMAGE_TO_VIDEO_PRODUCT_KEY,
+            "routing_product_key": IMAGE_TO_VIDEO_ROUTING_KEY,
+            "required_capability": "image_to_video",
+            "input_type": "scene_images",
+            "worker_owner": "product_video",
+            "image_asset_id": normalized["image_asset_id"],
+            "request_id": final_req_id,
+            "job_id": job_id,
+            "account_id": owner_id,
+            "prompt": normalized["prompt"],
+            "aspect_ratio": normalized["aspect_ratio"],
+            "duration_seconds": normalized["duration_seconds"],
+            "quality_tier": normalized["quality_tier"],
+            "scene_count": normalized["scene_count"],
+            "status": STATUS_QUEUED,
+            "status_reason": STATUS_REASON_AWAITING,
+            "created_at": now,
+            "output": None,
+        }
+        envelope_json = json.dumps(bridge_envelope, ensure_ascii=True, sort_keys=True)
+
+        conn.execute(
+            """
+            INSERT INTO web_product_video_jobs (
+                id, request_id, account_id, product_key, routing_product_key,
+                prompt, aspect_ratio, duration_seconds, quality_tier, scene_count,
+                status, status_reason, idempotency_key_hash, payload_hash,
+                bridge_envelope, output_metadata, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
+            """,
+            (
+                job_id,
+                final_req_id,
+                owner_id,
+                IMAGE_TO_VIDEO_PRODUCT_KEY,
+                IMAGE_TO_VIDEO_ROUTING_KEY,
+                normalized["prompt"],
+                normalized["aspect_ratio"],
+                normalized["duration_seconds"],
+                normalized["quality_tier"],
+                normalized["scene_count"],
+                STATUS_QUEUED,
+                STATUS_REASON_AWAITING,
+                idem_hash or None,
+                payload_hash,
+                envelope_json,
+                now,
+                now,
+            ),
+        )
+
+        return {
+            "id": job_id,
+            "request_id": final_req_id,
+            "account_id": owner_id,
+            "product_key": IMAGE_TO_VIDEO_PRODUCT_KEY,
+            "routing_product_key": IMAGE_TO_VIDEO_ROUTING_KEY,
+            "prompt": normalized["prompt"],
+            "image_asset_id": normalized["image_asset_id"],
+            "aspect_ratio": normalized["aspect_ratio"],
+            "duration_seconds": normalized["duration_seconds"],
+            "quality_tier": normalized["quality_tier"],
+            "scene_count": normalized["scene_count"],
+            "status": STATUS_QUEUED,
+            "status_reason": STATUS_REASON_AWAITING,
+            "output_available": False,
+            "download_ready": False,
+            "delivery_ready": False,
+            "output": None,
+            "output_metadata": None,
+            "created_at": now,
+            "updated_at": now,
+            "bridge_envelope": bridge_envelope,
+            "idempotent_replay": False,
+        }
+
 
 
 def create_owner_acceptance_video_reference_job(
@@ -766,8 +1004,9 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
     is_completed = status_str == "completed"
     is_terminal_failure = status_str in ("failed", "cancelled", "rejected")
     is_non_terminal = not is_completed and not is_terminal_failure
-    runtime_active = _is_runtime_execution_active("video_ai_prompt")
-    is_v2v = str(row[3]) == V2V_PRODUCT_KEY
+    product_key_val = str(row[3])
+    runtime_active = _is_runtime_execution_active(product_key_val) or _is_runtime_execution_active("video_ai_prompt")
+    is_v2v = product_key_val == V2V_PRODUCT_KEY
 
     if is_v2v:
         runtime_execution_active = False

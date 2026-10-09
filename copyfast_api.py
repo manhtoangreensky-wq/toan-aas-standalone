@@ -130,10 +130,17 @@ from copyfast_product_video_job_bridge import (
     CANONICAL_PRODUCT_KEY as PRODUCT_VIDEO_PRODUCT_KEY,
     SUPPORTED_CANONICAL_JOB_ADAPTERS as PRODUCT_VIDEO_ADAPTER_KEYS,
     create_or_replay_product_video_job,
+    create_or_replay_image_to_video_job,
     get_product_video_job,
     is_product_video_job_other_account,
     list_product_video_jobs,
     product_video_job_to_native_compat,
+)
+from copyfast_document_translate_bridge import (
+    create_or_replay_document_translate_job,
+    get_document_translate_job,
+    is_document_translate_job_other_account,
+    list_document_translate_jobs,
 )
 from copyfast_video_trend_job_bridge import (
     CANONICAL_PRODUCT_KEY as VIDEO_TREND_PRODUCT_KEY,
@@ -246,6 +253,12 @@ WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES: frozenset[str] = frozenset({
     "subdub", "video_ai_prompt", "voice_tts",
     "music", "music_background", "music_song",
     "image_create",
+    "video_trend",
+    "video_image_to_video",
+    "video_quick",
+    "video_product",
+    "video_text_to_video",
+    "documents_translate",
 })
 CONTIGUOUS_PAGE_RANGE_PATTERN = re.compile(r"^\d+(?:-\d+)?$")
 TICKET_SECRET_ASSIGNMENT_PATTERN = re.compile(
@@ -6433,22 +6446,29 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
         )
         if quote_state != "claimed":
             return _feature_quote_required_response(quote_state)
-        if feature == "video_ai_prompt":
+        if feature in ("video_ai_prompt", "video_quick", "video_product", "video_text_to_video"):
             account_id = str(account.get("id") or "")
             try:
                 job_result = create_or_replay_product_video_job(
                     account_id=account_id,
                     payload=values,
                     idempotency_key=key,
+                    product_key=feature,
                 )
                 _settle_feature_quote_receipt(
                     receipt=payload.web_quote_receipt,
                     idempotency_key=key,
                     accepted=True,
                 )
+                msg_map = {
+                    "video_ai_prompt": "Đã tạo tác vụ Video AI Prompt thành công, chờ runtime xử lý.",
+                    "video_quick": "Đã tạo tác vụ Video Nhanh thành công, chờ runtime xử lý.",
+                    "video_product": "Đã tạo tác vụ Video Sản phẩm thành công, chờ runtime xử lý.",
+                    "video_text_to_video": "Đã tạo tác vụ Video từ Văn bản thành công, chờ runtime xử lý.",
+                }
                 return envelope(
                     True,
-                    "Đã tạo tác vụ Video AI Prompt thành công, chờ runtime xử lý.",
+                    msg_map.get(feature, "Đã tạo tác vụ Video thành công, chờ runtime xử lý."),
                     data=job_result,
                     status_name="queued",
                 )
@@ -6465,6 +6485,72 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
                     exc.detail,
                     status_name="guarded",
                     error_code="PRODUCT_VIDEO_JOB_VALIDATION_FAILED",
+                )
+        if feature == "video_image_to_video":
+            account_id = str(account.get("id") or "")
+            try:
+                job_result = create_or_replay_image_to_video_job(
+                    account_id=account_id,
+                    payload=values,
+                    idempotency_key=key,
+                )
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=True,
+                )
+                return envelope(
+                    True,
+                    "Đã tạo tác vụ Video AI Image thành công, chờ runtime xử lý.",
+                    data=job_result,
+                    status_name="queued",
+                )
+            except HTTPException as exc:
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=False,
+                )
+                if exc.status_code == 409:
+                    raise exc
+                return envelope(
+                    False,
+                    exc.detail,
+                    status_name="guarded",
+                    error_code="IMAGE_TO_VIDEO_JOB_VALIDATION_FAILED",
+                )
+        if feature == "documents_translate":
+            account_id = str(account.get("id") or "")
+            try:
+                job_result = create_or_replay_document_translate_job(
+                    account_id=account_id,
+                    payload=values,
+                    idempotency_key=key,
+                )
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=True,
+                )
+                return envelope(
+                    True,
+                    "Đã tạo tác vụ Dịch tài liệu thành công, chờ runtime xử lý.",
+                    data=job_result,
+                    status_name="queued",
+                )
+            except HTTPException as exc:
+                _settle_feature_quote_receipt(
+                    receipt=payload.web_quote_receipt,
+                    idempotency_key=key,
+                    accepted=False,
+                )
+                if exc.status_code == 409:
+                    raise exc
+                return envelope(
+                    False,
+                    exc.detail,
+                    status_name="guarded",
+                    error_code="DOCUMENT_TRANSLATE_JOB_VALIDATION_FAILED",
                 )
         if feature == "video_trend":
             account_id = str(account.get("id") or "")
@@ -6809,6 +6895,309 @@ async def get_product_video_job_route(
     if is_product_video_job_other_account(job_id, account_id):
         raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
     raise HTTPException(status_code=404, detail="Không tìm thấy job Video AI Prompt của tài khoản.")
+
+
+@router.post("/features/video_quick/jobs")
+async def create_video_quick_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if not _web_feature_runtime_active("video_quick"):
+        return envelope(False, "Runtime execution chưa được kích hoạt cho tính năng này.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    request_id = str(payload.input.get("request_id") or "")
+    job = create_or_replay_product_video_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        request_id=request_id,
+        idempotency_key=key,
+        product_key="video_quick",
+    )
+    return envelope(
+        True,
+        "Đã tạo tác vụ Video Nhanh thành công, chờ runtime xử lý.",
+        data=job,
+        status_name="queued",
+    )
+
+
+@router.get("/features/video_quick/jobs")
+async def list_video_quick_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = [j for j in list_product_video_jobs(account_id, limit=100) if j.get("product_key") == "video_quick"]
+    return envelope(
+        True,
+        "Đã tải danh sách job Video Nhanh của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/video_quick/jobs/{job_id}")
+async def get_video_quick_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    job = get_product_video_job(account_id, job_id)
+    if job is not None and job.get("product_key") == "video_quick":
+        return envelope(
+            True,
+            "Đã tải chi tiết job Video Nhanh.",
+            data=job,
+            status_name="read_only",
+        )
+    if is_product_video_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Video Nhanh của tài khoản.")
+
+
+@router.post("/features/video_product/jobs")
+async def create_video_product_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if not _web_feature_runtime_active("video_product"):
+        return envelope(False, "Runtime execution chưa được kích hoạt cho tính năng này.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    request_id = str(payload.input.get("request_id") or "")
+    job = create_or_replay_product_video_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        request_id=request_id,
+        idempotency_key=key,
+        product_key="video_product",
+    )
+    return envelope(
+        True,
+        "Đã tạo tác vụ Video Sản phẩm thành công, chờ runtime xử lý.",
+        data=job,
+        status_name="queued",
+    )
+
+
+@router.get("/features/video_product/jobs")
+async def list_video_product_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = [j for j in list_product_video_jobs(account_id, limit=100) if j.get("product_key") == "video_product"]
+    return envelope(
+        True,
+        "Đã tải danh sách job Video Sản phẩm của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/video_product/jobs/{job_id}")
+async def get_video_product_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    job = get_product_video_job(account_id, job_id)
+    if job is not None and job.get("product_key") == "video_product":
+        return envelope(
+            True,
+            "Đã tải chi tiết job Video Sản phẩm.",
+            data=job,
+            status_name="read_only",
+        )
+    if is_product_video_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Video Sản phẩm của tài khoản.")
+
+
+@router.post("/features/video_text_to_video/jobs")
+async def create_video_text_to_video_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if not _web_feature_runtime_active("video_text_to_video"):
+        return envelope(False, "Runtime execution chưa được kích hoạt cho tính năng này.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    request_id = str(payload.input.get("request_id") or "")
+    job = create_or_replay_product_video_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        request_id=request_id,
+        idempotency_key=key,
+        product_key="video_text_to_video",
+    )
+    return envelope(
+        True,
+        "Đã tạo tác vụ Video từ Văn bản thành công, chờ runtime xử lý.",
+        data=job,
+        status_name="queued",
+    )
+
+
+@router.get("/features/video_text_to_video/jobs")
+async def list_video_text_to_video_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = [j for j in list_product_video_jobs(account_id, limit=100) if j.get("product_key") == "video_text_to_video"]
+    return envelope(
+        True,
+        "Đã tải danh sách job Video từ Văn bản của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/video_text_to_video/jobs/{job_id}")
+async def get_video_text_to_video_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    job = get_product_video_job(account_id, job_id)
+    if job is not None and job.get("product_key") == "video_text_to_video":
+        return envelope(
+            True,
+            "Đã tải chi tiết job Video từ Văn bản.",
+            data=job,
+            status_name="read_only",
+        )
+    if is_product_video_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Video từ Văn bản của tài khoản.")
+
+
+@router.post("/features/video_image_to_video/jobs")
+async def create_video_image_to_video_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if not _web_feature_runtime_active("video_image_to_video"):
+        return envelope(False, "Runtime execution chưa được kích hoạt cho tính năng này.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    request_id = str(payload.input.get("request_id") or "")
+    job = create_or_replay_image_to_video_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        request_id=request_id,
+        idempotency_key=key,
+    )
+    return envelope(
+        True,
+        "Đã tạo tác vụ Video AI Image thành công, chờ runtime xử lý.",
+        data=job,
+        status_name="queued",
+    )
+
+
+@router.get("/features/video_image_to_video/jobs")
+async def list_video_image_to_video_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = [j for j in list_product_video_jobs(account_id, limit=100) if j.get("product_key") == "video_ai_image"]
+    return envelope(
+        True,
+        "Đã tải danh sách job Video AI Image của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/video_image_to_video/jobs/{job_id}")
+async def get_video_image_to_video_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    job = get_product_video_job(account_id, job_id)
+    if job is not None and job.get("product_key") == "video_ai_image":
+        return envelope(
+            True,
+            "Đã tải chi tiết job Video AI Image.",
+            data=job,
+            status_name="read_only",
+        )
+    if is_product_video_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Video AI Image của tài khoản.")
+
+
+@router.post("/features/documents_translate/jobs")
+async def create_documents_translate_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if not _web_feature_runtime_active("documents_translate"):
+        return envelope(False, "Runtime execution chưa được kích hoạt cho tính năng này.", status_name="guarded", error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED")
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    request_id = str(payload.input.get("request_id") or "")
+    job = create_or_replay_document_translate_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        request_id=request_id,
+        idempotency_key=key,
+    )
+    return envelope(
+        True,
+        "Đã tạo tác vụ Dịch tài liệu thành công, chờ runtime xử lý.",
+        data=job,
+        status_name="queued",
+    )
+
+
+@router.get("/features/documents_translate/jobs")
+async def list_documents_translate_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = list_document_translate_jobs(account_id, limit=100)
+    return envelope(
+        True,
+        "Đã tải danh sách job Dịch tài liệu của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/documents_translate/jobs/{job_id}")
+async def get_documents_translate_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    job = get_document_translate_job(account_id, job_id)
+    if job is not None:
+        return envelope(
+            True,
+            "Đã tải chi tiết job Dịch tài liệu.",
+            data=job,
+            status_name="read_only",
+        )
+    if is_document_translate_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Dịch tài liệu của tài khoản.")
 
 
 @router.post("/features/video_trend/jobs")

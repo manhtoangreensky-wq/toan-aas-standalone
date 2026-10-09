@@ -61,5 +61,37 @@
     "STATUS": "REPAIRED_IN_R5",
     "RESOLUTION": "Promoted /video/poster, /video/frame-sequence, /video/finishing, and /video/add-ons to RELEASED_WEB_NATIVE_RUNTIME, and /video/export to RELEASED_READ_ONLY_CANONICAL_COMPANION. Exact root gaps recorded for remaining 13 blocked routes.",
     "TERMINAL_CLASSIFICATION": "RELEASED_WEB_NATIVE_RUNTIME_AND_COMPANION"
+  },
+  {
+    "DEFECT_ID": "DEFECT-R6-001",
+    "SPEC": "SPEC-00-R6",
+    "ROLE": "customer",
+    "ROUTE": "/video/{trend,image-to-video,quick,product,text-to-video}, /documents/translate",
+    "CONTROL": "Cross-Product Canonical Bridges and Worker Consumers Activation",
+    "REPRO_STEPS": "Audit 13 remaining routes previously marked BLOCKED_CANONICAL_BACKEND_MISSING.",
+    "EXPECTED": "Activate canonical bridges and worker consumers where existing engines exist.",
+    "ACTUAL": "Routes were blocked due to unmounted web bridges or inactive allowlist toggles.",
+    "DATA_SOURCE": "CANONICAL_BOT_ENGINE_AND_BRIDGE",
+    "FIRST_RED": "Bridges were missing or not mounted in copyfast_api.py despite underlying engines existing.",
+    "ROOT_CAUSE": "Routes /video/trend, /video/image-to-video, /video/quick, /video/product, /video/text-to-video, and /documents/translate had existing canonical backend engines but lacked mounted web bridges and runtime allowlist flags.",
+    "STATUS": "REPAIRED_IN_R6",
+    "RESOLUTION": "Mounted canonical bridges with full idempotency, quote settlement, and asset vault verification; activated in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES. Promoted 6 routes to RELEASED_ACTIVE_CANONICAL_RUNTIME.",
+    "TERMINAL_CLASSIFICATION": "RELEASED_ACTIVE_CANONICAL_RUNTIME"
+  },
+  {
+    "DEFECT_ID": "DEFECT-R6-002",
+    "SPEC": "SPEC-00-R6",
+    "ROLE": "customer",
+    "ROUTE": "/video/mux, /music/sfx, /image/{upscale,transform,remove-background}",
+    "CONTROL": "Mux Informational Reclassification and External Provider Capability Gaps",
+    "REPRO_STEPS": "Audit /video/mux and remaining genuine missing engine routes.",
+    "EXPECTED": "Truthfully classify /video/mux as informational guidance and external provider dependent routes as grant required.",
+    "ACTUAL": "Generic backend missing classification obscured exact product contract and provider entitlement gaps.",
+    "DATA_SOURCE": "PRODUCT_CONTRACT_AND_PROVIDER_INVENTORY",
+    "FIRST_RED": "Mux is an internal pipeline stage of SubDub, not an independent product action; SFX and image operations require external provider account grants.",
+    "ROOT_CAUSE": "Taxonomy lumped informational pipeline stages and provider entitlement dependencies into generic backend missing.",
+    "STATUS": "REPAIRED_IN_R6",
+    "RESOLUTION": "Reclassified /video/mux as NOT_A_PRODUCT_ACTION_INFORMATIONAL_ONLY and /music/sfx, /image/upscale, /image/transform, /image/remove-background as BLOCKED_EXTERNAL_CAPABILITY_OR_GRANT_REQUIRED.",
+    "TERMINAL_CLASSIFICATION": "INFORMATIONAL_AND_GRANT_REQUIRED"
   }
 ]
