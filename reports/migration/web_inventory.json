@@ -1298,7 +1298,7 @@
     "callback_templates": 0,
     "commands": 0,
     "conversations": 0,
-    "database_tables": 244,
+    "database_tables": 245,
     "env_references": 284,
     "providers": 13,
     "routes": 830,
@@ -1436,6 +1436,12 @@
       "line": 78,
       "operation": "INSERT INTO",
       "table": "credit_events"
+    },
+    {
+      "file": "scripts/build_r4_matrix.py",
+      "line": 563,
+      "operation": "UPDATE",
+      "table": "defects"
     },
     {
       "file": "erp_core.py",
@@ -7772,6 +7778,7 @@
     "campaigns",
     "clears",
     "credit_events",
+    "defects",
     "erp_approvals",
     "erp_assets",
     "erp_attendance",
@@ -9564,7 +9571,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 973,
+      "occurrences": 979,
       "provider": "PayOS"
     },
     {
@@ -9724,7 +9731,7 @@
         "copyfast_notification_center.py",
         "copyfast_pages.py"
       ],
-      "occurrences": 1832,
+      "occurrences": 1837,
       "provider": "Telegram"
     }
   ],
@@ -17201,9 +17208,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 246,
-  "source_files_scanned": 246,
-  "source_fingerprint_sha256": "ec9ea9e6a67b96422839fbfcdd208822381f141091e5c1b8ac612264560dcc63",
+  "source_files_discovered": 248,
+  "source_files_scanned": 248,
+  "source_fingerprint_sha256": "179cec34e07c0b267f73ede6de9a6370993a7cb1f28df49c2d94c224f4b9650f",
   "source_root": "repository-root",
   "ui_path_references": [
     {
