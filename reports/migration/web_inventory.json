@@ -1660,6 +1660,12 @@
       "table": "defects"
     },
     {
+      "file": "scripts/build_r8_matrix.py",
+      "line": 1221,
+      "operation": "UPDATE",
+      "table": "defects"
+    },
+    {
       "file": "erp_core.py",
       "line": 36,
       "operation": "CREATE TABLE IF NOT EXISTS",
@@ -1884,6 +1890,12 @@
     {
       "file": "scripts/build_r7_matrix.py",
       "line": 1179,
+      "operation": "UPDATE",
+      "table": "in"
+    },
+    {
+      "file": "scripts/build_r8_matrix.py",
+      "line": 1241,
       "operation": "UPDATE",
       "table": "in"
     },
@@ -9839,7 +9851,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 997,
+      "occurrences": 1003,
       "provider": "PayOS"
     },
     {
@@ -9869,9 +9881,11 @@
         "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
         "reports/audit/WEB_APP_FULL_UIUX_FUNCTIONAL_STABILIZATION_R1.json",
         "reports/audit/WEB_APP_FULL_UIUX_FUNCTIONAL_STABILIZATION_R1.md",
+        "reports/webapp_full_product_truth/R8_FINAL_ROUTE_RUNTIME_MATRIX.json",
+        "scripts/build_r8_matrix.py",
         "static/portal/portal.js"
       ],
-      "occurrences": 9,
+      "occurrences": 11,
       "provider": "MiniMax"
     },
     {
@@ -9922,11 +9936,13 @@
         "reports/webapp_full_product_truth/00_route_surface_inventory.json",
         "reports/webapp_full_product_truth/R6_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R7_FINAL_ROUTE_RUNTIME_MATRIX.json",
+        "reports/webapp_full_product_truth/R8_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "scripts/build_r6_matrix.py",
         "scripts/build_r7_matrix.py",
+        "scripts/build_r8_matrix.py",
         "studio/script.js"
       ],
-      "occurrences": 10,
+      "occurrences": 12,
       "provider": "ElevenLabs"
     },
     {
@@ -9967,9 +9983,11 @@
     },
     {
       "files": [
-        "reports/webapp_full_product_truth/00_route_surface_inventory.json"
+        "reports/webapp_full_product_truth/00_route_surface_inventory.json",
+        "reports/webapp_full_product_truth/R8_FINAL_ROUTE_RUNTIME_MATRIX.json",
+        "scripts/build_r8_matrix.py"
       ],
-      "occurrences": 1,
+      "occurrences": 7,
       "provider": "Replicate"
     },
     {
@@ -10015,7 +10033,7 @@
         "copyfast_notification_center.py",
         "copyfast_pages.py"
       ],
-      "occurrences": 1852,
+      "occurrences": 1857,
       "provider": "Telegram"
     }
   ],
@@ -17681,9 +17699,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 256,
-  "source_files_scanned": 256,
-  "source_fingerprint_sha256": "4cdda629685d66fa5549af3b0ef6d45b0de4738590b104059002065f0d53e341",
+  "source_files_discovered": 258,
+  "source_files_scanned": 258,
+  "source_fingerprint_sha256": "f8c7c0f712f30bc7e8ae15344055aa215f0148c2df52948f44f375c2b78b5352",
   "source_root": "repository-root",
   "ui_path_references": [
     {

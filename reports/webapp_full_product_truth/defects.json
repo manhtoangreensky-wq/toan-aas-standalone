@@ -141,5 +141,37 @@
     "STATUS": "REPAIRED_IN_R7",
     "RESOLUTION": "Implemented copyfast_image_remove_background_bridge.py with durable SQLite ledger, mounted endpoints in copyfast_api.py, and promoted to RELEASED_ACTIVE_CANONICAL_RUNTIME.",
     "TERMINAL_CLASSIFICATION": "RELEASED_ACTIVE_CANONICAL_RUNTIME"
+  },
+  {
+    "DEFECT_ID": "DEFECT-R8-001",
+    "SPEC": "SPEC-00-R8",
+    "ROLE": "customer",
+    "ROUTE": "/image/upscale, /image/transform, /music/sfx",
+    "CONTROL": "Generic External Capability Elimination & Truthful Entitlement Classification",
+    "REPRO_STEPS": "Audit 3 residual external capability lanes against configured production credentials and provider capability registries.",
+    "EXPECTED": "Precise terminal classification to BLOCKED_PROVIDER_ENTITLEMENT with ACCOUNT_ENTITLEMENT_MISSING root gap.",
+    "ACTUAL": "Carried generic EXTERNAL_PROVIDER_CAPABILITY_MISSING label across previous iterations.",
+    "DATA_SOURCE": "BOT_PROVIDER_REGISTRY_AND_ENV_AUDIT",
+    "FIRST_RED": "Generic bucket masked distinct root causes (unimplemented upscale vs absent img2img vs library-only Freesound).",
+    "ROOT_CAUSE": "Catch-all classification bucket used prior to systematic per-lane capability determination.",
+    "STATUS": "REPAIRED_IN_R8",
+    "RESOLUTION": "Evaluated accounts and registered models; accurately classified all 3 routes to BLOCKED_PROVIDER_ENTITLEMENT with ACCOUNT_ENTITLEMENT_MISSING.",
+    "TERMINAL_CLASSIFICATION": "BLOCKED_PROVIDER_ENTITLEMENT"
+  },
+  {
+    "DEFECT_ID": "DEFECT-R8-002",
+    "SPEC": "SPEC-00-R8",
+    "ROLE": "customer",
+    "ROUTE": "/voice/clone",
+    "CONTROL": "Voice Clone Runtime Requalification and Owner Live Grant Separation",
+    "REPRO_STEPS": "Audit Bot Core voice clone pipeline, first-free FSM, settlement durability, and live grant status.",
+    "EXPECTED": "Classified to IMPLEMENTED_DEPLOYED_WAIT_OWNER_LIVE_GRANT with OWNER_LIVE_GRANT_REQUIRED root gap.",
+    "ACTUAL": "Grouped into generic BLOCKED_EXTERNAL_CAPABILITY_OR_GRANT_REQUIRED without differentiating ready runtime from missing grant.",
+    "DATA_SOURCE": "BOT_VOICE_CLONE_PIPELINE_AND_RUNTIME_SERVICE",
+    "FIRST_RED": "Ready canonical engine and web bridge were labeled as generically blocked.",
+    "ROOT_CAUSE": "Failure to decouple complete implementation/deployment from live paid provider grant requirement.",
+    "STATUS": "REPAIRED_IN_R8",
+    "RESOLUTION": "Requalified zero-drift runtime, verified actor 6824663936 clean state, and established terminal status IMPLEMENTED_DEPLOYED_WAIT_OWNER_LIVE_GRANT.",
+    "TERMINAL_CLASSIFICATION": "IMPLEMENTED_DEPLOYED_WAIT_OWNER_LIVE_GRANT"
   }
 ]
