@@ -1666,6 +1666,12 @@
       "table": "defects"
     },
     {
+      "file": "scripts/build_r9_matrix.py",
+      "line": 248,
+      "operation": "UPDATE",
+      "table": "defects"
+    },
+    {
       "file": "erp_core.py",
       "line": 36,
       "operation": "CREATE TABLE IF NOT EXISTS",
@@ -9851,7 +9857,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1003,
+      "occurrences": 1008,
       "provider": "PayOS"
     },
     {
@@ -9882,10 +9888,12 @@
         "reports/audit/WEB_APP_FULL_UIUX_FUNCTIONAL_STABILIZATION_R1.json",
         "reports/audit/WEB_APP_FULL_UIUX_FUNCTIONAL_STABILIZATION_R1.md",
         "reports/webapp_full_product_truth/R8_FINAL_ROUTE_RUNTIME_MATRIX.json",
+        "reports/webapp_full_product_truth/R9_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "scripts/build_r8_matrix.py",
+        "scripts/build_r9_matrix.py",
         "static/portal/portal.js"
       ],
-      "occurrences": 11,
+      "occurrences": 13,
       "provider": "MiniMax"
     },
     {
@@ -9937,12 +9945,14 @@
         "reports/webapp_full_product_truth/R6_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R7_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R8_FINAL_ROUTE_RUNTIME_MATRIX.json",
+        "reports/webapp_full_product_truth/R9_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "scripts/build_r6_matrix.py",
         "scripts/build_r7_matrix.py",
         "scripts/build_r8_matrix.py",
+        "scripts/build_r9_matrix.py",
         "studio/script.js"
       ],
-      "occurrences": 12,
+      "occurrences": 14,
       "provider": "ElevenLabs"
     },
     {
@@ -9985,9 +9995,11 @@
       "files": [
         "reports/webapp_full_product_truth/00_route_surface_inventory.json",
         "reports/webapp_full_product_truth/R8_FINAL_ROUTE_RUNTIME_MATRIX.json",
-        "scripts/build_r8_matrix.py"
+        "reports/webapp_full_product_truth/R9_FINAL_ROUTE_RUNTIME_MATRIX.json",
+        "scripts/build_r8_matrix.py",
+        "scripts/build_r9_matrix.py"
       ],
-      "occurrences": 7,
+      "occurrences": 12,
       "provider": "Replicate"
     },
     {
@@ -10033,7 +10045,7 @@
         "copyfast_notification_center.py",
         "copyfast_pages.py"
       ],
-      "occurrences": 1857,
+      "occurrences": 1862,
       "provider": "Telegram"
     }
   ],
@@ -17699,9 +17711,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 258,
-  "source_files_scanned": 258,
-  "source_fingerprint_sha256": "f8c7c0f712f30bc7e8ae15344055aa215f0148c2df52948f44f375c2b78b5352",
+  "source_files_discovered": 260,
+  "source_files_scanned": 260,
+  "source_fingerprint_sha256": "b9b6a0c09dcf91cc0328120150a118c1546391202f55b80e28fda05d393ac3ae",
   "source_root": "repository-root",
   "ui_path_references": [
     {

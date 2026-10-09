@@ -289,6 +289,7 @@ def test_r7_provenance_and_defects_integrity() -> None:
     assert s["FIRST_RED"] in (
         "NONE - R7 WHOLE APP FINAL RESIDUAL RUNTIME CLOSURE COMPLETE",
         "NONE - R8 WHOLE APP EXTERNAL CAPABILITY AND LIVE ENGINE CLOSURE COMPLETE",
+        "NONE - R9 WHOLE APP POST R8 PROVENANCE AND CURRENT RUNTIME RECONCILIATION COMPLETE",
     )
 
     with open(DEFECTS_FILE, "r", encoding="utf-8") as f:
