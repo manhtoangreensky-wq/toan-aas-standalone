@@ -871,4 +871,3 @@ def test_22_client_completed_status_injection_rejected():
         assert res.status_code == 200
         body = res.json()
         assert body["ok"] is False
-
