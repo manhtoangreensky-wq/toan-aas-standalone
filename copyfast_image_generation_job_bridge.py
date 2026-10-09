@@ -334,10 +334,28 @@ def ensure_image_generation_schema(conn: Any = None) -> None:
                 output_metadata_json TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
+                runtime_job_id TEXT,
+                quote_xu INTEGER NOT NULL DEFAULT 0,
+                charged_xu INTEGER NOT NULL DEFAULT 0,
+                runtime_dispatch_status TEXT NOT NULL DEFAULT 'undispatched',
+                runtime_dispatched_at TEXT,
+                completed_at TEXT,
                 FOREIGN KEY(account_id) REFERENCES web_accounts(id)
             )
             """
         )
+        for col, col_def in [
+            ("runtime_job_id", "TEXT"),
+            ("quote_xu", "INTEGER NOT NULL DEFAULT 0"),
+            ("charged_xu", "INTEGER NOT NULL DEFAULT 0"),
+            ("runtime_dispatch_status", "TEXT NOT NULL DEFAULT 'undispatched'"),
+            ("runtime_dispatched_at", "TEXT"),
+            ("completed_at", "TEXT"),
+        ]:
+            try:
+                c.execute(f"ALTER TABLE web_image_generation_jobs ADD COLUMN {col} {col_def}")
+            except Exception:
+                pass
         c.execute("CREATE INDEX IF NOT EXISTS idx_web_image_generation_jobs_account_created ON web_image_generation_jobs(account_id, created_at DESC)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_web_image_generation_jobs_request ON web_image_generation_jobs(request_id)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_web_image_generation_jobs_account_idempotency ON web_image_generation_jobs(account_id, idempotency_key_hash)")
@@ -621,8 +639,11 @@ def _format_image_generation_job_record(row: dict[str, Any]) -> dict[str, Any]:
         except Exception:
             output_metadata = None
 
+    job_id = str(row.get("id") or "")
+    artifact_url = f"/api/v1/features/image_create/jobs/{job_id}/artifact" if is_completed else None
+
     return {
-        "id": row.get("id"),
+        "id": job_id,
         "canonical_job_id": row.get("canonical_job_id"),
         "request_id": row.get("request_id"),
         "account_id": row.get("account_id"),
@@ -634,6 +655,13 @@ def _format_image_generation_job_record(row: dict[str, Any]) -> dict[str, Any]:
         "status_reason": projected_status_reason,
         "source_state": source_state,
         "runtime_execution_active": runtime_execution_active,
+        "quote_xu": int(row.get("quote_xu") or 0),
+        "charged_xu": int(row.get("charged_xu") or 0),
+        "runtime_job_id": row.get("runtime_job_id"),
+        "runtime_dispatch_status": row.get("runtime_dispatch_status") or "undispatched",
+        "has_artifact": bool(is_completed),
+        "can_download": bool(is_completed),
+        "artifact_url": artifact_url,
         "output": clean_output,
         "output_url": clean_output,
         "output_available": output_available,
@@ -643,4 +671,236 @@ def _format_image_generation_job_record(row: dict[str, Any]) -> dict[str, Any]:
         "bridge_envelope": envelope,
         "created_at": row.get("created_at"),
         "updated_at": row.get("updated_at"),
+        "completed_at": row.get("completed_at"),
     }
+
+
+# ─── CANONICAL RUNTIME DISPATCH & CONFIRM ────────────────────────────────────
+
+async def dispatch_image_generation_job_to_canonical_runtime(
+    job_id: str,
+    account: dict[str, Any],
+    request: Any = None,
+) -> dict[str, Any]:
+    """Dispatch an admitted Web Image Generation job to canonical Bot Core runtime."""
+    ensure_image_generation_schema()
+    clean_job_id = str(job_id or "").strip()
+    account_id = str(account.get("id") or "").strip()
+    canonical_user_id = str(account.get("canonical_user_id") or "").strip()
+
+    if not clean_job_id or not account_id:
+        return {}
+
+    job = get_image_generation_job(account_id, clean_job_id)
+    if not job:
+        return {}
+    if job.get("status") == STATUS_COMPLETED:
+        return job
+
+    from copyfast_bridge import bridge_configured, bridge_request
+    if not bridge_configured() or not canonical_user_id:
+        return job
+
+    canonical_payload = {
+        "prompt": job["prompt"],
+        "tier_key": job["tier_key"],
+        "aspect_ratio": "1:1",
+        "idempotency_key": f"{canonical_user_id}:{clean_job_id}",
+        "web_request_id": job.get("request_id") or clean_job_id,
+    }
+
+    try:
+        res = await bridge_request(
+            "POST",
+            "/internal/v1/web-image/jobs",
+            payload=canonical_payload,
+            request_id=f"DISPATCH-{job['request_id']}",
+            actor_id=canonical_user_id,
+            owner_id=canonical_user_id,
+        )
+        if isinstance(res, dict) and res.get("ok"):
+            bot_job = (res.get("data") or {}).get("job") or res.get("job") or {}
+            rt_id = str(bot_job.get("job_id") or "").strip() if isinstance(bot_job, dict) else ""
+            if rt_id:
+                bot_quote = int(bot_job.get("quote_xu") or 0)
+                bot_status = str(bot_job.get("status") or "")
+                with transaction() as conn:
+                    conn.execute(
+                        """
+                        UPDATE web_image_generation_jobs
+                        SET runtime_job_id = ?,
+                            quote_xu = ?,
+                            runtime_dispatch_status = 'dispatched',
+                            runtime_dispatched_at = ?,
+                            updated_at = ?
+                        WHERE id = ? AND status != 'completed'
+                        """,
+                        (rt_id, bot_quote, utc_now(), utc_now(), clean_job_id),
+                    )
+            else:
+                with transaction() as conn:
+                    conn.execute(
+                        """
+                        UPDATE web_image_generation_jobs
+                        SET runtime_dispatch_status = 'failed',
+                            status_reason = 'BOT_JOB_ID_MISSING',
+                            updated_at = ?
+                        WHERE id = ? AND status != 'completed'
+                        """,
+                        (utc_now(), clean_job_id),
+                    )
+        else:
+            err_reason = str((res.get("error_code") if isinstance(res, dict) else "") or "BOT_PREPARE_FAILED")
+            with transaction() as conn:
+                conn.execute(
+                    """
+                    UPDATE web_image_generation_jobs
+                    SET runtime_dispatch_status = 'failed',
+                        status_reason = ?,
+                        updated_at = ?
+                    WHERE id = ? AND status != 'completed'
+                    """,
+                    (err_reason, utc_now(), clean_job_id),
+                )
+    except Exception:
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_image_generation_jobs
+                SET runtime_dispatch_status = 'uncertain',
+                    status_reason = 'BRIDGE_DISPATCH_EXCEPTION',
+                    updated_at = ?
+                WHERE id = ? AND status != 'completed'
+                """,
+                (utc_now(), clean_job_id),
+            )
+
+    return get_image_generation_job(account_id, clean_job_id) or {}
+
+
+async def confirm_image_generation_job(
+    job_id: str,
+    account: dict[str, Any],
+    request: Any = None,
+) -> dict[str, Any]:
+    """Confirm and execute Web Image Generation job against canonical Bot Core."""
+    ensure_image_generation_schema()
+    clean_job_id = str(job_id or "").strip()
+    account_id = str(account.get("id") or "").strip()
+    canonical_user_id = str(account.get("canonical_user_id") or "").strip()
+
+    job = get_image_generation_job(account_id, clean_job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail={"error_code": "JOB_NOT_FOUND", "message": "Không tìm thấy job Tạo ảnh AI của tài khoản"})
+
+    if job.get("status") == STATUS_COMPLETED:
+        return job
+
+    from copyfast_bridge import bridge_configured, bridge_request
+    if not bridge_configured():
+        raise HTTPException(status_code=503, detail={"error_code": "BRIDGE_NOT_CONFIGURED", "message": "Core Bridge chưa được cấu hình"})
+    if not canonical_user_id:
+        raise HTTPException(status_code=403, detail={"error_code": "TELEGRAM_LINK_REQUIRED", "message": "Tài khoản chưa liên kết Telegram"})
+
+    # Dispatch first if needed
+    if not job.get("runtime_job_id"):
+        job = await dispatch_image_generation_job_to_canonical_runtime(job_id=clean_job_id, account=account, request=request)
+
+    rt_id = str(job.get("runtime_job_id") or "").strip()
+    if not rt_id:
+        raise HTTPException(status_code=502, detail={"error_code": "BOT_RUNTIME_UNAVAILABLE", "message": "Cannot confirm job: Bot runtime not ready"})
+
+    res = await bridge_request(
+        "POST",
+        f"/internal/v1/web-image/jobs/{rt_id}/confirm",
+        payload={},
+        request_id=f"CONFIRM-{job['request_id']}",
+        actor_id=canonical_user_id,
+        owner_id=canonical_user_id,
+    )
+
+    if isinstance(res, dict) and res.get("ok"):
+        bot_job = (res.get("data") or {}).get("job") or res.get("job") or {}
+        bot_status = str(bot_job.get("status") or "completed")
+        charged_xu = int(bot_job.get("charged_xu") or 0)
+        completed_at = bot_job.get("completed_at") if bot_status == "completed" else None
+        output_url = str(bot_job.get("output_url") or "").strip() or None
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_image_generation_jobs
+                SET status = ?,
+                    charged_xu = ?,
+                    output_url = ?,
+                    completed_at = ?,
+                    updated_at = ?
+                WHERE id = ?
+                """,
+                (bot_status, charged_xu, output_url, completed_at, utc_now(), clean_job_id),
+            )
+        return get_image_generation_job(account_id, clean_job_id) or {}
+    else:
+        err_code = str((res.get("error_code") if isinstance(res, dict) else "") or "CONFIRM_FAILED")
+        err_msg = str((res.get("message") if isinstance(res, dict) else "") or "Bot execution failed")
+        status_code = int(res.get("http_status") or 422) if isinstance(res, dict) else 422
+        raise HTTPException(status_code=status_code, detail={"error_code": err_code, "message": err_msg})
+
+
+async def reconcile_image_generation_job_status(
+    job_id: str,
+    account: dict[str, Any],
+    request: Any = None,
+) -> dict[str, Any]:
+    """Reconcile and sync Web Image Generation job status from Bot Core."""
+    ensure_image_generation_schema()
+    clean_job_id = str(job_id or "").strip()
+    account_id = str(account.get("id") or "").strip()
+    canonical_user_id = str(account.get("canonical_user_id") or "").strip()
+
+    job = get_image_generation_job(account_id, clean_job_id)
+    if not job:
+        return {}
+
+    if job.get("status") == STATUS_COMPLETED:
+        return job
+
+    rt_id = str(job.get("runtime_job_id") or "").strip()
+    if not rt_id:
+        return job
+
+    from copyfast_bridge import bridge_configured, bridge_request
+    if not bridge_configured() or not canonical_user_id:
+        return job
+
+    try:
+        res = await bridge_request(
+            "GET",
+            f"/internal/v1/web-image/jobs/{rt_id}",
+            payload={},
+            request_id=f"RECONCILE-{job['request_id']}",
+            actor_id=canonical_user_id,
+            owner_id=canonical_user_id,
+        )
+        if isinstance(res, dict) and res.get("ok"):
+            bot_job = (res.get("data") or {}).get("job") or res.get("job") or {}
+            bot_status = str(bot_job.get("status") or "")
+            charged_xu = int(bot_job.get("charged_xu") or 0)
+            completed_at = bot_job.get("completed_at") if bot_status == "completed" else None
+            bot_output = str(bot_job.get("output_url") or "").strip() or None
+            with transaction() as conn:
+                conn.execute(
+                    """
+                    UPDATE web_image_generation_jobs
+                    SET status = ?,
+                        charged_xu = ?,
+                        output_url = CASE WHEN ? IS NOT NULL THEN ? ELSE output_url END,
+                        completed_at = CASE WHEN ? IS NOT NULL THEN ? ELSE completed_at END,
+                        updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (bot_status, charged_xu, bot_output, bot_output, completed_at, completed_at, utc_now(), clean_job_id),
+                )
+    except Exception:
+        pass
+
+    return get_image_generation_job(account_id, clean_job_id) or {}

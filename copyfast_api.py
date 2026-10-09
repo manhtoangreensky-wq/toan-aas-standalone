@@ -174,6 +174,9 @@ from copyfast_image_generation_job_bridge import (
     list_image_generation_jobs,
     image_generation_job_to_native_compat,
     validate_image_generation_input,
+    dispatch_image_generation_job_to_canonical_runtime,
+    confirm_image_generation_job,
+    reconcile_image_generation_job_status,
 )
 from copyfast_subdub_job_bridge import (
     CANONICAL_PRODUCT_KEY as SUBDUB_PRODUCT_KEY,
@@ -242,6 +245,7 @@ CANONICAL_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
 WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES: frozenset[str] = frozenset({
     "subdub", "video_ai_prompt", "voice_tts",
     "music", "music_background", "music_song",
+    "image_create",
 })
 CONTIGUOUS_PAGE_RANGE_PATTERN = re.compile(r"^\d+(?:-\d+)?$")
 TICKET_SECRET_ASSIGNMENT_PATTERN = re.compile(
@@ -6569,6 +6573,14 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
                     payload=values,
                     idempotency_key=key,
                 )
+                if not job_result.get("idempotent_replay"):
+                    dispatched = await dispatch_image_generation_job_to_canonical_runtime(
+                        job_id=job_result["id"],
+                        account=account,
+                        request=request,
+                    )
+                    if dispatched:
+                        job_result = dispatched
                 _settle_feature_quote_receipt(
                     receipt=payload.web_quote_receipt,
                     idempotency_key=key,
@@ -6992,6 +7004,14 @@ async def create_image_generation_job_route(
         payload=dict(payload.input),
         idempotency_key=key,
     )
+    if not job.get("idempotent_replay"):
+        dispatched = await dispatch_image_generation_job_to_canonical_runtime(
+            job_id=job["id"],
+            account=account,
+            request=request,
+        )
+        if dispatched:
+            job = dispatched
     return envelope(
         True,
         "Đã tạo tác vụ Tạo ảnh AI thành công, chờ runtime xử lý.",
@@ -7033,6 +7053,78 @@ async def get_image_generation_job_route(
     if is_image_generation_job_other_account(job_id, account_id):
         raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
     raise HTTPException(status_code=404, detail="Không tìm thấy job Tạo ảnh AI của tài khoản.")
+
+
+@router.post("/features/image_create/jobs/{job_id}/confirm")
+async def confirm_image_generation_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    if is_image_generation_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    job = await confirm_image_generation_job(job_id, account=account, request=request)
+    return envelope(
+        True,
+        "Đã xác nhận và thực thi tạo ảnh AI thành công.",
+        data=job,
+        status_name=job.get("status", "completed"),
+    )
+
+
+@router.post("/features/image_create/jobs/{job_id}/reconcile")
+async def reconcile_image_generation_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    if is_image_generation_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    job = await reconcile_image_generation_job_status(job_id, account=account, request=request)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy job Tạo ảnh AI của tài khoản.")
+    return envelope(
+        True,
+        "Reconcile Tạo ảnh AI job thành công.",
+        data=job,
+        status_name=job.get("status", "completed"),
+    )
+
+
+@router.get("/features/image_create/jobs/{job_id}/artifact")
+async def get_image_generation_job_artifact_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    from fastapi.responses import Response
+    from copyfast_bridge import bridge_configured, CoreBridgeClient
+    account_id = str(account.get("id") or "")
+    canonical_user_id = str(account.get("canonical_user_id") or "").strip()
+
+    if is_image_generation_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+
+    job = get_image_generation_job(account_id, job_id)
+    if not job or job.get("status") != "completed":
+        raise HTTPException(status_code=404, detail="Không tìm thấy tệp ảnh hoàn tất")
+
+    if not bridge_configured() or not canonical_user_id:
+        raise HTTPException(status_code=503, detail="Bridge chưa được cấu hình hoặc tài khoản chưa liên kết Telegram")
+
+    bridge = CoreBridgeClient()
+    rt_id = str(job.get("runtime_job_id") or job_id).strip()
+    headers = bridge._headers("GET", f"/internal/v1/web-image/jobs/{rt_id}/artifact", b"", request_id=f"ART-{job_id}", actor_id=canonical_user_id)
+    url = f"{bridge.base_url}/internal/v1/web-image/jobs/{rt_id}/artifact"
+    import httpx
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.get(url, headers=headers)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=resp.status_code, detail="Không thể tải tệp ảnh từ Bot Core")
+        content_type = resp.headers.get("content-type", "image/png")
+        return Response(content=resp.content, media_type=content_type, headers={"Content-Disposition": f'inline; filename="image_{job_id}.png"'})
 
 
 @router.post("/features/subdub/jobs")
