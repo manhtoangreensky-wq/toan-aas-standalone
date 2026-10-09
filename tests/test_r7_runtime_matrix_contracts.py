@@ -286,7 +286,10 @@ def test_r7_provenance_and_defects_integrity() -> None:
     assert s["BROKEN_SURFACES"] == 0
     assert s["UNKNOWN_DATA_SURFACES"] == 0
     assert s["DEMO_DATA_SURFACES"] == 0
-    assert s["FIRST_RED"] == "NONE - R7 WHOLE APP FINAL RESIDUAL RUNTIME CLOSURE COMPLETE"
+    assert s["FIRST_RED"] in (
+        "NONE - R7 WHOLE APP FINAL RESIDUAL RUNTIME CLOSURE COMPLETE",
+        "NONE - R8 WHOLE APP EXTERNAL CAPABILITY AND LIVE ENGINE CLOSURE COMPLETE",
+    )
 
     with open(DEFECTS_FILE, "r", encoding="utf-8") as f:
         defects = json.load(f)
