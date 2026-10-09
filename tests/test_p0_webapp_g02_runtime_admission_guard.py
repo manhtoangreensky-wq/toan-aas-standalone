@@ -60,7 +60,7 @@ def setup_db_and_env(monkeypatch):
     monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTER_ENABLED", "true")
     monkeypatch.setenv(
         "WEBAPP_FEATURE_JOB_ADAPTERS",
-        "video_ai_prompt,video_single,video_trend,video_long,video_multiscene,image_create,subdub",
+        "video_ai_prompt,video_single,video_trend,video_long,video_multiscene,image_create,subdub,voice_tts,music,music_background,music_song",
     )
     monkeypatch.setenv("CORE_BRIDGE_BASE_URL", "http://127.0.0.1:8000")
     monkeypatch.setenv("CORE_BRIDGE_TOKEN", "test-token")
@@ -128,9 +128,46 @@ def _login(client: TestClient, email: str, password: str) -> dict:
 # ─── TEST 1: COMPILE-TIME ALLOWLIST EXACT ACTIVATION SET ─────────────────────
 
 def test_01_allowlist_exact_activation_set():
-    """Prove WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES contains exactly subdub and video_ai_prompt."""
+    """Prove WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES contains the source-reviewed active features.
+
+    Currently admitted:
+    - subdub
+    - video_ai_prompt
+    - voice_tts
+    - music
+    - music_background
+    - music_song
+
+    Guarded and NOT active (awaiting complete canonical runtime backend execution authority):
+    - image_create
+    - video_trend
+    - video_long
+    - video_multiscene
+    """
     assert isinstance(WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES, frozenset)
-    assert WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES == frozenset({"subdub", "video_ai_prompt"})
+    expected_active = frozenset({
+        "subdub",
+        "video_ai_prompt",
+        "voice_tts",
+        "music",
+        "music_background",
+        "music_song",
+    })
+    assert WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES == expected_active
+
+    # Preserved active features
+    assert "subdub" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+    assert "video_ai_prompt" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+    assert "voice_tts" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+    assert "music" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+    assert "music_background" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+    assert "music_song" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+
+    # Guarded lanes must NOT be in active set
+    assert "image_create" not in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+    assert "video_trend" not in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+    assert "video_long" not in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
+    assert "video_multiscene" not in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
 
 
 # ─── TEST 2: ENV ALONE CANNOT ACTIVATE RUNTIME ──────────────────────────────
@@ -147,6 +184,18 @@ def test_02_env_alone_cannot_activate_runtime():
     assert _web_feature_runtime_active("video_ai_prompt") is True
     assert _web_feature_execution_available("subdub") is True
     assert _web_feature_runtime_active("subdub") is True
+    assert _web_feature_execution_available("voice_tts") is True
+    assert _web_feature_runtime_active("voice_tts") is True
+    assert _web_feature_execution_available("music") is True
+    assert _web_feature_runtime_active("music") is True
+    assert _web_feature_execution_available("music_background") is True
+    assert _web_feature_runtime_active("music_background") is True
+    assert _web_feature_execution_available("music_song") is True
+    assert _web_feature_runtime_active("music_song") is True
+    # Aliases cannot bypass allowlist
+    for alias in ["image_generation", "trend_video", "long_video", "multi_scene_film"]:
+        assert _web_feature_execution_available(alias) is False
+        assert _web_feature_runtime_active(alias) is False
     # Generic check is True because active features exist
     assert _web_feature_execution_available(None) is True
 
@@ -728,3 +777,98 @@ def test_17_owner_isolation_for_historical_rows():
     assert res_b_g_list.status_code == 200
     g_items_b = res_b_g_list.json()["data"]["items"]
     assert not any(it["id"] == job_id for it in g_items_b)
+
+
+# ─── TEST 18: ENV ALONE CANNOT ACTIVATE UNKNOWN FEATURE ──────────────────────
+
+def test_18_env_only_cannot_activate_unknown_feature():
+    """Prove that environment configuration alone cannot activate an unreviewed feature."""
+    assert _web_feature_execution_available("unknown_feature_xyz") is False
+    assert _web_feature_runtime_active("unknown_feature_xyz") is False
+    assert _web_feature_execution_available("arbitrary_mock") is False
+    assert _web_feature_runtime_active("arbitrary_mock") is False
+
+
+# ─── TEST 19: ALIAS CANNOT BYPASS ALLOWLIST ─────────────────────────────────
+
+def test_19_alias_cannot_bypass_allowlist():
+    """Prove aliases cannot bypass runtime admission allowlist."""
+    aliases = ["image_generation", "trend_video", "long_video", "multi_scene_film"]
+    for alias in aliases:
+        assert _web_feature_execution_available(alias) is False
+        assert _web_feature_runtime_active(alias) is False
+
+
+# ─── TEST 20: CLIENT PROVIDER INJECTION REJECTED ─────────────────────────────
+
+def test_20_client_provider_injection_rejected():
+    """Prove client authority injection (provider, provider_task_id, api_key) is rejected."""
+    client = TestClient(app)
+    auth = _login(client, "g02t20@test.local", "secure-g02-pwd-1234")
+    injection_payload = {
+        "prompt": "Legitimate looking prompt",
+        "provider": "unauthorized_mock_provider",
+        "provider_task_id": "forged_task_123",
+        "api_key": "sk-1234567890abcdef12345678",
+    }
+    for route in [
+        "/api/v1/features/image_create/jobs",
+        "/api/v1/features/video_trend/jobs",
+        "/api/v1/features/video_long/jobs",
+        "/api/v1/features/video_multiscene/jobs",
+    ]:
+        res = client.post(route, json={"input": injection_payload, "idempotency_key": f"inj-{route}"}, headers=auth["headers"])
+        assert res.status_code == 200
+        body = res.json()
+        assert body["ok"] is False
+
+
+# ─── TEST 21: CLIENT PRICE AND WALLET INJECTION REJECTED ─────────────────────
+
+def test_21_client_price_and_wallet_injection_rejected():
+    """Prove client financial/wallet authority injection is rejected."""
+    client = TestClient(app)
+    auth = _login(client, "g02t21@test.local", "secure-g02-pwd-1234")
+    injection_payload = {
+        "prompt": "Test injection",
+        "amount": 0,
+        "price": 0,
+        "cost": 0,
+        "wallet": "free",
+        "balance": 999999,
+        "xu": 0,
+    }
+    for feature in ["image_create", "video_trend", "video_long", "video_multiscene"]:
+        res = client.post(
+            f"/api/v1/features/{feature}/confirm",
+            json={"input": injection_payload, "idempotency_key": f"fin-{feature}"},
+            headers=auth["headers"],
+        )
+        assert res.status_code == 200
+        body = res.json()
+        assert body["ok"] is False
+
+
+# ─── TEST 22: CLIENT COMPLETED STATUS INJECTION REJECTED ────────────────────
+
+def test_22_client_completed_status_injection_rejected():
+    """Prove client cannot inject completed status or forged output URL."""
+    client = TestClient(app)
+    auth = _login(client, "g02t22@test.local", "secure-g02-pwd-1234")
+    injection_payload = {
+        "prompt": "Test fake completion",
+        "status": "completed",
+        "output": "https://attacker.example.com/fake.mp4",
+        "output_url": "https://attacker.example.com/fake.mp4",
+    }
+    for route in [
+        "/api/v1/features/image_create/jobs",
+        "/api/v1/features/video_trend/jobs",
+        "/api/v1/features/video_long/jobs",
+        "/api/v1/features/video_multiscene/jobs",
+    ]:
+        res = client.post(route, json={"input": injection_payload, "idempotency_key": f"fake-{route}"}, headers=auth["headers"])
+        assert res.status_code == 200
+        body = res.json()
+        assert body["ok"] is False
+
