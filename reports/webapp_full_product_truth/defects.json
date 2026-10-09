@@ -173,5 +173,21 @@
     "STATUS": "REPAIRED_IN_R8",
     "RESOLUTION": "Requalified zero-drift runtime, verified actor 6824663936 clean state, and established terminal status IMPLEMENTED_DEPLOYED_WAIT_OWNER_LIVE_GRANT.",
     "TERMINAL_CLASSIFICATION": "IMPLEMENTED_DEPLOYED_WAIT_OWNER_LIVE_GRANT"
+  },
+  {
+    "DEFECT_ID": "DEFECT-R9-001",
+    "SPEC": "SPEC-00-R9",
+    "ROLE": "customer",
+    "ROUTE": "reports/webapp_full_product_truth/*",
+    "CONTROL": "Post-R8 Web App Provenance & Canonical Bot Runtime Reconciliation",
+    "REPRO_STEPS": "Audit committed R8 evidence (R8_FINAL_ROUTE_RUNTIME_MATRIX.json, 00_data_provenance.json, 00_source_runtime.json) against exact current main/runtime SHA.",
+    "EXPECTED": "All provenance records align exactly with merged/deployed Web SHA (73d3ee7085fa8450826efe43ce32ec021888cbde), eliminate stale candidate SHAs (a76d1d1... and d734e3c...), and truthfully report Bot source/runtime split (source 381d335... vs runtime 5e11ce7...).",
+    "ACTUAL": "R8 matrix, provenance, and source_runtime files carried pre-final candidate SHA a76d1d1446b091ebd1df78707059d30e7c28b6c2, and 00_data_provenance.json retained legacy root key current_main_sha d734e3cb86edf44d4be6fa96a161c4d6de389947.",
+    "DATA_SOURCE": "GIT_MAIN_AUTHORITY_AND_VPS_RUNTIME_INSPECTION",
+    "FIRST_RED": "Stale candidate SHAs detected in R8 provenance artifacts after squash-merge 73d3ee7085fa8450826efe43ce32ec021888cbde.",
+    "ROOT_CAUSE": "Artifact generation in R8 captured pre-merge local branch HEAD instead of final merged commit, leaving provenance drift in committed reports.",
+    "STATUS": "REPAIRED_IN_R9",
+    "RESOLUTION": "Reconciled all provenance records to Web SHA 73d3ee7085fa8450826efe43ce32ec021888cbde, pruned legacy root keys, published R9_FINAL_ROUTE_RUNTIME_MATRIX.json, and truthfully documented Bot source/runtime split without unauthorized bot deploy.",
+    "TERMINAL_CLASSIFICATION": "PROVENANCE_AND_RUNTIME_RECONCILED"
   }
 ]
