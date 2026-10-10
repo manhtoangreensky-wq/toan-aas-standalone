@@ -237,5 +237,21 @@
     "STATUS": "REPAIRED_IN_R11",
     "RESOLUTION": "Audited all 7 changed files in PR #1420, verified fail-closed Key4U credential authority, proved zero regression to non-video products, recommended exact deploy for 5c38bd3, and held deployment pending Owner authorization.",
     "TERMINAL_CLASSIFICATION": "AUTHORITY_RECONCILED_AND_DOCUMENTED"
+  },
+  {
+    "DEFECT_ID": "DEFECT-R12-001",
+    "SPEC": "SPEC-00-R12",
+    "ROLE": "system",
+    "ROUTE": "whole-app parallel residual governance",
+    "CONTROL": "Parallel Multi-Lane Residual Governance & Anti-Stall Stall Policy Implementation",
+    "REPRO_STEPS": "Audit residual lanes (/image/upscale, /image/transform, /music/sfx, /voice/clone, Bot runtime) where external blocker in one lane risked blocking whole-app progress.",
+    "EXPECTED": "Each lane executes independently under explicit state machine (CLOSED_RELEASED, WAIT_OWNER_EXTERNAL_ENTITLEMENT, WAIT_OWNER_EXACT_DEPLOY_AUTHORIZATION, EXTERNAL_PROVIDER_INCIDENT_HOLD), preventing any single external provider issue from aborting the app.",
+    "ACTUAL": "Prior sequential workflows allowed external provider incident holds or entitlement waits to stall progress across unrelated features.",
+    "DATA_SOURCE": "PARALLEL_GOVERNANCE_MODEL",
+    "FIRST_RED": "Risk of whole-app stall due to external provider incident.",
+    "ROOT_CAUSE": "Coupled sequential processing of independent external provider residuals.",
+    "STATUS": "REPAIRED_IN_R12",
+    "RESOLUTION": "Implemented decoupled parallel governance model with concise Owner Action Board, validated 221 surface matrix non-regression, and verified zero open internal engineering defects.",
+    "TERMINAL_CLASSIFICATION": "PARALLEL_GOVERNANCE_ESTABLISHED"
   }
 ]

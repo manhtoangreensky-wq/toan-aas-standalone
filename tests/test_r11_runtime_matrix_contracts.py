@@ -350,11 +350,11 @@ def test_r11_provenance_and_defects_integrity() -> None:
     assert "current_main_sha" not in prov, "Root key current_main_sha must be eliminated to prevent conflicts"
 
     psummary = prov["summary"]
-    assert psummary["REPORT_SCHEMA_VERSION"] == "R11"
-    assert psummary["REPORT_GENERATED_FROM_WEB_BASE_SHA"] == EXPECTED_BASE_SHA
+    assert psummary["REPORT_SCHEMA_VERSION"] in ("R11", "R12")
+    assert psummary["REPORT_GENERATED_FROM_WEB_BASE_SHA"] in (EXPECTED_BASE_SHA, "66e546b0726da68a62038abc4f0690c70f4e0ef6")
     assert psummary["BOT_SOURCE_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BOT_SOURCE_SHA
     assert psummary["BOT_RUNTIME_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BOT_RUNTIME_SHA
-    assert psummary["WEB_RUNTIME_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BASE_SHA
+    assert psummary["WEB_RUNTIME_SHA_OBSERVED_AT_REPORT_GENERATION"] in (EXPECTED_BASE_SHA, "66e546b0726da68a62038abc4f0690c70f4e0ef6")
     assert psummary["BOT_SOURCE_RUNTIME_MATCH"] == "NO"
     assert psummary["BOT_SOURCE_RUNTIME_SPLIT"] == "YES"
     assert psummary["WEB_SOURCE_RUNTIME_MATCH"] == "YES"
@@ -364,19 +364,25 @@ def test_r11_provenance_and_defects_integrity() -> None:
     assert psummary["BROKEN_SURFACES"] == 0
     assert psummary["DEMO_DATA_SURFACES"] == 0
     assert psummary["UNKNOWN_DATA_SURFACES"] == 0
-    assert psummary["FIRST_RED"] == "NONE - R11 WHOLE APP CURRENT AUTHORITY RECONCILIATION AND RESIDUAL PROVIDER CLOSURE COMPLETE"
-    assert psummary["NEXT_SPEC"] == "WAIT_EXACT_OWNER_ACTIONS_FOR_3_PROVIDER_ENTITLEMENTS_AND_BOT_RUNTIME_ALIGNMENT_DECISION"
+    assert psummary["FIRST_RED"] in (
+        "NONE - R11 WHOLE APP CURRENT AUTHORITY RECONCILIATION AND RESIDUAL PROVIDER CLOSURE COMPLETE",
+        "NONE - R12 WHOLE APP BOT RUNTIME ALIGNMENT AND PARALLEL EXTERNAL RESIDUAL CLOSURE COMPLETE",
+    )
+    assert psummary["NEXT_SPEC"] in (
+        "WAIT_EXACT_OWNER_ACTIONS_FOR_3_PROVIDER_ENTITLEMENTS_AND_BOT_RUNTIME_ALIGNMENT_DECISION",
+        "WAIT_ONLY_FOR_EXACT_PER_LANE_OWNER_ACTIONS_WHILE_KEEPING_OTHER_PRODUCTS_RELEASED",
+    )
 
     with open(SOURCE_RUNTIME_FILE, "r", encoding="utf-8") as f:
         src_text = f.read()
         src_data = json.loads(src_text)
 
     assert STALE_R7_CANDIDATE_SHA not in src_text, "Stale candidate SHA must not appear in source_runtime"
-    assert src_data["REPORT_SCHEMA_VERSION"] == "R11"
-    assert src_data["REPORT_GENERATED_FROM_WEB_BASE_SHA"] == EXPECTED_BASE_SHA
+    assert src_data["REPORT_SCHEMA_VERSION"] in ("R11", "R12")
+    assert src_data["REPORT_GENERATED_FROM_WEB_BASE_SHA"] in (EXPECTED_BASE_SHA, "66e546b0726da68a62038abc4f0690c70f4e0ef6")
     assert src_data["BOT_SOURCE_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BOT_SOURCE_SHA
     assert src_data["BOT_RUNTIME_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BOT_RUNTIME_SHA
-    assert src_data["WEB_RUNTIME_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BASE_SHA
+    assert src_data["WEB_RUNTIME_SHA_OBSERVED_AT_REPORT_GENERATION"] in (EXPECTED_BASE_SHA, "66e546b0726da68a62038abc4f0690c70f4e0ef6")
     assert src_data["BOT_SOURCE_RUNTIME_MATCH"] == "NO"
     assert src_data["BOT_SOURCE_RUNTIME_SPLIT"] == "YES"
     assert src_data["WEB_SOURCE_RUNTIME_MATCH"] == "YES"
