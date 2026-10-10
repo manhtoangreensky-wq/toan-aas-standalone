@@ -1,4 +1,4 @@
-# TOAN AAS Bot → Web capability closeout — 2026-10-09 (rechecked 2026-10-10)
+# TOAN AAS Bot → Web capability closeout — 2026-10-09 (current-main rebaseline 2026-10-10)
 
 > Đang đọc và áp dụng skill owner-governed-codex cho task này.
 
@@ -13,8 +13,8 @@ thái cuối cùng mới được ghi `RUNTIME_PASS`.
 
 | Hạng mục | Giá trị | Giới hạn |
 |---|---|---|
-| Web branch | `fix/shared-shell-locale-controls-20261008` | Cây local đang dirty; không phải xác nhận `main`/production |
-| Web HEAD | `17b9494392cc063e8f9d0f39974da2569009b23d` | Chỉ là mốc đọc nguồn |
+| Web snapshot lịch sử của audit cũ | branch `fix/shared-shell-locale-controls-20261008`, SHA `17b9494392cc063e8f9d0f39974da2569009b23d` | Chỉ dùng để hiểu các test/checkpoint lịch sử; đã bị main vượt qua, không còn là current-main authority |
+| Web current main đã đối chiếu | `origin/main=86d4ee6e11ddfbc0d4e1dbf63b41d9b3ed7d859b`; docs branch `45b84de83ee9b475bb4366c3ddc2af85b82297c4`, merge-base `17b9494392cc063e8f9d0f39974da2569009b23d` | Mốc source mới nhất đã đọc ngày 2026-10-10; không xác nhận deployed/live và phải làm mới ngay trước khi code |
 | Bot snapshot từ audit trước | Branch `fix/p0-subdub-smart-synth-adapter-signature-r1`, HEAD `ae85e84f27f3f5e09c4e05667a34355a758c8a8a`; 7 tracked files modified, 24 untracked status entries | Dữ liệu lịch sử; chưa tái lập trên checkout cục bộ hiện tại. Không dọn hoặc ghi đè thay đổi Bot. |
 | Bot checkout đọc được hiện tại | Branch `feature/p0-webapp-copyfast1-core-bridge`, HEAD `32d6d1bfbc8040b0632a44e6a9326ed568cb1a59`, clean | Commit `ae85…` có trong object database nhưng không phải HEAD/ancestor; checkout này chưa được xác nhận là Bot main/deployed source. |
 | Bot comparator khác | Detached HEAD `6476f20bdd9f8728a5db0b1d62a245b0d612aea8`, clean | Không chứa object `ae85…`; không chọn làm nguồn chuẩn thay thế. |
@@ -22,6 +22,11 @@ thái cuối cùng mới được ghi `RUNTIME_PASS`.
 | Static parity | 7.633 mapping; Web surface 37,56%; 1.923 cần disposition; 353 chưa có Web route | Kết quả quét nguồn ngày 2026-10-09; chưa tái lập riêng trên Git HEAD và dirty overlay. Đây không phải điểm chất lượng hay runtime. |
 | Browser/UI regression | Ngày 2026-10-09, Node `--test` trên Music/Voice/Image/SubDub: **110 pass, 0 fail** | Chỉ chứng minh renderer/presentation/guard, không chứng minh provider/artifact |
 | Cost/data gates | `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`, `PRODUCTION_DATA_MUTATIONS=0` | Không chạy provider, không ghi ví, không ghi production |
+
+> **Lưu ý freshness:** các bảng trạng thái sản phẩm phía dưới ban đầu được lập
+> từ Web candidate `17b9494…`. Current-main source đã tiến tới `86d4ee6…`; phần
+> rebaseline mới nhất ở cuối tài liệu là nguồn hiện hành để quyết định trạng
+> thái. Không dùng riêng bảng cũ để giao builder hoặc tuyên bố UI hiện tại.
 
 Nguồn Bot dùng để tham khảo là working tree đọc được. Không import `bot.py`,
 không đọc secret/ENV, không gọi Telegram/provider và không coi kết quả này là
@@ -128,7 +133,7 @@ phải đọc skill tương ứng trước khi làm.
 4. `PARITY-04` — Music background/song: tier, vocal, half/full/duration và adapter boundary.
 5. `PARITY-05` — SubDub bốn mode một màn, volume payload, report/artifact; giữ màu xanh–teal và layout dọc.
 6. `PARITY-06` — Image create, AI edit, deterministic edit artifact proof.
-7. `PARITY-07A..E` — Free tools; Notes/Memory; Documents/OCR/translation; Publishing/social; Projects/Assets/Support/Admin.
+7. `PARITY-07A..P` — A Free Tools; B Notes/Memory; C Documents/PDF/OCR/translation; D Content/Prompt; E channel connection; F Auto-post/publish; G Projects; H Assets; I Jobs/History; J Support/Tickets; K Members; L Rewards; M Community/Referral; N customer Wallet/manual top-up; O Admin billing review; P remaining Admin ERP. Each parent family is split into action-level child specs after ledger reconciliation; Members and Rewards remain separate; Admin ERP is not automatically counted as Bot parity.
 8. `PARITY-08A..C` — Video catalog; manual editor; AI editor. Chỉ bắt đầu sau nhóm không phải Video.
 9. `PARITY-09` — UI/UX toàn site và motion WA-35/WA-36 đóng cuối; không dùng test từng sản phẩm thay cho whole-site gate.
 
@@ -186,9 +191,11 @@ trùng alias hoặc callback template; dynamic ID phải ghi rõ cách bao phủ
    intake/download/profile và editor. Editor AI và editor thủ công/timeline
    phải là hai dòng riêng. Seed list không thay inventory chuẩn Bot.
 6. **Nhóm còn lại:** Free Tools từng công cụ; Notes/Memory/reminders; Documents,
-   PDF/OCR/translation; Content; social channel/autopost từ kết nối đến receipt;
-   Projects, Assets, Jobs/History, Support/Ticket, Membership/Rewards,
-   Community/Referral, Admin/ERP và mọi family khác action ledger phát hiện.
+   PDF/OCR/translation; Content; channel connection; Auto-post từ duyệt/lịch đến
+   receipt; Projects/Workboard; Assets/Downloads; Jobs/History; Support/Ticket;
+   Members; Rewards; Community/Referral; Admin/ERP và mọi family khác action
+   ledger phát hiện. Mỗi family có checklist riêng; Members và Rewards không
+   được gộp. Mọi hành động bên trong vẫn tách thành phiếu action độc lập.
    Chỉ ghi ghim/lưu trữ hoặc thao tác khác nếu nguồn Bot chứng minh hoặc Owner
    phê duyệt thành yêu cầu mới.
 
@@ -366,3 +373,100 @@ xã hội còn thiếu; test SubDub xác nhận bốn mode ở lớp trình bày
   `PRODUCT_CODE_CHANGED=0`, `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
   `PRODUCTION_DATA_MUTATIONS=0`, `COMMIT=NO`, `PUSH=NO`, `MERGE=NO`,
   `DEPLOY=NO`, `LIVE_PASS=NO`.
+
+## Current-main correction + button-level UI/UX contract — 2026-10-10
+
+### Những dữ kiện mới thay thế kết luận lịch sử
+
+- Đối chiếu first-parent từ `17b9494…` tới `86d4ee6…` có 11 commit (#621–#634).
+  Trong các đường trình bày được so trực tiếp, `static/portal/portal.js` là
+  file bị sửa sau UI checkpoint; đồng thời API/DB, bridge Music/Image/Video/
+  Document Translation và R4–R10 runtime matrices đã đổi. Mọi UI checkpoint
+  trước đó chỉ là bằng chứng của SHA cũ.
+- Music #621 trực tiếp thêm vào `portal.js` tier/giá nhạc nền (130/150/200
+  Xu), tier/giá bài hát (200/250/300 Xu), `vocal_mode`, `lyrics`,
+  `song_length_mode` và độ dài. Current source có `music_background` và
+  `music_song` bridge/API. Vì vậy kết luận cũ “Web thiếu tier/adapter” đã stale;
+  nhưng UI hiện tại vẫn cần test render/interaction/quote/confirm và file audio.
+- Image #623 thêm canonical Image Generation bridge; không thể giữ trạng thái
+  `BLOCKED_BY_RUNTIME` của snapshot cũ nếu chưa đối chiếu lại current-main guard
+  và runtime matrix. Điều đó cũng chưa chứng minh file ảnh cuối đã giao thành
+  công.
+- Tệp người dùng gửi nói có 12 ViewTransition invalid-state errors. Lượt này
+  không có trace có thể tái lập trên `86d4ee6…`; status đúng là
+  `CLAIM_NOT_REPRODUCED_ON_CURRENT_MAIN`. WA-35/36 vẫn OPEN. R11 trên candidate
+  cũ cũng fail acceptance, không được nâng thành PASS.
+
+### Không được giao code cho đến khi mỗi nút có hợp đồng riêng
+
+Spec con bắt buộc: `docs/superpowers/specs/2026-10-10-webapp-product-control-by-control-ux.md`.
+Đầu ra inventory sau này: `reports/audit/WEBAPP-PRODUCT-UI-ACTION-LEDGER.md`
+và `.json`; chúng chưa được tạo trong task plan này. Mỗi nút, link, control,
+state-dependent action và route/action pair phải có một record, tối thiểu gồm:
+
+```text
+CURRENT_MAIN_SHA + source path/line + route + stable DOM selector
+exact VI/EN/ZH label + aria name/help + user intent
+visible/enabled precondition + disabled reason + role/owner
+input/validation + method/endpoint/payload + quote/cost authority
+idempotency/duplicate behavior + exact state transition
+success feedback/next step + errors/recovery/input retention
+Admin/customer report link + result/asset/download ownership
+destructive confirm/undo + responsive/keyboard/touch/focus
+theme/contrast/reduced-motion + runnable test command/output + evidence path
+disposition; UNKNOWN/BACKEND_GAP is explicit, never guessed away
+```
+
+### Layout/state rules for all product specs
+
+- Product hubs and ordinary forms/lists use clear vertical grouping. Each page
+  has one primary action; secondary/history/tool links do not compete. Do not
+  convert editor canvas/timeline into a vertical stack when that breaks the
+  real editing task; only editor canvas/timeline may use horizontal space by
+  functional necessity.
+- Every applicable action defines default, hover, focus-visible,
+  active/selected, disabled with reason, loading/deduplicate, success, validation,
+  permission failure, server/network error, retry/cancel, and reduced-motion
+  behavior. Unused states require `NOT_APPLICABLE` plus reason.
+- Failure preserves entered data. Paid/job actions use canonical quote and
+  idempotency; draft/estimate/job ID/HTTP 200 never becomes success copy by
+  itself. Destructive actions need explicit impact/confirmation or supported
+  undo. Navigation controls define destination and back/scroll behavior.
+- Keep blue–teal brand tokens, dark-blue surfaces with light readable text,
+  VI/EN/ZH purity, WCAG AA contrast and 44×44px touch targets. Do not invent
+  colors or labels from memory; read the exact current token and source copy.
+- Before a builder is assigned, its ticket must include exact file paths, source
+  selector/lines, complete behavior contract, explicit files not to edit, one
+  runnable verify command and expected output. Otherwise `NOT_READY_FOR_BUILDER`.
+
+### Updated execution order
+
+1. Chốt plan/checklist/spec và dừng ở ranh giới hiện tại.
+2. Lượt tiếp theo khép phần UI/motion đang dở; không chen thêm product mới.
+3. Refresh current main; khóa Bot canonical/dirty provenance; tạo action ledger
+   và control ledger trước implementation.
+4. Hoàn tất cổng tham khảo `UI-REF-00`; Landing/Welcome → Shared shell → Voice →
+   Music → SubDub → Image → customer Wallet/manual top-up + Admin billing review → từng nhóm khác
+   không phải Video → từng product/editor Video riêng → whole-site motion và final
+   matrix.
+
+### Checklist/spec được tách riêng để thi công không đoán
+
+- Checklist điều phối tổng theo giai đoạn và cổng dừng:
+  `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-20261010.md`.
+- Sổ điều khiển từng nút (chưa tạo cho đến khi current source/DOM được kiểm):
+  `docs/superpowers/specs/2026-10-10-webapp-product-control-by-control-ux.md`.
+- Đặc tả motion cuối toàn site, bao gồm WA-35/WA-36 và vòng đời chuyển trang:
+  `docs/superpowers/specs/2026-10-10-motion-webapp-surfaces-final.md`.
+- Đặc tả Wallet khách hàng và Admin billing:
+  `docs/superpowers/specs/2026-10-10-webapp-wallet-admin-ui-closeout.md`.
+
+Đây là tài liệu điều phối và đặc tả, không phải xác nhận mọi capability đã có
+hoặc hoạt động. Các action thực tế chỉ được tách thành phiếu nhỏ sau khi Bot
+source canonical và ledger đã khóa; mọi `UNKNOWN` ngoài phạm vi được giữ công
+khai, không tự lấp bằng suy đoán.
+
+Trạng thái: `CURRENT_MAIN=86d4ee6…` (baseline đã đọc, cần refresh sau); `MUSIC=
+REVALIDATE_AFTER_621`; `IMAGE=REVALIDATE_AFTER_623`; `UI_CONTROL_LEDGER=NOT_CREATED`;
+`BOT_CANONICAL=NOT_LOCKED`; `UNKNOWN=NOT_ZERO_OR_NOT_MEASURED`;
+`WA35/WA36=OPEN`; `IMPLEMENTATION_STARTED=NO` trong lượt cập nhật plan này.

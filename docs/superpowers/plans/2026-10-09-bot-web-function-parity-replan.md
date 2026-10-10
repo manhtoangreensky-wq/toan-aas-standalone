@@ -1,8 +1,8 @@
 # Rà soát chức năng Bot → Web App: kết luận, plan và checklist
 
 **SPEC_ID:** `WEBAPP-BOT-FUNCTION-PARITY-REBASELINE-20261009`
-**STATUS:** `READ_ONLY_RECHECK_BOT_GIT_BASELINE_NOT_LOCKED_2026-10-10_PLAN_UPDATED_IMPLEMENTATION_NOT_STARTED`
-**Phạm vi lượt này:** rà soát parity và cập nhật plan/checklist/spec; không sửa engine, route, Bot, giao diện sản phẩm, dữ liệu hay cấu hình.
+**STATUS:** `PLAN_REBASED_TO_MAIN_86d4ee6_BUTTON_LEVEL_WALLET_ADMIN_REFERENCE_GATES_ADDED_2026-10-10_PAUSE_AFTER_PLAN`
+**Phạm vi lượt này:** kiểm chứng mốc source và hoàn thiện plan/checklist/spec; không sửa engine, route, Bot, giao diện sản phẩm, dữ liệu hay cấu hình. Sau khi chốt tài liệu, dừng tại đây; việc kế tiếp là khép phần UI/motion đang dở, rồi mới mở các spec theo thứ tự dưới đây.
 
 > Goal UI/UX và motion vẫn được giữ riêng. Yêu cầu lượt này mở rộng sang rà soát đối chiếu tính năng; chỉ cập nhật tài liệu plan/spec, không triển khai engine/route hay tuyên bố runtime đã đạt.
 
@@ -16,7 +16,8 @@
 
 | Nguồn | Mốc/đặc điểm | Ý nghĩa và giới hạn |
 |---|---|---|
-| Web local | Branch `fix/shared-shell-locale-controls-20261008`, HEAD `17b9494392cc063e8f9d0f39974da2569009b23d`; worktree đang dirty | Đây là cây local, không phải xác nhận `main`, production hay runtime. |
+| Web snapshot của lần audit trước | Branch `fix/shared-shell-locale-controls-20261008`, HEAD `17b9494392cc063e8f9d0f39974da2569009b23d`; worktree khi đó dirty | Chỉ là baseline lịch sử của các test cũ, không còn là current-main baseline. |
+| Web current-main rebaseline | `origin/main` tại `86d4ee6e11ddfbc0d4e1dbf63b41d9b3ed7d859b`, đọc ngày 2026-10-10; docs branch đang ở `45b84de83ee9b475bb4366c3ddc2af85b82297c4`, merge-base `17b9494392cc063e8f9d0f39974da2569009b23d` | Current source baseline để sửa plan; không xác nhận production/deployed/live. Phải làm mới SHA ngay trước khi bắt đầu code sau khi phần UI/motion dang dở được khép. |
 | Bot source folder đang đọc trực tiếp | `D:\TOANAAS\bot telegram`; `bot.py` SHA-256 `7EAE9610073D3000C2A949E78E2E48E0194EB402EEDEA7F9B9328FA09D7F0B0F`, 14.966.481 bytes, LastWriteTime `2026-09-27 16:28:02`; `.git/HEAD` trỏ tới `fix/p0-subdub-smart-synth-adapter-signature-r1` @ `ae85e84f27f3f5e09c4e05667a34355a758c8a8a` | Chạy từ chính thư mục, `git rev-parse` xác nhận top-level và `is-inside-work-tree=true`; `git status` vẫn lỗi `fatal: this operation must be run in a work tree`. Lệnh có cờ `--git-dir/--work-tree` cho kết quả `false` không nhất quán nên không dùng làm trạng thái. HEAD/ref đã biết, nhưng sạch/dirty, quan hệ giữa `bot.py` với Git HEAD và tính canonical chưa xác minh. |
 | Web static fingerprint tại lúc rà | `e6bbba95c74851362009f53a9cd60c4f61994762cfda6afd8d6f306cde5ca247`; 248 tệp nguồn | Được tính trước khi thêm mục checklist trong lượt này; không phải fingerprint sau cập nhật. |
 | Bot snapshot trong lần audit trước | Branch `fix/p0-subdub-smart-synth-adapter-signature-r1`; HEAD `ae85e84f27f3f5e09c4e05667a34355a758c8a8a`; 7 tracked files modified và 24 untracked entries | Giữ là bằng chứng lịch sử của lần audit trước, không coi là Git status hiện tại. Recheck lượt này tìm thấy các checkout Bot khác; xem mục recheck cuối tài liệu. |
@@ -38,7 +39,7 @@
 
 | Nhóm | Điều đã có bằng chứng | Kết luận chức năng so với Bot | Việc cần chốt trong plan |
 |---|---|---|---|
-| Music | Hub UI có nhóm sáng tác được đánh dấu guarded và nhóm thư viện/công cụ. Hồ sơ Music ghi rõ không tạo nhạc/âm thanh, không gọi provider. | **Chưa chứng minh** hai luồng chạy thật tách biệt: nhạc nền và bài hát có lời. Không được coi thẻ/route `/music/create` là có đầu ra. | Tách AC cho `music_background` và `music_song`; bài có lời chỉ dùng nửa bài/toàn bài, thư viện/SFX không gắn nhãn nhạc AI. Kiểm tra file âm thanh thật, không fake pending. |
+| Music | Checkpoint #618 được theo sau bởi #621 (`a5e3685`): `static/portal/portal.js` thêm tier/giá, `vocal_mode`, `lyrics` và lựa chọn độ dài bài hát; `copyfast_music_job_bridge.py` cùng API job routes cho `music_background`/`music_song` có trong current main. | **Kết luận cũ “thiếu tier/adapter” đã stale.** Tuy nhiên chưa có regression render/interaction trên current main và chưa có bằng chứng runtime/live/file âm thanh cuối. Giá đang hiện ở option UI phải khớp estimate canonical, không được xem UI là nguồn giá. | Rà lại đủ hai form và mọi nút trên `86d4ee6…`; đối chiếu field/payload/quote/confirm/result với bridge hiện tại; kiểm file âm thanh thật chỉ ở gate được duyệt. Thư viện/SFX/tệp âm thanh vẫn là các luồng riêng. |
 | Image | `/image` và `/image/create` có hub/form/copy; đã gỡ một số demo/fake-ready/fake-output và cải thiện locale/trình bày. Checklist ghi rõ không suy ra toàn bộ nhóm Image đã hoàn thiện. | **Chưa chứng minh** tạo ảnh AI thực, chỉnh sửa ảnh AI, hoặc chỉnh sửa thủ công đều chạy tới file ảnh đầu ra. | Lập riêng luồng tạo, sửa AI và thao tác thủ công; xác thực ảnh đầu vào thuộc người dùng, preview và artifact đầu ra. |
 | Voice | Có UI TTS, giọng đã lưu, clone và trạng thái. Hồ sơ Voice nói rõ không có claim audio/job/delivery thật. | **Chưa chứng minh** giọng mặc định trả âm thanh thật, giọng do người dùng thêm/clone dùng lại được, hay đầu ra kiểm tra được. | Tách mặc định, saved voice và clone; ghi nhận đồng ý/nguồn mẫu, capability thật, ID giọng phía provider và kiểm tra bytes/MIME/duration của âm thanh. |
 | SubDub | Một màn hình có bốn chế độ và hai thanh âm lượng; API có route/bridge và `subdub` nằm trong allowlist runtime. | **Chưa chứng minh end-to-end:** test UI hiện tại xác nhận CTA đang `guarded`, vùng kết quả rỗng, và volume chỉ đổi giá trị hiển thị. Cờ runtime/route không chứng minh browser đã xử lý và giao đúng file. | Giữ một màn; nối bốn mode tới đúng payload/job; đưa hai mức âm lượng vào payload và kiểm tra trên file cuối; chứng minh request/job/report/artifact khớp ở khách và Admin. |
@@ -96,11 +97,11 @@ thể và người duyệt. Số route hay test trình bày không thay thế c�
 
 ### Kết luận UX/motion cho phạm vi goal đang chạy
 
-Các hồ sơ có ma trận UI tốt cho một số màn và checkpoint; điều đó đáng giữ. Tuy vậy toàn bộ ứng dụng **chưa thể đánh dấu hoàn thiện UI/UX và motion**: master checklist còn open shared-shell/locale/nút nổi, ViewTransition và whole-site motion; `WA-35/WA-36` chưa có đủ bằng chứng đóng theo handover. Trong dữ liệu handover, frame desktop 277–392 ms chưa truy nguyên, comparator/Tester receipt còn thiếu và có một liên kết evidence không tồn tại. Lượt này không chụp lại giao diện/live nên không đưa ra điểm thẩm mỹ mới.
+Các hồ sơ có ma trận UI tốt cho một số màn và checkpoint; điều đó đáng giữ. Tuy vậy toàn bộ ứng dụng **chưa thể đánh dấu hoàn thiện UI/UX và motion**: shared-shell/locale/nút nổi và whole-site motion còn mở; `WA-35/WA-36` chưa có đủ bằng chứng đóng. Tài liệu được gửi kèm nêu “12 ViewTransition invalid-state errors”, nhưng lượt này chưa tái hiện/đo lỗi đó trên `origin/main=86d4ee6…`, nên phải ghi `CLAIM_NOT_REPRODUCED_ON_CURRENT_MAIN`, không ghi đó là lỗi đã xác minh. R11 gần nhất là candidate cũ `17b9494… + dirty overlay`, `PARTIAL_MEASUREMENT_NOT_PASS`: 16/16 phép đo, `CLS=0`, `pageErrors=0`, nhưng thiếu `animationend` 8/8 normal rows, 4/16 long task >200 ms (max 311 ms), 10/16 frame gap >200 ms (max 450 ms); WA-35/36 vẫn OPEN. Lượt này không chụp lại UI/live và không đưa ra điểm thẩm mỹ mới.
 
 ## 3. Ranh giới an toàn và cách làm
 
-- Bot chỉ là tham khảo luồng và danh mục; **không sửa Bot, không port Telegram callback/session/pending-state sang trình duyệt**. Callback/command vận hành, broadcast, emergency, freeze, provider key và thao tác owner có thể phải giữ Telegram-only/admin-only.
+- Bot là nguồn đối chiếu cho capability và thứ tự nghiệp vụ; mẫu sản phẩm bên ngoài chỉ là nguồn tham khảo cách trình bày. **Không sửa Bot, không port Telegram callback/session/pending-state sang trình duyệt, không lấy mẫu thị trường làm nguồn nghiệp vụ.** Callback/command vận hành, broadcast, emergency, freeze, provider key và thao tác owner có thể phải giữ Telegram-only/admin-only.
 - Không tạo cầu ghi Web↔Bot tùy tiện. Mỗi chức năng cần ghi rõ nguồn dữ liệu, chủ sở hữu, quyền, request/job/provider ID, trạng thái, audit và đường giao artifact.
 - Confirm phải idempotent; refresh/status là chỉ đọc; chỉ tạo `JOB_ID` sau khi qua preflight/admission; fail-closed khi thiếu adapter/quyền/nguồn/giá; không fake accepted, pending, success, phí hay Xu.
 - Không có provider call tính phí, sửa ENV/secret, thay ví/PayOS, ghi dữ liệu production, migration phá hủy, deploy hoặc merge trong plan này. Kiểm tra giao diện có thể dùng fixture/local adapter; kiểm thử output thật cần cổng duyệt provider riêng.
@@ -163,8 +164,12 @@ trước khi khóa Bot source.
 - **06A Free Tools:** lập danh sách đủ từng công cụ; phân loại deterministic miễn phí, quota hoặc provider; có đầu vào/đầu ra thật, nêu rõ lưu hay không lưu. 4 tiện ích UI đã thấy không thay cho catalog đầy đủ.
 - **06B Notes/Memory:** bắt đầu bằng action Bot đã xác nhận: tạo/list/search/delete/reminder/priority; kiểm tra edit/update và danh mục trước khi ghi vào scope. Không tính `memory_plan` là work plan. Ghim/lưu trữ chỉ là `OWNER_NEW_REQUIREMENT` nếu không tìm thấy trong Bot. Kiểm owner, thời gian và empty/error state.
 - **06C Documents/OCR/Translation:** PDF/OCR/nén/chuyển đổi/ASR/dịch; phân biệt preview/draft với file đã xuất; owner-scoped asset và format thực.
-- **06D Content/Social/Autopost:** soạn nội dung, lịch, kênh, duyệt, hàng đợi, gửi, receipt và retry/idempotency; draft không được gọi là đã đăng.
-- **06E Projects/Assets/Support/Membership/Admin:** lập từng action catalog theo quyền; route có sẵn không được tính là chức năng nếu server action, record và receipt chưa chạy. Giữ wallet/payment là authority riêng, không viết lại.
+- **06D Content/Prompt:** tách soạn, lưu, sao chép, áp dụng và xuất; bản nháp không phải đầu ra đã giao.
+- **06E Channel connection** và **06F Auto-post:** tách kết nối/ủy quyền khỏi soạn, duyệt, lên lịch, gửi, receipt và retry/idempotency; không báo đã đăng khi chưa có receipt.
+- **06G Projects**, **06H Assets/Downloads**, **06I Jobs/History**, **06J Support/Tickets**, **06K Members**, **06L Rewards**, **06M Community/Referral:** mỗi nhóm có action catalog và quyền/record riêng; Members ≠ Rewards; project/task ≠ product job.
+- **06N Wallet/manual top-up khách hàng:** spec giao diện dọc cho chọn phương thức → nhập số tiền → xác nhận → mới hiện hướng dẫn thanh toán/mã/QR theo contract; tạo yêu cầu pending không đồng nghĩa đã cộng Xu.
+- **06O Admin billing review:** hàng chờ nạp thủ công, đối chiếu tài khoản/số tiền/phương thức/nội dung chuyển khoản/chứng từ; chỉ hiện duyệt/từ chối theo quyền và server contract, có lý do/audit/idempotency. Đây là luồng Admin riêng, không gộp vào parity UI của khách.
+- **06P Admin ERP còn lại:** lập catalog cho từng hành động quản trị theo role/record/audit; không suy rằng mọi thao tác Admin có đối tác trong Bot và không sửa RBAC/payment logic trong lane UI.
 - **Nghiệm thu chung:** mỗi hành động có một kết quả kiểm chứng được hoặc được loại rõ `Telegram-only/admin-only/read-only` với lý do; không bỏ sót family trong ledger SPEC-00.
 
 ### SPEC-07 — Toàn bộ Video và biên tập (P6, làm sau các nhóm khác)
@@ -181,6 +186,7 @@ trước khi khóa Bot source.
 - Đo chữ thường ≥4.5:1, chữ lớn/ranh giới UI ≥3:1, hit target ≥44px; kiểm 360/375/768/1440px, bàn phím/focus, trạng thái trống/đang chạy/thành công/lỗi.
 - Motion dùng transform/opacity, phản hồi thao tác rõ, không animate layout, có `prefers-reduced-motion`; không chốt smooth nếu còn lỗi console, transition hoặc tải nhảy.
 - **WA-35/WA-36 giữ OPEN:** xử lý lỗi ViewTransition; truy nguyên frame 277–392 ms; sửa link evidence thiếu; có comparator/Tester receipt gắn SHA. Các checkpoint sản phẩm không đóng thay cho cổng motion toàn site.
+- Đặc tả motion cuối riêng: `docs/superpowers/specs/2026-10-10-motion-webapp-surfaces-final.md` (`MOTION-WEBAPP-SURFACES-FINAL-20261010`). Tài liệu này tách vòng đời animation khỏi lỗi khựng/frame gap và định nghĩa ma trận rapid navigation, Back/Forward, auth, hydration/remount, route failure, normal/reduced motion.
 - **Nghiệm thu cuối:** browser matrix trên source SHA cố định; lưu ảnh/JSON/console/network và kết quả đo; kiểm Web/App shell sau khi từng nhóm giao diện hoàn tất.
 
 ### 4A. Các spec con bắt buộc (tách nhỏ, chạy đúng thứ tự)
@@ -194,9 +200,10 @@ trước khi khóa Bot source.
 | 7–8 | `SPEC-03A/B` | Tạo nhạc nền; bài hát có lời — hai form/luồng/AC riêng | Không gộp SFX/library; file âm thanh hợp lệ hoặc lỗi thật |
 | 9–12 | `SPEC-04A/B/C/D` | Phụ đề nguồn; lồng tiếng; phụ đề gốc/dịch theo Bot; combo — cùng một shell nhưng mỗi mode một spec con | Đúng payload, âm lượng có hiệu lực, đúng artifact và báo cáo cho mode đang chọn |
 | 13–15 | `SPEC-05A/B/C` | Tạo ảnh AI; sửa ảnh AI; chỉnh thủ công/deterministic — tách ba lane | File ảnh thật, quyền owner, MIME/dimension và preview hợp lệ |
-| 16+ | `SPEC-06A..G` | Mỗi free tool; Notes/Memory; từng nhóm Documents/OCR/Translation; Content; social connection; Autopost; Projects/Assets/Jobs; Support/Membership/Rewards/Admin | Nếu một nhóm có nhiều hành động độc lập, tách thêm spec con từ ledger; không dùng một spec để đóng cả nhóm |
+| Trước thiết kế màn | `UI-REF-00` | Tối đa 2 tham chiếu sản phẩm chính thức cho mỗi nhóm giao diện; ghi URL/ngày truy cập, mẫu bố cục/tương tác áp dụng và lý do | Tham chiếu chỉ định hướng trình bày; Bot/current server contract mới quyết định nghiệp vụ; giữ brand xanh–teal, không sao chép tài sản/nhận diện. |
+| 16+ | `SPEC-06A..P` | A Free Tools; B Notes/Memory; C Documents/OCR/Translation; D Content; E channel connection; F Auto-post; G Projects; H Assets; I Jobs/History; J Support; K Members; L Rewards; M Community; N Wallet/manual top-up khách; O Admin billing review; P Admin ERP còn lại | Mỗi control/action có phiếu riêng; Members ≠ Rewards; Wallet/Admin approval là luồng nhạy cảm riêng; Admin ERP không gộp với luồng khách. |
 | Sau hết nhóm trên | `SPEC-07A..N` | Mỗi capability Video được Bot source xác nhận có một spec riêng; editor thủ công/timeline và editor AI luôn tách | Spec con Video được sinh từ ledger chính xác; không bỏ sản phẩm vì tên route khác |
-| Cuối cùng | `SPEC-08` | UI/UX và motion toàn site trên source SHA cố định | Whole-site browser matrix và WA-35/WA-36 evidence; không thay bằng pass của từng màn |
+| Cuối cùng | `SPEC-08` + `MOTION-WEBAPP-SURFACES-FINAL-20261010` | UI/UX và motion toàn site trên source SHA cố định | Whole-site browser matrix và WA-35/WA-36 evidence; không thay bằng pass của từng màn |
 
 **Quy tắc giao việc:** mỗi spec con được giao riêng theo builder order Owner đã
 chốt: Gemini 3.8 Flash trước → không đạt cùng AC mới đến Gemini 3.1 Pro → Pro
@@ -232,7 +239,7 @@ khóa để hoàn thiện bề mặt và kiểm bằng chứng UI.
 ## 6. Thứ tự và cổng giao việc
 
 1. SPEC-00 source baseline/ledger → SPEC-01 workflow/Admin contract.
-2. Voice → Music → SubDub → Image → các nhóm không phải Video (06A–06E).
+2. Sau khi khóa nguồn/ledger, chốt tham chiếu giao diện `UI-REF-00`, rồi Landing/Shared Shell → Voice → Music → SubDub → Image → Wallet/manual top-up + Admin billing review → từng nhóm không phải Video còn lại (06A–06P).
 3. Video (SPEC-07) cuối theo thứ tự Owner đã chốt.
 4. WA-35/WA-36 được theo dõi liên tục trong goal UI/UX & motion hiện hành; toàn-site acceptance đóng sau khi các bề mặt cuối ổn định.
 
@@ -454,8 +461,9 @@ nghĩa là yêu cầu đã được ghi vào plan/spec; **không** có nghĩa t�
   **biên tập AI** khỏi **biên tập thủ công/timeline**.
 - [x] Nhóm còn lại không bị bỏ khỏi sổ: từng Free Tool; Notes/Memory/reminder;
   Documents/PDF/OCR/translation; Content; kết nối kênh, duyệt, lịch, đăng,
-  receipt/retry; Projects, Assets, Jobs/History, Support/Ticket,
-  Membership/Rewards, Community/Referral, Admin/ERP và family phát hiện mới.
+  receipt/retry; Projects, Assets, Jobs/History, Support/Ticket, Members,
+  Rewards, Community/Referral, Admin/ERP và family phát hiện mới; Members và
+  Rewards được theo dõi như hai capability riêng.
 - [ ] Khóa được Bot source canonical + Web base SHA; status hiện vẫn
   `BOT_CANONICAL_BASELINE=NOT_LOCKED`.
 - [ ] Tạo action ledger đầy đủ từ nguồn chuẩn, reconcile mọi command/callback/
@@ -506,3 +514,108 @@ smooth-load claim is made. The summary and exact per-row measurements are in
 `evidence/motion-wa35-measured-20261010-r11.md`; remaining work is to repair the
 measurement gate, attribute the frame delays, and rerun the same matrix plus
 protected comparators.
+
+## 9. Rebaseline current main và bổ sung cổng đặc tả từng nút — 2026-10-10
+
+### 9.1 Kết quả kiểm tra thiếu sót thật
+
+Lần đọc này đối chiếu tệp người dùng gửi với Git source; nội dung tệp được coi
+là đầu vào cần kiểm chứng, không tự động coi mọi nhận định là lỗi đã xác minh.
+
+| Nhận định trong đầu vào | Kết quả kiểm chứng | Cách xử lý trong plan |
+|---|---|---|
+| Plan đang bind snapshot cũ | **Đúng.** Docs branch `45b84de…` có merge-base `17b9494…`; `origin/main` đã là `86d4ee6…`. Có 11 commit first-parent sau base, từ #621 tới #634. | Từ nay dùng current-main SHA làm baseline mới; làm mới SHA trước mỗi wave sau khi phần đang dở khép lại. |
+| Music UI #618 vẫn đại diện UI hiện tại | **Sai nếu dùng như bằng chứng cuối.** PR #621 (`a5e3685`) trực tiếp thay `static/portal/portal.js`: thêm tier/giá, `vocal_mode`, `lyrics` và độ dài bài hát; đồng thời thêm `copyfast_music_job_bridge.py` và API contract. | Thay kết luận cũ “thiếu tier/adapter” bằng `CURRENT_MAIN_REVALIDATION_REQUIRED`; kiểm UI handler/quote/confirm với bridge hiện hành. |
+| Engine/runtime merges sau checkpoint không thể đổi contract UI | **Thiếu sót thật.** Từ merge-base đến main, current source đổi API/DB và Music/Image/Video/document bridges cùng runtime matrices; route, trạng thái khả dụng, quote và kết quả cần được so lại dù CSS không đổi. | Mỗi product phải có bảng source-touch → trường/nút chịu ảnh hưởng → test lại. UI lane chỉ trình bày contract, không tự sửa engine. |
+| Có 12 lỗi ViewTransition uncaught trên main | **Chưa xác minh trên current main.** Tệp gửi nêu con số nhưng không kèm run SHA/trace có thể tái lập trên `86d4ee6…`; không được ghi là defect current-main đã xác nhận. | Ghi `CLAIM_NOT_REPRODUCED_ON_CURRENT_MAIN`; WA-35/36 vẫn OPEN. R11 chỉ là candidate cũ và runner fail như mục trước. |
+| Plan đã chỉ rõ UI từng nút để builder không đoán | **Chưa đạt ở mức kiểm kê thực tế.** Existing plan chia capability và acceptance cấp nhóm, nhưng chưa bắt buộc DOM selector, mỗi nhãn/locale, điều kiện bật/tắt, request/payload, state, lỗi/khôi phục, quyền, focus/mobile và một lệnh test cho từng control. | Thêm spec `WEBAPP-PRODUCT-CONTROL-BY-CONTROL-UX-20261010`; trước code phải tạo ledger từ nguồn đã khóa và sinh phiếu action-level, cấm dispatch khi action còn `UNKNOWN`. |
+| Luồng nạp thủ công khách → Admin | **Thiếu trong bản plan trước:** Wallet/payment mới được nhắc như authority cần giữ, chưa có checklist riêng cho nhập tiền, thời điểm hiện QR/mã, pending và duyệt Admin. Đây là yêu cầu Owner đã nêu nhưng chưa được tái xác minh trên current main. | Thêm spec `WEBAPP_WALLET_ADMIN_UI_CLOSEOUT_20261010`; kiểm từ customer top-up đến Admin review theo server contract; mọi thử nghiệm chỉ dùng QA cô lập, không sửa ví/payment và không tạo giao dịch production. |
+| Tham khảo UX thị trường trước khi thiết kế | **Thiếu tiêu chí có thể kiểm:** plan chưa bắt buộc ghi nguồn tham khảo, ngày xem, pattern áp dụng và ranh giới không sao chép. | Thêm `UI-REF-00`: tối đa 2 nguồn chính thức liên quan mỗi nhóm, lưu URL/ngày và pattern; Bot/API vẫn là nguồn chức năng, tham khảo ngoài chỉ giúp bố cục/tương tác. |
+| Admin ERP nằm trong nhóm parity Bot → Web | **Dễ gây nhập nhằng:** nhiều quyền quản trị là app-native, không nhất thiết có hành động Bot tương đương. | Tách Admin billing review và Admin ERP thành `06O/06P`; đối chiếu Bot khi có, nếu không thì ghi `ADMIN_ONLY`/`OWNER_NEW_REQUIREMENT`, không tự gán thiếu parity. |
+
+### 9.2 Current-main source baseline và đường revalidation
+
+`origin/main=86d4ee6e11ddfbc0d4e1dbf63b41d9b3ed7d859b` là mốc source mới
+nhất được đọc trong lượt này. So với `17b9494…`, direct presentation-file
+delta được xác minh là `static/portal/portal.js`; runtime/contract delta gồm
+`copyfast_api.py`, `copyfast_db.py`, các bridge Music/Image/Video/Document
+Translation và R4–R10 route/runtime matrices. Đây là **source comparison**,
+không phải browser/live/deploy evidence.
+
+| Product / surface | Current-main contract đã xác minh | UI closeout gần nhất | Thay đổi sau checkpoint cần xét | Trạng thái hiện tại và bước kế tiếp |
+|---|---|---|---|---|
+| Landing / Welcome | Chưa có catalog từng CTA/section current-main trong lượt này; đây là bề mặt khách công khai, không suy từ ảnh lịch sử. | Chưa có closeout control-level | Cần recheck route/DOM/locale/claims trên current main. | `NOT_AUDITED_CONTROL_BY_CONTROL`; kiểm H1, thông điệp chính, CTA, điều hướng auth→app, VI/EN/ZH và mobile. |
+| Video | Các route/flow đã có checkpoint hub, nhanh, nhiều cảnh; không coi planner là file video cuối. | #616 | `copyfast_product_video_job_bridge.py`, API và runtime matrices R5–R10 thay đổi; chưa thấy direct `portal.js` delta ngoài #621. | `CHECKPOINT_ONLY_REVALIDATE`; sau các nhóm khác, lập từng action/editor spec từ Bot ledger rồi test route/guard/result. |
+| Voice | Current source có TTS, saved/profile/clone surfaces; route/feature controls phải được reconcile với runtime admission. | #617 | #622 runtime admission và R4–R10 contracts/matrices; không có direct presentation path delta được thấy ngoài `portal.js` Music edit. | `CHECKPOINT_ONLY_REVALIDATE`; tách TTS mặc định, saved voice, clone/profile và từng nút quản lý. |
+| Music | `/music/create` = `music_background`; `/music/song` có form riêng. Current `portal.js` có background tier 130/150/200 Xu; song tier 200/250/300 Xu, `vocal_mode` auto/male/female/duet, `lyrics`, `song_length_mode` seconds/half/full và duration. Bridge canonical hiện có hai sản phẩm/giá tương ứng trong source. | #618 | **#621 sửa `portal.js` trực tiếp** và thêm Music bridge/API. UI gửi generic feature phase theo mapping; vẫn cần kiểm tương quan exact action → estimate/confirm/bridge/receipt. | `MUST_REVALIDATE`; test toàn bộ control trên `/music/create` và `/music/song`, không chỉ form render. Giá option UI không phải thẩm quyền; phải khớp quote/receipt server. |
+| SubDub | Checkpoint mô tả một màn/bốn mode, nhưng local UI test trước đó chỉ thấy guarded CTA/volume local; chưa có file output evidence. | #619 | API/runtime truth matrices tiếp tục đổi; không có direct presentation path change được thấy từ base tới main. | `CHECKPOINT_ONLY_REVALIDATE`; kiểm từng mode, payload/volume/result/report Admin; không gọi local slider là xử lý thật. |
+| Image | Current main có Image Generation bridge mới và các trạng thái runtime được cập nhật. | #620 | #623 thêm `copyfast_image_generation_job_bridge.py`; API/runtime matrices R4–R10 thay đổi. | `MUST_REVALIDATE`; tách tạo AI, sửa AI và deterministic edit; map mọi nút tới contract đúng và kiểm output/ownership. |
+| Free Tools | Có bề mặt/hub; chưa có catalog current-main control-by-control trong tài liệu này. | Chưa có closeout đủ catalog | Runtime/source inventory thay đổi sau base; chưa đối chiếu action từng tool. | `NOT_AUDITED_CONTROL_BY_CONTROL`; lấy từng action từ Bot ledger + DOM, không đếm hub/card là đủ. |
+| Notes / Memory / Reminders | Các capability được nêu ở audit cũ chưa tạo thành action ledger hoàn chỉnh. | Chưa có closeout đủ CRUD | Chưa có current-main action map trong lượt này. | `NOT_AUDITED_CONTROL_BY_CONTROL`; mỗi create/list/search/update/delete/reminder/priority phải có dòng riêng nếu Bot source xác nhận. |
+| Documents / PDF / OCR / Translation | Current main thêm Document Translation bridge; route tồn tại không chứng minh tệp dịch được xuất. | Chưa có closeout theo từng nút | `copyfast_document_translate_bridge.py` và API/runtime matrices đổi. | `REVALIDATE_REQUIRED`; tách upload/inspect/translate/convert/download/retry và kiểm file thật ở môi trường được phép. |
+| Content / Prompt tools | Có Web surfaces/prompt tools, nhưng draft text không đồng nghĩa AI/provider output hoặc publish. | Chưa có closeout theo mọi action | Không có direct presentation-path delta được xác minh trong lượt này. | `NOT_AUDITED_CONTROL_BY_CONTROL`; tách compose/save/copy/apply/export theo contract thật. |
+| Auto-post / Channels | Audit authority trước đó từng ghi channel connection thiếu; trạng thái đó chưa được tái xác minh trên `86d4ee6…`. | Chưa có closeout publish | Chưa có recheck current-main channel/OAuth/receipt evidence. | `REVALIDATE_BACKEND_AND_UI`; không để nút “Đăng” xuất hiện sẵn nếu chưa có channel authority/approval/receipt. |
+| Projects / Workboard | Có route/records riêng; không phải Bot job và không được gán nhãn lẫn nhau. | Chưa có closeout từng action | Chưa có current-main control inventory. | `NOT_AUDITED_CONTROL_BY_CONTROL`; tách tạo/sửa/hoàn tất/phân công/lọc và trạng thái. |
+| Assets / Downloads | Có private asset surfaces; không lấy metadata/available badge làm bằng chứng tải file được. | Chưa có closeout từng action | Route/engine inventory chưa đối chiếu qua UI hiện tại. | `NOT_AUDITED_CONTROL_BY_CONTROL`; tách preview/download/delete/share, owner check và file readiness. |
+| Support / Tickets | Support surface có route/API; chưa đối chiếu mọi form/status/attachment/report. | Chưa có closeout toàn action | Cần recheck route + current copy. | `NOT_AUDITED_CONTROL_BY_CONTROL`; form giữ input khi lỗi, action/ticket state và response rõ. |
+| Wallet / manual top-up + Admin billing | Tài liệu cũ có route khách `/wallet/topup` và nhiều báo cáo lỗi trước đây; lần này chưa tái kiểm toàn bộ current-main flow, số tiền, thời điểm hiện QR/mã và Admin approval. | Chưa có closeout control-level hiện hành | Cần đọc lại route/DOM/API/permission và map Bot payment contract sau khi khóa nguồn; không suy từ ảnh cũ. | `REVALIDATE_HIGH_RISK`; Customer amount → confirm → instructions → pending; Admin review/approve/reject theo quyền, audit và idempotency; thử nghiệm không tạo wallet/production mutation. |
+| Members | Chưa có action catalog current-main trong lượt này. | Chưa có closeout | Chưa có current-main control inventory về role/thành viên/audit. | `UNKNOWN`; kiểm quyền/owner và audit trước khi vẽ action. |
+| Rewards | Chưa có action catalog current-main trong lượt này. | Chưa có closeout | Chưa có current-main control inventory về điều kiện/điểm/lịch sử. | `UNKNOWN`; xác minh authority và điều kiện; không gộp với Members. |
+| Community / Referral | Chưa có action catalog current-main trong lượt này. | Chưa có closeout | Chưa có current-main control inventory. | `UNKNOWN`; chỉ giữ chức năng có nguồn/owner rõ. |
+| Admin ERP | Checklist legacy 19-spec có nhiều trạng thái lịch sử, không phải chứng nhận mọi nút Admin hiện nay. | Các đợt Admin trước đây, chưa có button catalog current-main | Runtime matrices/API tiếp tục đổi; chưa rebaseline trang Admin trong lượt này. | `REBASELINE_REQUIRED`; mỗi thao tác quản trị cần role, record, audit, confirm/undo, lỗi và bằng chứng riêng. |
+| Shared shell | Shell/locale/theme/navigation đang là nguồn dùng chung; current-main direct UI diff phải kiểm lại theo rendered state, không dựa dirty worktree. | Không có closeout toàn shell | `portal.js` thay đổi; `portal-i18n.js`, CSS/theme/template không đổi trong file-diff giữa base và main. | `OPEN`; inventory nav/account/locale/theme/install/assistant/focus/back ở anonymous + signed. |
+| Motion | `portal-motion.js` tại current main có tree hash `2bb208658eb989ad32c83bbaadf58fe75cebd564`; source main không đổi từ base được so. | WA-35/36 chưa đóng | R11 là local candidate `17b9494… + dirty overlay`, không phải current main; nguồn gửi nêu 12 lỗi nhưng chưa có trace current-main. | `OPEN_NOT_REPRODUCED_ON_MAIN`; sau khi khép phần motion dang dở, rerun cold/warm, normal/reduced, rapid/back-forward trên current main. |
+
+### 9.3 Thứ tự cập nhật sau khi chốt plan
+
+1. **Task hiện tại:** hoàn tất tài liệu plan/checklist/spec rồi dừng. Không triển
+   khai UI trong cùng lượt.
+2. **Việc kế tiếp — phần đang dở, không mở product mới:** giữ nguyên mọi thay đổi
+   trong worktree `work/toanaas-video-ui-release-20261007`; tiếp tục WA-35 entrance
+   lifecycle RCA. Probe phải ghi `animationstart/end/cancel`, `getAnimations()`,
+   `isConnected`, class/`data-portal-motion` mutation và mẫu computed state
+   khoảng 5 giây đầu cho `/dashboard` và `/features`. Phân biệt animation bị huỷ,
+   thay CSS, remount/gỡ DOM hay event listener sai; chỉ sau khi có RED evidence
+   mới viết test hồi quy rồi sửa đúng nguyên nhân. Đồng thời tách riêng điều tra
+   long task/frame gap, chạy WA-36 reduced-motion và protected comparators. Không
+   reset/stash/rebase mù, không dùng production/provider.
+3. Chỉ sau khi việc dở dang đóng tại ranh giới an toàn: fetch/rebase lại main,
+   khóa Bot source theo `SPEC-00`, tạo action ledger và control ledger; nếu
+   current main tiến sau `86d4ee6…`, cập nhật matrix trước khi giao việc.
+4. Sau inventory: ghi tham chiếu `UI-REF-00` → landing/welcome → shared shell theo
+   spec riêng → Voice → Music → SubDub → Image → Wallet/manual top-up và Admin
+   billing review (spec riêng) → từng nhóm không phải Video (Members và Rewards
+   là hai nhóm riêng) → mọi sản phẩm Video/editor → whole-site motion/final matrix.
+5. Một capability/control nhỏ mỗi spec; không bật nhiều `RUNNING` cùng lúc.
+   Builder brief phải có đường dẫn file, dòng/selector, spec hoàn chỉnh, file
+   cấm sửa, lệnh verify và output mong đợi; thiếu một mục thì chưa giao.
+6. Checklist điều phối riêng cho wave và từng action nằm tại
+   `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-20261010.md`; shared
+   shell có spec riêng tại
+   `docs/superpowers/specs/2026-10-10-webapp-shared-shell-ui-closeout.md`;
+   không dùng checklist ERP P0 cũ làm bằng chứng đóng UI sản phẩm.
+
+### 9.4 Trạng thái chốt lượt plan
+
+```ini
+PLAN=UPDATED_WITH_CURRENT_MAIN_REBASELINE_BUTTON_LEVEL_WALLET_ADMIN_AND_REFERENCE_GATES
+CURRENT_MAIN_SHA=86d4ee6e11ddfbc0d4e1dbf63b41d9b3ed7d859b
+BUTTON_CONTROL_LEDGER=NOT_CREATED_YET; REQUIRED_BEFORE_PRODUCT_CODE
+UI_REFERENCE_GATE=REQUIRED_AFTER_SOURCE_LEDGER; NOT_RUN
+WALLET_ADMIN_SPEC=READY_FOR_REBASELINE; CUSTOMER_AND_ADMIN_UI_NEED_CURRENT_MAIN_REVALIDATION
+TASK_CHECKLIST=reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-20261010.md
+MOTION_FINAL_SPEC=docs/superpowers/specs/2026-10-10-motion-webapp-surfaces-final.md
+SHARED_SHELL_SPEC=docs/superpowers/specs/2026-10-10-webapp-shared-shell-ui-closeout.md
+WALLET_ADMIN_SPEC=docs/superpowers/specs/2026-10-10-webapp-wallet-admin-ui-closeout.md
+BOT_CANONICAL_BASELINE=NOT_LOCKED
+FULL_ACTION_LEDGER=OPEN
+WA35=OPEN_PARTIAL_MEASUREMENT_R11
+WA36=OPEN
+PRODUCT_CODE_CHANGED_THIS_TASK=0
+PROVIDER_CALLS=0
+WALLET_MUTATIONS=0
+PRODUCTION_DATA_MUTATIONS=0
+DEPLOY=NO
+LIVE_PASS=NO
+NEXT=STOP_AFTER_PLAN; RESUME_WA35_ENTRANCE_LIFECYCLE_RCA; THEN_REBASELINE_AND_EXECUTE_PLAN
+```

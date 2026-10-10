@@ -88,6 +88,91 @@ main CI `37770140237` SUCCESS. Deploy/signed live SubDub chưa thực hiện.
   CI/PR/release còn mở.
 - `PROVIDER_CALLS=0 WALLET_MUTATIONS=0 PRODUCTION_DATA_MUTATIONS=0`.
 
+---
+
+## KẾ HOẠCH UI/UX TỪNG NÚT — CURRENT-MAIN REBASELINE 2026-10-10
+
+**SPEC_ID:** `WEBAPP-PRODUCT-CONTROL-BY-CONTROL-UX-20261010`<br>
+**CURRENT_MAIN ĐÃ ĐỌC:** `86d4ee6e11ddfbc0d4e1dbf63b41d9b3ed7d859b`<br>
+**Plan tổng:** `docs/superpowers/plans/2026-10-09-bot-web-function-parity-replan.md`<br>
+**Spec capability:** `docs/superpowers/specs/2026-10-09-bot-web-capability-closeout.md`<br>
+**Spec từng điều khiển:** `docs/superpowers/specs/2026-10-10-webapp-product-control-by-control-ux.md`<br>
+**Spec shared shell:** `docs/superpowers/specs/2026-10-10-webapp-shared-shell-ui-closeout.md`<br>
+**Trạng thái:** Plan được rebaseline và bổ sung spec; inventory từng DOM control, Bot canonical source và toàn bộ product UI vẫn OPEN. Hoàn tất phần tài liệu thì dừng; lượt sau tiếp tục việc UI/motion dang dở trước khi mở plan mới.
+
+**Checklist điều phối riêng (không trộn với backlog ERP P0):**
+`reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-20261010.md`.
+**Đặc tả motion toàn site:**
+`docs/superpowers/specs/2026-10-10-motion-webapp-surfaces-final.md`.
+
+### A. Bằng chứng và sửa kết luận stale
+
+- [x] Xác nhận plan/docs branch `45b84de…` còn dựa trên merge-base `17b9494…`, trong khi `origin/main` là `86d4ee6…`.
+- [x] Đọc 11 commit first-parent #621–#634 sau base; xác nhận direct presentation-file touch là `static/portal/portal.js`, cùng các thay đổi API/DB, Music/Image/Video/Document Translation bridge và R4–R10 runtime matrices.
+- [x] Sửa kết luận Music cũ: PR #621 thêm tier/giá, `vocal_mode`, `lyrics`, `song_length_mode`; bridge/API đã có trong source. UI current-main chưa được browser revalidate, quote/confirm correlation và audio output chưa được chứng minh.
+- [x] Sửa ngôn ngữ của claim “12 ViewTransition invalid-state errors”: chưa được tái hiện trên current main nên ghi `CLAIM_NOT_REPRODUCED_ON_CURRENT_MAIN`; WA-35/36 vẫn OPEN.
+- [x] Tạo spec con bắt buộc để mô tả từng nút/control; không tạo plan tổng thứ ba.
+- [ ] Sau khi khép phần motion hiện đang dở, cập nhật `CURRENT_MAIN_SHA` lần nữa trước khi code; nếu khác `86d4ee6…`, chạy lại source-touch matrix.
+
+### B. Cổng inventory — không giao builder trước khi đạt
+
+- [ ] Khóa Bot Git SHA canonical và ghi riêng dirty overlay; cho tới khi khóa xong, không tuyên bố đủ/chưa đủ parity dựa trên một checkout bất kỳ.
+- [ ] Dựng Bot action ledger đầy đủ cho command/callback/template/handler/admin action; alias không được làm rơi record; `UNKNOWN/UNREVIEWED=0` cho snapshot đã chốt.
+- [ ] Tạo `reports/audit/WEBAPP-PRODUCT-UI-ACTION-LEDGER.md` và `.json` từ đúng current main + rendered route DOM; chưa được tạo trong task này.
+- [ ] Đối chiếu route ↔ source renderer ↔ DOM button/control ↔ event handler ↔ endpoint/payload ↔ state/report. Mỗi route/action pair là record riêng; `CONTROL_UNKNOWN=0` mới được code capability đó.
+- [ ] Mỗi record có source SHA/path/line, route, selector, label VI/EN/ZH, aria/help, intent, visible/enabled/disabled reason, quyền/owner, input/validation, request/payload, quote/cost, idempotency, state transition, success/error/recovery, report/artifact, responsive/a11y/theme/motion, test command/output và evidence.
+- [ ] Nếu thiếu endpoint, payload, quyền, giá, trạng thái, hành vi lỗi hoặc output: ghi `UNKNOWN`/`BACKEND_GAP`, hỏi đúng owner/engine lane và không cho builder tự đoán.
+- [ ] Ticket builder có đủ đường dẫn file, selector/dòng, spec đầy đủ, file cấm sửa, một lệnh verify chạy được + kết quả mong đợi; worker đọc skill tương ứng; `WORKER_LOCK=1`.
+
+### C. Bảng sản phẩm/surface cần xử lý — không suy từ PR cũ
+
+| Surface | Checkpoint gần nhất | Delta sau checkpoint/current-main cần rà | Trạng thái / việc tiếp theo |
+|---|---|---|---|
+| Video | #616 | Video job bridge, API và runtime matrices R5–R10 đổi; còn nhiều sản phẩm/editor | OPEN; để sau cùng, từng sản phẩm một; AI editor và manual/timeline tách riêng. |
+| Voice | #617 | Runtime admission/contracts R4–R10 đổi | OPEN; revalidate TTS mặc định, saved voice, clone/profile và từng action quản lý. |
+| Music | #618 | #621 sửa `portal.js`, thêm tier/giá/vocal/lyrics/length và bridge/API | OPEN; bắt buộc test `/music/create`, `/music/song`, quote→confirm và report; giá UI không là authority. |
+| SubDub | #619 | API/runtime matrices sau checkpoint; old local evidence chỉ thấy guard và volume cục bộ | OPEN; một màn/bốn mode; verify từng payload, volume, report và artifact. |
+| Image | #620 | #623 thêm Image Generation bridge; runtime matrices thay đổi | OPEN; tách AI create, AI edit, deterministic/manual; recheck guard/output. |
+| Free Tools | Chưa có catalog đủ | Chưa có action-level inventory current-main | OPEN; mỗi tool có form/action/result riêng. |
+| Notes / Memory / Reminders | Chưa có catalog đủ | Bot canonical chưa khóa; CRUD/runtime chưa được chứng minh | OPEN; action create/list/search/update/delete/reminder/priority tách riêng nếu source xác nhận. |
+| Documents / PDF / OCR / Translation | Chưa có closeout từng action | Thêm Document Translation bridge sau baseline | OPEN; tách upload/inspect/translate/convert/export/download/retry và kiểm file thật. |
+| Content / Prompt tools | Chưa có closeout mọi action | Draft text không chứng minh AI output/publish | OPEN; tách compose/save/copy/apply/export và ghi đúng giới hạn. |
+| Auto-post / Channels | Chưa có closeout publish | Kết nối/authority/receipt chưa tái xác minh trên `86d4ee6…` | OPEN; không hiện “Đăng” như sẵn dùng nếu thiếu kênh/approval/receipt. |
+| Projects / Workboard | Chưa có action catalog | Chưa revalidate route/DOM từng nút | OPEN; tách tạo/sửa/giao việc/hoàn tất/lọc; không trộn job engine. |
+| Assets / Downloads | Chưa có action catalog | Metadata != file sẵn sàng | OPEN; tách preview/download/delete/share và owner/readiness. |
+| Support / Tickets | Chưa có closeout toàn action | Chưa đối chiếu từng trạng thái/attachment/report | OPEN; giữ input lỗi, phản hồi dễ hiểu và đường khôi phục. |
+| Members | Chưa có closeout | Vai trò, quyền, thành viên được cấp và trạng thái từng action chưa có ledger current-main | OPEN; xác minh authority trước khi tạo/đổi quyền; không tạo CTA giả. |
+| Rewards | Chưa có closeout | Điều kiện, số dư/điểm và lịch sử reward chưa có action map current-main | OPEN; tách quyền đọc/ghi, nguồn tính và lịch sử; không suy từ màn Members. |
+| Community / Referral | Chưa có closeout | Chưa có current-main action map | OPEN; disposition từng action và quyền riêng. |
+| Admin ERP | Checklist legacy 19 specs | Không phải chứng nhận từng nút hiện tại; API/runtime còn đổi | OPEN; role/record/audit/confirm/undo/report phải ghi từng action. |
+| Shared shell | Chưa có closeout toàn shell | `portal.js` đổi sau checkpoint; source current cần rendered recheck | OPEN; nav/account/locale/theme/install/assistant/back/focus ở anonymous + signed. |
+| Motion | WA-35/36 chưa đóng | R11 cũ fail; 12 lỗi trong tài liệu chưa xác minh trên main | OPEN; khép việc đang dở, rồi rerun normal/reduced, rapid/back-forward trên current main. |
+
+### D. Checklist UI/UX cho từng nút/control
+
+Áp dụng checklist con trong spec `2026-10-10-webapp-product-control-by-control-ux.md` cho **từng dòng**, không đánh dấu thay cho cả route:
+
+- [ ] Default/hover/focus-visible/active/selected/disabled + lý do/loading/duplicate lock.
+- [ ] Success chỉ sau kết quả đúng; validation/server/permission/offline error có thông báo và cách sửa.
+- [ ] Submit lỗi không xóa input; retry idempotent; cancel/destructive chỉ khi API hỗ trợ thật.
+- [ ] Mọi trạng thái có copy đủ VI/EN/ZH; aria-label/help/error khớp trạng thái.
+- [ ] Một primary action rõ; form/list theo cột dọc; không nhồi các nút ngang hàng.
+- [ ] Giữ màu xanh–teal; dark mode xanh đậm + chữ sáng, không chuyển sang nền đen.
+- [ ] Contrast thường ≥4.5:1, chữ lớn/UI ≥3:1, hit target ≥44×44px; Tab/focus và touch dùng được.
+- [ ] 360/375/768/1440px không tràn, chồng, cắt; input không mất focus khi hiện bàn phím.
+- [ ] Motion giúp hiểu phản hồi, không animate layout; reduced-motion vẫn dùng đầy đủ.
+- [ ] Có test interaction thật trên rendered state + screenshot/DOM/console evidence; snapshot string hoặc route 200 một mình không PASS.
+
+### E. Thứ tự thực hiện khóa
+
+1. [ ] Chốt plan/checklist/spec và dừng tại đây.
+2. [ ] Lượt kế tiếp tiếp tục phần UI/motion hiện đang dở; giữ nguyên các thay đổi worktree; không mở sản phẩm mới.
+3. [ ] Khi việc dở đóng: recheck main, khóa Bot source, dựng Bot action ledger + Web control ledger.
+4. [ ] Shared shell theo spec riêng → Voice → Music → SubDub → Image → từng nhóm không phải Video (Members và Rewards là hai nhóm riêng) → Video từng sản phẩm/editor → whole-site motion/final certification.
+5. [ ] Sau mỗi spec: Tester độc lập, review checklist live, nếu lỗi thì sửa đúng spec gốc rồi chạy lại bằng chứng trước khi qua spec kế tiếp.
+
+**Trạng thái chốt task plan:** `PLAN_UPDATED=YES`; `BUTTON_LEDGER=NOT_CREATED`; `BOT_CANONICAL_SHA=NOT_LOCKED`; `WA35/WA36=OPEN`; `PRODUCT_CODE_CHANGED=0`; `PROVIDER_CALLS=0`; `WALLET_MUTATIONS=0`; `PRODUCTION_DATA_MUTATIONS=0`; `DEPLOY=NO`; `LIVE_PASS=NO`.
+
 ### WA-35 motion measurement update — R11 / 2026-10-10
 
 - [x] Hydrated local matrix collected: 16/16 route × viewport × motion rows; `CLS=0`, browser page errors `0` in all rows.
@@ -95,6 +180,23 @@ main CI `37770140237` SUCCESS. Deploy/signed live SubDub chưa thực hiện.
 - [ ] Motion-duration assertion remains unverified: computed entrance appears in all 8 normal rows and in 0 reduced-motion rows, but the harness recorded no `animationend` event for the 8 normal rows and exited `1`; do not mark WA-35 PASS.
 - [ ] Attribute the remaining long frames/tasks, correct the event instrumentation or measurement timing, then rerun the same matrix and protected comparators before closing WA-35/WA-36.
 - Evidence: `evidence/motion-wa35-measured-20261010-r11.md`. Run is local QA only; no provider, wallet, production-data, merge, or deploy action.
+
+### WA-35 follow-up — R27–R35 / 2026-10-10
+
+- [x] Latest partial localhost QA is recorded in `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-20261010.md` and `docs/superpowers/specs/2026-10-10-motion-webapp-surfaces-final.md` on HEAD `45b84de…` plus the documented dirty source overlay; it is not main or production evidence.
+- [x] Dashboard R34/R35 observed 10 `mount()` calls, including 9 hydration-driven calls matching 9 `integration.merge()` calls. R35 still recorded one completed 0.68-second entrance and no cancel; animation replay is not established.
+- [x] Existing lifecycle/fallback harnesses ran against the recorded dirty source overlay: 7 passed; the older baseline reproduces hydration replay and current code settles same-route hydration. This is not a browser performance attribution test.
+- [ ] Long tasks (223/198/252 ms) and the 700 ms frame gap remain unattributed; no RED regression currently identifies their source. Keep WA-35/WA-36 OPEN and do not claim smooth-load or motion acceptance.
+- R35 next step is superseded by the R36 sample-matrix evidence below; performance RCA and full route/state coverage remain open.
+
+### WA-35/36 R36 — 2026-10-10
+
+- [x] Isolated localhost Chrome/Playwright QA: 16/16 rows across four routes, two viewports and normal/reduced motion; page/console/request/external/CLS/overflow errors are zero.
+- [x] Normal entrance assertions pass 8/8 at `0.68s`; reduced mode has no hero/main entrance in 8/8. Features reveals all 12 groups in all four mode/viewport rows.
+- [ ] Performance fails: long tasks `>200ms` in 11/16 rows (maximum `761ms`); frame gaps `>200ms` in 16/16 (maximum `866.7ms`). Worst LoAF `874.7ms`, blocking `749.7ms`; source attribution partial, so no motion-only cause established.
+- [ ] Dashboard normal leaves hidden, zero-height `.portal-dashboard-assurance` `is-pending`; CSS intentionally hides technical assurance. Verify the motion target/acceptance contract without treating it as visible customer content.
+- Evidence: `C:\Users\toann\Documents\Codex\2026-07-10\1-ngu-n-ch-nh-v\outputs\wa35-r36-attributed-20261010\matrix.json` and 16 PNG/JSON rows outside the repository. `FOCUSED_HYDRATED_MOTION_PASS`, exit `0`, is only a focused motion/browser/layout pass—not performance or full-site PASS.
+- Next: trace the R36 long frames on the same QA fixture, compare normal/reduced and cold/warm, extend route/auth/navigation coverage, then make a narrowly scoped change only if motion-owned RED evidence is reproducible. Do not change route/engine bundles from this task.
 
 ## VIDEO UI CHECKPOINT — 2026-10-07
 
