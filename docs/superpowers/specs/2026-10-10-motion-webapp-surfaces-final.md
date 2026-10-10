@@ -437,8 +437,9 @@ R11 trên candidate cũ không thay thế các cổng này.
 
 ## 9. Cập nhật QA R40 — 2026-10-10
 
-- Giữ nguyên `HEAD=45b84de83ee9b475bb4366c3ddc2af85b82297c4` và dirty overlay có
-  sẵn; SHA256 hiện tại của `static/portal/portal-motion.js` là
+- Mã nguồn được đo trên `45b84de83ee9b475bb4366c3ddc2af85b82297c4` cùng dirty
+  overlay đã có; commit tài liệu không đổi mã sản phẩm. SHA256 hiện tại của
+  `static/portal/portal-motion.js` là
   `C70752BAE488EB8D91069173B6F7D9E41F09C73A2F6985526BACF41FB0159326`.
 - Lần thử Playwright với Edge cài sẵn kết thúc bằng `TargetClosedError`,
   `exitCode=13` và lỗi Crashpad/remote-debugging pipe; không có trace/ảnh hợp lệ.
@@ -457,3 +458,6 @@ R11 trên candidate cũ không thay thế các cổng này.
   vì source SHA hiện tại khác SHA đã ghi lúc đó. Cần một runtime QA/browser đã
   được provision hợp lệ để tạo trace mới trước khi quyết định có lỗi motion cần
   sửa hay không.
+- Ba tài liệu plan/spec/checklist đã được commit và push lên nhánh
+  `docs/webapp-bot-parity-plan-checklist-20261010`; không có PR mở cho nhánh,
+  không merge và không deploy.

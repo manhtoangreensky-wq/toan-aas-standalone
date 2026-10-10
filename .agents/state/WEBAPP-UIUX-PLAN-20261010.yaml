@@ -158,7 +158,7 @@ evidence_state:
   wa35_r34_r35_mounts: DASHBOARD_10_PUBLIC_MOUNTS; 9_DATA_HYDRATION_MOUNTS_MATCH_9_MERGES; 9_7_TO_27_2MS_EACH; ABOUT_146MS_TOTAL
   wa35_r35_entrance: ONE_0_68S_PORTAL_MAIN_ENTRANCE_END_NO_CANCEL; NO_REPLAY_PROVEN
   wa35_r35_performance: LONG_TASKS_223_198_252MS; MAX_FRAME_GAP_700MS; SOURCE_UNATTRIBUTED
-  wa35_current_git_head: 45b84de83ee9b475bb4366c3ddc2af85b82297c4
+  wa35_tested_code_base_sha: 45b84de83ee9b475bb4366c3ddc2af85b82297c4; DOCUMENTATION_ONLY_COMMIT_EXCLUDED_FROM_PRODUCT_SOURCE
   wa35_source_overlay_sha256: PORTAL_JS_520978F0F88DB73A1B8F8462CBEAC7E266561EE5285A7088C2C451E6713B22D6; INTEGRATION_JS_CFC08D9A3226CC085B895B5F20D672D3CC07A0B83A19102FDF303ACE987797C9; PORTAL_MOTION_JS_8779D4F57A1B560BF817BC07CD2BB01B39885153D49D3CBF4035DE590C76C366; PORTAL_FEATURES_JS_4E091257625B7F66E25DC8950032F4DB6E9A3E1D0973CBC70F7F682D569ED431
   wa35_raw_traces: '%TEMP%\toanaas-wa35-r26\wa35-lifecycle-r27.json; wa35-lifecycle-r30-features.json; wa35-cpu-profile-r31.json; wa35-lifecycle-r34-dashboard.json; wa35-lifecycle-r35-dashboard.json'
   wa35_lifecycle_regression: EXISTING_BASELINE_RED_CURRENT_GREEN
@@ -219,8 +219,10 @@ evidence_state:
   provider_calls: 0
   wallet_mutations: 0
   production_data_mutations: 0
-  commit: NO
-  push: NO
+  commit: DOCS_ONLY
+  push: YES
+  pushed_branch: docs/webapp-bot-parity-plan-checklist-20261010
+  open_pr: NONE
   merge: NO
   deploy: NO
   live_pass: NO
