@@ -221,5 +221,21 @@
     "STATUS": "REPAIRED_IN_R10",
     "RESOLUTION": "Corrected terminal classification to IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD with EXTERNAL_PROVIDER_INCIDENT_MINIMAX_503, releasing lane without blocking other product families.",
     "TERMINAL_CLASSIFICATION": "IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD"
+  },
+  {
+    "DEFECT_ID": "DEFECT-R11-001",
+    "SPEC": "SPEC-00-R11",
+    "ROLE": "system",
+    "ROUTE": "providers/video_generic_http_provider.py, remote_worker.py, services/video_provider_*",
+    "CONTROL": "Bot Core Source / Runtime Authority Reconciled with PR #1420 Key4U Video Credential Authority",
+    "REPRO_STEPS": "Audit Bot Core source movement (commit 5c38bd31c20f26f815e2f05b6419f4dd64afbba9) against VPS runtime (381d335961bea01db60cda99f0dfe98e2b2d1760).",
+    "EXPECTED": "Bot source movement is strictly audited for cross-product non-regression, preserves all fail-closed invariants, and documents source/runtime split without unauthorized production deploy.",
+    "ACTUAL": "Bot main moved 1 commit ahead via PR #1420 introducing fail-closed Key4U video credential authority hardening while VPS runtime remains on 381d3359.",
+    "DATA_SOURCE": "BOT_PR_1420_AND_VPS_SSH_READBACK",
+    "FIRST_RED": "Bot source/runtime split detected after PR #1420 merged to main.",
+    "ROOT_CAUSE": "Independent Bot Core PR merge prior to scheduled production deploy dispatch.",
+    "STATUS": "REPAIRED_IN_R11",
+    "RESOLUTION": "Audited all 7 changed files in PR #1420, verified fail-closed Key4U credential authority, proved zero regression to non-video products, recommended exact deploy for 5c38bd3, and held deployment pending Owner authorization.",
+    "TERMINAL_CLASSIFICATION": "AUTHORITY_RECONCILED_AND_DOCUMENTED"
   }
 ]

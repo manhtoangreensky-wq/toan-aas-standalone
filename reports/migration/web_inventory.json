@@ -1642,6 +1642,12 @@
       "table": "defects"
     },
     {
+      "file": "scripts/build_r11_matrix.py",
+      "line": 415,
+      "operation": "UPDATE",
+      "table": "defects"
+    },
+    {
       "file": "scripts/build_r4_matrix.py",
       "line": 563,
       "operation": "UPDATE",
@@ -9863,7 +9869,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1013,
+      "occurrences": 1018,
       "provider": "PayOS"
     },
     {
@@ -9872,11 +9878,13 @@
         "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
         "reports/bundle_analyzer.html",
         "reports/webapp_full_product_truth/R10_FINAL_ROUTE_RUNTIME_MATRIX.json",
+        "reports/webapp_full_product_truth/R11_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/defects.json",
         "scripts/build_r10_matrix.py",
+        "scripts/build_r11_matrix.py",
         "static/portal/bundle_analyzer.html"
       ],
-      "occurrences": 25,
+      "occurrences": 45,
       "provider": "Key4U"
     },
     {
@@ -9896,15 +9904,17 @@
         "reports/audit/WEB_APP_FULL_UIUX_FUNCTIONAL_STABILIZATION_R1.json",
         "reports/audit/WEB_APP_FULL_UIUX_FUNCTIONAL_STABILIZATION_R1.md",
         "reports/webapp_full_product_truth/R10_FINAL_ROUTE_RUNTIME_MATRIX.json",
+        "reports/webapp_full_product_truth/R11_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R8_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R9_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/defects.json",
         "scripts/build_r10_matrix.py",
+        "scripts/build_r11_matrix.py",
         "scripts/build_r8_matrix.py",
         "scripts/build_r9_matrix.py",
         "static/portal/portal.js"
       ],
-      "occurrences": 20,
+      "occurrences": 25,
       "provider": "MiniMax"
     },
     {
@@ -9954,18 +9964,20 @@
         "copyfast_provider_policy.py",
         "reports/webapp_full_product_truth/00_route_surface_inventory.json",
         "reports/webapp_full_product_truth/R10_FINAL_ROUTE_RUNTIME_MATRIX.json",
+        "reports/webapp_full_product_truth/R11_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R6_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R7_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R8_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R9_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "scripts/build_r10_matrix.py",
+        "scripts/build_r11_matrix.py",
         "scripts/build_r6_matrix.py",
         "scripts/build_r7_matrix.py",
         "scripts/build_r8_matrix.py",
         "scripts/build_r9_matrix.py",
         "studio/script.js"
       ],
-      "occurrences": 40,
+      "occurrences": 66,
       "provider": "ElevenLabs"
     },
     {
@@ -9982,9 +9994,11 @@
         "copyfast_registry.py",
         "customer_app.html",
         "reports/webapp_full_product_truth/R10_FINAL_ROUTE_RUNTIME_MATRIX.json",
+        "reports/webapp_full_product_truth/R11_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R6_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R7_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "scripts/build_r10_matrix.py",
+        "scripts/build_r11_matrix.py",
         "scripts/build_r6_matrix.py",
         "scripts/build_r7_matrix.py",
         "static/manifest.json",
@@ -9993,7 +10007,7 @@
         "studio/manifest.json",
         "studio/script.js"
       ],
-      "occurrences": 54,
+      "occurrences": 56,
       "provider": "Suno"
     },
     {
@@ -10010,13 +10024,15 @@
       "files": [
         "reports/webapp_full_product_truth/00_route_surface_inventory.json",
         "reports/webapp_full_product_truth/R10_FINAL_ROUTE_RUNTIME_MATRIX.json",
+        "reports/webapp_full_product_truth/R11_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R8_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R9_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "scripts/build_r10_matrix.py",
+        "scripts/build_r11_matrix.py",
         "scripts/build_r8_matrix.py",
         "scripts/build_r9_matrix.py"
       ],
-      "occurrences": 30,
+      "occurrences": 48,
       "provider": "Replicate"
     },
     {
@@ -10062,7 +10078,7 @@
         "copyfast_notification_center.py",
         "copyfast_pages.py"
       ],
-      "occurrences": 1867,
+      "occurrences": 1872,
       "provider": "Telegram"
     }
   ],
@@ -17728,9 +17744,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 262,
-  "source_files_scanned": 262,
-  "source_fingerprint_sha256": "3f71072fa24b2ce8c009148318463b1f5a0a7089c0311306dba4d8cca198fa34",
+  "source_files_discovered": 264,
+  "source_files_scanned": 264,
+  "source_fingerprint_sha256": "b5c75a38133da4bd3d1706218528c076da9b7d624c9595ada47108d47754e01c",
   "source_root": "repository-root",
   "ui_path_references": [
     {
