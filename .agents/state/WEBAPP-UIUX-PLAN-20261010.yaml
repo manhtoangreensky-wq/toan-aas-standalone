@@ -1,0 +1,226 @@
+task_id: WEBAPP-UIUX-PLAN-20261010
+goal: >-
+  Hoàn tất bộ plan, checklist và spec trước; hiện tiếp tục xử lý phần WA-35/36
+  motion còn dở theo thứ tự, rồi mới mở các wave sản phẩm trong plan.
+phase: WA35_RCA_IN_PROGRESS_R39_TEMP_AND_SOURCE_REBASELINE_BLOCKED
+status: WA35_RCA_OPEN_R38C_PARTIAL_R39_BLOCKED_TEMP_AND_SOURCE_REBASELINE
+scope:
+  repository: toanaas-standalone
+  branch: docs/webapp-bot-parity-plan-checklist-20261010
+  base_sha: 45b84de83ee9b475bb4366c3ddc2af85b82297c4
+  current_main_read: 86d4ee6e11ddfbc0d4e1dbf63b41d9b3ed7d859b
+  allowed_files:
+    - docs/superpowers/plans/2026-10-09-bot-web-function-parity-replan.md
+    - docs/superpowers/specs/2026-10-09-bot-web-capability-closeout.md
+    - docs/superpowers/specs/2026-10-10-webapp-product-control-by-control-ux.md
+    - docs/superpowers/specs/2026-10-10-webapp-shared-shell-ui-closeout.md
+    - docs/superpowers/specs/2026-10-10-motion-webapp-surfaces-final.md
+    - docs/superpowers/specs/2026-10-10-webapp-wallet-admin-ui-closeout.md
+    - reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-20261010.md
+    - reports/audit/P0-WEB-ERP-MASTER-CHECKLIST.md
+    - .agents/state/WEBAPP-UIUX-PLAN-20261010.yaml
+  protected:
+    - all product/runtime code
+    - all pre-existing uncommitted and untracked files outside the listed plan documents
+acceptance:
+  - Plan, focused checklist, control-level UX spec, shared-shell spec, capability spec and final motion spec link consistently.
+  - Wallet/manual top-up and Admin billing approval have a dedicated UI contract; Admin ERP is not falsely counted as Bot parity.
+  - '`UI-REF-00` records sourced visual-pattern research without replacing Bot/API business truth or changing brand.'
+  - R37 confirms normal/reduced entrance behavior and one smooth Features scroll-reveal sample on three desktop routes, but cold-load performance still fails, the hidden Dashboard target remains pending, and R37 did not instrument cancel/overflow; WA-35/WA-36 stay open.
+  - R38c confirms a Dashboard target can reveal at 680ms and the hidden assurance block is not visible/pending; its early MutationObserver target caused two instrumentation errors and lifecycle events were not captured. R38d has no valid browser JSON because Chrome Crashpad self-terminated. Focused static motion/dashboard contracts pass 8 tests but do not close browser acceptance; WA-35/WA-36 remain open.
+  - Later sequence is rebaseline/source inventory, landing/shared shell, Voice, Music, SubDub, Image, each non-Video family (including separate Members and Rewards specs), Video, final whole-site motion.
+  - Unknown source/runtime behavior remains explicitly open; no product UI, parity, runtime, deploy or live pass is claimed.
+  - Markdown and repository diff checks pass without editing product code.
+tests:
+  - git diff --check
+  - git diff --cached --check
+  - node --check static/portal/portal-motion.js
+  - tests/test_wa35_motion_entry_fallback_contracts.py + tests/test_motion_webapp_dashboard_stability_001_contracts.py (8 passed; static contracts only)
+prohibited:
+  - product_code_changes
+  - bot_or_engine_changes
+  - route_or_api_changes
+  - provider_calls
+  - wallet_or_payment_mutations
+  - production_data_mutations
+  - commit_push_pr_merge_deploy
+  - production_live_testing
+stop_condition: >-
+  Historical R37 evidence is partial local-QA evidence on Git HEAD
+  45b84de83ee9b475bb4366c3ddc2af85b82297c4 plus the recorded dirty source overlay;
+  source hashes were stable during the run. It is not main/deployed/live. R37
+  covered /wallet/topup, /dashboard and /features at desktop 1440x900, normal and
+  reduced motion, cold navigation and same-session reload (12 rows), plus one
+  Features scroll reveal (13 cases total). Normal main/sidebar entrance start/end
+  matched in all 6 normal route/reload cases; no main entrance appeared in the 6
+  reduced cases. One Features reveal sample completed in 72 frames with max gap
+  17.1ms and no gap >50ms. Page/console/failed/external request findings and CLS
+  were zero in the captured cases. R37 did not instrument animationcancel or
+  horizontal overflow, so those are not accepted as zero. Cold-load performance
+  still fails: long tasks reached 563ms, LoAF 610ms/517ms blocking, and rAF gap
+  999.9ms; reduced-motion also had cold-load tasks up to 381ms and a 466.5ms gap.
+  The 6 same-session reload rows had no >200ms long task, but transfer sizes for
+  portal.js/integration.js remained unchanged, so cache-hit behavior is unproven.
+  Dashboard normal has one zero-geometry, CSS-hidden assurance target still
+  is-pending; it is not visible customer content. The R37 browser JSON was emitted,
+  but the server wrapper ended with SERVER_EXIT=-1 / exit 1; do not report the
+  whole runner as clean exit. Attribution is partial and does not prove motion is
+  the cause. Do not edit product motion code without a reproducible matching RED
+  regression tied to a specific behavior and recorded source SHA/overlay. Preserve
+  all dirty and untracked work. Never touch unrelated sessions, production,
+  providers, wallet or deployment.
+  Latest browser evidence R38c is also PARTIAL: Dashboard shell markers are
+  present, but dashboard_rendered is a harness false negative and two early
+  MutationObserver errors prevent a valid animation lifecycle trace. Its artifact
+  is not bound to a HEAD/source fingerprint. R38d corrected the observer target
+  but Chrome Crashpad self-terminated before a valid JSON was written. A fresh
+  temporary dependency install was blocked by sandbox permissions; escalated
+  execution was rejected, so do not bypass it. The focused static motion-fallback
+  and dashboard-stability suites passed 8 tests and node syntax passed, but neither
+  replaces browser acceptance. WA-35/WA-36 remain open; make no product code change
+  without a matching browser reproduction and RED regression. For R39 the Owner
+  approved an isolated TEMP runtime and scoped TEMP/network permission was granted;
+  two pip installs still failed because the Python process remapped its temporary
+  unpack directory to a different per-exec AppContainer TEMP. No server packages
+  were installed and no R39 browser run occurred. Do not repeat pip, elevate, or
+  bypass the sandbox; continue only when a browser-enabled local runtime is
+  available without crossing that boundary. Current portal-motion.js SHA256
+  C70752BAE488EB8D91069173B6F7D9E41F09C73A2F6985526BACF41FB0159326 differs from
+  previously recorded overlay 8779D4F57A1B560BF817BC07CD2BB01B39885153D49D3CBF4035DE590C76C366.
+  The file was already dirty at entry and was not edited in this turn; provenance
+  and change time are unknown. Its current diff is 40 insertions/15 deletions,
+  including customer entrance clear delay 760 to 1200 ms and IntersectionObserver
+  target classification changes. R38 evidence cannot be attributed to this
+  current source until a fresh HEAD+overlay rebaseline is recorded.
+previous_resume_r35: >-
+  Preserve every pre-existing edit; do not reset, stash, checkout, rebase, or
+  overwrite the dirty source overlay. R27/R30/R34/R35 now provide partial local
+  QA on Git HEAD 45b84de83ee9b475bb4366c3ddc2af85b82297c4 plus the four recorded
+  source-overlay hashes. R34/R35 measured 10 public Dashboard mounts (one initial
+  and nine data-hydration mounts) matching nine integration.merge calls; each
+  mount took 9.7–27.2 ms, about 146 ms total. R35 still observed one completed
+  0.68-second #portal-main entrance with no cancel, so the repeated mounts do not
+  establish animation replay. Long tasks 223/198/252 ms and a 700 ms frame gap
+  remain unattributed; the R31 CPU profile only returned an unassigned
+  (program) sample. The existing focused lifecycle harness already compares an
+  older replaying baseline with current code; it passed 7 tests in this turn,
+  including baseline replay RED/current hydration GREEN. It uses two hydration
+  merge calls and does not attribute the nine observed browser merges or the
+  long frame gap. Do not duplicate that test. Next capture task/frame attribution
+  for the measured workload on isolated localhost QA, then complete the missing
+  route/state matrix and WA-36 reduced-motion comparators. Do not edit product
+  code unless a matching RED regression identifies a defect. R11 remains
+  historical candidate evidence; R23/R24/R25 limitations remain recorded in the
+  motion spec. Never touch production, providers, wallet, unrelated sessions,
+  or deployment.
+next_resume: >-
+  Preserve every pre-existing edit; do not reset, stash, checkout, rebase, or
+  overwrite the dirty source overlay. R37 is a focused Chrome/Playwright QA run
+  on isolated localhost and QA data at Git HEAD 45b84de83ee9b475bb4366c3ddc2af85b82297c4
+  plus the recorded four-source overlay hashes, stable before/after. It covers
+  /wallet/topup, /dashboard and /features at 1440x900, normal/reduced motion, one
+  cold navigation plus same-session reload (12 rows), and one scroll reveal
+  (13 cases total). Normal entrance starts/ends matched for 6/6 main/sidebar
+  cases; reduced had no main entrance in 6/6. The Features reveal sample completed
+  in 72 frames, max gap 17.1ms, no gap >50ms, and the target left is-pending.
+  Captured page/console/failed/external request findings and CLS were zero; R37
+  did not record animationcancel or horizontal overflow. Cold-load performance
+  remains RED: max long task 563ms, max LoAF 610ms/517ms blocking, max frame gap
+  999.9ms; Wallet reduced cold had tasks 381/244ms and max gap 466.5ms. Reload
+  rows had no >200ms long task but unchanged portal.js/integration.js transfer
+  sizes mean this is not a verified cache hit. Dashboard normal retains one
+  CSS-hidden zero-geometry `.portal-dashboard-assurance` pending target. The
+  browser evidence JSON exists, but the server wrapper reported SERVER_EXIT=-1 /
+  exit 1; do not claim a clean runner exit. Next repeat source attribution for
+  cold loading and reduced motion on the same isolated fixture, separate shared
+  portal/integration work from motion-owned work, then extend route/auth/mobile,
+  rapid navigation, Back/Forward, cancel and overflow instrumentation. Do not
+  edit product code without a matching motion-owned RED. Existing lifecycle
+  regression remains 7 passed; do not duplicate it. Never touch production,
+  providers, wallet, unrelated sessions or deployment.
+evidence_state:
+  plan_docs_exist: true
+  wallet_admin_ui_spec: READY_FOR_REBASELINE
+  ui_reference_gate: PLANNED_NOT_RUN
+  control_ledger: NOT_CREATED
+  bot_canonical_sha: NOT_LOCKED
+  action_ledger_unknown_count: NOT_MEASURED
+  wa35: OPEN_RCA_R38C_LIFECYCLE_TRACE_INCOMPLETE_R38D_BROWSER_BLOCKED_PERFORMANCE_FAILURE_AND_FULL_ROUTE_MATRIX
+  wa35_r11: OLD_CANDIDATE_8_NORMAL_STARTS_0_MATCHING_ENDS_NOT_CURRENT_MAIN
+  wa35_r23: PARTIAL_DASHBOARD_AND_WALLET_ENTRANCE_ENDS_PRESENT_NO_CANCEL
+  wa35_r23_trace: '%TEMP%\toanaas-wa35-r22\wa35-lifecycle-r23.json'
+  wa35_r23_source: ASSET_LOCAL_8B6E2DEA62F4A56A5657; CURRENT_SHA_NOT_RECORDED
+  wa35_r23_child_mutations: DASHBOARD_16; WALLET_TOPUP_12; NOT_MOUNT_COUNTS
+  wa35_r23_max_long_task_ms: DASHBOARD_99; WALLET_TOPUP_207
+  wa35_r27_dashboard: ONE_0_68S_ENTRANCE_END_NO_CANCEL; NO_RECORDED_PAGE_OR_CONSOLE_ERRORS
+  wa35_r30_features: SEPARATE_HYDRATE_RENDER_MOTION_PATH; ONE_0_68S_ENTRANCE_END_NO_CANCEL; MAX_LONG_TASK_216MS
+  wa35_r31_cpu_profile: LONG_TASK_SOURCE_UNATTRIBUTED_PROGRAM_SAMPLE; COLD_LOCAL_RESPONSE_SIZE_ONLY
+  wa35_r34_r35_mounts: DASHBOARD_10_PUBLIC_MOUNTS; 9_DATA_HYDRATION_MOUNTS_MATCH_9_MERGES; 9_7_TO_27_2MS_EACH; ABOUT_146MS_TOTAL
+  wa35_r35_entrance: ONE_0_68S_PORTAL_MAIN_ENTRANCE_END_NO_CANCEL; NO_REPLAY_PROVEN
+  wa35_r35_performance: LONG_TASKS_223_198_252MS; MAX_FRAME_GAP_700MS; SOURCE_UNATTRIBUTED
+  wa35_current_git_head: 45b84de83ee9b475bb4366c3ddc2af85b82297c4
+  wa35_source_overlay_sha256: PORTAL_JS_520978F0F88DB73A1B8F8462CBEAC7E266561EE5285A7088C2C451E6713B22D6; INTEGRATION_JS_CFC08D9A3226CC085B895B5F20D672D3CC07A0B83A19102FDF303ACE987797C9; PORTAL_MOTION_JS_8779D4F57A1B560BF817BC07CD2BB01B39885153D49D3CBF4035DE590C76C366; PORTAL_FEATURES_JS_4E091257625B7F66E25DC8950032F4DB6E9A3E1D0973CBC70F7F682D569ED431
+  wa35_raw_traces: '%TEMP%\toanaas-wa35-r26\wa35-lifecycle-r27.json; wa35-lifecycle-r30-features.json; wa35-cpu-profile-r31.json; wa35-lifecycle-r34-dashboard.json; wa35-lifecycle-r35-dashboard.json'
+  wa35_lifecycle_regression: EXISTING_BASELINE_RED_CURRENT_GREEN
+  wa35_lifecycle_regression_files: tests/test_motion_webapp_lifecycle_001_contracts.py; tests/test_wa35_motion_entry_fallback_contracts.py
+  wa35_lifecycle_regression_result: 7_PASSED_IN_4_65S_EXIT_0_PYTEST_CACHE_DISABLED
+  wa35_lifecycle_regression_scope: BASELINE_SHA_896D3761AA1126CF4BD6A6F08E2F9A9D7C51E972_VS_CURRENT_DIRTY_SOURCE; TWO_SAME_ROUTE_HYDRATION_MERGES; NOT_BROWSER_PERFORMANCE_ATTRIBUTION
+  wa35_full_route_and_state_matrix: PARTIAL_4_ROUTES; AUTH_COLD_WARM_RAPID_BACK_FORWARD_NOT_RUN
+  wa36_reduced_motion: PARTIAL_4_ROUTE_MATRIX; FULL_SITE_AND_PERFORMANCE_OPEN
+  qa_session_61755: INTERRUPT_ATTEMPT_RETURNED_UNKNOWN_PROCESS_ID
+  qa_port_14179: R24_BIND_FAILED_WINERROR_10048
+  qa_r25_trace: NOT_CREATED
+  wa35_code_fix_this_turn: NONE
+  wa36: PARTIAL_SAMPLE_MATRIX; FULL_SITE_AND_PERFORMANCE_OPEN
+  wa35_r36_matrix: 16_ROWS_4_ROUTES_X_2_VIEWPORTS_X_2_MOTION; ERRORS_CONSOLE_FAILED_EXTERNAL_CLS_OVERFLOW=0
+  wa35_r36_entrance: NORMAL_8_OF_8_ONE_START_END_0_68S; REDUCED_8_OF_8_NO_MAIN_ENTRANCE; FEATURES_12_REVEALS_ALL_4_ROWS
+  wa35_r36_dashboard_hidden_target: PORTAL_DASHBOARD_ASSURANCE_ZERO_HEIGHT_IS_PENDING_NORMAL; CSS_HIDDEN_TECHNICAL_SECTION
+  wa35_r36_performance: LONG_TASK_GT_200MS_11_OF_16_MAX_761MS; FRAME_GAP_GT_200MS_16_OF_16_MAX_866_7MS
+  wa35_r36_worst_loaf: 874_7MS_DURATION_749_7MS_BLOCKING; PARTIAL_SCRIPT_ATTRIBUTION; PORTAL_MOTION_POS_5945_LINE_138_FORCED_STYLE_18_2MS; NOT_MOTION_ONLY
+  wa35_r36_evidence: 'C:\Users\toann\Documents\Codex\2026-07-10\1-ngu-n-ch-nh-v\outputs\wa35-r36-attributed-20261010\matrix.json; 16 per-route JSON/PNG files'
+  wa35_r36_runner: TEMP_WRAPPER_REMOVED_AFTER_RUN; RESULT_FOCUSED_HYDRATED_MOTION_PASS_EXIT_0
+  wa35_r37_matrix: 12_ROUTE_MODE_RELOAD_ROWS_PLUS_1_FEATURES_SCROLL_REVEAL; DESKTOP_1440X900; ROUTES_WALLET_DASHBOARD_FEATURES
+  wa35_r37_source_stable: TRUE; HEAD_45B84DE83EE9B475BB4366C3DDC2AF85B82297C4_PLUS_RECORDED_DIRTY_OVERLAY
+  wa35_r37_lifecycle: NORMAL_MAIN_SIDEBAR_START_END_MATCH_6_OF_6; REDUCED_NO_MAIN_ENTRANCE_6_OF_6; CANCEL_NOT_INSTRUMENTED
+  wa35_r37_scroll_reveal: FEATURES_1_SAMPLE_72_FRAMES_MAX_GAP_17_1MS_OVER50_0_TARGET_NOT_PENDING
+  wa35_r37_errors_layout: PAGE_CONSOLE_FAILED_EXTERNAL=0; CLS=0; HORIZONTAL_OVERFLOW_NOT_INSTRUMENTED
+  wa35_r37_dashboard_hidden_target: PORTAL_DASHBOARD_ASSURANCE_IS_PENDING_ZERO_GEOMETRY_CSS_HIDDEN_NORMAL
+  wa35_r37_cold_performance: MAX_LONG_TASK_563MS; MAX_LOAF_610MS_BLOCKING_517MS; MAX_RAF_GAP_999_9MS; WALLET_REDUCED_LONG_TASKS_381_244MS_GAP_466_5MS
+  wa35_r37_reload_performance: NO_LONG_TASK_GT_200MS_IN_6_ROWS; MAX_RAF_GAP_100MS; PORTAL_JS_INTEGRATION_JS_TRANSFER_SIZES_UNCHANGED_CACHE_HIT_UNPROVEN
+  wa35_r37_attribution: PARTIAL_PORTAL_JS_AND_INTEGRATION_JS; NOT_CAUSAL_MOTION_PROOF
+  wa35_r37_runner: JSON_CAPTURED; SERVER_EXIT_MINUS1_WRAPPER_EXIT_1
+  wa35_r37_evidence: 'C:\Users\toann\Documents\Codex\2026-07-10\1-ngu-n-ch-nh-v\outputs\wa35-r37-measurement-20261010\browser\r37.json'
+  wa35_r37_cleanup: PORT_14283_NOT_LISTENING; TWO_QA_DB_DIRECTORIES_REMOVED; JSON_AND_SCREENSHOTS_PRESERVED
+  wa35_r38c: PARTIAL_DASHBOARD; ROUTE_TITLE_SHELL_MAIN_PRESENT; RENDER_PREDICATE_FALSE_NEGATIVE; ASSURANCE_HIDDEN_ZERO_GEOMETRY_NOT_PENDING; OFFSCREEN_TARGET_VISIBLE_680MS; REDUCED_MOTION_AND_OVERFLOW_SAMPLE_OK
+  wa35_r38c_trace: TWO_MUTATIONOBSERVER_DOCUMENTELEMENT_ERRORS; CLASS_HISTORY_ANIMATIONEND_ANIMATIONCANCEL_NOT_CAPTURED; CONSOLE_ERRORS=0; LOCAL_FAILED_RESPONSES=0; FOREIGN_REQUESTS=0; NO_HEAD_SHA_OR_SOURCE_FINGERPRINT
+  wa35_r38c_evidence: 'C:\Users\toann\AppData\Local\Temp\toanaas-wa35-r38-bf30f5f560734ebb911f2f29e0262f2f\browser-r38c-20261010\evidence\r38.json'
+  wa35_r38d: NO_VALID_JSON; CHROME_CRASHPAD_SELF_TERMINATED; NEW_TEMP_INSTALL_BLOCKED; ESCALATED_EXECUTION_REJECTED
+  wa35_r38d_chrome_log: 'C:\Users\toann\AppData\Local\Temp\toanaas-wa35-r38-bf30f5f560734ebb911f2f29e0262f2f\browser-r38d5-evidence-20261010\chrome.log'
+  wa35_r39_environment: OWNER_APPROVED_TEMP_QA; SCOPED_TEMP_AND_NETWORK_PERMISSION_GRANTED; PIP_UNPACK_DENIED_IN_REMAPPED_PER_EXEC_APPCONTAINER_TEMP; NO_PACKAGES_INSTALLED; NO_SERVER_OR_BROWSER_RUN
+  wa35_r39_pip_errors: FIRST_TEMP_SANDBOX_40CDD4EB; SECOND_TEMP_SANDBOX_28D4C1E0_AFTER_TEMP_TMP_REDIRECT; ERROR_13_PERMISSION_DENIED_PIP_UNPACK
+  wa35_r39_browser_evidence: NONE; BROWSER_ACCEPTANCE_NOT_RUN
+  wa35_current_portal_motion_sha256: C70752BAE488EB8D91069173B6F7D9E41F09C73A2F6985526BACF41FB0159326
+  wa35_prior_recorded_portal_motion_sha256: 8779D4F57A1B560BF817BC07CD2BB01B39885153D49D3CBF4035DE590C76C366
+  wa35_source_change_provenance: UNKNOWN; FILE_WAS_DIRTY_AT_ENTRY; NOT_EDITED_THIS_TURN; R38_TRACE_NOT_TRANSFERABLE
+  wa35_focused_contract_tests: 8_PASSED_IN_5_87S_EXIT_0; MOTION_FALLBACK_AND_DASHBOARD_STABILITY; STATIC_ONLY
+  wa35_node_syntax: PORTAL_MOTION_JS_NODE_CHECK_EXIT_0
+  wa35_code_fix_this_turn: NONE
+  document_validation: TRACKED_DIFF_CHECKS_PASS; R38_ADDITIONS_WHITESPACE_PASS; YAML_PARSER_UNAVAILABLE_MANUAL_STRUCTURE_REVIEW
+  wa35_r40_playwright_edge: TARGETCLOSED_ERROR_EXIT_13_CRASHPAD_REMOTE_DEBUGGING_PIPE; NO_VALID_TRACE_OR_SCREENSHOT
+  wa35_r40_codex_iab: URL_HTTP_127_0_0_1_4178_PORTAL_MOTION_JS; NET_ERR_CONNECTION_TIMED_OUT
+  wa35_r40_qa_session: SESSION_30036_CTRL_C_EXIT_1; PORT_4178_VERIFIED_NO_LISTENER; NO_SERVER_LEFT_RUNNING
+  wa35_r40_runtime_discovery: GLOBAL_PLAYWRIGHT_PLAYWRIGHT_CORE_PUPPETEER_NOT_FOUND; NODE_REPL_CJS_PLAYWRIGHT_NOT_FOUND_AND_ESM_IMPORT_FAILED_DEFAULT_EXPORT; PYTHON_PYTEST_COMMANDS_NOT_VISIBLE; BUNDLED_DEPENDENCY_TOOL_UNAVAILABLE
+  wa35_r40_node_syntax: PORTAL_MOTION_JS_NODE_CHECK_EXIT_0; STATIC_SYNTAX_ONLY
+  wa35_r40_browser_acceptance: NOT_RUN_ENVIRONMENT_BLOCKED; WA35_WA36_OPEN
+  wa35_r40_code_change: NONE; NO_PRODUCT_SOURCE_EDIT
+  wa35_r40_note: R39_TEMP_PIP_UNPACK_DENIED_BY_WINDOWS_SANDBOX; NO_PACKAGE_INSTALLED; NO_RETRY_OR_SANDBOX_CHANGE_THIS_TURN
+  wa35_next: PROVISION_OR_RESTORE_QA_BROWSER_RUNTIME_THEN_RECAPTURE_LIFECYCLE_TRACE_ON_CURRENT_SHA; DO_NOT_PATCH_WITHOUT_REPRO
+  qa_server_4178: STOPPED; PORT_NO_LISTENER
+  provider_calls: 0
+  wallet_mutations: 0
+  production_data_mutations: 0
+  commit: NO
+  push: NO
+  merge: NO
+  deploy: NO
+  live_pass: NO
