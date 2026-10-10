@@ -1,14 +1,16 @@
-"""Tests for R10 Final Residual Provider Engines and Provenance Closure contracts.
+"""Tests for R11 Whole-App Current Authority Reconciliation and Residual Provider Closure contracts.
 
 Validates:
 1. Exact 221 surface inventory, classification, and root gap distributions.
-2. Voice Clone taxonomy realignment to IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD (MiniMax 503).
-3. The 3 external provider residual lanes (/image/upscale, /image/transform, /music/sfx) with enriched
-   candidates, models, endpoints, missing account entitlements, and required Owner actions.
-4. Entrypoints auth enforcement (307 redirect unauthenticated, 200 authenticated).
-5. Non-regression across all 217 released/terminal surfaces.
-6. Provenance schema refactoring eliminating pre-merge self-referential squash SHA checks.
-7. Tracking of DEFECT-R10-001 and DEFECT-R10-002 in defects.json.
+2. Bot Core source/runtime split reconciliation (5c38bd3 vs 381d335) with exact deploy recommendation.
+3. PR #1420 Product Video auth semantics (canonical KEY4U_VIDEO_AUTH_HEADER_VALUE, fail-closed auth blockers, zero secret leak).
+4. SubDub remains CLOSED_RELEASED without false reopening from historical documents.
+5. Voice Clone remains non-blocking incident hold (MiniMax 503) with zero engineering rework required.
+6. The 3 external provider residual lanes (/image/upscale, /image/transform, /music/sfx) with enriched
+   candidates, models, endpoints, missing account entitlements, required Owner actions, and activation readiness.
+7. Entrypoints auth enforcement (307 redirect unauthenticated, 200 authenticated).
+8. Non-regression across all 217 released/terminal surfaces.
+9. Provenance schema baseline and tracking of DEFECT-R11-001 in defects.json.
 """
 
 from __future__ import annotations
@@ -24,13 +26,14 @@ from copyfast_db import ensure_copyfast_schema, transaction
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 REPORT_DIR = REPO_ROOT / "reports" / "webapp_full_product_truth"
-MATRIX_FILE = REPORT_DIR / "R10_FINAL_ROUTE_RUNTIME_MATRIX.json"
+MATRIX_FILE = REPORT_DIR / "R11_FINAL_ROUTE_RUNTIME_MATRIX.json"
 PROVENANCE_FILE = REPORT_DIR / "00_data_provenance.json"
 DEFECTS_FILE = REPORT_DIR / "defects.json"
 SOURCE_RUNTIME_FILE = REPORT_DIR / "00_source_runtime.json"
 
-EXPECTED_BASE_SHA = "614648c47235fa590896b4283e6ad56a6c3cfd1e"
-EXPECTED_BOT_SHA = "381d335961bea01db60cda99f0dfe98e2b2d1760"
+EXPECTED_BASE_SHA = "86d4ee6e11ddfbc0d4e1dbf63b41d9b3ed7d859b"
+EXPECTED_BOT_SOURCE_SHA = "5c38bd31c20f26f815e2f05b6419f4dd64afbba9"
+EXPECTED_BOT_RUNTIME_SHA = "381d335961bea01db60cda99f0dfe98e2b2d1760"
 STALE_R7_CANDIDATE_SHA = "a76d1d1446b091ebd1df78707059d30e7c28b6c2"
 STALE_LEGACY_SHA = "d734e3cb86edf44d4be6fa96a161c4d6de389947"
 
@@ -41,38 +44,46 @@ def setup_db(monkeypatch):
     monkeypatch.setenv("WEB_SESSION_SECRET", "test-secret-at-least-16-bytes-long")
     ensure_copyfast_schema()
     with transaction() as conn:
-        conn.execute("DELETE FROM web_sessions WHERE account_id LIKE 'test-r10-%'")
-        conn.execute("DELETE FROM web_accounts WHERE id LIKE 'test-r10-%'")
+        conn.execute("DELETE FROM web_sessions WHERE account_id LIKE 'test-r11-%'")
+        conn.execute("DELETE FROM web_accounts WHERE id LIKE 'test-r11-%'")
         conn.execute(
             """
             INSERT OR REPLACE INTO web_accounts (id, email, password_hash, created_at, updated_at)
-            VALUES ('test-r10-user-1', 'user1@test.local', 'hash1', '2026-10-09T00:00:00Z', '2026-10-09T00:00:00Z')
+            VALUES ('test-r11-user-1', 'user1@test.local', 'hash1', '2026-10-10T00:00:00Z', '2026-10-10T00:00:00Z')
             """
         )
     yield
     with transaction() as conn:
-        conn.execute("DELETE FROM web_sessions WHERE account_id LIKE 'test-r10-%'")
-        conn.execute("DELETE FROM web_accounts WHERE id LIKE 'test-r10-%'")
+        conn.execute("DELETE FROM web_sessions WHERE account_id LIKE 'test-r11-%'")
+        conn.execute("DELETE FROM web_accounts WHERE id LIKE 'test-r11-%'")
 
 
 # ─── TEST 1: MATRIX SUMMARY & TOTAL INTEGRITY ─────────────────────────────────
 
-def test_r10_matrix_summary_and_surface_counts() -> None:
-    assert MATRIX_FILE.exists(), "R10_FINAL_ROUTE_RUNTIME_MATRIX.json must exist"
+def test_r11_matrix_summary_and_surface_counts() -> None:
+    assert MATRIX_FILE.exists(), "R11_FINAL_ROUTE_RUNTIME_MATRIX.json must exist"
     with open(MATRIX_FILE, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     summary = data["summary"]
     routes = data["routes"]
 
-    assert summary["BATCH"] == "WEBAPP_R10_FINAL_RESIDUAL_PROVIDER_ENGINE_AND_PROVENANCE_CLOSURE_MASTER_BATCH_R1"
-    assert summary["REPORT_SCHEMA_VERSION"] == "R10"
+    assert summary["BATCH"] == "WEBAPP_R11_WHOLE_APP_CURRENT_AUTHORITY_RECONCILIATION_AND_RESIDUAL_PROVIDER_CLOSURE_MASTER_BATCH_R1"
+    assert summary["REPORT_SCHEMA_VERSION"] == "R11"
     assert summary["REPORT_GENERATED_FROM_WEB_BASE_SHA"] == EXPECTED_BASE_SHA
-    assert summary["BOT_SOURCE_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BOT_SHA
-    assert summary["BOT_RUNTIME_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BOT_SHA
+    assert summary["BOT_SOURCE_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BOT_SOURCE_SHA
+    assert summary["BOT_RUNTIME_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BOT_RUNTIME_SHA
     assert summary["WEB_RUNTIME_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BASE_SHA
-    assert summary["BOT_SOURCE_RUNTIME_MATCH"] == "YES"
+    assert summary["BOT_SOURCE_RUNTIME_MATCH"] == "NO"
+    assert summary["BOT_SOURCE_RUNTIME_SPLIT"] == "YES"
     assert summary["WEB_SOURCE_RUNTIME_MATCH"] == "YES"
+    assert summary["SOURCE_RUNTIME_MATCH"] == "YES"
+    assert summary["BOT_5C38_EXACT_DEPLOY_RECOMMENDED"] == "YES"
+    assert summary["BOT_5C38_DEPLOY_BLOCKER"] == "NONE_AWAITING_OWNER_PRODUCTION_DEPLOY_AUTHORIZATION"
+    assert summary["NEXT_OWNER_ACTION_REQUIRED"] == "AUTHORIZE_EXACT_BOT_SHA_5C38_DEPLOY_OR_EXPLICITLY_FREEZE_RUNTIME_381D"
+    assert summary["SUBDUB_CURRENT_TERMINAL_STATUS"] == "CLOSED_RELEASED"
+    assert summary["VOICE_CLONE_INTERNAL_ENGINE_REWORK_REQUIRED"] == "NO"
+    assert summary["VOICE_CLONE_BLOCKS_OTHER_PRODUCT_LANES"] == "NO"
 
     assert summary["TOTAL_SURFACES"] == 221
     assert len(routes) == 221
@@ -103,6 +114,7 @@ def test_r10_matrix_summary_and_surface_counts() -> None:
     # Counts for the four residual lanes
     assert summary["BLOCKED_PROVIDER_ENTITLEMENT_COUNT"] == 3
     assert summary["IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD_COUNT"] == 1
+    assert summary["OTHER_UNRESOLVED_ENGINEERING_RESIDUALS"] == 0
     assert summary["ACCOUNT_ENTITLEMENT_MISSING_COUNT"] == 3
     assert summary["EXTERNAL_PROVIDER_INCIDENT_MINIMAX_503_COUNT"] == 1
 
@@ -127,14 +139,45 @@ def test_r10_matrix_summary_and_surface_counts() -> None:
     assert sum(rg.values()) == 221
 
 
-# ─── TEST 2: THE FOUR LANES EXACT TERMINAL DISPOSITION & ENRICHED ATTRIBUTES ──
+# ─── TEST 2: PR 1420 PRODUCT VIDEO AUTH SEMANTICS ────────────────────────────
 
-def test_r10_all_four_lanes_exact_terminal_disposition_and_actions() -> None:
+def test_r11_product_video_pr1420_semantics() -> None:
+    with open(MATRIX_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    summary = data["summary"]
+    pv = summary["PRODUCT_VIDEO_PR1420"]
+    assert pv["RECONCILED"] is True
+    assert pv["DRIFT_COMMIT"] == EXPECTED_BOT_SOURCE_SHA
+    assert pv["BASE_COMMIT"] == EXPECTED_BOT_RUNTIME_SHA
+    assert pv["PRODUCT_VIDEO_BEHAVIOR_DRIFT"] == "YES_FAIL_CLOSED_AUTHORITY_HARDENING"
+    assert pv["IMAGE_BEHAVIOR_DRIFT"] == "NO"
+    assert pv["MUSIC_SFX_BEHAVIOR_DRIFT"] == "NO"
+    assert pv["SUBDUB_BEHAVIOR_DRIFT"] == "NO"
+    assert pv["VOICE_BEHAVIOR_DRIFT"] == "NO"
+    assert pv["AUTH_ACCOUNT_BEHAVIOR_DRIFT"] == "NO"
+    assert pv["SHARED_WEB_BRIDGE_BEHAVIOR_DRIFT"] == "NO"
+    assert pv["PRODUCT_VIDEO_NO_BLIND_FALLBACK"] is True
+    assert pv["PRODUCT_VIDEO_NO_SECOND_SUBMIT"] is True
+    assert pv["PRODUCT_VIDEO_NO_CHARGE_ON_AUTH_BLOCKER"] is True
+    assert pv["PRODUCT_VIDEO_KEY4U_CANONICAL_AUTH_ENV"] == "KEY4U_VIDEO_AUTH_HEADER_VALUE"
+    assert pv["PRODUCT_VIDEO_KEY4U_MISSING_AUTH_FAILS_CLOSED"] is True
+    assert pv["PRODUCT_VIDEO_KEY4U_ALIAS_CONFLICT_FAILS_CLOSED"] is True
+    assert pv["PRODUCT_VIDEO_SECRET_DIAGNOSTIC_LEAK_COUNT"] == 0
+
+    open_defects = summary["PRODUCT_FAMILY_OPEN_ENGINEERING_DEFECTS"]
+    for fam, count in open_defects.items():
+        assert count == 0, f"Product family {fam} has open engineering defects: {count}"
+
+
+# ─── TEST 3: THE FOUR LANES EXACT TERMINAL DISPOSITION & ACTIVATION READINESS ─
+
+def test_r11_all_four_lanes_exact_terminal_disposition_and_readiness() -> None:
     with open(MATRIX_FILE, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     route_map = {r["route"]: r for r in data["routes"]}
-    summary_lanes = data["summary"]["R10_RESIDUAL_LANES"]
+    summary_lanes = data["summary"]["R11_RESIDUAL_LANES"]
 
     # Lane A: /image/upscale
     assert "/image/upscale" in route_map
@@ -147,7 +190,15 @@ def test_r10_all_four_lanes_exact_terminal_disposition_and_actions() -> None:
     assert upscale["endpoint_documented"] == "https://api.stability.ai/v2beta/stable-image/upscale/conservative"
     assert "credit" in upscale["missing_account_entitlement"].lower()
     assert "developer credit" in upscale["required_owner_action"].lower()
-    assert summary_lanes["image_upscale"]["status"] == "BLOCKED_PROVIDER_ENTITLEMENT"
+    readiness_upscale = summary_lanes["image_upscale"]["activation_readiness"]
+    assert readiness_upscale["SOURCE_IMPLEMENTATION_READY"] == "YES"
+    assert readiness_upscale["WEB_ROUTE_READY"] == "YES"
+    assert readiness_upscale["BOT_OR_WEB_PROVIDER_ADAPTER_READY"] == "YES"
+    assert readiness_upscale["PRICING_READY"] == "YES"
+    assert readiness_upscale["WALLET_SETTLEMENT_READY"] == "YES"
+    assert readiness_upscale["IDEMPOTENCY_READY"] == "YES"
+    assert readiness_upscale["NO_BLIND_RETRY_GATE_READY"] == "YES"
+    assert readiness_upscale["PROVIDER_ENTITLEMENT_ONLY_BLOCKER"] == "YES"
 
     # Lane B: /image/transform
     assert "/image/transform" in route_map
@@ -160,7 +211,15 @@ def test_r10_all_four_lanes_exact_terminal_disposition_and_actions() -> None:
     assert transform["endpoint_documented"] == "https://api.key4u.vn/v1/images/edits"
     assert "KEY4U_PUBLIC_ENABLED=false" in transform["missing_account_entitlement"]
     assert "KEY4U_PUBLIC_ENABLED=true" in transform["required_owner_action"]
-    assert summary_lanes["image_transform"]["status"] == "BLOCKED_PROVIDER_ENTITLEMENT"
+    readiness_transform = summary_lanes["image_transform"]["activation_readiness"]
+    assert readiness_transform["SOURCE_IMPLEMENTATION_READY"] == "YES"
+    assert readiness_transform["WEB_ROUTE_READY"] == "YES"
+    assert readiness_transform["BOT_OR_WEB_PROVIDER_ADAPTER_READY"] == "YES"
+    assert readiness_transform["PRICING_READY"] == "YES"
+    assert readiness_transform["WALLET_SETTLEMENT_READY"] == "YES"
+    assert readiness_transform["IDEMPOTENCY_READY"] == "YES"
+    assert readiness_transform["NO_BLIND_RETRY_GATE_READY"] == "YES"
+    assert readiness_transform["PROVIDER_ENTITLEMENT_ONLY_BLOCKER"] == "YES"
 
     # Lane C: /music/sfx
     assert "/music/sfx" in route_map
@@ -173,7 +232,15 @@ def test_r10_all_four_lanes_exact_terminal_disposition_and_actions() -> None:
     assert sfx["endpoint_documented"] == "https://api.elevenlabs.io/v1/sound-effects"
     assert "Sound Effects API quota" in sfx["missing_account_entitlement"]
     assert "Sound Effects generation quota" in sfx["required_owner_action"]
-    assert summary_lanes["music_sfx"]["status"] == "BLOCKED_PROVIDER_ENTITLEMENT"
+    readiness_sfx = summary_lanes["music_sfx"]["activation_readiness"]
+    assert readiness_sfx["SOURCE_IMPLEMENTATION_READY"] == "YES"
+    assert readiness_sfx["WEB_ROUTE_READY"] == "YES"
+    assert readiness_sfx["BOT_OR_WEB_PROVIDER_ADAPTER_READY"] == "YES"
+    assert readiness_sfx["PRICING_READY"] == "YES"
+    assert readiness_sfx["WALLET_SETTLEMENT_READY"] == "YES"
+    assert readiness_sfx["IDEMPOTENCY_READY"] == "YES"
+    assert readiness_sfx["NO_BLIND_RETRY_GATE_READY"] == "YES"
+    assert readiness_sfx["PROVIDER_ENTITLEMENT_ONLY_BLOCKER"] == "YES"
 
     # Lane D: /voice/clone (Incident Hold)
     assert "/voice/clone" in route_map
@@ -198,9 +265,9 @@ def test_r10_all_four_lanes_exact_terminal_disposition_and_actions() -> None:
     assert summary_lanes["voice_clone"]["lane_released"] is True
 
 
-# ─── TEST 3: WEB ENTRYPOINTS AUTH & REJECTION CONTRACTS ───────────────────────
+# ─── TEST 4: WEB ENTRYPOINTS AUTH & REJECTION CONTRACTS ───────────────────────
 
-def test_r10_web_entrypoints_auth_enforcement() -> None:
+def test_r11_web_entrypoints_auth_enforcement() -> None:
     client = TestClient(app)
     routes = ["/image/upscale", "/image/transform", "/music/sfx", "/voice/clone"]
 
@@ -212,7 +279,7 @@ def test_r10_web_entrypoints_auth_enforcement() -> None:
 
     # 2. Authenticated requests render HTTP 200
     with transaction() as conn:
-        sess = _insert_session(conn, "test-r10-user-1")
+        sess = _insert_session(conn, "test-r11-user-1")
 
     sid = sess["session_id"]
     signed_cookie = sid + "." + _sign_session(sid)
@@ -224,9 +291,9 @@ def test_r10_web_entrypoints_auth_enforcement() -> None:
         assert len(resp.text) > 1000
 
 
-# ─── TEST 4: NON-REGRESSION OF ALL RELEASED SURFACES ──────────────────────────
+# ─── TEST 5: NON-REGRESSION OF ALL RELEASED SURFACES ──────────────────────────
 
-def test_r10_non_regression_locked_surfaces() -> None:
+def test_r11_non_regression_locked_surfaces() -> None:
     with open(MATRIX_FILE, "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -266,9 +333,9 @@ def test_r10_non_regression_locked_surfaces() -> None:
         assert surf["actual_root_gap"] == "NONE_RELEASED_RUNTIME"
 
 
-# ─── TEST 5: PROVENANCE, GENERATION-TIME BASELINE & DEFECTS INTEGRITY ─────────
+# ─── TEST 6: PROVENANCE, GENERATION-TIME BASELINE & DEFECTS INTEGRITY ─────────
 
-def test_r10_provenance_and_defects_integrity() -> None:
+def test_r11_provenance_and_defects_integrity() -> None:
     assert PROVENANCE_FILE.exists()
     assert DEFECTS_FILE.exists()
     assert SOURCE_RUNTIME_FILE.exists()
@@ -283,39 +350,41 @@ def test_r10_provenance_and_defects_integrity() -> None:
     assert "current_main_sha" not in prov, "Root key current_main_sha must be eliminated to prevent conflicts"
 
     psummary = prov["summary"]
-    assert psummary["REPORT_SCHEMA_VERSION"] in ("R10", "R11")
-    assert psummary.get("SOURCE_RUNTIME_MATCH") == "YES"
-    assert psummary.get("WEB_SOURCE_RUNTIME_MATCH") == "YES"
-    assert psummary.get("BOT_SOURCE_RUNTIME_MATCH") in ("YES", "NO")
+    assert psummary["REPORT_SCHEMA_VERSION"] == "R11"
+    assert psummary["REPORT_GENERATED_FROM_WEB_BASE_SHA"] == EXPECTED_BASE_SHA
+    assert psummary["BOT_SOURCE_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BOT_SOURCE_SHA
+    assert psummary["BOT_RUNTIME_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BOT_RUNTIME_SHA
+    assert psummary["WEB_RUNTIME_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BASE_SHA
+    assert psummary["BOT_SOURCE_RUNTIME_MATCH"] == "NO"
+    assert psummary["BOT_SOURCE_RUNTIME_SPLIT"] == "YES"
+    assert psummary["WEB_SOURCE_RUNTIME_MATCH"] == "YES"
+    assert psummary["SOURCE_RUNTIME_MATCH"] == "YES"
     assert psummary["CORE_SURFACES"] == 221
     assert psummary["PLACEHOLDER_SURFACES"] == 0
     assert psummary["BROKEN_SURFACES"] == 0
     assert psummary["DEMO_DATA_SURFACES"] == 0
     assert psummary["UNKNOWN_DATA_SURFACES"] == 0
-    assert psummary["FIRST_RED"] in (
-        "NONE - R10 WHOLE APP FINAL RESIDUAL PROVIDER ENGINE AND PROVENANCE CLOSURE COMPLETE",
-        "NONE - R11 WHOLE APP CURRENT AUTHORITY RECONCILIATION AND RESIDUAL PROVIDER CLOSURE COMPLETE",
-    )
-    assert psummary["NEXT_SPEC"] in (
-        "WAIT_OWNER_PROVIDER_ACCOUNT_ENTITLEMENT_ACTIONS",
-        "WAIT_EXACT_OWNER_ACTIONS_FOR_3_PROVIDER_ENTITLEMENTS_AND_BOT_RUNTIME_ALIGNMENT_DECISION",
-    )
+    assert psummary["FIRST_RED"] == "NONE - R11 WHOLE APP CURRENT AUTHORITY RECONCILIATION AND RESIDUAL PROVIDER CLOSURE COMPLETE"
+    assert psummary["NEXT_SPEC"] == "WAIT_EXACT_OWNER_ACTIONS_FOR_3_PROVIDER_ENTITLEMENTS_AND_BOT_RUNTIME_ALIGNMENT_DECISION"
 
     with open(SOURCE_RUNTIME_FILE, "r", encoding="utf-8") as f:
         src_text = f.read()
         src_data = json.loads(src_text)
 
     assert STALE_R7_CANDIDATE_SHA not in src_text, "Stale candidate SHA must not appear in source_runtime"
-    assert src_data["REPORT_SCHEMA_VERSION"] in ("R10", "R11")
-    assert src_data.get("SOURCE_RUNTIME_MATCH") == "YES"
-    assert src_data.get("WEB_SOURCE_RUNTIME_MATCH") == "YES"
-    assert src_data.get("BOT_SOURCE_RUNTIME_MATCH") in ("YES", "NO")
+    assert src_data["REPORT_SCHEMA_VERSION"] == "R11"
+    assert src_data["REPORT_GENERATED_FROM_WEB_BASE_SHA"] == EXPECTED_BASE_SHA
+    assert src_data["BOT_SOURCE_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BOT_SOURCE_SHA
+    assert src_data["BOT_RUNTIME_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BOT_RUNTIME_SHA
+    assert src_data["WEB_RUNTIME_SHA_OBSERVED_AT_REPORT_GENERATION"] == EXPECTED_BASE_SHA
+    assert src_data["BOT_SOURCE_RUNTIME_MATCH"] == "NO"
+    assert src_data["BOT_SOURCE_RUNTIME_SPLIT"] == "YES"
+    assert src_data["WEB_SOURCE_RUNTIME_MATCH"] == "YES"
+    assert src_data["SOURCE_RUNTIME_MATCH"] == "YES"
 
     with open(DEFECTS_FILE, "r", encoding="utf-8") as f:
         defects = json.load(f)
 
     defect_ids = {d["DEFECT_ID"]: d for d in defects}
-    assert "DEFECT-R10-001" in defect_ids, "DEFECT-R10-001 must be tracked"
-    assert defect_ids["DEFECT-R10-001"]["STATUS"] == "REPAIRED_IN_R10"
-    assert "DEFECT-R10-002" in defect_ids, "DEFECT-R10-002 must be tracked"
-    assert defect_ids["DEFECT-R10-002"]["STATUS"] == "REPAIRED_IN_R10"
+    assert "DEFECT-R11-001" in defect_ids, "DEFECT-R11-001 must be tracked"
+    assert defect_ids["DEFECT-R11-001"]["STATUS"] == "REPAIRED_IN_R11"
