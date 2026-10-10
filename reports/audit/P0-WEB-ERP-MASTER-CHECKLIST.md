@@ -88,6 +88,14 @@ main CI `37770140237` SUCCESS. Deploy/signed live SubDub chưa thực hiện.
   CI/PR/release còn mở.
 - `PROVIDER_CALLS=0 WALLET_MUTATIONS=0 PRODUCTION_DATA_MUTATIONS=0`.
 
+### WA-35 motion measurement update — R11 / 2026-10-10
+
+- [x] Hydrated local matrix collected: 16/16 route × viewport × motion rows; `CLS=0`, browser page errors `0` in all rows.
+- [ ] Performance acceptance remains open: 4/16 rows contain a long task over 200 ms (maximum 311 ms); 10/16 rows contain a frame gap over 200 ms (maximum 450 ms).
+- [ ] Motion-duration assertion remains unverified: computed entrance appears in all 8 normal rows and in 0 reduced-motion rows, but the harness recorded no `animationend` event for the 8 normal rows and exited `1`; do not mark WA-35 PASS.
+- [ ] Attribute the remaining long frames/tasks, correct the event instrumentation or measurement timing, then rerun the same matrix and protected comparators before closing WA-35/WA-36.
+- Evidence: `evidence/motion-wa35-measured-20261010-r11.md`. Run is local QA only; no provider, wallet, production-data, merge, or deploy action.
+
 ## VIDEO UI CHECKPOINT — 2026-10-07
 
 **UI RELEASE:** `CLOSED_LOCKED` — giữ nguyên ba màn sản phẩm đã nghiệm thu.
@@ -362,3 +370,80 @@ CI run. Merge, deployment, and production runtime readback remain pending.
 - [ ] **GATE-F**: Bất kỳ thao tác dọn dẹp dữ liệu (purge demo) có tính phá hủy (Cấm tự ý chạy).
 - [ ] **GATE-G**: Bất kỳ tích hợp nhà cung cấp hoặc secret/API key mới nào (Cần Owner cung cấp).
 - [ ] **GATE-H**: Deploy/restart dịch vụ khi chưa có yêu cầu mã nguồn bắt buộc.
+
+---
+
+## BOT → WEB APP FUNCTION PARITY REVIEW — 2026-10-09 (Git recheck 2026-10-10)
+
+**SPEC_ID:** `WEBAPP-BOT-FUNCTION-PARITY-REBASELINE-20261009`
+**STATUS:** `READ_ONLY_RECHECK_PARTIAL_BOT_BASELINE_NOT_LOCKED_2026-10-10_PLAN_READY_IMPLEMENTATION_NOT_STARTED`
+**Plan/checklist chi tiết:** `docs/superpowers/plans/2026-10-09-bot-web-function-parity-replan.md`.
+**Ma trận capability/spec:** `docs/superpowers/specs/2026-10-09-bot-web-capability-closeout.md`.
+
+- [x] Đối chiếu chỉ-đọc các hồ sơ UI Image/Video/Voice/Music/SubDub; các nhãn
+  đóng/khóa chỉ thuộc lát cắt giao diện, không chứng minh engine hoặc artifact.
+- [x] Quét inventory tĩnh trên nguồn Bot đọc được và cây Web local: 7.633
+  product-action mapping; bề mặt Web tĩnh 37,56%; 1.923 record cần disposition,
+  353 chưa có route Web; runtime equivalence `0% / NOT_STATICALLY_VERIFIABLE`.
+- [x] Lần audit trước ghi nhận Bot branch `fix/p0-subdub-smart-synth-adapter-signature-r1`,
+  HEAD `ae85e84f27f3f5e09c4e05667a34355a758c8a8a`; 7 tracked file sửa và 24
+  untracked entry. Giữ đây là snapshot lịch sử, không dọn/stash/reset, không lấy
+  phần chưa commit làm baseline chuẩn. Web HEAD `17b9494…` đang dirty.
+- [ ] Quét Git HEAD Bot và dirty overlay thành hai lớp có fingerprint riêng; xuất
+  ledger từng action, đối soát tổng record và không để `unknown/unreviewed`.
+- [ ] Đóng workflow/report Admin contract; lần lượt Voice → Music → SubDub →
+  Image → nhóm phi Video (Free Tools, Notes/Memory, Documents/OCR/Translation,
+  Content/Autopost, Projects/Assets/Support/Membership/Admin) → Video cuối.
+- [ ] Giữ WA-35/WA-36 OPEN; không tuyên bố toàn site UI/UX/motion hoàn thiện từ
+  test của một route. Chat này không sửa route/engine; chỉ làm trong phạm vi
+  UI/UX và motion của goal hiện hành.
+- [x] 2026-10-10: thêm cổng “không sót” theo yêu cầu Owner: Music nền/bài có
+  lời; Image tạo/sửa AI/chỉnh thủ công; Voice mặc định/saved/clone; SubDub bốn
+  mode một màn; toàn bộ catalog Video với AI editor và manual editor tách riêng;
+  Free Tools, Notes/Memory, tài liệu/OCR/dịch, Content/Autopost và mọi family
+  Bot khác phải có dòng trong ledger. Chi tiết ở plan/spec liên kết phía trên.
+- [x] Chạy lại 7 bộ kiểm tra trình bày Music/Voice/Image/SubDub trên Web candidate
+  `17b9494392cc063e8f9d0f39974da2569009b23d` + dirty overlay: `110 pass, 0 fail`.
+  Đây là UI/locale/guard regression; không chứng minh job/provider/media output.
+- [ ] Cổng inventory vẫn mở: chốt Bot Git HEAD và dirty overlay riêng, reconcile
+  mọi command/callback/template/handler với action ledger, `UNKNOWN=0`, rồi mới
+  được tuyên bố hoàn tất rà soát đủ chức năng.
+- [x] Recheck metadata Git ở tiến trình hiện tại: checkout Bot đọc được là branch
+  `feature/p0-webapp-copyfast1-core-bridge`, HEAD
+  `32d6d1bfbc8040b0632a44e6a9326ed568cb1a59`, clean; `ae85…` tồn tại trong object
+  database nhưng không phải HEAD/ancestor. Comparator riêng detached HEAD
+  `6476f20bdd9f8728a5db0b1d62a245b0d612aea8`, clean, không chứa `ae85…`. Chưa có
+  bằng chứng hai checkout này là Bot main/deployed source.
+- [ ] Chọn và khóa Bot source canonical bằng Git SHA; không lấy snapshot 7.633
+  mapping/fingerprint cũ làm kết quả tái lập của SHA đó.
+- [ ] Chạy static inventory baseline `ae85…` bằng auditor hiện hữu: auditor fail
+  closed vì Git archive vượt `MAX_BASELINE_ARCHIVE_BYTES=64 MiB`. Không nới trần
+  mù quáng; thiết kế đọc allowlist source blobs với giới hạn từng file/tổng,
+  loại trừ `.env`, data/attachments và giữ path-traversal/secret guards.
+- [ ] Tái lập inventory riêng cho Bot HEAD và dirty overlay, reconcile mọi record
+  thành action ledger và `UNKNOWN/UNREVIEWED=0`.
+- [x] Đối chiếu `bot_to_web_parity_matrix.json`: file có 39 mục capability, 39/39
+  `OPTIMIZED_FLOW`, `100%` trong phạm vi hẹp; không phải danh mục đầy đủ của Bot.
+- [x] Chạy lại 7 bộ UI/locale/guard Music/Voice/Image/SubDub từ repo root: `110
+  pass, 0 fail`; không kiểm provider/job/artifact/live.
+- [ ] Trước khi giao builder, chẻ parent wave thành spec con một capability/một
+  phiếu: Voice 3 lane, Music 2, SubDub 4 mode, Image 3 lane; các tính năng khác
+  và từng sản phẩm Video lấy số lượng từ ledger. Editor AI/manual luôn tách.
+- [ ] Nghiệm thu từng action theo luồng input → quyền/owner → preflight/quote →
+  confirm idempotent → job → báo cáo Admin/khách → artifact thật. Với giao diện:
+  giữ xanh–teal, bố cục dọc rõ ràng, VI/EN/ZH sạch, mobile/contrast/focus/motion;
+  test live/provider cần gate riêng.
+- [x] 2026-10-10: browser kiểm tra riêng `portal-motion.js` trên Chrome headless
+  (Playwright Node đóng gói, fixture cục bộ): `reads=0`, `readsAfterWrite=0`,
+  3 nhóm đầu hiển thị và nhóm dưới màn hình hiện sau cuộn;
+  `WORKSPACE_MOTION_LAYOUT_BATCHING_PASS`. Edge thoát sớm; Python runtime thiếu
+  pytest/Playwright. Đây chỉ là regression của motion component, không phải app
+  đã hydrate hay full-route/performance PASS; WA-35/WA-36 vẫn OPEN. Reduced-motion
+  fixture ở `390×844` cũng xác nhận cả 3 nhóm luôn hiện, `pending=0`, opacity `1`:
+  `WORKSPACE_MOTION_REDUCED_MOTION_VISIBLE_PASS`.
+- **Lưu ý provenance:** mục checklist này nằm trong `reports/audit`, là nguồn
+  được fingerprint Web tính đến. Fingerprint `8eef38f8…` là kết quả sau lần cập nhật
+  checklist trước đó; lần chỉnh tài liệu hiện tại làm fingerprint đó cũ. Cần tính
+  lại Web provenance sau khi tài liệu chốt và trước PR. Không cập nhật báo cáo sinh
+  tự động trong lượt rà này.
+- `PROVIDER_CALLS=0 WALLET_MUTATIONS=0 PRODUCTION_DATA_MUTATIONS=0`.
