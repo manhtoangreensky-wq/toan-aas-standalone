@@ -44,8 +44,15 @@ CANONICAL_ROUTE_ID = "image_transform_canonical_v1"
 CANONICAL_CUSTOMER_ENTRYPOINT = "/image/transform"
 CANONICAL_ALIAS_ENTRYPOINTS = ("/image/image-to-image",)
 
-SAFE_IMAGE_EXTENSIONS: frozenset[str] = frozenset({
+SUPPORTED_IMAGE_EXTENSIONS: frozenset[str] = frozenset({
     ".png", ".jpg", ".jpeg", ".webp",
+})
+SAFE_IMAGE_EXTENSIONS = SUPPORTED_IMAGE_EXTENSIONS
+
+SUPPORTED_IMAGE_MIME_TYPES: frozenset[str] = frozenset({
+    "image/png",
+    "image/jpeg",
+    "image/webp",
 })
 
 STATUS_QUEUED = "queued"
@@ -60,25 +67,9 @@ SUPPORTED_ASPECT_RATIOS: frozenset[str] = SUPPORTED_FORMATS
 DEFAULT_FORMAT = "1:1"
 DEFAULT_ASPECT_RATIO = "1:1"
 
-SUPPORTED_TIERS: frozenset[str] = frozenset({"standard", "free", "pro"})
-DEFAULT_TIER = "standard"
-
-SUPPORTED_MODELS: frozenset[str] = frozenset({
-    "key4u_img2img",
-    "replicate_sd_img2img",
-    "stability_img2img",
-})
-DEFAULT_MODEL = "key4u_img2img"
-
 # External provider dispatch flags — strictly disabled in R24B2
 IMAGE_TRANSFORM_PROVIDER_DISPATCH_ENABLED: bool = False
 KEY4U_PUBLIC_ENABLED: bool = False
-KEY4U_DISPATCH_AUTHORIZED: bool = False
-KEY4U_IMG2IMG_DISPATCH_AUTHORIZED: bool = False
-REPLICATE_IMAGE_TRANSFORM_DISPATCH_AUTHORIZED: bool = False
-REPLICATE_SD_IMG2IMG_DISPATCH_AUTHORIZED: bool = False
-STABILITY_IMAGE_TRANSFORM_DISPATCH_AUTHORIZED: bool = False
-STABILITY_IMG2IMG_DISPATCH_AUTHORIZED: bool = False
 
 FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED: frozenset[str] = frozenset({
     "amount", "amountvnd", "price", "cost", "currency", "paymentid", "ordercode",
@@ -88,6 +79,26 @@ FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED: frozenset[str] = frozenset({
 })
 
 UNSAFE_URL_PREFIXES = ("javascript:", "data:", "file:", "http://127.0.0.1", "http://localhost", "http://0.0.0.0")
+
+SENSITIVE_KEY_SUBSTRINGS: tuple[str, ...] = (
+    "api_key", "apikey", "token", "authorization", "secret",
+    "credential", "cookie", "password", "signed_url_secret",
+)
+
+
+def sanitize_external_metadata(meta: Any) -> Any:
+    """Recursively sanitizes and strips sensitive secret fields from metadata."""
+    if isinstance(meta, dict):
+        clean = {}
+        for k, v in meta.items():
+            norm_k = "".join(ch for ch in str(k or "").lower() if ch.isalnum() or ch == "_")
+            if any(sub in norm_k for sub in SENSITIVE_KEY_SUBSTRINGS):
+                continue  # strip secret field to prevent secret persistence
+            clean[k] = sanitize_external_metadata(v)
+        return clean
+    elif isinstance(meta, list):
+        return [sanitize_external_metadata(item) for item in meta]
+    return meta
 
 
 def _contains_authority_field(value: Any) -> bool:
@@ -134,9 +145,9 @@ def ensure_image_transform_schema() -> None:
                 image_name TEXT NOT NULL,
                 transform_instruction TEXT NOT NULL,
                 aspect_ratio TEXT NOT NULL DEFAULT '1:1',
-                tier TEXT NOT NULL DEFAULT 'standard',
-                model_name TEXT NOT NULL DEFAULT 'key4u_img2img',
-                xu_cost INTEGER NOT NULL DEFAULT 0,
+                tier TEXT,
+                model_name TEXT,
+                xu_cost INTEGER DEFAULT NULL,
                 status TEXT NOT NULL DEFAULT 'queued',
                 status_reason TEXT NOT NULL DEFAULT 'AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE',
                 idempotency_key_hash TEXT,
@@ -207,17 +218,7 @@ def validate_image_transform_input(
         valid_fmts = ", ".join(sorted(SUPPORTED_FORMATS))
         return False, f"Tỷ lệ khung hình không hợp lệ: '{fmt}'. Hỗ trợ: {valid_fmts}.", {}
 
-    tier = str(payload.get("tier") or DEFAULT_TIER).strip().lower()
-    if tier not in SUPPORTED_TIERS:
-        valid_tiers = ", ".join(sorted(SUPPORTED_TIERS))
-        return False, f"Tier không hợp lệ: '{tier}'. Hỗ trợ: {valid_tiers}.", {}
-
-    model = str(payload.get("model_name") or payload.get("model") or DEFAULT_MODEL).strip().lower()
-    if model not in SUPPORTED_MODELS:
-        valid_models = ", ".join(sorted(SUPPORTED_MODELS))
-        return False, f"Mô hình không hợp lệ: '{model}'. Hỗ trợ: {valid_models}.", {}
-
-    # Verify asset exists, is owned by account_id, and is an image
+    # Verify asset exists, is owned by account_id, and is an approved image format
     with read_transaction() as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
@@ -243,19 +244,18 @@ def validate_image_transform_input(
         ext = ("." + orig_name.rsplit(".", 1)[-1].lower())
     mime = str(asset_dict.get("content_type") or "").strip().lower()
 
-    is_image = (ext in SAFE_IMAGE_EXTENSIONS) or mime.startswith("image/")
-    if not is_image:
-        valid_exts = ", ".join(sorted(SAFE_IMAGE_EXTENSIONS))
-        return False, f"Định dạng tệp không được hỗ trợ để biến thể. Hỗ trợ: {valid_exts}.", {}
+    if ext not in SUPPORTED_IMAGE_EXTENSIONS:
+        valid_exts = ", ".join(sorted(SUPPORTED_IMAGE_EXTENSIONS))
+        return False, f"Định dạng tệp không được hỗ trợ để biến thể. Chỉ hỗ trợ: {valid_exts}.", {}
+
+    if mime and mime not in SUPPORTED_IMAGE_MIME_TYPES:
+        return False, "MIME type của tệp không được hỗ trợ để biến thể. Chỉ hỗ trợ ảnh .png, .jpg, .jpeg, .webp.", {}
 
     clean_payload = {
         "image_asset_id": asset_id,
         "image_name": orig_name,
         "transform_instruction": instruction,
         "aspect_ratio": fmt,
-        "tier": tier,
-        "model_name": model,
-        "xu_cost": 0,
     }
     return True, "", clean_payload
 
@@ -301,9 +301,9 @@ def _format_job_dict(row: dict[str, Any]) -> dict[str, Any]:
         "image_name": row["image_name"],
         "transform_instruction": row.get("transform_instruction") or "",
         "aspect_ratio": row.get("aspect_ratio") or DEFAULT_FORMAT,
-        "tier": row.get("tier") or DEFAULT_TIER,
-        "model_name": row.get("model_name") or DEFAULT_MODEL,
-        "xu_cost": row.get("xu_cost", 0),
+        "tier": row.get("tier"),
+        "model_name": row.get("model_name"),
+        "xu_cost": row.get("xu_cost"),
         "status": row["status"],
         "status_reason": row.get("status_reason") or STATUS_REASON_AWAITING,
         "provider_name": row.get("provider_name"),
@@ -407,8 +407,9 @@ def create_or_replay_image_transform_job(
                 image_asset_id, image_name, transform_instruction, aspect_ratio,
                 tier, model_name, xu_cost, status, status_reason,
                 idempotency_key_hash, payload_hash, bridge_envelope,
+                provider_name, provider_task_id,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             """,
             (
                 job_id,
@@ -420,14 +421,16 @@ def create_or_replay_image_transform_job(
                 clean_input["image_name"],
                 clean_input["transform_instruction"],
                 clean_input["aspect_ratio"],
-                clean_input["tier"],
-                clean_input["model_name"],
-                clean_input["xu_cost"],
+                None,
+                None,
+                None,
                 STATUS_QUEUED,
                 STATUS_REASON_AWAITING,
                 idem_hash if idem_hash else None,
                 payload_hash,
                 json.dumps(bridge_envelope, ensure_ascii=False),
+                None,
+                None,
                 now,
                 now,
             ),
@@ -575,6 +578,7 @@ def image_transform_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
         "status_reason": job.get("status_reason") or STATUS_REASON_AWAITING,
         "provider_name": job.get("provider_name"),
         "model_name": job.get("model_name"),
+        "xu_cost": job.get("xu_cost"),
         "output_available": is_completed,
         "output_asset_id": output_asset_id,
         "output_url": output_url,
@@ -590,9 +594,9 @@ def image_transform_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
 def finalize_image_transform_job_result(
     job_id: str,
     *,
-    provider_task_id: str = "",
-    provider_name: str = "",
-    model_name: str = "",
+    provider_task_id: str | None = None,
+    provider_name: str | None = None,
+    model_name: str | None = None,
     output_asset_id: str = "",
     output_metadata: dict[str, Any] | None = None,
     cost_metadata: dict[str, Any] | None = None,
@@ -600,12 +604,14 @@ def finalize_image_transform_job_result(
 ) -> dict[str, Any]:
     """Finalizes an image transform job by attaching a verified, owner-scoped Asset Vault item.
 
-    This function is called by the future authorized provider worker.
-    It enforces:
+    Enforces:
     1. The job exists.
-    2. The output_asset_id exists in web_asset_files and belongs to the SAME account.
-    3. Rejects any unsafe URL scheme (SSRF prevention).
-    4. Updates job status to 'completed' with canonical download/preview paths.
+    2. Output asset must NOT be the same as source image_asset_id (distinct artifact).
+    3. Output asset exists in web_asset_files, belongs to the SAME account, and is active.
+    4. Output asset is a verified supported image format (.png, .jpg, .jpeg, .webp).
+    5. Provider and model metadata are neutral: omitted parameters remain NULL without fake defaults.
+    6. External metadata (output_metadata, cost_metadata) is sanitized against secret leakage.
+    7. Updates job status to 'completed' with canonical download/preview paths.
     """
     ensure_image_transform_schema()
     clean_job_id = str(job_id).strip()
@@ -628,6 +634,14 @@ def finalize_image_transform_job_result(
 
         job_dict = dict(job_row)
         account_id = str(job_dict["account_id"])
+        source_asset_id = str(job_dict.get("image_asset_id") or "")
+
+        # Distinct artifact requirement: output_asset_id != source image_asset_id
+        if clean_asset_id == source_asset_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Tài sản kết quả không được trùng với tài sản ảnh nguồn (phải là tạo tác biến đổi riêng biệt).",
+            )
 
         # Verify output asset exists and is owned by the SAME account
         asset_row = conn.execute(
@@ -650,13 +664,39 @@ def finalize_image_transform_job_result(
         if asset_dict.get("state") != "active":
             raise HTTPException(status_code=400, detail="Tài sản kết quả không ở trạng thái sẵn sàng (active).")
 
-        now = completed_at or utc_now()
-        resolved_model = model_name or job_dict.get("model_name") or DEFAULT_MODEL
-        resolved_provider = provider_name or "key4u"
-        output_url = f"/api/v1/assets/{clean_asset_id}/download"
+        # Verify output asset is a supported image type
+        out_orig = str(asset_dict.get("original_filename") or "").strip()
+        out_ext = str(asset_dict.get("extension") or "").strip().lower()
+        if not out_ext and "." in out_orig:
+            out_ext = ("." + out_orig.rsplit(".", 1)[-1].lower())
+        out_mime = str(asset_dict.get("content_type") or "").strip().lower()
 
+        if out_ext not in SUPPORTED_IMAGE_EXTENSIONS:
+            valid_exts = ", ".join(sorted(SUPPORTED_IMAGE_EXTENSIONS))
+            raise HTTPException(
+                status_code=400,
+                detail=f"Định dạng tệp kết quả không được hỗ trợ. Chỉ chấp nhận: {valid_exts}.",
+            )
+        if out_mime and out_mime not in SUPPORTED_IMAGE_MIME_TYPES:
+            raise HTTPException(
+                status_code=400,
+                detail="MIME type của tệp kết quả không được hỗ trợ. Chỉ chấp nhận ảnh .png, .jpg, .jpeg, .webp.",
+            )
+
+        now = completed_at or utc_now()
+
+        # Defect B: Do NOT fabricate fallback provider (e.g. 'key4u') or model
+        resolved_provider = (str(provider_name).strip() if provider_name and str(provider_name).strip() else None) or job_dict.get("provider_name")
+        resolved_model = (str(model_name).strip() if model_name and str(model_name).strip() else None) or job_dict.get("model_name")
+        resolved_task_id = (str(provider_task_id).strip() if provider_task_id and str(provider_task_id).strip() else None) or job_dict.get("provider_task_id")
+
+        output_url = f"/api/v1/assets/{clean_asset_id}/download"
         if not _validate_safe_url(output_url):
             raise HTTPException(status_code=400, detail="Đường dẫn kết quả không an toàn.")
+
+        # Defect F: Sanitize metadata against secret leakage
+        clean_out_meta = sanitize_external_metadata(output_metadata or {})
+        clean_cost_meta = sanitize_external_metadata(cost_metadata or {})
 
         conn.execute(
             """
@@ -677,13 +717,13 @@ def finalize_image_transform_job_result(
             (
                 STATUS_COMPLETED,
                 STATUS_REASON_COMPLETED,
-                str(provider_task_id or ""),
+                resolved_task_id,
                 resolved_provider,
                 resolved_model,
                 clean_asset_id,
                 output_url,
-                json.dumps(output_metadata or {}, ensure_ascii=False),
-                json.dumps(cost_metadata or {}, ensure_ascii=False),
+                json.dumps(clean_out_meta, ensure_ascii=False),
+                json.dumps(clean_cost_meta, ensure_ascii=False),
                 now,
                 now,
                 clean_job_id,
