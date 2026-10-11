@@ -8465,7 +8465,54 @@ async def admin_users(request: Request, account: dict = Depends(require_canonica
 @router.get("/admin/jobs")
 async def admin_jobs(request: Request, account: dict = Depends(require_canonical_admin)):
     response = await _bridge("GET", "/internal/v1/admin/jobs", account=account, request=request, admin_read=True)
+    upscale_admin_jobs = list_admin_image_upscale_jobs(limit=100)
+    upscale_items = [
+        {
+            "job_id": j["id"],
+            "product": "image_upscale",
+            "product_family": "image",
+            "owner_reference": j["account_id"],
+            "state": "QUEUED" if j["status"] == "queued" else ("SUCCEEDED" if j["status"] == "completed" else "FAILED"),
+            "status": j["status"],
+            "status_reason": j["status_reason"],
+            "created_at": j["created_at"],
+            "updated_at": j["updated_at"],
+            "model": j.get("model_name"),
+            "provider": j.get("provider_name"),
+            "output_asset_id": j.get("output_asset_id"),
+            "output_url": j.get("output_url"),
+            "cost": j.get("cost_metadata"),
+            "attention_required": False,
+            "source_system": "web_native_image_upscale",
+        }
+        for j in upscale_admin_jobs
+    ]
     if not response.get("ok"):
+        if upscale_items:
+            summary = {
+                "status": "HEALTHY",
+                "job_authority": "web_native_image_upscale",
+                "web_role": "admin_read",
+                "counts": {
+                    "total": len(upscale_items),
+                    "queued": sum(1 for it in upscale_items if it["state"] == "QUEUED"),
+                    "running": 0,
+                    "failed": sum(1 for it in upscale_items if it["state"] == "FAILED"),
+                    "succeeded": sum(1 for it in upscale_items if it["state"] == "SUCCEEDED"),
+                    "blocked": 0,
+                    "attention": 0,
+                },
+                "items": upscale_items,
+                "freshness": None,
+                "fake_zero_job_count": False,
+                "mutation_available": False,
+            }
+            return envelope(
+                True,
+                "Đã nạp danh sách tác vụ từ Web-native ledger.",
+                data=summary,
+                status_name="read_only",
+            )
         summary = synthesize_operations_jobs_summary(
             bridge_available=False,
             bridge_error=response.get("error_code") or "CORE_BRIDGE_NOT_CONFIGURED",
@@ -8481,9 +8528,15 @@ async def admin_jobs(request: Request, account: dict = Depends(require_canonical
         response.get("data"),
         bridge_available=True,
     )
+    if upscale_items:
+        summary["items"] = upscale_items + summary.get("items", [])
+        counts = summary.get("counts") or {}
+        if isinstance(counts.get("total"), int):
+            counts["total"] += len(upscale_items)
+            counts["queued"] = (counts.get("queued") or 0) + sum(1 for it in upscale_items if it["state"] == "QUEUED")
     return envelope(
         True,
-        "Đã nạp danh sách tác vụ từ Bot Core.",
+        "Đã nạp danh sách tác vụ từ Bot Core và Web-native ledger.",
         data=summary,
         status_name="read_only",
     )

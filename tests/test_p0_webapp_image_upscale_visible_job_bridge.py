@@ -495,3 +495,72 @@ def test_09_provider_dispatch_disabled():
     with pytest.raises(RuntimeError) as exc:
         bridge.dispatch_image_upscale_provider("upscale_123")
     assert "IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED" in str(exc.value)
+
+
+# ─── TEST 10: ADMIN JOBS LEDGER LIST AGGREGATION ──────────────────────────────
+
+def test_10_admin_jobs_ledger_list():
+    """Admin endpoint /api/v1/admin/jobs aggregates upscale jobs into the global ledger."""
+    client_user, csrf_user = _create_authenticated_client("test-upscale-user-1")
+    client_admin, _ = _create_authenticated_client("test-upscale-admin", role="admin")
+
+    from copyfast_auth import require_canonical_admin
+    app.dependency_overrides[require_canonical_admin] = lambda: {"id": "test-upscale-admin", "role": "admin"}
+
+    try:
+        resp = client_user.post(
+            "/api/v1/features/image_upscale/jobs",
+            headers={"X-CSRF-Token": csrf_user},
+            json={
+                "feature": "image_upscale",
+                "input": {
+                    "image_asset_id": "asset-upscale-source-1",
+                    "scale_factor": 4,
+                },
+            },
+        )
+        assert resp.status_code == 200
+        job_id = resp.json()["data"]["id"]
+
+        list_resp = client_admin.get("/api/v1/admin/jobs")
+        assert list_resp.status_code == 200
+        list_data = list_resp.json()
+        assert list_data["ok"] is True
+        items = list_data["data"]["items"]
+        matched = [j for j in items if j.get("id") == job_id or j.get("job_id") == job_id]
+        assert len(matched) == 1
+        assert matched[0]["product"] == "image_upscale"
+        assert matched[0]["status"] == "queued"
+    finally:
+        app.dependency_overrides.clear()
+
+
+# ─── TEST 11: CUSTOMER UI PORTAL CONTRACT ─────────────────────────────────────
+
+def test_11_customer_ui_portal_contract():
+    """Customer portal and integration contracts strictly declare visible upscale elements."""
+    portal_js_path = STANDALONE_ROOT / "static" / "portal" / "portal.js"
+    integration_js_path = STANDALONE_ROOT / "static" / "portal" / "integration.js"
+
+    assert portal_js_path.exists()
+    assert integration_js_path.exists()
+
+    portal_text = portal_js_path.read_text(encoding="utf-8")
+    integration_text = integration_js_path.read_text(encoding="utf-8")
+
+    # Portal layout and elements
+    assert 'customerPage("/image/upscale"' in portal_text
+    assert 'layout: "image-upscale"' in portal_text
+    assert "function renderImageUpscale" in portal_text
+    assert 'data-field="source_image_selector"' in portal_text
+    assert 'data-field="scale_selector"' in portal_text
+    assert 'data-portal-submit="image-upscale"' in portal_text
+    assert "data-upscale-job-receipt" in portal_text
+    assert 'data-link="view-job-history"' in portal_text
+    assert 'case "image-upscale": return renderImageUpscale' in portal_text
+
+    # Integration action handlers
+    assert 'action === "image-upscale-submit"' in integration_text
+    assert 'action === "image-upscale-reset"' in integration_text
+    assert '"/features/image_upscale/jobs"' in integration_text
+

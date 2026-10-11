@@ -35990,6 +35990,45 @@
         }
         return;
       }
+      if (action === "image-upscale-reset") {
+        const nextFlows = Object.assign({}, base().featureFlows);
+        delete nextFlows["/image/upscale"];
+        merge({ featureFlows: nextFlows, imageUpscaleLastJob: null });
+        return;
+      }
+      if (action === "image-upscale-submit") {
+        const imageAssetId = String(fields.image_asset_id || "").trim();
+        const scaleFactor = Number(fields.scale_factor || 2);
+        if (!validVaultAssetId(imageAssetId)) {
+          throw new Error("Hãy chọn ảnh hợp lệ từ Asset Vault.");
+        }
+        if (![2, 4].includes(scaleFactor)) {
+          throw new Error("Hệ số phóng đại chỉ có thể là 2x hoặc 4x.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/features/image_upscale/jobs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              feature: "image_upscale",
+              input: {
+                image_asset_id: imageAssetId,
+                scale_factor: scaleFactor
+              }
+            })
+          });
+          const job = result && (result.data || result.job || result);
+          const nextFlows = Object.assign({}, base().featureFlows, {
+            "/image/upscale": { job }
+          });
+          merge({ featureFlows: nextFlows, imageUpscaleLastJob: job });
+          toast(result.message || "Đã tiếp nhận tác vụ Nâng cấp ảnh trong hàng đợi.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "image-operation-refresh") {
         await Promise.all([hydrateImageOperations(), hydrateAssetVault()]);
         toast("Đã làm mới Resize & Aspect Studio.");
