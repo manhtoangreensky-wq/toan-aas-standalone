@@ -1781,7 +1781,13 @@
       "Resize là nội suy LANCZOS deterministic. Nó không tạo chi tiết AI, không retouch, không subject-aware crop và không thay đổi file gốc trong Asset Vault."
     ]
   });
-  featurePage("/image/upscale", "Nâng cấp ảnh", "Gửi yêu cầu upscale từ ảnh nguồn và nhận quote canonical trước khi xác nhận.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
+  customerPage("/image/upscale", "Nâng cấp ảnh (Upscale)", "Nâng độ phân giải ảnh 2x hoặc 4x từ Asset Vault qua Job Bridge canonical.", ICONS.image, {
+    layout: "image-upscale", type: "image-operation", action: "none", status: "ready", fields: [],
+    notes: [
+      "Chỉ JPEG, PNG hoặc WebP active thuộc signed Web account hiện tại được chọn từ Asset Vault. Browser chỉ gửi Asset Vault ID và hệ số phóng đại đã chọn; không gửi path, URL hoặc bytes ảnh vào thao tác.",
+      "Tác vụ được tạo trong hàng đợi Web-native (status: queued). Kết quả chỉ xuất hiện sau khi provider thật xử lý; không có preview giả lập hay báo thành công trước."
+    ]
+  });
   featurePage("/image/transform", "Image-to-Image", "Chuẩn bị biến thể từ ảnh nguồn với toàn bộ quyền kiểm tra ở Core Bridge.", ICONS.image, FIELD_SETS.imageTransform, ["/image/image-to-image"]);
   featurePage("/image/remove-background", "Xóa nền", "Tạo quote xóa nền từ ảnh nguồn; job chỉ xuất hiện sau adapter canonical.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   customerPage("/image/history", "Lịch sử ảnh", "Theo dõi PNG riêng tư đã được Web Workspace tạo và xác minh; không thay thế lịch sử job Bot.", ICONS.image, {
@@ -9565,7 +9571,7 @@
     const route = normalizePath((page && (page.routePath || page.path)) || "");
     const feature = typeof featureKeyForPage === "function" ? featureKeyForPage(page, context) : "";
 
-    if (feature === "video_ai_prompt" || feature === "video_single" || route === "/video/create" || route === "/video/new") {
+    if (feature === "video_ai_prompt" || feature === "video_single" || route === "/video/create" || route === "/video/new" || feature === "image_upscale" || route === "/image/upscale") {
       return "canonical_bridge";
     }
 
@@ -9607,7 +9613,7 @@
     const RUNTIME_GENERATOR_FEATURES = new Set([
       "video_trend", "video_long", "video_multiscene", "video_text_to_video",
       "video_image_to_video", "video_product", "video_quick", "image_create",
-      "image_upscale", "image_transform", "image_remove_background",
+      "image_transform", "image_remove_background",
       "voice_tts", "voice_clone", "voice_saved_tts", "music_background",
       "music_song", "music_sfx"
     ]);
@@ -9615,7 +9621,7 @@
     const RUNTIME_GENERATOR_PATHS = new Set([
       "/video/trend", "/video/long", "/video/multiscene", "/video/text-to-video",
       "/video/image-to-video", "/video/product", "/video/quick", "/image/create",
-      "/image/upscale", "/image/transform", "/image/remove-background",
+      "/image/transform", "/image/remove-background",
       "/voice/create", "/voice/tts", "/voice/clone", "/voice/saved",
       "/music/ai", "/music/create", "/music/song", "/music/sfx"
     ]);
@@ -26091,6 +26097,126 @@
     </article>`;
   }
 
+  function renderImageUpscale(page, context) {
+    const rawSources = imageVaultItems(context);
+    const sources = rawSources.filter((a) => [".png", ".jpg", ".jpeg", ".webp"].includes(String(a.extension || "").toLowerCase()));
+    const formValues = transientFormValues("/image/upscale");
+    const lastJob = (context.featureFlows && context.featureFlows["/image/upscale"] && context.featureFlows["/image/upscale"].job)
+      || context.imageUpscaleLastJob || null;
+    const canRun = sources.length > 0;
+    const sourceSummary = sources.length === 1 ? "1 ảnh đang hoạt động" : `${sources.length} ảnh đang hoạt động`;
+    const runReason = sources.length === 0
+      ? "Hãy lưu JPEG, PNG hoặc WebP vào Asset Vault trước khi tạo tác vụ upscale."
+      : "Chọn ảnh từ Asset Vault và hệ số phóng đại (2x hoặc 4x) để đưa vào hàng đợi canonical.";
+
+    let resultSection = "";
+    if (lastJob) {
+      resultSection = `
+        <section class="portal-card portal-card-pad portal-upscale-job-receipt" data-upscale-job-receipt>
+          <div class="portal-card-header">
+            <div>
+              <h2 class="portal-card-title">Tác vụ Nâng cấp ảnh đã tạo</h2>
+              <p class="portal-card-subtitle">Tác vụ đã được tiếp nhận an toàn trong hàng đợi Web-native.</p>
+            </div>
+            ${badge("queued")}
+          </div>
+          <dl class="portal-job-meta">
+            <div><dt>Mã tác vụ (Job ID)</dt><dd><code data-field="job_id">${safeText(lastJob.id || lastJob.job_id || "")}</code></dd></div>
+            <div><dt>Trạng thái (Status)</dt><dd><span class="portal-badge" data-status="${safeText(lastJob.status || "queued")}" data-field="job_status">${safeText(lastJob.status || "queued")}</span></dd></div>
+            <div><dt>Lý do (Status Reason)</dt><dd><span data-field="status_reason">${safeText(lastJob.status_reason || "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE")}</span></dd></div>
+            <div><dt>Hệ số phóng đại</dt><dd><span>${safeText(String(lastJob.scale_factor || "2"))}x</span></dd></div>
+          </dl>
+          <div class="portal-notice portal-notice--info">
+            <span class="portal-notice-icon" aria-hidden="true">i</span>
+            <div>
+              <strong>Chờ xử lý từ Provider</strong>
+              <p>Tác vụ đang chờ thực thi thực tế. Kết quả và tệp xuất sẽ xuất hiện sau khi quá trình xử lý hoàn tất.</p>
+            </div>
+          </div>
+          <div class="portal-form-footer">
+            <a class="portal-button portal-button--primary" href="/jobs" data-link="view-job-history">Xem lịch sử tác vụ (/jobs)</a>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="image-upscale-reset" data-portal-route="/image/upscale">Tạo tác vụ mới</button>
+          </div>
+        </section>
+      `;
+    }
+
+    return `<article class="portal-page portal-image-upscale">${renderHero(page, context)}
+      <section class="portal-document-operation-intro">
+        <div>
+          <span class="portal-section-kicker">Web-native Image Operations</span>
+          <h2>Nâng cấp độ phân giải ảnh (Image Upscale)</h2>
+          <p>Chọn ảnh nguồn từ Asset Vault của bạn để nâng cấp độ sắc nét (2x hoặc 4x). Quá trình chạy qua Job Bridge fail-closed, xác thực quyền sở hữu và bảo vệ chi phí Xu minh bạch.</p>
+        </div>
+        <dl>
+          <div><dt>${safeText(sourceSummary)}</dt><dd>Ảnh trong Asset Vault</dd></div>
+          <div><dt>2x / 4x</dt><dd>Hệ số phóng đại hỗ trợ</dd></div>
+        </dl>
+      </section>
+      ${resultSection}
+      <div class="portal-document-operation-layout">
+        <section class="portal-card portal-card-pad portal-document-operation-form">
+          <div class="portal-card-header">
+            <div>
+              <h2 class="portal-card-title">Cấu hình nâng cấp ảnh</h2>
+              <p class="portal-card-subtitle">Browser chỉ gửi Asset Vault ID và hệ số phóng đại. Không upload bytes hoặc đường dẫn raw.</p>
+            </div>
+            ${badge(canRun ? "ready" : "guarded")}
+          </div>
+          <form class="portal-form" data-portal-form data-portal-action="image-upscale-submit" data-portal-route="/image/upscale" novalidate>
+            <div class="portal-field">
+              <label class="portal-field-label" for="upscale_image_asset_id">Ảnh nguồn trong Asset Vault <span class="portal-field-required">*</span></label>
+              <select class="portal-select" id="upscale_image_asset_id" name="image_asset_id" required data-field="source_image_selector">
+                <option value="">-- Chọn ảnh trong Asset Vault --</option>
+                ${sources.map((asset) => `<option value="${safeText(asset.id)}"${formValues.image_asset_id === asset.id ? " selected" : ""}>${safeText(asset.display_name || asset.original_filename || "Ảnh riêng tư")} (${safeText(String(asset.extension || "").replace(".", "").toUpperCase())} · ${vaultBytes(asset.byte_size)})</option>`).join("")}
+              </select>
+              <span class="portal-field-help">Chỉ ảnh .png, .jpg, .jpeg, .webp active của tài khoản hiện tại được hiển thị.</span>
+            </div>
+            <div class="portal-field">
+              <label class="portal-field-label" for="upscale_scale_factor">Hệ số phóng đại (Scale) <span class="portal-field-required">*</span></label>
+              <select class="portal-select" id="upscale_scale_factor" name="scale_factor" required data-field="scale_selector">
+                <option value="2"${formValues.scale_factor === "2" || !formValues.scale_factor ? " selected" : ""}>2x (Phóng to gấp 2 lần)</option>
+                <option value="4"${formValues.scale_factor === "4" ? " selected" : ""}>4x (Phóng to gấp 4 lần)</option>
+              </select>
+              <span class="portal-field-help">Hệ số tỷ lệ mở rộng kích thước ảnh đầu ra.</span>
+            </div>
+            <div class="portal-form-footer">
+              <span class="portal-form-note">${safeText(runReason)}</span>
+              <button class="portal-button portal-button--primary" type="submit" data-portal-submit="image-upscale"${canRun ? "" : " disabled"}>Tạo tác vụ Upscale</button>
+            </div>
+          </form>
+        </section>
+        <aside class="portal-card portal-card-pad portal-document-operation-boundary">
+          <div class="portal-card-header">
+            <div>
+              <h2 class="portal-card-title">Quy trình xử lý</h2>
+              <p class="portal-card-subtitle">Đảm bảo an toàn và minh bạch theo chuẩn SPEC.</p>
+            </div>
+          </div>
+          <ol class="portal-project-steps">
+            <li><strong>1. Chọn ảnh từ Asset Vault</strong><span>Kiểm tra định dạng, kích thước và quyền sở hữu trước khi tiếp nhận.</span></li>
+            <li><strong>2. Tạo job trong hàng đợi</strong><span>Job được lưu durable trong SQLite với trạng thái queued.</span></li>
+            <li><strong>3. Theo dõi trong Lịch sử</strong><span>Xem trạng thái và tải ảnh đã hoàn thành tại trang Lịch sử tác vụ.</span></li>
+          </ol>
+          <div class="portal-form-footer">
+            <a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a>
+            <a class="portal-button portal-button--quiet" href="/jobs">Mở Lịch sử tác vụ (/jobs)</a>
+          </div>
+        </aside>
+      </div>
+      <section class="portal-card portal-card-pad">
+        <div class="portal-notice portal-notice--info">
+          <span class="portal-notice-icon" aria-hidden="true">i</span>
+          <div>
+            <strong>Quy chuẩn Visible Live Acceptance</strong>
+            <p>Tác vụ Image Upscale chỉ ghi nhận trạng thái đã hoàn thành khi có kết quả thật từ nhà cung cấp. Không hiển thị kết quả giả lập hoặc báo thành công trước khi có provider output.</p>
+          </div>
+        </div>
+        ${renderNotes(page)}
+      </section>
+    </article>`;
+  }
+
   function renderAssetVault(page, context) {
     const deliveryNav = renderDeliveryWorkspaceNav(page.path);
     const canView = Boolean(context.capabilities && context.capabilities["asset-vault-view"] === true);
@@ -35417,6 +35543,7 @@
       case "pdf-ocr-to-word": return renderPdfOcrToWord(page, context);
       case "image-to-pdf": return renderImageToPdf(page, context);
       case "image-resize": return renderImageResize(page, context);
+      case "image-upscale": return renderImageUpscale(page, context);
       case "image-enhance": return renderImageEnhance(page, context);
       case "image-background-cleanup": return renderImageBackgroundCleanup(page, context);
       case "image-brand-overlay": return renderImageBrandOverlay(page, context);

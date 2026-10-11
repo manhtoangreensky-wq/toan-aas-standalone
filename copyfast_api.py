@@ -151,6 +151,17 @@ from copyfast_image_remove_background_bridge import (
     image_remove_background_job_to_native_compat,
     validate_image_remove_background_input,
 )
+from copyfast_image_upscale_job_bridge import (
+    CANONICAL_PRODUCT_KEY as IMAGE_UPSCALE_PRODUCT_KEY,
+    create_or_replay_image_upscale_job,
+    get_image_upscale_job,
+    is_image_upscale_job_other_account,
+    list_image_upscale_jobs,
+    image_upscale_job_to_native_compat,
+    get_admin_image_upscale_job,
+    list_admin_image_upscale_jobs,
+    validate_image_upscale_input,
+)
 from copyfast_video_trend_job_bridge import (
     CANONICAL_PRODUCT_KEY as VIDEO_TREND_PRODUCT_KEY,
     SUPPORTED_CANONICAL_JOB_ADAPTERS as VIDEO_TREND_ADAPTER_KEYS,
@@ -3537,7 +3548,11 @@ def _native_jobs_for_account(account: dict) -> list[dict[str, Any]]:
         voice_tts_job_to_native_compat(job)
         for job in list_voice_tts_jobs(account_id, limit=100)
     ]
-    return _merge_read_items(vtts_jobs, sd_jobs, img_jobs, msf_jobs, vl_jobs, vt_jobs, pv_jobs, native_jobs)
+    upscale_jobs = [
+        image_upscale_job_to_native_compat(job)
+        for job in list_image_upscale_jobs(account_id, limit=100)
+    ]
+    return _merge_read_items(upscale_jobs, vtts_jobs, sd_jobs, img_jobs, msf_jobs, vl_jobs, vt_jobs, pv_jobs, native_jobs)
 
 
 def _native_assets_for_account(account: dict) -> list[dict[str, Any]]:
@@ -6237,6 +6252,24 @@ async def job_detail(job_id: str, request: Request, account: dict = Depends(requ
             status_name="guarded",
             error_code="WEB_NATIVE_JOB_NOT_FOUND",
         )
+    upscale_job = get_image_upscale_job(account_id, job_id)
+    if upscale_job is not None:
+        compat_item = image_upscale_job_to_native_compat(upscale_job)
+        return envelope(
+            True,
+            "Đã tải dữ liệu Job Web-native của tài khoản hiện tại.",
+            data={**compat_item, "job_record": upscale_job, "read_model": "jobs", "canonical_available": False},
+            status_name="read_only",
+        )
+    if is_image_upscale_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    if str(job_id or "").strip().startswith("upscale_"):
+        return envelope(
+            False,
+            "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_JOB_NOT_FOUND",
+        )
     native_job = parse_native_job_id(job_id)
     if native_job is not None:
         record = get_native_job(str(account.get("id") or ""), job_id)
@@ -7309,6 +7342,64 @@ async def get_image_remove_background_job_route(
     raise HTTPException(status_code=404, detail="Không tìm thấy job Tách nền ảnh của tài khoản.")
 
 
+@router.post("/features/image_upscale/jobs")
+async def create_image_upscale_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    request_id = str(payload.input.get("request_id") or "")
+    job = create_or_replay_image_upscale_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        request_id=request_id,
+        idempotency_key=key,
+    )
+    return envelope(
+        True,
+        "Đã tạo tác vụ Nâng cấp ảnh thành công, chờ runtime xử lý.",
+        data=job,
+        status_name="queued",
+    )
+
+
+@router.get("/features/image_upscale/jobs")
+async def list_image_upscale_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = list_image_upscale_jobs(account_id, limit=100)
+    return envelope(
+        True,
+        "Đã tải danh sách job Nâng cấp ảnh của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/image_upscale/jobs/{job_id}")
+async def get_image_upscale_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    job = get_image_upscale_job(account_id, job_id)
+    if job is not None:
+        return envelope(
+            True,
+            "Đã tải chi tiết job Nâng cấp ảnh.",
+            data=job,
+            status_name="read_only",
+        )
+    if is_image_upscale_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Nâng cấp ảnh của tài khoản.")
+
+
 @router.post("/features/video_trend/jobs")
 async def create_video_trend_job_route(
     payload: FeatureRequest,
@@ -8374,7 +8465,54 @@ async def admin_users(request: Request, account: dict = Depends(require_canonica
 @router.get("/admin/jobs")
 async def admin_jobs(request: Request, account: dict = Depends(require_canonical_admin)):
     response = await _bridge("GET", "/internal/v1/admin/jobs", account=account, request=request, admin_read=True)
+    upscale_admin_jobs = list_admin_image_upscale_jobs(limit=100)
+    upscale_items = [
+        {
+            "job_id": j["id"],
+            "product": "image_upscale",
+            "product_family": "image",
+            "owner_reference": j["account_id"],
+            "state": "QUEUED" if j["status"] == "queued" else ("SUCCEEDED" if j["status"] == "completed" else "FAILED"),
+            "status": j["status"],
+            "status_reason": j["status_reason"],
+            "created_at": j["created_at"],
+            "updated_at": j["updated_at"],
+            "model": j.get("model_name"),
+            "provider": j.get("provider_name"),
+            "output_asset_id": j.get("output_asset_id"),
+            "output_url": j.get("output_url"),
+            "cost": j.get("cost_metadata"),
+            "attention_required": False,
+            "source_system": "web_native_image_upscale",
+        }
+        for j in upscale_admin_jobs
+    ]
     if not response.get("ok"):
+        if upscale_items:
+            summary = {
+                "status": "HEALTHY",
+                "job_authority": "web_native_image_upscale",
+                "web_role": "admin_read",
+                "counts": {
+                    "total": len(upscale_items),
+                    "queued": sum(1 for it in upscale_items if it["state"] == "QUEUED"),
+                    "running": 0,
+                    "failed": sum(1 for it in upscale_items if it["state"] == "FAILED"),
+                    "succeeded": sum(1 for it in upscale_items if it["state"] == "SUCCEEDED"),
+                    "blocked": 0,
+                    "attention": 0,
+                },
+                "items": upscale_items,
+                "freshness": None,
+                "fake_zero_job_count": False,
+                "mutation_available": False,
+            }
+            return envelope(
+                True,
+                "Đã nạp danh sách tác vụ từ Web-native ledger.",
+                data=summary,
+                status_name="read_only",
+            )
         summary = synthesize_operations_jobs_summary(
             bridge_available=False,
             bridge_error=response.get("error_code") or "CORE_BRIDGE_NOT_CONFIGURED",
@@ -8390,9 +8528,15 @@ async def admin_jobs(request: Request, account: dict = Depends(require_canonical
         response.get("data"),
         bridge_available=True,
     )
+    if upscale_items:
+        summary["items"] = upscale_items + summary.get("items", [])
+        counts = summary.get("counts") or {}
+        if isinstance(counts.get("total"), int):
+            counts["total"] += len(upscale_items)
+            counts["queued"] = (counts.get("queued") or 0) + sum(1 for it in upscale_items if it["state"] == "QUEUED")
     return envelope(
         True,
-        "Đã nạp danh sách tác vụ từ Bot Core.",
+        "Đã nạp danh sách tác vụ từ Bot Core và Web-native ledger.",
         data=summary,
         status_name="read_only",
     )
@@ -8401,6 +8545,31 @@ async def admin_jobs(request: Request, account: dict = Depends(require_canonical
 @router.get("/admin/jobs/{job_id}")
 async def admin_job_detail(job_id: str, request: Request, account: dict = Depends(require_canonical_admin)):
     job_id = _canonical_route_identifier(job_id, "Mã job")
+    if job_id.startswith("upscale_"):
+        upscale_job = get_admin_image_upscale_job(job_id)
+        if upscale_job:
+            return envelope(
+                True,
+                "Đã nạp chi tiết tác vụ Image Upscale từ Web-native ledger.",
+                data={
+                    "job_id": job_id,
+                    "product": "image_upscale",
+                    "product_family": "image",
+                    "owner_reference": upscale_job.get("account_id"),
+                    "status": upscale_job.get("status"),
+                    "status_reason": upscale_job.get("status_reason"),
+                    "provider": upscale_job.get("provider_name"),
+                    "model": upscale_job.get("model_name"),
+                    "output_asset_id": upscale_job.get("output_asset_id"),
+                    "output_url": upscale_job.get("output_url"),
+                    "cost": upscale_job.get("cost_metadata"),
+                    "created_at": upscale_job.get("created_at"),
+                    "completed_at": upscale_job.get("completed_at"),
+                    "data_source_authority": "web_native_image_upscale",
+                    "mutation_available": False,
+                },
+                status_name="read_only",
+            )
     response = await _bridge("GET", f"/internal/v1/admin/jobs/{job_id}", account=account, request=request, admin_read=True)
     if not response.get("ok"):
         return envelope(

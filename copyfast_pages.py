@@ -151,6 +151,7 @@ _PORTAL_SHELL_TITLES = {
     "/features/documents": {"vi": "Documents & PDF · TOAN AAS", "en": "Documents & PDF · TOAN AAS", "zh": "文档与 PDF · TOAN AAS"},
     "/free-tools": {"vi": "Công cụ miễn phí (0 Xu) · TOAN AAS", "en": "Free Tools (0 Xu) · TOAN AAS", "zh": "免费工具 (0 积分) · TOAN AAS"},
     "/music/sfx-library": {"vi": "Thư viện SFX · TOAN AAS", "en": "SFX Library · TOAN AAS", "zh": "音效库 · TOAN AAS"},
+    "/image/upscale": {"vi": "Nâng cấp ảnh (Upscale) · TOAN AAS", "en": "Image Upscale · TOAN AAS", "zh": "图像超分辨率 · TOAN AAS"},
     "/login": {"vi": "Đăng nhập · TOAN AAS", "en": "Sign in · TOAN AAS", "zh": "登录 · TOAN AAS"},
     "/register": {"vi": "Tạo tài khoản · TOAN AAS", "en": "Create account · TOAN AAS", "zh": "创建账户 · TOAN AAS"},
     "/password-recovery": {"vi": "Khôi phục mật khẩu · TOAN AAS", "en": "Password recovery · TOAN AAS", "zh": "找回密码 · TOAN AAS"},
