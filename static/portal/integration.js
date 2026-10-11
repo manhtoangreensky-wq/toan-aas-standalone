@@ -36029,6 +36029,47 @@
         }
         return;
       }
+      if (action === "image-transform-reset") {
+        const nextFlows = Object.assign({}, base().featureFlows);
+        delete nextFlows["/image/transform"];
+        merge({ featureFlows: nextFlows, imageTransformLastJob: null });
+        return;
+      }
+      if (action === "image-transform-submit") {
+        const imageAssetId = String(fields.image_asset_id || fields.source_asset_id || "").trim();
+        const transformInstruction = String(fields.transform_instruction || fields.prompt || "").trim();
+        const aspectRatio = String(fields.aspect_ratio || fields.format || "1:1").trim();
+        if (!validVaultAssetId(imageAssetId)) {
+          throw new Error("Hãy chọn ảnh hợp lệ từ Asset Vault.");
+        }
+        if (!transformInstruction) {
+          throw new Error("Hãy nhập câu lệnh biến đổi ảnh (prompt/instruction).");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/features/image_transform/jobs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              feature: "image_transform",
+              input: {
+                image_asset_id: imageAssetId,
+                transform_instruction: transformInstruction,
+                aspect_ratio: aspectRatio
+              }
+            })
+          });
+          const job = result && (result.data || result.job || result);
+          const nextFlows = Object.assign({}, base().featureFlows, {
+            "/image/transform": { job }
+          });
+          merge({ featureFlows: nextFlows, imageTransformLastJob: job });
+          toast(result.message || "Đã tiếp nhận tác vụ Biến đổi ảnh trong hàng đợi.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "image-operation-refresh") {
         await Promise.all([hydrateImageOperations(), hydrateAssetVault()]);
         toast("Đã làm mới Resize & Aspect Studio.");
