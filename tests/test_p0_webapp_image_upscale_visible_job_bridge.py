@@ -563,4 +563,3 @@ def test_11_customer_ui_portal_contract():
     assert 'action === "image-upscale-submit"' in integration_text
     assert 'action === "image-upscale-reset"' in integration_text
     assert '"/features/image_upscale/jobs"' in integration_text
-
