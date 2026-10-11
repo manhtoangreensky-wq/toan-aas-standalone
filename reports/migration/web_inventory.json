@@ -616,7 +616,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 590,
+      "line": 594,
       "target": "finalize_image_transform_job_result"
     },
     {
@@ -682,7 +682,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 531,
+      "line": 534,
       "target": "get_admin_image_transform_job"
     },
     {
@@ -748,7 +748,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 445,
+      "line": 448,
       "target": "get_image_transform_job"
     },
     {
@@ -988,7 +988,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 551,
+      "line": 554,
       "target": "image_transform_job_to_native_compat"
     },
     {
@@ -1018,7 +1018,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 465,
+      "line": 468,
       "target": "is_image_transform_job_other_account"
     },
     {
@@ -1078,7 +1078,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 509,
+      "line": 512,
       "target": "list_admin_image_transform_jobs"
     },
     {
@@ -1138,7 +1138,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 485,
+      "line": 488,
       "target": "list_image_transform_jobs"
     },
     {
@@ -2567,7 +2567,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6784,
+      "line": 6823,
       "operation": "INSERT INTO",
       "table": "web_account_topup_codes"
     },
@@ -3161,19 +3161,19 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 7289,
+      "line": 7328,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7804,
+      "line": 7843,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7892,
+      "line": 7931,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
@@ -5146,8 +5146,20 @@
       "table": "web_image_transform_jobs"
     },
     {
+      "file": "copyfast_db.py",
+      "line": 6743,
+      "operation": "CREATE TABLE",
+      "table": "web_image_transform_jobs"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 6774,
+      "operation": "INSERT INTO",
+      "table": "web_image_transform_jobs"
+    },
+    {
       "file": "copyfast_image_transform_job_bridge.py",
-      "line": 127,
+      "line": 138,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_image_transform_jobs"
     },
@@ -5159,7 +5171,7 @@
     },
     {
       "file": "copyfast_image_transform_job_bridge.py",
-      "line": 663,
+      "line": 703,
       "operation": "UPDATE",
       "table": "web_image_transform_jobs"
     },
@@ -5195,19 +5207,19 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 7368,
+      "line": 7407,
       "operation": "DELETE FROM",
       "table": "web_manual_topup_approve_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7372,
+      "line": 7411,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_approve_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7797,
+      "line": 7836,
       "operation": "UPDATE",
       "table": "web_manual_topup_approve_receipts"
     },
@@ -5219,31 +5231,31 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 7551,
+      "line": 7590,
       "operation": "UPDATE",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7561,
+      "line": 7600,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7644,
+      "line": 7683,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7689,
+      "line": 7728,
       "operation": "UPDATE",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7769,
+      "line": 7808,
       "operation": "UPDATE",
       "table": "web_manual_topup_credit_operations"
     },
@@ -5255,19 +5267,19 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 7193,
+      "line": 7232,
       "operation": "DELETE FROM",
       "table": "web_manual_topup_decision_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7197,
+      "line": 7236,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_decision_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7268,
+      "line": 7307,
       "operation": "UPDATE",
       "table": "web_manual_topup_decision_receipts"
     },
@@ -5285,31 +5297,31 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6941,
+      "line": 6980,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 6964,
+      "line": 7003,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7274,
+      "line": 7313,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7778,
+      "line": 7817,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7875,
+      "line": 7914,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
@@ -5645,7 +5657,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6890,
+      "line": 6929,
       "operation": "INSERT INTO",
       "table": "web_notification_events"
     },
@@ -18012,7 +18024,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 268,
   "source_files_scanned": 268,
-  "source_fingerprint_sha256": "3ab85cc7b3a0318360ecd093ad017d639f43a3476ac08b4decd6e6ea214e26d5",
+  "source_fingerprint_sha256": "2f87e5f6215d1fbc0c75716efa4dc5fb0a736f5e67e58d1269d4fabbae21dee5",
   "source_root": "repository-root",
   "ui_path_references": [
     {
