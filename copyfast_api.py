@@ -173,6 +173,17 @@ from copyfast_image_transform_job_bridge import (
     list_admin_image_transform_jobs,
     validate_image_transform_input,
 )
+from copyfast_music_sfx_job_bridge import (
+    CANONICAL_PRODUCT_KEY as MUSIC_SFX_PRODUCT_KEY,
+    create_or_replay_music_sfx_job,
+    get_music_sfx_job,
+    is_music_sfx_job_other_account,
+    list_music_sfx_jobs,
+    music_sfx_job_to_native_compat,
+    get_admin_music_sfx_job,
+    list_admin_music_sfx_jobs,
+    validate_music_sfx_input,
+)
 from copyfast_video_trend_job_bridge import (
     CANONICAL_PRODUCT_KEY as VIDEO_TREND_PRODUCT_KEY,
     SUPPORTED_CANONICAL_JOB_ADAPTERS as VIDEO_TREND_ADAPTER_KEYS,
@@ -3567,7 +3578,11 @@ def _native_jobs_for_account(account: dict) -> list[dict[str, Any]]:
         image_transform_job_to_native_compat(job)
         for job in list_image_transform_jobs(account_id, limit=100)
     ]
-    return _merge_read_items(transform_jobs, upscale_jobs, vtts_jobs, sd_jobs, img_jobs, msf_jobs, vl_jobs, vt_jobs, pv_jobs, native_jobs)
+    sfx_jobs = [
+        music_sfx_job_to_native_compat(job)
+        for job in list_music_sfx_jobs(account_id, limit=100)
+    ]
+    return _merge_read_items(sfx_jobs, transform_jobs, upscale_jobs, vtts_jobs, sd_jobs, img_jobs, msf_jobs, vl_jobs, vt_jobs, pv_jobs, native_jobs)
 
 
 def _native_assets_for_account(account: dict) -> list[dict[str, Any]]:
@@ -6303,6 +6318,24 @@ async def job_detail(job_id: str, request: Request, account: dict = Depends(requ
             status_name="guarded",
             error_code="WEB_NATIVE_JOB_NOT_FOUND",
         )
+    sfx_job = get_music_sfx_job(account_id, job_id)
+    if sfx_job is not None:
+        compat_item = music_sfx_job_to_native_compat(sfx_job)
+        return envelope(
+            True,
+            "Đã tải dữ liệu Job Web-native của tài khoản hiện tại.",
+            data={**compat_item, "job_record": sfx_job, "read_model": "jobs", "canonical_available": False},
+            status_name="read_only",
+        )
+    if is_music_sfx_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    if str(job_id or "").strip().startswith("msfx_"):
+        return envelope(
+            False,
+            "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_JOB_NOT_FOUND",
+        )
     native_job = parse_native_job_id(job_id)
     if native_job is not None:
         record = get_native_job(str(account.get("id") or ""), job_id)
@@ -7491,6 +7524,64 @@ async def get_image_transform_job_route(
     raise HTTPException(status_code=404, detail="Không tìm thấy job Biến thể ảnh của tài khoản.")
 
 
+@router.post("/features/music_sfx/jobs")
+async def create_music_sfx_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    request_id = str(payload.input.get("request_id") or "")
+    job = create_or_replay_music_sfx_job(
+        account_id=account_id,
+        payload=dict(payload.input),
+        request_id=request_id,
+        idempotency_key=key,
+    )
+    return envelope(
+        True,
+        "Đã tạo tác vụ Hiệu ứng âm thanh (SFX) thành công, chờ runtime xử lý.",
+        data=job,
+        status_name="queued",
+    )
+
+
+@router.get("/features/music_sfx/jobs")
+async def list_music_sfx_jobs_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    jobs = list_music_sfx_jobs(account_id, limit=100)
+    return envelope(
+        True,
+        "Đã tải danh sách job SFX của tài khoản.",
+        data={"items": jobs},
+        status_name="read_only",
+    )
+
+
+@router.get("/features/music_sfx/jobs/{job_id}")
+async def get_music_sfx_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    job = get_music_sfx_job(account_id, job_id)
+    if job is not None:
+        return envelope(
+            True,
+            "Đã tải chi tiết job SFX.",
+            data=job,
+            status_name="read_only",
+        )
+    if is_music_sfx_job_other_account(job_id, account_id):
+        raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
+    raise HTTPException(status_code=404, detail="Không tìm thấy job SFX của tài khoản.")
+
+
 @router.post("/features/video_trend/jobs")
 async def create_video_trend_job_route(
     payload: FeatureRequest,
@@ -8600,7 +8691,29 @@ async def admin_jobs(request: Request, account: dict = Depends(require_canonical
         }
         for j in transform_admin_jobs
     ]
-    all_web_items = upscale_items + transform_items
+    sfx_admin_jobs = list_admin_music_sfx_jobs(limit=100)
+    sfx_items = [
+        {
+            "job_id": j["id"],
+            "product": "music_sfx",
+            "product_family": "music",
+            "owner_reference": j["account_id"],
+            "state": "QUEUED" if j["status"] == "queued" else ("SUCCEEDED" if j["status"] == "completed" else "FAILED"),
+            "status": j["status"],
+            "status_reason": j["status_reason"],
+            "created_at": j["created_at"],
+            "updated_at": j["updated_at"],
+            "model": j.get("model_name"),
+            "provider": j.get("provider_name"),
+            "output_asset_id": j.get("output_asset_id"),
+            "output_url": j.get("output_url"),
+            "cost": j.get("cost_metadata"),
+            "attention_required": False,
+            "source_system": "web_native_music_sfx",
+        }
+        for j in sfx_admin_jobs
+    ]
+    all_web_items = upscale_items + transform_items + sfx_items
     if not response.get("ok"):
         if all_web_items:
             summary = {
@@ -8705,6 +8818,31 @@ async def admin_job_detail(job_id: str, request: Request, account: dict = Depend
                     "created_at": transform_job.get("created_at"),
                     "completed_at": transform_job.get("completed_at"),
                     "data_source_authority": "web_native_image_transform",
+                    "mutation_available": False,
+                },
+                status_name="read_only",
+            )
+    if job_id.startswith("msfx_"):
+        sfx_job = get_admin_music_sfx_job(job_id)
+        if sfx_job:
+            return envelope(
+                True,
+                "Đã nạp chi tiết tác vụ Music SFX từ Web-native ledger.",
+                data={
+                    "job_id": job_id,
+                    "product": "music_sfx",
+                    "product_family": "music",
+                    "owner_reference": sfx_job.get("account_id"),
+                    "status": sfx_job.get("status"),
+                    "status_reason": sfx_job.get("status_reason"),
+                    "provider": sfx_job.get("provider_name"),
+                    "model": sfx_job.get("model_name"),
+                    "output_asset_id": sfx_job.get("output_asset_id"),
+                    "output_url": sfx_job.get("output_url"),
+                    "cost": sfx_job.get("cost_metadata"),
+                    "created_at": sfx_job.get("created_at"),
+                    "completed_at": sfx_job.get("completed_at"),
+                    "data_source_authority": "web_native_music_sfx",
                     "mutation_available": False,
                 },
                 status_name="read_only",

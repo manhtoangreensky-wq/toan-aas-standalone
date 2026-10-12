@@ -1877,7 +1877,13 @@
       "Trang chỉ đọc. Không tạo SFX, job, Xu, PayOS, asset, delivery, Bot state hoặc Telegram action. Mở collection để server kiểm tra ownership lại trước khi biên tập metadata."
     ]
   });
-  featurePage("/music/sfx", "Hiệu ứng âm thanh", "Chuẩn bị brief SFX; không tìm kho ngoài, tạo âm thanh hay charge Xu ở browser.", ICONS.music, FIELD_SETS.musicSfx);
+  customerPage("/music/sfx", "Hiệu ứng âm thanh (Music SFX)", "Tạo hiệu ứng âm thanh từ mô tả brief qua Job Bridge canonical.", ICONS.music, {
+    layout: "music-sfx", type: "audio-operation", action: "none", status: "ready", fields: [],
+    notes: [
+      "Nhập mô tả brief âm thanh (tối đa 2000 ký tự). Browser chỉ gửi brief và idempotency key; không có quyền chỉ định giá tiền, tier, model hoặc trừ Xu ở client.",
+      "Tác vụ được tạo trong hàng đợi Web-native (status: queued). Kết quả âm thanh chỉ xuất hiện sau khi provider thật xử lý và lưu vào Asset Vault; không có âm thanh giả lập hay báo thành công trước."
+    ]
+  });
   featurePage("/music/create", "Tạo nhạc AI", "Tạo bản nháp nhạc AI và đợi engine/ước tính từ Core Bridge.", ICONS.music, FIELD_SETS.music, ["/music/ai"]);
   featurePage("/music/song", "AI Song", "Chuẩn bị yêu cầu bài hát, cấu trúc và mood; job chỉ được tạo sau confirm.", ICONS.music, FIELD_SETS.musicSong);
   featurePage("/music/upload", "Nhạc của tôi", "Upload nhạc chỉ được bật qua URL ký tạm thời và kiểm tra MIME server-side.", ICONS.music, FIELD_SETS.musicUpload);
@@ -9577,7 +9583,7 @@
     const route = normalizePath((page && (page.routePath || page.path)) || "");
     const feature = typeof featureKeyForPage === "function" ? featureKeyForPage(page, context) : "";
 
-    if (feature === "video_ai_prompt" || feature === "video_single" || route === "/video/create" || route === "/video/new" || feature === "image_upscale" || route === "/image/upscale" || feature === "image_transform" || route === "/image/transform" || route === "/image/image-to-image") {
+    if (feature === "video_ai_prompt" || feature === "video_single" || route === "/video/create" || route === "/video/new" || feature === "image_upscale" || route === "/image/upscale" || feature === "image_transform" || route === "/image/transform" || route === "/image/image-to-image" || feature === "music_sfx" || route === "/music/sfx") {
       return "canonical_bridge";
     }
 
@@ -9621,7 +9627,7 @@
       "video_image_to_video", "video_product", "video_quick", "image_create",
       "image_transform", "image_remove_background",
       "voice_tts", "voice_clone", "voice_saved_tts", "music_background",
-      "music_song", "music_sfx"
+      "music_song"
     ]);
 
     const RUNTIME_GENERATOR_PATHS = new Set([
@@ -9629,7 +9635,7 @@
       "/video/image-to-video", "/video/product", "/video/quick", "/image/create",
       "/image/transform", "/image/remove-background",
       "/voice/create", "/voice/tts", "/voice/clone", "/voice/saved",
-      "/music/ai", "/music/create", "/music/song", "/music/sfx"
+      "/music/ai", "/music/create", "/music/song"
     ]);
 
     if (
@@ -26351,6 +26357,122 @@
     </article>`;
   }
 
+  function renderMusicSfx(page, context) {
+    const formValues = transientFormValues("/music/sfx");
+    const lastJob = (context.featureFlows && context.featureFlows["/music/sfx"] && context.featureFlows["/music/sfx"].job)
+      || context.musicSfxLastJob || null;
+    const canRun = true;
+    const runReason = "Nhập mô tả brief âm thanh (tối đa 2000 ký tự) để đưa tác vụ vào hàng đợi canonical.";
+
+    let resultSection = "";
+    if (lastJob) {
+      const isCompleted = String(lastJob.status || "").toLowerCase() === "completed";
+      const hasOutputUrl = Boolean(lastJob.output_url);
+      const audioPlayerHtml = isCompleted && hasOutputUrl
+        ? `<div class="portal-audio-player-wrapper" style="margin-top: 1rem;">
+             <label class="portal-field-label">Kết quả âm thanh đã xác minh</label>
+             <audio controls preload="none" src="${safeText(lastJob.output_url)}" data-field="output_audio_player" style="width: 100%;">
+               Trình duyệt không hỗ trợ thẻ audio.
+             </audio>
+           </div>`
+        : "";
+
+      resultSection = `
+        <section class="portal-card portal-card-pad portal-music-sfx-job-receipt" data-music-sfx-job-receipt>
+          <div class="portal-card-header">
+            <div>
+              <h2 class="portal-card-title">Tác vụ Hiệu ứng âm thanh đã tạo</h2>
+              <p class="portal-card-subtitle">Tác vụ đã được tiếp nhận an toàn trong hàng đợi Web-native.</p>
+            </div>
+            ${badge(lastJob.status || "queued")}
+          </div>
+          <dl class="portal-job-meta">
+            <div><dt>Mã tác vụ (Job ID)</dt><dd><code data-field="job_id">${safeText(lastJob.id || lastJob.job_id || "")}</code></dd></div>
+            <div><dt>Trạng thái (Status)</dt><dd><span class="portal-badge" data-status="${safeText(lastJob.status || "queued")}" data-field="job_status">${safeText(lastJob.status || "queued")}</span></dd></div>
+            <div><dt>Lý do (Status Reason)</dt><dd><span data-field="status_reason">${safeText(lastJob.status_reason || "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE")}</span></dd></div>
+            <div><dt>Mô tả hiệu ứng (Brief)</dt><dd><span data-field="brief">${safeText(String(lastJob.brief || ""))}</span></dd></div>
+          </dl>
+          ${audioPlayerHtml}
+          <div class="portal-notice portal-notice--info">
+            <span class="portal-notice-icon" aria-hidden="true">i</span>
+            <div>
+              <strong>Chờ xử lý từ Provider</strong>
+              <p>Tác vụ đang chờ thực thi thực tế từ provider được ủy quyền. Kết quả và tệp âm thanh xuất vào Asset Vault sẽ xuất hiện sau khi quá trình xử lý hoàn tất.</p>
+            </div>
+          </div>
+          <div class="portal-form-footer">
+            <a class="portal-button portal-button--primary" href="/jobs" data-link="view-job-history">Xem lịch sử tác vụ (/jobs)</a>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="music-sfx-reset" data-portal-route="/music/sfx">Tạo tác vụ mới</button>
+          </div>
+        </section>
+      `;
+    }
+
+    return `<article class="portal-page portal-music-sfx">${renderHero(page, context)}
+      <section class="portal-document-operation-intro">
+        <div>
+          <span class="portal-section-kicker">Web-native Audio Operations</span>
+          <h2>Hiệu ứng âm thanh (Music SFX / Generative SFX)</h2>
+          <p>Tạo hiệu ứng âm thanh chuyên biệt theo mô tả chi tiết. Quá trình chạy qua Job Bridge fail-closed, tách biệt hoàn toàn với kho Freesound có sẵn và bảo vệ chi phí Xu minh bạch.</p>
+        </div>
+        <dl>
+          <div><dt>Generative AI</dt><dd>Tạo âm thanh từ mô tả brief</dd></div>
+          <div><dt>Tối đa 2.000 ký tự</dt><dd>Độ dài mô tả hỗ trợ</dd></div>
+        </dl>
+      </section>
+      ${resultSection}
+      <div class="portal-document-operation-layout">
+        <section class="portal-card portal-card-pad portal-document-operation-form">
+          <div class="portal-card-header">
+            <div>
+              <h2 class="portal-card-title">Cấu hình hiệu ứng âm thanh</h2>
+              <p class="portal-card-subtitle">Browser chỉ gửi mô tả brief. Không gửi tham số giá, tier, model hoặc trừ Xu từ client.</p>
+            </div>
+            ${badge("ready")}
+          </div>
+          <form class="portal-form" data-portal-form data-portal-action="music-sfx-submit" data-portal-route="/music/sfx" novalidate>
+            <div class="portal-field">
+              <label class="portal-field-label" for="music_sfx_brief">Mô tả hiệu ứng âm thanh (Brief / Sound Prompt) <span class="portal-field-required">*</span></label>
+              <textarea class="portal-textarea" id="music_sfx_brief" name="brief" rows="4" required data-field="music_sfx_brief_input" placeholder="Mô tả âm thanh bạn muốn tạo (ví dụ: tiếng sấm rền từ xa, tiếng sóng biển rì rào vỗ bờ đá, tiếng khởi động động cơ phi thuyền không gian...)...">${safeText(formValues.brief || "")}</textarea>
+              <span class="portal-field-help">Mô tả chi tiết âm thanh, bối cảnh, âm lượng, nhịp điệu (1 đến 2.000 ký tự).</span>
+            </div>
+            <div class="portal-form-footer">
+              <span class="portal-form-note">${safeText(runReason)}</span>
+              <button class="portal-button portal-button--primary" type="submit" data-portal-submit="music-sfx">Tạo tác vụ SFX</button>
+            </div>
+          </form>
+        </section>
+        <aside class="portal-card portal-card-pad portal-document-operation-boundary">
+          <div class="portal-card-header">
+            <div>
+              <h2 class="portal-card-title">Quy trình xử lý</h2>
+              <p class="portal-card-subtitle">Đảm bảo an toàn và minh bạch theo chuẩn SPEC.</p>
+            </div>
+          </div>
+          <ol class="portal-project-steps">
+            <li><strong>1. Nhập mô tả âm thanh</strong><span>Brief được xác thực server-side (1-2000 ký tự).</span></li>
+            <li><strong>2. Tạo job trong hàng đợi</strong><span>Job được lưu durable trong SQLite với trạng thái queued.</span></li>
+            <li><strong>3. Theo dõi trong Lịch sử</strong><span>Xem trạng thái và nghe kết quả âm thanh đã xác minh tại trang Lịch sử tác vụ (/jobs).</span></li>
+          </ol>
+          <div class="portal-form-footer">
+            <a class="portal-button portal-button--quiet" href="/music/sfx-library">Mở Thư viện SFX (/music/sfx-library)</a>
+            <a class="portal-button portal-button--quiet" href="/jobs">Mở Lịch sử tác vụ (/jobs)</a>
+          </div>
+        </aside>
+      </div>
+      <section class="portal-card portal-card-pad">
+        <div class="portal-notice portal-notice--info">
+          <span class="portal-notice-icon" aria-hidden="true">i</span>
+          <div>
+            <strong>Quy chuẩn Visible Live Acceptance</strong>
+            <p>Tác vụ Music SFX chỉ ghi nhận trạng thái đã hoàn thành khi có kết quả audio thật từ provider được ủy quyền và lưu vào Asset Vault. Tách biệt hoàn toàn với kho Freesound. Không phát âm thanh giả lập trước khi có provider output.</p>
+          </div>
+        </div>
+        ${renderNotes(page)}
+      </section>
+    </article>`;
+  }
+
   function renderAssetVault(page, context) {
     const deliveryNav = renderDeliveryWorkspaceNav(page.path);
     const canView = Boolean(context.capabilities && context.capabilities["asset-vault-view"] === true);
@@ -35666,6 +35788,7 @@
       case "image-operations-hub": return renderImageSuiteHub(page, context);
       case "voice-operations-hub": return renderVoiceHub(page, context);
       case "music-operations-hub": return renderMusicHub(page, context);
+      case "music-sfx": return renderMusicSfx(page, context);
       case "subdub-operations-hub": return renderSubDubHub(page, context);
       case "pdf-split": return renderPdfSplit(page, context);
       case "pdf-merge": return renderPdfMerge(page, context);

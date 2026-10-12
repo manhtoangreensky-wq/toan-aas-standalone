@@ -6777,6 +6777,39 @@ def ensure_copyfast_schema() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_img_transform_jobs_request ON web_image_transform_jobs(request_id)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_img_transform_jobs_account_idempotency ON web_image_transform_jobs(account_id, idempotency_key_hash)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_web_img_transform_jobs_status_created ON web_image_transform_jobs(status, created_at ASC)")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_music_sfx_jobs (
+                id TEXT PRIMARY KEY,
+                request_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                product_key TEXT NOT NULL DEFAULT 'music_sfx',
+                routing_product_key TEXT NOT NULL DEFAULT 'music_sfx',
+                brief TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'queued',
+                status_reason TEXT NOT NULL DEFAULT 'AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE',
+                idempotency_key_hash TEXT,
+                payload_hash TEXT NOT NULL,
+                bridge_envelope TEXT NOT NULL,
+                provider_name TEXT,
+                provider_task_id TEXT,
+                model_name TEXT,
+                xu_cost INTEGER DEFAULT NULL,
+                output_asset_id TEXT,
+                output_url TEXT,
+                output_metadata TEXT,
+                cost_metadata TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                completed_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_music_sfx_jobs_account_created ON web_music_sfx_jobs(account_id, created_at DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_music_sfx_jobs_request ON web_music_sfx_jobs(request_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_music_sfx_jobs_account_idempotency ON web_music_sfx_jobs(account_id, idempotency_key_hash)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_web_music_sfx_jobs_status_created ON web_music_sfx_jobs(status, created_at ASC)")
         try:
             import copyfast_pricing_policy
             copyfast_pricing_policy.ensure_pricing_schema(conn)

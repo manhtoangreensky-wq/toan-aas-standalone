@@ -36070,6 +36070,40 @@
         }
         return;
       }
+      if (action === "music-sfx-reset") {
+        const nextFlows = Object.assign({}, base().featureFlows);
+        delete nextFlows["/music/sfx"];
+        merge({ featureFlows: nextFlows, musicSfxLastJob: null });
+        return;
+      }
+      if (action === "music-sfx-submit") {
+        const brief = String(fields.brief || "").trim();
+        if (!brief) {
+          throw new Error("Hãy nhập mô tả hiệu ứng âm thanh (brief).");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/features/music_sfx/jobs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              feature: "music_sfx",
+              input: {
+                brief: brief
+              }
+            })
+          });
+          const job = result && (result.data || result.job || result);
+          const nextFlows = Object.assign({}, base().featureFlows, {
+            "/music/sfx": { job }
+          });
+          merge({ featureFlows: nextFlows, musicSfxLastJob: job });
+          toast(result.message || "Đã tiếp nhận tác vụ Hiệu ứng âm thanh trong hàng đợi.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "image-operation-refresh") {
         await Promise.all([hydrateImageOperations(), hydrateAssetVault()]);
         toast("Đã làm mới Resize & Aspect Studio.");
