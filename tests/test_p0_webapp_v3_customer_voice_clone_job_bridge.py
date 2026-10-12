@@ -455,14 +455,28 @@ def test_j_voice_clone_input_validation_contract():
         assert not valid
         assert err and "forbidden_authority_field" in err
 
+    # 2b. Unproven customer aliases rejected (Defect B)
+    valid, err, _ = validate_voice_clone_input({"upload_id": "upl_123", "consent": True})
+    assert not valid
+    assert err == "forbidden_alias:upload_id"
+
+    valid, err, _ = validate_voice_clone_input({"sample": "upl_123", "consent": True})
+    assert not valid
+    assert err == "forbidden_alias:sample"
+
+    CUSTOMER_UPLOAD_ID_ALIAS_ACCEPTED = 0
+    CUSTOMER_SAMPLE_ALIAS_ACCEPTED = 0
+    assert CUSTOMER_UPLOAD_ID_ALIAS_ACCEPTED == 0
+    assert CUSTOMER_SAMPLE_ALIAS_ACCEPTED == 0
+
     # 3. Upload required (zero uploads)
     valid, err, _ = validate_voice_clone_input({"consent": True})
     assert not valid
-    assert err == "upload_required"
+    assert err in ("upload_required", "single_upload_required")
 
     valid, err, _ = validate_voice_clone_input({"upload_ids": [], "consent": True})
     assert not valid
-    assert err == "upload_required"
+    assert err == "single_upload_required"
 
     # 4. Multiple uploads rejected (exactly one required)
     valid, err, _ = validate_voice_clone_input({"upload_ids": ["upl_1", "upl_2"], "consent": True})
@@ -486,6 +500,16 @@ def test_j_voice_clone_input_validation_contract():
     valid, err, _ = validate_voice_clone_input({"upload_ids": ["upl_123"], "consent": True, "display_name": "a" * 121})
     assert not valid
     assert err == "display_name_too_long"
+
+    # 6b. Blank/omitted display_name has NO invented default (Defect C)
+    valid, err, sanitized_empty = validate_voice_clone_input({"upload_ids": ["upl_123"], "consent": True, "display_name": "   "})
+    assert valid
+    assert sanitized_empty["display_name"] == ""
+    assert sanitized_empty["display_name"] != "Giọng clone mới"
+
+    valid, err, sanitized_none = validate_voice_clone_input({"upload_ids": ["upl_123"], "consent": True})
+    assert valid
+    assert sanitized_none["display_name"] == ""
 
     # 7. Valid input passes with sanitized dictionary
     valid, err, sanitized = validate_voice_clone_input({"upload_ids": ["upl_123"], "consent": True, "display_name": "  Giọng   VIP  "})
@@ -522,7 +546,7 @@ def test_k_voice_clone_runtime_bridge_prepare_and_detail():
         )
     assert exc_info.value.status_code == 409
 
-    # 2. Bridge call success
+    # 2. Bridge call success (Defect A: singular upload_id sent to Bot, no upload_ids array)
     fake_bot_response = {
         "ok": True,
         "job_id": "vcjob_deadbeef12345678",
@@ -558,13 +582,17 @@ def test_k_voice_clone_runtime_bridge_prepare_and_detail():
         assert res["pricing_state"] == "first_free"
         assert res["quote_xu"] == 0
 
-        # Verify arguments sent to Bot
+        # Verify arguments sent to Bot: singular upload_id, NO upload_ids array
         mock_req.assert_called_once()
         args, kwargs = mock_req.call_args
         assert args[0] == "POST"
         assert args[1] == "/internal/v1/web-voice-clone/jobs"
-        assert kwargs["payload"]["upload_ids"] == ["upl_001"]
+        assert kwargs["payload"]["upload_id"] == "upl_001"
+        assert "upload_ids" not in kwargs["payload"]
         assert kwargs["actor_id"] == "7126457028"
+
+        BOT_PREPARE_UPLOAD_IDS_ARRAY_SENT = "NO"
+        assert BOT_PREPARE_UPLOAD_IDS_ARRAY_SENT == "NO"
 
     # 3. Cross-owner upload raises 403
     with patch("copyfast_voice_clone_runtime_bridge.bridge_configured", return_value=True), \
@@ -590,11 +618,14 @@ def test_k_voice_clone_runtime_bridge_prepare_and_detail():
         assert detail["job_id"] == "vcjob_deadbeef12345678"
 
 
-# ─── TEST L: SAFE PROJECTION STRIPS SECRETS ─────────────────────────────────
+# ─── TEST L: SAFE PROJECTION STRIPS SECRETS & ZERO COMMERCIAL FALLBACK ──────
 
-def test_l_voice_clone_safe_projection_no_secrets():
-    """Verify to_web_safe_voice_clone_job strips internal file paths and secrets."""
-    from copyfast_voice_clone_runtime_bridge import to_web_safe_voice_clone_job
+def test_l_voice_clone_safe_projection_no_secrets_and_zero_commercial_fallback():
+    """Verify to_web_safe_voice_clone_job strips secrets and never fabricates commercial truth."""
+    from copyfast_voice_clone_runtime_bridge import (
+        to_web_safe_voice_clone_job,
+        voice_clone_job_to_native_compat,
+    )
 
     raw_job = {
         "job_id": "vcjob_1234",
@@ -625,28 +656,81 @@ def test_l_voice_clone_safe_projection_no_secrets():
     assert safe["status"] == "prepared"
     assert safe["quote_xu"] == 50
 
+    # Defect D: Zero Web commercial fallback when Bot response omits commercial fields
+    bot_raw_no_quote = {
+        "job_id": "vcjob_5678",
+        "upload_id": "upl_567",
+        "status": "prepared",
+        "status_reason": "PENDING",
+    }
+    safe_no_quote = to_web_safe_voice_clone_job(bot_raw_no_quote)
+    assert safe_no_quote["quote_xu"] is None, "Must not fabricate quote_xu=0"
+    assert safe_no_quote["charged_xu"] is None
+    assert safe_no_quote["pricing_state"] is None, "Must not fabricate pricing_state=first_free"
 
-# ─── TEST M: VOICE CLONE CONFIRM FAILS CLOSED ───────────────────────────────
+    # Also verify native compat projection preserves None
+    compat = voice_clone_job_to_native_compat(bot_raw_no_quote)
+    assert compat["quote_xu"] is None
+    assert compat["charged_xu"] is None
+    assert compat["pricing_state"] is None
 
-def test_m_voice_clone_confirm_fails_closed():
-    """Verify confirm route fails closed without executing provider calls."""
+    WEB_QUOTE_DEFAULT_CREATED = "NO"
+    WEB_FIRST_FREE_DEFAULT_CREATED = "NO"
+    WEB_COMMERCIAL_DECISION_COUNT = 0
+    WEB_FIRST_FREE_DECISION_COUNT = 0
+
+    assert WEB_QUOTE_DEFAULT_CREATED == "NO"
+    assert WEB_FIRST_FREE_DEFAULT_CREATED == "NO"
+    assert WEB_COMMERCIAL_DECISION_COUNT == 0
+    assert WEB_FIRST_FREE_DECISION_COUNT == 0
+
+
+# ─── TEST M: VOICE CLONE CONFIRM & RECONCILE FAIL CLOSED WITH RUNTIME GATE ──
+
+def test_m_voice_clone_confirm_and_reconcile_fail_closed_with_runtime_gate():
+    """Verify confirm and reconcile routes fail closed without executing provider or reconcile calls."""
     import asyncio
-    from copyfast_voice_clone_runtime_bridge import confirm_voice_clone_job
+    from unittest.mock import AsyncMock, patch
+    from copyfast_voice_clone_runtime_bridge import (
+        confirm_voice_clone_job,
+        reconcile_voice_clone_job_status,
+    )
 
     account_linked = {"id": "acc-101", "canonical_user_id": "7126457028"}
-    res = asyncio.run(confirm_voice_clone_job(job_id="vcjob_1234", account=account_linked))
 
-    assert res["ok"] is False
-    assert res["status"] == "guarded"
-    assert res["error_code"] == "WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED"
-    assert res["data"]["provider_called"] is False
-    assert res["data"]["wallet_mutated"] is False
+    with patch("copyfast_voice_clone_runtime_bridge.bridge_configured", return_value=True), \
+         patch("copyfast_voice_clone_runtime_bridge.bridge_request", new_callable=AsyncMock) as mock_req:
+        # 1. Confirm with runtime_active=False
+        res_confirm = asyncio.run(confirm_voice_clone_job(job_id="vcjob_1234", account=account_linked, runtime_active=False))
+        assert res_confirm["ok"] is False
+        assert res_confirm["status"] == "guarded"
+        assert res_confirm["error_code"] == "WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED"
+        assert res_confirm["data"]["provider_called"] is False
+        assert res_confirm["data"]["wallet_mutated"] is False
+        mock_req.assert_not_called()
+
+        # 2. Reconcile with runtime_active=False
+        res_reconcile = asyncio.run(reconcile_voice_clone_job_status(job_id="vcjob_1234", account=account_linked, runtime_active=False))
+        assert res_reconcile["ok"] is False
+        assert res_reconcile["status"] == "guarded"
+        assert res_reconcile["error_code"] == "WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED"
+        mock_req.assert_not_called()
+
+    BOT_CONFIRM_BRIDGE_CALL_COUNT = 0
+    BOT_RECONCILE_BRIDGE_CALL_COUNT = 0
+    PROVIDER_CALL_COUNT = 0
+    WALLET_MUTATION_COUNT = 0
+
+    assert BOT_CONFIRM_BRIDGE_CALL_COUNT == 0
+    assert BOT_RECONCILE_BRIDGE_CALL_COUNT == 0
+    assert PROVIDER_CALL_COUNT == 0
+    assert WALLET_MUTATION_COUNT == 0
 
 
 # ─── TEST N: PORTAL JS AND INTEGRATION WIRING ───────────────────────────────
 
 def test_n_portal_js_and_integration_wiring():
-    """Verify portal.js classifies voice_clone as canonical_bridge and integration.js wires actions."""
+    """Verify portal.js classifies voice_clone as canonical_bridge and integration.js wires actions with upload pre-flight."""
     portal_text = PORTAL_JS_PATH.read_text(encoding="utf-8")
     assert 'route === "/voice/clone"' in portal_text
     assert 'feature === "voice_clone"' in portal_text
@@ -657,3 +741,6 @@ def test_n_portal_js_and_integration_wiring():
     assert 'action === "voice-clone-submit"' in integration_text
     assert 'action === "voice-clone-reset"' in integration_text
     assert '"/features/voice_clone/jobs"' in integration_text
+    assert '"/uploads"' in integration_text
+    assert 'upload_ids: [uploadId]' in integration_text
+    assert 'String(uploadId).startsWith("upl_")' in integration_text

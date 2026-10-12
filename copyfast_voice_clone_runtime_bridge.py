@@ -129,25 +129,19 @@ def validate_voice_clone_input(payload: dict[str, Any]) -> tuple[bool, str | Non
     if is_forbidden:
         return False, f"forbidden_authority_field:{forbidden_field}", {}
 
+    # Reject unproven customer aliases
+    if "upload_id" in payload:
+        return False, "forbidden_alias:upload_id", {}
+    if "sample" in payload:
+        return False, "forbidden_alias:sample", {}
+
     # Validate upload_ids: exactly one required
     raw_uploads = payload.get("upload_ids")
-    if raw_uploads is None:
-        raw_uploads = payload.get("upload_id")
-    if raw_uploads is None:
-        raw_uploads = payload.get("sample")
-
-    if not raw_uploads:
-        return False, "upload_required", {}
-
-    clean_upload_id = ""
-    if isinstance(raw_uploads, list):
-        if len(raw_uploads) != 1 or not str(raw_uploads[0]).strip():
-            return False, "single_upload_required", {}
-        clean_upload_id = str(raw_uploads[0]).strip()
-    elif isinstance(raw_uploads, str):
-        clean_upload_id = raw_uploads.strip()
-    else:
+    if raw_uploads is None or not isinstance(raw_uploads, list):
         return False, "single_upload_required", {}
+    if len(raw_uploads) != 1 or not str(raw_uploads[0]).strip():
+        return False, "single_upload_required", {}
+    clean_upload_id = str(raw_uploads[0]).strip()
 
     if not clean_upload_id:
         return False, "upload_required", {}
@@ -165,13 +159,11 @@ def validate_voice_clone_input(payload: dict[str, Any]) -> tuple[bool, str | Non
     if not is_consented:
         return False, "voice_clone_consent_required", {}
 
-    # Validate display_name: optional, max 120 characters
+    # Validate display_name: optional, max 120 characters, no invented default
     raw_display_name = str(payload.get("display_name") or "").strip()
     if len(raw_display_name) > 120:
         return False, "display_name_too_long", {}
-    clean_display_name = re.sub(r"\s+", " ", raw_display_name)[:120]
-    if not clean_display_name:
-        clean_display_name = "Giọng clone mới"
+    clean_display_name = re.sub(r"\s+", " ", raw_display_name)[:120] if raw_display_name else ""
 
     sanitized = {
         "upload_ids": [clean_upload_id],
@@ -186,6 +178,7 @@ def to_web_safe_voice_clone_job(job: dict[str, Any]) -> dict[str, Any]:
     """Sanitize Bot job response for external Web consumption.
 
     Strips any residual provider credentials, local paths, or internal tokens.
+    Never fabricates commercial truth or defaults.
     """
     if not isinstance(job, dict):
         return {}
@@ -193,6 +186,14 @@ def to_web_safe_voice_clone_job(job: dict[str, Any]) -> dict[str, Any]:
     status = str(job.get("status") or STATUS_PREPARED)
     profile_id = job.get("canonical_profile_id")
     expose_profile_id = int(profile_id) if profile_id and status in ("completed", "ready") else None
+
+    raw_quote = job.get("quote_xu")
+    quote_xu = int(raw_quote) if raw_quote is not None else None
+
+    raw_charged = job.get("charged_xu")
+    charged_xu = int(raw_charged) if raw_charged is not None else None
+
+    pricing_state = str(job["pricing_state"]).strip() if job.get("pricing_state") is not None else None
 
     # Filter out sensitive keys from any nested structures
     cleaned: dict[str, Any] = {
@@ -202,9 +203,9 @@ def to_web_safe_voice_clone_job(job: dict[str, Any]) -> dict[str, Any]:
         "display_name": str(job.get("display_name") or ""),
         "status": status,
         "status_reason": str(job.get("status_reason") or STATUS_REASON_AWAITING),
-        "quote_xu": int(job.get("quote_xu") or 0),
-        "charged_xu": int(job.get("charged_xu") or 0),
-        "pricing_state": str(job.get("pricing_state") or "first_free"),
+        "quote_xu": quote_xu,
+        "charged_xu": charged_xu,
+        "pricing_state": pricing_state,
         "canonical_profile_id": expose_profile_id,
         "has_preview_audio": bool(int(job.get("preview_audio_bytes") or 0) > 0),
         "preview_audio_bytes": int(job.get("preview_audio_bytes") or 0),
@@ -219,15 +220,23 @@ def to_web_safe_voice_clone_job(job: dict[str, Any]) -> dict[str, Any]:
 def voice_clone_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
     """Adapt one Voice Clone job record to the generic Jobs read shape."""
     public_id = str(job.get("job_id") or job.get("id") or "").strip()
+    raw_quote = job.get("quote_xu")
+    quote_xu = int(raw_quote) if raw_quote is not None else None
+
+    raw_charged = job.get("charged_xu")
+    charged_xu = int(raw_charged) if raw_charged is not None else None
+
+    pricing_state = str(job["pricing_state"]).strip() if job.get("pricing_state") is not None else None
+
     return {
         "id": public_id,
         "feature": CANONICAL_FEATURE_KEY,
         "product_key": CANONICAL_PRODUCT_KEY,
         "status": str(job.get("status") or STATUS_PREPARED),
         "status_reason": str(job.get("status_reason") or STATUS_REASON_AWAITING),
-        "quote_xu": int(job.get("quote_xu") or 0),
-        "charged_xu": int(job.get("charged_xu") or 0),
-        "pricing_state": str(job.get("pricing_state") or "first_free"),
+        "quote_xu": quote_xu,
+        "charged_xu": charged_xu,
+        "pricing_state": pricing_state,
         "created_at": str(job.get("created_at") or ""),
         "updated_at": str(job.get("updated_at") or ""),
         "completed_at": job.get("completed_at"),
@@ -266,7 +275,7 @@ async def create_or_prepare_voice_clone_job(
         )
 
     bot_payload = {
-        "upload_ids": sanitized["upload_ids"],
+        "upload_id": sanitized["upload_id"],
         "consent": True,
         "display_name": sanitized["display_name"],
         "idempotency_key": idempotency_key,
@@ -354,6 +363,7 @@ async def confirm_voice_clone_job(
     job_id: str,
     account: dict[str, Any],
     request: Any = None,
+    runtime_active: bool = False,
 ) -> dict[str, Any]:
     """Fail-closed confirm handler for Voice Clone jobs.
 
@@ -365,7 +375,7 @@ async def confirm_voice_clone_job(
         raise HTTPException(status_code=400, detail="Mã job không được để trống")
 
     # Invariant: FAIL CLOSED. No live provider call or balance debit in R24B4.
-    if not VOICE_CLONE_PROVIDER_EXECUTION_ENABLED:
+    if not runtime_active or not VOICE_CLONE_PROVIDER_EXECUTION_ENABLED:
         return envelope(
             False,
             "Tính năng Voice Clone đang trong chế độ an toàn (Incident Hold). Chưa thực thi live và chưa trừ Xu.",
@@ -401,11 +411,27 @@ async def reconcile_voice_clone_job_status(
     job_id: str,
     account: dict[str, Any],
     request: Any = None,
+    runtime_active: bool = False,
 ) -> dict[str, Any] | None:
     """Reconcile Voice Clone job status via Bot Core private bridge."""
     clean_job_id = str(job_id or "").strip()
     if not clean_job_id:
         return None
+
+    # Sensitive runtime gate: fail closed without calling Bot when gate is off
+    if not runtime_active or not VOICE_CLONE_PROVIDER_EXECUTION_ENABLED:
+        return envelope(
+            False,
+            "Tính năng Voice Clone đang trong chế độ an toàn (Incident Hold). Chưa thực thi reconcile.",
+            status_name="guarded",
+            error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED",
+            data={
+                "job_id": clean_job_id,
+                "incident_hold": VOICE_CLONE_EXTERNAL_PROVIDER_INCIDENT_HOLD,
+                "provider_called": False,
+                "wallet_mutated": False,
+            },
+        )
 
     canonical_user_id = str(account.get("canonical_user_id") or "").strip()
     if not canonical_user_id:

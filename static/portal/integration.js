@@ -36111,8 +36111,22 @@
         return;
       }
       if (action === "voice-clone-submit") {
-        const uploadIds = Array.isArray(fields.upload_ids) ? fields.upload_ids : (fields.upload_id ? [fields.upload_id] : (fields.sample ? [fields.sample] : []));
-        if (!uploadIds.length) {
+        let uploadId = "";
+        const sampleVal = fields.sample;
+        if (sampleVal && typeof sampleVal === "object" && (typeof sampleVal.name === "string" || sampleVal instanceof Blob)) {
+          const form = new FormData();
+          form.append("file", sampleVal, sampleVal.name || "voice_sample.wav");
+          const uploaded = await api("/uploads", {
+            method: "POST",
+            headers: { "Idempotency-Key": randomKey("upload") },
+            body: form
+          });
+          uploadId = uploaded && uploaded.data && (uploaded.data.id || uploaded.data.upload_id);
+          if (!uploadId) throw new Error("Core Bridge chưa xác nhận tệp âm thanh tải lên.");
+        } else if (Array.isArray(fields.upload_ids) && fields.upload_ids.length && typeof fields.upload_ids[0] === "string" && String(fields.upload_ids[0]).startsWith("upl_")) {
+          uploadId = String(fields.upload_ids[0]).trim();
+        }
+        if (!uploadId || !String(uploadId).startsWith("upl_")) {
           throw new Error("Voice Clone cần một mẫu audio đã vào staging canonical.");
         }
         if (fields.consent !== true && String(fields.consent).toLowerCase() !== "true") {
@@ -36127,7 +36141,7 @@
             body: JSON.stringify({
               feature: "voice_clone",
               input: {
-                upload_ids: uploadIds,
+                upload_ids: [uploadId],
                 consent: true,
                 display_name: displayName
               }

@@ -256,6 +256,7 @@ from copyfast_voice_tts_job_bridge import (
 from copyfast_voice_clone_runtime_bridge import (
     CANONICAL_PRODUCT_KEY as VOICE_CLONE_PRODUCT_KEY,
     SUPPORTED_CANONICAL_JOB_ADAPTERS as VOICE_CLONE_ADAPTER_KEYS,
+    VOICE_CLONE_EXTERNAL_PROVIDER_INCIDENT_HOLD,
     create_or_prepare_voice_clone_job,
     get_voice_clone_job,
     confirm_voice_clone_job,
@@ -2167,14 +2168,17 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
         return "text_required"
     if feature in FEATURE_UPLOAD_REQUIRED and not upload_ids:
         return "upload_required"
-    if feature == "voice_clone" and len(upload_ids) > 1:
-        return "single_upload_required"
+    if feature == "voice_clone":
+        if "upload_id" in values or "sample" in values:
+            return "forbidden_alias_field"
+        if len(upload_ids) != 1:
+            return "single_upload_required"
+        if not _affirmed(values.get("consent")):
+            return "voice_clone_consent_required"
+        if len(str(values.get("display_name") or "")) > 120:
+            return "display_name_too_long"
     if feature == "documents_merge" and len(upload_ids) < 2:
         return "multiple_uploads_required"
-    if feature == "voice_clone" and not _affirmed(values.get("consent")):
-        return "voice_clone_consent_required"
-    if feature == "voice_clone" and len(str(values.get("display_name") or "")) > 120:
-        return "display_name_too_long"
     if feature == "voice_saved_tts" and not str(values.get("voice_profile_id") or "").strip():
         return "voice_profile_required"
     if feature == "music_song":
@@ -8206,7 +8210,26 @@ async def confirm_voice_clone_job_route(
     request: Request,
     account: dict = Depends(require_csrf),
 ):
-    job = await confirm_voice_clone_job(job_id=job_id, account=account, request=request)
+    runtime_active = _web_feature_runtime_active("voice_clone")
+    if not runtime_active:
+        return envelope(
+            False,
+            "Tính năng Voice Clone đang trong chế độ an toàn (Incident Hold). Chưa thực thi live và chưa trừ Xu.",
+            status_name="guarded",
+            error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED",
+            data={
+                "job_id": job_id,
+                "incident_hold": VOICE_CLONE_EXTERNAL_PROVIDER_INCIDENT_HOLD,
+                "provider_called": False,
+                "wallet_mutated": False,
+            },
+        )
+    job = await confirm_voice_clone_job(
+        job_id=job_id,
+        account=account,
+        request=request,
+        runtime_active=runtime_active,
+    )
     return envelope(
         bool(job.get("ok")),
         str(job.get("message") or "Voice Clone confirm"),
@@ -8222,7 +8245,26 @@ async def reconcile_voice_clone_job_route(
     request: Request,
     account: dict = Depends(require_csrf),
 ):
-    job = await reconcile_voice_clone_job_status(job_id=job_id, account=account, request=request)
+    runtime_active = _web_feature_runtime_active("voice_clone")
+    if not runtime_active:
+        return envelope(
+            False,
+            "Tính năng Voice Clone đang trong chế độ an toàn (Incident Hold). Chưa thực thi reconcile.",
+            status_name="guarded",
+            error_code="WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED",
+            data={
+                "job_id": job_id,
+                "incident_hold": VOICE_CLONE_EXTERNAL_PROVIDER_INCIDENT_HOLD,
+                "provider_called": False,
+                "wallet_mutated": False,
+            },
+        )
+    job = await reconcile_voice_clone_job_status(
+        job_id=job_id,
+        account=account,
+        request=request,
+        runtime_active=runtime_active,
+    )
     if job is not None:
         return envelope(
             True,
