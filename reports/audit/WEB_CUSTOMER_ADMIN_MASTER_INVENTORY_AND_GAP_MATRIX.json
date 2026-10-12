@@ -219,7 +219,7 @@
       "real_output": "NONE_ON_WEB",
       "admin_trace": "ADMIN_COMMERCIAL_B01",
       "status": "BLOCKED_BY_RUNTIME",
-      "blocker": "VOICE_CLONE_UPLOAD_AUTHORITY_LOOKUP_REQUIRED"
+      "blocker": "VOICE_CLONE_EXTERNAL_PROVIDER_INCIDENT_HOLD"
     },
     {
       "bot_capability": "music_generation",

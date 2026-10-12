@@ -36104,6 +36104,60 @@
         }
         return;
       }
+      if (action === "voice-clone-reset") {
+        const nextFlows = Object.assign({}, base().featureFlows);
+        delete nextFlows["/voice/clone"];
+        merge({ featureFlows: nextFlows, voiceCloneLastJob: null });
+        return;
+      }
+      if (action === "voice-clone-submit") {
+        let uploadId = "";
+        const sampleVal = fields.sample;
+        if (sampleVal && typeof sampleVal === "object" && (typeof sampleVal.name === "string" || sampleVal instanceof Blob)) {
+          const form = new FormData();
+          form.append("file", sampleVal, sampleVal.name || "voice_sample.wav");
+          const uploaded = await api("/uploads", {
+            method: "POST",
+            headers: { "Idempotency-Key": randomKey("upload") },
+            body: form
+          });
+          uploadId = uploaded && uploaded.data && (uploaded.data.id || uploaded.data.upload_id);
+          if (!uploadId) throw new Error("Core Bridge chưa xác nhận tệp âm thanh tải lên.");
+        } else if (Array.isArray(fields.upload_ids) && fields.upload_ids.length && typeof fields.upload_ids[0] === "string" && String(fields.upload_ids[0]).startsWith("upl_")) {
+          uploadId = String(fields.upload_ids[0]).trim();
+        }
+        if (!uploadId || !String(uploadId).startsWith("upl_")) {
+          throw new Error("Voice Clone cần một mẫu audio đã vào staging canonical.");
+        }
+        if (fields.consent !== true && String(fields.consent).toLowerCase() !== "true") {
+          throw new Error("Hãy xác nhận quyền sử dụng mẫu giọng trước khi tiếp tục.");
+        }
+        const displayName = String(fields.display_name || "").trim().slice(0, 120);
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/features/voice_clone/jobs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              feature: "voice_clone",
+              input: {
+                upload_ids: [uploadId],
+                consent: true,
+                display_name: displayName
+              }
+            })
+          });
+          const job = result && (result.data || result.job || result);
+          const nextFlows = Object.assign({}, base().featureFlows, {
+            "/voice/clone": { job }
+          });
+          merge({ featureFlows: nextFlows, voiceCloneLastJob: job });
+          toast(result.message || "Đã chuẩn bị tác vụ Voice Clone thành công từ Bot canonical.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "image-operation-refresh") {
         await Promise.all([hydrateImageOperations(), hydrateAssetVault()]);
         toast("Đã làm mới Resize & Aspect Studio.");

@@ -9583,7 +9583,7 @@
     const route = normalizePath((page && (page.routePath || page.path)) || "");
     const feature = typeof featureKeyForPage === "function" ? featureKeyForPage(page, context) : "";
 
-    if (feature === "video_ai_prompt" || feature === "video_single" || route === "/video/create" || route === "/video/new" || feature === "image_upscale" || route === "/image/upscale" || feature === "image_transform" || route === "/image/transform" || route === "/image/image-to-image" || feature === "music_sfx" || route === "/music/sfx") {
+    if (feature === "video_ai_prompt" || feature === "video_single" || route === "/video/create" || route === "/video/new" || feature === "image_upscale" || route === "/image/upscale" || feature === "image_transform" || route === "/image/transform" || route === "/image/image-to-image" || feature === "music_sfx" || route === "/music/sfx" || feature === "voice_clone" || route === "/voice/clone") {
       return "canonical_bridge";
     }
 
@@ -9626,7 +9626,7 @@
       "video_trend", "video_long", "video_multiscene", "video_text_to_video",
       "video_image_to_video", "video_product", "video_quick", "image_create",
       "image_transform", "image_remove_background",
-      "voice_tts", "voice_clone", "voice_saved_tts", "music_background",
+      "voice_tts", "voice_saved_tts", "music_background",
       "music_song"
     ]);
 
@@ -9634,7 +9634,7 @@
       "/video/trend", "/video/long", "/video/multiscene", "/video/text-to-video",
       "/video/image-to-video", "/video/product", "/video/quick", "/image/create",
       "/image/transform", "/image/remove-background",
-      "/voice/create", "/voice/tts", "/voice/clone", "/voice/saved",
+      "/voice/create", "/voice/tts", "/voice/saved",
       "/music/ai", "/music/create", "/music/song"
     ]);
 
