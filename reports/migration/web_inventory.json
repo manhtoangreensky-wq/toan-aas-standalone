@@ -94,7 +94,7 @@
     {
       "file": "copyfast_music_sfx_job_bridge.py",
       "kind": "function",
-      "line": 361,
+      "line": 389,
       "target": "_format_job_dict"
     },
     {
@@ -448,7 +448,7 @@
     {
       "file": "copyfast_music_sfx_job_bridge.py",
       "kind": "function",
-      "line": 243,
+      "line": 272,
       "target": "create_or_replay_music_sfx_job"
     },
     {
@@ -646,7 +646,7 @@
     {
       "file": "copyfast_music_sfx_job_bridge.py",
       "kind": "function",
-      "line": 549,
+      "line": 575,
       "target": "finalize_music_sfx_job_result"
     },
     {
@@ -718,7 +718,7 @@
     {
       "file": "copyfast_music_sfx_job_bridge.py",
       "kind": "function",
-      "line": 519,
+      "line": 545,
       "target": "get_admin_music_sfx_job"
     },
     {
@@ -850,7 +850,7 @@
     {
       "file": "copyfast_music_sfx_job_bridge.py",
       "kind": "function",
-      "line": 409,
+      "line": 436,
       "target": "get_music_sfx_job"
     },
     {
@@ -1084,7 +1084,7 @@
     {
       "file": "copyfast_music_sfx_job_bridge.py",
       "kind": "function",
-      "line": 428,
+      "line": 455,
       "target": "is_music_sfx_job_other_account"
     },
     {
@@ -1138,7 +1138,7 @@
     {
       "file": "copyfast_music_sfx_job_bridge.py",
       "kind": "function",
-      "line": 503,
+      "line": 529,
       "target": "list_admin_music_sfx_jobs"
     },
     {
@@ -1252,7 +1252,7 @@
     {
       "file": "copyfast_music_sfx_job_bridge.py",
       "kind": "function",
-      "line": 444,
+      "line": 471,
       "target": "list_music_sfx_jobs"
     },
     {
@@ -1414,7 +1414,7 @@
     {
       "file": "copyfast_music_sfx_job_bridge.py",
       "kind": "function",
-      "line": 462,
+      "line": 489,
       "target": "music_sfx_job_to_native_compat"
     },
     {
@@ -2639,7 +2639,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6857,
+      "line": 6856,
       "operation": "INSERT INTO",
       "table": "web_account_topup_codes"
     },
@@ -3233,19 +3233,19 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 7362,
+      "line": 7361,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7877,
+      "line": 7876,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7965,
+      "line": 7964,
       "operation": "INSERT INTO",
       "table": "web_audit_events"
     },
@@ -5279,19 +5279,19 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 7441,
+      "line": 7440,
       "operation": "DELETE FROM",
       "table": "web_manual_topup_approve_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7445,
+      "line": 7444,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_approve_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7870,
+      "line": 7869,
       "operation": "UPDATE",
       "table": "web_manual_topup_approve_receipts"
     },
@@ -5303,31 +5303,31 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 7624,
+      "line": 7623,
       "operation": "UPDATE",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7634,
+      "line": 7633,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7717,
+      "line": 7716,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7762,
+      "line": 7761,
       "operation": "UPDATE",
       "table": "web_manual_topup_credit_operations"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7842,
+      "line": 7841,
       "operation": "UPDATE",
       "table": "web_manual_topup_credit_operations"
     },
@@ -5339,19 +5339,19 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 7266,
+      "line": 7265,
       "operation": "DELETE FROM",
       "table": "web_manual_topup_decision_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7270,
+      "line": 7269,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_decision_receipts"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7341,
+      "line": 7340,
       "operation": "UPDATE",
       "table": "web_manual_topup_decision_receipts"
     },
@@ -5369,31 +5369,31 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 7014,
+      "line": 7013,
       "operation": "INSERT INTO",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7037,
+      "line": 7036,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7347,
+      "line": 7346,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7851,
+      "line": 7850,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
     {
       "file": "copyfast_db.py",
-      "line": 7948,
+      "line": 7947,
       "operation": "UPDATE",
       "table": "web_manual_topup_requests"
     },
@@ -5717,19 +5717,19 @@
     },
     {
       "file": "copyfast_music_sfx_job_bridge.py",
-      "line": 141,
+      "line": 160,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_music_sfx_jobs"
     },
     {
       "file": "copyfast_music_sfx_job_bridge.py",
-      "line": 323,
+      "line": 352,
       "operation": "INSERT INTO",
       "table": "web_music_sfx_jobs"
     },
     {
       "file": "copyfast_music_sfx_job_bridge.py",
-      "line": 659,
+      "line": 685,
       "operation": "UPDATE",
       "table": "web_music_sfx_jobs"
     },
@@ -5753,7 +5753,7 @@
     },
     {
       "file": "copyfast_db.py",
-      "line": 6963,
+      "line": 6962,
       "operation": "INSERT INTO",
       "table": "web_notification_events"
     },
@@ -18148,7 +18148,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 269,
   "source_files_scanned": 269,
-  "source_fingerprint_sha256": "7b1f231f9e36df052ef2bab240790b75efd10d0fa827f057805d2cf18d941eb6",
+  "source_fingerprint_sha256": "914ad278f8c512d968732837e54b89d7e98d17b97c304e1be40225fc92aba7c9",
   "source_root": "repository-root",
   "ui_path_references": [
     {
