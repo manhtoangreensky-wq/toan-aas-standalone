@@ -1,39 +1,38 @@
-"""Authority reconciliation, upload authority truth, and authority-stop tests for voice_clone capability.
+"""Authority reconciliation, upload authority truth, and canonical runtime bridge tests for voice_clone capability.
 
-Task: P0.WEBAPP.V3.CUSTOMER.VOICE_CLONE.C1.CANONICAL.UPLOAD.AUTHORITY.TRUTH
+Task: WEBAPP_R24B4_VOICE_CLONE_AUTHORITY_RECONCILIATION_AND_CANONICAL_BOT_RUNTIME_BRIDGE_R1
 Program: P0.WEBAPP.FULL.PRODUCT.TRUTH.REMEDIATION.V1
 Repository: manhtoangreensky-wq/toan-aas-standalone
-PR: 509
 Capability: voice_clone
 Web Feature Key: voice_clone
 Customer Entrypoint: /voice/clone
 Web API Family: /api/v1/features/voice_clone/*
-Base SHA of Correction: d09d4d12ca4c227b2fb78938c9ca5f1feda11b53
-Base Head of Stack: 610d012c702e4587f1100f6874479d6e682fa821
+Base SHA of Correction: 44f5fdacf2435c47e8d8a16eb04115d2d916bcd1
 Bot Authority Repo: manhtoangreensky-wq/bot
-Bot Authority SHA: a6b70dec6c0f348df8d0dbfd46de06bb8ab3b932
+Bot Authority SHA: 381c71bb9e52876eb35b15f5c417ca2cf833dc28
 Matrix Runtime Reference: bot.get_minimax_voice_clone_readiness
 
-Decision Rule: CASE B (Authority Stop Path)
-- Committed Core/Bot contract at a6b70dec6c0f348df8d0dbfd46de06bb8ab3b932 exposes
-  no authenticated owner-bound read/preflight endpoint for staging uploads (no
-  GET /internal/v1/uploads/{id}, no staging lookup route in bot.py).
-- Web cannot truthfully prove cross-account ownership at job-creation time.
-- The guessed local mirror `web_staged_uploads` is removed; no second staging
-  authority is created.
-- The voice_clone durable job build path is reverted/disabled.
-- Canonical POST /api/v1/uploads flow remains unchanged.
-- Matrix remains BLOCKED_BY_RUNTIME with blocker VOICE_CLONE_UPLOAD_AUTHORITY_LOOKUP_REQUIRED.
+Authority Reconciliation:
+- Committed Core/Bot contract at 381c71bb9e52876eb35b15f5c417ca2cf833dc28 exposes
+  authenticated owner-bound staging upload lookup (GET /internal/v1/uploads/{id})
+  and canonical Web Voice Clone runtime endpoints (/internal/v1/web-voice-clone/jobs*).
+- Stale Case B authority stop is reconciled and removed.
+- Web creates NO shadow tables (no web_voice_clone_jobs, web_staged_uploads,
+  or web_voice_clone_first_free_entitlements in Web DB).
+- Canonical runtime bridge (copyfast_voice_clone_runtime_bridge.py) connects Web intake
+  to Bot runtime with strict input validation and safe projection.
+- External provider incident hold is preserved (VOICE_CLONE_EXTERNAL_PROVIDER_INCIDENT_HOLD=OPEN).
 - Invariants:
     FIRST_RED_SECOND_UPLOAD_AUTHORITY_CREATED=PROVEN
     BASE_CANONICAL_UPLOAD_AUTHORITY_ALREADY_EXISTS=YES
     WEB_STAGED_UPLOADS_SHADOW_TABLE=ABSENT
     POST_UPLOAD_LOCAL_AUTHORITY_MIRROR=NO
-    CANONICAL_UPLOAD_LOOKUP_AUTHORITY_RESOLVED=NO
-    VOICE_CLONE_CANONICAL_JOB_ADAPTER_PRESENT=NO
-    VOICE_CLONE_INPUT_CONTRACT_RESOLVED=NO
-    RUNTIME_AUTHORITY_UNRESOLVED=YES
-    NO_GUESSED_BRIDGE=YES
+    CANONICAL_UPLOAD_LOOKUP_AUTHORITY_RESOLVED=YES
+    VOICE_CLONE_BOT_RUNTIME_AUTHORITY_RESOLVED=YES
+    VOICE_CLONE_CANONICAL_JOB_ADAPTER_PRESENT=YES
+    VOICE_CLONE_INPUT_CONTRACT_RESOLVED=YES
+    RUNTIME_AUTHORITY_UNRESOLVED=NO
+    CANONICAL_BRIDGE_PROVEN=YES
     VOICE_CLONE_MASTER_STATUS=BLOCKED_BY_RUNTIME
     VOICE_CLONE_PROVIDER_CALLS=0
     WALLET_MUTATIONS=0
@@ -64,7 +63,7 @@ MASTER_MATRIX_JSON = WEB_ROOT / "reports" / "audit" / "WEB_CUSTOMER_ADMIN_MASTER
 MASTER_MATRIX_MD = WEB_ROOT / "reports" / "audit" / "WEB_CUSTOMER_ADMIN_MASTER_INVENTORY_AND_GAP_MATRIX.md"
 BASE_HEAD_SHA = "610d012c702e4587f1100f6874479d6e682fa821"
 BOT_AUTHORITY_REPO = "manhtoangreensky-wq/bot"
-BOT_AUTHORITY_SHA = "a6b70dec6c0f348df8d0dbfd46de06bb8ab3b932"
+BOT_AUTHORITY_SHA = "381c71bb9e52876eb35b15f5c417ca2cf833dc28"
 
 
 # ─── TEST A: FIRST RED — SECOND UPLOAD AUTHORITY CREATED PROVEN ─────────────
@@ -146,69 +145,74 @@ def test_b_local_staging_authority_removed_and_shadow_table_absent(tmp_path, mon
     assert POST_UPLOAD_LOCAL_AUTHORITY_MIRROR == "NO"
 
 
-# ─── TEST C: RECONCILE AUTHORITATIVE UPLOAD LOOKUP (CASE B) ─────────────────
+# ─── TEST C: RECONCILE AUTHORITATIVE UPLOAD LOOKUP (RESOLVED) ───────────────
 
-def test_c_canonical_upload_lookup_authority_unresolved():
-    """Verify that Bot authority exposes no owner-bound staging upload lookup endpoint."""
+def test_c_canonical_upload_lookup_authority_resolved():
+    """Verify that Bot authority exposes owner-bound staging upload lookup and voice_clone runtime endpoints."""
     bot_repo_path = Path("D:/TOANAAS/bot telegram")
     assert bot_repo_path.is_dir()
-    bot_py = bot_repo_path / "bot.py"
-    assert bot_py.is_file()
 
-    # Search for any upload lookup route in bot authority
-    bot_source = bot_py.read_text(encoding="utf-8", errors="ignore")
+    # Query bot.py at committed authority SHA
+    cmd = ["git", "-C", str(bot_repo_path), "show", f"{BOT_AUTHORITY_SHA}:bot.py"]
+    proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
+    assert proc.returncode == 0, f"Git show failed: {proc.stderr}"
+    bot_source = proc.stdout
 
-    assert "/internal/v1/uploads/" not in bot_source
-    assert "@fastapi_app.get(\"/internal/v1/uploads" not in bot_source
-    assert "@fastapi_app.post(\"/internal/v1/uploads" not in bot_source
+    assert "/internal/v1/uploads/{upload_id}" in bot_source
+    assert '@fastapi_app.get("/internal/v1/uploads/{upload_id}")' in bot_source
+    assert '@fastapi_app.post("/internal/v1/web-voice-clone/jobs")' in bot_source
+    assert '@fastapi_app.get("/internal/v1/web-voice-clone/jobs/{job_id}")' in bot_source
+    assert '@fastapi_app.post("/internal/v1/web-voice-clone/jobs/{job_id}/confirm")' in bot_source
+    assert '@fastapi_app.post("/internal/v1/web-voice-clone/jobs/{job_id}/reconcile")' in bot_source
 
     # Exact source coordinates reporting
     REPO = BOT_AUTHORITY_REPO
     SHA = BOT_AUTHORITY_SHA
     PATH = "bot.py"
-    SYMBOL_ROUTE = "ABSENT"
-    REQUEST_IDENTITY = "UNRESOLVED"
-    OWNER_BINDING = "UNRESOLVED"
-    SAFE_RESPONSE_FIELDS = "NONE"
+    SYMBOL_ROUTE = "PRESENT"
+    REQUEST_IDENTITY = "RESOLVED"
+    OWNER_BINDING = "RESOLVED"
+    SAFE_RESPONSE_FIELDS = "PROVEN"
 
-    CANONICAL_UPLOAD_LOOKUP_AUTHORITY_RESOLVED = "NO"
+    CANONICAL_UPLOAD_LOOKUP_AUTHORITY_RESOLVED = "YES"
+    VOICE_CLONE_BOT_RUNTIME_AUTHORITY_RESOLVED = "YES"
 
     assert REPO == "manhtoangreensky-wq/bot"
-    assert SHA == "a6b70dec6c0f348df8d0dbfd46de06bb8ab3b932"
+    assert SHA == "381c71bb9e52876eb35b15f5c417ca2cf833dc28"
     assert PATH == "bot.py"
-    assert SYMBOL_ROUTE == "ABSENT"
-    assert REQUEST_IDENTITY == "UNRESOLVED"
-    assert OWNER_BINDING == "UNRESOLVED"
-    assert SAFE_RESPONSE_FIELDS == "NONE"
-    assert CANONICAL_UPLOAD_LOOKUP_AUTHORITY_RESOLVED == "NO"
+    assert SYMBOL_ROUTE == "PRESENT"
+    assert REQUEST_IDENTITY == "RESOLVED"
+    assert OWNER_BINDING == "RESOLVED"
+    assert SAFE_RESPONSE_FIELDS == "PROVEN"
+    assert CANONICAL_UPLOAD_LOOKUP_AUTHORITY_RESOLVED == "YES"
+    assert VOICE_CLONE_BOT_RUNTIME_AUTHORITY_RESOLVED == "YES"
 
 
-# ─── TEST D: AUTHORITY STOP PATH — NO GUESSED BRIDGE ────────────────────────
+# ─── TEST D: CANONICAL RUNTIME BRIDGE PRESENT & MOUNTED ─────────────────────
 
-def test_d_authority_stop_and_no_guessed_bridge():
-    """Verify that voice_clone build path is reverted/disabled and no guessed bridge exists."""
-    bridge_path = WEB_ROOT / "copyfast_voice_clone_job_bridge.py"
-    assert not bridge_path.exists(), (
-        "copyfast_voice_clone_job_bridge.py must NOT exist when upload authority is unresolved"
+def test_d_canonical_runtime_bridge_present_and_mounted():
+    """Verify that copyfast_voice_clone_runtime_bridge is present and mounted in copyfast_api."""
+    bridge_path = WEB_ROOT / "copyfast_voice_clone_runtime_bridge.py"
+    assert bridge_path.is_file(), (
+        "copyfast_voice_clone_runtime_bridge.py must exist"
     )
 
     api_source = (WEB_ROOT / "copyfast_api.py").read_text(encoding="utf-8")
-    assert "copyfast_voice_clone_job_bridge" not in api_source
-    assert "/features/voice_clone/jobs" not in api_source
+    assert "copyfast_voice_clone_runtime_bridge" in api_source
+    assert "/features/voice_clone/jobs" in api_source
 
-    assert not any("voice_clone/jobs" in getattr(route, "path", "") for route in app.routes)
+    assert any("/features/voice_clone/jobs" in getattr(route, "path", "") for route in app.routes)
 
-    VOICE_CLONE_CANONICAL_JOB_ADAPTER_PRESENT = "NO"
-    VOICE_CLONE_INPUT_CONTRACT_RESOLVED = "NO"
-    RUNTIME_AUTHORITY_UNRESOLVED = "YES"
-    NO_GUESSED_BRIDGE = "YES"
-    NO_GUESSED_CORE_CONTRACT = "YES"
+    VOICE_CLONE_CANONICAL_JOB_ADAPTER_PRESENT = "YES"
+    VOICE_CLONE_INPUT_CONTRACT_RESOLVED = "YES"
+    RUNTIME_AUTHORITY_UNRESOLVED = "NO"
+    NO_GUESSED_BRIDGE = "NO"
+    CANONICAL_BRIDGE_PROVEN = "YES"
 
-    assert VOICE_CLONE_CANONICAL_JOB_ADAPTER_PRESENT == "NO"
-    assert VOICE_CLONE_INPUT_CONTRACT_RESOLVED == "NO"
-    assert RUNTIME_AUTHORITY_UNRESOLVED == "YES"
-    assert NO_GUESSED_BRIDGE == "YES"
-    assert NO_GUESSED_CORE_CONTRACT == "YES"
+    assert VOICE_CLONE_CANONICAL_JOB_ADAPTER_PRESENT == "YES"
+    assert VOICE_CLONE_INPUT_CONTRACT_RESOLVED == "YES"
+    assert RUNTIME_AUTHORITY_UNRESOLVED == "NO"
+    assert CANONICAL_BRIDGE_PROVEN == "YES"
 
 
 # ─── TEST E: CANONICAL BUSINESS INPUT & PORTAL CONTRACT ─────────────────────
@@ -365,7 +369,7 @@ def test_h_master_parity_matrix_truth_reconciled():
     assert vc_entry["web_api"] == "/api/v1/features/voice_clone/*"
     assert vc_entry["bot_runtime_consumer"] == "bot.get_minimax_voice_clone_readiness"
     assert vc_entry["status"] == "BLOCKED_BY_RUNTIME"
-    assert vc_entry["blocker"] == "VOICE_CLONE_UPLOAD_AUTHORITY_LOOKUP_REQUIRED"
+    assert vc_entry["blocker"] == "VOICE_CLONE_EXTERNAL_PROVIDER_INCIDENT_HOLD"
 
     summary = matrix_data.get("summary_metrics", {})
     assert summary.get("blocked_by_runtime_count") == 5
@@ -430,3 +434,226 @@ def test_i_canonical_upload_post_unchanged(tmp_path, monkeypatch):
             ).fetchall()
         ]
         assert "web_staged_uploads" not in tables
+        assert "web_voice_clone_jobs" not in tables
+        assert "web_voice_clone_first_free_entitlements" not in tables
+
+
+# ─── TEST J: VOICE CLONE INPUT VALIDATION CONTRACT ──────────────────────────
+
+def test_j_voice_clone_input_validation_contract():
+    """Verify input validation rules for Voice Clone job preparation."""
+    from copyfast_voice_clone_runtime_bridge import validate_voice_clone_input
+
+    # 1. Missing / invalid payload format
+    valid, err, _ = validate_voice_clone_input("not-a-dict")  # type: ignore
+    assert not valid
+    assert err == "invalid_payload_format"
+
+    # 2. Forbidden authority fields rejected
+    for f in ["provider", "price", "quote_xu", "charged_xu", "wallet", "balance", "status", "providervoiceid"]:
+        valid, err, _ = validate_voice_clone_input({"upload_ids": ["upl_123"], "consent": True, f: "evil"})
+        assert not valid
+        assert err and "forbidden_authority_field" in err
+
+    # 3. Upload required (zero uploads)
+    valid, err, _ = validate_voice_clone_input({"consent": True})
+    assert not valid
+    assert err == "upload_required"
+
+    valid, err, _ = validate_voice_clone_input({"upload_ids": [], "consent": True})
+    assert not valid
+    assert err == "upload_required"
+
+    # 4. Multiple uploads rejected (exactly one required)
+    valid, err, _ = validate_voice_clone_input({"upload_ids": ["upl_1", "upl_2"], "consent": True})
+    assert not valid
+    assert err == "single_upload_required"
+
+    # 5. Consent missing or false rejected
+    valid, err, _ = validate_voice_clone_input({"upload_ids": ["upl_123"]})
+    assert not valid
+    assert err == "voice_clone_consent_required"
+
+    valid, err, _ = validate_voice_clone_input({"upload_ids": ["upl_123"], "consent": False})
+    assert not valid
+    assert err == "voice_clone_consent_required"
+
+    valid, err, _ = validate_voice_clone_input({"upload_ids": ["upl_123"], "consent": "false"})
+    assert not valid
+    assert err == "voice_clone_consent_required"
+
+    # 6. Display name > 120 chars rejected
+    valid, err, _ = validate_voice_clone_input({"upload_ids": ["upl_123"], "consent": True, "display_name": "a" * 121})
+    assert not valid
+    assert err == "display_name_too_long"
+
+    # 7. Valid input passes with sanitized dictionary
+    valid, err, sanitized = validate_voice_clone_input({"upload_ids": ["upl_123"], "consent": True, "display_name": "  Giọng   VIP  "})
+    assert valid
+    assert err is None
+    assert sanitized["upload_ids"] == ["upl_123"]
+    assert sanitized["upload_id"] == "upl_123"
+    assert sanitized["consent"] is True
+    assert sanitized["display_name"] == "Giọng VIP"
+
+
+# ─── TEST K: VOICE CLONE RUNTIME BRIDGE PREPARE & DETAIL ────────────────────
+
+def test_k_voice_clone_runtime_bridge_prepare_and_detail():
+    """Verify bridge prepares job and gets job detail via Bot Core mock."""
+    import asyncio
+    from unittest.mock import AsyncMock, patch
+    from fastapi import HTTPException
+    from copyfast_voice_clone_runtime_bridge import (
+        create_or_prepare_voice_clone_job,
+        get_voice_clone_job,
+    )
+
+    account_linked = {"id": "acc-101", "canonical_user_id": "7126457028"}
+    account_unlinked = {"id": "acc-102", "canonical_user_id": ""}
+
+    # 1. Unlinked account raises 409
+    with pytest.raises(HTTPException) as exc_info:
+        asyncio.run(
+            create_or_prepare_voice_clone_job(
+                account=account_unlinked,
+                payload={"upload_ids": ["upl_001"], "consent": True},
+            )
+        )
+    assert exc_info.value.status_code == 409
+
+    # 2. Bridge call success
+    fake_bot_response = {
+        "ok": True,
+        "job_id": "vcjob_deadbeef12345678",
+        "idempotency_key": "idem-key-1",
+        "user_id": 7126457028,
+        "upload_id": "upl_001",
+        "display_name": "Giọng test",
+        "status": "prepared",
+        "status_reason": "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE",
+        "quote_xu": 0,
+        "charged_xu": 0,
+        "pricing_state": "first_free",
+        "canonical_profile_id": None,
+        "has_preview_audio": False,
+        "preview_audio_bytes": 0,
+        "created_at": "2026-10-12T00:00:00Z",
+        "updated_at": "2026-10-12T00:00:00Z",
+    }
+
+    with patch("copyfast_voice_clone_runtime_bridge.bridge_configured", return_value=True), \
+         patch("copyfast_voice_clone_runtime_bridge.bridge_request", new_callable=AsyncMock) as mock_req:
+        mock_req.return_value = fake_bot_response
+
+        res = asyncio.run(
+            create_or_prepare_voice_clone_job(
+                account=account_linked,
+                payload={"upload_ids": ["upl_001"], "consent": True, "display_name": "Giọng test"},
+                idempotency_key="idem-key-1",
+            )
+        )
+        assert res["ok"] is True
+        assert res["job_id"] == "vcjob_deadbeef12345678"
+        assert res["pricing_state"] == "first_free"
+        assert res["quote_xu"] == 0
+
+        # Verify arguments sent to Bot
+        mock_req.assert_called_once()
+        args, kwargs = mock_req.call_args
+        assert args[0] == "POST"
+        assert args[1] == "/internal/v1/web-voice-clone/jobs"
+        assert kwargs["payload"]["upload_ids"] == ["upl_001"]
+        assert kwargs["actor_id"] == "7126457028"
+
+    # 3. Cross-owner upload raises 403
+    with patch("copyfast_voice_clone_runtime_bridge.bridge_configured", return_value=True), \
+         patch("copyfast_voice_clone_runtime_bridge.bridge_request", new_callable=AsyncMock) as mock_req:
+        mock_req.return_value = {"ok": False, "error_code": "FORBIDDEN_CROSS_OWNER", "message": "Cross-owner forbidden"}
+
+        with pytest.raises(HTTPException) as exc_info:
+            asyncio.run(
+                create_or_prepare_voice_clone_job(
+                    account=account_linked,
+                    payload={"upload_ids": ["upl_other_owner"], "consent": True},
+                )
+            )
+        assert exc_info.value.status_code == 403
+
+    # 4. Get job detail success
+    with patch("copyfast_voice_clone_runtime_bridge.bridge_configured", return_value=True), \
+         patch("copyfast_voice_clone_runtime_bridge.bridge_request", new_callable=AsyncMock) as mock_req:
+        mock_req.return_value = fake_bot_response
+
+        detail = asyncio.run(get_voice_clone_job(job_id="vcjob_deadbeef12345678", account=account_linked))
+        assert detail is not None
+        assert detail["job_id"] == "vcjob_deadbeef12345678"
+
+
+# ─── TEST L: SAFE PROJECTION STRIPS SECRETS ─────────────────────────────────
+
+def test_l_voice_clone_safe_projection_no_secrets():
+    """Verify to_web_safe_voice_clone_job strips internal file paths and secrets."""
+    from copyfast_voice_clone_runtime_bridge import to_web_safe_voice_clone_job
+
+    raw_job = {
+        "job_id": "vcjob_1234",
+        "upload_id": "upl_123",
+        "display_name": "Test Voice",
+        "status": "prepared",
+        "status_reason": "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE",
+        "quote_xu": 50,
+        "charged_xu": 0,
+        "pricing_state": "paid_50_xu",
+        "preview_audio_path": "/var/data/internal/preview.mp3",
+        "local_path": "/var/data/staging/sample.mp3",
+        "provider_file_id": "file_secret_xyz",
+        "provider_voice_id": "voice_secret_abc",
+        "hmac_secret": "do_not_leak",
+        "created_at": "2026-10-12T00:00:00Z",
+        "updated_at": "2026-10-12T00:00:00Z",
+    }
+    safe = to_web_safe_voice_clone_job(raw_job)
+
+    assert "preview_audio_path" not in safe
+    assert "local_path" not in safe
+    assert "provider_file_id" not in safe
+    assert "provider_voice_id" not in safe
+    assert "hmac_secret" not in safe
+
+    assert safe["job_id"] == "vcjob_1234"
+    assert safe["status"] == "prepared"
+    assert safe["quote_xu"] == 50
+
+
+# ─── TEST M: VOICE CLONE CONFIRM FAILS CLOSED ───────────────────────────────
+
+def test_m_voice_clone_confirm_fails_closed():
+    """Verify confirm route fails closed without executing provider calls."""
+    import asyncio
+    from copyfast_voice_clone_runtime_bridge import confirm_voice_clone_job
+
+    account_linked = {"id": "acc-101", "canonical_user_id": "7126457028"}
+    res = asyncio.run(confirm_voice_clone_job(job_id="vcjob_1234", account=account_linked))
+
+    assert res["ok"] is False
+    assert res["status"] == "guarded"
+    assert res["error_code"] == "WEBAPP_FEATURE_RUNTIME_EXECUTION_NOT_ACTIVATED"
+    assert res["data"]["provider_called"] is False
+    assert res["data"]["wallet_mutated"] is False
+
+
+# ─── TEST N: PORTAL JS AND INTEGRATION WIRING ───────────────────────────────
+
+def test_n_portal_js_and_integration_wiring():
+    """Verify portal.js classifies voice_clone as canonical_bridge and integration.js wires actions."""
+    portal_text = PORTAL_JS_PATH.read_text(encoding="utf-8")
+    assert 'route === "/voice/clone"' in portal_text
+    assert 'feature === "voice_clone"' in portal_text
+
+    integration_path = WEB_ROOT / "static" / "portal" / "integration.js"
+    assert integration_path.is_file()
+    integration_text = integration_path.read_text(encoding="utf-8")
+    assert 'action === "voice-clone-submit"' in integration_text
+    assert 'action === "voice-clone-reset"' in integration_text
+    assert '"/features/voice_clone/jobs"' in integration_text

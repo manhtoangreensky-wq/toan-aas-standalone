@@ -253,6 +253,16 @@ from copyfast_voice_tts_job_bridge import (
     voice_tts_job_to_native_compat,
     validate_voice_tts_input,
 )
+from copyfast_voice_clone_runtime_bridge import (
+    CANONICAL_PRODUCT_KEY as VOICE_CLONE_PRODUCT_KEY,
+    SUPPORTED_CANONICAL_JOB_ADAPTERS as VOICE_CLONE_ADAPTER_KEYS,
+    create_or_prepare_voice_clone_job,
+    get_voice_clone_job,
+    confirm_voice_clone_job,
+    reconcile_voice_clone_job_status,
+    voice_clone_job_to_native_compat,
+    validate_voice_clone_input,
+)
 from copyfast_music_job_bridge import (
     CANONICAL_PRODUCT_KEY as MUSIC_PRODUCT_KEY,
     SUPPORTED_CANONICAL_JOB_ADAPTERS as MUSIC_ADAPTER_KEYS,
@@ -985,8 +995,8 @@ def _web_feature_job_adapter_keys() -> frozenset[str]:
     return frozenset(
         feature
         for feature in requested
-        if (feature in FEATURE_EXECUTION_CANDIDATE_KEYS or feature in SUBDUB_ADAPTER_KEYS or feature in VOICE_TTS_ADAPTER_KEYS or feature in MUSIC_ADAPTER_KEYS)
-        and (feature in FEATURE_BY_KEY or feature in SUBDUB_ADAPTER_KEYS or feature in VOICE_TTS_ADAPTER_KEYS or feature in MUSIC_ADAPTER_KEYS)
+        if (feature in FEATURE_EXECUTION_CANDIDATE_KEYS or feature in SUBDUB_ADAPTER_KEYS or feature in VOICE_TTS_ADAPTER_KEYS or feature in MUSIC_ADAPTER_KEYS or feature in VOICE_CLONE_ADAPTER_KEYS)
+        and (feature in FEATURE_BY_KEY or feature in SUBDUB_ADAPTER_KEYS or feature in VOICE_TTS_ADAPTER_KEYS or feature in MUSIC_ADAPTER_KEYS or feature in VOICE_CLONE_ADAPTER_KEYS)
     )
 
 
@@ -1022,6 +1032,8 @@ def _web_feature_execution_available(feature: str | None = None) -> bool:
         feature_key in VOICE_TTS_ADAPTER_KEYS and "voice_tts" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
     ) or (
         feature_key in MUSIC_ADAPTER_KEYS and ("music" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES or feature_key in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES)
+    ) or (
+        feature_key in VOICE_CLONE_ADAPTER_KEYS and "voice_clone" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES
     )
     return feature_key in adapter_keys and is_active
 
@@ -1038,6 +1050,7 @@ def _web_feature_runtime_active(feature: str) -> bool:
         or (clean in SUBDUB_ADAPTER_KEYS and "subdub" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES)
         or (clean in VOICE_TTS_ADAPTER_KEYS and "voice_tts" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES)
         or (clean in MUSIC_ADAPTER_KEYS and ("music" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES or clean in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES))
+        or (clean in VOICE_CLONE_ADAPTER_KEYS and "voice_clone" in WEB_RUNTIME_EXECUTION_ACTIVE_FEATURES)
     )
     return _web_feature_execution_available(feature) and is_active
 
@@ -2154,10 +2167,14 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
         return "text_required"
     if feature in FEATURE_UPLOAD_REQUIRED and not upload_ids:
         return "upload_required"
+    if feature == "voice_clone" and len(upload_ids) > 1:
+        return "single_upload_required"
     if feature == "documents_merge" and len(upload_ids) < 2:
         return "multiple_uploads_required"
     if feature == "voice_clone" and not _affirmed(values.get("consent")):
         return "voice_clone_consent_required"
+    if feature == "voice_clone" and len(str(values.get("display_name") or "")) > 120:
+        return "display_name_too_long"
     if feature == "voice_saved_tts" and not str(values.get("voice_profile_id") or "").strip():
         return "voice_profile_required"
     if feature == "music_song":
@@ -8142,6 +8159,78 @@ async def create_voice_saved_tts_job_route(
     inp.setdefault("voice_source", "saved")
     payload.input = inp
     return await create_voice_tts_job_route(payload, request, account)
+
+
+@router.post("/features/voice_clone/jobs")
+async def create_voice_clone_job_route(
+    payload: FeatureRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
+    request_id = str(payload.input.get("request_id") or "")
+    job = await create_or_prepare_voice_clone_job(
+        account=account,
+        payload=dict(payload.input),
+        idempotency_key=key,
+        request_id=request_id,
+    )
+    return envelope(
+        True,
+        "Đã chuẩn bị tác vụ Voice Clone thành công từ Bot canonical.",
+        data=job,
+        status_name=job.get("status", "prepared"),
+    )
+
+
+@router.get("/features/voice_clone/jobs/{job_id}")
+async def get_voice_clone_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    job = await get_voice_clone_job(job_id=job_id, account=account)
+    if job is not None:
+        return envelope(
+            True,
+            "Đã tải chi tiết job Voice Clone từ Bot canonical.",
+            data=job,
+            status_name="read_only",
+        )
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Voice Clone của tài khoản.")
+
+
+@router.post("/features/voice_clone/jobs/{job_id}/confirm")
+async def confirm_voice_clone_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    job = await confirm_voice_clone_job(job_id=job_id, account=account, request=request)
+    return envelope(
+        bool(job.get("ok")),
+        str(job.get("message") or "Voice Clone confirm"),
+        data=job.get("data") if "data" in job else job,
+        status_name=job.get("status", "guarded"),
+        error_code=job.get("error_code"),
+    )
+
+
+@router.post("/features/voice_clone/jobs/{job_id}/reconcile")
+async def reconcile_voice_clone_job_route(
+    job_id: str,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    job = await reconcile_voice_clone_job_status(job_id=job_id, account=account, request=request)
+    if job is not None:
+        return envelope(
+            True,
+            "Reconcile Voice Clone job thành công.",
+            data=job,
+            status_name=job.get("status", "prepared"),
+        )
+    raise HTTPException(status_code=404, detail="Không tìm thấy job Voice Clone của tài khoản.")
 
 
 @router.post("/features/video_dub/jobs")
