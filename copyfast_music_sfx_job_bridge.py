@@ -79,6 +79,12 @@ FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED: frozenset[str] = frozenset({
     "xucharge", "fee", "credits", "wallet",
     "apikey", "apitoken", "token", "secret", "jobid", "jobstatus", "status", "statusreason",
     "output", "outputurl", "assetid", "downloadurl", "role", "balance", "filepath", "localpath",
+    "accountid", "userid", "canonicaluserid",
+})
+
+UNPROVEN_SFX_FIELDS_NORMALIZED: frozenset[str] = frozenset({
+    "durationseconds", "duration", "loop", "category",
+    "sfxbrief", "prompt",
 })
 
 UNSAFE_URL_PREFIXES = ("javascript:", "data:", "file:", "http://127.0.0.1", "http://localhost", "http://0.0.0.0")
@@ -117,6 +123,19 @@ def _contains_authority_field(value: Any) -> bool:
     return False
 
 
+def _contains_unproven_field(value: Any) -> bool:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            normalized = "".join(ch for ch in str(key or "").lower() if ch.isalnum())
+            if normalized in UNPROVEN_SFX_FIELDS_NORMALIZED:
+                return True
+            if _contains_unproven_field(child):
+                return True
+    elif isinstance(value, (list, tuple)):
+        return any(_contains_unproven_field(child) for child in value)
+    return False
+
+
 def _hash_payload(payload: dict[str, Any]) -> str:
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
@@ -145,7 +164,6 @@ def ensure_music_sfx_schema() -> None:
                 product_key TEXT NOT NULL DEFAULT 'music_sfx',
                 routing_product_key TEXT NOT NULL DEFAULT 'music_sfx',
                 brief TEXT NOT NULL,
-                duration_seconds INTEGER DEFAULT NULL,
                 status TEXT NOT NULL DEFAULT 'queued',
                 status_reason TEXT NOT NULL DEFAULT 'AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE',
                 idempotency_key_hash TEXT,
@@ -184,6 +202,15 @@ def ensure_music_sfx_schema() -> None:
         )
 
 
+PERMITTED_TOP_LEVEL_KEYS: frozenset[str] = frozenset({
+    "input", "feature", "brief", "request_id", "idempotency_key",
+})
+
+PERMITTED_INPUT_KEYS: frozenset[str] = frozenset({
+    "brief", "request_id", "idempotency_key", "feature",
+})
+
+
 def validate_music_sfx_input(
     account_id: str,
     payload: dict[str, Any],
@@ -192,9 +219,10 @@ def validate_music_sfx_input(
 
     Enforces:
     - Signed account
-    - Non-empty brief
-    - Rejection of client authority injection (provider, model, tier, xu, status, etc.)
-    - Bounded inputs
+    - Canonical brief-only customer semantic contract
+    - Rejection of unproven SFX semantics (duration_seconds, loop, category, sfx_brief, prompt)
+    - Rejection of client authority injection (provider, model, tier, xu, status, wallet, etc.)
+    - Bounded inputs (1-2000 chars)
     """
     if not account_id or not str(account_id).strip():
         return False, "Yêu cầu đăng nhập tài khoản Web hợp lệ.", {}
@@ -205,13 +233,28 @@ def validate_music_sfx_input(
     if _contains_authority_field(payload):
         return False, "Yêu cầu chứa trường quyền hạn máy chủ bị cấm (authority fields).", {}
 
+    if _contains_unproven_field(payload):
+        return False, "Yêu cầu chứa trường ngữ nghĩa SFX chưa được chứng minh (unproven SFX semantic field). Chỉ chấp nhận 'brief'.", {}
+
+    for k in payload.keys():
+        if k not in PERMITTED_TOP_LEVEL_KEYS:
+            return False, f"Trường dữ liệu không hợp lệ ở cấp cao nhất: '{k}'.", {}
+
     # Extract input values (supports payload or nested under 'input')
     inner = payload.get("input") if isinstance(payload.get("input"), dict) else payload
 
     if _contains_authority_field(inner):
         return False, "Yêu cầu chứa trường quyền hạn máy chủ bị cấm trong khối input.", {}
 
-    raw_brief = inner.get("brief") or inner.get("sfx_brief") or inner.get("prompt")
+    if _contains_unproven_field(inner):
+        return False, "Yêu cầu chứa trường ngữ nghĩa SFX chưa được chứng minh trong khối input. Chỉ chấp nhận 'brief'.", {}
+
+    for k in inner.keys():
+        if k not in PERMITTED_INPUT_KEYS:
+            return False, f"Trường dữ liệu không hợp lệ hoặc chưa được chứng minh cho Music SFX: '{k}'. Chỉ chấp nhận 'brief'.", {}
+
+    # Canonical brief ONLY — aliases sfx_brief and prompt are explicitly rejected above
+    raw_brief = inner.get("brief")
     if raw_brief is None or not str(raw_brief).strip():
         return False, "Thiếu mô tả brief hiệu ứng âm thanh (brief).", {}
 
@@ -219,23 +262,9 @@ def validate_music_sfx_input(
     if len(brief) > 2000:
         return False, "Brief hiệu ứng âm thanh vượt quá độ dài tối đa 2000 ký tự.", {}
 
-    duration_sec: int | None = None
-    raw_duration = inner.get("duration_seconds")
-    if raw_duration is not None:
-        try:
-            val = int(raw_duration)
-            if 1 <= val <= 600:
-                duration_sec = val
-            else:
-                return False, "Thời lượng tham chiếu phải từ 1 đến 600 giây.", {}
-        except (ValueError, TypeError):
-            return False, "Thời lượng tham chiếu không hợp lệ.", {}
-
     clean_data: dict[str, Any] = {
         "brief": brief,
     }
-    if duration_sec is not None:
-        clean_data["duration_seconds"] = duration_sec
 
     return True, "", clean_data
 
@@ -322,11 +351,11 @@ def create_or_replay_music_sfx_job(
             """
             INSERT INTO web_music_sfx_jobs (
                 id, request_id, account_id, product_key, routing_product_key,
-                brief, duration_seconds, status, status_reason,
+                brief, status, status_reason,
                 idempotency_key_hash, payload_hash, bridge_envelope,
                 provider_name, provider_task_id, model_name, xu_cost,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             """,
             (
                 job_id,
@@ -335,7 +364,6 @@ def create_or_replay_music_sfx_job(
                 CANONICAL_PRODUCT_KEY,
                 CANONICAL_ROUTING_KEY,
                 clean_input["brief"],
-                clean_input.get("duration_seconds"),
                 STATUS_QUEUED,
                 STATUS_REASON_AWAITING,
                 idem_hash if idem_hash else None,
@@ -388,7 +416,6 @@ def _format_job_dict(row: dict[str, Any]) -> dict[str, Any]:
         "product_key": row.get("product_key") or CANONICAL_PRODUCT_KEY,
         "routing_product_key": row.get("routing_product_key") or CANONICAL_ROUTING_KEY,
         "brief": row["brief"],
-        "duration_seconds": row.get("duration_seconds"),
         "xu_cost": row.get("xu_cost"),
         "status": row["status"],
         "status_reason": row["status_reason"],
@@ -484,7 +511,6 @@ def music_sfx_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
         "completed_at": job.get("completed_at"),
         "account_id": job.get("account_id") or "",
         "brief": job.get("brief") or "",
-        "duration_seconds": job.get("duration_seconds"),
         "xu_cost": job.get("xu_cost"),
         "provider_name": job.get("provider_name"),
         "provider_task_id": job.get("provider_task_id"),

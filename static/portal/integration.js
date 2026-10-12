@@ -36077,7 +36077,7 @@
         return;
       }
       if (action === "music-sfx-submit") {
-        const brief = String(fields.brief || fields.prompt || "").trim();
+        const brief = String(fields.brief || "").trim();
         if (!brief) {
           throw new Error("Hãy nhập mô tả hiệu ứng âm thanh (brief).");
         }

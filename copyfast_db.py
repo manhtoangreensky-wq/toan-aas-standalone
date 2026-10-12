@@ -6786,7 +6786,6 @@ def ensure_copyfast_schema() -> None:
                 product_key TEXT NOT NULL DEFAULT 'music_sfx',
                 routing_product_key TEXT NOT NULL DEFAULT 'music_sfx',
                 brief TEXT NOT NULL,
-                duration_seconds INTEGER DEFAULT NULL,
                 status TEXT NOT NULL DEFAULT 'queued',
                 status_reason TEXT NOT NULL DEFAULT 'AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE',
                 idempotency_key_hash TEXT,

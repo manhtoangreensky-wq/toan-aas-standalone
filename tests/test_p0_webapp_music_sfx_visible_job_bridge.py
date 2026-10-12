@@ -195,12 +195,68 @@ def test_validate_music_sfx_input_oversized():
 
 
 def test_validate_music_sfx_input_authority_injection_rejected():
-    """Client cannot inject tier, model, price, xu_cost, wallet, or provider."""
-    forbidden_keys = ["tier", "model", "modelname", "provider", "providername", "price", "xu", "xucost", "wallet", "status"]
+    """Client cannot inject tier, model, price, xu_cost, wallet, provider, or other authority fields."""
+    forbidden_keys = [
+        "tier", "model", "provider", "provider_task_id",
+        "price", "cost", "xu", "xu_cost", "quote_xu",
+        "status", "status_reason", "wallet",
+        "account_id", "user_id", "canonical_user_id",
+        "output_url", "local_path", "file_path",
+    ]
     for key in forbidden_keys:
         ok, err, _ = bridge.validate_music_sfx_input("test-sfx-user-1", {"brief": "Tiếng gió rít", key: "fake_val"})
-        assert ok is False
+        assert ok is False, f"Expected {key} to be rejected"
         assert "quyền hạn máy chủ bị cấm" in err
+
+
+def test_validate_music_sfx_input_duration_seconds_rejected():
+    """Unproven duration_seconds semantic is strictly rejected."""
+    ok, err, _ = bridge.validate_music_sfx_input(
+        "test-sfx-user-1",
+        {"brief": "Tiếng sấm rền", "duration_seconds": 15}
+    )
+    assert ok is False
+    assert "chưa được chứng minh" in err or "unproven" in err.lower()
+
+
+def test_validate_music_sfx_input_loop_rejected():
+    """Unproven loop semantic is strictly rejected."""
+    ok, err, _ = bridge.validate_music_sfx_input(
+        "test-sfx-user-1",
+        {"brief": "Tiếng sóng biển", "loop": True}
+    )
+    assert ok is False
+    assert "chưa được chứng minh" in err or "unproven" in err.lower()
+
+
+def test_validate_music_sfx_input_category_rejected():
+    """Unproven category semantic is strictly rejected."""
+    ok, err, _ = bridge.validate_music_sfx_input(
+        "test-sfx-user-1",
+        {"brief": "Tiếng chim hót", "category": "nature"}
+    )
+    assert ok is False
+    assert "chưa được chứng minh" in err or "unproven" in err.lower()
+
+
+def test_validate_music_sfx_input_sfx_brief_alias_rejected():
+    """Unproven alias sfx_brief is strictly rejected; only canonical 'brief' is accepted."""
+    ok, err, _ = bridge.validate_music_sfx_input(
+        "test-sfx-user-1",
+        {"sfx_brief": "Tiếng mưa rơi"}
+    )
+    assert ok is False
+    assert "chưa được chứng minh" in err or "unproven" in err.lower()
+
+
+def test_validate_music_sfx_input_prompt_alias_rejected():
+    """Unproven alias prompt is strictly rejected; only canonical 'brief' is accepted."""
+    ok, err, _ = bridge.validate_music_sfx_input(
+        "test-sfx-user-1",
+        {"prompt": "Tiếng chuông ngân"}
+    )
+    assert ok is False
+    assert "chưa được chứng minh" in err or "unproven" in err.lower()
 
 
 # ─── 4. FAIL-CLOSED JOB CREATION & NEUTRAL PRICING ────────────────────────────
@@ -218,8 +274,10 @@ def test_create_music_sfx_job_fail_closed_initial_state():
     assert job["status"] == "queued"
     assert job["status_reason"] == "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE"
     assert job["provider_name"] is None
+    assert job["provider_task_id"] is None
     assert job["model_name"] is None
     assert job["xu_cost"] is None  # NOT 0, neutral until proven
+    assert "duration_seconds" not in job or job.get("duration_seconds") is None
     assert job["output_asset_id"] is None
     assert job["output_url"] is None
     assert job["brief"] == "Tiếng bước chân giẫm trên lá khô trong rừng vắng"
@@ -260,6 +318,37 @@ def test_idempotency_conflict_different_payload():
         )
     assert exc_info.value.status_code == 409
     assert "Xung đột Idempotency-Key" in exc_info.value.detail
+
+
+def test_request_id_replay_and_conflict():
+    """request_id exact replay returns existing job; conflicting payload raises 409."""
+    req_id = "req_msfx_unique_custom_001"
+    job1 = bridge.create_or_replay_music_sfx_job(
+        account_id="test-sfx-user-1",
+        payload={"brief": "Tiếng gió thổi qua rừng thông"},
+        request_id=req_id,
+    )
+    assert job1["idempotent_replay"] is False
+    assert job1["request_id"] == req_id
+
+    # Exact replay
+    job2 = bridge.create_or_replay_music_sfx_job(
+        account_id="test-sfx-user-1",
+        payload={"brief": "Tiếng gió thổi qua rừng thông"},
+        request_id=req_id,
+    )
+    assert job2["idempotent_replay"] is True
+    assert job2["id"] == job1["id"]
+
+    # Conflicting payload on same request_id
+    with pytest.raises(HTTPException) as exc_info:
+        bridge.create_or_replay_music_sfx_job(
+            account_id="test-sfx-user-1",
+            payload={"brief": "Tiếng sấm sét rền vang"},
+            request_id=req_id,
+        )
+    assert exc_info.value.status_code == 409
+    assert "Xung đột request_id" in exc_info.value.detail
 
 
 # ─── 6. CUSTOMER API: CREATE, DETAIL, LIST ───────────────────────────────────
@@ -546,8 +635,26 @@ def test_portal_js_and_integration_contracts():
     assert 'classifyPageBoundary' in portal_js
     assert 'canonical_bridge' in portal_js
     assert 'renderMusicSfx' in portal_js
+    assert 'data-field="music_sfx_brief_input"' in portal_js
+
+    # Verify UI brief-only contract: NO unproven duration, loop, or category inputs
+    render_sfx_idx = portal_js.find("function renderMusicSfx")
+    assert render_sfx_idx != -1
+    render_sfx_code = portal_js[render_sfx_idx : render_sfx_idx + 3500]
+    assert 'name="duration_seconds"' not in render_sfx_code
+    assert 'name="duration"' not in render_sfx_code
+    assert 'name="loop"' not in render_sfx_code
+    assert 'name="category"' not in render_sfx_code
+    # Truthful initial queued state
+    assert 'AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE' in render_sfx_code
+    assert 'queued' in render_sfx_code
 
     # integration.js contracts
     assert 'if (action === "music-sfx-submit")' in integration_js
     assert 'if (action === "music-sfx-reset")' in integration_js
     assert '"/features/music_sfx/jobs"' in integration_js
+    # Verify brief-only field extraction without prompt fallback
+    submit_idx = integration_js.find('if (action === "music-sfx-submit")')
+    assert submit_idx != -1
+    submit_code = integration_js[submit_idx : submit_idx + 500]
+    assert "fields.prompt" not in submit_code
