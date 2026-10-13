@@ -355,7 +355,7 @@ async def test_05_06_07_valid_png_jpeg_webp_staging(monkeypatch):
     async def mock_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
         if path == BOT_PRIVATE_UPLOAD_ROUTE:
             staged_types.append(payload["content_type"])
-            return {"ok": True, "status": "completed", "data": {"upload_id": f"upl_{len(staged_types)}"}}
+            return {"ok": True, "status": "completed", "data": {"upload_id": f"upl_{len(staged_types)}", "sha256": payload["sha256"]}}
         if path == BOT_PRIVATE_PREPARE_ROUTE:
             _, p_resp = make_mock_bot_responses(payload["upload_id"], actor_id)
             return p_resp
@@ -469,7 +469,7 @@ async def test_15_provider_model_injection_never_emitted(monkeypatch):
     async def mock_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
         recorded_payloads.append((path, payload))
         if path == BOT_PRIVATE_UPLOAD_ROUTE:
-            return {"ok": True, "status": "completed", "data": {"upload_id": "upl_15"}}
+            return {"ok": True, "status": "completed", "data": {"upload_id": "upl_15", "sha256": payload["sha256"]}}
         if path == BOT_PRIVATE_PREPARE_ROUTE:
             _, p_resp = make_mock_bot_responses("upl_15", actor_id)
             return p_resp
@@ -583,7 +583,7 @@ async def test_22_same_prepared_job_does_not_upload_twice(monkeypatch):
     async def mock_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
         if path == BOT_PRIVATE_UPLOAD_ROUTE:
             call_counts["upload"] += 1
-            return {"ok": True, "status": "completed", "data": {"upload_id": "upl_idem_22"}}
+            return {"ok": True, "status": "completed", "data": {"upload_id": "upl_idem_22", "sha256": payload["sha256"]}}
         if path == BOT_PRIVATE_PREPARE_ROUTE:
             call_counts["prepare"] += 1
             _, p_resp = make_mock_bot_responses("upl_idem_22", actor_id)
@@ -677,3 +677,191 @@ def test_26_invariants_and_zero_mutation_guarantees():
     """26. Invariant verification: provider dispatch disabled, zero spend, zero wallet mutations."""
     assert IMAGE_TRANSFORM_PROVIDER_DISPATCH_ENABLED is False
     assert WEB_PROVIDER_EXECUTOR_IMPLEMENTED is False
+
+
+@pytest.mark.anyio
+async def test_27_inactive_and_non_image_assets_rejected():
+    """5. Inactive asset -> BLOCK; 6. Non-image asset -> BLOCK."""
+    # Inactive asset
+    create_test_asset(
+        "acc_user_a", "ast_inactive", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES,
+        storage_hex="71717171717171717171717171717171", state="archived",
+    )
+    with pytest.raises(HTTPException) as exc1:
+        create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_inactive", "transform_instruction": "style"})
+    assert exc1.value.status_code == 400
+
+    # Non-image asset (pdf)
+    create_test_asset(
+        "acc_user_a", "ast_pdf", "doc.pdf", ".pdf", "application/pdf", b"%PDF-1.4 dummy",
+        storage_hex="72727272727272727272727272727272",
+    )
+    with pytest.raises(HTTPException) as exc2:
+        create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_pdf", "transform_instruction": "style"})
+    assert exc2.value.status_code == 400
+
+
+def test_28_path_and_storage_key_injections_rejected():
+    """7. Browser local_path injection -> BLOCK; 8. Storage_key injection -> BLOCK."""
+    create_test_asset("acc_user_a", "ast_inj", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="73737373737373737373737373737373")
+    injections = [
+        {"image_asset_id": "ast_inj", "transform_instruction": "prompt", "local_path": "C:\\Windows\\System32\\calc.exe"},
+        {"image_asset_id": "ast_inj", "transform_instruction": "prompt", "file_path": "/etc/passwd"},
+        {"image_asset_id": "ast_inj", "transform_instruction": "prompt", "storage_key": "objects/evil.blob"},
+    ]
+    for p in injections:
+        with pytest.raises(HTTPException) as exc:
+            create_or_replay_image_transform_job("acc_user_a", p)
+        assert exc.value.status_code == 400
+
+
+@pytest.mark.anyio
+async def test_29_bot_sha_mismatch_blocks(monkeypatch):
+    """10. Web computed SHA sent to Bot; 11. Bot SHA mismatch -> BLOCK."""
+    create_test_asset("acc_user_a", "ast_sha_mismatch", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="74747474747474747474747474747474")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_sha_mismatch", "transform_instruction": "style"})
+
+    async def mock_mismatch_upload(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        return {
+            "ok": True,
+            "status": "completed",
+            "data": {
+                "upload_id": "upl_mismatch_123",
+                "sha256": "0" * 64,  # Mismatch!
+            },
+        }
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_mismatch_upload)
+    with pytest.raises(HTTPException) as exc:
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+    assert exc.value.status_code == 502
+    assert "SHA256 mismatch" in exc.value.detail
+
+
+@pytest.mark.anyio
+async def test_30_local_path_and_credentials_never_leaked_or_persisted(monkeypatch):
+    """12. Bot upload response local_path cannot leak to Web response/job envelope; 13. Bridge credentials not persisted."""
+    create_test_asset("acc_user_a", "ast_leak_check", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="75757575757575757575757575757575")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_leak_check", "transform_instruction": "style"})
+
+    async def mock_leaky_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            return {
+                "ok": True,
+                "status": "completed",
+                "data": {
+                    "upload_id": "upl_leak_test",
+                    "sha256": hashlib.sha256(SAMPLE_PNG_BYTES).hexdigest(),
+                    "local_path": "/var/bot/data/secret_upload.png",
+                },
+            }
+        _, p_resp = make_mock_bot_responses("upl_leak_test", actor_id)
+        return p_resp
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_leaky_bridge)
+    res = await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+
+    # Verify return dict has no local_path
+    res_str = json.dumps(res)
+    assert "/var/bot/data/secret_upload.png" not in res_str
+    assert "local_path" not in res
+    assert "token" not in res
+    assert "secret" not in res
+
+    # Verify persisted job in SQLite has no local_path and no bridge credentials
+    db_job = get_image_transform_job("acc_user_a", job["id"])
+    env_str = json.dumps(db_job["bridge_envelope"])
+    assert "/var/bot/data/secret_upload.png" not in env_str
+    assert "local_path" not in env_str
+    assert "test-bridge-token" not in env_str
+    assert "test-bridge-hmac-secret" not in env_str
+
+
+@pytest.mark.anyio
+async def test_31_staging_pass_prepare_transient_fail_retry_reuses_upload(monkeypatch):
+    """22. Staging PASS / prepare transient fail -> safe retry without duplicate stage."""
+    create_test_asset("acc_user_a", "ast_retry_test", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="76767676767676767676767676767676")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_retry_test", "transform_instruction": "style"})
+
+    call_counts = {"upload": 0, "prepare": 0}
+
+    async def mock_flaky_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            call_counts["upload"] += 1
+            return {
+                "ok": True,
+                "status": "completed",
+                "data": {
+                    "upload_id": "upl_retry_42",
+                    "sha256": hashlib.sha256(SAMPLE_PNG_BYTES).hexdigest(),
+                },
+            }
+        if path == BOT_PRIVATE_PREPARE_ROUTE:
+            call_counts["prepare"] += 1
+            if call_counts["prepare"] == 1:
+                # First attempt fails transiently (e.g. 502 / timeout)
+                return {"ok": False, "error_code": "CORE_BRIDGE_UNAVAILABLE", "message": "Transient failure"}
+            _, p_resp = make_mock_bot_responses("upl_retry_42", actor_id)
+            return p_resp
+        raise ValueError(path)
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_flaky_bridge)
+
+    # First attempt: staging succeeds (1 call), prepare fails (1 call) -> raises 502
+    with pytest.raises(HTTPException) as exc:
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+    assert exc.value.status_code == 502
+    assert call_counts["upload"] == 1
+    assert call_counts["prepare"] == 1
+
+    # Second attempt (retry): upload is NOT repeated (upload count remains 1)!
+    res2 = await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+    assert res2["ok"] is True
+    assert res2["bot_upload_id"] == "upl_retry_42"
+    assert call_counts["upload"] == 1  # DUPLICATE_BOT_STAGING_ON_IDEMPOTENT_REPLAY=NO
+    assert call_counts["prepare"] == 2
+
+
+@pytest.mark.anyio
+async def test_32_bot_auth_failure_and_timeout_zero_provider_calls(monkeypatch):
+    """23. Bot auth failure -> zero provider calls; 24. Bot timeout -> zero provider calls."""
+    create_test_asset("acc_user_a", "ast_auth_fail", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="77777777777777777777777777777778")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_auth_fail", "transform_instruction": "style"})
+
+    # 1. Auth failure
+    async def mock_auth_failure(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        return {"ok": False, "error_code": "CORE_BRIDGE_UNAUTHORIZED", "message": "Unauthorized"}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_auth_failure)
+    with pytest.raises(HTTPException) as exc1:
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+    assert exc1.value.status_code == 502
+
+    # 2. Timeout
+    async def mock_timeout(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        return {"ok": False, "error_code": "CORE_BRIDGE_UNAVAILABLE", "message": "Timeout"}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_timeout)
+    with pytest.raises(HTTPException) as exc2:
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+    assert exc2.value.status_code == 502
+
+
+@pytest.mark.anyio
+async def test_33_unexpected_provider_execution_allowed_true_blocks_drift(monkeypatch):
+    """20. Unexpected provider_execution_allowed=true -> BLOCK contract drift."""
+    create_test_asset("acc_user_a", "ast_drift", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="78787878787878787878787878787878")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_drift", "transform_instruction": "style"})
+
+    async def mock_drift_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            return {"ok": True, "status": "completed", "data": {"upload_id": "upl_drift", "sha256": hashlib.sha256(SAMPLE_PNG_BYTES).hexdigest()}}
+        _, p_resp = make_mock_bot_responses("upl_drift", actor_id)
+        p_resp["data"]["provider_execution_allowed"] = True  # Contract drift!
+        return p_resp
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_drift_bridge)
+    with pytest.raises(HTTPException) as exc:
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+    assert exc.value.status_code == 502
+    assert "provider_execution_allowed must be false" in exc.value.detail

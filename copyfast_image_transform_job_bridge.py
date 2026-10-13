@@ -79,7 +79,7 @@ _RAW_FORBIDDEN_AUTHORITY_KEYS = (
     "quota_xu", "charged_xu", "xu", "xu_cost", "xu_charge", "fee", "credits",
     "wallet", "wallet_id", "wallet_balance", "balance", "api_key", "api_token", "token", "secret",
     "job_id", "job_status", "status", "status_reason", "output", "output_url", "asset_id", "download_url",
-    "role", "file_path", "local_path", "account_id", "user_id", "canonical_user_id",
+    "role", "file_path", "local_path", "storage_key", "account_id", "user_id", "canonical_user_id",
     "actor_id", "is_paid_job", "confirm_paid", "paid", "owner_id",
     "upload_id", "bot_upload_id", "bridge_envelope", "bot_prepare_status", "result",
 )

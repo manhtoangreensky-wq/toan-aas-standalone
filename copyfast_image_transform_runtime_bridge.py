@@ -44,13 +44,16 @@ from copyfast_db import (
     utc_now,
 )
 from copyfast_image_transform_job_bridge import (
+    CANONICAL_CUSTOMER_ENTRYPOINT,
     CANONICAL_PRODUCT_KEY,
+    CANONICAL_ROUTE_ID,
     STATUS_QUEUED,
     STATUS_REASON_AWAITING,
     SUPPORTED_IMAGE_EXTENSIONS,
     SUPPORTED_IMAGE_MIME_TYPES,
     get_image_transform_job,
     is_image_transform_job_other_account,
+    sanitize_external_metadata,
 )
 
 # ─── CANONICAL ROUTE CONSTANTS ───────────────────────────────────────────────
@@ -246,31 +249,63 @@ async def prepare_image_transform_job_with_bot(
         raise HTTPException(status_code=401, detail="ACTOR_ID_REQUIRED: unable to resolve canonical actor")
 
     # 5. Bot Staging Request: POST /internal/v1/uploads
-    staging_idempotency_key = f"stage_imgxf_{clean_job_id}_{sha256_digest[:16]}"
-    staging_payload = {
-        "file_name": file_name,
-        "content_type": content_type,
-        "content_base64": base64.b64encode(content_bytes).decode("ascii"),
-        "sha256": sha256_digest,
-        "idempotency_key": staging_idempotency_key,
-    }
-
-    upload_res = await copyfast_bridge.bridge_request(
-        "POST",
-        BOT_PRIVATE_UPLOAD_ROUTE,
-        payload=staging_payload,
-        actor_id=actor_id,
-    )
-
-    if not upload_res.get("ok"):
-        error_code = upload_res.get("error_code") or "BOT_UPLOAD_FAILED"
-        msg = upload_res.get("message") or "Staged upload rejected by Bot"
-        raise HTTPException(status_code=502, detail=f"{BOT_UPLOAD_REJECTED}: {error_code} - {msg}")
-
-    upload_data = upload_res.get("data") if isinstance(upload_res.get("data"), dict) else {}
-    bot_upload_id = str(upload_data.get("upload_id") or upload_res.get("upload_id") or "").strip()
+    # Reuses existing bot_upload_id if already staged (DUPLICATE_BOT_STAGING_ON_IDEMPOTENT_REPLAY=NO)
+    bot_upload_id = str(envelope_meta.get("bot_upload_id") or "").strip()
     if not bot_upload_id or not bot_upload_id.startswith("upl_"):
-        raise HTTPException(status_code=502, detail=f"{BOT_UPLOAD_REJECTED}: Bot response missing valid upload_id")
+        staging_idempotency_key = f"stage_imgxf_{clean_job_id}_{sha256_digest[:16]}"
+        staging_payload = {
+            "file_name": file_name,
+            "content_type": content_type,
+            "content_base64": base64.b64encode(content_bytes).decode("ascii"),
+            "sha256": sha256_digest,
+            "idempotency_key": staging_idempotency_key,
+        }
+
+        upload_res = await copyfast_bridge.bridge_request(
+            "POST",
+            BOT_PRIVATE_UPLOAD_ROUTE,
+            payload=staging_payload,
+            actor_id=actor_id,
+        )
+
+        if not upload_res.get("ok"):
+            error_code = upload_res.get("error_code") or "BOT_UPLOAD_FAILED"
+            msg = upload_res.get("message") or "Staged upload rejected by Bot"
+            raise HTTPException(status_code=502, detail=f"{BOT_UPLOAD_REJECTED}: {error_code} - {msg}")
+
+        upload_data = upload_res.get("data") if isinstance(upload_res.get("data"), dict) else {}
+        bot_upload_id = str(upload_data.get("upload_id") or upload_res.get("upload_id") or "").strip()
+        if not bot_upload_id or not bot_upload_id.startswith("upl_"):
+            raise HTTPException(status_code=502, detail=f"{BOT_UPLOAD_REJECTED}: Bot response missing valid upload_id")
+
+        # Verify WEB_TO_BOT_STAGED_BYTES_SHA_MATCH=YES
+        bot_sha = str(upload_data.get("sha256") or upload_res.get("sha256") or "").strip().lower()
+        if not bot_sha or bot_sha != sha256_digest.lower():
+            raise HTTPException(
+                status_code=502,
+                detail=f"{BOT_UPLOAD_REJECTED}: SHA256 mismatch between Web bytes and Bot staging (web={sha256_digest}, bot={bot_sha})",
+            )
+
+        # Durably record staged upload_id immediately so that if prepare fails transiently,
+        # subsequent retry does not duplicate staging.
+        envelope_meta["bot_upload_id"] = bot_upload_id
+        envelope_meta["source_asset_id"] = source_asset_id
+        envelope_meta["source_sha256"] = sha256_digest
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_image_transform_jobs
+                SET bridge_envelope = ?,
+                    updated_at = ?
+                WHERE id = ? AND account_id = ?;
+                """,
+                (
+                    json.dumps(sanitize_external_metadata(envelope_meta), ensure_ascii=False),
+                    utc_now(),
+                    clean_job_id,
+                    clean_account,
+                ),
+            )
 
     # 6. Bot Prepare Request: POST /internal/v1/web-image-transform/prepare
     prepare_payload = {
@@ -302,7 +337,7 @@ async def prepare_image_transform_job_with_bot(
     bot_execution_allowed = bool(prepare_data.get("provider_execution_allowed", prepare_res.get("provider_execution_allowed", True)))
     bot_ret_upload_id = str(prepare_data.get("upload_id") or prepare_res.get("upload_id") or "").strip()
     bot_owner_id = str(prepare_data.get("owner_id") or prepare_res.get("owner_id") or "").strip()
-    bot_blockers = prepare_data.get("blockers") or prepare_res.get("blockers") or []
+    bot_blockers = list(prepare_data.get("blockers") or prepare_res.get("blockers") or [])
 
     # Contract Invariants:
     # - status must be PREPARED_PROVIDER_DISABLED
@@ -343,7 +378,7 @@ async def prepare_image_transform_job_with_bot(
         )
 
     # Reject unexpected provider/execution artifacts
-    unexpected_keys = {"provider_task_id", "output_url", "output", "result", "wallet", "xu_charged", "charged_xu"}
+    unexpected_keys = {"provider_task_id", "output_url", "output", "result", "wallet", "xu_charged", "charged_xu", "local_path", "file_path"}
     found_unexpected = unexpected_keys.intersection(prepare_data.keys()).union(unexpected_keys.intersection(prepare_res.keys()))
     if found_unexpected:
         raise HTTPException(
@@ -360,6 +395,12 @@ async def prepare_image_transform_job_with_bot(
     now = utc_now()
     updated_envelope = dict(envelope_meta)
     updated_envelope.update({
+        "canonical_product_key": CANONICAL_PRODUCT_KEY,
+        "canonical_route_id": CANONICAL_ROUTE_ID,
+        "customer_entrypoint": CANONICAL_CUSTOMER_ENTRYPOINT,
+        "account_id": clean_account,
+        "source_asset_id": source_asset_id,
+        "source_sha256": sha256_digest,
         "bot_upload_id": bot_upload_id,
         "bot_prepare_status": bot_status,
         "bot_prepare_reason": bot_status_reason or STATUS_REASON_UNPROVEN,
@@ -370,6 +411,7 @@ async def prepare_image_transform_job_with_bot(
         "provider_calls_made": 0,
         "paid_calls_made": 0,
     })
+    clean_envelope = sanitize_external_metadata(updated_envelope)
 
     with transaction() as conn:
         conn.execute(
@@ -384,7 +426,7 @@ async def prepare_image_transform_job_with_bot(
             (
                 STATUS_QUEUED,
                 STATUS_REASON_UNPROVEN,
-                json.dumps(updated_envelope, ensure_ascii=False),
+                json.dumps(clean_envelope, ensure_ascii=False),
                 now,
                 clean_job_id,
                 clean_account,
