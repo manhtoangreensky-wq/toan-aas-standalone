@@ -1486,7 +1486,7 @@
     {
       "file": "copyfast_image_transform_runtime_bridge.py",
       "kind": "function",
-      "line": 186,
+      "line": 207,
       "target": "prepare_image_transform_job_with_bot"
     },
     {
@@ -5315,13 +5315,31 @@
     },
     {
       "file": "copyfast_image_transform_runtime_bridge.py",
-      "line": 297,
+      "line": 289,
       "operation": "UPDATE",
       "table": "web_image_transform_jobs"
     },
     {
       "file": "copyfast_image_transform_runtime_bridge.py",
-      "line": 419,
+      "line": 323,
+      "operation": "UPDATE",
+      "table": "web_image_transform_jobs"
+    },
+    {
+      "file": "copyfast_image_transform_runtime_bridge.py",
+      "line": 356,
+      "operation": "UPDATE",
+      "table": "web_image_transform_jobs"
+    },
+    {
+      "file": "copyfast_image_transform_runtime_bridge.py",
+      "line": 402,
+      "operation": "UPDATE",
+      "table": "web_image_transform_jobs"
+    },
+    {
+      "file": "copyfast_image_transform_runtime_bridge.py",
+      "line": 530,
       "operation": "UPDATE",
       "table": "web_image_transform_jobs"
     },
@@ -8707,7 +8725,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 177,
+      "line": 178,
       "name": "ADMIN_ID"
     },
     {
@@ -8807,17 +8825,17 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 47,
+      "line": 48,
       "name": "CORE_BRIDGE_BASE_URL"
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 55,
+      "line": 56,
       "name": "CORE_BRIDGE_HMAC_SECRET"
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 51,
+      "line": 52,
       "name": "CORE_BRIDGE_TOKEN"
     },
     {
@@ -8907,7 +8925,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 343,
+      "line": 347,
       "name": "INTERNAL_MANUAL_ADMIN_TOKEN"
     },
     {
@@ -8937,7 +8955,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 177,
+      "line": 178,
       "name": "OWNER_IDS"
     },
     {
@@ -9842,7 +9860,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 106,
+      "line": 107,
       "name": "WEBAPP_REQUIRE_CORE_BRIDGE"
     },
     {
@@ -18265,7 +18283,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 271,
   "source_files_scanned": 271,
-  "source_fingerprint_sha256": "54dffc289845ff4a1c4a87d3712a8344cef2591a5cebe220eb057743608b29f4",
+  "source_fingerprint_sha256": "974a95a71a3800dfafcd502f5e634f7e2928dfc4ef11a3cb8f2a6b68460210c2",
   "source_root": "repository-root",
   "ui_path_references": [
     {
