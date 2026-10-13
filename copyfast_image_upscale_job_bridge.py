@@ -39,11 +39,14 @@ from copyfast_db import asset_vault_directory, ensure_copyfast_schema, read_tran
 from copyfast_image_upscale_provider import (
     DEFAULT_CREATIVITY,
     DEFAULT_UPSCALE_PROMPT,
+    MISSING_PROVIDER_CREDENTIAL_BEHAVIOR,
+    PRODUCTION_FAKE_API_KEY_FALLBACK,
     STABILITY_UPSCALE_CAPABILITY_ID,
     STABILITY_UPSCALE_ENDPOINT,
     STABILITY_UPSCALE_MODEL_NAME,
     STABILITY_UPSCALE_PROVIDER_KEY,
     STABILITY_UPSCALE_PROVIDER_NAME,
+    SYNTHETIC_PROVIDER_TASK_ID_ALLOWED,
     ImageUpscaleProviderError,
     ImageUpscaleProviderRequest,
     ImageUpscaleProviderResponseError,
@@ -86,7 +89,7 @@ BLOCKER_PROVIDER_ENTITLEMENT_UNPROVEN: str = "PROVIDER_ENTITLEMENT_UNPROVEN"
 BLOCKER_OWNER_PAID_AUTHORIZATION_REQUIRED: str = "OWNER_PAID_AUTHORIZATION_REQUIRED"
 BLOCKER_PROVIDER_CONTRACT_UNPROVEN: str = "PROVIDER_CONTRACT_UNPROVEN"
 
-# Structural Truth Declarations (R24E1)
+# Structural Truth Declarations (R24E1 & R24E1-FIX1)
 IMAGE_UPSCALE_PROVIDER_EXECUTOR_IMPLEMENTED: bool = True
 IMAGE_UPSCALE_PROVIDER_DISPATCH_ENABLED: bool = False
 IMAGE_UPSCALE_PROVIDER_DISPATCH_CURRENTLY_ENABLED: bool = False
@@ -95,6 +98,10 @@ STABILITY_UPSCALE_DISPATCH_AUTHORIZED: bool = False
 STABILITY_UPSCALE_ENTITLEMENT_PROVEN: bool = False
 OWNER_PAID_AUTHORIZATION_GRANTED: bool = False
 DIRECT_OWNER_AUTHORIZATION_TO_LIVE_TEST_POSSIBLE: bool = False
+
+# Security & Authority Boundaries (R24E1-FIX1)
+ARBITRARY_TRANSPORT_OBJECT_IS_AUTHORITY: bool = False
+DIRECT_TRANSPORT_GATE_BYPASS: bool = False
 
 FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED: frozenset[str] = frozenset({
     "amount", "amountvnd", "price", "cost", "currency", "paymentid", "ordercode",
@@ -619,6 +626,7 @@ def finalize_image_upscale_job_result(
         resolved_model = model_name or job_dict.get("model_name") or DEFAULT_MODEL
         resolved_provider = provider_name or "replicate"
         output_url = f"/api/v1/assets/{clean_asset_id}/download"
+        clean_task_id = str(provider_task_id).strip() if provider_task_id else None
 
         if not _validate_safe_url(output_url):
             raise HTTPException(status_code=400, detail="Đường dẫn kết quả không an toàn.")
@@ -642,7 +650,7 @@ def finalize_image_upscale_job_result(
             (
                 STATUS_COMPLETED,
                 STATUS_REASON_COMPLETED,
-                str(provider_task_id or ""),
+                clean_task_id,
                 resolved_provider,
                 resolved_model,
                 clean_asset_id,
@@ -818,82 +826,79 @@ def transition_image_upscale_job_failed(job_id: str, reason: str) -> None:
         )
 
 
-def dispatch_image_upscale_provider(job_id: str) -> None:
-    """Fail-closed provider dispatch boundary.
+def check_image_upscale_runtime_dispatch_gates(job_id: str) -> dict[str, Any] | None:
+    """Evaluates canonical runtime dispatch gates in strict priority order.
 
-    In R24E1, the provider executor foundation is implemented, but runtime provider
-    dispatch remains strictly disabled until account entitlement and explicit Owner
-    spend authorization are separately established.
-
-    Evaluates canonical runtime gates and raises precise blockers:
-    - PROVIDER_CONTRACT_UNPROVEN: if job model has no proven external provider contract.
-    - PROVIDER_ENTITLEMENT_UNPROVEN: if developer credit/account entitlement is unproven.
-    - OWNER_PAID_AUTHORIZATION_REQUIRED: if explicit Owner spend authorization is missing.
-    - PROVIDER_EXECUTOR_READY_BUT_DISPATCH_DISABLED: if provider dispatch is disabled.
+    Fails closed before any transport execution or network call:
+    1. Model contract unproven -> BLOCKER_PROVIDER_CONTRACT_UNPROVEN.
+    2. Account entitlement unproven -> BLOCKER_PROVIDER_ENTITLEMENT_UNPROVEN.
+    3. Owner live-paid authorization ungranted -> BLOCKER_OWNER_PAID_AUTHORIZATION_REQUIRED.
+    4. Provider dispatch disabled -> BLOCKER_PROVIDER_EXECUTOR_READY_BUT_DISPATCH_DISABLED.
     """
     clean_job_id = str(job_id).strip()
     if not clean_job_id:
         raise ValueError("Thiếu mã job (job_id).")
 
     job = get_admin_image_upscale_job(clean_job_id)
-
-    # 1. Model contract check
-    if job and job.get("model_name") == "replicate_real_esrgan":
+    if job and str(job.get("model_name") or DEFAULT_MODEL) != "stability_conservative":
         raise RuntimeError(
             f"IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED: {BLOCKER_PROVIDER_CONTRACT_UNPROVEN} "
-            "- Model 'replicate_real_esrgan' lacks proven executable provider contract."
+            f"- Model '{job.get('model_name')}' lacks proven executable provider contract."
         )
 
-    # 2. Entitlement check
     if not STABILITY_UPSCALE_ENTITLEMENT_PROVEN:
         raise RuntimeError(
             f"IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED: {BLOCKER_PROVIDER_ENTITLEMENT_UNPROVEN} "
             "- Stability AI upscale credit tier/balance is unproven in active account."
         )
 
-    # 3. Owner spend authorization check
     if not OWNER_PAID_AUTHORIZATION_GRANTED:
         raise RuntimeError(
             f"IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED: {BLOCKER_OWNER_PAID_AUTHORIZATION_REQUIRED} "
             "- Requires explicit Owner live-paid spend authorization."
         )
 
-    # 4. Dispatch enabled check
     if not IMAGE_UPSCALE_PROVIDER_DISPATCH_ENABLED or not IMAGE_UPSCALE_PROVIDER_DISPATCH_CURRENTLY_ENABLED:
         raise RuntimeError(
             f"IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED: {BLOCKER_PROVIDER_EXECUTOR_READY_BUT_DISPATCH_DISABLED} "
             "- Provider dispatch is currently disabled."
         )
 
-    if not job:
-        raise HTTPException(status_code=404, detail=f"Không tìm thấy job Image Upscale: {clean_job_id}")
+    return job
+
+
+def dispatch_image_upscale_provider(job_id: str) -> None:
+    """Fail-closed provider dispatch boundary.
+
+    In R24E1 & R24E1-FIX1, the provider executor foundation is implemented, but runtime provider
+    dispatch remains strictly disabled until account entitlement and explicit Owner
+    spend authorization are separately established.
+    """
+    clean_job_id = str(job_id).strip()
+    if not clean_job_id:
+        raise ValueError("Thiếu mã job (job_id).")
+
+    # Enforce all runtime dispatch gates
+    check_image_upscale_runtime_dispatch_gates(clean_job_id)
 
     raise RuntimeError("IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED")
 
 
-def execute_image_upscale_job(
+def prepare_image_upscale_request(
     job_id: str,
     *,
-    transport: ImageUpscaleTransportProtocol | None = None,
-    api_key: str = "",
-) -> dict[str, Any]:
-    """Executes the complete Image Upscale provider executor FSM.
-
-    Transitions:
-    queued -> processing -> completed
-    or
-    queued/processing -> failed
+    api_key: str,
+) -> tuple[dict[str, Any], ImageUpscaleProviderRequest, tuple[str, dict[str, str], dict[str, tuple[str, bytes, str]], dict[str, Any]]]:
+    """Pure request preparation and atomic FSM transition for Image Upscale.
 
     Invariants:
-    1. Unknown job -> fails closed.
-    2. Completed job -> rejects second provider submit.
-    3. Processing job -> rejects concurrent duplicate execution.
-    4. Failed job -> rejects blind automatic retry without new job.
-    5. Model provider contract must be proven ('stability_conservative').
-    6. Source image resolved from Asset Vault with account ownership.
-    7. Transport is injectable/mockable (REAL_PROVIDER_NETWORK_CALL_COUNT = 0 in tests).
-    8. Provider result stored in Asset Vault and finalized with safe preview/download.
-    9. Zero wallet/payment mutations.
+    1. Unknown job -> fails closed (ValueError).
+    2. Completed job -> rejects duplicate submit (ValueError).
+    3. Processing job -> rejects concurrent duplicate submit (ValueError).
+    4. Failed job -> rejects blind automatic retry without new job (ValueError).
+    5. Model contract must be proven ('stability_conservative').
+    6. Resolves source image from Asset Vault (enforcing account ownership, format, disk existence).
+    7. Constructs provider request and payload with explicit api_key. Missing key fails closed.
     """
     clean_job_id = str(job_id).strip()
     if not clean_job_id:
@@ -972,58 +977,112 @@ def execute_image_upscale_job(
         output_format="png",
     )
 
-    url, headers, files, data = build_stability_upscale_request_payload(req, api_key=api_key)
-
-    # Provider dispatch safety gate
-    if transport is None:
-        if not IMAGE_UPSCALE_PROVIDER_DISPATCH_ENABLED or not IMAGE_UPSCALE_PROVIDER_DISPATCH_CURRENTLY_ENABLED:
-            transition_image_upscale_job_failed(
-                clean_job_id,
-                f"IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED: {BLOCKER_PROVIDER_EXECUTOR_READY_BUT_DISPATCH_DISABLED}",
-            )
-            raise RuntimeError(
-                f"IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED: {BLOCKER_PROVIDER_EXECUTOR_READY_BUT_DISPATCH_DISABLED}"
-            )
-        raise RuntimeError("Production network transport not enabled.")
-
-    # Execute via transport
     try:
-        raw_resp = transport.post(url, headers=headers, files=files, data=data)
+        payload_tuple = build_stability_upscale_request_payload(req, api_key=api_key)
     except Exception as exc:
-        transition_image_upscale_job_failed(clean_job_id, f"PROVIDER_TRANSPORT_FAILED: {exc}")
+        transition_image_upscale_job_failed(clean_job_id, f"PROVIDER_REQUEST_BUILD_FAILED: {exc}")
         raise
 
-    # Parse response
-    try:
-        provider_result = parse_stability_upscale_response(raw_resp, job_id=clean_job_id)
-    except Exception as exc:
-        transition_image_upscale_job_failed(clean_job_id, f"PROVIDER_RESPONSE_PARSE_FAILED: {exc}")
-        raise
+    return job_dict, req, payload_tuple
+
+
+def apply_image_upscale_result(
+    job_id: str,
+    result: ImageUpscaleProviderResult,
+) -> dict[str, Any]:
+    """Pure result application and output Asset Vault finalization for Image Upscale.
+
+    Invariants:
+    1. Validates finish_reason == 'SUCCESS' (non-success fails closed).
+    2. Stores output image bytes in Asset Vault with owner scoping.
+    3. Finalizes job record with provider_task_id (or None if absent).
+    4. Records output_sha256 in metadata (never as synthetic provider_task_id).
+    5. Returns finalized job dictionary.
+    """
+    clean_job_id = str(job_id).strip()
+    if not clean_job_id:
+        raise ValueError("Thiếu mã job (job_id).")
+
+    if result.finish_reason.upper() != "SUCCESS":
+        transition_image_upscale_job_failed(
+            clean_job_id,
+            f"PROVIDER_NON_SUCCESS_FINISH_REASON: {result.finish_reason}",
+        )
+        raise ValueError(f"Provider returned non-success finish_reason: {result.finish_reason}")
+
+    job = get_admin_image_upscale_job(clean_job_id)
+    if not job:
+        raise ValueError(f"Không tìm thấy job Image Upscale: {clean_job_id}")
+
+    account_id = str(job["account_id"])
+    image_name = str(job.get("image_name") or "image.png")
+    scale_factor = int(job.get("scale_factor", DEFAULT_SCALE_FACTOR))
 
     # Store output image into Asset Vault
     try:
-        out_name = f"upscaled_{orig_name.rsplit('.', 1)[0] if '.' in orig_name else orig_name}{provider_result.output_extension}"
+        out_name = f"upscaled_{image_name.rsplit('.', 1)[0] if '.' in image_name else image_name}{result.output_extension}"
         output_asset_id = store_image_upscale_output_asset(
             account_id=account_id,
-            output_image_bytes=provider_result.output_image_bytes,
+            output_image_bytes=result.output_image_bytes,
             original_filename=out_name,
-            extension=provider_result.output_extension,
-            content_type=provider_result.output_content_type,
-            display_name=f"Upscale {scale_factor}x: {orig_name}",
+            extension=result.output_extension,
+            content_type=result.output_content_type,
+            display_name=f"Upscale {scale_factor}x: {image_name}",
         )
     except Exception as exc:
         transition_image_upscale_job_failed(clean_job_id, f"OUTPUT_ASSET_STORAGE_FAILED: {exc}")
         raise
 
-    # Finalize job result
+    metadata = dict(result.metadata)
+    if result.output_sha256:
+        metadata["output_sha256"] = result.output_sha256
+
     finalized = finalize_image_upscale_job_result(
         clean_job_id,
-        provider_task_id=provider_result.provider_task_id,
-        provider_name=provider_result.provider_name,
-        model_name=provider_result.model_name,
+        provider_task_id=result.provider_task_id or "",
+        provider_name=result.provider_name,
+        model_name=result.model_name,
         output_asset_id=output_asset_id,
-        output_metadata=provider_result.metadata,
+        output_metadata=metadata,
         cost_metadata={"test_cost": 0, "commercial_authority": False},
     )
 
     return finalized
+
+
+def execute_image_upscale_job(
+    job_id: str,
+    *,
+    transport: Any = None,
+    api_key: str = "",
+) -> dict[str, Any]:
+    """Production executor entrypoint for Image Upscale.
+
+    Invariants (R24E1-FIX1):
+    1. ARBITRARY_TRANSPORT_OBJECT_IS_AUTHORITY = NO.
+       Caller-supplied transport CANNOT bypass entitlement, owner auth, or dispatch gates.
+    2. Enforces all runtime dispatch gates FIRST. Fails closed before any transport or network action.
+    3. Direct hidden provider bypass is eliminated (DIRECT_HIDDEN_PROVIDER_PATH_AVAILABLE = NO).
+    4. Production network transport remains unactivated (REAL_PROVIDER_NETWORK_CALL_COUNT = 0).
+    """
+    clean_job_id = str(job_id).strip()
+    if not clean_job_id:
+        raise ValueError("Thiếu mã job (job_id).")
+
+    # 1. Verify job exists (unknown job fails closed with ValueError)
+    job = get_admin_image_upscale_job(clean_job_id)
+    if not job:
+        raise ValueError(f"Không tìm thấy job Image Upscale: {clean_job_id}")
+
+    # 2. Enforce all runtime dispatch gates FIRST
+    check_image_upscale_runtime_dispatch_gates(clean_job_id)
+
+    # 3. Enforce dependency injection is NOT authority
+    if transport is not None:
+        raise RuntimeError(
+            "ARBITRARY_TRANSPORT_OBJECT_IS_AUTHORITY=NO: "
+            "Caller-supplied transport cannot be used in production execution."
+        )
+
+    # 3. Production transport fail-closed
+    raise RuntimeError("IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED: Production network transport not active.")

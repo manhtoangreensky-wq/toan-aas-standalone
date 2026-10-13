@@ -39,6 +39,12 @@ DEFAULT_OUTPUT_FORMAT: str = "png"
 MAX_IMAGE_INPUT_BYTES: int = 10 * 1024 * 1024  # 10 MiB official Stability API limit
 
 
+# Security & Truth Constants (R24E1-FIX1)
+PRODUCTION_FAKE_API_KEY_FALLBACK: str = "ABSENT"
+MISSING_PROVIDER_CREDENTIAL_BEHAVIOR: str = "FAIL_CLOSED_BEFORE_NETWORK"
+SYNTHETIC_PROVIDER_TASK_ID_ALLOWED: bool = False
+
+
 class ImageUpscaleProviderError(Exception):
     """Base error for image upscale provider operations."""
 
@@ -80,13 +86,14 @@ class ImageUpscaleProviderRawResponse:
 
 @dataclass(frozen=True)
 class ImageUpscaleProviderResult:
-    provider_task_id: str
+    provider_task_id: str | None
     provider_name: str
     model_name: str
     output_image_bytes: bytes
     output_content_type: str
     output_extension: str
     finish_reason: str = "SUCCESS"
+    output_sha256: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -121,8 +128,14 @@ def build_stability_upscale_request_payload(
         )
 
     clean_key = str(api_key).strip()
+    if not clean_key:
+        raise ImageUpscaleProviderError(
+            "Missing provider credential (api_key is required and cannot be empty).",
+            status_code=401,
+        )
+
     headers = {
-        "Authorization": f"Bearer {clean_key}" if clean_key else "Bearer test-unauthorized-key",
+        "Authorization": f"Bearer {clean_key}",
         "Accept": "image/*",
     }
 
@@ -163,7 +176,9 @@ def parse_stability_upscale_response(
     - Status 200 OK.
     - Handles binary image/* or JSON base64 payloads.
     - Fails closed on malformed, corrupt, or non-200 responses.
-    - Extracts provider task ID from headers or payload digest.
+    - Extracts provider task ID from headers (x-request-id / x-stability-request-id).
+    - SYNTHETIC_PROVIDER_TASK_ID_ALLOWED = False (leaves None if header is absent).
+    - Truthful finish_reason parsing (non-SUCCESS fails closed).
     """
     if raw.status_code != 200:
         error_msg = f"Provider returned HTTP {raw.status_code}"
@@ -188,11 +203,8 @@ def parse_stability_upscale_response(
         )
 
     content_type = raw.headers.get("content-type", "").lower()
-    task_id = (
-        raw.headers.get("x-request-id")
-        or raw.headers.get("x-stability-request-id")
-        or f"stbl_{hashlib.sha256(raw.content or raw.text.encode()).hexdigest()[:16]}"
-    )
+    raw_task_id = raw.headers.get("x-request-id") or raw.headers.get("x-stability-request-id")
+    task_id = str(raw_task_id).strip() if raw_task_id else None
 
     # Case A: Binary image payload
     is_binary_image = (
@@ -208,6 +220,14 @@ def parse_stability_upscale_response(
                 status_code=502,
             )
 
+        finish_reason_hdr = raw.headers.get("finish-reason") or raw.headers.get("x-finish-reason")
+        finish_reason = str(finish_reason_hdr).strip() if finish_reason_hdr else "SUCCESS"
+        if finish_reason.upper() != "SUCCESS":
+            raise ImageUpscaleProviderResponseError(
+                f"Provider returned non-success finish-reason: {finish_reason}",
+                status_code=502,
+            )
+
         if "jpeg" in content_type or "jpg" in content_type or output_bytes[:2] == b"\xff\xd8":
             ext = ".jpg"
             mime = "image/jpeg"
@@ -218,6 +238,8 @@ def parse_stability_upscale_response(
             ext = ".png"
             mime = "image/png"
 
+        output_sha256 = hashlib.sha256(output_bytes).hexdigest()
+
         return ImageUpscaleProviderResult(
             provider_task_id=task_id,
             provider_name=STABILITY_UPSCALE_PROVIDER_KEY,
@@ -225,8 +247,14 @@ def parse_stability_upscale_response(
             output_image_bytes=output_bytes,
             output_content_type=mime,
             output_extension=ext,
-            finish_reason="SUCCESS",
-            metadata={"content_length": len(output_bytes), "task_id": task_id},
+            finish_reason=finish_reason,
+            output_sha256=output_sha256,
+            metadata={
+                "content_length": len(output_bytes),
+                "task_id": task_id,
+                "output_sha256": output_sha256,
+                "finish_reason": finish_reason,
+            },
         )
 
     # Case B: JSON payload with base64
@@ -259,7 +287,14 @@ def parse_stability_upscale_response(
                 status_code=502,
             )
 
-        finish_reason = body.get("finish_reason") or "SUCCESS"
+        finish_reason = str(body.get("finish_reason") or raw.headers.get("finish-reason") or "SUCCESS").strip()
+        if finish_reason.upper() != "SUCCESS":
+            raise ImageUpscaleProviderResponseError(
+                f"Provider returned non-success finish-reason: {finish_reason}",
+                status_code=502,
+            )
+
+        output_sha256 = hashlib.sha256(output_bytes).hexdigest()
         seed = body.get("seed")
 
         return ImageUpscaleProviderResult(
@@ -269,8 +304,14 @@ def parse_stability_upscale_response(
             output_image_bytes=output_bytes,
             output_content_type="image/png",
             output_extension=".png",
-            finish_reason=str(finish_reason),
-            metadata={"seed": seed, "finish_reason": finish_reason, "task_id": task_id},
+            finish_reason=finish_reason,
+            output_sha256=output_sha256,
+            metadata={
+                "seed": seed,
+                "finish_reason": finish_reason,
+                "task_id": task_id,
+                "output_sha256": output_sha256,
+            },
         )
 
     raise ImageUpscaleProviderResponseError(
@@ -294,10 +335,12 @@ class FakeStabilityUpscaleTransport(ImageUpscaleTransportProtocol):
         response_json: dict[str, Any] | None = None,
         error_text: str = "",
         headers: dict[str, str] | None = None,
+        include_request_id: bool = True,
     ):
         self.call_count: int = 0
         self.recorded_requests: list[dict[str, Any]] = []
         self.status_code = status_code
+        self.include_request_id = include_request_id
         # Minimal valid 2x2 PNG for mock delivery
         self.response_image_bytes = (
             response_image_bytes
@@ -326,8 +369,9 @@ class FakeStabilityUpscaleTransport(ImageUpscaleTransportProtocol):
 
         resp_headers = {
             "content-type": "image/png",
-            "x-request-id": f"fake_task_{self.call_count}",
         }
+        if self.include_request_id:
+            resp_headers["x-request-id"] = f"fake_task_{self.call_count}"
         resp_headers.update(self.custom_headers)
 
         if self.status_code != 200:
