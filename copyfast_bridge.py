@@ -322,6 +322,7 @@ def _sanitize_envelope(value: dict, *, fallback_code: str | None = None) -> dict
         "failed", "failed_no_charge", "guarded", "cancelled", "refunded",
         "read_only", "pending_admin_review", "approved", "rejected",
         "unverified", "unlinked", "conflict",
+        "prepared_provider_disabled", "PREPARED_PROVIDER_DISABLED",
     }
     if status_name not in allowed_statuses:
         status_name = "failed"

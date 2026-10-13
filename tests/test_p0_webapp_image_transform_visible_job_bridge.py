@@ -316,7 +316,7 @@ def test_04_create_job_fail_closed_via_web_api():
 
     # Verify fail-closed initial state
     assert job["status"] == "queued"
-    assert job["status_reason"] == "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE"
+    assert job["status_reason"] == "EXTERNAL_PROVIDER_AUTHORITY_AND_ENTITLEMENT_UNPROVEN"
     assert job["output_available"] is False
     assert job["output_asset_id"] is None
     assert job["output_url"] is None
