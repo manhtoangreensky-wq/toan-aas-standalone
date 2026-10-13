@@ -43,10 +43,12 @@ import sqlite3
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import httpx
 import pytest
 from fastapi import HTTPException
 
 import copyfast_bridge
+from copyfast_bridge import CoreBridgeClient
 from copyfast_db import (
     asset_vault_directory,
     ensure_copyfast_schema,
@@ -62,6 +64,10 @@ from copyfast_image_transform_job_bridge import (
 from copyfast_image_transform_runtime_bridge import (
     BOT_PRIVATE_PREPARE_ROUTE,
     BOT_PRIVATE_UPLOAD_ROUTE,
+    BOT_PREPARE_CONTRACT_INVALID,
+    BOT_STAGING_AMBIGUOUS,
+    BOT_STAGING_AMBIGUOUS_RETRY_BLOCKED,
+    CANONICAL_ACTOR_BINDING_REQUIRED,
     CORE_BRIDGE_UNCONFIGURED,
     IMAGE_TRANSFORM_PROVIDER_DISPATCH_ENABLED,
     SOURCE_ASSET_CORRUPT,
@@ -865,3 +871,290 @@ async def test_33_unexpected_provider_execution_allowed_true_blocks_drift(monkey
         await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
     assert exc.value.status_code == 502
     assert "provider_execution_allowed must be false" in exc.value.detail
+
+
+@pytest.mark.anyio
+async def test_34_fix1_canonical_user_id_missing_fails_before_bridge_call(monkeypatch):
+    """Fix A: unlinked web account with missing canonical_user_id fails closed before Bot call."""
+    now = utc_now()
+    with transaction() as conn:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO web_accounts (id, email, password_hash, canonical_user_id, role_cache, is_active, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+            """,
+            ("acc_unlinked_user", "unlinked@example.com", "hash", None, "user", 1, now, now),
+        )
+
+    create_test_asset(
+        "acc_unlinked_user", "ast_unlinked", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES,
+        storage_hex="81818181818181818181818181818181",
+    )
+    job = create_or_replay_image_transform_job("acc_unlinked_user", {"image_asset_id": "ast_unlinked", "transform_instruction": "style"})
+
+    calls = []
+    async def mock_bridge(*args, **kwargs):
+        calls.append((args, kwargs))
+        return {"ok": True, "status": "completed"}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge)
+
+    with pytest.raises(HTTPException) as exc:
+        await prepare_image_transform_job_with_bot("acc_unlinked_user", job["id"])
+
+    assert exc.value.status_code == 403
+    assert CANONICAL_ACTOR_BINDING_REQUIRED in exc.value.detail
+    assert len(calls) == 0  # 0 Bot calls when canonical identity missing!
+
+
+@pytest.mark.anyio
+async def test_35_fix1_missing_web_account_row_fails_before_bridge_call(monkeypatch):
+    """Fix A: missing web account row fails closed before Bot call."""
+    calls = []
+    async def mock_bridge(*args, **kwargs):
+        calls.append((args, kwargs))
+        return {"ok": True, "status": "completed"}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge)
+
+    with pytest.raises(HTTPException) as exc:
+        await prepare_image_transform_job_with_bot("acc_nonexistent_9999", "job_nonexistent")
+
+    assert exc.value.status_code in {403, 404}
+    assert len(calls) == 0
+
+
+@pytest.mark.anyio
+async def test_36_fix1_bot_prepare_missing_owner_id_rejected(monkeypatch):
+    """Fix B: Bot prepare response missing mandatory owner_id is rejected."""
+    create_test_asset("acc_user_a", "ast_miss_owner", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="82828282828282828282828282828282")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_miss_owner", "transform_instruction": "style"})
+
+    u_resp, p_resp = make_mock_bot_responses("upl_miss_owner", "canonical_user_a_100")
+    del p_resp["data"]["owner_id"]  # Omit owner_id
+
+    async def mock_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            return u_resp
+        return p_resp
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge)
+
+    with pytest.raises(HTTPException) as exc:
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+
+    assert exc.value.status_code == 502
+    assert BOT_PREPARE_CONTRACT_INVALID in exc.value.detail
+    assert "missing mandatory owner_id" in exc.value.detail
+
+
+@pytest.mark.anyio
+async def test_37_fix1_bot_prepare_empty_or_whitespace_owner_id_rejected(monkeypatch):
+    """Fix B: Bot prepare response with empty or whitespace owner_id is rejected."""
+    create_test_asset("acc_user_a", "ast_empty_owner", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="83838383838383838383838383838383")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_empty_owner", "transform_instruction": "style"})
+
+    for bad_owner in ["", "   ", "\t"]:
+        u_resp, p_resp = make_mock_bot_responses("upl_empty_owner", "canonical_user_a_100")
+        p_resp["data"]["owner_id"] = bad_owner
+
+        async def mock_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+            if path == BOT_PRIVATE_UPLOAD_ROUTE:
+                return u_resp
+            return p_resp
+
+        monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge)
+
+        with pytest.raises(HTTPException) as exc:
+            await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+
+        assert exc.value.status_code == 502
+        assert BOT_PREPARE_CONTRACT_INVALID in exc.value.detail
+        assert "missing mandatory owner_id" in exc.value.detail
+
+
+@pytest.mark.anyio
+async def test_38_fix1_bot_prepare_owner_id_mismatch_rejected(monkeypatch):
+    """Fix B: Bot prepare response with mismatched owner_id is rejected."""
+    create_test_asset("acc_user_a", "ast_mismatch_owner", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="84848484848484848484848484848484")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_mismatch_owner", "transform_instruction": "style"})
+
+    u_resp, p_resp = make_mock_bot_responses("upl_mismatch_owner", "canonical_user_a_100")
+    p_resp["data"]["owner_id"] = "canonical_imposter_666"
+
+    async def mock_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            return u_resp
+        return p_resp
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge)
+
+    with pytest.raises(HTTPException) as exc:
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+
+    assert exc.value.status_code == 502
+    assert BOT_PREPARE_CONTRACT_INVALID in exc.value.detail
+    assert "owner_id mismatch" in exc.value.detail
+
+
+@pytest.mark.anyio
+async def test_39_fix1_upload_transport_ambiguity_blocks_automatic_resubmit(monkeypatch):
+    """Fix C & Section 6: Upload transport ambiguity does not permit automatic second upload."""
+    create_test_asset("acc_user_a", "ast_ambig", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="85858585858585858585858585858585")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_ambig", "transform_instruction": "style"})
+
+    upload_calls = []
+    async def mock_ambiguous_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            upload_calls.append(payload)
+            return {"ok": False, "status": "guarded", "error_code": "CORE_BRIDGE_UNAVAILABLE", "message": "Connection reset by peer"}
+        return {"ok": True, "status": "completed"}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_ambiguous_bridge)
+
+    # First attempt: transport fails ambiguously
+    with pytest.raises(HTTPException) as exc1:
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+
+    assert exc1.value.status_code == 502
+    assert BOT_STAGING_AMBIGUOUS in exc1.value.detail
+    assert len(upload_calls) == 1
+
+    # Verify durable state in DB is 'ambiguous'
+    db_job = get_image_transform_job("acc_user_a", job["id"])
+    assert db_job["bridge_envelope"]["bot_staging_state"] == "ambiguous"
+
+    # Second attempt: must fail closed without issuing another Bot upload!
+    with pytest.raises(HTTPException) as exc2:
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+
+    assert exc2.value.status_code == 409
+    assert BOT_STAGING_AMBIGUOUS_RETRY_BLOCKED in exc2.value.detail
+    assert len(upload_calls) == 1  # 0 additional upload attempts!
+
+
+@pytest.mark.anyio
+async def test_40_fix1_core_bridge_does_not_retry_uploads_on_idempotency_key():
+    """Section 7: Core Bridge does not automatically retry /internal/v1/uploads merely because payload has idempotency_key."""
+    upload_attempts = []
+    other_attempts = []
+
+    async def mock_handler(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        if path == "/internal/v1/uploads":
+            upload_attempts.append(request)
+            raise httpx.ConnectError("Connection failed", request=request)
+        else:
+            other_attempts.append(request)
+            if len(other_attempts) == 1:
+                raise httpx.ConnectError("Connection failed first attempt", request=request)
+            return httpx.Response(200, json={"ok": True, "status": "completed", "data": {}})
+
+    client = CoreBridgeClient(
+        base_url="https://bridge.invalid",
+        token="bridge-token-xyz",
+        hmac_secret="bridge-hmac-secret-123",
+        transport=httpx.MockTransport(mock_handler),
+    )
+
+    # 1. POST /internal/v1/uploads with idempotency_key -> MUST NOT RETRY (1 attempt only)
+    res_upload = await client.request(
+        "POST",
+        "/internal/v1/uploads",
+        payload={"idempotency_key": "upload_idem_key_1", "file_name": "pic.png"},
+    )
+    assert res_upload["ok"] is False
+    assert res_upload["error_code"] == "CORE_BRIDGE_UNAVAILABLE"
+    assert len(upload_attempts) == 1  # Not retried!
+
+    # 2. POST /internal/v1/features/chat/draft with idempotency_key -> DOES RETRY (2 attempts)
+    res_other = await client.request(
+        "POST",
+        "/internal/v1/features/chat/draft",
+        payload={"idempotency_key": "other_idem_key_2", "prompt": "hello"},
+    )
+    assert res_other["ok"] is True
+    assert len(other_attempts) == 2  # Proven route retried!
+
+
+@pytest.mark.anyio
+async def test_41_fix1_known_bot_upload_id_reused_after_prepare_failure(monkeypatch):
+    """Section 9 & Test H: Already-known bot_upload_id still reuses staging after prepare failure."""
+    create_test_asset("acc_user_a", "ast_reuse_upl", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="86868686868686868686868686868686")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_reuse_upl", "transform_instruction": "style"})
+
+    calls = {"upload": 0, "prepare": 0}
+
+    # Attempt 1: Upload succeeds, prepare fails transiently
+    async def mock_first_attempt(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            calls["upload"] += 1
+            return {"ok": True, "status": "completed", "data": {"upload_id": "upl_known_reuse_42", "sha256": hashlib.sha256(SAMPLE_PNG_BYTES).hexdigest()}}
+        calls["prepare"] += 1
+        return {"ok": False, "error_code": "BOT_PREPARE_FAILED", "message": "Temporary prepare glitch"}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_first_attempt)
+
+    with pytest.raises(HTTPException) as exc1:
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+
+    assert exc1.value.status_code == 502
+    assert calls["upload"] == 1
+    assert calls["prepare"] == 1
+
+    # Check job has bot_upload_id saved durably
+    db_job = get_image_transform_job("acc_user_a", job["id"])
+    assert db_job["bridge_envelope"]["bot_upload_id"] == "upl_known_reuse_42"
+    assert db_job["bridge_envelope"]["bot_staging_state"] == "staged"
+
+    # Attempt 2: Prepare succeeds. Upload must NOT be called again!
+    u_resp, p_resp = make_mock_bot_responses("upl_known_reuse_42", "canonical_user_a_100")
+
+    async def mock_second_attempt(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            calls["upload"] += 1
+            return u_resp
+        calls["prepare"] += 1
+        return p_resp
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_second_attempt)
+
+    res = await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+
+    assert res["ok"] is True
+    assert res["bot_upload_id"] == "upl_known_reuse_42"
+    assert calls["upload"] == 1  # 0 additional upload calls!
+    assert calls["prepare"] == 2  # Prepare was called and succeeded!
+
+
+@pytest.mark.anyio
+async def test_42_fix1_fully_prepared_replay_makes_zero_bot_calls(monkeypatch):
+    """Section 9 & Test I: Fully prepared replay makes zero Bot calls."""
+    create_test_asset("acc_user_a", "ast_zero_calls", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="87878787878787878787878787878787")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_zero_calls", "transform_instruction": "style"})
+
+    u_resp, p_resp = make_mock_bot_responses("upl_zero_call_99", "canonical_user_a_100")
+    calls = {"upload": 0, "prepare": 0}
+
+    async def mock_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            calls["upload"] += 1
+            return u_resp
+        calls["prepare"] += 1
+        return p_resp
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge)
+
+    # Initial preparation
+    res1 = await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+    assert res1["ok"] is True
+    assert calls["upload"] == 1
+    assert calls["prepare"] == 1
+
+    # Exact replay of fully prepared job
+    res2 = await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+    assert res2["ok"] is True
+    assert res2["idempotent_replay"] is True
+    assert res2["bot_upload_id"] == "upl_zero_call_99"
+    assert calls["upload"] == 1  # 0 additional upload calls!
+    assert calls["prepare"] == 1  # 0 additional prepare calls!

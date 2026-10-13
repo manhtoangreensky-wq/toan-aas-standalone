@@ -65,6 +65,7 @@ STATUS_PREPARED_PROVIDER_DISABLED = "PREPARED_PROVIDER_DISABLED"
 
 # ─── FAILURE CODES ───────────────────────────────────────────────────────────
 CORE_BRIDGE_UNCONFIGURED = "CORE_BRIDGE_UNCONFIGURED"
+CANONICAL_ACTOR_BINDING_REQUIRED = "CANONICAL_ACTOR_BINDING_REQUIRED"
 SOURCE_ASSET_NOT_FOUND = "SOURCE_ASSET_NOT_FOUND"
 SOURCE_ASSET_OWNER_MISMATCH = "SOURCE_ASSET_OWNER_MISMATCH"
 SOURCE_ASSET_CORRUPT = "SOURCE_ASSET_CORRUPT"
@@ -74,6 +75,8 @@ BOT_PREPARE_REJECTED = "BOT_PREPARE_REJECTED"
 BOT_PREPARE_CONTRACT_INVALID = "BOT_PREPARE_CONTRACT_INVALID"
 BOT_DEPENDENCY_NOT_READY = "BOT_DEPENDENCY_NOT_READY"
 PROVIDER_AUTHORITY_UNPROVEN = "PROVIDER_AUTHORITY_UNPROVEN"
+BOT_STAGING_AMBIGUOUS = "BOT_STAGING_AMBIGUOUS"
+BOT_STAGING_AMBIGUOUS_RETRY_BLOCKED = "BOT_STAGING_AMBIGUOUS_RETRY_BLOCKED"
 
 # Structural / State Declarations
 IMAGE_TRANSFORM_PROVIDER_DISPATCH_ENABLED: bool = False
@@ -83,10 +86,20 @@ KEY4U_PUBLIC_ENABLED_MUTATION: bool = False
 
 
 def _resolve_account_actor_id(account_id: str) -> str:
-    """Resolve the canonical actor identifier from the authenticated Web account."""
+    """Resolve the canonical actor identifier from the authenticated Web account.
+
+    Fails closed:
+    - account_id empty -> 401 CANONICAL_ACTOR_BINDING_REQUIRED
+    - account row missing -> 403 CANONICAL_ACTOR_BINDING_REQUIRED
+    - canonical_user_id missing/blank -> 403 CANONICAL_ACTOR_BINDING_REQUIRED
+    Never returns web_accounts.id, email, or unlinked web UUID as authority.
+    """
     clean_account_id = str(account_id or "").strip()
     if not clean_account_id:
-        return ""
+        raise HTTPException(
+            status_code=401,
+            detail=f"{CANONICAL_ACTOR_BINDING_REQUIRED}: account_id is required",
+        )
 
     with read_transaction() as conn:
         conn.row_factory = sqlite3.Row
@@ -96,12 +109,20 @@ def _resolve_account_actor_id(account_id: str) -> str:
         ).fetchone()
 
     if not acc_row:
-        return clean_account_id
+        raise HTTPException(
+            status_code=403,
+            detail=f"{CANONICAL_ACTOR_BINDING_REQUIRED}: web account row not found",
+        )
 
     canonical_user_id = acc_row["canonical_user_id"]
-    if canonical_user_id and str(canonical_user_id).strip():
-        return str(canonical_user_id).strip()
-    return str(acc_row["id"]).strip()
+    clean_canonical_id = str(canonical_user_id or "").strip()
+    if not clean_canonical_id:
+        raise HTTPException(
+            status_code=403,
+            detail=f"{CANONICAL_ACTOR_BINDING_REQUIRED}: account has no canonical user identity binding",
+        )
+
+    return clean_canonical_id
 
 
 def resolve_source_asset_bytes(account_id: str, asset_id: str) -> tuple[bytes, str, str, str]:
@@ -234,24 +255,50 @@ async def prepare_image_transform_job_with_bot(
             "job": job,
         }
 
-    # 3. Check Core Bridge Configuration
+    # 3. Resolve canonical actor identity BEFORE any Bot call or asset read
+    actor_id = _resolve_account_actor_id(clean_account)
+
+    # 4. Check Core Bridge Configuration
     if not copyfast_bridge.bridge_configured():
         raise HTTPException(status_code=503, detail=f"{CORE_BRIDGE_UNCONFIGURED}: Core Bridge is not configured")
 
-    # 4. Resolve source bytes from Asset Vault
+    # 5. Resolve source bytes from Asset Vault
     source_asset_id = str(job.get("image_asset_id") or "").strip()
     content_bytes, file_name, content_type, sha256_digest = resolve_source_asset_bytes(
         clean_account, source_asset_id
     )
 
-    actor_id = _resolve_account_actor_id(clean_account)
-    if not actor_id:
-        raise HTTPException(status_code=401, detail="ACTOR_ID_REQUIRED: unable to resolve canonical actor")
-
-    # 5. Bot Staging Request: POST /internal/v1/uploads
+    # 6. Bot Staging Request: POST /internal/v1/uploads
     # Reuses existing bot_upload_id if already staged (DUPLICATE_BOT_STAGING_ON_IDEMPOTENT_REPLAY=NO)
     bot_upload_id = str(envelope_meta.get("bot_upload_id") or "").strip()
     if not bot_upload_id or not bot_upload_id.startswith("upl_"):
+        bot_staging_state = str(envelope_meta.get("bot_staging_state") or "").strip().lower()
+        if bot_staging_state in {"ambiguous", "attempting"}:
+            raise HTTPException(
+                status_code=409,
+                detail=f"{BOT_STAGING_AMBIGUOUS_RETRY_BLOCKED}: staging state '{bot_staging_state}' is unverified; automatic duplicate upload is blocked",
+            )
+
+        # Durably record that an upload attempt has begun before dispatching outbound request
+        envelope_meta["bot_staging_state"] = "attempting"
+        envelope_meta["bot_staging_source_sha256"] = sha256_digest
+        envelope_meta["bot_staging_attempted_at"] = utc_now()
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_image_transform_jobs
+                SET bridge_envelope = ?,
+                    updated_at = ?
+                WHERE id = ? AND account_id = ?;
+                """,
+                (
+                    json.dumps(sanitize_external_metadata(envelope_meta), ensure_ascii=False),
+                    utc_now(),
+                    clean_job_id,
+                    clean_account,
+                ),
+            )
+
         staging_idempotency_key = f"stage_imgxf_{clean_job_id}_{sha256_digest[:16]}"
         staging_payload = {
             "file_name": file_name,
@@ -261,17 +308,73 @@ async def prepare_image_transform_job_with_bot(
             "idempotency_key": staging_idempotency_key,
         }
 
-        upload_res = await copyfast_bridge.bridge_request(
-            "POST",
-            BOT_PRIVATE_UPLOAD_ROUTE,
-            payload=staging_payload,
-            actor_id=actor_id,
-        )
+        try:
+            upload_res = await copyfast_bridge.bridge_request(
+                "POST",
+                BOT_PRIVATE_UPLOAD_ROUTE,
+                payload=staging_payload,
+                actor_id=actor_id,
+            )
+        except Exception as exc:
+            envelope_meta["bot_staging_state"] = "ambiguous"
+            with transaction() as conn:
+                conn.execute(
+                    """
+                    UPDATE web_image_transform_jobs
+                    SET bridge_envelope = ?,
+                        updated_at = ?
+                    WHERE id = ? AND account_id = ?;
+                    """,
+                    (
+                        json.dumps(sanitize_external_metadata(envelope_meta), ensure_ascii=False),
+                        utc_now(),
+                        clean_job_id,
+                        clean_account,
+                    ),
+                )
+            raise HTTPException(
+                status_code=502,
+                detail=f"{BOT_STAGING_AMBIGUOUS}: transport error during staging: {exc}",
+            )
 
         if not upload_res.get("ok"):
-            error_code = upload_res.get("error_code") or "BOT_UPLOAD_FAILED"
-            msg = upload_res.get("message") or "Staged upload rejected by Bot"
-            raise HTTPException(status_code=502, detail=f"{BOT_UPLOAD_REJECTED}: {error_code} - {msg}")
+            error_code = str(upload_res.get("error_code") or "").strip()
+            msg = str(upload_res.get("message") or "Staged upload rejected by Bot")
+            status_name = str(upload_res.get("status") or "").strip().lower()
+
+            # Distinguish definitive application rejection from ambiguous transport failure
+            is_ambiguous = (
+                error_code in {"CORE_BRIDGE_UNAVAILABLE", "CORE_BRIDGE_TIMEOUT"}
+                or status_name in {"guarded", "unavailable"}
+                or not error_code
+            )
+
+            envelope_meta["bot_staging_state"] = "ambiguous" if is_ambiguous else "rejected"
+            with transaction() as conn:
+                conn.execute(
+                    """
+                    UPDATE web_image_transform_jobs
+                    SET bridge_envelope = ?,
+                        updated_at = ?
+                    WHERE id = ? AND account_id = ?;
+                    """,
+                    (
+                        json.dumps(sanitize_external_metadata(envelope_meta), ensure_ascii=False),
+                        utc_now(),
+                        clean_job_id,
+                        clean_account,
+                    ),
+                )
+
+            if is_ambiguous:
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"{BOT_STAGING_AMBIGUOUS}: staging transport result is ambiguous ({error_code or 'UNKNOWN'}) - {msg}",
+                )
+            raise HTTPException(
+                status_code=502,
+                detail=f"{BOT_UPLOAD_REJECTED}: {error_code or 'REJECTED'} - {msg}",
+            )
 
         upload_data = upload_res.get("data") if isinstance(upload_res.get("data"), dict) else {}
         bot_upload_id = str(upload_data.get("upload_id") or upload_res.get("upload_id") or "").strip()
@@ -289,8 +392,10 @@ async def prepare_image_transform_job_with_bot(
         # Durably record staged upload_id immediately so that if prepare fails transiently,
         # subsequent retry does not duplicate staging.
         envelope_meta["bot_upload_id"] = bot_upload_id
+        envelope_meta["bot_staging_state"] = "staged"
         envelope_meta["source_asset_id"] = source_asset_id
         envelope_meta["source_sha256"] = sha256_digest
+        envelope_meta["bot_staged_at"] = utc_now()
         with transaction() as conn:
             conn.execute(
                 """
@@ -307,7 +412,7 @@ async def prepare_image_transform_job_with_bot(
                 ),
             )
 
-    # 6. Bot Prepare Request: POST /internal/v1/web-image-transform/prepare
+    # 7. Bot Prepare Request: POST /internal/v1/web-image-transform/prepare
     prepare_payload = {
         "upload_id": bot_upload_id,
         "transform_instruction": str(job.get("transform_instruction") or ""),
@@ -328,7 +433,7 @@ async def prepare_image_transform_job_with_bot(
 
     prepare_data = prepare_res.get("data") if isinstance(prepare_res.get("data"), dict) else {}
 
-    # 7. Validate Bot Prepare Response
+    # 8. Validate Bot Prepare Response
     bot_status = str(prepare_data.get("status") or prepare_res.get("status") or "").strip()
     bot_status_reason = str(prepare_data.get("status_reason") or prepare_res.get("status_reason") or "").strip()
     bot_capability = str(prepare_data.get("capability") or prepare_res.get("capability") or "").strip()
@@ -345,7 +450,7 @@ async def prepare_image_transform_job_with_bot(
     # - capability must be image_transform
     # - executor_owner must be bot
     # - upload_id must match staged upload_id
-    # - owner_id must match canonical actor_id
+    # - owner_id must be non-empty and match canonical actor_id exactly
     if bot_status != STATUS_PREPARED_PROVIDER_DISABLED:
         raise HTTPException(
             status_code=502,
@@ -371,10 +476,15 @@ async def prepare_image_transform_job_with_bot(
             status_code=502,
             detail=f"{BOT_PREPARE_CONTRACT_INVALID}: upload_id mismatch (staged={bot_upload_id}, ret={bot_ret_upload_id})",
         )
-    if bot_owner_id and bot_owner_id != actor_id:
+    if not bot_owner_id:
         raise HTTPException(
             status_code=502,
-            detail=f"{BOT_UPLOAD_OWNER_MISMATCH}: owner_id mismatch (actor={actor_id}, ret={bot_owner_id})",
+            detail=f"{BOT_PREPARE_CONTRACT_INVALID}: prepare response missing mandatory owner_id",
+        )
+    if bot_owner_id != actor_id:
+        raise HTTPException(
+            status_code=502,
+            detail=f"{BOT_PREPARE_CONTRACT_INVALID}: owner_id mismatch (expected={actor_id}, got={bot_owner_id})",
         )
 
     # Reject unexpected provider/execution artifacts
@@ -402,6 +512,7 @@ async def prepare_image_transform_job_with_bot(
         "source_asset_id": source_asset_id,
         "source_sha256": sha256_digest,
         "bot_upload_id": bot_upload_id,
+        "bot_staging_state": "staged",
         "bot_prepare_status": bot_status,
         "bot_prepare_reason": bot_status_reason or STATUS_REASON_UNPROVEN,
         "bot_executor_owner": bot_executor_owner,

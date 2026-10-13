@@ -26,6 +26,7 @@ _MAX_SAFE_DATA_DEPTH = 6
 _MAX_SAFE_DATA_ITEMS = 80
 _MAX_SAFE_STRING_LENGTH = 4_000
 _ASSET_DELIVERY_ROUTE_RE = re.compile(r"^/internal/v1/assets/[^/]+/download$")
+_NON_RETRYABLE_WRITE_ROUTE_RE = re.compile(r"^/internal/v1/uploads(?:/.*)?$")
 _TELEGRAM_OWNER_ID_RE = re.compile(r"^[1-9][0-9]{0,19}$")
 _MANUAL_ADMIN_PATH_RE = re.compile(
     r"^/internal/v1/admin/payments/manual"
@@ -225,7 +226,10 @@ class CoreBridgeClient:
         # both bridge layers.
         retry_safe = (
             (method.upper() == "GET" and not _ASSET_DELIVERY_ROUTE_RE.fullmatch(normalized_path))
-            or bool((payload or {}).get("idempotency_key"))
+            or (
+                bool((payload or {}).get("idempotency_key"))
+                and not _NON_RETRYABLE_WRITE_ROUTE_RE.fullmatch(normalized_path)
+            )
         )
         attempts = 2 if retry_safe else 1
         response: httpx.Response | None = None
