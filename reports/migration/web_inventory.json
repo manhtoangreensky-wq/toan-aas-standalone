@@ -238,25 +238,25 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8904,
+      "line": 8908,
       "target": "admin_job_detail"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8779,
+      "line": 8783,
       "target": "admin_jobs"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 9584,
+      "line": 9588,
       "target": "admin_refund_job"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 9558,
+      "line": 9562,
       "target": "admin_retry_job"
     },
     {
@@ -286,13 +286,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7851,
+      "line": 7855,
       "target": "confirm_image_generation_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8716,
+      "line": 8720,
       "target": "confirm_music_background_job_route"
     },
     {
@@ -304,13 +304,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8626,
+      "line": 8630,
       "target": "confirm_music_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8748,
+      "line": 8752,
       "target": "confirm_music_song_job_route"
     },
     {
@@ -322,7 +322,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8208,
+      "line": 8212,
       "target": "confirm_voice_clone_job_route"
     },
     {
@@ -334,13 +334,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8087,
+      "line": 8091,
       "target": "confirm_voice_tts_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8482,
+      "line": 8486,
       "target": "create_asr_job_route"
     },
     {
@@ -352,13 +352,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8395,
+      "line": 8399,
       "target": "create_dubbing_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7785,
+      "line": 7789,
       "target": "create_image_generation_job_route"
     },
     {
@@ -382,31 +382,31 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7727,
+      "line": 7731,
       "target": "create_multi_scene_film_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8698,
+      "line": 8702,
       "target": "create_music_background_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8553,
+      "line": 8557,
       "target": "create_music_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7549,
+      "line": 7553,
       "target": "create_music_sfx_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8730,
+      "line": 8734,
       "target": "create_music_song_job_route"
     },
     {
@@ -514,43 +514,43 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7923,
+      "line": 7927,
       "target": "create_subdub_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8453,
+      "line": 8457,
       "target": "create_subtitle_asr_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8308,
+      "line": 8312,
       "target": "create_subtitle_create_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8366,
+      "line": 8370,
       "target": "create_subtitle_plus_dub_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8424,
+      "line": 8428,
       "target": "create_subtitle_plus_dubbing_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8337,
+      "line": 8341,
       "target": "create_subtitle_translate_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8279,
+      "line": 8283,
       "target": "create_video_dub_job_route"
     },
     {
@@ -562,7 +562,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7667,
+      "line": 7671,
       "target": "create_video_long_job_route"
     },
     {
@@ -586,25 +586,25 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7607,
+      "line": 7611,
       "target": "create_video_trend_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8169,
+      "line": 8173,
       "target": "create_voice_clone_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8157,
+      "line": 8161,
       "target": "create_voice_saved_tts_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8015,
+      "line": 8019,
       "target": "create_voice_tts_job_route"
     },
     {
@@ -748,7 +748,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8502,
+      "line": 8506,
       "target": "get_asr_job_route"
     },
     {
@@ -766,7 +766,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8415,
+      "line": 8419,
       "target": "get_dubbing_job_route"
     },
     {
@@ -778,13 +778,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7889,
+      "line": 7893,
       "target": "get_image_generation_job_artifact_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7831,
+      "line": 7835,
       "target": "get_image_generation_job_route"
     },
     {
@@ -808,7 +808,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7529,
+      "line": 7533,
       "target": "get_image_transform_job_route"
     },
     {
@@ -838,19 +838,19 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7765,
+      "line": 7769,
       "target": "get_multi_scene_film_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8724,
+      "line": 8728,
       "target": "get_music_background_job_artifact_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8712,
+      "line": 8716,
       "target": "get_music_background_job_route"
     },
     {
@@ -862,13 +862,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8664,
+      "line": 8668,
       "target": "get_music_job_artifact_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8606,
+      "line": 8610,
       "target": "get_music_job_route"
     },
     {
@@ -880,19 +880,19 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7587,
+      "line": 7591,
       "target": "get_music_sfx_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8756,
+      "line": 8760,
       "target": "get_music_song_job_artifact_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8744,
+      "line": 8748,
       "target": "get_music_song_job_route"
     },
     {
@@ -922,43 +922,43 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7971,
+      "line": 7975,
       "target": "get_subdub_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8473,
+      "line": 8477,
       "target": "get_subtitle_asr_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8328,
+      "line": 8332,
       "target": "get_subtitle_create_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8386,
+      "line": 8390,
       "target": "get_subtitle_plus_dub_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8444,
+      "line": 8448,
       "target": "get_subtitle_plus_dubbing_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8357,
+      "line": 8361,
       "target": "get_subtitle_translate_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8299,
+      "line": 8303,
       "target": "get_video_dub_job_route"
     },
     {
@@ -976,7 +976,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7707,
+      "line": 7711,
       "target": "get_video_long_job_route"
     },
     {
@@ -1006,7 +1006,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7647,
+      "line": 7651,
       "target": "get_video_trend_job_route"
     },
     {
@@ -1018,7 +1018,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8191,
+      "line": 8195,
       "target": "get_voice_clone_job_route"
     },
     {
@@ -1030,13 +1030,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8125,
+      "line": 8129,
       "target": "get_voice_tts_job_artifact_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8067,
+      "line": 8071,
       "target": "get_voice_tts_job_route"
     },
     {
@@ -1180,7 +1180,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8494,
+      "line": 8498,
       "target": "list_asr_jobs_route"
     },
     {
@@ -1198,7 +1198,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8407,
+      "line": 8411,
       "target": "list_dubbing_jobs_route"
     },
     {
@@ -1210,7 +1210,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7816,
+      "line": 7820,
       "target": "list_image_generation_jobs_route"
     },
     {
@@ -1234,7 +1234,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7514,
+      "line": 7518,
       "target": "list_image_transform_jobs_route"
     },
     {
@@ -1264,13 +1264,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7750,
+      "line": 7754,
       "target": "list_multi_scene_film_jobs_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8706,
+      "line": 8710,
       "target": "list_music_background_jobs_route"
     },
     {
@@ -1282,7 +1282,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8591,
+      "line": 8595,
       "target": "list_music_jobs_route"
     },
     {
@@ -1294,13 +1294,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7572,
+      "line": 7576,
       "target": "list_music_sfx_jobs_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8738,
+      "line": 8742,
       "target": "list_music_song_jobs_route"
     },
     {
@@ -1330,43 +1330,43 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7956,
+      "line": 7960,
       "target": "list_subdub_jobs_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8465,
+      "line": 8469,
       "target": "list_subtitle_asr_jobs_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8320,
+      "line": 8324,
       "target": "list_subtitle_create_jobs_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8378,
+      "line": 8382,
       "target": "list_subtitle_plus_dub_jobs_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8436,
+      "line": 8440,
       "target": "list_subtitle_plus_dubbing_jobs_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8349,
+      "line": 8353,
       "target": "list_subtitle_translate_jobs_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8291,
+      "line": 8295,
       "target": "list_video_dub_jobs_route"
     },
     {
@@ -1384,7 +1384,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7692,
+      "line": 7696,
       "target": "list_video_long_jobs_route"
     },
     {
@@ -1414,7 +1414,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7632,
+      "line": 7636,
       "target": "list_video_trend_jobs_route"
     },
     {
@@ -1426,7 +1426,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8052,
+      "line": 8056,
       "target": "list_voice_tts_jobs_route"
     },
     {
@@ -1456,25 +1456,25 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 9050,
+      "line": 9054,
       "target": "operations_job_detail"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 9059,
+      "line": 9063,
       "target": "operations_job_retry_action"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 9005,
+      "line": 9009,
       "target": "operations_jobs"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 9041,
+      "line": 9045,
       "target": "operations_jobs_failed"
     },
     {
@@ -1504,61 +1504,61 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8546,
+      "line": 8550,
       "target": "reconcile_and_settle_asr_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8531,
+      "line": 8535,
       "target": "reconcile_and_settle_dubbing_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7991,
+      "line": 7995,
       "target": "reconcile_and_settle_subdub_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8541,
+      "line": 8545,
       "target": "reconcile_and_settle_subtitle_asr_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8516,
+      "line": 8520,
       "target": "reconcile_and_settle_subtitle_create_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8526,
+      "line": 8530,
       "target": "reconcile_and_settle_subtitle_plus_dub_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8536,
+      "line": 8540,
       "target": "reconcile_and_settle_subtitle_plus_dubbing_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8521,
+      "line": 8525,
       "target": "reconcile_and_settle_subtitle_translate_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8511,
+      "line": 8515,
       "target": "reconcile_and_settle_video_dub_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 7869,
+      "line": 7873,
       "target": "reconcile_image_generation_job_route"
     },
     {
@@ -1570,13 +1570,13 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8720,
+      "line": 8724,
       "target": "reconcile_music_background_job_route"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8644,
+      "line": 8648,
       "target": "reconcile_music_job_route"
     },
     {
@@ -1588,7 +1588,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8752,
+      "line": 8756,
       "target": "reconcile_music_song_job_route"
     },
     {
@@ -1606,7 +1606,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8243,
+      "line": 8247,
       "target": "reconcile_voice_clone_job_route"
     },
     {
@@ -1618,7 +1618,7 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 8105,
+      "line": 8109,
       "target": "reconcile_voice_tts_job_route"
     },
     {
@@ -1744,25 +1744,25 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 9670,
+      "line": 9674,
       "target": "worker_product_video_claim"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 9711,
+      "line": 9715,
       "target": "worker_product_video_complete"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 9733,
+      "line": 9737,
       "target": "worker_product_video_fail"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 9693,
+      "line": 9697,
       "target": "worker_product_video_heartbeat"
     }
   ],
@@ -5339,7 +5339,7 @@
     },
     {
       "file": "copyfast_image_transform_runtime_bridge.py",
-      "line": 530,
+      "line": 546,
       "operation": "UPDATE",
       "table": "web_image_transform_jobs"
     },
@@ -10641,7 +10641,7 @@
     {
       "endpoint": "admin_freeze_feature",
       "file": "copyfast_api.py",
-      "line": 9607,
+      "line": 9611,
       "methods": [
         "POST"
       ],
@@ -10650,7 +10650,7 @@
     {
       "endpoint": "admin_finance_summary",
       "file": "copyfast_api.py",
-      "line": 9073,
+      "line": 9077,
       "methods": [
         "GET"
       ],
@@ -10659,7 +10659,7 @@
     {
       "endpoint": "locked_finance_write_action",
       "file": "copyfast_api.py",
-      "line": 9251,
+      "line": 9255,
       "methods": [
         "POST"
       ],
@@ -10668,7 +10668,7 @@
     {
       "endpoint": "locked_finance_write_action",
       "file": "copyfast_api.py",
-      "line": 9251,
+      "line": 9255,
       "methods": [
         "POST"
       ],
@@ -10677,7 +10677,7 @@
     {
       "endpoint": "admin_finance_payments",
       "file": "copyfast_api.py",
-      "line": 9185,
+      "line": 9189,
       "methods": [
         "GET"
       ],
@@ -10686,7 +10686,7 @@
     {
       "endpoint": "admin_finance_reconciliation",
       "file": "copyfast_api.py",
-      "line": 9109,
+      "line": 9113,
       "methods": [
         "GET"
       ],
@@ -10695,7 +10695,7 @@
     {
       "endpoint": "locked_finance_write_action",
       "file": "copyfast_api.py",
-      "line": 9251,
+      "line": 9255,
       "methods": [
         "POST"
       ],
@@ -10704,7 +10704,7 @@
     {
       "endpoint": "locked_finance_write_action",
       "file": "copyfast_api.py",
-      "line": 9251,
+      "line": 9255,
       "methods": [
         "POST"
       ],
@@ -10713,7 +10713,7 @@
     {
       "endpoint": "admin_finance_summary",
       "file": "copyfast_api.py",
-      "line": 9073,
+      "line": 9077,
       "methods": [
         "GET"
       ],
@@ -10722,7 +10722,7 @@
     {
       "endpoint": "admin_finance_topups",
       "file": "copyfast_api.py",
-      "line": 9149,
+      "line": 9153,
       "methods": [
         "GET"
       ],
@@ -10731,7 +10731,7 @@
     {
       "endpoint": "admin_jobs",
       "file": "copyfast_api.py",
-      "line": 8779,
+      "line": 8783,
       "methods": [
         "GET"
       ],
@@ -10740,7 +10740,7 @@
     {
       "endpoint": "admin_job_detail",
       "file": "copyfast_api.py",
-      "line": 8904,
+      "line": 8908,
       "methods": [
         "GET"
       ],
@@ -10749,7 +10749,7 @@
     {
       "endpoint": "admin_refund_job",
       "file": "copyfast_api.py",
-      "line": 9584,
+      "line": 9588,
       "methods": [
         "POST"
       ],
@@ -10758,7 +10758,7 @@
     {
       "endpoint": "admin_retry_job",
       "file": "copyfast_api.py",
-      "line": 9558,
+      "line": 9562,
       "methods": [
         "POST"
       ],
@@ -10776,7 +10776,7 @@
     {
       "endpoint": "retired_generic_admin_security_module",
       "file": "copyfast_api.py",
-      "line": 9305,
+      "line": 9309,
       "methods": [
         "GET"
       ],
@@ -10785,7 +10785,7 @@
     {
       "endpoint": "admin_pricing_module",
       "file": "copyfast_api.py",
-      "line": 9321,
+      "line": 9325,
       "methods": [
         "GET"
       ],
@@ -10794,7 +10794,7 @@
     {
       "endpoint": "admin_pricing_module",
       "file": "copyfast_api.py",
-      "line": 9321,
+      "line": 9325,
       "methods": [
         "GET"
       ],
@@ -10803,7 +10803,7 @@
     {
       "endpoint": "retired_generic_admin_security_module",
       "file": "copyfast_api.py",
-      "line": 9305,
+      "line": 9309,
       "methods": [
         "GET"
       ],
@@ -10812,7 +10812,7 @@
     {
       "endpoint": "admin_module",
       "file": "copyfast_api.py",
-      "line": 9541,
+      "line": 9545,
       "methods": [
         "GET"
       ],
@@ -10821,7 +10821,7 @@
     {
       "endpoint": "admin_pricing_module",
       "file": "copyfast_api.py",
-      "line": 9321,
+      "line": 9325,
       "methods": [
         "GET"
       ],
@@ -10830,7 +10830,7 @@
     {
       "endpoint": "admin_payments",
       "file": "copyfast_api.py",
-      "line": 9264,
+      "line": 9268,
       "methods": [
         "GET"
       ],
@@ -10875,7 +10875,7 @@
     {
       "endpoint": "admin_pricing_module",
       "file": "copyfast_api.py",
-      "line": 9321,
+      "line": 9325,
       "methods": [
         "GET"
       ],
@@ -10884,7 +10884,7 @@
     {
       "endpoint": "admin_product_video_metrics",
       "file": "copyfast_api.py",
-      "line": 9751,
+      "line": 9755,
       "methods": [
         "GET"
       ],
@@ -10893,7 +10893,7 @@
     {
       "endpoint": "admin_product_video_reconcile",
       "file": "copyfast_api.py",
-      "line": 9762,
+      "line": 9766,
       "methods": [
         "POST"
       ],
@@ -10902,7 +10902,7 @@
     {
       "endpoint": "admin_providers",
       "file": "copyfast_api.py",
-      "line": 9269,
+      "line": 9273,
       "methods": [
         "GET"
       ],
@@ -10911,7 +10911,7 @@
     {
       "endpoint": "admin_provider_detail",
       "file": "copyfast_api.py",
-      "line": 9274,
+      "line": 9278,
       "methods": [
         "GET"
       ],
@@ -10920,7 +10920,7 @@
     {
       "endpoint": "admin_provider_action_guard",
       "file": "copyfast_api.py",
-      "line": 9280,
+      "line": 9284,
       "methods": [
         "POST"
       ],
@@ -10947,7 +10947,7 @@
     {
       "endpoint": "admin_summary",
       "file": "copyfast_api.py",
-      "line": 8761,
+      "line": 8765,
       "methods": [
         "GET"
       ],
@@ -10965,7 +10965,7 @@
     {
       "endpoint": "admin_tickets",
       "file": "copyfast_api.py",
-      "line": 9299,
+      "line": 9303,
       "methods": [
         "GET"
       ],
@@ -10974,7 +10974,7 @@
     {
       "endpoint": "admin_finance_topups",
       "file": "copyfast_api.py",
-      "line": 9149,
+      "line": 9153,
       "methods": [
         "GET"
       ],
@@ -10983,7 +10983,7 @@
     {
       "endpoint": "admin_users",
       "file": "copyfast_api.py",
-      "line": 8774,
+      "line": 8778,
       "methods": [
         "GET"
       ],
@@ -12999,7 +12999,7 @@
     {
       "endpoint": "create_asr_job_route",
       "file": "copyfast_api.py",
-      "line": 8482,
+      "line": 8486,
       "methods": [
         "POST"
       ],
@@ -13008,7 +13008,7 @@
     {
       "endpoint": "list_asr_jobs_route",
       "file": "copyfast_api.py",
-      "line": 8494,
+      "line": 8498,
       "methods": [
         "GET"
       ],
@@ -13017,7 +13017,7 @@
     {
       "endpoint": "get_asr_job_route",
       "file": "copyfast_api.py",
-      "line": 8502,
+      "line": 8506,
       "methods": [
         "GET"
       ],
@@ -13026,7 +13026,7 @@
     {
       "endpoint": "reconcile_and_settle_asr_job_route",
       "file": "copyfast_api.py",
-      "line": 8546,
+      "line": 8550,
       "methods": [
         "POST"
       ],
@@ -13062,7 +13062,7 @@
     {
       "endpoint": "create_dubbing_job_route",
       "file": "copyfast_api.py",
-      "line": 8395,
+      "line": 8399,
       "methods": [
         "POST"
       ],
@@ -13071,7 +13071,7 @@
     {
       "endpoint": "list_dubbing_jobs_route",
       "file": "copyfast_api.py",
-      "line": 8407,
+      "line": 8411,
       "methods": [
         "GET"
       ],
@@ -13080,7 +13080,7 @@
     {
       "endpoint": "get_dubbing_job_route",
       "file": "copyfast_api.py",
-      "line": 8415,
+      "line": 8419,
       "methods": [
         "GET"
       ],
@@ -13089,7 +13089,7 @@
     {
       "endpoint": "reconcile_and_settle_dubbing_job_route",
       "file": "copyfast_api.py",
-      "line": 8531,
+      "line": 8535,
       "methods": [
         "POST"
       ],
@@ -13098,7 +13098,7 @@
     {
       "endpoint": "create_image_generation_job_route",
       "file": "copyfast_api.py",
-      "line": 7785,
+      "line": 7789,
       "methods": [
         "POST"
       ],
@@ -13107,7 +13107,7 @@
     {
       "endpoint": "list_image_generation_jobs_route",
       "file": "copyfast_api.py",
-      "line": 7816,
+      "line": 7820,
       "methods": [
         "GET"
       ],
@@ -13116,7 +13116,7 @@
     {
       "endpoint": "get_image_generation_job_route",
       "file": "copyfast_api.py",
-      "line": 7831,
+      "line": 7835,
       "methods": [
         "GET"
       ],
@@ -13125,7 +13125,7 @@
     {
       "endpoint": "get_image_generation_job_artifact_route",
       "file": "copyfast_api.py",
-      "line": 7889,
+      "line": 7893,
       "methods": [
         "GET"
       ],
@@ -13134,7 +13134,7 @@
     {
       "endpoint": "confirm_image_generation_job_route",
       "file": "copyfast_api.py",
-      "line": 7851,
+      "line": 7855,
       "methods": [
         "POST"
       ],
@@ -13143,7 +13143,7 @@
     {
       "endpoint": "reconcile_image_generation_job_route",
       "file": "copyfast_api.py",
-      "line": 7869,
+      "line": 7873,
       "methods": [
         "POST"
       ],
@@ -13215,7 +13215,7 @@
     {
       "endpoint": "list_image_transform_jobs_route",
       "file": "copyfast_api.py",
-      "line": 7514,
+      "line": 7518,
       "methods": [
         "GET"
       ],
@@ -13224,7 +13224,7 @@
     {
       "endpoint": "get_image_transform_job_route",
       "file": "copyfast_api.py",
-      "line": 7529,
+      "line": 7533,
       "methods": [
         "GET"
       ],
@@ -13260,7 +13260,7 @@
     {
       "endpoint": "create_music_job_route",
       "file": "copyfast_api.py",
-      "line": 8553,
+      "line": 8557,
       "methods": [
         "POST"
       ],
@@ -13269,7 +13269,7 @@
     {
       "endpoint": "list_music_jobs_route",
       "file": "copyfast_api.py",
-      "line": 8591,
+      "line": 8595,
       "methods": [
         "GET"
       ],
@@ -13278,7 +13278,7 @@
     {
       "endpoint": "get_music_job_route",
       "file": "copyfast_api.py",
-      "line": 8606,
+      "line": 8610,
       "methods": [
         "GET"
       ],
@@ -13287,7 +13287,7 @@
     {
       "endpoint": "get_music_job_artifact_route",
       "file": "copyfast_api.py",
-      "line": 8664,
+      "line": 8668,
       "methods": [
         "GET"
       ],
@@ -13296,7 +13296,7 @@
     {
       "endpoint": "confirm_music_job_route",
       "file": "copyfast_api.py",
-      "line": 8626,
+      "line": 8630,
       "methods": [
         "POST"
       ],
@@ -13305,7 +13305,7 @@
     {
       "endpoint": "reconcile_music_job_route",
       "file": "copyfast_api.py",
-      "line": 8644,
+      "line": 8648,
       "methods": [
         "POST"
       ],
@@ -13314,7 +13314,7 @@
     {
       "endpoint": "create_music_background_job_route",
       "file": "copyfast_api.py",
-      "line": 8698,
+      "line": 8702,
       "methods": [
         "POST"
       ],
@@ -13323,7 +13323,7 @@
     {
       "endpoint": "list_music_background_jobs_route",
       "file": "copyfast_api.py",
-      "line": 8706,
+      "line": 8710,
       "methods": [
         "GET"
       ],
@@ -13332,7 +13332,7 @@
     {
       "endpoint": "get_music_background_job_route",
       "file": "copyfast_api.py",
-      "line": 8712,
+      "line": 8716,
       "methods": [
         "GET"
       ],
@@ -13341,7 +13341,7 @@
     {
       "endpoint": "get_music_background_job_artifact_route",
       "file": "copyfast_api.py",
-      "line": 8724,
+      "line": 8728,
       "methods": [
         "GET"
       ],
@@ -13350,7 +13350,7 @@
     {
       "endpoint": "confirm_music_background_job_route",
       "file": "copyfast_api.py",
-      "line": 8716,
+      "line": 8720,
       "methods": [
         "POST"
       ],
@@ -13359,7 +13359,7 @@
     {
       "endpoint": "reconcile_music_background_job_route",
       "file": "copyfast_api.py",
-      "line": 8720,
+      "line": 8724,
       "methods": [
         "POST"
       ],
@@ -13368,7 +13368,7 @@
     {
       "endpoint": "create_music_sfx_job_route",
       "file": "copyfast_api.py",
-      "line": 7549,
+      "line": 7553,
       "methods": [
         "POST"
       ],
@@ -13377,7 +13377,7 @@
     {
       "endpoint": "list_music_sfx_jobs_route",
       "file": "copyfast_api.py",
-      "line": 7572,
+      "line": 7576,
       "methods": [
         "GET"
       ],
@@ -13386,7 +13386,7 @@
     {
       "endpoint": "get_music_sfx_job_route",
       "file": "copyfast_api.py",
-      "line": 7587,
+      "line": 7591,
       "methods": [
         "GET"
       ],
@@ -13395,7 +13395,7 @@
     {
       "endpoint": "create_music_song_job_route",
       "file": "copyfast_api.py",
-      "line": 8730,
+      "line": 8734,
       "methods": [
         "POST"
       ],
@@ -13404,7 +13404,7 @@
     {
       "endpoint": "list_music_song_jobs_route",
       "file": "copyfast_api.py",
-      "line": 8738,
+      "line": 8742,
       "methods": [
         "GET"
       ],
@@ -13413,7 +13413,7 @@
     {
       "endpoint": "get_music_song_job_route",
       "file": "copyfast_api.py",
-      "line": 8744,
+      "line": 8748,
       "methods": [
         "GET"
       ],
@@ -13422,7 +13422,7 @@
     {
       "endpoint": "get_music_song_job_artifact_route",
       "file": "copyfast_api.py",
-      "line": 8756,
+      "line": 8760,
       "methods": [
         "GET"
       ],
@@ -13431,7 +13431,7 @@
     {
       "endpoint": "confirm_music_song_job_route",
       "file": "copyfast_api.py",
-      "line": 8748,
+      "line": 8752,
       "methods": [
         "POST"
       ],
@@ -13440,7 +13440,7 @@
     {
       "endpoint": "reconcile_music_song_job_route",
       "file": "copyfast_api.py",
-      "line": 8752,
+      "line": 8756,
       "methods": [
         "POST"
       ],
@@ -13458,7 +13458,7 @@
     {
       "endpoint": "create_subdub_job_route",
       "file": "copyfast_api.py",
-      "line": 7923,
+      "line": 7927,
       "methods": [
         "POST"
       ],
@@ -13467,7 +13467,7 @@
     {
       "endpoint": "list_subdub_jobs_route",
       "file": "copyfast_api.py",
-      "line": 7956,
+      "line": 7960,
       "methods": [
         "GET"
       ],
@@ -13476,7 +13476,7 @@
     {
       "endpoint": "get_subdub_job_route",
       "file": "copyfast_api.py",
-      "line": 7971,
+      "line": 7975,
       "methods": [
         "GET"
       ],
@@ -13485,7 +13485,7 @@
     {
       "endpoint": "reconcile_and_settle_subdub_job_route",
       "file": "copyfast_api.py",
-      "line": 7991,
+      "line": 7995,
       "methods": [
         "POST"
       ],
@@ -13494,7 +13494,7 @@
     {
       "endpoint": "create_subtitle_asr_job_route",
       "file": "copyfast_api.py",
-      "line": 8453,
+      "line": 8457,
       "methods": [
         "POST"
       ],
@@ -13503,7 +13503,7 @@
     {
       "endpoint": "list_subtitle_asr_jobs_route",
       "file": "copyfast_api.py",
-      "line": 8465,
+      "line": 8469,
       "methods": [
         "GET"
       ],
@@ -13512,7 +13512,7 @@
     {
       "endpoint": "get_subtitle_asr_job_route",
       "file": "copyfast_api.py",
-      "line": 8473,
+      "line": 8477,
       "methods": [
         "GET"
       ],
@@ -13521,7 +13521,7 @@
     {
       "endpoint": "reconcile_and_settle_subtitle_asr_job_route",
       "file": "copyfast_api.py",
-      "line": 8541,
+      "line": 8545,
       "methods": [
         "POST"
       ],
@@ -13530,7 +13530,7 @@
     {
       "endpoint": "create_subtitle_create_job_route",
       "file": "copyfast_api.py",
-      "line": 8308,
+      "line": 8312,
       "methods": [
         "POST"
       ],
@@ -13539,7 +13539,7 @@
     {
       "endpoint": "list_subtitle_create_jobs_route",
       "file": "copyfast_api.py",
-      "line": 8320,
+      "line": 8324,
       "methods": [
         "GET"
       ],
@@ -13548,7 +13548,7 @@
     {
       "endpoint": "get_subtitle_create_job_route",
       "file": "copyfast_api.py",
-      "line": 8328,
+      "line": 8332,
       "methods": [
         "GET"
       ],
@@ -13557,7 +13557,7 @@
     {
       "endpoint": "reconcile_and_settle_subtitle_create_job_route",
       "file": "copyfast_api.py",
-      "line": 8516,
+      "line": 8520,
       "methods": [
         "POST"
       ],
@@ -13566,7 +13566,7 @@
     {
       "endpoint": "create_subtitle_plus_dub_job_route",
       "file": "copyfast_api.py",
-      "line": 8366,
+      "line": 8370,
       "methods": [
         "POST"
       ],
@@ -13575,7 +13575,7 @@
     {
       "endpoint": "list_subtitle_plus_dub_jobs_route",
       "file": "copyfast_api.py",
-      "line": 8378,
+      "line": 8382,
       "methods": [
         "GET"
       ],
@@ -13584,7 +13584,7 @@
     {
       "endpoint": "get_subtitle_plus_dub_job_route",
       "file": "copyfast_api.py",
-      "line": 8386,
+      "line": 8390,
       "methods": [
         "GET"
       ],
@@ -13593,7 +13593,7 @@
     {
       "endpoint": "reconcile_and_settle_subtitle_plus_dub_job_route",
       "file": "copyfast_api.py",
-      "line": 8526,
+      "line": 8530,
       "methods": [
         "POST"
       ],
@@ -13602,7 +13602,7 @@
     {
       "endpoint": "create_subtitle_plus_dubbing_job_route",
       "file": "copyfast_api.py",
-      "line": 8424,
+      "line": 8428,
       "methods": [
         "POST"
       ],
@@ -13611,7 +13611,7 @@
     {
       "endpoint": "list_subtitle_plus_dubbing_jobs_route",
       "file": "copyfast_api.py",
-      "line": 8436,
+      "line": 8440,
       "methods": [
         "GET"
       ],
@@ -13620,7 +13620,7 @@
     {
       "endpoint": "get_subtitle_plus_dubbing_job_route",
       "file": "copyfast_api.py",
-      "line": 8444,
+      "line": 8448,
       "methods": [
         "GET"
       ],
@@ -13629,7 +13629,7 @@
     {
       "endpoint": "reconcile_and_settle_subtitle_plus_dubbing_job_route",
       "file": "copyfast_api.py",
-      "line": 8536,
+      "line": 8540,
       "methods": [
         "POST"
       ],
@@ -13638,7 +13638,7 @@
     {
       "endpoint": "create_subtitle_translate_job_route",
       "file": "copyfast_api.py",
-      "line": 8337,
+      "line": 8341,
       "methods": [
         "POST"
       ],
@@ -13647,7 +13647,7 @@
     {
       "endpoint": "list_subtitle_translate_jobs_route",
       "file": "copyfast_api.py",
-      "line": 8349,
+      "line": 8353,
       "methods": [
         "GET"
       ],
@@ -13656,7 +13656,7 @@
     {
       "endpoint": "get_subtitle_translate_job_route",
       "file": "copyfast_api.py",
-      "line": 8357,
+      "line": 8361,
       "methods": [
         "GET"
       ],
@@ -13665,7 +13665,7 @@
     {
       "endpoint": "reconcile_and_settle_subtitle_translate_job_route",
       "file": "copyfast_api.py",
-      "line": 8521,
+      "line": 8525,
       "methods": [
         "POST"
       ],
@@ -13701,7 +13701,7 @@
     {
       "endpoint": "create_video_dub_job_route",
       "file": "copyfast_api.py",
-      "line": 8279,
+      "line": 8283,
       "methods": [
         "POST"
       ],
@@ -13710,7 +13710,7 @@
     {
       "endpoint": "list_video_dub_jobs_route",
       "file": "copyfast_api.py",
-      "line": 8291,
+      "line": 8295,
       "methods": [
         "GET"
       ],
@@ -13719,7 +13719,7 @@
     {
       "endpoint": "get_video_dub_job_route",
       "file": "copyfast_api.py",
-      "line": 8299,
+      "line": 8303,
       "methods": [
         "GET"
       ],
@@ -13728,7 +13728,7 @@
     {
       "endpoint": "reconcile_and_settle_video_dub_job_route",
       "file": "copyfast_api.py",
-      "line": 8511,
+      "line": 8515,
       "methods": [
         "POST"
       ],
@@ -13764,7 +13764,7 @@
     {
       "endpoint": "create_video_long_job_route",
       "file": "copyfast_api.py",
-      "line": 7667,
+      "line": 7671,
       "methods": [
         "POST"
       ],
@@ -13773,7 +13773,7 @@
     {
       "endpoint": "list_video_long_jobs_route",
       "file": "copyfast_api.py",
-      "line": 7692,
+      "line": 7696,
       "methods": [
         "GET"
       ],
@@ -13782,7 +13782,7 @@
     {
       "endpoint": "get_video_long_job_route",
       "file": "copyfast_api.py",
-      "line": 7707,
+      "line": 7711,
       "methods": [
         "GET"
       ],
@@ -13791,7 +13791,7 @@
     {
       "endpoint": "create_multi_scene_film_job_route",
       "file": "copyfast_api.py",
-      "line": 7727,
+      "line": 7731,
       "methods": [
         "POST"
       ],
@@ -13800,7 +13800,7 @@
     {
       "endpoint": "list_multi_scene_film_jobs_route",
       "file": "copyfast_api.py",
-      "line": 7750,
+      "line": 7754,
       "methods": [
         "GET"
       ],
@@ -13809,7 +13809,7 @@
     {
       "endpoint": "get_multi_scene_film_job_route",
       "file": "copyfast_api.py",
-      "line": 7765,
+      "line": 7769,
       "methods": [
         "GET"
       ],
@@ -13899,7 +13899,7 @@
     {
       "endpoint": "create_video_trend_job_route",
       "file": "copyfast_api.py",
-      "line": 7607,
+      "line": 7611,
       "methods": [
         "POST"
       ],
@@ -13908,7 +13908,7 @@
     {
       "endpoint": "list_video_trend_jobs_route",
       "file": "copyfast_api.py",
-      "line": 7632,
+      "line": 7636,
       "methods": [
         "GET"
       ],
@@ -13917,7 +13917,7 @@
     {
       "endpoint": "get_video_trend_job_route",
       "file": "copyfast_api.py",
-      "line": 7647,
+      "line": 7651,
       "methods": [
         "GET"
       ],
@@ -13926,7 +13926,7 @@
     {
       "endpoint": "create_voice_clone_job_route",
       "file": "copyfast_api.py",
-      "line": 8169,
+      "line": 8173,
       "methods": [
         "POST"
       ],
@@ -13935,7 +13935,7 @@
     {
       "endpoint": "get_voice_clone_job_route",
       "file": "copyfast_api.py",
-      "line": 8191,
+      "line": 8195,
       "methods": [
         "GET"
       ],
@@ -13944,7 +13944,7 @@
     {
       "endpoint": "confirm_voice_clone_job_route",
       "file": "copyfast_api.py",
-      "line": 8208,
+      "line": 8212,
       "methods": [
         "POST"
       ],
@@ -13953,7 +13953,7 @@
     {
       "endpoint": "reconcile_voice_clone_job_route",
       "file": "copyfast_api.py",
-      "line": 8243,
+      "line": 8247,
       "methods": [
         "POST"
       ],
@@ -13962,7 +13962,7 @@
     {
       "endpoint": "create_voice_saved_tts_job_route",
       "file": "copyfast_api.py",
-      "line": 8157,
+      "line": 8161,
       "methods": [
         "POST"
       ],
@@ -13971,7 +13971,7 @@
     {
       "endpoint": "create_voice_tts_job_route",
       "file": "copyfast_api.py",
-      "line": 8015,
+      "line": 8019,
       "methods": [
         "POST"
       ],
@@ -13980,7 +13980,7 @@
     {
       "endpoint": "list_voice_tts_jobs_route",
       "file": "copyfast_api.py",
-      "line": 8052,
+      "line": 8056,
       "methods": [
         "GET"
       ],
@@ -13989,7 +13989,7 @@
     {
       "endpoint": "get_voice_tts_job_route",
       "file": "copyfast_api.py",
-      "line": 8067,
+      "line": 8071,
       "methods": [
         "GET"
       ],
@@ -13998,7 +13998,7 @@
     {
       "endpoint": "get_voice_tts_job_artifact_route",
       "file": "copyfast_api.py",
-      "line": 8125,
+      "line": 8129,
       "methods": [
         "GET"
       ],
@@ -14007,7 +14007,7 @@
     {
       "endpoint": "confirm_voice_tts_job_route",
       "file": "copyfast_api.py",
-      "line": 8087,
+      "line": 8091,
       "methods": [
         "POST"
       ],
@@ -14016,7 +14016,7 @@
     {
       "endpoint": "reconcile_voice_tts_job_route",
       "file": "copyfast_api.py",
-      "line": 8105,
+      "line": 8109,
       "methods": [
         "POST"
       ],
@@ -14808,7 +14808,7 @@
     {
       "endpoint": "operations_jobs",
       "file": "copyfast_api.py",
-      "line": 9005,
+      "line": 9009,
       "methods": [
         "GET"
       ],
@@ -14817,7 +14817,7 @@
     {
       "endpoint": "operations_jobs_failed",
       "file": "copyfast_api.py",
-      "line": 9041,
+      "line": 9045,
       "methods": [
         "GET"
       ],
@@ -14826,7 +14826,7 @@
     {
       "endpoint": "operations_job_retry_action",
       "file": "copyfast_api.py",
-      "line": 9059,
+      "line": 9063,
       "methods": [
         "POST"
       ],
@@ -14835,7 +14835,7 @@
     {
       "endpoint": "operations_job_detail",
       "file": "copyfast_api.py",
-      "line": 9050,
+      "line": 9054,
       "methods": [
         "GET"
       ],
@@ -17544,7 +17544,7 @@
     {
       "endpoint": "worker_product_video_claim",
       "file": "copyfast_api.py",
-      "line": 9670,
+      "line": 9674,
       "methods": [
         "POST"
       ],
@@ -17553,7 +17553,7 @@
     {
       "endpoint": "worker_product_video_complete",
       "file": "copyfast_api.py",
-      "line": 9711,
+      "line": 9715,
       "methods": [
         "POST"
       ],
@@ -17562,7 +17562,7 @@
     {
       "endpoint": "worker_product_video_fail",
       "file": "copyfast_api.py",
-      "line": 9733,
+      "line": 9737,
       "methods": [
         "POST"
       ],
@@ -17571,7 +17571,7 @@
     {
       "endpoint": "worker_product_video_heartbeat",
       "file": "copyfast_api.py",
-      "line": 9693,
+      "line": 9697,
       "methods": [
         "POST"
       ],
@@ -18283,7 +18283,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 271,
   "source_files_scanned": 271,
-  "source_fingerprint_sha256": "974a95a71a3800dfafcd502f5e634f7e2928dfc4ef11a3cb8f2a6b68460210c2",
+  "source_fingerprint_sha256": "82a4c6cb52453d8898b25a47e95522a8e98999b76ce3903a61e3d84a4c926118",
   "source_root": "repository-root",
   "ui_path_references": [
     {
