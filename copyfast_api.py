@@ -7502,10 +7502,14 @@ async def create_image_transform_job_route(
         request_id=request_id,
         idempotency_key=key,
     )
+    from copyfast_image_transform_runtime_bridge import prepare_image_transform_job_with_bot
+    prep_res = await prepare_image_transform_job_with_bot(account_id, job["id"])
+    out_job = prep_res.get("job") or job
+    out_job["idempotent_replay"] = bool(job.get("idempotent_replay", False))
     return envelope(
         True,
         "Đã tạo tác vụ Biến thể ảnh thành công, chờ runtime xử lý.",
-        data=job,
+        data=out_job,
         status_name="queued",
     )
 

@@ -125,6 +125,7 @@ def setup_isolated_env(tmp_path: Path, monkeypatch):
     with transaction() as conn:
         conn.execute("DELETE FROM web_image_transform_jobs")
         conn.execute("DELETE FROM web_asset_files WHERE account_id LIKE 'acc_user_%'")
+        conn.execute("DELETE FROM web_sessions WHERE account_id LIKE 'acc_user_%'")
         conn.execute("DELETE FROM web_accounts WHERE id LIKE 'acc_user_%'")
 
     # Create test accounts: user_a and user_b
@@ -1158,3 +1159,133 @@ async def test_42_fix1_fully_prepared_replay_makes_zero_bot_calls(monkeypatch):
     assert res2["bot_upload_id"] == "upl_zero_call_99"
     assert calls["upload"] == 1  # 0 additional upload calls!
     assert calls["prepare"] == 1  # 0 additional prepare calls!
+
+
+@pytest.mark.anyio
+async def test_43_fix1_e2e_customer_flow_mount_via_api(monkeypatch):
+    """Section 2 & 3: POST /features/image_transform/jobs executes prepare bridge and returns prepared result."""
+    from fastapi.testclient import TestClient
+    from app import app
+    from copyfast_auth import SESSION_COOKIE, _cookie_name, _insert_session, _session_cookie_value
+
+    monkeypatch.setenv("WEB_SESSION_SECRET", "test-session-secret-transform-bridge-12345")
+    monkeypatch.setenv("WEBAPP_COPYFAST_ENABLED", "true")
+    monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTER_ENABLED", "true")
+
+    create_test_asset("acc_user_a", "ast_e2e_mount", "e2e.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="90909090909090909090909090909090")
+    u_resp, p_resp = make_mock_bot_responses("upl_e2e_mount_01", "canonical_user_a_100")
+    calls = {"upload": 0, "prepare": 0}
+
+    async def mock_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            calls["upload"] += 1
+            return u_resp
+        calls["prepare"] += 1
+        return p_resp
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge)
+
+    client = TestClient(app)
+    with transaction() as conn:
+        sess = _insert_session(conn, "acc_user_a")
+        csrf = sess["csrf_token"]
+        raw_cookie = _session_cookie_value(sess["session_id"])
+    client.cookies.set(_cookie_name(SESSION_COOKIE), raw_cookie)
+
+    resp = client.post(
+        "/api/v1/features/image_transform/jobs",
+        headers={"X-CSRF-Token": csrf, "Idempotency-Key": "idem-e2e-mount-001"},
+        json={
+            "feature": "image_transform",
+            "input": {
+                "image_asset_id": "ast_e2e_mount",
+                "transform_instruction": "E2E artistic transformation",
+                "aspect_ratio": "1:1",
+            },
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["ok"] is True
+    job = data["data"]
+
+    # Verify real customer API executed Web-to-Bot prepare bridge
+    assert calls["upload"] == 1
+    assert calls["prepare"] == 1
+    assert job["status"] == "queued"
+    assert job["bridge_envelope"]["bot_upload_id"] == "upl_e2e_mount_01"
+    assert job["bridge_envelope"]["bot_prepare_status"] == "PREPARED_PROVIDER_DISABLED"
+    assert job["bridge_envelope"]["bot_staging_state"] == "staged"
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("invalid_val", [None, 0, 1, "false", "true", "FALSE"])
+async def test_44_fix1_strict_provider_execution_allowed_types(monkeypatch, invalid_val):
+    """Clause 3 & Section 5: provider_execution_allowed must be strict boolean False. None, 0, 'false' block."""
+    create_test_asset("acc_user_a", f"ast_strict_val_{str(invalid_val).lower()}", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="71717171717171717171717171717171")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": f"ast_strict_val_{str(invalid_val).lower()}", "transform_instruction": "style"})
+
+    async def mock_drift_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            return {"ok": True, "status": "completed", "data": {"upload_id": "upl_strict_t", "sha256": hashlib.sha256(SAMPLE_PNG_BYTES).hexdigest()}}
+        _, p_resp = make_mock_bot_responses("upl_strict_t", actor_id)
+        if invalid_val == "missing":
+            p_resp["data"].pop("provider_execution_allowed", None)
+        else:
+            p_resp["data"]["provider_execution_allowed"] = invalid_val
+        return p_resp
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_drift_bridge)
+    with pytest.raises(HTTPException) as exc:
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+    assert exc.value.status_code == 502
+    assert "provider_execution_allowed must be false" in exc.value.detail
+
+
+@pytest.mark.anyio
+async def test_45_fix1_strict_status_reason_unproven(monkeypatch):
+    """Clause 3: status_reason must be exact EXTERNAL_PROVIDER_AUTHORITY_AND_ENTITLEMENT_UNPROVEN."""
+    create_test_asset("acc_user_a", "ast_reason_test", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="72727272727272727272727272727272")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_reason_test", "transform_instruction": "style"})
+
+    async def mock_drift_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            return {"ok": True, "status": "completed", "data": {"upload_id": "upl_reason_t", "sha256": hashlib.sha256(SAMPLE_PNG_BYTES).hexdigest()}}
+        _, p_resp = make_mock_bot_responses("upl_reason_t", actor_id)
+        p_resp["data"]["status_reason"] = "FALLBACK_LOCAL_REASON"
+        return p_resp
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_drift_bridge)
+    with pytest.raises(HTTPException) as exc:
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+    assert exc.value.status_code == 502
+    assert "unexpected status_reason" in exc.value.detail
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("missing_blocker", [
+    "KEY4U_ACCOUNT_ENTITLEMENT_PROVEN=NO",
+    "KEY4U_PRICING_AUTHORITY_PROVEN=NO",
+    "KEY4U_QUOTA_AUTHORITY_PROVEN=NO",
+    "KEY4U_SPECIFIC_GROK_MODEL_PROVIDER_AUTHORITY_PROVEN=NO",
+    "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE",
+])
+async def test_46_fix1_all_five_blockers_required(monkeypatch, missing_blocker):
+    """Clause 3 & Section 5: All 5 blockers must be present; missing any blocker fails closed."""
+    create_test_asset("acc_user_a", f"ast_blk_{missing_blocker[:8]}", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="73737373737373737373737373737373")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": f"ast_blk_{missing_blocker[:8]}", "transform_instruction": "style"})
+
+    async def mock_drift_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            return {"ok": True, "status": "completed", "data": {"upload_id": "upl_blk_t", "sha256": hashlib.sha256(SAMPLE_PNG_BYTES).hexdigest()}}
+        _, p_resp = make_mock_bot_responses("upl_blk_t", actor_id)
+        current_blockers = list(p_resp["data"]["blockers"])
+        current_blockers.remove(missing_blocker)
+        p_resp["data"]["blockers"] = current_blockers
+        return p_resp
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_drift_bridge)
+    with pytest.raises(HTTPException) as exc:
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+    assert exc.value.status_code == 502
+    assert "missing required blockers" in exc.value.detail

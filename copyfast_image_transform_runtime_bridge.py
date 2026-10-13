@@ -439,27 +439,43 @@ async def prepare_image_transform_job_with_bot(
     bot_capability = str(prepare_data.get("capability") or prepare_res.get("capability") or "").strip()
     bot_executor_owner = str(prepare_data.get("executor_owner") or prepare_res.get("executor_owner") or "").strip()
     bot_provider_family = str(prepare_data.get("provider_family") or prepare_res.get("provider_family") or "").strip()
-    bot_execution_allowed = bool(prepare_data.get("provider_execution_allowed", prepare_res.get("provider_execution_allowed", True)))
+    raw_execution_allowed = prepare_data.get("provider_execution_allowed") if "provider_execution_allowed" in prepare_data else prepare_res.get("provider_execution_allowed")
     bot_ret_upload_id = str(prepare_data.get("upload_id") or prepare_res.get("upload_id") or "").strip()
     bot_owner_id = str(prepare_data.get("owner_id") or prepare_res.get("owner_id") or "").strip()
     bot_blockers = list(prepare_data.get("blockers") or prepare_res.get("blockers") or [])
 
     # Contract Invariants:
+    # - provider_execution_allowed must exist and be strictly boolean False
+    if type(raw_execution_allowed) is not bool or raw_execution_allowed is not False:
+        raise HTTPException(
+            status_code=502,
+            detail=f"{BOT_PREPARE_CONTRACT_INVALID}: provider_execution_allowed must be false (strict boolean False required)",
+        )
     # - status must be PREPARED_PROVIDER_DISABLED
-    # - provider_execution_allowed must be False
-    # - capability must be image_transform
-    # - executor_owner must be bot
-    # - upload_id must match staged upload_id
-    # - owner_id must be non-empty and match canonical actor_id exactly
     if bot_status != STATUS_PREPARED_PROVIDER_DISABLED:
         raise HTTPException(
             status_code=502,
             detail=f"{BOT_PREPARE_CONTRACT_INVALID}: unexpected status '{bot_status}', expected '{STATUS_PREPARED_PROVIDER_DISABLED}'",
         )
-    if bot_execution_allowed is not False:
+    # - status_reason must be exact EXTERNAL_PROVIDER_AUTHORITY_AND_ENTITLEMENT_UNPROVEN
+    if bot_status_reason != STATUS_REASON_UNPROVEN:
         raise HTTPException(
             status_code=502,
-            detail=f"{BOT_PREPARE_CONTRACT_INVALID}: provider_execution_allowed must be false",
+            detail=f"{BOT_PREPARE_CONTRACT_INVALID}: unexpected status_reason '{bot_status_reason}', expected '{STATUS_REASON_UNPROVEN}'",
+        )
+    # - blocker set must contain all 5 required blockers
+    required_blockers = {
+        "KEY4U_ACCOUNT_ENTITLEMENT_PROVEN=NO",
+        "KEY4U_PRICING_AUTHORITY_PROVEN=NO",
+        "KEY4U_QUOTA_AUTHORITY_PROVEN=NO",
+        "KEY4U_SPECIFIC_GROK_MODEL_PROVIDER_AUTHORITY_PROVEN=NO",
+        "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE",
+    }
+    missing_blockers = required_blockers - set(bot_blockers)
+    if missing_blockers:
+        raise HTTPException(
+            status_code=502,
+            detail=f"{BOT_PREPARE_CONTRACT_INVALID}: missing required blockers: {sorted(missing_blockers)}",
         )
     if bot_capability != "image_transform":
         raise HTTPException(

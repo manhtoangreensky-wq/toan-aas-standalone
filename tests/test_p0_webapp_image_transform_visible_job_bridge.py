@@ -46,8 +46,32 @@ if str(STANDALONE_ROOT) not in sys.path:
 
 from app import app
 import app as app_module
-from copyfast_db import ensure_copyfast_schema, read_transaction, session_database_path, transaction
+from copyfast_db import asset_vault_directory, ensure_copyfast_schema, read_transaction, session_database_path, transaction
 import copyfast_image_transform_job_bridge as bridge
+import copyfast_bridge
+import hashlib
+
+SAMPLE_PNG_BYTES = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+    b"\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00"
+    b"\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+SAMPLE_JPEG_BYTES = (
+    b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00`\x00`\x00\x00"
+    b"\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t\x08\n\x0c"
+    b"\x14\r\x0c\x0b\x0b\x0c\x19\x12\x13\x0f\x14\x1d\x1a\x1f\x1e\x1d\x1a\x1c"
+    b"\x1c $.' \",#\x1c\x1c(7),01444\x1f'9=82<.342\xff\xc0\x00\x0b\x08\x00\x01"
+    b"\x00\x01\x01\x01\x11\x00\xff\xc4\x00\x1f\x00\x00\x01\x05\x01\x01\x01\x01"
+    b"\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08"
+    b"\t\n\x0b\xff\xda\x00\x08\x01\x01\x00\x00?\x00\xbf\x00\xff\xd9"
+)
+SAMPLE_WEBP_BYTES = (
+    b"RIFF\x1a\x00\x00\x00WEBPVP8 \x0e\x00\x00\x000\x01\x00\x9d\x01*\x01\x00"
+    b"\x01\x00\x02\x004%\xa4\x00"
+)
+SHA_JPEG = hashlib.sha256(SAMPLE_JPEG_BYTES).hexdigest()
+SHA_PNG = hashlib.sha256(SAMPLE_PNG_BYTES).hexdigest()
+SHA_WEBP = hashlib.sha256(SAMPLE_WEBP_BYTES).hexdigest()
 
 
 # ─── FIXTURE ──────────────────────────────────────────────────────────────────
@@ -61,10 +85,54 @@ def setup_db_and_env(monkeypatch):
     monkeypatch.setenv("WEBAPP_COPYFAST_ENABLED", "true")
     monkeypatch.setenv("WEBAPP_PROVIDER_CALLS_ENABLED", "false")
     monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTER_ENABLED", "true")
+    monkeypatch.setenv("WEBAPP_ASSET_VAULT_ENABLED", "true")
+    monkeypatch.setenv("CORE_BRIDGE_BASE_URL", "http://127.0.0.1:8000")
+    monkeypatch.setenv("CORE_BRIDGE_TOKEN", "mock-bridge-token")
+    monkeypatch.setenv("CORE_BRIDGE_HMAC_SECRET", "mock-bridge-secret")
     monkeypatch.setattr(app_module, "_durable_auth_throttle_guard", lambda *a, **kw: None)
     app_module._auth_rate_windows.clear()
+
+    async def mock_bridge_req(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == "/internal/v1/uploads":
+            sha = (payload or {}).get("sha256") or ""
+            return {"ok": True, "status": "completed", "data": {"upload_id": "upl_mock_test_123", "sha256": sha}}
+        if path == "/internal/v1/web-image-transform/prepare":
+            upl_id = (payload or {}).get("upload_id") or "upl_mock_test_123"
+            return {
+                "ok": True,
+                "status": "PREPARED_PROVIDER_DISABLED",
+                "status_reason": "EXTERNAL_PROVIDER_AUTHORITY_AND_ENTITLEMENT_UNPROVEN",
+                "data": {
+                    "status": "PREPARED_PROVIDER_DISABLED",
+                    "status_reason": "EXTERNAL_PROVIDER_AUTHORITY_AND_ENTITLEMENT_UNPROVEN",
+                    "capability": "image_transform",
+                    "executor_owner": "bot",
+                    "provider_family": "key4u",
+                    "provider_execution_allowed": False,
+                    "upload_id": upl_id,
+                    "owner_id": actor_id,
+                    "blockers": [
+                        "KEY4U_ACCOUNT_ENTITLEMENT_PROVEN=NO",
+                        "KEY4U_PRICING_AUTHORITY_PROVEN=NO",
+                        "KEY4U_QUOTA_AUTHORITY_PROVEN=NO",
+                        "KEY4U_SPECIFIC_GROK_MODEL_PROVIDER_AUTHORITY_PROVEN=NO",
+                        "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE",
+                    ],
+                },
+            }
+        return {"ok": True, "data": {}}
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_bridge_req)
+
     ensure_copyfast_schema()
     bridge.ensure_image_transform_schema()
+
+    vault_root = Path(asset_vault_directory())
+    objects_dir = vault_root / "objects"
+    objects_dir.mkdir(parents=True, exist_ok=True)
+    (objects_dir / "11111111111111111111111111111111.blob").write_bytes(SAMPLE_JPEG_BYTES)
+    (objects_dir / "22222222222222222222222222222222.blob").write_bytes(SAMPLE_PNG_BYTES)
+    (objects_dir / "33333333333333333333333333333333.blob").write_bytes(SAMPLE_WEBP_BYTES)
+    (objects_dir / "44444444444444444444444444444444.blob").write_bytes(SAMPLE_PNG_BYTES)
 
     with transaction() as conn:
         conn.execute("DELETE FROM web_image_transform_jobs")
@@ -73,53 +141,53 @@ def setup_db_and_env(monkeypatch):
         conn.execute("DELETE FROM web_accounts WHERE id LIKE 'test-transform-%'")
         conn.execute(
             """
-            INSERT OR REPLACE INTO web_accounts (id, email, password_hash, role_cache, created_at, updated_at)
-            VALUES ('test-transform-user-1', 'transform1@test.local', 'hash1', 'user', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'),
-                   ('test-transform-user-2', 'transform2@test.local', 'hash2', 'user', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'),
-                   ('test-transform-admin', 'admin@test.local', 'hashadmin', 'admin', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z')
+            INSERT OR REPLACE INTO web_accounts (id, email, password_hash, role_cache, canonical_user_id, created_at, updated_at)
+            VALUES ('test-transform-user-1', 'transform1@test.local', 'hash1', 'user', '100001', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'),
+                   ('test-transform-user-2', 'transform2@test.local', 'hash2', 'user', '100002', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'),
+                   ('test-transform-admin', 'admin@test.local', 'hashadmin', 'admin', '100000', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z')
             """
         )
         conn.execute(
-            """
+            f"""
             INSERT OR REPLACE INTO web_asset_files (
                 id, account_id, project_id, display_name, original_filename,
                 extension, content_type, byte_size, sha256, storage_key,
                 state, created_at, updated_at
             ) VALUES (
                 'asset-transform-source-1', 'test-transform-user-1', NULL, 'Ảnh JPEG thử nghiệm',
-                'sample.jpg', '.jpg', 'image/jpeg', 102400, 'hashsha256', 'storage_key_1',
+                'sample.jpg', '.jpg', 'image/jpeg', {len(SAMPLE_JPEG_BYTES)}, '{SHA_JPEG}', 'objects/11111111111111111111111111111111.blob',
                 'active', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'
             ), (
                 'asset-transform-source-png', 'test-transform-user-1', NULL, 'Ảnh PNG thử nghiệm',
-                'sample.png', '.png', 'image/png', 204800, 'hashsha256_png', 'storage_key_png',
+                'sample.png', '.png', 'image/png', {len(SAMPLE_PNG_BYTES)}, '{SHA_PNG}', 'objects/22222222222222222222222222222222.blob',
                 'active', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'
             ), (
                 'asset-transform-source-webp', 'test-transform-user-1', NULL, 'Ảnh WebP thử nghiệm',
-                'sample.webp', '.webp', 'image/webp', 153600, 'hashsha256_webp', 'storage_key_webp',
+                'sample.webp', '.webp', 'image/webp', {len(SAMPLE_WEBP_BYTES)}, '{SHA_WEBP}', 'objects/33333333333333333333333333333333.blob',
                 'active', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'
             ), (
                 'asset-transform-svg', 'test-transform-user-1', NULL, 'Ảnh vector SVG không hợp lệ',
-                'vector.svg', '.svg', 'image/svg+xml', 10240, 'hashsha256_svg', 'storage_key_svg',
+                'vector.svg', '.svg', 'image/svg+xml', 10240, 'hashsha256_svg', 'objects/55555555555555555555555555555555.blob',
                 'active', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'
             ), (
                 'asset-transform-gif', 'test-transform-user-1', NULL, 'Ảnh động GIF không hợp lệ',
-                'animation.gif', '.gif', 'image/gif', 20480, 'hashsha256_gif', 'storage_key_gif',
+                'animation.gif', '.gif', 'image/gif', 20480, 'hashsha256_gif', 'objects/66666666666666666666666666666666.blob',
                 'active', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'
             ), (
                 'asset-transform-bmp', 'test-transform-user-1', NULL, 'Ảnh bitmap BMP không hợp lệ',
-                'raw.bmp', '.bmp', 'image/bmp', 20480, 'hashsha256_bmp', 'storage_key_bmp',
+                'raw.bmp', '.bmp', 'image/bmp', 20480, 'hashsha256_bmp', 'objects/77777777777777777777777777777777.blob',
                 'active', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'
             ), (
                 'asset-transform-user2-source', 'test-transform-user-2', NULL, 'Ảnh người khác',
-                'private.png', '.png', 'image/png', 204800, 'hashsha256_2', 'storage_key_2',
+                'private.png', '.png', 'image/png', {len(SAMPLE_PNG_BYTES)}, '{SHA_PNG}', 'objects/44444444444444444444444444444444.blob',
                 'active', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'
             ), (
                 'asset-transform-inactive', 'test-transform-user-1', NULL, 'Ảnh chưa sẵn sàng',
-                'draft.jpg', '.jpg', 'image/jpeg', 51200, 'hashsha256_3', 'storage_key_3',
+                'draft.jpg', '.jpg', 'image/jpeg', 51200, 'hashsha256_3', 'objects/88888888888888888888888888888888.blob',
                 'pending', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'
             ), (
                 'asset-transform-non-image', 'test-transform-user-1', NULL, 'Tệp văn bản',
-                'document.pdf', '.pdf', 'application/pdf', 51200, 'hashsha256_4', 'storage_key_4',
+                'document.pdf', '.pdf', 'application/pdf', 51200, 'hashsha256_4', 'objects/99999999999999999999999999999999.blob',
                 'active', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'
             )
             """
@@ -309,7 +377,7 @@ def test_04_create_job_fail_closed_via_web_api():
             },
         },
     )
-    assert resp.status_code == 200
+    assert resp.status_code == 200, f"Status: {resp.status_code}, Body: {resp.text}"
     data = resp.json()
     assert data["ok"] is True
     job = data["data"]
