@@ -82,7 +82,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 263,
+      "line": 274,
       "target": "_format_job_dict"
     },
     {
@@ -442,7 +442,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 326,
+      "line": 337,
       "target": "create_or_replay_image_transform_job"
     },
     {
@@ -658,7 +658,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 594,
+      "line": 605,
       "target": "finalize_image_transform_job_result"
     },
     {
@@ -730,7 +730,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 534,
+      "line": 545,
       "target": "get_admin_image_transform_job"
     },
     {
@@ -802,7 +802,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 448,
+      "line": 459,
       "target": "get_image_transform_job"
     },
     {
@@ -1066,7 +1066,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 554,
+      "line": 565,
       "target": "image_transform_job_to_native_compat"
     },
     {
@@ -1096,7 +1096,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 468,
+      "line": 479,
       "target": "is_image_transform_job_other_account"
     },
     {
@@ -1162,7 +1162,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 512,
+      "line": 523,
       "target": "list_admin_image_transform_jobs"
     },
     {
@@ -1228,7 +1228,7 @@
     {
       "file": "copyfast_image_transform_job_bridge.py",
       "kind": "function",
-      "line": 488,
+      "line": 499,
       "target": "list_image_transform_jobs"
     },
     {
@@ -1482,6 +1482,12 @@
       "kind": "function",
       "line": 284,
       "target": "parse_native_job_id"
+    },
+    {
+      "file": "copyfast_image_transform_runtime_bridge.py",
+      "kind": "function",
+      "line": 186,
+      "target": "prepare_image_transform_job_with_bot"
     },
     {
       "file": "copyfast_product_video_job_bridge.py",
@@ -1766,7 +1772,7 @@
   "commands": [],
   "conversations": [],
   "counts": {
-    "background_jobs": 293,
+    "background_jobs": 294,
     "callback_data": 0,
     "callback_handlers": 0,
     "callback_templates": 0,
@@ -5291,19 +5297,31 @@
     },
     {
       "file": "copyfast_image_transform_job_bridge.py",
-      "line": 138,
+      "line": 149,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_image_transform_jobs"
     },
     {
       "file": "copyfast_image_transform_job_bridge.py",
-      "line": 405,
+      "line": 416,
       "operation": "INSERT INTO",
       "table": "web_image_transform_jobs"
     },
     {
       "file": "copyfast_image_transform_job_bridge.py",
-      "line": 703,
+      "line": 714,
+      "operation": "UPDATE",
+      "table": "web_image_transform_jobs"
+    },
+    {
+      "file": "copyfast_image_transform_runtime_bridge.py",
+      "line": 297,
+      "operation": "UPDATE",
+      "table": "web_image_transform_jobs"
+    },
+    {
+      "file": "copyfast_image_transform_runtime_bridge.py",
+      "line": 419,
       "operation": "UPDATE",
       "table": "web_image_transform_jobs"
     },
@@ -8889,7 +8907,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 342,
+      "line": 343,
       "name": "INTERNAL_MANUAL_ADMIN_TOKEN"
     },
     {
@@ -10244,6 +10262,7 @@
     {
       "files": [
         "copyfast_image_transform_job_bridge.py",
+        "copyfast_image_transform_runtime_bridge.py",
         "copyfast_provider_policy.py",
         "reports/audit/P0-WEBAPP-V3-SUBDUB-CANONICAL-PRODUCT-AUTHORITY-R1.json",
         "reports/bundle_analyzer.html",
@@ -10256,7 +10275,7 @@
         "scripts/build_r12_matrix.py",
         "static/portal/bundle_analyzer.html"
       ],
-      "occurrences": 56,
+      "occurrences": 57,
       "provider": "Key4U"
     },
     {
@@ -18244,9 +18263,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 270,
-  "source_files_scanned": 270,
-  "source_fingerprint_sha256": "ceda851da725c68a3653dace379d1d70a60d976de47cc1ff3bc7bd1c2068bb5e",
+  "source_files_discovered": 271,
+  "source_files_scanned": 271,
+  "source_fingerprint_sha256": "54dffc289845ff4a1c4a87d3712a8344cef2591a5cebe220eb057743608b29f4",
   "source_root": "repository-root",
   "ui_path_references": [
     {
