@@ -5327,19 +5327,25 @@
     },
     {
       "file": "copyfast_image_transform_runtime_bridge.py",
-      "line": 356,
+      "line": 350,
       "operation": "UPDATE",
       "table": "web_image_transform_jobs"
     },
     {
       "file": "copyfast_image_transform_runtime_bridge.py",
-      "line": 402,
+      "line": 378,
       "operation": "UPDATE",
       "table": "web_image_transform_jobs"
     },
     {
       "file": "copyfast_image_transform_runtime_bridge.py",
-      "line": 546,
+      "line": 424,
+      "operation": "UPDATE",
+      "table": "web_image_transform_jobs"
+    },
+    {
+      "file": "copyfast_image_transform_runtime_bridge.py",
+      "line": 568,
       "operation": "UPDATE",
       "table": "web_image_transform_jobs"
     },
@@ -8725,7 +8731,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 178,
+      "line": 190,
       "name": "ADMIN_ID"
     },
     {
@@ -8925,7 +8931,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 347,
+      "line": 361,
       "name": "INTERNAL_MANUAL_ADMIN_TOKEN"
     },
     {
@@ -8955,7 +8961,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 178,
+      "line": 190,
       "name": "OWNER_IDS"
     },
     {
@@ -18283,7 +18289,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 271,
   "source_files_scanned": 271,
-  "source_fingerprint_sha256": "82a4c6cb52453d8898b25a47e95522a8e98999b76ce3903a61e3d84a4c926118",
+  "source_fingerprint_sha256": "34f84c9216dbcaad44e51abec8005048bb3245fa03c90b5485d097dd64ffdd67",
   "source_root": "repository-root",
   "ui_path_references": [
     {
