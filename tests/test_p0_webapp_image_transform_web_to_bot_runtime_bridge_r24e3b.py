@@ -1380,4 +1380,3 @@ async def test_47_web_bridge_sends_idempotency_key_header():
     await client.request("POST", "/internal/v1/uploads", payload=payload, actor_id="user_test")
 
     assert captured_headers.get("idempotency-key") == "my-canonical-key-123"
-
