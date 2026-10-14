@@ -999,16 +999,34 @@ async def test_38_fix1_bot_prepare_owner_id_mismatch_rejected(monkeypatch):
 
 
 @pytest.mark.anyio
-async def test_39_fix1_upload_transport_ambiguity_blocks_automatic_resubmit(monkeypatch):
-    """Fix C & Section 6: Upload transport ambiguity does not permit automatic second upload."""
+async def test_39_fix2_upload_transport_ambiguity_reconciliation(monkeypatch):
+    """Section 14 & 22: First upload ambiguous -> durable ambiguous state. Next explicit replay performs exactly one reconciliation request using same idempotency key and resolves same upload ID."""
     create_test_asset("acc_user_a", "ast_ambig", "art.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="85858585858585858585858585858585")
     job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_ambig", "transform_instruction": "style"})
 
     upload_calls = []
+    first_call = True
+
     async def mock_ambiguous_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        nonlocal first_call
         if path == BOT_PRIVATE_UPLOAD_ROUTE:
-            upload_calls.append(payload)
-            return {"ok": False, "status": "guarded", "error_code": "CORE_BRIDGE_UNAVAILABLE", "message": "Connection reset by peer"}
+            upload_calls.append(dict(payload))
+            if first_call:
+                first_call = False
+                return {"ok": False, "status": "guarded", "error_code": "CORE_BRIDGE_UNAVAILABLE", "message": "Connection reset by peer"}
+            else:
+                return {
+                    "ok": True,
+                    "status": "completed",
+                    "data": {
+                        "upload_id": "upl_reconciled_9999",
+                        "owner_id": actor_id,
+                        "sha256": payload.get("sha256"),
+                    },
+                }
+        if path == BOT_PRIVATE_PREPARE_ROUTE:
+            _, p_resp = make_mock_bot_responses("upl_reconciled_9999", actor_id)
+            return p_resp
         return {"ok": True, "status": "completed"}
 
     monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_ambiguous_bridge)
@@ -1022,16 +1040,68 @@ async def test_39_fix1_upload_transport_ambiguity_blocks_automatic_resubmit(monk
     assert len(upload_calls) == 1
 
     # Verify durable state in DB is 'ambiguous'
-    db_job = get_image_transform_job("acc_user_a", job["id"])
-    assert db_job["bridge_envelope"]["bot_staging_state"] == "ambiguous"
+    db_job1 = get_image_transform_job("acc_user_a", job["id"])
+    assert db_job1["bridge_envelope"]["bot_staging_state"] == "ambiguous"
+    idemp_key_1 = upload_calls[0]["idempotency_key"]
 
-    # Second attempt: must fail closed without issuing another Bot upload!
-    with pytest.raises(HTTPException) as exc2:
+    # Second explicit attempt: reconciliation succeeds using SAME idempotency key!
+    res2 = await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+    assert res2["ok"] is True
+    assert res2["bot_upload_id"] == "upl_reconciled_9999"
+    assert len(upload_calls) == 2  # exactly ONE reconciliation request
+    assert upload_calls[1]["idempotency_key"] == idemp_key_1  # SAME idempotency key!
+
+    # Verify durable state in DB is now 'staged'
+    db_job2 = get_image_transform_job("acc_user_a", job["id"])
+    assert db_job2["bridge_envelope"]["bot_staging_state"] == "staged"
+    assert db_job2["bridge_envelope"]["bot_upload_id"] == "upl_reconciled_9999"
+
+
+@pytest.mark.anyio
+async def test_39_b_reconciliation_still_unavailable_remains_ambiguous(monkeypatch):
+    """Section 22: If reconciliation call is still unavailable, state remains ambiguous with no fabricated ID."""
+    create_test_asset("acc_user_a", "ast_ambig2", "art2.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="86868686868686868686868686868686")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_ambig2", "transform_instruction": "style"})
+
+    async def mock_fail_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            return {"ok": False, "status": "guarded", "error_code": "CORE_BRIDGE_TIMEOUT", "message": "Timed out"}
+        return {"ok": True, "status": "completed"}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_fail_bridge)
+
+    with pytest.raises(HTTPException):
         await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
 
-    assert exc2.value.status_code == 409
-    assert BOT_STAGING_AMBIGUOUS_RETRY_BLOCKED in exc2.value.detail
-    assert len(upload_calls) == 1  # 0 additional upload attempts!
+    with pytest.raises(HTTPException):
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+
+    db_job = get_image_transform_job("acc_user_a", job["id"])
+    assert db_job["bridge_envelope"]["bot_staging_state"] == "ambiguous"
+    assert "bot_upload_id" not in db_job["bridge_envelope"]
+
+
+@pytest.mark.anyio
+async def test_39_c_idempotency_conflict_fails_closed(monkeypatch):
+    """Section 22: If Bot returns IDEMPOTENCY_CONFLICT, Web fails closed with 409 and sets conflict state."""
+    create_test_asset("acc_user_a", "ast_ambig3", "art3.png", ".png", "image/png", SAMPLE_PNG_BYTES, storage_hex="87878787878787878787878787878787")
+    job = create_or_replay_image_transform_job("acc_user_a", {"image_asset_id": "ast_ambig3", "transform_instruction": "style"})
+
+    async def mock_conflict_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id="", owner_id=""):
+        if path == BOT_PRIVATE_UPLOAD_ROUTE:
+            return {"ok": False, "status_code": 409, "error_code": "IDEMPOTENCY_CONFLICT", "message": "Mismatched payload"}
+        return {"ok": True, "status": "completed"}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", mock_conflict_bridge)
+
+    with pytest.raises(HTTPException) as exc:
+        await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
+
+    assert exc.value.status_code == 409
+    assert "IDEMPOTENCY_CONFLICT" in exc.value.detail
+
+    db_job = get_image_transform_job("acc_user_a", job["id"])
+    assert db_job["bridge_envelope"]["bot_staging_state"] == "conflict"
 
 
 @pytest.mark.anyio
@@ -1289,3 +1359,25 @@ async def test_46_fix1_all_five_blockers_required(monkeypatch, missing_blocker):
         await prepare_image_transform_job_with_bot("acc_user_a", job["id"])
     assert exc.value.status_code == 502
     assert "missing required blockers" in exc.value.detail
+
+
+@pytest.mark.anyio
+async def test_47_web_bridge_sends_idempotency_key_header():
+    """Section 16: Core Bridge passes canonical Idempotency-Key header matching payload idempotency_key."""
+    captured_headers = {}
+
+    async def mock_handler(request: httpx.Request) -> httpx.Response:
+        captured_headers.update(dict(request.headers))
+        return httpx.Response(200, json={"ok": True, "status": "completed", "data": {"upload_id": "upl_test"}})
+
+    client = CoreBridgeClient(
+        base_url="https://bridge.invalid",
+        token="token-123",
+        hmac_secret="secret-123",
+        transport=httpx.MockTransport(mock_handler),
+    )
+    payload = {"idempotency_key": "my-canonical-key-123", "data": "abc"}
+    await client.request("POST", "/internal/v1/uploads", payload=payload, actor_id="user_test")
+
+    assert captured_headers.get("idempotency-key") == "my-canonical-key-123"
+

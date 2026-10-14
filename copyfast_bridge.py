@@ -146,7 +146,17 @@ class CoreBridgeClient:
     def configuration_error(self) -> str | None:
         return _configuration_error(self.base_url, self.token, self.hmac_secret)
 
-    def _headers(self, method: str, path: str, body: bytes, *, request_id: str, actor_id: str = "", owner_id: str = "") -> dict[str, str]:
+    def _headers(
+        self,
+        method: str,
+        path: str,
+        body: bytes,
+        *,
+        request_id: str,
+        actor_id: str = "",
+        owner_id: str = "",
+        idempotency_key: str = "",
+    ) -> dict[str, str]:
         timestamp = str(int(time.time()))
         digest = hashlib.sha256(body).hexdigest()
         clean_actor = str(actor_id or "").strip()
@@ -166,6 +176,8 @@ class CoreBridgeClient:
             headers["X-TOAN-AAS-Actor-ID"] = clean_actor[:128]
         if owner_id:
             headers["X-TOAN-AAS-Telegram-User-ID"] = owner_id
+        if idempotency_key:
+            headers["Idempotency-Key"] = str(idempotency_key).strip()
         if body:
             headers["Content-Type"] = "application/json"
         return headers
@@ -232,6 +244,7 @@ class CoreBridgeClient:
             )
         )
         attempts = 2 if retry_safe else 1
+        idemp_key = str((payload or {}).get("idempotency_key") or "").strip() if isinstance(payload, dict) else ""
         response: httpx.Response | None = None
         for attempt in range(attempts):
             try:
@@ -243,6 +256,7 @@ class CoreBridgeClient:
                     request_id=bridge_request_id,
                     actor_id=actor_id,
                     owner_id=owner_id,
+                    idempotency_key=idemp_key,
                 )
                 async with httpx.AsyncClient(base_url=self.base_url, timeout=httpx.Timeout(12.0, connect=4.0), transport=self.transport) as client:
                     response = await client.request(method.upper(), normalized_path, content=body or None, params=params, headers=headers)

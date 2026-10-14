@@ -273,13 +273,13 @@ async def prepare_image_transform_job_with_bot(
     bot_upload_id = str(envelope_meta.get("bot_upload_id") or "").strip()
     if not bot_upload_id or not bot_upload_id.startswith("upl_"):
         bot_staging_state = str(envelope_meta.get("bot_staging_state") or "").strip().lower()
-        if bot_staging_state in {"ambiguous", "attempting"}:
+        if bot_staging_state == "conflict":
             raise HTTPException(
                 status_code=409,
-                detail=f"{BOT_STAGING_AMBIGUOUS_RETRY_BLOCKED}: staging state '{bot_staging_state}' is unverified; automatic duplicate upload is blocked",
+                detail="IDEMPOTENCY_CONFLICT: staging conflict; payload mismatch on idempotency key",
             )
 
-        # Durably record that an upload attempt has begun before dispatching outbound request
+        # Durably record that an upload attempt / reconciliation replay has begun
         envelope_meta["bot_staging_state"] = "attempting"
         envelope_meta["bot_staging_source_sha256"] = sha256_digest
         envelope_meta["bot_staging_attempted_at"] = utc_now()
@@ -341,6 +341,28 @@ async def prepare_image_transform_job_with_bot(
             error_code = str(upload_res.get("error_code") or "").strip()
             msg = str(upload_res.get("message") or "Staged upload rejected by Bot")
             status_name = str(upload_res.get("status") or "").strip().lower()
+
+            if error_code == "IDEMPOTENCY_CONFLICT":
+                envelope_meta["bot_staging_state"] = "conflict"
+                with transaction() as conn:
+                    conn.execute(
+                        """
+                        UPDATE web_image_transform_jobs
+                        SET bridge_envelope = ?,
+                            updated_at = ?
+                        WHERE id = ? AND account_id = ?;
+                        """,
+                        (
+                            json.dumps(sanitize_external_metadata(envelope_meta), ensure_ascii=False),
+                            utc_now(),
+                            clean_job_id,
+                            clean_account,
+                        ),
+                    )
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"IDEMPOTENCY_CONFLICT: {msg}",
+                )
 
             # Distinguish definitive application rejection from ambiguous transport failure
             is_ambiguous = (
