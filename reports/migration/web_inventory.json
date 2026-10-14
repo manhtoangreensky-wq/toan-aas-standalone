@@ -1925,19 +1925,19 @@
     },
     {
       "file": "scripts/build_r10_matrix.py",
-      "line": 346,
+      "line": 359,
       "operation": "UPDATE",
       "table": "defects"
     },
     {
       "file": "scripts/build_r11_matrix.py",
-      "line": 415,
+      "line": 431,
       "operation": "UPDATE",
       "table": "defects"
     },
     {
       "file": "scripts/build_r12_matrix.py",
-      "line": 388,
+      "line": 392,
       "operation": "UPDATE",
       "table": "defects"
     },
@@ -10391,7 +10391,7 @@
         "scripts/build_r9_matrix.py",
         "studio/script.js"
       ],
-      "occurrences": 80,
+      "occurrences": 42,
       "provider": "ElevenLabs"
     },
     {
@@ -10407,14 +10407,8 @@
         "bot_to_web_parity_matrix.json",
         "copyfast_registry.py",
         "customer_app.html",
-        "reports/webapp_full_product_truth/R10_FINAL_ROUTE_RUNTIME_MATRIX.json",
-        "reports/webapp_full_product_truth/R11_FINAL_ROUTE_RUNTIME_MATRIX.json",
-        "reports/webapp_full_product_truth/R12_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R6_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R7_FINAL_ROUTE_RUNTIME_MATRIX.json",
-        "scripts/build_r10_matrix.py",
-        "scripts/build_r11_matrix.py",
-        "scripts/build_r12_matrix.py",
         "scripts/build_r6_matrix.py",
         "scripts/build_r7_matrix.py",
         "static/manifest.json",
@@ -10423,7 +10417,7 @@
         "studio/manifest.json",
         "studio/script.js"
       ],
-      "occurrences": 58,
+      "occurrences": 52,
       "provider": "Suno"
     },
     {
@@ -18282,7 +18276,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 271,
   "source_files_scanned": 271,
-  "source_fingerprint_sha256": "e7e8e007277024ca122b0de616a607bb9d27c068b320b071b4ed6f81a4119f2f",
+  "source_fingerprint_sha256": "32bc085f0b3fc81df3ffb8a5d075b7cda6b6fad27f3d56020ded42d3e25c1bd4",
   "source_root": "repository-root",
   "ui_path_references": [
     {
