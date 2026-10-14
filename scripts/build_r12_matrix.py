@@ -39,6 +39,7 @@ ALLOWED_CLASSIFICATIONS = frozenset({
     "BLOCKED_CANONICAL_BACKEND_MISSING",
     "BLOCKED_EXTERNAL_CAPABILITY_OR_GRANT_REQUIRED",
     "BLOCKED_PROVIDER_ENTITLEMENT",
+    "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED",
     "IMPLEMENTED_DEPLOYED_WAIT_OWNER_LIVE_GRANT",
     "IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD",
     "NOT_A_PRODUCT_ACTION_INFORMATIONAL_ONLY",
@@ -55,6 +56,7 @@ ALLOWED_ROOT_GAPS = frozenset({
     "GENUINE_CANONICAL_ENGINE_MISSING",
     "EXTERNAL_PROVIDER_CAPABILITY_MISSING",
     "ACCOUNT_ENTITLEMENT_MISSING",
+    "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED",
     "OWNER_LIVE_GRANT_REQUIRED",
     "EXTERNAL_PROVIDER_INCIDENT_MINIMAX_503",
     "NONE_RELEASED_RUNTIME",
@@ -94,16 +96,25 @@ R12_ROUTE_OVERLAYS = {
         "required_owner_action": "ESTABLISH_PRODUCTION_QUOTA_AND_PRICING_THEN_AUTHORIZE_KEY4U_PUBLIC_ENABLED_TRUE",
     },
     "/music/sfx": {
-        "final_classification": "BLOCKED_PROVIDER_ENTITLEMENT",
-        "actual_root_gap": "ACCOUNT_ENTITLEMENT_MISSING",
-        "proof": "ElevenLabs API key configured in Bot Core only for Text-to-Speech (/v1/text-to-speech) and subscription readback (/v1/user/subscription); no Sound Effects API quota or adapter exists; Musicful is limited to Suno music generation; Freesound library assets are non-generative.",
-        "business_status": "BLOCKED_PROVIDER_ENTITLEMENT",
-        "selected_provider": "ElevenLabs",
+        "final_classification": "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED",
+        "actual_root_gap": "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED",
+        "proof": "No sanctioned generative SFX provider selected; ElevenLabs is a viable external candidate (/v1/sound-generation, eleven_text_to_sound_v2) but is not selected or authorized; Freesound is non-generative catalog search/download only; requires Owner provider selection before entitlement.",
+        "business_status": "WAIT_OWNER_MUSIC_SFX_PROVIDER_SELECTION",
+        "sanctioned_generative_sfx_provider_selected": "NO",
+        "selected_provider": "NONE",
+        "elevenlabs_external_sfx_candidate": "YES",
+        "elevenlabs_sanctioned_project_sfx_provider": "NO",
         "provider_candidates": ["ElevenLabs", "Musicful"],
-        "model_or_capability_id": "elevenlabs-sound-effects-v1",
-        "endpoint_documented": "https://api.elevenlabs.io/v1/sound-effects",
-        "missing_account_entitlement": "ElevenLabs Sound Effects API quota and subscription entitlement",
-        "required_owner_action": "UPGRADE_ELEVENLABS_SUBSCRIPTION_TO_TIER_WITH_SOUND_EFFECTS_QUOTA_OR_ALLOCATE_SFX_API",
+        "model_or_capability_id": "eleven_text_to_sound_v2",
+        "endpoint_documented": "https://api.elevenlabs.io/v1/sound-generation",
+        "candidate_http_method": "POST",
+        "candidate_auth_scheme": "xi-api-key",
+        "candidate_response_type": "BINARY_MP3_SYNC",
+        "candidate_task_id_semantics": "NONE",
+        "freesound_generative_sfx_capability": "NO",
+        "account_entitlement_is_only_current_blocker": "NO",
+        "missing_account_entitlement": "Generative Music SFX provider selection and subsequent subscription/API quota entitlement",
+        "required_owner_action": "SELECT_AND_AUTHORIZE_GENERATIVE_MUSIC_SFX_PROVIDER_BEFORE_ENTITLEMENT",
     },
 }
 
@@ -113,19 +124,9 @@ def classify_surface(s: dict) -> dict:
     path = s["path"]
     if path in R12_ROUTE_OVERLAYS:
         overlay = R12_ROUTE_OVERLAYS[path]
-        cr["final_classification"] = overlay["final_classification"]
-        cr["actual_root_gap"] = overlay["actual_root_gap"]
+        for k, v in overlay.items():
+            cr[k] = v
         cr["correct_terminal_classification"] = overlay["final_classification"]
-        cr["proof"] = overlay["proof"]
-        if "business_status" in overlay:
-            cr["business_status"] = overlay["business_status"]
-        if "selected_provider" in overlay:
-            cr["selected_provider"] = overlay["selected_provider"]
-            cr["provider_candidates"] = overlay["provider_candidates"]
-            cr["model_or_capability_id"] = overlay["model_or_capability_id"]
-            cr["endpoint_documented"] = overlay["endpoint_documented"]
-            cr["missing_account_entitlement"] = overlay["missing_account_entitlement"]
-            cr["required_owner_action"] = overlay["required_owner_action"]
 
     assert cr["final_classification"] in ALLOWED_CLASSIFICATIONS, f"Invalid classification {cr['final_classification']} for {path}"
     assert cr["actual_root_gap"] in ALLOWED_ROOT_GAPS, f"Invalid root gap {cr['actual_root_gap']} for {path}"
@@ -197,6 +198,7 @@ def main() -> None:
             "EXTERNAL_PROVIDER_CAPABILITY_MISSING_COUNT": 0,
             "BLOCKED_EXTERNAL_CAPABILITY_OR_GRANT_REQUIRED_COUNT": 0,
             "BLOCKED_PROVIDER_ENTITLEMENT_COUNT": classification_counts.get("BLOCKED_PROVIDER_ENTITLEMENT", 0),
+            "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED_COUNT": classification_counts.get("NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED", 0),
             "EXTERNAL_PROVIDER_INCIDENT_HOLD_COUNT": classification_counts.get("IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD", 0),
             "OTHER_UNRESOLVED_ENGINEERING_RESIDUALS": 0,
             "ACCOUNT_ENTITLEMENT_MISSING_COUNT": root_gap_counts.get("ACCOUNT_ENTITLEMENT_MISSING", 0),
@@ -213,8 +215,8 @@ def main() -> None:
             "IMAGE_UPSCALE_OWNER_ACTION_REQUIRED": "GRANT_DEVELOPER_CREDIT_BALANCE_ON_STABILITY_AI_OR_AUTHORIZE_REPLICATE_UPSCALER",
             "IMAGE_TRANSFORM_LANE_STATUS": "WAIT_OWNER_EXTERNAL_ENTITLEMENT",
             "IMAGE_TRANSFORM_OWNER_ACTION_REQUIRED": "ESTABLISH_PRODUCTION_QUOTA_AND_PRICING_THEN_AUTHORIZE_KEY4U_PUBLIC_ENABLED_TRUE",
-            "MUSIC_SFX_LANE_STATUS": "WAIT_OWNER_EXTERNAL_ENTITLEMENT",
-            "MUSIC_SFX_OWNER_ACTION_REQUIRED": "UPGRADE_ELEVENLABS_SUBSCRIPTION_TO_TIER_WITH_SOUND_EFFECTS_QUOTA_OR_ALLOCATE_SFX_API",
+            "MUSIC_SFX_LANE_STATUS": "WAIT_OWNER_MUSIC_SFX_PROVIDER_SELECTION",
+            "MUSIC_SFX_OWNER_ACTION_REQUIRED": "SELECT_AND_AUTHORIZE_GENERATIVE_MUSIC_SFX_PROVIDER_BEFORE_ENTITLEMENT",
             "NON_REGRESSION_PROBES": {
                 "NEW_CROSS_PRODUCT_ROUTE_BREAK_COUNT": 0,
                 "NEW_INTERNAL_PROVIDER_ADAPTER_BREAK_COUNT": 0,
@@ -260,11 +262,11 @@ def main() -> None:
                 },
                 {
                     "LANE": "/music/sfx",
-                    "CURRENT_STATE": "WAIT_OWNER_EXTERNAL_ENTITLEMENT",
+                    "CURRENT_STATE": "WAIT_OWNER_MUSIC_SFX_PROVIDER_SELECTION",
                     "INTERNAL_ENGINEERING_REQUIRED": "NO",
-                    "OWNER_ACTION_REQUIRED": "UPGRADE_ELEVENLABS_SUBSCRIPTION_TO_TIER_WITH_SOUND_EFFECTS_QUOTA_OR_ALLOCATE_SFX_API",
-                    "PAID_PROVIDER_CALL_REQUIRED_FOR_NEXT_ACCEPTANCE": "YES_EXACT_ONE_SHOT_ONLY_AFTER_QUOTA_ALLOCATED",
-                    "EXACT_NEXT_AUTHORITY_NEEDED": "ELEVENLABS_SFX_SUBSCRIPTION_TIER_AUTHORITY",
+                    "OWNER_ACTION_REQUIRED": "SELECT_AND_AUTHORIZE_GENERATIVE_MUSIC_SFX_PROVIDER_BEFORE_ENTITLEMENT",
+                    "PAID_PROVIDER_CALL_REQUIRED_FOR_NEXT_ACCEPTANCE": "NO_PROVIDER_SELECTION_REQUIRED_FIRST",
+                    "EXACT_NEXT_AUTHORITY_NEEDED": "OWNER_MUSIC_SFX_PROVIDER_SELECTION_AUTHORIZATION",
                     "CAN_OTHER_LANES_CONTINUE": "YES",
                 },
                 {
@@ -306,6 +308,8 @@ def main() -> None:
             s["business_status"] = "INFORMATIONAL"
         elif c == "BLOCKED_PROVIDER_ENTITLEMENT":
             s["business_status"] = "BLOCKED_PROVIDER_ENTITLEMENT"
+        elif c == "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED":
+            s["business_status"] = "WAIT_OWNER_MUSIC_SFX_PROVIDER_SELECTION"
         elif c == "IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD":
             s["business_status"] = "INCIDENT_HOLD"
         elif c == "IMPLEMENTED_DEPLOYED_WAIT_OWNER_LIVE_GRANT":

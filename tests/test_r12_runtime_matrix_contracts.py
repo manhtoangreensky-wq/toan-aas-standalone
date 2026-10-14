@@ -109,10 +109,11 @@ def test_r12_matrix_summary_and_surface_counts() -> None:
     assert summary["BLOCKED_EXTERNAL_CAPABILITY_OR_GRANT_REQUIRED_COUNT"] == 0
 
     # Counts for the four residual lanes
-    assert summary["BLOCKED_PROVIDER_ENTITLEMENT_COUNT"] == 3
+    assert summary["BLOCKED_PROVIDER_ENTITLEMENT_COUNT"] == 2
+    assert summary["NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED_COUNT"] == 1
     assert summary["EXTERNAL_PROVIDER_INCIDENT_HOLD_COUNT"] == 1
     assert summary["OTHER_UNRESOLVED_ENGINEERING_RESIDUALS"] == 0
-    assert summary["ACCOUNT_ENTITLEMENT_MISSING_COUNT"] == 3
+    assert summary["ACCOUNT_ENTITLEMENT_MISSING_COUNT"] == 2
     assert summary["EXTERNAL_PROVIDER_INCIDENT_MINIMAX_503_COUNT"] == 1
 
     # Exact classification counts
@@ -122,7 +123,8 @@ def test_r12_matrix_summary_and_surface_counts() -> None:
     assert cc["RELEASED_READ_ONLY_CANONICAL_COMPANION"] == 19
     assert cc["RELEASED_ACTIVE_CANONICAL_RUNTIME"] == 22
     assert cc["ADMIN_INTERNAL_ONLY"] == 48
-    assert cc["BLOCKED_PROVIDER_ENTITLEMENT"] == 3
+    assert cc["BLOCKED_PROVIDER_ENTITLEMENT"] == 2
+    assert cc["NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED"] == 1
     assert cc["IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD"] == 1
     assert sum(cc.values()) == 221
 
@@ -131,7 +133,8 @@ def test_r12_matrix_summary_and_surface_counts() -> None:
     assert rg["NOT_APPLICABLE_INFORMATIONAL"] == 16
     assert rg["NONE_RELEASED_RUNTIME"] == 153
     assert rg["ADMIN_INTERNAL_BOUNDARY"] == 48
-    assert rg["ACCOUNT_ENTITLEMENT_MISSING"] == 3
+    assert rg["ACCOUNT_ENTITLEMENT_MISSING"] == 2
+    assert rg["NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED"] == 1
     assert rg["EXTERNAL_PROVIDER_INCIDENT_MINIMAX_503"] == 1
     assert sum(rg.values()) == 221
 
@@ -154,7 +157,8 @@ def test_r12_multi_lane_governance_and_action_board() -> None:
     assert summary["PRODUCT_VIDEO_LANE_STATUS"] == "WAIT_OWNER_EXACT_DEPLOY_AUTHORIZATION"
     assert summary["IMAGE_UPSCALE_LANE_STATUS"] == "WAIT_OWNER_EXTERNAL_ENTITLEMENT"
     assert summary["IMAGE_TRANSFORM_LANE_STATUS"] == "WAIT_OWNER_EXTERNAL_ENTITLEMENT"
-    assert summary["MUSIC_SFX_LANE_STATUS"] == "WAIT_OWNER_EXTERNAL_ENTITLEMENT"
+    assert summary["MUSIC_SFX_LANE_STATUS"] == "WAIT_OWNER_MUSIC_SFX_PROVIDER_SELECTION"
+    assert summary["MUSIC_SFX_OWNER_ACTION_REQUIRED"] == "SELECT_AND_AUTHORIZE_GENERATIVE_MUSIC_SFX_PROVIDER_BEFORE_ENTITLEMENT"
 
     # Action Board validation
     board = summary["OWNER_ACTION_BOARD"]
@@ -166,6 +170,12 @@ def test_r12_multi_lane_governance_and_action_board() -> None:
     assert "/image/transform" in lanes_in_board
     assert "/music/sfx" in lanes_in_board
     assert "/voice/clone" in lanes_in_board
+
+    sfx_row = lanes_in_board["/music/sfx"]
+    assert sfx_row["CURRENT_STATE"] == "WAIT_OWNER_MUSIC_SFX_PROVIDER_SELECTION"
+    assert sfx_row["OWNER_ACTION_REQUIRED"] == "SELECT_AND_AUTHORIZE_GENERATIVE_MUSIC_SFX_PROVIDER_BEFORE_ENTITLEMENT"
+    assert sfx_row["PAID_PROVIDER_CALL_REQUIRED_FOR_NEXT_ACCEPTANCE"] == "NO_PROVIDER_SELECTION_REQUIRED_FIRST"
+    assert sfx_row["EXACT_NEXT_AUTHORITY_NEEDED"] == "OWNER_MUSIC_SFX_PROVIDER_SELECTION_AUTHORIZATION"
 
     for row in board:
         assert row["CAN_OTHER_LANES_CONTINUE"] == "YES"
@@ -314,3 +324,52 @@ def test_r12_provenance_and_defects_integrity() -> None:
     defect_ids = {d["DEFECT_ID"]: d for d in defects}
     assert "DEFECT-R12-001" in defect_ids, "DEFECT-R12-001 must be tracked"
     assert defect_ids["DEFECT-R12-001"]["STATUS"] == "REPAIRED_IN_R12"
+
+
+# ─── TEST 6: R24E4A MUSIC SFX 14-POINT CONTRACT TRUTH ────────────────────────
+
+def test_r24e4a_music_sfx_r12_contract_truth() -> None:
+    with open(MATRIX_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    route_map = {r["route"]: r for r in data["routes"]}
+    assert "/music/sfx" in route_map
+    sfx = route_map["/music/sfx"]
+    board_map = {row["LANE"]: row for row in data["summary"]["OWNER_ACTION_BOARD"]}
+    sfx_row = board_map["/music/sfx"]
+
+    # 1. selected provider is NONE
+    assert sfx["selected_provider"] == "NONE"
+    # 2. ElevenLabs is candidate only
+    assert sfx.get("elevenlabs_external_sfx_candidate") in ("YES", True)
+    assert sfx.get("elevenlabs_sanctioned_project_sfx_provider") in ("NO", False)
+    # 3. sanctioned provider selected = NO
+    assert sfx.get("sanctioned_generative_sfx_provider_selected") in ("NO", False)
+    # 4. current endpoint is /v1/sound-generation
+    assert sfx["endpoint_documented"] == "https://api.elevenlabs.io/v1/sound-generation"
+    # 5. current model is eleven_text_to_sound_v2
+    assert sfx["model_or_capability_id"] == "eleven_text_to_sound_v2"
+    # 6. stale /v1/sound-effects not represented as current
+    assert "/v1/sound-effects" not in sfx["endpoint_documented"]
+    # 7. stale elevenlabs-sound-effects-v1 not represented as current
+    assert "elevenlabs-sound-effects-v1" not in sfx["model_or_capability_id"]
+    # 8. Freesound remains non-generative
+    assert sfx.get("freesound_generative_sfx_capability") in ("NO", False)
+    # 9. executor remains absent
+    assert sfx.get("canonical_bot_engine_exists") is False
+    assert sfx.get("canonical_bot_adapter_exists") is False
+    # 10. next classification is NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED
+    assert sfx["final_classification"] == "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED"
+    # 11. next action is WAIT_OWNER_MUSIC_SFX_PROVIDER_SELECTION
+    assert sfx["business_status"] == "WAIT_OWNER_MUSIC_SFX_PROVIDER_SELECTION"
+    assert sfx_row["CURRENT_STATE"] == "WAIT_OWNER_MUSIC_SFX_PROVIDER_SELECTION"
+    assert sfx_row["OWNER_ACTION_REQUIRED"] == "SELECT_AND_AUTHORIZE_GENERATIVE_MUSIC_SFX_PROVIDER_BEFORE_ENTITLEMENT"
+    assert sfx_row["PAID_PROVIDER_CALL_REQUIRED_FOR_NEXT_ACCEPTANCE"] == "NO_PROVIDER_SELECTION_REQUIRED_FIRST"
+    assert sfx_row["EXACT_NEXT_AUTHORITY_NEEDED"] == "OWNER_MUSIC_SFX_PROVIDER_SELECTION_AUTHORIZATION"
+    # 12. entitlement is not represented as the sole blocker
+    assert sfx.get("account_entitlement_is_only_current_blocker") in ("NO", False)
+    # 13. preview readiness remains NO
+    assert sfx.get("customer_preview_ready", False) is False
+    # 14. provider calls remain 0
+    assert sfx.get("runtime_execution_enabled") is False
+
