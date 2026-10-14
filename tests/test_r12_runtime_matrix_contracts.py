@@ -372,4 +372,3 @@ def test_r24e4a_music_sfx_r12_contract_truth() -> None:
     assert sfx.get("customer_preview_ready", False) is False
     # 14. provider calls remain 0
     assert sfx.get("runtime_execution_enabled") is False
-
