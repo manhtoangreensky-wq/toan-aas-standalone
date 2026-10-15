@@ -7,9 +7,9 @@ const source = fs.readFileSync('static/portal/portal-auth.js', 'utf8');
 const shellSource = fs.readFileSync('static/portal/portal.js', 'utf8');
 
 test('Auth shell install entry uses reviewed locale copy instead of legacy mixed-language text', () => {
-  assert.doesNotMatch(shellSource, /Tải & Cài đặt App TOAN AAS/);
-  assert.match(shellSource, /uiText\("installGuide\.title", "Cài ứng dụng TOAN AAS"\)/);
-  assert.doesNotMatch(source, /📲/u);
+  assert.doesNotMatch(shellSource, /Táº£i & CÃ i Äáº·t App TOAN AAS/);
+  assert.match(shellSource, /uiText\("installGuide\.title", "CÃ i á»©ng dá»¥ng TOAN AAS"\)/);
+  assert.doesNotMatch(source, /ð²/u);
   assert.match(source, /class="portal-auth-install-icon"/);
   assert.match(source, /<svg class="portal-icon"/);
 });
@@ -91,15 +91,15 @@ function clickInstall(app) {
 }
 
 const instructionCases = [
-  { locale: 'vi', platform: 'iOS', userAgent: 'iPhone', expected: 'Thêm vào Màn hình chính' },
-  { locale: 'vi', platform: 'Android', userAgent: 'Android', expected: 'Thêm vào màn hình chính' },
-  { locale: 'vi', platform: 'desktop', userAgent: 'Windows', expected: 'thanh địa chỉ' },
+  { locale: 'vi', platform: 'iOS', userAgent: 'iPhone', expected: 'ThÃªm vÃ o MÃ n hÃ¬nh chÃ­nh' },
+  { locale: 'vi', platform: 'Android', userAgent: 'Android', expected: 'ThÃªm vÃ o mÃ n hÃ¬nh chÃ­nh' },
+  { locale: 'vi', platform: 'desktop', userAgent: 'Windows', expected: 'thanh Äá»a chá»' },
   { locale: 'en', platform: 'iOS', userAgent: 'iPhone', expected: 'Add to Home Screen' },
   { locale: 'en', platform: 'Android', userAgent: 'Android', expected: 'browser menu' },
   { locale: 'en', platform: 'desktop', userAgent: 'Windows', expected: 'address bar' },
-  { locale: 'zh', platform: 'iOS', userAgent: 'iPhone', expected: '添加到主屏幕' },
-  { locale: 'zh', platform: 'Android', userAgent: 'Android', expected: '浏览器菜单' },
-  { locale: 'zh', platform: 'desktop', userAgent: 'Windows', expected: '地址栏' }
+  { locale: 'zh', platform: 'iOS', userAgent: 'iPhone', expected: 'æ·»å å°ä¸»å±å¹' },
+  { locale: 'zh', platform: 'Android', userAgent: 'Android', expected: 'æµè§å¨èå' },
+  { locale: 'zh', platform: 'desktop', userAgent: 'Windows', expected: 'å°åæ ' }
 ];
 
 for (const item of instructionCases) {
@@ -107,7 +107,7 @@ for (const item of instructionCases) {
     const app = mountAuth(item);
     assert.equal(app.control.hidden, false);
     assert.equal(app.control.disabled, false);
-    assert.equal(app.label.textContent, { vi: 'Cách cài đặt', en: 'How to install', zh: '安装说明' }[item.locale]);
+    assert.equal(app.label.textContent, { vi: 'CÃ¡ch cÃ i Äáº·t', en: 'How to install', zh: 'å®è£è¯´æ' }[item.locale]);
     assert.equal(app.control.getAttribute('aria-label'), app.label.textContent);
     assert.match(app.main.markup, /data-pwa-install-help/);
     assert.match(app.main.markup, /aria-controls="portal-pwa-install-help"/);
@@ -127,14 +127,14 @@ test('A valid beforeinstallprompt invokes the native install prompt', async () =
     userChoice: Promise.resolve({ outcome: 'accepted' })
   };
   app.windowListeners.get('beforeinstallprompt')(installEvent);
-  assert.equal(app.label.textContent, 'Cài đặt ứng dụng TOAN AAS');
-  assert.equal(app.control.getAttribute('aria-label'), 'Cài đặt ứng dụng TOAN AAS');
+  assert.equal(app.label.textContent, 'CÃ i Äáº·t á»©ng dá»¥ng TOAN AAS');
+  assert.equal(app.control.getAttribute('aria-label'), 'CÃ i Äáº·t á»©ng dá»¥ng TOAN AAS');
   clickInstall(app);
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(promptCalls, 1);
   assert.equal(app.control.hidden, true);
   assert.equal(app.status.hidden, false);
-  assert.equal(app.status.textContent, 'Ứng dụng TOAN AAS đã được cài đặt.');
+  assert.equal(app.status.textContent, 'á»¨ng dá»¥ng TOAN AAS ÄÃ£ ÄÆ°á»£c cÃ i Äáº·t.');
 });
 
 test('An already-installed or standalone app does not show an install action', () => {
@@ -142,7 +142,7 @@ test('An already-installed or standalone app does not show an install action', (
   assert.equal(standalone.control.hidden, true);
   assert.equal(standalone.control.disabled, true);
   assert.equal(standalone.status.hidden, false);
-  assert.equal(standalone.status.textContent, 'Ứng dụng TOAN AAS đã được cài đặt.');
+  assert.equal(standalone.status.textContent, 'á»¨ng dá»¥ng TOAN AAS ÄÃ£ ÄÆ°á»£c cÃ i Äáº·t.');
 
   const installed = mountAuth({ locale: 'en' });
   installed.windowListeners.get('appinstalled')();
@@ -150,4 +150,4 @@ test('An already-installed or standalone app does not show an install action', (
   assert.equal(installed.status.textContent, 'TOAN AAS is installed.');
 });
 
-// whitespace-clean regression guard (LF-normalized)
+// whitespace-clean regression guard (LF)
