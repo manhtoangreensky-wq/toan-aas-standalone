@@ -47,6 +47,17 @@ AX tree vẫn trả về nút `📲 Tải & Cài đặt App TOAN AAS`; EN/ZH cũ
 `App`. Đây là bằng chứng auth bundle live cũ, không phải lỗi còn trong source
 hiện tại.
 
+## Revalidation live — Codex In-app Browser, read-only
+
+- VI: AX vẫn trả `📲 Tải & Cài đặt App TOAN AAS`; ảnh chụp cho thấy shell
+  navy/xanh ngọc, form và heading hiển thị đầy đủ, không blank.
+- EN: AX vẫn trả `📲 Install TOAN AAS App`.
+- ZH: AX vẫn trả `📲 安装 TOAN AAS App`.
+- Skip link ở cả ba locale vẫn trỏ `#portal-main`; không có thao tác đăng nhập,
+  gửi form, tạo job, gọi provider hoặc mutation dữ liệu.
+- Kết luận không đổi: source patch đã xanh nhưng runtime chưa nhận bundle mới;
+  R216-L và `LIVE_PASS` vẫn mở.
+
 ## File/contract đã khóa
 
 - `static/portal/portal-auth.js` — auth lifecycle, provider hydration, Telegram
