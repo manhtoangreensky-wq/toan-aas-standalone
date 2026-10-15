@@ -12,6 +12,9 @@ const routeStyles = themeSource.slice(themeSource.lastIndexOf("/* R142: standalo
 const motionStart = featureSource.indexOf("function mountFeatureMotion(main)");
 const motionEnd = featureSource.indexOf("\n  function renderShell(", motionStart);
 const motionBlock = featureSource.slice(motionStart, motionEnd);
+const cleanupStart = motionBlock.lastIndexOf("featureMotionCleanup = () => {");
+const cleanupEnd = motionBlock.indexOf("\n    };", cleanupStart);
+const cleanup = cleanupStart >= 0 && cleanupEnd > cleanupStart ? motionBlock.slice(cleanupStart, cleanupEnd) : "";
 
 test("standalone Features fixed Vietnamese chrome uses natural, translated wording", () => {
   assert.ok(viCopy, "Vietnamese copy block must exist");
@@ -36,10 +39,23 @@ test("Features route uses one entrance cue and remains static with reduced motio
   assert.match(routeStyles, /@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*?body\.portal-body--features[\s\S]*?animation:\s*none\s*!important/u);
   assert.match(featureSource, /data-portal-features-motion/);
   const activate = motionBlock.match(/const activate = \(\) => \{([\s\S]*?)\n    \};/u)?.[1] || "";
-  const cleanupStart = motionBlock.lastIndexOf("featureMotionCleanup = () => {");
-  const cleanupEnd = motionBlock.indexOf("\n    };", cleanupStart);
-  const cleanup = cleanupStart >= 0 && cleanupEnd > cleanupStart ? motionBlock.slice(cleanupStart, cleanupEnd) : "";
   assert.match(activate, /featureMotionActive/);
   assert.ok(activate.indexOf('set(entrance, "data-portal-features-motion", "enter")') < activate.indexOf("clearTimer = window.setTimeout"));
   assert.match(cleanup, /featureMotionActive = false/);
+});
+
+test("Features motion ignores queued observer and animation-frame work after cleanup", () => {
+  assert.match(motionBlock, /const reveal = \(target\) => \{[\s\S]*?featureMotionActive/);
+  assert.match(motionBlock, /const scheduleReveal = \(target\) => \{[\s\S]*?if \(!featureMotionActive\)/);
+  assert.match(motionBlock, /observer = new window\.IntersectionObserver\(\(entries\) => \{[\s\S]*?if \(!featureMotionActive\) return;/);
+  assert.match(motionBlock, /const revealFrames = new Set\(\)/);
+  assert.match(cleanup, /cancelAnimationFrame/);
+  assert.match(cleanup, /revealFrames\.clear\(\)/);
+});
+
+test("Features motion removes focus listeners when the route unmounts", () => {
+  assert.match(motionBlock, /const focusHandlers = \[\]/);
+  assert.match(motionBlock, /focusHandlers\.push\(\{ target, onFocus \}\)/);
+  assert.match(cleanup, /focusHandlers\.forEach/);
+  assert.match(cleanup, /removeEventListener\("focusin", onFocus\)/);
 });

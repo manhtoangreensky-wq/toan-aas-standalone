@@ -187,6 +187,37 @@ test('Scroll-driven transforms do not carry scrub transitions that lag input', (
   assert.match(motion, /requestAnimationFrame\(syncHeader\)/);
 });
 
+test('Scroll-driven landing scenes do not repaint backgrounds from progress variables', () => {
+  for (const selector of [
+    '.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-features',
+    '.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-feature',
+  ]) {
+    const block = selectorBlock(theme, selector);
+    assert.doesNotMatch(block, /background(?:-color)?\s*:/);
+  }
+});
+
+test('Global compositor hints are not blanket-applied to every Portal surface', () => {
+  assert.doesNotMatch(theme, /\.portal-page\s*,\s*\.portal-card[\s\S]*?will-change:\s*transform, opacity/);
+  assert.doesNotMatch(theme, /\.portal-header\s*\{\s*transform:\s*translateZ\(0\)/);
+});
+
+test('Landing reduced-motion changes detach the active presentation lifecycle', () => {
+  assert.match(motion, /matchMedia\(REDUCED_MOTION_QUERY\)/);
+  assert.match(motion, /removeReducedMotionListener/);
+  assert.match(motion, /if \(event && event\.matches\) unmountLanding\(\)/);
+});
+
+test('Landing scroll metadata avoids redundant DOM writes and dead offset variables', () => {
+  const syncStart = motion.indexOf('const syncScrollMotion = () => {');
+  const syncEnd = motion.indexOf('\n    const resetPointer', syncStart);
+  const sync = motion.slice(syncStart, syncEnd);
+  assert.match(sync, /progressPercent/);
+  assert.match(sync, /getAttribute\("data-landing-scroll-progress"\)/);
+  assert.match(sync, /getAttribute\("data-landing-motion-section"\)/);
+  assert.doesNotMatch(sync, /--landing-section-offset/);
+});
+
 test('Reduced-motion remains an explicit static fallback for landing motion', () => {
   const landingStart = theme.indexOf('.landing-motion-scroll[data-landing-scroll-motion="active"]');
   const reducedStart = theme.indexOf('@media (prefers-reduced-motion: reduce)', landingStart);

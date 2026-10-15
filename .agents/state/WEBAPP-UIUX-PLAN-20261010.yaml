@@ -54,8 +54,8 @@ ordered_checkpoints:
     name: motion
     status: SOURCE_GREEN_BROWSER_ACCEPTANCE_OPEN
     active_spec: R216-motion-lifecycle-compositor-r216
-    evidence: "motion/auth/locale/PWA focused 31/31; latest motion-focused 15/15 (R216 6 + static 9); full Node 461/461; JS syntax 3/3 recheck; diff-check; live AX/screenshot read-only on VI/EN/ZH"
-    status_note: "Auth lifecycle, provider reservation, compositor scroll, Telegram/PWA readiness, reduced-motion và landing mobile header source gates đã xanh; live auth locale recheck xanh. Live landing viewport hẹp vẫn đang phục vụ bundle cũ: header bị clipping và PWA FAB còn nổi đè vùng proof; source patch đã có nhưng chưa delivery runtime. Browser matrix/CLS/LCP/INP/FPS runtime vẫn mở. Phiếu Antigravity PHIEU-217 vẫn NOT_RUN vì không tìm thấy agy.exe; Chrome QA sandbox exit 13 trước remote debugging."
+    evidence: "motion/auth/locale/PWA focused 31/31; latest motion-focused 19/19 (R216 10 + static 9); Features route lifecycle 5/5; full Node 467/467; JS syntax 3/3 recheck; diff-check; live AX/screenshot read-only on VI/EN/ZH"
+    status_note: "Auth lifecycle, provider reservation, compositor scroll, Telegram/PWA readiness, reduced-motion, Features lifecycle cleanup và landing mobile header source gates đã xanh; live auth locale recheck xanh trên direct login nhưng next-route drift vẫn mở. Live landing viewport hẹp vẫn đang phục vụ bundle cũ: header bị clipping và PWA FAB còn nổi đè vùng proof; source patch đã có nhưng chưa delivery runtime. Browser matrix/CLS/LCP/INP/FPS runtime vẫn mở. Phiếu Antigravity PHIEU-217 vẫn NOT_RUN vì không tìm thấy agy.exe; Chrome QA sandbox exit 13 trước remote debugging."
   - id: R216-H
     name: landing-responsive-header-and-install-placement
     status: SOURCE_GREEN_LIVE_DRIFT_OPEN
@@ -64,7 +64,7 @@ ordered_checkpoints:
   - id: R216-L
     name: auth-install-locale-drift
     status: SOURCE_GREEN_LIVE_DRIFT_OPEN
-    evidence: "Both portal.js and portal-auth.js auth CTA paths use reviewed locale copy; duplicate-key regression added; full Node 461/461. Earlier /login?lang=vi|en|zh recheck was green, but latest read-only /features redirected to /login?next=/features and AX exposed legacy 'Tải & Cài đặt App TOAN AAS'."
+    evidence: "Both portal.js and portal-auth.js auth CTA paths use reviewed locale copy; duplicate-key regression added; full Node 467/467. Earlier /login?lang=vi|en|zh recheck was green, but latest read-only /features redirected to /login?next=/features and AX exposed legacy 'Tải & Cài đặt App TOAN AAS'."
     status_note: "Locale source remains green; live auth CTA drift is open on the next-route login renderer/runtime bundle. Do not generalize the earlier locale recheck; no login or mutation was performed."
 protected_contracts:
   - routes

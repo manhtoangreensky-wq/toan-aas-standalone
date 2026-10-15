@@ -31,6 +31,7 @@ Khóa các nguyên nhân khiến hiệu ứng bị cắt, giật hoặc giả tr
 - `static/portal/portal.css` (chỉ media rule header landing ≤420px)
 - `templates/dashboard.html` (chỉ giới hạn shorthand hover transition)
 - `static/portal/portal-motion.js` (chỉ khi regression yêu cầu)
+- `static/portal/portal-features.js` (chỉ lifecycle cleanup của Features motion)
 - `tests/r216-motion-lifecycle-compositor.test.mjs`
 - `tests/auth-pwa-install-control.test.mjs` (regression R216-L)
 - `tests/current-main-motion-static-gates.test.mjs` (regression responsive header)
@@ -66,6 +67,14 @@ server-owned data.
 - Hover/focus có thể transition riêng, nhưng không được làm chậm giá trị do
   scroll ghi mỗi frame.
 - Reduced-motion bỏ toàn bộ chuyển động trang trí và giữ nội dung đọc được.
+- Nếu người dùng bật reduced-motion trong lúc landing đang chạy, lifecycle phải
+  tháo listener, huỷ RAF/timer/observer/pointer và trả DOM về trạng thái tĩnh.
+- Callback IntersectionObserver/RAF/focus của Features phải bị vô hiệu và huỷ
+  khi route unmount; callback cũ không được sửa DOM đã tách.
+- Scroll hot path không được đổi `background`/`background-color` theo progress;
+  hiệu ứng nền phụ chỉ dùng pseudo-element với `opacity`/`transform`.
+- Không áp `will-change`/`translateZ(0)` blanket lên toàn bộ page/card/table;
+  chỉ dùng hint ở control có animation thực sự.
 
 ### Existing readiness locks
 
@@ -104,18 +113,19 @@ server-owned data.
 | R216-C compositor/scroll | không `transition:left`, không scrub lag | focused 2/2 + full Node 461/461 + CSS diff | GREEN (source) |
 | R216-D Telegram | popup trước await, link fail-closed | existing popup test | GREEN (source) |
 | R216-E PWA | native prompt chỉ khi readiness | existing PWA test | GREEN (source) |
-| R216-F reduced motion | static content + performance notes | focused 1/1 + motion static 9/9 + full Node 461/461; runtime metrics pending | GREEN (static) |
+| R216-F reduced motion | static content + performance notes | focused 1/1 + motion static 9/9 + full Node 467/467; runtime metrics pending | GREEN (static) |
 | R216-G browser acceptance | DOM/screenshot/computed style/console/interaction | Fixture server dựng được; bundled Chromium thiếu executable; Chrome hệ thống exit 13 trước remote debugging | OPEN |
-| R216-L auth install locale | VI/EN/ZH dùng cùng key locale, không hard-code `App`, không duplicate key | source regression + duplicate-key guard + full Node 461/461 + live AX recheck VI/EN/ZH không còn hậu tố `App` xen | SOURCE GREEN / LIVE RECHECK GREEN |
+| R216-L auth install locale | VI/EN/ZH dùng cùng key locale, không hard-code `App`, không duplicate key | source regression + duplicate-key guard + full Node 467/467; direct login AX recheck xanh nhưng `/features` → `/login?next=/features` còn CTA cũ | SOURCE GREEN / LIVE DRIFT OPEN |
 | R216-H landing mobile header | header không clipping ở ≤420px, controls wrap xuống hàng | source media rule + static regression; live screenshot khoảng 327x667 ghi nhận bundle cũ còn clipping; PWA placement regression đã xanh | SOURCE GREEN / LIVE DRIFT OPEN |
 
 ## Kết quả source gate ngày 2026-10-15
 
 ```text
-node --test tests/r216-motion-lifecycle-compositor.test.mjs: 6 passed, 0 failed
+node --test tests/r216-motion-lifecycle-compositor.test.mjs: 10 passed, 0 failed
 node --test tests/auth-telegram-popup-order.test.mjs tests/auth-pwa-install-control.test.mjs: 15 passed, 0 failed
-node --test tests/**/*.test.mjs: 461 passed, 0 failed
-node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs: 15 passed, 0 failed (latest recheck)
+node --test tests/**/*.test.mjs: 467 passed, 0 failed
+node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs: 19 passed, 0 failed (latest recheck)
+node --test tests/feature-catalog-route-presentation.test.mjs: 5 passed, 0 failed
 node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs tests/auth-locale-copy-purity.test.mjs tests/auth-pwa-install-control.test.mjs: 31 passed, 0 failed (prior focused ledger)
 node --check static/portal/portal-auth.js: PASS
 node --check static/portal/portal-motion.js: PASS

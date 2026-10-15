@@ -486,6 +486,7 @@
     const generation = landingGeneration;
     const isCurrentMount = () => landingGeneration === generation;
     let pointerHandlers = [];
+    const pointerFrames = new Set();
     if (header) header.classList.add("landing-motion-header");
     if (hero) hero.classList.add("landing-motion-hero", "landing-cinematic-hero");
     if (preview) {
@@ -552,7 +553,7 @@
             "landing-motion-final"
           );
         }
-        ["--landing-section-progress", "--landing-section-offset"].forEach((property) => removeStyleProperty(layer, property));
+        removeStyleProperty(layer, "--landing-section-progress");
       });
       pointerHandlers.forEach(({ target, move, leave }) => {
         if (!target || typeof target.removeEventListener !== "function") return;
@@ -575,6 +576,20 @@
       root.setAttribute("data-landing-anchor-motion", "static");
       root.setAttribute("data-landing-motion-phase", "settled");
       return;
+    }
+    let removeReducedMotionListener = () => {};
+    if (typeof window.matchMedia === "function") {
+      const reducedMotionMedia = window.matchMedia(REDUCED_MOTION_QUERY);
+      const onReducedMotionChange = (event) => {
+        if (event && event.matches) unmountLanding();
+      };
+      if (reducedMotionMedia && typeof reducedMotionMedia.addEventListener === "function") {
+        reducedMotionMedia.addEventListener("change", onReducedMotionChange);
+        removeReducedMotionListener = () => reducedMotionMedia.removeEventListener("change", onReducedMotionChange);
+      } else if (reducedMotionMedia && typeof reducedMotionMedia.addListener === "function") {
+        reducedMotionMedia.addListener(onReducedMotionChange);
+        removeReducedMotionListener = () => reducedMotionMedia.removeListener(onReducedMotionChange);
+      }
     }
     if (documentElement && documentElement.classList && typeof documentElement.classList.add === "function") {
       documentElement.classList.add("portal-landing-anchor-motion");
@@ -607,7 +622,10 @@
         : Math.max(viewportHeight, Number(scrollOwner.scrollHeight) || viewportHeight);
       const pageProgress = clamp(scrollPos / Math.max(1, scrollHeight - viewportHeight), 0, 1);
       setStyleProperty(root, "--landing-scroll-progress", pageProgress.toFixed(4));
-      root.setAttribute("data-landing-scroll-progress", String(Math.round(pageProgress * 100)));
+      const progressPercent = String(Math.round(pageProgress * 100));
+      if (root.getAttribute("data-landing-scroll-progress") !== progressPercent) {
+        root.setAttribute("data-landing-scroll-progress", progressPercent);
+      }
 
       const ownerRect = !isWindowOwner && typeof scrollOwner.getBoundingClientRect === "function"
         ? scrollOwner.getBoundingClientRect()
@@ -632,9 +650,7 @@
         const center = layerTop + (height / 2);
         const travel = Math.max(1, (height + viewportHeight) * 0.55);
         const progress = clamp(1 - (Math.abs(center - (viewportHeight * 0.52)) / travel), 0, 1);
-        const distance = clamp((center - (viewportHeight * 0.52)) / travel, -1, 1);
         setStyleProperty(layer, "--landing-section-progress", progress.toFixed(4));
-        setStyleProperty(layer, "--landing-section-offset", `${Math.round(distance * 18)}px`);
         if (layer.getAttribute) {
           const name = String(layer.getAttribute("data-landing-layer") || "");
           const currentDistance = Math.abs(center - (viewportHeight * 0.52));
@@ -644,7 +660,9 @@
           }
         }
       });
-      root.setAttribute("data-landing-motion-section", activeLayer);
+      if (root.getAttribute("data-landing-motion-section") !== activeLayer) {
+        root.setAttribute("data-landing-motion-section", activeLayer);
+      }
     };
 
     const resetPointer = (target) => {
@@ -668,6 +686,7 @@
           const clientX = Number(event.clientX) || 0;
           const clientY = Number(event.clientY) || 0;
           pointerFrame = window.requestAnimationFrame(() => {
+            pointerFrames.delete(pointerFrame);
             pointerFrame = 0;
             if (!isCurrentMount()) return;
             const rect = target.getBoundingClientRect();
@@ -679,6 +698,7 @@
             setStyleProperty(target, "--landing-pointer-y", y.toFixed(3));
             if (target.classList && typeof target.classList.add === "function") target.classList.add("is-pointer-active");
           });
+          pointerFrames.add(pointerFrame);
         };
         const leave = () => resetPointer(target);
         target.addEventListener("pointermove", move, { passive: true });
@@ -872,6 +892,11 @@
     landingCleanup = () => {
       clearIntroSchedule();
       if (scrollFrame) window.cancelAnimationFrame(scrollFrame);
+      if (typeof window.cancelAnimationFrame === "function") {
+        pointerFrames.forEach((frame) => window.cancelAnimationFrame(frame));
+      }
+      pointerFrames.clear();
+      removeReducedMotionListener();
       if (scrollOwner && typeof scrollOwner.removeEventListener === "function") {
         scrollOwner.removeEventListener("scroll", onScroll);
       }

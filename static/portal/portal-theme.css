@@ -1217,7 +1217,6 @@ body {
   position: relative;
   isolation: isolate;
   --landing-section-progress: 0;
-  --landing-section-offset: 0px;
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-hero::after {
@@ -1289,21 +1288,19 @@ body {
    share the page's bounded scene grammar. They remain ordinary semantic
    sections in normal flow; this only adds depth while they enter view. */
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-features {
-  background:
-    linear-gradient(
-      90deg,
-      transparent,
-      color-mix(in srgb, var(--portal-brand) calc(var(--landing-section-progress, 0) * 7%), transparent),
-      transparent
-    );
+  position: relative;
+  isolation: isolate;
 }
 
-.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-feature {
-  background: color-mix(
-    in srgb,
-    var(--portal-light-surface) calc(100% - (var(--landing-section-progress, 0) * 7%)),
-    var(--portal-light-accent-soft)
-  );
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-features::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, var(--portal-light-accent-soft), transparent);
+  content: "";
+  opacity: calc(var(--landing-section-progress, 0) * .07);
+  pointer-events: none;
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-spotlights::before {
@@ -18615,24 +18612,6 @@ html::view-transition-old(root),
 html::view-transition-new(root) {
   animation-duration: 160ms !important;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.portal-page,
-.portal-card,
-.portal-metric,
-.portal-operations-run,
-.portal-table-container,
-.portal-auth-card {
-  transform: translateZ(0);
-  will-change: transform, opacity;
-}
-
-.portal-header {
-  transform: translateZ(0);
-}
-
-@media (min-width: 981px) {
-  .portal-shell:not(.portal-shell--focus) .portal-sidebar { transform: translateZ(0); }
 }
 
 /* =========================================================================

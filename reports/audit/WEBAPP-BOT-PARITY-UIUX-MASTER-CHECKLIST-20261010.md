@@ -200,7 +200,16 @@
       tra cả JavaScript renderer và stylesheet.
 - [x] Dashboard template cũ bỏ shorthand transition mọi thuộc tính; hover chỉ
       chuyển `transform`/`border-color`. Motion/auth focused 31/31, full Node
-      461/461, JS syntax 5/5, py_compile 17/17 và diff-check đạt ngày 2026-10-15.
+      467/467, JS syntax 3/3, py_compile 17/17 và diff-check đạt ngày 2026-10-15.
+- [x] Features route huỷ IntersectionObserver, RAF, timer và listener `focusin`
+      khi unmount; callback cũ không còn sửa DOM đã tách. Regression riêng
+      `feature-catalog-route-presentation.test.mjs` đạt 5/5.
+- [x] Landing lắng nghe thay đổi `prefers-reduced-motion` và huỷ lifecycle đang
+      chạy; metadata scroll chỉ ghi khi giá trị đổi, bỏ biến offset không có CSS
+      consumer, bỏ gradient nền phụ thuộc progress khỏi hot path.
+- [x] Gỡ `will-change`/`translateZ(0)` áp blanket lên mọi page/card/table; chỉ
+      giữ hint compositor ở các control thực sự có motion. Focused motion mới
+      đạt 19/19; full Node đạt 467/467.
 - [x] Giữ user gesture khi mở Telegram sau async; regression test hiện có xanh.
 - [x] PWA install chỉ gọi native prompt khi `beforeinstallprompt` thật; không
       còn toast giả, regression test hiện có xanh.

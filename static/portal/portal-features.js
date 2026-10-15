@@ -441,27 +441,43 @@
         item.style.setProperty("--portal-workspace-motion-index", String(index));
       });
     };
+    let observer = null, clearTimer = null, featureMotionActive = true;
+    const revealFrames = new Set();
+    const focusHandlers = [];
     const reveal = (target) => {
-      if (!target || !target.classList.contains("is-pending")) return;
+      if (!featureMotionActive || !target || !target.classList.contains("is-pending")) return;
       target.classList.remove("is-pending"); target.classList.add("is-visible");
       if (observer) observer.unobserve(target);
     };
     targets.forEach((target) => {
       target.classList.add("portal-workspace-motion-target");
-      target.addEventListener("focusin", () => { armItems(target); reveal(target); }, { once: true });
+      const onFocus = () => { armItems(target); reveal(target); };
+      target.addEventListener("focusin", onFocus, { once: true });
+      focusHandlers.push({ target, onFocus });
     });
 
-    let observer = null, clearTimer = null, featureMotionActive = true;
     const revealQueued = new WeakSet();
     const scheduleReveal = (target) => {
-      if (revealQueued.has(target)) return;
+      if (!featureMotionActive || revealQueued.has(target)) return;
       revealQueued.add(target);
       armItems(target);
       if (typeof window.requestAnimationFrame !== "function") return reveal(target);
-      window.requestAnimationFrame(() => window.requestAnimationFrame(() => reveal(target)));
+      let firstFrame = 0;
+      firstFrame = window.requestAnimationFrame(() => {
+        revealFrames.delete(firstFrame);
+        if (!featureMotionActive) return;
+        let secondFrame = 0;
+        secondFrame = window.requestAnimationFrame(() => {
+          revealFrames.delete(secondFrame);
+          if (featureMotionActive) reveal(target);
+        });
+        revealFrames.add(secondFrame);
+      });
+      revealFrames.add(firstFrame);
     };
     if (typeof window.IntersectionObserver === "function") {
       observer = new window.IntersectionObserver((entries) => {
+        if (!featureMotionActive) return;
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             if (entry.target.classList.contains("is-pending")) scheduleReveal(entry.target);
@@ -486,13 +502,30 @@
       clearTimer = window.setTimeout(clearEntrance, 760);
     };
     entrance.addEventListener("animationend", clearEntrance);
+    let entranceFrameOne = 0, entranceFrameTwo = 0;
     if (typeof window.requestAnimationFrame === "function") {
-      window.requestAnimationFrame(() => window.requestAnimationFrame(activate));
+      entranceFrameOne = window.requestAnimationFrame(() => {
+        entranceFrameOne = 0;
+        if (!featureMotionActive) return;
+        entranceFrameTwo = window.requestAnimationFrame(() => {
+          entranceFrameTwo = 0;
+          activate();
+        });
+      });
     } else activate();
     featureMotionCleanup = () => {
       featureMotionActive = false;
       if (observer) observer.disconnect();
       if (clearTimer !== null) { window.clearTimeout(clearTimer); clearTimer = null; }
+      if (typeof window.cancelAnimationFrame === "function") {
+        if (entranceFrameOne) window.cancelAnimationFrame(entranceFrameOne);
+        if (entranceFrameTwo) window.cancelAnimationFrame(entranceFrameTwo);
+        revealFrames.forEach((frame) => window.cancelAnimationFrame(frame));
+      }
+      entranceFrameOne = 0;
+      entranceFrameTwo = 0;
+      revealFrames.clear();
+      focusHandlers.forEach(({ target, onFocus }) => target.removeEventListener("focusin", onFocus));
       entrance.removeEventListener("animationend", clearEntrance);
     };
   }
