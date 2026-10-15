@@ -279,6 +279,7 @@ PASS
 | R216-L locale drift CTA đăng nhập | GREEN — source regression + duplicate-key guard; full Node 469/469 | OPEN — `/features` → `/login?next=/features` AX còn `Tải & Cài đặt App TOAN AAS`; bundle/route drift |
 | R216-H landing header responsive | GREEN — static gate + source media rule; PWA inline placement regression xanh | OPEN — live read-only 327×667 còn clipping header và FAB cũ che proof vì deployment drift |
 | R216-I Features hydration lifecycle | GREEN — async response chỉ render khi đúng `portal-main` và `/features` hoặc `/features/` sau chuẩn hóa dấu `/` cuối; regression 6/6 | Chưa có browser QA runtime |
+| R216-P auth install icon structure | GREEN — shared SVG `portal-icon`, wrapper ổn định 18px, không emoji; focused auth/PWA + motion 32/32 và full Node 469/469 | Runtime visual acceptance mở cùng R216-G/H/L/P |
 
 ## Chưa được tuyên bố
 
@@ -290,8 +291,8 @@ vì vậy `LIVE_PASS=NO`. Source green không đồng nghĩa deployed/live.
 TASK=R216-motion-lifecycle-compositor
 BASE_SHA=44f5fdacf2435c47e8d8a16eb04115d2d916bcd1
 HEAD_SHA=LOCAL_BRANCH_HEAD (verify with `git rev-parse HEAD`)
-FILES_CHANGED=static/portal/portal-auth.js; static/portal/portal.css; static/portal/portal-theme.css; static/portal/portal.js; static/portal/portal-motion.js; static/portal/portal-features.js; templates/dashboard.html; tests/auth-pwa-install-control.test.mjs; tests/current-main-motion-static-gates.test.mjs; tests/r216-motion-lifecycle-compositor.test.mjs; tests/feature-catalog-route-presentation.test.mjs; tests/test_auth_reference_login_001_contracts.py; docs/superpowers/specs/2026-10-15-motion-lifecycle-compositor-r216.md; checklist/state
-TESTS=latest motion/static/palette/features focused 26/26; Features lifecycle 6/6; prior combined motion/auth/locale/PWA focused 31/31; full Node 469/469; JS syntax 4/4 latest recheck; py_compile 17/17 prior gate; diff-check PASS
+FILES_CHANGED=static/portal/portal-auth.js; static/portal/portal.css; static/portal/portal-theme.css; static/portal/portal.js; static/portal/portal-motion.js; static/portal/portal-features.js; templates/dashboard.html; tests/auth-pwa-install-control.test.mjs; tests/current-main-motion-static-gates.test.mjs; tests/r216-motion-lifecycle-compositor.test.mjs; tests/feature-catalog-route-presentation.test.mjs; tests/test_auth_reference_login_001_contracts.py; docs/superpowers/specs/2026-10-15-motion-lifecycle-compositor-r216.md; reports/audit/WEBAPP-E0-MOTION-LIFECYCLE-COMPOSITOR-R216-20261015.md; reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-20261010.md; .agents/state/WEBAPP-UIUX-PLAN-20261010.yaml
+TESTS=focused auth/PWA + motion 32/32; latest motion/static/palette/features 26/26; Features lifecycle 6/6; full Node 469/469; JS syntax 4/4 latest recheck; py_compile 17/17 prior gate; diff-check PASS
 BASELINE_FAILURES=0
 BRANCH_FAILURES=0
 NEW_FAILURES=0
@@ -327,3 +328,16 @@ MERGE=NO
   Able to merge; CI `Web App quality gate / Verify Web App` đang chạy. Không
   merge/deploy; `gh auth status` vẫn báo CLI token không hợp lệ nên không dùng
   CLI cho thao tác PR. Không dùng chuỗi xác thực người dùng đã dán.
+
+## Source follow-up — R216-P — auth install icon structure (2026-10-16)
+
+- `static/portal/portal-auth.js` không còn dùng emoji làm icon cấu trúc cho CTA
+  cài PWA. CTA dùng `portal-auth-install-icon` chứa SVG `portal-icon`, giữ kích
+  thước khung 18px để không gây layout shift khi font hoặc locale thay đổi.
+- `static/portal/portal.css` giới hạn hộp icon và SVG ở 18/17px; không đổi màu
+  navy/xanh, route, hành vi cài đặt, API, provider hay wallet.
+- `tests/auth-pwa-install-control.test.mjs` khóa không emoji, có wrapper SVG và
+  giữ toàn bộ ma trận hướng dẫn cài đặt VI/EN/ZH.
+- Kết quả kiểm chứng: focused auth/PWA + motion `32 passed, 0 failed`; toàn bộ
+  Node suite `469 passed, 0 failed`; `git diff --check` xanh. Đây là source
+  evidence; runtime/live visual confirmation vẫn mở theo R216-G/H/L/P.

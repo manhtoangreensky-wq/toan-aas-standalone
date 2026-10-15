@@ -227,6 +227,9 @@
       còn toast giả, regression test hiện có xanh.
 - [x] Auth install CTA dùng catalogue locale `installGuide.title`; không còn
       hard-code `Tải & Cài đặt App TOAN AAS` trong source.
+- [x] Auth install CTA dùng icon SVG theo cùng hệ `portal-icon`, không dùng
+      emoji phụ thuộc font; `auth-pwa-install-control.test.mjs` kiểm tra cả
+      cấu trúc icon và bản dịch VI/EN/ZH.
 - [x] Verify reduced-motion và ghi static contract cho CLS/LCP/INP; nội dung
       vẫn đọc được và motion được tắt an toàn.
 - [ ] Đo CLS/LCP/INP thật trên QA runtime; chưa có runtime nên chưa đóng.
