@@ -78,7 +78,9 @@ server-owned data.
 - Auth install CTA không chứa chuỗi `Tải & Cài đặt App TOAN AAS` và dùng
   `uiText("installGuide.title", ...)`.
 - `node --check` cho các JavaScript đã chạm.
-- `node --test tests/*.test.mjs` không có failure mới so với 458 baseline.
+- `node --test tests/*.test.mjs` không có failure mới so với 459 baseline.
+- Inline renderer styles không được dùng `transition: all`; motion gate phải
+  kiểm tra cả JavaScript renderer, không chỉ stylesheet.
 - `git diff --check` xanh.
 - Không tuyên bố LIVE_PASS nếu chưa có DOM/screenshot/console/interaction từ
   QA runtime.
@@ -87,12 +89,12 @@ server-owned data.
 
 | Spec | Acceptance | Evidence | Trạng thái |
 |---|---|---|---|
-| R216-A auth lifecycle | hydrate không cắt entry, không dựng lại main | focused 2/2 + full Node 458/458 + source diff | GREEN (source) |
+| R216-A auth lifecycle | hydrate không cắt entry, không dựng lại main | focused 2/2 + full Node 459/459 + source diff | GREEN (source) |
 | R216-B provider stability | vùng social không layout shift | focused 1/1 + CSS contract (`min-height: 86px`) | GREEN (source) |
-| R216-C compositor/scroll | không `transition:left`, không scrub lag | focused 2/2 + full Node 458/458 + CSS diff | GREEN (source) |
+| R216-C compositor/scroll | không `transition:left`, không scrub lag | focused 2/2 + full Node 459/459 + CSS diff | GREEN (source) |
 | R216-D Telegram | popup trước await, link fail-closed | existing popup test | GREEN (source) |
 | R216-E PWA | native prompt chỉ khi readiness | existing PWA test | GREEN (source) |
-| R216-F reduced motion | static content + performance notes | focused 1/1 + full Node 458/458; runtime metrics pending | GREEN (static) |
+| R216-F reduced motion | static content + performance notes | focused 1/1 + motion static 7/7 + full Node 459/459; runtime metrics pending | GREEN (static) |
 | R216-G browser acceptance | DOM/screenshot/computed style/console/interaction | QA runtime unavailable | OPEN |
 | R216-L auth install locale | VI/EN/ZH dùng cùng key locale, không hard-code `App`, không duplicate key | source regression + duplicate-key guard + live AX ghi nhận drift legacy | SOURCE GREEN / LIVE OPEN |
 
@@ -101,7 +103,7 @@ server-owned data.
 ```text
 node --test tests/r216-motion-lifecycle-compositor.test.mjs: 6 passed, 0 failed
 node --test tests/auth-telegram-popup-order.test.mjs tests/auth-pwa-install-control.test.mjs: 15 passed, 0 failed
-node --test tests/*.test.mjs: 458 passed, 0 failed
+node --test tests/*.test.mjs: 459 passed, 0 failed
 node --check static/portal/portal-auth.js: PASS
 node --check static/portal/portal-motion.js: PASS
 node --check static/portal/portal.js: PASS

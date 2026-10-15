@@ -22492,7 +22492,7 @@
     });
 
     const packageOptions = packages.length ? packages.map((pkg) => `
-      <label class="portal-topup-pkg-card${selectedPkg === pkg.code ? " is-selected" : ""}" style="display:flex; flex-direction:row; align-items:center; justify-content:space-between; padding:16px 18px; border:2px solid ${selectedPkg === pkg.code ? "#00f2fe" : "var(--portal-border, #2a3b4c)"}; border-radius:12px; cursor:pointer; background:var(--portal-surface-card, #091a28); position:relative; min-height:86px; min-width:0; width:100%; gap:12px; transition:all .2s ease;">
+      <label class="portal-topup-pkg-card${selectedPkg === pkg.code ? " is-selected" : ""}" style="display:flex; flex-direction:row; align-items:center; justify-content:space-between; padding:16px 18px; border:2px solid ${selectedPkg === pkg.code ? "#00f2fe" : "var(--portal-border, #2a3b4c)"}; border-radius:12px; cursor:pointer; background:var(--portal-surface-card, #091a28); position:relative; min-height:86px; min-width:0; width:100%; gap:12px;">
         <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
           <strong style="font-size:17px; color:var(--portal-text-primary, #fff); font-weight:800; white-space:nowrap;">${safeText(pkg.label)}</strong>
           <small style="color:var(--portal-text-secondary, #8fa3b7); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeText(pkg.note)}</small>

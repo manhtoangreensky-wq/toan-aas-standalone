@@ -19,6 +19,8 @@ engine, provider, ví/Xu, PayOS, dữ liệu production, VPS hoặc deploy.
   hiển thị hướng dẫn cài đặt theo thiết bị, không báo cài đặt giả.
 - `prefers-reduced-motion` tắt animation/transition trang trí và giữ nội dung
   đọc được.
+- Renderer gói nạp không còn inline `transition: all`; các chuyển động thẻ gói
+  chỉ dùng thuộc tính visual đã định danh trong stylesheet.
 - Catalogue auth VI/EN/ZH không còn khai báo trùng khóa `pwaFallback`; regression
   guard mới bắt lỗi duplicate key trước khi bundle được dùng.
 
@@ -67,6 +69,8 @@ hiện tại.
 - `static/portal/portal-theme.css` — auth entry, compositor sheen, scroll layer,
   reduced-motion fallback.
 - `tests/r216-motion-lifecycle-compositor.test.mjs` — 6 regression gates.
+- `tests/current-main-motion-static-gates.test.mjs` — gate không để inline
+  `transition: all` quay lại renderer.
 - `tests/test_auth_reference_login_001_contracts.py` — cập nhật phase contract
   theo lifecycle mới.
 - `docs/superpowers/specs/2026-10-15-motion-lifecycle-compositor-r216.md` —
@@ -78,11 +82,14 @@ hiện tại.
 node --test tests/r216-motion-lifecycle-compositor.test.mjs
 6 passed, 0 failed
 
+node --test tests/current-main-motion-static-gates.test.mjs
+7 passed, 0 failed
+
 node --test tests/auth-telegram-popup-order.test.mjs tests/auth-pwa-install-control.test.mjs
 15 passed, 0 failed
 
 node --test tests/*.test.mjs
-458 passed, 0 failed
+459 passed, 0 failed
 
 node --check static/portal/portal-auth.js
 node --check static/portal/portal-motion.js
@@ -109,9 +116,9 @@ PASS
 | R216-C compositor/scroll | GREEN — focused 2/2 | Chưa đo FPS/INP thật |
 | R216-D Telegram gesture | GREEN — regression hiện có | Chưa thao tác browser |
 | R216-E PWA readiness | GREEN — regression hiện có | Chưa thao tác browser |
-| R216-F reduced-motion | GREEN — focused 1/1, full Node 458/458 | Chưa đo CLS/LCP/INP thật |
+| R216-F reduced-motion | GREEN — focused 1/1, full Node 459/459 | Chưa đo CLS/LCP/INP thật |
 | R216-G browser acceptance | OPEN | QA runtime cô lập chưa khả dụng |
-| R216-L locale drift CTA đăng nhập | GREEN — source regression + duplicate-key guard; full Node 458/458 | OPEN — live còn chuỗi cũ do chưa deploy |
+| R216-L locale drift CTA đăng nhập | GREEN — source regression + duplicate-key guard; full Node 459/459 | OPEN — live còn chuỗi cũ do chưa deploy |
 
 ## Chưa được tuyên bố
 
@@ -124,7 +131,7 @@ TASK=R216-motion-lifecycle-compositor
 BASE_SHA=44f5fdacf2435c47e8d8a16eb04115d2d916bcd1
 HEAD_SHA=LOCAL_BRANCH_HEAD (verify with `git rev-parse HEAD`)
 FILES_CHANGED=static/portal/portal-auth.js; static/portal/portal.css; static/portal/portal-theme.css; static/portal/portal.js; tests/auth-pwa-install-control.test.mjs; tests/r216-motion-lifecycle-compositor.test.mjs; tests/test_auth_reference_login_001_contracts.py; docs/superpowers/specs/2026-10-15-motion-lifecycle-compositor-r216.md; checklist/state
-TESTS=R216 6/6; locale/PWA focused 22/22; full Node 458/458; JS syntax 5/5; py_compile 17/17; diff-check PASS
+TESTS=R216 6/6; motion static 7/7; locale/PWA focused 22/22; full Node 459/459; JS syntax 5/5; py_compile 17/17; diff-check PASS
 BASELINE_FAILURES=0
 BRANCH_FAILURES=0
 NEW_FAILURES=0

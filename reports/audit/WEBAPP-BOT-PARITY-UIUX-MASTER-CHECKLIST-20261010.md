@@ -187,6 +187,8 @@
       không layout shift.
 - [x] Thay transition `left` bằng transform compositor.
 - [x] Sửa scroll reveal để biến đổi do scroll không bị transition trễ một nhịp.
+- [x] Không còn inline `transition: all` trong Portal renderer; gate static kiểm
+      tra cả JavaScript renderer và stylesheet.
 - [x] Giữ user gesture khi mở Telegram sau async; regression test hiện có xanh.
 - [x] PWA install chỉ gọi native prompt khi `beforeinstallprompt` thật; không
       còn toast giả, regression test hiện có xanh.

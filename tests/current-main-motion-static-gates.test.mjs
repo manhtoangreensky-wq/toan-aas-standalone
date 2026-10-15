@@ -4,6 +4,7 @@ import test from 'node:test';
 
 const portalCss = fs.readFileSync('static/portal/portal.css', 'utf8');
 const themeCss = fs.readFileSync('static/portal/portal-theme.css', 'utf8');
+const portalJs = fs.readFileSync('static/portal/portal.js', 'utf8');
 
 function selectorBlocks(selector, source) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -69,4 +70,8 @@ test('Reduced-motion leaves the Project-detail loading icon static', () => {
 test('Reduced-motion leaves the Workboard loading surface static', () => {
   const blocks = reducedMotionBlocks(themeCss);
   assert.ok(blocks.some(block => /\.portal-workboard-recovery\[data-workboard-read-state="loading"\][\s\S]{0,180}animation\s*:\s*none\s*!important/i.test(block)));
+});
+
+test('Portal renderers do not add inline transition-all motion', () => {
+  assert.doesNotMatch(portalJs, /transition\s*:\s*all\b/i);
 });
