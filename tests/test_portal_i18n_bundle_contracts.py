@@ -1058,8 +1058,8 @@ def test_app_shell_navigation_uses_the_reviewed_locale_catalogue() -> None:
 
     assert 'source.startsWith("ERP · ")' in localized_navigation
     assert 'uiText("shellNav.erp", "ERP")' in localized_navigation
-    assert 'title: localizedNavigationLabel(String(candidate.title || "TOAN AAS"))' in command_palette
-    assert 'section: localizedNavigationLabel(String(candidate.section || "Workspace"))' in command_palette
+    assert 'const title = deferTitle ? localizedNavigationLabel(String(candidate.title || "TOAN AAS"))' in command_palette
+    assert ': localizedNavigationLabel(String(candidate.section || "Workspace"));' in command_palette
     assert ".portal-nav-link > span:not(.portal-nav-icon)" in PORTAL_CSS
     assert "overflow-wrap: anywhere;" in PORTAL_CSS
 
