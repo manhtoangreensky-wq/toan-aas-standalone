@@ -199,19 +199,25 @@
 - [x] Không còn inline `transition: all` trong Portal renderer; gate static kiểm
       tra cả JavaScript renderer và stylesheet.
 - [x] Dashboard template cũ bỏ shorthand transition mọi thuộc tính; hover chỉ
-      chuyển `transform`/`border-color`. Motion/auth focused 31/31, full Node
-      468/468, JS syntax 3/3, py_compile 17/17 và diff-check đạt ngày 2026-10-15.
+      chuyển `transform`/`border-color`. Motion/static/features focused 26/26,
+      full Node 469/469, JS syntax 4/4, py_compile 17/17 và diff-check đạt
+      ngày 2026-10-15.
 - [x] Features route huỷ IntersectionObserver, RAF, timer và listener `focusin`
       khi unmount; callback cũ không còn sửa DOM đã tách. Regression riêng
-      `feature-catalog-route-presentation.test.mjs` đạt 5/5.
+      `feature-catalog-route-presentation.test.mjs` đạt 6/6; hydrate async cũng
+      bị chặn nếu `portal-main` đã bị thay hoặc đường dẫn không còn là
+      `/features`.
 - [x] Landing lắng nghe thay đổi `prefers-reduced-motion` và huỷ lifecycle đang
       chạy; metadata scroll chỉ ghi khi giá trị đổi, bỏ biến offset không có CSS
       consumer, bỏ gradient nền phụ thuộc progress khỏi hot path.
 - [x] Gỡ `will-change`/`translateZ(0)` áp blanket lên mọi page/card/table; chỉ
       giữ hint compositor ở các control thực sự có motion. Focused motion mới
-      đạt 19/19; dark input palette gate và full Node đạt 468/468.
+      đạt 19/19; dark input palette gate và full Node đạt 469/469.
 - [x] Dark theme dùng nền navy/xanh và ô nhập dùng token `--portal-dark-*`;
       không còn map sang palette obsidian gần đen.
+- [x] Features hydration giữ định danh `portal-main` và route `/features` qua
+      toàn bộ lần đọc async; kết quả cũ không được render vào shell đã thay.
+      Regression `feature-catalog-route-presentation.test.mjs` đạt 6/6.
 - [x] Giữ user gesture khi mở Telegram sau async; regression test hiện có xanh.
 - [x] PWA install chỉ gọi native prompt khi `beforeinstallprompt` thật; không
       còn toast giả, regression test hiện có xanh.

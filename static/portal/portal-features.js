@@ -136,6 +136,14 @@
     } catch (_error) { return {}; }
   }
 
+  function featuresHydrationIsCurrent(main, expectedPath) {
+    if (!main || typeof document.getElementById !== "function") return false;
+    if (document.getElementById("portal-main") !== main
+      && document.getElementById("portal-root") !== main) return false;
+    const location = typeof window === "object" && window ? window.location : null;
+    return !location || typeof location.pathname !== "string" || location.pathname === expectedPath;
+  }
+
   async function readJson(path) {
     try {
       const response = await fetch(`${API}${path}`, {
@@ -545,6 +553,7 @@
 
   async function hydrateFeatures() {
     const initial = readBootstrap(), fallbackLocale = LOCALES.has(initial.interfaceLocale) ? initial.interfaceLocale : "vi";
+    const initialMain = document.getElementById("portal-main") || document.getElementById("portal-root");
     const [catalogueData, accountData] = await Promise.all([readJson("/catalog"), readJson("/auth/me")]);
     const catalog = projectCatalogue(catalogueData), account = projectAccount(accountData, fallbackLocale);
     const locale = account ? account.locale : fallbackLocale, ready = Boolean(catalog && account);
@@ -554,6 +563,7 @@
         displayName: account ? account.displayName : "", email: account ? account.email : "" },
       pageStates: { ...(initial.pageStates || {}), "/features": ready ? "read_only" : "guarded" }
     };
+    if (!featuresHydrationIsCurrent(initialMain, "/features")) return initial;
     window.__TOAN_AAS_PORTAL__ = next; renderShell(next.catalog, account, locale, ready); return next;
   }
 

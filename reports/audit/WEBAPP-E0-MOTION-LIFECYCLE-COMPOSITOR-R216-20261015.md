@@ -25,6 +25,23 @@ engine, provider, ví/Xu, PayOS, dữ liệu production, VPS hoặc deploy.
   bỏ shorthand `transition:.2s` để thay đổi kích thước/nội dung không bị kéo theo.
 - Catalogue auth VI/EN/ZH không còn khai báo trùng khóa `pwaFallback`; regression
   guard mới bắt lỗi duplicate key trước khi bundle được dùng.
+- Features hydration async giữ đúng phần tử `portal-main` và route `/features`;
+  phản hồi đến muộn bị bỏ qua nếu shell đã được thay bởi route khác, tránh dựng
+  lại nội dung cũ vào DOM mới.
+
+## Addendum R216-I — stale Features hydration
+
+- **Nguyên nhân:** `hydrateFeatures()` chờ đồng thời `/catalog` và `/auth/me`,
+  sau đó trước đây luôn ghi state và gọi `renderShell()` mà không xác nhận phần tử
+  đích còn là `portal-main` ban đầu hoặc đường dẫn còn là `/features`.
+- **Đã sửa:** `featuresHydrationIsCurrent()` kiểm tra danh tính shell hiện tại và
+  pathname trước khi ghi `window.__TOAN_AAS_PORTAL__` hoặc thay DOM. Khi route đã
+  rời đi, kết quả async được bỏ qua và không chạm shell mới.
+- **Phạm vi:** chỉ `static/portal/portal-features.js` và regression source; không
+  đổi route, action, field, API, quyền, dữ liệu hay trạng thái server.
+- **Bằng chứng:** `tests/feature-catalog-route-presentation.test.mjs` đạt 6/6;
+  focused motion/static/features đạt 26/26; toàn bộ Node đạt 469/469; JS syntax
+  4/4; `git diff --check` đạt.
 
 ## Follow-up R216-L — locale drift ở nút cài ứng dụng trên trang đăng nhập
 
@@ -133,7 +150,7 @@ Codex In-app Browser đã đọc landing ở viewport khoảng `327×667`, chỉ
   gesture, PWA readiness.
 - `static/portal/portal.js` — auth install CTA locale drift fix (R216-L).
 - `static/portal/portal-features.js` — Features motion cleanup for stale observer,
-  RAF, timer và focus callbacks.
+  RAF, timer, focus callbacks và stale async hydration.
 - `static/portal/portal-motion.js` — landing reduced-motion lifecycle, pointer RAF
   cleanup và scroll metadata hot-path.
 - `static/portal/portal.css` — reservation cho vùng provider và media rule
@@ -142,8 +159,8 @@ Codex In-app Browser đã đọc landing ở viewport khoảng `327×667`, chỉ
   reduced-motion fallback.
 - `tests/r216-motion-lifecycle-compositor.test.mjs` — 10 regression gates cho
   auth, compositor, reduced-motion, scroll paint và metadata hot-path.
-- `tests/feature-catalog-route-presentation.test.mjs` — 5 regression gates cho
-  Features route lifecycle cleanup.
+- `tests/feature-catalog-route-presentation.test.mjs` — 6 regression gates cho
+  Features route lifecycle cleanup và stale hydration guard.
 - `tests/current-main-motion-static-gates.test.mjs` — gate không để inline
   `transition: all` quay lại renderer, shorthand quay lại Dashboard cũ hoặc
   header landing bị clipping trên mobile.
@@ -178,7 +195,7 @@ Audit đọc mã sau checkpoint live đã tìm và khóa bốn điểm source c�
 
 Regression mới:
 
-- `tests/feature-catalog-route-presentation.test.mjs`: 5/5.
+- `tests/feature-catalog-route-presentation.test.mjs`: 6/6.
 - `tests/r216-motion-lifecycle-compositor.test.mjs`: 10/10.
 - `tests/current-main-motion-static-gates.test.mjs`: 10/10, gồm gate palette
   dark navy/xanh.
@@ -198,13 +215,13 @@ node --test tests/auth-telegram-popup-order.test.mjs tests/auth-pwa-install-cont
 15 passed, 0 failed
 
 node --test tests/**/*.test.mjs
-468 passed, 0 failed
+469 passed, 0 failed
 
-node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs
-19 passed, 0 failed (latest recheck)
+node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs tests/feature-catalog-route-presentation.test.mjs
+26 passed, 0 failed (latest recheck)
 
 node --test tests/feature-catalog-route-presentation.test.mjs
-5 passed, 0 failed
+6 passed, 0 failed
 
 node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs tests/auth-locale-copy-purity.test.mjs tests/auth-pwa-install-control.test.mjs
 31 passed, 0 failed (prior focused ledger)
@@ -230,14 +247,14 @@ PASS
 
 | Spec | Kết quả source | Runtime |
 |---|---|---|
-| R216-A auth lifecycle | GREEN — focused 2/2, full Node 468/468 | Chưa có browser QA |
+| R216-A auth lifecycle | GREEN — focused 2/2, full Node 469/469 | Chưa có browser QA |
 | R216-B provider stability | GREEN — focused 1/1, `min-height: 86px` | Chưa đo CLS thật |
-| R216-C compositor/scroll | GREEN — focused 2/2 + new hot-path gates, full Node 468/468 | Chưa đo FPS/INP thật |
+| R216-C compositor/scroll | GREEN — focused 2/2 + new hot-path gates, full Node 469/469 | Chưa đo FPS/INP thật |
 | R216-D Telegram gesture | GREEN — regression hiện có | Chưa thao tác browser |
 | R216-E PWA readiness | GREEN — regression hiện có | Chưa thao tác browser |
-| R216-F reduced-motion | GREEN — focused 1/1, full Node 468/468 | Chưa đo CLS/LCP/INP thật |
+| R216-F reduced-motion | GREEN — focused 1/1, full Node 469/469 | Chưa đo CLS/LCP/INP thật |
 | R216-G browser acceptance | OPEN | QA fixture server có thể dựng; Chrome sandbox đóng với `exitCode=13` trước khi tạo phiên |
-| R216-L locale drift CTA đăng nhập | GREEN — source regression + duplicate-key guard; full Node 468/468 | OPEN — `/features` → `/login?next=/features` AX còn `Tải & Cài đặt App TOAN AAS`; bundle/route drift |
+| R216-L locale drift CTA đăng nhập | GREEN — source regression + duplicate-key guard; full Node 469/469 | OPEN — `/features` → `/login?next=/features` AX còn `Tải & Cài đặt App TOAN AAS`; bundle/route drift |
 | R216-H landing header responsive | GREEN — static gate + source media rule; PWA inline placement regression xanh | OPEN — live read-only 327×667 còn clipping header và FAB cũ che proof vì deployment drift |
 
 ## Chưa được tuyên bố
@@ -251,7 +268,7 @@ TASK=R216-motion-lifecycle-compositor
 BASE_SHA=44f5fdacf2435c47e8d8a16eb04115d2d916bcd1
 HEAD_SHA=LOCAL_BRANCH_HEAD (verify with `git rev-parse HEAD`)
 FILES_CHANGED=static/portal/portal-auth.js; static/portal/portal.css; static/portal/portal-theme.css; static/portal/portal.js; static/portal/portal-motion.js; static/portal/portal-features.js; templates/dashboard.html; tests/auth-pwa-install-control.test.mjs; tests/current-main-motion-static-gates.test.mjs; tests/r216-motion-lifecycle-compositor.test.mjs; tests/feature-catalog-route-presentation.test.mjs; tests/test_auth_reference_login_001_contracts.py; docs/superpowers/specs/2026-10-15-motion-lifecycle-compositor-r216.md; checklist/state
-TESTS=latest motion/static/palette focused 25/25; Features lifecycle 5/5; prior combined motion/auth/locale/PWA focused 31/31; full Node 468/468; JS syntax 3/3 latest recheck; py_compile 17/17 prior gate; diff-check PASS
+TESTS=latest motion/static/palette/features focused 26/26; Features lifecycle 6/6; prior combined motion/auth/locale/PWA focused 31/31; full Node 469/469; JS syntax 4/4 latest recheck; py_compile 17/17 prior gate; diff-check PASS
 BASELINE_FAILURES=0
 BRANCH_FAILURES=0
 NEW_FAILURES=0
