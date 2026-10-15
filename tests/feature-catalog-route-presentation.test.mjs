@@ -63,7 +63,8 @@ test("Features motion removes focus listeners when the route unmounts", () => {
 test("Features hydration cannot render a stale response into a replaced route shell", () => {
   assert.match(featureSource, /function featuresHydrationIsCurrent\(main, expectedPath\)/);
   assert.match(featureSource, /document\.getElementById\("portal-main"\) !== main/);
-  assert.match(featureSource, /location\.pathname === expectedPath/);
+  assert.match(featureSource, /pathname === expectedPath/);
+  assert.ok(featureSource.includes('const pathname = location.pathname.replace(/\\/+$/, "") || "/";'));
   assert.match(featureSource, /const initialMain = document\.getElementById\("portal-main"\) \|\| document\.getElementById\("portal-root"\)/);
   assert.ok(featureSource.includes('if (!featuresHydrationIsCurrent(initialMain, "/features")) return initial;'));
   assert.ok(featureSource.indexOf("featuresHydrationIsCurrent(initialMain, \"/features\")") < featureSource.indexOf("window.__TOAN_AAS_PORTAL__ = next;"));

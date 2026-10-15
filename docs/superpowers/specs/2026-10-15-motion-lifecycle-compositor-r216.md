@@ -24,6 +24,8 @@ Khóa các nguyên nhân khiến hiệu ứng bị cắt, giật hoặc giả tr
    trong CTA cuối trang, không nổi đè vùng nội dung.
 10. Features hydration phải giữ đúng `portal-main` và route `/features` sau các
     lần đọc async; phản hồi cũ không được dựng lại DOM sau khi shell đã thay.
+    Dấu `/` cuối được chuẩn hóa, nên `/features` và `/features/` dùng cùng
+    acceptance và không bị bỏ render.
 
 ## Phạm vi file được phép
 
@@ -119,7 +121,7 @@ server-owned data.
 | R216-G browser acceptance | DOM/screenshot/computed style/console/interaction | Fixture server dựng được; bundled Chromium thiếu executable; Chrome hệ thống exit 13 trước remote debugging | OPEN |
 | R216-L auth install locale | VI/EN/ZH dùng cùng key locale, không hard-code `App`, không duplicate key | source regression + duplicate-key guard + full Node 469/469; direct login AX recheck xanh nhưng `/features` → `/login?next=/features` còn CTA cũ | SOURCE GREEN / LIVE DRIFT OPEN |
 | R216-H landing mobile header | header không clipping ở ≤420px, controls wrap xuống hàng | source media rule + static regression; live screenshot khoảng 327x667 ghi nhận bundle cũ còn clipping; PWA placement regression đã xanh | SOURCE GREEN / LIVE DRIFT OPEN |
-| R216-I Features hydration lifecycle | async response chỉ render khi đúng `portal-main` và `/features` | `feature-catalog-route-presentation.test.mjs` 6/6 + JS syntax + diff-check | GREEN (source) |
+| R216-I Features hydration lifecycle | async response chỉ render khi đúng `portal-main` và `/features` hoặc `/features/` sau khi chuẩn hóa dấu `/` cuối | `feature-catalog-route-presentation.test.mjs` 6/6 + JS syntax + diff-check | GREEN (source) |
 
 ## Kết quả source gate ngày 2026-10-15
 

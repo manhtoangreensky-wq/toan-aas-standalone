@@ -27,7 +27,8 @@ engine, provider, ví/Xu, PayOS, dữ liệu production, VPS hoặc deploy.
   guard mới bắt lỗi duplicate key trước khi bundle được dùng.
 - Features hydration async giữ đúng phần tử `portal-main` và route `/features`;
   phản hồi đến muộn bị bỏ qua nếu shell đã được thay bởi route khác, tránh dựng
-  lại nội dung cũ vào DOM mới.
+  lại nội dung cũ vào DOM mới. Dấu `/` cuối được chuẩn hóa nên `/features` và
+  `/features/` dùng cùng acceptance.
 
 ## Addendum R216-I — stale Features hydration
 
@@ -267,6 +268,7 @@ PASS
 | R216-G browser acceptance | OPEN | QA fixture server có thể dựng; Chrome sandbox đóng với `exitCode=13` trước khi tạo phiên |
 | R216-L locale drift CTA đăng nhập | GREEN — source regression + duplicate-key guard; full Node 469/469 | OPEN — `/features` → `/login?next=/features` AX còn `Tải & Cài đặt App TOAN AAS`; bundle/route drift |
 | R216-H landing header responsive | GREEN — static gate + source media rule; PWA inline placement regression xanh | OPEN — live read-only 327×667 còn clipping header và FAB cũ che proof vì deployment drift |
+| R216-I Features hydration lifecycle | GREEN — async response chỉ render khi đúng `portal-main` và `/features` hoặc `/features/` sau chuẩn hóa dấu `/` cuối; regression 6/6 | Chưa có browser QA runtime |
 
 ## Chưa được tuyên bố
 

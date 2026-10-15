@@ -141,7 +141,9 @@
     if (document.getElementById("portal-main") !== main
       && document.getElementById("portal-root") !== main) return false;
     const location = typeof window === "object" && window ? window.location : null;
-    return !location || typeof location.pathname !== "string" || location.pathname === expectedPath;
+    if (!location || typeof location.pathname !== "string") return true;
+    const pathname = location.pathname.replace(/\/+$/, "") || "/";
+    return pathname === expectedPath;
   }
 
   async function readJson(path) {

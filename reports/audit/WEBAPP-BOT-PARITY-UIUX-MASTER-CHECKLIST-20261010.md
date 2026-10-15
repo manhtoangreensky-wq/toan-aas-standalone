@@ -218,7 +218,9 @@
       không còn map sang palette obsidian gần đen.
 - [x] Features hydration giữ định danh `portal-main` và route `/features` qua
       toàn bộ lần đọc async; kết quả cũ không được render vào shell đã thay.
-      Regression `feature-catalog-route-presentation.test.mjs` đạt 6/6.
+      Dấu `/` cuối được chuẩn hóa nên `/features` và `/features/` dùng cùng
+      acceptance; regression `feature-catalog-route-presentation.test.mjs` đạt
+      6/6.
 - [x] Giữ user gesture khi mở Telegram sau async; regression test hiện có xanh.
 - [x] PWA install chỉ gọi native prompt khi `beforeinstallprompt` thật; không
       còn toast giả, regression test hiện có xanh.
