@@ -108,9 +108,9 @@ server-owned data.
 
 | Spec | Acceptance | Evidence | Trạng thái |
 |---|---|---|---|
-| R216-A auth lifecycle | hydrate không cắt entry, không dựng lại main | focused 2/2 + full Node 461/461 + source diff | GREEN (source) |
+| R216-A auth lifecycle | hydrate không cắt entry, không dựng lại main | focused 2/2 + full Node 467/467 + source diff | GREEN (source) |
 | R216-B provider stability | vùng social không layout shift | focused 1/1 + CSS contract (`min-height: 86px`) | GREEN (source) |
-| R216-C compositor/scroll | không `transition:left`, không scrub lag | focused 2/2 + full Node 461/461 + CSS diff | GREEN (source) |
+| R216-C compositor/scroll | không `transition:left`, không scrub lag | focused 2/2 + hot-path gates + full Node 467/467 + CSS diff | GREEN (source) |
 | R216-D Telegram | popup trước await, link fail-closed | existing popup test | GREEN (source) |
 | R216-E PWA | native prompt chỉ khi readiness | existing PWA test | GREEN (source) |
 | R216-F reduced motion | static content + performance notes | focused 1/1 + motion static 9/9 + full Node 467/467; runtime metrics pending | GREEN (static) |
