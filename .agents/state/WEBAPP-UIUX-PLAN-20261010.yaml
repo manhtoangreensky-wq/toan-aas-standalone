@@ -81,6 +81,11 @@ ordered_checkpoints:
     status: SOURCE_GREEN_LIVE_DRIFT_OPEN
     evidence: "Both portal.js and portal-auth.js auth CTA paths use reviewed locale copy; duplicate-key regression added; full Node 469/469. Earlier /login?lang=vi|en|zh recheck was green, but latest read-only /features redirected to /login?next=/features and AX exposed legacy 'Tải & Cài đặt App TOAN AAS'."
     status_note: "Locale source remains green; live auth CTA drift is open on the next-route login renderer/runtime bundle. Do not generalize the earlier locale recheck; no login or mutation was performed."
+  - id: R216-P
+    name: auth-install-icon-structure
+    status: SOURCE_GREEN_LIVE_ACCEPTANCE_OPEN
+    evidence: "Auth install CTA now uses the shared SVG portal-icon wrapper with an 18px stable box; no emoji remains in portal-auth.js; focused auth/PWA + motion gates 32/32 and full Node 469/469 passed."
+    status_note: "Source and static accessibility structure are locked. Live visual confirmation remains part of the pending QA/runtime delivery gate; do not call LIVE_PASS."
 protected_contracts:
   - routes
   - actions
@@ -97,4 +102,4 @@ motion_backlog:
   - telegram-popup-user-gesture
   - pwa-install-readiness
   - reduced-motion-and-cls-lcp-inp
-next_action: "Giữ PR #647 mở và không merge/deploy; khi delivery/auth hợp lệ, recheck R216-L next-route và R216-H landing ở viewport hẹp, sau đó hoàn tất QA matrix cùng CLS/LCP/INP/FPS. Chỉ retry PHIEU-217 khi agy.exe khả dụng. Do not call LIVE_PASS before evidence."
+next_action: "Giữ PR #647 mở và không merge/deploy; khi delivery/auth hợp lệ, recheck R216-L next-route, R216-H landing ở viewport hẹp và R216-P icon trên runtime, sau đó hoàn tất QA matrix cùng CLS/LCP/INP/FPS. Chỉ retry PHIEU-217 khi agy.exe khả dụng. Do not call LIVE_PASS before evidence."
