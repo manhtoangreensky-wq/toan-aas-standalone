@@ -890,11 +890,11 @@ def test_customer_authoring_has_no_untranslated_nested_or_package_surface() -> N
     source = BUNDLE.read_text(encoding="utf-8")
     expected = {
         "projectCenter.notes.integrationTitle": ("Trạng thái tích hợp", "Integration status", "集成状态"),
-        "project.editor.title": ("Studio Document editor", "Studio Document editor", "工作室文档编辑器"),
+        "project.editor.title": ("Trình chỉnh sửa tài liệu Studio", "Studio Document editor", "工作室文档编辑器"),
         "project.editor.save": ("Lưu phiên bản mới", "Save new version", "保存新版本"),
-        "projectPackage.page.title": ("Project Packages", "Project Packages", "项目套餐"),
-        "projectPackage.page.guardTitle": ("Project Packages chưa được bật", "Project Packages are not enabled", "项目套餐尚未启用"),
-        "projectPackage.page.historyTitle": ("Lịch sử Project Packages", "Project Package history", "项目套餐历史"),
+        "projectPackage.page.title": ("Gói dự án", "Project Packages", "项目套餐"),
+        "projectPackage.page.guardTitle": ("Gói dự án chưa được bật", "Project Packages are not enabled", "项目套餐尚未启用"),
+        "projectPackage.page.historyTitle": ("Lịch sử gói dự án", "Project Package history", "项目套餐历史"),
     }
     for key, translations in expected.items():
         for translation in translations:
