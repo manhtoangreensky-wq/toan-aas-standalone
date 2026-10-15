@@ -9,6 +9,9 @@ const shellSource = fs.readFileSync('static/portal/portal.js', 'utf8');
 test('Auth shell install entry uses reviewed locale copy instead of legacy mixed-language text', () => {
   assert.doesNotMatch(shellSource, /Tải & Cài đặt App TOAN AAS/);
   assert.match(shellSource, /uiText\("installGuide\.title", "Cài ứng dụng TOAN AAS"\)/);
+  assert.doesNotMatch(source, /📲/u);
+  assert.match(source, /class="portal-auth-install-icon"/);
+  assert.match(source, /<svg class="portal-icon"/);
 });
 
 function mountAuth({ locale = 'vi', userAgent = '', platform = '', standalone = false } = {}) {
