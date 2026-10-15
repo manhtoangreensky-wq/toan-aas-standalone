@@ -113,12 +113,16 @@ Codex In-app Browser đã đọc landing ở viewport khoảng `327×667`, chỉ
 - `static/portal/portal-auth.js` — auth lifecycle, provider hydration, Telegram
   gesture, PWA readiness.
 - `static/portal/portal.js` — auth install CTA locale drift fix (R216-L).
-- `static/portal/portal.css` — reservation cho vùng provider.
+- `static/portal/portal.css` — reservation cho vùng provider và media rule
+  responsive cho landing header ≤420px.
 - `static/portal/portal-theme.css` — auth entry, compositor sheen, scroll layer,
   reduced-motion fallback.
 - `tests/r216-motion-lifecycle-compositor.test.mjs` — 6 regression gates.
 - `tests/current-main-motion-static-gates.test.mjs` — gate không để inline
-  `transition: all` quay lại renderer hoặc shorthand quay lại Dashboard cũ.
+  `transition: all` quay lại renderer, shorthand quay lại Dashboard cũ hoặc
+  header landing bị clipping trên mobile.
+- `tests/pwa-landing-install-placement.test.mjs` — bảo vệ placement PWA inline
+  trong CTA cuối landing.
 - `templates/dashboard.html` — giới hạn hover transition ở hai thuộc tính thực sự thay đổi.
 - `tests/test_auth_reference_login_001_contracts.py` — cập nhật phase contract
   theo lifecycle mới.
