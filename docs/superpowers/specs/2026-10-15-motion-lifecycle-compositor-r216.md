@@ -122,6 +122,7 @@ server-owned data.
 | R216-L auth install locale | VI/EN/ZH dùng cùng key locale, không hard-code `App`, không duplicate key | source regression + duplicate-key guard + full Node 469/469; direct login AX recheck xanh nhưng `/features` → `/login?next=/features` còn CTA cũ | SOURCE GREEN / LIVE DRIFT OPEN |
 | R216-H landing mobile header | header không clipping ở ≤420px, controls wrap xuống hàng | source media rule + static regression; live screenshot khoảng 327x667 ghi nhận bundle cũ còn clipping; PWA placement regression đã xanh | SOURCE GREEN / LIVE DRIFT OPEN |
 | R216-I Features hydration lifecycle | async response chỉ render khi đúng `portal-main` và `/features` hoặc `/features/` sau khi chuẩn hóa dấu `/` cuối | `feature-catalog-route-presentation.test.mjs` 6/6 + JS syntax + diff-check | GREEN (source) |
+| R216-P auth install icon structure | CTA dùng shared SVG, khung 18px, không emoji, không đổi hành vi cài đặt | `auth-pwa-install-control.test.mjs` trong focused 32/32; full Node 469/469; diff-check | GREEN (source); runtime mở |
 
 ## Kết quả source gate ngày 2026-10-15
 
@@ -163,3 +164,24 @@ cụm locale/theme/action bị cắt ở mép phải; nút PWA dạng FAB cũ n�
 trái và che một phần danh sách proof. Source hiện tại đã có media rule bọc header
 và quy tắc placement inline trong `portal-theme.css`; cần recheck sau delivery,
 không được suy diễn source xanh thành `LIVE_PASS`.
+
+## Follow-up R216-P — auth install icon structure (2026-10-16)
+
+**Scope:** `static/portal/portal-auth.js`, `static/portal/portal.css`, and the
+focused PWA regression. This is presentation-only; route, session, provider,
+wallet, and install-prompt behavior remain protected.
+
+**Acceptance:**
+
+- The auth install CTA contains no emoji or font-dependent structural icon.
+- The icon is the shared SVG `portal-icon` inside a stable 18px wrapper.
+- VI/EN/ZH labels and native/fallback install behavior remain unchanged.
+- Reduced-motion, keyboard, contrast, and existing auth lifecycle contracts stay
+  green.
+
+**Evidence:** `node --test tests/auth-pwa-install-control.test.mjs
+tests/r216-motion-lifecycle-compositor.test.mjs
+tests/current-main-motion-static-gates.test.mjs` → `32 passed, 0 failed`;
+full Node suite → `469 passed, 0 failed`; `git diff --check` → `PASS`.
+Runtime/live acceptance remains open because the branch has not been merged or
+deployed and the isolated QA browser runtime is unavailable.
