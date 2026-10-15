@@ -189,6 +189,9 @@
 - [x] Sửa scroll reveal để biến đổi do scroll không bị transition trễ một nhịp.
 - [x] Không còn inline `transition: all` trong Portal renderer; gate static kiểm
       tra cả JavaScript renderer và stylesheet.
+- [x] Dashboard template cũ bỏ shorthand transition mọi thuộc tính; hover chỉ
+      chuyển `transform`/`border-color`. Motion/auth focused 30/30, full Node
+      460/460, JS syntax 5/5, py_compile 17/17 và diff-check đạt ngày 2026-10-15.
 - [x] Giữ user gesture khi mở Telegram sau async; regression test hiện có xanh.
 - [x] PWA install chỉ gọi native prompt khi `beforeinstallprompt` thật; không
       còn toast giả, regression test hiện có xanh.

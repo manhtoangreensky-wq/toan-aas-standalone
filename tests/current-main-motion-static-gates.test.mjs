@@ -5,6 +5,7 @@ import test from 'node:test';
 const portalCss = fs.readFileSync('static/portal/portal.css', 'utf8');
 const themeCss = fs.readFileSync('static/portal/portal-theme.css', 'utf8');
 const portalJs = fs.readFileSync('static/portal/portal.js', 'utf8');
+const legacyDashboardTemplate = fs.readFileSync('templates/dashboard.html', 'utf8');
 
 function selectorBlocks(selector, source) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -74,4 +75,8 @@ test('Reduced-motion leaves the Workboard loading surface static', () => {
 
 test('Portal renderers do not add inline transition-all motion', () => {
   assert.doesNotMatch(portalJs, /transition\s*:\s*all\b/i);
+});
+
+test('Legacy dashboard template does not use shorthand all-property transitions', () => {
+  assert.doesNotMatch(legacyDashboardTemplate, /transition\s*:\s*\.2s\b/i);
 });

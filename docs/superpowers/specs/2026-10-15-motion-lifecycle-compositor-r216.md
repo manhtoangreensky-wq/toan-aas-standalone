@@ -25,6 +25,7 @@ Khóa các nguyên nhân khiến hiệu ứng bị cắt, giật hoặc giả tr
 - `static/portal/portal-auth.js`
 - `static/portal/portal.js` (chỉ nhánh auth install CTA locale drift R216-L)
 - `static/portal/portal-theme.css`
+- `templates/dashboard.html` (chỉ giới hạn shorthand hover transition)
 - `static/portal/portal-motion.js` (chỉ khi regression yêu cầu)
 - `tests/r216-motion-lifecycle-compositor.test.mjs`
 - `tests/auth-pwa-install-control.test.mjs` (regression R216-L)
@@ -81,6 +82,7 @@ server-owned data.
 - `node --test tests/*.test.mjs` không có failure mới so với 459 baseline.
 - Inline renderer styles không được dùng `transition: all`; motion gate phải
   kiểm tra cả JavaScript renderer, không chỉ stylesheet.
+- Dashboard cũ chỉ transition `transform` và `border-color`, không shorthand all-property.
 - `git diff --check` xanh.
 - Không tuyên bố LIVE_PASS nếu chưa có DOM/screenshot/console/interaction từ
   QA runtime.
@@ -89,12 +91,12 @@ server-owned data.
 
 | Spec | Acceptance | Evidence | Trạng thái |
 |---|---|---|---|
-| R216-A auth lifecycle | hydrate không cắt entry, không dựng lại main | focused 2/2 + full Node 459/459 + source diff | GREEN (source) |
+| R216-A auth lifecycle | hydrate không cắt entry, không dựng lại main | focused 2/2 + full Node 460/460 + source diff | GREEN (source) |
 | R216-B provider stability | vùng social không layout shift | focused 1/1 + CSS contract (`min-height: 86px`) | GREEN (source) |
-| R216-C compositor/scroll | không `transition:left`, không scrub lag | focused 2/2 + full Node 459/459 + CSS diff | GREEN (source) |
+| R216-C compositor/scroll | không `transition:left`, không scrub lag | focused 2/2 + full Node 460/460 + CSS diff | GREEN (source) |
 | R216-D Telegram | popup trước await, link fail-closed | existing popup test | GREEN (source) |
 | R216-E PWA | native prompt chỉ khi readiness | existing PWA test | GREEN (source) |
-| R216-F reduced motion | static content + performance notes | focused 1/1 + motion static 7/7 + full Node 459/459; runtime metrics pending | GREEN (static) |
+| R216-F reduced motion | static content + performance notes | focused 1/1 + motion static 8/8 + full Node 460/460; runtime metrics pending | GREEN (static) |
 | R216-G browser acceptance | DOM/screenshot/computed style/console/interaction | QA runtime unavailable | OPEN |
 | R216-L auth install locale | VI/EN/ZH dùng cùng key locale, không hard-code `App`, không duplicate key | source regression + duplicate-key guard + live AX ghi nhận drift legacy | SOURCE GREEN / LIVE OPEN |
 
@@ -103,11 +105,13 @@ server-owned data.
 ```text
 node --test tests/r216-motion-lifecycle-compositor.test.mjs: 6 passed, 0 failed
 node --test tests/auth-telegram-popup-order.test.mjs tests/auth-pwa-install-control.test.mjs: 15 passed, 0 failed
-node --test tests/*.test.mjs: 459 passed, 0 failed
+node --test tests/**/*.test.mjs: 460 passed, 0 failed
+node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs tests/auth-locale-copy-purity.test.mjs tests/auth-pwa-install-control.test.mjs: 30 passed, 0 failed
 node --check static/portal/portal-auth.js: PASS
 node --check static/portal/portal-motion.js: PASS
 node --check static/portal/portal.js: PASS
 node --check static/portal/portal-i18n.js: PASS
+node --check static/portal/offline.js: PASS
 git diff --check: PASS
 py_compile (17 touched Python contract files): PASS
 pytest: NOT RUN — bundled Python không có module pytest

@@ -54,12 +54,12 @@ ordered_checkpoints:
     name: motion
     status: SOURCE_GREEN_BROWSER_ACCEPTANCE_OPEN
     active_spec: R216-motion-lifecycle-compositor-r216
-    evidence: "focused R216 6/6; motion static 7/7; locale/PWA 22/22; full Node 459/459; JS syntax 5/5; py_compile 17/17; diff-check; live AX/screenshot read-only on VI/EN/ZH"
+    evidence: "motion/auth/locale/PWA focused 30/30 (R216 6 + motion static 8 + locale/PWA 16); full Node 460/460; JS syntax 5/5; py_compile 17/17; diff-check; live AX/screenshot read-only on VI/EN/ZH"
     status_note: "Auth lifecycle, provider reservation, compositor scroll, Telegram/PWA readiness và reduced-motion source gates đã xanh; live auth AX/screenshot còn thấy bundle cũ; browser matrix/CLS/LCP/INP runtime vẫn mở."
   - id: R216-L
     name: auth-install-locale-drift
     status: SOURCE_GREEN_LIVE_DRIFT_OPEN
-    evidence: "Both portal.js and portal-auth.js auth CTA paths use reviewed locale copy; duplicate-key regression added; full Node 459/459; live script portal-auth.js?v=local-57e76aa281dcc721fdaa still exposes legacy App copy in VI/EN/ZH (read-only AX/screenshot)."
+    evidence: "Both portal.js and portal-auth.js auth CTA paths use reviewed locale copy; duplicate-key regression added; full Node 460/460; live script portal-auth.js?v=local-57e76aa281dcc721fdaa still exposes legacy App copy in VI/EN/ZH (read-only AX/screenshot)."
     status_note: "Source fix is complete; production auth bundle has not received the patch. Do not claim LIVE_PASS or deploy in this checkpoint."
 protected_contracts:
   - routes
