@@ -109,10 +109,12 @@
       dùng catalogue locale (`installGuide.title`/`text.install`) và có regression
       gate; không đổi action/route. Catalogue auth hiện không còn khóa trùng và
       đã có regression kiểm tra trùng khóa.
-- [x] R216-L live recheck — AX read-only trên `/login?lang=vi|en|zh` xác nhận
+- [~] R216-L live recheck — lần đọc trước trên `/login?lang=vi|en|zh` xác nhận
       fixed chrome theo đúng từng locale và không còn hậu tố `App` xen trong
-      vùng hiển thị; ảnh VI ghi nhận nền navy/xanh ngọc và card form dọc.
-      Đây chỉ đóng drift của auth login, không đóng browser acceptance toàn app.
+      vùng hiển thị; tuy nhiên lần kiểm tra mới nhất `/features` chuyển tới
+      `/login?next=/features` và AX lại thấy `Tải & Cài đặt App TOAN AAS`.
+      Source locale vẫn xanh nhưng live drift trên next-route auth còn mở; không
+      đăng nhập hoặc gửi biểu mẫu.
 - [~] R216-H live recheck — viewport khoảng 327×667 vẫn nhận bundle landing cũ:
       header bị cắt cụm locale/theme/action và FAB PWA cũ che một phần proof.
       Source media rule và placement inline đã xanh; chờ delivery rồi chụp lại
@@ -226,11 +228,11 @@
 ```ini
 CURRENT=R216-H
 SOURCE=GREEN
-BROWSER=PARTIAL_LIVE_AX_SCREENSHOT_AUTH_RECHECK_GREEN;LANDING_HEADER_PWA_DRIFT_OLD_BUNDLE;QA_FIXTURE_LOCALHOST_BLOCKED
+BROWSER=PARTIAL_LIVE_AX_SCREENSHOT_AUTH_LOCALE_DRIFT_ON_FEATURES_NEXT_ROUTE;LANDING_HEADER_PWA_DRIFT_OLD_BUNDLE;QA_FIXTURE_LOCALHOST_BLOCKED
 LIVE_PASS=NO
 COMMIT=LOCAL_BRANCH_HEAD
 PUSH=NO
 MERGE=NO
 DEPLOY=NO
-NEXT=DELIVER_R216_H_SOURCE_THEN_LIVE_RECHECK;ANTIGRAVITY_217_WHEN_AGY_AVAILABLE;FULL_BROWSER_ACCEPTANCE_RUNTIME_METRICS
+NEXT=DELIVER_CURRENT_SOURCE_THEN_RECHECK_R216_L_NEXT_ROUTE_AND_R216_H_LANDING;ANTIGRAVITY_217_WHEN_AGY_AVAILABLE;FULL_BROWSER_ACCEPTANCE_RUNTIME_METRICS
 ```

@@ -82,6 +82,24 @@ này. R216-L được đánh dấu `LIVE_RECHECK_GREEN`; không suy rộng kết
 nghiệm thu toàn app. Browser matrix các route, keyboard/focus và CLS/LCP/INP/FPS
 vẫn mở.
 
+### Recheck live lần 3 — next-route auth còn dùng copy cũ
+
+Lần kiểm tra read-only tiếp theo mở `/features`; runtime chuyển hướng tới
+`/login?next=/features`. AX tree của trang đích lại hiển thị nút
+`Tải & Cài đặt App TOAN AAS` — chuỗi đã được loại khỏi source locale hiện tại.
+Source `portal.js` và `portal-auth.js` vẫn dùng catalogue `installGuide.title` /
+`text.install`, và các regression source vẫn khóa hành vi đó. Bằng chứng này
+cho thấy lần recheck xanh trước chỉ áp dụng cho các URL `/login?lang=vi|en|zh`,
+không chứng minh mọi auth renderer/next-route đã được cập nhật.
+
+- Quan sát: `/features` → `/login?next=/features`; AX còn chuỗi CTA cũ.
+- Source: locale catalogue vẫn là nguồn của CTA ở cả hai renderer.
+- Kết luận: deployment/bundle drift còn trên next-route auth; không kết luận sai
+  rằng source hiện tại vẫn chứa chuỗi cũ.
+- An toàn: không đăng nhập, không gửi biểu mẫu, không tạo dữ liệu, không gọi
+  provider và không mutation.
+- Trạng thái: `R216-L=SOURCE_GREEN_LIVE_DRIFT_OPEN`; `LIVE_PASS=NO`.
+
 ## R216-H — landing header responsive
 
 Ảnh live read-only ở viewport hẹp đã cho thấy header landing bị ép một hàng:
@@ -178,7 +196,7 @@ PASS
 | R216-E PWA readiness | GREEN — regression hiện có | Chưa thao tác browser |
 | R216-F reduced-motion | GREEN — focused 1/1, full Node 461/461 | Chưa đo CLS/LCP/INP thật |
 | R216-G browser acceptance | OPEN | QA fixture server có thể dựng; Chrome sandbox đóng với `exitCode=13` trước khi tạo phiên |
-| R216-L locale drift CTA đăng nhập | GREEN — source regression + duplicate-key guard; full Node 461/461 | LIVE_RECHECK_GREEN — VI/EN/ZH AX read-only không còn chuỗi `App` xen |
+| R216-L locale drift CTA đăng nhập | GREEN — source regression + duplicate-key guard; full Node 461/461 | OPEN — `/features` → `/login?next=/features` AX còn `Tải & Cài đặt App TOAN AAS`; bundle/route drift |
 | R216-H landing header responsive | GREEN — static gate + source media rule; PWA inline placement regression xanh | OPEN — live read-only 327×667 còn clipping header và FAB cũ che proof vì deployment drift |
 
 ## Chưa được tuyên bố
