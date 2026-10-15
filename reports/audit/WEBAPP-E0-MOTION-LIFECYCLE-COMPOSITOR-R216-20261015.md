@@ -304,7 +304,8 @@ LIVE_PASS=NO
 BLOCKERS=live runtime still serves pre-patch bundle for R216-H; isolated QA runtime metrics unavailable because Chrome sandbox exits 13 before session; Antigravity PHIEU-217 cannot run because agy.exe is not available; pytest module unavailable in bundled Python
 COMMIT=YES (local checkpoint commit; exact HEAD is read from git)
 PUSH=YES (branch `webapp-checklist-r116`; remote ref verified)
-PR=NOT_CREATED
+PR=OPEN #647
+PR_URL=https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/647
 MERGE=NO
 ```
 
@@ -321,7 +322,8 @@ MERGE=NO
   mở phiên remote debugging. Vì vậy chưa có DOM/screenshot/CLS/LCP/INP runtime.
 - Delivery GitHub đã thực hiện ngày 2026-10-16: sau khi fetch `main=3df20c7`,
   branch local được rebase không conflict và push thành công lên
-  `webapp-checklist-r116`; remote trả URL tạo PR nhưng chưa bấm/tạo PR. `gh
-  auth status` vẫn báo CLI token không hợp lệ, vì vậy không dùng CLI để tạo PR;
-  GitHub Web chỉ được đọc để đối chiếu branch/main/labels. Không dùng chuỗi xác
-  thực người dùng đã dán.
+  `webapp-checklist-r116`. Theo xác nhận action-time của Owner, PR WebApp
+  UI/UX–motion đã được tạo một lần qua GitHub Web: **PR #647**, trạng thái Open,
+  Able to merge; CI `Web App quality gate / Verify Web App` đang chạy. Không
+  merge/deploy; `gh auth status` vẫn báo CLI token không hợp lệ nên không dùng
+  CLI cho thao tác PR. Không dùng chuỗi xác thực người dùng đã dán.

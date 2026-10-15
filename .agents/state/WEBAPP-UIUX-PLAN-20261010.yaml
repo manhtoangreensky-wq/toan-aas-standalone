@@ -19,6 +19,11 @@ delivery_recheck:
   local_backup_branch: backup/webapp-checklist-r116-pre-rebase
   github_branch: webapp-checklist-r116
   remote_ref_verified: true
+  pull_request: 647
+  pull_request_url: https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/647
+  pull_request_status: OPEN
+  pull_request_mergeability: ABLE_TO_MERGE
+  pull_request_ci: IN_PROGRESS
   github_web_session: authenticated_read_only
   gh_cli_auth: invalid_token
   github_repository_projects: 0
@@ -92,4 +97,4 @@ motion_backlog:
   - telegram-popup-user-gesture
   - pwa-install-readiness
   - reduced-motion-and-cls-lcp-inp
-next_action: "Giữ source gate xanh sau lifecycle/hot-path fixes; khi delivery/auth hợp lệ, recheck R216-L next-route và R216-H landing ở viewport hẹp, sau đó hoàn tất QA matrix cùng CLS/LCP/INP/FPS. Chỉ retry PHIEU-217 khi agy.exe khả dụng. Do not call LIVE_PASS before evidence."
+next_action: "Giữ PR #647 mở và không merge/deploy; khi delivery/auth hợp lệ, recheck R216-L next-route và R216-H landing ở viewport hẹp, sau đó hoàn tất QA matrix cùng CLS/LCP/INP/FPS. Chỉ retry PHIEU-217 khi agy.exe khả dụng. Do not call LIVE_PASS before evidence."
