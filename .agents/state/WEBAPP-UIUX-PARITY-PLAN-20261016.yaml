@@ -1,0 +1,106 @@
+task_id: WEBAPP-UIUX-PARITY-20261016
+phase: REPORT
+objective: "Lập plan, checklist và spec tuần tự cho toàn bộ WebApp standalone; chỉ mở implementation khi Owner ra lệnh."
+scope: "Customer shell, Admin shell, product-lane UI/UX, locale, responsive, accessibility, motion và browser/live evidence."
+out_of_scope: "Bot/Core code, route-engine, provider calls, wallet/Xu, PayOS, production data, VPS, deploy, merge và backend mutation."
+base_remote_sha: f59eacf63a49534854dc7cde06e5baed6546dc58
+working_branch: webapp-plan-r116
+target_branch: webapp-checklist-r116
+pull_request: 647
+status: PLAN_CHECKLIST_SPEC_READY_WAITING_OWNER
+live_pass: NO
+provider_calls: 0
+wallet_mutations: 0
+production_data_mutations: 0
+merge: NO
+deploy: NO
+ordered_waves:
+  - id: W0
+    spec: R217-00
+    status: CLOSED_WITH_EVIDENCE
+    note: "Baseline remote, prior source/live evidence, protected contracts and blockers recorded."
+  - id: W1
+    spec: R217-01
+    status: SOURCE_GREEN_RUNTIME_OPEN
+    note: "Mobile landing clipping and PWA placement remain live drift."
+  - id: W2
+    spec: R217-02
+    status: SOURCE_GREEN_RUNTIME_OPEN
+    note: "Next-route auth locale drift requires runtime recheck."
+  - id: W3
+    spec: R217-03
+    status: SOURCE_GREEN_RUNTIME_OPEN
+    note: "Unauthenticated/authenticated browser matrix not complete."
+  - id: W4
+    spec: R217-04
+    status: TODO
+    name: image
+  - id: W4
+    spec: R217-05
+    status: TODO
+    name: voice
+  - id: W4
+    spec: R217-06
+    status: TODO
+    name: music
+  - id: W4
+    spec: R217-07
+    status: TODO
+    name: subdub
+  - id: W4
+    spec: R217-08
+    status: TODO
+    name: product-video
+  - id: W4
+    spec: R217-09A
+    status: TODO
+    name: content-workboard-free-tools
+  - id: W5
+    spec: R217-09
+    status: TODO
+    name: admin-customer-visibility
+  - id: W6
+    spec: R217-10
+    status: SOURCE_GREEN_RUNTIME_OPEN
+    note: "Static motion gates green; runtime trace and scroll evidence open."
+  - id: W7
+    spec: R217-11
+    status: BLOCKED
+    note: "Isolated QA runtime and fixtures not available in this documentation turn."
+  - id: W8
+    spec: R217-12
+    status: LIVE_DRIFT_OPEN
+    note: "Must recheck R216-H/L/P after valid delivery; no deploy in this turn."
+  - id: W9
+    spec: R217-13
+    status: DEFERRED
+    note: "Bridge, real output, Smart Multi backend, autopost, support, admin mutation and wallet remain separate Owner-gated work."
+protected_contracts:
+  - routes
+  - actions
+  - fields
+  - capabilities
+  - csrf
+  - idempotency
+  - revisions
+  - dynamic_server_data
+created_files:
+  - docs/superpowers/plans/2026-10-16-webapp-uiux-product-parity-master-plan-r217.md
+  - reports/audit/WEBAPP-UIUX-PARITY-MASTER-CHECKLIST-20261016.md
+  - .agents/state/WEBAPP-UIUX-PARITY-PLAN-20261016.yaml
+  - docs/superpowers/specs/2026-10-16-r217-00-evidence-ledger.md
+  - docs/superpowers/specs/2026-10-16-r217-01-shell-responsive-foundation.md
+  - docs/superpowers/specs/2026-10-16-r217-02-locale-purity.md
+  - docs/superpowers/specs/2026-10-16-r217-03-auth-accessibility.md
+  - docs/superpowers/specs/2026-10-16-r217-04-image-lane.md
+  - docs/superpowers/specs/2026-10-16-r217-05-voice-lane.md
+  - docs/superpowers/specs/2026-10-16-r217-06-music-lane.md
+  - docs/superpowers/specs/2026-10-16-r217-07-subdub-lane.md
+  - docs/superpowers/specs/2026-10-16-r217-08-product-video-lane.md
+  - docs/superpowers/specs/2026-10-16-r217-09a-content-workboard-free-tools.md
+  - docs/superpowers/specs/2026-10-16-r217-09-admin-customer-visibility.md
+  - docs/superpowers/specs/2026-10-16-r217-10-motion-performance.md
+  - docs/superpowers/specs/2026-10-16-r217-11-authenticated-qa-matrix.md
+  - docs/superpowers/specs/2026-10-16-r217-12-live-readonly-recheck.md
+  - docs/superpowers/specs/2026-10-16-r217-13-deferred-technical-register.md
+next_action: "Push documentation commit only; report links and wait for Owner to open W1."

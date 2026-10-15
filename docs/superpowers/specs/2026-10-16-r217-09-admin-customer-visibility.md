@@ -1,0 +1,44 @@
+# R217-09 — Admin shell, customer visibility và permission presentation
+
+**Status:** `TODO`
+**Wave:** W5
+**Surface:** Admin login/shell, operations, billing/top-up, jobs/assets, customer directory,
+support, audit, reliability, ERP data views và customer action reports.
+
+## File có thể sửa khi mở
+
+- admin/customer presentation modules trong `static/portal/`;
+- admin templates/styles;
+- contract tests `tests/test_admin_*` và browser fixture tests.
+
+## Cấm sửa
+
+Không tự cấp quyền, không sửa RBAC/ABAC backend, không mutate wallet/PayOS, không đổi
+ledger/customer data, không gọi Bot/Core bridge từ UI task.
+
+## Contract giao diện
+
+- Navigation theo nhóm dọc, một heading/CTA mỗi panel, không dùng hàng ngang dày đặc.
+- Owner thấy toàn bộ; role khác thấy menu/action theo permission snapshot, nút bị chặn có
+  lý do và hướng dẫn xin quyền.
+- Customer action phải liên kết request/job/asset/report/audit; Admin không hiển thị card
+  thành công nếu không có record thật.
+- Top-up manual presentation có amount/method/reference/status/approve/reject/reason,
+  nhưng mutation ledger chỉ là deferred.
+- Bảng/chart có card fallback trên mobile, legend/heading/empty/loading/error, locale sạch.
+
+## Acceptance
+
+- Admin thao tác được bằng keyboard, 44px target, contrast AA, light/dark navy/teal,
+  375/390/768/1440 không clipping.
+- Mỗi action trong Admin có bằng chứng report hoặc status `NOT_CONNECTED`/`GUARDED` rõ.
+- Không có “UI PASS” thay cho server permission/bridge PASS.
+
+## Verify
+
+```powershell
+python -m pytest tests/test_admin_*.py -q
+```
+
+Chỉ kết luận PASS theo output thật; nếu bundled Python/fixture không chạy, ghi BLOCKED và
+không tự sửa dependency production.
