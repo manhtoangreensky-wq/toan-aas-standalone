@@ -836,13 +836,13 @@ def test_customer_authoring_uses_reviewed_copy_without_translating_records() -> 
         "workspaceDrafts.card.resume": ("Tiếp tục brief", "Continue brief", "继续简报"),
         "workspaceDrafts.card.attach": ("Đưa vào Project", "Add to Project", "加入项目"),
         "workspaceDrafts.card.attachProjectLabel": ("Đưa vào Project", "Add to Project", "加入项目"),
-        "projectCenter.page.title": ("Project Operations Board", "Project Operations Board", "项目运营看板"),
-        "projectCenter.filter.searchLabel": ("Tìm Project", "Search projects", "搜索项目"),
-        "projectCenter.authoring.createTitle": ("Tạo Project", "Create a project", "创建项目"),
-        "project.page.title": ("Project Workspace", "Project Workspace", "项目工作区"),
-        "project.detail.documentsTitle": ("Studio Documents", "Studio Documents", "工作室文档"),
-        "project.document.create": ("Thêm Studio Document", "Add Studio Document", "添加工作室文档"),
-        "projectPackage.panel.title": ("Project Packages", "Project Packages", "项目套餐"),
+        "projectCenter.page.title": ("Bảng vận hành dự án", "Project Operations Board", "项目运营看板"),
+        "projectCenter.filter.searchLabel": ("Tìm dự án", "Search projects", "搜索项目"),
+        "projectCenter.authoring.createTitle": ("Tạo dự án", "Create a project", "创建项目"),
+        "project.page.title": ("Không gian dự án", "Project Workspace", "项目工作区"),
+        "project.detail.documentsTitle": ("Tài liệu Studio", "Studio Documents", "工作室文档"),
+        "project.document.create": ("Thêm tài liệu Studio", "Add Studio Document", "添加工作室文档"),
+        "projectPackage.panel.title": ("Gói dự án", "Project Packages", "项目套餐"),
     }
     for key, translations in expected.items():
         for translation in translations:
