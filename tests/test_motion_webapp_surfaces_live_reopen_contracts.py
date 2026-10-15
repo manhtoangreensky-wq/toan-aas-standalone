@@ -164,8 +164,10 @@ def test_split_features_owns_small_motion_without_loading_full_bundle() -> None:
         'else entry.target.classList.add("is-pending");',
         'item.classList.add("portal-workspace-motion-item")', ".slice(0, 6)",
         "const scheduleReveal = (target) => {", "new WeakSet()",
-        "window.requestAnimationFrame(() => window.requestAnimationFrame(() => reveal(target)))",
-        "window.requestAnimationFrame(() => window.requestAnimationFrame(activate))",
+        "firstFrame = window.requestAnimationFrame(() => {",
+        "secondFrame = window.requestAnimationFrame(() => {",
+        "entranceFrameOne = window.requestAnimationFrame(() => {",
+        "entranceFrameTwo = window.requestAnimationFrame(() => {",
         "targets.forEach((target) => observer.observe(target));",
         "if (featureMotionReduced()) return;", "mountFeatureMotion(main);",
     ):
