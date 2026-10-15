@@ -26,6 +26,7 @@ _MAX_SAFE_DATA_DEPTH = 6
 _MAX_SAFE_DATA_ITEMS = 80
 _MAX_SAFE_STRING_LENGTH = 4_000
 _ASSET_DELIVERY_ROUTE_RE = re.compile(r"^/internal/v1/assets/[^/]+/download$")
+_NON_RETRYABLE_WRITE_ROUTE_RE = re.compile(r"^/internal/v1/uploads(?:/.*)?$")
 _TELEGRAM_OWNER_ID_RE = re.compile(r"^[1-9][0-9]{0,19}$")
 _MANUAL_ADMIN_PATH_RE = re.compile(
     r"^/internal/v1/admin/payments/manual"
@@ -145,7 +146,17 @@ class CoreBridgeClient:
     def configuration_error(self) -> str | None:
         return _configuration_error(self.base_url, self.token, self.hmac_secret)
 
-    def _headers(self, method: str, path: str, body: bytes, *, request_id: str, actor_id: str = "", owner_id: str = "") -> dict[str, str]:
+    def _headers(
+        self,
+        method: str,
+        path: str,
+        body: bytes,
+        *,
+        request_id: str,
+        actor_id: str = "",
+        owner_id: str = "",
+        idempotency_key: str = "",
+    ) -> dict[str, str]:
         timestamp = str(int(time.time()))
         digest = hashlib.sha256(body).hexdigest()
         clean_actor = str(actor_id or "").strip()
@@ -165,6 +176,8 @@ class CoreBridgeClient:
             headers["X-TOAN-AAS-Actor-ID"] = clean_actor[:128]
         if owner_id:
             headers["X-TOAN-AAS-Telegram-User-ID"] = owner_id
+        if idempotency_key:
+            headers["Idempotency-Key"] = str(idempotency_key).strip()
         if body:
             headers["Content-Type"] = "application/json"
         return headers
@@ -225,9 +238,13 @@ class CoreBridgeClient:
         # both bridge layers.
         retry_safe = (
             (method.upper() == "GET" and not _ASSET_DELIVERY_ROUTE_RE.fullmatch(normalized_path))
-            or bool((payload or {}).get("idempotency_key"))
+            or (
+                bool((payload or {}).get("idempotency_key"))
+                and not _NON_RETRYABLE_WRITE_ROUTE_RE.fullmatch(normalized_path)
+            )
         )
         attempts = 2 if retry_safe else 1
+        idemp_key = str((payload or {}).get("idempotency_key") or "").strip() if isinstance(payload, dict) else ""
         response: httpx.Response | None = None
         for attempt in range(attempts):
             try:
@@ -239,6 +256,7 @@ class CoreBridgeClient:
                     request_id=bridge_request_id,
                     actor_id=actor_id,
                     owner_id=owner_id,
+                    idempotency_key=idemp_key,
                 )
                 async with httpx.AsyncClient(base_url=self.base_url, timeout=httpx.Timeout(12.0, connect=4.0), transport=self.transport) as client:
                     response = await client.request(method.upper(), normalized_path, content=body or None, params=params, headers=headers)
@@ -322,6 +340,7 @@ def _sanitize_envelope(value: dict, *, fallback_code: str | None = None) -> dict
         "failed", "failed_no_charge", "guarded", "cancelled", "refunded",
         "read_only", "pending_admin_review", "approved", "rejected",
         "unverified", "unlinked", "conflict",
+        "prepared_provider_disabled", "PREPARED_PROVIDER_DISABLED",
     }
     if status_name not in allowed_statuses:
         status_name = "failed"

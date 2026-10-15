@@ -59,7 +59,8 @@ STATUS_QUEUED = "queued"
 STATUS_PROCESSING = "processing"
 STATUS_COMPLETED = "completed"
 STATUS_FAILED = "failed"
-STATUS_REASON_AWAITING = "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE"
+STATUS_REASON_AWAITING = "EXTERNAL_PROVIDER_AUTHORITY_AND_ENTITLEMENT_UNPROVEN"
+STATUS_REASON_LEGACY = "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE"
 STATUS_REASON_COMPLETED = "COMPLETED"
 
 SUPPORTED_FORMATS: frozenset[str] = frozenset({"1:1", "4:5", "16:9", "9:16"})
@@ -67,22 +68,32 @@ SUPPORTED_ASPECT_RATIOS: frozenset[str] = SUPPORTED_FORMATS
 DEFAULT_FORMAT = "1:1"
 DEFAULT_ASPECT_RATIO = "1:1"
 
-# External provider dispatch flags — strictly disabled in R24B2
+# External provider dispatch flags — strictly disabled in R24B2 / R24E3B
 IMAGE_TRANSFORM_PROVIDER_DISPATCH_ENABLED: bool = False
 KEY4U_PUBLIC_ENABLED: bool = False
 
-FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED: frozenset[str] = frozenset({
-    "amount", "amountvnd", "price", "cost", "currency", "paymentid", "ordercode",
-    "checkouturl", "webhook", "provider", "providerid", "apikey", "apitoken", "token",
-    "secret", "jobid", "jobstatus", "status", "statusreason", "output", "outputurl",
-    "assetid", "downloadurl", "role", "balance", "xu", "wallet",
-})
+_RAW_FORBIDDEN_AUTHORITY_KEYS = (
+    "amount", "amount_vnd", "amount_xu", "price", "cost", "currency", "payment_id", "order_code",
+    "checkout_url", "webhook", "provider", "provider_name", "provider_id", "provider_task_id",
+    "provider_job_id", "provider_route", "model", "model_name", "tier", "quality_tier",
+    "quota_xu", "charged_xu", "xu", "xu_cost", "xu_charge", "fee", "credits",
+    "wallet", "wallet_id", "wallet_balance", "balance", "api_key", "api_token", "token", "secret",
+    "job_id", "job_status", "status", "status_reason", "output", "output_url", "asset_id", "download_url",
+    "role", "file_path", "local_path", "storage_key", "account_id", "user_id", "canonical_user_id",
+    "actor_id", "is_paid_job", "confirm_paid", "paid", "owner_id",
+    "upload_id", "bot_upload_id", "bridge_envelope", "bot_prepare_status", "result",
+)
+FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED: frozenset[str] = frozenset(
+    "".join(ch for ch in str(k or "").lower() if ch.isalnum()) for k in _RAW_FORBIDDEN_AUTHORITY_KEYS
+)
 
 UNSAFE_URL_PREFIXES = ("javascript:", "data:", "file:", "http://127.0.0.1", "http://localhost", "http://0.0.0.0")
 
 SENSITIVE_KEY_SUBSTRINGS: tuple[str, ...] = (
     "api_key", "apikey", "token", "authorization", "secret",
     "credential", "cookie", "password", "signed_url_secret",
+    "local_path", "localpath", "file_path", "filepath", "filesystem_path",
+    "raw_authorization", "bearer", "hmac",
 )
 
 
@@ -334,9 +345,9 @@ def create_or_replay_image_transform_job(
     if not ok:
         raise HTTPException(status_code=400, detail=err_msg)
 
+    payload_hash = _hash_payload(clean_input)
     req_id = request_id.strip() or f"req_imgxf_{uuid.uuid4().hex[:16]}"
     clean_input["request_id"] = req_id
-    payload_hash = _hash_payload(clean_input)
     idem_hash = _hash_key(idempotency_key)
     now = utc_now()
 
