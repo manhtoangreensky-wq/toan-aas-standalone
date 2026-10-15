@@ -2291,7 +2291,7 @@
     "hardcoded_data": false,
     "demo_data": false,
     "fallback_data": false,
-    "business_status": "BLOCKED_PROVIDER_ENTITLEMENT",
+    "business_status": "WAIT_OWNER_MUSIC_SFX_PROVIDER_SELECTION",
     "helper": "featurePage",
     "layout": "standard",
     "final_classification": "BLOCKED_EXTERNAL_CAPABILITY_OR_GRANT_REQUIRED",

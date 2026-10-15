@@ -37,10 +37,11 @@
     "GENERIC_EXTERNAL_CAPABILITY_BUCKET_ELIMINATED": true,
     "EXTERNAL_PROVIDER_CAPABILITY_MISSING_COUNT": 0,
     "BLOCKED_EXTERNAL_CAPABILITY_OR_GRANT_REQUIRED_COUNT": 0,
-    "BLOCKED_PROVIDER_ENTITLEMENT_COUNT": 3,
+    "BLOCKED_PROVIDER_ENTITLEMENT_COUNT": 2,
+    "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED_COUNT": 1,
     "IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD_COUNT": 1,
     "OTHER_UNRESOLVED_ENGINEERING_RESIDUALS": 0,
-    "ACCOUNT_ENTITLEMENT_MISSING_COUNT": 3,
+    "ACCOUNT_ENTITLEMENT_MISSING_COUNT": 2,
     "EXTERNAL_PROVIDER_INCIDENT_MINIMAX_503_COUNT": 1,
     "PRODUCT_FAMILY_OPEN_ENGINEERING_DEFECTS": {
       "product_video": 0,
@@ -122,26 +123,38 @@
       },
       "music_sfx": {
         "route": "/music/sfx",
-        "status": "BLOCKED_PROVIDER_ENTITLEMENT",
-        "root_gap": "ACCOUNT_ENTITLEMENT_MISSING",
-        "selected_provider": "ElevenLabs",
+        "status": "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED",
+        "root_gap": "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED",
+        "sanctioned_generative_sfx_provider_selected": "NO",
+        "selected_provider": "NONE",
+        "elevenlabs_external_sfx_candidate": "YES",
+        "elevenlabs_sanctioned_project_sfx_provider": "NO",
         "provider_candidates": [
           "ElevenLabs",
           "Musicful"
         ],
-        "model_or_capability_id": "elevenlabs-sound-effects-v1",
-        "endpoint_documented": "https://api.elevenlabs.io/v1/sound-effects",
-        "missing_account_entitlement": "ElevenLabs Sound Effects API quota and subscription entitlement",
-        "required_owner_action": "Upgrade ElevenLabs subscription tier to include Sound Effects generation quota or allocate dedicated generative SFX provider API",
+        "model_or_capability_id": "eleven_text_to_sound_v2",
+        "endpoint_documented": "https://api.elevenlabs.io/v1/sound-generation",
+        "candidate_http_method": "POST",
+        "candidate_auth_scheme": "xi-api-key",
+        "candidate_response_type": "BINARY_MP3_SYNC",
+        "candidate_task_id_semantics": "NONE",
+        "freesound_generative_sfx_capability": "NO",
+        "account_entitlement_is_only_current_blocker": "NO",
+        "missing_account_entitlement": "Generative Music SFX provider selection and subsequent subscription/API quota entitlement",
+        "required_owner_action": "Select and authorize generative Music SFX provider before entitlement",
         "activation_readiness": {
-          "SOURCE_IMPLEMENTATION_READY": "YES",
+          "SOURCE_IMPLEMENTATION_READY": "NO",
           "WEB_ROUTE_READY": "YES",
-          "BOT_OR_WEB_PROVIDER_ADAPTER_READY": "YES",
-          "PRICING_READY": "YES",
+          "BOT_OR_WEB_PROVIDER_ADAPTER_READY": "NO",
+          "PRICING_READY": "NO",
           "WALLET_SETTLEMENT_READY": "YES",
           "IDEMPOTENCY_READY": "YES",
           "NO_BLIND_RETRY_GATE_READY": "YES",
-          "PROVIDER_ENTITLEMENT_ONLY_BLOCKER": "YES"
+          "PROVIDER_ENTITLEMENT_ONLY_BLOCKER": "NO",
+          "CUSTOMER_PREVIEW_READY": "NO",
+          "CUSTOMER_DOWNLOAD_READY": "YES",
+          "OUTPUT_ASSET_VAULT_READY": "YES"
         }
       },
       "voice_clone": {
@@ -165,8 +178,9 @@
       "RELEASED_WEB_NATIVE_RUNTIME": 112,
       "RELEASED_READ_ONLY_CANONICAL_COMPANION": 19,
       "RELEASED_ACTIVE_CANONICAL_RUNTIME": 22,
-      "BLOCKED_PROVIDER_ENTITLEMENT": 3,
+      "BLOCKED_PROVIDER_ENTITLEMENT": 2,
       "IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD": 1,
+      "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED": 1,
       "ADMIN_INTERNAL_ONLY": 48
     },
     "PRODUCT_FAMILY_COUNTS": {
@@ -185,11 +199,12 @@
     "ROOT_GAP_COUNTS": {
       "NOT_APPLICABLE_INFORMATIONAL": 16,
       "NONE_RELEASED_RUNTIME": 153,
-      "ACCOUNT_ENTITLEMENT_MISSING": 3,
+      "ACCOUNT_ENTITLEMENT_MISSING": 2,
       "EXTERNAL_PROVIDER_INCIDENT_MINIMAX_503": 1,
+      "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED": 1,
       "ADMIN_INTERNAL_BOUNDARY": 48
     },
-    "REPORT_GENERATED_AT": "2026-10-10T15:37:31.265053+00:00"
+    "REPORT_GENERATED_AT": "2026-10-14T06:59:58.746309+00:00"
   },
   "routes": [
     {
@@ -5015,8 +5030,8 @@
       "authentication_requirement": "signed_account_session_and_csrf",
       "tenant_isolation_rule": "account_id_owner_scoped",
       "current_implementation_class": "copyfast_music_sfx_view",
-      "final_classification": "BLOCKED_PROVIDER_ENTITLEMENT",
-      "proof": "ElevenLabs API key configured in Bot Core only for Text-to-Speech (/v1/text-to-speech) and subscription readback (/v1/user/subscription); no Sound Effects API quota or adapter exists; Musicful is limited to Suno music generation; Freesound library assets are non-generative.",
+      "final_classification": "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED",
+      "proof": "No sanctioned generative SFX provider selected; ElevenLabs is a viable external candidate (/v1/sound-generation, eleven_text_to_sound_v2) but is not selected or authorized; Freesound is non-generative catalog search/download only; requires Owner provider selection before entitlement.",
       "web_entrypoint_implemented": true,
       "web_api_implemented": false,
       "canonical_bot_engine_exists": false,
@@ -5029,18 +5044,27 @@
       "canonical_pricing_authority_exists": false,
       "canonical_job_ledger_exists": false,
       "canonical_output_delivery_exists": false,
-      "actual_root_gap": "ACCOUNT_ENTITLEMENT_MISSING",
-      "correct_terminal_classification": "BLOCKED_PROVIDER_ENTITLEMENT",
-      "business_status": "BLOCKED_PROVIDER_ENTITLEMENT",
-      "selected_provider": "ElevenLabs",
+      "actual_root_gap": "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED",
+      "correct_terminal_classification": "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED",
+      "business_status": "WAIT_OWNER_MUSIC_SFX_PROVIDER_SELECTION",
+      "sanctioned_generative_sfx_provider_selected": "NO",
+      "selected_provider": "NONE",
+      "elevenlabs_external_sfx_candidate": "YES",
+      "elevenlabs_sanctioned_project_sfx_provider": "NO",
       "provider_candidates": [
         "ElevenLabs",
         "Musicful"
       ],
-      "model_or_capability_id": "elevenlabs-sound-effects-v1",
-      "endpoint_documented": "https://api.elevenlabs.io/v1/sound-effects",
-      "missing_account_entitlement": "ElevenLabs Sound Effects API quota and subscription entitlement",
-      "required_owner_action": "Upgrade ElevenLabs subscription tier to include Sound Effects generation quota or allocate dedicated generative SFX provider API"
+      "model_or_capability_id": "eleven_text_to_sound_v2",
+      "endpoint_documented": "https://api.elevenlabs.io/v1/sound-generation",
+      "candidate_http_method": "POST",
+      "candidate_auth_scheme": "xi-api-key",
+      "candidate_response_type": "BINARY_MP3_SYNC",
+      "candidate_task_id_semantics": "NONE",
+      "freesound_generative_sfx_capability": "NO",
+      "account_entitlement_is_only_current_blocker": "NO",
+      "missing_account_entitlement": "Generative Music SFX provider selection and subsequent subscription/API quota entitlement",
+      "required_owner_action": "Select and authorize generative Music SFX provider before entitlement"
     },
     {
       "route": "/music/create",

@@ -101,9 +101,10 @@ def test_r10_matrix_summary_and_surface_counts() -> None:
     assert summary["BLOCKED_EXTERNAL_CAPABILITY_OR_GRANT_REQUIRED_COUNT"] == 0
 
     # Counts for the four residual lanes
-    assert summary["BLOCKED_PROVIDER_ENTITLEMENT_COUNT"] == 3
+    assert summary["BLOCKED_PROVIDER_ENTITLEMENT_COUNT"] == 2
+    assert summary["NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED_COUNT"] == 1
     assert summary["IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD_COUNT"] == 1
-    assert summary["ACCOUNT_ENTITLEMENT_MISSING_COUNT"] == 3
+    assert summary["ACCOUNT_ENTITLEMENT_MISSING_COUNT"] == 2
     assert summary["EXTERNAL_PROVIDER_INCIDENT_MINIMAX_503_COUNT"] == 1
 
     # Exact classification counts
@@ -113,7 +114,8 @@ def test_r10_matrix_summary_and_surface_counts() -> None:
     assert cc["RELEASED_READ_ONLY_CANONICAL_COMPANION"] == 19
     assert cc["RELEASED_ACTIVE_CANONICAL_RUNTIME"] == 22
     assert cc["ADMIN_INTERNAL_ONLY"] == 48
-    assert cc["BLOCKED_PROVIDER_ENTITLEMENT"] == 3
+    assert cc["BLOCKED_PROVIDER_ENTITLEMENT"] == 2
+    assert cc["NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED"] == 1
     assert cc["IMPLEMENTED_DEPLOYED_EXTERNAL_PROVIDER_INCIDENT_HOLD"] == 1
     assert sum(cc.values()) == 221
 
@@ -122,7 +124,8 @@ def test_r10_matrix_summary_and_surface_counts() -> None:
     assert rg["NOT_APPLICABLE_INFORMATIONAL"] == 16
     assert rg["NONE_RELEASED_RUNTIME"] == 153
     assert rg["ADMIN_INTERNAL_BOUNDARY"] == 48
-    assert rg["ACCOUNT_ENTITLEMENT_MISSING"] == 3
+    assert rg["ACCOUNT_ENTITLEMENT_MISSING"] == 2
+    assert rg["NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED"] == 1
     assert rg["EXTERNAL_PROVIDER_INCIDENT_MINIMAX_503"] == 1
     assert sum(rg.values()) == 221
 
@@ -165,15 +168,25 @@ def test_r10_all_four_lanes_exact_terminal_disposition_and_actions() -> None:
     # Lane C: /music/sfx
     assert "/music/sfx" in route_map
     sfx = route_map["/music/sfx"]
-    assert sfx["final_classification"] == "BLOCKED_PROVIDER_ENTITLEMENT"
-    assert sfx["actual_root_gap"] == "ACCOUNT_ENTITLEMENT_MISSING"
-    assert sfx["selected_provider"] == "ElevenLabs"
+    assert sfx["final_classification"] == "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED"
+    assert sfx["actual_root_gap"] == "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED"
+    assert sfx["selected_provider"] == "NONE"
+    assert sfx.get("sanctioned_generative_sfx_provider_selected") in ("NO", False)
+    assert sfx.get("elevenlabs_external_sfx_candidate") in ("YES", True)
+    assert sfx.get("elevenlabs_sanctioned_project_sfx_provider") in ("NO", False)
     assert "ElevenLabs" in sfx["provider_candidates"]
-    assert sfx["model_or_capability_id"] == "elevenlabs-sound-effects-v1"
-    assert sfx["endpoint_documented"] == "https://api.elevenlabs.io/v1/sound-effects"
-    assert "Sound Effects API quota" in sfx["missing_account_entitlement"]
-    assert "Sound Effects generation quota" in sfx["required_owner_action"]
-    assert summary_lanes["music_sfx"]["status"] == "BLOCKED_PROVIDER_ENTITLEMENT"
+    assert sfx["model_or_capability_id"] == "eleven_text_to_sound_v2"
+    assert sfx["endpoint_documented"] == "https://api.elevenlabs.io/v1/sound-generation"
+    assert sfx.get("candidate_http_method") == "POST"
+    assert sfx.get("candidate_auth_scheme") == "xi-api-key"
+    assert sfx.get("candidate_response_type") == "BINARY_MP3_SYNC"
+    assert sfx.get("candidate_task_id_semantics") == "NONE"
+    assert sfx.get("freesound_generative_sfx_capability") in ("NO", False)
+    assert sfx.get("account_entitlement_is_only_current_blocker") in ("NO", False)
+    assert summary_lanes["music_sfx"]["status"] == "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED"
+    assert summary_lanes["music_sfx"]["selected_provider"] == "NONE"
+    assert summary_lanes["music_sfx"]["model_or_capability_id"] == "eleven_text_to_sound_v2"
+    assert summary_lanes["music_sfx"]["endpoint_documented"] == "https://api.elevenlabs.io/v1/sound-generation"
 
     # Lane D: /voice/clone (Incident Hold)
     assert "/voice/clone" in route_map
@@ -321,3 +334,57 @@ def test_r10_provenance_and_defects_integrity() -> None:
     assert defect_ids["DEFECT-R10-001"]["STATUS"] == "REPAIRED_IN_R10"
     assert "DEFECT-R10-002" in defect_ids, "DEFECT-R10-002 must be tracked"
     assert defect_ids["DEFECT-R10-002"]["STATUS"] == "REPAIRED_IN_R10"
+
+
+# ─── TEST 6: R24E4A MUSIC SFX 14-POINT CONTRACT TRUTH ────────────────────────
+
+def test_r24e4a_music_sfx_r10_contract_truth() -> None:
+    with open(MATRIX_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    route_map = {r["route"]: r for r in data["routes"]}
+    assert "/music/sfx" in route_map
+    sfx = route_map["/music/sfx"]
+    summary_lane = data["summary"]["R10_RESIDUAL_LANES"]["music_sfx"]
+
+    # 1. selected provider is NONE
+    assert sfx["selected_provider"] == "NONE"
+    assert summary_lane["selected_provider"] == "NONE"
+    # 2. ElevenLabs is candidate only
+    assert sfx.get("elevenlabs_external_sfx_candidate") in ("YES", True)
+    assert sfx.get("elevenlabs_sanctioned_project_sfx_provider") in ("NO", False)
+    assert summary_lane.get("elevenlabs_external_sfx_candidate") in ("YES", True)
+    assert summary_lane.get("elevenlabs_sanctioned_project_sfx_provider") in ("NO", False)
+    # 3. sanctioned provider selected = NO
+    assert sfx.get("sanctioned_generative_sfx_provider_selected") in ("NO", False)
+    assert summary_lane.get("sanctioned_generative_sfx_provider_selected") in ("NO", False)
+    # 4. current endpoint is /v1/sound-generation
+    assert sfx["endpoint_documented"] == "https://api.elevenlabs.io/v1/sound-generation"
+    assert summary_lane["endpoint_documented"] == "https://api.elevenlabs.io/v1/sound-generation"
+    # 5. current model is eleven_text_to_sound_v2
+    assert sfx["model_or_capability_id"] == "eleven_text_to_sound_v2"
+    assert summary_lane["model_or_capability_id"] == "eleven_text_to_sound_v2"
+    # 6. stale /v1/sound-effects not represented as current
+    assert "/v1/sound-effects" not in sfx["endpoint_documented"]
+    assert "/v1/sound-effects" not in summary_lane["endpoint_documented"]
+    # 7. stale elevenlabs-sound-effects-v1 not represented as current
+    assert "elevenlabs-sound-effects-v1" not in sfx["model_or_capability_id"]
+    assert "elevenlabs-sound-effects-v1" not in summary_lane["model_or_capability_id"]
+    # 8. Freesound remains non-generative
+    assert sfx.get("freesound_generative_sfx_capability") in ("NO", False)
+    assert summary_lane.get("freesound_generative_sfx_capability") in ("NO", False)
+    # 9. executor remains absent
+    assert sfx.get("canonical_bot_engine_exists") is False
+    assert sfx.get("canonical_bot_adapter_exists") is False
+    # 10. next classification is NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED
+    assert sfx["final_classification"] == "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED"
+    assert summary_lane["status"] == "NO_SANCTIONED_GENERATIVE_SFX_PROVIDER_SELECTED"
+    # 11. next action is WAIT_OWNER_MUSIC_SFX_PROVIDER_SELECTION
+    assert sfx["business_status"] == "WAIT_OWNER_MUSIC_SFX_PROVIDER_SELECTION"
+    # 12. entitlement is not represented as the sole blocker
+    assert sfx.get("account_entitlement_is_only_current_blocker") in ("NO", False)
+    assert summary_lane.get("account_entitlement_is_only_current_blocker") in ("NO", False)
+    # 13. preview readiness remains NO
+    assert sfx.get("customer_preview_ready", False) is False
+    # 14. provider calls remain 0
+    assert sfx.get("runtime_execution_enabled") is False
