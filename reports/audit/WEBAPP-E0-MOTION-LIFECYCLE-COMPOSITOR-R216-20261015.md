@@ -130,6 +130,16 @@ không chứng minh mọi auth renderer/next-route đã được cập nhật.
 - Kết luận: `R216-L` tiếp tục `SOURCE_GREEN_LIVE_DRIFT_OPEN`; cần delivery hợp lệ
   rồi đọc lại đúng next-route này trước khi đóng.
 
+### Recheck live lần 5 — current DOM probe
+
+Đã mở lại `https://app.toanaas.vn/features` bằng Codex In-app Browser, chỉ đọc.
+Runtime tiếp tục chuyển tới `/login?next=/features`; `main#portal-main` vẫn có
+`tabindex="-1"`, nền thực tế là navy/xanh ngọc (`rgb(6, 32, 38)`) và chữ sáng.
+Bundle hiện tại vẫn là `portal-auth.js?v=local-57e76aa281dcc721fdaa`. Probe DOM
+thấy chuỗi `📲Tải & Cài đặt App TOAN AAS` còn trong nút cài đặt ẩn
+(`visible=false`). Đây tiếp tục là deployment drift; không đăng nhập, không gửi
+biểu mẫu, không gọi provider và không mutation.
+
 ## R216-H — landing header responsive
 
 Ảnh live read-only ở viewport hẹp đã cho thấy header landing bị ép một hàng:
