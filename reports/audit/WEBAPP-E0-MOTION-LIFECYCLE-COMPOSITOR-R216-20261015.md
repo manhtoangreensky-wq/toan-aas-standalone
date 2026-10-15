@@ -303,7 +303,8 @@ RUNTIME_SHA=NOT_AVAILABLE
 LIVE_PASS=NO
 BLOCKERS=live runtime still serves pre-patch bundle for R216-H; isolated QA runtime metrics unavailable because Chrome sandbox exits 13 before session; Antigravity PHIEU-217 cannot run because agy.exe is not available; pytest module unavailable in bundled Python
 COMMIT=YES (local checkpoint commit; exact HEAD is read from git)
-PUSH=NO
+PUSH=YES (branch `webapp-checklist-r116`; remote ref verified)
+PR=NOT_CREATED
 MERGE=NO
 ```
 
@@ -318,9 +319,9 @@ MERGE=NO
 - QA fixture đã dựng được server và đọc source, nhưng Playwright bundled thiếu
   Chromium; khi chuyển sang Chrome hệ thống, Chrome thoát `exitCode=13` trước khi
   mở phiên remote debugging. Vì vậy chưa có DOM/screenshot/CLS/LCP/INP runtime.
-- Delivery GitHub chưa thực hiện: `origin` hiện là bundle local
-  `C:\Users\toann\Documents\Codex\toanaas-origin-main-r116.bundle`. `gh auth
-  status` hiện xác nhận tài khoản GitHub hợp lệ, nhưng `gh repo view` và
-  `git ls-remote https://github.com/manhtoangreensky-wq/toanaas-standalone.git`
-  đều bị lỗi kết nối mạng/DNS trong môi trường hiện tại. Không đổi remote,
-  không dùng mã xác thực người dùng gửi và không tuyên bố đã push.
+- Delivery GitHub đã thực hiện ngày 2026-10-16: sau khi fetch `main=3df20c7`,
+  branch local được rebase không conflict và push thành công lên
+  `webapp-checklist-r116`; remote trả URL tạo PR nhưng chưa bấm/tạo PR. `gh
+  auth status` vẫn báo CLI token không hợp lệ, vì vậy không dùng CLI để tạo PR;
+  GitHub Web chỉ được đọc để đối chiếu branch/main/labels. Không dùng chuỗi xác
+  thực người dùng đã dán.

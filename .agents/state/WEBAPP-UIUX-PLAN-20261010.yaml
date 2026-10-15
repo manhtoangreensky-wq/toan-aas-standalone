@@ -10,13 +10,15 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 commit: LOCAL_BRANCH_HEAD
-push: NO
+push: YES
 merge: NO
 deploy: NO
 delivery_recheck:
   github_main_sha: 3df20c720dae263fe95c6452f48cdd651d04ff87
   local_branch_rebased_onto_main: true
   local_backup_branch: backup/webapp-checklist-r116-pre-rebase
+  github_branch: webapp-checklist-r116
+  remote_ref_verified: true
   github_web_session: authenticated_read_only
   gh_cli_auth: invalid_token
   github_repository_projects: 0
