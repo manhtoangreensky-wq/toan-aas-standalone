@@ -88,7 +88,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 233,
+      "line": 268,
       "target": "_format_job_dict"
     },
     {
@@ -448,7 +448,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 289,
+      "line": 324,
       "target": "create_or_replay_image_upscale_job"
     },
     {
@@ -650,6 +650,12 @@
       "target": "evaluate_job_attention"
     },
     {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "kind": "function",
+      "line": 1053,
+      "target": "execute_image_upscale_job"
+    },
+    {
       "file": "copyfast_product_video_dispatcher.py",
       "kind": "function",
       "line": 427,
@@ -664,7 +670,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 527,
+      "line": 562,
       "target": "finalize_image_upscale_job_result"
     },
     {
@@ -736,7 +742,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 460,
+      "line": 495,
       "target": "get_admin_image_upscale_job"
     },
     {
@@ -814,7 +820,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 414,
+      "line": 449,
       "target": "get_image_upscale_job"
     },
     {
@@ -1072,7 +1078,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 493,
+      "line": 528,
       "target": "image_upscale_job_to_native_compat"
     },
     {
@@ -1102,7 +1108,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 431,
+      "line": 466,
       "target": "is_image_upscale_job_other_account"
     },
     {
@@ -1168,7 +1174,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 477,
+      "line": 512,
       "target": "list_admin_image_upscale_jobs"
     },
     {
@@ -1240,7 +1246,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 443,
+      "line": 478,
       "target": "list_image_upscale_jobs"
     },
     {
@@ -1694,6 +1700,12 @@
       "target": "to_web_safe_voice_clone_job"
     },
     {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "kind": "function",
+      "line": 813,
+      "target": "transition_image_upscale_job_failed"
+    },
+    {
       "file": "copyfast_image_remove_background_bridge.py",
       "kind": "function",
       "line": 138,
@@ -1772,7 +1784,7 @@
   "commands": [],
   "conversations": [],
   "counts": {
-    "background_jobs": 294,
+    "background_jobs": 296,
     "callback_data": 0,
     "callback_handlers": 0,
     "callback_templates": 0,
@@ -1919,19 +1931,19 @@
     },
     {
       "file": "scripts/build_r10_matrix.py",
-      "line": 346,
+      "line": 359,
       "operation": "UPDATE",
       "table": "defects"
     },
     {
       "file": "scripts/build_r11_matrix.py",
-      "line": 415,
+      "line": 431,
       "operation": "UPDATE",
       "table": "defects"
     },
     {
       "file": "scripts/build_r12_matrix.py",
-      "line": 388,
+      "line": 392,
       "operation": "UPDATE",
       "table": "defects"
     },
@@ -3109,6 +3121,12 @@
       "file": "copyfast_image_operations.py",
       "line": 1413,
       "operation": "UPDATE",
+      "table": "web_asset_files"
+    },
+    {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "line": 785,
+      "operation": "INSERT INTO",
       "table": "web_asset_files"
     },
     {
@@ -5357,19 +5375,37 @@
     },
     {
       "file": "copyfast_image_upscale_job_bridge.py",
-      "line": 115,
+      "line": 150,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_image_upscale_jobs"
     },
     {
       "file": "copyfast_image_upscale_job_bridge.py",
-      "line": 372,
+      "line": 407,
       "operation": "INSERT INTO",
       "table": "web_image_upscale_jobs"
     },
     {
       "file": "copyfast_image_upscale_job_bridge.py",
-      "line": 600,
+      "line": 636,
+      "operation": "UPDATE",
+      "table": "web_image_upscale_jobs"
+    },
+    {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "line": 819,
+      "operation": "UPDATE",
+      "table": "web_image_upscale_jobs"
+    },
+    {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "line": 933,
+      "operation": "UPDATE",
+      "table": "web_image_upscale_jobs"
+    },
+    {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "line": 948,
       "operation": "UPDATE",
       "table": "web_image_upscale_jobs"
     },
@@ -10398,7 +10434,7 @@
         "scripts/build_r9_matrix.py",
         "studio/script.js"
       ],
-      "occurrences": 80,
+      "occurrences": 42,
       "provider": "ElevenLabs"
     },
     {
@@ -10414,14 +10450,8 @@
         "bot_to_web_parity_matrix.json",
         "copyfast_registry.py",
         "customer_app.html",
-        "reports/webapp_full_product_truth/R10_FINAL_ROUTE_RUNTIME_MATRIX.json",
-        "reports/webapp_full_product_truth/R11_FINAL_ROUTE_RUNTIME_MATRIX.json",
-        "reports/webapp_full_product_truth/R12_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R6_FINAL_ROUTE_RUNTIME_MATRIX.json",
         "reports/webapp_full_product_truth/R7_FINAL_ROUTE_RUNTIME_MATRIX.json",
-        "scripts/build_r10_matrix.py",
-        "scripts/build_r11_matrix.py",
-        "scripts/build_r12_matrix.py",
         "scripts/build_r6_matrix.py",
         "scripts/build_r7_matrix.py",
         "static/manifest.json",
@@ -10430,7 +10460,7 @@
         "studio/manifest.json",
         "studio/script.js"
       ],
-      "occurrences": 58,
+      "occurrences": 52,
       "provider": "Suno"
     },
     {
@@ -18287,9 +18317,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 271,
-  "source_files_scanned": 271,
-  "source_fingerprint_sha256": "34f84c9216dbcaad44e51abec8005048bb3245fa03c90b5485d097dd64ffdd67",
+  "source_files_discovered": 272,
+  "source_files_scanned": 272,
+  "source_fingerprint_sha256": "9155b68623763fa5954713d289bcb9bf90808e1030c2af36636f052902ca4337",
   "source_root": "repository-root",
   "ui_path_references": [
     {
