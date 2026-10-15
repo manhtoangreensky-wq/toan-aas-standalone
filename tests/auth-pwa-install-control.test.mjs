@@ -149,3 +149,5 @@ test('An already-installed or standalone app does not show an install action', (
   assert.equal(installed.control.hidden, true);
   assert.equal(installed.status.textContent, 'TOAN AAS is installed.');
 });
+
+// whitespace-clean regression guard
