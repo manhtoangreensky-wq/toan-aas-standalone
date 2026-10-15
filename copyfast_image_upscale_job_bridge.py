@@ -34,7 +34,27 @@ from typing import Any
 import uuid
 
 from fastapi import HTTPException
-from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, utc_now
+from copyfast_assets import _private_asset_vault_child_directory, _storage_path
+from copyfast_db import asset_vault_directory, ensure_copyfast_schema, read_transaction, transaction, utc_now
+from copyfast_image_upscale_provider import (
+    DEFAULT_CREATIVITY,
+    DEFAULT_UPSCALE_PROMPT,
+    MISSING_PROVIDER_CREDENTIAL_BEHAVIOR,
+    PRODUCTION_FAKE_API_KEY_FALLBACK,
+    STABILITY_UPSCALE_CAPABILITY_ID,
+    STABILITY_UPSCALE_ENDPOINT,
+    STABILITY_UPSCALE_MODEL_NAME,
+    STABILITY_UPSCALE_PROVIDER_KEY,
+    STABILITY_UPSCALE_PROVIDER_NAME,
+    SYNTHETIC_PROVIDER_TASK_ID_ALLOWED,
+    ImageUpscaleProviderError,
+    ImageUpscaleProviderRequest,
+    ImageUpscaleProviderResponseError,
+    ImageUpscaleProviderResult,
+    ImageUpscaleTransportProtocol,
+    build_stability_upscale_request_payload,
+    parse_stability_upscale_response,
+)
 
 # ─── CANONICAL CONSTANTS ─────────────────────────────────────────────────────
 
@@ -63,10 +83,25 @@ SUPPORTED_MODELS: frozenset[str] = frozenset({
 })
 DEFAULT_MODEL = "replicate_real_esrgan"
 
-# Future provider dispatch flags — strictly disabled in R24B1
+# Dispatch & Blocker Constants (R24E1)
+BLOCKER_PROVIDER_EXECUTOR_READY_BUT_DISPATCH_DISABLED: str = "PROVIDER_EXECUTOR_READY_BUT_DISPATCH_DISABLED"
+BLOCKER_PROVIDER_ENTITLEMENT_UNPROVEN: str = "PROVIDER_ENTITLEMENT_UNPROVEN"
+BLOCKER_OWNER_PAID_AUTHORIZATION_REQUIRED: str = "OWNER_PAID_AUTHORIZATION_REQUIRED"
+BLOCKER_PROVIDER_CONTRACT_UNPROVEN: str = "PROVIDER_CONTRACT_UNPROVEN"
+
+# Structural Truth Declarations (R24E1 & R24E1-FIX1)
+IMAGE_UPSCALE_PROVIDER_EXECUTOR_IMPLEMENTED: bool = True
 IMAGE_UPSCALE_PROVIDER_DISPATCH_ENABLED: bool = False
+IMAGE_UPSCALE_PROVIDER_DISPATCH_CURRENTLY_ENABLED: bool = False
 REPLICATE_REAL_ESRGAN_DISPATCH_AUTHORIZED: bool = False
 STABILITY_UPSCALE_DISPATCH_AUTHORIZED: bool = False
+STABILITY_UPSCALE_ENTITLEMENT_PROVEN: bool = False
+OWNER_PAID_AUTHORIZATION_GRANTED: bool = False
+DIRECT_OWNER_AUTHORIZATION_TO_LIVE_TEST_POSSIBLE: bool = False
+
+# Security & Authority Boundaries (R24E1-FIX1)
+ARBITRARY_TRANSPORT_OBJECT_IS_AUTHORITY: bool = False
+DIRECT_TRANSPORT_GATE_BYPASS: bool = False
 
 FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED: frozenset[str] = frozenset({
     "amount", "amountvnd", "price", "cost", "currency", "paymentid", "ordercode",
@@ -591,6 +626,7 @@ def finalize_image_upscale_job_result(
         resolved_model = model_name or job_dict.get("model_name") or DEFAULT_MODEL
         resolved_provider = provider_name or "replicate"
         output_url = f"/api/v1/assets/{clean_asset_id}/download"
+        clean_task_id = str(provider_task_id).strip() if provider_task_id else None
 
         if not _validate_safe_url(output_url):
             raise HTTPException(status_code=400, detail="Đường dẫn kết quả không an toàn.")
@@ -614,7 +650,7 @@ def finalize_image_upscale_job_result(
             (
                 STATUS_COMPLETED,
                 STATUS_REASON_COMPLETED,
-                str(provider_task_id or ""),
+                clean_task_id,
                 resolved_provider,
                 resolved_model,
                 clean_asset_id,
@@ -634,12 +670,419 @@ def finalize_image_upscale_job_result(
     return _format_job_dict(dict(updated_row))
 
 
-def dispatch_image_upscale_provider(job_id: str) -> None:
-    """Provider dispatch boundary.
+def resolve_source_asset_image(
+    account_id: str,
+    image_asset_id: str,
+) -> tuple[bytes, str, str, str]:
+    """Resolves and verifies the source image artifact from Asset Vault.
 
-    In R24B1, provider dispatch is strictly disabled.
-    Any attempt to invoke an external provider raises RuntimeError without network calls.
+    Enforces:
+    1. Asset exists in web_asset_files.
+    2. Same account (cross-owner isolation).
+    3. Active state.
+    4. Supported image extension and MIME type.
+    5. Real storage artifact exists on disk and is non-empty.
+    6. Verifies digest integrity if recorded.
+
+    Returns: (image_bytes, original_filename, extension, content_type)
     """
-    raise RuntimeError(
-        "IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED: Requires explicit Owner live-paid spend authorization."
+    clean_account_id = str(account_id).strip()
+    clean_asset_id = str(image_asset_id).strip()
+    if not clean_asset_id:
+        raise ValueError("Thiếu mã tài sản ảnh nguồn (image_asset_id).")
+
+    with read_transaction() as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            """
+            SELECT id, account_id, original_filename, extension, content_type,
+                   byte_size, sha256, storage_key, state
+            FROM web_asset_files
+            WHERE id = ?;
+            """,
+            (clean_asset_id,),
+        ).fetchone()
+
+    if not row:
+        raise ValueError(f"Không tìm thấy tài sản ảnh nguồn: {clean_asset_id}")
+
+    asset_dict = dict(row)
+    if asset_dict.get("account_id") != clean_account_id:
+        raise ValueError(
+            f"Vi phạm cách ly tài khoản: tài sản {clean_asset_id} không thuộc về {clean_account_id}"
+        )
+
+    if asset_dict.get("state") != "active":
+        raise ValueError(f"Tài sản ảnh {clean_asset_id} không ở trạng thái sẵn sàng (active)")
+
+    orig_name = str(asset_dict.get("original_filename") or "image.png")
+    ext = str(asset_dict.get("extension") or "").strip().lower()
+    if not ext and "." in orig_name:
+        ext = "." + orig_name.rsplit(".", 1)[-1].lower()
+    mime = str(asset_dict.get("content_type") or "image/png").strip().lower()
+
+    if ext not in SAFE_IMAGE_EXTENSIONS and not mime.startswith("image/"):
+        raise ValueError(f"Định dạng tệp không được hỗ trợ để upscale: {ext}")
+
+    storage_key = str(asset_dict.get("storage_key") or "")
+    if not storage_key:
+        raise ValueError(f"Tài sản {clean_asset_id} thiếu storage_key")
+
+    root = asset_vault_directory()
+    try:
+        candidate_path = _storage_path(root, storage_key)
+    except Exception as exc:
+        raise ValueError(f"Đường dẫn lưu trữ không an toàn hoặc không hợp lệ: {exc}") from exc
+
+    if not candidate_path.is_file() or candidate_path.stat().st_size == 0:
+        raise ValueError(f"Tệp lưu trữ vật lý không tồn tại trên đĩa: {storage_key}")
+
+    image_bytes = candidate_path.read_bytes()
+    expected_digest = str(asset_dict.get("sha256") or "").strip()
+    if expected_digest:
+        actual_digest = hashlib.sha256(image_bytes).hexdigest()
+        if not hmac.compare_digest(actual_digest, expected_digest):
+            raise ValueError("Tính toàn vẹn của tệp nguồn không khớp (sha256 mismatch)")
+
+    return image_bytes, orig_name, ext, mime
+
+
+def store_image_upscale_output_asset(
+    account_id: str,
+    output_image_bytes: bytes,
+    *,
+    original_filename: str = "upscaled.png",
+    extension: str = ".png",
+    content_type: str = "image/png",
+    display_name: str = "Ảnh phóng to (Upscale)",
+) -> str:
+    """Stores the upscaled image bytes into the canonical Asset Vault.
+
+    Enforces:
+    1. Writes to safe objects/ directory under asset_vault_directory().
+    2. Hashes content with sha256.
+    3. Inserts row into web_asset_files owned by account_id with state='active'.
+    4. Returns output_asset_id.
+    """
+    if not output_image_bytes:
+        raise ValueError("Dữ liệu ảnh kết quả rỗng.")
+
+    root = asset_vault_directory()
+    _private_asset_vault_child_directory(root, "objects")
+    output_asset_id = str(uuid.uuid4())
+    storage_key = f"objects/{uuid.uuid4().hex}.blob"
+    final_path = _storage_path(root, storage_key)
+
+    final_path.write_bytes(output_image_bytes)
+
+    byte_size = len(output_image_bytes)
+    digest = hashlib.sha256(output_image_bytes).hexdigest()
+    now = utc_now()
+
+    with transaction() as conn:
+        conn.execute(
+            """
+            INSERT INTO web_asset_files (
+                id, account_id, project_id, display_name, original_filename,
+                extension, content_type, byte_size, sha256, storage_key,
+                state, created_at, updated_at, archived_at
+            ) VALUES (
+                ?, ?, NULL, ?, ?,
+                ?, ?, ?, ?, ?,
+                'active', ?, ?, NULL
+            );
+            """,
+            (
+                output_asset_id,
+                account_id,
+                display_name,
+                original_filename,
+                extension,
+                content_type,
+                byte_size,
+                digest,
+                storage_key,
+                now,
+                now,
+            ),
+        )
+
+    return output_asset_id
+
+
+def transition_image_upscale_job_failed(job_id: str, reason: str) -> None:
+    """Explicitly transitions a queued or processing job to failed."""
+    now = utc_now()
+    with transaction() as conn:
+        conn.execute(
+            """
+            UPDATE web_image_upscale_jobs
+            SET status = ?,
+                status_reason = ?,
+                updated_at = ?
+            WHERE id = ? AND status IN (?, ?);
+            """,
+            (STATUS_FAILED, str(reason)[:500], now, job_id, STATUS_QUEUED, STATUS_PROCESSING),
+        )
+
+
+def check_image_upscale_runtime_dispatch_gates(job_id: str) -> dict[str, Any] | None:
+    """Evaluates canonical runtime dispatch gates in strict priority order.
+
+    Fails closed before any transport execution or network call:
+    1. Model contract unproven -> BLOCKER_PROVIDER_CONTRACT_UNPROVEN.
+    2. Account entitlement unproven -> BLOCKER_PROVIDER_ENTITLEMENT_UNPROVEN.
+    3. Owner live-paid authorization ungranted -> BLOCKER_OWNER_PAID_AUTHORIZATION_REQUIRED.
+    4. Provider dispatch disabled -> BLOCKER_PROVIDER_EXECUTOR_READY_BUT_DISPATCH_DISABLED.
+    """
+    clean_job_id = str(job_id).strip()
+    if not clean_job_id:
+        raise ValueError("Thiếu mã job (job_id).")
+
+    job = get_admin_image_upscale_job(clean_job_id)
+    if job and str(job.get("model_name") or DEFAULT_MODEL) != "stability_conservative":
+        raise RuntimeError(
+            f"IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED: {BLOCKER_PROVIDER_CONTRACT_UNPROVEN} "
+            f"- Model '{job.get('model_name')}' lacks proven executable provider contract."
+        )
+
+    if not STABILITY_UPSCALE_ENTITLEMENT_PROVEN:
+        raise RuntimeError(
+            f"IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED: {BLOCKER_PROVIDER_ENTITLEMENT_UNPROVEN} "
+            "- Stability AI upscale credit tier/balance is unproven in active account."
+        )
+
+    if not OWNER_PAID_AUTHORIZATION_GRANTED:
+        raise RuntimeError(
+            f"IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED: {BLOCKER_OWNER_PAID_AUTHORIZATION_REQUIRED} "
+            "- Requires explicit Owner live-paid spend authorization."
+        )
+
+    if not IMAGE_UPSCALE_PROVIDER_DISPATCH_ENABLED or not IMAGE_UPSCALE_PROVIDER_DISPATCH_CURRENTLY_ENABLED:
+        raise RuntimeError(
+            f"IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED: {BLOCKER_PROVIDER_EXECUTOR_READY_BUT_DISPATCH_DISABLED} "
+            "- Provider dispatch is currently disabled."
+        )
+
+    return job
+
+
+def dispatch_image_upscale_provider(job_id: str) -> None:
+    """Fail-closed provider dispatch boundary.
+
+    In R24E1 & R24E1-FIX1, the provider executor foundation is implemented, but runtime provider
+    dispatch remains strictly disabled until account entitlement and explicit Owner
+    spend authorization are separately established.
+    """
+    clean_job_id = str(job_id).strip()
+    if not clean_job_id:
+        raise ValueError("Thiếu mã job (job_id).")
+
+    # Enforce all runtime dispatch gates
+    check_image_upscale_runtime_dispatch_gates(clean_job_id)
+
+    raise RuntimeError("IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED")
+
+
+def prepare_image_upscale_request(
+    job_id: str,
+    *,
+    api_key: str,
+) -> tuple[dict[str, Any], ImageUpscaleProviderRequest, tuple[str, dict[str, str], dict[str, tuple[str, bytes, str]], dict[str, Any]]]:
+    """Pure request preparation and atomic FSM transition for Image Upscale.
+
+    Invariants:
+    1. Unknown job -> fails closed (ValueError).
+    2. Completed job -> rejects duplicate submit (ValueError).
+    3. Processing job -> rejects concurrent duplicate submit (ValueError).
+    4. Failed job -> rejects blind automatic retry without new job (ValueError).
+    5. Model contract must be proven ('stability_conservative').
+    6. Resolves source image from Asset Vault (enforcing account ownership, format, disk existence).
+    7. Constructs provider request and payload with explicit api_key. Missing key fails closed.
+    """
+    clean_job_id = str(job_id).strip()
+    if not clean_job_id:
+        raise ValueError("Thiếu mã job (job_id).")
+
+    with transaction() as conn:
+        conn.row_factory = sqlite3.Row
+        job_row = conn.execute(
+            "SELECT * FROM web_image_upscale_jobs WHERE id = ?;",
+            (clean_job_id,),
+        ).fetchone()
+
+        if not job_row:
+            raise ValueError(f"Không tìm thấy job Image Upscale: {clean_job_id}")
+
+        job_dict = dict(job_row)
+        current_status = job_dict.get("status")
+
+        if current_status == STATUS_COMPLETED:
+            raise ValueError(f"Job {clean_job_id} đã hoàn thành, không được submit lại nhà cung cấp.")
+        if current_status == STATUS_PROCESSING:
+            raise ValueError(f"Job {clean_job_id} đang được xử lý, không thể gửi trùng lặp.")
+        if current_status == STATUS_FAILED:
+            raise ValueError(f"Job {clean_job_id} đã thất bại. Cấm tự động retry mù quáng.")
+        if current_status != STATUS_QUEUED:
+            raise ValueError(f"Job {clean_job_id} có trạng thái không hợp lệ để thực thi: {current_status}")
+
+        model_name = str(job_dict.get("model_name") or DEFAULT_MODEL)
+        if model_name != "stability_conservative":
+            now = utc_now()
+            conn.execute(
+                "UPDATE web_image_upscale_jobs SET status = ?, status_reason = ?, updated_at = ? WHERE id = ?;",
+                (
+                    STATUS_FAILED,
+                    f"{BLOCKER_PROVIDER_CONTRACT_UNPROVEN}: Model '{model_name}' has no proven provider contract.",
+                    now,
+                    clean_job_id,
+                ),
+            )
+            raise ValueError(
+                f"{BLOCKER_PROVIDER_CONTRACT_UNPROVEN}: Model '{model_name}' lacks proven provider contract."
+            )
+
+        # Atomic FSM transition: queued -> processing
+        now = utc_now()
+        cursor = conn.execute(
+            "UPDATE web_image_upscale_jobs SET status = ?, status_reason = ?, updated_at = ? WHERE id = ? AND status = ?;",
+            (STATUS_PROCESSING, "PROCESSING_PROVIDER_SUBMIT", now, clean_job_id, STATUS_QUEUED),
+        )
+        if cursor.rowcount == 0:
+            raise ValueError(f"Xung đột FSM: Job {clean_job_id} đã được nhận bởi tiến trình khác.")
+
+    account_id = str(job_dict["account_id"])
+    image_asset_id = str(job_dict["image_asset_id"])
+
+    # Resolve source asset from Asset Vault
+    try:
+        source_bytes, orig_name, ext, mime = resolve_source_asset_image(account_id, image_asset_id)
+    except Exception as exc:
+        transition_image_upscale_job_failed(clean_job_id, f"SOURCE_ASSET_RESOLUTION_FAILED: {exc}")
+        raise
+
+    scale_factor = int(job_dict.get("scale_factor", DEFAULT_SCALE_FACTOR))
+
+    # Build provider request
+    req = ImageUpscaleProviderRequest(
+        job_id=clean_job_id,
+        account_id=account_id,
+        source_asset_id=image_asset_id,
+        image_bytes=source_bytes,
+        filename=orig_name,
+        content_type=mime,
+        scale_factor=scale_factor,
+        prompt=f"high resolution upscale {scale_factor}x, clean detailed",
+        creativity=DEFAULT_CREATIVITY,
+        output_format="png",
     )
+
+    try:
+        payload_tuple = build_stability_upscale_request_payload(req, api_key=api_key)
+    except Exception as exc:
+        transition_image_upscale_job_failed(clean_job_id, f"PROVIDER_REQUEST_BUILD_FAILED: {exc}")
+        raise
+
+    return job_dict, req, payload_tuple
+
+
+def apply_image_upscale_result(
+    job_id: str,
+    result: ImageUpscaleProviderResult,
+) -> dict[str, Any]:
+    """Pure result application and output Asset Vault finalization for Image Upscale.
+
+    Invariants:
+    1. Validates finish_reason == 'SUCCESS' (non-success fails closed).
+    2. Stores output image bytes in Asset Vault with owner scoping.
+    3. Finalizes job record with provider_task_id (or None if absent).
+    4. Records output_sha256 in metadata (never as synthetic provider_task_id).
+    5. Returns finalized job dictionary.
+    """
+    clean_job_id = str(job_id).strip()
+    if not clean_job_id:
+        raise ValueError("Thiếu mã job (job_id).")
+
+    if result.finish_reason.upper() != "SUCCESS":
+        transition_image_upscale_job_failed(
+            clean_job_id,
+            f"PROVIDER_NON_SUCCESS_FINISH_REASON: {result.finish_reason}",
+        )
+        raise ValueError(f"Provider returned non-success finish_reason: {result.finish_reason}")
+
+    job = get_admin_image_upscale_job(clean_job_id)
+    if not job:
+        raise ValueError(f"Không tìm thấy job Image Upscale: {clean_job_id}")
+
+    account_id = str(job["account_id"])
+    image_name = str(job.get("image_name") or "image.png")
+    scale_factor = int(job.get("scale_factor", DEFAULT_SCALE_FACTOR))
+
+    # Store output image into Asset Vault
+    try:
+        out_name = f"upscaled_{image_name.rsplit('.', 1)[0] if '.' in image_name else image_name}{result.output_extension}"
+        output_asset_id = store_image_upscale_output_asset(
+            account_id=account_id,
+            output_image_bytes=result.output_image_bytes,
+            original_filename=out_name,
+            extension=result.output_extension,
+            content_type=result.output_content_type,
+            display_name=f"Upscale {scale_factor}x: {image_name}",
+        )
+    except Exception as exc:
+        transition_image_upscale_job_failed(clean_job_id, f"OUTPUT_ASSET_STORAGE_FAILED: {exc}")
+        raise
+
+    metadata = dict(result.metadata)
+    if result.output_sha256:
+        metadata["output_sha256"] = result.output_sha256
+
+    finalized = finalize_image_upscale_job_result(
+        clean_job_id,
+        provider_task_id=result.provider_task_id or "",
+        provider_name=result.provider_name,
+        model_name=result.model_name,
+        output_asset_id=output_asset_id,
+        output_metadata=metadata,
+        cost_metadata={"test_cost": 0, "commercial_authority": False},
+    )
+
+    return finalized
+
+
+def execute_image_upscale_job(
+    job_id: str,
+    *,
+    transport: Any = None,
+    api_key: str = "",
+) -> dict[str, Any]:
+    """Production executor entrypoint for Image Upscale.
+
+    Invariants (R24E1-FIX1):
+    1. ARBITRARY_TRANSPORT_OBJECT_IS_AUTHORITY = NO.
+       Caller-supplied transport CANNOT bypass entitlement, owner auth, or dispatch gates.
+    2. Enforces all runtime dispatch gates FIRST. Fails closed before any transport or network action.
+    3. Direct hidden provider bypass is eliminated (DIRECT_HIDDEN_PROVIDER_PATH_AVAILABLE = NO).
+    4. Production network transport remains unactivated (REAL_PROVIDER_NETWORK_CALL_COUNT = 0).
+    """
+    clean_job_id = str(job_id).strip()
+    if not clean_job_id:
+        raise ValueError("Thiếu mã job (job_id).")
+
+    # 1. Verify job exists (unknown job fails closed with ValueError)
+    job = get_admin_image_upscale_job(clean_job_id)
+    if not job:
+        raise ValueError(f"Không tìm thấy job Image Upscale: {clean_job_id}")
+
+    # 2. Enforce all runtime dispatch gates FIRST
+    check_image_upscale_runtime_dispatch_gates(clean_job_id)
+
+    # 3. Enforce dependency injection is NOT authority
+    if transport is not None:
+        raise RuntimeError(
+            "ARBITRARY_TRANSPORT_OBJECT_IS_AUTHORITY=NO: "
+            "Caller-supplied transport cannot be used in production execution."
+        )
+
+    # 3. Production transport fail-closed
+    raise RuntimeError("IMAGE_UPSCALE_PROVIDER_DISPATCH_DISABLED: Production network transport not active.")

@@ -88,7 +88,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 233,
+      "line": 268,
       "target": "_format_job_dict"
     },
     {
@@ -448,7 +448,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 289,
+      "line": 324,
       "target": "create_or_replay_image_upscale_job"
     },
     {
@@ -650,6 +650,12 @@
       "target": "evaluate_job_attention"
     },
     {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "kind": "function",
+      "line": 1053,
+      "target": "execute_image_upscale_job"
+    },
+    {
       "file": "copyfast_product_video_dispatcher.py",
       "kind": "function",
       "line": 427,
@@ -664,7 +670,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 527,
+      "line": 562,
       "target": "finalize_image_upscale_job_result"
     },
     {
@@ -736,7 +742,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 460,
+      "line": 495,
       "target": "get_admin_image_upscale_job"
     },
     {
@@ -814,7 +820,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 414,
+      "line": 449,
       "target": "get_image_upscale_job"
     },
     {
@@ -1072,7 +1078,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 493,
+      "line": 528,
       "target": "image_upscale_job_to_native_compat"
     },
     {
@@ -1102,7 +1108,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 431,
+      "line": 466,
       "target": "is_image_upscale_job_other_account"
     },
     {
@@ -1168,7 +1174,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 477,
+      "line": 512,
       "target": "list_admin_image_upscale_jobs"
     },
     {
@@ -1240,7 +1246,7 @@
     {
       "file": "copyfast_image_upscale_job_bridge.py",
       "kind": "function",
-      "line": 443,
+      "line": 478,
       "target": "list_image_upscale_jobs"
     },
     {
@@ -1688,6 +1694,12 @@
       "target": "to_web_safe_voice_clone_job"
     },
     {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "kind": "function",
+      "line": 813,
+      "target": "transition_image_upscale_job_failed"
+    },
+    {
       "file": "copyfast_image_remove_background_bridge.py",
       "kind": "function",
       "line": 138,
@@ -1766,7 +1778,7 @@
   "commands": [],
   "conversations": [],
   "counts": {
-    "background_jobs": 293,
+    "background_jobs": 295,
     "callback_data": 0,
     "callback_handlers": 0,
     "callback_templates": 0,
@@ -3103,6 +3115,12 @@
       "file": "copyfast_image_operations.py",
       "line": 1413,
       "operation": "UPDATE",
+      "table": "web_asset_files"
+    },
+    {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "line": 785,
+      "operation": "INSERT INTO",
       "table": "web_asset_files"
     },
     {
@@ -5315,19 +5333,37 @@
     },
     {
       "file": "copyfast_image_upscale_job_bridge.py",
-      "line": 115,
+      "line": 150,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_image_upscale_jobs"
     },
     {
       "file": "copyfast_image_upscale_job_bridge.py",
-      "line": 372,
+      "line": 407,
       "operation": "INSERT INTO",
       "table": "web_image_upscale_jobs"
     },
     {
       "file": "copyfast_image_upscale_job_bridge.py",
-      "line": 600,
+      "line": 636,
+      "operation": "UPDATE",
+      "table": "web_image_upscale_jobs"
+    },
+    {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "line": 819,
+      "operation": "UPDATE",
+      "table": "web_image_upscale_jobs"
+    },
+    {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "line": 933,
+      "operation": "UPDATE",
+      "table": "web_image_upscale_jobs"
+    },
+    {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "line": 948,
       "operation": "UPDATE",
       "table": "web_image_upscale_jobs"
     },
@@ -18238,9 +18274,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 270,
-  "source_files_scanned": 270,
-  "source_fingerprint_sha256": "ca0e224aa88f91b5cd9c2bc93ecd6df16531e1d92630bbba4419c55f057626db",
+  "source_files_discovered": 271,
+  "source_files_scanned": 271,
+  "source_fingerprint_sha256": "32bc085f0b3fc81df3ffb8a5d075b7cda6b6fad27f3d56020ded42d3e25c1bd4",
   "source_root": "repository-root",
   "ui_path_references": [
     {
