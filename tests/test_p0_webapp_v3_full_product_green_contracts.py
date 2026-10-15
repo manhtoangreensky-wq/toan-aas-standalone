@@ -65,12 +65,12 @@ def test_green_02_zero_duplicate_routes_in_primary_nav() -> None:
 
 
 def test_green_03_dashboard_product_first_and_6_launchers() -> None:
-    """Gap 4 & 5: Dashboard hero is product-first with 'Bạn muốn làm gì hôm nay?' and 6 launchers."""
+    """Gap 4 & 5: Dashboard hero consumes localized copy and retains 6 launchers."""
     idx = PORTAL_JS.find("function renderDashboard(")
     assert idx != -1
     dashboard_block = PORTAL_JS[idx:idx + 15000]
 
-    assert "Bạn muốn làm gì hôm nay?" in dashboard_block
+    assert 'dashboardText("productHero.title")' in dashboard_block
     assert "renderDashboardProductHero" in dashboard_block
     assert "renderDashboardAccountSummary" in dashboard_block
 

@@ -130,14 +130,23 @@ def test_topup_display_fallback_keeps_six_packages_disabled_without_catalog() ->
     assert 'xu: adminNumber(xu, " Xu")' in form
 
 
-def test_app_and_copilot_mount_on_body_with_fixed_controls_not_utility_dock() -> None:
+def test_customer_utilities_use_account_menu_and_keep_landing_fallback() -> None:
     pwa = _section(PORTAL, "function syncSmartInstallBanner()", "function dismissSmartInstallBanner()")
     copilot = _section(PORTAL, "function mountPortalAiCopilot(context)", "window.TOANAASPortal")
 
     assert "getUtilityDock" not in PORTAL
     assert "portal-utility-dock" not in PORTAL_CSS
-    assert pwa.count("document.body.appendChild") == 2
+    assert 'document.querySelector(".portal-landing .portal-landing-final")' in pwa
+    assert 'document.querySelector("[data-portal-customer-utilities]")' in pwa
+    assert "const installContainer = landingInstallSlot || customerUtilitySlot || document.body;" in pwa
+    assert pwa.count("placeInstallControl(") == 2
     assert "document.body.appendChild(container)" in copilot
+    renderer = _section(PORTAL, "function renderCopilotHtml(container, context)", "function mountPortalAiCopilot(context)")
+    assert 'utilitySlot.appendChild(toggle)' in renderer
+    assert 'data-portal-customer-utilities' in PORTAL
+    menu_control = _declarations_after(THEME, ':root .portal-customer-utilities > :is(.portal-pwa-fab-trigger, .portal-copilot-btn, .portal-pwa-install-trigger)', 0)
+    assert "position: static;" in menu_control
+    assert "min-height: 44px;" in menu_control
     assert "position: fixed;" in _declarations_after(PORTAL_CSS, ".portal-pwa-fab-trigger", 0)
     assert "position: fixed;" in _declarations_after(PORTAL, ".portal-copilot-btn", 0)
 

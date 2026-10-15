@@ -8,6 +8,7 @@
   const POLL_MS = 2500;
   const MAX_POLL_MS = 10000;
   const MAX_CHALLENGE_MINUTES = 30;
+  const AUTH_MOTION_ENTRY_MS = 680;
   let bootstrap = {};
   try {
     const node = document.getElementById("portal-bootstrap");
@@ -35,14 +36,19 @@
       confirm: "Xác nhận mật khẩu", confirmPlaceholder: "Nhập lại mật khẩu", show: "Hiện", hide: "Ẩn",
       forgot: "Quên mật khẩu?", theme: "Giao diện", switchLabel: "Chọn phương thức truy cập", required: "Bắt buộc",
       googleTitle: "Đăng nhập bằng Google", appleTitle: "Đăng nhập bằng Apple ID",
-      install: "Tải & Cài đặt App TOAN AAS", pwaFallback: "Hãy dùng menu trình duyệt để cài ứng dụng.",
+      install: "Cài đặt ứng dụng TOAN AAS", installGuide: "Cách cài đặt", installed: "Ứng dụng TOAN AAS đã được cài đặt.",
+      pwaFallback: "Mở trình đơn của trình duyệt để tìm cách cài đặt ứng dụng.",
+      pwaInstructionsIos: "Trên iPhone hoặc iPad: mở nút Chia sẻ trong Safari, chọn “Thêm vào Màn hình chính”, rồi xác nhận.",
+      pwaInstructionsAndroid: "Trên Android: mở trình đơn của trình duyệt, chọn “Cài đặt ứng dụng” hoặc “Thêm vào màn hình chính”.",
+      pwaInstructionsDesktop: "Trên máy tính: chọn biểu tượng cài đặt trên thanh địa chỉ hoặc mở trình đơn của trình duyệt và chọn “Cài đặt ứng dụng”.",
+      pwaInstructionsGeneric: "Mở trình đơn của trình duyệt và tìm “Cài đặt ứng dụng” hoặc “Thêm vào màn hình chính”.",
       registeredTitle: "Tiếp tục bằng đăng nhập",
       registeredBody: "Nếu email chưa có tài khoản, hồ sơ đã được tạo. Hãy đăng nhập để tiếp tục; bạn có thể liên kết Telegram sau.",
-      oauthCancelled: "Bạn đã hủy xác minh tại nhà cung cấp.",
-      oauthFailed: "Không thể xác minh OAuth. Hãy thử lại mà không chia sẻ mã hay token với bất kỳ ai.",
-      oauthState: "Phiên OAuth không hợp lệ hoặc đã hết hạn. Hãy bắt đầu lại từ Web App.",
-      oauthSession: "Signed session đã thay đổi trong khi liên kết OAuth. Hãy đăng nhập lại rồi thử lại.",
-      oauthLinkRequired: "Email này đã có tài khoản Web. Hãy đăng nhập bằng phương thức hiện có, sau đó liên kết OAuth trong trang Tài khoản.",
+      oauthCancelled: "Bạn đã hủy xác minh với nhà cung cấp.",
+      oauthFailed: "Không thể xác minh OAuth. Hãy thử lại và không chia sẻ mã xác minh hay mã truy cập với bất kỳ ai.",
+      oauthState: "Phiên OAuth không hợp lệ hoặc đã hết hạn. Hãy bắt đầu lại từ trang đăng nhập.",
+      oauthSession: "Phiên đăng nhập đã thay đổi trong khi liên kết OAuth. Hãy đăng nhập lại rồi thử lại.",
+      oauthLinkRequired: "Email này đã có tài khoản. Hãy đăng nhập bằng phương thức hiện có, sau đó liên kết OAuth trong mục Tài khoản.",
       mismatch: "Xác nhận mật khẩu chưa khớp.", genericError: "Yêu cầu chưa được máy chủ xác nhận.",
       telegramButtonTitle: "Tạo mã bảo mật và mở Bot Telegram @toanaasbot", telegramButtonLabel: "Đăng nhập với Telegram Bot",
       telegramUnavailable: "Đăng nhập Telegram hiện chưa sẵn sàng.",
@@ -61,9 +67,15 @@
       pointThree: "Help is always available when you need it.", name: "Display name", namePlaceholder: "The name you want to use",
       email: "Email (Gmail is supported)", password: "Password", passwordPlaceholder: "Enter password", passwordMin: "At least 12 characters",
       confirm: "Confirm password", confirmPlaceholder: "Re-enter password", show: "Show", hide: "Hide", forgot: "Forgot password?",
-      theme: "Theme", switchLabel: "Choose an access method", required: "Required", install: "Install TOAN AAS App",
+      theme: "Theme", switchLabel: "Choose an access method", required: "Required", install: "Install the TOAN AAS app",
+      installGuide: "How to install", installed: "TOAN AAS is installed.",
+      pwaFallback: "Open your browser menu and look for installation options.",
+      pwaInstructionsIos: "On iPhone or iPad: tap Share in Safari, choose Add to Home Screen, then confirm.",
+      pwaInstructionsAndroid: "On Android: open the browser menu and choose Install app or Add to Home screen.",
+      pwaInstructionsDesktop: "On your computer: use the install icon in the address bar or choose Install app from the browser menu.",
+      pwaInstructionsGeneric: "Open your browser menu and look for Install app or Add to Home screen.",
       googleTitle: "Sign in with Google", appleTitle: "Sign in with Apple ID",
-      pwaFallback: "Use your browser menu to install the app.", registeredTitle: "Continue by signing in",
+      registeredTitle: "Continue by signing in",
       registeredBody: "If the email you just submitted did not yet have an account, a profile has been created. Sign in to start a signed session and use the Web Workspace; you can link Telegram later if Bot synchronization is needed.",
       oauthCancelled: "You cancelled verification with the provider.",
       oauthFailed: "OAuth could not be verified. Try again without sharing a code or token with anyone.",
@@ -86,15 +98,21 @@
       pointOne: "项目、资产和进度会集中有序地管理。", pointTwo: "每项重要操作都有清晰的状态。", pointThree: "需要时，您始终可以获得帮助。",
       name: "显示名称", namePlaceholder: "您想使用的名称", email: "邮箱（支持 Gmail）", password: "密码", passwordPlaceholder: "输入密码",
       passwordMin: "至少 12 个字符", confirm: "确认密码", confirmPlaceholder: "再次输入密码", show: "显示", hide: "隐藏",
-      forgot: "忘记密码？", theme: "主题", switchLabel: "选择访问方式", required: "必填", install: "安装 TOAN AAS App",
+      forgot: "忘记密码？", theme: "主题", switchLabel: "选择访问方式", required: "必填", install: "安装 TOAN AAS 应用",
+      installGuide: "安装说明", installed: "TOAN AAS 已安装。",
+      pwaFallback: "打开浏览器菜单，查找应用安装选项。",
+      pwaInstructionsIos: "在 iPhone 或 iPad 上：在 Safari 中点击“分享”，选择“添加到主屏幕”，然后确认。",
+      pwaInstructionsAndroid: "在 Android 上：打开浏览器菜单，选择“安装应用”或“添加到主屏幕”。",
+      pwaInstructionsDesktop: "在电脑上：点击地址栏中的安装图标，或从浏览器菜单选择“安装应用”。",
+      pwaInstructionsGeneric: "打开浏览器菜单，查找“安装应用”或“添加到主屏幕”。",
       googleTitle: "使用 Google 登录", appleTitle: "使用 Apple ID 登录",
-      pwaFallback: "请使用浏览器菜单安装应用。", registeredTitle: "请继续登录",
-      registeredBody: "如果您刚提交的邮箱尚未拥有账户，系统已创建资料。请登录以创建已签名会话并使用 Web 工作空间；如需同步 Bot，您可以稍后链接 Telegram。",
-      oauthCancelled: "您已取消在提供方处的验证。",
-      oauthFailed: "无法验证 OAuth。请重试，并且不要向任何人分享代码或令牌。",
-      oauthState: "OAuth 会话无效或已过期。请从 Web App 重新开始。",
-      oauthSession: "链接 OAuth 时已签名会话发生变化。请重新登录后再试。",
-      oauthLinkRequired: "此邮箱已有 Web 账户。请使用现有方式登录，然后在“账户”页面链接 OAuth。", mismatch: "两次输入的密码不一致。",
+      registeredTitle: "请继续登录",
+      registeredBody: "如果您提交的邮箱尚未注册，系统已创建资料。请登录后继续使用工作空间；如需与 Bot 同步数据，可稍后关联 Telegram。",
+      oauthCancelled: "您已取消通过服务商进行验证。",
+      oauthFailed: "无法验证 OAuth。请重试，并且不要向任何人分享验证码或访问令牌。",
+      oauthState: "OAuth 会话无效或已过期。请从网页应用重新开始。",
+      oauthSession: "关联 OAuth 时，登录会话已发生变化。请重新登录后再试。",
+      oauthLinkRequired: "此邮箱已有账户。请使用现有方式登录，然后在“账户”页面关联 OAuth。", mismatch: "两次输入的密码不一致。",
       genericError: "服务器尚未确认此请求。",
       telegramButtonTitle: "创建安全代码并打开 Telegram Bot @toanaasbot", telegramButtonLabel: "使用 Telegram Bot 登录",
       telegramUnavailable: "Telegram 登录尚未就绪。",
@@ -105,9 +123,44 @@
   }[locale];
   const state = { providers: {}, connection: {}, telegram: {}, mfa: null, pollTimer: 0, pollFailures: 0, pollDeadline: 0 };
   let pwaInstallPrompt = null;
+  let pwaInstalled = false;
+  let authMotionTimer = 0;
 
   function safe(value) {
     return typeof value === "string" ? value.replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char])) : "";
+  }
+
+  // Preserve only the non-secret email draft while switching Login/Register.
+  // Passwords, MFA codes and provider tokens never enter browser storage.
+  const AUTH_EMAIL_DRAFT_KEY = "toanaas.auth.email-draft";
+  function authEmailStorage() {
+    try {
+      return window.sessionStorage && typeof window.sessionStorage.getItem === "function" ? window.sessionStorage : null;
+    } catch (_) { return null; }
+  }
+  function rememberEmailDraft() {
+    const input = document.querySelector('input[name="email"]');
+    const storage = authEmailStorage();
+    if (!input || !storage) return;
+    const value = String(input.value || "").trim().slice(0, 254);
+    try {
+      if (value) storage.setItem(AUTH_EMAIL_DRAFT_KEY, value);
+      else storage.removeItem(AUTH_EMAIL_DRAFT_KEY);
+    } catch (_) { /* Storage can be disabled without affecting auth. */ }
+  }
+  function restoreEmailDraft() {
+    const input = document.querySelector('input[name="email"]');
+    const storage = authEmailStorage();
+    if (!input || input.value || !storage) return;
+    try {
+      const value = storage.getItem(AUTH_EMAIL_DRAFT_KEY);
+      if (value) input.value = String(value).slice(0, 254);
+    } catch (_) { /* Storage can be disabled without affecting auth. */ }
+  }
+  function clearEmailDraft() {
+    const storage = authEmailStorage();
+    if (!storage) return;
+    try { storage.removeItem(AUTH_EMAIL_DRAFT_KEY); } catch (_) { /* no-op */ }
   }
 
   const AUTH_LOCALE_LABELS = Object.freeze({
@@ -187,6 +240,38 @@
   function brandMark() { return '<img class="portal-brand-mark-image" src="/static/logo_ch%C3%ADnh_th%E1%BB%A9c.png" alt="" width="56" height="56" decoding="async">'; }
   function themeToggle() { return `<button class="portal-theme-toggle" type="button" data-portal-theme-toggle aria-label="${safe(text.theme)}" title="${safe(text.theme)}"><span class="portal-theme-toggle-icon" data-portal-theme-icon aria-hidden="true"></span><span class="portal-theme-toggle-label" data-portal-theme-label>${safe(text.theme)}</span></button>`; }
 
+  function authMotionPhase(main) {
+    if (!main) return "";
+    if (typeof main.getAttribute === "function") return main.getAttribute("data-auth-motion-phase") || "";
+    return main.dataset && main.dataset.authMotionPhase ? main.dataset.authMotionPhase : "";
+  }
+
+  function authMotionReduced() {
+    try {
+      return typeof window.matchMedia === "function"
+        && window.matchMedia("(prefers-reduced-motion: reduce)").matches === true;
+    } catch (_) { return false; }
+  }
+
+  function scheduleAuthMotionSettle(main) {
+    if (!main || authMotionPhase(main) !== "entry") return;
+    const finish = () => {
+      authMotionTimer = 0;
+      if (authMotionPhase(main) === "entry") main.setAttribute("data-auth-motion-phase", "settled");
+    };
+    if (authMotionReduced() || typeof window.requestAnimationFrame !== "function"
+      || typeof window.setTimeout !== "function") {
+      finish();
+      return;
+    }
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        if (authMotionTimer && typeof window.clearTimeout === "function") window.clearTimeout(authMotionTimer);
+        authMotionTimer = window.setTimeout(finish, AUTH_MOTION_ENTRY_MS);
+      });
+    });
+  }
+
   function field(name, label, type, placeholder, autocomplete, required, minLength, maxLength) {
     const id = `portal-field-${name}`;
     const requiredMarkup = required ? `<span class="portal-required-mark" data-portal-required-mark aria-hidden="true">*</span><span class="portal-sr-only" data-portal-required-message> ${safe(text.required)}</span>` : "";
@@ -244,7 +329,7 @@
     const main = document.getElementById("portal-main") || document.getElementById("portal-root");
     if (!main) return;
     if (main.hasAttribute("data-auth-motion-phase")) {
-      main.setAttribute("data-auth-motion-phase", "settled");
+      if (authMotionPhase(main) !== "entry") main.setAttribute("data-auth-motion-phase", "settled");
       const card = main.querySelector(".portal-auth-card");
       if (card) {
         const primary = card.querySelector(".portal-auth-primary");
@@ -280,9 +365,29 @@
     main.dataset.portalMotionSkipEnter = "true";
     const isLogin = path === "/login";
     const localeMarkup = authLocaleLabels(locale).map(([code, label]) => `<a class="portal-auth-locale-link" href="${safe(localeHref(code))}"${locale === code ? ' aria-current="true"' : ""}>${safe(label)}</a>`).join("");
-    const contextMarkup = `<aside class="portal-auth-context" aria-label="${safe(text.contextLabel)}"><div class="portal-auth-context-head"><span class="portal-auth-context-icon" aria-hidden="true">${icon('<path d="M12 3.5 19 6v5.8c0 4.4-2.9 7.6-7 8.7-4.1-1.1-7-4.3-7-8.7V6z"/><path d="m9 12 2 2 4-4"/>')}</span><strong class="portal-auth-context-kicker">${safe(text.context)}</strong></div><p class="portal-auth-context-title">${safe(isLogin ? text.loginContext : text.registerContext)}</p><ul class="portal-auth-context-list"><li><span class="portal-auth-feat-check">✓</span><span>${safe(text.pointOne)}</span></li><li><span class="portal-auth-feat-check">✓</span><span>${safe(text.pointTwo)}</span></li><li><span class="portal-auth-feat-check">✓</span><span>${safe(text.pointThree)}</span></li></ul><div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);"><button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-install-prompt" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-weight:700; border-radius:10px;"><span>📲</span><span>${safe(text.install)}</span></button></div></aside>`;
+    const contextMarkup = `<aside class="portal-auth-context" aria-label="${safe(text.contextLabel)}">
+      <div class="portal-auth-context-head">
+        <span class="portal-auth-context-icon" aria-hidden="true">${icon('<path d="M12 3.5 19 6v5.8c0 4.4-2.9 7.6-7 8.7-4.1-1.1-7-4.3-7-8.7V6z"/><path d="m9 12 2 2 4-4"/>')}</span>
+        <strong class="portal-auth-context-kicker">${safe(text.context)}</strong>
+      </div>
+      <p class="portal-auth-context-title">${safe(isLogin ? text.loginContext : text.registerContext)}</p>
+      <ul class="portal-auth-context-list">
+        <li><span class="portal-auth-feat-check">✓</span><span>${safe(text.pointOne)}</span></li>
+        <li><span class="portal-auth-feat-check">✓</span><span>${safe(text.pointTwo)}</span></li>
+        <li><span class="portal-auth-feat-check">✓</span><span>${safe(text.pointThree)}</span></li>
+      </ul>
+      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-install-prompt" aria-controls="portal-pwa-install-help" aria-expanded="false" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-weight:700; border-radius:10px;">
+          <span aria-hidden="true">📲</span><span data-pwa-install-label>${safe(text.installGuide)}</span>
+        </button>
+        <p class="portal-field-help" id="portal-pwa-install-help" data-pwa-install-help role="status" aria-live="polite" hidden></p>
+        <p class="portal-field-help" data-pwa-install-status role="status" aria-live="polite" hidden></p>
+      </div>
+    </aside>`;
     const authSwitch = `<nav class="portal-auth-switch" aria-label="${safe(text.switchLabel)}"><a href="/login?lang=${locale}"${isLogin ? ' aria-current="page"' : ""}>${safe(text.login)}</a><a href="/register?lang=${locale}"${!isLogin ? ' aria-current="page"' : ""}>${safe(text.register)}</a></nav>`;
     main.innerHTML = `<article class="portal-auth-page portal-auth-page--access"><header class="portal-auth-header"><div class="portal-auth-brand"><span class="portal-brand-mark" aria-hidden="true">${brandMark()}</span><span><strong>TOAN AAS</strong><small>${safe(text.brand)}</small></span></div><nav class="portal-auth-locale-nav" aria-label="${safe(text.language)}">${localeMarkup}</nav><div class="portal-auth-header-actions">${themeToggle()}<a class="portal-auth-back" href="/welcome?lang=${locale}" aria-label="${safe(text.back)}"><span class="portal-auth-back-label">${safe(text.back)}</span><span aria-hidden="true">${icon('<path d="M5 12h14M13 6l6 6-6 6"/>')}</span></a></div></header><div class="portal-auth-shell"><section class="portal-auth-intro"><h1 class="portal-title">${safe(isLogin ? text.loginHeading : text.registerHeading)}</h1><p class="portal-description">${safe(isLogin ? text.loginIntro : text.registerIntro)}</p>${contextMarkup}</section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-auth-card-top">${authSwitch}</div>${queryNotice()}<div class="portal-auth-primary">${primaryForm()}</div>${state.mfa ? "" : socialLogin()}</section></div><footer class="portal-auth-footer" hidden><div class="portal-auth-footer-grid"></div></footer></article>`;
+    scheduleAuthMotionSettle(main);
+    restoreEmailDraft();
     const theme = window.TOANAASPortalTheme;
     if (theme && typeof theme.syncControls === "function") theme.syncControls();
     syncPwaInstallControl();
@@ -294,24 +399,72 @@
     control.setAttribute("aria-busy", busy ? "true" : "false");
   }
 
+  function isStandaloneApp() {
+    const nativeStandalone = typeof navigator === "object" && navigator.standalone === true;
+    let displayModeStandalone = false;
+    try {
+      displayModeStandalone = typeof window.matchMedia === "function"
+        && window.matchMedia("(display-mode: standalone)").matches === true;
+    } catch (_) { displayModeStandalone = false; }
+    return pwaInstalled || nativeStandalone || displayModeStandalone;
+  }
+
+  function pwaInstallInstructions() {
+    const currentNavigator = typeof navigator === "object" ? navigator : {};
+    const userAgent = String(currentNavigator.userAgent || "");
+    const platform = String((currentNavigator.userAgentData && currentNavigator.userAgentData.platform)
+      || currentNavigator.platform || "");
+    const signature = `${platform} ${userAgent}`;
+    if (/iphone|ipad|ipod/i.test(signature)
+      || (/macintel/i.test(platform) && Number(currentNavigator.maxTouchPoints) > 1)) return text.pwaInstructionsIos;
+    if (/android/i.test(signature)) return text.pwaInstructionsAndroid;
+    if (/windows|mac|linux|cros/i.test(signature)) return text.pwaInstructionsDesktop;
+    return text.pwaInstructionsGeneric;
+  }
+
   function syncPwaInstallControl() {
     const control = document.querySelector('[data-portal-action="pwa-install-prompt"]');
     if (!control) return;
+    const helper = document.querySelector("[data-pwa-install-help]");
+    const installedStatus = document.querySelector("[data-pwa-install-status]");
+    if (isStandaloneApp()) {
+      control.hidden = true;
+      control.disabled = true;
+      control.setAttribute("aria-hidden", "true");
+      control.setAttribute("aria-expanded", "false");
+      if (helper) { helper.hidden = true; helper.textContent = ""; }
+      if (installedStatus) { installedStatus.hidden = false; installedStatus.textContent = text.installed; }
+      return;
+    }
+    if (installedStatus) { installedStatus.hidden = true; installedStatus.textContent = ""; }
+    const promptAvailable = Boolean(pwaInstallPrompt && typeof pwaInstallPrompt.prompt === "function");
     control.hidden = false;
     control.disabled = false;
     control.removeAttribute("aria-hidden");
+    const label = control.querySelector("[data-pwa-install-label]");
+    const actionLabel = promptAvailable ? text.install : text.installGuide;
+    if (label) label.textContent = actionLabel;
+    control.setAttribute("aria-label", actionLabel);
+    if (promptAvailable && helper) { helper.hidden = true; helper.textContent = ""; }
+    control.setAttribute("aria-expanded", helper && !helper.hidden ? "true" : "false");
   }
 
   async function requestPwaInstall(control) {
     const prompt = pwaInstallPrompt;
     if (!prompt || typeof prompt.prompt !== "function") {
-      toast(text.pwaFallback);
+      const helper = document.querySelector("[data-pwa-install-help]");
+      if (!helper) { toast(text.pwaFallback); return; }
+      const opening = helper.hidden;
+      helper.textContent = opening ? pwaInstallInstructions() : "";
+      helper.hidden = !opening;
+      if (control && typeof control.setAttribute === "function") control.setAttribute("aria-expanded", opening ? "true" : "false");
       return;
     }
     setBusy(control, true);
     try {
       await prompt.prompt();
-      if (prompt.userChoice && typeof prompt.userChoice.then === "function") await prompt.userChoice;
+      const choice = prompt.userChoice && typeof prompt.userChoice.then === "function" ? await prompt.userChoice : null;
+      if (choice && choice.outcome === "accepted") pwaInstalled = true;
     } finally {
       pwaInstallPrompt = null;
       setBusy(control, false);
@@ -335,6 +488,7 @@
       if (form.dataset.portalAction === "auth-register") {
         if (values.password !== values.confirm_password) throw new Error(text.mismatch);
         const result = await api("/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: values.email || "", password: values.password || "", display_name: values.name || "" }) });
+        clearEmailDraft();
         toast(result.message);
         window.location.assign(`/login?registered=1&lang=${locale}`);
       } else if (form.dataset.portalAction === "auth-mfa-login") {
@@ -342,6 +496,7 @@
         if (!state.mfa || !/^(?:[0-9]{6}|[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4})$/.test(code)) throw new Error(text.genericError);
         const result = await api("/auth/login/mfa", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...state.mfa, code }) });
         state.mfa = null;
+        clearEmailDraft();
         toast(result.message);
         window.location.assign(nextRoute() || "/dashboard");
       } else {
@@ -352,6 +507,7 @@
           toast(result.message);
           render({ primary: true });
         } else {
+          clearEmailDraft();
           toast(result.message);
           window.location.assign(nextRoute() || "/dashboard");
         }
@@ -424,15 +580,26 @@
   async function startTelegram(control) {
     if (!(state.connection && state.connection.ready === true)) return toast(text.telegramUnavailable, "error");
     setBusy(control, true);
+    let popup = null;
     try {
       stopPolling();
+      try {
+        popup = window.open("about:blank", "_blank");
+        if (popup) popup.opener = null;
+      } catch (_) { popup = null; }
       const result = await api("/auth/telegram/login/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
       state.telegram = { status: result.status || "awaiting_confirm", message: result.message, errorCode: result.error_code || "", data: result.data || {} };
       const deepLink = safeTelegramLink(result.data && result.data.deep_link);
-      if (deepLink) window.open(deepLink, "_blank");
+      if (deepLink) {
+        if (popup && !popup.closed) popup.location.href = deepLink;
+        else window.location.assign(deepLink);
+      } else if (popup && !popup.closed) popup.close();
       toast(result.message || text.telegramWaiting);
       schedulePolling();
-    } catch (error) { toast(error instanceof Error ? error.message : text.genericError, "error"); }
+    } catch (error) {
+      if (popup && !popup.closed) popup.close();
+      toast(error instanceof Error ? error.message : text.genericError, "error");
+    }
     finally { setBusy(control, false); }
   }
 
@@ -449,11 +616,16 @@
       if (label) label.textContent = reveal ? text.hide : text.show;
       return;
     }
+    const authSwitchLink = event.target.closest && event.target.closest(".portal-auth-switch a");
+    if (authSwitchLink) rememberEmailDraft();
     const action = event.target.closest && event.target.closest("[data-portal-action]");
     if (!action) return;
     if (action.dataset.portalAction === "pwa-install-prompt") { requestPwaInstall(action); return; }
     if (action.dataset.portalAction === "start-telegram-login") startTelegram(action);
     if (action.dataset.portalAction === "auth-mfa-login-cancel") { state.mfa = null; render({ primary: true }); }
+  });
+  document.addEventListener("input", (event) => {
+    if (event.target && event.target.name === "email") rememberEmailDraft();
   });
   document.addEventListener("submit", (event) => {
     const form = event.target.closest && event.target.closest("[data-portal-form]");
@@ -463,12 +635,13 @@
   });
   document.addEventListener("visibilitychange", () => { if (document.visibilityState !== "hidden") schedulePolling(0); });
   window.addEventListener("beforeinstallprompt", (event) => {
-    event.preventDefault();
-    pwaInstallPrompt = event;
+    if (event && typeof event.preventDefault === "function") event.preventDefault();
+    pwaInstallPrompt = event && typeof event.prompt === "function" ? event : null;
     syncPwaInstallControl();
   });
   window.addEventListener("appinstalled", () => {
     pwaInstallPrompt = null;
+    pwaInstalled = true;
     syncPwaInstallControl();
   });
 

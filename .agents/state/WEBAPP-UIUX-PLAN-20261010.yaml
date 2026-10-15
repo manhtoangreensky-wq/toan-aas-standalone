@@ -1,0 +1,80 @@
+task_id: WEBAPP-UIUX-PLAN-20261010
+phase: REPORT
+goal: "Hoàn thiện UI/UX và locale của Web App standalone theo thứ tự; motion làm sau cùng."
+scope: "Web App standalone; presentation, locale, responsive và motion; không Bot/Core, ví, provider, production hoặc deploy."
+base_sha: 44f5fdacf2435c47e8d8a16eb04115d2d916bcd1
+current_status: R216_L_SOURCE_GREEN_LIVE_DRIFT_OPEN
+browser: LIVE_DRIFT_LEGACY_AUTH_COPY
+live_pass: NO
+provider_calls: 0
+wallet_mutations: 0
+production_data_mutations: 0
+commit: LOCAL_BRANCH_HEAD
+push: NO
+merge: NO
+deploy: NO
+ordered_checkpoints:
+  - id: R207
+    name: content-studio-board-new
+    status: SOURCE_LOCALIZED_TESTED
+  - id: R208
+    name: content-studio-detail
+    status: SOURCE_LOCALIZED_TESTED
+  - id: R209
+    name: publish-review
+    status: SOURCE_LOCALIZED_TESTED
+  - id: R210
+    name: workboard-locale-presentation
+    status: SOURCE_GREEN_BROWSER_ACCEPTANCE_OPEN
+    evidence: "64 focused; 420 Node; JS checks; diff-check"
+  - id: R211
+    name: notes-memory-center
+    status: SOURCE_GREEN_BROWSER_ACCEPTANCE_OPEN
+    evidence: "3 focused; 423 Node; JS checks; diff-check; 139 memory keys"
+  - id: R212
+    name: campaign-calendar-approvals
+    status: SOURCE_GREEN_BROWSER_ACCEPTANCE_OPEN
+    evidence: "2 focused; 425 Node; JS checks; diff-check; 204 campaign keys"
+  - id: R213
+    name: remaining-non-video-locale-surfaces
+    status: SOURCE_GREEN_BROWSER_ACCEPTANCE_OPEN
+    active_spec: R213-02-audio-workspace-shell-locale
+    evidence: "R213-01 source green (focused 5/5; Node all 430/430); R213-02 source green (focused 5/5; Node all 435/435; JS checks; diff-check); browser acceptance remains open because QA runtime is unavailable"
+  - id: R214
+    name: video-uiux
+    status: SOURCE_GREEN_BROWSER_ACCEPTANCE_OPEN
+    active_spec: R214-video-uiux-locale-presentation
+    evidence: "focused 10/10; Node all 445/445; JS checks; diff-check; browser acceptance remains open because QA runtime is unavailable"
+  - id: R215
+    name: full-uiux-acceptance
+    status: SOURCE_GREEN_BROWSER_ACCEPTANCE_OPEN
+    active_spec: R215-full-uiux-acceptance
+    evidence: "focused 5/5; full Node 450/450; JS checks; diff-check; browser acceptance remains open because QA runtime is unavailable"
+  - id: R216
+    name: motion
+    status: SOURCE_GREEN_BROWSER_ACCEPTANCE_OPEN
+    active_spec: R216-motion-lifecycle-compositor-r216
+    evidence: "focused R216 6/6; locale/PWA 22/22; full Node 458/458; JS syntax 5/5; py_compile 17/17; diff-check; live AX/screenshot read-only on VI/EN/ZH"
+    status_note: "Auth lifecycle, provider reservation, compositor scroll, Telegram/PWA readiness và reduced-motion source gates đã xanh; live auth AX/screenshot còn thấy bundle cũ; browser matrix/CLS/LCP/INP runtime vẫn mở."
+  - id: R216-L
+    name: auth-install-locale-drift
+    status: SOURCE_GREEN_LIVE_DRIFT_OPEN
+    evidence: "Both portal.js and portal-auth.js auth CTA paths use reviewed locale copy; duplicate-key regression added; full Node 458/458; live script portal-auth.js?v=local-57e76aa281dcc721fdaa still exposes legacy App copy in VI/EN/ZH (read-only AX/screenshot)."
+    status_note: "Source fix is complete; production auth bundle has not received the patch. Do not claim LIVE_PASS or deploy in this checkpoint."
+protected_contracts:
+  - routes
+  - actions
+  - fields
+  - capabilities
+  - csrf
+  - idempotency
+  - revisions
+  - dynamic_server_data
+motion_backlog:
+  - auth-render-double-pass
+  - avoid-left-transition
+  - scroll-reveal-scrub
+  - telegram-popup-user-gesture
+  - pwa-install-readiness
+  - reduced-motion-and-cls-lcp-inp
+next_action: "Owner-controlled delivery of R216-L source patch, then recheck live VI/EN/ZH AX/screenshot; afterward continue QA matrix and CLS/LCP/INP. Do not call LIVE_PASS before evidence."

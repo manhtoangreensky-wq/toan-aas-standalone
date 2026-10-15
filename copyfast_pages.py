@@ -56,6 +56,7 @@ _PORTAL_BUILD_SOURCE_FILES = (
     "portal-theme.css",
     "portal-theme.js",
     "portal-auth.js",
+    "portal-feature-catalog-copy.js",
     "portal-features.js",
     "portal-i18n.js",
     "admin-customer-directory.js",
@@ -542,7 +543,7 @@ def _shell_description_for(path: str, locale: str) -> str:
 def _fallback_template() -> str:
     # Keep the fallback compatible with the strict production CSP: bootstrap
     # data lives in inert JSON, never in an inline executable script.
-    return """<!doctype html><html lang=\"__PORTAL_HTML_LANG__\" dir=\"ltr\" data-portal-locale=\"__PORTAL_LOCALE__\" data-portal-motion-route=\"__PORTAL_MOTION_ROUTE__\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"description\" content=\"__PORTAL_DESCRIPTION__\"><title>__PORTAL_TITLE__</title><script src=\"/static/portal/portal-theme.js?v=__PORTAL_ASSET_VERSION__\"></script><link rel=\"stylesheet\" href=\"/static/portal/portal-first-paint.css?v=__PORTAL_ASSET_VERSION__\"><link rel=\"stylesheet\" href=\"/static/portal/portal.css?v=__PORTAL_ASSET_VERSION__\"><link rel=\"stylesheet\" href=\"/static/portal/portal-theme.css?v=__PORTAL_ASSET_VERSION__\"></head><body><a class=\"skip-link\" href=\"#portal-main\">__PORTAL_SKIP_NAVIGATION__</a><main id=\"portal-root\" aria-label=\"__PORTAL_MAIN_NAVIGATION__\"><p>__PORTAL_BOOT_MESSAGE__</p></main><noscript>__PORTAL_NOSCRIPT__</noscript><script id=\"portal-bootstrap\" type=\"application/json\">__PORTAL_BOOTSTRAP__</script><script src=\"/static/portal/portal-i18n.js?v=__PORTAL_ASSET_VERSION__\" defer></script><script src=\"/static/portal/portal-motion.js?v=__PORTAL_ASSET_VERSION__\" defer></script><script src=\"/static/portal/admin-customer-directory.js?v=__PORTAL_ASSET_VERSION__\" defer></script><script src=\"/static/portal/portal.js?v=__PORTAL_ASSET_VERSION__\" defer></script><script src=\"/static/portal/integration.js?v=__PORTAL_ASSET_VERSION__\" defer></script></body></html>"""
+    return """<!doctype html><html lang=\"__PORTAL_HTML_LANG__\" dir=\"ltr\" data-portal-locale=\"__PORTAL_LOCALE__\" data-portal-motion-route=\"__PORTAL_MOTION_ROUTE__\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"description\" content=\"__PORTAL_DESCRIPTION__\"><title>__PORTAL_TITLE__</title><script src=\"/static/portal/portal-theme.js?v=__PORTAL_ASSET_VERSION__\"></script><link rel=\"stylesheet\" href=\"/static/portal/portal-first-paint.css?v=__PORTAL_ASSET_VERSION__\"><link rel=\"stylesheet\" href=\"/static/portal/portal.css?v=__PORTAL_ASSET_VERSION__\"><link rel=\"stylesheet\" href=\"/static/portal/portal-theme.css?v=__PORTAL_ASSET_VERSION__\"></head><body><a class=\"skip-link\" href=\"#portal-main\">__PORTAL_SKIP_NAVIGATION__</a><main id=\"portal-main\" tabindex=\"-1\" aria-label=\"__PORTAL_MAIN_NAVIGATION__\"><p>__PORTAL_BOOT_MESSAGE__</p></main><noscript>__PORTAL_NOSCRIPT__</noscript><script id=\"portal-bootstrap\" type=\"application/json\">__PORTAL_BOOTSTRAP__</script><script src=\"/static/portal/portal-i18n.js?v=__PORTAL_ASSET_VERSION__\" defer></script><script src=\"/static/portal/portal-motion.js?v=__PORTAL_ASSET_VERSION__\" defer></script><script src=\"/static/portal/admin-customer-directory.js?v=__PORTAL_ASSET_VERSION__\" defer></script><script src=\"/static/portal/portal.js?v=__PORTAL_ASSET_VERSION__\" defer></script><script src=\"/static/portal/integration.js?v=__PORTAL_ASSET_VERSION__\" defer></script></body></html>"""
 
 
 def render_portal(path: str, *, interface_locale: str | None = None) -> HTMLResponse:
@@ -590,9 +591,14 @@ def render_portal(path: str, *, interface_locale: str | None = None) -> HTMLResp
             )
         template = template.replace(
             "</body>",
-            '<script src="/static/portal/portal-features.js?v=__PORTAL_ASSET_VERSION__" defer></script></body>',
+            '<script src="/static/portal/portal-feature-catalog-copy.js?v=__PORTAL_ASSET_VERSION__" defer></script><script src="/static/portal/portal-features.js?v=__PORTAL_ASSET_VERSION__" defer></script></body>',
         )
     build_id = _portal_build_id()
+    initial_sidebar = ""
+    initial_header = ""
+    if normalized == "/dashboard":
+        initial_sidebar = '<div class="portal-shell-placeholder portal-boot-skeleton-sidebar" aria-hidden="true"><span class="portal-shell-placeholder-brand"></span><span class="portal-shell-placeholder-action"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>'
+        initial_header = '<div class="portal-shell-placeholder portal-boot-skeleton-header" aria-hidden="true"><span></span><div><span></span><span></span><span></span></div></div>'
     payload = {
         "path": normalized,
         "title": _shell_title_for(normalized, locale),
@@ -626,6 +632,8 @@ def render_portal(path: str, *, interface_locale: str | None = None) -> HTMLResp
         .replace("__PORTAL_MAIN_NAVIGATION__", html.escape(shell_copy["main_navigation"], quote=True))
         .replace("__PORTAL_QUICK_NAVIGATION__", html.escape(shell_copy["quick_navigation"], quote=True))
         .replace("__PORTAL_BOOT_MESSAGE__", html.escape(shell_copy["boot_message"]))
+        .replace("__PORTAL_INITIAL_SIDEBAR__", initial_sidebar)
+        .replace("__PORTAL_INITIAL_HEADER__", initial_header)
         .replace("__PORTAL_NOSCRIPT__", html.escape(shell_copy["noscript"]))
         .replace("__PORTAL_ASSET_VERSION__", build_id)
         .replace("__PORTAL_BOOTSTRAP__", json.dumps(payload, ensure_ascii=False).replace("</", "<\\/"))

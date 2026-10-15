@@ -148,7 +148,8 @@ def test_mount_portal_assigns_surface_and_delegates_render_lifecycle_to_motion()
     )
     for rendering_step in (
         "sidebar.innerHTML = renderSidebar(page, context);",
-        "header.innerHTML = renderHeader(page, context);",
+        "const headerMarkup = renderHeader(page, context);",
+        "if (!keepCustomerHeader) header.innerHTML = headerMarkup;",
         "main.innerHTML = renderPage(page, context);",
         "placeSfxCueSheetReceipt(main);",
         "bindInteractions();",

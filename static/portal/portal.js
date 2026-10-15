@@ -173,6 +173,7 @@
   const transientWorkspaceDraftIds = new Map();
   let sidebarReturnFocus = null;
   let commandPaletteReturnFocus = null;
+  let commandPaletteMarkup = "";
   let installModalReturnFocus = null;
   // This is a presentation preference for the current page only. It is never
   // written to storage, a URL, the signed bootstrap, or an action payload.
@@ -264,6 +265,70 @@
 
   function manualTopupText(key, fallback, params) {
     return uiText(`manualTopup.${key}`, fallback, params);
+  }
+
+  // Free Tools is a browser-local presentation surface.  Keep its fixed
+  // chrome in the reviewed locale catalogue; input, generated text, IDs and
+  // external resource URLs remain untouched user/canonical data.
+  function freeToolsText(key, fallback, params) {
+    return uiText(`freeTools.${key}`, fallback, params);
+  }
+
+  // Free Prompt Gallery translates only fixed catalog chrome. Prompt bodies,
+  // server-issued titles, tags, IDs, revisions and receipts remain owner/
+  // server-owned data and are rendered exactly as received.
+  function freePromptGalleryText(key, fallback, params) {
+    return uiText(`freePromptGallery.${key}`, fallback, params);
+  }
+
+  // Audio Workspace / Audio Hub translates fixed shell chrome only. Collection
+  // titles, briefs, tags, timestamps, revisions, policy statements and event
+  // payloads remain server-owned data and are rendered exactly as received.
+  function audioWorkspaceText(key, fallback, params) {
+    return uiText(`audioWorkspace.${key}`, fallback, params);
+  }
+
+  // Prompt authoring surfaces translate only fixed Web chrome. Prompt bodies,
+  // template titles, variable values and server receipts remain owner-scoped
+  // data and are never translated in the browser.
+  function promptLibraryText(key, fallback, params) {
+    return uiText(`promptLibrary.${key}`, fallback, params);
+  }
+
+  function promptStudioText(key, fallback, params) {
+    return uiText(`promptStudio.${key}`, fallback, params);
+  }
+
+  // Content Studio translates fixed Web chrome only. Brief text, titles,
+  // tags, references and server activity remain owner-scoped data.
+  function contentStudioText(key, fallback, params) {
+    return uiText(`contentStudio.${key}`, fallback, params);
+  }
+
+  // Publish Review only translates fixed Web chrome. User-supplied title,
+  // caption, hashtags, CTA, prompt text, checklist entries and server
+  // receipts remain owner-scoped data and are never rewritten in the browser.
+  function publishReviewText(key, fallback, params) {
+    return uiText(`publishReview.${key}`, fallback, params);
+  }
+
+  // Workboard translates fixed Web chrome only. Titles, descriptions,
+  // checklist bodies, reference names, timestamps and server receipts remain
+  // owner-scoped data and are never rewritten in the browser.
+  function workboardText(key, fallback, params) {
+    return uiText(`workboard.${key}`, fallback, params);
+  }
+
+  // Memory Center translates fixed Web chrome only. Note bodies, titles, tags,
+  // timestamps, revisions and server receipts remain owner-scoped data.
+  function memoryText(key, fallback, params) {
+    return uiText(`memory.${key}`, fallback, params);
+  }
+
+  // Campaign planning translates only fixed Web chrome. Campaign briefs,
+  // titles, notes, URLs, IDs, timestamps and server receipts remain data.
+  function campaignText(key, fallback, params) {
+    return uiText(`campaignUi.${key}`, fallback, params);
   }
 
   // Delivery Center translates only fixed Web chrome and lifecycle guidance.
@@ -1094,7 +1159,7 @@
     layout: "partner-readiness", fields: [], action: "none", status: "ready",
     notes: ["Đây là workspace Web-native riêng tư theo signed account; không nhận Telegram ID, contact, referral code, URL, payment hay dữ liệu CRM từ browser.", "Submitted chỉ nghĩa là Web App đã ghi receipt quan tâm cục bộ; không phải duyệt, ghép khách, liên hệ, referral, hoa hồng, thanh toán hoặc payout."]
   });
-  customerPage("/workspace-menu", "Chuyển workspace", "Directory điều hướng gọn theo mục tiêu làm việc; mọi route đích vẫn kiểm tra signed session, ownership và trạng thái riêng.", ICONS.dashboard, {
+  customerPage("/workspace-menu", "Không gian làm việc", "Danh sách lối vào theo mục tiêu công việc; mỗi trang đích vẫn xác minh phiên đăng nhập, quyền truy cập và trạng thái riêng.", ICONS.dashboard, {
     type: "workspace-menu", layout: "workspace-menu", fields: [], action: "none", status: "read_only",
     notes: ["Directory chỉ dùng catalogue điều hướng Web đã review. Nó không nhận callback, Telegram ID, message, pending state hoặc dữ liệu Bot.", "Không có action, bridge/read-model riêng, job, Xu, PayOS, payment, provider hay output được tạo từ trang này."]
   });
@@ -1146,21 +1211,21 @@
     layout: "workspace-drafts", type: "workspace-drafts", fields: [], action: "none", status: "read_only",
     notes: ["Chỉ lưu brief và lựa chọn scalar do bạn nhập. Tệp, upload ID, voice profile, quote receipt, job, Xu, PayOS và provider không được lưu hoặc khôi phục.", "Bản nháp thuộc signed Web account hiện tại; tiếp tục một bản nháp vẫn cần đi qua toàn bộ kiểm tra form, upload, estimate và Bot canonical riêng."]
   });
-  customerPage("/projects", "Project Center", "Tổ chức brief, prompt, caption, script và storyboard trong các Project có version history do Web Workspace sở hữu.", ICONS.dashboard, {
+  customerPage("/projects", "Trung tâm dự án", "Tổ chức định hướng, lời nhắc, chú thích, kịch bản và bảng phân cảnh trong các dự án có lịch sử phiên bản do Web sở hữu.", ICONS.dashboard, {
     layout: "project-center", type: "project-center", fields: [], action: "none", status: "ready",
-    notes: ["Project và Studio Document thuộc Web account hiện tại, hoạt động ngay cả khi không liên kết Telegram.", "Đây là dữ liệu authoring do bạn tạo; không gọi Bot, provider, PayOS, ví Xu hoặc tự gắn nhãn output media."]
+    notes: ["Dự án và tài liệu Studio thuộc tài khoản Web hiện tại, hoạt động ngay cả khi không liên kết Telegram.", "Đây là dữ liệu soạn thảo do bạn tạo; không gọi Bot, nhà cung cấp, PayOS, ví Xu hoặc tự gắn nhãn kết quả media."]
   });
-  customerPage("/projects/new", "Project mới", "Tạo Project Web-owned với brief, mục tiêu và lịch sử tài liệu riêng tư.", ICONS.dashboard, {
+  customerPage("/projects/new", "Dự án mới", "Tạo dự án do Web sở hữu với định hướng, mục tiêu và lịch sử tài liệu riêng tư.", ICONS.dashboard, {
     layout: "project-center", type: "project-center", fields: [], action: "none", status: "ready",
-    notes: ["Form này chỉ tạo metadata authoring thuộc signed Web account hiện tại; không nhận Project ID, text hay state từ URL hoặc Bot.", "Tạo Project không gọi provider, job, PayOS, ví Xu, webhook, publish hoặc delivery."]
+    notes: ["Biểu mẫu này chỉ tạo siêu dữ liệu soạn thảo thuộc tài khoản Web hiện tại; không nhận mã dự án, văn bản hay trạng thái từ URL hoặc Bot.", "Tạo dự án không gọi nhà cung cấp, tác vụ, PayOS, ví Xu, webhook, đăng bài hay giao tệp."]
   });
-  customerPage("/prompt-library", "Prompt Library", "Lưu template prompt riêng tư có metadata, biến, tag, version history và preview cục bộ — không tạo AI job hoặc gọi provider.", ICONS.prompt, {
+  customerPage("/prompt-library", "Prompt Library", "Lưu mẫu câu lệnh riêng tư có dữ liệu mô tả, biến, thẻ, lịch sử phiên bản và bản xem trước tại chỗ — không tạo tác vụ AI hoặc gọi nhà cung cấp.", ICONS.prompt, {
     layout: "prompt-library", type: "prompt-library", fields: [], action: "none", status: "ready",
-    notes: ["Mỗi template thuộc signed Web account hiện tại; kho JSON seed global của Bot không được copy hoặc hiển thị tại đây.", "Preview chỉ thay thế variable đã khai báo trong trình duyệt/server Web; không gọi engine, Bot, provider, Xu hoặc PayOS."]
+    notes: ["Mỗi mẫu thuộc tài khoản TOAN AAS hiện tại; kho mẫu JSON dùng chung của Bot không được sao chép hoặc hiển thị tại đây.", "Bản xem trước chỉ thay biến đã khai báo trong ứng dụng; không gọi bộ máy xử lý, Bot, nhà cung cấp, Xu hoặc PayOS."]
   });
-  customerPage("/prompt-library/new", "Template Prompt mới", "Tạo một recipe prompt có thể tái sử dụng trong Prompt Library riêng tư của Web account.", ICONS.prompt, {
+  customerPage("/prompt-library/new", "Mẫu câu lệnh mới", "Tạo một mẫu câu lệnh có thể dùng lại trong thư viện riêng tư của tài khoản TOAN AAS.", ICONS.prompt, {
     layout: "prompt-library", type: "prompt-library", fields: [], action: "none", status: "ready",
-    notes: ["Điền nguồn và quyền sử dụng rõ ràng trước khi lưu. Không gửi secret, token, OTP/CVV, số thẻ hay dữ liệu thanh toán.", "Bạn có thể sao chép template sang Prompt Studio sau khi lưu; đó không phải yêu cầu chạy AI."]
+    notes: ["Điền rõ nguồn và quyền sử dụng trước khi lưu. Không gửi khóa bí mật, mã truy cập, OTP/CVV, số thẻ hoặc dữ liệu thanh toán.", "Sau khi lưu, bạn có thể sao chép mẫu sang Prompt Studio; thao tác đó không yêu cầu chạy AI."]
   });
   customerPage("/free-prompt-gallery", "Prompt Gallery miễn phí", "Khám phá catalog prompt seed chỉ đọc, lọc theo mục tiêu và sao chép từng prompt để tự review trước khi sử dụng.", ICONS.prompt, {
     layout: "free-prompt-gallery", type: "free-prompt-gallery", fields: [], action: "none", status: "read_only",
@@ -1567,9 +1632,9 @@
     layout: "workboard-new", type: "workboard", fields: [], action: "none", status: "ready",
     notes: ["Mỗi thay đổi dùng signed session, CSRF, idempotency, optimistic revision và audit do server xác minh.", "Chỉ chọn reference do server trả về; không nhập URL, token, secret, payment proof, provider hoặc job handle."]
   });
-  customerPage("/project-packages", "Project Packages", "Xuất snapshot ZIP bất biến từ Project và Studio Document do Web App tự xác minh riêng tư.", ICONS.package, {
+  customerPage("/project-packages", "Gói dự án", "Xuất ảnh chụp ZIP bất biến từ dự án và tài liệu Studio do Web App tự xác minh riêng tư.", ICONS.package, {
     layout: "project-packages", type: "project-packages", fields: [], action: "none", status: "ready",
-    notes: ["Project Package là output Web-native riêng tư; không phải Gói dịch vụ, Job Bot hay Tài sản Bot.", "ZIP chỉ chứa snapshot Project và metadata tham chiếu; không chứa source blob, storage path, URL ký, identity, Xu, PayOS hay provider data."]
+    notes: ["Gói dự án là kết quả Web riêng tư; không phải gói dịch vụ, tác vụ Bot hay tài sản Bot.", "ZIP chỉ chứa ảnh chụp dự án và siêu dữ liệu tham chiếu; không chứa dữ liệu nguồn, đường dẫn lưu trữ, URL ký, danh tính, Xu, PayOS hay dữ liệu nhà cung cấp."]
   });
   customerPage("/asset-vault", "Asset Vault", "Lưu tệp riêng trong Web Workspace, tùy chọn gắn với Project và luôn tải qua signed session.", ICONS.assets, {
     layout: "asset-vault", type: "asset-vault", fields: [], action: "none", status: "ready",
@@ -1712,11 +1777,11 @@
   // Content, image, video, voice, music, language and document feature routes.
   // `/chat` is registered above as a dedicated Web-native workspace.  Never
   // reintroduce it here as a generic Core Bridge/provider estimate flow.
-  customerPage("/prompt-studio", "Prompt Studio", "Soạn Prompt Blueprint có cấu trúc để tự review và tiếp tục biên tập trong Prompt Library riêng tư.", ICONS.prompt, {
+  customerPage("/prompt-studio", "Prompt Studio", "Soạn bản phác thảo câu lệnh có cấu trúc để tự rà soát và tiếp tục biên tập trong thư viện riêng tư.", ICONS.prompt, {
     layout: "prompt-studio", type: "prompt-studio", action: "none", status: "ready", fields: [],
     notes: [
-      "Prompt Studio chỉ tạo blueprint text deterministic trong request Web-native. Nó không gọi Bot, Core Bridge, model/provider, job, ví Xu, PayOS, asset, render, publish hoặc delivery.",
-      "Blueprint không phải AI output, fact-check, xác minh quyền hay nội dung đã sẵn sàng sử dụng. Tự kiểm tra claim, quyền và phù hợp nền tảng trước khi lưu/chuyển sang Prompt Library."
+      "Prompt Studio chỉ tạo bản phác thảo chữ theo quy tắc cố định trong một yêu cầu của ứng dụng. Công cụ không gọi Bot, Core Bridge, mô hình/nhà cung cấp, tác vụ, ví Xu, PayOS, tài sản, kết xuất, đăng bài hoặc giao nhận.",
+      "Bản phác thảo không phải kết quả AI, bước kiểm chứng sự thật, xác minh quyền hay nội dung sẵn sàng sử dụng. Hãy tự kiểm tra thông tin, quyền và mức phù hợp với nền tảng trước khi lưu hoặc chuyển sang Prompt Library."
     ]
   }, ["/prompts"]);
   contentPromptPackShortcutPage("/content/caption", "Caption", "Tạo khung caption và hashtag text để tự review trước khi dùng.", ICONS.prompt, "caption_hashtag", ["/caption"]);
@@ -2287,31 +2352,31 @@
   // server route. Payment writes, admin surfaces and every video capability
   // remain outside this directory by design.
   const WORKSPACE_MENU_CAPABILITY_SPECS = Object.freeze([
-    Object.freeze({ key: "workspace_home", featureKey: "dashboard", route: "/dashboard", authority: "SIGNED_CUSTOMER", launchMode: "NAVIGATION_SHELL", availability: "NAVIGATION_ONLY", group: "organize", eyebrow: "Workspace", title: "Tổng quan", description: "Quay về bức tranh công việc và các điểm vào đã được server xác thực." }),
-    Object.freeze({ key: "memory_center", featureKey: "notes", route: "/notes", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "organize", eyebrow: "Web-owned", title: "Memory Center", description: "Ghi chú, tag, ưu tiên và lịch sử phiên bản trong không gian Web riêng." }),
-    Object.freeze({ key: "reminder_center", featureKey: "reminders", route: "/reminders", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "organize", eyebrow: "Web-owned", title: "Nhắc việc", description: "Lập kế hoạch, pause, resume và complete theo account Web hiện tại." }),
-    Object.freeze({ key: "campaign_planner", featureKey: "campaign_planner", route: "/campaigns", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "organize", eyebrow: "Planning", title: "Kế hoạch nội dung", description: "Bắt đầu brief, calendar marker và self-review trong Campaign Planner." }),
-    Object.freeze({ key: "chat_workspace", featureKey: "chat", route: "/chat", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "create", eyebrow: "Authoring", title: "Content & Chat", description: "Mở workspace hội thoại và context Web-owned, tách khỏi Telegram." }),
-    Object.freeze({ key: "prompt_studio", featureKey: "prompt_studio", route: "/prompt-studio", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "create", eyebrow: "Authoring", title: "Prompt Studio", description: "Soạn brief rõ ràng trước khi tiếp tục sang các studio chuyên biệt." }),
-    Object.freeze({ key: "image_studio", featureKey: "image_studio", route: "/image-studio", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "create", eyebrow: "Visual direction", title: "Image Studio", description: "Tổ chức art direction, reference và self-review trong một workspace riêng." }),
-    Object.freeze({ key: "image_prompt_composer", featureKey: "image_prompt_composer", route: "/image/prompt-composer", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "create", eyebrow: "Visual direction", title: "Image Prompt Composer", description: "Chuyển ý tưởng thành direction hình ảnh có cấu trúc để tự review." }),
-    Object.freeze({ key: "documents", featureKey: "documents", route: "/documents", authority: "SIGNED_CUSTOMER", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "library", eyebrow: "Documents", title: "Document Workspace", description: "Mở không gian tài liệu/PDF; từng thao tác vẫn có ownership và capability riêng." }),
-    Object.freeze({ key: "subtitle_studio", featureKey: "subtitle_studio", route: "/subtitle-studio", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "library", eyebrow: "Language", title: "Subtitle Studio", description: "Soạn transcript, cue và bản dịch thủ công trong phạm vi Web-native." }),
-    Object.freeze({ key: "asset_vault", featureKey: "asset_vault", route: "/asset-vault", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "library", eyebrow: "Private library", title: "Asset Vault", description: "Quản lý tài sản thuộc account Web hiện tại bằng owner check riêng." }),
-    Object.freeze({ key: "media_workspace", featureKey: "media_workspace", route: "/media-workspace", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "library", eyebrow: "Audio library", title: "Audio Library", description: "Tổ chức audio brief, music và SFX metadata mà không gọi provider." }),
-    Object.freeze({ key: "account", featureKey: "account", route: "/account", authority: "SIGNED_CUSTOMER", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "account", eyebrow: "Account", title: "Tài khoản & bảo mật", description: "Quản lý hồ sơ, phương thức đăng nhập và liên kết theo signed session." }),
-    Object.freeze({ key: "wallet", featureKey: "wallet", route: "/wallet", authority: "CORE_CANONICAL_READ", launchMode: "READ_ONLY_CANONICAL", availability: "GUARDED", group: "account", eyebrow: "Canonical read", title: "Ví Xu", description: "Chỉ đọc số dư và lịch sử canonical sau khi authority hợp lệ được xác nhận." }),
-    Object.freeze({ key: "membership", featureKey: "membership", route: "/membership", authority: "CORE_CANONICAL_READ", launchMode: "READ_ONLY_CANONICAL", availability: "GUARDED", group: "account", eyebrow: "Canonical read", title: "Gói thành viên", description: "Xem tier và quyền lợi do nguồn canonical công bố, không tự cấp quyền." }),
-    Object.freeze({ key: "packages", featureKey: "packages", route: "/packages", authority: "CORE_CANONICAL_READ", launchMode: "READ_ONLY_CANONICAL", availability: "GUARDED", group: "account", eyebrow: "Canonical read", title: "Gói dịch vụ", description: "Duyệt catalog gói canonical; directory này không tạo purchase hoặc checkout." }),
-    Object.freeze({ key: "pricing", featureKey: "pricing", route: "/pricing", authority: "SIGNED_CUSTOMER", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "account", eyebrow: "Reference", title: "Bảng giá", description: "Xem thông tin giá để tham khảo, không thay đổi rate hoặc Xu." }),
-    Object.freeze({ key: "support", featureKey: "support", route: "/support", authority: "SIGNED_CUSTOMER", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "account", eyebrow: "Support", title: "Support Desk", description: "Mở hỗ trợ owner-scoped mà không dùng Telegram ID hoặc chat state thô." })
+    Object.freeze({ key: "workspace_home", featureKey: "dashboard", route: "/dashboard", authority: "SIGNED_CUSTOMER", launchMode: "NAVIGATION_SHELL", availability: "NAVIGATION_ONLY", group: "organize", eyebrow: "Không gian làm việc", title: "Tổng quan", description: "Quay lại tổng quan công việc và các lối vào đã được máy chủ xác minh." }),
+    Object.freeze({ key: "memory_center", featureKey: "notes", route: "/notes", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "organize", eyebrow: "Trong ứng dụng", title: "Ghi chú & kế hoạch", description: "Quản lý ghi chú, nhãn, mức ưu tiên và lịch sử phiên bản trong tài khoản của bạn." }),
+    Object.freeze({ key: "reminder_center", featureKey: "reminders", route: "/reminders", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "organize", eyebrow: "Trong ứng dụng", title: "Nhắc việc", description: "Lập kế hoạch, tạm dừng, tiếp tục hoặc hoàn tất lời nhắc trong tài khoản hiện tại." }),
+    Object.freeze({ key: "campaign_planner", featureKey: "campaign_planner", route: "/campaigns", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "organize", eyebrow: "Lập kế hoạch", title: "Kế hoạch nội dung", description: "Bắt đầu bằng yêu cầu, các mốc trên lịch và phần tự rà soát trong mục Kế hoạch nội dung." }),
+    Object.freeze({ key: "chat_workspace", featureKey: "chat", route: "/chat", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "create", eyebrow: "Soạn nội dung", title: "Nội dung & trò chuyện", description: "Mở không gian trò chuyện và ngữ cảnh do ứng dụng quản lý, tách biệt với Telegram." }),
+    Object.freeze({ key: "prompt_studio", featureKey: "prompt_studio", route: "/prompt-studio", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "create", eyebrow: "Soạn lời nhắc", title: "Soạn lời nhắc", description: "Viết yêu cầu rõ ràng trước khi chuyển sang các công cụ chuyên biệt." }),
+    Object.freeze({ key: "image_studio", featureKey: "image_studio", route: "/image-studio", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "create", eyebrow: "Sáng tạo hình ảnh", title: "Không gian sáng tạo ảnh", description: "Sắp xếp định hướng hình ảnh, tài liệu tham khảo và bước tự rà soát tại một nơi." }),
+    Object.freeze({ key: "image_prompt_composer", featureKey: "image_prompt_composer", route: "/image/prompt-composer", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "create", eyebrow: "Sáng tạo hình ảnh", title: "Soạn yêu cầu tạo ảnh", description: "Biến ý tưởng thành mô tả hình ảnh có cấu trúc để dễ rà soát." }),
+    Object.freeze({ key: "documents", featureKey: "documents", route: "/documents", authority: "SIGNED_CUSTOMER", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "library", eyebrow: "Tài liệu", title: "Không gian tài liệu", description: "Mở khu vực tài liệu/PDF; từng thao tác vẫn kiểm tra quyền sở hữu và tính năng được hỗ trợ." }),
+    Object.freeze({ key: "subtitle_studio", featureKey: "subtitle_studio", route: "/subtitle-studio", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "library", eyebrow: "Ngôn ngữ", title: "Soạn phụ đề", description: "Soạn bản chép lời, mốc phụ đề và bản dịch thủ công bằng các công cụ có sẵn." }),
+    Object.freeze({ key: "asset_vault", featureKey: "asset_vault", route: "/asset-vault", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "library", eyebrow: "Thư viện riêng", title: "Thư viện tài sản", description: "Quản lý tài sản thuộc tài khoản hiện tại; quyền sở hữu được kiểm tra riêng." }),
+    Object.freeze({ key: "media_workspace", featureKey: "media_workspace", route: "/media-workspace", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "library", eyebrow: "Thư viện âm thanh", title: "Thư viện âm thanh", description: "Sắp xếp mô tả âm thanh, nhạc và thông tin hiệu ứng mà không gọi nhà cung cấp." }),
+    Object.freeze({ key: "account", featureKey: "account", route: "/account", authority: "SIGNED_CUSTOMER", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "account", eyebrow: "Tài khoản", title: "Tài khoản & bảo mật", description: "Quản lý hồ sơ, cách đăng nhập và các liên kết thông qua phiên đã xác thực." }),
+    Object.freeze({ key: "wallet", featureKey: "wallet", route: "/wallet", authority: "CORE_CANONICAL_READ", launchMode: "READ_ONLY_CANONICAL", availability: "GUARDED", group: "account", eyebrow: "Nguồn dữ liệu chuẩn", title: "Ví Xu", description: "Chỉ xem số dư và lịch sử từ nguồn chuẩn sau khi xác minh quyền truy cập hợp lệ." }),
+    Object.freeze({ key: "membership", featureKey: "membership", route: "/membership", authority: "CORE_CANONICAL_READ", launchMode: "READ_ONLY_CANONICAL", availability: "GUARDED", group: "account", eyebrow: "Nguồn dữ liệu chuẩn", title: "Gói thành viên", description: "Xem cấp độ và quyền lợi do nguồn chuẩn công bố; danh sách này không cấp quyền lợi." }),
+    Object.freeze({ key: "packages", featureKey: "packages", route: "/packages", authority: "CORE_CANONICAL_READ", launchMode: "READ_ONLY_CANONICAL", availability: "GUARDED", group: "account", eyebrow: "Nguồn dữ liệu chuẩn", title: "Gói dịch vụ", description: "Xem danh mục gói chính thức; danh sách này không tạo đơn mua hoặc thanh toán." }),
+    Object.freeze({ key: "pricing", featureKey: "pricing", route: "/pricing", authority: "SIGNED_CUSTOMER", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "account", eyebrow: "Tham khảo", title: "Bảng giá", description: "Xem giá để tham khảo; mục này không thay đổi mức quy đổi hoặc số Xu." }),
+    Object.freeze({ key: "support", featureKey: "support", route: "/support", authority: "SIGNED_CUSTOMER", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "account", eyebrow: "Hỗ trợ", title: "Trung tâm hỗ trợ khách hàng", description: "Mở mục hỗ trợ trong phạm vi tài khoản của bạn; không cần nhập Telegram ID hay dùng trạng thái trò chuyện nội bộ." })
   ]);
 
   const WORKSPACE_MENU_GROUP_SPECS = Object.freeze([
-    Object.freeze({ key: "organize", title: "Tổ chức công việc", description: "Bắt đầu từ không gian tổng quan, planning và các record Web-owned." }),
-    Object.freeze({ key: "create", title: "Soạn & phát triển", description: "Chuyển brief thành direction rõ ràng trước khi đi vào workflow chuyên biệt." }),
-    Object.freeze({ key: "library", title: "Tài liệu & thư viện", description: "Mở các không gian có owner check riêng cho tài liệu, ngôn ngữ và tài sản." }),
-    Object.freeze({ key: "account", title: "Tài khoản & hỗ trợ", description: "Đọc dữ liệu canonical đúng boundary hoặc mở đúng nơi cần hỗ trợ." })
+    Object.freeze({ key: "organize", title: "Tổ chức công việc", description: "Bắt đầu từ trang tổng quan, kế hoạch và các hồ sơ do ứng dụng quản lý." }),
+    Object.freeze({ key: "create", title: "Soạn thảo & phát triển", description: "Biến yêu cầu ban đầu thành định hướng rõ ràng trước khi chuyển sang quy trình chuyên biệt." }),
+    Object.freeze({ key: "library", title: "Tài liệu & thư viện", description: "Mở các khu vực tài liệu, ngôn ngữ và tài sản có quyền sở hữu riêng." }),
+    Object.freeze({ key: "account", title: "Tài khoản & hỗ trợ", description: "Đọc dữ liệu từ nguồn chuẩn trong đúng phạm vi hoặc mở mục hỗ trợ phù hợp." })
   ]);
 
   function workspaceMenuGroupCopy(group, field) {
@@ -2798,7 +2863,7 @@
   const FREE_PROMPT_GALLERY_IDENTIFIER = /^[a-z][a-z0-9_]{0,79}$/;
   const FREE_PROMPT_GALLERY_ITEM_IDENTIFIER = /^[a-z][a-z0-9_]{2,180}$/;
 
-  function freePromptGalleryText(value, minimum, maximum, allowEmpty = false) {
+  function freePromptGalleryBoundedText(value, minimum, maximum, allowEmpty = false) {
     return typeof value === "string" && value.length <= maximum && (allowEmpty ? true : value.length >= minimum);
   }
 
@@ -2829,8 +2894,8 @@
     const goals = freePromptGalleryStringList(source.goals, 1, 8, 79);
     const platforms = freePromptGalleryStringList(source.platforms, 1, 8, 79);
     if (!exactShape || !id || !categoryId || !industryId || !goals.length || !platforms.length
-      || !freePromptGalleryText(source.category_title, 1, 160) || !freePromptGalleryText(source.industry, 1, 160)
-      || !freePromptGalleryText(source.title, 1, 320) || !freePromptGalleryText(source.prompt, 1, 3200)) return null;
+      || !freePromptGalleryBoundedText(source.category_title, 1, 160) || !freePromptGalleryBoundedText(source.industry, 1, 160)
+      || !freePromptGalleryBoundedText(source.title, 1, 320) || !freePromptGalleryBoundedText(source.prompt, 1, 3200)) return null;
     return {
       id, category_id: categoryId, category_title: source.category_title, industry_id: industryId,
       industry: source.industry, title: source.title, prompt: source.prompt, goals, platforms
@@ -2848,7 +2913,7 @@
       const platforms = freePromptGalleryStringList(item.platforms, 1, 8, 79);
       const itemCount = Number(item.item_count);
       if (Object.keys(item).length !== keys.length || !keys.every((key) => Object.prototype.hasOwnProperty.call(item, key))
-        || !freePromptGalleryIdentifier(item.id) || !freePromptGalleryText(item.title, 1, 160) || !goals.length || !platforms.length
+        || !freePromptGalleryIdentifier(item.id) || !freePromptGalleryBoundedText(item.title, 1, 160) || !goals.length || !platforms.length
         || !Number.isInteger(itemCount) || itemCount < 1 || itemCount > 1000) return null;
       return { id: item.id, title: item.title, goals, platforms, item_count: itemCount };
     }).filter(Boolean).slice(0, 100) : [];
@@ -2857,7 +2922,7 @@
       const keys = ["id", "title", "item_count"];
       const itemCount = Number(item.item_count);
       if (Object.keys(item).length !== keys.length || !keys.every((key) => Object.prototype.hasOwnProperty.call(item, key))
-        || !freePromptGalleryIdentifier(item.id) || !freePromptGalleryText(item.title, 1, 160)
+        || !freePromptGalleryIdentifier(item.id) || !freePromptGalleryBoundedText(item.title, 1, 160)
         || !Number.isInteger(itemCount) || itemCount < 1 || itemCount > 1000) return null;
       return { id: item.id, title: item.title, item_count: itemCount };
     }).filter(Boolean).slice(0, 200) : [];
@@ -2867,7 +2932,7 @@
     const consistentCounts = categories.length && industries.length
       && categories.every((item) => item.item_count === industries.length)
       && industries.every((item) => item.item_count === categories.length);
-    if (!exactShape || !freePromptGalleryText(source.snapshot_version, 1, 80) || !freePromptGalleryText(source.description, 1, 480)
+    if (!exactShape || !freePromptGalleryBoundedText(source.snapshot_version, 1, 80) || !freePromptGalleryBoundedText(source.description, 1, 480)
       || !categories.length || !industries.length || new Set(categoryIds).size !== categoryIds.length || new Set(industryIds).size !== industryIds.length
       || !Number.isInteger(totalItems) || totalItems !== categories.length * industries.length || !consistentCounts
       || !freePromptGalleryBoundaryIsSafe(source.boundaries)) return {};
@@ -2907,7 +2972,7 @@
       || Object.keys(filters).length !== filterKeys.length || !filterKeys.every((key) => Object.prototype.hasOwnProperty.call(filters, key))
       || (categoryId && !categoryIds.has(categoryId)) || (industryId && !industryIds.has(industryId))
       || (goal && !goals.has(goal)) || (platform && !platforms.has(platform))
-      || !freePromptGalleryText(query, 0, 160, true) || /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(query)
+      || !freePromptGalleryBoundedText(query, 0, 160, true) || /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(query)
       || !Number.isInteger(page) || page < 1 || page > 10000 || !Number.isInteger(pageSize) || pageSize < 1 || pageSize > 50
       || !Number.isInteger(totalItems) || totalItems < 0 || totalItems > availableCatalog.total_items
       || !Number.isInteger(totalPages) || totalPages !== expectedPages || page > totalPages
@@ -2926,8 +2991,8 @@
     const expected = ["snapshot_version", "item", "copy_instruction", "boundaries"];
     const exactShape = Object.keys(source).length === expected.length && expected.every((key) => Object.prototype.hasOwnProperty.call(source, key));
     const item = normalizeFreePromptGalleryItem(source.item);
-    if (!exactShape || !freePromptGalleryText(source.snapshot_version, 1, 80) || !item
-      || !freePromptGalleryText(source.copy_instruction, 1, 900) || !freePromptGalleryBoundaryIsSafe(source.boundaries)) return {};
+    if (!exactShape || !freePromptGalleryBoundedText(source.snapshot_version, 1, 80) || !item
+      || !freePromptGalleryBoundedText(source.copy_instruction, 1, 900) || !freePromptGalleryBoundaryIsSafe(source.boundaries)) return {};
     return { snapshot_version: source.snapshot_version, item, copy_instruction: source.copy_instruction, boundaries: { ...source.boundaries } };
   }
 
@@ -2948,11 +3013,11 @@
     const galleryExact = Object.keys(gallery).length === galleryKeys.length && galleryKeys.every((key) => Object.prototype.hasOwnProperty.call(gallery, key));
     const revision = Number(note.revision);
     if (!exact || !noteExact || !galleryExact || !FREE_PROMPT_GALLERY_MEMORY_NOTE_ID.test(String(note.id || ""))
-      || !freePromptGalleryText(note.category, 1, 80) || !["low", "normal", "important", "urgent"].includes(String(note.priority || ""))
+      || !freePromptGalleryBoundedText(note.category, 1, 80) || !["low", "normal", "important", "urgent"].includes(String(note.priority || ""))
       || String(note.state || "") !== "active"
       || !Number.isInteger(revision) || revision < 1 || revision > 1_000_000
       || !FREE_PROMPT_GALLERY_ITEM_IDENTIFIER.test(String(gallery.prompt_id || ""))
-      || !freePromptGalleryText(gallery.snapshot_version, 1, 80)
+      || !freePromptGalleryBoundedText(gallery.snapshot_version, 1, 80)
     ) return {};
     return {
       note: { id: note.id, category: note.category, priority: note.priority, state: note.state, revision },
@@ -9665,16 +9730,16 @@
     }
     const boundary = classifyPageBoundary(page, context);
     if (boundary === "canonical_bridge") {
-      return `<span class="portal-badge" data-status="ready" data-boundary="canonical_bridge">Job Bridge Sẵn sàng</span>`;
+      return `<span class="portal-badge" data-status="ready" data-boundary="canonical_bridge">${isAdminPortalSurface(page) ? "Job Bridge Sẵn sàng" : safeText(uiText("customerChrome.boundary.task", "Tác vụ AI"))}</span>`;
     }
     if (boundary === "web_planning") {
-      return `<span class="portal-badge" data-status="draft" data-boundary="web_planning">Kế hoạch &amp; Bản nháp Web</span>`;
+      return `<span class="portal-badge" data-status="draft" data-boundary="web_planning">${isAdminPortalSurface(page) ? "Kế hoạch &amp; Bản nháp Web" : safeText(uiText("customerChrome.boundary.planning", "Kế hoạch & bản nháp"))}</span>`;
     }
     if (boundary === "runtime_generator") {
       const executionReady = typeof featureConfirmExecutionReady === "function" && featureConfirmExecutionReady(page, context);
       return executionReady
-        ? `<span class="portal-badge" data-status="ready" data-boundary="runtime_generator">AI Generator</span>`
-        : `<span class="portal-badge" data-status="guarded" data-boundary="runtime_generator">Bộ tạo AI (Chờ Adapter)</span>`;
+        ? `<span class="portal-badge" data-status="ready" data-boundary="runtime_generator">${isAdminPortalSurface(page) ? "AI Generator" : safeText(uiText("customerChrome.boundary.generation", "Tạo bằng AI"))}</span>`
+        : `<span class="portal-badge" data-status="guarded" data-boundary="runtime_generator">${isAdminPortalSurface(page) ? "Bộ tạo AI (Chờ Adapter)" : safeText(uiText("customerChrome.boundary.unavailable", "Chưa sẵn sàng tạo"))}</span>`;
     }
     return "";
   }
@@ -9699,7 +9764,7 @@
     "Khách hàng": "customerTopup.section.customer",
     "Workspace": "nav.workspace",
     "Tổng quan": "nav.dashboard",
-    "Chuyển workspace": "nav.workspaceMenu",
+    "Không gian làm việc": "nav.workspaceMenu",
     "Guide Center": "nav.guideCenter",
     "Starter Kits": "nav.starterKits",
     "Project Center": "nav.projects",
@@ -9875,13 +9940,20 @@
     const fallback = displayPageTitle(page, context);
     const path = normalizePath(page && (page.routePath || page.path));
     if (["/image/create", "/image/new"].includes(path)) return imageUiText("page.title", fallback);
+    if (path === "/image/upscale") return mediaOperationText("upscale.page.title", fallback);
+    if (path === "/image/transform") return mediaOperationText("transform.page.title", fallback);
+    if (path === "/music/sfx") return mediaOperationText("sfx.page.title", fallback);
     if (["/image", "/tools/image"].includes(path)) return uiText("imageHub.page.title", fallback);
     if (path === "/tools/video") return uiText("mediaHub.video.page.title", fallback);
     if (path === "/music") return uiText("musicHub.page.title", fallback);
+    if (path === "/music/library") return musicLibraryText("page.music.title", fallback);
+    if (path === "/music/sfx-library") return musicLibraryText("page.sfx.title", fallback);
     if (path === "/voice") return voiceUiText("hub.title", fallback);
     if (path === "/voice-studio" || path === "/voice-studio/new") return voiceStudioText(path.endsWith("/new") ? "page.newTitle" : "page.title", fallback);
     if (path === "/voice-studio/direction-composer") return voiceStudioText("composer.page.title", fallback);
     if (path.startsWith("/voice-studio/") && path !== "/voice-studio/direction-composer") return voiceStudioText("detail.title", fallback);
+    if (path === "/video-studio" || path === "/video-studio/new") return videoStudioText(path.endsWith("/new") ? "page.newTitle" : "page.title", fallback);
+    if (path.startsWith("/video-studio/") && path !== "/video-studio/prompt-planner" && path !== "/video-studio/idea-planner" && path !== "/video-studio/motion-guide" && path !== "/video-studio/long-form-planner" && path !== "/video-studio/self-shot-planner" && path !== "/video-studio/script-to-screen-planner" && path !== "/video-studio/cinematic-concept" && path !== "/video-studio/image-motion-planner" && path !== "/video-studio/reference-format-planner" && path !== "/video-studio/storyboard-composer") return videoStudioText("detail.title", fallback);
     if (["/voice/tts", "/voice/saved", "/voice/clone", "/voice/preview", "/voice/outputs"].includes(path)) return voiceUiText(`tool.${path.split("/").pop()}.title`, fallback);
     if (path === "/video/create" || path === "/video/multiscene") return uiText(`videoUi.${path.endsWith("multiscene") ? "multi" : "quick"}.title`, fallback);
     const featureFamily = featureFamilyForPath(path);
@@ -9940,6 +10012,15 @@
     if (path === "/projects") return uiText("projectCenter.page.title", fallback);
     if (path === "/projects/new") return uiText("projectCenter.authoring.createTitle", fallback);
     if (path.startsWith("/projects/")) return uiText("project.page.title", fallback);
+    if (path === "/prompt-library/new") return promptLibraryText("page.newTitle", fallback);
+    if (path === "/prompt-library") return promptLibraryText("page.title", fallback);
+    if (path === "/prompt-studio") return promptStudioText("page.title", fallback);
+    if (path === "/content/publish-review") return publishReviewText("page.title", fallback);
+    if (path === "/content-studio/new") return contentStudioText("page.newTitle", fallback);
+    if (path.startsWith("/content-studio/") && path !== "/content-studio/new") return contentStudioText("detail.pageTitle", fallback);
+    if (path === "/content-studio") return contentStudioText("page.title", fallback);
+    if (path === "/workboard/new") return workboardText("page.newTitle", fallback);
+    if (path === "/workboard" || path.startsWith("/workboard/")) return workboardText("page.title", fallback);
     if (path === "/guides") return uiText("page.guideCenter.title", fallback);
     if (path === "/community") return uiText("page.communityTrust.title", fallback);
     if (path === "/workspace/setup") return uiText("setup.title", fallback);
@@ -9958,13 +10039,20 @@
     const fallback = typeof page.description === "string" ? page.description : "";
     const path = normalizePath(page && (page.routePath || page.path));
     if (["/image/create", "/image/new"].includes(path)) return imageUiText("page.description", fallback);
+    if (path === "/image/upscale") return mediaOperationText("upscale.page.description", fallback);
+    if (path === "/image/transform") return mediaOperationText("transform.page.description", fallback);
+    if (path === "/music/sfx") return mediaOperationText("sfx.page.description", fallback);
     if (["/image", "/tools/image"].includes(path)) return uiText("imageHub.page.description", fallback);
     if (path === "/tools/video") return uiText("mediaHub.video.page.description", fallback);
     if (path === "/music") return uiText("musicHub.page.description", fallback);
+    if (path === "/music/library") return musicLibraryText("page.music.description", fallback);
+    if (path === "/music/sfx-library") return musicLibraryText("page.sfx.description", fallback);
     if (path === "/voice") return voiceUiText("hub.description", fallback);
     if (path === "/voice-studio" || path === "/voice-studio/new") return voiceStudioText("page.description", fallback);
     if (path === "/voice-studio/direction-composer") return voiceStudioText("composer.page.description", fallback);
     if (path.startsWith("/voice-studio/") && path !== "/voice-studio/direction-composer") return voiceStudioText("page.description", fallback);
+    if (path === "/video-studio" || path === "/video-studio/new") return videoStudioText("page.description", fallback);
+    if (path.startsWith("/video-studio/") && path !== "/video-studio/prompt-planner" && path !== "/video-studio/idea-planner" && path !== "/video-studio/motion-guide" && path !== "/video-studio/long-form-planner" && path !== "/video-studio/self-shot-planner" && path !== "/video-studio/script-to-screen-planner" && path !== "/video-studio/cinematic-concept" && path !== "/video-studio/image-motion-planner" && path !== "/video-studio/reference-format-planner" && path !== "/video-studio/storyboard-composer") return videoStudioText("page.description", fallback);
     if (["/voice/tts", "/voice/saved", "/voice/clone", "/voice/preview", "/voice/outputs"].includes(path)) return voiceUiText(`tool.${path.split("/").pop()}.description`, fallback);
     if (path === "/video/create" || path === "/video/multiscene") return uiText(`videoUi.${path.endsWith("multiscene") ? "multi" : "quick"}.description`, fallback);
     const featureFamily = featureFamilyForPath(path);
@@ -10023,6 +10111,15 @@
     if (path === "/projects") return uiText("projectCenter.page.description", fallback);
     if (path === "/projects/new") return uiText("projectCenter.authoring.body", fallback);
     if (path.startsWith("/projects/")) return uiText("project.page.description", fallback);
+    if (path === "/prompt-library/new") return promptLibraryText("page.newDescription", fallback);
+    if (path === "/prompt-library") return promptLibraryText("page.description", fallback);
+    if (path === "/prompt-studio") return promptStudioText("page.description", fallback);
+    if (path === "/content/publish-review") return publishReviewText("page.description", fallback);
+    if (path === "/content-studio/new") return contentStudioText("page.newDescription", fallback);
+    if (path.startsWith("/content-studio/") && path !== "/content-studio/new") return contentStudioText("detail.pageDescription", fallback);
+    if (path === "/content-studio") return contentStudioText("page.description", fallback);
+    if (path === "/workboard/new") return workboardText("page.newDescription", fallback);
+    if (path === "/workboard" || path.startsWith("/workboard/")) return workboardText("page.description", fallback);
     if (path === "/guides") return uiText("page.guideCenter.description", fallback);
     if (path === "/community") return uiText("page.communityTrust.description", fallback);
     if (path === "/workspace/setup") return uiText("page.workspaceSetup.description", fallback);
@@ -10130,7 +10227,9 @@
     const route = safeCatalogRoute(currentPage && (currentPage.routePath || currentPage.path));
     if (!currentPage || currentPage.access !== "member" || currentPage.layout === "not-found" || currentPage.path === "/not-found" || !route || !CUSTOMER_APPLICATION_ROUTE.test(route)) return null;
     if (groups.some((group) => group.links.some(([path]) => isNavCurrent(path, currentPage)))) return null;
-    const title = String(route === "/voice-studio/direction-composer" ? voiceStudioText("composer.page.title", currentPage.title) : route === "/voice-studio" || route === "/voice-studio/new"
+    const title = String(["/image/upscale", "/image/transform", "/music/sfx"].includes(route)
+      ? localizedPageTitle(currentPage, {})
+      : route === "/voice-studio/direction-composer" ? voiceStudioText("composer.page.title", currentPage.title) : route === "/voice-studio" || route === "/voice-studio/new"
       ? voiceStudioText(route.endsWith("/new") ? "page.newTitle" : "page.title", currentPage.title)
       : currentPage && currentPage.title || "").trim().slice(0, 96);
     if (!title) return null;
@@ -10574,8 +10673,8 @@
 
   function renderMobileNav(page) {
     const items = [
-      ["studio", "/studio", uiText("mobile.studio", "Studio"), ICONS.video],
-      ["publishing", "/publishing", uiText("mobile.publishing", "AutoPost"), ICONS.reports],
+      ["studio", "/studio", uiText("mobile.studio", "Công cụ"), ICONS.video],
+      ["publishing", "/publishing", uiText("mobile.publishing", "Đăng bài"), ICONS.reports],
       ["projects", "/projects", uiText("mobile.projects", "Dự án"), ICONS.dashboard],
       ["wallet", "/wallet", uiText("mobile.wallet", "Ví Xu"), ICONS.wallet],
       ["account", "/account", uiText("mobile.account", "Tài khoản"), ICONS.account]
@@ -10635,6 +10734,36 @@
       : raw;
   }
 
+  const COMMAND_PALETTE_ROUTE_KEYS = Object.freeze({
+    "/image-studio/new": "artboardNew",
+    "/media-workspace/new": "audioCollectionNew",
+    "/audio-hub/new": "audioBriefNew",
+    "/publishing": "publishing",
+    "/analytics/new": "analyticsNew",
+    "/campaigns/new": "campaignNew",
+    "/free-tools": "freeTools",
+    "/content-studio/new": "contentBriefNew",
+    "/calendar": "calendar",
+    "/content/handoffs/new": "contentHandoffNew",
+    "/document-workspace": "documents",
+    "/document-workspace/new": "documentBriefNew",
+    "/crm/consultations/new": "consultationNew",
+    "/chat/new": "chatNew",
+    "/image-hub/new": "imageDirectionNew",
+    "/crm/leads/new": "leadNew",
+    "/history": "history",
+    "/approvals": "approvals",
+    "/prompt-library/new": "promptTemplateNew",
+    "/subtitle-studio/new": "subtitleProjectNew",
+    "/account/data-controls": "dataControls",
+    "/workboard/new": "workItemNew",
+    "/image/background-cleanup": "backgroundCleanup",
+    "/music/create": "musicCreate",
+    "/crm/leads": "partnerLeads",
+    "/projects/new": "projectNew",
+    "/workspace/setup": "workspaceSetup"
+  });
+
   function commandPaletteItems(context, page) {
     const activePath = normalizePath(page && (page.routePath || page.path));
     const items = [];
@@ -10663,6 +10792,13 @@
         });
       });
     } else {
+      const paletteCatalogLabels = new Map();
+      (Array.isArray(context.catalog) ? context.catalog : []).forEach((entry) => {
+        const route = catalogEntryRoute(entry);
+        if (!entry || !route || entry.kind === "admin" || entry.group === "admin"
+            || typeof entry.key !== "string" || !/^[a-z][a-z0-9_]{1,120}$/.test(entry.key)) return;
+        if (!paletteCatalogLabels.has(normalizePath(route))) paletteCatalogLabels.set(normalizePath(route), entry);
+      });
       Object.values(manifest).forEach((candidate) => {
         const path = candidate && typeof candidate.path === "string" ? candidate.path : "";
         if (!path || seen.has(path) || candidate.access === "public") return;
@@ -10672,10 +10808,22 @@
         // by itself.
         if (candidate.access === "admin" && !authorizedAdminRoutes.has(path)) return;
         seen.add(path);
+        const paletteEntry = paletteCatalogLabels.get(normalizePath(path));
+        const deferTitle = candidate.access === "admin" || (paletteEntry && paletteEntry.group === "video") || fallbackCatalogGroup(path) === "video";
+        const routeCopyKey = COMMAND_PALETTE_ROUTE_KEYS[path];
+        const fixedTitle = !deferTitle && (routeCopyKey
+          ? uiText(`commandPalette.${routeCopyKey}`, "")
+          : (paletteEntry ? featureCatalogText(`entry.${paletteEntry.key}.title`, "") : ""));
+        const title = deferTitle ? localizedNavigationLabel(String(candidate.title || "TOAN AAS"))
+          : (fixedTitle || localizedPageTitle(candidate, { title: "" }));
+        const section = candidate.section === "AI Studio" ? uiText("shellNav.aiStudios", "Xưởng sáng tạo AI")
+          : candidate.section === "Media Studio" ? uiText("commandPalette.mediaSection", "Xưởng sáng tạo")
+          : localizedNavigationLabel(String(candidate.section || "Workspace"));
         items.push({
           path,
-          title: localizedNavigationLabel(String(candidate.title || "TOAN AAS")),
-          section: localizedNavigationLabel(String(candidate.section || "Workspace")),
+          title,
+          section,
+          sourceSearchText: `${candidate.title || ""} ${candidate.section || ""}`,
           icon: candidate.icon || ICONS.default,
           current: normalizePath(path) === activePath
         });
@@ -10704,7 +10852,7 @@
       ? uiText("chrome.no_results", "Không tìm thấy kết quả.")
       : uiText("chrome.commandEmpty", "Không tìm thấy workspace phù hợp. Hãy thử tên tính năng hoặc đường dẫn khác.");
     const markup = items.map((item) => {
-      const search = normalizeCommandSearch(`${item.title} ${item.section} ${item.path}`);
+      const search = normalizeCommandSearch(`${item.title} ${item.section} ${item.path} ${item.sourceSearchText || ""}`);
       return `<a class="portal-command-item" href="${safeText(item.path)}" data-portal-command-item data-command-search="${safeText(search)}"${item.current ? ' aria-current="page"' : ""}>
         <span class="portal-command-item-icon" aria-hidden="true">${portalIcon(item.icon)}</span>
         <span class="portal-command-item-copy"><strong>${safeText(item.title)}</strong><small>${safeText(item.section)} · ${safeText(item.path)}</small></span>
@@ -10731,6 +10879,15 @@
     const sidebarSearchLabel = adminSurface
       ? uiText("chrome.searchAdmin", "Tìm trong quản trị")
       : uiText("chrome.searchWorkspace", "Tìm mọi workspace");
+    const customerRouteCopyKeys = {
+      "/dashboard": "overview", "/studio": "video", "/tools/image": "image", "/voice": "voice",
+      "/music": "music", "/subdub": "subdub", "/content": "content", "/documents": "documents",
+      "/projects": "projects", "/publishing": "publishing", "/jobs": "jobs", "/wallet": "wallet",
+      "/packages": "plans", "/history": "history", "/account": "account", "/features": "allTools", "/tools/free": "freeTools"
+    };
+    const customerGroupCopyKeys = {
+      "Tổng quan": "overview", "Sáng tạo": "create", "Công việc": "work", "Tài khoản": "account", "Tất cả công cụ": "allTools"
+    };
     const sidebarActionRow = adminSurface ? "" : `<div class="portal-sidebar-action-row">
       <a class="portal-sidebar-create" href="/features"><span class="portal-sidebar-create-icon" aria-hidden="true">${portalIcon(ICONS.plus)}</span><span>${safeText(uiText("chrome.newWorkflow", "Tạo workflow mới"))}</span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>
     </div>`;
@@ -10739,7 +10896,10 @@
         const [path, label, linkIcon] = link;
         const currentOverride = link.length > 3 ? link[3] : null;
         const current = currentOverride === true ? true : (currentOverride === false ? false : isNavCurrent(path, page));
-        return { path, label: localizedNavigationLabel(label), linkIcon, current };
+        const customerCopyKey = !adminSurface && customerRouteCopyKeys[path];
+        const displayLabel = customerCopyKey ? uiText(`customerChrome.nav.${customerCopyKey}`, label)
+          : !adminSurface && group.current === true ? localizedPageTitle(page, { title: "" }) : localizedNavigationLabel(label);
+        return { path, label: displayLabel, linkIcon, current };
       });
       const links = preparedLinks.map(({ path, label, linkIcon, current }) => {
         let badgeHtml = "";
@@ -10766,8 +10926,10 @@
         </div>`;
       }
       const open = group.defaultOpen === true || preparedLinks.some((link) => link.current);
+      const groupCopyKey = customerGroupCopyKeys[group.label];
+      const groupLabel = groupCopyKey ? uiText(`customerChrome.nav.${groupCopyKey}`, group.label) : localizedNavigationLabel(group.label);
       return `<details class="portal-nav-group${group.current === true ? " portal-nav-group--current" : ""}"${open ? " open" : ""}>
-        <summary class="portal-nav-summary"><span class="portal-nav-label">${safeText(localizedNavigationLabel(group.label))}</span><span class="portal-nav-group-count" aria-hidden="true">${safeText(String(preparedLinks.length))}</span></summary>
+        <summary class="portal-nav-summary"><span class="portal-nav-label">${safeText(groupLabel)}</span><span class="portal-nav-group-count" aria-hidden="true">${safeText(String(preparedLinks.length))}</span></summary>
         <div class="portal-nav-links">${links}</div>
       </details>`;
     }).join("");
@@ -10798,8 +10960,10 @@
     const name = displayName(context);
     const adminSurface = isAdminPortalSurface(page);
     const adminActiveGroup = adminSurface ? activeAdminNavigationGroup(page, context) : null;
+    const commandSearchReady = adminSurface || Boolean(context.session && context.session.authenticated === true);
     const commandSearchLabel = adminSurface
       ? uiText("chrome.searchAdmin", "Tìm trong quản trị")
+      : !commandSearchReady ? uiText("commandPalette.notReady", "Tìm kiếm chưa sẵn sàng")
       : uiText("chrome.searchWorkspace", "Tìm hoặc chuyển workspace");
     const crumbItems = (adminSurface
       ? ["TOAN AAS", localizedPageTitle(page, context)]
@@ -10829,7 +10993,7 @@
       ? Number(headerWallet.total_paid_vnd != null ? headerWallet.total_paid_vnd : headerWallet.total_deposited_vnd)
       : null;
     const headerIsVip = Boolean(headerWallet && (headerWallet.is_vip || (profile && profile.vipTierOverride === "vip")));
-    const headerTierBadge = headerIsVip ? "👑 VIP" : "⭐ Thành viên";
+    const headerTierBadge = headerIsVip ? "👑 VIP" : `⭐ ${uiText("chrome.accountMembershipBadge", "Thành viên")}`;
     const headerTierColor = headerIsVip ? "#f43f5e" : "#38bdf8";
     const headerTierInfo = { isKnown: Boolean(headerWallet), currentTier: { badge: headerTierBadge, color: headerTierColor } };
     const currentLocale = interfaceLocaleFor(context);
@@ -10863,35 +11027,39 @@
             <div class="portal-user-dropdown-items">
               <a class="portal-user-dropdown-item" href="/membership">
         <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.pricing)}</span>
-        <div><strong style="color:${headerTierColor};">${safeText(headerTierBadge)} · Quyền Lợi</strong><small>Thông tin tài khoản & quyền lợi Xu</small></div>
+        <div><strong style="color:${headerTierColor};">${safeText(uiText("featureCatalog.entry.membership.title", "Gói thành viên"))}</strong><small>${safeText(uiText("chrome.accountMenu.membershipDescription", "Quyền lợi và gói hiện tại"))}</small></div>
       </a>
       <a class="portal-user-dropdown-item" href="/wallet">
         <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.wallet)}</span>
-        <div><strong>Ví & Số dư Xu</strong><small>Nạp Xu, kiểm tra số dư</small></div>
+        <div><strong>${safeText(uiText("featureCatalog.entry.wallet.title", "Ví Xu"))}</strong><small>${safeText(uiText("chrome.accountMenu.walletDescription", "Số dư và giao dịch"))}</small></div>
       </a>
       <a class="portal-user-dropdown-item" href="/wallet/topup">
         <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.plus)}</span>
-        <div><strong>Nạp Xu</strong><small>Cổng thanh toán PayOS VietQR</small></div>
+        <div><strong>${safeText(uiText("featureCatalog.entry.wallet_topup.title", "Nạp Xu"))}</strong><small>${safeText(uiText("chrome.accountMenu.topupDescription", "Chọn cách nạp phù hợp"))}</small></div>
       </a>
               <a class="portal-user-dropdown-item" href="/account">
                 <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.account)}</span>
-                <div><strong>Hồ sơ & Cài đặt</strong><small>Quản lý tài khoản, đổi Avatar</small></div>
+                <div><strong>${safeText(uiText("featureCatalog.entry.account.title", "Tài khoản"))}</strong><small>${safeText(uiText("chrome.accountMenu.profileDescription", "Thông tin cá nhân và cài đặt"))}</small></div>
               </a>
               <a class="portal-user-dropdown-item" href="/account/security">
                 <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span>
-                <div><strong>Bảo mật & Đổi mật khẩu</strong><small>Phiên đăng nhập, mật khẩu</small></div>
+                <div><strong>${safeText(uiText("featureCatalog.entry.account_security.title", "Bảo mật tài khoản"))}</strong><small>${safeText(uiText("chrome.accountMenu.securityDescription", "Phiên đăng nhập và mật khẩu"))}</small></div>
               </a>
               ${(hasLiveCanonicalAdmin(context) || (context.session && context.session.role === "admin") || (profile.role === "admin")) ? `
               <a class="portal-user-dropdown-item" href="/admin" style="background: rgba(0, 242, 254, 0.08); border-left: 3px solid #00f2fe;">
                 <span class="portal-user-dropdown-item-icon" aria-hidden="true">${portalIcon(ICONS.admin)}</span>
-                <div><strong style="color:#00f2fe;">⚙️ Trang Quản Trị Admin ERP</strong><small>Quản lý người dùng, duyệt Xu, tài chính & hệ thống</small></div>
+                <div><strong style="color:#00f2fe;">⚙️ ${safeText(uiText("chrome.adminAppCaption", "Trung tâm quản trị"))}</strong><small>${safeText(uiText("chrome.accountMenu.adminDescription", "Quản lý người dùng, quyền truy cập, tài chính và hệ thống."))}</small></div>
               </a>` : ""}
+            </div>
+            <div class="portal-customer-utilities" role="group" aria-label="${safeText(uiText("chrome.utilities", "Tiện ích"))}" data-portal-customer-utilities>
+              <span class="portal-customer-utility-title">${safeText(uiText("chrome.utilities", "Tiện ích"))}</span>
+              ${canOfferPwaInstall ? `<button class="portal-pwa-install-trigger" type="button" aria-label="${safeText(uiText("chrome.installApp", "Cài TOAN AAS trên thiết bị"))}" hidden data-portal-install-app><span aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-install-label">${safeText(uiText("chrome.installApp", "Cài app"))}</span></button>` : ""}
             </div>
             <div class="portal-user-dropdown-divider"></div>
             <div class="portal-user-dropdown-footer">
-              <button class="portal-user-dropdown-logout" type="button" data-portal-action="auth-logout" data-portal-confirm="Bạn có chắc muốn đăng xuất khỏi phiên này?">
+              <button class="portal-user-dropdown-logout" type="button" data-portal-action="auth-logout" data-portal-confirm="${safeText(uiText("accountCenter.profile.logoutConfirm", "Bạn có chắc muốn đăng xuất khỏi phiên này?"))}">
                 <span class="portal-user-dropdown-item-icon" aria-hidden="true">⎋</span>
-                <span>Đăng xuất / Thoát tài khoản</span>
+                <span>${safeText(uiText("accountCenter.profile.logout", "Đăng xuất"))}</span>
               </button>
             </div>
           </div>
@@ -10945,8 +11113,7 @@
       <div class="portal-header-actions">
         ${adminHeaderLocaleForm}
         ${renderThemeToggle()}
-        ${canOfferPwaInstall ? `<button class="portal-pwa-install-trigger" type="button" aria-label="${safeText(uiText("chrome.installApp", "Cài TOAN AAS trên thiết bị"))}" hidden data-portal-install-app><span aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-install-label">${safeText(uiText("chrome.installApp", "Cài app"))}</span></button>` : ""}
-        <button class="portal-command-trigger" type="button" aria-label="${safeText(commandSearchLabel)}" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span class="portal-command-trigger-label">${safeText(commandSearchLabel)}</span><kbd>Ctrl K</kbd></button>
+        <button class="portal-command-trigger" type="button" aria-label="${safeText(commandSearchLabel)}" aria-haspopup="dialog" aria-controls="portal-command-palette"${commandSearchReady ? "" : ' disabled aria-disabled="true"'} data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span class="portal-command-trigger-label">${safeText(commandSearchLabel)}</span><kbd>Ctrl K</kbd></button>
         ${adminSurface && (typeof context.pendingTopupsCount === "number" ? context.pendingTopupsCount : (typeof window !== "undefined" && typeof window.__TOAN_AAS_PENDING_TOPUPS_COUNT__ === "number" ? window.__TOAN_AAS_PENDING_TOPUPS_COUNT__ : 0)) > 0 ? `<a class="portal-admin-pending-badge" href="/admin/topups" title="${safeText(adminManualTopupText("header.pendingTitle", `${typeof context.pendingTopupsCount === "number" ? context.pendingTopupsCount : window.__TOAN_AAS_PENDING_TOPUPS_COUNT__} yêu cầu nạp tiền chờ duyệt`))}" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;background:var(--portal-warning-bg,#fef3c7);color:var(--portal-warning-text,#92400e);font-size:12px;font-weight:700;text-decoration:none;border:1px solid var(--portal-warning-border,#fde68a);"><span aria-hidden="true">🔔</span><span>${safeText(String(typeof context.pendingTopupsCount === "number" ? context.pendingTopupsCount : window.__TOAN_AAS_PENDING_TOPUPS_COUNT__))}</span></a>` : ""}
         ${pageStatusBadge(page, context)}
         ${userDropdown}
@@ -11159,8 +11326,10 @@
   }
 
   function renderNotes(page, labels) {
-    const notes = page.notes && page.notes.length ? page.notes : ["Trạng thái bên ngoài chỉ được dùng sau khi backend kiểm tra quyền sở hữu và capability."];
     const noteLabels = labels && typeof labels === "object" ? labels : {};
+    const notes = Array.isArray(noteLabels.notes) && noteLabels.notes.length
+      ? noteLabels.notes
+      : (page.notes && page.notes.length ? page.notes : ["Trạng thái bên ngoài chỉ được dùng sau khi backend kiểm tra quyền sở hữu và capability."]);
     const integrationTitle = typeof noteLabels.integrationTitle === "string" ? noteLabels.integrationTitle : "Trạng thái tích hợp";
     const safetyTitle = typeof noteLabels.safetyTitle === "string" ? noteLabels.safetyTitle : "Nguyên tắc an toàn";
     return `<div class="portal-panel-list">${notes.map((note, index) => `<div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${portalIcon(index ? ICONS.security : ICONS.legal)}</span><div><strong>${safeText(index ? safetyTitle : integrationTitle)}</strong><span>${safeText(note)}</span></div></div>`).join("")}</div>`;
@@ -11394,8 +11563,8 @@
       matches: (path) => path === "/admin",
       tabs: [
         { path: "/admin", label: "Tổng quan ERP", labelEn: "ERP Overview" },
-        { path: "/admin/customers", label: "Khách hàng & Leads", labelEn: "Customers" },
-        { path: "/admin/operations", label: "Vận hành Autopilot", labelEn: "Operations" },
+        { path: "/admin/customers", label: "Khách hàng & Đầu mối", labelEn: "Customers" },
+        { path: "/admin/operations", label: "Vận hành tự động", labelEn: "Operations" },
         { path: "/admin/reliability", label: "Độ ổn định", labelEn: "Reliability" },
         { path: "/admin/finance", label: "Tài chính", labelEn: "Finance" },
         { path: "/admin/pricing", label: "Kinh doanh & Giá", labelEn: "Commerce" },
@@ -11407,21 +11576,21 @@
       matches: (path) => ["/admin/customers", "/admin/crm/leads", "/admin/leads", "/admin/users", "/admin/support", "/admin/tickets"].includes(path) || path.startsWith("/admin/support/"),
       tabs: [
         { path: "/admin/customers", label: "Khách hàng Web", labelEn: "Customers" },
-        { path: "/admin/crm/leads", label: "CRM & Leads", labelEn: "CRM & Leads", alias: ["/admin/leads"] },
+        { path: "/admin/crm/leads", label: "CRM & Đầu mối", labelEn: "CRM & Leads", alias: ["/admin/leads"] },
         { path: "/admin/users", label: "Người dùng", labelEn: "Users" },
-        { path: "/admin/support", label: "Support Desk", labelEn: "Support Desk" },
-        { path: "/admin/tickets", label: "Tickets canonical", labelEn: "Tickets" }
+        { path: "/admin/support", label: "Bàn hỗ trợ", labelEn: "Support Desk" },
+        { path: "/admin/tickets", label: "Phiếu hỗ trợ chuẩn", labelEn: "Tickets" }
       ]
     },
     {
       id: "operations",
       matches: (path) => ["/admin/operations", "/admin/jobs", "/admin/jobs/failed", "/admin/content-handoffs", "/admin/automation", "/admin/job-recovery-guide"].includes(path) || path.startsWith("/admin/jobs/"),
       tabs: [
-        { path: "/admin/operations", label: "Vận hành Autopilot", labelEn: "Autopilot" },
-        { path: "/admin/jobs", label: "Jobs", labelEn: "Jobs" },
-        { path: "/admin/jobs/failed", label: "Jobs thất bại", labelEn: "Failed Jobs" },
+        { path: "/admin/operations", label: "Vận hành tự động", labelEn: "Autopilot" },
+        { path: "/admin/jobs", label: "Tác vụ", labelEn: "Jobs" },
+        { path: "/admin/jobs/failed", label: "Tác vụ thất bại", labelEn: "Failed Jobs" },
         { path: "/admin/content-handoffs", label: "Hàng bàn giao", labelEn: "Handoff Queue" },
-        { path: "/admin/automation", label: "Automation Monitor", labelEn: "Automation" },
+        { path: "/admin/automation", label: "Giám sát tự động", labelEn: "Automation" },
         { path: "/admin/job-recovery-guide", label: "Sổ tay xử lý sự cố", labelEn: "Recovery Guide" }
       ]
     },
@@ -11430,12 +11599,12 @@
       matches: (path) => ["/admin/reliability", "/admin/providers", "/admin/provider-cost", "/admin/workers", "/admin/runtime", "/admin/features", "/admin/freezes"].includes(path),
       tabs: [
         { path: "/admin/reliability", label: "Độ ổn định", labelEn: "Reliability" },
-        { path: "/admin/providers", label: "Providers & chi phí", labelEn: "Providers" },
-        { path: "/admin/provider-cost", label: "Chi phí Provider", labelEn: "Provider Cost" },
-        { path: "/admin/workers", label: "Workers", labelEn: "Workers" },
-        { path: "/admin/runtime", label: "Runtime", labelEn: "Runtime" },
-        { path: "/admin/features", label: "Features", labelEn: "Features" },
-        { path: "/admin/freezes", label: "Bảo trì & Freeze", labelEn: "Freezes" }
+        { path: "/admin/providers", label: "Nhà cung cấp & chi phí", labelEn: "Providers" },
+        { path: "/admin/provider-cost", label: "Chi phí nhà cung cấp", labelEn: "Provider Cost" },
+        { path: "/admin/workers", label: "Tiến trình", labelEn: "Workers" },
+        { path: "/admin/runtime", label: "Môi trường chạy", labelEn: "Runtime" },
+        { path: "/admin/features", label: "Tính năng", labelEn: "Features" },
+        { path: "/admin/freezes", label: "Bảo trì & đóng băng", labelEn: "Freezes" }
       ]
     },
     {
@@ -11458,8 +11627,8 @@
       tabs: [
         { path: "/admin/commercial", label: "Trung tâm Thương mại", labelEn: "Commercial Center" },
         { path: "/admin/pricing", label: "Bảng giá & Xu", labelEn: "Pricing" },
-        { path: "/admin/packages", label: "Gói cước Packages", labelEn: "Packages" },
-        { path: "/admin/promos", label: "Khuyến mãi Promo", labelEn: "Promos" }
+        { path: "/admin/packages", label: "Gói cước", labelEn: "Packages" },
+        { path: "/admin/promos", label: "Khuyến mãi", labelEn: "Promos" }
       ]
     },
     {
@@ -11470,8 +11639,8 @@
         { path: "/admin/calendar", label: "Lịch nội dung", labelEn: "Calendar" },
         { path: "/admin/approvals", label: "Hàng duyệt", labelEn: "Approvals" },
         { path: "/admin/publishing", label: "Xuất bản & Kênh", labelEn: "Publishing" },
-        { path: "/admin/analytics", label: "Analytics", labelEn: "Analytics" },
-        { path: "/admin/growth", label: "Tăng trưởng & Affiliate", labelEn: "Growth" },
+        { path: "/admin/analytics", label: "Phân tích", labelEn: "Analytics" },
+        { path: "/admin/growth", label: "Tăng trưởng & liên kết", labelEn: "Growth" },
         { path: "/admin/trends", label: "Xu hướng & Tham chiếu", labelEn: "Trends" }
       ]
     },
@@ -11480,10 +11649,10 @@
       matches: (path) => ["/admin/system", "/admin/system-stewardship", "/admin/security", "/admin/access", "/admin/audit", "/admin/reports", "/admin/backups"].includes(path),
       tabs: [
         { path: "/admin/system", label: "Hệ thống", labelEn: "System" },
-        { path: "/admin/system-stewardship", label: "System Stewardship", labelEn: "Stewardship" },
+        { path: "/admin/system-stewardship", label: "Quản trị hệ thống & dữ liệu", labelEn: "Stewardship" },
         { path: "/admin/security", label: "An ninh bảo mật", labelEn: "Security Posture" },
         { path: "/admin/access", label: "Quyền truy cập", labelEn: "Access Posture" },
-        { path: "/admin/audit", label: "Nhật ký Audit", labelEn: "Audit Log" },
+        { path: "/admin/audit", label: "Nhật ký kiểm toán", labelEn: "Audit Log" },
         { path: "/admin/reports", label: "Báo cáo", labelEn: "Reports" },
         { path: "/admin/backups", label: "Sao lưu", labelEn: "Backups" }
       ]
@@ -11562,6 +11731,8 @@
     const routeKey = supportTicketHeroRouteKey(page);
     const route = normalizePath(page && (page.routePath || page.path) || "/");
     if (["/image", "/tools/image", "/image/create", "/image/new"].includes(route)) return imageUiText("section", "HÌNH ẢNH");
+    if (["/image/upscale", "/image/transform"].includes(route)) return mediaOperationText("section.image", "");
+    if (route === "/music/sfx") return mediaOperationText("section.audio", "");
     if (route.startsWith("/voice/")) return voiceUiText("section", "GIỌNG NÓI");
     if (route === "/voice-studio" || route === "/voice-studio/new" || route.startsWith("/voice-studio/")) return voiceStudioText("intro.kicker", "");
     const source = page && typeof page.section === "string" ? page.section : "TOAN AAS";
@@ -11584,18 +11755,18 @@
   }
 
   const FEATURE_CATALOG_GROUPS = Object.freeze([
-    { key: "account", title: "Bắt đầu & tài khoản", description: "Onboarding, session và hồ sơ đã được server kiểm soát." },
-    { key: "wallet", title: "Ví, nạp & gói", description: "Xu, pricing và thanh toán chỉ đọc qua authority canonical." },
-    { key: "jobs", title: "Job & tài sản", description: "Theo dõi work, delivery và metadata thuộc phiên sở hữu." },
-    { key: "content", title: "Content & Chat", description: "Prompt, caption, script và planning nội dung." },
-    { key: "image", title: "Image Studio", description: "Tạo, chỉnh sửa và xử lý ảnh theo workflow canonical." },
-    { key: "video", title: "Video Studio", description: "Brief, cảnh, tiến độ, preview và export có kiểm soát." },
-    { key: "voice", title: "Voice Studio", description: "TTS, Voice Vault, clone và preview riêng tư." },
-    { key: "music", title: "Music & SFX", description: "Nhạc AI, bài hát, SFX và thư viện tài sản âm thanh." },
+    { key: "account", title: "Bắt đầu & tài khoản", description: "Thiết lập ban đầu, phiên đăng nhập và hồ sơ do máy chủ kiểm soát." },
+    { key: "wallet", title: "Ví, nạp & gói", description: "Số dư Xu, giá và thanh toán chỉ được đọc từ nguồn có thẩm quyền." },
+    { key: "jobs", title: "Tác vụ & tài sản", description: "Theo dõi công việc, nội dung bàn giao và thông tin thuộc phiên hiện tại." },
+    { key: "content", title: "Nội dung & trò chuyện", description: "Lời nhắc, chú thích, kịch bản và kế hoạch nội dung." },
+    { key: "image", title: "Sáng tạo ảnh", description: "Tạo, chỉnh sửa và xử lý ảnh theo quy trình được xác nhận." },
+    { key: "video", title: "Sáng tạo video", description: "Mô tả, cảnh, tiến độ, xem trước và xuất video có kiểm soát." },
+    { key: "voice", title: "Giọng nói", description: "TTS, kho giọng, nhân bản giọng và nghe thử riêng tư." },
+    { key: "music", title: "Âm nhạc & hiệu ứng âm thanh", description: "Nhạc AI, bài hát, hiệu ứng âm thanh và thư viện tài sản âm thanh." },
     { key: "subtitle", title: "Phụ đề & Lồng tiếng", description: "ASR, SRT/VTT, dịch và lồng tiếng." },
-    { key: "documents", title: "Documents & PDF", description: "PDF, OCR, gộp, tách, nén và dịch tài liệu." },
-    { key: "free_tools", title: "🆓 Công cụ miễn phí (0 Xu)", description: "Dịch thuật mở, tỷ giá USD/VND & quy đổi Xu, tạo mã QR, sinh Avatar AI và dự báo thời tiết hoàn toàn miễn phí." },
-    { key: "support", title: "Hỗ trợ & thông tin", description: "Ticket, bảng giá và thông tin pháp lý." }
+    { key: "documents", title: "Tài liệu & PDF", description: "PDF, OCR, gộp, tách, nén và dịch tài liệu." },
+    { key: "free_tools", title: "🆓 Công cụ miễn phí (0 Xu)", description: "Dịch thuật mở, tỷ giá USD/VND và quy đổi Xu, tạo mã QR, tạo ảnh đại diện AI, dự báo thời tiết — đều miễn phí." },
+    { key: "support", title: "Hỗ trợ & thông tin", description: "Phiếu hỗ trợ, bảng giá và thông tin pháp lý." }
   ]);
 
   function featureCatalogGroupCopy(group, field) {
@@ -11686,14 +11857,14 @@
   function renderEngineLabel(module) {
     const engine = normalizeCatalogEngine(module && typeof module === "object" ? module.engine : null);
     const labels = {
-      web_native: featureCatalogText("engine.webNative", "Web-native"),
-      bot_companion: featureCatalogText("engine.botCompanion", "Bot companion"),
-      guarded: featureCatalogText("engine.guarded", "Đang guarded")
+      web_native: featureCatalogText("engine.webNative", "Xử lý trong ứng dụng"),
+      bot_companion: featureCatalogText("engine.botCompanion", "Kết nối với Bot"),
+      guarded: featureCatalogText("engine.guarded", "Bị giới hạn")
     };
     const suffix = engine.mode === "web_native" && engine.executionState === "ready"
       ? ""
-      : featureCatalogText("engine.guardedSuffix", " · đang guarded");
-    const title = featureCatalogText("engine.title", "Phân loại execution; không xác nhận job, payment hoặc output.");
+      : featureCatalogText("engine.guardedSuffix", " · bị giới hạn");
+    const title = featureCatalogText("engine.title", "Phân loại cách xử lý; không xác nhận tác vụ, thanh toán hay kết quả đầu ra.");
     return `<span class="portal-engine-label" data-engine-mode="${safeText(engine.mode)}" title="${safeText(title)}">${safeText(labels[engine.mode] || labels.guarded)}${safeText(suffix)}</span>`;
   }
 
@@ -11711,12 +11882,12 @@
     const labels = {
       available: featureCatalogText("readiness.available", "Sẵn sàng"),
       planning_only: featureCatalogText("readiness.planningOnly", "Lập kế hoạch"),
-      local_execution: featureCatalogText("readiness.localExecution", "Xử lý tại Web"),
-      canonical_read: featureCatalogText("readiness.canonicalRead", "Đọc canonical"),
+      local_execution: featureCatalogText("readiness.localExecution", "Xử lý tại ứng dụng"),
+      canonical_read: featureCatalogText("readiness.canonicalRead", "Đọc từ nguồn chuẩn"),
       guarded: featureCatalogText("readiness.guarded", "Đang bảo vệ"),
       disabled: featureCatalogText("readiness.disabled", "Tạm dừng")
     };
-    const title = featureCatalogText("readiness.title", "Phân loại readiness; không xác nhận job, payment hoặc output.");
+    const title = featureCatalogText("readiness.title", "Phân loại mức sẵn sàng; không xác nhận tác vụ, thanh toán hay kết quả đầu ra.");
     return `<span class="portal-readiness-label" data-readiness="${safeText(readiness.status)}" title="${safeText(title)}">${safeText(labels[readiness.status] || labels.guarded)}</span>`;
   }
 
@@ -11743,14 +11914,31 @@
     if (!route) return "";
     const path = normalizePath(route);
     const page = manifest[path] || { path, status: "guarded", access: "member" };
-    const title = typeof module.title === "string" && module.title
-      ? module.title
-      : page.title || featureCatalogText("card.defaultTitle", "Workflow");
-    const description = typeof module.description === "string" && module.description
-      ? module.description
-      : (typeof module.input_hint === "string" && module.input_hint
-        ? module.input_hint
-        : featureCatalogText("card.defaultDescription", "Route được Core Bridge quản lý trạng thái theo phiên."));
+    const workspaceMenu = module.key === "workspace_menu";
+    const catalogCard = !workspaceMenu && options && options.showEngineLabel === true;
+    const catalogEntryKey = catalogCard && typeof module.key === "string" && /^[a-z][a-z0-9_]{1,120}$/.test(module.key)
+      ? module.key
+      : "";
+    const catalogEntryTitle = catalogEntryKey ? featureCatalogText(`entry.${catalogEntryKey}.title`, "") : "";
+    const catalogEntryDescription = catalogEntryKey ? featureCatalogText(`entry.${catalogEntryKey}.description`, "") : "";
+    const catalogTitle = catalogEntryTitle || (catalogCard && typeof localizedPageTitle === "function"
+      ? localizedPageTitle(page, context)
+      : "");
+    const catalogDescription = catalogEntryDescription || (catalogCard && typeof localizedPageDescription === "function"
+      ? localizedPageDescription(page)
+      : "");
+    const title = workspaceMenu
+      ? uiText("page.workspaceMenu.title", module.title)
+      : (catalogTitle || (typeof module.title === "string" && module.title
+        ? module.title
+        : page.title || featureCatalogText("card.defaultTitle", "Quy trình")));
+    const description = workspaceMenu
+      ? uiText("page.workspaceMenu.description", module.description)
+      : (catalogDescription || (typeof module.description === "string" && module.description
+        ? module.description
+        : (typeof module.input_hint === "string" && module.input_hint
+          ? module.input_hint
+          : featureCatalogText("card.defaultDescription", "Máy chủ quản lý trạng thái trang này theo phiên hiện tại."))));
     const declaredState = ALLOWED_STATES.has(String(module && (module.state || module.availability) || "").toLowerCase())
       ? String(module.state || module.availability).toLowerCase()
       : (String(module && module.availability || "").toLowerCase() === "available" ? "read_only" : "");
@@ -11762,7 +11950,7 @@
       ? `<span class="portal-module-card-signals">${renderEngineLabel(module)}${renderReadinessLabel(module)}</span>`
       : badge(displayState);
     return `<a class="portal-module-card" href="${safeText(route)}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(module.icon || page.icon || ICONS.default)}</span>${signals}</div>
-      <div><h3>${safeText(title)}</h3><p>${safeText(description)}</p></div><span class="portal-module-card-footer"><span>${safeText(label || featureCatalogText("action.openWorkflow", "Mở workflow"))}</span><span class="portal-module-arrow" aria-hidden="true">→</span></span></a>`;
+      <div><h3>${safeText(title)}</h3><p>${safeText(description)}</p></div><span class="portal-module-card-footer"><span>${safeText(label || featureCatalogText("action.openWorkflow", "Mở quy trình"))}</span><span class="portal-module-arrow" aria-hidden="true">→</span></span></a>`;
   }
 
   function fallbackCatalogGroup(path) {
@@ -11844,8 +12032,8 @@
     if (!family) return "";
     return `<dl class="portal-capability-family-metrics">
       <div><dt>${safeText(hubNumber(family.customerCommandCount))}</dt><dd>${safeText(featureCatalogText("capabilityHub.family.commands", "lệnh người dùng"))}</dd></div>
-      <div><dt>${safeText(hubNumber(family.mappedRouteCount))}</dt><dd>${safeText(featureCatalogText("capabilityHub.family.mapped", "đã map route"))}</dd></div>
-      <div><dt>${safeText(hubNumber(family.guardedRouteCount))}</dt><dd>${safeText(featureCatalogText("capabilityHub.family.guarded", "đang guarded"))}</dd></div>
+      <div><dt>${safeText(hubNumber(family.mappedRouteCount))}</dt><dd>${safeText(featureCatalogText("capabilityHub.family.mapped", "đã liên kết trang"))}</dd></div>
+      <div><dt>${safeText(hubNumber(family.guardedRouteCount))}</dt><dd>${safeText(featureCatalogText("capabilityHub.family.guarded", "đang bị giới hạn"))}</dd></div>
       <div><dt>${safeText(hubNumber(family.telegramOnlyCount))}</dt><dd>${safeText(featureCatalogText("capabilityHub.family.telegramOnly", "chỉ Bot"))}</dd></div>
     </dl>`;
   }
@@ -11855,25 +12043,25 @@
     const audit = hub.audit && typeof hub.audit === "object" ? hub.audit : {};
     const families = Array.isArray(hub.families) ? hub.families.filter((item) => item && typeof item === "object" && safeHubRoute(item.route)) : [];
     if (hub.available !== true || !families.length) {
-      return `<section class="portal-capability-hub portal-capability-hub--pending"><div><span class="portal-section-kicker">${safeText(featureCatalogText("capabilityHub.pendingKicker", "Workspace directory"))}</span><h2>${safeText(featureCatalogText("capabilityHub.pendingTitle", "Chọn một nhóm workflow"))}</h2><p>${safeText(featureCatalogText("capabilityHub.pendingBody", "Danh mục Web vẫn dùng được độc lập. Khi phạm vi chuyển đổi được đóng gói, ứng dụng chỉ công bố mô tả tổng hợp theo nhóm sản phẩm — không hiển thị lệnh quản trị, callback hay dữ liệu Bot."))}</p></div></section>`;
+      return `<section class="portal-capability-hub portal-capability-hub--pending"><div><span class="portal-section-kicker">${safeText(featureCatalogText("capabilityHub.pendingKicker", "Danh mục công cụ"))}</span><h2>${safeText(featureCatalogText("capabilityHub.pendingTitle", "Chọn nhóm công cụ"))}</h2><p>${safeText(featureCatalogText("capabilityHub.pendingBody", "Danh mục công cụ của ứng dụng vẫn sử dụng độc lập. Khi phạm vi chuyển đổi được hoàn thiện, ứng dụng chỉ công bố mô tả tổng hợp theo nhóm sản phẩm — không hiển thị lệnh quản trị, dữ liệu gọi lại hay dữ liệu Bot."))}</p></div></section>`;
     }
     const totalCallbacks = safeHubCount(audit.callbackHandlers) + safeHubCount(audit.callbackData);
     const familyCards = families.map((family) => `<a class="portal-capability-family" href="${safeText(family.route)}">
-      <span class="portal-capability-family-top"><span>${safeText(family.title || featureCatalogText("capabilityHub.defaultTitle", "Workflow Web"))}</span><b aria-hidden="true">→</b></span>
-      <p>${safeText(family.description || featureCatalogText("capabilityHub.defaultDescription", "Workflow được tổ chức lại cho Web App."))}</p>
-      <span class="portal-capability-family-state">${safeText(featureCatalogText("capabilityHub.open", "Khám phá workflow"))}</span>
+      <span class="portal-capability-family-top"><span>${safeText(family.title || featureCatalogText("capabilityHub.defaultTitle", "Quy trình trong ứng dụng"))}</span><b aria-hidden="true">→</b></span>
+      <p>${safeText(family.description || featureCatalogText("capabilityHub.defaultDescription", "Quy trình được sắp xếp phù hợp với ứng dụng."))}</p>
+      <span class="portal-capability-family-state">${safeText(featureCatalogText("capabilityHub.open", "Khám phá quy trình"))}</span>
     </a>`).join("");
     return `<section class="portal-capability-hub" aria-labelledby="portal-capability-hub-title">
-      <header class="portal-capability-hub-head"><div><span class="portal-section-kicker">${safeText(featureCatalogText("capabilityHub.kicker", "Workspace directory"))}</span><h2 id="portal-capability-hub-title">${safeText(featureCatalogText("capabilityHub.title", "Khám phá theo nhóm công cụ"))}</h2><p>${safeText(featureCatalogText("capabilityHub.body", "Bắt đầu theo mục tiêu của bạn. Mỗi nhóm mở các workspace có trạng thái, hướng dẫn và luồng xử lý riêng thay vì lệnh chat rời rạc."))}</p></div><span class="portal-capability-hub-badge">${safeText(featureCatalogText("capabilityHub.noRawCommands", "Không có lệnh thô"))}</span></header>
+      <header class="portal-capability-hub-head"><div><span class="portal-section-kicker">${safeText(featureCatalogText("capabilityHub.kicker", "Danh mục công cụ"))}</span><h2 id="portal-capability-hub-title">${safeText(featureCatalogText("capabilityHub.title", "Khám phá theo nhóm công cụ"))}</h2><p>${safeText(featureCatalogText("capabilityHub.body", "Bắt đầu từ mục tiêu của bạn. Mỗi nhóm mở một không gian làm việc có trạng thái, hướng dẫn và quy trình riêng — không phải các lệnh trò chuyện rời rạc."))}</p></div><span class="portal-capability-hub-badge">${safeText(featureCatalogText("capabilityHub.noRawCommands", "Không có lệnh thô"))}</span></header>
       <div class="portal-capability-family-grid">${familyCards}</div>
-      <details class="portal-capability-hub-audit"><summary>${safeText(featureCatalogText("capabilityHub.auditSummary", "Phạm vi chuyển đổi & bảo vệ"))}</summary><div class="portal-capability-hub-audit-body"><dl class="portal-capability-audit"><div><dt>${safeText(hubNumber(audit.commands))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.commands", "lệnh đã audit"))}</dd></div><div><dt>${safeText(hubNumber(totalCallbacks))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.callbacks", "callback đã phân loại"))}</dd></div><div><dt>${safeText(hubNumber(audit.mapped))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.mapped", "đã map route"))}</dd></div><div><dt>${safeText(hubNumber(audit.guarded))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.guarded", "compatibility guarded"))}</dd></div><div><dt>${safeText(hubNumber(audit.telegramOnly))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.telegramOnly", "giữ ở Telegram"))}</dd></div></dl><p class="portal-capability-hub-note">${safeText(featureCatalogText("capabilityHub.audit.note", "Các entry quản trị, provider, ví/PayOS, worker, backup và callback payload không trở thành nút browser. Execution chỉ bật sau contract, ownership và output validation riêng."))}</p></div></details>
+      <details class="portal-capability-hub-audit"><summary>${safeText(featureCatalogText("capabilityHub.auditSummary", "Phạm vi chuyển đổi & biện pháp bảo vệ"))}</summary><div class="portal-capability-hub-audit-body"><dl class="portal-capability-audit"><div><dt>${safeText(hubNumber(audit.commands))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.commands", "lệnh đã kiểm tra"))}</dd></div><div><dt>${safeText(hubNumber(totalCallbacks))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.callbacks", "lệnh gọi lại đã phân loại"))}</dd></div><div><dt>${safeText(hubNumber(audit.mapped))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.mapped", "đã liên kết trang"))}</dd></div><div><dt>${safeText(hubNumber(audit.guarded))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.guarded", "khả năng tương thích bị giới hạn"))}</dd></div><div><dt>${safeText(hubNumber(audit.telegramOnly))}</dt><dd>${safeText(featureCatalogText("capabilityHub.audit.telegramOnly", "giữ trên Telegram"))}</dd></div></dl><p class="portal-capability-hub-note">${safeText(featureCatalogText("capabilityHub.audit.note", "Các mục quản trị, nhà cung cấp, ví/PayOS, tiến trình xử lý, sao lưu và dữ liệu gọi lại không được chuyển thành nút trong trình duyệt. Chỉ bật thực thi sau khi có quy định, quyền sở hữu và kiểm tra đầu ra riêng."))}</p></div></details>
     </section>`;
   }
 
   function renderCapabilityHubFamilySummary(context, familyKey) {
     const family = capabilityHubFamily(context, familyKey);
     if (!family) return "";
-    return `<details class="portal-capability-family-summary"><summary>${safeText(featureCatalogText("capabilityHub.family.summary", "Phạm vi chuyển đổi"))}</summary><div class="portal-capability-family-summary-body">${renderCapabilityHubFamilyMetrics(family)}<p>${safeText(featureCatalogText("capabilityHub.family.note", "Con số này chỉ phản ánh phạm vi Bot đã được phân loại vào nhóm. Route Web và engine vẫn được kiểm tra độc lập theo signed session và capability."))}</p></div></details>`;
+    return `<details class="portal-capability-family-summary"><summary>${safeText(featureCatalogText("capabilityHub.family.summary", "Phạm vi chuyển đổi"))}</summary><div class="portal-capability-family-summary-body">${renderCapabilityHubFamilyMetrics(family)}<p>${safeText(featureCatalogText("capabilityHub.family.note", "Các con số chỉ phản ánh các mục Bot đã phân loại vào nhóm này. Trang và bộ xử lý của ứng dụng vẫn được kiểm tra độc lập theo phiên đăng nhập và quyền sử dụng."))}</p></div></details>`;
   }
 
   function renderFeatureFamilyExplorer() {
@@ -11882,10 +12070,10 @@
       const page = manifest[normalizePath(route)];
       const family = featureCatalogGroup(familyKey);
       if (!family || !(page && page.access === "member")) return "";
-      return `<a class="portal-feature-family-explorer-card" href="${safeText(route)}"><span class="portal-feature-family-explorer-icon" aria-hidden="true">${portalIcon(featureFamilyIcon(familyKey))}</span><span class="portal-feature-family-explorer-copy"><strong>${safeText(featureCatalogGroupCopy(family, "title"))}</strong><span>${safeText(featureCatalogGroupCopy(family, "description"))}</span></span><span class="portal-feature-family-explorer-open">${safeText(featureCatalogText("familyExplorer.open", "Mở studio"))}<b aria-hidden="true">→</b></span></a>`;
+      return `<a class="portal-feature-family-explorer-card" href="${safeText(route)}"><span class="portal-feature-family-explorer-icon" aria-hidden="true">${portalIcon(featureFamilyIcon(familyKey))}</span><span class="portal-feature-family-explorer-copy"><strong>${safeText(featureCatalogGroupCopy(family, "title"))}</strong><span>${safeText(featureCatalogGroupCopy(family, "description"))}</span></span><span class="portal-feature-family-explorer-open">${safeText(featureCatalogText("familyExplorer.open", "Mở bộ công cụ"))}<b aria-hidden="true">→</b></span></a>`;
     }).filter(Boolean).join("");
     if (!cards) return "";
-    return `<section class="portal-feature-family-explorer" aria-labelledby="portal-feature-family-explorer-title"><div class="portal-feature-family-explorer-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("familyExplorer.kicker", "AI Studio"))}</span><h2 id="portal-feature-family-explorer-title">${safeText(featureCatalogText("familyExplorer.title", "Bắt đầu theo loại công việc"))}</h2><p>${safeText(featureCatalogText("familyExplorer.body", "Chọn một studio để xem các workflow đã được định tuyến cho công việc của bạn."))}</p></div></div><nav class="portal-feature-family-explorer-grid" aria-label="${safeText(featureCatalogText("familyExplorer.title", "Bắt đầu theo loại công việc"))}">${cards}</nav></section>`;
+    return `<section class="portal-feature-family-explorer" aria-labelledby="portal-feature-family-explorer-title"><div class="portal-feature-family-explorer-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("familyExplorer.kicker", "Bộ công cụ AI"))}</span><h2 id="portal-feature-family-explorer-title">${safeText(featureCatalogText("familyExplorer.title", "Bắt đầu theo loại công việc"))}</h2><p>${safeText(featureCatalogText("familyExplorer.body", "Chọn một nhóm công cụ để xem các quy trình phù hợp với công việc của bạn."))}</p></div></div><nav class="portal-feature-family-explorer-grid" aria-label="${safeText(featureCatalogText("familyExplorer.title", "Bắt đầu theo loại công việc"))}">${cards}</nav></section>`;
   }
 
   function renderModuleCards(context) {
@@ -11904,7 +12092,7 @@
       const href = step.route === "/features" ? "#feature-catalog-list" : step.route;
       return `<a class="portal-start-guide-step" href="${safeText(href)}"><span class="portal-start-guide-number" aria-hidden="true">${safeText(step.number)}</span><span class="portal-start-guide-copy"><small>${safeText(step.eyebrow)}</small><strong>${safeText(step.title)}</strong><p>${safeText(step.description)}</p><em>${safeText(step.action)} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></em></span></a>`;
     }).join("");
-    return `<section class="portal-start-guide portal-feature-guided-start" data-feature-guided-start aria-labelledby="feature-guided-start-title"><div class="portal-start-guide-head"><div><span class="portal-section-kicker">${safeText(featureCatalogText("guidedStart.kicker", "Guided Start"))}</span><h2 id="feature-guided-start-title">${safeText(featureCatalogText("guidedStart.title", "Bạn muốn bắt đầu việc gì?"))}</h2><p>${safeText(featureCatalogText("guidedStart.body", "Chọn một lối đi ngắn hoặc duyệt toàn bộ catalog. Khi mở workspace, ứng dụng sẽ kiểm tra quyền và trạng thái thực tế của phiên hiện tại."))}</p></div><span class="portal-start-guide-note">${safeText(featureCatalogText("guidedStart.shortcuts", "{count} lối đi ngắn", { count: String(steps.length) }))}</span></div><div class="portal-start-guide-grid">${cards}</div></section>`;
+    return `<section class="portal-start-guide portal-feature-guided-start" data-feature-guided-start aria-labelledby="feature-guided-start-title"><div class="portal-start-guide-head"><div><span class="portal-section-kicker">${safeText(featureCatalogText("guidedStart.kicker", "Bắt đầu có hướng dẫn"))}</span><h2 id="feature-guided-start-title">${safeText(featureCatalogText("guidedStart.title", "Bạn muốn bắt đầu việc gì?"))}</h2><p>${safeText(featureCatalogText("guidedStart.body", "Chọn lối đi nhanh hoặc duyệt toàn bộ danh mục. Khi mở một không gian làm việc, ứng dụng sẽ xác minh quyền và trạng thái của phiên hiện tại."))}</p></div><span class="portal-start-guide-note">${safeText(featureCatalogText("guidedStart.shortcuts", "{count} lối đi nhanh", { count: String(steps.length) }))}</span></div><div class="portal-start-guide-grid">${cards}</div></section>`;
   }
 
   function renderRouteEngineBoundary(context) {
@@ -11922,19 +12110,19 @@
     const grouped = FEATURE_CATALOG_GROUPS.map((group) => ({ ...group, entries: entries.filter((entry) => entry && typeof entry === "object" && entry.group === group.key) })).filter((group) => group.entries.length);
     const knownGroups = new Set(FEATURE_CATALOG_GROUPS.map((group) => group.key));
     const otherEntries = entries.filter((entry) => !entry || typeof entry !== "object" || !knownGroups.has(entry.group));
-    if (otherEntries.length) grouped.push({ key: "other", title: featureCatalogText("group.other.title", "Workflow khác"), description: featureCatalogText("group.other.description", "Các route customer được registry công bố ngoài nhóm Studio chuẩn."), entries: otherEntries });
+    if (otherEntries.length) grouped.push({ key: "other", title: featureCatalogText("group.other.title", "Quy trình khác"), description: featureCatalogText("group.other.description", "Các trang khách hàng do hệ thống công bố ngoài nhóm công cụ tiêu chuẩn."), entries: otherEntries });
     const jumps = grouped.length
       ? `<nav class="portal-feature-jumps" aria-label="${safeText(featureCatalogText("catalog.jumpsLabel", "Đi tới nhóm công cụ"))}">${grouped.map((group) => `<a class="portal-feature-jump" data-catalog-family-jump="${safeText(group.key)}" aria-controls="feature-group-${safeText(group.key)}" href="#feature-group-${safeText(group.key)}">${safeText(featureCatalogGroupCopy(group, "title"))}</a>`).join("")}</nav>`
       : "";
-    const groups = grouped.map((group) => `<section id="feature-group-${safeText(group.key)}" class="portal-feature-group" data-catalog-group data-catalog-group-key="${safeText(group.key)}" aria-labelledby="feature-group-${safeText(group.key)}-title" role="region"><div class="portal-feature-group-head"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(group, "title"))}</span><h2 id="feature-group-${safeText(group.key)}-title">${safeText(featureCatalogGroupCopy(group, "title"))}</h2><p>${safeText(featureCatalogGroupCopy(group, "description"))}</p></div><span class="portal-feature-count" data-catalog-total="${safeText(String(group.entries.length))}">${safeText(featureCatalogText("catalog.count", "{count} workflow", { count: String(group.entries.length) }))}</span></div><div class="portal-module-grid">${group.entries.map((entry) => {
+    const groups = grouped.map((group) => `<section id="feature-group-${safeText(group.key)}" class="portal-feature-group" data-catalog-group data-catalog-group-key="${safeText(group.key)}" aria-labelledby="feature-group-${safeText(group.key)}-title" role="region"><div class="portal-feature-group-head"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(group, "title"))}</span><h2 id="feature-group-${safeText(group.key)}-title">${safeText(featureCatalogGroupCopy(group, "title"))}</h2><p>${safeText(featureCatalogGroupCopy(group, "description"))}</p></div><span class="portal-feature-count" data-catalog-total="${safeText(String(group.entries.length))}">${safeText(featureCatalogText("catalog.count", "{count} quy trình", { count: String(group.entries.length) }))}</span></div><div class="portal-module-grid">${group.entries.map((entry) => {
       const searchText = [featureCatalogGroupCopy(group, "title"), entry.title, entry.description, entry.input_hint, entry.key, entry.route].filter((part) => typeof part === "string").join(" ");
-      return `<div class="portal-catalog-item" data-catalog-item data-catalog-text="${safeText(searchText)}">${moduleCard(entry, context, "Mở workflow", { showEngineLabel: true })}</div>`;
+      return `<div class="portal-catalog-item" data-catalog-item data-catalog-text="${safeText(searchText)}">${moduleCard(entry, context, "Mở quy trình", { showEngineLabel: true })}</div>`;
     }).join("")}</div></section>`).join("");
-    const body = groups || renderEmpty(featureCatalogText("catalog.emptyTitle", "Danh mục đang chờ registry"), featureCatalogText("catalog.emptyBody", "Core Bridge chưa cấp metadata route. Portal không tự tạo danh sách hay trạng thái giả."), "⌁");
-    const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">${safeText(featureCatalogText("search.label", "Tìm công cụ"))}</label><div class="portal-catalog-search-control"><span aria-hidden="true">${portalIcon(ICONS.search)}</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="${safeText(featureCatalogText("search.placeholder", "Ví dụ: OCR, TTS, video sản phẩm, dịch…"))}" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>${safeText(featureCatalogText("search.clear", "Xóa"))}</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(featureCatalogText("search.result.visible", "{count} workflow đang hiển thị.", { count: String(entries.length) }))}</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><h3>${safeText(featureCatalogText("search.emptyTitle", "Không tìm thấy workflow"))}</h3><p>${safeText(featureCatalogText("search.emptyBody", "Thử từ khoá khác hoặc chọn một nhóm công cụ phía trên."))}</p></div></div>` : "";
-    const catalogContext = `<section class="portal-catalog-context"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><div><strong>${safeText(featureCatalogText("context.title", "Chọn theo mục tiêu, không theo lệnh chat"))}</strong><p>${safeText(featureCatalogText("context.body", "Tìm theo từ khóa hoặc mở một nhóm bên dưới. Trạng thái của từng workflow phản ánh capability mà phiên hiện tại được phép dùng."))}</p></div>${badge("read_only")}</section>`;
+    const body = groups || renderEmpty(featureCatalogText("catalog.emptyTitle", "Danh mục đang chờ hệ thống cập nhật"), featureCatalogText("catalog.emptyBody", "Máy chủ chưa cung cấp thông tin về các trang. Ứng dụng không tự tạo danh sách hay trạng thái."), "⌁");
+    const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">${safeText(featureCatalogText("search.label", "Tìm công cụ"))}</label><div class="portal-catalog-search-control"><span aria-hidden="true">${portalIcon(ICONS.search)}</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="${safeText(featureCatalogText("search.placeholder", "Ví dụ: OCR, TTS, video sản phẩm, dịch…"))}" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>${safeText(featureCatalogText("search.clear", "Xóa"))}</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(featureCatalogText("search.result.visible", "{count} quy trình đang hiển thị.", { count: String(entries.length) }))}</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><h3>${safeText(featureCatalogText("search.emptyTitle", "Không tìm thấy quy trình"))}</h3><p>${safeText(featureCatalogText("search.emptyBody", "Thử từ khóa khác hoặc chọn một nhóm công cụ phía trên."))}</p></div></div>` : "";
+    const catalogContext = `<section class="portal-catalog-context"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><div><strong>${safeText(featureCatalogText("context.title", "Chọn theo mục tiêu, không theo lệnh trò chuyện"))}</strong><p>${safeText(featureCatalogText("context.body", "Tìm theo từ khóa hoặc mở nhóm bên dưới. Trạng thái của mỗi quy trình phản ánh quyền mà phiên hiện tại được phép sử dụng."))}</p></div>${badge("read_only")}</section>`;
     const studioContinuation = `<aside class="portal-feature-studio-continuation" aria-labelledby="feature-studio-continuation-title"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span><div><h2 id="feature-studio-continuation-title">${safeText(mediaStudioText("catalog.title", "Dẫn dắt dự án media theo một luồng rõ lượng"))}</h2><p>${safeText(mediaStudioText("catalog.body", "Nếu bạn đang khám phá công cụ, Media Studio giúp nối lựa chọn đó với brief, kế hoạch, rà soát, Job Center và Asset Vault."))}</p></div><a class="portal-button portal-button--quiet" href="/studio">${safeText(mediaStudioText("catalog.action", "Mở Media Studio"))}<span aria-hidden="true">→</span></a></aside>`;
-    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Workspace catalogue"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm workflow phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Chuyển workspace"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về Dashboard"))} <span aria-hidden="true">→</span></a></div></div><div class="portal-feature-directory-controls">${search}${renderFeatureFamilyExplorer()}${jumps}</div>${studioContinuation}${body}${renderRouteEngineBoundary(context)}${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}</section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogText("catalog.kicker", "Danh mục công cụ"))}</span><h2>${safeText(featureCatalogText("catalog.title", "Tìm quy trình phù hợp"))}</h2><p>${safeText(featureCatalogText("catalog.body", "Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu từ một không gian làm việc rõ ràng. Mỗi quy trình hiển thị đúng trạng thái sẵn sàng hiện tại."))}</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">${safeText(featureCatalogText("action.switchWorkspace", "Mở danh sách không gian"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(featureCatalogText("action.backDashboard", "Về trang tổng quan"))} <span aria-hidden="true">→</span></a></div></div><div class="portal-feature-directory-controls">${search}${renderFeatureFamilyExplorer()}${jumps}</div>${studioContinuation}${body}${renderRouteEngineBoundary(context)}${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}</section></article>`;
   }
 
   function workspaceMenuText(key, fallback, params) {
@@ -11946,11 +12134,11 @@
       return {
         badgeState: "guarded",
         label: entry.authority === "CORE_CANONICAL_READ"
-          ? workspaceMenuText("state.canonicalReadGuarded", "Canonical read · guarded")
-          : workspaceMenuText("state.guarded", "Guarded")
+          ? workspaceMenuText("state.canonicalReadGuarded", "Nguồn chuẩn · chỉ đọc, đang bị giới hạn")
+          : workspaceMenuText("state.guarded", "Đang bị giới hạn")
       };
     }
-    return { badgeState: "read_only", label: workspaceMenuText("state.webNativeNavigation", "Web-native navigation") };
+    return { badgeState: "read_only", label: workspaceMenuText("state.webNativeNavigation", "Điều hướng trong ứng dụng") };
   }
 
   function workspaceMenuCard(entry) {
@@ -11968,7 +12156,7 @@
     const groupTitle = workspaceMenuGroupCopy(group, "title");
     const title = workspaceMenuEntryCopy(entry, "title");
     const description = workspaceMenuEntryCopy(entry, "description");
-    return `<a class="portal-workspace-menu-card" href="${safeText(route)}"><span class="portal-workspace-menu-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(icon)}</span><span class="portal-workspace-menu-card-state">${badge(state.badgeState)}<small>${safeText(state.label)}</small></span></span><span class="portal-workspace-menu-card-copy"><small>${safeText(groupTitle || entry.eyebrow)}</small><strong>${safeText(title)}</strong><span>${safeText(description)}</span></span><span class="portal-workspace-menu-card-footer">${safeText(workspaceMenuText("open", "Mở workspace"))} <b aria-hidden="true">→</b></span></a>`;
+    return `<a class="portal-workspace-menu-card" href="${safeText(route)}"><span class="portal-workspace-menu-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(icon)}</span><span class="portal-workspace-menu-card-state">${badge(state.badgeState)}<small>${safeText(state.label)}</small></span></span><span class="portal-workspace-menu-card-copy"><small>${safeText(groupTitle || entry.eyebrow)}</small><strong>${safeText(title)}</strong><span>${safeText(description)}</span></span><span class="portal-workspace-menu-card-footer">${safeText(workspaceMenuText("open", "Mở không gian"))} <b aria-hidden="true">→</b></span></a>`;
   }
 
   function renderWorkspaceMenu(page, context) {
@@ -11979,19 +12167,19 @@
         ? "loading"
         : "guarded";
     if (catalogReadState === "loading") {
-      return `<article class="portal-page portal-workspace-menu">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-busy="true">${renderEmpty(workspaceMenuText("loadingTitle", "Đang tải Workspace Menu"), workspaceMenuText("loadingBody", "Portal đang kiểm tra catalogue điều hướng đã review. Không dùng cache cũ, Bot state hay route tự suy đoán để thay thế."), ICONS.dashboard)}</section></article>`;
+      return `<article class="portal-page portal-workspace-menu">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-busy="true">${renderEmpty(workspaceMenuText("loadingTitle", "Đang tải danh sách không gian làm việc"), workspaceMenuText("loadingBody", "Ứng dụng đang kiểm tra danh sách điều hướng đã xác minh. Không thay thế bằng dữ liệu lưu tạm cũ, trạng thái từ Bot hay đường dẫn tự suy đoán."), ICONS.dashboard)}</section></article>`;
     }
     if (catalogReadState !== "read_only" || entries.length !== WORKSPACE_MENU_CAPABILITY_SPECS.length) {
-      return `<article class="portal-page portal-workspace-menu">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(workspaceMenuText("guardedTitle", "Workspace Menu chưa thể xác minh"), workspaceMenuText("guardedBody", "Catalogue điều hướng đang được bảo vệ hoặc không khớp contract đã review. Portal không dựng route hoặc trạng thái thay thế."), ICONS.security)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/features">${safeText(workspaceMenuText("openCatalog", "Mở catalog đầy đủ"))}</a></div></section></article>`;
+      return `<article class="portal-page portal-workspace-menu">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(workspaceMenuText("guardedTitle", "Chưa thể xác minh danh sách không gian làm việc"), workspaceMenuText("guardedBody", "Danh sách điều hướng đang bị giới hạn hoặc không khớp với quy tắc đã xác nhận. Ứng dụng không tự tạo đường dẫn hay trạng thái thay thế."), ICONS.security)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/features">${safeText(workspaceMenuText("openCatalog", "Mở danh mục đầy đủ"))}</a></div></section></article>`;
     }
     const grouped = WORKSPACE_MENU_GROUP_SPECS.map((group) => ({
       ...group,
       entries: entries.filter((entry) => entry && entry.group === group.key)
     })).filter((group) => group.entries.length);
     const directory = grouped.length
-      ? grouped.map((group) => `<section class="portal-workspace-menu-group" aria-labelledby="workspace-menu-${safeText(group.key)}"><div class="portal-workspace-menu-group-head"><div><span class="portal-section-kicker">${safeText(workspaceMenuGroupCopy(group, "title"))}</span><h2 id="workspace-menu-${safeText(group.key)}">${safeText(workspaceMenuGroupCopy(group, "title"))}</h2><p>${safeText(workspaceMenuGroupCopy(group, "description"))}</p></div><span>${safeText(workspaceMenuText("groupCount", "{count} workspace", { count: String(group.entries.length) }))}</span></div><nav class="portal-workspace-menu-grid" aria-label="${safeText(workspaceMenuGroupCopy(group, "title"))}">${group.entries.map(workspaceMenuCard).join("")}</nav></section>`).join("")
-      : renderEmpty(workspaceMenuText("guardedTitle", "Workspace Menu chưa thể xác minh"), workspaceMenuText("guardedBody", "Catalogue điều hướng đang được bảo vệ hoặc không khớp contract đã review. Portal không dựng route hoặc trạng thái thay thế."), ICONS.security);
-    return `<article class="portal-page portal-workspace-menu">${renderHero(page, context)}<section class="portal-workspace-menu-intro"><div><span class="portal-section-kicker">${safeText(workspaceMenuText("kicker", "Workspace directory"))}</span><h2>${safeText(workspaceMenuText("introTitle", "Chọn đúng không gian, rồi bắt đầu rõ ràng"))}</h2><p>${safeText(workspaceMenuText("introBody", "Danh sách này tổ chức các điểm vào Web đã review theo cách bạn làm việc. Mỗi card chỉ chuyển trang; quyền và trạng thái luôn được kiểm tra lại ở route đích."))}</p></div><aside class="portal-workspace-menu-intro-status" aria-label="${safeText(workspaceMenuText("navigationOnly", "Navigation only"))}"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>${safeText(workspaceMenuText("navigationOnly", "Navigation only"))}</strong><small>${safeText(workspaceMenuText("noAutomaticAction", "Không có hành động tự động"))}</small></span></aside></section><section class="portal-workspace-menu-directory" aria-label="${safeText(workspaceMenuText("directoryLabel", "Danh sách workspace đã review"))}">${directory}</section><section class="portal-card portal-card-pad portal-workspace-menu-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(workspaceMenuText("boundaryKicker", "Ranh giới rõ ràng"))}</span><h2 class="portal-card-title">${safeText(workspaceMenuText("boundaryTitle", "Directory không thay thế workflow"))}</h2><p class="portal-card-subtitle">${safeText(workspaceMenuText("boundaryBody", "Nếu một route đang guarded, trạng thái đó vẫn được giữ nguyên. Không có shortcut nào bỏ qua signed session, CSRF, ownership hoặc feature guard riêng."))}</p></div>${badge("read_only")}</div><ul class="portal-workspace-menu-boundary-list"><li><strong>${safeText(workspaceMenuText("noBotState", "Không sao chép Bot state"))}</strong><small>${safeText(workspaceMenuText("noBotStateBody", "Không có callback, message, Telegram ID hoặc pending value."))}</small></li><li><strong>${safeText(workspaceMenuText("noDirectoryWrite", "Không có write từ directory"))}</strong><small>${safeText(workspaceMenuText("noDirectoryWriteBody", "Card chỉ là link; mỗi write cần flow và confirmation tại nơi phù hợp."))}</small></li><li><strong>${safeText(workspaceMenuText("videoDeferred", "Video để phase riêng"))}</strong><small>${safeText(workspaceMenuText("videoDeferredBody", "Directory này cố ý không mở rộng menu Video."))}</small></li></ul><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/features">${safeText(workspaceMenuText("openCatalog", "Mở catalog đầy đủ"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(workspaceMenuText("backDashboard", "Về Dashboard"))}</a></div></section></article>`;
+      ? grouped.map((group) => `<section class="portal-workspace-menu-group" aria-labelledby="workspace-menu-${safeText(group.key)}"><div class="portal-workspace-menu-group-head"><div><span class="portal-section-kicker">${safeText(workspaceMenuGroupCopy(group, "title"))}</span><h2 id="workspace-menu-${safeText(group.key)}">${safeText(workspaceMenuGroupCopy(group, "title"))}</h2><p>${safeText(workspaceMenuGroupCopy(group, "description"))}</p></div><span>${safeText(workspaceMenuText("groupCount", "{count} không gian", { count: String(group.entries.length) }))}</span></div><nav class="portal-workspace-menu-grid" aria-label="${safeText(workspaceMenuGroupCopy(group, "title"))}">${group.entries.map(workspaceMenuCard).join("")}</nav></section>`).join("")
+      : renderEmpty(workspaceMenuText("guardedTitle", "Chưa thể xác minh danh sách không gian làm việc"), workspaceMenuText("guardedBody", "Danh sách điều hướng đang bị giới hạn hoặc không khớp với quy tắc đã xác nhận. Ứng dụng không tự tạo đường dẫn hay trạng thái thay thế."), ICONS.security);
+    return `<article class="portal-page portal-workspace-menu">${renderHero(page, context)}<section class="portal-workspace-menu-intro"><div><span class="portal-section-kicker">${safeText(workspaceMenuText("kicker", "Danh sách lối vào"))}</span><h2>${safeText(workspaceMenuText("introTitle", "Chọn đúng nơi để bắt đầu"))}</h2><p>${safeText(workspaceMenuText("introBody", "Danh sách này sắp xếp các trang theo công việc bạn cần. Mỗi thẻ chỉ mở một trang; quyền và trạng thái sẽ được kiểm tra lại tại trang đích."))}</p></div><aside class="portal-workspace-menu-intro-status" aria-label="${safeText(workspaceMenuText("navigationOnly", "Chỉ điều hướng"))}"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>${safeText(workspaceMenuText("navigationOnly", "Chỉ điều hướng"))}</strong><small>${safeText(workspaceMenuText("noAutomaticAction", "Không tự động thực hiện thao tác"))}</small></span></aside></section><section class="portal-workspace-menu-directory" aria-label="${safeText(workspaceMenuText("directoryLabel", "Danh sách không gian làm việc"))}">${directory}</section><section class="portal-card portal-card-pad portal-workspace-menu-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(workspaceMenuText("boundaryKicker", "Phạm vi rõ ràng"))}</span><h2 class="portal-card-title">${safeText(workspaceMenuText("boundaryTitle", "Danh sách lối vào không thay thế quy trình làm việc"))}</h2><p class="portal-card-subtitle">${safeText(workspaceMenuText("boundaryBody", "Nếu một trang đang bị giới hạn, trạng thái đó vẫn được giữ nguyên. Không có lối tắt nào bỏ qua phiên đăng nhập, CSRF, quyền sở hữu hoặc điều kiện tính năng."))}</p></div>${badge("read_only")}</div><ul class="portal-workspace-menu-boundary-list"><li><strong>${safeText(workspaceMenuText("noBotState", "Không sao chép trạng thái Bot"))}</strong><small>${safeText(workspaceMenuText("noBotStateBody", "Không chuyển dữ liệu gọi lại, tin nhắn, Telegram ID hoặc dữ liệu đang chờ."))}</small></li><li><strong>${safeText(workspaceMenuText("noDirectoryWrite", "Danh sách này không ghi dữ liệu"))}</strong><small>${safeText(workspaceMenuText("noDirectoryWriteBody", "Thẻ chỉ là liên kết; thao tác ghi cần có quy trình và xác nhận riêng tại nơi phù hợp."))}</small></li><li><strong>${safeText(workspaceMenuText("videoDeferred", "Để nhóm tạo video sang giai đoạn riêng"))}</strong><small>${safeText(workspaceMenuText("videoDeferredBody", "Danh sách này chưa mở rộng sang các công cụ tạo video."))}</small></li></ul><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/features">${safeText(workspaceMenuText("openCatalog", "Mở danh mục đầy đủ"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(workspaceMenuText("backDashboard", "Về trang tổng quan"))}</a></div></section></article>`;
   }
 
   function validWorkspaceDraftId(value) {
@@ -12233,10 +12421,10 @@
     const canView = Boolean(context.capabilities && context.capabilities["projects-refresh"] === true);
     const canCreate = Boolean(context.capabilities && context.capabilities["project-create"] === true);
     const readState = projectCenterReadState(context);
-    if (!canView) return `<article class="portal-page portal-project-center portal-project-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><h2>${safeText(projectCenterText("guard.title", "Project Operations Board đang được bảo vệ"))}</h2><p>${safeText(projectCenterText("guard.body", "Chỉ signed Web session mới mở Project, Studio Document và lịch sử owner-scoped. Web không thay bằng dữ liệu Telegram, Bot, provider hoặc browser cache."))}</p><div class="portal-state-meta"><span>${safeText(projectCenterText("guard.session", "Signed session"))}</span><span>${safeText(projectCenterText("guard.ownerScoped", "Owner-scoped"))}</span><span>${safeText(projectCenterText("guard.noFakeOutput", "Không có output giả"))}</span></div></div></div></section></article>`;
+    if (!canView) return `<article class="portal-page portal-project-center portal-project-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><h2>${safeText(projectCenterText("guard.title", "Bảng vận hành dự án đang được bảo vệ"))}</h2><p>${safeText(projectCenterText("guard.body", "Chỉ phiên Web đã xác thực mới mở dự án, tài liệu Studio và lịch sử theo chủ sở hữu. Web không thay bằng dữ liệu Telegram, Bot, nhà cung cấp hay bộ nhớ đệm trình duyệt."))}</p><div class="portal-state-meta"><span>${safeText(projectCenterText("guard.session", "Phiên đã xác thực"))}</span><span>${safeText(projectCenterText("guard.ownerScoped", "Theo chủ sở hữu"))}</span><span>${safeText(projectCenterText("guard.noFakeOutput", "Không có kết quả giả"))}</span></div></div></div></section></article>`;
     if (authoringRoute) return renderProjectCenterAuthoring(page, context, canCreate);
-    if (readState === "loading") return `<article class="portal-page portal-project-center portal-project-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.refresh)}</span><div><h2>${safeText(projectCenterText("loading.title", "Đang xác minh Project riêng tư"))}</h2><p>${safeText(projectCenterText("loading.body", "Web Workspace đang tải danh sách Project owner-scoped cho signed account hiện tại. Không hiển thị workspace cũ, Bot list hoặc fallback browser trong khi chờ máy chủ."))}</p><div class="portal-state-meta"><span>${safeText(projectCenterText("loading.noCache", "Không cache private"))}</span><span>${safeText(projectCenterText("loading.noBotFallback", "Không có Bot fallback"))}</span><span>${safeText(projectCenterText("loading.ownerCheck", "Owner check server-side"))}</span></div></div></div></section></article>`;
-    if (readState !== "ready") return `<article class="portal-page portal-project-center portal-project-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><h2>${safeText(projectCenterText("failed.title", "Chưa thể tải Project riêng tư"))}</h2><p>${safeText(projectCenterText("failed.body", "Máy chủ chưa trả danh sách owner-scoped an toàn nên Web đã xóa state cũ. Không thay bằng Project Bot, list cache, provider result hoặc activity mô phỏng."))}</p><div class="portal-state-meta"><span>${safeText(projectCenterText("failed.noStaleData", "Không có dữ liệu cũ"))}</span><span>${safeText(projectCenterText("failed.noBridgeFallback", "Không có bridge fallback"))}</span><span>${safeText(projectCenterText("failed.noFakeActivity", "Không có activity giả"))}</span></div><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="projects-refresh" data-portal-route="/projects">${safeText(projectCenterText("failed.retry", "Thử lại dữ liệu private"))}</button></div></div></div></section></article>`;
+    if (readState === "loading") return `<article class="portal-page portal-project-center portal-project-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.refresh)}</span><div><h2>${safeText(projectCenterText("loading.title", "Đang xác minh dự án riêng tư"))}</h2><p>${safeText(projectCenterText("loading.body", "Không gian làm việc Web đang tải danh sách dự án theo chủ sở hữu của tài khoản hiện tại. Không hiển thị không gian cũ, danh sách Bot hay phương án dự phòng trình duyệt trong khi chờ máy chủ."))}</p><div class="portal-state-meta"><span>${safeText(projectCenterText("loading.noCache", "Không dùng bộ nhớ đệm riêng tư"))}</span><span>${safeText(projectCenterText("loading.noBotFallback", "Không có dự phòng từ Bot"))}</span><span>${safeText(projectCenterText("loading.ownerCheck", "Kiểm tra phía máy chủ"))}</span></div></div></div></section></article>`;
+    if (readState !== "ready") return `<article class="portal-page portal-project-center portal-project-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><h2>${safeText(projectCenterText("failed.title", "Chưa thể tải dự án riêng tư"))}</h2><p>${safeText(projectCenterText("failed.body", "Máy chủ chưa trả danh sách dự án an toàn theo chủ sở hữu nên Web đã xóa trạng thái cũ. Không thay bằng dự án Bot, danh sách đệm, kết quả nhà cung cấp hay hoạt động mô phỏng."))}</p><div class="portal-state-meta"><span>${safeText(projectCenterText("failed.noStaleData", "Không có dữ liệu cũ"))}</span><span>${safeText(projectCenterText("failed.noBridgeFallback", "Không có dự phòng cầu nối"))}</span><span>${safeText(projectCenterText("failed.noFakeActivity", "Không có hoạt động giả"))}</span></div><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="projects-refresh" data-portal-route="/projects">${safeText(projectCenterText("failed.retry", "Thử lại dữ liệu riêng tư"))}</button></div></div></div></section></article>`;
     const projects = (Array.isArray(context.projects) ? context.projects : []).filter((item) => item && typeof item === "object" && validProjectId(item.id)).slice(0, 100);
     const listing = projectListing(context);
     const filter = listing.filters;
@@ -12244,38 +12432,37 @@
     const currentDocuments = projects.reduce((total, item) => total + projectDocumentCount(item.document_count), 0);
     const returned = Number(listing.pagination && listing.pagination.returned) || projects.length;
     const projectCards = projects.length
-      ? `<div class="portal-project-grid">${projects.map((project) => `<article class="portal-card portal-card-pad portal-project-card"><div class="portal-card-header"><div><span class="portal-eyebrow">${safeText(projectCenterText("card.kicker", "Project thuộc Web"))}</span><h2 class="portal-card-title">${safeText(String(project.title || projectCenterText("card.defaultTitle", "Project")))}</h2><p class="portal-card-subtitle">${safeText(String(project.summary || project.objective || projectCenterText("card.noDescription", "Chưa có mô tả")))}</p></div>${badge(projectState(project.state))}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${safeText(projectCenterText("card.objective", "Mục tiêu"))}</span><span class="portal-summary-value">${safeText(String(project.objective || projectCenterText("card.noObjective", "Chưa đặt")))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(projectCenterText("card.documents", "Studio Documents"))}</span><span class="portal-summary-value">${safeText(String(projectDocumentCount(project.document_count)))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(projectCenterText("card.updated", "Cập nhật"))}</span><span class="portal-summary-value">${safeText(String(project.updated_at || "—"))}</span></div></div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/projects/${encodeURIComponent(String(project.id))}">${safeText(projectCenterText("card.open", "Mở Project"))} <span aria-hidden="true">→</span></a></div></article>`).join("")}</div>`
+      ? `<div class="portal-project-grid">${projects.map((project) => `<article class="portal-card portal-card-pad portal-project-card"><div class="portal-card-header"><div><span class="portal-eyebrow">${safeText(projectCenterText("card.kicker", "Dự án thuộc Web"))}</span><h2 class="portal-card-title">${safeText(String(project.title || projectCenterText("card.defaultTitle", "Dự án")))}</h2><p class="portal-card-subtitle">${safeText(String(project.summary || project.objective || projectCenterText("card.noDescription", "Chưa có mô tả")))}</p></div>${badge(projectState(project.state))}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${safeText(projectCenterText("card.objective", "Mục tiêu"))}</span><span class="portal-summary-value">${safeText(String(project.objective || projectCenterText("card.noObjective", "Chưa đặt")))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(projectCenterText("card.documents", "Tài liệu Studio"))}</span><span class="portal-summary-value">${safeText(String(projectDocumentCount(project.document_count)))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(projectCenterText("card.updated", "Cập nhật"))}</span><span class="portal-summary-value">${safeText(String(project.updated_at || "—"))}</span></div></div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/projects/${encodeURIComponent(String(project.id))}">${safeText(projectCenterText("card.open", "Mở dự án"))} <span aria-hidden="true">→</span></a></div></article>`).join("")}</div>`
       : (projectFilterIsActive(filter)
-        ? renderEmpty(projectCenterText("empty.filteredTitle", "Không có Project phù hợp"), projectCenterText("empty.filteredBody", "Điều chỉnh từ khóa hoặc trạng thái để xem các Project khác của signed Web account. Không có fallback từ Bot hoặc browser cache."), ICONS.dashboard)
-        : renderEmpty(projectCenterText("empty.title", "Chưa có Project"), projectCenterText("empty.body", "Tạo Project đầu tiên để gom brief, prompt, caption, kịch bản và storyboard vào một lịch sử version riêng của Web."), ICONS.dashboard));
+         ? renderEmpty(projectCenterText("empty.filteredTitle", "Không có dự án phù hợp"), projectCenterText("empty.filteredBody", "Điều chỉnh từ khóa hoặc trạng thái để xem các dự án khác của tài khoản Web hiện tại. Không có dự phòng từ Bot hay bộ nhớ đệm trình duyệt."), ICONS.dashboard)
+         : renderEmpty(projectCenterText("empty.title", "Chưa có dự án"), projectCenterText("empty.body", "Tạo dự án đầu tiên để gom định hướng, lời nhắc, chú thích, kịch bản và bảng phân cảnh vào một lịch sử phiên bản riêng của Web."), ICONS.dashboard));
     const projectFilter = '<form class="portal-project-filter" data-portal-form data-portal-no-transient data-portal-action="projects-filter" data-portal-route="/projects" novalidate>'
       + renderFields(projectFilterFields(), canView, context, filter, "projects-filter")
-      + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(projectCenterText("filter.note", "Bộ lọc chỉ yêu cầu API owner-scoped trong phiên trang hiện tại; không lưu vào URL, Telegram hay browser storage.")) + '</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="projects-filter-clear" data-portal-route="/projects">' + safeText(projectCenterText("filter.clear", "Xóa lọc")) + '</button><button class="portal-button portal-button--primary" type="submit">' + safeText(projectCenterText("filter.submit", "Tìm Project")) + '</button></div></div></form>';
+       + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(projectCenterText("filter.note", "Bộ lọc chỉ yêu cầu API theo chủ sở hữu trong phiên trang hiện tại; không lưu vào URL, Telegram hay bộ nhớ trình duyệt.")) + '</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="projects-filter-clear" data-portal-route="/projects">' + safeText(projectCenterText("filter.clear", "Xóa lọc")) + '</button><button class="portal-button portal-button--primary" type="submit">' + safeText(projectCenterText("filter.submit", "Tìm dự án")) + '</button></div></div></form>';
     const startAction = canCreate
-      ? '<a class="portal-button portal-button--primary" href="/projects/new">' + safeText(projectCenterText("authoring.createTitle", "Tạo Project")) + '</a>'
-      : '<div class="portal-project-operations-create-guard" role="status"><strong>' + safeText(projectCenterText("createGuard.title", "Chỉ có quyền xem")) + '</strong><span>' + safeText(projectCenterText("createGuard.body", "Signed session hiện tại chưa có quyền tạo Project. Nút tạo được giữ không thể bấm thay vì điều hướng sang form bị vô hiệu.")) + "</span></div>";
+      ? '<a class="portal-button portal-button--primary" href="/projects/new">' + safeText(projectCenterText("authoring.createTitle", "Tạo dự án")) + '</a>'
+      : '<div class="portal-project-operations-create-guard" role="status"><strong>' + safeText(projectCenterText("createGuard.title", "Chỉ có quyền xem")) + '</strong><span>' + safeText(projectCenterText("createGuard.body", "Phiên hiện tại chưa có quyền tạo dự án. Nút tạo được giữ ở trạng thái không thể bấm thay vì điều hướng sang biểu mẫu bị vô hiệu.")) + "</span></div>";
     return `<article class="portal-page portal-project-center portal-project-operations-board">${renderHero(page, context)}
-      <section class="portal-project-operations-summary" data-project-operations-board><div><span class="portal-section-kicker">${safeText(projectCenterText("summary.kicker", "Vận hành Project riêng tư"))}</span><h2>${safeText(projectCenterText("summary.title", "Giữ brief, tài liệu và revision đi đúng Project."))}</h2><p>${safeText(projectCenterText("summary.body", "Project Operations Board là view điều phối của Project Center canonical. Mọi nội dung đầy đủ vẫn mở trong Project Workspace riêng sau server owner-check; board không gọi AI, provider, job, payment, publish hoặc delivery."))}</p></div><dl><div><dt>${safeText(String(active.length))}</dt><dd>${safeText(projectCenterText("summary.active", "Project đang hoạt động trên trang này"))}</dd></div><div><dt>${safeText(String(currentDocuments))}</dt><dd>${safeText(projectCenterText("summary.documents", "Studio Documents trên trang này"))}</dd></div><div><dt>${safeText(String(returned))}</dt><dd>${safeText(projectCenterText("summary.visible", "Project đang hiển thị"))}</dd></div></dl></section>
-      <section class="portal-project-operations-primary"><div><span class="portal-section-kicker">${safeText(projectCenterText("primary.kicker", "Tạo mới"))}</span><h2>${safeText(projectCenterText("primary.title", "Bắt đầu từ Project, không từ một form chen vào thư viện."))}</h2><p>${safeText(projectCenterText("primary.body", "Mở form riêng để đặt bối cảnh và mục tiêu, sau đó server tạo lifecycle authoring và trả route Project Workspace riêng tư."))}</p></div>${startAction}</section>
-      <div class="portal-project-operations-workspace"><section class="portal-card portal-card-pad portal-project-operations-library"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(projectCenterText("library.kicker", "Thư viện theo owner"))}</span><h2 class="portal-card-title">${safeText(projectCenterText("library.title", "Tìm và tiếp tục Project"))}</h2><p class="portal-card-subtitle">${safeText(projectCenterText("library.body", "Chỉ metadata Project của signed account hiện tại được hiển thị. Mở Project để server kiểm tra lại ownership và đọc Studio Document riêng."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="projects-refresh" data-portal-route="/projects">${safeText(projectCenterText("library.refresh", "Làm mới"))}</button></div>${projectFilter}${projectCards}${renderProjectPagination(listing)}</section>
-        <aside class="portal-card portal-card-pad portal-project-operations-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(projectCenterText("noActivity.kicker", "Không giả activity"))}</span><h2 class="portal-card-title">${safeText(projectCenterText("noActivity.title", "Không có timeline suy đoán"))}</h2><p class="portal-card-subtitle">${safeText(projectCenterText("noActivity.body", "Project API hiện chỉ công bố danh sách và detail owner-scoped. Board không bịa hoạt động gần đây hoặc tổng số toàn workspace khi contract chưa cung cấp."))}</p></div>${badge("read_only")}</div><ol class="portal-project-steps"><li><strong>${safeText(projectCenterText("noActivity.stepList", "Danh sách hiện tại"))}</strong><span>${safeText(projectCenterText("noActivity.stepListBody", "Chỉ count và metadata từ trang API đang hiển thị."))}</span></li><li><strong>${safeText(projectCenterText("noActivity.stepDetail", "Detail riêng"))}</strong><span>${safeText(projectCenterText("noActivity.stepDetailBody", "Studio Documents và revision chỉ nạp sau khi mở đúng Project."))}</span></li><li><strong>${safeText(projectCenterText("noActivity.stepExecution", "Execution tách biệt"))}</strong><span>${safeText(projectCenterText("noActivity.stepExecutionBody", "Project không chạy Bot, provider, job, Xu hoặc PayOS."))}</span></li></ol></aside></div>
-      <section class="portal-card portal-card-pad portal-project-operations-boundary"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(projectCenterText("boundary.title", "Biên giới dữ liệu rõ ràng"))}</strong><p>${safeText(projectCenterText("boundary.body", "Filter, pagination và refresh chỉ làm việc với API owner-scoped trong phiên trang. Browser không ghi Project vào URL, Telegram, bridge, PWA shell, provider request hoặc payment state."))}</p></div></div>${renderProjectCenterNotes(page)}</section>
+      <section class="portal-project-operations-summary" data-project-operations-board><div><span class="portal-section-kicker">${safeText(projectCenterText("summary.kicker", "Vận hành dự án riêng tư"))}</span><h2>${safeText(projectCenterText("summary.title", "Giữ định hướng, tài liệu và phiên bản đi đúng dự án."))}</h2><p>${safeText(projectCenterText("summary.body", "Bảng vận hành dự án là màn hình điều phối chuẩn của trung tâm dự án. Nội dung đầy đủ vẫn mở trong không gian dự án riêng sau khi máy chủ kiểm tra chủ sở hữu; bảng không gọi AI, nhà cung cấp, tác vụ, thanh toán, đăng bài hay giao tệp."))}</p></div><dl><div><dt>${safeText(String(active.length))}</dt><dd>${safeText(projectCenterText("summary.active", "Dự án đang hoạt động trên trang này"))}</dd></div><div><dt>${safeText(String(currentDocuments))}</dt><dd>${safeText(projectCenterText("summary.documents", "Tài liệu Studio trên trang này"))}</dd></div><div><dt>${safeText(String(returned))}</dt><dd>${safeText(projectCenterText("summary.visible", "Dự án đang hiển thị"))}</dd></div></dl></section>
+      <section class="portal-project-operations-primary"><div><span class="portal-section-kicker">${safeText(projectCenterText("primary.kicker", "Tạo mới"))}</span><h2>${safeText(projectCenterText("primary.title", "Bắt đầu từ dự án, không từ biểu mẫu chen vào thư viện."))}</h2><p>${safeText(projectCenterText("primary.body", "Mở biểu mẫu riêng để đặt bối cảnh và mục tiêu, sau đó máy chủ tạo vòng đời soạn thảo và trả về không gian dự án riêng tư."))}</p></div>${startAction}</section>
+      <div class="portal-project-operations-workspace"><section class="portal-card portal-card-pad portal-project-operations-library"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(projectCenterText("library.kicker", "Thư viện theo chủ sở hữu"))}</span><h2 class="portal-card-title">${safeText(projectCenterText("library.title", "Tìm và tiếp tục dự án"))}</h2><p class="portal-card-subtitle">${safeText(projectCenterText("library.body", "Chỉ siêu dữ liệu dự án của tài khoản hiện tại được hiển thị. Mở dự án để máy chủ kiểm tra lại quyền sở hữu và đọc tài liệu Studio riêng."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="projects-refresh" data-portal-route="/projects">${safeText(projectCenterText("library.refresh", "Làm mới"))}</button></div>${projectFilter}${projectCards}${renderProjectPagination(listing)}</section>
+        <aside class="portal-card portal-card-pad portal-project-operations-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(projectCenterText("noActivity.kicker", "Không bịa hoạt động"))}</span><h2 class="portal-card-title">${safeText(projectCenterText("noActivity.title", "Không có dòng thời gian suy đoán"))}</h2><p class="portal-card-subtitle">${safeText(projectCenterText("noActivity.body", "API dự án hiện chỉ công bố danh sách và chi tiết theo chủ sở hữu. Bảng không bịa hoạt động gần đây hoặc tổng số toàn không gian khi hợp đồng chưa cung cấp."))}</p></div>${badge("read_only")}</div><ol class="portal-project-steps"><li><strong>${safeText(projectCenterText("noActivity.stepList", "Danh sách hiện tại"))}</strong><span>${safeText(projectCenterText("noActivity.stepListBody", "Chỉ số lượng và siêu dữ liệu từ trang API đang hiển thị."))}</span></li><li><strong>${safeText(projectCenterText("noActivity.stepDetail", "Chi tiết riêng"))}</strong><span>${safeText(projectCenterText("noActivity.stepDetailBody", "Tài liệu Studio và phiên bản chỉ nạp sau khi mở đúng dự án."))}</span></li><li><strong>${safeText(projectCenterText("noActivity.stepExecution", "Thực thi tách biệt"))}</strong><span>${safeText(projectCenterText("noActivity.stepExecutionBody", "Dự án không chạy Bot, nhà cung cấp, tác vụ, Xu hoặc PayOS."))}</span></li></ol></aside></div>
+      <section class="portal-card portal-card-pad portal-project-operations-boundary"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(projectCenterText("boundary.title", "Biên giới dữ liệu rõ ràng"))}</strong><p>${safeText(projectCenterText("boundary.body", "Bộ lọc, phân trang và làm mới chỉ làm việc với API theo chủ sở hữu trong phiên trang. Trình duyệt không ghi dự án vào URL, Telegram, cầu nối, vỏ PWA, yêu cầu nhà cung cấp hay trạng thái thanh toán."))}</p></div></div>${renderProjectCenterNotes(page)}</section>
     </article>`;
   }
 
   // Memory Center mirrors the useful organization flow from the Bot while
-  // keeping a deliberately separate, signed Web-owned record set.  It is not
+  // keeping a deliberately separate, signed Web record set.  It is not
   // a UI proxy for Telegram messages: notes, versions and reminders remain
   // private to the current browser account and delivery is Web-view-only.
   const MEMORY_PRIORITIES = Object.freeze([
-    ["low", "Thấp"], ["normal", "Bình thường"], ["important", "Quan trọng"], ["urgent", "Khẩn"]
+    ["low"], ["normal"], ["important"], ["urgent"]
   ]);
   const MEMORY_REPEAT_RULES = Object.freeze([
-    ["none", "Một lần"], ["daily", "Mỗi ngày"], ["weekly", "Mỗi tuần"], ["monthly", "Mỗi tháng"], ["yearly", "Mỗi năm"]
+    ["none"], ["daily"], ["weekly"], ["monthly"], ["yearly"]
   ]);
   const MEMORY_REMINDER_STATES = Object.freeze([
-    ["all", "Tất cả trạng thái"], ["active", "Đang hoạt động"], ["paused", "Đang tạm dừng"],
-    ["completed", "Đã hoàn tất"], ["cancelled", "Đã hủy"]
+    ["all"], ["active"], ["paused"], ["completed"], ["cancelled"]
   ]);
 
   function validMemoryId(value) {
@@ -12288,20 +12475,43 @@
   }
 
   function memoryPriorityLabel(value) {
-    return ({ low: "Thấp", normal: "Bình thường", important: "Quan trọng", urgent: "Khẩn" })[String(value || "")] || "Bình thường";
+    const key = String(value || "normal");
+    return memoryText(`priority.${key}`, key === "low" ? "Thấp" : key === "important" ? "Quan trọng" : key === "urgent" ? "Khẩn" : "Bình thường");
   }
 
   function memoryRepeatLabel(value) {
-    return ({ none: "Một lần", daily: "Mỗi ngày", weekly: "Mỗi tuần", monthly: "Mỗi tháng", yearly: "Mỗi năm" })[String(value || "")] || "Một lần";
+    const key = String(value || "none");
+    return memoryText(`repeat.${key}`, key === "daily" ? "Mỗi ngày" : key === "weekly" ? "Mỗi tuần" : key === "monthly" ? "Mỗi tháng" : key === "yearly" ? "Mỗi năm" : "Một lần");
   }
 
   function memoryEventLabel(value) {
-    return ({
-      note_created: "Đã tạo ghi chú", note_updated: "Đã lưu phiên bản ghi chú", note_archived: "Đã archive ghi chú",
-      note_restored: "Đã khôi phục ghi chú", note_version_restored: "Đã khôi phục phiên bản ghi chú",
-      reminder_created: "Đã tạo reminder", reminder_updated: "Đã cập nhật reminder", reminder_complete: "Đã hoàn tất reminder",
-      reminder_pause: "Đã tạm dừng reminder", reminder_resume: "Đã tiếp tục reminder", reminder_cancel: "Đã hủy reminder"
-    })[String(value || "")] || "Đã cập nhật Memory Center";
+    const labels = {
+      note_created: ["event.noteCreated", "Đã tạo ghi chú"],
+      note_updated: ["event.noteUpdated", "Đã lưu phiên bản ghi chú"],
+      note_archived: ["event.noteArchived", "Đã lưu trữ ghi chú"],
+      note_restored: ["event.noteRestored", "Đã khôi phục ghi chú"],
+      note_version_restored: ["event.noteVersionRestored", "Đã khôi phục phiên bản ghi chú"],
+      reminder_created: ["event.reminderCreated", "Đã tạo lời nhắc"],
+      reminder_updated: ["event.reminderUpdated", "Đã cập nhật lời nhắc"],
+      reminder_complete: ["event.reminderComplete", "Đã hoàn tất lời nhắc"],
+      reminder_pause: ["event.reminderPause", "Đã tạm dừng lời nhắc"],
+      reminder_resume: ["event.reminderResume", "Đã tiếp tục lời nhắc"],
+      reminder_cancel: ["event.reminderCancel", "Đã hủy lời nhắc"]
+    };
+    const entry = labels[String(value || "")];
+    return entry ? memoryText(entry[0], entry[1]) : memoryText("event.fallback", "Đã cập nhật ghi chú và lời nhắc");
+  }
+
+  function memoryPriorityOptions() {
+    return MEMORY_PRIORITIES.map(([value]) => [value, memoryPriorityLabel(value)]);
+  }
+
+  function memoryRepeatOptions() {
+    return MEMORY_REPEAT_RULES.map(([value]) => [value, memoryRepeatLabel(value)]);
+  }
+
+  function memoryReminderStateOptions() {
+    return MEMORY_REMINDER_STATES.map(([value]) => [value, memoryText(`state.${value}`, value === "all" ? "Tất cả trạng thái" : value === "active" ? "Đang hoạt động" : value === "paused" ? "Đang tạm dừng" : value === "completed" ? "Đã hoàn tất" : "Đã hủy")]);
   }
 
   function memoryTags(tags) {
@@ -12315,11 +12525,11 @@
 
   function memoryNoteFormFields() {
     return [
-      { name: "title", label: "Tiêu đề", placeholder: "Ví dụ: Ý tưởng video tháng 8", required: true, minLength: 3, maxLength: 160 },
-      { name: "content", label: "Nội dung", control: "textarea", placeholder: "Viết nội dung cần nhớ, quyết định, bối cảnh hoặc checklist…", required: true, minLength: 1, maxLength: 12000, help: "Không lưu API key, token, mật khẩu hoặc số thẻ." },
-      { name: "tags", label: "Tags", placeholder: "Ví dụ: launch, video, ưu tiên", maxLength: 520, help: "Phân tách bằng dấu phẩy; tối đa 12 tags." },
-      { name: "category", label: "Danh mục", placeholder: "Ví dụ: Marketing", maxLength: 80 },
-      { name: "priority", label: "Ưu tiên", control: "select", options: MEMORY_PRIORITIES }
+      { name: "title", label: memoryText("form.titleLabel", "Tiêu đề"), placeholder: memoryText("form.titlePlaceholder", "Ví dụ: Ý tưởng video tháng 8"), required: true, minLength: 3, maxLength: 160 },
+      { name: "content", label: memoryText("form.contentLabel", "Nội dung"), control: "textarea", placeholder: memoryText("form.contentPlaceholder", "Viết nội dung cần nhớ, quyết định, bối cảnh hoặc danh sách việc cần làm…"), required: true, minLength: 1, maxLength: 12000, help: memoryText("form.contentHelp", "Không lưu mã API, mã truy cập, mật khẩu hoặc số thẻ.") },
+      { name: "tags", label: memoryText("form.tagsLabel", "Thẻ"), placeholder: memoryText("form.tagsPlaceholder", "Ví dụ: ra mắt, video, ưu tiên"), maxLength: 520, help: memoryText("form.tagsHelp", "Phân tách bằng dấu phẩy; tối đa 12 thẻ.") },
+      { name: "category", label: memoryText("form.categoryLabel", "Danh mục"), placeholder: memoryText("form.categoryPlaceholder", "Ví dụ: Tiếp thị"), maxLength: 80 },
+      { name: "priority", label: memoryText("form.priorityLabel", "Mức ưu tiên"), control: "select", options: memoryPriorityOptions() }
     ];
   }
 
@@ -12396,22 +12606,35 @@
     const previous = Number.isInteger(source.previous_offset) && source.previous_offset >= 0 ? source.previous_offset : null;
     const next = source.has_more === true && Number.isInteger(source.next_offset) && source.next_offset > offset ? source.next_offset : null;
     if (previous === null && next === null) return "";
-    const range = returned ? "Đang hiển thị " + String(offset + 1) + "–" + String(offset + returned) + " " + label : "Không có " + label + " ở trang này";
+    const memoryCopy = className === "portal-memory-pagination" || !className ? {
+      range: memoryText("pagination.range", "Đang hiển thị {from}–{to} {label}", { from: String(offset + 1), to: String(offset + returned), label }),
+      empty: memoryText("pagination.empty", "Không có {label} ở trang này", { label }),
+      previous: memoryText("pagination.previous", "← Trang trước"),
+      next: memoryText("pagination.next", "Trang sau →"),
+      aria: memoryText("pagination.aria", "Phân trang {label}", { label })
+    } : {
+      range: "Đang hiển thị " + String(offset + 1) + "–" + String(offset + returned) + " " + label,
+      empty: "Không có " + label + " ở trang này",
+      previous: "← Trang trước",
+      next: "Trang sau →",
+      aria: "Phân trang " + label
+    };
+    const range = returned ? memoryCopy.range : memoryCopy.empty;
     const previousButton = previous !== null
-      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + safeText(action) + '" data-portal-route="' + safeText(route) + '" ' + offsetAttribute + '="' + safeText(String(previous)) + '">← Trang trước</button>'
+      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + safeText(action) + '" data-portal-route="' + safeText(route) + '" ' + offsetAttribute + '="' + safeText(String(previous)) + '">' + safeText(memoryCopy.previous) + '</button>'
       : "";
     const nextButton = next !== null
-      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + safeText(action) + '" data-portal-route="' + safeText(route) + '" ' + offsetAttribute + '="' + safeText(String(next)) + '">Trang sau →</button>'
+      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + safeText(action) + '" data-portal-route="' + safeText(route) + '" ' + offsetAttribute + '="' + safeText(String(next)) + '">' + safeText(memoryCopy.next) + '</button>'
       : "";
-    return '<nav class="' + safeText(className || "portal-memory-pagination") + '" aria-label="Phân trang ' + safeText(label) + '"><span>' + safeText(range) + "</span><div>" + previousButton + nextButton + "</div></nav>";
+    return '<nav class="' + safeText(className || "portal-memory-pagination") + '" aria-label="' + safeText(memoryCopy.aria) + '"><span>' + safeText(range) + "</span><div>" + previousButton + nextButton + "</div></nav>";
   }
 
   function renderMemoryNotePagination(listing) {
-    return renderMemoryPagination(listing, "ghi chú", "memory-note-page", "/notes", "data-memory-note-offset");
+    return renderMemoryPagination(listing, memoryText("labels.notes", "ghi chú"), "memory-note-page", "/notes", "data-memory-note-offset");
   }
 
   function renderMemoryReminderPagination(listing) {
-    return renderMemoryPagination(listing, "reminder", "memory-reminder-page", "/reminders", "data-memory-reminder-offset");
+    return renderMemoryPagination(listing, memoryText("labels.reminders", "lời nhắc"), "memory-reminder-page", "/reminders", "data-memory-reminder-offset");
   }
 
   function renderPromptLibraryPagination(listing) {
@@ -12420,25 +12643,25 @@
 
   function memoryNoteFilterFields() {
     return [
-      { name: "q", label: "Tìm ghi chú", placeholder: "Tiêu đề, tag, danh mục hoặc nội dung…", maxLength: 80, wide: true },
-      { name: "priority", label: "Ưu tiên", control: "select", options: MEMORY_PRIORITIES, emptyLabel: "Mọi mức ưu tiên" },
-      { name: "category", label: "Danh mục", placeholder: "Ví dụ: Marketing", maxLength: 80 },
-      { name: "state", label: "Trạng thái", control: "select", options: [["all", "Tất cả"], ["active", "Đang hoạt động"], ["archived", "Đã archive"]] }
+      { name: "q", label: memoryText("filter.searchLabel", "Tìm ghi chú"), placeholder: memoryText("filter.searchPlaceholder", "Tiêu đề, thẻ, danh mục hoặc nội dung…"), maxLength: 80, wide: true },
+      { name: "priority", label: memoryText("form.priorityLabel", "Mức ưu tiên"), control: "select", options: memoryPriorityOptions(), emptyLabel: memoryText("filter.priorityAll", "Mọi mức ưu tiên") },
+      { name: "category", label: memoryText("form.categoryLabel", "Danh mục"), placeholder: memoryText("form.categoryPlaceholder", "Ví dụ: Tiếp thị"), maxLength: 80 },
+      { name: "state", label: memoryText("filter.stateLabel", "Trạng thái"), control: "select", options: [["all", memoryText("filter.stateAll", "Tất cả")], ["active", memoryText("state.active", "Đang hoạt động")], ["archived", memoryText("state.archived", "Đã lưu trữ")]] }
     ];
   }
 
   function memoryReminderFilterFields() {
-    return [{ name: "state", label: "Trạng thái", control: "select", options: MEMORY_REMINDER_STATES }];
+    return [{ name: "state", label: memoryText("filter.stateLabel", "Trạng thái"), control: "select", options: memoryReminderStateOptions() }];
   }
 
   function memoryReminderFormFields() {
     return [
-      { name: "title", label: "Tiêu đề reminder", placeholder: "Ví dụ: Rà soát storyboard", required: true, minLength: 3, maxLength: 160 },
-      { name: "body", label: "Ghi chú", control: "textarea", placeholder: "Bối cảnh hoặc checklist ngắn (tùy chọn)", maxLength: 2000 },
-      { name: "due_at", label: "Thời điểm", type: "datetime-local", required: true, help: "Reminder chỉ hiện trong Web Workspace; chưa gửi Telegram, email hoặc push." },
-      { name: "timezone", label: "Múi giờ", control: "select", options: [["Asia/Ho_Chi_Minh", "Asia/Ho_Chi_Minh (GMT+7)"], ["UTC", "UTC"]] },
-      { name: "repeat_rule", label: "Lặp lại", control: "select", options: MEMORY_REPEAT_RULES },
-      { name: "note_id", label: "Liên kết ghi chú", control: "select", optionsFrom: "memoryNotes", emptyLabel: "Không liên kết ghi chú" }
+      { name: "title", label: memoryText("reminder.titleLabel", "Tiêu đề lời nhắc"), placeholder: memoryText("reminder.titlePlaceholder", "Ví dụ: Rà soát bảng phân cảnh"), required: true, minLength: 3, maxLength: 160 },
+      { name: "body", label: memoryText("reminder.bodyLabel", "Ghi chú"), control: "textarea", placeholder: memoryText("reminder.bodyPlaceholder", "Bối cảnh hoặc danh sách việc ngắn (tùy chọn)"), maxLength: 2000 },
+      { name: "due_at", label: memoryText("reminder.dueLabel", "Thời điểm"), type: "datetime-local", required: true, help: memoryText("reminder.dueHelp", "Lời nhắc chỉ hiển thị trong Không gian làm việc; chưa gửi Telegram, email hoặc thông báo đẩy.") },
+      { name: "timezone", label: memoryText("reminder.timezoneLabel", "Múi giờ"), control: "select", options: [["Asia/Ho_Chi_Minh", "Asia/Ho_Chi_Minh (GMT+7)"], ["UTC", "UTC"]] },
+      { name: "repeat_rule", label: memoryText("reminder.repeatLabel", "Lặp lại"), control: "select", options: memoryRepeatOptions() },
+      { name: "note_id", label: memoryText("reminder.noteLinkLabel", "Liên kết ghi chú"), control: "select", optionsFrom: "memoryNotes", emptyLabel: memoryText("reminder.noteLinkEmpty", "Không liên kết ghi chú") }
     ];
   }
 
@@ -12446,7 +12669,7 @@
     const detail = context.memoryNoteDetail && typeof context.memoryNoteDetail === "object" ? context.memoryNoteDetail : {};
     const note = detail.note && typeof detail.note === "object" && validMemoryId(detail.note.id) ? detail.note : null;
     if (!note) {
-      return `<section class="portal-card portal-card-pad portal-memory-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Mở một ghi chú</h2><p class="portal-card-subtitle">Nội dung đầy đủ chỉ được nạp sau owner check ở server.</p></div>${badge("read_only")}</div>${renderEmpty("Chưa chọn ghi chú", "Chọn một ghi chú ở danh sách để xem, chỉnh sửa hoặc khôi phục phiên bản. Web không đọc Memory của Bot.", "◇")}</section>`;
+      return `<section class="portal-card portal-card-pad portal-memory-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(memoryText("detail.historyKicker", "Lịch sử phiên bản"))}</span><h2 class="portal-card-title">${safeText(memoryText("detail.openTitle", "Mở một ghi chú"))}</h2><p class="portal-card-subtitle">${safeText(memoryText("detail.openBody", "Nội dung đầy đủ chỉ được nạp sau khi máy chủ xác minh quyền sở hữu."))}</p></div>${badge("read_only")}</div>${renderEmpty(memoryText("detail.noSelectionTitle", "Chưa chọn ghi chú"), memoryText("detail.noSelectionBody", "Chọn một ghi chú ở danh sách để xem, chỉnh sửa hoặc khôi phục phiên bản. Web không đọc Memory của Bot."), "◇")}</section>`;
     }
     const state = String(note.state || "active");
     const canWrite = Boolean(context.capabilities && context.capabilities["memory-note-update"] === true && state === "active");
@@ -12458,13 +12681,13 @@
     const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 50) : [];
     const related = Array.isArray(detail.reminders) ? detail.reminders.filter((item) => item && validMemoryId(item.id)).slice(0, 20) : [];
     const stateAction = state === "active"
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-note-archive" data-portal-route="${safeText(route)}" data-memory-note-id="${safeText(String(note.id))}" data-memory-note-revision="${safeText(String(note.revision))}" data-portal-confirm="Archive ghi chú này? Reminder liên kết sẽ không bị thay đổi tự động."${canArchive ? "" : " disabled"}>${canArchive ? "Archive" : "Archive đang khóa"}</button>`
-      : `<button class="portal-button portal-button--primary" type="button" data-portal-action="memory-note-restore" data-portal-route="${safeText(route)}" data-memory-note-id="${safeText(String(note.id))}" data-memory-note-revision="${safeText(String(note.revision))}"${canRestore ? "" : " disabled"}>Khôi phục ghi chú</button>`;
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-note-archive" data-portal-route="${safeText(route)}" data-memory-note-id="${safeText(String(note.id))}" data-memory-note-revision="${safeText(String(note.revision))}" data-portal-confirm="${safeText(memoryText("detail.archiveConfirm", "Lưu trữ ghi chú này? Các lời nhắc liên kết sẽ không tự thay đổi."))}"${canArchive ? "" : " disabled"}>${safeText(canArchive ? memoryText("detail.archive", "Lưu trữ") : memoryText("detail.archiveLocked", "Lưu trữ đang khóa"))}</button>`
+      : `<button class="portal-button portal-button--primary" type="button" data-portal-action="memory-note-restore" data-portal-route="${safeText(route)}" data-memory-note-id="${safeText(String(note.id))}" data-memory-note-revision="${safeText(String(note.revision))}"${canRestore ? "" : " disabled"}>${safeText(memoryText("detail.restore", "Khôi phục ghi chú"))}</button>`;
     const versionList = versions.length
-      ? `<div class="portal-version-list">${versions.map((version) => `<div class="portal-version-row"><span><strong>v${safeText(String(version.revision))}</strong><small>${safeText(String(version.title || "Ghi chú"))} · ${safeText(String(version.created_at || "—"))}</small></span>${Number(version.revision) === Number(note.revision) ? `<span class="portal-form-note">Đang mở</span>` : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-note-restore-version" data-portal-route="${safeText(route)}" data-memory-note-id="${safeText(String(note.id))}" data-memory-note-revision="${safeText(String(note.revision))}" data-memory-note-version="${safeText(String(version.revision))}" data-portal-confirm="Khôi phục v${safeText(String(version.revision))} thành một phiên bản mới? Phiên bản hiện tại vẫn còn trong history."${canRestoreVersion ? "" : " disabled"}>Khôi phục</button>`}</div>`).join("")}</div>`
-      : renderEmpty("Chưa có version history", "Version đầu tiên được lưu cùng ghi chú và không bị xóa khi cập nhật.", "○");
-    const linked = related.length ? `<div class="portal-memory-linked-list">${related.map((item) => `<a href="/reminders" class="portal-memory-linked"><span><strong>${safeText(String(item.title || "Reminder"))}</strong><small>${safeText(memoryRepeatLabel(item.repeat_rule))} · ${safeText(String(item.next_run_at || item.due_at || "—"))}</small></span>${badge(String(item.state || "read_only"))}</a>`).join("")}</div>` : renderEmpty("Chưa có reminder liên kết", "Bạn có thể tạo reminder từ tab Nhắc việc và liên kết lại với ghi chú này.", "○");
-    return `<section class="portal-card portal-card-pad portal-memory-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(memoryPriorityLabel(note.priority))} · v${safeText(String(note.revision))}</span><h2 class="portal-card-title">${safeText(String(note.title || "Ghi chú"))}</h2><p class="portal-card-subtitle">${state === "archived" ? "Ghi chú đang archive và giữ nguyên history." : "Mỗi lần lưu tạo phiên bản bất biến; không có ghi đè âm thầm."}</p></div>${badge(state === "archived" ? "read_only" : "ready")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="memory-note-update" data-portal-route="${safeText(route)}" data-memory-note-id="${safeText(String(note.id))}" data-memory-note-revision="${safeText(String(note.revision))}" novalidate>${renderFields(memoryNoteFormFields(), canWrite, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Optimistic revision bảo vệ thay đổi đang mở. Server luôn kiểm tra ownership, CSRF và idempotency.</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--primary" type="submit"${canWrite ? "" : " disabled"}>Lưu phiên bản mới</button></div></div></form><section class="portal-project-history"><div class="portal-section-heading"><div><span class="portal-section-kicker">Version history</span><h3>Lịch sử phiên bản</h3><p>Khôi phục luôn tạo một revision mới, không sửa version cũ.</p></div></div>${versionList}</section><section class="portal-project-history"><div class="portal-section-heading"><div><span class="portal-section-kicker">Linked reminders</span><h3>Nhắc việc liên kết</h3><p>Trạng thái reminder luôn explicit; archive ghi chú không tự tắt reminder.</p></div></div>${linked}</section></section>`;
+      ? `<div class="portal-version-list">${versions.map((version) => `<div class="portal-version-row"><span><strong>v${safeText(String(version.revision))}</strong><small>${safeText(String(version.title || memoryText("detail.noteFallback", "Ghi chú")))} · ${safeText(String(version.created_at || "—"))}</small></span>${Number(version.revision) === Number(note.revision) ? `<span class="portal-form-note">${safeText(memoryText("detail.currentVersion", "Đang mở"))}</span>` : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-note-restore-version" data-portal-route="${safeText(route)}" data-memory-note-id="${safeText(String(note.id))}" data-memory-note-revision="${safeText(String(note.revision))}" data-memory-note-version="${safeText(String(version.revision))}" data-portal-confirm="${safeText(memoryText("detail.restoreVersionConfirm", "Khôi phục v{version} thành một phiên bản mới? Phiên bản hiện tại vẫn được giữ trong lịch sử.", { version: String(version.revision) }))}"${canRestoreVersion ? "" : " disabled"}>${safeText(memoryText("detail.restore", "Khôi phục"))}</button>`}</div>`).join("")}</div>`
+      : renderEmpty(memoryText("detail.emptyHistoryTitle", "Chưa có lịch sử phiên bản"), memoryText("detail.emptyHistoryBody", "Phiên bản đầu tiên được lưu cùng ghi chú và không bị xóa khi cập nhật."), "○");
+    const linked = related.length ? `<div class="portal-memory-linked-list">${related.map((item) => `<a href="/reminders" class="portal-memory-linked"><span><strong>${safeText(String(item.title || memoryText("reminder.fallbackTitle", "Lời nhắc")))}</strong><small>${safeText(memoryRepeatLabel(item.repeat_rule))} · ${safeText(String(item.next_run_at || item.due_at || "—"))}</small></span>${badge(String(item.state || "read_only"))}</a>`).join("")}</div>` : renderEmpty(memoryText("detail.emptyLinkedTitle", "Chưa có lời nhắc liên kết"), memoryText("detail.emptyLinkedBody", "Bạn có thể tạo lời nhắc từ mục Lời nhắc và liên kết lại với ghi chú này."), "○");
+    return `<section class="portal-card portal-card-pad portal-memory-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(memoryPriorityLabel(note.priority))} · v${safeText(String(note.revision))}</span><h2 class="portal-card-title">${safeText(String(note.title || memoryText("detail.noteFallback", "Ghi chú")))}</h2><p class="portal-card-subtitle">${state === "archived" ? safeText(memoryText("detail.archivedBody", "Ghi chú đã lưu trữ và vẫn giữ nguyên lịch sử.")) : safeText(memoryText("detail.activeBody", "Mỗi lần lưu tạo một phiên bản bất biến; không có ghi đè âm thầm."))}</p></div>${badge(state === "archived" ? "read_only" : "ready")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="memory-note-update" data-portal-route="${safeText(route)}" data-memory-note-id="${safeText(String(note.id))}" data-memory-note-revision="${safeText(String(note.revision))}" novalidate>${renderFields(memoryNoteFormFields(), canWrite, context, values)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(memoryText("detail.editorNote", "Phiên bản lạc quan bảo vệ thay đổi đang mở. Máy chủ luôn kiểm tra quyền sở hữu, CSRF và chống lặp."))}</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--primary" type="submit"${canWrite ? "" : " disabled"}>${safeText(memoryText("detail.save", "Lưu phiên bản mới"))}</button></div></div></form><section class="portal-project-history"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(memoryText("history.kicker", "Lịch sử phiên bản"))}</span><h3>${safeText(memoryText("history.title", "Lịch sử phiên bản"))}</h3><p>${safeText(memoryText("history.body", "Khôi phục luôn tạo một phiên bản mới; phiên bản cũ vẫn được giữ."))}</p></div></div>${versionList}</section><section class="portal-project-history"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(memoryText("linked.kicker", "Lời nhắc liên kết"))}</span><h3>${safeText(memoryText("linked.title", "Lời nhắc liên kết"))}</h3><p>${safeText(memoryText("linked.body", "Trạng thái lời nhắc luôn rõ ràng; lưu trữ ghi chú không tự tắt lời nhắc."))}</p></div></div>${linked}</section></section>`;
   }
 
   function renderMemoryNotes(page, context) {
@@ -12473,17 +12696,17 @@
     const noteSummary = summary.notes && typeof summary.notes === "object" ? summary.notes : {};
     const canView = Boolean(context.capabilities && context.capabilities["memory-view"] === true);
     const canCreate = Boolean(context.capabilities && context.capabilities["memory-note-create"] === true);
-    if (!canView) return `<article class="portal-page portal-memory-center">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Memory Center đang được bảo vệ", "Đăng nhập bằng signed session để nạp ghi chú riêng tư. Web không dùng Telegram ID thô hoặc fallback sang Bot state.", "⌁")}</section></article>`;
+    if (!canView) return `<article class="portal-page portal-memory-center">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(memoryText("guard.title", "Khu vực ghi chú đang được bảo vệ"), memoryText("guard.body", "Đăng nhập bằng phiên đã xác thực để nạp ghi chú riêng tư. Ứng dụng không dùng Telegram ID thô hoặc trạng thái thay thế từ Bot."), "⌁")}</section></article>`;
     const listing = memoryNoteListing(context);
     const filter = listing.filters;
     const cards = notes.length
-      ? `<div class="portal-memory-note-list">${notes.map((note) => `<button type="button" class="portal-memory-note" data-portal-action="memory-note-open" data-portal-route="/notes" data-memory-note-id="${safeText(String(note.id))}"><span class="portal-memory-note-head"><span><strong>${safeText(String(note.title || "Ghi chú"))}</strong><small>${safeText(String(note.category || "Chưa phân loại"))} · cập nhật ${safeText(String(note.updated_at || note.created_at || "—"))}</small></span>${badge(String(note.state || "read_only"))}</span><span class="portal-memory-note-excerpt">${safeText(String(note.excerpt || ""))}</span><span class="portal-memory-note-footer"><span class="portal-memory-priority" data-priority="${safeText(String(note.priority || "normal"))}">${safeText(memoryPriorityLabel(note.priority))}</span>${renderMemoryTagList(note.tags)}<b aria-hidden="true">→</b></span></button>`).join("")}</div>`
-      : renderEmpty(memoryNoteFilterIsActive(filter) ? "Không có ghi chú phù hợp" : "Chưa có ghi chú", memoryNoteFilterIsActive(filter) ? "Điều chỉnh từ khóa hoặc bộ lọc để xem các ghi chú Web-owned khác." : "Tạo ghi chú đầu tiên để lưu bối cảnh, checklist và quyết định trong một Web Workspace riêng tư.", "◇");
-    const filterForm = `<form class="portal-memory-filter" data-portal-form data-portal-no-transient data-portal-action="memory-note-filter" data-portal-route="/notes" novalidate>${renderFields(memoryNoteFilterFields(), true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Tìm kiếm thực hiện trên API owner-scoped, không tạo Bot hand-off hoặc lưu query vào URL.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-note-filter-clear" data-portal-route="/notes">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm kiếm</button></div></div></form>`;
+      ? `<div class="portal-memory-note-list">${notes.map((note) => `<button type="button" class="portal-memory-note" data-portal-action="memory-note-open" data-portal-route="/notes" data-memory-note-id="${safeText(String(note.id))}"><span class="portal-memory-note-head"><span><strong>${safeText(String(note.title || memoryText("detail.noteFallback", "Ghi chú")))}</strong><small>${safeText(String(note.category || memoryText("card.uncategorized", "Chưa phân loại")))} · ${safeText(memoryText("card.updated", "cập nhật {date}", { date: String(note.updated_at || note.created_at || "—") }))}</small></span>${badge(String(note.state || "read_only"))}</span><span class="portal-memory-note-excerpt">${safeText(String(note.excerpt || ""))}</span><span class="portal-memory-note-footer"><span class="portal-memory-priority" data-priority="${safeText(String(note.priority || "normal"))}">${safeText(memoryPriorityLabel(note.priority))}</span>${renderMemoryTagList(note.tags)}<b aria-hidden="true">→</b></span></button>`).join("")}</div>`
+      : renderEmpty(memoryNoteFilterIsActive(filter) ? memoryText("list.emptyFilteredTitle", "Không có ghi chú phù hợp") : memoryText("list.emptyTitle", "Chưa có ghi chú"), memoryNoteFilterIsActive(filter) ? memoryText("list.emptyFilteredBody", "Điều chỉnh từ khóa hoặc bộ lọc để xem các ghi chú khác trong tài khoản hiện tại.") : memoryText("list.emptyBody", "Tạo ghi chú đầu tiên để lưu bối cảnh, danh sách việc và quyết định trong một không gian riêng tư."), "◇");
+    const filterForm = `<form class="portal-memory-filter" data-portal-form data-portal-no-transient data-portal-action="memory-note-filter" data-portal-route="/notes" novalidate>${renderFields(memoryNoteFilterFields(), true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(memoryText("filter.note", "Tìm kiếm chỉ đọc API theo tài khoản trong phiên hiện tại; không tạo bàn giao Bot hoặc lưu truy vấn vào URL."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-note-filter-clear" data-portal-route="/notes">${safeText(memoryText("filter.clear", "Xóa bộ lọc"))}</button><button class="portal-button portal-button--primary" type="submit">${safeText(memoryText("filter.submit", "Tìm ghi chú"))}</button></div></div></form>`;
     return `<article class="portal-page portal-memory-center">${renderHero(page, context)}
-      <section class="portal-memory-intro"><div><span class="portal-section-kicker">Private Web memory</span><h2>Giữ ý tưởng, quyết định và việc cần làm ở đúng ngữ cảnh</h2><p>Memory Center hoạt động độc lập trên Web với tag, ưu tiên, archive và revision history. Nó không gửi nội dung sang Bot hay provider.</p></div><dl><div><dt>${safeText(String(Number(noteSummary.active || 0)))}</dt><dd>Ghi chú đang hoạt động</dd></div><div><dt>${safeText(String(Number(noteSummary.archived || 0)))}</dt><dd>Đã archive</dd></div><div><dt>v∞</dt><dd>Lịch sử phiên bản bất biến</dd></div></dl></section>
-      <div class="portal-memory-layout"><section class="portal-card portal-card-pad portal-memory-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo ghi chú</h2><p class="portal-card-subtitle">Dùng tag và ưu tiên để biến một ý tưởng rời rạc thành bối cảnh có thể tiếp tục.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="memory-note-create" data-portal-route="/notes" novalidate>${renderFields(memoryNoteFormFields(), canCreate, context, {})}<div class="portal-form-footer"><span class="portal-form-note">Không tạo job, charge, output hoặc notification. Dữ liệu chỉ thuộc signed Web account hiện tại.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Lưu ghi chú</button></div></form></section><aside class="portal-card portal-card-pad portal-memory-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Privacy boundary</span><h2 class="portal-card-title">Web-owned, không giả delivery</h2><p class="portal-card-subtitle">Reminder chỉ hiển thị trong app. Nếu cần Telegram/email/push, đó là adapter riêng và sẽ không được tự nhận là đã gửi.</p></div></div>${renderNotes(page)}</aside></div>
-      <section class="portal-memory-content"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ghi chú của tôi</h2><p class="portal-card-subtitle">Tìm theo nội dung, tag hoặc danh mục; chọn một ghi chú để mở nội dung đầy đủ cùng history.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-refresh" data-portal-route="/notes">Làm mới</button></div>${filterForm}${cards}${renderMemoryNotePagination(listing)}</section>${memoryNoteEditor(page, context)}</section>
+      <section class="portal-memory-intro"><div><span class="portal-section-kicker">${safeText(memoryText("intro.kicker", "Bộ nhớ riêng trong ứng dụng"))}</span><h2>${safeText(memoryText("intro.title", "Giữ ý tưởng, quyết định và việc cần làm đúng ngữ cảnh"))}</h2><p>${safeText(memoryText("intro.body", "Khu vực ghi chú hoạt động độc lập trên Web với thẻ, mức ưu tiên, lưu trữ và lịch sử phiên bản. Nội dung không được gửi sang Bot hay nhà cung cấp."))}</p></div><dl><div><dt>${safeText(String(Number(noteSummary.active || 0)))}</dt><dd>${safeText(memoryText("summary.active", "Ghi chú đang hoạt động"))}</dd></div><div><dt>${safeText(String(Number(noteSummary.archived || 0)))}</dt><dd>${safeText(memoryText("summary.archived", "Đã lưu trữ"))}</dd></div><div><dt>v∞</dt><dd>${safeText(memoryText("summary.versions", "Lịch sử phiên bản bất biến"))}</dd></div></dl></section>
+      <div class="portal-memory-layout"><section class="portal-card portal-card-pad portal-memory-create"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(memoryText("create.title", "Tạo ghi chú"))}</h2><p class="portal-card-subtitle">${safeText(memoryText("create.body", "Dùng thẻ và mức ưu tiên để biến một ý tưởng rời rạc thành bối cảnh có thể tiếp tục."))}</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="memory-note-create" data-portal-route="/notes" novalidate>${renderFields(memoryNoteFormFields(), canCreate, context, {})}<div class="portal-form-footer"><span class="portal-form-note">${safeText(memoryText("create.note", "Không tạo tác vụ, tính phí, tệp đầu ra hoặc thông báo. Dữ liệu chỉ thuộc tài khoản Web hiện tại."))}</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>${safeText(memoryText("create.submit", "Lưu ghi chú"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-memory-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(memoryText("boundary.kicker", "Phạm vi riêng tư"))}</span><h2 class="portal-card-title">${safeText(memoryText("boundary.title", "Dữ liệu do Web quản lý, không giả giao nhận"))}</h2><p class="portal-card-subtitle">${safeText(memoryText("boundary.body", "Lời nhắc chỉ hiển thị trong ứng dụng. Telegram, email hoặc thông báo đẩy cần adapter riêng và không được tự nhận là đã gửi."))}</p></div></div>${renderNotes(page)}</aside></div>
+      <section class="portal-memory-content"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(memoryText("list.title", "Ghi chú của tôi"))}</h2><p class="portal-card-subtitle">${safeText(memoryText("list.body", "Tìm theo nội dung, thẻ hoặc danh mục; chọn một ghi chú để mở nội dung đầy đủ cùng lịch sử."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-refresh" data-portal-route="/notes">${safeText(memoryText("common.refresh", "Làm mới"))}</button></div>${filterForm}${cards}${renderMemoryNotePagination(listing)}</section>${memoryNoteEditor(page, context)}</section>
     </article>`;
   }
 
@@ -12512,15 +12735,15 @@
     const currentLinkIsListed = selectedNoteId && linkedNotes.some((note) => String(note.id) === selectedNoteId);
     const linkedNoteState = String(item.note_state || "").toLowerCase();
     const retainedLinkSuffix = linkedNoteState === "archived"
-      ? " · ghi chú đã archive; giữ liên kết hoặc chọn ghi chú active khác"
-      : " · giữ liên kết hiện có";
+      ? memoryText("reminder.archivedLinkSuffix", " · ghi chú đã lưu trữ; giữ liên kết hoặc chọn ghi chú đang hoạt động")
+      : memoryText("reminder.retainedLinkSuffix", " · giữ liên kết hiện có");
     // A linked note can be outside the bounded picker or archived later. Keep
     // its value explicit rather than silently submitting an empty select.
     const retainedCurrentLink = selectedNoteId && !currentLinkIsListed
-      ? `<option value="${safeText(selectedNoteId)}" selected>${safeText(String(item.note_title || "Ghi chú liên kết hiện có"))}${safeText(retainedLinkSuffix)}</option>`
+      ? `<option value="${safeText(selectedNoteId)}" selected>${safeText(String(item.note_title || memoryText("reminder.linkedNoteFallback", "Ghi chú liên kết hiện có")))}${safeText(retainedLinkSuffix)}</option>`
       : "";
-    const noteOptions = `<option value=""${selectedNoteId ? "" : " selected"}>Không liên kết ghi chú</option>${retainedCurrentLink}${linkedNotes.map((note) => `<option value="${safeText(String(note.id))}"${String(note.id) === selectedNoteId ? " selected" : ""}>${safeText(String(note.title || "Ghi chú Web"))}</option>`).join("")}`;
-    return `<details class="portal-memory-reminder-edit"><summary>Chỉnh sửa reminder</summary><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="memory-reminder-update" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(String(item.revision || 1))}" novalidate><div class="portal-fields"><div class="portal-field portal-field--wide"><label for="memory-reminder-title-${safeText(id)}">Tiêu đề<span class="portal-required-mark" aria-hidden="true">*</span></label><input class="portal-input" id="memory-reminder-title-${safeText(id)}" name="title" value="${safeText(String(item.title || ""))}" minlength="3" maxlength="160" required${canEdit ? "" : " disabled"}></div><div class="portal-field portal-field--wide"><label for="memory-reminder-body-${safeText(id)}">Ghi chú</label><textarea class="portal-textarea" id="memory-reminder-body-${safeText(id)}" name="body" maxlength="2000"${canEdit ? "" : " disabled"}>${safeText(String(item.body || ""))}</textarea></div><div class="portal-field"><label for="memory-reminder-due-${safeText(id)}">Thời điểm<span class="portal-required-mark" aria-hidden="true">*</span></label><input class="portal-input" id="memory-reminder-due-${safeText(id)}" name="due_at" type="datetime-local" value="${safeText(memoryDateInputValue(item.next_run_at || item.due_at, item.timezone))}" required${canEdit ? "" : " disabled"}></div><div class="portal-field"><label for="memory-reminder-timezone-${safeText(id)}">Múi giờ</label><select class="portal-select" id="memory-reminder-timezone-${safeText(id)}" name="timezone"${canEdit ? "" : " disabled"}><option value="Asia/Ho_Chi_Minh"${String(item.timezone || "") === "Asia/Ho_Chi_Minh" ? " selected" : ""}>Asia/Ho_Chi_Minh (GMT+7)</option><option value="UTC"${String(item.timezone || "") === "UTC" ? " selected" : ""}>UTC</option></select></div><div class="portal-field"><label for="memory-reminder-repeat-${safeText(id)}">Lặp lại</label><select class="portal-select" id="memory-reminder-repeat-${safeText(id)}" name="repeat_rule"${canEdit ? "" : " disabled"}>${MEMORY_REPEAT_RULES.map(([value, label]) => `<option value="${safeText(value)}"${String(item.repeat_rule || "none") === value ? " selected" : ""}>${safeText(label)}</option>`).join("")}</select></div><div class="portal-field"><label for="memory-reminder-note-${safeText(id)}">Ghi chú liên kết</label><select class="portal-select" id="memory-reminder-note-${safeText(id)}" name="note_id"${canEdit ? "" : " disabled"}>${noteOptions}</select></div></div><div class="portal-form-footer"><span class="portal-form-note">Lưu lại yêu cầu revision hiện tại để tránh ghi đè một thay đổi ở tab khác.</span><button class="portal-button portal-button--primary" type="submit"${canEdit ? "" : " disabled"}>Lưu thay đổi</button></div></form></details>`;
+    const noteOptions = `<option value=""${selectedNoteId ? "" : " selected"}>${safeText(memoryText("reminder.noteLinkEmpty", "Không liên kết ghi chú"))}</option>${retainedCurrentLink}${linkedNotes.map((note) => `<option value="${safeText(String(note.id))}"${String(note.id) === selectedNoteId ? " selected" : ""}>${safeText(String(note.title || memoryText("reminder.noteFallback", "Ghi chú Web")))}</option>`).join("")}`;
+    return `<details class="portal-memory-reminder-edit"><summary>${safeText(memoryText("reminder.edit", "Chỉnh sửa lời nhắc"))}</summary><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="memory-reminder-update" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(String(item.revision || 1))}" novalidate><div class="portal-fields"><div class="portal-field portal-field--wide"><label for="memory-reminder-title-${safeText(id)}">${safeText(memoryText("reminder.titleLabel", "Tiêu đề lời nhắc"))}<span class="portal-required-mark" aria-hidden="true">*</span></label><input class="portal-input" id="memory-reminder-title-${safeText(id)}" name="title" value="${safeText(String(item.title || ""))}" minlength="3" maxlength="160" required${canEdit ? "" : " disabled"}></div><div class="portal-field portal-field--wide"><label for="memory-reminder-body-${safeText(id)}">${safeText(memoryText("reminder.bodyLabel", "Ghi chú"))}</label><textarea class="portal-textarea" id="memory-reminder-body-${safeText(id)}" name="body" maxlength="2000"${canEdit ? "" : " disabled"}>${safeText(String(item.body || ""))}</textarea></div><div class="portal-field"><label for="memory-reminder-due-${safeText(id)}">${safeText(memoryText("reminder.dueLabel", "Thời điểm"))}<span class="portal-required-mark" aria-hidden="true">*</span></label><input class="portal-input" id="memory-reminder-due-${safeText(id)}" name="due_at" type="datetime-local" value="${safeText(memoryDateInputValue(item.next_run_at || item.due_at, item.timezone))}" required${canEdit ? "" : " disabled"}></div><div class="portal-field"><label for="memory-reminder-timezone-${safeText(id)}">${safeText(memoryText("reminder.timezoneLabel", "Múi giờ"))}</label><select class="portal-select" id="memory-reminder-timezone-${safeText(id)}" name="timezone"${canEdit ? "" : " disabled"}><option value="Asia/Ho_Chi_Minh"${String(item.timezone || "") === "Asia/Ho_Chi_Minh" ? " selected" : ""}>Asia/Ho_Chi_Minh (GMT+7)</option><option value="UTC"${String(item.timezone || "") === "UTC" ? " selected" : ""}>UTC</option></select></div><div class="portal-field"><label for="memory-reminder-repeat-${safeText(id)}">${safeText(memoryText("reminder.repeatLabel", "Lặp lại"))}</label><select class="portal-select" id="memory-reminder-repeat-${safeText(id)}" name="repeat_rule"${canEdit ? "" : " disabled"}>${memoryRepeatOptions().map(([value, label]) => `<option value="${safeText(value)}"${String(item.repeat_rule || "none") === value ? " selected" : ""}>${safeText(label)}</option>`).join("")}</select></div><div class="portal-field"><label for="memory-reminder-note-${safeText(id)}">${safeText(memoryText("reminder.noteLinkLabel", "Liên kết ghi chú"))}</label><select class="portal-select" id="memory-reminder-note-${safeText(id)}" name="note_id"${canEdit ? "" : " disabled"}>${noteOptions}</select></div></div><div class="portal-form-footer"><span class="portal-form-note">${safeText(memoryText("reminder.editNote", "Lưu theo phiên bản hiện tại để tránh ghi đè thay đổi ở tab khác."))}</span><button class="portal-button portal-button--primary" type="submit"${canEdit ? "" : " disabled"}>${safeText(memoryText("common.save", "Lưu thay đổi"))}</button></div></form></details>`;
   }
 
   function renderMemoryReminderCard(item, context, route) {
@@ -12532,12 +12755,12 @@
     const canResume = Boolean(context.capabilities && context.capabilities["memory-reminder-resume"] === true && state === "paused");
     const canCancel = Boolean(context.capabilities && context.capabilities["memory-reminder-cancel"] === true && ["active", "paused"].includes(state));
     const stateActions = state === "active"
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-reminder-complete" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}"${canComplete ? "" : " disabled"}>Hoàn tất</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-reminder-pause" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}"${canPause ? "" : " disabled"}>Tạm dừng</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-reminder-cancel" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}" data-portal-confirm="Hủy reminder này? Hành động không gửi notification và không thể tự đảo ngược."${canCancel ? "" : " disabled"}>Hủy</button>`
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-reminder-complete" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}"${canComplete ? "" : " disabled"}>${safeText(memoryText("reminder.complete", "Hoàn tất"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-reminder-pause" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}"${canPause ? "" : " disabled"}>${safeText(memoryText("reminder.pause", "Tạm dừng"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-reminder-cancel" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}" data-portal-confirm="${safeText(memoryText("reminder.cancelConfirm", "Hủy lời nhắc này? Thao tác không gửi thông báo và không thể tự đảo ngược."))}"${canCancel ? "" : " disabled"}>${safeText(memoryText("reminder.cancel", "Hủy"))}</button>`
       : state === "paused"
-        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="memory-reminder-resume" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}"${canResume ? "" : " disabled"}>Tiếp tục</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-reminder-cancel" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}" data-portal-confirm="Hủy reminder này? Hành động không gửi notification và không thể tự đảo ngược."${canCancel ? "" : " disabled"}>Hủy</button>`
-        : `<span class="portal-form-note">${state === "completed" ? "Reminder đã hoàn tất." : "Reminder đã hủy."}</span>`;
+        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="memory-reminder-resume" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}"${canResume ? "" : " disabled"}>${safeText(memoryText("reminder.resume", "Tiếp tục"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-reminder-cancel" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}" data-portal-confirm="${safeText(memoryText("reminder.cancelConfirm", "Hủy lời nhắc này? Thao tác không gửi thông báo và không thể tự đảo ngược."))}"${canCancel ? "" : " disabled"}>${safeText(memoryText("reminder.cancel", "Hủy"))}</button>`
+        : `<span class="portal-form-note">${safeText(state === "completed" ? memoryText("reminder.completed", "Lời nhắc đã hoàn tất.") : memoryText("reminder.cancelled", "Lời nhắc đã hủy."))}</span>`;
     const due = String(item.next_run_at || item.due_at || "—");
-    return `<article class="portal-card portal-card-pad portal-memory-reminder-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(memoryRepeatLabel(item.repeat_rule))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Reminder"))}</h3><p class="portal-card-subtitle">${safeText(String(item.body || "Không có ghi chú bổ sung."))}</p></div>${badge(state)}</div><dl class="portal-memory-reminder-meta"><div><dt>Lần chạy</dt><dd>${safeText(due)}</dd></div><div><dt>Múi giờ</dt><dd>${safeText(String(item.timezone || "—"))}</dd></div><div><dt>Liên kết</dt><dd>${safeText(String(item.note_title || "Không có ghi chú"))}</dd></div></dl>${item.overdue === true && state === "active" ? `<p class="portal-memory-overdue" role="status">Đã quá thời điểm; Web chỉ đánh dấu để bạn chủ động xử lý, không tuyên bố đã gửi thông báo.</p>` : ""}<div class="portal-form-footer"><div class="portal-inline-actions">${stateActions}</div></div>${renderMemoryReminderEdit(item, context, route)}</article>`;
+    return `<article class="portal-card portal-card-pad portal-memory-reminder-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(memoryRepeatLabel(item.repeat_rule))}</span><h3 class="portal-card-title">${safeText(String(item.title || memoryText("reminder.fallbackTitle", "Lời nhắc")))}</h3><p class="portal-card-subtitle">${safeText(String(item.body || memoryText("reminder.noBody", "Không có ghi chú bổ sung.")))}</p></div>${badge(state)}</div><dl class="portal-memory-reminder-meta"><div><dt>${safeText(memoryText("reminder.nextRun", "Lần chạy"))}</dt><dd>${safeText(due)}</dd></div><div><dt>${safeText(memoryText("reminder.timezoneLabel", "Múi giờ"))}</dt><dd>${safeText(String(item.timezone || "—"))}</dd></div><div><dt>${safeText(memoryText("reminder.linkLabel", "Liên kết"))}</dt><dd>${safeText(String(item.note_title || memoryText("reminder.noLinkedNote", "Không có ghi chú")))}</dd></div></dl>${item.overdue === true && state === "active" ? `<p class="portal-memory-overdue" role="status">${safeText(memoryText("reminder.overdue", "Đã quá thời điểm; Web chỉ đánh dấu để bạn chủ động xử lý, không tuyên bố đã gửi thông báo."))}</p>` : ""}<div class="portal-form-footer"><div class="portal-inline-actions">${stateActions}</div></div>${renderMemoryReminderEdit(item, context, route)}</article>`;
   }
 
   function renderMemoryReminders(page, context) {
@@ -12549,17 +12772,17 @@
     const canView = Boolean(context.capabilities && context.capabilities["memory-view"] === true);
     const canCreate = Boolean(context.capabilities && context.capabilities["memory-reminder-create"] === true);
     const route = page.routePath || page.path;
-    if (!canView) return `<article class="portal-page portal-memory-reminders">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Reminder đang được bảo vệ", "Đăng nhập bằng signed session để xem hoặc quản lý reminder riêng tư. Bot reminder không được đưa sang Web bằng raw Telegram ID.", "⌁")}</section></article>`;
-    const cards = reminders.length ? `<div class="portal-memory-reminder-grid">${reminders.map((item) => renderMemoryReminderCard(item, context, route)).join("")}</div>` : renderEmpty("Chưa có reminder", "Tạo mốc đầu tiên để theo dõi việc cần làm trong Web Workspace. Web sẽ không giả lập Telegram/email/push delivery.", "◷");
+    if (!canView) return `<article class="portal-page portal-memory-reminders">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(memoryText("guard.remindersTitle", "Khu vực lời nhắc đang được bảo vệ"), memoryText("guard.remindersBody", "Đăng nhập bằng phiên đã ký để xem hoặc quản lý lời nhắc riêng tư. Lời nhắc của Bot không được đưa sang Web bằng Telegram ID thô."), "⌁")}</section></article>`;
+    const cards = reminders.length ? `<div class="portal-memory-reminder-grid">${reminders.map((item) => renderMemoryReminderCard(item, context, route)).join("")}</div>` : renderEmpty(memoryText("list.remindersEmptyTitle", "Chưa có lời nhắc"), memoryText("list.remindersEmptyBody", "Tạo mốc đầu tiên để theo dõi việc cần làm trong Không gian làm việc. Web không giả lập việc gửi qua Telegram, email hoặc thông báo đẩy."), "◷");
     const events = memoryItems(context, "memoryEvents");
     const eventReadState = String(context.memoryEventsReadState || "guarded").trim().toLowerCase();
     const eventList = eventReadState === "guarded"
-      ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Hoạt động Memory đang tạm chưa xác minh</strong><p>Không hiển thị dữ liệu cũ hoặc coi feed là trống. Notes và reminder đã xác thực vẫn có thể dùng.</p></div></div>`
+      ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(memoryText("activity.guardedTitle", "Hoạt động ghi chú đang tạm chưa xác minh"))}</strong><p>${safeText(memoryText("activity.guardedBody", "Không hiển thị dữ liệu cũ hoặc coi bảng hoạt động là trống. Ghi chú và lời nhắc đã xác thực vẫn có thể dùng."))}</p></div></div>`
       : eventReadState === "loading"
-        ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Đang tải hoạt động Memory</strong><p>Feed audit-safe được đọc riêng và không quyết định trạng thái note/reminder.</p></div></div>`
-        : events.length ? `<div class="portal-memory-event-list">${events.map((item) => `<div class="portal-memory-event"><span aria-hidden="true">•</span><span><strong>${safeText(memoryEventLabel(item.action))}</strong><small>${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : renderEmpty("Chưa có hoạt động", "Các cập nhật note/reminder của Web account sẽ xuất hiện tại đây sau khi server ghi audit event.", "○");
-    const reminderFilterForm = `<form class="portal-memory-filter" data-portal-form data-portal-no-transient data-portal-action="memory-reminder-filter" data-portal-route="${safeText(route)}" novalidate>${renderFields(memoryReminderFilterFields(), true, context, filter, "memory-reminder-filter")}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ yêu cầu API owner-scoped trong phiên trang hiện tại; không lưu trạng thái reminder vào URL, Bot hoặc browser storage.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-reminder-filter-clear" data-portal-route="${safeText(route)}">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Lọc reminder</button></div></div></form>`;
-    return `<article class="portal-page portal-memory-reminders">${renderHero(page, context)}<section class="portal-memory-intro"><div><span class="portal-section-kicker">Web view-only delivery</span><h2>Quản lý nhịp công việc mà không đánh đồng với thông báo đã gửi</h2><p>Reminder giữ lịch một lần hoặc lặp lại, pause/resume và complete. Web chỉ hiển thị trạng thái trong account của bạn; Telegram, email và push cần adapter riêng.</p></div><dl><div><dt>${safeText(String(Number(reminderSummary.active || 0)))}</dt><dd>Đang hoạt động</dd></div><div><dt>${safeText(String(Number(reminderSummary.due_soon || 0)))}</dt><dd>Đến hạn trong 24h</dd></div><div><dt>${safeText(String(Number(reminderSummary.overdue || 0)))}</dt><dd>Cần xem lại</dd></div></dl></section><div class="portal-memory-layout"><section class="portal-card portal-card-pad portal-memory-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo reminder</h2><p class="portal-card-subtitle">Chọn mốc, múi giờ, lịch lặp và tùy chọn liên kết một ghi chú đang active.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="memory-reminder-create" data-portal-route="${safeText(route)}" novalidate>${renderFields(memoryReminderFormFields(), canCreate, context, {})}<div class="portal-form-footer"><span class="portal-form-note">Không tạo Bot job, Xu, PayOS, provider call hay notification delivery.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo reminder</button></div></form></section><aside class="portal-card portal-card-pad portal-memory-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Explicit status</span><h2 class="portal-card-title">Không có thông báo giả</h2><p class="portal-card-subtitle">Quá hạn chỉ là state để bạn xem lại. Việc complete reminder lặp lại tính mốc tiếp theo ở server theo đúng múi giờ đã chọn.</p></div></div>${renderNotes(page)}</aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Reminder của tôi</h2><p class="portal-card-subtitle">Mọi thay đổi phải có CSRF, revision và idempotency. Các trạng thái terminal không thể chỉnh sửa.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-refresh" data-portal-route="${safeText(route)}">Làm mới</button></div>${reminderFilterForm}${cards}${renderMemoryReminderPagination(listing)}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Chỉ hiển thị nhãn thao tác đã sanitize, không lộ nội dung ghi chú hoặc request detail.</p></div></div>${eventList}</section></article>`;
+        ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(memoryText("activity.loadingTitle", "Đang tải hoạt động ghi chú"))}</strong><p>${safeText(memoryText("activity.loadingBody", "Bảng hoạt động an toàn được đọc riêng và không quyết định trạng thái ghi chú hoặc lời nhắc."))}</p></div></div>`
+        : events.length ? `<div class="portal-memory-event-list">${events.map((item) => `<div class="portal-memory-event"><span aria-hidden="true">•</span><span><strong>${safeText(memoryEventLabel(item.action))}</strong><small>${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : renderEmpty(memoryText("activity.emptyTitle", "Chưa có hoạt động"), memoryText("activity.emptyBody", "Các cập nhật ghi chú và lời nhắc của tài khoản Web sẽ xuất hiện tại đây sau khi máy chủ ghi sự kiện kiểm toán."), "○");
+    const reminderFilterForm = `<form class="portal-memory-filter" data-portal-form data-portal-no-transient data-portal-action="memory-reminder-filter" data-portal-route="${safeText(route)}" novalidate>${renderFields(memoryReminderFilterFields(), true, context, filter, "memory-reminder-filter")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(memoryText("filter.reminderNote", "Bộ lọc chỉ yêu cầu API theo chủ sở hữu trong phiên trang hiện tại; không lưu trạng thái lời nhắc vào URL, Bot hoặc bộ nhớ trình duyệt."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-reminder-filter-clear" data-portal-route="${safeText(route)}">${safeText(memoryText("filter.clear", "Xóa bộ lọc"))}</button><button class="portal-button portal-button--primary" type="submit">${safeText(memoryText("filter.reminderSubmit", "Lọc lời nhắc"))}</button></div></div></form>`;
+    return `<article class="portal-page portal-memory-reminders">${renderHero(page, context)}<section class="portal-memory-intro"><div><span class="portal-section-kicker">${safeText(memoryText("intro.remindersKicker", "Trạng thái hiển thị trong Web"))}</span><h2>${safeText(memoryText("intro.remindersTitle", "Quản lý nhịp công việc mà không đánh đồng với thông báo đã gửi"))}</h2><p>${safeText(memoryText("intro.remindersBody", "Lời nhắc giữ lịch một lần hoặc lặp lại, tạm dừng, tiếp tục và hoàn tất. Web chỉ hiển thị trạng thái trong tài khoản của bạn; Telegram, email và thông báo đẩy cần bộ kết nối riêng."))}</p></div><dl><div><dt>${safeText(String(Number(reminderSummary.active || 0)))}</dt><dd>${safeText(memoryText("summary.remindersActive", "Đang hoạt động"))}</dd></div><div><dt>${safeText(String(Number(reminderSummary.due_soon || 0)))}</dt><dd>${safeText(memoryText("summary.remindersDueSoon", "Đến hạn trong 24 giờ"))}</dd></div><div><dt>${safeText(String(Number(reminderSummary.overdue || 0)))}</dt><dd>${safeText(memoryText("summary.remindersOverdue", "Cần xem lại"))}</dd></div></dl></section><div class="portal-memory-layout"><section class="portal-card portal-card-pad portal-memory-create"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(memoryText("reminder.createTitle", "Tạo lời nhắc"))}</h2><p class="portal-card-subtitle">${safeText(memoryText("reminder.createBody", "Chọn mốc, múi giờ, lịch lặp và tùy chọn liên kết một ghi chú đang hoạt động."))}</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="memory-reminder-create" data-portal-route="${safeText(route)}" novalidate>${renderFields(memoryReminderFormFields(), canCreate, context, {})}<div class="portal-form-footer"><span class="portal-form-note">${safeText(memoryText("reminder.createNote", "Không tạo tác vụ Bot, Xu, PayOS, yêu cầu nhà cung cấp hoặc gửi thông báo."))}</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>${safeText(memoryText("reminder.createSubmit", "Tạo lời nhắc"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-memory-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(memoryText("boundary.statusKicker", "Trạng thái rõ ràng"))}</span><h2 class="portal-card-title">${safeText(memoryText("boundary.noFakeTitle", "Không có thông báo giả"))}</h2><p class="portal-card-subtitle">${safeText(memoryText("boundary.noFakeBody", "Quá hạn chỉ là trạng thái để bạn xem lại. Việc hoàn tất lời nhắc lặp lại sẽ tính mốc tiếp theo ở máy chủ theo đúng múi giờ đã chọn."))}</p></div></div>${renderNotes(page)}</aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(memoryText("list.remindersTitle", "Lời nhắc của tôi"))}</h2><p class="portal-card-subtitle">${safeText(memoryText("list.remindersBody", "Mọi thay đổi phải có CSRF, phiên bản và mã chống lặp. Các trạng thái kết thúc không thể chỉnh sửa."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-refresh" data-portal-route="${safeText(route)}">${safeText(memoryText("common.refresh", "Làm mới"))}</button></div>${reminderFilterForm}${cards}${renderMemoryReminderPagination(listing)}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(memoryText("activity.kicker", "Bảng hoạt động an toàn"))}</span><h2 class="portal-card-title">${safeText(memoryText("activity.title", "Hoạt động gần đây"))}</h2><p class="portal-card-subtitle">${safeText(memoryText("activity.body", "Chỉ hiển thị nhãn thao tác đã làm sạch, không lộ nội dung ghi chú hoặc chi tiết yêu cầu."))}</p></div></div>${eventList}</section></article>`;
   }
 
   // Prompt Library is intentionally a reusable recipe inventory rather than
@@ -12584,7 +12807,9 @@
   }
 
   function promptTemplateStateLabel(value) {
-    return String(value || "").toLowerCase() === "archived" ? "Đã archive" : "Đang hoạt động";
+    return String(value || "").toLowerCase() === "archived"
+      ? promptLibraryText("state.archived", "Đã lưu trữ")
+      : promptLibraryText("state.active", "Đang hoạt động");
   }
 
   function promptTemplateTags(value) {
@@ -12622,30 +12847,30 @@
 
   function promptTemplateFormFields() {
     return [
-      { name: "title", label: "Tên template", placeholder: "Ví dụ: Hook video sản phẩm 3 giây", required: true, minLength: 3, maxLength: 180 },
-      { name: "prompt_text", label: "Prompt", control: "textarea", placeholder: "Dùng {{product}}, {{benefit}} cho biến có thể thay thế…", required: true, minLength: 1, maxLength: 16000, help: "Đây là recipe authoring. Lưu template không chạy AI, không tạo job hoặc charge." },
-      { name: "negative_prompt", label: "Negative prompt", control: "textarea", placeholder: "Điều cần tránh (tùy chọn)", maxLength: 8000 },
-      { name: "category", label: "Danh mục", placeholder: "Ví dụ: Video product", required: true, maxLength: 100 },
-      { name: "product_context", label: "Ngữ cảnh", placeholder: "Ví dụ: video, image, content", required: true, maxLength: 100 },
-      { name: "platform", label: "Nền tảng", placeholder: "Ví dụ: TikTok", required: true, maxLength: 100 },
-      { name: "style", label: "Phong cách", placeholder: "Ví dụ: rõ ràng, giàu nhịp điệu", maxLength: 100 },
-      { name: "language", label: "Ngôn ngữ", placeholder: "Ví dụ: vi", required: true, maxLength: 100 },
-      { name: "variables", label: "Variables", placeholder: "product, benefit", maxLength: 1560, help: "Tên biến ngắn, phân tách bằng dấu phẩy. Chỉ variable khai báo mới được preview thay thế." },
-      { name: "tags", label: "Tags", placeholder: "launch, tiktok, hook", maxLength: 800, help: "Tối đa 16 tags, phân tách bằng dấu phẩy." },
-      { name: "source", label: "Nguồn", placeholder: "Ví dụ: Tự soạn trong TOAN AAS Web", required: true, minLength: 2, maxLength: 600 },
-      { name: "license_note", label: "Quyền sử dụng", placeholder: "Ví dụ: Tôi có quyền sử dụng nội dung này.", required: true, minLength: 2, maxLength: 600 },
-      { name: "quality_score", label: "Mức hoàn thiện tự đánh giá", type: "number", min: 0, max: 100, step: 1, required: true, help: "Điểm tự mô tả của bạn, không phải điểm đánh giá AI hoặc provider." }
+      { name: "title", label: promptLibraryText("form.titleLabel", "Tên mẫu"), placeholder: promptLibraryText("form.titlePlaceholder", "Ví dụ: Mở đầu video sản phẩm 3 giây"), required: true, minLength: 3, maxLength: 180 },
+      { name: "prompt_text", label: promptLibraryText("form.promptLabel", "Nội dung prompt"), control: "textarea", placeholder: promptLibraryText("form.promptPlaceholder", "Dùng {{product}}, {{benefit}} cho biến có thể thay thế…"), required: true, minLength: 1, maxLength: 16000, help: promptLibraryText("form.promptHelp", "Đây là công thức biên tập. Lưu mẫu không chạy AI, không tạo tác vụ hoặc tính phí.") },
+      { name: "negative_prompt", label: promptLibraryText("form.negativePromptLabel", "Prompt loại trừ"), control: "textarea", placeholder: promptLibraryText("form.negativePromptPlaceholder", "Điều cần tránh (tùy chọn)"), maxLength: 8000 },
+      { name: "category", label: promptLibraryText("form.categoryLabel", "Danh mục"), placeholder: promptLibraryText("form.categoryPlaceholder", "Ví dụ: Video sản phẩm"), required: true, maxLength: 100 },
+      { name: "product_context", label: promptLibraryText("form.productContextLabel", "Ngữ cảnh"), placeholder: promptLibraryText("form.productContextPlaceholder", "Ví dụ: video, hình ảnh, nội dung"), required: true, maxLength: 100 },
+      { name: "platform", label: promptLibraryText("form.platformLabel", "Nền tảng"), placeholder: promptLibraryText("form.platformPlaceholder", "Ví dụ: TikTok"), required: true, maxLength: 100 },
+      { name: "style", label: promptLibraryText("form.styleLabel", "Phong cách"), placeholder: promptLibraryText("form.stylePlaceholder", "Ví dụ: rõ ràng, giàu nhịp điệu"), maxLength: 100 },
+      { name: "language", label: promptLibraryText("form.languageLabel", "Ngôn ngữ"), placeholder: promptLibraryText("form.languagePlaceholder", "Ví dụ: vi"), required: true, maxLength: 100 },
+      { name: "variables", label: promptLibraryText("form.variablesLabel", "Biến"), placeholder: promptLibraryText("form.variablesPlaceholder", "product, benefit"), maxLength: 1560, help: promptLibraryText("form.variablesHelp", "Tên biến ngắn, phân tách bằng dấu phẩy. Chỉ biến đã khai báo mới được dùng khi xem trước.") },
+      { name: "tags", label: promptLibraryText("form.tagsLabel", "Thẻ"), placeholder: promptLibraryText("form.tagsPlaceholder", "launch, tiktok, hook"), maxLength: 800, help: promptLibraryText("form.tagsHelp", "Tối đa 16 thẻ, phân tách bằng dấu phẩy.") },
+      { name: "source", label: promptLibraryText("form.sourceLabel", "Nguồn"), placeholder: promptLibraryText("form.sourcePlaceholder", "Ví dụ: Tự soạn trong TOAN AAS Web"), required: true, minLength: 2, maxLength: 600 },
+      { name: "license_note", label: promptLibraryText("form.licenseLabel", "Quyền sử dụng"), placeholder: promptLibraryText("form.licensePlaceholder", "Ví dụ: Tôi có quyền sử dụng nội dung này."), required: true, minLength: 2, maxLength: 600 },
+      { name: "quality_score", label: promptLibraryText("form.qualityLabel", "Mức hoàn thiện tự đánh giá"), type: "number", min: 0, max: 100, step: 1, required: true, help: promptLibraryText("form.qualityHelp", "Điểm tự mô tả của bạn, không phải điểm đánh giá AI hoặc nhà cung cấp.") }
     ];
   }
 
   function promptLibraryFilterFields() {
     return [
-      { name: "q", label: "Tìm template", placeholder: "Tên, metadata, tag hoặc prompt…", maxLength: 100, wide: true },
-      { name: "category", label: "Danh mục", placeholder: "Ví dụ: Video", maxLength: 100 },
-      { name: "platform", label: "Nền tảng", placeholder: "Ví dụ: TikTok", maxLength: 100 },
-      { name: "product_context", label: "Ngữ cảnh", placeholder: "Ví dụ: video", maxLength: 100 },
-      { name: "tag", label: "Tag", placeholder: "Ví dụ: launch", maxLength: 48 },
-      { name: "state", label: "Trạng thái", control: "select", options: [["all", "Tất cả"], ["active", "Đang hoạt động"], ["archived", "Đã archive"]] }
+      { name: "q", label: promptLibraryText("filter.searchLabel", "Tìm mẫu"), placeholder: promptLibraryText("filter.searchPlaceholder", "Tên, dữ liệu mô tả, thẻ hoặc prompt…"), maxLength: 100, wide: true },
+      { name: "category", label: promptLibraryText("filter.categoryLabel", "Danh mục"), placeholder: promptLibraryText("filter.categoryPlaceholder", "Ví dụ: Video"), maxLength: 100 },
+      { name: "platform", label: promptLibraryText("filter.platformLabel", "Nền tảng"), placeholder: promptLibraryText("filter.platformPlaceholder", "Ví dụ: TikTok"), maxLength: 100 },
+      { name: "product_context", label: promptLibraryText("filter.productContextLabel", "Ngữ cảnh"), placeholder: promptLibraryText("filter.productContextPlaceholder", "Ví dụ: video"), maxLength: 100 },
+      { name: "tag", label: promptLibraryText("filter.tagLabel", "Thẻ"), placeholder: promptLibraryText("filter.tagPlaceholder", "Ví dụ: launch"), maxLength: 48 },
+      { name: "state", label: promptLibraryText("filter.stateLabel", "Trạng thái"), control: "select", options: [["all", promptLibraryText("filter.stateAll", "Tất cả")], ["active", promptLibraryText("state.active", "Đang hoạt động")], ["archived", promptLibraryText("state.archived", "Đã lưu trữ")]] }
     ];
   }
 
@@ -12663,18 +12888,22 @@
 
   function promptLibraryEventLabel(value) {
     return ({
-      template_created: "Đã tạo template", template_updated: "Đã lưu phiên bản mới", template_archived: "Đã archive template",
-      template_restored: "Đã khôi phục template", template_version_restored: "Đã khôi phục phiên bản", template_duplicated: "Đã nhân bản template",
-      template_imported: "Đã import template"
-    })[String(value || "")] || "Đã cập nhật Prompt Library";
+      template_created: promptLibraryText("event.created", "Đã tạo mẫu"),
+      template_updated: promptLibraryText("event.updated", "Đã lưu phiên bản mới"),
+      template_archived: promptLibraryText("event.archived", "Đã lưu trữ mẫu"),
+      template_restored: promptLibraryText("event.restored", "Đã khôi phục mẫu"),
+      template_version_restored: promptLibraryText("event.versionRestored", "Đã khôi phục phiên bản"),
+      template_duplicated: promptLibraryText("event.duplicated", "Đã nhân bản mẫu"),
+      template_imported: promptLibraryText("event.imported", "Đã nhập mẫu")
+    })[String(value || "")] || promptLibraryText("event.fallback", "Đã cập nhật Thư viện prompt");
   }
 
   function renderPromptLibraryCards(items) {
-    if (!items.length) return renderEmpty("Chưa có template", "Lưu recipe đầu tiên để tái sử dụng prompt, metadata và variables trong Web Workspace riêng tư.", "◇");
+    if (!items.length) return renderEmpty(promptLibraryText("card.emptyTitle", "Chưa có mẫu"), promptLibraryText("card.emptyBody", "Lưu công thức đầu tiên để tái sử dụng prompt, dữ liệu mô tả và biến trong không gian Web riêng tư."), "◇");
     return `<div class="portal-prompt-library-grid">${items.map((item) => {
       const id = String(item.id || "");
       const quality = Math.max(0, Math.min(100, Number(item.quality_score || 0) || 0));
-      return `<article class="portal-card portal-card-pad portal-prompt-library-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(item.product_context || "general"))} · ${safeText(String(item.platform || "general"))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Template"))}</h3><p class="portal-card-subtitle">${safeText(String(item.excerpt || "Chưa có prompt hiển thị."))}</p></div>${badge(promptTemplateState(item.state))}</div><div class="portal-prompt-library-meta"><span>${safeText(String(item.category || "Chưa phân loại"))}</span><span>${safeText(String(item.language || "vi"))}</span><span>v${safeText(String(item.revision || 1))}</span><span>${safeText(String(quality))}/100</span></div>${renderPromptTemplateTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(promptTemplateStateLabel(item.state))} · cập nhật ${safeText(String(item.updated_at || item.created_at || "—"))}</span><a class="portal-button portal-button--quiet" href="/prompt-library/${encodeURIComponent(id)}">Mở template <span aria-hidden="true">→</span></a></div></article>`;
+      return `<article class="portal-card portal-card-pad portal-prompt-library-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(item.product_context || promptLibraryText("card.defaultContext", "chung")))} · ${safeText(String(item.platform || promptLibraryText("card.defaultPlatform", "chung")))}</span><h3 class="portal-card-title">${safeText(String(item.title || promptLibraryText("card.defaultTitle", "Mẫu prompt")))}</h3><p class="portal-card-subtitle">${safeText(String(item.excerpt || promptLibraryText("card.noExcerpt", "Chưa có prompt hiển thị.")))}</p></div>${badge(promptTemplateState(item.state))}</div><div class="portal-prompt-library-meta"><span>${safeText(String(item.category || promptLibraryText("card.uncategorized", "Chưa phân loại")))}</span><span>${safeText(String(item.language || "vi"))}</span><span>v${safeText(String(item.revision || 1))}</span><span>${safeText(String(quality))}/100</span></div>${renderPromptTemplateTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(promptTemplateStateLabel(item.state))} · ${safeText(promptLibraryText("card.updated", "cập nhật {date}", { date: String(item.updated_at || item.created_at || "—") }))}</span><a class="portal-button portal-button--quiet" href="/prompt-library/${encodeURIComponent(id)}">${safeText(promptLibraryText("card.open", "Mở mẫu"))} <span aria-hidden="true">→</span></a></div></article>`;
     }).join("")}</div>`;
   }
 
@@ -12690,16 +12919,16 @@
     const filter = listing.filters;
     const route = page.routePath || page.path;
     const values = promptTemplateValues({ ...transientFormValues(route), quality_score: transientFormValues(route).quality_score || "50" });
-    if (!canView) return `<article class="portal-page portal-prompt-library">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Prompt Library đang được bảo vệ", "Đăng nhập bằng signed session để xem template riêng tư. Web không nhận Telegram ID thô hoặc mở kho seed global của Bot.", "⌁")}</section></article>`;
-    const filterForm = `<form class="portal-prompt-library-filter" data-portal-form data-portal-no-transient data-portal-action="prompt-library-filter" data-portal-route="/prompt-library" novalidate>${renderFields(promptLibraryFilterFields(), true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ tồn tại trong trang đang mở và đi qua API owner-scoped; không lưu vào URL, localStorage hoặc Telegram.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-library-filter-clear" data-portal-route="/prompt-library">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm kiếm</button></div></div></form>`;
+    if (!canView) return `<article class="portal-page portal-prompt-library">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(promptLibraryText("guard.title", "Thư viện prompt đang được bảo vệ"), promptLibraryText("guard.body", "Đăng nhập bằng phiên đã xác minh để xem mẫu riêng tư. Web không nhận Telegram ID thô hoặc mở kho mẫu dùng chung của Bot."), "⌁")}</section></article>`;
+    const filterForm = `<form class="portal-prompt-library-filter" data-portal-form data-portal-no-transient data-portal-action="prompt-library-filter" data-portal-route="/prompt-library" novalidate>${renderFields(promptLibraryFilterFields(), true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(promptLibraryText("filter.note", "Bộ lọc chỉ tồn tại trong trang đang mở và đi qua API theo chủ sở hữu; không lưu vào URL, bộ nhớ trình duyệt hoặc Telegram."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-library-filter-clear" data-portal-route="/prompt-library">${safeText(promptLibraryText("filter.clear", "Xóa lọc"))}</button><button class="portal-button portal-button--primary" type="submit">${safeText(promptLibraryText("filter.submit", "Tìm kiếm"))}</button></div></div></form>`;
     const events = Array.isArray(context.promptLibraryEvents) ? context.promptLibraryEvents.slice(0, 8) : [];
-    const eventList = events.length ? `<div class="portal-prompt-library-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(promptLibraryEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : renderEmpty("Chưa có hoạt động", "Timeline chỉ chứa nhãn audit-safe; không hiển thị prompt, license note hoặc request detail.", "○");
+    const eventList = events.length ? `<div class="portal-prompt-library-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(promptLibraryEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : renderEmpty(promptLibraryText("activity.emptyTitle", "Chưa có hoạt động"), promptLibraryText("activity.emptyBody", "Dòng thời gian chỉ chứa nhãn đã lọc an toàn; không hiển thị prompt, ghi chú quyền sử dụng hoặc chi tiết yêu cầu."), "○");
     return `<article class="portal-page portal-prompt-library">${renderHero(page, context)}
-      <section class="portal-prompt-library-intro"><div><span class="portal-section-kicker">Private Web template vault</span><h2>Prompt tốt là tài sản có thể tiếp tục, không phải đoạn text bị thất lạc</h2><p>Lưu recipe có bối cảnh, biến, quyền sử dụng và lịch sử phiên bản rõ ràng. Prompt Library độc lập với Bot, provider, job, Xu và PayOS.</p></div><dl><div><dt>${safeText(String(Number(counts.active || 0)))}</dt><dd>Đang hoạt động</dd></div><div><dt>${safeText(String(Number(counts.with_variables || 0)))}</dt><dd>Có variables</dd></div><div><dt>${safeText(String(Number(counts.archived || 0)))}</dt><dd>Đã archive</dd></div></dl></section>
-      <div class="portal-prompt-library-layout"><section class="portal-card portal-card-pad portal-prompt-library-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo template mới</h2><p class="portal-card-subtitle">Một template là recipe reusable. Hãy mô tả nguồn và quyền sử dụng, không lưu credential hay chứng từ thanh toán.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="prompt-template-create" data-portal-route="${safeText(route)}" novalidate>${renderFields(promptTemplateFormFields(), canCreate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Lưu version 1 với CSRF, idempotency và owner check. Không tạo engine request hoặc output.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Lưu template</button></div></form></section><aside class="portal-card portal-card-pad portal-prompt-library-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Ranh giới rõ ràng</span><h2 class="portal-card-title">Sử dụng có kiểm soát</h2><p class="portal-card-subtitle">Kho này là không gian authoring riêng tư, không phải catalog seed chung hoặc provider console.</p></div></div><ol class="portal-project-steps"><li><strong>1. Recipe có ngữ cảnh</strong><span>Ghi danh mục, nền tảng, phong cách, ngôn ngữ và variable.</span></li><li><strong>2. Version không ghi đè</strong><span>Mỗi lần lưu hoặc khôi phục tạo revision mới để so sánh rõ ràng.</span></li><li><strong>3. Preview trung thực</strong><span>Chỉ thay {{variable}} tại chỗ; không chạy AI hay phát sinh charge.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/prompt-studio">Mở Prompt Studio</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-library-export" data-portal-route="${safeText(route)}"${canExport ? "" : " disabled"}>Xuất JSON riêng tư</button></div></aside></div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tìm và tiếp tục template</h2><p class="portal-card-subtitle">Danh sách chỉ chứa metadata/excerpt thuộc signed account hiện tại. Nội dung đầy đủ chỉ nạp khi mở template.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-library-refresh" data-portal-route="/prompt-library">Làm mới</button></div>${filterForm}${renderPromptLibraryCards(templates)}${renderPromptLibraryPagination(listing)}</section>
-      <details class="portal-prompt-library-import"><summary>Import JSON an toàn</summary><p>Chỉ dán JSON object có trường <code>templates</code> hoặc một mảng template. Không nhận file path, URL, scrape hoặc seed global của Bot; import tối đa 50 template mỗi lần.</p><form class="portal-form" data-portal-form data-portal-action="prompt-library-import" data-portal-route="/prompt-library" data-portal-confirm="Import các template JSON vào Prompt Library riêng tư? Dữ liệu sẽ được kiểm tra schema, secret và quyền sử dụng trước khi lưu." novalidate><label class="portal-field"><span>JSON template</span><textarea class="portal-textarea" name="templates_json" required minlength="2" maxlength="1400000" placeholder='{"templates":[{"title":"…","prompt_text":"…"}]}'${canImport ? "" : " disabled"}></textarea><small>Tối đa 1.400.000 ký tự mỗi batch; không bao gồm account ID, đường dẫn file, token, API key, khóa riêng, OTP/CVV, số thẻ hoặc chứng từ thanh toán.</small></label><div class="portal-form-footer"><span class="portal-form-note">Import append-only, idempotent và không fetch URL ngoài.</span><button class="portal-button portal-button--primary" type="submit"${canImport ? "" : " disabled"}>Kiểm tra & import</button></div></form></details>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Chỉ nhãn thao tác và revision; không lộ prompt, variable value, license note hoặc request detail.</p></div></div>${eventList}</section>
+      <section class="portal-prompt-library-intro"><div><span class="portal-section-kicker">${safeText(promptLibraryText("intro.kicker", "Kho mẫu Web riêng tư"))}</span><h2>${safeText(promptLibraryText("intro.title", "Prompt tốt là tài sản có thể tiếp tục, không phải đoạn chữ bị thất lạc"))}</h2><p>${safeText(promptLibraryText("intro.body", "Lưu công thức có bối cảnh, biến, quyền sử dụng và lịch sử phiên bản rõ ràng. Thư viện prompt độc lập với Bot, nhà cung cấp, job, Xu và PayOS."))}</p></div><dl><div><dt>${safeText(String(Number(counts.active || 0)))}</dt><dd>${safeText(promptLibraryText("count.active", "Đang hoạt động"))}</dd></div><div><dt>${safeText(String(Number(counts.with_variables || 0)))}</dt><dd>${safeText(promptLibraryText("count.withVariables", "Có biến"))}</dd></div><div><dt>${safeText(String(Number(counts.archived || 0)))}</dt><dd>${safeText(promptLibraryText("count.archived", "Đã lưu trữ"))}</dd></div></dl></section>
+      <div class="portal-prompt-library-layout"><section class="portal-card portal-card-pad portal-prompt-library-create"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(promptLibraryText("create.title", "Tạo mẫu mới"))}</h2><p class="portal-card-subtitle">${safeText(promptLibraryText("create.body", "Một mẫu là công thức có thể dùng lại. Hãy mô tả nguồn và quyền sử dụng, không lưu thông tin xác thực hoặc chứng từ thanh toán."))}</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="prompt-template-create" data-portal-route="${safeText(route)}" novalidate>${renderFields(promptTemplateFormFields(), canCreate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(promptLibraryText("create.note", "Lưu phiên bản 1 với CSRF, chống lặp và kiểm tra chủ sở hữu. Không tạo yêu cầu engine hoặc đầu ra."))}</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>${safeText(promptLibraryText("create.submit", "Lưu mẫu"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-prompt-library-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(promptLibraryText("boundary.kicker", "Ranh giới rõ ràng"))}</span><h2 class="portal-card-title">${safeText(promptLibraryText("boundary.title", "Sử dụng có kiểm soát"))}</h2><p class="portal-card-subtitle">${safeText(promptLibraryText("boundary.body", "Kho này là không gian biên tập riêng tư, không phải catalog mẫu dùng chung hoặc bảng điều khiển nhà cung cấp."))}</p></div></div><ol class="portal-project-steps"><li><strong>1. ${safeText(promptLibraryText("boundary.stepContext", "Công thức có ngữ cảnh"))}</strong><span>${safeText(promptLibraryText("boundary.stepContextBody", "Ghi danh mục, nền tảng, phong cách, ngôn ngữ và biến."))}</span></li><li><strong>2. ${safeText(promptLibraryText("boundary.stepVersion", "Phiên bản không ghi đè"))}</strong><span>${safeText(promptLibraryText("boundary.stepVersionBody", "Mỗi lần lưu hoặc khôi phục tạo phiên bản mới để so sánh rõ ràng."))}</span></li><li><strong>3. ${safeText(promptLibraryText("boundary.stepPreview", "Xem trước trung thực"))}</strong><span>${safeText(promptLibraryText("boundary.stepPreviewBody", "Chỉ thay {{variable}} tại chỗ; không chạy AI hay phát sinh phí."))}</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/prompt-studio">${safeText(promptLibraryText("boundary.openStudio", "Mở Prompt Studio"))}</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-library-export" data-portal-route="${safeText(route)}"${canExport ? "" : " disabled"}>${safeText(promptLibraryText("boundary.export", "Xuất JSON riêng tư"))}</button></div></aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(promptLibraryText("library.title", "Tìm và tiếp tục mẫu"))}</h2><p class="portal-card-subtitle">${safeText(promptLibraryText("library.body", "Danh sách chỉ chứa dữ liệu mô tả và trích đoạn thuộc tài khoản đã xác minh hiện tại. Nội dung đầy đủ chỉ nạp khi mở mẫu."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-library-refresh" data-portal-route="/prompt-library">${safeText(promptLibraryText("library.refresh", "Làm mới"))}</button></div>${filterForm}${renderPromptLibraryCards(templates)}${renderPromptLibraryPagination(listing)}</section>
+      <details class="portal-prompt-library-import"><summary>${safeText(promptLibraryText("import.summary", "Nhập JSON an toàn"))}</summary><p>${safeText(promptLibraryText("import.body", "Chỉ dán đối tượng JSON có trường danh sách mẫu hoặc một mảng mẫu. Không nhận đường dẫn tệp, URL, scrape hoặc mẫu dùng chung của Bot; mỗi lần nhập tối đa 50 mẫu."))}</p><form class="portal-form" data-portal-form data-portal-action="prompt-library-import" data-portal-route="/prompt-library" data-portal-confirm="${safeText(promptLibraryText("import.confirm", "Nhập các mẫu JSON vào thư viện prompt riêng tư? Dữ liệu sẽ được kiểm tra lược đồ, secret và quyền sử dụng trước khi lưu."))}" novalidate><label class="portal-field"><span>${safeText(promptLibraryText("import.jsonLabel", "Mẫu JSON"))}</span><textarea class="portal-textarea" name="templates_json" required minlength="2" maxlength="1400000" placeholder='{"templates":[{"title":"…","prompt_text":"…"}]}'${canImport ? "" : " disabled"}></textarea><small>${safeText(promptLibraryText("import.sizeNote", "Tối đa 1.400.000 ký tự mỗi đợt; không bao gồm mã tài khoản, đường dẫn tệp, token, API key, khóa riêng, OTP/CVV, số thẻ hoặc chứng từ thanh toán."))}</small></label><div class="portal-form-footer"><span class="portal-form-note">${safeText(promptLibraryText("import.note", "Nhập chỉ thêm, chống lặp và không tải URL bên ngoài."))}</span><button class="portal-button portal-button--primary" type="submit"${canImport ? "" : " disabled"}>${safeText(promptLibraryText("import.submit", "Kiểm tra và nhập"))}</button></div></form></details>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(promptLibraryText("activity.kicker", "Dòng thời gian an toàn"))}</span><h2 class="portal-card-title">${safeText(promptLibraryText("activity.title", "Hoạt động gần đây"))}</h2><p class="portal-card-subtitle">${safeText(promptLibraryText("activity.body", "Chỉ hiển thị nhãn thao tác và phiên bản; không lộ prompt, giá trị biến, ghi chú quyền sử dụng hoặc chi tiết yêu cầu."))}</p></div></div>${eventList}</section>
     </article>`;
   }
 
@@ -12707,7 +12936,7 @@
     const detail = context.promptTemplateDetail && typeof context.promptTemplateDetail === "object" ? context.promptTemplateDetail : {};
     const template = detail.template && typeof detail.template === "object" && validPromptTemplateId(detail.template.id) && String(detail.template.id) === String(page.recordId || "") ? detail.template : null;
     const canView = Boolean(context.capabilities && context.capabilities["prompt-library-view"] === true);
-    if (!canView || !template) return `<article class="portal-page portal-prompt-library-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Không tìm thấy template", "Template có thể không thuộc Web account hiện tại, đã bị gỡ hoặc dữ liệu riêng tư chưa được server xác minh.", "◇")}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/prompt-library">Về Prompt Library</a></div></section></article>`;
+    if (!canView || !template) return `<article class="portal-page portal-prompt-library-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(promptLibraryText("detail.notFoundTitle", "Không tìm thấy mẫu"), promptLibraryText("detail.notFoundBody", "Mẫu có thể không thuộc tài khoản Web hiện tại, đã bị gỡ hoặc dữ liệu riêng tư chưa được máy chủ xác minh."), "◇")}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/prompt-library">${safeText(promptLibraryText("detail.back", "Về thư viện prompt"))}</a></div></section></article>`;
     const state = String(template.state || "active");
     const canUpdate = Boolean(context.capabilities && context.capabilities["prompt-library-update"] === true && state === "active");
     const canArchive = Boolean(context.capabilities && context.capabilities["prompt-library-archive"] === true && state === "active");
@@ -12721,19 +12950,19 @@
     const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 100) : [];
     const variables = promptTemplateVariables(template.variables);
     const stateAction = state === "active"
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-archive" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" data-portal-confirm="Archive template này? Nội dung và version history vẫn được giữ riêng tư, nhưng template không thể chỉnh sửa cho đến khi được khôi phục."${canArchive ? "" : " disabled"}>Archive</button>`
-      : `<button class="portal-button portal-button--primary" type="button" data-portal-action="prompt-template-restore" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}"${canRestore ? "" : " disabled"}>Khôi phục template</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-purge" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" data-portal-confirm="Xóa vĩnh viễn template đã archive cùng toàn bộ version history? Thao tác này không thể hoàn tác."${canPurge ? "" : " disabled"}>Xóa vĩnh viễn</button>`;
-    const versionList = versions.length ? `<div class="portal-version-list">${versions.map((version) => `<div class="portal-version-row"><span><strong>v${safeText(String(version.revision))}</strong><small>${safeText(String(version.title || "Template"))} · ${safeText(String(version.created_at || "—"))} · ${safeText(promptTemplateStateLabel(version.state))}</small></span>${Number(version.revision) === Number(template.revision) ? `<span class="portal-form-note">Đang mở</span>` : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-restore-version" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" data-prompt-template-version="${safeText(String(version.revision))}" data-portal-confirm="Khôi phục v${safeText(String(version.revision))} thành một revision mới? Phiên bản hiện tại vẫn được giữ trong history."${canUpdate ? "" : " disabled"}>Khôi phục</button>`}</div>`).join("")}</div>` : renderEmpty("Chưa có version history", "Version đầu tiên được lưu khi template được tạo và không bị ghi đè âm thầm.", "○");
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-archive" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" data-portal-confirm="${safeText(promptLibraryText("detail.archiveConfirm", "Lưu trữ mẫu này? Nội dung và lịch sử phiên bản vẫn được giữ riêng tư, nhưng mẫu không thể chỉnh sửa cho đến khi được khôi phục."))}"${canArchive ? "" : " disabled"}>${safeText(promptLibraryText("detail.archive", "Lưu trữ"))}</button>`
+      : `<button class="portal-button portal-button--primary" type="button" data-portal-action="prompt-template-restore" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}"${canRestore ? "" : " disabled"}>${safeText(promptLibraryText("detail.restore", "Khôi phục mẫu"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-purge" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" data-portal-confirm="${safeText(promptLibraryText("detail.purgeConfirm", "Xóa vĩnh viễn mẫu đã lưu trữ cùng toàn bộ lịch sử phiên bản? Thao tác này không thể hoàn tác."))}"${canPurge ? "" : " disabled"}>${safeText(promptLibraryText("detail.purge", "Xóa vĩnh viễn"))}</button>`;
+    const versionList = versions.length ? `<div class="portal-version-list">${versions.map((version) => `<div class="portal-version-row"><span><strong>v${safeText(String(version.revision))}</strong><small>${safeText(String(version.title || promptLibraryText("card.defaultTitle", "Mẫu prompt")))} · ${safeText(String(version.created_at || "—"))} · ${safeText(promptTemplateStateLabel(version.state))}</small></span>${Number(version.revision) === Number(template.revision) ? `<span class="portal-form-note">${safeText(promptLibraryText("detail.currentVersion", "Đang mở"))}</span>` : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-restore-version" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" data-prompt-template-version="${safeText(String(version.revision))}" data-portal-confirm="${safeText(promptLibraryText("detail.restoreVersionConfirm", "Khôi phục v{version} thành một phiên bản mới? Phiên bản hiện tại vẫn được giữ trong lịch sử.", { version: String(version.revision) }))}"${canUpdate ? "" : " disabled"}>${safeText(promptLibraryText("detail.restoreVersion", "Khôi phục"))}</button>`}</div>`).join("")}</div>` : renderEmpty(promptLibraryText("detail.emptyHistoryTitle", "Chưa có lịch sử phiên bản"), promptLibraryText("detail.emptyHistoryBody", "Phiên bản đầu tiên được lưu khi mẫu được tạo và không bị ghi đè âm thầm."), "○");
     const preview = context.promptTemplatePreview && typeof context.promptTemplatePreview === "object" ? context.promptTemplatePreview : {};
     const previewForTemplate = String(preview.template_id || "") === String(template.id) ? preview : {};
-    const variableFields = variables.length ? variables.map((name) => `<label class="portal-field"><span>${safeText(name)}</span><input class="portal-input" name="variable_${safeText(name)}" maxlength="600" placeholder="Giá trị preview cho ${safeText(name)}"${canPreview ? "" : " disabled"}></label>`).join("") : `<p class="portal-form-note">Template chưa khai báo variable. Preview sẽ giữ nguyên nội dung.</p>`;
-    const previewResult = previewForTemplate && typeof previewForTemplate.prompt_text === "string" ? `<section class="portal-prompt-library-preview-result"><div><span class="portal-section-kicker">Preview only</span><h3>Prompt sau khi thay variable</h3><p>Đây là render cục bộ, không phải AI output hoặc request engine.</p></div><pre>${safeText(previewForTemplate.prompt_text)}</pre>${previewForTemplate.negative_prompt ? `<h4>Negative prompt</h4><pre>${safeText(previewForTemplate.negative_prompt)}</pre>` : ""}</section>` : "";
+    const variableFields = variables.length ? variables.map((name) => `<label class="portal-field"><span>${safeText(name)}</span><input class="portal-input" name="variable_${safeText(name)}" maxlength="600" placeholder="${safeText(promptLibraryText("preview.variablePlaceholder", "Giá trị xem trước cho {name}", { name }))}"${canPreview ? "" : " disabled"}></label>`).join("") : `<p class="portal-form-note">${safeText(promptLibraryText("preview.noVariables", "Template chưa khai báo biến. Phần xem trước sẽ giữ nguyên nội dung."))}</p>`;
+    const previewResult = previewForTemplate && typeof previewForTemplate.prompt_text === "string" ? `<section class="portal-prompt-library-preview-result"><div><span class="portal-section-kicker">${safeText(promptLibraryText("preview.kicker", "Chỉ xem trước"))}</span><h3>${safeText(promptLibraryText("preview.title", "Prompt sau khi thay biến"))}</h3><p>${safeText(promptLibraryText("preview.body", "Đây là bản dựng cục bộ, không phải đầu ra AI hoặc yêu cầu engine."))}</p></div><pre>${safeText(previewForTemplate.prompt_text)}</pre>${previewForTemplate.negative_prompt ? `<h4>${safeText(promptLibraryText("preview.negativePrompt", "Prompt loại trừ"))}</h4><pre>${safeText(previewForTemplate.negative_prompt)}</pre>` : ""}</section>` : "";
     return `<article class="portal-page portal-prompt-library-detail">${renderHero(page, context)}
-      <section class="portal-prompt-library-detail-summary"><div><span class="portal-section-kicker">${safeText(String(template.product_context || "general"))} · ${safeText(String(template.platform || "general"))}</span><h2>${safeText(String(template.title || "Template"))}</h2><p>${safeText(String(template.category || "Chưa phân loại"))} · ${safeText(String(template.style || "Chưa đặt phong cách"))} · ${safeText(String(template.language || "vi"))}</p>${renderPromptTemplateTags(template.tags)}</div><dl><div><dt>Revision</dt><dd>v${safeText(String(template.revision || 1))}</dd></div><div><dt>Tự đánh giá</dt><dd>${safeText(String(template.quality_score || 0))}/100</dd></div><div><dt>Trạng thái</dt><dd>${badge(promptTemplateState(template.state))}</dd></div></dl></section>
-      <div class="portal-prompt-library-detail-grid"><section class="portal-card portal-card-pad portal-prompt-library-editor"><div class="portal-card-header"><div><h2 class="portal-card-title">Template editor</h2><p class="portal-card-subtitle">Mỗi lần lưu tạo revision mới. Server kiểm tra owner, CSRF, idempotency và optimistic revision trước khi ghi.</p></div>${badge(promptTemplateState(template.state))}</div><form class="portal-form" data-portal-form data-portal-action="prompt-template-update" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" novalidate>${renderFields(promptTemplateFormFields(), canUpdate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Không có provider/engine call, job, Xu hoặc payment trong thao tác lưu template.</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-duplicate" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}"${canDuplicate ? "" : " disabled"}>Nhân bản</button><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu revision mới</button></div></div></form><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-copy" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}"${canCopy ? "" : " disabled"}>Sao chép prompt</button><a class="portal-button portal-button--quiet" href="/prompt-studio">Mở Prompt Studio</a></div></section>
-        <aside class="portal-card portal-card-pad portal-prompt-library-preview"><div class="portal-card-header"><div><span class="portal-section-kicker">Local preview</span><h2 class="portal-card-title">Thử variable an toàn</h2><p class="portal-card-subtitle">Chỉ variable đã khai báo mới được thay. Nội dung preview không được lưu tự động hoặc gửi tới engine.</p></div>${badge(canPreview ? "read_only" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="prompt-template-preview" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" novalidate><div class="portal-fields">${variableFields}</div><div class="portal-form-footer"><span class="portal-form-note">Preview local-only · không tạo AI output.</span><button class="portal-button portal-button--primary" type="submit"${canPreview ? "" : " disabled"}>Tạo preview</button></div></form>${previewResult}</aside></div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử phiên bản</h2><p class="portal-card-subtitle">Khôi phục luôn tạo revision mới. Dữ liệu phiên bản chỉ nạp sau owner check và không được cache PWA.</p></div></div>${versionList}</section>
-      <section class="portal-card portal-card-pad portal-prompt-library-provenance"><div class="portal-card-header"><div><span class="portal-section-kicker">Provenance</span><h2 class="portal-card-title">Nguồn & quyền sử dụng</h2><p class="portal-card-subtitle">Thông tin này do bạn khai báo để quản lý template của chính mình; Web không tự chứng nhận bản quyền hoặc provenance ngoài hệ thống.</p></div></div><dl><div><dt>Nguồn</dt><dd>${safeText(String(template.source || "—"))}</dd></div><div><dt>Quyền sử dụng</dt><dd>${safeText(String(template.license_note || "—"))}</dd></div></dl>${renderNotes(page)}</section>
+      <section class="portal-prompt-library-detail-summary"><div><span class="portal-section-kicker">${safeText(String(template.product_context || promptLibraryText("card.defaultContext", "chung")))} · ${safeText(String(template.platform || promptLibraryText("card.defaultPlatform", "chung")))}</span><h2>${safeText(String(template.title || promptLibraryText("card.defaultTitle", "Template")))}</h2><p>${safeText(String(template.category || promptLibraryText("card.uncategorized", "Chưa phân loại")))} · ${safeText(String(template.style || promptLibraryText("detail.noStyle", "Chưa đặt phong cách")))} · ${safeText(String(template.language || "vi"))}</p>${renderPromptTemplateTags(template.tags)}</div><dl><div><dt>${safeText(promptLibraryText("detail.revisionLabel", "Phiên bản"))}</dt><dd>v${safeText(String(template.revision || 1))}</dd></div><div><dt>${safeText(promptLibraryText("detail.qualityLabel", "Tự đánh giá"))}</dt><dd>${safeText(String(template.quality_score || 0))}/100</dd></div><div><dt>${safeText(promptLibraryText("detail.statusLabel", "Trạng thái"))}</dt><dd>${badge(promptTemplateState(template.state))}</dd></div></dl></section>
+      <div class="portal-prompt-library-detail-grid"><section class="portal-card portal-card-pad portal-prompt-library-editor"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(promptLibraryText("editor.title", "Biên tập mẫu"))}</h2><p class="portal-card-subtitle">${safeText(promptLibraryText("editor.body", "Mỗi lần lưu tạo phiên bản mới. Máy chủ kiểm tra chủ sở hữu, CSRF, chống lặp và phiên bản hiện tại trước khi ghi."))}</p></div>${badge(promptTemplateState(template.state))}</div><form class="portal-form" data-portal-form data-portal-action="prompt-template-update" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" novalidate>${renderFields(promptTemplateFormFields(), canUpdate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(promptLibraryText("editor.note", "Thao tác lưu không gọi nhà cung cấp hoặc engine, không tạo tác vụ, Xu hay thanh toán."))}</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-duplicate" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}"${canDuplicate ? "" : " disabled"}>${safeText(promptLibraryText("editor.duplicate", "Nhân bản"))}</button><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>${safeText(promptLibraryText("editor.save", "Lưu phiên bản mới"))}</button></div></div></form><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-copy" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}"${canCopy ? "" : " disabled"}>${safeText(promptLibraryText("editor.copy", "Sao chép prompt"))}</button><a class="portal-button portal-button--quiet" href="/prompt-studio">${safeText(promptLibraryText("editor.openStudio", "Mở Prompt Studio"))}</a></div></section>
+         <aside class="portal-card portal-card-pad portal-prompt-library-preview"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(promptLibraryText("preview.kicker", "Xem trước cục bộ"))}</span><h2 class="portal-card-title">${safeText(promptLibraryText("preview.titlePanel", "Thử biến an toàn"))}</h2><p class="portal-card-subtitle">${safeText(promptLibraryText("preview.panelBody", "Chỉ biến đã khai báo mới được thay. Nội dung xem trước không tự lưu hoặc gửi tới engine."))}</p></div>${badge(canPreview ? "read_only" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="prompt-template-preview" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" novalidate><div class="portal-fields">${variableFields}</div><div class="portal-form-footer"><span class="portal-form-note">${safeText(promptLibraryText("preview.note", "Chỉ xem trước tại Web · không tạo đầu ra AI."))}</span><button class="portal-button portal-button--primary" type="submit"${canPreview ? "" : " disabled"}>${safeText(promptLibraryText("preview.submit", "Tạo bản xem trước"))}</button></div></form>${previewResult}</aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(promptLibraryText("history.kicker", "Lịch sử phiên bản"))}</span><h2 class="portal-card-title">${safeText(promptLibraryText("history.title", "Lịch sử phiên bản"))}</h2><p class="portal-card-subtitle">${safeText(promptLibraryText("history.body", "Khôi phục luôn tạo phiên bản mới. Dữ liệu phiên bản chỉ nạp sau khi kiểm tra chủ sở hữu và không được lưu trong bộ nhớ PWA."))}</p></div></div>${versionList}</section>
+      <section class="portal-card portal-card-pad portal-prompt-library-provenance"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(promptLibraryText("provenance.kicker", "Nguồn và quyền"))}</span><h2 class="portal-card-title">${safeText(promptLibraryText("provenance.title", "Nguồn và quyền sử dụng"))}</h2><p class="portal-card-subtitle">${safeText(promptLibraryText("provenance.body", "Thông tin này do bạn khai báo để quản lý mẫu của chính mình; Web không tự chứng nhận bản quyền hoặc nguồn gốc ngoài hệ thống."))}</p></div></div><dl><div><dt>${safeText(promptLibraryText("form.sourceLabel", "Nguồn"))}</dt><dd>${safeText(String(template.source || "—"))}</dd></div><div><dt>${safeText(promptLibraryText("form.licenseLabel", "Quyền sử dụng"))}</dt><dd>${safeText(String(template.license_note || "—"))}</dd></div></dl>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -12783,11 +13012,11 @@
     const platforms = [...new Set(categories.flatMap((item) => Array.isArray(item.platforms) ? item.platforms : []))];
     const label = (value) => String(value || "").replace(/_/g, " ");
     return [
-      { name: "q", label: "Tìm prompt", placeholder: "Tiêu đề, ngành, mục tiêu hoặc một cụm từ trong prompt…", maxLength: 160, wide: true, help: "Tìm kiếm tối đa 160 ký tự, chỉ gửi tới snapshot signed này và không được lưu vào URL hoặc browser storage." },
-      { name: "category_id", label: "Nhóm prompt", control: "select", options: [["", "Tất cả nhóm"], ...categories.map((item) => [item.id, item.title])] },
-      { name: "industry_id", label: "Ngành", control: "select", options: [["", "Tất cả ngành"], ...industries.map((item) => [item.id, item.title])] },
-      { name: "goal", label: "Mục tiêu", control: "select", options: [["", "Tất cả mục tiêu"], ...goals.map((item) => [item, label(item)])] },
-      { name: "platform", label: "Nền tảng", control: "select", options: [["", "Tất cả nền tảng"], ...platforms.map((item) => [item, label(item)])] }
+      { name: "q", label: freePromptGalleryText("filter.searchLabel", "Tìm kiếm mẫu"), placeholder: freePromptGalleryText("filter.searchPlaceholder", "Tiêu đề, ngành, mục tiêu hoặc một cụm từ trong mẫu…"), maxLength: 160, wide: true, help: freePromptGalleryText("filter.searchHelp", "Tối đa 160 ký tự; chỉ gửi trong bản chụp đã ký và không lưu vào URL hoặc bộ nhớ trình duyệt.") },
+      { name: "category_id", label: freePromptGalleryText("filter.categoryLabel", "Nhóm mẫu"), control: "select", options: [["", freePromptGalleryText("filter.categoryAll", "Tất cả nhóm")], ...categories.map((item) => [item.id, item.title])] },
+      { name: "industry_id", label: freePromptGalleryText("filter.industryLabel", "Ngành"), control: "select", options: [["", freePromptGalleryText("filter.industryAll", "Tất cả ngành")], ...industries.map((item) => [item.id, item.title])] },
+      { name: "goal", label: freePromptGalleryText("filter.goalLabel", "Mục tiêu"), control: "select", options: [["", freePromptGalleryText("filter.goalAll", "Tất cả mục tiêu")], ...goals.map((item) => [item, label(item)])] },
+      { name: "platform", label: freePromptGalleryText("filter.platformLabel", "Nền tảng"), control: "select", options: [["", freePromptGalleryText("filter.platformAll", "Tất cả nền tảng")], ...platforms.map((item) => [item, label(item)])] }
     ];
   }
 
@@ -12797,12 +13026,16 @@
   }
 
   function renderFreePromptGalleryCards(items, enabled) {
-    if (!items.length) return renderEmpty("Chưa có prompt phù hợp", "Đổi bộ lọc hoặc từ khóa để xem seed có trong snapshot hiện tại. Web không tự sinh prompt khi catalog không có kết quả.", "◇");
+    if (!items.length) return renderEmpty(
+      freePromptGalleryText("cards.emptyTitle", "Chưa có mẫu phù hợp"),
+      freePromptGalleryText("cards.emptyBody", "Đổi bộ lọc hoặc từ khóa để xem mẫu có trong danh mục hiện tại. Ứng dụng không tự sinh mẫu khi danh mục không có kết quả."),
+      "◇"
+    );
     return `<div class="portal-prompt-library-grid">${items.map((item) => {
       const id = String(item.id || "");
       const preview = String(item.prompt || "");
       const shortPreview = preview.length > 420 ? `${preview.slice(0, 420)}…` : preview;
-      return `<article class="portal-card portal-card-pad portal-prompt-library-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(item.category_title || "Prompt"))} · ${safeText(String(item.industry || "General"))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Prompt seed"))}</h3><p class="portal-card-subtitle">${safeText(shortPreview)}</p></div>${badge("read_only")}</div>${freePromptGalleryTags([...(Array.isArray(item.goals) ? item.goals : []), ...(Array.isArray(item.platforms) ? item.platforms : [])])}<div class="portal-form-footer"><span class="portal-form-note">Snapshot chỉ đọc · không tạo job, asset hoặc publish action.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-detail" data-portal-route="/free-prompt-gallery" data-free-prompt-gallery-id="${safeText(id)}" data-copy-text="${safeText(id)}"${enabled ? "" : " disabled"}>Xem chi tiết</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-copy" data-portal-route="/free-prompt-gallery" data-free-prompt-gallery-id="${safeText(id)}" data-copy-text="${safeText(id)}"${enabled ? "" : " disabled"}>Sao chép prompt</button></div></div></article>`;
+      return `<article class="portal-card portal-card-pad portal-prompt-library-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(item.category_title || freePromptGalleryText("cards.defaultCategory", "Mẫu")))} · ${safeText(String(item.industry || freePromptGalleryText("cards.defaultIndustry", "Chung")))}</span><h3 class="portal-card-title">${safeText(String(item.title || freePromptGalleryText("cards.defaultTitle", "Mẫu câu lệnh")))}</h3><p class="portal-card-subtitle">${safeText(shortPreview)}</p></div>${badge("read_only")}</div>${freePromptGalleryTags([...(Array.isArray(item.goals) ? item.goals : []), ...(Array.isArray(item.platforms) ? item.platforms : [])])}<div class="portal-form-footer"><span class="portal-form-note">${safeText(freePromptGalleryText("cards.note", "Danh mục chỉ đọc · không tạo tác vụ, tài sản hoặc thao tác đăng bài."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-detail" data-portal-route="/free-prompt-gallery" data-free-prompt-gallery-id="${safeText(id)}" data-copy-text="${safeText(id)}"${enabled ? "" : " disabled"}>${safeText(freePromptGalleryText("cards.detail", "Xem chi tiết"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-copy" data-portal-route="/free-prompt-gallery" data-free-prompt-gallery-id="${safeText(id)}" data-copy-text="${safeText(id)}"${enabled ? "" : " disabled"}>${safeText(freePromptGalleryText("cards.copy", "Sao chép mẫu"))}</button></div></div></article>`;
     }).join("")}</div>`;
   }
 
@@ -12817,26 +13050,26 @@
     const previous = page > 1 ? page - 1 : 0;
     const next = source.has_next === true ? page + 1 : 0;
     const disabled = enabled ? "" : " disabled";
-    return `<div class="portal-form-footer" aria-label="Phân trang Prompt Gallery"><span class="portal-form-note">Hiển thị ${safeText(String(from))}–${safeText(String(to))} / ${safeText(String(total))} prompt · trang ${safeText(String(page))}/${safeText(String(source.total_pages || 1))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-page" data-portal-route="/free-prompt-gallery" data-free-prompt-gallery-page="${safeText(String(previous))}" data-copy-text="${safeText(String(previous))}"${previous ? disabled : " disabled"}>← Trước</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-page" data-portal-route="/free-prompt-gallery" data-free-prompt-gallery-page="${safeText(String(next))}" data-copy-text="${safeText(String(next))}"${next ? disabled : " disabled"}>Sau →</button></div></div>`;
+    return `<div class="portal-form-footer" aria-label="${safeText(freePromptGalleryText("pagination.aria", "Phân trang thư viện mẫu"))}"><span class="portal-form-note">${safeText(freePromptGalleryText("pagination.summary", "Hiển thị {from}–{to} / {total} mẫu · trang {page}/{pages}", { from: String(from), to: String(to), total: String(total), page: String(page), pages: String(source.total_pages || 1) }))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-page" data-portal-route="/free-prompt-gallery" data-free-prompt-gallery-page="${safeText(String(previous))}" data-copy-text="${safeText(String(previous))}"${previous ? disabled : " disabled"}>← ${safeText(freePromptGalleryText("pagination.previous", "Trước"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-page" data-portal-route="/free-prompt-gallery" data-free-prompt-gallery-page="${safeText(String(next))}" data-copy-text="${safeText(String(next))}"${next ? disabled : " disabled"}>${safeText(freePromptGalleryText("pagination.next", "Sau"))} →</button></div></div>`;
   }
 
   function renderFreePromptGalleryDetail(raw, enabled, canSave) {
     const detail = normalizeFreePromptGalleryDetail(raw);
     const item = detail.item && typeof detail.item === "object" ? detail.item : null;
     if (!item) {
-      return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Prompt detail</span><h2 class="portal-card-title">Chọn một prompt để xem đầy đủ</h2><p class="portal-card-subtitle">Chi tiết chỉ được nạp sau signed session và thao tác rõ ràng của bạn; browser không đoán hoặc ghép prompt từ Bot, provider hay một cache cũ.</p></div>${badge("empty")}</div></section>`;
+      return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("detail.kicker", "Chi tiết mẫu"))}</span><h2 class="portal-card-title">${safeText(freePromptGalleryText("detail.emptyTitle", "Chọn một mẫu để xem đầy đủ"))}</h2><p class="portal-card-subtitle">${safeText(freePromptGalleryText("detail.emptyBody", "Chi tiết chỉ được nạp sau phiên đăng nhập đã xác minh và thao tác rõ ràng của bạn; ứng dụng không đoán hoặc ghép mẫu từ Bot, nhà cung cấp hay bộ nhớ cũ."))}</p></div>${badge("empty")}</div></section>`;
     }
     const itemId = safeText(String(item.id || ""));
-    const saveControl = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-save" data-portal-route="/free-prompt-gallery" data-free-prompt-gallery-id="${itemId}" data-copy-text="${itemId}" data-portal-confirm="Lưu seed Gallery này thành ghi chú riêng trong Memory Center? Máy chủ sẽ tự lấy lại seed từ snapshot đã duyệt; không tạo Bot pending-save, không gọi provider, không tạo job, không đổi ví Xu, PayOS hoặc publish."${canSave ? "" : " disabled"}>Lưu vào Memory Center</button>`;
-    return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Static prompt seed</span><h2 class="portal-card-title">${safeText(String(item.title || "Prompt seed"))}</h2><p class="portal-card-subtitle">${safeText(String(item.category_title || "Prompt"))} · ${safeText(String(item.industry || "General"))}. Đây là seed để tự review, không phải output AI, asset, post hoặc delivery receipt.</p></div>${badge("read_only")}</div>${freePromptGalleryTags([...(Array.isArray(item.goals) ? item.goals : []), ...(Array.isArray(item.platforms) ? item.platforms : [])])}<section class="portal-content-prompt-pack-section"><h3>Prompt đầy đủ</h3><div><article><span>READ</span><pre>${safeText(String(item.prompt || ""))}</pre></article></div></section><div class="portal-form-footer"><span class="portal-form-note">${safeText(String(detail.copy_instruction || ""))} Lưu chỉ tạo ghi chú owner-only trong Memory Center từ snapshot server-side; không tạo pending save phía Bot.</span><div class="portal-inline-actions"><button class="portal-button portal-button--primary" type="button" data-portal-action="free-prompt-gallery-copy" data-portal-route="/free-prompt-gallery" data-free-prompt-gallery-id="${itemId}" data-copy-text="${itemId}"${enabled ? "" : " disabled"}>Sao chép prompt</button>${saveControl}</div></div></section>`;
+    const saveControl = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-save" data-portal-route="/free-prompt-gallery" data-free-prompt-gallery-id="${itemId}" data-copy-text="${itemId}" data-portal-confirm="${safeText(freePromptGalleryText("detail.saveConfirm", "Lưu mẫu này thành ghi chú riêng trong Kho ghi nhớ? Máy chủ sẽ lấy lại mẫu từ danh mục đã duyệt; không tạo thao tác Bot, không gọi nhà cung cấp, không tạo tác vụ, không đổi ví Xu, PayOS hoặc đăng bài."))}"${canSave ? "" : " disabled"}>${safeText(freePromptGalleryText("detail.save", "Lưu vào Kho ghi nhớ"))}</button>`;
+    return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("detail.staticKicker", "Mẫu câu lệnh tĩnh"))}</span><h2 class="portal-card-title">${safeText(String(item.title || freePromptGalleryText("cards.defaultTitle", "Mẫu câu lệnh")))}</h2><p class="portal-card-subtitle">${safeText(String(item.category_title || freePromptGalleryText("cards.defaultCategory", "Mẫu")))} · ${safeText(String(item.industry || freePromptGalleryText("cards.defaultIndustry", "Chung")))}. ${safeText(freePromptGalleryText("detail.body", "Đây là mẫu để tự rà soát, không phải đầu ra AI, tài sản, bài đăng hoặc biên nhận bàn giao."))}</p></div>${badge("read_only")}</div>${freePromptGalleryTags([...(Array.isArray(item.goals) ? item.goals : []), ...(Array.isArray(item.platforms) ? item.platforms : [])])}<section class="portal-content-prompt-pack-section"><h3>${safeText(freePromptGalleryText("detail.promptHeading", "Mẫu đầy đủ"))}</h3><div><article><span>${safeText(freePromptGalleryText("detail.readBadge", "ĐỌC"))}</span><pre>${safeText(String(item.prompt || ""))}</pre></article></div></section><div class="portal-form-footer"><span class="portal-form-note">${safeText(String(detail.copy_instruction || ""))} ${safeText(freePromptGalleryText("detail.note", "Lưu chỉ tạo ghi chú riêng trong Kho ghi nhớ từ bản chụp phía máy chủ; không tạo thao tác chờ phía Bot."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--primary" type="button" data-portal-action="free-prompt-gallery-copy" data-portal-route="/free-prompt-gallery" data-free-prompt-gallery-id="${itemId}" data-copy-text="${itemId}"${enabled ? "" : " disabled"}>${safeText(freePromptGalleryText("detail.copy", "Sao chép mẫu"))}</button>${saveControl}</div></div></section>`;
   }
 
   function renderFreePromptGallerySaveResult(raw, selectedPromptId) {
     const receipt = normalizeFreePromptGallerySaveResult(raw);
     const promptId = typeof selectedPromptId === "string" ? selectedPromptId : "";
     if (!receipt.note || !receipt.gallery || receipt.gallery.prompt_id !== promptId) return "";
-    const note = "Ghi chú owner-only đã được lưu trong Memory Center. Đây không phải Bot pending-save và không tạo provider, job, ví Xu, PayOS hoặc publish.";
-    return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Memory Center riêng tư</span><h2 class="portal-card-title">Đã lưu seed Gallery</h2><p class="portal-card-subtitle">${safeText(String(receipt.note.category || "Memory note"))} · ${safeText(String(receipt.note.priority || "normal"))} · revision ${safeText(String(receipt.note.revision || 1))}</p></div>${badge("completed")}</div><div class="portal-form-footer"><span class="portal-form-note">${safeText(note)}</span><a class="portal-button portal-button--primary" href="/notes/${encodeURIComponent(String(receipt.note.id || ""))}">Mở ghi chú riêng</a></div></section>`;
+    const note = freePromptGalleryText("save.note", "Ghi chú riêng đã được lưu trong Kho ghi nhớ. Đây không phải thao tác chờ phía Bot và không tạo nhà cung cấp, tác vụ, ví Xu, PayOS hoặc đăng bài.");
+    return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("save.kicker", "Kho ghi nhớ riêng tư"))}</span><h2 class="portal-card-title">${safeText(freePromptGalleryText("save.title", "Đã lưu mẫu"))}</h2><p class="portal-card-subtitle">${safeText(String(receipt.note.category || freePromptGalleryText("save.defaultCategory", "Ghi chú")))} · ${safeText(String(receipt.note.priority || freePromptGalleryText("save.defaultPriority", "bình thường")))} · ${safeText(freePromptGalleryText("save.revision", "phiên bản {revision}", { revision: String(receipt.note.revision || 1) }))}</p></div>${badge("completed")}</div><div class="portal-form-footer"><span class="portal-form-note">${safeText(note)}</span><a class="portal-button portal-button--primary" href="/notes/${encodeURIComponent(String(receipt.note.id || ""))}">${safeText(freePromptGalleryText("save.open", "Mở ghi chú riêng"))}</a></div></section>`;
   }
 
   function renderFreePromptGallery(page, context) {
@@ -12848,7 +13081,7 @@
     const categoryCount = Array.isArray(catalog.categories) ? catalog.categories.length : 0;
     const industryCount = Array.isArray(catalog.industries) ? catalog.industries.length : 0;
     const catalogTotal = Number.isInteger(Number(catalog.total_items)) ? Number(catalog.total_items) : 0;
-    return `<article class="portal-page portal-content-prompt-pack portal-free-prompt-gallery">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">Signed Web-only · read-only snapshot</span><h2>Tìm một prompt seed rõ ngữ cảnh, rồi tự review trước khi dùng.</h2><p>Gallery thay việc lục lại Free Hub trong Telegram bằng catalog Web gọn, có bộ lọc server-side, phân trang và chi tiết theo thao tác của bạn. Nó không tạo AI output hoặc kết nối bất kỳ runtime nào.</p></div><dl><div><dt>${safeText(String(categoryCount))}</dt><dd>Nhóm prompt</dd></div><div><dt>${safeText(String(industryCount))}</dt><dd>Ngành</dd></div><div><dt>0</dt><dd>Execution / payment</dd></div></dl></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Snapshot catalog</span><h2 class="portal-card-title">Khám phá ${safeText(String(catalogTotal || "—"))} prompt seed</h2><p class="portal-card-subtitle">${safeText(String(catalog.description || "Catalog sẽ xuất hiện sau khi signed session được máy chủ xác nhận."))}</p></div>${badge(canBrowse ? "read_only" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="free-prompt-gallery-filter" data-portal-route="/free-prompt-gallery" novalidate>${renderFields(freePromptGalleryFilterFields(catalog), canBrowse, context, listing.filters, "free-prompt-gallery-filter")}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc và query chỉ dùng cho request hiện tại; không lưu vào URL, localStorage, sessionStorage, Project hay Memory Center.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-refresh" data-portal-route="/free-prompt-gallery"${canRead ? "" : " disabled"}>Làm mới catalog</button><button class="portal-button portal-button--primary" type="submit"${canBrowse ? "" : " disabled"}>Áp dụng bộ lọc</button></div></div></form></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Read-only results</span><h2 class="portal-card-title">Prompt phù hợp</h2><p class="portal-card-subtitle">Mỗi thẻ là dữ liệu snapshot đã trả về từ server; chỉ nút “Xem chi tiết” mới gọi endpoint chi tiết riêng.</p></div>${badge(canBrowse ? "ready" : "guarded")}</div>${renderFreePromptGalleryCards(listing.items, canBrowse)}${renderFreePromptGalleryPagination(listing.pagination, canBrowse)}</section>${renderFreePromptGalleryDetail(context.freePromptGalleryDetail, canBrowse, canSave)}${renderFreePromptGallerySaveResult(context.freePromptGallerySaveResult, context.freePromptGalleryDetail && context.freePromptGalleryDetail.item && context.freePromptGalleryDetail.item.id)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Catalog để tham khảo, không thực thi</h2><p class="portal-card-subtitle">Không có provider, Bot, Core Bridge, job, ví Xu, PayOS, asset, render, publish hoặc delivery trong Gallery. Hãy kiểm tra claim, nguồn và quyền dùng trước khi đưa prompt vào một workflow khác.</p></div>${badge("guarded")}</div><div class="portal-content-prompt-pack-guard-list"><span><strong>Provider / Bot / bridge</strong><em>off</em></span><span><strong>Job / wallet / PayOS</strong><em>off</em></span><span><strong>Asset / publish / delivery</strong><em>off</em></span></div>${renderNotes(page)}</section></article>`;
+    return `<article class="portal-page portal-content-prompt-pack portal-free-prompt-gallery">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("intro.kicker", "Không gian Web riêng · chỉ đọc"))}</span><h2>${safeText(freePromptGalleryText("intro.title", "Tìm một mẫu câu lệnh rõ ngữ cảnh rồi tự rà soát trước khi dùng."))}</h2><p>${safeText(freePromptGalleryText("intro.body", "Thư viện đưa các mẫu đã được rà soát lên một danh mục gọn, có lọc, phân trang và xem chi tiết theo thao tác của bạn. Trang không tạo đầu ra AI hay kết nối runtime bên ngoài."))}</p></div><dl><div><dt>${safeText(String(categoryCount))}</dt><dd>${safeText(freePromptGalleryText("intro.stat.categories", "Nhóm mẫu"))}</dd></div><div><dt>${safeText(String(industryCount))}</dt><dd>${safeText(freePromptGalleryText("intro.stat.industries", "Ngành"))}</dd></div><div><dt>0</dt><dd>${safeText(freePromptGalleryText("intro.stat.execution", "Thực thi / thanh toán"))}</dd></div></dl></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("catalog.kicker", "Danh mục bản chụp"))}</span><h2 class="portal-card-title">${safeText(freePromptGalleryText("catalog.title", "Khám phá {count} mẫu", { count: String(catalogTotal || "—") }))}</h2><p class="portal-card-subtitle">${safeText(String(catalog.description || freePromptGalleryText("catalog.descriptionFallback", "Danh mục sẽ xuất hiện sau khi phiên đăng nhập đã được máy chủ xác minh.")))}</p></div>${badge(canBrowse ? "read_only" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="free-prompt-gallery-filter" data-portal-route="/free-prompt-gallery" novalidate>${renderFields(freePromptGalleryFilterFields(catalog), canBrowse, context, listing.filters, "free-prompt-gallery-filter")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(freePromptGalleryText("catalog.filterNote", "Bộ lọc và truy vấn chỉ dùng cho request hiện tại; không lưu vào URL, bộ nhớ trình duyệt, Project hay Kho ghi nhớ."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-refresh" data-portal-route="/free-prompt-gallery"${canRead ? "" : " disabled"}>${safeText(freePromptGalleryText("catalog.refresh", "Làm mới danh mục"))}</button><button class="portal-button portal-button--primary" type="submit"${canBrowse ? "" : " disabled"}>${safeText(freePromptGalleryText("catalog.submit", "Áp dụng bộ lọc"))}</button></div></div></form></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("results.kicker", "Kết quả chỉ đọc"))}</span><h2 class="portal-card-title">${safeText(freePromptGalleryText("results.title", "Mẫu phù hợp"))}</h2><p class="portal-card-subtitle">${safeText(freePromptGalleryText("results.body", "Mỗi thẻ là dữ liệu bản chụp do máy chủ trả về; chỉ nút xem chi tiết mới gọi endpoint chi tiết riêng."))}</p></div>${badge(canBrowse ? "ready" : "guarded")}</div>${renderFreePromptGalleryCards(listing.items, canBrowse)}${renderFreePromptGalleryPagination(listing.pagination, canBrowse)}</section>${renderFreePromptGalleryDetail(context.freePromptGalleryDetail, canBrowse, canSave)}${renderFreePromptGallerySaveResult(context.freePromptGallerySaveResult, context.freePromptGalleryDetail && context.freePromptGalleryDetail.item && context.freePromptGalleryDetail.item.id)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("boundary.kicker", "Ranh giới thực thi"))}</span><h2 class="portal-card-title">${safeText(freePromptGalleryText("boundary.title", "Danh mục để tham khảo, không thực thi"))}</h2><p class="portal-card-subtitle">${safeText(freePromptGalleryText("boundary.body", "Gallery không có nhà cung cấp, Bot, Core Bridge, tác vụ, ví Xu, PayOS, tài sản, kết xuất, đăng bài hoặc bàn giao. Hãy kiểm tra claim, nguồn và quyền sử dụng trước khi đưa mẫu vào workflow khác."))}</p></div>${badge("guarded")}</div><div class="portal-content-prompt-pack-guard-list"><span><strong>${safeText(freePromptGalleryText("boundary.provider", "Nhà cung cấp / Bot / cầu nối"))}</strong><em>${safeText(freePromptGalleryText("boundary.off", "tắt"))}</em></span><span><strong>${safeText(freePromptGalleryText("boundary.job", "Tác vụ / ví / thanh toán"))}</strong><em>${safeText(freePromptGalleryText("boundary.off", "tắt"))}</em></span><span><strong>${safeText(freePromptGalleryText("boundary.asset", "Tài sản / đăng bài / bàn giao"))}</strong><em>${safeText(freePromptGalleryText("boundary.off", "tắt"))}</em></span></div>${renderNotes(page)}</section></article>`;
   }
 
   const VIETQR_BANKS = [
@@ -12989,8 +13222,12 @@
     if (cnEl) cnEl.textContent = String(metrics.charsNoSpaces);
     if (wEl) wEl.textContent = String(metrics.words);
     if (lsEl) lsEl.textContent = `${metrics.lines} / ${metrics.sentences}`;
-    if (rtEl) rtEl.textContent = metrics.words > 0 ? `~${metrics.readingTimeMin}p` : "~0s";
-    if (vtEl) vtEl.textContent = metrics.words > 0 ? `~${metrics.speakingTimeMin}p` : "~0s";
+    if (rtEl) rtEl.textContent = metrics.words > 0
+      ? freeToolsText("text.stat.readMinutes", "~{minutes} phút", { minutes: metrics.readingTimeMin })
+      : freeToolsText("text.stat.zeroSeconds", "~0 giây");
+    if (vtEl) vtEl.textContent = metrics.words > 0
+      ? freeToolsText("text.stat.voiceMinutes", "~{minutes} phút", { minutes: metrics.speakingTimeMin })
+      : freeToolsText("text.stat.zeroSeconds", "~0 giây");
   }
 
   function autoUpdateVietQrPreview(triggerNotice) {
@@ -13009,7 +13246,7 @@
       if (img) { img.style.display = "none"; img.src = ""; }
       if (placeholder) placeholder.style.display = "block";
       if (actions) actions.style.display = "none";
-      if (triggerNotice) showToast("Vui lòng nhập số tài khoản ngân hàng.", "warning");
+       if (triggerNotice) showToast(freeToolsText("vietqr.toast.accountRequired", "Vui lòng nhập số tài khoản ngân hàng."), "warning");
       return;
     }
 
@@ -13025,190 +13262,191 @@
 
   function renderFreeTools(page, context) {
     const defaultBank = "VCB";
+    const c = (key, fallback, params) => safeText(freeToolsText(key, fallback, params));
     return `<article class="portal-page portal-free-tools">${renderHero(page, context)}
       <section class="portal-free-tools-intro">
         <div>
-          <span class="portal-section-kicker">100% Client-Side · Không tốn Xu · Hoàn toàn Miễn phí</span>
-          <h2>Bộ công cụ tiện ích sáng tạo nội dung nhanh</h2>
-          <p>Tất cả công cụ hoạt động tức thì ngay trong trình duyệt của bạn với tốc độ cao, không gọi API trừ phí, không lưu trữ dữ liệu cá nhân, đảm bảo an toàn tuyệt đối và riêng tư.</p>
+          <span class="portal-section-kicker">${c("intro.kicker", "Xử lý tại trình duyệt · Không tốn Xu · Hoàn toàn miễn phí")}</span>
+          <h2>${c("intro.title", "Bộ công cụ tiện ích sáng tạo nội dung nhanh")}</h2>
+          <p>${c("intro.body", "Tất cả công cụ hoạt động ngay trong trình duyệt với tốc độ cao, không gọi API tính phí, không lưu dữ liệu cá nhân và ưu tiên riêng tư.")}</p>
         </div>
         <dl>
-          <div><dt>6</dt><dd>Công cụ tích hợp</dd></div>
-          <div><dt>0đ</dt><dd>Chi phí / Xu</dd></div>
-          <div><dt>Instant</dt><dd>Xử lý tại Browser</dd></div>
+          <div><dt>6</dt><dd>${c("intro.stat.tools", "Công cụ tích hợp")}</dd></div>
+          <div><dt>0đ</dt><dd>${c("intro.stat.cost", "Chi phí / Xu")}</dd></div>
+          <div><dt>${c("intro.stat.speedValue", "Tức thì")}</dt><dd>${c("intro.stat.speed", "Xử lý tại trình duyệt")}</dd></div>
         </dl>
       </section>
 
-      <nav class="portal-free-tools-nav" aria-label="Danh mục công cụ miễn phí">
-        <button class="portal-free-tools-tab is-active" type="button" data-free-tool-tab="subtitle">✂️ Làm sạch Phụ đề (SRT/VTT)</button>
-        <button class="portal-free-tools-tab" type="button" data-free-tool-tab="youtube">📺 YouTube Extractor & Thumbnails</button>
-        <button class="portal-free-tools-tab" type="button" data-free-tool-tab="vietqr">⚡ Tạo mã VietQR</button>
-        <button class="portal-free-tools-tab" type="button" data-free-tool-tab="json">📝 Định dạng & Soát lỗi JSON</button>
-        <button class="portal-free-tools-tab" type="button" data-free-tool-tab="text">📊 Xử lý & Phân tích Văn bản</button>
-        <button class="portal-free-tools-tab" type="button" data-free-tool-tab="codec">🔐 Base64 & URL Codec</button>
+      <nav class="portal-free-tools-nav" role="tablist" aria-orientation="horizontal" aria-label="${c("nav.label", "Danh mục công cụ miễn phí")}">
+        <button id="free-tools-tab-subtitle" class="portal-free-tools-tab is-active" role="tab" type="button" data-free-tool-tab="subtitle" aria-selected="true" aria-pressed="true" aria-controls="free-tools-panel-subtitle" tabindex="0">✂️ ${c("nav.subtitle", "Làm sạch phụ đề (SRT/VTT)")}</button>
+        <button id="free-tools-tab-youtube" class="portal-free-tools-tab" role="tab" type="button" data-free-tool-tab="youtube" aria-selected="false" aria-pressed="false" aria-controls="free-tools-panel-youtube" tabindex="-1">📺 ${c("nav.youtube", "YouTube · Trích xuất ảnh thu nhỏ")}</button>
+        <button id="free-tools-tab-vietqr" class="portal-free-tools-tab" role="tab" type="button" data-free-tool-tab="vietqr" aria-selected="false" aria-pressed="false" aria-controls="free-tools-panel-vietqr" tabindex="-1">⚡ ${c("nav.vietqr", "Tạo mã VietQR")}</button>
+        <button id="free-tools-tab-json" class="portal-free-tools-tab" role="tab" type="button" data-free-tool-tab="json" aria-selected="false" aria-pressed="false" aria-controls="free-tools-panel-json" tabindex="-1">📝 ${c("nav.json", "Định dạng và kiểm tra JSON")}</button>
+        <button id="free-tools-tab-text" class="portal-free-tools-tab" role="tab" type="button" data-free-tool-tab="text" aria-selected="false" aria-pressed="false" aria-controls="free-tools-panel-text" tabindex="-1">📊 ${c("nav.text", "Xử lý và phân tích văn bản")}</button>
+        <button id="free-tools-tab-codec" class="portal-free-tools-tab" role="tab" type="button" data-free-tool-tab="codec" aria-selected="false" aria-pressed="false" aria-controls="free-tools-panel-codec" tabindex="-1">🔐 ${c("nav.codec", "Mã hóa Base64 và URL")}</button>
       </nav>
 
       <!-- Panel 1: Subtitle Cleaner -->
-      <section class="portal-card portal-card-pad portal-free-tool-panel is-active" data-free-tool-panel="subtitle">
+      <section id="free-tools-panel-subtitle" class="portal-card portal-card-pad portal-free-tool-panel is-active" role="tabpanel" aria-labelledby="free-tools-tab-subtitle" aria-hidden="false" data-free-tool-panel="subtitle">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">Subtitle Processor</span>
-            <h2 class="portal-card-title">Làm sạch phụ đề SRT / VTT thành văn bản thuần</h2>
-            <p class="portal-card-subtitle">Tách bỏ toàn bộ timestamp, số thứ tự cue, thẻ định dạng HTML/VTT để lấy lại bài viết hoặc kịch bản đọc mượt mà.</p>
+            <span class="portal-section-kicker">${c("subtitle.kicker", "Xử lý phụ đề")}</span>
+            <h2 class="portal-card-title">${c("subtitle.title", "Làm sạch phụ đề SRT / VTT thành văn bản thuần")}</h2>
+            <p class="portal-card-subtitle">${c("subtitle.body", "Tách thời gian, số thứ tự và thẻ định dạng HTML/VTT để lấy lại bài viết hoặc kịch bản đọc mượt mà.")}</p>
           </div>
           ${badge("ready")}
         </div>
         <div class="portal-free-tool-layout">
           <div class="portal-free-tool-col">
             <div class="portal-field">
-              <label class="portal-label" for="free-tools-sub-input">Dán nội dung SRT / VTT vào đây</label>
-              <textarea id="free-tools-sub-input" class="portal-textarea" style="min-height: 220px; font-family: monospace; font-size: 12px;" placeholder="1&#10;00:00:01,000 --> 00:00:04,500&#10;Chào mừng các bạn đến với TOAN AAS.&#10;&#10;2&#10;00:00:05,000 --> 00:00:08,200&#10;Hệ thống tự động hóa nội dung đa nền tảng."></textarea>
+                <label class="portal-label" for="free-tools-sub-input">${c("subtitle.inputLabel", "Dán nội dung SRT / VTT vào đây")}</label>
+                <textarea id="free-tools-sub-input" class="portal-textarea" style="min-height: 220px; font-family: monospace; font-size: 12px;" placeholder="${c("subtitle.inputPlaceholder", "Dán nội dung SRT hoặc VTT vào đây…")}"></textarea>
             </div>
             <div class="portal-free-tool-options" style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
-              <label class="portal-checkbox-label" style="font-size: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="free-tools-sub-opt-merge" /> Nối thành đoạn văn bản liền mạch (Paragraphs)</label>
-              <label class="portal-checkbox-label" style="font-size: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="free-tools-sub-opt-tags" checked /> Xóa bỏ thẻ HTML/VTT (&lt;i&gt;, &lt;c&gt;...)</label>
+              <label class="portal-checkbox-label" style="font-size: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="free-tools-sub-opt-merge" /> ${c("subtitle.mergeOption", "Nối thành đoạn văn liền mạch")}</label>
+              <label class="portal-checkbox-label" style="font-size: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="free-tools-sub-opt-tags" checked /> ${c("subtitle.tagsOption", "Xóa thẻ HTML/VTT (<i>, <c>…)")}</label>
             </div>
             <div class="portal-inline-actions" style="margin-top: 14px;">
-              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="clean-subtitle">✨ Làm sạch phụ đề</button>
-              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="sample-subtitle">📋 Dữ liệu mẫu</button>
-              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="clear-subtitle">🗑️ Xóa</button>
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="clean-subtitle">✨ ${c("subtitle.action.clean", "Làm sạch phụ đề")}</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="sample-subtitle">📋 ${c("subtitle.action.sample", "Dữ liệu mẫu")}</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="clear-subtitle">🗑️ ${c("subtitle.action.clear", "Xóa")}</button>
             </div>
           </div>
           <div class="portal-free-tool-col">
             <div class="portal-field">
               <div class="portal-field-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                <label class="portal-label" for="free-tools-sub-output">Văn bản thuần đã làm sạch</label>
-                <span id="free-tools-sub-stats" class="portal-text-counter" style="font-size: 11px; color: var(--portal-muted);">0 từ · 0 ký tự</span>
+                <label class="portal-label" for="free-tools-sub-output">${c("subtitle.outputLabel", "Văn bản thuần đã làm sạch")}</label>
+                <span id="free-tools-sub-stats" class="portal-text-counter" style="font-size: 11px; color: var(--portal-muted);">${c("subtitle.statsEmpty", "0 từ · 0 ký tự")}</span>
               </div>
-              <textarea id="free-tools-sub-output" class="portal-textarea" readonly style="min-height: 220px; font-size: 13px; line-height: 1.6;" placeholder="Kết quả văn bản sau khi lọc sẽ hiển thị tại đây..."></textarea>
+              <textarea id="free-tools-sub-output" class="portal-textarea" readonly style="min-height: 220px; font-size: 13px; line-height: 1.6;" placeholder="${c("subtitle.outputPlaceholder", "Kết quả văn bản sau khi lọc sẽ hiển thị tại đây…")}"></textarea>
             </div>
             <div class="portal-inline-actions" style="margin-top: 14px;">
-              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-clean-subtitle">📋 Sao chép kết quả</button>
-              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="download-clean-subtitle">💾 Tải về file .txt</button>
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-clean-subtitle">📋 ${c("subtitle.action.copy", "Sao chép kết quả")}</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="download-clean-subtitle">💾 ${c("subtitle.action.download", "Tải về tệp .txt")}</button>
             </div>
           </div>
         </div>
       </section>
 
       <!-- Panel 2: YouTube Extractor -->
-      <section class="portal-card portal-card-pad portal-free-tool-panel" data-free-tool-panel="youtube">
+      <section id="free-tools-panel-youtube" class="portal-card portal-card-pad portal-free-tool-panel" role="tabpanel" aria-labelledby="free-tools-tab-youtube" aria-hidden="true" hidden data-free-tool-panel="youtube">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">Video Assets & Metadata</span>
-            <h2 class="portal-card-title">Trích xuất Thumbnail & Mã nhúng YouTube</h2>
-            <p class="portal-card-subtitle">Nhận trực tiếp link ảnh thumbnail độ phân giải cao nhất (Full HD 1080p, HD 720p), Video ID và mã nhúng Iframe chuẩn SEO.</p>
+            <span class="portal-section-kicker">${c("youtube.kicker", "Tài nguyên và siêu dữ liệu video")}</span>
+            <h2 class="portal-card-title">${c("youtube.title", "Trích xuất ảnh thu nhỏ và mã nhúng YouTube")}</h2>
+            <p class="portal-card-subtitle">${c("youtube.body", "Lấy liên kết ảnh thu nhỏ độ phân giải cao, mã video và mã nhúng Iframe thích ứng.")}</p>
           </div>
           ${badge("ready")}
         </div>
         <div class="portal-field" style="margin-bottom: 20px;">
-          <label class="portal-label" for="free-tools-yt-url">Dán link YouTube (Video thông thường, Shorts, hoặc Live)</label>
+          <label class="portal-label" for="free-tools-yt-url">${c("youtube.urlLabel", "Dán liên kết YouTube (video thường, Shorts hoặc phát trực tiếp)")}</label>
           <div class="portal-input-group" style="display:flex; gap: 8px;">
-            <input type="url" id="free-tools-yt-url" class="portal-input" style="flex:1;" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ hoặc https://youtu.be/..." />
-            <button class="portal-button portal-button--primary" type="button" data-free-tool-action="extract-youtube">🔍 Trích xuất</button>
+            <input type="url" id="free-tools-yt-url" class="portal-input" style="flex:1;" placeholder="${c("youtube.urlPlaceholder", "https://www.youtube.com/watch?v=… hoặc https://youtu.be/…")}" />
+            <button class="portal-button portal-button--primary" type="button" data-free-tool-action="extract-youtube">🔍 ${c("youtube.action.extract", "Trích xuất")}</button>
           </div>
         </div>
         <div id="free-tools-yt-result" style="display:none;">
           <div class="portal-yt-info-banner" style="padding: 12px 16px; background: rgba(123, 237, 219, 0.08); border: 1px solid rgba(123, 237, 219, 0.2); border-radius: 12px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
             <div>
-              <strong>Video ID:</strong> <span id="free-tools-yt-id" style="font-family: monospace; color: var(--portal-accent);">-</span>
+                <strong>${c("youtube.result.videoId", "Mã video")}:</strong> <span id="free-tools-yt-id" style="font-family: monospace; color: var(--portal-accent);">-</span>
             </div>
-            <a id="free-tools-yt-link" class="portal-button portal-button--quiet" href="https://www.youtube.com" target="_blank" rel="noopener noreferrer">🔗 Mở trên YouTube ↗</a>
+            <a id="free-tools-yt-link" class="portal-button portal-button--quiet" href="https://www.youtube.com" target="_blank" rel="noopener noreferrer">🔗 ${c("youtube.action.openYoutube", "Mở trên YouTube")} ↗</a>
           </div>
-          <h3 style="font-size: 14px; margin-bottom: 12px;">Ảnh Thumbnail các độ phân giải:</h3>
+          <h3 style="font-size: 14px; margin-bottom: 12px;">${c("youtube.result.heading", "Ảnh thu nhỏ theo độ phân giải")}:</h3>
           <div class="portal-yt-thumbs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
-              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">MaxRes (1080p Full HD)</div>
-              <img id="free-tools-yt-thumb-max" src="" alt="Thumbnail MaxRes" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" onerror="this.src='https://placehold.co/600x338?text=Kh%C3%B4ng+c%C3%B3+1080p'" />
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.max", "Độ phân giải tối đa (1080p Full HD)")}</div>
+              <img id="free-tools-yt-thumb-max" src="" alt="${c("youtube.imgAltMax", "Ảnh thu nhỏ độ phân giải tối đa")}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" onerror="this.src='https://placehold.co/600x338?text=Kh%C3%B4ng+c%C3%B3+1080p'" />
               <div style="margin-top: 10px; display:flex; gap: 6px;">
-                <a id="free-tools-yt-thumb-max-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">Mở ảnh</a>
-                <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="max" style="font-size: 11px;">Copy Link</button>
+                <a id="free-tools-yt-thumb-max-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">${c("youtube.action.openImage", "Mở ảnh")}</a>
+                <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="max" style="font-size: 11px;">${c("youtube.action.copyLink", "Sao chép liên kết")}</button>
               </div>
             </div>
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
-              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">High Quality (720p HD)</div>
-              <img id="free-tools-yt-thumb-hq" src="" alt="Thumbnail HQ" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.high", "Chất lượng cao (720p HD)")}</div>
+              <img id="free-tools-yt-thumb-hq" src="" alt="${c("youtube.imgAltHigh", "Ảnh thu nhỏ chất lượng cao")}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
               <div style="margin-top: 10px; display:flex; gap: 6px;">
-                <a id="free-tools-yt-thumb-hq-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">Mở ảnh</a>
-                <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="hq" style="font-size: 11px;">Copy Link</button>
+                <a id="free-tools-yt-thumb-hq-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">${c("youtube.action.openImage", "Mở ảnh")}</a>
+                <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="hq" style="font-size: 11px;">${c("youtube.action.copyLink", "Sao chép liên kết")}</button>
               </div>
             </div>
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
-              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">Medium Quality (360p)</div>
-              <img id="free-tools-yt-thumb-mq" src="" alt="Thumbnail MQ" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.medium", "Chất lượng tiêu chuẩn (360p)")}</div>
+              <img id="free-tools-yt-thumb-mq" src="" alt="${c("youtube.imgAltMedium", "Ảnh thu nhỏ chất lượng tiêu chuẩn")}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
               <div style="margin-top: 10px; display:flex; gap: 6px;">
-                <a id="free-tools-yt-thumb-mq-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">Mở ảnh</a>
-                <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="mq" style="font-size: 11px;">Copy Link</button>
+                <a id="free-tools-yt-thumb-mq-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">${c("youtube.action.openImage", "Mở ảnh")}</a>
+                <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="mq" style="font-size: 11px;">${c("youtube.action.copyLink", "Sao chép liên kết")}</button>
               </div>
             </div>
           </div>
           <div class="portal-field">
-            <label class="portal-label" for="free-tools-yt-embed">Mã nhúng Responsive Iframe (HTML)</label>
+            <label class="portal-label" for="free-tools-yt-embed">${c("youtube.embedLabel", "Mã nhúng Iframe thích ứng (HTML)")}</label>
             <div style="display:flex; gap: 8px;">
               <input type="text" id="free-tools-yt-embed" class="portal-input" readonly style="font-family: monospace; font-size: 12px; flex:1;" />
-              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-embed">📋 Sao chép</button>
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-embed">📋 ${c("youtube.action.copy", "Sao chép")}</button>
             </div>
           </div>
         </div>
       </section>
 
       <!-- Panel 3: VietQR Quick Generator -->
-      <section class="portal-card portal-card-pad portal-free-tool-panel" data-free-tool-panel="vietqr">
+      <section id="free-tools-panel-vietqr" class="portal-card portal-card-pad portal-free-tool-panel" role="tabpanel" aria-labelledby="free-tools-tab-vietqr" aria-hidden="true" hidden data-free-tool-panel="vietqr">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">NAPAS 247 Standard</span>
-            <h2 class="portal-card-title">Tạo mã VietQR chuyển khoản ngân hàng siêu tốc</h2>
-            <p class="portal-card-subtitle">Sinh mã QR thanh toán chuẩn ngân hàng Việt Nam, quét trực tiếp trên tất cả các app Mobile Banking.</p>
+            <span class="portal-section-kicker">${c("vietqr.kicker", "Chuẩn NAPAS 247")}</span>
+            <h2 class="portal-card-title">${c("vietqr.title", "Tạo mã VietQR chuyển khoản ngân hàng nhanh")}</h2>
+            <p class="portal-card-subtitle">${c("vietqr.body", "Tạo mã QR thanh toán theo chuẩn ngân hàng Việt Nam, có thể quét trên các ứng dụng ngân hàng điện tử.")}</p>
           </div>
           ${badge("ready")}
         </div>
         <div class="portal-free-tool-layout">
           <div class="portal-free-tool-col">
             <div class="portal-field" style="margin-bottom: 12px;">
-              <label class="portal-label" for="free-tools-qr-bank">Chọn Ngân hàng</label>
+              <label class="portal-label" for="free-tools-qr-bank">${c("vietqr.field.bank", "Chọn ngân hàng")}</label>
               <select id="free-tools-qr-bank" class="portal-select" data-vietqr-input>
                 ${VIETQR_BANKS.map((b) => `<option value="${safeText(b.code)}"${b.code === defaultBank ? " selected" : ""}>${safeText(b.shortName)} - ${safeText(b.name)} (${safeText(b.code)})</option>`).join("")}
               </select>
             </div>
             <div class="portal-field" style="margin-bottom: 12px;">
-              <label class="portal-label" for="free-tools-qr-account">Số tài khoản nhận tiền *</label>
-              <input type="text" id="free-tools-qr-account" class="portal-input" placeholder="Ví dụ: 0123456789" data-vietqr-input />
+              <label class="portal-label" for="free-tools-qr-account">${c("vietqr.field.account", "Số tài khoản nhận tiền *")}</label>
+              <input type="text" id="free-tools-qr-account" class="portal-input" placeholder="${c("vietqr.field.accountPlaceholder", "Ví dụ: 0123456789")}" data-vietqr-input />
             </div>
             <div class="portal-field" style="margin-bottom: 12px;">
-              <label class="portal-label" for="free-tools-qr-name">Tên chủ tài khoản (Không dấu)</label>
-              <input type="text" id="free-tools-qr-name" class="portal-input" placeholder="Ví dụ: NGUYEN VAN A" style="text-transform: uppercase;" data-vietqr-input />
+              <label class="portal-label" for="free-tools-qr-name">${c("vietqr.field.name", "Tên chủ tài khoản (không dấu)")}</label>
+              <input type="text" id="free-tools-qr-name" class="portal-input" placeholder="${c("vietqr.field.namePlaceholder", "Ví dụ: NGUYEN VAN A")}" style="text-transform: uppercase;" data-vietqr-input />
             </div>
             <div class="portal-field" style="margin-bottom: 12px;">
-              <label class="portal-label" for="free-tools-qr-amount">Số tiền (VNĐ - Tùy chọn)</label>
-              <input type="number" id="free-tools-qr-amount" class="portal-input" placeholder="Ví dụ: 50000" min="0" step="1000" data-vietqr-input />
+              <label class="portal-label" for="free-tools-qr-amount">${c("vietqr.field.amount", "Số tiền (VNĐ · tùy chọn)")}</label>
+              <input type="number" id="free-tools-qr-amount" class="portal-input" placeholder="${c("vietqr.field.amountPlaceholder", "Ví dụ: 50000")}" min="0" step="1000" data-vietqr-input />
             </div>
             <div class="portal-field" style="margin-bottom: 12px;">
-              <label class="portal-label" for="free-tools-qr-memo">Nội dung chuyển khoản (Tùy chọn)</label>
-              <input type="text" id="free-tools-qr-memo" class="portal-input" placeholder="Ví dụ: Thanh toan don hang #1024" data-vietqr-input />
+              <label class="portal-label" for="free-tools-qr-memo">${c("vietqr.field.memo", "Nội dung chuyển khoản (tùy chọn)")}</label>
+              <input type="text" id="free-tools-qr-memo" class="portal-input" placeholder="${c("vietqr.field.memoPlaceholder", "Ví dụ: Thanh toan don hang #1024")}" data-vietqr-input />
             </div>
             <div class="portal-field" style="margin-bottom: 12px;">
-              <label class="portal-label" for="free-tools-qr-template">Mẫu giao diện VietQR</label>
+              <label class="portal-label" for="free-tools-qr-template">${c("vietqr.field.template", "Mẫu giao diện VietQR")}</label>
               <select id="free-tools-qr-template" class="portal-select" data-vietqr-input>
-                <option value="compact2" selected>Giao diện Hiện đại (Compact 2 - Có khung thông tin)</option>
-                <option value="compact">Giao diện Tiêu chuẩn (Compact)</option>
-                <option value="qr_only">Chỉ mã QR (QR Only)</option>
-                <option value="print">Bản in hóa đơn (Print)</option>
+                <option value="compact2" selected>${c("vietqr.template.modern", "Giao diện hiện đại (Compact 2 · có khung thông tin)")}</option>
+                <option value="compact">${c("vietqr.template.standard", "Giao diện tiêu chuẩn (Compact)")}</option>
+                <option value="qr_only">${c("vietqr.template.qrOnly", "Chỉ mã QR")}</option>
+                <option value="print">${c("vietqr.template.print", "Bản in hóa đơn")}</option>
               </select>
             </div>
             <div class="portal-inline-actions" style="margin-top: 16px;">
-              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="generate-vietqr">⚡ Tạo mã QR</button>
-              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="sample-vietqr">📋 Thông tin mẫu</button>
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="generate-vietqr">⚡ ${c("vietqr.action.generate", "Tạo mã QR")}</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="sample-vietqr">📋 ${c("vietqr.action.sample", "Thông tin mẫu")}</button>
             </div>
           </div>
           <div class="portal-free-tool-col" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
             <div id="free-tools-qr-preview-container" class="portal-card portal-card-pad" style="width: 100%; max-width: 360px; text-align:center; background: rgba(0,0,0,0.25); border: 1px solid var(--portal-border-strong); border-radius: 16px; padding: 20px;">
-              <div style="font-size: 13px; font-weight: 600; color: var(--portal-accent); margin-bottom: 14px;">MÃ VIETQR THANH TOÁN</div>
+              <div style="font-size: 13px; font-weight: 600; color: var(--portal-accent); margin-bottom: 14px;">${c("vietqr.preview.title", "MÃ VIETQR THANH TOÁN")}</div>
               <div style="min-height: 260px; display:flex; align-items:center; justify-content:center; background: #ffffff; border-radius: 12px; padding: 8px; margin-bottom: 14px;">
-                <img id="free-tools-qr-img" src="" alt="Mã VietQR" style="max-width: 100%; height: auto; display:none;" />
-                <div id="free-tools-qr-placeholder" style="color: #666666; font-size: 13px; padding: 40px 10px;">Nhập số tài khoản và bấm <strong>Tạo mã QR</strong> để xem trước mã</div>
+                <img id="free-tools-qr-img" src="" alt="${c("vietqr.preview.alt", "Mã VietQR")}" style="max-width: 100%; height: auto; display:none;" />
+                <div id="free-tools-qr-placeholder" style="color: #666666; font-size: 13px; padding: 40px 10px;">${c("vietqr.preview.placeholder", "Nhập số tài khoản rồi bấm Tạo mã QR để xem trước.")}</div>
               </div>
               <div id="free-tools-qr-actions" style="display:none; gap: 8px; justify-content:center; flex-wrap: wrap;">
-                <button class="portal-button portal-button--primary" type="button" data-free-tool-action="download-vietqr">💾 Tải ảnh QR</button>
-                <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="copy-vietqr-link">📋 Copy Link QR</button>
+                <button class="portal-button portal-button--primary" type="button" data-free-tool-action="download-vietqr">💾 ${c("vietqr.action.download", "Tải ảnh QR")}</button>
+                <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="copy-vietqr-link">📋 ${c("vietqr.action.copyLink", "Sao chép liên kết QR")}</button>
               </div>
             </div>
           </div>
@@ -13216,126 +13454,126 @@
       </section>
 
       <!-- Panel 4: JSON Formatter & Validator -->
-      <section class="portal-card portal-card-pad portal-free-tool-panel" data-free-tool-panel="json">
+      <section id="free-tools-panel-json" class="portal-card portal-card-pad portal-free-tool-panel" role="tabpanel" aria-labelledby="free-tools-tab-json" aria-hidden="true" hidden data-free-tool-panel="json">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">Developer Utilities</span>
-            <h2 class="portal-card-title">Định dạng & Kiểm tra cú pháp JSON</h2>
-            <p class="portal-card-subtitle">Format JSON có thụt dòng đẹp mắt, nén gọn (Minify), phát hiện lỗi cú pháp và vị trí sai sót chính xác.</p>
+            <span class="portal-section-kicker">${c("json.kicker", "Tiện ích cho nhà phát triển")}</span>
+            <h2 class="portal-card-title">${c("json.title", "Định dạng và kiểm tra cú pháp JSON")}</h2>
+            <p class="portal-card-subtitle">${c("json.body", "Định dạng JSON dễ đọc, thu gọn dữ liệu, phát hiện lỗi cú pháp và chỉ rõ vị trí sai.")}</p>
           </div>
           ${badge("ready")}
         </div>
         <div class="portal-free-tool-layout">
           <div class="portal-free-tool-col">
             <div class="portal-field">
-              <label class="portal-label" for="free-tools-json-input">Dán chuỗi JSON vào đây</label>
+              <label class="portal-label" for="free-tools-json-input">${c("json.inputLabel", "Dán chuỗi JSON vào đây")}</label>
               <textarea id="free-tools-json-input" class="portal-textarea" style="min-height: 240px; font-family: monospace; font-size: 12px;" placeholder='{"title":"TOAN AAS","features":["tools","ai","bot"],"active":true}'></textarea>
             </div>
             <div class="portal-inline-actions" style="margin-top: 14px; flex-wrap: wrap;">
-              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="format-json-2">✨ Format (2 spaces)</button>
-              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="format-json-4">Format (4 spaces)</button>
-              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="minify-json">⚡ Minify (Nén)</button>
-              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="sample-json">📋 Mẫu</button>
-              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="clear-json">🗑️ Xóa</button>
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="format-json-2">✨ ${c("json.action.format2", "Định dạng (2 dấu cách)")}</button>
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="format-json-4">${c("json.action.format4", "Định dạng (4 dấu cách)")}</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="minify-json">⚡ ${c("json.action.minify", "Thu gọn JSON")}</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="sample-json">📋 ${c("json.action.sample", "Dữ liệu mẫu")}</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="clear-json">🗑️ ${c("json.action.clear", "Xóa")}</button>
             </div>
           </div>
           <div class="portal-free-tool-col">
             <div class="portal-field">
               <div class="portal-field-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                <label class="portal-label" for="free-tools-json-output">Kết quả JSON</label>
+                <label class="portal-label" for="free-tools-json-output">${c("json.outputLabel", "Kết quả JSON")}</label>
                 <span id="free-tools-json-status" style="font-size: 11px; font-weight: 600;"></span>
               </div>
-              <textarea id="free-tools-json-output" class="portal-textarea" readonly style="min-height: 240px; font-family: monospace; font-size: 12px; line-height: 1.5;" placeholder="Kết quả JSON sau khi định dạng..."></textarea>
+              <textarea id="free-tools-json-output" class="portal-textarea" readonly style="min-height: 240px; font-family: monospace; font-size: 12px; line-height: 1.5;" placeholder="${c("json.outputPlaceholder", "Kết quả JSON sau khi định dạng…")}"></textarea>
             </div>
             <div class="portal-inline-actions" style="margin-top: 14px;">
-              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-json">📋 Sao chép JSON</button>
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-json">📋 ${c("json.action.copy", "Sao chép JSON")}</button>
             </div>
           </div>
         </div>
       </section>
 
       <!-- Panel 5: Text & Word Counter & Tools -->
-      <section class="portal-card portal-card-pad portal-free-tool-panel" data-free-tool-panel="text">
+      <section id="free-tools-panel-text" class="portal-card portal-card-pad portal-free-tool-panel" role="tabpanel" aria-labelledby="free-tools-tab-text" aria-hidden="true" hidden data-free-tool-panel="text">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">Content & Typography</span>
-            <h2 class="portal-card-title">Phân tích số liệu & Biến đổi định dạng văn bản</h2>
-            <p class="portal-card-subtitle">Đếm từ, ký tự, ước tính thời gian đọc / lồng tiếng, chuyển đổi chữ hoa/thường, xóa dấu tiếng Việt và tạo URL slug chuẩn SEO.</p>
+            <span class="portal-section-kicker">${c("text.kicker", "Nội dung và kiểu chữ")}</span>
+            <h2 class="portal-card-title">${c("text.title", "Phân tích số liệu và biến đổi định dạng văn bản")}</h2>
+            <p class="portal-card-subtitle">${c("text.body", "Đếm từ, ký tự, ước tính thời gian đọc và lồng tiếng, đổi kiểu chữ, bỏ dấu tiếng Việt và tạo đường dẫn thân thiện.")}</p>
           </div>
           ${badge("ready")}
         </div>
         <div class="portal-free-tools-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px;">
           <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
-            <div style="font-size: 11px; color: var(--portal-muted);">Tổng ký tự</div>
+            <div style="font-size: 11px; color: var(--portal-muted);">${c("text.stat.chars", "Tổng ký tự")}</div>
             <div id="free-tools-text-chars" style="font-size: 20px; font-weight: 700; color: var(--portal-accent); margin-top: 4px;">0</div>
           </div>
           <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
-            <div style="font-size: 11px; color: var(--portal-muted);">Không khoảng trắng</div>
+            <div style="font-size: 11px; color: var(--portal-muted);">${c("text.stat.charsNoSpaces", "Không khoảng trắng")}</div>
             <div id="free-tools-text-chars-nospaces" style="font-size: 20px; font-weight: 700; color: #a6fff0; margin-top: 4px;">0</div>
           </div>
           <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
-            <div style="font-size: 11px; color: var(--portal-muted);">Số từ</div>
+            <div style="font-size: 11px; color: var(--portal-muted);">${c("text.stat.words", "Số từ")}</div>
             <div id="free-tools-text-words" style="font-size: 20px; font-weight: 700; color: var(--portal-accent); margin-top: 4px;">0</div>
           </div>
           <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
-            <div style="font-size: 11px; color: var(--portal-muted);">Số dòng / Số câu</div>
+            <div style="font-size: 11px; color: var(--portal-muted);">${c("text.stat.lines", "Số dòng / số câu")}</div>
             <div id="free-tools-text-lines-sentences" style="font-size: 20px; font-weight: 700; color: #ffffff; margin-top: 4px;">0 / 0</div>
           </div>
           <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
-            <div style="font-size: 11px; color: var(--portal-muted);">Thời gian đọc</div>
-            <div id="free-tools-text-read-time" style="font-size: 20px; font-weight: 700; color: #7beddb; margin-top: 4px;">~0s</div>
+            <div style="font-size: 11px; color: var(--portal-muted);">${c("text.stat.readTime", "Thời gian đọc")}</div>
+            <div id="free-tools-text-read-time" style="font-size: 20px; font-weight: 700; color: #7beddb; margin-top: 4px;">${c("text.stat.zeroSeconds", "~0 giây")}</div>
           </div>
           <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
-            <div style="font-size: 11px; color: var(--portal-muted);">Đọc Voiceover</div>
-            <div id="free-tools-text-voice-time" style="font-size: 20px; font-weight: 700; color: #ffd166; margin-top: 4px;">~0s</div>
+            <div style="font-size: 11px; color: var(--portal-muted);">${c("text.stat.voiceTime", "Thời gian lồng tiếng")}</div>
+            <div id="free-tools-text-voice-time" style="font-size: 20px; font-weight: 700; color: #ffd166; margin-top: 4px;">${c("text.stat.zeroSeconds", "~0 giây")}</div>
           </div>
         </div>
         <div class="portal-field">
-          <label class="portal-label" for="free-tools-text-input">Nhập văn bản cần xử lý</label>
-          <textarea id="free-tools-text-input" class="portal-textarea" style="min-height: 180px; font-size: 13px; line-height: 1.6;" placeholder="Nhập hoặc dán đoạn văn bản bất kỳ để xem phân tích số liệu và áp dụng các thao tác biến đổi..."></textarea>
+          <label class="portal-label" for="free-tools-text-input">${c("text.inputLabel", "Nhập văn bản cần xử lý")}</label>
+          <textarea id="free-tools-text-input" class="portal-textarea" style="min-height: 180px; font-size: 13px; line-height: 1.6;" placeholder="${c("text.inputPlaceholder", "Nhập hoặc dán văn bản để xem phân tích và áp dụng thao tác…")}"></textarea>
         </div>
         <div class="portal-inline-actions" style="margin-top: 14px; flex-wrap: wrap; gap: 8px;">
-          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-uppercase">IN HOA</button>
-          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-lowercase">in thường</button>
-          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-titlecase">Viết Hoa Đầu Từ</button>
-          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-sentencecase">Viết hoa đầu câu</button>
-          <button class="portal-button portal-button--primary" type="button" data-free-tool-action="text-remove-accents">Xóa dấu tiếng Việt</button>
-          <button class="portal-button portal-button--primary" type="button" data-free-tool-action="text-slugify">Tạo URL Slug</button>
-          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-trim-spaces">Xóa khoảng trắng thừa</button>
-          <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-text-main">📋 Sao chép</button>
+          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-uppercase">${c("text.action.uppercase", "IN HOA")}</button>
+          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-lowercase">${c("text.action.lowercase", "in thường")}</button>
+          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-titlecase">${c("text.action.titlecase", "Viết hoa đầu từ")}</button>
+          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-sentencecase">${c("text.action.sentencecase", "Viết hoa đầu câu")}</button>
+          <button class="portal-button portal-button--primary" type="button" data-free-tool-action="text-remove-accents">${c("text.action.removeAccents", "Xóa dấu tiếng Việt")}</button>
+          <button class="portal-button portal-button--primary" type="button" data-free-tool-action="text-slugify">${c("text.action.slugify", "Tạo đường dẫn thân thiện")}</button>
+          <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="text-trim-spaces">${c("text.action.trim", "Xóa khoảng trắng thừa")}</button>
+          <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-text-main">📋 ${c("text.action.copy", "Sao chép")}</button>
         </div>
       </section>
 
       <!-- Panel 6: Base64 & URL Codec -->
-      <section class="portal-card portal-card-pad portal-free-tool-panel" data-free-tool-panel="codec">
+      <section id="free-tools-panel-codec" class="portal-card portal-card-pad portal-free-tool-panel" role="tabpanel" aria-labelledby="free-tools-tab-codec" aria-hidden="true" hidden data-free-tool-panel="codec">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">Encoding & Hashing Utilities</span>
-            <h2 class="portal-card-title">Mã hóa & Giải mã Base64 / URL Component</h2>
-            <p class="portal-card-subtitle">Hỗ trợ đầy đủ bảng mã UTF-8 tiếng Việt, không bị lỗi font khi chuyển đổi chuỗi văn bản phức tạp.</p>
+            <span class="portal-section-kicker">${c("codec.kicker", "Tiện ích mã hóa và băm")}</span>
+            <h2 class="portal-card-title">${c("codec.title", "Mã hóa và giải mã Base64 / URL")}</h2>
+            <p class="portal-card-subtitle">${c("codec.body", "Hỗ trợ bảng mã UTF-8 tiếng Việt, không lỗi font khi chuyển đổi chuỗi văn bản phức tạp.")}</p>
           </div>
           ${badge("ready")}
         </div>
         <div class="portal-free-tool-layout">
           <div class="portal-free-tool-col">
             <div class="portal-field">
-              <label class="portal-label" for="free-tools-codec-input">Dữ liệu nguồn (Input)</label>
+                <label class="portal-label" for="free-tools-codec-input">${c("codec.inputLabel", "Dữ liệu nguồn")}</label>
               <textarea id="free-tools-codec-input" class="portal-textarea" style="min-height: 200px; font-family: monospace; font-size: 12px;" placeholder="Nhập chuỗi văn bản hoặc mã cần chuyển đổi..."></textarea>
             </div>
             <div class="portal-inline-actions" style="margin-top: 14px; flex-wrap: wrap;">
-              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="b64-encode">🔒 Base64 Encode</button>
-              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="b64-decode">🔓 Base64 Decode</button>
-              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="url-encode">🌐 URL Encode</button>
-              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="url-decode">🔓 URL Decode</button>
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="b64-encode">🔒 ${c("codec.action.b64Encode", "Mã hóa Base64")}</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="b64-decode">🔓 ${c("codec.action.b64Decode", "Giải mã Base64")}</button>
+              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="url-encode">🌐 ${c("codec.action.urlEncode", "Mã hóa URL")}</button>
+              <button class="portal-button portal-button--quiet" type="button" data-free-tool-action="url-decode">🔓 ${c("codec.action.urlDecode", "Giải mã URL")}</button>
             </div>
           </div>
           <div class="portal-free-tool-col">
             <div class="portal-field">
-              <label class="portal-label" for="free-tools-codec-output">Kết quả sau khi chuyển đổi (Output)</label>
-              <textarea id="free-tools-codec-output" class="portal-textarea" readonly style="min-height: 200px; font-family: monospace; font-size: 12px;" placeholder="Kết quả sẽ hiển thị tại đây..."></textarea>
+                <label class="portal-label" for="free-tools-codec-output">${c("codec.outputLabel", "Kết quả sau khi chuyển đổi")}</label>
+                <textarea id="free-tools-codec-output" class="portal-textarea" readonly style="min-height: 200px; font-family: monospace; font-size: 12px;" placeholder="${c("codec.outputPlaceholder", "Kết quả sẽ hiển thị tại đây…")}"></textarea>
             </div>
             <div class="portal-inline-actions" style="margin-top: 14px;">
-              <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-codec">📋 Sao chép kết quả</button>
+                <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-codec">📋 ${c("codec.action.copy", "Sao chép kết quả")}</button>
             </div>
           </div>
         </div>
@@ -13345,16 +13583,16 @@
       <section class="portal-card portal-card-pad">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">Cam kết riêng tư & Bảo mật</span>
-            <h2 class="portal-card-title">Xử lý cục bộ 100% trên trình duyệt</h2>
-            <p class="portal-card-subtitle">Tất cả các thao tác trên trang Công cụ miễn phí đều được thực thi bằng thuật toán Javascript cục bộ trong trình duyệt của bạn. Hệ thống không gửi dữ liệu văn bản lên server, không tiêu tốn Xu, và hoàn toàn độc lập với các tác vụ có phí.</p>
+            <span class="portal-section-kicker">${c("privacy.kicker", "Cam kết riêng tư và bảo mật")}</span>
+            <h2 class="portal-card-title">${c("privacy.title", "Xử lý cục bộ 100% trên trình duyệt")}</h2>
+            <p class="portal-card-subtitle">${c("privacy.body", "Mọi thao tác trên trang Công cụ miễn phí đều chạy bằng JavaScript cục bộ. Dữ liệu văn bản không gửi lên máy chủ, không tiêu tốn Xu và tách biệt với tác vụ có phí.")}</p>
           </div>
           ${badge("guarded")}
         </div>
         <div class="portal-content-prompt-pack-guard-list">
-          <span><strong>Ví Xu / PayOS</strong><em>0đ / Không trừ Xu</em></span>
-          <span><strong>Lưu trữ Server</strong><em>Không lưu dữ liệu</em></span>
-          <span><strong>AI Token / Provider</strong><em>Không tiêu hao</em></span>
+          <span><strong>${c("privacy.guard.wallet", "Ví Xu / PayOS")}</strong><em>${c("privacy.guard.walletValue", "0đ / Không trừ Xu")}</em></span>
+          <span><strong>${c("privacy.guard.storage", "Lưu trữ máy chủ")}</strong><em>${c("privacy.guard.storageValue", "Không lưu dữ liệu")}</em></span>
+          <span><strong>${c("privacy.guard.provider", "Mã AI / nhà cung cấp")}</strong><em>${c("privacy.guard.providerValue", "Không tiêu hao")}</em></span>
         </div>
         ${renderNotes(page)}
       </section>
@@ -13368,11 +13606,41 @@
     const root = tabBtn.closest(".portal-free-tools");
     if (!root) return;
     root.querySelectorAll("[data-free-tool-tab]").forEach((btn) => {
-      btn.classList.toggle("is-active", btn.getAttribute("data-free-tool-tab") === target);
+      const selected = btn.getAttribute("data-free-tool-tab") === target;
+      btn.classList.toggle("is-active", selected);
+      btn.setAttribute("aria-selected", String(selected));
+      btn.setAttribute("aria-pressed", String(selected));
+      btn.setAttribute("tabindex", selected ? "0" : "-1");
     });
     root.querySelectorAll("[data-free-tool-panel]").forEach((panel) => {
-      panel.classList.toggle("is-active", panel.getAttribute("data-free-tool-panel") === target);
+      const selected = panel.getAttribute("data-free-tool-panel") === target;
+      panel.classList.toggle("is-active", selected);
+      panel.hidden = !selected;
+      panel.setAttribute("aria-hidden", String(!selected));
     });
+    return true;
+  }
+
+  function handleFreeToolTabKeydown(tabBtn, event) {
+    if (!tabBtn || !event) return false;
+    const root = tabBtn.closest(".portal-free-tools");
+    if (!root) return false;
+    const tabs = Array.from(root.querySelectorAll("[data-free-tool-tab]"));
+    const index = tabs.indexOf(tabBtn);
+    if (index < 0) return false;
+    const key = event.key;
+    if (!["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Home", "End"].includes(key)) return false;
+    event.preventDefault();
+    const last = tabs.length - 1;
+    let nextIndex = index;
+    if (key === "ArrowRight" || key === "ArrowDown") nextIndex = index >= last ? 0 : index + 1;
+    if (key === "ArrowLeft" || key === "ArrowUp") nextIndex = index <= 0 ? last : index - 1;
+    if (key === "Home") nextIndex = 0;
+    if (key === "End") nextIndex = last;
+    const nextTab = tabs[nextIndex];
+    handleFreeToolTab(nextTab);
+    if (nextTab && typeof nextTab.focus === "function") nextTab.focus({ preventScroll: true });
+    return true;
   }
 
   function handleFreeToolAction(actionEl, event) {
@@ -13389,8 +13657,8 @@
       if (outEl) outEl.value = cleaned;
       const metrics = analyzeTextMetrics(cleaned);
       const statsEl = document.getElementById("free-tools-sub-stats");
-      if (statsEl) statsEl.textContent = `${metrics.words} từ · ${metrics.chars} ký tự`;
-      showToast("Đã làm sạch phụ đề thành công!");
+      if (statsEl) statsEl.textContent = freeToolsText("subtitle.stats", "{words} từ · {chars} ký tự", metrics);
+      showToast(freeToolsText("subtitle.toast.cleaned", "Đã làm sạch phụ đề thành công!"));
       return;
     }
 
@@ -13404,8 +13672,8 @@
         if (outEl) outEl.value = cleaned;
         const metrics = analyzeTextMetrics(cleaned);
         const statsEl = document.getElementById("free-tools-sub-stats");
-        if (statsEl) statsEl.textContent = `${metrics.words} từ · ${metrics.chars} ký tự`;
-        showToast("Đã tải dữ liệu phụ đề SRT mẫu.");
+        if (statsEl) statsEl.textContent = freeToolsText("subtitle.stats", "{words} từ · {chars} ký tự", metrics);
+        showToast(freeToolsText("subtitle.toast.sampleLoaded", "Đã tải dữ liệu phụ đề SRT mẫu."));
       }
       return;
     }
@@ -13416,23 +13684,23 @@
       const statsEl = document.getElementById("free-tools-sub-stats");
       if (inEl) inEl.value = "";
       if (outEl) outEl.value = "";
-      if (statsEl) statsEl.textContent = "0 từ · 0 ký tự";
-      showToast("Đã xóa nội dung phụ đề.");
+      if (statsEl) statsEl.textContent = freeToolsText("subtitle.statsEmpty", "0 từ · 0 ký tự");
+      showToast(freeToolsText("subtitle.toast.cleared", "Đã xóa nội dung phụ đề."));
       return;
     }
 
     if (action === "copy-clean-subtitle") {
       const outEl = document.getElementById("free-tools-sub-output");
-      copyPlainText(outEl ? outEl.value : "", "Đã sao chép văn bản phụ đề.");
+      copyPlainText(outEl ? outEl.value : "", freeToolsText("subtitle.toast.copied", "Đã sao chép văn bản phụ đề."));
       return;
     }
 
     if (action === "download-clean-subtitle") {
       const outEl = document.getElementById("free-tools-sub-output");
       const val = outEl ? outEl.value : "";
-      if (!val) { showToast("Không có nội dung để tải về.", "warning"); return; }
+      if (!val) { showToast(freeToolsText("subtitle.toast.emptyDownload", "Không có nội dung để tải về."), "warning"); return; }
       downloadTextAsFile(val, "subtitle_cleaned.txt");
-      showToast("Đang tải file subtitle_cleaned.txt...");
+      showToast(freeToolsText("subtitle.toast.downloading", "Đang tải tệp subtitle_cleaned.txt…"));
       return;
     }
 
@@ -13441,7 +13709,7 @@
       const vidId = parseYouTubeVideoId(url);
       const resBox = document.getElementById("free-tools-yt-result");
       if (!vidId) {
-        showToast("Vui lòng nhập đường link hoặc ID YouTube hợp lệ.", "warning");
+        showToast(freeToolsText("youtube.toast.invalidUrl", "Vui lòng nhập liên kết hoặc mã video YouTube hợp lệ."), "warning");
         return;
       }
       const idEl = document.getElementById("free-tools-yt-id");
@@ -13470,24 +13738,24 @@
       if (mqLink) mqLink.href = mqUrl;
       if (embedEl) embedEl.value = embedHtml;
       if (resBox) resBox.style.display = "block";
-      showToast("Đã trích xuất thông tin video YouTube thành công!");
+      showToast(freeToolsText("youtube.toast.extracted", "Đã trích xuất thông tin video YouTube thành công!"));
       return;
     }
 
     if (action === "copy-yt-thumb") {
       const target = actionEl.getAttribute("data-thumb-target");
       const vidId = document.getElementById("free-tools-yt-id")?.textContent.trim();
-      if (!vidId || vidId === "-") { showToast("Chưa trích xuất video nào.", "warning"); return; }
+      if (!vidId || vidId === "-") { showToast(freeToolsText("youtube.toast.noVideo", "Chưa trích xuất video nào."), "warning"); return; }
       let thumbUrl = `https://img.youtube.com/vi/${vidId}/maxresdefault.jpg`;
       if (target === "hq") thumbUrl = `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`;
       if (target === "mq") thumbUrl = `https://img.youtube.com/vi/${vidId}/mqdefault.jpg`;
-      copyPlainText(thumbUrl, "Đã sao chép link ảnh Thumbnail.");
+      copyPlainText(thumbUrl, freeToolsText("youtube.toast.thumbCopied", "Đã sao chép liên kết ảnh thu nhỏ."));
       return;
     }
 
     if (action === "copy-yt-embed") {
       const embedEl = document.getElementById("free-tools-yt-embed");
-      copyPlainText(embedEl ? embedEl.value : "", "Đã sao chép mã nhúng Iframe YouTube.");
+      copyPlainText(embedEl ? embedEl.value : "", freeToolsText("youtube.toast.embedCopied", "Đã sao chép mã nhúng Iframe YouTube."));
       return;
     }
 
@@ -13521,9 +13789,9 @@
         document.body.appendChild(a);
         a.click();
         setTimeout(() => a.remove(), 500);
-        showToast("Đang mở tải ảnh mã VietQR...");
+        showToast(freeToolsText("vietqr.toast.downloading", "Đang chuẩn bị tải ảnh mã VietQR…"));
       } else {
-        showToast("Vui lòng tạo mã QR trước khi tải.", "warning");
+        showToast(freeToolsText("vietqr.toast.noQr", "Vui lòng tạo mã QR trước khi tải."), "warning");
       }
       return;
     }
@@ -13531,9 +13799,9 @@
     if (action === "copy-vietqr-link") {
       const img = document.getElementById("free-tools-qr-img");
       if (img && img.src && img.style.display !== "none") {
-        copyPlainText(img.src, "Đã sao chép link ảnh VietQR.");
+        copyPlainText(img.src, freeToolsText("vietqr.toast.linkCopied", "Đã sao chép liên kết ảnh VietQR."));
       } else {
-        showToast("Chưa có mã QR để sao chép.", "warning");
+        showToast(freeToolsText("vietqr.toast.noQrCopy", "Chưa có mã QR để sao chép."), "warning");
       }
       return;
     }
@@ -13546,7 +13814,7 @@
       if (!inp.trim()) {
         if (out) out.value = "";
         if (status) status.textContent = "";
-        showToast("Vui lòng nhập chuỗi JSON cần format.", "warning");
+        showToast(freeToolsText("json.toast.empty", "Vui lòng nhập chuỗi JSON cần định dạng."), "warning");
         return;
       }
       try {
@@ -13554,16 +13822,16 @@
         const formatted = JSON.stringify(parsed, null, indent);
         if (out) out.value = formatted;
         if (status) {
-          status.textContent = "✅ Cú pháp JSON hợp lệ";
+          status.textContent = freeToolsText("json.status.valid", "✅ Cú pháp JSON hợp lệ");
           status.style.color = "var(--portal-accent, #7beddb)";
         }
-        showToast("Đã định dạng JSON thành công!");
+        showToast(freeToolsText("json.toast.formatted", "Đã định dạng JSON thành công!"));
       } catch (err) {
         if (status) {
-          status.textContent = `❌ Lỗi cú pháp: ${err.message}`;
+          status.textContent = `${freeToolsText("json.status.invalidPrefix", "❌ Lỗi cú pháp: ")} ${err.message}`;
           status.style.color = "#ff6b6b";
         }
-        showToast("Cú pháp JSON không hợp lệ.", "warning");
+        showToast(freeToolsText("json.toast.invalid", "Cú pháp JSON không hợp lệ."), "warning");
       }
       return;
     }
@@ -13582,16 +13850,16 @@
         const minified = JSON.stringify(parsed);
         if (out) out.value = minified;
         if (status) {
-          status.textContent = "✅ Đã nén Minify gọn";
+          status.textContent = freeToolsText("json.status.minified", "✅ Đã thu gọn JSON");
           status.style.color = "var(--portal-accent, #7beddb)";
         }
-        showToast("Đã nén Minify JSON!");
+        showToast(freeToolsText("json.toast.minified", "Đã thu gọn JSON!"));
       } catch (err) {
         if (status) {
-          status.textContent = `❌ Lỗi cú pháp: ${err.message}`;
+          status.textContent = `${freeToolsText("json.status.invalidPrefix", "❌ Lỗi cú pháp: ")} ${err.message}`;
           status.style.color = "#ff6b6b";
         }
-        showToast("Cú pháp JSON không hợp lệ.", "warning");
+        showToast(freeToolsText("json.toast.invalid", "Cú pháp JSON không hợp lệ."), "warning");
       }
       return;
     }
@@ -13610,10 +13878,10 @@
       if (inp) inp.value = sample;
       if (out) out.value = sample;
       if (status) {
-        status.textContent = "✅ Cú pháp JSON hợp lệ";
+        status.textContent = freeToolsText("json.status.valid", "✅ Cú pháp JSON hợp lệ");
         status.style.color = "var(--portal-accent, #7beddb)";
       }
-      showToast("Đã tải dữ liệu JSON mẫu.");
+      showToast(freeToolsText("json.toast.sampleLoaded", "Đã tải dữ liệu JSON mẫu."));
       return;
     }
 
@@ -13624,13 +13892,13 @@
       if (inp) inp.value = "";
       if (out) out.value = "";
       if (status) status.textContent = "";
-      showToast("Đã xóa JSON.");
+      showToast(freeToolsText("json.toast.cleared", "Đã xóa JSON."));
       return;
     }
 
     if (action === "copy-json") {
       const out = document.getElementById("free-tools-json-output");
-      copyPlainText(out ? out.value : "", "Đã sao chép nội dung JSON.");
+      copyPlainText(out ? out.value : "", freeToolsText("json.toast.copied", "Đã sao chép nội dung JSON."));
       return;
     }
 
@@ -13639,7 +13907,7 @@
       if (inp && inp.value) {
         inp.value = inp.value.toUpperCase();
         updateFreeToolsTextStats(inp.value);
-        showToast("Đã chuyển thành chữ IN HOA.");
+        showToast(freeToolsText("text.toast.uppercase", "Đã chuyển thành chữ IN HOA."));
       }
       return;
     }
@@ -13649,7 +13917,7 @@
       if (inp && inp.value) {
         inp.value = inp.value.toLowerCase();
         updateFreeToolsTextStats(inp.value);
-        showToast("Đã chuyển thành chữ in thường.");
+        showToast(freeToolsText("text.toast.lowercase", "Đã chuyển thành chữ in thường."));
       }
       return;
     }
@@ -13659,7 +13927,7 @@
       if (inp && inp.value) {
         inp.value = inp.value.toLowerCase().replace(/(?:^|\s)\S/g, (a) => a.toUpperCase());
         updateFreeToolsTextStats(inp.value);
-        showToast("Đã Viết Hoa Đầu Mỗi Từ.");
+        showToast(freeToolsText("text.toast.titlecase", "Đã viết hoa đầu mỗi từ."));
       }
       return;
     }
@@ -13669,7 +13937,7 @@
       if (inp && inp.value) {
         inp.value = inp.value.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, (c) => c.toUpperCase());
         updateFreeToolsTextStats(inp.value);
-        showToast("Đã viết hoa đầu câu.");
+        showToast(freeToolsText("text.toast.sentencecase", "Đã viết hoa đầu câu."));
       }
       return;
     }
@@ -13679,7 +13947,7 @@
       if (inp && inp.value) {
         inp.value = removeVietnameseAccents(inp.value);
         updateFreeToolsTextStats(inp.value);
-        showToast("Đã xóa dấu tiếng Việt.");
+        showToast(freeToolsText("text.toast.removeAccents", "Đã xóa dấu tiếng Việt."));
       }
       return;
     }
@@ -13689,7 +13957,7 @@
       if (inp && inp.value) {
         inp.value = slugifyVietnamese(inp.value);
         updateFreeToolsTextStats(inp.value);
-        showToast("Đã chuyển thành URL Slug.");
+        showToast(freeToolsText("text.toast.slugify", "Đã chuyển thành đường dẫn thân thiện."));
       }
       return;
     }
@@ -13699,27 +13967,27 @@
       if (inp && inp.value) {
         inp.value = inp.value.replace(/[ \t]+/g, " ").replace(/\n\s+/g, "\n").trim();
         updateFreeToolsTextStats(inp.value);
-        showToast("Đã xóa các khoảng trắng thừa.");
+        showToast(freeToolsText("text.toast.trim", "Đã xóa các khoảng trắng thừa."));
       }
       return;
     }
 
     if (action === "copy-text-main") {
       const inp = document.getElementById("free-tools-text-input");
-      copyPlainText(inp ? inp.value : "", "Đã sao chép văn bản.");
+      copyPlainText(inp ? inp.value : "", freeToolsText("text.toast.copied", "Đã sao chép văn bản."));
       return;
     }
 
     if (action === "b64-encode") {
       const inp = document.getElementById("free-tools-codec-input")?.value || "";
       const out = document.getElementById("free-tools-codec-output");
-      if (!inp) { showToast("Vui lòng nhập chuỗi cần mã hóa.", "warning"); return; }
+      if (!inp) { showToast(freeToolsText("codec.toast.emptyEncode", "Vui lòng nhập chuỗi cần mã hóa."), "warning"); return; }
       try {
         const encoded = utf8ToBase64(inp);
         if (out) out.value = encoded;
-        showToast("Đã mã hóa Base64 thành công!");
+        showToast(freeToolsText("codec.toast.b64Encoded", "Đã mã hóa Base64 thành công!"));
       } catch (err) {
-        showToast("Lỗi khi mã hóa Base64: " + err.message, "warning");
+        showToast(`${freeToolsText("codec.toast.b64EncodeError", "Lỗi khi mã hóa Base64: ")}${err.message}`, "warning");
       }
       return;
     }
@@ -13727,13 +13995,13 @@
     if (action === "b64-decode") {
       const inp = document.getElementById("free-tools-codec-input")?.value || "";
       const out = document.getElementById("free-tools-codec-output");
-      if (!inp.trim()) { showToast("Vui lòng nhập chuỗi Base64 cần giải mã.", "warning"); return; }
+      if (!inp.trim()) { showToast(freeToolsText("codec.toast.emptyDecode", "Vui lòng nhập chuỗi Base64 cần giải mã."), "warning"); return; }
       try {
         const decoded = base64ToUtf8(inp);
         if (out) out.value = decoded;
-        showToast("Đã giải mã Base64 thành công!");
+        showToast(freeToolsText("codec.toast.b64Decoded", "Đã giải mã Base64 thành công!"));
       } catch (err) {
-        showToast("Chuỗi Base64 không hợp lệ.", "warning");
+        showToast(freeToolsText("codec.toast.b64Invalid", "Chuỗi Base64 không hợp lệ."), "warning");
       }
       return;
     }
@@ -13741,28 +14009,28 @@
     if (action === "url-encode") {
       const inp = document.getElementById("free-tools-codec-input")?.value || "";
       const out = document.getElementById("free-tools-codec-output");
-      if (!inp) { showToast("Vui lòng nhập chuỗi cần encode.", "warning"); return; }
+      if (!inp) { showToast(freeToolsText("codec.toast.emptyUrlEncode", "Vui lòng nhập chuỗi cần mã hóa URL."), "warning"); return; }
       if (out) out.value = encodeURIComponent(inp);
-      showToast("Đã URL Encode thành công!");
+      showToast(freeToolsText("codec.toast.urlEncoded", "Đã mã hóa URL thành công!"));
       return;
     }
 
     if (action === "url-decode") {
       const inp = document.getElementById("free-tools-codec-input")?.value || "";
       const out = document.getElementById("free-tools-codec-output");
-      if (!inp) { showToast("Vui lòng nhập chuỗi cần decode.", "warning"); return; }
+      if (!inp) { showToast(freeToolsText("codec.toast.emptyUrlDecode", "Vui lòng nhập chuỗi cần giải mã URL."), "warning"); return; }
       try {
         if (out) out.value = decodeURIComponent(inp);
-        showToast("Đã URL Decode thành công!");
+        showToast(freeToolsText("codec.toast.urlDecoded", "Đã giải mã URL thành công!"));
       } catch (err) {
-        showToast("Chuỗi URL encode không hợp lệ.", "warning");
+        showToast(freeToolsText("codec.toast.urlInvalid", "Chuỗi URL không hợp lệ."), "warning");
       }
       return;
     }
 
     if (action === "copy-codec") {
       const out = document.getElementById("free-tools-codec-output");
-      copyPlainText(out ? out.value : "", "Đã sao chép kết quả Codec.");
+      copyPlainText(out ? out.value : "", freeToolsText("codec.toast.copied", "Đã sao chép kết quả mã hóa."));
       return;
     }
   }
@@ -13851,6 +14119,21 @@
   ]);
   const MEDIA_ITEM_ROLES = Object.freeze([["music", "Music"], ["sfx", "SFX"], ["reference", "Reference"]]);
 
+  function audioWorkspaceModeOptions() {
+    return MEDIA_PROMPT_MODES.map(([key]) => [key, audioWorkspaceText(`mode.${key}`, key)]);
+  }
+
+  function audioWorkspaceRoleOptions() {
+    return MEDIA_ITEM_ROLES.map(([key]) => [key, audioWorkspaceText(`role.${key}`, key)]);
+  }
+
+  function audioWorkspaceExecutionStatus(value) {
+    const key = String(value || "").trim().toLowerCase();
+    if (key === "ready") return audioWorkspaceText("activity.status.ready", "Ready");
+    if (key === "guarded") return audioWorkspaceText("activity.status.guarded", "Protected");
+    return String(value || "");
+  }
+
   function validMediaCollectionId(value) {
     return validProjectId(value);
   }
@@ -13861,7 +14144,9 @@
   }
 
   function mediaCollectionStateLabel(value) {
-    return String(value || "").toLowerCase() === "archived" ? "Đã archive" : "Đang hoạt động";
+    return String(value || "").toLowerCase() === "archived"
+      ? audioWorkspaceText("state.archived", "Archived")
+      : audioWorkspaceText("state.active", "Active");
   }
 
   function mediaCollectionTags(value) {
@@ -13874,13 +14159,17 @@
   }
 
   function mediaModeLabel(value) {
-    const match = MEDIA_PROMPT_MODES.find(([key]) => key === String(value || "").toLowerCase());
-    return match ? match[1] : "Brief âm thanh";
+    const key = String(value || "").toLowerCase();
+    return MEDIA_PROMPT_MODES.some(([candidate]) => candidate === key)
+      ? audioWorkspaceText(`mode.${key}`, key)
+      : audioWorkspaceText("mode.fallback", "Audio brief");
   }
 
   function mediaRoleLabel(value) {
-    const match = MEDIA_ITEM_ROLES.find(([key]) => key === String(value || "").toLowerCase());
-    return match ? match[1] : "Reference";
+    const key = String(value || "").toLowerCase();
+    return MEDIA_ITEM_ROLES.some(([candidate]) => candidate === key)
+      ? audioWorkspaceText(`role.${key}`, key)
+      : audioWorkspaceText("role.fallback", "Reference");
   }
 
   // Audio Production Hub is deliberately a route/UI projection over the
@@ -13934,7 +14223,7 @@
   }
 
   function renderMediaWorkspacePagination(listing, route) {
-    return renderMemoryPagination(listing, "audio collection", "media-workspace-page", route || "/media-workspace", "data-media-collection-offset", "portal-media-pagination");
+    return renderMemoryPagination(listing, audioWorkspaceText("pagination.collection", "audio collection"), "media-workspace-page", route || "/media-workspace", "data-media-collection-offset", "portal-media-pagination");
   }
 
   function renderMediaAudioAssetPagination(listing, route) {
@@ -13977,18 +14266,22 @@
 
   function musicLibraryDurationLabel(value) {
     const seconds = Number(value);
-    if (!Number.isInteger(seconds) || seconds < 1 || seconds > 7200) return "Chưa khai báo thời lượng";
+    if (!Number.isInteger(seconds) || seconds < 1 || seconds > 7200) {
+      return musicLibraryText("duration.unknown", "Chưa khai báo thời lượng");
+    }
     const minutes = Math.floor(seconds / 60);
     const remainder = seconds % 60;
-    return minutes ? `${minutes}m ${String(remainder).padStart(2, "0")}s tự khai báo` : `${seconds}s tự khai báo`;
+    return minutes
+      ? musicLibraryText("duration.minutes", "{minutes} phút {seconds} giây · tự khai báo", { minutes, seconds: String(remainder).padStart(2, "0") })
+      : musicLibraryText("duration.seconds", "{seconds} giây · tự khai báo", { seconds });
   }
 
   function renderMusicLibraryCards(items, role, route) {
-    const roleLabel = role === "sfx" ? "SFX" : "Music";
+    const roleLabel = musicLibraryText(role === "sfx" ? "role.sfx" : "role.music", role === "sfx" ? "SFX" : "nhạc");
     if (!items.length) {
       return renderEmpty(
-        role === "sfx" ? "Chưa có SFX trong thư viện" : "Chưa có nhạc trong thư viện",
-        "Gắn audio active vào một Audio Collection riêng tư trước. Trang này không suy đoán catalog, file, preview hoặc kết quả âm thanh.",
+        musicLibraryText(role === "sfx" ? "empty.sfx.title" : "empty.music.title", role === "sfx" ? "Chưa có SFX trong thư viện" : "Chưa có nhạc trong thư viện"),
+        musicLibraryText("empty.body", "Gắn âm thanh đang hoạt động vào một bộ sưu tập âm thanh riêng tư trước. Trang này không suy đoán danh mục, tệp, bản xem trước hoặc kết quả âm thanh."),
         ICONS.music
       );
     }
@@ -13997,11 +14290,11 @@
       const tags = mediaCollectionTags(item.tags);
       const collectionRoute = `/media-workspace/${encodeURIComponent(collectionId)}`;
       const favorite = item.favorite === true
-        ? '<span class="portal-music-library-favorite">Đã đánh dấu</span>'
+        ? `<span class="portal-music-library-favorite">${safeText(musicLibraryText("favorite", "Đã đánh dấu"))}</span>`
         : "";
       const tagMarkup = tags.length
-        ? `<div class="portal-music-library-tags" aria-label="Tags audio">${tags.map((tag) => `<span>${safeText(tag)}</span>`).join("")}</div>`
-        : '<span class="portal-music-library-muted">Chưa có tag</span>';
+        ? `<div class="portal-music-library-tags" aria-label="${safeText(musicLibraryText("tagLabel", "Thẻ"))}">${tags.map((tag) => `<span>${safeText(tag)}</span>`).join("")}</div>`
+        : `<span class="portal-music-library-muted">${safeText(musicLibraryText("noTags", "Chưa có thẻ"))}</span>`;
       return `<article class="portal-music-library-card">
         <header class="portal-music-library-card-head">
           <span class="portal-music-library-role">${safeText(roleLabel)}</span>
@@ -14009,16 +14302,16 @@
         </header>
         <div class="portal-music-library-card-copy">
           <h3>${safeText(String(item.reference_title || roleLabel))}</h3>
-          <p>Thuộc collection <strong>${safeText(String(item.collection_title || "Audio Collection"))}</strong></p>
+          <p>${safeText(musicLibraryText("belongsTo", "Thuộc bộ sưu tập"))} <strong>${safeText(String(item.collection_title || musicLibraryText("defaultCollection", "Bộ sưu tập âm thanh")))}</strong></p>
         </div>
         <dl class="portal-music-library-meta">
-          <div><dt>Thời lượng</dt><dd>${safeText(musicLibraryDurationLabel(item.user_declared_duration_seconds))}</dd></div>
-          <div><dt>Cập nhật</dt><dd>${safeText(String(item.updated_at || item.collection_updated_at || "—"))}</dd></div>
+          <div><dt>${safeText(musicLibraryText("durationLabel", "Thời lượng"))}</dt><dd>${safeText(musicLibraryDurationLabel(item.user_declared_duration_seconds))}</dd></div>
+          <div><dt>${safeText(musicLibraryText("updatedLabel", "Cập nhật"))}</dt><dd>${safeText(String(item.updated_at || item.collection_updated_at || "—"))}</dd></div>
         </dl>
         ${tagMarkup}
         <footer class="portal-music-library-card-footer">
-          <span>Metadata riêng tư · không có player hoặc delivery.</span>
-          <a class="portal-button portal-button--quiet" href="${safeText(collectionRoute)}">Mở collection <span aria-hidden="true">→</span></a>
+          <span>${safeText(musicLibraryText("metadataNotice", "Thông tin riêng tư · không có trình phát hoặc bàn giao tệp."))}</span>
+          <a class="portal-button portal-button--quiet" href="${safeText(collectionRoute)}">${safeText(musicLibraryText("openCollection", "Mở bộ sưu tập"))} <span aria-hidden="true">→</span></a>
         </footer>
       </article>`;
     }).join("")}</div>`;
@@ -14031,11 +14324,12 @@
     // reject it as a stale-route interaction.
     const route = String((context && context.path) || page.routePath || page.path || "/music/library").split("?")[0];
     const role = musicLibraryRoleForPage(page);
-    const roleLabel = role === "sfx" ? "SFX" : "nhạc";
-    const title = role === "sfx" ? "Thư viện SFX của tôi" : "Thư viện nhạc của tôi";
+    const roleKey = role === "sfx" ? "sfx" : "music";
+    const roleLabel = musicLibraryText(`role.${roleKey}`, role === "sfx" ? "SFX" : "nhạc");
+    const title = musicLibraryText(`intro.title.${roleKey}`, role === "sfx" ? "Thư viện SFX của tôi" : "Thư viện nhạc của tôi");
     const alternate = role === "sfx"
-      ? { href: "/music/library", label: "Mở thư viện nhạc" }
-      : { href: "/music/sfx-library", label: "Mở thư viện SFX" };
+      ? { href: "/music/library", label: musicLibraryText("page.music.title", "Thư viện nhạc") }
+      : { href: "/music/sfx-library", label: musicLibraryText("page.sfx.title", "Thư viện hiệu ứng âm thanh") };
     const canView = Boolean(context.capabilities && context.capabilities["music-library-view"] === true);
     const readState = ["loading", "ready", "failed", "guarded"].includes(String(context.musicLibraryReadState || ""))
       ? String(context.musicLibraryReadState)
@@ -14043,26 +14337,35 @@
     const listing = musicLibraryListing(context);
     const filter = listing.filters;
     const items = musicLibraryItems(context, role);
-    const filterForm = `<form class="portal-music-library-filter" data-portal-form data-portal-no-transient data-portal-action="music-library-filter" data-portal-route="${safeText(route)}" novalidate>${renderFields([{ name: "q", label: `Tìm ${roleLabel}`, placeholder: "Tên reference đã đặt, collection hoặc tag…", maxLength: 100, wide: true }], canView, context, filter, "music-library-filter")}<div class="portal-form-footer"><span class="portal-form-note">Tìm kiếm chỉ đọc metadata owner-scoped trong phiên hiện tại; không lưu vào URL, Bot hoặc browser storage.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="music-library-filter-clear" data-portal-route="${safeText(route)}"${canView ? "" : " disabled"}>Xóa lọc</button><button class="portal-button portal-button--primary" type="submit"${canView ? "" : " disabled"}>Tìm trong thư viện</button></div></div></form>`;
+    const filterForm = `<form class="portal-music-library-filter" data-portal-form data-portal-no-transient data-portal-action="music-library-filter" data-portal-route="${safeText(route)}" novalidate>${renderFields([{ name: "q", label: musicLibraryText(`filter.label.${roleKey}`, role === "sfx" ? "Tìm SFX" : "Tìm nhạc"), placeholder: musicLibraryText("filter.placeholder", "Tên đã đặt, bộ sưu tập hoặc thẻ…"), maxLength: 100, wide: true }], canView, context, filter, "music-library-filter")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(musicLibraryText("filter.note", "Tìm kiếm chỉ đọc thông tin trong phạm vi tài khoản hiện tại; không lưu vào đường dẫn, Bot hoặc bộ nhớ trình duyệt."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="music-library-filter-clear" data-portal-route="${safeText(route)}"${canView ? "" : " disabled"}>${safeText(musicLibraryText("filter.clear", "Xóa lọc"))}</button><button class="portal-button portal-button--primary" type="submit"${canView ? "" : " disabled"}>${safeText(musicLibraryText("filter.submit", "Tìm trong thư viện"))}</button></div></div></form>`;
     const guard = !canView || readState !== "ready";
     if (guard) {
       const loading = canView && readState === "loading";
       const failed = canView && readState === "failed";
-      const heading = loading ? `Đang kiểm tra thư viện ${roleLabel}` : failed ? `Chưa thể tải thư viện ${roleLabel}` : `Thư viện ${roleLabel} đang được bảo vệ`;
-      const copy = loading
-        ? "Đang nạp metadata đã được owner-check. Dữ liệu cũ không được giữ lại hoặc thay bằng generic Assets."
+      const heading = loading
+        ? musicLibraryText("guard.loading.title", "Đang kiểm tra thư viện {role}", { role: roleLabel })
         : failed
-          ? "Máy chủ chưa trả danh sách metadata owner-scoped hợp lệ nên Web đã ẩn state cũ. Không dùng Bot, provider, catalog hoặc file thay thế."
-          : "Đăng nhập bằng signed Web session và chờ Audio Workspace được bật để xem metadata riêng tư. Telegram ID thô không cấp quyền cho màn này.";
-      return `<article class="portal-page portal-music-library">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-music-library-guard" aria-live="polite"><div class="portal-state" data-state="${failed ? "error" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.music)}</span><div><h2>${safeText(heading)}</h2><p>${safeText(copy)}</p><div class="portal-state-meta"><span>Không có generic Assets</span><span>Không có player/catalog</span><span>Không có Bot hand-off</span></div><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="music-library-refresh" data-portal-route="${safeText(route)}"${canView ? "" : " disabled"}>${loading ? "Đang nạp metadata" : "Thử lại dữ liệu private"}</button><a class="portal-button portal-button--quiet" href="${safeText(alternate.href)}">${safeText(alternate.label)}</a></div></div></div></section></article>`;
+          ? musicLibraryText("guard.failed.title", "Chưa thể tải thư viện {role}", { role: roleLabel })
+          : musicLibraryText("guard.guarded.title", "Thư viện {role} đang được bảo vệ", { role: roleLabel });
+      const copy = loading
+        ? musicLibraryText("guard.loading.copy", "Đang nạp thông tin đã được kiểm tra quyền. Dữ liệu cũ không được giữ lại hoặc thay bằng tài sản chung.")
+        : failed
+          ? musicLibraryText("guard.failed.copy", "Máy chủ chưa trả danh sách hợp lệ nên giao diện đã ẩn dữ liệu cũ. Không dùng Bot, nhà cung cấp, danh mục hoặc tệp thay thế.")
+          : musicLibraryText("guard.guarded.copy", "Đăng nhập bằng phiên Web hợp lệ và chờ Không gian âm thanh được bật để xem thông tin riêng tư. Mã Telegram thô không cấp quyền cho màn này.");
+      const guardButton = loading
+        ? musicLibraryText("guard.loading.button", "Đang nạp thông tin")
+        : failed
+          ? musicLibraryText("guard.failed.button", "Thử lại dữ liệu riêng tư")
+          : musicLibraryText("guard.guarded.button", "Thử lại sau khi bật quyền");
+      return `<article class="portal-page portal-music-library">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-music-library-guard" aria-live="polite"><div class="portal-state" data-state="${failed ? "error" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.music)}</span><div><h2>${safeText(heading)}</h2><p>${safeText(copy)}</p><div class="portal-state-meta"><span>${safeText(musicLibraryText("guard.noGenericAssets", "Không có tài sản chung"))}</span><span>${safeText(musicLibraryText("guard.noPlayerCatalog", "Không có trình phát/danh mục"))}</span><span>${safeText(musicLibraryText("guard.noBotHandoff", "Không bàn giao cho Bot"))}</span></div><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="music-library-refresh" data-portal-route="${safeText(route)}"${canView ? "" : " disabled"}>${safeText(guardButton)}</button><a class="portal-button portal-button--quiet" href="${safeText(alternate.href)}">${safeText(alternate.label)}</a></div></div></div></section></article>`;
     }
     const resultNote = filter.q
-      ? `Kết quả cho “${safeText(filter.q)}” chỉ tìm trên tên reference đã đặt, collection và tag đã redaction.`
-      : `Chỉ ${roleLabel} active đã gắn vào Audio Collection active của signed Web account hiện tại được hiển thị.`;
+      ? musicLibraryText("result.query", "Kết quả cho “{query}” chỉ tìm trên tên đã đặt, bộ sưu tập và thẻ đã được lọc.", { query: filter.q })
+      : musicLibraryText(`result.all.${roleKey}`, "Chỉ nội dung đang hoạt động đã gắn vào bộ sưu tập âm thanh đang hoạt động của tài khoản hiện tại được hiển thị.");
     return `<article class="portal-page portal-music-library">${renderHero(page, context)}
-      <section class="portal-music-library-intro"><div><span class="portal-section-kicker">Private media library</span><h2>${safeText(title)}</h2><p>Quét nhanh các reference đã tổ chức trong Audio Collection mà không mở file, preview hoặc kho bên ngoài. Mỗi card chỉ là metadata để tiếp tục làm việc trong collection.</p></div><div class="portal-music-library-intro-actions"><span class="portal-music-library-read-badge">Read only · signed session</span><a class="portal-button portal-button--quiet" href="${safeText(alternate.href)}">${safeText(alternate.label)}</a></div></section>
-      <section class="portal-card portal-card-pad portal-music-library-board"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped metadata</span><h2 class="portal-card-title">Tìm và mở đúng collection</h2><p class="portal-card-subtitle">${resultNote}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="music-library-refresh" data-portal-route="${safeText(route)}">Làm mới</button></div>${filterForm}${renderMusicLibraryCards(items, role, route)}${renderMemoryPagination(listing, role === "sfx" ? "SFX" : "audio nhạc", "music-library-page", route, "data-music-library-offset", "portal-music-library-pagination")}</section>
-      <aside class="portal-music-library-boundary"><div><strong>Ranh giới của thư viện</strong><span>Chỉ đọc metadata. Không mở player/preview, không tạo audio, job, wallet, payment, asset, delivery, Bot hoặc Telegram action.</span></div><a class="portal-button portal-button--quiet" href="/media-workspace">Mở Audio Workspace</a></aside>
+      <section class="portal-music-library-intro"><div><span class="portal-section-kicker">${safeText(musicLibraryText("intro.kicker", "THƯ VIỆN ÂM THANH RIÊNG TƯ"))}</span><h2>${safeText(title)}</h2><p>${safeText(musicLibraryText("intro.description", "Xem nhanh các tên tham chiếu trong bộ sưu tập âm thanh mà không mở tệp, xem trước hoặc truy cập kho bên ngoài. Mỗi thẻ chỉ là thông tin để bạn tiếp tục trong bộ sưu tập."))}</p></div><div class="portal-music-library-intro-actions"><span class="portal-music-library-read-badge">${safeText(musicLibraryText("intro.readOnly", "Chỉ đọc · phiên đăng nhập"))}</span><a class="portal-button portal-button--quiet" href="${safeText(alternate.href)}">${safeText(alternate.label)}</a></div></section>
+      <section class="portal-card portal-card-pad portal-music-library-board"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicLibraryText("board.kicker", "THÔNG TIN TRONG PHẠM VI TÀI KHOẢN"))}</span><h2 class="portal-card-title">${safeText(musicLibraryText("board.title", "Tìm và mở đúng bộ sưu tập"))}</h2><p class="portal-card-subtitle">${safeText(resultNote)}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="music-library-refresh" data-portal-route="${safeText(route)}">${safeText(musicLibraryText("refresh", "Làm mới"))}</button></div>${filterForm}${renderMusicLibraryCards(items, role, route)}${renderMemoryPagination(listing, role === "sfx" ? musicLibraryText("role.sfx", "SFX") : musicLibraryText("role.music", "nhạc"), "music-library-page", route, "data-music-library-offset", "portal-music-library-pagination")}</section>
+      <aside class="portal-music-library-boundary"><div><strong>${safeText(musicLibraryText("boundary.title", "Ranh giới của thư viện"))}</strong><span>${safeText(musicLibraryText("boundary.body", "Chỉ đọc thông tin. Không mở trình phát/xem trước, không tạo âm thanh, tác vụ, ví, thanh toán, tài sản, bàn giao, Bot hoặc Telegram."))}</span></div><a class="portal-button portal-button--quiet" href="/media-workspace">${safeText(musicLibraryText("openWorkspace", "Mở Không gian âm thanh"))}</a></aside>
     </article>`;
   }
 
@@ -14080,6 +14383,21 @@
       { name: "tags", label: "Tags", placeholder: "launch, upbeat, short-form", maxLength: 800, help: "Tối đa 16 tags, phân tách bằng dấu phẩy." },
       { name: "project_id", label: "Liên kết planning với Project", control: "select", optionsFrom: "projects", emptyLabel: "Không liên kết Project", help: "Chỉ là liên kết planning Web-owned, không tự đưa audio vào package, job hoặc delivery." },
       { name: "rights_note", label: "Quyền sử dụng", placeholder: "Ví dụ: Tôi có quyền sử dụng các tệp và brief này.", required: true, minLength: 2, maxLength: 800, help: "Web không tự chứng nhận bản quyền, license hoặc quyền thương mại của bạn." }
+    ];
+  }
+
+  // The create form is part of the R213-02 shell checkpoint. Detail/editor
+  // keeps its existing contract until the later detail checkpoint.
+  function mediaCollectionShellFormFields() {
+    return [
+      { name: "title", label: audioWorkspaceText("create.field.title", "Collection name"), placeholder: audioWorkspaceText("create.field.titlePlaceholder", "Example: summer launch audio"), required: true, minLength: 3, maxLength: 180 },
+      { name: "creative_brief", label: audioWorkspaceText("create.field.brief", "Creative brief"), control: "textarea", placeholder: audioWorkspaceText("create.field.briefPlaceholder", "Mood, tempo, instruments, feeling, target duration and scene context…"), maxLength: 6000, help: audioWorkspaceText("create.field.briefHelp", "Web authoring only. Do not request imitation of a named artist, song, melody or voice.") },
+      { name: "description", label: audioWorkspaceText("create.field.description", "Internal description"), control: "textarea", placeholder: audioWorkspaceText("create.field.descriptionPlaceholder", "Purpose, context or team note…"), maxLength: 6000, help: audioWorkspaceText("create.field.descriptionHelp", "Do not store secrets, tokens, OTP/CVV, card numbers or payment documents.") },
+      { name: "prompt_mode", label: audioWorkspaceText("create.field.mode", "Brief type"), control: "select", required: true, options: audioWorkspaceModeOptions() },
+      { name: "use_context", label: audioWorkspaceText("create.field.context", "Use context"), placeholder: audioWorkspaceText("create.field.contextPlaceholder", "Example: 15-second product introduction video"), required: true, maxLength: 160 },
+      { name: "tags", label: audioWorkspaceText("create.field.tags", "Tags"), placeholder: audioWorkspaceText("create.field.tagsPlaceholder", "launch, upbeat, short-form"), maxLength: 800, help: audioWorkspaceText("create.field.tagsHelp", "Up to 16 tags, separated by commas.") },
+      { name: "project_id", label: audioWorkspaceText("create.field.project", "Link planning to a project"), control: "select", optionsFrom: "projects", emptyLabel: audioWorkspaceText("create.field.projectEmpty", "No project link"), help: audioWorkspaceText("create.field.projectHelp", "Web planning link only; it does not move audio into a package, job or delivery.") },
+      { name: "rights_note", label: audioWorkspaceText("create.field.rights", "Usage rights"), placeholder: audioWorkspaceText("create.field.rightsPlaceholder", "Example: I confirm that I can use these files and this brief."), required: true, minLength: 2, maxLength: 800, help: audioWorkspaceText("create.field.rightsHelp", "The Web does not certify your copyright, license or commercial rights.") }
     ];
   }
 
@@ -14110,13 +14428,8 @@
   }
 
   function mediaEventLabel(value) {
-    return ({
-      collection_created: "Đã tạo collection", collection_updated: "Đã lưu revision mới", collection_archived: "Đã archive collection",
-      collection_archived_without_snapshot: "Đã archive khi history đạt giới hạn", collection_restored: "Đã khôi phục collection",
-      collection_restored_without_snapshot: "Đã khôi phục khi history đạt giới hạn", collection_duplicated: "Đã nhân bản collection",
-      collection_version_restored: "Đã khôi phục revision metadata", item_attached: "Đã gắn audio Asset Vault",
-      item_updated: "Đã cập nhật metadata audio", item_detached: "Đã gỡ audio reference"
-    })[String(value || "")] || "Đã cập nhật Audio Library";
+    const key = String(value || "");
+    return audioWorkspaceText(`event.${key}`, audioWorkspaceText("event.fallback", "Audio Workspace updated"));
   }
 
   function mediaCollectionItems(context) {
@@ -14125,13 +14438,13 @@
   }
 
   function renderMediaCollectionCards(items, route) {
-    if (!items.length) return renderEmpty("Chưa có audio collection", "Tạo collection đầu tiên để tổ chức brief, quyền sử dụng và các audio private đã có trong Asset Vault.", ICONS.music);
+    if (!items.length) return renderEmpty(audioWorkspaceText("collection.emptyTitle", "No audio collections yet"), audioWorkspaceText("collection.emptyBody", "Create your first collection to organize briefs, usage rights and private audio already in Asset Vault."), ICONS.music);
     return `<div class="portal-media-collection-grid">${items.map((item) => {
       const id = String(item.id || "");
       const policy = item.policy && typeof item.policy === "object" ? item.policy : {};
-      const policyBadge = policy.status === "guarded" ? `<span class="portal-media-policy-flag">Brief cần chỉnh policy</span>` : "";
+      const policyBadge = policy.status === "guarded" ? `<span class="portal-media-policy-flag">${safeText(audioWorkspaceText("collection.policyGuarded", "Policy needs review"))}</span>` : "";
       const target = mediaWorkspaceCollectionRoute({ routePath: route }, id);
-      return `<article class="portal-card portal-card-pad portal-media-collection-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(mediaModeLabel(item.prompt_mode))} · ${safeText(String(item.use_context || "general"))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Audio Collection"))}</h3><p class="portal-card-subtitle">${safeText(String(item.brief_excerpt || item.description_excerpt || "Chưa có brief hiển thị."))}</p></div>${badge(mediaCollectionState(item.state))}</div><div class="portal-media-card-meta"><span>v${safeText(String(item.revision || 1))}</span><span>${safeText(mediaCollectionStateLabel(item.state))}</span><span>${safeText(String(item.updated_at || item.created_at || "—"))}</span></div>${policyBadge}${renderMediaTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">Authoring-only · không có job, charge hoặc output.</span><a class="portal-button portal-button--quiet" href="${safeText(target)}">Mở collection <span aria-hidden="true">→</span></a></div></article>`;
+      return `<article class="portal-card portal-card-pad portal-media-collection-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(mediaModeLabel(item.prompt_mode))} · ${safeText(String(item.use_context || "general"))}</span><h3 class="portal-card-title">${safeText(String(item.title || audioWorkspaceText("collection.defaultTitle", "Audio collection")))}</h3><p class="portal-card-subtitle">${safeText(String(item.brief_excerpt || item.description_excerpt || audioWorkspaceText("collection.defaultBrief", "No brief is available to display.")))}</p></div>${badge(mediaCollectionState(item.state))}</div><div class="portal-media-card-meta"><span>v${safeText(String(item.revision || 1))}</span><span>${safeText(mediaCollectionStateLabel(item.state))}</span><span>${safeText(String(item.updated_at || item.created_at || "—"))}</span></div>${policyBadge}${renderMediaTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(audioWorkspaceText("collection.note", "Authoring only · no job, charge or output."))}</span><a class="portal-button portal-button--quiet" href="${safeText(target)}">${safeText(audioWorkspaceText("collection.open", "Open collection"))} <span aria-hidden="true">→</span></a></div></article>`;
     }).join("")}</div>`;
   }
 
@@ -14139,22 +14452,22 @@
     const policy = context.mediaWorkspacePolicy && typeof context.mediaWorkspacePolicy === "object" ? context.mediaWorkspacePolicy : {};
     const statements = Array.isArray(policy.policy) ? policy.policy.filter((item) => typeof item === "string" && item.trim()).slice(0, 6) : [];
     const guarded = Array.isArray(policy.guarded_capabilities) ? policy.guarded_capabilities.filter((item) => typeof item === "string" && item.trim()).slice(0, 8) : [];
-    return `<aside class="portal-card portal-card-pad portal-media-policy"><div class="portal-card-header"><div><span class="portal-section-kicker">Ranh giới an toàn</span><h2 class="portal-card-title">Authoring sẵn sàng, engine vẫn được bảo vệ</h2><p class="portal-card-subtitle">Không có music generation, provider library, enhance, translate, mux/render, job, Xu hay payment trong workspace này.</p></div>${badge("guarded")}</div><ol class="portal-project-steps">${statements.length ? statements.map((item, index) => `<li><strong>${index + 1}.</strong><span>${safeText(item)}</span></li>`).join("") : "<li><strong>1.</strong><span>Chính sách đang được nạp an toàn từ server.</span></li>"}</ol>${guarded.length ? `<div class="portal-media-guarded-list"><span>Đang guarded</span>${guarded.map((item) => `<em>${safeText(String(item).replace(/_/g, " "))}</em>`).join("")}</div>` : ""}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a><a class="portal-button portal-button--quiet" href="/projects">Mở Project Center</a></div></aside>`;
+    return `<aside class="portal-card portal-card-pad portal-media-policy"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(audioWorkspaceText("policy.kicker", "Safety boundary"))}</span><h2 class="portal-card-title">${safeText(audioWorkspaceText("policy.title", "Authoring is ready, processing remains protected"))}</h2><p class="portal-card-subtitle">${safeText(audioWorkspaceText("policy.body", "This space does not create music, open provider libraries, enhance, translate, mux or render, create jobs, charge credits or take payments."))}</p></div>${badge("guarded")}</div><ol class="portal-project-steps">${statements.length ? statements.map((item, index) => `<li><strong>${index + 1}.</strong><span>${safeText(item)}</span></li>`).join("") : `<li><strong>1.</strong><span>${safeText(audioWorkspaceText("policy.fallback", "The policy is loading safely from the server."))}</span></li>`}</ol>${guarded.length ? `<div class="portal-media-guarded-list"><span>${safeText(audioWorkspaceText("policy.guardedLabel", "Protected capabilities"))}</span>${guarded.map((item) => `<em>${safeText(String(item).replace(/_/g, " "))}</em>`).join("")}</div>` : ""}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">${safeText(audioWorkspaceText("policy.openAssets", "Open Asset Vault"))}</a><a class="portal-button portal-button--quiet" href="/projects">${safeText(audioWorkspaceText("policy.openProjects", "Open Project Center"))}</a></div></aside>`;
   }
 
   function renderAudioHubOverview(summary) {
     const collections = summary && summary.collections && typeof summary.collections === "object" ? summary.collections : {};
     const items = summary && summary.items && typeof summary.items === "object" ? summary.items : {};
     const lanes = [
-      { index: "01", label: "Brief & policy", value: String(Number(collections.active || 0)), note: "Collection active có revision và policy guard rõ ràng." },
-      { index: "02", label: "Asset Vault assembly", value: String(Number(items.total || 0)), note: "Reference private; không copy tệp, không player hoặc preview." },
-      { index: "03", label: "Direction review", value: "Text", note: "Music/SFX direction cần mở và xác nhận tại công cụ riêng." }
+      { index: "01", label: audioWorkspaceText("overview.lane.briefLabel", "Brief and policy"), value: String(Number(collections.active || 0)), note: audioWorkspaceText("overview.lane.briefNote", "Active collections have a revision and a clear policy guard.") },
+      { index: "02", label: audioWorkspaceText("overview.lane.assetLabel", "Asset Vault assembly"), value: String(Number(items.total || 0)), note: audioWorkspaceText("overview.lane.assetNote", "Private references; files are not copied, played or previewed.") },
+      { index: "03", label: audioWorkspaceText("overview.lane.directionLabel", "Direction review"), value: audioWorkspaceText("overview.lane.directionValue", "Text"), note: audioWorkspaceText("overview.lane.directionNote", "Open a separate tool to draft and confirm music or sound-effect direction.") }
     ];
-    return `<section class="portal-audio-hub-overview" aria-label="Tổng quan Audio Production Hub"><div class="portal-audio-hub-overview-copy"><span class="portal-section-kicker">Audio production board</span><h2>Điều phối brief, reference và review trong một không gian rõ ràng.</h2><p>Hub dùng collection Media Workspace đã có thay vì tạo thêm kho dữ liệu. Mỗi bước vẫn giữ owner check, CSRF, revision và trạng thái policy của Web App.</p></div><ol class="portal-audio-hub-lanes">${lanes.map((lane) => `<li><span class="portal-audio-hub-lane-index">${safeText(lane.index)}</span><div><strong>${safeText(lane.label)}</strong><b>${safeText(lane.value)}</b><small>${safeText(lane.note)}</small></div></li>`).join("")}</ol></section>`;
+    return `<section class="portal-audio-hub-overview" aria-label="${safeText(audioWorkspaceText("overview.aria", "Audio Production Hub overview"))}"><div class="portal-audio-hub-overview-copy"><span class="portal-section-kicker">${safeText(audioWorkspaceText("overview.kicker", "Audio production board"))}</span><h2>${safeText(audioWorkspaceText("overview.title", "Coordinate briefs, references and review in one clear workspace."))}</h2><p>${safeText(audioWorkspaceText("overview.body", "The hub uses existing Audio Workspace collections instead of creating another data store. Every step keeps owner, CSRF, revision and policy checks."))}</p></div><ol class="portal-audio-hub-lanes">${lanes.map((lane) => `<li><span class="portal-audio-hub-lane-index">${safeText(lane.index)}</span><div><strong>${safeText(lane.label)}</strong><b>${safeText(lane.value)}</b><small>${safeText(lane.note)}</small></div></li>`).join("")}</ol></section>`;
   }
 
   function renderAudioHubNextSteps() {
-    return `<section class="portal-card portal-card-pad portal-audio-hub-next-steps"><div class="portal-card-header"><div><span class="portal-section-kicker">Handoff có chủ đích</span><h2 class="portal-card-title">Chọn công cụ tiếp theo, không truyền ngầm dữ liệu</h2><p class="portal-card-subtitle">Các route dưới đây mở như workspace riêng. Hub không prefill collection, Asset Vault reference, account data hoặc lệnh thực thi sang chúng.</p></div>${badge("read_only")}</div><div class="portal-audio-hub-next-grid"><a class="portal-audio-hub-next-card" href="/media-workspace/music-directions"><strong>Music Directions</strong><span>Lập direction text để review</span></a><a class="portal-audio-hub-next-card" href="/media-workspace/sfx-cue-sheet"><strong>SFX Cue Sheet</strong><span>Lập cue semantic theo ngữ cảnh</span></a><a class="portal-audio-hub-next-card" href="/audio/assets"><strong>Audio Operations</strong><span>Chọn audio private và xác nhận riêng</span></a></div></section>`;
+    return `<section class="portal-card portal-card-pad portal-audio-hub-next-steps"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(audioWorkspaceText("next.kicker", "Intentional next step"))}</span><h2 class="portal-card-title">${safeText(audioWorkspaceText("next.title", "Choose the next tool without hidden data transfer"))}</h2><p class="portal-card-subtitle">${safeText(audioWorkspaceText("next.body", "These routes open as separate workspaces. The hub does not prefill collections, Asset Vault references, account data or execution commands."))}</p></div>${badge("read_only")}</div><div class="portal-audio-hub-next-grid"><a class="portal-audio-hub-next-card" href="/media-workspace/music-directions"><strong>${safeText(audioWorkspaceText("next.musicTitle", "Music Directions"))}</strong><span>${safeText(audioWorkspaceText("next.musicBody", "Draft text direction for review"))}</span></a><a class="portal-audio-hub-next-card" href="/media-workspace/sfx-cue-sheet"><strong>${safeText(audioWorkspaceText("next.sfxTitle", "SFX Cue Sheet"))}</strong><span>${safeText(audioWorkspaceText("next.sfxBody", "Draft cues by context"))}</span></a><a class="portal-audio-hub-next-card" href="/audio/assets"><strong>${safeText(audioWorkspaceText("next.audioTitle", "Audio Operations"))}</strong><span>${safeText(audioWorkspaceText("next.audioBody", "Select private audio and confirm each step"))}</span></a></div></section>`;
   }
 
   function renderMediaWorkspace(page, context) {
@@ -14162,8 +14475,10 @@
     const audioHub = isAudioHubRoute(route);
     const canView = Boolean(context.capabilities && context.capabilities["media-workspace-view"] === true);
     const canCreate = Boolean(context.capabilities && context.capabilities["media-workspace-create"] === true);
-    const workspaceLabel = audioHub ? "Audio Production Hub" : "Audio Library";
-    if (!canView) return `<article class="portal-page ${audioHub ? "portal-audio-hub" : "portal-media-workspace"}">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(`${workspaceLabel} đang được bảo vệ`, "Đăng nhập bằng signed session để mở workspace audio riêng tư. Web không nhận Telegram ID thô và không hiển thị data music của Bot.", ICONS.music)}</section></article>`;
+    const workspaceLabel = audioHub
+      ? audioWorkspaceText("workspace.hubLabel", "Audio Production Hub")
+      : audioWorkspaceText("workspace.libraryLabel", "Audio Library");
+    if (!canView) return `<article class="portal-page ${audioHub ? "portal-audio-hub" : "portal-media-workspace"}">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(audioWorkspaceText("workspace.guardTitle", "{workspace} is protected", { workspace: workspaceLabel }), audioWorkspaceText("workspace.guardBody", "Sign in with a signed session to open the private audio workspace. The app does not accept raw Telegram IDs or expose Bot music data."), ICONS.music)}</section></article>`;
     const summary = context.mediaWorkspaceSummary && typeof context.mediaWorkspaceSummary === "object" ? context.mediaWorkspaceSummary : {};
     const collections = summary.collections && typeof summary.collections === "object" ? summary.collections : {};
     const items = summary.items && typeof summary.items === "object" ? summary.items : {};
@@ -14172,21 +14487,21 @@
     const filter = listing.filters;
     const values = mediaCollectionValues({ ...transientFormValues(page.routePath || page.path), prompt_mode: transientFormValues(page.routePath || page.path).prompt_mode || "background" });
     const filterFields = [
-      { name: "q", label: "Tìm collection", placeholder: "Tên, brief hoặc mô tả…", maxLength: 100, wide: true },
-      { name: "tag", label: "Tag", placeholder: "Ví dụ: launch", maxLength: 48 },
-      { name: "prompt_mode", label: "Loại brief", control: "select", options: MEDIA_PROMPT_MODES, emptyLabel: "Tất cả loại" },
-      { name: "state", label: "Trạng thái", control: "select", options: [["all", "Tất cả"], ["active", "Đang hoạt động"], ["archived", "Đã archive"]] }
+      { name: "q", label: audioWorkspaceText("filter.searchLabel", "Search collections"), placeholder: audioWorkspaceText("filter.searchPlaceholder", "Name, brief or description…"), maxLength: 100, wide: true },
+      { name: "tag", label: audioWorkspaceText("filter.tagLabel", "Tag"), placeholder: audioWorkspaceText("filter.tagPlaceholder", "Example: launch"), maxLength: 48 },
+      { name: "prompt_mode", label: audioWorkspaceText("filter.modeLabel", "Brief type"), control: "select", options: audioWorkspaceModeOptions(), emptyLabel: audioWorkspaceText("filter.modeAll", "All types") },
+      { name: "state", label: audioWorkspaceText("filter.stateLabel", "Status"), control: "select", options: [["all", audioWorkspaceText("filter.stateAll", "All")], ["active", audioWorkspaceText("filter.stateActive", "Active")], ["archived", audioWorkspaceText("filter.stateArchived", "Archived")]] }
     ];
     const events = Array.isArray(context.mediaWorkspaceEvents) ? context.mediaWorkspaceEvents.slice(0, 8) : [];
-    const eventList = events.length ? `<div class="portal-media-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(mediaEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : renderEmpty("Chưa có hoạt động", "Timeline chỉ lưu nhãn thao tác và revision; không hiển thị brief, attribution hoặc license note.", "○");
-    const overview = audioHub ? renderAudioHubOverview(summary) : `<section class="portal-media-workspace-intro"><div><span class="portal-section-kicker">Private Audio Library & Briefing</span><h2>Âm thanh được tổ chức theo ngữ cảnh, quyền sử dụng và ý định sáng tạo</h2><p>Tạo collection cho music/SFX brief, liên kết planning với Project và gắn audio đã nằm trong Asset Vault. Đây là workspace authoring; không phải generator, catalog provider hay trình phát audio.</p></div><dl><div><dt>${safeText(String(Number(collections.active || 0)))}</dt><dd>Đang hoạt động</dd></div><div><dt>${safeText(String(Number(items.total || 0)))}</dt><dd>Audio references</dd></div><div><dt>${safeText(String(Number(items.favorites || 0)))}</dt><dd>Đã đánh dấu</dd></div></dl></section>`;
-    const nextSteps = audioHub ? renderAudioHubNextSteps() : `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Công cụ biên tập nhanh</span><h2 class="portal-card-title">Lập SFX theo ngữ cảnh trước khi chọn nguồn âm thanh</h2><p class="portal-card-subtitle">SFX Cue Sheet tạo ba vị trí semantic để review. Đây là công cụ Web độc lập: không mở catalog, preview, job, ví Xu hay thao tác Telegram.</p></div>${badge("ready")}</div><div class="portal-form-footer"><span class="portal-form-note">Chọn preset và viết brief mới trên trang riêng; không chuyển collection, file hoặc dữ liệu account sang công cụ này.</span><a class="portal-button portal-button--primary" href="/media-workspace/sfx-cue-sheet">Mở SFX Cue Sheet <span aria-hidden="true">→</span></a></div></section>`;
+    const eventList = events.length ? `<div class="portal-media-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(mediaEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : renderEmpty(audioWorkspaceText("activity.emptyTitle", "No activity yet"), audioWorkspaceText("activity.emptyBody", "The timeline stores action labels and revisions only; it does not show briefs, usage-rights information or license notes."), "○");
+    const overview = audioHub ? renderAudioHubOverview(summary) : `<section class="portal-media-workspace-intro"><div><span class="portal-section-kicker">${safeText(audioWorkspaceText("intro.kicker", "PRIVATE AUDIO LIBRARY"))}</span><h2>${safeText(audioWorkspaceText("intro.title", "Organize audio by context, usage rights and creative intent"))}</h2><p>${safeText(audioWorkspaceText("intro.body", "Create collections for music and sound-effect briefs, link planning to a project and attach audio already in Asset Vault. This is an authoring workspace, not a generator, provider library or audio player."))}</p></div><dl><div><dt>${safeText(String(Number(collections.active || 0)))}</dt><dd>${safeText(audioWorkspaceText("intro.active", "Active"))}</dd></div><div><dt>${safeText(String(Number(items.total || 0)))}</dt><dd>${safeText(audioWorkspaceText("intro.references", "Audio references"))}</dd></div><div><dt>${safeText(String(Number(items.favorites || 0)))}</dt><dd>${safeText(audioWorkspaceText("intro.favorites", "Favorites"))}</dd></div></dl></section>`;
+    const nextSteps = audioHub ? renderAudioHubNextSteps() : `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(audioWorkspaceText("quick.kicker", "Quick authoring tool"))}</span><h2 class="portal-card-title">${safeText(audioWorkspaceText("quick.title", "Draft a sound-effect cue sheet before choosing an audio source"))}</h2><p class="portal-card-subtitle">${safeText(audioWorkspaceText("quick.body", "The cue sheet creates three contextual positions for review. It is a separate tool; it does not open a catalogue, preview, create jobs, charge credits or send data to Telegram."))}</p></div>${badge("ready")}</div><div class="portal-form-footer"><span class="portal-form-note">${safeText(audioWorkspaceText("quick.note", "Choose a preset and write a new brief on its own page; no collection, file or account data is transferred into it."))}</span><a class="portal-button portal-button--primary" href="/media-workspace/sfx-cue-sheet">${safeText(audioWorkspaceText("quick.open", "Open SFX Cue Sheet"))} <span aria-hidden="true">→</span></a></div></section>`;
     return `<article class="portal-page ${audioHub ? "portal-audio-hub" : "portal-media-workspace"}">${renderHero(page, context)}
       ${overview}
       ${nextSteps}
-      <div class="portal-media-workspace-layout"><section class="portal-card portal-card-pad portal-media-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo audio collection</h2><p class="portal-card-subtitle">Lưu creative brief riêng tư với owner check, CSRF, idempotency và version history. Chưa có AI request hoặc media output.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="media-collection-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(mediaCollectionFormFields(), canCreate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Collection chỉ lưu authoring metadata. Audio được gắn riêng từ Asset Vault sau khi server owner-check.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo collection</button></div></form></section>${renderMediaPolicy(context)}</div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tìm và tiếp tục collection</h2><p class="portal-card-subtitle">Danh sách chỉ chứa metadata/excerpt thuộc signed account hiện tại; nội dung đầy đủ chỉ nạp sau owner check khi mở collection.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="media-workspace-refresh" data-portal-route="${safeText(route)}">Làm mới</button></div><form class="portal-media-filter" data-portal-form data-portal-no-transient data-portal-action="media-workspace-filter" data-portal-route="${safeText(route)}" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ tồn tại trong phiên trang hiện tại, không lưu localStorage hoặc Telegram.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="media-workspace-filter-clear" data-portal-route="${safeText(route)}">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm collection</button></div></div></form>${renderMediaCollectionCards(mediaCollectionItems(context), route)}${renderMediaWorkspacePagination(listing, route)}</section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Chỉ có nhãn thao tác, revision và thời điểm; không có raw brief, file path, URL hoặc data provider.</p></div><span class="portal-form-note">${safeText(String(execution.authoring || "ready"))} authoring · ${safeText(String(execution.generation || "guarded"))} generation</span></div>${eventList}</section>
+      <div class="portal-media-workspace-layout"><section class="portal-card portal-card-pad portal-media-create"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(audioWorkspaceText("create.title", "Create audio collection"))}</h2><p class="portal-card-subtitle">${safeText(audioWorkspaceText("create.body", "Save a private creative brief with owner, CSRF, idempotency and version-history checks. No AI request or audio output is created here."))}</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="media-collection-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(mediaCollectionShellFormFields(), canCreate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(audioWorkspaceText("create.note", "The collection stores authoring metadata only. Audio is attached separately from Asset Vault after the server checks ownership."))}</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>${safeText(audioWorkspaceText("create.submit", "Create collection"))}</button></div></form></section>${renderMediaPolicy(context)}</div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(audioWorkspaceText("list.title", "Find and continue a collection"))}</h2><p class="portal-card-subtitle">${safeText(audioWorkspaceText("list.body", "The list contains only signed-account metadata and excerpts; full content loads after the server checks ownership."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="media-workspace-refresh" data-portal-route="${safeText(route)}">${safeText(audioWorkspaceText("list.refresh", "Refresh"))}</button></div><form class="portal-media-filter" data-portal-form data-portal-no-transient data-portal-action="media-workspace-filter" data-portal-route="${safeText(route)}" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(audioWorkspaceText("filter.note", "Filters apply only to this page session; they are not saved to browser storage or Telegram."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="media-workspace-filter-clear" data-portal-route="${safeText(route)}">${safeText(audioWorkspaceText("filter.clear", "Clear filters"))}</button><button class="portal-button portal-button--primary" type="submit">${safeText(audioWorkspaceText("filter.submit", "Search collections"))}</button></div></div></form>${renderMediaCollectionCards(mediaCollectionItems(context), route)}${renderMediaWorkspacePagination(listing, route)}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(audioWorkspaceText("activity.kicker", "AUDIT-SAFE FEED"))}</span><h2 class="portal-card-title">${safeText(audioWorkspaceText("activity.title", "Recent activity"))}</h2><p class="portal-card-subtitle">${safeText(audioWorkspaceText("activity.body", "Only action labels, revisions and timestamps are shown; no raw brief, file path, URL or provider data is exposed."))}</p></div><span class="portal-form-note">${safeText(audioWorkspaceExecutionStatus(execution.authoring || "ready"))} ${safeText(audioWorkspaceText("activity.authoring", "authoring"))} · ${safeText(audioWorkspaceExecutionStatus(execution.generation || "guarded"))} ${safeText(audioWorkspaceText("activity.generation", "processing"))}</span></div>${eventList}</section>
     </article>`;
   }
 
@@ -14474,10 +14789,21 @@
     ["hook_script", "Hook & script"], ["content_pack", "Content pack"], ["storyboard", "Storyboard"]
   ]);
 
+  function contentStudioKindOptions() {
+    return [
+      ["caption_hashtag", contentStudioText("kind.captionHashtag", "Chú thích & thẻ")],
+      ["content_ideas", contentStudioText("kind.contentIdeas", "Ý tưởng nội dung")],
+      ["hook_script", contentStudioText("kind.hookScript", "Câu mở đầu & kịch bản")],
+      ["content_pack", contentStudioText("kind.contentPack", "Gói nội dung")],
+      ["storyboard", contentStudioText("kind.storyboard", "Phân cảnh")]
+    ];
+  }
+
   function validContentBriefId(value) { return validProjectId(value); }
   function contentStudioKindLabel(value) {
-    const found = CONTENT_STUDIO_KINDS.find(([key]) => key === String(value || ""));
-    return found ? found[1] : "Content brief";
+    const key = String(value || "");
+    const labels = Object.fromEntries(contentStudioKindOptions());
+    return labels[key] || contentStudioText("kind.fallback", "Yêu cầu nội dung");
   }
   function contentStudioTags(value) {
     return Array.isArray(value) ? value.filter((item) => typeof item === "string" && item.trim()).slice(0, 20) : [];
@@ -14502,7 +14828,23 @@
     };
   }
   function renderContentStudioPagination(listing) {
-    return renderMemoryPagination(listing, "content brief", "content-studio-page", "/content-studio", "data-content-studio-offset", "portal-content-studio-pagination");
+    const source = listing && listing.pagination && typeof listing.pagination === "object" ? listing.pagination : {};
+    const offset = Number.isInteger(source.offset) ? source.offset : 0;
+    const returned = Number.isInteger(source.returned) ? source.returned : 0;
+    const previous = Number.isInteger(source.previous_offset) && source.previous_offset >= 0 ? source.previous_offset : null;
+    const next = source.has_more === true && Number.isInteger(source.next_offset) && source.next_offset > offset ? source.next_offset : null;
+    if (previous === null && next === null) return "";
+    const item = contentStudioText("pagination.itemName", "yêu cầu nội dung");
+    const range = returned
+      ? contentStudioText("pagination.range", "Đang hiển thị {from}–{to} {item}", { from: String(offset + 1), to: String(offset + returned), item })
+      : contentStudioText("pagination.empty", "Không có {item} ở trang này", { item });
+    const previousButton = previous !== null
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-studio-page" data-portal-route="/content-studio" data-content-studio-offset="${safeText(String(previous))}">${safeText(contentStudioText("pagination.previous", "← Trang trước"))}</button>`
+      : "";
+    const nextButton = next !== null
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-studio-page" data-portal-route="/content-studio" data-content-studio-offset="${safeText(String(next))}">${safeText(contentStudioText("pagination.next", "Trang sau →"))}</button>`
+      : "";
+    return `<nav class="portal-content-studio-pagination" aria-label="${safeText(contentStudioText("pagination.aria", "Phân trang yêu cầu nội dung"))}"><span>${safeText(range)}</span><div>${previousButton}${nextButton}</div></nav>`;
   }
   function contentStudioQueryKind() {
     const raw = String(new URLSearchParams(window.location.search || "").get("kind") || "").trim().toLowerCase();
@@ -14518,23 +14860,23 @@
   }
   function contentStudioFields(context) {
     return [
-      { name: "title", label: "Tên brief", placeholder: "Ví dụ: Launch mùa hè · Caption Instagram", required: true, minLength: 2, maxLength: 180 },
-      { name: "content_kind", label: "Loại nội dung", control: "select", required: true, options: CONTENT_STUDIO_KINDS },
-      { name: "subject", label: "Chủ đề", placeholder: "Sản phẩm, câu chuyện hoặc vấn đề cần truyền đạt", required: true, minLength: 2, maxLength: 700 },
-      { name: "objective", label: "Mục tiêu", placeholder: "Lợi ích cần làm rõ", maxLength: 500 },
-      { name: "audience", label: "Đối tượng", placeholder: "Người xem phù hợp", maxLength: 500 },
-      { name: "platform", label: "Nền tảng", placeholder: "Instagram / TikTok / Website", maxLength: 100 },
-      { name: "tone", label: "Giọng điệu", placeholder: "Rõ ràng, gần gũi", maxLength: 160 },
-      { name: "language", label: "Ngôn ngữ", placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
-      { name: "call_to_action", label: "CTA", control: "textarea", placeholder: "Hành động mong muốn…", maxLength: 600 },
-      { name: "brief_text", label: "Nội dung brief", control: "textarea", placeholder: "Bối cảnh, insight, điểm cần chứng minh và hướng triển khai…", required: true, minLength: 1, maxLength: 12000, wide: true },
-      { name: "constraints", label: "Ràng buộc / review notes", control: "textarea", placeholder: "Claim cần kiểm tra, giới hạn thương hiệu, quyền dùng asset…", maxLength: 6000, wide: true },
-      { name: "tags", label: "Tags", placeholder: "launch, summer, review", maxLength: 1000 },
-      { name: "project_id", label: "Project (tùy chọn)", control: "select", options: contentStudioReferenceOptions(context, "project_id"), emptyLabel: "Không liên kết Project" },
-      { name: "campaign_plan_id", label: "Campaign (tùy chọn)", control: "select", options: contentStudioReferenceOptions(context, "campaign_plan_id"), emptyLabel: "Không liên kết Campaign" },
-      { name: "prompt_template_id", label: "Prompt template (tùy chọn)", control: "select", options: contentStudioReferenceOptions(context, "prompt_template_id"), emptyLabel: "Không liên kết Prompt template" },
-      { name: "media_collection_id", label: "Audio collection (tùy chọn)", control: "select", options: contentStudioReferenceOptions(context, "media_collection_id"), emptyLabel: "Không liên kết Audio collection" },
-      { name: "rights_note", label: "Ghi chú quyền sử dụng", control: "textarea", placeholder: "Kiểm tra quyền asset và claim trước khi publish.", maxLength: 1000, wide: true }
+      { name: "title", label: contentStudioText("field.titleLabel", "Tên yêu cầu"), placeholder: contentStudioText("field.titlePlaceholder", "Ví dụ: Ra mắt mùa hè · chú thích Instagram"), required: true, minLength: 2, maxLength: 180 },
+      { name: "content_kind", label: contentStudioText("field.kindLabel", "Loại nội dung"), control: "select", required: true, options: contentStudioKindOptions() },
+      { name: "subject", label: contentStudioText("field.subjectLabel", "Chủ đề"), placeholder: contentStudioText("field.subjectPlaceholder", "Sản phẩm, câu chuyện hoặc vấn đề cần truyền đạt"), required: true, minLength: 2, maxLength: 700 },
+      { name: "objective", label: contentStudioText("field.objectiveLabel", "Mục tiêu"), placeholder: contentStudioText("field.objectivePlaceholder", "Lợi ích cần làm rõ"), maxLength: 500 },
+      { name: "audience", label: contentStudioText("field.audienceLabel", "Đối tượng"), placeholder: contentStudioText("field.audiencePlaceholder", "Người xem phù hợp"), maxLength: 500 },
+      { name: "platform", label: contentStudioText("field.platformLabel", "Nền tảng"), placeholder: contentStudioText("field.platformPlaceholder", "Instagram / TikTok / Website"), maxLength: 100 },
+      { name: "tone", label: contentStudioText("field.toneLabel", "Giọng điệu"), placeholder: contentStudioText("field.tonePlaceholder", "Rõ ràng, gần gũi"), maxLength: 160 },
+      { name: "language", label: contentStudioText("field.languageLabel", "Ngôn ngữ"), placeholder: contentStudioText("field.languagePlaceholder", "vi"), required: true, minLength: 1, maxLength: 100 },
+      { name: "call_to_action", label: contentStudioText("field.callToActionLabel", "Lời kêu gọi hành động"), control: "textarea", placeholder: contentStudioText("field.callToActionPlaceholder", "Hành động mong muốn…"), maxLength: 600 },
+      { name: "brief_text", label: contentStudioText("field.briefTextLabel", "Nội dung yêu cầu"), control: "textarea", placeholder: contentStudioText("field.briefTextPlaceholder", "Bối cảnh, insight, điểm cần chứng minh và hướng triển khai…"), required: true, minLength: 1, maxLength: 12000, wide: true },
+      { name: "constraints", label: contentStudioText("field.constraintsLabel", "Ràng buộc / ghi chú rà soát"), control: "textarea", placeholder: contentStudioText("field.constraintsPlaceholder", "Claim cần kiểm tra, giới hạn thương hiệu, quyền dùng tài liệu…"), maxLength: 6000, wide: true },
+      { name: "tags", label: contentStudioText("field.tagsLabel", "Thẻ"), placeholder: contentStudioText("field.tagsPlaceholder", "ra mắt, mùa hè, rà soát"), maxLength: 1000 },
+      { name: "project_id", label: contentStudioText("field.projectLabel", "Dự án (tùy chọn)"), control: "select", options: contentStudioReferenceOptions(context, "project_id"), emptyLabel: contentStudioText("field.projectEmpty", "Không liên kết dự án") },
+      { name: "campaign_plan_id", label: contentStudioText("field.campaignLabel", "Kế hoạch (tùy chọn)"), control: "select", options: contentStudioReferenceOptions(context, "campaign_plan_id"), emptyLabel: contentStudioText("field.campaignEmpty", "Không liên kết kế hoạch") },
+      { name: "prompt_template_id", label: contentStudioText("field.promptTemplateLabel", "Mẫu prompt (tùy chọn)"), control: "select", options: contentStudioReferenceOptions(context, "prompt_template_id"), emptyLabel: contentStudioText("field.promptTemplateEmpty", "Không liên kết mẫu prompt") },
+      { name: "media_collection_id", label: contentStudioText("field.audioCollectionLabel", "Bộ sưu tập âm thanh (tùy chọn)"), control: "select", options: contentStudioReferenceOptions(context, "media_collection_id"), emptyLabel: contentStudioText("field.audioCollectionEmpty", "Không liên kết bộ sưu tập âm thanh") },
+      { name: "rights_note", label: contentStudioText("field.rightsNoteLabel", "Ghi chú quyền sử dụng"), control: "textarea", placeholder: contentStudioText("field.rightsNotePlaceholder", "Kiểm tra quyền tài liệu và claim trước khi đăng bài."), maxLength: 1000, wide: true }
     ];
   }
   function contentStudioValues(value) {
@@ -14550,24 +14892,38 @@
   }
   function contentVariantFields() {
     return [
-      { name: "kind", label: "Loại content piece", control: "select", required: true, options: [["caption", "Caption"], ["hashtag_set", "Hashtag set"], ["hook", "Hook"], ["script", "Script"], ["storyboard", "Storyboard"], ["content_pack", "Content pack"], ["content_ideas", "Content ideas"], ["custom", "Tùy chỉnh"]] },
-      { name: "title", label: "Tiêu đề", placeholder: "Ví dụ: Hook mở đầu", required: true, minLength: 2, maxLength: 180 },
-      { name: "content_text", label: "Nội dung", control: "textarea", placeholder: "Viết khung nội dung có thể review…", required: true, minLength: 1, maxLength: 20000, wide: true },
-      { name: "note", label: "Ghi chú review", control: "textarea", placeholder: "Claim, quyền asset hoặc điểm cần xác minh…", maxLength: 2000, wide: true },
-      { name: "tags", label: "Tags", placeholder: "launch, review", maxLength: 1000 }
+      { name: "kind", label: contentStudioText("detail.variants.kindLabel", "Loại mục nội dung"), control: "select", required: true, options: [["caption", contentStudioText("detail.variant.kind.caption", "Chú thích")], ["hashtag_set", contentStudioText("detail.variant.kind.hashtagSet", "Bộ thẻ")], ["hook", contentStudioText("detail.variant.kind.hook", "Câu mở đầu")], ["script", contentStudioText("detail.variant.kind.script", "Kịch bản")], ["storyboard", contentStudioText("detail.variant.kind.storyboard", "Phân cảnh")], ["content_pack", contentStudioText("detail.variant.kind.contentPack", "Gói nội dung")], ["content_ideas", contentStudioText("detail.variant.kind.contentIdeas", "Ý tưởng nội dung")], ["custom", contentStudioText("detail.variant.kind.custom", "Tùy chỉnh")] ] },
+      { name: "title", label: contentStudioText("detail.variants.titleLabel", "Tiêu đề"), placeholder: contentStudioText("detail.variants.titlePlaceholder", "Ví dụ: Câu mở đầu"), required: true, minLength: 2, maxLength: 180 },
+      { name: "content_text", label: contentStudioText("detail.variants.contentLabel", "Nội dung"), control: "textarea", placeholder: contentStudioText("detail.variants.contentPlaceholder", "Viết khung nội dung để rà soát…"), required: true, minLength: 1, maxLength: 20000, wide: true },
+      { name: "note", label: contentStudioText("detail.variants.noteLabel", "Ghi chú rà soát"), control: "textarea", placeholder: contentStudioText("detail.variants.notePlaceholder", "Claim, quyền tài liệu hoặc điểm cần xác minh…"), maxLength: 2000, wide: true },
+      { name: "tags", label: contentStudioText("field.tagsLabel", "Thẻ"), placeholder: contentStudioText("field.tagsPlaceholder", "ra mắt, mùa hè, rà soát"), maxLength: 1000 }
     ];
+  }
+
+  function contentVariantKindLabel(value) {
+    const labels = {
+      caption: contentStudioText("detail.variant.kind.caption", "Chú thích"),
+      hashtag_set: contentStudioText("detail.variant.kind.hashtagSet", "Bộ thẻ"),
+      hook: contentStudioText("detail.variant.kind.hook", "Câu mở đầu"),
+      script: contentStudioText("detail.variant.kind.script", "Kịch bản"),
+      storyboard: contentStudioText("detail.variant.kind.storyboard", "Phân cảnh"),
+      content_pack: contentStudioText("detail.variant.kind.contentPack", "Gói nội dung"),
+      content_ideas: contentStudioText("detail.variant.kind.contentIdeas", "Ý tưởng nội dung"),
+      custom: contentStudioText("detail.variant.kind.custom", "Tùy chỉnh")
+    };
+    return labels[String(value || "")] || labels.custom;
   }
   function renderContentStudioPolicy(context) {
     const policy = context.contentStudioPolicy && typeof context.contentStudioPolicy === "object" ? context.contentStudioPolicy : {};
     const lines = Array.isArray(policy.guardrails) ? policy.guardrails.filter((item) => typeof item === "string").slice(0, 5) : [];
-    return `<aside class="portal-card portal-card-pad portal-content-studio-policy"><div class="portal-card-header"><div><span class="portal-section-kicker">Review boundary</span><h2 class="portal-card-title">Authoring trước, execution sau</h2><p class="portal-card-subtitle">Không có Bot, provider, payment, job, publish hoặc delivery trong workspace này.</p></div>${badge("guarded")}</div><ol class="portal-project-steps">${lines.length ? lines.map((item, index) => `<li><strong>${index + 1}.</strong><span>${safeText(item)}</span></li>`).join("") : "<li><strong>1.</strong><span>Chính sách đang được nạp an toàn từ server.</span></li>"}</ol></aside>`;
+    return `<aside class="portal-card portal-card-pad portal-content-studio-policy"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(contentStudioText("policy.kicker", "Ranh giới rà soát"))}</span><h2 class="portal-card-title">${safeText(contentStudioText("policy.title", "Biên tập trước, xử lý sau"))}</h2><p class="portal-card-subtitle">${safeText(contentStudioText("policy.body", "Không có Bot, nhà cung cấp, thanh toán, tác vụ, đăng bài hoặc giao tệp trong không gian này."))}</p></div>${badge("guarded")}</div><ol class="portal-project-steps">${lines.length ? lines.map((item, index) => `<li><strong>${index + 1}.</strong><span>${safeText(item)}</span></li>`).join("") : `<li><strong>1.</strong><span>${safeText(contentStudioText("policy.fallback", "Chính sách đang được nạp an toàn từ máy chủ."))}</span></li>`}</ol></aside>`;
   }
   function renderContentBriefCards(items) {
-    if (!items.length) return renderEmpty("Chưa có content brief", "Tạo brief đầu tiên để tách tư duy, review và version history khỏi các form generic.", ICONS.prompt);
+    if (!items.length) return renderEmpty(contentStudioText("card.emptyTitle", "Chưa có yêu cầu nội dung"), contentStudioText("card.emptyBody", "Tạo yêu cầu đầu tiên để tách tư duy, rà soát và lịch sử phiên bản khỏi các biểu mẫu chung."), ICONS.prompt);
     return `<div class="portal-content-studio-grid">${items.map((item) => {
       const id = String(item.id || "");
       const archived = String(item.state || "") === "archived";
-      return `<article class="portal-card portal-card-pad portal-content-studio-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(contentStudioKindLabel(item.content_kind))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Content brief"))}</h3><p class="portal-card-subtitle">${safeText(String(item.brief_excerpt || item.subject_excerpt || "Chưa có brief hiển thị."))}</p></div>${badge(archived ? "read_only" : "ready")}</div><div class="portal-content-studio-meta"><span>v${safeText(String(item.revision || 1))}</span><span>${safeText(archived ? "Đã archive" : "Đang hoạt động")}</span><span>${safeText(String(item.platform || "Chưa chọn kênh"))}</span></div>${renderContentStudioTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">Private authoring · không có job, charge, output hay publish.</span><a class="portal-button portal-button--quiet" href="/content-studio/${encodeURIComponent(id)}">Mở brief <span aria-hidden="true">→</span></a></div></article>`;
+      return `<article class="portal-card portal-card-pad portal-content-studio-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(contentStudioKindLabel(item.content_kind))}</span><h3 class="portal-card-title">${safeText(String(item.title || contentStudioText("card.defaultTitle", "Yêu cầu nội dung")))}</h3><p class="portal-card-subtitle">${safeText(String(item.brief_excerpt || item.subject_excerpt || contentStudioText("card.noExcerpt", "Chưa có nội dung hiển thị.")))}</p></div>${badge(archived ? "read_only" : "ready")}</div><div class="portal-content-studio-meta"><span>v${safeText(String(item.revision || 1))}</span><span>${safeText(archived ? contentStudioText("card.archived", "Đã lưu trữ") : contentStudioText("card.active", "Đang hoạt động"))}</span><span>${safeText(String(item.platform || contentStudioText("card.noPlatform", "Chưa chọn kênh")))}</span></div>${renderContentStudioTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(contentStudioText("card.privateNote", "Biên tập riêng tư · không có tác vụ, tính phí, đầu ra hay đăng bài."))}</span><a class="portal-button portal-button--quiet" href="/content-studio/${encodeURIComponent(id)}">${safeText(contentStudioText("card.open", "Mở yêu cầu"))} <span aria-hidden="true">→</span></a></div></article>`;
     }).join("")}</div>`;
   }
   function contentBriefItems(context) {
@@ -14578,23 +14934,23 @@
 
   function contentStudioEventLabel(value) {
     return ({
-      brief_created: "Đã tạo brief",
-      brief_updated: "Đã lưu revision brief",
-      brief_archived: "Đã archive brief",
-      brief_restored: "Đã khôi phục brief",
-      brief_duplicated: "Đã nhân bản brief",
-      brief_version_restored: "Đã khôi phục revision brief",
-      brief_composed_local: "Đã tạo khung nháp cục bộ",
-      variant_created: "Đã thêm content piece",
-      variant_updated: "Đã lưu content piece",
-      variant_archived: "Đã archive content piece",
-      variant_restored: "Đã khôi phục content piece",
-      variant_duplicated: "Đã nhân bản content piece",
-      variant_version_restored: "Đã khôi phục revision piece",
-      variant_composed_local: "Đã tạo piece nháp cục bộ",
-      variant_selected: "Đã chọn content piece",
-      variant_selected_without_snapshot: "Đã chọn content piece"
-    })[String(value || "")] || "Đã cập nhật Content Studio";
+      brief_created: contentStudioText("event.briefCreated", "Đã tạo yêu cầu"),
+      brief_updated: contentStudioText("event.briefUpdated", "Đã lưu phiên bản yêu cầu"),
+      brief_archived: contentStudioText("event.briefArchived", "Đã lưu trữ yêu cầu"),
+      brief_restored: contentStudioText("event.briefRestored", "Đã khôi phục yêu cầu"),
+      brief_duplicated: contentStudioText("event.briefDuplicated", "Đã nhân bản yêu cầu"),
+      brief_version_restored: contentStudioText("event.briefVersionRestored", "Đã khôi phục phiên bản yêu cầu"),
+      brief_composed_local: contentStudioText("event.briefComposed", "Đã tạo khung nháp cục bộ"),
+      variant_created: contentStudioText("event.variantCreated", "Đã thêm mục nội dung"),
+      variant_updated: contentStudioText("event.variantUpdated", "Đã lưu mục nội dung"),
+      variant_archived: contentStudioText("event.variantArchived", "Đã lưu trữ mục nội dung"),
+      variant_restored: contentStudioText("event.variantRestored", "Đã khôi phục mục nội dung"),
+      variant_duplicated: contentStudioText("event.variantDuplicated", "Đã nhân bản mục nội dung"),
+      variant_version_restored: contentStudioText("event.variantVersionRestored", "Đã khôi phục phiên bản mục nội dung"),
+      variant_composed_local: contentStudioText("event.variantComposed", "Đã tạo mục nháp cục bộ"),
+      variant_selected: contentStudioText("event.variantSelected", "Đã chọn mục nội dung"),
+      variant_selected_without_snapshot: contentStudioText("event.variantSelected", "Đã chọn mục nội dung")
+    })[String(value || "")] || contentStudioText("event.fallback", "Đã cập nhật không gian nội dung");
   }
 
   function contentStudioBoardEvents(context) {
@@ -14605,23 +14961,19 @@
 
   function renderContentStudioBoardActivity(items) {
     if (!items.length) {
-      return renderEmpty(
-        "Chưa có hoạt động Content Studio",
-        "Khi một brief hoặc content piece được server xác nhận, timeline chỉ hiển thị nhãn thao tác, revision và thời điểm. Không có text brief, reference, Bot state hoặc provider payload.",
-        "○"
-      );
+      return renderEmpty(contentStudioText("board.activity.emptyTitle", "Chưa có hoạt động nội dung"), contentStudioText("board.activity.emptyBody", "Khi máy chủ xác nhận một yêu cầu hoặc mục nội dung, dòng thời gian mới hiển thị nhãn thao tác, phiên bản và thời điểm."), "○");
     }
-    return `<ol class="portal-content-operations-activity" aria-label="Hoạt động Content Studio gần đây">${items.map((item) => `<li><span aria-hidden="true"></span><div><strong>${safeText(contentStudioEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></div></li>`).join("")}</ol>`;
+    return `<ol class="portal-content-operations-activity" aria-label="${safeText(contentStudioText("board.activity.title", "Hoạt động gần đây"))}">${items.map((item) => `<li><span aria-hidden="true"></span><div><strong>${safeText(contentStudioEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></div></li>`).join("")}</ol>`;
   }
 
   function renderContentStudioKindBoard(canCreate) {
-    const cards = CONTENT_STUDIO_KINDS.map(([kind, label], index) => {
-      const content = `<span>${safeText(String(index + 1).padStart(2, "0"))}</span><strong>${safeText(label)}</strong><small>${canCreate ? "Tạo brief mới" : "Cần quyền tạo brief"}</small>`;
+    const cards = contentStudioKindOptions().map(([kind, label], index) => {
+      const content = `<span>${safeText(String(index + 1).padStart(2, "0"))}</span><strong>${safeText(label)}</strong><small>${safeText(canCreate ? contentStudioText("kind.create", "Tạo yêu cầu mới") : contentStudioText("kind.denied", "Cần quyền tạo yêu cầu"))}</small>`;
       return canCreate
         ? `<a class="portal-content-operations-kind-card" data-content-kind="${safeText(kind)}" href="/content-studio/new?kind=${encodeURIComponent(kind)}">${content}</a>`
         : `<div class="portal-content-operations-kind-card portal-content-operations-kind-card--guarded" data-content-kind="${safeText(kind)}">${content}</div>`;
     }).join("");
-    return `<section class="portal-content-operations-kinds" aria-labelledby="content-operations-kinds-title"><div class="portal-card-header"><div><span class="portal-section-kicker">Bắt đầu có chủ đích</span><h2 class="portal-card-title" id="content-operations-kinds-title">Chọn loại brief trước khi viết</h2><p class="portal-card-subtitle">${canCreate ? "Mỗi lựa chọn chỉ mở form Content Brief mới với một loại allowlist. Không có text, brief ID, state Bot hay lệnh publish được truyền sang route mới." : "Bạn đang có quyền xem Content Studio. Các loại brief vẫn được giải thích rõ, nhưng không được giả là thao tác có thể tạo khi signed session chưa có quyền write."}</p></div>${badge(canCreate ? "ready" : "guarded")}</div><div class="portal-content-operations-kind-grid">${cards}</div></section>`;
+    return `<section class="portal-content-operations-kinds" aria-labelledby="content-operations-kinds-title"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(contentStudioText("kind.kicker", "Bắt đầu có chủ đích"))}</span><h2 class="portal-card-title" id="content-operations-kinds-title">${safeText(contentStudioText("kind.title", "Chọn loại yêu cầu trước khi viết"))}</h2><p class="portal-card-subtitle">${safeText(canCreate ? contentStudioText("kind.body", "Mỗi lựa chọn chỉ mở biểu mẫu mới với loại được cho phép. Không có văn bản, mã yêu cầu, trạng thái Bot hay lệnh đăng bài được truyền sang trang mới.") : contentStudioText("viewOnly.body", "Phiên hiện tại chưa có quyền tạo yêu cầu nội dung. Các nút ghi được giữ ở trạng thái không thể bấm thay vì mở một biểu mẫu không có quyền."))}</p></div>${badge(canCreate ? "ready" : "guarded")}</div><div class="portal-content-operations-kind-grid">${cards}</div></section>`;
   }
 
   function renderContentStudioAuthoring(page, context, canCreate) {
@@ -14634,9 +14986,9 @@
     const requestedKind = contentStudioQueryKind();
     const values = contentStudioValues({ ...draft, content_kind: requestedKind || draft.content_kind || contentStudioKindFromQuery() });
     return `<article class="portal-page portal-content-studio portal-content-studio-authoring">${renderHero(page, context)}
-      <section class="portal-content-operations-authoring-intro"><div><span class="portal-section-kicker">New private brief</span><h2>Một brief rõ ý định, dễ review và có lịch sử riêng.</h2><p>Form này chỉ tạo authoring record thuộc signed Web account hiện tại. Sau khi server kiểm tra CSRF, ownership, policy, idempotency và revision, bạn sẽ tiếp tục tại brief detail riêng tư.</p></div><div class="portal-content-operations-authoring-actions"><a class="portal-button portal-button--quiet" href="/content-studio">Về Content Operations Board</a><span>Không có AI request, job, charge, publish hoặc delivery.</span></div></section>
-      <div class="portal-content-operations-authoring-layout"><section class="portal-card portal-card-pad portal-content-studio-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo Content Brief</h2><p class="portal-card-subtitle">Lưu ngữ cảnh, ràng buộc và reference owner-scoped. Chọn loại brief trước, sau đó điền nội dung nguyên bản cần review.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="content-brief-create" data-portal-route="${safeText(route)}" novalidate>${renderFields(contentStudioFields(context), canCreate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Không nhập token, OTP, payment proof hoặc yêu cầu mô phỏng tác giả/phong cách. Một lần lưu tạo một brief riêng tư, không tạo output hay publish.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo brief riêng tư</button></div></form></section>${renderContentStudioPolicy(context)}</div>
-      <section class="portal-card portal-card-pad portal-content-operations-boundary"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Đường đi của dữ liệu được giữ riêng</strong><p>Reference chỉ được chọn từ danh sách server-side thuộc account hiện tại. Browser không tự mang dữ liệu qua Bot, provider, ví Xu, PayOS, webhook, URL công khai hoặc PWA cache.</p></div></div>${renderNotes(page)}</section>
+      <section class="portal-content-operations-authoring-intro"><div><span class="portal-section-kicker">${safeText(contentStudioText("authoring.kicker", "Yêu cầu riêng tư mới"))}</span><h2>${safeText(contentStudioText("authoring.title", "Một yêu cầu rõ ý định, dễ rà soát và có lịch sử riêng."))}</h2><p>${safeText(contentStudioText("authoring.body", "Biểu mẫu này chỉ tạo bản ghi biên tập thuộc tài khoản Web hiện tại. Sau khi máy chủ kiểm tra CSRF, chủ sở hữu, chính sách, chống lặp và phiên bản, bạn sẽ tiếp tục ở trang chi tiết riêng tư."))}</p></div><div class="portal-content-operations-authoring-actions"><a class="portal-button portal-button--quiet" href="/content-studio">${safeText(contentStudioText("authoring.back", "Về bảng điều phối nội dung"))}</a><span>${safeText(contentStudioText("authoring.noExternal", "Không có yêu cầu AI, tác vụ, tính phí, đăng bài hoặc giao tệp."))}</span></div></section>
+      <div class="portal-content-operations-authoring-layout"><section class="portal-card portal-card-pad portal-content-studio-create"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(contentStudioText("authoring.form.title", "Tạo yêu cầu nội dung"))}</h2><p class="portal-card-subtitle">${safeText(contentStudioText("authoring.form.body", "Lưu bối cảnh, ràng buộc và tài liệu tham chiếu theo tài khoản. Chọn loại trước, sau đó điền nội dung nguyên bản cần rà soát."))}</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="content-brief-create" data-portal-route="${safeText(route)}" novalidate>${renderFields(contentStudioFields(context), canCreate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(contentStudioText("authoring.form.note", "Không nhập token, OTP, chứng từ thanh toán hoặc yêu cầu mô phỏng tác giả/phong cách. Một lần lưu tạo một yêu cầu riêng tư, không tạo đầu ra hay đăng bài."))}</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>${safeText(contentStudioText("authoring.form.submit", "Tạo yêu cầu riêng tư"))}</button></div></form></section>${renderContentStudioPolicy(context)}</div>
+      <section class="portal-card portal-card-pad portal-content-operations-boundary"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(contentStudioText("authoring.boundary.title", "Đường đi của dữ liệu được giữ riêng"))}</strong><p>${safeText(contentStudioText("authoring.boundary.body", "Tài liệu tham chiếu chỉ được chọn từ danh sách do máy chủ trả về cho tài khoản hiện tại. Trình duyệt không tự mang dữ liệu sang Bot, nhà cung cấp, ví Xu, PayOS, webhook, URL công khai hoặc bộ nhớ PWA."))}</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -14648,11 +15000,11 @@
     const canCreate = Boolean(context.capabilities && context.capabilities["content-studio-create"] === true);
     const canRefresh = Boolean(context.capabilities && context.capabilities["content-studio-refresh"] === true);
     const readState = String(context.contentStudioReadState || "guarded");
-    if (!canView) return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.prompt)}</span><div><h2>Content Studio đang được bảo vệ</h2><p>Chỉ signed Web session mới có thể mở brief, reference, history hoặc activity thuộc account hiện tại. Web không thay bằng dữ liệu Telegram, Bot, provider hay browser cache.</p><div class="portal-state-meta"><span>Signed session</span><span>Owner-scoped</span><span>Không có output giả</span></div></div></div></section></article>`;
-    if (readState === "loading") return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>Đang xác minh Content Studio riêng tư</h2><p>Web Workspace đang tải summary, policy, reference, brief và activity owner-scoped của signed account. Không hiển thị dữ liệu cũ, list Bot hoặc fallback browser trong khi chờ máy chủ.</p><div class="portal-state-meta"><span>Không cache private</span><span>Không có Bot fallback</span><span>Policy server-side</span></div></div></div></section></article>`;
+    if (!canView) return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.prompt)}</span><div><h2>${safeText(contentStudioText("guard.title", "Nội dung sáng tạo đang được bảo vệ"))}</h2><p>${safeText(contentStudioText("guard.body", "Chỉ phiên Web đã xác minh mới có thể mở yêu cầu, tài liệu tham chiếu, lịch sử hoặc hoạt động thuộc tài khoản hiện tại. Web không thay thế bằng dữ liệu Telegram, Bot, nhà cung cấp hoặc bộ nhớ trình duyệt."))}</p><div class="portal-state-meta"><span>${safeText(contentStudioText("guard.signed", "Phiên đã xác minh"))}</span><span>${safeText(contentStudioText("guard.owner", "Theo tài khoản hiện tại"))}</span><span>${safeText(contentStudioText("guard.noOutput", "Không có đầu ra giả"))}</span></div></div></div></section></article>`;
+    if (readState === "loading") return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>${safeText(contentStudioText("loading.title", "Đang xác minh không gian nội dung riêng tư"))}</h2><p>${safeText(contentStudioText("loading.body", "Web đang tải bản tóm tắt, chính sách, tài liệu tham chiếu, yêu cầu và hoạt động thuộc tài khoản đã xác minh. Trong lúc chờ máy chủ, không hiển thị dữ liệu cũ, danh sách Bot hoặc nội dung dự phòng từ trình duyệt."))}</p><div class="portal-state-meta"><span>${safeText(contentStudioText("loading.noCache", "Không dùng bộ nhớ cũ"))}</span><span>${safeText(contentStudioText("loading.noBot", "Không có dữ liệu Bot dự phòng"))}</span><span>${safeText(contentStudioText("loading.serverPolicy", "Chính sách từ máy chủ"))}</span></div></div></div></section></article>`;
     if (readState !== "ready") {
-      const retry = canRefresh ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="content-studio-refresh" data-portal-route="${safeText(route)}">Thử lại dữ liệu private</button></div>` : "";
-      return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">!</span><div><h2>Chưa thể tải Content Studio riêng tư</h2><p>Máy chủ chưa trả projection owner-scoped an toàn nên Web đã xóa state cũ. Không thay dữ liệu bằng prompt, brief, activity, callback Telegram, provider hay output mô phỏng.</p><div class="portal-state-meta"><span>Không có cache</span><span>Không có bridge fallback</span><span>Không có publish giả</span></div>${retry}</div></div></section></article>`;
+      const retry = canRefresh ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="content-studio-refresh" data-portal-route="${safeText(route)}">${safeText(contentStudioText("unavailable.retry", "Thử lại dữ liệu riêng tư"))}</button></div>` : "";
+      return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">!</span><div><h2>${safeText(contentStudioText("unavailable.title", "Chưa thể tải không gian nội dung riêng tư"))}</h2><p>${safeText(contentStudioText("unavailable.body", "Máy chủ chưa trả về dữ liệu theo tài khoản an toàn nên Web đã xóa state cũ. Không thay thế bằng prompt, yêu cầu, hoạt động, callback Telegram, nhà cung cấp hoặc đầu ra mô phỏng."))}</p><div class="portal-state-meta"><span>${safeText(contentStudioText("unavailable.noCache", "Không có bộ nhớ dự phòng"))}</span><span>${safeText(contentStudioText("unavailable.noBridge", "Không có cầu nối dự phòng"))}</span><span>${safeText(contentStudioText("unavailable.noPublish", "Không đăng bài giả"))}</span></div>${retry}</div></div></section></article>`;
     }
     if (authoringRoute) return renderContentStudioAuthoring(page, context, canCreate);
     const summary = context.contentStudioSummary && typeof context.contentStudioSummary === "object" ? context.contentStudioSummary : {};
@@ -14664,28 +15016,28 @@
     const events = contentStudioBoardEvents(context);
     const returned = Number(listing.pagination && listing.pagination.returned) || items.length;
     const startAction = canCreate
-      ? `<a class="portal-button portal-button--primary" href="/content-studio/new">Tạo Content Brief</a>`
-      : `<div class="portal-content-operations-create-guard" role="status"><strong>Chỉ có quyền xem</strong><span>Signed session hiện tại chưa có quyền tạo brief. Các thao tác tạo được giữ không thể bấm thay vì mở một form bị vô hiệu.</span></div>`;
+      ? `<a class="portal-button portal-button--primary" href="/content-studio/new">${safeText(contentStudioText("board.create.action", "Tạo yêu cầu nội dung"))}</a>`
+      : `<div class="portal-content-operations-create-guard" role="status"><strong>${safeText(contentStudioText("viewOnly.title", "Chỉ có quyền xem"))}</strong><span>${safeText(contentStudioText("viewOnly.body", "Phiên hiện tại chưa có quyền tạo yêu cầu nội dung. Các nút ghi được giữ ở trạng thái không thể bấm thay vì mở một biểu mẫu không có quyền."))}</span></div>`;
     const filterFields = [
-      { name: "q", label: "Tìm brief", placeholder: "Tên, chủ đề hoặc brief…", maxLength: 100, wide: true },
-      { name: "tag", label: "Tag", placeholder: "Ví dụ: launch", maxLength: 48 },
-      { name: "content_kind", label: "Loại", control: "select", options: CONTENT_STUDIO_KINDS, emptyLabel: "Tất cả loại" },
-      { name: "state", label: "Trạng thái", control: "select", options: [["all", "Tất cả"], ["active", "Đang hoạt động"], ["archived", "Đã archive"]] }
+      { name: "q", label: contentStudioText("board.filter.searchLabel", "Tìm yêu cầu"), placeholder: contentStudioText("board.filter.searchPlaceholder", "Tên, chủ đề hoặc nội dung…"), maxLength: 100, wide: true },
+      { name: "tag", label: contentStudioText("board.filter.tagLabel", "Thẻ"), placeholder: contentStudioText("board.filter.tagPlaceholder", "Ví dụ: ra mắt"), maxLength: 48 },
+      { name: "content_kind", label: contentStudioText("board.filter.kindLabel", "Loại nội dung"), control: "select", options: contentStudioKindOptions(), emptyLabel: contentStudioText("board.filter.allKinds", "Tất cả loại") },
+      { name: "state", label: contentStudioText("board.filter.stateLabel", "Trạng thái"), control: "select", options: [["all", contentStudioText("board.filter.allStates", "Tất cả")], ["active", contentStudioText("board.filter.active", "Đang hoạt động")], ["archived", contentStudioText("board.filter.archived", "Đã lưu trữ")]] }
     ];
     return `<article class="portal-page portal-content-studio portal-content-operations-board">${renderHero(page, context)}
-      <section class="portal-content-operations-summary" data-content-operations-board><div><span class="portal-section-kicker">Private content operations</span><h2>Giữ brief, review và phiên bản đi đúng luồng.</h2><p>Content Operations Board dùng Content Studio canonical đã có để điều phối authoring của account hiện tại. Mọi nội dung đầy đủ chỉ mở trong brief detail sau khi server owner-check; board không chạy AI, job, payment, publish hay delivery.</p></div><dl><div><dt>${safeText(String(Number(briefs.active || 0)))}</dt><dd>Brief đang hoạt động</dd></div><div><dt>${safeText(String(Number(variants.active || 0)))}</dt><dd>Content pieces active</dd></div><div><dt>${safeText(String(returned))}</dt><dd>Brief ở trang hiện tại</dd></div></dl></section>
-      <section class="portal-content-operations-primary"><div><span class="portal-section-kicker">Tạo mới</span><h2>Bắt đầu từ brief, không từ một form chung.</h2><p>Chọn loại nội dung, mở form riêng và để server thiết lập lifecycle authoring. Route mới không nhận ID, text hay trạng thái từ board.</p></div>${startAction}</section>
+      <section class="portal-content-operations-summary" data-content-operations-board><div><span class="portal-section-kicker">${safeText(contentStudioText("board.summary.kicker", "Điều phối nội dung riêng tư"))}</span><h2>${safeText(contentStudioText("board.summary.title", "Giữ yêu cầu, rà soát và phiên bản đi đúng luồng."))}</h2><p>${safeText(contentStudioText("board.summary.body", "Bảng điều phối dùng dữ liệu nội dung đã xác minh của tài khoản hiện tại. Nội dung đầy đủ chỉ mở ở trang chi tiết sau khi máy chủ kiểm tra lại chủ sở hữu; bảng không chạy AI, tác vụ, thanh toán, đăng bài hay giao tệp."))}</p></div><dl><div><dt>${safeText(String(Number(briefs.active || 0)))}</dt><dd>${safeText(contentStudioText("board.metric.activeBriefs", "Yêu cầu đang hoạt động"))}</dd></div><div><dt>${safeText(String(Number(variants.active || 0)))}</dt><dd>${safeText(contentStudioText("board.metric.activePieces", "Mục nội dung đang hoạt động"))}</dd></div><div><dt>${safeText(String(returned))}</dt><dd>${safeText(contentStudioText("board.metric.currentBriefs", "Yêu cầu ở trang hiện tại"))}</dd></div></dl></section>
+      <section class="portal-content-operations-primary"><div><span class="portal-section-kicker">${safeText(contentStudioText("board.create.kicker", "Tạo mới"))}</span><h2>${safeText(contentStudioText("board.create.title", "Bắt đầu từ yêu cầu, không từ một biểu mẫu chung."))}</h2><p>${safeText(contentStudioText("board.create.body", "Chọn loại nội dung, mở biểu mẫu riêng và để máy chủ thiết lập vòng đời biên tập. Trang mới không nhận mã, văn bản hay trạng thái từ bảng."))}</p></div>${startAction}</section>
       ${renderContentStudioKindBoard(canCreate)}
-      <div class="portal-content-operations-workspace"><section class="portal-card portal-card-pad portal-content-operations-briefs"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped library</span><h2 class="portal-card-title">Tìm và tiếp tục brief</h2><p class="portal-card-subtitle">Danh sách chỉ hiển thị metadata và excerpt được server giới hạn. Mở brief để máy chủ kiểm tra lại owner, revision và history.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-studio-refresh" data-portal-route="/content-studio"${canRefresh ? "" : " disabled"}>Làm mới</button></div><form class="portal-content-studio-filter" data-portal-form data-portal-no-transient data-portal-action="content-studio-filter" data-portal-route="/content-studio" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ tồn tại trong phiên trang hiện tại; không được đưa vào URL, Telegram hoặc browser storage.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-studio-filter-clear" data-portal-route="/content-studio">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm brief</button></div></div></form>${renderContentBriefCards(items)}${renderContentStudioPagination(listing)}</section>
-        <section class="portal-card portal-card-pad portal-content-operations-activity-card" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe activity</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Chỉ có nhãn thao tác, revision và thời điểm; không đưa nội dung brief, reference hay payload vào timeline.</p></div></div>${renderContentStudioBoardActivity(events)}</section></div>
-      <div class="portal-content-operations-boundary-grid">${renderContentStudioPolicy(context)}<section class="portal-card portal-card-pad portal-content-operations-boundary"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Biên giới dữ liệu rõ ràng</strong><p>Không có callback Telegram, Bot creative state, provider request, Xu ledger, PayOS order, webhook, publish hay output giả trong board này. Mỗi công cụ liên quan vẫn có route và contract riêng.</p></div></div>${renderNotes(page)}</section></div>
+      <div class="portal-content-operations-workspace"><section class="portal-card portal-card-pad portal-content-operations-briefs"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(contentStudioText("board.library.kicker", "Thư viện theo tài khoản"))}</span><h2 class="portal-card-title">${safeText(contentStudioText("board.library.title", "Tìm và tiếp tục yêu cầu nội dung"))}</h2><p class="portal-card-subtitle">${safeText(contentStudioText("board.library.body", "Danh sách chỉ hiển thị dữ liệu mô tả và trích đoạn do máy chủ giới hạn. Mở yêu cầu để máy chủ kiểm tra lại chủ sở hữu, phiên bản và lịch sử."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-studio-refresh" data-portal-route="/content-studio"${canRefresh ? "" : " disabled"}>${safeText(contentStudioText("board.library.refresh", "Làm mới"))}</button></div><form class="portal-content-studio-filter" data-portal-form data-portal-no-transient data-portal-action="content-studio-filter" data-portal-route="/content-studio" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(contentStudioText("board.filter.note", "Bộ lọc chỉ tồn tại trong trang hiện tại; không đưa vào URL, Telegram hoặc bộ nhớ trình duyệt."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-studio-filter-clear" data-portal-route="/content-studio">${safeText(contentStudioText("board.filter.clear", "Xóa lọc"))}</button><button class="portal-button portal-button--primary" type="submit">${safeText(contentStudioText("board.filter.submit", "Tìm kiếm"))}</button></div></div></form>${renderContentBriefCards(items)}${renderContentStudioPagination(listing)}</section>
+        <section class="portal-card portal-card-pad portal-content-operations-activity-card" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(contentStudioText("board.activity.kicker", "Hoạt động đã lọc an toàn"))}</span><h2 class="portal-card-title">${safeText(contentStudioText("board.activity.title", "Hoạt động gần đây"))}</h2><p class="portal-card-subtitle">${safeText(contentStudioText("board.activity.body", "Chỉ hiển thị nhãn thao tác, phiên bản và thời điểm; không đưa nội dung yêu cầu, tài liệu tham chiếu hoặc dữ liệu gửi sang timeline."))}</p></div></div>${renderContentStudioBoardActivity(events)}</section></div>
+      <div class="portal-content-operations-boundary-grid">${renderContentStudioPolicy(context)}<section class="portal-card portal-card-pad portal-content-operations-boundary"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(contentStudioText("board.boundary.title", "Biên giới dữ liệu rõ ràng"))}</strong><p>${safeText(contentStudioText("board.boundary.body", "Không có callback Telegram, trạng thái sáng tạo của Bot, yêu cầu nhà cung cấp, sổ Xu, đơn PayOS, webhook, đăng bài hoặc đầu ra giả trong bảng này. Mỗi công cụ liên quan vẫn có route và hợp đồng riêng."))}</p></div></div>${renderNotes(page)}</section></div>
     </article>`;
   }
   function renderContentStudioDetail(page, context) {
     const detail = context.contentBriefDetail && typeof context.contentBriefDetail === "object" ? context.contentBriefDetail : {};
     const brief = detail.brief && typeof detail.brief === "object" && validContentBriefId(detail.brief.id) && String(detail.brief.id) === String(page.recordId || "") ? detail.brief : null;
     const canView = Boolean(context.capabilities && context.capabilities["content-studio-view"] === true);
-    if (!canView || !brief) return `<article class="portal-page portal-content-studio-detail portal-content-studio-workspace-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Không tìm thấy content brief", "Brief có thể không thuộc Web account hiện tại hoặc chưa được server xác minh.", ICONS.prompt)}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/content-studio">Về Content Studio</a></div></section></article>`;
+    if (!canView || !brief) return `<article class="portal-page portal-content-studio-detail portal-content-studio-workspace-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(contentStudioText("detail.notFoundTitle", "Không tìm thấy yêu cầu nội dung"), contentStudioText("detail.notFoundBody", "Yêu cầu có thể không thuộc tài khoản Web hiện tại hoặc chưa được máy chủ xác minh."), ICONS.prompt)}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/content-studio">${safeText(contentStudioText("detail.back", "Về không gian nội dung"))}</a></div></section></article>`;
     const route = page.routePath || page.path;
     const writable = String(brief.state || "") === "active";
     const canUpdate = Boolean(context.capabilities && context.capabilities["content-studio-update"] === true && writable);
@@ -14712,22 +15064,22 @@
       const editable = Boolean(context.capabilities && context.capabilities["content-studio-variant-update"] === true && writable && active);
       const itemHistory = variantHistoryId === itemId ? variantHistoryVersions : [];
       const stateAction = active
-        ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-archive" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}" data-portal-confirm="Archive content piece này? Nội dung và history vẫn được giữ riêng tư cho đến khi khôi phục."${canVariantArchive && writable ? "" : " disabled"}>Archive</button>`
-        : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-restore" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}"${canVariantRestore && writable ? "" : " disabled"}>Khôi phục</button>`;
-      const historyPanel = itemHistory.length ? `<div class="portal-content-variant-history"><strong>Lịch sử content piece</strong>${itemHistory.map((version) => `<div><span>v${safeText(String(version.revision))} · ${safeText(String(version.created_at || "—"))}</span>${Number(version.revision) === Number(item.revision) ? "<em>Đang mở</em>" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-restore-version" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}" data-content-variant-version="${safeText(String(version.revision))}" data-portal-confirm="Khôi phục v${safeText(String(version.revision))} thành một revision content piece mới?"${canVariantRestoreVersion && active ? "" : " disabled"}>Khôi phục v${safeText(String(version.revision))}</button>`}</div>`).join("")}</div>` : "";
-      return `<article class="portal-content-variant-card${selected ? " is-selected" : ""}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(item.kind || "custom").replace(/_/g, " "))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Content piece"))}</h3><p class="portal-card-subtitle">${safeText(String(item.content_excerpt || ""))}</p></div>${selected ? "<span class=\"portal-content-selected\">Đang chọn</span>" : badge(active ? "ready" : "read_only")}</div>${renderContentStudioTags(item.tags)}<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-select" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" data-content-variant-id="${safeText(itemId)}"${selectable ? "" : " disabled"}>Chọn</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-history" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}">Lịch sử</button>${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-duplicate" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}"${canVariantDuplicate && active && writable ? "" : " disabled"}>Nhân bản</button></div><form id="piece-${safeText(itemId)}" class="portal-form portal-content-variant-form" data-portal-form data-portal-action="content-variant-update" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}" novalidate>${renderFields(contentVariantFields(), editable, context, { kind: String(item.kind || "custom"), title: String(item.title || ""), content_text: String(item.content_text || ""), note: String(item.note || ""), tags: contentStudioTags(item.tags).join(", ") })}<div class="portal-form-footer"><span class="portal-form-note">Content piece vẫn là bản biên tập riêng tư.</span><button class="portal-button portal-button--primary" type="submit"${editable ? "" : " disabled"}>Lưu piece</button></div></form>${historyPanel}</article>`;
-    }).join("") : renderEmpty("Chưa có content piece", "Dùng composer hoặc thêm piece thủ công để bắt đầu review.", ICONS.prompt);
+        ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-archive" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}" data-portal-confirm="${safeText(contentStudioText("detail.variants.archiveConfirm", "Lưu trữ mục nội dung này? Nội dung và lịch sử vẫn được giữ riêng tư cho đến khi khôi phục."))}"${canVariantArchive && writable ? "" : " disabled"}>${safeText(contentStudioText("detail.variants.archive", "Lưu trữ"))}</button>`
+        : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-restore" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}"${canVariantRestore && writable ? "" : " disabled"}>${safeText(contentStudioText("detail.variants.restore", "Khôi phục"))}</button>`;
+      const historyPanel = itemHistory.length ? `<div class="portal-content-variant-history"><strong>${safeText(contentStudioText("detail.variants.historyTitle", "Lịch sử mục nội dung"))}</strong>${itemHistory.map((version) => { const versionLabel = String(version.revision); return `<div><span>v${safeText(versionLabel)} · ${safeText(String(version.created_at || "—"))}</span>${Number(version.revision) === Number(item.revision) ? `<em>${safeText(contentStudioText("detail.variants.current", "Đang mở"))}</em>` : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-restore-version" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}" data-content-variant-version="${safeText(versionLabel)}" data-portal-confirm="${safeText(contentStudioText("detail.variants.restoreVersionConfirm", "Khôi phục v{version} thành một phiên bản mới của mục nội dung này?", { version: versionLabel }))}"${canVariantRestoreVersion && active ? "" : " disabled"}>${safeText(contentStudioText("detail.variants.restoreVersion", "Khôi phục v{version}", { version: versionLabel }))}</button>`}</div>`; }).join("")}</div>` : "";
+      return `<article class="portal-content-variant-card${selected ? " is-selected" : ""}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(contentVariantKindLabel(item.kind))}</span><h3 class="portal-card-title">${safeText(String(item.title || contentStudioText("detail.variants.defaultTitle", "Mục nội dung")))}</h3><p class="portal-card-subtitle">${safeText(String(item.content_excerpt || ""))}</p></div>${selected ? `<span class="portal-content-selected">${safeText(contentStudioText("detail.variants.selected", "Đang chọn"))}</span>` : badge(active ? "ready" : "read_only")}</div>${renderContentStudioTags(item.tags)}<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-select" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" data-content-variant-id="${safeText(itemId)}"${selectable ? "" : " disabled"}>${safeText(contentStudioText("detail.variants.select", "Chọn"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-history" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}">${safeText(contentStudioText("detail.variants.history", "Lịch sử"))}</button>${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-duplicate" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}"${canVariantDuplicate && active && writable ? "" : " disabled"}>${safeText(contentStudioText("detail.variants.duplicate", "Nhân bản"))}</button></div><form id="piece-${safeText(itemId)}" class="portal-form portal-content-variant-form" data-portal-form data-portal-action="content-variant-update" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}" novalidate>${renderFields(contentVariantFields(), editable, context, { kind: String(item.kind || "custom"), title: String(item.title || ""), content_text: String(item.content_text || ""), note: String(item.note || ""), tags: contentStudioTags(item.tags).join(", ") })}<div class="portal-form-footer"><span class="portal-form-note">${safeText(contentStudioText("detail.variants.privateNote", "Mục nội dung vẫn là bản biên tập riêng tư."))}</span><button class="portal-button portal-button--primary" type="submit"${editable ? "" : " disabled"}>${safeText(contentStudioText("detail.variants.save", "Lưu mục nội dung"))}</button></div></form>${historyPanel}</article>`;
+    }).join("") : renderEmpty(contentStudioText("detail.variants.emptyTitle", "Chưa có mục nội dung"), contentStudioText("detail.variants.emptyBody", "Dùng khung nháp hoặc thêm mục thủ công để bắt đầu rà soát."), ICONS.prompt);
     const stateAction = writable
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-brief-archive" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" data-portal-confirm="Archive brief này? Nội dung, pieces và history vẫn giữ riêng tư cho đến khi khôi phục."${canArchive ? "" : " disabled"}>Archive brief</button>`
-      : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-brief-restore" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}"${canRestore ? "" : " disabled"}>Khôi phục brief</button>`;
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-brief-archive" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" data-portal-confirm="${safeText(contentStudioText("detail.editor.archiveConfirm", "Lưu trữ yêu cầu này? Nội dung, mục nội dung và lịch sử vẫn được giữ riêng tư cho đến khi khôi phục."))}"${canArchive ? "" : " disabled"}>${safeText(contentStudioText("detail.editor.archiveBrief", "Lưu trữ yêu cầu"))}</button>`
+      : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-brief-restore" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}"${canRestore ? "" : " disabled"}>${safeText(contentStudioText("detail.editor.restoreBrief", "Khôi phục yêu cầu"))}</button>`;
     const activity = Array.isArray(detail.events) ? detail.events.filter((item) => item && typeof item === "object").slice(0, 12) : [];
     return `<article class="portal-page portal-content-studio-detail portal-content-studio-workspace-detail">${renderHero(page, context)}
-      <section class="portal-content-studio-detail-summary"><div><span class="portal-section-kicker">${safeText(contentStudioKindLabel(brief.content_kind))}</span><h2>${safeText(String(brief.title || "Content brief"))}</h2><p>${safeText(String(brief.brief_excerpt || brief.subject || ""))}</p></div><dl><div><dt>Trạng thái</dt><dd>${safeText(writable ? "Đang hoạt động" : "Đã archive")}</dd></div><div><dt>Revision</dt><dd>v${safeText(String(brief.revision || 1))}</dd></div><div><dt>Pieces</dt><dd>${safeText(String(variants.length))}</dd></div></dl></section>
-      <div class="portal-content-studio-detail-grid"><section class="portal-card portal-card-pad portal-content-studio-editor"><div class="portal-card-header"><div><h2 class="portal-card-title">Brief & review context</h2><p class="portal-card-subtitle">Lưu bằng optimistic revision và owner check cho reference.</p></div>${badge(writable ? "ready" : "read_only")}</div><form class="portal-form" data-portal-form data-portal-action="content-brief-update" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" novalidate>${renderFields(contentStudioFields(context), canUpdate, context, contentStudioValues(brief))}<div class="portal-form-footer"><span class="portal-form-note">Mỗi lần lưu tạo revision mới; reference luôn được kiểm tra lại trên server.</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-brief-duplicate" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}"${canDuplicate ? "" : " disabled"}>Nhân bản brief</button><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu brief</button></div></div></form></section>${renderContentStudioPolicy(context)}</div>
-      <section class="portal-card portal-card-pad portal-content-studio-composer"><div class="portal-card-header"><div><span class="portal-section-kicker">Local deterministic drafts</span><h2 class="portal-card-title">Tạo 3 khung nháp để biên tập</h2><p class="portal-card-subtitle">Không phải AI output, job, asset, delivery hoặc nội dung đã publish.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">Các khung nháp được lưu thành content pieces riêng tư và cần review thủ công.</span><button class="portal-button portal-button--primary" type="button" data-portal-action="content-brief-compose" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}"${canCompose ? "" : " disabled"}>Tạo 3 khung nháp</button></div></section>
-      <section class="portal-card portal-card-pad portal-content-variant-create"><div class="portal-card-header"><div><span class="portal-section-kicker">Manual authoring</span><h2 class="portal-card-title">Thêm content piece thủ công</h2><p class="portal-card-subtitle">Dành cho ý tưởng, caption, script hoặc checklist đã có sẵn để đưa vào cùng brief.</p></div>${badge(canVariantCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="content-variant-create" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" novalidate>${renderFields(contentVariantFields(), canVariantCreate, context, { kind: "custom", title: "", content_text: "", note: "", tags: "" })}<div class="portal-form-footer"><span class="portal-form-note">Không nhập secret, OTP, payment proof hoặc yêu cầu mô phỏng tác giả/phong cách.</span><button class="portal-button portal-button--primary" type="submit"${canVariantCreate ? "" : " disabled"}>Thêm content piece</button></div></form></section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Content pieces</h2><p class="portal-card-subtitle">Chọn, biên tập, archive hoặc xem history của từng piece trong brief.</p></div></div><div class="portal-content-variant-grid">${contentCards}</div></section>
-      <div class="portal-content-studio-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử brief</h2><p class="portal-card-subtitle">Khôi phục version chỉ khi reference còn hợp lệ và thuộc signed account.</p></div></div><div class="portal-content-version-list">${versions.length ? versions.map((item) => `<article><div><strong>v${safeText(String(item.revision))} · ${safeText(String(item.title || "Content brief"))}</strong><p>${safeText(String(item.brief_excerpt || ""))}</p><small>${safeText(String(item.created_at || "—"))}</small></div>${Number(item.revision) === Number(brief.revision) ? "<span class=\"portal-form-note\">Đang mở</span>" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-brief-restore-version" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" data-content-brief-version="${safeText(String(item.revision))}" data-portal-confirm="Khôi phục v${safeText(String(item.revision))} thành một revision brief mới?"${canRestoreVersion ? "" : " disabled"}>Khôi phục v${safeText(String(item.revision))}</button>`}</article>`).join("") : renderEmpty("Chưa có history", "Version đầu tiên sẽ xuất hiện sau khi server lưu brief.", "↺")}</div></section><section class="portal-card portal-card-pad portal-content-studio-activity"><div class="portal-card-header"><div><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Chỉ ghi nhãn thao tác và revision, không đưa nội dung brief vào audit feed.</p></div></div><div class="portal-content-activity-list">${activity.length ? activity.map((item) => `<div><span></span><p><strong>${safeText(String(item.action || "content_updated").replace(/_/g, " "))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></p></div>`).join("") : "<p class=\"portal-form-note\">Chưa có hoạt động được ghi nhận.</p>"}</div></section></div>
+      <section class="portal-content-studio-detail-summary"><div><span class="portal-section-kicker">${safeText(contentStudioKindLabel(brief.content_kind))}</span><h2>${safeText(String(brief.title || contentStudioText("detail.summary.defaultTitle", "Yêu cầu nội dung")))}</h2><p>${safeText(String(brief.brief_excerpt || brief.subject || ""))}</p></div><dl><div><dt>${safeText(contentStudioText("detail.summary.status", "Trạng thái"))}</dt><dd>${safeText(writable ? contentStudioText("detail.summary.active", "Đang hoạt động") : contentStudioText("detail.summary.archived", "Đã lưu trữ"))}</dd></div><div><dt>${safeText(contentStudioText("detail.summary.revision", "Phiên bản"))}</dt><dd>v${safeText(String(brief.revision || 1))}</dd></div><div><dt>${safeText(contentStudioText("detail.summary.pieces", "Mục nội dung"))}</dt><dd>${safeText(String(variants.length))}</dd></div></dl></section>
+      <div class="portal-content-studio-detail-grid"><section class="portal-card portal-card-pad portal-content-studio-editor"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(contentStudioText("detail.editor.title", "Yêu cầu & bối cảnh rà soát"))}</h2><p class="portal-card-subtitle">${safeText(contentStudioText("detail.editor.body", "Mỗi lần lưu tạo phiên bản mới; máy chủ kiểm tra chủ sở hữu và tài liệu tham chiếu."))}</p></div>${badge(writable ? "ready" : "read_only")}</div><form class="portal-form" data-portal-form data-portal-action="content-brief-update" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" novalidate>${renderFields(contentStudioFields(context), canUpdate, context, contentStudioValues(brief))}<div class="portal-form-footer"><span class="portal-form-note">${safeText(contentStudioText("detail.editor.formNote", "Mỗi lần lưu tạo phiên bản mới; tài liệu tham chiếu luôn được kiểm tra lại trên máy chủ."))}</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-brief-duplicate" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}"${canDuplicate ? "" : " disabled"}>${safeText(contentStudioText("detail.editor.duplicate", "Nhân bản yêu cầu"))}</button><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>${safeText(contentStudioText("detail.editor.save", "Lưu yêu cầu"))}</button></div></div></form></section>${renderContentStudioPolicy(context)}</div>
+      <section class="portal-card portal-card-pad portal-content-studio-composer"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(contentStudioText("detail.composer.kicker", "Khung nháp cục bộ"))}</span><h2 class="portal-card-title">${safeText(contentStudioText("detail.composer.title", "Tạo 3 khung nháp để biên tập"))}</h2><p class="portal-card-subtitle">${safeText(contentStudioText("detail.composer.body", "Không phải đầu ra AI, tác vụ, tài sản, giao tệp hoặc nội dung đã đăng."))}</p></div>${badge(canCompose ? "ready" : "guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">${safeText(contentStudioText("detail.composer.note", "Khung nháp được lưu thành các mục nội dung riêng tư và vẫn cần rà soát thủ công."))}</span><button class="portal-button portal-button--primary" type="button" data-portal-action="content-brief-compose" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}"${canCompose ? "" : " disabled"}>${safeText(contentStudioText("detail.composer.submit", "Tạo 3 khung nháp"))}</button></div></section>
+      <section class="portal-card portal-card-pad portal-content-variant-create"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(contentStudioText("detail.manual.kicker", "Biên tập thủ công"))}</span><h2 class="portal-card-title">${safeText(contentStudioText("detail.manual.title", "Thêm mục nội dung thủ công"))}</h2><p class="portal-card-subtitle">${safeText(contentStudioText("detail.manual.body", "Dùng cho ý tưởng, chú thích, kịch bản hoặc danh sách kiểm tra đã có sẵn để đưa vào cùng yêu cầu."))}</p></div>${badge(canVariantCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="content-variant-create" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" novalidate>${renderFields(contentVariantFields(), canVariantCreate, context, { kind: "custom", title: "", content_text: "", note: "", tags: "" })}<div class="portal-form-footer"><span class="portal-form-note">${safeText(contentStudioText("detail.manual.note", "Không nhập khóa bí mật, OTP, chứng từ thanh toán hoặc yêu cầu mô phỏng tác giả/phong cách."))}</span><button class="portal-button portal-button--primary" type="submit"${canVariantCreate ? "" : " disabled"}>${safeText(contentStudioText("detail.manual.submit", "Thêm mục nội dung"))}</button></div></form></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(contentStudioText("detail.variants.kicker", "Các mục nội dung"))}</span><h2 class="portal-card-title">${safeText(contentStudioText("detail.variants.title", "Các mục nội dung trong yêu cầu"))}</h2><p class="portal-card-subtitle">${safeText(contentStudioText("detail.variants.body", "Chọn, biên tập, lưu trữ hoặc xem lịch sử của từng mục nội dung."))}</p></div></div><div class="portal-content-variant-grid">${contentCards}</div></section>
+      <div class="portal-content-studio-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(contentStudioText("detail.history.kicker", "Lịch sử phiên bản"))}</span><h2 class="portal-card-title">${safeText(contentStudioText("detail.history.title", "Lịch sử yêu cầu"))}</h2><p class="portal-card-subtitle">${safeText(contentStudioText("detail.history.body", "Khôi phục phiên bản chỉ khi tài liệu tham chiếu còn hợp lệ và thuộc tài khoản đã xác minh."))}</p></div></div><div class="portal-content-version-list">${versions.length ? versions.map((item) => { const versionLabel = String(item.revision); return `<article><div><strong>v${safeText(versionLabel)} · ${safeText(String(item.title || contentStudioText("detail.summary.defaultTitle", "Yêu cầu nội dung")))}</strong><p>${safeText(String(item.brief_excerpt || ""))}</p><small>${safeText(String(item.created_at || "—"))}</small></div>${Number(item.revision) === Number(brief.revision) ? `<span class="portal-form-note">${safeText(contentStudioText("detail.history.open", "Đang mở"))}</span>` : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-brief-restore-version" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" data-content-brief-version="${safeText(versionLabel)}" data-portal-confirm="${safeText(contentStudioText("detail.history.restoreConfirm", "Khôi phục phiên bản {version} thành một phiên bản yêu cầu mới?", { version: versionLabel }))}"${canRestoreVersion ? "" : " disabled"}>${safeText(contentStudioText("detail.history.restore", "Khôi phục phiên bản"))}</button>`}</article>`; }).join("") : renderEmpty(contentStudioText("detail.history.emptyTitle", "Chưa có lịch sử"), contentStudioText("detail.history.emptyBody", "Phiên bản đầu tiên sẽ xuất hiện sau khi máy chủ lưu yêu cầu."), "↺")}</div></section><section class="portal-card portal-card-pad portal-content-studio-activity"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(contentStudioText("detail.activity.kicker", "Dòng thời gian an toàn"))}</span><h2 class="portal-card-title">${safeText(contentStudioText("detail.activity.title", "Hoạt động gần đây"))}</h2><p class="portal-card-subtitle">${safeText(contentStudioText("detail.activity.body", "Chỉ ghi nhãn thao tác và phiên bản; không đưa nội dung yêu cầu vào dòng thời gian kiểm toán."))}</p></div></div><div class="portal-content-activity-list">${activity.length ? activity.map((item) => `<div><span></span><p><strong>${safeText(contentStudioEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></p></div>`).join("") : `<p class="portal-form-note">${safeText(contentStudioText("detail.activity.empty", "Chưa có hoạt động được ghi nhận."))}</p>`}</div></section></div>
     </article>`;
   }
 
@@ -15143,6 +15495,10 @@
     ["image_prompt", "Prompt hình ảnh"], ["video_prompt", "Prompt video"], ["voice_script", "Lời thoại"], ["document_outline", "Dàn ý tài liệu"]
   ]);
 
+  function promptStudioOptions(options, group) {
+    return options.map(([key, fallback]) => [key, promptStudioText(`option.${group}.${key}`, fallback)]);
+  }
+
   function promptStudioLabel(options, value, fallback) {
     const found = options.find(([key]) => key === String(value || ""));
     return found ? found[1] : fallback;
@@ -15150,25 +15506,25 @@
 
   function promptStudioFields() {
     return [
-      { name: "goal", label: "Mục tiêu", control: "textarea", placeholder: "Ví dụ: giải thích bộ dụng cụ pha cà phê cho người mới theo cách dễ kiểm tra", required: true, minLength: 2, maxLength: 300, wide: true, help: "Một mục tiêu biên tập ngắn, nguyên bản. Không nhập URL, social handle, secret, OTP, chứng từ hoặc yêu cầu mô phỏng người thật." },
-      { name: "audience", label: "Đối tượng (tùy chọn)", placeholder: "Ví dụ: người mới pha cà phê tại nhà", maxLength: 300, wide: true },
-      { name: "platform", label: "Ngữ cảnh", control: "select", required: true, options: PROMPT_STUDIO_PLATFORM_OPTIONS },
-      { name: "tone", label: "Giọng điệu", control: "select", required: true, options: PROMPT_STUDIO_TONE_OPTIONS },
-      { name: "language", label: "Ngôn ngữ blueprint", control: "select", required: true, options: PROMPT_STUDIO_LANGUAGE_OPTIONS },
-      { name: "output_format", label: "Định dạng cần phác thảo", control: "select", required: true, options: PROMPT_STUDIO_OUTPUT_FORMAT_OPTIONS },
-      { name: "constraints", label: "Ràng buộc (tùy chọn)", control: "textarea", placeholder: "Ví dụ: nêu chỗ cần kiểm tra fact, không đưa giá hoặc claim chưa có nguồn", maxLength: 1200, wide: true, help: "Chỉ là ràng buộc biên tập. Công cụ không fact-check, xác minh quyền hay gọi engine." }
+      { name: "goal", label: promptStudioText("field.goalLabel", "Mục tiêu"), control: "textarea", placeholder: promptStudioText("field.goalPlaceholder", "Ví dụ: giải thích bộ dụng cụ pha cà phê cho người mới theo cách dễ kiểm tra"), required: true, minLength: 2, maxLength: 300, wide: true, help: promptStudioText("field.goalHelp", "Một mục tiêu biên tập ngắn, nguyên bản. Không nhập URL, tài khoản mạng xã hội, secret, OTP, chứng từ hoặc yêu cầu mô phỏng người thật.") },
+      { name: "audience", label: promptStudioText("field.audienceLabel", "Đối tượng (tùy chọn)"), placeholder: promptStudioText("field.audiencePlaceholder", "Ví dụ: người mới pha cà phê tại nhà"), maxLength: 300, wide: true },
+      { name: "platform", label: promptStudioText("field.platformLabel", "Ngữ cảnh"), control: "select", required: true, options: promptStudioOptions(PROMPT_STUDIO_PLATFORM_OPTIONS, "platform") },
+      { name: "tone", label: promptStudioText("field.toneLabel", "Giọng điệu"), control: "select", required: true, options: promptStudioOptions(PROMPT_STUDIO_TONE_OPTIONS, "tone") },
+      { name: "language", label: promptStudioText("field.languageLabel", "Ngôn ngữ bản phác thảo"), control: "select", required: true, options: promptStudioOptions(PROMPT_STUDIO_LANGUAGE_OPTIONS, "language") },
+      { name: "output_format", label: promptStudioText("field.outputLabel", "Định dạng cần phác thảo"), control: "select", required: true, options: promptStudioOptions(PROMPT_STUDIO_OUTPUT_FORMAT_OPTIONS, "output") },
+      { name: "constraints", label: promptStudioText("field.constraintsLabel", "Ràng buộc (tùy chọn)"), control: "textarea", placeholder: promptStudioText("field.constraintsPlaceholder", "Ví dụ: nêu chỗ cần kiểm tra thông tin, không đưa giá hoặc khẳng định chưa có nguồn"), maxLength: 1200, wide: true, help: promptStudioText("field.constraintsHelp", "Chỉ là ràng buộc biên tập. Công cụ không kiểm chứng thông tin, xác minh quyền hay gọi engine.") }
     ];
   }
 
   function renderPromptStudioResult(raw, context) {
     const result = normalizePromptStudioResult(raw);
     const blueprint = result.blueprint && typeof result.blueprint === "object" ? result.blueprint : null;
-    if (!blueprint) return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Transient blueprint</span><h2 class="portal-card-title">Chưa có Prompt Blueprint</h2><p class="portal-card-subtitle">Điền mục tiêu để nhận một khung prompt có cấu trúc. Kết quả chỉ ở state phiên hiện tại và không phải template, AI output hay tác vụ đã thực thi.</p></div>${badge("empty")}</div></section>`;
-    const variables = blueprint.variables.map((item) => `<li><strong>{{${safeText(item.name)}}}</strong> · ${safeText(item.label)}${item.required ? " <em>bắt buộc</em>" : " <em>tùy chọn</em>"}</li>`).join("");
+    if (!blueprint) return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(promptStudioText("result.emptyKicker", "Khung prompt tạm thời"))}</span><h2 class="portal-card-title">${safeText(promptStudioText("result.emptyTitle", "Chưa có bản phác thảo prompt"))}</h2><p class="portal-card-subtitle">${safeText(promptStudioText("result.emptyBody", "Điền mục tiêu để nhận một khung prompt có cấu trúc. Kết quả chỉ ở trạng thái phiên hiện tại và không phải mẫu, đầu ra AI hay tác vụ đã thực thi."))}</p></div>${badge("empty")}</div></section>`;
+    const variables = blueprint.variables.map((item) => `<li><strong>{{${safeText(item.name)}}}</strong> · ${safeText(item.label)}${item.required ? ` <em>${safeText(promptStudioText("result.required", "bắt buộc"))}</em>` : ` <em>${safeText(promptStudioText("result.optional", "tùy chọn"))}</em>`}</li>`).join("");
     const checklist = blueprint.review_checklist.map((item) => `<li>${safeText(item)}</li>`).join("");
-    const platform = promptStudioLabel(PROMPT_STUDIO_PLATFORM_OPTIONS, blueprint.platform, "Ngữ cảnh");
-    const tone = promptStudioLabel(PROMPT_STUDIO_TONE_OPTIONS, blueprint.tone, "Giọng điệu");
-    const output = promptStudioLabel(PROMPT_STUDIO_OUTPUT_FORMAT_OPTIONS, blueprint.output_format, "Bản nháp");
+    const platform = promptStudioLabel(promptStudioOptions(PROMPT_STUDIO_PLATFORM_OPTIONS, "platform"), blueprint.platform, promptStudioText("field.platformLabel", "Ngữ cảnh"));
+    const tone = promptStudioLabel(promptStudioOptions(PROMPT_STUDIO_TONE_OPTIONS, "tone"), blueprint.tone, promptStudioText("field.toneLabel", "Giọng điệu"));
+    const output = promptStudioLabel(promptStudioOptions(PROMPT_STUDIO_OUTPUT_FORMAT_OPTIONS, "output"), blueprint.output_format, promptStudioText("result.draftFallback", "Bản nháp"));
     const saveSource = normalizePromptStudioLibrarySaveSource(context && context.promptStudioSaveSource);
     const composeGeneration = normalizePromptStudioComposeGeneration(context && context.promptStudioComposeGeneration);
     const sourceMatchesResult = composeGeneration > 0 && promptStudioLibrarySaveSourceMatchesResult(saveSource, result);
@@ -15179,19 +15535,19 @@
       && !template && sourceMatchesResult
     );
     const saveControl = template
-      ? `<span class="portal-button portal-button--primary" aria-disabled="true">Đã lưu thành template</span>`
-      : `<button class="portal-button portal-button--primary" type="button" data-portal-action="prompt-studio-save-library" data-portal-route="/prompt-studio" data-portal-confirm="Lưu Prompt Blueprint Web hiện tại thành template versioned trong Prompt Library riêng tư? Máy chủ sẽ tự tạo lại template từ brief đã xác nhận."${canSave ? "" : " disabled"}>Lưu thành template</button>`;
+      ? `<span class="portal-button portal-button--primary" aria-disabled="true">${safeText(promptStudioText("result.saved", "Đã lưu thành mẫu"))}</span>`
+      : `<button class="portal-button portal-button--primary" type="button" data-portal-action="prompt-studio-save-library" data-portal-route="/prompt-studio" data-portal-confirm="${safeText(promptStudioText("result.saveConfirm", "Lưu Prompt Blueprint Web hiện tại thành mẫu có phiên bản trong thư viện prompt riêng tư? Máy chủ sẽ tự tạo lại mẫu từ brief đã xác nhận."))}"${canSave ? "" : " disabled"}>${safeText(promptStudioText("result.save", "Lưu thành mẫu"))}</button>`;
     const receiptMarkup = template
-      ? `<section class="portal-card portal-card-pad portal-content-prompt-pack-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Prompt Library riêng tư</span><h3 class="portal-card-title">Đã lưu template</h3><p class="portal-card-subtitle">${safeText(template.category)} · revision ${safeText(String(template.revision))}. Receipt chỉ giữ metadata template; không giữ nội dung Blueprint hoặc brief trong browser.</p></div>${badge("completed")}</div><div class="portal-form-footer"><span class="portal-form-note">Template thuộc Web account hiện tại.</span><a class="portal-button portal-button--primary" href="/prompt-library/${encodeURIComponent(template.id)}">Mở template</a></div></section>`
+      ? `<section class="portal-card portal-card-pad portal-content-prompt-pack-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(promptStudioText("result.receiptKicker", "Thư viện prompt riêng tư"))}</span><h3 class="portal-card-title">${safeText(promptStudioText("result.receiptTitle", "Đã lưu mẫu"))}</h3><p class="portal-card-subtitle">${safeText(template.category)} · ${safeText(promptStudioText("result.revision", "phiên bản {revision}", { revision: String(template.revision) }))}. ${safeText(promptStudioText("result.receiptBody", "Xác nhận chỉ giữ dữ liệu mô tả mẫu; không giữ nội dung Blueprint hoặc brief trong trình duyệt."))}</p></div>${badge("completed")}</div><div class="portal-form-footer"><span class="portal-form-note">${safeText(promptStudioText("result.receiptOwner", "Mẫu thuộc tài khoản Web hiện tại."))}</span><a class="portal-button portal-button--primary" href="/prompt-library/${encodeURIComponent(template.id)}">${safeText(promptStudioText("result.openTemplate", "Mở mẫu"))}</a></div></section>`
       : "";
-    return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Deterministic Prompt Blueprint</span><h2 class="portal-card-title">${safeText(blueprint.title)}</h2><p class="portal-card-subtitle">${safeText(platform)} · ${safeText(tone)} · ${safeText(output)}. Đây là khung text để bạn tự copy và review, không phải AI output, template đã lưu, asset hoặc nội dung đã publish.</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Mục tiêu</span><span class="portal-summary-value">${safeText(blueprint.goal)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Đối tượng</span><span class="portal-summary-value">${safeText(blueprint.audience || "Chưa cung cấp")}</span></div></div><div class="portal-content-prompt-pack-sections"><section><h3>Prompt blueprint</h3><textarea class="portal-subtitle-format-output" readonly aria-label="Prompt Blueprint">${safeText(blueprint.prompt_text)}</textarea></section><section><h3>Negative direction</h3><textarea class="portal-subtitle-format-output" readonly aria-label="Negative direction">${safeText(blueprint.negative_prompt)}</textarea></section><section><h3>Biến cần chủ động điền</h3><ul>${variables}</ul></section></div><div class="portal-content-prompt-pack-checks"><strong>Kiểm tra trước khi dùng bên ngoài</strong><ul>${checklist}</ul></div><div class="portal-form-footer"><span class="portal-form-note">Blueprint chỉ là kết quả review trong tab. Bạn có thể xác nhận lưu một template versioned riêng tư; server sẽ tạo lại từ brief gốc, không tin hoặc lưu Blueprint do browser truyền.</span><div class="portal-inline-actions">${saveControl}<a class="portal-button portal-button--quiet" href="/prompt-library/new">Mở Prompt Library</a></div></div></section>${receiptMarkup}`;
+    return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(promptStudioText("result.kicker", "Khung bản phác thảo prompt xác định"))}</span><h2 class="portal-card-title">${safeText(blueprint.title)}</h2><p class="portal-card-subtitle">${safeText(platform)} · ${safeText(tone)} · ${safeText(output)}. ${safeText(promptStudioText("result.body", "Đây là khung chữ để bạn tự sao chép và rà soát, không phải đầu ra AI, mẫu đã lưu, tài sản hoặc nội dung đã đăng."))}</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${safeText(promptStudioText("result.goalLabel", "Mục tiêu"))}</span><span class="portal-summary-value">${safeText(blueprint.goal)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(promptStudioText("result.audienceLabel", "Đối tượng"))}</span><span class="portal-summary-value">${safeText(blueprint.audience || promptStudioText("result.noAudience", "Chưa cung cấp"))}</span></div></div><div class="portal-content-prompt-pack-sections"><section><h3>${safeText(promptStudioText("result.promptSection", "Bản phác thảo prompt"))}</h3><textarea class="portal-subtitle-format-output" readonly aria-label="${safeText(promptStudioText("result.promptAria", "Bản phác thảo prompt"))}">${safeText(blueprint.prompt_text)}</textarea></section><section><h3>${safeText(promptStudioText("result.negativeSection", "Prompt loại trừ"))}</h3><textarea class="portal-subtitle-format-output" readonly aria-label="${safeText(promptStudioText("result.negativeAria", "Prompt loại trừ"))}">${safeText(blueprint.negative_prompt)}</textarea></section><section><h3>${safeText(promptStudioText("result.variablesSection", "Biến cần chủ động điền"))}</h3><ul>${variables}</ul></section></div><div class="portal-content-prompt-pack-checks"><strong>${safeText(promptStudioText("result.checklistTitle", "Kiểm tra trước khi dùng bên ngoài"))}</strong><ul>${checklist}</ul></div><div class="portal-form-footer"><span class="portal-form-note">${safeText(promptStudioText("result.note", "Bản phác thảo chỉ là kết quả rà soát trong tab. Bạn có thể xác nhận lưu một mẫu có phiên bản riêng tư; máy chủ sẽ tạo lại từ bản yêu cầu gốc, không tin hoặc lưu bản phác thảo do trình duyệt truyền."))}</span><div class="portal-inline-actions">${saveControl}<a class="portal-button portal-button--quiet" href="/prompt-library/new">${safeText(promptStudioText("result.openLibrary", "Mở thư viện prompt"))}</a></div></div></section>${receiptMarkup}`;
   }
 
   function renderPromptStudio(page, context) {
     const canCompose = Boolean(context.capabilities && context.capabilities["prompt-studio-compose"] === true);
     const route = String(page.routePath || page.path || "/prompt-studio");
     const values = { goal: "", audience: "", platform: "general", tone: "clear", language: "vi", output_format: "general", constraints: "" };
-    return `<article class="portal-page portal-content-prompt-pack">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">Web-native Prompt Blueprint Composer</span><h2>Biến mục tiêu thành khung prompt rõ ràng để tự kiểm soát.</h2><p>Prompt Studio chuyển grammar lập kế hoạch hữu ích sang một blueprint Web độc lập: có mục tiêu, đối tượng, tone, biến cần điền và checklist review. Nó không nhận là engine AI hoặc kết quả đã sẵn sàng dùng.</p></div><dl><div><dt>0</dt><dd>Bot / bridge call</dd></div><div><dt>0</dt><dd>Provider / job / payment</dd></div><div><dt>1</dt><dd>Text blueprint để review</dd></div></dl></section><div class="portal-content-prompt-pack-layout"><section class="portal-card portal-card-pad portal-content-prompt-pack-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Blueprint composer</span><h2 class="portal-card-title">Tạo Prompt Blueprint</h2><p class="portal-card-subtitle">Máy chủ kiểm tra signed session, CSRF và dữ liệu đã giới hạn trước khi dựng template xác định trong request. Không có brief, template hoặc audit detail chứa input được lưu từ thao tác này.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="prompt-studio-compose" data-portal-route="${safeText(route)}" novalidate>${renderFields(promptStudioFields(), canCompose, context, values, "prompt-studio")}<div class="portal-form-footer"><span class="portal-form-note">Blueprint cần được bạn kiểm tra claim, nguồn, quyền và chính sách kênh trước khi dùng ở nơi khác.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Tạo Prompt Blueprint</button></div></form></section><aside class="portal-card portal-card-pad portal-content-prompt-pack-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Chỉ dựng cấu trúc text</h2><p class="portal-card-subtitle">Không có model, provider, Bot, Core Bridge, job, Xu, PayOS, asset, render, publish hoặc delivery trong Prompt Studio.</p></div>${badge("guarded")}</div><div class="portal-content-prompt-pack-guard-list"><span><strong>Model / provider</strong><em>off</em></span><span><strong>Bot / bridge</strong><em>off</em></span><span><strong>Job / payment</strong><em>off</em></span><span><strong>Asset / publish</strong><em>off</em></span></div></aside></div>${renderPromptStudioResult(context.promptStudioResult, context)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Dựng khung trước, lưu khi bạn chủ động</h2><p class="portal-card-subtitle">Kết quả chỉ là blueprint tạm thời. Prompt Library có workflow versioned riêng nếu bạn quyết định tự lưu một template Web-owned sau khi rà soát.</p></div></div>${renderNotes(page)}</section></article>`;
+    return `<article class="portal-page portal-content-prompt-pack">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">${safeText(promptStudioText("intro.kicker", "Trình dựng Prompt Blueprint trên Web"))}</span><h2>${safeText(promptStudioText("intro.title", "Biến mục tiêu thành khung prompt rõ ràng để tự kiểm soát."))}</h2><p>${safeText(promptStudioText("intro.body", "Prompt Studio chuyển cấu trúc lập kế hoạch hữu ích thành một blueprint Web độc lập: có mục tiêu, đối tượng, giọng điệu, biến cần điền và danh sách rà soát. Nó không phải engine AI hoặc kết quả sẵn sàng sử dụng."))}</p></div><dl><div><dt>0</dt><dd>${safeText(promptStudioText("metric.bot", "Lệnh Bot / cầu nối"))}</dd></div><div><dt>0</dt><dd>${safeText(promptStudioText("metric.execution", "Nhà cung cấp / job / thanh toán"))}</dd></div><div><dt>1</dt><dd>${safeText(promptStudioText("metric.blueprint", "Khung chữ để rà soát"))}</dd></div></dl></section><div class="portal-content-prompt-pack-layout"><section class="portal-card portal-card-pad portal-content-prompt-pack-form"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(promptStudioText("composer.kicker", "Trình dựng blueprint"))}</span><h2 class="portal-card-title">${safeText(promptStudioText("composer.title", "Tạo Prompt Blueprint"))}</h2><p class="portal-card-subtitle">${safeText(promptStudioText("composer.body", "Máy chủ kiểm tra phiên đã xác minh, CSRF và dữ liệu giới hạn trước khi dựng mẫu xác định trong yêu cầu. Không lưu brief, mẫu hoặc chi tiết kiểm toán chứa dữ liệu nhập từ thao tác này."))}</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="prompt-studio-compose" data-portal-route="${safeText(route)}" novalidate>${renderFields(promptStudioFields(), canCompose, context, values, "prompt-studio")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(promptStudioText("composer.note", "Bạn cần kiểm tra khẳng định, nguồn, quyền và chính sách kênh trước khi dùng blueprint ở nơi khác."))}</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>${safeText(promptStudioText("composer.submit", "Tạo Prompt Blueprint"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-content-prompt-pack-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(promptStudioText("boundary.kicker", "Ranh giới thực thi"))}</span><h2 class="portal-card-title">${safeText(promptStudioText("boundary.title", "Chỉ dựng cấu trúc chữ"))}</h2><p class="portal-card-subtitle">${safeText(promptStudioText("boundary.body", "Không có model, nhà cung cấp, Bot, Core Bridge, job, Xu, PayOS, tài sản, kết xuất, đăng bài hoặc giao nhận trong Prompt Studio."))}</p></div>${badge("guarded")}</div><div class="portal-content-prompt-pack-guard-list"><span><strong>${safeText(promptStudioText("boundary.model", "Model / nhà cung cấp"))}</strong><em>${safeText(promptStudioText("boundary.off", "tắt"))}</em></span><span><strong>${safeText(promptStudioText("boundary.bot", "Bot / cầu nối"))}</strong><em>${safeText(promptStudioText("boundary.off", "tắt"))}</em></span><span><strong>${safeText(promptStudioText("boundary.job", "Job / thanh toán"))}</strong><em>${safeText(promptStudioText("boundary.off", "tắt"))}</em></span><span><strong>${safeText(promptStudioText("boundary.asset", "Tài sản / đăng bài"))}</strong><em>${safeText(promptStudioText("boundary.off", "tắt"))}</em></span></div></aside></div>${renderPromptStudioResult(context.promptStudioResult, context)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(promptStudioText("scope.kicker", "Phạm vi rõ ràng"))}</span><h2 class="portal-card-title">${safeText(promptStudioText("scope.title", "Dựng khung trước, lưu khi bạn chủ động"))}</h2><p class="portal-card-subtitle">${safeText(promptStudioText("scope.body", "Kết quả chỉ là blueprint tạm thời. Thư viện prompt có quy trình phiên bản riêng nếu bạn quyết định lưu một mẫu Web sau khi rà soát."))}</p></div></div>${renderNotes(page)}</section></article>`;
   }
 
   const CONTENT_PROMPT_PACK_KIND_OPTIONS = Object.freeze([
@@ -15339,11 +15695,11 @@
   // instead of inheriting Telegram pending state or implying social publish.
   function publishReviewPackFields() {
     return [
-      { name: "title", label: "Tiêu đề", placeholder: "Ví dụ: Bộ dụng cụ pha cà phê cho người mới", required: true, minLength: 2, maxLength: 180, wide: true, help: "Tiêu đề dùng để review copy; không tạo post, campaign hoặc social metadata." },
-      { name: "caption", label: "Caption cần review", control: "textarea", placeholder: "Dán caption bạn đã soạn để kiểm tra trước khi dùng bên ngoài…", required: true, minLength: 2, maxLength: 2000, wide: true, help: "Không dán token, OTP, chứng từ thanh toán, URL ký riêng hoặc nội dung mô phỏng tác giả/nghệ sĩ." },
-      { name: "hashtags", label: "Hashtag", control: "textarea", placeholder: "#ContentDraft\n#ReviewBeforePost", maxLength: 640, wide: true, help: "Mỗi hashtag cách nhau bằng khoảng trắng, dấu phẩy hoặc xuống dòng. Tối đa 12 hashtag; chỉ chữ, số và dấu gạch dưới." },
-      { name: "cta", label: "CTA (tùy chọn)", placeholder: "Ví dụ: Xem thêm thông tin phù hợp trước khi quyết định.", maxLength: 240, wide: true, help: "Nếu để trống, server dùng CTA trung tính cho bản review." },
-      { name: "source_prompt", label: "Prompt nền (tùy chọn)", control: "textarea", placeholder: "Dán prompt/brief text đang tham chiếu để tự review cùng gói…", maxLength: 3200, wide: true, help: "Chỉ là ngữ cảnh text trong request; không được chạy qua provider, lưu thành asset hoặc gửi tới kênh bên ngoài." }
+      { name: "title", label: publishReviewText("field.titleLabel", "Tiêu đề"), placeholder: publishReviewText("field.titlePlaceholder", "Ví dụ: Bộ dụng cụ pha cà phê cho người mới"), required: true, minLength: 2, maxLength: 180, wide: true, help: publishReviewText("field.titleHelp", "Tiêu đề chỉ dùng để rà soát nội dung; không tạo bài đăng, kế hoạch hoặc dữ liệu mạng xã hội.") },
+      { name: "caption", label: publishReviewText("field.captionLabel", "Chú thích cần rà soát"), control: "textarea", placeholder: publishReviewText("field.captionPlaceholder", "Dán chú thích bạn đã soạn để kiểm tra trước khi dùng bên ngoài…"), required: true, minLength: 2, maxLength: 2000, wide: true, help: publishReviewText("field.captionHelp", "Không dán mã bí mật, mã dùng một lần, chứng từ thanh toán, URL ký riêng hoặc yêu cầu mô phỏng tác giả/nghệ sĩ.") },
+      { name: "hashtags", label: publishReviewText("field.hashtagsLabel", "Hashtag"), control: "textarea", placeholder: publishReviewText("field.hashtagsPlaceholder", "#ContentDraft\n#ReviewBeforePost"), maxLength: 640, wide: true, help: publishReviewText("field.hashtagsHelp", "Mỗi hashtag cách nhau bằng khoảng trắng, dấu phẩy hoặc xuống dòng. Tối đa 12 hashtag; chỉ chữ, số và dấu gạch dưới.") },
+      { name: "cta", label: publishReviewText("field.ctaLabel", "Lời kêu gọi hành động (tùy chọn)"), placeholder: publishReviewText("field.ctaPlaceholder", "Ví dụ: Xem thêm thông tin phù hợp trước khi quyết định."), maxLength: 240, wide: true, help: publishReviewText("field.ctaHelp", "Nếu để trống, máy chủ dùng lời kêu gọi trung tính cho bản rà soát.") },
+      { name: "source_prompt", label: publishReviewText("field.sourcePromptLabel", "Prompt nền (tùy chọn)"), control: "textarea", placeholder: publishReviewText("field.sourcePromptPlaceholder", "Dán prompt hoặc brief đang tham chiếu để rà soát cùng gói…"), maxLength: 3200, wide: true, help: publishReviewText("field.sourcePromptHelp", "Chỉ là ngữ cảnh văn bản trong request; không chạy qua nhà cung cấp, lưu thành tài sản hoặc gửi tới kênh bên ngoài.") }
     ];
   }
 
@@ -15356,17 +15712,17 @@
     const result = normalizePublishReviewPackResult(raw);
     const pack = result.package && typeof result.package === "object" ? result.package : null;
     if (!pack) {
-      return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Review receipt</span><h2 class="portal-card-title">Chưa có gói review</h2><p class="portal-card-subtitle">Nhập copy bạn đang có để nhận một package text có checklist rõ ràng. Browser không tự tạo post hoặc dùng nội dung từ phiên Telegram trước.</p></div>${badge("empty")}</div></section>`;
+      return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(publishReviewText("result.emptyKicker", "Bản ghi rà soát"))}</span><h2 class="portal-card-title">${safeText(publishReviewText("result.emptyTitle", "Chưa có gói rà soát"))}</h2><p class="portal-card-subtitle">${safeText(publishReviewText("result.emptyBody", "Nhập nội dung bạn đang có để nhận một gói văn bản với danh sách kiểm tra rõ ràng. Trình duyệt không tự tạo bài đăng hoặc dùng nội dung từ phiên Telegram trước."))}</p></div>${badge("empty")}</div></section>`;
     }
     const hashtags = Array.isArray(pack.hashtags) ? pack.hashtags : [];
     const prompt = String(pack.source_prompt || "");
-    return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native review only</span><h2 class="portal-card-title">${safeText(String(pack.title || "Gói review"))}</h2><p class="portal-card-subtitle">Đây là text để bạn tự kiểm tra. Nó không phải post, lịch đăng, analytics, social-account action hoặc delivery receipt.</p></div>${badge("read_only")}</div><div class="portal-content-prompt-pack-layout"><section class="portal-content-prompt-pack-checks"><strong>Caption</strong><pre>${safeText(String(pack.caption || ""))}</pre></section><section class="portal-content-prompt-pack-checks"><strong>Hashtag & CTA</strong><div class="portal-storyboard-composer-hashtags">${hashtags.map((item) => `<span>${safeText(String(item))}</span>`).join("")}</div><p><strong>CTA:</strong> ${safeText(String(pack.cta || ""))}</p></section></div>${prompt ? `<section class="portal-content-prompt-pack-section"><h3>Prompt nền để đối chiếu</h3><div><article><span>REF</span><pre>${safeText(prompt)}</pre></article></div></section>` : ""}<section class="portal-content-prompt-pack-checks"><strong>Checklist trước khi dùng bên ngoài</strong>${publishReviewPackList(pack.review_checklist, "Tự kiểm tra claim, quyền, format và chính sách kênh đích.")}</section><div class="portal-form-footer"><span class="portal-form-note">${safeText(String(pack.copy_instruction || ""))}</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/content-studio">Mở Content Studio</a><a class="portal-button portal-button--quiet" href="/workboard">Mở Workboard</a></div></div></section>`;
+    return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(publishReviewText("result.kicker", "Chỉ rà soát trên Web"))}</span><h2 class="portal-card-title">${safeText(String(pack.title || publishReviewText("result.titleFallback", "Gói rà soát")))}</h2><p class="portal-card-subtitle">${safeText(publishReviewText("result.body", "Đây là văn bản để bạn tự kiểm tra. Nó không phải bài đăng, lịch đăng, số liệu, thao tác tài khoản mạng xã hội hoặc biên nhận giao tệp."))}</p></div>${badge("read_only")}</div><div class="portal-content-prompt-pack-layout"><section class="portal-content-prompt-pack-checks"><strong>${safeText(publishReviewText("result.caption", "Chú thích"))}</strong><pre>${safeText(String(pack.caption || ""))}</pre></section><section class="portal-content-prompt-pack-checks"><strong>${safeText(publishReviewText("result.hashtagsCta", "Hashtag và lời kêu gọi"))}</strong><div class="portal-storyboard-composer-hashtags">${hashtags.map((item) => `<span>${safeText(String(item))}</span>`).join("")}</div><p><strong>${safeText(publishReviewText("result.ctaLabel", "Lời kêu gọi"))}:</strong> ${safeText(String(pack.cta || ""))}</p></section></div>${prompt ? `<section class="portal-content-prompt-pack-section"><h3>${safeText(publishReviewText("result.sourcePrompt", "Prompt tham chiếu"))}</h3><div><article><span>REF</span><pre>${safeText(prompt)}</pre></article></div></section>` : ""}<section class="portal-content-prompt-pack-checks"><strong>${safeText(publishReviewText("result.checklistTitle", "Danh sách kiểm tra trước khi dùng bên ngoài"))}</strong>${publishReviewPackList(pack.review_checklist, publishReviewText("result.checklistFallback", "Tự kiểm tra tuyên bố, quyền sử dụng, định dạng và chính sách kênh đích."))}</section><div class="portal-form-footer"><span class="portal-form-note">${safeText(String(pack.copy_instruction || ""))}</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/content-studio">${safeText(publishReviewText("result.openContentStudio", "Mở Content Studio"))}</a><a class="portal-button portal-button--quiet" href="/workboard">${safeText(publishReviewText("result.openWorkboard", "Mở Workboard"))}</a></div></div></section>`;
   }
 
   function renderPublishReviewPack(page, context) {
     const canCompose = Boolean(context.capabilities && context.capabilities["publish-review-pack-compose"] === true);
     const values = { title: "", caption: "", hashtags: "#ContentDraft\n#ReviewBeforePost", cta: "", source_prompt: "" };
-    return `<article class="portal-page portal-content-prompt-pack portal-publish-review-pack">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">Bot-derived · explicit Web review</span><h2>Đóng gói copy để tự rà soát trước khi đăng.</h2><p>Bot ghép “gói đăng bài” từ kết quả Telegram gần nhất. Web nâng cấp thành form rõ nguồn: bạn chủ động đưa title, caption, hashtag và CTA vào request, rồi nhận checklist review không lưu trữ.</p></div><dl><div><dt>0</dt><dd>Social connections</dd></div><div><dt>0</dt><dd>Publish actions</dd></div><div><dt>1</dt><dd>Reviewable text pack</dd></div></dl></section><div class="portal-content-prompt-pack-layout"><section class="portal-card portal-card-pad portal-content-prompt-pack-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Review composer</span><h2 class="portal-card-title">Tạo gói review trước khi đăng</h2><p class="portal-card-subtitle">Server xác minh signed session và CSRF. Nội dung chỉ nằm trong request/receipt; không thành post, social draft, Content Brief, Project, audit detail hoặc browser storage.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="publish-review-pack-compose" data-portal-route="/content/publish-review" novalidate>${renderFields(publishReviewPackFields(), canCompose, context, values, "publish-review-pack")}<div class="portal-form-footer"><span class="portal-form-note">Tự xác minh claim, giá/ưu đãi, disclosure, asset rights và chính sách kênh đích.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Tạo gói review</button></div></form></section><aside class="portal-card portal-card-pad portal-content-prompt-pack-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Review copy, không đăng nội dung</h2><p class="portal-card-subtitle">Không có social account, provider, Bot/Core Bridge, scheduler, job, Xu, PayOS, asset, render, publish hay delivery trong flow này.</p></div>${badge("guarded")}</div><div class="portal-content-prompt-pack-guard-list"><span><strong>Social / scheduler</strong><em>off</em></span><span><strong>Bot / provider</strong><em>off</em></span><span><strong>Job / wallet / PayOS</strong><em>off</em></span><span><strong>Asset / publish</strong><em>off</em></span></div></aside></div>${renderPublishReviewPackResult(context.publishReviewPackResult)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Một review package không phải một post</h2><p class="portal-card-subtitle">Khi muốn giữ version history hoặc xin duyệt, hãy chủ động tạo Content Brief/Workboard item. Web không tự giữ hoặc tự gửi copy này ra ngoài.</p></div></div>${renderNotes(page)}</section></article>`;
+    return `<article class="portal-page portal-content-prompt-pack portal-publish-review-pack">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">${safeText(publishReviewText("intro.kicker", "Nguồn Bot · rà soát rõ ràng trên Web"))}</span><h2>${safeText(publishReviewText("intro.title", "Đóng gói nội dung để tự rà soát trước khi đăng."))}</h2><p>${safeText(publishReviewText("intro.body", "Bạn chủ động đưa tiêu đề, chú thích, hashtag và lời kêu gọi vào request; máy chủ trả một danh sách kiểm tra không lưu trữ."))}</p></div><dl><div><dt>0</dt><dd>${safeText(publishReviewText("metric.social", "Kết nối mạng xã hội"))}</dd></div><div><dt>0</dt><dd>${safeText(publishReviewText("metric.publish", "Thao tác đăng"))}</dd></div><div><dt>1</dt><dd>${safeText(publishReviewText("metric.pack", "Gói văn bản để rà soát"))}</dd></div></dl></section><div class="portal-content-prompt-pack-layout"><section class="portal-card portal-card-pad portal-content-prompt-pack-form"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(publishReviewText("composer.kicker", "Biên soạn bản rà soát"))}</span><h2 class="portal-card-title">${safeText(publishReviewText("composer.title", "Tạo gói rà soát trước khi đăng"))}</h2><p class="portal-card-subtitle">${safeText(publishReviewText("composer.body", "Máy chủ xác minh phiên đã ký và CSRF. Nội dung chỉ nằm trong request và biên nhận; không thành bài đăng, bản nháp mạng xã hội, Content Brief, Project, chi tiết kiểm toán hoặc bộ nhớ trình duyệt."))}</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="publish-review-pack-compose" data-portal-route="/content/publish-review" novalidate>${renderFields(publishReviewPackFields(), canCompose, context, values, "publish-review-pack")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(publishReviewText("composer.note", "Tự kiểm tra tuyên bố, giá và ưu đãi, thông tin công khai, quyền sử dụng tài sản và chính sách kênh đích."))}</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>${safeText(publishReviewText("composer.submit", "Tạo gói rà soát"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-content-prompt-pack-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(publishReviewText("boundary.kicker", "Ranh giới xử lý"))}</span><h2 class="portal-card-title">${safeText(publishReviewText("boundary.title", "Rà soát nội dung, không đăng bài"))}</h2><p class="portal-card-subtitle">${safeText(publishReviewText("boundary.body", "Không có tài khoản mạng xã hội, nhà cung cấp, Bot/Core Bridge, lịch tự động, tác vụ, Xu, PayOS, tài sản, kết xuất, đăng bài hay giao tệp trong luồng này."))}</p></div>${badge("guarded")}</div><div class="portal-content-prompt-pack-guard-list"><span><strong>${safeText(publishReviewText("boundary.social", "Mạng xã hội / lịch tự động"))}</strong><em>${safeText(publishReviewText("boundary.off", "tắt"))}</em></span><span><strong>${safeText(publishReviewText("boundary.bot", "Bot / nhà cung cấp"))}</strong><em>${safeText(publishReviewText("boundary.off", "tắt"))}</em></span><span><strong>${safeText(publishReviewText("boundary.job", "Tác vụ / ví Xu / PayOS"))}</strong><em>${safeText(publishReviewText("boundary.off", "tắt"))}</em></span><span><strong>${safeText(publishReviewText("boundary.asset", "Tài sản / đăng bài"))}</strong><em>${safeText(publishReviewText("boundary.off", "tắt"))}</em></span></div></aside></div>${renderPublishReviewPackResult(context.publishReviewPackResult)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(publishReviewText("scope.kicker", "Phạm vi rõ ràng"))}</span><h2 class="portal-card-title">${safeText(publishReviewText("scope.title", "Một gói rà soát không phải là một bài đăng"))}</h2><p class="portal-card-subtitle">${safeText(publishReviewText("scope.body", "Khi cần lịch sử phiên bản hoặc phê duyệt, hãy chủ động tạo Content Brief hoặc mục Workboard. Web không tự lưu hoặc gửi nội dung này ra ngoài."))}</p></div></div>${renderNotes(page, { integrationTitle: publishReviewText("notes.integrationTitle", "Trạng thái tích hợp"), safetyTitle: publishReviewText("notes.safetyTitle", "Nguyên tắc an toàn"), notes: [publishReviewText("notes.integrationBody", "Không có kết nối bên ngoài; gói chỉ tồn tại trong phiên hiện tại."), publishReviewText("notes.safetyBody", "Tự kiểm tra tuyên bố, quyền sử dụng và chính sách kênh trước khi dùng.")] })}</section></article>`;
   }
 
   // Contextual Ad Prompt keeps the Bot's goal → platform → ratio → style
@@ -17242,16 +17598,20 @@
 
   function validVideoStudioPlanId(value) { return validProjectId(value); }
   function validVideoStudioSceneId(value) { return validProjectId(value); }
+  function videoStudioText(key, fallback, params) {
+    return uiText(`videoStudioUi.${key}`, fallback, params);
+  }
   function videoStudioFormatLabel(value) {
     const found = VIDEO_STUDIO_FORMATS.find(([key]) => key === String(value || ""));
-    return found ? found[1] : "Video plan";
+    return found ? videoStudioText(`format.${found[0]}`, found[1]) : videoStudioText("fallback.plan", "Kế hoạch video");
   }
   function videoStudioSceneTypeLabel(value) {
     const found = VIDEO_STUDIO_SCENE_TYPES.find(([key]) => key === String(value || ""));
-    return found ? found[1] : "Scene";
+    return found ? videoStudioText(`sceneType.${found[0]}`, found[1]) : videoStudioText("fallback.scene", "Cảnh");
   }
   function videoStudioPlanStateLabel(value) {
-    return VIDEO_STUDIO_PLAN_STATE_LABELS[String(value || "")] || "Được bảo vệ";
+    const state = String(value || "");
+    return videoStudioText(`state.${state}`, VIDEO_STUDIO_PLAN_STATE_LABELS[state] || "Được bảo vệ");
   }
   function videoStudioPlanStateBadge(value) {
     const state = ["draft", "review", "approved", "archived"].includes(String(value || "")) ? String(value) : "guarded";
@@ -17268,20 +17628,20 @@
     const refs = context && context.videoStudioReferences && typeof context.videoStudioReferences === "object" ? context.videoStudioReferences : {};
     const projects = Array.isArray(refs.projects) ? refs.projects : [];
     return projects.filter((item) => item && validVideoStudioPlanId(item.id)).slice(0, 100)
-      .map((item) => ({ value: String(item.id), label: String(item.title || "Project Web riêng tư") }));
+      .map((item) => ({ value: String(item.id), label: String(item.title || videoStudioText("fallback.project", "Dự án Web riêng tư")) }));
   }
   function videoStudioPlanFields(context) {
     return [
-      { name: "title", label: "Tên video plan", placeholder: "Ví dụ: Launch bộ sưu tập mùa hè", required: true, minLength: 2, maxLength: 180 },
-      { name: "format", label: "Loại kế hoạch", control: "select", required: true, options: VIDEO_STUDIO_FORMATS },
-      { name: "language", label: "Ngôn ngữ", placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
-      { name: "aspect_ratio", label: "Tỷ lệ khung hình", control: "select", required: true, options: VIDEO_STUDIO_ASPECT_RATIOS },
-      { name: "target_duration_seconds", label: "Thời lượng mục tiêu (giây)", type: "number", required: true, min: 1, max: 7200, step: 1, inputMode: "numeric", help: "Đây là mục tiêu biên tập để kiểm tra nhịp scene, không phải thời lượng media đã được tạo." },
-      { name: "objective", label: "Mục tiêu", placeholder: "Ví dụ: giúp khách mới hiểu lợi ích trong 30 giây", maxLength: 1200, wide: true },
-      { name: "audience", label: "Đối tượng", placeholder: "Ví dụ: người mới tìm hiểu sản phẩm", maxLength: 1200, wide: true },
-      { name: "brief", label: "Creative brief", control: "textarea", placeholder: "Thông điệp, bối cảnh, ràng buộc thương hiệu và điểm cần tự rà soát…", required: true, minLength: 3, maxLength: 12000, wide: true },
-      { name: "tags", label: "Tags", placeholder: "launch, product, review", maxLength: 1000 },
-      { name: "project_id", label: "Project (tùy chọn)", control: "select", options: videoStudioReferenceOptions(context), emptyLabel: "Không liên kết Project" }
+      { name: "title", label: videoStudioText("field.plan.title", "Tên kế hoạch video"), placeholder: videoStudioText("field.plan.titlePlaceholder", "Ví dụ: Ra mắt bộ sưu tập mùa hè"), labelKey: "videoStudioUi.field.plan.title", placeholderKey: "videoStudioUi.field.plan.titlePlaceholder", required: true, minLength: 2, maxLength: 180 },
+      { name: "format", label: videoStudioText("field.plan.format", "Loại kế hoạch"), labelKey: "videoStudioUi.field.plan.format", control: "select", required: true, options: VIDEO_STUDIO_FORMATS.map(([value]) => ({ value, label: videoStudioText(`format.${value}`, value) })) },
+      { name: "language", label: videoStudioText("field.plan.language", "Ngôn ngữ"), labelKey: "videoStudioUi.field.plan.language", placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
+      { name: "aspect_ratio", label: videoStudioText("field.plan.aspectRatio", "Tỷ lệ khung hình"), labelKey: "videoStudioUi.field.plan.aspectRatio", control: "select", required: true, options: VIDEO_STUDIO_ASPECT_RATIOS.map(([value, fallback]) => ({ value, label: videoStudioText(`aspect.${value.replace(/:/g, "_")}`, fallback) })) },
+      { name: "target_duration_seconds", label: videoStudioText("field.plan.duration", "Thời lượng mục tiêu (giây)"), labelKey: "videoStudioUi.field.plan.duration", type: "number", required: true, min: 1, max: 7200, step: 1, inputMode: "numeric", help: videoStudioText("field.plan.durationHelp", "Đây là mục tiêu biên tập để kiểm tra nhịp cảnh, không phải thời lượng media đã được tạo."), helpKey: "videoStudioUi.field.plan.durationHelp" },
+      { name: "objective", label: videoStudioText("field.plan.objective", "Mục tiêu"), labelKey: "videoStudioUi.field.plan.objective", placeholder: videoStudioText("field.plan.objectivePlaceholder", "Ví dụ: giúp khách mới hiểu lợi ích trong 30 giây"), placeholderKey: "videoStudioUi.field.plan.objectivePlaceholder", maxLength: 1200, wide: true },
+      { name: "audience", label: videoStudioText("field.plan.audience", "Đối tượng"), labelKey: "videoStudioUi.field.plan.audience", placeholder: videoStudioText("field.plan.audiencePlaceholder", "Ví dụ: người mới tìm hiểu sản phẩm"), placeholderKey: "videoStudioUi.field.plan.audiencePlaceholder", maxLength: 1200, wide: true },
+      { name: "brief", label: videoStudioText("field.plan.brief", "Mô tả sáng tạo"), labelKey: "videoStudioUi.field.plan.brief", control: "textarea", placeholder: videoStudioText("field.plan.briefPlaceholder", "Thông điệp, bối cảnh, ràng buộc thương hiệu và điểm cần tự rà soát…"), placeholderKey: "videoStudioUi.field.plan.briefPlaceholder", required: true, minLength: 3, maxLength: 12000, wide: true },
+      { name: "tags", label: videoStudioText("field.plan.tags", "Thẻ"), labelKey: "videoStudioUi.field.plan.tags", placeholder: videoStudioText("field.plan.tagsPlaceholder", "ra mắt, sản phẩm, rà soát"), placeholderKey: "videoStudioUi.field.plan.tagsPlaceholder", maxLength: 1000 },
+      { name: "project_id", label: videoStudioText("field.plan.project", "Dự án (tùy chọn)"), labelKey: "videoStudioUi.field.plan.project", control: "select", options: videoStudioReferenceOptions(context), emptyLabel: videoStudioText("field.plan.projectEmpty", "Không liên kết dự án") }
     ];
   }
   function videoStudioPlanValues(value) {
@@ -17299,15 +17659,15 @@
   }
   function videoStudioSceneFields() {
     return [
-      { name: "title", label: "Tên scene", placeholder: "Ví dụ: Hook mở đầu", required: true, minLength: 2, maxLength: 180 },
-      { name: "scene_type", label: "Vai trò scene", control: "select", required: true, options: VIDEO_STUDIO_SCENE_TYPES },
-      { name: "duration_seconds", label: "Thời lượng ước lượng (giây)", type: "number", required: true, min: 1, max: 1800, step: 1, inputMode: "numeric" },
-      { name: "visual_direction", label: "Visual direction", control: "textarea", placeholder: "Khung hình, bố cục, nhịp và thông tin phải có để biên tập…", maxLength: 5000, wide: true },
-      { name: "narration", label: "Narration / thoại", control: "textarea", placeholder: "Nội dung dự kiến cần truyền đạt ở scene này…", maxLength: 5000, wide: true },
-      { name: "on_screen_text", label: "Text trên màn hình", control: "textarea", placeholder: "Thông điệp ngắn cần hiển thị (nếu có)…", maxLength: 3000, wide: true },
-      { name: "shot_notes", label: "Ghi chú quay dựng", control: "textarea", placeholder: "Góc máy, nhịp chuyển, điều cần tránh hoặc điểm review…", maxLength: 5000, wide: true },
-      { name: "transition", label: "Chuyển cảnh", placeholder: "Ví dụ: cut theo beat, dissolve nhẹ", maxLength: 500 },
-      { name: "tags", label: "Tags", placeholder: "hook, product, cta", maxLength: 1000 }
+      { name: "title", label: videoStudioText("field.scene.title", "Tên cảnh"), labelKey: "videoStudioUi.field.scene.title", placeholder: videoStudioText("field.scene.titlePlaceholder", "Ví dụ: Mở đầu thu hút"), placeholderKey: "videoStudioUi.field.scene.titlePlaceholder", required: true, minLength: 2, maxLength: 180 },
+      { name: "scene_type", label: videoStudioText("field.scene.type", "Vai trò cảnh"), labelKey: "videoStudioUi.field.scene.type", control: "select", required: true, options: VIDEO_STUDIO_SCENE_TYPES.map(([value]) => ({ value, label: videoStudioText(`sceneType.${value}`, value) })) },
+      { name: "duration_seconds", label: videoStudioText("field.scene.duration", "Thời lượng ước lượng (giây)"), labelKey: "videoStudioUi.field.scene.duration", type: "number", required: true, min: 1, max: 1800, step: 1, inputMode: "numeric" },
+      { name: "visual_direction", label: videoStudioText("field.scene.visual", "Định hướng hình ảnh"), labelKey: "videoStudioUi.field.scene.visual", control: "textarea", placeholder: videoStudioText("field.scene.visualPlaceholder", "Khung hình, bố cục, nhịp và thông tin cần có…"), placeholderKey: "videoStudioUi.field.scene.visualPlaceholder", maxLength: 5000, wide: true },
+      { name: "narration", label: videoStudioText("field.scene.narration", "Lời thoại"), labelKey: "videoStudioUi.field.scene.narration", control: "textarea", placeholder: videoStudioText("field.scene.narrationPlaceholder", "Nội dung cần truyền đạt ở cảnh này…"), placeholderKey: "videoStudioUi.field.scene.narrationPlaceholder", maxLength: 5000, wide: true },
+      { name: "on_screen_text", label: videoStudioText("field.scene.onScreen", "Chữ trên màn hình"), labelKey: "videoStudioUi.field.scene.onScreen", control: "textarea", placeholder: videoStudioText("field.scene.onScreenPlaceholder", "Thông điệp ngắn cần hiển thị (nếu có)…"), placeholderKey: "videoStudioUi.field.scene.onScreenPlaceholder", maxLength: 3000, wide: true },
+      { name: "shot_notes", label: videoStudioText("field.scene.notes", "Ghi chú quay dựng"), labelKey: "videoStudioUi.field.scene.notes", control: "textarea", placeholder: videoStudioText("field.scene.notesPlaceholder", "Góc máy, nhịp chuyển, điều cần tránh hoặc điểm rà soát…"), placeholderKey: "videoStudioUi.field.scene.notesPlaceholder", maxLength: 5000, wide: true },
+      { name: "transition", label: videoStudioText("field.scene.transition", "Chuyển cảnh"), labelKey: "videoStudioUi.field.scene.transition", placeholder: videoStudioText("field.scene.transitionPlaceholder", "Ví dụ: cắt theo nhịp, hòa mờ nhẹ"), placeholderKey: "videoStudioUi.field.scene.transitionPlaceholder", maxLength: 500 },
+      { name: "tags", label: videoStudioText("field.scene.tags", "Thẻ"), labelKey: "videoStudioUi.field.scene.tags", placeholder: videoStudioText("field.scene.tagsPlaceholder", "mở đầu, sản phẩm, kêu gọi hành động"), placeholderKey: "videoStudioUi.field.scene.tagsPlaceholder", maxLength: 1000 }
     ];
   }
   function videoStudioSceneValues(value) {
@@ -17323,28 +17683,28 @@
   }
   function videoStudioEventLabel(value) {
     const labels = {
-      plan_created: "Đã tạo video plan", plan_updated: "Đã lưu video plan", plan_state_changed: "Đã đổi trạng thái review", plan_version_restored: "Đã khôi phục version plan",
-      scene_created: "Đã thêm scene", scene_updated: "Đã lưu scene", scene_archived: "Đã archive scene", scene_restored: "Đã khôi phục scene", scene_version_restored: "Đã khôi phục version scene", scenes_reordered: "Đã sắp xếp scene"
+      plan_created: videoStudioText("event.planCreated", "Đã tạo kế hoạch video"), plan_updated: videoStudioText("event.planUpdated", "Đã lưu kế hoạch video"), plan_state_changed: videoStudioText("event.planStateChanged", "Đã đổi trạng thái rà soát"), plan_version_restored: videoStudioText("event.planVersionRestored", "Đã khôi phục phiên bản kế hoạch"),
+      scene_created: videoStudioText("event.sceneCreated", "Đã thêm cảnh"), scene_updated: videoStudioText("event.sceneUpdated", "Đã lưu cảnh"), scene_archived: videoStudioText("event.sceneArchived", "Đã lưu trữ cảnh"), scene_restored: videoStudioText("event.sceneRestored", "Đã khôi phục cảnh"), scene_version_restored: videoStudioText("event.sceneVersionRestored", "Đã khôi phục phiên bản cảnh"), scenes_reordered: videoStudioText("event.scenesReordered", "Đã sắp xếp cảnh")
     };
-    return labels[String(value || "")] || String(value || "video_studio_updated").replace(/_/g, " ");
+    return labels[String(value || "")] || String(value || videoStudioText("event.updated", "Đã cập nhật kế hoạch video")).replace(/_/g, " ");
   }
   function renderVideoStudioBoundary() {
-    return `<aside class="portal-card portal-card-pad portal-video-studio-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Authoring boundary</span><h2 class="portal-card-title">Plan & review, không tạo media</h2><p class="portal-card-subtitle">Workspace chỉ lưu brief, scene và self-review thuộc Web account. Không có upload, renderer, player, URL media, tệp hoặc delivery được tạo từ trang này.</p></div>${badge("guarded")}</div><div class="portal-video-studio-guard-list"><span><strong>Media generation</strong><em>guarded</em></span><span><strong>Media render</strong><em>guarded</em></span><span><strong>Media delivery</strong><em>guarded</em></span></div></aside>`;
+    return `<aside class="portal-card portal-card-pad portal-video-studio-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(videoStudioText("boundary.kicker", "Giới hạn soạn thảo"))}</span><h2 class="portal-card-title">${safeText(videoStudioText("boundary.title", "Lập kế hoạch và rà soát, chưa tạo media"))}</h2><p class="portal-card-subtitle">${safeText(videoStudioText("boundary.description", "Workspace chỉ lưu mô tả, cảnh và tự rà soát thuộc tài khoản Web. Trang này không tải lên, dựng, phát, tạo URL, tệp hoặc bàn giao media."))}</p></div>${badge("guarded")}</div><div class="portal-video-studio-guard-list"><span><strong>${safeText(videoStudioText("boundary.generation", "Tạo media"))}</strong><em>${safeText(videoStudioText("status.guarded", "Được bảo vệ"))}</em></span><span><strong>${safeText(videoStudioText("boundary.render", "Dựng media"))}</strong><em>${safeText(videoStudioText("status.guarded", "Được bảo vệ"))}</em></span><span><strong>${safeText(videoStudioText("boundary.delivery", "Bàn giao media"))}</strong><em>${safeText(videoStudioText("status.guarded", "Được bảo vệ"))}</em></span></div></aside>`;
   }
   function renderVideoPlanCards(items, context) {
     const canView = Boolean(context.capabilities && context.capabilities["video-studio-view"] === true);
-    if (!items.length) return renderEmpty("Chưa có video plan", "Tạo plan đầu tiên để tổ chức brief, scene và self-review. Workspace không sinh media hay kết quả thay thế.", ICONS.video);
+    if (!items.length) return renderEmpty(videoStudioText("empty.plans.title", "Chưa có kế hoạch video"), videoStudioText("empty.plans.description", "Tạo kế hoạch đầu tiên để tổ chức mô tả, cảnh và tự rà soát. Workspace không tạo media hay kết quả thay thế."), ICONS.video);
     return `<div class="portal-video-plan-grid">${items.map((item) => {
       const id = String(item.id || "");
       const state = ["draft", "review", "approved", "archived"].includes(String(item.state || "")) ? String(item.state) : "guarded";
       const duration = Number(item.target_duration_seconds || 0);
-      return `<article class="portal-card portal-card-pad portal-video-plan-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(videoStudioFormatLabel(item.format))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Video plan"))}</h3><p class="portal-card-subtitle">${safeText(String(item.brief_excerpt || item.objective || "Chưa có brief hiển thị."))}</p></div>${videoStudioPlanStateBadge(state)}</div><div class="portal-video-plan-meta"><span>${safeText(String(item.aspect_ratio || "—"))}</span><span>${duration > 0 ? `~${safeText(String(duration))} giây` : "Chưa có thời lượng"}</span><span>${safeText(String(item.scene_count || 0))} scenes</span><span>v${safeText(String(item.revision || 1))}</span></div>${renderVideoStudioTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">${state === "approved" ? "Self-review đã đánh dấu" : state === "archived" ? "Đã archive · chỉ đọc" : "Đang biên tập"}</span>${canView && validVideoStudioPlanId(id) ? `<a class="portal-button portal-button--quiet" href="/video-studio/${encodeURIComponent(id)}">Mở plan <span aria-hidden="true">→</span></a>` : ""}</div></article>`;
+      return `<article class="portal-card portal-card-pad portal-video-plan-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(videoStudioFormatLabel(item.format))}</span><h3 class="portal-card-title">${safeText(String(item.title || videoStudioText("fallback.plan", "Kế hoạch video")))}</h3><p class="portal-card-subtitle">${safeText(String(item.brief_excerpt || item.objective || videoStudioText("fallback.noBrief", "Chưa có mô tả hiển thị.")))}</p></div>${videoStudioPlanStateBadge(state)}</div><div class="portal-video-plan-meta"><span>${safeText(String(item.aspect_ratio || "—"))}</span><span>${duration > 0 ? `~${safeText(String(duration))} ${safeText(videoStudioText("units.seconds", "giây"))}` : safeText(videoStudioText("card.noDuration", "Chưa có thời lượng"))}</span><span>${safeText(String(item.scene_count || 0))} ${safeText(videoStudioText("card.scenes", "cảnh"))}</span><span>v${safeText(String(item.revision || 1))}</span></div>${renderVideoStudioTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">${state === "approved" ? safeText(videoStudioText("card.reviewDone", "Đã hoàn tất tự rà soát")) : state === "archived" ? safeText(videoStudioText("card.archivedReadOnly", "Đã lưu trữ · chỉ đọc")) : safeText(videoStudioText("card.editing", "Đang biên tập"))}</span>${canView && validVideoStudioPlanId(id) ? `<a class="portal-button portal-button--quiet" href="/video-studio/${encodeURIComponent(id)}">${safeText(videoStudioText("actions.openPlan", "Mở kế hoạch"))} <span aria-hidden="true">→</span></a>` : ""}</div></article>`;
     }).join("")}</div>`;
   }
   function renderVideoStudio(page, context) {
     const canView = Boolean(context.capabilities && context.capabilities["video-studio-view"] === true);
     const canCreate = Boolean(context.capabilities && context.capabilities["video-plan-create"] === true);
-    if (!canView) return `<article class="portal-page portal-video-studio">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Video Production Studio đang được bảo vệ", "Đăng nhập bằng signed session để mở các video plan riêng tư. Route này không dùng dữ liệu từ legacy video workflow.", ICONS.video)}</section></article>`;
+    if (!canView) return `<article class="portal-page portal-video-studio">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(videoStudioText("access.title", "Không gian video đang được bảo vệ"), videoStudioText("access.description", "Đăng nhập bằng phiên Web hợp lệ để mở các kế hoạch video riêng tư. Route này không dùng dữ liệu từ luồng video cũ."), ICONS.video)}</section></article>`;
     const summary = context.videoStudioSummary && typeof context.videoStudioSummary === "object" ? context.videoStudioSummary : {};
     const plansSummary = summary.plans && typeof summary.plans === "object" ? summary.plans : {};
     const plans = Array.isArray(context.videoPlans) ? context.videoPlans.filter((item) => item && validVideoStudioPlanId(item.id)).slice(0, 100) : [];
@@ -17353,9 +17713,9 @@
     const inReview = Number(plansSummary.review || 0);
     const approved = Number(plansSummary.approved || 0);
     return `<article class="portal-page portal-video-studio">${renderHero(page, context)}
-      <section class="portal-video-studio-intro"><div><span class="portal-section-kicker">Web-native production planning</span><h2>Đi từ creative brief đến scene review, có kiểm soát.</h2><p>Tổ chức video plan, nhịp scene và self-review trong một không gian riêng tư. Các số liệu ở đây là metadata biên tập, không phải media đã được tạo hoặc xác minh.</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>Video plans</dd></div><div><dt>${safeText(String(inReview))}</dt><dd>Đang review</dd></div><div><dt>${safeText(String(approved))}</dt><dd>Self-review xong</dd></div></dl></section>
-      <div class="portal-video-studio-layout"><section class="portal-card portal-card-pad portal-video-studio-create"><div class="portal-card-header"><div><span class="portal-section-kicker">New production plan</span><h2 class="portal-card-title">Lập video plan</h2><p class="portal-card-subtitle">Bắt đầu bằng mục tiêu, audience, format, tỷ lệ và brief. Mỗi lần ghi được server kiểm tra phiên, CSRF, ownership, revision và idempotency.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="video-plan-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(videoStudioPlanFields(context), canCreate, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">Không nhập secret, chứng từ thanh toán, URL media hoặc dữ liệu riêng tư không cần thiết.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo video plan</button></div></form></section>${renderVideoStudioBoundary()}</div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Plan library</span><h2 class="portal-card-title">Tiếp tục công việc</h2><p class="portal-card-subtitle">Danh sách chỉ hiển thị metadata/excerpt thuộc signed account. Mở plan để nạp scene, estimate và history sau owner check.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-studio-refresh" data-portal-route="/video-studio">Làm mới</button></div>${renderVideoPlanCards(plans, context)}</section>
+      <section class="portal-video-studio-intro"><div><span class="portal-section-kicker">${safeText(videoStudioText("intro.kicker", "Lập kế hoạch video"))}</span><h2>${safeText(videoStudioText("intro.title", "Từ mô tả sáng tạo đến rà soát cảnh, có kiểm soát."))}</h2><p>${safeText(videoStudioText("intro.description", "Tổ chức kế hoạch video, nhịp cảnh và tự rà soát trong một không gian riêng tư. Các số liệu ở đây là metadata biên tập, không phải media đã được tạo hoặc xác minh."))}</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>${safeText(videoStudioText("stats.plans", "Kế hoạch video"))}</dd></div><div><dt>${safeText(String(inReview))}</dt><dd>${safeText(videoStudioText("stats.review", "Đang rà soát"))}</dd></div><div><dt>${safeText(String(approved))}</dt><dd>${safeText(videoStudioText("stats.approved", "Đã tự rà soát"))}</dd></div></dl></section>
+      <div class="portal-video-studio-layout"><section class="portal-card portal-card-pad portal-video-studio-create"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(videoStudioText("create.kicker", "Kế hoạch mới"))}</span><h2 class="portal-card-title">${safeText(videoStudioText("create.title", "Lập kế hoạch video"))}</h2><p class="portal-card-subtitle">${safeText(videoStudioText("create.description", "Bắt đầu bằng mục tiêu, đối tượng, định dạng, tỷ lệ và mô tả. Mỗi lần ghi được máy chủ kiểm tra phiên, CSRF, quyền sở hữu, phiên bản và chống gửi lặp."))}</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="video-plan-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(videoStudioPlanFields(context), canCreate, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(videoStudioText("create.note", "Không nhập bí mật, chứng từ thanh toán, URL media hoặc dữ liệu riêng tư không cần thiết."))}</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>${safeText(videoStudioText("create.submit", "Tạo kế hoạch video"))}</button></div></form></section>${renderVideoStudioBoundary()}</div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(videoStudioText("library.kicker", "Thư viện kế hoạch"))}</span><h2 class="portal-card-title">${safeText(videoStudioText("library.title", "Tiếp tục công việc"))}</h2><p class="portal-card-subtitle">${safeText(videoStudioText("library.description", "Danh sách chỉ hiển thị metadata và trích đoạn thuộc tài khoản đã xác minh. Mở kế hoạch để nạp cảnh, ước tính và lịch sử sau khi kiểm tra quyền sở hữu."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-studio-refresh" data-portal-route="/video-studio">${safeText(videoStudioText("library.refresh", "Làm mới"))}</button></div>${renderVideoPlanCards(plans, context)}</section>
     </article>`;
   }
   function videoRuntimeEstimateMarkup(estimate) {
@@ -17364,8 +17724,8 @@
     const sceneTotal = Number(source.scene_duration_seconds || source.total_scene_duration_seconds || source.scene_seconds || 0);
     const delta = Number(source.delta_seconds || (target > 0 && sceneTotal >= 0 ? sceneTotal - target : NaN));
     const status = String(source.status || (target > 0 ? "ready" : "guarded"));
-    const deltaText = Number.isFinite(delta) ? `${delta > 0 ? "+" : ""}${delta} giây` : "Chưa có so sánh";
-    return `<section class="portal-card portal-card-pad portal-video-runtime-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Runtime estimate</span><h2 class="portal-card-title">Kiểm tra nhịp scene</h2><p class="portal-card-subtitle">Estimate chỉ cộng metadata thời lượng của plan và scene để hỗ trợ review. Nó không suy diễn hay xác nhận media.</p></div>${badge(["ready", "guarded", "review"].includes(status) ? status : "guarded")}</div><div class="portal-video-runtime-grid"><div><small>Target</small><strong>${target > 0 ? `${safeText(String(target))} giây` : "Chưa khai báo"}</strong></div><div><small>Tổng scene</small><strong>${sceneTotal > 0 ? `${safeText(String(sceneTotal))} giây` : "Chưa có scene"}</strong></div><div><small>Chênh lệch</small><strong>${safeText(deltaText)}</strong></div></div></section>`;
+    const deltaText = Number.isFinite(delta) ? `${delta > 0 ? "+" : ""}${delta} ${videoStudioText("units.seconds", "giây")}` : videoStudioText("runtime.noComparison", "Chưa có so sánh");
+    return `<section class="portal-card portal-card-pad portal-video-runtime-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(videoStudioText("runtime.kicker", "Ước tính thời lượng"))}</span><h2 class="portal-card-title">${safeText(videoStudioText("runtime.title", "Kiểm tra nhịp cảnh"))}</h2><p class="portal-card-subtitle">${safeText(videoStudioText("runtime.description", "Ước tính chỉ cộng metadata thời lượng của kế hoạch và cảnh để hỗ trợ rà soát. Không suy diễn hoặc xác nhận media."))}</p></div>${badge(["ready", "guarded", "review"].includes(status) ? status : "guarded")}</div><div class="portal-video-runtime-grid"><div><small>${safeText(videoStudioText("runtime.target", "Mục tiêu"))}</small><strong>${target > 0 ? `${safeText(String(target))} ${safeText(videoStudioText("units.seconds", "giây"))}` : safeText(videoStudioText("runtime.notDeclared", "Chưa khai báo"))}</strong></div><div><small>${safeText(videoStudioText("runtime.sceneTotal", "Tổng cảnh"))}</small><strong>${sceneTotal > 0 ? `${safeText(String(sceneTotal))} ${safeText(videoStudioText("units.seconds", "giây"))}` : safeText(videoStudioText("runtime.noScene", "Chưa có cảnh"))}</strong></div><div><small>${safeText(videoStudioText("runtime.delta", "Chênh lệch"))}</small><strong>${safeText(deltaText)}</strong></div></div></section>`;
   }
   function renderVideoSceneCard(scene, plan, context, route, order, total) {
     const sceneId = String(scene.id || "");
@@ -17379,10 +17739,10 @@
     const canReorder = Boolean(context.capabilities && context.capabilities["video-scene-reorder"] === true && active && planWritable);
     const versions = Array.isArray(scene.versions) ? scene.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 20) : [];
     const stateAction = active
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="video-scene-archive" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-video-scene-id="${safeText(sceneId)}" data-video-scene-revision="${safeText(String(scene.revision))}" data-portal-confirm="Archive scene này? History riêng tư vẫn được giữ để khôi phục."${canArchive ? "" : " disabled"}>Archive</button>`
-      : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="video-scene-restore" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-video-scene-id="${safeText(sceneId)}" data-video-scene-revision="${safeText(String(scene.revision))}"${canRestore ? "" : " disabled"}>Khôi phục</button>`;
-    const versionsMarkup = versions.length ? `<div class="portal-video-scene-history"><strong>Lịch sử scene</strong>${versions.map((version) => `<div><span>v${safeText(String(version.revision))} · ${safeText(String(version.created_at || "—"))}</span>${Number(version.revision) === Number(scene.revision) ? "<em>Đang mở</em>" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="video-scene-restore-version" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-video-scene-id="${safeText(sceneId)}" data-video-scene-revision="${safeText(String(scene.revision))}" data-video-scene-version="${safeText(String(version.revision))}" data-portal-confirm="Khôi phục v${safeText(String(version.revision))} thành một revision scene mới?"${canRestoreVersion ? "" : " disabled"}>Khôi phục v${safeText(String(version.revision))}</button>`}</div>`).join("")}</div>` : "";
-    return `<article class="portal-video-scene-card${active ? "" : " is-archived"}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(displayOrder)} · ${safeText(videoStudioSceneTypeLabel(scene.scene_type))}</span><h3 class="portal-card-title">${safeText(String(scene.title || "Scene"))}</h3><p class="portal-card-subtitle">${safeText(String(scene.visual_direction || scene.narration || "Chưa có direction hiển thị."))}</p></div>${badge(active ? "ready" : "archived")}</div><div class="portal-video-scene-meta"><span>~${safeText(String(scene.duration_seconds || 0))} giây</span><span>v${safeText(String(scene.revision || 1))}</span><span>${safeText(String(scene.transition || "Không transition"))}</span></div>${renderVideoStudioTags(scene.tags)}<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-scene-reorder" data-video-scene-direction="up" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-video-scene-id="${safeText(sceneId)}"${canReorder && order > 0 ? "" : " disabled"}>↑</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-scene-reorder" data-video-scene-direction="down" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-video-scene-id="${safeText(sceneId)}"${canReorder && order >= 0 && order < total - 1 ? "" : " disabled"}>↓</button>${stateAction}</div><form class="portal-form portal-video-scene-form" data-portal-form data-portal-action="video-scene-update" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-video-scene-id="${safeText(sceneId)}" data-video-scene-revision="${safeText(String(scene.revision))}" novalidate>${renderFields(videoStudioSceneFields(), canUpdate, context, videoStudioSceneValues(scene))}<div class="portal-form-footer"><span class="portal-form-note">Mỗi lần lưu tạo revision; không biến direction thành media hay kết quả.</span><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu scene</button></div></form>${versionsMarkup}</article>`;
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="video-scene-archive" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-video-scene-id="${safeText(sceneId)}" data-video-scene-revision="${safeText(String(scene.revision))}" data-portal-confirm="${safeText(videoStudioText("scene.confirmArchive", "Lưu trữ cảnh này? Lịch sử riêng tư vẫn được giữ để khôi phục."))}"${canArchive ? "" : " disabled"}>${safeText(videoStudioText("actions.archive", "Lưu trữ"))}</button>`
+      : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="video-scene-restore" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-video-scene-id="${safeText(sceneId)}" data-video-scene-revision="${safeText(String(scene.revision))}"${canRestore ? "" : " disabled"}>${safeText(videoStudioText("actions.restore", "Khôi phục"))}</button>`;
+    const versionsMarkup = versions.length ? `<div class="portal-video-scene-history"><strong>${safeText(videoStudioText("scene.history", "Lịch sử cảnh"))}</strong>${versions.map((version) => `<div><span>v${safeText(String(version.revision))} · ${safeText(String(version.created_at || "—"))}</span>${Number(version.revision) === Number(scene.revision) ? `<em>${safeText(videoStudioText("scene.current", "Đang mở"))}</em>` : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="video-scene-restore-version" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-video-scene-id="${safeText(sceneId)}" data-video-scene-revision="${safeText(String(scene.revision))}" data-video-scene-version="${safeText(String(version.revision))}" data-portal-confirm="${safeText(videoStudioText("scene.confirmRestoreVersion", `Khôi phục v${String(version.revision)} thành một phiên bản cảnh mới?`))}"${canRestoreVersion ? "" : " disabled"}>${safeText(videoStudioText("actions.restoreVersion", "Khôi phục phiên bản"))} v${safeText(String(version.revision))}</button>`}</div>`).join("")}</div>` : "";
+    return `<article class="portal-video-scene-card${active ? "" : " is-archived"}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(displayOrder)} · ${safeText(videoStudioSceneTypeLabel(scene.scene_type))}</span><h3 class="portal-card-title">${safeText(String(scene.title || videoStudioText("fallback.scene", "Cảnh")))}</h3><p class="portal-card-subtitle">${safeText(String(scene.visual_direction || scene.narration || videoStudioText("fallback.noDirection", "Chưa có định hướng hiển thị.")))}</p></div>${badge(active ? "ready" : "archived")}</div><div class="portal-video-scene-meta"><span>~${safeText(String(scene.duration_seconds || 0))} ${safeText(videoStudioText("units.seconds", "giây"))}</span><span>v${safeText(String(scene.revision || 1))}</span><span>${safeText(String(scene.transition || videoStudioText("scene.noTransition", "Không có chuyển cảnh")))}</span></div>${renderVideoStudioTags(scene.tags)}<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" aria-label="${safeText(videoStudioText("scene.moveUp", "Đưa cảnh lên"))}" data-portal-action="video-scene-reorder" data-video-scene-direction="up" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-video-scene-id="${safeText(sceneId)}"${canReorder && order > 0 ? "" : " disabled"}>↑</button><button class="portal-button portal-button--quiet" type="button" aria-label="${safeText(videoStudioText("scene.moveDown", "Đưa cảnh xuống"))}" data-portal-action="video-scene-reorder" data-video-scene-direction="down" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-video-scene-id="${safeText(sceneId)}"${canReorder && order >= 0 && order < total - 1 ? "" : " disabled"}>↓</button>${stateAction}</div><form class="portal-form portal-video-scene-form" data-portal-form data-portal-action="video-scene-update" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-video-scene-id="${safeText(sceneId)}" data-video-scene-revision="${safeText(String(scene.revision))}" novalidate>${renderFields(videoStudioSceneFields(), canUpdate, context, videoStudioSceneValues(scene))}<div class="portal-form-footer"><span class="portal-form-note">${safeText(videoStudioText("scene.formNote", "Mỗi lần lưu tạo phiên bản mới; định hướng không trở thành media hay kết quả."))}</span><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>${safeText(videoStudioText("actions.saveScene", "Lưu cảnh"))}</button></div></form>${versionsMarkup}</article>`;
   }
   function renderVideoStudioDetail(page, context) {
     const detail = context.videoPlanDetail && typeof context.videoPlanDetail === "object" ? context.videoPlanDetail : {};
@@ -17390,9 +17750,9 @@
     const canView = Boolean(context.capabilities && context.capabilities["video-studio-view"] === true);
     if (!canView || !plan) {
       const state = String(context.videoStudioReadState || "guarded");
-      const title = !canView ? "Video Production Studio đang được bảo vệ" : state === "loading" ? "Đang nạp video plan riêng tư" : state === "failed" ? "Chưa thể nạp video plan" : "Không tìm thấy video plan";
-      const text = !canView ? "Đăng nhập bằng signed session để mở plan thuộc account hiện tại." : "Server cần xác minh owner trước khi hiển thị brief, scene và history; dữ liệu cũ không được giữ trong browser.";
-      return `<article class="portal-page portal-video-studio-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(title, text, ICONS.video)}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/video-studio">Về Video Studio</a></div></section></article>`;
+      const title = !canView ? videoStudioText("access.title", "Không gian video đang được bảo vệ") : state === "loading" ? videoStudioText("detail.loadingTitle", "Đang nạp kế hoạch video riêng tư") : state === "failed" ? videoStudioText("detail.failedTitle", "Chưa thể nạp kế hoạch video") : videoStudioText("detail.notFoundTitle", "Không tìm thấy kế hoạch video");
+      const text = !canView ? videoStudioText("access.description", "Đăng nhập bằng phiên Web hợp lệ để mở kế hoạch thuộc tài khoản hiện tại.") : videoStudioText("detail.accessDescription", "Máy chủ cần xác minh quyền sở hữu trước khi hiển thị mô tả, cảnh và lịch sử; dữ liệu cũ không được giữ trong trình duyệt.");
+      return `<article class="portal-page portal-video-studio-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(title, text, ICONS.video)}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/video-studio">${safeText(videoStudioText("actions.backToStudio", "Về không gian video"))}</a></div></section></article>`;
     }
     const route = page.routePath || page.path;
     const planState = ["draft", "review", "approved", "archived"].includes(String(plan.state || "")) ? String(plan.state) : "guarded";
@@ -17406,24 +17766,24 @@
     const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 100) : [];
     const events = Array.isArray(detail.events) ? detail.events.filter((item) => item && typeof item === "object").slice(0, 24) : [];
     const stateActions = planState === "archived"
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="video-plan-state" data-video-plan-state="draft" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-portal-confirm="Khôi phục plan này về Draft để tiếp tục biên tập?"${Boolean(context.capabilities && context.capabilities["video-plan-lifecycle"] === true) ? "" : " disabled"}>Khôi phục về Draft</button>`
-      : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="video-plan-state" data-video-plan-state="${planState === "draft" ? "review" : "draft"}" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-portal-confirm="${planState === "draft" ? "Chuyển plan sang Self-review?" : "Trả plan về Draft để tiếp tục biên tập?"}"${canState ? "" : " disabled"}>${planState === "draft" ? "Bắt đầu self-review" : "Trả về Draft"}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-plan-state" data-video-plan-state="approved" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-portal-confirm="Đánh dấu self-review hoàn tất? Điều này không tạo media hoặc delivery."${canState && planState === "review" ? "" : " disabled"}>Đánh dấu review xong</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-plan-state" data-video-plan-state="archived" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-portal-confirm="Archive video plan này? Brief, scene và history vẫn được giữ riêng tư."${canState ? "" : " disabled"}>Archive plan</button>`;
-    const versionMarkup = versions.length ? `<div class="portal-video-version-list">${versions.map((version) => `<article><div><strong>v${safeText(String(version.revision))} · ${safeText(String(version.title || "Video plan"))}</strong><p>${safeText(String(version.brief_excerpt || version.objective || ""))}</p><small>${safeText(String(version.created_at || "—"))}</small></div>${Number(version.revision) === Number(plan.revision) ? "<span class=\"portal-form-note\">Đang mở</span>" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="video-plan-restore-version" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-video-plan-version="${safeText(String(version.revision))}" data-portal-confirm="Khôi phục v${safeText(String(version.revision))} thành một revision plan mới?"${canRestoreVersion ? "" : " disabled"}>Khôi phục v${safeText(String(version.revision))}</button>`}</article>`).join("")}</div>` : renderEmpty("Chưa có history", "Version đầu tiên xuất hiện khi server lưu video plan.", "↺");
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="video-plan-state" data-video-plan-state="draft" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-portal-confirm="${safeText(videoStudioText("detail.confirm.restoreDraft", "Khôi phục kế hoạch về bản nháp để tiếp tục biên tập?"))}"${Boolean(context.capabilities && context.capabilities["video-plan-lifecycle"] === true) ? "" : " disabled"}>${safeText(videoStudioText("actions.restoreDraft", "Khôi phục về bản nháp"))}</button>`
+      : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="video-plan-state" data-video-plan-state="${planState === "draft" ? "review" : "draft"}" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-portal-confirm="${safeText(videoStudioText(planState === "draft" ? "detail.confirm.startReview" : "detail.confirm.returnDraft", planState === "draft" ? "Chuyển kế hoạch sang tự rà soát?" : "Trả kế hoạch về bản nháp để tiếp tục biên tập?"))}"${canState ? "" : " disabled"}>${safeText(videoStudioText(planState === "draft" ? "actions.startReview" : "actions.returnDraft", planState === "draft" ? "Bắt đầu tự rà soát" : "Trả về bản nháp"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-plan-state" data-video-plan-state="approved" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-portal-confirm="${safeText(videoStudioText("detail.confirm.completeReview", "Đánh dấu đã hoàn tất tự rà soát? Thao tác này không tạo media hoặc bàn giao."))}"${canState && planState === "review" ? "" : " disabled"}>${safeText(videoStudioText("actions.completeReview", "Đánh dấu đã rà soát xong"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-plan-state" data-video-plan-state="archived" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-portal-confirm="${safeText(videoStudioText("detail.confirm.archivePlan", "Lưu trữ kế hoạch video này? Mô tả, cảnh và lịch sử vẫn được giữ riêng tư."))}"${canState ? "" : " disabled"}>${safeText(videoStudioText("actions.archivePlan", "Lưu trữ kế hoạch"))}</button>`;
+    const versionMarkup = versions.length ? `<div class="portal-video-version-list">${versions.map((version) => `<article><div><strong>v${safeText(String(version.revision))} · ${safeText(String(version.title || videoStudioText("fallback.plan", "Kế hoạch video")))}</strong><p>${safeText(String(version.brief_excerpt || version.objective || ""))}</p><small>${safeText(String(version.created_at || "—"))}</small></div>${Number(version.revision) === Number(plan.revision) ? `<span class="portal-form-note">${safeText(videoStudioText("detail.current", "Đang mở"))}</span>` : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="video-plan-restore-version" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" data-video-plan-version="${safeText(String(version.revision))}" data-portal-confirm="${safeText(videoStudioText("detail.confirm.restoreVersion", "Khôi phục phiên bản này thành một phiên bản kế hoạch mới?"))}"${canRestoreVersion ? "" : " disabled"}>${safeText(videoStudioText("actions.restoreVersion", "Khôi phục phiên bản"))} v${safeText(String(version.revision))}</button>`}</article>`).join("")}</div>` : renderEmpty(videoStudioText("detail.emptyHistory.title", "Chưa có lịch sử"), videoStudioText("detail.emptyHistory.description", "Phiên bản đầu tiên xuất hiện khi máy chủ lưu kế hoạch video."), "↺");
     let activeSceneOrder = 0;
     const sceneMarkup = scenes.length ? scenes.map((scene) => {
       const active = String(scene.state || "active") === "active";
       const order = active ? activeSceneOrder++ : -1;
       return renderVideoSceneCard(scene, plan, context, route, order, activeScenes.length);
-    }).join("") : renderEmpty("Chưa có scene", "Thêm scene thủ công để bắt đầu sắp nhịp và self-review.", ICONS.video);
+    }).join("") : renderEmpty(videoStudioText("detail.emptyScenes.title", "Chưa có cảnh"), videoStudioText("detail.emptyScenes.description", "Thêm cảnh thủ công để bắt đầu sắp nhịp và tự rà soát."), ICONS.video);
     const estimateMarkup = planState === "archived"
-      ? `<section class="portal-card portal-card-pad portal-video-runtime-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Runtime estimate</span><h2 class="portal-card-title">Estimate đã được khóa</h2><p class="portal-card-subtitle">Plan đang archive nên scene và estimate không được nạp hay tính lại. Khôi phục về Draft khi bạn muốn tiếp tục review.</p></div>${badge("archived")}</div></section>`
+      ? `<section class="portal-card portal-card-pad portal-video-runtime-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(videoStudioText("runtime.kicker", "Ước tính thời lượng"))}</span><h2 class="portal-card-title">${safeText(videoStudioText("runtime.lockedTitle", "Đã khóa ước tính"))}</h2><p class="portal-card-subtitle">${safeText(videoStudioText("runtime.lockedDescription", "Kế hoạch đang lưu trữ nên cảnh và ước tính không được nạp hoặc tính lại. Khôi phục về bản nháp nếu muốn tiếp tục rà soát."))}</p></div>${badge("archived")}</div></section>`
       : videoRuntimeEstimateMarkup(detail.estimate || context.videoPlanEstimate);
     return `<article class="portal-page portal-video-studio-detail">${renderHero(page, context)}
-      <section class="portal-video-studio-detail-summary"><div><span class="portal-section-kicker">${safeText(videoStudioFormatLabel(plan.format))}</span><h2>${safeText(String(plan.title || "Video plan"))}</h2><p>${safeText(String(plan.objective || plan.brief_excerpt || "Chưa có mục tiêu hiển thị."))}</p>${renderVideoStudioTags(plan.tags)}</div><dl><div><dt>Trạng thái</dt><dd>${safeText(videoStudioPlanStateLabel(planState))}</dd></div><div><dt>Revision</dt><dd>v${safeText(String(plan.revision || 1))}</dd></div><div><dt>Scenes</dt><dd>${safeText(String(activeScenes.length))}</dd></div></dl></section>
-      <div class="portal-video-studio-detail-grid"><section class="portal-card portal-card-pad portal-video-studio-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">Plan editor</span><h2 class="portal-card-title">Brief & review context</h2><p class="portal-card-subtitle">Lưu bằng optimistic revision; self-review và archive là trạng thái server-side, không được browser tự suy diễn.</p></div>${videoStudioPlanStateBadge(planState)}</div><form class="portal-form" data-portal-form data-portal-action="video-plan-update" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" novalidate>${renderFields(videoStudioPlanFields(context), canUpdate, context, videoStudioPlanValues(plan))}<div class="portal-form-footer"><span class="portal-form-note">Plan đã approved hoặc archived sẽ khóa editor cho tới khi server xác nhận một trạng thái có thể biên tập.</span><div class="portal-inline-actions">${stateActions}<button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu revision plan</button></div></div></form></section>${estimateMarkup}</div>
-      <section class="portal-card portal-card-pad portal-video-scene-create"><div class="portal-card-header"><div><span class="portal-section-kicker">Scene board</span><h2 class="portal-card-title">Thêm scene thủ công</h2><p class="portal-card-subtitle">Mỗi scene có direction, thời lượng và history riêng; thứ tự scene được server kiểm tra lại trước khi lưu.</p></div>${badge(canSceneCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="video-scene-create" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" novalidate>${renderFields(videoStudioSceneFields(), canSceneCreate, context, { scene_type: "hook", duration_seconds: "5" })}<div class="portal-form-footer"><span class="portal-form-note">Scene chỉ là metadata biên tập; không chứa source file, media URL hoặc output.</span><button class="portal-button portal-button--primary" type="submit"${canSceneCreate ? "" : " disabled"}>Thêm scene</button></div></form></section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Ordered scene board</span><h2 class="portal-card-title">Scenes & nhịp kể chuyện</h2><p class="portal-card-subtitle">Dùng mũi tên để thay thứ tự active scene. Thao tác gửi toàn bộ sequence cùng revision của plan để tránh ghi đè im lặng.</p></div></div><div class="portal-video-scene-grid">${sceneMarkup}</div></section>
-      <div class="portal-video-studio-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử video plan</h2><p class="portal-card-subtitle">Khôi phục version tạo revision mới, không xóa history cũ.</p></div></div>${versionMarkup}</section><section class="portal-card portal-card-pad portal-video-studio-activity"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Feed chỉ hiển thị nhãn, revision và thời điểm; không đưa brief hay scene text vào audit view.</p></div></div>${events.length ? `<div class="portal-video-studio-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(videoStudioEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : "<p class=\"portal-form-note\">Chưa có hoạt động được ghi nhận.</p>"}</section></div>
+      <section class="portal-video-studio-detail-summary"><div><span class="portal-section-kicker">${safeText(videoStudioFormatLabel(plan.format))}</span><h2>${safeText(String(plan.title || videoStudioText("fallback.plan", "Kế hoạch video")))}</h2><p>${safeText(String(plan.objective || plan.brief_excerpt || videoStudioText("fallback.noObjective", "Chưa có mục tiêu hiển thị.")))}</p>${renderVideoStudioTags(plan.tags)}</div><dl><div><dt>${safeText(videoStudioText("detail.statusLabel", "Trạng thái"))}</dt><dd>${safeText(videoStudioPlanStateLabel(planState))}</dd></div><div><dt>${safeText(videoStudioText("detail.revision", "Phiên bản"))}</dt><dd>v${safeText(String(plan.revision || 1))}</dd></div><div><dt>${safeText(videoStudioText("detail.sceneCount", "Số cảnh"))}</dt><dd>${safeText(String(activeScenes.length))}</dd></div></dl></section>
+      <div class="portal-video-studio-detail-grid"><section class="portal-card portal-card-pad portal-video-studio-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(videoStudioText("detail.editor.kicker", "Biên tập kế hoạch"))}</span><h2 class="portal-card-title">${safeText(videoStudioText("detail.editor.title", "Mô tả và bối cảnh rà soát"))}</h2><p class="portal-card-subtitle">${safeText(videoStudioText("detail.editor.description", "Lưu bằng phiên bản lạc quan; trạng thái tự rà soát và lưu trữ do máy chủ quản lý, không do trình duyệt tự suy diễn."))}</p></div>${videoStudioPlanStateBadge(planState)}</div><form class="portal-form" data-portal-form data-portal-action="video-plan-update" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" novalidate>${renderFields(videoStudioPlanFields(context), canUpdate, context, videoStudioPlanValues(plan))}<div class="portal-form-footer"><span class="portal-form-note">${safeText(videoStudioText("detail.editor.note", "Kế hoạch đã hoàn tất rà soát hoặc đã lưu trữ sẽ khóa biên tập cho tới khi máy chủ xác nhận trạng thái có thể sửa."))}</span><div class="portal-inline-actions">${stateActions}<button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>${safeText(videoStudioText("actions.savePlan", "Lưu phiên bản kế hoạch"))}</button></div></div></form></section>${estimateMarkup}</div>
+      <section class="portal-card portal-card-pad portal-video-scene-create"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(videoStudioText("scene.createKicker", "Bảng cảnh"))}</span><h2 class="portal-card-title">${safeText(videoStudioText("scene.createTitle", "Thêm cảnh thủ công"))}</h2><p class="portal-card-subtitle">${safeText(videoStudioText("scene.createDescription", "Mỗi cảnh có định hướng, thời lượng và lịch sử riêng; máy chủ kiểm tra lại thứ tự trước khi lưu."))}</p></div>${badge(canSceneCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="video-scene-create" data-portal-route="${safeText(route)}" data-video-plan-id="${safeText(String(plan.id))}" data-video-plan-revision="${safeText(String(plan.revision))}" novalidate>${renderFields(videoStudioSceneFields(), canSceneCreate, context, { scene_type: "hook", duration_seconds: "5" })}<div class="portal-form-footer"><span class="portal-form-note">${safeText(videoStudioText("scene.metadataNote", "Cảnh chỉ là metadata biên tập; không chứa tệp nguồn, URL media hoặc kết quả."))}</span><button class="portal-button portal-button--primary" type="submit"${canSceneCreate ? "" : " disabled"}>${safeText(videoStudioText("actions.addScene", "Thêm cảnh"))}</button></div></form></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(videoStudioText("scene.orderedKicker", "Bảng cảnh theo thứ tự"))}</span><h2 class="portal-card-title">${safeText(videoStudioText("scene.orderedTitle", "Cảnh và nhịp kể chuyện"))}</h2><p class="portal-card-subtitle">${safeText(videoStudioText("scene.orderedDescription", "Dùng mũi tên để đổi thứ tự cảnh đang hoạt động. Thao tác gửi toàn bộ chuỗi cùng phiên bản kế hoạch để tránh ghi đè im lặng."))}</p></div></div><div class="portal-video-scene-grid">${sceneMarkup}</div></section>
+      <div class="portal-video-studio-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(videoStudioText("history.kicker", "Lịch sử phiên bản"))}</span><h2 class="portal-card-title">${safeText(videoStudioText("history.title", "Lịch sử kế hoạch video"))}</h2><p class="portal-card-subtitle">${safeText(videoStudioText("history.description", "Khôi phục phiên bản sẽ tạo phiên bản mới, không xóa lịch sử cũ."))}</p></div></div>${versionMarkup}</section><section class="portal-card portal-card-pad portal-video-studio-activity"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(videoStudioText("activity.kicker", "Dòng hoạt động an toàn"))}</span><h2 class="portal-card-title">${safeText(videoStudioText("activity.title", "Hoạt động gần đây"))}</h2><p class="portal-card-subtitle">${safeText(videoStudioText("activity.description", "Chỉ hiển thị nhãn, phiên bản và thời điểm; không đưa mô tả hoặc nội dung cảnh vào nhật ký."))}</p></div></div>${events.length ? `<div class="portal-video-studio-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(videoStudioEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : `<p class="portal-form-note">${safeText(videoStudioText("activity.empty", "Chưa có hoạt động được ghi nhận."))}</p>`}</section></div>
       ${renderVideoStudioBoundary()}
     </article>`;
   }
@@ -20385,12 +20745,12 @@
     const next = pagination.has_more === true && Number.isInteger(pagination.next_offset) && pagination.next_offset > offset ? pagination.next_offset : null;
     const range = returned
       ? projectPackageText("pagination.range", "Hiển thị {start}–{end}", { start: String(offset + 1), end: String(offset + returned) })
-      : projectPackageText("pagination.empty", "Không có Project Package ở trang này");
+      : projectPackageText("pagination.empty", "Không có gói dự án ở trang này");
     const disabled = enabled ? "" : " disabled";
     const projectAttribute = selectedProjectId ? ` data-project-package-project-id="${safeText(selectedProjectId)}"` : "";
     const previousButton = previous === null ? "" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="project-package-page" data-portal-route="${safeText(route)}" data-project-package-offset="${safeText(String(previous))}"${projectAttribute}${disabled}>${safeText(projectPackageText("pagination.previous", "← Trang trước"))}</button>`;
     const nextButton = next === null ? "" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="project-package-page" data-portal-route="${safeText(route)}" data-project-package-offset="${safeText(String(next))}"${projectAttribute}${disabled}>${safeText(projectPackageText("pagination.next", "Trang sau →"))}</button>`;
-    return `<nav class="portal-support-pagination" aria-label="${safeText(projectPackageText("pagination.label", "Phân trang Project Package"))}"><span>${safeText(range)}</span><div>${previousButton}${nextButton}</div></nav>`;
+    return `<nav class="portal-support-pagination" aria-label="${safeText(projectPackageText("pagination.label", "Phân trang gói dự án"))}"><span>${safeText(range)}</span><div>${previousButton}${nextButton}</div></nav>`;
   }
 
   function projectPackageDownloadPath(item) {
@@ -20401,14 +20761,14 @@
   }
 
   function renderProjectPackageCards(items, context) {
-    if (!items.length) return renderEmpty(projectPackageText("panel.emptyTitle", "Chưa có Project Package"), projectPackageText("panel.emptyBody", "Khi bạn xuất package, Web App sẽ tạo một snapshot ZIP bất biến sau khi kiểm tra file private. Không tạo Job Bot hoặc delivery giả."), "▤");
+    if (!items.length) return renderEmpty(projectPackageText("panel.emptyTitle", "Chưa có gói dự án"), projectPackageText("panel.emptyBody", "Khi bạn xuất gói, Web App sẽ tạo một ảnh chụp ZIP bất biến sau khi kiểm tra tệp riêng tư. Không tạo tác vụ Bot hoặc tệp giao giả."), "▤");
     return `<div class="portal-project-package-grid">${items.map((item) => {
       const state = String(item.state || "guarded");
       const downloadPath = projectPackageDownloadPath(item);
       const events = context.projectPackageEvents && context.projectPackageEvents[String(item.id)];
       const latestEvent = Array.isArray(events) && events.length ? events[events.length - 1] : null;
-      const filename = String(item.original_filename || projectPackageText("card.defaultFilename", "Project Package riêng tư"));
-      return `<article class="portal-card portal-card-pad portal-project-package-card"><div class="portal-card-header"><div class="portal-project-package-title"><span class="portal-project-package-icon" aria-hidden="true">ZIP</span><div><h3 class="portal-card-title">${safeText(filename)}</h3><p class="portal-card-subtitle">${safeText(String(item.document_count || 0))} ${safeText(projectPackageText("card.documents", "Studio Documents"))} · ${safeText(String(item.asset_reference_count || 0))} ${safeText(projectPackageText("card.assetReferences", "tham chiếu Asset Vault"))}</p></div></div>${badge(state)}</div><dl class="portal-project-package-meta"><div><dt>${safeText(projectPackageText("card.artifact", "Artifact"))}</dt><dd>${safeText(item.byte_size ? vaultBytes(item.byte_size) : projectPackageText("card.checking", "Đang kiểm tra"))}</dd></div><div><dt>${safeText(projectPackageText("card.updated", "Cập nhật"))}</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div><div><dt>${safeText(projectPackageText("card.flow", "Luồng"))}</dt><dd>${safeText(latestEvent && latestEvent.state ? String(latestEvent.state) : state)}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${safeText(projectPackageText("card.download", "Tải ZIP"))} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${safeText(projectPackageText("card.pending", "ZIP chỉ mở tải sau khi server xác minh byte size và integrity."))}</span>`}</div></article>`;
+      const filename = String(item.original_filename || projectPackageText("card.defaultFilename", "Gói dự án riêng tư"));
+      return `<article class="portal-card portal-card-pad portal-project-package-card"><div class="portal-card-header"><div class="portal-project-package-title"><span class="portal-project-package-icon" aria-hidden="true">ZIP</span><div><h3 class="portal-card-title">${safeText(filename)}</h3><p class="portal-card-subtitle">${safeText(String(item.document_count || 0))} ${safeText(projectPackageText("card.documents", "Tài liệu Studio"))} · ${safeText(String(item.asset_reference_count || 0))} ${safeText(projectPackageText("card.assetReferences", "tham chiếu kho tài sản"))}</p></div></div>${badge(state)}</div><dl class="portal-project-package-meta"><div><dt>${safeText(projectPackageText("card.artifact", "Tệp kết quả"))}</dt><dd>${safeText(item.byte_size ? vaultBytes(item.byte_size) : projectPackageText("card.checking", "Đang kiểm tra"))}</dd></div><div><dt>${safeText(projectPackageText("card.updated", "Cập nhật"))}</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div><div><dt>${safeText(projectPackageText("card.flow", "Luồng"))}</dt><dd>${safeText(latestEvent && latestEvent.state ? String(latestEvent.state) : state)}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${safeText(projectPackageText("card.download", "Tải ZIP"))} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${safeText(projectPackageText("card.pending", "ZIP chỉ mở tải sau khi máy chủ xác minh kích thước byte và tính toàn vẹn."))}</span>`}</div></article>`;
     }).join("")}</div>`;
   }
 
@@ -20417,27 +20777,27 @@
     const canExport = Boolean(context.capabilities && context.capabilities["project-package-export"] === true && String(project.state || "active") === "active");
     const canRefresh = Boolean(context.capabilities && context.capabilities["project-package-refresh"] === true);
     if (!canView) {
-      return `<section class="portal-card portal-card-pad portal-project-package-panel"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.package)}</span><div><h2>${safeText(projectPackageText("panel.guardTitle", "Project Package đang ở chế độ an toàn"))}</h2><p>${safeText(projectPackageText("panel.guardBody", "Xuất ZIP chỉ bật khi môi trường có persistent storage riêng. Không có fallback sang static, browser storage, Asset Vault hoặc Job Bot."))}</p><div class="portal-state-meta"><span>${safeText(projectPackageText("panel.guardSnapshot", "Snapshot thuộc Web"))}</span><span>${safeText(projectPackageText("panel.guardNoProvider", "Không có provider call"))}</span><span>${safeText(projectPackageText("panel.guardNoFakeOutput", "Không có output giả"))}</span></div></div></div></section>`;
+      return `<section class="portal-card portal-card-pad portal-project-package-panel"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.package)}</span><div><h2>${safeText(projectPackageText("panel.guardTitle", "Gói dự án đang ở chế độ an toàn"))}</h2><p>${safeText(projectPackageText("panel.guardBody", "Xuất ZIP chỉ bật khi môi trường có bộ nhớ lưu trữ bền vững riêng. Không có phương án dự phòng sang tệp tĩnh, bộ nhớ trình duyệt, kho tài sản hoặc tác vụ Bot."))}</p><div class="portal-state-meta"><span>${safeText(projectPackageText("panel.guardSnapshot", "Ảnh chụp trạng thái thuộc Web"))}</span><span>${safeText(projectPackageText("panel.guardNoProvider", "Không gọi nhà cung cấp"))}</span><span>${safeText(projectPackageText("panel.guardNoFakeOutput", "Không có kết quả giả"))}</span></div></div></div></section>`;
     }
     const route = page.routePath || page.path;
     const items = projectPackageItems(context, project.id);
-    return `<section class="portal-card portal-card-pad portal-project-package-panel"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(projectPackageText("panel.kicker", "Xuất bất biến"))}</span><h2 class="portal-card-title">${safeText(projectPackageText("panel.title", "Project Packages"))}</h2><p class="portal-card-subtitle">${safeText(projectPackageText("panel.body", "Đóng gói snapshot hiện tại của Project và Studio Document thành ZIP riêng tư. Asset Vault chỉ hiện metadata tham chiếu, không sao chép source blob."))}</p></div>${badge(canExport ? "ready" : "guarded")}</div><div class="portal-project-package-actions"><div><strong>${safeText(projectPackageText("panel.flow", "Snapshot → xác minh → tệp đính kèm"))}</strong><span>${safeText(projectPackageText("panel.flowBody", "Package và Web export không tạo Job Bot, charge Xu, PayOS hay provider request."))}</span></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="project-package-refresh" data-portal-route="${safeText(route)}" data-project-id="${safeText(String(project.id))}"${canRefresh ? "" : " disabled"}>${safeText(projectPackageText("panel.refresh", "Làm mới"))}</button><button class="portal-button portal-button--primary" type="button" data-portal-action="project-package-export" data-portal-route="${safeText(route)}" data-project-id="${safeText(String(project.id))}" data-portal-confirm="${safeText(projectPackageText("panel.exportConfirm", "Xuất Project Package sẽ tạo một snapshot ZIP bất biến của Studio Document hiện tại. Bạn có muốn tiếp tục?"))}"${canExport ? "" : " disabled"}>${safeText(projectPackageText("panel.create", "Xuất Project Package"))}</button></div></div><div class="portal-project-package-list">${renderProjectPackageCards(items, context)}${renderProjectPackagePagination(context, canView, route, project.id)}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/project-packages">${safeText(projectPackageText("panel.all", "Xem tất cả Project Packages →"))}</a></div></section>`;
+    return `<section class="portal-card portal-card-pad portal-project-package-panel"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(projectPackageText("panel.kicker", "Xuất bất biến"))}</span><h2 class="portal-card-title">${safeText(projectPackageText("panel.title", "Gói dự án"))}</h2><p class="portal-card-subtitle">${safeText(projectPackageText("panel.body", "Đóng gói ảnh chụp trạng thái hiện tại của dự án và tài liệu Studio thành ZIP riêng tư. Kho tài sản chỉ hiện siêu dữ liệu tham chiếu, không sao chép dữ liệu nguồn."))}</p></div>${badge(canExport ? "ready" : "guarded")}</div><div class="portal-project-package-actions"><div><strong>${safeText(projectPackageText("panel.flow", "Ảnh chụp trạng thái → xác minh → tệp đính kèm"))}</strong><span>${safeText(projectPackageText("panel.flowBody", "Gói dự án và bản xuất Web không tạo tác vụ Bot, trừ Xu, PayOS hay yêu cầu nhà cung cấp."))}</span></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="project-package-refresh" data-portal-route="${safeText(route)}" data-project-id="${safeText(String(project.id))}"${canRefresh ? "" : " disabled"}>${safeText(projectPackageText("panel.refresh", "Làm mới"))}</button><button class="portal-button portal-button--primary" type="button" data-portal-action="project-package-export" data-portal-route="${safeText(route)}" data-project-id="${safeText(String(project.id))}" data-portal-confirm="${safeText(projectPackageText("panel.exportConfirm", "Xuất gói dự án sẽ tạo một ảnh chụp ZIP bất biến của tài liệu Studio hiện tại. Bạn có muốn tiếp tục?"))}"${canExport ? "" : " disabled"}>${safeText(projectPackageText("panel.create", "Xuất gói dự án"))}</button></div></div><div class="portal-project-package-list">${renderProjectPackageCards(items, context)}${renderProjectPackagePagination(context, canView, route, project.id)}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/project-packages">${safeText(projectPackageText("panel.all", "Xem tất cả gói dự án →"))}</a></div></section>`;
   }
 
   function renderProjectPackages(page, context) {
     const canView = Boolean(context.capabilities && context.capabilities["project-package-view"] === true);
     const canRefresh = Boolean(context.capabilities && context.capabilities["project-package-refresh"] === true);
-    if (!canView) return `<article class="portal-page portal-project-packages">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.package)}</span><div><h2>${safeText(projectPackageText("page.guardTitle", "Project Packages chưa được bật"))}</h2><p>${safeText(projectPackageText("page.guardBody", "Capability này chỉ xuất hiện khi server có storage riêng, bền vững và không thuộc static/PWA cache."))}</p></div></div></section></article>`;
+    if (!canView) return `<article class="portal-page portal-project-packages">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.package)}</span><div><h2>${safeText(projectPackageText("page.guardTitle", "Gói dự án chưa được bật"))}</h2><p>${safeText(projectPackageText("page.guardBody", "Tính năng này chỉ xuất hiện khi máy chủ có bộ nhớ lưu trữ riêng, bền vững và không thuộc bộ nhớ đệm tĩnh/PWA."))}</p></div></div></section></article>`;
     const items = projectPackageItems(context);
     const projectNames = new Map((Array.isArray(context.projects) ? context.projects : [])
       .filter((project) => project && validProjectId(project.id))
-      .map((project) => [String(project.id), String(project.title || projectPackageText("page.defaultProject", "Project Web"))]));
+      .map((project) => [String(project.id), String(project.title || projectPackageText("page.defaultProject", "Dự án Web"))]));
     const cards = items.length ? `<div class="portal-project-package-grid">${items.map((item) => {
       const downloadPath = projectPackageDownloadPath(item);
-      const projectName = projectNames.get(String(item.project_id || "")) || projectPackageText("page.privateProject", "Project riêng tư");
-      return `<article class="portal-card portal-card-pad portal-project-package-card"><div class="portal-card-header"><div class="portal-project-package-title"><span class="portal-project-package-icon" aria-hidden="true">ZIP</span><div><h2 class="portal-card-title">${safeText(projectName)}</h2><p class="portal-card-subtitle">${safeText(String(item.original_filename || projectPackageText("page.defaultPackage", "Project Package")))}</p></div></div>${badge(String(item.state || "guarded"))}</div><dl class="portal-project-package-meta"><div><dt>${safeText(projectPackageText("card.documents", "Studio Documents"))}</dt><dd>${safeText(String(item.document_count || 0))}</dd></div><div><dt>${safeText(projectPackageText("card.artifact", "Artifact"))}</dt><dd>${safeText(item.byte_size ? vaultBytes(item.byte_size) : projectPackageText("card.checking", "Đang kiểm tra"))}</dd></div><div><dt>${safeText(projectPackageText("card.updated", "Cập nhật"))}</dt><dd>${safeText(String(item.completed_at || item.updated_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${safeText(projectPackageText("card.download", "Tải ZIP"))} <span aria-hidden="true">↓</span></a>` : `<a class="portal-button portal-button--quiet" href="/projects/${encodeURIComponent(String(item.project_id || ""))}">${safeText(projectPackageText("page.openProject", "Mở Project"))}</a>`}</div></article>`;
-    }).join("")}</div>` : renderEmpty(projectPackageText("page.emptyTitle", "Chưa có Project Package"), projectPackageText("page.emptyBody", "Mở một Project để xuất snapshot ZIP đầu tiên. Tính năng này độc lập với Bot và không tạo charge hay provider request."), "▤");
-    return `<article class="portal-page portal-project-packages">${renderHero(page, context)}<section class="portal-project-package-intro"><div><span class="portal-section-kicker">${safeText(projectPackageText("page.kicker", "Xuất Web riêng tư"))}</span><h2>${safeText(projectPackageText("page.introTitle", "Snapshot có thể giao, không trộn với Job Bot"))}</h2><p>${safeText(projectPackageText("page.introBody", "Mỗi Package là artifact ZIP bất biến tạo từ Project Web. File chỉ xuất hiện sau khi server kiểm tra storage riêng, byte size và integrity."))}</p></div><dl><div><dt>${safeText(String(items.length))}</dt><dd>${safeText(projectPackageText("page.accountCount", "Package thuộc account"))}</dd></div><div><dt>ZIP</dt><dd>${safeText(projectPackageText("page.privateAttachment", "Tệp đính kèm riêng tư"))}</dd></div></dl></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(projectPackageText("page.historyTitle", "Lịch sử Project Packages"))}</h2><p class="portal-card-subtitle">${safeText(projectPackageText("page.historyBody", "Không phải Gói dịch vụ, Tài sản Bot hay output provider. Chỉ snapshot Web-owned được kiểm tra."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="project-package-refresh" data-portal-route="/project-packages"${canRefresh ? "" : " disabled"}>${safeText(projectPackageText("panel.refresh", "Làm mới"))}</button></div>${cards}${renderProjectPackagePagination(context, canView, "/project-packages", "")}</section></article>`;
+      const projectName = projectNames.get(String(item.project_id || "")) || projectPackageText("page.privateProject", "Dự án riêng tư");
+      return `<article class="portal-card portal-card-pad portal-project-package-card"><div class="portal-card-header"><div class="portal-project-package-title"><span class="portal-project-package-icon" aria-hidden="true">ZIP</span><div><h2 class="portal-card-title">${safeText(projectName)}</h2><p class="portal-card-subtitle">${safeText(String(item.original_filename || projectPackageText("page.defaultPackage", "Gói dự án")))}</p></div></div>${badge(String(item.state || "guarded"))}</div><dl class="portal-project-package-meta"><div><dt>${safeText(projectPackageText("card.documents", "Tài liệu Studio"))}</dt><dd>${safeText(String(item.document_count || 0))}</dd></div><div><dt>${safeText(projectPackageText("card.artifact", "Tệp kết quả"))}</dt><dd>${safeText(item.byte_size ? vaultBytes(item.byte_size) : projectPackageText("card.checking", "Đang kiểm tra"))}</dd></div><div><dt>${safeText(projectPackageText("card.updated", "Cập nhật"))}</dt><dd>${safeText(String(item.completed_at || item.updated_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${safeText(projectPackageText("card.download", "Tải ZIP"))} <span aria-hidden="true">↓</span></a>` : `<a class="portal-button portal-button--quiet" href="/projects/${encodeURIComponent(String(item.project_id || ""))}">${safeText(projectPackageText("page.openProject", "Mở dự án"))}</a>`}</div></article>`;
+    }).join("")}</div>` : renderEmpty(projectPackageText("page.emptyTitle", "Chưa có gói dự án"), projectPackageText("page.emptyBody", "Mở một dự án để xuất ảnh chụp ZIP đầu tiên. Tính năng này độc lập với Bot và không tạo khoản trừ hay yêu cầu nhà cung cấp."), "▤");
+    return `<article class="portal-page portal-project-packages">${renderHero(page, context)}<section class="portal-project-package-intro"><div><span class="portal-section-kicker">${safeText(projectPackageText("page.kicker", "Xuất Web riêng tư"))}</span><h2>${safeText(projectPackageText("page.introTitle", "Ảnh chụp có thể giao, không trộn với tác vụ Bot"))}</h2><p>${safeText(projectPackageText("page.introBody", "Mỗi gói là tệp ZIP bất biến tạo từ dự án Web. Tệp chỉ xuất hiện sau khi máy chủ kiểm tra bộ nhớ riêng, kích thước byte và tính toàn vẹn."))}</p></div><dl><div><dt>${safeText(String(items.length))}</dt><dd>${safeText(projectPackageText("page.accountCount", "Gói thuộc tài khoản"))}</dd></div><div><dt>ZIP</dt><dd>${safeText(projectPackageText("page.privateAttachment", "Tệp đính kèm riêng tư"))}</dd></div></dl></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(projectPackageText("page.historyTitle", "Lịch sử gói dự án"))}</h2><p class="portal-card-subtitle">${safeText(projectPackageText("page.historyBody", "Không phải gói dịch vụ, tài sản Bot hay kết quả nhà cung cấp. Chỉ ảnh chụp do Web sở hữu được kiểm tra."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="project-package-refresh" data-portal-route="/project-packages"${canRefresh ? "" : " disabled"}>${safeText(projectPackageText("panel.refresh", "Làm mới"))}</button></div>${cards}${renderProjectPackagePagination(context, canView, "/project-packages", "")}</section></article>`;
   }
 
   function renderProjectDetail(page, context) {
@@ -20453,17 +20813,17 @@
     // (or ready with a verified record), so this fallback cannot mask a
     // completed authorization/read failure.
     if (!project && (!detailState || detailState === "processing")) {
-      return `<article class="portal-page portal-project-detail portal-project-detail--loading">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-project-detail-loading" role="status" aria-live="polite">${renderEmpty(projectText("detail.loadingTitle", "Đang tải Project"), projectText("detail.loadingBody", "Portal đang kiểm tra Project owner-scoped trước khi hiển thị dữ liệu."), ICONS.refresh)}</div></section></article>`;
+      return `<article class="portal-page portal-project-detail portal-project-detail--loading">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-project-detail-loading" role="status" aria-live="polite">${renderEmpty(projectText("detail.loadingTitle", "Đang tải dự án"), projectText("detail.loadingBody", "Portal đang kiểm tra dự án theo chủ sở hữu trước khi hiển thị dữ liệu."), ICONS.refresh)}</div></section></article>`;
     }
     if (!project && detailState === "guarded" && !signedIn) {
       const loginRoute = `/login?next=${encodeURIComponent(route)}`;
-      return `<article class="portal-page portal-project-detail portal-project-detail--guarded">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(projectText("detail.guardedTitle", "Project đang được bảo vệ"), projectText("detail.guardedBody", "Đăng nhập bằng signed Web session để máy chủ kiểm tra quyền sở hữu Project. Portal không suy đoán hoặc hiển thị dữ liệu của account khác."), ICONS.security)}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="${safeText(loginRoute)}">${safeText(projectText("detail.signIn", "Đăng nhập để tiếp tục"))}</a><a class="portal-button portal-button--quiet" href="/projects">${safeText(projectText("detail.back", "Về Project Center"))}</a></div></section></article>`;
+      return `<article class="portal-page portal-project-detail portal-project-detail--guarded">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(projectText("detail.guardedTitle", "Dự án đang được bảo vệ"), projectText("detail.guardedBody", "Đăng nhập bằng phiên Web đã xác thực để máy chủ kiểm tra quyền sở hữu dự án. Portal không suy đoán hoặc hiển thị dữ liệu của tài khoản khác."), ICONS.security)}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="${safeText(loginRoute)}">${safeText(projectText("detail.signIn", "Đăng nhập để tiếp tục"))}</a><a class="portal-button portal-button--quiet" href="/projects">${safeText(projectText("detail.back", "Về trung tâm dự án"))}</a></div></section></article>`;
     }
-    if (!project) return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(projectText("detail.emptyTitle", "Không tìm thấy Project"), projectText("detail.emptyBody", "Project có thể không thuộc account hiện tại hoặc đã không còn khả dụng. Portal không suy đoán hay hiển thị dữ liệu của account khác."), "⌁")}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/projects">${safeText(projectText("detail.back", "Về Project Center"))}</a></div></section></article>`;
+    if (!project) return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(projectText("detail.emptyTitle", "Không tìm thấy dự án"), projectText("detail.emptyBody", "Dự án có thể không thuộc tài khoản hiện tại hoặc đã không còn khả dụng. Portal không suy đoán hay hiển thị dữ liệu của tài khoản khác."), "⌁")}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/projects">${safeText(projectText("detail.back", "Về trung tâm dự án"))}</a></div></section></article>`;
     const documents = (Array.isArray(context.projectDocuments) ? context.projectDocuments : []).filter((item) => item && typeof item === "object" && validProjectId(item.id)).slice(0, 100);
     const canCreate = Boolean(context.capabilities && context.capabilities["studio-document-create"] === true && String(project.state || "active") === "active");
-    const documentCards = documents.length ? `<div class="portal-project-document-list">${documents.map((document) => `<button type="button" class="portal-project-document" data-portal-action="studio-document-open" data-portal-route="${safeText(route)}" data-studio-document-id="${safeText(String(document.id))}"><span class="portal-project-document-icon" aria-hidden="true">${portalIcon(ICONS.prompt)}</span><span><strong>${safeText(String(document.title || projectText("detail.defaultDocument", "Studio Document")))}</strong><small>${safeText(projectKindLabel(document.kind))} · v${safeText(String(document.revision || 1))} · ${safeText(String(document.updated_at || "—"))}</small></span>${badge(projectState(document.state))}<b aria-hidden="true">→</b></button>`).join("")}</div>` : renderEmpty(projectText("detail.emptyDocumentsTitle", "Chưa có Studio Document"), projectText("detail.emptyDocumentsBody", "Tạo brief, prompt, caption, kịch bản hoặc storyboard đầu tiên cho Project này."), "✦");
-    return `<article class="portal-page portal-project-detail">${renderHero(page, context)}<section class="portal-project-summary"><div><span class="portal-section-kicker">${safeText(projectText("detail.kicker", "Project Web độc lập"))}</span><h2>${safeText(String(project.title || projectText("detail.defaultTitle", "Project")))}</h2><p>${safeText(String(project.summary || projectText("detail.noSummary", "Chưa có tóm tắt")))}</p></div><dl><div><dt>${safeText(projectText("detail.objective", "Mục tiêu"))}</dt><dd>${safeText(String(project.objective || projectText("detail.noObjective", "Chưa đặt")))}</dd></div><div><dt>${safeText(projectText("detail.state", "Trạng thái"))}</dt><dd>${badge(projectState(project.state))}</dd></div><div><dt>${safeText(projectText("detail.documents", "Documents"))}</dt><dd>${safeText(String(documents.length))}</dd></div></dl></section><div class="portal-project-detail-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(projectText("detail.documentsTitle", "Studio Documents"))}</h2><p class="portal-card-subtitle">${safeText(projectText("detail.documentsBody", "Tài liệu authoring được lưu và version trên Web, không cần Telegram hoặc Bot bridge."))}</p></div><a class="portal-button portal-button--quiet" href="/projects">${safeText(projectText("detail.allProjects", "Tất cả Project"))}</a></div>${documentCards}<section class="portal-project-new-document"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(projectText("document.kicker", "Thêm tài liệu"))}</span><h3>${safeText(projectText("document.create", "Thêm Studio Document"))}</h3><p>${safeText(projectText("document.body", "Mỗi tài liệu mới bắt đầu ở v1 và có history riêng."))}</p></div></div><form class="portal-form" data-portal-form data-portal-action="studio-document-create" data-portal-route="${safeText(route)}" data-project-id="${safeText(String(project.id))}" novalidate>${renderFields(projectDocumentFormFields(), canCreate, context, transientFormValues(route))}<div class="portal-form-footer"><span class="portal-form-note">${safeText(projectText("document.formNote", "Không gọi provider hoặc tạo media output; đây là authoring workspace độc lập."))}</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>${safeText(projectText("document.create", "Thêm Studio Document"))}</button></div></form></section></section>${renderStudioDocumentEditor(page, context, project)}</div>${renderProjectPackagePanel(page, context, project)}</article>`;
+     const documentCards = documents.length ? `<div class="portal-project-document-list">${documents.map((document) => `<button type="button" class="portal-project-document" data-portal-action="studio-document-open" data-portal-route="${safeText(route)}" data-studio-document-id="${safeText(String(document.id))}"><span class="portal-project-document-icon" aria-hidden="true">${portalIcon(ICONS.prompt)}</span><span><strong>${safeText(String(document.title || projectText("detail.defaultDocument", "Tài liệu Studio")))}</strong><small>${safeText(projectKindLabel(document.kind))} · v${safeText(String(document.revision || 1))} · ${safeText(String(document.updated_at || "—"))}</small></span>${badge(projectState(document.state))}<b aria-hidden="true">→</b></button>`).join("")}</div>` : renderEmpty(projectText("detail.emptyDocumentsTitle", "Chưa có tài liệu Studio"), projectText("detail.emptyDocumentsBody", "Tạo định hướng, lời nhắc, chú thích, kịch bản hoặc bảng phân cảnh đầu tiên cho dự án này."), "✦");
+     return `<article class="portal-page portal-project-detail">${renderHero(page, context)}<section class="portal-project-summary"><div><span class="portal-section-kicker">${safeText(projectText("detail.kicker", "Dự án Web độc lập"))}</span><h2>${safeText(String(project.title || projectText("detail.defaultTitle", "Dự án")))}</h2><p>${safeText(String(project.summary || projectText("detail.noSummary", "Chưa có tóm tắt")))}</p></div><dl><div><dt>${safeText(projectText("detail.objective", "Mục tiêu"))}</dt><dd>${safeText(String(project.objective || projectText("detail.noObjective", "Chưa đặt")))}</dd></div><div><dt>${safeText(projectText("detail.state", "Trạng thái"))}</dt><dd>${badge(projectState(project.state))}</dd></div><div><dt>${safeText(projectText("detail.documents", "Tài liệu"))}</dt><dd>${safeText(String(documents.length))}</dd></div></dl></section><div class="portal-project-detail-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(projectText("detail.documentsTitle", "Tài liệu Studio"))}</h2><p class="portal-card-subtitle">${safeText(projectText("detail.documentsBody", "Tài liệu soạn thảo được lưu và phiên bản hóa trên Web, không cần Telegram hoặc cầu nối Bot."))}</p></div><a class="portal-button portal-button--quiet" href="/projects">${safeText(projectText("detail.allProjects", "Tất cả dự án"))}</a></div>${documentCards}<section class="portal-project-new-document"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(projectText("document.kicker", "Thêm tài liệu"))}</span><h3>${safeText(projectText("document.create", "Thêm tài liệu Studio"))}</h3><p>${safeText(projectText("document.body", "Mỗi tài liệu mới bắt đầu ở phiên bản 1 và có lịch sử riêng."))}</p></div></div><form class="portal-form" data-portal-form data-portal-action="studio-document-create" data-portal-route="${safeText(route)}" data-project-id="${safeText(String(project.id))}" novalidate>${renderFields(projectDocumentFormFields(), canCreate, context, transientFormValues(route))}<div class="portal-form-footer"><span class="portal-form-note">${safeText(projectText("document.formNote", "Không gọi nhà cung cấp hoặc tạo kết quả media; đây là không gian soạn thảo độc lập."))}</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>${safeText(projectText("document.create", "Thêm tài liệu Studio"))}</button></div></form></section></section>${renderStudioDocumentEditor(page, context, project)}</div>${renderProjectPackagePanel(page, context, project)}</article>`;
   }
 
   function renderFeatureFamily(page, context) {
@@ -20487,13 +20847,13 @@
         ? `<span class="portal-feature-jump portal-feature-jump--current" aria-current="page">${label}</span>`
         : `<a class="portal-feature-jump" href="${safeText(route)}">${label}</a>`;
     }).join("");
-    const familyNav = `<nav class="portal-feature-jumps" aria-label="${safeText(featureCatalogText("family.navLabel", "Chuyển nhóm AI Studio"))}"><a class="portal-feature-jump" href="/features">${safeText(featureCatalogText("family.allTools", "Tất cả công cụ"))}</a>${familyNavItems}</nav>`;
-    const summary = `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(featureCatalogText("family.summary.title", "Trạng thái workflow"))}</h2><p class="portal-card-subtitle">${safeText(featureCatalogText("family.summary.body", "Số liệu chỉ mô tả route đã được registry công bố; không suy đoán engine, quota hoặc output."))}</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.mapped", "Đã định tuyến"))}</span><span class="portal-summary-value">${safeText(featureCatalogText("catalog.count", "{count} workflow", { count: String(entries.length) }))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.canonicalReady", "Sẵn sàng canonical"))}</span><span class="portal-summary-value">${safeText(String(states.ready || 0))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.guarded", "Đang guarded"))}</span><span class="portal-summary-value">${safeText(String(states.guarded || 0))}</span></div></div>${renderCapabilityHubFamilySummary(context, family.key)}</aside>`;
+    const familyNav = `<nav class="portal-feature-jumps" aria-label="${safeText(featureCatalogText("family.navLabel", "Chuyển nhóm công cụ AI"))}"><a class="portal-feature-jump" href="/features">${safeText(featureCatalogText("family.allTools", "Tất cả công cụ"))}</a>${familyNavItems}</nav>`;
+    const summary = `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(featureCatalogText("family.summary.title", "Trạng thái quy trình"))}</h2><p class="portal-card-subtitle">${safeText(featureCatalogText("family.summary.body", "Số liệu chỉ mô tả các trang được hệ thống công bố; không suy đoán bộ xử lý, hạn mức hoặc kết quả."))}</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.mapped", "Đã liên kết trang"))}</span><span class="portal-summary-value">${safeText(featureCatalogText("catalog.count", "{count} quy trình", { count: String(entries.length) }))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.canonicalReady", "Sẵn sàng đọc nguồn chuẩn"))}</span><span class="portal-summary-value">${safeText(String(states.ready || 0))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(featureCatalogText("family.summary.guarded", "Bị giới hạn"))}</span><span class="portal-summary-value">${safeText(String(states.guarded || 0))}</span></div></div>${renderCapabilityHubFamilySummary(context, family.key)}</aside>`;
     const cards = entries.length
-      ? `<div class="portal-module-grid">${entries.map((entry) => moduleCard(entry, context, featureCatalogText("action.openWorkflow", "Mở workflow"), { showEngineLabel: true })).join("")}</div>`
-      : renderEmpty(featureCatalogText("family.emptyTitle", "Nhóm đang chờ registry"), featureCatalogText("family.emptyBody", "Core Bridge chưa công bố workflow Web hợp lệ cho nhóm này. Portal không tự tạo form hay trạng thái thay thế."), "⌁");
+      ? `<div class="portal-module-grid">${entries.map((entry) => moduleCard(entry, context, featureCatalogText("action.openWorkflow", "Mở quy trình"), { showEngineLabel: true })).join("")}</div>`
+      : renderEmpty(featureCatalogText("family.emptyTitle", "Nhóm đang chờ hệ thống cập nhật"), featureCatalogText("family.emptyBody", "Máy chủ chưa công bố quy trình hợp lệ trong ứng dụng cho nhóm này. Ứng dụng không tự tạo biểu mẫu hoặc trạng thái thay thế."), "⌁");
     const interactiveWorkbench = renderInteractiveFeatureWorkbench({ featureFamily: family.key, path: page.path }, context);
-    return `<article class="portal-page">${renderHero(page, context)}${familyNav}${interactiveWorkbench}<div class="portal-status-grid">${renderStatusCard(page, context)}${summary}</div>${renderRouteEngineBoundary(context)}<section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(family, "title"))}</span><h2>${safeText(featureCatalogText("family.heading", "Chọn workflow phù hợp"))}</h2><p>${safeText(featureCatalogGroupCopy(family, "description"))} ${safeText(featureCatalogText("family.bodySuffix", "Mỗi card giữ nguyên flow draft → estimate → confirm và trạng thái do Core Bridge cấp."))}</p></div><a class="portal-button portal-button--quiet" href="/features">${safeText(featureCatalogText("action.openAll", "Xem mọi công cụ"))} <span aria-hidden="true">→</span></a></div>${cards}</section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}${familyNav}${interactiveWorkbench}<div class="portal-status-grid">${renderStatusCard(page, context)}${summary}</div>${renderRouteEngineBoundary(context)}<section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(featureCatalogGroupCopy(family, "title"))}</span><h2>${safeText(featureCatalogText("family.heading", "Chọn quy trình phù hợp"))}</h2><p>${safeText(featureCatalogGroupCopy(family, "description"))} ${safeText(featureCatalogText("family.bodySuffix", "Mỗi thẻ giữ các bước bản nháp → ước tính → xác nhận và trạng thái do hệ thống cấp."))}</p></div><a class="portal-button portal-button--quiet" href="/features">${safeText(featureCatalogText("action.openAll", "Xem mọi công cụ"))} <span aria-hidden="true">→</span></a></div>${cards}</section></article>`;
   }
 
   function normalizeCatalogSearch(value) {
@@ -20521,7 +20881,7 @@
       const count = group.querySelector(".portal-feature-count");
       if (count) {
         const total = count.getAttribute("data-catalog-total") || String(visibleItems.length);
-        count.textContent = featureCatalogText("catalog.count", "{count} workflow", {
+        count.textContent = featureCatalogText("catalog.count", "{count} quy trình", {
           count: needle ? String(visibleItems.length) : total
         });
       }
@@ -20541,8 +20901,8 @@
     if (familyExplorer) familyExplorer.hidden = Boolean(needle);
     const result = document.querySelector("[data-portal-catalog-result]");
     if (result) result.textContent = needle
-      ? featureCatalogText("search.result.matches", "{count} workflow phù hợp.", { count: String(matches) })
-      : featureCatalogText("search.result.visible", "{count} workflow đang hiển thị.", { count: String(items.length) });
+      ? featureCatalogText("search.result.matches", "{count} quy trình phù hợp.", { count: String(matches) })
+      : featureCatalogText("search.result.visible", "{count} quy trình đang hiển thị.", { count: String(items.length) });
     const empty = document.querySelector("[data-portal-catalog-empty]");
     if (empty) empty.hidden = matches > 0;
     const clear = document.querySelector("[data-portal-catalog-clear]");
@@ -20788,7 +21148,7 @@
       ? `<div class="portal-dashboard-overview-actions"><a class="portal-button portal-button--primary" href="${safeText(decision.href)}"><span>${dashboardText(`summary.decision.${decision.kind}.action`)}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a><a class="portal-button portal-button--quiet" href="${safeText(decision.secondaryHref)}">${dashboardText(`summary.decision.${decision.kind}.secondary`)}</a></div>`
       : "";
     return `<section class="portal-dashboard-overview" aria-labelledby="workspace-overview-title">
-      <div class="portal-dashboard-overview-copy"><span class="portal-section-kicker">${dashboardText("summary.kicker")}</span><h1 id="workspace-overview-title">${dashboardText("summary.greeting", { name })}</h1><p>${dashboardText("summary.body")}</p>${summaryActions}</div>
+      <div class="portal-dashboard-overview-copy"><span class="portal-section-kicker">${dashboardText("summary.kicker")}</span><h2 id="workspace-overview-title">${dashboardText("summary.greeting", { name })}</h2><p>${dashboardText("summary.body")}</p>${summaryActions}</div>
       <dl class="portal-dashboard-overview-stats" aria-label="${dashboardText("summary.statsLabel")}"><div><dt>${dashboardText("summary.projects")}</dt><dd>${safeText(projectCount)}</dd><span>${dashboardText("summary.webOwned")}</span></div><div><dt>${dashboardText("summary.drafts")}</dt><dd>${safeText(draftCount)}</dd><span>${dashboardText("summary.webOwned")}</span></div><div><dt>${dashboardText("summary.processing")}</dt><dd>${safeText(String(processing))}</dd><span>${canonicalLabel}</span></div><div><dt>${dashboardText("summary.readyDownload")}</dt><dd>${safeText(String(deliveryReady))}</dd><span>${canonicalLabel}</span></div></dl>
     </section>`;
   }
@@ -20803,7 +21163,7 @@
         : drafts.length
           ? `<div class="portal-dashboard-draft-list">${drafts.map((item) => `<a class="portal-dashboard-draft" href="/projects"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.prompt)}</span><span><strong>${safeText(String(item.title || item.feature_title || dashboardText("drafts.defaultTitle")))}</strong><small>${safeText(String(item.feature_title || dashboardText("drafts.defaultFeature")))} · ${dashboardText("drafts.updated", { date: String(item.updated_at || item.created_at || "—") })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
           : renderEmpty(dashboardText("drafts.emptyTitle"), dashboardText("drafts.emptyBody"), ICONS.prompt);
-    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("drafts.kicker")}</span><h2 class="portal-card-title">${dashboardText("drafts.title")}</h2><p class="portal-card-subtitle">${dashboardText("drafts.body")}</p></div><a class="portal-button portal-button--quiet" href="/projects"><span>${dashboardText("drafts.viewAll")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
+    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("drafts.kicker")}</span><h3 class="portal-card-title">${dashboardText("drafts.title")}</h3><p class="portal-card-subtitle">${dashboardText("drafts.body")}</p></div><a class="portal-button portal-button--quiet" href="/projects"><span>${dashboardText("drafts.viewAll")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
   }
 
   function renderDashboardRecentProjects(context) {
@@ -20816,7 +21176,7 @@
         : projects.length
           ? `<div class="portal-dashboard-draft-list">${projects.map((project) => `<a class="portal-dashboard-draft" href="/projects/${encodeURIComponent(String(project.id))}"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><span><strong>${safeText(String(project.title || dashboardText("projects.defaultTitle")))}</strong><small>${safeText(String(project.objective || dashboardText("projects.defaultObjective")))} · ${dashboardText("projects.documents", { count: String(Number(project.document_count || 0)) })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
           : renderEmpty(dashboardText("projects.emptyTitle"), dashboardText("projects.emptyBody"), ICONS.dashboard);
-    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("projects.kicker")}</span><h2 class="portal-card-title">${dashboardText("projects.title")}</h2><p class="portal-card-subtitle">${dashboardText("projects.body")}</p></div><a class="portal-button portal-button--quiet" href="/projects"><span>${dashboardText("projects.open")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
+    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("projects.kicker")}</span><h3 class="portal-card-title">${dashboardText("projects.title")}</h3><p class="portal-card-subtitle">${dashboardText("projects.body")}</p></div><a class="portal-button portal-button--quiet" href="/projects"><span>${dashboardText("projects.open")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
   }
 
   function renderDashboardStartGuide(context) {
@@ -20892,7 +21252,7 @@
     const assets = Array.isArray(context.assets) ? context.assets.slice(0, 5) : [];
     const wallet = canonicalWalletProjection(context.wallet);
     const quickMetrics = `<section class="portal-admin-grid portal-command-center-metrics"><div class="portal-metric"><span>${dashboardText("canonical.metrics.balanceLabel")}</span><strong>${safeText(wallet ? String(wallet.balance_xu) : "—")}</strong><em>${wallet ? dashboardText("canonical.metrics.balanceCanonicalDetail") : dashboardText("canonical.metrics.balancePendingDetail")}</em></div><div class="portal-metric"><span>${dashboardText("canonical.metrics.spentLabel")}</span><strong>${safeText(wallet ? String(wallet.total_spent_xu) : "—")}</strong><em>${wallet ? dashboardText("canonical.metrics.spentCanonicalDetail") : dashboardText("canonical.metrics.spentPendingDetail")}</em></div><div class="portal-metric"><span>${dashboardText("canonical.metrics.jobsLabel")}</span><strong>${safeText(String(jobs.length))}</strong><em>${dashboardText("canonical.metrics.jobsDetail")}</em></div><div class="portal-metric"><span>${dashboardText("canonical.metrics.assetsLabel")}</span><strong>${safeText(String(assets.length))}</strong><em>${dashboardText("canonical.metrics.assetsDetail")}</em></div></section>`;
-    const activity = `<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${dashboardText("canonical.jobs.title")}</h2><p class="portal-card-subtitle">${dashboardText("canonical.jobs.body")}</p></div><a class="portal-button portal-button--quiet" href="/jobs">${dashboardText("canonical.jobs.open")}</a></div>${renderRowsTable([dashboardText("canonical.jobs.table.id"), dashboardText("canonical.jobs.table.feature"), dashboardText("canonical.jobs.table.status"), dashboardText("canonical.jobs.table.output")], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${dashboardReportedOutput(item)}</td>`, dashboardText("canonical.jobs.emptyTitle"), dashboardText("canonical.jobs.emptyBody"))}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${dashboardText("canonical.assets.title")}</h2><p class="portal-card-subtitle">${dashboardText("canonical.assets.body")}</p></div><a class="portal-button portal-button--quiet" href="/assets">${dashboardText("canonical.assets.open")}</a></div>${renderRowsTable([dashboardText("canonical.assets.table.asset"), dashboardText("canonical.assets.table.feature"), dashboardText("canonical.assets.table.status"), dashboardText("canonical.assets.table.delivery")], assets, (item) => `<td>${dashboardAssetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${dashboardAssetDeliveryState(item)}</td>`, dashboardText("canonical.assets.emptyTitle"), dashboardText("canonical.assets.emptyBody"))}</section></div>`;
+    const activity = `<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h3 class="portal-card-title">${dashboardText("canonical.jobs.title")}</h3><p class="portal-card-subtitle">${dashboardText("canonical.jobs.body")}</p></div><a class="portal-button portal-button--quiet" href="/jobs">${dashboardText("canonical.jobs.open")}</a></div>${renderRowsTable([dashboardText("canonical.jobs.table.id"), dashboardText("canonical.jobs.table.feature"), dashboardText("canonical.jobs.table.status"), dashboardText("canonical.jobs.table.output")], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${dashboardReportedOutput(item)}</td>`, dashboardText("canonical.jobs.emptyTitle"), dashboardText("canonical.jobs.emptyBody"))}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h3 class="portal-card-title">${dashboardText("canonical.assets.title")}</h3><p class="portal-card-subtitle">${dashboardText("canonical.assets.body")}</p></div><a class="portal-button portal-button--quiet" href="/assets">${dashboardText("canonical.assets.open")}</a></div>${renderRowsTable([dashboardText("canonical.assets.table.asset"), dashboardText("canonical.assets.table.feature"), dashboardText("canonical.assets.table.status"), dashboardText("canonical.assets.table.delivery")], assets, (item) => `<td>${dashboardAssetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${dashboardAssetDeliveryState(item)}</td>`, dashboardText("canonical.assets.emptyTitle"), dashboardText("canonical.assets.emptyBody"))}</section></div>`;
     return `<section class="portal-command-center-canonical" data-state="ready" aria-labelledby="workspace-canonical-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.jobs)}</span><div><span class="portal-section-kicker">${dashboardText("canonical.kicker")}</span><h2 id="workspace-canonical-lane-title">${dashboardText("canonical.readyTitle")}</h2><p>${dashboardText("canonical.readyBody")}</p></div>${badge("read_only")}</div>${quickMetrics}${renderWorkspaceActionCenter(context)}${activity}</section>`;
   }
 
@@ -21187,9 +21547,9 @@
     function renderDashboardProductHero(ctx) {
       return `<section class="portal-card portal-card-pad portal-dashboard-product-hero" aria-labelledby="dashboard-product-title" style="margin-bottom:20px; background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand) 6%, var(--portal-surface-light)) 0%, var(--portal-surface-light) 100%); border:1px solid color-mix(in srgb, var(--portal-brand) 20%, var(--portal-border)); border-radius:var(--portal-radius-lg); padding:24px;">
         <div style="margin-bottom:20px;">
-          <span class="portal-section-kicker" style="color:var(--portal-brand); font-weight:700; font-size:12px; letter-spacing:0.05em;">HỆ SINH THÁI SÁNG TẠO AI TOAN AAS</span>
-          <h2 id="dashboard-product-title" style="margin:6px 0 8px; font-size:24px; font-weight:800; color:var(--portal-ink);">Bạn muốn làm gì hôm nay?</h2>
-          <p style="margin:0; font-size:14px; color:var(--portal-muted);">Khởi tạo nhanh các tác vụ AI sáng tạo chuyên nghiệp từ 6 không gian sản phẩm chủ lực.</p>
+          <span class="portal-section-kicker" style="color:var(--portal-brand); font-weight:700; font-size:12px; letter-spacing:0.05em;">${dashboardText("productHero.kicker")}</span>
+          <h1 id="dashboard-product-title" style="margin:6px 0 8px; font-weight:800; color:var(--portal-ink);">${dashboardText("productHero.title")}</h1>
+          <p style="margin:0; font-size:14px; color:var(--portal-muted);">${dashboardText("productHero.body")}</p>
         </div>
         <div class="portal-dashboard-launchers-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
           <a class="portal-product-launcher-card" href="/studio" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
@@ -21197,12 +21557,12 @@
               <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #3b82f6 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#3b82f6; margin-bottom:12px;">
                 ${portalIcon(ICONS.video)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Video AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Video ngắn TikTok/Reels, phân cảnh đa góc quay và kịch bản video AI.</p>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">${dashboardText("productHero.video.title")}</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">${dashboardText("productHero.video.body")}</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Video →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Đa kịch bản</span>
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">${dashboardText("productHero.video.open")} →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">${dashboardText("productHero.video.tag")}</span>
             </div>
           </a>
           <a class="portal-product-launcher-card" href="/tools/image" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
@@ -21210,12 +21570,12 @@
               <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #8b5cf6 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#8b5cf6; margin-bottom:12px;">
                 ${portalIcon(ICONS.image)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Ảnh AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Ảnh chân thực 4K, người mẫu AI, poster sản phẩm và nâng cấp độ phân giải.</p>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">${dashboardText("productHero.image.title")}</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">${dashboardText("productHero.image.body")}</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Ảnh →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Độ phân giải cao</span>
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">${dashboardText("productHero.image.open")} →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">${dashboardText("productHero.image.tag")}</span>
             </div>
           </a>
           <a class="portal-product-launcher-card" href="/voice" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
@@ -21223,12 +21583,12 @@
               <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #06b6d4 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#06b6d4; margin-bottom:12px;">
                 ${portalIcon(ICONS.voice)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Giọng AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Lồng tiếng đọc văn bản tự nhiên, nhân bản giọng nói và chuyển ngữ chuẩn âm.</p>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">${dashboardText("productHero.voice.title")}</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">${dashboardText("productHero.voice.body")}</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Giọng →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Đa ngôn ngữ</span>
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">${dashboardText("productHero.voice.open")} →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">${dashboardText("productHero.voice.tag")}</span>
             </div>
           </a>
           <a class="portal-product-launcher-card" href="/subdub" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
@@ -21236,12 +21596,12 @@
               <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #10b981 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#10b981; margin-bottom:12px;">
                 ${portalIcon(ICONS.subtitle)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">AI SubDub</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Bóc tách phụ đề video tự động, dịch song ngữ và lồng tiếng tự động chuẩn khớp.</p>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">${dashboardText("productHero.subdub.title")}</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">${dashboardText("productHero.subdub.body")}</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở SubDub →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Khớp nhịp audio</span>
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">${dashboardText("productHero.subdub.open")} →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">${dashboardText("productHero.subdub.tag")}</span>
             </div>
           </a>
           <a class="portal-product-launcher-card" href="/content" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
@@ -21249,12 +21609,12 @@
               <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #f59e0b 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#f59e0b; margin-bottom:12px;">
                 ${portalIcon(ICONS.prompt)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Nội dung</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Kịch bản video, bài đăng mạng xã hội, copywriting bán hàng và tối ưu SEO.</p>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">${dashboardText("productHero.content.title")}</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">${dashboardText("productHero.content.body")}</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Nội Dung →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Tối ưu chuyển đổi</span>
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">${dashboardText("productHero.content.open")} →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">${dashboardText("productHero.content.tag")}</span>
             </div>
           </a>
           <a class="portal-product-launcher-card" href="/music" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
@@ -21262,12 +21622,12 @@
               <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #ec4899 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#ec4899; margin-bottom:12px;">
                 ${portalIcon(ICONS.music)}
               </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">Tạo Nhạc AI</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">Sáng tác bài hát theo lời thoại, tạo giai điệu nền và hiệu ứng âm thanh SFX.</p>
+              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">${dashboardText("productHero.music.title")}</h3>
+              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">${dashboardText("productHero.music.body")}</p>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">Mở Xưởng Nhạc →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">Bản quyền thương mại</span>
+              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">${dashboardText("productHero.music.open")} →</span>
+              <span style="font-size:11px; color:var(--portal-muted);">${dashboardText("productHero.music.tag")}</span>
             </div>
           </a>
         </div>
@@ -21280,12 +21640,13 @@
       const spent = w ? localizedNumber(w.total_spent_xu) : "—";
       const planName = w && w.plan && (w.plan.plan_name || w.plan.current_plan)
         ? String(w.plan.plan_name || w.plan.current_plan)
-        : (w && w.is_vip ? "VIP Doanh nghiệp" : "Thành viên");
+        : uiText(w && w.is_vip ? "dashboard.accountSummary.vip" : "dashboard.accountSummary.member", "");
       return `<section class="portal-card portal-card-pad portal-dashboard-account-summary-strip" aria-labelledby="dashboard-account-summary-title" style="margin-bottom:24px; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px 20px;">
+        <h2 id="dashboard-account-summary-title" class="portal-sr-only">${dashboardText("accountSummary.title")}</h2>
         <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px;">
           <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
             <div>
-              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">Số dư Xu khả dụng</span>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${dashboardText("accountSummary.balance")}</span>
               <div style="display:flex; align-items:baseline; gap:6px;">
                 <strong style="font-size:22px; font-weight:900; color:var(--portal-brand);">${safeText(balance)}</strong>
                 <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">Xu</span>
@@ -21293,14 +21654,14 @@
             </div>
             <div style="width:1px; height:32px; background:var(--portal-border);" class="portal-summary-divider"></div>
             <div>
-              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">Gói tài khoản</span>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${dashboardText("accountSummary.plan")}</span>
               <div style="display:flex; align-items:baseline; gap:6px;">
                 <strong style="font-size:15px; font-weight:700; color:var(--portal-ink);">${safeText(planName)}</strong>
               </div>
             </div>
             <div style="width:1px; height:32px; background:var(--portal-border);" class="portal-summary-divider"></div>
             <div>
-              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">Lũy kế đã dùng</span>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${dashboardText("accountSummary.used")}</span>
               <div style="display:flex; align-items:baseline; gap:6px;">
                 <strong style="font-size:15px; font-weight:700; color:var(--portal-ink);">${safeText(spent)}</strong>
                 <span style="font-size:12px; color:var(--portal-muted);">Xu</span>
@@ -21310,13 +21671,13 @@
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <a class="portal-button portal-button--primary" href="/wallet/topup" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 14px;">
               <span aria-hidden="true">${portalIcon(ICONS.payments)}</span>
-              <span>Nạp Xu VietQR PayOS</span>
+              <span>${dashboardText("accountSummary.topup")}</span>
             </a>
             <a class="portal-button portal-button--quiet" href="/wallet" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 12px;">
-              <span>Ví Xu & Lịch sử</span>
+              <span>${dashboardText("accountSummary.wallet")}</span>
             </a>
             <a class="portal-button portal-button--quiet" href="/packages" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 12px;">
-              <span>Bảng giá & Gói</span>
+              <span>${dashboardText("accountSummary.plans")}</span>
             </a>
           </div>
         </div>
@@ -24775,6 +25136,41 @@
     return uiText(`musicHub.${key}`, fallback, params);
   }
 
+  function musicLibraryText(key, fallback, params) {
+    return uiText(`musicLibrary.${key}`, fallback, params);
+  }
+
+  function mediaOperationText(key, fallback, params) {
+    return uiText(`mediaOperation.${key}`, fallback, params);
+  }
+
+  function mediaOperationStatusBadge(status, fieldName) {
+    const allowed = new Set(["queued", "processing", "completed", "failed", "failed_no_charge", "cancelled", "refunded"]);
+    const normalized = allowed.has(String(status || "").toLowerCase()) ? String(status).toLowerCase() : "unknown";
+    const state = normalized === "unknown" ? "guarded" : normalized;
+    const field = typeof fieldName === "string" && /^[a-z_]{1,48}$/.test(fieldName)
+      ? ` data-field="${fieldName}"` : "";
+    return `<span class="portal-badge" data-status="${state}"${field}>${safeText(mediaOperationText(`common.status.${normalized}`, ""))}</span>`;
+  }
+
+  function mediaOperationStatusReason(reason) {
+    const key = String(reason || "").trim().toUpperCase() === "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE"
+      ? "common.statusReason.awaiting" : "common.statusReason.generic";
+    return mediaOperationText(key, "");
+  }
+
+  function renderMediaOperationNotes(page, scope) {
+    const notePrefix = scope === "sfx" ? "common.notes.sfx" : "common.notes.image";
+    return renderNotes(page, {
+      integrationTitle: mediaOperationText("common.notes.processTitle", ""),
+      safetyTitle: mediaOperationText("common.notes.safetyTitle", ""),
+      notes: [
+        mediaOperationText(`${notePrefix}Process`, ""),
+        mediaOperationText(`${notePrefix}Safety`, "")
+      ]
+    });
+  }
+
   function renderVoiceHub(page, context) {
     const tools = [
       ["tts", "/voice/tts"], ["saved", "/voice/saved"], ["clone", "/voice/clone"],
@@ -25295,10 +25691,14 @@
     subDubPage.querySelectorAll("[data-subdub-mode-select]").forEach((button) => {
       const selected = button === modeButton;
       button.setAttribute("aria-pressed", selected ? "true" : "false");
+      button.setAttribute("aria-selected", selected ? "true" : "false");
+      button.setAttribute("tabindex", selected ? "0" : "-1");
       button.classList.toggle("portal-subdub-mode-choice--active", selected);
     });
     subDubPage.querySelectorAll("[data-subdub-mode-panel]").forEach((panel) => {
-      panel.hidden = panel.getAttribute("data-subdub-mode-panel") !== nextMode;
+      const selected = panel.getAttribute("data-subdub-mode-panel") === nextMode;
+      panel.hidden = !selected;
+      panel.setAttribute("aria-hidden", selected ? "false" : "true");
     });
     const selectedLabel = modeButton.getAttribute("data-subdub-summary-label") || "";
     const summary = subDubPage.querySelector("[data-subdub-summary-mode]");
@@ -25308,6 +25708,26 @@
       nextUrl.searchParams.set("mode", nextQueryMode);
       browserWindow.history.replaceState(browserWindow.history.state, "", nextUrl.toString());
     }
+    return true;
+  }
+
+  function handleSubDubModeKeydown(modeButton, event, browserWindow) {
+    if (!modeButton || !event) return false;
+    const subDubPage = modeButton.closest(".portal-subdub-hub");
+    if (!subDubPage) return false;
+    const buttons = Array.from(subDubPage.querySelectorAll("[data-subdub-mode-select]"));
+    const currentIndex = buttons.indexOf(modeButton);
+    if (currentIndex < 0) return false;
+    let nextIndex = currentIndex;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = (currentIndex + 1) % buttons.length;
+    if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = (currentIndex - 1 + buttons.length) % buttons.length;
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = buttons.length - 1;
+    if (nextIndex === currentIndex) return false;
+    event.preventDefault();
+    const nextButton = buttons[nextIndex];
+    if (!updateSubDubModeSelection(nextButton, browserWindow)) return false;
+    if (typeof nextButton.focus === "function") nextButton.focus({ preventScroll: true });
     return true;
   }
 
@@ -25332,7 +25752,7 @@
     const modeTabs = Object.values(SUBDUB_PRODUCT_MODES).map((item) => {
       const isSelected = item.key === currentModeKey;
       const itemCopy = copy.modes[item.key] || copy.modes.SUBTITLE_ONLY;
-      return `<button class="portal-subdub-mode-choice ${isSelected ? "portal-subdub-mode-choice--active" : ""}" type="button" data-subdub-mode-select="${safeText(item.key)}" data-subdub-mode-query="${safeText(item.queryMode)}" data-subdub-summary-label="${safeText(`${itemCopy.title} (${itemCopy.badge})`)}" aria-pressed="${isSelected ? "true" : "false"}" aria-controls="subdub-mode-panel-${safeText(item.queryMode)}">
+      return `<button class="portal-subdub-mode-choice ${isSelected ? "portal-subdub-mode-choice--active" : ""}" type="button" role="tab" data-subdub-mode-select="${safeText(item.key)}" data-subdub-mode-query="${safeText(item.queryMode)}" data-subdub-summary-label="${safeText(`${itemCopy.title} (${itemCopy.badge})`)}" aria-pressed="${isSelected ? "true" : "false"}" aria-selected="${isSelected ? "true" : "false"}" tabindex="${isSelected ? "0" : "-1"}" aria-controls="subdub-mode-panel-${safeText(item.queryMode)}">
         <strong>${safeText(itemCopy.title)}</strong>
         <span>${safeText(itemCopy.badge)}</span>
       </button>`;
@@ -25502,7 +25922,7 @@
     const stage2Html = Object.values(SUBDUB_PRODUCT_MODES).map((item) => {
       const panelModeCopy = copy.modes[item.key] || copy.modes.SUBTITLE_ONLY;
       const isActive = item.key === currentModeKey;
-      return `<section class="portal-card portal-card-pad portal-subdub-stage portal-subdub-mode-panel" id="subdub-mode-panel-${safeText(item.queryMode)}" data-subdub-stage="2" data-subdub-mode-panel="${safeText(item.key)}" ${isActive ? "" : "hidden"} aria-labelledby="subdub-mode-heading-${safeText(item.queryMode)}">
+      return `<section class="portal-card portal-card-pad portal-subdub-stage portal-subdub-mode-panel" id="subdub-mode-panel-${safeText(item.queryMode)}" role="tabpanel" tabindex="0" data-subdub-stage="2" data-subdub-mode-panel="${safeText(item.key)}" ${isActive ? "" : "hidden"} aria-hidden="${isActive ? "false" : "true"}" aria-labelledby="subdub-mode-heading-${safeText(item.queryMode)}">
       <div class="portal-card-header">
         <div>
           <span class="portal-section-kicker">${safeText(copy.stage2Kicker)}</span>
@@ -25613,7 +26033,7 @@
       ${renderHero({ ...page, description: copy.heroSubtitle }, context)}
       <section class="portal-subdub-mode-picker" aria-labelledby="subdub-mode-picker-title">
         <h2 class="portal-card-title" id="subdub-mode-picker-title">${safeText(copy.modeSelectorLabel)}</h2>
-      <nav class="portal-subdub-mode-nav" aria-label="${safeText(copy.modeSelectorLabel)}">
+      <nav class="portal-subdub-mode-nav" role="tablist" aria-orientation="horizontal" aria-label="${safeText(copy.modeSelectorLabel)}">
         ${modeTabs}
       </nav>
       </section>
@@ -26110,44 +26530,47 @@
   }
 
   function renderImageUpscale(page, context) {
+    const t = (key, fallback = "", params) => mediaOperationText(`upscale.${key}`, fallback, params);
+    const common = (key, fallback = "", params) => mediaOperationText(`common.${key}`, fallback, params);
     const rawSources = imageVaultItems(context);
     const sources = rawSources.filter((a) => [".png", ".jpg", ".jpeg", ".webp"].includes(String(a.extension || "").toLowerCase()));
     const formValues = transientFormValues("/image/upscale");
     const lastJob = (context.featureFlows && context.featureFlows["/image/upscale"] && context.featureFlows["/image/upscale"].job)
       || context.imageUpscaleLastJob || null;
     const canRun = sources.length > 0;
-    const sourceSummary = sources.length === 1 ? "1 ảnh đang hoạt động" : `${sources.length} ảnh đang hoạt động`;
+    const sourceSummary = common("activeAssetCount", "{count} ảnh khả dụng", { count: String(sources.length) });
     const runReason = sources.length === 0
-      ? "Hãy lưu JPEG, PNG hoặc WebP vào Asset Vault trước khi tạo tác vụ upscale."
-      : "Chọn ảnh từ Asset Vault và hệ số phóng đại (2x hoặc 4x) để đưa vào hàng đợi canonical.";
+      ? t("runReason.empty")
+      : t("runReason.ready");
 
     let resultSection = "";
     if (lastJob) {
+      const jobStatus = lastJob.status || "queued";
       resultSection = `
         <section class="portal-card portal-card-pad portal-upscale-job-receipt" data-upscale-job-receipt>
           <div class="portal-card-header">
             <div>
-              <h2 class="portal-card-title">Tác vụ Nâng cấp ảnh đã tạo</h2>
-              <p class="portal-card-subtitle">Tác vụ đã được tiếp nhận an toàn trong hàng đợi Web-native.</p>
+              <h2 class="portal-card-title">${safeText(t("receipt.title"))}</h2>
+              <p class="portal-card-subtitle">${safeText(t("receipt.description"))}</p>
             </div>
-            ${badge("queued")}
+            ${mediaOperationStatusBadge(jobStatus)}
           </div>
           <dl class="portal-job-meta">
-            <div><dt>Mã tác vụ (Job ID)</dt><dd><code data-field="job_id">${safeText(lastJob.id || lastJob.job_id || "")}</code></dd></div>
-            <div><dt>Trạng thái (Status)</dt><dd><span class="portal-badge" data-status="${safeText(lastJob.status || "queued")}" data-field="job_status">${safeText(lastJob.status || "queued")}</span></dd></div>
-            <div><dt>Lý do (Status Reason)</dt><dd><span data-field="status_reason">${safeText(lastJob.status_reason || "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE")}</span></dd></div>
-            <div><dt>Hệ số phóng đại</dt><dd><span>${safeText(String(lastJob.scale_factor || "2"))}x</span></dd></div>
+            <div><dt>${safeText(common("jobId"))}</dt><dd><code data-field="job_id">${safeText(lastJob.id || lastJob.job_id || "")}</code></dd></div>
+            <div><dt>${safeText(common("status"))}</dt><dd>${mediaOperationStatusBadge(jobStatus, "job_status")}</dd></div>
+            <div><dt>${safeText(common("statusReason"))}</dt><dd><span data-field="status_reason">${safeText(mediaOperationStatusReason(lastJob.status_reason))}</span></dd></div>
+            <div><dt>${safeText(t("scale.label"))}</dt><dd><span>${safeText(String(lastJob.scale_factor || "2"))}×</span></dd></div>
           </dl>
           <div class="portal-notice portal-notice--info">
             <span class="portal-notice-icon" aria-hidden="true">i</span>
             <div>
-              <strong>Chờ xử lý từ Provider</strong>
-              <p>Tác vụ đang chờ thực thi thực tế. Kết quả và tệp xuất sẽ xuất hiện sau khi quá trình xử lý hoàn tất.</p>
+              <strong>${safeText(common("wait.title"))}</strong>
+              <p>${safeText(common("wait.body"))}</p>
             </div>
           </div>
           <div class="portal-form-footer">
-            <a class="portal-button portal-button--primary" href="/jobs" data-link="view-job-history">Xem lịch sử tác vụ (/jobs)</a>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="image-upscale-reset" data-portal-route="/image/upscale">Tạo tác vụ mới</button>
+            <a class="portal-button portal-button--primary" href="/jobs" data-link="view-job-history">${safeText(common("history"))}</a>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="image-upscale-reset" data-portal-route="/image/upscale">${safeText(common("newTask"))}</button>
           </div>
         </section>
       `;
@@ -26156,13 +26579,13 @@
     return `<article class="portal-page portal-image-upscale">${renderHero(page, context)}
       <section class="portal-document-operation-intro">
         <div>
-          <span class="portal-section-kicker">Web-native Image Operations</span>
-          <h2>Nâng cấp độ phân giải ảnh (Image Upscale)</h2>
-          <p>Chọn ảnh nguồn từ Asset Vault của bạn để nâng cấp độ sắc nét (2x hoặc 4x). Quá trình chạy qua Job Bridge fail-closed, xác thực quyền sở hữu và bảo vệ chi phí Xu minh bạch.</p>
+          <span class="portal-section-kicker">${safeText(t("intro.kicker"))}</span>
+          <h2>${safeText(t("intro.title"))}</h2>
+          <p>${safeText(t("intro.description"))}</p>
         </div>
         <dl>
-          <div><dt>${safeText(sourceSummary)}</dt><dd>Ảnh trong Asset Vault</dd></div>
-          <div><dt>2x / 4x</dt><dd>Hệ số phóng đại hỗ trợ</dd></div>
+          <div><dt>${safeText(sourceSummary)}</dt><dd>${safeText(t("assetLabel"))}</dd></div>
+          <div><dt>2× / 4×</dt><dd>${safeText(t("scaleSummary"))}</dd></div>
         </dl>
       </section>
       ${resultSection}
@@ -26170,49 +26593,49 @@
         <section class="portal-card portal-card-pad portal-document-operation-form">
           <div class="portal-card-header">
             <div>
-              <h2 class="portal-card-title">Cấu hình nâng cấp ảnh</h2>
-              <p class="portal-card-subtitle">Browser chỉ gửi Asset Vault ID và hệ số phóng đại. Không upload bytes hoặc đường dẫn raw.</p>
+              <h2 class="portal-card-title">${safeText(t("form.title"))}</h2>
+              <p class="portal-card-subtitle">${safeText(t("form.description"))}</p>
             </div>
             ${badge(canRun ? "ready" : "guarded")}
           </div>
           <form class="portal-form" data-portal-form data-portal-action="image-upscale-submit" data-portal-route="/image/upscale" novalidate>
             <div class="portal-field">
-              <label class="portal-field-label" for="upscale_image_asset_id">Ảnh nguồn trong Asset Vault <span class="portal-field-required">*</span></label>
+              <label class="portal-field-label" for="upscale_image_asset_id">${safeText(t("source.label"))} <span class="portal-field-required">*</span></label>
               <select class="portal-select" id="upscale_image_asset_id" name="image_asset_id" required data-field="source_image_selector">
-                <option value="">-- Chọn ảnh trong Asset Vault --</option>
-                ${sources.map((asset) => `<option value="${safeText(asset.id)}"${formValues.image_asset_id === asset.id ? " selected" : ""}>${safeText(asset.display_name || asset.original_filename || "Ảnh riêng tư")} (${safeText(String(asset.extension || "").replace(".", "").toUpperCase())} · ${vaultBytes(asset.byte_size)})</option>`).join("")}
+                <option value="">${safeText(t("source.placeholder"))}</option>
+                ${sources.map((asset) => `<option value="${safeText(asset.id)}"${formValues.image_asset_id === asset.id ? " selected" : ""}>${safeText(asset.display_name || asset.original_filename || t("source.privateImage"))} (${safeText(String(asset.extension || "").replace(".", "").toUpperCase())} · ${vaultBytes(asset.byte_size)})</option>`).join("")}
               </select>
-              <span class="portal-field-help">Chỉ ảnh .png, .jpg, .jpeg, .webp active của tài khoản hiện tại được hiển thị.</span>
+              <span class="portal-field-help">${safeText(t("source.help"))}</span>
             </div>
             <div class="portal-field">
-              <label class="portal-field-label" for="upscale_scale_factor">Hệ số phóng đại (Scale) <span class="portal-field-required">*</span></label>
+              <label class="portal-field-label" for="upscale_scale_factor">${safeText(t("scale.label"))} <span class="portal-field-required">*</span></label>
               <select class="portal-select" id="upscale_scale_factor" name="scale_factor" required data-field="scale_selector">
-                <option value="2"${formValues.scale_factor === "2" || !formValues.scale_factor ? " selected" : ""}>2x (Phóng to gấp 2 lần)</option>
-                <option value="4"${formValues.scale_factor === "4" ? " selected" : ""}>4x (Phóng to gấp 4 lần)</option>
+                <option value="2"${formValues.scale_factor === "2" || !formValues.scale_factor ? " selected" : ""}>${safeText(t("scale.option2"))}</option>
+                <option value="4"${formValues.scale_factor === "4" ? " selected" : ""}>${safeText(t("scale.option4"))}</option>
               </select>
-              <span class="portal-field-help">Hệ số tỷ lệ mở rộng kích thước ảnh đầu ra.</span>
+              <span class="portal-field-help">${safeText(t("scale.help"))}</span>
             </div>
             <div class="portal-form-footer">
               <span class="portal-form-note">${safeText(runReason)}</span>
-              <button class="portal-button portal-button--primary" type="submit" data-portal-submit="image-upscale"${canRun ? "" : " disabled"}>Tạo tác vụ Upscale</button>
+              <button class="portal-button portal-button--primary" type="submit" data-portal-submit="image-upscale"${canRun ? "" : " disabled"}>${safeText(t("action.submit"))}</button>
             </div>
           </form>
         </section>
         <aside class="portal-card portal-card-pad portal-document-operation-boundary">
           <div class="portal-card-header">
             <div>
-              <h2 class="portal-card-title">Quy trình xử lý</h2>
-              <p class="portal-card-subtitle">Đảm bảo an toàn và minh bạch theo chuẩn SPEC.</p>
+              <h2 class="portal-card-title">${safeText(common("workflow.title"))}</h2>
+              <p class="portal-card-subtitle">${safeText(common("workflow.description"))}</p>
             </div>
           </div>
           <ol class="portal-project-steps">
-            <li><strong>1. Chọn ảnh từ Asset Vault</strong><span>Kiểm tra định dạng, kích thước và quyền sở hữu trước khi tiếp nhận.</span></li>
-            <li><strong>2. Tạo job trong hàng đợi</strong><span>Job được lưu durable trong SQLite với trạng thái queued.</span></li>
-            <li><strong>3. Theo dõi trong Lịch sử</strong><span>Xem trạng thái và tải ảnh đã hoàn thành tại trang Lịch sử tác vụ.</span></li>
+            <li><strong>1. ${safeText(t("step.1.title"))}</strong><span>${safeText(t("step.1.body"))}</span></li>
+            <li><strong>2. ${safeText(t("step.2.title"))}</strong><span>${safeText(t("step.2.body"))}</span></li>
+            <li><strong>3. ${safeText(t("step.3.title"))}</strong><span>${safeText(t("step.3.body"))}</span></li>
           </ol>
           <div class="portal-form-footer">
-            <a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a>
-            <a class="portal-button portal-button--quiet" href="/jobs">Mở Lịch sử tác vụ (/jobs)</a>
+            <a class="portal-button portal-button--quiet" href="/asset-vault">${safeText(common("openVault"))}</a>
+            <a class="portal-button portal-button--quiet" href="/jobs">${safeText(common("openHistory"))}</a>
           </div>
         </aside>
       </div>
@@ -26220,55 +26643,58 @@
         <div class="portal-notice portal-notice--info">
           <span class="portal-notice-icon" aria-hidden="true">i</span>
           <div>
-            <strong>Quy chuẩn Visible Live Acceptance</strong>
-            <p>Tác vụ Image Upscale chỉ ghi nhận trạng thái đã hoàn thành khi có kết quả thật từ nhà cung cấp. Không hiển thị kết quả giả lập hoặc báo thành công trước khi có provider output.</p>
+            <strong>${safeText(common("acceptance.title"))}</strong>
+            <p>${safeText(t("acceptance.body"))}</p>
           </div>
         </div>
-        ${renderNotes(page)}
+        ${renderMediaOperationNotes(page, "image")}
       </section>
     </article>`;
   }
 
   function renderImageTransform(page, context) {
+    const t = (key, fallback = "", params) => mediaOperationText(`transform.${key}`, fallback, params);
+    const common = (key, fallback = "", params) => mediaOperationText(`common.${key}`, fallback, params);
     const rawSources = imageVaultItems(context);
     const sources = rawSources.filter((a) => [".png", ".jpg", ".jpeg", ".webp"].includes(String(a.extension || "").toLowerCase()));
     const formValues = transientFormValues("/image/transform");
     const lastJob = (context.featureFlows && context.featureFlows["/image/transform"] && context.featureFlows["/image/transform"].job)
       || context.imageTransformLastJob || null;
     const canRun = sources.length > 0;
-    const sourceSummary = sources.length === 1 ? "1 ảnh đang hoạt động" : `${sources.length} ảnh đang hoạt động`;
+    const sourceSummary = common("activeAssetCount", "{count} ảnh khả dụng", { count: String(sources.length) });
     const runReason = sources.length === 0
-      ? "Hãy lưu JPEG, PNG hoặc WebP vào Asset Vault trước khi tạo tác vụ biến đổi ảnh."
-      : "Chọn ảnh từ Asset Vault, nhập câu lệnh biến đổi và tỷ lệ khung hình để đưa vào hàng đợi canonical.";
+      ? t("runReason.empty")
+      : t("runReason.ready");
 
     let resultSection = "";
     if (lastJob) {
+      const jobStatus = lastJob.status || "queued";
       resultSection = `
         <section class="portal-card portal-card-pad portal-transform-job-receipt" data-transform-job-receipt>
           <div class="portal-card-header">
             <div>
-              <h2 class="portal-card-title">Tác vụ Biến đổi ảnh đã tạo</h2>
-              <p class="portal-card-subtitle">Tác vụ đã được tiếp nhận an toàn trong hàng đợi Web-native.</p>
+              <h2 class="portal-card-title">${safeText(t("receipt.title"))}</h2>
+              <p class="portal-card-subtitle">${safeText(t("receipt.description"))}</p>
             </div>
-            ${badge("queued")}
+            ${mediaOperationStatusBadge(jobStatus)}
           </div>
           <dl class="portal-job-meta">
-            <div><dt>Mã tác vụ (Job ID)</dt><dd><code data-field="job_id">${safeText(lastJob.id || lastJob.job_id || "")}</code></dd></div>
-            <div><dt>Trạng thái (Status)</dt><dd><span class="portal-badge" data-status="${safeText(lastJob.status || "queued")}" data-field="job_status">${safeText(lastJob.status || "queued")}</span></dd></div>
-            <div><dt>Lý do (Status Reason)</dt><dd><span data-field="status_reason">${safeText(lastJob.status_reason || "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE")}</span></dd></div>
-            <div><dt>Tỷ lệ khung hình</dt><dd><span>${safeText(String(lastJob.aspect_ratio || "1:1"))}</span></dd></div>
-            <div><dt>Câu lệnh biến đổi</dt><dd><span>${safeText(String(lastJob.transform_instruction || ""))}</span></dd></div>
+            <div><dt>${safeText(common("jobId"))}</dt><dd><code data-field="job_id">${safeText(lastJob.id || lastJob.job_id || "")}</code></dd></div>
+            <div><dt>${safeText(common("status"))}</dt><dd>${mediaOperationStatusBadge(jobStatus, "job_status")}</dd></div>
+            <div><dt>${safeText(common("statusReason"))}</dt><dd><span data-field="status_reason">${safeText(mediaOperationStatusReason(lastJob.status_reason))}</span></dd></div>
+            <div><dt>${safeText(t("aspect.label"))}</dt><dd><span>${safeText(String(lastJob.aspect_ratio || "1:1"))}</span></dd></div>
+            <div><dt>${safeText(t("instruction.label"))}</dt><dd><span>${safeText(String(lastJob.transform_instruction || ""))}</span></dd></div>
           </dl>
           <div class="portal-notice portal-notice--info">
             <span class="portal-notice-icon" aria-hidden="true">i</span>
             <div>
-              <strong>Chờ xử lý từ Provider</strong>
-              <p>Tác vụ đang chờ thực thi thực tế. Kết quả và tệp xuất sẽ xuất hiện sau khi quá trình xử lý hoàn tất.</p>
+              <strong>${safeText(common("wait.title"))}</strong>
+              <p>${safeText(common("wait.body"))}</p>
             </div>
           </div>
           <div class="portal-form-footer">
-            <a class="portal-button portal-button--primary" href="/jobs" data-link="view-job-history">Xem lịch sử tác vụ (/jobs)</a>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="image-transform-reset" data-portal-route="/image/transform">Tạo tác vụ mới</button>
+            <a class="portal-button portal-button--primary" href="/jobs" data-link="view-job-history">${safeText(common("history"))}</a>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="image-transform-reset" data-portal-route="/image/transform">${safeText(common("newTask"))}</button>
           </div>
         </section>
       `;
@@ -26277,13 +26703,13 @@
     return `<article class="portal-page portal-image-transform">${renderHero(page, context)}
       <section class="portal-document-operation-intro">
         <div>
-          <span class="portal-section-kicker">Web-native Image Operations</span>
-          <h2>Biến đổi ảnh (Image Transform / Image-to-Image)</h2>
-          <p>Chọn ảnh nguồn từ Asset Vault và cung cấp câu lệnh biến đổi để tạo biến thể phong cách hoặc nội dung mới. Quá trình chạy qua Job Bridge fail-closed, xác thực quyền sở hữu và bảo vệ chi phí Xu minh bạch.</p>
+          <span class="portal-section-kicker">${safeText(t("intro.kicker"))}</span>
+          <h2>${safeText(t("intro.title"))}</h2>
+          <p>${safeText(t("intro.description"))}</p>
         </div>
         <dl>
-          <div><dt>${safeText(sourceSummary)}</dt><dd>Ảnh trong Asset Vault</dd></div>
-          <div><dt>1:1, 4:5, 16:9, 9:16</dt><dd>Tỷ lệ khung hình hỗ trợ</dd></div>
+          <div><dt>${safeText(sourceSummary)}</dt><dd>${safeText(t("assetLabel"))}</dd></div>
+          <div><dt>1:1, 4:5, 16:9, 9:16</dt><dd>${safeText(t("aspect.summary"))}</dd></div>
         </dl>
       </section>
       ${resultSection}
@@ -26291,56 +26717,56 @@
         <section class="portal-card portal-card-pad portal-document-operation-form">
           <div class="portal-card-header">
             <div>
-              <h2 class="portal-card-title">Cấu hình biến đổi ảnh</h2>
-              <p class="portal-card-subtitle">Browser chỉ gửi Asset Vault ID, câu lệnh và tỷ lệ khung hình. Không upload bytes hoặc đường dẫn raw.</p>
+              <h2 class="portal-card-title">${safeText(t("form.title"))}</h2>
+              <p class="portal-card-subtitle">${safeText(t("form.description"))}</p>
             </div>
             ${badge(canRun ? "ready" : "guarded")}
           </div>
           <form class="portal-form" data-portal-form data-portal-action="image-transform-submit" data-portal-route="/image/transform" novalidate>
             <div class="portal-field">
-              <label class="portal-field-label" for="transform_image_asset_id">Ảnh nguồn trong Asset Vault <span class="portal-field-required">*</span></label>
+              <label class="portal-field-label" for="transform_image_asset_id">${safeText(t("source.label"))} <span class="portal-field-required">*</span></label>
               <select class="portal-select" id="transform_image_asset_id" name="image_asset_id" required data-field="source_image_selector">
-                <option value="">-- Chọn ảnh trong Asset Vault --</option>
-                ${sources.map((asset) => `<option value="${safeText(asset.id)}"${formValues.image_asset_id === asset.id ? " selected" : ""}>${safeText(asset.display_name || asset.original_filename || "Ảnh riêng tư")} (${safeText(String(asset.extension || "").replace(".", "").toUpperCase())} · ${vaultBytes(asset.byte_size)})</option>`).join("")}
+                <option value="">${safeText(t("source.placeholder"))}</option>
+                ${sources.map((asset) => `<option value="${safeText(asset.id)}"${formValues.image_asset_id === asset.id ? " selected" : ""}>${safeText(asset.display_name || asset.original_filename || common("source.privateImage"))} (${safeText(String(asset.extension || "").replace(".", "").toUpperCase())} · ${vaultBytes(asset.byte_size)})</option>`).join("")}
               </select>
-              <span class="portal-field-help">Chỉ ảnh .png, .jpg, .jpeg, .webp active của tài khoản hiện tại được hiển thị.</span>
+              <span class="portal-field-help">${safeText(t("source.help"))}</span>
             </div>
             <div class="portal-field">
-              <label class="portal-field-label" for="transform_instruction">Câu lệnh biến đổi (Transform Instruction / Prompt) <span class="portal-field-required">*</span></label>
-              <textarea class="portal-textarea" id="transform_instruction" name="transform_instruction" rows="3" required data-field="transform_instruction_input" placeholder="Mô tả phong cách, nhân vật, bối cảnh hoặc chi tiết cần biến đổi...">${safeText(formValues.transform_instruction || "")}</textarea>
-              <span class="portal-field-help">Mô tả chi tiết mong muốn biến đổi từ ảnh gốc.</span>
+              <label class="portal-field-label" for="transform_instruction">${safeText(t("instruction.label"))} <span class="portal-field-required">*</span></label>
+              <textarea class="portal-textarea" id="transform_instruction" name="transform_instruction" rows="3" required data-field="transform_instruction_input" placeholder="${safeText(t("instruction.placeholder"))}">${safeText(formValues.transform_instruction || "")}</textarea>
+              <span class="portal-field-help">${safeText(t("instruction.help"))}</span>
             </div>
             <div class="portal-field">
-              <label class="portal-field-label" for="transform_aspect_ratio">Tỷ lệ khung hình (Format / Aspect Ratio) <span class="portal-field-required">*</span></label>
+              <label class="portal-field-label" for="transform_aspect_ratio">${safeText(t("aspect.label"))} <span class="portal-field-required">*</span></label>
               <select class="portal-select" id="transform_aspect_ratio" name="aspect_ratio" required data-field="format_selector">
-                <option value="1:1"${formValues.aspect_ratio === "1:1" || !formValues.aspect_ratio ? " selected" : ""}>1:1 (Vuông - Square)</option>
-                <option value="4:5"${formValues.aspect_ratio === "4:5" ? " selected" : ""}>4:5 (Dọc bài viết - Portrait)</option>
-                <option value="16:9"${formValues.aspect_ratio === "16:9" ? " selected" : ""}>16:9 (Ngang màn ảnh - Landscape)</option>
-                <option value="9:16"${formValues.aspect_ratio === "9:16" ? " selected" : ""}>9:16 (Dọc Story / Reels / Shorts)</option>
+                <option value="1:1"${formValues.aspect_ratio === "1:1" || !formValues.aspect_ratio ? " selected" : ""}>${safeText(t("aspect.square"))}</option>
+                <option value="4:5"${formValues.aspect_ratio === "4:5" ? " selected" : ""}>${safeText(t("aspect.portrait"))}</option>
+                <option value="16:9"${formValues.aspect_ratio === "16:9" ? " selected" : ""}>${safeText(t("aspect.landscape"))}</option>
+                <option value="9:16"${formValues.aspect_ratio === "9:16" ? " selected" : ""}>${safeText(t("aspect.story"))}</option>
               </select>
-              <span class="portal-field-help">Tỷ lệ khung hình ảnh đầu ra.</span>
+              <span class="portal-field-help">${safeText(t("aspect.help"))}</span>
             </div>
             <div class="portal-form-footer">
               <span class="portal-form-note">${safeText(runReason)}</span>
-              <button class="portal-button portal-button--primary" type="submit" data-portal-submit="image-transform"${canRun ? "" : " disabled"}>Tạo tác vụ Transform</button>
+              <button class="portal-button portal-button--primary" type="submit" data-portal-submit="image-transform"${canRun ? "" : " disabled"}>${safeText(t("action.submit"))}</button>
             </div>
           </form>
         </section>
         <aside class="portal-card portal-card-pad portal-document-operation-boundary">
           <div class="portal-card-header">
             <div>
-              <h2 class="portal-card-title">Quy trình xử lý</h2>
-              <p class="portal-card-subtitle">Đảm bảo an toàn và minh bạch theo chuẩn SPEC.</p>
+              <h2 class="portal-card-title">${safeText(common("workflow.title"))}</h2>
+              <p class="portal-card-subtitle">${safeText(common("workflow.description"))}</p>
             </div>
           </div>
           <ol class="portal-project-steps">
-            <li><strong>1. Chọn ảnh từ Asset Vault</strong><span>Kiểm tra định dạng, kích thước và quyền sở hữu trước khi tiếp nhận.</span></li>
-            <li><strong>2. Tạo job trong hàng đợi</strong><span>Job được lưu durable trong SQLite với trạng thái queued.</span></li>
-            <li><strong>3. Theo dõi trong Lịch sử</strong><span>Xem trạng thái và tải ảnh đã hoàn thành tại trang Lịch sử tác vụ.</span></li>
+            <li><strong>1. ${safeText(t("step.1.title"))}</strong><span>${safeText(t("step.1.body"))}</span></li>
+            <li><strong>2. ${safeText(t("step.2.title"))}</strong><span>${safeText(t("step.2.body"))}</span></li>
+            <li><strong>3. ${safeText(t("step.3.title"))}</strong><span>${safeText(t("step.3.body"))}</span></li>
           </ol>
           <div class="portal-form-footer">
-            <a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a>
-            <a class="portal-button portal-button--quiet" href="/jobs">Mở Lịch sử tác vụ (/jobs)</a>
+            <a class="portal-button portal-button--quiet" href="/asset-vault">${safeText(common("openVault"))}</a>
+            <a class="portal-button portal-button--quiet" href="/jobs">${safeText(common("openHistory"))}</a>
           </div>
         </aside>
       </div>
@@ -26348,31 +26774,34 @@
         <div class="portal-notice portal-notice--info">
           <span class="portal-notice-icon" aria-hidden="true">i</span>
           <div>
-            <strong>Quy chuẩn Visible Live Acceptance</strong>
-            <p>Tác vụ Image Transform chỉ ghi nhận trạng thái đã hoàn thành khi có kết quả thật từ nhà cung cấp. Không hiển thị kết quả giả lập hoặc báo thành công trước khi có provider output.</p>
+            <strong>${safeText(common("acceptance.title"))}</strong>
+            <p>${safeText(t("acceptance.body"))}</p>
           </div>
         </div>
-        ${renderNotes(page)}
+        ${renderMediaOperationNotes(page, "image")}
       </section>
     </article>`;
   }
 
   function renderMusicSfx(page, context) {
+    const t = (key, fallback = "", params) => mediaOperationText(`sfx.${key}`, fallback, params);
+    const common = (key, fallback = "", params) => mediaOperationText(`common.${key}`, fallback, params);
     const formValues = transientFormValues("/music/sfx");
     const lastJob = (context.featureFlows && context.featureFlows["/music/sfx"] && context.featureFlows["/music/sfx"].job)
       || context.musicSfxLastJob || null;
     const canRun = true;
-    const runReason = "Nhập mô tả brief âm thanh (tối đa 2000 ký tự) để đưa tác vụ vào hàng đợi canonical.";
+    const runReason = t("runReason");
 
     let resultSection = "";
     if (lastJob) {
+      const jobStatus = lastJob.status || "queued";
       const isCompleted = String(lastJob.status || "").toLowerCase() === "completed";
       const hasOutputUrl = Boolean(lastJob.output_url);
       const audioPlayerHtml = isCompleted && hasOutputUrl
         ? `<div class="portal-audio-player-wrapper" style="margin-top: 1rem;">
-             <label class="portal-field-label">Kết quả âm thanh đã xác minh</label>
+             <label class="portal-field-label">${safeText(t("audioResult"))}</label>
              <audio controls preload="none" src="${safeText(lastJob.output_url)}" data-field="output_audio_player" style="width: 100%;">
-               Trình duyệt không hỗ trợ thẻ audio.
+               ${safeText(t("audioUnsupported"))}
              </audio>
            </div>`
         : "";
@@ -26381,28 +26810,28 @@
         <section class="portal-card portal-card-pad portal-music-sfx-job-receipt" data-music-sfx-job-receipt>
           <div class="portal-card-header">
             <div>
-              <h2 class="portal-card-title">Tác vụ Hiệu ứng âm thanh đã tạo</h2>
-              <p class="portal-card-subtitle">Tác vụ đã được tiếp nhận an toàn trong hàng đợi Web-native.</p>
+              <h2 class="portal-card-title">${safeText(t("receipt.title"))}</h2>
+              <p class="portal-card-subtitle">${safeText(t("receipt.description"))}</p>
             </div>
-            ${badge(lastJob.status || "queued")}
+            ${mediaOperationStatusBadge(jobStatus)}
           </div>
           <dl class="portal-job-meta">
-            <div><dt>Mã tác vụ (Job ID)</dt><dd><code data-field="job_id">${safeText(lastJob.id || lastJob.job_id || "")}</code></dd></div>
-            <div><dt>Trạng thái (Status)</dt><dd><span class="portal-badge" data-status="${safeText(lastJob.status || "queued")}" data-field="job_status">${safeText(lastJob.status || "queued")}</span></dd></div>
-            <div><dt>Lý do (Status Reason)</dt><dd><span data-field="status_reason">${safeText(lastJob.status_reason || "AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE")}</span></dd></div>
-            <div><dt>Mô tả hiệu ứng (Brief)</dt><dd><span data-field="brief">${safeText(String(lastJob.brief || ""))}</span></dd></div>
+            <div><dt>${safeText(common("jobId"))}</dt><dd><code data-field="job_id">${safeText(lastJob.id || lastJob.job_id || "")}</code></dd></div>
+            <div><dt>${safeText(common("status"))}</dt><dd>${mediaOperationStatusBadge(jobStatus, "job_status")}</dd></div>
+            <div><dt>${safeText(common("statusReason"))}</dt><dd><span data-field="status_reason">${safeText(mediaOperationStatusReason(lastJob.status_reason))}</span></dd></div>
+            <div><dt>${safeText(t("brief.label"))}</dt><dd><span data-field="brief">${safeText(String(lastJob.brief || ""))}</span></dd></div>
           </dl>
           ${audioPlayerHtml}
           <div class="portal-notice portal-notice--info">
             <span class="portal-notice-icon" aria-hidden="true">i</span>
             <div>
-              <strong>Chờ xử lý từ Provider</strong>
-              <p>Tác vụ đang chờ thực thi thực tế từ provider được ủy quyền. Kết quả và tệp âm thanh xuất vào Asset Vault sẽ xuất hiện sau khi quá trình xử lý hoàn tất.</p>
+              <strong>${safeText(common("wait.title"))}</strong>
+              <p>${safeText(common("wait.body"))}</p>
             </div>
           </div>
           <div class="portal-form-footer">
-            <a class="portal-button portal-button--primary" href="/jobs" data-link="view-job-history">Xem lịch sử tác vụ (/jobs)</a>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="music-sfx-reset" data-portal-route="/music/sfx">Tạo tác vụ mới</button>
+            <a class="portal-button portal-button--primary" href="/jobs" data-link="view-job-history">${safeText(common("history"))}</a>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="music-sfx-reset" data-portal-route="/music/sfx">${safeText(common("newTask"))}</button>
           </div>
         </section>
       `;
@@ -26411,13 +26840,13 @@
     return `<article class="portal-page portal-music-sfx">${renderHero(page, context)}
       <section class="portal-document-operation-intro">
         <div>
-          <span class="portal-section-kicker">Web-native Audio Operations</span>
-          <h2>Hiệu ứng âm thanh (Music SFX / Generative SFX)</h2>
-          <p>Tạo hiệu ứng âm thanh chuyên biệt theo mô tả chi tiết. Quá trình chạy qua Job Bridge fail-closed, tách biệt hoàn toàn với kho Freesound có sẵn và bảo vệ chi phí Xu minh bạch.</p>
+          <span class="portal-section-kicker">${safeText(t("intro.kicker"))}</span>
+          <h2>${safeText(t("intro.title"))}</h2>
+          <p>${safeText(t("intro.description"))}</p>
         </div>
         <dl>
-          <div><dt>Generative AI</dt><dd>Tạo âm thanh từ mô tả brief</dd></div>
-          <div><dt>Tối đa 2.000 ký tự</dt><dd>Độ dài mô tả hỗ trợ</dd></div>
+          <div><dt>${safeText(t("intro.kind"))}</dt><dd>${safeText(t("intro.kindDescription"))}</dd></div>
+          <div><dt>${safeText(t("intro.length"))}</dt><dd>${safeText(t("intro.lengthDescription"))}</dd></div>
         </dl>
       </section>
       ${resultSection}
@@ -26425,38 +26854,38 @@
         <section class="portal-card portal-card-pad portal-document-operation-form">
           <div class="portal-card-header">
             <div>
-              <h2 class="portal-card-title">Cấu hình hiệu ứng âm thanh</h2>
-              <p class="portal-card-subtitle">Browser chỉ gửi mô tả brief. Không gửi tham số giá, tier, model hoặc trừ Xu từ client.</p>
+              <h2 class="portal-card-title">${safeText(t("form.title"))}</h2>
+              <p class="portal-card-subtitle">${safeText(t("form.description"))}</p>
             </div>
             ${badge("ready")}
           </div>
           <form class="portal-form" data-portal-form data-portal-action="music-sfx-submit" data-portal-route="/music/sfx" novalidate>
             <div class="portal-field">
-              <label class="portal-field-label" for="music_sfx_brief">Mô tả hiệu ứng âm thanh (Brief / Sound Prompt) <span class="portal-field-required">*</span></label>
-              <textarea class="portal-textarea" id="music_sfx_brief" name="brief" rows="4" required data-field="music_sfx_brief_input" placeholder="Mô tả âm thanh bạn muốn tạo (ví dụ: tiếng sấm rền từ xa, tiếng sóng biển rì rào vỗ bờ đá, tiếng khởi động động cơ phi thuyền không gian...)...">${safeText(formValues.brief || "")}</textarea>
-              <span class="portal-field-help">Mô tả chi tiết âm thanh, bối cảnh, âm lượng, nhịp điệu (1 đến 2.000 ký tự).</span>
+              <label class="portal-field-label" for="music_sfx_brief">${safeText(t("brief.label"))} <span class="portal-field-required">*</span></label>
+              <textarea class="portal-textarea" id="music_sfx_brief" name="brief" rows="4" required data-field="music_sfx_brief_input" placeholder="${safeText(t("brief.placeholder"))}">${safeText(formValues.brief || "")}</textarea>
+              <span class="portal-field-help">${safeText(t("brief.help"))}</span>
             </div>
             <div class="portal-form-footer">
               <span class="portal-form-note">${safeText(runReason)}</span>
-              <button class="portal-button portal-button--primary" type="submit" data-portal-submit="music-sfx">Tạo tác vụ SFX</button>
+              <button class="portal-button portal-button--primary" type="submit" data-portal-submit="music-sfx">${safeText(t("action.submit"))}</button>
             </div>
           </form>
         </section>
         <aside class="portal-card portal-card-pad portal-document-operation-boundary">
           <div class="portal-card-header">
             <div>
-              <h2 class="portal-card-title">Quy trình xử lý</h2>
-              <p class="portal-card-subtitle">Đảm bảo an toàn và minh bạch theo chuẩn SPEC.</p>
+              <h2 class="portal-card-title">${safeText(common("workflow.title"))}</h2>
+              <p class="portal-card-subtitle">${safeText(common("workflow.description"))}</p>
             </div>
           </div>
           <ol class="portal-project-steps">
-            <li><strong>1. Nhập mô tả âm thanh</strong><span>Brief được xác thực server-side (1-2000 ký tự).</span></li>
-            <li><strong>2. Tạo job trong hàng đợi</strong><span>Job được lưu durable trong SQLite với trạng thái queued.</span></li>
-            <li><strong>3. Theo dõi trong Lịch sử</strong><span>Xem trạng thái và nghe kết quả âm thanh đã xác minh tại trang Lịch sử tác vụ (/jobs).</span></li>
+            <li><strong>1. ${safeText(t("step.1.title"))}</strong><span>${safeText(t("step.1.body"))}</span></li>
+            <li><strong>2. ${safeText(t("step.2.title"))}</strong><span>${safeText(t("step.2.body"))}</span></li>
+            <li><strong>3. ${safeText(t("step.3.title"))}</strong><span>${safeText(t("step.3.body"))}</span></li>
           </ol>
           <div class="portal-form-footer">
-            <a class="portal-button portal-button--quiet" href="/music/sfx-library">Mở Thư viện SFX (/music/sfx-library)</a>
-            <a class="portal-button portal-button--quiet" href="/jobs">Mở Lịch sử tác vụ (/jobs)</a>
+            <a class="portal-button portal-button--quiet" href="/music/sfx-library">${safeText(t("openLibrary"))}</a>
+            <a class="portal-button portal-button--quiet" href="/jobs">${safeText(common("openHistory"))}</a>
           </div>
         </aside>
       </div>
@@ -26464,11 +26893,11 @@
         <div class="portal-notice portal-notice--info">
           <span class="portal-notice-icon" aria-hidden="true">i</span>
           <div>
-            <strong>Quy chuẩn Visible Live Acceptance</strong>
-            <p>Tác vụ Music SFX chỉ ghi nhận trạng thái đã hoàn thành khi có kết quả audio thật từ provider được ủy quyền và lưu vào Asset Vault. Tách biệt hoàn toàn với kho Freesound. Không phát âm thanh giả lập trước khi có provider output.</p>
+            <strong>${safeText(common("acceptance.title"))}</strong>
+            <p>${safeText(t("acceptance.body"))}</p>
           </div>
         </div>
-        ${renderNotes(page)}
+        ${renderMediaOperationNotes(page, "sfx")}
       </section>
     </article>`;
   }
@@ -30324,7 +30753,7 @@
         <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
           <button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-install-prompt" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-weight:700; border-radius:10px;">
             <span>📲</span>
-            <span>Tải & Cài đặt App TOAN AAS</span>
+            <span>${safeText(uiText("installGuide.title", "Cài ứng dụng TOAN AAS"))}</span>
           </button>
         </div>
       </aside>`;
@@ -34074,6 +34503,26 @@
     affiliate: "Affiliate", traffic: "Tăng traffic", conversion: "Tăng chuyển đổi", revenue: "Tăng doanh thu", community: "Cộng đồng"
   });
 
+  function campaignStatusText(value) {
+    const key = String(value || "draft").trim().toLowerCase();
+    return campaignText(`status.${key}`, CAMPAIGN_PLAN_STATUS_LABELS[key] || key);
+  }
+
+  function campaignPlatformText(value) {
+    const key = String(value || "other").trim().toLowerCase();
+    return campaignText(`platform.${key}`, CAMPAIGN_PLATFORM_LABELS[key] || key);
+  }
+
+  function campaignObjectiveText(value) {
+    const key = String(value || "").trim().toLowerCase();
+    return campaignText(`objective.${key}`, CAMPAIGN_OBJECTIVE_LABELS[key] || campaignText("board.noObjective", "Chưa rõ mục tiêu"));
+  }
+
+  function campaignScheduleStateText(value) {
+    const key = String(value || "guarded").trim().toLowerCase();
+    return campaignText(`schedule.${key}`, CAMPAIGN_SCHEDULE_INTENT_LABELS[key] || key);
+  }
+
   function campaignPlanStatus(plan) {
     const value = String(plan && plan.approval_status || "").trim().toLowerCase();
     return CAMPAIGN_PLAN_STATUSES.includes(value) ? value : "draft";
@@ -34081,9 +34530,9 @@
 
   function campaignScheduleLabel(value) {
     const raw = typeof value === "string" ? value.trim() : "";
-    if (!raw) return "Chưa xếp lịch";
+    if (!raw) return campaignText("schedule.notSet", "Chưa xếp lịch");
     const parsed = new Date(raw);
-    if (Number.isNaN(parsed.getTime())) return "Chưa xếp lịch";
+    if (Number.isNaN(parsed.getTime())) return campaignText("schedule.notSet", "Chưa xếp lịch");
     return localizedDateTime(parsed, { dateStyle: "medium", timeStyle: "short" }) || raw.replace("T", " · ");
   }
 
@@ -34093,7 +34542,7 @@
       if (url.protocol !== "https:" || !url.hostname || url.username || url.password || (url.port && url.port !== "443")) throw new Error("invalid campaign URL");
       return `<a class="portal-campaign-destination" href="${safeText(url.href)}" target="_blank" rel="noopener noreferrer">${safeText(url.hostname)}</a>`;
     } catch (_) {
-      return `<span class="portal-form-note">Liên kết đích không còn hợp lệ</span>`;
+      return `<span class="portal-form-note">${safeText(campaignText("schedule.invalidLink", "Liên kết đích không còn hợp lệ"))}</span>`;
     }
   }
 
@@ -34114,14 +34563,14 @@
     const current = campaignPlanStatus(plan);
     const transitions = CAMPAIGN_PLAN_TRANSITIONS[current] || [];
     const choices = [current, ...transitions];
-    const options = choices.map((value) => `<option value="${safeText(value)}">${safeText(CAMPAIGN_PLAN_STATUS_LABELS[value] || value)}</option>`).join("");
+    const options = choices.map((value) => `<option value="${safeText(value)}">${safeText(campaignStatusText(value))}</option>`).join("");
     const disabled = enabled ? "" : " disabled";
     const actionRoute = typeof route === "string" && route.startsWith("/campaigns/") ? route : "/campaigns";
-    return `<form class="portal-campaign-review" data-portal-form data-portal-action="campaign-update-status" data-portal-route="${safeText(actionRoute)}" data-portal-confirm="Cập nhật trạng thái kế hoạch cục bộ? Thao tác này không publish, không tạo job và không thay đổi Xu." novalidate>
+    return `<form class="portal-campaign-review" data-portal-form data-portal-action="campaign-update-status" data-portal-route="${safeText(actionRoute)}" data-portal-confirm="${safeText(campaignText("detail.statusConfirm", "Cập nhật trạng thái kế hoạch? Thao tác này không đăng bài, tạo tác vụ hoặc thay đổi Xu."))}" novalidate>
       <input type="hidden" name="plan_id" value="${safeText(id)}">
-      <label class="portal-field"><span class="portal-label">Trạng thái kế hoạch</span><select class="portal-select" name="approval_status"${disabled}>${options}</select></label>
-      <label class="portal-field"><span class="portal-label">Ghi chú tự rà soát</span><textarea class="portal-textarea" name="review_note" maxlength="1000" placeholder="Điều cần hoàn thiện trước bước tiếp theo…"${disabled}>${safeText(String(plan.review_note || ""))}</textarea></label>
-      <div class="portal-form-footer"><span class="portal-form-note">Chỉ thay đổi trạng thái quản lý cá nhân của bản kế hoạch này.</span><button class="portal-button portal-button--quiet" type="submit"${disabled}>Cập nhật</button></div>
+      <label class="portal-field"><span class="portal-label">${safeText(campaignText("detail.statusLabel", "Trạng thái kế hoạch"))}</span><select class="portal-select" name="approval_status"${disabled}>${options}</select></label>
+      <label class="portal-field"><span class="portal-label">${safeText(campaignText("detail.reviewLabel", "Ghi chú tự rà soát"))}</span><textarea class="portal-textarea" name="review_note" maxlength="1000" placeholder="${safeText(campaignText("detail.reviewPlaceholder", "Điều cần hoàn thiện trước bước tiếp theo…"))}"${disabled}>${safeText(String(plan.review_note || ""))}</textarea></label>
+      <div class="portal-form-footer"><span class="portal-form-note">${safeText(campaignText("detail.statusHelp", "Chỉ thay đổi trạng thái riêng của bản kế hoạch này."))}</span><button class="portal-button portal-button--quiet" type="submit"${disabled}>${safeText(campaignText("detail.update", "Cập nhật"))}</button></div>
     </form>`;
   }
 
@@ -34133,10 +34582,10 @@
     const objective = String(plan.objective || "").toLowerCase();
     const scheduledFor = typeof plan.scheduled_for === "string" ? plan.scheduled_for.slice(0, 16) : "";
     const actionRoute = typeof route === "string" && route.startsWith("/campaigns/") ? route : "/campaigns";
-    return `<details class="portal-campaign-edit"><summary>Chỉnh sửa brief &amp; mốc lịch</summary><form class="portal-form" data-portal-form data-portal-action="campaign-update" data-portal-route="${safeText(actionRoute)}" data-portal-confirm="Lưu thay đổi kế hoạch cục bộ? Thao tác này không publish, không tạo job và không thay đổi Xu." novalidate>
+    return `<details class="portal-campaign-edit"><summary>${safeText(campaignText("detail.editSummary", "Chỉnh sửa brief và mốc lịch"))}</summary><form class="portal-form" data-portal-form data-portal-action="campaign-update" data-portal-route="${safeText(actionRoute)}" data-portal-confirm="${safeText(campaignText("detail.editConfirm", "Lưu thay đổi kế hoạch riêng? Thao tác này không đăng bài, tạo tác vụ hay thay đổi Xu."))}" novalidate>
       <input type="hidden" name="plan_id" value="${safeText(id)}">
-      <div class="portal-fields"><label class="portal-field"><span class="portal-label">Tên kế hoạch</span><input class="portal-input" name="title" value="${safeText(String(plan.title || ""))}" minlength="3" maxlength="180" required${disabled}></label><label class="portal-field"><span class="portal-label">Liên kết đích HTTPS</span><input class="portal-input" name="destination_url" type="url" value="${safeText(String(plan.destination_url || ""))}" maxlength="1024" required${disabled}></label><label class="portal-field"><span class="portal-label">Nền tảng</span><select class="portal-select" name="platform" required${disabled}>${optionsFor(CAMPAIGN_PLATFORM_LABELS, platform)}</select></label><label class="portal-field"><span class="portal-label">Mục tiêu</span><select class="portal-select" name="objective" required${disabled}>${optionsFor(CAMPAIGN_OBJECTIVE_LABELS, objective)}</select></label><label class="portal-field"><span class="portal-label">Mốc lịch nội bộ</span><input class="portal-input" name="scheduled_for" type="datetime-local" value="${safeText(scheduledFor)}"${disabled}></label></div>
-      <div class="portal-form-footer"><span class="portal-form-note">Chỉ cập nhật metadata Web-owned; Bot/provider/PayOS/Xu không nhận thay đổi này.</span><button class="portal-button portal-button--quiet" type="submit"${disabled}>Lưu thay đổi</button></div>
+      <div class="portal-fields"><label class="portal-field"><span class="portal-label">${safeText(campaignText("detail.titleLabel", "Tên kế hoạch"))}</span><input class="portal-input" name="title" value="${safeText(String(plan.title || ""))}" minlength="3" maxlength="180" required${disabled}></label><label class="portal-field"><span class="portal-label">${safeText(campaignText("detail.urlLabel", "Liên kết đích HTTPS"))}</span><input class="portal-input" name="destination_url" type="url" value="${safeText(String(plan.destination_url || ""))}" maxlength="1024" required${disabled}></label><label class="portal-field"><span class="portal-label">${safeText(campaignText("detail.platform", "Nền tảng"))}</span><select class="portal-select" name="platform" required${disabled}>${optionsFor(CAMPAIGN_PLATFORM_LABELS, platform)}</select></label><label class="portal-field"><span class="portal-label">${safeText(campaignText("detail.objective", "Mục tiêu"))}</span><select class="portal-select" name="objective" required${disabled}>${optionsFor(CAMPAIGN_OBJECTIVE_LABELS, objective)}</select></label><label class="portal-field"><span class="portal-label">${safeText(campaignText("detail.internalDateLabel", "Mốc lịch nội bộ"))}</span><input class="portal-input" name="scheduled_for" type="datetime-local" value="${safeText(scheduledFor)}"${disabled}></label></div>
+      <div class="portal-form-footer"><span class="portal-form-note">${safeText(campaignText("authoring.saveNote", "Lưu dữ liệu riêng với CSRF, chống gửi lặp và nhật ký kiểm toán."))}</span><button class="portal-button portal-button--quiet" type="submit"${disabled}>${safeText(campaignText("detail.save", "Lưu thay đổi"))}</button></div>
     </form></details>`;
   }
 
@@ -34163,7 +34612,12 @@
 
   function campaignScheduleGuardLabel(value) {
     const code = String(value || "").trim();
-    return CAMPAIGN_SCHEDULE_GUARD_LABELS[code] || "Lịch nhắc đang được bảo vệ cho đến khi bạn xác nhận lại source.";
+    const key = code === "CAMPAIGN_SCHEDULE_SOURCE_CHANGED" ? "guard.sourceChanged"
+      : code === "CAMPAIGN_SCHEDULE_SOURCE_UNVERIFIED" ? "guard.sourceUnverified"
+        : code === "CAMPAIGN_SCHEDULE_PLAN_ARCHIVED" ? "guard.planArchived"
+          : code === "CAMPAIGN_SCHEDULE_TRIGGER_EXPIRED" ? "guard.triggerExpired"
+            : code === "CAMPAIGN_SCHEDULE_TRIGGER_UNVERIFIED" ? "guard.triggerUnverified" : "guard.fallback";
+    return campaignText(key, CAMPAIGN_SCHEDULE_GUARD_LABELS[code] || "Lịch nhắc đang được bảo vệ cho đến khi bạn xác nhận lại chiến dịch.");
   }
 
   function campaignScheduleTimezoneDefault() {
@@ -34179,7 +34633,7 @@
     const utc = String(intent && intent.trigger_at || "").trim();
     const timezone = String(intent && intent.timezone || "UTC").trim();
     const parsed = new Date(utc);
-    if (Number.isNaN(parsed.getTime())) return "Thời điểm chưa xác minh";
+    if (Number.isNaN(parsed.getTime())) return campaignText("schedule.invalidTime", "Thời điểm chưa xác minh");
     return localizedDateTime(parsed, { dateStyle: "medium", timeStyle: "short", timeZone: timezone }) || utc.replace("T", " · ");
   }
 
@@ -34202,8 +34656,8 @@
     const detailRoute = typeof route === "string" && route.startsWith("/campaigns/") ? route : campaignPlanHref(plan);
     const form = `<form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="campaign-schedule-create" data-portal-route="${safeText(detailRoute)}" data-campaign-plan-id="${safeText(planId)}" data-campaign-plan-revision="${safeText(String(planRevision))}" novalidate>
       <input type="hidden" name="plan_id" value="${safeText(planId)}">
-      <div class="portal-fields"><label class="portal-field"><span class="portal-label">Thời điểm nhắc</span><input class="portal-input" type="datetime-local" name="trigger_local_at" required${disabled}></label><label class="portal-field"><span class="portal-label">Timezone IANA</span><input class="portal-input" name="timezone" maxlength="64" required value="${safeText(zone)}"${disabled}><span class="portal-field-help">Ví dụ: Asia/Ho_Chi_Minh. Server từ chối giờ trùng hoặc không tồn tại khi đổi DST.</span></label><label class="portal-field portal-field--wide"><span><input type="checkbox" name="opt_in" value="true" required${disabled}> Tôi chủ động yêu cầu tạo một record Inbox riêng tư tại thời điểm này.</span></label><label class="portal-field portal-field--wide"><span><input type="checkbox" name="confirm" value="true" required${disabled}> Tôi hiểu thay đổi Campaign/revision sẽ dừng lịch nhắc để tôi xác nhận lại.</span></label></div>
-      <div class="portal-form-footer"><span class="portal-form-note">Không Telegram, email, push, Bot, provider, publish hay tự chạy browser. Mốc UTC do server chuẩn hóa sau khi kiểm tra timezone.</span><button class="portal-button portal-button--primary" type="submit"${disabled}>Lưu lịch nhắc in-app</button></div>
+      <div class="portal-fields"><label class="portal-field"><span class="portal-label">${safeText(campaignText("schedule.triggerLabel", "Thời điểm nhắc"))}</span><input class="portal-input" type="datetime-local" name="trigger_local_at" required${disabled}></label><label class="portal-field"><span class="portal-label">${safeText(campaignText("schedule.timezoneLabel", "Múi giờ IANA"))}</span><input class="portal-input" name="timezone" maxlength="64" required value="${safeText(zone)}"${disabled}><span class="portal-field-help">${safeText(campaignText("schedule.timezoneHelp", "Ví dụ: Asia/Ho_Chi_Minh. Máy chủ từ chối giờ trùng hoặc không tồn tại khi chuyển giờ mùa hè."))}</span></label><label class="portal-field portal-field--wide"><span><input type="checkbox" name="opt_in" value="true" required${disabled}> ${safeText(campaignText("schedule.optIn", "Tôi chủ động yêu cầu tạo một lời nhắc riêng trong hộp thư vào thời điểm này."))}</span></label><label class="portal-field portal-field--wide"><span><input type="checkbox" name="confirm" value="true" required${disabled}> ${safeText(campaignText("schedule.confirm", "Tôi hiểu rằng khi chiến dịch thay đổi, lịch nhắc sẽ dừng cho đến khi tôi xác nhận lại."))}</span></label></div>
+      <div class="portal-form-footer"><span class="portal-form-note">${safeText(campaignText("schedule.writeNote", "Không gửi Telegram, email hoặc thông báo đẩy; không gọi Bot, nhà cung cấp hay đăng bài."))}</span><button class="portal-button portal-button--primary" type="submit"${disabled}>${safeText(campaignText("schedule.save", "Lưu lời nhắc trong ứng dụng"))}</button></div>
     </form>`;
     const rows = intents.length ? `<div class="portal-workboard-events">${intents.map((intent) => {
       const intentId = String(intent.id || "");
@@ -34212,13 +34666,13 @@
       const attributes = ` data-campaign-plan-id="${safeText(planId)}" data-campaign-plan-revision="${safeText(String(planRevision))}" data-campaign-schedule-intent-id="${safeText(intentId)}" data-campaign-schedule-intent-revision="${safeText(String(revision))}"`;
       const canCancelIntent = canCancel && revision && ["active", "guarded"].includes(state);
       const canReconfirmIntent = canReconfirm && revision && state === "guarded" && intent.reconfirmation_required === true;
-      const actions = (canReconfirmIntent ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="campaign-schedule-reconfirm" data-portal-route="${safeText(detailRoute)}"${attributes} data-portal-confirm="Xác nhận lại lịch nhắc với revision Campaign hiện tại? Thời điểm cũ sẽ giữ nguyên.">Xác nhận lại</button>` : "")
-        + (canCancelIntent ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="campaign-schedule-cancel" data-portal-route="${safeText(detailRoute)}"${attributes} data-portal-confirm="Hủy lịch nhắc này? Thao tác không sửa Campaign hoặc gửi thông báo ngoài Web.">Hủy lịch nhắc</button>` : "");
-      const guard = state === "guarded" ? `<small>${safeText(campaignScheduleGuardLabel(intent.guard_code))} Không tự đổi giờ; hãy xác nhận lại hoặc tạo lịch mới.</small>` : "";
-      return `<div><span>•</span><span><b>${safeText(CAMPAIGN_SCHEDULE_INTENT_LABELS[state])}</b><small>${safeText(campaignScheduleIntentDueLabel(intent))} · ${safeText(String(intent.timezone || "UTC"))} · source v${safeText(String(intent.source_revision || "—"))}</small>${guard}${actions ? `<div class="portal-inline-actions">${actions}</div>` : ""}</span></div>`;
-    }).join("")}</div>` : renderEmpty("Chưa có lịch nhắc", "Lịch Campaign chỉ được tạo sau khi chính owner xác nhận ở trang chi tiết này. Mốc lịch nội bộ phía trên vẫn không tự chạy.", "◷");
-    const readNotice = canRead ? "" : `<div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h3>Chưa thể xác minh lịch nhắc</h3><p>Máy chủ chưa trả danh sách owner-scoped, vì vậy form đang khóa thay vì giả định không có lịch cũ.</p></div></div>`;
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch nhắc in-app riêng tư</h2><p class="portal-card-subtitle">Khác với “Mốc lịch nội bộ”: đây là opt-in rõ ràng để scheduler Web đã xác thực có thể tạo đúng một record Inbox riêng tư.</p></div>${badge(canRead ? (canCreate ? "ready" : "read_only") : "guarded")}</div>${readNotice}${form}<div class="portal-card-header"><div><h3 class="portal-card-title">Lịch đã ghi nhận</h3><p class="portal-card-subtitle">Không có delivery ngoài Web; source thay đổi sẽ được giữ ở trạng thái guarded.</p></div></div>${rows}</section>`;
+      const actions = (canReconfirmIntent ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="campaign-schedule-reconfirm" data-portal-route="${safeText(detailRoute)}"${attributes} data-portal-confirm="${safeText(campaignText("schedule.reconfirmConfirm", "Xác nhận lại lịch nhắc với phiên bản chiến dịch hiện tại? Thời điểm cũ vẫn được giữ."))}">${safeText(campaignText("schedule.reconfirm", "Xác nhận lại"))}</button>` : "")
+        + (canCancelIntent ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="campaign-schedule-cancel" data-portal-route="${safeText(detailRoute)}"${attributes} data-portal-confirm="${safeText(campaignText("schedule.cancelConfirm", "Hủy lời nhắc này? Chiến dịch không bị sửa và không có thông báo nào được gửi ra ngoài ứng dụng."))}">${safeText(campaignText("schedule.cancel", "Hủy lịch nhắc"))}</button>` : "");
+      const guard = state === "guarded" ? `<small>${safeText(campaignScheduleGuardLabel(intent.guard_code))} ${safeText(campaignText("schedule.guardHint", "Không tự đổi giờ; hãy xác nhận lại hoặc tạo lịch mới."))}</small>` : "";
+      return `<div><span>•</span><span><b>${safeText(campaignScheduleStateText(state))}</b><small>${safeText(campaignScheduleIntentDueLabel(intent))} · ${safeText(String(intent.timezone || "UTC"))} · v${safeText(String(intent.source_revision || "—"))}</small>${guard}${actions ? `<div class="portal-inline-actions">${actions}</div>` : ""}</span></div>`;
+    }).join("")}</div>` : renderEmpty(campaignText("schedule.emptyTitle", "Chưa có lời nhắc"), campaignText("schedule.emptyBody", "Chỉ tạo lời nhắc sau khi chủ tài khoản xác nhận tại trang chi tiết. Mốc nội bộ phía trên không tự chạy."), "◷");
+    const readNotice = canRead ? "" : `<div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h3>${safeText(campaignText("schedule.unverifiedTitle", "Chưa thể xác minh lời nhắc"))}</h3><p>${safeText(campaignText("schedule.unverifiedBody", "Máy chủ chưa trả danh sách theo tài khoản, vì vậy biểu mẫu vẫn khóa thay vì giả định không có lịch cũ."))}</p></div></div>`;
+    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(campaignText("schedule.title", "Lịch nhắc riêng trong ứng dụng"))}</h2><p class="portal-card-subtitle">${safeText(campaignText("schedule.body", "Đây là lựa chọn rõ ràng để tạo một lời nhắc riêng trong hộp thư, khác với mốc lịch nội bộ."))}</p></div>${badge(canRead ? (canCreate ? "ready" : "read_only") : "guarded")}</div>${readNotice}${form}<div class="portal-card-header"><div><h3 class="portal-card-title">${safeText(campaignText("schedule.listTitle", "Lời nhắc đã ghi nhận"))}</h3><p class="portal-card-subtitle">${safeText(campaignText("schedule.listBody", "Không gửi thông báo ra ngoài ứng dụng; nếu nguồn thay đổi, lịch sẽ cần xác nhận lại."))}</p></div></div>${rows}</section>`;
   }
 
   function campaignPlannerReadState(context) {
@@ -34231,8 +34685,8 @@
     const createReason = actionBlockReason(page, context);
     const values = transientFormValues(route);
     return `<article class="portal-page portal-campaign-planner portal-campaign-operations-authoring">${renderHero(page, context)}
-      <section class="portal-campaign-operations-authoring-intro"><div><span class="portal-section-kicker">New private campaign</span><h2>Đặt brief rõ ràng trước khi chuyển sang lịch và self-review.</h2><p>Campaign mới là metadata Web-owned của signed account. Server mới xác minh session, CSRF, ownership và idempotency; form không nhận Campaign ID, pending state, Telegram data hoặc Bot suggestion từ URL.</p></div><div class="portal-campaign-operations-authoring-actions"><a class="portal-button portal-button--quiet" href="/campaigns">Về Campaign Operations Board</a><span>Không có publish, queue, provider, job, Xu, PayOS hoặc delivery.</span></div></section>
-      <div class="portal-campaign-operations-authoring-layout"><section class="portal-card portal-card-pad portal-campaign-operations-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo Campaign</h2><p class="portal-card-subtitle">Ghi brief, CTA, mục tiêu và một mốc quản lý nội bộ. Sau receipt hợp lệ của server, Web mở detail owner-scoped để bạn tiếp tục self-review hoặc lịch nhắc in-app.</p></div>${badge(createEnabled ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="campaign-create" data-portal-route="${safeText(route)}" novalidate>${renderFields(page.fields, createEnabled, context, values)}<div class="portal-form-footer"><span class="portal-form-note">${createEnabled ? "Lưu Web-owned kèm CSRF, idempotency và audit. Không gọi Bot, PayOS, Xu hay provider." : safeText(createReason)}</span><button class="portal-button portal-button--primary" type="submit"${createEnabled ? "" : ` disabled title="${safeText(createReason)}"`}>Tạo Campaign riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-campaign-operations-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Campaign là planning, không phải publishing engine.</h2><p class="portal-card-subtitle">Tạo Campaign chỉ lưu metadata. Calendar, self-review và schedule intent có route riêng; không có channel credential, publish queue, performance hay revenue claim.</p></div>${badge("read_only")}</div><ol class="portal-campaign-operations-steps"><li><strong>1. Đặt bối cảnh</strong><span>Lưu brief và CTA cần review.</span></li><li><strong>2. Tự rà soát</strong><span>Chuyển trạng thái ở detail owner-scoped.</span></li><li><strong>3. Theo dõi nội bộ</strong><span>Dùng Calendar hoặc lịch nhắc in-app đã opt-in.</span></li></ol></aside></div>
+      <section class="portal-campaign-operations-authoring-intro"><div><span class="portal-section-kicker">${safeText(campaignText("authoring.kicker", "Kế hoạch riêng mới"))}</span><h2>${safeText(campaignText("authoring.title", "Đặt brief rõ ràng trước khi lên lịch và tự rà soát."))}</h2><p>${safeText(campaignText("authoring.body", "Kế hoạch mới thuộc tài khoản hiện tại. Máy chủ xác minh phiên, CSRF, quyền sở hữu và chống gửi lặp; biểu mẫu không nhận mã chiến dịch hoặc dữ liệu Bot từ URL."))}</p></div><div class="portal-campaign-operations-authoring-actions"><a class="portal-button portal-button--quiet" href="/campaigns">${safeText(campaignText("authoring.back", "Về bảng kế hoạch"))}</a><span>Không có đăng bài, hàng đợi, nhà cung cấp, tác vụ, Xu, PayOS hoặc bàn giao.</span></div></section>
+      <div class="portal-campaign-operations-authoring-layout"><section class="portal-card portal-card-pad portal-campaign-operations-create"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(campaignText("authoring.titleCard", "Tạo kế hoạch"))}</h2><p class="portal-card-subtitle">${safeText(campaignText("authoring.cardBody", "Ghi brief, lời kêu gọi hành động, mục tiêu và mốc nội bộ. Sau khi máy chủ xác nhận, bạn có thể tự rà soát hoặc đặt lời nhắc riêng."))}</p></div>${badge(createEnabled ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="campaign-create" data-portal-route="${safeText(route)}" novalidate>${renderFields(page.fields, createEnabled, context, values)}<div class="portal-form-footer"><span class="portal-form-note">${createEnabled ? safeText(campaignText("authoring.saveNote", "Lưu dữ liệu riêng với CSRF, chống gửi lặp và nhật ký kiểm toán.")) : safeText(createReason)}</span><button class="portal-button portal-button--primary" type="submit"${createEnabled ? "" : ` disabled title="${safeText(createReason)}"`}>${safeText(campaignText("authoring.submit", "Tạo kế hoạch riêng"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-campaign-operations-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(campaignText("authoring.boundaryKicker", "Ranh giới thực thi"))}</span><h2 class="portal-card-title">${safeText(campaignText("authoring.boundaryTitle", "Kế hoạch không phải công cụ đăng bài."))}</h2><p class="portal-card-subtitle">${safeText(campaignText("authoring.boundaryBody", "Tạo kế hoạch chỉ lưu dữ liệu mô tả. Lịch, tự rà soát và lời nhắc có quy trình riêng; không có thông tin đăng nhập kênh, hiệu quả hay doanh thu."))}</p></div>${badge("read_only")}</div><ol class="portal-campaign-operations-steps"><li><strong>${safeText(campaignText("authoring.stepContext", "1. Đặt bối cảnh"))}</strong><span>${safeText(campaignText("authoring.stepContextBody", "Lưu brief và lời kêu gọi hành động cần rà soát."))}</span></li><li><strong>${safeText(campaignText("authoring.stepReview", "2. Tự rà soát"))}</strong><span>${safeText(campaignText("authoring.stepReviewBody", "Chuyển trạng thái trong trang chi tiết của chính kế hoạch."))}</span></li><li><strong>${safeText(campaignText("authoring.stepTrack", "3. Theo dõi riêng"))}</strong><span>${safeText(campaignText("authoring.stepTrackBody", "Dùng lịch hoặc lời nhắc trong ứng dụng đã xác nhận."))}</span></li></ol></aside></div>
       <section class="portal-card portal-card-pad portal-campaign-operations-boundary"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Đường đi dữ liệu được giữ rõ</strong><p>Campaign ID chỉ xuất hiện trong receipt server rồi mới điều hướng sang detail riêng. Browser không đưa form vào Bot, link public, provider request, PWA shell hoặc payment state.</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
@@ -34243,12 +34697,12 @@
     const signedSession = Boolean(context && context.session && context.session.authenticated === true);
     const canView = Boolean(context && context.capabilities && context.capabilities["campaigns-refresh"] === true);
     const canCreate = Boolean(context && context.session && context.session.authenticated === true && context.session.csrfReady === true && context.capabilities && context.capabilities["campaign-create"] === true);
-    if (!signedSession) return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><h2>Campaign Operations Board đang được bảo vệ</h2><p>Chỉ signed Web session mới xem metadata Campaign owner-scoped. Web không thay bằng campaign Bot, browser cache, provider hay queue publish.</p><div class="portal-state-meta"><span>Signed session</span><span>Owner-scoped</span><span>Không có publish giả</span></div></div></div></section></article>`;
+    if (!signedSession) return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><h2>${safeText(campaignText("board.signedTitle", "Bảng kế hoạch đang được bảo vệ"))}</h2><p>${safeText(campaignText("board.signedBody", "Chỉ phiên Web đã đăng nhập mới xem được dữ liệu kế hoạch riêng. Không thay bằng danh sách Bot, bộ nhớ trình duyệt hoặc hàng đợi đăng bài."))}</p><div class="portal-state-meta"><span>Phiên đăng nhập</span><span>Phạm vi tài khoản</span><span>Không có đăng bài giả</span></div></div></div></section></article>`;
     if (authoringRoute) return renderCampaignPlannerAuthoring(page, context, canAct(page, context));
-    if (!canView) return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><h2>Campaign Operations Board chưa sẵn sàng</h2><p>Máy chủ chưa cấp signed read capability cho phiên này, nên Web không hiển thị dữ liệu cũ hoặc list thay thế.</p></div></div></section></article>`;
+    if (!canView) return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><h2>${safeText(campaignText("board.unavailableTitle", "Bảng kế hoạch chưa sẵn sàng"))}</h2><p>${safeText(campaignText("board.unavailableBody", "Máy chủ chưa cấp quyền đọc dữ liệu trong phiên này; dữ liệu cũ không được hiển thị thay thế."))}</p></div></div></section></article>`;
     const readState = campaignPlannerReadState(context);
-    if (readState === "loading") return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.refresh)}</span><div><h2>Đang xác minh Campaign riêng tư</h2><p>Web Workspace đang tải projection owner-scoped cho signed account hiện tại. Không hiển thị Campaign cũ, Bot list hay fallback browser trong lúc chờ máy chủ.</p><div class="portal-state-meta"><span>Không cache private</span><span>Không có Bot fallback</span><span>Owner check server-side</span></div></div></div></section></article>`;
-    if (readState !== "ready") return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><h2>Chưa thể tải Campaign riêng tư</h2><p>Máy chủ chưa trả projection owner-scoped an toàn nên Web đã xóa state cũ. Không thay bằng campaign Bot, cache, provider result hoặc activity mô phỏng.</p><div class="portal-state-meta"><span>Không có dữ liệu cũ</span><span>Không có bridge fallback</span><span>Không có activity giả</span></div><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="campaigns-refresh" data-portal-route="/campaigns">Thử lại dữ liệu private</button></div></div></div></section></article>`;
+    if (readState === "loading") return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.refresh)}</span><div><h2>${safeText(campaignText("board.loadingTitle", "Đang xác minh kế hoạch riêng"))}</h2><p>${safeText(campaignText("board.loadingBody", "Đang tải dữ liệu theo tài khoản hiện tại. Không dùng kế hoạch cũ, danh sách Bot hoặc dữ liệu trình duyệt trong lúc chờ."))}</p><div class="portal-state-meta"><span>Không dùng bộ nhớ cũ</span><span>Không có dữ liệu Bot thay thế</span><span>Máy chủ xác minh quyền</span></div></div></div></section></article>`;
+    if (readState !== "ready") return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><h2>${safeText(campaignText("board.failedTitle", "Chưa thể tải kế hoạch riêng"))}</h2><p>${safeText(campaignText("board.failedBody", "Máy chủ chưa trả dữ liệu an toàn nên trạng thái cũ đã được xóa. Hãy thử lại; không dùng dữ liệu Bot, bộ nhớ đệm hoặc hoạt động mô phỏng."))}</p><div class="portal-state-meta"><span>Không có dữ liệu cũ</span><span>Không có kết nối thay thế</span><span>Không có hoạt động giả</span></div><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="campaigns-refresh" data-portal-route="/campaigns">${safeText(campaignText("board.retry", "Thử tải lại kế hoạch"))}</button></div></div></div></section></article>`;
     const plans = campaignPlanItems(context);
     const reviewCount = plans.filter((plan) => campaignPlanStatus(plan) === "review").length;
     const readyCount = plans.filter((plan) => ["approved", "scheduled"].includes(campaignPlanStatus(plan))).length;
@@ -34256,19 +34710,19 @@
     const planCards = plans.length
       ? plans.map((plan) => {
         const status = campaignPlanStatus(plan);
-        const platform = CAMPAIGN_PLATFORM_LABELS[String(plan.platform || "").toLowerCase()] || "Khác";
-        const objective = CAMPAIGN_OBJECTIVE_LABELS[String(plan.objective || "").toLowerCase()] || "Mục tiêu chưa rõ";
-        return `<article class="portal-campaign-card" data-campaign-plan="${safeText(plan.id)}"><div class="portal-campaign-card-head"><div><div class="portal-eyebrow">${safeText(platform)} · ${safeText(objective)}</div><h3>${safeText(String(plan.title || "Campaign chưa đặt tên"))}</h3></div>${badge(status)}</div><dl class="portal-campaign-facts"><div><dt>Liên kết đích</dt><dd>${campaignDestinationLink(plan.destination_url)}</dd></div><div><dt>Mốc lịch nội bộ</dt><dd>${safeText(campaignScheduleLabel(plan.scheduled_for))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(campaignScheduleLabel(plan.updated_at))}</dd></div></dl><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${safeText(campaignPlanHref(plan))}">Mở Campaign <span aria-hidden="true">→</span></a></div></article>`;
+        const platform = campaignPlatformText(plan.platform);
+        const objective = campaignObjectiveText(plan.objective);
+        return `<article class="portal-campaign-card" data-campaign-plan="${safeText(plan.id)}"><div class="portal-campaign-card-head"><div><div class="portal-eyebrow">${safeText(platform)} · ${safeText(objective)}</div><h3>${safeText(String(plan.title || campaignText("board.noTitle", "Kế hoạch chưa đặt tên")))}</h3></div>${badge(status)}</div><dl class="portal-campaign-facts"><div><dt>${safeText(campaignText("board.target", "Liên kết đích"))}</dt><dd>${campaignDestinationLink(plan.destination_url)}</dd></div><div><dt>${safeText(campaignText("board.internalDate", "Mốc nội bộ"))}</dt><dd>${safeText(campaignScheduleLabel(plan.scheduled_for))}</dd></div><div><dt>${safeText(campaignText("board.updated", "Cập nhật"))}</dt><dd>${safeText(campaignScheduleLabel(plan.updated_at))}</dd></div></dl><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${safeText(campaignPlanHref(plan))}">${safeText(campaignText("board.open", "Mở kế hoạch"))} <span aria-hidden="true">→</span></a></div></article>`;
       }).join("")
-      : renderEmpty("Chưa có Campaign", "Tạo Campaign đầu tiên để gom brief, CTA, mốc nội bộ và self-review vào một detail owner-scoped. Không có campaign nào được tự động xuất bản.", ICONS.prompt);
+      : renderEmpty(campaignText("board.emptyTitle", "Chưa có kế hoạch"), campaignText("board.emptyBody", "Tạo kế hoạch đầu tiên để gom brief, lời kêu gọi hành động, mốc nội bộ và phần tự rà soát. Không có nội dung nào được tự động đăng."), ICONS.prompt);
     const startAction = canCreate
       ? '<a class="portal-button portal-button--primary" href="/campaigns/new">Tạo Campaign</a>'
-      : '<div class="portal-campaign-operations-create-guard" role="status"><strong>Chỉ có quyền xem</strong><span>Signed session hiện tại chưa có quyền tạo Campaign. Nút tạo được giữ không thể bấm thay vì điều hướng sang form bị vô hiệu.</span></div>';
+      : `<div class="portal-campaign-operations-create-guard" role="status"><strong>${safeText(campaignText("board.createGuardTitle", "Chỉ có quyền xem"))}</strong><span>${safeText(campaignText("board.createGuardBody", "Phiên hiện tại chưa có quyền tạo kế hoạch. Nút tạo được khóa thay vì mở biểu mẫu không thể gửi."))}</span></div>`;
     return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}
-      <section class="portal-campaign-operations-summary" data-campaign-operations-board><div><span class="portal-section-kicker">Private campaign operations</span><h2>Giữ brief, self-review và mốc nội bộ đi đúng Campaign.</h2><p>Campaign Operations Board là view điều phối của planner canonical. Mỗi card chỉ mở Campaign detail sau owner check; board không tự publish, không tạo analytics/revenue. Không gọi Bot, PayOS, Xu hay provider, queue, job hoặc delivery.</p></div><dl><div><dt>${safeText(String(plans.length))}</dt><dd>Campaign đã tải trong projection hiện tại</dd></div><div><dt>${safeText(String(reviewCount))}</dt><dd>Cần self-review trong projection hiện tại</dd></div><div><dt>${safeText(String(readyCount))}</dt><dd>Sẵn sàng nội bộ trong projection hiện tại</dd></div></dl></section>
-      <section class="portal-campaign-operations-primary"><div><span class="portal-section-kicker">Tạo mới</span><h2>Bắt đầu từ Campaign riêng, không từ form chen vào thư viện.</h2><p>Mở form focused để lưu brief và CTA, sau đó server trả receipt rồi điều hướng sang Campaign detail riêng tư.</p></div>${startAction}</section>
-      <div class="portal-campaign-operations-workspace"><section class="portal-card portal-card-pad portal-campaign-operations-library"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped library</span><h2 class="portal-card-title">Tiếp tục Campaign</h2><p class="portal-card-subtitle">Chỉ metadata Campaign của signed account hiện tại được nạp. Chỉnh brief, trạng thái và lịch nhắc tiếp tục ở detail để không thao tác nhầm record.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="campaigns-refresh" data-portal-route="/campaigns">Làm mới</button></div><div class="portal-campaign-operations-quick-links"><a href="/calendar"><strong>${safeText(String(scheduledCount))} mốc nội bộ</strong><span>Mở Content Calendar riêng tư</span></a><a href="/approvals"><strong>${safeText(String(reviewCount))} cần self-review</strong><span>Mở Self-review Queue của bạn</span></a></div><section class="portal-campaign-board" aria-label="Danh sách Campaign owner-scoped">${planCards}</section></section><aside class="portal-card portal-card-pad portal-campaign-operations-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Không giả activity</span><h2 class="portal-card-title">Không có timeline hoặc tổng số suy đoán</h2><p class="portal-card-subtitle">Campaign API hiện chỉ công bố projection owner-scoped đã tải. Board không bịa activity, publish status, performance, doanh thu hoặc tổng số toàn workspace.</p></div>${badge("read_only")}</div><ol class="portal-campaign-operations-steps"><li><strong>Projection hiện tại</strong><span>Metrics chỉ tính trên records API đang hiển thị.</span></li><li><strong>Detail riêng</strong><span>Brief, lifecycle và lịch nhắc được nạp lại sau owner check.</span></li><li><strong>Execution tách biệt</strong><span>Campaign không gọi Bot, provider, job, Xu hay PayOS.</span></li></ol></aside></div>
-      <section class="portal-card portal-card-pad portal-campaign-operations-boundary"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Biên giới dữ liệu rõ ràng</strong><p>Refresh chỉ đọc Campaign API owner-scoped trong signed session. Browser không đưa Campaign vào Telegram, Bot, bridge, public PWA shell, provider request, publish queue hoặc payment state.</p></div></div>${renderNotes(page)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/calendar">Content Calendar</a><a class="portal-button portal-button--quiet" href="/approvals">Self-review Queue</a><a class="portal-button portal-button--quiet" href="/support">Cần hỗ trợ</a></div></section>
+      <section class="portal-campaign-operations-summary" data-campaign-operations-board><div><span class="portal-section-kicker">${safeText(campaignText("board.kicker", "Điều phối kế hoạch riêng"))}</span><h2>${safeText(campaignText("board.title", "Giữ brief, tự rà soát và mốc nội bộ cùng một kế hoạch."))}</h2><p>${safeText(campaignText("board.body", "Mỗi thẻ mở chi tiết sau khi xác minh quyền sở hữu. Bảng không đăng bài, tạo phân tích, doanh thu, tác vụ, thanh toán hay đầu ra."))}</p></div><dl><div><dt>${safeText(String(plans.length))}</dt><dd>${safeText(campaignText("board.countLoaded", "Kế hoạch đã tải trong phiên"))}</dd></div><div><dt>${safeText(String(reviewCount))}</dt><dd>${safeText(campaignText("board.countReview", "Đang cần tự rà soát"))}</dd></div><div><dt>${safeText(String(readyCount))}</dt><dd>${safeText(campaignText("board.countReady", "Sẵn sàng trong nội bộ"))}</dd></div></dl></section>
+      <section class="portal-campaign-operations-primary"><div><span class="portal-section-kicker">${safeText(campaignText("board.createKicker", "Tạo mới"))}</span><h2>${safeText(campaignText("board.createTitle", "Bắt đầu từ kế hoạch riêng, không chen biểu mẫu vào danh sách."))}</h2><p>${safeText(campaignText("board.createBody", "Mở biểu mẫu riêng để lưu brief và lời kêu gọi hành động; sau đó mở trang chi tiết riêng."))}</p></div>${startAction}</section>
+      <div class="portal-campaign-operations-workspace"><section class="portal-card portal-card-pad portal-campaign-operations-library"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(campaignText("board.libraryKicker", "Thư viện kế hoạch"))}</span><h2 class="portal-card-title">${safeText(campaignText("board.libraryTitle", "Tiếp tục kế hoạch"))}</h2><p class="portal-card-subtitle">${safeText(campaignText("board.libraryBody", "Chỉ nạp dữ liệu mô tả của tài khoản hiện tại. Chỉnh brief, trạng thái và lời nhắc trong trang chi tiết để tránh nhầm bản ghi."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="campaigns-refresh" data-portal-route="/campaigns">${safeText(campaignText("board.refresh", "Làm mới"))}</button></div><div class="portal-campaign-operations-quick-links"><a href="/calendar"><strong>${safeText(String(scheduledCount))} ${safeText(campaignText("board.internalDate", "mốc nội bộ"))}</strong><span>${safeText(campaignText("board.quickCalendar", "Mở lịch riêng"))}</span></a><a href="/approvals"><strong>${safeText(String(reviewCount))} ${safeText(campaignText("board.countReview", "cần tự rà soát"))}</strong><span>${safeText(campaignText("board.quickReview", "Mở hàng tự rà soát"))}</span></a></div><section class="portal-campaign-board" aria-label="${safeText(campaignText("board.title", "Danh sách kế hoạch"))}">${planCards}</section></section><aside class="portal-card portal-card-pad portal-campaign-operations-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(campaignText("board.noActivityKicker", "Không bịa hoạt động"))}</span><h2 class="portal-card-title">${safeText(campaignText("board.noActivityTitle", "Không suy đoán dòng thời gian hoặc tổng số."))}</h2><p class="portal-card-subtitle">${safeText(campaignText("board.noActivityBody", "Bảng chỉ dùng dữ liệu máy chủ đã tải; không tự tạo hoạt động, trạng thái đăng bài, hiệu quả, doanh thu hoặc tổng số toàn không gian."))}</p></div>${badge("read_only")}</div><ol class="portal-campaign-operations-steps"><li><strong>${safeText(campaignText("board.projection", "Dữ liệu hiện có"))}</strong><span>${safeText(campaignText("board.projectionBody", "Chỉ tính các bản ghi API đã trả về."))}</span></li><li><strong>${safeText(campaignText("board.detail", "Chi tiết riêng"))}</strong><span>${safeText(campaignText("board.detailBody", "Brief, vòng đời và lời nhắc được tải lại sau khi xác minh quyền sở hữu."))}</span></li><li><strong>${safeText(campaignText("board.execution", "Tách khỏi thực thi"))}</strong><span>${safeText(campaignText("board.executionBody", "Kế hoạch không gọi Bot, nhà cung cấp, tác vụ, Xu hoặc PayOS."))}</span></li></ol></aside></div>
+      <section class="portal-card portal-card-pad portal-campaign-operations-boundary"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(campaignText("board.boundaryTitle", "Ranh giới dữ liệu rõ ràng"))}</strong><p>${safeText(campaignText("board.boundaryBody", "Làm mới chỉ đọc dữ liệu kế hoạch theo tài khoản. Trình duyệt không gửi kế hoạch sang Telegram, Bot, nhà cung cấp, hàng đợi đăng bài hoặc thanh toán."))}</p></div></div>${renderNotes(page)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/calendar">${safeText(campaignText("calendar.title", "Lịch nội dung"))}</a><a class="portal-button portal-button--quiet" href="/approvals">${safeText(campaignText("approvals.title", "Hàng tự rà soát"))}</a><a class="portal-button portal-button--quiet" href="/support">Cần hỗ trợ</a></div></section>
     </article>`;
   }
 
@@ -34279,22 +34733,22 @@
     const reviewEnabled = Boolean(context.session.authenticated && context.session.csrfReady && context.capabilities && context.capabilities["campaign-update-status"] === true);
     const editEnabled = Boolean(context.session.authenticated && context.session.csrfReady && context.capabilities && context.capabilities["campaign-update"] === true);
     if (!plan) {
-      return `<article class="portal-page portal-campaign-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Không tìm thấy kế hoạch Web", "Kế hoạch có thể không thuộc signed account hiện tại, đã bị xoá hoặc chưa tải xong. Web không thử tra cứu campaign Bot thay thế.", "⌁")}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/campaigns">Về Campaign Planner</a></div></section></article>`;
+      return `<article class="portal-page portal-campaign-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(campaignText("detail.notFoundTitle", "Không tìm thấy kế hoạch"), campaignText("detail.notFoundBody", "Kế hoạch có thể không thuộc tài khoản hiện tại, đã bị xóa hoặc chưa tải xong. Ứng dụng không tra cứu dữ liệu Bot để thay thế."), "⌁")}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/campaigns">${safeText(campaignText("detail.back", "Về danh sách kế hoạch"))}</a></div></section></article>`;
     }
     const status = campaignPlanStatus(plan);
-    const platform = CAMPAIGN_PLATFORM_LABELS[String(plan.platform || "").toLowerCase()] || "Khác";
-    const objective = CAMPAIGN_OBJECTIVE_LABELS[String(plan.objective || "").toLowerCase()] || "Mục tiêu chưa rõ";
+    const platform = campaignPlatformText(plan.platform);
+    const objective = campaignObjectiveText(plan.objective);
     const reviewNote = String(plan.review_note || "").trim();
     const actionRoute = String(page.routePath || campaignPlanHref(plan));
-    const facts = `<dl class="portal-campaign-facts"><div><dt>Trạng thái kế hoạch</dt><dd>${badge(status)}</dd></div><div><dt>Nền tảng</dt><dd>${safeText(platform)}</dd></div><div><dt>Mục tiêu</dt><dd>${safeText(objective)}</dd></div><div><dt>Liên kết đích</dt><dd>${campaignDestinationLink(plan.destination_url)}</dd></div><div><dt>Mốc lịch nội bộ</dt><dd>${safeText(campaignScheduleLabel(plan.scheduled_for))}</dd></div><div><dt>Tạo lúc</dt><dd>${safeText(campaignScheduleLabel(plan.created_at))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(campaignScheduleLabel(plan.updated_at))}</dd></div></dl>`;
+    const facts = `<dl class="portal-campaign-facts"><div><dt>${safeText(campaignText("detail.status", "Trạng thái kế hoạch"))}</dt><dd>${badge(status)}</dd></div><div><dt>${safeText(campaignText("detail.platform", "Nền tảng"))}</dt><dd>${safeText(platform)}</dd></div><div><dt>${safeText(campaignText("detail.objective", "Mục tiêu"))}</dt><dd>${safeText(objective)}</dd></div><div><dt>${safeText(campaignText("board.target", "Liên kết đích"))}</dt><dd>${campaignDestinationLink(plan.destination_url)}</dd></div><div><dt>${safeText(campaignText("detail.internalDateLabel", "Mốc lịch nội bộ"))}</dt><dd>${safeText(campaignScheduleLabel(plan.scheduled_for))}</dd></div><div><dt>${safeText(campaignText("detail.created", "Tạo lúc"))}</dt><dd>${safeText(campaignScheduleLabel(plan.created_at))}</dd></div><div><dt>${safeText(campaignText("board.updated", "Cập nhật"))}</dt><dd>${safeText(campaignScheduleLabel(plan.updated_at))}</dd></div></dl>`;
     const reviewCard = reviewNote
-      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ghi chú tự rà soát</h2><p class="portal-card-subtitle">Ghi chú này chỉ thuộc kế hoạch cá nhân trên Web.</p></div>${badge("read_only")}</div><div class="portal-result-text">${safeText(reviewNote)}</div></section>`
-      : `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ghi chú tự rà soát</h2><p class="portal-card-subtitle">Chưa có ghi chú. Bạn có thể thêm nó khi chuyển trạng thái kế hoạch.</p></div>${badge("empty")}</div></section>`;
+      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(campaignText("detail.reviewNote", "Ghi chú tự rà soát"))}</h2><p class="portal-card-subtitle">${safeText(campaignText("detail.reviewNoteBody", "Ghi chú này chỉ thuộc kế hoạch riêng trong ứng dụng."))}</p></div>${badge("read_only")}</div><div class="portal-result-text">${safeText(reviewNote)}</div></section>`
+      : `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(campaignText("detail.reviewNote", "Ghi chú tự rà soát"))}</h2><p class="portal-card-subtitle">${safeText(campaignText("detail.reviewNoteEmpty", "Chưa có ghi chú. Bạn có thể thêm ghi chú khi đổi trạng thái kế hoạch."))}</p></div>${badge("empty")}</div></section>`;
     return `<article class="portal-page portal-campaign-detail">${renderHero(page, context)}
-      <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>Chi tiết planning Web-owned</h2><p>Trang này chỉ quản lý brief, CTA, lịch nội bộ và tự rà soát của một kế hoạch thuộc signed account hiện tại. Nó không tạo campaign canonical, publish queue, analytics/revenue, job, Xu hoặc PayOS.</p><div class="portal-state-meta"><span>Owner-scoped read</span><span>CSRF + idempotency cho write</span><span>Không gọi Bot/provider</span></div></div></div></section>
-      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-eyebrow">${safeText(platform)} · ${safeText(objective)}</span><h2 class="portal-card-title">${safeText(String(plan.title || "Kế hoạch"))}</h2><p class="portal-card-subtitle">ID Web local: <code>${safeText(expectedId)}</code>. ID này không phải ID campaign Bot và không cho phép đọc chéo tài khoản.</p></div>${badge(status)}</div>${facts}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/campaigns">Tất cả kế hoạch</a><a class="portal-button portal-button--quiet" href="/calendar">Mở Calendar</a><a class="portal-button portal-button--quiet" href="/approvals">Self-review Queue</a></div></section><aside class="portal-stack">${reviewCard}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới canonical</h2><p class="portal-card-subtitle">Nếu cần analytics, báo cáo hay publish thật, tiếp tục qua Bot đã được phê duyệt.</p></div>${badge("read_only")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/growth/ai">Growth Review thủ công</a><a class="portal-button portal-button--quiet" href="/campaign/report">Báo cáo campaign</a></div></section></aside></div>
+      <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>${safeText(campaignText("detail.title", "Chi tiết kế hoạch"))}</h2><p>${safeText(campaignText("detail.boundaryBody", "Trang này quản lý brief, lời kêu gọi hành động, mốc nội bộ và phần tự rà soát của kế hoạch thuộc tài khoản hiện tại. Không tạo hàng đợi đăng bài, phân tích, doanh thu, tác vụ, Xu hoặc PayOS."))}</p><div class="portal-state-meta"><span>${safeText(campaignText("detail.idNote", "Mã kế hoạch riêng"))}</span><span>CSRF + chống gửi lặp</span><span>Không gọi Bot hoặc nhà cung cấp</span></div></div></div></section>
+      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-eyebrow">${safeText(platform)} · ${safeText(objective)}</span><h2 class="portal-card-title">${safeText(String(plan.title || campaignText("board.noTitle", "Kế hoạch chưa đặt tên")))}</h2><p class="portal-card-subtitle">${safeText(campaignText("detail.idBoundary", "Mã này chỉ dùng trong tài khoản hiện tại và không đọc chéo dữ liệu."))} <code>${safeText(expectedId)}</code></p></div>${badge(status)}</div>${facts}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/campaigns">${safeText(campaignText("detail.allPlans", "Tất cả kế hoạch"))}</a><a class="portal-button portal-button--quiet" href="/calendar">${safeText(campaignText("detail.openCalendar", "Mở lịch"))}</a><a class="portal-button portal-button--quiet" href="/approvals">${safeText(campaignText("detail.openApprovals", "Mở hàng tự rà soát"))}</a></div></section><aside class="portal-stack">${reviewCard}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(campaignText("detail.canonicalTitle", "Ranh giới nguồn chuẩn"))}</h2><p class="portal-card-subtitle">${safeText(campaignText("detail.canonicalBody", "Để xem phân tích, báo cáo hoặc đăng bài thật, hãy dùng quy trình Bot đã được phê duyệt."))}</p></div>${badge("read_only")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/growth/ai">Growth Review thủ công</a><a class="portal-button portal-button--quiet" href="/campaign/report">Báo cáo kế hoạch</a></div></section></aside></div>
       ${renderCampaignScheduleControls(plan, context, actionRoute)}
-      <section class="portal-campaign-board" aria-label="Chỉnh sửa kế hoạch"><article class="portal-campaign-card"><div class="portal-campaign-card-head"><div><h2>Brief &amp; mốc lịch</h2><p>Chỉ cập nhật metadata Web-owned của kế hoạch này.</p></div>${badge(editEnabled ? "ready" : "guarded")}</div>${campaignEditControls(plan, editEnabled, actionRoute)}</article><article class="portal-campaign-card"><div class="portal-campaign-card-head"><div><h2>Tự rà soát</h2><p>Lifecycle tại đây không phải duyệt staff hoặc publish canonical.</p></div>${badge(reviewEnabled ? status : "guarded")}</div>${campaignStatusControls(plan, reviewEnabled, actionRoute)}</article></section>
+      <section class="portal-campaign-board" aria-label="${safeText(campaignText("detail.editSummary", "Chỉnh sửa brief và mốc lịch"))}"><article class="portal-campaign-card"><div class="portal-campaign-card-head"><div><h2>${safeText(campaignText("detail.editSummary", "Chỉnh sửa brief và mốc lịch"))}</h2><p>${safeText(campaignText("detail.editConfirm", "Chỉ cập nhật dữ liệu mô tả của kế hoạch này."))}</p></div>${badge(editEnabled ? "ready" : "guarded")}</div>${campaignEditControls(plan, editEnabled, actionRoute)}</article><article class="portal-campaign-card"><div class="portal-campaign-card-head"><div><h2>${safeText(campaignText("approvals.title", "Tự rà soát"))}</h2><p>${safeText(campaignText("detail.statusHelp", "Chỉ thay đổi trạng thái riêng của kế hoạch này."))}</p></div>${badge(reviewEnabled ? status : "guarded")}</div>${campaignStatusControls(plan, reviewEnabled, actionRoute)}</article></section>
     </article>`;
   }
 
@@ -34324,13 +34778,13 @@
   function campaignCalendarMonthLabel(month) {
     const [yearText, monthText] = String(month || "").split("-");
     const date = new Date(Number(yearText), Number(monthText) - 1, 1);
-    if (Number.isNaN(date.getTime())) return "Tháng đã chọn";
-    return localizedDateTime(date, { month: "long", year: "numeric" }) || String(month || "Tháng đã chọn");
+    if (Number.isNaN(date.getTime())) return campaignText("calendar.selectedMonth", "Tháng đã chọn");
+    return localizedDateTime(date, { month: "long", year: "numeric" }) || String(month || campaignText("calendar.selectedMonth", "Tháng đã chọn"));
   }
 
   function campaignCalendarAgendaLabel(plan) {
     const parts = campaignScheduleParts(plan && plan.scheduled_for);
-    if (!parts) return "Mốc lịch không hợp lệ";
+    if (!parts) return campaignText("calendar.invalidDate", "Mốc lịch không hợp lệ");
     const date = new Date(parts.year, parts.month, parts.day, parts.hour, parts.minute);
     return localizedDateTime(date, { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) || `${String(parts.day).padStart(2, "0")}/${String(parts.month + 1).padStart(2, "0")} · ${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}`;
   }
@@ -34384,23 +34838,23 @@
       cells.push(`<div class="portal-calendar-cell${today ? " is-today" : ""}"><span class="portal-calendar-day">${safeText(String(day))}</span><div class="portal-calendar-events">${cards}${overflow}</div></div>`);
     }
     const scheduledCount = Number(calendar.summary.total || 0);
-    const statusOptions = [["all", "Tất cả trạng thái"], ...CAMPAIGN_PLAN_STATUSES.map((value) => [value, CAMPAIGN_PLAN_STATUS_LABELS[value] || value])];
-    const platformOptions = [["all", "Tất cả nền tảng"], ...Object.entries(CAMPAIGN_PLATFORM_LABELS)];
+    const statusOptions = [["all", campaignText("calendar.allStates", "Tất cả trạng thái")], ...CAMPAIGN_PLAN_STATUSES.map((value) => [value, campaignStatusText(value)])];
+    const platformOptions = [["all", campaignText("calendar.allPlatforms", "Tất cả nền tảng")], ...Object.keys(CAMPAIGN_PLATFORM_LABELS).map((value) => [value, campaignPlatformText(value)])];
     const optionMarkup = (options, selected) => options.map(([value, label]) => `<option value="${safeText(value)}"${value === selected ? " selected" : ""}>${safeText(label)}</option>`).join("");
     const previousMonth = campaignCalendarShiftMonth(calendar.month, -1);
     const nextMonth = campaignCalendarShiftMonth(calendar.month, 1);
     const agenda = plans.length
-      ? `<div class="portal-calendar-agenda">${plans.map((plan) => `<a class="portal-calendar-agenda-item" href="${safeText(campaignPlanHref(plan))}"><time>${safeText(campaignCalendarAgendaLabel(plan))}</time><span><strong>${safeText(String(plan.title || "Kế hoạch"))}</strong><em>${safeText(CAMPAIGN_PLATFORM_LABELS[String(plan.platform || "").toLowerCase()] || "Khác")} · ${safeText(CAMPAIGN_PLAN_STATUS_LABELS[campaignPlanStatus(plan)] || "Được bảo vệ")}</em></span><b aria-hidden="true">→</b></a>`).join("")}</div>`
-      : renderEmpty(readState === "loading" ? "Đang nạp Calendar" : "Chưa có mốc trong cửa sổ này", readState === "failed" ? "Chưa thể nạp Calendar an toàn. Hãy làm mới để yêu cầu lại dữ liệu của signed account." : "Chọn tháng khác hoặc tạo mốc nội bộ trong Campaign Planner. Không có reminder hoặc publish tự động.", "⌁");
+      ? `<div class="portal-calendar-agenda">${plans.map((plan) => `<a class="portal-calendar-agenda-item" href="${safeText(campaignPlanHref(plan))}"><time>${safeText(campaignCalendarAgendaLabel(plan))}</time><span><strong>${safeText(String(plan.title || campaignText("board.noTitle", "Kế hoạch chưa đặt tên")))}</strong><em>${safeText(campaignPlatformText(plan.platform))} · ${safeText(campaignStatusText(campaignPlanStatus(plan)))}</em></span><b aria-hidden="true">→</b></a>`).join("")}</div>`
+      : renderEmpty(readState === "loading" ? campaignText("calendar.loading", "Đang tải lịch") : campaignText("calendar.emptyTitle", "Chưa có mốc trong khoảng thời gian này"), readState === "failed" ? campaignText("calendar.failedBody", "Hãy làm mới để yêu cầu lại dữ liệu của tài khoản hiện tại.") : campaignText("calendar.emptyBody", "Chọn tháng khác hoặc tạo mốc nội bộ trong kế hoạch. Không có lời nhắc hay bài đăng nào tự chạy."), "⌁");
     const loadedNotice = calendar.summary.has_more
-      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Calendar đang hiển thị cửa sổ an toàn</strong><p>Đã tải ${safeText(String(plans.length))}/${safeText(String(scheduledCount))} mốc phù hợp trong tháng này. Hãy thu hẹp trạng thái hoặc nền tảng để xem tập trung hơn; browser không tự lấy toàn bộ lịch sử.</p></div></div>`
+      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(campaignText("calendar.windowNoticeTitle", "Đang hiển thị một phần lịch"))}</strong><p>${safeText(campaignText("calendar.windowNoticeBody", "Đã tải {loaded}/{total} mốc phù hợp trong tháng này.", { loaded: String(plans.length), total: String(scheduledCount) }))}</p></div></div>`
       : "";
     return `<article class="portal-page portal-campaign-calendar">${renderHero(page, context)}
-      <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>Calendar không tạo publish queue</h2><p>Lịch này chỉ đọc cửa sổ tháng thuộc Web account hiện tại. Mỗi card dẫn lại Campaign Planner; không gửi lịch sang Bot, kênh social hay provider.</p><div class="portal-state-meta"><span>${safeText(String(scheduledCount))} mốc phù hợp</span><span>Không reminder tự động</span><span>Không channel automation</span></div></div></div></section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Cửa sổ Calendar</h2><p class="portal-card-subtitle">Đổi tháng hoặc lọc metadata ngay trong signed Web session. Bộ lọc không vào URL, bộ nhớ trình duyệt, Telegram hay lịch canonical.</p></div>${badge(readState === "read_only" ? "read_only" : readState === "failed" ? "failed" : "guarded")}</div><form class="portal-calendar-filter" data-portal-form data-portal-no-transient data-portal-action="campaign-calendar-filter" data-portal-route="/calendar" novalidate><div class="portal-fields"><label class="portal-field"><span class="portal-label">Tháng</span><input class="portal-input" name="month" type="month" min="2000-01" max="2100-12" value="${safeText(calendar.month)}" required${disabled}></label><label class="portal-field"><span class="portal-label">Trạng thái</span><select class="portal-select" name="status"${disabled}>${optionMarkup(statusOptions, calendar.filters.status)}</select></label><label class="portal-field"><span class="portal-label">Nền tảng</span><select class="portal-select" name="platform"${disabled}>${optionMarkup(platformOptions, calendar.filters.platform)}</select></label></div><div class="portal-form-footer"><span class="portal-form-note">Chỉ query metadata Calendar đã giới hạn của chính account hiện tại. Không có publish, reminder, job, Xu hoặc payment.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="campaign-calendar-month" data-portal-route="/calendar" data-campaign-calendar-month="${safeText(previousMonth)}"${disabled}>← Tháng trước</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="campaign-calendar-month" data-portal-route="/calendar" data-campaign-calendar-month="${safeText(nextMonth)}"${disabled}>Tháng sau →</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="campaign-calendar-refresh" data-portal-route="/calendar"${canRefresh ? "" : " disabled"}>Làm mới</button><button class="portal-button portal-button--primary" type="submit"${disabled}>Áp dụng</button></div></div></form></section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(localeMonth)}</h2><p class="portal-card-subtitle">Mốc theo giờ cục bộ bạn đã nhập. Calendar chỉ là view quản lý cá nhân, không phải lịch xuất bản canonical.</p></div>${badge("read_only")}</div>${loadedNotice}<div class="portal-calendar" role="grid" aria-label="Content Calendar ${safeText(localeMonth)}"><div class="portal-calendar-weekdays" role="row">${weekdayLabels.map((label) => `<span role="columnheader">${safeText(label)}</span>`).join("")}</div><div class="portal-calendar-grid">${cells.join("")}</div></div></section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Agenda ${safeText(localeMonth)}</h2><p class="portal-card-subtitle">Danh sách tuần tự của đúng cửa sổ đã lọc; mở kế hoạch để tự rà soát hoặc đổi lifecycle nội bộ.</p></div>${badge("read_only")}</div>${agenda}</section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Kế hoạch chưa có mốc lịch</h2><p class="portal-card-subtitle">Plan chưa có ngày giờ không nằm trong cửa sổ Calendar. Đặt mốc trong Campaign Planner khi bạn muốn theo dõi; không có tác vụ nào tự chạy khi thêm mốc.</p></div>${badge("read_only")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/campaigns">Mở Campaign Planner</a><a class="portal-button portal-button--quiet" href="/approvals">Mở Self-review Queue</a></div></section>
+      <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>${safeText(campaignText("calendar.boundaryTitle", "Lịch không tạo hàng đợi đăng bài"))}</h2><p>${safeText(campaignText("calendar.boundaryBody", "Lịch chỉ đọc dữ liệu tháng của tài khoản hiện tại. Mỗi mục mở lại kế hoạch; không gửi lịch sang Bot, kênh mạng xã hội hay nhà cung cấp."))}</p><div class="portal-state-meta"><span>${safeText(String(scheduledCount))} ${safeText(campaignText("calendar.loadedDates", "mốc phù hợp", { count: String(scheduledCount) }))}</span><span>Không tạo lời nhắc tự động</span><span>Không tự động hóa kênh</span></div></div></div></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(campaignText("calendar.windowTitle", "Phạm vi lịch"))}</h2><p class="portal-card-subtitle">${safeText(campaignText("calendar.windowBody", "Đổi tháng hoặc lọc dữ liệu mô tả trong phiên đăng nhập hiện tại. Bộ lọc không được lưu vào URL, bộ nhớ trình duyệt hay lịch chính thức."))}</p></div>${badge(readState === "read_only" ? "read_only" : readState === "failed" ? "failed" : "guarded")}</div><form class="portal-calendar-filter" data-portal-form data-portal-no-transient data-portal-action="campaign-calendar-filter" data-portal-route="/calendar" novalidate><div class="portal-fields"><label class="portal-field"><span class="portal-label">${safeText(campaignText("calendar.month", "Tháng"))}</span><input class="portal-input" name="month" type="month" min="2000-01" max="2100-12" value="${safeText(calendar.month)}" required${disabled}></label><label class="portal-field"><span class="portal-label">${safeText(campaignText("calendar.status", "Trạng thái"))}</span><select class="portal-select" name="status"${disabled}>${optionMarkup(statusOptions, calendar.filters.status)}</select></label><label class="portal-field"><span class="portal-label">${safeText(campaignText("calendar.platform", "Nền tảng"))}</span><select class="portal-select" name="platform"${disabled}>${optionMarkup(platformOptions, calendar.filters.platform)}</select></label></div><div class="portal-form-footer"><span class="portal-form-note">${safeText(campaignText("calendar.filterNote", "Chỉ lọc dữ liệu lịch đã giới hạn của tài khoản hiện tại. Không đăng bài, gửi lời nhắc, tạo tác vụ, Xu hoặc thanh toán."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="campaign-calendar-month" data-portal-route="/calendar" data-campaign-calendar-month="${safeText(previousMonth)}"${disabled}>${safeText(campaignText("calendar.previous", "← Tháng trước"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="campaign-calendar-month" data-portal-route="/calendar" data-campaign-calendar-month="${safeText(nextMonth)}"${disabled}>${safeText(campaignText("calendar.next", "Tháng sau →"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="campaign-calendar-refresh" data-portal-route="/calendar"${canRefresh ? "" : " disabled"}>${safeText(campaignText("common.refresh", "Làm mới"))}</button><button class="portal-button portal-button--primary" type="submit"${disabled}>${safeText(campaignText("calendar.apply", "Áp dụng"))}</button></div></div></form></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(localeMonth)}</h2><p class="portal-card-subtitle">${safeText(campaignText("calendar.dateNote", "Mốc dùng giờ địa phương bạn đã nhập. Đây là lịch quản lý riêng, không phải lịch xuất bản chính thức."))}</p></div>${badge("read_only")}</div>${loadedNotice}<div class="portal-calendar" role="grid" aria-label="${safeText(campaignText("calendar.title", "Lịch nội dung"))} ${safeText(localeMonth)}"><div class="portal-calendar-weekdays" role="row">${weekdayLabels.map((label) => `<span role="columnheader">${safeText(label)}</span>`).join("")}</div><div class="portal-calendar-grid">${cells.join("")}</div></div></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(campaignText("calendar.agendaTitle", "Danh sách theo ngày"))} ${safeText(localeMonth)}</h2><p class="portal-card-subtitle">${safeText(campaignText("calendar.agendaBody", "Danh sách theo thứ tự của khoảng thời gian đã lọc; mở kế hoạch để tự rà soát hoặc đổi trạng thái."))}</p></div>${badge("read_only")}</div>${agenda}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(campaignText("calendar.noDateTitle", "Kế hoạch chưa có mốc lịch"))}</h2><p class="portal-card-subtitle">${safeText(campaignText("calendar.noDateBody", "Kế hoạch chưa có ngày giờ không xuất hiện trên lịch. Bạn có thể thêm mốc trong kế hoạch; thao tác này không tự chạy tác vụ."))}</p></div>${badge("read_only")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/campaigns">${safeText(campaignText("calendar.openCampaigns", "Mở kế hoạch"))}</a><a class="portal-button portal-button--quiet" href="/approvals">${safeText(campaignText("calendar.openReview", "Mở hàng tự rà soát"))}</a></div></section>
     </article>`;
   }
 
@@ -34411,19 +34865,24 @@
     const readyCount = plans.filter((plan) => ["approved", "scheduled"].includes(campaignPlanStatus(plan))).length;
     const reviewEnabled = Boolean(context.session.authenticated && context.session.csrfReady && context.capabilities && context.capabilities["campaign-update-status"] === true);
     const cards = reviewPlans.length
-      ? reviewPlans.map((plan) => `<article class="portal-campaign-card" id="approval-${safeText(plan.id)}"><div class="portal-campaign-card-head"><div><div class="portal-eyebrow">${safeText(CAMPAIGN_PLATFORM_LABELS[String(plan.platform || "").toLowerCase()] || "Khác")} · ${safeText(CAMPAIGN_OBJECTIVE_LABELS[String(plan.objective || "").toLowerCase()] || "Mục tiêu")}</div><h3><a href="${safeText(campaignPlanHref(plan))}">${safeText(String(plan.title || "Kế hoạch"))}</a></h3></div>${badge("review")}</div><dl class="portal-campaign-facts"><div><dt>Mốc lịch</dt><dd>${safeText(campaignScheduleLabel(plan.scheduled_for))}</dd></div><div><dt>Liên kết đích</dt><dd>${campaignDestinationLink(plan.destination_url)}</dd></div></dl><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${safeText(campaignPlanHref(plan))}">Mở chi tiết →</a></div>${campaignStatusControls(plan, reviewEnabled)}</article>`).join("")
-      : renderEmpty("Không có kế hoạch cần tự rà soát", "Khi một bản nháp chuyển sang “Tự rà soát”, nó sẽ xuất hiện tại đây. Đây không phải hàng duyệt Admin/Bot.", "✓");
+      ? reviewPlans.map((plan) => `<article class="portal-campaign-card" id="approval-${safeText(plan.id)}"><div class="portal-campaign-card-head"><div><div class="portal-eyebrow">${safeText(campaignPlatformText(plan.platform))} · ${safeText(campaignObjectiveText(plan.objective))}</div><h3><a href="${safeText(campaignPlanHref(plan))}">${safeText(String(plan.title || campaignText("board.noTitle", "Kế hoạch chưa đặt tên")))}</a></h3></div>${badge("review")}</div><dl class="portal-campaign-facts"><div><dt>${safeText(campaignText("approvals.date", "Mốc lịch"))}</dt><dd>${safeText(campaignScheduleLabel(plan.scheduled_for))}</dd></div><div><dt>${safeText(campaignText("board.target", "Liên kết đích"))}</dt><dd>${campaignDestinationLink(plan.destination_url)}</dd></div></dl><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${safeText(campaignPlanHref(plan))}">${safeText(campaignText("approvals.openDetail", "Mở chi tiết →"))}</a></div>${campaignStatusControls(plan, reviewEnabled)}</article>`).join("")
+      : renderEmpty(campaignText("approvals.emptyTitle", "Không có kế hoạch cần tự rà soát"), campaignText("approvals.emptyBody", "Khi bạn chuyển một bản nháp sang tự rà soát, bản đó sẽ xuất hiện tại đây. Đây không phải hàng duyệt của quản trị hoặc Bot."), "✓");
     return `<article class="portal-page portal-campaign-approvals">${renderHero(page, context)}
-      <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>Self-review Queue của riêng bạn</h2><p>Chỉ bạn thay đổi lifecycle của kế hoạch Web-owned. “Approved” tại đây không cấp quyền cho channel, publish queue, job, Xu hoặc provider.</p><div class="portal-state-meta"><span>Không có admin approval giả</span><span>Không có publish giả</span><span>Server audit mọi write</span></div></div></div></section>
-      <section class="portal-campaign-metrics" aria-label="Tóm tắt tự rà soát"><div class="portal-metric"><span>Bản nháp</span><strong>${safeText(String(draftCount))}</strong><em>Có thể chuyển sang tự rà soát</em></div><div class="portal-metric"><span>Đang tự rà soát</span><strong>${safeText(String(reviewPlans.length))}</strong><em>Cần quyết định trong kế hoạch Web</em></div><div class="portal-metric"><span>Sẵn sàng / đã xếp lịch</span><strong>${safeText(String(readyCount))}</strong><em>Không phải trạng thái canonical</em></div></section>
-      <section class="portal-campaign-board" aria-label="Hàng tự rà soát">${cards}</section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Cần duyệt thực tế?</h2><p class="portal-card-subtitle">Các job, output, channel và publishing cần queue canonical từ Bot/Admin ERP, không dùng trạng thái ở trang này.</p></div>${badge("read_only")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/campaigns">Mở Campaign Planner</a>${serverAuthorizesAdminRoute(context, "/admin/approvals") ? '<a class="portal-button portal-button--quiet" href="/admin/approvals">Admin Approval Queue</a>' : ""}<a class="portal-button portal-button--quiet" href="/support">Cần hỗ trợ</a></div></section>
+      <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>${safeText(campaignText("approvals.boundaryTitle", "Hàng tự rà soát của riêng bạn"))}</h2><p>${safeText(campaignText("approvals.boundaryBody", "Chỉ bạn thay đổi vòng đời của kế hoạch riêng. Trạng thái sẵn sàng tại đây không cấp quyền cho kênh, hàng đợi đăng bài, tác vụ, Xu hay nhà cung cấp."))}</p><div class="portal-state-meta"><span>${safeText(campaignText("approvals.noAdmin", "Không thay thế hàng duyệt quản trị"))}</span><span>${safeText(campaignText("approvals.noPublish", "Không đăng bài"))}</span><span>${safeText(campaignText("approvals.audit", "Máy chủ ghi nhận thay đổi"))}</span></div></div></div></section>
+      <section class="portal-campaign-metrics" aria-label="${safeText(campaignText("approvals.summary", "Tóm tắt tự rà soát"))}"><div class="portal-metric"><span>${safeText(campaignText("approvals.drafts", "Bản nháp"))}</span><strong>${safeText(String(draftCount))}</strong><em>${safeText(campaignText("approvals.draftsHelp", "Có thể chuyển sang tự rà soát"))}</em></div><div class="portal-metric"><span>${safeText(campaignText("approvals.inReview", "Đang tự rà soát"))}</span><strong>${safeText(String(reviewPlans.length))}</strong><em>${safeText(campaignText("approvals.inReviewHelp", "Cần quyết định trong kế hoạch riêng"))}</em></div><div class="portal-metric"><span>${safeText(campaignText("approvals.ready", "Sẵn sàng / đã xếp lịch"))}</span><strong>${safeText(String(readyCount))}</strong><em>${safeText(campaignText("approvals.readyHelp", "Không phải trạng thái chính thức"))}</em></div></section>
+      <section class="portal-campaign-board" aria-label="${safeText(campaignText("approvals.title", "Hàng tự rà soát"))}">${cards}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(campaignText("approvals.actualTitle", "Cần duyệt tác vụ thật?"))}</h2><p class="portal-card-subtitle">${safeText(campaignText("approvals.actualBody", "Tác vụ, đầu ra, kênh và đăng bài cần hàng đợi chính thức từ Bot hoặc ERP quản trị; trang này không thay thế quy trình đó."))}</p></div>${badge("read_only")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/campaigns">${safeText(campaignText("approvals.openPlanner", "Mở kế hoạch"))}</a>${serverAuthorizesAdminRoute(context, "/admin/approvals") ? `<a class="portal-button portal-button--quiet" href="/admin/approvals">${safeText(campaignText("approvals.openAdmin", "Hàng duyệt quản trị"))}</a>` : ""}<a class="portal-button portal-button--quiet" href="/support">${safeText(campaignText("approvals.support", "Cần hỗ trợ"))}</a></div></section>
     </article>`;
   }
 
   function renderLanding(page, context) {
     const signedIn = context.session && context.session.authenticated === true;
     const text = (key) => safeText(uiText(`landing.${key}`, ""));
+    const heroTitle = uiText("landing.hero.title", "");
+    const heroTitleEmphasis = uiText("landing.hero.titleEmphasis", "");
+    const heroTitleMarkup = heroTitleEmphasis && heroTitle.endsWith(heroTitleEmphasis)
+      ? `${safeText(heroTitle.slice(0, -heroTitleEmphasis.length))}<span class="portal-landing-title-emphasis">${safeText(heroTitleEmphasis)}</span>`
+      : safeText(heroTitle);
     const i18n = portalI18n();
     const locale = i18n && typeof i18n.currentLocale === "function" ? i18n.currentLocale() : "vi";
     const languageLinks = [
@@ -34487,7 +34946,7 @@
       <header class="portal-landing-header">
         <nav class="portal-landing-nav" aria-label="${text("nav.language")}"><a class="portal-landing-brand" href="/welcome"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>${text("brand.workspace")}</small></span></a><div class="portal-landing-nav-links"><a href="#features">${text("nav.features")}</a><a href="#content-workspace">${text("nav.content")}</a><a href="#audio-workspace">${text("nav.audio")}</a><a href="#studios">${text("nav.tools")}</a><a href="#workflow">${text("nav.workflow")}</a></div><div class="portal-landing-nav-actions"><nav class="portal-landing-locale-nav" aria-label="${text("nav.language")}">${localeMarkup}</nav>${renderLandingThemeSwitch()}${secondaryAction}${navigationAction}</div></nav>
       </header>
-      <section class="portal-landing-hero" data-landing-layer="hero" aria-labelledby="portal-landing-title"><div class="portal-landing-hero-copy"><h1 id="portal-landing-title">${text("hero.title")}</h1><p>${text("hero.body")}</p><div class="portal-landing-hero-actions">${primaryAction}${heroSecondaryAction}<button class="portal-button portal-button--quiet portal-landing-motion-replay" type="button" data-landing-motion-replay aria-label="${text("motion.replay")}"><span aria-hidden="true">${portalIcon(ICONS.refresh)}</span><span>${text("motion.replay")}</span></button></div><ul class="portal-landing-proof" aria-label="${text("trust.title")}"><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.webOwned")}</span></li><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.noFakeOutput")}</span></li><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.companionOptional")}</span></li></ul></div><div class="portal-landing-hero-stage"><aside class="portal-landing-preview portal-landing-product-surface" data-landing-pointer="preview" aria-label="${text("preview.title")}"><div class="portal-landing-preview-bar portal-landing-product-surface-head"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><strong>${text("preview.title")}</strong></div><div class="portal-landing-preview-body"><div class="portal-landing-preview-heading"><span>${text("preview.project")}</span><b>${text("preview.draft")}</b></div><p class="portal-landing-product-surface-copy">${text("hero.productBody")}</p><div class="portal-landing-preview-lines" aria-hidden="true"><i></i><i></i><i></i></div><div class="portal-landing-preview-steps portal-landing-product-surface-flow"><span class="is-active"><b>1</b><small>${text("preview.brief")}</small></span><span><b>2</b><small>${text("preview.plan")}</small></span><span><b>3</b><small>${text("preview.confirm")}</small></span><span><b>4</b><small>${text("preview.delivery")}</small></span></div><div class="portal-landing-preview-callout"><span aria-hidden="true">${portalIcon(ICONS.shield)}</span><p><strong>${text("preview.guardedTitle")}</strong><br>${text("preview.guardedBody")}</p></div></div></aside><p class="portal-landing-hero-stage-label"><span aria-hidden="true">${portalIcon(ICONS.check)}</span>${text("hero.productLabel")}</p></div></section>
+      <section class="portal-landing-hero" data-landing-layer="hero" aria-labelledby="portal-landing-title"><div class="portal-landing-hero-copy"><h1 id="portal-landing-title">${heroTitleMarkup}</h1><p>${text("hero.body")}</p><div class="portal-landing-hero-actions">${primaryAction}${heroSecondaryAction}<button class="portal-button portal-button--quiet portal-landing-motion-replay" type="button" data-landing-motion-replay aria-label="${text("motion.replay")}"><span aria-hidden="true">${portalIcon(ICONS.refresh)}</span><span>${text("motion.replay")}</span></button></div><ul class="portal-landing-proof" aria-label="${text("trust.title")}"><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.webOwned")}</span></li><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.noFakeOutput")}</span></li><li><span aria-hidden="true">${portalIcon(ICONS.check)}</span><span>${text("proof.companionOptional")}</span></li></ul></div><div class="portal-landing-hero-stage"><aside class="portal-landing-preview portal-landing-product-surface" data-landing-pointer="preview" aria-label="${text("preview.title")}"><div class="portal-landing-preview-bar portal-landing-product-surface-head"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><strong>${text("preview.title")}</strong></div><div class="portal-landing-preview-body"><div class="portal-landing-preview-heading"><span>${text("preview.project")}</span><b>${text("preview.draft")}</b></div><p class="portal-landing-product-surface-copy">${text("hero.productBody")}</p><div class="portal-landing-preview-lines" aria-hidden="true"><i></i><i></i><i></i></div><div class="portal-landing-preview-steps portal-landing-product-surface-flow"><span class="is-active"><b>1</b><small>${text("preview.brief")}</small></span><span><b>2</b><small>${text("preview.plan")}</small></span><span><b>3</b><small>${text("preview.confirm")}</small></span><span><b>4</b><small>${text("preview.delivery")}</small></span></div><div class="portal-landing-preview-callout"><span aria-hidden="true">${portalIcon(ICONS.shield)}</span><p><strong>${text("preview.guardedTitle")}</strong><br>${text("preview.guardedBody")}</p></div></div></aside><p class="portal-landing-hero-stage-label"><span aria-hidden="true">${portalIcon(ICONS.check)}</span>${text("hero.productLabel")}</p></div></section>
       <section class="portal-landing-feature-strip" id="features" data-landing-anchor-target data-landing-layer="features" aria-label="${text("studios.title")}">${featureStrip}</section>
       <section class="portal-landing-spotlights" data-landing-layer="spotlights" aria-label="${text("studios.title")}">${spotlight}</section>
       <section class="portal-landing-section portal-landing-discovery-rail" id="studios" data-landing-anchor-target data-landing-layer="studios"><div class="portal-landing-discovery-intro"><div class="portal-landing-section-heading"><span>${text("discovery.label")}</span><h2>${text("studios.title")}</h2><p>${text("studios.body")}</p></div><a class="portal-button portal-button--quiet portal-landing-discovery-cta" href="${safeText(studioHref("/features"))}"><span>${text("discovery.cta")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div><div class="portal-landing-studios portal-landing-discovery-list">${studioCards}</div></section>
@@ -34531,7 +34990,7 @@
   const WORKBOARD_STATES = Object.freeze(["backlog", "planned", "in_progress", "review", "done", "archived"]);
   const WORKBOARD_BOARD_STATES = Object.freeze(["backlog", "planned", "in_progress", "review", "done"]);
   const WORKBOARD_STATE_LABELS = Object.freeze({
-    backlog: "Backlog", planned: "Đã lên kế hoạch", in_progress: "Đang thực hiện",
+    backlog: "Việc cần làm", planned: "Đã lên kế hoạch", in_progress: "Đang thực hiện",
     review: "Chờ rà soát", done: "Hoàn tất", archived: "Đã lưu trữ"
   });
   const WORKBOARD_PRIORITIES = Object.freeze(["low", "normal", "high", "urgent"]);
@@ -34557,6 +35016,16 @@
   function workboardPriority(value) {
     const priority = String(value || "").trim().toLowerCase();
     return WORKBOARD_PRIORITIES.includes(priority) ? priority : "normal";
+  }
+
+  function workboardStateLabel(value) {
+    const state = workboardState(value);
+    return workboardText(`state.${state}`, WORKBOARD_STATE_LABELS[state] || "Trạng thái");
+  }
+
+  function workboardPriorityLabel(value) {
+    const priority = workboardPriority(value);
+    return workboardText(`priority.${priority}`, WORKBOARD_PRIORITY_LABELS[priority] || "Ưu tiên");
   }
 
   function workboardItems(context) {
@@ -34597,31 +35066,31 @@
       const key = type + ":" + id;
       if (seen.has(key)) return options;
       seen.add(key);
-      const label = String(record.label || record.title || record.name || record.display_name || type + " reference").trim().slice(0, 180);
-      options.push({ ref_type: type, ref_id: id, label: label || type + " reference" });
+      const label = String(record.label || record.title || record.name || record.display_name || workboardText("reference.fallback", "Bản ghi liên kết")).trim().slice(0, 180);
+      options.push({ ref_type: type, ref_id: id, label: label || workboardText("reference.fallback", "Bản ghi liên kết") });
       return options;
     }, []).slice(0, 120);
   }
 
   function workboardReferenceLabel(reference) {
     const type = String(reference && reference.ref_type || "").toLowerCase();
-    const names = { project: "Project", campaign: "Campaign", analytics: "Analytics", note: "Ghi chú", draft: "Bản nháp" };
-    return names[type] || "Reference";
+    const fallbacks = { project: "Dự án", campaign: "Chiến dịch", analytics: "Phân tích", note: "Ghi chú", draft: "Bản nháp" };
+    return workboardText(`reference.${type}`, fallbacks[type] || "Bản ghi liên kết");
   }
 
   function workboardReferenceMarkup(item) {
     const references = workboardReferences(item);
     if (!references.length) return "";
-    return '<div class="portal-workboard-reference-list">' + references.map((reference) => '<span><b>' + safeText(workboardReferenceLabel(reference)) + '</b>' + safeText(String(reference.title || reference.label || reference.ref_id || "Reference")) + '</span>').join("") + "</div>";
+    return '<div class="portal-workboard-reference-list">' + references.map((reference) => '<span><b>' + safeText(workboardReferenceLabel(reference)) + '</b>' + safeText(String(reference.title || reference.label || reference.ref_id || workboardText("reference.fallback", "Bản ghi liên kết"))) + '</span>').join("") + "</div>";
   }
 
   function renderWorkboardReferencePicker(context, selected, enabled) {
     const options = workboardReferenceOptions(context);
     const selectedKeys = new Set(workboardReferences(selected).map((reference) => reference.ref_type + ":" + reference.ref_id));
     if (!options.length) {
-      return '<section class="portal-workboard-reference-picker"><div><strong>Liên kết bản ghi</strong><p>Chưa có Project, Campaign, Analytics, Note hoặc Draft đủ điều kiện để liên kết trong account hiện tại.</p></div></section>';
+      return '<section class="portal-workboard-reference-picker"><div><strong>' + safeText(workboardText("reference.title", "Liên kết bản ghi")) + '</strong><p>' + safeText(workboardText("reference.empty", "Chưa có bản ghi đủ điều kiện để liên kết trong tài khoản hiện tại.")) + '</p></div></section>';
     }
-    return '<fieldset class="portal-workboard-reference-picker"><legend>Liên kết bản ghi</legend><p>Chỉ chọn bản ghi do server trả về; không có trường URL hoặc external handle.</p><div class="portal-workboard-reference-options">' + options.map((option) => {
+    return '<fieldset class="portal-workboard-reference-picker"><legend>' + safeText(workboardText("reference.title", "Liên kết bản ghi")) + '</legend><p>' + safeText(workboardText("reference.help", "Chỉ chọn bản ghi do máy chủ trả về; không có trường URL hoặc mã tham chiếu bên ngoài.")) + '</p><div class="portal-workboard-reference-options">' + options.map((option) => {
       const key = option.ref_type + ":" + option.ref_id;
       const checked = selectedKeys.has(key) ? " checked" : "";
       return '<label><input type="checkbox" value="' + safeText(key) + '" data-workboard-reference' + checked + (enabled ? "" : " disabled") + '><span><b>' + safeText(workboardReferenceLabel(option)) + '</b>' + safeText(option.label) + '</span></label>';
@@ -34655,10 +35124,10 @@
     const fields = [
       { name: "title", label: "Tên công việc", placeholder: "Ví dụ: Rà soát brief launch tháng 7", required: true, minLength: 3, maxLength: 180 },
       { name: "description", label: "Mô tả", control: "textarea", placeholder: "Mục tiêu, phạm vi, tiêu chí hoàn tất và bối cảnh cần thiết…", maxLength: 5000, wide: true },
-      { name: "priority", label: "Ưu tiên", control: "select", required: true, options: WORKBOARD_PRIORITIES.map((value) => ({ value, label: WORKBOARD_PRIORITY_LABELS[value] })) },
-      { name: "due_at", label: "Hạn hoàn tất", type: "datetime-local", help: "Để trống nếu chưa cần deadline. Mốc này chỉ thuộc Workboard Web-native." }
+      { name: "priority", label: workboardText("field.priorityLabel", "Ưu tiên"), control: "select", required: true, options: WORKBOARD_PRIORITIES.map((value) => ({ value, label: workboardPriorityLabel(value) })) },
+      { name: "due_at", label: workboardText("field.dueLabel", "Hạn hoàn tất"), type: "datetime-local", help: workboardText("field.dueHelp", "Để trống nếu chưa cần hạn. Mốc này chỉ thuộc Workboard trên Web.") }
     ];
-    if (includeChecklist) fields.push({ name: "checklist", label: "Checklist khởi tạo", control: "textarea", placeholder: "Mỗi dòng là một việc cần hoàn tất", maxLength: 7200, wide: true, help: "Mỗi dòng cần 2–360 ký tự; tối đa 40 việc. Không cần nhập ID hoặc link." });
+    if (includeChecklist) fields.push({ name: "checklist", label: workboardText("field.checklistLabel", "Danh sách việc cần làm"), control: "textarea", placeholder: workboardText("field.checklistPlaceholder", "Mỗi dòng là một việc cần hoàn tất"), maxLength: 7200, wide: true, help: workboardText("field.checklistHelp", "Mỗi dòng cần 2–360 ký tự; tối đa 40 việc. Không cần nhập mã hoặc liên kết.") });
     return fields;
   }
 
@@ -34693,8 +35162,8 @@
   function workboardFilterFields() {
     return [
       { name: "q", label: "Tìm công việc", placeholder: "Tên hoặc mô tả", maxLength: 120 },
-      { name: "state", label: "Trạng thái", control: "select", options: [{ value: "all", label: "Tất cả đang hiển thị" }].concat(WORKBOARD_STATES.map((value) => ({ value, label: WORKBOARD_STATE_LABELS[value] }))) },
-      { name: "priority", label: "Ưu tiên", control: "select", options: [{ value: "", label: "Tất cả ưu tiên" }].concat(WORKBOARD_PRIORITIES.map((value) => ({ value, label: WORKBOARD_PRIORITY_LABELS[value] }))) }
+      { name: "state", label: workboardText("filter.stateLabel", "Trạng thái"), control: "select", options: [{ value: "all", label: workboardText("filter.stateAll", "Tất cả trạng thái") }].concat(WORKBOARD_STATES.map((value) => ({ value, label: workboardStateLabel(value) }))) },
+      { name: "priority", label: workboardText("field.priorityLabel", "Ưu tiên"), control: "select", options: [{ value: "", label: workboardText("filter.priorityAll", "Tất cả mức ưu tiên") }].concat(WORKBOARD_PRIORITIES.map((value) => ({ value, label: workboardPriorityLabel(value) }))) }
     ];
   }
 
@@ -34729,9 +35198,9 @@
   function workboardTabs(active, context, allowCreate) {
     const canCreate = allowCreate === true;
     const create = canCreate
-      ? '<a class="portal-workboard-tabs-new" href="/workboard/new"' + (active === "new" ? ' aria-current="page"' : "") + '>+ Công việc mới</a>'
-      : '<span class="portal-workboard-tabs-new portal-workboard-tabs-new--disabled" aria-disabled="true">Chỉ xem</span>';
-    return '<nav class="portal-workboard-tabs" aria-label="Điều hướng Workboard"><a href="/workboard"' + (active === "board" ? ' aria-current="page"' : "") + '>Kanban</a><a href="/workboard?view=list"' + (active === "list" ? ' aria-current="page"' : "") + '>Danh sách</a>' + create + '</nav>';
+      ? '<a class="portal-workboard-tabs-new" href="/workboard/new"' + (active === "new" ? ' aria-current="page"' : "") + '>+ ' + safeText(workboardText("tabs.new", "Công việc mới")) + '</a>'
+      : '<span class="portal-workboard-tabs-new portal-workboard-tabs-new--disabled" aria-disabled="true">' + safeText(workboardText("tabs.readOnly", "Chỉ xem")) + '</span>';
+    return '<nav class="portal-workboard-tabs" aria-label="' + safeText(workboardText("tabs.aria", "Điều hướng công việc")) + '"><a href="/workboard"' + (active === "board" ? ' aria-current="page"' : "") + '>' + safeText(workboardText("tabs.board", "Bảng")) + '</a><a href="/workboard?view=list"' + (active === "list" ? ' aria-current="page"' : "") + '>' + safeText(workboardText("tabs.list", "Danh sách")) + '</a>' + create + '</nav>';
   }
 
   function workboardView() {
@@ -34762,10 +35231,10 @@
     const nextState = workboardNextState(state);
     const canState = Boolean(context.capabilities && context.capabilities["workboard-state"] === true && validWorkboardRevision(item.revision) && nextState);
     const quickAction = canState
-      ? '<button class="portal-workboard-card-move" type="button" data-portal-action="workboard-state" data-portal-route="/workboard"' + workboardDataAttrs(item) + ' data-workboard-state="' + safeText(nextState) + '">→ ' + safeText(WORKBOARD_STATE_LABELS[nextState]) + "</button>"
+      ? '<button class="portal-workboard-card-move" type="button" data-portal-action="workboard-state" data-portal-route="/workboard"' + workboardDataAttrs(item) + ' data-workboard-state="' + safeText(nextState) + '">→ ' + safeText(workboardStateLabel(nextState)) + "</button>"
       : "";
     const description = String(item.description || item.description_excerpt || "").replace(/\s+/g, " ").trim();
-    return '<article class="portal-workboard-card" data-workboard-state="' + safeText(state) + '"><div class="portal-workboard-card-top"><span class="portal-workboard-priority" data-priority="' + safeText(priority) + '">' + safeText(WORKBOARD_PRIORITY_LABELS[priority]) + '</span>' + badge(state) + '</div><h3><a href="/workboard/' + encodeURIComponent(id) + '">' + safeText(String(item.title || "Công việc chưa đặt tên")) + '</a></h3>' + (description ? '<p>' + safeText(description.slice(0, 280)) + "</p>" : "") + workboardReferenceMarkup(item) + '<footer><span class="portal-workboard-due">◷ ' + safeText(workboardDueLabel(item.due_at)) + '</span><span class="portal-workboard-progress">' + safeText(String(progress.done)) + "/" + safeText(String(progress.total)) + ' checklist</span></footer><div class="portal-workboard-card-actions"><a class="portal-button portal-button--quiet" href="/workboard/' + encodeURIComponent(id) + '">Mở</a>' + quickAction + "</div></article>";
+    return '<article class="portal-workboard-card" data-workboard-state="' + safeText(state) + '"><div class="portal-workboard-card-top"><span class="portal-workboard-priority" data-priority="' + safeText(priority) + '">' + safeText(workboardPriorityLabel(priority)) + '</span>' + badge(state) + '</div><h3><a href="/workboard/' + encodeURIComponent(id) + '">' + safeText(String(item.title || workboardText("item.untitled", "Công việc chưa đặt tên"))) + '</a></h3>' + (description ? '<p>' + safeText(description.slice(0, 280)) + "</p>" : "") + workboardReferenceMarkup(item) + '<footer><span class="portal-workboard-due">◷ ' + safeText(workboardDueLabel(item.due_at)) + '</span><span class="portal-workboard-progress">' + safeText(String(progress.done)) + "/" + safeText(String(progress.total)) + ' ' + safeText(workboardText("item.checklist", "việc cần làm")) + '</span></footer><div class="portal-workboard-card-actions"><a class="portal-button portal-button--quiet" href="/workboard/' + encodeURIComponent(id) + '">' + safeText(workboardText("item.open", "Mở")) + '</a>' + quickAction + "</div></article>";
   }
 
   function renderWorkboardBoard(items, context) {
@@ -34774,22 +35243,22 @@
       const cards = columnItems.length
         ? columnItems.map((item) => renderWorkboardItemCard(item, context)).join("")
         : '<div class="portal-workboard-column-empty">Chưa có công việc</div>';
-      return '<section class="portal-workboard-column" data-workboard-state="' + safeText(state) + '"><header><div><span>' + safeText(WORKBOARD_STATE_LABELS[state]) + '</span><b>' + safeText(String(columnItems.length)) + '</b></div></header><div class="portal-workboard-column-cards">' + cards + "</div></section>";
+      return '<section class="portal-workboard-column" data-workboard-state="' + safeText(state) + '"><header><div><span>' + safeText(workboardStateLabel(state)) + '</span><b>' + safeText(String(columnItems.length)) + '</b></div></header><div class="portal-workboard-column-cards">' + cards + "</div></section>";
     }).join("") + "</section>";
   }
 
   function renderWorkboardListRows(items, filter) {
     if (!items.length) {
       return workboardFilterIsActive(filter)
-        ? renderEmpty("Không có công việc phù hợp", "Điều chỉnh từ khóa hoặc bộ lọc để xem các work item khác của signed Web account. Không có fallback từ Bot hay browser cache.", ICONS.workboard)
-        : renderEmpty("Chưa có công việc", "Tạo work item đầu tiên để bắt đầu theo dõi tiến độ. Portal không tự tạo task từ job, Bot hoặc lịch sử browser.", ICONS.workboard);
+        ? renderEmpty(workboardText("list.emptyFilteredTitle", "Không có công việc phù hợp"), workboardText("list.emptyFilteredBody", "Điều chỉnh từ khóa hoặc bộ lọc để xem các công việc khác của tài khoản hiện tại. Không dùng dữ liệu thay thế từ Bot hay bộ nhớ trình duyệt."), ICONS.workboard)
+        : renderEmpty(workboardText("list.emptyTitle", "Chưa có công việc"), workboardText("list.emptyBody", "Tạo công việc đầu tiên để bắt đầu theo dõi tiến độ. Portal không tự tạo việc từ tác vụ, Bot hoặc lịch sử trình duyệt."), ICONS.workboard);
     }
     return '<div class="portal-workboard-list" role="list">' + items.map((item) => {
       const id = String(item.id || "");
       const state = workboardState(item.state);
       const priority = workboardPriority(item.priority);
       const progress = workboardChecklistProgress(item);
-      return '<a class="portal-workboard-list-row" role="listitem" href="/workboard/' + encodeURIComponent(id) + '"><span class="portal-workboard-list-title"><b>' + safeText(String(item.title || "Công việc chưa đặt tên")) + '</b><small>' + safeText(String(item.description || item.description_excerpt || "").replace(/\s+/g, " ").trim().slice(0, 160) || "Chưa có mô tả") + '</small></span><span class="portal-workboard-priority" data-priority="' + safeText(priority) + '">' + safeText(WORKBOARD_PRIORITY_LABELS[priority]) + '</span>' + badge(state) + '<span class="portal-workboard-list-meta"><small>◷ ' + safeText(workboardDueLabel(item.due_at)) + '</small><small>' + safeText(String(progress.done)) + "/" + safeText(String(progress.total)) + ' checklist</small></span></a>';
+      return '<a class="portal-workboard-list-row" role="listitem" href="/workboard/' + encodeURIComponent(id) + '"><span class="portal-workboard-list-title"><b>' + safeText(String(item.title || workboardText("item.untitled", "Công việc chưa đặt tên"))) + '</b><small>' + safeText(String(item.description || item.description_excerpt || "").replace(/\s+/g, " ").trim().slice(0, 160) || workboardText("item.noDescription", "Chưa có mô tả")) + '</small></span><span class="portal-workboard-priority" data-priority="' + safeText(priority) + '">' + safeText(workboardPriorityLabel(priority)) + '</span>' + badge(state) + '<span class="portal-workboard-list-meta"><small>◷ ' + safeText(workboardDueLabel(item.due_at)) + '</small><small>' + safeText(String(progress.done)) + "/" + safeText(String(progress.total)) + ' ' + safeText(workboardText("item.checklist", "việc cần làm")) + '</small></span></a>';
     }).join("") + "</div>";
   }
 
@@ -34800,42 +35269,42 @@
     const previous = Number.isInteger(source.previous_offset) && source.previous_offset >= 0 ? source.previous_offset : null;
     const next = source.has_more === true && Number.isInteger(source.next_offset) && source.next_offset > offset ? source.next_offset : null;
     if (previous === null && next === null) return "";
-    const range = returned ? "Đang hiển thị " + String(offset + 1) + "–" + String(offset + returned) + " công việc" : "Không có công việc ở trang này";
+    const range = returned ? workboardText("pagination.range", "Đang hiển thị {from}–{to} công việc", { from: String(offset + 1), to: String(offset + returned) }) : workboardText("pagination.empty", "Không có công việc ở trang này");
     const previousButton = previous !== null
-      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-page" data-portal-route="/workboard" data-workboard-offset="' + safeText(String(previous)) + '">← Trang trước</button>'
+      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-page" data-portal-route="/workboard" data-workboard-offset="' + safeText(String(previous)) + '">' + safeText(workboardText("pagination.previous", "← Trang trước")) + '</button>'
       : "";
     const nextButton = next !== null
-      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-page" data-portal-route="/workboard" data-workboard-offset="' + safeText(String(next)) + '">Trang sau →</button>'
+      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-page" data-portal-route="/workboard" data-workboard-offset="' + safeText(String(next)) + '">' + safeText(workboardText("pagination.next", "Trang sau →")) + '</button>'
       : "";
-    return '<nav class="portal-workboard-pagination" aria-label="Phân trang Workboard"><span>' + safeText(range) + "</span><div>" + previousButton + nextButton + "</div></nav>";
+    return '<nav class="portal-workboard-pagination" aria-label="' + safeText(workboardText("pagination.aria", "Phân trang công việc")) + '"><span>' + safeText(range) + "</span><div>" + previousButton + nextButton + "</div></nav>";
   }
 
   function workboardRecovery(readState, title, description, backHref) {
     const state = ["loading", "failed", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded";
     const copy = {
-      loading: "Đang chờ server xác minh dữ liệu Workboard của tài khoản hiện tại. Không dùng số 0 thay cho dữ liệu chưa xác minh.",
-      failed: "Chưa thể nạp Workboard an toàn. Hãy thử lại để yêu cầu lại projection owner-scoped; dữ liệu cũ không được giữ trong browser.",
-      guarded: "Workboard đang được bảo vệ. Đăng nhập bằng signed session và chờ máy chủ cấp quyền cho account hiện tại."
+      loading: workboardText("recovery.loading", "Đang chờ máy chủ xác minh dữ liệu công việc của tài khoản hiện tại. Không dùng số 0 thay cho dữ liệu chưa xác minh."),
+      failed: workboardText("recovery.failed", "Chưa thể nạp công việc an toàn. Hãy thử lại để yêu cầu lại dữ liệu theo tài khoản; dữ liệu cũ không được giữ trong trình duyệt."),
+      guarded: workboardText("recovery.guarded", "Khu vực công việc đang được bảo vệ. Hãy đăng nhập bằng phiên đã ký và chờ máy chủ cấp quyền cho tài khoản hiện tại.")
     }[state];
     const body = description || copy;
     const retry = state === "failed" || state === "loading"
-      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-refresh" data-portal-route="/workboard">Thử lại</button>'
+      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-refresh" data-portal-route="/workboard">' + safeText(workboardText("recovery.retry", "Thử lại")) + '</button>'
       : '';
     const destination = String(backHref || "/dashboard").startsWith("/") ? String(backHref || "/dashboard") : "/dashboard";
-    const destinationLabel = destination === "/workboard" ? "Về Workboard" : "Về Dashboard";
+    const destinationLabel = destination === "/workboard" ? workboardText("recovery.backWorkboard", "Về khu vực công việc") : workboardText("recovery.backDashboard", "Về bảng điều khiển");
     const destinationHref = destination === "/workboard" ? 'href="/workboard"' : 'href="/dashboard"';
-    return '<section class="portal-card portal-card-pad portal-workboard-recovery" data-workboard-read-state="' + safeText(state) + '"><div class="portal-state" data-state="' + safeText(state) + '"><span class="portal-state-icon" aria-hidden="true">' + safeText(ICONS.workboard) + '</span><div><h2>' + safeText(title || "Workboard chưa sẵn sàng") + '</h2><p>' + safeText(body) + '</p><p class="portal-form-note">Trạng thái này không phải là danh sách rỗng và không tạo task thay thế.</p></div></div><div class="portal-form-footer">' + retry + '<a class="portal-button portal-button--primary" ' + destinationHref + '>' + destinationLabel + '</a></div></section>';
+    return '<section class="portal-card portal-card-pad portal-workboard-recovery" data-workboard-read-state="' + safeText(state) + '"><div class="portal-state" data-state="' + safeText(state) + '"><span class="portal-state-icon" aria-hidden="true">' + safeText(ICONS.workboard) + '</span><div><h2>' + safeText(title || workboardText("recovery.title", "Khu vực công việc chưa sẵn sàng")) + '</h2><p>' + safeText(body) + '</p><p class="portal-form-note">' + safeText(workboardText("recovery.notEmpty", "Trạng thái này không phải là danh sách rỗng và không tạo việc thay thế.")) + '</p></div></div><div class="portal-form-footer">' + retry + '<a class="portal-button portal-button--primary" ' + destinationHref + '>' + safeText(destinationLabel) + '</a></div></section>';
   }
 
   function renderWorkboardOverview(page, context, view) {
     const canView = Boolean(context.capabilities && context.capabilities["workboard-view"] === true);
     const canCreate = Boolean(context.capabilities && context.capabilities["workboard-create"] === true);
     if (!canView) {
-      return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view, context, false) + workboardRecovery("guarded", "Workboard đang được bảo vệ", "Đăng nhập bằng signed session và chờ server cấp Workboard cho account hiện tại. Portal không hiển thị dữ liệu cũ từ cache hoặc browser storage.") + "</article>";
+      return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view, context, false) + workboardRecovery("guarded", workboardText("recovery.guardedTitle", "Khu vực công việc đang được bảo vệ"), workboardText("recovery.guardedBody", "Hãy đăng nhập bằng phiên đã ký và chờ máy chủ cấp dữ liệu công việc cho tài khoản hiện tại. Portal không hiển thị dữ liệu cũ từ bộ nhớ đệm hoặc bộ nhớ trình duyệt.")) + "</article>";
     }
     const readState = ["loading", "ready", "failed", "guarded"].includes(String(context.workboardReadState || "")) ? String(context.workboardReadState) : "guarded";
     if (readState !== "ready") {
-      const title = readState === "loading" ? "Đang nạp Workboard" : (readState === "failed" ? "Không thể nạp Workboard" : "Workboard đang được bảo vệ");
+      const title = readState === "loading" ? workboardText("recovery.loadingTitle", "Đang nạp công việc") : (readState === "failed" ? workboardText("recovery.failedTitle", "Không thể nạp công việc") : workboardText("recovery.guardedTitle", "Khu vực công việc đang được bảo vệ"));
       return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view, context, false) + workboardRecovery(readState, title) + "</article>";
     }
     const items = workboardItems(context);
@@ -34849,14 +35318,14 @@
     const doneCount = workboardMetricCount(summary, ["done", "done_items", "completed_count"], done);
     const listFilter = '<form class="portal-workboard-filter" data-portal-form data-portal-no-transient data-portal-action="workboard-filter" data-portal-route="/workboard" novalidate>'
       + renderFields(workboardFilterFields(), true, context, filter, "workboard-filter")
-      + '<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ yêu cầu lại API owner-scoped trong phiên trang hiện tại; không lưu vào URL, Telegram hay browser storage.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-filter-clear" data-portal-route="/workboard">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm công việc</button></div></div></form>';
+      + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(workboardText("filter.note", "Bộ lọc chỉ yêu cầu lại dữ liệu theo tài khoản trong phiên hiện tại; không lưu vào URL, Telegram hay bộ nhớ trình duyệt.")) + '</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-filter-clear" data-portal-route="/workboard">' + safeText(workboardText("filter.clear", "Xóa bộ lọc")) + '</button><button class="portal-button portal-button--primary" type="submit">' + safeText(workboardText("filter.submit", "Tìm công việc")) + '</button></div></div></form>';
     const content = view === "list"
-      ? '<section class="portal-card portal-card-pad portal-workboard-library"><div class="portal-card-header"><div><span class="portal-section-kicker">Work item library</span><h2 class="portal-card-title">' + (workboardFilterIsActive(filter) ? "Kết quả Workboard" : "Danh sách công việc") + '</h2><p class="portal-card-subtitle">Mỗi hàng là metadata server-owned; mở item để chỉnh revision, trạng thái, checklist và history.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-refresh" data-portal-route="/workboard">Làm mới</button></div>' + listFilter + renderWorkboardListRows(items, filter) + renderWorkboardPagination(listing) + "</section>"
-      : '<section class="portal-card portal-card-pad portal-workboard-board-card"><div class="portal-card-header"><div><span class="portal-section-kicker">Kanban board</span><h2 class="portal-card-title">Luồng công việc</h2><p class="portal-card-subtitle">Di chuyển trạng thái luôn dùng revision hiện tại do server xác minh; browser không suy đoán kết quả hoặc lưu board riêng.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-refresh" data-portal-route="/workboard">Làm mới</button></div>' + (items.length ? renderWorkboardBoard(items, context) : renderEmpty("Chưa có công việc", "Tạo work item đầu tiên để bắt đầu theo dõi Kanban riêng tư.", ICONS.workboard)) + "</section>";
+      ? '<section class="portal-card portal-card-pad portal-workboard-library"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(workboardText("library.kicker", "Thư viện công việc")) + '</span><h2 class="portal-card-title">' + safeText(workboardFilterIsActive(filter) ? workboardText("library.filteredTitle", "Kết quả công việc") : workboardText("library.title", "Danh sách công việc")) + '</h2><p class="portal-card-subtitle">' + safeText(workboardText("library.body", "Mỗi hàng là dữ liệu do máy chủ quản lý; mở công việc để chỉnh phiên bản, trạng thái, danh sách việc và lịch sử.")) + '</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-refresh" data-portal-route="/workboard">' + safeText(workboardText("common.refresh", "Làm mới")) + '</button></div>' + listFilter + renderWorkboardListRows(items, filter) + renderWorkboardPagination(listing) + "</section>"
+      : '<section class="portal-card portal-card-pad portal-workboard-board-card"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(workboardText("board.kicker", "Bảng Kanban")) + '</span><h2 class="portal-card-title">' + safeText(workboardText("board.title", "Luồng công việc")) + '</h2><p class="portal-card-subtitle">' + safeText(workboardText("board.body", "Di chuyển trạng thái luôn dùng phiên bản hiện tại do máy chủ xác minh; trình duyệt không tự suy đoán kết quả hoặc lưu bảng riêng.")) + '</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-refresh" data-portal-route="/workboard">' + safeText(workboardText("common.refresh", "Làm mới")) + '</button></div>' + (items.length ? renderWorkboardBoard(items, context) : renderEmpty(workboardText("list.emptyTitle", "Chưa có công việc"), workboardText("board.emptyBody", "Tạo công việc đầu tiên để bắt đầu theo dõi bảng riêng tư."), ICONS.workboard)) + "</section>";
     const createAction = canCreate
-      ? '<a class="portal-button portal-button--primary" href="/workboard/new">+ Tạo công việc</a>'
-      : '<span class="portal-button portal-button--quiet portal-workboard-create-disabled" aria-disabled="true">Chỉ xem</span>';
-    return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view, context, canCreate) + '<section class="portal-workboard-intro"><div><span class="portal-section-kicker">Private planning workspace</span><h2>Giữ mọi việc quan trọng trong một luồng rõ ràng</h2><p>Workboard chỉ tổ chức công việc, deadline, reference Web-native và checklist. Nó không khởi chạy provider, Bot, payment, job hay publish action.</p><div class="portal-inline-actions">' + createAction + '<a class="portal-button portal-button--quiet" href="/workboard?view=' + (view === "list" ? "board" : "list") + '">' + (view === "list" ? "Xem Kanban" : "Xem danh sách") + "</a></div></div><dl><div><dt>" + safeText(String(total)) + "</dt><dd>Tổng công việc</dd></div><div><dt>" + safeText(String(activeCount)) + "</dt><dd>Đang mở</dd></div><div><dt>" + safeText(String(doneCount)) + "</dt><dd>Hoàn tất</dd></div></dl></section>" + content + "</article>";
+      ? '<a class="portal-button portal-button--primary" href="/workboard/new">+ ' + safeText(workboardText("common.create", "Tạo công việc")) + '</a>'
+      : '<span class="portal-button portal-button--quiet portal-workboard-create-disabled" aria-disabled="true">' + safeText(workboardText("tabs.readOnly", "Chỉ xem")) + '</span>';
+    return '<article class="portal-page portal-workboard">' + renderHero(page, context) + workboardTabs(view, context, canCreate) + '<section class="portal-workboard-intro"><div><span class="portal-section-kicker">' + safeText(workboardText("intro.kicker", "Không gian lập kế hoạch riêng tư")) + '</span><h2>' + safeText(workboardText("intro.title", "Giữ mọi việc quan trọng trong một luồng rõ ràng")) + '</h2><p>' + safeText(workboardText("intro.body", "Khu vực công việc chỉ tổ chức việc cần làm, hạn, bản ghi liên quan và danh sách kiểm tra. Nó không khởi chạy nhà cung cấp, Bot, thanh toán, tác vụ hay đăng bài.")) + '</p><div class="portal-inline-actions">' + createAction + '<a class="portal-button portal-button--quiet" href="/workboard?view=' + (view === "list" ? "board" : "list") + '">' + safeText(view === "list" ? workboardText("common.showBoard", "Xem bảng") : workboardText("common.showList", "Xem danh sách")) + "</a></div></div><dl><div><dt>" + safeText(String(total)) + "</dt><dd>" + safeText(workboardText("metric.total", "Tổng công việc")) + "</dd></div><div><dt>" + safeText(String(activeCount)) + "</dt><dd>" + safeText(workboardText("metric.active", "Đang mở")) + "</dd></div><div><dt>" + safeText(String(doneCount)) + "</dt><dd>" + safeText(workboardText("metric.done", "Hoàn tất")) + "</dd></div></dl></section>" + content + "</article>";
   }
 
   function renderWorkboardNew(page, context) {
@@ -34865,18 +35334,18 @@
     const readyForCreate = canCreate && readState === "ready";
     if (!readyForCreate) {
       const description = readState === "loading"
-        ? "Server đang xác minh projection Workboard. Hãy chờ hoàn tất rồi thử lại; form chưa được mở để tránh gửi thiếu context."
-        : (readState === "failed" ? "Workboard chưa nạp thành công. Hãy quay lại và thử lại projection owner-scoped trước khi tạo task." : "Tài khoản hiện tại chưa có quyền tạo work item hoặc Workboard đang được bảo vệ.");
-      return '<article class="portal-page portal-workboard-new">' + renderHero(page, context) + workboardTabs("new", context, false) + workboardRecovery(readState, "Không thể tạo công việc lúc này", description, "/workboard") + "</article>";
+        ? workboardText("create.loading", "Máy chủ đang xác minh dữ liệu công việc. Hãy chờ hoàn tất rồi thử lại; biểu mẫu chưa mở để tránh gửi thiếu ngữ cảnh.")
+        : (readState === "failed" ? workboardText("create.failed", "Khu vực công việc chưa nạp thành công. Hãy quay lại và thử lại dữ liệu theo tài khoản trước khi tạo việc.") : workboardText("create.guarded", "Tài khoản hiện tại chưa có quyền tạo công việc hoặc khu vực công việc đang được bảo vệ."));
+      return '<article class="portal-page portal-workboard-new">' + renderHero(page, context) + workboardTabs("new", context, false) + workboardRecovery(readState, workboardText("create.unavailableTitle", "Không thể tạo công việc lúc này"), description, "/workboard") + "</article>";
     }
     return '<article class="portal-page portal-workboard-new">' + renderHero(page, context) + workboardTabs("new", context, true)
-      + '<div class="portal-workboard-editor-layout"><section class="portal-card portal-card-pad portal-workboard-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">New work item</span><h2 class="portal-card-title">Bắt đầu với một việc rõ ràng</h2><p class="portal-card-subtitle">Title, ưu tiên, deadline, reference và checklist sẽ được server lưu theo signed session.</p></div>' + badge(canCreate ? "ready" : "guarded")
+      + '<div class="portal-workboard-editor-layout"><section class="portal-card portal-card-pad portal-workboard-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(workboardText("create.kicker", "Công việc mới")) + '</span><h2 class="portal-card-title">' + safeText(workboardText("create.title", "Bắt đầu với một việc rõ ràng")) + '</h2><p class="portal-card-subtitle">' + safeText(workboardText("create.body", "Tên, ưu tiên, hạn, bản ghi liên quan và danh sách việc sẽ được máy chủ lưu theo phiên đã ký.")) + '</p></div>' + badge(canCreate ? "ready" : "guarded")
       + '</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="workboard-create" data-portal-route="/workboard/new" novalidate>'
       + renderFields(workboardFields(true), canCreate, context, workboardFormValues({}, true), "workboard-create")
       + renderWorkboardReferencePicker(context, {}, canCreate)
-      + '<div class="portal-form-footer"><span class="portal-form-note">Không có URL input hoặc external reference. Mỗi lần gửi dùng CSRF và idempotency key do integration tạo.</span><button class="portal-button portal-button--primary" type="submit"'
+      + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(workboardText("create.note", "Không có trường URL hoặc mã tham chiếu bên ngoài. Mỗi lần gửi dùng CSRF và mã chống lặp do lớp tích hợp tạo.")) + '</span><button class="portal-button portal-button--primary" type="submit"'
       + (canCreate ? "" : " disabled")
-      + '>Tạo công việc</button></div></form></section><aside class="portal-card portal-card-pad portal-workboard-guide"><span class="portal-section-kicker">Cách dùng</span><h2 class="portal-card-title">Từ backlog đến hoàn tất</h2><ol><li><b>1. Ghi rõ kết quả</b><span>Đặt title và mô tả đủ để người khác có thể tiếp tục.</span></li><li><b>2. Gắn đúng context</b><span>Chọn Project, Campaign, Analytics, Note hoặc Draft do server đã xác minh.</span></li><li><b>3. Tách checklist</b><span>Mỗi dòng trở thành một việc nhỏ có thể đánh dấu riêng.</span></li></ol></aside></div></article>';
+      + '>' + safeText(workboardText("create.submit", "Tạo công việc")) + '</button></div></form></section><aside class="portal-card portal-card-pad portal-workboard-guide"><span class="portal-section-kicker">' + safeText(workboardText("guide.kicker", "Cách dùng")) + '</span><h2 class="portal-card-title">' + safeText(workboardText("guide.title", "Từ việc cần làm đến hoàn tất")) + '</h2><ol><li><b>1. ' + safeText(workboardText("guide.step1", "Ghi rõ kết quả")) + '</b><span>' + safeText(workboardText("guide.step1Body", "Đặt tên và mô tả đủ để người khác có thể tiếp tục.")) + '</span></li><li><b>2. ' + safeText(workboardText("guide.step2", "Gắn đúng ngữ cảnh")) + '</b><span>' + safeText(workboardText("guide.step2Body", "Chọn dự án, chiến dịch, phân tích, ghi chú hoặc bản nháp do máy chủ đã xác minh.")) + '</span></li><li><b>3. ' + safeText(workboardText("guide.step3", "Tách danh sách việc")) + '</b><span>' + safeText(workboardText("guide.step3Body", "Mỗi dòng trở thành một việc nhỏ có thể đánh dấu riêng.")) + '</span></li></ol></aside></div></article>';
   }
 
   function renderWorkboardChecklist(item, context, route, writable) {
@@ -34886,30 +35355,47 @@
       const entryId = validWorkboardId(entry.id) ? String(entry.id) : "";
       const done = entry.is_done === true;
       const action = entryId && canChecklist
-        ? '<button type="button" data-portal-action="workboard-checklist-update" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + ' data-workboard-checklist-id="' + safeText(entryId) + '" data-workboard-checklist-done="' + (done ? "false" : "true") + '" aria-label="' + (done ? "Đánh dấu chưa xong" : "Đánh dấu đã xong") + '">' + (done ? "✓" : "○") + "</button>"
+        ? '<button type="button" data-portal-action="workboard-checklist-update" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + ' data-workboard-checklist-id="' + safeText(entryId) + '" data-workboard-checklist-done="' + (done ? "false" : "true") + '" aria-label="' + safeText(done ? workboardText("checklist.markUndone", "Đánh dấu chưa xong") : workboardText("checklist.markDone", "Đánh dấu đã xong")) + '">' + (done ? "✓" : "○") + "</button>"
         : '<span class="portal-workboard-checkmark" aria-hidden="true">' + (done ? "✓" : "○") + "</span>";
-      return "<li" + (done ? ' class="is-done"' : "") + ">" + action + "<span>" + safeText(String(entry.body || "Checklist item")) + "</span></li>";
-    }).join("") + "</ul>" : '<p class="portal-form-note">Chưa có checklist. Thêm một bước nhỏ để theo dõi tiến độ rõ hơn.</p>';
-    const create = '<form class="portal-workboard-checklist-add" data-portal-form data-portal-no-transient data-portal-action="workboard-checklist-create" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + ' novalidate><label><span>Thêm checklist</span><input name="body" type="text" minlength="2" maxlength="360" placeholder="Ví dụ: Gửi bản nháp để review"' + (canChecklist ? "" : " disabled") + "></label><button class=\"portal-button portal-button--quiet\" type=\"submit\"" + (canChecklist ? "" : " disabled") + ">Thêm</button></form>";
-    return '<section class="portal-card portal-card-pad portal-workboard-checklist-card"><div class="portal-card-header"><div><span class="portal-section-kicker">Checklist</span><h2 class="portal-card-title">Tiến độ thực hiện</h2><p class="portal-card-subtitle">Mỗi thay đổi checklist dùng revision hiện tại và được server audit.</p></div><span class="portal-workboard-progress">' + safeText(String(workboardChecklistProgress(item).done)) + "/" + safeText(String(workboardChecklistProgress(item).total)) + "</span></div>" + rows + create + "</section>";
+      return "<li" + (done ? ' class="is-done"' : "") + ">" + action + "<span>" + safeText(String(entry.body || workboardText("checklist.itemFallback", "Việc cần làm"))) + "</span></li>";
+    }).join("") + "</ul>" : '<p class="portal-form-note">' + safeText(workboardText("checklist.empty", "Chưa có danh sách việc. Thêm một bước nhỏ để theo dõi tiến độ rõ hơn.")) + '</p>';
+    const create = '<form class="portal-workboard-checklist-add" data-portal-form data-portal-no-transient data-portal-action="workboard-checklist-create" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + ' novalidate><label><span>' + safeText(workboardText("checklist.addLabel", "Thêm việc")) + '</span><input name="body" type="text" minlength="2" maxlength="360" placeholder="' + safeText(workboardText("checklist.placeholder", "Ví dụ: Gửi bản nháp để rà soát")) + '"' + (canChecklist ? "" : " disabled") + "></label><button class=\"portal-button portal-button--quiet\" type=\"submit\"" + (canChecklist ? "" : " disabled") + ">" + safeText(workboardText("common.add", "Thêm")) + "</button></form>";
+    return '<section class="portal-card portal-card-pad portal-workboard-checklist-card"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(workboardText("checklist.kicker", "Danh sách việc")) + '</span><h2 class="portal-card-title">' + safeText(workboardText("checklist.title", "Tiến độ thực hiện")) + '</h2><p class="portal-card-subtitle">' + safeText(workboardText("checklist.body", "Mỗi thay đổi danh sách việc dùng phiên bản hiện tại và được máy chủ ghi nhận.")) + '</p></div><span class="portal-workboard-progress">' + safeText(String(workboardChecklistProgress(item).done)) + "/" + safeText(String(workboardChecklistProgress(item).total)) + "</span></div>" + rows + create + "</section>";
   }
 
   function renderWorkboardVersions(item, versions, context, route) {
-    if (!versions.length) return '<p class="portal-form-note">Version đầu tiên sẽ xuất hiện sau khi bạn lưu thay đổi.</p>';
+    if (!versions.length) return '<p class="portal-form-note">' + safeText(workboardText("history.emptyVersions", "Phiên bản đầu tiên sẽ xuất hiện sau khi bạn lưu thay đổi.")) + '</p>';
     const canRestore = Boolean(context.capabilities && context.capabilities["workboard-restore-version"] === true && validWorkboardRevision(item.revision));
     return '<div class="portal-workboard-version-list">' + versions.map((version) => {
       const revision = validWorkboardRevision(version && version.revision);
       const current = revision && revision === validWorkboardRevision(item.revision);
       const restore = !current && revision && canRestore
-        ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-restore-version" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + ' data-workboard-version="' + safeText(String(revision)) + '" data-portal-confirm="Khôi phục version này thành revision mới?">Khôi phục v' + safeText(String(revision)) + "</button>"
-        : (current ? '<span class="portal-form-note">Đang mở</span>' : "");
-      return "<article><span><b>v" + safeText(String(revision || "—")) + "</b><small>" + safeText(String(version.created_at || version.updated_at || "—")) + "</small></span><p>" + safeText(String(version.title || "Work item")) + "</p>" + restore + "</article>";
+        ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-restore-version" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + ' data-workboard-version="' + safeText(String(revision)) + '" data-portal-confirm="' + safeText(workboardText("history.restoreConfirm", "Khôi phục phiên bản này thành phiên bản mới?")) + '">' + safeText(workboardText("history.restore", "Khôi phục")) + ' v' + safeText(String(revision)) + "</button>"
+        : (current ? '<span class="portal-form-note">' + safeText(workboardText("history.current", "Đang mở")) + '</span>' : "");
+      return "<article><span><b>v" + safeText(String(revision || "—")) + "</b><small>" + safeText(String(version.created_at || version.updated_at || "—")) + "</small></span><p>" + safeText(String(version.title || workboardText("item.fallback", "Công việc"))) + "</p>" + restore + "</article>";
     }).join("") + "</div>";
+  }
+
+  function workboardEventLabel(value) {
+    const action = String(value || "").trim().toLowerCase();
+    const keys = {
+      workboard_created: "event.created",
+      workboard_updated: "event.updated",
+      workboard_state_changed: "event.stateChanged",
+      workboard_archived: "event.archived",
+      workboard_restored: "event.restored",
+      workboard_checklist_created: "event.checklistCreated",
+      workboard_checklist_updated: "event.checklistUpdated",
+      workboard_schedule_created: "event.scheduleCreated",
+      workboard_schedule_cancelled: "event.scheduleCancelled",
+      workboard_schedule_reconfirmed: "event.scheduleReconfirmed"
+    };
+    return workboardText(keys[action] || "event.fallback", "Đã cập nhật công việc");
   }
 
   function renderWorkboardEvents(events) {
     if (!events.length) return '<p class="portal-form-note">Chưa có hoạt động được ghi nhận.</p>';
-    return '<div class="portal-workboard-events">' + events.map((event) => '<div><span aria-hidden="true">•</span><span><b>' + safeText(String(event.action || event.kind || "Cập nhật work item").replace(/_/g, " ")) + '</b><small>' + safeText(String(event.created_at || event.at || "—")) + (validWorkboardRevision(event.revision) ? " · v" + safeText(String(event.revision)) : "") + "</small></span></div>").join("") + "</div>";
+    return '<div class="portal-workboard-events">' + events.map((event) => '<div><span aria-hidden="true">•</span><span><b>' + safeText(workboardEventLabel(event.action || event.kind)) + '</b><small>' + safeText(String(event.created_at || event.at || "—")) + (validWorkboardRevision(event.revision) ? " · v" + safeText(String(event.revision)) : "") + "</small></span></div>").join("") + "</div>";
   }
 
   function renderWorkboardHistoryPagination(listingValue, action, route, kind) {
@@ -34921,10 +35407,10 @@
     const next = page.has_more === true && Number.isInteger(Number(page.next_offset)) && Number(page.next_offset) > offset ? Number(page.next_offset) : null;
     if (previous === null && next === null) return "";
     const attribute = kind === "versions" ? "data-workboard-version-offset" : "data-workboard-event-offset";
-    const prefix = kind === "versions" ? "revision" : "hoạt động";
-    const previousButton = previous === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + safeText(action) + '" data-portal-route="' + safeText(route) + '" ' + attribute + '="' + safeText(String(previous)) + '">← Trước</button>';
-    const nextButton = next === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + safeText(action) + '" data-portal-route="' + safeText(route) + '" ' + attribute + '="' + safeText(String(next)) + '">Sau →</button>';
-    const range = returned ? "Đang hiển thị " + String(offset + 1) + "–" + String(offset + returned) + " " + prefix : "Không có " + prefix + " ở trang này";
+    const prefix = kind === "versions" ? workboardText("history.versionUnit", "phiên bản") : workboardText("history.eventUnit", "hoạt động");
+    const previousButton = previous === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + safeText(action) + '" data-portal-route="' + safeText(route) + '" ' + attribute + '="' + safeText(String(previous)) + '">' + safeText(workboardText("pagination.previousShort", "← Trước")) + '</button>';
+    const nextButton = next === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + safeText(action) + '" data-portal-route="' + safeText(route) + '" ' + attribute + '="' + safeText(String(next)) + '">' + safeText(workboardText("pagination.nextShort", "Sau →")) + '</button>';
+    const range = returned ? workboardText("history.range", "Đang hiển thị {from}–{to} {unit}", { from: String(offset + 1), to: String(offset + returned), unit: prefix }) : workboardText("history.emptyPage", "Không có {unit} ở trang này", { unit: prefix });
     return '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(range) + '</span><div class="portal-inline-actions">' + previousButton + nextButton + "</div></div>";
   }
 
@@ -34934,12 +35420,14 @@
   }
 
   function workboardScheduleIntentLabel(state) {
-    return {
+    const value = workboardScheduleIntentState(state);
+    const fallbacks = {
       active: "Đang chờ mốc giờ",
-      dispatched: "Đã tạo record Inbox",
+      dispatched: "Đã tạo mục trong hộp thư",
       guarded: "Cần xác nhận lại",
-      cancelled: "Đã cancel"
-    }[workboardScheduleIntentState(state)] || "Được bảo vệ";
+      cancelled: "Đã hủy"
+    };
+    return workboardText("schedule.state." + value, fallbacks[value] || "Được bảo vệ");
   }
 
   function workboardScheduleTimezoneDefault(context) {
@@ -34970,9 +35458,9 @@
     const canReconfirm = Boolean(scheduleReadable && context.capabilities && context.capabilities["workboard-schedule-reconfirm"] === true && writable && validWorkboardRevision(item.revision));
     const zone = workboardScheduleTimezoneDefault(context);
     const disabled = canCreate ? "" : " disabled";
-    const form = '<form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="workboard-schedule-create" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + ' novalidate><div class="portal-fields"><label class="portal-field"><span>Thời điểm nhắc</span><input class="portal-input" type="datetime-local" name="trigger_local_at" required' + disabled + '></label><label class="portal-field"><span>Timezone IANA</span><input class="portal-input" name="timezone" maxlength="64" required value="' + safeText(zone) + '"' + disabled + '><small>Ví dụ: Asia/Ho_Chi_Minh. Server từ chối giờ bị trùng hoặc không tồn tại khi đổi DST.</small></label><label class="portal-field portal-field--wide"><span><input type="checkbox" name="opt_in" value="true" required' + disabled + '> Tôi chủ động yêu cầu tạo một record Inbox riêng tư tại thời điểm này.</span></label><label class="portal-field portal-field--wide"><span><input type="checkbox" name="confirm" value="true" required' + disabled + '> Tôi hiểu thay đổi nội dung/revision Workboard sẽ dừng lịch nhắc để tôi xác nhận lại.</span></label></div><div class="portal-form-footer"><span class="portal-form-note">Không Telegram, email, push, Bot, provider hay tự chạy browser. Mốc UTC do server chuẩn hóa sau khi kiểm tra timezone.</span><button class="portal-button portal-button--primary" type="submit"' + disabled + '>Lưu lịch nhắc in-app</button></div></form>';
+    const form = '<form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="workboard-schedule-create" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + ' novalidate><div class="portal-fields"><label class="portal-field"><span>' + safeText(workboardText("schedule.triggerLabel", "Thời điểm nhắc")) + '</span><input class="portal-input" type="datetime-local" name="trigger_local_at" required' + disabled + '></label><label class="portal-field"><span>' + safeText(workboardText("schedule.timezoneLabel", "Múi giờ IANA")) + '</span><input class="portal-input" name="timezone" maxlength="64" required value="' + safeText(zone) + '"' + disabled + '><small>' + safeText(workboardText("schedule.timezoneHelp", "Ví dụ: Asia/Ho_Chi_Minh. Máy chủ từ chối giờ trùng hoặc không tồn tại khi đổi giờ mùa hè.")) + '</small></label><label class="portal-field portal-field--wide"><span><input type="checkbox" name="opt_in" value="true" required' + disabled + '> ' + safeText(workboardText("schedule.optIn", "Tôi chủ động yêu cầu tạo một mục Hộp thư riêng tư tại thời điểm này.")) + '</span></label><label class="portal-field portal-field--wide"><span><input type="checkbox" name="confirm" value="true" required' + disabled + '> ' + safeText(workboardText("schedule.confirm", "Tôi hiểu thay đổi nội dung hoặc phiên bản công việc sẽ dừng lịch nhắc để tôi xác nhận lại.")) + '</span></label></div><div class="portal-form-footer"><span class="portal-form-note">' + safeText(workboardText("schedule.note", "Không Telegram, email, thông báo đẩy, Bot, nhà cung cấp hay tự chạy trình duyệt. Mốc UTC do máy chủ chuẩn hóa sau khi kiểm tra múi giờ.")) + '</span><button class="portal-button portal-button--primary" type="submit"' + disabled + '>' + safeText(workboardText("schedule.save", "Lưu lịch nhắc trong ứng dụng")) + '</button></div></form>';
     const rows = !scheduleReadable
-      ? '<div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h3>Chưa thể xác minh lịch nhắc</h3><p>Work item vẫn được hiển thị, nhưng máy chủ chưa xác nhận danh sách lịch owner-scoped. Form và các thao tác lịch đã khóa thay vì giả định không có lịch cũ.</p></div></div>'
+      ? '<div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h3>' + safeText(workboardText("schedule.unavailableTitle", "Chưa thể xác minh lịch nhắc")) + '</h3><p>' + safeText(workboardText("schedule.unavailableBody", "Công việc vẫn được hiển thị, nhưng máy chủ chưa xác nhận danh sách lịch theo tài khoản. Biểu mẫu và thao tác lịch đã khóa thay vì giả định không có lịch cũ.")) + '</p></div></div>'
       : intents.length ? '<div class="portal-workboard-events">' + intents.map((intent) => {
       const intentId = String(intent.id || "");
       const state = workboardScheduleIntentState(intent.state);
@@ -34980,13 +35468,13 @@
       const attributes = workboardDataAttrs(item) + ' data-workboard-schedule-intent-id="' + safeText(intentId) + '" data-workboard-schedule-intent-revision="' + safeText(String(revision)) + '"';
       const canCancelIntent = canCancel && revision && ["active", "guarded"].includes(state);
       const canReconfirmIntent = canReconfirm && revision && state === "guarded" && intent.reconfirmation_required === true;
-      const actions = (canReconfirmIntent ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-schedule-reconfirm" data-portal-route="' + safeText(route) + '"' + attributes + ' data-portal-confirm="Xác nhận lại lịch nhắc với revision Workboard hiện tại? Thời điểm cũ sẽ giữ nguyên.">Xác nhận lại</button>' : '')
-        + (canCancelIntent ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-schedule-cancel" data-portal-route="' + safeText(route) + '"' + attributes + ' data-portal-confirm="Hủy lịch nhắc này? Thao tác không sửa work item hoặc gửi thông báo ngoài Web.">Hủy lịch nhắc</button>' : '');
-      const guard = state === "guarded" ? '<small>Source không còn khớp (' + safeText(String(intent.guard_code || "unverified")) + '). Không tự đổi giờ; hãy xác nhận lại hoặc tạo lịch mới.</small>' : '';
+      const actions = (canReconfirmIntent ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-schedule-reconfirm" data-portal-route="' + safeText(route) + '"' + attributes + ' data-portal-confirm="' + safeText(workboardText("schedule.reconfirmConfirm", "Xác nhận lại lịch nhắc với phiên bản công việc hiện tại? Thời điểm cũ sẽ giữ nguyên.")) + '">' + safeText(workboardText("schedule.reconfirm", "Xác nhận lại")) + '</button>' : '')
+        + (canCancelIntent ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="workboard-schedule-cancel" data-portal-route="' + safeText(route) + '"' + attributes + ' data-portal-confirm="' + safeText(workboardText("schedule.cancelConfirm", "Hủy lịch nhắc này? Thao tác không sửa công việc hoặc gửi thông báo ra ngoài Web.")) + '">' + safeText(workboardText("schedule.cancel", "Hủy lịch nhắc")) + '</button>' : '');
+      const guard = state === "guarded" ? '<small>' + safeText(workboardText("schedule.guard", "Nguồn không còn khớp ({code}). Không tự đổi giờ; hãy xác nhận lại hoặc tạo lịch mới.", { code: String(intent.guard_code || "chưa xác minh") })) + '</small>' : '';
       return '<div><span>•</span><span><b>' + safeText(workboardScheduleIntentLabel(state)) + '</b><small>' + safeText(workboardDueLabel(intent.trigger_at)) + ' · ' + safeText(String(intent.timezone || "UTC")) + ' · source v' + safeText(String(intent.source_revision || "—")) + '</small>' + guard + (actions ? '<div class="portal-inline-actions">' + actions + '</div>' : '') + '</span></div>';
-    }).join("") + '</div>' : '<p class="portal-form-note">Chưa có lịch nhắc. Khi đến mốc giờ, scheduler chỉ tạo record Inbox nếu revision và snapshot Workboard vẫn khớp.</p>';
+    }).join("") + '</div>' : '<p class="portal-form-note">' + safeText(workboardText("schedule.empty", "Chưa có lịch nhắc. Khi đến mốc giờ, bộ lập lịch chỉ tạo mục Hộp thư nếu phiên bản và bản chụp công việc vẫn khớp.")) + '</p>';
     const scheduleBadge = !scheduleReadable || intents.some((intent) => workboardScheduleIntentState(intent.state) === "guarded") ? "guarded" : "read_only";
-    return '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Private in-app schedule</span><h2 class="portal-card-title">Lịch nhắc Workboard</h2><p class="portal-card-subtitle">Lịch nhắc thuộc riêng work item này. Mọi delivery ngoài Web đều không có trong phase này.</p></div>' + badge(scheduleBadge) + '</div>' + form + '<div class="portal-workboard-history"><h3>Lịch đã lưu</h3>' + rows + '</div></section>';
+    return '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(workboardText("schedule.kicker", "Lịch trong ứng dụng riêng tư")) + '</span><h2 class="portal-card-title">' + safeText(workboardText("schedule.title", "Lịch nhắc công việc")) + '</h2><p class="portal-card-subtitle">' + safeText(workboardText("schedule.body", "Lịch nhắc thuộc riêng công việc này. Giai đoạn này không có giao nhận ra ngoài Web.")) + '</p></div>' + badge(scheduleBadge) + '</div>' + form + '<div class="portal-workboard-history"><h3>' + safeText(workboardText("schedule.savedTitle", "Lịch đã lưu")) + '</h3>' + rows + '</div></section>';
   }
 
   function renderWorkboardDetail(page, context) {
@@ -34994,7 +35482,7 @@
     const item = detail.item && typeof detail.item === "object" && validWorkboardId(detail.item.id) && String(detail.item.id) === String(page.recordId || "") ? detail.item : null;
     const canView = Boolean(context.capabilities && context.capabilities["workboard-view"] === true);
     if (!canView || !item) {
-      return '<article class="portal-page portal-workboard-detail">' + renderHero(page, context) + workboardTabs("", context, false) + '<section class="portal-card portal-card-pad">' + renderEmpty(canView ? "Không tìm thấy work item" : "Workboard đang được bảo vệ", canView ? "Server cần xác minh owner trước khi hiển thị item, checklist và history. Portal không dùng cache hoặc browser fallback." : "Đăng nhập bằng signed session và chờ server cấp Workboard cho account hiện tại.", ICONS.workboard) + '<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/workboard">Về Workboard</a></div></section></article>';
+      return '<article class="portal-page portal-workboard-detail">' + renderHero(page, context) + workboardTabs("", context, false) + '<section class="portal-card portal-card-pad">' + renderEmpty(canView ? workboardText("detail.notFoundTitle", "Không tìm thấy công việc") : workboardText("recovery.guardedTitle", "Khu vực công việc đang được bảo vệ"), canView ? workboardText("detail.notFoundBody", "Máy chủ cần xác minh chủ sở hữu trước khi hiển thị công việc, danh sách việc và lịch sử. Portal không dùng bộ nhớ đệm hoặc phương án dự phòng trong trình duyệt.") : workboardText("recovery.guarded", "Hãy đăng nhập bằng phiên đã ký và chờ máy chủ cấp quyền cho tài khoản hiện tại."), ICONS.workboard) + '<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/workboard">' + safeText(workboardText("recovery.backWorkboard", "Về khu vực công việc")) + '</a></div></section></article>';
     }
     const route = String(page.routePath || page.path || "/workboard");
     const state = workboardState(item.state);
@@ -35006,10 +35494,10 @@
     const versionListing = detail.versionListing && typeof detail.versionListing === "object" ? detail.versionListing : {};
     const eventListing = detail.eventListing && typeof detail.eventListing === "object" ? detail.eventListing : {};
     const progress = workboardChecklistProgress(item);
-    const overview = '<section class="portal-workboard-detail-summary"><div><span class="portal-section-kicker">Work item · v' + safeText(String(item.revision || 1)) + "</span><h2>" + safeText(String(item.title || "Công việc chưa đặt tên")) + '</h2><p>' + safeText(String(item.description || "Chưa có mô tả.")) + "</p>" + workboardReferenceMarkup(item) + "</div><dl><div><dt>Trạng thái</dt><dd>" + safeText(WORKBOARD_STATE_LABELS[state]) + "</dd></div><div><dt>Ưu tiên</dt><dd>" + safeText(WORKBOARD_PRIORITY_LABELS[workboardPriority(item.priority)]) + "</dd></div><div><dt>Checklist</dt><dd>" + safeText(String(progress.done)) + "/" + safeText(String(progress.total)) + "</dd></div><div><dt>Hạn</dt><dd>" + safeText(workboardDueLabel(item.due_at)) + "</dd></div></dl></section>";
-    const editor = '<section class="portal-card portal-card-pad portal-workboard-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">Item editor</span><h2 class="portal-card-title">Nội dung & reference</h2><p class="portal-card-subtitle">Lưu thay đổi tạo revision mới. Nếu item đã thay đổi ở nơi khác, server sẽ yêu cầu bạn nạp lại trước khi ghi đè.</p></div>' + badge(state) + '</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="workboard-update" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + " novalidate>" + renderFields(workboardFields(false), canUpdate, context, workboardFormValues(item, false), "workboard-update") + renderWorkboardReferencePicker(context, item, canUpdate) + '<div class="portal-form-footer"><span class="portal-form-note">Checklist dùng endpoint riêng để giữ tiến độ rõ ràng. Không có URL input hoặc external reference.</span><button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + ">Lưu revision</button></div></form></section>";
-    const lifecycle = '<section class="portal-card portal-card-pad portal-workboard-lifecycle"><div class="portal-card-header"><div><span class="portal-section-kicker">Workflow state</span><h2 class="portal-card-title">Di chuyển công việc</h2><p class="portal-card-subtitle">Server xác minh transition và revision trước khi thay đổi board.</p></div>' + badge(state) + '</div><form class="portal-workboard-state-form" data-portal-form data-portal-no-transient data-portal-action="workboard-state" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + ' novalidate><label><span>Trạng thái mới</span><select name="state"' + (canState ? "" : " disabled") + ">" + WORKBOARD_STATES.map((value) => '<option value="' + safeText(value) + '"' + (value === state ? " selected" : "") + ">" + safeText(WORKBOARD_STATE_LABELS[value]) + "</option>").join("") + '</select></label><button class="portal-button portal-button--quiet" type="submit"' + (canState ? "" : " disabled") + ">Cập nhật trạng thái</button></form></section>";
-    const history = '<div class="portal-workboard-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử revision</h2><p class="portal-card-subtitle">Khôi phục luôn tạo revision mới; history cũ không bị xóa.</p></div></div>' + renderWorkboardVersions(item, versions, context, route) + renderWorkboardHistoryPagination(versionListing, "workboard-history-version-page", route, "versions") + '</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Activity</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Feed chỉ trình bày action, revision và thời điểm do server trả về.</p></div></div>' + renderWorkboardEvents(events) + renderWorkboardHistoryPagination(eventListing, "workboard-history-event-page", route, "events") + "</section></div>";
+    const overview = '<section class="portal-workboard-detail-summary"><div><span class="portal-section-kicker">' + safeText(workboardText("detail.itemVersion", "Công việc · v") + String(item.revision || 1)) + "</span><h2>" + safeText(String(item.title || workboardText("item.untitled", "Công việc chưa đặt tên"))) + '</h2><p>' + safeText(String(item.description || workboardText("item.noDescription", "Chưa có mô tả."))) + "</p>" + workboardReferenceMarkup(item) + "</div><dl><div><dt>" + safeText(workboardText("detail.stateLabel", "Trạng thái")) + "</dt><dd>" + safeText(workboardStateLabel(state)) + "</dd></div><div><dt>" + safeText(workboardText("detail.priorityLabel", "Ưu tiên")) + "</dt><dd>" + safeText(workboardPriorityLabel(item.priority)) + "</dd></div><div><dt>" + safeText(workboardText("detail.checklistLabel", "Danh sách việc")) + "</dt><dd>" + safeText(String(progress.done)) + "/" + safeText(String(progress.total)) + "</dd></div><div><dt>" + safeText(workboardText("detail.dueLabel", "Hạn")) + "</dt><dd>" + safeText(workboardDueLabel(item.due_at)) + "</dd></div></dl></section>";
+    const editor = '<section class="portal-card portal-card-pad portal-workboard-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(workboardText("detail.editorKicker", "Chỉnh sửa công việc")) + '</span><h2 class="portal-card-title">' + safeText(workboardText("detail.editorTitle", "Nội dung và bản ghi liên quan")) + '</h2><p class="portal-card-subtitle">' + safeText(workboardText("detail.editorBody", "Lưu thay đổi sẽ tạo phiên bản mới. Nếu công việc đã thay đổi ở nơi khác, máy chủ sẽ yêu cầu bạn nạp lại trước khi ghi đè.")) + '</p></div>' + badge(state) + '</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="workboard-update" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + " novalidate>" + renderFields(workboardFields(false), canUpdate, context, workboardFormValues(item, false), "workboard-update") + renderWorkboardReferencePicker(context, item, canUpdate) + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(workboardText("detail.editorNote", "Danh sách việc dùng điểm cuối riêng để giữ tiến độ rõ ràng. Không có trường URL hoặc mã tham chiếu bên ngoài.")) + '</span><button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + '>' + safeText(workboardText("detail.save", "Lưu phiên bản")) + '</button></div></form></section>';
+    const lifecycle = '<section class="portal-card portal-card-pad portal-workboard-lifecycle"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(workboardText("detail.lifecycleKicker", "Vòng đời công việc")) + '</span><h2 class="portal-card-title">' + safeText(workboardText("detail.lifecycleTitle", "Di chuyển công việc")) + '</h2><p class="portal-card-subtitle">' + safeText(workboardText("detail.lifecycleBody", "Máy chủ xác minh chuyển trạng thái và phiên bản trước khi thay đổi bảng.")) + '</p></div>' + badge(state) + '</div><form class="portal-workboard-state-form" data-portal-form data-portal-no-transient data-portal-action="workboard-state" data-portal-route="' + safeText(route) + '"' + workboardDataAttrs(item) + ' novalidate><label><span>' + safeText(workboardText("detail.newStateLabel", "Trạng thái mới")) + '</span><select name="state"' + (canState ? "" : " disabled") + ">" + WORKBOARD_STATES.map((value) => '<option value="' + safeText(value) + '"' + (value === state ? " selected" : "") + ">" + safeText(workboardStateLabel(value)) + "</option>").join("") + '</select></label><button class="portal-button portal-button--quiet" type="submit"' + (canState ? "" : " disabled") + '>' + safeText(workboardText("detail.updateState", "Cập nhật trạng thái")) + '</button></form></section>';
+    const history = '<div class="portal-workboard-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(workboardText("history.kicker", "Lịch sử phiên bản")) + '</span><h2 class="portal-card-title">' + safeText(workboardText("history.title", "Lịch sử phiên bản")) + '</h2><p class="portal-card-subtitle">' + safeText(workboardText("history.body", "Khôi phục luôn tạo phiên bản mới; lịch sử cũ không bị xóa.")) + '</p></div></div>' + renderWorkboardVersions(item, versions, context, route) + renderWorkboardHistoryPagination(versionListing, "workboard-history-version-page", route, "versions") + '</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(workboardText("activity.kicker", "Hoạt động")) + '</span><h2 class="portal-card-title">' + safeText(workboardText("activity.title", "Hoạt động gần đây")) + '</h2><p class="portal-card-subtitle">' + safeText(workboardText("activity.body", "Dòng thời gian chỉ trình bày nhãn thao tác, phiên bản và thời điểm do máy chủ trả về.")) + '</p></div></div>' + renderWorkboardEvents(events) + renderWorkboardHistoryPagination(eventListing, "workboard-history-event-page", route, "events") + "</section></div>";
     const canCreate = Boolean(context.capabilities && context.capabilities["workboard-create"] === true);
     return '<article class="portal-page portal-workboard-detail">' + renderHero(page, context) + workboardTabs("", context, canCreate) + overview + '<div class="portal-workboard-detail-grid">' + editor + lifecycle + "</div>" + renderWorkboardSchedule(item, context, route, writable) + renderWorkboardChecklist(item, context, route, writable) + history + "</article>";
   }
@@ -37685,6 +38173,7 @@
       commandPaletteReturnFocus.focus({ preventScroll: true });
     }
     commandPaletteReturnFocus = null;
+    commandPaletteMarkup = "";
   }
 
   function isStandaloneApp() {
@@ -37719,12 +38208,12 @@
     const url = window.location.origin + "/dashboard";
     if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
       navigator.clipboard.writeText(url).then(() => {
-        showToast("📋 Đã sao chép liên kết! Dán vào Chrome (Android) hoặc Safari (iPhone) để cài đặt.");
+        showToast(uiText("installGuide.linkCopied", "Đã sao chép liên kết. Mở liên kết trong trình duyệt để xem cách cài đặt."));
       }).catch(() => {
-        showToast("Liên kết cài đặt: " + url);
+        showToast(uiText("installGuide.linkPrefix", "Liên kết cài đặt: ") + url);
       });
     } else {
-      showToast("Liên kết cài đặt: " + url);
+      showToast(uiText("installGuide.linkPrefix", "Liên kết cài đặt: ") + url);
     }
   }
 
@@ -37738,7 +38227,7 @@
     document.body.appendChild(a);
     a.click();
     a.remove();
-    showToast("⬇️ Đã tải phím tắt TOAN AAS về máy!");
+    showToast(uiText("installGuide.shortcutRequested", "Đã yêu cầu tải tệp liên kết TOAN AAS. Hãy kiểm tra mục tải xuống của trình duyệt."));
   }
 
   function pwaInstallCanBeOffered() {
@@ -37763,7 +38252,11 @@
   function syncSmartInstallBanner() {
     const isAuthPage = Boolean(document.querySelector(".portal-auth-page"));
     const isAdminSurface = Boolean(document.querySelector('.portal-shell[data-portal-app-kind="admin"]'));
-    if (isStandaloneApp() || isAuthPage || isAdminSurface) {
+    const landingInstallSlot = document.querySelector(".portal-landing .portal-landing-final");
+    const customerUtilitySlot = document.querySelector("[data-portal-customer-utilities]");
+    const isCustomerSurface = Boolean(document.querySelector('.portal-shell[data-portal-app-kind="customer"]'));
+    const installContainer = landingInstallSlot || customerUtilitySlot || document.body;
+    if (isStandaloneApp() || isAuthPage || isAdminSurface || (isCustomerSurface && !landingInstallSlot && !customerUtilitySlot)) {
       const existingBanner = document.querySelector("[data-portal-smart-install-banner]");
       if (existingBanner) existingBanner.remove();
       const existingFab = document.querySelector("[data-portal-pwa-fab]");
@@ -37796,12 +38289,32 @@
       }
     } catch (_) {}
 
+    const nativeInstallEntry = customerUtilitySlot && customerUtilitySlot.querySelector("[data-portal-install-app]");
+    if (nativeInstallEntry && !isExpanded) {
+      nativeInstallEntry.hidden = !pwaInstallCanBeOffered();
+      const banner = document.querySelector("[data-portal-smart-install-banner]");
+      const fab = document.querySelector("[data-portal-pwa-fab]");
+      if (banner) banner.remove();
+      if (fab) fab.remove();
+      return;
+    }
+    if (nativeInstallEntry && isExpanded) nativeInstallEntry.hidden = true;
+
     const isIos = isIosDevice();
     const isAndroid = isAndroidDevice();
     const canPromptNative = Boolean(pwaInstallPrompt && typeof pwaInstallPrompt.prompt === "function");
-    const installLabel = isIos ? "📲 Cài cho iPhone" : (isAndroid ? "⚡ Cài Android" : (canPromptNative ? "⚡ Cài đặt App ngay" : "⬇️ Tải & Cài App"));
+    const installLabel = isIos ? uiText("installBanner.iosAction", "Cài trên iPhone")
+      : isAndroid ? uiText("installBanner.androidAction", "Cài trên Android")
+      : canPromptNative ? uiText("customerTopup.installApp", "Cài đặt ứng dụng")
+      : uiText("installBanner.guideAction", "Hướng dẫn cài đặt");
     const actionAttr = isIos ? 'data-portal-action="pwa-install-ios-guide"' : 'data-portal-action="pwa-install-prompt"';
-    const subDesc = isIos ? "Thêm vào màn hình chính iPhone / iPad mượt mà" : (isAndroid ? "Cài ứng dụng toàn màn hình không có thanh URL" : "Trải nghiệm mượt 60 FPS, mở độc lập toàn màn hình");
+    const subDesc = isIos ? uiText("installBanner.iosDescription", "Xem cách thêm TOAN AAS vào màn hình chính iPhone hoặc iPad.")
+      : isAndroid ? uiText("installBanner.androidDescription", "Xem cách cài TOAN AAS từ trình duyệt hỗ trợ trên Android.")
+      : uiText("installBanner.desktopDescription", "Xem cách mở TOAN AAS như ứng dụng riêng trên thiết bị.");
+    const placeInstallControl = (control, inlineClass) => {
+      control.classList.toggle(inlineClass, Boolean(landingInstallSlot));
+      if (control.parentElement !== installContainer) installContainer.appendChild(control);
+    };
 
     if (isExpanded) {
       const existingFab = document.querySelector("[data-portal-pwa-fab]");
@@ -37813,23 +38326,23 @@
         banner.className = "portal-smart-install-banner";
         banner.setAttribute("data-portal-smart-install-banner", "true");
         banner.setAttribute("role", "complementary");
-        banner.setAttribute("aria-label", "Cài đặt ứng dụng TOAN AAS");
-        document.body.appendChild(banner);
       }
+      banner.setAttribute("aria-label", uiText("customerTopup.installAppAria", "Cài đặt ứng dụng TOAN AAS"));
+      placeInstallControl(banner, "portal-smart-install-banner--landing-inline");
 
       banner.innerHTML = `
         <div class="portal-smart-install-inner">
           <div class="portal-smart-install-badge">
             <div class="portal-smart-install-icon" aria-hidden="true">${portalIcon(ICONS.download)}</div>
             <div class="portal-smart-install-meta">
-              <strong class="portal-smart-install-title">TOAN AAS App</strong>
+              <strong class="portal-smart-install-title">${safeText(uiText("installBanner.title", "Ứng dụng TOAN AAS"))}</strong>
               <span class="portal-smart-install-desc">${safeText(subDesc)}</span>
             </div>
           </div>
           <div class="portal-smart-install-actions">
             <button type="button" class="portal-btn-install" ${actionAttr}>${safeText(installLabel)}</button>
-            <button type="button" class="portal-btn-collapse" data-portal-action="pwa-install-collapse" title="Thu gọn" aria-label="Thu gọn">—</button>
-            <button type="button" class="portal-btn-dismiss" data-portal-action="pwa-install-dismiss" title="Tắt hẳn" aria-label="Tắt hẳn">✕</button>
+            <button type="button" class="portal-btn-collapse" data-portal-action="pwa-install-collapse" title="${safeText(uiText("installBanner.collapse", "Thu gọn hướng dẫn"))}" aria-label="${safeText(uiText("installBanner.collapse", "Thu gọn hướng dẫn"))}">—</button>
+            <button type="button" class="portal-btn-dismiss" data-portal-action="pwa-install-dismiss" title="${safeText(uiText("installBanner.dismiss", "Ẩn hướng dẫn cài đặt"))}" aria-label="${safeText(uiText("installBanner.dismiss", "Ẩn hướng dẫn cài đặt"))}">✕</button>
           </div>
         </div>
       `;
@@ -37844,8 +38357,8 @@
         fab.className = "portal-pwa-fab-trigger";
         fab.setAttribute("data-portal-pwa-fab", "true");
         fab.setAttribute("data-portal-action", "pwa-toggle-banner");
-        document.body.appendChild(fab);
       }
+      placeInstallControl(fab, "portal-pwa-fab-trigger--landing-inline");
       fab.setAttribute("title", uiText("customerTopup.installAppAria", "Cài đặt ứng dụng TOAN AAS"));
       fab.setAttribute("aria-label", uiText("customerTopup.installAppAria", "Cài đặt ứng dụng TOAN AAS"));
       fab.innerHTML = `<span class="portal-pwa-fab-icon" aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-fab-label">${safeText(uiText("customerTopup.installApp", "Cài đặt ứng dụng"))}</span>`;
@@ -37913,95 +38426,95 @@
 
     const inAppAlert = inApp ? `
       <div class="portal-inapp-alert" style="margin-bottom:14px; padding:12px 14px; border-radius:12px; background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.35); color:#fef08a; font-size:12.5px; line-height:1.5;">
-        <strong style="color:#fde047; display:flex; align-items:center; gap:6px;">⚠️ Phát hiện mở trong Telegram / Zalo / Facebook</strong>
-        <p style="margin:4px 0 8px 0; color:#fef08a;">Trình duyệt phụ đang chặn quyền cài đặt. Hãy bấm biểu tượng <strong>(⋮)</strong> hoặc <strong>(⋯)</strong> ở góc trên ➔ chọn <strong>"Mở bằng Chrome"</strong> (Android) hoặc <strong>"Mở bằng Safari"</strong> (iPhone) để cài đặt.</p>
-        <button type="button" class="portal-button portal-button--quiet" data-portal-action="pwa-copy-link" style="padding:4px 10px; font-size:11px; background:rgba(255,255,255,0.12); color:#fff; border:none; border-radius:6px; cursor:pointer;">📋 Sao chép liên kết</button>
+        <strong style="color:#fde047; display:flex; align-items:center; gap:6px;">${safeText(uiText("installGuide.inAppTitle", "Đang mở trong một ứng dụng khác"))}</strong>
+        <p style="margin:4px 0 8px 0; color:#fef08a;">${safeText(uiText("installGuide.inAppBody", "Trình duyệt trong ứng dụng có thể không hỗ trợ cài đặt. Hãy mở liên kết trong Chrome trên Android hoặc Safari trên iPhone."))}</p>
+        <button type="button" class="portal-button portal-button--quiet" data-portal-action="pwa-copy-link" style="padding:4px 10px; font-size:11px; background:rgba(255,255,255,0.12); color:#fff; border:none; border-radius:6px; cursor:pointer;">${safeText(uiText("installGuide.copyLink", "Sao chép liên kết"))}</button>
       </div>
     ` : "";
 
     modal.innerHTML = `
       <div class="portal-modal-card portal-install-guide-modal" role="dialog" aria-modal="true" aria-labelledby="install-guide-title">
         <div class="portal-modal-head">
-          <h3 id="install-guide-title">⚡ Tải & Cài Đặt App TOAN AAS</h3>
-          <button type="button" class="portal-modal-close" data-portal-action="modal-close" aria-label="Đóng">✕</button>
+          <h3 id="install-guide-title">${safeText(uiText("installGuide.title", "Cài ứng dụng TOAN AAS"))}</h3>
+          <button type="button" class="portal-modal-close" data-portal-action="modal-close" aria-label="${safeText(uiText("installGuide.close", "Đóng hướng dẫn cài đặt"))}">✕</button>
         </div>
         <div class="portal-modal-body">
           ${inAppAlert}
-          <div class="portal-install-tabs" role="tablist">
-            <button type="button" class="portal-install-tab-btn${initialTab === 'android' ? ' is-active' : ''}" data-portal-install-tab="android">🤖 Android</button>
-            <button type="button" class="portal-install-tab-btn${initialTab === 'ios' ? ' is-active' : ''}" data-portal-install-tab="ios">🍏 iPhone / iPad</button>
-            <button type="button" class="portal-install-tab-btn${initialTab === 'desktop' ? ' is-active' : ''}" data-portal-install-tab="desktop">💻 Máy tính (PC/Mac)</button>
+          <div class="portal-install-tabs" role="tablist" aria-label="${safeText(uiText("installGuide.devices", "Thiết bị"))}">
+            <button type="button" id="install-guide-tab-android" role="tab" aria-controls="install-guide-panel-android" aria-selected="${initialTab === 'android'}" class="portal-install-tab-btn${initialTab === 'android' ? ' is-active' : ''}" data-portal-install-tab="android">Android</button>
+            <button type="button" id="install-guide-tab-ios" role="tab" aria-controls="install-guide-panel-ios" aria-selected="${initialTab === 'ios'}" class="portal-install-tab-btn${initialTab === 'ios' ? ' is-active' : ''}" data-portal-install-tab="ios">iPhone / iPad</button>
+            <button type="button" id="install-guide-tab-desktop" role="tab" aria-controls="install-guide-panel-desktop" aria-selected="${initialTab === 'desktop'}" class="portal-install-tab-btn${initialTab === 'desktop' ? ' is-active' : ''}" data-portal-install-tab="desktop">${safeText(uiText("installGuide.computer", "Máy tính"))}</button>
           </div>
 
-          <div class="portal-install-panel${initialTab === 'android' ? ' is-active' : ''}" data-portal-install-panel="android">
-            <p class="portal-ios-guide-intro">Cài đặt TOAN AAS trên điện thoại Android:</p>
+          <div class="portal-install-panel${initialTab === 'android' ? ' is-active' : ''}" id="install-guide-panel-android" role="tabpanel" aria-labelledby="install-guide-tab-android" data-portal-install-panel="android">
+            <p class="portal-ios-guide-intro">${safeText(uiText("installGuide.androidIntro", "Cài TOAN AAS trên Android bằng Chrome:"))}</p>
             <ol class="portal-ios-steps">
               <li>
                 <div class="portal-ios-step-num">1</div>
-                <div class="portal-ios-step-text">Mở trang bằng <strong>Chrome</strong> hoặc <strong>Samsung Internet</strong>, bấm menu <strong>3 chấm (⋮)</strong> ở góc trên bên phải.</div>
+                <div class="portal-ios-step-text">${safeText(uiText("installGuide.androidStep1", "Mở TOAN AAS trong Chrome rồi mở menu ⋮."))}</div>
               </li>
               <li>
                 <div class="portal-ios-step-num">2</div>
-                <div class="portal-ios-step-text">Chọn <strong>"Cài đặt ứng dụng"</strong> hoặc <strong>"Thêm vào màn hình chính" (Add to Home screen)</strong>.</div>
+                <div class="portal-ios-step-text">${safeText(uiText("installGuide.androidStep2", "Chọn mục cài đặt hoặc tạo lối tắt, rồi chọn cài ứng dụng nếu có."))}</div>
               </li>
               <li>
                 <div class="portal-ios-step-num">3</div>
-                <div class="portal-ios-step-text">Bấm <strong>"Cài đặt"</strong> để mở ứng dụng toàn màn hình không có thanh URL.</div>
+                <div class="portal-ios-step-text">${safeText(uiText("installGuide.androidStep3", "Làm theo hướng dẫn của trình duyệt. Khả năng cài đặt phụ thuộc thiết bị và trình duyệt."))}</div>
               </li>
             </ol>
             <div class="portal-install-direct-action">
-              <span>Nếu trình duyệt hỗ trợ phím tắt:</span>
-              <button type="button" class="portal-button portal-button--quiet" data-portal-action="pwa-download-shortcut" style="padding:6px 12px; font-size:12px;">⬇️ Tải Phím tắt Web (.url)</button>
+              <span>${safeText(uiText("installGuide.shortcutNote", "Tệp liên kết .url dành cho thiết bị có hỗ trợ; không phải bộ cài ứng dụng."))}</span>
+              <button type="button" class="portal-button portal-button--quiet" data-portal-action="pwa-download-shortcut" style="padding:6px 12px; font-size:12px;">${safeText(uiText("installGuide.downloadLink", "Tải tệp liên kết (.url)"))}</button>
             </div>
           </div>
 
-          <div class="portal-install-panel${initialTab === 'ios' ? ' is-active' : ''}" data-portal-install-panel="ios">
-            <p class="portal-ios-guide-intro">Thêm TOAN AAS vào màn hình chính iPhone / iPad bằng Safari:</p>
+          <div class="portal-install-panel${initialTab === 'ios' ? ' is-active' : ''}" id="install-guide-panel-ios" role="tabpanel" aria-labelledby="install-guide-tab-ios" data-portal-install-panel="ios">
+            <p class="portal-ios-guide-intro">${safeText(uiText("installGuide.iosIntro", "Thêm TOAN AAS vào màn hình chính bằng Safari:"))}</p>
             <ol class="portal-ios-steps">
               <li>
                 <div class="portal-ios-step-num">1</div>
-                <div class="portal-ios-step-text">Bấm biểu tượng <strong>Chia sẻ (Share ⬆️)</strong> ở thanh menu dưới cùng của trình duyệt Safari.</div>
+                <div class="portal-ios-step-text">${safeText(uiText("installGuide.iosStep1", "Mở TOAN AAS trong Safari, mở menu trang hoặc nút Chia sẻ."))}</div>
               </li>
               <li>
                 <div class="portal-ios-step-num">2</div>
-                <div class="portal-ios-step-text">Cuộn danh sách và chọn <strong>"Thêm vào MH chính" (Add to Home Screen ➕)</strong>.</div>
+                <div class="portal-ios-step-text">${safeText(uiText("installGuide.iosStep2", "Chọn Thêm vào màn hình chính. Nếu có tùy chọn mở như ứng dụng, hãy bật tùy chọn đó."))}</div>
               </li>
               <li>
                 <div class="portal-ios-step-num">3</div>
-                <div class="portal-ios-step-text">Bấm <strong>"Thêm" (Add)</strong> ở góc trên bên phải để hoàn tất.</div>
+                <div class="portal-ios-step-text">${safeText(uiText("installGuide.iosStep3", "Chọn Thêm, rồi mở TOAN AAS từ biểu tượng trên màn hình chính."))}</div>
               </li>
             </ol>
             <div class="portal-install-direct-action">
-              <span>Dán link vào Safari:</span>
-              <button type="button" class="portal-button portal-button--quiet" data-portal-action="pwa-copy-link" style="padding:6px 12px; font-size:12px;">📋 Sao chép liên kết</button>
+              <span>${safeText(uiText("installGuide.safariHint", "Bạn có thể sao chép liên kết để mở trong Safari."))}</span>
+              <button type="button" class="portal-button portal-button--quiet" data-portal-action="pwa-copy-link" style="padding:6px 12px; font-size:12px;">${safeText(uiText("installGuide.copyLink", "Sao chép liên kết"))}</button>
             </div>
           </div>
 
-          <div class="portal-install-panel${initialTab === 'desktop' ? ' is-active' : ''}" data-portal-install-panel="desktop">
-            <p class="portal-ios-guide-intro">Cài đặt ứng dụng PWA độc lập trên Windows / macOS / Linux, chạy mượt 60fps:</p>
+          <div class="portal-install-panel${initialTab === 'desktop' ? ' is-active' : ''}" id="install-guide-panel-desktop" role="tabpanel" aria-labelledby="install-guide-tab-desktop" data-portal-install-panel="desktop">
+            <p class="portal-ios-guide-intro">${safeText(uiText("installGuide.desktopIntro", "Cài TOAN AAS trên máy tính bằng Chrome hoặc trình duyệt có hỗ trợ:"))}</p>
             <ol class="portal-ios-steps">
               <li>
                 <div class="portal-ios-step-num">1</div>
-                <div class="portal-ios-step-text">Bấm vào biểu tượng <strong>Cài đặt (⊕ hoặc 📲)</strong> trên thanh địa chỉ của trình duyệt Chrome / Edge / Brave.</div>
+                <div class="portal-ios-step-text">${safeText(uiText("installGuide.desktopStep1", "Mở TOAN AAS trong Chrome, rồi mở menu ⋮."))}</div>
               </li>
               <li>
                 <div class="portal-ios-step-num">2</div>
-                <div class="portal-ios-step-text">Hoặc bấm menu <strong>3 chấm (⋮) ➔ Chọn "Cài đặt TOAN AAS" (Install App)</strong>.</div>
+                <div class="portal-ios-step-text">${safeText(uiText("installGuide.desktopStep2", "Tìm mục cài trang làm ứng dụng trong nhóm truyền, lưu và chia sẻ; hoặc dùng biểu tượng cài đặt trên thanh địa chỉ nếu có."))}</div>
               </li>
               <li>
                 <div class="portal-ios-step-num">3</div>
-                <div class="portal-ios-step-text">Bấm <strong>"Cài đặt"</strong> để tạo biểu tượng ứng dụng ngoài Desktop và Taskbar.</div>
+                <div class="portal-ios-step-text">${safeText(uiText("installGuide.desktopStep3", "Làm theo lời nhắc của trình duyệt. Nếu chưa thấy mục cài đặt, bạn vẫn có thể dùng TOAN AAS trong trình duyệt."))}</div>
               </li>
             </ol>
             <div class="portal-install-direct-action">
-              <span>Tải file phím tắt khởi chạy nhanh:</span>
-              <button type="button" class="portal-button portal-button--quiet" data-portal-action="pwa-download-shortcut" style="padding:6px 12px; font-size:12px;">⬇️ Tải Phím tắt App (.url)</button>
+              <span>${safeText(uiText("installGuide.shortcutNote", "Tệp liên kết .url dành cho thiết bị có hỗ trợ; không phải bộ cài ứng dụng."))}</span>
+              <button type="button" class="portal-button portal-button--quiet" data-portal-action="pwa-download-shortcut" style="padding:6px 12px; font-size:12px;">${safeText(uiText("installGuide.downloadLink", "Tải tệp liên kết (.url)"))}</button>
             </div>
           </div>
         </div>
         <div class="portal-modal-foot">
-          <button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-try-prompt">⚡ Kích hoạt Cài đặt / Tải App</button>
-          <button type="button" class="portal-button portal-button--quiet" data-portal-action="modal-close">Đã hiểu</button>
+          <button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-try-prompt">${safeText(uiText("installGuide.tryInstall", "Thử cài bằng trình duyệt"))}</button>
+          <button type="button" class="portal-button portal-button--quiet" data-portal-action="modal-close">${safeText(uiText("installGuide.done", "Đã hiểu"))}</button>
         </div>
       </div>
     `;
@@ -38027,7 +38540,6 @@
     if (!pwaInstallCanBeOffered() || pwaInstallInFlight) {
       if (isIosDevice()) openUniversalInstallGuideModal("ios");
       else {
-        downloadAppLauncherShortcut();
         openUniversalInstallGuideModal();
       }
       syncPwaInstallControl();
@@ -38043,12 +38555,12 @@
           ? await prompt.userChoice
           : null;
         if (choice && choice.outcome === "accepted") {
-          showToast("✅ Yêu cầu cài TOAN AAS đã được chấp nhận. Trình duyệt sẽ hoàn tất cài đặt vào thiết bị!");
+          showToast(uiText("installGuide.requestAccepted", "Trình duyệt đã nhận yêu cầu cài đặt. Hãy theo dõi thông báo trên thiết bị."));
           dismissSmartInstallBanner();
           const modal = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
           if (modal) modal.remove();
         } else if (choice && choice.outcome === "dismissed") {
-          showToast("Bạn có thể cài ứng dụng sau bất cứ lúc nào khi cần.", "warning");
+          showToast(uiText("installGuide.requestDismissed", "Bạn có thể mở lại hướng dẫn cài đặt khi cần."), "warning");
         }
       } catch (_) {
         openUniversalInstallGuideModal();
@@ -38062,7 +38574,6 @@
     if (isIosDevice()) {
       openUniversalInstallGuideModal("ios");
     } else {
-      downloadAppLauncherShortcut();
       openUniversalInstallGuideModal();
     }
     syncPwaInstallControl();
@@ -38084,7 +38595,7 @@
       dismissSmartInstallBanner();
       const modal = document.querySelector("[data-portal-ios-modal], [data-portal-install-modal]");
       if (modal) modal.remove();
-      showToast("🎉 TOAN AAS đã được cài đặt thành công vào thiết bị của bạn!");
+      showToast(uiText("installGuide.installed", "Trình duyệt xác nhận TOAN AAS đã được cài đặt."));
     });
   }
 
@@ -38095,7 +38606,8 @@
     if (!palette) return;
     closeSidebar({ restoreFocus: false });
     commandPaletteReturnFocus = trigger || document.activeElement;
-    palette.innerHTML = renderCommandPalette(resolvePage(context.path), context);
+    commandPaletteMarkup = renderCommandPalette(resolvePage(context.path), context);
+    palette.innerHTML = commandPaletteMarkup;
     palette.hidden = false;
     setCommandPaletteBackgroundInert(true);
     window.requestAnimationFrame(() => {
@@ -38212,6 +38724,12 @@
       const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume]");
       updateSubDubLocalVolume(volumeInput);
     });
+    document.addEventListener("keydown", (event) => {
+      const subDubModeButton = event.target.closest(".portal-subdub-hub [data-subdub-mode-select]");
+      if (handleSubDubModeKeydown(subDubModeButton, event, window)) return;
+      const freeToolTab = event.target.closest(".portal-free-tools [data-free-tool-tab]");
+      handleFreeToolTabKeydown(freeToolTab, event);
+    });
     document.addEventListener("click", (event) => {
       const subDubModeButton = event.target.closest("[data-subdub-mode-select]");
       if (updateSubDubModeSelection(subDubModeButton, window)) return;
@@ -38273,7 +38791,11 @@
         const tab = installTabBtn.getAttribute("data-portal-install-tab");
         const modal = event.target.closest(".portal-install-guide-modal");
         if (modal && tab) {
-          modal.querySelectorAll("[data-portal-install-tab]").forEach((btn) => btn.classList.toggle("is-active", btn.getAttribute("data-portal-install-tab") === tab));
+          modal.querySelectorAll("[data-portal-install-tab]").forEach((btn) => {
+            const selected = btn.getAttribute("data-portal-install-tab") === tab;
+            btn.classList.toggle("is-active", selected);
+            btn.setAttribute("aria-selected", String(selected));
+          });
           modal.querySelectorAll("[data-portal-install-panel]").forEach((panel) => panel.classList.toggle("is-active", panel.getAttribute("data-portal-install-panel") === tab));
         }
         return;
@@ -38341,13 +38863,13 @@
         if (pwaInstallPrompt && typeof pwaInstallPrompt.prompt === "function") {
           requestPwaInstall();
         } else if (isInAppBrowser()) {
-          showToast("⚠️ Trình duyệt nội bộ đang chặn. Hãy bấm (⋮) chọn 'Mở bằng Chrome/Safari'!", "warning");
+          showToast(uiText("installGuide.inAppBody", "Trình duyệt trong ứng dụng có thể không hỗ trợ cài đặt. Hãy mở liên kết trong Chrome trên Android hoặc Safari trên iPhone."), "warning");
         } else if (isIosDevice()) {
-          showToast("🍏 Hãy bấm nút Chia sẻ (Share ⬆️) trong Safari ➔ 'Thêm vào MH chính'!");
+          showToast(uiText("installGuide.iosStep2", "Chọn Thêm vào màn hình chính. Nếu có tùy chọn mở như ứng dụng, hãy bật tùy chọn đó."));
         } else if (isAndroidDevice()) {
-          showToast("🤖 Bấm menu 3 chấm (⋮) góc trên phải Chrome ➔ 'Cài đặt ứng dụng'!");
+          showToast(uiText("installGuide.androidStep2", "Chọn mục cài đặt hoặc tạo lối tắt, rồi chọn cài ứng dụng nếu có."));
         } else {
-          downloadAppLauncherShortcut();
+          showToast(uiText("installGuide.noPrompt", "Chưa có lời nhắc cài đặt. Hãy làm theo hướng dẫn trong tab thiết bị; không cần tải tệp để dùng TOAN AAS."), "warning");
         }
         return;
       }
@@ -38742,6 +39264,19 @@
       }
       const installModal = document.querySelector("[data-portal-install-modal]");
       const installModalOpen = Boolean(installModal);
+      if (installModalOpen && event.target && event.target.matches("[data-portal-install-tab]")
+          && ["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+        const tabs = Array.from(installModal.querySelectorAll("[data-portal-install-tab]"));
+        const current = tabs.indexOf(event.target);
+        const next = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1
+          : (current + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+        if (tabs[next]) {
+          event.preventDefault();
+          tabs[next].click();
+          tabs[next].focus({ preventScroll: true });
+        }
+        return;
+      }
       if (event.key === "Escape" && installModalOpen) { event.preventDefault(); closeInstallGuideModal(); return; }
       if (event.key === "Tab" && installModalOpen) {
         const focusables = installModalFocusables(installModal);
@@ -38769,6 +39304,17 @@
         const last = focusables[focusables.length - 1];
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        return;
+      }
+      const accountDropdown = document.querySelector("[data-portal-user-dropdown]");
+      if (event.key === "Escape" && accountDropdown && !accountDropdown.hidden) {
+        event.preventDefault();
+        accountDropdown.hidden = true;
+        const accountTrigger = document.querySelector('[data-portal-action="toggle-user-dropdown"]');
+        if (accountTrigger) {
+          accountTrigger.setAttribute("aria-expanded", "false");
+          accountTrigger.focus({ preventScroll: true });
+        }
         return;
       }
       const sidebar = document.querySelector("[data-portal-sidebar]");
@@ -38864,6 +39410,8 @@
   }
 
   let lastNormalizedRoute = null;
+  let lastCustomerHeaderMarkup = null;
+  let lastCustomerHeaderSessionToken = null;
   function mountPortal(override) {
     const options = arguments[1] || {};
     if (override && typeof override === "object") window.__TOAN_AAS_PORTAL__ = override;
@@ -38887,8 +39435,14 @@
     if (!sidebar || !header || !main || !shell) return;
     // A hydration remount must not leave the responsive navigation in an
     // inert/modal state with a replaced header button behind it.
+    const actualPath = normalizePath((context && context.path) || window.location.pathname);
+    const isHydration = options.reason === "data-hydration" && lastNormalizedRoute === actualPath;
+    const keepCustomerPalette = isHydration && !isAdminPortalSurface(page) && commandPalette && !commandPalette.hidden
+      && context.session && context.session.authenticated === true && context.session.csrfToken
+      && context.session.csrfToken === lastCustomerHeaderSessionToken
+      && renderCommandPalette(page, context) === commandPaletteMarkup;
     if (sidebar.classList.contains("is-open")) closeSidebar({ restoreFocus: false });
-    if (commandPalette && !commandPalette.hidden) closeCommandPalette({ restoreFocus: false });
+    if (commandPalette && !commandPalette.hidden && !keepCustomerPalette) closeCommandPalette({ restoreFocus: false });
     const surface = portalSurface(page);
     const isLanding = surface === "landing";
     const isAuth = surface === "auth";
@@ -38937,7 +39491,13 @@
         ? (isAdminMobileSurface(page) ? renderAdminMobileNav(page, context) : renderMobileNav(page))
         : "";
       mobileNav.hidden = !mobileNavMarkup;
-      mobileNav.innerHTML = mobileNavMarkup;
+      if (appKind === "customer") {
+        const mobileNavTemplate = document.createElement("template");
+        mobileNavTemplate.innerHTML = mobileNavMarkup;
+        if (mobileNav.innerHTML !== mobileNavTemplate.innerHTML) mobileNav.innerHTML = mobileNavMarkup;
+      } else {
+        mobileNav.innerHTML = mobileNavMarkup;
+      }
       if (mobileNavMarkup) mobileNav.dataset.portalMobileNavKind = appKind;
       else mobileNav.removeAttribute("data-portal-mobile-nav-kind");
     }
@@ -38957,8 +39517,6 @@
     if (isAuth) main.dataset.portalMotionSkipEnter = "true";
     main.dataset.portalPresentationRoute = featureCatalogRoute ? "features" : "default";
     document.documentElement.setAttribute("data-portal-motion-route", dashboardMotionRoute || isCustomerDirectoryRoute ? "dashboard" : "default");
-    const actualPath = normalizePath((context && context.path) || window.location.pathname);
-    const isHydration = options.reason === "data-hydration" && lastNormalizedRoute === actualPath;
     lastNormalizedRoute = actualPath;
     const phase = isHydration ? "settled" : "entry";
     shell.dataset.portalPresentationPhase = phase;
@@ -38966,7 +39524,16 @@
     function renderShell() {
       sidebar.innerHTML = renderSidebar(page, context);
       setSidebarAccessibilityState(false);
-      header.innerHTML = renderHeader(page, context);
+      const headerMarkup = renderHeader(page, context);
+      const headerSessionToken = context.session && context.session.authenticated === true
+        && typeof context.session.csrfToken === "string" ? context.session.csrfToken : "";
+      // Unrelated data hydration must not close a customer's open menu or
+      // replace its focused control. Changed markup/session still renders.
+      const keepCustomerHeader = isHydration && !isAdminPortalSurface(page) && headerSessionToken
+        && headerSessionToken === lastCustomerHeaderSessionToken && headerMarkup === lastCustomerHeaderMarkup;
+      if (!keepCustomerHeader) header.innerHTML = headerMarkup;
+      lastCustomerHeaderMarkup = headerMarkup;
+      lastCustomerHeaderSessionToken = headerSessionToken;
       main.innerHTML = renderPage(page, context);
       if (!isHydration) {
         const workspace = document.querySelector(".portal-workspace") || main;
@@ -39007,6 +39574,10 @@
       syncPwaInstallControl();
       const theme = window.TOANAASPortalTheme;
       if (theme && typeof theme.syncControls === "function") theme.syncControls();
+      if (keepCustomerPalette) {
+        commandPaletteReturnFocus = header.querySelector("[data-portal-open-command-palette]");
+        setCommandPaletteBackgroundInert(true);
+      }
       mountLandingMotion();
       mountWorkspaceMotion();
       mountPortalAiCopilot(context);
@@ -39050,23 +39621,28 @@
 
   let copilotState = {
     open: false,
+    suggestionsOpen: false,
     messages: [
       {
         role: "assistant",
-        text: "👋 <strong>Xin chào! Tôi là Trợ Lý AI AAS BOT.</strong><br/>Tôi được kết nối trực tiếp vào toàn bộ hệ sinh thái TOAN AAS: Video AI, Tạo Ảnh 4K, Voiceover TTS, Bóc Phụ Đề, Suno Music, Nạp Xu PayOS, Quyền lợi Hội Viên VIP và Asset Vault.<br/><br/><em>Bạn có thể hỏi bất kỳ điều gì, yêu cầu viết prompt/kịch bản hoặc bấm nút bên dưới để tôi điều khiển Web App cho bạn!</em>",
+        copyKey: "welcome",
+        text: "",
         actions: [
-          { label: "⚡ Nạp Xu PayOS", route: "/wallet/topup" },
-          { label: "🎬 Tạo Video AI", route: "/video/product" },
-          { label: "🖼 Tạo Ảnh AI", route: "/image/create" },
-          { label: "🎙️ Lồng Tiếng TTS", route: "/voice/tts" },
-          { label: "🗣️ Bóc Phụ Đề", route: "/subtitle" },
-          { label: "🎵 Tạo Nhạc Suno", route: "/music/direction" },
-          { label: "💳 Bảng Giá & Gói", route: "/pricing" },
-          { label: "💳 Bảng Giá", route: "/pricing" }
+          { labelKey: "assistant.action.topup", label: "Nạp Xu", route: "/wallet/topup" },
+          { labelKey: "assistant.action.video", label: "Video AI", route: "/video/product" },
+          { labelKey: "assistant.action.image", label: "Ảnh AI", route: "/image/create" },
+          { labelKey: "assistant.action.voice", label: "Giọng đọc", route: "/voice/tts" },
+          { labelKey: "assistant.action.subdub", label: "SubDub", route: "/subtitle" },
+          { labelKey: "assistant.action.music", label: "Âm nhạc", route: "/music/direction" },
+          { labelKey: "assistant.action.plans", label: "Gói dịch vụ", route: "/pricing" },
+          { labelKey: "assistant.action.pricing", label: "Bảng giá", route: "/pricing" }
         ]
       }
     ]
   };
+  const copilotInitialMessages = copilotState.messages.slice();
+  let copilotSessionToken = "";
+  let copilotDraftInput = "";
 
   function executeCopilotQuery(query, context) {
     const rawQuery = String(query || "").trim();
@@ -39356,19 +39932,25 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
   }
 
   function bindCopilotListeners(container, context) {
-    const toggleBtn = container.querySelector("#portal-copilot-toggle-btn");
+    const toggleBtn = document.getElementById("portal-copilot-toggle-btn");
     const closeBtn = container.querySelector("#portal-copilot-close-btn");
     const form = container.querySelector("#portal-copilot-input-form");
     const input = container.querySelector("#portal-copilot-text-input");
     const msgsList = container.querySelector("#portal-copilot-msgs-list");
 
     if (msgsList) {
-      msgsList.scrollTop = msgsList.scrollHeight;
+      msgsList.scrollTop = copilotState.messages.length === 1 ? 0 : msgsList.scrollHeight;
     }
 
     if (toggleBtn) {
       toggleBtn.onclick = () => {
         copilotState.open = !copilotState.open;
+        const accountMenu = document.querySelector("[data-portal-user-dropdown]");
+        if (copilotState.open && accountMenu) {
+          accountMenu.hidden = true;
+          const accountTrigger = document.querySelector('[data-portal-action="toggle-user-dropdown"]');
+          if (accountTrigger) accountTrigger.setAttribute("aria-expanded", "false");
+        }
         renderCopilotHtml(container, context);
         if (copilotState.open) {
           const inp = container.querySelector("#portal-copilot-text-input");
@@ -39381,8 +39963,18 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
       closeBtn.onclick = () => {
         copilotState.open = false;
         renderCopilotHtml(container, context);
+        const accountTrigger = document.querySelector('[data-portal-action="toggle-user-dropdown"]');
+        const returnFocus = accountTrigger || document.getElementById("portal-copilot-toggle-btn");
+        if (returnFocus) returnFocus.focus({ preventScroll: true });
       };
     }
+    container.onkeydown = (event) => {
+      if (event.key === "Escape" && copilotState.open && closeBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeBtn.click();
+      }
+    };
 
     if (form && input) {
       form.onsubmit = (e) => {
@@ -39433,6 +40025,14 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
 
   function renderCopilotHtml(container, context) {
     if (!container) return;
+    const priorInput = container.querySelector("#portal-copilot-text-input");
+    const priorSuggestions = container.querySelector(".portal-copilot-suggestions");
+    if (priorSuggestions) copilotState.suggestionsOpen = priorSuggestions.open;
+    const inputHadFocus = Boolean(priorInput && document.activeElement === priorInput);
+    const selection = inputHadFocus ? [priorInput.selectionStart, priorInput.selectionEnd] : null;
+    if (priorInput) copilotDraftInput = priorInput.value;
+    const previousToggle = document.getElementById("portal-copilot-toggle-btn");
+    if (previousToggle && !container.contains(previousToggle)) previousToggle.remove();
 
     container.innerHTML = `
       <style>
@@ -39633,43 +40233,46 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
         <span class="portal-copilot-btn-label">${safeText(uiText("customerTopup.assistant.label", "Trợ lý AI AAS BOT"))}</span>
       </button>
 
-      <div class="portal-copilot-drawer" id="portal-copilot-drawer" style="display:${copilotState.open ? 'flex' : 'none'};">
+      <div class="portal-copilot-drawer" id="portal-copilot-drawer" role="dialog" aria-labelledby="portal-copilot-title" style="display:${copilotState.open ? 'flex' : 'none'};">
         <div class="portal-copilot-header">
           <div style="display:flex; align-items:center; gap:10px;">
-            <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, #00f2fe, #4facfe); display:flex; align-items:center; justify-content:center; font-size:18px;">🤖</div>
+            <span class="portal-copilot-avatar" aria-hidden="true">${portalIcon(ICONS.chat)}</span>
             <div>
-              <strong style="font-size:14px; color:#fff; display:block;">Trợ lý AI AAS BOT</strong>
-              <span style="font-size:11px; color:#00d26a;">🟢 Nối liền toàn bộ sản phẩm TOAN AAS</span>
+              <strong id="portal-copilot-title" style="font-size:14px; color:#fff; display:block;">${safeText(uiText("customerTopup.assistant.label", "Trợ lý AI AAS BOT"))}</strong>
+              <span style="font-size:11px; color:#00d26a;">${safeText(uiText("assistant.subtitle", "Tìm công cụ và xem hướng dẫn sử dụng"))}</span>
             </div>
           </div>
-          <button type="button" id="portal-copilot-close-btn" style="background:none; border:none; color:#8fa3b7; font-size:18px; cursor:pointer;" aria-label="Đóng">✕</button>
+          <button type="button" id="portal-copilot-close-btn" style="background:none; border:none; color:#8fa3b7; font-size:18px; cursor:pointer;" aria-label="${safeText(uiText("assistant.close", "Đóng trợ lý"))}">✕</button>
         </div>
 
-        <div class="portal-copilot-chips">
-          <button type="button" class="portal-copilot-chip" data-copilot-query="Nạp tiền vào tài khoản">⚡ Nạp Xu PayOS</button>
-          <button type="button" class="portal-copilot-chip" data-copilot-query="Tạo video quảng cáo">🎬 Tạo Video AI</button>
-          <button type="button" class="portal-copilot-chip" data-copilot-query="Tạo ảnh sản phẩm">🖼 Tạo Ảnh AI</button>
-          <button type="button" class="portal-copilot-chip" data-copilot-query="Lồng tiếng đọc văn bản">🎙️ Lồng Tiếng TTS</button>
-          <button type="button" class="portal-copilot-chip" data-copilot-query="Bóc tách phụ đề video">🗣️ Bóc Phụ Đề</button>
-          <button type="button" class="portal-copilot-chip" data-copilot-query="Tạo nhạc Suno AI">🎵 Tạo Nhạc Suno</button>
-          <button type="button" class="portal-copilot-chip" data-copilot-query="Viết kịch bản video">✍️ Kịch Bản</button>
-          <button type="button" class="portal-copilot-chip" data-copilot-query="Xem gói và quyền lợi thành viên">👑 Gói Hội Viên</button>
-          <button type="button" class="portal-copilot-chip" data-copilot-query="Bảng giá các dịch vụ">💳 Bảng Giá</button>
-          <button type="button" class="portal-copilot-chip" data-copilot-query="Kiểm tra số dư Xu hiện tại">💼 Kiểm Tra Số Dư</button>
-          <button type="button" class="portal-copilot-chip" data-copilot-query="Đổi giao diện sáng tối">🎨 Đổi Theme</button>
-        </div>
+        <details class="portal-copilot-suggestions"${copilotState.suggestionsOpen ? " open" : ""}>
+          <summary>${safeText(uiText("assistant.suggestions", "Gợi ý nhanh"))}</summary>
+          <div class="portal-copilot-chips">
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Nạp tiền vào tài khoản">${safeText(uiText("assistant.action.topup", "Nạp Xu"))}</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Tạo video quảng cáo">${safeText(uiText("assistant.action.video", "Video AI"))}</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Tạo ảnh sản phẩm">${safeText(uiText("assistant.action.image", "Ảnh AI"))}</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Lồng tiếng đọc văn bản">${safeText(uiText("assistant.action.voice", "Giọng đọc"))}</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Bóc tách phụ đề video">${safeText(uiText("assistant.action.subdub", "SubDub"))}</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Tạo nhạc Suno AI">${safeText(uiText("assistant.action.music", "Âm nhạc"))}</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Viết kịch bản video">${safeText(uiText("assistant.action.scripts", "Kịch bản"))}</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Xem gói và quyền lợi thành viên">${safeText(uiText("assistant.action.membership", "Gói thành viên"))}</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Bảng giá các dịch vụ">${safeText(uiText("assistant.action.pricing", "Bảng giá"))}</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Kiểm tra số dư Xu hiện tại">${safeText(uiText("assistant.action.balance", "Số dư Xu"))}</button>
+          <button type="button" class="portal-copilot-chip" data-copilot-query="Đổi giao diện sáng tối">${safeText(uiText("assistant.action.theme", "Giao diện"))}</button>
+          </div>
+        </details>
 
         <div class="portal-copilot-msgs" id="portal-copilot-msgs-list">
           ${copilotState.messages.map((m) => `
             <div class="${m.role === 'user' ? 'copilot-bubble-user' : 'copilot-bubble-ai'}">
-              <div>${m.text}</div>
+              <div>${m.copyKey === "welcome" ? `<strong>${safeText(uiText("assistant.welcomeTitle", "Xin chào! Tôi là Trợ lý AI AAS BOT."))}</strong><br/>${safeText(uiText("assistant.welcomeBody", "Tôi giúp bạn tìm công cụ và xem hướng dẫn sử dụng TOAN AAS."))}<br/><br/>${safeText(uiText("assistant.welcomeHint", "Chọn mục bên dưới hoặc nhập câu hỏi để bắt đầu. Trạng thái và kết quả tác vụ được kiểm tra tại từng sản phẩm."))}` : m.text}</div>
               ${m.actions && m.actions.length ? `
                 <div class="copilot-actions">
                   ${m.actions.map((act) => {
                     if (act.insertPrompt) {
                       return `<button type="button" class="copilot-prompt-btn" data-copilot-insert-prompt="${safeText(act.insertPrompt)}">${safeText(act.label)}</button>`;
                     }
-                    return `<button type="button" class="copilot-act-btn" data-copilot-navigate="${safeText(act.route)}">👉 ${safeText(act.label)}</button>`;
+                    return `<button type="button" class="copilot-act-btn" data-copilot-navigate="${safeText(act.route)}">${safeText(act.labelKey ? uiText(act.labelKey, act.label) : act.label)}</button>`;
                   }).join('')}
                 </div>
               ` : ''}
@@ -39678,13 +40281,25 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
         </div>
 
         <form class="portal-copilot-form" id="portal-copilot-input-form">
-          <input type="text" id="portal-copilot-text-input" class="portal-copilot-input" placeholder="Hỏi hoặc yêu cầu điều khiển web app..." autocomplete="off" />
-          <button type="submit" class="portal-copilot-send">Gửi</button>
+          <label class="portal-sr-only" for="portal-copilot-text-input">${safeText(uiText("assistant.inputLabel", "Câu hỏi cho trợ lý"))}</label>
+          <input type="text" id="portal-copilot-text-input" class="portal-copilot-input" placeholder="${safeText(uiText("assistant.placeholder", "Hỏi về tính năng hoặc tìm công cụ…"))}" autocomplete="off" />
+          <button type="submit" class="portal-copilot-send">${safeText(uiText("assistant.send", "Gửi"))}</button>
         </form>
       </div>
     `;
 
+    const utilitySlot = document.querySelector("[data-portal-customer-utilities]");
+    const toggle = container.querySelector("#portal-copilot-toggle-btn");
+    if (utilitySlot && toggle) utilitySlot.appendChild(toggle);
     bindCopilotListeners(container, context);
+    const input = container.querySelector("#portal-copilot-text-input");
+    if (input) {
+      input.value = copilotDraftInput;
+      if (copilotState.open && inputHadFocus) {
+        input.focus({ preventScroll: true });
+        if (selection && typeof input.setSelectionRange === "function") input.setSelectionRange(selection[0], selection[1]);
+      }
+    }
   }
 
   function mountPortalAiCopilot(context) {
@@ -39694,6 +40309,17 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
     const isAuthPage = ["/login", "/register", "/password-recovery", "/welcome"].includes(currentPath) || (document.querySelector && Boolean(document.querySelector(".portal-auth-page")));
     const isAdminPath = currentPath === "/admin" || currentPath.startsWith("/admin/");
     const isAuthenticated = Boolean(context && context.session && context.session.authenticated === true);
+    const sessionToken = isAuthenticated && typeof context.session.csrfToken === "string" ? context.session.csrfToken : "";
+    // Like the existing customer-header comparator, this token is compared
+    // only in tab memory; it is never persisted or emitted as telemetry.
+    if (isAuthPage || !isAuthenticated || isAdminPath || !sessionToken || sessionToken !== copilotSessionToken) {
+      copilotDraftInput = "";
+      copilotState.open = false;
+      copilotState.suggestionsOpen = false;
+      copilotState.messages = copilotInitialMessages.slice();
+      if (container) container.innerHTML = "";
+    }
+    copilotSessionToken = isAuthPage || !isAuthenticated || isAdminPath ? "" : sessionToken;
 
     if (isAuthPage || !isAuthenticated || isAdminPath) {
       if (container) {

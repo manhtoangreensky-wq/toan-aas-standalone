@@ -34,9 +34,9 @@ def _function(source: str, name: str) -> str:
 
 
 def test_workspace_menu_is_an_explicit_signed_navigation_directory() -> None:
-    assert 'WebFeature("workspace_menu", "Chuyển workspace", "content", "/workspace-menu"' in REGISTRY
+    assert 'WebFeature("workspace_menu", "Không gian làm việc", "content", "/workspace-menu"' in REGISTRY
     for declaration in (
-        'customerPage("/workspace-menu", "Chuyển workspace"',
+        'customerPage("/workspace-menu", "Không gian làm việc"',
         'type: "workspace-menu", layout: "workspace-menu", fields: [], action: "none", status: "read_only"',
         'case "workspace-menu": return renderWorkspaceMenu(page, context);',
         'href="/workspace-menu"',
@@ -59,7 +59,7 @@ def test_workspace_menu_is_an_explicit_signed_navigation_directory() -> None:
         "function commandPaletteItems(context, page)",
         "function renderCommandPalette(page, context)",
     )
-    assert '["/workspace-menu", "Chuyển workspace", ICONS.dashboard]' not in permanent_projection
+    assert '["/workspace-menu", "Không gian làm việc", ICONS.dashboard]' not in permanent_projection
     assert "Object.values(manifest)" in palette
 
     # A browser-owned projection must remain fixed and must not expose the
@@ -129,10 +129,10 @@ def test_workspace_menu_renderer_only_links_to_reviewed_routes() -> None:
             "catalogReadState === \"loading\"",
             "entries.length !== WORKSPACE_MENU_CAPABILITY_SPECS.length",
             "aria-busy=\"true\"",
-            'workspaceMenuText("directoryLabel", "Danh sách workspace đã review")',
-        "Navigation only",
-        "Không có hành động tự động",
-        "Video để phase riêng",
+            'workspaceMenuText("directoryLabel", "Danh sách không gian làm việc")',
+        "Chỉ điều hướng",
+        "Không tự động thực hiện thao tác",
+        "Để nhóm tạo video sang giai đoạn riêng",
     ):
         assert requirement in renderer
     for requirement in (
@@ -140,7 +140,7 @@ def test_workspace_menu_renderer_only_links_to_reviewed_routes() -> None:
         "manifest[normalizePath(route)]",
         'page.access === "admin"',
         'href="${safeText(route)}"',
-        "Mở workspace",
+        "Mở không gian",
     ):
         assert requirement in card
     for source in (renderer, card):

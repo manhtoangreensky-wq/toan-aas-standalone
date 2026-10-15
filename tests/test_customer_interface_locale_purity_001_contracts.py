@@ -197,7 +197,7 @@ def test_topup_renderers_use_distinct_catalogue_keys_without_cross_surface_leaka
     assert 'uiText("customerTopup.installApp"' in pwa
     assert 'uiText("customerTopup.installAppAria"' in pwa
     assert (
-        'document.body.appendChild(fab);\n      }\n'
+        'placeInstallControl(fab, "portal-pwa-fab-trigger--landing-inline");\n'
         '      fab.setAttribute("title", uiText("customerTopup.installAppAria"'
     ) in pwa
     assert pwa.index('fab.setAttribute("title"') < pwa.index('fab.setAttribute("aria-label"') < pwa.index("fab.innerHTML")

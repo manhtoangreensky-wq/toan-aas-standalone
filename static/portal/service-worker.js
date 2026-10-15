@@ -50,6 +50,7 @@ const SHELL = Object.freeze([
   "/static/portal/portal.css",
   "/static/portal/portal-theme.css",
   "/static/portal/portal-theme.js",
+  "/static/portal/portal-feature-catalog-copy.js",
   "/static/portal/portal-features.js",
   "/static/portal/portal-i18n.js",
   "/static/portal/portal.js",
@@ -58,6 +59,7 @@ const SHELL = Object.freeze([
   "/static/portal/manifest.webmanifest",
   "/static/portal/app-icon.svg",
   "/static/logo_chính_thức.png",
+  "/static/portal/offline.js",
   OFFLINE_FALLBACK
 ]);
 const SHELL_PATHS = new Set(SHELL);

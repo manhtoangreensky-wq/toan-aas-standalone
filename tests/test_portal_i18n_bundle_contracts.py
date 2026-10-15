@@ -100,7 +100,7 @@ for (const locale of expected) {
 const landingKeys = [
   "landing.nav.features", "landing.nav.workflow", "landing.nav.trust",
   "landing.nav.language", "landing.cta.start", "landing.cta.signIn",
-  "landing.hero.title", "landing.hero.body", "landing.hero.explore",
+  "landing.hero.title", "landing.hero.titleEmphasis", "landing.hero.body", "landing.hero.explore",
   "landing.proof.webOwned", "landing.proof.noFakeOutput",
   "landing.proof.companionOptional", "landing.preview.title",
   "landing.workflow.title", "landing.trust.title", "landing.footer.legal"

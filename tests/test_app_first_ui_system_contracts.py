@@ -46,7 +46,11 @@ def test_app_shell_keeps_touch_focus_motion_and_local_svg_contracts() -> None:
     # Labels are presentation-only and must follow the signed account's
     # reviewed interface locale.  The route and closed SVG icon remain fixed
     # so localization cannot change navigation authority or icon rendering.
-    assert '["dashboard", "/dashboard", uiText("mobile.home", "Trang chủ"), ICONS.dashboard]' in PORTAL
+    assert '["studio", "/studio", uiText("mobile.studio", "Công cụ"), ICONS.video]' in PORTAL
+    assert '["publishing", "/publishing", uiText("mobile.publishing", "Đăng bài"), ICONS.reports]' in PORTAL
+    assert '["projects", "/projects", uiText("mobile.projects", "Dự án"), ICONS.dashboard]' in PORTAL
+    assert '["wallet", "/wallet", uiText("mobile.wallet", "Ví Xu"), ICONS.wallet]' in PORTAL
+    assert '["account", "/account", uiText("mobile.account", "Tài khoản"), ICONS.account]' in PORTAL
     assert "const PORTAL_ICON_PATHS = Object.freeze({" in PORTAL
     icon_helper = _section(PORTAL, "function portalIcon(icon)", "const WEB_LOCAL_ACTIONS")
     assert "PORTAL_ICON_PATHS[key] || PORTAL_ICON_PATHS[ICONS.default]" in icon_helper
@@ -102,7 +106,7 @@ def test_customer_surfaces_use_progressive_disclosure_and_ephemeral_password_rev
         "portal-onboarding-assurance": '<details class="portal-onboarding-assurance">',
         "portal-account-assurance": '<details class="portal-account-assurance">',
         "portal-wallet-assurance": '<details class="portal-wallet-assurance">',
-        "portal-wallet-secondary": '<details class="portal-wallet-secondary">',
+        "portal-wallet-secondary": '<details class="portal-wallet-secondary"',
     }
     for css_class, markup in disclosures.items():
         assert markup in PORTAL
