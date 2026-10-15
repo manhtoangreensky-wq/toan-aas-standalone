@@ -2809,9 +2809,9 @@ def test_light_audio_production_hub_main_surface_keeps_authoring_boundaries_read
     route = ".portal-page.portal-audio-hub"
     for marker in (
         "Audio production board",
-        "Hub dùng collection Media Workspace đã có thay vì tạo thêm kho dữ liệu.",
-        "Handoff có chủ đích",
-        "Không có music generation, provider library, enhance, translate, mux/render, job, Xu hay payment",
+        "Hub chỉ là projection của collection Media Workspace; không tạo database, API, player, waveform, provider catalog, generator, job, ví Xu, PayOS hay output mới.",
+        "Mỗi công cụ tiếp theo mở độc lập. Hub không chuyển collection, asset, account data hoặc lệnh thực thi qua URL, query hoặc browser storage.",
+        "This space does not create music, open provider libraries, enhance, translate, mux or render, create jobs, charge credits or take payments.",
     ):
         assert marker in PORTAL_CLIENT
     for selector in (
