@@ -113,8 +113,9 @@
       fixed chrome theo đúng từng locale và không còn hậu tố `App` xen trong
       vùng hiển thị; tuy nhiên lần kiểm tra mới nhất `/features` chuyển tới
       `/login?next=/features` và AX lại thấy `Tải & Cài đặt App TOAN AAS`.
-      Source locale vẫn xanh nhưng live drift trên next-route auth còn mở; không
-      đăng nhập hoặc gửi biểu mẫu.
+      Recheck lần 4 ngày 2026-10-15 trên đúng URL vẫn thấy nút cũ trong AX và
+      screenshot. Source locale vẫn xanh nhưng live drift trên next-route auth
+      còn mở; không đăng nhập hoặc gửi biểu mẫu.
 - [~] R216-H live recheck — viewport khoảng 327×667 vẫn nhận bundle landing cũ:
       header bị cắt cụm locale/theme/action và FAB PWA cũ che một phần proof.
       Source media rule và placement inline đã xanh; chờ delivery rồi chụp lại

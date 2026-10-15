@@ -118,6 +118,17 @@ không chứng minh mọi auth renderer/next-route đã được cập nhật.
   provider và không mutation.
 - Trạng thái: `R216-L=SOURCE_GREEN_LIVE_DRIFT_OPEN`; `LIVE_PASS=NO`.
 
+### Recheck live lần 4 — Codex In-app Browser, 2026-10-15
+
+- URL đang mở: `https://app.toanaas.vn/login?next=/features`.
+- AX snapshot vẫn có nút `📲 Tải & Cài đặt App TOAN AAS`; ảnh chụp cùng phiên
+  xác nhận form đăng nhập và nền navy/xanh ngọc đang hiển thị, nhưng CTA còn
+  bundle cũ.
+- Không đăng nhập, không nhập dữ liệu, không gửi biểu mẫu, không gọi provider
+  và không tạo mutation.
+- Kết luận: `R216-L` tiếp tục `SOURCE_GREEN_LIVE_DRIFT_OPEN`; cần delivery hợp lệ
+  rồi đọc lại đúng next-route này trước khi đóng.
+
 ## R216-H — landing header responsive
 
 Ảnh live read-only ở viewport hẹp đã cho thấy header landing bị ép một hàng:
