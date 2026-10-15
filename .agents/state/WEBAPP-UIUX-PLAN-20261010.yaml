@@ -82,4 +82,4 @@ motion_backlog:
   - telegram-popup-user-gesture
   - pwa-install-readiness
   - reduced-motion-and-cls-lcp-inp
-next_action: "Giữ source gate xanh; delivery source patch responsive trước, sau đó recheck landing ở viewport hẹp và hoàn tất QA matrix cùng CLS/LCP/INP/FPS. Chỉ retry PHIEU-217 khi agy.exe khả dụng. Do not call LIVE_PASS before evidence."
+next_action: "Giữ source gate xanh sau lifecycle/hot-path fixes; khi delivery/auth hợp lệ, recheck R216-L next-route và R216-H landing ở viewport hẹp, sau đó hoàn tất QA matrix cùng CLS/LCP/INP/FPS. Chỉ retry PHIEU-217 khi agy.exe khả dụng. Do not call LIVE_PASS before evidence."
