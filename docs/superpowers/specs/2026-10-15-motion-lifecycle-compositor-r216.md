@@ -108,14 +108,14 @@ server-owned data.
 
 | Spec | Acceptance | Evidence | Trạng thái |
 |---|---|---|---|
-| R216-A auth lifecycle | hydrate không cắt entry, không dựng lại main | focused 2/2 + full Node 467/467 + source diff | GREEN (source) |
+| R216-A auth lifecycle | hydrate không cắt entry, không dựng lại main | focused 2/2 + full Node 468/468 + source diff | GREEN (source) |
 | R216-B provider stability | vùng social không layout shift | focused 1/1 + CSS contract (`min-height: 86px`) | GREEN (source) |
-| R216-C compositor/scroll | không `transition:left`, không scrub lag | focused 2/2 + hot-path gates + full Node 467/467 + CSS diff | GREEN (source) |
+| R216-C compositor/scroll | không `transition:left`, không scrub lag | focused 2/2 + hot-path gates + full Node 468/468 + CSS diff | GREEN (source) |
 | R216-D Telegram | popup trước await, link fail-closed | existing popup test | GREEN (source) |
 | R216-E PWA | native prompt chỉ khi readiness | existing PWA test | GREEN (source) |
-| R216-F reduced motion | static content + performance notes | focused 1/1 + motion static 9/9 + full Node 467/467; runtime metrics pending | GREEN (static) |
+| R216-F reduced motion | static content + performance notes | focused 1/1 + motion/static/palette 25/25 + full Node 468/468; runtime metrics pending | GREEN (static) |
 | R216-G browser acceptance | DOM/screenshot/computed style/console/interaction | Fixture server dựng được; bundled Chromium thiếu executable; Chrome hệ thống exit 13 trước remote debugging | OPEN |
-| R216-L auth install locale | VI/EN/ZH dùng cùng key locale, không hard-code `App`, không duplicate key | source regression + duplicate-key guard + full Node 467/467; direct login AX recheck xanh nhưng `/features` → `/login?next=/features` còn CTA cũ | SOURCE GREEN / LIVE DRIFT OPEN |
+| R216-L auth install locale | VI/EN/ZH dùng cùng key locale, không hard-code `App`, không duplicate key | source regression + duplicate-key guard + full Node 468/468; direct login AX recheck xanh nhưng `/features` → `/login?next=/features` còn CTA cũ | SOURCE GREEN / LIVE DRIFT OPEN |
 | R216-H landing mobile header | header không clipping ở ≤420px, controls wrap xuống hàng | source media rule + static regression; live screenshot khoảng 327x667 ghi nhận bundle cũ còn clipping; PWA placement regression đã xanh | SOURCE GREEN / LIVE DRIFT OPEN |
 
 ## Kết quả source gate ngày 2026-10-15
@@ -123,7 +123,7 @@ server-owned data.
 ```text
 node --test tests/r216-motion-lifecycle-compositor.test.mjs: 10 passed, 0 failed
 node --test tests/auth-telegram-popup-order.test.mjs tests/auth-pwa-install-control.test.mjs: 15 passed, 0 failed
-node --test tests/**/*.test.mjs: 467 passed, 0 failed
+node --test tests/**/*.test.mjs: 468 passed, 0 failed
 node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs: 19 passed, 0 failed (latest recheck)
 node --test tests/feature-catalog-route-presentation.test.mjs: 5 passed, 0 failed
 node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs tests/auth-locale-copy-purity.test.mjs tests/auth-pwa-install-control.test.mjs: 31 passed, 0 failed (prior focused ledger)

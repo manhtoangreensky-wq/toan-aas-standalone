@@ -73,6 +73,17 @@ test('Reduced-motion leaves the Workboard loading surface static', () => {
   assert.ok(blocks.some(block => /\.portal-workboard-recovery\[data-workboard-read-state="loading"\][\s\S]{0,180}animation\s*:\s*none\s*!important/i.test(block)));
 });
 
+test('Dark theme inputs stay in the approved navy/blue palette', () => {
+  const darkStart = themeCss.indexOf(':root[data-portal-theme="dark"]');
+  assert.ok(darkStart >= 0);
+  const darkTheme = themeCss.slice(darkStart);
+  assert.match(darkTheme, /--portal-input-bg:\s*var\(--portal-dark-input-surface\)/);
+  assert.match(darkTheme, /--portal-input-text:\s*var\(--portal-dark-ink\)/);
+  assert.match(darkTheme, /--portal-input-placeholder:\s*var\(--portal-dark-placeholder\)/);
+  assert.match(darkTheme, /--portal-input-border:\s*var\(--portal-dark-input-border\)/);
+  assert.doesNotMatch(darkTheme, /--portal-input-(?:bg|text|placeholder|border):\s*var\(--portal-saas-obsidian-/);
+});
+
 test('Portal renderers do not add inline transition-all motion', () => {
   assert.doesNotMatch(portalJs, /transition\s*:\s*all\b/i);
 });

@@ -172,11 +172,16 @@ Audit đọc mã sau checkpoint live đã tìm và khóa bốn điểm source c�
    `will-change`/`translateZ(0)` lên toàn bộ page/card/table. Đã ghi attribute theo
    điều kiện khi giá trị đổi và gỡ hint compositor blanket; control có motion riêng
    vẫn giữ hint cục bộ.
+5. Dark theme còn map ô nhập sang palette obsidian gần đen, lệch khỏi quy cách
+   navy/xanh. Đã chuyển bốn token nền/chữ/placeholder/viền sang
+   `--portal-dark-input-*`, `--portal-dark-ink` và `--portal-dark-placeholder`.
 
 Regression mới:
 
 - `tests/feature-catalog-route-presentation.test.mjs`: 5/5.
 - `tests/r216-motion-lifecycle-compositor.test.mjs`: 10/10.
+- `tests/current-main-motion-static-gates.test.mjs`: 10/10, gồm gate palette
+  dark navy/xanh.
 - Các test mới khóa stale callback sau cleanup, dynamic reduced-motion, scroll
   background paint, metadata writes và blanket compositor hints.
 
@@ -193,7 +198,7 @@ node --test tests/auth-telegram-popup-order.test.mjs tests/auth-pwa-install-cont
 15 passed, 0 failed
 
 node --test tests/**/*.test.mjs
-467 passed, 0 failed
+468 passed, 0 failed
 
 node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs
 19 passed, 0 failed (latest recheck)
@@ -225,14 +230,14 @@ PASS
 
 | Spec | Kết quả source | Runtime |
 |---|---|---|
-| R216-A auth lifecycle | GREEN — focused 2/2, full Node 467/467 | Chưa có browser QA |
+| R216-A auth lifecycle | GREEN — focused 2/2, full Node 468/468 | Chưa có browser QA |
 | R216-B provider stability | GREEN — focused 1/1, `min-height: 86px` | Chưa đo CLS thật |
-| R216-C compositor/scroll | GREEN — focused 2/2 + new hot-path gates, full Node 467/467 | Chưa đo FPS/INP thật |
+| R216-C compositor/scroll | GREEN — focused 2/2 + new hot-path gates, full Node 468/468 | Chưa đo FPS/INP thật |
 | R216-D Telegram gesture | GREEN — regression hiện có | Chưa thao tác browser |
 | R216-E PWA readiness | GREEN — regression hiện có | Chưa thao tác browser |
-| R216-F reduced-motion | GREEN — focused 1/1, full Node 467/467 | Chưa đo CLS/LCP/INP thật |
+| R216-F reduced-motion | GREEN — focused 1/1, full Node 468/468 | Chưa đo CLS/LCP/INP thật |
 | R216-G browser acceptance | OPEN | QA fixture server có thể dựng; Chrome sandbox đóng với `exitCode=13` trước khi tạo phiên |
-| R216-L locale drift CTA đăng nhập | GREEN — source regression + duplicate-key guard; full Node 467/467 | OPEN — `/features` → `/login?next=/features` AX còn `Tải & Cài đặt App TOAN AAS`; bundle/route drift |
+| R216-L locale drift CTA đăng nhập | GREEN — source regression + duplicate-key guard; full Node 468/468 | OPEN — `/features` → `/login?next=/features` AX còn `Tải & Cài đặt App TOAN AAS`; bundle/route drift |
 | R216-H landing header responsive | GREEN — static gate + source media rule; PWA inline placement regression xanh | OPEN — live read-only 327×667 còn clipping header và FAB cũ che proof vì deployment drift |
 
 ## Chưa được tuyên bố
@@ -246,7 +251,7 @@ TASK=R216-motion-lifecycle-compositor
 BASE_SHA=44f5fdacf2435c47e8d8a16eb04115d2d916bcd1
 HEAD_SHA=LOCAL_BRANCH_HEAD (verify with `git rev-parse HEAD`)
 FILES_CHANGED=static/portal/portal-auth.js; static/portal/portal.css; static/portal/portal-theme.css; static/portal/portal.js; static/portal/portal-motion.js; static/portal/portal-features.js; templates/dashboard.html; tests/auth-pwa-install-control.test.mjs; tests/current-main-motion-static-gates.test.mjs; tests/r216-motion-lifecycle-compositor.test.mjs; tests/feature-catalog-route-presentation.test.mjs; tests/test_auth_reference_login_001_contracts.py; docs/superpowers/specs/2026-10-15-motion-lifecycle-compositor-r216.md; checklist/state
-TESTS=latest motion-focused 19/19; Features lifecycle 5/5; prior combined motion/auth/locale/PWA focused 31/31; full Node 467/467; JS syntax 3/3 latest recheck; py_compile 17/17 prior gate; diff-check PASS
+TESTS=latest motion/static/palette focused 25/25; Features lifecycle 5/5; prior combined motion/auth/locale/PWA focused 31/31; full Node 468/468; JS syntax 3/3 latest recheck; py_compile 17/17 prior gate; diff-check PASS
 BASELINE_FAILURES=0
 BRANCH_FAILURES=0
 NEW_FAILURES=0

@@ -16050,10 +16050,10 @@ body {
   --portal-rail-border: var(--portal-dark-rail-border);
   --portal-rail-text: var(--portal-dark-rail-text);
   --portal-rail-muted: var(--portal-dark-rail-muted);
-  --portal-input-bg: var(--portal-saas-obsidian-surface);
-  --portal-input-text: var(--portal-saas-obsidian-ink);
-  --portal-input-placeholder: var(--portal-saas-obsidian-muted);
-  --portal-input-border: var(--portal-saas-obsidian-border);
+  --portal-input-bg: var(--portal-dark-input-surface);
+  --portal-input-text: var(--portal-dark-ink);
+  --portal-input-placeholder: var(--portal-dark-placeholder);
+  --portal-input-border: var(--portal-dark-input-border);
   --portal-bg: var(--portal-app-canvas);
   --portal-bg-deep: var(--portal-dark-bg-deep);
   --portal-chrome: var(--portal-surface-light);
