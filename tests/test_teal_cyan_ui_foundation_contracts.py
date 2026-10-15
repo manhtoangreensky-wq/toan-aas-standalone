@@ -2379,7 +2379,7 @@ def test_light_music_library_keeps_private_metadata_and_guard_states_readable() 
         "portal-music-library-guard",
     ):
         assert marker in PORTAL_CLIENT
-    assert "Không mở player/preview" in PORTAL_CLIENT
+    assert "Không mở trình phát/xem trước" in PORTAL_CLIENT
     assert all(
         selector in PORTAL_CATALOGUE
         for selector in (
