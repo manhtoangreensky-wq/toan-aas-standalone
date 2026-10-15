@@ -10390,8 +10390,6 @@
     },
     {
       "files": [
-        "_giao-viec/MAU-BAO-CAO.md",
-        "_giao-viec/PHIEU-217.md",
         "ai_assistant.py",
         "coach.html",
         "coach.py",
@@ -10402,7 +10400,7 @@
         "video.html",
         "video.py"
       ],
-      "occurrences": 17,
+      "occurrences": 15,
       "provider": "Gemini"
     },
     {
@@ -18319,9 +18317,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 285,
-  "source_files_scanned": 285,
-  "source_fingerprint_sha256": "f930bf9f46d7662cd53da84f8e2e3bb21487cf93cfb08028af7130c87bfdda92",
+  "source_files_discovered": 283,
+  "source_files_scanned": 283,
+  "source_fingerprint_sha256": "28007daa4fe6696e6d9983f875396684c788cd16c558dc239b3bb72890f1608d",
   "source_root": "repository-root",
   "ui_path_references": [
     {
