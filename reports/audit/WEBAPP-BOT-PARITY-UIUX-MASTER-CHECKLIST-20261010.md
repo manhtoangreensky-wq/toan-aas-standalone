@@ -13,6 +13,9 @@
 - [x] Không đổi route/action/field/capability/CSRF/idempotency/revision.
 - [x] Không provider call, wallet mutation, production mutation hoặc deploy.
 - [ ] Browser QA runtime cô lập được cung cấp và chạy ổn định.
+- [ ] Phiếu Antigravity #217: đã soạn đúng phạm vi; lần giao ngày 2026-10-15
+      không chạy vì script trả `LOI: khong tim thay agy.exe`; không dùng báo cáo
+      giả để đóng checklist.
 
 ## Checkpoint đã xử lý
 
@@ -106,10 +109,14 @@
       dùng catalogue locale (`installGuide.title`/`text.install`) và có regression
       gate; không đổi action/route. Catalogue auth hiện không còn khóa trùng và
       đã có regression kiểm tra trùng khóa.
-- [ ] R216-L live sync — Chỉ đóng sau khi bản chạy nhận source patch và AX/
-      screenshot VI/EN/ZH xác nhận không còn `App` xen trong nhãn cài đặt. Runtime
-      hiện vẫn nạp auth bundle cũ `portal-auth.js?v=local-57e76aa281dcc721fdaa`;
-      kiểm tra chỉ-đọc mới nhất vẫn thấy chuỗi cũ ở cả VI/EN/ZH.
+- [x] R216-L live recheck — AX read-only trên `/login?lang=vi|en|zh` xác nhận
+      fixed chrome theo đúng từng locale và không còn hậu tố `App` xen trong
+      vùng hiển thị; ảnh VI ghi nhận nền navy/xanh ngọc và card form dọc.
+      Đây chỉ đóng drift của auth login, không đóng browser acceptance toàn app.
+- [~] R216-H live recheck — viewport khoảng 327×667 vẫn nhận bundle landing cũ:
+      header bị cắt cụm locale/theme/action và FAB PWA cũ che một phần proof.
+      Source media rule và placement inline đã xanh; chờ delivery rồi chụp lại
+      live trước khi đóng.
 
 ## R213-01 — Free Prompt Gallery locale chrome
 
@@ -190,8 +197,8 @@
 - [x] Không còn inline `transition: all` trong Portal renderer; gate static kiểm
       tra cả JavaScript renderer và stylesheet.
 - [x] Dashboard template cũ bỏ shorthand transition mọi thuộc tính; hover chỉ
-      chuyển `transform`/`border-color`. Motion/auth focused 30/30, full Node
-      460/460, JS syntax 5/5, py_compile 17/17 và diff-check đạt ngày 2026-10-15.
+      chuyển `transform`/`border-color`. Motion/auth focused 31/31, full Node
+      461/461, JS syntax 5/5, py_compile 17/17 và diff-check đạt ngày 2026-10-15.
 - [x] Giữ user gesture khi mở Telegram sau async; regression test hiện có xanh.
 - [x] PWA install chỉ gọi native prompt khi `beforeinstallprompt` thật; không
       còn toast giả, regression test hiện có xanh.
@@ -200,6 +207,10 @@
 - [x] Verify reduced-motion và ghi static contract cho CLS/LCP/INP; nội dung
       vẫn đọc được và motion được tắt an toàn.
 - [ ] Đo CLS/LCP/INP thật trên QA runtime; chưa có runtime nên chưa đóng.
+- [~] Landing header ở màn hình hẹp đã có nhánh responsive riêng: giữ nguyên
+      hàng thương hiệu và bọc cụm ngôn ngữ/giao diện/nút hành động xuống hàng,
+      không ép tràn ngang. Static gate đạt 1/1; live 327×667 còn drift do
+      bundle cũ nên browser recheck sau source delivery vẫn mở.
 
 ## Cổng nghiệm thu chung
 
@@ -213,13 +224,13 @@
 ## Trạng thái bằng chứng hiện tại
 
 ```ini
-CURRENT=R216
+CURRENT=R216-H
 SOURCE=GREEN
-BROWSER=PARTIAL_LIVE_AX_SCREENSHOT;QA_FIXTURE_LOCALHOST_BLOCKED
+BROWSER=PARTIAL_LIVE_AX_SCREENSHOT_AUTH_RECHECK_GREEN;LANDING_HEADER_PWA_DRIFT_OLD_BUNDLE;QA_FIXTURE_LOCALHOST_BLOCKED
 LIVE_PASS=NO
 COMMIT=LOCAL_BRANCH_HEAD
 PUSH=NO
 MERGE=NO
 DEPLOY=NO
-NEXT=R216_L_OWNER_DELIVERY_THEN_FULL_BROWSER_ACCEPTANCE_AND_RUNTIME_METRICS
+NEXT=DELIVER_R216_H_SOURCE_THEN_LIVE_RECHECK;ANTIGRAVITY_217_WHEN_AGY_AVAILABLE;FULL_BROWSER_ACCEPTANCE_RUNTIME_METRICS
 ```

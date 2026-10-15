@@ -3,8 +3,8 @@ phase: REPORT
 goal: "Hoàn thiện UI/UX và locale của Web App standalone theo thứ tự; motion làm sau cùng."
 scope: "Web App standalone; presentation, locale, responsive và motion; không Bot/Core, ví, provider, production hoặc deploy."
 base_sha: 44f5fdacf2435c47e8d8a16eb04115d2d916bcd1
-current_status: R216_L_SOURCE_GREEN_LIVE_DRIFT_OPEN
-browser: LIVE_DRIFT_LEGACY_AUTH_COPY
+current_status: R216_H_SOURCE_GREEN_LIVE_DRIFT_OPEN
+browser: LIVE_DRIFT_LANDING_RESPONSIVE_PWA_OLD_BUNDLE
 live_pass: NO
 provider_calls: 0
 wallet_mutations: 0
@@ -54,13 +54,18 @@ ordered_checkpoints:
     name: motion
     status: SOURCE_GREEN_BROWSER_ACCEPTANCE_OPEN
     active_spec: R216-motion-lifecycle-compositor-r216
-    evidence: "motion/auth/locale/PWA focused 30/30 (R216 6 + motion static 8 + locale/PWA 16); full Node 460/460; JS syntax 5/5; py_compile 17/17; diff-check; live AX/screenshot read-only on VI/EN/ZH"
-    status_note: "Auth lifecycle, provider reservation, compositor scroll, Telegram/PWA readiness và reduced-motion source gates đã xanh; live auth AX/screenshot còn thấy bundle cũ; browser matrix/CLS/LCP/INP runtime vẫn mở."
+    evidence: "motion/auth/locale/PWA focused 31/31; latest motion-focused 15/15 (R216 6 + static 9); full Node 461/461; JS syntax 3/3 recheck; diff-check; live AX/screenshot read-only on VI/EN/ZH"
+    status_note: "Auth lifecycle, provider reservation, compositor scroll, Telegram/PWA readiness, reduced-motion và landing mobile header source gates đã xanh; live auth locale recheck xanh. Live landing viewport hẹp vẫn đang phục vụ bundle cũ: header bị clipping và PWA FAB còn nổi đè vùng proof; source patch đã có nhưng chưa delivery runtime. Browser matrix/CLS/LCP/INP/FPS runtime vẫn mở. Phiếu Antigravity PHIEU-217 vẫn NOT_RUN vì không tìm thấy agy.exe; Chrome QA sandbox exit 13 trước remote debugging."
+  - id: R216-H
+    name: landing-responsive-header-and-install-placement
+    status: SOURCE_GREEN_LIVE_DRIFT_OPEN
+    evidence: "@media max-width 420px bọc nav/action; static regression xanh; live read-only screenshot khoảng 327x667 xác nhận bundle cũ còn clipping header và FAB cũ che proof"
+    status_note: "Đã khóa source selector; cần đưa source lên runtime rồi chụp lại viewport hẹp trước khi đóng."
   - id: R216-L
     name: auth-install-locale-drift
-    status: SOURCE_GREEN_LIVE_DRIFT_OPEN
-    evidence: "Both portal.js and portal-auth.js auth CTA paths use reviewed locale copy; duplicate-key regression added; full Node 460/460; live script portal-auth.js?v=local-57e76aa281dcc721fdaa still exposes legacy App copy in VI/EN/ZH (read-only AX/screenshot)."
-    status_note: "Source fix is complete; production auth bundle has not received the patch. Do not claim LIVE_PASS or deploy in this checkpoint."
+    status: SOURCE_GREEN_LIVE_RECHECK_GREEN
+    evidence: "Both portal.js and portal-auth.js auth CTA paths use reviewed locale copy; duplicate-key regression added; full Node 461/461; live read-only AX recheck on /login?lang=vi|en|zh no longer exposes the legacy App suffix."
+    status_note: "Auth locale drift is green on the current login surface; this does not close whole-app browser acceptance or runtime performance metrics."
 protected_contracts:
   - routes
   - actions
@@ -77,4 +82,4 @@ motion_backlog:
   - telegram-popup-user-gesture
   - pwa-install-readiness
   - reduced-motion-and-cls-lcp-inp
-next_action: "Owner-controlled delivery of R216-L source patch, then recheck live VI/EN/ZH AX/screenshot; afterward continue QA matrix and CLS/LCP/INP. Do not call LIVE_PASS before evidence."
+next_action: "Giữ source gate xanh; delivery source patch responsive trước, sau đó recheck landing ở viewport hẹp và hoàn tất QA matrix cùng CLS/LCP/INP/FPS. Chỉ retry PHIEU-217 khi agy.exe khả dụng. Do not call LIVE_PASS before evidence."

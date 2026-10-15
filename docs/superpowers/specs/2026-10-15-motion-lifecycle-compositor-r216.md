@@ -19,16 +19,22 @@ Khóa các nguyên nhân khiến hiệu ứng bị cắt, giật hoặc giả tr
    contract CLS/LCP/INP khi chưa có runtime QA.
 8. Auth install CTA phải dùng catalogue locale chung, không được giữ copy cũ
    có `App` xen trong VI/ZH hoặc copy không đồng nhất giữa các nhánh renderer.
+9. Landing ở viewport hẹp phải giữ nguyên hàng thương hiệu, bọc cụm ngôn ngữ/
+   giao diện/nút hành động xuống hàng riêng; nút cài PWA trên landing phải nằm
+   trong CTA cuối trang, không nổi đè vùng nội dung.
 
 ## Phạm vi file được phép
 
 - `static/portal/portal-auth.js`
 - `static/portal/portal.js` (chỉ nhánh auth install CTA locale drift R216-L)
 - `static/portal/portal-theme.css`
+- `static/portal/portal.css` (chỉ media rule header landing ≤420px)
 - `templates/dashboard.html` (chỉ giới hạn shorthand hover transition)
 - `static/portal/portal-motion.js` (chỉ khi regression yêu cầu)
 - `tests/r216-motion-lifecycle-compositor.test.mjs`
 - `tests/auth-pwa-install-control.test.mjs` (regression R216-L)
+- `tests/current-main-motion-static-gates.test.mjs` (regression responsive header)
+- `tests/pwa-landing-install-placement.test.mjs` (regression PWA landing placement)
 - report/state/checklist R215/R216.
 
 Không đổi route, action, field, capability, CSRF, idempotency, revision hoặc
@@ -83,6 +89,8 @@ server-owned data.
 - Inline renderer styles không được dùng `transition: all`; motion gate phải
   kiểm tra cả JavaScript renderer, không chỉ stylesheet.
 - Dashboard cũ chỉ transition `transform` và `border-color`, không shorthand all-property.
+- Landing mobile header phải wrap thay vì clipping; PWA landing control phải static
+  trong final CTA khi có `--landing-inline` class.
 - `git diff --check` xanh.
 - Không tuyên bố LIVE_PASS nếu chưa có DOM/screenshot/console/interaction từ
   QA runtime.
@@ -91,27 +99,27 @@ server-owned data.
 
 | Spec | Acceptance | Evidence | Trạng thái |
 |---|---|---|---|
-| R216-A auth lifecycle | hydrate không cắt entry, không dựng lại main | focused 2/2 + full Node 460/460 + source diff | GREEN (source) |
+| R216-A auth lifecycle | hydrate không cắt entry, không dựng lại main | focused 2/2 + full Node 461/461 + source diff | GREEN (source) |
 | R216-B provider stability | vùng social không layout shift | focused 1/1 + CSS contract (`min-height: 86px`) | GREEN (source) |
-| R216-C compositor/scroll | không `transition:left`, không scrub lag | focused 2/2 + full Node 460/460 + CSS diff | GREEN (source) |
+| R216-C compositor/scroll | không `transition:left`, không scrub lag | focused 2/2 + full Node 461/461 + CSS diff | GREEN (source) |
 | R216-D Telegram | popup trước await, link fail-closed | existing popup test | GREEN (source) |
 | R216-E PWA | native prompt chỉ khi readiness | existing PWA test | GREEN (source) |
-| R216-F reduced motion | static content + performance notes | focused 1/1 + motion static 8/8 + full Node 460/460; runtime metrics pending | GREEN (static) |
-| R216-G browser acceptance | DOM/screenshot/computed style/console/interaction | QA runtime unavailable | OPEN |
-| R216-L auth install locale | VI/EN/ZH dùng cùng key locale, không hard-code `App`, không duplicate key | source regression + duplicate-key guard + live AX ghi nhận drift legacy | SOURCE GREEN / LIVE OPEN |
+| R216-F reduced motion | static content + performance notes | focused 1/1 + motion static 9/9 + full Node 461/461; runtime metrics pending | GREEN (static) |
+| R216-G browser acceptance | DOM/screenshot/computed style/console/interaction | Fixture server dựng được; bundled Chromium thiếu executable; Chrome hệ thống exit 13 trước remote debugging | OPEN |
+| R216-L auth install locale | VI/EN/ZH dùng cùng key locale, không hard-code `App`, không duplicate key | source regression + duplicate-key guard + full Node 461/461 + live AX recheck VI/EN/ZH không còn hậu tố `App` xen | SOURCE GREEN / LIVE RECHECK GREEN |
+| R216-H landing mobile header | header không clipping ở ≤420px, controls wrap xuống hàng | source media rule + static regression; live screenshot khoảng 327x667 ghi nhận bundle cũ còn clipping; PWA placement regression đã xanh | SOURCE GREEN / LIVE DRIFT OPEN |
 
 ## Kết quả source gate ngày 2026-10-15
 
 ```text
 node --test tests/r216-motion-lifecycle-compositor.test.mjs: 6 passed, 0 failed
 node --test tests/auth-telegram-popup-order.test.mjs tests/auth-pwa-install-control.test.mjs: 15 passed, 0 failed
-node --test tests/**/*.test.mjs: 460 passed, 0 failed
-node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs tests/auth-locale-copy-purity.test.mjs tests/auth-pwa-install-control.test.mjs: 30 passed, 0 failed
+node --test tests/**/*.test.mjs: 461 passed, 0 failed
+node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs: 15 passed, 0 failed (latest recheck)
+node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs tests/auth-locale-copy-purity.test.mjs tests/auth-pwa-install-control.test.mjs: 31 passed, 0 failed (prior focused ledger)
 node --check static/portal/portal-auth.js: PASS
 node --check static/portal/portal-motion.js: PASS
 node --check static/portal/portal.js: PASS
-node --check static/portal/portal-i18n.js: PASS
-node --check static/portal/offline.js: PASS
 git diff --check: PASS
 py_compile (17 touched Python contract files): PASS
 pytest: NOT RUN — bundled Python không có module pytest
@@ -120,3 +128,23 @@ pytest: NOT RUN — bundled Python không có module pytest
 R216 chỉ khóa presentation/source contract. Không ghi `LIVE_PASS` khi chưa có
 DOM, screenshot, computed style, console/network, keyboard/focus và số đo
 CLS/LCP/INP từ runtime QA cô lập.
+
+## Delegation/QA evidence — 2026-10-15
+
+Phiếu `PHIEU-217` đã được chuẩn bị cho Antigravity để rà soát riêng template
+Dashboard và static motion gate. Lần giao lại qua script trả
+`LOI: khong tim thay agy.exe`; không có báo cáo thợ và không được tính là PASS.
+QA cục bộ cũng chưa mở được Chrome session: Playwright bundled không có
+Chromium, Chrome hệ thống kết thúc với `exitCode=13` trước remote debugging.
+
+Live read-only recheck ngày 2026-10-15 trên `/login?lang=vi|en|zh` ghi nhận
+đúng một ngôn ngữ trên fixed chrome, skip link `#portal-main`, nền navy/xanh
+ngọc và không còn hậu tố `App` xen trong vùng hiển thị. Đây là bằng chứng riêng
+cho R216-L; không đóng R216-G và không ghi `LIVE_PASS` cho toàn app.
+
+Live read-only landing recheck cùng ngày ở viewport hẹp khoảng 327×667 ghi nhận
+bundle đang chạy chưa có source delivery mới: logo/brand giữ hàng đầu nhưng
+cụm locale/theme/action bị cắt ở mép phải; nút PWA dạng FAB cũ nằm cố định góc
+trái và che một phần danh sách proof. Source hiện tại đã có media rule bọc header
+và quy tắc placement inline trong `portal-theme.css`; cần recheck sau delivery,
+không được suy diễn source xanh thành `LIVE_PASS`.

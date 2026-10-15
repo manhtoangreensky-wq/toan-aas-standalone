@@ -80,3 +80,11 @@ test('Portal renderers do not add inline transition-all motion', () => {
 test('Legacy dashboard template does not use shorthand all-property transitions', () => {
   assert.doesNotMatch(legacyDashboardTemplate, /transition\s*:\s*\.2s\b/i);
 });
+
+test('Landing mobile header wraps controls instead of clipping the brand row', () => {
+  const blocks = mediaBlocks(portalCss, '@media\\s*\\(max-width:\\s*420px\\)');
+  const mobile = blocks.join('\\n');
+  assert.match(mobile, /\.portal-landing-nav\s*\{[^}]*flex-wrap\s*:\s*wrap/i);
+  assert.match(mobile, /\.portal-landing-nav-actions\s*\{[^}]*flex:\s*1 1 100%/i);
+  assert.match(mobile, /\.portal-landing-locale-link\s*\{[^}]*min-width:\s*38px/i);
+});

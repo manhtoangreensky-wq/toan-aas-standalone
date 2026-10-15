@@ -59,8 +59,54 @@ hiện tại.
 - ZH: AX vẫn trả `📲 安装 TOAN AAS App`.
 - Skip link ở cả ba locale vẫn trỏ `#portal-main`; không có thao tác đăng nhập,
   gửi form, tạo job, gọi provider hoặc mutation dữ liệu.
-- Kết luận không đổi: source patch đã xanh nhưng runtime chưa nhận bundle mới;
-  R216-L và `LIVE_PASS` vẫn mở.
+- Kết luận của lần đọc thứ nhất: source patch đã xanh nhưng runtime khi đó còn
+  phục vụ bundle cũ; R216-L và `LIVE_PASS` vẫn mở ở thời điểm đó.
+
+## Revalidation live lần 2 — 2026-10-15
+
+Đã đọc lại trực tiếp bằng Codex In-app Browser ở cùng phiên, chỉ đọc, không
+đăng nhập, không gửi biểu mẫu và không tạo dữ liệu:
+
+- VI `/login?lang=vi`: tiêu đề `Đăng nhập · TOAN AAS`; skip link `#portal-main`;
+  nhãn, trường biểu mẫu, nút đăng nhập và nút Telegram đều là tiếng Việt.
+- EN `/login?lang=en`: tiêu đề `Sign in · TOAN AAS`; toàn bộ fixed chrome là
+  tiếng Anh; không còn hậu tố `App` trong CTA cài đặt (CTA không xuất hiện khi
+  trình duyệt chưa phát tín hiệu cài đặt).
+- ZH `/login?lang=zh`: tiêu đề `登录 · TOAN AAS`; toàn bộ fixed chrome là tiếng
+  Trung; không còn hậu tố `App` xen trong vùng hiển thị.
+- Ảnh chụp VI ở viewport hẹp cho thấy nền navy/xanh ngọc, card form nằm dọc,
+  không clipping nội dung và CTA chính có tương phản rõ.
+
+Kết luận cập nhật: auth locale drift không còn quan sát thấy ở lần kiểm tra live
+này. R216-L được đánh dấu `LIVE_RECHECK_GREEN`; không suy rộng kết quả này thành
+nghiệm thu toàn app. Browser matrix các route, keyboard/focus và CLS/LCP/INP/FPS
+vẫn mở.
+
+## R216-H — landing header responsive
+
+Ảnh live read-only ở viewport hẹp đã cho thấy header landing bị ép một hàng:
+logo/brand vẫn chiếm chỗ trong khi cụm ngôn ngữ, giao diện và nút hành động bị
+cắt ở mép phải. Source đã thêm nhánh `@media (max-width: 420px)` trong
+`static/portal/portal.css`: nav được phép bọc, cụm actions chiếm hàng riêng,
+locale links thu nhỏ theo vùng an toàn và không đổi route/action.
+
+Regression gate `Landing mobile header wraps controls instead of clipping the
+brand row` đã đạt; browser recheck sau khi source này được giao lên runtime vẫn mở.
+
+### Recheck live viewport hẹp — bundle cũ còn drift
+
+Codex In-app Browser đã đọc landing ở viewport khoảng `327×667`, chỉ đọc, không
+đăng nhập, không bấm CTA, không gửi form và không tạo dữ liệu. Ảnh live xác nhận:
+
+- Logo/brand vẫn giữ ở hàng đầu nhưng cụm locale, giao diện và CTA bị cắt ở mép
+  phải vì runtime chưa nhận media rule mới.
+- Nút cài PWA đang là FAB cố định ở góc trái phía dưới và che một phần dòng
+  proof khi nội dung hero dài trên màn hình hẹp.
+- Source hiện tại đã có hai chốt đúng phạm vi: media rule `max-width: 420px`
+  trong `static/portal/portal.css`, và placement `--landing-inline` trong
+  `static/portal/portal-theme.css` để control nằm trong CTA cuối trang.
+- Regression `tests/pwa-landing-install-placement.test.mjs` và gate responsive
+  đều xanh; vì bundle live còn cũ, R216-H vẫn `LIVE_DRIFT_OPEN`.
 
 ## File/contract đã khóa
 
@@ -86,16 +132,19 @@ node --test tests/r216-motion-lifecycle-compositor.test.mjs
 6 passed, 0 failed
 
 node --test tests/current-main-motion-static-gates.test.mjs
-8 passed, 0 failed
+9 passed, 0 failed
 
 node --test tests/auth-telegram-popup-order.test.mjs tests/auth-pwa-install-control.test.mjs
 15 passed, 0 failed
 
 node --test tests/**/*.test.mjs
-460 passed, 0 failed
+461 passed, 0 failed
+
+node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs
+15 passed, 0 failed (latest recheck)
 
 node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs tests/auth-locale-copy-purity.test.mjs tests/auth-pwa-install-control.test.mjs
-30 passed, 0 failed
+31 passed, 0 failed (prior focused ledger)
 
 node --check static/portal/portal-auth.js
 node --check static/portal/portal-motion.js
@@ -123,9 +172,10 @@ PASS
 | R216-C compositor/scroll | GREEN — focused 2/2 | Chưa đo FPS/INP thật |
 | R216-D Telegram gesture | GREEN — regression hiện có | Chưa thao tác browser |
 | R216-E PWA readiness | GREEN — regression hiện có | Chưa thao tác browser |
-| R216-F reduced-motion | GREEN — focused 1/1, full Node 460/460 | Chưa đo CLS/LCP/INP thật |
-| R216-G browser acceptance | OPEN | QA runtime cô lập chưa khả dụng |
-| R216-L locale drift CTA đăng nhập | GREEN — source regression + duplicate-key guard; full Node 460/460 | OPEN — live còn chuỗi cũ do chưa deploy |
+| R216-F reduced-motion | GREEN — focused 1/1, full Node 461/461 | Chưa đo CLS/LCP/INP thật |
+| R216-G browser acceptance | OPEN | QA fixture server có thể dựng; Chrome sandbox đóng với `exitCode=13` trước khi tạo phiên |
+| R216-L locale drift CTA đăng nhập | GREEN — source regression + duplicate-key guard; full Node 461/461 | LIVE_RECHECK_GREEN — VI/EN/ZH AX read-only không còn chuỗi `App` xen |
+| R216-H landing header responsive | GREEN — static gate + source media rule; PWA inline placement regression xanh | OPEN — live read-only 327×667 còn clipping header và FAB cũ che proof vì deployment drift |
 
 ## Chưa được tuyên bố
 
@@ -138,7 +188,7 @@ TASK=R216-motion-lifecycle-compositor
 BASE_SHA=44f5fdacf2435c47e8d8a16eb04115d2d916bcd1
 HEAD_SHA=LOCAL_BRANCH_HEAD (verify with `git rev-parse HEAD`)
 FILES_CHANGED=static/portal/portal-auth.js; static/portal/portal.css; static/portal/portal-theme.css; static/portal/portal.js; templates/dashboard.html; tests/auth-pwa-install-control.test.mjs; tests/current-main-motion-static-gates.test.mjs; tests/r216-motion-lifecycle-compositor.test.mjs; tests/test_auth_reference_login_001_contracts.py; docs/superpowers/specs/2026-10-15-motion-lifecycle-compositor-r216.md; checklist/state
-TESTS=motion/auth/locale/PWA focused 30/30 (R216 6 + motion static 8 + locale/PWA 16); full Node 460/460; JS syntax 5/5; py_compile 17/17; diff-check PASS
+TESTS=latest motion-focused 15/15; prior combined motion/auth/locale/PWA focused 31/31; full Node 461/461; JS syntax 3/3 latest recheck; py_compile 17/17 prior gate; diff-check PASS
 BASELINE_FAILURES=0
 BRANCH_FAILURES=0
 NEW_FAILURES=0
@@ -148,8 +198,20 @@ WALLET_MUTATIONS=0
 DEPLOY=NO
 RUNTIME_SHA=NOT_AVAILABLE
 LIVE_PASS=NO
-BLOCKERS=live deployment still carries legacy auth copy; isolated QA metrics runtime unavailable; pytest module unavailable in bundled Python
-COMMIT=YES (local branch; exact SHA is reported from `git rev-parse HEAD`)
+BLOCKERS=live runtime still serves pre-patch bundle for R216-H; isolated QA runtime metrics unavailable because Chrome sandbox exits 13 before session; Antigravity PHIEU-217 cannot run because agy.exe is not available; pytest module unavailable in bundled Python
+COMMIT=YES (local checkpoint commit; exact HEAD is read from git)
 PUSH=NO
 MERGE=NO
 ```
+
+## Delegation and QA recheck — 2026-10-15
+
+- Đã chuẩn bị phiếu Antigravity `PHIEU-217` cho đúng một phạm vi: rà soát
+  `templates/dashboard.html` và regression gate tương ứng. Phiếu cấm trình duyệt,
+  mạng, git, package và mọi file ngoài phạm vi.
+- Lần giao lại qua `chay-phieu-agy.ps1` trả `NOT_RUN`: `LOI: khong tim thay
+  agy.exe. Dat bien AGY_EXE tro toi agy.exe.`; không có báo cáo của thợ nên
+  không ghi nhận PASS từ Antigravity.
+- QA fixture đã dựng được server và đọc source, nhưng Playwright bundled thiếu
+  Chromium; khi chuyển sang Chrome hệ thống, Chrome thoát `exitCode=13` trước khi
+  mở phiên remote debugging. Vì vậy chưa có DOM/screenshot/CLS/LCP/INP runtime.
