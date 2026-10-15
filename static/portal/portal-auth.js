@@ -378,7 +378,7 @@
       </ul>
       <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
         <button type="button" class="portal-button portal-button--primary" data-portal-action="pwa-install-prompt" aria-controls="portal-pwa-install-help" aria-expanded="false" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-weight:700; border-radius:10px;">
-          <span aria-hidden="true">📲</span><span data-pwa-install-label>${safe(text.installGuide)}</span>
+          <span class="portal-auth-install-icon" aria-hidden="true">${icon('<path d="M7 3h10v18H7z"/><path d="M9.5 7h5M10 17h4"/>')}</span><span data-pwa-install-label>${safe(text.installGuide)}</span>
         </button>
         <p class="portal-field-help" id="portal-pwa-install-help" data-pwa-install-help role="status" aria-live="polite" hidden></p>
         <p class="portal-field-help" data-pwa-install-status role="status" aria-live="polite" hidden></p>

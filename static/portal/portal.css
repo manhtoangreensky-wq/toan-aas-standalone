@@ -1048,6 +1048,8 @@ a { color: inherit; text-decoration: none; }
 .portal-auth-card { max-width: 480px; width: 100%; justify-self: end; }
 .portal-auth-notes { display: grid; gap: 10px; margin: 14px 0; }
 .portal-auth-provider { display: grid; gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--portal-border); }
+.portal-auth-install-icon { display: inline-grid; width: 18px; height: 18px; flex: 0 0 18px; place-items: center; }
+.portal-auth-install-icon .portal-icon { width: 17px; height: 17px; }
 .portal-oauth-method { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(155, 178, 193, .1); }
 .portal-oauth-method:last-child { padding-bottom: 0; border-bottom: 0; }
 .portal-oauth-method > div { display: grid; gap: 3px; min-width: 0; }
