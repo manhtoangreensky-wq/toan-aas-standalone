@@ -87,8 +87,8 @@ def test_manifest_shortcuts_are_fixed_in_scope_navigation_without_private_data()
     shortcuts = MANIFEST["shortcuts"]
     assert [(item["name"], item["url"]) for item in shortcuts] == [
         ("Tổng quan", "/dashboard"),
-        ("Project Center", "/projects"),
-        ("Tạo workflow", "/features"),
+        ("Dự án", "/projects"),
+        ("Tạo quy trình", "/features"),
     ]
     assert all(item["url"].startswith(MANIFEST["scope"]) for item in shortcuts)
     # Launch shortcuts deliberately point at normal routes. The worker's
