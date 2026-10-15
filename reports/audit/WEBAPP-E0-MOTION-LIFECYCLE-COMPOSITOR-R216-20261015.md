@@ -87,8 +87,8 @@ vẫn mở.
 Ảnh live read-only ở viewport hẹp đã cho thấy header landing bị ép một hàng:
 logo/brand vẫn chiếm chỗ trong khi cụm ngôn ngữ, giao diện và nút hành động bị
 cắt ở mép phải. Source đã thêm nhánh `@media (max-width: 420px)` trong
-`static/portal/portal.css`: nav được phép bọc, cụm actions chiếm hàng riêng,
-locale links thu nhỏ theo vùng an toàn và không đổi route/action.
+`static/portal/portal.css`: nav chuyển về grid một cột, cụm actions chiếm hàng
+riêng, locale links thu nhỏ theo vùng an toàn và không đổi route/action.
 
 Regression gate `Landing mobile header wraps controls instead of clipping the
 brand row` đã đạt; browser recheck sau khi source này được giao lên runtime vẫn mở.

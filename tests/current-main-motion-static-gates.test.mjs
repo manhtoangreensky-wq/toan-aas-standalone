@@ -84,7 +84,7 @@ test('Legacy dashboard template does not use shorthand all-property transitions'
 test('Landing mobile header wraps controls instead of clipping the brand row', () => {
   const blocks = mediaBlocks(portalCss, '@media\\s*\\(max-width:\\s*420px\\)');
   const mobile = blocks.join('\\n');
-  assert.match(mobile, /\.portal-landing-nav\s*\{[^}]*flex-wrap\s*:\s*wrap/i);
-  assert.match(mobile, /\.portal-landing-nav-actions\s*\{[^}]*flex:\s*1 1 100%/i);
+  assert.match(mobile, /\.portal-landing-nav\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/i);
+  assert.match(mobile, /\.portal-landing-nav-actions\s*\{[^}]*grid-column:\s*1\s*\/\s*-1/i);
   assert.match(mobile, /\.portal-landing-locale-link\s*\{[^}]*min-width:\s*38px/i);
 });
