@@ -225,14 +225,14 @@ PASS
 
 | Spec | Kết quả source | Runtime |
 |---|---|---|
-| R216-A auth lifecycle | GREEN — focused 2/2 | Chưa có browser QA |
+| R216-A auth lifecycle | GREEN — focused 2/2, full Node 467/467 | Chưa có browser QA |
 | R216-B provider stability | GREEN — focused 1/1, `min-height: 86px` | Chưa đo CLS thật |
-| R216-C compositor/scroll | GREEN — focused 2/2 | Chưa đo FPS/INP thật |
+| R216-C compositor/scroll | GREEN — focused 2/2 + new hot-path gates, full Node 467/467 | Chưa đo FPS/INP thật |
 | R216-D Telegram gesture | GREEN — regression hiện có | Chưa thao tác browser |
 | R216-E PWA readiness | GREEN — regression hiện có | Chưa thao tác browser |
 | R216-F reduced-motion | GREEN — focused 1/1, full Node 467/467 | Chưa đo CLS/LCP/INP thật |
 | R216-G browser acceptance | OPEN | QA fixture server có thể dựng; Chrome sandbox đóng với `exitCode=13` trước khi tạo phiên |
-| R216-L locale drift CTA đăng nhập | GREEN — source regression + duplicate-key guard; full Node 461/461 | OPEN — `/features` → `/login?next=/features` AX còn `Tải & Cài đặt App TOAN AAS`; bundle/route drift |
+| R216-L locale drift CTA đăng nhập | GREEN — source regression + duplicate-key guard; full Node 467/467 | OPEN — `/features` → `/login?next=/features` AX còn `Tải & Cài đặt App TOAN AAS`; bundle/route drift |
 | R216-H landing header responsive | GREEN — static gate + source media rule; PWA inline placement regression xanh | OPEN — live read-only 327×667 còn clipping header và FAB cũ che proof vì deployment drift |
 
 ## Chưa được tuyên bố
