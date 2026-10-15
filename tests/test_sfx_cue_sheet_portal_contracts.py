@@ -303,8 +303,8 @@ def test_sfx_cue_sheet_has_a_clear_audio_workspace_entry_and_readable_review_cop
     assert "Object.values(manifest)" in palette
 
     workspace = _function_block(PORTAL, "renderMediaWorkspace")
-    assert "Công cụ biên tập nhanh" in workspace
-    assert "Lập SFX theo ngữ cảnh trước khi chọn nguồn âm thanh" in workspace
+    assert "Quick authoring tool" in workspace
+    assert "Draft a sound-effect cue sheet before choosing an audio source" in workspace
     assert 'href="/media-workspace/sfx-cue-sheet"' in workspace
 
     assert "task-critical text" in CSS
