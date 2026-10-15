@@ -219,3 +219,8 @@ MERGE=NO
 - QA fixture đã dựng được server và đọc source, nhưng Playwright bundled thiếu
   Chromium; khi chuyển sang Chrome hệ thống, Chrome thoát `exitCode=13` trước khi
   mở phiên remote debugging. Vì vậy chưa có DOM/screenshot/CLS/LCP/INP runtime.
+- Delivery GitHub chưa thực hiện: `origin` hiện là bundle local
+  `C:\Users\toann\Documents\Codex\toanaas-origin-main-r116.bundle`; lệnh
+  `git push --dry-run origin webapp-checklist-r116` trả exit `1`, và
+  `gh auth status` báo token GitHub không hợp lệ. Không đổi remote, không dùng
+  mã xác thực nhạy cảm và không tuyên bố đã push.
