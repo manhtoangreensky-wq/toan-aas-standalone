@@ -77,10 +77,11 @@ hiện tại.
 - Ảnh chụp VI ở viewport hẹp cho thấy nền navy/xanh ngọc, card form nằm dọc,
   không clipping nội dung và CTA chính có tương phản rõ.
 
-Kết luận cập nhật: auth locale drift không còn quan sát thấy ở lần kiểm tra live
-này. R216-L được đánh dấu `LIVE_RECHECK_GREEN`; không suy rộng kết quả này thành
-nghiệm thu toàn app. Browser matrix các route, keyboard/focus và CLS/LCP/INP/FPS
-vẫn mở.
+Kết luận của lần kiểm tra thứ hai: auth locale drift không còn quan sát thấy trên
+các URL đăng nhập trực tiếp đó. Kết quả này trước đây được ghi là
+`LIVE_RECHECK_GREEN`, nhưng không được suy rộng thành nghiệm thu toàn app hoặc
+mọi next-route auth. Browser matrix các route, keyboard/focus và CLS/LCP/INP/FPS
+vẫn mở; lần recheck thứ ba dưới đây đã mở lại R216-L.
 
 ### Recheck live lần 3 — next-route auth còn dùng copy cũ
 
