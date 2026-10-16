@@ -134,7 +134,7 @@ _PORTAL_SHELL_TITLES = {
     "/membership": {"vi": "Gói thành viên · TOAN AAS", "en": "Membership · TOAN AAS", "zh": "会员方案 · TOAN AAS"},
     "/packages": {"vi": "Gói dịch vụ · TOAN AAS", "en": "Service packages · TOAN AAS", "zh": "服务套餐 · TOAN AAS"},
     "/pricing": {"vi": "Bảng giá · TOAN AAS", "en": "Pricing · TOAN AAS", "zh": "价格 · TOAN AAS"},
-    "/jobs": {"vi": "Job Center · TOAN AAS", "en": "Job Center · TOAN AAS", "zh": "任务中心 · TOAN AAS"},
+    "/jobs": {"vi": "Trung tâm tác vụ · TOAN AAS", "en": "Job Center · TOAN AAS", "zh": "任务中心 · TOAN AAS"},
     "/assets": {"vi": "Thư viện tài sản · TOAN AAS", "en": "Asset library · TOAN AAS", "zh": "资源库 · TOAN AAS"},
     "/support": {"vi": "Hỗ trợ · TOAN AAS", "en": "Support · TOAN AAS", "zh": "支持 · TOAN AAS"},
     "/tickets": {"vi": "Yêu cầu của tôi · TOAN AAS", "en": "My requests · TOAN AAS", "zh": "我的请求 · TOAN AAS"},
@@ -252,12 +252,12 @@ _PORTAL_SHELL_DESCRIPTIONS = {
         "zh": "查看由 Core Bridge 发布的公开销售价格；Web 不会推测费率、优惠或积分限额。",
     },
     "/jobs": {
-        "vi": "Theo dõi job thuộc sở hữu của phiên hiện tại; không hiện output giả khi chưa có delivery hợp lệ.",
+        "vi": "Theo dõi các tác vụ thuộc phiên hiện tại; không hiển thị kết quả giả khi chưa có bàn giao hợp lệ.",
         "en": "Track jobs owned by the current session; do not show a fake output before valid delivery is available.",
         "zh": "跟踪当前会话拥有的任务；在有效交付可用前不会显示虚假的输出。",
     },
     "/assets": {
-        "vi": "Tệp hoàn tất chỉ xuất hiện sau khi Core Bridge xác minh ownership và cung cấp URL ký tạm thời.",
+        "vi": "Tệp hoàn tất chỉ xuất hiện sau khi Core Bridge xác minh quyền sở hữu và cung cấp URL ký tạm thời.",
         "en": "Completed files appear only after Core Bridge verifies ownership and supplies a temporary signed URL.",
         "zh": "只有在 Core Bridge 验证所有权并提供临时签名 URL 后，完成的文件才会显示。",
     },

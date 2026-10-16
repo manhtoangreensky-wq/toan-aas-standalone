@@ -26,7 +26,7 @@ ordered_waves:
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Locale source focused gates pass; Admin fallback copy and fixed chrome are being closed in narrow groups. SOURCE-LOCALE-03 system stewardship 1/1, SOURCE-LOCALE-04 generic Admin chrome 1/1, SOURCE-LOCALE-05 security/access chrome 2/2, SOURCE-LOCALE-06 automation monitor chrome 1/1 (bao phủ 3 nhóm), SOURCE-LOCALE-07 admin guidance chrome 1/1 (bao phủ 2 màn hình), SOURCE-LOCALE-08 delivery/runtime chrome 1/1 và SOURCE-LOCALE-09 customer shell navigation 1/1 pass; full Node suite 476/476. Auth next-route/live locale recheck and broader customer/product scan remain open."
+    note: "Locale source focused gates pass; Admin fallback copy and fixed chrome are being closed in narrow groups. SOURCE-LOCALE-03 system stewardship 1/1, SOURCE-LOCALE-04 generic Admin chrome 1/1, SOURCE-LOCALE-05 security/access chrome 2/2, SOURCE-LOCALE-06 automation monitor chrome 1/1 (bao phủ 3 nhóm), SOURCE-LOCALE-07 admin guidance chrome 1/1 (bao phủ 2 màn hình), SOURCE-LOCALE-08 delivery/runtime chrome 1/1, SOURCE-LOCALE-09 customer shell navigation 1/1 và SOURCE-LOCALE-10 deliveryCenter customer chrome 1/1 pass; full Node suite 477/477. Auth next-route/live locale recheck and broader product scan remain open."
   - id: W3
     spec: R217-03
     status: SOURCE_GREEN_RUNTIME_OPEN
@@ -105,4 +105,4 @@ created_files:
   - docs/superpowers/specs/2026-10-16-r217-12-live-readonly-recheck.md
   - docs/superpowers/specs/2026-10-16-r217-13-deferred-technical-register.md
   - tests/admin-generic-fixed-chrome-locale.test.mjs
-next_action: "Continue W2 locale source closeout in checklist order; next scan is customer/Admin/product fixed chrome. Update evidence and push after each narrow group; live gates remain open until a delivered bundle is rechecked."
+next_action: "Continue W2 locale source closeout in checklist order; next scan is remaining customer/Admin/product lane fixed chrome. Update evidence and push after each narrow group; live gates remain open until a delivered bundle is rechecked."

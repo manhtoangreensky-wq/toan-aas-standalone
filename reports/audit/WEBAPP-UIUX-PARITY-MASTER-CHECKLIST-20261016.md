@@ -59,7 +59,7 @@
       lớp phủ và thanh chọn tab không còn dùng nền đen. Regression nằm ở
       `tests/install-modal-navy-palette.test.mjs`.
 - [x] Source recheck sau W1 và W2 locale: focused PWA/auth/utility/motion `39/39`,
-      toàn bộ Node `476/476`, `node --check static/portal/portal-i18n.js`,
+      toàn bộ Node `477/477`, `node --check static/portal/portal-i18n.js`,
       `git diff --check` đạt.
 - [!] Python Admin/PWA contract chưa chạy: bundled Python không có module `pytest`; đây
       là blocker công cụ, không ghi PASS giả.
@@ -108,9 +108,16 @@
       `Audio Workspace`, `Automation Center`, `Operations Center`, `Media Factory`,
       `Creative Flow` và `storyboard`; regression `tests/customer-shell-nav-locale.test.mjs`
       đạt `1/1`.
+- [x] **SOURCE-LOCALE-10:** customer `deliveryCenter.*` đã dịch toàn bộ fixed chrome của
+      trung tâm tác vụ, thư viện tài sản, trạng thái kết quả/bàn giao, bảng, chi tiết và phiếu
+      hỗ trợ; bản VI không còn các thuật ngữ giao diện chung `job`, `output`, `delivery`,
+      `workflow`, `runtime`, `metadata`, `download`, `ticket` hoặc `Web-native`. First paint
+      `/jobs` và `/assets` cũng đã sạch tiếng Việt. Regression
+      `tests/delivery-center-locale-purity.test.mjs` đạt `1/1`; focused nhóm đạt `3/3`, full
+      Node suite đạt `477/477`; runtime/live locale vẫn mở.
 - [~] **LIVE-I18N-01:** next-route `/features → /login?next=/features` từng lộ
       `Tải & Cài đặt App TOAN AAS` trong bundle cũ; phải recheck đúng URL sau delivery.
-- [~] Đã khóa một cụm fixed chrome Admin theo SOURCE-LOCALE-04; vẫn còn phải quét tiếp
+- [~] Đã khóa các cụm fixed chrome Admin và customer theo SOURCE-LOCALE-04→10; vẫn còn phải quét tiếp
       toàn customer/Admin/product lanes và lập danh sách chuỗi English lọt trong VI cùng
       Vietnamese lọt trong EN/ZH; không sửa server data/ID/URL.
 - [ ] Kiểm tra fallback locale, duplicate key, option label và aria-label ở VI/EN/ZH.

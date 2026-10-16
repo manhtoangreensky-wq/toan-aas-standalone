@@ -114,8 +114,8 @@ def test_delivery_lists_localize_fixed_copy_and_keep_canonical_records_escaped()
 def test_delivery_first_paint_is_route_and_locale_specific() -> None:
     expected = {
         "vi": {
-            "/jobs": ("Job Center · TOAN AAS", "Theo dõi job thuộc sở hữu của phiên hiện tại; không hiện output giả khi chưa có delivery hợp lệ."),
-            "/assets": ("Thư viện tài sản · TOAN AAS", "Tệp hoàn tất chỉ xuất hiện sau khi Core Bridge xác minh ownership và cung cấp URL ký tạm thời."),
+            "/jobs": ("Trung tâm tác vụ · TOAN AAS", "Theo dõi các tác vụ thuộc phiên hiện tại; không hiển thị kết quả giả khi chưa có bàn giao hợp lệ."),
+            "/assets": ("Thư viện tài sản · TOAN AAS", "Tệp hoàn tất chỉ xuất hiện sau khi Core Bridge xác minh quyền sở hữu và cung cấp URL ký tạm thời."),
         },
         "en": {
             "/jobs": ("Job Center · TOAN AAS", "Track jobs owned by the current session; do not show a fake output before valid delivery is available."),
