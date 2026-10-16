@@ -151,9 +151,17 @@
       và dữ liệu động không đổi; Python contract `NOT_RUN` vì thiếu `python`/`py`.
       Runtime/live, AX tree và Image reference/detail/Resize/Enhance/Brand Overlay/
       Storyboard còn mở.
+- [x] **SOURCE-LOCALE-16:** fixed chrome thư viện tham chiếu, thư viện bảng thiết kế, thẻ
+      bảng thiết kế, tổng quan Image Hub, bước tiếp theo và bảng rà soát định hướng đã dùng
+      catalogue `imageStudioLibraryUi.*` có `67` mục cân bằng VI/EN/ZH. Regression
+      `tests/image-studio-library-locale-purity.test.mjs` đạt `2/2`, focused Image `49/49`,
+      full Node `488/488`, syntax hai tệp Portal và `git diff --check` đều đạt. Giữ nguyên
+      route/action/offset phân trang/capability và dữ liệu động; Python contract `NOT_RUN`
+      vì thiếu `python`/`py`. Chi tiết artboard/direction/estimate/history và Image
+      Resize/Enhance/Brand Overlay/Storyboard vẫn mở.
 - [~] **LIVE-I18N-01:** next-route `/features → /login?next=/features` từng lộ
       `Tải & Cài đặt App TOAN AAS` trong bundle cũ; phải recheck đúng URL sau delivery.
-- [~] Đã khóa các cụm fixed chrome Admin, customer và Image theo SOURCE-LOCALE-04→15; vẫn còn phải quét tiếp
+- [~] Đã khóa các cụm fixed chrome Admin, customer và Image theo SOURCE-LOCALE-04→16; vẫn còn phải quét tiếp
       toàn customer/Admin/product lanes và lập danh sách chuỗi English lọt trong VI cùng
       Vietnamese lọt trong EN/ZH; không sửa server data/ID/URL.
 - [ ] Kiểm tra fallback locale, duplicate key, option label và aria-label ở VI/EN/ZH.
@@ -367,5 +375,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=Tiếp tục W2 locale theo thứ tự: rà soát các cụm Image còn raw English (reference/detail/Resize/Enhance/Brand Overlay/Storyboard), khóa từng cụm bằng regression; live/runtime vẫn mở đến khi có bundle được delivery.
+NEXT_ACTION=Tiếp tục W2 locale theo thứ tự: rà soát chi tiết Image còn raw English (direction card/estimate/history) rồi tới Resize/Enhance/Brand Overlay/Storyboard, khóa từng cụm bằng regression; live/runtime vẫn mở đến khi có bundle được delivery.
 ```

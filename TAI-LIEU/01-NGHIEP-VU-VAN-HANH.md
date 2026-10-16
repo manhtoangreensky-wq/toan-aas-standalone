@@ -606,3 +606,19 @@ capability, CSRF, idempotency, revision, dữ liệu động, provider và ví/X
 Python contract chưa chạy vì môi trường không có `python`/`py`. Đây là source evidence trên
 PR #647, chưa phải bundle đã giao, deployed hoặc live. Các cụm Image reference/detail,
 Resize/Enhance/Brand Overlay/Storyboard vẫn là bước tiếp theo.
+
+### Ghi nhận source locale customer — Image library và Image Hub — 16/10/2026
+
+Fixed chrome của thư viện tham chiếu, thư viện bảng thiết kế, thẻ bảng thiết kế, tổng quan
+Image Hub, các bước tiếp theo và bảng rà soát định hướng đã được đưa qua catalogue
+`imageStudioLibraryUi.*` có `67` mục cân bằng VI/EN/ZH. Bản tiếng Việt không còn các cụm giao diện
+`reference library`, `creative review`, `signed account`, `owner-check`, `Image operations
+board`, `Independent next steps` hoặc `Direction review board`; nhãn bộ lọc, placeholder,
+phân trang, trạng thái, lối tắt và empty state đều đi qua helper locale.
+
+Regression `tests/image-studio-library-locale-purity.test.mjs` đạt `2/2`; focused Image
+đạt `49/49`; full Node đạt `488/488`; syntax hai tệp Portal và `git diff --check` đều đạt.
+Route, action, offset phân trang, capability, dữ liệu động, provider và ví/Xu không đổi;
+Python contract chưa chạy vì môi trường không có `python`/`py`. Đây là source evidence trên
+PR #647, chưa phải bundle đã giao, deployed hoặc live. Chi tiết direction card, estimate,
+history và các route Resize/Enhance/Brand Overlay/Storyboard vẫn là bước kế tiếp.

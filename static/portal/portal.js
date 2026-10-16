@@ -17794,6 +17794,9 @@
   function imageStudioText(key, fallback, params) {
     return uiText(`imageStudioUi.${key}`, fallback, params);
   }
+  function imageStudioLibraryText(key, fallback, params) {
+    return uiText(`imageStudioLibraryUi.${key}`, fallback, params);
+  }
 
   const IMAGE_STUDIO_INTENTS = Object.freeze([
     ["create", "Tạo concept (brief only)"], ["edit", "Chỉnh sửa direction"], ["upscale", "Nâng cấp direction"],
@@ -18011,13 +18014,13 @@
     return id ? `${root}/${encodeURIComponent(id)}` : root;
   }
   function renderImageStudioArtboardPagination(listing, route) {
-    return renderMemoryPagination(listing, "artboard", "image-studio-page", route, "data-image-studio-offset", "portal-image-studio-pagination");
+    return renderMemoryPagination(listing, imageStudioLibraryText("artboard.kicker", "Thư viện bảng thiết kế"), "image-studio-page", route, "data-image-studio-offset", "portal-image-studio-pagination");
   }
   function renderImageStudioReferencePagination(listing, kind, route) {
     const projects = kind === "projects";
     return renderMemoryPagination(
       listing,
-      projects ? "Project reference" : "image Asset Vault reference",
+      imageStudioLibraryText(projects ? "pagination.projectReference" : "pagination.assetReference", projects ? "tham chiếu dự án" : "tham chiếu ảnh trong Kho tài sản"),
       projects ? "image-studio-project-reference-page" : "image-studio-asset-reference-page",
       route,
       projects ? "data-image-studio-project-reference-offset" : "data-image-studio-asset-reference-offset",
@@ -18029,44 +18032,47 @@
     const listing = imageStudioReferenceListing(context, kind);
     const filter = listing.filters;
     const rows = projects ? imageStudioProjectReferenceRows(context) : imageStudioAssetReferenceRows(context);
-    const title = projects ? "Project reference" : "Ảnh từ Asset Vault";
+    const title = imageStudioLibraryText(projects ? "reference.projectTitle" : "reference.assetTitle", projects ? "Dự án tham chiếu" : "Ảnh từ Kho tài sản");
     const copy = projects
-      ? "Tìm Project riêng tư để liên kết với artboard mới hoặc artboard đang mở. Mỗi trang chỉ lấy metadata thuộc signed account hiện tại."
-      : "Tìm ảnh JPEG, PNG hoặc WebP của Asset Vault. Không nạp filename gốc, blob, URL, thumbnail hoặc provider handle vào trang.";
+      ? imageStudioLibraryText("reference.projectCopy", "Tìm dự án riêng tư để liên kết với bảng thiết kế mới hoặc đang mở. Mỗi trang chỉ lấy siêu dữ liệu thuộc tài khoản hiện tại.")
+      : imageStudioLibraryText("reference.assetCopy", "Tìm ảnh JPEG, PNG hoặc WebP trong Kho tài sản. Không đưa tên tệp gốc, dữ liệu nhị phân, URL, hình thu nhỏ hoặc mã đối tác vào trang.");
     const actionPrefix = projects ? "image-studio-project-reference" : "image-studio-asset-reference";
-    const label = projects ? "Tìm Project" : "Tìm ảnh Asset Vault";
-    const placeholder = projects ? "Tên Project…" : "Tên hiển thị ảnh…";
+    const label = imageStudioLibraryText(projects ? "reference.projectLabel" : "reference.assetLabel", projects ? "Tìm dự án" : "Tìm ảnh trong Kho tài sản");
+    const placeholder = imageStudioLibraryText(projects ? "reference.projectPlaceholder" : "reference.assetPlaceholder", projects ? "Tên dự án…" : "Tên hiển thị ảnh…");
     const list = rows.length
       ? `<ul class="portal-image-reference-list">${rows.map((item) => {
-        const name = projects ? String(item.title || "Project Web riêng tư") : imageStudioAssetDisplayLabel(item);
+        const name = projects ? String(item.title || imageStudioLibraryText("reference.projectFallback", "Dự án Web riêng tư")) : imageStudioAssetDisplayLabel(item);
         const updatedAt = String(item.updated_at || "").replace(/\s+/g, " ").trim();
         const unavailable = !projects && (item.available === false || ["archived", "unavailable"].includes(String(item.state || "").toLowerCase()));
-        const availability = unavailable ? " · Không còn khả dụng để gắn mới" : "";
-        return `<li${unavailable ? ' class="is-unavailable"' : ""}><strong>${safeText(name)}</strong><small>${safeText(updatedAt ? `Cập nhật ${updatedAt}${availability}` : `Reference thuộc account hiện tại${availability}`)}</small></li>`;
+        const availability = unavailable ? imageStudioLibraryText("reference.unavailable", " · Không còn khả dụng để gắn mới") : "";
+        const updated = updatedAt
+          ? `${imageStudioLibraryText("reference.updatedPrefix", "Cập nhật")} ${updatedAt}${availability}`
+          : `${imageStudioLibraryText("reference.accountPrefix", "Tham chiếu thuộc tài khoản hiện tại")}${availability}`;
+        return `<li${unavailable ? ' class="is-unavailable"' : ""}><strong>${safeText(name)}</strong><small>${safeText(updated)}</small></li>`;
       }).join("")}</ul>`
-      : `<p class="portal-form-note">Chưa có ${projects ? "Project phù hợp" : "ảnh phù hợp"} ở trang này. Bạn có thể đổi từ khóa hoặc sang trang khác.</p>`;
-    return `<section class="portal-image-reference-picker"><div><span class="portal-section-kicker">${safeText(projects ? "Project context" : "Asset Vault context")}</span><h3>${safeText(title)}</h3><p>${safeText(copy)}</p></div><form class="portal-image-reference-filter" data-portal-form data-portal-no-transient data-portal-action="${safeText(actionPrefix + "-filter")}" data-portal-route="${safeText(route)}" novalidate>${renderFields([{ name: "q", label, placeholder, maxLength: 100 }], true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Từ khóa chỉ tồn tại trong phiên hiện tại.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="${safeText(actionPrefix + "-filter-clear")}" data-portal-route="${safeText(route)}">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm reference</button></div></div></form>${list}${renderImageStudioReferencePagination(listing, kind, route)}</section>`;
+      : `<p class="portal-form-note">${safeText(imageStudioLibraryText(projects ? "reference.emptyProject" : "reference.emptyAsset", projects ? "Chưa có dự án phù hợp ở trang này. Bạn có thể đổi từ khóa hoặc sang trang khác." : "Chưa có ảnh phù hợp ở trang này. Bạn có thể đổi từ khóa hoặc sang trang khác."))}</p>`;
+    return `<section class="portal-image-reference-picker"><div><span class="portal-section-kicker">${safeText(imageStudioLibraryText(projects ? "reference.contextProject" : "reference.contextAsset", projects ? "Ngữ cảnh dự án" : "Ngữ cảnh Kho tài sản"))}</span><h3>${safeText(title)}</h3><p>${safeText(copy)}</p></div><form class="portal-image-reference-filter" data-portal-form data-portal-no-transient data-portal-action="${safeText(actionPrefix + "-filter")}" data-portal-route="${safeText(route)}" novalidate>${renderFields([{ name: "q", label, placeholder, maxLength: 100 }], true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(imageStudioLibraryText("reference.sessionNote", "Từ khóa chỉ tồn tại trong phiên hiện tại."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="${safeText(actionPrefix + "-filter-clear")}" data-portal-route="${safeText(route)}">${safeText(imageStudioLibraryText("reference.clear", "Xóa lọc"))}</button><button class="portal-button portal-button--primary" type="submit">${safeText(imageStudioLibraryText("reference.search", "Tìm tham chiếu"))}</button></div></div></form>${list}${renderImageStudioReferencePagination(listing, kind, route)}</section>`;
   }
   function renderImageStudioReferenceLibrary(context, route) {
-    return `<section class="portal-card portal-card-pad portal-image-reference-library"><div class="portal-card-header"><div><span class="portal-section-kicker">Reference library</span><h2 class="portal-card-title">Chọn đúng Project và ảnh cũ</h2><p class="portal-card-subtitle">Thư viện được phân trang để account có nhiều dữ liệu vẫn tìm được reference cũ. Khi mở artboard, lựa chọn đang dùng được ghim an toàn thay vì browser tự đổi sang item đầu danh sách.</p></div>${badge("read_only")}</div><div class="portal-image-reference-library-grid">${renderImageStudioReferencePicker(context, "projects", route)}${renderImageStudioReferencePicker(context, "image_assets", route)}</div></section>`;
+    return `<section class="portal-card portal-card-pad portal-image-reference-library"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageStudioLibraryText("library.kicker", "Thư viện tham chiếu"))}</span><h2 class="portal-card-title">${safeText(imageStudioLibraryText("library.title", "Chọn đúng dự án và ảnh cũ"))}</h2><p class="portal-card-subtitle">${safeText(imageStudioLibraryText("library.body", "Thư viện được phân trang để tài khoản có nhiều dữ liệu vẫn tìm được tham chiếu cũ. Khi mở bảng thiết kế, lựa chọn đang dùng được ghim an toàn thay vì trình duyệt tự đổi sang mục đầu danh sách."))}</p></div>${badge("read_only")}</div><div class="portal-image-reference-library-grid">${renderImageStudioReferencePicker(context, "projects", route)}${renderImageStudioReferencePicker(context, "image_assets", route)}</div></section>`;
   }
   function renderImageStudioArtboardLibrary(items, context, route) {
     const listing = imageStudioArtboardListing(context);
     const filter = listing.filters;
     const filterFields = [
-      { name: "q", label: "Tìm artboard", placeholder: "Tên, brief hoặc tag…", maxLength: 180 },
-      { name: "state", label: "Trạng thái", control: "select", options: imageStudioStateOptions() }
+      { name: "q", label: imageStudioLibraryText("artboard.searchLabel", "Tìm bảng thiết kế"), placeholder: imageStudioLibraryText("artboard.searchPlaceholder", "Tên, mô tả hoặc thẻ…"), maxLength: 180 },
+      { name: "state", label: imageStudioLibraryText("artboard.stateLabel", "Trạng thái"), control: "select", options: imageStudioStateOptions() }
     ];
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Artboard library</span><h2 class="portal-card-title">Tiếp tục creative review</h2><p class="portal-card-subtitle">Danh sách chỉ hiển thị metadata/excerpt thuộc signed account. Mở artboard để server owner-check direction, history và Asset Vault reference an toàn.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-studio-refresh" data-portal-route="${safeText(route)}">Làm mới</button></div><form class="portal-image-studio-filter" data-portal-form data-portal-no-transient data-portal-action="image-studio-filter" data-portal-route="${safeText(route)}" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ dùng signed API trong phiên hiện tại; không lưu vào localStorage, Telegram hay provider.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-studio-filter-clear" data-portal-route="${safeText(route)}">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm artboard</button></div></div></form>${renderImageArtboardCards(items, context, route)}${renderImageStudioArtboardPagination(listing, route)}</section>`;
+    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageStudioLibraryText("artboard.kicker", "Thư viện bảng thiết kế"))}</span><h2 class="portal-card-title">${safeText(imageStudioLibraryText("artboard.title", "Tiếp tục rà soát sáng tạo"))}</h2><p class="portal-card-subtitle">${safeText(imageStudioLibraryText("artboard.body", "Danh sách chỉ hiển thị siêu dữ liệu và trích đoạn thuộc tài khoản đã xác thực. Mở bảng thiết kế để máy chủ kiểm tra quyền sở hữu, định hướng, lịch sử và tham chiếu Kho tài sản an toàn."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-studio-refresh" data-portal-route="${safeText(route)}">${safeText(imageStudioLibraryText("artboard.refresh", "Làm mới"))}</button></div><form class="portal-image-studio-filter" data-portal-form data-portal-no-transient data-portal-action="image-studio-filter" data-portal-route="${safeText(route)}" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(imageStudioLibraryText("artboard.note", "Bộ lọc chỉ dùng API đã xác thực trong phiên hiện tại; không lưu vào bộ nhớ trình duyệt, Telegram hay nhà cung cấp."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-studio-filter-clear" data-portal-route="${safeText(route)}">${safeText(imageStudioLibraryText("reference.clear", "Xóa lọc"))}</button><button class="portal-button portal-button--primary" type="submit">${safeText(imageStudioLibraryText("artboard.search", "Tìm bảng thiết kế"))}</button></div></div></form>${renderImageArtboardCards(items, context, route)}${renderImageStudioArtboardPagination(listing, route)}</section>`;
   }
   function renderImageArtboardCards(items, context, route) {
     const canView = Boolean(context.capabilities && context.capabilities["image-studio-view"] === true);
-    if (!items.length) return renderEmpty("Chưa có artboard", "Tạo artboard đầu tiên để tổ chức brief, Asset Vault reference và self-review. Workspace không sinh ảnh hoặc output thay thế.", ICONS.image);
+    if (!items.length) return renderEmpty(imageStudioLibraryText("artboard.emptyTitle", "Chưa có bảng thiết kế"), imageStudioLibraryText("artboard.emptyBody", "Tạo bảng thiết kế đầu tiên để tổ chức mô tả, tham chiếu Kho tài sản và tự rà soát. Không gian này không tạo ảnh hoặc đầu ra thay thế."), ICONS.image);
     return `<div class="portal-image-artboard-grid">${items.map((item) => {
       const id = String(item.id || "");
       const state = imageStudioState(item.state);
       const directionCount = Number(item.direction_count || 0);
-      return `<article class="portal-card portal-card-pad portal-image-artboard-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageStudioIntentLabel(item.image_intent))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Image artboard"))}</h3><p class="portal-card-subtitle">${safeText(String(item.creative_brief_excerpt || item.brief_excerpt || item.creative_brief || "Chưa có brief hiển thị."))}</p></div>${imageStudioStateBadge(state)}</div><div class="portal-image-artboard-meta"><span>${safeText(String(item.aspect_ratio || "—"))}</span><span>${safeText(String(item.output_format || "png").toUpperCase())} target</span><span>${safeText(String(directionCount))} directions</span><span>v${safeText(String(item.revision || 1))}</span></div>${renderImageStudioTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">${state === "approved" ? "Self-review đã đánh dấu" : state === "archived" ? "Đã archive · chỉ đọc" : "Đang biên tập"}</span>${canView && validImageStudioArtboardId(id) ? `<a class="portal-button portal-button--quiet" href="${imageStudioPresentationRoute(route, id)}">Mở artboard <span aria-hidden="true">→</span></a>` : ""}</div></article>`;
+      return `<article class="portal-card portal-card-pad portal-image-artboard-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageStudioIntentLabel(item.image_intent))}</span><h3 class="portal-card-title">${safeText(String(item.title || imageStudioLibraryText("artboard.fallbackTitle", "Bảng thiết kế hình ảnh")))}</h3><p class="portal-card-subtitle">${safeText(String(item.creative_brief_excerpt || item.brief_excerpt || item.creative_brief || "Chưa có mô tả hiển thị."))}</p></div>${imageStudioStateBadge(state)}</div><div class="portal-image-artboard-meta"><span>${safeText(String(item.aspect_ratio || "—"))}</span><span>${safeText(String(item.output_format || "png").toUpperCase())} ${safeText(imageStudioLibraryText("artboard.targetSuffix", "đích"))}</span><span>${safeText(String(directionCount))} ${safeText(imageStudioLibraryText("artboard.directionSuffix", "định hướng"))}</span><span>v${safeText(String(item.revision || 1))}</span></div>${renderImageStudioTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(state === "approved" ? imageStudioLibraryText("artboard.reviewed", "Đã tự rà soát") : state === "archived" ? imageStudioLibraryText("artboard.archived", "Đã lưu trữ · chỉ đọc") : imageStudioLibraryText("artboard.editing", "Đang biên tập"))}</span>${canView && validImageStudioArtboardId(id) ? `<a class="portal-button portal-button--quiet" href="${imageStudioPresentationRoute(route, id)}">${safeText(imageStudioLibraryText("artboard.open", "Mở bảng thiết kế"))} <span aria-hidden="true">→</span></a>` : ""}</div></article>`;
     }).join("")}</div>`;
   }
   function renderImageHubOverview(summary) {
@@ -18074,21 +18080,21 @@
     const total = Number(artboards.total || 0);
     const review = Number(artboards.review || 0);
     const approved = Number(artboards.approved || 0);
-    return `<section class="portal-image-hub-overview"><div><span class="portal-section-kicker">Image operations board</span><h2>Rõ hướng sáng tạo, rõ bước tiếp theo.</h2><p>Điều phối direction, self-review và metadata có kiểm soát trong một workspace gọn. Mỗi công cụ xử lý mở như một phiên mới, không mang theo lựa chọn riêng tư từ board.</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>Artboards</dd></div><div><dt>${safeText(String(review))}</dt><dd>Đang review</dd></div><div><dt>${safeText(String(approved))}</dt><dd>Đã self-review</dd></div></dl></section>`;
+    return `<section class="portal-image-hub-overview"><div><span class="portal-section-kicker">${safeText(imageStudioLibraryText("hub.kicker", "Bảng thao tác hình ảnh"))}</span><h2>${safeText(imageStudioLibraryText("hub.title", "Rõ hướng sáng tạo, rõ bước tiếp theo."))}</h2><p>${safeText(imageStudioLibraryText("hub.body", "Điều phối định hướng, tự rà soát và siêu dữ liệu có kiểm soát trong một không gian gọn. Mỗi công cụ mở như một phiên mới, không mang theo lựa chọn riêng tư từ bảng này."))}</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>${safeText(imageStudioLibraryText("hub.metricArtboards", "Bảng thiết kế"))}</dd></div><div><dt>${safeText(String(review))}</dt><dd>${safeText(imageStudioLibraryText("hub.metricReview", "Đang rà soát"))}</dd></div><div><dt>${safeText(String(approved))}</dt><dd>${safeText(imageStudioLibraryText("hub.metricApproved", "Đã tự rà soát"))}</dd></div></dl></section>`;
   }
   function renderImageHubNextSteps() {
     const steps = [
-      { href: "/image/prompt-composer", title: "Soạn direction", text: "Bắt đầu một prompt text mới để review." },
-      { href: "/image/resize", title: "Chuẩn hóa tỷ lệ", text: "Mở một thao tác độc lập với nguồn được chọn lại." },
-      { href: "/image/edit", title: "Tinh chỉnh ảnh", text: "Khởi đầu phiên chỉnh sửa riêng tư mới." },
-      { href: "/image/brand-overlay", title: "Đặt nhận diện", text: "Mở lớp phủ thương hiệu với dữ liệu mới." },
-      { href: "/asset-vault", title: "Kiểm tra tài sản", text: "Chọn và kiểm tra tệp trong kho riêng tư." }
+      { href: "/image/prompt-composer", title: imageStudioLibraryText("next.promptTitle", "Soạn định hướng"), text: imageStudioLibraryText("next.promptText", "Bắt đầu một mô tả mới để rà soát.") },
+      { href: "/image/resize", title: imageStudioLibraryText("next.resizeTitle", "Chuẩn hóa tỷ lệ"), text: imageStudioLibraryText("next.resizeText", "Mở một thao tác độc lập với nguồn được chọn lại.") },
+      { href: "/image/edit", title: imageStudioLibraryText("next.editTitle", "Tinh chỉnh ảnh"), text: imageStudioLibraryText("next.editText", "Khởi đầu phiên chỉnh sửa riêng tư mới.") },
+      { href: "/image/brand-overlay", title: imageStudioLibraryText("next.brandTitle", "Đặt nhận diện"), text: imageStudioLibraryText("next.brandText", "Mở lớp phủ thương hiệu với dữ liệu mới.") },
+      { href: "/asset-vault", title: imageStudioLibraryText("next.assetTitle", "Kiểm tra tài sản"), text: imageStudioLibraryText("next.assetText", "Chọn và kiểm tra tệp trong kho riêng tư.") }
     ];
-    return `<section class="portal-image-hub-next-steps"><div class="portal-card-header"><div><span class="portal-section-kicker">Independent next steps</span><h2 class="portal-card-title">Chọn đúng công cụ cho bước tiếp theo</h2><p class="portal-card-subtitle">Các lối tắt này là điều hướng mới. Không có lựa chọn direction, tài sản hoặc dữ liệu tài khoản được đưa đi cùng.</p></div>${badge("read_only")}</div><div class="portal-image-hub-step-grid">${steps.map((step) => `<a class="portal-image-hub-step" href="${step.href}"><strong>${safeText(step.title)}</strong><span>${safeText(step.text)}</span><b>Mở công cụ</b></a>`).join("")}</div></section>`;
+    return `<section class="portal-image-hub-next-steps"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageStudioLibraryText("next.kicker", "Bước tiếp theo độc lập"))}</span><h2 class="portal-card-title">${safeText(imageStudioLibraryText("next.title", "Chọn đúng công cụ cho bước tiếp theo"))}</h2><p class="portal-card-subtitle">${safeText(imageStudioLibraryText("next.body", "Các lối tắt này chỉ điều hướng sang công cụ mới. Không có lựa chọn định hướng, tài sản hoặc dữ liệu tài khoản được mang theo."))}</p></div>${badge("read_only")}</div><div class="portal-image-hub-step-grid">${steps.map((step) => `<a class="portal-image-hub-step" href="${step.href}"><strong>${safeText(step.title)}</strong><span>${safeText(step.text)}</span><b>${safeText(imageStudioLibraryText("next.action", "Mở công cụ"))}</b></a>`).join("")}</div></section>`;
   }
   function renderImageHubDetailBoard(artboard, directions) {
     const active = Array.isArray(directions) ? directions.filter((direction) => String(direction.state || "active") === "active").length : 0;
-    return `<section class="portal-image-hub-detail-board"><div><span class="portal-section-kicker">Direction review board</span><h2>Giữ review có chủ đích</h2><p>Tên, revision và direction đang hoạt động được tổng hợp từ metadata đã được xác minh cho artboard này.</p></div><dl><div><dt>${safeText(String(artboard.revision || 1))}</dt><dd>Revision</dd></div><div><dt>${safeText(String(active))}</dt><dd>Direction active</dd></div><div><dt>${safeText(imageStudioState(artboard.state))}</dt><dd>Trạng thái</dd></div></dl></section>`;
+    return `<section class="portal-image-hub-detail-board"><div><span class="portal-section-kicker">${safeText(imageStudioLibraryText("detailBoard.kicker", "Bảng rà soát định hướng"))}</span><h2>${safeText(imageStudioLibraryText("detailBoard.title", "Giữ việc rà soát có chủ đích"))}</h2><p>${safeText(imageStudioLibraryText("detailBoard.body", "Tên, phiên bản và định hướng đang hoạt động được tổng hợp từ siêu dữ liệu đã xác minh cho bảng thiết kế này."))}</p></div><dl><div><dt>${safeText(String(artboard.revision || 1))}</dt><dd>${safeText(imageStudioLibraryText("detailBoard.revision", "Phiên bản"))}</dd></div><div><dt>${safeText(String(active))}</dt><dd>${safeText(imageStudioLibraryText("detailBoard.directionActive", "Định hướng đang hoạt động"))}</dd></div><div><dt>${safeText(imageStudioStateLabel(artboard.state))}</dt><dd>${safeText(imageStudioLibraryText("detailBoard.stateLabel", "Trạng thái"))}</dd></div></dl></section>`;
   }
   function renderImageStudio(page, context) {
     const route = String(page.routePath || page.path || "/image-studio");

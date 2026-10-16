@@ -372,3 +372,14 @@ riêng đạt `2/2`, focused Image đạt `45/45`, full Node đạt `486/486`, s
 và `git diff --check` đều đạt. Python contract `NOT_RUN` vì môi trường thiếu `python`/`py`;
 runtime/live, AX tree và các cụm Image reference/detail/Resize/Enhance/Brand Overlay/
 Storyboard vẫn mở.
+
+### Bổ sung đối chiếu source ngày 16/10/2026 — Image library/Image Hub
+
+Đợt `SOURCE-LOCALE-16` chỉ chuẩn hóa fixed chrome của thư viện tham chiếu, thư viện bảng
+thiết kế, thẻ bảng thiết kế, tổng quan Image Hub, bước tiếp theo và bảng rà soát định hướng.
+Catalogue `imageStudioLibraryUi.*` có `67` mục cân bằng VI/EN/ZH; helper locale phủ nhãn lọc,
+placeholder, phân trang, trạng thái, lối tắt và empty state. Không đổi route, action, offset
+phân trang, capability, dữ liệu động hoặc ranh giới chỉ đọc. Regression riêng đạt `2/2`,
+focused Image đạt `49/49`, full Node đạt `488/488`, syntax hai tệp Portal và
+`git diff --check` đều đạt. Python contract `NOT_RUN` vì thiếu `python`/`py`; runtime/live,
+AX tree, chi tiết direction/estimate/history và các route Image còn lại vẫn mở.
