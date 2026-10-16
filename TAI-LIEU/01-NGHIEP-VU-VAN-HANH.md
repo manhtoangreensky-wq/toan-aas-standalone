@@ -699,3 +699,29 @@ giữ nguyên; không kiểm tra media, không tạo SFX/audio/provider/job/paym
 
 Regression riêng `2/2`, focused Composer/Direction/SFX/Voice/Media `33/33`, full Node
 `502/502`, baseline `500/500`, `NEW_FAILURES=0`; browser/AX/live và Python contract chưa chạy.
+## Checkpoint nguồn WebApp — SOURCE-ADMIN-05 Customer 360 — 17/10/2026
+
+Candidate hiện tại là working tree trên nhánh `webapp-plan-r116`, dự kiến push vào
+`webapp-checklist-r116`/PR #647. Đợt này chỉ đổi fixed chrome Customer 360 và safety modal
+trong `static/portal/portal.js` + `static/portal/portal-i18n.js`; không đổi route, action,
+field, capability, CSRF, idempotency, revision, dữ liệu customer, RBAC/ABAC, ví/Xu, ledger,
+Core Bridge write, provider hoặc deploy.
+
+- Catalogue mới `adminCustomer360.*` có cùng bộ khóa trong đủ `3` locale: VI/EN/ZH.
+- Regression mới đạt `3/3`; full Node suite đạt `512/512`; `node --check` cho `2/2` tệp
+  Portal đạt; `git diff --check` đạt.
+- Comparator source trước/sau giữ nguyên `771` occurrence `data-portal-action`, `630`
+  occurrence `data-portal-route` và `439` occurrence `name`; `removed=0`, `added=0`.
+- Contract Python `tests/test_p0_webapp_v2_05_admin_customer_360.py` chưa chạy được vì máy
+  không có lệnh `py`/`pytest`; đây là blocker công cụ, không phải PASS.
+- Browser/runtime/live và canonical-admin fixture chưa được chứng minh trong batch; `MERGED`,
+  `DEPLOYED`, `LIVE` vẫn là các cổng riêng. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
+  `PRODUCTION_DATA_MUTATIONS=0`.
+
+### Bẫy cần giữ
+
+Fixed chrome phải đi qua catalogue; không dịch `customer_id`, role/status server, mã case,
+thời điểm, action/outcome audit hoặc số tiền. Không thay giá trị thiếu bằng số `0`, không biến
+Customer 360 thành quyền ghi ví/ledger và không tuyên bố runtime chỉ từ source test.
+
+Kết thúc checkpoint nguồn `SOURCE-ADMIN-05`.

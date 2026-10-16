@@ -1,6 +1,6 @@
 # R217-09 — Admin shell, customer visibility và permission presentation
 
-**Status:** `TODO`
+**Status:** `SOURCE_GREEN_RUNTIME_OPEN`
 **Wave:** W5
 **Surface:** Admin login/shell, operations, billing/top-up, jobs/assets, customer directory,
 support, audit, reliability, ERP data views và customer action reports.
@@ -80,3 +80,21 @@ không tự sửa dependency production.
   `adminDomainUi.trends.*` cho title, description, stream và boundary; server route allowlist
   và read-only authority không đổi.
 - Admin domain/provider/top-up focused regression đạt `7/7`; full Node suite đạt `509/509`.
+
+### Source closeout bổ sung — SOURCE-ADMIN-05 (2026-10-17)
+
+- Customer 360 và safety modal đã chuyển fixed chrome còn sót sang catalogue
+  `adminCustomer360.*` cân bằng VI/EN/ZH: an toàn tài khoản, trạng thái đăng nhập/phiên,
+  nút khóa/mở khóa, ví/tài chính, tác vụ/tệp bàn giao, hỗ trợ, nhật ký, cảnh báo, nhãn lý do,
+  nút đóng và hủy.
+- Dữ liệu động (customer ID, role/status, case/audit payload, số tiền và số dư),
+  `admin-customer-ban-open`, `admin-customer-unban-open`, `admin-customer-safety-close`,
+  `admin-customer-ban-submit`, `admin-customer-unban-submit`, route và safety boundary giữ
+  nguyên. Không mở wallet/ledger mutation hoặc Core Bridge write.
+- Regression mới `tests/admin-customer-360-locale-purity.test.mjs` đạt `3/3`; full Node suite
+  đạt `512/512`; syntax `static/portal/portal.js` và `static/portal/portal-i18n.js`,
+  `git diff --check` đều đạt; comparator giữ nguyên 771 action, 630 route và 439 field
+  occurrence, không có mục thêm/xóa.
+- Python contract `tests/test_p0_webapp_v2_05_admin_customer_360.py` chưa chạy được do môi
+  trường thiếu `py`/`pytest`; browser/runtime canonical-admin fixture và ledger effect vẫn
+  `OPEN`/`DEFERRED`, không được suy diễn thành PASS.

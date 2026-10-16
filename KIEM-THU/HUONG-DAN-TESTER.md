@@ -78,6 +78,20 @@
 43. Với ship, tách PR merge, CI run, deploy run, runtime SHA, service health và live output.
 44. Builder self-report không thay independent Tester verdict.
 
+### WA-49 — Customer 360 locale/fixed chrome
+
+45. Dùng candidate SHA đã ghi trong PR; tạo hoặc dùng `canonical_admin_qa` chỉ trong DB QA cô
+    lập, không dùng tài khoản production và không gửi thao tác ví/provider.
+46. Mở Customer 360 ở VI, EN, ZH và hai theme tại `1440/1024/768/390`; kiểm tra tiêu đề,
+    thẻ trạng thái, ví/tài chính, tác vụ/tệp, hỗ trợ, nhật ký và modal khóa/mở khóa.
+47. Ở VI, fixed chrome không được còn `Charged`, `Tier`, `Assets`, `Support Desk`, `Audit Trail`;
+    dữ liệu server như mã khách, role/status, mã case, thời điểm và action/outcome không dịch.
+48. Không bấm xác nhận khóa/mở khóa, approve top-up, cộng Xu hoặc bất kỳ CTA ghi nào; chỉ kiểm
+    keyboard/focus, DOM/AX, overflow/clip, console và network request.
+49. Ghi rõ `3/3` locale, viewport/theme, expected/actual, ảnh/DOM/AX, console/network và
+    `runtime SHA` nếu có. Nếu thiếu `py`/`pytest` hoặc fixture thì ghi `BLOCKED`, không đổi
+    dependency và không suy diễn thành PASS.
+
 ## 7. Báo lỗi và retest
 
 45. Chọn đúng severity: `🔴 chặn-bán-hàng`, `🟠 nặng`, `🟡 vừa` hoặc `🟢 nhẹ`.

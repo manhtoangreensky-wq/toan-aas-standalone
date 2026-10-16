@@ -140,3 +140,20 @@ Evidence local đặt dưới `D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/`. PASS cu�
 - Manager review giữ đúng `approved_for_handoff` + `blocked`; record ID/revision/cursor giữ nguyên; guarded/empty không có review action.
 - Bắt buộc: contrast ≥4.5:1, target ≥44px, overflow/clipping/framework overlay/relevant event/staff write request `0`.
 - Live sau deploy chỉ đọc queue hiện có; cấm bấm quyết định hoặc tạo dữ liệu production chỉ để lấy ảnh.
+
+## WA-49 — SOURCE-ADMIN-05-CUSTOMER-360-LOCALE
+
+- Mức: 🟠 nặng; môi trường `local-render` hoặc QA cô lập; route Customer 360 trong
+  `/admin/customers`; role `canonical_admin_qa`; VI/EN/ZH × sáng/tối × `1440/1024/768/390`.
+- Kiểm tra: tiêu đề/thẻ an toàn tài khoản, trạng thái đăng nhập/phiên, ví/tài chính,
+  tác vụ/tệp, hỗ trợ, nhật ký và safety modal đều dùng đúng một ngôn ngữ; không còn
+  `Charged`, `Tier`, `Assets`, `Support Desk`, `Audit Trail` trong fixed chrome VI.
+- Giữ nguyên: customer ID, role/status server, số tiền, mã case, timestamp, action,
+  `admin-customer-ban-open`, `admin-customer-unban-open`, `admin-customer-safety-close`,
+  `admin-customer-ban-submit`, `admin-customer-unban-submit`; không approve top-up, không
+  cộng Xu, không gọi Core Bridge/provider.
+- PASS bắt buộc: catalogue `adminCustomer360.*` đủ khóa ở `3/3` locale; keyboard/focus,
+  target ≥44px, overflow/clip/console/request ghi ngoài phạm vi `0`; comparator action/route/
+  field không đổi; canonical-admin fixture chỉ trong DB QA cô lập.
+- Evidence: candidate SHA, ảnh/DOM/AX, console/network, output `node --test`, và blocker
+  Python/runtime nếu chưa có `py`/`pytest`. Không coi source PASS là live PASS.

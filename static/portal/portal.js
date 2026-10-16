@@ -386,6 +386,10 @@
     return uiText(`adminGeneric.${key}`, fallback, params);
   }
 
+  function adminCustomer360Text(key, fallback, params) {
+    return uiText(`adminCustomer360.${key}`, fallback, params);
+  }
+
   function adminSecurityAccessText(key, fallback, params) {
     return adminGenericText(`securityAccess.${key}`, fallback, params);
   }
@@ -36322,32 +36326,43 @@
     const modal = context && context.adminCustomerSafetyModal;
     if (!modal) return "";
     const isBan = modal.mode === "ban";
-    const title = isBan ? "Khóa quyền truy cập Web" : "Mở khóa quyền truy cập Web";
+    const title = isBan
+      ? adminCustomer360Text("modal.banTitle", "Khóa quyền truy cập Web")
+      : adminCustomer360Text("modal.unbanTitle", "Mở khóa quyền truy cập Web");
     const actionName = isBan ? "admin-customer-ban-submit" : "admin-customer-unban-submit";
     const btnClass = isBan ? "portal-button--danger" : "portal-button--accent";
-    const btnLabel = isBan ? "Khóa tài khoản Web" : "Mở khóa tài khoản";
+    const btnLabel = isBan
+      ? adminCustomer360Text("modal.banButton", "Khóa tài khoản Web")
+      : adminCustomer360Text("modal.unbanButton", "Mở khóa tài khoản");
     const warning = isBan
-      ? "Tài khoản sẽ bị chuyển sang trạng thái Bị khóa (is_active=0). Toàn bộ phiên đăng nhập Web hiện tại của khách hàng sẽ bị thu hồi ngay lập tức. Thao tác không tự động cấm trên Bot/Telegram."
-      : "Tài khoản sẽ được kích hoạt lại (is_active=1). Lưu ý: Các phiên đăng nhập cũ đã thu hồi sẽ KHÔNG được kích hoạt lại; khách hàng cần đăng nhập mới.";
+      ? adminCustomer360Text("modal.banWarning", "Tài khoản sẽ chuyển sang trạng thái bị khóa (is_active=0). Toàn bộ phiên đăng nhập Web hiện tại sẽ bị thu hồi ngay lập tức. Thao tác không tự động cấm trên Bot/Telegram.")
+      : adminCustomer360Text("modal.unbanWarning", "Tài khoản sẽ được kích hoạt lại (is_active=1). Các phiên đăng nhập đã thu hồi sẽ không được kích hoạt lại; khách hàng cần đăng nhập mới.");
+    const reasonLabel = adminCustomer360Text("modal.reason", "Lý do thực hiện");
+    const reasonPlaceholder = isBan
+      ? adminCustomer360Text("modal.reasonBanPlaceholder", "Ví dụ: Vi phạm điều khoản dịch vụ / Yêu cầu tạm ngưng")
+      : adminCustomer360Text("modal.reasonUnbanPlaceholder", "Ví dụ: Đã xác minh thông tin / Giải quyết khiếu nại");
+    const closeLabel = adminCustomer360Text("modal.close", "Đóng");
+    const cancelLabel = adminCustomer360Text("modal.cancel", "Hủy bỏ");
 
     return `<div class="portal-admin-manual-topup-modal" data-customer-safety-modal>`
       + `<div class="portal-admin-manual-topup-backdrop" data-portal-action="admin-customer-safety-close"></div>`
       + `<section class="portal-admin-manual-topup-dialog" role="dialog" aria-modal="true" aria-labelledby="cust-safety-title" tabindex="-1">`
       + `<div class="portal-card-header" style="margin-bottom: 0;">`
-      + `<div><span class="portal-section-kicker">Quản trị an toàn</span><h2 id="cust-safety-title" class="portal-card-title">${safeText(title)}</h2></div>`
-      + `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-customer-safety-close" aria-label="Đóng">✕</button>`
+      + `<div><span class="portal-section-kicker">${safeText(adminCustomer360Text("modal.section", "Quản trị an toàn"))}</span><h2 id="cust-safety-title" class="portal-card-title">${safeText(title)}</h2></div>`
+      + `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-customer-safety-close" aria-label="${safeText(closeLabel)}">✕</button>`
       + `</div>`
       + `<div class="portal-alert portal-alert--${isBan ? 'warning' : 'info'}" style="margin: 10px 0;"><p>${safeText(warning)}</p></div>`
       + `<form data-portal-form data-portal-action="${actionName}" data-account-id="${safeText(modal.accountId)}" style="display: grid; gap: 14px;">`
-      + `<div class="portal-form-group"><label for="safety-reason"><strong>Lý do thực hiện <span style="color: var(--portal-danger, #ef4444);">*</span></strong></label>`
-      + `<input class="portal-input" id="safety-reason" name="reason" type="text" required minlength="2" maxlength="250" placeholder="VD: ${isBan ? 'Vi phạm điều khoản dịch vụ / Yêu cầu tạm ngưng' : 'Đã xác minh thông tin / Giải quyết khiếu nại'}"></div>`
+      + `<div class="portal-form-group"><label for="safety-reason"><strong>${safeText(reasonLabel)} <span style="color: var(--portal-danger, #ef4444);">*</span></strong></label>`
+      + `<input class="portal-input" id="safety-reason" name="reason" type="text" required minlength="2" maxlength="250" placeholder="${safeText(reasonPlaceholder)}"></div>`
       + `<div class="portal-inline-actions" style="margin-top: 8px;">`
-      + `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-customer-safety-close">Hủy bỏ</button>`
+      + `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-customer-safety-close">${safeText(cancelLabel)}</button>`
       + `<button class="portal-button ${btnClass}" type="submit">${safeText(btnLabel)}</button>`
       + `</div></form></section></div>`;
   }
 
   function renderAdminCustomer360Sections(context) {
+    const copy = (key, fallback, params) => adminCustomer360Text(key, fallback, params);
     const raw = context && context.adminCustomerDirectory;
     const c = (raw && raw.customer) || {};
     const crm = (raw && raw.crm) || {};
@@ -36364,55 +36379,59 @@
 
     let dangerActionHtml = "";
     if (isAdminTarget) {
-      dangerActionHtml = `<div class="portal-alert portal-alert--info" style="margin-top: 12px;"><p>Tài khoản Quản trị viên được bảo vệ. Thao tác khóa bị từ chối qua danh mục khách hàng thông thường.</p></div>`;
+      dangerActionHtml = `<div class="portal-alert portal-alert--info" style="margin-top: 12px;"><p>${safeText(copy("notice.adminProtected", "Tài khoản quản trị viên được bảo vệ. Thao tác khóa bị từ chối qua danh mục khách hàng thông thường."))}</p></div>`;
     } else if (isSelf) {
-      dangerActionHtml = `<div class="portal-alert portal-alert--info" style="margin-top: 12px;"><p>Tài khoản của chính bạn. Không thể tự khóa tài khoản hiện tại.</p></div>`;
+      dangerActionHtml = `<div class="portal-alert portal-alert--info" style="margin-top: 12px;"><p>${safeText(copy("notice.self", "Đây là tài khoản của bạn. Không thể tự khóa tài khoản hiện tại."))}</p></div>`;
     } else if (!isLocked) {
-      dangerActionHtml = `<div class="portal-inline-actions" style="margin-top: 14px;"><button class="portal-button portal-button--danger" type="button" data-portal-action="admin-customer-ban-open" data-account-id="${safeText(c.id)}">Khóa quyền truy cập Web</button></div>`;
+      dangerActionHtml = `<div class="portal-inline-actions" style="margin-top: 14px;"><button class="portal-button portal-button--danger" type="button" data-portal-action="admin-customer-ban-open" data-account-id="${safeText(c.id)}">${safeText(copy("action.ban", "Khóa quyền truy cập Web"))}</button></div>`;
     } else {
-      dangerActionHtml = `<div class="portal-inline-actions" style="margin-top: 14px;"><button class="portal-button portal-button--accent" type="button" data-portal-action="admin-customer-unban-open" data-account-id="${safeText(c.id)}">Mở khóa quyền truy cập Web</button></div>`;
+      dangerActionHtml = `<div class="portal-inline-actions" style="margin-top: 14px;"><button class="portal-button portal-button--accent" type="button" data-portal-action="admin-customer-unban-open" data-account-id="${safeText(c.id)}">${safeText(copy("action.unban", "Mở khóa quyền truy cập Web"))}</button></div>`;
     }
 
     const approvedVnd = typeof spend.total_approved_topup_vnd === "number" && spend.total_approved_topup_vnd > 0
       ? spend.total_approved_topup_vnd.toLocaleString("vi-VN") + " đ"
-      : "Chưa có giao dịch";
+      : copy("wallet.noTransactions", "Chưa có giao dịch");
 
     const balanceXuText = typeof wallet.balance_xu === "number"
       ? wallet.balance_xu.toLocaleString("vi-VN") + " Xu"
-      : '<span class="portal-text-muted">Không khả dụng (Core Bridge)</span>';
+      : `<span class="portal-text-muted">${safeText(copy("wallet.unavailableBridge", "Không khả dụng (Core Bridge)"))}</span>`;
 
     const recentCases = Array.isArray(support.recent_cases) ? support.recent_cases : [];
     const casesHtml = recentCases.length
-      ? `<ul class="portal-list-reset" style="display: grid; gap: 8px; margin-top: 8px;">` + recentCases.map((cs) => `<li style="padding: 8px 12px; background: var(--portal-surface-subtle, rgba(255,255,255,0.03)); border-radius: 6px; border: 1px solid var(--portal-border, #1e293b);"><div style="display: flex; justify-content: space-between;"><strong>${safeText(cs.subject || "Yêu cầu hỗ trợ")}</strong><span class="portal-badge portal-badge--info">${safeText(cs.state || "new")}</span></div><div class="portal-text-muted" style="font-size: 0.85em; margin-top: 4px;">Mã: <code>${safeText(cs.id)}</code> · ${safeText((cs.created_at || "").slice(0, 10))}</div></li>`).join("") + `</ul>`
-      : `<p class="portal-text-muted" style="margin-top: 8px;">Chưa có yêu cầu hỗ trợ nào.</p>`;
+      ? `<ul class="portal-list-reset" style="display: grid; gap: 8px; margin-top: 8px;">` + recentCases.map((cs) => `<li style="padding: 8px 12px; background: var(--portal-surface-subtle, rgba(255,255,255,0.03)); border-radius: 6px; border: 1px solid var(--portal-border, #1e293b);"><div style="display: flex; justify-content: space-between;"><strong>${safeText(cs.subject || "Yêu cầu hỗ trợ")}</strong><span class="portal-badge portal-badge--info">${safeText(cs.state || "new")}</span></div><div class="portal-text-muted" style="font-size: 0.85em; margin-top: 4px;">${safeText(copy("support.code", "Mã"))}: <code>${safeText(cs.id)}</code> · ${safeText((cs.created_at || "").slice(0, 10))}</div></li>`).join("") + `</ul>`
+      : `<p class="portal-text-muted" style="margin-top: 8px;">${safeText(copy("support.empty", "Chưa có yêu cầu hỗ trợ nào."))}</p>`;
 
     const recentAudits = Array.isArray(audit.recent_events) ? audit.recent_events : [];
     const auditHtml = recentAudits.length
       ? `<ul class="portal-list-reset" style="display: grid; gap: 8px; margin-top: 8px;">` + recentAudits.map((a) => `<li style="padding: 8px 12px; background: var(--portal-surface-subtle, rgba(255,255,255,0.03)); border-radius: 6px; border: 1px solid var(--portal-border, #1e293b);"><div style="display: flex; justify-content: space-between;"><code>${safeText(a.action)}</code><span class="portal-badge portal-badge--neutral">${safeText(a.outcome)}</span></div><div class="portal-text-muted" style="font-size: 0.85em; margin-top: 4px;">${safeText(a.detail || "")} · <time>${safeText((a.created_at || "").slice(0, 19))}</time></div></li>`).join("") + `</ul>`
-      : `<p class="portal-text-muted" style="margin-top: 8px;">Chưa có nhật ký quản trị.</p>`;
+      : `<p class="portal-text-muted" style="margin-top: 8px;">${safeText(copy("audit.empty", "Chưa có nhật ký quản trị."))}</p>`;
 
+    const supportSubtitle = copy("support.subtitle", "{total} yêu cầu ({open} đang mở).", {
+      total: typeof support.total_cases === "number" ? support.total_cases : 0,
+      open: typeof support.open_cases_count === "number" ? support.open_cases_count : 0
+    });
     return `<div class="portal-admin-grid" style="margin-top: 16px;">`
-      + `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">An toàn tài khoản & Kiểm soát truy cập</h2><p class="portal-card-subtitle">Trạng thái đăng nhập và thu hồi phiên Web.</p></div>${isLocked ? '<span class="portal-badge portal-badge--warning">Bị khóa</span>' : '<span class="portal-badge portal-badge--success">Hoạt động</span>'}</div>`
+      + `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("accountSafety.title", "An toàn tài khoản và quyền truy cập"))}</h2><p class="portal-card-subtitle">${safeText(copy("accountSafety.subtitle", "Trạng thái đăng nhập và thu hồi phiên Web."))}</p></div>${isLocked ? `<span class="portal-badge portal-badge--warning">${safeText(copy("badge.locked", "Bị khóa"))}</span>` : `<span class="portal-badge portal-badge--success">${safeText(copy("badge.active", "Hoạt động"))}</span>`}</div>`
       + `<dl class="portal-summary-list">`
-      + `<div class="portal-summary-item"><dt class="portal-summary-key">Trạng thái đăng nhập Web</dt><dd class="portal-summary-value">${isLocked ? '<strong style="color: var(--portal-warning, #f59e0b);">Bị khóa (Từ chối truy cập)</strong>' : '<strong style="color: var(--portal-success, #10b981);">Đang hoạt động (Cho phép)</strong>'}</dd></div>`
-      + `<div class="portal-summary-item"><dt class="portal-summary-key">Phiên Web đang hoạt động</dt><dd class="portal-summary-value"><code>${activeSessions}</code> phiên</dd></div>`
-      + `<div class="portal-summary-item"><dt class="portal-summary-key">Trạng thái Bot / Telegram</dt><dd class="portal-summary-value"><span class="portal-badge portal-badge--neutral">Độc lập (Không suy đoán)</span></dd></div>`
-      + `<div class="portal-summary-item"><dt class="portal-summary-key">Quyền hạn tài khoản</dt><dd class="portal-summary-value">${safeText(c.role_label || "Khách hàng")} (<code>${safeText(c.role || "user")}</code>)</dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">${safeText(copy("status.webLogin", "Trạng thái đăng nhập Web"))}</dt><dd class="portal-summary-value">${isLocked ? `<strong style="color: var(--portal-warning, #f59e0b);">${safeText(copy("status.locked", "Bị khóa (từ chối truy cập)"))}</strong>` : `<strong style="color: var(--portal-success, #10b981);">${safeText(copy("status.active", "Đang hoạt động (cho phép)"))}</strong>`}</dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">${safeText(copy("status.sessions", "Phiên Web đang hoạt động"))}</dt><dd class="portal-summary-value"><code>${activeSessions}</code> ${safeText(copy("status.sessionUnit", "phiên"))}</dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">${safeText(copy("status.bot", "Trạng thái Bot / Telegram"))}</dt><dd class="portal-summary-value"><span class="portal-badge portal-badge--neutral">${safeText(copy("status.botIndependent", "Độc lập (không suy đoán)"))}</span></dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">${safeText(copy("status.role", "Quyền hạn tài khoản"))}</dt><dd class="portal-summary-value">${safeText(c.role_label || copy("status.roleFallback", "Khách hàng"))} (<code>${safeText(c.role || "user")}</code>)</dd></div>`
       + `</dl>${dangerActionHtml}</section>`
-      + `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ví Xu & Tài chính khách hàng</h2><p class="portal-card-subtitle">Số liệu xác thực từ Core Bridge & nạp tiền Web.</p></div></div>`
+      + `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("wallet.title", "Ví Xu và tài chính khách hàng"))}</h2><p class="portal-card-subtitle">${safeText(copy("wallet.subtitle", "Số liệu xác thực từ Core Bridge và nạp tiền Web."))}</p></div></div>`
       + `<dl class="portal-summary-list">`
-      + `<div class="portal-summary-item"><dt class="portal-summary-key">Số dư Xu xác thực</dt><dd class="portal-summary-value">${balanceXuText}</dd></div>`
-      + `<div class="portal-summary-item"><dt class="portal-summary-key">Tổng nạp tiền đã duyệt</dt><dd class="portal-summary-value"><strong>${approvedVnd}</strong></dd></div>`
-      + `<div class="portal-summary-item"><dt class="portal-summary-key">Tổng chi Xu (Charged)</dt><dd class="portal-summary-value"><span class="portal-text-muted">Không khả dụng (Core Bridge Ledger)</span></dd></div>`
-      + `<div class="portal-summary-item"><dt class="portal-summary-key">Hạng thành viên (Tier)</dt><dd class="portal-summary-value"><span class="portal-badge portal-badge--neutral">Không khả dụng (Chưa cấu hình)</span></dd></div>`
-      + `</dl><p class="portal-text-muted" style="margin-top: 12px; font-size: 0.85em;">Chân thực tài chính: Web không tự lưu số dư Xu độc lập và không tự tính toán thứ hạng hoặc chỉ số hành vi giả định.</p></section>`
-      + `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tác vụ & Tệp bàn giao (V2-04 Truth)</h2><p class="portal-card-subtitle">Quy tắc bàn giao: Job xong ≠ có tệp tải về.</p></div></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">${safeText(copy("wallet.balance", "Số dư Xu xác thực"))}</dt><dd class="portal-summary-value">${balanceXuText}</dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">${safeText(copy("wallet.approvedTopup", "Tổng nạp tiền đã duyệt"))}</dt><dd class="portal-summary-value"><strong>${approvedVnd}</strong></dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">${safeText(copy("wallet.charged", "Tổng chi Xu"))}</dt><dd class="portal-summary-value"><span class="portal-text-muted">${safeText(copy("wallet.unavailableLedger", "Không khả dụng (sổ giao dịch Core Bridge)"))}</span></dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">${safeText(copy("wallet.tier", "Hạng thành viên"))}</dt><dd class="portal-summary-value"><span class="portal-badge portal-badge--neutral">${safeText(copy("wallet.unavailableNotConfigured", "Không khả dụng (chưa cấu hình)"))}</span></dd></div>`
+      + `</dl><p class="portal-text-muted" style="margin-top: 12px; font-size: 0.85em;">${safeText(copy("wallet.truthNote", "Chân thực tài chính: Web không tự lưu số dư Xu độc lập và không tự tính toán thứ hạng hoặc chỉ số hành vi giả định."))}</p></section>`
+      + `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("jobs.title", "Tác vụ và tệp bàn giao"))}</h2><p class="portal-card-subtitle">${safeText(copy("jobs.subtitle", "Quy tắc bàn giao: tác vụ xong không đồng nghĩa có tệp tải về."))}</p></div></div>`
       + `<dl class="portal-summary-list">`
-      + `<div class="portal-summary-item"><dt class="portal-summary-key">Lịch sử tác vụ (Jobs)</dt><dd class="portal-summary-value"><span class="portal-text-muted">Không khả dụng qua Web SQLite</span> — <a class="portal-link" href="/admin/jobs">Quản lý Job →</a></dd></div>`
-      + `<div class="portal-summary-item"><dt class="portal-summary-key">Tệp đầu ra (Assets)</dt><dd class="portal-summary-value"><span class="portal-text-muted">Không khả dụng (Core Bridge Asset Vault)</span></dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">${safeText(copy("jobs.history", "Lịch sử tác vụ"))}</dt><dd class="portal-summary-value"><span class="portal-text-muted">${safeText(copy("jobs.unavailableWebSqlite", "Không khả dụng qua SQLite Web"))}</span> — <a class="portal-link" href="/admin/jobs">${safeText(copy("jobs.open", "Quản lý tác vụ →"))}</a></dd></div>`
+      + `<div class="portal-summary-item"><dt class="portal-summary-key">${safeText(copy("jobs.assets", "Tệp đầu ra"))}</dt><dd class="portal-summary-value"><span class="portal-text-muted">${safeText(copy("wallet.unavailableBridge", "Không khả dụng (Core Bridge)"))}</span></dd></div>`
       + `</dl></section>`
-      + `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Yêu cầu hỗ trợ (Support Desk)</h2><p class="portal-card-subtitle">${typeof support.total_cases === "number" ? support.total_cases : 0} yêu cầu (${typeof support.open_cases_count === "number" ? support.open_cases_count : 0} đang mở).</p></div></div>${casesHtml}</section>`
-      + `<section class="portal-card portal-card-pad" style="grid-column: 1 / -1;"><div class="portal-card-header"><div><h2 class="portal-card-title">Nhật ký quản trị (Audit Trail)</h2><p class="portal-card-subtitle">Lịch sử các thao tác an toàn trên tài khoản này.</p></div></div>${auditHtml}</section>`
+      + `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("support.title", "Yêu cầu hỗ trợ"))}</h2><p class="portal-card-subtitle">${safeText(supportSubtitle)}</p></div></div>${casesHtml}</section>`
+      + `<section class="portal-card portal-card-pad" style="grid-column: 1 / -1;"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("audit.title", "Nhật ký quản trị"))}</h2><p class="portal-card-subtitle">${safeText(copy("audit.subtitle", "Lịch sử các thao tác an toàn trên tài khoản này."))}</p></div></div>${auditHtml}</section>`
       + `</div>`;
   }
 

@@ -4,7 +4,7 @@
 **Plan:** `docs/superpowers/plans/2026-10-16-webapp-uiux-product-parity-master-plan-r217.md`
 **Baseline remote:** `f59eacf63a49534854dc7cde06e5baed6546dc58`
 **PR liên quan:** #647 — đang mở, chưa merge/deploy
-**Ngày cập nhật:** 2026-10-16
+**Ngày cập nhật:** 2026-10-17
 
 ## Cách đọc trạng thái
 
@@ -320,6 +320,20 @@ hiển thị thành công giả khi engine/bridge chưa có.
 - [x] **SOURCE-ADMIN-04:** `/admin/growth` và `/admin/trends` dùng catalogue
       `adminDomainUi.growth.*` và `adminDomainUi.trends.*` cho title, description, stream,
       boundary và common permission/read-only chrome; route allowlist không đổi.
+- [x] **SOURCE-ADMIN-05:** Customer 360 và safety modal đã chuyển toàn bộ fixed chrome còn sót
+      (an toàn tài khoản, trạng thái phiên, ví/tài chính, tác vụ/tệp, hỗ trợ, nhật ký,
+      nút khóa/mở khóa, cảnh báo, nhãn lý do và nút đóng/hủy) sang catalogue
+      `adminCustomer360.*` cân bằng VI/EN/ZH. Dữ liệu động, mã tài khoản, role/status server,
+      `admin-customer-*` actions, wallet/ledger truth và safety boundary không đổi. Candidate
+      source trước commit: `41cce2819d52e79f6c39a1764b4bddc14a8771e1`; thay đổi đang ở working tree.
+- [x] Regression mới `tests/admin-customer-360-locale-purity.test.mjs`: `3/3`; full Node
+      suite sau batch: `512/512`, `NEW_FAILURES=0`; `node --check static/portal/portal.js`,
+      `node --check static/portal/portal-i18n.js` và `git diff --check` đạt.
+- [x] Contract comparator với HEAD trước batch giữ nguyên `data-portal-action 771→771`,
+      `data-portal-route 630→630`, `field names 439→439`, `removed=[]`, `added=[]`.
+- [!] `python -m pytest tests/test_p0_webapp_v2_05_admin_customer_360.py -q` chưa chạy được:
+      môi trường hiện không có lệnh `py`/`pytest`; không ghi PASS giả. Browser/runtime,
+      canonical-admin fixture và ledger mutation vẫn mở/deferred đúng phạm vi.
 - [ ] Owner thấy toàn bộ; role khác chỉ thấy module/action theo policy hiển thị. UI phải
       nói rõ quyền bị thiếu thay vì nút chết.
 - [ ] Mỗi customer action có request/job/asset/report reference và trạng thái audit trên
@@ -467,5 +481,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=Tiếp tục W2 locale sau SOURCE-LOCALE-20C; các nhóm Music authoring đã khóa source, chuyển sang browser/AX/runtime evidence và các lane còn mở trong checklist.
+NEXT_ACTION=SOURCE-ADMIN-06 — rà soát fixed chrome Admin shell/customer visibility còn mở; sau đó mới chuyển sang browser/AX/runtime evidence. Giữ nguyên các mục backend/ledger/real-output ở trạng thái deferred.
 ```

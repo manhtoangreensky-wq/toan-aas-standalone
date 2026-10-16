@@ -453,3 +453,16 @@ route/action/field/capability/CSRF/idempotency và dữ liệu receipt canonical
 
 Evidence source: regression `2/2`, focused Composer/Direction/SFX/Voice/Media `33/33`, full
 Node `502/502`, `NEW_FAILURES=0`; Browser, AX, runtime/live và Python contract chưa chạy.
+## Đối chiếu bổ sung — SOURCE-ADMIN-05 Customer 360 — 17/10/2026
+
+| Chức năng hiện tại | Trạng thái | Bằng chứng đo được |
+|---|---|---|
+| Customer 360 fixed chrome VI/EN/ZH | ✅ | Catalogue `adminCustomer360.*` có cùng bộ khóa ở `3/3` locale; regression `3/3` |
+| Safety modal khóa/mở khóa | ✅ | Nút và cảnh báo dùng helper locale; `admin-customer-*` action giữ nguyên; comparator action `771→771` |
+| Dữ liệu động, ví/Xu, ledger và quyền | ⚠️ | Không thay đổi trong batch; Python Customer 360 contract chưa chạy vì thiếu `py`/`pytest`; runtime fixture vẫn mở |
+| Duyệt nạp thủ công/cộng Xu thật | ⚠️ | Không thuộc batch; vẫn `DEFERRED`, không có wallet mutation |
+
+Tài liệu gốc không có mục riêng cho catalogue Customer 360; vì vậy đây là phần bổ sung của
+WebApp standalone, không được suy diễn thành chức năng Bot/Core Bridge hoặc quyền tài chính.
+
+Kết thúc đối chiếu `SOURCE-ADMIN-05`.
