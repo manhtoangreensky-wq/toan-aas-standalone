@@ -59,7 +59,7 @@
       lớp phủ và thanh chọn tab không còn dùng nền đen. Regression nằm ở
       `tests/install-modal-navy-palette.test.mjs`.
 - [x] Source recheck sau W1 và W2 locale: focused PWA/auth/utility/motion `39/39`,
-      toàn bộ Node `478/478`, `node --check static/portal/portal-i18n.js`,
+      toàn bộ Node `480/480`, `node --check static/portal/portal-i18n.js`,
       `git diff --check` đạt.
 - [!] Python Admin/PWA contract chưa chạy: bundled Python không có module `pytest`; đây
       là blocker công cụ, không ghi PASS giả.
@@ -120,9 +120,16 @@
       fallback renderer cũng khớp. Regression `tests/account-activity-locale-purity.test.mjs`
       đạt `1/1`; focused account đạt `4/4`, full Node suite đạt `478/478`; runtime/live và
       các cụm hồ sơ/tài khoản còn lại vẫn mở.
+- [x] **SOURCE-LOCALE-12:** customer `accountCenter.dataControls.*` và mô tả
+      `/account/data-controls` đã dịch sạch fixed chrome về phạm vi dữ liệu, bản xuất, yêu cầu
+      rà soát xóa, phiên bản, quyền sở hữu, ranh giới Bot và thông báo thao tác; fallback trong
+      `renderAccountDataControls` cũng không còn trộn `review`, `export`, `Web`, `signed`,
+      `authoring`, `browser` hoặc `canonical`. Regression `tests/data-controls-locale-purity.test.mjs`
+      đạt `2/2`; full Node suite đạt `480/480`, syntax hai file Portal và `git diff --check`
+      đều đạt. Runtime/live, hồ sơ/tài khoản còn lại và product-lane scan vẫn mở.
 - [~] **LIVE-I18N-01:** next-route `/features → /login?next=/features` từng lộ
       `Tải & Cài đặt App TOAN AAS` trong bundle cũ; phải recheck đúng URL sau delivery.
-- [~] Đã khóa các cụm fixed chrome Admin và customer theo SOURCE-LOCALE-04→11; vẫn còn phải quét tiếp
+- [~] Đã khóa các cụm fixed chrome Admin và customer theo SOURCE-LOCALE-04→12; vẫn còn phải quét tiếp
       toàn customer/Admin/product lanes và lập danh sách chuỗi English lọt trong VI cùng
       Vietnamese lọt trong EN/ZH; không sửa server data/ID/URL.
 - [ ] Kiểm tra fallback locale, duplicate key, option label và aria-label ở VI/EN/ZH.

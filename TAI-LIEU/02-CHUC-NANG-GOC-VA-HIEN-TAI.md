@@ -332,3 +332,12 @@ PR #647 vẫn cần delivery trước khi đối chiếu live.
 Các thẻ cố định của khu vực Quản trị hệ thống đã có bản tiếng Việt riêng trong catalogue VI;
 key và route giữ nguyên, catalogue EN/ZH không đổi. Kiểm thử source đạt `1/1`. Bằng chứng
 runtime sau delivery vẫn thuộc ma trận QA và chưa được suy ra từ source.
+
+### Bổ sung đối chiếu source ngày 16/10/2026 — không đổi chức năng
+
+Đợt `SOURCE-LOCALE-12` chỉ chuẩn hóa fixed chrome của Trung tâm kiểm soát dữ liệu và
+fallback renderer trên WebApp. Không thêm hoặc xóa chức năng gốc, không đổi route/API,
+payload, quyền, trạng thái hay hành vi dữ liệu. Bằng chứng đo được: regression riêng
+`2/2`, toàn bộ Node `480/480`, syntax hai tệp Portal đạt và `git diff --check` đạt.
+Runtime/live chưa được suy ra từ source; mọi mô tả chức năng trong tài liệu gốc vẫn giữ
+nguyên cho tới khi có bundle delivery và browser evidence mới.

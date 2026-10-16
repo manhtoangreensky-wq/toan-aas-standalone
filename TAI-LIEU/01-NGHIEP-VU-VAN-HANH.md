@@ -556,3 +556,17 @@ Tám tiêu đề cố định của khu vực Quản trị hệ thống trong ca
 hóa: theo dõi tự động hóa, tình trạng bảo mật, quyền truy cập, tài liệu quản trị, kho tài liệu
 nội bộ, hệ thống, môi trường chạy và bản sao lưu. Regression riêng đạt `1/1`; đây chỉ là thay
 đổi copy Web, không cấp quyền, không tạo dữ liệu và chưa phải bằng chứng live.
+
+### Ghi nhận source locale customer — Data Controls — 16/10/2026
+
+Nhóm `accountCenter.dataControls.*` và mô tả `/account/data-controls` đã được chuẩn hóa
+tiếng Việt ở lớp giao diện cố định. Phạm vi thay đổi chỉ gồm `static/portal/portal-i18n.js`,
+`static/portal/portal.js` và regression `tests/data-controls-locale-purity.test.mjs`;
+không đổi route, action, capability, CSRF, idempotency, revision, dữ liệu máy chủ,
+ví/Xu hoặc nhà cung cấp. Regression riêng đạt `2/2`; toàn bộ Node đạt `480/480`;
+hai tệp Portal qua `node --check` và `git diff --check` đều đạt. Đây là bằng chứng source
+trên nhánh PR #647, chưa phải bundle đã giao, deployed hoặc live.
+
+Bẫy cần giữ: fallback trong renderer cũng là giao diện người dùng. Nếu chỉ sửa catalogue mà
+bỏ qua fallback, khi thiếu key bản Việt có thể quay lại các từ `review`, `export`, `signed`,
+`authoring` hoặc `Web`; regression hiện khóa cả catalogue và fallback để ngăn lỗi này.
