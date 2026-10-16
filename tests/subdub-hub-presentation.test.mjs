@@ -268,4 +268,6 @@ test("SubDub exposes guarded Smart Multi speaker mapping and Voice Library contr
   assert.match(html, /name="target_language_custom"/);
   assert.match(html, /pattern="\[a-zA-Z\]\{2,5\}/);
   assert.match(html, /data-status="guarded"/);
+  assert.equal((html.match(/data-subdub-voice-library-link/g) || []).length, 2);
+  assert.equal((html.match(/href="\/voice-studio"/g) || []).length, 2);
 });

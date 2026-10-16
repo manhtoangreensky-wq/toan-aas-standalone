@@ -25520,6 +25520,7 @@
       smartMultiMany: "Nhiều giọng",
       voiceLibraryLabel: "Giọng từ Thư viện giọng",
       voiceLibraryGuarded: "Thư viện giọng sẽ liên kết khi Voice và SubDub cùng được máy chủ mở.",
+      voiceLibraryLink: "Mở Thư viện giọng",
       smartMultiLabel: "Phân bổ giọng thông minh",
       smartMultiHint: "Tự nhận diện người nói và gán một, hai hoặc nhiều giọng; tính năng vẫn đang được bảo vệ.",
       smartMultiAuto: "Tự động nhận diện",
@@ -25528,6 +25529,7 @@
       smartMultiMany: "Nhiều giọng",
       voiceLibraryLabel: "Giọng từ Thư viện giọng",
       voiceLibraryGuarded: "Thư viện giọng sẽ liên kết khi Voice và SubDub cùng được máy chủ mở.",
+      voiceLibraryLink: "Mở Thư viện giọng",
       audioBalanceLabel: "Cân bằng âm thanh gốc",
       audioBalanceLower: "Giảm nhỏ âm lượng nền khi có tiếng nói (20%)",
       audioBalanceMute: "Tắt hoàn toàn âm thanh gốc (100% Giọng lồng tiếng)",
@@ -25663,6 +25665,7 @@
       smartMultiMany: "Many voices",
       voiceLibraryLabel: "Voice Library selection",
       voiceLibraryGuarded: "Voice Library will connect when Voice and SubDub are opened by the server.",
+      voiceLibraryLink: "Open Voice Library",
       smartMultiLabel: "Smart speaker allocation",
       smartMultiHint: "Detect speakers and map one, two, or many voices; this capability remains guarded.",
       smartMultiAuto: "Auto-detect",
@@ -25671,6 +25674,7 @@
       smartMultiMany: "Many voices",
       voiceLibraryLabel: "Voice Library selection",
       voiceLibraryGuarded: "Voice Library will connect when Voice and SubDub are opened by the server.",
+      voiceLibraryLink: "Open Voice Library",
       audioBalanceLabel: "Original audio balance",
       audioBalanceLower: "Lower background audio during speech (20%)",
       audioBalanceMute: "Mute original audio completely (100% Dubbed voice)",
@@ -25806,6 +25810,7 @@
       smartMultiMany: "多个音色",
       voiceLibraryLabel: "从音色库选择",
       voiceLibraryGuarded: "服务器开放 Voice 与 SubDub 后，音色库将在此连接。",
+      voiceLibraryLink: "打开音色库",
       audioBalanceLabel: "原始音频音量",
       audioBalanceLower: "说话时降低背景音量（20%）",
       audioBalanceMute: "完全静音原始音频（仅保留配音）",
@@ -26051,6 +26056,7 @@
           <select id="subdub-voice-profile-dub" class="portal-select" name="voice_profile_id" disabled data-status="guarded">
             <option value="" selected>${safeText(copy.voiceLibraryGuarded)}</option>
           </select>
+          <a class="portal-button portal-button--quiet" href="/voice-studio" data-subdub-voice-library-link>${safeText(copy.voiceLibraryLink)}</a>
           <fieldset class="portal-subdub-smart-multi" data-subdub-smart-multi data-status="guarded" aria-describedby="subdub-smart-multi-note-dub">
             <legend>${safeText(copy.smartMultiLabel)}</legend>
             <p id="subdub-smart-multi-note-dub">${safeText(copy.smartMultiHint)}</p>
@@ -26112,6 +26118,7 @@
               <select id="subdub-voice-profile-combo" class="portal-select" name="voice_profile_id" disabled data-status="guarded">
                 <option value="" selected>${safeText(copy.voiceLibraryGuarded)}</option>
               </select>
+              <a class="portal-button portal-button--quiet" href="/voice-studio" data-subdub-voice-library-link>${safeText(copy.voiceLibraryLink)}</a>
               <fieldset class="portal-subdub-smart-multi" data-subdub-smart-multi data-status="guarded" aria-describedby="subdub-smart-multi-note-combo">
                 <legend>${safeText(copy.smartMultiLabel)}</legend>
                 <p id="subdub-smart-multi-note-combo">${safeText(copy.smartMultiHint)}</p>

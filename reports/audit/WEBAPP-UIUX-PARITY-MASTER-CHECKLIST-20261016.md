@@ -221,13 +221,14 @@ hiển thị thành công giả khi engine/bridge chưa có.
 
 - [ ] Một workspace có giọng mặc định, giọng tự thêm/tải file, voice library, preview,
       lưu/xóa có guard và chọn giọng cho sản phẩm khác.
-- [ ] Liên kết selector giọng với SubDub/Music khi chỉ là presentation; không tự tạo clone
+- [~] Presentation đã nối selector giọng của SubDub tới `/voice-studio` ở cả hai panel lồng
+      tiếng/combo; dữ liệu Voice thật và Music handoff vẫn chờ server capability.
       hoặc gọi provider trong QA.
 - [ ] Có text/language/rate/pitch/volume, preview loading, result/download/recovery,
       báo cáo request/job/output thật.
 - [ ] Tách rõ `voice_tts` source pass với `voice_clone` runtime blocked.
-- [!] Voice TTS/clone/preview/output runtime vẫn guarded; Voice Library chưa nối vào
-      SubDub bằng evidence UI/runtime xác thực.
+- [!] Voice TTS/clone/preview/output runtime vẫn guarded; Voice Library chưa nối dữ liệu thật
+      vào SubDub bằng evidence runtime xác thực.
 
 ### 5.3 Music — Spec R217-06
 
@@ -257,9 +258,14 @@ hiển thị thành công giả khi engine/bridge chưa có.
 - [x] Source presentation bổ sung Smart Multi guarded: lựa chọn tự động/một/hai/nhiều
       giọng, mapping placeholder, selector Voice Library và mã ngôn ngữ ISO mở rộng;
       SubDub vẫn không gọi engine và không tạo output giả.
+- [x] Source presentation thêm liên kết rõ `Mở Thư viện giọng` tới `/voice-studio` cho cả
+      panel Lồng tiếng và Phụ đề + lồng tiếng; regression SubDub `12/12` và Voice focused
+      `47/47` vẫn xanh.
 - [!] `SUBDUB_VOICE_LIBRARY_LINK_MISSING` runtime: selector đã có trong UI nhưng chưa nối
       dữ liệu Voice thật; upload/CTA vẫn guarded và target language custom chỉ là input
       presentation chờ server xác minh.
+- [x] Source discoverability đã thêm liên kết `Mở Thư viện giọng` tới `/voice-studio` cho cả
+      panel Lồng tiếng và Phụ đề + lồng tiếng; selector vẫn guarded, không tạo dữ liệu Voice giả.
 
 ### 5.5 Product Video — Spec R217-08
 
