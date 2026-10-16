@@ -16,6 +16,11 @@ const automationStart = vi.indexOf('"adminGeneric.automationMonitor.route.title"
 const automationEnd = vi.indexOf('"adminGeneric.systemStewardship.route.title"', automationStart);
 assert.ok(automationStart >= 0 && automationEnd > automationStart, 'Automation monitor catalogue must remain present');
 const automation = vi.slice(automationStart, automationEnd);
+const guidanceStart = vi.indexOf('"adminGeneric.postbackReadiness.route.title"');
+const guidanceEnd = vi.indexOf('"adminGeneric.deliveryRuntimeNavigation.group.title"', guidanceStart);
+assert.ok(guidanceStart >= 0 && guidanceEnd > guidanceStart, 'Admin guidance catalogue must remain present');
+const guidance = vi.slice(guidanceStart, guidanceEnd);
+const guidanceValues = guidance.replace(/^\s*"[^"]+":\s*/gm, '');
 
 test('Vietnamese Admin fixed chrome removes the reported English leaks', () => {
   const expected = [
@@ -74,4 +79,28 @@ test('Vietnamese Admin fixed chrome removes the reported English leaks', () => {
     'payment',
     'job'
   ]) assert.equal(automation.includes(phrase), false, `English automation chrome leaked: ${phrase}`);
+  for (const line of [
+    '"adminGeneric.postbackReadiness.route.title": "Mức sẵn sàng phản hồi"',
+    '"adminGeneric.postbackReadiness.checkpoint.handoff.title": "Bàn giao đúng thẩm quyền"',
+    '"adminGeneric.jobRecoveryGuide.route.title": "Hướng dẫn xử lý tác vụ bị khóa"',
+    '"adminGeneric.jobRecoveryGuide.escalation.kicker": "Chuyển cấp an toàn"',
+    '"adminGeneric.jobRecoveryGuide.boundary.noMutation.title": "Không xóa, thử lại hoặc hoàn tiền"'
+  ]) assert.ok(guidance.includes(line), `missing reviewed guidance copy: ${line}`);
+  for (const phrase of [
+    'canonical admin',
+    'handoff',
+    'guidance',
+    'triage',
+    'job-lock',
+    'queue',
+    'delivery',
+    'billing',
+    'browser',
+    'credential',
+    'escalate',
+    'runbook',
+    'financial',
+    'mutation',
+    'provider'
+  ]) assert.equal(guidanceValues.includes(phrase), false, `English guidance chrome leaked: ${phrase}`);
 });

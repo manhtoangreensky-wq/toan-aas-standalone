@@ -97,6 +97,9 @@
       `scheduler`, `receipt`, `metadata`, `preflight`, `control plane`, `delivery`,
       `payment` và trạng thái biên nhận; regression `tests/admin-generic-fixed-chrome-locale.test.mjs`
       đạt `1/1` và bao phủ 3 nhóm chuỗi.
+- [x] **SOURCE-LOCALE-07:** hai màn hình hướng dẫn quản trị đã dịch fixed chrome về bàn giao,
+      phân loại tác vụ bị khóa, chuyển cấp, hàng chờ, giao kết quả và tài chính; regression
+      `tests/admin-generic-fixed-chrome-locale.test.mjs` đạt `1/1` và bao phủ 2 màn hình.
 - [~] **LIVE-I18N-01:** next-route `/features → /login?next=/features` từng lộ
       `Tải & Cài đặt App TOAN AAS` trong bundle cũ; phải recheck đúng URL sau delivery.
 - [~] Đã khóa một cụm fixed chrome Admin theo SOURCE-LOCALE-04; vẫn còn phải quét tiếp
