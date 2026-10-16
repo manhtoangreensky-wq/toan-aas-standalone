@@ -326,3 +326,9 @@ Chức năng hướng dẫn cài ứng dụng vẫn giữ nguyên hành vi và �
 modal được chuẩn hóa theo design system xanh navy/xanh ngọc. Source candidate có một
 regression test riêng đạt `1/1`; không có thay đổi route, action, API hoặc output sản phẩm.
 PR #647 vẫn cần delivery trước khi đối chiếu live.
+
+### Đối chiếu locale Admin ngày 16/10/2026
+
+Các thẻ cố định của khu vực Quản trị hệ thống đã có bản tiếng Việt riêng trong catalogue VI;
+key và route giữ nguyên, catalogue EN/ZH không đổi. Kiểm thử source đạt `1/1`. Bằng chứng
+runtime sau delivery vẫn thuộc ma trận QA và chưa được suy ra từ source.

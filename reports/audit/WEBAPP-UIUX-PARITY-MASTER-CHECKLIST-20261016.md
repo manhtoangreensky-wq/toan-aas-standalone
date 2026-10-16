@@ -81,6 +81,10 @@
 - [x] W2 source regression mới: locale/auth catalogue `272/272` Node pass; `portal-i18n.js`
       và `portal-auth.js` syntax pass. Admin fallback copy vừa dọn `Web audit metadata`,
       `Feature/provider readiness` và các nhãn vai trò/quyền hạn generic trong VI.
+- [x] **SOURCE-LOCALE-03:** các thẻ cố định của Admin → Quản trị hệ thống đã có bản dịch
+      tiếng Việt đầy đủ cho theo dõi tự động hóa, bảo mật, quyền truy cập, tài liệu quản trị,
+      kho tài liệu, hệ thống, môi trường chạy và bản sao lưu; regression
+      `tests/admin-system-stewardship-locale.test.mjs` đạt `1/1`.
 - [~] **LIVE-I18N-01:** next-route `/features → /login?next=/features` từng lộ
       `Tải & Cài đặt App TOAN AAS` trong bundle cũ; phải recheck đúng URL sau delivery.
 - [ ] Quét fixed chrome toàn customer/Admin/product lanes; lập danh sách chuỗi English lọt

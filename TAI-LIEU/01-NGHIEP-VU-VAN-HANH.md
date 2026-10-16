@@ -549,3 +549,10 @@ không còn nền đen trong vùng modal. Đây là thay đổi giao diện tĩn
 không đổi phiên đăng nhập, dữ liệu, ví Xu hay cấu hình vận hành. Regression riêng
 `tests/install-modal-navy-palette.test.mjs` đạt `1 passed`, exit `0`; live production
 chưa được gọi là đã cập nhật vì PR #647 chưa có deployment.
+
+### Cập nhật locale Admin ngày 16/10/2026
+
+Tám tiêu đề cố định của khu vực Quản trị hệ thống trong catalogue tiếng Việt đã được chuẩn
+hóa: theo dõi tự động hóa, tình trạng bảo mật, quyền truy cập, tài liệu quản trị, kho tài liệu
+nội bộ, hệ thống, môi trường chạy và bản sao lưu. Regression riêng đạt `1/1`; đây chỉ là thay
+đổi copy Web, không cấp quyền, không tạo dữ liệu và chưa phải bằng chứng live.

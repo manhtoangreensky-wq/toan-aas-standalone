@@ -26,7 +26,7 @@ ordered_waves:
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Locale source 272/272 Node pass; Admin fallback copy cleaned. Auth next-route/live locale recheck remains open; public auth fallback jargon still needs review."
+    note: "Locale source 272/272 Node pass; Admin fallback copy cleaned and the eight fixed Admin System Stewardship card labels are now Vietnamese with a dedicated 1/1 regression. Auth next-route/live locale recheck remains open; broader public auth and runtime locale evidence still needs review."
   - id: W3
     spec: R217-03
     status: SOURCE_GREEN_RUNTIME_OPEN
