@@ -360,3 +360,15 @@ riêng đạt `2/2`, full Node đạt `484/484`, syntax Portal đạt và `git d
 Không thêm/xóa chức năng gốc, không đổi route/API, payload, quyền, trạng thái hoặc hành vi
 dữ liệu; các tên riêng/mã kỹ thuật được giữ theo allowlist. Runtime/live chưa được suy ra từ
 source và product-lane scan vẫn là bước kế tiếp.
+
+### Bổ sung đối chiếu source ngày 16/10/2026 — Image Studio/Image Hub
+
+Đợt `SOURCE-LOCALE-15` chỉ chuẩn hóa fixed chrome Image Studio và Image Hub qua catalogue
+`imageStudioUi.*` cân bằng VI/EN/ZH: guard, giới thiệu, số liệu, biểu mẫu bảng thiết kế,
+ranh giới biên tập, ý định, định dạng, trạng thái và bộ lọc. Bản VI không còn generic English
+UI; renderer giữ nguyên route, action, field, capability, CSRF, idempotency, revision,
+dữ liệu động và trạng thái không tạo ảnh/không gọi nhà cung cấp/không trừ Xu. Regression
+riêng đạt `2/2`, focused Image đạt `45/45`, full Node đạt `486/486`, syntax hai tệp Portal
+và `git diff --check` đều đạt. Python contract `NOT_RUN` vì môi trường thiếu `python`/`py`;
+runtime/live, AX tree và các cụm Image reference/detail/Resize/Enhance/Brand Overlay/
+Storyboard vẫn mở.

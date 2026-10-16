@@ -590,3 +590,19 @@ URL, BOT_USERNAME và Core Bridge được giữ nguyên. Regression riêng đ�
 đạt `484/484`, syntax hai tệp Portal đạt và `git diff --check` đạt. Route, action, field,
 capability, dữ liệu hồ sơ, ví/Xu và nhà cung cấp không thay đổi; đây là bằng chứng source trên
 nhánh PR #647, chưa phải bundle đã giao, deployed hoặc live.
+
+### Ghi nhận source locale customer — Image Studio và Image Hub — 16/10/2026
+
+Fixed chrome của Image Studio/Image Hub đã được chuẩn hóa qua catalogue `imageStudioUi.*`
+đối xứng VI/EN/ZH, gồm guard, giới thiệu, số liệu, biểu mẫu bảng thiết kế, ranh giới biên
+tập, ý định, định dạng, trạng thái và bộ lọc. Bản tiếng Việt không còn generic English UI;
+các mã kỹ thuật, định dạng và tên riêng được giữ nguyên. Renderer dùng helper locale cho
+option/status/fallback và bổ sung trạng thái `active` để bộ lọc phản ánh đúng dữ liệu.
+
+Regression `tests/image-studio-locale-purity.test.mjs` đạt `2/2`; focused Image đạt `45/45`;
+full Node đạt `486/486`; `node --check static/portal/portal.js`, `node --check
+static/portal/portal-i18n.js` và `git diff --check` đều đạt. Route, action, field,
+capability, CSRF, idempotency, revision, dữ liệu động, provider và ví/Xu không thay đổi;
+Python contract chưa chạy vì môi trường không có `python`/`py`. Đây là source evidence trên
+PR #647, chưa phải bundle đã giao, deployed hoặc live. Các cụm Image reference/detail,
+Resize/Enhance/Brand Overlay/Storyboard vẫn là bước tiếp theo.

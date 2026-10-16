@@ -15404,6 +15404,50 @@
     IMAGE_CREATE_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageUi.${row[0]}`] = row[index + 1]; });
   });
 
+  const IMAGE_STUDIO_COPY_ROWS = [
+    ["guarded.hubTitle", "Trung tâm thao tác hình ảnh đang được bảo vệ", "Image Operations Hub is protected", "图像操作中心受保护"],
+    ["guarded.studioTitle", "Xưởng sáng tạo hình ảnh đang được bảo vệ", "Image Creative Studio is protected", "图像创作工作室受保护"],
+    ["guarded.enabled", "Đăng nhập bằng phiên Web đã ký để mở bảng thiết kế thuộc tài khoản hiện tại. Đường dẫn gốc này không dùng dữ liệu từ /image cũ.", "Sign in with a signed Web session to open artboards owned by the current account. This native route does not use data from legacy /image.", "请使用已签名的 Web 会话打开当前账户拥有的画板。此原生路径不会使用旧版 /image 数据。"],
+    ["guarded.disabled", "Xưởng sáng tạo hình ảnh đang được máy chủ giữ ở chế độ bảo vệ. Khi cờ tính năng chưa bật, Web không hiển thị luồng nhà cung cấp, hình giả hoặc đầu ra giả.", "Image Creative Studio is guarded by the server. Until the feature flag is enabled, the Web App shows no provider flow, fabricated image or fabricated output.", "图像创作工作室由服务器保护。在功能开关启用前，Web 不会显示服务商流程、虚构图像或虚构输出。"],
+    ["intro.kicker", "Định hướng hình ảnh trên Web", "Web visual direction", "Web 视觉方向"],
+    ["intro.title", "Từ định hướng sáng tạo đến rà soát, với ảnh tham chiếu trong Kho tài sản được kiểm soát.", "Move from creative direction to review with controlled Asset Vault references.", "从创意方向进入审核，并使用受控的 Asset Vault 参考图。"],
+    ["intro.body", "Giữ mô tả sáng tạo, điều cần tránh và các biến thể trong không gian riêng tư. Mọi số liệu chỉ là siêu dữ liệu biên tập, không phải ảnh, hình thu nhỏ hay bản xem trước đã tạo.", "Keep the creative brief, negative direction and variants in a private workspace. Every metric is authoring metadata, not a generated image, thumbnail or preview.", "在私有工作区中保存创意简报、避免项和变体。所有指标都是创作元数据，不代表已生成图像、缩略图或预览。"],
+    ["metric.artboards", "Bảng thiết kế", "Artboards", "画板"],
+    ["metric.review", "Đang rà soát", "In review", "审核中"],
+    ["metric.approved", "Đã tự rà soát", "Self-review complete", "自审完成"],
+    ["create.kicker", "Bảng thiết kế mới", "New creative artboard", "新建创意画板"],
+    ["create.title", "Lập định hướng hình ảnh", "Create visual direction", "建立视觉方向"],
+    ["create.body", "Bắt đầu bằng ý định, tỷ lệ, định dạng đích, mô tả sáng tạo và hướng phong cách. Máy chủ kiểm tra phiên, CSRF, quyền sở hữu, phiên bản và mã chống lặp cho mỗi lần ghi.", "Start with intent, aspect ratio, target format, creative brief and style direction. The server checks the session, CSRF, ownership, revision and idempotency for every write.", "从意图、画面比例、目标格式、创意简报和风格方向开始。每次写入都会由服务器检查会话、CSRF、所有权、修订版本和幂等性。"],
+    ["create.formNote", "Không nhập URL, đường dẫn tài sản, mã nhà cung cấp/tác vụ, mã bí mật, OTP/CVV hoặc chứng từ thanh toán.", "Do not enter URLs, asset paths, provider/job IDs, secrets, OTP/CVV or payment evidence.", "请勿输入 URL、资产路径、服务商/任务编号、密钥、OTP/CVV 或付款凭证。"],
+    ["create.action", "Tạo bảng thiết kế", "Create artboard", "创建画板"],
+    ["boundary.kicker", "Ranh giới biên tập", "Authoring boundary", "创作边界"],
+    ["boundary.title", "Định hướng và tự rà soát, không tạo ảnh", "Direction and self-review, no image generation", "方向与自审，不生成图像"],
+    ["boundary.body", "Không gian chỉ lưu mô tả, tham chiếu Kho tài sản đã được kiểm tra quyền sở hữu và các biến thể định hướng. Không gọi nhà cung cấp, không tạo ảnh/bản xem trước/tác vụ, không trừ Xu hay khởi tạo thanh toán.", "The workspace stores briefs, owner-checked Asset Vault references and direction variants only. It does not call providers, create images/previews/jobs, spend Xu or start payments.", "工作区只保存简报、已检查所有权的 Asset Vault 参考和方向变体。不会调用服务商、生成图像/预览/任务，也不会扣除 Xu 或发起付款。"],
+    ["boundary.provider", "Gọi nhà cung cấp ảnh", "Provider image call", "图像服务商调用"],
+    ["boundary.image", "Ảnh / bản xem trước", "Image / preview", "图像 / 预览"],
+    ["boundary.job", "Tác vụ / bàn giao", "Job / delivery", "任务 / 交付"],
+    ["boundary.wallet", "Ví / thanh toán", "Wallet / payment", "钱包 / 付款"],
+    ["intent.create", "Tạo ý tưởng (chỉ mô tả)", "Create concept (brief only)", "创建概念（仅简报）"],
+    ["intent.edit", "Chỉnh sửa định hướng", "Edit direction", "编辑方向"],
+    ["intent.upscale", "Nâng cấp định hướng", "Upscale direction", "放大方向"],
+    ["intent.imageToImage", "Định hướng biến đổi ảnh", "Image-to-image direction", "图生图方向"],
+    ["intent.removeBackground", "Định hướng tách nền", "Background-removal direction", "去背景方向"],
+    ["intent.fallback", "Định hướng hình ảnh", "Visual direction", "视觉方向"],
+    ["format.png", "PNG · siêu dữ liệu đích", "PNG · target metadata", "PNG · 目标元数据"],
+    ["format.jpg", "JPG · siêu dữ liệu đích", "JPG · target metadata", "JPG · 目标元数据"],
+    ["format.webp", "WebP · siêu dữ liệu đích", "WebP · target metadata", "WebP · 目标元数据"],
+    ["format.fallback", "Siêu dữ liệu đích", "Target metadata", "目标元数据"],
+    ["state.active", "Đang hoạt động", "Active", "活跃"],
+    ["state.draft", "Bản nháp", "Draft", "草稿"],
+    ["state.review", "Đang tự rà soát", "In self-review", "自审中"],
+    ["state.approved", "Đã tự rà soát", "Self-review complete", "自审完成"],
+    ["state.archived", "Đã lưu trữ", "Archived", "已归档"],
+    ["state.guarded", "Được bảo vệ", "Protected", "受保护"]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    IMAGE_STUDIO_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageStudioUi.${row[0]}`] = row[index + 1]; });
+  });
+
   const MEDIA_OPERATION_COPY_ROWS = [
     ["section.image", "XỬ LÝ ẢNH", "IMAGE TOOLS", "图像处理"],
     ["section.audio", "ÂM THANH", "AUDIO TOOLS", "音频工具"],

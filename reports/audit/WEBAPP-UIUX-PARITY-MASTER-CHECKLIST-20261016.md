@@ -142,9 +142,18 @@
       revision, provider labels, URL ảnh và dữ liệu hồ sơ. Full Node suite `484/484`, syntax hai
       tệp Portal và `git diff --check` đều đạt. Runtime/live, browser AX tree và product-lane
       scan vẫn mở.
+- [x] **SOURCE-LOCALE-15:** fixed chrome Image Studio và Image Hub đã dùng catalogue
+      `imageStudioUi.*` cân bằng VI/EN/ZH cho guard, giới thiệu, bảng thiết kế, ranh giới
+      biên tập, ý định, định dạng, trạng thái và bộ lọc; bản VI không còn generic English
+      UI. Regression `tests/image-studio-locale-purity.test.mjs` đạt `2/2`, focused Image
+      đạt `45/45`, full Node suite `486/486`, `node --check` hai tệp Portal và
+      `git diff --check` đều đạt. Route/action/field/capability/CSRF/idempotency/revision
+      và dữ liệu động không đổi; Python contract `NOT_RUN` vì thiếu `python`/`py`.
+      Runtime/live, AX tree và Image reference/detail/Resize/Enhance/Brand Overlay/
+      Storyboard còn mở.
 - [~] **LIVE-I18N-01:** next-route `/features → /login?next=/features` từng lộ
       `Tải & Cài đặt App TOAN AAS` trong bundle cũ; phải recheck đúng URL sau delivery.
-- [~] Đã khóa các cụm fixed chrome Admin và customer theo SOURCE-LOCALE-04→13; vẫn còn phải quét tiếp
+- [~] Đã khóa các cụm fixed chrome Admin, customer và Image theo SOURCE-LOCALE-04→15; vẫn còn phải quét tiếp
       toàn customer/Admin/product lanes và lập danh sách chuỗi English lọt trong VI cùng
       Vietnamese lọt trong EN/ZH; không sửa server data/ID/URL.
 - [ ] Kiểm tra fallback locale, duplicate key, option label và aria-label ở VI/EN/ZH.
@@ -358,5 +367,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=Tiếp tục W2 locale theo thứ tự: rà soát product lanes, khóa từng cụm bằng regression; live/runtime vẫn mở đến khi có bundle được delivery.
+NEXT_ACTION=Tiếp tục W2 locale theo thứ tự: rà soát các cụm Image còn raw English (reference/detail/Resize/Enhance/Brand Overlay/Storyboard), khóa từng cụm bằng regression; live/runtime vẫn mở đến khi có bundle được delivery.
 ```

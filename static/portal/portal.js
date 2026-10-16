@@ -17791,6 +17791,10 @@
   // Image Creative Studio is a signed-account art-direction boundary.  It
   // keeps briefs, owned Asset Vault references, variants and self-review in
   // one place without becoming a proxy for any image provider or output.
+  function imageStudioText(key, fallback, params) {
+    return uiText(`imageStudioUi.${key}`, fallback, params);
+  }
+
   const IMAGE_STUDIO_INTENTS = Object.freeze([
     ["create", "Tạo concept (brief only)"], ["edit", "Chỉnh sửa direction"], ["upscale", "Nâng cấp direction"],
     ["image_to_image", "Image-to-image direction"], ["remove_background", "Tách nền direction"]
@@ -17801,29 +17805,47 @@
   ]);
   const IMAGE_STUDIO_OUTPUT_FORMATS = Object.freeze([["png", "PNG · target metadata"], ["jpg", "JPG · target metadata"], ["webp", "WebP · target metadata"]]);
   const IMAGE_STUDIO_STATES = Object.freeze({
-    draft: "Bản nháp", review: "Đang self-review", approved: "Self-review hoàn tất", archived: "Đã archive"
+    active: "Đang hoạt động", draft: "Bản nháp", review: "Đang self-review", approved: "Self-review hoàn tất", archived: "Đã archive"
   });
   const IMAGE_STUDIO_ARTBOARD_FILTERS = Object.freeze([
     ["active", "Đang hoạt động"], ["draft", "Bản nháp"], ["review", "Đang self-review"], ["approved", "Self-review hoàn tất"], ["archived", "Đã archive"]
   ]);
 
-  function validImageStudioArtboardId(value) { return validProjectId(value); }
-  function validImageStudioDirectionId(value) { return validProjectId(value); }
   function imageStudioIntentLabel(value) {
     const found = IMAGE_STUDIO_INTENTS.find(([key]) => key === String(value || ""));
-    return found ? found[1] : "Art direction";
+    if (!found) return imageStudioText("intent.fallback", "Định hướng hình ảnh");
+    const keyMap = { create: "create", edit: "edit", upscale: "upscale", image_to_image: "imageToImage", remove_background: "removeBackground" };
+    return imageStudioText(`intent.${keyMap[found[0]] || "fallback"}`, found[1]);
+  }
+  function imageStudioIntentOptions() {
+    return IMAGE_STUDIO_INTENTS.map(([key]) => [key, imageStudioIntentLabel(key)]);
   }
   function imageStudioFormatLabel(value) {
-    const found = IMAGE_STUDIO_OUTPUT_FORMATS.find(([key]) => key === String(value || ""));
-    return found ? found[1] : "Target metadata";
+    const key = String(value || "").toLowerCase();
+    const row = IMAGE_STUDIO_OUTPUT_FORMATS.find(([format]) => format === key);
+    return row ? imageStudioText(`format.${key}`, row[1]) : imageStudioText("format.fallback", "Siêu dữ liệu đích");
   }
+  function imageStudioFormatOptions() {
+    return IMAGE_STUDIO_OUTPUT_FORMATS.map(([key]) => [key, imageStudioFormatLabel(key)]);
+  }
+  function imageStudioStateLabel(value) {
+    const state = String(value || "").toLowerCase();
+    const key = Object.prototype.hasOwnProperty.call(IMAGE_STUDIO_STATES, state) ? state : "guarded";
+    return imageStudioText(`state.${key}`, IMAGE_STUDIO_STATES[key] || "Được bảo vệ");
+  }
+  function imageStudioStateOptions() {
+    return IMAGE_STUDIO_ARTBOARD_FILTERS.map(([key]) => [key, imageStudioStateLabel(key)]);
+  }
+
+  function validImageStudioArtboardId(value) { return validProjectId(value); }
+  function validImageStudioDirectionId(value) { return validProjectId(value); }
   function imageStudioState(value) {
     const state = String(value || "").toLowerCase();
     return Object.prototype.hasOwnProperty.call(IMAGE_STUDIO_STATES, state) ? state : "guarded";
   }
   function imageStudioStateBadge(value) {
     const state = imageStudioState(value);
-    return `<span class="portal-badge" data-status="${safeText(state)}">${safeText(IMAGE_STUDIO_STATES[state] || "Được bảo vệ")}</span>`;
+    return `<span class="portal-badge" data-status="${safeText(state)}">${safeText(imageStudioStateLabel(state))}</span>`;
   }
   function imageStudioTags(value) {
     return Array.isArray(value) ? value.filter((tag) => typeof tag === "string" && tag.trim()).slice(0, 20) : [];
@@ -17921,10 +17943,10 @@
   function imageStudioArtboardFields(context) {
     return [
       { name: "title", label: "Tên artboard", placeholder: "Ví dụ: Key visual bộ sưu tập mùa hè", required: true, minLength: 2, maxLength: 180 },
-      { name: "image_intent", label: "Ý định direction", control: "select", required: true, options: IMAGE_STUDIO_INTENTS, help: "Nhãn để tổ chức brief; không gọi engine, provider hoặc tạo ảnh." },
+      { name: "image_intent", label: "Ý định định hướng", control: "select", required: true, options: imageStudioIntentOptions(), help: "Nhãn để tổ chức mô tả; không gọi cơ chế xử lý, nhà cung cấp hoặc tạo ảnh." },
       { name: "language", label: "Ngôn ngữ direction", placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
       { name: "aspect_ratio", label: "Tỷ lệ khung hình", control: "select", required: true, options: IMAGE_STUDIO_ASPECT_RATIOS },
-      { name: "output_format", label: "Định dạng đích", control: "select", required: true, options: IMAGE_STUDIO_OUTPUT_FORMATS, help: "Chỉ là metadata cho self-review, không có file đích được tạo." },
+      { name: "output_format", label: "Định dạng đích", control: "select", required: true, options: imageStudioFormatOptions(), help: "Chỉ là siêu dữ liệu cho bước tự rà soát, không tạo tệp đích." },
       { name: "creative_brief", label: "Creative brief", control: "textarea", placeholder: "Thông điệp, bối cảnh, giới hạn thương hiệu và điểm cần tự rà soát…", required: true, minLength: 3, maxLength: 12000, wide: true },
       { name: "style_direction", label: "Style direction", control: "textarea", placeholder: "Bố cục, ánh sáng, palette, chất liệu và cảm xúc mong muốn…", maxLength: 6000, wide: true },
       { name: "negative_direction", label: "Điều cần tránh", control: "textarea", placeholder: "Các yếu tố không phù hợp với thương hiệu hoặc mục tiêu brief…", maxLength: 4000, wide: true },
@@ -17948,7 +17970,7 @@
   function imageStudioDirectionFields(context) {
     return [
       { name: "title", label: "Tên biến thể direction", placeholder: "Ví dụ: Bản tối giản cho feed", required: true, minLength: 2, maxLength: 180 },
-      { name: "operation", label: "Loại biến thể", control: "select", required: true, options: IMAGE_STUDIO_INTENTS, help: "Không chạy thao tác ảnh. Với Edit/Upscale/Image-to-image/Tách nền, hãy chọn ảnh gốc trong Asset Vault." },
+      { name: "operation", label: "Loại biến thể", control: "select", required: true, options: imageStudioIntentOptions(), help: "Không chạy thao tác ảnh. Với chỉnh sửa, nâng cấp, biến đổi ảnh hoặc tách nền, hãy chọn ảnh gốc trong Kho tài sản." },
       { name: "asset_id", label: "Ảnh gốc từ Asset Vault", control: "select", options: imageStudioAssetOptions(context), emptyLabel: "Không dùng ảnh gốc (chỉ phù hợp Create)", help: "Chỉ có metadata của ảnh thuộc account hiện tại; không có thumbnail, blob hay URL công khai." },
       { name: "reference_asset_id", label: "Ảnh tham chiếu (tùy chọn)", control: "select", options: imageStudioAssetOptions(context), emptyLabel: "Không thêm ảnh tham chiếu" },
       { name: "prompt_text", label: "Prompt / concept text", control: "textarea", placeholder: "Mô tả concept, đối tượng và thông điệp cần được biên tập…", maxLength: 12000, wide: true },
@@ -17977,7 +17999,7 @@
     return labels[String(value || "")] || String(value || "image_studio_updated").replace(/_/g, " ");
   }
   function renderImageStudioBoundary() {
-    return `<aside class="portal-card portal-card-pad portal-image-studio-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Authoring boundary</span><h2 class="portal-card-title">Direction & self-review, không tạo ảnh</h2><p class="portal-card-subtitle">Workspace chỉ lưu brief, Asset Vault reference đã được owner check và biến thể direction. Không gọi provider, không tạo ảnh/preview/job, không trừ Xu hay khởi tạo thanh toán.</p></div>${badge("guarded")}</div><div class="portal-image-studio-guard-list"><span><strong>Provider image call</strong><em>guarded</em></span><span><strong>Image / preview</strong><em>guarded</em></span><span><strong>Job / delivery</strong><em>guarded</em></span><span><strong>Wallet / payment</strong><em>guarded</em></span></div></aside>`;
+    return `<aside class="portal-card portal-card-pad portal-image-studio-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageStudioText("boundary.kicker", "Ranh giới biên tập"))}</span><h2 class="portal-card-title">${safeText(imageStudioText("boundary.title", "Định hướng và tự rà soát, không tạo ảnh"))}</h2><p class="portal-card-subtitle">${safeText(imageStudioText("boundary.body", "Không gian chỉ lưu mô tả, tham chiếu Kho tài sản đã được kiểm tra quyền sở hữu và các biến thể định hướng. Không gọi nhà cung cấp, không tạo ảnh/bản xem trước/tác vụ, không trừ Xu hay khởi tạo thanh toán."))}</p></div>${badge("guarded")}</div><div class="portal-image-studio-guard-list"><span><strong>${safeText(imageStudioText("boundary.provider", "Gọi nhà cung cấp ảnh"))}</strong><em>guarded</em></span><span><strong>${safeText(imageStudioText("boundary.image", "Ảnh / bản xem trước"))}</strong><em>guarded</em></span><span><strong>${safeText(imageStudioText("boundary.job", "Tác vụ / bàn giao"))}</strong><em>guarded</em></span><span><strong>${safeText(imageStudioText("boundary.wallet", "Ví / thanh toán"))}</strong><em>guarded</em></span></div></aside>`;
   }
   function isImageHubRoute(value) {
     const route = String(value || "").split("?")[0].replace(/\/+$/, "") || "/";
@@ -18033,7 +18055,7 @@
     const filter = listing.filters;
     const filterFields = [
       { name: "q", label: "Tìm artboard", placeholder: "Tên, brief hoặc tag…", maxLength: 180 },
-      { name: "state", label: "Trạng thái", control: "select", options: IMAGE_STUDIO_ARTBOARD_FILTERS }
+      { name: "state", label: "Trạng thái", control: "select", options: imageStudioStateOptions() }
     ];
     return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Artboard library</span><h2 class="portal-card-title">Tiếp tục creative review</h2><p class="portal-card-subtitle">Danh sách chỉ hiển thị metadata/excerpt thuộc signed account. Mở artboard để server owner-check direction, history và Asset Vault reference an toàn.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-studio-refresh" data-portal-route="${safeText(route)}">Làm mới</button></div><form class="portal-image-studio-filter" data-portal-form data-portal-no-transient data-portal-action="image-studio-filter" data-portal-route="${safeText(route)}" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ dùng signed API trong phiên hiện tại; không lưu vào localStorage, Telegram hay provider.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-studio-filter-clear" data-portal-route="${safeText(route)}">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm artboard</button></div></div></form>${renderImageArtboardCards(items, context, route)}${renderImageStudioArtboardPagination(listing, route)}</section>`;
   }
@@ -18076,9 +18098,10 @@
     const enabled = context.imageStudioEnabled === true;
     if (!canView) {
       const copy = enabled
-        ? "Đăng nhập bằng signed session để mở artboard thuộc account hiện tại. Route native này không sử dụng dữ liệu từ legacy /image."
-        : "Image Creative Studio đang được server giữ ở chế độ guarded. Khi cờ feature chưa bật, Web không hiển thị fallback, provider flow, hình giả hoặc output giả.";
-      return `<article class="portal-page ${workspaceClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(imageHub ? "Image Operations Hub đang được bảo vệ" : "Image Creative Studio đang được bảo vệ", copy, ICONS.image)}</section></article>`;
+        ? imageStudioText("guarded.enabled", "Đăng nhập bằng phiên Web đã ký để mở bảng thiết kế thuộc tài khoản hiện tại. Đường dẫn gốc này không dùng dữ liệu từ /image cũ.")
+        : imageStudioText("guarded.disabled", "Xưởng sáng tạo hình ảnh đang được máy chủ giữ ở chế độ bảo vệ. Khi cờ tính năng chưa bật, Web không hiển thị luồng nhà cung cấp, hình giả hoặc đầu ra giả.");
+      const title = imageStudioText(imageHub ? "guarded.hubTitle" : "guarded.studioTitle", imageHub ? "Trung tâm thao tác hình ảnh đang được bảo vệ" : "Xưởng sáng tạo hình ảnh đang được bảo vệ");
+      return `<article class="portal-page ${workspaceClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(title, copy, ICONS.image)}</section></article>`;
     }
     const summary = context.imageStudioSummary && typeof context.imageStudioSummary === "object" ? context.imageStudioSummary : {};
     const artboardsSummary = summary.artboards && typeof summary.artboards === "object" ? summary.artboards : {};
@@ -18089,10 +18112,10 @@
     const approved = Number(artboardsSummary.approved || 0);
     const overview = imageHub
       ? renderImageHubOverview(summary)
-      : `<section class="portal-image-studio-intro"><div><span class="portal-section-kicker">Web-native visual direction</span><h2>Đi từ art direction đến review, với Asset Vault reference có kiểm soát.</h2><p>Giữ creative brief, negative direction và biến thể trong không gian riêng tư. Mọi số liệu là metadata authoring; không phải ảnh, thumbnail hay preview đã được tạo.</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>Artboards</dd></div><div><dt>${safeText(String(review))}</dt><dd>Đang review</dd></div><div><dt>${safeText(String(approved))}</dt><dd>Self-review xong</dd></div></dl></section>`;
+      : `<section class="portal-image-studio-intro"><div><span class="portal-section-kicker">${safeText(imageStudioText("intro.kicker", "Định hướng hình ảnh trên Web"))}</span><h2>${safeText(imageStudioText("intro.title", "Từ định hướng sáng tạo đến rà soát, với ảnh tham chiếu trong Kho tài sản được kiểm soát."))}</h2><p>${safeText(imageStudioText("intro.body", "Giữ mô tả sáng tạo, điều cần tránh và các biến thể trong không gian riêng tư. Mọi số liệu chỉ là siêu dữ liệu biên tập, không phải ảnh, hình thu nhỏ hay bản xem trước đã tạo."))}</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>${safeText(imageStudioText("metric.artboards", "Bảng thiết kế"))}</dd></div><div><dt>${safeText(String(review))}</dt><dd>${safeText(imageStudioText("metric.review", "Đang rà soát"))}</dd></div><div><dt>${safeText(String(approved))}</dt><dd>${safeText(imageStudioText("metric.approved", "Đã tự rà soát"))}</dd></div></dl></section>`;
     return `<article class="portal-page ${workspaceClass}">${renderHero(page, context)}
       ${overview}
-      <div class="portal-image-studio-layout"><section class="portal-card portal-card-pad portal-image-studio-create"><div class="portal-card-header"><div><span class="portal-section-kicker">New creative artboard</span><h2 class="portal-card-title">Lập art direction</h2><p class="portal-card-subtitle">Bắt đầu bằng intent, tỷ lệ, định dạng đích, creative brief và style direction. Server kiểm tra session, CSRF, ownership, revision và idempotency cho mỗi lần ghi.</p></div>${badge(canView && context.capabilities["image-artboard-create"] ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="image-artboard-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(imageStudioArtboardFields(context), Boolean(context.capabilities && context.capabilities["image-artboard-create"]), context, values)}<div class="portal-form-footer"><span class="portal-form-note">Không nhập URL, asset path, provider/job ID, secret, OTP/CVV hoặc chứng từ thanh toán.</span><button class="portal-button portal-button--primary" type="submit"${context.capabilities && context.capabilities["image-artboard-create"] ? "" : " disabled"}>Tạo artboard</button></div></form></section>${renderImageStudioBoundary()}</div>
+      <div class="portal-image-studio-layout"><section class="portal-card portal-card-pad portal-image-studio-create"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageStudioText("create.kicker", "Bảng thiết kế mới"))}</span><h2 class="portal-card-title">${safeText(imageStudioText("create.title", "Lập định hướng hình ảnh"))}</h2><p class="portal-card-subtitle">${safeText(imageStudioText("create.body", "Bắt đầu bằng ý định, tỷ lệ, định dạng đích, mô tả sáng tạo và hướng phong cách. Máy chủ kiểm tra phiên, CSRF, quyền sở hữu, phiên bản và mã chống lặp cho mỗi lần ghi."))}</p></div>${badge(canView && context.capabilities["image-artboard-create"] ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="image-artboard-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(imageStudioArtboardFields(context), Boolean(context.capabilities && context.capabilities["image-artboard-create"]), context, values)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(imageStudioText("create.formNote", "Không nhập URL, đường dẫn tài sản, mã nhà cung cấp/tác vụ, mã bí mật, OTP/CVV hoặc chứng từ thanh toán."))}</span><button class="portal-button portal-button--primary" type="submit"${context.capabilities && context.capabilities["image-artboard-create"] ? "" : " disabled"}>${safeText(imageStudioText("create.action", "Tạo bảng thiết kế"))}</button></div></form></section>${renderImageStudioBoundary()}</div>
       ${imageHub ? renderImageHubNextSteps() : ""}
       ${renderImageStudioArtboardLibrary(artboards, context, route)}
       ${renderImageStudioReferenceLibrary(context, route)}
