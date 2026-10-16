@@ -31,6 +31,10 @@
 ## 1. W0 — Baseline và evidence ledger
 
 - [x] Đối chiếu remote: local cũ lệch; tạo worktree sạch từ `github/webapp-checklist-r116`.
+- [x] Sau quality-gate failure `38958333812`, đã sửa provenance evidence: `284` eligible Web
+      files; `preflight.json`, `web_inventory.json` và source hiện cùng fingerprint
+      `ef1a6bd2b1400129cadbb10fdbb55884436d99da5c230687dc4166916b93f6e6`. Local Node
+      reimplementation của audit verifier trả `match=true`; không sửa runtime source.
 - [x] Ghi baseline HEAD `f59eacf63a49534854dc7cde06e5baed6546dc58` và PR #647.
 - [x] Ghi rõ source gate gần nhất: full Node 469/469, focused gates xanh, syntax và
       `git diff --check` xanh theo R216.
