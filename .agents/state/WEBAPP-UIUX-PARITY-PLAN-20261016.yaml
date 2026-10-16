@@ -22,7 +22,7 @@ ordered_waves:
   - id: W1
     spec: R217-01
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Source fixes locked: landing flex-wrap at <=420px and no landing install banner/FAB before beforeinstallprompt; focused 39/39 and full Node 470/470. Live recheck remains open."
+    note: "Source fixes locked: landing flex-wrap at <=420px and no landing install banner/FAB before beforeinstallprompt; focused 39/39 and full Node 470/470. Live probe 2026-10-16 still sees old fingerprint local-57e76aa281dcc721fdaa, nowrap header and fixed FAB at 327x668; delivery recheck remains open."
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN

@@ -3,6 +3,16 @@
 **Status:** `LIVE_DRIFT_OPEN`
 **Wave:** W8
 
+## Latest read-only observation 2026-10-16
+
+At `https://app.toanaas.vn/welcome?lang=vi`, viewport `327×668`, production served
+`portal.js?v=local-57e76aa281dcc721fdaa` and `portal.css` with the pre-fix behavior:
+`.portal-landing-nav-actions` computed as `flex-wrap: nowrap` with a child right edge
+around `372px`, and `.portal-pwa-fab-trigger` computed as `display:flex`,
+`position:fixed`. `document.documentElement.scrollWidth` remained `327px`, confirming
+clipping instead of a visible horizontal scrollbar. The source fix is on the pushed branch
+but this runtime has not received it; keep R216-H/R216-P open.
+
 ## Phạm vi
 
 Chỉ đọc các defect đã có evidence: R216-L auth next-route CTA, R216-H landing mobile

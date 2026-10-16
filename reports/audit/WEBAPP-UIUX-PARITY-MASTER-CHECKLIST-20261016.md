@@ -59,6 +59,10 @@
       `470/470`, `node --check static/portal/portal.js`, `git diff --check` đạt.
 - [!] Python Admin/PWA contract chưa chạy: bundled Python không có module `pytest`; đây
       là blocker công cụ, không ghi PASS giả.
+- [~] Live recheck 2026-10-16 ở `/welcome?lang=vi`, viewport `327×668` vẫn nhận
+      `local-57e76aa281dcc721fdaa`: `.portal-landing-nav-actions` là `nowrap`, right≈372
+      vượt viewport 327 và `.portal-pwa-fab-trigger` còn fixed/display:flex. Source fix
+      chưa được đưa lên runtime; giữ `LIVE-UI-01/LIVE-UI-02` mở.
 - [ ] Đo viewport 320/375/390/414/768/1024/1440 ở light/dark; ghi `scrollWidth <= clientWidth`.
 - [ ] Đo type/spacing/contrast thật; body ≥16px mobile, target ≥44×44px, contrast AA.
 - [ ] Xác minh bảng/list chuyển hàng dọc hoặc wrapper có nhãn trên 375/390px.
