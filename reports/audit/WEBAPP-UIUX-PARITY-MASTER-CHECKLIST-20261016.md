@@ -303,6 +303,15 @@ hiển thị thành công giả khi engine/bridge chưa có.
 
 - [ ] Admin shell/menu/operations/billing/jobs/assets/customer/support/audit/reliability/
       ERP trình bày theo hàng dọc, nhóm rõ, không lẫn tiếng Anh trong VI.
+- [x] **SOURCE-ADMIN-01:** fixed chrome của bảng Provider dùng catalogue `adminProviderUi.*`
+      cân bằng VI/EN/ZH cho cột, badge cấu hình/khả dụng/sức khỏe/điều phối, empty state và
+      nút chi tiết; không đổi provider ID, capability data, route hoặc thao tác provider.
+- [x] **SOURCE-ADMIN-02:** fixed chrome duyệt/từ chối nạp thủ công dùng catalogue
+      `adminManualTopup.approval.*`, giữ nguyên draft/confirmation action và không mở ledger
+      mutation trong batch.
+- [x] Regression Admin Provider + Manual Topup `4/4`; full Node suite sau batch đạt `506/506`,
+      `NEW_FAILURES=0`; provider table vẫn read-only và manual top-up approval vẫn là draft/
+      confirmation presentation, chưa mở wallet/ledger mutation.
 - [ ] Owner thấy toàn bộ; role khác chỉ thấy module/action theo policy hiển thị. UI phải
       nói rõ quyền bị thiếu thay vì nút chết.
 - [ ] Mỗi customer action có request/job/asset/report reference và trạng thái audit trên

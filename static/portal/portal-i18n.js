@@ -16422,6 +16422,50 @@
     SFX_CUE_SHEET_COPY_ROWS.forEach((row) => { MESSAGES[locale][`sfxCueSheetUi.${row[0]}`] = row[index + 1]; });
   });
 
+  const ADMIN_PROVIDER_COPY_ROWS = [
+    ["column.providerId", "Mã nhà cung cấp", "Provider ID", "服务商编号"],
+    ["column.nameType", "Nhà cung cấp / loại", "Provider / type", "服务商 / 类型"],
+    ["column.capabilities", "Khả năng", "Capabilities", "能力"],
+    ["column.configured", "Cấu hình", "Configured", "已配置"],
+    ["column.available", "Khả dụng", "Available", "可用"],
+    ["column.health", "Sức khỏe", "Health", "健康状态"],
+    ["column.routing", "Điều phối", "Routing", "路由"],
+    ["column.updated", "Cập nhật", "Updated", "更新时间"],
+    ["column.actions", "Thao tác", "Actions", "操作"],
+    ["badge.configured", "Đã cấu hình", "Configured", "已配置"],
+    ["badge.notConfigured", "Chưa cấu hình", "Not configured", "未配置"],
+    ["badge.available", "Khả dụng", "Available", "可用"],
+    ["badge.unavailable", "Không khả dụng", "Unavailable", "不可用"],
+    ["badge.unknown", "Chưa xác định", "Unknown", "未知"],
+    ["badge.healthy", "Ổn định", "Healthy", "健康"],
+    ["badge.degraded", "Suy giảm", "Degraded", "降级"],
+    ["badge.routingEligible", "Đủ điều kiện", "Eligible", "符合条件"],
+    ["badge.routingBlocked", "Không điều phối", "Not eligible", "不可路由"],
+    ["action.detail", "Chi tiết", "Details", "详情"],
+    ["empty.title", "Chưa có nhà cung cấp được cấp", "No providers granted", "暂无已授权服务商"],
+    ["empty.body", "Trạng thái nhà cung cấp do Core phát hành; Web không thao tác trực tiếp.", "Provider status is issued by Core; the Web App does not operate providers directly.", "服务商状态由 Core 发布；Web 不直接操作服务商。"],
+    ["boundary", "Chỉ đọc dữ liệu nhà cung cấp đã được máy chủ cấp.", "Read only provider data granted by the server.", "仅读取服务器授权的服务商数据。"]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    ADMIN_PROVIDER_COPY_ROWS.forEach((row) => { MESSAGES[locale][`adminProviderUi.${row[0]}`] = row[index + 1]; });
+  });
+
+  const ADMIN_TOPUP_APPROVAL_COPY_ROWS = [
+    ["approveTitle", "Duyệt nạp tiền và cộng Xu", "Approve top-up and credit Xu", "批准充值并增加 Xu"],
+    ["approveBody", "Xác nhận tiền đã vào tài khoản ngân hàng trước khi kích hoạt cộng {xu} vào tài khoản khách hàng.", "Confirm the bank transfer before crediting {xu} to the customer account.", "确认银行到账后再向客户账户增加 {xu}。"],
+    ["approveReasonLabel", "Ghi chú duyệt", "Approval note", "批准备注"],
+    ["approveReasonPlaceholder", "Xác nhận đã nhận tiền qua chuyển khoản ngân hàng", "Confirm the bank transfer was received", "确认已收到银行转账"],
+    ["approveReasonValue", "Xác nhận đã nhận tiền qua chuyển khoản ngân hàng", "Confirm the bank transfer was received", "确认已收到银行转账"],
+    ["approveSubmit", "Xác nhận tiền đã vào và cộng Xu", "Confirm funds received and credit Xu", "确认已到账并增加 Xu"],
+    ["rejectTitle", "Từ chối yêu cầu", "Reject request", "拒绝请求"],
+    ["rejectBody", "Chỉ từ chối khi không nhận được tiền hoặc thông tin chứng từ không khớp; không cộng Xu.", "Reject only when funds were not received or the payment evidence does not match; no Xu is credited.", "仅在未收到款项或支付凭证不匹配时拒绝；不会增加 Xu。"],
+    ["rejectPlaceholder", "Ví dụ: Chưa nhận được giao dịch hoặc chứng từ không trùng khớp", "Example: Transfer not received or evidence does not match", "示例：未收到转账或凭证不匹配"],
+    ["rejectSubmit", "Tạo xác nhận từ chối", "Create rejection confirmation", "创建拒绝确认"]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    ADMIN_TOPUP_APPROVAL_COPY_ROWS.forEach((row) => { MESSAGES[locale][`adminManualTopup.approval.${row[0]}`] = row[index + 1]; });
+  });
+
   const FREE_TOOLS_COPY_ROWS = [
     ["intro.kicker", "Xử lý tại trình duyệt · Không tốn Xu · Hoàn toàn miễn phí", "Browser-local processing · No Xu cost · Completely free", "浏览器本地处理 · 不消耗 Xu · 完全免费"],
     ["intro.title", "Bộ công cụ tiện ích sáng tạo nội dung nhanh", "A fast toolkit for everyday content work", "快速完成内容工作的实用工具集"],

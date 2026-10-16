@@ -375,6 +375,9 @@
   function adminFinanceText(key, fallback, params) {
     return uiText(`adminFinance.${key}`, fallback, params);
   }
+  function adminProviderText(key, fallback, params) {
+    return uiText(`adminProviderUi.${key}`, fallback, params);
+  }
 
   function adminGenericText(key, fallback, params) {
     return uiText(`adminGeneric.${key}`, fallback, params);
@@ -32683,20 +32686,20 @@
     }
     if (module === "providers") {
       return surface(renderRowsTable(
-        ["Mã Provider", "Nhà cung cấp / Phân loại", "Capabilities", "Cấu hình", "Khả dụng", "Sức khỏe", "Điều phối", "Cập nhật", "Thao tác"],
+        [adminProviderText("column.providerId", "Mã nhà cung cấp"), adminProviderText("column.nameType", "Nhà cung cấp / loại"), adminProviderText("column.capabilities", "Khả năng"), adminProviderText("column.configured", "Cấu hình"), adminProviderText("column.available", "Khả dụng"), adminProviderText("column.health", "Sức khỏe"), adminProviderText("column.routing", "Điều phối"), adminProviderText("column.updated", "Cập nhật"), adminProviderText("column.actions", "Thao tác")],
         rows,
         (item) => {
-          const configuredBadge = item.configured ? '<span class="portal-badge" data-status="ready">Đã cấu hình</span>' : '<span class="portal-badge" data-status="guarded">Chưa cấu hình</span>';
-          const availableBadge = item.available ? '<span class="portal-badge" data-status="ready">Khả dụng</span>' : '<span class="portal-badge" data-status="disabled">Không khả dụng</span>';
-          let healthBadge = '<span class="portal-badge" data-status="archived">Unknown</span>';
+          const configuredBadge = item.configured ? `<span class="portal-badge" data-status="ready">${safeText(adminProviderText("badge.configured", "Đã cấu hình"))}</span>` : `<span class="portal-badge" data-status="guarded">${safeText(adminProviderText("badge.notConfigured", "Chưa cấu hình"))}</span>`;
+          const availableBadge = item.available ? `<span class="portal-badge" data-status="ready">${safeText(adminProviderText("badge.available", "Khả dụng"))}</span>` : `<span class="portal-badge" data-status="disabled">${safeText(adminProviderText("badge.unavailable", "Không khả dụng"))}</span>`;
+          let healthBadge = `<span class="portal-badge" data-status="archived">${safeText(adminProviderText("badge.unknown", "Chưa xác định"))}</span>`;
           if (item.health_state === "HEALTHY") {
-            healthBadge = '<span class="portal-badge" data-status="ready">Healthy</span>';
+            healthBadge = `<span class="portal-badge" data-status="ready">${safeText(adminProviderText("badge.healthy", "Ổn định"))}</span>`;
           } else if (item.health_state === "DEGRADED") {
-            healthBadge = '<span class="portal-badge" data-status="guarded">Degraded</span>';
+            healthBadge = `<span class="portal-badge" data-status="guarded">${safeText(adminProviderText("badge.degraded", "Suy giảm"))}</span>`;
           } else if (item.health_state === "UNAVAILABLE") {
-            healthBadge = '<span class="portal-badge" data-status="error">Unavailable</span>';
+            healthBadge = `<span class="portal-badge" data-status="error">${safeText(adminProviderText("badge.unavailable", "Không khả dụng"))}</span>`;
           }
-          const routingBadge = item.routing_eligible ? '<span class="portal-badge" data-status="ready">Đủ điều kiện</span>' : '<span class="portal-badge" data-status="disabled">Không điều phối</span>';
+          const routingBadge = item.routing_eligible ? `<span class="portal-badge" data-status="ready">${safeText(adminProviderText("badge.routingEligible", "Đủ điều kiện"))}</span>` : `<span class="portal-badge" data-status="disabled">${safeText(adminProviderText("badge.routingBlocked", "Không điều phối"))}</span>`;
           const caps = Array.isArray(item.capabilities)
             ? item.capabilities.map((c) => safeText(typeof c === "object" && c ? c.name : c)).filter(Boolean).join(", ")
             : "—";
@@ -32708,10 +32711,10 @@
             + `<td>${healthBadge}</td>`
             + `<td>${routingBadge}</td>`
             + `<td><small>${safeText(item.last_observed_at || item.updated_at || "—")}</small></td>`
-            + `<td><button class="portal-button portal-button--quiet portal-button--small" type="button" disabled title="Thao tác provider do Bot Core canonical quản trị; Web chỉ đọc.">Chi tiết</button></td>`;
+            + `<td><button class="portal-button portal-button--quiet portal-button--small" type="button" disabled title="${safeText(adminProviderText("boundary", "Chỉ đọc dữ liệu nhà cung cấp đã được máy chủ cấp."))}">${safeText(adminProviderText("action.detail", "Chi tiết"))}</button></td>`;
         },
-        "Chưa có nhà cung cấp được cấp",
-        "Trạng thái provider do Bot Core canonical phát hành; Web không thực hiện thao tác provider trực tiếp."
+        adminProviderText("empty.title", "Chưa có nhà cung cấp được cấp"),
+        adminProviderText("empty.body", "Trạng thái nhà cung cấp do Core phát hành; Web không thao tác trực tiếp.")
       ));
     }
     if (["provider-cost", "features", "freezes", "promos"].includes(module)) {
@@ -32921,7 +32924,7 @@
   function renderAdminManualTopupCard(record, selectedId) {
     const selected = String(record.request_id || "") === String(selectedId || "");
     const actionButtons = record.status === "pending_admin_review"
-      ? `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;"><button class="portal-button portal-button--primary portal-button--small" type="button" data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}" data-manual-admin-decision="approve" style="background:var(--portal-success,#16a34a);border-color:var(--portal-success,#16a34a);color:#fff;">Duyệt &amp; Cộng Xu</button><button class="portal-button portal-button--quiet portal-button--small" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></div>`
+      ? `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;"><button class="portal-button portal-button--primary portal-button--small" type="button" data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}" data-manual-admin-decision="approve" style="background:var(--portal-success,#16a34a);border-color:var(--portal-success,#16a34a);color:#fff;">${safeText(adminManualTopupText("approval.approveTitle", "Duyệt nạp tiền và cộng Xu"))}</button><button class="portal-button portal-button--quiet portal-button--small" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></div>`
       : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button>`;
     return `<article class="portal-admin-manual-topup-card${selected ? " is-selected" : ""}" data-status="${safeText(record.status || "guarded")}" style="box-sizing:border-box;max-width:100%;overflow-x:hidden;word-break:break-word;"><div class="portal-admin-manual-topup-card-head" style="box-sizing:border-box;max-width:100%;flex-wrap:wrap;gap:8px;"><div><strong>${safeText(record.request_id || "—")}</strong><span>${safeText(record.display_name || record.email || "—")}</span><small style="word-break:break-all;">${safeText(record.email || "—")}</small></div>${adminManualTopupStatusBadge(record.status, record)}</div><dl style="box-sizing:border-box;max-width:100%;"><div><dt>${safeText(adminManualTopupText("column.amount", "Số tiền"))}</dt><dd>${safeText(adminNumber(record.amount_vnd, ` ${record.currency || "VND"}`))}</dd></div><div><dt>${safeText(adminManualTopupText("column.method", "Phương thức"))}</dt><dd>${safeText(record.method || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("field.paymentCode", "Mã nạp tiền"))}</dt><dd style="word-break:break-all;">${safeText(record.payment_code || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("column.submittedAt", "Yêu cầu lúc"))}</dt><dd>${safeText(record.submitted_at || "—")}</dd></div></dl>${actionButtons}</article>`;
   }
@@ -32936,19 +32939,19 @@
     const expectedXu = record.expected_xu || Math.floor((record.amount_vnd || 0) / 100);
     return `<section class="portal-admin-manual-topup-actions">
       <div style="padding-bottom: 14px; border-bottom: 1px solid var(--portal-border); margin-bottom: 14px;">
-        <h3 style="color: var(--portal-success, #22c55e); margin: 0 0 6px 0;">Duyệt nạp tiền &amp; Cộng Xu</h3>
-        <p style="margin: 0 0 10px 0; font-size: 0.9em; color: var(--portal-muted, #94a3b8);">Xác nhận tiền đã vào tài khoản ngân hàng và kích hoạt cộng <strong>${safeText(adminNumber(expectedXu, " Xu"))}</strong> vào tài khoản khách hàng.</p>
+        <h3 style="color: var(--portal-success, #22c55e); margin: 0 0 6px 0;">${safeText(adminManualTopupText("approval.approveTitle", "Duyệt nạp tiền và cộng Xu"))}</h3>
+        <p style="margin: 0 0 10px 0; font-size: 0.9em; color: var(--portal-muted, #94a3b8);">${safeText(adminManualTopupText("approval.approveBody", "Xác nhận tiền đã vào tài khoản ngân hàng trước khi kích hoạt cộng {xu} vào tài khoản khách hàng.", { xu: adminNumber(expectedXu, " Xu") }))}</p>
         <form class="portal-admin-manual-topup-decision-form" data-portal-form data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id)}" data-manual-admin-decision="approve">
-          <label><span>Ghi chú duyệt</span><input name="reason" type="text" maxlength="300" placeholder="Xác nhận đã nhận tiền qua chuyển khoản ngân hàng" value="Xác nhận đã nhận tiền qua chuyển khoản ngân hàng"></label>
-          <button class="portal-button portal-button--primary" type="submit" style="background: var(--portal-success, #16a34a); border-color: var(--portal-success, #16a34a); color: #fff;">Xác nhận tiền đã vào &amp; cộng Xu</button>
+          <label><span>${safeText(adminManualTopupText("approval.approveReasonLabel", "Ghi chú duyệt"))}</span><input name="reason" type="text" maxlength="300" placeholder="${safeText(adminManualTopupText("approval.approveReasonPlaceholder", "Xác nhận đã nhận tiền qua chuyển khoản ngân hàng"))}" value="${safeText(adminManualTopupText("approval.approveReasonValue", "Xác nhận đã nhận tiền qua chuyển khoản ngân hàng"))}"></label>
+          <button class="portal-button portal-button--primary" type="submit" style="background: var(--portal-success, #16a34a); border-color: var(--portal-success, #16a34a); color: #fff;">${safeText(adminManualTopupText("approval.approveSubmit", "Xác nhận tiền đã vào và cộng Xu"))}</button>
         </form>
       </div>
       <div>
-        <h3 style="color: var(--portal-danger, #ef4444); margin: 0 0 6px 0;">Từ chối yêu cầu</h3>
-        <p style="margin: 0 0 10px 0; font-size: 0.9em; color: var(--portal-muted, #94a3b8);">Chỉ từ chối khi không nhận được tiền hoặc thông tin bill không khớp; không cộng Xu.</p>
+        <h3 style="color: var(--portal-danger, #ef4444); margin: 0 0 6px 0;">${safeText(adminManualTopupText("approval.rejectTitle", "Từ chối yêu cầu"))}</h3>
+        <p style="margin: 0 0 10px 0; font-size: 0.9em; color: var(--portal-muted, #94a3b8);">${safeText(adminManualTopupText("approval.rejectBody", "Chỉ từ chối khi không nhận được tiền hoặc thông tin chứng từ không khớp; không cộng Xu."))}</p>
         <form class="portal-admin-manual-topup-decision-form" data-portal-form data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id)}" data-manual-admin-decision="reject">
-          <label><span>${safeText(adminManualTopupText("field.rejectReason", "Lý do từ chối"))}</span><input name="reason" type="text" minlength="3" maxlength="300" placeholder="VD: Chưa nhận được giao dịch / Bill không trùng khớp" required></label>
-          <button class="portal-button portal-button--danger" type="submit">${safeText(adminManualTopupText("action.reject", "Tạo xác nhận từ chối"))}</button>
+          <label><span>${safeText(adminManualTopupText("field.rejectReason", "Lý do từ chối"))}</span><input name="reason" type="text" minlength="3" maxlength="300" placeholder="${safeText(adminManualTopupText("approval.rejectPlaceholder", "Ví dụ: Chưa nhận được giao dịch hoặc chứng từ không trùng khớp"))}" required></label>
+          <button class="portal-button portal-button--danger" type="submit">${safeText(adminManualTopupText("approval.rejectSubmit", "Tạo xác nhận từ chối"))}</button>
         </form>
       </div>
     </section>`;

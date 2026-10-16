@@ -53,3 +53,15 @@ không tự sửa dependency production.
 - Manual top-up draft/confirm and idempotency presentation exists in source, but actual
   approval/ledger effect still requires an isolated canonical-admin fixture and remains
   deferred; no wallet mutation was performed.
+
+## Source closeout bổ sung 2026-10-16
+
+- Provider table fixed chrome now uses balanced `adminProviderUi.*` locale keys for columns,
+  configuration/availability/health/routing badges, empty state and read-only detail action.
+  Provider IDs, capability payloads, route and provider operations remain untouched.
+- Manual top-up approval/rejection fixed chrome now uses balanced
+  `adminManualTopup.approval.*` keys for approve/reject headings, note placeholders and
+  confirmation buttons. Existing draft/confirmation actions remain unchanged; no ledger or
+  wallet mutation was opened.
+- New Node regressions: Admin Provider + Manual Top-up `4/4`; full Node suite `506/506`.
+  Python admin fixture and browser runtime remain open.
