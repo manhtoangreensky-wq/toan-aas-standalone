@@ -26,7 +26,7 @@ ordered_waves:
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Locale source focused gates pass; SOURCE-LOCALE-03→19 đã khóa theo nhóm hẹp. SOURCE-LOCALE-20A nối Music Prompt Composer vào catalogue musicPromptComposerUi.* cân bằng; Channel Strategy 2/2, Workboard 4/4, Music Prompt Composer 2/2, focused Content/Workboard/Free/Memory/Project/Publish/Campaign 28/28, focused Image/media 54/54, full Node 498/498, baseline 496/496, NEW_FAILURES=0. HEAD_SHA=eba71e0b8fd7183ba98e705e5f6e9767eab98d7f đã push lên webapp-checklist-r116; chưa merge/deploy/live. Python contract chưa chạy do thiếu python/py; browser/AX/live locale recheck và Music Direction/SFX scan còn mở."
+    note: "Locale source focused gates pass; SOURCE-LOCALE-03→19 đã khóa theo nhóm hẹp. SOURCE-LOCALE-20A nối Music Prompt Composer vào catalogue musicPromptComposerUi.* cân bằng; Channel Strategy 2/2, Workboard 4/4, Music Prompt Composer 2/2, focused Content/Workboard/Free/Memory/Project/Publish/Campaign 28/28, focused Image/media 54/54, full Node 498/498, baseline 496/496, NEW_FAILURES=0. Helper collision đã được tách và regression vẫn 2/2; HEAD_SHA=db9f693aab77211f4f48863185d57c01e1b66ed2 đã push lên webapp-checklist-r116; chưa merge/deploy/live. Python contract chưa chạy do thiếu python/py; browser/AX/live locale recheck và Music Direction/SFX scan còn mở."
   - id: W3
     spec: R217-03
     status: SOURCE_GREEN_RUNTIME_OPEN
