@@ -26,7 +26,7 @@ ordered_waves:
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Locale source focused gates pass; SOURCE-LOCALE-03→19 đã khóa theo nhóm hẹp. SOURCE-LOCALE-20A/20B/20C nối Music Prompt Composer, Music Direction Presets và SFX Cue Sheet vào catalogue cân bằng VI/EN/ZH; Channel Strategy 2/2, Workboard 4/4, Composer 2/2, Direction 2/2, SFX 2/2, focused Content/Workboard/Free/Memory/Project/Publish/Campaign 28/28, focused Image/media 54/54, full Node 502/502, baseline 500/500, NEW_FAILURES=0. Voice/SubDub guarded handoff discoverability source fixed, SubDub 12/12 và Voice 47/47; Admin Provider/Topup/Publishing source fixed, focused 6/6, full Node 508/508; HEAD_SHA=9857a019cd17d1e61f40a50bb533d41c274d1384 đã push lên webapp-checklist-r116; chưa merge/deploy/live. Python contract chưa chạy do thiếu python/py; browser/AX/live locale recheck còn mở."
+    note: "Locale source focused gates pass; SOURCE-LOCALE-03→19 đã khóa theo nhóm hẹp. SOURCE-LOCALE-20A/20B/20C nối Music Prompt Composer, Music Direction Presets và SFX Cue Sheet vào catalogue cân bằng VI/EN/ZH; Channel Strategy 2/2, Workboard 4/4, Composer 2/2, Direction 2/2, SFX 2/2, focused Content/Workboard/Free/Memory/Project/Publish/Campaign 28/28, focused Image/media 54/54, full Node 502/502, baseline 500/500, NEW_FAILURES=0. Voice/SubDub guarded handoff discoverability source fixed, SubDub 12/12 và Voice 47/47; Admin Provider/Topup/Publishing/Growth/Trends source fixed, focused 7/7, full Node 509/509; HEAD_SHA=75cf737f1932c557b695d7f5688c0bc4a0525e31 đã push lên webapp-checklist-r116; chưa merge/deploy/live. Python contract chưa chạy do thiếu python/py; browser/AX/live locale recheck còn mở."
   - id: W3
     spec: R217-03
     status: SOURCE_GREEN_RUNTIME_OPEN
