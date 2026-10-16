@@ -25,8 +25,8 @@ test("Music Prompt Composer catalogue is balanced", () => {
 });
 
 test("Music Prompt Composer fixed chrome uses locale helper and keeps contracts", () => {
-  assert.match(source, /function musicPromptComposerText\(key, fallback, params\)/);
-  assert.ok((source.match(/musicPromptComposerText\(/g) || []).length >= 30);
+  assert.match(source, /function musicPromptComposerUiText\(key, fallback, params\)/);
+  assert.ok((source.match(/musicPromptComposerUiText\(/g) || []).length >= 30);
   for (const stale of [
     "Web-native deterministic music direction", "Reviewable music direction receipt", "Direction brief",
     "Execution boundary", "Audio source / player", "AI music / lyrics", "Preview / output",
