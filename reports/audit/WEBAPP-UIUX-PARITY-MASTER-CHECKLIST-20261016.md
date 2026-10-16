@@ -90,6 +90,9 @@
       `Job`, `Output`, `Workspace`, tiêu đề bảo mật/quyền truy cập, quản trị hệ thống,
       phản hồi chuyển đổi và tác vụ bị khóa đã được dịch trong catalogue VI; regression
       `tests/admin-generic-fixed-chrome-locale.test.mjs` đạt `1/1`.
+- [x] **SOURCE-LOCALE-05:** nhóm Bảo mật & Quyền truy cập trong Admin đã dịch fixed chrome
+      `Security/Access Posture`, `aggregate`, `session`, `role`, `throttle`, `credential`,
+      `control plane` và các nhãn trạng thái tương ứng; regression cùng file đạt `2/2`.
 - [~] **LIVE-I18N-01:** next-route `/features → /login?next=/features` từng lộ
       `Tải & Cài đặt App TOAN AAS` trong bundle cũ; phải recheck đúng URL sau delivery.
 - [~] Đã khóa một cụm fixed chrome Admin theo SOURCE-LOCALE-04; vẫn còn phải quét tiếp

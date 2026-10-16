@@ -26,7 +26,7 @@ ordered_waves:
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Locale source focused gates pass; Admin fallback copy and fixed chrome are being closed in narrow groups. SOURCE-LOCALE-03 system stewardship 1/1 and SOURCE-LOCALE-04 generic Admin chrome 1/1 pass; full Node suite 475/475. Auth next-route/live locale recheck and broader customer/product scan remain open."
+    note: "Locale source focused gates pass; Admin fallback copy and fixed chrome are being closed in narrow groups. SOURCE-LOCALE-03 system stewardship 1/1, SOURCE-LOCALE-04 generic Admin chrome 1/1 và SOURCE-LOCALE-05 security/access chrome 2/2 pass; full Node suite 475/475 trước cụm này. Auth next-route/live locale recheck and broader customer/product scan remain open."
   - id: W3
     spec: R217-03
     status: SOURCE_GREEN_RUNTIME_OPEN
