@@ -13,6 +13,11 @@ around `372px`, and `.portal-pwa-fab-trigger` computed as `display:flex`,
 clipping instead of a visible horizontal scrollbar. The source fix is on the pushed branch
 but this runtime has not received it; keep R216-H/R216-P open.
 
+GitHub PR #647 was read in the authenticated web session on 2026-10-16. Its current
+status is `Open` and the page explicitly shows `This branch has not been deployed` and
+`No deployments`, confirming that the old production fingerprint is a delivery-state
+blocker rather than a failed source fix.
+
 ## Phạm vi
 
 Chỉ đọc các defect đã có evidence: R216-L auth next-route CTA, R216-H landing mobile
