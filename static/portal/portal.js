@@ -32740,17 +32740,17 @@
   // routes are fixed below and every destination remains server role-protected.
   function adminFinanceDomain() {
     return {
-      kicker: adminFinanceText("hub.kicker", "Finance & revenue control center"),
-      title: adminFinanceText("hub.title", "Nhìn rõ financial operations mà không sinh ledger thứ hai"),
+      kicker: adminFinanceText("hub.kicker", "Trung tâm tài chính và doanh thu"),
+      title: adminFinanceText("hub.title", "Nhìn rõ hoạt động tài chính mà không sinh sổ giao dịch thứ hai"),
       description: adminFinanceText("hub.description", "Gom các bề mặt đọc tài chính vào một nơi để đội vận hành truy cập đúng workflow, trong khi PayOS và Xu tiếp tục có một authority canonical duy nhất."),
       streams: [
-        { title: adminFinanceText("stream.payments.title", "Payments"), text: adminFinanceText("stream.payments.description", "Theo dõi payment canonical; Web không thêm webhook hoặc ký request PayOS."), route: "/admin/payments", icon: ICONS.payments },
-        { title: adminFinanceText("stream.topups.title", "Topups"), text: adminFinanceText("stream.topups.description", "Review nạp Xu và đối soát qua server, không cấp credit trực tiếp."), route: "/admin/topups", icon: ICONS.payments },
-        { title: adminFinanceText("stream.revenue.title", "Revenue"), text: adminFinanceText("stream.revenue.description", "Mở revenue projection đã redaction và không tính toán thay backend."), route: "/admin/revenue", icon: ICONS.reports },
-        { title: adminFinanceText("stream.refunds.title", "Refunds"), text: adminFinanceText("stream.refunds.description", "Review refund canonical; write chỉ mở khi có approval/idempotency/audit adapter."), route: "/admin/refunds", icon: ICONS.payments },
-        { title: adminFinanceText("stream.pricing.title", "Giá & packages"), text: adminFinanceText("stream.pricing.description", "Đi tới catalog pricing/package để review chứ không thay rate ở client."), route: "/admin/pricing", icon: ICONS.pricing },
-        { title: adminFinanceText("stream.financePlanning.title", "Finance planning"), text: adminFinanceText("stream.financePlanning.description", "Lập ngân sách và kế hoạch chi phí vận hành Web-native có revision/audit; không phải ledger hay payment."), route: "/admin/finance/planning", icon: ICONS.payments },
-        { title: adminFinanceText("stream.taxReadiness.title", "Tax readiness"), text: adminFinanceText("stream.taxReadiness.description", "Mở checklist và handoff accounting chỉ đọc; không tính thuế, xuất file hay đọc ledger."), route: "/admin/finance/tax-readiness", icon: ICONS.document }
+        { title: adminFinanceText("stream.payments.title", "Thanh toán"), text: adminFinanceText("stream.payments.description", "Theo dõi thanh toán chuẩn; Web không thêm webhook hoặc ký yêu cầu PayOS."), route: "/admin/payments", icon: ICONS.payments },
+        { title: adminFinanceText("stream.topups.title", "Nạp Xu"), text: adminFinanceText("stream.topups.description", "Rà soát nạp Xu và đối soát qua máy chủ, không cấp tín dụng trực tiếp."), route: "/admin/topups", icon: ICONS.payments },
+        { title: adminFinanceText("stream.revenue.title", "Doanh thu"), text: adminFinanceText("stream.revenue.description", "Mở dữ liệu doanh thu đã ẩn thông tin; không tính toán thay máy chủ."), route: "/admin/revenue", icon: ICONS.reports },
+        { title: adminFinanceText("stream.refunds.title", "Hoàn tiền"), text: adminFinanceText("stream.refunds.description", "Rà soát hoàn tiền chuẩn; thao tác ghi chỉ mở khi có bộ kết nối được duyệt, chống trùng và nhật ký."), route: "/admin/refunds", icon: ICONS.payments },
+        { title: adminFinanceText("stream.pricing.title", "Giá và gói"), text: adminFinanceText("stream.pricing.description", "Mở danh mục giá và gói để rà soát, không thay đổi mức giá ở trình duyệt."), route: "/admin/pricing", icon: ICONS.pricing },
+        { title: adminFinanceText("stream.financePlanning.title", "Kế hoạch tài chính"), text: adminFinanceText("stream.financePlanning.description", "Lập ngân sách và kế hoạch chi phí Web có phiên bản và nhật ký; không phải sổ giao dịch hay thanh toán."), route: "/admin/finance/planning", icon: ICONS.payments },
+        { title: adminFinanceText("stream.taxReadiness.title", "Sẵn sàng kế toán và thuế"), text: adminFinanceText("stream.taxReadiness.description", "Mở danh sách kiểm tra và bàn giao kế toán chỉ đọc; không tính thuế, xuất tệp hoặc đọc sổ giao dịch."), route: "/admin/finance/tax-readiness", icon: ICONS.document }
       ],
       boundaries: [
         adminFinanceText("boundary.itemOne", "Không cộng/trừ Xu, finalize PayOS hoặc đối soát thanh toán từ browser."),

@@ -348,6 +348,12 @@ hiển thị thành công giả khi engine/bridge chưa có.
       state và dữ liệu server giữ nguyên.
 - [x] Regression `tests/admin-system-stewardship-fallback-locale.test.mjs` cùng catalogue
       stewardship đạt `4/4`; syntax Portal `2/2` đạt. Full Node suite là cổng closeout.
+- [x] **SOURCE-ADMIN-08:** fallback fixed chrome của `adminFinanceDomain` đã được làm sạch
+      tiếng Việt cho trung tâm tài chính, 7 luồng thanh toán/nạp Xu/doanh thu/hoàn tiền/giá,
+      kế hoạch tài chính và kế toán-thuế; giữ nguyên route, authority, boundary và helper
+      `adminFinance.*`.
+- [x] Regression `tests/admin-finance-domain-fallback-locale.test.mjs`: `2/2`; full Node
+      suite sau batch: `516/516`, `NEW_FAILURES=0`; syntax Portal `2/2` đạt.
 - [ ] Owner thấy toàn bộ; role khác chỉ thấy module/action theo policy hiển thị. UI phải
       nói rõ quyền bị thiếu thay vì nút chết.
 - [ ] Mỗi customer action có request/job/asset/report reference và trạng thái audit trên
@@ -495,5 +501,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=SOURCE-ADMIN-08 — rà soát bảng/inspector Admin mobile và các fallback fixed chrome còn sót; sau đó chuyển sang browser/AX/runtime evidence. Giữ nguyên các mục backend/ledger/real-output ở trạng thái deferred.
+NEXT_ACTION=SOURCE-ADMIN-09 — rà soát bảng/inspector Admin mobile và domain-center fallback còn sót; sau đó chuyển sang browser/AX/runtime evidence. Giữ nguyên các mục backend/ledger/real-output ở trạng thái deferred.
 ```

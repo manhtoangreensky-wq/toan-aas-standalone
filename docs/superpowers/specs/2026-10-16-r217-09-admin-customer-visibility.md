@@ -118,3 +118,12 @@ không tự sửa dependency production.
 - Không đổi server manifest, route/action, authority filter, guarded/read-only state hoặc dữ
   liệu động. Regression `tests/admin-system-stewardship-fallback-locale.test.mjs` cùng
   catalogue đạt `4/4`; syntax Portal `2/2` đạt.
+
+### Source closeout bổ sung — SOURCE-ADMIN-08 (2026-10-17)
+
+- Fallback fixed chrome trong `adminFinanceDomain()` đã chuyển sang tiếng Việt: kicker/trung
+  tâm, thanh toán, nạp Xu, doanh thu, hoàn tiền, giá và gói, kế hoạch tài chính, sẵn sàng kế
+  toán-thuế. Các helper `adminFinance.*` và catalogue VI/EN/ZH tiếp tục là nguồn theo locale.
+- Bảy route tài chính giữ nguyên, không mở ledger/PayOS/provider mutation và không đổi
+  authority boundary. Regression `tests/admin-finance-domain-fallback-locale.test.mjs` đạt
+  `2/2`; full Node đạt `516/516`.
