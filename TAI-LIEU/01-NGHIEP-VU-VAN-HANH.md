@@ -669,3 +669,13 @@ Regression Channel Strategy `2/2`, Workboard `4/4`; focused Content/Workboard/Fr
 Project/Publish/Campaign `28/28`; focused Image/media `54/54`; full Node `496/496`, baseline
 `493/493`, `NEW_FAILURES=0`. Đây là source evidence; browser/AX/live và Python contract vẫn
 chưa chạy, không gọi provider, không chạm ví/Xu/PayOS, không deploy hoặc merge.
+
+### Ghi nhận source locale — Music Prompt Composer — 16/10/2026
+
+`SOURCE-LOCALE-20A` chuẩn hóa fixed chrome Music Prompt Composer qua catalogue
+`musicPromptComposerUi.*` cân bằng VI/EN/ZH: trang lập kế hoạch, biểu mẫu, boundary, ba hướng,
+ghi chú sử dụng, biên nhận lưu Memory và phạm vi. Route/action/field/capability/CSRF/
+idempotency giữ nguyên; không tạo âm thanh, tác vụ, thanh toán hoặc đầu ra giả.
+
+Regression riêng `2/2`, focused Channel/Workboard/Music `8/8`, Image/media `54/54`, full Node
+`498/498`, baseline `496/496`, `NEW_FAILURES=0`; browser/AX/live và Python contract chưa chạy.

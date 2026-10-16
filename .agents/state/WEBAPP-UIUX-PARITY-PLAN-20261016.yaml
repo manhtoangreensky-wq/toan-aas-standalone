@@ -26,7 +26,7 @@ ordered_waves:
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Locale source focused gates pass; SOURCE-LOCALE-03→18 đã khóa theo nhóm hẹp. SOURCE-LOCALE-19 nối Channel Strategy vào catalogue channelStrategyUi.* cân bằng, khóa Workboard aria-label và guarded recovery fallback; regression Channel Strategy 2/2, Workboard 4/4, focused Content/Workboard/Free/Memory/Project/Publish/Campaign 28/28, focused Image/media 54/54, full Node 496/496, baseline 493/493, NEW_FAILURES=0. HEAD_SHA=c685a07947af513eb0ea6ecd2d6be951be9fb30d đã push lên webapp-checklist-r116; chưa merge/deploy/live. Python contract chưa chạy do thiếu python/py; browser/AX/live locale recheck và Music authoring scan còn mở."
+    note: "Locale source focused gates pass; SOURCE-LOCALE-03→19 đã khóa theo nhóm hẹp. SOURCE-LOCALE-20A nối Music Prompt Composer vào catalogue musicPromptComposerUi.* cân bằng; Channel Strategy 2/2, Workboard 4/4, Music Prompt Composer 2/2, focused Content/Workboard/Free/Memory/Project/Publish/Campaign 28/28, focused Image/media 54/54, full Node 498/498, baseline 496/496, NEW_FAILURES=0. HEAD_SHA=79ef2a590e87892cccd7cadcca3e93487b2a10fa đã push lên webapp-checklist-r116; chưa merge/deploy/live. Python contract chưa chạy do thiếu python/py; browser/AX/live locale recheck và Music Direction/SFX scan còn mở."
   - id: W3
     spec: R217-03
     status: SOURCE_GREEN_RUNTIME_OPEN
@@ -108,4 +108,4 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-next_action: "Continue W2 locale in checklist order after SOURCE-LOCALE-19; Channel Strategy and Workboard residual source chrome are locked. Next group is Music authoring fixed chrome; browser/AX/live recheck remains open."
+next_action: "Continue W2 locale in checklist order after SOURCE-LOCALE-20A; next groups are Music Direction Presets and SFX Cue Sheet. Browser/AX/live recheck remains open."

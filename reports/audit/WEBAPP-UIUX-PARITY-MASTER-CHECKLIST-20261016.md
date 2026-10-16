@@ -394,12 +394,19 @@ hiển thị thành công giả khi engine/bridge chưa có.
 - [ ] Browser/AX/live locale recheck và Python contract vẫn chưa chạy; không đánh dấu runtime.
 - [x] `HEAD_SHA=c685a07947af513eb0ea6ecd2d6be951be9fb30d` đã push lên nhánh
       `webapp-checklist-r116`; PR chưa merge, chưa deploy, `LIVE_PASS=NO`.
+- [x] **SOURCE-LOCALE-20A:** Music Prompt Composer đã dùng catalogue
+      `musicPromptComposerUi.*` cân bằng VI/EN/ZH cho trang lập kế hoạch, form, boundary,
+      kết quả, ghi chú, biên nhận và phạm vi; giữ nguyên route/action/field/capability/CSRF/
+      idempotency và không tạo âm thanh/tác vụ/thanh toán.
+- [x] Regression Music Prompt Composer `2/2`; focused Channel/Workboard/Music `8/8`, focused
+      Image/media `54/54`, full Node `498/498`, baseline `496/496`, `NEW_FAILURES=0`; syntax
+      và `git diff --check` đạt. Direction Presets và SFX Cue Sheet còn là batch sau.
 
 ## 11. Tổng trạng thái tại ngày 2026-10-16
 
 | Nhóm | Đã có bằng chứng | Đang mở | Bị chặn/hoãn |
 |---|---:|---:|---:|
-| Source UI/UX/locale/static motion | W2 locale `SOURCE-LOCALE-19` xanh; W4 09A source `28/28` | 3 live drift/runtime gates | 0 |
+| Source UI/UX/locale/static motion | W2 locale `SOURCE-LOCALE-20A` xanh; W4 09A source `28/28` | 3 live drift/runtime gates | 0 |
 | Responsive/PWA live | source fix + 39 focused / 470 Node | 2 (R216-H/R216-P) | QA runtime |
 | Customer product parity UI | shell/partial nhiều lane | 6 lane acceptance | real-output bridge |
 | Admin/customer wiring UI | source contracts rải rác | 1 master surface audit | backend/permission mutation |
@@ -421,5 +428,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=Tiếp tục W2 locale theo checklist sau SOURCE-LOCALE-19; Channel Strategy và Workboard residual đã khóa source, tiếp theo là Music authoring fixed chrome, còn browser/AX/live recheck và các lane runtime mở.
+NEXT_ACTION=Tiếp tục W2 locale sau SOURCE-LOCALE-20A; tiếp theo là Music Direction Presets và SFX Cue Sheet, còn browser/AX/live recheck và các lane runtime mở.
 ```

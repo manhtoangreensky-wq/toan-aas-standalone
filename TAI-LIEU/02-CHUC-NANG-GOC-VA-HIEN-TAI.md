@@ -425,3 +425,13 @@ không bị dịch trong trình duyệt.
 Evidence source: Channel Strategy `2/2`, Workboard `4/4`, focused nhóm Content/Workboard/
 Free/Memory/Project/Publish/Campaign `28/28`, full Node `496/496`, `NEW_FAILURES=0`. Browser,
 AX, runtime/live và Python contract chưa chạy.
+
+### Đối chiếu source locale — Music Prompt Composer — 16/10/2026
+
+Music Prompt Composer hiện dùng catalogue `musicPromptComposerUi.*` cân bằng VI/EN/ZH cho
+fixed chrome của trang lập kế hoạch, biểu mẫu, ranh giới, kết quả, ghi chú, biên nhận và phạm
+vi. Dữ liệu mô tả và biên nhận từ máy chủ giữ nguyên; các field/action/route và ranh giới
+không tạo âm thanh không đổi.
+
+Evidence source: regression `2/2`, focused Channel/Workboard/Music `8/8`, full Node `498/498`,
+`NEW_FAILURES=0`. Browser, AX, runtime/live và Python contract chưa chạy.

@@ -16238,6 +16238,57 @@
     CHANNEL_STRATEGY_COPY_ROWS.forEach((row) => { MESSAGES[locale][`channelStrategyUi.${row[0]}`] = row[index + 1]; });
   });
 
+  const MUSIC_PROMPT_COMPOSER_COPY_ROWS = [
+    ["page.kicker", "Lập kế hoạch âm nhạc trên Web", "Web music planning", "Web 音乐规划"],
+    ["page.title", "Chọn hướng âm nhạc trước khi mở xử lý âm thanh", "Choose music direction before audio processing opens", "在打开音频处理前选择音乐方向"],
+    ["page.body", "So sánh ba hướng, chọn một hướng và sao chép nội dung để rà soát. Mọi phần đều là kế hoạch do bạn kiểm tra.", "Compare three directions, choose one and copy the text for review. Everything here is planning for your review.", "比较三个方向，选择一个并复制文本进行审核。这里的内容仅供您规划和检查。"],
+    ["stats.directions", "Hướng âm nhạc", "Music directions", "音乐方向"],
+    ["stats.notes", "Ghi chú sử dụng", "Usage notes", "使用备注"],
+    ["stats.created", "Âm thanh đã tạo", "Audio created", "已创建音频"],
+    ["form.kicker", "Tóm tắt hướng", "Direction brief", "方向摘要"],
+    ["form.title", "Lập hướng âm nhạc", "Create music direction", "创建音乐方向"],
+    ["form.body", "Máy chủ kiểm tra phiên Web và trả mẫu văn bản; nội dung không được lưu vào thư viện âm thanh hoặc bản nháp trình duyệt.", "The server checks the Web session and returns text templates; content is not saved to the audio library or browser draft.", "服务器检查 Web 会话并返回文本模板；内容不会保存到音频库或浏览器草稿。"],
+    ["form.submit", "Lập ba hướng âm nhạc", "Create three music directions", "创建三个音乐方向"],
+    ["form.note", "Chỉ tạo văn bản để rà soát; không tạo âm thanh, bản xem trước, tệp, tác vụ, thanh toán hoặc đăng bài.", "Creates text for review only; no audio, preview, file, job, payment or publishing is created.", "仅创建供审核的文本；不会创建音频、预览、文件、任务、支付或发布。"],
+    ["boundary.kicker", "Ranh giới thực thi", "Execution boundary", "执行边界"],
+    ["boundary.title", "Lập hướng, không tạo nhạc", "Create direction, not music", "创建方向，不生成音乐"],
+    ["boundary.body", "Công cụ này không có nguồn âm thanh, trình phát, nhà cung cấp, tạo lời, bản xem trước, đầu ra, tác vụ, ví, thanh toán, tài sản, bộ sưu tập hoặc hành động Telegram.", "This tool has no audio source, player, provider, lyric generation, preview, output, job, wallet, payment, asset, collection or Telegram action.", "此工具没有音频源、播放器、服务商、歌词生成、预览、输出、任务、钱包、支付、资产、集合或 Telegram 操作。"],
+    ["boundary.audio", "Nguồn âm thanh / trình phát", "Audio source / player", "音频源 / 播放器"],
+    ["boundary.provider", "Nhà cung cấp", "Provider", "服务商"],
+    ["boundary.music", "Nhạc và lời bằng AI", "AI music and lyrics", "AI 音乐与歌词"],
+    ["boundary.preview", "Bản xem trước / đầu ra", "Preview / output", "预览 / 输出"],
+    ["boundary.job", "Tác vụ / ví / thanh toán", "Job / wallet / payment", "任务 / 钱包 / 支付"],
+    ["boundary.asset", "Tài sản / bộ sưu tập / giao tệp", "Asset / collection / delivery", "资产 / 集合 / 交付"],
+    ["boundary.telegram", "Hành động Telegram", "Telegram action", "Telegram 操作"],
+    ["result.emptyKicker", "Biên nhận hướng âm nhạc", "Music direction receipt", "音乐方向回执"],
+    ["result.emptyTitle", "Chưa có hướng âm nhạc", "No music direction yet", "暂无音乐方向"],
+    ["result.emptyBody", "Nhập mô tả để máy chủ trả ba hướng văn bản. Trình duyệt không tự dựng âm thanh, trình phát, bản xem trước hoặc đầu ra thay thế.", "Enter a description for three text directions from the server. The browser does not create audio, a player, preview or substitute output.", "输入描述后由服务器返回三个文本方向。浏览器不会创建音频、播放器、预览或替代输出。"],
+    ["result.kicker", "Hướng âm nhạc đã kiểm tra", "Reviewed music direction", "已审核的音乐方向"],
+    ["result.titleFallback", "Hướng âm nhạc", "Music direction", "音乐方向"],
+    ["result.bodySuffix", "Đây là văn bản để rà soát và sao chép, không phải âm thanh, yêu cầu nhà cung cấp, trình phát, bản xem trước, đầu ra hay biên nhận giao tệp.", "This is text for review and copying, not audio, a provider request, player, preview, output or delivery receipt.", "这是供审核和复制的文本，不是音频、服务商请求、播放器、预览、输出或交付回执。"],
+    ["result.suggestionsKicker", "Ba hướng để rà soát", "Three directions to review", "待审核的三个方向"],
+    ["result.suggestionsTitle", "So sánh ba hướng âm nhạc", "Compare three music directions", "比较三个音乐方向"],
+    ["result.suggestionsBody", "Các thẻ là văn bản tóm tắt có thể sao chép, không phải tệp nhạc, danh mục bản nhạc, giọng hát, trình phát hoặc kết quả nhà cung cấp.", "Cards are copyable text briefs, not music files, track catalogues, vocal identities, players or provider results.", "卡片是可复制的文本摘要，不是音乐文件、曲目目录、声音身份、播放器或服务商结果。"],
+    ["result.usageKicker", "Bàn giao hướng đã chọn", "Selected direction handoff", "所选方向交接"],
+    ["result.usageTitle", "Ghi chú biên tập cho hướng đã chọn", "Editorial notes for the selected direction", "所选方向的编辑备注"],
+    ["result.usageBody", "Hướng đã chọn chỉ được đánh dấu để rà soát. Ghi chú này không tạo bản phối, giọng hát, bản nhạc, bản xem trước hoặc giao tệp.", "The selected direction is marked for review only. These notes do not create a mix, vocal, track, preview or delivery.", "所选方向仅供审核标记。这些备注不会创建混音、声音、曲目、预览或交付。"],
+    ["result.reviewTitle", "Cảnh báo và danh sách kiểm tra", "Warnings and checklist", "警告与清单"],
+    ["result.openLibrary", "Mở thư viện âm thanh", "Open audio library", "打开音频库"],
+    ["result.saveMemory", "Lưu vào Trung tâm ghi chú", "Save to Memory Center", "保存到记忆中心"],
+    ["receipt.kicker", "Trung tâm ghi chú riêng tư", "Private Memory Center", "私有记忆中心"],
+    ["receipt.title", "Đã lưu hướng âm nhạc", "Music direction saved", "音乐方向已保存"],
+    ["receipt.body", "Biên nhận không giữ lại mô tả, hướng hoặc lời nhắc đã tạo trong trình duyệt.", "The receipt does not keep the description, direction or prompt in the browser.", "回执不会在浏览器中保留描述、方向或提示词。"],
+    ["receipt.note", "Đã tạo một ghi chú riêng tư. Không có Telegram, Bot, nhà cung cấp, âm thanh, tác vụ, ví, thanh toán, tài sản, bộ sưu tập, đăng bài hoặc giao tệp.", "A private note was created. There is no Telegram, Bot, provider, audio, job, wallet, payment, asset, collection, publishing or delivery.", "已创建私有备注。不会有 Telegram、Bot、服务商、音频、任务、钱包、支付、资产、集合、发布或交付。"],
+    ["scope.kicker", "Phạm vi rõ ràng", "Clear scope", "清晰范围"],
+    ["scope.title", "Rà soát hướng trước, thực thi bằng hợp đồng riêng sau", "Review direction first, execute later through a separate contract", "先审核方向，再通过独立合约执行"],
+    ["scope.body", "Dùng hướng như bản tóm tắt để kiểm tra quyền sử dụng, thông tin công khai, thương hiệu và giọng điệu. Lưu lịch sử trong thư viện cũng không tạo âm thanh.", "Use the direction as a brief to check rights, disclosures, brand and tone. Saving history in the library also creates no audio.", "将方向作为摘要检查权利、披露、品牌和语气。保存到库中也不会创建音频。"],
+    ["common.revision", "phiên bản", "version", "版本"],
+    ["result.openMemory", "Mở Trung tâm ghi chú", "Open Memory Center", "打开记忆中心"]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    MUSIC_PROMPT_COMPOSER_COPY_ROWS.forEach((row) => { MESSAGES[locale][`musicPromptComposerUi.${row[0]}`] = row[index + 1]; });
+  });
+
   const FREE_TOOLS_COPY_ROWS = [
     ["intro.kicker", "Xử lý tại trình duyệt · Không tốn Xu · Hoàn toàn miễn phí", "Browser-local processing · No Xu cost · Completely free", "浏览器本地处理 · 不消耗 Xu · 完全免费"],
     ["intro.title", "Bộ công cụ tiện ích sáng tạo nội dung nhanh", "A fast toolkit for everyday content work", "快速完成内容工作的实用工具集"],
