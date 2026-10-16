@@ -98,3 +98,13 @@ không tự sửa dependency production.
 - Python contract `tests/test_p0_webapp_v2_05_admin_customer_360.py` chưa chạy được do môi
   trường thiếu `py`/`pytest`; browser/runtime canonical-admin fixture và ledger effect vẫn
   `OPEN`/`DEFERRED`, không được suy diễn thành PASS.
+
+### Source closeout bổ sung — SOURCE-ADMIN-06 (2026-10-17)
+
+- Admin shell `pageStatusBadge` không còn hardcode fixed chrome trộn VI/EN. Bốn nhãn
+  `canonical_bridge`, `web_planning` và `runtime_generator` (ready/guarded) dùng
+  `adminHome.boundary.*` cân bằng VI/EN/ZH.
+- Giữ nguyên boundary/status semantics, route/action, capability và dữ liệu server; không
+  mở write hoặc thay đổi permission enforcement.
+- Regression `tests/admin-shell-boundary-locale.test.mjs` đạt `5/5`; syntax Portal `2/2`
+  đạt. Full Node, browser/runtime và Python contract vẫn là các cổng riêng.

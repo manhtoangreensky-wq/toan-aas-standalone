@@ -334,6 +334,13 @@ hiển thị thành công giả khi engine/bridge chưa có.
 - [!] `python -m pytest tests/test_p0_webapp_v2_05_admin_customer_360.py -q` chưa chạy được:
       môi trường hiện không có lệnh `py`/`pytest`; không ghi PASS giả. Browser/runtime,
       canonical-admin fixture và ledger mutation vẫn mở/deferred đúng phạm vi.
+- [x] **SOURCE-ADMIN-06:** Admin shell boundary badges đã chuyển 4 nhãn cố định còn trộn
+      ngôn ngữ (`Job Bridge Sẵn sàng`, `Kế hoạch & Bản nháp Web`, `AI Generator`,
+      `Bộ tạo AI (Chờ Adapter)`) sang `adminHome.boundary.*` cân bằng VI/EN/ZH. Giữ nguyên
+      `canonical_bridge`, `web_planning`, `runtime_generator`, trạng thái ready/guarded,
+      route, action và dữ liệu server.
+- [x] Regression `tests/admin-shell-boundary-locale.test.mjs`: `5/5` khi chạy cùng Customer
+      360 focused; syntax Portal `2/2` đạt. Full Node suite và comparator sẽ là cổng closeout.
 - [ ] Owner thấy toàn bộ; role khác chỉ thấy module/action theo policy hiển thị. UI phải
       nói rõ quyền bị thiếu thay vì nút chết.
 - [ ] Mỗi customer action có request/job/asset/report reference và trạng thái audit trên
@@ -481,5 +488,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=SOURCE-ADMIN-06 — rà soát fixed chrome Admin shell/customer visibility còn mở; sau đó mới chuyển sang browser/AX/runtime evidence. Giữ nguyên các mục backend/ledger/real-output ở trạng thái deferred.
+NEXT_ACTION=SOURCE-ADMIN-07 — rà soát Admin shell copy còn hardcode và bảng/mobile presentation; sau đó chuyển sang browser/AX/runtime evidence. Giữ nguyên các mục backend/ledger/real-output ở trạng thái deferred.
 ```

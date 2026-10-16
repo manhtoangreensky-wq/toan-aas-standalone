@@ -9740,16 +9740,16 @@
     }
     const boundary = classifyPageBoundary(page, context);
     if (boundary === "canonical_bridge") {
-      return `<span class="portal-badge" data-status="ready" data-boundary="canonical_bridge">${isAdminPortalSurface(page) ? "Job Bridge Sẵn sàng" : safeText(uiText("customerChrome.boundary.task", "Tác vụ AI"))}</span>`;
+      return `<span class="portal-badge" data-status="ready" data-boundary="canonical_bridge">${isAdminPortalSurface(page) ? safeText(uiText("adminHome.boundary.task", "Tác vụ AI")) : safeText(uiText("customerChrome.boundary.task", "Tác vụ AI"))}</span>`;
     }
     if (boundary === "web_planning") {
-      return `<span class="portal-badge" data-status="draft" data-boundary="web_planning">${isAdminPortalSurface(page) ? "Kế hoạch &amp; Bản nháp Web" : safeText(uiText("customerChrome.boundary.planning", "Kế hoạch & bản nháp"))}</span>`;
+      return `<span class="portal-badge" data-status="draft" data-boundary="web_planning">${isAdminPortalSurface(page) ? safeText(uiText("adminHome.boundary.planning", "Kế hoạch và bản nháp Web")) : safeText(uiText("customerChrome.boundary.planning", "Kế hoạch & bản nháp"))}</span>`;
     }
     if (boundary === "runtime_generator") {
       const executionReady = typeof featureConfirmExecutionReady === "function" && featureConfirmExecutionReady(page, context);
       return executionReady
-        ? `<span class="portal-badge" data-status="ready" data-boundary="runtime_generator">${isAdminPortalSurface(page) ? "AI Generator" : safeText(uiText("customerChrome.boundary.generation", "Tạo bằng AI"))}</span>`
-        : `<span class="portal-badge" data-status="guarded" data-boundary="runtime_generator">${isAdminPortalSurface(page) ? "Bộ tạo AI (Chờ Adapter)" : safeText(uiText("customerChrome.boundary.unavailable", "Chưa sẵn sàng tạo"))}</span>`;
+        ? `<span class="portal-badge" data-status="ready" data-boundary="runtime_generator">${isAdminPortalSurface(page) ? safeText(uiText("adminHome.boundary.generatorReady", "Bộ tạo AI")) : safeText(uiText("customerChrome.boundary.generation", "Tạo bằng AI"))}</span>`
+        : `<span class="portal-badge" data-status="guarded" data-boundary="runtime_generator">${isAdminPortalSurface(page) ? safeText(uiText("adminHome.boundary.generatorGuarded", "Bộ tạo AI (đang chờ kết nối)")) : safeText(uiText("customerChrome.boundary.unavailable", "Chưa sẵn sàng tạo"))}</span>`;
     }
     return "";
   }

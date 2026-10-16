@@ -5158,7 +5158,11 @@
       "adminHome.quickAccess.kicker": "Điều hướng theo quyền",
       "adminHome.quickAccess.title": "Truy cập nhanh",
       "adminHome.quickAccess.body": "Mở các phân hệ được máy chủ cấp cho phiên quản trị này.",
-      "adminHome.authority.summary": "Quyền hạn và ranh giới quản trị"
+      "adminHome.authority.summary": "Quyền hạn và ranh giới quản trị",
+      "adminHome.boundary.task": "Tác vụ AI",
+      "adminHome.boundary.planning": "Kế hoạch và bản nháp Web",
+      "adminHome.boundary.generatorReady": "Bộ tạo AI",
+      "adminHome.boundary.generatorGuarded": "Bộ tạo AI (đang chờ kết nối)"
     },
     en: {
       "adminHome.title": "Operations center",
@@ -5237,7 +5241,11 @@
       "adminHome.quickAccess.kicker": "Permission-aware navigation",
       "adminHome.quickAccess.title": "Quick access",
       "adminHome.quickAccess.body": "Open modules granted by the server for this admin session.",
-      "adminHome.authority.summary": "Access & admin boundaries"
+      "adminHome.authority.summary": "Access & admin boundaries",
+      "adminHome.boundary.task": "AI tasks",
+      "adminHome.boundary.planning": "Web plans and drafts",
+      "adminHome.boundary.generatorReady": "AI generator",
+      "adminHome.boundary.generatorGuarded": "AI generator (adapter pending)"
     },
     zh: {
       "adminHome.title": "运营中心",
@@ -5316,7 +5324,11 @@
       "adminHome.quickAccess.kicker": "按权限导航",
       "adminHome.quickAccess.title": "快速访问",
       "adminHome.quickAccess.body": "打开服务器为当前管理会话授权的模块。",
-      "adminHome.authority.summary": "权限与管理边界"
+      "adminHome.authority.summary": "权限与管理边界",
+      "adminHome.boundary.task": "AI 任务",
+      "adminHome.boundary.planning": "Web 计划与草稿",
+      "adminHome.boundary.generatorReady": "AI 生成器",
+      "adminHome.boundary.generatorGuarded": "AI 生成器（等待适配器）"
     }
   };
 
