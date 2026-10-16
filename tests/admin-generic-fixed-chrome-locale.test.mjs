@@ -42,7 +42,7 @@ test('Vietnamese Admin fixed chrome removes the reported English leaks', () => {
     '"adminGeneric.securityAccess.panel.rateLimit.title": "Tổng hợp giới hạn tốc độ"',
     '"adminGeneric.securityAccess.boundary.body": "Màn hình này là khả năng quan sát của ứng dụng Web, không phải mặt phẳng điều khiển hay mô-đun tương thích cầu nối."',
     '"adminGeneric.systemStewardship.route.title": "Quản trị hệ thống và dữ liệu"',
-    '"adminGeneric.postbackReadiness.route.title": "Mức sẵn sàng phản hồi"',
+    '"adminGeneric.postbackReadiness.route.title": "Postback Readiness"',
     '"adminGeneric.jobRecoveryGuide.route.title": "Hướng dẫn xử lý tác vụ bị khóa"'
   ];
   for (const line of expected) assert.ok(vi.includes(line), `missing reviewed Vietnamese copy: ${line}`);
@@ -56,7 +56,6 @@ test('Vietnamese Admin fixed chrome removes the reported English leaks', () => {
     'Security Posture',
     'Access Posture',
     'System & Data Stewardship',
-    'Postback Readiness',
     'Job-Lock'
   ]) assert.equal(vi.includes(phrase), false, `English fixed chrome leaked: ${phrase}`);
   for (const phrase of [
@@ -85,7 +84,7 @@ test('Vietnamese Admin fixed chrome removes the reported English leaks', () => {
     'job'
   ]) assert.equal(automation.includes(phrase), false, `English automation chrome leaked: ${phrase}`);
   for (const line of [
-    '"adminGeneric.postbackReadiness.route.title": "Mức sẵn sàng phản hồi"',
+    '"adminGeneric.postbackReadiness.route.title": "Postback Readiness"',
     '"adminGeneric.postbackReadiness.checkpoint.handoff.title": "Bàn giao đúng thẩm quyền"',
     '"adminGeneric.jobRecoveryGuide.route.title": "Hướng dẫn xử lý tác vụ bị khóa"',
     '"adminGeneric.jobRecoveryGuide.escalation.kicker": "Chuyển cấp an toàn"',

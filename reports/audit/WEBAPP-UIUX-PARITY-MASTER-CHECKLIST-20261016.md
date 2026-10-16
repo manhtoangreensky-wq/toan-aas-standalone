@@ -95,6 +95,9 @@
       `Job`, `Output`, `Workspace`, tiêu đề bảo mật/quyền truy cập, quản trị hệ thống,
       phản hồi chuyển đổi và tác vụ bị khóa đã được dịch trong catalogue VI; regression
       `tests/admin-generic-fixed-chrome-locale.test.mjs` đạt `1/1`.
+- [x] Đã đồng bộ contract route `Postback Readiness`: đây là tên route/proper name được
+      reviewed trong bundle contract; regression Admin cũ không còn phủ định giá trị này.
+      Full Node sau đồng bộ vẫn `518/518`.
 - [x] **SOURCE-LOCALE-05:** nhóm Bảo mật & Quyền truy cập trong Admin đã dịch fixed chrome
       `Security/Access Posture`, `aggregate`, `session`, `role`, `throttle`, `credential`,
       `control plane` và các nhãn trạng thái tương ứng; regression cùng file đạt `2/2`.

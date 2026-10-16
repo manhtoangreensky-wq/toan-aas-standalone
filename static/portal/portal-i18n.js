@@ -5865,7 +5865,7 @@
       "adminGeneric.systemStewardship.boundary.noProvider.body": "Không tạo request provider, không đọc payload, credential, raw log hoặc trạng thái runtime.",
       "adminGeneric.systemStewardship.boundary.noLedger.title": "Không có payment hoặc ledger action",
       "adminGeneric.systemStewardship.boundary.noLedger.body": "Không tác động Xu, PayOS, entitlement, refund, job charge hoặc canonical record.",
-      "adminGeneric.postbackReadiness.route.title": "Mức sẵn sàng phản hồi",
+      "adminGeneric.postbackReadiness.route.title": "Postback Readiness",
       "adminGeneric.postbackReadiness.route.description": "Hướng dẫn chuẩn bị phản hồi chuyển đổi chỉ đọc cho quản trị chuẩn; không hiển thị thông tin kết nối nhạy cảm, không gửi sự kiện và không thay đổi gán nguồn hay chi trả.",
       "adminGeneric.postbackReadiness.intro.kicker": "Hướng dẫn quản trị chuẩn · chỉ đọc",
       "adminGeneric.postbackReadiness.intro.title": "Chuẩn bị phản hồi chuyển đổi có kiểm soát, không biến Web thành nơi cấu hình hoặc nhận sự kiện",
