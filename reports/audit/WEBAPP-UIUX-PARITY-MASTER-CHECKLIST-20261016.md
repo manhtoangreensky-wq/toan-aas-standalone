@@ -50,6 +50,15 @@
       có media rule `max-width:420px`, cần delivery rồi chụp lại DOM/screenshot.
 - [~] **LIVE-UI-02:** PWA FAB bundle cũ còn nổi che vùng proof; source đã có placement
       inline/readiness gate, cần runtime recheck.
+- [x] **SOURCE-UI-01:** landing không tạo hoặc giữ banner/FAB khi chưa có
+      `beforeinstallprompt`; iOS vẫn dùng hướng dẫn cài đặt riêng. Regression mới nằm ở
+      `tests/pwa-landing-install-placement.test.mjs`.
+- [x] **SOURCE-UI-02:** cụm điều khiển landing ở ≤420px có `flex-wrap: wrap`, giữ brand
+      row và tránh ép locale/theme/CTA thành một hàng. Regression gate header đã cập nhật.
+- [x] Source recheck sau W1: focused PWA/auth/utility/motion `39/39`, toàn bộ Node
+      `470/470`, `node --check static/portal/portal.js`, `git diff --check` đạt.
+- [!] Python Admin/PWA contract chưa chạy: bundled Python không có module `pytest`; đây
+      là blocker công cụ, không ghi PASS giả.
 - [ ] Đo viewport 320/375/390/414/768/1024/1440 ở light/dark; ghi `scrollWidth <= clientWidth`.
 - [ ] Đo type/spacing/contrast thật; body ≥16px mobile, target ≥44×44px, contrast AA.
 - [ ] Xác minh bảng/list chuyển hàng dọc hoặc wrapper có nhãn trên 375/390px.
@@ -222,7 +231,7 @@ hiển thị thành công giả khi engine/bridge chưa có.
 | Nhóm | Đã có bằng chứng | Đang mở | Bị chặn/hoãn |
 |---|---:|---:|---:|
 | Source UI/UX/locale/static motion | 1 baseline xanh | 3 live drift/runtime gates | 0 |
-| Responsive/PWA live | 0 live close | 2 (R216-H/R216-P) | QA runtime |
+| Responsive/PWA live | source fix + 39 focused / 470 Node | 2 (R216-H/R216-P) | QA runtime |
 | Customer product parity UI | shell/partial nhiều lane | 6 lane acceptance | real-output bridge |
 | Admin/customer wiring UI | source contracts rải rác | 1 master surface audit | backend/permission mutation |
 | Authenticated QA | 0 | toàn ma trận | fixture/runtime |

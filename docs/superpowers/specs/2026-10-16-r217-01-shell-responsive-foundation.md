@@ -45,3 +45,14 @@ git diff --check
 
 **Runtime evidence:** DOM probe `scrollWidth/clientWidth`, computed color/size, screenshot
 ở 390px và 1440px; thiếu runtime thì giữ `RUNTIME_UNAVAILABLE`.
+
+## Source closeout 2026-10-16
+
+- `static/portal/portal.css`: landing action cluster wraps at `max-width: 420px`.
+- `static/portal/portal.js`: landing install banner/FAB is removed and not recreated until
+  a native `beforeinstallprompt` is available; iOS guide remains eligible.
+- `tests/pwa-landing-install-placement.test.mjs`: no-prompt landing regression added.
+- `tests/current-main-motion-static-gates.test.mjs`: header wrap regression strengthened.
+- Evidence: focused W1/PWA/auth/utility/motion `39/39`; full Node `470/470`; JS syntax and
+  `git diff --check` pass. Live runtime evidence is still open because the deployed asset
+  fingerprint has not been rechecked after this source delivery.

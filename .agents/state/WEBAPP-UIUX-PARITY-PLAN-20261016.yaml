@@ -22,7 +22,7 @@ ordered_waves:
   - id: W1
     spec: R217-01
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Mobile landing clipping and PWA placement remain live drift."
+    note: "Source fixes locked: landing flex-wrap at <=420px and no landing install banner/FAB before beforeinstallprompt; focused 39/39 and full Node 470/470. Live recheck remains open."
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN

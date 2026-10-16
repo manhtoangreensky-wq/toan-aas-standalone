@@ -38282,6 +38282,19 @@
       return;
     }
 
+    const canPromptNative = typeof pwaInstallPrompt !== "undefined"
+      && Boolean(pwaInstallPrompt && typeof pwaInstallPrompt.prompt === "function");
+    // The public landing page must not create a floating install affordance until
+    // the browser exposes a real native prompt. iOS has a separate, actionable
+    // guide, so it remains eligible without beforeinstallprompt.
+    if (landingInstallSlot && (!pwaInstallCanBeOffered() || (!canPromptNative && !isIosDevice()))) {
+      const existingBanner = document.querySelector("[data-portal-smart-install-banner]");
+      if (existingBanner) existingBanner.remove();
+      const existingFab = document.querySelector("[data-portal-pwa-fab]");
+      if (existingFab) existingFab.remove();
+      return;
+    }
+
     let isExpanded = false;
     try {
       if (window.sessionStorage && window.sessionStorage.getItem("toanaas_install_expanded") === "true") {
@@ -38302,7 +38315,6 @@
 
     const isIos = isIosDevice();
     const isAndroid = isAndroidDevice();
-    const canPromptNative = Boolean(pwaInstallPrompt && typeof pwaInstallPrompt.prompt === "function");
     const installLabel = isIos ? uiText("installBanner.iosAction", "Cài trên iPhone")
       : isAndroid ? uiText("installBanner.androidAction", "Cài trên Android")
       : canPromptNative ? uiText("customerTopup.installApp", "Cài đặt ứng dụng")
