@@ -1,6 +1,6 @@
 # R217-09A — Content, Workboard, Free Tools và Notes
 
-**Status:** `TODO`
+**Status:** `SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN`
 **Wave:** W4
 **Surface:** Content Studio, Workboard, Campaign/Calendar/Approvals, Notes/Memory,
 Projects/Documents, Free Tools/Prompt Gallery, Publishing.
@@ -33,5 +33,14 @@ Không đổi server action, revision, CSRF, idempotency, publishing/automation 
 ## Verify
 
 ```powershell
-node --test tests/content-studio-locale-presentation.test.mjs tests/memory-center-locale-presentation.test.mjs tests/free-prompt-gallery-locale-presentation.test.mjs tests/campaign-planner-locale-presentation.test.mjs
+node --test tests/content-studio-locale-presentation.test.mjs tests/content-studio-detail-locale-presentation.test.mjs tests/workboard-locale-presentation.test.mjs tests/memory-center-locale-presentation.test.mjs tests/free-tools-hub-presentation.test.mjs tests/free-prompt-gallery-locale-presentation.test.mjs tests/project-studio-locale-presentation.test.mjs tests/publish-review-pack-locale-presentation.test.mjs tests/campaign-planner-locale-presentation.test.mjs
 ```
+
+## Source evidence 2026-10-16
+
+- Content Studio board/detail, Workboard board/list/detail, Memory, Free Tools, Free Prompt
+  Gallery, Projects/Studio Documents, Publish Review và Campaign đều có renderer/helper và
+  locale regression hiện hành; focused source set đạt `28/28`, full Node suite đạt `496/496`.
+- Các route/action/field/revision và boundary bản nháp/không tạo output vẫn được kiểm tra bởi
+  các test từng surface. Đây là source/presentation evidence; browser AX, responsive runtime
+  và dữ liệu ghi thật vẫn mở theo W7/W8/W9.

@@ -413,3 +413,15 @@ Regression `tests/image-operation-locale-purity.test.mjs` đạt `3/3`; focused 
 tệp Portal và `git diff --check` đạt. Python contract `NOT_RUN` vì thiếu `python`/`py`;
 browser/AX/live chưa chạy và không có provider call, wallet mutation, production data,
 merge hay deploy trong batch.
+
+### Đối chiếu source locale — Channel Strategy và Workboard — 16/10/2026
+
+Channel Strategy hiện có catalogue giao diện cân bằng VI/EN/ZH và renderer dùng helper cho
+list, filter, create, detail, preview, history, activity, field labels và aria text. Workboard
+đã dùng locale key cho nhãn bảng Kanban và trạng thái guarded. Các hợp đồng route/action/field,
+quyền, revision, CSRF và idempotency không đổi; nội dung do tài khoản nhập và dữ liệu máy chủ
+không bị dịch trong trình duyệt.
+
+Evidence source: Channel Strategy `2/2`, Workboard `4/4`, focused nhóm Content/Workboard/
+Free/Memory/Project/Publish/Campaign `28/28`, full Node `496/496`, `NEW_FAILURES=0`. Browser,
+AX, runtime/live và Python contract chưa chạy.

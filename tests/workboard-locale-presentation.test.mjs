@@ -84,3 +84,11 @@ test("Workboard route metadata is locale-aware", () => {
   assert.match(portalSource, /path === "\/workboard" \|\| path\.startsWith\("\/workboard\/"\)\) return workboardText\("page\.title"/);
   assert.match(portalSource, /path === "\/workboard\/new"\) return workboardText\("page\.newDescription"/);
 });
+
+test("Workboard board label and guarded recovery use reviewed locale keys", () => {
+  assert.match(source, /aria-label=\"' \+ safeText\(workboardText\("board\.kicker"/);
+  assert.match(source, /workboardText\("recovery\.guarded",/);
+  assert.doesNotMatch(source, /workboardText\("recovery\.guardedBody",/);
+  assert.ok(messages.vi["workboard.board.kicker"] && messages.en["workboard.board.kicker"] && messages.zh["workboard.board.kicker"]);
+  assert.ok(messages.vi["workboard.recovery.guarded"] && messages.en["workboard.recovery.guarded"] && messages.zh["workboard.recovery.guarded"]);
+});

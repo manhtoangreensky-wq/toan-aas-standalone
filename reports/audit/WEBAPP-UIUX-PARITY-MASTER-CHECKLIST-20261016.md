@@ -275,13 +275,17 @@ hiển thị thành công giả khi engine/bridge chưa có.
 
 ### 5.6 Content, Workboard, Free Tools, Notes, Projects — Spec R217-09A
 
-- [ ] Mỗi surface có create/edit/save/archive/restore/version/history phù hợp và state
+- [~] Source presentation của Content Studio, Workboard, Free Tools, Notes, Projects,
+      Publish Review và Campaign đã có regression focused `28/28`; browser/runtime state
+      và dữ liệu ghi thật vẫn mở. Mỗi surface có create/edit/save/archive/restore/version/history
+      phù hợp và state
       empty/loading/error/guarded.
-- [ ] Campaign/Calendar/Approval có mốc, trạng thái, lịch, review và handoff; không đổi
+- [~] Campaign/Calendar/Approval source chrome có mốc, trạng thái, lịch, review và handoff;
+      browser/runtime vẫn mở, server action/CSRF/revision không đổi.
       server action/CSRF/revision.
-- [ ] Free Tools/Prompt Gallery có filter, copy/save và phân biệt fixed chrome với prompt
+- [~] Free Tools/Prompt Gallery source có filter, copy/save và tách fixed chrome khỏi prompt
       data; Workboard có board/list/card dọc trên mobile.
-- [ ] Ghi nhận những phần chỉ là planning/draft, không gọi là sản phẩm đã tạo.
+- [x] Ghi nhận những phần chỉ là planning/draft; không gọi là sản phẩm đã tạo.
 
 ## 6. W5 — Admin và liên kết customer — Spec R217-09
 
@@ -314,7 +318,8 @@ hiển thị thành công giả khi engine/bridge chưa có.
       `188/188` pass; runtime FPS/CLS/LCP/INP vẫn mở.
 - [~] Browser motion acceptance còn mở: chưa có trace FPS/CLS/LCP/INP và chưa chứng minh
       scroll reveal không tạo vùng trống trên runtime mới.
-- [ ] Kiểm tra entry/stagger 240–450ms, micro 150–300ms, exit nhanh hơn entry; không animate
+- [ ] Kiểm tra micro 150–300ms, exit nhanh hơn entry; auth/customer entrance giữ 680ms theo
+      R216/WA-35 và landing cinematic giữ 980ms; không animate
       quá 1–2 nhóm chính mỗi view, không dùng linear cho UI.
 - [ ] Kiểm tra route unmount: observer/RAF/timer/listener bị hủy và async hydration không
       ghi vào shell đã thay.
@@ -376,11 +381,25 @@ hiển thị thành công giả khi engine/bridge chưa có.
 - [ ] Browser/AX/live recheck chưa chạy; Python contract `NOT_RUN` do thiếu `python`/`py`.
 - [ ] Không provider call, wallet mutation, production data, merge hoặc deploy trong batch.
 
+- [x] **SOURCE-LOCALE-19:** Channel Strategy đã nối renderer vào catalogue
+      `channelStrategyUi.*` cân bằng VI/EN/ZH, bao phủ guard/list/filter/pagination/create/
+      detail/lifecycle/preview/history/activity, field label/placeholder/help và aria text.
+      Workboard residual cũng đã khóa: nhãn bảng Kanban dùng `workboard.board.kicker`, guarded
+      recovery dùng `workboard.recovery.guarded` thay vì fallback tiếng Việt thiếu key. Route,
+      action, field, capability, revision, CSRF, idempotency và dữ liệu động giữ nguyên.
+- [x] Regression `tests/channel-strategy-locale-presentation.test.mjs` đạt `2/2`, Workboard
+      locale đạt `4/4`; focused Content/Workboard/Free/Memory/Project/Publish/Campaign đạt
+      `28/28`; focused Image/media đạt `54/54`; full Node suite đạt `496/496`; baseline trước
+      batch `493/493`, `NEW_FAILURES=0`; syntax và `git diff --check` đạt.
+- [ ] Browser/AX/live locale recheck và Python contract vẫn chưa chạy; không đánh dấu runtime.
+- [x] `HEAD_SHA=c685a07947af513eb0ea6ecd2d6be951be9fb30d` đã push lên nhánh
+      `webapp-checklist-r116`; PR chưa merge, chưa deploy, `LIVE_PASS=NO`.
+
 ## 11. Tổng trạng thái tại ngày 2026-10-16
 
 | Nhóm | Đã có bằng chứng | Đang mở | Bị chặn/hoãn |
 |---|---:|---:|---:|
-| Source UI/UX/locale/static motion | W2 locale `SOURCE-LOCALE-18` xanh | 3 live drift/runtime gates | 0 |
+| Source UI/UX/locale/static motion | W2 locale `SOURCE-LOCALE-19` xanh; W4 09A source `28/28` | 3 live drift/runtime gates | 0 |
 | Responsive/PWA live | source fix + 39 focused / 470 Node | 2 (R216-H/R216-P) | QA runtime |
 | Customer product parity UI | shell/partial nhiều lane | 6 lane acceptance | real-output bridge |
 | Admin/customer wiring UI | source contracts rải rác | 1 master surface audit | backend/permission mutation |
@@ -402,5 +421,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=Tiếp tục W2 locale theo checklist sau SOURCE-LOCALE-18; nhóm Image Resize/Enhance/Brand Overlay/Storyboard đã khóa source, còn browser/AX/live recheck và các lane kế tiếp mở.
+NEXT_ACTION=Tiếp tục W2 locale theo checklist sau SOURCE-LOCALE-19; Channel Strategy và Workboard residual đã khóa source, tiếp theo là Music authoring fixed chrome, còn browser/AX/live recheck và các lane runtime mở.
 ```

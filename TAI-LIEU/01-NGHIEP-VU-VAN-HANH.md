@@ -656,3 +656,16 @@ idempotency, revision, download path, ownership/integrity guard và điều ki�
 không tạo output giả. Python contract `NOT_RUN` vì môi trường thiếu `python`/`py`; đây là
 source evidence trên PR #647, chưa phải bundle đã giao, deployed hoặc live. Browser/AX/live
 recheck và các lane tiếp theo vẫn mở.
+
+### Ghi nhận source locale — Channel Strategy và Workboard — 16/10/2026
+
+`SOURCE-LOCALE-19` nối fixed chrome Channel Strategy vào catalogue `channelStrategyUi.*`
+cân bằng VI/EN/ZH, gồm guard, thư viện, bộ lọc, phân trang, biểu mẫu, chi tiết, vòng đời,
+định hướng, lịch sử, hoạt động, field label/help và aria text. Workboard dùng key locale cho
+aria-label bảng Kanban và guarded recovery, không còn fallback tiếng Việt khi chọn EN/ZH.
+Route/action/field/capability/revision/CSRF/idempotency và dữ liệu động không đổi.
+
+Regression Channel Strategy `2/2`, Workboard `4/4`; focused Content/Workboard/Free/Memory/
+Project/Publish/Campaign `28/28`; focused Image/media `54/54`; full Node `496/496`, baseline
+`493/493`, `NEW_FAILURES=0`. Đây là source evidence; browser/AX/live và Python contract vẫn
+chưa chạy, không gọi provider, không chạm ví/Xu/PayOS, không deploy hoặc merge.

@@ -26,7 +26,7 @@ ordered_waves:
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Locale source focused gates pass; Admin fallback copy và fixed chrome được đóng theo nhóm hẹp. SOURCE-LOCALE-03 system stewardship 1/1, SOURCE-LOCALE-04 generic Admin chrome 1/1, SOURCE-LOCALE-05 security/access chrome 2/2, SOURCE-LOCALE-06 automation monitor chrome 1/1 (bao phủ 3 nhóm), SOURCE-LOCALE-07 admin guidance chrome 1/1 (bao phủ 2 màn hình), SOURCE-LOCALE-08 delivery/runtime chrome 1/1, SOURCE-LOCALE-09 customer shell navigation 1/1, SOURCE-LOCALE-10 deliveryCenter customer chrome 1/1, SOURCE-LOCALE-11 account activity chrome 1/1, SOURCE-LOCALE-12 data controls chrome + renderer fallback 2/2, SOURCE-LOCALE-13 support ticket chrome + renderer fallback 2/2, SOURCE-LOCALE-14 account/profile chrome + renderer fallback 2/2, SOURCE-LOCALE-15 Image Studio/Hub chrome 2/2, SOURCE-LOCALE-16 Image library/Hub chrome 2/2 (catalogue 67 mục), SOURCE-LOCALE-17 Image detail chrome 2/2 (catalogue 91 mục) và SOURCE-LOCALE-18 Image operations 3/3 (catalogue cân bằng) pass; focused Image/media 54/54, full Node suite 493/493, baseline 490/490, NEW_FAILURES=0. Python contract chưa chạy do thiếu python/py; browser/AX/live locale recheck và product scan còn mở."
+    note: "Locale source focused gates pass; SOURCE-LOCALE-03→18 đã khóa theo nhóm hẹp. SOURCE-LOCALE-19 nối Channel Strategy vào catalogue channelStrategyUi.* cân bằng, khóa Workboard aria-label và guarded recovery fallback; regression Channel Strategy 2/2, Workboard 4/4, focused Content/Workboard/Free/Memory/Project/Publish/Campaign 28/28, focused Image/media 54/54, full Node 496/496, baseline 493/493, NEW_FAILURES=0. HEAD_SHA=c685a07947af513eb0ea6ecd2d6be951be9fb30d đã push lên webapp-checklist-r116; chưa merge/deploy/live. Python contract chưa chạy do thiếu python/py; browser/AX/live locale recheck và Music authoring scan còn mở."
   - id: W3
     spec: R217-03
     status: SOURCE_GREEN_RUNTIME_OPEN
@@ -54,8 +54,9 @@ ordered_waves:
     name: product-video
   - id: W4
     spec: R217-09A
-    status: TODO
+    status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
     name: content-workboard-free-tools
+    note: "Content Studio, Workboard, Free Tools, Free Prompt Gallery, Memory, Projects, Publish Review và Campaign source focused 28/28; browser/runtime state và ghi thật còn mở."
   - id: W5
     spec: R217-09
     status: SOURCE_PARTIAL_RUNTIME_OPEN
@@ -107,4 +108,4 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-next_action: "Continue W2 locale in checklist order after SOURCE-LOCALE-18; Image Resize/Enhance/Brand Overlay/Storyboard source chrome is locked. Next groups and browser/AX/live recheck remain open; update evidence before any delivery."
+next_action: "Continue W2 locale in checklist order after SOURCE-LOCALE-19; Channel Strategy and Workboard residual source chrome are locked. Next group is Music authoring fixed chrome; browser/AX/live recheck remains open."
