@@ -419,7 +419,7 @@ hiển thị thành công giả khi engine/bridge chưa có.
       `28/28`; focused Image/media đạt `54/54`; full Node suite đạt `496/496`; baseline trước
       batch `493/493`, `NEW_FAILURES=0`; syntax và `git diff --check` đạt.
 - [ ] Browser/AX/live locale recheck và Python contract vẫn chưa chạy; không đánh dấu runtime.
-- [x] `HEAD_SHA=f7e637ac606e00053269bb7abe64dc45e02d851d` đã push lên nhánh
+- [x] `HEAD_SHA=80e43861b6be4c92b9c9a4cbcb7fc19dd2841218` đã push lên nhánh
       `webapp-checklist-r116`; PR chưa merge, chưa deploy, `LIVE_PASS=NO`.
 - [x] **SOURCE-LOCALE-20A:** Music Prompt Composer đã dùng catalogue
       `musicPromptComposerUi.*` cân bằng VI/EN/ZH cho trang lập kế hoạch, form, boundary,
