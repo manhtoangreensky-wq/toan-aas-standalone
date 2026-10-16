@@ -58,8 +58,9 @@
 - [x] **SOURCE-UI-03:** modal hướng dẫn cài ứng dụng giữ đúng nền xanh navy/xanh ngọc;
       lớp phủ và thanh chọn tab không còn dùng nền đen. Regression nằm ở
       `tests/install-modal-navy-palette.test.mjs`.
-- [x] Source recheck sau W1: focused PWA/auth/utility/motion `39/39`, toàn bộ Node
-      `470/470`, `node --check static/portal/portal.js`, `git diff --check` đạt.
+- [x] Source recheck sau W1 và W2 locale: focused PWA/auth/utility/motion `39/39`,
+      toàn bộ Node `475/475`, `node --check static/portal/portal-i18n.js`,
+      `git diff --check` đạt.
 - [!] Python Admin/PWA contract chưa chạy: bundled Python không có module `pytest`; đây
       là blocker công cụ, không ghi PASS giả.
 - [~] Live recheck 2026-10-16 ở `/welcome?lang=vi`, viewport `327×668` vẫn nhận
@@ -85,10 +86,15 @@
       tiếng Việt đầy đủ cho theo dõi tự động hóa, bảo mật, quyền truy cập, tài liệu quản trị,
       kho tài liệu, hệ thống, môi trường chạy và bản sao lưu; regression
       `tests/admin-system-stewardship-locale.test.mjs` đạt `1/1`.
+- [x] **SOURCE-LOCALE-04:** fixed chrome Admin còn sót `Maintenance`, `Audit`, `Incident queue`,
+      `Job`, `Output`, `Workspace`, tiêu đề bảo mật/quyền truy cập, quản trị hệ thống,
+      phản hồi chuyển đổi và tác vụ bị khóa đã được dịch trong catalogue VI; regression
+      `tests/admin-generic-fixed-chrome-locale.test.mjs` đạt `1/1`.
 - [~] **LIVE-I18N-01:** next-route `/features → /login?next=/features` từng lộ
       `Tải & Cài đặt App TOAN AAS` trong bundle cũ; phải recheck đúng URL sau delivery.
-- [ ] Quét fixed chrome toàn customer/Admin/product lanes; lập danh sách chuỗi English lọt
-      trong VI và Vietnamese lọt trong EN/ZH; không sửa server data/ID/URL.
+- [~] Đã khóa một cụm fixed chrome Admin theo SOURCE-LOCALE-04; vẫn còn phải quét tiếp
+      toàn customer/Admin/product lanes và lập danh sách chuỗi English lọt trong VI cùng
+      Vietnamese lọt trong EN/ZH; không sửa server data/ID/URL.
 - [ ] Kiểm tra fallback locale, duplicate key, option label và aria-label ở VI/EN/ZH.
 - [ ] Evidence: `node --test tests/auth-locale-copy-purity.test.mjs tests/*locale*.test.mjs`
       và browser AX tree theo locale.
@@ -293,12 +299,12 @@ phát hiện lỗi mới, thêm một dòng ở đúng wave và ghi `OPEN`. Chec
 nhất để quyết định wave tiếp theo.
 
 ```ini
-STATUS=PLAN_CHECKLIST_SPEC_READY_WAITING_OWNER
+STATUS=ACTIVE_SOURCE_EXECUTION
 PROVIDER_CALLS=0
 WALLET_MUTATIONS=0
 PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=Owner mở W1 hoặc chỉ định spec cụ thể; chưa thực thi code trong lượt này
+NEXT_ACTION=Tiếp tục W2 locale theo thứ tự: quét fixed chrome customer/Admin/product, khóa từng cụm bằng regression; live/runtime vẫn mở đến khi có bundle được delivery.
 ```
