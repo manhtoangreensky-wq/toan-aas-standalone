@@ -12,6 +12,10 @@ const securityStart = vi.indexOf('"adminGeneric.securityAccess.state.loadingTitl
 const securityEnd = vi.indexOf('"adminGeneric.automationMonitor.route.title"', securityStart);
 assert.ok(securityStart >= 0 && securityEnd > securityStart, 'Security/access catalogue must remain present');
 const security = vi.slice(securityStart, securityEnd);
+const automationStart = vi.indexOf('"adminGeneric.automationMonitor.route.title"');
+const automationEnd = vi.indexOf('"adminGeneric.systemStewardship.route.title"', automationStart);
+assert.ok(automationStart >= 0 && automationEnd > automationStart, 'Automation monitor catalogue must remain present');
+const automation = vi.slice(automationStart, automationEnd);
 
 test('Vietnamese Admin fixed chrome removes the reported English leaks', () => {
   const expected = [
@@ -55,4 +59,19 @@ test('Vietnamese Admin fixed chrome removes the reported English leaks', () => {
     'rate limit',
     'control plane'
   ]) assert.equal(security.includes(phrase), false, `English security/access chrome leaked: ${phrase}`);
+  for (const phrase of [
+    'receipt scheduler',
+    'receipt private',
+    'projection receipt',
+    'Inbox Center',
+    'Scheduler',
+    'Web-native',
+    'metadata',
+    'Preflight',
+    'control plane',
+    'provider',
+    'delivery',
+    'payment',
+    'job'
+  ]) assert.equal(automation.includes(phrase), false, `English automation chrome leaked: ${phrase}`);
 });
