@@ -75,6 +75,9 @@
 - [x] Source locale R210 Workboard, R211 Memory, R212 Campaign, R213 Gallery/Audio,
       R214 Video có focused tests và catalogue VI/EN/ZH.
 - [x] Source auth CTA dùng catalogue, có duplicate-key regression.
+- [x] W2 source regression mới: locale/auth catalogue `272/272` Node pass; `portal-i18n.js`
+      và `portal-auth.js` syntax pass. Admin fallback copy vừa dọn `Web audit metadata`,
+      `Feature/provider readiness` và các nhãn vai trò/quyền hạn generic trong VI.
 - [~] **LIVE-I18N-01:** next-route `/features → /login?next=/features` từng lộ
       `Tải & Cài đặt App TOAN AAS` trong bundle cũ; phải recheck đúng URL sau delivery.
 - [ ] Quét fixed chrome toàn customer/Admin/product lanes; lập danh sách chuỗi English lọt
@@ -89,6 +92,11 @@
 - [x] Source Telegram giữ user gesture, PWA prompt chỉ gọi khi readiness thật.
 - [x] Skip link, labels, autocomplete, aria-busy, password cleanup và reduced-motion guards
       đã có regression theo R216.
+- [x] Auth source contract: intro bắt đầu ở đầu bố cục khi provider card cao
+      (`align-items/align-content:start`, `padding-top:68px`); responsive auth header
+      kiểm tra đúng ba hàng brand/locale/actions. Direct source checks của hai contract đạt.
+- [x] Auth/customer/motion source regression bổ sung `31/31` pass; auth focused `16/16`
+      pass. Python pytest vẫn không có trong runtime nên không đánh dấu pytest PASS.
 - [ ] QA unauthenticated route matrix: `/dashboard`, `/features`, `/image/create`,
       `/subdub`, `/music`, `/voice`, `/admin` đều fail-closed đúng next path.
 - [ ] QA authenticated first paint: skeleton → shell → data; không chớp trang hoặc render
@@ -105,6 +113,9 @@ hiển thị thành công giả khi engine/bridge chưa có.
 
 ### 5.1 Image — Spec R217-04
 
+- [x] Source presentation focused `188/188` cho Image/Voice/Music/SubDub/Video; UI giữ
+      guarded boundary và không tạo output giả.
+
 - [ ] Một entry `/image/create` có tạo ảnh AI và chỉnh sửa ảnh; không buộc người dùng mò
       route khác để upload/reference.
 - [ ] Có prompt, tỉ lệ, style/preset, image reference/upload, biến thể, preview và lịch sử.
@@ -112,6 +123,8 @@ hiển thị thành công giả khi engine/bridge chưa có.
       khi asset thật, không dùng `output available` giả.
 - [ ] Nút chính, disclosure nâng cao, helper/error và mobile stacking được khóa bằng test.
 - [ ] Phân biệt source UI green với `REAL_OUTPUT` chưa có bridge; evidence phải ghi rõ.
+- [!] Image AI edit/reference upload/preview/delivery thật chưa có evidence; `/image/edit`
+      hiện là Image Enhance deterministic và `/image-studio` là planning metadata.
 
 ### 5.2 Voice — Spec R217-05
 
@@ -122,6 +135,8 @@ hiển thị thành công giả khi engine/bridge chưa có.
 - [ ] Có text/language/rate/pitch/volume, preview loading, result/download/recovery,
       báo cáo request/job/output thật.
 - [ ] Tách rõ `voice_tts` source pass với `voice_clone` runtime blocked.
+- [!] Voice TTS/clone/preview/output runtime vẫn guarded; Voice Library chưa nối vào
+      SubDub bằng evidence UI/runtime xác thực.
 
 ### 5.3 Music — Spec R217-06
 
@@ -131,6 +146,8 @@ hiển thị thành công giả khi engine/bridge chưa có.
       và vocal/instrumental; preset và preview dùng cùng hệ component.
 - [ ] Có progress/result/history/export và cảnh báo boundary nếu generation bridge chưa có.
 - [ ] Mobile mode switch/card/list theo hàng dọc; không trộn thuật ngữ English trong VI.
+- [!] Hai hướng nhạc nền/nhạc có lời có entry/catalogue nhưng generation/export thật vẫn
+      guarded; không có provider/output evidence.
 
 ### 5.4 SubDub — Spec R217-07
 
@@ -146,6 +163,9 @@ hiển thị thành công giả khi engine/bridge chưa có.
       sau đó EN/ZH và các target khác, không hard-code danh sách hẹp ở UI.
 - [ ] Kết quả phải có video/track/subtitle artifact thật hoặc trạng thái bị chặn cụ thể;
       không dùng card “xong” cho draft.
+- [!] `SMART_MULTI_UI_MISSING`: chưa có auto-detect/mapping một-hai-nhiều giọng; chưa có
+      `SUBDUB_VOICE_LIBRARY_LINK_MISSING`; target language UI đang hẹp (VI/EN/ZH/JA/KO)
+      so với contract mã ngôn ngữ rộng hơn của backend. Upload/CTA vẫn guarded.
 
 ### 5.5 Product Video — Spec R217-08
 
@@ -157,6 +177,8 @@ hiển thị thành công giả khi engine/bridge chưa có.
       reference, version/history và report.
 - [ ] Không tuyên bố real MP4/provider output khi parity matrix đang `PARTIAL` hoặc
       `BLOCKED_BY_RUNTIME`; phải link request/job/report thật nếu có.
+- [!] `VIDEO_AI_MANUAL_EDIT_UI_MISSING`: AI edit/manual edit/timeline/render MP4/delivery
+      chưa có evidence; Video Studio hiện là planning/scene/review/version metadata.
 
 ### 5.6 Content, Workboard, Free Tools, Notes, Projects — Spec R217-09A
 
@@ -170,6 +192,11 @@ hiển thị thành công giả khi engine/bridge chưa có.
 
 ## 6. W5 — Admin và liên kết customer — Spec R217-09
 
+- [x] Source Admin fallback locale đã dọn các nhãn kỹ thuật generic; focused Admin tab +
+      motion suite `29/29` pass.
+- [x] Admin module navigation đã chuyển thành danh sách dọc, `min-height:44px`, không còn
+      `overflow-x:auto`/`min-width:max-content` trong scoped tab layer.
+
 - [ ] Admin shell/menu/operations/billing/jobs/assets/customer/support/audit/reliability/
       ERP trình bày theo hàng dọc, nhóm rõ, không lẫn tiếng Anh trong VI.
 - [ ] Owner thấy toàn bộ; role khác chỉ thấy module/action theo policy hiển thị. UI phải
@@ -182,12 +209,16 @@ hiển thị thành công giả khi engine/bridge chưa có.
       legend/label không dùng màu đơn độc.
 - [ ] Evidence source dùng các test `tests/test_admin_*`, browser QA cần canonical_admin
       fixture cô lập; không gọi production wallet.
+- [!] Manual top-up có draft/confirm receipt/idempotency ở source nhưng chưa có canonical
+      admin fixture/runtime evidence chứng minh duyệt và ghi ledger; giữ mutation deferred.
 
 ## 7. W6 — Motion và perceived performance — Spec R217-10
 
 - [x] Source auth double-render, provider reservation, `left` transition, stale observer/
       RAF, reduced-motion listener, blanket will-change và PWA gesture đã có regression
       theo R216.
+- [x] Current source motion/admin focused suite `29/29` pass; product presentation suite
+      `188/188` pass; runtime FPS/CLS/LCP/INP vẫn mở.
 - [~] Browser motion acceptance còn mở: chưa có trace FPS/CLS/LCP/INP và chưa chứng minh
       scroll reveal không tạo vùng trống trên runtime mới.
 - [ ] Kiểm tra entry/stagger 240–450ms, micro 150–300ms, exit nhanh hơn entry; không animate

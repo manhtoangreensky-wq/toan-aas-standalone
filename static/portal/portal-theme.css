@@ -20760,14 +20760,14 @@ html:not([data-portal-theme="dark"]) .portal-auth-page--admin .portal-auth-card 
 
 /* ERP Module Secondary Navigation Tabs */
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-tabs {
-  display: flex;
+  display: block;
   width: 100%;
   margin: 0 0 18px 0;
-  padding: 0 0 8px 0;
-  border-bottom: 1px solid var(--portal-border);
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  padding: 4px;
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-md, 10px);
+  background: var(--portal-surface-card);
+  overflow: visible;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-tabs::-webkit-scrollbar {
@@ -20775,16 +20775,19 @@ html:not([data-portal-theme="dark"]) .portal-auth-page--admin .portal-auth-card 
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-tabs-list {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
-  min-width: max-content;
+  min-width: 0;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-tab {
-  display: inline-flex;
+  display: flex;
+  width: 100%;
+  min-height: 44px;
   align-items: center;
-  padding: 6px 14px;
+  justify-content: flex-start;
+  padding: 10px 14px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
@@ -20792,7 +20795,7 @@ html:not([data-portal-theme="dark"]) .portal-auth-page--admin .portal-auth-card 
   text-decoration: none;
   border: 1px solid transparent;
   transition: color 0.16s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s cubic-bezier(0.16, 1, 0.3, 1);
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-tab:hover {

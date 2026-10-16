@@ -39,3 +39,9 @@ node --test tests/*.test.mjs
 
 Nếu test tên cũ không tồn tại, dùng đúng focused test được ghi trong R214 và lưu lệnh đã
 chạy; không bỏ qua vì khác tên.
+
+## Current source audit 2026-10-16
+
+Video Hub and Studio presentation tests are green and preserve the ordered brief-to-report
+flow. AI edit, manual timeline editing, render MP4 and delivery remain guarded/planning
+surfaces; no provider output or real artifact evidence exists.

@@ -26,30 +26,30 @@ ordered_waves:
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Next-route auth locale drift requires runtime recheck."
+    note: "Locale source 272/272 Node pass; Admin fallback copy cleaned. Auth next-route/live locale recheck remains open; public auth fallback jargon still needs review."
   - id: W3
     spec: R217-03
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Unauthenticated/authenticated browser matrix not complete."
+    note: "Auth entry layout and responsive source contracts fixed; auth/customer/motion source 31/31 and focused auth 16/16 pass. Browser route matrix and pytest remain unavailable."
   - id: W4
     spec: R217-04
-    status: TODO
+    status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
     name: image
   - id: W4
     spec: R217-05
-    status: TODO
+    status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
     name: voice
   - id: W4
     spec: R217-06
-    status: TODO
+    status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
     name: music
   - id: W4
     spec: R217-07
-    status: TODO
+    status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
     name: subdub
   - id: W4
     spec: R217-08
-    status: TODO
+    status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
     name: product-video
   - id: W4
     spec: R217-09A
@@ -57,12 +57,12 @@ ordered_waves:
     name: content-workboard-free-tools
   - id: W5
     spec: R217-09
-    status: TODO
+    status: SOURCE_PARTIAL_RUNTIME_OPEN
     name: admin-customer-visibility
   - id: W6
     spec: R217-10
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Static motion gates green; runtime trace and scroll evidence open."
+    note: "Static motion/admin focused 29/29 and product presentation 188/188 green; runtime trace and scroll evidence open."
   - id: W7
     spec: R217-11
     status: BLOCKED

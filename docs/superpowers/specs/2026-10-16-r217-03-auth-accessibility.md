@@ -44,3 +44,13 @@ node --check static/portal/portal-auth.js
 
 Nếu bundled Python không chạy, ghi lỗi harness thật và giữ `RUNTIME_UNAVAILABLE`; không
 đổi lệnh thành PASS giả.
+
+## Source closeout 2026-10-16
+
+- Auth entry layout contract fixed: `.portal-auth-page` starts content at the top with
+  `align-items:start`, `align-content:start`, and `padding-top:68px`.
+- Responsive contract boundary now stops before the later Admin drawer layer, so the
+  auth three-row `brand → locale → actions` check does not inspect unrelated CSS.
+- Direct source checks for the entry layout and responsive three-row contract pass.
+- Node auth/customer/motion regression: `31/31`; auth/PWA focused: `16/16`.
+- Authenticated browser route matrix and runtime AX/console/network evidence remain open.

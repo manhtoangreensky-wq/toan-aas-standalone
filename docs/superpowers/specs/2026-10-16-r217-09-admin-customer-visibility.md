@@ -42,3 +42,14 @@ python -m pytest tests/test_admin_*.py -q
 
 Chỉ kết luận PASS theo output thật; nếu bundled Python/fixture không chạy, ghi BLOCKED và
 không tự sửa dependency production.
+
+## Source closeout 2026-10-16
+
+- Admin module tabs now render as a vertical grid with `min-height:44px`, normal wrapping,
+  and no horizontal overflow in the scoped Admin layer.
+- Generic Admin fallback labels now use the VI/EN/ZH catalogue for role check, read-only,
+  authority boundary, Web audit metadata and provider readiness copy.
+- Admin/module/locale/motion focused Node evidence: `29/29`.
+- Manual top-up draft/confirm and idempotency presentation exists in source, but actual
+  approval/ledger effect still requires an isolated canonical-admin fixture and remains
+  deferred; no wallet mutation was performed.
