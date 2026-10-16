@@ -401,6 +401,11 @@ hiển thị thành công giả khi engine/bridge chưa có.
 - [x] Regression Music Prompt Composer `2/2`; focused Channel/Workboard/Music `8/8`, focused
       Image/media `54/54`, full Node `498/498`, baseline `496/496`, `NEW_FAILURES=0`; syntax
       và `git diff --check` đạt. Direction Presets và SFX Cue Sheet còn là batch sau.
+- [x] **SOURCE-LOCALE-20B:** Music Direction Presets đã dùng catalogue `musicDirectionUi.*`
+      cân bằng VI/EN/ZH cho preset card, form, receipt, boundary, checklist và scope; giữ
+      nguyên ID preset, route/action/field/capability/CSRF/idempotency và không tạo âm thanh.
+- [x] Regression Music Direction `2/2`; focused Composer/Direction/Voice/Media `33/33`;
+      full Node suite `500/500`, syntax và `git diff --check` đạt. SFX Cue Sheet còn là batch sau.
 
 ## 11. Tổng trạng thái tại ngày 2026-10-16
 

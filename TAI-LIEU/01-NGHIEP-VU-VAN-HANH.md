@@ -679,3 +679,13 @@ idempotency giữ nguyên; không tạo âm thanh, tác vụ, thanh toán hoặc
 
 Regression riêng `2/2`, focused Channel/Workboard/Music `8/8`, Image/media `54/54`, full Node
 `498/498`, baseline `496/496`, `NEW_FAILURES=0`; browser/AX/live và Python contract chưa chạy.
+
+### Ghi nhận source locale — Music Direction Presets — 16/10/2026
+
+`SOURCE-LOCALE-20B` chuẩn hóa fixed chrome của Music Direction Presets qua catalogue
+`musicDirectionUi.*` cân bằng VI/EN/ZH: preset card, form, receipt, boundary, checklist và
+phạm vi. ID preset, route/action/field/capability/CSRF/idempotency và ranh giới không tạo âm
+thanh giữ nguyên.
+
+Regression riêng `2/2`; focused Composer/Direction/Voice/Media `31/31`; browser/AX/live và
+Python contract chưa chạy. SFX Cue Sheet là nhóm kế tiếp.

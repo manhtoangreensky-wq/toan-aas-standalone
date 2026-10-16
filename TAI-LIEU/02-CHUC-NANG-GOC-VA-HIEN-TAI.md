@@ -435,3 +435,12 @@ không tạo âm thanh không đổi.
 
 Evidence source: regression `2/2`, focused Channel/Workboard/Music `8/8`, full Node `498/498`,
 `NEW_FAILURES=0`. Browser, AX, runtime/live và Python contract chưa chạy.
+
+### Đối chiếu source locale — Music Direction Presets — 16/10/2026
+
+Music Direction Presets dùng catalogue `musicDirectionUi.*` cân bằng VI/EN/ZH cho preset card,
+biểu mẫu, biên nhận, boundary, checklist và scope. ID preset và dữ liệu brief/receipt vẫn là
+giá trị canonical; route/action/field/capability/CSRF/idempotency không đổi.
+
+Evidence source: regression `2/2`, focused Composer/Direction/Voice/Media `31/31`; Browser,
+AX, runtime/live và Python contract chưa chạy.
