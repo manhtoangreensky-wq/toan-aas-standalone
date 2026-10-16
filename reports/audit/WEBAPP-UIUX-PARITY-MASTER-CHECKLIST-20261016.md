@@ -163,9 +163,12 @@ hiển thị thành công giả khi engine/bridge chưa có.
       sau đó EN/ZH và các target khác, không hard-code danh sách hẹp ở UI.
 - [ ] Kết quả phải có video/track/subtitle artifact thật hoặc trạng thái bị chặn cụ thể;
       không dùng card “xong” cho draft.
-- [!] `SMART_MULTI_UI_MISSING`: chưa có auto-detect/mapping một-hai-nhiều giọng; chưa có
-      `SUBDUB_VOICE_LIBRARY_LINK_MISSING`; target language UI đang hẹp (VI/EN/ZH/JA/KO)
-      so với contract mã ngôn ngữ rộng hơn của backend. Upload/CTA vẫn guarded.
+- [x] Source presentation bổ sung Smart Multi guarded: lựa chọn tự động/một/hai/nhiều
+      giọng, mapping placeholder, selector Voice Library và mã ngôn ngữ ISO mở rộng;
+      SubDub vẫn không gọi engine và không tạo output giả.
+- [!] `SUBDUB_VOICE_LIBRARY_LINK_MISSING` runtime: selector đã có trong UI nhưng chưa nối
+      dữ liệu Voice thật; upload/CTA vẫn guarded và target language custom chỉ là input
+      presentation chờ server xác minh.
 
 ### 5.5 Product Video — Spec R217-08
 

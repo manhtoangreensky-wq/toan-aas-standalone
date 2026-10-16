@@ -25375,6 +25375,9 @@
       targetLangDubLabel: "Ngôn ngữ lồng tiếng mục tiêu",
       sharedTargetLangLabel: "Ngôn ngữ đầu ra",
       sharedTargetLangHint: "Dùng chung cho phụ đề và giọng lồng tiếng.",
+      targetLangCustomLabel: "Mã ngôn ngữ khác (ISO)",
+      targetLangCustomPlaceholder: "Ví dụ: fr, de, es hoặc pt-BR",
+      targetLangCustomHelp: "Nhập mã ngôn ngữ được hệ thống hỗ trợ khi không có trong danh sách nhanh.",
       subDisplayLabel: "Kiểu hiển thị phụ đề",
       subDisplaySingle: "Phụ đề đơn ngữ (Chỉ bản dịch)",
       subDisplayBilingual: "Phụ đề song ngữ (Gốc + Dịch)",
@@ -25384,6 +25387,22 @@
       voiceGuardedTitle: "Hệ thống giọng đọc đang tạm khóa",
       voiceGuardedBody: "Các giọng đọc sẽ hiển thị tại đây khi tính năng lồng tiếng được mở.",
       voiceUnavailableOption: "Chưa thể chọn giọng đọc",
+      smartMultiLabel: "Phân bổ giọng thông minh",
+      smartMultiHint: "Tự nhận diện người nói và gán một, hai hoặc nhiều giọng; tính năng vẫn đang được bảo vệ.",
+      smartMultiAuto: "Tự động nhận diện",
+      smartMultiOne: "Một giọng",
+      smartMultiTwo: "Hai giọng",
+      smartMultiMany: "Nhiều giọng",
+      voiceLibraryLabel: "Giọng từ Thư viện giọng",
+      voiceLibraryGuarded: "Thư viện giọng sẽ liên kết khi Voice và SubDub cùng được máy chủ mở.",
+      smartMultiLabel: "Phân bổ giọng thông minh",
+      smartMultiHint: "Tự nhận diện người nói và gán một, hai hoặc nhiều giọng; tính năng vẫn đang được bảo vệ.",
+      smartMultiAuto: "Tự động nhận diện",
+      smartMultiOne: "Một giọng",
+      smartMultiTwo: "Hai giọng",
+      smartMultiMany: "Nhiều giọng",
+      voiceLibraryLabel: "Giọng từ Thư viện giọng",
+      voiceLibraryGuarded: "Thư viện giọng sẽ liên kết khi Voice và SubDub cùng được máy chủ mở.",
       audioBalanceLabel: "Cân bằng âm thanh gốc",
       audioBalanceLower: "Giảm nhỏ âm lượng nền khi có tiếng nói (20%)",
       audioBalanceMute: "Tắt hoàn toàn âm thanh gốc (100% Giọng lồng tiếng)",
@@ -25499,6 +25518,9 @@
       targetLangDubLabel: "Target dubbing language",
       sharedTargetLangLabel: "Output language",
       sharedTargetLangHint: "Used for both subtitles and the dubbed voice.",
+      targetLangCustomLabel: "Other language code (ISO)",
+      targetLangCustomPlaceholder: "Example: fr, de, es, or pt-BR",
+      targetLangCustomHelp: "Enter a supported language code when it is not in the quick list.",
       subDisplayLabel: "Subtitle display layout",
       subDisplaySingle: "Single language (Target translation only)",
       subDisplayBilingual: "Bilingual (Source + Target)",
@@ -25508,6 +25530,22 @@
       voiceGuardedTitle: "Voice catalog is safely guarded",
       voiceGuardedBody: "Available voices will appear here when dubbing is enabled.",
       voiceUnavailableOption: "Voice selection is not available yet",
+      smartMultiLabel: "Smart speaker allocation",
+      smartMultiHint: "Detect speakers and map one, two, or many voices; this capability remains guarded.",
+      smartMultiAuto: "Auto-detect",
+      smartMultiOne: "One voice",
+      smartMultiTwo: "Two voices",
+      smartMultiMany: "Many voices",
+      voiceLibraryLabel: "Voice Library selection",
+      voiceLibraryGuarded: "Voice Library will connect when Voice and SubDub are opened by the server.",
+      smartMultiLabel: "Smart speaker allocation",
+      smartMultiHint: "Detect speakers and map one, two, or many voices; this capability remains guarded.",
+      smartMultiAuto: "Auto-detect",
+      smartMultiOne: "One voice",
+      smartMultiTwo: "Two voices",
+      smartMultiMany: "Many voices",
+      voiceLibraryLabel: "Voice Library selection",
+      voiceLibraryGuarded: "Voice Library will connect when Voice and SubDub are opened by the server.",
       audioBalanceLabel: "Original audio balance",
       audioBalanceLower: "Lower background audio during speech (20%)",
       audioBalanceMute: "Mute original audio completely (100% Dubbed voice)",
@@ -25623,6 +25661,9 @@
       targetLangDubLabel: "配音目标语言",
       sharedTargetLangLabel: "输出语言",
       sharedTargetLangHint: "只需选择一次，即可同时用于字幕和配音。",
+      targetLangCustomLabel: "其他语言代码（ISO）",
+      targetLangCustomPlaceholder: "例如：fr、de、es 或 pt-BR",
+      targetLangCustomHelp: "快速列表中没有目标语言时，输入系统支持的语言代码。",
       subDisplayLabel: "字幕显示方式",
       subDisplaySingle: "单语字幕（仅显示译文）",
       subDisplayBilingual: "双语字幕（原文 + 译文）",
@@ -25632,6 +25673,14 @@
       voiceGuardedTitle: "配音音色暂不可用",
       voiceGuardedBody: "配音功能开放后，可用音色将在此显示。",
       voiceUnavailableOption: "音色暂不可用",
+      smartMultiLabel: "智能说话人分配",
+      smartMultiHint: "自动识别说话人并分配一个、两个或多个音色；此能力仍受保护。",
+      smartMultiAuto: "自动识别",
+      smartMultiOne: "一个音色",
+      smartMultiTwo: "两个音色",
+      smartMultiMany: "多个音色",
+      voiceLibraryLabel: "从音色库选择",
+      voiceLibraryGuarded: "服务器开放 Voice 与 SubDub 后，音色库将在此连接。",
       audioBalanceLabel: "原始音频音量",
       audioBalanceLower: "说话时降低背景音量（20%）",
       audioBalanceMute: "完全静音原始音频（仅保留配音）",
@@ -25831,6 +25880,9 @@
             <option value="ja">${safeText(copy.langJa)}</option>
             <option value="ko">${safeText(copy.langKo)}</option>
           </select>
+          <label class="portal-label" for="subdub-target-lang-custom">${safeText(copy.targetLangCustomLabel)}</label>
+          <input id="subdub-target-lang-custom" class="portal-input" name="target_language_custom" inputmode="text" pattern="[a-zA-Z]{2,5}(?:-[a-zA-Z0-9]{2,5})?" placeholder="${safeText(copy.targetLangCustomPlaceholder)}" aria-describedby="subdub-target-lang-custom-help">
+          <small id="subdub-target-lang-custom-help" class="portal-form-note">${safeText(copy.targetLangCustomHelp)}</small>
         </div>
         <div class="portal-field">
           <label class="portal-label">${safeText(copy.subDisplayLabel)}</label>
@@ -25857,6 +25909,9 @@
             <option value="ja">${safeText(copy.langJa)}</option>
             <option value="ko">${safeText(copy.langKo)}</option>
           </select>
+          <label class="portal-label" for="subdub-target-lang-dub-custom">${safeText(copy.targetLangCustomLabel)}</label>
+          <input id="subdub-target-lang-dub-custom" class="portal-input" name="target_language_custom" inputmode="text" pattern="[a-zA-Z]{2,5}(?:-[a-zA-Z0-9]{2,5})?" placeholder="${safeText(copy.targetLangCustomPlaceholder)}" aria-describedby="subdub-target-lang-dub-custom-help">
+          <small id="subdub-target-lang-dub-custom-help" class="portal-form-note">${safeText(copy.targetLangCustomHelp)}</small>
         </div>
         <div class="portal-field" data-status="guarded">
           <label class="portal-label">${safeText(copy.voiceStyleLabel)}</label>
@@ -25867,6 +25922,20 @@
           <select class="portal-select" name="voice_style" disabled>
             <option value="" selected>${safeText(copy.voiceUnavailableOption)}</option>
           </select>
+          <label class="portal-label" for="subdub-voice-profile-dub">${safeText(copy.voiceLibraryLabel)}</label>
+          <select id="subdub-voice-profile-dub" class="portal-select" name="voice_profile_id" disabled data-status="guarded">
+            <option value="" selected>${safeText(copy.voiceLibraryGuarded)}</option>
+          </select>
+          <fieldset class="portal-subdub-smart-multi" data-subdub-smart-multi data-status="guarded" aria-describedby="subdub-smart-multi-note-dub">
+            <legend>${safeText(copy.smartMultiLabel)}</legend>
+            <p id="subdub-smart-multi-note-dub">${safeText(copy.smartMultiHint)}</p>
+            <select class="portal-select" name="speaker_mode" disabled>
+              <option value="auto" selected>${safeText(copy.smartMultiAuto)}</option>
+              <option value="one">${safeText(copy.smartMultiOne)}</option>
+              <option value="two">${safeText(copy.smartMultiTwo)}</option>
+              <option value="many">${safeText(copy.smartMultiMany)}</option>
+            </select>
+          </fieldset>
         </div>
         ${localVolumeControlsHtml("dub")}`;
     } else if (modeKey === "SUBTITLE_PLUS_DUBBING") {
@@ -25881,6 +25950,9 @@
             <option value="ja">${safeText(copy.langJa)}</option>
             <option value="ko">${safeText(copy.langKo)}</option>
           </select>
+          <label class="portal-label" for="subdub-shared-target-lang-custom">${safeText(copy.targetLangCustomLabel)}</label>
+          <input id="subdub-shared-target-lang-custom" class="portal-input" name="target_language_custom" inputmode="text" pattern="[a-zA-Z]{2,5}(?:-[a-zA-Z0-9]{2,5})?" placeholder="${safeText(copy.targetLangCustomPlaceholder)}" aria-describedby="subdub-shared-target-lang-custom-help">
+          <small id="subdub-shared-target-lang-custom-help" class="portal-form-note">${safeText(copy.targetLangCustomHelp)}</small>
         </div>
         <div class="portal-subdub-config-pair">
           <div class="portal-subdub-config-card">
@@ -25911,6 +25983,20 @@
               <select class="portal-select" name="voice_style" disabled>
                 <option value="" selected>${safeText(copy.voiceUnavailableOption)}</option>
               </select>
+              <label class="portal-label" for="subdub-voice-profile-combo">${safeText(copy.voiceLibraryLabel)}</label>
+              <select id="subdub-voice-profile-combo" class="portal-select" name="voice_profile_id" disabled data-status="guarded">
+                <option value="" selected>${safeText(copy.voiceLibraryGuarded)}</option>
+              </select>
+              <fieldset class="portal-subdub-smart-multi" data-subdub-smart-multi data-status="guarded" aria-describedby="subdub-smart-multi-note-combo">
+                <legend>${safeText(copy.smartMultiLabel)}</legend>
+                <p id="subdub-smart-multi-note-combo">${safeText(copy.smartMultiHint)}</p>
+                <select class="portal-select" name="speaker_mode" disabled>
+                  <option value="auto" selected>${safeText(copy.smartMultiAuto)}</option>
+                  <option value="one">${safeText(copy.smartMultiOne)}</option>
+                  <option value="two">${safeText(copy.smartMultiTwo)}</option>
+                  <option value="many">${safeText(copy.smartMultiMany)}</option>
+                </select>
+              </fieldset>
             </div>
             ${localVolumeControlsHtml("combo")}
           </div>

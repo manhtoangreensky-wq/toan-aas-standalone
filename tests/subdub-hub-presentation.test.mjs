@@ -257,3 +257,15 @@ test("local volume input updates its visible value only", () => {
   assert.equal(renderSubDubHelpers.updateSubDubLocalVolume(input), true);
   assert.equal(output.textContent, "42%");
 });
+
+test("SubDub exposes guarded Smart Multi speaker mapping and Voice Library controls", () => {
+  const html = renderSubDub("/subdub?mode=subtitle_plus_dubbing");
+  assert.match(html, /data-subdub-smart-multi/);
+  assert.match(html, /name="speaker_mode"/);
+  assert.match(html, /one|two|many|auto/i);
+  assert.match(html, /name="voice_profile_id"/);
+  assert.match(html, /Voice Library|Voice Vault|Thư viện giọng|Kho giọng/);
+  assert.match(html, /name="target_language_custom"/);
+  assert.match(html, /pattern="\[a-zA-Z\]\{2,5\}/);
+  assert.match(html, /data-status="guarded"/);
+});

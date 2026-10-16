@@ -47,6 +47,7 @@ ordered_waves:
     spec: R217-07
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
     name: subdub
+    note: "Four modes plus guarded Smart Multi one/two/many mapping, Voice Library selector and ISO custom target-language input are now source-presented; runtime bridge/upload/output remains guarded."
   - id: W4
     spec: R217-08
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
