@@ -350,3 +350,13 @@ và giữ các contract
 tạo yêu cầu, phản hồi, liên kết bằng chứng, mã yêu cầu và phiên bản. Không thêm/xóa chức năng
 gốc, không đổi route/API, payload, quyền, trạng thái hay hành vi dữ liệu; runtime/live vẫn
 chưa được suy ra từ source.
+
+### Bổ sung đối chiếu source ngày 16/10/2026 — Hồ sơ tài khoản
+
+Đợt `SOURCE-LOCALE-14` chỉ chuẩn hóa fixed chrome `accountCenter.profile.*` và fallback
+renderer của `/account`, gồm hồ sơ, ảnh đại diện, phương thức đăng nhập, liên kết Telegram,
+tùy chọn Bot, nâng cấp Email và Trung tâm bảo mật. Catalogue VI có `101` mục; regression
+riêng đạt `2/2`, full Node đạt `484/484`, syntax Portal đạt và `git diff --check` đạt.
+Không thêm/xóa chức năng gốc, không đổi route/API, payload, quyền, trạng thái hoặc hành vi
+dữ liệu; các tên riêng/mã kỹ thuật được giữ theo allowlist. Runtime/live chưa được suy ra từ
+source và product-lane scan vẫn là bước kế tiếp.

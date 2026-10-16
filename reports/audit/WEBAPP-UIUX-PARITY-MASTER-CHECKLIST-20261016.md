@@ -134,6 +134,14 @@
       renderer có ít nhất `210` fallback, full Node suite `482/482`, syntax hai tệp Portal và
       `git diff --check` đều đạt; contract tạo/trả lời/liên kết bằng chứng vẫn còn. Runtime/live,
       browser AX tree, hồ sơ/tài khoản còn lại và product-lane scan vẫn mở.
+- [x] **SOURCE-LOCALE-14:** customer `accountCenter.profile.*` và fixed chrome/fallback của
+      `/account` đã được làm sạch tiếng Việt: phiên đã xác thực, máy chủ, nguồn chuẩn, nhà cung
+      cấp, siêu dữ liệu, quy trình, trình duyệt, tài khoản, ví, tác vụ, tài sản, bàn giao và
+      Trung tâm bảo mật. Regression `tests/account-profile-locale-purity.test.mjs` đạt `2/2`,
+      catalogue VI đủ `101` mục; giữ nguyên route, action, field, capability, CSRF, idempotency,
+      revision, provider labels, URL ảnh và dữ liệu hồ sơ. Full Node suite `484/484`, syntax hai
+      tệp Portal và `git diff --check` đều đạt. Runtime/live, browser AX tree và product-lane
+      scan vẫn mở.
 - [~] **LIVE-I18N-01:** next-route `/features → /login?next=/features` từng lộ
       `Tải & Cài đặt App TOAN AAS` trong bundle cũ; phải recheck đúng URL sau delivery.
 - [~] Đã khóa các cụm fixed chrome Admin và customer theo SOURCE-LOCALE-04→13; vẫn còn phải quét tiếp
@@ -350,5 +358,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=Tiếp tục W2 locale theo thứ tự: rà soát account/profile rồi product lanes, khóa từng cụm bằng regression; live/runtime vẫn mở đến khi có bundle được delivery.
+NEXT_ACTION=Tiếp tục W2 locale theo thứ tự: rà soát product lanes, khóa từng cụm bằng regression; live/runtime vẫn mở đến khi có bundle được delivery.
 ```

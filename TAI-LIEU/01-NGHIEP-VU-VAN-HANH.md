@@ -579,3 +579,14 @@ Nhóm `supportTicket.*` và fallback của các màn hình tư vấn, bằng ch�
 renderer giữ ít nhất `210` fallback an toàn. Route, action, field, capability, CSRF,
 idempotency, revision, dữ liệu máy chủ, ví/Xu và nhà cung cấp không thay đổi; full Node đạt
 `482/482`. Đây là bằng chứng source trên nhánh PR #647, chưa phải bundle đã giao, deployed hoặc live.
+
+### Ghi nhận source locale customer — Hồ sơ tài khoản — 16/10/2026
+
+Nhóm `accountCenter.profile.*` và fallback của trang `/account` đã được chuẩn hóa tiếng Việt;
+101 mục catalogue được kiểm tra, bao gồm phiên đã xác thực, phương thức đăng nhập, hồ sơ,
+liên kết Telegram, ảnh đại diện, tùy chọn Bot, nâng cấp Email và Trung tâm bảo mật. Các tên
+riêng/mã kỹ thuật như Telegram, Google, GitHub, Apple, OAuth, CSRF, MFA, PayOS, Bot, Web,
+URL, BOT_USERNAME và Core Bridge được giữ nguyên. Regression riêng đạt `2/2`, toàn bộ Node
+đạt `484/484`, syntax hai tệp Portal đạt và `git diff --check` đạt. Route, action, field,
+capability, dữ liệu hồ sơ, ví/Xu và nhà cung cấp không thay đổi; đây là bằng chứng source trên
+nhánh PR #647, chưa phải bundle đã giao, deployed hoặc live.

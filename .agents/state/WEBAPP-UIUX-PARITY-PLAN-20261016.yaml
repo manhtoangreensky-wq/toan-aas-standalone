@@ -26,7 +26,7 @@ ordered_waves:
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Locale source focused gates pass; Admin fallback copy và fixed chrome được đóng theo nhóm hẹp. SOURCE-LOCALE-03 system stewardship 1/1, SOURCE-LOCALE-04 generic Admin chrome 1/1, SOURCE-LOCALE-05 security/access chrome 2/2, SOURCE-LOCALE-06 automation monitor chrome 1/1 (bao phủ 3 nhóm), SOURCE-LOCALE-07 admin guidance chrome 1/1 (bao phủ 2 màn hình), SOURCE-LOCALE-08 delivery/runtime chrome 1/1, SOURCE-LOCALE-09 customer shell navigation 1/1, SOURCE-LOCALE-10 deliveryCenter customer chrome 1/1, SOURCE-LOCALE-11 account activity chrome 1/1, SOURCE-LOCALE-12 data controls chrome + renderer fallback 2/2 và SOURCE-LOCALE-13 support ticket chrome + renderer fallback 2/2 pass; full Node suite 482/482. Auth next-route/live locale recheck, account/profile và product scan còn mở."
+    note: "Locale source focused gates pass; Admin fallback copy và fixed chrome được đóng theo nhóm hẹp. SOURCE-LOCALE-03 system stewardship 1/1, SOURCE-LOCALE-04 generic Admin chrome 1/1, SOURCE-LOCALE-05 security/access chrome 2/2, SOURCE-LOCALE-06 automation monitor chrome 1/1 (bao phủ 3 nhóm), SOURCE-LOCALE-07 admin guidance chrome 1/1 (bao phủ 2 màn hình), SOURCE-LOCALE-08 delivery/runtime chrome 1/1, SOURCE-LOCALE-09 customer shell navigation 1/1, SOURCE-LOCALE-10 deliveryCenter customer chrome 1/1, SOURCE-LOCALE-11 account activity chrome 1/1, SOURCE-LOCALE-12 data controls chrome + renderer fallback 2/2, SOURCE-LOCALE-13 support ticket chrome + renderer fallback 2/2 và SOURCE-LOCALE-14 account/profile chrome + renderer fallback 2/2 pass; full Node suite 484/484. Auth next-route/live locale recheck và product scan còn mở."
   - id: W3
     spec: R217-03
     status: SOURCE_GREEN_RUNTIME_OPEN
@@ -105,4 +105,4 @@ created_files:
   - docs/superpowers/specs/2026-10-16-r217-12-live-readonly-recheck.md
   - docs/superpowers/specs/2026-10-16-r217-13-deferred-technical-register.md
   - tests/admin-generic-fixed-chrome-locale.test.mjs
-next_action: "Continue W2 locale source closeout in checklist order; next group is account/profile, then product lanes. Update evidence and push after each narrow group; live gates remain open until a delivered bundle is rechecked."
+next_action: "Continue W2 locale source closeout in checklist order; next group is product lanes. Update evidence and push after each narrow group; live gates remain open until a delivered bundle is rechecked."
