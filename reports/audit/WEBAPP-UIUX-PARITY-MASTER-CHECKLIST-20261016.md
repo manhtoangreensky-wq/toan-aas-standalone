@@ -422,7 +422,7 @@ hiển thị thành công giả khi engine/bridge chưa có.
 
 | Nhóm | Đã có bằng chứng | Đang mở | Bị chặn/hoãn |
 |---|---:|---:|---:|
-| Source UI/UX/locale/static motion | W2 locale `SOURCE-LOCALE-20A` xanh; W4 09A source `28/28` | 3 live drift/runtime gates | 0 |
+| Source UI/UX/locale/static motion | W2 locale `SOURCE-LOCALE-20C` xanh; W4 09A source `28/28` | 3 live drift/runtime gates | 0 |
 | Responsive/PWA live | source fix + 39 focused / 470 Node | 2 (R216-H/R216-P) | QA runtime |
 | Customer product parity UI | shell/partial nhiều lane | 6 lane acceptance | real-output bridge |
 | Admin/customer wiring UI | source contracts rải rác | 1 master surface audit | backend/permission mutation |
@@ -444,5 +444,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=Tiếp tục W2 locale sau SOURCE-LOCALE-20A; tiếp theo là Music Direction Presets và SFX Cue Sheet, còn browser/AX/live recheck và các lane runtime mở.
+NEXT_ACTION=Tiếp tục W2 locale sau SOURCE-LOCALE-20C; các nhóm Music authoring đã khóa source, chuyển sang browser/AX/runtime evidence và các lane còn mở trong checklist.
 ```

@@ -108,4 +108,4 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-next_action: "Continue W2 locale in checklist order after SOURCE-LOCALE-20B; next group is SFX Cue Sheet. Browser/AX/live recheck remains open."
+next_action: "SOURCE-LOCALE-20A/20B/20C đã khóa Music authoring source. Chuyển sang browser/AX/runtime evidence và các lane còn mở trong checklist; production delivery vẫn chưa được cho phép trong scope này."
