@@ -689,3 +689,13 @@ thanh giữ nguyên.
 
 Regression riêng `2/2`; focused Composer/Direction/Voice/Media `31/31`; browser/AX/live và
 Python contract chưa chạy. SFX Cue Sheet là nhóm kế tiếp.
+
+### Ghi nhận source locale — SFX Cue Sheet — 16/10/2026
+
+`SOURCE-LOCALE-20C` chuẩn hóa fixed chrome SFX Cue Sheet qua catalogue `sfxCueSheetUi.*`
+cân bằng VI/EN/ZH: preset card, form, placement, receipt, danh sách cue, cảnh báo, boundary
+và scope. Preset ID, cue family, placement ID, route/action/field/capability/CSRF/idempotency
+giữ nguyên; không kiểm tra media, không tạo SFX/audio/provider/job/payment.
+
+Regression riêng `2/2`, focused Composer/Direction/SFX/Voice/Media `33/33`, full Node
+`502/502`, baseline `500/500`, `NEW_FAILURES=0`; browser/AX/live và Python contract chưa chạy.

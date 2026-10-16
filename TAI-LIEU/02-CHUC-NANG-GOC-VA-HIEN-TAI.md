@@ -444,3 +444,12 @@ giá trị canonical; route/action/field/capability/CSRF/idempotency không đ�
 
 Evidence source: regression `2/2`, focused Composer/Direction/Voice/Media `31/31`; Browser,
 AX, runtime/live và Python contract chưa chạy.
+
+### Đối chiếu source locale — SFX Cue Sheet — 16/10/2026
+
+SFX Cue Sheet dùng catalogue `sfxCueSheetUi.*` cân bằng VI/EN/ZH cho fixed chrome của preset,
+form, placement, receipt, cue list, cảnh báo, boundary và scope. ID preset/cue/placement,
+route/action/field/capability/CSRF/idempotency và dữ liệu receipt canonical không đổi.
+
+Evidence source: regression `2/2`, focused Composer/Direction/SFX/Voice/Media `33/33`, full
+Node `502/502`, `NEW_FAILURES=0`; Browser, AX, runtime/live và Python contract chưa chạy.

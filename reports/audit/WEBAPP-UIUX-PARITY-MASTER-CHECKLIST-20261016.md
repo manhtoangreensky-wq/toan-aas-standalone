@@ -406,6 +406,13 @@ hiển thị thành công giả khi engine/bridge chưa có.
       nguyên ID preset, route/action/field/capability/CSRF/idempotency và không tạo âm thanh.
 - [x] Regression Music Direction `2/2`; focused Composer/Direction/Voice/Media `33/33`;
       full Node suite `500/500`, syntax và `git diff --check` đạt. SFX Cue Sheet còn là batch sau.
+- [x] **SOURCE-LOCALE-20C:** SFX Cue Sheet đã dùng catalogue `sfxCueSheetUi.*` cân bằng
+      VI/EN/ZH cho preset card, form, placement, receipt, cue list, boundary và scope; giữ
+      nguyên preset/cue/placement ID, route/action/field/capability/CSRF/idempotency và không
+      tạo SFX/audio/provider/job/payment.
+- [x] Regression SFX Cue Sheet `2/2`; focused Composer/Direction/SFX/Voice/Media `33/33`;
+      full Node suite `502/502`, baseline `500/500`, `NEW_FAILURES=0`; syntax và
+      `git diff --check` đạt.
 
 ## 11. Tổng trạng thái tại ngày 2026-10-16
 
