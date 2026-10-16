@@ -59,7 +59,7 @@
       lớp phủ và thanh chọn tab không còn dùng nền đen. Regression nằm ở
       `tests/install-modal-navy-palette.test.mjs`.
 - [x] Source recheck sau W1 và W2 locale: focused PWA/auth/utility/motion `39/39`,
-      toàn bộ Node `475/475`, `node --check static/portal/portal-i18n.js`,
+      toàn bộ Node `476/476`, `node --check static/portal/portal-i18n.js`,
       `git diff --check` đạt.
 - [!] Python Admin/PWA contract chưa chạy: bundled Python không có module `pytest`; đây
       là blocker công cụ, không ghi PASS giả.
@@ -103,6 +103,11 @@
 - [x] **SOURCE-LOCALE-08:** điều hướng Giao nhận & Môi trường vận hành đã dịch fixed chrome
       về công việc, tiến trình xử lý, hàng chờ, giao kết quả, nhà cung cấp và bảo trì; regression
       `tests/admin-generic-fixed-chrome-locale.test.mjs` đạt `1/1`.
+- [x] **SOURCE-LOCALE-09:** customer shell navigation đã dịch các nhãn fixed chrome còn lộ
+      `Analytics Workspace`, `Memory Center`, `Image Operations Hub`, `Document Workspace`,
+      `Audio Workspace`, `Automation Center`, `Operations Center`, `Media Factory`,
+      `Creative Flow` và `storyboard`; regression `tests/customer-shell-nav-locale.test.mjs`
+      đạt `1/1`.
 - [~] **LIVE-I18N-01:** next-route `/features → /login?next=/features` từng lộ
       `Tải & Cài đặt App TOAN AAS` trong bundle cũ; phải recheck đúng URL sau delivery.
 - [~] Đã khóa một cụm fixed chrome Admin theo SOURCE-LOCALE-04; vẫn còn phải quét tiếp
