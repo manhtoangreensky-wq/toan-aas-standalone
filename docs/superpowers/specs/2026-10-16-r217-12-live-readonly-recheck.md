@@ -18,6 +18,32 @@ status is `Open` and the page explicitly shows `This branch has not been deploye
 `No deployments`, confirming that the old production fingerprint is a delivery-state
 blocker rather than a failed source fix.
 
+### Fresh browser evidence — 2026-10-16 14:52:08 UTC
+
+- URL `https://app.toanaas.vn/welcome?lang=vi`, viewport `327px` wide: `body.scrollWidth=327`,
+  `documentElement.clientWidth=327`; no horizontal overflow. The live DOM still exposed
+  `.portal-pwa-fab-trigger[data-portal-pwa-fab="true"]` with text `Cài đặt ứng dụng`,
+  `display:flex`, `position:fixed`, `44×44px`, at approximately `(12,544)`. This is the old
+  PWA FAB behavior and keeps `LIVE-UI-02` open.
+- The same page loaded scripts with fingerprint
+  `?v=local-57e76aa281dcc721fdaa` for `portal-theme.js`, `portal-i18n.js`,
+  `portal-motion.js`, `portal.js` and `integration.js`.
+- Direct read-only navigation from `/features?lang=vi` redirected to
+  `https://app.toanaas.vn/login?next=/features`. The route matrix readback was:
+
+  | locale | final title | document language | main id | main tabindex |
+  | --- | --- | --- | --- | --- |
+  | vi | `Đăng nhập · TOAN AAS` | `vi` | `portal-main` | `-1` |
+  | en | `Sign in · TOAN AAS` | `en` | `portal-main` | `-1` |
+  | zh | `登录 · TOAN AAS` | `zh-CN` | `portal-main` | `-1` |
+
+- On the Vietnamese login DOM the legacy PWA button text `📲Tải & Cài đặt App TOAN AAS`
+  still exists in a hidden `.portal-auth-intro` (`display:none`, zero bounding rect), so it
+  did not appear in the AX tree. It remains a stale-bundle copy that must be rechecked after
+  the pushed source is delivered.
+- No form was filled, no login was submitted, no CTA was activated, no file was uploaded and
+  no provider/wallet/production mutation occurred.
+
 ## Phạm vi
 
 Chỉ đọc các defect đã có evidence: R216-L auth next-route CTA, R216-H landing mobile

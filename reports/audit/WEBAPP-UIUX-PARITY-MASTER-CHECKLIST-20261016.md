@@ -63,10 +63,11 @@
       `git diff --check` đạt.
 - [!] Python Admin/PWA contract chưa chạy: bundled Python không có module `pytest`; đây
       là blocker công cụ, không ghi PASS giả.
-- [~] Live recheck 2026-10-16 ở `/welcome?lang=vi`, viewport `327×668` vẫn nhận
-      `local-57e76aa281dcc721fdaa`: `.portal-landing-nav-actions` là `nowrap`, right≈372
-      vượt viewport 327 và `.portal-pwa-fab-trigger` còn fixed/display:flex. Source fix
-      chưa được đưa lên runtime; giữ `LIVE-UI-01/LIVE-UI-02` mở.
+- [~] Live recheck 2026-10-16 lúc `14:52:08 UTC` ở `/welcome?lang=vi`, viewport rộng `327px`
+      vẫn nhận fingerprint `local-57e76aa281dcc721fdaa`. `body.scrollWidth=327` và
+      `clientWidth=327`, nhưng `.portal-pwa-fab-trigger` vẫn `display:flex`, `position:fixed`,
+      `44×44px`, tọa độ khoảng `(12,544)`. Header source fix chưa được đưa lên runtime; giữ
+      `LIVE-UI-01/LIVE-UI-02` mở.
 - [x] Delivery evidence 2026-10-16: GitHub PR #647 vẫn `Open`; trang PR hiển thị
       `This branch has not been deployed` và `No deployments`. Đây là nguyên nhân xác nhận
       của live drift; không đánh dấu `LIVE_PASS` khi chưa có delivery được Owner cho phép.
@@ -341,14 +342,17 @@ hiển thị thành công giả khi engine/bridge chưa có.
 
 ## 9. W8 — Live read-only recheck — Spec R217-12
 
-- [~] Recheck R216-L `/features → /login?next=/features`: bundle cũ từng lộ CTA có chữ
-      `App`; cần đọc lại sau delivery.
+- [~] Recheck R216-L `/features → /login?next=/features`: redirect đã xác nhận ở VI/EN/ZH,
+      `main#portal-main` có `tabindex=-1`; bundle cũ vẫn chứa hidden VI text
+      `📲Tải & Cài đặt App TOAN AAS`, chưa đóng cho tới khi fingerprint mới được giao.
 - [~] Recheck R216-H landing 327×667: header clipping và PWA FAB bundle cũ từng còn;
       cần DOM/screenshot mới.
-- [ ] Recheck R216-P auth install icon wrapper/18px stable box trên direct login và
-      next-route.
-- [ ] Ghi asset fingerprint, runtime SHA nếu có, viewport, URL, timestamp, screenshot,
-      AX, console/network; chỉ đóng khi evidence mới trùng source SHA.
+- [~] Recheck R216-P direct login/next-route: không có install CTA trong AX/visible DOM vì
+      vùng auth install đang `display:none`; hidden legacy button vẫn tồn tại trong bundle cũ,
+      cần xác nhận lại sau delivery fingerprint mới.
+- [~] Ghi asset fingerprint, runtime SHA nếu có, viewport, URL, timestamp, DOM/AX và
+      computed style; evidence mới vẫn lệch source SHA (`local-57e76aa281dcc721fdaa`), nên
+      chưa đóng live.
 - [ ] Không bấm CTA tạo job, không đăng nhập production, không deploy/merge trong wave này.
 
 ## 10. W9 — Deferred technical register — Spec R217-13

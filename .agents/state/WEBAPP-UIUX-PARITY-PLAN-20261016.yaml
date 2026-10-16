@@ -72,7 +72,7 @@ ordered_waves:
   - id: W8
     spec: R217-12
     status: LIVE_DRIFT_OPEN
-    note: "Must recheck R216-H/L/P after valid delivery; no deploy in this turn."
+    note: "Read-only browser evidence 2026-10-16 14:52:08 UTC confirms production fingerprint local-57e76aa281dcc721fdaa, landing PWA FAB still fixed/display:flex at 327px, /features redirects to login?next=/features in VI/EN/ZH, and hidden legacy VI App install text remains in auth DOM. Source SHA is not delivered; keep R216-H/L/P open."
   - id: W9
     spec: R217-13
     status: DEFERRED
