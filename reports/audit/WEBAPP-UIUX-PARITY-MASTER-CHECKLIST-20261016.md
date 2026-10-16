@@ -312,6 +312,11 @@ hiển thị thành công giả khi engine/bridge chưa có.
 - [x] Regression Admin Provider + Manual Topup `4/4`; full Node suite sau batch đạt `506/506`,
       `NEW_FAILURES=0`; provider table vẫn read-only và manual top-up approval vẫn là draft/
       confirmation presentation, chưa mở wallet/ledger mutation.
+- [x] **SOURCE-ADMIN-03:** `/admin/publishing` domain center dùng catalogue
+      `adminDomainUi.publishing.*` cho title/description, 4 stream, 3 boundary và common
+      permission/read-only chrome; giữ nguyên 4 route và server authorization filter.
+- [x] Regression Admin domain/provider/topup `6/6`; full Node suite `508/508`, syntax và
+      `git diff --check` đạt.
 - [ ] Owner thấy toàn bộ; role khác chỉ thấy module/action theo policy hiển thị. UI phải
       nói rõ quyền bị thiếu thay vì nút chết.
 - [ ] Mỗi customer action có request/job/asset/report reference và trạng thái audit trên

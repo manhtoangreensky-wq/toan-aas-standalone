@@ -16466,6 +16466,36 @@
     ADMIN_TOPUP_APPROVAL_COPY_ROWS.forEach((row) => { MESSAGES[locale][`adminManualTopup.approval.${row[0]}`] = row[index + 1]; });
   });
 
+  const ADMIN_DOMAIN_COPY_ROWS = [
+    ["publishing.kicker", "Trung tâm xuất bản", "Publishing control center", "发布控制中心"],
+    ["publishing.title", "Từ brief đến hàng chờ xuất bản, với ranh giới quyền rõ ràng", "From brief to publishing queue with clear authority boundaries", "从摘要到发布队列，权限边界清晰"],
+    ["publishing.description", "Điều phối chiến dịch, lịch, tự rà soát, bàn giao xuất bản và phân tích mà không biến trình duyệt thành worker hoặc trình đăng kênh.", "Coordinate campaigns, calendars, self-review, publishing handoff and analytics without turning the browser into a worker or channel publisher.", "协调活动、日历、自审、发布交接和分析，不把浏览器变成 worker 或频道发布器。"],
+    ["publishing.stream.campaign.title", "Trung tâm chiến dịch", "Campaign Center", "活动中心"],
+    ["publishing.stream.campaign.body", "Brief, mục tiêu và trạng thái kế hoạch qua quy trình quản trị đã được bảo vệ.", "Briefs, goals and plan states through protected admin workflows.", "通过受保护的管理流程查看摘要、目标和计划状态。"],
+    ["publishing.stream.calendar.title", "Lịch nội dung", "Content Calendar", "内容日历"],
+    ["publishing.stream.calendar.body", "Xem các mốc nội dung khi máy chủ công bố bộ kết nối chỉ đọc.", "View content milestones when the server publishes the read-only adapter.", "服务器发布只读适配器后查看内容节点。"],
+    ["publishing.stream.approvals.title", "Hàng chờ phê duyệt", "Approval Queue", "审批队列"],
+    ["publishing.stream.approvals.body", "Theo dõi điểm duyệt; giao diện không cấp quyền đăng bài.", "Track approval points; the UI does not grant publishing permission.", "跟踪审批点；界面不会授予发布权限。"],
+    ["publishing.stream.analytics.title", "Phân tích", "Analytics", "分析"],
+    ["publishing.stream.analytics.body", "Mở báo cáo đã ẩn dữ liệu; không xuất hoặc tính doanh thu tại trình duyệt.", "Open redacted reports; the browser does not export or calculate revenue.", "打开已脱敏报告；浏览器不会导出或计算收入。"],
+    ["publishing.boundary.one", "Không tự gửi bài, tạo lịch chạy hoặc gọi API kênh.", "Do not send posts, create schedules or call channel APIs from the browser.", "不要在浏览器中发布内容、创建日程或调用频道 API。"],
+    ["publishing.boundary.two", "Mọi đăng lại hoặc thử lại cần quy trình chuẩn, xác nhận và nhật ký.", "Every publish or retry needs a canonical workflow, confirmation and audit.", "每次发布或重试都需要标准流程、确认和审计。"],
+    ["publishing.boundary.three", "Không hiển thị thông tin xác thực kênh, token, payload nhà cung cấp hoặc dữ liệu khách thô.", "Do not render channel credentials, tokens, provider payloads or raw customer data.", "不要显示频道凭证、令牌、服务商载荷或原始客户数据。"],
+    ["common.roleCheck", "Kiểm tra vai trò phía máy chủ", "Server-side role check", "服务器端角色检查"],
+    ["common.readOnly", "Mặc định chỉ đọc", "Read-only by default", "默认只读"],
+    ["common.noActions", "Không có thao tác giả", "No simulated actions", "没有模拟操作"],
+    ["common.boundaryKicker", "Ranh giới quyền hạn", "Authority boundary", "权限边界"],
+    ["common.boundaryTitle", "Các giới hạn được giữ có chủ đích", "Intentional limits", "有意保留的限制"],
+    ["common.boundaryBody", "Trung tâm giúp đi đúng quy trình; không thay thế Bot, nhà cung cấp hoặc quyền tài chính.", "This center guides the right workflow; it does not replace the Bot, providers or financial authority.", "此中心帮助进入正确流程；不替代 Bot、服务商或财务权限。"],
+    ["common.emptyTitle", "Chưa có quy trình quản trị được cấp", "No admin workflow granted", "尚未授权管理流程"],
+    ["common.emptyBody", "Vai trò và manifest máy chủ chưa cấp route nào cho trung tâm này.", "The server role and manifest have not granted routes for this center.", "服务器角色和清单尚未为此中心授权路由。"],
+    ["common.backAdmin", "Về tổng quan quản trị", "Back to admin overview", "返回管理总览"],
+    ["common.operations", "Vận hành", "Operations", "运营"]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    ADMIN_DOMAIN_COPY_ROWS.forEach((row) => { MESSAGES[locale][`adminDomainUi.${row[0]}`] = row[index + 1]; });
+  });
+
   const FREE_TOOLS_COPY_ROWS = [
     ["intro.kicker", "Xử lý tại trình duyệt · Không tốn Xu · Hoàn toàn miễn phí", "Browser-local processing · No Xu cost · Completely free", "浏览器本地处理 · 不消耗 Xu · 完全免费"],
     ["intro.title", "Bộ công cụ tiện ích sáng tạo nội dung nhanh", "A fast toolkit for everyday content work", "快速完成内容工作的实用工具集"],

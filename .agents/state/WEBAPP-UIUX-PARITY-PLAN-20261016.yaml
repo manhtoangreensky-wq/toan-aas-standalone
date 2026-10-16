@@ -61,7 +61,7 @@ ordered_waves:
     spec: R217-09
     status: SOURCE_PARTIAL_RUNTIME_OPEN
     name: admin-customer-visibility
-    note: "Admin Provider fixed chrome and manual top-up approval/rejection fixed chrome now use balanced locale catalogues; Admin Provider + Manual Top-up regressions 4/4 and full Node 506/506. Canonical admin fixture, wallet mutation and browser runtime remain deferred."
+    note: "Admin Provider, manual top-up approval/rejection và /admin/publishing domain center fixed chrome now use balanced locale catalogues; Admin domain/provider/top-up focused 6/6 and full Node 508/508. Canonical admin fixture, wallet mutation and browser runtime remain deferred."
   - id: W6
     spec: R217-10
     status: SOURCE_GREEN_RUNTIME_OPEN

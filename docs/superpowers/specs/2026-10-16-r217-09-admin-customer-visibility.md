@@ -65,3 +65,11 @@ không tự sửa dependency production.
   wallet mutation was opened.
 - New Node regressions: Admin Provider + Manual Top-up `4/4`; full Node suite `506/506`.
   Python admin fixture and browser runtime remain open.
+
+## Source closeout bổ sung 2026-10-16 — SOURCE-ADMIN-03
+
+- `/admin/publishing` domain center now uses balanced `adminDomainUi.publishing.*` copy for
+  title/description, Campaign Center, Content Calendar, Approval Queue, Analytics and its
+  three authority boundaries. The four routes remain filtered by the signed server manifest.
+- Admin domain/provider/top-up focused regression passes `6/6`; full Node suite passes
+  `508/508`. No RBAC/ABAC, provider operation, wallet or PayOS mutation was changed.
