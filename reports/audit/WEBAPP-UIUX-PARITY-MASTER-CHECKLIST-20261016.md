@@ -159,9 +159,17 @@
       route/action/offset phân trang/capability và dữ liệu động; Python contract `NOT_RUN`
       vì thiếu `python`/`py`. Chi tiết artboard/direction/estimate/history và Image
       Resize/Enhance/Brand Overlay/Storyboard vẫn mở.
+- [x] **SOURCE-LOCALE-17:** fixed chrome chi tiết Image Studio/Hub — estimate, direction card,
+      trạng thái, lịch sử, activity, tiện ích và nút xác nhận — đã dùng catalogue
+      `imageStudioDetailUi.*` có `91` mục cân bằng VI/EN/ZH. Regression
+      `tests/image-studio-detail-locale-purity.test.mjs` đạt `2/2`, focused Image `51/51`,
+      full Node `490/490`, syntax hai tệp Portal và `git diff --check` đều đạt. Giữ nguyên
+      route/action/field/capability/CSRF/idempotency/revision, dữ liệu động và ranh giới
+      không tạo ảnh; Python contract `NOT_RUN` vì thiếu `python`/`py`. Runtime/live, AX tree
+      và Image Resize/Enhance/Brand Overlay/Storyboard vẫn mở.
 - [~] **LIVE-I18N-01:** next-route `/features → /login?next=/features` từng lộ
       `Tải & Cài đặt App TOAN AAS` trong bundle cũ; phải recheck đúng URL sau delivery.
-- [~] Đã khóa các cụm fixed chrome Admin, customer và Image theo SOURCE-LOCALE-04→16; vẫn còn phải quét tiếp
+- [~] Đã khóa các cụm fixed chrome Admin, customer và Image theo SOURCE-LOCALE-04→17; vẫn còn phải quét tiếp
       toàn customer/Admin/product lanes và lập danh sách chuỗi English lọt trong VI cùng
       Vietnamese lọt trong EN/ZH; không sửa server data/ID/URL.
 - [ ] Kiểm tra fallback locale, duplicate key, option label và aria-label ở VI/EN/ZH.
@@ -375,5 +383,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=Tiếp tục W2 locale theo thứ tự: rà soát chi tiết Image còn raw English (direction card/estimate/history) rồi tới Resize/Enhance/Brand Overlay/Storyboard, khóa từng cụm bằng regression; live/runtime vẫn mở đến khi có bundle được delivery.
+NEXT_ACTION=Tiếp tục W2 locale theo thứ tự: rà soát Image Resize/Enhance/Brand Overlay/Storyboard, khóa từng cụm bằng regression; runtime/live và AX tree vẫn mở đến khi có bundle được delivery.
 ```

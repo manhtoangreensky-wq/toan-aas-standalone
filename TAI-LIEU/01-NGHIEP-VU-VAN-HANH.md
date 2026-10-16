@@ -622,3 +622,19 @@ Route, action, offset phân trang, capability, dữ liệu động, provider và
 Python contract chưa chạy vì môi trường không có `python`/`py`. Đây là source evidence trên
 PR #647, chưa phải bundle đã giao, deployed hoặc live. Chi tiết direction card, estimate,
 history và các route Resize/Enhance/Brand Overlay/Storyboard vẫn là bước kế tiếp.
+
+### Ghi nhận source locale customer — Image Studio/Hub detail — 16/10/2026
+
+Fixed chrome của trang chi tiết Image Studio/Hub đã được chuẩn hóa qua catalogue
+`imageStudioDetailUi.*` gồm `91` mục cân bằng VI/EN/ZH: bản tổng hợp rà soát, thẻ biến thể,
+trạng thái, lịch sử phiên bản, activity feed, tiện ích cục bộ và các nút xác nhận/khôi phục.
+Helper `imageStudioDetailText` phủ estimate, direction card, detail renderer và nhãn event;
+bản VI không còn các cụm raw `review estimate`, `Asset Vault refs`, `Archive artboard`,
+`Direction library`, `Version history` hoặc `Audit-safe feed`.
+
+Regression `tests/image-studio-detail-locale-purity.test.mjs` đạt `2/2`; focused Image
+đạt `51/51`; full Node đạt `490/490`; syntax hai tệp Portal và `git diff --check` đều đạt.
+Route, action, field, capability, CSRF, idempotency, revision, dữ liệu động, provider và
+ví/Xu không đổi; Python contract chưa chạy vì môi trường không có `python`/`py`. Đây là
+source evidence trên PR #647, chưa phải bundle đã giao, deployed hoặc live. Runtime/live,
+browser AX tree và Image Resize/Enhance/Brand Overlay/Storyboard vẫn mở.

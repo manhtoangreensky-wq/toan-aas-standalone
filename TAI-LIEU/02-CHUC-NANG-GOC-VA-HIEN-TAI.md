@@ -383,3 +383,17 @@ phân trang, capability, dữ liệu động hoặc ranh giới chỉ đọc. Re
 focused Image đạt `49/49`, full Node đạt `488/488`, syntax hai tệp Portal và
 `git diff --check` đều đạt. Python contract `NOT_RUN` vì thiếu `python`/`py`; runtime/live,
 AX tree, chi tiết direction/estimate/history và các route Image còn lại vẫn mở.
+
+### Bổ sung đối chiếu source ngày 16/10/2026 — Image detail
+
+Đợt `SOURCE-LOCALE-17` chỉ chuẩn hóa fixed chrome chi tiết Image Studio/Hub: estimate,
+direction card, trạng thái bảng thiết kế, lịch sử phiên bản, activity feed, tiện ích cục bộ
+và các nút xác nhận/khôi phục/lưu trữ. Catalogue `imageStudioDetailUi.*` có `91` mục cân bằng
+VI/EN/ZH; helper phủ các renderer `imageStudioEstimateMarkup`, `renderImageDirectionCard`,
+`renderImageStudioDetail` và nhãn event. Không đổi route, action, field, capability, CSRF,
+idempotency, revision, dữ liệu động hay ranh giới không tạo ảnh.
+
+Regression riêng đạt `2/2`, focused Image đạt `51/51`, full Node đạt `490/490`, syntax hai
+tệp Portal và `git diff --check` đều đạt. Python contract `NOT_RUN` vì môi trường thiếu
+`python`/`py`; runtime/live, AX tree và các route Resize/Enhance/Brand Overlay/Storyboard
+vẫn mở.
