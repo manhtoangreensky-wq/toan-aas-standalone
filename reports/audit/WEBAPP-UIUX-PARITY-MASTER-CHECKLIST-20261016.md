@@ -360,6 +360,14 @@ hiển thị thành công giả khi engine/bridge chưa có.
       domain route, stream route, manifest filter, authority và catalogue locale.
 - [x] Regression `tests/admin-domain-center-fallback-locale.test.mjs`: `2/2`; full Node
       suite sau batch: `517/517`, `NEW_FAILURES=0`; syntax Portal `2/2` đạt.
+- [x] **SOURCE-ADMIN-10:** CSS harmony cho bảng dữ liệu Admin mobile đã được khóa ở lớp
+      source: selector scoped dưới signed Admin shell, breakpoint `700px`, theme token xanh/
+      navy, scroll hint và first-column affordance; không có API/action/provider/wallet trong
+      layer. Regression Node `tests/admin-mobile-data-harmony-source.test.mjs`: `1/1`.
+- [~] Runtime/browser mobile matrix của bảng/inspector vẫn mở; Python contract tương ứng chưa
+      chạy do môi trường thiếu `py`/`pytest`, không đánh dấu live PASS.
+- [x] **SOURCE-ADMIN-10 closeout:** regression source mobile harmony đạt `1/1`; full Node suite
+      sau batch: `518/518`, `NEW_FAILURES=0`; syntax Portal `2/2` đạt.
 - [ ] Owner thấy toàn bộ; role khác chỉ thấy module/action theo policy hiển thị. UI phải
       nói rõ quyền bị thiếu thay vì nút chết.
 - [ ] Mỗi customer action có request/job/asset/report reference và trạng thái audit trên
@@ -507,5 +515,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=SOURCE-ADMIN-10 — rà soát bảng/inspector Admin mobile; sau đó chuyển sang browser/AX/runtime evidence. Giữ nguyên các mục backend/ledger/real-output ở trạng thái deferred.
+NEXT_ACTION=W7/W8 — chạy browser/AX/runtime matrix cho Admin/customer sau khi có QA runtime; giữ nguyên các mục backend/ledger/real-output ở trạng thái deferred.
 ```

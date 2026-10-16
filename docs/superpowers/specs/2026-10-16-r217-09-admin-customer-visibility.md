@@ -136,3 +136,17 @@ không tự sửa dependency production.
 - Route stream, manifest filter, authority và boundary giữ nguyên; không gọi provider, không
   publish, không payout và không mutation. Regression `tests/admin-domain-center-fallback-locale.test.mjs`
   đạt `2/2`; full Node `517/517`.
+
+### Source closeout bổ sung — SOURCE-ADMIN-10 (2026-10-17)
+
+- Admin mobile data harmony đã được kiểm bằng Node source contract: selector chỉ nằm dưới
+  signed Admin shell, breakpoint `700px`, dùng theme token và không chứa API/action/provider/
+  wallet/Telegram. Regression `tests/admin-mobile-data-harmony-source.test.mjs` đạt `1/1`.
+- Đây chỉ là source evidence; browser screenshot/AX/overflow/inspector runtime và Python
+  contract vẫn `OPEN`/`BLOCKED` khi chưa có QA runtime hoặc `pytest`.
+
+### Source closeout bổ sung — SOURCE-ADMIN-10 (2026-10-17)
+
+- Source contract cho Admin mobile data harmony đạt `1/1`; full Node suite đạt `518/518`.
+- Chỉ đóng source layer: browser/AX/overflow/inspector runtime vẫn mở và không được suy ra
+  từ CSS evidence.
