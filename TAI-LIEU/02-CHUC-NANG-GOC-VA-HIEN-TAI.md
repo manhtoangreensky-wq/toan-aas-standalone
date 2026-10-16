@@ -341,3 +341,12 @@ payload, quyền, trạng thái hay hành vi dữ liệu. Bằng chứng đo đ�
 `2/2`, toàn bộ Node `480/480`, syntax hai tệp Portal đạt và `git diff --check` đạt.
 Runtime/live chưa được suy ra từ source; mọi mô tả chức năng trong tài liệu gốc vẫn giữ
 nguyên cho tới khi có bundle delivery và browser evidence mới.
+
+### Bổ sung đối chiếu source ngày 16/10/2026 — Trung tâm hỗ trợ
+
+Đợt `SOURCE-LOCALE-13` chỉ chuẩn hóa fixed chrome `supportTicket.*` và fallback renderer của
+Trung tâm hỗ trợ. Catalogue VI có `295` mục; regression riêng đạt `2/2`, full Node đạt `482/482`
+và giữ các contract
+tạo yêu cầu, phản hồi, liên kết bằng chứng, mã yêu cầu và phiên bản. Không thêm/xóa chức năng
+gốc, không đổi route/API, payload, quyền, trạng thái hay hành vi dữ liệu; runtime/live vẫn
+chưa được suy ra từ source.

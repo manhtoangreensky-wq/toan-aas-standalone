@@ -570,3 +570,12 @@ trên nhánh PR #647, chưa phải bundle đã giao, deployed hoặc live.
 Bẫy cần giữ: fallback trong renderer cũng là giao diện người dùng. Nếu chỉ sửa catalogue mà
 bỏ qua fallback, khi thiếu key bản Việt có thể quay lại các từ `review`, `export`, `signed`,
 `authoring` hoặc `Web`; regression hiện khóa cả catalogue và fallback để ngăn lỗi này.
+
+### Ghi nhận source locale customer — Trung tâm hỗ trợ — 16/10/2026
+
+Nhóm `supportTicket.*` và fallback của các màn hình tư vấn, bằng chứng, yêu cầu, chi tiết,
+đánh giá và phân loại vận hành đã được chuẩn hóa tiếng Việt. Regression
+`tests/support-ticket-locale-purity.test.mjs` đạt `2/2`; catalogue cố định có `295` mục và
+renderer giữ ít nhất `210` fallback an toàn. Route, action, field, capability, CSRF,
+idempotency, revision, dữ liệu máy chủ, ví/Xu và nhà cung cấp không thay đổi; full Node đạt
+`482/482`. Đây là bằng chứng source trên nhánh PR #647, chưa phải bundle đã giao, deployed hoặc live.

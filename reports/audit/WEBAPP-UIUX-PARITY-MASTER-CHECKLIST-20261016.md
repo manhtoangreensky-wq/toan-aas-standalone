@@ -127,9 +127,16 @@
       `authoring`, `browser` hoặc `canonical`. Regression `tests/data-controls-locale-purity.test.mjs`
       đạt `2/2`; full Node suite đạt `480/480`, syntax hai file Portal và `git diff --check`
       đều đạt. Runtime/live, hồ sơ/tài khoản còn lại và product-lane scan vẫn mở.
+- [x] **SOURCE-LOCALE-13:** customer `supportTicket.*` fixed chrome và fallback của tư vấn,
+      bằng chứng, yêu cầu, chi tiết, đánh giá và phân loại vận hành đã được làm sạch tiếng Việt;
+      tên riêng/mã kỹ thuật cần thiết được giữ nguyên. Regression
+      `tests/support-ticket-locale-purity.test.mjs` đạt `2/2`, catalogue VI đủ `295` mục,
+      renderer có ít nhất `210` fallback, full Node suite `482/482`, syntax hai tệp Portal và
+      `git diff --check` đều đạt; contract tạo/trả lời/liên kết bằng chứng vẫn còn. Runtime/live,
+      browser AX tree, hồ sơ/tài khoản còn lại và product-lane scan vẫn mở.
 - [~] **LIVE-I18N-01:** next-route `/features → /login?next=/features` từng lộ
       `Tải & Cài đặt App TOAN AAS` trong bundle cũ; phải recheck đúng URL sau delivery.
-- [~] Đã khóa các cụm fixed chrome Admin và customer theo SOURCE-LOCALE-04→12; vẫn còn phải quét tiếp
+- [~] Đã khóa các cụm fixed chrome Admin và customer theo SOURCE-LOCALE-04→13; vẫn còn phải quét tiếp
       toàn customer/Admin/product lanes và lập danh sách chuỗi English lọt trong VI cùng
       Vietnamese lọt trong EN/ZH; không sửa server data/ID/URL.
 - [ ] Kiểm tra fallback locale, duplicate key, option label và aria-label ở VI/EN/ZH.
@@ -343,5 +350,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=Tiếp tục W2 locale theo thứ tự: quét fixed chrome customer/Admin/product, khóa từng cụm bằng regression; live/runtime vẫn mở đến khi có bundle được delivery.
+NEXT_ACTION=Tiếp tục W2 locale theo thứ tự: rà soát account/profile rồi product lanes, khóa từng cụm bằng regression; live/runtime vẫn mở đến khi có bundle được delivery.
 ```
