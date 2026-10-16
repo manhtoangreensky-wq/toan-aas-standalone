@@ -108,3 +108,13 @@ không tự sửa dependency production.
   mở write hoặc thay đổi permission enforcement.
 - Regression `tests/admin-shell-boundary-locale.test.mjs` đạt `5/5`; syntax Portal `2/2`
   đạt. Full Node, browser/runtime và Python contract vẫn là các cổng riêng.
+
+### Source closeout bổ sung — SOURCE-ADMIN-07 (2026-10-17)
+
+- `renderAdminSystemStewardship` không còn dùng fallback tiếng Anh cho fixed chrome khi
+  catalogue thiếu key. Các thẻ, marker thẩm quyền, manifest, tiêu đề phân khu và ranh giới
+  vận hành dùng fallback tiếng Việt; helper vẫn lấy `adminGeneric.systemStewardship.*` theo
+  locale đã chọn.
+- Không đổi server manifest, route/action, authority filter, guarded/read-only state hoặc dữ
+  liệu động. Regression `tests/admin-system-stewardship-fallback-locale.test.mjs` cùng
+  catalogue đạt `4/4`; syntax Portal `2/2` đạt.
