@@ -100,6 +100,9 @@
 - [x] **SOURCE-LOCALE-07:** hai màn hình hướng dẫn quản trị đã dịch fixed chrome về bàn giao,
       phân loại tác vụ bị khóa, chuyển cấp, hàng chờ, giao kết quả và tài chính; regression
       `tests/admin-generic-fixed-chrome-locale.test.mjs` đạt `1/1` và bao phủ 2 màn hình.
+- [x] **SOURCE-LOCALE-08:** điều hướng Giao nhận & Môi trường vận hành đã dịch fixed chrome
+      về công việc, tiến trình xử lý, hàng chờ, giao kết quả, nhà cung cấp và bảo trì; regression
+      `tests/admin-generic-fixed-chrome-locale.test.mjs` đạt `1/1`.
 - [~] **LIVE-I18N-01:** next-route `/features → /login?next=/features` từng lộ
       `Tải & Cài đặt App TOAN AAS` trong bundle cũ; phải recheck đúng URL sau delivery.
 - [~] Đã khóa một cụm fixed chrome Admin theo SOURCE-LOCALE-04; vẫn còn phải quét tiếp

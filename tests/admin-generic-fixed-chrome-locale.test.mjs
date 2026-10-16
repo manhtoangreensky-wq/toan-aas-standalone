@@ -21,6 +21,11 @@ const guidanceEnd = vi.indexOf('"adminGeneric.deliveryRuntimeNavigation.group.ti
 assert.ok(guidanceStart >= 0 && guidanceEnd > guidanceStart, 'Admin guidance catalogue must remain present');
 const guidance = vi.slice(guidanceStart, guidanceEnd);
 const guidanceValues = guidance.replace(/^\s*"[^"]+":\s*/gm, '');
+const deliveryStart = vi.indexOf('"adminGeneric.deliveryRuntimeNavigation.group.title"');
+const deliveryEnd = vi.length;
+assert.ok(deliveryStart >= 0, 'Delivery/runtime catalogue must remain present');
+const delivery = vi.slice(deliveryStart, deliveryEnd);
+const deliveryValues = delivery.replace(/^\s*"[^"]+":\s*/gm, '');
 
 test('Vietnamese Admin fixed chrome removes the reported English leaks', () => {
   const expected = [
@@ -103,4 +108,25 @@ test('Vietnamese Admin fixed chrome removes the reported English leaks', () => {
     'mutation',
     'provider'
   ]) assert.equal(guidanceValues.includes(phrase), false, `English guidance chrome leaked: ${phrase}`);
+  for (const line of [
+    '"adminGeneric.deliveryRuntimeNavigation.group.title": "Giao nhận & Môi trường vận hành"',
+    '"adminGeneric.deliveryRuntimeNavigation.workers.title": "Tiến trình xử lý"',
+    '"adminGeneric.deliveryRuntimeNavigation.runtime.title": "Môi trường vận hành"'
+  ]) assert.ok(delivery.includes(line), `missing reviewed delivery/runtime copy: ${line}`);
+  for (const phrase of [
+    'Runtime',
+    'Jobs',
+    'job',
+    'delivery',
+    'provider',
+    'secret',
+    'browser',
+    'Workers',
+    'queue',
+    'guarded mode',
+    'maintenance',
+    'freeze',
+    'adapter write',
+    'audit'
+  ]) assert.equal(deliveryValues.includes(phrase), false, `English delivery/runtime chrome leaked: ${phrase}`);
 });
