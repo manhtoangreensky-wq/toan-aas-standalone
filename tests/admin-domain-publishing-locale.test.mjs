@@ -33,3 +33,13 @@ test("Publishing Admin domain uses locale copy and preserves routes", () => {
     assert.match(source, new RegExp(route.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), route);
   }
 });
+
+test("Growth and Trends Admin domains use locale projections", () => {
+  for (const scope of ["growth", "trends"]) {
+    assert.match(portal, new RegExp(`adminDomainText\\("${scope}\\.(kicker|title|description)`));
+    assert.match(portal, new RegExp(`adminDomainText\\("${scope}\\.boundary`));
+  }
+  for (const route of ["/admin/leads", "/admin/growth/postback-readiness", "/admin/promos", "/admin/trends", "/admin/features"]) {
+    assert.match(portal, new RegExp(route.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), route);
+  }
+});

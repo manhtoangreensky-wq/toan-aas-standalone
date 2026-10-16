@@ -32809,6 +32809,8 @@
     // Domain centers are a convenience view, never a browser-side permission
     // inference.  Keep only the routes the signed server manifest issued.
     const isPublishingDomain = domainPath === "/admin/publishing";
+    const isGrowthDomain = domainPath === "/admin/growth";
+    const isTrendsDomain = domainPath === "/admin/trends";
     const localizedDomain = isPublishingDomain
       ? {
           ...domain,
@@ -32827,7 +32829,36 @@
             adminDomainText("publishing.boundary.three", domain.boundaries[2])
           ]
         }
-      : domain;
+      : isGrowthDomain
+        ? {
+            ...domain,
+            kicker: adminDomainText("growth.kicker", domain.kicker),
+            title: adminDomainText("growth.title", domain.title),
+            description: adminDomainText("growth.description", domain.description),
+            streams: [
+              { ...domain.streams[0], title: adminDomainText("growth.stream.leads.title", domain.streams[0].title), text: adminDomainText("growth.stream.leads.body", domain.streams[0].text) },
+              { ...domain.streams[1], title: adminDomainText("growth.stream.postback.title", domain.streams[1].title), text: adminDomainText("growth.stream.postback.body", domain.streams[1].text) },
+              { ...domain.streams[2], title: adminDomainText("growth.stream.promos.title", domain.streams[2].title), text: adminDomainText("growth.stream.promos.body", domain.streams[2].text) },
+              { ...domain.streams[3], title: adminDomainText("growth.stream.campaign.title", domain.streams[3].title), text: adminDomainText("growth.stream.campaign.body", domain.streams[3].text) },
+              { ...domain.streams[4], title: adminDomainText("growth.stream.analytics.title", domain.streams[4].title), text: adminDomainText("growth.stream.analytics.body", domain.streams[4].text) }
+            ],
+            boundaries: [adminDomainText("growth.boundary.one", domain.boundaries[0]), adminDomainText("growth.boundary.two", domain.boundaries[1]), adminDomainText("growth.boundary.three", domain.boundaries[2])]
+          }
+        : isTrendsDomain
+          ? {
+              ...domain,
+              kicker: adminDomainText("trends.kicker", domain.kicker),
+              title: adminDomainText("trends.title", domain.title),
+              description: adminDomainText("trends.description", domain.description),
+              streams: [
+                { ...domain.streams[0], title: adminDomainText("trends.stream.campaign.title", domain.streams[0].title), text: adminDomainText("trends.stream.campaign.body", domain.streams[0].text) },
+                { ...domain.streams[1], title: adminDomainText("trends.stream.analytics.title", domain.streams[1].title), text: adminDomainText("trends.stream.analytics.body", domain.streams[1].text) },
+                { ...domain.streams[2], title: adminDomainText("trends.stream.publishing.title", domain.streams[2].title), text: adminDomainText("trends.stream.publishing.body", domain.streams[2].text) },
+                { ...domain.streams[3], title: adminDomainText("trends.stream.features.title", domain.streams[3].title), text: adminDomainText("trends.stream.features.body", domain.streams[3].text) }
+              ],
+              boundaries: [adminDomainText("trends.boundary.one", domain.boundaries[0]), adminDomainText("trends.boundary.two", domain.boundaries[1]), adminDomainText("trends.boundary.three", domain.boundaries[2])]
+            }
+          : domain;
     const streams = localizedDomain.streams.filter((stream) => serverAuthorizesAdminRoute(context, stream.route));
     const cards = streams.length
       ? streams.map((stream) => `<a class="portal-admin-domain-card" href="${safeText(stream.route)}"><span class="portal-module-icon" aria-hidden="true">${portalIcon(stream.icon || ICONS.default)}</span><span><h3>${safeText(stream.title)}</h3><p>${safeText(stream.text)}</p></span><span class="portal-module-arrow" aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>`).join("")
@@ -32843,12 +32874,12 @@
       serverAuthorizesAdminRoute(context, "/admin/operations") ? '<a class="portal-button portal-button--quiet" href="/admin/operations">' + safeText(operationsLabel) + '</a>' : ""
     ].filter(Boolean).join("");
     const boundaries = localizedDomain.boundaries.map((item) => `<li>${safeText(item)}</li>`).join("");
-    const roleCheck = isFinanceDomain ? adminFinanceText("meta.roleCheck", "Kiểm tra vai trò phía máy chủ") : (isPublishingDomain ? adminDomainText("common.roleCheck", "Kiểm tra vai trò phía máy chủ") : adminGenericText("meta.roleCheck", "Kiểm tra vai trò phía máy chủ"));
-    const readOnly = isFinanceDomain ? adminFinanceText("meta.readOnly", "Mặc định chỉ đọc") : (isPublishingDomain ? adminDomainText("common.readOnly", "Mặc định chỉ đọc") : adminGenericText("meta.readOnly", "Mặc định chỉ đọc"));
-    const noActions = isFinanceDomain ? adminFinanceText("meta.noActions", "Không có thao tác giả") : (isPublishingDomain ? adminDomainText("common.noActions", "Không có thao tác giả") : adminGenericText("meta.noActions", "Không có thao tác giả"));
-    const boundaryKicker = isFinanceDomain ? adminFinanceText("boundary.kicker", "Ranh giới quyền hạn") : (isPublishingDomain ? adminDomainText("common.boundaryKicker", "Ranh giới quyền hạn") : adminGenericText("boundary.kicker", "Ranh giới quyền hạn"));
-    const boundaryTitle = isFinanceDomain ? adminFinanceText("boundary.title", "Các giới hạn được giữ cố ý") : (isPublishingDomain ? adminDomainText("common.boundaryTitle", "Các giới hạn được giữ có chủ đích") : "Các giới hạn được giữ cố ý");
-    const boundaryBody = isFinanceDomain ? adminFinanceText("boundary.body", "Center này giúp đi đúng workflow; nó không thay thế Bot, provider hoặc financial authority.") : (isPublishingDomain ? adminDomainText("common.boundaryBody", "Trung tâm giúp đi đúng quy trình; không thay thế Bot, nhà cung cấp hoặc quyền tài chính.") : "Center này giúp đi đúng workflow; nó không thay thế Bot, provider hoặc financial authority.");
+    const roleCheck = isFinanceDomain ? adminFinanceText("meta.roleCheck", "Kiểm tra vai trò phía máy chủ") : ((isPublishingDomain || isGrowthDomain || isTrendsDomain) ? adminDomainText("common.roleCheck", "Kiểm tra vai trò phía máy chủ") : adminGenericText("meta.roleCheck", "Kiểm tra vai trò phía máy chủ"));
+    const readOnly = isFinanceDomain ? adminFinanceText("meta.readOnly", "Mặc định chỉ đọc") : ((isPublishingDomain || isGrowthDomain || isTrendsDomain) ? adminDomainText("common.readOnly", "Mặc định chỉ đọc") : adminGenericText("meta.readOnly", "Mặc định chỉ đọc"));
+    const noActions = isFinanceDomain ? adminFinanceText("meta.noActions", "Không có thao tác giả") : ((isPublishingDomain || isGrowthDomain || isTrendsDomain) ? adminDomainText("common.noActions", "Không có thao tác giả") : adminGenericText("meta.noActions", "Không có thao tác giả"));
+    const boundaryKicker = isFinanceDomain ? adminFinanceText("boundary.kicker", "Ranh giới quyền hạn") : ((isPublishingDomain || isGrowthDomain || isTrendsDomain) ? adminDomainText("common.boundaryKicker", "Ranh giới quyền hạn") : adminGenericText("boundary.kicker", "Ranh giới quyền hạn"));
+    const boundaryTitle = isFinanceDomain ? adminFinanceText("boundary.title", "Các giới hạn được giữ cố ý") : ((isPublishingDomain || isGrowthDomain || isTrendsDomain) ? adminDomainText("common.boundaryTitle", "Các giới hạn được giữ có chủ đích") : "Các giới hạn được giữ cố ý");
+    const boundaryBody = isFinanceDomain ? adminFinanceText("boundary.body", "Center này giúp đi đúng workflow; nó không thay thế Bot, provider hoặc financial authority.") : ((isPublishingDomain || isGrowthDomain || isTrendsDomain) ? adminDomainText("common.boundaryBody", "Trung tâm giúp đi đúng quy trình; không thay thế Bot, nhà cung cấp hoặc quyền tài chính.") : "Center này giúp đi đúng workflow; nó không thay thế Bot, provider hoặc financial authority.");
     return `<article class="portal-page portal-admin-domain">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-domain-intro"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.admin)}</span><div><span class="portal-section-kicker">${safeText(localizedDomain.kicker)}</span><h2>${safeText(localizedDomain.title)}</h2><p>${safeText(localizedDomain.description)}</p><div class="portal-state-meta"><span>${safeText(roleCheck)}</span><span>${safeText(readOnly)}</span><span>${safeText(noActions)}</span></div></div>${badge("read_only")}</div></section>${adapterMessage}<section class="portal-admin-domain-grid" aria-label="${safeText(localizedDomain.kicker)}">${cards}</section><section class="portal-card portal-card-pad portal-admin-domain-boundaries"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(boundaryKicker)}</span><h2 class="portal-card-title">${safeText(boundaryTitle)}</h2><p class="portal-card-subtitle">${safeText(boundaryBody)}</p></div>${badge("guarded")}</div><ul>${boundaries}</ul>${footerLinks ? `<div class="portal-form-footer">${footerLinks}</div>` : ""}</section></article>`;
   }
 

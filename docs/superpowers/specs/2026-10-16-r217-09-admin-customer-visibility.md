@@ -73,3 +73,10 @@ không tự sửa dependency production.
   three authority boundaries. The four routes remain filtered by the signed server manifest.
 - Admin domain/provider/top-up focused regression passes `6/6`; full Node suite passes
   `508/508`. No RBAC/ABAC, provider operation, wallet or PayOS mutation was changed.
+
+### Source closeout bổ sung — SOURCE-ADMIN-04
+
+- `/admin/growth` và `/admin/trends` dùng catalogue `adminDomainUi.growth.*` và
+  `adminDomainUi.trends.*` cho title, description, stream và boundary; server route allowlist
+  và read-only authority không đổi.
+- Admin domain/provider/top-up focused regression đạt `7/7`; full Node suite đạt `509/509`.
