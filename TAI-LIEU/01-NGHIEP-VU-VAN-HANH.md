@@ -638,3 +638,21 @@ Route, action, field, capability, CSRF, idempotency, revision, dữ liệu độ
 ví/Xu không đổi; Python contract chưa chạy vì môi trường không có `python`/`py`. Đây là
 source evidence trên PR #647, chưa phải bundle đã giao, deployed hoặc live. Runtime/live,
 browser AX tree và Image Resize/Enhance/Brand Overlay/Storyboard vẫn mở.
+
+### Ghi nhận source locale customer — Image operations — 16/10/2026
+
+Đợt `SOURCE-LOCALE-18` chuẩn hóa fixed chrome của Image Resize, Image Enhance, Brand Overlay
+và Storyboard Grid qua catalogue `imageOperationUi.*` cân bằng VI/EN/ZH. Phạm vi gồm picker
+Asset Vault, phân trang, guard/loading/failed, nhãn biểu mẫu và option, boundary, empty/result,
+lịch sử Image, vị trí logo/chữ và xác nhận lưu tiếp tục/bàn giao. Brand Overlay đã bỏ nhãn
+`Owner-scoped` cố định và thêm bản dịch xem trước công khai; Storyboard Grid đã chuyển toàn bộ
+chuỗi mixed-language sang helper locale.
+
+Regression mới `tests/image-operation-locale-purity.test.mjs` đạt `3/3`; focused Image/media
+đạt `54/54`; full Node đạt `493/493` với baseline `490/490`, `NEW_FAILURES=0`. Hai tệp Portal
+qua `node --check`, `git diff --check` đều đạt. Route, action, field, capability, CSRF,
+idempotency, revision, download path, ownership/integrity guard và điều kiện
+`completed + download_ready` không đổi; không gọi provider, không thay đổi ví/Xu/PayOS,
+không tạo output giả. Python contract `NOT_RUN` vì môi trường thiếu `python`/`py`; đây là
+source evidence trên PR #647, chưa phải bundle đã giao, deployed hoặc live. Browser/AX/live
+recheck và các lane tiếp theo vẫn mở.

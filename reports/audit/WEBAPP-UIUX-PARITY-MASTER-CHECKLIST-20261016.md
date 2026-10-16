@@ -357,11 +357,30 @@ hiển thị thành công giả khi engine/bridge chưa có.
 - [→] Các mục deferred phải có request ID/job ID/provider task ID, idempotency, audit,
       fail-closed và provider/wallet safety proof trước khi code.
 
+## 10.1. SOURCE-LOCALE-18 — Image operation chrome — Spec R217-02
+
+- [x] Catalogue `imageOperationUi.*` cân bằng VI/EN/ZH cho picker tài sản, phân trang,
+      guard/loading/failed, biểu mẫu, option, boundary, empty/result, lịch sử và xác nhận.
+- [x] Brand Overlay: bỏ `Owner-scoped` cố định, thêm bản dịch `brand.guard.publicPreview`,
+      chuyển notice cuối trang và nút lưu/bàn giao/tiếp tục qua helper locale.
+- [x] Storyboard Grid: chuyển guard, loading, retry, lý do khóa, giới thiệu, form, boundary,
+      kết quả, cell và notice sang helper; không đổi route/action/field/capability.
+- [x] Image history/result cards: nhãn loại, nguồn, PNG đầu ra, khung/lớp thương hiệu/hồ sơ,
+      fallback và thông báo tải xuống dùng catalogue; không hiển thị dữ liệu động thay thế.
+- [x] Khóa điều kiện delivery: chỉ có download/export khi `state=completed` và
+      `download_ready=true`; giữ nguyên path `/api/v1/image-operations/...` và
+      `/api/v1/storyboard-grid/...`.
+- [x] Regression `tests/image-operation-locale-purity.test.mjs`: `3/3`; focused Image/media
+      `54/54`; full Node `493/493`; baseline `490/490`, `NEW_FAILURES=0`; syntax và
+      `git diff --check` đạt.
+- [ ] Browser/AX/live recheck chưa chạy; Python contract `NOT_RUN` do thiếu `python`/`py`.
+- [ ] Không provider call, wallet mutation, production data, merge hoặc deploy trong batch.
+
 ## 11. Tổng trạng thái tại ngày 2026-10-16
 
 | Nhóm | Đã có bằng chứng | Đang mở | Bị chặn/hoãn |
 |---|---:|---:|---:|
-| Source UI/UX/locale/static motion | 1 baseline xanh | 3 live drift/runtime gates | 0 |
+| Source UI/UX/locale/static motion | W2 locale `SOURCE-LOCALE-18` xanh | 3 live drift/runtime gates | 0 |
 | Responsive/PWA live | source fix + 39 focused / 470 Node | 2 (R216-H/R216-P) | QA runtime |
 | Customer product parity UI | shell/partial nhiều lane | 6 lane acceptance | real-output bridge |
 | Admin/customer wiring UI | source contracts rải rác | 1 master surface audit | backend/permission mutation |
@@ -383,5 +402,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=Tiếp tục W2 locale theo thứ tự: rà soát Image Resize/Enhance/Brand Overlay/Storyboard, khóa từng cụm bằng regression; runtime/live và AX tree vẫn mở đến khi có bundle được delivery.
+NEXT_ACTION=Tiếp tục W2 locale theo checklist sau SOURCE-LOCALE-18; nhóm Image Resize/Enhance/Brand Overlay/Storyboard đã khóa source, còn browser/AX/live recheck và các lane kế tiếp mở.
 ```

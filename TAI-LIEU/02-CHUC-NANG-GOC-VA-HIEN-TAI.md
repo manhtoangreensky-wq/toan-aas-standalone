@@ -397,3 +397,19 @@ Regression riêng đạt `2/2`, focused Image đạt `51/51`, full Node đạt `
 tệp Portal và `git diff --check` đều đạt. Python contract `NOT_RUN` vì môi trường thiếu
 `python`/`py`; runtime/live, AX tree và các route Resize/Enhance/Brand Overlay/Storyboard
 vẫn mở.
+
+### Bổ sung đối chiếu source ngày 16/10/2026 — Image operations
+
+Đợt `SOURCE-LOCALE-18` chuẩn hóa fixed chrome các route Image Resize, Image Enhance, Brand
+Overlay và Storyboard Grid qua catalogue `imageOperationUi.*` cân bằng VI/EN/ZH. Picker
+Asset Vault, phân trang, trạng thái guard/loading/failed, form/option, boundary, kết quả,
+lịch sử và xác nhận export/bàn giao đều dùng helper locale; Brand Overlay không còn nhãn
+`Owner-scoped` cố định và Storyboard không còn chuỗi `signed/private/source reference` trong
+bản tiếng Việt. Không đổi route, action, field, capability, CSRF, idempotency, revision,
+download path, ownership/integrity guard hoặc dữ liệu động.
+
+Regression `tests/image-operation-locale-purity.test.mjs` đạt `3/3`; focused Image/media
+đạt `54/54`; full Node đạt `493/493` (baseline `490/490`, `NEW_FAILURES=0`), syntax hai
+tệp Portal và `git diff --check` đạt. Python contract `NOT_RUN` vì thiếu `python`/`py`;
+browser/AX/live chưa chạy và không có provider call, wallet mutation, production data,
+merge hay deploy trong batch.

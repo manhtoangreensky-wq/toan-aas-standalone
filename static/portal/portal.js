@@ -23939,10 +23939,12 @@
     const previous = Number.isInteger(pagination.previous_offset) && pagination.previous_offset >= 0 ? pagination.previous_offset : null;
     const next = pagination.has_more === true && Number.isInteger(pagination.next_offset) && pagination.next_offset > offset ? pagination.next_offset : null;
     if (previous === null && next === null) return "";
-    const range = returned ? `Đang hiển thị ${offset + 1}–${offset + returned} reference` : "Không có reference ở trang này";
-    const previousButton = previous === null ? "" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="${safeText(action)}" data-portal-route="${safeText(route)}" ${safeText(attribute)}="${safeText(String(previous))}">← Trang trước</button>`;
-    const nextButton = next === null ? "" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="${safeText(action)}" data-portal-route="${safeText(route)}" ${safeText(attribute)}="${safeText(String(next))}">Trang sau →</button>`;
-    return `<nav class="portal-vault-pagination portal-operation-reference-pagination" aria-label="Phân trang reference"><span>${safeText(range)}</span><div>${previousButton}${nextButton}</div></nav>`;
+    const range = returned
+      ? imageOperationText("reference.range", "Đang hiển thị {start}–{end} {label}", { start: String(offset + 1), end: String(offset + returned), label: imageOperationText("reference.type.reference", "tham chiếu") })
+      : imageOperationText("reference.empty", "Không có {label} ở trang này", { label: imageOperationText("reference.type.reference", "tham chiếu") });
+    const previousButton = previous === null ? "" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="${safeText(action)}" data-portal-route="${safeText(route)}" ${safeText(attribute)}="${safeText(String(previous))}">${safeText(imageOperationText("reference.previous", "Trang trước"))}</button>`;
+    const nextButton = next === null ? "" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="${safeText(action)}" data-portal-route="${safeText(route)}" ${safeText(attribute)}="${safeText(String(next))}">${safeText(imageOperationText("reference.next", "Trang sau"))}</button>`;
+    return `<nav class="portal-vault-pagination portal-operation-reference-pagination" aria-label="${safeText(imageOperationText("reference.aria", "Phân trang tham chiếu"))}"><span>${safeText(range)}</span><div>${previousButton}${nextButton}</div></nav>`;
   }
 
   function renderOperationAssetReferencePicker(context, picker) {
@@ -23957,13 +23959,17 @@
     const rows = documentPicker
       ? operationAssetReferenceRows(context, "document", kind)
       : operationAssetReferenceRows(context, "image_operation", "image");
-    const typeLabel = kind === "pdf" ? "PDF" : "ảnh JPEG, PNG hoặc WebP";
+    const typeLabel = imageOperationText(kind === "pdf" ? "reference.type.pdf" : "reference.type.image", kind === "pdf" ? "PDF" : "ảnh JPEG, PNG hoặc WebP");
     const rowsText = rows.length
-      ? `${rows.length} ${typeLabel} đang có thể chọn trong filter/trang hiện tại.`
-      : `Chưa có ${typeLabel} phù hợp ở trang này.`;
-    const statusText = readState === "loading" ? "Đang tải reference owner-scoped…" : readState === "failed" ? "Chưa tải được reference; không dùng dữ liệu thay thế." : rowsText;
+      ? imageOperationText("reference.available", "{count} {type} có thể chọn ở trang hiện tại.", { count: String(rows.length), type: typeLabel })
+      : imageOperationText("reference.none", "Chưa có {type} phù hợp ở trang này.", { type: typeLabel });
+    const statusText = readState === "loading"
+      ? imageOperationText("reference.loading", "Đang tải tham chiếu thuộc tài khoản…")
+      : readState === "failed"
+        ? imageOperationText("reference.failed", "Chưa tải được tham chiếu; không dùng dữ liệu thay thế.")
+        : rowsText;
     const disabled = readState === "guarded" ? " disabled" : "";
-    return `<section class="portal-operation-reference-picker" data-operation-reference-kind="${safeText(selected)}"><div class="portal-operation-reference-copy"><strong>Tìm ${safeText(typeLabel)} cũ</strong><span>${safeText(statusText)}</span></div><div class="portal-operation-reference-controls"><label><span class="portal-sr-only">Tìm ${safeText(typeLabel)}</span><input class="portal-input" name="asset_reference_q" value="${safeText(listing.filters.q)}" maxlength="100" placeholder="Tên hiển thị hoặc tên tệp"${disabled}></label><button class="portal-button portal-button--quiet" type="button" data-portal-action="${safeText(actionPrefix + "-filter")}" data-portal-route="${safeText(route)}"${disabled}>Tìm</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="${safeText(actionPrefix + "-filter-clear")}" data-portal-route="${safeText(route)}"${disabled}>Xóa lọc</button></div>${renderOperationAssetReferencePagination(listing, actionPrefix + "-page", offsetAttribute, route)}</section>`;
+    return `<section class="portal-operation-reference-picker" data-operation-reference-kind="${safeText(selected)}"><div class="portal-operation-reference-copy"><strong>${safeText(imageOperationText("reference.title", "Tìm {type} cũ", { type: typeLabel }))}</strong><span>${safeText(statusText)}</span></div><div class="portal-operation-reference-controls"><label><span class="portal-sr-only">${safeText(imageOperationText("reference.inputLabel", "Tìm {type}", { type: typeLabel }))}</span><input class="portal-input" name="asset_reference_q" value="${safeText(listing.filters.q)}" maxlength="100" placeholder="${safeText(imageOperationText("reference.placeholder", "Tên hiển thị hoặc tên tệp"))}"${disabled}></label><button class="portal-button portal-button--quiet" type="button" data-portal-action="${safeText(actionPrefix + "-filter")}" data-portal-route="${safeText(route)}"${disabled}>${safeText(imageOperationText("reference.find", "Tìm"))}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="${safeText(actionPrefix + "-filter-clear")}" data-portal-route="${safeText(route)}"${disabled}>${safeText(imageOperationText("reference.clear", "Xóa lọc"))}</button></div>${renderOperationAssetReferencePagination(listing, actionPrefix + "-page", offsetAttribute, route)}</section>`;
   }
 
   function validDocumentOperationId(value) {
@@ -24027,11 +24033,15 @@
     return renderOperationsPagination(
       listing,
       enabled,
-      enhance ? "Image Enhance" : "Resize Studio",
+      enhance ? imageOperationText("pagination.enhance.label", "lịch sử Làm ảnh rõ") : imageOperationText("pagination.resize.label", "lịch sử Đổi canvas"),
       enhance ? "image-enhance-operation-page" : "image-operation-page",
       route,
       enhance ? "data-image-enhance-operation-offset" : "data-image-operation-offset",
-      enhance ? "Phân trang lịch sử Image Enhance" : "Phân trang lịch sử Resize Studio"
+      enhance ? imageOperationText("pagination.enhance.aria", "Phân trang lịch sử Làm ảnh rõ") : imageOperationText("pagination.resize.aria", "Phân trang lịch sử Đổi canvas"),
+      {
+        localized: true,
+        translate: (key, fallback, params) => imageOperationText(`pagination.${key.replace(/^range$/, "range").replace(/^empty$/, "empty")}`, fallback, params)
+      }
     );
   }
 
@@ -24042,11 +24052,12 @@
     return renderOperationsPagination(
       listing,
       enabled,
-      "Brand Overlay Studio",
+      imageOperationText("pagination.brand.label", "lịch sử Gắn thương hiệu"),
       "image-brand-overlay-page",
       route,
       "data-image-brand-overlay-offset",
-      "Phân trang lịch sử Brand Overlay Studio"
+      imageOperationText("pagination.brand.aria", "Phân trang lịch sử Gắn thương hiệu"),
+      { localized: true, translate: (key, fallback, params) => imageOperationText(key, fallback, params) }
     );
   }
 
@@ -24072,11 +24083,12 @@
     return renderOperationsPagination(
       listing,
       enabled,
-      "Storyboard Grid Splitter",
+      imageOperationText("pagination.storyboard.label", "lịch sử Chia bảng cảnh"),
       "storyboard-grid-page",
       route,
       "data-storyboard-grid-offset",
-      "Phân trang lịch sử Storyboard Grid Splitter"
+      imageOperationText("pagination.storyboard.aria", "Phân trang lịch sử Chia bảng cảnh"),
+      { localized: true, translate: (key, fallback, params) => imageOperationText(key, fallback, params) }
     );
   }
 
@@ -24382,12 +24394,12 @@
     const canPrepareContentHandoff = Boolean(
       context && context.capabilities && context.capabilities["content-handoff-create"] === true
     );
-    const exportControl = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-export-to-asset-vault" data-portal-route="${safeText(route)}" data-image-operation-id="${safeText(operationId)}" data-portal-confirm="Lưu PNG đã được xác minh vào Asset Vault riêng tư?">Lưu vào Asset Vault</button>`;
+    const exportControl = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-export-to-asset-vault" data-portal-route="${safeText(route)}" data-image-operation-id="${safeText(operationId)}" data-portal-confirm="${safeText(imageOperationText("common.exportConfirm", "Lưu PNG đã được xác minh vào Asset Vault riêng tư?"))}">${safeText(imageOperationText("common.saveVault", "Lưu vào Asset Vault"))}</button>`;
     const handoffControl = canPrepareContentHandoff
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-export-to-content-handoff" data-portal-route="${safeText(route)}" data-image-operation-id="${safeText(operationId)}" data-portal-confirm="Lưu PNG đã được xác minh vào Asset Vault rồi mở draft Content Handoff? Chưa có record nào được tạo cho tới khi bạn gửi form.">Lưu & chuẩn bị bàn giao</button>`
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-export-to-content-handoff" data-portal-route="${safeText(route)}" data-image-operation-id="${safeText(operationId)}" data-portal-confirm="${safeText(imageOperationText("common.handoffConfirm", "Lưu PNG đã được xác minh vào Asset Vault rồi mở bản nháp bàn giao? Chưa có record nào được tạo cho tới khi bạn gửi biểu mẫu."))}">${safeText(imageOperationText("common.prepareHandoff", "Lưu và chuẩn bị bàn giao"))}</button>`
       : "";
     const continuationControl = continuation
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-export-to-continue" data-portal-route="${safeText(route)}" data-image-operation-id="${safeText(operationId)}" data-image-operation-continue-target="${safeText(continuation.target)}" data-portal-confirm="Lưu PNG đã được xác minh vào Asset Vault rồi mở thao tác mới? Chỉ Asset UUID mới được chọn; thông số cũ không được chuyển.">${safeText(continuation.label)}</button>`
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-export-to-continue" data-portal-route="${safeText(route)}" data-image-operation-id="${safeText(operationId)}" data-image-operation-continue-target="${safeText(continuation.target)}" data-portal-confirm="${safeText(imageOperationText("common.continueConfirm", "Lưu PNG đã được xác minh vào Asset Vault rồi mở thao tác mới? Chỉ mã Asset Vault mới được chọn; thông số cũ không được chuyển."))}">${safeText(imageOperationText(continuation.target === "/image/edit" ? "common.continueEnhance" : "common.continueResize", continuation.label))}</button>`
       : "";
     return exportControl + continuationControl + handoffControl;
   }
@@ -24413,42 +24425,42 @@
     const isCustom = selectedPreset === "custom";
     return [
       {
-        name: "source_asset_id", label: "Ảnh nguồn trong Asset Vault", control: "select", optionsFrom: "imageVaultAssets", referencePicker: "image-operation-image",
-        emptyLabel: "Chọn ảnh private", required: true,
-        help: "Chỉ JPEG, PNG hoặc WebP active của signed Web account hiện tại xuất hiện. File gốc không bị ghi đè."
+        name: "source_asset_id", label: imageOperationText("field.source.label", "Ảnh nguồn trong Asset Vault"), control: "select", optionsFrom: "imageVaultAssets", referencePicker: "image-operation-image",
+        emptyLabel: imageOperationText("field.source.empty", "Chọn ảnh riêng tư"), required: true,
+        help: imageOperationText("field.source.help", "Chỉ JPEG, PNG hoặc WebP đang hoạt động thuộc tài khoản hiện tại xuất hiện. File gốc không bị ghi đè.")
       },
       {
-        name: "preset", label: "Canvas / tỷ lệ đích", control: "select", options: [
-          { value: "custom", label: "Tùy chỉnh (nhập pixel)" },
-          { value: "1:1", label: "Vuông 1:1 · 1024 × 1024" },
-          { value: "4:5", label: "Chân dung 4:5 · 1080 × 1350" },
-          { value: "9:16", label: "Story / Reel 9:16 · 1080 × 1920" },
-          { value: "16:9", label: "Ngang 16:9 · 1920 × 1080" },
-          { value: "3:4", label: "Chân dung 3:4 · 1080 × 1440" },
-          { value: "4:3", label: "Cổ điển 4:3 · 1440 × 1080" },
-          { value: "3:2", label: "Ảnh 3:2 · 1500 × 1000" },
-          { value: "2:3", label: "Ảnh dọc 2:3 · 1000 × 1500" },
-          { value: "21:9", label: "Wide 21:9 · 1920 × 823" }
+        name: "preset", label: imageOperationText("field.resize.preset.label", "Canvas / tỷ lệ đích"), control: "select", options: [
+          { value: "custom", label: imageOperationText("field.resize.preset.custom", "Tùy chỉnh (nhập pixel)") },
+          { value: "1:1", label: imageOperationText("field.resize.preset.square", "Vuông 1:1 · 1024 × 1024") },
+          { value: "4:5", label: imageOperationText("field.resize.preset.portrait45", "Chân dung 4:5 · 1080 × 1350") },
+          { value: "9:16", label: imageOperationText("field.resize.preset.story", "Story / Reel 9:16 · 1080 × 1920") },
+          { value: "16:9", label: imageOperationText("field.resize.preset.landscape", "Ngang 16:9 · 1920 × 1080") },
+          { value: "3:4", label: imageOperationText("field.resize.preset.portrait34", "Chân dung 3:4 · 1080 × 1440") },
+          { value: "4:3", label: imageOperationText("field.resize.preset.classic43", "Cổ điển 4:3 · 1440 × 1080") },
+          { value: "3:2", label: imageOperationText("field.resize.preset.photo32", "Ảnh 3:2 · 1500 × 1000") },
+          { value: "2:3", label: imageOperationText("field.resize.preset.photo23", "Ảnh dọc 2:3 · 1000 × 1500") },
+          { value: "21:9", label: imageOperationText("field.resize.preset.wide219", "Rộng 21:9 · 1920 × 823") }
         ],
-        help: "Chọn preset để server dùng đúng pixel canonical của local image tool. Khi chọn Tùy chỉnh, nhập cả hai cạnh bên dưới."
+        help: imageOperationText("field.resize.preset.help", "Chọn preset để dùng đúng pixel chuẩn. Khi chọn Tùy chỉnh, nhập cả hai cạnh bên dưới.")
       },
       {
-        name: "target_width", label: "Chiều rộng tùy chỉnh (px)", type: "number", placeholder: "Ví dụ: 1080", min: 128, max: 4096, step: 1, inputMode: "numeric",
+        name: "target_width", label: imageOperationText("field.resize.width.label", "Chiều rộng tùy chỉnh (px)"), type: "number", placeholder: imageOperationText("field.resize.width.placeholder", "Ví dụ: 1080"), min: 128, max: 4096, step: 1, inputMode: "numeric",
         required: isCustom, dynamicRequired: true, disabled: !isCustom,
-        help: "Chỉ dùng khi Canvas là Tùy chỉnh. Nếu chọn preset, để trống để server áp pixel chuẩn; không nhập số khác preset."
+        help: imageOperationText("field.resize.width.help", "Chỉ dùng khi Canvas là Tùy chỉnh. Nếu chọn preset, để trống để dùng pixel chuẩn.")
       },
       {
-        name: "target_height", label: "Chiều cao tùy chỉnh (px)", type: "number", placeholder: "Ví dụ: 1350", min: 128, max: 4096, step: 1, inputMode: "numeric",
+        name: "target_height", label: imageOperationText("field.resize.height.label", "Chiều cao tùy chỉnh (px)"), type: "number", placeholder: imageOperationText("field.resize.height.placeholder", "Ví dụ: 1350"), min: 128, max: 4096, step: 1, inputMode: "numeric",
         required: isCustom, dynamicRequired: true, disabled: !isCustom,
-        help: "Canvas tối đa 16 MP, mỗi cạnh 128–4096 px, tỷ lệ tối đa 12:1. Không có upscale AI hoặc khôi phục chi tiết."
+        help: imageOperationText("field.resize.height.help", "Canvas tối đa 16 MP, mỗi cạnh 128–4096 px, tỷ lệ tối đa 12:1. Không có nâng cấp AI.")
       },
       {
-        name: "fit_mode", label: "Cách đặt ảnh vào canvas", control: "select", options: [
-          { value: "pad", label: "Pad nền trắng · giữ trọn ảnh, không cắt" },
-          { value: "crop", label: "Crop giữa khung · lấp đầy canvas, có thể cắt rìa" },
-          { value: "blur", label: "Blur nền · giữ trọn ảnh ở giữa, nền mờ" }
+        name: "fit_mode", label: imageOperationText("field.resize.fit.label", "Cách đặt ảnh vào canvas"), control: "select", options: [
+          { value: "pad", label: imageOperationText("field.resize.fit.pad", "Đệm nền trắng · giữ trọn ảnh, không cắt") },
+          { value: "crop", label: imageOperationText("field.resize.fit.crop", "Cắt giữa khung · lấp đầy canvas, có thể cắt rìa") },
+          { value: "blur", label: imageOperationText("field.resize.fit.blur", "Nền mờ · giữ trọn ảnh ở giữa, nền mờ") }
         ],
-        help: "Crop luôn cắt tâm, không có focal-point editor ở phiên bản này. Blur không nhận diện chủ thể; đây là xử lý ảnh cục bộ deterministic."
+        help: imageOperationText("field.resize.fit.help", "Cắt luôn lấy tâm; không có trình chọn điểm nhấn. Nền mờ là xử lý cục bộ có thể kiểm tra.")
       }
     ];
   }
@@ -24462,61 +24474,66 @@
     custom: "Thông số tùy chỉnh"
   };
 
+  function imageEnhancePresetLabel(value) {
+    const key = String(value || "custom");
+    return imageOperationText(`result.preset.${key}`, IMAGE_ENHANCE_PRESET_LABELS[key] || key);
+  }
+
   function imageEnhanceFormFields(values) {
     const selectedPreset = String(values && values.preset || transientFormValues("/image/edit").preset || "photo_clear_detail");
     const isCustom = selectedPreset === "custom";
     return [
       {
-        name: "source_asset_id", label: "Ảnh nguồn trong Asset Vault", control: "select", optionsFrom: "imageVaultAssets", referencePicker: "image-operation-image",
-        emptyLabel: "Chọn ảnh private", required: true,
-        help: "Chỉ JPEG, PNG hoặc WebP active của signed Web account hiện tại xuất hiện. File gốc không bị ghi đè."
+        name: "source_asset_id", label: imageOperationText("field.source.label", "Ảnh nguồn trong Asset Vault"), control: "select", optionsFrom: "imageVaultAssets", referencePicker: "image-operation-image",
+        emptyLabel: imageOperationText("field.source.empty", "Chọn ảnh riêng tư"), required: true,
+        help: imageOperationText("field.source.help", "Chỉ JPEG, PNG hoặc WebP đang hoạt động thuộc tài khoản hiện tại xuất hiện. File gốc không bị ghi đè.")
       },
       {
-        name: "preset", label: "Công thức màu cục bộ", control: "select", options: [
-          { value: "photo_clear_detail", label: "Rõ và chi tiết · auto enhance" },
-          { value: "product_clean", label: "Sản phẩm sạch sáng" },
-          { value: "cinematic_warm", label: "Cinematic ấm" },
-          { value: "fresh_blue", label: "Tươi xanh" },
-          { value: "food_vivid", label: "Ẩm thực nổi bật" },
-          { value: "custom", label: "Tùy chỉnh thông số" }
+        name: "preset", label: imageOperationText("field.enhance.preset.label", "Công thức màu cục bộ"), control: "select", options: [
+          { value: "photo_clear_detail", label: imageOperationText("field.enhance.preset.clear", "Rõ và chi tiết · tự tăng cường") },
+          { value: "product_clean", label: imageOperationText("field.enhance.preset.product", "Sản phẩm sạch sáng") },
+          { value: "cinematic_warm", label: imageOperationText("field.enhance.preset.cinematic", "Cinematic ấm") },
+          { value: "fresh_blue", label: imageOperationText("field.enhance.preset.fresh", "Tươi xanh") },
+          { value: "food_vivid", label: imageOperationText("field.enhance.preset.food", "Ẩm thực nổi bật") },
+          { value: "custom", label: imageOperationText("field.enhance.preset.custom", "Tùy chỉnh thông số") }
         ],
-        help: "Preset dùng thông số deterministic canonical từ local editor của Bot. Chỉ chọn Tùy chỉnh khi cần nhập đủ bốn thông số bên dưới."
+        help: imageOperationText("field.enhance.preset.help", "Preset dùng thông số chuẩn từ trình chỉnh sửa cục bộ. Chỉ chọn Tùy chỉnh khi cần nhập đủ bốn thông số.")
       },
       {
-        name: "brightness", label: "Độ sáng", type: "number", placeholder: "0.50 – 2.00", min: 0.5, max: 2, step: 0.01, inputMode: "decimal",
+        name: "brightness", label: imageOperationText("field.enhance.brightness.label", "Độ sáng"), type: "number", placeholder: imageOperationText("field.enhance.range.placeholder", "0.50 – 2.00"), min: 0.5, max: 2, step: 0.01, inputMode: "decimal",
         required: isCustom, dynamicRequired: true, disabled: !isCustom,
-        help: "Chỉ dùng với Tùy chỉnh. 1.00 là giữ nguyên trước khi áp các bước tăng cường khác."
+        help: imageOperationText("field.enhance.custom.help", "Chỉ dùng với Tùy chỉnh. 1.00 là giữ nguyên trước khi áp các bước tăng cường khác.")
       },
       {
-        name: "contrast", label: "Tương phản", type: "number", placeholder: "0.50 – 2.00", min: 0.5, max: 2, step: 0.01, inputMode: "decimal",
+        name: "contrast", label: imageOperationText("field.enhance.contrast.label", "Tương phản"), type: "number", placeholder: imageOperationText("field.enhance.range.placeholder", "0.50 – 2.00"), min: 0.5, max: 2, step: 0.01, inputMode: "decimal",
         required: isCustom, dynamicRequired: true, disabled: !isCustom,
-        help: "Chỉ dùng với Tùy chỉnh. Không có HDR, khôi phục chi tiết hoặc AI retouch."
+        help: imageOperationText("field.enhance.contrast.help", "Chỉ dùng với Tùy chỉnh. Không có HDR, khôi phục chi tiết hoặc chỉnh sửa AI.")
       },
       {
-        name: "saturation", label: "Bão hòa màu", type: "number", placeholder: "0.50 – 2.00", min: 0.5, max: 2, step: 0.01, inputMode: "decimal",
+        name: "saturation", label: imageOperationText("field.enhance.saturation.label", "Bão hòa màu"), type: "number", placeholder: imageOperationText("field.enhance.range.placeholder", "0.50 – 2.00"), min: 0.5, max: 2, step: 0.01, inputMode: "decimal",
         required: isCustom, dynamicRequired: true, disabled: !isCustom,
-        help: "Chỉ dùng với Tùy chỉnh. Server chặn số ngoài 0.50–2.00."
+        help: imageOperationText("field.enhance.saturation.help", "Chỉ dùng với Tùy chỉnh. Máy chủ chặn số ngoài 0.50–2.00.")
       },
       {
-        name: "sharpness", label: "Độ nét", type: "number", placeholder: "0.50 – 2.00", min: 0.5, max: 2, step: 0.01, inputMode: "decimal",
+        name: "sharpness", label: imageOperationText("field.enhance.sharpness.label", "Độ nét"), type: "number", placeholder: imageOperationText("field.enhance.range.placeholder", "0.50 – 2.00"), min: 0.5, max: 2, step: 0.01, inputMode: "decimal",
         required: isCustom, dynamicRequired: true, disabled: !isCustom,
-        help: "Chỉ dùng với Tùy chỉnh. Đây là filter local, không tạo chi tiết AI mới."
+        help: imageOperationText("field.enhance.sharpness.help", "Chỉ dùng với Tùy chỉnh. Đây là bộ lọc cục bộ, không tạo chi tiết AI mới.")
       },
       {
-        name: "tone", label: "Tone tùy chỉnh", control: "select", disabled: !isCustom, options: [
-          { value: "neutral", label: "Neutral · không phủ tone" },
-          { value: "warm", label: "Warm · ấm nhẹ" },
-          { value: "cool", label: "Cool · xanh nhẹ" },
-          { value: "clean", label: "Clean · sáng sạch" }
+        name: "tone", label: imageOperationText("field.enhance.tone.label", "Sắc độ tùy chỉnh"), control: "select", disabled: !isCustom, options: [
+          { value: "neutral", label: imageOperationText("field.enhance.tone.neutral", "Trung tính · không phủ sắc độ") },
+          { value: "warm", label: imageOperationText("field.enhance.tone.warm", "Ấm · ấm nhẹ") },
+          { value: "cool", label: imageOperationText("field.enhance.tone.cool", "Lạnh · xanh nhẹ") },
+          { value: "clean", label: imageOperationText("field.enhance.tone.clean", "Sạch · sáng sạch") }
         ],
-        help: "Chỉ dùng với Tùy chỉnh. Preset đã có tone canonical riêng."
+        help: imageOperationText("field.enhance.tone.help", "Chỉ dùng với Tùy chỉnh. Preset đã có sắc độ chuẩn riêng.")
       },
       {
-        name: "basic_upscale", label: "Làm nét / nâng kích thước cơ bản", control: "select", options: [
-          { value: "false", label: "Không · giữ kích thước an toàn" },
-          { value: "true", label: "Có · tối đa 2×, luôn theo trần 4096 px / 16 MP" }
+        name: "basic_upscale", label: imageOperationText("field.enhance.upscale.label", "Làm nét / nâng kích thước cơ bản"), control: "select", options: [
+          { value: "false", label: imageOperationText("field.enhance.upscale.no", "Không · giữ kích thước an toàn") },
+          { value: "true", label: imageOperationText("field.enhance.upscale.yes", "Có · tối đa 2×, theo trần 4096 px / 16 MP") }
         ],
-        help: "Dùng nội suy LANCZOS và UnsharpMask cục bộ. Không phải AI upscale; ảnh lớn có thể bị hạ về trần output để giữ an toàn."
+        help: imageOperationText("field.enhance.upscale.help", "Dùng nội suy LANCZOS và UnsharpMask cục bộ. Không phải nâng cấp AI; ảnh lớn có thể bị hạ về trần an toàn.")
       }
     ];
   }
@@ -24554,6 +24571,11 @@
     Object.fromEntries(IMAGE_BRAND_OVERLAY_POSITION_OPTIONS.map((item) => [item.value, item.label]))
   );
 
+  function imageBrandOverlayPositionLabel(value) {
+    const key = String(value || "");
+    return imageOperationText(`brand.position.${key}`, IMAGE_BRAND_OVERLAY_POSITION_LABELS[key] || "");
+  }
+
   function imageBrandOverlayFormValues(values) {
     // Brand wording is request-only.  Unlike ordinary workflow forms, this
     // route never restores a generic tab-memory draft, including one that
@@ -24571,36 +24593,36 @@
   function imageBrandOverlayFormFields() {
     return [
       {
-        name: "source_asset_id", label: "Ảnh nguồn trong Asset Vault", control: "select", optionsFrom: "imageVaultAssets", referencePicker: "image-operation-image",
-        emptyLabel: "Chọn ảnh private", required: true,
-        help: "Chỉ JPEG, PNG hoặc WebP active thuộc signed Web account hiện tại được chọn. Ảnh nguồn luôn giữ nguyên."
+        name: "source_asset_id", label: imageOperationText("field.source.label", "Ảnh nguồn trong Asset Vault"), control: "select", optionsFrom: "imageVaultAssets", referencePicker: "image-operation-image",
+        emptyLabel: imageOperationText("field.source.empty", "Chọn ảnh riêng tư"), required: true,
+        help: imageOperationText("field.source.help", "Chỉ JPEG, PNG hoặc WebP đang hoạt động thuộc tài khoản hiện tại xuất hiện. File gốc không bị ghi đè.")
       },
       {
-        name: "logo_asset_id", label: "Logo / watermark từ Asset Vault (tùy chọn)", control: "select", optionsFrom: "imageVaultAssets",
-        emptyLabel: "Không dùng logo", help: "Chọn một ảnh logo private khác ảnh nguồn. Server kiểm tra ownership, định dạng và hash-copy logo trước khi ghép."
+        name: "logo_asset_id", label: imageOperationText("field.brand.logo.label", "Logo / watermark từ Asset Vault (tùy chọn)"), control: "select", optionsFrom: "imageVaultAssets",
+        emptyLabel: imageOperationText("field.brand.logo.empty", "Không dùng logo"), help: imageOperationText("field.brand.logo.help", "Chọn một logo riêng tư khác ảnh nguồn. Máy chủ kiểm tra quyền sở hữu, định dạng và sao chép kiểm tra trước khi ghép.")
       },
       {
-        name: "overlay_text", label: "Chữ thương hiệu (tùy chọn)", control: "textarea", placeholder: "Ví dụ: © TOAN AAS · 2026", maxLength: 260,
-        help: "Nhập chữ hoặc chọn logo; cần ít nhất một trong hai. Nội dung chỉ đi trong request signed, không được dựng preview hay lưu vào browser."
+        name: "overlay_text", label: imageOperationText("field.brand.text.label", "Chữ thương hiệu (tùy chọn)"), control: "textarea", placeholder: imageOperationText("field.brand.text.placeholder", "Ví dụ: © TOAN AAS · 2026"), maxLength: 260,
+        help: imageOperationText("field.brand.text.help", "Nhập chữ hoặc chọn logo; cần ít nhất một trong hai. Nội dung chỉ đi trong request đã xác thực và không lưu vào trình duyệt.")
       },
       {
-        name: "text_position", label: "Vị trí chữ", control: "select", options: IMAGE_BRAND_OVERLAY_POSITION_OPTIONS,
-        help: "Vị trí trong lưới 3 × 3 đã giới hạn. Nếu không nhập chữ, server bỏ qua lựa chọn này."
+        name: "text_position", label: imageOperationText("field.brand.textPosition.label", "Vị trí chữ"), control: "select", options: IMAGE_BRAND_OVERLAY_POSITION_OPTIONS.map((item) => ({ ...item, label: imageOperationText(`brand.position.${item.value}`, item.label) })),
+        help: imageOperationText("field.brand.textPosition.help", "Vị trí nằm trong lưới 3 × 3 đã giới hạn. Nếu không nhập chữ, máy chủ bỏ qua lựa chọn này.")
       },
       {
-        name: "logo_position", label: "Vị trí logo", control: "select", options: IMAGE_BRAND_OVERLAY_POSITION_OPTIONS,
-        help: "Vị trí trong lưới 3 × 3 đã giới hạn. Nếu không chọn logo, server bỏ qua lựa chọn này."
+        name: "logo_position", label: imageOperationText("field.brand.logoPosition.label", "Vị trí logo"), control: "select", options: IMAGE_BRAND_OVERLAY_POSITION_OPTIONS.map((item) => ({ ...item, label: imageOperationText(`brand.position.${item.value}`, item.label) })),
+        help: imageOperationText("field.brand.logoPosition.help", "Vị trí nằm trong lưới 3 × 3 đã giới hạn. Nếu không chọn logo, máy chủ bỏ qua lựa chọn này.")
       },
       {
-        name: "logo_scale_percent", label: "Kích thước logo", control: "select", options: [
-          { value: "12", label: "Nhỏ · 12% chiều rộng canvas" },
-          { value: "18", label: "Vừa · 18% chiều rộng canvas" },
-          { value: "22", label: "Lớn · 22% chiều rộng canvas" }
-        ], help: "Scale được giới hạn theo chiều rộng canvas và khung đặt logo; không có resize tự do hoặc browser canvas."
+        name: "logo_scale_percent", label: imageOperationText("field.brand.scale.label", "Kích thước logo"), control: "select", options: [
+          { value: "12", label: imageOperationText("field.brand.scale.small", "Nhỏ · 12% chiều rộng canvas") },
+          { value: "18", label: imageOperationText("field.brand.scale.medium", "Vừa · 18% chiều rộng canvas") },
+          { value: "22", label: imageOperationText("field.brand.scale.large", "Lớn · 22% chiều rộng canvas") }
+        ], help: imageOperationText("field.brand.scale.help", "Kích thước bị giới hạn theo chiều rộng canvas và khung đặt logo; không có chỉnh tự do.")
       },
       {
-        name: "logo_opacity_percent", label: "Độ mờ logo (%)", type: "number", min: 25, max: 100, step: 1, inputMode: "numeric",
-        help: "Chỉ nhận số nguyên 25–100. Nếu không dùng logo, server bỏ qua giá trị này."
+        name: "logo_opacity_percent", label: imageOperationText("field.brand.opacity.label", "Độ mờ logo (%)"), type: "number", min: 25, max: 100, step: 1, inputMode: "numeric",
+        help: imageOperationText("field.brand.opacity.help", "Chỉ nhận số nguyên 25–100. Nếu không dùng logo, máy chủ bỏ qua giá trị này.")
       }
     ];
   }
@@ -24651,29 +24673,29 @@
   function storyboardGridFormFields() {
     return [
       {
-        name: "source_asset_id", label: "Ảnh storyboard trong Asset Vault", control: "select", optionsFrom: "imageVaultAssets", referencePicker: "image-operation-image",
-        emptyLabel: "Chọn ảnh private", required: true,
-        help: "Chỉ JPEG, PNG hoặc WebP active thuộc signed Web account hiện tại được chọn. Browser chỉ gửi UUID của asset; file gốc luôn giữ nguyên."
+        name: "source_asset_id", label: imageOperationText("field.storyboardSource.label", "Ảnh bảng cảnh trong Asset Vault"), control: "select", optionsFrom: "imageVaultAssets", referencePicker: "image-operation-image",
+        emptyLabel: imageOperationText("field.source.empty", "Chọn ảnh riêng tư"), required: true,
+        help: imageOperationText("field.storyboardSource.help", "Chỉ JPEG, PNG hoặc WebP đang hoạt động thuộc tài khoản hiện tại được chọn. Trình duyệt chỉ gửi mã tài sản; file gốc luôn giữ nguyên.")
       },
       {
-        name: "episode", label: "Tập", type: "number", min: 1, max: 999, step: 1, inputMode: "numeric", required: true,
-        help: "Số tập dùng để đặt ngữ cảnh cảnh, từ 1 đến 999. Không tạo video hoặc Episode job."
+        name: "episode", label: imageOperationText("field.storyboard.episode.label", "Tập"), type: "number", min: 1, max: 999, step: 1, inputMode: "numeric", required: true,
+        help: imageOperationText("field.storyboard.episode.help", "Số tập dùng để đặt ngữ cảnh cảnh, từ 1 đến 999. Không tạo video hoặc tác vụ tập.")
       },
       {
-        name: "rows", label: "Số hàng", type: "number", min: 1, max: 6, step: 1, inputMode: "numeric", required: true,
-        help: "Lưới có 1–6 hàng. Server chia ảnh bằng quy tắc deterministic; không có kéo cắt hoặc canvas trên browser."
+        name: "rows", label: imageOperationText("field.storyboard.rows.label", "Số hàng"), type: "number", min: 1, max: 6, step: 1, inputMode: "numeric", required: true,
+        help: imageOperationText("field.storyboard.rows.help", "Lưới có 1–6 hàng. Máy chủ chia ảnh theo quy tắc có thể kiểm tra; không kéo cắt trên trình duyệt.")
       },
       {
-        name: "cols", label: "Số cột", type: "number", min: 1, max: 8, step: 1, inputMode: "numeric", required: true,
-        help: "Lưới có 1–8 cột, tối đa 48 cảnh cho mỗi thao tác."
+        name: "cols", label: imageOperationText("field.storyboard.cols.label", "Số cột"), type: "number", min: 1, max: 8, step: 1, inputMode: "numeric", required: true,
+        help: imageOperationText("field.storyboard.cols.help", "Lưới có 1–8 cột, tối đa 48 cảnh cho mỗi thao tác.")
       },
       {
-        name: "start_scene", label: "Cảnh bắt đầu", type: "number", min: 1, max: 999, step: 1, inputMode: "numeric", required: true,
-        help: "Mỗi cell được đánh số theo thứ tự hàng–cột, bắt đầu từ số cảnh này."
+        name: "start_scene", label: imageOperationText("field.storyboard.start.label", "Cảnh bắt đầu"), type: "number", min: 1, max: 999, step: 1, inputMode: "numeric", required: true,
+        help: imageOperationText("field.storyboard.start.help", "Mỗi ô ảnh được đánh số theo thứ tự hàng–cột, bắt đầu từ số cảnh này.")
       },
       {
-        name: "trim_percent", label: "Cắt mép mỗi cell (%)", type: "number", min: 0, max: 18, step: 1, inputMode: "numeric", required: true,
-        help: "0–18%. Server chỉ trim đều theo thông số này sau khi chia lưới; không nhận diện nhân vật, vật thể hay vùng quan trọng."
+        name: "trim_percent", label: imageOperationText("field.storyboard.trim.label", "Cắt mép mỗi ô ảnh (%)"), type: "number", min: 0, max: 18, step: 1, inputMode: "numeric", required: true,
+        help: imageOperationText("field.storyboard.trim.help", "0–18%. Máy chủ chỉ cắt đều theo thông số sau khi chia lưới; không nhận diện nhân vật, vật thể hay vùng quan trọng.")
       }
     ];
   }
@@ -24682,18 +24704,24 @@
     const raw = item && item.settings && typeof item.settings === "object" ? item.settings : {};
     const values = ["brightness", "contrast", "saturation", "sharpness"].map((key) => {
       const value = Number(raw[key]);
-      return Number.isFinite(value) ? `${key === "brightness" ? "Sáng" : key === "contrast" ? "Tương phản" : key === "saturation" ? "Bão hòa" : "Nét"} ${value.toFixed(2)}` : "";
+      const labelKey = key === "brightness" ? "brightness" : key === "contrast" ? "contrast" : key === "saturation" ? "saturation" : "sharpness";
+      return Number.isFinite(value) ? `${imageOperationText(`result.setting.${labelKey}`, labelKey)} ${value.toFixed(2)}` : "";
     }).filter(Boolean);
-    const tone = ["neutral", "warm", "cool", "clean"].includes(String(raw.tone || "")) ? `Tone ${String(raw.tone)}` : "";
+    const toneKey = String(raw.tone || "");
+    const tone = ["neutral", "warm", "cool", "clean"].includes(toneKey)
+      ? imageOperationText(`result.tone.${toneKey}`, toneKey)
+      : "";
     if (tone) values.push(tone);
-    if (raw.basic_upscale === true) values.push("LANCZOS + sharpen cơ bản");
-    return values.join(" · ") || "Preset canonical đã được server xác minh";
+    if (raw.basic_upscale === true) values.push(imageOperationText("result.setting.basicUpscale", "LANCZOS + làm nét cơ bản"));
+    return values.join(" · ") || imageOperationText("result.setting.fallback", "Công thức chuẩn đã được máy chủ xác minh");
   }
 
   function renderImageEnhanceOperationCards(items) {
     const context = arguments[1] || {};
+    const t = (key, fallback, params) => imageOperationText(`enhance.${key}`, fallback, params);
+    const common = (key, fallback, params) => imageOperationText(`common.${key}`, fallback, params);
     if (!items.length) {
-      return renderEmpty("Chưa có PNG đã chỉnh", "Bản sao chỉ xuất hiện sau khi server kiểm tra ảnh nguồn, áp preset/thông số cục bộ, mở lại PNG và xác minh integrity. Không có preview hoặc output mô phỏng.", "✦");
+      return renderEmpty(t("empty.title", "Chưa có PNG đã chỉnh"), t("empty.body", "Bản sao chỉ xuất hiện sau khi máy chủ kiểm tra ảnh nguồn, áp công thức/thông số cục bộ, mở lại PNG và xác minh tính toàn vẹn. Không có bản xem trước hoặc đầu ra mô phỏng."), "✦");
     }
     return `<div class="portal-document-operation-grid">${items.map((item) => {
       const status = imageOperationState(item);
@@ -24702,45 +24730,48 @@
       const sourceHeight = Number(item.source_height);
       const targetWidth = Number(item.target_width);
       const targetHeight = Number(item.target_height);
-      const sourceGeometry = Number.isInteger(sourceWidth) && Number.isInteger(sourceHeight) ? `${sourceWidth} × ${sourceHeight}` : "Đang kiểm tra";
-      const targetGeometry = Number.isInteger(targetWidth) && Number.isInteger(targetHeight) ? `${targetWidth} × ${targetHeight}` : "Canvas an toàn";
+      const sourceGeometry = Number.isInteger(sourceWidth) && Number.isInteger(sourceHeight) ? `${sourceWidth} × ${sourceHeight}` : common("checking", "Đang kiểm tra");
+      const targetGeometry = Number.isInteger(targetWidth) && Number.isInteger(targetHeight) ? `${targetWidth} × ${targetHeight}` : common("safeCanvas", "Canvas an toàn");
       const preset = String(item.preset || "custom");
       const pendingMessage = status === "failed" || status === "unavailable"
-        ? "Không có PNG tải xuống; kiểm tra ảnh nguồn private và tạo bản sao mới."
+        ? common("downloadFailed", "Không có PNG để tải; kiểm tra nguồn riêng tư và tạo bản sao mới.")
         : status === "guarded"
-          ? "Thao tác bị chặn an toàn; Web không phát output thay thế."
-          : "Chỉ tải xuống sau khi server xác minh PNG và ownership.";
-      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">✦</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || "PNG private đã chỉnh"))}</h2><p class="portal-card-subtitle">${safeText(IMAGE_ENHANCE_PRESET_LABELS[preset] || preset)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(targetGeometry)}</dd></div><div><dt>Thông số</dt><dd>${safeText(imageEnhanceSettings(item))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}${imageOperationAssetExportControl(item, context)}</div></article>`;
+          ? common("downloadGuarded", "Thao tác đang được bảo vệ; Web không phát đầu ra thay thế.")
+          : common("downloadVerified", "Chỉ tải xuống sau khi máy chủ xác minh PNG và quyền sở hữu.");
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">✦</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || t("fallbackName", "PNG riêng tư đã chỉnh")))}</h2><p class="portal-card-subtitle">${safeText(imageEnhancePresetLabel(preset))}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>${safeText(common("source", "Nguồn"))}</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>${safeText(common("output", "Đầu ra"))}</dt><dd>${safeText(targetGeometry)}</dd></div><div><dt>${safeText(common("settings", "Thông số"))}</dt><dd>${safeText(imageEnhanceSettings(item))}</dd></div><div><dt>${safeText(common("updated", "Cập nhật"))}</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${safeText(common("downloadPng", "Tải PNG riêng tư"))} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}${imageOperationAssetExportControl(item, context)}</div></article>`;
     }).join("")}</div>`;
   }
 
   function imageBrandOverlaySettings(item) {
+    const result = (key, fallback, params) => imageOperationText(`result.${key}`, fallback, params);
     const raw = item && item.settings && typeof item.settings === "object" ? item.settings : {};
     // Do not render raw overlay text, source identifiers, hashes, paths, URLs
     // or the original logo filename. The private API may expose only these
     // coarse, safe settings for a completed owner-scoped operation.
     const textApplied = raw.text_applied === true || raw.text_present === true || raw.overlay_text_present === true;
     const logoApplied = raw.logo_applied === true || raw.logo_present === true;
-    const textPosition = IMAGE_BRAND_OVERLAY_POSITION_LABELS[String(raw.text_position || "")] || "";
-    const logoPosition = IMAGE_BRAND_OVERLAY_POSITION_LABELS[String(raw.logo_position || "")] || "";
+    const textPosition = imageBrandOverlayPositionLabel(raw.text_position);
+    const logoPosition = imageBrandOverlayPositionLabel(raw.logo_position);
     const logoScale = Number(raw.logo_scale_percent);
     const logoOpacity = Number(raw.logo_opacity_percent);
     const values = [];
-    if (textApplied) values.push(`Chữ${textPosition ? ` · ${textPosition}` : ""}`);
+    if (textApplied) values.push(`${result("position.text", "Chữ")}${textPosition ? ` · ${textPosition}` : ""}`);
     if (logoApplied) {
-      const logoParts = ["Logo"];
+      const logoParts = [result("position.logo", "Logo")];
       if (logoPosition) logoParts.push(logoPosition);
       if ([12, 18, 22].includes(logoScale)) logoParts.push(`${logoScale}%`);
       if (Number.isInteger(logoOpacity) && logoOpacity >= 25 && logoOpacity <= 100) logoParts.push(`mờ ${logoOpacity}%`);
       values.push(logoParts.join(" · "));
     }
-    return values.join(" | ") || "Thông số overlay đã được server xác minh";
+    return values.join(" | ") || result("overlay.fallback", "Thông số gắn thương hiệu đã được máy chủ xác minh");
   }
 
   function renderImageBrandOverlayOperationCards(items) {
     const context = arguments[1] || {};
+    const t = (key, fallback, params) => imageOperationText(`brand.${key}`, fallback, params);
+    const common = (key, fallback, params) => imageOperationText(`common.${key}`, fallback, params);
     if (!items.length) {
-      return renderEmpty("Chưa có PNG thương hiệu", "Bản sao chỉ xuất hiện sau khi server hash-copy nguồn/logo, ghép text/logo, strict-reparse PNG và xác minh integrity. Không có preview hoặc output mô phỏng.", "▣");
+      return renderEmpty(t("empty.title", "Chưa có PNG thương hiệu"), t("empty.body", "Bản sao chỉ xuất hiện sau khi máy chủ sao chép kiểm tra nguồn/logo, ghép chữ/logo, mở lại PNG và xác minh tính toàn vẹn. Không có bản xem trước hoặc đầu ra mô phỏng."), "▣");
     }
     return `<div class="portal-document-operation-grid">${items.map((item) => {
       const status = imageOperationState(item);
@@ -24749,62 +24780,72 @@
       const sourceHeight = Number(item.source_height);
       const targetWidth = Number(item.target_width);
       const targetHeight = Number(item.target_height);
-      const sourceGeometry = Number.isInteger(sourceWidth) && Number.isInteger(sourceHeight) ? `${sourceWidth} × ${sourceHeight}` : "Đang kiểm tra";
-      const targetGeometry = Number.isInteger(targetWidth) && Number.isInteger(targetHeight) ? `${targetWidth} × ${targetHeight}` : "PNG an toàn";
+      const sourceGeometry = Number.isInteger(sourceWidth) && Number.isInteger(sourceHeight) ? `${sourceWidth} × ${sourceHeight}` : common("checking", "Đang kiểm tra");
+      const targetGeometry = Number.isInteger(targetWidth) && Number.isInteger(targetHeight) ? `${targetWidth} × ${targetHeight}` : common("safePng", "PNG an toàn");
       const pendingMessage = status === "failed" || status === "unavailable"
-        ? "Không có PNG tải xuống; kiểm tra ảnh nguồn/logo private và tạo bản sao mới."
+        ? common("downloadFailed", "Không có PNG để tải; kiểm tra nguồn riêng tư và tạo bản sao mới.")
         : status === "guarded"
-          ? "Thao tác bị chặn an toàn; Web không phát output thay thế."
-          : "Chỉ tải xuống sau khi server xác minh PNG và ownership.";
-      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">▣</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || "PNG private đã gắn thương hiệu"))}</h2><p class="portal-card-subtitle">Brand Overlay Studio · deterministic</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(targetGeometry)}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>Overlay</dt><dd>${safeText(imageBrandOverlaySettings(item))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}${imageOperationAssetExportControl(item, context)}</div></article>`;
+          ? common("downloadGuarded", "Thao tác đang được bảo vệ; Web không phát đầu ra thay thế.")
+          : common("downloadVerified", "Chỉ tải xuống sau khi máy chủ xác minh PNG và quyền sở hữu.");
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">▣</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || t("fallbackName", "PNG riêng tư đã gắn thương hiệu")))}</h2><p class="portal-card-subtitle">${safeText(t("subtitle", "Gắn thương hiệu · có thể kiểm tra"))}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>${safeText(common("source", "Nguồn"))}</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>${safeText(common("output", "Đầu ra"))}</dt><dd>${safeText(targetGeometry)}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>${safeText(common("brandOverlay", "Gắn thương hiệu"))}</dt><dd>${safeText(imageBrandOverlaySettings(item))}</dd></div><div><dt>${safeText(common("updated", "Cập nhật"))}</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${safeText(common("downloadPng", "Tải PNG riêng tư"))} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}${imageOperationAssetExportControl(item, context)}</div></article>`;
     }).join("")}</div>`;
   }
 
   function renderStoryboardGridCells(operation) {
+    const t = (key, fallback, params) => imageOperationText(`result.storyboard.${key}`, fallback, params);
+    const common = (key, fallback, params) => imageOperationText(`common.${key}`, fallback, params);
     const cells = Array.isArray(operation && operation.cells) ? operation.cells : [];
     if (!cells.length) {
-      return `<p class="portal-form-note">Metadata từng cảnh chỉ xuất hiện sau khi server xác minh cell private; Web không tự chia hoặc dựng ảnh thay thế.</p>`;
+      return `<p class="portal-form-note">${safeText(common("noCells", "Siêu dữ liệu từng cảnh chỉ xuất hiện sau khi máy chủ xác minh ô ảnh riêng tư; Web không tự chia hoặc dựng ảnh thay thế."))}</p>`;
     }
     return `<ul class="portal-project-steps">${cells.map((cell) => {
       const downloadPath = storyboardGridCellDownloadPath(operation, cell);
-      const filename = String(cell.original_filename || `Cảnh ${cell.scene_no}`);
+      const filename = String(cell.original_filename || t("sceneRange", "Cảnh {start}", { start: String(cell.scene_no) }));
       const geometry = `${cell.width} × ${cell.height}`;
-      const placement = `H${cell.row} · C${cell.column}`;
+      const placement = t("placement", "H{row} · C{column}", { row: String(cell.row), column: String(cell.column) });
       const size = cell.byte_size ? ` · ${vaultBytes(cell.byte_size)}` : "";
-      const label = `Cảnh ${cell.scene_no} · ${placement} · ${geometry}${size}`;
-      return `<li><strong>${safeText(label)}</strong><span>${downloadPath ? `<a href="${safeText(downloadPath)}" rel="noreferrer">${safeText(filename)} · tải riêng tư ↓</a>` : "Chưa có file cell đã xác minh để tải."}</span></li>`;
+      const label = `${t("sceneRange", "Cảnh {start}", { start: String(cell.scene_no) })} · ${placement} · ${geometry}${size}`;
+      return `<li><strong>${safeText(label)}</strong><span>${downloadPath ? `<a href="${safeText(downloadPath)}" rel="noreferrer">${safeText(filename)} · ${safeText(common("privateScene", "Cảnh riêng tư"))} ↓</a>` : safeText(common("cellVerified", "Chưa có tệp ô ảnh đã xác minh để tải."))}</span></li>`;
     }).join("")}</ul>`;
   }
 
   function renderStoryboardGridOperationCards(items) {
+    const t = (key, fallback, params) => imageOperationText(`storyboard.${key}`, fallback, params);
+    const result = (key, fallback, params) => imageOperationText(`result.storyboard.${key}`, fallback, params);
+    const common = (key, fallback, params) => imageOperationText(`common.${key}`, fallback, params);
     if (!items.length) {
-      return renderEmpty("Chưa có storyboard đã chia", "Các cell chỉ xuất hiện sau khi server hash-copy ảnh nguồn, chia lưới deterministic, kiểm tra từng JPEG và xác minh integrity. Không có preview hoặc output mô phỏng.", "▦");
+      return renderEmpty(t("empty.title", "Chưa có bảng cảnh đã chia"), t("empty.body", "Các ô ảnh chỉ xuất hiện sau khi máy chủ sao chép kiểm tra ảnh nguồn, chia lưới, kiểm tra từng JPEG và xác minh tính toàn vẹn. Không có bản xem trước hoặc đầu ra mô phỏng."), "▦");
     }
     return `<div class="portal-document-operation-grid">${items.map((item) => {
       const status = imageOperationState(item);
       const downloadPath = storyboardGridDownloadPath(item);
       const sourceGeometry = item.source_width > 0 && item.source_height > 0
         ? `${item.source_width} × ${item.source_height}`
-        : "Đang kiểm tra";
+        : common("checking", "Đang kiểm tra");
       const trimLabel = Number((Number(item.trim_percent || 0) * 100).toFixed(2));
       const lastScene = Math.max(item.start_scene, item.start_scene + Math.max(0, item.scene_count - 1));
       const sceneRange = item.scene_count > 0
-        ? (item.start_scene === lastScene ? `Cảnh ${item.start_scene}` : `Cảnh ${item.start_scene}–${lastScene}`)
-        : "Đang xác minh cảnh";
+         ? (item.start_scene === lastScene
+           ? result("sceneRange", "Cảnh {start}", { start: String(item.start_scene) })
+           : result("sceneRangeTo", "Cảnh {start}–{end}", { start: String(item.start_scene), end: String(lastScene) }))
+         : result("unknownScene", "Đang xác minh cảnh");
       const pendingMessage = status === "failed" || status === "unavailable"
-        ? "Không có cell tải xuống; kiểm tra ảnh storyboard private rồi tạo thao tác mới."
+        ? common("cellDownloadFailed", "Không có ô ảnh để tải; kiểm tra ảnh bảng cảnh riêng tư rồi tạo thao tác mới.")
         : status === "guarded"
-          ? "Thao tác bị chặn an toàn; Web không phát cell thay thế."
-          : "Chỉ tải archive/cell sau khi server xác minh ownership và integrity.";
+          ? common("downloadGuarded", "Thao tác đang được bảo vệ; Web không phát ô ảnh thay thế.")
+          : common("cellDownloadVerified", "Chỉ tải gói ô ảnh sau khi máy chủ xác minh quyền sở hữu và tính toàn vẹn.");
       const cells = renderStoryboardGridCells(item);
-      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-storyboard-grid="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">▦</span><div><h2 class="portal-card-title">Tập ${safeText(String(item.episode))} · ${safeText(sceneRange)}</h2><p class="portal-card-subtitle">Storyboard Grid Splitter · deterministic</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>Lưới</dt><dd>${safeText(`${item.rows} hàng × ${item.cols} cột · trim ${trimLabel}%`)}</dd></div><div><dt>Cell</dt><dd>${safeText(String(item.scene_count))}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-card-subsection"><h3>Cảnh private</h3>${cells}</div><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải toàn bộ cell riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-storyboard-grid="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">▦</span><div><h2 class="portal-card-title">${safeText(result("cardTitle", "Tập {episode} · {range}", { episode: String(item.episode), range: sceneRange }))}</h2><p class="portal-card-subtitle">${safeText(result("subtitle", "Bộ chia bảng cảnh · có thể kiểm tra"))}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>${safeText(common("source", "Nguồn"))}</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>${safeText(common("grid", "Lưới"))}</dt><dd>${safeText(result("gridMetric", "{rows} hàng × {cols} cột · cắt mép {trim}%", { rows: String(item.rows), cols: String(item.cols), trim: String(trimLabel) }))}</dd></div><div><dt>${safeText(common("cells", "Ô ảnh"))}</dt><dd>${safeText(result("cellsMetric", "{count} ô ảnh", { count: String(item.scene_count) }))}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>${safeText(common("updated", "Cập nhật"))}</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-card-subsection"><h3>${safeText(result("cellsTitle", "Cảnh riêng tư"))}</h3>${cells}</div><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${safeText(common("downloadAllCells", "Tải toàn bộ ô ảnh riêng tư"))} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
     }).join("")}</div>`;
   }
 
   function renderImageOperationCards(items) {
     const context = arguments[1] || {};
+    const t = (key, fallback, params) => imageOperationText(`resize.${key}`, fallback, params);
+    const result = (key, fallback, params) => imageOperationText(`result.${key}`, fallback, params);
+    const common = (key, fallback, params) => imageOperationText(`common.${key}`, fallback, params);
     if (!items.length) {
-      return renderEmpty("Chưa có PNG đã resize", "Bản sao chỉ xuất hiện sau khi server kiểm tra ảnh nguồn, render, mở lại PNG và xác minh integrity. Không có preview hay output mô phỏng.", "▧");
+      return renderEmpty(t("empty.title", "Chưa có PNG đã đổi canvas"), t("empty.body", "Bản sao chỉ xuất hiện sau khi máy chủ kiểm tra ảnh nguồn, dựng lại PNG và xác minh tính toàn vẹn. Không có bản xem trước hay đầu ra mô phỏng."), "▧");
     }
     return `<div class="portal-document-operation-grid">${items.map((item) => {
       const status = imageOperationState(item);
@@ -24813,15 +24854,19 @@
       const sourceHeight = Number(item.source_height);
       const targetWidth = Number(item.target_width);
       const targetHeight = Number(item.target_height);
-      const sourceGeometry = Number.isInteger(sourceWidth) && Number.isInteger(sourceHeight) ? `${sourceWidth} × ${sourceHeight}` : "Đang kiểm tra";
-      const targetGeometry = Number.isInteger(targetWidth) && Number.isInteger(targetHeight) ? `${targetWidth} × ${targetHeight}` : "Canvas đã yêu cầu";
-      const fitLabel = { crop: "Crop giữa khung", pad: "Pad nền trắng", blur: "Blur nền" }[String(item.fit_mode || "")] || "Đang kiểm tra";
+      const sourceGeometry = Number.isInteger(sourceWidth) && Number.isInteger(sourceHeight) ? `${sourceWidth} × ${sourceHeight}` : common("checking", "Đang kiểm tra");
+      const targetGeometry = Number.isInteger(targetWidth) && Number.isInteger(targetHeight) ? `${targetWidth} × ${targetHeight}` : t("targetFallback", "Canvas đã yêu cầu");
+      const fitLabel = {
+        crop: imageOperationText("field.resize.fit.crop", "Cắt giữa khung · lấp đầy canvas, có thể cắt rìa"),
+        pad: imageOperationText("field.resize.fit.pad", "Đệm nền trắng · giữ trọn ảnh, không cắt"),
+        blur: imageOperationText("field.resize.fit.blur", "Nền mờ · giữ trọn ảnh ở giữa, nền mờ")
+      }[String(item.fit_mode || "")] || common("checking", "Đang kiểm tra");
       const pendingMessage = status === "failed" || status === "unavailable"
-        ? "Không có PNG tải xuống; kiểm tra nguồn private và tạo bản sao mới."
+        ? common("downloadFailed", "Không có PNG để tải; kiểm tra nguồn riêng tư và tạo bản sao mới.")
         : status === "guarded"
-          ? "Thao tác bị chặn an toàn; Web không phát output thay thế."
-          : "Chỉ tải xuống sau khi server xác minh PNG và ownership.";
-      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">PNG</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || "PNG private đã resize"))}</h2><p class="portal-card-subtitle">${safeText(fitLabel)} · ${safeText(String(item.preset || "custom"))}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>Canvas</dt><dd>${safeText(targetGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(item.byte_size ? vaultBytes(item.byte_size) : "Chưa có")}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}${imageOperationAssetExportControl(item, context)}</div></article>`;
+          ? common("downloadGuarded", "Thao tác đang được bảo vệ; Web không phát đầu ra thay thế.")
+          : common("downloadVerified", "Chỉ tải xuống sau khi máy chủ xác minh PNG và quyền sở hữu.");
+       return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">PNG</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || t("fallbackName", "PNG riêng tư đã đổi canvas")))}</h2><p class="portal-card-subtitle">${safeText(result("resize.subtitle", "Đổi canvas · {preset}", { preset: `${fitLabel} · ${String(item.preset || "custom")}` }))}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>${safeText(common("source", "Nguồn"))}</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>${safeText(common("canvas", "Canvas"))}</dt><dd>${safeText(targetGeometry)}</dd></div><div><dt>${safeText(common("output", "Đầu ra"))}</dt><dd>${safeText(item.byte_size ? vaultBytes(item.byte_size) : common("checking", "Đang kiểm tra"))}</dd></div><div><dt>${safeText(common("updated", "Cập nhật"))}</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${safeText(common("downloadPng", "Tải PNG riêng tư"))} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}${imageOperationAssetExportControl(item, context)}</div></article>`;
     }).join("")}</div>`;
   }
 
@@ -24903,8 +24948,11 @@
   }
 
   function renderImageHistoryOperationCards(items) {
+    const history = (key, fallback, params) => imageOperationText(`history.${key}`, fallback, params);
+    const result = (key, fallback, params) => imageOperationText(`result.${key}`, fallback, params);
+    const common = (key, fallback, params) => imageOperationText(`common.${key}`, fallback, params);
     if (!items.length) {
-      return renderEmpty("Chưa có PNG Web đã xác minh", "Lịch sử này chỉ hiển thị output Resize, Image Enhance hoặc Brand Overlay do signed Web account hiện tại tạo. Nó không suy đoán từ Asset Vault, Bot, provider hay browser.", "▧");
+      return renderEmpty(history("empty.title", "Chưa có PNG Web đã xác minh"), history("empty.body", "Lịch sử này chỉ hiển thị output từ các công cụ ảnh của tài khoản hiện tại. Nó không suy đoán từ Kho tài sản, Bot, nhà cung cấp hay trình duyệt."), "▧");
     }
     return `<div class="portal-document-operation-grid">${items.map((item) => {
       const kind = String(item.kind || "");
@@ -24920,22 +24968,28 @@
       const sourceGeometry = Number.isInteger(sourceWidth) && Number.isInteger(sourceHeight) ? `${sourceWidth} × ${sourceHeight}` : "Đang kiểm tra";
       const targetGeometry = Number.isInteger(targetWidth) && Number.isInteger(targetHeight) ? `${targetWidth} × ${targetHeight}` : "Canvas an toàn";
       const preset = String(item.preset || "custom");
-      const resizeLabel = { crop: "Crop giữa khung", pad: "Pad nền trắng", blur: "Blur nền" }[String(item.fit_mode || "")] || "Đang kiểm tra";
+       const resizeLabel = {
+         crop: imageOperationText("field.resize.fit.crop", "Cắt giữa khung · lấp đầy canvas, có thể cắt rìa"),
+         pad: imageOperationText("field.resize.fit.pad", "Đệm nền trắng · giữ trọn ảnh, không cắt"),
+         blur: imageOperationText("field.resize.fit.blur", "Nền mờ · giữ trọn ảnh ở giữa, nền mờ")
+       }[String(item.fit_mode || "")] || common("checking", "Đang kiểm tra");
       const operationLabel = isResize
-        ? `${resizeLabel} · ${String(item.preset || "custom")}`
+         ? result("resize.subtitle", "Đổi canvas · {preset}", { preset: `${resizeLabel} · ${String(item.preset || "custom")}` })
         : isBrandOverlay
-          ? "Brand Overlay Studio · deterministic"
+           ? result("brand.subtitle", "Gắn thương hiệu · có thể kiểm tra")
           : isBackgroundCleanup
-            ? `${imageBackgroundCleanupSettings(item)} · nền liên thông từ mép`
-          : (IMAGE_ENHANCE_PRESET_LABELS[preset] || preset);
+             ? result("background.subtitle", "Làm trong nền màu trơn · {profile}", { profile: imageBackgroundCleanupSettings(item) })
+           : result("enhance.subtitle", imageEnhancePresetLabel(preset), { preset: imageEnhancePresetLabel(preset) });
       const settings = isResize ? resizeLabel : isBrandOverlay ? imageBrandOverlaySettings(item) : isBackgroundCleanup ? imageBackgroundCleanupSettings(item) : imageEnhanceSettings(item);
-      const fallbackName = isResize ? "PNG private đã resize" : isBrandOverlay ? "PNG private đã gắn thương hiệu" : isBackgroundCleanup ? "PNG nền trong suốt private" : "PNG private đã chỉnh";
+       const fallbackName = isResize ? imageOperationText("resize.fallbackName", "PNG riêng tư đã đổi canvas") : isBrandOverlay ? imageOperationText("brand.fallbackName", "PNG riêng tư đã gắn thương hiệu") : isBackgroundCleanup ? history("fallback.background", "PNG nền trong suốt riêng tư") : imageOperationText("enhance.fallbackName", "PNG riêng tư đã chỉnh");
       const pendingMessage = status === "failed" || status === "unavailable"
-        ? "Không có PNG tải xuống; kiểm tra ảnh nguồn private và tạo bản sao mới."
+         ? common("downloadFailed", "Không có PNG để tải; kiểm tra nguồn riêng tư và tạo bản sao mới.")
         : status === "guarded"
-          ? "Thao tác bị chặn an toàn; Web không phát output thay thế."
-          : "Chỉ tải xuống sau khi server xác minh PNG và ownership.";
-      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isResize ? "PNG" : isBrandOverlay ? "▣" : isBackgroundCleanup ? "◇" : "✦"}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackName))}</h2><p class="portal-card-subtitle">${safeText(operationLabel)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Loại</dt><dd>${safeText(isResize ? "Resize & Aspect" : isBrandOverlay ? "Brand Overlay Studio" : isBackgroundCleanup ? "Xóa nền màu trơn" : "Image Enhance")}</dd></div><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(targetGeometry)}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>${safeText(isResize ? "Khung" : isBrandOverlay ? "Overlay" : isBackgroundCleanup ? "Profile" : "Thông số")}</dt><dd>${safeText(settings)}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
+           ? common("downloadGuarded", "Thao tác đang được bảo vệ; Web không phát đầu ra thay thế.")
+           : common("downloadVerified", "Chỉ tải xuống sau khi máy chủ xác minh PNG và quyền sở hữu.");
+       const kindLabel = isResize ? result("history.operation.resize", "Đổi canvas") : isBrandOverlay ? result("history.operation.brand", "Gắn thương hiệu") : isBackgroundCleanup ? result("history.operation.background", "Xóa nền màu trơn") : result("history.operation.enhance", "Làm ảnh rõ");
+       const settingsLabel = isResize ? common("frame", "Khung") : isBrandOverlay ? common("overlay", "Lớp thương hiệu") : isBackgroundCleanup ? common("profile", "Hồ sơ") : common("settings", "Thông số");
+       return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isResize ? "PNG" : isBrandOverlay ? "▣" : isBackgroundCleanup ? "◇" : "✦"}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackName))}</h2><p class="portal-card-subtitle">${safeText(operationLabel)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>${safeText(common("type", "Loại"))}</dt><dd>${safeText(kindLabel)}</dd></div><div><dt>${safeText(common("source", "Nguồn"))}</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>${safeText(common("pngOutput", "PNG đầu ra"))}</dt><dd>${safeText(targetGeometry)}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>${safeText(settingsLabel)}</dt><dd>${safeText(settings)}</dd></div><div><dt>${safeText(common("updated", "Cập nhật"))}</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${safeText(common("downloadPng", "Tải PNG riêng tư"))} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
     }).join("")}</div>`;
   }
 
@@ -25182,6 +25236,10 @@
 
   function mediaOperationText(key, fallback, params) {
     return uiText(`mediaOperation.${key}`, fallback, params);
+  }
+
+  function imageOperationText(key, fallback, params) {
+    return uiText(`imageOperationUi.${key}`, fallback, params);
   }
 
   function mediaOperationStatusBadge(status, fieldName) {
@@ -26459,53 +26517,57 @@
   }
 
   function renderImageOperationHistory(page, context) {
+    const t = (key, fallback, params) => imageOperationText(`history.${key}`, fallback, params);
+    const common = (key, fallback, params) => imageOperationText(`common.${key}`, fallback, params);
     const canView = Boolean(context.capabilities && context.capabilities["image-operation-view"] === true);
     const canRefresh = Boolean(context.capabilities && context.capabilities["image-operation-refresh"] === true);
     const readState = String(context.imageHistoryReadState || "guarded");
     if (!canView) {
-      return `<article class="portal-page portal-image-operation-history">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>Lịch sử ảnh đang ở chế độ an toàn</h2><p>Máy chủ chỉ mở lịch sử PNG Web-native sau khi signed session, Asset Vault và Image Operations được xác minh. Không fallback sang danh sách Asset, Bot job hoặc output provider.</p><div class="portal-state-meta"><span>Signed session</span><span>Owner-scoped</span><span>Không có output giả</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-image-operation-history">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>${safeText(t("guard.title", "Lịch sử ảnh đang ở chế độ an toàn"))}</h2><p>${safeText(t("guard.body", "Máy chủ chỉ mở lịch sử ảnh Web sau khi phiên đã xác thực, Kho tài sản và thao tác ảnh được kiểm tra. Không dùng danh sách Asset, tác vụ Bot hoặc đầu ra nhà cung cấp thay thế."))}</p><div class="portal-state-meta"><span>${safeText(common("guard.session", "Phiên đã xác thực"))}</span><span>${safeText(common("guard.ownerScoped", "Theo phạm vi tài khoản"))}</span><span>${safeText(common("noSubstitute", "Không có đầu ra thay thế"))}</span></div></div></div></section></article>`;
     }
     if (readState === "loading") {
-      return `<article class="portal-page portal-image-operation-history">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>Đang xác minh lịch sử ảnh private</h2><p>Web Workspace đang tải projection Resize, Image Enhance và Brand Overlay thuộc signed account hiện tại. Không hiển thị dữ liệu route trước, browser cache hay danh sách Bot trong khi chờ.</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-image-operation-history">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>${safeText(t("loading.title", "Đang xác minh lịch sử ảnh riêng tư"))}</h2><p>${safeText(t("loading.body", "Web Workspace đang tải các thao tác ảnh thuộc tài khoản hiện tại. Không hiển thị dữ liệu route cũ, bộ nhớ trình duyệt hoặc danh sách Bot trong lúc chờ."))}</p><div class="portal-state-meta"><span>${safeText(common("guard.session", "Phiên đã xác thực"))}</span><span>${safeText(common("state.noCache", "Không lưu bộ nhớ đệm riêng tư"))}</span><span>${safeText(common("state.noBrowserFallback", "Không dùng dữ liệu thay thế từ trình duyệt"))}</span></div></div></div></section></article>`;
     }
     if (readState !== "ready") {
       const retry = canRefresh
-        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-history-refresh" data-portal-route="/image/history">Thử lại dữ liệu private</button></div>`
+        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-history-refresh" data-portal-route="/image/history">${safeText(t("retry", "Thử lại dữ liệu riêng tư"))}</button></div>`
         : "";
-      return `<article class="portal-page portal-image-operation-history">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">!</span><div><h2>Chưa thể tải lịch sử ảnh private</h2><p>Projection owner-scoped chưa trả dữ liệu an toàn. Web đã xóa dữ liệu cũ và không thay thế bằng Asset Vault, Bot, provider hay preview công khai.</p><div class="portal-state-meta"><span>Không có cache</span><span>Không có Bot fallback</span><span>Không có URL công khai</span></div>${retry}</div></div></section></article>`;
+      return `<article class="portal-page portal-image-operation-history">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">!</span><div><h2>${safeText(t("failed.title", "Chưa thể tải lịch sử ảnh riêng tư"))}</h2><p>${safeText(t("failed.body", "Projection theo phạm vi tài khoản chưa trả dữ liệu an toàn. Web không thay thế bằng Kho tài sản, Bot, nhà cung cấp hoặc bản xem trước công khai."))}</p><div class="portal-state-meta"><span>${safeText(common("state.noCache", "Không lưu bộ nhớ đệm riêng tư"))}</span><span>${safeText(common("noSubstitute", "Không có đầu ra thay thế"))}</span><span>${safeText(t("metric.outOfScope", "Ngoài phạm vi"))}</span></div>${retry}</div></div></section></article>`;
     }
     const operations = imageHistoryOperationItems(context);
     const listing = imageHistoryOperationHistoryListing(context);
     const returned = Number(listing.pagination && listing.pagination.returned) || operations.length;
     return `<article class="portal-page portal-image-operation-history">
       ${renderHero(page, context)}
-      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Private Image History</span><h2>Một lịch sử PNG đã xác minh, không trộn authority</h2><p>Chỉ output Resize & Aspect Studio, Image Enhance Studio và Brand Overlay Studio của signed Web account hiện tại xuất hiện tại đây. Mỗi download được server kiểm tra lại ownership, integrity và trạng thái hoàn tất trước khi stream file.</p></div><dl><div><dt>${safeText(String(returned))}</dt><dd>PNG Web ở trang này</dd></div><div><dt>Ngoài phạm vi</dt><dd>Bot job / provider output không được truy vấn</dd></div></dl></section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PNG đã xử lý</h2><p class="portal-card-subtitle">Không dùng URL tĩnh, preview công khai, PWA cache hoặc lịch sử Asset/Bot thay thế khi một đọc private thất bại.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-history-refresh" data-portal-route="/image/history"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderImageHistoryOperationCards(operations)}${renderImageHistoryOperationPagination(context, canView, "/image/history")}</section>
-      <section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2>Ranh giới dữ liệu</h2><p>Đây là output storage riêng của Web Workspace, không phải delivery center chung.</p></div>${badge("read_only")}</div><ul class="portal-operations-boundary-list"><li>Không gọi Bot/Core Bridge, provider, PayOS, ví Xu hoặc webhook.</li><li>Không ghi đè file gốc, không tạo preview và không suy đoán output từ Asset Vault.</li><li>Muốn tạo bản mới, mở <a href="/image/resize">Resize &amp; Aspect Studio</a>, <a href="/image/edit">Image Enhance Studio</a> hoặc <a href="/image/brand-overlay">Brand Overlay Studio</a>.</li></ul></section>
+       <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">${safeText(t("intro.kicker", "Lịch sử ảnh riêng tư"))}</span><h2>${safeText(t("intro.title", "Một lịch sử PNG đã xác minh, không trộn nguồn"))}</h2><p>${safeText(t("intro.body", "Chỉ output từ các công cụ ảnh của tài khoản hiện tại xuất hiện. Mỗi lần tải xuống đều được máy chủ kiểm tra lại quyền sở hữu, tính toàn vẹn và trạng thái hoàn tất."))}</p></div><dl><div><dt>${safeText(String(returned))}</dt><dd>${safeText(t("metric.count", "PNG Web ở trang này"))}</dd></div><div><dt>${safeText(t("metric.outOfScope", "Ngoài phạm vi"))}</dt><dd>${safeText(t("metric.outOfScopeBody", "Tác vụ Bot và output nhà cung cấp không được truy vấn"))}</dd></div></dl></section>
+       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("results.title", "PNG đã xử lý"))}</h2><p class="portal-card-subtitle">${safeText(t("results.description", "Không dùng URL tĩnh, bản xem trước công khai, bộ nhớ đệm PWA hoặc lịch sử Asset/Bot thay thế khi một lần đọc riêng tư thất bại."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-history-refresh" data-portal-route="/image/history"${canRefresh ? "" : " disabled"}>${safeText(common("refresh", "Làm mới"))}</button></div>${renderImageHistoryOperationCards(operations)}${renderImageHistoryOperationPagination(context, canView, "/image/history")}</section>
+       <section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2>${safeText(t("boundary.title", "Ranh giới dữ liệu"))}</h2><p>${safeText(t("boundary.body", "Đây là kho output riêng của Web Workspace, không phải trung tâm giao tệp chung."))}</p></div>${badge("read_only")}</div><ul class="portal-operations-boundary-list"><li>${safeText(t("boundary.item.one", "Không gọi Bot/Core Bridge, nhà cung cấp, PayOS, ví Xu hoặc webhook."))}</li><li>${safeText(t("boundary.item.two", "Không ghi đè file gốc, không tạo bản xem trước và không suy đoán output từ Asset Vault."))}</li><li>${safeText(t("boundary.item.three", "Muốn tạo bản mới, mở đúng công cụ ảnh tương ứng."))} <a href="/image/resize">${safeText(imageOperationText("resize.form.title", "Đổi canvas"))}</a>, <a href="/image/edit">${safeText(imageOperationText("enhance.form.title", "Làm ảnh rõ"))}</a> hoặc <a href="/image/brand-overlay">${safeText(imageOperationText("brand.form.title", "Gắn thương hiệu"))}</a>.</li></ul></section>
       ${renderNotes(page)}
     </article>`;
   }
 
   function renderImageBrandOverlay(page, context) {
+    const t = (key, fallback, params) => imageOperationText(`brand.${key}`, fallback, params);
+    const common = (key, fallback, params) => imageOperationText(`common.${key}`, fallback, params);
     const canView = Boolean(context.capabilities && context.capabilities["image-brand-overlay-view"] === true);
     const canRunCapability = Boolean(context.capabilities && context.capabilities["image-brand-overlay-run"] === true);
     const canRefresh = Boolean(context.capabilities && context.capabilities["image-brand-overlay-refresh"] === true);
     if (!canView) {
-      return `<article class="portal-page portal-image-brand-overlay">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>Brand Overlay Studio đang ở chế độ an toàn</h2><p>Tiện ích chỉ mở khi Asset Vault, storage output private và signed capability riêng được server xác nhận. Web không fallback sang browser canvas, Bot job, provider hoặc output giả.</p><div class="portal-state-meta"><span>Signed session</span><span>Owner-scoped</span><span>Không có preview công khai</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-image-brand-overlay">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>${safeText(t("guard.title", "Xưởng gắn thương hiệu đang ở chế độ an toàn"))}</h2><p>${safeText(t("guard.body", "Tiện ích chỉ mở khi Kho tài sản, kho đầu ra riêng tư và quyền riêng được máy chủ xác nhận. Web không dùng canvas trình duyệt, tác vụ Bot, nhà cung cấp hoặc đầu ra giả."))}</p><div class="portal-state-meta"><span>${safeText(common("guard.session", "Phiên đã xác thực"))}</span><span>${safeText(common("guard.ownerScoped", "Theo phạm vi tài khoản"))}</span><span>${safeText(t("guard.publicPreview", "Không có bản xem trước công khai"))}</span></div></div></div></section></article>`;
     }
     const assetReadState = String(context.assetVaultReadState || "loading");
     const operationReadState = String(context.imageBrandOverlayOperationsReadState || "loading");
     const privateReadsReady = assetReadState === "ready" && operationReadState === "ready";
     if (!privateReadsReady) {
       const loading = assetReadState === "loading" || operationReadState === "loading";
-      const title = loading ? "Đang xác minh dữ liệu private" : "Chưa thể tải trạng thái private";
+      const title = loading ? common("state.loadingTitle", "Đang xác minh dữ liệu riêng tư") : common("state.failedTitle", "Chưa thể tải trạng thái riêng tư");
       const message = loading
-        ? "Brand Overlay Studio đang tải Asset Vault và lịch sử thuộc signed Web account hiện tại. Form chỉ mở sau khi cả hai phản hồi server-side hoàn tất."
-        : "Asset Vault hoặc lịch sử Brand Overlay chưa trả dữ liệu an toàn. Web đã xóa projection cũ, không hiển thị form, output hay dữ liệu thay thế.";
+        ? t("loading.body", "Xưởng gắn thương hiệu đang tải Kho tài sản và lịch sử thuộc tài khoản hiện tại. Biểu mẫu chỉ mở sau khi cả hai phản hồi phía máy chủ hoàn tất.")
+        : t("failed.body", "Kho tài sản hoặc lịch sử gắn thương hiệu chưa trả dữ liệu an toàn. Web đã xóa dữ liệu cũ và không hiển thị đầu ra thay thế.");
       const retry = !loading && canRefresh
-        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-brand-overlay-refresh" data-portal-route="/image/brand-overlay">Thử lại dữ liệu private</button></div>`
+        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-brand-overlay-refresh" data-portal-route="/image/brand-overlay">${safeText(common("formRetry", "Thử lại dữ liệu riêng tư"))}</button></div>`
         : "";
-      return `<article class="portal-page portal-image-brand-overlay">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div>${retry}</div></div></section></article>`;
+      return `<article class="portal-page portal-image-brand-overlay">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>${safeText(common("state.loadingMeta", "Phiên đã xác thực"))}</span><span>${safeText(common("state.noCache", "Không lưu bộ nhớ đệm riêng tư"))}</span><span>${safeText(common("state.noBrowserFallback", "Không dùng dữ liệu thay thế từ trình duyệt"))}</span></div>${retry}</div></div></section></article>`;
     }
     const sources = imageVaultItems(context);
     const operations = imageBrandOverlayOperationItems(context);
@@ -26513,27 +26575,29 @@
     const formValues = imageBrandOverlayFormValues();
     const runReason = !canRunCapability
       ? (context.imageBrandOverlayEnabled === true
-        ? "Cần signed session, CSRF và capability Brand Overlay Studio từ server."
-        : "Brand Overlay Studio đang được server giữ guarded cho đến khi WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED được bật có chủ đích.")
+        ? t("runReason.capability", "Cần phiên đã xác thực, CSRF và quyền Gắn thương hiệu từ máy chủ.")
+        : t("runReason.disabled", "Gắn thương hiệu đang được máy chủ giữ ở chế độ bảo vệ cho đến khi kho lưu trữ riêng tư được bật có chủ đích."))
       : sources.length === 0
-        ? "Hãy lưu JPEG, PNG hoặc WebP private vào Asset Vault trước khi tạo bản sao."
-        : "Nguồn/logo → hash-copy cô lập → overlay deterministic → PNG được mở lại và xác minh trước khi tải.";
-    const sourceSummary = sources.length === 1 ? "1 ảnh đang hoạt động" : `${sources.length} ảnh đang hoạt động`;
+        ? t("runReason.empty", "Hãy lưu JPEG, PNG hoặc WebP riêng tư vào Kho tài sản trước khi tạo bản sao.")
+        : t("runReason.ready", "Nguồn/logo → sao chép cô lập → ghép lớp có thể kiểm tra → PNG được mở lại và xác minh trước khi tải.");
+    const sourceSummary = t("sourceCount", "{count} ảnh đang hoạt động", { count: String(sources.length) });
     const completedCount = operations.filter((item) => imageOperationState(item) === "completed" && item.download_ready === true).length;
     return `<article class="portal-page portal-image-brand-overlay">${renderHero(page, context)}
-      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native Image Operations</span><h2>Gắn thương hiệu lên ảnh private, không đưa media ra ngoài</h2><p>Chọn một ảnh nguồn từ Asset Vault, rồi thêm chữ, logo hoặc cả hai lên bản sao PNG mới. Server kiểm tra ownership của từng asset, hash-copy cô lập, giới hạn decoder, chuẩn hóa orientation và chỉ phát output sau strict re-parse + hash integrity. Không có AI generation, provider call, preview browser hoặc file public.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PNG thương hiệu sẵn sàng tải</dd></div></dl></section>
-      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo bản sao thương hiệu</h2><p class="portal-card-subtitle">Chọn ít nhất chữ hoặc logo. Browser chỉ gửi Asset Vault UUID và thông số đã giới hạn; không upload bytes, URL hoặc raw file path.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="image-brand-overlay" data-portal-route="/image/brand-overlay" data-portal-confirm="Tạo PNG private mới với chữ/logo thương hiệu đã chọn? Ảnh nguồn và logo trong Asset Vault sẽ không bị thay đổi." novalidate>${renderFields(imageBrandOverlayFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo PNG thương hiệu</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới có thể kiểm tra</h2><p class="portal-card-subtitle">Đây là ghép lớp cục bộ deterministic, không phải lời hứa AI design hoặc nhận diện thương hiệu.</p></div></div><ol class="portal-project-steps"><li><strong>1. Asset Vault riêng tư</strong><span>Nguồn và logo đều phải thuộc signed account, active, đúng định dạng và không thể là cùng một asset.</span></li><li><strong>2. Lưới vị trí có giới hạn</strong><span>Chữ và logo chỉ dùng vị trí 3 × 3, cùng ba scale logo và opacity 25–100%; không có drag/drop, canvas hoặc URL tùy ý.</span></li><li><strong>3. Delivery đã xác minh</strong><span>PNG mới được strict-reparse, hash lại và tải qua signed session; không có public URL, preview công khai hay PWA cache.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PNG đã gắn thương hiệu</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Download bị khóa nếu ownership, state hoặc integrity không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-brand-overlay-refresh" data-portal-route="/image/brand-overlay"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderImageBrandOverlayOperationCards(operations, context)}${renderImageBrandOverlayOperationHistoryPagination(context, canView, "/image/brand-overlay")}</section>
-      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>Brand Overlay Studio không tạo Bot job, không gọi provider, không trừ/cộng Xu, không tạo PayOS order và không dùng webhook. Nó cũng không xác nhận quyền sở hữu logo, license hoặc quyền thương hiệu thay bạn.</p></div></div>${renderNotes(page)}</section>
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">${safeText(t("intro.kicker", "Tiện ích xử lý ảnh trên Web"))}</span><h2>${safeText(t("intro.title", "Gắn thương hiệu lên ảnh riêng tư, không đưa media ra ngoài"))}</h2><p>${safeText(t("intro.body", "Chọn ảnh nguồn rồi thêm chữ, logo hoặc cả hai lên bản sao PNG mới. Máy chủ kiểm tra quyền sở hữu từng tài sản và chỉ phát đầu ra sau khi kiểm tra lại."))}</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>${safeText(t("metric.sources", "Nguồn thuộc tài khoản hiện tại"))}</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>${safeText(t("metric.ready", "PNG thương hiệu sẵn sàng tải"))}</dd></div></dl></section>
+      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("form.title", "Tạo bản sao thương hiệu"))}</h2><p class="portal-card-subtitle">${safeText(t("form.description", "Chọn ít nhất chữ hoặc logo. Trình duyệt chỉ gửi mã tài sản và thông số đã giới hạn."))}</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="image-brand-overlay" data-portal-route="/image/brand-overlay" data-portal-confirm="${safeText(t("form.confirm", "Tạo PNG riêng tư với chữ/logo đã chọn? Ảnh nguồn và logo trong Kho tài sản sẽ không bị thay đổi."))}" novalidate>${renderFields(imageBrandOverlayFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>${safeText(t("form.submit", "Tạo PNG thương hiệu"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("boundary.title", "Ranh giới có thể kiểm tra"))}</h2><p class="portal-card-subtitle">${safeText(t("boundary.description", "Đây là ghép lớp cục bộ có thể kiểm tra, không phải lời hứa thiết kế AI."))}</p></div></div><ol class="portal-project-steps"><li><strong>1. ${safeText(t("step.assets.title", "Kho tài sản riêng tư"))}</strong><span>${safeText(t("step.assets.body", "Nguồn và logo phải thuộc tài khoản hiện tại, đang hoạt động, đúng định dạng và không được là cùng một tài sản."))}</span></li><li><strong>2. ${safeText(t("step.position.title", "Lưới vị trí có giới hạn"))}</strong><span>${safeText(t("step.position.body", "Chữ và logo chỉ dùng vị trí 3 × 3, cùng ba cỡ logo và độ mờ 25–100%; không có kéo thả hoặc canvas tự do."))}</span></li><li><strong>3. ${safeText(t("step.delivery.title", "Phát tệp đã xác minh"))}</strong><span>${safeText(t("step.delivery.body", "PNG mới được kiểm tra lại, băm lại và tải qua phiên đã xác thực; không có URL công khai hoặc bộ nhớ đệm PWA."))}</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">${safeText(common("openVault", "Mở Asset Vault"))}</a></div></aside></div>
+       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("results.title", "PNG đã gắn thương hiệu"))}</h2><p class="portal-card-subtitle">${safeText(t("results.description", "Chỉ thao tác thuộc tài khoản hiện tại. Tải xuống bị khóa nếu quyền sở hữu, trạng thái hoặc tính toàn vẹn không còn hợp lệ."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-brand-overlay-refresh" data-portal-route="/image/brand-overlay"${canRefresh ? "" : " disabled"}>${safeText(common("refresh", "Làm mới"))}</button></div>${renderImageBrandOverlayOperationCards(operations, context)}${renderImageBrandOverlayOperationHistoryPagination(context, canView, "/image/brand-overlay")}</section>
+       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(t("notice.title", "Tiện ích Web độc lập"))}</strong><p>${safeText(t("notice.body", "Gắn thương hiệu không tạo tác vụ Bot, không gọi nhà cung cấp, không trừ/cộng Xu, không tạo đơn PayOS và không dùng webhook thanh toán."))}</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
   function renderStoryboardGrid(page, context) {
+    const t = (key, fallback, params) => imageOperationText(`storyboard.${key}`, fallback, params);
+    const common = (key, fallback, params) => imageOperationText(`common.${key}`, fallback, params);
     const canView = Boolean(context.capabilities && context.capabilities["storyboard-grid-view"] === true);
     const canRunCapability = Boolean(context.capabilities && context.capabilities["storyboard-grid-run"] === true);
     const canRefresh = Boolean(context.capabilities && context.capabilities["storyboard-grid-refresh"] === true);
     if (!canView) {
-      return `<article class="portal-page portal-storyboard-grid">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>Storyboard Grid Splitter đang ở chế độ an toàn</h2><p>Tiện ích chỉ mở khi signed Web session, Asset Vault và storage private riêng được server xác nhận. Web không fallback sang browser canvas, Bot job, provider hoặc output giả.</p><div class="portal-state-meta"><span>Signed session</span><span>Owner-scoped</span><span>Không có preview công khai</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-storyboard-grid">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>${safeText(t("guard.title", "Bộ chia bảng cảnh đang ở chế độ an toàn"))}</h2><p>${safeText(t("guard.body", "Tiện ích chỉ mở khi phiên Web, Kho tài sản và kho riêng tư được máy chủ xác nhận. Web không dùng canvas trình duyệt, tác vụ Bot, nhà cung cấp hoặc đầu ra giả."))}</p><div class="portal-state-meta"><span>${safeText(common("guard.session", "Phiên đã xác thực"))}</span><span>${safeText(common("guard.ownerScoped", "Theo phạm vi tài khoản"))}</span><span>${safeText(t("guard.publicPreview", "Không có bản xem trước công khai"))}</span></div></div></div></section></article>`;
     }
     const assetReadState = String(context.assetVaultReadState || "loading");
     const operationReadState = String(context.storyboardGridReadState || "loading");
@@ -26541,14 +26605,14 @@
     const privateReadsReady = assetReadState === "ready" && operationReadState === "ready" && referenceReadState === "ready";
     if (!privateReadsReady) {
       const loading = assetReadState === "loading" || operationReadState === "loading" || referenceReadState === "loading";
-      const title = loading ? "Đang xác minh dữ liệu private" : "Chưa thể tải trạng thái private";
+       const title = loading ? common("state.loadingTitle", "Đang xác minh dữ liệu riêng tư") : common("state.failedTitle", "Chưa thể tải trạng thái riêng tư");
       const message = loading
-        ? "Storyboard Grid Splitter đang tải Asset Vault, source reference và lịch sử thuộc signed Web account hiện tại. Form chỉ mở sau khi các phản hồi server-side hoàn tất."
-        : "Asset Vault, source reference hoặc lịch sử Storyboard Grid chưa trả dữ liệu an toàn. Web đã xóa projection cũ, không hiển thị form, cell hoặc dữ liệu thay thế.";
+         ? t("loading.body", "Bộ chia bảng cảnh đang tải Kho tài sản, ảnh nguồn và lịch sử thuộc tài khoản hiện tại. Biểu mẫu chỉ mở sau khi các phản hồi phía máy chủ hoàn tất.")
+         : t("failed.body", "Kho tài sản, ảnh nguồn hoặc lịch sử chia bảng cảnh chưa trả dữ liệu an toàn. Web đã xóa dữ liệu cũ và không hiển thị ô ảnh thay thế.");
       const retry = !loading && canRefresh
-        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="storyboard-grid-refresh" data-portal-route="/image/storyboard-grid">Thử lại dữ liệu private</button></div>`
+         ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="storyboard-grid-refresh" data-portal-route="/image/storyboard-grid">${safeText(common("formRetry", "Thử lại dữ liệu riêng tư"))}</button></div>`
         : "";
-      return `<article class="portal-page portal-storyboard-grid">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div>${retry}</div></div></section></article>`;
+       return `<article class="portal-page portal-storyboard-grid">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>${safeText(common("state.loadingMeta", "Phiên đã xác thực"))}</span><span>${safeText(common("state.noCache", "Không lưu bộ nhớ đệm riêng tư"))}</span><span>${safeText(common("state.noBrowserFallback", "Không dùng dữ liệu thay thế từ trình duyệt"))}</span></div>${retry}</div></div></section></article>`;
     }
     const sources = imageVaultItems(context);
     const operations = storyboardGridOperationItems(context);
@@ -26556,102 +26620,106 @@
     const formValues = storyboardGridFormValues();
     const runReason = !canRunCapability
       ? (context.storyboardGridEnabled === true
-        ? "Cần signed session, CSRF và capability Storyboard Grid từ server."
-        : "Storyboard Grid Splitter đang được server giữ guarded cho đến khi WEBAPP_STORYBOARD_GRID_ENABLED được bật có chủ đích.")
+         ? t("runReason.capability", "Cần phiên đã xác thực, CSRF và quyền Chia bảng cảnh từ máy chủ.")
+         : t("runReason.disabled", "Bộ chia bảng cảnh đang được máy chủ giữ ở chế độ bảo vệ cho đến khi kho lưu trữ riêng tư được bật có chủ đích."))
       : sources.length === 0
-        ? "Hãy lưu ảnh storyboard JPEG, PNG hoặc WebP private vào Asset Vault trước khi chia lưới."
-        : "Nguồn → hash-copy cô lập → chia lưới + trim deterministic → từng PNG cell được mở lại và xác minh trước khi tải.";
-    const sourceSummary = sources.length === 1 ? "1 ảnh đang hoạt động" : `${sources.length} ảnh đang hoạt động`;
+         ? t("runReason.empty", "Hãy lưu ảnh bảng cảnh JPEG, PNG hoặc WebP riêng tư vào Kho tài sản trước khi chia lưới.")
+         : t("runReason.ready", "Nguồn → sao chép cô lập → chia lưới và cắt mép có thể kiểm tra → từng ô JPEG được mở lại và xác minh trước khi tải.");
+    const sourceSummary = t("sourceCount", "{count} ảnh đang hoạt động", { count: String(sources.length) });
     const completedCount = operations.filter((item) => imageOperationState(item) === "completed" && item.download_ready === true).length;
     return `<article class="portal-page portal-storyboard-grid">${renderHero(page, context)}
-      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native Storyboard Utility</span><h2>Chia bảng cảnh private thành JPEG riêng, theo đúng thứ tự tập</h2><p>Chọn một ảnh storyboard trong Asset Vault, đặt lưới, tập, cảnh bắt đầu và mức trim. Server kiểm tra ownership, hash-copy nguồn, giới hạn decoder, chuẩn hóa orientation rồi tạo và xác minh từng cell riêng. Không có browser crop/canvas, preview công khai, AI generation, provider call hay Bot job.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>Bộ cell sẵn sàng tải</dd></div></dl></section>
-      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Chia ảnh storyboard</h2><p class="portal-card-subtitle">Browser chỉ gửi Asset Vault UUID, bốn số nguyên và một phần trăm đã giới hạn. Phần trăm được đổi thành decimal canonical trong request; không upload bytes, URL, raw file path hoặc giữ kết quả crop private trong browser.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="storyboard-grid-create" data-portal-route="/image/storyboard-grid" data-portal-confirm="Chia ảnh storyboard private thành các cell JPEG mới theo lưới đã chọn? Ảnh nguồn trong Asset Vault sẽ không bị thay đổi." novalidate>${renderFields(storyboardGridFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo cell storyboard riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới có thể kiểm tra</h2><p class="portal-card-subtitle">Đây là utility chia lưới cục bộ deterministic, không phải tạo storyboard hay dựng video AI.</p></div></div><ol class="portal-project-steps"><li><strong>1. Nguồn Asset Vault riêng tư</strong><span>Ảnh nguồn phải active, thuộc signed account và được server hash-copy trước khi xử lý. File gốc không bị ghi đè.</span></li><li><strong>2. Lưới có trần</strong><span>1–6 hàng × 1–8 cột, trim 0–18% và thứ tự cảnh theo hàng–cột. Không có drag/drop, vùng crop tự do hoặc nhận diện chủ thể.</span></li><li><strong>3. Delivery từng cell</strong><span>Mỗi JPEG được kiểm tra lại trước khi download qua signed session. Không có public URL, preview thumbnail hay PWA cache cho ảnh private.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Storyboard đã chia</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Archive và từng cell đều bị khóa nếu ownership, state hoặc integrity không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="storyboard-grid-refresh" data-portal-route="/image/storyboard-grid"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderStoryboardGridOperationCards(operations)}${renderStoryboardGridHistoryPagination(context, canView, "/image/storyboard-grid")}</section>
-      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>Storyboard Grid Splitter không tạo Bot job, không gọi Core Bridge/provider, không trừ/cộng Xu, không tạo PayOS order và không dùng webhook. Nó cũng không xác minh quyền sử dụng storyboard, nhân vật hoặc tài sản trí tuệ thay bạn.</p></div></div>${renderNotes(page)}</section>
+       <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">${safeText(t("intro.kicker", "Tiện ích bảng cảnh trên Web"))}</span><h2>${safeText(t("intro.title", "Chia bảng cảnh riêng tư thành JPEG theo đúng thứ tự tập"))}</h2><p>${safeText(t("intro.body", "Chọn ảnh bảng cảnh, đặt lưới, tập, cảnh bắt đầu và mức cắt mép. Máy chủ kiểm tra quyền sở hữu rồi xác minh từng ô ảnh riêng."))}</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>${safeText(t("metric.sources", "Nguồn thuộc tài khoản hiện tại"))}</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>${safeText(t("metric.ready", "Bộ ô ảnh sẵn sàng tải"))}</dd></div></dl></section>
+       <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("form.title", "Chia ảnh bảng cảnh"))}</h2><p class="portal-card-subtitle">${safeText(t("form.description", "Trình duyệt chỉ gửi mã tài sản, bốn số nguyên và một phần trăm đã giới hạn."))}</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="storyboard-grid-create" data-portal-route="/image/storyboard-grid" data-portal-confirm="${safeText(t("form.confirm", "Chia ảnh bảng cảnh riêng tư thành các ô JPEG theo lưới đã chọn? Ảnh nguồn trong Kho tài sản sẽ không bị thay đổi."))}" novalidate>${renderFields(storyboardGridFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>${safeText(t("form.submit", "Tạo ô ảnh bảng cảnh riêng tư"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("boundary.title", "Ranh giới có thể kiểm tra"))}</h2><p class="portal-card-subtitle">${safeText(t("boundary.description", "Đây là tiện ích chia lưới cục bộ có thể kiểm tra, không phải tạo bảng cảnh hoặc dựng video AI."))}</p></div></div><ol class="portal-project-steps"><li><strong>1. ${safeText(t("step.source.title", "Nguồn Kho tài sản riêng tư"))}</strong><span>${safeText(t("step.source.body", "Ảnh nguồn phải đang hoạt động, thuộc tài khoản hiện tại và được máy chủ sao chép kiểm tra trước khi xử lý."))}</span></li><li><strong>2. ${safeText(t("step.grid.title", "Lưới có giới hạn"))}</strong><span>${safeText(t("step.grid.body", "Từ 1–6 hàng × 1–8 cột, cắt mép 0–18% và đánh số theo hàng–cột. Không kéo thả hoặc nhận diện chủ thể."))}</span></li><li><strong>3. ${safeText(t("step.delivery.title", "Phát từng ô đã xác minh"))}</strong><span>${safeText(t("step.delivery.body", "Mỗi JPEG được kiểm tra lại trước khi tải qua phiên đã xác thực; không có URL công khai hoặc bộ nhớ đệm PWA."))}</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">${safeText(common("openVault", "Mở Asset Vault"))}</a></div></aside></div>
+       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("results.title", "Bảng cảnh đã chia"))}</h2><p class="portal-card-subtitle">${safeText(t("results.description", "Chỉ thao tác thuộc tài khoản hiện tại. Archive và từng ô ảnh bị khóa nếu quyền sở hữu, trạng thái hoặc tính toàn vẹn không còn hợp lệ."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="storyboard-grid-refresh" data-portal-route="/image/storyboard-grid"${canRefresh ? "" : " disabled"}>${safeText(common("refresh", "Làm mới"))}</button></div>${renderStoryboardGridOperationCards(operations)}${renderStoryboardGridHistoryPagination(context, canView, "/image/storyboard-grid")}</section>
+       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(t("notice.title", "Tiện ích Web độc lập"))}</strong><p>${safeText(t("notice.body", "Bộ chia bảng cảnh không tạo tác vụ Bot, không gọi nhà cung cấp, không trừ/cộng Xu, không tạo đơn PayOS và không dùng webhook thanh toán."))}</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
   function renderImageResize(page, context) {
+    const t = (key, fallback, params) => imageOperationText(`resize.${key}`, fallback, params);
+    const common = (key, fallback, params) => imageOperationText(`common.${key}`, fallback, params);
     const canViewCapability = Boolean(context.capabilities && context.capabilities["image-operation-view"] === true);
     const canRunCapability = Boolean(context.capabilities && context.capabilities["image-operation-resize"] === true);
     const canRefresh = Boolean(context.capabilities && context.capabilities["image-operation-refresh"] === true);
     if (!canViewCapability) {
-      return `<article class="portal-page portal-image-resize">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>Resize & Aspect Studio đang ở chế độ an toàn</h2><p>Tiện ích chỉ bật khi Asset Vault, private output storage và runtime Pillow được server xác nhận. Web không fallback sang browser canvas, Bot job, provider hoặc output giả.</p><div class="portal-state-meta"><span>Signed session</span><span>Storage riêng</span><span>Không AI giả</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-image-resize">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>${safeText(t("guard.title", "Xưởng đổi canvas đang ở chế độ an toàn"))}</h2><p>${safeText(t("guard.body", "Tiện ích chỉ bật khi Kho tài sản, kho đầu ra riêng tư và Pillow được máy chủ xác nhận. Web không dùng canvas trình duyệt, tác vụ Bot, nhà cung cấp hoặc đầu ra giả thay thế."))}</p><div class="portal-state-meta"><span>${safeText(common("guard.session", "Phiên đã xác thực"))}</span><span>${safeText(common("guard.storage", "Kho lưu trữ riêng"))}</span><span>${safeText(common("guard.noAi", "Không tạo AI giả"))}</span></div></div></div></section></article>`;
     }
     const assetReadState = String(context.assetVaultReadState || "loading");
     const operationReadState = String(context.imageOperationsReadState || "loading");
     const privateReadsReady = assetReadState === "ready" && operationReadState === "ready";
     if (!privateReadsReady) {
       const loading = assetReadState === "loading" || operationReadState === "loading";
-      const title = loading ? "Đang xác minh dữ liệu private" : "Chưa thể tải trạng thái private";
+      const title = loading ? common("state.loadingTitle", "Đang xác minh dữ liệu riêng tư") : common("state.failedTitle", "Chưa thể tải trạng thái riêng tư");
       const message = loading
-        ? "Resize Studio đang tải Asset Vault và lịch sử thuộc signed Web account hiện tại. Form chỉ mở sau khi cả hai phản hồi server-side hoàn tất."
-        : "Asset Vault hoặc lịch sử Resize Studio chưa trả dữ liệu an toàn. Web đã xóa projection cũ, không hiển thị form, output hay dữ liệu thay thế.";
+        ? t("loading.body", "Xưởng đổi canvas đang tải Kho tài sản và lịch sử thuộc tài khoản hiện tại. Biểu mẫu chỉ mở sau khi cả hai phản hồi phía máy chủ hoàn tất.")
+        : t("failed.body", "Kho tài sản hoặc lịch sử đổi canvas chưa trả dữ liệu an toàn. Web đã xóa dữ liệu cũ và không hiển thị đầu ra thay thế.");
       const retry = !loading && canRefresh
-        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-operation-refresh" data-portal-route="/image/resize">Thử lại dữ liệu private</button></div>`
+        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-operation-refresh" data-portal-route="/image/resize">${safeText(common("formRetry", "Thử lại dữ liệu riêng tư"))}</button></div>`
         : "";
-      return `<article class="portal-page portal-image-resize">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div>${retry}</div></div></section></article>`;
+      return `<article class="portal-page portal-image-resize">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>${safeText(common("state.loadingMeta", "Phiên đã xác thực"))}</span><span>${safeText(common("state.noCache", "Không lưu bộ nhớ đệm riêng tư"))}</span><span>${safeText(common("state.noBrowserFallback", "Không dùng dữ liệu thay thế từ trình duyệt"))}</span></div>${retry}</div></div></section></article>`;
     }
     const sources = imageVaultItems(context);
     const operations = imageOperationItems(context);
     const canRun = canRunCapability && sources.length > 0;
     const formValues = transientFormValues("/image/resize");
     const runReason = !canRunCapability
-      ? (context.imageResizeEnabled === true
-        ? "Cần signed session, CSRF và capability Resize Studio từ server."
-        : "Resize Studio đang được server giữ guarded cho đến khi private storage và WEBAPP_IMAGE_RESIZE_ENABLED được bật có chủ đích.")
+        ? (context.imageResizeEnabled === true
+        ? t("runReason.capability", "Cần phiên đã xác thực, CSRF và quyền Đổi canvas từ máy chủ.")
+        : t("runReason.disabled", "Đổi canvas đang được máy chủ giữ ở chế độ bảo vệ cho đến khi kho lưu trữ riêng tư được bật có chủ đích."))
       : sources.length === 0
-        ? "Hãy lưu JPEG, PNG hoặc WebP private vào Asset Vault trước khi tạo bản sao."
-        : "Nguồn → hash-copy cô lập → decode có giới hạn → PNG được mở lại và xác minh trước khi tải.";
-    const sourceSummary = sources.length === 1 ? "1 ảnh đang hoạt động" : `${sources.length} ảnh đang hoạt động`;
+        ? t("runReason.empty", "Hãy lưu JPEG, PNG hoặc WebP riêng tư vào Kho tài sản trước khi tạo bản sao.")
+        : t("runReason.ready", "Nguồn → sao chép cô lập → giải mã có giới hạn → PNG được mở lại và xác minh trước khi tải.");
+    const sourceSummary = t("sourceCount", "{count} ảnh đang hoạt động", { count: String(sources.length) });
     const completedCount = operations.filter((item) => imageOperationState(item) === "completed" && item.download_ready === true).length;
     return `<article class="portal-page portal-image-resize">${renderHero(page, context)}
-      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native Image Operations</span><h2>Đổi canvas ảnh rõ ràng, không tạo ảnh AI</h2><p>Chọn ảnh private trong Asset Vault rồi tạo PNG mới theo crop giữa khung, pad nền trắng hoặc blur nền. Server giữ nguyên file gốc, sửa orientation, loại metadata nguồn, giới hạn decoder và chỉ phát bản sao sau khi tự mở lại, kiểm tra kích thước và hash integrity.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PNG sẵn sàng tải</dd></div></dl></section>
-      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo canvas mới</h2><p class="portal-card-subtitle">Không upload bytes, URL hoặc raw file path ở bước này. Browser chỉ gửi Asset Vault ID và cấu hình canvas đã chọn.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="image-operation-resize" data-portal-route="/image/resize" data-portal-confirm="Tạo một PNG private mới theo canvas và cách đặt ảnh đã chọn? File gốc trong Asset Vault sẽ không bị thay đổi." novalidate>${renderFields(imageResizeFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo PNG riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Cách khung hoạt động</h2><p class="portal-card-subtitle">Canvas là thông số deterministic, không phải promise AI.</p></div></div><ol class="portal-project-steps"><li><strong>1. Crop giữa khung</strong><span>Lấp đầy canvas theo tỉ lệ và cắt phần rìa từ tâm. Không có focal-point hoặc nhận diện chủ thể.</span></li><li><strong>2. Pad nền trắng</strong><span>Giữ trọn ảnh, đặt giữa canvas trắng; alpha/metadata nguồn không đi sang PNG mới.</span></li><li><strong>3. Blur nền</strong><span>Giữ trọn ảnh ở giữa trên nền cover được làm mờ. Đây là hiệu ứng cục bộ, không retouch hay AI upscale.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PNG đã tạo</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Không có preview công khai; download bị khóa nếu ownership hoặc integrity không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-refresh" data-portal-route="/image/resize"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderImageOperationCards(operations, context)}${renderImageOperationHistoryPagination(context, canViewCapability, "/image/resize", false)}</section>
-      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>Resize & Aspect Studio không tạo Bot job, không gọi provider, không trừ/cộng Xu, không tạo PayOS order và không dùng webhook thanh toán. AI Upscale vẫn là workflow riêng, chỉ hiển thị readiness canonical.</p></div></div>${renderNotes(page)}</section>
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">${safeText(t("intro.kicker", "Tiện ích xử lý ảnh trên Web"))}</span><h2>${safeText(t("intro.title", "Đổi canvas ảnh rõ ràng, không tạo ảnh AI"))}</h2><p>${safeText(t("intro.body", "Chọn ảnh riêng tư trong Kho tài sản rồi tạo PNG mới theo cách cắt giữa khung, đệm nền trắng hoặc nền mờ. Máy chủ giữ file gốc và chỉ phát bản sao sau khi kiểm tra lại."))}</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>${safeText(t("metric.sources", "Nguồn thuộc tài khoản hiện tại"))}</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>${safeText(t("metric.ready", "PNG sẵn sàng tải"))}</dd></div></dl></section>
+      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("form.title", "Tạo canvas mới"))}</h2><p class="portal-card-subtitle">${safeText(t("form.description", "Trình duyệt chỉ gửi mã tài sản và cấu hình canvas đã chọn."))}</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="image-operation-resize" data-portal-route="/image/resize" data-portal-confirm="${safeText(t("form.confirm", "Tạo PNG riêng tư theo canvas và cách đặt ảnh đã chọn? File gốc trong Kho tài sản sẽ không bị thay đổi."))}" novalidate>${renderFields(imageResizeFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>${safeText(t("form.submit", "Tạo PNG riêng tư"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("boundary.title", "Cách canvas hoạt động"))}</h2><p class="portal-card-subtitle">${safeText(t("boundary.description", "Canvas là thông số có thể kiểm tra, không phải lời hứa AI."))}</p></div></div><ol class="portal-project-steps"><li><strong>1. ${safeText(t("step.crop.title", "Cắt giữa khung"))}</strong><span>${safeText(t("step.crop.body", "Lấp đầy canvas theo tỉ lệ và cắt phần rìa từ tâm. Không có trình chọn điểm nhấn."))}</span></li><li><strong>2. ${safeText(t("step.pad.title", "Đệm nền trắng"))}</strong><span>${safeText(t("step.pad.body", "Giữ trọn ảnh và đặt giữa canvas trắng; dữ liệu nguồn không đi sang PNG mới."))}</span></li><li><strong>3. ${safeText(t("step.blur.title", "Nền mờ"))}</strong><span>${safeText(t("step.blur.body", "Giữ ảnh ở giữa trên nền phủ được làm mờ. Đây là xử lý cục bộ, không retouch hoặc nâng cấp AI."))}</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">${safeText(common("openVault", "Mở Asset Vault"))}</a></div></aside></div>
+       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("results.title", "PNG đã tạo"))}</h2><p class="portal-card-subtitle">${safeText(t("results.description", "Chỉ thao tác thuộc tài khoản hiện tại. Tải xuống bị khóa nếu quyền sở hữu hoặc tính toàn vẹn không còn hợp lệ."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-refresh" data-portal-route="/image/resize"${canRefresh ? "" : " disabled"}>${safeText(common("refresh", "Làm mới"))}</button></div>${renderImageOperationCards(operations, context)}${renderImageOperationHistoryPagination(context, canViewCapability, "/image/resize", false)}</section>
+       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(t("notice.title", "Tiện ích Web độc lập"))}</strong><p>${safeText(t("notice.body", "Đổi canvas không tạo tác vụ Bot, không gọi nhà cung cấp, không trừ/cộng Xu, không tạo đơn PayOS và không dùng webhook thanh toán."))}</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
   function renderImageEnhance(page, context) {
+    const t = (key, fallback, params) => imageOperationText(`enhance.${key}`, fallback, params);
+    const common = (key, fallback, params) => imageOperationText(`common.${key}`, fallback, params);
     const canViewCapability = Boolean(context.capabilities && context.capabilities["image-operation-view"] === true);
     const canRunCapability = Boolean(context.capabilities && context.capabilities["image-operation-enhance"] === true);
     const canRefresh = Boolean(context.capabilities && context.capabilities["image-enhance-refresh"] === true);
     if (!canViewCapability) {
-      return `<article class="portal-page portal-image-enhance">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>Image Enhance Studio đang ở chế độ an toàn</h2><p>Tiện ích chỉ mở khi Asset Vault và storage output private của Web được server xác nhận. Web không fallback sang canvas trình duyệt, Bot job, provider hay output giả.</p><div class="portal-state-meta"><span>Signed session</span><span>Storage riêng</span><span>Không AI giả</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-image-enhance">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>${safeText(t("guard.title", "Xưởng làm ảnh rõ đang ở chế độ an toàn"))}</h2><p>${safeText(t("guard.body", "Tiện ích chỉ mở khi Kho tài sản và kho đầu ra riêng tư của Web được máy chủ xác nhận. Web không dùng canvas trình duyệt, tác vụ Bot, nhà cung cấp hoặc đầu ra giả."))}</p><div class="portal-state-meta"><span>${safeText(common("guard.session", "Phiên đã xác thực"))}</span><span>${safeText(common("guard.storage", "Kho lưu trữ riêng"))}</span><span>${safeText(common("guard.noAi", "Không tạo AI giả"))}</span></div></div></div></section></article>`;
     }
     const assetReadState = String(context.assetVaultReadState || "loading");
     const operationReadState = String(context.imageEnhanceOperationsReadState || "loading");
     const privateReadsReady = assetReadState === "ready" && operationReadState === "ready";
     if (!privateReadsReady) {
       const loading = assetReadState === "loading" || operationReadState === "loading";
-      const title = loading ? "Đang xác minh dữ liệu private" : "Chưa thể tải trạng thái private";
+      const title = loading ? common("state.loadingTitle", "Đang xác minh dữ liệu riêng tư") : common("state.failedTitle", "Chưa thể tải trạng thái riêng tư");
       const message = loading
-        ? "Image Enhance Studio đang tải Asset Vault và lịch sử thuộc signed Web account hiện tại. Form chỉ mở sau khi cả hai phản hồi server-side hoàn tất."
-        : "Asset Vault hoặc lịch sử Image Enhance chưa trả dữ liệu an toàn. Web đã xóa projection cũ, không hiển thị form, output hay dữ liệu thay thế.";
+        ? t("loading.body", "Xưởng làm ảnh rõ đang tải Kho tài sản và lịch sử thuộc tài khoản hiện tại. Biểu mẫu chỉ mở sau khi cả hai phản hồi phía máy chủ hoàn tất.")
+        : t("failed.body", "Kho tài sản hoặc lịch sử làm ảnh rõ chưa trả dữ liệu an toàn. Web đã xóa dữ liệu cũ và không hiển thị đầu ra thay thế.");
       const retry = !loading && canRefresh
-        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-enhance-refresh" data-portal-route="/image/edit">Thử lại dữ liệu private</button></div>`
+        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-enhance-refresh" data-portal-route="/image/edit">${safeText(common("formRetry", "Thử lại dữ liệu riêng tư"))}</button></div>`
         : "";
-      return `<article class="portal-page portal-image-enhance">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div>${retry}</div></div></section></article>`;
+      return `<article class="portal-page portal-image-enhance">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>${safeText(common("state.loadingMeta", "Phiên đã xác thực"))}</span><span>${safeText(common("state.noCache", "Không lưu bộ nhớ đệm riêng tư"))}</span><span>${safeText(common("state.noBrowserFallback", "Không dùng dữ liệu thay thế từ trình duyệt"))}</span></div>${retry}</div></div></section></article>`;
     }
     const sources = imageVaultItems(context);
     const operations = imageEnhanceOperationItems(context);
     const canRun = canRunCapability && sources.length > 0;
     const formValues = transientFormValues("/image/edit");
     const runReason = !canRunCapability
-      ? (context.imageEnhanceEnabled === true
-        ? "Cần signed session, CSRF và capability Image Enhance Studio từ server."
-        : "Image Enhance Studio đang được server giữ guarded cho đến khi WEBAPP_IMAGE_ENHANCE_ENABLED được bật có chủ đích.")
+        ? (context.imageEnhanceEnabled === true
+        ? t("runReason.capability", "Cần phiên đã xác thực, CSRF và quyền Làm ảnh rõ từ máy chủ.")
+        : t("runReason.disabled", "Làm ảnh rõ đang được máy chủ giữ ở chế độ bảo vệ cho đến khi kho lưu trữ riêng tư được bật có chủ đích."))
       : sources.length === 0
-        ? "Hãy lưu JPEG, PNG hoặc WebP private vào Asset Vault trước khi tạo bản sao."
-        : "Nguồn → hash-copy cô lập → chỉnh màu/làm nét deterministic → PNG được mở lại và xác minh trước khi tải.";
-    const sourceSummary = sources.length === 1 ? "1 ảnh đang hoạt động" : `${sources.length} ảnh đang hoạt động`;
+        ? t("runReason.empty", "Hãy lưu JPEG, PNG hoặc WebP riêng tư vào Kho tài sản trước khi tạo bản sao.")
+        : t("runReason.ready", "Nguồn → sao chép cô lập → chỉnh màu/làm nét có thể kiểm tra → PNG được mở lại và xác minh trước khi tải.");
+    const sourceSummary = t("sourceCount", "{count} ảnh đang hoạt động", { count: String(sources.length) });
     const completedCount = operations.filter((item) => imageOperationState(item) === "completed" && item.download_ready === true).length;
     return `<article class="portal-page portal-image-enhance">${renderHero(page, context)}
-      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native Image Operations</span><h2>Làm ảnh sạch, rõ và nhất quán — không hứa hẹn AI</h2><p>Chọn ảnh private trong Asset Vault rồi áp một preset màu/làm nét cục bộ hoặc nhập đủ bốn thông số tùy chỉnh. Server giữ nguyên file gốc, chuẩn hóa orientation, làm phẳng alpha nền trắng, loại metadata nguồn và chỉ phát PNG mới sau khi tự mở lại, kiểm tra kích thước và hash integrity.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PNG sẵn sàng tải</dd></div></dl></section>
-      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo bản sao đã chỉnh</h2><p class="portal-card-subtitle">Browser chỉ gửi Asset Vault ID và thông số đã giới hạn. Không upload bytes, URL hoặc raw file path cho thao tác này.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="image-operation-enhance" data-portal-route="/image/edit" data-portal-confirm="Tạo một PNG private mới theo preset hoặc thông số cục bộ đã chọn? File gốc trong Asset Vault sẽ không bị thay đổi." novalidate>${renderFields(imageEnhanceFormFields(formValues), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo PNG riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Giới hạn trung thực</h2><p class="portal-card-subtitle">Preset là công thức local deterministic, không phải lời hứa retouch AI.</p></div></div><ol class="portal-project-steps"><li><strong>1. Thứ tự có thể kiểm tra</strong><span>Auto-contrast → sáng → tương phản → bão hòa → nét → tone, cùng thứ tự local editor của Bot tham chiếu.</span></li><li><strong>2. Upscale cơ bản có trần</strong><span>Nếu bật, server chỉ dùng LANCZOS + UnsharpMask tối đa 2× và luôn giữ trần 4096 px/16 MP. Không tạo chi tiết mới.</span></li><li><strong>3. Delivery riêng tư</strong><span>PNG mới được strict-reparse, hash lại và tải qua signed session; không có public URL, preview công khai hay PWA cache.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PNG đã chỉnh</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Download bị khóa nếu ownership hoặc integrity không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-enhance-refresh" data-portal-route="/image/edit"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderImageEnhanceOperationCards(operations, context)}${renderImageOperationHistoryPagination(context, canViewCapability, "/image/edit", true)}</section>
-      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>Image Enhance Studio không tạo Bot job, không gọi provider, không trừ/cộng Xu, không tạo PayOS order và không dùng webhook thanh toán. AI edit, remove background và AI upscale vẫn là workflow riêng, chỉ hiển thị readiness canonical.</p></div></div>${renderNotes(page)}</section>
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">${safeText(t("intro.kicker", "Tiện ích xử lý ảnh trên Web"))}</span><h2>${safeText(t("intro.title", "Làm ảnh sạch, rõ và nhất quán — không hứa hẹn AI"))}</h2><p>${safeText(t("intro.body", "Chọn ảnh riêng tư trong Kho tài sản rồi áp công thức màu/làm nét cục bộ hoặc nhập bốn thông số tùy chỉnh. File gốc được giữ nguyên và PNG mới chỉ xuất hiện sau khi kiểm tra lại."))}</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>${safeText(t("metric.sources", "Nguồn thuộc tài khoản hiện tại"))}</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>${safeText(t("metric.ready", "PNG sẵn sàng tải"))}</dd></div></dl></section>
+       <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("form.title", "Tạo bản sao đã chỉnh"))}</h2><p class="portal-card-subtitle">${safeText(t("form.description", "Trình duyệt chỉ gửi mã tài sản và thông số đã giới hạn."))}</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="image-operation-enhance" data-portal-route="/image/edit" data-portal-confirm="${safeText(t("form.confirm", "Tạo PNG riêng tư theo công thức hoặc thông số đã chọn? File gốc trong Kho tài sản sẽ không bị thay đổi."))}" novalidate>${renderFields(imageEnhanceFormFields(formValues), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>${safeText(t("form.submit", "Tạo PNG riêng tư"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("boundary.title", "Giới hạn trung thực"))}</h2><p class="portal-card-subtitle">${safeText(t("boundary.description", "Công thức là xử lý cục bộ có thể kiểm tra, không phải lời hứa chỉnh sửa AI."))}</p></div></div><ol class="portal-project-steps"><li><strong>1. ${safeText(t("step.order.title", "Thứ tự có thể kiểm tra"))}</strong><span>${safeText(t("step.order.body", "Tự cân bằng → sáng → tương phản → bão hòa → nét → sắc độ, theo cùng thứ tự của trình chỉnh sửa cục bộ."))}</span></li><li><strong>2. ${safeText(t("step.upscale.title", "Nâng kích thước cơ bản có trần"))}</strong><span>${safeText(t("step.upscale.body", "Nếu bật, máy chủ chỉ dùng LANCZOS và UnsharpMask tối đa 2×, giữ trần 4096 px/16 MP. Không tạo chi tiết mới."))}</span></li><li><strong>3. ${safeText(t("step.delivery.title", "Phát tệp riêng tư"))}</strong><span>${safeText(t("step.delivery.body", "PNG mới được kiểm tra lại, băm lại và tải qua phiên đã xác thực; không có URL công khai hoặc bộ nhớ đệm PWA."))}</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">${safeText(common("openVault", "Mở Asset Vault"))}</a></div></aside></div>
+       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("results.title", "PNG đã chỉnh"))}</h2><p class="portal-card-subtitle">${safeText(t("results.description", "Chỉ thao tác thuộc tài khoản hiện tại. Tải xuống bị khóa nếu quyền sở hữu hoặc tính toàn vẹn không còn hợp lệ."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-enhance-refresh" data-portal-route="/image/edit"${canRefresh ? "" : " disabled"}>${safeText(common("refresh", "Làm mới"))}</button></div>${renderImageEnhanceOperationCards(operations, context)}${renderImageOperationHistoryPagination(context, canViewCapability, "/image/edit", true)}</section>
+       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(t("notice.title", "Tiện ích Web độc lập"))}</strong><p>${safeText(t("notice.body", "Làm ảnh rõ không tạo tác vụ Bot, không gọi nhà cung cấp, không trừ/cộng Xu, không tạo đơn PayOS và không dùng webhook thanh toán."))}</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -28003,13 +28071,14 @@
     if (previous === null && next === null) return "";
     const disabled = enabled ? "" : " disabled";
     const localized = messages && messages.localized === true;
+    const translate = messages && typeof messages.translate === "function" ? messages.translate : adminOperationsText;
     const range = localized
       ? (returned
-        ? adminOperationsText("pagination.range", "Đang hiển thị {start}–{end} {label}", { start: String(offset + 1), end: String(offset + returned), label })
-        : adminOperationsText("pagination.empty", "Không có {label} ở trang này", { label }))
+        ? translate("pagination.range", "Đang hiển thị {start}–{end} {label}", { start: String(offset + 1), end: String(offset + returned), label })
+        : translate("pagination.empty", "Không có {label} ở trang này", { label }))
       : (returned ? "Đang hiển thị " + String(offset + 1) + "–" + String(offset + returned) + " " + label : "Không có " + label + " ở trang này");
-    const previousLabel = localized ? adminOperationsText("pagination.previous", "Trang trước") : "Trang trước";
-    const nextLabel = localized ? adminOperationsText("pagination.next", "Trang sau") : "Trang sau";
+    const previousLabel = localized ? translate("pagination.previous", "Trang trước") : "Trang trước";
+    const nextLabel = localized ? translate("pagination.next", "Trang sau") : "Trang sau";
     const previousButton = previous === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + safeText(action) + '" data-portal-route="' + safeText(route) + '" ' + safeText(offsetAttribute) + '="' + safeText(String(previous)) + '"' + disabled + '>← ' + safeText(previousLabel) + '</button>';
     const nextButton = next === null ? "" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="' + safeText(action) + '" data-portal-route="' + safeText(route) + '" ' + safeText(offsetAttribute) + '="' + safeText(String(next)) + '"' + disabled + '>' + safeText(nextLabel) + ' →</button>';
     return '<nav class="portal-support-pagination" aria-label="' + safeText(ariaLabel) + '"><span>' + safeText(range) + '</span><div>' + previousButton + nextButton + '</div></nav>';
