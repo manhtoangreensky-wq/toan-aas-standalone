@@ -32762,39 +32762,39 @@
 
   const ADMIN_DOMAIN_CENTERS = Object.freeze({
     "/admin/publishing": {
-      kicker: "Publishing control center",
+      kicker: "Trung tâm xuất bản",
       title: "Từ brief đến hàng chờ xuất bản, với ranh giới authority rõ ràng",
       description: "Điều phối campaign, lịch, self-review, publishing handoff và analytics mà không biến browser thành worker hoặc channel publisher.",
       streams: [
-        { title: "Campaign Center", text: "Brief, mục tiêu và trạng thái kế hoạch qua workflow quản trị đã bảo vệ.", route: "/admin/campaigns", icon: ICONS.prompt },
-        { title: "Content Calendar", text: "Xem các mốc nội dung canonical khi adapter chỉ đọc được công bố.", route: "/admin/calendar", icon: ICONS.system },
-        { title: "Approval Queue", text: "Theo dõi điểm duyệt; không cấp quyền publish từ shell.", route: "/admin/approvals", icon: ICONS.security },
-        { title: "Analytics", text: "Mở báo cáo đã redaction, không export hay tính doanh thu ở client.", route: "/admin/analytics", icon: ICONS.reports }
+        { title: "Trung tâm chiến dịch", text: "Brief, mục tiêu và trạng thái kế hoạch qua quy trình quản trị đã bảo vệ.", route: "/admin/campaigns", icon: ICONS.prompt },
+        { title: "Lịch nội dung", text: "Xem các mốc nội dung chuẩn khi bộ kết nối chỉ đọc được công bố.", route: "/admin/calendar", icon: ICONS.system },
+        { title: "Hàng chờ phê duyệt", text: "Theo dõi điểm duyệt; không cấp quyền xuất bản từ shell.", route: "/admin/approvals", icon: ICONS.security },
+        { title: "Phân tích", text: "Mở báo cáo đã ẩn dữ liệu, không xuất dữ liệu hay tính doanh thu ở trình duyệt.", route: "/admin/analytics", icon: ICONS.reports }
       ],
       boundaries: ["Không tự gửi bài, tạo lịch chạy hoặc gọi channel API.", "Mọi publish/retry vẫn cần canonical workflow, confirmation và audit.", "Không render credential channel, token, provider payload hay dữ liệu khách thô."]
     },
     "/admin/growth": {
-      kicker: "Growth & affiliate control center",
+      kicker: "Trung tâm tăng trưởng và tiếp thị liên kết",
       title: "Tập trung growth operations mà không nhân bản attribution hoặc payout",
       description: "Dùng một điểm vào để review lead, referral, promo và campaign. Khi Bot chưa công bố adapter read-only, từng route vẫn giữ guarded thay vì tạo số liệu giả.",
       streams: [
-        { title: "Leads", text: "Theo dõi lead và handoff CSKH trong quyền server-side.", route: "/admin/leads", icon: ICONS.users },
-        { title: "Postback readiness", text: "Chuẩn bị phạm vi và handoff an toàn; không mở cấu hình, thông tin kết nối hay event từ browser.", route: "/admin/growth/postback-readiness", icon: ICONS.security },
+        { title: "Khách hàng tiềm năng", text: "Theo dõi khách hàng tiềm năng và bàn giao chăm sóc trong quyền máy chủ.", route: "/admin/leads", icon: ICONS.users },
+        { title: "Sẵn sàng phản hồi chuyển đổi", text: "Chuẩn bị phạm vi và bàn giao an toàn; không mở cấu hình, thông tin kết nối hay sự kiện từ trình duyệt.", route: "/admin/growth/postback-readiness", icon: ICONS.security },
         { title: "Khuyến mãi", text: "Review promo canonical; không tự cấp ưu đãi hoặc sửa entitlement.", route: "/admin/promos", icon: ICONS.pricing },
-        { title: "Campaign", text: "Đi tới planning và review campaign có audit boundary.", route: "/admin/campaigns", icon: ICONS.prompt },
-        { title: "Analytics", text: "Đọc performance metadata đã redaction khi adapter sẵn sàng.", route: "/admin/analytics", icon: ICONS.reports }
+        { title: "Chiến dịch", text: "Đi tới lập kế hoạch và rà soát chiến dịch có ranh giới nhật ký.", route: "/admin/campaigns", icon: ICONS.prompt },
+        { title: "Phân tích", text: "Đọc siêu dữ liệu hiệu suất đã ẩn thông tin khi bộ kết nối sẵn sàng.", route: "/admin/analytics", icon: ICONS.reports }
       ],
       boundaries: ["Không payout affiliate, sửa referral attribution hoặc cấp reward từ browser.", "Không gửi campaign, scrape trend hay tạo report AI thay thế.", "Payout, Xu, payment và entitlement tiếp tục do canonical authority quyết định."]
     },
     "/admin/trends": {
-      kicker: "Trend & reference control center",
+      kicker: "Trung tâm xu hướng và tham khảo",
       title: "Biến research thành brief có kiểm soát, không biến Web thành scraper",
       description: "Tập trung quy trình tham chiếu, creative review và trend-video planning. Các nguồn ngoài, provider và publishing vẫn là capability riêng được bảo vệ.",
       streams: [
-        { title: "Campaign briefs", text: "Dùng Campaign Center để tổ chức brief có mục tiêu và lifecycle rõ ràng.", route: "/admin/campaigns", icon: ICONS.prompt },
-        { title: "Creative analytics", text: "Mở analytics đã redaction cho review, không tạo insight hoặc export giả.", route: "/admin/analytics", icon: ICONS.reports },
-        { title: "Publishing handoff", text: "Chuyển sang Publishing Center khi workflow canonical đã được phê duyệt.", route: "/admin/publishing", icon: ICONS.assets },
-        { title: "Feature readiness", text: "Kiểm tra maintenance/guard trước khi một engine hoặc workflow được mở.", route: "/admin/features", icon: ICONS.system }
+        { title: "Brief chiến dịch", text: "Dùng trung tâm chiến dịch để tổ chức brief có mục tiêu và vòng đời rõ ràng.", route: "/admin/campaigns", icon: ICONS.prompt },
+        { title: "Phân tích sáng tạo", text: "Mở dữ liệu phân tích đã ẩn thông tin để rà soát, không tạo insight hoặc xuất dữ liệu giả.", route: "/admin/analytics", icon: ICONS.reports },
+        { title: "Bàn giao xuất bản", text: "Chuyển sang trung tâm xuất bản khi quy trình chuẩn đã được phê duyệt.", route: "/admin/publishing", icon: ICONS.assets },
+        { title: "Mức sẵn sàng tính năng", text: "Kiểm tra bảo trì/bảo vệ trước khi mở một bộ máy hoặc quy trình.", route: "/admin/features", icon: ICONS.system }
       ],
       boundaries: ["Không scrape website, mạng xã hội hoặc nguồn trend từ browser.", "Không gọi provider, tạo video hoặc publish tự động từ center này.", "Reference, quyền sử dụng và approval cần được xác minh ở workflow riêng trước delivery."]
     }

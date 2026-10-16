@@ -127,3 +127,12 @@ không tự sửa dependency production.
 - Bảy route tài chính giữ nguyên, không mở ledger/PayOS/provider mutation và không đổi
   authority boundary. Regression `tests/admin-finance-domain-fallback-locale.test.mjs` đạt
   `2/2`; full Node đạt `516/516`.
+
+### Source closeout bổ sung — SOURCE-ADMIN-09 (2026-10-17)
+
+- Fallback của ba domain center Publishing/Growth/Trends đã được chuẩn hóa tiếng Việt cho
+  kicker, campaign/calendar/approval/analytics, lead/postback, brief/reference, publishing
+  handoff và feature readiness. Catalogue locale hiện có vẫn được dùng trước fallback.
+- Route stream, manifest filter, authority và boundary giữ nguyên; không gọi provider, không
+  publish, không payout và không mutation. Regression `tests/admin-domain-center-fallback-locale.test.mjs`
+  đạt `2/2`; full Node `517/517`.

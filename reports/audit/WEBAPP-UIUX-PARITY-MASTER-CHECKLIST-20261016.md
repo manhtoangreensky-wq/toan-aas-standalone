@@ -354,6 +354,12 @@ hiển thị thành công giả khi engine/bridge chưa có.
       `adminFinance.*`.
 - [x] Regression `tests/admin-finance-domain-fallback-locale.test.mjs`: `2/2`; full Node
       suite sau batch: `516/516`, `NEW_FAILURES=0`; syntax Portal `2/2` đạt.
+- [x] **SOURCE-ADMIN-09:** fallback fixed chrome của ba domain center Publishing/Growth/
+      Trends đã chuyển từ tiêu đề tiếng Anh sang tiếng Việt (trung tâm, chiến dịch, lịch,
+      phê duyệt, phân tích, khách hàng tiềm năng, bàn giao, brief và mức sẵn sàng); giữ nguyên
+      domain route, stream route, manifest filter, authority và catalogue locale.
+- [x] Regression `tests/admin-domain-center-fallback-locale.test.mjs`: `2/2`; full Node
+      suite sau batch: `517/517`, `NEW_FAILURES=0`; syntax Portal `2/2` đạt.
 - [ ] Owner thấy toàn bộ; role khác chỉ thấy module/action theo policy hiển thị. UI phải
       nói rõ quyền bị thiếu thay vì nút chết.
 - [ ] Mỗi customer action có request/job/asset/report reference và trạng thái audit trên
@@ -501,5 +507,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=SOURCE-ADMIN-09 — rà soát bảng/inspector Admin mobile và domain-center fallback còn sót; sau đó chuyển sang browser/AX/runtime evidence. Giữ nguyên các mục backend/ledger/real-output ở trạng thái deferred.
+NEXT_ACTION=SOURCE-ADMIN-10 — rà soát bảng/inspector Admin mobile; sau đó chuyển sang browser/AX/runtime evidence. Giữ nguyên các mục backend/ledger/real-output ở trạng thái deferred.
 ```
