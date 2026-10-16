@@ -315,8 +315,8 @@ hiển thị thành công giả khi engine/bridge chưa có.
 - [x] Source auth double-render, provider reservation, `left` transition, stale observer/
       RAF, reduced-motion listener, blanket will-change và PWA gesture đã có regression
       theo R216.
-- [x] Current source motion/admin focused suite `29/29` pass; product presentation suite
-      `188/188` pass; runtime FPS/CLS/LCP/INP vẫn mở.
+- [x] Current source motion/admin focused suite `29/29`, auth/landing lifecycle/compositor
+      suite `42/42`, product presentation suite `188/188` pass; runtime FPS/CLS/LCP/INP vẫn mở.
 - [~] Browser motion acceptance còn mở: chưa có trace FPS/CLS/LCP/INP và chưa chứng minh
       scroll reveal không tạo vùng trống trên runtime mới.
 - [ ] Kiểm tra micro 150–300ms, exit nhanh hơn entry; auth/customer entrance giữ 680ms theo

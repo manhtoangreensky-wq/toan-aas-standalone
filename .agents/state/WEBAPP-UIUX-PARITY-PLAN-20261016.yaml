@@ -64,7 +64,7 @@ ordered_waves:
   - id: W6
     spec: R217-10
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Static motion/admin focused 29/29 and product presentation 188/188 green; runtime trace and scroll evidence open."
+    note: "Static motion/admin focused 29/29, auth/landing lifecycle/compositor 42/42 and product presentation 188/188 green; runtime trace, AX keyboard and scroll evidence open."
   - id: W7
     spec: R217-11
     status: BLOCKED
