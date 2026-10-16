@@ -540,3 +540,12 @@ Các số liệu local bên dưới mô tả batch PR #425 trước khi ship.
 - Fresh focused gate: `151 passed`, `2` dependency warnings, `0` failed. Protected exact-main/candidate đều `68 passed / 2` CSS-tail baseline failures; `NEW_FAILURES=0`. Node syntax `3/3`, diff-check `0`.
 - Signed local Browser: `20` trạng thái = VI/EN × sáng/tối × `1440/1024/768/390/360`; `14/14` assertions đạt, console/network sau readiness `0`, request ghi Operations `0`, page overflow/clipping/high-level horizontal scroller `0`, contrast và touch target đạt.
 - Codex Security scan `8bc4f21a-ed08-46ed-a7ba-ec0a0ae6e8ed` lưu partial draft với `0` finding trên `7` changed-file surfaces; Workbench inventory lỗi `destination escaped its bound context`, nên đây không phải plugin PASS.
+
+### Cập nhật WebApp UI shell ngày 16/10/2026
+
+Bản WebApp candidate hiện giữ modal hướng dẫn cài ứng dụng trên nền xanh navy/xanh ngọc:
+lớp phủ dùng `rgba(3, 20, 43, .86)`, thanh chọn tab dùng `rgba(5, 31, 57, .92)` và
+không còn nền đen trong vùng modal. Đây là thay đổi giao diện tĩnh, không tạo request,
+không đổi phiên đăng nhập, dữ liệu, ví Xu hay cấu hình vận hành. Regression riêng
+`tests/install-modal-navy-palette.test.mjs` đạt `1 passed`, exit `0`; live production
+chưa được gọi là đã cập nhật vì PR #647 chưa có deployment.

@@ -22,7 +22,7 @@ ordered_waves:
   - id: W1
     spec: R217-01
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Source fixes locked: landing flex-wrap at <=420px and no landing install banner/FAB before beforeinstallprompt; focused 39/39 and full Node 470/470. Live probe 2026-10-16 still sees old fingerprint local-57e76aa281dcc721fdaa, nowrap header and fixed FAB at 327x668. PR #647 GitHub page confirms branch has not been deployed and shows no deployments; delivery recheck remains open."
+    note: "Source fixes locked: landing flex-wrap at <=420px, no landing install banner/FAB before beforeinstallprompt, and install-guide modal uses navy/teal surfaces without black backdrop/tab fills. Focused 39/39 and full Node 470/470 were green before the latest modal regression, which also passes separately. Live probe 2026-10-16 still sees old fingerprint local-57e76aa281dcc721fdaa, nowrap header and fixed FAB at 327x668. PR #647 GitHub page confirms branch has not been deployed and shows no deployments; delivery recheck remains open."
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN
@@ -104,4 +104,4 @@ created_files:
   - docs/superpowers/specs/2026-10-16-r217-11-authenticated-qa-matrix.md
   - docs/superpowers/specs/2026-10-16-r217-12-live-readonly-recheck.md
   - docs/superpowers/specs/2026-10-16-r217-13-deferred-technical-register.md
-next_action: "Push documentation commit only; report links and wait for Owner to open W1."
+next_action: "Continue W1 source closeout in checklist order, then update evidence and push; live gates remain open until a delivered bundle is rechecked."

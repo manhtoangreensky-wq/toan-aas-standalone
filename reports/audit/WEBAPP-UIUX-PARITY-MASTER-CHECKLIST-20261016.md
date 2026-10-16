@@ -55,6 +55,9 @@
       `tests/pwa-landing-install-placement.test.mjs`.
 - [x] **SOURCE-UI-02:** cụm điều khiển landing ở ≤420px có `flex-wrap: wrap`, giữ brand
       row và tránh ép locale/theme/CTA thành một hàng. Regression gate header đã cập nhật.
+- [x] **SOURCE-UI-03:** modal hướng dẫn cài ứng dụng giữ đúng nền xanh navy/xanh ngọc;
+      lớp phủ và thanh chọn tab không còn dùng nền đen. Regression nằm ở
+      `tests/install-modal-navy-palette.test.mjs`.
 - [x] Source recheck sau W1: focused PWA/auth/utility/motion `39/39`, toàn bộ Node
       `470/470`, `node --check static/portal/portal.js`, `git diff --check` đạt.
 - [!] Python Admin/PWA contract chưa chạy: bundled Python không có module `pytest`; đây

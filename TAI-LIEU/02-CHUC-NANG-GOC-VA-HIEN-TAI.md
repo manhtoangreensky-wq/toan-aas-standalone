@@ -319,3 +319,10 @@ Chỗ tài liệu cũ không còn đúng: tài liệu/ảnh nào còn mô tả r
 Khung A09 đã merge trong PR #423 tại `6298057…`; Admin Support đã merge trong PR #424 tại `cc3b468…`. Trạng thái “candidate chưa merge” phía trên là lịch sử trước các PR, không phải trạng thái hiện hành. Tuy nhiên, việc dịch thanh điều hướng hoặc một route không chứng minh toàn bộ phân hệ Admin đã thuần ngôn ngữ.
 
 Admin Support đã ship với danh mục riêng cho danh sách/chi tiết, phân công, chuyển cấp và thông báo cố định; final focused `84` bài đạt và local Browser QA `40` trạng thái. Signed production DOM của Support vẫn chưa có, và các route Admin khác tiếp tục được xử lý tuần tự; không khẳng định toàn Admin đã hoàn thiện.
+
+### Đối chiếu UI shell ngày 16/10/2026
+
+Chức năng hướng dẫn cài ứng dụng vẫn giữ nguyên hành vi và điều kiện hiển thị; chỉ màu nền
+modal được chuẩn hóa theo design system xanh navy/xanh ngọc. Source candidate có một
+regression test riêng đạt `1/1`; không có thay đổi route, action, API hoặc output sản phẩm.
+PR #647 vẫn cần delivery trước khi đối chiếu live.

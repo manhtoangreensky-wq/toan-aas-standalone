@@ -53,6 +53,9 @@ git diff --check
   a native `beforeinstallprompt` is available; iOS guide remains eligible.
 - `tests/pwa-landing-install-placement.test.mjs`: no-prompt landing regression added.
 - `tests/current-main-motion-static-gates.test.mjs`: header wrap regression strengthened.
+- `static/portal/portal.css`: install-guide backdrop và tab strip chuyển từ lớp đen sang
+  xanh navy có alpha; giữ chữ trắng và màu nhấn xanh ngọc.
+- `tests/install-modal-navy-palette.test.mjs`: khóa bảng màu modal, không cho nền đen quay lại.
 - Evidence: focused W1/PWA/auth/utility/motion `39/39`; full Node `470/470`; JS syntax and
-  `git diff --check` pass. Live runtime evidence is still open because the deployed asset
+  `git diff --check` pass; regression modal navy pass riêng. Live runtime evidence is still open because the deployed asset
   fingerprint has not been rechecked after this source delivery.
