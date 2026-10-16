@@ -701,7 +701,7 @@ Regression riêng `2/2`, focused Composer/Direction/SFX/Voice/Media `33/33`, ful
 `502/502`, baseline `500/500`, `NEW_FAILURES=0`; browser/AX/live và Python contract chưa chạy.
 ## Checkpoint nguồn WebApp — SOURCE-ADMIN-05 Customer 360 — 17/10/2026
 
-Candidate hiện tại là working tree trên nhánh `webapp-plan-r116`, dự kiến push vào
+Candidate đã push là `a0069fa866a866dc319bcea91e5c2da867433c94` trên nhánh
 `webapp-checklist-r116`/PR #647. Đợt này chỉ đổi fixed chrome Customer 360 và safety modal
 trong `static/portal/portal.js` + `static/portal/portal-i18n.js`; không đổi route, action,
 field, capability, CSRF, idempotency, revision, dữ liệu customer, RBAC/ABAC, ví/Xu, ledger,

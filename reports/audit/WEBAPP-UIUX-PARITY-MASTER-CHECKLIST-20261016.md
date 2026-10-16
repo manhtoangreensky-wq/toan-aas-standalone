@@ -324,8 +324,8 @@ hiển thị thành công giả khi engine/bridge chưa có.
       (an toàn tài khoản, trạng thái phiên, ví/tài chính, tác vụ/tệp, hỗ trợ, nhật ký,
       nút khóa/mở khóa, cảnh báo, nhãn lý do và nút đóng/hủy) sang catalogue
       `adminCustomer360.*` cân bằng VI/EN/ZH. Dữ liệu động, mã tài khoản, role/status server,
-      `admin-customer-*` actions, wallet/ledger truth và safety boundary không đổi. Candidate
-      source trước commit: `41cce2819d52e79f6c39a1764b4bddc14a8771e1`; thay đổi đang ở working tree.
+      `admin-customer-*` actions, wallet/ledger truth và safety boundary không đổi. HEAD sau
+      batch: `a0069fa866a866dc319bcea91e5c2da867433c94`; nhánh PR đã push.
 - [x] Regression mới `tests/admin-customer-360-locale-purity.test.mjs`: `3/3`; full Node
       suite sau batch: `512/512`, `NEW_FAILURES=0`; `node --check static/portal/portal.js`,
       `node --check static/portal/portal-i18n.js` và `git diff --check` đạt.
