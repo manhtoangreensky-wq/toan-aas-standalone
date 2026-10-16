@@ -315,10 +315,11 @@ hiển thị thành công giả khi engine/bridge chưa có.
 - [x] **SOURCE-ADMIN-03:** `/admin/publishing` domain center dùng catalogue
       `adminDomainUi.publishing.*` cho title/description, 4 stream, 3 boundary và common
       permission/read-only chrome; giữ nguyên 4 route và server authorization filter.
-- [x] `adminDomainUi.growth.*` và `adminDomainUi.trends.*` đã nối vào `/admin/growth` và
-      `/admin/trends`, bao phủ title/description, stream và boundary; route allowlist giữ nguyên.
 - [x] Regression Admin domain/provider/topup `7/7`; full Node suite `509/509`, syntax và
       `git diff --check` đạt.
+- [x] **SOURCE-ADMIN-04:** `/admin/growth` và `/admin/trends` dùng catalogue
+      `adminDomainUi.growth.*` và `adminDomainUi.trends.*` cho title, description, stream,
+      boundary và common permission/read-only chrome; route allowlist không đổi.
 - [ ] Owner thấy toàn bộ; role khác chỉ thấy module/action theo policy hiển thị. UI phải
       nói rõ quyền bị thiếu thay vì nút chết.
 - [ ] Mỗi customer action có request/job/asset/report reference và trạng thái audit trên
