@@ -3,17 +3,18 @@ phase: VERIFY
 objective: "Tiếp tục thực thi tuần tự plan/checklist/spec WebApp standalone; khóa từng lỗi UI/UX/locale bằng bằng chứng source, giữ runtime/live mở khi chưa có delivery."
 scope: "Customer shell, Admin shell, product-lane UI/UX, locale, responsive, accessibility, motion và browser/live evidence."
 out_of_scope: "Bot/Core code, route-engine, provider calls, wallet/Xu, PayOS, production data và backend mutation."
-base_remote_sha: f59eacf63a49534854dc7cde06e5baed6546dc58
+base_remote_sha: ea914bb45966237106d8a8e8c1464604ffaba42b
 working_branch: webapp-live-r117
-target_branch: webapp-checklist-r116
-pull_request: 647
-status: VERIFIED_LIVE_PARTIAL
-live_pass: PARTIAL_R217_12_READ_ONLY
+target_branch: main
+pull_request: 651
+pull_request_url: https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/651
+status: SOURCE_VERIFIED_DELIVERY_OPEN
+live_pass: NO
 provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
-merge: PR_648_MERGED_506d2b9
-deploy: WORKFLOW_39039077676_SUCCESS_RUNTIME_506d2b9
+merge: NO
+deploy: NO
 ordered_waves:
   - id: W0
     spec: R217-00
@@ -116,5 +117,15 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39036418754 SUCCESS on merge bc0d089: Verify Web App job 117407092586 and Authenticated WebApp QA job 117407581546 passed; authenticated matrix completed 456/456 with safety mutations 0. Deploy 39036918159 then validated health payload TOAN AAS Web App/app.py and active Web/Nginx services; live locale recheck still failed closed."
-next_action: "R217-12 remains LIVE_DRIFT_OPEN until candidate 0ad78e5 is delivered. Run CI/quality gates, then (only with Owner delivery approval) deploy and repeat locale redirect, auth install, PWA placement and 390x844/1440x900 checks; no provider or wallet action."
+last_ci_run: "39054217248 SUCCESS on candidate 7d24327: Verify Web App job 117458760671 and Authenticated WebApp QA job 117459394702 passed; authenticated matrix completed 456/456 with safety mutations 0."
+latest_source_verification:
+  date: 2026-10-18
+  head_sha: 7d2432707d94a91aeff15bbadd620993c4dd298c
+  node_test: "525/525 passed via node --test over tests/**/*.test|spec.(mjs|js|cjs)"
+  node_check: "4/4 passed: portal.js, portal-auth.js, integration.js, portal-motion.js"
+  git_diff_check: PASS
+  python_verifier: NOT_RUN_MISSING_PYTHON
+  provider_calls: 0
+  wallet_mutations: 0
+  production_data_mutations: 0
+next_action: "PR #651 đã có quality gate xanh và provenance khớp nhưng còn Open. Chờ Owner delivery approval riêng trước merge/deploy; sau delivery mới lặp lại live read-only locale redirect, auth install, PWA placement và viewport 390x844/1440x900. Không provider, wallet hoặc production-data action."
