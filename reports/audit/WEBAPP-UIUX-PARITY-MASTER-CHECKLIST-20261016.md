@@ -484,14 +484,19 @@ plugin và môi trường Python/QA server trong lượt này; giữ runtime `OP
       theo R216.
 - [x] Current source motion/admin focused suite `29/29`, auth/landing lifecycle/compositor
       suite `42/42`, product presentation suite `188/188` pass; runtime FPS/CLS/LCP/INP vẫn mở.
+- [x] **R217-10 source timing closeout — 2026-10-17:** `--portal-motion-fast` đã khóa ở
+      `160ms` (micro `150–300ms`), thấp hơn entry `220ms`; auth `680ms` và landing hero
+      `980ms` giữ nguyên. Regression timing mới nằm trong focused motion/auth/PWA `43/43`;
+      full Node `523/523`; `node --check` Auth/Motion `2/2`; `git diff --check` đạt.
 - [~] Browser motion acceptance còn mở: chưa có trace FPS/CLS/LCP/INP và chưa chứng minh
       scroll reveal không tạo vùng trống trên runtime mới.
-- [ ] Kiểm tra micro 150–300ms, exit nhanh hơn entry; auth/customer entrance giữ 680ms theo
-      R216/WA-35 và landing cinematic giữ 980ms; không animate
-      quá 1–2 nhóm chính mỗi view, không dùng linear cho UI.
-- [ ] Kiểm tra route unmount: observer/RAF/timer/listener bị hủy và async hydration không
-      ghi vào shell đã thay.
-- [ ] Kiểm tra `prefers-reduced-motion` trước và khi đang chạy; nội dung vẫn hiển thị.
+- [x] Kiểm tra source micro `160ms`, exit nhanh hơn entry `220ms`; auth/customer entrance giữ
+      `680ms` theo R216/WA-35 và landing cinematic giữ `980ms`; không animate quá 1–2 nhóm
+      chính mỗi view, không dùng linear cho UI.
+- [x] Kiểm tra source route unmount: observer/RAF/timer/listener bị hủy và async hydration
+      không ghi vào shell đã thay; regression lifecycle `42/42`.
+- [x] Kiểm tra source `prefers-reduced-motion` trước và khi đang chạy; nội dung vẫn hiển thị;
+      regression reduced-motion nằm trong `43/43` focused gate.
 - [ ] Chụp Performance trace đại diện desktop/mobile; ghi CLS <0.10, LCP ≤2.5s, INP ≤200ms
       hoặc ghi blocker nếu runtime không đo được.
 
@@ -589,7 +594,7 @@ plugin và môi trường Python/QA server trong lượt này; giữ runtime `OP
 
 | Nhóm | Đã có bằng chứng | Đang mở | Bị chặn/hoãn |
 |---|---:|---:|---:|
-| Source UI/UX/locale/static motion | W2 locale `319/319`; Image source `40/40`; full Node `521/521` | product-lane source acceptance còn mở; runtime/AX chưa đo | 2 source-matrix AI lanes thiếu entitlement (Transform/Upscale) |
+| Source UI/UX/locale/static motion | R217-10 motion `43/43`; full Node `523/523`; Auth/Motion syntax `2/2` | product-lane runtime/AX chưa đo; FPS/CLS/LCP/INP trace chưa có | 2 source-matrix AI lanes thiếu entitlement (Transform/Upscale) |
 | Responsive/PWA live | source fix đã có; CI evidence gần nhất `cb1fab6` | 2 drift (R216-H/R216-P) + ma trận viewport | QA runtime |
 | Customer product parity UI | shell/partial nhiều lane | 6 lane acceptance | real-output bridge |
 | Admin/customer wiring UI | source contracts rải rác | 1 master surface audit | backend/permission mutation |
@@ -611,8 +616,8 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=R217-09 Admin/customer visibility — Product Video source presentation đã khóa
-bốn lane, flow bảy bước, boundary AI/manual và regression focused `11/11`; Content/Workboard/
-Free Tools source set `26/26`; full Node suite `522/522`. Browser/runtime, Admin fixture,
-artifact thật và các bridge vẫn mở; motion vẫn làm cuối cùng.
+NEXT_ACTION=R217-11 Authenticated QA matrix — R217-10 source motion đã khóa timing/lifecycle/
+reduced-motion với focused `43/43`, full Node `523/523`; browser trace/AX/runtime và
+delivery fingerprint vẫn mở. Admin fixture, artifact thật và các bridge vẫn deferred;
+PROVIDER_CALLS=0, WALLET_MUTATIONS=0, DEPLOY=NO, MERGE=NO, LIVE_PASS=NO.
 ```

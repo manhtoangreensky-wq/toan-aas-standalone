@@ -241,7 +241,7 @@
   --portal-scrim-blur: 2px;
   --portal-control-height: 42px;
   --portal-transition: 180ms cubic-bezier(.2, .8, .2, 1);
-  --portal-motion-fast: 140ms;
+  --portal-motion-fast: 160ms;
   --portal-motion-base: 220ms;
   --portal-motion-slow: 420ms;
   --portal-motion-distance: 10px;

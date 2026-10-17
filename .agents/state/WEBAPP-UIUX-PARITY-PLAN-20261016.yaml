@@ -70,7 +70,7 @@ ordered_waves:
   - id: W6
     spec: R217-10
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Static motion/admin focused 29/29, auth/landing lifecycle/compositor 42/42 and product presentation 188/188 green; runtime trace, AX keyboard and scroll evidence open."
+    note: "2026-10-17 source closeout: --portal-motion-fast 160ms (micro 150–300ms and faster than 220ms entry), auth 680ms and landing hero 980ms preserved; focused motion/auth/PWA 43/43, full Node 523/523, Auth/Motion node-check 2/2 and diff-check green. Runtime FPS/CLS/LCP/INP trace, AX keyboard, scroll and delivery evidence remain open."
   - id: W7
     spec: R217-11
     status: BLOCKED
@@ -115,4 +115,4 @@ created_files:
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
 last_ci_run: "39007843300 SUCCESS on 1fe321b; Verify Web App green; browser evidence artifact 10.7 MB; digest sha256:97607fe14b53f75f25eda7f0159b17996f6384a9e87c3dcbaec33d712f4a5f88"
-next_action: "Continue R217-10 motion/perceived-performance source gates after committing the Admin recheck. Keep all product/admin runtime, fixture, bridge and real-output evidence open; no provider, wallet, production or deploy action."
+next_action: "Proceed to R217-11 authenticated QA only when an isolated runtime/fixture is supplied; keep R217-10 browser FPS/CLS/LCP/INP and AX evidence open. No provider, wallet, production, merge or deploy action."

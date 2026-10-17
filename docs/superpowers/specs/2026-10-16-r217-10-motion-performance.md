@@ -45,3 +45,17 @@ node --test tests/r216-motion-lifecycle-compositor.test.mjs tests/current-main-m
 node --check static/portal/portal-auth.js
 node --check static/portal/portal-motion.js
 ```
+
+## Source closeout — 2026-10-17
+
+- Fixed the remaining timing-contract drift: `--portal-motion-fast` is now `160ms`
+  (inside the required `150–300ms` micro-interaction window and still faster than
+  the `220ms` route-entry token).
+- Added a regression assertion covering the micro window, exit-before-entry order,
+  the `680ms` auth entrance and the `980ms` landing hero timeline.
+- Evidence: focused motion/auth/PWA gates `43/43`; full Node suite `523/523`;
+  `node --check static/portal/portal-auth.js` PASS; `node --check
+  static/portal/portal-motion.js` PASS; `git diff --check` PASS.
+- Runtime FPS/CLS/LCP/INP trace, browser AX/scroll evidence and the production
+  delivery fingerprint remain open. No provider call, wallet mutation, merge,
+  deploy or production-data mutation was performed.

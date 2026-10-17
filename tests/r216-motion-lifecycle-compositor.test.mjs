@@ -143,6 +143,21 @@ test('Auth hydration keeps entry phase until the bounded lifecycle settles', () 
   assert.doesNotMatch(render.slice(0, render.indexOf('main.innerHTML =')), /main\.innerHTML/);
 });
 
+test('Portal motion timing keeps micro interactions readable and exit faster than entry', () => {
+  const fast = theme.match(/--portal-motion-fast:\s*(\d+)ms/);
+  const base = theme.match(/--portal-motion-base:\s*(\d+)ms/);
+  const authEntry = auth.match(/AUTH_MOTION_ENTRY_MS\s*=\s*(\d+)/);
+  const landingHero = theme.match(/--portal-landing-motion-hero:\s*(\d+)ms/);
+  assert.ok(fast && base && authEntry && landingHero, 'motion timing tokens must remain explicit');
+  const fastMs = Number(fast[1]);
+  const baseMs = Number(base[1]);
+  assert.ok(fastMs >= 150 && fastMs <= 300, 'micro interactions stay in the 150–300ms window');
+  assert.ok(baseMs >= 150 && baseMs <= 300, 'route entry stays in the 150–300ms window');
+  assert.ok(fastMs < baseMs, 'exit/feedback timing remains faster than route entry');
+  assert.equal(Number(authEntry[1]), 680, 'auth entrance keeps its observable 680ms contract');
+  assert.equal(Number(landingHero[1]), 980, 'landing cinematic hero keeps its 980ms contract');
+});
+
 test('Auth provider hydration does not restart or cut the entry animation', async () => {
   const app = await mountAuthMotionLifecycle();
   assert.equal(app.attributes.get('data-auth-motion-phase'), 'entry');
