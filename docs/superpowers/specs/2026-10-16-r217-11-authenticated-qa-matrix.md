@@ -15,11 +15,13 @@ Ma trận bắt buộc: customer + Admin × VI/EN/ZH × light/dark × 375/390/76
 Mỗi route ghi title/heading/CTA/field, AX name, focus order, screenshot, console, network,
 persistence sau reload và state transitions input/preflight/confirm/progress/result/recovery.
 
-Routes tối thiểu: `/welcome`, `/dashboard`, `/features`, `/image/create`, `/voice/create`,
+Routes tối thiểu: `/welcome`, `/dashboard`, `/features`, `/image/create`, `/voice/tts`,
 `/music`, `/subdub`, `/tools/video`, `/video/create`, `/workboard`, `/campaigns`,
 `/free-prompt-gallery`, `/wallet/topup`, `/admin`, `/admin/operations`, `/admin/payments`,
 `/admin/customers`, `/admin/audit`, `/admin/support`.
 
+`/voice/tts` là route Voice canonical hiện tại; `/voice/create` là alias legacy được giữ để
+probe route tương thích và phải ghi cả requested route lẫn resolved route trong evidence.
 `/admin/payments` là route quản trị thanh toán canonical hiện tại. `/admin/billing` là tên
 legacy trong một số tài liệu cũ và chỉ được ghi nhận như một alias/probe riêng nếu runtime có
 route chuyển hướng; không dùng nó để thay thế route canonical trong acceptance matrix.
