@@ -25,9 +25,10 @@
 - [x] Không provider call, wallet/Xu mutation, PayOS mutation, production data mutation,
       merge hoặc deploy trong lượt lập plan.
 - [x] Fixed chrome VI/EN/ZH phải một ngôn ngữ; tên riêng/danh từ được phép giữ nguyên.
-- [~] QA runtime cô lập trên máy dev vẫn thiếu dependency, nhưng runner CI riêng
-      `scripts/ci/run_authenticated_qa_matrix.py` đã được thêm với DB SQLite tạm,
-      fixture theo locale và không bật provider/wallet; chỉ đóng khi CI tạo đủ 456 bản ghi.
+- [~] QA runtime cô lập trên máy dev vẫn thiếu dependency; runner CI riêng
+      `scripts/ci/run_authenticated_qa_matrix.py` đã chạy thành công với DB SQLite tạm,
+      fixture theo locale và không bật provider/wallet. Ma trận R217-11 đã được đóng bằng
+      artifact CI; runtime local vẫn giữ mở riêng cho lần đo trace/FPS nếu có môi trường phù hợp.
 - [ ] Antigravity handoff chỉ được đánh dấu PASS khi có log thật; không dùng báo cáo giả.
 
 ## 1. W0 — Baseline và evidence ledger
@@ -543,10 +544,19 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       `.github/workflows/webapp-quality.yml` cài dependency trong runner CI và upload artifact;
       contract route/count/safety `tests/test_r21711_authenticated_qa_runner_contract.py` được
       đưa vào critical WebApp contracts.
-- [ ] **RUNTIME-R217-11-01:** CI phải tạo đủ `456/456` bản ghi, `0` console error/warning,
-      `0` external/provider/payment/wallet mutation, `0` overflow và reload state khớp;
-      chỉ khi có artifact thật mới đóng ma trận. Run `39023945997` bị chặn trước job này do
-      provenance; job authenticated QA hiện vẫn `skipped`, chưa có artifact.
+- [x] **RUNTIME-R217-11-01 — CLOSED_WITH_EVIDENCE — 2026-10-17:** CI run `39025580717`
+      (job `117376311018`) trên HEAD `4b25d452f03c027cc52309ad8b2184548051ffcf`
+      tạo artifact thật `webapp-authenticated-qa-4b25d452f03c027cc52309ad8b2184548051ffcf`.
+      JSON ghi `records_expected=456`, `records_completed=456`, `records_passed=456`,
+      `records_failed=0`, `provider_calls=0`, `wallet_mutations=0`,
+      `production_data_mutations=0`. Đối soát 456 record: HTTP/route/locale/theme mismatch
+      đều `0`; console errors/warnings, page errors, failed requests, external requests và
+      forbidden mutations đều `0`; reload route/locale/theme mismatch `0`. Predicate PASS
+      của runner bao gồm `horizontal_overflow=false`, nên `456/456` pass tương đương `0`
+      overflow failure. Artifact ZIP local có SHA-256
+      `2f3edea16f53dfb9df47ed42d093550384f69c2a3e38708e6aec33f02fef45ef`, khớp digest
+      GitHub; browser evidence artifact digest là
+      `sha256:e77bdd574f7ea5a08a096c58bb87e5447f8b352cbc1cc0bbad3df3096a931d1a`.
 - [!] **CI run `39024899449` — 2026-10-17:** quality gate nền đã xanh nhưng runner R217-11
       dừng khi tạo fixture tại `_set_fixture_locale`: schema thực tế lưu locale ở
       `web_account_profiles`, không phải `web_accounts`, nên job báo
@@ -668,9 +678,9 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=R217-11 Authenticated QA matrix — source runner đã sẵn sàng, chờ CI artifact
-`456/456`; R217-10 source motion đã khóa timing/lifecycle/reduced-motion với focused
-`43/43`, full Node `523/523`; browser trace/AX/runtime và delivery fingerprint vẫn mở.
-Admin fixture, artifact thật và các bridge vẫn deferred;
+NEXT_ACTION=R217-12 Live read-only recheck sau khi R217-11 đã CLOSED_WITH_EVIDENCE; R217-10
+source motion đã khóa timing/lifecycle/reduced-motion với focused `43/43`, full Node `523/523`;
+browser trace/AX runtime, delivery fingerprint và các bridge vẫn mở. Các lane chưa có engine
+vẫn phải giữ guarded boundary; không suy diễn artifact QA thành real output;
 PROVIDER_CALLS=0, WALLET_MUTATIONS=0, DEPLOY=NO, MERGE=NO, LIVE_PASS=NO.
 ```

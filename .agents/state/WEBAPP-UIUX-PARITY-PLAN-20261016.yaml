@@ -73,8 +73,8 @@ ordered_waves:
     note: "2026-10-17 source closeout: HEAD_SHA=2d756b8db62f74cb331065c3b9ec74691f06a8cd pushed to PR #647; --portal-motion-fast 160ms (micro 150–300ms and faster than 220ms entry), auth 680ms and landing hero 980ms preserved; focused motion/auth/PWA 43/43, full Node 523/523, Auth/Motion node-check 2/2 and diff-check green. Three Python motion contracts were synchronized to 160ms but Python/pytest is unavailable. CI run 39015089989 then exposed stale migration provenance (recorded 4dbdf2…, current 8ee8c913…); refresh is prepared at HEAD fe146c191ffd7abc2d6d4d8a679e3630ccea1a0e and local verify returned ok. Runtime FPS/CLS/LCP/INP trace, AX keyboard, scroll and delivery evidence remain open."
   - id: W7
     spec: R217-11
-    status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "2026-10-17: local bundled Python still lacks fastapi/uvicorn/pytest/websockets, so no local runtime claim is made. Added scripts/ci/run_authenticated_qa_matrix.py and an authenticated-qa CI job that installs isolated dependencies, creates six locale fixtures in temporary SQLite, and records the required 456-route matrix. Source Admin fixture remains green (CI run 39021192324). CI run 39023945997 stopped before this job because migration provenance recorded bf9084e4509b while current HEAD 3e5cd367a48e8d673a16d5184b2a45946b3275b6 fingerprints c9bbeab9d557. Run 39024899449 passed the base gate but R217-11 exposed a fixture schema error (`web_accounts` has no locale column); runner now writes role/canonical to `web_accounts` and locale to `web_account_profiles`, with a source contract guard. Artifact 456/456 remains open."
+    status: CLOSED_WITH_EVIDENCE
+    note: "2026-10-17: local bundled Python vẫn thiếu fastapi/uvicorn/pytest/websockets nên không có local runtime claim. CI run 39025580717 / job 117376311018 trên HEAD 4b25d452f03c027cc52309ad8b2184548051ffcf đã tạo và đọc artifact authenticated matrix: 456/456 completed, 456/456 passed, records_failed=0; HTTP/route/locale/theme mismatch=0; console errors/warnings/page errors/failed requests/external requests/forbidden mutations=0; reload mismatch=0; pass predicate bao gồm horizontal_overflow=false. provider_calls=0, wallet_mutations=0, production_data_mutations=0. Artifact digest sha256:2f3edea16f53dfb9df47ed42d093550384f69c2a3e38708e6aec33f02fef45ef; browser evidence digest sha256:e77bdd574f7ea5a08a096c58bb87e5447f8b352cbc1cc0bbad3df3096a931d1a. R217-11 đóng bằng chứng; local trace/FPS và real output vẫn thuộc spec khác."
   - id: W8
     spec: R217-12
     status: LIVE_DRIFT_OPEN
@@ -116,5 +116,5 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39024899449 FAILED: Verify Web App passed; Authenticated WebApp QA stopped in fixture setup with sqlite3.OperationalError no such column: locale. Runner was corrected to use web_account_profiles for locale; rerun CI and inspect the artifact."
-next_action: "Refresh Web provenance after the runner fix, commit/push, and rerun CI. Inspect the authenticated QA artifact for 456/456 before opening R217-12. Product Video source/browser gate is closed for this correction, but authenticated runtime, FPS/CLS/LCP/INP, upload/render/delivery and real artifacts remain open; no provider, wallet, production, merge or deploy action."
+last_ci_run: "39025580717 SUCCESS: Verify Web App and Authenticated WebApp QA passed; job 117376311018 artifact 456/456 passed and was read directly."
+next_action: "Proceed in order to R217-12 live read-only recheck only; keep runtime/trace/delivery evidence open and do not infer real provider output from QA artifact. No provider, wallet, production, merge or deploy action."

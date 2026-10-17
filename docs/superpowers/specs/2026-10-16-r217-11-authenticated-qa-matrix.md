@@ -1,6 +1,6 @@
 # R217-11 — Authenticated QA matrix và bot-parity evidence
 
-**Status:** `SOURCE_GREEN_RUNTIME_OPEN` (runner CI đã có; artifact runtime đầu tiên đang chờ)
+**Status:** `CLOSED_WITH_EVIDENCE` (CI authenticated matrix và artifact đã được đọc/đối soát)
 **Wave:** W7
 
 ## Chặn CI hiện tại — 2026-10-17
@@ -66,14 +66,14 @@ python -m pytest tests/test_browser_runtime_gate.py -q
 Nếu runtime không chạy ở máy dev, giữ trạng thái runtime mở và dùng job CI cô lập; không tạo
 fixture ở production.
 
-## Verification attempt 2026-10-17
+## Verification attempt 2026-10-17 (local, historical)
 
 Bundled Python `3.12.14` was available, but the isolated runtime had no `fastapi`, `uvicorn`,
 `pytest` or `websockets`. A temporary install outside the repository was attempted with
 `pip install -r requirements-dev.txt`; the environment could not resolve `pypi.org`, ending
-with `NameResolutionError` and no matching `fastapi` distribution. The QA server therefore
-did not start, no fixture was created, and R217-11 remains `BLOCKED`. The next valid opening
-condition is a user supplied or preloaded isolated QA runtime; production is not a substitute.
+with `NameResolutionError`. The local QA server therefore did not start; this remains a local
+runtime limitation only. CI is the authoritative isolated runtime for this matrix, and
+production is not a substitute.
 
 ## Source fixture contract 2026-10-17
 
@@ -100,4 +100,26 @@ customer, 6 route Admin, 3 locale, 2 theme và 4 viewport trước khi chạy br
 Artifact chỉ được coi là đạt khi có đủ `456/456` bản ghi, mọi bản ghi có route/locale/theme/
 viewport/timestamp, DOM + AX + focus + screenshot + console + network + reload evidence,
 không có lỗi console/warning, request ngoài origin, mutation bị cấm hoặc tràn ngang. Source
-runner đã được kiểm tra cú pháp; runtime status vẫn mở cho tới khi CI trả artifact thật.
+runner đã được kiểm tra cú pháp.
+
+## Closeout evidence — 2026-10-17
+
+CI run `39025580717` trên PR #647 hoàn tất `Success` trong `7m 11s`; job
+`117376311018` (`Authenticated WebApp QA (R217-11)`) hoàn tất trong `4m 11s`.
+Artifact `webapp-authenticated-qa-4b25d452f03c027cc52309ad8b2184548051ffcf` có digest
+`sha256:2f3edea16f53dfb9df47ed42d093550384f69c2a3e38708e6aec33f02fef45ef`; browser evidence
+artifact `webapp-browser-evidence-4b25d452f03c027cc52309ad8b2184548051ffcf` có digest
+`sha256:e77bdd574f7ea5a08a096c58bb87e5447f8b352cbc1cc0bbad3df3096a931d1a`.
+
+Đã đọc trực tiếp `r21711-authenticated-qa-matrix.json` và đối soát:
+
+- `records_expected=456`, `records_completed=456`, `records_passed=456`, `records_failed=0`.
+- `provider_calls=0`, `wallet_mutations=0`, `production_data_mutations=0`.
+- HTTP non-200, route/locale/theme mismatch, console errors/warnings, page errors,
+  failed requests, external requests, forbidden mutations và reload mismatch đều `0`.
+- Predicate PASS của runner kiểm tra `horizontal_overflow=false`; 456/456 record PASS nên
+  không có overflow failure.
+
+Kết luận: R217-11 được `CLOSED_WITH_EVIDENCE`. Đây là bằng chứng DOM/AX/responsive và an
+toàn QA cô lập, không phải bằng chứng real provider output, wallet approval, production
+deployment hoặc LIVE; các phần đó vẫn ở spec riêng theo checklist.
