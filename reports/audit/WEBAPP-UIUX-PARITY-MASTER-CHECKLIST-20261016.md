@@ -565,6 +565,17 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       browser evidence digest `sha256:f3283ecc640acd428458286e1dfaef1f2e42bda339c9cdbacef3c86062bb3c55`.
       Rerun giữ nguyên ma trận `456/456` và safety predicate; chỉ còn warning môi trường Node 20/
       Ubuntu image, không có source/test failure. R217-11 vẫn đóng; không nâng thành LIVE.
+- [x] **RUNTIME-R217-11-03 — CLOSED_WITH_EVIDENCE — 2026-10-17:** Rerun mới nhất trên HEAD
+      `6c70cb0171244e5c817af1e9ff75c098b76f50fc` tại workflow `39030607461` hoàn tất
+      `Success` trong `7m20s`; `Verify Web App` job `117390119739` xanh trong `3m04s`,
+      `Authenticated WebApp QA` job `117390664800` xanh trong `4m09s`. Artifact authenticated
+      QA có digest `sha256:db6af37ce65e260ec16990aef1204756b8196dc25b7e5c16749b27ae3ec88888`;
+      browser evidence có digest `sha256:a3da16bc97c3ed371194beb322a0dd87951f2483ddaa7bb2a1c4a44cb8457a8e`.
+      Ma trận giữ `456/456` bản ghi hoàn tất và đạt, mọi mismatch/lỗi console/page/request,
+      reload, tràn ngang, request ngoài origin và mutation bị cấm đều `0`; `provider_calls=0`,
+      `wallet_mutations=0`, `production_data_mutations=0`. Warning Node 20/Ubuntu là cảnh báo
+      môi trường đã biết. R217-11 tiếp tục đóng bằng chứng; R217-12 vẫn `LIVE_DRIFT_OPEN` và
+      `LIVE_PASS=NO` vì production chưa nhận bundle mới.
 - [!] **CI run `39024899449` — 2026-10-17:** quality gate nền đã xanh nhưng runner R217-11
       dừng khi tạo fixture tại `_set_fixture_locale`: schema thực tế lưu locale ở
       `web_account_profiles`, không phải `web_accounts`, nên job báo
@@ -675,7 +686,7 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
 | Responsive/PWA live | source fix đã có; CI evidence gần nhất `cb1fab6` | R216-H/R216-L/R216-P + stale PWA/auth bundle + 390×844/1440×900 viewport matrix | QA runtime/delivery |
 | Customer product parity UI | shell/partial nhiều lane | 6 lane acceptance | real-output bridge |
 | Admin/customer wiring UI | source contracts rải rác | 1 master surface audit | backend/permission mutation |
-| Authenticated QA | source runner + Admin fixture; CI `39029971691` và artifact `456/456` | local runtime/trace riêng | bundled local dependency thiếu; production không thay thế QA |
+| Authenticated QA | source runner + Admin fixture; CI `39030607461` và artifact `456/456` | local runtime/trace riêng | bundled local dependency thiếu; production không thay thế QA |
 | Technical parity/real output | 0 cho bridge AI | 0 trong wave UI | W9 deferred |
 
 ## 12. Quy tắc cập nhật bắt buộc

@@ -74,7 +74,7 @@ ordered_waves:
   - id: W7
     spec: R217-11
     status: CLOSED_WITH_EVIDENCE
-    note: "2026-10-17: local bundled Python vẫn thiếu fastapi/uvicorn/pytest/websockets nên không có local runtime claim. CI rerun 39029971691 / job 117388767101 trên HEAD 0001c11 hoàn tất Success; Verify Web App job 117388290081 cũng xanh. Artifact authenticated matrix giữ 456/456 completed, 456/456 passed, records_failed=0; HTTP/route/locale/theme mismatch=0; console errors/warnings/page errors/failed requests/external requests/forbidden mutations=0; reload mismatch=0; pass predicate bao gồm horizontal_overflow=false. provider_calls=0, wallet_mutations=0, production_data_mutations=0. Artifact digest sha256:328dd0d2d777d3d7c8907b9e0edc6ec85568e5cb745041b67b9383ed6fe147b3; browser evidence digest sha256:f3283ecc640acd428458286e1dfaef1f2e42bda339c9cdbacef3c86062bb3c55. R217-11 đóng bằng chứng; local trace/FPS và real output vẫn thuộc spec khác."
+    note: "2026-10-17: local bundled Python vẫn thiếu fastapi/uvicorn/pytest/websockets nên không có local runtime claim. CI mới nhất 39030607461 trên HEAD 6c70cb0171244e5c817af1e9ff75c098b76f50fc hoàn tất Success trong 7m20s; Verify Web App job 117390119739 xanh, Authenticated WebApp QA job 117390664800 xanh. Artifact authenticated matrix giữ 456/456 completed, 456/456 passed, records_failed=0; HTTP/route/locale/theme mismatch=0; console errors/warnings/page errors/failed requests/external requests/forbidden mutations=0; reload mismatch=0; horizontal_overflow=false. provider_calls=0, wallet_mutations=0, production_data_mutations=0. Artifact digest sha256:db6af37ce65e260ec16990aef1204756b8196dc25b7e5c16749b27ae3ec88888; browser evidence digest sha256:a3da16bc97c3ed371194beb322a0dd87951f2483ddaa7bb2a1c4a44cb8457a8e. R217-11 đóng bằng chứng; local trace/FPS và real output vẫn thuộc spec khác."
   - id: W8
     spec: R217-12
     status: LIVE_DRIFT_OPEN
@@ -116,5 +116,5 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39029971691 SUCCESS: Verify Web App and Authenticated WebApp QA passed on HEAD 0001c11; job 117388767101 artifact 456/456 passed and was read directly."
+last_ci_run: "39030607461 SUCCESS: Verify Web App and Authenticated WebApp QA passed on HEAD 6c70cb0171244e5c817af1e9ff75c098b76f50fc; job 117390664800 artifact 456/456 passed; authenticated digest sha256:db6af37ce65e260ec16990aef1204756b8196dc25b7e5c16749b27ae3ec88888; browser digest sha256:a3da16bc97c3ed371194beb322a0dd87951f2483ddaa7bb2a1c4a44cb8457a8e."
 next_action: "R217-12 remains LIVE_DRIFT_OPEN after the 2026-10-17 read-only recheck. Wait for a valid source delivery, then repeat locale redirect, auth install, PWA placement and 390x844/1440x900 viewport checks; do not infer real provider output from QA artifacts. No provider, wallet, production, merge or deploy action."

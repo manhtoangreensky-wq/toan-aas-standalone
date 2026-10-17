@@ -143,3 +143,23 @@ records, no forbidden mutation/provider/wallet activity). GitHub displayed only 
 Node.js 20 deprecation and Ubuntu image migration notices; neither is a source or test
 failure. R217-11 remains `CLOSED_WITH_EVIDENCE`; this rerun does not alter the separate
 R217-12 production delivery drift or `LIVE_PASS=NO`.
+
+## Rerun evidence — 2026-10-17 — HEAD `6c70cb0171244e5c817af1e9ff75c098b76f50fc`
+
+The latest PR #647 quality gate completed successfully after the provenance refresh:
+
+- Workflow `39030607461` — `Success`, total duration `7m20s`.
+- `Verify Web App` — job `117390119739`, `3m04s`, completed successfully.
+- `Authenticated WebApp QA (R217-11)` — job `117390664800`, `4m09s`, completed successfully.
+- Authenticated QA artifact digest:
+  `sha256:db6af37ce65e260ec16990aef1204756b8196dc25b7e5c16749b27ae3ec88888`.
+- Browser evidence artifact digest:
+  `sha256:a3da16bc97c3ed371194beb322a0dd87951f2483ddaa7bb2a1c4a44cb8457a8e`.
+
+The run retained the same isolated acceptance contract: `456/456` records completed and
+passed, with zero route/locale/theme mismatch, console/page/request errors, reload mismatch,
+horizontal overflow, external requests or forbidden mutations. `provider_calls=0`,
+`wallet_mutations=0`, and `production_data_mutations=0`. The known Node.js 20 deprecation and
+Ubuntu image migration notices remain environment warnings only. R217-11 stays
+`CLOSED_WITH_EVIDENCE`; this CI result does not deliver the source to production and does not
+change R217-12 `LIVE_DRIFT_OPEN` or `LIVE_PASS=NO`.
