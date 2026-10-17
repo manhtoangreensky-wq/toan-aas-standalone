@@ -45,6 +45,14 @@
       `de8d38a9fc9c7cf37e41cdb53fc4420becd20d820732695fcb8ca08ac74006aa`, `284` tệp.
 - [~] CI trên candidate đã xác minh chưa chạy/chưa có kết quả; chỉ run mới của PR #647 sau push
       mới khép gate. Không dùng run cũ trên `66684e8` làm bằng chứng cho HEAD hiện tại.
+- [!] **CI run `39023945997` trên `3e5cd36` — 2026-10-17:** `Verify Web App` dừng ở
+      `Verify committed migration evidence` vì provenance ghi fingerprint cũ
+      `bf9084e4509b` trong khi 284 tệp Web đủ điều kiện trên HEAD hiện tại cho fingerprint
+      `c9bbeab9d557`. Đã làm mới riêng `reports/migration/preflight.json` và
+      `reports/migration/web_inventory.json` theo đúng HEAD `3e5cd367a48e8d673a16d5184b2a45946b3275b6`;
+      kiểm chứng local trả `ok=true`, audit SHA khớp HEAD, quan hệ `ancestor`, fingerprint
+      `c9bbeab9d5578d42e371a96945f805fe4cc2b2b053897becfc7693591dd59491`. Chưa ghi quality
+      gate xanh cho đến khi CI mới chạy lại.
 - [!] CI run `39005931284` trên `39460ee` đã chạy `288 passed, 1 failed`; lỗi duy nhất là
       `tests/test_p0_05d_tester_workspace.py::test_readiness_json_has_explicit_truth_and_file_metadata`:
       metadata của `KIEM-THU/DANH-SACH-CASE.md` còn `159` dòng/bytes/hash cũ trong khi file sau
@@ -537,7 +545,8 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       đưa vào critical WebApp contracts.
 - [ ] **RUNTIME-R217-11-01:** CI phải tạo đủ `456/456` bản ghi, `0` console error/warning,
       `0` external/provider/payment/wallet mutation, `0` overflow và reload state khớp;
-      chỉ khi có artifact thật mới đóng ma trận.
+      chỉ khi có artifact thật mới đóng ma trận. Run `39023945997` bị chặn trước job này do
+      provenance; job authenticated QA hiện vẫn `skipped`, chưa có artifact.
 - [ ] Các lane Image/Voice/Music/SubDub/Video phải có evidence từng state; nếu engine chưa
       có, evidence phải chứng minh guarded boundary chứ không gọi output PASS.
 - [x] **SOURCE-R217-11-02 — 2026-10-17:** Đã thêm fixture test DB tạm với

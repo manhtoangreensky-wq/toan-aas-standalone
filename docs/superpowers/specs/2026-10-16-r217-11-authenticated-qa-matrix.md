@@ -3,6 +3,17 @@
 **Status:** `SOURCE_GREEN_RUNTIME_OPEN` (runner CI đã có; artifact runtime đầu tiên đang chờ)
 **Wave:** W7
 
+## Chặn CI hiện tại — 2026-10-17
+
+Run `39023945997` trên HEAD `3e5cd367a48e8d673a16d5184b2a45946b3275b6` chưa vào được
+ma trận authenticated QA: bước `Verify committed migration evidence` dừng vì
+`reports/migration/preflight.json`/`web_inventory.json` ghi fingerprint `bf9084e4509b`
+nhưng 284 tệp Web đủ điều kiện trên HEAD cho fingerprint `c9bbeab9d557`.
+Đã refresh Web-only provenance tại chỗ; lệnh `--verify-web-evidence` trả `ok=true`, audit
+SHA khớp HEAD và fingerprint đầy đủ là
+`c9bbeab9d5578d42e371a96945f805fe4cc2b2b053897becfc7693591dd59491`. Vì run này fail trước
+job authenticated QA, R217-11 vẫn mở và chưa có artifact `456/456`.
+
 ## Điều kiện mở
 
 - URL/lệnh runtime QA cô lập, DB fixture tách production.

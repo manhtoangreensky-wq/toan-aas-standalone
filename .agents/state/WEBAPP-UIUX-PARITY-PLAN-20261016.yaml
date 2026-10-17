@@ -74,7 +74,7 @@ ordered_waves:
   - id: W7
     spec: R217-11
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "2026-10-17: local bundled Python still lacks fastapi/uvicorn/pytest/websockets, so no local runtime claim is made. Added scripts/ci/run_authenticated_qa_matrix.py and an authenticated-qa CI job that installs isolated dependencies, creates six locale fixtures in temporary SQLite, and records the required 456-route matrix. Source Admin fixture remains green (CI run 39021192324); close R217-11 only after the CI artifact reports 456/456 with zero console/network/overflow failures."
+    note: "2026-10-17: local bundled Python still lacks fastapi/uvicorn/pytest/websockets, so no local runtime claim is made. Added scripts/ci/run_authenticated_qa_matrix.py and an authenticated-qa CI job that installs isolated dependencies, creates six locale fixtures in temporary SQLite, and records the required 456-route matrix. Source Admin fixture remains green (CI run 39021192324). CI run 39023945997 stopped before this job because migration provenance recorded bf9084e4509b while current HEAD 3e5cd367a48e8d673a16d5184b2a45946b3275b6 fingerprints c9bbeab9d557. Web-only evidence was refreshed and local verification returned ok; rerun CI before closing R217-11."
   - id: W8
     spec: R217-12
     status: LIVE_DRIFT_OPEN
@@ -116,5 +116,5 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39018249838 SUCCEEDED: provenance, critical contracts, browser verification, browser runtime assertions, evidence upload and diff gate passed; 6/6 hubs checked and 18 screenshots captured after the explicit /video/finishing primary CTA correction. R217-11 authenticated-qa job added after this run; its first artifact is pending."
-next_action: "Run CI R217-11 authenticated matrix and inspect artifact for 456/456 before opening R217-12. Product Video source/browser gate is closed for this correction, but authenticated runtime, FPS/CLS/LCP/INP, upload/render/delivery and real artifacts remain open; no provider, wallet, production, merge or deploy action."
+last_ci_run: "39023945997 FAILED: Verify Web App stopped at migration provenance because recorded fingerprint bf9084e4509b did not match current source fingerprint c9bbeab9d557 on HEAD 3e5cd367a48e8d673a16d5184b2a45946b3275b6; Authenticated WebApp QA was skipped. Web-only evidence refresh and local verify are now green; rerun CI is required."
+next_action: "Commit/push the Web-only provenance refresh and rerun CI. Inspect the authenticated QA artifact for 456/456 before opening R217-12. Product Video source/browser gate is closed for this correction, but authenticated runtime, FPS/CLS/LCP/INP, upload/render/delivery and real artifacts remain open; no provider, wallet, production, merge or deploy action."
