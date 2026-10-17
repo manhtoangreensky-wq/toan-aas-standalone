@@ -484,3 +484,15 @@ không tuyên bố tương đương runtime với Bot. Việc hợp nhất works
 variants, preview/history và giao nhận ảnh thật vẫn mở trong R217-04. Hai lane AI có
 server-side bridge nhưng đang bị chặn theo source matrix; trạng thái entitlement production
 chưa được kiểm tra trong lượt này.
+
+## Đối chiếu bổ sung — SOURCE-VOICE-01/02 — 17/10/2026
+
+| Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Chọn cách làm Voice | Voice Studio có đúng `3` lane dọc: mặc định, đã lưu và thêm giọng; lần lượt mở `/voice/tts`, `/voice/saved`, `/voice/clone`. | `static/portal/portal.js`; `tests/voice-studio-locale-presentation.test.mjs`; Voice batch `126/126` |
+| Locale Voice Studio | Fixed chrome của lane mới dùng cùng catalogue `customerVoiceStudio` ở `3/3` locale VI/EN/ZH; tên hồ sơ và dữ liệu máy chủ không bị dịch. | `static/portal/portal-i18n.js`; regression locale Voice |
+| Màu và responsive | Voice Studio/Voice Vault dùng xanh dương–xanh ngọc/nền xanh navy; rail xếp `1` cột ở `max-width: 820px`; focus ring và hover được giữ. | `static/portal/portal.css`; `node --check` `2/2`; không có browser/live evidence trong batch |
+| TTS/Voice Library/clone/preview/output thật | Chưa đóng; lane chỉ mở đúng route và giữ nhãn được bảo vệ, không dựng tệp hay trạng thái hoàn tất. | Runtime/bridge/provider/Voice Library handoff chưa được xác minh; tiếp tục mở R217-05 runtime |
+
+Batch này chỉ đóng phần trình bày UI/UX của Voice. Không được gọi đây là parity runtime với Bot,
+không đổi ví/Xu, quyền, route/action/field/capability hoặc dữ liệu production.

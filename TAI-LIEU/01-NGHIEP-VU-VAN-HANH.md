@@ -735,3 +735,20 @@ thời điểm, action/outcome audit hoặc số tiền. Không thay giá trị 
 Customer 360 thành quyền ghi ví/ledger và không tuyên bố runtime chỉ từ source test.
 
 Kết thúc checkpoint nguồn `SOURCE-ADMIN-05`.
+
+## Checkpoint nguồn WebApp — R217-05 Voice workspace — 17/10/2026
+
+Batch Voice tiếp theo của PR #647 chỉ thay trình bày WebApp trong `static/portal/portal.js`,
+`static/portal/portal-i18n.js`, `static/portal/portal.css` và hợp đồng kiểm thử locale. Voice
+Studio hiện mở đầu bằng ba lối vào dọc: giọng mặc định (`/voice/tts`), giọng đã lưu
+(`/voice/saved`) và thêm giọng (`/voice/clone`). Mỗi thẻ có mô tả mục đích, CTA và nhãn được
+bảo vệ; không thêm audio, upload, provider, job, wallet/Xu hoặc output giả.
+
+- Catalogue `customerVoiceStudio` giữ đủ khóa VI/EN/ZH; lane rail có `3` thẻ và giữ nguyên
+  route/action/field/capability hiện có.
+- Voice Studio/Voice Vault dùng hệ xanh dương–xanh ngọc và nền xanh navy của portal; hover chỉ
+  nâng `1px`, focus ring vẫn nhìn thấy, mobile chuyển về `1` cột ở `max-width: 820px`.
+- Regression Voice/audio/SubDub đạt `126/126`; `node --check` `2/2` tệp Portal và
+  `git diff --check` đạt. Đây là source evidence trên PR #647, chưa phải merge/deploy/live.
+- TTS, clone, preview, output/download và dữ liệu Voice Library nối sang SubDub vẫn là
+  `guarded` vì chưa có runtime/bridge evidence; không suy diễn source pass thành sản phẩm đã chạy.

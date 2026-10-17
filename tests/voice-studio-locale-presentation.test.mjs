@@ -32,6 +32,10 @@ for(const locale of ['vi','en','zh']){
     if(locale==='en') assert.doesNotMatch(text,/[À-ỹ]/);
     assert.match(text,locale==='vi'?/Lưu hồ sơ/:locale==='en'?/Save (?:voice )?profile/:/保存(?:语音)?档案/);
     assert.match(text,locale==='vi'?/Trang trước/:locale==='en'?/Previous page/:/上一页/);
+    assert.equal((html.match(/data-voice-lane=/g)||[]).length,3);
+    for(const href of ['/voice/tts','/voice/saved','/voice/clone']) assert.match(html,new RegExp(`href="${href}"`));
+    assert.equal((html.match(/class="portal-voice-lane-card"/g)||[]).length,3);
+    assert.equal((html.match(/class="portal-voice-lane-action"/g)||[]).length,3);
     assert.match(html,/data-voice-studio-offset="100"/);
     assert.match(html,new RegExp(`/voice-studio/${id}`));
     assert.doesNotMatch(html,/<audio\b|onclick=/i);

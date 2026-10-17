@@ -1632,6 +1632,57 @@ a { color: inherit; text-decoration: none; }
 .portal-voice-studio-events strong { color: #ffe9d6; font-size: 11px; text-transform: capitalize; }
 .portal-voice-studio-events small { margin-top: 3px; color: #c5a8a4; font-size: 9px; }
 
+/* Voice workspace follows the portal's original blue/navy system.  The
+   authoring boundary stays guarded, but its hierarchy must not look like a
+   separate dark/orange product. */
+.portal-voice-studio-intro, .portal-voice-studio-detail-summary { border-color: rgba(111, 183, 255, .24); background: radial-gradient(circle at 89% 12%, rgba(55, 162, 249, .17), transparent 18rem), linear-gradient(145deg, rgba(15, 42, 69, .96), rgba(8, 17, 31, .99)); }
+.portal-voice-studio-intro h2, .portal-voice-studio-detail-summary h2 { color: #eaf7ff; }
+.portal-voice-studio-intro p, .portal-voice-studio-detail-summary p { color: #b7cedd; }
+.portal-voice-studio-intro dl > div, .portal-voice-studio-detail-summary dl > div { border-color: rgba(149, 213, 255, .16); background: rgba(4, 19, 37, .48); }
+.portal-voice-studio-intro dt { color: #8fd8ff; }
+.portal-voice-studio-intro dd, .portal-voice-studio-detail-summary dt { color: #9fb7ca; }
+.portal-voice-studio-detail-summary dd { color: #e5f4ff; }
+.portal-voice-studio-create, .portal-voice-studio-editor, .portal-voice-script-create { background: linear-gradient(150deg, rgba(15, 42, 69, .93), rgba(8, 17, 31, .99)); }
+.portal-voice-studio-policy, .portal-voice-studio-composer, .portal-voice-studio-activity, .portal-voice-studio-boundary { background: linear-gradient(150deg, rgba(13, 36, 60, .9), rgba(7, 17, 31, .99)); }
+.portal-voice-studio-guard-list span { border-color: rgba(111, 183, 255, .16); background: rgba(4, 19, 37, .48); }
+.portal-voice-studio-guard-list strong { color: #d9efff; }
+.portal-voice-studio-guard-list em { border-color: rgba(131, 197, 255, .24); background: rgba(55, 162, 249, .1); color: #b9e3ff; }
+.portal-voice-vault-card { border-color: rgba(111, 183, 255, .18); background: linear-gradient(150deg, rgba(15, 42, 69, .94), rgba(8, 17, 31, .99)); }
+.portal-voice-vault-card:hover { border-color: rgba(131, 197, 255, .52); background: linear-gradient(150deg, rgba(18, 54, 88, .98), rgba(8, 19, 35, 1)); }
+.portal-voice-vault-card.is-default { border-color: rgba(99, 225, 208, .4); background: radial-gradient(circle at 92% 8%, rgba(81, 213, 188, .13), transparent 13rem), linear-gradient(150deg, rgba(13, 54, 69, .98), rgba(8, 17, 31, 1)); box-shadow: inset 0 0 0 1px rgba(99, 225, 208, .08); }
+.portal-voice-vault-meta span, .portal-voice-script-meta span, .portal-voice-reference-list span, .portal-voice-default, .portal-voice-policy-flag { border-color: rgba(131, 197, 255, .2); background: rgba(55, 162, 249, .1); color: #c7e9ff; }
+.portal-voice-default { border-color: rgba(99, 225, 208, .37); background: rgba(81, 213, 188, .12); color: #b9f2e5; }
+.portal-voice-policy-flag { border-color: rgba(255, 211, 122, .35); background: rgba(255, 211, 122, .1); color: #ffe4a3; }
+.portal-voice-studio-filter { border-color: rgba(111, 183, 255, .16); background: rgba(4, 19, 37, .52); }
+.portal-voice-studio-pagination { border-top-color: rgba(111, 183, 255, .18); color: #b9d9ef; }
+.portal-voice-script-card { border-color: rgba(111, 183, 255, .17); background: linear-gradient(145deg, rgba(13, 36, 60, .94), rgba(7, 16, 30, .99)); }
+.portal-voice-script-form, .portal-voice-script-history, .portal-voice-script-history > div, .portal-voice-version-list > article, .portal-voice-studio-events > div { border-top-color: rgba(111, 183, 255, .13); }
+.portal-voice-script-history > strong, .portal-voice-version-list strong, .portal-voice-studio-events strong { color: #dff3ff; }
+.portal-voice-script-history > div, .portal-voice-version-list p { color: #b7cedd; }
+.portal-voice-script-history em { color: #b9e3ff; }
+.portal-voice-version-list small, .portal-voice-studio-events small { color: #91b8d2; }
+.portal-voice-studio-events > div > span:first-child { background: #83c5ff; box-shadow: 0 0 0 4px rgba(131, 197, 255, .12); }
+
+.portal-voice-lane-rail { display: grid; gap: 14px; padding: clamp(18px, 2.6vw, 28px); border: 1px solid rgba(111, 183, 255, .22); border-radius: 20px; background: linear-gradient(145deg, rgba(15, 42, 69, .78), rgba(8, 17, 31, .98)); }
+.portal-voice-lane-heading { max-width: 760px; }
+.portal-voice-lane-heading h2 { margin: 6px 0 7px; color: #eaf7ff; font-size: clamp(21px, 2.5vw, 30px); letter-spacing: -.035em; }
+.portal-voice-lane-heading p { margin: 0; color: #b7cedd; font-size: 12px; line-height: 1.65; }
+.portal-voice-lane-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; }
+.portal-voice-lane-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 11px; min-width: 0; min-height: 132px; padding: 14px; border: 1px solid rgba(111, 183, 255, .17); border-radius: 15px; background: rgba(4, 19, 37, .58); color: #eaf7ff; text-decoration: none; transition: transform .16s ease, border-color .16s ease, background .16s ease; }
+.portal-voice-lane-card:hover, .portal-voice-lane-card:focus-visible { border-color: rgba(131, 197, 255, .56); background: rgba(13, 54, 86, .72); transform: translateY(-1px); }
+.portal-voice-lane-card:focus-visible { outline: 2px solid #83c5ff; outline-offset: 2px; }
+.portal-voice-lane-icon { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid rgba(99, 225, 208, .26); border-radius: 11px; background: rgba(81, 213, 188, .1); color: #a8f1e1; font-size: 17px; }
+.portal-voice-lane-copy { display: grid; gap: 5px; min-width: 0; }
+.portal-voice-lane-copy strong { color: #eaf7ff; font-size: 13px; }
+.portal-voice-lane-copy > span { color: #b7cedd; font-size: 10px; line-height: 1.5; }
+.portal-voice-lane-copy em { width: fit-content; padding: 3px 7px; border: 1px solid rgba(131, 197, 255, .22); border-radius: 999px; background: rgba(55, 162, 249, .1); color: #b9e3ff; font-size: 8px; font-style: normal; font-weight: 760; }
+.portal-voice-lane-action { grid-column: 2; align-self: end; color: #83c5ff; font-size: 10px; font-weight: 760; }
+
+@media (max-width: 820px) {
+  .portal-voice-lane-grid { grid-template-columns: 1fr; }
+  .portal-voice-lane-card { min-height: 0; }
+}
+
 /* Audio Library & Briefing: a private working surface for music/SFX intent
    and Asset Vault references. It deliberately avoids a faux audio player,
    provider dashboard, streaming chrome or landing-page treatment. */

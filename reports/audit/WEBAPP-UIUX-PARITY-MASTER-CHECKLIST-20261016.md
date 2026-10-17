@@ -59,6 +59,11 @@
       `19269` byte/hash cũ trong khi file thực tế là `202` dòng, `19442` byte chuẩn LF, SHA-256
       `6a7b1df026ee816542e49ea9e1263ea0f265cdb7a952bae9a0d600be324eebaa`. Đã cập nhật metadata
       đúng; chờ quality gate kế tiếp, không đổi runtime.
+- [x] CI run `39007843300` trên `1fe321b` đã chạy thành công: `Verify Web App` xanh,
+      browser evidence artifact `10.7 MB`, digest `sha256:97607fe14b53f75f25eda7f0159b17996f6384a9e87c3dcbaec33d712f4a5f88`.
+      Đây là bằng chứng quality gate của candidate trước batch Voice; warning Node 20 bị ép
+      chạy trên Node 24 và Ubuntu runner sắp đổi phiên bản là cảnh báo môi trường, không phải
+      lỗi source.
 - [x] Đối chiếu remote: local cũ lệch; tạo worktree sạch từ `github/webapp-checklist-r116`.
 - [x] Sau quality-gate failure `38958333812`, đã sửa provenance evidence: `284` eligible Web
       files; `preflight.json`, `web_inventory.json` và source hiện cùng fingerprint
@@ -277,6 +282,13 @@ hiển thị thành công giả khi engine/bridge chưa có.
 
 - [ ] Một workspace có giọng mặc định, giọng tự thêm/tải file, voice library, preview,
       lưu/xóa có guard và chọn giọng cho sản phẩm khác.
+- [x] **SOURCE-VOICE-01 — 2026-10-17:** Voice Studio có thanh chọn lane dọc với đúng 3
+      lối vào `/voice/tts`, `/voice/saved`, `/voice/clone`; mỗi thẻ nêu rõ mục đích, CTA
+      và trạng thái được bảo vệ. VI/EN/ZH lấy cùng catalogue `customerVoiceStudio`;
+      không thêm upload, audio, provider hoặc output giả.
+- [x] **SOURCE-VOICE-02 — 2026-10-17:** bề mặt Voice Studio/Voice Vault dùng lại hệ xanh
+      dương–xanh ngọc và nền xanh navy của portal, có focus ring, hover nhẹ và mobile
+      stacking một cột; không còn dùng nền cam/nâu riêng cho khu vực này.
 - [~] Presentation đã nối selector giọng của SubDub tới `/voice-studio` ở cả hai panel lồng
       tiếng/combo; dữ liệu Voice thật và Music handoff vẫn chờ server capability.
       hoặc gọi provider trong QA.
@@ -571,5 +583,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=R217-05 Voice — Image capability audit đã xác nhận reference chưa có trong form và Transform/Upscale bị source-matrix chặn entitlement; giữ R217-04 TODO, chuyển tiếp Voice, rồi Music/SubDub trước Video. Trở lại Image chỉ khi có authority/runtime evidence.
+NEXT_ACTION=R217-06 Music — Voice source presentation đã có lane rail xanh/navy và test Voice 126/126 xanh; runtime TTS/clone/preview/output và Voice Library handoff vẫn guarded. Giữ R217-04/R217-05 runtime mở, chuyển Music theo thứ tự trước SubDub và Video.
 ```

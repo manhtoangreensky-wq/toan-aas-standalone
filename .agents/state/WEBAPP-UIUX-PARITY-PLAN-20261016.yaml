@@ -38,8 +38,9 @@ ordered_waves:
     note: "SOURCE-IMAGE-01 adds a truthful vertical create/edit entry on /image/create with VI/EN/ZH copy; no upload/output/capability added. Source audit SOURCE-IMAGE-02: image_create job API exists but no reference field; image_transform and image_upscale bridges exist yet source runtime matrix records BLOCKED_PROVIDER_ENTITLEMENT; /image/edit is deterministic Image Enhance. No provider/entitlement action. R217-04 stays TODO for browser DOM/AX, unified workspace, references, variants, preview/history and verified outputs."
   - id: W4
     spec: R217-05
-    status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
+    status: SOURCE_GREEN_RUNTIME_OPEN
     name: voice
+    note: "Voice Studio source UI now presents one clear three-lane rail: default voice -> /voice/tts, saved voice -> /voice/saved, add voice -> /voice/clone. VI/EN/ZH use the shared customerVoiceStudio catalogue; Voice Studio surfaces were aligned to blue/navy portal colors with mobile one-column stacking. Focused Voice/SubDub/audio presentation batch is 126/126 green; TTS/clone/preview/output and real Voice Library handoff remain guarded and unverified at runtime."
   - id: W4
     spec: R217-06
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
@@ -110,4 +111,5 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-next_action: "Fix the stale Tester guide metadata found by PR #647 CI (`HUONG-DAN-TESTER.md` is 19,442 normalized bytes, not 19,269), finalize the checklist/state update, refresh Web-only evidence at that final commit, commit only excluded migration outputs afterward, verify and push. Once the quality gate is green, continue R217-05 Voice source/UI, followed by Music/SubDub before Video. Image R217-04 remains TODO until browser DOM/AX, owner-authorized runtime evidence and real output are available; no provider/entitlement mutation."
+last_ci_run: "39007843300 SUCCESS on 1fe321b; Verify Web App green; browser evidence artifact 10.7 MB; digest sha256:97607fe14b53f75f25eda7f0159b17996f6384a9e87c3dcbaec33d712f4a5f88"
+next_action: "Continue R217-06 Music after committing and verifying the Voice source batch. Keep R217-04 Image and R217-05 Voice runtime/real-output evidence open; no provider, wallet, production or deploy action."
