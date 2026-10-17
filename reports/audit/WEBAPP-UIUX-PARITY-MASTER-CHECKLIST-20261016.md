@@ -351,14 +351,17 @@ hiển thị thành công giả khi engine/bridge chưa có.
 
 ### 5.5 Product Video — Spec R217-08
 
-- [ ] Hub dọc liệt kê các lane video hiện có, mỗi lane có mục tiêu, input, output và
-      boundary riêng; không gộp tên kỹ thuật vào CTA.
-- [ ] `/video/create` và `/video/multiscene` giữ flow bảy bước nhập → plan → quote →
-      confirm → progress → result → recovery.
-- [ ] Có AI edit và manual edit: scene/timeline, poster, caption/audio handoff, upload/
-      reference, version/history và report.
-- [ ] Không tuyên bố real MP4/provider output khi parity matrix đang `PARTIAL` hoặc
-      `BLOCKED_BY_RUNTIME`; phải link request/job/report thật nếu có.
+- [x] **SOURCE-VIDEO-01 — 2026-10-17:** Hub dọc chia `10` route duy nhất thành bốn lane
+      lập kế hoạch, tạo video, biên tập/ghép và kiểm tra/bàn giao; mỗi lane có đầu vào,
+      đầu ra và trạng thái `ready`/`guarded` rõ ràng, CTA không lộ jargon kỹ thuật.
+- [x] **SOURCE-VIDEO-02 — 2026-10-17:** Hub trình bày flow bảy bước nhập → plan → quote →
+      confirm → progress → result → recovery; form `/video/create` và `/video/multiscene`
+      giữ nguyên contract bảy bước hiện hữu.
+- [~] **SOURCE-VIDEO-03 — 2026-10-17:** Boundary AI/manual đã có trên hub, đồng thời giữ
+      handoff scene/timeline, poster, audio, reference, version/history và report ở các
+      màn hình chuyên trách. Render MP4, upload và delivery thật vẫn chưa có runtime evidence.
+- [x] **SOURCE-VIDEO-04 — 2026-10-17:** Không tuyên bố real MP4/provider output; card guarded
+      chỉ nêu điều kiện xử lý và CTA xem khả năng, không tạo job, charge, provider hay wallet.
 - [!] `VIDEO_AI_MANUAL_EDIT_UI_MISSING`: AI edit/manual edit/timeline/render MP4/delivery
       chưa có evidence; Video Studio hiện là planning/scene/review/version metadata.
 
@@ -597,7 +600,9 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=R217-08 Product Video — SubDub source presentation đã khóa một màn hình bốn mode,
-volume gốc/giọng riêng, Smart Multi guarded và test `12/12` xanh; runtime upload/voice/output
-vẫn mở. Giữ R217-04/R217-05/R217-06/R217-07 runtime mở, chuyển Product Video trước motion.
+NEXT_ACTION=R217-09A Content/Workboard/Free Tools — Product Video source presentation đã khóa
+bốn lane, flow bảy bước, boundary AI/manual và regression focused `11/11`; full Node suite
+`522/522`; runtime upload,
+render, delivery và artifact thật vẫn mở. Giữ R217-04/R217-05/R217-06/R217-07/R217-08 runtime
+mở; motion vẫn làm cuối cùng.
 ```

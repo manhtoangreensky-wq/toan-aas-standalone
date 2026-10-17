@@ -1,9 +1,10 @@
 # R217-08 — Product Video UI/UX parity
 
-**Status:** `TODO`
+**Status:** `SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN`
 **Wave:** W4
 **Surface:** `/tools/video`, `/video/create`, `/video/multiscene`, `/video-studio`,
-`/video/poster`, `/video/finishing`.
+`/video/text-to-video`, `/video/long`, `/video/product`, `/video/frame-sequence`,
+`/video/mux`, `/video/preview`, `/video/poster`, `/video/finishing`.
 
 ## File có thể sửa khi mở
 
@@ -16,18 +17,21 @@ Không tự nối provider/worker, không fake MP4, không đổi quote/charge/i
 
 ## Contract giao diện
 
-- Hub hiển thị lane theo mục tiêu: prompt-to-video, image-to-video, multi-scene, long video,
-  reference/storyboard/script/idea và local edit.
+- Hub hiển thị bốn lane dọc theo mục tiêu: lập kế hoạch, tạo video, biên tập/ghép và
+  kiểm tra/bàn giao; mỗi lane có đầu vào, đầu ra và trạng thái rõ ràng.
+- Có ba lối bắt đầu nhanh, nhưng danh mục chính chỉ đếm `10` route video duy nhất để tránh
+  người dùng phải đoán hoặc thấy công cụ trùng lặp.
 - Form chính chỉ hỏi input cần thiết; advanced settings trong disclosure.
 - Flow giữ bảy bước `input → plan → quote → confirm → progress → result → recovery`;
   status và report tách khỏi khả năng download.
-- AI edit và manual edit có boundary rõ, timeline/scene/version/history và handoff sang
-  Audio/Image/SubDub.
+- AI edit và manual edit có boundary rõ; các phần timeline/scene/version/history và handoff
+  sang Audio/Image/SubDub vẫn do các màn hình chuyên trách giữ nguyên.
 
 ## Acceptance
 
 - Nhóm tác vụ dọc, CTA không lẫn jargon kỹ thuật, mobile không tràn ngang.
-- Mỗi lane có empty/loading/guarded/failed/completed; output thật mới có download.
+- Mỗi lane giữ trạng thái `ready` hoặc `guarded` đúng với khả năng source hiện tại; không
+  tự hiển thị completed/download khi chưa có output thật.
 - Locale, keyboard/focus, report và evidence không đổi core contract.
 
 ## Verify
@@ -40,8 +44,13 @@ node --test tests/*.test.mjs
 Nếu test tên cũ không tồn tại, dùng đúng focused test được ghi trong R214 và lưu lệnh đã
 chạy; không bỏ qua vì khác tên.
 
-## Current source audit 2026-10-16
+## Source closeout 2026-10-17
 
-Video Hub and Studio presentation tests are green and preserve the ordered brief-to-report
-flow. AI edit, manual timeline editing, render MP4 and delivery remain guarded/planning
-surfaces; no provider output or real artifact evidence exists.
+Video Hub now presents a seven-step journey, four lanes, lane input/output contracts and an
+explicit AI/manual editing boundary. The existing `10` video routes remain unchanged; no
+provider output, MP4, job, quote, charge or wallet mutation was added. The focused source
+regression reports `11` test cases with `11` passed and `0` failed, the full Node suite reports
+`522` passed and `0` failed, `node --check` passes for
+Portal and i18n, and `git diff --check` passes.
+Runtime upload, render, delivery, download and real artifact evidence remain open and must
+not be reported as parity with Bot until a guarded QA/runtime bridge is available.

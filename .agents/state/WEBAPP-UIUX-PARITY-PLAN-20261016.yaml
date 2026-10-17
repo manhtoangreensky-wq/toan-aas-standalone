@@ -56,6 +56,7 @@ ordered_waves:
     spec: R217-08
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
     name: product-video
+    note: "2026-10-17 source closeout: /tools/video now has 4 vertical lanes across 10 unique routes, lane input/output contracts, a 7-step input→plan→quote→confirm→progress→result→recovery journey and explicit AI/manual editing boundary. Focused video presentation test 11/11 and full Node 522/522 pass, node-check Portal/i18n and diff-check green; upload/render/delivery/real artifact runtime remains open."
   - id: W4
     spec: R217-09A
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
@@ -114,4 +115,4 @@ created_files:
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
 last_ci_run: "39007843300 SUCCESS on 1fe321b; Verify Web App green; browser evidence artifact 10.7 MB; digest sha256:97607fe14b53f75f25eda7f0159b17996f6384a9e87c3dcbaec33d712f4a5f88"
-next_action: "Continue R217-08 Product Video after committing and verifying the SubDub source presentation batch. Keep R217-04/R217-05/R217-06/R217-07 runtime and real-output evidence open; no provider, wallet, production or deploy action."
+next_action: "Continue R217-09A Content/Workboard/Free Tools after committing and verifying the Product Video source presentation batch. Keep R217-04/R217-05/R217-06/R217-07/R217-08 runtime and real-output evidence open; no provider, wallet, production or deploy action."

@@ -134,6 +134,17 @@ test("R214 has one balanced VI/EN/ZH generic video-task catalogue", () => {
   }
 });
 
+test("R217 Product Video hub keeps one balanced VI/EN/ZH catalogue", () => {
+  const ctx = createHubHarness("vi");
+  const keysets = ["vi", "en", "zh"].map((locale) => Object.keys(ctx.TOANAASI18n.messages[locale]).filter((key) => key.startsWith("mediaHub.video.")).sort());
+  assert.ok(keysets[0].length >= 80, "Product Video hub catalogue is complete");
+  assert.deepEqual(keysets[1], keysets[0]);
+  assert.deepEqual(keysets[2], keysets[0]);
+  for (const key of ["mediaHub.video.journey.step.recovery", "mediaHub.video.group.planning.input", "mediaHub.video.editorBoundary.manual.title", "mediaHub.video.status.guarded"]) {
+    assert.ok(keysets[0].includes(key), `missing ${key}`);
+  }
+});
+
 const staleHubEnglish = [
   "Video workspace", "Edit video", "Multi-scene video", "Open tool", "Check processing availability",
   "Before processing", "Plan and create AI video"
@@ -152,8 +163,23 @@ for (const locale of ["vi", "en", "zh"]) {
     for (const href of ["/video/finishing", "/video/frame-sequence", "/video/poster", "/video-studio", "/video/multiscene", "/video/product"]) {
       assert.match(html, new RegExp(`href=\\"${href.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}\\"`), href);
     }
+    for (const href of ["/video/preview", "/video/text-to-video", "/video/long", "/video/mux"]) {
+      assert.match(html, new RegExp(`href=\\"${href.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}\\"`), href);
+    }
+    assert.match(html, /data-video-flow/);
+    for (const step of ["input", "plan", "quote", "confirm", "progress", "result", "recovery"]) {
+      assert.match(html, new RegExp(`data-video-step="${step}"`), step);
+    }
+    for (const lane of ["planning", "creation", "editing", "delivery"]) {
+      assert.match(html, new RegExp(`data-video-lane="${lane}"`), lane);
+    }
+    assert.match(html, /portal-video-lane-contract/);
+    assert.match(html, /data-video-editor-boundary/);
+    assert.match(html, /data-video-editor-mode="ai"/);
+    assert.match(html, /data-video-editor-mode="manual"/);
     assert.match(html, /data-tool-state="ready"/);
     assert.match(html, /data-tool-state="guarded"/);
+    assert.doesNotMatch(html, /provider_called|wallet_mutated|job_created|<video\b/i);
   });
 }
 

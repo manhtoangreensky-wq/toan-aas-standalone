@@ -25223,29 +25223,60 @@
   function renderVideoHub(page, context) {
     const t = (key, fallback, params) => uiText(`mediaHub.video.${key}`, fallback, params);
     const quick = [
-      ["finishing", "/video/finishing"],
-      ["frames", "/video/frame-sequence"],
-      ["poster", "/video/poster"]
+      { key: "planning", href: "/video-studio", state: "ready", lane: "planning" },
+      { key: "creation", href: "/video/text-to-video", state: "guarded", lane: "creation" },
+      { key: "editing", href: "/video/finishing", state: "guarded", lane: "editing" }
     ];
     const groups = [
-      ["editing", [["preview", "/video/preview", "ready"]]],
-      ["creation", [
-        ["planning", "/video-studio", "ready"], ["textVideo", "/video/text-to-video", "guarded"],
-        ["multiscene", "/video/multiscene", "guarded"], ["long", "/video/long", "guarded"],
-        ["product", "/video/product", "guarded"], ["mux", "/video/mux", "guarded"]
-      ]]
+      {
+        key: "planning",
+        items: [
+          ["planning", "/video-studio", "ready"], ["long", "/video/long", "guarded"],
+          ["product", "/video/product", "guarded"]
+        ]
+      },
+      {
+        key: "creation",
+        items: [
+          ["textVideo", "/video/text-to-video", "guarded"], ["multiscene", "/video/multiscene", "guarded"],
+          ["frames", "/video/frame-sequence", "guarded"]
+        ]
+      },
+      {
+        key: "editing",
+        items: [
+          ["finishing", "/video/finishing", "guarded"], ["mux", "/video/mux", "guarded"]
+        ]
+      },
+      {
+        key: "delivery",
+        items: [
+          ["preview", "/video/preview", "ready"], ["poster", "/video/poster", "guarded"]
+        ]
+      }
     ];
-    const count = new Set(quick.map((item) => item[1]).concat(groups.flatMap((group) => group[1].map((item) => item[1])))).size;
+    const routes = new Set(groups.flatMap((group) => group.items.map((item) => item[1])));
+    const journeySteps = ["input", "plan", "quote", "confirm", "progress", "result", "recovery"];
+    const quickHtml = quick.map((item, index) => {
+      const descriptionId = `video-quick-${safeText(item.key)}-description`;
+      return `<a class="portal-document-board-action${index === 0 ? " portal-document-board-action--primary" : ""}" data-video-lane="${safeText(item.lane)}" data-tool-state="${safeText(item.state)}" href="${safeText(item.href)}" aria-describedby="${safeText(descriptionId)}"><strong>${safeText(t(`quick.${item.key}.title`, item.key))}</strong><span id="${safeText(descriptionId)}">${safeText(t(`quick.${item.key}.description`, ""))}</span><b aria-hidden="true">→</b></a>`;
+    }).join("");
+    const groupHtml = groups.map((group) => `<section class="portal-document-board-workflow-group portal-video-lane" data-video-lane="${safeText(group.key)}" aria-labelledby="video-${safeText(group.key)}-heading"><div class="portal-document-board-workflow-heading"><div><h2 id="video-${safeText(group.key)}-heading">${safeText(t(`group.${group.key}.title`, group.key))}</h2><p>${safeText(t(`group.${group.key}.description`, ""))}</p></div><span>${safeText(t("count", "{count} công cụ", { count: group.items.length }))}</span></div><dl class="portal-video-lane-contract"><div><dt>${safeText(t("lane.input", "Đầu vào"))}</dt><dd>${safeText(t(`group.${group.key}.input`, ""))}</dd></div><div><dt>${safeText(t("lane.output", "Đầu ra"))}</dt><dd>${safeText(t(`group.${group.key}.output`, ""))}</dd></div></dl><div class="portal-module-grid">${group.items.map(([key, href, state]) => { const descriptionId = `video-${key}-description`; const stateLabel = state === "ready" ? "available" : "guarded"; return `<a class="portal-module-card" data-video-lane="${safeText(group.key)}" data-video-route="${safeText(href)}" data-tool-state="${safeText(state)}" href="${safeText(href)}" aria-describedby="${safeText(descriptionId)}"><div class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.video)}</div><div class="portal-module-copy"><div class="portal-module-heading"><h3>${safeText(t(`${key}.title`, key))}</h3><span class="portal-badge" data-status="${safeText(stateLabel)}">${safeText(t(`status.${stateLabel}`, state))}</span></div><p id="${safeText(descriptionId)}">${safeText(t(`${key}.description`, ""))}</p><span class="portal-module-link">${safeText(t(state === "ready" ? "actions.open" : "actions.details", "Mở công cụ"))} <b aria-hidden="true">→</b></span></div></a>`; }).join("")}</div></section>`).join("");
     return `<article class="portal-page portal-media-hub portal-video-hub">
       ${renderHero(page, context)}
-      <section class="portal-media-hub-compact-summary"><dl><div><dt>${count}</dt><dd>${safeText(t("toolsLabel", "công cụ video"))}</dd></div></dl><p>${safeText(t("subtext", "Mở công cụ để xem thông số và khả năng xử lý."))}</p></section>
-      <section class="portal-document-board-actions" aria-label="${safeText(t("quick.title", "Biên tập video"))}">
-        <div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("quick.title", "Biên tập video"))}</h2><p class="portal-card-subtitle">${safeText(t("quick.description", "Chọn tác vụ bạn cần."))}</p></div></div>
-        <div class="portal-document-board-action-grid">${quick.map(([key, href], index) => `<a class="portal-document-board-action ${index === 0 ? "portal-document-board-action--primary" : ""}" href="${safeText(href)}"><strong>${safeText(t(`${key}.title`, key))}</strong><span>${safeText(t(`${key}.description`, ""))}</span><b aria-hidden="true">→</b></a>`).join("")}</div>
+      <section class="portal-media-hub-compact-summary"><dl><div><dt>${routes.size}</dt><dd>${safeText(t("toolsLabel", "công cụ video"))}</dd></div></dl><p>${safeText(t("subtext", "Mở công cụ để xem thông số và khả năng xử lý."))}</p></section>
+      <section class="portal-card portal-card-pad portal-video-journey" data-video-flow aria-labelledby="video-journey-heading">
+        <div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(t("journey.kicker", "QUY TRÌNH VIDEO"))}</span><h2 id="video-journey-heading" class="portal-card-title">${safeText(t("journey.title", "Một quy trình rõ ràng từ ý tưởng đến báo cáo"))}</h2><p class="portal-card-subtitle">${safeText(t("journey.description", "Mỗi bước chỉ chuyển tiếp khi máy chủ xác nhận trạng thái thật."))}</p></div></div>
+        <ol class="portal-video-journey-list">${journeySteps.map((step, index) => `<li data-video-step="${safeText(step)}"><span aria-hidden="true">${safeText(String(index + 1).padStart(2, "0"))}</span><div><strong>${safeText(t(`journey.step.${step}`, step))}</strong><p>${safeText(t(`journey.step.${step}.description`, ""))}</p></div></li>`).join("")}</ol>
       </section>
-      <section class="portal-document-board-workflows"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("catalog.title", "Các công cụ khác"))}</h2><p class="portal-card-subtitle">${safeText(t("catalog.description", "Chọn theo mục tiêu của video."))}</p></div></div>
-        <div class="portal-document-board-workflow-groups">${groups.map(([group, items]) => `<section class="portal-document-board-workflow-group"><div class="portal-document-board-workflow-heading"><div><h2>${safeText(t(`${group}.title`, group))}</h2><p>${safeText(t(`${group}.description`, ""))}</p></div><span>${safeText(t("count", "{count} công cụ", { count: items.length }))}</span></div><div class="portal-module-grid">${items.map(([key, href, state]) => `<a class="portal-module-card" data-tool-state="${safeText(state)}" href="${safeText(href)}"><div class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.video)}</div><div class="portal-module-copy"><h3>${safeText(t(`${key}.title`, key))}</h3><p>${safeText(t(`${key}.description`, ""))}</p><span class="portal-module-link">${safeText(t(state === "ready" ? "actions.open" : "actions.details", "Mở công cụ"))} <b aria-hidden="true">→</b></span></div></a>`).join("")}</div></section>`).join("")}</div>
+      <section class="portal-document-board-actions portal-video-quick-actions" aria-labelledby="video-quick-heading">
+        <div class="portal-card-header"><div><h2 id="video-quick-heading" class="portal-card-title">${safeText(t("quick.title", "Bắt đầu nhanh"))}</h2><p class="portal-card-subtitle">${safeText(t("quick.description", "Chọn một hướng để bắt đầu."))}</p></div></div>
+        <div class="portal-document-board-action-grid">${quickHtml}</div>
       </section>
+      <section class="portal-document-board-workflows" aria-labelledby="video-catalog-heading"><div class="portal-card-header"><div><h2 id="video-catalog-heading" class="portal-card-title">${safeText(t("catalog.title", "Các lane video"))}</h2><p class="portal-card-subtitle">${safeText(t("catalog.description", "Chọn theo mục tiêu; mỗi lane nêu rõ đầu vào, đầu ra và trạng thái."))}</p></div></div>
+        <div class="portal-document-board-workflow-groups">${groupHtml}</div>
+      </section>
+      <section class="portal-card portal-card-pad portal-video-edit-boundary" data-video-editor-boundary aria-labelledby="video-editor-boundary-heading"><div class="portal-card-header"><div><h2 id="video-editor-boundary-heading" class="portal-card-title">${safeText(t("editorBoundary.title", "Ranh giới biên tập"))}</h2><p class="portal-card-subtitle">${safeText(t("editorBoundary.description", "Phân biệt rõ phần được hỗ trợ bởi AI và phần chỉnh sửa thủ công; không coi bản kế hoạch là tệp video đã tạo."))}</p></div></div><div class="portal-video-edit-boundary-grid"><article data-video-editor-mode="ai"><span class="portal-section-kicker">${safeText(t("editorBoundary.ai.kicker", "NHÁNH AI"))}</span><h3>${safeText(t("editorBoundary.ai.title", "Lập kế hoạch và biên tập có hỗ trợ AI"))}</h3><p>${safeText(t("editorBoundary.ai.description", "Mô tả, kịch bản và cảnh được chuẩn bị trước; xử lý thật chỉ mở khi máy chủ xác nhận."))}</p><span class="portal-badge" data-status="guarded">${safeText(t("status.guarded", "Đang được bảo vệ"))}</span></article><article data-video-editor-mode="manual"><span class="portal-section-kicker">${safeText(t("editorBoundary.manual.kicker", "NHÁNH THỦ CÔNG"))}</span><h3>${safeText(t("editorBoundary.manual.title", "Chỉnh sửa thủ công và hoàn thiện"))}</h3><p>${safeText(t("editorBoundary.manual.description", "Sắp xếp cảnh, ghép âm thanh, chọn khung hình và kiểm tra bản xem trước theo dữ liệu thật."))}</p><span class="portal-badge" data-status="guarded">${safeText(t("status.guarded", "Đang được bảo vệ"))}</span></article></div></section>
       <section class="portal-card portal-card-pad"><h2 class="portal-card-title">${safeText(t("boundary.title", "Trước khi xử lý"))}</h2><p>${safeText(t("boundary.description", ""))}</p></section>
     </article>`;
   }

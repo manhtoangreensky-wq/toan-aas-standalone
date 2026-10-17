@@ -6365,6 +6365,37 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-document-board-action span { color: var(--portal-muted-strong); font-size: 13px; line-height: 1.55; }
 .portal-document-board-action b { margin-top: auto; color: var(--portal-accent); font-size: 14px; }
 
+/* Product Video hub: keep the source catalogue readable without implying that
+ * a guarded lane has produced a real video artifact. */
+.portal-video-hub { min-width: 0; }
+.portal-video-journey { display: grid; gap: 16px; }
+.portal-video-journey-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.portal-video-journey-list li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; min-width: 0; min-height: 104px; padding: 13px; border: 1px solid var(--portal-border); border-radius: 13px; background: var(--portal-surface-strong); }
+.portal-video-journey-list li > span { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 9px; background: var(--portal-surface-soft); color: var(--portal-accent); font-size: 11px; font-weight: 800; }
+.portal-video-journey-list strong { color: var(--portal-text); font-size: 13px; line-height: 1.35; }
+.portal-video-journey-list p { margin: 5px 0 0; color: var(--portal-muted-strong); font-size: 11px; line-height: 1.48; }
+.portal-video-lane-contract { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.portal-video-lane-contract > div { min-width: 0; padding: 10px 12px; border: 1px solid var(--portal-border); border-radius: 11px; background: var(--portal-surface-strong); }
+.portal-video-lane-contract dt { color: var(--portal-accent); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+.portal-video-lane-contract dd { margin: 4px 0 0; color: var(--portal-muted-strong); font-size: 12px; line-height: 1.45; }
+.portal-video-lane .portal-module-card { min-height: 172px; }
+.portal-video-lane .portal-module-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.portal-video-lane .portal-module-heading h3 { min-width: 0; }
+.portal-video-lane .portal-badge { flex: 0 0 auto; }
+.portal-video-edit-boundary { display: grid; gap: 14px; }
+.portal-video-edit-boundary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.portal-video-edit-boundary-grid article { display: grid; align-content: start; gap: 7px; min-width: 0; padding: 15px; border: 1px solid var(--portal-border); border-radius: 14px; background: var(--portal-surface-strong); }
+.portal-video-edit-boundary-grid article[data-video-editor-mode="ai"] { border-color: rgba(126, 186, 255, .3); }
+.portal-video-edit-boundary-grid article[data-video-editor-mode="manual"] { border-color: rgba(81, 213, 188, .3); }
+.portal-video-edit-boundary-grid h3 { margin: 0; color: var(--portal-text); font-size: 15px; line-height: 1.35; }
+.portal-video-edit-boundary-grid p { margin: 0; color: var(--portal-muted-strong); font-size: 12px; line-height: 1.55; }
+
+@media (max-width: 820px) {
+  .portal-video-journey-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .portal-video-lane-contract,
+  .portal-video-edit-boundary-grid { grid-template-columns: 1fr; }
+}
+
 .portal-document-board-history { min-width: 0; }
 .portal-document-hub .portal-document-operation-card {
   border-color: var(--portal-border);
@@ -6433,6 +6464,9 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-document-board-action-grid { grid-template-columns: 1fr; }
   .portal-document-board-action { min-height: 112px; padding: 14px; }
   .portal-document-board-workflow-heading { align-items: flex-start; flex-direction: column; }
+  .portal-video-journey-list,
+  .portal-video-edit-boundary-grid,
+  .portal-video-lane-contract { grid-template-columns: 1fr; }
   .portal-document-hub .portal-module-grid { grid-template-columns: 1fr; }
   .portal-document-hub .portal-module-card { min-height: 0; padding: 15px; }
   .portal-document-hub .portal-button,

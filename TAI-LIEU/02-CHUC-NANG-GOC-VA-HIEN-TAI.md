@@ -520,3 +520,16 @@ không đổi ví/Xu, route/action/field/capability hoặc dữ liệu productio
 
 Batch này chỉ đóng source presentation của SubDub. Không được gọi đây là parity runtime với Bot,
 không đổi engine, route/action/field/capability, ví/Xu hoặc dữ liệu production.
+
+## Đối chiếu bổ sung — SOURCE-VIDEO-01/04 — 17/10/2026
+
+| Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Phân loại Product Video | `/tools/video` chia `10` route duy nhất thành `4` lane: lập kế hoạch, tạo video, biên tập/ghép và kiểm tra/bàn giao; mỗi lane nêu đầu vào/đầu ra. | `static/portal/portal.js`; `tests/video-uiux-locale-presentation.test.mjs` `11/11`; full Node `522/522` |
+| Quy trình bảy bước | Hub hiển thị nhập → lập kế hoạch → xem báo giá → xác nhận → theo dõi xử lý → nhận kết quả → khôi phục; form tạo và đa cảnh giữ cùng contract. | `data-video-step` cho đủ `7` bước; không đổi route/action/field |
+| Ranh giới AI/thủ công | Có panel riêng cho nhánh AI và nhánh thủ công, đều ghi rõ trạng thái được bảo vệ để không nhầm kế hoạch với video đã tạo. | `data-video-editor-mode="ai"` và `"manual"`; chưa có runtime render/timeline thật |
+| Locale và bố cục | Fixed chrome có đủ VI/EN/ZH; lane dùng thẻ dọc, đầu vào/đầu ra và badge trạng thái; mobile chuyển về một cột. | `static/portal/portal-i18n.js`, `static/portal/portal.css`; chưa có browser screenshot/AX runtime |
+| Upload, render, MP4, preview và download thật | Chưa đóng; các lane chưa sẵn sàng vẫn guarded và không tự tạo job, provider output hoặc tệp giả. | Provider/worker/runtime/real artifact evidence chưa có; tiếp tục mở R217-08 runtime |
+
+Batch này chỉ đóng source presentation của Product Video. Không được gọi đây là parity runtime
+với Bot, không đổi engine, route/action/field/capability, ví/Xu hoặc dữ liệu production.

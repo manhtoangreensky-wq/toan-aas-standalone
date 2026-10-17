@@ -784,3 +784,22 @@ tiếp theo mà không nhầm là đã có engine.
   dữ liệu Voice thật, upload, Smart Multi backend và output dubbing vẫn chưa có evidence runtime.
 - Không gọi provider, không tạo video/audio/subtitle, không đổi Xu/PayOS hoặc dữ liệu production;
   source pass không phải parity runtime với Bot.
+
+## Checkpoint nguồn WebApp — R217-08 Product Video hub — 17/10/2026
+
+Hub Product Video được sắp xếp lại theo `4` lane dọc: lập kế hoạch, tạo video, biên tập/ghép
+và kiểm tra/bàn giao. Danh mục giữ `10` route hiện hữu, không thêm route hoặc thay đổi action:
+`/video-studio`, `/video/long`, `/video/product`, `/video/text-to-video`, `/video/multiscene`,
+`/video/frame-sequence`, `/video/finishing`, `/video/mux`, `/video/preview`, `/video/poster`.
+Mỗi lane nêu đầu vào, đầu ra và trạng thái; hub có quy trình `7` bước nhập → lập kế hoạch →
+xem báo giá → xác nhận → theo dõi → nhận kết quả → khôi phục. Một panel riêng phân biệt nhánh
+AI và nhánh thủ công để không nhầm bản kế hoạch với video đã tạo.
+
+- `tests/video-uiux-locale-presentation.test.mjs`: `11` test, `11` passed, `0` failed;
+  full Node suite `522` passed, `0` failed; catalogue VI/EN/ZH cân bằng, route và flow
+  bảy bước được giữ nguyên.
+- `node --check static/portal/portal.js`, `node --check static/portal/portal-i18n.js`
+  và `git diff --check` đạt.
+- Đây chỉ là source presentation evidence. Upload, render, delivery, download và artifact
+  video thật vẫn `guarded`; không gọi provider, không tạo job/MP4 và không đổi Xu/PayOS hay
+  dữ liệu production.
