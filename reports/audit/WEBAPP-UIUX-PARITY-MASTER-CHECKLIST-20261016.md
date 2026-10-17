@@ -81,6 +81,12 @@
 
 ## 3. W2 — Locale purity — Spec R217-02
 
+- [x] **SOURCE-LOCALE-21 — 2026-10-17:** sau khi bổ sung lối vào Image VI/EN/ZH, chạy lại
+      bộ locale Node contracts trên worktree hiện tại, mỗi tệp chạy đúng một lần: `319/319`; full Node suite:
+      `521/521`. Đây chỉ là source evidence, không thay thế browser AX tree hoặc live bundle.
+- [ ] Browser AX tree/visible DOM trên runtime đã giao vẫn mở; rà soát inventory toàn bộ
+      customer/Admin/product lanes và các fallback ngoài test hiện có vẫn chưa khép.
+
 - [x] Source locale R210 Workboard, R211 Memory, R212 Campaign, R213 Gallery/Audio,
       R214 Video có focused tests và catalogue VI/EN/ZH.
 - [x] Source auth CTA dùng catalogue, có duplicate-key regression.
@@ -223,6 +229,14 @@ hiển thị thành công giả khi engine/bridge chưa có.
 - [ ] Phân biệt source UI green với `REAL_OUTPUT` chưa có bridge; evidence phải ghi rõ.
 - [!] Image AI edit/reference upload/preview/delivery thật chưa có evidence; `/image/edit`
       hiện là Image Enhance deterministic và `/image-studio` là planning metadata.
+
+- [x] **SOURCE-IMAGE-01 — 2026-10-17:** `/image/create` có danh sách dọc để chọn Tạo ảnh /
+      Chỉnh sửa ảnh, đánh dấu rõ trang hiện tại, nhãn truy cập được và copy VI/EN/ZH; đường
+      chỉnh ảnh mô tả đúng công cụ tăng chất lượng hiện có, đồng thời nói rõ AI edit chưa khả
+      dụng. Không đổi route/action/field/capability và không thêm upload/preview/output giả.
+      Focused Image `40/40`, locale contracts `319/319`, full Node `521/521`; `node --check`
+      hai tệp Portal và `git diff --check` đạt. Browser render/AX chưa chạy; toàn bộ yêu cầu
+      workspace thống nhất, reference/upload, preview, variants và lịch sử vẫn còn mở.
 
 ### 5.2 Voice — Spec R217-05
 
@@ -496,12 +510,12 @@ hiển thị thành công giả khi engine/bridge chưa có.
       full Node suite `502/502`, baseline `500/500`, `NEW_FAILURES=0`; syntax và
       `git diff --check` đạt.
 
-## 11. Tổng trạng thái tại ngày 2026-10-16
+## 11. Tổng trạng thái tại ngày 2026-10-17
 
 | Nhóm | Đã có bằng chứng | Đang mở | Bị chặn/hoãn |
 |---|---:|---:|---:|
-| Source UI/UX/locale/static motion | W2 locale `SOURCE-LOCALE-20C` xanh; W4 09A source `28/28` | 3 live drift/runtime gates | 0 |
-| Responsive/PWA live | source fix + 39 focused / 470 Node | 2 (R216-H/R216-P) | QA runtime |
+| Source UI/UX/locale/static motion | W2 locale `319/319`; Image source `40/40`; full Node `521/521` | product-lane source acceptance còn mở; runtime/AX chưa đo | 0 |
+| Responsive/PWA live | source fix đã có; CI evidence gần nhất `cb1fab6` | 2 drift (R216-H/R216-P) + ma trận viewport | QA runtime |
 | Customer product parity UI | shell/partial nhiều lane | 6 lane acceptance | real-output bridge |
 | Admin/customer wiring UI | source contracts rải rác | 1 master surface audit | backend/permission mutation |
 | Authenticated QA | 0 | toàn ma trận | fixture/runtime |
@@ -522,5 +536,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=W7/W8 — chạy browser/AX/runtime matrix cho Admin/customer sau khi có QA runtime; giữ nguyên các mục backend/ledger/real-output ở trạng thái deferred.
+NEXT_ACTION=W4 — tiếp tục Image theo contract đã xác minh; xác định field/capability server-backed trước khi thêm upload, variants hay preview. Nếu thiếu runtime contract thì ghi DEFERRED có lý do rồi xử lý Voice/Music/SubDub trước Video.
 ```

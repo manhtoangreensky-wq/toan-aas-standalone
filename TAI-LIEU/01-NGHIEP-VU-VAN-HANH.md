@@ -31,6 +31,16 @@ còn mở. Bằng chứng: `../../evidence/IMAGE-I03-VERIFY-20261008.md`.
 Đây là checkpoint trình bày cục bộ; các số liệu production phía dưới có ngày
 riêng, không chứng minh runtime đang dùng candidate Image.
 
+## Candidate Image UI trên PR #647 — 2026-10-17
+
+Source của PR #647 thêm danh sách dọc tại `/image/create` để khách chọn tạo ảnh hoặc mở
+công cụ tăng chất lượng ảnh hiện có. Bản Việt/Anh/Trung, trạng thái trang hiện tại và ghi chú
+rõ “chỉnh ảnh bằng AI chưa khả dụng” đã được kiểm bằng test nguồn (`40/40` Image, `319/319`
+locale, `521/521` Node trên candidate hiện tại). Đây chỉ là thay đổi trình bày: không thêm
+upload, preview, biến thể, đầu ra AI, giá hay thao tác thanh toán. Chưa merge/deploy/live;
+không được coi chức năng chỉnh sửa ảnh bằng AI là đã hoàn thành. Tester case IUI-05 là nguồn
+kiểm thử giao diện; cần browser DOM/AX và viewport QA riêng trước khi đóng runtime.
+
 ## Checkpoint giao diện SubDub — ứng viên 08/10/2026
 
 Mã giao diện đã kiểm thử: `e4070e3bf6710be1e5388c12e20800aae0ee5ea3`, trên

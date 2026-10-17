@@ -3,7 +3,7 @@
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
-2. Chọn đúng một ID trong `WA-01..WA-48` cho mỗi lượt test; WA-44 kiểm Operations readiness, WA-45 Reliability, WA-46 hàng chờ bàn giao nội dung, WA-47 hàng việc điều hành, WA-48 danh sách khách hàng tiềm năng ẩn danh.
+2. Với luồng chung, chọn đúng một ID trong `WA-01..WA-48`; với bộ kiểm thử sản phẩm chuyên biệt, dùng mã đúng nhóm trong `DANH-SACH-CASE.md` (ví dụ `IUI-01..05` cho Image, `MUI-*` cho Music, `VUI-*` cho Voice). WA-44 kiểm Operations readiness, WA-45 Reliability, WA-46 hàng chờ bàn giao nội dung, WA-47 hàng việc điều hành, WA-48 danh sách khách hàng tiềm năng ẩn danh.
 3. Nếu cần đổi case, sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 4. Tracker batch là GitHub issue `#412` của repo `manhtoangreensky-wq/toan-aas-standalone`.
 5. Không dùng chat/Zalo làm nơi lưu kết quả duy nhất.

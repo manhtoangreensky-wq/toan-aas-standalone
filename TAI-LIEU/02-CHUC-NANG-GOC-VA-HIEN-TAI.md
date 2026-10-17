@@ -466,3 +466,18 @@ Tài liệu gốc không có mục riêng cho catalogue Customer 360; vì vậy 
 WebApp standalone, không được suy diễn thành chức năng Bot/Core Bridge hoặc quyền tài chính.
 
 Kết thúc đối chiếu `SOURCE-ADMIN-05`.
+
+## Đối chiếu bổ sung — SOURCE-IMAGE-01 — 17/10/2026
+
+| Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Lối vào tạo và chỉnh ảnh trên `/image/create` | Có hai lựa chọn dọc; tạo ảnh là trang hiện tại, mục chỉnh mở `/image/edit` và mô tả đúng công cụ tăng chất lượng đang có. | `static/portal/portal.js`; `tests/image-create-locale-presentation.test.mjs` |
+| Fixed chrome VI/EN/ZH | Có catalogue đủ ba ngôn ngữ cho tiêu đề, liên kết, mô tả và nhãn truy cập. | Regression Image source `40/40`; mỗi tệp locale Node chạy một lần `319/319`; full Node `521/521`. |
+| Chỉnh sửa ảnh bằng AI | Chưa có bằng chứng capability/server contract; giao diện nói rõ chưa khả dụng. | Không thêm upload, biến thể, preview, đầu ra giả, action, field, API hay capability. |
+| Trạng thái giao nhận | Source candidate thuộc PR #647; việc có PR không đồng nghĩa đã merge/deploy/live. | Browser DOM/AX/runtime chưa đo; source pass không đóng R217-04. Đối chiếu head/CI theo trang PR hiện hành. |
+
+Nguồn yêu cầu giai đoạn xây dựng chưa có một danh mục gốc duy nhất theo bounded inventory
+đã nêu ở các mục trên; vì vậy đối chiếu này ghi bổ sung hành vi của WebApp standalone,
+không tuyên bố tương đương runtime với Bot. Việc hợp nhất workspace, reference/upload,
+variants, preview/history và giao nhận ảnh thật vẫn mở trong R217-04 cho tới khi có
+capability server-backed và bằng chứng tương ứng.

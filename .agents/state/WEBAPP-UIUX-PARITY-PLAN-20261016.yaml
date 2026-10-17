@@ -1,5 +1,5 @@
 task_id: WEBAPP-UIUX-PARITY-20261016
-phase: REPORT
+phase: VERIFY
 objective: "Tiếp tục thực thi tuần tự plan/checklist/spec WebApp standalone; khóa từng lỗi UI/UX/locale bằng bằng chứng source, giữ runtime/live mở khi chưa có delivery."
 scope: "Customer shell, Admin shell, product-lane UI/UX, locale, responsive, accessibility, motion và browser/live evidence."
 out_of_scope: "Bot/Core code, route-engine, provider calls, wallet/Xu, PayOS, production data, VPS, deploy, merge và backend mutation."
@@ -35,6 +35,7 @@ ordered_waves:
     spec: R217-04
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
     name: image
+    note: "SOURCE-IMAGE-01 adds a truthful vertical create/edit entry on /image/create with VI/EN/ZH copy; no upload/output/capability added. Focused Image 40/40, locale 319/319 (each Node locale file once), full Node 521/521 are recorded in candidate docs; rerun before delivery. R217-04 stays TODO: runtime DOM/AX, server capability audit, unified workspace, references, variants, preview/history and real output remain open."
   - id: W4
     spec: R217-05
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
@@ -109,4 +110,4 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-next_action: "SOURCE-LOCALE-20A/20B/20C đã khóa Music authoring source. Chuyển sang browser/AX/runtime evidence và các lane còn mở trong checklist; production delivery vẫn chưa được cho phép trong scope này."
+next_action: "Check the latest PR #647 CI for SOURCE-IMAGE-01 without merge/deploy; then continue R217-04 by auditing server-backed Image capabilities. If a capability is missing, mark the exact sub-acceptance deferred with evidence and proceed in order to Voice/Music/SubDub before Video. Keep runtime/live gates open until real browser evidence exists."

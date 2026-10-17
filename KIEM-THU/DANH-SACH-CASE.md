@@ -12,6 +12,7 @@ Tracker điều phối: `manhtoangreensky-wq/toan-aas-standalone#412`.
 | IUI-02 | `/image/create`, `/image/new`; guarded/draft/quote/task report QA | Fields `prompt/tier/format`, action/capability/receipt không đổi; copy cố định sạch; chỉ giá bán công khai, 0 khác unknown; tracking phải khớp; không giả output/download |
 | IUI-03 | 48 trạng thái tạo ảnh và 24 trạng thái hub QA, sáng/tối desktop/mobile | Fields/thẻ dọc, quote trước confirm/report trước form cũ; focus và mở details bằng Enter; chữ thường ≥4.5:1, chữ lớn/viền input ≥3:1, input ≥16px, target ≥44px; tràn/clip 0 |
 | IUI-04 | Source protection và browser gate official | 163 renderer đạt; protected comparator không đổi vùng ngoài Image; ghi đúng 1 failure nền Python; official gate gắn source cuối; 12 lỗi ViewTransition phải còn ghi OPEN cho tới spec motion riêng |
+| IUI-05 | `/image/create`; VI/EN/ZH × sáng/tối × 1440/390/375 | Danh sách tác vụ tạo/chỉnh ảnh có hai đường dẫn dọc, trang tạo được đánh dấu `aria-current`; đường chỉnh mở công cụ tăng chất lượng hiện có và nói rõ AI edit chưa khả dụng; Enter mở đúng route, target ≥44px, không tràn ngang; không gửi biểu mẫu/đổi action/field |
 
 Sửa case tại đây trước. Fixture tổng hợp chỉ trong QA cô lập; không gửi tác
 vụ, lấy báo giá thật, dùng provider, thay ví hoặc dữ liệu production. Ghi

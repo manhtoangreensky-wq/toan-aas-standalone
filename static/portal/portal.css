@@ -10354,6 +10354,16 @@ html[data-portal-theme="dark"] .portal-manual-topup-form option {
   text-decoration: none;
 }
 
+.portal-image-create-workflow-card {
+  min-height: 96px;
+  text-decoration: none;
+}
+
+.portal-image-create-workflow-card[aria-current="page"] {
+  border-color: var(--portal-action) !important;
+  box-shadow: inset 3px 0 0 var(--portal-action);
+}
+
 .portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(h1, h2, h3, h4, label, legend, strong, dt, dd, summary, .portal-label, .portal-title, .portal-card-title, .portal-module-link) {
   color: var(--portal-ink) !important;
 }

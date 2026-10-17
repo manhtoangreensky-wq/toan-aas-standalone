@@ -15517,6 +15517,14 @@
   });
 
   const IMAGE_CREATE_COPY_ROWS = [
+    ["workflow.title", "Bạn muốn làm gì với ảnh?", "What would you like to do with images?", "你想如何处理图像？"],
+    ["workflow.navLabel", "Chọn tác vụ hình ảnh", "Choose an image task", "选择图像任务"],
+    ["workflow.create.title", "Tạo ảnh AI", "Create AI images", "创建 AI 图像"],
+    ["workflow.create.description", "Soạn yêu cầu, xem báo giá và theo dõi báo cáo xử lý.", "Prepare a request, review its quote and follow the processing report.", "填写请求、查看报价并跟踪处理报告。"],
+    ["workflow.current", "Đang ở trang này", "Current page", "当前页面"],
+    ["workflow.edit.title", "Chỉnh sửa ảnh", "Edit an image", "编辑图像"],
+    ["workflow.edit.description", "Mở công cụ tăng chất lượng ảnh hiện có. Chỉnh sửa ảnh bằng AI chưa khả dụng.", "Open the existing image enhancement tool. AI image editing is not currently available.", "打开现有图像增强工具。当前尚不支持 AI 图像编辑。"],
+    ["workflow.open", "Mở công cụ", "Open tool", "打开工具"],
     ["page.title", "Tạo ảnh", "Create an image", "创建图像"],
     ["page.description", "Mô tả hình ảnh, chọn loại ảnh và tỷ lệ. Xem báo giá trước khi xác nhận tạo ảnh.", "Describe your image, choose the image type and aspect ratio, then review the quote before confirming.", "描述图像，选择类型和比例，确认生成前请查看报价。"],
     ["section", "HÌNH ẢNH", "IMAGES", "图像"],
