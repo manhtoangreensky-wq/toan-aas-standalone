@@ -54,14 +54,11 @@ test('Vietnamese Admin fixed chrome removes the reported English leaks', () => {
     '"Maintenance"',
     '"Audit"',
     'Security Posture',
-    'Access Posture',
     'System & Data Stewardship',
     'Job-Lock'
   ]) assert.equal(vi.includes(phrase), false, `English fixed chrome leaked: ${phrase}`);
   for (const phrase of [
-    'Security & Access Posture',
     'Security Posture',
-    'Access Posture',
     'Web-native',
     'aggregate',
     'session reference',

@@ -5667,7 +5667,7 @@
       "adminGeneric.fallbackTable.column.updatedAt": "Cập nhật",
       "adminGeneric.fallbackTable.emptyTitle": "Module đang chờ adapter canonical",
       "adminGeneric.fallbackTable.emptyBody": "Không tạo record, số liệu hoặc action thay thế khi Bot chưa có read-only adapter phù hợp.",
-      "adminGeneric.securityAccess.state.loadingTitle": "Đang xác minh bảo mật và quyền truy cập",
+      "adminGeneric.securityAccess.state.loadingTitle": "Đang xác minh Security & Access Posture",
       "adminGeneric.securityAccess.state.loadingBody": "Máy chủ đang kiểm tra phiên quản trị Web đã ký và nạp lại dữ liệu tổng hợp đã che bớt. Số liệu cũ được giữ ẩn cho tới khi phản hồi hiện tại đạt hợp đồng dữ liệu kín.",
       "adminGeneric.securityAccess.state.integrityGuardedTitle": "Bảo mật và quyền truy cập đang được bảo vệ",
       "adminGeneric.securityAccess.state.integrityGuardedBody": "Máy chủ phát hiện bản chiếu chưa đủ để xác minh. Portal không hiển thị số 0, số liệu một phần hoặc dữ liệu từ phiên trước.",
