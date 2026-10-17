@@ -487,7 +487,8 @@ plugin và môi trường Python/QA server trong lượt này; giữ runtime `OP
 - [x] **R217-10 source timing closeout — 2026-10-17:** `--portal-motion-fast` đã khóa ở
       `160ms` (micro `150–300ms`), thấp hơn entry `220ms`; auth `680ms` và landing hero
       `980ms` giữ nguyên. Regression timing mới nằm trong focused motion/auth/PWA `43/43`;
-      full Node `523/523`; `node --check` Auth/Motion `2/2`; `git diff --check` đạt.
+      full Node `523/523`; `node --check` Auth/Motion `2/2`; `git diff --check` đạt;
+      `HEAD_SHA=fd18f00c8ee0efef676e71a3dd6f87dca8416d53` đã push lên nhánh PR #647.
 - [~] Browser motion acceptance còn mở: chưa có trace FPS/CLS/LCP/INP và chưa chứng minh
       scroll reveal không tạo vùng trống trên runtime mới.
 - [x] Kiểm tra source micro `160ms`, exit nhanh hơn entry `220ms`; auth/customer entrance giữ
