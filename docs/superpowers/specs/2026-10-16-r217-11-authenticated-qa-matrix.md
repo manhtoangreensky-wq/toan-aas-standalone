@@ -1,6 +1,6 @@
 # R217-11 — Authenticated QA matrix và bot-parity evidence
 
-**Status:** `BLOCKED` (chưa có runtime QA cô lập trong lượt lập plan)
+**Status:** `SOURCE_GREEN_RUNTIME_OPEN` (runner CI đã có; artifact runtime đầu tiên đang chờ)
 **Wave:** W7
 
 ## Điều kiện mở
@@ -43,8 +43,8 @@ approve top-up, không sửa DB production.
 python -m pytest tests/test_browser_runtime_gate.py -q
 ```
 
-Nếu runtime không chạy, giữ `BLOCKED`, ghi lỗi khởi động cụ thể và không tạo fixture ở
-production.
+Nếu runtime không chạy ở máy dev, giữ trạng thái runtime mở và dùng job CI cô lập; không tạo
+fixture ở production.
 
 ## Verification attempt 2026-10-17
 
@@ -64,3 +64,18 @@ fixture identity without a Bot/provider request. The test is included in the bou
 CI run `39021192324` passed. This proves route authority and shell availability only. The browser
 route × locale × theme × viewport matrix remains open until the QA runtime dependencies are
 available.
+
+## CI runner contract 2026-10-17
+
+`scripts/ci/run_authenticated_qa_matrix.py` là runner riêng cho R217-11. Nó khởi động
+`app:app` trên `127.0.0.1` với SQLite và thư mục tài sản tạm, xoá các biến bridge/PayOS,
+tắt các engine có thể tạo job, rồi tạo sáu tài khoản QA (customer/Admin × VI/EN/ZH). Mỗi
+tài khoản chỉ được lưu trong DB tạm; runner không đăng nhập production và không gửi form
+provider, thanh toán, ví, job hoặc delivery.
+
+Job `authenticated-qa` trong `.github/workflows/webapp-quality.yml` chạy runner sau quality
+gate, upload `r21711-authenticated-qa-matrix.json`, `screenshot-manifest.json` và 456 ảnh.
+Artifact chỉ được coi là đạt khi có đủ `456/456` bản ghi, mọi bản ghi có route/locale/theme/
+viewport/timestamp, DOM + AX + focus + screenshot + console + network + reload evidence,
+không có lỗi console/warning, request ngoài origin, mutation bị cấm hoặc tràn ngang. Source
+runner đã được kiểm tra cú pháp; runtime status vẫn mở cho tới khi CI trả artifact thật.

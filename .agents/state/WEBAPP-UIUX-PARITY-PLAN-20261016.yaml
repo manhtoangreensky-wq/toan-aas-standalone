@@ -73,8 +73,8 @@ ordered_waves:
     note: "2026-10-17 source closeout: HEAD_SHA=2d756b8db62f74cb331065c3b9ec74691f06a8cd pushed to PR #647; --portal-motion-fast 160ms (micro 150–300ms and faster than 220ms entry), auth 680ms and landing hero 980ms preserved; focused motion/auth/PWA 43/43, full Node 523/523, Auth/Motion node-check 2/2 and diff-check green. Three Python motion contracts were synchronized to 160ms but Python/pytest is unavailable. CI run 39015089989 then exposed stale migration provenance (recorded 4dbdf2…, current 8ee8c913…); refresh is prepared at HEAD fe146c191ffd7abc2d6d4d8a679e3630ccea1a0e and local verify returned ok. Runtime FPS/CLS/LCP/INP trace, AX keyboard, scroll and delivery evidence remain open."
   - id: W7
     spec: R217-11
-    status: BLOCKED
-    note: "2026-10-17 probe: bundled Python 3.12.14 exists but has no fastapi/uvicorn/pytest/websockets; temporary pip install outside repo failed because pypi.org DNS could not resolve (NameResolutionError). QA server and browser fixtures were not created; production is not used as a substitute. Source fixture test seeds canonical-admin and checks 5 canonical Admin child shells; CI run 39021192324 passed. Browser matrix remains open."
+    status: SOURCE_GREEN_RUNTIME_OPEN
+    note: "2026-10-17: local bundled Python still lacks fastapi/uvicorn/pytest/websockets, so no local runtime claim is made. Added scripts/ci/run_authenticated_qa_matrix.py and an authenticated-qa CI job that installs isolated dependencies, creates six locale fixtures in temporary SQLite, and records the required 456-route matrix. Source Admin fixture remains green (CI run 39021192324); close R217-11 only after the CI artifact reports 456/456 with zero console/network/overflow failures."
   - id: W8
     spec: R217-12
     status: LIVE_DRIFT_OPEN
@@ -111,8 +111,9 @@ created_files:
   - docs/superpowers/specs/2026-10-16-r217-11-authenticated-qa-matrix.md
   - docs/superpowers/specs/2026-10-16-r217-12-live-readonly-recheck.md
   - docs/superpowers/specs/2026-10-16-r217-13-deferred-technical-register.md
+  - scripts/ci/run_authenticated_qa_matrix.py
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39018249838 SUCCEEDED: provenance, critical contracts, browser verification, browser runtime assertions, evidence upload and diff gate passed; 6/6 hubs checked and 18 screenshots captured after the explicit /video/finishing primary CTA correction."
-next_action: "Continue checklist order at R217-11 authenticated QA/performance evidence. Product Video source/browser gate is closed for this correction, but authenticated runtime, FPS/CLS/LCP/INP, upload/render/delivery and real artifacts remain open; no provider, wallet, production, merge or deploy action."
+last_ci_run: "39018249838 SUCCEEDED: provenance, critical contracts, browser verification, browser runtime assertions, evidence upload and diff gate passed; 6/6 hubs checked and 18 screenshots captured after the explicit /video/finishing primary CTA correction. R217-11 authenticated-qa job added after this run; its first artifact is pending."
+next_action: "Run CI R217-11 authenticated matrix and inspect artifact for 456/456 before opening R217-12. Product Video source/browser gate is closed for this correction, but authenticated runtime, FPS/CLS/LCP/INP, upload/render/delivery and real artifacts remain open; no provider, wallet, production, merge or deploy action."

@@ -25,7 +25,9 @@
 - [x] Không provider call, wallet/Xu mutation, PayOS mutation, production data mutation,
       merge hoặc deploy trong lượt lập plan.
 - [x] Fixed chrome VI/EN/ZH phải một ngôn ngữ; tên riêng/danh từ được phép giữ nguyên.
-- [ ] QA runtime cô lập có URL/lệnh và tài khoản fixture ổn định.
+- [~] QA runtime cô lập trên máy dev vẫn thiếu dependency, nhưng runner CI riêng
+      `scripts/ci/run_authenticated_qa_matrix.py` đã được thêm với DB SQLite tạm,
+      fixture theo locale và không bật provider/wallet; chỉ đóng khi CI tạo đủ 456 bản ghi.
 - [ ] Antigravity handoff chỉ được đánh dấu PASS khi có log thật; không dùng báo cáo giả.
 
 ## 1. W0 — Baseline và evidence ledger
@@ -519,18 +521,21 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
 
 ## 8. W7 — Authenticated QA matrix — Spec R217-11
 
-- [!] QA runtime cô lập chưa được cung cấp ổn định; không tự động tạo tài khoản production.
+- [~] Runtime QA cục bộ chưa có dependency; không tự động tạo tài khoản production.
 - [!] **QA-R217-11-01 — 2026-10-17:** Đã thử dựng runtime tạm ngoài repo bằng bundled
       Python `3.12.14` và `pip install -r requirements-dev.txt`; môi trường thiếu
       `fastapi`, `uvicorn`, `pytest`, `websockets`, còn PyPI không phân giải được DNS
       (`NameResolutionError: pypi.org`). Vì vậy chưa khởi động được server QA và chưa tạo
       fixture; không chuyển sang production để thay thế bằng chứng QA.
-- [ ] Tạo fixture `customer_qa` và `canonical_admin_qa` chỉ trong DB QA cô lập, không ví,
-      không provider, không bridge mutation.
-- [ ] Ma trận route × locale (VI/EN/ZH) × theme (light/dark) × viewport
-      (375/390/768/1440) cho customer và Admin.
-- [ ] Mỗi route kiểm tra DOM title/heading/CTA/field, AX labels, focus, screenshot,
-      console error/warning, network request và persistence sau reload.
+- [x] **SOURCE-R217-11-03 — 2026-10-17:** Runner CI riêng
+      `scripts/ci/run_authenticated_qa_matrix.py` tạo DB SQLite tạm, 6 fixture account
+      theo VI/EN/ZH, chạy customer + Admin trên 19 route × 3 locale × 2 theme × 4 viewport
+      (456 bản ghi), ghi requested/resolved route, title/heading/CTA/field, AX tree, focus,
+      screenshot, console, network và reload persistence. Job `authenticated-qa` trong
+      `.github/workflows/webapp-quality.yml` cài dependency trong runner CI và upload artifact.
+- [ ] **RUNTIME-R217-11-01:** CI phải tạo đủ `456/456` bản ghi, `0` console error/warning,
+      `0` external/provider/payment/wallet mutation, `0` overflow và reload state khớp;
+      chỉ khi có artifact thật mới đóng ma trận.
 - [ ] Các lane Image/Voice/Music/SubDub/Video phải có evidence từng state; nếu engine chưa
       có, evidence phải chứng minh guarded boundary chứ không gọi output PASS.
 - [x] **SOURCE-R217-11-02 — 2026-10-17:** Đã thêm fixture test DB tạm với
@@ -626,7 +631,7 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
 | Responsive/PWA live | source fix đã có; CI evidence gần nhất `cb1fab6` | 2 drift (R216-H/R216-P) + ma trận viewport | QA runtime |
 | Customer product parity UI | shell/partial nhiều lane | 6 lane acceptance | real-output bridge |
 | Admin/customer wiring UI | source contracts rải rác | 1 master surface audit | backend/permission mutation |
-| Authenticated QA | 0 | toàn ma trận | fixture/runtime |
+| Authenticated QA | source runner + Admin fixture | toàn ma trận 456 bản ghi | local dependency; chờ CI artifact |
 | Technical parity/real output | 0 cho bridge AI | 0 trong wave UI | W9 deferred |
 
 ## 12. Quy tắc cập nhật bắt buộc
@@ -644,8 +649,9 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=R217-11 Authenticated QA matrix — R217-10 source motion đã khóa timing/lifecycle/
-reduced-motion với focused `43/43`, full Node `523/523`; browser trace/AX/runtime và
-delivery fingerprint vẫn mở. Admin fixture, artifact thật và các bridge vẫn deferred;
+NEXT_ACTION=R217-11 Authenticated QA matrix — source runner đã sẵn sàng, chờ CI artifact
+`456/456`; R217-10 source motion đã khóa timing/lifecycle/reduced-motion với focused
+`43/43`, full Node `523/523`; browser trace/AX/runtime và delivery fingerprint vẫn mở.
+Admin fixture, artifact thật và các bridge vẫn deferred;
 PROVIDER_CALLS=0, WALLET_MUTATIONS=0, DEPLOY=NO, MERGE=NO, LIVE_PASS=NO.
 ```
