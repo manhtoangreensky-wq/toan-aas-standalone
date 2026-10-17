@@ -70,7 +70,7 @@ ordered_waves:
   - id: W6
     spec: R217-10
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "2026-10-17 source closeout: HEAD_SHA=de42dc6c6eec15c55861ace030c6e780838487af pushed to PR #647; --portal-motion-fast 160ms (micro 150–300ms and faster than 220ms entry), auth 680ms and landing hero 980ms preserved; focused motion/auth/PWA 43/43, full Node 523/523, Auth/Motion node-check 2/2 and diff-check green. Three Python motion contracts were synchronized to 160ms but Python/pytest is unavailable. Runtime FPS/CLS/LCP/INP trace, AX keyboard, scroll and delivery evidence remain open."
+    note: "2026-10-17 source closeout: HEAD_SHA=2d756b8db62f74cb331065c3b9ec74691f06a8cd pushed to PR #647; --portal-motion-fast 160ms (micro 150–300ms and faster than 220ms entry), auth 680ms and landing hero 980ms preserved; focused motion/auth/PWA 43/43, full Node 523/523, Auth/Motion node-check 2/2 and diff-check green. Three Python motion contracts were synchronized to 160ms but Python/pytest is unavailable. Runtime FPS/CLS/LCP/INP trace, AX keyboard, scroll and delivery evidence remain open."
   - id: W7
     spec: R217-11
     status: BLOCKED

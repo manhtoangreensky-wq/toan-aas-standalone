@@ -56,7 +56,7 @@ node --check static/portal/portal-motion.js
 - Updated the three Python motion contracts that still expected the old `140ms`
   token; they now assert the shipped `160ms` value. Python/pytest execution is
   still not available in this environment, so it remains an explicit blocker.
-- `HEAD_SHA=de42dc6c6eec15c55861ace030c6e780838487af` was pushed to
+- `HEAD_SHA=2d756b8db62f74cb331065c3b9ec74691f06a8cd` was pushed to
   `github/webapp-checklist-r116` (PR #647 branch).
 - Evidence: focused motion/auth/PWA gates `43/43`; full Node suite `523/523`;
   `node --check static/portal/portal-auth.js` PASS; `node --check
