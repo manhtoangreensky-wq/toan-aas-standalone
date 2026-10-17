@@ -3,7 +3,7 @@
 **Checklist ID:** `WEBAPP-UIUX-PARITY-20261016`
 **Plan:** `docs/superpowers/plans/2026-10-16-webapp-uiux-product-parity-master-plan-r217.md`
 **Baseline remote:** `ea914bb45966237106d8a8e8c1464604ffaba42b`
-**PR liên quan:** [#651](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/651) — đang Open; quality gate #1725 đạt, chưa merge/deploy/live
+**PR liên quan:** [#651](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/651) — đã merge vào `main` bằng `559d982`; quality gate #1728, deploy #202 và live read-only matrix đã đạt
 **Ngày cập nhật:** 2026-10-18
 
 ## Cách đọc trạng thái
@@ -632,6 +632,10 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
 
 ## 9. W8 — Live read-only recheck — Spec R217-12
 
+> Các bullet `[!]`/`[~]` trong mục này là bằng chứng lịch sử trước khi PR #651 được
+> delivery. Trạng thái hiện hành sau merge/deploy/live được chốt ở mục 14; không được
+> đọc các bullet lịch sử dưới đây như một lỗi production còn mở.
+
 - [!] **R217-12 post-delivery 2026-10-17 13:35 UTC — locale redirect còn lỗi:** deploy
       workflow `39036918159` đã đưa `bc0d089055df7a52c1ee9e3e76a5cbc57beacce4` lên VPS,
       health check trên `toanaas-web.service` đạt, asset fingerprint đổi khỏi bundle cũ.
@@ -770,7 +774,7 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
 | Authenticated QA | source runner + Admin fixture; CI `39030607461` và artifact `456/456` | local runtime/trace riêng | bundled local dependency thiếu; production không thay thế QA |
 | Technical parity/real output | 0 cho bridge AI | 0 trong wave UI | W9 deferred |
 
-## 12. Bằng chứng xác minh mới nhất trên PR #651 — 2026-10-18
+## 12. Bằng chứng xác minh candidate trước delivery trên PR #651 — 2026-10-18
 
 - [x] HEAD `7d2432707d94a91aeff15bbadd620993c4dd298c` đúng với nhánh `webapp-live-r117`.
 - [x] Chạy lại toàn bộ kiểm thử JavaScript bằng Node trên HEAD hiện tại: `525/525` đạt,
@@ -784,7 +788,7 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       đạt `2/2`; Authenticated WebApp QA giữ `456/456` bản ghi đạt và các bộ đếm provider/wallet/
       production mutation đều `0`.
 - [x] Comment bàn giao đã đăng trên [PR #651](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/651#issuecomment-6237924002).
-- [ ] PR vẫn chưa merge, chưa deploy VPS, chưa live recheck và chưa đánh dấu `LIVE_PASS`.
+- [x] Mục này là ledger lịch sử trước delivery; trạng thái sau delivery được ghi đầy đủ ở mục 14 bên dưới, không xóa bằng chứng cũ.
 
 ## 13. Quy tắc cập nhật bắt buộc
 
@@ -794,13 +798,36 @@ phát hiện lỗi mới, thêm một dòng ở đúng wave và ghi `OPEN`. Chec
 nhất để quyết định wave tiếp theo.
 
 ```ini
-STATUS=SOURCE_VERIFIED_DELIVERY_OPEN
+STATUS=DELIVERY_LIVE_PASS_OPEN_WAVES
 PROVIDER_CALLS=0
 WALLET_MUTATIONS=0
 PRODUCTION_DATA_MUTATIONS=0
-MERGE=NO
-DEPLOY=NO
-LIVE_PASS=NO
-HEAD_SHA=7d2432707d94a91aeff15bbadd620993c4dd298c
-NEXT_ACTION=Chờ Owner delivery approval riêng cho PR #651; sau merge/deploy mới lặp lại route-locale/PWA/auth viewport matrix (390×844 và 1440×900) và chỉ đóng LIVE_PASS khi có bằng chứng runtime mới. Node 525/525, JS syntax 4/4 và diff-check đã đạt; Python verifier NOT_RUN do thiếu python/py. Không provider, wallet, PayOS hoặc production-data action.
+MERGE=YES
+DEPLOY=YES
+LIVE_PASS=YES
+HEAD_SHA=559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
+NEXT_ACTION=W1 runtime responsive/contrast/table matrix; sau đó W2 browser AX locale inventory và W3 auth/accessibility matrix. Product-lane real output, admin mutation, provider, wallet và W9 bridge vẫn mở riêng.
 ```
+
+## 14. Delivery và live closeout PR #651 — 2026-10-18
+
+- [x] **Merge:** PR #651 đã squash-merge vào `main`, merge/runtime SHA
+      `559d982e8391fb7c3eb1dc6f5a41ef6bb3401209`.
+- [x] **Quality gate:** [Web App quality gate #1728](https://github.com/manhtoangreensky-wq/toan-aas-standalone/actions/runs/39056943164)
+      đạt; Verify Web App `3m01s`, Authenticated WebApp QA `5m12s`, tổng `8m18s`.
+      Ma trận authenticated giữ `456/456`, không có mutation mới.
+- [x] **Deploy:** [Deploy Web App to VPS #202](https://github.com/manhtoangreensky-wq/toan-aas-standalone/actions/runs/39057625526)
+      đạt `52s`, input SHA đúng merge/runtime SHA.
+- [x] **Runtime:** SSH xác nhận `toanaas-web.service`, `nginx.service` và
+      `toanaas-bot.service` đều `active (running)`; `/opt/toanaas/webapp` đúng SHA
+      `559d982e8391fb7c3eb1dc6f5a41ef6bb3401209`.
+- [x] **Live read-only:** `/features?lang=vi|en|zh` giữ `lang` và `next` khi redirect login;
+      `/login?lang=vi|en|zh` có title/form đúng locale; `/dashboard?lang=vi` fail-closed đúng
+      target; PWA install guidance hiện đúng; viewport `390×844` và `1440×900` không overflow;
+      `main#portal-main` tồn tại cho skip link.
+- [x] **Safety:** chỉ GET/navigation/screenshot/DOM probe; `PROVIDER_CALLS=0`,
+      `WALLET_MUTATIONS=0`, `PRODUCTION_DATA_MUTATIONS=0`.
+- [x] **Handoff comment:** [comment delivery/live cuối trên PR #651](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/651#issuecomment-6238515512).
+- [ ] **Phạm vi còn mở:** W1 responsive/contrast/table matrix, W2 browser AX locale inventory,
+      W3 auth/accessibility matrix, product-lane real output, admin mutation và W9 technical
+      bridge chưa được suy diễn từ closeout này; phải xử lý theo wave riêng.
