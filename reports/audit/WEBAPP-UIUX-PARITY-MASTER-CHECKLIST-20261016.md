@@ -557,6 +557,14 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       `334858235c9bb9ed67f4a5e3e093e1796bb8ce17ce32ca3bbc80f5cfc4911f38`, khớp digest
       GitHub; browser evidence artifact digest là
       `sha256:6e57d73522e244001908c88214484b8518380741ba70821e81c7871dba624d21`.
+- [x] **RUNTIME-R217-11-02 — CLOSED_WITH_EVIDENCE — 2026-10-17:** Rerun trên HEAD
+      `0001c11` tại workflow `39029971691` hoàn tất `Success` trong `6m 43s`; `Verify Web App`
+      job `117388290081` xanh trong `2m 38s`, `Authenticated WebApp QA` job `117388767101`
+      xanh trong `4m 01s`. Artifact `webapp-authenticated-qa-0001c110baa69d92885acf53293b3193856aff7c`
+      có digest `sha256:328dd0d2d777d3d7c8907b9e0edc6ec85568e5cb745041b67b9383ed6fe147b3`;
+      browser evidence digest `sha256:f3283ecc640acd428458286e1dfaef1f2e42bda339c9cdbacef3c86062bb3c55`.
+      Rerun giữ nguyên ma trận `456/456` và safety predicate; chỉ còn warning môi trường Node 20/
+      Ubuntu image, không có source/test failure. R217-11 vẫn đóng; không nâng thành LIVE.
 - [!] **CI run `39024899449` — 2026-10-17:** quality gate nền đã xanh nhưng runner R217-11
       dừng khi tạo fixture tại `_set_fixture_locale`: schema thực tế lưu locale ở
       `web_account_profiles`, không phải `web_accounts`, nên job báo
@@ -667,7 +675,7 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
 | Responsive/PWA live | source fix đã có; CI evidence gần nhất `cb1fab6` | R216-H/R216-L/R216-P + stale PWA/auth bundle + 390×844/1440×900 viewport matrix | QA runtime/delivery |
 | Customer product parity UI | shell/partial nhiều lane | 6 lane acceptance | real-output bridge |
 | Admin/customer wiring UI | source contracts rải rác | 1 master surface audit | backend/permission mutation |
-| Authenticated QA | source runner + Admin fixture | toàn ma trận 456 bản ghi | local dependency; chờ CI artifact |
+| Authenticated QA | source runner + Admin fixture; CI `39029971691` và artifact `456/456` | local runtime/trace riêng | bundled local dependency thiếu; production không thay thế QA |
 | Technical parity/real output | 0 cho bridge AI | 0 trong wave UI | W9 deferred |
 
 ## 12. Quy tắc cập nhật bắt buộc

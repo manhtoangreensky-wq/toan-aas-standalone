@@ -123,3 +123,23 @@ artifact `webapp-browser-evidence-a311caf1913e7ab40361727a771a09d6eaf5ff5b` có 
 Kết luận: R217-11 được `CLOSED_WITH_EVIDENCE`. Đây là bằng chứng DOM/AX/responsive và an
 toàn QA cô lập, không phải bằng chứng real provider output, wallet approval, production
 deployment hoặc LIVE; các phần đó vẫn ở spec riêng theo checklist.
+
+## Rerun evidence — 2026-10-17 — HEAD `0001c11`
+
+Sau khi cập nhật live-drift ledger và refresh Web-only provenance, CI chạy lại trên PR #647
+và hoàn tất thành công:
+
+- Workflow `39029971691` — `Success`, tổng `6m 43s`.
+- `Verify Web App` — job `117388290081`, `2m 38s`, completed successfully.
+- `Authenticated WebApp QA (R217-11)` — job `117388767101`, `4m 01s`, completed
+  successfully.
+- Artifact `webapp-authenticated-qa-0001c110baa69d92885acf53293b3193856aff7c`, digest
+  `sha256:328dd0d2d777d3d7c8907b9e0edc6ec85568e5cb745041b67b9383ed6fe147b3`.
+- Browser evidence artifact `webapp-browser-evidence-0001c110baa69d92885acf53293b3193856aff7c`,
+  digest `sha256:f3283ecc640acd428458286e1dfaef1f2e42bda339c9cdbacef3c86062bb3c55`.
+
+The rerun kept the same acceptance contract (`456/456` route × locale × theme × viewport
+records, no forbidden mutation/provider/wallet activity). GitHub displayed only the known
+Node.js 20 deprecation and Ubuntu image migration notices; neither is a source or test
+failure. R217-11 remains `CLOSED_WITH_EVIDENCE`; this rerun does not alter the separate
+R217-12 production delivery drift or `LIVE_PASS=NO`.
