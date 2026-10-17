@@ -38,6 +38,11 @@
       fingerprint đã lệch (`af3a77086075` so với source `7d6f0a4da90c`, `284` tệp); vì vậy
       không đánh dấu provenance đạt. Làm mới lại trên HEAD sạch sau lần cập nhật checklist/state,
       rồi xác minh và chờ CI mới; các bước test sau provenance vẫn chưa chạy.
+- [x] Làm mới riêng Web provenance trên `0d96560490288917530b53e69979b0c8b7aa7642`; xác minh
+      tại chỗ đạt: audit SHA khớp HEAD, quan hệ `ancestor`, fingerprint
+      `de8d38a9fc9c7cf37e41cdb53fc4420becd20d820732695fcb8ca08ac74006aa`, `284` tệp.
+- [~] CI trên candidate đã xác minh chưa chạy/chưa có kết quả; chỉ run mới của PR #647 sau push
+      mới khép gate. Không dùng run cũ trên `66684e8` làm bằng chứng cho HEAD hiện tại.
 - [x] Đối chiếu remote: local cũ lệch; tạo worktree sạch từ `github/webapp-checklist-r116`.
 - [x] Sau quality-gate failure `38958333812`, đã sửa provenance evidence: `284` eligible Web
       files; `preflight.json`, `web_inventory.json` và source hiện cùng fingerprint
