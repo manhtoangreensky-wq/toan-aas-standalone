@@ -56,7 +56,7 @@ ordered_waves:
     spec: R217-08
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
     name: product-video
-    note: "2026-10-17 source closeout: /tools/video now has 4 vertical lanes across 10 unique routes, lane input/output contracts, a 7-step input→plan→quote→confirm→progress→result→recovery journey and explicit AI/manual editing boundary. Focused video presentation test 11/11 and full Node 522/522 pass, node-check Portal/i18n and diff-check green; upload/render/delivery/real artifact runtime remains open."
+    note: "2026-10-17 source/browser closeout: /tools/video now has 4 vertical lanes across 10 unique routes, lane input/output contracts, a 7-step input→plan→quote→confirm→progress→result→recovery journey and explicit AI/manual editing boundary. The /video/finishing primary CTA is explicit. Focused video presentation test 11/11 and full Node 523/523 pass; CI run 39017696660 checked 6/6 hubs and captured 18 screenshots. Upload/render/delivery/real artifact runtime remains open."
   - id: W4
     spec: R217-09A
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
@@ -114,5 +114,5 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39016286441 FAILED at browser verification gate after provenance passed: one broken primary hub link and 5/6 hubs checked because Product Video primary CTA resolved to /video-studio instead of the established operational /video/finishing contract."
-next_action: "Commit/push the explicit Product Video primary CTA correction and refresh migration evidence for the new HEAD; wait for a new CI browser gate. Keep runtime/AX/performance and real-output evidence open; no provider, wallet, production, merge or deploy action."
+last_ci_run: "39017696660 SUCCEEDED: provenance, critical contracts, browser verification, browser runtime assertions, evidence upload and diff gate passed; 6/6 hubs checked and 18 screenshots captured after the explicit /video/finishing primary CTA correction."
+next_action: "Continue checklist order at R217-11 authenticated QA/performance evidence. Product Video source/browser gate is closed for this correction, but authenticated runtime, FPS/CLS/LCP/INP, upload/render/delivery and real artifacts remain open; no provider, wallet, production, merge or deploy action."

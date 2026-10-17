@@ -64,3 +64,11 @@ new planning-first order accidentally exposed `/video-studio` as primary and cau
 report one broken hub. The primary marker is now explicit on the editing quick action; planning
 and creation remain visible secondary entry points. This is presentation-only: routes, guarded
 states, seven-step flow and backend boundaries are unchanged.
+
+## CI verification 2026-10-17
+
+Candidate `4ece9119d1d9a09ded8177ed3a98bc07286d0d7f` passed GitHub Actions run `39017696660`.
+The browser verification gate checked all `6/6` product hubs, captured `18` screenshots, then
+the browser runtime assertions and evidence upload completed successfully. This proves the
+source/browser gate contract only; authenticated QA, performance tracing and real upload/render/
+delivery artifacts remain open.

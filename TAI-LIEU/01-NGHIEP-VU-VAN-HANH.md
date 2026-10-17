@@ -805,6 +805,9 @@ luồng lập kế hoạch thành luồng vận hành.
   bảy bước được giữ nguyên.
 - `node --check static/portal/portal.js`, `node --check static/portal/portal-i18n.js`
   và `git diff --check` đạt.
+- GitHub Actions run `39017696660` trên candidate `4ece9119d1d9a09ded8177ed3a98bc07286d0d7f`
+  đã đạt: browser gate kiểm đủ `6/6` hub, tạo `18` screenshot, browser runtime assertions,
+  upload evidence và diff gate đều thành công.
 - Đây chỉ là source presentation evidence. Upload, render, delivery, download và artifact
   video thật vẫn `guarded`; không gọi provider, không tạo job/MP4 và không đổi Xu/PayOS hay
   dữ liệu production.
