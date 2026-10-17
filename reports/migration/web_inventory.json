@@ -10316,7 +10316,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1096,
+      "occurrences": 1099,
       "provider": "PayOS"
     },
     {
@@ -18319,37 +18319,37 @@
   "schema_version": "2.0",
   "source_files_discovered": 284,
   "source_files_scanned": 284,
-  "source_fingerprint_sha256": "4dbdf2a50e5dd806a29a2ad0c55fd7bff8b36bffb79b1ef1551877ab82d4908f",
+  "source_fingerprint_sha256": "f46e771ca56d3c9b00db7a3861cc8de127be85b33a03783325ebd0c5aba03f79",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 33830,
+      "line": 33876,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34146,
+      "line": 34192,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33494,
+      "line": 33540,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33743,
+      "line": 33789,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33115,
+      "line": 33161,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33407,
+      "line": 33453,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -18564,7 +18564,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35249,
+      "line": 35295,
       "path": "/features"
     },
     {
