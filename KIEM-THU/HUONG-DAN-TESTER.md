@@ -3,7 +3,7 @@
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
-2. Chọn đúng một ID trong `WA-01..WA-48` cho mỗi lượt test; WA-44 kiểm Operations readiness, WA-45 Reliability, WA-46 hàng chờ bàn giao nội dung, WA-47 hàng việc điều hành, WA-48 danh sách khách hàng tiềm năng ẩn danh.
+2. Với luồng chung, chọn đúng một ID trong `WA-01..WA-48`; với bộ kiểm thử sản phẩm chuyên biệt, dùng mã đúng nhóm trong `DANH-SACH-CASE.md` (ví dụ `IUI-01..05` cho Image, `MUI-*` cho Music, `VUI-*` cho Voice). WA-44 kiểm Operations readiness, WA-45 Reliability, WA-46 hàng chờ bàn giao nội dung, WA-47 hàng việc điều hành, WA-48 danh sách khách hàng tiềm năng ẩn danh.
 3. Nếu cần đổi case, sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
 4. Tracker batch là GitHub issue `#412` của repo `manhtoangreensky-wq/toan-aas-standalone`.
 5. Không dùng chat/Zalo làm nơi lưu kết quả duy nhất.
@@ -77,6 +77,20 @@
 42. Với security/tiền, ghi provider/wallet/data/ENV/GitHub mutation counters.
 43. Với ship, tách PR merge, CI run, deploy run, runtime SHA, service health và live output.
 44. Builder self-report không thay independent Tester verdict.
+
+### WA-49 — Customer 360 locale/fixed chrome
+
+45. Dùng candidate SHA đã ghi trong PR; tạo hoặc dùng `canonical_admin_qa` chỉ trong DB QA cô
+    lập, không dùng tài khoản production và không gửi thao tác ví/provider.
+46. Mở Customer 360 ở VI, EN, ZH và hai theme tại `1440/1024/768/390`; kiểm tra tiêu đề,
+    thẻ trạng thái, ví/tài chính, tác vụ/tệp, hỗ trợ, nhật ký và modal khóa/mở khóa.
+47. Ở VI, fixed chrome không được còn `Charged`, `Tier`, `Assets`, `Support Desk`, `Audit Trail`;
+    dữ liệu server như mã khách, role/status, mã case, thời điểm và action/outcome không dịch.
+48. Không bấm xác nhận khóa/mở khóa, approve top-up, cộng Xu hoặc bất kỳ CTA ghi nào; chỉ kiểm
+    keyboard/focus, DOM/AX, overflow/clip, console và network request.
+49. Ghi rõ `3/3` locale, viewport/theme, expected/actual, ảnh/DOM/AX, console/network và
+    `runtime SHA` nếu có. Nếu thiếu `py`/`pytest` hoặc fixture thì ghi `BLOCKED`, không đổi
+    dependency và không suy diễn thành PASS.
 
 ## 7. Báo lỗi và retest
 

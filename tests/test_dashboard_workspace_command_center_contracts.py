@@ -193,7 +193,9 @@ def test_dashboard_is_private_in_pwa_and_uses_app_first_mobile_ui_rules() -> Non
     shell = SERVICE_WORKER.split("const SHELL = Object.freeze([", 1)[1].split("]);", 1)[0]
     assert '"/dashboard"' in private_prefixes
     assert '"/dashboard"' not in shell
-    command_center_css = CSS[CSS.index("/* Workspace Command Center"):]
+    start = CSS.index("/* Workspace Command Center")
+    end = CSS.index("/* Secure Access & First-Run Journey", start)
+    command_center_css = CSS[start:end]
     for token in (
         ".portal-workspace-command-center",
         ".portal-command-center-lanes",
@@ -207,7 +209,9 @@ def test_dashboard_is_private_in_pwa_and_uses_app_first_mobile_ui_rules() -> Non
 
 
 def test_dashboard_hero_uses_a_quiet_data_first_grid_with_aligned_mobile_actions() -> None:
-    command_center_css = CSS[CSS.index("/* Workspace Command Center"):]
+    start = CSS.index("/* Workspace Command Center")
+    end = CSS.index("/* Secure Access & First-Run Journey", start)
+    command_center_css = CSS[start:end]
     for token in (
         ".portal-workspace-command-center .portal-dashboard-overview {",
         "grid-template-columns: minmax(0, 1fr);",

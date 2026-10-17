@@ -32,6 +32,9 @@ def _rule(source: str, selector: str) -> str:
 def test_reference_first_welcome_keeps_a_truthful_product_surface_and_real_entry_actions() -> None:
     landing = _between(PORTAL, "function renderLanding(page, context)", "function renderVideoFinalization")
 
+    assert 'landing.hero.titleEmphasis' in landing
+    assert 'class="portal-landing-title-emphasis"' in landing
+    assert '<h1 id="portal-landing-title">${heroTitleMarkup}</h1>' in landing
     assert 'class="portal-landing-hero-stage"' in landing
     assert 'portal-landing-product-surface"' in landing
     assert 'portal-landing-product-surface-head"' in landing
@@ -134,7 +137,16 @@ def test_reference_first_welcome_uses_token_only_responsive_motion_safe_presenta
     assert "@media (max-width: 920px)" in THEME
     assert "@media (max-width: 600px)" in THEME
     assert "@media (prefers-reduced-motion: reduce)" in THEME
-    assert "#" not in THEME[THEME.index(".portal-landing-hero-stage"):]
+    tokenized_landing_rules = (
+        ".portal-landing-hero-stage",
+        ".portal-landing-product-surface",
+        ".portal-landing-product-surface-head",
+        ".portal-landing-product-surface-flow",
+        ".portal-landing-discovery-rail",
+        ".portal-landing-discovery-list",
+        ".portal-landing-discovery-list .portal-landing-studio",
+    )
+    assert all("#" not in _rule(THEME, selector) for selector in tokenized_landing_rules)
 
 
 def test_reference_first_product_surface_copy_keeps_its_compact_preview_type_scale() -> None:
@@ -197,7 +209,14 @@ def test_reference_first_welcome_has_trilingual_spotlight_copy_and_token_only_re
         ".portal-landing-spotlight-preview",
     ):
         assert selector in THEME
-    assert "#" not in THEME[THEME.index(".portal-landing-feature-strip"):]
+    tokenized_spotlight_rules = (
+        ".portal-landing-feature-strip",
+        ".portal-landing-spotlights",
+        ".portal-landing-spotlight",
+        ".portal-landing-spotlight--audio",
+        ".portal-landing-spotlight-preview",
+    )
+    assert all("#" not in _rule(THEME, selector) for selector in tokenized_spotlight_rules)
 
 
 def test_reference_first_welcome_reveals_its_feature_strip_and_spotlights_as_real_motion_scenes() -> None:

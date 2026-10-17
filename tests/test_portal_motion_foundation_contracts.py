@@ -108,7 +108,7 @@ def test_motion_utility_waits_for_view_transition_dom_update_before_entering() -
 def test_theme_declares_shared_portal_motion_tokens_and_lifecycle_selectors() -> None:
     root = _theme_root()
     expected_tokens = (
-        "--portal-motion-fast: 140ms;",
+        "--portal-motion-fast: 160ms;",
         "--portal-motion-base: 220ms;",
         "--portal-motion-slow: 420ms;",
         "--portal-motion-distance: 10px;",
@@ -148,7 +148,8 @@ def test_mount_portal_assigns_surface_and_delegates_render_lifecycle_to_motion()
     )
     for rendering_step in (
         "sidebar.innerHTML = renderSidebar(page, context);",
-        "header.innerHTML = renderHeader(page, context);",
+        "const headerMarkup = renderHeader(page, context);",
+        "if (!keepCustomerHeader) header.innerHTML = headerMarkup;",
         "main.innerHTML = renderPage(page, context);",
         "placeSfxCueSheetReceipt(main);",
         "bindInteractions();",

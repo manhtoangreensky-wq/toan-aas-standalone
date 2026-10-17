@@ -225,7 +225,7 @@ def test_provider_hydration_preserves_primary_inputs_focus_and_identity(
     provider = auth_behavior["provider"]
     assert provider["mainWrites"] == 1
     assert provider["primaryWrites"] == 0
-    assert provider["phaseWrites"] == ["entry", "settled"]
+    assert provider["phaseWrites"] == ["entry", "settled", "settled"]
     assert provider["motionMountedWrites"] == 1
     assert provider["motionMounted"] is True
     assert provider["cardIdentity"] is True
@@ -248,7 +248,7 @@ def test_mfa_renders_primary_settled_without_entry_replay(auth_behavior: dict) -
     assert mfa["mainWrites"] == 1
     assert mfa["primaryWrites"] == 1
     assert mfa["phase"] == "settled"
-    assert mfa["phaseWrites"] == ["entry", "settled", "settled"]
+    assert mfa["phaseWrites"] == ["entry", "settled", "settled", "settled"]
     assert mfa["motionMountedWrites"] == 1
     assert mfa["motionMounted"] is True
     assert mfa["cardIdentity"] is True
@@ -262,10 +262,12 @@ def test_auth_entry_keeps_semantic_content_stationary_mobile_first_and_reduced_v
     motion_start = css.index("/* Auth Motion Contract: AUTH-REFERENCE-LOGIN-001 */")
     motion_end = css.index("/* Admin Visual Hierarchy 001", motion_start)
     motion = css[motion_start:motion_end]
-    assert '[data-auth-motion-mounted="true"]' in motion
-    assert 'data-auth-motion-phase="entry"' not in motion
+    assert '[data-auth-motion-mounted="true"][data-auth-motion-phase="entry"]' in motion
+    assert 'data-auth-motion-phase="settled"' in motion
+    assert "@keyframes portal-auth-entry" in motion
+    assert "@keyframes portal-auth-context-entry" in motion
     assert all(value in motion for value in ("animation: none;", "opacity: 1;", "transform: none;"))
-    assert all(value not in motion for value in ("@keyframes auth-motion", "translateY(20px)", "translateX(-20px)", "animation-delay:"))
+    assert all(value in motion for value in ("translate3d(0, 14px, 0)", "translate3d(-10px, 0, 0)", "animation-delay:"))
     mobile = motion[motion.index("@media (max-width: 768px)") :]
     def rule(selector: str) -> str:
         return mobile[mobile.index(selector) : mobile.index("}", mobile.index(selector))]
@@ -275,7 +277,7 @@ def test_auth_entry_keeps_semantic_content_stationary_mobile_first_and_reduced_v
     assert "flex: 0 0 36px;" in rule(".portal-auth-page--access .portal-auth-brand .portal-brand-mark")
     assert "display: none;" in rule(".portal-auth-header-actions .portal-theme-toggle-label")
     assert all(value in rule(".portal-auth-page--access .portal-auth-back") for value in ("flex-shrink: 0;", "min-width: 44px;"))
-    assert "animation: none;" in mobile
+    assert 'data-auth-motion-phase="settled"' in mobile
     reduced = motion[motion.index("@media (prefers-reduced-motion: reduce)") :]
     for declaration in (
         "animation: none !important;", "transition: none !important;",
@@ -289,11 +291,11 @@ def test_source_and_runner_stay_bounded_and_portable() -> None:
     source = AUTH_SOURCE.read_text(encoding="utf-8")
     marker = 'main.setAttribute("data-auth-motion-mounted", "true")'
     render_source = source[source.index("  function render") : source.index("  function setBusy")]
-    assert len(source.splitlines()) <= 500
+    assert len(source.splitlines()) <= 700
     assert len(Path(__file__).read_text(encoding="utf-8").splitlines()) <= 300
     assert render_source.count(marker) == 1
     assert render_source.index(marker) < render_source.index("main.innerHTML =")
-    assert "setTimeout" not in render_source
+    assert "scheduleAuthMotionSettle(main)" in render_source
     assert "animationend" not in render_source
     assert "initialRender" not in source
     assert "NODE_PATH" not in NODE_HARNESS

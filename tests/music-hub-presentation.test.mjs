@@ -56,6 +56,10 @@ for (const locale of ['vi', 'en', 'zh']) {
     assert.ok(html.indexOf('data-music-group="creation"') < html.indexOf('data-music-group="library"'));
     assert.doesNotMatch(html, /portal-document-board-actions|Khởi tạo nhanh|Quick start|快速开始/);
     assert.match(html, /data-music-route-count="6"/);
+    assert.match(html, /data-music-journey/);
+    assert.equal(html.match(/data-music-journey-step=/g)?.length, 3);
+    assert.match(html, /data-music-mode="background"/);
+    assert.match(html, /data-music-mode="song"/);
     assert.doesNotMatch(text, /Stereo\s*320k|Royalty-Free|commercial rights|bản quyền thương mại|chuẩn phòng thu/i);
     assert.doesNotMatch(html, /<audio\b|<source\b|data-portal-action="feature-confirm"|provider_called|wallet_mutated/i);
     if (locale === 'en') {
@@ -82,6 +86,8 @@ for (const locale of ['vi', 'en', 'zh']) {
     assert.match(html, /data-status="guarded"/);
     assert.equal(html.match(/data-music-primary/g)?.length, 1);
     assert.match(html, /href="\/music\/create"[^>]*data-music-primary/);
+    assert.equal(html.match(/data-music-role="primary"/g)?.length, 2);
+    assert.equal(html.match(/data-music-role="supporting"/g)?.length, 1);
     assert.ok(containsAny(plainText(html), [
       context.uiText('musicHub.actions.details', ''),
       context.uiText('musicHub.actions.open', '')

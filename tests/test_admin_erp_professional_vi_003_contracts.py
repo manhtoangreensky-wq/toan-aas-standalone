@@ -148,7 +148,7 @@ def test_render_summary_uses_reviewed_locale_keys_for_every_fixed_label_and_stat
 
 def test_admin_header_reuses_signed_locale_action_and_excludes_customer_chrome() -> None:
     header = _between(PORTAL, "function renderHeader(page, context)", "function renderFields(fields, enabled, context, fieldValues, idNamespace)")
-    _contains(header, "const canOfferPwaInstall = Boolean(!adminSurface &&", "const currentLocale = interfaceLocaleFor(context);", "const adminHeaderLocaleForm = adminSurface", 'data-portal-action="update-interface-locale"', 'data-portal-route="/admin"', 'name="locale"', 'value="${value}"', "const customerUserDropdown =", "const adminUserDropdown =", "adminSurface ? adminUserDropdown : customerUserDropdown")
+    _contains(header, "const canOfferPwaInstall = Boolean(!adminSurface &&", "const currentLocale = interfaceLocaleFor(context);", "const adminHeaderLocaleForm = adminSurface", 'data-portal-action="update-interface-locale"', 'data-portal-route="/admin"', 'name="locale"', 'value="${value}"', 'uiText("chrome.accountMembershipBadge"', "const customerUserDropdown =", "const adminUserDropdown =", "adminSurface ? adminUserDropdown : customerUserDropdown")
     for locale in ("vi", "en"):
         assert f'localeOption("{locale}",' in header
     locale_form = _between(header, "const adminHeaderLocaleForm =", "const customerUserDropdown =")
@@ -157,7 +157,9 @@ def test_admin_header_reuses_signed_locale_action_and_excludes_customer_chrome()
     admin = _between(header, "const adminUserDropdown =", "const userDropdown =")
     _contains(header_actions, "${adminHeaderLocaleForm}")
     _excludes(locale_form, 'localeOption("zh",')
-    _contains(customer, '<span style="font-size:11px; font-weight:700; background:rgba(255,255,255,0.1); color:${headerTierInfo.currentTier.color}; padding:1px 6px; border-radius:4px; border:1px solid ${headerTierInfo.currentTier.color}44;">${safeText(headerTierInfo.currentTier.badge)}</span>', '<a class="portal-user-dropdown-item" href="/admin" style="background: rgba(0, 242, 254, 0.08); border-left: 3px solid #00f2fe;">', '<div><strong style="color:#00f2fe;">⚙️ Trang Quản Trị Admin ERP</strong><small>Quản lý người dùng, duyệt Xu, tài chính & hệ thống</small></div>')
+    assert re.search(r'<span\b[^>]*>\$\{safeText\(headerTierBadge\)\}</span>', customer), "Customer dropdown must render the dynamic membership tier badge"
+    _contains(customer, '<a class="portal-user-dropdown-item" href="/admin" style="background: rgba(0, 242, 254, 0.08); border-left: 3px solid #00f2fe;">', 'uiText("featureCatalog.entry.membership.title"', 'uiText("chrome.accountMenu.membershipDescription"', 'uiText("chrome.accountMenu.walletDescription"', 'uiText("chrome.accountMenu.topupDescription"', 'uiText("chrome.accountMenu.profileDescription"', 'uiText("chrome.accountMenu.securityDescription"', 'uiText("chrome.adminAppCaption"', 'uiText("chrome.accountMenu.adminDescription"')
+    _excludes(customer, "Quyền Lợi", "Thông tin tài khoản & quyền lợi Xu", "Ví & Số dư Xu", "Cổng thanh toán PayOS VietQR", "Hồ sơ & Cài đặt", "Bảo mật & Đổi mật khẩu", "Trang Quản Trị Admin ERP", "Quản lý người dùng, duyệt Xu, tài chính & hệ thống", "Đăng xuất / Thoát tài khoản")
     _contains(admin, 'href="/account"', 'href="/account/security"', 'data-portal-action="auth-logout"')
     _excludes(admin, "${adminHeaderLocaleForm}", 'data-portal-action="update-interface-locale"')
     for key in ("account.profile", "account.profile_description", "account.security", "account.security_description", "accountCenter.profile.logoutConfirm", "accountCenter.profile.logout"):

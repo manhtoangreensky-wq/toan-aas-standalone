@@ -27,14 +27,21 @@
     FastAPI must create it from a signed session, never from raw browser input.
   -->
   <div class="portal-shell" id="portal-shell" data-portal-shell>
-    <aside class="portal-sidebar" id="portal-sidebar" aria-label="__PORTAL_MAIN_NAVIGATION__" data-portal-sidebar></aside>
+    <aside class="portal-sidebar" id="portal-sidebar" aria-label="__PORTAL_MAIN_NAVIGATION__" data-portal-sidebar>__PORTAL_INITIAL_SIDEBAR__</aside>
     <div class="portal-backdrop" data-portal-backdrop hidden></div>
     <section class="portal-workspace">
-      <header class="portal-header" data-portal-header></header>
+      <header class="portal-header" data-portal-header>__PORTAL_INITIAL_HEADER__</header>
       <main class="portal-main" id="portal-main" tabindex="-1" data-portal-main>
         <section class="portal-boot" aria-live="polite">
-          <span class="portal-loader" aria-hidden="true"></span>
-          <p>__PORTAL_BOOT_MESSAGE__</p>
+          <p class="portal-sr-only">__PORTAL_BOOT_MESSAGE__</p>
+          <div class="portal-boot-skeleton" aria-hidden="true">
+            <span class="portal-boot-skeleton-title"></span>
+            <span class="portal-boot-skeleton-copy"></span>
+            <div class="portal-boot-skeleton-grid">
+              <span></span><span></span><span></span>
+              <span></span><span></span><span></span>
+            </div>
+          </div>
         </section>
       </main>
     </section>

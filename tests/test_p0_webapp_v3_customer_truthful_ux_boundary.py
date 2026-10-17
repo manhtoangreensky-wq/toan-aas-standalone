@@ -98,9 +98,10 @@ def test_05_portal_features_js_boundary_signals_and_search() -> None:
     """Verify portal-features.js tags catalog cards with boundary signals and search keywords."""
     assert "function classifyCatalogBoundary(feature)" in PORTAL_FEATURES_JS
     assert 'data-boundary' in PORTAL_FEATURES_JS
-    assert "Job Bridge" in PORTAL_FEATURES_JS
-    assert "Kế hoạch Web" in PORTAL_FEATURES_JS
-    assert "Bộ tạo AI" in PORTAL_FEATURES_JS
+    assert 'boundary: ["Liên kết tác vụ chuẩn", "Lập kế hoạch trên Web", "Tạo nội dung bằng AI"]' in PORTAL_FEATURES_JS
+    assert 'boundary: ["Canonical workflow", "Web planning", "AI content generation"]' in PORTAL_FEATURES_JS
+    assert 'boundary: ["标准工作流", "网页规划", "AI 内容生成"]' in PORTAL_FEATURES_JS
+    assert "portal-boundary-label" in PORTAL_FEATURES_JS
     assert "job bridge canonical thực thi trực tiếp" in PORTAL_FEATURES_JS
     assert "kế hoạch workspace bản nháp draft web planning" in PORTAL_FEATURES_JS
     assert "bộ tạo ai bot generator runtime" in PORTAL_FEATURES_JS

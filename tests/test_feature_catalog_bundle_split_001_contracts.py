@@ -28,6 +28,7 @@ def test_features_uses_only_its_route_entry_and_shared_presentation_scripts() ->
     assert 'class="portal-body portal-body--features"' in html
     assert _scripts("/features") == {
         "/static/portal/portal-theme.js",
+        "/static/portal/portal-feature-catalog-copy.js",
         "/static/portal/portal-features.js",
     }
 
@@ -36,6 +37,7 @@ def test_features_split_also_applies_to_fallback_template(monkeypatch) -> None:
     monkeypatch.setattr(copyfast_pages, "TEMPLATE", ROOT / "templates" / "missing.html")
     scripts = _scripts("/features")
     assert "/static/portal/portal-features.js" in scripts
+    assert "/static/portal/portal-feature-catalog-copy.js" in scripts
     assert not ({
         "/static/portal/integration.js",
         "/static/portal/admin-customer-directory.js",
@@ -154,7 +156,9 @@ def test_features_reserves_its_final_header_geometry_without_global_layout_chang
 def test_feature_entry_participates_in_build_id_and_fixed_shell_cache() -> None:
     pages = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
     worker = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
+    assert '"portal-feature-catalog-copy.js",' in pages
     assert '"portal-features.js",' in pages
+    assert '"/static/portal/portal-feature-catalog-copy.js",' in worker
     assert '"/static/portal/portal-features.js",' in worker
     for existing in (
         "/static/portal/portal-i18n.js", "/static/portal/portal.js",

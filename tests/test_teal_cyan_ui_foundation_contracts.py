@@ -705,7 +705,8 @@ def test_public_landing_uses_a_bounded_editorial_hero_scale() -> None:
     )
 
     assert headings
-    assert any("font-size: clamp(40px, 4.5vw, 64px);" in declaration for declaration in headings)
+    assert any("font-size: clamp(52px, 5vw, 64px);" in declaration for declaration in headings)
+    assert any("font-size: clamp(36px, 10.5vw, 46px);" in declaration for declaration in headings)
 
 
 def test_primary_actions_use_the_accessible_dark_teal_and_readable_on_action_text() -> None:
@@ -719,6 +720,54 @@ def test_primary_actions_use_the_accessible_dark_teal_and_readable_on_action_tex
     assert "--portal-on-action: #ffffff;" in root.group("declarations")
     assert "background: var(--portal-action);" in primary.group("declarations")
     assert "color: var(--portal-on-action);" in primary.group("declarations")
+
+
+def test_dark_theme_input_placeholder_meets_normal_text_contrast_on_teal_surface() -> None:
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    placeholder = re.search(r"--portal-teal-dark-placeholder:\s*(#[0-9a-fA-F]{6})\s*;", theme_source)
+    input_surface = re.search(r"--portal-teal-dark-surface:\s*(#[0-9a-fA-F]{6})\s*;", theme_source)
+
+    assert placeholder is not None
+    assert input_surface is not None
+    assert "--portal-input-placeholder: var(--portal-teal-dark-placeholder);" in theme_source
+    assert "--portal-input-bg: var(--portal-teal-dark-surface);" in theme_source
+    assert _contrast_ratio(placeholder.group(1), input_surface.group(1)) >= 4.5
+
+
+def test_dark_theme_primary_actions_keep_light_text_and_aa_contrast_in_both_states() -> None:
+    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    root = re.search(r":root\s*\{(?P<declarations>.*?)\n\}", theme_source, flags=re.DOTALL)
+    default = re.search(
+        r'html\[data-portal-theme="dark"\]\s+\.portal-button--primary\s*\{(?P<declarations>.*?)\n\}',
+        theme_source,
+        flags=re.DOTALL,
+    )
+    hover = re.search(
+        r'html\[data-portal-theme="dark"\]\s+\.portal-button--primary:hover:not\(:disabled\)\s*'
+        r'\{(?P<declarations>.*?)\n\}',
+        theme_source,
+        flags=re.DOTALL,
+    )
+
+    assert root is not None
+    assert default is not None
+    assert hover is not None
+    root_declarations = root.group("declarations")
+    dark_ink = re.search(r"--portal-teal-dark-ink:\s*(#[0-9a-fA-F]{6})\s*;", root_declarations)
+    default_action = re.search(r"--portal-teal-dark-cta-action:\s*(#[0-9a-fA-F]{6})\s*;", root_declarations)
+    hover_action = re.search(r"--portal-teal-dark-cta-hover:\s*(#[0-9a-fA-F]{6})\s*;", root_declarations)
+
+    assert dark_ink is not None
+    assert default_action is not None
+    assert hover_action is not None
+    assert "background: var(--portal-teal-dark-cta-action) !important;" in default.group("declarations")
+    assert "color: var(--portal-teal-dark-ink) !important;" in default.group("declarations")
+    assert "background: var(--portal-teal-dark-cta-hover) !important;" in hover.group("declarations")
+    assert "color: var(--portal-teal-dark-ink) !important;" in hover.group("declarations")
+    assert _contrast_ratio(dark_ink.group(1), default_action.group(1)) >= 4.5
+    assert _contrast_ratio(dark_ink.group(1), hover_action.group(1)) >= 4.5
+
+    assert "filter: none !important;" in hover.group("declarations")
 
 
 def test_light_auth_provider_options_override_dark_catalogue_text() -> None:
@@ -2330,7 +2379,7 @@ def test_light_music_library_keeps_private_metadata_and_guard_states_readable() 
         "portal-music-library-guard",
     ):
         assert marker in PORTAL_CLIENT
-    assert "Không mở player/preview" in PORTAL_CLIENT
+    assert "Không mở trình phát/xem trước" in PORTAL_CLIENT
     assert all(
         selector in PORTAL_CATALOGUE
         for selector in (
@@ -2444,7 +2493,7 @@ def test_light_account_security_keeps_signed_session_and_mfa_states_readable() -
         "portal-security-assurance",
     ):
         assert marker in PORTAL_CLIENT
-    assert "Signed session hợp lệ" in PORTAL_CLIENT
+    assert "Phiên đã xác thực hợp lệ" in PORTAL_CLIENT
     assert "Tình trạng bảo mật" in PORTAL_CLIENT
     assert all(
         selector in PORTAL_CATALOGUE
@@ -2760,9 +2809,9 @@ def test_light_audio_production_hub_main_surface_keeps_authoring_boundaries_read
     route = ".portal-page.portal-audio-hub"
     for marker in (
         "Audio production board",
-        "Hub dùng collection Media Workspace đã có thay vì tạo thêm kho dữ liệu.",
-        "Handoff có chủ đích",
-        "Không có music generation, provider library, enhance, translate, mux/render, job, Xu hay payment",
+        "Hub chỉ là projection của collection Media Workspace; không tạo database, API, player, waveform, provider catalog, generator, job, ví Xu, PayOS hay output mới.",
+        "Mỗi công cụ tiếp theo mở độc lập. Hub không chuyển collection, asset, account data hoặc lệnh thực thi qua URL, query hoặc browser storage.",
+        "This space does not create music, open provider libraries, enhance, translate, mux or render, create jobs, charge credits or take payments.",
     ):
         assert marker in PORTAL_CLIENT
     for selector in (

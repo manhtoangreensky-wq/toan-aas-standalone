@@ -295,6 +295,40 @@ def test_admin_auth_and_authority_truth(tmp_path, monkeypatch):
         assert "text/html" in res_topups_page.headers["content-type"]
 
 
+def test_isolated_canonical_admin_fixture_opens_admin_child_routes(tmp_path, monkeypatch):
+    """A QA-only canonical fixture must open every read-only Admin child shell."""
+    client, db_path = _setup_app_client(tmp_path, monkeypatch)
+
+    with client:
+        client.post(
+            "/api/v1/auth/register",
+            json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD, "display_name": "QA Canonical Admin"},
+        )
+        with sqlite3.connect(db_path) as conn:
+            conn.execute(
+                "UPDATE web_accounts SET role_cache='admin', canonical_user_id='canonical-admin' WHERE email=?",
+                (ADMIN_EMAIL,),
+            )
+
+        login = client.post(
+            "/api/v1/auth/login",
+            json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD, "admin_portal": True},
+        )
+        assert login.status_code == 200
+        assert login.json()["ok"] is True
+
+        for route in (
+            "/admin/operations",
+            "/admin/payments",
+            "/admin/customers",
+            "/admin/audit",
+            "/admin/support",
+        ):
+            response = client.get(route, follow_redirects=False)
+            assert response.status_code == 200, route
+            assert "text/html" in response.headers["content-type"], route
+
+
 def test_unauthenticated_requests_fail_closed(tmp_path, monkeypatch):
     """Unauthenticated access to protected APIs returns 401; protected customer pages redirect."""
     client, db_path = _setup_app_client(tmp_path, monkeypatch)
