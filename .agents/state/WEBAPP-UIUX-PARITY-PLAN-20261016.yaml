@@ -4,7 +4,7 @@ objective: "Tiếp tục thực thi tuần tự plan/checklist/spec WebApp stand
 scope: "Customer shell, Admin shell, product-lane UI/UX, locale, responsive, accessibility, motion và browser/live evidence."
 out_of_scope: "Bot/Core code, route-engine, provider calls, wallet/Xu, PayOS, production data, VPS, deploy, merge và backend mutation."
 base_remote_sha: f59eacf63a49534854dc7cde06e5baed6546dc58
-working_branch: webapp-plan-r116
+working_branch: webapp-live-r117
 target_branch: webapp-checklist-r116
 pull_request: 647
 status: ACTIVE_SOURCE_EXECUTION
@@ -78,7 +78,7 @@ ordered_waves:
   - id: W8
     spec: R217-12
     status: LIVE_DRIFT_OPEN
-    note: "Fresh read-only evidence 2026-10-17 13:35 UTC after deploy workflow 39036918159 (runtime bc0d089055df7a52c1ee9e3e76a5cbc57beacce4; health/service checks green) confirms the asset fingerprint changed off local-57e76aa281dcc721fdaa, but /features?lang=vi|en|zh still redirects to login?next=/features and loses locale. Root cause is the shared unauthenticated redirect using normalized without allowlisted lang; a focused app.py fix plus vi/en/zh regression is now prepared on webapp-live-r117. Landing mobile/PWA/auth checks must be repeated after that fix delivery; keep R216-H/L/P and LIVE_DRIFT_OPEN."
+    note: "Fresh read-only evidence 2026-10-17 13:35 UTC after deploy workflow 39036918159 (runtime bc0d089055df7a52c1ee9e3e76a5cbc57beacce4; health/service checks green) confirmed /features?lang=vi|en|zh still dropped locale before login. Source candidate 0ad78e5 now carries the allowlisted locale on both the encoded return target and the /login URL, and portal-auth/integration accept only one reviewed lang query (vi|en|zh); 17/17 focused and 525/525 full Node pass, py_compile pass. Candidate is not deployed; landing mobile/PWA/auth checks must be repeated after delivery, so keep R216-H/L/P and LIVE_DRIFT_OPEN."
   - id: W9
     spec: R217-13
     status: DEFERRED
@@ -117,4 +117,4 @@ created_files:
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
 last_ci_run: "39036418754 SUCCESS on merge bc0d089: Verify Web App job 117407092586 and Authenticated WebApp QA job 117407581546 passed; authenticated matrix completed 456/456 with safety mutations 0. Deploy 39036918159 then validated health payload TOAN AAS Web App/app.py and active Web/Nginx services; live locale recheck still failed closed."
-next_action: "R217-12 remains LIVE_DRIFT_OPEN because post-delivery read-only recheck found /features?lang=en|zh losing locale. Land the focused app.py redirect fix on webapp-live-r117, pass the same quality gates, deploy, then repeat locale redirect, auth install, PWA placement and 390x844/1440x900 checks; no provider or wallet action."
+next_action: "R217-12 remains LIVE_DRIFT_OPEN until candidate 0ad78e5 is delivered. Run CI/quality gates, then (only with Owner delivery approval) deploy and repeat locale redirect, auth install, PWA placement and 390x844/1440x900 checks; no provider or wallet action."

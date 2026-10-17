@@ -556,3 +556,11 @@ Bot, không đổi engine, route/action/field/capability, ví/Xu hoặc dữ li�
 
 Batch này chỉ đóng source recheck Admin. Không được gọi đây là parity runtime với Bot hoặc
 duyệt tiền thật.
+
+## Đối chiếu bổ sung — R217-12 auth locale return — 17/10/2026
+
+| Chức năng gốc / hiện tại | Đối chiếu candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Route được bảo vệ giữ ngôn ngữ đã chọn khi yêu cầu đăng nhập | `/features?lang=vi|en|zh` nay tạo return target có đúng `lang` và mở `/login` cùng locale; client chỉ nhận một tham số `lang` đã allowlist. | `app.py`, `static/portal/portal-auth.js`, `static/portal/integration.js`; focused `17/17`, full Node `525/525` |
+| An toàn return path | Query ngoài `lang`, fragment, backslash, đường dẫn ngoài và auth-loop bị fail-closed; không đổi route/action/field hoặc quyền. | `node --check`, `py_compile`, `git diff --check`; chưa có live/CI sau candidate |
+| Trạng thái giao nhận | Candidate commit `0ad78e5` đã khóa source nhưng chưa phải merge/deploy/live. | Cần CI và read-only production recheck trước khi đánh dấu ✅ runtime |

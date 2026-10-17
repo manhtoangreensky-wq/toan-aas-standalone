@@ -636,6 +636,13 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       Đã khoanh đúng một nhánh trong `app.py`, thêm regression cho `vi/en/zh`; chờ PR sửa
       tiếp theo và lặp lại live matrix trước khi đóng `R216-L`.
 
+- [x] **SOURCE-R217-12-02 — candidate `0ad78e5` — 2026-10-17:** Sửa đúng seam locale:
+      redirect unauthenticated đưa `lang=vi|en|zh` lên cả URL `/login` và return target đã mã hóa;
+      `portal-auth.js` và `integration.js` chỉ nhận đúng một query `lang` trong allowlist, mọi query
+      khác/fragment/backslash/auth-loop vẫn fail-closed. Focused `17/17`, full Node `525/525`,
+      `node --check` hai JavaScript, `py_compile` `4/4` và `git diff --check` đạt. Đây mới là
+      source evidence; chưa CI/deploy/live nên R217-12 vẫn `LIVE_DRIFT_OPEN`.
+
 - [~] **R217-12 fresh 2026-10-17 11:40:28 UTC — R216-L:** `/features?lang=vi|en|zh`
       vẫn kết thúc ở `/login?next=/features` và làm mất locale query. `main#portal-main`
       vẫn có `tabindex=-1`, nhưng các lần `en`/`zh` rơi về document `vi`/`Đăng nhập ·
@@ -752,8 +759,8 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=Giữ R217-12 LIVE_DRIFT_OPEN sau read-only recheck 2026-10-17; chờ delivery hợp lệ
-đưa source fingerprint mới lên production rồi lặp lại route-locale/PWA/auth viewport matrix
+NEXT_ACTION=Giữ R217-12 LIVE_DRIFT_OPEN sau read-only recheck 2026-10-17; candidate 0ad78e5 đã
+đưa locale lên cả login URL và return path, chờ CI/delivery hợp lệ rồi lặp lại route-locale/PWA/auth viewport matrix
 (390×844 và 1440×900 đã có baseline read-only). R217-10 source motion đã khóa timing/lifecycle/
 reduced-motion với focused `43/43`, full Node `523/523`; không chuyển sang R217-13 và không
 suy diễn artifact QA thành real output. PROVIDER_CALLS=0, WALLET_MUTATIONS=0,

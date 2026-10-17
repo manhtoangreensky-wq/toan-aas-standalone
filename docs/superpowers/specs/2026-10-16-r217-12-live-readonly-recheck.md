@@ -120,6 +120,24 @@ remains discarded. Regression coverage asserts all three locale redirects and pr
 existing `/dashboard` no-query redirect. No account, form, CTA, upload, provider, wallet or
 production-data mutation occurred during this probe.
 
+## Source correction — candidate `0ad78e5` — 2026-10-17
+
+The first source correction preserved `lang` only inside `next`, which was not enough for the
+public login shell and was rejected by the browser return-path guard. The focused follow-up now:
+
+- appends the same allowlisted `lang=vi|en|zh` to `/login` while keeping the encoded return target;
+- permits exactly one `lang` query on the client return path, while continuing to reject every other
+  query, fragment, backslash, external path and auth-loop route;
+- covers both password/Telegram auth (`portal-auth.js`) and the shared OAuth/link return helper
+  (`integration.js`) without changing route/action/field or session authority.
+
+Evidence on the candidate: focused locale/UX guard `17/17`, full Node suite `525/525`,
+`node --check` for both modified JavaScript files, `py_compile` for `app.py` and three Python
+contract files, and `git diff --check` all pass. `pytest` is not runnable in this checkout because
+the bundled Python runtime has no `pytest` module. The candidate is committed but not deployed;
+R217-12 remains `LIVE_DRIFT_OPEN` until CI, delivery and a read-only production recheck prove the
+new redirect and the prior PWA/mobile/auth surfaces together.
+
 ## Source quality-gate refresh — 2026-10-17
 
 After the final provenance refresh candidate `7942548`, GitHub workflow `39034978224` completed
