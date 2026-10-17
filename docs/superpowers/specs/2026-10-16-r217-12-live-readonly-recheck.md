@@ -103,6 +103,23 @@ defects: the source branch's mobile wrap and readiness-gated inline placement ar
 delivered to production. Keep `LIVE-UI-01`, `LIVE-UI-02`, `R216-H`, `R216-L` and `R216-P`
 open until a valid delivery and a post-delivery recheck succeed.
 
+## Post-delivery evidence — 2026-10-17 13:35 UTC
+
+The Owner-authorized WebApp deployment workflow `39036918159` deployed merge SHA
+`bc0d089055df7a52c1ee9e3e76a5cbc57beacce4`. The workflow's forward-only guard, tracked-source
+backup, `toanaas-web.service`/`nginx.service` checks and `/health` payload validation all passed.
+The production asset fingerprint changed from the pre-delivery `local-57e76aa281dcc721fdaa`.
+
+The read-only browser probe then found one remaining defect: all three requests
+`/features?lang=vi`, `/features?lang=en` and `/features?lang=zh` still ended at
+`/login?next=/features`, so the requested interface locale was discarded before the login shell.
+The root cause is the shared unauthenticated redirect in `app.py`: it used `normalized` as the
+return target and never copied the reviewed `lang` query. The focused fix on `webapp-live-r117`
+allowlists only `vi|en|zh` and appends that value to the encoded return target; other query data
+remains discarded. Regression coverage asserts all three locale redirects and preserves the
+existing `/dashboard` no-query redirect. No account, form, CTA, upload, provider, wallet or
+production-data mutation occurred during this probe.
+
 ## Source quality-gate refresh — 2026-10-17
 
 After the final provenance refresh candidate `7942548`, GitHub workflow `39034978224` completed

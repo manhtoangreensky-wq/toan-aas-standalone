@@ -78,7 +78,7 @@ ordered_waves:
   - id: W8
     spec: R217-12
     status: LIVE_DRIFT_OPEN
-    note: "Fresh read-only evidence 2026-10-17 12:29:53 UTC confirms production still serves fingerprint local-57e76aa281dcc721fdaa. /features?lang=vi|en|zh still redirects to login?next=/features and loses locale; direct /login?lang=vi|en|zh exposes the stale install labels (VI 📲Tải & Cài đặt App TOAN AAS, EN 📲Install TOAN AAS App, ZH 📲安装 TOAN AAS App). At 390x844, body/root/client=390 but .portal-landing-nav scrollWidth=356 vs clientWidth=343, actions remain flex-wrap:nowrap, and the old PWA FAB remains visible/fixed/display:flex at 44x44 around (12,720). At 1440x900 body/root/client=1440 but the old PWA FAB remains visible/fixed/display:flex at 171.95x41.10 around (1023.05,834.90). Console warnings/errors=0; source delivery is stale. Keep R216-H/L/P and repeat the same viewport matrix after delivery."
+    note: "Fresh read-only evidence 2026-10-17 13:35 UTC after deploy workflow 39036918159 (runtime bc0d089055df7a52c1ee9e3e76a5cbc57beacce4; health/service checks green) confirms the asset fingerprint changed off local-57e76aa281dcc721fdaa, but /features?lang=vi|en|zh still redirects to login?next=/features and loses locale. Root cause is the shared unauthenticated redirect using normalized without allowlisted lang; a focused app.py fix plus vi/en/zh regression is now prepared on webapp-live-r117. Landing mobile/PWA/auth checks must be repeated after that fix delivery; keep R216-H/L/P and LIVE_DRIFT_OPEN."
   - id: W9
     spec: R217-13
     status: DEFERRED
@@ -116,5 +116,5 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39034978224 SUCCESS: Verify Web App job 117402852575 and Authenticated WebApp QA job 117403448516 passed on HEAD 7942548; authenticated job 5m12s, 456/456 passed, records_failed=0, safety mutations=0. Artifact authenticated sha256:5ca1ad0448bcd3388695ffee032a4c99b3493fa59774b66e0725b385ef824d37; browser sha256:d61a2372b3683c658c6ad1c606943198bfe558454151305df7d5b3d9af592ef7. Environment warnings only: Node 20 deprecation and upcoming Ubuntu image change."
-next_action: "R217-12 remains LIVE_DRIFT_OPEN after the 2026-10-17 viewport-capable read-only recheck. Wait for a valid source delivery, then repeat locale redirect, auth install, PWA placement and 390x844/1440x900 viewport checks; do not infer real provider output from QA artifacts. No provider, wallet, production, merge or deploy action."
+last_ci_run: "39036418754 SUCCESS on merge bc0d089: Verify Web App job 117407092586 and Authenticated WebApp QA job 117407581546 passed; authenticated matrix completed 456/456 with safety mutations 0. Deploy 39036918159 then validated health payload TOAN AAS Web App/app.py and active Web/Nginx services; live locale recheck still failed closed."
+next_action: "R217-12 remains LIVE_DRIFT_OPEN because post-delivery read-only recheck found /features?lang=en|zh losing locale. Land the focused app.py redirect fix on webapp-live-r117, pass the same quality gates, deploy, then repeat locale redirect, auth install, PWA placement and 390x844/1440x900 checks; no provider or wallet action."

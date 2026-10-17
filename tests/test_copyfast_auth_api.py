@@ -2180,6 +2180,10 @@ def test_customer_portal_keeps_web_workspace_independent_from_telegram_link_stat
         unauthenticated = client.get("/dashboard", follow_redirects=False)
         assert unauthenticated.status_code == 307
         assert unauthenticated.headers["location"] == "/login?next=/dashboard"
+        for locale in ("vi", "en", "zh"):
+            localized = client.get(f"/features?lang={locale}", follow_redirects=False)
+            assert localized.status_code == 307
+            assert localized.headers["location"] == f"/login?next=/features%3Flang%3D{locale}"
         assert client.get("/legal").status_code == 200
 
         registration = client.post("/api/v1/auth/register", json={"email": "redirect@example.com", "password": "correct-horse-battery-staple"})
