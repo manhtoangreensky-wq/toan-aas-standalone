@@ -533,11 +533,12 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       console error/warning, network request và persistence sau reload.
 - [ ] Các lane Image/Voice/Music/SubDub/Video phải có evidence từng state; nếu engine chưa
       có, evidence phải chứng minh guarded boundary chứ không gọi output PASS.
-- [~] **SOURCE-R217-11-02 — 2026-10-17:** Đã thêm fixture test DB tạm với
+- [x] **SOURCE-R217-11-02 — 2026-10-17:** Đã thêm fixture test DB tạm với
       `role_cache='admin'` và `canonical_user_id='canonical-admin'`, kiểm tra shell HTML của
       `/admin/operations`, `/admin/payments`, `/admin/customers`, `/admin/audit` và
-      `/admin/support`. `py_compile` đạt; CI cần chạy để xác nhận route contract. Đây là
-      source auth evidence, chưa thay thế browser DOM/AX matrix.
+      `/admin/support`. `py_compile` đạt; CI run `39021192324` passed. Đây là source auth
+      evidence, chưa thay thế browser DOM/AX matrix. `/admin/billing` được ghi nhận là
+      legacy name, không dùng trong canonical acceptance matrix.
 
 ## 9. W8 — Live read-only recheck — Spec R217-12
 

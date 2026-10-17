@@ -59,5 +59,6 @@ condition is a user supplied or preloaded isolated QA runtime; production is not
 `role_cache='admin'` and `canonical_user_id='canonical-admin'`, then checks the HTML shell for
 the five canonical Admin child routes. The existing local bridge shortcut resolves that known
 fixture identity without a Bot/provider request. The test is included in the bounded CI contract;
-it proves route authority and shell availability only. The browser route × locale × theme ×
-viewport matrix remains open until the QA runtime dependencies are available.
+CI run `39021192324` passed. This proves route authority and shell availability only. The browser
+route × locale × theme × viewport matrix remains open until the QA runtime dependencies are
+available.
