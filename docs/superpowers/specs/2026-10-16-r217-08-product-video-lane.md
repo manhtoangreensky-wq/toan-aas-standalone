@@ -51,6 +51,7 @@ explicit AI/manual editing boundary. The existing `10` video routes remain uncha
 provider output, MP4, job, quote, charge or wallet mutation was added. The focused source
 regression reports `11` test cases with `11` passed and `0` failed, the full Node suite reports
 `522` passed and `0` failed, `node --check` passes for
-Portal and i18n, and `git diff --check` passes.
+Portal and i18n, and `git diff --check` passes. Evidence commit:
+`8e8ca08cd31617b21fc78b2956302873fe84d337`.
 Runtime upload, render, delivery, download and real artifact evidence remain open and must
 not be reported as parity with Bot until a guarded QA/runtime bridge is available.

@@ -365,6 +365,13 @@ hiển thị thành công giả khi engine/bridge chưa có.
 - [!] `VIDEO_AI_MANUAL_EDIT_UI_MISSING`: AI edit/manual edit/timeline/render MP4/delivery
       chưa có evidence; Video Studio hiện là planning/scene/review/version metadata.
 
+Evidence closeout R217-08: `HEAD_SHA=8e8ca08cd31617b21fc78b2956302873fe84d337`; focused
+`node --test tests/video-uiux-locale-presentation.test.mjs` đạt `11/11`, full
+`node --test tests/*.test.mjs` đạt `522/522`, `node --check` hai tệp Portal đạt `2/2`,
+`git diff --check` đạt. Browser/QA runtime và real artifact chưa chạy vì không có Browser
+plugin và môi trường Python/QA server trong lượt này; giữ runtime `OPEN`, không đánh dấu
+`LIVE_PASS`.
+
 ### 5.6 Content, Workboard, Free Tools, Notes, Projects — Spec R217-09A
 
 - [~] Source presentation của Content Studio, Workboard, Free Tools, Notes, Projects,
