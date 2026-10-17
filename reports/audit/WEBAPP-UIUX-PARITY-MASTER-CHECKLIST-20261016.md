@@ -535,7 +535,7 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       có, evidence phải chứng minh guarded boundary chứ không gọi output PASS.
 - [~] **SOURCE-R217-11-02 — 2026-10-17:** Đã thêm fixture test DB tạm với
       `role_cache='admin'` và `canonical_user_id='canonical-admin'`, kiểm tra shell HTML của
-      `/admin/operations`, `/admin/billing`, `/admin/customers`, `/admin/audit` và
+      `/admin/operations`, `/admin/payments`, `/admin/customers`, `/admin/audit` và
       `/admin/support`. `py_compile` đạt; CI cần chạy để xác nhận route contract. Đây là
       source auth evidence, chưa thay thế browser DOM/AX matrix.
 

@@ -319,7 +319,7 @@ def test_isolated_canonical_admin_fixture_opens_admin_child_routes(tmp_path, mon
 
         for route in (
             "/admin/operations",
-            "/admin/billing",
+            "/admin/payments",
             "/admin/customers",
             "/admin/audit",
             "/admin/support",

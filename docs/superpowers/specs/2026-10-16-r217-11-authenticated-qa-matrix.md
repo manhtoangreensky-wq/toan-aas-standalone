@@ -17,8 +17,12 @@ persistence sau reload và state transitions input/preflight/confirm/progress/re
 
 Routes tối thiểu: `/welcome`, `/dashboard`, `/features`, `/image/create`, `/voice/create`,
 `/music`, `/subdub`, `/tools/video`, `/video/create`, `/workboard`, `/campaigns`,
-`/free-prompt-gallery`, `/wallet/topup`, `/admin`, `/admin/operations`, `/admin/billing`,
+`/free-prompt-gallery`, `/wallet/topup`, `/admin`, `/admin/operations`, `/admin/payments`,
 `/admin/customers`, `/admin/audit`, `/admin/support`.
+
+`/admin/payments` là route quản trị thanh toán canonical hiện tại. `/admin/billing` là tên
+legacy trong một số tài liệu cũ và chỉ được ghi nhận như một alias/probe riêng nếu runtime có
+route chuyển hướng; không dùng nó để thay thế route canonical trong acceptance matrix.
 
 ## Cấm
 
