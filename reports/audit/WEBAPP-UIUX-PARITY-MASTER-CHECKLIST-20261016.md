@@ -488,7 +488,7 @@ plugin và môi trường Python/QA server trong lượt này; giữ runtime `OP
       `160ms` (micro `150–300ms`), thấp hơn entry `220ms`; auth `680ms` và landing hero
       `980ms` giữ nguyên. Regression timing mới nằm trong focused motion/auth/PWA `43/43`;
       full Node `523/523`; `node --check` Auth/Motion `2/2`; `git diff --check` đạt;
-      `HEAD_SHA=fd18f00c8ee0efef676e71a3dd6f87dca8416d53` đã push lên nhánh PR #647.
+      `HEAD_SHA=de42dc6c6eec15c55861ace030c6e780838487af` đã push lên nhánh PR #647.
 - [x] Ba Python motion contracts còn giữ literal cũ `140ms` đã đồng bộ sang `160ms`;
       chưa chạy được `python/py/pytest` vì runtime hiện không có Python, không ghi PASS giả.
 - [~] Browser motion acceptance còn mở: chưa có trace FPS/CLS/LCP/INP và chưa chứng minh
