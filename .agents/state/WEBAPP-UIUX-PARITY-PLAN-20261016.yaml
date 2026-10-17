@@ -114,5 +114,5 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39015089989 FAILED at Verify committed migration evidence: recorded fingerprint 4dbdf2… did not match current eligible source 8ee8c913…; no product tests ran."
-next_action: "Commit/push the static-only provenance refresh, wait for the new Verify Web App gate, then proceed in checklist order; keep R217-10 browser FPS/CLS/LCP/INP and AX evidence open. No provider, wallet, production, merge or deploy action."
+last_ci_run: "39016286441 FAILED at browser verification gate after provenance passed: one broken primary hub link and 5/6 hubs checked because Product Video primary CTA resolved to /video-studio instead of the established operational /video/finishing contract."
+next_action: "Commit/push the explicit Product Video primary CTA correction and refresh migration evidence for the new HEAD; wait for a new CI browser gate. Keep runtime/AX/performance and real-output evidence open; no provider, wallet, production, merge or deploy action."

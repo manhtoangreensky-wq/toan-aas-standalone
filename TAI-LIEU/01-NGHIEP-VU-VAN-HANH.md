@@ -795,8 +795,13 @@ Mỗi lane nêu đầu vào, đầu ra và trạng thái; hub có quy trình `7`
 xem báo giá → xác nhận → theo dõi → nhận kết quả → khôi phục. Một panel riêng phân biệt nhánh
 AI và nhánh thủ công để không nhầm bản kế hoạch với video đã tạo.
 
+CTA chính của nhóm Bắt đầu nhanh được đánh dấu tường minh trên `/video/finishing` (biên tập và
+hoàn thiện). `/video-studio` (lập kế hoạch) và `/video/text-to-video` (tạo video) vẫn là hai
+lối phụ; không suy ra CTA chính theo vị trí mảng để tránh browser gate và trợ năng đọc nhầm
+luồng lập kế hoạch thành luồng vận hành.
+
 - `tests/video-uiux-locale-presentation.test.mjs`: `11` test, `11` passed, `0` failed;
-  full Node suite `522` passed, `0` failed; catalogue VI/EN/ZH cân bằng, route và flow
+  full Node suite `523` passed, `0` failed; catalogue VI/EN/ZH cân bằng, route và flow
   bảy bước được giữ nguyên.
 - `node --check static/portal/portal.js`, `node --check static/portal/portal-i18n.js`
   và `git diff --check` đạt.

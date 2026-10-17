@@ -166,6 +166,8 @@ for (const locale of ["vi", "en", "zh"]) {
     for (const href of ["/video/preview", "/video/text-to-video", "/video/long", "/video/mux"]) {
       assert.match(html, new RegExp(`href=\\"${href.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}\\"`), href);
     }
+    assert.match(html, /class="portal-document-board-action portal-document-board-action--primary"[^>]*href="\/video\/finishing"/);
+    assert.equal((html.match(/portal-document-board-action--primary/g) || []).length, 1);
     assert.match(html, /data-video-flow/);
     for (const step of ["input", "plan", "quote", "confirm", "progress", "result", "recovery"]) {
       assert.match(html, new RegExp(`data-video-step="${step}"`), step);

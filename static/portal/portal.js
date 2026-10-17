@@ -25225,7 +25225,7 @@
     const quick = [
       { key: "planning", href: "/video-studio", state: "ready", lane: "planning" },
       { key: "creation", href: "/video/text-to-video", state: "guarded", lane: "creation" },
-      { key: "editing", href: "/video/finishing", state: "guarded", lane: "editing" }
+      { key: "editing", href: "/video/finishing", state: "guarded", lane: "editing", primary: true }
     ];
     const groups = [
       {
@@ -25257,9 +25257,9 @@
     ];
     const routes = new Set(groups.flatMap((group) => group.items.map((item) => item[1])));
     const journeySteps = ["input", "plan", "quote", "confirm", "progress", "result", "recovery"];
-    const quickHtml = quick.map((item, index) => {
+    const quickHtml = quick.map((item) => {
       const descriptionId = `video-quick-${safeText(item.key)}-description`;
-      return `<a class="portal-document-board-action${index === 0 ? " portal-document-board-action--primary" : ""}" data-video-lane="${safeText(item.lane)}" data-tool-state="${safeText(item.state)}" href="${safeText(item.href)}" aria-describedby="${safeText(descriptionId)}"><strong>${safeText(t(`quick.${item.key}.title`, item.key))}</strong><span id="${safeText(descriptionId)}">${safeText(t(`quick.${item.key}.description`, ""))}</span><b aria-hidden="true">→</b></a>`;
+      return `<a class="portal-document-board-action${item.primary ? " portal-document-board-action--primary" : ""}" data-video-lane="${safeText(item.lane)}" data-tool-state="${safeText(item.state)}" href="${safeText(item.href)}" aria-describedby="${safeText(descriptionId)}"><strong>${safeText(t(`quick.${item.key}.title`, item.key))}</strong><span id="${safeText(descriptionId)}">${safeText(t(`quick.${item.key}.description`, ""))}</span><b aria-hidden="true">→</b></a>`;
     }).join("");
     const groupHtml = groups.map((group) => `<section class="portal-document-board-workflow-group portal-video-lane" data-video-lane="${safeText(group.key)}" aria-labelledby="video-${safeText(group.key)}-heading"><div class="portal-document-board-workflow-heading"><div><h2 id="video-${safeText(group.key)}-heading">${safeText(t(`group.${group.key}.title`, group.key))}</h2><p>${safeText(t(`group.${group.key}.description`, ""))}</p></div><span>${safeText(t("count", "{count} công cụ", { count: group.items.length }))}</span></div><dl class="portal-video-lane-contract"><div><dt>${safeText(t("lane.input", "Đầu vào"))}</dt><dd>${safeText(t(`group.${group.key}.input`, ""))}</dd></div><div><dt>${safeText(t("lane.output", "Đầu ra"))}</dt><dd>${safeText(t(`group.${group.key}.output`, ""))}</dd></div></dl><div class="portal-module-grid">${group.items.map(([key, href, state]) => { const descriptionId = `video-${key}-description`; const stateLabel = state === "ready" ? "available" : "guarded"; return `<a class="portal-module-card" data-video-lane="${safeText(group.key)}" data-video-route="${safeText(href)}" data-tool-state="${safeText(state)}" href="${safeText(href)}" aria-describedby="${safeText(descriptionId)}"><div class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.video)}</div><div class="portal-module-copy"><div class="portal-module-heading"><h3>${safeText(t(`${key}.title`, key))}</h3><span class="portal-badge" data-status="${safeText(stateLabel)}">${safeText(t(`status.${stateLabel}`, state))}</span></div><p id="${safeText(descriptionId)}">${safeText(t(`${key}.description`, ""))}</p><span class="portal-module-link">${safeText(t(state === "ready" ? "actions.open" : "actions.details", "Mở công cụ"))} <b aria-hidden="true">→</b></span></div></a>`; }).join("")}</div></section>`).join("");
     return `<article class="portal-page portal-media-hub portal-video-hub">

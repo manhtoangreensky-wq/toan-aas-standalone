@@ -55,3 +55,12 @@ Portal and i18n, and `git diff --check` passes. Evidence commit:
 `8e8ca08cd31617b21fc78b2956302873fe84d337`.
 Runtime upload, render, delivery, download and real artifact evidence remain open and must
 not be reported as parity with Bot until a guarded QA/runtime bridge is available.
+
+## Browser-gate correction 2026-10-17
+
+The browser gate requires the operational finishing route `/video/finishing` to be the single
+primary quick action. The source previously inferred primary status from array position, so the
+new planning-first order accidentally exposed `/video-studio` as primary and caused the gate to
+report one broken hub. The primary marker is now explicit on the editing quick action; planning
+and creation remain visible secondary entry points. This is presentation-only: routes, guarded
+states, seven-step flow and backend boundaries are unchanged.
