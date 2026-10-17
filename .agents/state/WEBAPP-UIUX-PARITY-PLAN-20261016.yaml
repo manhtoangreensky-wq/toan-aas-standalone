@@ -74,7 +74,7 @@ ordered_waves:
   - id: W7
     spec: R217-11
     status: CLOSED_WITH_EVIDENCE
-    note: "2026-10-17: local bundled Python vẫn thiếu fastapi/uvicorn/pytest/websockets nên không có local runtime claim. CI run 39033202368 trên HEAD bf290c4 hoàn tất Success; Verify Web App job 117397736360 và Authenticated WebApp QA job 117398289631 đều xanh, authenticated job chạy 5m07s. Ma trận authenticated giữ 456/456 completed, 456/456 passed, records_failed=0; HTTP/route/locale/theme mismatch=0; console/page/request/external/forbidden mutation=0; reload mismatch=0; horizontal_overflow=false; provider_calls=0, wallet_mutations=0, production_data_mutations=0. Cảnh báo duy nhất là Node 20/Ubuntu deprecation. R217-11 đóng bằng chứng mới nhất; local trace/FPS và real output vẫn thuộc spec khác."
+    note: "2026-10-17: local bundled Python vẫn thiếu fastapi/uvicorn/pytest/websockets nên không có local runtime claim. CI run 39034247997 trên HEAD 404d0b8 hoàn tất Success trong 8m10s; Verify Web App job 117400767233 và Authenticated WebApp QA job 117401357659 đều xanh, authenticated job chạy 5m03s. Ma trận authenticated giữ 456/456 completed, 456/456 passed, records_failed=0; HTTP/route/locale/theme mismatch=0; console/page/request/external/forbidden mutation=0; reload mismatch=0; horizontal_overflow=false; provider_calls=0, wallet_mutations=0, production_data_mutations=0. Cảnh báo duy nhất là Node 20/Ubuntu deprecation. Artifact authenticated digest sha256:bb1cf1a931426a150ab9b7f22db7eb9b8761e1be62a10cb22e85a197fd2861bb; browser evidence digest sha256:11ba1f0bd6fe9e4ee0ec55eeef93b39c30a2f0908c1eea3bd7e058a717a0921a. R217-11 đóng bằng chứng mới nhất; local trace/FPS và real output vẫn thuộc spec khác."
   - id: W8
     spec: R217-12
     status: LIVE_DRIFT_OPEN
@@ -116,5 +116,5 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39033202368 SUCCESS: Verify Web App job 117397736360 and Authenticated WebApp QA job 117398289631 passed on HEAD bf290c4; authenticated job 5m07s, 456/456 passed, records_failed=0, safety mutations=0. Environment warnings only: Node 20 deprecation and upcoming Ubuntu image change."
+last_ci_run: "39034247997 SUCCESS: Verify Web App job 117400767233 and Authenticated WebApp QA job 117401357659 passed on HEAD 404d0b8; authenticated job 5m03s, 456/456 passed, records_failed=0, safety mutations=0. Artifact authenticated sha256:bb1cf1a931426a150ab9b7f22db7eb9b8761e1be62a10cb22e85a197fd2861bb; browser sha256:11ba1f0bd6fe9e4ee0ec55eeef93b39c30a2f0908c1eea3bd7e058a717a0921a. Environment warnings only: Node 20 deprecation and upcoming Ubuntu image change."
 next_action: "R217-12 remains LIVE_DRIFT_OPEN after the 2026-10-17 viewport-capable read-only recheck. Wait for a valid source delivery, then repeat locale redirect, auth install, PWA placement and 390x844/1440x900 viewport checks; do not infer real provider output from QA artifacts. No provider, wallet, production, merge or deploy action."
