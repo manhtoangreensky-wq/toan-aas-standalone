@@ -103,6 +103,15 @@ defects: the source branch's mobile wrap and readiness-gated inline placement ar
 delivered to production. Keep `LIVE-UI-01`, `LIVE-UI-02`, `R216-H`, `R216-L` and `R216-P`
 open until a valid delivery and a post-delivery recheck succeed.
 
+## Source quality-gate refresh — 2026-10-17
+
+After the provenance refresh commit `bf290c4`, GitHub workflow `39033202368` completed
+successfully. `Verify Web App` job `117397736360` and `Authenticated WebApp QA (R217-11)` job
+`117398289631` both passed; the authenticated matrix remained `456/456` with no forbidden
+provider, wallet or production-data mutation. This confirms the source/QA candidate is green,
+but it does not change the live conclusion above: production still serves the older bundle and
+must be rechecked only after an authorized delivery.
+
 ## Phạm vi
 
 Chỉ đọc các defect đã có evidence: R216-L auth next-route CTA, R216-H landing mobile

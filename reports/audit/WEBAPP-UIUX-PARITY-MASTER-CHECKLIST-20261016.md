@@ -576,6 +576,14 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       `wallet_mutations=0`, `production_data_mutations=0`. Warning Node 20/Ubuntu là cảnh báo
       môi trường đã biết. R217-11 tiếp tục đóng bằng chứng; R217-12 vẫn `LIVE_DRIFT_OPEN` và
       `LIVE_PASS=NO` vì production chưa nhận bundle mới.
+- [x] **RUNTIME-R217-11-04 — CLOSED_WITH_EVIDENCE — 2026-10-17:** Sau khi push provenance
+      `bf290c4`, workflow `39033202368` trên HEAD `bf290c4` hoàn tất `Success`; `Verify Web App`
+      job `117397736360` và `Authenticated WebApp QA` job `117398289631` đều xanh. Job
+      authenticated hoàn tất trong `5m07s`; ma trận vẫn `456/456` bản ghi đạt, không phát sinh
+      provider call, wallet mutation hoặc production-data mutation. Cảnh báo duy nhất vẫn là
+      deprecation Node 20/Ubuntu runner; đây là cảnh báo môi trường, không phải lỗi source.
+      R217-11 được khóa lại bằng bằng chứng CI mới nhất; R217-12 vẫn `LIVE_DRIFT_OPEN` và
+      `LIVE_PASS=NO` vì production chưa nhận bundle mới.
 - [!] **CI run `39024899449` — 2026-10-17:** quality gate nền đã xanh nhưng runner R217-11
       dừng khi tạo fixture tại `_set_fixture_locale`: schema thực tế lưu locale ở
       `web_account_profiles`, không phải `web_accounts`, nên job báo
