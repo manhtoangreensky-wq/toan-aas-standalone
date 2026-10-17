@@ -533,3 +533,14 @@ không đổi engine, route/action/field/capability, ví/Xu hoặc dữ liệu p
 
 Batch này chỉ đóng source presentation của Product Video. Không được gọi đây là parity runtime
 với Bot, không đổi engine, route/action/field/capability, ví/Xu hoặc dữ liệu production.
+
+## Đối chiếu bổ sung — SOURCE-CONTENT-01/03 — 17/10/2026
+
+| Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Content/Workboard/Projects | Các board/list/detail có lối vào, create/edit/save/archive/restore/version/history theo contract hiện hữu; Workboard có bố cục dọc cho mobile. | Focused source set `26/26`; không đổi action, revision hoặc server data |
+| Campaign/Calendar/Approval/Publish | Fixed chrome có mốc, agenda, review, reminder, trạng thái guard và handoff; bản nháp không bị gọi là output. | `static/portal/portal.js`, catalogue VI/EN/ZH; browser/runtime chưa đo |
+| Free Tools/Prompt Gallery/Memory | Có tab/filter/group/copy/save và tách fixed chrome khỏi prompt/owner data. | Source regression `26/26`; ghi thật, persistence và bridge vẫn mở |
+
+Batch này chỉ đóng source presentation của R217-09A. Không được gọi đây là parity runtime với
+Bot, không đổi engine, route/action/field/capability, ví/Xu hoặc dữ liệu production.

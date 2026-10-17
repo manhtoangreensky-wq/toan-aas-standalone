@@ -36,11 +36,12 @@ Không đổi server action, revision, CSRF, idempotency, publishing/automation 
 node --test tests/content-studio-locale-presentation.test.mjs tests/content-studio-detail-locale-presentation.test.mjs tests/workboard-locale-presentation.test.mjs tests/memory-center-locale-presentation.test.mjs tests/free-tools-hub-presentation.test.mjs tests/free-prompt-gallery-locale-presentation.test.mjs tests/project-studio-locale-presentation.test.mjs tests/publish-review-pack-locale-presentation.test.mjs tests/campaign-planner-locale-presentation.test.mjs
 ```
 
-## Source evidence 2026-10-16
+## Source evidence 2026-10-17
 
 - Content Studio board/detail, Workboard board/list/detail, Memory, Free Tools, Free Prompt
   Gallery, Projects/Studio Documents, Publish Review và Campaign đều có renderer/helper và
-  locale regression hiện hành; focused source set đạt `28/28`, full Node suite đạt `496/496`.
+  locale regression hiện hành; focused source set đạt `26/26`, full Node suite đạt `522/522`.
 - Các route/action/field/revision và boundary bản nháp/không tạo output vẫn được kiểm tra bởi
   các test từng surface. Đây là source/presentation evidence; browser AX, responsive runtime
-  và dữ liệu ghi thật vẫn mở theo W7/W8/W9.
+  và dữ liệu ghi thật vẫn mở theo W7/W8/W9. Không có code cần sửa thêm trong R217-09A khi
+  source contract đã xanh; chuyển wave kế tiếp sang R217-09 Admin/customer visibility.

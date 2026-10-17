@@ -374,16 +374,16 @@ plugin và môi trường Python/QA server trong lượt này; giữ runtime `OP
 
 ### 5.6 Content, Workboard, Free Tools, Notes, Projects — Spec R217-09A
 
-- [~] Source presentation của Content Studio, Workboard, Free Tools, Notes, Projects,
-      Publish Review và Campaign đã có regression focused `28/28`; browser/runtime state
-      và dữ liệu ghi thật vẫn mở. Mỗi surface có create/edit/save/archive/restore/version/history
-      phù hợp và state
-      empty/loading/error/guarded.
-- [~] Campaign/Calendar/Approval source chrome có mốc, trạng thái, lịch, review và handoff;
-      browser/runtime vẫn mở, server action/CSRF/revision không đổi.
-      server action/CSRF/revision.
-- [~] Free Tools/Prompt Gallery source có filter, copy/save và tách fixed chrome khỏi prompt
-      data; Workboard có board/list/card dọc trên mobile.
+- [x] **SOURCE-CONTENT-01 — 2026-10-17:** Content Studio, Workboard, Free Tools, Notes,
+      Projects, Publish Review và Campaign có renderer/helper, locale VI/EN/ZH và source
+      contract cho create/edit/save/archive/restore/version/history cùng các trạng thái
+      empty/loading/error/guarded. Focused set hiện đo được `26/26`.
+- [x] **SOURCE-CONTENT-02 — 2026-10-17:** Campaign/Calendar/Approval có mốc, trạng thái,
+      lịch, review và handoff; server action/CSRF/revision không đổi.
+- [x] **SOURCE-CONTENT-03 — 2026-10-17:** Free Tools/Prompt Gallery có filter, copy/save và
+      tách fixed chrome khỏi prompt data; Workboard có board/list/card dọc trên mobile.
+- [~] Browser/runtime, keyboard/AX viewport và dữ liệu ghi thật của các surface này vẫn mở;
+      không suy diễn source `26/26` thành live PASS.
 - [x] Ghi nhận những phần chỉ là planning/draft; không gọi là sản phẩm đã tạo.
 
 ## 6. W5 — Admin và liên kết customer — Spec R217-09
@@ -607,9 +607,8 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=R217-09A Content/Workboard/Free Tools — Product Video source presentation đã khóa
-bốn lane, flow bảy bước, boundary AI/manual và regression focused `11/11`; full Node suite
-`522/522`; runtime upload,
-render, delivery và artifact thật vẫn mở. Giữ R217-04/R217-05/R217-06/R217-07/R217-08 runtime
-mở; motion vẫn làm cuối cùng.
+NEXT_ACTION=R217-09 Admin/customer visibility — Product Video source presentation đã khóa
+bốn lane, flow bảy bước, boundary AI/manual và regression focused `11/11`; Content/Workboard/
+Free Tools source set `26/26`; full Node suite `522/522`. Browser/runtime, Admin fixture,
+artifact thật và các bridge vẫn mở; motion vẫn làm cuối cùng.
 ```

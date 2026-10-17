@@ -803,3 +803,12 @@ AI và nhánh thủ công để không nhầm bản kế hoạch với video đ�
 - Đây chỉ là source presentation evidence. Upload, render, delivery, download và artifact
   video thật vẫn `guarded`; không gọi provider, không tạo job/MP4 và không đổi Xu/PayOS hay
   dữ liệu production.
+
+## Checkpoint nguồn WebApp — R217-09A Content/Workboard/Free Tools — 17/10/2026
+
+Các surface Content Studio, Workboard, Free Tools, Free Prompt Gallery, Memory, Projects,
+Publish Review và Campaign đã được kiểm lại theo cùng checklist. Lệnh focused hiện hành chạy
+`26` test, `26` passed, `0` failed; full Node suite trên candidate chạy `522` passed, `0` failed.
+Các route/action/field/revision, bản nháp và trạng thái guarded giữ nguyên. Browser/AX,
+responsive runtime và dữ liệu ghi thật chưa có môi trường QA nên vẫn mở; không gọi provider,
+không tạo output và không ghi dữ liệu production. Wave source này đóng, chuyển sang rà Admin.
