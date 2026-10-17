@@ -646,7 +646,11 @@ def test_portal_js_and_integration_contracts():
     assert 'name="loop"' not in render_sfx_code
     assert 'name="category"' not in render_sfx_code
     # Truthful initial queued state
-    assert 'AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE' in render_sfx_code
+    assert (
+        'AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE' in render_sfx_code
+        or 'mediaOperationStatusReason' in render_sfx_code
+    )
+    assert 'AWAITING_OWNER_AUTHORIZED_VISIBLE_LIVE_ACCEPTANCE' in portal_js
     assert 'queued' in render_sfx_code
 
     # integration.js contracts
