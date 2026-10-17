@@ -110,4 +110,4 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-next_action: "Commit the Web-only provenance refresh, verify it locally against the final candidate SHA, and check PR #647 CI in GitHub Web. Once that gate is green, continue R217-05 Voice source/UI, followed by Music/SubDub before Video. Image R217-04 remains TODO until browser DOM/AX, owner-authorized runtime evidence and real output are available; no provider/entitlement mutation."
+next_action: "Refresh Web-only provenance again against clean HEAD 646fb0b after final checklist/state updates, commit the refreshed evidence, verify against that HEAD, and check PR #647 CI in GitHub Web. Once the gate is green, continue R217-05 Voice source/UI, followed by Music/SubDub before Video. Image R217-04 remains TODO until browser DOM/AX, owner-authorized runtime evidence and real output are available; no provider/entitlement mutation."

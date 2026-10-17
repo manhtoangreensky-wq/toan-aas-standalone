@@ -34,7 +34,10 @@
       fingerprint ghi nhận `32c98444d7b3`, source hiện tại `3b9657865e57` (`284` tệp).
       Các bước test tiếp theo chưa chạy. Đã chạy chế độ `--refresh-web-evidence` chỉ cho Web
       trên source commit `e44080e`, tạo fingerprint `af3a77086075` khớp inventory/preflight;
-      không quét Bot và không thay đổi runtime. Cần xác minh lại trên HEAD evidence commit.
+      không quét Bot và không thay đổi runtime. Kiểm chứng tiếp trên `646fb0b` phát hiện
+      fingerprint đã lệch (`af3a77086075` so với source `7d6f0a4da90c`, `284` tệp); vì vậy
+      không đánh dấu provenance đạt. Làm mới lại trên HEAD sạch sau lần cập nhật checklist/state,
+      rồi xác minh và chờ CI mới; các bước test sau provenance vẫn chưa chạy.
 - [x] Đối chiếu remote: local cũ lệch; tạo worktree sạch từ `github/webapp-checklist-r116`.
 - [x] Sau quality-gate failure `38958333812`, đã sửa provenance evidence: `284` eligible Web
       files; `preflight.json`, `web_inventory.json` và source hiện cùng fingerprint
