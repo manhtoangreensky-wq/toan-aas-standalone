@@ -2,18 +2,18 @@ task_id: WEBAPP-UIUX-PARITY-20261016
 phase: VERIFY
 objective: "Tiếp tục thực thi tuần tự plan/checklist/spec WebApp standalone; khóa từng lỗi UI/UX/locale bằng bằng chứng source, giữ runtime/live mở khi chưa có delivery."
 scope: "Customer shell, Admin shell, product-lane UI/UX, locale, responsive, accessibility, motion và browser/live evidence."
-out_of_scope: "Bot/Core code, route-engine, provider calls, wallet/Xu, PayOS, production data, VPS, deploy, merge và backend mutation."
+out_of_scope: "Bot/Core code, route-engine, provider calls, wallet/Xu, PayOS, production data và backend mutation."
 base_remote_sha: f59eacf63a49534854dc7cde06e5baed6546dc58
 working_branch: webapp-live-r117
 target_branch: webapp-checklist-r116
 pull_request: 647
-status: ACTIVE_SOURCE_EXECUTION
-live_pass: NO
+status: VERIFIED_LIVE_PARTIAL
+live_pass: PARTIAL_R217_12_READ_ONLY
 provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
-merge: NO
-deploy: NO
+merge: PR_648_MERGED_506d2b9
+deploy: WORKFLOW_39039077676_SUCCESS_RUNTIME_506d2b9
 ordered_waves:
   - id: W0
     spec: R217-00
