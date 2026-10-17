@@ -593,6 +593,15 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       evidence digest `sha256:11ba1f0bd6fe9e4ee0ec55eeef93b39c30a2f0908c1eea3bd7e058a717a0921a`.
       Warning Node 20/Ubuntu vẫn là cảnh báo môi trường; R217-12 vẫn `LIVE_DRIFT_OPEN` và
       `LIVE_PASS=NO` vì production chưa nhận bundle mới.
+- [x] **RUNTIME-R217-11-06 — CLOSED_WITH_EVIDENCE — 2026-10-17:** Sau khi khóa provenance
+      cuối ở HEAD `7942548`, workflow `39034978224` hoàn tất `Success` trong `8m19s`; `Verify
+      Web App` job `117402852575` xanh trong `3m02s`, `Authenticated WebApp QA` job
+      `117403448516` xanh trong `5m12s`. Artifact authenticated giữ `456/456` đạt, digest
+      `sha256:5ca1ad0448bcd3388695ffee032a4c99b3493fa59774b66e0725b385ef824d37`; browser
+      evidence digest `sha256:d61a2372b3683c658c6ad1c606943198bfe558454151305df7d5b3d9af592ef7`.
+      Provider call, wallet mutation, production-data mutation đều `0`; cảnh báo còn lại chỉ
+      là Node 20/Ubuntu runner. R217-12 vẫn `LIVE_DRIFT_OPEN` và `LIVE_PASS=NO` vì production
+      chưa nhận bundle mới.
 - [!] **CI run `39024899449` — 2026-10-17:** quality gate nền đã xanh nhưng runner R217-11
       dừng khi tạo fixture tại `_set_fixture_locale`: schema thực tế lưu locale ở
       `web_account_profiles`, không phải `web_accounts`, nên job báo

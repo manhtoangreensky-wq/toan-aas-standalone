@@ -105,9 +105,9 @@ open until a valid delivery and a post-delivery recheck succeed.
 
 ## Source quality-gate refresh — 2026-10-17
 
-After the final provenance refresh candidate `404d0b8`, GitHub workflow `39034247997` completed
-successfully. `Verify Web App` job `117400767233` and `Authenticated WebApp QA (R217-11)` job
-`117401357659` both passed; the authenticated matrix remained `456/456` with no forbidden
+After the final provenance refresh candidate `7942548`, GitHub workflow `39034978224` completed
+successfully. `Verify Web App` job `117402852575` and `Authenticated WebApp QA (R217-11)` job
+`117403448516` both passed; the authenticated matrix remained `456/456` with no forbidden
 provider, wallet or production-data mutation. This confirms the source/QA candidate is green,
 but it does not change the live conclusion above: production still serves the older bundle and
 must be rechecked only after an authorized delivery.
