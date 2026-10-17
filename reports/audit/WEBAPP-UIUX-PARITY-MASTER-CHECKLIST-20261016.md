@@ -220,7 +220,9 @@
 - [~] Đã khóa các cụm fixed chrome Admin, customer và Image theo SOURCE-LOCALE-04→17; vẫn còn phải quét tiếp
       toàn customer/Admin/product lanes và lập danh sách chuỗi English lọt trong VI cùng
       Vietnamese lọt trong EN/ZH; không sửa server data/ID/URL.
-- [ ] Kiểm tra fallback locale, duplicate key, option label và aria-label ở VI/EN/ZH.
+- [x] **SOURCE-LOCALE-22 — 2026-10-17:** Ma trận source locale gồm `59` file Node hiện hành
+      đạt `320/320`; các contract fallback, duplicate key, option label và aria-label ở
+      VI/EN/ZH đều pass trong phạm vi source. Browser AX theo locale vẫn mở ở R217-11.
 - [ ] Evidence: `node --test tests/auth-locale-copy-purity.test.mjs tests/*locale*.test.mjs`
       và browser AX tree theo locale.
 
