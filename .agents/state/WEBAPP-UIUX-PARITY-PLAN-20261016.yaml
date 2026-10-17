@@ -74,7 +74,7 @@ ordered_waves:
   - id: W7
     spec: R217-11
     status: BLOCKED
-    note: "2026-10-17 probe: bundled Python 3.12.14 exists but has no fastapi/uvicorn/pytest/websockets; temporary pip install outside repo failed because pypi.org DNS could not resolve (NameResolutionError). QA server and fixtures were not created; production is not used as a substitute."
+    note: "2026-10-17 probe: bundled Python 3.12.14 exists but has no fastapi/uvicorn/pytest/websockets; temporary pip install outside repo failed because pypi.org DNS could not resolve (NameResolutionError). QA server and browser fixtures were not created; production is not used as a substitute. Source fixture test now seeds canonical-admin and checks 5 Admin child shells in bounded CI; browser matrix remains open."
   - id: W8
     spec: R217-12
     status: LIVE_DRIFT_OPEN

@@ -93,6 +93,7 @@ jobs:
             tests/test_copyfast_auth_api.py::test_upload_rejects_path_traversal_and_never_falls_back_to_web_storage \
             tests/test_copyfast_auth_api.py::test_legacy_billing_router_is_not_mounted_as_a_second_payos_or_wallet_writer \
             tests/test_copyfast_auth_api.py::test_admin_portal_requires_signed_session_and_current_canonical_role \
+            tests/test_p0_webapp_spec01_auth_rbac_truth.py::test_isolated_canonical_admin_fixture_opens_admin_child_routes \
             tests/test_account_security_center.py::test_security_sessions_are_owner_scoped_redacted_and_csrf_protected \
             tests/test_account_security_center.py::test_password_change_requires_csrf_rotates_all_sessions_and_never_returns_raw_id \
             tests/test_account_security_center.py::test_telegram_account_upgrade_rechecks_a_revoked_actor_before_adding_password \

@@ -48,3 +48,12 @@ Bundled Python `3.12.14` was available, but the isolated runtime had no `fastapi
 with `NameResolutionError` and no matching `fastapi` distribution. The QA server therefore
 did not start, no fixture was created, and R217-11 remains `BLOCKED`. The next valid opening
 condition is a user supplied or preloaded isolated QA runtime; production is not a substitute.
+
+## Source fixture contract 2026-10-17
+
+`tests/test_p0_webapp_spec01_auth_rbac_truth.py` now seeds an isolated Admin account with
+`role_cache='admin'` and `canonical_user_id='canonical-admin'`, then checks the HTML shell for
+the five canonical Admin child routes. The existing local bridge shortcut resolves that known
+fixture identity without a Bot/provider request. The test is included in the bounded CI contract;
+it proves route authority and shell availability only. The browser route × locale × theme ×
+viewport matrix remains open until the QA runtime dependencies are available.
