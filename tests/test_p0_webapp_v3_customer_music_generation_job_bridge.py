@@ -60,6 +60,18 @@ BOT_AUTHORITY_REPO = "manhtoangreensky-wq/bot"
 BOT_AUTHORITY_SHA = "a77a5e0b13f943eb9fafb82a9fe3e80b6371b921"
 
 
+@pytest.fixture(autouse=True)
+def _isolate_bot_sys_path():
+    """Ensure bot repo path and imported modules do not leak into other test suites."""
+    orig_path = list(sys.path)
+    orig_modules = set(sys.modules.keys())
+    yield
+    sys.path[:] = orig_path
+    for mod in list(sys.modules.keys()):
+        if mod not in orig_modules and (mod == "bot" or mod.startswith("services")):
+            sys.modules.pop(mod, None)
+
+
 # ─── TEST A: FIRST RED ADAPTER ABSENCE PROVEN ────────────────────────────────
 
 def test_a_first_red_music_generation_adapter_absence_proven():
