@@ -79,6 +79,30 @@ performed.
   rendered without a framework error overlay. The screenshot also visually confirms the
   navy/teal brand is still in use, while the old landing FAB and auth install copy remain.
 
+### Fresh viewport-capable browser evidence — 2026-10-17 12:29:53 UTC
+
+The in-app browser viewport capability was used for a read-only measurement at the two sizes
+that were previously unavailable. The override was reset after the measurements. No account,
+form, CTA, upload, provider, wallet or production mutation was performed; console error and
+warning logs were empty for both loads.
+
+- At `390×844`, production still loaded
+  `https://app.toanaas.vn/static/portal/portal.js?v=local-57e76aa281dcc721fdaa`.
+  `body.scrollWidth=390`, `documentElement.scrollWidth=390`, and `clientWidth=390`, but the
+  landing navigation itself clipped (`.portal-landing-nav`: `scrollWidth=356`,
+  `clientWidth=343`) while `.portal-landing-nav-actions` remained `display:flex` with
+  `flex-wrap:nowrap`. The old `[data-portal-pwa-fab]` stayed `hidden=false`,
+  `display:flex`, `position:fixed`, `44×44px`, at approximately `(12,720)`.
+- At `1440×900`, the page root remained within the viewport (`body/root/client=1440`) and
+  `.portal-landing-nav-actions` remained `display:flex`/`flex-wrap:nowrap`. The old PWA FAB
+  stayed `hidden=false`, `display:flex`, `position:fixed`, `171.95×41.10px`, at approximately
+  `(1023.05,834.90)`, with the same stale asset fingerprint.
+
+These measurements close the evidence gap for the two viewport sizes but do not close the
+defects: the source branch's mobile wrap and readiness-gated inline placement are still not
+delivered to production. Keep `LIVE-UI-01`, `LIVE-UI-02`, `R216-H`, `R216-L` and `R216-P`
+open until a valid delivery and a post-delivery recheck succeed.
+
 ## Phạm vi
 
 Chỉ đọc các defect đã có evidence: R216-L auth next-route CTA, R216-H landing mobile
@@ -88,9 +112,8 @@ header/PWA placement và R216-P auth install icon. Không biến recheck thành 
 
 - `/features` rồi ghi URL redirect `/login?next=/features` ở VI/EN/ZH.
 - `/login?lang=vi|en|zh`.
-- `/welcome?lang=vi` ở 327×667, 390×844 và 1440×900. The available browser in this
-  recheck exposed `1280×720`; 327×668 remains covered by the prior read-only evidence, while
-  390×844 and 1440×900 still require a viewport-capable QA run.
+- `/welcome?lang=vi` ở 327×667, 390×844 và 1440×900. The current viewport-capable
+  read-only run covers 390×844 and 1440×900; 327×668 remains covered by prior evidence.
 - Nếu đã có authenticated QA, thêm `/dashboard` và một route product; nếu không ghi blocked.
 
 ## Evidence bắt buộc

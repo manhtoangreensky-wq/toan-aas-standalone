@@ -120,7 +120,7 @@
 - [x] Delivery evidence 2026-10-16: GitHub PR #647 vẫn `Open`; trang PR hiển thị
       `This branch has not been deployed` và `No deployments`. Đây là nguyên nhân xác nhận
       của live drift; không đánh dấu `LIVE_PASS` khi chưa có delivery được Owner cho phép.
-- [ ] Đo viewport 320/375/390/414/768/1024/1440 ở light/dark; ghi `scrollWidth <= clientWidth`.
+- [ ] Đo viewport 320/375/414/768/1024 ở light/dark; ghi `scrollWidth <= clientWidth`.
 - [ ] Đo type/spacing/contrast thật; body ≥16px mobile, target ≥44×44px, contrast AA.
 - [ ] Xác minh bảng/list chuyển hàng dọc hoặc wrapper có nhãn trên 375/390px.
 
@@ -601,8 +601,15 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       TOAN AAS`; bundle vẫn là `local-57e76aa281dcc721fdaa`.
 - [~] **R217-12 fresh — R216-H:** viewport đang đo được là `1280×720`, không có
       overflow (`body/root=1280`, `client=1280`) và console không có warning/error; nav vẫn
-      `flex-wrap:nowrap`. Mobile `327×668` drift đã có bằng chứng trước đó; viewport
-      `390×844` và `1440×900` chưa thể đo bằng tab hiện tại, không được suy diễn PASS.
+      `flex-wrap:nowrap`. Mobile `327×668` drift đã có bằng chứng trước đó.
+- [~] **R217-12 viewport-capable recheck — 2026-10-17 12:29:53 UTC:** tại `390×844`,
+      `body/root/client=390` nhưng `.portal-landing-nav` có `scrollWidth=356` so với
+      `clientWidth=343`, `.portal-landing-nav-actions` vẫn `flex-wrap:nowrap`, và PWA FAB cũ
+      vẫn `hidden=false`, `display:flex`, `position:fixed`, `44×44px` ở khoảng `(12,720)`.
+      Tại `1440×900`, `body/root/client=1440`, nhưng PWA FAB cũ vẫn `display:flex`,
+      `position:fixed`, `171.95×41.10px` ở khoảng `(1023.05,834.90)`. Cả hai viewport dùng
+      fingerprint `local-57e76aa281dcc721fdaa`; console warning/error `0`. Bằng chứng đã đủ,
+      nhưng lỗi vẫn mở vì production chưa nhận source mobile-wrap/readiness-gated placement.
 - [~] **R217-12 fresh — R216-P/LIVE-UI-02:** PWA FAB cũ vẫn hiện với
       `data-portal-pwa-fab="true"`, `display:flex`, `position:fixed`, `171.95×41.10px` ở
       desktop và asset fingerprint cũ; chưa nhận source placement/readiness fix.
@@ -683,7 +690,7 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
 | Nhóm | Đã có bằng chứng | Đang mở | Bị chặn/hoãn |
 |---|---:|---:|---:|
 | Source UI/UX/locale/static motion | R217-10 motion `43/43`; full Node `523/523`; Auth/Motion syntax `2/2` | product-lane runtime/AX chưa đo; FPS/CLS/LCP/INP trace chưa có | 2 source-matrix AI lanes thiếu entitlement (Transform/Upscale) |
-| Responsive/PWA live | source fix đã có; CI evidence gần nhất `cb1fab6` | R216-H/R216-L/R216-P + stale PWA/auth bundle + 390×844/1440×900 viewport matrix | QA runtime/delivery |
+| Responsive/PWA live | source fix đã có; read-only `390×844` và `1440×900` đã đo 2026-10-17 | R216-H/R216-L/R216-P + stale PWA/auth bundle; cần delivery rồi đo lại | QA runtime/delivery |
 | Customer product parity UI | shell/partial nhiều lane | 6 lane acceptance | real-output bridge |
 | Admin/customer wiring UI | source contracts rải rác | 1 master surface audit | backend/permission mutation |
 | Authenticated QA | source runner + Admin fixture; CI `39030607461` và artifact `456/456` | local runtime/trace riêng | bundled local dependency thiếu; production không thay thế QA |
@@ -706,7 +713,7 @@ DEPLOY=NO
 LIVE_PASS=NO
 NEXT_ACTION=Giữ R217-12 LIVE_DRIFT_OPEN sau read-only recheck 2026-10-17; chờ delivery hợp lệ
 đưa source fingerprint mới lên production rồi lặp lại route-locale/PWA/auth viewport matrix
-(390×844 và 1440×900 cần viewport-capable QA). R217-10 source motion đã khóa timing/lifecycle/
+(390×844 và 1440×900 đã có baseline read-only). R217-10 source motion đã khóa timing/lifecycle/
 reduced-motion với focused `43/43`, full Node `523/523`; không chuyển sang R217-13 và không
 suy diễn artifact QA thành real output. PROVIDER_CALLS=0, WALLET_MUTATIONS=0,
 PRODUCTION_DATA_MUTATIONS=0, DEPLOY=NO, MERGE=NO, LIVE_PASS=NO.

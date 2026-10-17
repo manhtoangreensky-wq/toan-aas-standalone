@@ -78,7 +78,7 @@ ordered_waves:
   - id: W8
     spec: R217-12
     status: LIVE_DRIFT_OPEN
-    note: "Fresh read-only evidence 2026-10-17 11:40:28 UTC confirms production still serves fingerprint local-57e76aa281dcc721fdaa. At 1280x720 the PWA FAB remains visible/fixed/display:flex; /features?lang=vi|en|zh still redirects to login?next=/features and loses locale; direct /login?lang=vi|en|zh exposes the stale install labels (VI 📲Tải & Cài đặt App TOAN AAS, EN 📲Install TOAN AAS App, ZH 📲安装 TOAN AAS App). Console has no warnings/errors and desktop has no overflow, but source delivery is stale; keep R216-H/L/P and the 390x844/1440x900 viewport matrix open."
+    note: "Fresh read-only evidence 2026-10-17 12:29:53 UTC confirms production still serves fingerprint local-57e76aa281dcc721fdaa. /features?lang=vi|en|zh still redirects to login?next=/features and loses locale; direct /login?lang=vi|en|zh exposes the stale install labels (VI 📲Tải & Cài đặt App TOAN AAS, EN 📲Install TOAN AAS App, ZH 📲安装 TOAN AAS App). At 390x844, body/root/client=390 but .portal-landing-nav scrollWidth=356 vs clientWidth=343, actions remain flex-wrap:nowrap, and the old PWA FAB remains visible/fixed/display:flex at 44x44 around (12,720). At 1440x900 body/root/client=1440 but the old PWA FAB remains visible/fixed/display:flex at 171.95x41.10 around (1023.05,834.90). Console warnings/errors=0; source delivery is stale. Keep R216-H/L/P and repeat the same viewport matrix after delivery."
   - id: W9
     spec: R217-13
     status: DEFERRED
@@ -117,4 +117,4 @@ created_files:
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
 last_ci_run: "39030607461 SUCCESS: Verify Web App and Authenticated WebApp QA passed on HEAD 6c70cb0171244e5c817af1e9ff75c098b76f50fc; job 117390664800 artifact 456/456 passed; authenticated digest sha256:db6af37ce65e260ec16990aef1204756b8196dc25b7e5c16749b27ae3ec88888; browser digest sha256:a3da16bc97c3ed371194beb322a0dd87951f2483ddaa7bb2a1c4a44cb8457a8e."
-next_action: "R217-12 remains LIVE_DRIFT_OPEN after the 2026-10-17 read-only recheck. Wait for a valid source delivery, then repeat locale redirect, auth install, PWA placement and 390x844/1440x900 viewport checks; do not infer real provider output from QA artifacts. No provider, wallet, production, merge or deploy action."
+next_action: "R217-12 remains LIVE_DRIFT_OPEN after the 2026-10-17 viewport-capable read-only recheck. Wait for a valid source delivery, then repeat locale redirect, auth install, PWA placement and 390x844/1440x900 viewport checks; do not infer real provider output from QA artifacts. No provider, wallet, production, merge or deploy action."
