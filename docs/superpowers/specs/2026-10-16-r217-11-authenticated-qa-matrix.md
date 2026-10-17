@@ -39,3 +39,12 @@ python -m pytest tests/test_browser_runtime_gate.py -q
 
 Nếu runtime không chạy, giữ `BLOCKED`, ghi lỗi khởi động cụ thể và không tạo fixture ở
 production.
+
+## Verification attempt 2026-10-17
+
+Bundled Python `3.12.14` was available, but the isolated runtime had no `fastapi`, `uvicorn`,
+`pytest` or `websockets`. A temporary install outside the repository was attempted with
+`pip install -r requirements-dev.txt`; the environment could not resolve `pypi.org`, ending
+with `NameResolutionError` and no matching `fastapi` distribution. The QA server therefore
+did not start, no fixture was created, and R217-11 remains `BLOCKED`. The next valid opening
+condition is a user supplied or preloaded isolated QA runtime; production is not a substitute.

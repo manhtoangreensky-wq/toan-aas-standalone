@@ -518,6 +518,11 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
 ## 8. W7 — Authenticated QA matrix — Spec R217-11
 
 - [!] QA runtime cô lập chưa được cung cấp ổn định; không tự động tạo tài khoản production.
+- [!] **QA-R217-11-01 — 2026-10-17:** Đã thử dựng runtime tạm ngoài repo bằng bundled
+      Python `3.12.14` và `pip install -r requirements-dev.txt`; môi trường thiếu
+      `fastapi`, `uvicorn`, `pytest`, `websockets`, còn PyPI không phân giải được DNS
+      (`NameResolutionError: pypi.org`). Vì vậy chưa khởi động được server QA và chưa tạo
+      fixture; không chuyển sang production để thay thế bằng chứng QA.
 - [ ] Tạo fixture `customer_qa` và `canonical_admin_qa` chỉ trong DB QA cô lập, không ví,
       không provider, không bridge mutation.
 - [ ] Ma trận route × locale (VI/EN/ZH) × theme (light/dark) × viewport
