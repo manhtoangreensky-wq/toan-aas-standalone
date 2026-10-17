@@ -39,6 +39,13 @@ test("R215 keeps vertical responsive surfaces and prevents page-wide overflow", 
   assert.match(themeCss, /@media\s*\(max-width:\s*700px\)[\s\S]*\.portal-module-grid/);
 });
 
+test("R217-01 keeps landing navigation controls touch-safe on mobile", () => {
+  assert.match(
+    portalCss,
+    /@media\s*\(max-width:\s*700px\)[\s\S]*?\.portal-landing-nav-actions \.portal-button \{[^}]*min-height:\s*44px;/,
+  );
+});
+
 test("R215 keeps visible keyboard focus and reduced-motion fallbacks", () => {
   assert.match(portalCss, /\.skip-link:focus\s*\{/);
   assert.match(themeCss, /:focus-visible\s*\{/);

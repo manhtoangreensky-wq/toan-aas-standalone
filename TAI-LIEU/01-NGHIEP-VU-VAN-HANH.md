@@ -829,3 +829,18 @@ Provider, nạp thủ công, finance/domain center và mobile harmony đều có
 Quyền Owner/role, liên kết request/job/asset/report/audit, canonical-admin fixture, duyệt
 ledger/Xu và browser/AX runtime vẫn chưa có bằng chứng phù hợp; giữ `OPEN/DEFERRED`, không
 ghi PASS thay cho backend permission hoặc mutation thật.
+
+## Checkpoint vận hành — R217-12 auth locale return — 17/10/2026
+
+Candidate `0ad78e5` sửa một seam trình bày trước phiên đăng nhập: khi khách mở route được bảo vệ
+với `?lang=vi|en|zh`, máy chủ đưa locale đã allowlist lên cả URL `/login` và return target đã mã
+hóa. Bộ lọc phía trình duyệt chỉ chấp nhận đúng một tham số `lang` trong ba giá trị này; query
+khác, fragment, đường dẫn ngoài, dấu `\\` và vòng lặp auth bị loại bỏ. Route, quyền, phiên, API,
+ví/Xu, Bot bridge và dữ liệu production không đổi.
+
+- Bằng chứng source: focused `17/17`, full Node `525/525`, `node --check` hai tệp JavaScript,
+  `py_compile` `4/4`, `git diff --check` đạt.
+- Trạng thái giao nhận: commit đã tạo trên `webapp-live-r117`, chưa CI/deploy/live; không được
+  gọi đây là locale đã sửa trên production cho đến khi recheck trực tiếp chứng minh.
+- Blocker kiểm thử: `pytest` chưa chạy vì Python bundled không có module `pytest`; CI phải chạy
+  lại bộ Python trước delivery.
