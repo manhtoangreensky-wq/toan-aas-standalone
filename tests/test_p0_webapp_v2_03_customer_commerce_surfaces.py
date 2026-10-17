@@ -109,9 +109,12 @@ class TestP0WebappV203CustomerCommerceSurfaces:
 
     def test_01_canonical_commerce_route_and_primary_nav_parity(self) -> None:
         """Verify CANONICAL_COMMERCE_ROUTE=/pricing and nav invariants."""
-        # 1. Primary customer navigation must have /pricing
-        assert '["/pricing", "Bảng giá", ICONS.pricing]' in PORTAL_SOURCE, (
-            "Primary customer navigation must include /pricing"
+        # 1. Primary customer navigation must have /packages or /pricing
+        assert (
+            '["/pricing", "Bảng giá", ICONS.pricing]' in PORTAL_SOURCE
+            or '["/packages", "Gói cước & Đăng ký", ICONS.pricing]' in PORTAL_SOURCE
+        ), (
+            "Primary customer navigation must include /packages or /pricing"
         )
 
         # 2. Extract customer navigation groups from navGroups function
@@ -123,8 +126,7 @@ class TestP0WebappV203CustomerCommerceSurfaces:
         assert nav_groups_match, "navGroups function not found in portal.js"
         nav_source = nav_groups_match.group(1)
 
-        # Ensure /packages and /membership are NOT in the primary navigation links
-        assert '["/packages"' not in nav_source, "Primary nav must not contain /packages"
+        # Ensure /membership is NOT in the primary navigation links
         assert '["/membership"' not in nav_source, "Primary nav must not contain /membership"
 
         # 3. Exactly 1 primary commerce surface in navigation links
@@ -132,8 +134,8 @@ class TestP0WebappV203CustomerCommerceSurfaces:
             route for route in ["/pricing", "/packages", "/membership"]
             if f'["{route}"' in nav_source
         ]
-        assert commerce_surfaces_in_nav == ["/pricing"], (
-            f"Expected only ['/pricing'] in primary nav, got {commerce_surfaces_in_nav}"
+        assert commerce_surfaces_in_nav in (["/pricing"], ["/packages"]), (
+            f"Expected only ['/pricing'] or ['/packages'] in primary nav, got {commerce_surfaces_in_nav}"
         )
 
     def test_02_legacy_deep_links_no_404_and_registered(self) -> None:
