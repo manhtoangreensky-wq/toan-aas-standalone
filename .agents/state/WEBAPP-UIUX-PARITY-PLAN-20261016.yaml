@@ -1,6 +1,6 @@
 task_id: WEBAPP-UIUX-PARITY-20261016
 phase: VERIFY
-objective: "Tiếp tục thực thi tuần tự plan/checklist/spec WebApp standalone; khóa từng lỗi UI/UX/locale bằng bằng chứng source, giữ runtime/live mở khi chưa có delivery."
+objective: "Tiếp tục thực thi tuần tự plan/checklist/spec WebApp standalone; khóa từng lỗi UI/UX/locale bằng bằng chứng source, runtime và live; giữ các wave sản phẩm còn mở cho đến khi có evidence riêng."
 scope: "Customer shell, Admin shell, product-lane UI/UX, locale, responsive, accessibility, motion và browser/live evidence."
 out_of_scope: "Bot/Core code, route-engine, provider calls, wallet/Xu, PayOS, production data và backend mutation."
 base_remote_sha: ea914bb45966237106d8a8e8c1464604ffaba42b
@@ -8,13 +8,13 @@ working_branch: webapp-live-r117
 target_branch: main
 pull_request: 651
 pull_request_url: https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/651
-status: SOURCE_VERIFIED_DELIVERY_OPEN
-live_pass: NO
+status: DELIVERY_LIVE_PASS_OPEN_WAVES
+live_pass: YES
 provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
-merge: NO
-deploy: NO
+merge: YES
+deploy: YES
 ordered_waves:
   - id: W0
     spec: R217-00
@@ -78,8 +78,8 @@ ordered_waves:
     note: "2026-10-17: local bundled Python vẫn thiếu fastapi/uvicorn/pytest/websockets nên không có local runtime claim. CI run 39034978224 trên HEAD 7942548 hoàn tất Success trong 8m19s; Verify Web App job 117402852575 và Authenticated WebApp QA job 117403448516 đều xanh, authenticated job chạy 5m12s. Ma trận authenticated giữ 456/456 completed, 456/456 passed, records_failed=0; HTTP/route/locale/theme mismatch=0; console/page/request/external/forbidden mutation=0; reload mismatch=0; horizontal_overflow=false; provider_calls=0, wallet_mutations=0, production_data_mutations=0. Cảnh báo duy nhất là Node 20/Ubuntu deprecation. Artifact authenticated digest sha256:5ca1ad0448bcd3388695ffee032a4c99b3493fa59774b66e0725b385ef824d37; browser evidence digest sha256:d61a2372b3683c658c6ad1c606943198bfe558454151305df7d5b3d9af592ef7. R217-11 đóng bằng chứng mới nhất; local trace/FPS và real output vẫn thuộc spec khác."
   - id: W8
     spec: R217-12
-    status: LIVE_DRIFT_OPEN
-    note: "Fresh read-only evidence 2026-10-17 13:35 UTC after deploy workflow 39036918159 (runtime bc0d089055df7a52c1ee9e3e76a5cbc57beacce4; health/service checks green) confirmed /features?lang=vi|en|zh still dropped locale before login. Source candidate 0ad78e5 now carries the allowlisted locale on both the encoded return target and the /login URL, and portal-auth/integration accept only one reviewed lang query (vi|en|zh); 17/17 focused and 525/525 full Node pass, py_compile pass. Candidate is not deployed; landing mobile/PWA/auth checks must be repeated after delivery, so keep R216-H/L/P and LIVE_DRIFT_OPEN."
+    status: CLOSED_WITH_EVIDENCE
+    note: "Closed after PR #651 delivery. Quality gate #1728 on main (merge/runtime SHA 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209) passed Verify Web App and Authenticated WebApp QA. Deploy workflow #202 succeeded with the exact SHA; SSH verified toanaas-web.service, nginx.service and toanaas-bot.service active, with /opt/toanaas/webapp at the same revision. Read-only production matrix 2026-10-18 confirmed /features?lang=vi|en|zh preserve lang and encoded next on /login, /login titles/forms are locale-correct, /dashboard?lang=vi fails closed with the preserved target, PWA install guidance is visible, 390x844 and 1440x900 have scrollWidth == innerWidth, and main#portal-main exists. PROVIDER_CALLS=0, WALLET_MUTATIONS=0, PRODUCTION_DATA_MUTATIONS=0."
   - id: W9
     spec: R217-13
     status: DEFERRED
@@ -117,15 +117,15 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39054217248 SUCCESS on candidate 7d24327: Verify Web App job 117458760671 and Authenticated WebApp QA job 117459394702 passed; authenticated matrix completed 456/456 with safety mutations 0."
+last_ci_run: "39056943164 SUCCESS on main merge 559d982: Verify Web App job 117466732028 and Authenticated WebApp QA job 117467385118 passed; authenticated matrix completed with the same 456/456 contract and safety mutations 0. Deploy workflow 39057625526 then succeeded with exact SHA 559d982."
 latest_source_verification:
   date: 2026-10-18
-  head_sha: 7d2432707d94a91aeff15bbadd620993c4dd298c
+  head_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
   node_test: "525/525 passed via node --test over tests/**/*.test|spec.(mjs|js|cjs)"
   node_check: "4/4 passed: portal.js, portal-auth.js, integration.js, portal-motion.js"
   git_diff_check: PASS
-  python_verifier: NOT_RUN_MISSING_PYTHON
+  python_verifier: "audit_bot_to_web.py --verify-web-evidence PASS; pytest NOT_RUN because local bundled environment lacks pytest"
   provider_calls: 0
   wallet_mutations: 0
   production_data_mutations: 0
-next_action: "PR #651 đã có quality gate xanh và provenance khớp nhưng còn Open. Chờ Owner delivery approval riêng trước merge/deploy; sau delivery mới lặp lại live read-only locale redirect, auth install, PWA placement và viewport 390x844/1440x900. Không provider, wallet hoặc production-data action."
+next_action: "W8/R217-12 đã CLOSED_WITH_EVIDENCE. Tiếp tục W1 runtime responsive/contrast/table matrix, sau đó W2 browser AX locale inventory và W3 unauthenticated/authenticated accessibility matrix; giữ product-lane real output, admin mutation, provider, wallet và W9 bridge ở trạng thái mở riêng. Không provider, wallet hoặc production-data action."
