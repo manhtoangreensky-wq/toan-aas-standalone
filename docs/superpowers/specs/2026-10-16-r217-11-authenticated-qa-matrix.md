@@ -104,12 +104,12 @@ runner đã được kiểm tra cú pháp.
 
 ## Closeout evidence — 2026-10-17
 
-CI run `39025580717` trên PR #647 hoàn tất `Success` trong `7m 11s`; job
-`117376311018` (`Authenticated WebApp QA (R217-11)`) hoàn tất trong `4m 11s`.
-Artifact `webapp-authenticated-qa-4b25d452f03c027cc52309ad8b2184548051ffcf` có digest
-`sha256:2f3edea16f53dfb9df47ed42d093550384f69c2a3e38708e6aec33f02fef45ef`; browser evidence
-artifact `webapp-browser-evidence-4b25d452f03c027cc52309ad8b2184548051ffcf` có digest
-`sha256:e77bdd574f7ea5a08a096c58bb87e5447f8b352cbc1cc0bbad3df3096a931d1a`.
+CI run `39027760496` trên PR #647 hoàn tất `Success` trong `8m 13s`; job
+`117382539076` (`Authenticated WebApp QA (R217-11)`) hoàn tất trong `5m 17s`.
+Artifact `webapp-authenticated-qa-a311caf1913e7ab40361727a771a09d6eaf5ff5b` có digest
+`sha256:334858235c9bb9ed67f4a5e3e093e1796bb8ce17ce32ca3bbc80f5cfc4911f38`; browser evidence
+artifact `webapp-browser-evidence-a311caf1913e7ab40361727a771a09d6eaf5ff5b` có digest
+`sha256:6e57d73522e244001908c88214484b8518380741ba70821e81c7871dba624d21`.
 
 Đã đọc trực tiếp `r21711-authenticated-qa-matrix.json` và đối soát:
 

@@ -74,7 +74,7 @@ ordered_waves:
   - id: W7
     spec: R217-11
     status: CLOSED_WITH_EVIDENCE
-    note: "2026-10-17: local bundled Python vẫn thiếu fastapi/uvicorn/pytest/websockets nên không có local runtime claim. CI run 39025580717 / job 117376311018 trên HEAD 4b25d452f03c027cc52309ad8b2184548051ffcf đã tạo và đọc artifact authenticated matrix: 456/456 completed, 456/456 passed, records_failed=0; HTTP/route/locale/theme mismatch=0; console errors/warnings/page errors/failed requests/external requests/forbidden mutations=0; reload mismatch=0; pass predicate bao gồm horizontal_overflow=false. provider_calls=0, wallet_mutations=0, production_data_mutations=0. Artifact digest sha256:2f3edea16f53dfb9df47ed42d093550384f69c2a3e38708e6aec33f02fef45ef; browser evidence digest sha256:e77bdd574f7ea5a08a096c58bb87e5447f8b352cbc1cc0bbad3df3096a931d1a. R217-11 đóng bằng chứng; local trace/FPS và real output vẫn thuộc spec khác."
+    note: "2026-10-17: local bundled Python vẫn thiếu fastapi/uvicorn/pytest/websockets nên không có local runtime claim. CI run 39027760496 / job 117382539076 trên HEAD a311caf1913e7ab40361727a771a09d6eaf5ff5b đã tạo và đọc artifact authenticated matrix: 456/456 completed, 456/456 passed, records_failed=0; HTTP/route/locale/theme mismatch=0; console errors/warnings/page errors/failed requests/external requests/forbidden mutations=0; reload mismatch=0; pass predicate bao gồm horizontal_overflow=false. provider_calls=0, wallet_mutations=0, production_data_mutations=0. Artifact digest sha256:334858235c9bb9ed67f4a5e3e093e1796bb8ce17ce32ca3bbc80f5cfc4911f38; browser evidence digest sha256:6e57d73522e244001908c88214484b8518380741ba70821e81c7871dba624d21. R217-11 đóng bằng chứng; local trace/FPS và real output vẫn thuộc spec khác."
   - id: W8
     spec: R217-12
     status: LIVE_DRIFT_OPEN
@@ -116,5 +116,5 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39025580717 SUCCESS: Verify Web App and Authenticated WebApp QA passed; job 117376311018 artifact 456/456 passed and was read directly."
+last_ci_run: "39027760496 SUCCESS: Verify Web App and Authenticated WebApp QA passed; job 117382539076 artifact 456/456 passed and was read directly."
 next_action: "Proceed in order to R217-12 live read-only recheck only; keep runtime/trace/delivery evidence open and do not infer real provider output from QA artifact. No provider, wallet, production, merge or deploy action."

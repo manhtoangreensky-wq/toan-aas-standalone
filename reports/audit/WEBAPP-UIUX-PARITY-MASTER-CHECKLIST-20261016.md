@@ -544,9 +544,9 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       `.github/workflows/webapp-quality.yml` cài dependency trong runner CI và upload artifact;
       contract route/count/safety `tests/test_r21711_authenticated_qa_runner_contract.py` được
       đưa vào critical WebApp contracts.
-- [x] **RUNTIME-R217-11-01 — CLOSED_WITH_EVIDENCE — 2026-10-17:** CI run `39025580717`
-      (job `117376311018`) trên HEAD `4b25d452f03c027cc52309ad8b2184548051ffcf`
-      tạo artifact thật `webapp-authenticated-qa-4b25d452f03c027cc52309ad8b2184548051ffcf`.
+- [x] **RUNTIME-R217-11-01 — CLOSED_WITH_EVIDENCE — 2026-10-17:** CI run `39027760496`
+      (job `117382539076`) trên HEAD `a311caf1913e7ab40361727a771a09d6eaf5ff5b`
+      tạo artifact thật `webapp-authenticated-qa-a311caf1913e7ab40361727a771a09d6eaf5ff5b`.
       JSON ghi `records_expected=456`, `records_completed=456`, `records_passed=456`,
       `records_failed=0`, `provider_calls=0`, `wallet_mutations=0`,
       `production_data_mutations=0`. Đối soát 456 record: HTTP/route/locale/theme mismatch
@@ -554,9 +554,9 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       forbidden mutations đều `0`; reload route/locale/theme mismatch `0`. Predicate PASS
       của runner bao gồm `horizontal_overflow=false`, nên `456/456` pass tương đương `0`
       overflow failure. Artifact ZIP local có SHA-256
-      `2f3edea16f53dfb9df47ed42d093550384f69c2a3e38708e6aec33f02fef45ef`, khớp digest
+      `334858235c9bb9ed67f4a5e3e093e1796bb8ce17ce32ca3bbc80f5cfc4911f38`, khớp digest
       GitHub; browser evidence artifact digest là
-      `sha256:e77bdd574f7ea5a08a096c58bb87e5447f8b352cbc1cc0bbad3df3096a931d1a`.
+      `sha256:6e57d73522e244001908c88214484b8518380741ba70821e81c7871dba624d21`.
 - [!] **CI run `39024899449` — 2026-10-17:** quality gate nền đã xanh nhưng runner R217-11
       dừng khi tạo fixture tại `_set_fixture_locale`: schema thực tế lưu locale ở
       `web_account_profiles`, không phải `web_accounts`, nên job báo
