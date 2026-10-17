@@ -370,10 +370,10 @@ hiển thị thành công giả khi engine/bridge chưa có.
       CTA vận hành. Regression Video Hub `11/11`, full Node `523/523`, node-check và
       `git diff --check` đạt; chưa có runtime/provider/output evidence.
 
-Evidence closeout R217-08: `HEAD_SHA=4ece9119d1d9a09ded8177ed3a98bc07286d0d7f`; focused
+Evidence closeout R217-08: `HEAD_SHA=59afdf7a8367a0126c6078f40c75dbce019966ae`; focused
 `node --test tests/video-uiux-locale-presentation.test.mjs` đạt `11/11`, full
 `node --test tests/*.test.mjs` đạt `523/523`, `node --check` hai tệp Portal đạt `2/2`,
-`git diff --check` đạt. CI run `39017696660` đã chạy thành công provenance, critical contracts,
+`git diff --check` đạt. CI run `39018249838` đã chạy thành công provenance, critical contracts,
 browser verification gate và browser runtime gate; kiểm đủ `6/6` hub, tạo `18` screenshot và
 upload evidence. Authenticated QA/performance trace, upload/render/delivery và real artifact
 vẫn `OPEN`, không đánh dấu `LIVE_PASS`.

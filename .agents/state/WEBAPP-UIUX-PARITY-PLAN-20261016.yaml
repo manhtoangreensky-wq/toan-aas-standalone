@@ -114,5 +114,5 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39017696660 SUCCEEDED: provenance, critical contracts, browser verification, browser runtime assertions, evidence upload and diff gate passed; 6/6 hubs checked and 18 screenshots captured after the explicit /video/finishing primary CTA correction."
+last_ci_run: "39018249838 SUCCEEDED: provenance, critical contracts, browser verification, browser runtime assertions, evidence upload and diff gate passed; 6/6 hubs checked and 18 screenshots captured after the explicit /video/finishing primary CTA correction."
 next_action: "Continue checklist order at R217-11 authenticated QA/performance evidence. Product Video source/browser gate is closed for this correction, but authenticated runtime, FPS/CLS/LCP/INP, upload/render/delivery and real artifacts remain open; no provider, wallet, production, merge or deploy action."
