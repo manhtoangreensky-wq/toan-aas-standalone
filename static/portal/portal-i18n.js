@@ -1293,7 +1293,7 @@
       "states.cancelled": "Đã hủy",
 
       "account.interfaceLocale": "Ngôn ngữ giao diện",
-      "account.sessionValid": "Signed session hợp lệ",
+      "account.sessionValid": "Phiên đã xác thực hợp lệ",
       "account.sessionPending": "Đang chờ xác minh",
       "interfaceLocale.nav": "Ngôn ngữ",
       "interfaceLocale.activityNav": "Hoạt động",

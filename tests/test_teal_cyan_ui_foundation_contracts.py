@@ -2493,7 +2493,7 @@ def test_light_account_security_keeps_signed_session_and_mfa_states_readable() -
         "portal-security-assurance",
     ):
         assert marker in PORTAL_CLIENT
-    assert "Signed session hợp lệ" in PORTAL_CLIENT
+    assert "Phiên đã xác thực hợp lệ" in PORTAL_CLIENT
     assert "Tình trạng bảo mật" in PORTAL_CLIENT
     assert all(
         selector in PORTAL_CATALOGUE

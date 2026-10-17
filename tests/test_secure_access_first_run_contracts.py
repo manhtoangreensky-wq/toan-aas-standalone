@@ -19,9 +19,9 @@ def _section(source: str, start: str, end: str) -> str:
 def test_auth_keeps_email_primary_and_reveals_optional_methods_progressively() -> None:
     auth = _section(PORTAL, "function renderAuth(page, context)", "const RESULT_LABELS")
     for token in (
-        'const isLogin = page.path === "/login";',
+        'const isLogin = page.path === "/login" || page.path === "/admin/login";',
         'const isRegister = page.path === "/register";',
-        'class="portal-auth-page portal-auth-page--access"',
+        'class="portal-auth-page portal-auth-page--access${isAdminLogin ?',
         'class="portal-auth-primary"',
         'class="portal-auth-alternatives"',
         'Dùng Telegram hoặc OAuth',
@@ -78,7 +78,7 @@ def test_customer_auth_hides_admin_entry_while_admin_keeps_customer_return() -> 
     admin_footer = _section(auth, "const adminLinkFooter", "const primaryForm")
 
     assert 'href="/login"' in admin_footer
-    assert "Quay lại trang đăng nhập Khách hàng" in admin_footer
+    assert "Quay lại đăng nhập khách hàng" in admin_footer
     assert 'href="/admin/login"' not in admin_footer
     assert 'page.path === "/login"' not in admin_footer
 
@@ -91,7 +91,7 @@ def test_register_defaults_and_account_entry_are_concise_without_relaxing_securi
     for token in (
         "const accountNextAction = linked",
         'class="portal-account-command"',
-        "Signed session hợp lệ",
+        "Phiên đã xác thực hợp lệ",
         'href: "/account/security"',
         'href: "/onboarding"',
     ):
@@ -129,7 +129,10 @@ def test_access_and_account_routes_remain_private_to_the_pwa() -> None:
 
 
 def test_new_access_scope_uses_flat_app_tokens_and_mobile_accessibility_rules() -> None:
-    scope = CSS[CSS.index("/* Secure Access & First-Run Journey"):]
+    scope = CSS[
+        CSS.index("/* Secure Access & First-Run Journey"):
+        CSS.index("/* Job & Asset Delivery Center")
+    ]
     for token in (
         ".portal-auth-page--access",
         ".portal-auth-journey",
