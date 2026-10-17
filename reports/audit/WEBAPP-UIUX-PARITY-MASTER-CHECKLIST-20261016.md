@@ -43,6 +43,12 @@
       `de8d38a9fc9c7cf37e41cdb53fc4420becd20d820732695fcb8ca08ac74006aa`, `284` tệp.
 - [~] CI trên candidate đã xác minh chưa chạy/chưa có kết quả; chỉ run mới của PR #647 sau push
       mới khép gate. Không dùng run cũ trên `66684e8` làm bằng chứng cho HEAD hiện tại.
+- [!] CI run `39005931284` trên `39460ee` đã chạy `288 passed, 1 failed`; lỗi duy nhất là
+      `tests/test_p0_05d_tester_workspace.py::test_readiness_json_has_explicit_truth_and_file_metadata`:
+      metadata của `KIEM-THU/DANH-SACH-CASE.md` còn `159` dòng/bytes/hash cũ trong khi file sau
+      WA-49 có `160` dòng. Đã cập nhật đúng `lines=160`, `bytes=36583`, SHA-256
+      `c2dbd8196fa7b2302656a67380ec8b1b9e01875fac666ce2774a1035c5b42cfa`; đã xác minh bằng
+      Python read-only. Chờ quality gate mới để đóng lỗi; không thay đổi runtime.
 - [x] Đối chiếu remote: local cũ lệch; tạo worktree sạch từ `github/webapp-checklist-r116`.
 - [x] Sau quality-gate failure `38958333812`, đã sửa provenance evidence: `284` eligible Web
       files; `preflight.json`, `web_inventory.json` và source hiện cùng fingerprint
