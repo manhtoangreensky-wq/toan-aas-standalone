@@ -2862,7 +2862,15 @@ async def page(page_path: str, request: Request):
                 if requested_locale in PUBLIC_ACCESS_INTERFACE_LOCALES
                 else normalized
             )
-            return RedirectResponse(f"/login?next={quote(return_target, safe='/')}", status_code=307)
+            login_locale = (
+                f"&lang={requested_locale}"
+                if requested_locale in PUBLIC_ACCESS_INTERFACE_LOCALES
+                else ""
+            )
+            return RedirectResponse(
+                f"/login?next={quote(return_target, safe='/')}{login_locale}",
+                status_code=307,
+            )
 
         linked = bool(account.get("canonical_user_id"))
         if linked and normalized == "/onboarding":

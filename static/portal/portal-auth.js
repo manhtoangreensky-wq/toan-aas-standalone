@@ -182,9 +182,17 @@
   function safeReturnPath(value) {
     if (typeof value !== "string") return "";
     const route = value.trim();
-    if (!route.startsWith("/") || route.startsWith("//") || route.includes("\\") || route.includes("?") || route.includes("#")) return "";
-    const normalized = route.replace(/\/+$/, "") || "/";
-    return ["/login", "/register", "/password-recovery", "/onboarding"].includes(normalized) ? "" : normalized;
+    if (!route.startsWith("/") || route.startsWith("//") || route.includes("\\") || route.includes("\u0000") || route.includes("#")) return "";
+    const separator = route.indexOf("?");
+    const pathname = separator >= 0 ? route.slice(0, separator) : route;
+    const query = separator >= 0 ? route.slice(separator + 1) : "";
+    const normalized = pathname.replace(/\/+$/, "") || "/";
+    if (["/login", "/register", "/password-recovery", "/onboarding"].includes(normalized)) return "";
+    if (!query) return normalized;
+    const params = new URLSearchParams(query);
+    const entries = Array.from(params.entries());
+    if (entries.length !== 1 || entries[0][0] !== "lang" || !LOCALES.has(entries[0][1])) return "";
+    return `${normalized}?lang=${encodeURIComponent(entries[0][1])}`;
   }
 
   function nextRoute() { return safeReturnPath(new URLSearchParams(window.location.search).get("next") || ""); }

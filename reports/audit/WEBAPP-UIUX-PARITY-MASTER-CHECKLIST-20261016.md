@@ -2,9 +2,9 @@
 
 **Checklist ID:** `WEBAPP-UIUX-PARITY-20261016`
 **Plan:** `docs/superpowers/plans/2026-10-16-webapp-uiux-product-parity-master-plan-r217.md`
-**Baseline remote:** `f59eacf63a49534854dc7cde06e5baed6546dc58`
-**PR liên quan:** #647 — đã merge `bc0d089`; deploy WebApp `39036918159` đã thành công, live recheck tiếp tục mở
-**Ngày cập nhật:** 2026-10-17
+**Baseline remote:** `ea914bb45966237106d8a8e8c1464604ffaba42b`
+**PR liên quan:** [#651](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/651) — đang Open; quality gate #1725 đạt, chưa merge/deploy/live
+**Ngày cập nhật:** 2026-10-18
 
 ## Cách đọc trạng thái
 
@@ -111,9 +111,16 @@
 - [x] **SOURCE-UI-03:** modal hướng dẫn cài ứng dụng giữ đúng nền xanh navy/xanh ngọc;
       lớp phủ và thanh chọn tab không còn dùng nền đen. Regression nằm ở
       `tests/install-modal-navy-palette.test.mjs`.
+- [x] **SOURCE-UI-04 — 2026-10-17 15:36:32 UTC:** nút trong cụm điều hướng landing ở
+      breakpoint `max-width:700px` giữ `min-height:44px`, không còn bị thu xuống `35px`;
+      regression thêm vào `tests/r215-full-uiux-static-acceptance.test.mjs`. Target touch
+      này không đổi route/action/field và không làm thay đổi palette xanh navy/xanh ngọc.
 - [x] Source recheck sau W1 và W2 locale: focused PWA/auth/utility/motion `39/39`,
       toàn bộ Node `480/480`, `node --check static/portal/portal-i18n.js`,
       `git diff --check` đạt.
+- [x] **R217-01 source recheck — 2026-10-17 15:36:32 UTC:** focused shell/PWA/locale/motion
+      `27/27`, full Node suite `524/524`, `git diff --check` đạt; đây là source evidence,
+      không thay thế ma trận browser 320/375/414/768/1024 ở light/dark.
 - [!] Python Admin/PWA contract chưa chạy: bundled Python không có module `pytest`; đây
       là blocker công cụ, không ghi PASS giả.
 - [~] Live recheck 2026-10-16 lúc `14:52:08 UTC` ở `/welcome?lang=vi`, viewport rộng `327px`
@@ -633,6 +640,13 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       Đã khoanh đúng một nhánh trong `app.py`, thêm regression cho `vi/en/zh`; chờ PR sửa
       tiếp theo và lặp lại live matrix trước khi đóng `R216-L`.
 
+- [x] **SOURCE-R217-12-02 — candidate `0ad78e5` — 2026-10-17:** Sửa đúng seam locale:
+      redirect unauthenticated đưa `lang=vi|en|zh` lên cả URL `/login` và return target đã mã hóa;
+      `portal-auth.js` và `integration.js` chỉ nhận đúng một query `lang` trong allowlist, mọi query
+      khác/fragment/backslash/auth-loop vẫn fail-closed. Focused `17/17`, full Node `525/525`,
+      `node --check` hai JavaScript, `py_compile` `4/4` và `git diff --check` đạt. Đây mới là
+      source evidence; chưa CI/deploy/live nên R217-12 vẫn `LIVE_DRIFT_OPEN`.
+
 - [~] **R217-12 fresh 2026-10-17 11:40:28 UTC — R216-L:** `/features?lang=vi|en|zh`
       vẫn kết thúc ở `/login?next=/features` và làm mất locale query. `main#portal-main`
       vẫn có `tabindex=-1`, nhưng các lần `en`/`zh` rơi về document `vi`/`Đăng nhập ·
@@ -745,18 +759,34 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       `WALLET_MUTATIONS=0`, `PRODUCTION_DATA_MUTATIONS=0`; không đăng nhập production,
       không gửi form, không upload và không tạo tác vụ.
 
-## 11. Tổng trạng thái tại ngày 2026-10-17
+## 11. Tổng trạng thái tại ngày 2026-10-18
 
 | Nhóm | Đã có bằng chứng | Đang mở | Bị chặn/hoãn |
 |---|---:|---:|---:|
-| Source UI/UX/locale/static motion | R217-10 motion `43/43`; full Node `523/523`; Auth/Motion syntax `2/2` | product-lane runtime/AX chưa đo; FPS/CLS/LCP/INP trace chưa có | 2 source-matrix AI lanes thiếu entitlement (Transform/Upscale) |
+| Source UI/UX/locale/static motion | R217-10 motion `43/43`; full Node `525/525`; JS syntax `4/4`; `git diff --check` sạch | product-lane runtime/AX chưa đo; FPS/CLS/LCP/INP trace chưa có | 2 source-matrix AI lanes thiếu entitlement (Transform/Upscale) |
 | Responsive/PWA live | R216-L/R216-P/R216-H + LIVE-UI-01/LIVE-UI-02 `CLOSED_WITH_EVIDENCE`; bundle `local-00d9a64e11a5031705e6`; live 390×844 light/dark + desktop pass | R217-01 broader type/spacing/contrast matrix; performance trace | QA runtime/trace riêng |
 | Customer product parity UI | shell/partial nhiều lane | 6 lane acceptance | real-output bridge |
 | Admin/customer wiring UI | source contracts rải rác | 1 master surface audit | backend/permission mutation |
 | Authenticated QA | source runner + Admin fixture; CI `39030607461` và artifact `456/456` | local runtime/trace riêng | bundled local dependency thiếu; production không thay thế QA |
 | Technical parity/real output | 0 cho bridge AI | 0 trong wave UI | W9 deferred |
 
-## 12. Quy tắc cập nhật bắt buộc
+## 12. Bằng chứng xác minh mới nhất trên PR #651 — 2026-10-18
+
+- [x] HEAD `7d2432707d94a91aeff15bbadd620993c4dd298c` đúng với nhánh `webapp-live-r117`.
+- [x] Chạy lại toàn bộ kiểm thử JavaScript bằng Node trên HEAD hiện tại: `525/525` đạt,
+      `0` lỗi, `0` huỷ, thời lượng `5.116s`.
+- [x] Chạy `node --check` cho `static/portal/portal.js`, `portal-auth.js`,
+      `integration.js` và `portal-motion.js`: `4/4` đạt.
+- [x] `git diff --check`: đạt, không có whitespace error.
+- [!] Bộ xác minh Python không chạy được tại máy hiện tại vì không có `python`/`py`; đây là
+      thiếu runtime cục bộ, không được suy diễn thành Python PASS.
+- [x] Quality gate GitHub [#1725](https://github.com/manhtoangreensky-wq/toan-aas-standalone/actions/runs/39054217248)
+      đạt `2/2`; Authenticated WebApp QA giữ `456/456` bản ghi đạt và các bộ đếm provider/wallet/
+      production mutation đều `0`.
+- [x] Comment bàn giao đã đăng trên [PR #651](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/651#issuecomment-6237924002).
+- [ ] PR vẫn chưa merge, chưa deploy VPS, chưa live recheck và chưa đánh dấu `LIVE_PASS`.
+
+## 13. Quy tắc cập nhật bắt buộc
 
 Mỗi lần làm một spec phải cập nhật ngay bảng này với `status`, `date`, `HEAD_SHA`, lệnh
 verify, số pass/fail, screenshot/DOM evidence và blocker. Không xóa item đã đóng; nếu
@@ -764,17 +794,13 @@ phát hiện lỗi mới, thêm một dòng ở đúng wave và ghi `OPEN`. Chec
 nhất để quyết định wave tiếp theo.
 
 ```ini
-STATUS=VERIFIED_LIVE_READONLY_CLOSED
+STATUS=SOURCE_VERIFIED_DELIVERY_OPEN
 PROVIDER_CALLS=0
 WALLET_MUTATIONS=0
 PRODUCTION_DATA_MUTATIONS=0
-MERGE=PR_648_MERGED_506d2b9
-DEPLOY=WORKFLOW_39039077676_SUCCESS_RUNTIME_506d2b9
-LIVE_PASS=R217_12_READ_ONLY_CLOSED
-NEXT_ACTION=Tiếp tục R217-01 responsive type/spacing/contrast matrix; sau đó xử lý browser/AX
-locale và product-lane presentation theo thứ tự. Giữ các lane sản phẩm/bridge/real-output và W9
-deferred theo checklist hiện hành, không suy diễn 456/456 QA thành real provider output.
-PROVIDER_CALLS=0, WALLET_MUTATIONS=0, PRODUCTION_DATA_MUTATIONS=0,
-DEPLOY=WORKFLOW_39039077676_SUCCESS_RUNTIME_506d2b9, MERGE=PR_648_MERGED_506d2b9,
-LIVE_PASS=PARTIAL_R217_12_READ_ONLY.
+MERGE=NO
+DEPLOY=NO
+LIVE_PASS=NO
+HEAD_SHA=7d2432707d94a91aeff15bbadd620993c4dd298c
+NEXT_ACTION=Chờ Owner delivery approval riêng cho PR #651; sau merge/deploy mới lặp lại route-locale/PWA/auth viewport matrix (390×844 và 1440×900) và chỉ đóng LIVE_PASS khi có bằng chứng runtime mới. Node 525/525, JS syntax 4/4 và diff-check đã đạt; Python verifier NOT_RUN do thiếu python/py. Không provider, wallet, PayOS hoặc production-data action.
 ```

@@ -24,9 +24,9 @@ def test_dashboard_unauthenticated_route_redirects_before_shell_render():
     assert 'session = current_session(request)' in APP
     assert 'requested_locale = request.query_params.get("lang")' in APP
     assert 'f"{normalized}?lang={requested_locale}"' in APP
-    redirect = 'return RedirectResponse(f"/login?next={quote(return_target, safe=\'/\')}", status_code=307)'
-    assert redirect in APP
-    assert APP.index(redirect) < APP.index('return render_portal(page_path, interface_locale=portal_interface_locale)')
+    assert 'f"&lang={requested_locale}"' in APP
+    assert 'f"/login?next={quote(return_target, safe=\'/\')}{login_locale}"' in APP
+    assert APP.index('return RedirectResponse(') < APP.index('return render_portal(page_path, interface_locale=portal_interface_locale)')
 
 
 def test_shell_boot_uses_layout_skeleton_with_accessible_status_copy():

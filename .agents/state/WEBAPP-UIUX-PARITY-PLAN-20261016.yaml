@@ -3,17 +3,18 @@ phase: VERIFY
 objective: "Tiếp tục thực thi tuần tự plan/checklist/spec WebApp standalone; khóa từng lỗi UI/UX/locale bằng bằng chứng source, giữ runtime/live mở khi chưa có delivery."
 scope: "Customer shell, Admin shell, product-lane UI/UX, locale, responsive, accessibility, motion và browser/live evidence."
 out_of_scope: "Bot/Core code, route-engine, provider calls, wallet/Xu, PayOS, production data và backend mutation."
-base_remote_sha: f59eacf63a49534854dc7cde06e5baed6546dc58
-working_branch: webapp-plan-r116
-target_branch: webapp-checklist-r116
-pull_request: 647
-status: VERIFIED_LIVE_PARTIAL
-live_pass: PARTIAL_R217_12_READ_ONLY
+base_remote_sha: ea914bb45966237106d8a8e8c1464604ffaba42b
+working_branch: webapp-live-r117
+target_branch: main
+pull_request: 651
+pull_request_url: https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/651
+status: SOURCE_VERIFIED_DELIVERY_OPEN
+live_pass: NO
 provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
-merge: PR_648_MERGED_506d2b9
-deploy: WORKFLOW_39039077676_SUCCESS_RUNTIME_506d2b9
+merge: NO
+deploy: NO
 ordered_waves:
   - id: W0
     spec: R217-00
@@ -22,7 +23,7 @@ ordered_waves:
   - id: W1
     spec: R217-01
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Source fixes locked: landing flex-wrap at <=420px, no landing install banner/FAB before beforeinstallprompt, and install-guide modal uses navy/teal surfaces without black backdrop/tab fills. Focused 39/39 and full Node 470/470 were green before the latest modal regression, which also passes separately. Post-delivery mobile evidence at 390x844 (light/dark) now confirms no horizontal overflow, no visible PWA FAB and stable header/hero rendering; the remaining W1 TODOs are the broader 320/375/414/768/1024 type/spacing/contrast matrix, not the previously reported delivery drift."
+    note: "Source fixes locked: landing flex-wrap at <=420px, no landing install banner/FAB before beforeinstallprompt, install-guide modal uses navy/teal surfaces without black backdrop/tab fills, and landing navigation buttons retain the 44px touch target at <=700px. Focused R217-01 recheck 27/27 and full Node 524/524 pass; git diff --check pass. Browser matrix for 320/375/414/768/1024 light/dark and runtime contrast/table evidence remain open."
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN
@@ -77,8 +78,8 @@ ordered_waves:
     note: "2026-10-17: local bundled Python vẫn thiếu fastapi/uvicorn/pytest/websockets nên không có local runtime claim. CI run 39034978224 trên HEAD 7942548 hoàn tất Success trong 8m19s; Verify Web App job 117402852575 và Authenticated WebApp QA job 117403448516 đều xanh, authenticated job chạy 5m12s. Ma trận authenticated giữ 456/456 completed, 456/456 passed, records_failed=0; HTTP/route/locale/theme mismatch=0; console/page/request/external/forbidden mutation=0; reload mismatch=0; horizontal_overflow=false; provider_calls=0, wallet_mutations=0, production_data_mutations=0. Cảnh báo duy nhất là Node 20/Ubuntu deprecation. Artifact authenticated digest sha256:5ca1ad0448bcd3388695ffee032a4c99b3493fa59774b66e0725b385ef824d37; browser evidence digest sha256:d61a2372b3683c658c6ad1c606943198bfe558454151305df7d5b3d9af592ef7. R217-11 đóng bằng chứng mới nhất; local trace/FPS và real output vẫn thuộc spec khác."
   - id: W8
     spec: R217-12
-    status: CLOSED_WITH_EVIDENCE
-    note: "2026-10-17 closeout: PR #648 merge 506d2b9 passed main quality run 39038471041 (Verify Web App + Authenticated WebApp QA, 456/456). Deploy workflow 39039077676 passed forward-only guard, tracked backup, active Web/Nginx services and health payload TOAN AAS Web App/app.py. Live read-only GET/navigation confirmed /features?lang=vi|en|zh preserve locale in encoded next targets, welcome uses fingerprint local-00d9a64e11a5031705e6, and login vi/en/zh titles are correct with legacy install copy absent. Production viewport-capable recheck at 390x844 in both light/dark then closed R216-L/R216-P/R216-H and LIVE-UI-01/LIVE-UI-02: scrollWidth=clientWidth=390, no PWA selector/FAB, no console error/warning, and mobile auth SVG wrappers measured 18px/16px/18px. PROVIDER_CALLS=0, WALLET_MUTATIONS=0, PRODUCTION_DATA_MUTATIONS=0."
+    status: LIVE_DRIFT_OPEN
+    note: "Fresh read-only evidence 2026-10-17 13:35 UTC after deploy workflow 39036918159 (runtime bc0d089055df7a52c1ee9e3e76a5cbc57beacce4; health/service checks green) confirmed /features?lang=vi|en|zh still dropped locale before login. Source candidate 0ad78e5 now carries the allowlisted locale on both the encoded return target and the /login URL, and portal-auth/integration accept only one reviewed lang query (vi|en|zh); 17/17 focused and 525/525 full Node pass, py_compile pass. Candidate is not deployed; landing mobile/PWA/auth checks must be repeated after delivery, so keep R216-H/L/P and LIVE_DRIFT_OPEN."
   - id: W9
     spec: R217-13
     status: DEFERRED
@@ -116,5 +117,15 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39040466680 SUCCESS on PR #649: Verify Web App job 117418793017 and Authenticated WebApp QA job 117419357572 passed; authenticated matrix completed 456/456 with safety mutations 0. PR #649 merged as 3acd2416044904a7c3f0e6b43be8a4fe68e7b066. Post-merge live mobile read-only probe at 390x844 (light/dark) closed the production viewport/PWA evidence gap; no provider, wallet or production-data action."
-next_action: "R217-12 is CLOSED_WITH_EVIDENCE. Continue the next ordered UI/UX item: finish the remaining R217-01 responsive type/spacing/contrast matrix, then proceed to the open browser/AX locale and product-lane presentation checks; keep provider, wallet, payment, production-data and real-output bridges deferred."
+last_ci_run: "39054217248 SUCCESS on candidate 7d24327: Verify Web App job 117458760671 and Authenticated WebApp QA job 117459394702 passed; authenticated matrix completed 456/456 with safety mutations 0."
+latest_source_verification:
+  date: 2026-10-18
+  head_sha: 7d2432707d94a91aeff15bbadd620993c4dd298c
+  node_test: "525/525 passed via node --test over tests/**/*.test|spec.(mjs|js|cjs)"
+  node_check: "4/4 passed: portal.js, portal-auth.js, integration.js, portal-motion.js"
+  git_diff_check: PASS
+  python_verifier: NOT_RUN_MISSING_PYTHON
+  provider_calls: 0
+  wallet_mutations: 0
+  production_data_mutations: 0
+next_action: "PR #651 đã có quality gate xanh và provenance khớp nhưng còn Open. Chờ Owner delivery approval riêng trước merge/deploy; sau delivery mới lặp lại live read-only locale redirect, auth install, PWA placement và viewport 390x844/1440x900. Không provider, wallet hoặc production-data action."
