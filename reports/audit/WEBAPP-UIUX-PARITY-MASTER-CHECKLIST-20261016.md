@@ -107,9 +107,16 @@
 - [x] **SOURCE-UI-03:** modal hướng dẫn cài ứng dụng giữ đúng nền xanh navy/xanh ngọc;
       lớp phủ và thanh chọn tab không còn dùng nền đen. Regression nằm ở
       `tests/install-modal-navy-palette.test.mjs`.
+- [x] **SOURCE-UI-04 — 2026-10-17 15:36:32 UTC:** nút trong cụm điều hướng landing ở
+      breakpoint `max-width:700px` giữ `min-height:44px`, không còn bị thu xuống `35px`;
+      regression thêm vào `tests/r215-full-uiux-static-acceptance.test.mjs`. Target touch
+      này không đổi route/action/field và không làm thay đổi palette xanh navy/xanh ngọc.
 - [x] Source recheck sau W1 và W2 locale: focused PWA/auth/utility/motion `39/39`,
       toàn bộ Node `480/480`, `node --check static/portal/portal-i18n.js`,
       `git diff --check` đạt.
+- [x] **R217-01 source recheck — 2026-10-17 15:36:32 UTC:** focused shell/PWA/locale/motion
+      `27/27`, full Node suite `524/524`, `git diff --check` đạt; đây là source evidence,
+      không thay thế ma trận browser 320/375/414/768/1024 ở light/dark.
 - [!] Python Admin/PWA contract chưa chạy: bundled Python không có module `pytest`; đây
       là blocker công cụ, không ghi PASS giả.
 - [~] Live recheck 2026-10-16 lúc `14:52:08 UTC` ở `/welcome?lang=vi`, viewport rộng `327px`

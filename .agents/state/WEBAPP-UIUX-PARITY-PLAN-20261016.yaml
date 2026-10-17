@@ -22,7 +22,7 @@ ordered_waves:
   - id: W1
     spec: R217-01
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Source fixes locked: landing flex-wrap at <=420px, no landing install banner/FAB before beforeinstallprompt, and install-guide modal uses navy/teal surfaces without black backdrop/tab fills. Focused 39/39 and full Node 470/470 were green before the latest modal regression, which also passes separately. Live probe 2026-10-16 still sees old fingerprint local-57e76aa281dcc721fdaa, nowrap header and fixed FAB at 327x668. PR #647 GitHub page confirms branch has not been deployed and shows no deployments; delivery recheck remains open."
+    note: "Source fixes locked: landing flex-wrap at <=420px, no landing install banner/FAB before beforeinstallprompt, install-guide modal uses navy/teal surfaces without black backdrop/tab fills, and landing navigation buttons retain the 44px touch target at <=700px. Focused R217-01 recheck 27/27 and full Node 524/524 pass; git diff --check pass. Browser matrix for 320/375/414/768/1024 light/dark and runtime contrast/table evidence remain open."
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN

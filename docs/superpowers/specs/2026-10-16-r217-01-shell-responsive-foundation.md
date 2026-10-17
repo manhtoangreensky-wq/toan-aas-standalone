@@ -59,3 +59,12 @@ git diff --check
 - Evidence: focused W1/PWA/auth/utility/motion `39/39`; full Node `470/470`; JS syntax and
   `git diff --check` pass; regression modal navy pass riêng. Live runtime evidence is still open because the deployed asset
   fingerprint has not been rechecked after this source delivery.
+
+## Source follow-up 2026-10-17 15:36:32 UTC
+
+- Mobile landing navigation buttons under `max-width:700px` had `min-height:35px`, below the
+  plan's 44px touch target. The single scoped declaration is now `min-height:44px`.
+- Regression: focused shell/PWA/locale/motion tests `27/27` passed; full `node --test
+  tests/*.test.mjs` passed `524/524`; `git diff --check` passed.
+- This closes the source defect only. Browser matrix evidence for `320/375/414/768/1024` and
+  light/dark contrast remains open until a viewport-capable QA runtime is available.
