@@ -14,6 +14,15 @@ SHA khớp HEAD và fingerprint đầy đủ là
 `c9bbeab9d5578d42e371a96945f805fe4cc2b2b053897becfc7693591dd59491`. Vì run này fail trước
 job authenticated QA, R217-11 vẫn mở và chưa có artifact `456/456`.
 
+## Lỗi runner và bản sửa tiếp theo — 2026-10-17
+
+Run `39024899449` đã qua `Verify Web App` nhưng R217-11 fail ở bước tạo fixture với
+`sqlite3.OperationalError: no such column: locale`. Schema Web hiện tại tách locale trong
+`web_account_profiles`; `web_accounts` chỉ giữ role và canonical identity. Runner đã được sửa
+để cập nhật hai bảng đúng trách nhiệm: role/canonical theo `web_accounts.id`, locale bằng
+upsert vào `web_account_profiles`. Contract nguồn khóa cả câu lệnh update đúng và cấm update
+locale trực tiếp trên `web_accounts`. Artifact `456/456` vẫn chưa có; cần một CI run mới.
+
 ## Điều kiện mở
 
 - URL/lệnh runtime QA cô lập, DB fixture tách production.

@@ -547,6 +547,14 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       `0` external/provider/payment/wallet mutation, `0` overflow và reload state khớp;
       chỉ khi có artifact thật mới đóng ma trận. Run `39023945997` bị chặn trước job này do
       provenance; job authenticated QA hiện vẫn `skipped`, chưa có artifact.
+- [!] **CI run `39024899449` — 2026-10-17:** quality gate nền đã xanh nhưng runner R217-11
+      dừng khi tạo fixture tại `_set_fixture_locale`: schema thực tế lưu locale ở
+      `web_account_profiles`, không phải `web_accounts`, nên job báo
+      `sqlite3.OperationalError: no such column: locale` và chưa sinh artifact.
+- [x] **SOURCE-R217-11-04 — 2026-10-17:** Sửa đúng runner: cập nhật role/canonical trên
+      `web_accounts` theo `id`, upsert locale vào `web_account_profiles` với schema hiện tại,
+      giữ DB SQLite tạm và không mở thêm mutation. Đã thêm contract cấm quay lại câu lệnh
+      `UPDATE web_accounts SET locale`.
 - [ ] Các lane Image/Voice/Music/SubDub/Video phải có evidence từng state; nếu engine chưa
       có, evidence phải chứng minh guarded boundary chứ không gọi output PASS.
 - [x] **SOURCE-R217-11-02 — 2026-10-17:** Đã thêm fixture test DB tạm với

@@ -74,7 +74,7 @@ ordered_waves:
   - id: W7
     spec: R217-11
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "2026-10-17: local bundled Python still lacks fastapi/uvicorn/pytest/websockets, so no local runtime claim is made. Added scripts/ci/run_authenticated_qa_matrix.py and an authenticated-qa CI job that installs isolated dependencies, creates six locale fixtures in temporary SQLite, and records the required 456-route matrix. Source Admin fixture remains green (CI run 39021192324). CI run 39023945997 stopped before this job because migration provenance recorded bf9084e4509b while current HEAD 3e5cd367a48e8d673a16d5184b2a45946b3275b6 fingerprints c9bbeab9d557. Web-only provenance is now refreshed and locally verified on the current candidate; rerun CI before closing R217-11."
+    note: "2026-10-17: local bundled Python still lacks fastapi/uvicorn/pytest/websockets, so no local runtime claim is made. Added scripts/ci/run_authenticated_qa_matrix.py and an authenticated-qa CI job that installs isolated dependencies, creates six locale fixtures in temporary SQLite, and records the required 456-route matrix. Source Admin fixture remains green (CI run 39021192324). CI run 39023945997 stopped before this job because migration provenance recorded bf9084e4509b while current HEAD 3e5cd367a48e8d673a16d5184b2a45946b3275b6 fingerprints c9bbeab9d557. Run 39024899449 passed the base gate but R217-11 exposed a fixture schema error (`web_accounts` has no locale column); runner now writes role/canonical to `web_accounts` and locale to `web_account_profiles`, with a source contract guard. Artifact 456/456 remains open."
   - id: W8
     spec: R217-12
     status: LIVE_DRIFT_OPEN
@@ -116,5 +116,5 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39023945997 FAILED: Verify Web App stopped at migration provenance because recorded fingerprint bf9084e4509b did not match current source fingerprint c9bbeab9d557 on HEAD 3e5cd367a48e8d673a16d5184b2a45946b3275b6; Authenticated WebApp QA was skipped. Web-only evidence refresh and local verify are now green; rerun CI is required."
-next_action: "Push the current candidate and rerun CI. Inspect the authenticated QA artifact for 456/456 before opening R217-12. Product Video source/browser gate is closed for this correction, but authenticated runtime, FPS/CLS/LCP/INP, upload/render/delivery and real artifacts remain open; no provider, wallet, production, merge or deploy action."
+last_ci_run: "39024899449 FAILED: Verify Web App passed; Authenticated WebApp QA stopped in fixture setup with sqlite3.OperationalError no such column: locale. Runner was corrected to use web_account_profiles for locale; rerun CI and inspect the artifact."
+next_action: "Refresh Web provenance after the runner fix, commit/push, and rerun CI. Inspect the authenticated QA artifact for 456/456 before opening R217-12. Product Video source/browser gate is closed for this correction, but authenticated runtime, FPS/CLS/LCP/INP, upload/render/delivery and real artifacts remain open; no provider, wallet, production, merge or deploy action."

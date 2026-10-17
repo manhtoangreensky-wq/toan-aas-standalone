@@ -147,9 +147,20 @@ def _start_server(tmp_dir: Path, db_path: Path, assets_dir: Path, port: int) -> 
 
 def _set_fixture_locale(db_path: Path, email: str, locale: str, role: str, canonical_id: str | None) -> None:
     with sqlite3.connect(db_path) as conn:
+        account = conn.execute("SELECT id FROM web_accounts WHERE email=?", (email,)).fetchone()
+        if not account:
+            raise RuntimeError(f"QA fixture account is missing: {email}")
         conn.execute(
-            "UPDATE web_accounts SET locale=?, role_cache=?, canonical_user_id=? WHERE email=?",
-            (locale, role, canonical_id, email),
+            "UPDATE web_accounts SET role_cache=?, canonical_user_id=? WHERE id=?",
+            (role, canonical_id, account[0]),
+        )
+        now = time.strftime("%Y-%m-%dT%H:%M:%S+00:00", time.gmtime())
+        conn.execute(
+            """INSERT INTO web_account_profiles
+               (account_id, locale, timezone, avatar_style, created_at, updated_at)
+               VALUES (?, ?, 'Asia/Ho_Chi_Minh', 'gradient', ?, ?)
+               ON CONFLICT(account_id) DO UPDATE SET locale=excluded.locale, updated_at=excluded.updated_at""",
+            (account[0], locale, now, now),
         )
         conn.commit()
 

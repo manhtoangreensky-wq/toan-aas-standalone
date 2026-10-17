@@ -53,3 +53,11 @@ def test_r21711_runner_records_ax_focus_reload_and_artifact_hashes() -> None:
         '"console_warnings"',
     ):
         assert marker in source, marker
+
+
+def test_r21711_fixture_locale_uses_web_profile_schema() -> None:
+    source = RUNNER.read_text(encoding="utf-8")
+    assert "UPDATE web_accounts SET role_cache=?, canonical_user_id=? WHERE id=?" in source
+    assert "INSERT INTO web_account_profiles" in source
+    assert "SET locale=excluded.locale" in source
+    assert "UPDATE web_accounts SET locale" not in source
