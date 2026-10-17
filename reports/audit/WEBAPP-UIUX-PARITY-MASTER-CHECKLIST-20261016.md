@@ -460,6 +460,10 @@ plugin và môi trường Python/QA server trong lượt này; giữ runtime `OP
       chạy do môi trường thiếu `py`/`pytest`, không đánh dấu live PASS.
 - [x] **SOURCE-ADMIN-10 closeout:** regression source mobile harmony đạt `1/1`; full Node suite
       sau batch: `518/518`, `NEW_FAILURES=0`; syntax Portal `2/2` đạt.
+- [x] **SOURCE-ADMIN-11 recheck — 2026-10-17:** chạy lại toàn bộ `tests/admin-*.test.mjs`
+      đạt `21/21`; full Node suite hiện hành đạt `522/522`, không có source regression mới.
+      Fixed chrome, vertical navigation, locale, mobile harmony, Customer 360, Provider,
+      manual top-up và domain center presentation đã có evidence source.
 - [ ] Owner thấy toàn bộ; role khác chỉ thấy module/action theo policy hiển thị. UI phải
       nói rõ quyền bị thiếu thay vì nút chết.
 - [ ] Mỗi customer action có request/job/asset/report reference và trạng thái audit trên

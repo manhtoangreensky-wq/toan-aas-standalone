@@ -812,3 +812,12 @@ Publish Review và Campaign đã được kiểm lại theo cùng checklist. L�
 Các route/action/field/revision, bản nháp và trạng thái guarded giữ nguyên. Browser/AX,
 responsive runtime và dữ liệu ghi thật chưa có môi trường QA nên vẫn mở; không gọi provider,
 không tạo output và không ghi dữ liệu production. Wave source này đóng, chuyển sang rà Admin.
+
+## Recheck nguồn WebApp — R217-09 Admin/customer visibility — 17/10/2026
+
+Bộ `tests/admin-*.test.mjs` hiện chạy `21` test, `21` passed, `0` failed; full Node suite
+`522` passed, `0` failed. Fixed chrome, điều hướng dọc, locale VI/EN/ZH, Customer 360,
+Provider, nạp thủ công, finance/domain center và mobile harmony đều có evidence source.
+Quyền Owner/role, liên kết request/job/asset/report/audit, canonical-admin fixture, duyệt
+ledger/Xu và browser/AX runtime vẫn chưa có bằng chứng phù hợp; giữ `OPEN/DEFERRED`, không
+ghi PASS thay cho backend permission hoặc mutation thật.

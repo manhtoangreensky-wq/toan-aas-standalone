@@ -544,3 +544,15 @@ với Bot, không đổi engine, route/action/field/capability, ví/Xu hoặc d�
 
 Batch này chỉ đóng source presentation của R217-09A. Không được gọi đây là parity runtime với
 Bot, không đổi engine, route/action/field/capability, ví/Xu hoặc dữ liệu production.
+
+## Đối chiếu bổ sung — SOURCE-ADMIN-11 — 17/10/2026
+
+| Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Admin fixed chrome và điều hướng | Các khu vực Customer 360, Provider, nạp thủ công, finance/domain center, stewardship và mobile data dùng catalogue/khung dọc đã rà soát. | `tests/admin-*.test.mjs` `21/21`; không đổi route/action/permission server |
+| Locale và mobile | Nhãn cố định cân bằng VI/EN/ZH; module tabs có target chạm và bảng mobile có harmony source. | Full Node `522/522`; browser AX/overflow runtime chưa có |
+| Quyền và tác vụ khách | UI giữ boundary theo manifest/capability và trạng thái guarded; chưa chứng minh role enforcement hoặc liên kết request/job/asset/report/audit thật. | Canonical-admin fixture, Python contract và browser runtime đang `OPEN/BLOCKED` |
+| Duyệt nạp thủ công | Có amount/method/reference/status/approve/reject/reason ở lớp trình bày; ledger/Xu mutation vẫn `DEFERRED`. | Không gọi PayOS/provider, không ghi ví hoặc dữ liệu production |
+
+Batch này chỉ đóng source recheck Admin. Không được gọi đây là parity runtime với Bot hoặc
+duyệt tiền thật.

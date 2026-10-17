@@ -66,7 +66,7 @@ ordered_waves:
     spec: R217-09
     status: SOURCE_PARTIAL_RUNTIME_OPEN
     name: admin-customer-visibility
-    note: "Admin Provider, manual top-up approval/rejection và /admin/publishing, /admin/growth, /admin/trends domain center fixed chrome now use balanced locale catalogues; Admin domain/provider/top-up focused 7/7 and full Node 509/509. Canonical admin fixture, wallet mutation and browser runtime remain deferred."
+    note: "2026-10-17 source recheck: all admin-*.test.mjs focused 21/21 and full Node 522/522. Fixed chrome, vertical navigation, locale, Customer 360, Provider, manual top-up, finance/domain centres and mobile harmony are source-green; canonical-admin fixture, server permission enforcement, customer request/job/report references, wallet mutation and browser runtime remain deferred."
   - id: W6
     spec: R217-10
     status: SOURCE_GREEN_RUNTIME_OPEN
@@ -115,4 +115,4 @@ created_files:
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
 last_ci_run: "39007843300 SUCCESS on 1fe321b; Verify Web App green; browser evidence artifact 10.7 MB; digest sha256:97607fe14b53f75f25eda7f0159b17996f6384a9e87c3dcbaec33d712f4a5f88"
-next_action: "Continue R217-09 Admin/customer visibility after committing the Product Video and R217-09A source closeouts. Keep R217-04/R217-05/R217-06/R217-07/R217-08/R217-09A runtime and real-output evidence open; no provider, wallet, production or deploy action."
+next_action: "Continue R217-10 motion/perceived-performance source gates after committing the Admin recheck. Keep all product/admin runtime, fixture, bridge and real-output evidence open; no provider, wallet, production or deploy action."

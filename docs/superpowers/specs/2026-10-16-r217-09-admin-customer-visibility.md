@@ -150,3 +150,13 @@ không tự sửa dependency production.
 - Source contract cho Admin mobile data harmony đạt `1/1`; full Node suite đạt `518/518`.
 - Chỉ đóng source layer: browser/AX/overflow/inspector runtime vẫn mở và không được suy ra
   từ CSS evidence.
+
+### Source recheck — 2026-10-17
+
+- Admin fixed chrome, vertical module navigation, Customer 360, Provider, manual top-up
+  presentation, domain centres, finance, stewardship, locale and mobile harmony were rerun
+  together through the `tests/admin-*.test.mjs` set: `21` tests, `21` passed, `0` failed.
+- Full Node suite is `522/522`; no additional source change is justified in this recheck.
+- Remaining open items are server permission/role enforcement, canonical-admin fixture,
+  customer request/job/report references, wallet/ledger effect and browser/AX runtime. They
+  stay guarded/deferred and are not replaced by a UI-only PASS.
