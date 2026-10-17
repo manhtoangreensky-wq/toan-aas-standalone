@@ -335,13 +335,19 @@ hiển thị thành công giả khi engine/bridge chưa có.
       giọng, mapping placeholder, selector Voice Library và mã ngôn ngữ ISO mở rộng;
       SubDub vẫn không gọi engine và không tạo output giả.
 - [x] Source presentation thêm liên kết rõ `Mở Thư viện giọng` tới `/voice-studio` cho cả
-      panel Lồng tiếng và Phụ đề + lồng tiếng; regression SubDub `12/12` và Voice focused
+      panel Lồng tiếng và Phụ đề + lồng tiếng; regression SubDub `11/11` và Voice focused
       `47/47` vẫn xanh.
 - [!] `SUBDUB_VOICE_LIBRARY_LINK_MISSING` runtime: selector đã có trong UI nhưng chưa nối
       dữ liệu Voice thật; upload/CTA vẫn guarded và target language custom chỉ là input
       presentation chờ server xác minh.
 - [x] Source discoverability đã thêm liên kết `Mở Thư viện giọng` tới `/voice-studio` cho cả
       panel Lồng tiếng và Phụ đề + lồng tiếng; selector vẫn guarded, không tạo dữ liệu Voice giả.
+- [x] **SOURCE-SUBDUB-01 — 2026-10-17:** một màn hình `/subdub` giữ đủ bốn mode, tab có
+      keyboard navigation và cập nhật query không rời hub; draft panel không bị tách thành
+      route mới.
+- [x] **SOURCE-SUBDUB-02 — 2026-10-17:** panel lồng tiếng/combo có volume âm thanh gốc và
+      giọng lồng tiếng riêng; Smart Multi, Voice Library và ISO language input hiển thị đúng
+      trạng thái guarded; regression `11/11` focused xanh.
 
 ### 5.5 Product Video — Spec R217-08
 
@@ -591,7 +597,7 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=R217-07 SubDub — Music source presentation đã có journey ba bước, hai hướng chính
-và test Music hub/library 16/16 xanh; runtime generation/preview/export vẫn guarded. Giữ
-R217-04/R217-05/R217-06 runtime mở, chuyển SubDub theo thứ tự trước Product Video và motion.
+NEXT_ACTION=R217-08 Product Video — SubDub source presentation đã khóa một màn hình bốn mode,
+volume gốc/giọng riêng, Smart Multi guarded và test `12/12` xanh; runtime upload/voice/output
+vẫn mở. Giữ R217-04/R217-05/R217-06/R217-07 runtime mở, chuyển Product Video trước motion.
 ```

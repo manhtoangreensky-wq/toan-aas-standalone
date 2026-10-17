@@ -769,3 +769,18 @@ job, output, ví Xu hay thanh toán giả.
   `git diff --check` đạt. Đây là bằng chứng source, chưa phải browser/runtime/live.
 - Tạo nhạc, nghe thử, lịch sử, xuất tệp và output thật vẫn `guarded` vì chưa có bridge/provider
   evidence; không được báo parity runtime với Bot.
+
+## Checkpoint nguồn WebApp — R217-07 SubDub single-screen — 17/10/2026
+
+SubDub giữ một màn hình `/subdub` cho đủ `4` hướng: phụ đề gốc, dịch phụ đề, lồng tiếng và
+phụ đề + lồng tiếng. Tab có thể điều khiển bằng bàn phím, đổi mode không điều hướng sang form
+khác; hai panel có lồng tiếng dùng volume âm thanh gốc và giọng lồng tiếng riêng. Smart Multi,
+Voice Library và mã ngôn ngữ ISO mở rộng hiển thị đúng biên guarded để người dùng hiểu bước
+tiếp theo mà không nhầm là đã có engine.
+
+- Regression `tests/subdub-hub-presentation.test.mjs` đạt `11/11`; có đủ VI/EN/ZH, trạng thái
+  báo cáo rỗng và không có CTA tạo job/provider/wallet giả.
+- Link `Mở Thư viện giọng` xuất hiện `2` lần cho hai panel liên quan và giữ route `/voice-studio`;
+  dữ liệu Voice thật, upload, Smart Multi backend và output dubbing vẫn chưa có evidence runtime.
+- Không gọi provider, không tạo video/audio/subtitle, không đổi Xu/PayOS hoặc dữ liệu production;
+  source pass không phải parity runtime với Bot.

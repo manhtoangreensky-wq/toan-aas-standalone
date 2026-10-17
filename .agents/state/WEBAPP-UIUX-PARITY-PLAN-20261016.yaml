@@ -26,7 +26,7 @@ ordered_waves:
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Locale source focused gates pass; SOURCE-LOCALE-03→19 đã khóa theo nhóm hẹp. SOURCE-LOCALE-20A/20B/20C nối Music Prompt Composer, Music Direction Presets và SFX Cue Sheet vào catalogue cân bằng VI/EN/ZH; Channel Strategy 2/2, Workboard 4/4, Composer 2/2, Direction 2/2, SFX 2/2, focused Content/Workboard/Free/Memory/Project/Publish/Campaign 28/28, focused Image/media 54/54, full Node 502/502, baseline 500/500, NEW_FAILURES=0. Voice/SubDub guarded handoff discoverability source fixed, SubDub 12/12 và Voice 47/47; Admin Provider/Topup/Publishing/Growth/Trends source fixed, focused 7/7, full Node 509/509; HEAD_SHA=80e43861b6be4c92b9c9a4cbcb7fc19dd2841218 đã push lên webapp-checklist-r116; chưa merge/deploy/live. Python contract chưa chạy do thiếu python/py; browser/AX/live locale recheck còn mở."
+    note: "Locale source focused gates pass; SOURCE-LOCALE-03→19 đã khóa theo nhóm hẹp. SOURCE-LOCALE-20A/20B/20C nối Music Prompt Composer, Music Direction Presets và SFX Cue Sheet vào catalogue cân bằng VI/EN/ZH; Channel Strategy 2/2, Workboard 4/4, Composer 2/2, Direction 2/2, SFX 2/2, focused Content/Workboard/Free/Memory/Project/Publish/Campaign 28/28, focused Image/media 54/54, full Node 502/502, baseline 500/500, NEW_FAILURES=0. Voice/SubDub guarded handoff discoverability source fixed, SubDub 11/11 và Voice 47/47; Admin Provider/Topup/Publishing/Growth/Trends source fixed, focused 7/7, full Node 509/509; HEAD_SHA=80e43861b6be4c92b9c9a4cbcb7fc19dd2841218 đã push lên webapp-checklist-r116; chưa merge/deploy/live. Python contract chưa chạy do thiếu python/py; browser/AX/live locale recheck còn mở."
   - id: W3
     spec: R217-03
     status: SOURCE_GREEN_RUNTIME_OPEN
@@ -51,6 +51,7 @@ ordered_waves:
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
     name: subdub
     note: "Four modes plus guarded Smart Multi one/two/many mapping, Voice Library selector and ISO custom target-language input are now source-presented; runtime bridge/upload/output remains guarded."
+    closeout: "2026-10-17 source closeout: one-screen tabs, keyboard navigation, local original/dubbing volume controls and guarded Voice Library handoff verified by SubDub 11/11 focused assertions; runtime Voice data, upload and real dubbing output remain open."
   - id: W4
     spec: R217-08
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
@@ -113,4 +114,4 @@ created_files:
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
 last_ci_run: "39007843300 SUCCESS on 1fe321b; Verify Web App green; browser evidence artifact 10.7 MB; digest sha256:97607fe14b53f75f25eda7f0159b17996f6384a9e87c3dcbaec33d712f4a5f88"
-next_action: "Continue R217-07 SubDub after committing and verifying the Music source presentation batch. Keep R217-04/R217-05/R217-06 runtime and real-output evidence open; no provider, wallet, production or deploy action."
+next_action: "Continue R217-08 Product Video after committing and verifying the SubDub source presentation batch. Keep R217-04/R217-05/R217-06/R217-07 runtime and real-output evidence open; no provider, wallet, production or deploy action."

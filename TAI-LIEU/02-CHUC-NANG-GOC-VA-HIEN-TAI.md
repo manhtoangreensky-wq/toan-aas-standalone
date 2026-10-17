@@ -508,3 +508,15 @@ không đổi ví/Xu, quyền, route/action/field/capability hoặc dữ liệu 
 
 Batch này chỉ đóng source presentation của Music hub. Không được gọi đây là parity runtime với Bot,
 không đổi ví/Xu, route/action/field/capability hoặc dữ liệu production.
+
+## Đối chiếu bổ sung — SOURCE-SUBDUB-01/02 — 17/10/2026
+
+| Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Bốn hướng trong một màn hình | `/subdub` giữ phụ đề gốc, dịch phụ đề, lồng tiếng và phụ đề + lồng tiếng trong cùng tab; đổi mode không mở route mới. | `static/portal/portal.js`; `tests/subdub-hub-presentation.test.mjs` `11/11` |
+| Smart Multi và âm lượng | Có lựa chọn tự động/một/hai/nhiều giọng, mapping guarded, volume âm thanh gốc/giọng riêng và ISO language input. | Source presentation; không chứng minh auto-detect, mapping hay output thật |
+| Voice Library handoff | Hai panel lồng tiếng có link `Mở Thư viện giọng` tới `/voice-studio`; selector vẫn disabled/guarded. | `data-subdub-voice-library-link` `2` lần; chưa có Voice profile projection runtime |
+| Báo cáo và giao tệp | Khu báo cáo rỗng nói rõ chưa có tác vụ; CTA tạo bị guarded. | Không upload, job, provider, wallet hoặc artifact; runtime/QA còn mở |
+
+Batch này chỉ đóng source presentation của SubDub. Không được gọi đây là parity runtime với Bot,
+không đổi engine, route/action/field/capability, ví/Xu hoặc dữ liệu production.
