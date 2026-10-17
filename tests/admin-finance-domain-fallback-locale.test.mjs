@@ -16,4 +16,3 @@ test("Finance domain fallbacks stay Vietnamese and preserve route projection", (
   assert.match(domain, /adminFinanceText\("stream\.payments\.title"/);
   assert.match(domain, /adminFinanceText\("boundary\.itemOne"/);
 });
-

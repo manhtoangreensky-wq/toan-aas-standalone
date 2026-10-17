@@ -14,4 +14,3 @@ test("Admin publishing/growth/trends fallbacks stay Vietnamese", () => {
     assert.match(domain, new RegExp(route.replaceAll("/", "\\/")));
   }
 });
-

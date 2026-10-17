@@ -19,4 +19,3 @@ test("Admin data table mobile harmony is scoped and tokenized", () => {
   assert.match(layer, /color-mix\(in srgb, var\(--portal-ink\) 60%, transparent\)/);
   assert.doesNotMatch(layer, /fetch\(|XMLHttpRequest|\/api\/|data-portal-action|wallet|payos|provider|telegram|data-portal-app-kind="customer"/i);
 });
-

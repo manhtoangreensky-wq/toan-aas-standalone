@@ -13,4 +13,3 @@ test("System stewardship Vietnamese fallbacks stay in one language", () => {
   assert.match(renderer, /text\("card\.automation\.title"/);
   assert.match(renderer, /text\("boundary\.noLedger\.title"/);
 });
-

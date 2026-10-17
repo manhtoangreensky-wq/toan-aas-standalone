@@ -30,4 +30,3 @@ test("Admin shell boundary catalogue is present in VI/EN/ZH", () => {
     }
   }
 });
-
