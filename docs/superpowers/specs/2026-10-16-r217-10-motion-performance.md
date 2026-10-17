@@ -64,3 +64,16 @@ node --check static/portal/portal-motion.js
 - Runtime FPS/CLS/LCP/INP trace, browser AX/scroll evidence and the production
   delivery fingerprint remain open. No provider call, wallet mutation, merge,
   deploy or production-data mutation was performed.
+
+## Provenance gate repair — 2026-10-17
+
+- CI run `39015089989` failed before product tests in `Verify committed migration
+  evidence`: committed Web provenance still recorded the prior eligible-source
+  fingerprint `4dbdf2…`, while the current 284-file source inventory measured
+  `8ee8c9130c1fb121ff73c0d9ad6cd2fa35877f69c67449d7b3ffcaa9de3f424e`.
+- Refreshed only `reports/migration/preflight.json` and
+  `reports/migration/web_inventory.json` with the static-only audit at
+  `fe146c191ffd7abc2d6d4d8a679e3630ccea1a0e`; local `--verify-web-evidence`
+  returned `ok: true`. No application/runtime/provider/wallet/production change.
+- The next CI run is the acceptance gate for this repair; motion runtime trace and
+  live delivery evidence remain open regardless of this provenance repair.

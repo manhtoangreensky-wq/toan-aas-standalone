@@ -70,7 +70,7 @@ ordered_waves:
   - id: W6
     spec: R217-10
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "2026-10-17 source closeout: HEAD_SHA=2d756b8db62f74cb331065c3b9ec74691f06a8cd pushed to PR #647; --portal-motion-fast 160ms (micro 150–300ms and faster than 220ms entry), auth 680ms and landing hero 980ms preserved; focused motion/auth/PWA 43/43, full Node 523/523, Auth/Motion node-check 2/2 and diff-check green. Three Python motion contracts were synchronized to 160ms but Python/pytest is unavailable. Runtime FPS/CLS/LCP/INP trace, AX keyboard, scroll and delivery evidence remain open."
+    note: "2026-10-17 source closeout: HEAD_SHA=2d756b8db62f74cb331065c3b9ec74691f06a8cd pushed to PR #647; --portal-motion-fast 160ms (micro 150–300ms and faster than 220ms entry), auth 680ms and landing hero 980ms preserved; focused motion/auth/PWA 43/43, full Node 523/523, Auth/Motion node-check 2/2 and diff-check green. Three Python motion contracts were synchronized to 160ms but Python/pytest is unavailable. CI run 39015089989 then exposed stale migration provenance (recorded 4dbdf2…, current 8ee8c913…); refresh is prepared at HEAD fe146c191ffd7abc2d6d4d8a679e3630ccea1a0e and local verify returned ok. Runtime FPS/CLS/LCP/INP trace, AX keyboard, scroll and delivery evidence remain open."
   - id: W7
     spec: R217-11
     status: BLOCKED
@@ -114,5 +114,5 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39007843300 SUCCESS on 1fe321b; Verify Web App green; browser evidence artifact 10.7 MB; digest sha256:97607fe14b53f75f25eda7f0159b17996f6384a9e87c3dcbaec33d712f4a5f88"
-next_action: "Proceed to R217-11 authenticated QA only when an isolated runtime/fixture is supplied; keep R217-10 browser FPS/CLS/LCP/INP and AX evidence open. No provider, wallet, production, merge or deploy action."
+last_ci_run: "39015089989 FAILED at Verify committed migration evidence: recorded fingerprint 4dbdf2… did not match current eligible source 8ee8c913…; no product tests ran."
+next_action: "Commit/push the static-only provenance refresh, wait for the new Verify Web App gate, then proceed in checklist order; keep R217-10 browser FPS/CLS/LCP/INP and AX evidence open. No provider, wallet, production, merge or deploy action."

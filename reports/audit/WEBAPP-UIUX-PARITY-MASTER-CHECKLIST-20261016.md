@@ -491,6 +491,12 @@ plugin và môi trường Python/QA server trong lượt này; giữ runtime `OP
       `HEAD_SHA=2d756b8db62f74cb331065c3b9ec74691f06a8cd` đã push lên nhánh PR #647.
 - [x] Ba Python motion contracts còn giữ literal cũ `140ms` đã đồng bộ sang `160ms`;
       chưa chạy được `python/py/pytest` vì runtime hiện không có Python, không ghi PASS giả.
+- [x] **R217-10 provenance repair — 2026-10-17:** CI run `39015089989` đã dừng ở
+      `Verify committed migration evidence` vì `preflight.json`/`web_inventory.json`
+      còn fingerprint cũ `4dbdf2…`, trong khi 284 file source đủ điều kiện hiện tại là
+      `8ee8c9130c1fb121ff73c0d9ad6cd2fa35877f69c67449d7b3ffcaa9de3f424e`. Đã làm mới
+      bằng chứng static-only theo HEAD `fe146c191ffd7abc2d6d4d8a679e3630ccea1a0e`;
+      chưa đổi route, engine, runtime hay dữ liệu.
 - [~] Browser motion acceptance còn mở: chưa có trace FPS/CLS/LCP/INP và chưa chứng minh
       scroll reveal không tạo vùng trống trên runtime mới.
 - [x] Kiểm tra source micro `160ms`, exit nhanh hơn entry `220ms`; auth/customer entrance giữ
