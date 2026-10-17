@@ -95,13 +95,14 @@
 - [x] Source có boot skeleton, focus-visible, reduced-motion và guard không có
       `transition: all` trong Portal stylesheets.
 - [x] Source giữ semantic dark canvas navy/teal và input tokens; không map sang obsidian.
-- [~] **LIVE-UI-01 — LIVE_RECHECK_OPEN 2026-10-17:** sau deploy `506d2b9`, landing
-      production dùng bundle mới; ảnh live ở `1280×720` không có clipping/overflow. Ma trận
-      browser CI đã phủ phone `375/390`, tablet `768` và desktop `1440` ở light/dark, nhưng
-      viewport mobile production chưa đo được trong browser hiện có nên chưa khóa hết lỗi H.
-- [~] **LIVE-UI-02 — LIVE_RECHECK_OPEN 2026-10-17:** bundle mới không còn PWA FAB cũ
-      trong HTML ở live desktop; PWA CTA dùng readiness `beforeinstallprompt` và CI đã kiểm
-      tra, nhưng vị trí mobile production chưa có bằng chứng viewport nên giữ mở cùng H.
+- [x] **LIVE-UI-01 — CLOSED_WITH_EVIDENCE 2026-10-17 14:45:15 UTC:** production
+      `390×844` đã được đo trực tiếp ở light/dark; `scrollWidth=clientWidth=390`, hero/header
+      không clipping trong screenshot/AX snapshot, tiêu đề chính `40.992px`, console không có
+      `error/warn`. Asset fingerprint là `local-00d9a64e11a5031705e6`.
+- [x] **LIVE-UI-02 — CLOSED_WITH_EVIDENCE 2026-10-17 14:45:15 UTC:** cả hai theme
+      production không có `.portal-pwa-fab-trigger`, `[data-pwa-install]` hoặc
+      `[data-install-app]` visible; không còn PWA FAB cũ che nội dung. Source readiness gate
+      `beforeinstallprompt` và live DOM/mobile screenshot cùng đạt.
 - [x] **SOURCE-UI-01:** landing không tạo hoặc giữ banner/FAB khi chưa có
       `beforeinstallprompt`; iOS vẫn dùng hướng dẫn cài đặt riêng. Regression mới nằm ở
       `tests/pwa-landing-install-placement.test.mjs`.
@@ -727,10 +728,11 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
 - [x] **R216-L — CLOSED_WITH_EVIDENCE:** `GET /features?lang=vi|en|zh` lần lượt trả `307`
       tới `/login?next=/features%3Flang%3Dvi`, `/login?next=/features%3Flang%3Den` và
       `/login?next=/features%3Flang%3Dzh`; query ngoài allowlist không được mang theo.
-- [~] **R216-H — LIVE_RECHECK_OPEN:** landing production sau deploy dùng fingerprint
-      `local-00d9a64e11a5031705e6`; `body/client` không overflow ở live desktop và browser
-      gate đã chạy đủ 456/456 cấu hình QA ở phone/tablet/desktop, light/dark. Cần một lần
-      đo production `390×844` hoặc tương đương để xác nhận header/PWA không clipping trên máy thật.
+- [x] **R216-H — CLOSED_WITH_EVIDENCE 2026-10-17 14:45:15 UTC:** landing production
+      sau deploy dùng fingerprint `local-00d9a64e11a5031705e6`; đo trực tiếp `390×844` ở
+      light/dark cho `scrollWidth=clientWidth=390`, main rộng `375.2px` nằm trong viewport,
+      body không tràn, tiêu đề `40.992px`, AX snapshot không có clipping và screenshot không
+      có framework overlay.
 - [x] **R216-P — CLOSED_WITH_EVIDENCE:** `/login?lang=vi|en|zh` có tiêu đề tương ứng
       (`Đăng nhập · TOAN AAS`, `Sign in · TOAN AAS`, `登录 · TOAN AAS`) và không còn ba
       chuỗi cài ứng dụng cũ `📲Tải & Cài đặt App TOAN AAS`, `📲Install TOAN AAS App`,
@@ -748,7 +750,7 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
 | Nhóm | Đã có bằng chứng | Đang mở | Bị chặn/hoãn |
 |---|---:|---:|---:|
 | Source UI/UX/locale/static motion | R217-10 motion `43/43`; full Node `523/523`; Auth/Motion syntax `2/2` | product-lane runtime/AX chưa đo; FPS/CLS/LCP/INP trace chưa có | 2 source-matrix AI lanes thiếu entitlement (Transform/Upscale) |
-| Responsive/PWA live | R216-L/R216-P `CLOSED_WITH_EVIDENCE`; bundle `local-00d9a64e11a5031705e6`; live desktop pass | R216-H + mobile production viewport/PWA placement | QA runtime/trace riêng |
+| Responsive/PWA live | R216-L/R216-P/R216-H + LIVE-UI-01/LIVE-UI-02 `CLOSED_WITH_EVIDENCE`; bundle `local-00d9a64e11a5031705e6`; live 390×844 light/dark + desktop pass | R217-01 broader type/spacing/contrast matrix; performance trace | QA runtime/trace riêng |
 | Customer product parity UI | shell/partial nhiều lane | 6 lane acceptance | real-output bridge |
 | Admin/customer wiring UI | source contracts rải rác | 1 master surface audit | backend/permission mutation |
 | Authenticated QA | source runner + Admin fixture; CI `39030607461` và artifact `456/456` | local runtime/trace riêng | bundled local dependency thiếu; production không thay thế QA |
@@ -762,15 +764,15 @@ phát hiện lỗi mới, thêm một dòng ở đúng wave và ghi `OPEN`. Chec
 nhất để quyết định wave tiếp theo.
 
 ```ini
-STATUS=VERIFIED_LIVE_PARTIAL
+STATUS=VERIFIED_LIVE_READONLY_CLOSED
 PROVIDER_CALLS=0
 WALLET_MUTATIONS=0
 PRODUCTION_DATA_MUTATIONS=0
 MERGE=PR_648_MERGED_506d2b9
 DEPLOY=WORKFLOW_39039077676_SUCCESS_RUNTIME_506d2b9
-LIVE_PASS=PARTIAL_R217_12_READ_ONLY
-NEXT_ACTION=Giữ R216-H/LIVE-UI-01/LIVE-UI-02 mở cho một lần đo production mobile `390×844`
-hoặc tương đương; R216-L/R216-P đã khóa. Giữ các lane sản phẩm/bridge/real-output và W9
+LIVE_PASS=R217_12_READ_ONLY_CLOSED
+NEXT_ACTION=Tiếp tục R217-01 responsive type/spacing/contrast matrix; sau đó xử lý browser/AX
+locale và product-lane presentation theo thứ tự. Giữ các lane sản phẩm/bridge/real-output và W9
 deferred theo checklist hiện hành, không suy diễn 456/456 QA thành real provider output.
 PROVIDER_CALLS=0, WALLET_MUTATIONS=0, PRODUCTION_DATA_MUTATIONS=0,
 DEPLOY=WORKFLOW_39039077676_SUCCESS_RUNTIME_506d2b9, MERGE=PR_648_MERGED_506d2b9,
