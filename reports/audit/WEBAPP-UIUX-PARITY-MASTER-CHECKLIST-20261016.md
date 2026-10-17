@@ -54,6 +54,11 @@
       (`284` tệp). Đây là provenance drift do tài liệu được cập nhật sau lần refresh, không phải
       lỗi runtime. Đã giữ nguyên chất lượng source; cần chốt tài liệu này, refresh Web-only rồi
       verify lại trước khi tính quality gate xanh.
+- [!] CI run `39007466336` trên `964ce47` đã qua provenance nhưng dừng ở
+      `tests/test_p0_05d_tester_workspace.py`: metadata của `KIEM-THU/HUONG-DAN-TESTER.md` ghi
+      `19269` byte/hash cũ trong khi file thực tế là `202` dòng, `19442` byte chuẩn LF, SHA-256
+      `6a7b1df026ee816542e49ea9e1263ea0f265cdb7a952bae9a0d600be324eebaa`. Đã cập nhật metadata
+      đúng; chờ quality gate kế tiếp, không đổi runtime.
 - [x] Đối chiếu remote: local cũ lệch; tạo worktree sạch từ `github/webapp-checklist-r116`.
 - [x] Sau quality-gate failure `38958333812`, đã sửa provenance evidence: `284` eligible Web
       files; `preflight.json`, `web_inventory.json` và source hiện cùng fingerprint
