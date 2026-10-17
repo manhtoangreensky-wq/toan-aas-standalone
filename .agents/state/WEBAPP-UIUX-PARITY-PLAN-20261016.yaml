@@ -22,7 +22,7 @@ ordered_waves:
   - id: W1
     spec: R217-01
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "Source fixes locked: landing flex-wrap at <=420px, no landing install banner/FAB before beforeinstallprompt, and install-guide modal uses navy/teal surfaces without black backdrop/tab fills. Focused 39/39 and full Node 470/470 were green before the latest modal regression, which also passes separately. Live probe 2026-10-16 still sees old fingerprint local-57e76aa281dcc721fdaa, nowrap header and fixed FAB at 327x668. PR #647 GitHub page confirms branch has not been deployed and shows no deployments; delivery recheck remains open."
+    note: "Source fixes locked: landing flex-wrap at <=420px, no landing install banner/FAB before beforeinstallprompt, and install-guide modal uses navy/teal surfaces without black backdrop/tab fills. Focused 39/39 and full Node 470/470 were green before the latest modal regression, which also passes separately. Post-delivery mobile evidence at 390x844 (light/dark) now confirms no horizontal overflow, no visible PWA FAB and stable header/hero rendering; the remaining W1 TODOs are the broader 320/375/414/768/1024 type/spacing/contrast matrix, not the previously reported delivery drift."
   - id: W2
     spec: R217-02
     status: SOURCE_GREEN_RUNTIME_OPEN
@@ -77,8 +77,8 @@ ordered_waves:
     note: "2026-10-17: local bundled Python vẫn thiếu fastapi/uvicorn/pytest/websockets nên không có local runtime claim. CI run 39034978224 trên HEAD 7942548 hoàn tất Success trong 8m19s; Verify Web App job 117402852575 và Authenticated WebApp QA job 117403448516 đều xanh, authenticated job chạy 5m12s. Ma trận authenticated giữ 456/456 completed, 456/456 passed, records_failed=0; HTTP/route/locale/theme mismatch=0; console/page/request/external/forbidden mutation=0; reload mismatch=0; horizontal_overflow=false; provider_calls=0, wallet_mutations=0, production_data_mutations=0. Cảnh báo duy nhất là Node 20/Ubuntu deprecation. Artifact authenticated digest sha256:5ca1ad0448bcd3388695ffee032a4c99b3493fa59774b66e0725b385ef824d37; browser evidence digest sha256:d61a2372b3683c658c6ad1c606943198bfe558454151305df7d5b3d9af592ef7. R217-11 đóng bằng chứng mới nhất; local trace/FPS và real output vẫn thuộc spec khác."
   - id: W8
     spec: R217-12
-    status: LIVE_PARTIAL_EVIDENCE
-    note: "2026-10-17 closeout: PR #648 merge 506d2b9 passed main quality run 39038471041 (Verify Web App + Authenticated WebApp QA, 456/456). Deploy workflow 39039077676 passed forward-only guard, tracked backup, active Web/Nginx services and health payload TOAN AAS Web App/app.py. Live read-only GET/navigation confirmed /features?lang=vi|en|zh preserve locale in encoded next targets, welcome uses fingerprint local-00d9a64e11a5031705e6, and login vi/en/zh titles are correct with legacy install copy absent. R216-L/R216-P are closed; R216-H remains open because production mobile viewport/PWA placement was not measurable in the current browser. PROVIDER_CALLS=0, WALLET_MUTATIONS=0, PRODUCTION_DATA_MUTATIONS=0."
+    status: CLOSED_WITH_EVIDENCE
+    note: "2026-10-17 closeout: PR #648 merge 506d2b9 passed main quality run 39038471041 (Verify Web App + Authenticated WebApp QA, 456/456). Deploy workflow 39039077676 passed forward-only guard, tracked backup, active Web/Nginx services and health payload TOAN AAS Web App/app.py. Live read-only GET/navigation confirmed /features?lang=vi|en|zh preserve locale in encoded next targets, welcome uses fingerprint local-00d9a64e11a5031705e6, and login vi/en/zh titles are correct with legacy install copy absent. Production viewport-capable recheck at 390x844 in both light/dark then closed R216-L/R216-P/R216-H and LIVE-UI-01/LIVE-UI-02: scrollWidth=clientWidth=390, no PWA selector/FAB, no console error/warning, and mobile auth SVG wrappers measured 18px/16px/18px. PROVIDER_CALLS=0, WALLET_MUTATIONS=0, PRODUCTION_DATA_MUTATIONS=0."
   - id: W9
     spec: R217-13
     status: DEFERRED
@@ -116,5 +116,5 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-last_ci_run: "39038471041 SUCCESS on merge 506d2b9: Verify Web App job 117412964941 and Authenticated WebApp QA job 117413519593 passed; authenticated matrix completed 456/456 with safety mutations 0. Deploy 39039077676 validated forward-only guard, tracked backup, health payload TOAN AAS Web App/app.py and active Web/Nginx services; live locale/auth checks passed, while production mobile viewport evidence remains open."
-next_action: "R217-12 remains PARTIAL_R217_12_READ_ONLY: repeat one production mobile viewport measurement (390x844 or equivalent) to close R216-H/LIVE-UI-01/LIVE-UI-02; no provider, wallet, payment or production-data action."
+last_ci_run: "39040466680 SUCCESS on PR #649: Verify Web App job 117418793017 and Authenticated WebApp QA job 117419357572 passed; authenticated matrix completed 456/456 with safety mutations 0. PR #649 merged as 3acd2416044904a7c3f0e6b43be8a4fe68e7b066. Post-merge live mobile read-only probe at 390x844 (light/dark) closed the production viewport/PWA evidence gap; no provider, wallet or production-data action."
+next_action: "R217-12 is CLOSED_WITH_EVIDENCE. Continue the next ordered UI/UX item: finish the remaining R217-01 responsive type/spacing/contrast matrix, then proceed to the open browser/AX locale and product-lane presentation checks; keep provider, wallet, payment, production-data and real-output bridges deferred."

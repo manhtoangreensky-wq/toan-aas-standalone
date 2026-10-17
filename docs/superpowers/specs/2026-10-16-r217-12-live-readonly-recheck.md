@@ -1,6 +1,6 @@
 # R217-12 — Live read-only recheck sau delivery hợp lệ
 
-**Status:** `PARTIAL_LIVE_EVIDENCE`
+**Status:** `CLOSED_WITH_EVIDENCE`
 **Wave:** W8
 
 ## Latest read-only observation 2026-10-16
@@ -143,21 +143,49 @@ The post-deploy read-only probe confirmed:
 - all live checks were GET/navigation/screenshot only: `PROVIDER_CALLS=0`,
   `WALLET_MUTATIONS=0`, `PRODUCTION_DATA_MUTATIONS=0`.
 
-**Result:** `R216-L` and `R216-P` are `CLOSED_WITH_EVIDENCE` for this scoped read-only
-delivery. `R216-H`/`LIVE-UI-01`/`LIVE-UI-02` remain `LIVE_RECHECK_OPEN` because the current
-browser did not expose a production mobile viewport override; QA's 375/390/768/1440 matrix is
-not a substitute for a production viewport measurement. Product-lane real output, provider
-bridges, wallet/payment and other deferred technical items remain outside this spec and stay
-open in the master checklist.
+**Result at 14:04 UTC:** `R216-L` and `R216-P` were `CLOSED_WITH_EVIDENCE` for this scoped
+read-only delivery. `R216-H`/`LIVE-UI-01`/`LIVE-UI-02` were still `LIVE_RECHECK_OPEN` because
+the browser did not yet expose a production mobile viewport override. The later
+`Production mobile closure` section supersedes that interim status. Product-lane real output,
+provider bridges, wallet/payment and other deferred technical items remain outside this spec
+and stay open in the master checklist.
 
 ## Source quality-gate refresh — 2026-10-17
 
 After the final provenance refresh candidate `7942548`, GitHub workflow `39034978224` completed
 successfully. `Verify Web App` job `117402852575` and `Authenticated WebApp QA (R217-11)` job
 `117403448516` both passed; the authenticated matrix remained `456/456` with no forbidden
-provider, wallet or production-data mutation. This confirms the source/QA candidate is green,
-but it does not change the live conclusion above: production still serves the older bundle and
-must be rechecked only after an authorized delivery.
+provider, wallet or production-data mutation. This was a source/QA confirmation recorded before
+the subsequent mobile viewport probe; it did not itself change the live conclusion at that time.
+The later production mobile closure below is the authoritative final live evidence for this spec.
+
+## Production mobile closure — 2026-10-17 14:45:15 UTC
+
+The owner-authorized post-delivery read-only browser probe used the Codex in-app browser
+viewport capability at `390×844` against `https://app.toanaas.vn/welcome?lang=vi` in both
+light and dark themes. The delivered asset fingerprint was
+`local-00d9a64e11a5031705e6`.
+
+- `window.innerWidth=390`, `document.documentElement.clientWidth=390`, and
+  `document.documentElement.scrollWidth=390`; the landing root did not overflow.
+- The main content measured `375.2px` wide and stayed inside the viewport. The primary
+  heading measured `40.992px`; screenshot and accessibility snapshot showed no header/hero
+  clipping and no framework error overlay.
+- No visible legacy install control matched `.portal-pwa-fab-trigger`,
+  `[data-pwa-install]`, or `[data-install-app]` in either theme. The old fixed PWA FAB is
+  therefore absent from the delivered mobile DOM.
+- Browser console error/warning records were empty for both theme loads.
+- A second `390×844` read-only load of `/login?lang=vi` returned title `Đăng nhập · TOAN AAS`,
+  had `scrollWidth=clientWidth=390`, contained no legacy PWA copy, and exposed stable SVG
+  wrappers measured at `18px`, `16px`, and `18px`.
+- The probe only performed GET/navigation, screenshot, DOM, AX and computed-style reads. It
+  did not log in, submit a form, activate a CTA, upload a file, call a provider, mutate a
+  wallet, or change production data.
+
+This closes `R216-H`, `LIVE-UI-01`, and `LIVE-UI-02` with direct production evidence. The
+broader `R217-01` responsive type/spacing/contrast matrix, performance trace (FPS/CLS/LCP/INP),
+and product-lane runtime/real-output checks remain open in the master checklist and are not
+implicitly closed by this mobile read-only probe.
 
 ## Phạm vi
 
