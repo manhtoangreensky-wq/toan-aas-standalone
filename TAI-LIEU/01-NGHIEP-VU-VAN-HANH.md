@@ -31,6 +31,16 @@ còn mở. Bằng chứng: `../../evidence/IMAGE-I03-VERIFY-20261008.md`.
 Đây là checkpoint trình bày cục bộ; các số liệu production phía dưới có ngày
 riêng, không chứng minh runtime đang dùng candidate Image.
 
+## Candidate Image UI trên PR #647 — 2026-10-17
+
+Source của PR #647 thêm danh sách dọc tại `/image/create` để khách chọn tạo ảnh hoặc mở
+công cụ tăng chất lượng ảnh hiện có. Bản Việt/Anh/Trung, trạng thái trang hiện tại và ghi chú
+rõ “chỉnh ảnh bằng AI chưa khả dụng” đã được kiểm bằng test nguồn (`40/40` Image, `319/319`
+locale, `521/521` Node trên candidate hiện tại). Đây chỉ là thay đổi trình bày: không thêm
+upload, preview, biến thể, đầu ra AI, giá hay thao tác thanh toán. Chưa merge/deploy/live;
+không được coi chức năng chỉnh sửa ảnh bằng AI là đã hoàn thành. Tester case IUI-05 là nguồn
+kiểm thử giao diện; cần browser DOM/AX và viewport QA riêng trước khi đóng runtime.
+
 ## Checkpoint giao diện SubDub — ứng viên 08/10/2026
 
 Mã giao diện đã kiểm thử: `e4070e3bf6710be1e5388c12e20800aae0ee5ea3`, trên
@@ -540,3 +550,282 @@ Các số liệu local bên dưới mô tả batch PR #425 trước khi ship.
 - Fresh focused gate: `151 passed`, `2` dependency warnings, `0` failed. Protected exact-main/candidate đều `68 passed / 2` CSS-tail baseline failures; `NEW_FAILURES=0`. Node syntax `3/3`, diff-check `0`.
 - Signed local Browser: `20` trạng thái = VI/EN × sáng/tối × `1440/1024/768/390/360`; `14/14` assertions đạt, console/network sau readiness `0`, request ghi Operations `0`, page overflow/clipping/high-level horizontal scroller `0`, contrast và touch target đạt.
 - Codex Security scan `8bc4f21a-ed08-46ed-a7ba-ec0a0ae6e8ed` lưu partial draft với `0` finding trên `7` changed-file surfaces; Workbench inventory lỗi `destination escaped its bound context`, nên đây không phải plugin PASS.
+
+### Cập nhật WebApp UI shell ngày 16/10/2026
+
+Bản WebApp candidate hiện giữ modal hướng dẫn cài ứng dụng trên nền xanh navy/xanh ngọc:
+lớp phủ dùng `rgba(3, 20, 43, .86)`, thanh chọn tab dùng `rgba(5, 31, 57, .92)` và
+không còn nền đen trong vùng modal. Đây là thay đổi giao diện tĩnh, không tạo request,
+không đổi phiên đăng nhập, dữ liệu, ví Xu hay cấu hình vận hành. Regression riêng
+`tests/install-modal-navy-palette.test.mjs` đạt `1 passed`, exit `0`; live production
+chưa được gọi là đã cập nhật vì PR #647 chưa có deployment.
+
+### Cập nhật locale Admin ngày 16/10/2026
+
+Tám tiêu đề cố định của khu vực Quản trị hệ thống trong catalogue tiếng Việt đã được chuẩn
+hóa: theo dõi tự động hóa, tình trạng bảo mật, quyền truy cập, tài liệu quản trị, kho tài liệu
+nội bộ, hệ thống, môi trường chạy và bản sao lưu. Regression riêng đạt `1/1`; đây chỉ là thay
+đổi copy Web, không cấp quyền, không tạo dữ liệu và chưa phải bằng chứng live.
+
+### Ghi nhận source locale customer — Data Controls — 16/10/2026
+
+Nhóm `accountCenter.dataControls.*` và mô tả `/account/data-controls` đã được chuẩn hóa
+tiếng Việt ở lớp giao diện cố định. Phạm vi thay đổi chỉ gồm `static/portal/portal-i18n.js`,
+`static/portal/portal.js` và regression `tests/data-controls-locale-purity.test.mjs`;
+không đổi route, action, capability, CSRF, idempotency, revision, dữ liệu máy chủ,
+ví/Xu hoặc nhà cung cấp. Regression riêng đạt `2/2`; toàn bộ Node đạt `480/480`;
+hai tệp Portal qua `node --check` và `git diff --check` đều đạt. Đây là bằng chứng source
+trên nhánh PR #647, chưa phải bundle đã giao, deployed hoặc live.
+
+Bẫy cần giữ: fallback trong renderer cũng là giao diện người dùng. Nếu chỉ sửa catalogue mà
+bỏ qua fallback, khi thiếu key bản Việt có thể quay lại các từ `review`, `export`, `signed`,
+`authoring` hoặc `Web`; regression hiện khóa cả catalogue và fallback để ngăn lỗi này.
+
+### Ghi nhận source locale customer — Trung tâm hỗ trợ — 16/10/2026
+
+Nhóm `supportTicket.*` và fallback của các màn hình tư vấn, bằng chứng, yêu cầu, chi tiết,
+đánh giá và phân loại vận hành đã được chuẩn hóa tiếng Việt. Regression
+`tests/support-ticket-locale-purity.test.mjs` đạt `2/2`; catalogue cố định có `295` mục và
+renderer giữ ít nhất `210` fallback an toàn. Route, action, field, capability, CSRF,
+idempotency, revision, dữ liệu máy chủ, ví/Xu và nhà cung cấp không thay đổi; full Node đạt
+`482/482`. Đây là bằng chứng source trên nhánh PR #647, chưa phải bundle đã giao, deployed hoặc live.
+
+### Ghi nhận source locale customer — Hồ sơ tài khoản — 16/10/2026
+
+Nhóm `accountCenter.profile.*` và fallback của trang `/account` đã được chuẩn hóa tiếng Việt;
+101 mục catalogue được kiểm tra, bao gồm phiên đã xác thực, phương thức đăng nhập, hồ sơ,
+liên kết Telegram, ảnh đại diện, tùy chọn Bot, nâng cấp Email và Trung tâm bảo mật. Các tên
+riêng/mã kỹ thuật như Telegram, Google, GitHub, Apple, OAuth, CSRF, MFA, PayOS, Bot, Web,
+URL, BOT_USERNAME và Core Bridge được giữ nguyên. Regression riêng đạt `2/2`, toàn bộ Node
+đạt `484/484`, syntax hai tệp Portal đạt và `git diff --check` đạt. Route, action, field,
+capability, dữ liệu hồ sơ, ví/Xu và nhà cung cấp không thay đổi; đây là bằng chứng source trên
+nhánh PR #647, chưa phải bundle đã giao, deployed hoặc live.
+
+### Ghi nhận source locale customer — Image Studio và Image Hub — 16/10/2026
+
+Fixed chrome của Image Studio/Image Hub đã được chuẩn hóa qua catalogue `imageStudioUi.*`
+đối xứng VI/EN/ZH, gồm guard, giới thiệu, số liệu, biểu mẫu bảng thiết kế, ranh giới biên
+tập, ý định, định dạng, trạng thái và bộ lọc. Bản tiếng Việt không còn generic English UI;
+các mã kỹ thuật, định dạng và tên riêng được giữ nguyên. Renderer dùng helper locale cho
+option/status/fallback và bổ sung trạng thái `active` để bộ lọc phản ánh đúng dữ liệu.
+
+Regression `tests/image-studio-locale-purity.test.mjs` đạt `2/2`; focused Image đạt `45/45`;
+full Node đạt `486/486`; `node --check static/portal/portal.js`, `node --check
+static/portal/portal-i18n.js` và `git diff --check` đều đạt. Route, action, field,
+capability, CSRF, idempotency, revision, dữ liệu động, provider và ví/Xu không thay đổi;
+Python contract chưa chạy vì môi trường không có `python`/`py`. Đây là source evidence trên
+PR #647, chưa phải bundle đã giao, deployed hoặc live. Các cụm Image reference/detail,
+Resize/Enhance/Brand Overlay/Storyboard vẫn là bước tiếp theo.
+
+### Ghi nhận source locale customer — Image library và Image Hub — 16/10/2026
+
+Fixed chrome của thư viện tham chiếu, thư viện bảng thiết kế, thẻ bảng thiết kế, tổng quan
+Image Hub, các bước tiếp theo và bảng rà soát định hướng đã được đưa qua catalogue
+`imageStudioLibraryUi.*` có `67` mục cân bằng VI/EN/ZH. Bản tiếng Việt không còn các cụm giao diện
+`reference library`, `creative review`, `signed account`, `owner-check`, `Image operations
+board`, `Independent next steps` hoặc `Direction review board`; nhãn bộ lọc, placeholder,
+phân trang, trạng thái, lối tắt và empty state đều đi qua helper locale.
+
+Regression `tests/image-studio-library-locale-purity.test.mjs` đạt `2/2`; focused Image
+đạt `49/49`; full Node đạt `488/488`; syntax hai tệp Portal và `git diff --check` đều đạt.
+Route, action, offset phân trang, capability, dữ liệu động, provider và ví/Xu không đổi;
+Python contract chưa chạy vì môi trường không có `python`/`py`. Đây là source evidence trên
+PR #647, chưa phải bundle đã giao, deployed hoặc live. Chi tiết direction card, estimate,
+history và các route Resize/Enhance/Brand Overlay/Storyboard vẫn là bước kế tiếp.
+
+### Ghi nhận source locale customer — Image Studio/Hub detail — 16/10/2026
+
+Fixed chrome của trang chi tiết Image Studio/Hub đã được chuẩn hóa qua catalogue
+`imageStudioDetailUi.*` gồm `91` mục cân bằng VI/EN/ZH: bản tổng hợp rà soát, thẻ biến thể,
+trạng thái, lịch sử phiên bản, activity feed, tiện ích cục bộ và các nút xác nhận/khôi phục.
+Helper `imageStudioDetailText` phủ estimate, direction card, detail renderer và nhãn event;
+bản VI không còn các cụm raw `review estimate`, `Asset Vault refs`, `Archive artboard`,
+`Direction library`, `Version history` hoặc `Audit-safe feed`.
+
+Regression `tests/image-studio-detail-locale-purity.test.mjs` đạt `2/2`; focused Image
+đạt `51/51`; full Node đạt `490/490`; syntax hai tệp Portal và `git diff --check` đều đạt.
+Route, action, field, capability, CSRF, idempotency, revision, dữ liệu động, provider và
+ví/Xu không đổi; Python contract chưa chạy vì môi trường không có `python`/`py`. Đây là
+source evidence trên PR #647, chưa phải bundle đã giao, deployed hoặc live. Runtime/live,
+browser AX tree và Image Resize/Enhance/Brand Overlay/Storyboard vẫn mở.
+
+### Ghi nhận source locale customer — Image operations — 16/10/2026
+
+Đợt `SOURCE-LOCALE-18` chuẩn hóa fixed chrome của Image Resize, Image Enhance, Brand Overlay
+và Storyboard Grid qua catalogue `imageOperationUi.*` cân bằng VI/EN/ZH. Phạm vi gồm picker
+Asset Vault, phân trang, guard/loading/failed, nhãn biểu mẫu và option, boundary, empty/result,
+lịch sử Image, vị trí logo/chữ và xác nhận lưu tiếp tục/bàn giao. Brand Overlay đã bỏ nhãn
+`Owner-scoped` cố định và thêm bản dịch xem trước công khai; Storyboard Grid đã chuyển toàn bộ
+chuỗi mixed-language sang helper locale.
+
+Regression mới `tests/image-operation-locale-purity.test.mjs` đạt `3/3`; focused Image/media
+đạt `54/54`; full Node đạt `493/493` với baseline `490/490`, `NEW_FAILURES=0`. Hai tệp Portal
+qua `node --check`, `git diff --check` đều đạt. Route, action, field, capability, CSRF,
+idempotency, revision, download path, ownership/integrity guard và điều kiện
+`completed + download_ready` không đổi; không gọi provider, không thay đổi ví/Xu/PayOS,
+không tạo output giả. Python contract `NOT_RUN` vì môi trường thiếu `python`/`py`; đây là
+source evidence trên PR #647, chưa phải bundle đã giao, deployed hoặc live. Browser/AX/live
+recheck và các lane tiếp theo vẫn mở.
+
+### Ghi nhận source locale — Channel Strategy và Workboard — 16/10/2026
+
+`SOURCE-LOCALE-19` nối fixed chrome Channel Strategy vào catalogue `channelStrategyUi.*`
+cân bằng VI/EN/ZH, gồm guard, thư viện, bộ lọc, phân trang, biểu mẫu, chi tiết, vòng đời,
+định hướng, lịch sử, hoạt động, field label/help và aria text. Workboard dùng key locale cho
+aria-label bảng Kanban và guarded recovery, không còn fallback tiếng Việt khi chọn EN/ZH.
+Route/action/field/capability/revision/CSRF/idempotency và dữ liệu động không đổi.
+
+Regression Channel Strategy `2/2`, Workboard `4/4`; focused Content/Workboard/Free/Memory/
+Project/Publish/Campaign `28/28`; focused Image/media `54/54`; full Node `496/496`, baseline
+`493/493`, `NEW_FAILURES=0`. Đây là source evidence; browser/AX/live và Python contract vẫn
+chưa chạy, không gọi provider, không chạm ví/Xu/PayOS, không deploy hoặc merge.
+
+### Ghi nhận source locale — Music Prompt Composer — 16/10/2026
+
+`SOURCE-LOCALE-20A` chuẩn hóa fixed chrome Music Prompt Composer qua catalogue
+`musicPromptComposerUi.*` cân bằng VI/EN/ZH: trang lập kế hoạch, biểu mẫu, boundary, ba hướng,
+ghi chú sử dụng, biên nhận lưu Memory và phạm vi. Route/action/field/capability/CSRF/
+idempotency giữ nguyên; không tạo âm thanh, tác vụ, thanh toán hoặc đầu ra giả.
+
+Regression riêng `2/2`, focused Channel/Workboard/Music `8/8`, Image/media `54/54`, full Node
+`498/498`, baseline `496/496`, `NEW_FAILURES=0`; browser/AX/live và Python contract chưa chạy.
+
+### Ghi nhận source locale — Music Direction Presets — 16/10/2026
+
+`SOURCE-LOCALE-20B` chuẩn hóa fixed chrome của Music Direction Presets qua catalogue
+`musicDirectionUi.*` cân bằng VI/EN/ZH: preset card, form, receipt, boundary, checklist và
+phạm vi. ID preset, route/action/field/capability/CSRF/idempotency và ranh giới không tạo âm
+thanh giữ nguyên.
+
+Regression riêng `2/2`; focused Composer/Direction/Voice/Media `31/31`; browser/AX/live và
+Python contract chưa chạy. SFX Cue Sheet là nhóm kế tiếp.
+
+### Ghi nhận source locale — SFX Cue Sheet — 16/10/2026
+
+`SOURCE-LOCALE-20C` chuẩn hóa fixed chrome SFX Cue Sheet qua catalogue `sfxCueSheetUi.*`
+cân bằng VI/EN/ZH: preset card, form, placement, receipt, danh sách cue, cảnh báo, boundary
+và scope. Preset ID, cue family, placement ID, route/action/field/capability/CSRF/idempotency
+giữ nguyên; không kiểm tra media, không tạo SFX/audio/provider/job/payment.
+
+Regression riêng `2/2`, focused Composer/Direction/SFX/Voice/Media `33/33`, full Node
+`502/502`, baseline `500/500`, `NEW_FAILURES=0`; browser/AX/live và Python contract chưa chạy.
+## Checkpoint nguồn WebApp — SOURCE-ADMIN-05 Customer 360 — 17/10/2026
+
+Candidate đã push là `a0069fa866a866dc319bcea91e5c2da867433c94` trên nhánh
+`webapp-checklist-r116`/PR #647. Đợt này chỉ đổi fixed chrome Customer 360 và safety modal
+trong `static/portal/portal.js` + `static/portal/portal-i18n.js`; không đổi route, action,
+field, capability, CSRF, idempotency, revision, dữ liệu customer, RBAC/ABAC, ví/Xu, ledger,
+Core Bridge write, provider hoặc deploy.
+
+- Catalogue mới `adminCustomer360.*` có cùng bộ khóa trong đủ `3` locale: VI/EN/ZH.
+- Regression mới đạt `3/3`; full Node suite đạt `512/512`; `node --check` cho `2/2` tệp
+  Portal đạt; `git diff --check` đạt.
+- Comparator source trước/sau giữ nguyên `771` occurrence `data-portal-action`, `630`
+  occurrence `data-portal-route` và `439` occurrence `name`; `removed=0`, `added=0`.
+- Contract Python `tests/test_p0_webapp_v2_05_admin_customer_360.py` chưa chạy được vì máy
+  không có lệnh `py`/`pytest`; đây là blocker công cụ, không phải PASS.
+- Browser/runtime/live và canonical-admin fixture chưa được chứng minh trong batch; `MERGED`,
+  `DEPLOYED`, `LIVE` vẫn là các cổng riêng. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
+  `PRODUCTION_DATA_MUTATIONS=0`.
+
+### Bẫy cần giữ
+
+Fixed chrome phải đi qua catalogue; không dịch `customer_id`, role/status server, mã case,
+thời điểm, action/outcome audit hoặc số tiền. Không thay giá trị thiếu bằng số `0`, không biến
+Customer 360 thành quyền ghi ví/ledger và không tuyên bố runtime chỉ từ source test.
+
+Kết thúc checkpoint nguồn `SOURCE-ADMIN-05`.
+
+## Checkpoint nguồn WebApp — R217-05 Voice workspace — 17/10/2026
+
+Batch Voice tiếp theo của PR #647 chỉ thay trình bày WebApp trong `static/portal/portal.js`,
+`static/portal/portal-i18n.js`, `static/portal/portal.css` và hợp đồng kiểm thử locale. Voice
+Studio hiện mở đầu bằng ba lối vào dọc: giọng mặc định (`/voice/tts`), giọng đã lưu
+(`/voice/saved`) và thêm giọng (`/voice/clone`). Mỗi thẻ có mô tả mục đích, CTA và nhãn được
+bảo vệ; không thêm audio, upload, provider, job, wallet/Xu hoặc output giả.
+
+- Catalogue `customerVoiceStudio` giữ đủ khóa VI/EN/ZH; lane rail có `3` thẻ và giữ nguyên
+  route/action/field/capability hiện có.
+- Voice Studio/Voice Vault dùng hệ xanh dương–xanh ngọc và nền xanh navy của portal; hover chỉ
+  nâng `1px`, focus ring vẫn nhìn thấy, mobile chuyển về `1` cột ở `max-width: 820px`.
+- Regression Voice/audio/SubDub đạt `126/126`; `node --check` `2/2` tệp Portal và
+  `git diff --check` đạt. Đây là source evidence trên PR #647, chưa phải merge/deploy/live.
+- TTS, clone, preview, output/download và dữ liệu Voice Library nối sang SubDub vẫn là
+  `guarded` vì chưa có runtime/bridge evidence; không suy diễn source pass thành sản phẩm đã chạy.
+
+## Checkpoint nguồn WebApp — R217-06 Music hub — 17/10/2026
+
+Music hub được làm gọn theo một quy trình dễ đọc: chọn hướng → chuẩn bị mô tả → chờ hệ thống
+xác nhận kết quả thật. Hai hướng chính là nhạc nền và bài hát có lời; hiệu ứng âm thanh giữ ở
+nhánh bổ trợ. Các thẻ vẫn mở đúng `6` route hiện hữu (`/music/create`, `/music/song`,
+`/music/sfx`, `/audio/assets`, `/music/library`, `/music/sfx-library`) và không thêm provider,
+job, output, ví Xu hay thanh toán giả.
+
+- Catalogue `musicHub.*` giữ đủ `3/3` locale VI/EN/ZH; nhãn hướng và mô tả trình đọc màn hình
+  nằm trên từng card, không trộn English trong bản VI.
+- Giao diện dùng token xanh/navy chung; desktop tối đa `2` cột, mobile chuyển `1` cột tại
+  `max-width: 820px`; card chính có phân biệt thị giác nhưng không đổi route/action.
+- Regression Music hub/library đạt `16/16`; `node --check` `2/2` tệp Portal và
+  `git diff --check` đạt. Đây là bằng chứng source, chưa phải browser/runtime/live.
+- Tạo nhạc, nghe thử, lịch sử, xuất tệp và output thật vẫn `guarded` vì chưa có bridge/provider
+  evidence; không được báo parity runtime với Bot.
+
+## Checkpoint nguồn WebApp — R217-07 SubDub single-screen — 17/10/2026
+
+SubDub giữ một màn hình `/subdub` cho đủ `4` hướng: phụ đề gốc, dịch phụ đề, lồng tiếng và
+phụ đề + lồng tiếng. Tab có thể điều khiển bằng bàn phím, đổi mode không điều hướng sang form
+khác; hai panel có lồng tiếng dùng volume âm thanh gốc và giọng lồng tiếng riêng. Smart Multi,
+Voice Library và mã ngôn ngữ ISO mở rộng hiển thị đúng biên guarded để người dùng hiểu bước
+tiếp theo mà không nhầm là đã có engine.
+
+- Regression `tests/subdub-hub-presentation.test.mjs` đạt `11/11`; có đủ VI/EN/ZH, trạng thái
+  báo cáo rỗng và không có CTA tạo job/provider/wallet giả.
+- Link `Mở Thư viện giọng` xuất hiện `2` lần cho hai panel liên quan và giữ route `/voice-studio`;
+  dữ liệu Voice thật, upload, Smart Multi backend và output dubbing vẫn chưa có evidence runtime.
+- Không gọi provider, không tạo video/audio/subtitle, không đổi Xu/PayOS hoặc dữ liệu production;
+  source pass không phải parity runtime với Bot.
+
+## Checkpoint nguồn WebApp — R217-08 Product Video hub — 17/10/2026
+
+Hub Product Video được sắp xếp lại theo `4` lane dọc: lập kế hoạch, tạo video, biên tập/ghép
+và kiểm tra/bàn giao. Danh mục giữ `10` route hiện hữu, không thêm route hoặc thay đổi action:
+`/video-studio`, `/video/long`, `/video/product`, `/video/text-to-video`, `/video/multiscene`,
+`/video/frame-sequence`, `/video/finishing`, `/video/mux`, `/video/preview`, `/video/poster`.
+Mỗi lane nêu đầu vào, đầu ra và trạng thái; hub có quy trình `7` bước nhập → lập kế hoạch →
+xem báo giá → xác nhận → theo dõi → nhận kết quả → khôi phục. Một panel riêng phân biệt nhánh
+AI và nhánh thủ công để không nhầm bản kế hoạch với video đã tạo.
+
+CTA chính của nhóm Bắt đầu nhanh được đánh dấu tường minh trên `/video/finishing` (biên tập và
+hoàn thiện). `/video-studio` (lập kế hoạch) và `/video/text-to-video` (tạo video) vẫn là hai
+lối phụ; không suy ra CTA chính theo vị trí mảng để tránh browser gate và trợ năng đọc nhầm
+luồng lập kế hoạch thành luồng vận hành.
+
+- `tests/video-uiux-locale-presentation.test.mjs`: `11` test, `11` passed, `0` failed;
+  full Node suite `523` passed, `0` failed; catalogue VI/EN/ZH cân bằng, route và flow
+  bảy bước được giữ nguyên.
+- `node --check static/portal/portal.js`, `node --check static/portal/portal-i18n.js`
+  và `git diff --check` đạt.
+- GitHub Actions run `39018249838` trên candidate `59afdf7a8367a0126c6078f40c75dbce019966ae`
+  đã đạt: browser gate kiểm đủ `6/6` hub, tạo `18` screenshot, browser runtime assertions,
+  upload evidence và diff gate đều thành công.
+- Đây chỉ là source presentation evidence. Upload, render, delivery, download và artifact
+  video thật vẫn `guarded`; không gọi provider, không tạo job/MP4 và không đổi Xu/PayOS hay
+  dữ liệu production.
+
+## Checkpoint nguồn WebApp — R217-09A Content/Workboard/Free Tools — 17/10/2026
+
+Các surface Content Studio, Workboard, Free Tools, Free Prompt Gallery, Memory, Projects,
+Publish Review và Campaign đã được kiểm lại theo cùng checklist. Lệnh focused hiện hành chạy
+`26` test, `26` passed, `0` failed; full Node suite trên candidate chạy `522` passed, `0` failed.
+Các route/action/field/revision, bản nháp và trạng thái guarded giữ nguyên. Browser/AX,
+responsive runtime và dữ liệu ghi thật chưa có môi trường QA nên vẫn mở; không gọi provider,
+không tạo output và không ghi dữ liệu production. Wave source này đóng, chuyển sang rà Admin.
+
+## Recheck nguồn WebApp — R217-09 Admin/customer visibility — 17/10/2026
+
+Bộ `tests/admin-*.test.mjs` hiện chạy `21` test, `21` passed, `0` failed; full Node suite
+`522` passed, `0` failed. Fixed chrome, điều hướng dọc, locale VI/EN/ZH, Customer 360,
+Provider, nạp thủ công, finance/domain center và mobile harmony đều có evidence source.
+Quyền Owner/role, liên kết request/job/asset/report/audit, canonical-admin fixture, duyệt
+ledger/Xu và browser/AX runtime vẫn chưa có bằng chứng phù hợp; giữ `OPEN/DEFERRED`, không
+ghi PASS thay cho backend permission hoặc mutation thật.

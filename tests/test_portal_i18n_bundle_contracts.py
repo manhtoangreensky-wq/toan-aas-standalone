@@ -100,7 +100,7 @@ for (const locale of expected) {
 const landingKeys = [
   "landing.nav.features", "landing.nav.workflow", "landing.nav.trust",
   "landing.nav.language", "landing.cta.start", "landing.cta.signIn",
-  "landing.hero.title", "landing.hero.body", "landing.hero.explore",
+  "landing.hero.title", "landing.hero.titleEmphasis", "landing.hero.body", "landing.hero.explore",
   "landing.proof.webOwned", "landing.proof.noFakeOutput",
   "landing.proof.companionOptional", "landing.preview.title",
   "landing.workflow.title", "landing.trust.title", "landing.footer.legal"
@@ -360,7 +360,7 @@ for (const [locale, reviewed] of Object.entries(reviewedAdminSecurityAccessCopy)
 }
 
 const reviewedAutomationMonitorCopy = {
-  vi: "Đang xác minh receipt private",
+  vi: "Đang xác minh biên nhận riêng tư",
   en: "Verifying the private receipt",
   zh: "正在验证私有回执"
 };
@@ -371,7 +371,7 @@ for (const [locale, expectedCopy] of Object.entries(reviewedAutomationMonitorCop
 }
 
 const reviewedSystemStewardshipCopy = {
-  vi: "System & Data Stewardship",
+  vi: "Quản trị hệ thống và dữ liệu",
   en: "System & Data Stewardship",
   zh: "系统与数据治理"
 };
@@ -836,13 +836,13 @@ def test_customer_authoring_uses_reviewed_copy_without_translating_records() -> 
         "workspaceDrafts.card.resume": ("Tiếp tục brief", "Continue brief", "继续简报"),
         "workspaceDrafts.card.attach": ("Đưa vào Project", "Add to Project", "加入项目"),
         "workspaceDrafts.card.attachProjectLabel": ("Đưa vào Project", "Add to Project", "加入项目"),
-        "projectCenter.page.title": ("Project Operations Board", "Project Operations Board", "项目运营看板"),
-        "projectCenter.filter.searchLabel": ("Tìm Project", "Search projects", "搜索项目"),
-        "projectCenter.authoring.createTitle": ("Tạo Project", "Create a project", "创建项目"),
-        "project.page.title": ("Project Workspace", "Project Workspace", "项目工作区"),
-        "project.detail.documentsTitle": ("Studio Documents", "Studio Documents", "工作室文档"),
-        "project.document.create": ("Thêm Studio Document", "Add Studio Document", "添加工作室文档"),
-        "projectPackage.panel.title": ("Project Packages", "Project Packages", "项目套餐"),
+        "projectCenter.page.title": ("Bảng vận hành dự án", "Project Operations Board", "项目运营看板"),
+        "projectCenter.filter.searchLabel": ("Tìm dự án", "Search projects", "搜索项目"),
+        "projectCenter.authoring.createTitle": ("Tạo dự án", "Create a project", "创建项目"),
+        "project.page.title": ("Không gian dự án", "Project Workspace", "项目工作区"),
+        "project.detail.documentsTitle": ("Tài liệu Studio", "Studio Documents", "工作室文档"),
+        "project.document.create": ("Thêm tài liệu Studio", "Add Studio Document", "添加工作室文档"),
+        "projectPackage.panel.title": ("Gói dự án", "Project Packages", "项目套餐"),
     }
     for key, translations in expected.items():
         for translation in translations:
@@ -890,11 +890,11 @@ def test_customer_authoring_has_no_untranslated_nested_or_package_surface() -> N
     source = BUNDLE.read_text(encoding="utf-8")
     expected = {
         "projectCenter.notes.integrationTitle": ("Trạng thái tích hợp", "Integration status", "集成状态"),
-        "project.editor.title": ("Studio Document editor", "Studio Document editor", "工作室文档编辑器"),
+        "project.editor.title": ("Trình chỉnh sửa tài liệu Studio", "Studio Document editor", "工作室文档编辑器"),
         "project.editor.save": ("Lưu phiên bản mới", "Save new version", "保存新版本"),
-        "projectPackage.page.title": ("Project Packages", "Project Packages", "项目套餐"),
-        "projectPackage.page.guardTitle": ("Project Packages chưa được bật", "Project Packages are not enabled", "项目套餐尚未启用"),
-        "projectPackage.page.historyTitle": ("Lịch sử Project Packages", "Project Package history", "项目套餐历史"),
+        "projectPackage.page.title": ("Gói dự án", "Project Packages", "项目套餐"),
+        "projectPackage.page.guardTitle": ("Gói dự án chưa được bật", "Project Packages are not enabled", "项目套餐尚未启用"),
+        "projectPackage.page.historyTitle": ("Lịch sử gói dự án", "Project Package history", "项目套餐历史"),
     }
     for key, translations in expected.items():
         for translation in translations:
@@ -1058,8 +1058,8 @@ def test_app_shell_navigation_uses_the_reviewed_locale_catalogue() -> None:
 
     assert 'source.startsWith("ERP · ")' in localized_navigation
     assert 'uiText("shellNav.erp", "ERP")' in localized_navigation
-    assert 'title: localizedNavigationLabel(String(candidate.title || "TOAN AAS"))' in command_palette
-    assert 'section: localizedNavigationLabel(String(candidate.section || "Workspace"))' in command_palette
+    assert 'const title = deferTitle ? localizedNavigationLabel(String(candidate.title || "TOAN AAS"))' in command_palette
+    assert ': localizedNavigationLabel(String(candidate.section || "Workspace"));' in command_palette
     assert ".portal-nav-link > span:not(.portal-nav-icon)" in PORTAL_CSS
     assert "overflow-wrap: anywhere;" in PORTAL_CSS
 

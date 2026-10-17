@@ -319,3 +319,240 @@ Chỗ tài liệu cũ không còn đúng: tài liệu/ảnh nào còn mô tả r
 Khung A09 đã merge trong PR #423 tại `6298057…`; Admin Support đã merge trong PR #424 tại `cc3b468…`. Trạng thái “candidate chưa merge” phía trên là lịch sử trước các PR, không phải trạng thái hiện hành. Tuy nhiên, việc dịch thanh điều hướng hoặc một route không chứng minh toàn bộ phân hệ Admin đã thuần ngôn ngữ.
 
 Admin Support đã ship với danh mục riêng cho danh sách/chi tiết, phân công, chuyển cấp và thông báo cố định; final focused `84` bài đạt và local Browser QA `40` trạng thái. Signed production DOM của Support vẫn chưa có, và các route Admin khác tiếp tục được xử lý tuần tự; không khẳng định toàn Admin đã hoàn thiện.
+
+### Đối chiếu UI shell ngày 16/10/2026
+
+Chức năng hướng dẫn cài ứng dụng vẫn giữ nguyên hành vi và điều kiện hiển thị; chỉ màu nền
+modal được chuẩn hóa theo design system xanh navy/xanh ngọc. Source candidate có một
+regression test riêng đạt `1/1`; không có thay đổi route, action, API hoặc output sản phẩm.
+PR #647 vẫn cần delivery trước khi đối chiếu live.
+
+### Đối chiếu locale Admin ngày 16/10/2026
+
+Các thẻ cố định của khu vực Quản trị hệ thống đã có bản tiếng Việt riêng trong catalogue VI;
+key và route giữ nguyên, catalogue EN/ZH không đổi. Kiểm thử source đạt `1/1`. Bằng chứng
+runtime sau delivery vẫn thuộc ma trận QA và chưa được suy ra từ source.
+
+### Bổ sung đối chiếu source ngày 16/10/2026 — không đổi chức năng
+
+Đợt `SOURCE-LOCALE-12` chỉ chuẩn hóa fixed chrome của Trung tâm kiểm soát dữ liệu và
+fallback renderer trên WebApp. Không thêm hoặc xóa chức năng gốc, không đổi route/API,
+payload, quyền, trạng thái hay hành vi dữ liệu. Bằng chứng đo được: regression riêng
+`2/2`, toàn bộ Node `480/480`, syntax hai tệp Portal đạt và `git diff --check` đạt.
+Runtime/live chưa được suy ra từ source; mọi mô tả chức năng trong tài liệu gốc vẫn giữ
+nguyên cho tới khi có bundle delivery và browser evidence mới.
+
+### Bổ sung đối chiếu source ngày 16/10/2026 — Trung tâm hỗ trợ
+
+Đợt `SOURCE-LOCALE-13` chỉ chuẩn hóa fixed chrome `supportTicket.*` và fallback renderer của
+Trung tâm hỗ trợ. Catalogue VI có `295` mục; regression riêng đạt `2/2`, full Node đạt `482/482`
+và giữ các contract
+tạo yêu cầu, phản hồi, liên kết bằng chứng, mã yêu cầu và phiên bản. Không thêm/xóa chức năng
+gốc, không đổi route/API, payload, quyền, trạng thái hay hành vi dữ liệu; runtime/live vẫn
+chưa được suy ra từ source.
+
+### Bổ sung đối chiếu source ngày 16/10/2026 — Hồ sơ tài khoản
+
+Đợt `SOURCE-LOCALE-14` chỉ chuẩn hóa fixed chrome `accountCenter.profile.*` và fallback
+renderer của `/account`, gồm hồ sơ, ảnh đại diện, phương thức đăng nhập, liên kết Telegram,
+tùy chọn Bot, nâng cấp Email và Trung tâm bảo mật. Catalogue VI có `101` mục; regression
+riêng đạt `2/2`, full Node đạt `484/484`, syntax Portal đạt và `git diff --check` đạt.
+Không thêm/xóa chức năng gốc, không đổi route/API, payload, quyền, trạng thái hoặc hành vi
+dữ liệu; các tên riêng/mã kỹ thuật được giữ theo allowlist. Runtime/live chưa được suy ra từ
+source và product-lane scan vẫn là bước kế tiếp.
+
+### Bổ sung đối chiếu source ngày 16/10/2026 — Image Studio/Image Hub
+
+Đợt `SOURCE-LOCALE-15` chỉ chuẩn hóa fixed chrome Image Studio và Image Hub qua catalogue
+`imageStudioUi.*` cân bằng VI/EN/ZH: guard, giới thiệu, số liệu, biểu mẫu bảng thiết kế,
+ranh giới biên tập, ý định, định dạng, trạng thái và bộ lọc. Bản VI không còn generic English
+UI; renderer giữ nguyên route, action, field, capability, CSRF, idempotency, revision,
+dữ liệu động và trạng thái không tạo ảnh/không gọi nhà cung cấp/không trừ Xu. Regression
+riêng đạt `2/2`, focused Image đạt `45/45`, full Node đạt `486/486`, syntax hai tệp Portal
+và `git diff --check` đều đạt. Python contract `NOT_RUN` vì môi trường thiếu `python`/`py`;
+runtime/live, AX tree và các cụm Image reference/detail/Resize/Enhance/Brand Overlay/
+Storyboard vẫn mở.
+
+### Bổ sung đối chiếu source ngày 16/10/2026 — Image library/Image Hub
+
+Đợt `SOURCE-LOCALE-16` chỉ chuẩn hóa fixed chrome của thư viện tham chiếu, thư viện bảng
+thiết kế, thẻ bảng thiết kế, tổng quan Image Hub, bước tiếp theo và bảng rà soát định hướng.
+Catalogue `imageStudioLibraryUi.*` có `67` mục cân bằng VI/EN/ZH; helper locale phủ nhãn lọc,
+placeholder, phân trang, trạng thái, lối tắt và empty state. Không đổi route, action, offset
+phân trang, capability, dữ liệu động hoặc ranh giới chỉ đọc. Regression riêng đạt `2/2`,
+focused Image đạt `49/49`, full Node đạt `488/488`, syntax hai tệp Portal và
+`git diff --check` đều đạt. Python contract `NOT_RUN` vì thiếu `python`/`py`; runtime/live,
+AX tree, chi tiết direction/estimate/history và các route Image còn lại vẫn mở.
+
+### Bổ sung đối chiếu source ngày 16/10/2026 — Image detail
+
+Đợt `SOURCE-LOCALE-17` chỉ chuẩn hóa fixed chrome chi tiết Image Studio/Hub: estimate,
+direction card, trạng thái bảng thiết kế, lịch sử phiên bản, activity feed, tiện ích cục bộ
+và các nút xác nhận/khôi phục/lưu trữ. Catalogue `imageStudioDetailUi.*` có `91` mục cân bằng
+VI/EN/ZH; helper phủ các renderer `imageStudioEstimateMarkup`, `renderImageDirectionCard`,
+`renderImageStudioDetail` và nhãn event. Không đổi route, action, field, capability, CSRF,
+idempotency, revision, dữ liệu động hay ranh giới không tạo ảnh.
+
+Regression riêng đạt `2/2`, focused Image đạt `51/51`, full Node đạt `490/490`, syntax hai
+tệp Portal và `git diff --check` đều đạt. Python contract `NOT_RUN` vì môi trường thiếu
+`python`/`py`; runtime/live, AX tree và các route Resize/Enhance/Brand Overlay/Storyboard
+vẫn mở.
+
+### Bổ sung đối chiếu source ngày 16/10/2026 — Image operations
+
+Đợt `SOURCE-LOCALE-18` chuẩn hóa fixed chrome các route Image Resize, Image Enhance, Brand
+Overlay và Storyboard Grid qua catalogue `imageOperationUi.*` cân bằng VI/EN/ZH. Picker
+Asset Vault, phân trang, trạng thái guard/loading/failed, form/option, boundary, kết quả,
+lịch sử và xác nhận export/bàn giao đều dùng helper locale; Brand Overlay không còn nhãn
+`Owner-scoped` cố định và Storyboard không còn chuỗi `signed/private/source reference` trong
+bản tiếng Việt. Không đổi route, action, field, capability, CSRF, idempotency, revision,
+download path, ownership/integrity guard hoặc dữ liệu động.
+
+Regression `tests/image-operation-locale-purity.test.mjs` đạt `3/3`; focused Image/media
+đạt `54/54`; full Node đạt `493/493` (baseline `490/490`, `NEW_FAILURES=0`), syntax hai
+tệp Portal và `git diff --check` đạt. Python contract `NOT_RUN` vì thiếu `python`/`py`;
+browser/AX/live chưa chạy và không có provider call, wallet mutation, production data,
+merge hay deploy trong batch.
+
+### Đối chiếu source locale — Channel Strategy và Workboard — 16/10/2026
+
+Channel Strategy hiện có catalogue giao diện cân bằng VI/EN/ZH và renderer dùng helper cho
+list, filter, create, detail, preview, history, activity, field labels và aria text. Workboard
+đã dùng locale key cho nhãn bảng Kanban và trạng thái guarded. Các hợp đồng route/action/field,
+quyền, revision, CSRF và idempotency không đổi; nội dung do tài khoản nhập và dữ liệu máy chủ
+không bị dịch trong trình duyệt.
+
+Evidence source: Channel Strategy `2/2`, Workboard `4/4`, focused nhóm Content/Workboard/
+Free/Memory/Project/Publish/Campaign `28/28`, full Node `496/496`, `NEW_FAILURES=0`. Browser,
+AX, runtime/live và Python contract chưa chạy.
+
+### Đối chiếu source locale — Music Prompt Composer — 16/10/2026
+
+Music Prompt Composer hiện dùng catalogue `musicPromptComposerUi.*` cân bằng VI/EN/ZH cho
+fixed chrome của trang lập kế hoạch, biểu mẫu, ranh giới, kết quả, ghi chú, biên nhận và phạm
+vi. Dữ liệu mô tả và biên nhận từ máy chủ giữ nguyên; các field/action/route và ranh giới
+không tạo âm thanh không đổi.
+
+Evidence source: regression `2/2`, focused Channel/Workboard/Music `8/8`, full Node `498/498`,
+`NEW_FAILURES=0`. Browser, AX, runtime/live và Python contract chưa chạy.
+
+### Đối chiếu source locale — Music Direction Presets — 16/10/2026
+
+Music Direction Presets dùng catalogue `musicDirectionUi.*` cân bằng VI/EN/ZH cho preset card,
+biểu mẫu, biên nhận, boundary, checklist và scope. ID preset và dữ liệu brief/receipt vẫn là
+giá trị canonical; route/action/field/capability/CSRF/idempotency không đổi.
+
+Evidence source: regression `2/2`, focused Composer/Direction/Voice/Media `31/31`; Browser,
+AX, runtime/live và Python contract chưa chạy.
+
+### Đối chiếu source locale — SFX Cue Sheet — 16/10/2026
+
+SFX Cue Sheet dùng catalogue `sfxCueSheetUi.*` cân bằng VI/EN/ZH cho fixed chrome của preset,
+form, placement, receipt, cue list, cảnh báo, boundary và scope. ID preset/cue/placement,
+route/action/field/capability/CSRF/idempotency và dữ liệu receipt canonical không đổi.
+
+Evidence source: regression `2/2`, focused Composer/Direction/SFX/Voice/Media `33/33`, full
+Node `502/502`, `NEW_FAILURES=0`; Browser, AX, runtime/live và Python contract chưa chạy.
+## Đối chiếu bổ sung — SOURCE-ADMIN-05 Customer 360 — 17/10/2026
+
+| Chức năng hiện tại | Trạng thái | Bằng chứng đo được |
+|---|---|---|
+| Customer 360 fixed chrome VI/EN/ZH | ✅ | Catalogue `adminCustomer360.*` có cùng bộ khóa ở `3/3` locale; regression `3/3` |
+| Safety modal khóa/mở khóa | ✅ | Nút và cảnh báo dùng helper locale; `admin-customer-*` action giữ nguyên; comparator action `771→771` |
+| Dữ liệu động, ví/Xu, ledger và quyền | ⚠️ | Không thay đổi trong batch; Python Customer 360 contract chưa chạy vì thiếu `py`/`pytest`; runtime fixture vẫn mở |
+| Duyệt nạp thủ công/cộng Xu thật | ⚠️ | Không thuộc batch; vẫn `DEFERRED`, không có wallet mutation |
+
+Tài liệu gốc không có mục riêng cho catalogue Customer 360; vì vậy đây là phần bổ sung của
+WebApp standalone, không được suy diễn thành chức năng Bot/Core Bridge hoặc quyền tài chính.
+
+Kết thúc đối chiếu `SOURCE-ADMIN-05`.
+
+## Đối chiếu bổ sung — SOURCE-IMAGE-01 — 17/10/2026
+
+| Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Lối vào tạo và chỉnh ảnh trên `/image/create` | Có hai lựa chọn dọc; tạo ảnh là trang hiện tại, mục chỉnh mở `/image/edit` và mô tả đúng công cụ tăng chất lượng đang có. | `static/portal/portal.js`; `tests/image-create-locale-presentation.test.mjs` |
+| Fixed chrome VI/EN/ZH | Có catalogue đủ ba ngôn ngữ cho tiêu đề, liên kết, mô tả và nhãn truy cập. | Regression Image source `40/40`; mỗi tệp locale Node chạy một lần `319/319`; full Node `521/521`. |
+| Chỉnh sửa ảnh bằng AI | Source có lane `/image/transform` và alias `/image/image-to-image`, cùng bridge và API riêng; source runtime matrix ghi `BLOCKED_PROVIDER_ENTITLEMENT`, chưa xác nhận entitlement live. | `copyfast_image_transform_job_bridge.py`; `copyfast_image_transform_runtime_bridge.py`; `tests/test_r10_runtime_matrix_contracts.py`; provider dispatch vẫn khóa. Không bật quyền/nhà cung cấp trong batch UI. |
+| Nâng độ phân giải bằng AI | Source có lane `/image/upscale` và bridge/API riêng; source runtime matrix cũng ghi `BLOCKED_PROVIDER_ENTITLEMENT`. | `copyfast_image_upscale_job_bridge.py`; `tests/test_r10_runtime_matrix_contracts.py`; đây không phải bằng chứng đầu ra live. |
+| Trường ảnh tham chiếu trong luồng tạo | `/image/create` có API/job flow nhưng form contract hiện không nhận `reference`; Image Transform nhận asset đã có trong Asset Vault theo quyền sở hữu. | `tests/test_portal_safety_contracts.py::test_translation_upload_and_image_create_forms_match_the_frozen_bot_contract`; `copyfast_image_transform_job_bridge.py`. Không tự thêm field/upload nếu thiếu contract. |
+| Trạng thái giao nhận | Source candidate thuộc PR #647; việc có PR không đồng nghĩa đã merge/deploy/live. | Browser DOM/AX/runtime chưa đo; source pass không đóng R217-04. Đối chiếu head/CI theo trang PR hiện hành. |
+
+Nguồn yêu cầu giai đoạn xây dựng chưa có một danh mục gốc duy nhất theo bounded inventory
+đã nêu ở các mục trên; vì vậy đối chiếu này ghi bổ sung hành vi của WebApp standalone,
+không tuyên bố tương đương runtime với Bot. Việc hợp nhất workspace, upload/reference,
+variants, preview/history và giao nhận ảnh thật vẫn mở trong R217-04. Hai lane AI có
+server-side bridge nhưng đang bị chặn theo source matrix; trạng thái entitlement production
+chưa được kiểm tra trong lượt này.
+
+## Đối chiếu bổ sung — SOURCE-VOICE-01/02 — 17/10/2026
+
+| Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Chọn cách làm Voice | Voice Studio có đúng `3` lane dọc: mặc định, đã lưu và thêm giọng; lần lượt mở `/voice/tts`, `/voice/saved`, `/voice/clone`. | `static/portal/portal.js`; `tests/voice-studio-locale-presentation.test.mjs`; Voice batch `126/126` |
+| Locale Voice Studio | Fixed chrome của lane mới dùng cùng catalogue `customerVoiceStudio` ở `3/3` locale VI/EN/ZH; tên hồ sơ và dữ liệu máy chủ không bị dịch. | `static/portal/portal-i18n.js`; regression locale Voice |
+| Màu và responsive | Voice Studio/Voice Vault dùng xanh dương–xanh ngọc/nền xanh navy; rail xếp `1` cột ở `max-width: 820px`; focus ring và hover được giữ. | `static/portal/portal.css`; `node --check` `2/2`; không có browser/live evidence trong batch |
+| TTS/Voice Library/clone/preview/output thật | Chưa đóng; lane chỉ mở đúng route và giữ nhãn được bảo vệ, không dựng tệp hay trạng thái hoàn tất. | Runtime/bridge/provider/Voice Library handoff chưa được xác minh; tiếp tục mở R217-05 runtime |
+
+Batch này chỉ đóng phần trình bày UI/UX của Voice. Không được gọi đây là parity runtime với Bot,
+không đổi ví/Xu, quyền, route/action/field/capability hoặc dữ liệu production.
+
+## Đối chiếu bổ sung — SOURCE-MUSIC-01/02 — 17/10/2026
+
+| Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Chọn hướng làm nhạc | `/music` có journey ba bước và đặt hai hướng chính (nhạc nền, bài hát có lời) trước nhánh SFX; mỗi card vẫn mở route hiện hữu. | `static/portal/portal.js`; `tests/music-hub-presentation.test.mjs`; Music hub route set `6` |
+| Locale Music hub | Fixed chrome dùng catalogue `musicHub.*` ở `3/3` locale VI/EN/ZH; nhãn hướng, trạng thái và journey không trộn ngôn ngữ trong bản VI. | `static/portal/portal-i18n.js`; focused Music hub/library `16/16` |
+| Bố cục và khả năng đọc | Card chính có role/mode metadata và `aria-describedby`; desktop tối đa `2` cột, mobile `1` cột từ `820px`; màu dùng token xanh/navy chung. | `static/portal/portal-theme.css`; `node --check` `2/2`; chưa có browser screenshot/AX runtime |
+| Tạo/preview/export nhạc thật | Chưa đóng; hub chỉ trình bày route và boundary đúng, không dựng tệp hoặc receipt hoàn tất. | Provider/adapter và browser/runtime output chưa được xác minh; tiếp tục mở R217-06 runtime |
+
+Batch này chỉ đóng source presentation của Music hub. Không được gọi đây là parity runtime với Bot,
+không đổi ví/Xu, route/action/field/capability hoặc dữ liệu production.
+
+## Đối chiếu bổ sung — SOURCE-SUBDUB-01/02 — 17/10/2026
+
+| Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Bốn hướng trong một màn hình | `/subdub` giữ phụ đề gốc, dịch phụ đề, lồng tiếng và phụ đề + lồng tiếng trong cùng tab; đổi mode không mở route mới. | `static/portal/portal.js`; `tests/subdub-hub-presentation.test.mjs` `11/11` |
+| Smart Multi và âm lượng | Có lựa chọn tự động/một/hai/nhiều giọng, mapping guarded, volume âm thanh gốc/giọng riêng và ISO language input. | Source presentation; không chứng minh auto-detect, mapping hay output thật |
+| Voice Library handoff | Hai panel lồng tiếng có link `Mở Thư viện giọng` tới `/voice-studio`; selector vẫn disabled/guarded. | `data-subdub-voice-library-link` `2` lần; chưa có Voice profile projection runtime |
+| Báo cáo và giao tệp | Khu báo cáo rỗng nói rõ chưa có tác vụ; CTA tạo bị guarded. | Không upload, job, provider, wallet hoặc artifact; runtime/QA còn mở |
+
+Batch này chỉ đóng source presentation của SubDub. Không được gọi đây là parity runtime với Bot,
+không đổi engine, route/action/field/capability, ví/Xu hoặc dữ liệu production.
+
+## Đối chiếu bổ sung — SOURCE-VIDEO-01/04 — 17/10/2026
+
+| Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Phân loại Product Video | `/tools/video` chia `10` route duy nhất thành `4` lane: lập kế hoạch, tạo video, biên tập/ghép và kiểm tra/bàn giao; mỗi lane nêu đầu vào/đầu ra. CTA chính được đánh dấu tường minh trên `/video/finishing`; hai lối lập kế hoạch/tạo video vẫn là CTA phụ. | `static/portal/portal.js`; `tests/video-uiux-locale-presentation.test.mjs` `11/11`; full Node `523/523`; CI `39018249838` kiểm `6/6` hub và `18` screenshot |
+| Quy trình bảy bước | Hub hiển thị nhập → lập kế hoạch → xem báo giá → xác nhận → theo dõi xử lý → nhận kết quả → khôi phục; form tạo và đa cảnh giữ cùng contract. | `data-video-step` cho đủ `7` bước; không đổi route/action/field |
+| Ranh giới AI/thủ công | Có panel riêng cho nhánh AI và nhánh thủ công, đều ghi rõ trạng thái được bảo vệ để không nhầm kế hoạch với video đã tạo. | `data-video-editor-mode="ai"` và `"manual"`; chưa có runtime render/timeline thật |
+| Locale và bố cục | Fixed chrome có đủ VI/EN/ZH; lane dùng thẻ dọc, đầu vào/đầu ra và badge trạng thái; mobile chuyển về một cột. | `static/portal/portal-i18n.js`, `static/portal/portal.css`; chưa có browser screenshot/AX runtime |
+| Upload, render, MP4, preview và download thật | Chưa đóng; các lane chưa sẵn sàng vẫn guarded và không tự tạo job, provider output hoặc tệp giả. | Provider/worker/runtime/real artifact evidence chưa có; tiếp tục mở R217-08 runtime |
+
+Batch này chỉ đóng source presentation của Product Video. Không được gọi đây là parity runtime
+với Bot, không đổi engine, route/action/field/capability, ví/Xu hoặc dữ liệu production.
+
+## Đối chiếu bổ sung — SOURCE-CONTENT-01/03 — 17/10/2026
+
+| Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Content/Workboard/Projects | Các board/list/detail có lối vào, create/edit/save/archive/restore/version/history theo contract hiện hữu; Workboard có bố cục dọc cho mobile. | Focused source set `26/26`; không đổi action, revision hoặc server data |
+| Campaign/Calendar/Approval/Publish | Fixed chrome có mốc, agenda, review, reminder, trạng thái guard và handoff; bản nháp không bị gọi là output. | `static/portal/portal.js`, catalogue VI/EN/ZH; browser/runtime chưa đo |
+| Free Tools/Prompt Gallery/Memory | Có tab/filter/group/copy/save và tách fixed chrome khỏi prompt/owner data. | Source regression `26/26`; ghi thật, persistence và bridge vẫn mở |
+
+Batch này chỉ đóng source presentation của R217-09A. Không được gọi đây là parity runtime với
+Bot, không đổi engine, route/action/field/capability, ví/Xu hoặc dữ liệu production.
+
+## Đối chiếu bổ sung — SOURCE-ADMIN-11 — 17/10/2026
+
+| Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Admin fixed chrome và điều hướng | Các khu vực Customer 360, Provider, nạp thủ công, finance/domain center, stewardship và mobile data dùng catalogue/khung dọc đã rà soát. | `tests/admin-*.test.mjs` `21/21`; không đổi route/action/permission server |
+| Locale và mobile | Nhãn cố định cân bằng VI/EN/ZH; module tabs có target chạm và bảng mobile có harmony source. | Full Node `522/522`; browser AX/overflow runtime chưa có |
+| Quyền và tác vụ khách | UI giữ boundary theo manifest/capability và trạng thái guarded; chưa chứng minh role enforcement hoặc liên kết request/job/asset/report/audit thật. | Canonical-admin fixture, Python contract và browser runtime đang `OPEN/BLOCKED` |
+| Duyệt nạp thủ công | Có amount/method/reference/status/approve/reject/reason ở lớp trình bày; ledger/Xu mutation vẫn `DEFERRED`. | Không gọi PayOS/provider, không ghi ví hoặc dữ liệu production |
+
+Batch này chỉ đóng source recheck Admin. Không được gọi đây là parity runtime với Bot hoặc
+duyệt tiền thật.

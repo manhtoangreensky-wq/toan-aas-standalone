@@ -101,7 +101,9 @@
   --portal-teal-dark-border-strong: #14b8a6;
   --portal-teal-dark-ink: #f3fbfc;
   --portal-teal-dark-muted: #83a5ad;
-  --portal-teal-dark-placeholder: #528994;
+  --portal-teal-dark-placeholder: #83a5ad;
+  --portal-teal-dark-cta-action: #0f766e;
+  --portal-teal-dark-cta-hover: #115e59;
   --portal-teal-dark-input-border: rgba(20, 184, 166, 0.3);
   --portal-light-canvas: var(--portal-app-canvas);
   --portal-light-surface: var(--portal-surface-light);
@@ -239,7 +241,7 @@
   --portal-scrim-blur: 2px;
   --portal-control-height: 42px;
   --portal-transition: 180ms cubic-bezier(.2, .8, .2, 1);
-  --portal-motion-fast: 140ms;
+  --portal-motion-fast: 160ms;
   --portal-motion-base: 220ms;
   --portal-motion-slow: 420ms;
   --portal-motion-distance: 10px;
@@ -1215,7 +1217,6 @@ body {
   position: relative;
   isolation: isolate;
   --landing-section-progress: 0;
-  --landing-section-offset: 0px;
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-hero::after {
@@ -1232,7 +1233,6 @@ body {
   opacity: calc(.16 + (var(--landing-hero-progress, 0) * .28));
   pointer-events: none;
   transform: translate3d(0, calc(var(--landing-hero-progress, 0) * -22px), 0) scale(calc(.96 + (var(--landing-hero-progress, 0) * .06)));
-  transition: opacity var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease), transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-hero > * {
@@ -1241,12 +1241,11 @@ body {
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .portal-landing-hero-copy {
   transform: translate3d(0, calc(var(--landing-hero-progress, 0) * -8px), 0);
-  transition: transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-parallax {
   transform: translate3d(0, calc(var(--landing-hero-progress, 0) * -26px), 0) rotate(1.4deg);
-  transition: transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease), box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+  transition: box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-parallax.landing-motion-pointer {
@@ -1265,7 +1264,6 @@ body {
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-parallax::before {
   opacity: calc(.26 + (var(--landing-hero-progress, 0) * .3));
   transform: translate3d(calc(var(--landing-hero-progress, 0) * -14px), calc(var(--landing-hero-progress, 0) * 10px), 0);
-  transition: opacity var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease), transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-studios::before,
@@ -1284,30 +1282,25 @@ body {
   opacity: calc(.12 + (var(--landing-section-progress, 0) * .24));
   pointer-events: none;
   transform: translate3d(0, calc((1 - var(--landing-section-progress, 0)) * 24px), 0);
-  transition: opacity var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease), transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
 }
 
 /* Reference-first continuation: the feature strip and product spotlights
    share the page's bounded scene grammar. They remain ordinary semantic
    sections in normal flow; this only adds depth while they enter view. */
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-features {
-  background:
-    linear-gradient(
-      90deg,
-      transparent,
-      color-mix(in srgb, var(--portal-brand) calc(var(--landing-section-progress, 0) * 7%), transparent),
-      transparent
-    );
-  transition: background-color var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
+  position: relative;
+  isolation: isolate;
 }
 
-.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-feature {
-  background: color-mix(
-    in srgb,
-    var(--portal-light-surface) calc(100% - (var(--landing-section-progress, 0) * 7%)),
-    var(--portal-light-accent-soft)
-  );
-  transition: background-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+.landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-features::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, var(--portal-light-accent-soft), transparent);
+  content: "";
+  opacity: calc(var(--landing-section-progress, 0) * .07);
+  pointer-events: none;
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-spotlights::before {
@@ -1346,7 +1339,7 @@ body {
   --landing-pointer-y: 0;
   transform: perspective(900px) rotateX(calc(var(--landing-pointer-y, 0) * -1 * var(--portal-landing-pointer-tilt))) rotateY(calc(var(--landing-pointer-x, 0) * var(--portal-landing-pointer-tilt))) translate3d(0, calc((1 - var(--landing-section-progress, 0)) * 5px), 0);
   transform-style: preserve-3d;
-  transition: transform var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), border-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+  transition: box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), border-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-studio::after {
@@ -1360,7 +1353,6 @@ body {
   opacity: calc(.08 + (var(--landing-section-progress, 0) * .16));
   pointer-events: none;
   transform: translateX(calc(var(--landing-section-progress, 0) * 320%)) rotate(14deg);
-  transition: opacity var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease), transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
 }
 
 /* The studio card already has a legacy hover lift.  Keep that lift while
@@ -1382,12 +1374,11 @@ body {
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-workflow ol::before {
   opacity: clamp(0, var(--landing-section-progress, 0), 1);
   transform: scaleY(clamp(0, var(--landing-section-progress, 0), 1));
-  transition: opacity var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease), transform var(--portal-landing-scroll-scrub) var(--portal-landing-motion-ease);
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-workflow li,
 .landing-motion-scroll[data-landing-scroll-motion="active"] .portal-landing-trust-grid > article {
-  transition: transform var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), border-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), background-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+  transition: border-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), background-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease), box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
 }
 
 .landing-motion-scroll[data-landing-scroll-motion="active"] .landing-motion-workflow li.landing-motion-pointer {
@@ -1437,15 +1428,14 @@ body {
   position: absolute;
   z-index: -1;
   top: 50%;
-  left: calc((var(--landing-scroll-progress, 0) * 130%) - 30%);
+  left: 0;
   width: 42%;
   height: 180%;
   background: linear-gradient(100deg, transparent, color-mix(in srgb, var(--portal-context) 12%, transparent), transparent);
   content: "";
   opacity: .5;
   pointer-events: none;
-  transform: translateY(-50%) rotate(12deg);
-  transition: left var(--portal-landing-scroll-scrub) linear;
+  transform: translate3d(calc((var(--landing-scroll-progress, 0) * 130vw) - 30vw), -50%, 0) rotate(12deg);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2731,8 +2721,13 @@ body {
   max-width: 730px;
   margin: 0 0 20px;
   font-size: clamp(52px, 5vw, 64px);
-  line-height: 1.03;
+  line-height: 1.25;
   letter-spacing: -.05em;
+}
+
+.portal-landing-title-emphasis {
+  color: var(--portal-accent-deep);
+  font-weight: 800;
 }
 
 .portal-landing-hero p,
@@ -2957,8 +2952,8 @@ body {
 .portal-landing-feature-strip p {
   margin: 5px 0 0;
   color: var(--portal-light-muted);
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: 16px;
+  line-height: 1.65;
 }
 
 .portal-landing-spotlights {
@@ -2993,8 +2988,8 @@ body {
   max-width: 16ch;
   margin: 0;
   color: var(--portal-ink);
-  font-size: clamp(32px, 3.6vw, 50px);
-  line-height: 1.06;
+  font-size: clamp(28px, 3.6vw, 36px);
+  line-height: 1.25;
   letter-spacing: -.05em;
 }
 
@@ -3002,7 +2997,7 @@ body {
   max-width: 58ch;
   margin: 0;
   color: var(--portal-light-muted);
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.7;
 }
 
@@ -3173,8 +3168,8 @@ body {
 .portal-landing-final h2 {
   margin: 0;
   color: var(--portal-ink);
-  font-size: clamp(32px, 3.4vw, 48px);
-  line-height: 1.08;
+  font-size: clamp(28px, 3.4vw, 36px);
+  line-height: 1.25;
   letter-spacing: -.045em;
 }
 
@@ -3260,10 +3255,10 @@ body {
   line-height: 1.25;
 }
 
-.portal-landing-studio > span:not(.portal-landing-studio-icon) {
+.portal-landing-studio > span:not(.portal-landing-studio-icon):not(.portal-landing-studio-index) {
   color: var(--portal-light-muted);
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.65;
 }
 
 .portal-landing-studio em {
@@ -3314,7 +3309,8 @@ body {
 
 .portal-landing-workflow li p {
   margin-top: 4px;
-  font-size: 13px;
+  font-size: 16px;
+  line-height: 1.625;
 }
 
 .portal-landing-trust {
@@ -3363,8 +3359,8 @@ body {
 
 .portal-landing-trust-grid p {
   margin-top: 7px;
-  font-size: 12px;
-  line-height: 1.58;
+  font-size: 16px;
+  line-height: 1.625;
 }
 
 .portal-landing-final {
@@ -3381,7 +3377,7 @@ body {
 .portal-landing-final h2 {
   max-width: 18ch;
   color: var(--portal-light-surface);
-  font-size: clamp(28px, 3vw, 42px);
+  font-size: clamp(28px, 3vw, 36px);
 }
 
 .portal-landing-final p {
@@ -3496,7 +3492,8 @@ body {
   }
 
   .portal-landing-nav {
-    gap: 10px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
     min-height: 72px;
   }
 
@@ -3510,6 +3507,11 @@ body {
 
   .portal-landing-nav-actions {
     gap: 5px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    margin-left: 0;
+    min-width: 0;
+    width: 100%;
   }
 
   .portal-landing-nav-actions > .portal-button--quiet {
@@ -3530,7 +3532,7 @@ body {
   }
 
   .portal-landing-locale-link {
-    min-width: 36px;
+    min-width: 44px;
     padding-inline: 5px;
     font-size: 11px;
   }
@@ -3553,7 +3555,7 @@ body {
   .portal-landing-workflow p,
   .portal-landing-trust p,
   .portal-landing-final p {
-    font-size: 15px;
+    font-size: 16px;
   }
 
   .portal-landing-proof {
@@ -3599,7 +3601,7 @@ body {
   }
 
   .portal-landing-spotlight-copy > p {
-    font-size: 15px;
+    font-size: 16px;
   }
 
   .portal-landing-spotlight-preview {
@@ -16048,10 +16050,10 @@ body {
   --portal-rail-border: var(--portal-dark-rail-border);
   --portal-rail-text: var(--portal-dark-rail-text);
   --portal-rail-muted: var(--portal-dark-rail-muted);
-  --portal-input-bg: var(--portal-saas-obsidian-surface);
-  --portal-input-text: var(--portal-saas-obsidian-ink);
-  --portal-input-placeholder: var(--portal-saas-obsidian-muted);
-  --portal-input-border: var(--portal-saas-obsidian-border);
+  --portal-input-bg: var(--portal-dark-input-surface);
+  --portal-input-text: var(--portal-dark-ink);
+  --portal-input-placeholder: var(--portal-dark-placeholder);
+  --portal-input-border: var(--portal-dark-input-border);
   --portal-bg: var(--portal-app-canvas);
   --portal-bg-deep: var(--portal-dark-bg-deep);
   --portal-chrome: var(--portal-surface-light);
@@ -16337,6 +16339,13 @@ html[data-portal-theme="dark"] .portal-landing :is(.portal-landing-brand strong,
 
 html[data-portal-theme="dark"] .portal-landing :is(.portal-landing-brand small, .portal-landing-nav-links, .portal-landing-hero p, .portal-landing-section-heading p, .portal-landing-workflow p, .portal-landing-trust p) { color: var(--portal-muted); }
 
+/* R181: keep final CTA on a dark teal surface in dark mode. */
+html[data-portal-theme="dark"] .portal-landing-final {
+  background: var(--portal-teal-dark-raised);
+}
+html[data-portal-theme="dark"] .portal-landing-final h2 {
+  color: var(--portal-teal-dark-ink);
+}
 html[data-portal-theme="dark"] .portal-landing-footer { background: var(--portal-dark-landing-footer); }
 
 html[data-portal-theme="dark"] .portal-landing-preview-bar,
@@ -16772,13 +16781,20 @@ html[data-portal-theme="dark"] .portal-landing-preview-callout { border-color: v
   [data-landing-motion="cinematic-mini"] .landing-motion-card,
   [data-landing-motion="cinematic-mini"] .landing-motion-cta {
     transition:
-      transform var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
       box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
       border-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
       background-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
   }
 
   @media (hover: hover) and (pointer: fine) {
+    [data-landing-motion="cinematic-mini"] .landing-motion-card,
+    [data-landing-motion="cinematic-mini"] .landing-motion-cta {
+      transition: transform var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
+        box-shadow var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
+        border-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease),
+        background-color var(--portal-landing-motion-ui) var(--portal-landing-motion-ease);
+    }
+
     [data-landing-motion="cinematic-mini"] .portal-landing-studio.landing-motion-card:is(:hover, :focus-visible) {
       transform: translateY(-4px) scale(1.01);
     }
@@ -18048,9 +18064,34 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
   }
 }
 /* Auth Motion Contract: AUTH-REFERENCE-LOGIN-001 */
-[data-auth-motion-mounted="true"] .portal-auth-intro,
-[data-auth-motion-mounted="true"] .portal-auth-card,
-[data-auth-motion-mounted="true"] .portal-auth-context-list li {
+@keyframes portal-auth-entry {
+  from { opacity: .94; transform: translate3d(0, 14px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes portal-auth-context-entry {
+  from { opacity: .72; transform: translate3d(-10px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-auth-motion-mounted="true"][data-auth-motion-phase="entry"] .portal-auth-intro,
+  [data-auth-motion-mounted="true"][data-auth-motion-phase="entry"] .portal-auth-card {
+    animation: portal-auth-entry 680ms var(--portal-motion-ease-emphasis) both;
+  }
+
+  [data-auth-motion-mounted="true"][data-auth-motion-phase="entry"] .portal-auth-context-list li {
+    animation: portal-auth-context-entry 680ms var(--portal-motion-ease-emphasis) both;
+  }
+
+  [data-auth-motion-mounted="true"][data-auth-motion-phase="entry"] .portal-auth-context-list li:nth-child(1) { animation-delay: 90ms; }
+  [data-auth-motion-mounted="true"][data-auth-motion-phase="entry"] .portal-auth-context-list li:nth-child(2) { animation-delay: 150ms; }
+  [data-auth-motion-mounted="true"][data-auth-motion-phase="entry"] .portal-auth-context-list li:nth-child(3) { animation-delay: 210ms; }
+}
+
+[data-auth-motion-mounted="true"][data-auth-motion-phase="settled"] .portal-auth-intro,
+[data-auth-motion-mounted="true"][data-auth-motion-phase="settled"] .portal-auth-card,
+[data-auth-motion-mounted="true"][data-auth-motion-phase="settled"] .portal-auth-context-list li {
   animation: none;
   opacity: 1;
   transform: none;
@@ -18068,9 +18109,9 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
   .portal-auth-header-actions .portal-theme-toggle-label { display: none; }
   .portal-auth-page--access .portal-auth-back { min-width: 44px; flex-shrink: 0; }
 
-  [data-auth-motion-mounted="true"] .portal-auth-intro,
-  [data-auth-motion-mounted="true"] .portal-auth-card,
-  [data-auth-motion-mounted="true"] .portal-auth-context-list li {
+  [data-auth-motion-mounted="true"][data-auth-motion-phase="settled"] .portal-auth-intro,
+  [data-auth-motion-mounted="true"][data-auth-motion-phase="settled"] .portal-auth-card,
+  [data-auth-motion-mounted="true"][data-auth-motion-phase="settled"] .portal-auth-context-list li {
     animation: none;
     opacity: 1;
     transform: none;
@@ -18105,8 +18146,8 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
 .portal-shell[data-portal-app-kind="admin"] .portal-page.portal-admin-home > .portal-hero .portal-title {
   max-width: 22ch;
   margin-block: var(--portal-space-2);
-  font-size: clamp(30px, 3vw, 40px);
-  line-height: 1.2;
+  font-size: clamp(32px, 3vw, 40px);
+  line-height: 1.25;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-page.portal-admin-home > .portal-hero .portal-description {
@@ -18411,7 +18452,7 @@ html[data-portal-theme="dark"] .portal-feature-directory-controls .portal-featur
   .portal-shell[data-portal-app-kind="admin"] .portal-page.portal-admin-home > .portal-hero .portal-title {
     max-width: none;
     margin-block: 0;
-    font-size: 28px;
+    font-size: 32px;
     line-height: 1.25;
   }
 
@@ -18573,24 +18614,6 @@ html::view-transition-new(root) {
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-.portal-page,
-.portal-card,
-.portal-metric,
-.portal-operations-run,
-.portal-table-container,
-.portal-auth-card {
-  transform: translateZ(0);
-  will-change: transform, opacity;
-}
-
-.portal-header {
-  transform: translateZ(0);
-}
-
-@media (min-width: 981px) {
-  .portal-shell:not(.portal-shell--focus) .portal-sidebar { transform: translateZ(0); }
-}
-
 /* =========================================================================
    SAAS 2026 ULTRA-SMOOTH MOTION & ELEVATED WORKSPACE THEME
    Zero-jank entrance, fluid glass surfaces, tactile buttons & ambient polish
@@ -18677,6 +18700,17 @@ html::view-transition-new(root) {
   box-shadow: 0 2px 8px -1px rgba(13, 148, 136, 0.4) !important;
 }
 
+html[data-portal-theme="dark"] .portal-button--primary {
+  background: var(--portal-teal-dark-cta-action) !important;
+  color: var(--portal-teal-dark-ink) !important;
+}
+
+html[data-portal-theme="dark"] .portal-button--primary:hover:not(:disabled) {
+  background: var(--portal-teal-dark-cta-hover) !important;
+  color: var(--portal-teal-dark-ink) !important;
+  filter: none !important;
+}
+
 /* Subtle elevation for all cards */
 .portal-card {
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
@@ -18697,6 +18731,12 @@ html::view-transition-new(root) {
 @keyframes portalSaaS2026Pulse {
   0% { opacity: 0.65; transform: translateY(0) translateZ(0); }
   100% { opacity: 0.95; transform: translateY(-2px) translateZ(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-workboard-recovery[data-workboard-read-state="loading"] {
+    animation: none !important;
+  }
 }
 
 /* Admin ERP Professional VI 003 -------------------------------------- */
@@ -18747,11 +18787,16 @@ html::view-transition-new(root) {
 
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-titlebar h1 {
   color: var(--portal-ink);
-  font-size: 24px;
+  font-size: clamp(32px, 3vw, 40px);
   line-height: 1.25;
 }
 
-.portal-shell[data-portal-app-kind="admin"] .portal-admin-titlebar p,
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-titlebar p {
+  color: var(--portal-muted);
+  font-size: 16px;
+  line-height: 1.625;
+}
+
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-session-status em {
   color: var(--portal-muted);
   font-size: 14px;
@@ -20692,7 +20737,7 @@ html:not([data-portal-theme="dark"]) .portal-auth-page--admin .portal-auth-card 
   border: 1px solid var(--portal-border) !important;
   border-radius: 12px !important;
   padding: 14px 18px !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-work-queue:hover {
@@ -20715,14 +20760,14 @@ html:not([data-portal-theme="dark"]) .portal-auth-page--admin .portal-auth-card 
 
 /* ERP Module Secondary Navigation Tabs */
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-tabs {
-  display: flex;
+  display: block;
   width: 100%;
   margin: 0 0 18px 0;
-  padding: 0 0 8px 0;
-  border-bottom: 1px solid var(--portal-border);
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  padding: 4px;
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-md, 10px);
+  background: var(--portal-surface-card);
+  overflow: visible;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-tabs::-webkit-scrollbar {
@@ -20730,24 +20775,27 @@ html:not([data-portal-theme="dark"]) .portal-auth-page--admin .portal-auth-card 
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-tabs-list {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
-  min-width: max-content;
+  min-width: 0;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-tab {
-  display: inline-flex;
+  display: flex;
+  width: 100%;
+  min-height: 44px;
   align-items: center;
-  padding: 6px 14px;
+  justify-content: flex-start;
+  padding: 10px 14px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
   color: var(--portal-muted);
   text-decoration: none;
   border: 1px solid transparent;
-  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
-  white-space: nowrap;
+  transition: color 0.16s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: normal;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-tab:hover {
@@ -21022,7 +21070,12 @@ html:not([data-portal-theme="dark"]) .portal-auth-page--admin .portal-auth-card 
 
 @media (prefers-reduced-motion: reduce) {
   .portal-shell[data-portal-app-kind="admin"] .portal-admin-work-queue {
-    transition-duration: 0.01ms;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-admin-tab {
+    transition: none !important;
   }
 }
 
@@ -21639,6 +21692,104 @@ html[data-portal-theme="dark"] .portal-page.portal-music-hub .portal-eyebrow { c
 html[data-portal-theme="dark"] .portal-music-hub .portal-module-card p,
 html[data-portal-theme="dark"] .portal-music-hub .portal-notice--info p { color: var(--portal-teal-dark-ink); }
 
+/* R217-06: keep the two primary music directions obvious without inventing
+ * generation state.  The journey is explanatory; cards still own the real
+ * existing routes and retain their guarded/available boundaries. */
+.portal-music-hub .portal-document-board-workflow-group[data-music-group="creation"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-strong);
+}
+.portal-music-hub .portal-music-hub-journey {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  background: var(--portal-surface);
+}
+.portal-music-hub .portal-music-hub-journey-heading {
+  display: grid;
+  gap: 5px;
+}
+.portal-music-hub .portal-music-hub-journey-heading strong {
+  color: var(--portal-ink);
+  font-size: 15px;
+  line-height: 1.4;
+}
+.portal-music-hub .portal-music-hub-journey-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.portal-music-hub .portal-music-hub-journey-list li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 9px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--portal-border);
+  border-radius: 11px;
+  background: var(--portal-surface-strong);
+}
+.portal-music-hub .portal-music-hub-journey-list li > span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--portal-surface-soft);
+  color: var(--portal-accent-deep);
+  font-size: 10px;
+  font-weight: 800;
+}
+.portal-music-hub .portal-music-hub-journey-list strong {
+  display: block;
+  color: var(--portal-ink);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.portal-music-hub .portal-music-hub-journey-list p,
+.portal-music-hub .portal-music-hub-journey-note {
+  margin: 4px 0 0;
+  color: var(--portal-muted-strong);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.portal-music-hub .portal-music-hub-journey-note {
+  margin-top: 0;
+}
+.portal-music-hub .portal-module-heading {
+  flex-wrap: wrap;
+}
+.portal-music-hub .portal-module-card[data-music-role="primary"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+.portal-music-hub .portal-music-hub-mode-label {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 4px 7px;
+  border: 1px solid var(--portal-border);
+  border-radius: 999px;
+  color: var(--portal-accent-deep);
+  font-size: 10px;
+  font-weight: 760;
+  line-height: 1.25;
+}
+@media (min-width: 821px) {
+  .portal-music-hub .portal-module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 820px) {
+  .portal-music-hub .portal-music-hub-journey-list { grid-template-columns: 1fr; }
+  .portal-music-hub .portal-music-hub-journey { padding: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .portal-music-hub .portal-module-card[data-music-role] { transition: none; }
+}
+
 @media (max-width: 600px) {
   .portal-shell--auth .portal-main {
     width: min(100%, 560px);
@@ -21654,5 +21805,673 @@ html[data-portal-theme="dark"] .portal-music-hub .portal-notice--info p { color:
     min-height: 44px;
     align-items: center;
     padding-block: 8px;
+  }
+}
+
+/* Keep the primary route description on the shared body-text scale. */
+.portal-page > .portal-hero .portal-description,
+.portal-shell[data-portal-app-kind="admin"] .portal-page.portal-admin-home > .portal-hero .portal-description {
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+/* R142: standalone Features route presentation */
+body.portal-body--features .portal-page .portal-feature-group-head h2 {
+  font-size: clamp(24px, 2.4vw, 30px);
+  line-height: 1.25;
+}
+
+body.portal-body--features .portal-page .portal-module-card h3 {
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+body.portal-body--features .portal-page .portal-module-card p {
+  font-size: 16px;
+  line-height: 1.625;
+}
+
+body.portal-body--features .portal-page .portal-module-card-footer {
+  font-size: 14px;
+}
+
+body.portal-body--features .portal-page .portal-catalog-search > label {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+body.portal-body--features .portal-page .portal-catalog-search-result {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+body.portal-body--features .portal-page .portal-feature-count {
+  font-size: 12px;
+}
+
+body.portal-body--features .portal-page .portal-catalog-clear {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+  body.portal-body--features .portal-page .portal-feature-group-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body.portal-body--features .portal-page {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.portal-body--features .portal-page,
+  body.portal-body--features [data-portal-features-motion="enter"] {
+    opacity: 1 !important;
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* R143: keep the optional install control in the landing CTA flow. */
+.portal-dashboard-product-hero #dashboard-product-title {
+  font-size: clamp(32px, 3.4vw, 44px);
+  line-height: 1.25;
+}
+.portal-dashboard-product-hero p {
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+}
+.portal-dashboard-product-hero .portal-product-launcher-card h3 {
+  font-size: 20px !important;
+  line-height: 1.4;
+}
+.portal-dashboard-product-hero .portal-product-launcher-card > div:last-child span {
+  font-size: 14px !important;
+  line-height: 1.5;
+}
+.portal-workspace-command-center .portal-dashboard-overview #workspace-overview-title {
+  font-size: clamp(24px, 2.4vw, 32px);
+  line-height: 1.4;
+}
+#portal-copilot-root .portal-copilot-drawer {
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  height: min(640px, calc(100dvh - 112px));
+  max-height: calc(100dvh - 112px);
+  right: 24px;
+  bottom: 24px;
+  background: var(--portal-surface);
+  color: var(--portal-ink);
+  border-color: var(--portal-border);
+}
+#portal-copilot-root .portal-copilot-header {
+  flex: 0 0 auto;
+  gap: 12px;
+  background: var(--portal-surface-soft);
+  border-color: var(--portal-border);
+}
+#portal-copilot-root .portal-copilot-header > div {
+  min-width: 0;
+}
+#portal-copilot-root .portal-copilot-header > div > div {
+  min-width: 0;
+}
+#portal-copilot-root #portal-copilot-title {
+  color: var(--portal-ink) !important;
+  font-size: 18px !important;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+#portal-copilot-root .portal-copilot-header > div > div > span {
+  color: var(--portal-ink) !important;
+  font-size: 14px !important;
+  line-height: 1.5;
+}
+#portal-copilot-root .portal-copilot-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--portal-radius-md);
+  color: var(--portal-ink);
+  background: var(--portal-surface);
+}
+#portal-copilot-root #portal-copilot-close-btn {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--portal-border) !important;
+  border-radius: var(--portal-radius-md);
+  color: var(--portal-ink) !important;
+  background: var(--portal-surface) !important;
+}
+#portal-copilot-root .portal-copilot-suggestions {
+  flex: 0 1 auto;
+  min-height: 44px;
+  max-height: min(260px, 36dvh);
+  overflow-y: auto;
+  background: var(--portal-surface-soft);
+  border-bottom: 1px solid var(--portal-border);
+}
+#portal-copilot-root .portal-copilot-suggestions > summary {
+  min-height: 44px;
+  padding: 12px 16px;
+  color: var(--portal-ink);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 700;
+  cursor: pointer;
+}
+#portal-copilot-root .portal-copilot-chips,
+#portal-copilot-root .copilot-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  white-space: normal;
+  overflow-x: visible;
+  background: transparent;
+}
+#portal-copilot-root .portal-copilot-chips {
+  padding: 0 12px 12px;
+  border: 0;
+}
+#portal-copilot-root :is(.portal-copilot-chip, .copilot-act-btn, .copilot-prompt-btn) {
+  width: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px 12px;
+  justify-content: flex-start;
+  text-align: left;
+  white-space: normal;
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-md);
+  background: var(--portal-surface);
+  color: var(--portal-ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+#portal-copilot-root .portal-copilot-msgs {
+  min-height: 0;
+  background: var(--portal-surface);
+}
+#portal-copilot-root .copilot-bubble-ai {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: var(--portal-surface-soft);
+  border-color: var(--portal-border);
+  color: var(--portal-ink);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+#portal-copilot-root .copilot-bubble-user {
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+#portal-copilot-root .portal-copilot-form {
+  flex: 0 0 auto;
+  background: var(--portal-surface-soft);
+  border-color: var(--portal-border);
+}
+#portal-copilot-root .portal-copilot-input {
+  width: 0;
+  min-width: 0;
+  min-height: 44px;
+  font-size: 16px;
+  line-height: 1.5;
+  background: var(--portal-surface);
+  color: var(--portal-ink);
+  border-color: var(--portal-border);
+}
+#portal-copilot-root .portal-copilot-input::placeholder {
+  color: var(--portal-muted);
+  opacity: 1;
+}
+#portal-copilot-root .portal-copilot-send {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 14px;
+  background: var(--portal-action);
+  color: var(--portal-on-action);
+}
+html[data-portal-theme="dark"] #portal-copilot-root .portal-copilot-send {
+  background: var(--portal-dark-action);
+  color: var(--portal-dark-on-action);
+}
+#portal-copilot-root :is(button, input, summary):focus-visible {
+  outline: 2px solid var(--portal-action);
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  #portal-copilot-root .portal-copilot-drawer {
+    left: 16px;
+    right: 16px;
+    width: auto;
+    height: min(640px, calc(100dvh - 160px - var(--portal-safe-top, 0px) - var(--portal-safe-bottom, 0px)));
+    max-height: calc(100dvh - 160px - var(--portal-safe-top, 0px) - var(--portal-safe-bottom, 0px));
+    bottom: calc(80px + var(--portal-safe-bottom, 0px));
+  }
+}
+:root [data-portal-install-modal] .portal-install-guide-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: calc(100dvh - 32px - var(--portal-safe-top, 0px) - var(--portal-safe-bottom, 0px));
+  padding: 20px;
+  overflow: hidden;
+  background: var(--portal-surface) !important;
+  color: var(--portal-ink) !important;
+  border-color: var(--portal-border) !important;
+  backdrop-filter: none !important;
+}
+:root [data-portal-install-modal] :is(.portal-modal-head, .portal-modal-foot) {
+  flex: 0 0 auto;
+}
+:root [data-portal-install-modal] .portal-modal-head {
+  gap: 12px;
+}
+:root [data-portal-install-modal] .portal-modal-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+:root [data-portal-install-modal] :is(.portal-modal-head h3, .portal-ios-guide-intro, .portal-ios-step-text, .portal-install-direct-action, .portal-install-direct-action span) {
+  color: var(--portal-ink) !important;
+  line-height: 1.5;
+}
+:root [data-portal-install-modal] .portal-modal-head h3 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 20px;
+}
+:root [data-portal-install-modal] :is(.portal-ios-guide-intro, .portal-ios-step-text, .portal-install-direct-action span) {
+  font-size: 14px;
+}
+:root [data-portal-install-modal] :is(.portal-modal-close, .portal-install-tab-btn, .portal-button) {
+  min-width: 44px;
+  min-height: 44px;
+}
+:root [data-portal-install-modal] :is(.portal-modal-close, .portal-install-tab-btn:not(.is-active)) {
+  color: var(--portal-ink) !important;
+  background: var(--portal-surface-soft);
+  border-color: var(--portal-border) !important;
+}
+:root [data-portal-install-modal] .portal-install-tabs {
+  background: var(--portal-surface-soft) !important;
+  border-color: var(--portal-border) !important;
+}
+:root [data-portal-install-modal] .portal-install-tab-btn.is-active {
+  background: var(--portal-action) !important;
+  color: var(--portal-on-action) !important;
+}
+html[data-portal-theme="dark"] [data-portal-install-modal] .portal-install-tab-btn.is-active {
+  background: var(--portal-dark-action) !important;
+  color: var(--portal-dark-on-action) !important;
+}
+:root [data-portal-install-modal] .portal-modal-close {
+  flex: 0 0 44px;
+}
+:root [data-portal-install-modal] .portal-button--primary {
+  background: var(--portal-action) !important;
+  color: var(--portal-on-action) !important;
+}
+html[data-portal-theme="dark"] [data-portal-install-modal] .portal-button--primary {
+  background: var(--portal-dark-action) !important;
+  color: var(--portal-dark-on-action) !important;
+}
+:root [data-portal-install-modal] .portal-button--quiet {
+  background: var(--portal-surface-soft) !important;
+  color: var(--portal-ink) !important;
+}
+:root [data-portal-install-modal] :is(.portal-ios-steps li, .portal-install-direct-action) {
+  background: var(--portal-surface-soft) !important;
+  border-color: var(--portal-border) !important;
+}
+:root [data-portal-install-modal] .portal-inapp-alert {
+  color: var(--portal-ink) !important;
+  background: var(--portal-surface-soft) !important;
+  border-color: var(--portal-border) !important;
+}
+:root [data-portal-install-modal] .portal-inapp-alert :is(strong, p) {
+  color: var(--portal-ink) !important;
+}
+:root [data-portal-install-modal] .portal-inapp-alert button {
+  color: var(--portal-ink) !important;
+  background: var(--portal-surface) !important;
+}
+.portal-shell[data-portal-app-kind="customer"] .portal-user-dropdown-menu {
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 140px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--portal-surface);
+  border-color: var(--portal-border);
+  color: var(--portal-ink);
+  backdrop-filter: none;
+}
+.portal-shell[data-portal-app-kind="customer"] .portal-user-dropdown-menu :is(.portal-user-dropdown-meta strong, .portal-user-dropdown-item strong) {
+  color: var(--portal-ink) !important;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.portal-shell[data-portal-app-kind="customer"] .portal-user-dropdown-menu :is(.portal-user-dropdown-meta small, .portal-user-dropdown-item small) {
+  color: var(--portal-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.portal-shell[data-portal-app-kind="customer"] .portal-user-dropdown-divider {
+  background: var(--portal-border);
+}
+.portal-customer-utilities {
+  display: grid;
+  gap: 8px;
+  padding: 8px 12px;
+}
+.portal-customer-utility-title {
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 700;
+  color: var(--portal-muted);
+}
+:root .portal-customer-utilities > :is(.portal-pwa-fab-trigger, .portal-copilot-btn, .portal-pwa-install-trigger) {
+  position: static;
+  inset: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  height: auto;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-md);
+  background: var(--portal-surface);
+  color: var(--portal-ink) !important;
+  font-size: 14px;
+  line-height: 1.5;
+  box-shadow: none;
+  backdrop-filter: none;
+  transform: none;
+}
+.portal-customer-utilities :is(.portal-pwa-fab-label, .portal-copilot-btn-label, .portal-pwa-install-label) {
+  display: inline;
+  color: inherit;
+}
+.portal-customer-utilities :is(.portal-copilot-btn-icon, .portal-pwa-fab-icon) {
+  display: grid;
+  flex: 0 0 20px;
+  width: 20px;
+  color: var(--portal-action);
+}
+:root .portal-customer-utilities > .portal-smart-install-banner {
+  display: block;
+  position: static;
+  inset: auto;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 12px;
+  background: var(--portal-surface);
+  color: var(--portal-ink);
+  box-shadow: none;
+  transform: none;
+}
+.portal-customer-utilities .portal-smart-install-inner {
+  flex-direction: column;
+  align-items: stretch;
+}
+.portal-customer-utilities .portal-smart-install-actions {
+  flex-wrap: wrap;
+}
+.portal-customer-utilities :is(.portal-btn-install, .portal-btn-collapse, .portal-btn-dismiss) {
+  min-width: 44px;
+  min-height: 44px;
+}
+.portal-customer-utilities .portal-smart-install-actions .portal-btn-install {
+  width: 100%;
+  color: var(--portal-on-action) !important;
+  background: var(--portal-action) !important;
+  font-size: 14px;
+}
+html[data-portal-theme="dark"] .portal-customer-utilities .portal-smart-install-actions .portal-btn-install {
+  background: var(--portal-dark-action) !important;
+  color: var(--portal-dark-on-action) !important;
+}
+.portal-customer-utilities :is(.portal-smart-install-title, .portal-smart-install-desc) {
+  display: block;
+  color: var(--portal-ink) !important;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+.portal-customer-utilities :is(.portal-btn-collapse, .portal-btn-dismiss) {
+  color: var(--portal-ink) !important;
+  background: var(--portal-surface-soft);
+  border-color: var(--portal-border);
+}
+@media (max-width: 700px) {
+  body:has(:is(.portal-feature-workspace--voice-task, .portal-voice-studio, .portal-voice-studio-detail, .portal-voice-direction-composer)) .portal-header-actions:has([data-portal-customer-utilities]) {
+    padding-right: 0;
+  }
+}
+/* R195: stack the Features heading hierarchy on larger screens. */
+@media (min-width: 701px) {
+  body.portal-body--features [data-features-ready] > .portal-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+/* R188B: readable signals on non-Video Features cards in dark mode. */
+html[data-portal-theme="dark"] body.portal-body--features [data-catalog-group]:not([data-catalog-group="video"]) .portal-module-card .portal-module-icon {
+  color: var(--portal-teal-dark-border-strong);
+}
+html[data-portal-theme="dark"] body.portal-body--features [data-catalog-group]:not([data-catalog-group="video"]) .portal-module-card .portal-engine-label:is([data-engine-mode="web_native"], [data-engine-mode="bot_companion"]) {
+  color: var(--portal-teal-dark-ink);
+}
+html[data-portal-theme="dark"] body.portal-body--features [data-catalog-group]:not([data-catalog-group="video"]) .portal-module-card .portal-readiness-label:is([data-readiness="available"], [data-readiness="planning_only"]) {
+  color: var(--portal-teal-dark-ink);
+}
+/* R188A: readable Features chrome in light theme. */
+html:not([data-portal-theme="dark"]) body.portal-body--features [data-features-ready] > .portal-hero .portal-eyebrow,
+html:not([data-portal-theme="dark"]) body.portal-body--features [data-features-ready] .portal-feature-count {
+  color: var(--portal-action);
+}
+html:not([data-portal-theme="dark"]) body.portal-body--features [data-features-ready] .portal-catalog-search-control {
+  background: var(--portal-input-bg);
+}
+html:not([data-portal-theme="dark"]) body.portal-body--features [data-features-ready] .portal-catalog-search-control > span {
+  color: var(--portal-muted);
+}
+html:not([data-portal-theme="dark"]) body.portal-body--features [data-features-ready] .portal-catalog-search-control .portal-input::placeholder {
+  color: var(--portal-input-placeholder);
+}
+/* R187C: readable current mobile label in customer dark theme. */
+html[data-portal-theme="dark"] .portal-shell[data-portal-app-kind="customer"] .portal-mobile-nav-link[aria-current="page"] .portal-mobile-nav-label {
+  color: var(--portal-teal-dark-ink);
+}
+/* R187B: readable customer sidebar labels in light mode. */
+html:not([data-portal-theme="dark"]) .portal-shell[data-portal-app-kind="customer"] .portal-nav-summary .portal-nav-label,
+html:not([data-portal-theme="dark"]) .portal-shell[data-portal-app-kind="customer"] .portal-sidebar .portal-nav > .portal-nav-label {
+  color: var(--portal-ink);
+}
+html:not([data-portal-theme="dark"]) .portal-shell[data-portal-app-kind="customer"] .portal-sidebar .portal-nav-link:is([aria-current="page"], :hover) {
+  color: var(--portal-action) !important;
+}
+html[data-portal-theme="dark"] .portal-shell[data-portal-app-kind="customer"] .portal-sidebar .portal-nav-link[aria-current="page"] {
+  color: var(--portal-teal-dark-ink) !important;
+}
+/* R187A: readable Dashboard content pairs without changing data or layout. */
+html[data-portal-theme="dark"] .portal-dashboard-app .portal-product-launcher-card > div:last-child > span:first-child {
+  color: var(--portal-brand) !important;
+}
+html[data-portal-theme="dark"] .portal-dashboard-app .portal-dashboard-overview-copy :is(.portal-section-kicker, p),
+html[data-portal-theme="dark"] .portal-dashboard-app .portal-command-center-lane--account .portal-command-center-lane-heading :is(.portal-section-kicker, p),
+html[data-portal-theme="dark"] .portal-dashboard-app .portal-command-center-lane--account .portal-command-center-lane-note,
+html[data-portal-theme="dark"] .portal-dashboard-app .portal-command-center-canonical .portal-command-center-state :is(.portal-section-kicker, p) {
+  color: var(--portal-rail-muted) !important;
+}
+html:not([data-portal-theme="dark"]) .portal-dashboard-app .portal-dashboard-library-grid .portal-empty {
+  background: var(--portal-surface-soft);
+}
+/* R186: readable keyboard skip-link for public/customer dark theme. */
+html[data-portal-theme="dark"] body:has(.portal-shell:not([data-portal-app-kind="admin"])) > .skip-link {
+  background: var(--portal-teal-dark-cta-action);
+  color: var(--portal-teal-dark-ink);
+}
+/* R183: readable mobile preview paragraph leading. */
+@media (max-width: 700px) {
+  .portal-landing-preview-callout p {
+    line-height: 1.65;
+  }
+}
+/* R182: readable landing CTA and active theme labels. */
+html:not([data-portal-theme="dark"]) .portal-landing .portal-button--primary {
+  background: var(--portal-action) !important;
+  filter: none !important;
+}
+html:not([data-portal-theme="dark"]) .portal-landing .portal-button--primary:hover:not(:disabled) {
+  background: var(--portal-action-hover) !important;
+}
+html[data-portal-theme="dark"] .portal-landing-theme-switch button.is-active {
+  border-color: var(--portal-teal-dark-cta-action);
+  background: var(--portal-teal-dark-cta-action);
+  color: var(--portal-teal-dark-ink);
+}
+.portal-landing-final .portal-pwa-fab-trigger--landing-inline {
+  position: static;
+  inset: auto;
+  width: auto;
+  min-width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0 16px;
+  gap: 8px;
+  border-radius: 9999px;
+}
+
+.portal-landing-final .portal-pwa-fab-trigger--landing-inline .portal-pwa-fab-label {
+  display: inline;
+  font-size: 14px;
+}
+
+.portal-landing-final .portal-smart-install-banner--landing-inline {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  width: 100%;
+  max-width: 440px;
+  margin: 0;
+  transform: none;
+}
+
+@media (max-width: 640px) {
+  .portal-landing-final .portal-pwa-fab-trigger--landing-inline {
+    width: fit-content;
+    max-width: 100%;
+    justify-content: center;
+  }
+
+  .portal-landing-final .portal-smart-install-banner--landing-inline {
+    max-width: 100%;
+  }
+}
+
+/* R189B.4: readable Dashboard roles; other routes retain their existing scale. */
+:root .portal-dashboard-app :is(.portal-command-center-lane-heading h2, .portal-command-center-state h2) {
+  font-size: clamp(24px, 2.4vw, 32px);
+  line-height: 1.25;
+}
+:root .portal-dashboard-app :is(h3, .portal-card-title) {
+  font-size: 20px;
+  line-height: 1.4;
+}
+:root .portal-dashboard-app p {
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+}
+:root .portal-dashboard-app .portal-button {
+  font-size: 14px !important;
+  min-height: 44px;
+}
+:root .portal-dashboard-app :is(.portal-section-kicker, .portal-dashboard-overview-stats > div > span, .portal-dashboard-draft small, .portal-metric span, .portal-metric em, .portal-badge) {
+  font-size: 12px;
+  line-height: 1.5;
+}
+:root .portal-dashboard-app :is(.portal-dashboard-overview-stats dt, .portal-command-center-account-facts dt) {
+  font-size: 14px;
+  line-height: 1.5;
+}
+:root .portal-dashboard-app .portal-command-center-account-facts dd {
+  font-size: 16px;
+  line-height: 1.5;
+}
+:root .portal-dashboard-app .portal-data-table th {
+  font-size: 14px;
+  line-height: 1.5;
+}
+:root .portal-dashboard-app .portal-dashboard-account-summary-strip span:not([aria-hidden="true"]) {
+  font-size: 14px !important;
+  line-height: 1.5;
+}
+
+/* R189A: keep Landing text on six readable roles without changing its palette or layout. */
+.portal-landing :is(.portal-landing-brand small, .portal-landing-hero-stage-label, .portal-landing-kicker, .portal-landing-section-heading > span, .portal-landing-trust-copy > span, .portal-landing-preview-steps small, .portal-landing-studio-index) {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.portal-landing :is(.portal-landing-brand strong, .portal-landing-nav-links, .portal-landing-discovery-cta, .portal-landing-final .portal-pwa-fab-trigger, .portal-landing-workflow li > span) {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.portal-landing :is(.portal-landing-nav-links a, .portal-landing-locale-link, .portal-landing-nav-actions .portal-button, .portal-landing-hero-actions .portal-button, .portal-landing-theme-switch button, .portal-landing-preview-bar strong, .portal-landing-preview-heading b, .portal-landing-preview-callout p, .portal-landing-preview-callout strong, .portal-landing-studio em, .portal-landing-spotlight .portal-button, .portal-landing-final .portal-button, .portal-landing-footer) {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.portal-landing :is(.portal-landing-preview-heading > span, .portal-landing-studio strong, .portal-landing-workflow li strong, .portal-landing-trust-grid strong) {
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.portal-landing .portal-landing-feature-strip strong {
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.portal-landing .portal-landing-product-surface-copy {
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.portal-landing :is(.portal-landing-section h2, .portal-landing-workflow h2, .portal-landing-trust h2, .portal-landing-final h2, .portal-landing-spotlight h2) {
+  font-size: 32px;
+  line-height: 1.25;
+}
+
+@media (max-width: 767px) {
+  .portal-landing :is(.portal-landing-section h2, .portal-landing-workflow h2, .portal-landing-trust h2, .portal-landing-final h2, .portal-landing-spotlight h2) {
+    font-size: 28px;
   }
 }

@@ -1,0 +1,120 @@
+task_id: WEBAPP-UIUX-PARITY-20261016
+phase: VERIFY
+objective: "Tiếp tục thực thi tuần tự plan/checklist/spec WebApp standalone; khóa từng lỗi UI/UX/locale bằng bằng chứng source, giữ runtime/live mở khi chưa có delivery."
+scope: "Customer shell, Admin shell, product-lane UI/UX, locale, responsive, accessibility, motion và browser/live evidence."
+out_of_scope: "Bot/Core code, route-engine, provider calls, wallet/Xu, PayOS, production data và backend mutation."
+base_remote_sha: f59eacf63a49534854dc7cde06e5baed6546dc58
+working_branch: webapp-plan-r116
+target_branch: webapp-checklist-r116
+pull_request: 647
+status: VERIFIED_LIVE_PARTIAL
+live_pass: PARTIAL_R217_12_READ_ONLY
+provider_calls: 0
+wallet_mutations: 0
+production_data_mutations: 0
+merge: PR_648_MERGED_506d2b9
+deploy: WORKFLOW_39039077676_SUCCESS_RUNTIME_506d2b9
+ordered_waves:
+  - id: W0
+    spec: R217-00
+    status: CLOSED_WITH_EVIDENCE
+    note: "Baseline remote, prior source/live evidence, protected contracts and blockers recorded."
+  - id: W1
+    spec: R217-01
+    status: SOURCE_GREEN_RUNTIME_OPEN
+    note: "Source fixes locked: landing flex-wrap at <=420px, no landing install banner/FAB before beforeinstallprompt, and install-guide modal uses navy/teal surfaces without black backdrop/tab fills. Focused 39/39 and full Node 470/470 were green before the latest modal regression, which also passes separately. Post-delivery mobile evidence at 390x844 (light/dark) now confirms no horizontal overflow, no visible PWA FAB and stable header/hero rendering; the remaining W1 TODOs are the broader 320/375/414/768/1024 type/spacing/contrast matrix, not the previously reported delivery drift."
+  - id: W2
+    spec: R217-02
+    status: SOURCE_GREEN_RUNTIME_OPEN
+    note: "Locale source focused gates pass; SOURCE-LOCALE-03→19 đã khóa theo nhóm hẹp. SOURCE-LOCALE-20A/20B/20C nối Music Prompt Composer, Music Direction Presets và SFX Cue Sheet vào catalogue cân bằng VI/EN/ZH; Channel Strategy 2/2, Workboard 4/4, Composer 2/2, Direction 2/2, SFX 2/2, focused Content/Workboard/Free/Memory/Project/Publish/Campaign 28/28, focused Image/media 54/54, full Node 502/502, baseline 500/500, NEW_FAILURES=0. Voice/SubDub guarded handoff discoverability source fixed, SubDub 11/11 và Voice 47/47; Admin Provider/Topup/Publishing/Growth/Trends source fixed, focused 7/7, full Node 509/509; HEAD_SHA=80e43861b6be4c92b9c9a4cbcb7fc19dd2841218 đã push lên webapp-checklist-r116; chưa merge/deploy/live. Python contract chưa chạy do thiếu python/py; browser/AX/live locale recheck còn mở."
+  - id: W3
+    spec: R217-03
+    status: SOURCE_GREEN_RUNTIME_OPEN
+    note: "Auth entry layout and responsive source contracts fixed; auth/customer/motion source 31/31 and focused auth 16/16 pass. Browser route matrix and pytest remain unavailable."
+  - id: W4
+    spec: R217-04
+    status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
+    name: image
+    note: "SOURCE-IMAGE-01 adds a truthful vertical create/edit entry on /image/create with VI/EN/ZH copy; no upload/output/capability added. Source audit SOURCE-IMAGE-02: image_create job API exists but no reference field; image_transform and image_upscale bridges exist yet source runtime matrix records BLOCKED_PROVIDER_ENTITLEMENT; /image/edit is deterministic Image Enhance. No provider/entitlement action. R217-04 stays TODO for browser DOM/AX, unified workspace, references, variants, preview/history and verified outputs."
+  - id: W4
+    spec: R217-05
+    status: SOURCE_GREEN_RUNTIME_OPEN
+    name: voice
+    note: "Voice Studio source UI now presents one clear three-lane rail: default voice -> /voice/tts, saved voice -> /voice/saved, add voice -> /voice/clone. VI/EN/ZH use the shared customerVoiceStudio catalogue; Voice Studio surfaces were aligned to blue/navy portal colors with mobile one-column stacking. Focused Voice/SubDub/audio presentation batch is 126/126 green; TTS/clone/preview/output and real Voice Library handoff remain guarded and unverified at runtime."
+  - id: W4
+    spec: R217-06
+    status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
+    name: music
+    note: "Music hub source presentation now has a three-step journey, two primary directions (background music/song with lyrics) and a supporting SFX lane; six existing routes are preserved, VI/EN/ZH copy is balanced, desktop is capped at two columns and mobile stacks at max-width 820px. Focused Music hub/library 16/16, node-check 2/2 and diff-check green; generation, preview, export, history and real output remain guarded."
+  - id: W4
+    spec: R217-07
+    status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
+    name: subdub
+    note: "Four modes plus guarded Smart Multi one/two/many mapping, Voice Library selector and ISO custom target-language input are now source-presented; runtime bridge/upload/output remains guarded."
+    closeout: "2026-10-17 source closeout: one-screen tabs, keyboard navigation, local original/dubbing volume controls and guarded Voice Library handoff verified by SubDub 11/11 focused assertions; runtime Voice data, upload and real dubbing output remain open."
+  - id: W4
+    spec: R217-08
+    status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
+    name: product-video
+    note: "2026-10-17 source/browser closeout: /tools/video now has 4 vertical lanes across 10 unique routes, lane input/output contracts, a 7-step input→plan→quote→confirm→progress→result→recovery journey and explicit AI/manual editing boundary. The /video/finishing primary CTA is explicit. Focused video presentation test 11/11 and full Node 523/523 pass; CI run 39017696660 checked 6/6 hubs and captured 18 screenshots. Upload/render/delivery/real artifact runtime remains open."
+  - id: W4
+    spec: R217-09A
+    status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
+    name: content-workboard-free-tools
+    note: "2026-10-17 source closeout: Content Studio, Workboard, Free Tools, Free Prompt Gallery, Memory, Projects, Publish Review và Campaign focused 26/26; full Node 522/522. Browser/AX/responsive runtime và dữ liệu ghi thật còn mở; không cần thêm source change trong wave này."
+  - id: W5
+    spec: R217-09
+    status: SOURCE_PARTIAL_RUNTIME_OPEN
+    name: admin-customer-visibility
+    note: "2026-10-17 source recheck: all admin-*.test.mjs focused 21/21 and full Node 522/522. Fixed chrome, vertical navigation, locale, Customer 360, Provider, manual top-up, finance/domain centres and mobile harmony are source-green; canonical-admin fixture, server permission enforcement, customer request/job/report references, wallet mutation and browser runtime remain deferred."
+  - id: W6
+    spec: R217-10
+    status: SOURCE_GREEN_RUNTIME_OPEN
+    note: "2026-10-17 source closeout: HEAD_SHA=2d756b8db62f74cb331065c3b9ec74691f06a8cd pushed to PR #647; --portal-motion-fast 160ms (micro 150–300ms and faster than 220ms entry), auth 680ms and landing hero 980ms preserved; focused motion/auth/PWA 43/43, full Node 523/523, Auth/Motion node-check 2/2 and diff-check green. Three Python motion contracts were synchronized to 160ms but Python/pytest is unavailable. CI run 39015089989 then exposed stale migration provenance (recorded 4dbdf2…, current 8ee8c913…); refresh is prepared at HEAD fe146c191ffd7abc2d6d4d8a679e3630ccea1a0e and local verify returned ok. Runtime FPS/CLS/LCP/INP trace, AX keyboard, scroll and delivery evidence remain open."
+  - id: W7
+    spec: R217-11
+    status: CLOSED_WITH_EVIDENCE
+    note: "2026-10-17: local bundled Python vẫn thiếu fastapi/uvicorn/pytest/websockets nên không có local runtime claim. CI run 39034978224 trên HEAD 7942548 hoàn tất Success trong 8m19s; Verify Web App job 117402852575 và Authenticated WebApp QA job 117403448516 đều xanh, authenticated job chạy 5m12s. Ma trận authenticated giữ 456/456 completed, 456/456 passed, records_failed=0; HTTP/route/locale/theme mismatch=0; console/page/request/external/forbidden mutation=0; reload mismatch=0; horizontal_overflow=false; provider_calls=0, wallet_mutations=0, production_data_mutations=0. Cảnh báo duy nhất là Node 20/Ubuntu deprecation. Artifact authenticated digest sha256:5ca1ad0448bcd3388695ffee032a4c99b3493fa59774b66e0725b385ef824d37; browser evidence digest sha256:d61a2372b3683c658c6ad1c606943198bfe558454151305df7d5b3d9af592ef7. R217-11 đóng bằng chứng mới nhất; local trace/FPS và real output vẫn thuộc spec khác."
+  - id: W8
+    spec: R217-12
+    status: CLOSED_WITH_EVIDENCE
+    note: "2026-10-17 closeout: PR #648 merge 506d2b9 passed main quality run 39038471041 (Verify Web App + Authenticated WebApp QA, 456/456). Deploy workflow 39039077676 passed forward-only guard, tracked backup, active Web/Nginx services and health payload TOAN AAS Web App/app.py. Live read-only GET/navigation confirmed /features?lang=vi|en|zh preserve locale in encoded next targets, welcome uses fingerprint local-00d9a64e11a5031705e6, and login vi/en/zh titles are correct with legacy install copy absent. Production viewport-capable recheck at 390x844 in both light/dark then closed R216-L/R216-P/R216-H and LIVE-UI-01/LIVE-UI-02: scrollWidth=clientWidth=390, no PWA selector/FAB, no console error/warning, and mobile auth SVG wrappers measured 18px/16px/18px. PROVIDER_CALLS=0, WALLET_MUTATIONS=0, PRODUCTION_DATA_MUTATIONS=0."
+  - id: W9
+    spec: R217-13
+    status: DEFERRED
+    note: "Bridge, real output, Smart Multi backend, autopost, support, admin mutation and wallet remain separate Owner-gated work."
+protected_contracts:
+  - routes
+  - actions
+  - fields
+  - capabilities
+  - csrf
+  - idempotency
+  - revisions
+  - dynamic_server_data
+created_files:
+  - docs/superpowers/plans/2026-10-16-webapp-uiux-product-parity-master-plan-r217.md
+  - reports/audit/WEBAPP-UIUX-PARITY-MASTER-CHECKLIST-20261016.md
+  - .agents/state/WEBAPP-UIUX-PARITY-PLAN-20261016.yaml
+  - docs/superpowers/specs/2026-10-16-r217-00-evidence-ledger.md
+  - docs/superpowers/specs/2026-10-16-r217-01-shell-responsive-foundation.md
+  - docs/superpowers/specs/2026-10-16-r217-02-locale-purity.md
+  - docs/superpowers/specs/2026-10-16-r217-03-auth-accessibility.md
+  - docs/superpowers/specs/2026-10-16-r217-04-image-lane.md
+  - docs/superpowers/specs/2026-10-16-r217-05-voice-lane.md
+  - docs/superpowers/specs/2026-10-16-r217-06-music-lane.md
+  - docs/superpowers/specs/2026-10-16-r217-07-subdub-lane.md
+  - docs/superpowers/specs/2026-10-16-r217-08-product-video-lane.md
+  - docs/superpowers/specs/2026-10-16-r217-09a-content-workboard-free-tools.md
+  - docs/superpowers/specs/2026-10-16-r217-09-admin-customer-visibility.md
+  - docs/superpowers/specs/2026-10-16-r217-10-motion-performance.md
+  - docs/superpowers/specs/2026-10-16-r217-11-authenticated-qa-matrix.md
+  - docs/superpowers/specs/2026-10-16-r217-12-live-readonly-recheck.md
+  - docs/superpowers/specs/2026-10-16-r217-13-deferred-technical-register.md
+  - scripts/ci/run_authenticated_qa_matrix.py
+  - tests/test_r21711_authenticated_qa_runner_contract.py
+  - tests/admin-generic-fixed-chrome-locale.test.mjs
+  - tests/image-studio-detail-locale-purity.test.mjs
+  - tests/image-operation-locale-purity.test.mjs
+last_ci_run: "39040466680 SUCCESS on PR #649: Verify Web App job 117418793017 and Authenticated WebApp QA job 117419357572 passed; authenticated matrix completed 456/456 with safety mutations 0. PR #649 merged as 3acd2416044904a7c3f0e6b43be8a4fe68e7b066. Post-merge live mobile read-only probe at 390x844 (light/dark) closed the production viewport/PWA evidence gap; no provider, wallet or production-data action."
+next_action: "R217-12 is CLOSED_WITH_EVIDENCE. Continue the next ordered UI/UX item: finish the remaining R217-01 responsive type/spacing/contrast matrix, then proceed to the open browser/AX locale and product-lane presentation checks; keep provider, wallet, payment, production-data and real-output bridges deferred."

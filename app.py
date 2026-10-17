@@ -2856,7 +2856,13 @@ async def page(page_path: str, request: Request):
             portal_interface_locale = copyfast_auth.normalize_interface_locale(account.get("locale"))
         except HTTPException:
             # A portal shell without a signed session redirects to login with return target
-            return RedirectResponse(f"/login?next={quote(normalized, safe='/')}", status_code=307)
+            requested_locale = request.query_params.get("lang")
+            return_target = (
+                f"{normalized}?lang={requested_locale}"
+                if requested_locale in PUBLIC_ACCESS_INTERFACE_LOCALES
+                else normalized
+            )
+            return RedirectResponse(f"/login?next={quote(return_target, safe='/')}", status_code=307)
 
         linked = bool(account.get("canonical_user_id"))
         if linked and normalized == "/onboarding":

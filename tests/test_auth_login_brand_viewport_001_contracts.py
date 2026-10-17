@@ -7,11 +7,15 @@ ROOT = Path(__file__).resolve().parents[1]
 THEME = (ROOT / "static" / "portal" / "portal-theme.css").read_text(encoding="utf-8")
 WORKFLOW = (ROOT / ".github" / "workflows" / "webapp-quality.yml").read_text(encoding="utf-8")
 MARKER = "/* AUTH-LOGIN-BRAND-VIEWPORT-001 */"
+AUTH_SECTION_END = "\n/* Keep the primary route description on the shared body-text scale. */"
 
 
 def test_auth_brand_and_card_keep_measured_geometry_without_touching_behavior() -> None:
     assert THEME.count(MARKER) == 1
-    hotfix = THEME[THEME.index(MARKER) :]
+    start = THEME.index(MARKER)
+    end = THEME.find(AUTH_SECTION_END, start + len(MARKER))
+    assert end != -1, "Auth section boundary not found"
+    hotfix = THEME[start:end]
 
     for token in (
         ".portal-shell--auth .portal-main",

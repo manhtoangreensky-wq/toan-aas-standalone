@@ -15,9 +15,11 @@ def _auth_renderer() -> str:
 
 
 def _final_auth_mobile_layer() -> str:
-    semantic = THEME.index("/* Teal–Sky Product Redesign -- final semantic layer. */")
-    start = THEME.index("@media (max-width: 1080px) {", semantic)
-    end = THEME.index("@media (max-width: 390px) {", start)
+    marker = THEME.index("/* ADMIN-LOGIN-RESPONSIVE-001 */")
+    start = marker
+    # Stop before the later Admin shell responsive layer. The auth contract must
+    # not inspect the Admin sidebar's fixed drawer rule.
+    end = THEME.index("@media (max-width: 980px) {", start)
     return THEME[start:end]
 
 
@@ -59,7 +61,7 @@ def test_auth_header_uses_three_normal_flow_rows_at_nine_hundred() -> None:
     assert marker in THEME
     layer = THEME[THEME.index(marker):]
     start = layer.index("@media (max-width: 900px) {")
-    mobile = layer[start:]
+    mobile = layer[start:layer.index("@media (max-width: 390px) {", start)]
 
     assert "grid-template-areas:" in mobile
     assert '"brand"' in mobile

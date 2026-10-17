@@ -18,7 +18,7 @@ assert.notEqual(rendererEnd, -1, "SubDub renderer boundary is present");
 
 const helperSource = portalSource.slice(helperStart, helperEnd);
 const rendererSource = portalSource.slice(rendererStart, rendererEnd);
-const renderSubDubHelpers = new Function(`${helperSource}\nreturn { updateSubDubModeSelection, updateSubDubLocalVolume };`)();
+const renderSubDubHelpers = new Function(`${helperSource}\nreturn { updateSubDubModeSelection, updateSubDubLocalVolume, handleSubDubModeKeydown };`)();
 const escapeHtml = (value) => String(value ?? "")
   .replaceAll("&", "&amp;")
   .replaceAll("<", "&lt;")
@@ -52,8 +52,15 @@ test("SubDub mode selection stays on one screen and exposes all four choices", (
 
   assert.equal((html.match(/data-subdub-mode-select=/g) || []).length, 4);
   assert.equal((html.match(/data-subdub-mode-panel=/g) || []).length, 4);
+  assert.match(html, /role="tablist"[^>]*aria-orientation="horizontal"/);
+  assert.equal((html.match(/role="tab"/g) || []).length, 4);
+  assert.equal((html.match(/role="tabpanel"/g) || []).length, 4);
+  assert.match(html, /data-subdub-mode-select="DUBBING_ONLY"[^>]*aria-selected="true"[^>]*tabindex="0"/);
+  assert.match(html, /data-subdub-mode-select="SUBTITLE_ONLY"[^>]*aria-selected="false"[^>]*tabindex="-1"/);
   assert.match(html, /data-subdub-mode-select="DUBBING_ONLY"[^>]*aria-pressed="true"/);
   assert.match(html, /data-subdub-mode-panel="SUBTITLE_ONLY"[^>]*hidden/);
+  assert.match(html, /data-subdub-mode-panel="SUBTITLE_ONLY"[^>]*aria-hidden="true"/);
+  assert.match(html, /data-subdub-mode-panel="DUBBING_ONLY"[^>]*aria-hidden="false"/);
   assert.doesNotMatch(html, /href="\/subdub\?mode=/);
 });
 
@@ -142,7 +149,7 @@ test("mode changes update the selected panel, review summary, and query without 
     classList: { toggle(_className, enabled) { this.owner.active = enabled; }, owner: null }
   }));
   buttons.forEach((button) => { button.classList.owner = button; });
-  const panels = buttons.map((button) => ({ mode: button.key, hidden: true, getAttribute() { return this.mode; } }));
+  const panels = buttons.map((button) => ({ mode: button.key, hidden: true, attributes: {}, getAttribute(name) { return name === "data-subdub-mode-panel" ? this.mode : this.attributes[name] || ""; }, setAttribute(name, value) { this.attributes[name] = value; } }));
   const summary = { textContent: "" };
   const page = {
     querySelectorAll(selector) { return selector === "[data-subdub-mode-select]" ? buttons : panels; },
@@ -168,6 +175,76 @@ test("mode changes update the selected panel, review summary, and query without 
   assert.equal(finalUrl.hash, "#hub");
 });
 
+test("SubDub mode tabs support arrow-key navigation without leaving the hub", () => {
+  const parsed = new URL("https://app.example/subdub?lang=vi&mode=subtitle_only");
+  const buttons = ["SUBTITLE_ONLY", "TRANSLATED_SUBTITLE", "DUBBING_ONLY", "SUBTITLE_PLUS_DUBBING"].map((key, index) => ({
+    key,
+    attributes: {
+      "data-subdub-mode-select": key,
+      "data-subdub-mode-query": key.toLowerCase(),
+      "data-subdub-summary-label": `${key} summary`,
+      "aria-pressed": index === 0 ? "true" : "false",
+      "aria-selected": index === 0 ? "true" : "false",
+      tabindex: index === 0 ? "0" : "-1"
+    },
+    focused: false,
+    closest() { return page; },
+    getAttribute(name) { return this.attributes[name] ?? ""; },
+    setAttribute(name, value) { this.attributes[name] = value; },
+    focus() { this.focused = true; },
+    classList: { toggle() {} }
+  }));
+  const panels = buttons.map((button, index) => ({
+    mode: button.key,
+    hidden: index !== 0,
+    attributes: { "aria-hidden": index === 0 ? "false" : "true" },
+    getAttribute(name) { return name === "data-subdub-mode-panel" ? this.mode : this.attributes[name] ?? ""; },
+    setAttribute(name, value) { this.attributes[name] = value; }
+  }));
+  const summary = { textContent: "SUBTITLE_ONLY summary" };
+  const page = {
+    querySelectorAll(selector) {
+      return selector === "[data-subdub-mode-select]" ? buttons : panels;
+    },
+    querySelector() { return summary; }
+  };
+  let replacedUrl = "";
+  const browserWindow = {
+    URL,
+    location: { href: parsed.toString() },
+    history: { state: null, replaceState(_state, _title, url) { replacedUrl = url; } }
+  };
+  const press = (fromIndex, key) => {
+    let prevented = false;
+    const handled = renderSubDubHelpers.handleSubDubModeKeydown(buttons[fromIndex], {
+      key,
+      preventDefault() { prevented = true; }
+    }, browserWindow);
+    assert.equal(handled, true, `${key} is handled`);
+    assert.equal(prevented, true, `${key} prevents the browser's default tab movement`);
+  };
+  press(0, "ArrowRight");
+  assert.equal(buttons[1].focused, true);
+  assert.equal(buttons[1].attributes["aria-selected"], "true");
+  assert.equal(buttons[0].attributes["tabindex"], "-1");
+  assert.equal(panels[0].hidden, true);
+  assert.equal(panels[1].hidden, false);
+  assert.equal(new URL(replacedUrl).searchParams.get("mode"), "translated_subtitle");
+  press(1, "ArrowDown");
+  assert.equal(buttons[2].attributes["aria-selected"], "true");
+  press(2, "ArrowLeft");
+  assert.equal(buttons[1].attributes["aria-selected"], "true");
+  press(1, "ArrowUp");
+  assert.equal(buttons[0].attributes["aria-selected"], "true");
+  press(2, "Home");
+  assert.equal(buttons[0].attributes["aria-selected"], "true");
+  press(0, "End");
+  assert.equal(buttons[3].focused, true);
+  assert.equal(buttons[3].attributes["aria-selected"], "true");
+  assert.equal(panels[3].hidden, false);
+  assert.equal(new URL(replacedUrl).searchParams.get("mode"), "subtitle_plus_dubbing");
+});
+
 test("local volume input updates its visible value only", () => {
   const output = { textContent: "100%" };
   const panel = { querySelector() { return output; } };
@@ -179,4 +256,18 @@ test("local volume input updates its visible value only", () => {
 
   assert.equal(renderSubDubHelpers.updateSubDubLocalVolume(input), true);
   assert.equal(output.textContent, "42%");
+});
+
+test("SubDub exposes guarded Smart Multi speaker mapping and Voice Library controls", () => {
+  const html = renderSubDub("/subdub?mode=subtitle_plus_dubbing");
+  assert.match(html, /data-subdub-smart-multi/);
+  assert.match(html, /name="speaker_mode"/);
+  assert.match(html, /one|two|many|auto/i);
+  assert.match(html, /name="voice_profile_id"/);
+  assert.match(html, /Voice Library|Voice Vault|Thư viện giọng|Kho giọng/);
+  assert.match(html, /name="target_language_custom"/);
+  assert.match(html, /pattern="\[a-zA-Z\]\{2,5\}/);
+  assert.match(html, /data-status="guarded"/);
+  assert.equal((html.match(/data-subdub-voice-library-link/g) || []).length, 2);
+  assert.equal((html.match(/href="\/voice-studio"/g) || []).length, 2);
 });

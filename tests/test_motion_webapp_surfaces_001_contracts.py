@@ -113,7 +113,7 @@ def test_shared_tokens_pending_visibility_stagger_and_six_item_cap() -> None:
     theme = _read(THEME_PATH)
     motion = _read(MOTION_PATH)
     for declaration in (
-        "--portal-motion-fast: 140ms;",
+        "--portal-motion-fast: 160ms;",
         "--portal-motion-base: 220ms;",
         "--portal-motion-slow: 420ms;",
         "--portal-motion-ease-emphasis: cubic-bezier(.16,1,.3,1);",

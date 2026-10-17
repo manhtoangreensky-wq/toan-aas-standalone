@@ -23,6 +23,11 @@ const page = { path: route, access: 'member', type: 'feature', action: 'feature-
 ] };
 const visible = html => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 const expected = { vi: { form: 'Mô tả hình ảnh', report: 'Báo cáo và kết quả' }, en: { form: 'Image description', report: 'Report and results' }, zh: { form: '图像描述', report: '报告与结果' } };
+const expectedImageTasks = {
+  vi: { nav: 'Chọn tác vụ hình ảnh', create: 'Tạo ảnh AI', edit: 'Chỉnh sửa ảnh', current: 'Đang ở trang này', editNote: 'Chỉnh sửa ảnh bằng AI chưa khả dụng.' },
+  en: { nav: 'Choose an image task', create: 'Create AI images', edit: 'Edit an image', current: 'Current page', editNote: 'AI image editing is not currently available.' },
+  zh: { nav: '选择图像任务', create: '创建 AI 图像', edit: '编辑图像', current: '当前页面', editNote: '当前尚不支持 AI 图像编辑。' }
+};
 function model(locale) {
   const ctx = {
     manifest: { [route]: page }, FEATURE_PAGE_KEY_ALIASES: { [route]: 'image_create' }, WEB_LOCAL_ACTIONS: new Set(),
@@ -55,6 +60,17 @@ const quote = (amount = 8) => ({ phase: 'estimate', status: 'awaiting_confirm', 
 
 for (const locale of ['vi', 'en', 'zh']) {
   const { ctx, render } = model(locale);
+  test(`Image creation page exposes a truthful, localized create/edit path in ${locale}`, () => {
+    const html = render(null), text = visible(html), copy = expectedImageTasks[locale];
+    assert.match(html, /<nav[^>]*aria-label="[^"]+"[^>]*data-image-workflow-nav/);
+    const workflowNav = html.match(/<nav[^>]*data-image-workflow-nav[^>]*>/)?.[0] || '';
+    assert.ok(workflowNav.includes(`aria-label="${copy.nav}"`), `The navigation label follows ${locale}: ${workflowNav}`);
+    assert.match(html, /href="\/image\/create"[^>]*aria-current="page"/);
+    assert.match(html, /href="\/image\/edit"/);
+    const missingCopy = Object.entries(copy).filter(([key, value]) => key !== 'nav' && !text.includes(value)).map(([, value]) => value);
+    assert.deepEqual(missingCopy, [], `Missing localized workflow copy in ${locale}`);
+    assert.ok(html.indexOf('href="/image/create"') < html.indexOf('href="/image/edit"'), 'Creation remains the first task in the workflow list');
+  });
   test(`Image fixed form and empty report follow ${locale} while preserving real field contracts`, () => {
     const html = render(null), text = visible(html);
     assert.ok(text.includes(expected[locale].form), 'The description label follows the selected locale');

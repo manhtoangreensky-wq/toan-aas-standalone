@@ -34,30 +34,30 @@ def test_mount_marks_customer_and_admin_app_shells_without_changing_route_author
 def test_customer_dock_uses_app_words_in_all_reviewed_interface_locales() -> None:
     dock = _section(PORTAL, "function renderMobileNav(page) {", "function isAdminMobileSurface(page)")
 
-    assert '["dashboard", "/dashboard", uiText("mobile.home", "Trang chủ"), ICONS.dashboard]' in dock
-    assert '["studio", "/features", uiText("mobile.create", "Tạo"), ICONS.prompt]' in dock
-    assert '["jobs", "/jobs", uiText("mobile.work", "Công việc"), ICONS.jobs]' in dock
-    assert '["assets", "/assets", uiText("mobile.library", "Thư viện"), ICONS.assets]' in dock
+    assert '["studio", "/studio", uiText("mobile.studio", "Công cụ"), ICONS.video]' in dock
+    assert '["publishing", "/publishing", uiText("mobile.publishing", "Đăng bài"), ICONS.reports]' in dock
+    assert '["projects", "/projects", uiText("mobile.projects", "Dự án"), ICONS.dashboard]' in dock
+    assert '["wallet", "/wallet", uiText("mobile.wallet", "Ví Xu"), ICONS.wallet]' in dock
     assert '["account", "/account", uiText("mobile.account", "Tài khoản"), ICONS.account]' in dock
 
     for locale_values in (
         (
-            '"mobile.home": "Trang chủ"',
-            '"mobile.create": "Tạo"',
-            '"mobile.work": "Công việc"',
-            '"mobile.library": "Thư viện"',
+            '"mobile.studio": "Công cụ"',
+            '"mobile.publishing": "Đăng bài"',
+            '"mobile.projects": "Dự án"',
+            '"mobile.wallet": "Ví Xu"',
         ),
         (
-            '"mobile.home": "Home"',
-            '"mobile.create": "Create"',
-            '"mobile.work": "Work"',
-            '"mobile.library": "Library"',
+            '"mobile.studio": "Studio"',
+            '"mobile.publishing": "Publishing"',
+            '"mobile.projects": "Projects"',
+            '"mobile.wallet": "Credits"',
         ),
         (
-            '"mobile.home": "首页"',
-            '"mobile.create": "创建"',
-            '"mobile.work": "工作"',
-            '"mobile.library": "资源库"',
+            '"mobile.studio": "工作室"',
+            '"mobile.publishing": "发布"',
+            '"mobile.projects": "项目"',
+            '"mobile.wallet": "积分"',
         ),
     ):
         for value in locale_values:

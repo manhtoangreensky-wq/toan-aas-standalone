@@ -213,7 +213,8 @@ def test_image_studio_is_truthful_about_no_execution_or_media_output() -> None:
 
     assert "const writable = state === \"draft\";" in PORTAL
     assert 'const artboardWritable = String(artboard.state || "") === "draft";' in PORTAL
-    assert "Direction & self-review, không tạo ảnh" in PORTAL
+    assert 'imageStudioText("boundary.title"' in PORTAL
+    assert 'imageStudioText("boundary.body"' in PORTAL
     assert "Không có raw URL, blob, thumbnail, provider call, preview hoặc output." in PORTAL
     assert "Resize & Enhance là utility Web-native riêng" in PORTAL
     # List, detail and version DTOs intentionally expose bounded excerpts;

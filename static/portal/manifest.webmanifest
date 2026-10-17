@@ -1,6 +1,6 @@
 {
   "id": "/",
-  "name": "TOAN AAS - Autonomous Automation Suite",
+  "name": "TOAN AAS",
   "short_name": "TOAN AAS",
   "description": "Nền tảng Tự động hóa Đa phương tiện & Trợ lý Thông minh TOAN AAS",
   "lang": "vi",
@@ -15,20 +15,20 @@
   "shortcuts": [
     {
       "name": "Tổng quan",
-      "short_name": "Dashboard",
-      "description": "Mở tổng quan workspace TOAN AAS.",
+      "short_name": "Tổng quan",
+      "description": "Mở không gian làm việc TOAN AAS.",
       "url": "/dashboard"
     },
     {
-      "name": "Project Center",
-      "short_name": "Projects",
-      "description": "Mở các project riêng tư của bạn.",
+      "name": "Dự án",
+      "short_name": "Dự án",
+      "description": "Mở danh sách dự án riêng tư của bạn.",
       "url": "/projects"
     },
     {
-      "name": "Tạo workflow",
+      "name": "Tạo quy trình",
       "short_name": "Tạo mới",
-      "description": "Chọn một workflow trong TOAN AAS.",
+      "description": "Chọn một quy trình trong TOAN AAS.",
       "url": "/features"
     }
   ],

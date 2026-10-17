@@ -78,7 +78,7 @@ def test_customer_tokens_delta_stagger_containment_and_reduced_motion() -> None:
     assert '[data-portal-surface="customer"]' in block
     assert 'data-portal-app-kind="customer"' not in block
     assert re.search(r"(?:transition|animation)[^;]*(?:width|height|top|left)", block) is None
-    for shared in ("--portal-motion-fast: 140ms;", "--portal-motion-base: 220ms;", "--portal-motion-distance: 10px;"):
+    for shared in ("--portal-motion-fast: 160ms;", "--portal-motion-base: 220ms;", "--portal-motion-distance: 10px;"):
         assert shared in THEME[: THEME.index(MARKER)]
 
 
@@ -164,8 +164,10 @@ def test_split_features_owns_small_motion_without_loading_full_bundle() -> None:
         'else entry.target.classList.add("is-pending");',
         'item.classList.add("portal-workspace-motion-item")', ".slice(0, 6)",
         "const scheduleReveal = (target) => {", "new WeakSet()",
-        "window.requestAnimationFrame(() => window.requestAnimationFrame(() => reveal(target)))",
-        "window.requestAnimationFrame(() => window.requestAnimationFrame(activate))",
+        "firstFrame = window.requestAnimationFrame(() => {",
+        "secondFrame = window.requestAnimationFrame(() => {",
+        "entranceFrameOne = window.requestAnimationFrame(() => {",
+        "entranceFrameTwo = window.requestAnimationFrame(() => {",
         "targets.forEach((target) => observer.observe(target));",
         "if (featureMotionReduced()) return;", "mountFeatureMotion(main);",
     ):
