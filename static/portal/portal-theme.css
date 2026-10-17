@@ -21692,6 +21692,104 @@ html[data-portal-theme="dark"] .portal-page.portal-music-hub .portal-eyebrow { c
 html[data-portal-theme="dark"] .portal-music-hub .portal-module-card p,
 html[data-portal-theme="dark"] .portal-music-hub .portal-notice--info p { color: var(--portal-teal-dark-ink); }
 
+/* R217-06: keep the two primary music directions obvious without inventing
+ * generation state.  The journey is explanatory; cards still own the real
+ * existing routes and retain their guarded/available boundaries. */
+.portal-music-hub .portal-document-board-workflow-group[data-music-group="creation"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-strong);
+}
+.portal-music-hub .portal-music-hub-journey {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  background: var(--portal-surface);
+}
+.portal-music-hub .portal-music-hub-journey-heading {
+  display: grid;
+  gap: 5px;
+}
+.portal-music-hub .portal-music-hub-journey-heading strong {
+  color: var(--portal-ink);
+  font-size: 15px;
+  line-height: 1.4;
+}
+.portal-music-hub .portal-music-hub-journey-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.portal-music-hub .portal-music-hub-journey-list li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 9px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--portal-border);
+  border-radius: 11px;
+  background: var(--portal-surface-strong);
+}
+.portal-music-hub .portal-music-hub-journey-list li > span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--portal-surface-soft);
+  color: var(--portal-accent-deep);
+  font-size: 10px;
+  font-weight: 800;
+}
+.portal-music-hub .portal-music-hub-journey-list strong {
+  display: block;
+  color: var(--portal-ink);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.portal-music-hub .portal-music-hub-journey-list p,
+.portal-music-hub .portal-music-hub-journey-note {
+  margin: 4px 0 0;
+  color: var(--portal-muted-strong);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.portal-music-hub .portal-music-hub-journey-note {
+  margin-top: 0;
+}
+.portal-music-hub .portal-module-heading {
+  flex-wrap: wrap;
+}
+.portal-music-hub .portal-module-card[data-music-role="primary"] {
+  border-color: var(--portal-border-strong);
+  background: var(--portal-surface-soft);
+}
+.portal-music-hub .portal-music-hub-mode-label {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 4px 7px;
+  border: 1px solid var(--portal-border);
+  border-radius: 999px;
+  color: var(--portal-accent-deep);
+  font-size: 10px;
+  font-weight: 760;
+  line-height: 1.25;
+}
+@media (min-width: 821px) {
+  .portal-music-hub .portal-module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 820px) {
+  .portal-music-hub .portal-music-hub-journey-list { grid-template-columns: 1fr; }
+  .portal-music-hub .portal-music-hub-journey { padding: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .portal-music-hub .portal-module-card[data-music-role] { transition: none; }
+}
+
 @media (max-width: 600px) {
   .portal-shell--auth .portal-main {
     width: min(100%, 560px);

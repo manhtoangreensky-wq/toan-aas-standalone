@@ -496,3 +496,15 @@ chưa được kiểm tra trong lượt này.
 
 Batch này chỉ đóng phần trình bày UI/UX của Voice. Không được gọi đây là parity runtime với Bot,
 không đổi ví/Xu, quyền, route/action/field/capability hoặc dữ liệu production.
+
+## Đối chiếu bổ sung — SOURCE-MUSIC-01/02 — 17/10/2026
+
+| Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Chọn hướng làm nhạc | `/music` có journey ba bước và đặt hai hướng chính (nhạc nền, bài hát có lời) trước nhánh SFX; mỗi card vẫn mở route hiện hữu. | `static/portal/portal.js`; `tests/music-hub-presentation.test.mjs`; Music hub route set `6` |
+| Locale Music hub | Fixed chrome dùng catalogue `musicHub.*` ở `3/3` locale VI/EN/ZH; nhãn hướng, trạng thái và journey không trộn ngôn ngữ trong bản VI. | `static/portal/portal-i18n.js`; focused Music hub/library `16/16` |
+| Bố cục và khả năng đọc | Card chính có role/mode metadata và `aria-describedby`; desktop tối đa `2` cột, mobile `1` cột từ `820px`; màu dùng token xanh/navy chung. | `static/portal/portal-theme.css`; `node --check` `2/2`; chưa có browser screenshot/AX runtime |
+| Tạo/preview/export nhạc thật | Chưa đóng; hub chỉ trình bày route và boundary đúng, không dựng tệp hoặc receipt hoàn tất. | Provider/adapter và browser/runtime output chưa được xác minh; tiếp tục mở R217-06 runtime |
+
+Batch này chỉ đóng source presentation của Music hub. Không được gọi đây là parity runtime với Bot,
+không đổi ví/Xu, route/action/field/capability hoặc dữ liệu production.

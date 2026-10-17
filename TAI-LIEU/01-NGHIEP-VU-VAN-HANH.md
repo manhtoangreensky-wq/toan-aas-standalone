@@ -752,3 +752,20 @@ bảo vệ; không thêm audio, upload, provider, job, wallet/Xu hoặc output g
   `git diff --check` đạt. Đây là source evidence trên PR #647, chưa phải merge/deploy/live.
 - TTS, clone, preview, output/download và dữ liệu Voice Library nối sang SubDub vẫn là
   `guarded` vì chưa có runtime/bridge evidence; không suy diễn source pass thành sản phẩm đã chạy.
+
+## Checkpoint nguồn WebApp — R217-06 Music hub — 17/10/2026
+
+Music hub được làm gọn theo một quy trình dễ đọc: chọn hướng → chuẩn bị mô tả → chờ hệ thống
+xác nhận kết quả thật. Hai hướng chính là nhạc nền và bài hát có lời; hiệu ứng âm thanh giữ ở
+nhánh bổ trợ. Các thẻ vẫn mở đúng `6` route hiện hữu (`/music/create`, `/music/song`,
+`/music/sfx`, `/audio/assets`, `/music/library`, `/music/sfx-library`) và không thêm provider,
+job, output, ví Xu hay thanh toán giả.
+
+- Catalogue `musicHub.*` giữ đủ `3/3` locale VI/EN/ZH; nhãn hướng và mô tả trình đọc màn hình
+  nằm trên từng card, không trộn English trong bản VI.
+- Giao diện dùng token xanh/navy chung; desktop tối đa `2` cột, mobile chuyển `1` cột tại
+  `max-width: 820px`; card chính có phân biệt thị giác nhưng không đổi route/action.
+- Regression Music hub/library đạt `16/16`; `node --check` `2/2` tệp Portal và
+  `git diff --check` đạt. Đây là bằng chứng source, chưa phải browser/runtime/live.
+- Tạo nhạc, nghe thử, lịch sử, xuất tệp và output thật vẫn `guarded` vì chưa có bridge/provider
+  evidence; không được báo parity runtime với Bot.

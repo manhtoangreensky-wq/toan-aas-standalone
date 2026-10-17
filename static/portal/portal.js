@@ -25350,23 +25350,38 @@
       }
     ];
     const routes = new Set(groups.flatMap((group) => group.items.map((item) => item.href)));
+    const modeMeta = Object.freeze({
+      "create.background": { mode: "background", role: "primary", step: "01" },
+      "create.song": { mode: "song", role: "primary", step: "02" },
+      "create.sfx": { mode: "sfx", role: "supporting", step: "03" }
+    });
     const groupHtml = groups.map((group) => `
-      <section class="portal-document-board-workflow-group" data-music-group="${safeText(group.key)}">
+      <section class="portal-document-board-workflow-group" data-music-group="${safeText(group.key)}" aria-labelledby="music-${safeText(group.key)}-heading">
         <div class="portal-document-board-workflow-heading">
-          <div><h2>${safeText(t(`group.${group.key}.title`, ""))}</h2><p>${safeText(t(`group.${group.key}.description`, ""))}</p></div>
+          <div><h2 id="music-${safeText(group.key)}-heading">${safeText(t(`group.${group.key}.title`, ""))}</h2><p>${safeText(t(`group.${group.key}.description`, ""))}</p></div>
           ${group.guarded ? `<span class="portal-badge" data-status="guarded">${safeText(t("status.unavailable", ""))}</span>` : ""}
-          <span>${safeText(t("count", "{count}", { count: group.items.length }))}</span>
+          <span data-music-group-count="${safeText(group.key)}">${safeText(t("count", "{count}", { count: group.items.length }))}</span>
         </div>
+        ${group.key === "creation" ? `<div class="portal-music-hub-journey" data-music-journey aria-labelledby="music-journey-title">
+          <div class="portal-music-hub-journey-heading"><span class="portal-section-kicker">${safeText(t("journey.kicker", ""))}</span><strong id="music-journey-title">${safeText(t("journey.title", ""))}</strong></div>
+          <ol class="portal-music-hub-journey-list">
+            ${["mode", "brief", "result"].map((step, index) => `<li data-music-journey-step="${safeText(String(index + 1))}"><span aria-hidden="true">${safeText(String(index + 1).padStart(2, "0"))}</span><div><strong>${safeText(t(`journey.step.${step}`, ""))}</strong><p>${safeText(t(`journey.step.${step}.description`, ""))}</p></div></li>`).join("")}
+          </ol>
+          <p class="portal-music-hub-journey-note">${safeText(t("creation.note", ""))}</p>
+        </div>` : ""}
         <div class="portal-module-grid">
           ${group.items.map((item) => {
             const itemCopy = t(item.key + ".title", "");
             const itemState = item.state === "ready" ? "available" : "unavailable";
             const actionKey = item.state === "ready" ? "actions.open" : "actions.details";
-            return `<a class="portal-module-card" data-tool-state="${safeText(item.state)}" href="${safeText(item.href)}"${item.key === "create.background" ? " data-music-primary" : ""}>
+            const meta = modeMeta[item.key] || null;
+            const descriptionId = `music-${item.key.replace(/[^a-z0-9]+/gi, "-")}-description`;
+            const modeAttrs = meta ? ` data-music-mode="${safeText(meta.mode)}" data-music-role="${safeText(meta.role)}" data-music-step="${safeText(meta.step)}"` : "";
+            return `<a class="portal-module-card" data-tool-state="${safeText(item.state)}" href="${safeText(item.href)}"${modeAttrs}${item.key === "create.background" ? " data-music-primary" : ""} aria-describedby="${safeText(descriptionId)}">
               <div class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.music)}</div>
               <div class="portal-module-copy">
-                <div class="portal-module-heading"><h3>${safeText(itemCopy)}</h3>${item.state === "guarded" ? `<span class="portal-badge" data-status="guarded">${safeText(t("status.unavailable", ""))}</span>` : ""}</div>
-                <p>${safeText(t(item.key + ".description", ""))}</p>
+                <div class="portal-module-heading"><h3>${safeText(itemCopy)}</h3>${meta ? `<span class="portal-music-hub-mode-label" data-music-mode-role="${safeText(meta.role)}">${safeText(t(`mode.${meta.mode}`, ""))}</span>` : ""}${item.state === "guarded" ? `<span class="portal-badge" data-status="guarded">${safeText(t("status.unavailable", ""))}</span>` : ""}</div>
+                <p id="${safeText(descriptionId)}">${safeText(t(item.key + ".description", ""))}</p>
                 <span class="portal-module-link">${safeText(t(actionKey, ""))} <b aria-hidden="true">→</b></span>
               </div>
               <span class="portal-sr-only">${safeText(t(`status.${itemState}`, ""))}</span>

@@ -306,6 +306,14 @@ hiển thị thành công giả khi engine/bridge chưa có.
       và vocal/instrumental; preset và preview dùng cùng hệ component.
 - [ ] Có progress/result/history/export và cảnh báo boundary nếu generation bridge chưa có.
 - [ ] Mobile mode switch/card/list theo hàng dọc; không trộn thuật ngữ English trong VI.
+- [x] **SOURCE-MUSIC-01 — 2026-10-17:** Music hub có journey ba bước, đặt hai hướng chính
+      nhạc nền/bài hát có lời trước nhánh SFX; card giữ đúng sáu route hiện hữu, thêm
+      `data-music-mode`/`data-music-role` và mô tả cho trình đọc màn hình.
+- [x] **SOURCE-MUSIC-02 — 2026-10-17:** UI dùng token xanh/navy chung, desktop tối đa hai cột,
+      mobile `max-width: 820px` xếp một cột; VI/EN/ZH có catalogue cân bằng, không tạo output
+      hoặc trạng thái hoàn tất giả.
+- [x] Regression Music hub/library `16/16`; `node --check` Portal `2/2`; `git diff --check`
+      đạt. Đây là source presentation evidence, chưa phải browser/live/runtime evidence.
 - [!] Hai hướng nhạc nền/nhạc có lời có entry/catalogue nhưng generation/export thật vẫn
       guarded; không có provider/output evidence.
 
@@ -583,5 +591,7 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=R217-06 Music — Voice source presentation đã có lane rail xanh/navy và test Voice 126/126 xanh; runtime TTS/clone/preview/output và Voice Library handoff vẫn guarded. Giữ R217-04/R217-05 runtime mở, chuyển Music theo thứ tự trước SubDub và Video.
+NEXT_ACTION=R217-07 SubDub — Music source presentation đã có journey ba bước, hai hướng chính
+và test Music hub/library 16/16 xanh; runtime generation/preview/export vẫn guarded. Giữ
+R217-04/R217-05/R217-06 runtime mở, chuyển SubDub theo thứ tự trước Product Video và motion.
 ```

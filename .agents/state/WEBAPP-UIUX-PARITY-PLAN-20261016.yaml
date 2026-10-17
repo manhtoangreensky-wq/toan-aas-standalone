@@ -45,6 +45,7 @@ ordered_waves:
     spec: R217-06
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
     name: music
+    note: "Music hub source presentation now has a three-step journey, two primary directions (background music/song with lyrics) and a supporting SFX lane; six existing routes are preserved, VI/EN/ZH copy is balanced, desktop is capped at two columns and mobile stacks at max-width 820px. Focused Music hub/library 16/16, node-check 2/2 and diff-check green; generation, preview, export, history and real output remain guarded."
   - id: W4
     spec: R217-07
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
@@ -112,4 +113,4 @@ created_files:
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
 last_ci_run: "39007843300 SUCCESS on 1fe321b; Verify Web App green; browser evidence artifact 10.7 MB; digest sha256:97607fe14b53f75f25eda7f0159b17996f6384a9e87c3dcbaec33d712f4a5f88"
-next_action: "Continue R217-06 Music after committing and verifying the Voice source batch. Keep R217-04 Image and R217-05 Voice runtime/real-output evidence open; no provider, wallet, production or deploy action."
+next_action: "Continue R217-07 SubDub after committing and verifying the Music source presentation batch. Keep R217-04/R217-05/R217-06 runtime and real-output evidence open; no provider, wallet, production or deploy action."
