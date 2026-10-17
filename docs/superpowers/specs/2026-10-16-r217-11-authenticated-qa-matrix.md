@@ -75,6 +75,8 @@ provider, thanh toán, ví, job hoặc delivery.
 
 Job `authenticated-qa` trong `.github/workflows/webapp-quality.yml` chạy runner sau quality
 gate, upload `r21711-authenticated-qa-matrix.json`, `screenshot-manifest.json` và 456 ảnh.
+Contract nguồn `tests/test_r21711_authenticated_qa_runner_contract.py` khóa đúng 13 route
+customer, 6 route Admin, 3 locale, 2 theme và 4 viewport trước khi chạy browser.
 Artifact chỉ được coi là đạt khi có đủ `456/456` bản ghi, mọi bản ghi có route/locale/theme/
 viewport/timestamp, DOM + AX + focus + screenshot + console + network + reload evidence,
 không có lỗi console/warning, request ngoài origin, mutation bị cấm hoặc tràn ngang. Source

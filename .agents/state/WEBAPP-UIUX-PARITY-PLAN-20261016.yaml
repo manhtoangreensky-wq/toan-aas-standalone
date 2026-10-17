@@ -112,6 +112,7 @@ created_files:
   - docs/superpowers/specs/2026-10-16-r217-12-live-readonly-recheck.md
   - docs/superpowers/specs/2026-10-16-r217-13-deferred-technical-register.md
   - scripts/ci/run_authenticated_qa_matrix.py
+  - tests/test_r21711_authenticated_qa_runner_contract.py
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs

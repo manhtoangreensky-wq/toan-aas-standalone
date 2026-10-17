@@ -460,7 +460,13 @@ async def _capture_record(
         {"width": width, "height": height, "deviceScaleFactor": scale, "mobile": mobile},
     )
     await send_page("Page.navigate", {"url": url})
-    await asyncio.sleep(0.45)
+    for _ in range(18):
+        ready = await evaluate(
+            "Boolean(document.readyState === 'complete' && document.querySelector('h1,h2,h3,.portal-title,.portal-card-title'))"
+        )
+        if ready:
+            break
+        await asyncio.sleep(0.1)
     dom = await evaluate(
         """(() => {
             const visible = el => { if (!el) return false; const s = getComputedStyle(el), r = el.getBoundingClientRect(); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity || 1) > 0 && r.width > 0 && r.height > 0; };
@@ -504,7 +510,13 @@ async def _capture_record(
             }
         )
     await send_page("Page.reload")
-    await asyncio.sleep(0.25)
+    for _ in range(12):
+        ready = await evaluate(
+            "Boolean(document.readyState === 'complete' && document.querySelector('h1,h2,h3,.portal-title,.portal-card-title'))"
+        )
+        if ready:
+            break
+        await asyncio.sleep(0.1)
     reload_state = await evaluate(
         "JSON.stringify({locale: document.documentElement.getAttribute('data-portal-locale') || document.documentElement.getAttribute('lang') || '', theme: document.documentElement.getAttribute('data-portal-theme') || '', route: location.pathname})"
     )

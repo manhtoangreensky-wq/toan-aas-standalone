@@ -532,7 +532,9 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       theo VI/EN/ZH, chạy customer + Admin trên 19 route × 3 locale × 2 theme × 4 viewport
       (456 bản ghi), ghi requested/resolved route, title/heading/CTA/field, AX tree, focus,
       screenshot, console, network và reload persistence. Job `authenticated-qa` trong
-      `.github/workflows/webapp-quality.yml` cài dependency trong runner CI và upload artifact.
+      `.github/workflows/webapp-quality.yml` cài dependency trong runner CI và upload artifact;
+      contract route/count/safety `tests/test_r21711_authenticated_qa_runner_contract.py` được
+      đưa vào critical WebApp contracts.
 - [ ] **RUNTIME-R217-11-01:** CI phải tạo đủ `456/456` bản ghi, `0` console error/warning,
       `0` external/provider/payment/wallet mutation, `0` overflow và reload state khớp;
       chỉ khi có artifact thật mới đóng ma trận.
