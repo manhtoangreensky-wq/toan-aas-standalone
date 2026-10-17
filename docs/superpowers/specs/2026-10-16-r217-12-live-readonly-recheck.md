@@ -1,6 +1,6 @@
 # R217-12 — Live read-only recheck sau delivery hợp lệ
 
-**Status:** `LIVE_DRIFT_OPEN`
+**Status:** `PARTIAL_LIVE_EVIDENCE`
 **Wave:** W8
 
 ## Latest read-only observation 2026-10-16
@@ -119,6 +119,36 @@ allowlists only `vi|en|zh` and appends that value to the encoded return target; 
 remains discarded. Regression coverage asserts all three locale redirects and preserves the
 existing `/dashboard` no-query redirect. No account, form, CTA, upload, provider, wallet or
 production-data mutation occurred during this probe.
+
+## Final closeout evidence — 2026-10-17 14:04 UTC
+
+PR #648 (`fix(webapp): preserve locale through guarded route redirects`) merged to `main` as
+`506d2b9fd494993a17d01ab783095db85a6a6f5e`. Main quality workflow `39038471041` completed
+successfully: `Verify Web App` job `117412964941` and `Authenticated WebApp QA (R217-11)` job
+`117413519593` both passed; the isolated authenticated matrix recorded `456/456` successful
+cases across customer/admin routes, `vi/en/zh`, light/dark and phone/tablet/desktop variants.
+
+Owner-authorized deploy workflow `39039077676` then applied the same SHA with the forward-only
+guard, tracked-source backup, active `toanaas-web.service` and `nginx.service`, and validated
+`/health` as `TOAN AAS Web App/app.py`. Backup:
+`/opt/toanaas/webapp/delete/deploy-506d2b9fd494993a17d01ab783095db85a6a6f5e-20261017140326`.
+
+The post-deploy read-only probe confirmed:
+
+- `/features?lang=vi|en|zh` ends at `/login?next=/features%3Flang%3Dvi|en|zh` respectively;
+- `/welcome?lang=vi` serves asset fingerprint `local-00d9a64e11a5031705e6` and no longer
+  exposes the old PWA FAB in the delivered HTML; the browser gate covers responsive variants;
+- `/login?lang=vi|en|zh` titles are `Đăng nhập · TOAN AAS`, `Sign in · TOAN AAS` and
+  `登录 · TOAN AAS`, with no legacy `📲...Install App TOAN AAS` strings;
+- all live checks were GET/navigation/screenshot only: `PROVIDER_CALLS=0`,
+  `WALLET_MUTATIONS=0`, `PRODUCTION_DATA_MUTATIONS=0`.
+
+**Result:** `R216-L` and `R216-P` are `CLOSED_WITH_EVIDENCE` for this scoped read-only
+delivery. `R216-H`/`LIVE-UI-01`/`LIVE-UI-02` remain `LIVE_RECHECK_OPEN` because the current
+browser did not expose a production mobile viewport override; QA's 375/390/768/1440 matrix is
+not a substitute for a production viewport measurement. Product-lane real output, provider
+bridges, wallet/payment and other deferred technical items remain outside this spec and stay
+open in the master checklist.
 
 ## Source quality-gate refresh — 2026-10-17
 
