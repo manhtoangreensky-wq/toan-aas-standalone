@@ -10316,7 +10316,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1068,
+      "occurrences": 1096,
       "provider": "PayOS"
     },
     {
@@ -10460,7 +10460,7 @@
         "studio/manifest.json",
         "studio/script.js"
       ],
-      "occurrences": 49,
+      "occurrences": 45,
       "provider": "Suno"
     },
     {
@@ -10534,7 +10534,7 @@
         "copyfast_notification_center.py",
         "copyfast_pages.py"
       ],
-      "occurrences": 1970,
+      "occurrences": 2017,
       "provider": "Telegram"
     }
   ],
@@ -18324,32 +18324,32 @@
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 33533,
+      "line": 33823,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33849,
+      "line": 34139,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33197,
+      "line": 33487,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33446,
+      "line": 33736,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 32818,
+      "line": 33108,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33110,
+      "line": 33400,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -18564,7 +18564,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34952,
+      "line": 35242,
       "path": "/features"
     },
     {

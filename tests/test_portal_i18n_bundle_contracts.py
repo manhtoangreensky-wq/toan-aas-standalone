@@ -360,7 +360,7 @@ for (const [locale, reviewed] of Object.entries(reviewedAdminSecurityAccessCopy)
 }
 
 const reviewedAutomationMonitorCopy = {
-  vi: "Đang xác minh receipt private",
+  vi: "Đang xác minh biên nhận riêng tư",
   en: "Verifying the private receipt",
   zh: "正在验证私有回执"
 };
@@ -371,7 +371,7 @@ for (const [locale, expectedCopy] of Object.entries(reviewedAutomationMonitorCop
 }
 
 const reviewedSystemStewardshipCopy = {
-  vi: "System & Data Stewardship",
+  vi: "Quản trị hệ thống và dữ liệu",
   en: "System & Data Stewardship",
   zh: "系统与数据治理"
 };
