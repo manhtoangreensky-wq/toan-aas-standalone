@@ -753,7 +753,9 @@ def test_initial_hydration_is_deduplicated_and_bfcache_refresh_is_explicit() -> 
 def test_login_return_path_is_internal_and_web_workspace_is_independent() -> None:
     assert "function safeReturnPath(value)" in INTEGRATION
     assert 'route.startsWith("//")' in INTEGRATION
-    assert 'route.includes("?") || route.includes("#")' in INTEGRATION
+    assert 'const separator = route.indexOf("?")' in INTEGRATION
+    assert 'entries[0][0] !== "lang"' in INTEGRATION
+    assert 'INTERFACE_LOCALES.has(entries[0][1])' in INTEGRATION
     assert 'window.location.assign(requested || "/dashboard");' in INTEGRATION
     assert "account.canonical_user_id" not in INTEGRATION
 
