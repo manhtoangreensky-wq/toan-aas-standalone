@@ -44,6 +44,41 @@ blocker rather than a failed source fix.
 - No form was filled, no login was submitted, no CTA was activated, no file was uploaded and
   no provider/wallet/production mutation occurred.
 
+### Fresh browser evidence — 2026-10-17 11:40:28 UTC
+
+The read-only recheck was repeated against production with the existing in-app browser tab.
+No account was entered and no form, CTA, upload, provider, wallet or production mutation was
+performed.
+
+- `/welcome?lang=vi` served `TOAN AAS` at the available `1280×720` viewport. The live asset
+  fingerprint remained `local-57e76aa281dcc721fdaa` on `portal-theme.js`, `portal-i18n.js`,
+  `portal-motion.js`, `portal.js`, `integration.js`; `body.scrollWidth`,
+  `documentElement.scrollWidth` and `clientWidth` were all `1280`, and the browser console
+  returned no warning/error records. This confirms a stale delivery bundle, not a source-gate
+  failure. The earlier `327×668` mobile observation remains authoritative for the unmeasured
+  mobile viewport in this tab.
+- At the fresh desktop viewport, `.portal-landing-nav-actions` was `display:flex` with
+  `flex-wrap:nowrap`; `.portal-pwa-fab-trigger[data-portal-pwa-fab="true"]` was still
+  visible (`hidden=false`, `display:flex`, `position:fixed`, `171.95×41.10px`, roughly
+  `(863.05,654.90)`) with `data-portal-action="pwa-toggle-banner"`. The source branch's
+  inline/readiness-gated placement is therefore not present in production yet; keep
+  `LIVE-UI-02` open.
+- Direct `/features?lang=vi|en|zh` navigation still finished at
+  `/login?next=/features` without a locale query. All three final pages had
+  `main#portal-main[tabindex="-1"]`, but the final document language/title fell back to
+  Vietnamese (`vi`, `Đăng nhập · TOAN AAS`) for the `en` and `zh` attempts. Keep `R216-L`
+  open until the next-route redirect preserves locale.
+- Direct `/login?lang=vi|en|zh` preserved the requested locale (`vi`, `en`, `zh-CN`) and
+  showed a visible install control in every locale. The stale Vietnamese control was the
+  exact legacy text `📲Tải & Cài đặt App TOAN AAS` (`display:inline-flex`, `410.4×44px`,
+  roughly `(110.8,566.67)`); English and Chinese showed the translated stale equivalents
+  `📲Install TOAN AAS App` and `📲安装 TOAN AAS App`. This is visible in both DOM and the
+  rendered screenshot, so `R216-P` remains open until the delivered bundle exposes the
+  reviewed icon/locale control.
+- A fresh screenshot was captured for `/welcome?lang=vi` and `/login?lang=vi`; both pages
+  rendered without a framework error overlay. The screenshot also visually confirms the
+  navy/teal brand is still in use, while the old landing FAB and auth install copy remain.
+
 ## Phạm vi
 
 Chỉ đọc các defect đã có evidence: R216-L auth next-route CTA, R216-H landing mobile
@@ -53,7 +88,9 @@ header/PWA placement và R216-P auth install icon. Không biến recheck thành 
 
 - `/features` rồi ghi URL redirect `/login?next=/features` ở VI/EN/ZH.
 - `/login?lang=vi|en|zh`.
-- `/welcome?lang=vi` ở 327×667, 390×844 và 1440×900.
+- `/welcome?lang=vi` ở 327×667, 390×844 và 1440×900. The available browser in this
+  recheck exposed `1280×720`; 327×668 remains covered by the prior read-only evidence, while
+  390×844 and 1440×900 still require a viewport-capable QA run.
 - Nếu đã có authenticated QA, thêm `/dashboard` và một route product; nếu không ghi blocked.
 
 ## Evidence bắt buộc

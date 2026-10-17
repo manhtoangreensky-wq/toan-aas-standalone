@@ -78,7 +78,7 @@ ordered_waves:
   - id: W8
     spec: R217-12
     status: LIVE_DRIFT_OPEN
-    note: "Read-only browser evidence 2026-10-16 14:52:08 UTC confirms production fingerprint local-57e76aa281dcc721fdaa, landing PWA FAB still fixed/display:flex at 327px, /features redirects to login?next=/features in VI/EN/ZH, and hidden legacy VI App install text remains in auth DOM. Source SHA is not delivered; keep R216-H/L/P open."
+    note: "Fresh read-only evidence 2026-10-17 11:40:28 UTC confirms production still serves fingerprint local-57e76aa281dcc721fdaa. At 1280x720 the PWA FAB remains visible/fixed/display:flex; /features?lang=vi|en|zh still redirects to login?next=/features and loses locale; direct /login?lang=vi|en|zh exposes the stale install labels (VI 📲Tải & Cài đặt App TOAN AAS, EN 📲Install TOAN AAS App, ZH 📲安装 TOAN AAS App). Console has no warnings/errors and desktop has no overflow, but source delivery is stale; keep R216-H/L/P and the 390x844/1440x900 viewport matrix open."
   - id: W9
     spec: R217-13
     status: DEFERRED
@@ -117,4 +117,4 @@ created_files:
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
 last_ci_run: "39027760496 SUCCESS: Verify Web App and Authenticated WebApp QA passed; job 117382539076 artifact 456/456 passed and was read directly."
-next_action: "Proceed in order to R217-12 live read-only recheck only; keep runtime/trace/delivery evidence open and do not infer real provider output from QA artifact. No provider, wallet, production, merge or deploy action."
+next_action: "R217-12 remains LIVE_DRIFT_OPEN after the 2026-10-17 read-only recheck. Wait for a valid source delivery, then repeat locale redirect, auth install, PWA placement and 390x844/1440x900 viewport checks; do not infer real provider output from QA artifacts. No provider, wallet, production, merge or deploy action."
