@@ -78,7 +78,7 @@ def test_customer_tokens_delta_stagger_containment_and_reduced_motion() -> None:
     assert '[data-portal-surface="customer"]' in block
     assert 'data-portal-app-kind="customer"' not in block
     assert re.search(r"(?:transition|animation)[^;]*(?:width|height|top|left)", block) is None
-    for shared in ("--portal-motion-fast: 140ms;", "--portal-motion-base: 220ms;", "--portal-motion-distance: 10px;"):
+    for shared in ("--portal-motion-fast: 160ms;", "--portal-motion-base: 220ms;", "--portal-motion-distance: 10px;"):
         assert shared in THEME[: THEME.index(MARKER)]
 
 

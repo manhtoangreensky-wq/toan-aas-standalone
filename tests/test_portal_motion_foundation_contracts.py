@@ -108,7 +108,7 @@ def test_motion_utility_waits_for_view_transition_dom_update_before_entering() -
 def test_theme_declares_shared_portal_motion_tokens_and_lifecycle_selectors() -> None:
     root = _theme_root()
     expected_tokens = (
-        "--portal-motion-fast: 140ms;",
+        "--portal-motion-fast: 160ms;",
         "--portal-motion-base: 220ms;",
         "--portal-motion-slow: 420ms;",
         "--portal-motion-distance: 10px;",

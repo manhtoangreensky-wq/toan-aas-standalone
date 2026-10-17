@@ -53,6 +53,9 @@ node --check static/portal/portal-motion.js
   the `220ms` route-entry token).
 - Added a regression assertion covering the micro window, exit-before-entry order,
   the `680ms` auth entrance and the `980ms` landing hero timeline.
+- Updated the three Python motion contracts that still expected the old `140ms`
+  token; they now assert the shipped `160ms` value. Python/pytest execution is
+  still not available in this environment, so it remains an explicit blocker.
 - `HEAD_SHA=fd18f00c8ee0efef676e71a3dd6f87dca8416d53` was pushed to
   `github/webapp-checklist-r116` (PR #647 branch).
 - Evidence: focused motion/auth/PWA gates `43/43`; full Node suite `523/523`;
