@@ -130,7 +130,8 @@ def test_sfx_cue_sheet_uses_native_radio_selection_without_auto_submit_navigatio
     assert "data-sfx-cue-sheet-preset-card" in renderer
     assert "data-sfx-cue-sheet-submit" in renderer
     assert 'type="hidden" name="web_sfx_preset_id"' not in renderer
-    assert "Không có timeline số" in renderer
+    result_renderer = _function_block(PORTAL, "renderSfxCueSheetResult")
+    assert "không có mốc thời gian media" in result_renderer
 
     sync = _function_block(PORTAL, "synchronizeSfxCueSheetForm")
     edit = _function_block(PORTAL, "markSfxCueSheetDraftEdited")
@@ -141,7 +142,6 @@ def test_sfx_cue_sheet_uses_native_radio_selection_without_auto_submit_navigatio
         for forbidden in ("api(", "fetch(", "location", "history", ".submit(", ".reset(", "localStorage", "sessionStorage"):
             assert forbidden not in local_only
 
-    result_renderer = _function_block(PORTAL, "renderSfxCueSheetResult")
     for forbidden in (
         "output_url", "job_id", "audio_url", "preview_url", "asset_url", "payment_url", "collection_id",
         "telegram_message_id", "<audio", "new Audio(", "start_ms", "end_ms", "duration_seconds", "waveform",
