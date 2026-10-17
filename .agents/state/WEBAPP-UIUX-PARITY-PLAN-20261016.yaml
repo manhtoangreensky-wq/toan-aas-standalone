@@ -74,7 +74,7 @@ ordered_waves:
   - id: W7
     spec: R217-11
     status: SOURCE_GREEN_RUNTIME_OPEN
-    note: "2026-10-17: local bundled Python still lacks fastapi/uvicorn/pytest/websockets, so no local runtime claim is made. Added scripts/ci/run_authenticated_qa_matrix.py and an authenticated-qa CI job that installs isolated dependencies, creates six locale fixtures in temporary SQLite, and records the required 456-route matrix. Source Admin fixture remains green (CI run 39021192324). CI run 39023945997 stopped before this job because migration provenance recorded bf9084e4509b while current HEAD 3e5cd367a48e8d673a16d5184b2a45946b3275b6 fingerprints c9bbeab9d557. Web-only evidence was refreshed and local verification returned ok; rerun CI before closing R217-11."
+    note: "2026-10-17: local bundled Python still lacks fastapi/uvicorn/pytest/websockets, so no local runtime claim is made. Added scripts/ci/run_authenticated_qa_matrix.py and an authenticated-qa CI job that installs isolated dependencies, creates six locale fixtures in temporary SQLite, and records the required 456-route matrix. Source Admin fixture remains green (CI run 39021192324). CI run 39023945997 stopped before this job because migration provenance recorded bf9084e4509b while current HEAD 3e5cd367a48e8d673a16d5184b2a45946b3275b6 fingerprints c9bbeab9d557. The Web-only refresh is committed in candidate 6ce61f239f6453285f807ada22dcc7c5a29298b4; rerun CI before closing R217-11."
   - id: W8
     spec: R217-12
     status: LIVE_DRIFT_OPEN
@@ -117,4 +117,4 @@ created_files:
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
 last_ci_run: "39023945997 FAILED: Verify Web App stopped at migration provenance because recorded fingerprint bf9084e4509b did not match current source fingerprint c9bbeab9d557 on HEAD 3e5cd367a48e8d673a16d5184b2a45946b3275b6; Authenticated WebApp QA was skipped. Web-only evidence refresh and local verify are now green; rerun CI is required."
-next_action: "Commit/push the Web-only provenance refresh and rerun CI. Inspect the authenticated QA artifact for 456/456 before opening R217-12. Product Video source/browser gate is closed for this correction, but authenticated runtime, FPS/CLS/LCP/INP, upload/render/delivery and real artifacts remain open; no provider, wallet, production, merge or deploy action."
+next_action: "Refresh provenance against the final candidate, push it, and rerun CI. Inspect the authenticated QA artifact for 456/456 before opening R217-12. Product Video source/browser gate is closed for this correction, but authenticated runtime, FPS/CLS/LCP/INP, upload/render/delivery and real artifacts remain open; no provider, wallet, production, merge or deploy action."
