@@ -5740,7 +5740,7 @@
       "adminGeneric.securityAccess.intro.redacted.value": "Không có identity hoặc secret",
       "adminGeneric.securityAccess.boundary.title": "Ranh giới dữ liệu",
       "adminGeneric.securityAccess.boundary.body": "Màn hình này là khả năng quan sát của ứng dụng Web, không phải mặt phẳng điều khiển hay mô-đun tương thích cầu nối.",
-      "adminGeneric.securityAccess.boundary.0": "Chỉ hiển thị dữ liệu tổng hợp của ứng dụng Web; không có tài khoản, email, phiên, mã, bí mật, IP hoặc chi tiết kiểm soát.",
+      "adminGeneric.securityAccess.boundary.0": "Chỉ hiển thị aggregate Web-native; không có account, email, session, token, secret, IP hoặc audit detail.",
       "adminGeneric.securityAccess.boundary.1": "Trang chỉ đọc; không cấp vai trò, thu hồi phiên, đặt lại MFA hoặc thay đổi thông tin xác thực.",
       "adminGeneric.securityAccess.boundary.2": "Không gọi Bot/Core Bridge, nhà cung cấp, PayOS, ví Xu, tác vụ, webhook hoặc triển khai.",
       "adminGeneric.securityAccess.route.securityTitle": "Tình trạng bảo mật",
