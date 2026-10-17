@@ -3,7 +3,7 @@
 **Checklist ID:** `WEBAPP-UIUX-PARITY-20261016`
 **Plan:** `docs/superpowers/plans/2026-10-16-webapp-uiux-product-parity-master-plan-r217.md`
 **Baseline remote:** `f59eacf63a49534854dc7cde06e5baed6546dc58`
-**PR liên quan:** #647 — đang mở, chưa merge/deploy
+**PR liên quan:** #647 — đã merge `bc0d089`; deploy WebApp `39036918159` đã thành công, live recheck tiếp tục mở
 **Ngày cập nhật:** 2026-10-17
 
 ## Cách đọc trạng thái
@@ -620,6 +620,14 @@ vẫn `OPEN`, không đánh dấu `LIVE_PASS`.
       legacy name, không dùng trong canonical acceptance matrix.
 
 ## 9. W8 — Live read-only recheck — Spec R217-12
+
+- [!] **R217-12 post-delivery 2026-10-17 13:35 UTC — locale redirect còn lỗi:** deploy
+      workflow `39036918159` đã đưa `bc0d089055df7a52c1ee9e3e76a5cbc57beacce4` lên VPS,
+      health check trên `toanaas-web.service` đạt, asset fingerprint đổi khỏi bundle cũ.
+      Tuy nhiên `/features?lang=en` và `/features?lang=zh` vẫn về `/login?next=/features`,
+      làm rơi locale; nguyên nhân gốc là nhánh redirect chưa đưa query `lang` vào return target.
+      Đã khoanh đúng một nhánh trong `app.py`, thêm regression cho `vi/en/zh`; chờ PR sửa
+      tiếp theo và lặp lại live matrix trước khi đóng `R216-L`.
 
 - [~] **R217-12 fresh 2026-10-17 11:40:28 UTC — R216-L:** `/features?lang=vi|en|zh`
       vẫn kết thúc ở `/login?next=/features` và làm mất locale query. `main#portal-main`
