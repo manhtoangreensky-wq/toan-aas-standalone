@@ -35,7 +35,7 @@ ordered_waves:
     spec: R217-04
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
     name: image
-    note: "SOURCE-IMAGE-01 adds a truthful vertical create/edit entry on /image/create with VI/EN/ZH copy; no upload/output/capability added. Focused Image 40/40, locale 319/319 (each Node locale file once), full Node 521/521 are recorded in candidate docs; rerun before delivery. R217-04 stays TODO: runtime DOM/AX, server capability audit, unified workspace, references, variants, preview/history and real output remain open."
+    note: "SOURCE-IMAGE-01 adds a truthful vertical create/edit entry on /image/create with VI/EN/ZH copy; no upload/output/capability added. Source audit SOURCE-IMAGE-02: image_create job API exists but no reference field; image_transform and image_upscale bridges exist yet source runtime matrix records BLOCKED_PROVIDER_ENTITLEMENT; /image/edit is deterministic Image Enhance. No provider/entitlement action. R217-04 stays TODO for browser DOM/AX, unified workspace, references, variants, preview/history and verified outputs."
   - id: W4
     spec: R217-05
     status: SOURCE_PRESENTATION_GREEN_RUNTIME_OPEN
@@ -110,4 +110,4 @@ created_files:
   - tests/admin-generic-fixed-chrome-locale.test.mjs
   - tests/image-studio-detail-locale-purity.test.mjs
   - tests/image-operation-locale-purity.test.mjs
-next_action: "Check the latest PR #647 CI for SOURCE-IMAGE-01 without merge/deploy; then continue R217-04 by auditing server-backed Image capabilities. If a capability is missing, mark the exact sub-acceptance deferred with evidence and proceed in order to Voice/Music/SubDub before Video. Keep runtime/live gates open until real browser evidence exists."
+next_action: "Refresh only Web migration provenance for PR #647 using the auditor's --refresh-web-evidence mode (no Bot scan); verify the new HEAD/quality gate in GitHub Web. Then continue R217-05 Voice source/UI, followed by Music/SubDub before Video. Image R217-04 remains TODO until browser DOM/AX, owner-authorized runtime evidence and real output are available; no provider/entitlement mutation."

@@ -473,11 +473,14 @@ Kết thúc đối chiếu `SOURCE-ADMIN-05`.
 |---|---|---|
 | Lối vào tạo và chỉnh ảnh trên `/image/create` | Có hai lựa chọn dọc; tạo ảnh là trang hiện tại, mục chỉnh mở `/image/edit` và mô tả đúng công cụ tăng chất lượng đang có. | `static/portal/portal.js`; `tests/image-create-locale-presentation.test.mjs` |
 | Fixed chrome VI/EN/ZH | Có catalogue đủ ba ngôn ngữ cho tiêu đề, liên kết, mô tả và nhãn truy cập. | Regression Image source `40/40`; mỗi tệp locale Node chạy một lần `319/319`; full Node `521/521`. |
-| Chỉnh sửa ảnh bằng AI | Chưa có bằng chứng capability/server contract; giao diện nói rõ chưa khả dụng. | Không thêm upload, biến thể, preview, đầu ra giả, action, field, API hay capability. |
+| Chỉnh sửa ảnh bằng AI | Source có lane `/image/transform` và alias `/image/image-to-image`, cùng bridge và API riêng; source runtime matrix ghi `BLOCKED_PROVIDER_ENTITLEMENT`, chưa xác nhận entitlement live. | `copyfast_image_transform_job_bridge.py`; `copyfast_image_transform_runtime_bridge.py`; `tests/test_r10_runtime_matrix_contracts.py`; provider dispatch vẫn khóa. Không bật quyền/nhà cung cấp trong batch UI. |
+| Nâng độ phân giải bằng AI | Source có lane `/image/upscale` và bridge/API riêng; source runtime matrix cũng ghi `BLOCKED_PROVIDER_ENTITLEMENT`. | `copyfast_image_upscale_job_bridge.py`; `tests/test_r10_runtime_matrix_contracts.py`; đây không phải bằng chứng đầu ra live. |
+| Trường ảnh tham chiếu trong luồng tạo | `/image/create` có API/job flow nhưng form contract hiện không nhận `reference`; Image Transform nhận asset đã có trong Asset Vault theo quyền sở hữu. | `tests/test_portal_safety_contracts.py::test_translation_upload_and_image_create_forms_match_the_frozen_bot_contract`; `copyfast_image_transform_job_bridge.py`. Không tự thêm field/upload nếu thiếu contract. |
 | Trạng thái giao nhận | Source candidate thuộc PR #647; việc có PR không đồng nghĩa đã merge/deploy/live. | Browser DOM/AX/runtime chưa đo; source pass không đóng R217-04. Đối chiếu head/CI theo trang PR hiện hành. |
 
 Nguồn yêu cầu giai đoạn xây dựng chưa có một danh mục gốc duy nhất theo bounded inventory
 đã nêu ở các mục trên; vì vậy đối chiếu này ghi bổ sung hành vi của WebApp standalone,
-không tuyên bố tương đương runtime với Bot. Việc hợp nhất workspace, reference/upload,
-variants, preview/history và giao nhận ảnh thật vẫn mở trong R217-04 cho tới khi có
-capability server-backed và bằng chứng tương ứng.
+không tuyên bố tương đương runtime với Bot. Việc hợp nhất workspace, upload/reference,
+variants, preview/history và giao nhận ảnh thật vẫn mở trong R217-04. Hai lane AI có
+server-side bridge nhưng đang bị chặn theo source matrix; trạng thái entitlement production
+chưa được kiểm tra trong lượt này.

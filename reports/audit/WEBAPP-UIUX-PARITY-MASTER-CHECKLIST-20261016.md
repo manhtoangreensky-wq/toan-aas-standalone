@@ -30,6 +30,10 @@
 
 ## 1. W0 — Baseline và evidence ledger
 
+- [~] CI run `39005167126` trên `66684e8` dừng tại bước xác minh migration provenance:
+      fingerprint ghi nhận `32c98444d7b3`, source hiện tại `3b9657865e57` (`284` tệp).
+      Các bước test tiếp theo chưa chạy; đang chuẩn bị làm mới riêng Web evidence theo script
+      chính thức, không quét Bot và không thay đổi runtime.
 - [x] Đối chiếu remote: local cũ lệch; tạo worktree sạch từ `github/webapp-checklist-r116`.
 - [x] Sau quality-gate failure `38958333812`, đã sửa provenance evidence: `284` eligible Web
       files; `preflight.json`, `web_inventory.json` và source hiện cùng fingerprint
@@ -237,6 +241,12 @@ hiển thị thành công giả khi engine/bridge chưa có.
       Focused Image `40/40`, locale contracts `319/319`, full Node `521/521`; `node --check`
       hai tệp Portal và `git diff --check` đạt. Browser render/AX chưa chạy; toàn bộ yêu cầu
       workspace thống nhất, reference/upload, preview, variants và lịch sử vẫn còn mở.
+- [x] **SOURCE-IMAGE-02 — 2026-10-17:** audit chỉ-đọc xác nhận `/image/create` có server job API
+      nhưng form Web không có trường reference; `/image/transform` và `/image/upscale` có bridge
+      riêng nhưng source matrix ghi `BLOCKED_PROVIDER_ENTITLEMENT`, chưa phải kiểm tra quyền live.
+      `/image/edit` là Image Enhance Web-native xác định, không phải chỉnh sửa AI. Không gọi nhà
+      cung cấp hoặc thay quyền; ghi blocker thay vì bật chức năng. R217-04 vẫn `TODO` cho workspace
+      thống nhất, upload/reference, variants, preview/history và đầu ra đã xác minh.
 
 ### 5.2 Voice — Spec R217-05
 
@@ -514,7 +524,7 @@ hiển thị thành công giả khi engine/bridge chưa có.
 
 | Nhóm | Đã có bằng chứng | Đang mở | Bị chặn/hoãn |
 |---|---:|---:|---:|
-| Source UI/UX/locale/static motion | W2 locale `319/319`; Image source `40/40`; full Node `521/521` | product-lane source acceptance còn mở; runtime/AX chưa đo | 0 |
+| Source UI/UX/locale/static motion | W2 locale `319/319`; Image source `40/40`; full Node `521/521` | product-lane source acceptance còn mở; runtime/AX chưa đo | 2 source-matrix AI lanes thiếu entitlement (Transform/Upscale) |
 | Responsive/PWA live | source fix đã có; CI evidence gần nhất `cb1fab6` | 2 drift (R216-H/R216-P) + ma trận viewport | QA runtime |
 | Customer product parity UI | shell/partial nhiều lane | 6 lane acceptance | real-output bridge |
 | Admin/customer wiring UI | source contracts rải rác | 1 master surface audit | backend/permission mutation |
@@ -536,5 +546,5 @@ PRODUCTION_DATA_MUTATIONS=0
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NO
-NEXT_ACTION=W4 — tiếp tục Image theo contract đã xác minh; xác định field/capability server-backed trước khi thêm upload, variants hay preview. Nếu thiếu runtime contract thì ghi DEFERRED có lý do rồi xử lý Voice/Music/SubDub trước Video.
+NEXT_ACTION=R217-05 Voice — Image capability audit đã xác nhận reference chưa có trong form và Transform/Upscale bị source-matrix chặn entitlement; giữ R217-04 TODO, chuyển tiếp Voice, rồi Music/SubDub trước Video. Trở lại Image chỉ khi có authority/runtime evidence.
 ```
