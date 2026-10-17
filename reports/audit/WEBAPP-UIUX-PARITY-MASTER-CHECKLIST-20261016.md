@@ -32,8 +32,9 @@
 
 - [~] CI run `39005167126` trên `66684e8` dừng tại bước xác minh migration provenance:
       fingerprint ghi nhận `32c98444d7b3`, source hiện tại `3b9657865e57` (`284` tệp).
-      Các bước test tiếp theo chưa chạy; đang chuẩn bị làm mới riêng Web evidence theo script
-      chính thức, không quét Bot và không thay đổi runtime.
+      Các bước test tiếp theo chưa chạy. Đã chạy chế độ `--refresh-web-evidence` chỉ cho Web
+      trên source commit `e44080e`, tạo fingerprint `af3a77086075` khớp inventory/preflight;
+      không quét Bot và không thay đổi runtime. Cần xác minh lại trên HEAD evidence commit.
 - [x] Đối chiếu remote: local cũ lệch; tạo worktree sạch từ `github/webapp-checklist-r116`.
 - [x] Sau quality-gate failure `38958333812`, đã sửa provenance evidence: `284` eligible Web
       files; `preflight.json`, `web_inventory.json` và source hiện cùng fingerprint
