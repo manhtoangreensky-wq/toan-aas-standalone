@@ -49,6 +49,11 @@
       WA-49 có `160` dòng. Đã cập nhật đúng `lines=160`, `bytes=36583`, SHA-256
       `c2dbd8196fa7b2302656a67380ec8b1b9e01875fac666ce2774a1035c5b42cfa`; đã xác minh bằng
       Python read-only. Chờ quality gate mới để đóng lỗi; không thay đổi runtime.
+- [!] CI run `39006585798` trên `d9e4fe2` đã dừng ở bước `Verify committed migration evidence`:
+      evidence ghi `f590cd8df08a` nhưng source sau cập nhật checklist/state là `b11ca35d3e62`
+      (`284` tệp). Đây là provenance drift do tài liệu được cập nhật sau lần refresh, không phải
+      lỗi runtime. Đã giữ nguyên chất lượng source; cần chốt tài liệu này, refresh Web-only rồi
+      verify lại trước khi tính quality gate xanh.
 - [x] Đối chiếu remote: local cũ lệch; tạo worktree sạch từ `github/webapp-checklist-r116`.
 - [x] Sau quality-gate failure `38958333812`, đã sửa provenance evidence: `284` eligible Web
       files; `preflight.json`, `web_inventory.json` và source hiện cùng fingerprint
