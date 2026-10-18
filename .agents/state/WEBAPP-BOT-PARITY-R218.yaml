@@ -1,22 +1,22 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: WIP_P1_VOICE_STT_METADATA_VERIFIED_CI_GREEN
+status: WIP_P1_VOICE_STT_METADATA_VERIFIED_CI_PENDING_RECHECK
 date: 2026-10-18
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 8058ba5bf748bea0ea87c596b54cf6d625babba5
-delivery_head_sha: 8058ba5bf748bea0ea87c596b54cf6d625babba5
-delivery_status: PUSHED_REMOTE_CI_GREEN_PENDING_OWNER_MERGE
-head_sha_semantics: "Current verified branch tip; guarded Voice report projection and Web migration evidence refresh are verified, without unlocking runtime/provider execution."
-delivery_head_semantics: "Code, refreshed evidence and metadata are on the verified branch tip; PR quality gate and authenticated QA are green."
-branch_head_sha: 8058ba5bf748bea0ea87c596b54cf6d625babba5
+head_sha: 4b4478eae6b2f1f551a78d7b1ea452fccf88ee13
+delivery_head_sha: 4b4478eae6b2f1f551a78d7b1ea452fccf88ee13
+delivery_status: LOCAL_EVIDENCE_REFRESH_PENDING_PUSH_CI_RECHECK_OWNER_MERGE_NOT_AUTHORIZED
+head_sha_semantics: "Last verified product/evidence tip before the metadata-only state sync commit; guarded Voice report projection and Web migration evidence refresh are present. Runtime/provider execution remains locked."
+delivery_head_semantics: "The last product/evidence tip is recorded locally; the current branch may have bookkeeping-only commits, and PR/CI state for the tip must be rechecked when GitHub access is available."
+branch_head_sha: 4b4478eae6b2f1f551a78d7b1ea452fccf88ee13
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
-last_push_verified_commit: 8058ba5bf748bea0ea87c596b54cf6d625babba5
-docs_checkpoint_sha: 8058ba5bf748bea0ea87c596b54cf6d625babba5
-push_command_success_commit: 8058ba5bf748bea0ea87c596b54cf6d625babba5
-remote_readback: "VERIFIED: git push github webapp-r217-subdub-ui-r218 succeeded and updated GitHub branch to 8058ba5bf748bea0ea87c596b54cf6d625babba5. CI run 39134067820 Verify Web App and Authenticated WebApp QA both succeeded."
+last_push_verified_commit: 340407b977856f2c7255b8834d358faf93efe796
+docs_checkpoint_sha: 4b4478eae6b2f1f551a78d7b1ea452fccf88ee13
+push_command_success_commit: 340407b977856f2c7255b8834d358faf93efe796
+remote_readback: "Local tracking ref github/webapp-r217-subdub-ui-r218 remains at 340407b977856f2c7255b8834d358faf93efe796; local Web evidence refresh tip is 4b4478eae6b2f1f551a78d7b1ea452fccf88ee13 and is not pushed yet. GitHub API/CI for this tip was not revalidated; last independently confirmed terminal CI remains run 39134067820 on 8058ba5."
 batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
