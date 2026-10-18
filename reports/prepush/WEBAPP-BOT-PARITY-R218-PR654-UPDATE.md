@@ -8,7 +8,7 @@
 REPOSITORY=manhtoangreensky-wq/toan-aas-standalone
 BRANCH=webapp-r217-subdub-ui-r218
 SOURCE_HEAD_SHA=db8faa41fd059467d8f084a7661a01e53f4a5e85
-CURRENT_CANDIDATE_HEAD_SHA=faf26345881c09e55949c62a6fa4d0affc3b9331
+CURRENT_CANDIDATE_HEAD_SHA=3ecbdc8e6c7447570360aca6792d78f1d3cd995b
 DOCS_ONLY_UPDATE=false
 PR=https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/654
 PROVIDER_CALLS=0
@@ -64,26 +64,30 @@ delivery hoặc LIVE production.
 ```text
 TESTER_WORKSPACE=REUSE_EXISTING_ACCEPTED_WORKSPACE
 EXTERNAL_MUTATION_IN_THIS_UPDATE=0
-PUSH_GATE=READY_FOR_DOCUMENTATION_UPDATE
+PUSH_GATE=REMOTE_MATCHED; PR_OPEN_CONFLICTING; CI_UNKNOWN
 ```
 
-## Current Image candidate identity — commit `faf26345881c09e55949c62a6fa4d0affc3b9331`
+## Current Image candidate identity — pushed head `3ecbdc8e6c7447570360aca6792d78f1d3cd995b`
 
-Wave Image đã được commit sau khi kiểm tra đúng 8 tệp trong phạm vi. Bản ghi này tách rõ
-candidate mới khỏi comparator cũ ở trên; CI, browser evidence và LIVE trên candidate mới
-chưa được suy diễn từ run trước.
+Wave Image đã được commit/push sau khi kiểm tra đúng 8 tệp trong phạm vi. Local và GitHub
+đang trùng SHA; PR #654 vẫn OPEN, `statusCheckRollup=[]` và `mergeable=CONFLICTING`. Bản ghi
+này tách rõ candidate mới khỏi comparator cũ ở trên; CI, browser evidence và LIVE trên
+candidate mới chưa được suy diễn từ run trước.
 
 ```text
 IMAGE_TARGETED=48/48
 LOCAL_FULL=541/541 tests/*.test.mjs
 NODE_CHECK=PASS (static/portal/portal.js, static/portal/portal-i18n.js)
 GIT_DIFF_CHECK=PASS
-CI_ON_CURRENT_HEAD=UNKNOWN
+CI_ON_CURRENT_HEAD=UNKNOWN (PR statusCheckRollup rỗng)
 PROVIDER_CALLS=0
 WALLET_MUTATIONS=0
 PRODUCTION_DATA_MUTATIONS=0
 DEPLOY=NO
 LIVE_PASS=NOT_TESTED
+REMOTE_HEAD=3ecbdc8e6c7447570360aca6792d78f1d3cd995b (0/0 local-vs-GitHub)
+PR_STATE=OPEN
+PR_MERGEABLE=CONFLICTING
 ```
 
 ## 4. Disposition trước khi mở wave tiếp
