@@ -7,8 +7,8 @@
 ```text
 REPOSITORY=manhtoangreensky-wq/toan-aas-standalone
 BRANCH=webapp-r217-subdub-ui-r218
-SOURCE_HEAD_SHA=5150932d124f5df245077ee5516927543412b5e5
-CURRENT_CANDIDATE_HEAD_SHA=5150932d124f5df245077ee5516927543412b5e5
+SOURCE_HEAD_SHA=37aa610f37c5a99b7ea8fae5eafb5285eb8c9c61
+CURRENT_CANDIDATE_HEAD_SHA=37aa610f37c5a99b7ea8fae5eafb5285eb8c9c61
 DOCS_ONLY_UPDATE=false
 PR=https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/654
 PROVIDER_CALLS=0
@@ -38,7 +38,7 @@ VERIFY_WEB_APP=SUCCESS (prior comparator)
 AUTHENTICATED_WEBAPP_QA=SUCCESS (prior comparator)
 ROUTE_RENDER_MATRIX=456/456 (prior comparator)
 LOCAL_TARGETED=3 voice control + 97 Voice regression passed; node --check static/portal/portal.js; git diff --check
-LOCAL_REGRESSION=549 passed, 0 failed on source candidate 5150932
+LOCAL_REGRESSION=553 passed, 0 failed on source candidate 37aa610
 JSON_EVIDENCE=preflight.json + web_inventory.json parse successfully
 MIGRATION_SOURCE_FILES=recorded in reports/migration/web_inventory.json
 MIGRATION_SOURCE_FINGERPRINT=recorded in reports/migration/preflight.json and web_inventory.json
@@ -67,16 +67,16 @@ EXTERNAL_MUTATION_IN_THIS_UPDATE=0
 PUSH_GATE=REMOTE_MATCHED; PR_OPEN_CONFLICTING; CI_UNKNOWN
 ```
 
-## Current UT-04 Utilities candidate identity — pushed head `5150932d124f5df245077ee5516927543412b5e5`
+## Current UT-06 Documents candidate identity — pushed head `37aa610f37c5a99b7ea8fae5eafb5285eb8c9c61`
 
-Wave UT-04 Utilities đã được commit/push sau khi kiểm tra đúng phạm vi control-level. Local
+Wave UT-06 Documents đã được commit/push sau khi kiểm tra đúng phạm vi control-level. Local
 và GitHub đang trùng SHA; PR #654 vẫn OPEN, `statusCheckRollup=[]` và
 `mergeable=CONFLICTING`. Bản ghi này tách rõ candidate mới khỏi comparator cũ ở trên; CI,
 browser evidence và LIVE trên candidate mới chưa được suy diễn từ run trước.
 
 ```text
-UTILITY_UT04_TARGETED=5/5
-LOCAL_FULL=549/549 tests/*.test.mjs
+DOCUMENTS_UT06_TARGETED=4/4
+LOCAL_FULL=553/553 tests/*.test.mjs
 NODE_CHECK=PASS (static/portal/portal.js, static/portal/portal-i18n.js)
 GIT_DIFF_CHECK=PASS
 CI_ON_CURRENT_HEAD=UNKNOWN (PR statusCheckRollup rỗng)
@@ -85,7 +85,7 @@ WALLET_MUTATIONS=0
 PRODUCTION_DATA_MUTATIONS=0
 DEPLOY=NO
 LIVE_PASS=NOT_TESTED
-REMOTE_HEAD=5150932d124f5df245077ee5516927543412b5e5 (0/0 local-vs-GitHub)
+REMOTE_HEAD=37aa610f37c5a99b7ea8fae5eafb5285eb8c9c61 (0/0 local-vs-GitHub)
 PR_STATE=OPEN
 PR_MERGEABLE=CONFLICTING
 ```
