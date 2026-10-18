@@ -207,6 +207,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] Review candidate #654 theo spec mới: không còn count thẻ disabled là hoàn tất;
   lane selector/link/callback đã được kiểm thử static và CI/browser route/render; chưa có
   bằng chứng backend capability, upload, quote, job, result hoặc delivery.
+- [~] Regression SubDub hiện hành đạt `20/20` focused tests; simulation kiểm `24` tổ hợp
+  locale/mode/theme, giữ Smart Multi/Auto 2/Auto Multi 3–8 riêng, 7 vị trí phụ đề và
+  trạng thái guarded. Browser authenticated/runtime/upload thật vẫn mở.
 - [ ] Renderer/interaction + browser/AX/screenshots đạt.
 
 ## P4 — Image R218-05 (IM-01..10)
