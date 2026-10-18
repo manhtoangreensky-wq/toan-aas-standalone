@@ -1,12 +1,12 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: WIP_MUSIC_CONTROLS_LOCAL_GREEN_CI_PENDING
+status: WIP_MUSIC_CONTROLS_PUSHED_CI_PENDING
 date: 2026-10-18
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 06380789abcc11d118286de3903c5bbab44e4176
+head_sha: 427f4bfec16b9ac7d9e9fc4890b4fa7524a9d95a
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
   root: "D:/TOANAAS/bot telegram"
@@ -51,4 +51,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Đã khóa Music control-level local và chuẩn bị push PR #654; chờ CI/browser candidate riêng, sau đó mới sang SubDub capability/runtime; giữ nguyên no merge/deploy/live cho tới khi có lệnh Owner riêng."
+next_action: "Music control-level đã push lên PR #654 tại HEAD 427f4bf; chờ CI/browser candidate riêng, sau đó mới sang SubDub capability/runtime; giữ nguyên no merge/deploy/live cho tới khi có lệnh Owner riêng."

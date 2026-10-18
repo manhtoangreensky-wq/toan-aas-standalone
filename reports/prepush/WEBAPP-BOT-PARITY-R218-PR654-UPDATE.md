@@ -7,7 +7,7 @@
 ```text
 REPOSITORY=manhtoangreensky-wq/toan-aas-standalone
 BRANCH=webapp-r217-subdub-ui-r218
-SOURCE_HEAD_SHA=06380789abcc11d118286de3903c5bbab44e4176
+SOURCE_HEAD_SHA=427f4bfec16b9ac7d9e9fc4890b4fa7524a9d95a
 DOCS_ONLY_UPDATE=false
 PR=https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/654
 PROVIDER_CALLS=0
