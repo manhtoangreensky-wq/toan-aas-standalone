@@ -21521,7 +21521,7 @@ html[data-portal-theme="dark"] .portal-feature-workspace--voice-task form .porta
 .portal-voice-flow { display: grid; gap: 16px; color: var(--portal-ink); }
 .portal-voice-flow .portal-state { margin: 0; }
 .portal-voice-flow :is(h3, h4, dt, dd, p, summary) { color: var(--portal-ink); }
-.portal-voice-flow :is(.portal-voice-quote, .portal-voice-tracking) { background: var(--portal-surface-soft); border: 1px solid var(--portal-border); border-radius: 12px; padding: 16px; }
+.portal-voice-flow :is(.portal-voice-quote, .portal-voice-tracking, .portal-voice-report) { background: var(--portal-surface-soft); border: 1px solid var(--portal-border); border-radius: 12px; padding: 16px; }
 .portal-voice-flow dl { display: grid; gap: 12px; margin: 0; }
 .portal-voice-flow dl > div { display: grid; gap: 4px; }
 .portal-voice-flow dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }

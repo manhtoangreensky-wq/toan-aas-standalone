@@ -106,6 +106,17 @@ for(const locale of ['vi','en','zh']){
       for(const invalid of [{...f,data:{tracking:{...f.data.tracking,feature:'video_ai_prompt'}}},{...f,data:{tracking:{...f.data.tracking,status:'unknown'}}},{...f,data:{job_id:'QA-job-01'}}])assert.doesNotMatch(render(invalid),/href="\/jobs\/QA-job-01"/);
     });
   }
+  test(`Voice renders a guarded canonical report without exposing a private output URL (${locale})`,()=>{
+    const flow={phase:'confirm',status:'completed',feature:'voice_tts',message:'QA_SERVER_MESSAGE',data:{
+      tracking:{id:'QA-job-report',feature:'voice_tts',status:'completed'},
+      report:{status:'completed',progress_percent:100,output_available:true,download_ready:false,delivery_ready:false,status_reason:'DELIVERY_PENDING'},
+      output_url:'https://invalid.example/private.mp3'
+    }};
+    const html=render(flow);
+    assert.match(html,/data-voice-report-state="available"/);
+    assert.match(visible(html),locale==='vi'?/Chưa sẵn sàng bàn giao/:locale==='en'?/not ready for delivery/i:/尚未准备交付/);
+    assert.doesNotMatch(html,/https:\/\/invalid\.example|data-voice-report-download/);
+  });
   test(`Voice error preserves escaped server feedback without fake output (${locale})`,()=>{
     const html=render({phase:'estimate',status:'error',feature:'voice_tts',message:'QA_ERROR <script>',data:{}});
     assert.match(html,/QA_ERROR &lt;script&gt;/);assert.doesNotMatch(html,/<audio\b|<script\b|feature-confirm/);

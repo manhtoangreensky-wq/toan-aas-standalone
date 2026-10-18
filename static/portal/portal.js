@@ -31763,6 +31763,34 @@
     return { id, status, feature };
   }
 
+  function safeVoiceReport(flow) {
+    const data = flow && flow.data && typeof flow.data === "object" ? flow.data : {};
+    const explicit = [data.report, data.job, data.result].find((value) => value && typeof value === "object" && !Array.isArray(value));
+    const reportFields = ["status", "progress", "progress_percent", "progress_percentage", "output_available", "download_ready", "delivery_ready", "status_reason", "error_category", "id", "job_id"];
+    const direct = reportFields.some((key) => Object.prototype.hasOwnProperty.call(data, key)) ? data : null;
+    const source = explicit || direct;
+    if (!source) return null;
+    const rawStatus = String(source.status || (flow && flow.status) || "").trim().toLowerCase();
+    const status = FEATURE_TRACKING_JOB_STATES.has(rawStatus) ? rawStatus : "";
+    const rawProgress = source.progress_percent ?? source.progress_percentage ?? source.progress;
+    const progressNumber = Number(rawProgress);
+    const progress = Number.isFinite(progressNumber) && progressNumber >= 0 && progressNumber <= 100
+      ? Math.round(progressNumber) : null;
+    const reason = [source.status_reason, source.error_category]
+      .find((value) => typeof value === "string" && value.trim()) || "";
+    return {
+      status,
+      progress,
+      outputKnown: typeof source.output_available === "boolean",
+      outputAvailable: source.output_available === true,
+      downloadKnown: typeof source.download_ready === "boolean",
+      downloadReady: source.download_ready === true,
+      deliveryKnown: typeof source.delivery_ready === "boolean",
+      deliveryReady: source.delivery_ready === true,
+      reason: String(reason).trim().slice(0, 240)
+    };
+  }
+
   function renderFeatureTracking(flow) {
     if (!flow || flow.phase !== "confirm" || !FEATURE_TRACKING_JOB_STATES.has(String(flow.status || "").toLowerCase())) return "";
     const tracking = safeFeatureTracking(flow);
@@ -31817,7 +31845,22 @@
     const trackingMarkup = flow && flow.phase === "confirm"
       ? `<div class="portal-voice-tracking"><p>${safeText(t(tracking ? "flow.trackingReady" : "flow.trackingPending", ""))}</p>${tracking ? `<dl><div><dt>${safeText(t("flow.jobId", "Mã công việc"))}</dt><dd><code>${safeText(tracking.id)}</code></dd></div></dl>` : ""}<a class="portal-button portal-button--quiet" href="${tracking ? `/jobs/${encodeURIComponent(tracking.id)}` : "/jobs"}">${safeText(t(tracking ? "flow.track" : "output.jobs", "Xem công việc"))}</a></div>`
       : "";
-    return `<div class="portal-voice-flow" data-voice-flow-state="${safeText(status)}"><div class="portal-state" data-state="${safeText(status)}"><div><h3>${safeText(heading)}</h3><p>${safeText(needsRefresh ? t("flow.quoteNeedsRefreshNote", "") : t(`flow.note.${status}`, t("flow.note.guarded", "")))}</p></div></div>${quote}${planning}${textActions}${feedback}${trackingMarkup}</div>`;
+    const report = flow && flow.phase === "confirm" ? safeVoiceReport(flow) : null;
+    const reportStatus = report && report.status ? report.status : status;
+    const reportProgress = report && report.progress !== null
+      ? `<div><dt>${safeText(t("flow.report.progress", "Tiến độ"))}</dt><dd>${safeText(`${report.progress}%`)}</dd></div>` : "";
+    const reportOutput = report && report.outputKnown
+      ? `<div><dt>${safeText(t("flow.report.output", "Tệp kết quả"))}</dt><dd>${safeText(report.outputAvailable ? t("flow.report.outputReady", "Đã có tệp được xác minh") : t("flow.report.outputPending", "Chưa có tệp được xác minh"))}</dd></div>` : "";
+    const reportDownload = report && report.downloadKnown
+      ? `<div><dt>${safeText(t("flow.report.download", "Tải xuống"))}</dt><dd>${safeText(report.downloadReady ? t("flow.report.downloadReady", "Đã đủ điều kiện tải") : t("flow.report.downloadPending", "Chưa đủ điều kiện tải"))}</dd></div>` : "";
+    const reportDelivery = report && report.deliveryKnown
+      ? `<div><dt>${safeText(t("flow.report.delivery", "Bàn giao"))}</dt><dd>${safeText(report.deliveryReady ? t("flow.report.deliveryReady", "Đã sẵn sàng bàn giao") : t("flow.report.deliveryPending", "Chưa sẵn sàng bàn giao"))}</dd></div>` : "";
+    const reportReason = report && report.reason
+      ? `<div><dt>${safeText(t("flow.report.reason", "Thông tin máy chủ"))}</dt><dd>${safeText(report.reason)}</dd></div>` : "";
+    const reportMarkup = flow && flow.phase === "confirm"
+      ? `<section class="portal-voice-report" data-voice-report-state="${report ? "available" : "pending"}" aria-live="polite"><div class="portal-card-header"><div><h4>${safeText(t("flow.report.title", "Báo cáo xử lý"))}</h4><p>${safeText(report ? t("flow.report.note", "Chỉ hiển thị tín hiệu bàn giao do máy chủ trả về; Web không tự tạo tệp hoặc URL tải.") : t("flow.report.pending", "Chưa có báo cáo chi tiết từ máy chủ. Mở công việc để xem trạng thái canonical."))}</p></div></div>${report ? `<dl><div><dt>${safeText(t("flow.report.status", "Trạng thái"))}</dt><dd>${safeText(t(`flow.state.${reportStatus}`, t("flow.state.guarded", "Chưa thể tiếp tục")))}</dd></div>${reportProgress}${reportOutput}${reportDownload}${reportDelivery}${reportReason}</dl>` : ""}</section>`
+      : "";
+    return `<div class="portal-voice-flow" data-voice-flow-state="${safeText(status)}"><div class="portal-state" data-state="${safeText(status)}"><div><h3>${safeText(heading)}</h3><p>${safeText(needsRefresh ? t("flow.quoteNeedsRefreshNote", "") : t(`flow.note.${status}`, t("flow.note.guarded", "")))}</p></div></div>${quote}${planning}${textActions}${feedback}${reportMarkup}${trackingMarkup}</div>`;
   }
 
   function imageUiText(key, fallback, params) {
