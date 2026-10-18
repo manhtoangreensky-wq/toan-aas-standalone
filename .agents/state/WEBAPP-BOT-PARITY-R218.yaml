@@ -6,16 +6,16 @@ scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cu�
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: b7eef5474273c32b3dd13e4735bb7cd0443e633a
-delivery_head_sha: 1babe77e2d82fd200fe4a0c8b2a84d085ee83733
-delivery_status: PUSH_COMMAND_SUCCEEDED_REMOTE_READBACK_UNAVAILABLE_AWAITING_CI
+head_sha: f79dabf59484bc8edac8cd5bd898e5edc966ad2c
+delivery_head_sha: f79dabf59484bc8edac8cd5bd898e5edc966ad2c
+delivery_status: PUSH_COMMAND_SUCCEEDED_REMOTE_READBACK_UNAVAILABLE_CI_UNKNOWN
 head_sha_semantics: "Source-code candidate SHA; docs-only checkpoints may advance branch HEAD without changing this code candidate."
 delivery_head_semantics: "Push command succeeded for this commit; independent remote readback and CI are not verified in the current environment."
-branch_head_sha: 1babe77e2d82fd200fe4a0c8b2a84d085ee83733
+branch_head_sha: f79dabf59484bc8edac8cd5bd898e5edc966ad2c
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
 last_push_verified_commit: fd9cc30a1aa68b865ca9ef76a224936000d1cca0
-docs_checkpoint_sha: 1babe77e2d82fd200fe4a0c8b2a84d085ee83733
-push_command_success_commit: 1babe77e2d82fd200fe4a0c8b2a84d085ee83733
+docs_checkpoint_sha: f79dabf59484bc8edac8cd5bd898e5edc966ad2c
+push_command_success_commit: f79dabf59484bc8edac8cd5bd898e5edc966ad2c
 remote_readback: "NOT_VERIFIED: git ls-remote failed with getaddrinfo() thread failed to start"
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
@@ -61,7 +61,7 @@ current_wip:
   historical_crosswalk: "Đã kiểm kê 127 plan + 180 spec + 44 audit + 14 state = 365 file; 307 plan/spec được phân lớp; 433 dòng checkbox cũ được truy vết. `unclassified source=0`; semantic review từng dòng trước R217 vẫn mở theo wave, không suy diễn PASS."
   ci_run: 39099917923
   ci_head: 69ef97ffdf7f0c86aa950439dd8c83d64989f53e
-  ci_status_at_last_observation: UNKNOWN_AFTER_SUPPORT_PUSH
+  ci_status_at_last_observation: UNKNOWN_AFTER_VOICE_VAULT_PUSH
   ci_scope: "HEAD 8baaa07/148be4f prior comparator đã xanh Verify Web App + Authenticated QA; candidate 28cc131 chứa UT-01 translation workspace và tài liệu, GitHub statusCheckRollup hiện rỗng, cần CI/browser run riêng."
   ci_latest_run: 39101124230
   ci_latest_status: "Candidate source UT-06 vẫn ở code head 37aa610f37c5a99b7ea8fae5eafb5285eb8c9c61; sau đó branch có docs-only checkpoint. UT-07 control-level đã verify local; PR #654 vẫn OPEN, statusCheckRollup=[] và mergeable=CONFLICTING tại lần đọc này; không tự xử lý conflict."
