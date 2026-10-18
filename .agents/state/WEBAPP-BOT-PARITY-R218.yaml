@@ -1,6 +1,6 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: WIP_SUBDUB_PATCH_VERIFIED_LOCALLY
+status: WIP_SUBDUB_PATCH_CI_GREEN
 date: 2026-10-18
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
@@ -31,14 +31,14 @@ current_wip:
   ci_head: 8baaa0768600aea4f8da6c7e5515c9781c5bb7a5
   ci_status_at_last_observation: SUCCESS_BEFORE_LOCAL_SUBDUB_PATCH
   ci_scope: "HEAD 8baaa07 đã xanh Verify Web App + Authenticated QA; commit SubDub mới chưa push/CI."
-  ci_latest_run: 39100762508
-  ci_latest_status: "Verify Web App FAILED before product tests: migration evidence fingerprint recorded=4df2602795b3, current=0ccda5aeca61, files=286."
-  migration_evidence_refresh: "Prepared for b040fc0: source_files_scanned=286, source_fingerprint_sha256=0ccda5aeca61faf9bf26383e26ee4d9fdcf5642438ef41baa107bc19635dcf70."
+  ci_latest_run: 39101124230
+  ci_latest_status: "Verify Web App SUCCESS; Authenticated WebApp QA SUCCESS on HEAD 148be4f6ec18e3c7fe3abfee8ca8a34ee1a5d099. Route matrix: 456/456 cases observed across customer/admin, VI/EN/ZH, light/dark, phone/tablet/desktop."
+  migration_evidence_refresh: "Verified for docs-updated HEAD lineage from source 148be4f6ec18e3c7fe3abfee8ca8a34ee1a5d099: source_files_scanned=287, source_fingerprint_sha256=16a76f53a5f0b082a55ce9f9b5fb2faa123fa905152a0c3f25cc02b9d0ff86f0."
   local_targeted_tests: "13/13 tests/subdub-hub-presentation.test.mjs; node --check static/portal/portal.js; git diff --check"
   local_full_tests: "527/527 tests/*.test.mjs"
   browser_qa_artifact_sha256: e02fc36e875e12e910e327369f2d6bab625cae87ddb4ddc0fc57553fd1e7f0c9
 open_findings:
-  - "SubDub browser/CI chưa chạy trên commit lane patch; canonical voice handoff vẫn chờ server capability."
+  - "Authenticated browser matrix đã xanh cho route/render trên HEAD; canonical voice handoff vẫn chờ server capability và execution evidence."
   - "Auto 2/Auto Multi 3-8/Smart Multi là ba callback, không gộp."
   - "Music edit guarded; two-track delivery chưa chứng minh."
   - "Video 32 profiles/39 AI edit options; execution capability riêng."
@@ -47,4 +47,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Push migration evidence refresh with b040fc0, await Verify Web App + Authenticated QA, then continue ordered R218 wave; no merge/deploy/live."
+next_action: "Tiếp tục ordered R218 wave từ Shared → Voice → Music → SubDub capability/runtime contract; giữ nguyên no merge/deploy/live cho tới khi có lệnh Owner riêng."

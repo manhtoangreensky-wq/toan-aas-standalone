@@ -860,6 +860,21 @@ ví/Xu, Bot bridge và dữ liệu production không đổi.
 - Blocker kiểm thử: `pytest` chưa chạy vì Python bundled không có module `pytest`; CI phải chạy
   lại bộ Python trước delivery.
 
+## R218 — Cập nhật evidence sau WIP SubDub — 18/10/2026
+
+- HEAD candidate hiện tại của PR #654: `148be4f6ec18e3c7fe3abfee8ca8a34ee1a5d099`.
+- CI run `39101124230`: `Verify Web App=SUCCESS`, `Authenticated WebApp QA=SUCCESS`;
+  ma trận route/render ghi nhận `456/456` case trên customer/admin, VI/EN/ZH,
+  light/dark và phone/tablet/desktop.
+- Local gate của SubDub presentation: `13/13` test mục tiêu, `node --check
+  static/portal/portal.js`, `git diff --check`, full Node trước đó `527/527`.
+- Kết luận vận hành: chỉ khóa được lane presentation, locale, selector và route/render
+  evidence. Chưa có bằng chứng server capability, upload, quote, job, provider output,
+  artifact delivery hoặc live production; `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
+  `PRODUCTION_DATA_MUTATIONS=0`, `LIVE_PASS=NOT_TESTED`.
+- Ba lane Auto 2, Auto Multi 3–8 và Smart Multi vẫn là ba callback riêng; không được
+  gộp thành một engine hay suy diễn từ route matrix.
+
 ## R218 — Toàn sản phẩm, nguồn Bot và checkpoint — 18/10/2026
 
 R218 hiện bao phủ Voice, Music/SFX, SubDub, Image, Product Video/AI và manual edit,

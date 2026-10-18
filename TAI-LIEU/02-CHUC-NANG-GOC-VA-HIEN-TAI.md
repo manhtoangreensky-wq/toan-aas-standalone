@@ -595,3 +595,15 @@ duyệt tiền thật.
 Chi tiết nguồn: reports/audit/WEBAPP-BOT-PRODUCT-INVENTORY-R218.md.
 Lịch sử source PASS phía trên chỉ có giá trị đúng scope/HEAD/ngày đã ghi;
 không tự nâng thành hoàn tất toàn bộ sản phẩm hay deployment hiện tại.
+
+## R218 — Đối chiếu hiện tại sau CI run 39101124230 — 18/10/2026
+
+| Phạm vi | Hiện trạng có bằng chứng | Chưa được suy diễn |
+|---|---|---|
+| SubDub voice lanes | HEAD `148be4f6ec18e3c7fe3abfee8ca8a34ee1a5d099`; 13/13 test mục tiêu; CI Verify Web App và Authenticated QA xanh; 456/456 route/render case | Không chứng minh Voice Vault projection, speaker detection, upload, quote, job, output hay delivery |
+| Các nhóm Voice/Music/Image/Video/Utilities/AutoPost/Admin | Inventory B01–B34, plan/checklist/spec R218 đã ghi đủ control cần đối chiếu theo bảng Bot | Chưa có control-level/browser evidence cho từng nhóm; mục chưa có evidence vẫn mở `[ ]`/`[~]` trong checklist |
+| Runtime và production | Không gọi provider, không đổi ví/Xu, không sửa dữ liệu production | `MERGED != DEPLOYED != LIVE`; live pass vẫn `NOT_TESTED` |
+
+Nguồn completion ledger duy nhất của đợt này là
+`reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md`; không đánh dấu hoàn tất
+chỉ vì route trả HTML hoặc CI render xanh.
