@@ -9,7 +9,9 @@ REPOSITORY=manhtoangreensky-wq/toan-aas-standalone
 BRANCH=webapp-r217-subdub-ui-r218
 SOURCE_HEAD_SHA=37aa610f37c5a99b7ea8fae5eafb5285eb8c9c61
 CURRENT_CANDIDATE_HEAD_SHA=37aa610f37c5a99b7ea8fae5eafb5285eb8c9c61
-DOCS_ONLY_UPDATE=false
+DOCS_ONLY_UPDATE=true
+SOURCE_HEAD_SEMANTICS=source-code candidate; docs-only checkpoints may advance branch HEAD
+DOCS_CHECKPOINT_PARENT_SHA=a2da1a564be9864b2f647f65300460eea9be3d6b
 PR=https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/654
 PROVIDER_CALLS=0
 WALLET_MUTATIONS=0
@@ -38,7 +40,7 @@ VERIFY_WEB_APP=SUCCESS (prior comparator)
 AUTHENTICATED_WEBAPP_QA=SUCCESS (prior comparator)
 ROUTE_RENDER_MATRIX=456/456 (prior comparator)
 LOCAL_TARGETED=3 voice control + 97 Voice regression passed; node --check static/portal/portal.js; git diff --check
-LOCAL_REGRESSION=553 passed, 0 failed on source candidate 37aa610
+LOCAL_REGRESSION=558 passed, 0 failed on source candidate 37aa610
 JSON_EVIDENCE=preflight.json + web_inventory.json parse successfully
 MIGRATION_SOURCE_FILES=recorded in reports/migration/web_inventory.json
 MIGRATION_SOURCE_FINGERPRINT=recorded in reports/migration/preflight.json and web_inventory.json
@@ -67,7 +69,7 @@ EXTERNAL_MUTATION_IN_THIS_UPDATE=0
 PUSH_GATE=REMOTE_MATCHED; PR_OPEN_CONFLICTING; CI_UNKNOWN
 ```
 
-## Current UT-06 Documents candidate identity — pushed head `37aa610f37c5a99b7ea8fae5eafb5285eb8c9c61`
+## Current UT-06 Documents / UT-07 Assets candidate identity
 
 Wave UT-06 Documents đã được commit/push sau khi kiểm tra đúng phạm vi control-level. Local
 và GitHub đang trùng SHA; PR #654 vẫn OPEN, `statusCheckRollup=[]` và
@@ -76,7 +78,8 @@ browser evidence và LIVE trên candidate mới chưa được suy diễn từ r
 
 ```text
 DOCUMENTS_UT06_TARGETED=4/4
-LOCAL_FULL=553/553 tests/*.test.mjs
+ASSETS_UT07_TARGETED=5/5
+LOCAL_FULL=558/558 tests/*.test.mjs
 NODE_CHECK=PASS (static/portal/portal.js, static/portal/portal-i18n.js)
 GIT_DIFF_CHECK=PASS
 CI_ON_CURRENT_HEAD=UNKNOWN (PR statusCheckRollup rỗng)
@@ -94,6 +97,9 @@ PR_MERGEABLE=CONFLICTING
 
 - Đã khóa: SubDub lane selector, link Voice, ba callback riêng Auto 2/Multi 3–8/Smart Multi,
   dub volume static 0–200, locale copy và route/render CI evidence.
+- Đã khóa control-level UT-07: Asset Vault owner-scoped upload/filter/page/download/lifecycle,
+  Project link, 25 MB allowlist và archive/restore theo server revision; bytes thật, preview,
+  quota/expiry server, browser/AX và delivery vẫn mở.
 - Chưa khóa: Voice Vault mapping, Music editor/two-track delivery, SubDub server capability
   và execution, Image/Utilities/AutoPost/Admin control-level evidence, Product Video/Video
   Editor execution và toàn bộ motion cuối.

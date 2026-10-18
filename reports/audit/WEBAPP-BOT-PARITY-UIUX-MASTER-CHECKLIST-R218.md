@@ -1,6 +1,6 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
-Ngày 2026-10-18. WIP_UT06_DOCUMENTS_CONTROL_PARTIAL. Source Bot được đọc-only; production chưa kiểm.
+Ngày 2026-10-18. WIP_UT07_ASSETS_CONTROL_PARTIAL. Source Bot được đọc-only; production chưa kiểm.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
 
@@ -66,6 +66,11 @@ nhóm hoặc nhầm một thẻ điều hướng là một tính năng đã ch�
 - [~] UT-02/UT-03/UT-05/UT-08 control-level đã được rà soát bằng bộ test cố định; riêng
   Content Prompt Pack đã loại các chuỗi tiếng Anh giao diện khỏi bản VI và tách catalogue
   VI/EN/ZH. Runtime tạo nội dung, lưu, phiên bản, dữ liệu thật, browser và live vẫn mở.
+- [~] UT-07 Assets control-level đã khóa bằng `tests/assets-product-controls.test.mjs`:
+  workspace owner-scoped, upload 25 MB/allowlist, gắn Project, lọc active/archived/all,
+  phân trang, download chỉ active, lifecycle redaction, archive/restore theo revision và
+  các trạng thái guarded/failed. Test riêng `5/5`, full Node `558/558`; bytes thật,
+  preview, capability server, browser/AX, delivery và LIVE vẫn mở.
 
 ## F0 — Shared contract R218-00/01
 
@@ -167,7 +172,9 @@ nhóm hoặc nhầm một thẻ điều hướng là một tính năng đã ch�
   tải chỉ khi `completed + download_ready`. Spec chi tiết tại
   `docs/superpowers/specs/2026-10-18-r218-06c-documents-product-controls.md`.
   Capability server, upload/preview/output/delivery, browser/AX và LIVE vẫn mở.
-- [ ] UT-07 Assets upload/list/preview/download/quota/expiry/privacy.
+- [~] UT-07 Assets upload/list/filter/page/download/lifecycle/quota/privacy control-level
+  đã khóa tại `docs/superpowers/specs/2026-10-18-r218-06d-assets-product-controls.md`;
+  upload bytes thật, preview, quota/expiry do server công bố, browser/AX và delivery vẫn mở.
 - [~] UT-08 Projects/Workboard task/dependency/status/assignee/dates/report đã có Project
   Center, Workboard dọc, checklist, lịch, lịch sử và trạng thái; browser fixture/runtime chưa
   chứng minh.
