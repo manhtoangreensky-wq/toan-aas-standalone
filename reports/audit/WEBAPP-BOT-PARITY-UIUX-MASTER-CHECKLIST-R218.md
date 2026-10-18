@@ -1,6 +1,6 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
-Ngày 2026-10-18. WIP_AC01_ACCOUNT_CONTROLS_PARTIAL. Source Bot được đọc-only; production chưa kiểm.
+Ngày 2026-10-18. WIP_AC02_BILLING_CONTROLS_PARTIAL. Source Bot được đọc-only; production chưa kiểm.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
 Đối soát toàn bộ lịch sử trước R217 nằm tại
@@ -228,7 +228,11 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   nguyên tên riêng/acronym và placeholder; test riêng `2/2`, Account regression
   `11/11`, full Node mới nhất `574/574`. Đây chỉ là source-locale evidence;
   browser/AX, session runtime và control-level runtime vẫn chưa đóng AC-01.
-- [ ] AC-02 Packages/pricing/topup/history/detail/pending, không wallet mutation;
+- [~] AC-02 Packages/pricing/topup/history/detail/pending, không wallet mutation;
+  control-level đã có `tests/account-billing-control-level-contract.test.mjs` đạt `5/5`,
+  full Node mới nhất `579/579`; ví/lịch sử canonical, nạp thủ công bắt buộc method+amount
+  trước QR, PayOS/catalog fail-closed và Admin handoff giữ request/confirmation boundary.
+  Browser/AX, bytes/QR runtime, pending record thật, approval/credit và LIVE vẫn mở;
   control ledger theo `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md`
   (AC-02A..D). QR chỉ sau method+amount+readiness; approval/credit giữ T0.
 - [~] SP-01 Support/ticket/attachments/replies/status/escalation/task refs đã khóa lát
