@@ -1,6 +1,6 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
-Ngày 2026-10-18. WIP_VOICE_CONTROLS_LOCAL_GREEN. Source Bot được đọc-only; production chưa kiểm.
+Ngày 2026-10-18. WIP_UTILITIES_CONTENT_PROJECTS_LOCALE_GREEN. Source Bot được đọc-only; production chưa kiểm.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
 
@@ -36,6 +36,10 @@ Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
   `19/19`, focused Music hub/prompt/library `25/25`, full Node `537/537`, syntax và diff-check đạt.
   Đây chỉ là UI/control-level local; quote, confirm, generation, player/download/save/reuse,
   editor, delivery và browser/CI/live vẫn mở.
+
+- [~] UT-02/UT-03/UT-05/UT-08 control-level đã được rà soát bằng bộ test cố định; riêng
+  Content Prompt Pack đã loại các chuỗi tiếng Anh giao diện khỏi bản VI và tách catalogue
+  VI/EN/ZH. Runtime tạo nội dung, lưu, phiên bản, dữ liệu thật, browser và live vẫn mở.
 
 ## F0 — Shared contract R218-00/01
 
@@ -109,13 +113,21 @@ Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
 ## P5/P6 — Các sản phẩm còn lại R218-06/07
 
 - [ ] UT-01 Dịch text/voice/file/two-way/source-target/start-stop/result.
-- [ ] UT-02 Content idea/caption/hashtag/hook/script/CTA/edit/save/version/handoff.
-- [ ] UT-03 Free/prompt library/search/filter/copy/save/publish pack/quota.
+- [~] UT-02 Content idea/caption/hashtag/hook/script/CTA đã có workspace/brief/detail và
+  Prompt Pack với gợi ý, trạng thái rỗng, ranh giới xử lý, lưu vào Ghi chú và locale VI/EN/ZH;
+  edit/save/version/handoff runtime chưa có bằng chứng.
+- [~] UT-03 Free/prompt library/search/filter/copy/save/publish pack/quota đã có các projection
+  giao diện và trạng thái guarded; `Content Prompt Pack` fixed chrome đã cân bằng VI/EN/ZH,
+  không trộn tiếng Anh ở bản VI; quota/runtime/provider chưa chứng minh.
 - [ ] UT-04 QR/avatar/tỷ giá/thời tiết/downloader và stale/error states.
-- [ ] UT-05 Notes create/list/search/detail/edit/reminder/delete confirmation.
+- [~] UT-05 Notes create/list/search/detail/edit/reminder/delete confirmation đã có Memory
+  Center/Reminder shell, locale và contract owner-scoped; dữ liệu thật, browser và live chưa
+  chứng minh.
 - [ ] UT-06 Documents PDF→Word/ảnh→PDF/nén/tách/gộp, multi-file/order/range/result.
 - [ ] UT-07 Assets upload/list/preview/download/quota/expiry/privacy.
-- [ ] UT-08 Projects/Workboard task/dependency/status/assignee/dates/report.
+- [~] UT-08 Projects/Workboard task/dependency/status/assignee/dates/report đã có Project
+  Center, Workboard dọc, checklist, lịch, lịch sử và trạng thái; browser fixture/runtime chưa
+  chứng minh.
 - [ ] AP-01 Bảy nguồn nội dung AutoPost đúng source lineage.
 - [ ] AP-02 Brand/content plan/draft/edit/preview/review/calendar/version.
 - [ ] AP-03 Channels/platform/connection/expiry/target state.

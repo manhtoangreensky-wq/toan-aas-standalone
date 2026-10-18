@@ -936,3 +936,17 @@ hub/prompt/library `25/25`, full Node `537/537`, `node --check` và `git diff --
 Đây chưa phải Music runtime: tạo nhạc, báo giá/xác nhận, chỉnh nhạc, trình phát, tải, lưu,
 dùng lại, lịch sử, giao tệp hai bản và bằng chứng trình duyệt/CI/live vẫn mở trong checklist
 R218.
+
+## R218 — Utilities/Content/Projects locale checkpoint — 18/10/2026
+
+Đã rà soát và khóa phần giao diện cố định của Content Studio, Content Prompt Pack, Prompt
+Gallery, Công cụ miễn phí, Memory Center/Reminder, Project Center và Workboard. Content Prompt
+Pack hiện dùng một catalogue VI/EN/ZH cân bằng cho biểu mẫu, gợi ý, trạng thái rỗng, kết quả,
+biên nhận và ranh giới xử lý; bản VI không còn các nhãn giao diện tiếng Anh như `Draft composer`,
+`Execution boundary`, `Provider call` hoặc `Local deterministic draft`. Chủ đề, nội dung, tên
+server, nhãn kiểm tra và biên nhận owner-scoped vẫn giữ nguyên, không tự dịch dữ liệu người dùng.
+
+Bằng chứng local: `25/25` test focused Utilities/Content/Projects, `node --check` cho
+`portal.js` và `portal-i18n.js`, `git diff --check` đều đạt. Đây là bằng chứng control-level
+và locale; upload, dữ liệu thật, phiên bản, provider, publish, ví Xu, browser/AX và LIVE vẫn
+chưa được coi là hoàn tất.

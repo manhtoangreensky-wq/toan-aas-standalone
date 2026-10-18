@@ -192,3 +192,28 @@ runtime hoặc LIVE.
 - VO-04/VO-05: speed số `0,1–2,0` + mặc định `1,0` + 3 preset; volume slider `0–200` đồng bộ với một field số; label/help/preset đi qua catalogue locale.
 - Verify: targeted `3/3`, Voice regression `97/97`, full Node `530/530`, `node --check static/portal/portal.js`, `git diff --check`.
 - Không gọi provider, không sửa wallet/dữ liệu production, không merge/deploy/live. CI/browser cần chạy lại trên candidate này.
+
+## Incremental Utilities/Content/Projects locale evidence — working tree after pushed Image head
+
+- Phạm vi code: `static/portal/portal.js`, `static/portal/portal-i18n.js` và test mới
+  `tests/content-prompt-pack-locale-presentation.test.mjs`; tài liệu checklist/spec/vận hành
+  được cập nhật cùng checkpoint này.
+- UT-02/03/05/08 control-level: Content Studio/detail, Content Prompt Pack, Free Prompt Gallery,
+  Free Tools, Memory Center/Reminder, Project Center và Workboard giữ route/action contracts;
+  Content Prompt Pack dùng fixed chrome riêng cho VI/EN/ZH và bản VI không còn các chuỗi
+  giao diện tiếng Anh generic.
+
+```text
+UTILITY_TARGETED=25/25
+NODE_CHECK=PASS (portal.js, portal-i18n.js)
+GIT_DIFF_CHECK=PASS
+PYTEST=BLOCKED (workspace không có lệnh python/py)
+PROVIDER_CALLS=0
+WALLET_MUTATIONS=0
+PRODUCTION_DATA_MUTATIONS=0
+DEPLOY=NO
+LIVE_PASS=NOT_TESTED
+```
+
+Runtime dữ liệu thật, upload/download, provider, publish, wallet, browser/AX và live vẫn mở;
+không suy diễn UI control-level thành parity runtime.

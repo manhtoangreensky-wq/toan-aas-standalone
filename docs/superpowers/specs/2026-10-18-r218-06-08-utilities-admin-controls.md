@@ -31,6 +31,28 @@ Không lược bỏ các sản phẩm này vì chưa là AI tạo media. Chỉ t
 Bot anchors: bot.py:42324..42558,71003,123957..123987,184154..184416,
 186004..186090,60020..60528,230617; services/autopost_ui.py:48,87,132..321.
 
+## R218 Utilities/Content/Projects control checkpoint — 18/10/2026
+
+Đã khóa presentation-level cho các surface đã có contract Web-native: Content Studio/detail,
+Content Prompt Pack, Free Prompt Gallery, Free Tools, Memory Center/Reminder, Project Center
+và Workboard. Content Prompt Pack có form một cột, gợi ý theo loại bản nháp, empty/result/
+receipt, ranh giới không chạy engine và catalogue fixed chrome cân bằng VI/EN/ZH; bản VI không
+còn các chuỗi giao diện như `Draft composer`, `Execution boundary`, `Provider call` hoặc
+`Local deterministic draft`. Dữ liệu chủ đề, nội dung, tag, title, receipt và checklist vẫn
+được giữ nguyên như dữ liệu owner/server, không dịch trong trình duyệt.
+
+Evidence local ngày 18/10/2026:
+
+```text
+UTILITY_TARGETED=25/25 (Content Prompt Pack/Content Studio/Free/Memory/Project/Workboard)
+NODE_CHECK=PASS (static/portal/portal.js, static/portal/portal-i18n.js)
+GIT_DIFF_CHECK=PASS
+```
+
+Đây chỉ là khóa UI/UX fixed chrome và locale. UT-01/04/06/07, AutoPost, Account, Support,
+Admin, runtime dữ liệu thật, browser/AX, provider, publish, wallet và live vẫn mở theo bảng
+control ở trên; không suy diễn từ route hoặc HTTP 200.
+
 ## Bố cục / action state
 
 Không xây catalogue toàn card rời mà mất “việc đang làm”. Header sản phẩm + hành động
