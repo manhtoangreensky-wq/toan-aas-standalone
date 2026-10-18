@@ -17,11 +17,13 @@ Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
 - [~] Các callback động và catalog runtime cần mapping control chi tiết, chưa đủ để
   tuyên bố audit mọi nút hoàn tất.
 - [~] #653 auth responsive/contrast: CI source cũ xanh, delivery chưa đóng.
-- [~] #654 candidate source đã push, CI đang sửa/check; UI lane chưa được review browser.
+- [~] #654 candidate source đã push; SubDub lane patch đã đạt kiểm thử local, CI/browser trên commit mới còn chờ.
 - [ ] Ghi current SHA/checks #653/#654 và disposition trước mở wave mới.
-- [ ] Review #654 hidden field, default checked, duplicate selector, library link,
-  guard blanket, locale, âm lượng dub max 100; chưa merge là hoàn tất.
-- [ ] Toàn bộ plan/checklist/spec mới lên GitHub, provenance và CI candidate đạt.
+- [~] Review #654 hidden field, default checked, duplicate selector, library link,
+  guard blanket, locale, âm lượng dub max 100: đã sửa và khóa bằng 13 kiểm thử mục tiêu;
+  chưa có browser evidence/CI trên commit mới nên chưa đóng.
+- [~] Toàn bộ plan/checklist/spec đã lên GitHub; provenance/CI cũ đạt, commit SubDub mới cần
+  push và chạy lại candidate gate.
 
 ## F0 — Shared contract R218-00/01
 
@@ -61,12 +63,15 @@ Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
 - [ ] Source có/chưa có subtitle/upload/preview theo mode.
 - [ ] Auto source, giữ gốc/dịch, target Việt/Anh/Trung + searchable catalog đầy đủ.
 - [ ] Default Nữ/Nam; saved picker + custom Voice wizard, return đúng draft.
-- [ ] Auto 2, Auto Multi 3–8 và Smart Multi riêng, mapping rõ callback/capability.
+- [~] Auto 2, Auto Multi 3–8 và Smart Multi riêng, mapping rõ callback/capability;
+  lane presentation và ba callback đã có, server capability/browser vẫn mở.
 - [ ] Speaker map/preview/override chỉ khi có dữ liệu; ambiguous/review/fallback rõ.
-- [ ] Original audio toggle 0–100, dub 0–200 và number+slider; preserve zero.
+- [~] Original audio toggle 0–100, dub 0–200 và number+slider; static dub max 200 đã có,
+  number control/backend/browser evidence vẫn mở.
 - [ ] Subtitle position/format/mono-bilingual/original-translated source/review.
 - [ ] Quote/progress/result/report/download/recovery không giả.
-- [ ] Review candidate #654 theo spec mới, không count thẻ disabled là hoàn tất.
+- [~] Review candidate #654 theo spec mới: không còn count thẻ disabled là hoàn tất;
+  lane selector/link/callback đã được kiểm thử static, chưa chốt browser/CI mới.
 - [ ] Renderer/interaction + browser/AX/screenshots đạt.
 
 ## P4 — Image R218-05 (IM-01..10)

@@ -25593,7 +25593,7 @@
       voiceLibraryGuarded: "Thư viện giọng sẽ liên kết khi máy chủ mở đồng thời Giọng và SubDub.",
       voiceLibraryLink: "Mở Thư viện giọng",
       voiceLaneLabel: "Cách gán giọng",
-      voiceLaneHint: "Chọn cách gán giọng. Khi máy chủ chưa mở, các lựa chọn vẫn hiển thị để bạn biết đúng khả năng.",
+      voiceLaneHint: "Chọn cách gán giọng cho bản nháp. Lựa chọn được giữ lại để dùng khi máy chủ xác nhận khả năng xử lý.",
       voiceLaneDefaultFemale: "Giọng nữ mặc định",
       voiceLaneDefaultMale: "Giọng nam mặc định",
       voiceLaneSaved: "Giọng đã lưu trong Thư viện giọng",
@@ -25601,7 +25601,7 @@
       voiceLaneMultiTwo: "Hai giọng",
       voiceLaneMultiThreeEight: "Ba đến tám giọng",
       voiceLaneAutoMany: "Tự nhận diện nhiều giọng",
-      voiceLaneGuarded: "Cách này sẽ mở khi Thư viện giọng và bộ xử lý SubDub sẵn sàng.",
+      voiceLaneGuarded: "Lựa chọn được lưu trong bản nháp; xử lý chỉ bắt đầu khi máy chủ xác nhận khả năng này.",
       speakerMapLabel: "Bản đồ người nói → giọng",
       speakerMapGuarded: "Chưa có dữ liệu nhận diện. Không tự gán giọng hoặc tạo kết quả giả.",
       audioBalanceLabel: "Cân bằng âm thanh gốc",
@@ -25741,7 +25741,7 @@
       voiceLibraryGuarded: "Voice Library will connect when the server opens Voice and SubDub together.",
       voiceLibraryLink: "Open Voice Library",
       voiceLaneLabel: "Voice lane",
-      voiceLaneHint: "Choose how voices are assigned. Disabled lanes remain visible so the capability boundary is clear.",
+      voiceLaneHint: "Choose how voices are assigned in this draft. Your choice stays here until the server confirms processing capability.",
       voiceLaneDefaultFemale: "Default female voice",
       voiceLaneDefaultMale: "Default male voice",
       voiceLaneSaved: "Saved voice from Voice Library",
@@ -25749,7 +25749,7 @@
       voiceLaneMultiTwo: "Multi 2 voices",
       voiceLaneMultiThreeEight: "Multi 3–8 voices",
       voiceLaneAutoMany: "Auto-detect many voices",
-      voiceLaneGuarded: "This lane opens when Voice Library and the SubDub processor are ready.",
+      voiceLaneGuarded: "Saved in this draft; processing starts only after the server confirms this capability.",
       speakerMapLabel: "Speaker → voice map",
       speakerMapGuarded: "No speaker data yet. The UI will not guess voices or create a fake result.",
       smartMultiLabel: "Smart speaker allocation",
@@ -25898,7 +25898,7 @@
       voiceLibraryGuarded: "服务器同时开放语音与 SubDub 后，音色库将在此连接。",
       voiceLibraryLink: "打开音色库",
       voiceLaneLabel: "选择音色通道",
-      voiceLaneHint: "选择音色分配方式。服务器未开放时仍显示通道，方便确认能力边界。",
+      voiceLaneHint: "选择本次草稿的音色分配方式。提交处理前会由服务器确认相应能力。",
       voiceLaneDefaultFemale: "默认女声",
       voiceLaneDefaultMale: "默认男声",
       voiceLaneSaved: "音色库中的已保存音色",
@@ -25906,7 +25906,7 @@
       voiceLaneMultiTwo: "双人音色",
       voiceLaneMultiThreeEight: "3–8 人音色",
       voiceLaneAutoMany: "自动识别多人音色",
-      voiceLaneGuarded: "服务器开放音色库和 SubDub 处理器后，此通道才会启用。",
+      voiceLaneGuarded: "选项会保存在草稿中；服务器确认相应能力后才会开始处理。",
       speakerMapLabel: "说话人 → 音色映射",
       speakerMapGuarded: "暂无说话人数据，不会猜测音色或生成虚假结果。",
       audioBalanceLabel: "原始音频音量",
@@ -26017,6 +26017,20 @@
     return true;
   }
 
+  function updateSubDubVoiceLaneSelection(laneInput) {
+    if (!laneInput) return false;
+    const lanes = laneInput.closest(".portal-subdub-voice-lanes");
+    if (!lanes) return false;
+    const selectedValue = laneInput.value || "";
+    lanes.querySelectorAll("[data-subdub-voice-lane]").forEach((lane) => {
+      const selected = lane.getAttribute("data-subdub-voice-lane") === selectedValue;
+      lane.classList.toggle("is-selected", selected);
+    });
+    const libraryLink = lanes.querySelector("[data-subdub-voice-library-link]");
+    if (libraryLink) libraryLink.setAttribute("href", selectedValue === "custom_voice" ? "/voice/clone" : "/voice/saved");
+    return true;
+  }
+
   function renderSubDubHub(page, context) {
     const locale = resolveSubDubLocale(context);
     const copy = SUBDUB_PRESENTATION_COPY[locale] || SUBDUB_PRESENTATION_COPY.vi;
@@ -26042,7 +26056,7 @@
       </div>
       <div class="portal-subdub-volume-control">
         <label for="subdub-dubbing-volume-${safeText(suffix)}">${safeText(copy.audioDubbingLabel)}</label>
-        <span class="portal-subdub-volume-control__value"><input id="subdub-dubbing-volume-${safeText(suffix)}" type="range" min="0" max="100" value="100" data-subdub-local-volume="dubbing"><output data-subdub-volume-output="dubbing">100%</output></span>
+        <span class="portal-subdub-volume-control__value"><input id="subdub-dubbing-volume-${safeText(suffix)}" type="range" min="0" max="200" value="100" data-subdub-local-volume="dubbing"><output data-subdub-volume-output="dubbing">100%</output></span>
       </div>
       <p class="portal-subdub-volume-note" id="subdub-volume-note-${safeText(suffix)}">${safeText(copy.audioControlsNote)}</p>
     </fieldset>`;
@@ -26056,29 +26070,26 @@
         ["multi_three_eight", copy.voiceLaneMultiThreeEight],
         ["auto_many", copy.voiceLaneAutoMany]
       ];
-      return `<fieldset class="portal-subdub-voice-lanes" data-status="guarded" aria-describedby="subdub-voice-lane-note-${safeText(suffix)}">
+      const laneCallbacks = {
+        multi_two: "videodub|voice|auto_speaker_gender",
+        multi_three_eight: "videodub|voice|auto_multi_speaker",
+        auto_many: "videodub|voice|auto_smart_multivoice"
+      };
+      return `<fieldset class="portal-subdub-voice-lanes" data-status="ready" aria-describedby="subdub-voice-lane-note-${safeText(suffix)}">
         <legend>${safeText(copy.voiceLaneLabel)}</legend>
         <p class="portal-subdub-voice-lane-hint">${safeText(copy.voiceLaneHint)}</p>
         <div class="portal-subdub-voice-lane-grid">
-          ${lanes.map(([value, label], index) => `<label class="portal-subdub-voice-lane" data-status="guarded">
-            <input type="radio" name="subdub_voice_lane_${safeText(suffix)}" value="${safeText(value)}" disabled ${index === 0 ? "checked" : ""}>
+          ${lanes.map(([value, label], index) => `<label class="portal-subdub-voice-lane${index === 0 ? " is-selected" : ""}" data-status="ready" data-subdub-voice-lane="${safeText(value)}"${laneCallbacks[value] ? ` data-subdub-callback="${safeText(laneCallbacks[value])}"` : ""}>
+            <input type="radio" name="subdub_voice_lane_${safeText(suffix)}" value="${safeText(value)}" data-subdub-voice-lane-input ${index === 0 ? "checked" : ""}>
             <span class="portal-subdub-voice-lane__body"><strong>${safeText(label)}</strong><small>${safeText(copy.voiceLaneGuarded)}</small></span>
           </label>`).join("")}
         </div>
         <p class="portal-subdub-voice-lane-note" id="subdub-voice-lane-note-${safeText(suffix)}">${safeText(copy.voiceLaneGuarded)}</p>
-        <a class="portal-button portal-button--quiet" href="/voice-studio" data-subdub-voice-library-link>${safeText(copy.voiceLibraryLink)}</a>
-        <select class="portal-select" name="voice_profile_id" disabled hidden aria-hidden="true">
-          <option value="" selected>${safeText(copy.voiceLibraryGuarded)}</option>
-        </select>
-        <fieldset class="portal-subdub-smart-multi" data-subdub-smart-multi data-status="guarded" aria-describedby="subdub-smart-multi-note-${safeText(suffix)}">
+        <a class="portal-button portal-button--quiet" href="/voice/saved" data-subdub-voice-library-link>${safeText(copy.voiceLibraryLink)}</a>
+        <fieldset class="portal-subdub-smart-multi" data-subdub-smart-multi data-status="guarded" data-subdub-callback="videodub|voice|auto_smart_multivoice" aria-describedby="subdub-smart-multi-note-${safeText(suffix)}">
           <legend>${safeText(copy.smartMultiLabel)}</legend>
           <p id="subdub-smart-multi-note-${safeText(suffix)}">${safeText(copy.smartMultiHint)}</p>
-          <select class="portal-select" name="speaker_mode" disabled>
-            <option value="auto" selected>${safeText(copy.smartMultiAuto)}</option>
-            <option value="two">${safeText(copy.smartMultiTwo)}</option>
-            <option value="many_3_8">${safeText(copy.voiceLaneMultiThreeEight)}</option>
-            <option value="auto_many">${safeText(copy.voiceLaneAutoMany)}</option>
-          </select>
+          <p class="portal-form-note">${safeText(copy.voiceLaneAutoMany)} · ${safeText(copy.voiceLaneGuarded)}</p>
         </fieldset>
         <div class="portal-subdub-speaker-map" data-subdub-speaker-map data-status="guarded" aria-live="polite">
           <strong>${safeText(copy.speakerMapLabel)}</strong>
@@ -39121,6 +39132,10 @@
     document.addEventListener("input", (event) => {
       const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume]");
       updateSubDubLocalVolume(volumeInput);
+    });
+    document.addEventListener("change", (event) => {
+      const voiceLaneInput = event.target.closest(".portal-subdub-hub [data-subdub-voice-lane-input]");
+      updateSubDubVoiceLaneSelection(voiceLaneInput);
     });
     document.addEventListener("keydown", (event) => {
       const subDubModeButton = event.target.closest(".portal-subdub-hub [data-subdub-mode-select]");

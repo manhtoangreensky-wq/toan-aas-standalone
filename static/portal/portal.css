@@ -10384,6 +10384,13 @@ html[data-portal-theme="dark"] .portal-manual-topup-form option {
   border-radius: 12px;
   background: var(--portal-surface);
   color: var(--portal-ink);
+  cursor: pointer;
+}
+
+.portal-subdub-voice-lane.is-selected {
+  border-color: var(--portal-action);
+  background: var(--portal-surface-soft);
+  box-shadow: 0 0 0 1px var(--portal-action);
 }
 
 .portal-subdub-voice-lane input {

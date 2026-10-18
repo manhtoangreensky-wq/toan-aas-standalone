@@ -18,7 +18,7 @@ assert.notEqual(rendererEnd, -1, "SubDub renderer boundary is present");
 
 const helperSource = portalSource.slice(helperStart, helperEnd);
 const rendererSource = portalSource.slice(rendererStart, rendererEnd);
-const renderSubDubHelpers = new Function(`${helperSource}\nreturn { updateSubDubModeSelection, updateSubDubLocalVolume, handleSubDubModeKeydown };`)();
+const renderSubDubHelpers = new Function(`${helperSource}\nreturn { updateSubDubModeSelection, updateSubDubLocalVolume, updateSubDubVoiceLaneSelection, handleSubDubModeKeydown };`)();
 const escapeHtml = (value) => String(value ?? "")
   .replaceAll("&", "&amp;")
   .replaceAll("<", "&lt;")
@@ -35,7 +35,7 @@ function renderSubDub(url, locale = "vi", wallet = { balance_xu: 246 }) {
     "safeText",
     "badge",
     "renderHero",
-    `${helperSource}\n${rendererSource}\nreturn { renderSubDubHub, updateSubDubModeSelection, updateSubDubLocalVolume };`
+    `${helperSource}\n${rendererSource}\nreturn { renderSubDubHub, updateSubDubModeSelection, updateSubDubLocalVolume, updateSubDubVoiceLaneSelection };`
   )(
     browserWindow,
     (context) => context?.locale || locale,
@@ -74,6 +74,7 @@ test("dubbing modes expose separate local original and voice volume controls", (
     assert.match(panel, /data-subdub-local-volume="original"/);
     assert.match(panel, /data-subdub-local-volume="dubbing"/);
     assert.match(panel, /<output[^>]*>100%<\/output>/);
+    assert.match(panel, /data-subdub-local-volume="dubbing"[^>]*max="200"|max="200"[^>]*data-subdub-local-volume="dubbing"/);
     assert.doesNotMatch(panel, /name="(?:original_volume|dubbing_volume)"/);
   }
   assert.doesNotMatch(subtitlePanel, /data-subdub-local-volume=/);
@@ -261,15 +262,17 @@ test("local volume input updates its visible value only", () => {
 test("SubDub exposes guarded Smart Multi speaker mapping and Voice Library controls", () => {
   const html = renderSubDub("/subdub?mode=subtitle_plus_dubbing");
   assert.match(html, /data-subdub-smart-multi/);
-  assert.match(html, /name="speaker_mode"/);
-  assert.match(html, /one|two|many|auto/i);
-  assert.match(html, /name="voice_profile_id"/);
+  assert.doesNotMatch(html, /name="speaker_mode"/);
+  assert.doesNotMatch(html, /name="voice_profile_id"/);
+  assert.match(html, /data-subdub-callback="videodub\|voice\|auto_speaker_gender"/);
+  assert.match(html, /data-subdub-callback="videodub\|voice\|auto_multi_speaker"/);
+  assert.match(html, /data-subdub-callback="videodub\|voice\|auto_smart_multivoice"/);
   assert.match(html, /Voice Library|Voice Vault|Thư viện giọng|Kho giọng/);
   assert.match(html, /name="target_language_custom"/);
   assert.match(html, /pattern="\[a-zA-Z\]\{2,5\}/);
   assert.match(html, /data-status="guarded"/);
   assert.equal((html.match(/data-subdub-voice-library-link/g) || []).length, 2);
-  assert.equal((html.match(/href="\/voice-studio"/g) || []).length, 2);
+  assert.equal((html.match(/href="\/voice\/saved"/g) || []).length, 2);
 });
 
 test("SubDub exposes explicit default, saved, custom, two-speaker, three-to-eight and auto-many lanes", () => {
@@ -286,7 +289,23 @@ test("SubDub exposes explicit default, saved, custom, two-speaker, three-to-eigh
     const html = renderSubDub(`/subdub?lang=${locale}&mode=dubbing_only`, locale);
     for (const lane of laneValues) assert.match(html, new RegExp(`value="${lane}"`), `${locale} exposes ${lane}`);
     assert.match(html, /data-subdub-speaker-map/);
-    assert.match(html, /value="many_3_8"/);
-    assert.match(html, /value="auto_many"/);
+    assert.match(html, /data-subdub-callback="videodub\|voice\|auto_multi_speaker"/);
+    assert.match(html, /data-subdub-callback="videodub\|voice\|auto_smart_multivoice"/);
   }
+});
+
+test("voice lane selection highlights the chosen lane and routes the library action", () => {
+  const selectedLane = { classList: { toggles: [], toggle(name, enabled) { this.toggles.push([name, enabled]); } }, getAttribute(name) { return name === "data-subdub-voice-lane" ? "custom_voice" : ""; } };
+  const savedLane = { classList: { toggles: [], toggle(name, enabled) { this.toggles.push([name, enabled]); } }, getAttribute(name) { return name === "data-subdub-voice-lane" ? "saved_voice" : ""; } };
+  const libraryLink = { href: "", setAttribute(name, value) { if (name === "href") this.href = value; } };
+  const lanes = {
+    querySelectorAll() { return [selectedLane, savedLane]; },
+    querySelector() { return libraryLink; }
+  };
+  const input = { value: "custom_voice", closest() { return lanes; } };
+
+  assert.equal(renderSubDubHelpers.updateSubDubVoiceLaneSelection(input), true);
+  assert.deepEqual(selectedLane.classList.toggles, [["is-selected", true]]);
+  assert.deepEqual(savedLane.classList.toggles, [["is-selected", false]]);
+  assert.equal(libraryLink.href, "/voice/clone");
 });

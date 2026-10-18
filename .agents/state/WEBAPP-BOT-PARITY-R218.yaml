@@ -1,6 +1,6 @@
 task_id: WEBAPP-BOT-PARITY-R218
-phase: REVIEW
-status: PLAN_READY_FOR_REVIEW
+phase: VERIFY
+status: WIP_SUBDUB_PATCH_VERIFIED_LOCALLY
 date: 2026-10-18
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
@@ -26,14 +26,16 @@ artifacts:
   qa_motion_technical: docs/superpowers/specs/2026-10-18-r218-10-13-qa-motion-delivery-technical.md
 current_wip:
   pr653: "Auth responsive/contrast; source CI xanh trước đó; delivery chưa đóng."
-  pr654: "Candidate disabled SubDub lanes, source/docs; cần review/browser, không đóng UI parity."
-  ci_run: 39098833727
-  ci_head: 235d836
-  ci_status_at_last_observation: SUCCESS
-  ci_scope: "Candidate 235d836, Verify Web App + Authenticated QA success; docs expansion not yet CI verified."
-  browser_qa_artifact_sha256: ab07f7670eb6527062752504c32a94d782c3b38f0d4b4a6ad9ad8fe8976ca4a8
+  pr654: "SubDub lane patch đã sửa local: không còn disabled giả, có chọn lane, callback Auto 2/Multi 3–8/Smart Multi, link Voice đúng; chưa merge/deploy/live."
+  ci_run: 39099917923
+  ci_head: 8baaa0768600aea4f8da6c7e5515c9781c5bb7a5
+  ci_status_at_last_observation: SUCCESS_BEFORE_LOCAL_SUBDUB_PATCH
+  ci_scope: "HEAD 8baaa07 đã xanh Verify Web App + Authenticated QA; commit SubDub mới chưa push/CI."
+  local_targeted_tests: "13/13 tests/subdub-hub-presentation.test.mjs; node --check static/portal/portal.js; git diff --check"
+  local_full_tests: "527/527 tests/*.test.mjs"
+  browser_qa_artifact_sha256: e02fc36e875e12e910e327369f2d6bab625cae87ddb4ddc0fc57553fd1e7f0c9
 open_findings:
-  - "SubDub 0-200 dub volume, canonical voice handoff, duplicate/hidden controls."
+  - "SubDub browser/CI chưa chạy trên commit lane patch; canonical voice handoff vẫn chờ server capability."
   - "Auto 2/Auto Multi 3-8/Smart Multi là ba callback, không gộp."
   - "Music edit guarded; two-track delivery chưa chứng minh."
   - "Video 32 profiles/39 AI edit options; execution capability riêng."
