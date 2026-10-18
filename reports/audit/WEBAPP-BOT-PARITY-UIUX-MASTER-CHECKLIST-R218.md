@@ -1,6 +1,6 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
-Ngày 2026-10-18. PLAN_IN_REVIEW. Source Bot được đọc-only; production chưa kiểm.
+Ngày 2026-10-18. WIP_VOICE_CONTROLS_LOCAL_GREEN. Source Bot được đọc-only; production chưa kiểm.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
 
@@ -24,6 +24,10 @@ Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
   CI/browser trên commit mới đã đạt route/render matrix.
 - [x] Toàn bộ plan/checklist/spec đã lên GitHub; provenance được refresh cho HEAD mới và
   candidate gate đã xanh ở run `39101124230`.
+- [x] VO-04/VO-05 Voice controls đã có candidate local `814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd`:
+  tốc độ số `0,1–2,0` với mặc định `1,0` và 3 preset; âm lượng slider `0–200` đồng bộ
+  với đúng một field số. Targeted `3/3`, Voice regression `97/97`, full Node `530/530`,
+  `node --check` và `git diff --check` đều đạt; chưa có CI/live/runtime execution evidence.
 
 ## F0 — Shared contract R218-00/01
 
@@ -38,7 +42,9 @@ Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
 
 - [ ] TTS/STT/default/saved/clone được bố trí trong workspace.
 - [ ] Default nữ/nam distinct hoặc fallback một default theo capability.
-- [ ] Nội dung/đếm từ/speed 0.1–2.0/volume 0–200 và cảnh báo volume 0.
+- [~] Nội dung/đếm từ/speed 0.1–2.0/volume 0–200: control và giá trị mặc định đã khóa
+  bằng test `tests/voice-controls-contract.test.mjs`; cảnh báo volume 0 và quote stale
+  vẫn chờ contract/runtime evidence.
 - [ ] Quote/expiry/confirm/progress/player/download/report/retry đúng state.
 - [ ] Kho giọng search/page/status/default/preview/rename/delete/reuse.
 - [ ] Clone consent/upload/xác nhận text/name 2–80/quote/preview/save/back.

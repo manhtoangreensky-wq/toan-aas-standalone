@@ -891,3 +891,10 @@ SUCCESS (Verify Web App 2m31s, Authenticated QA 4m09s). Bản mở rộng tài l
 cần CI riêng sau push. Không suy test xanh thành product parity hoặc LIVE.
 Voice/Music và các sản phẩm khác chỉ mở sau plan + WIP checkpoint, Video sau cùng
 sản phẩm, motion cuối. Backend/provider/wallet/PayOS/publish giữ T0 và đợi lệnh.
+## R218 — Khóa control Voice tốc độ và âm lượng — 18/10/2026
+
+- Candidate source cho batch UI/UX hiện tại: `814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd` trên nhánh `webapp-r217-subdub-ui-r218`.
+- `/voice/tts` và `/voice/saved` dùng cùng hợp đồng control: `speed` là một ô số từ `0,1` đến `2,0`, mặc định `1,0`, có 3 mức gợi ý; `volume_percent` là một ô số từ `0` đến `200` kèm thanh kéo đồng bộ, không tạo field gửi trùng.
+- Nhãn, trợ giúp và preset lấy từ catalogue VI/EN/ZH; không còn giá trị biểu tượng `normal/slow/fast` trong payload.
+- Bằng chứng local: `3/3` test control, `97/97` Voice regression, `530/530` full Node, `node --check static/portal/portal.js`, `git diff --check`.
+- Đây chỉ là khóa trình bày và payload UI. Volume `0` warning, quote stale, Voice Vault/runtime execution, file output và live/CI vẫn chưa được coi là hoàn tất.

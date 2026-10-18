@@ -607,3 +607,12 @@ không tự nâng thành hoàn tất toàn bộ sản phẩm hay deployment hi�
 Nguồn completion ledger duy nhất của đợt này là
 `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md`; không đánh dấu hoàn tất
 chỉ vì route trả HTML hoặc CI render xanh.
+## R218 — Voice control contract sau candidate 814b70c — 18/10/2026
+
+| Control | Hiện trạng đã khóa | Bằng chứng | Còn mở |
+|---|---|---|---|
+| Tốc độ đọc | `speed` số `0,1–2,0`, mặc định `1,0`, preset Chậm/Chuẩn/Nhanh; `/voice/tts` và `/voice/saved` dùng cùng field | `tests/voice-controls-contract.test.mjs` `3/3`; Voice regression `97/97` | quote stale, runtime/CI/live |
+| Âm lượng | `volume_percent` số `0–200` + slider đồng bộ, chỉ một field gửi FormData | cùng test `3/3`; full Node `530/530` | cảnh báo mức `0`, output/runtime |
+| Bản địa hóa | label/help/preset dùng catalogue VI/EN/ZH; dữ liệu gửi giữ giá trị số | `portal.js`, catalogue `field.*`/`option.speed.*` | browser screenshot/AX sau deploy |
+
+Candidate này chỉ đóng control-level UI/UX, không tuyên bố TTS/STT/Voice Vault/provider/output đã hoạt động thật.
