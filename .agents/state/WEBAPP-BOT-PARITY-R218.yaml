@@ -1,6 +1,6 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: WIP_VOICE_CONTROLS_LOCAL_GREEN
+status: WIP_VOICE_CONTROLS_PUSHED_CI_PENDING
 date: 2026-10-18
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
@@ -27,13 +27,13 @@ artifacts:
 current_wip:
   pr653: "Auth responsive/contrast; source CI xanh trước đó; delivery chưa đóng."
   pr654: "SubDub lane patch đã sửa local: không còn disabled giả, có chọn lane, callback Auto 2/Multi 3–8/Smart Multi, link Voice đúng; chưa merge/deploy/live."
-  voice_controls: "VO-04/VO-05 đã khóa local trên candidate 814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd: speed số 0.1–2.0 + 3 preset, volume slider 0–200 + number một payload; runtime/CI/live chưa chứng minh."
+  voice_controls: "VO-04/VO-05 đã khóa local trên candidate code 814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd; PR head hiện tại 5b715e8788d8180a40e97273a1abeb431ec9fd2e: speed số 0.1–2.0 + 3 preset, volume slider 0–200 + number một payload; runtime/CI/live chưa chứng minh."
   ci_run: 39099917923
   ci_head: 8baaa0768600aea4f8da6c7e5515c9781c5bb7a5
   ci_status_at_last_observation: SUCCESS_BEFORE_LOCAL_SUBDUB_PATCH
-  ci_scope: "HEAD 8baaa07/148be4f prior comparator đã xanh Verify Web App + Authenticated QA; candidate Voice 814b70c chưa có CI/browser run."
+  ci_scope: "HEAD 8baaa07/148be4f prior comparator đã xanh Verify Web App + Authenticated QA; PR head 5b715e8 chứa candidate Voice và docs, GitHub statusCheckRollup hiện rỗng, cần CI/browser run riêng."
   ci_latest_run: 39101124230
-  ci_latest_status: "Prior comparator only: Verify Web App SUCCESS; Authenticated WebApp QA SUCCESS on HEAD 148be4f6ec18e3c7fe3abfee8ca8a34ee1a5d099. Route matrix: 456/456 cases across customer/admin, VI/EN/ZH, light/dark, phone/tablet/desktop; candidate Voice 814b70c still needs CI/browser rerun."
+  ci_latest_status: "GitHub PR #654 readback after push: head=5b715e8788d8180a40e97273a1abeb431ec9fd2e, statusCheckRollup=[]; prior comparator only had Verify Web App + Authenticated QA SUCCESS on HEAD 148be4f. Candidate Voice still needs CI/browser rerun."
   migration_evidence_refresh: "Verified for candidate 814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd lineage: source_files_scanned=287, source_fingerprint_sha256=29261d3f20b0cfaab478484b1a35135ba3f16d050ceaf0e36afdb5f4fbae488a."
   local_targeted_tests: "3/3 tests/voice-controls-contract.test.mjs; 97/97 Voice regression; node --check static/portal/portal.js; git diff --check"
   local_full_tests: "530/530 tests/*.test.mjs"
@@ -48,4 +48,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Tiếp tục ordered R218 wave từ Voice control closure → Music → SubDub capability/runtime contract; giữ nguyên no merge/deploy/live cho tới khi có lệnh Owner riêng."
+next_action: "Đã push Voice control candidate lên PR #654; tiếp tục Music control-level wave ở local trong khi CI/browser candidate chờ, rồi mới sang SubDub capability/runtime; giữ nguyên no merge/deploy/live cho tới khi có lệnh Owner riêng."
