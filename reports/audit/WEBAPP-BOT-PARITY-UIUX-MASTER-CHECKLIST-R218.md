@@ -187,7 +187,11 @@ nhóm hoặc nhầm một thẻ điều hướng là một tính năng đã ch�
 - [~] AP-05 AutoPost Hub đã có lane Affiliate/import/list/filter/ads/metrics ở trạng thái guarded; không hiển thị số liệu suy đoán.
 - [ ] AC-01 Profile/locale/session/security và stale data cleanup.
 - [ ] AC-02 Packages/pricing/topup/history/detail/pending, không wallet mutation.
-- [ ] SP-01 Support/ticket/attachments/replies/status/escalation/task refs.
+- [~] SP-01 Support/ticket/attachments/replies/status/escalation/task refs đã khóa lát
+  control-level bằng spec `docs/superpowers/specs/2026-10-18-r218-07b-support-center-controls.md`
+  và test `tests/support-hub-product-controls.test.mjs` đạt `4/4`; full Node đạt
+  `566/566`, syntax và `git diff --check` đạt. Capability server, dữ liệu thật,
+  browser/AX và LIVE vẫn mở; không đánh dấu runtime parity.
 - [ ] SP-02 Guide/Chat Pro/feedback/community, context help đúng sản phẩm.
 - [ ] Mỗi nhóm renderer/interaction + browser evidence, không chỉ navigation.
 

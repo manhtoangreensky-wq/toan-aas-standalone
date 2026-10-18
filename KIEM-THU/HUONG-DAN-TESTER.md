@@ -214,3 +214,24 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
      job, provider call hoặc dữ liệu production. Nếu giao diện hiển thị kết quả/receipt khi chưa có
      server capability, ghi lỗi APUI-04.
 118. Ghi rõ control-level/source PASS riêng với browser/AX/live; không gộp các mức bằng chứng.
+
+## 18. Trung tâm hỗ trợ khách hàng — SPUI-01..05
+
+119. Mở `/support`, `/tickets`, `/tickets/:id`, `/admin/support` và
+     `/admin/support/:id` bằng candidate SHA đúng; dùng fixture tài khoản/role QA cô lập.
+120. Kiểm theo thứ tự dọc: tiếp nhận → lọc/danh sách → chi tiết/dòng thời gian → phản hồi/
+     trạng thái → bằng chứng. Không coi việc thấy route hoặc thẻ disabled là đã hoạt động.
+121. Chọn VI/EN/ZH riêng; bản Việt phải dùng “Trung tâm hỗ trợ khách hàng”, không để
+     `Support Desk`, `Web Support Desk`, `Manager`, `Operator` hoặc thuật ngữ giao diện chưa
+     được duyệt lọt vào fixed chrome. Dữ liệu động như mã case, revision, thời điểm và trạng
+     thái canonical không tự dịch.
+122. Ở desktop/tablet/mobile `1440/1024/768/390`, kiểm focus/keyboard, target tối thiểu
+     `44×44`, contrast, overflow/clipping và lưới case chuyển một cột ở `<=620px`.
+123. Bằng chứng chỉ được chọn từ Asset Vault riêng; không upload bytes thô tại Support.
+     Kiểm loại/kích thước, xác nhận đã che dữ liệu, owner/revision và signed download; không
+     dùng bằng chứng thanh toán, QR, OCR, Telegram hoặc provider.
+124. Ở Admin, xác minh phản hồi công khai và ghi chú nội bộ là hai phạm vi riêng; cập nhật
+     trạng thái/mức ưu tiên phải có ghi chú, role, CSRF và revision do server cấp. Không approve
+     top-up, cộng Xu, gọi provider, gửi thông báo ngoài Web hoặc tạo ticket Bot.
+125. Ghi riêng source/control-level, browser/AX, CI và LIVE. Nếu capability hoặc runtime chưa
+     có, phải giữ `guarded` và `LIVE_PASS=NOT_TESTED`; không dùng `4/4` source để thay thế.

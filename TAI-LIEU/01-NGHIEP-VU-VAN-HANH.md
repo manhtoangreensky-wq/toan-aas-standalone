@@ -991,3 +991,17 @@ chuyển thành một cột ở màn hình hẹp.
 Đây chỉ là control-level/presentation. Chưa có OAuth/kết nối kênh, lịch đăng thật, biên nhận
 publish, Affiliate metrics, queue receipt, provider call, job, giao tệp hoặc live evidence.
 Không tạo dữ liệu production, không gọi provider, không đổi ví/Xu hoặc PayOS.
+
+## R218 — Trung tâm hỗ trợ khách hàng control-level — 18/10/2026
+
+Lát WebApp hiện có một luồng hỗ trợ dọc cho `/support`, `/tickets`, `/tickets/:id`,
+`/admin/support` và `/admin/support/:id`: tiếp nhận, lọc/phân trang, chi tiết/dòng thời gian,
+phản hồi công khai hoặc nội bộ, trạng thái/khôi phục, phản hồi kết quả và liên kết bằng chứng
+từ Asset Vault. Bản Việt dùng tên “Trung tâm hỗ trợ khách hàng”; bố cục case chuyển một cột ở
+`<=620px`, giữ palette xanh dương/xanh ngọc.
+
+Đã đo: `tests/support-hub-product-controls.test.mjs` `4/4`, full Node `566/566`, hai lệnh
+`node --check` và `git diff --check` đạt. Đây là control-level/presentation evidence; capability
+server, dữ liệu thật, browser/AX, CI, delivery và LIVE chưa đóng. Trung tâm hỗ trợ không upload
+bytes thô, không tạo ticket Bot, không gọi provider, không thay đổi ví/Xu, PayOS hoặc dữ liệu
+production.

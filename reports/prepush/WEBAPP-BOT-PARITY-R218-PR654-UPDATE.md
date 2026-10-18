@@ -282,3 +282,30 @@ LIVE_PASS=NOT_TESTED
 
 UT-04 vẫn control-level `[~]`: browser authenticated/AX, nguồn dữ liệu thật,
 stale/error/loading runtime, downloader delivery và live evidence chưa mở.
+
+## Incremental R218-07B Support evidence — local candidate 18/10/2026
+
+- Phạm vi: `static/portal/portal.js`, `static/portal/portal-i18n.js`,
+  `tests/support-hub-product-controls.test.mjs` và spec
+  `docs/superpowers/specs/2026-10-18-r218-07b-support-center-controls.md`.
+- `/support`, `/tickets`, `/tickets/:id`, `/admin/support` và `/admin/support/:id`
+  giữ luồng dọc tiếp nhận → danh sách → chi tiết → phản hồi/trạng thái → bằng chứng.
+  Bản Việt dùng “Trung tâm hỗ trợ khách hàng”; phản hồi công khai/nội bộ tách riêng;
+  bằng chứng chỉ chọn từ Asset Vault riêng, không upload bytes thô tại Support.
+
+```text
+SUPPORT_TARGETED=4/4
+FULL_NODE=566/566
+NODE_CHECK=PASS (portal.js, portal-i18n.js)
+GIT_DIFF_CHECK=PASS
+PYTEST=BLOCKED (workspace không có lệnh python/py)
+PROVIDER_CALLS=0
+WALLET_MUTATIONS=0
+PRODUCTION_DATA_MUTATIONS=0
+DEPLOY=NO
+LIVE_PASS=NOT_TESTED
+```
+
+SP-01 chỉ ở mức control-level `[~]`; capability server, dữ liệu thật,
+browser/AX, CI, delivery và live evidence chưa đóng. Không suy diễn test source
+thành Support runtime parity.
