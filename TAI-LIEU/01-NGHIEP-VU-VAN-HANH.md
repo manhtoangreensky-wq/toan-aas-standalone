@@ -898,3 +898,27 @@ sản phẩm, motion cuối. Backend/provider/wallet/PayOS/publish giữ T0 và 
 - Nhãn, trợ giúp và preset lấy từ catalogue VI/EN/ZH; không còn giá trị biểu tượng `normal/slow/fast` trong payload.
 - Bằng chứng local: `3/3` test control, `97/97` Voice regression, `530/530` full Node, `node --check static/portal/portal.js`, `git diff --check`.
 - Đây chỉ là khóa trình bày và payload UI. Volume `0` warning, quote stale, Voice Vault/runtime execution, file output và live/CI vẫn chưa được coi là hoàn tất.
+
+## R218 — Music control-level guarded — 18/10/2026
+
+Batch Music chỉ thay đổi lớp trình bày và bản nháp an toàn trên WebApp:
+
+- `/music/create` và `/music/song` có một workspace dọc gồm `4` bước: nhập mô tả, chọn thông số,
+  so sánh `3` phương án và nhận tệp/báo cáo.
+- Hai route hiển thị `3` tier bằng trạng thái chờ máy chủ; route bài hát giữ các field
+  `brief`, `tier`, `mode`, `vocal_mode`, `lyrics`, `song_length_mode`, `duration_seconds`.
+  Route nhạc nền không lộ các field chỉ dành cho bài hát.
+- Không còn provider badge, giá hard-code, player, tên MP3, download hoặc thông báo tạo tệp
+  giả trong workbench Music. Khi capability chưa bật, cờ `data-music-product-enabled` giữ
+  toàn bộ field ở trạng thái khóa.
+- Catalogue `musicProduct.*` có cùng bộ khóa ở `3/3` locale `vi/en/zh`; theme giữ palette
+  xanh/ngọc hiện tại, card dọc và breakpoint `980px/640px`.
+
+Bằng chứng source-only: Music control `7/7`, focused Music+Voice `19/19`, nhóm Music
+hub/prompt/library `25/25`, full Node `537/537`, `node --check` và `git diff --check`.
+`PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`, `PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`,
+`LIVE_PASS=NOT_TESTED`.
+
+Đây chưa phải Music runtime: tạo nhạc, báo giá/xác nhận, chỉnh nhạc, trình phát, tải, lưu,
+dùng lại, lịch sử, giao tệp hai bản và bằng chứng trình duyệt/CI/live vẫn mở trong checklist
+R218.

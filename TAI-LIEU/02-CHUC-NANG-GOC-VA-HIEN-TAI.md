@@ -616,3 +616,17 @@ chỉ vì route trả HTML hoặc CI render xanh.
 | Bản địa hóa | label/help/preset dùng catalogue VI/EN/ZH; dữ liệu gửi giữ giá trị số | `portal.js`, catalogue `field.*`/`option.speed.*` | browser screenshot/AX sau deploy |
 
 Candidate này chỉ đóng control-level UI/UX, không tuyên bố TTS/STT/Voice Vault/provider/output đã hoạt động thật.
+
+## Đối chiếu Music product workspace — R218 — 18/10/2026
+
+| Chức năng cần đối chiếu | Trạng thái candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Nhạc nền và bài hát có lời trên hai route rõ ràng | Đã có `/music/create` và `/music/song`, cùng workspace dọc 4 bước; route nền không lộ field bài hát | `static/portal/portal.js`; `tests/music-product-controls.test.mjs` |
+| Gói chất lượng và ba phương án | Có 3 tier và 3 ô phương án ở trạng thái guarded, không tự gán giá hoặc audio | Music control `7/7`; không có quote/provider/output thật |
+| Lời, kiểu giọng, thời lượng | Route bài hát giữ `lyrics`, `vocal_mode` (tự động/nam/nữ/song ca), `song_length_mode` (giây/nửa/đầy đủ) và `duration_seconds`; đổi sang giai điệu khóa field lời/giọng | `musicProductFields()` + synchronizer; server capability chưa chứng minh |
+| Locale và giao diện | Catalogue fixed chrome cân bằng `vi/en/zh`; card dọc, light/dark dùng token xanh/ngọc, không thêm motion | `static/portal/portal-i18n.js`, `static/portal/portal-theme.css`; chưa có screenshot/AX/live |
+| Player/tải/lưu/dùng lại/chỉnh nhạc/giao tệp | Chưa mở; không còn UI giả để thay thế capability thật | Checklist MU-04..MU-12 còn `[ ]/[!]`; provider, asset delivery và runtime chưa chạy |
+
+Kết luận: batch này khóa **control-level UI/UX và ranh giới guarded**, không được gọi là
+Music parity runtime với Bot hoặc là tệp đã tạo. Các mục quote, confirm, generation, editor,
+player/download/save/reuse, hai bản giao tệp và browser/CI/live tiếp tục theo thứ tự R218.

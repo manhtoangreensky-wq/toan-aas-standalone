@@ -807,16 +807,16 @@
     ],
     music: [
       { name: "brief", label: "Brief âm nhạc", control: "textarea", placeholder: "Bối cảnh, mood, nhịp độ, công cụ, đối tượng nghe…", help: "Bot sẽ chặn yêu cầu mô phỏng nghệ sĩ/bài hát hoặc giai điệu có bản quyền.", required: true, minLength: 1 },
-      { name: "tier", label: "Gói chất lượng (Tier)", control: "select", options: [{ value: "basic", label: "🎵 Cơ bản — 130 Xu" }, { value: "standard", label: "🎶 Tiêu chuẩn — 150 Xu" }, { value: "premium", label: "💎 Cao cấp — 200 Xu" }], emptyLabel: "Chọn gói chất lượng canonical", required: true, help: "Bắt buộc chọn gói chất lượng; không mặc định âm thầm." },
+      { name: "tier", label: "Gói chất lượng", control: "select", options: [{ value: "basic", label: "Cơ bản" }, { value: "standard", label: "Tiêu chuẩn" }, { value: "premium", label: "Cao cấp" }], emptyLabel: "Chọn gói chất lượng canonical", required: true, help: "Bắt buộc chọn gói chất lượng; giá và khả năng chỉ lấy từ báo giá máy chủ." },
       { name: "mode", label: "Loại định hướng", control: "select", options: ["background", "melody", "custom"], help: "Chỉ tạo gợi ý prompt canonical; chưa gọi provider tạo nhạc." },
       { name: "duration_seconds", label: "Thời lượng dự kiến (giây)", type: "number", placeholder: "Ví dụ: 30", help: "Tuỳ chọn planning; Bot dùng mặc định canonical khi để trống. Browser không tính Xu.", min: 1, max: 600, step: 1, inputMode: "numeric" }
     ],
     musicSong: [
       { name: "brief", label: "Brief bài hát", control: "textarea", placeholder: "Thông điệp, mood, cấu trúc, CTA và lời gốc mong muốn…", help: "Không yêu cầu cover, remix hoặc bắt chước nghệ sĩ/bài hát cụ thể.", required: true, minLength: 1 },
-      { name: "tier", label: "Gói chất lượng (Tier)", control: "select", options: [{ value: "basic", label: "🎵 Cơ bản — 200 Xu" }, { value: "standard", label: "🎶 Tiêu chuẩn — 250 Xu" }, { value: "premium", label: "💎 Cao cấp — 300 Xu" }], emptyLabel: "Chọn gói chất lượng canonical", required: true, help: "Bắt buộc chọn gói bài hát; không mặc định âm thầm." },
-      { name: "mode", label: "Kiểu sáng tác", control: "select", options: [{ value: "lyrics", label: "Bài hát có lời gốc" }, { value: "melody", label: "Giai điệu / instrumental" }, { value: "custom", label: "Tuỳ biến theo brief" }], help: "Giá trị này được gửi trực tiếp tới helper prompt canonical của bot.", required: true },
-      { name: "vocal_mode", label: "Giọng hát (Vocal Mode)", control: "select", options: [{ value: "auto", label: "Tự động" }, { value: "male", label: "Giọng Nam" }, { value: "female", label: "Giọng Nữ" }, { value: "duet", label: "Song ca Nam & Nữ" }], emptyLabel: "Chọn kiểu giọng hát canonical", help: "Tuỳ chọn kiểu vocal thực thi." },
-      { name: "lyrics", label: "Lời bài hát (Lyrics)", control: "textarea", placeholder: "Lời bài hát gốc (Verse 1, Chorus, Verse 2...). Nếu để trống sẽ tạo từ brief.", help: "Lời bài hát tùy chọn hoặc bot tự phát triển từ brief." },
+      { name: "tier", label: "Gói chất lượng", control: "select", options: [{ value: "basic", label: "Cơ bản" }, { value: "standard", label: "Tiêu chuẩn" }, { value: "premium", label: "Cao cấp" }], emptyLabel: "Chọn gói chất lượng canonical", required: true, help: "Bắt buộc chọn gói bài hát; giá và khả năng chỉ lấy từ báo giá máy chủ." },
+      { name: "mode", label: "Kiểu sáng tác", control: "select", options: [{ value: "lyrics", label: "Bài hát có lời gốc" }, { value: "melody", label: "Giai điệu không lời" }, { value: "custom", label: "Tùy biến theo mô tả" }], help: "Giá trị này được gửi trực tiếp tới helper prompt canonical của bot.", required: true },
+      { name: "vocal_mode", label: "Kiểu giọng hát", control: "select", options: [{ value: "auto", label: "Tự động" }, { value: "male", label: "Giọng nam" }, { value: "female", label: "Giọng nữ" }, { value: "duet", label: "Song ca nam và nữ" }], emptyLabel: "Chọn kiểu giọng hát canonical", help: "Tuỳ chọn kiểu giọng thực thi." },
+      { name: "lyrics", label: "Lời bài hát", control: "textarea", placeholder: "Lời bài hát gốc (khổ 1, điệp khúc, khổ 2)… Nếu để trống, máy chủ sẽ tạo từ mô tả khi được phép.", help: "Lời bài hát tùy chọn hoặc máy chủ tự phát triển từ mô tả." },
       { name: "song_length_mode", label: "Dạng bài hát", control: "select", options: [{ value: "seconds", label: "Theo số giây" }, { value: "half", label: "Bản nửa" }, { value: "full", label: "Bản đầy đủ" }], emptyLabel: "Chọn dạng bài hát canonical", help: "Chế độ half/full được bot quy đổi theo product kind canonical.", required: true },
       { name: "duration_seconds", label: "Thời lượng khi chọn theo số giây", type: "number", placeholder: "Ví dụ: 30", min: 1, max: 600, step: 1, inputMode: "numeric", help: "Bắt buộc khi chọn Theo số giây; half/full dùng product kind canonical." }
     ],
@@ -11437,6 +11437,57 @@
     );
   }
 
+  const MUSIC_PRODUCT_ROUTES = Object.freeze(["/music/create", "/music/song"]);
+
+  function musicProductRouteMode(route) {
+    return normalizePath(route || "") === "/music/song" ? "song" : "background";
+  }
+
+  function musicProductOptionLabel(fieldName, value, fallback) {
+    const key = `option.${fieldName}.${String(value || "")}`;
+    return musicProductText(key, fallback);
+  }
+
+  function musicProductFields(fields, route) {
+    const mode = musicProductRouteMode(route);
+    return (Array.isArray(fields) ? fields : []).map((field) => {
+      const copy = { ...field };
+      const name = String(field.name || "");
+      copy.label = musicProductText(`field.${name}.label`, field.label || name);
+      if (field.placeholder) copy.placeholder = musicProductText(`field.${name}.placeholder`, field.placeholder);
+      if (field.help) copy.help = musicProductText(`field.${name}.help`, field.help);
+      if (Array.isArray(field.options)) {
+        copy.options = field.options.map((option) => {
+          const value = Array.isArray(option) ? option[0] : (option && typeof option === "object" ? option.value : option);
+          const fallback = Array.isArray(option) ? option[1] : (option && typeof option === "object" ? option.label : option);
+          return { value, label: musicProductOptionLabel(name, value, fallback) };
+        });
+      }
+      if (field.emptyLabel) copy.emptyLabel = musicProductText(`field.${name}.empty`, field.emptyLabel);
+      // The background route must not expose song-only controls even if a
+      // future page definition accidentally shares the field set.
+      if (mode === "background" && ["lyrics", "vocal_mode", "song_length_mode"].includes(name)) copy.disabled = true;
+      return copy;
+    });
+  }
+
+  function renderMusicProductGuidance(page, context) {
+    const route = normalizePath(page && (page.routePath || page.path));
+    if (!MUSIC_PRODUCT_ROUTES.includes(route)) return "";
+    const mode = musicProductRouteMode(route);
+    const song = mode === "song";
+    const steps = ["input", "options", "suggestions", "result"];
+    const tierKeys = ["basic", "standard", "premium"];
+    const tierCards = tierKeys.map((tier, index) => `<article class="portal-music-product-tier" data-music-tier-card="${safeText(tier)}"><span class="portal-music-product-index">${safeText(String(index + 1).padStart(2, "0"))}</span><div><strong>${safeText(musicProductText(`tier.${tier}.title`, tier))}</strong><p>${safeText(musicProductText(`tier.${tier}.description`, "Gói chỉ được định giá khi máy chủ trả báo giá hợp lệ."))}</p></div><span class="portal-badge" data-status="guarded">${safeText(musicProductText("status.server", "Chờ máy chủ xác nhận"))}</span></article>`).join("");
+    const suggestionCards = [1, 2, 3].map((number) => `<li data-music-suggestion-card="${number}"><span class="portal-music-product-index">${safeText(String(number).padStart(2, "0"))}</span><div><strong>${safeText(musicProductText("suggestion.pendingTitle", `Phương án ${number}`, { number: String(number) }))}</strong><p>${safeText(musicProductText("suggestion.pendingBody", "Chưa có dữ liệu từ máy chủ; không dựng nội dung âm thanh thay thế."))}</p></div><span class="portal-badge" data-status="guarded">${safeText(musicProductText("status.pending", "Chưa có dữ liệu"))}</span></li>`).join("");
+    return `<section class="portal-card portal-card-pad portal-music-product-guidance" data-music-product-mode="${safeText(mode)}" aria-labelledby="music-product-flow-title">
+      <div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicProductText("kicker", "KHÔNG GIAN TẠO ÂM NHẠC"))}</span><h2 id="music-product-flow-title" class="portal-card-title">${safeText(song ? musicProductText("song.title", "Sáng tác bài hát trong một luồng") : musicProductText("background.title", "Tạo nhạc nền trong một luồng"))}</h2><p class="portal-card-subtitle">${safeText(song ? musicProductText("song.description", "Giữ lời bài hát, kiểu giọng và thời lượng trong cùng bản nháp.") : musicProductText("background.description", "Tách mục tiêu, phong cách, gói chất lượng và thời lượng để dễ rà soát."))}</p></div><span class="portal-badge" data-status="guarded">${safeText(musicProductText("status.guarded", "Chưa mở xử lý thật"))}</span></div>
+      <ol class="portal-music-product-steps" aria-label="${safeText(musicProductText("steps.label", "Trình tự tạo âm nhạc"))}">${steps.map((step, index) => `<li data-music-product-step="${safeText(step)}"><span class="portal-music-product-index">${safeText(String(index + 1).padStart(2, "0"))}</span><div><strong>${safeText(musicProductText(`step.${step}.title`, step))}</strong><p>${safeText(musicProductText(`step.${step}.description`, ""))}</p></div></li>`).join("")}</ol>
+      <div class="portal-music-product-tier-grid" aria-label="${safeText(musicProductText("tier.label", "Các gói chất lượng"))}">${tierCards}</div>
+      <section class="portal-music-product-suggestions" data-music-suggestion-board="guarded" aria-labelledby="music-product-suggestion-title"><div class="portal-card-header"><div><h3 id="music-product-suggestion-title" class="portal-card-title">${safeText(musicProductText("suggestion.title", "Ba phương án để so sánh"))}</h3><p class="portal-card-subtitle">${safeText(musicProductText("suggestion.description", "Các thẻ chỉ mở khi máy chủ trả ba phương án hợp lệ; không hiển thị bản nhạc hoặc trình phát giả."))}</p></div><span class="portal-badge" data-status="guarded">${safeText(musicProductText("status.pending", "Chưa có dữ liệu"))}</span></div><ol>${suggestionCards}</ol></section>
+    </section>`;
+  }
+
   function renderFormCard(page, context) {
     const enabled = canAct(page, context);
     const reason = actionBlockReason(page, context);
@@ -11467,6 +11518,7 @@
     const imageTask = route === "/image/create" || route === "/image/new";
     const videoTask = route === "/video/create" || route === "/video/multiscene";
     const voiceTask = ["/voice/tts", "/voice/saved", "/voice/clone"].includes(route);
+    const musicTask = ["/music/create", "/music/song"].includes(String(route || "").split("?")[0].replace(/\/$/, "") || "/");
     const videoText = (key, fallback) => uiText(`videoUi.${key}`, fallback);
     // When an external engine is not enabled, the primary form action is a
     // real, owner-scoped Web draft—not a disabled Bot action. This also makes
@@ -11577,9 +11629,12 @@
           <div class="portal-form-footer"><span class="portal-form-note">${safeText(videoText(localAuthoringOnly ? "form.draftNote" : "form.processingNote", ""))}</span>${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button></div>
         </form>${flowControls}</section>`;
     }
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.layout === "auth" ? "Thông tin xác thực" : "Chuẩn bị yêu cầu"}</h2><p class="portal-card-subtitle">${enabled ? "Yêu cầu sẽ được chuyển tới lớp tích hợp thông qua custom event, không gọi trực tiếp từ UI." : (workspaceDraftEnabled ? "Bạn có thể soạn và lưu brief Web; estimate, job và integration ngoài chỉ bật theo capability riêng." : safeText(reason))}</p></div>${badge(flowStatus || stateFor(page, context))}</div>
+    const genericFields = musicTask ? musicProductFields(page.fields, route) : page.fields;
+    const musicMode = musicTask ? musicProductRouteMode(route) : "";
+    const musicStatus = musicTask ? `<p class="portal-form-note portal-music-product-state" data-music-product-state role="status" aria-live="polite">${safeText(musicProductText(musicMode === "song" ? "state.song" : "state.background", "Các lựa chọn chỉ nằm trong bản nháp; xử lý thật cần capability và báo giá từ máy chủ."))}</p>` : "";
+    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.layout === "auth" ? "Thông tin xác thực" : musicTask ? safeText(musicProductText(musicMode === "song" ? "form.songTitle" : "form.backgroundTitle", "Chuẩn bị yêu cầu âm nhạc")) : "Chuẩn bị yêu cầu"}</h2><p class="portal-card-subtitle">${enabled ? "Yêu cầu sẽ được chuyển tới lớp tích hợp thông qua custom event, không gọi trực tiếp từ UI." : (workspaceDraftEnabled ? "Bạn có thể soạn và lưu brief Web; estimate, job và integration ngoài chỉ bật theo capability riêng." : safeText(reason))}</p></div>${badge(flowStatus || stateFor(page, context))}</div>
       ${boundaryNotice}
-      <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>${renderFields(page.fields, formFieldsEnabled, context, fieldValues)}
+      <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${musicTask ? ` data-music-product-form="${safeText(musicMode)}" data-music-product-enabled="${formFieldsEnabled ? "true" : "false"}"` : ""}${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>${renderFields(genericFields, formFieldsEnabled, context, fieldValues)}${musicStatus}
         <div class="portal-form-footer"><span class="portal-form-note">${enabled ? "Máy chủ vẫn phải xác minh phiên, CSRF, schema, ownership và idempotency." : (workspaceDraftEnabled ? "Bản nháp chỉ giữ brief scalar trên Web; không lưu file, upload ID, quote, job, Xu hoặc provider." : "Các trường bị khóa cho tới khi máy chủ cấp khả năng cần thiết.")}</span>
           ${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button>
         </div>
@@ -25327,6 +25382,10 @@
     return uiText(`musicLibrary.${key}`, fallback, params);
   }
 
+  function musicProductText(key, fallback, params) {
+    return uiText(`musicProduct.${key}`, fallback, params);
+  }
+
   function mediaOperationText(key, fallback, params) {
     return uiText(`mediaOperation.${key}`, fallback, params);
   }
@@ -31540,82 +31599,9 @@
     }
 
     if (path.startsWith("/music") || family === "music") {
-      return `<div class="portal-interactive-feature-workbench" style="margin-bottom: 24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(168,85,247,0.15), rgba(126,34,206,0.2)); border:1px solid rgba(168,85,247,0.3); border-radius:14px; padding:18px 24px; margin-bottom:18px;">
-          <div>
-            <span class="portal-badge" data-status="ready">🟢 Suno AI Music Generator Sẵn Sàng</span>
-            <h2 style="margin:6px 0 4px; font-size:20px; color:#f8fafc;">🎵 AI Music & Sound Effects Studio</h2>
-            <p style="margin:0; font-size:13px; color:#94a3b8;">Tạo nhạc nền độc quyền không dính bản quyền YouTube/TikTok, hiệu ứng âm thanh SFX kịch tính, meme vui nhộn.</p>
-          </div>
-          <div>
-            <a href="/studio" class="portal-button portal-button--primary" style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #9333ea, #7e22ce); color:#fff; font-weight:700; border-radius:10px; text-decoration:none; padding:10px 18px; min-height:42px;">
-              🎬 Mở Studio Pro
-            </a>
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap:18px;">
-          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
-            <h3 style="margin-top:0; font-size:15px; color:#c084fc;">1. Thể Loại & Mô Tả Giai Điệu</h3>
-            <div class="portal-fields" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
-              <label class="portal-field">
-                <span>Prompt mô tả không khí bản nhạc</span>
-                <textarea class="portal-input" rows="3">Nhạc nền Lofi Chill nhẹ nhàng thư giãn, tiếng piano du dương kết hợp tiếng mưa rơi nhẹ, thích hợp làm video học tập và vlog đời sống.</textarea>
-              </label>
-              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <label class="portal-field">
-                  <span>Thể loại nhạc</span>
-                  <select class="portal-input">
-                    <option selected>☕ Lofi Chill / Study Beats</option>
-                    <option>⚡ EDM Phóng Khoáng / Workout</option>
-                    <option>🎬 Cinematic Epic / Trailer Phim</option>
-                    <option>🎸 Acoustic Mộc Mạc / Podcast</option>
-                  </select>
-                </label>
-                <label class="portal-field">
-                  <span>Thời lượng bản nhạc</span>
-                  <select class="portal-input">
-                    <option>30 Giây (Chuẩn TikTok Loop)</option>
-                    <option selected>60 Giây (Vlog ngắn)</option>
-                    <option>120 Giây (Bản Full)</option>
-                  </select>
-                </label>
-              </div>
-            </div>
-            <div style="margin-top:14px;">
-              <button type="button" class="portal-button portal-button--primary" style="width:100%; min-height:44px; font-weight:700; background:linear-gradient(135deg, #9333ea, #7e22ce); color:#fff; border:none; border-radius:10px; cursor:pointer;" onclick="alert('Đã tạo bản nhạc AI thành công! Bạn có thể nghe thử.')">
-                🎵 TẠO NHẠC AI KHÔNG BẢN QUYỀN (-8 Xu)
-              </button>
-            </div>
-          </div>
-
-          <div class="portal-card portal-card-pad" style="border:1px solid rgba(255,255,255,0.1); border-radius:14px; background:rgba(15,23,42,0.65);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-              <div>
-                <h3 style="margin:0; font-size:15px; color:#c084fc;">2. Trình Phát Nhạc & Tải File</h3>
-                <small style="color:#94a3b8;">Bản quyền: Miễn phí thương mại 100%</small>
-              </div>
-              <button type="button" class="portal-button portal-button--primary" style="font-size:11px; padding:4px 12px; border-radius:6px; background:#9333ea; color:#fff;" onclick="alert('Đang tải file nhạc MP3 320kbps.')">⬇️ Tải MP3</button>
-            </div>
-            <div style="padding:14px; background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
-              <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-                <div style="width:40px; height:40px; border-radius:10px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.3); display:grid; place-items:center; color:#c084fc; font-size:18px;">
-                  🎶
-                </div>
-                <div>
-                  <strong style="display:block; font-size:13px; color:#f8fafc;">toanaas_lofi_chill_beats_master.mp3</strong>
-                  <small style="color:#94a3b8; font-size:11px;">MP3 Stereo · 44.1kHz · 320kbps · Studio Master</small>
-                </div>
-              </div>
-              <div class="portal-audio-player-stub" style="height:38px; border-radius:6px; background:rgba(255,255,255,0.06); display:flex; align-items:center; padding:0 12px; gap:8px;">
-                <span style="color:#c084fc; font-size:12px;" aria-hidden="true">▶</span>
-                <div style="flex:1; height:4px; border-radius:2px; background:rgba(255,255,255,0.15); position:relative;"><div style="width:55%; height:100%; border-radius:2px; background:#c084fc;"></div></div>
-                <span style="font-size:10px; color:#94a3b8;">1:24 / 2:30</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>`;
+      // Music uses the canonical guarded form below. Never render a decorative
+      // player, provider badge, hard-coded price or fake download action.
+      return "";
     }
 
     if (path.startsWith("/documents") || path.startsWith("/pdf") || family === "documents") {
@@ -31760,13 +31746,15 @@
     if (route === "/image/create" || route === "/image/new") return renderImageCreateWorkspace(page, context);
     const videoTask = route === "/video/create" || route === "/video/multiscene";
     const voiceTask = ["/voice/tts", "/voice/saved", "/voice/clone", "/voice/outputs"].includes(route);
+    const musicTask = ["/music/create", "/music/song"].includes(String(route || "").split("?")[0].replace(/\/$/, "") || "/");
     const subtitleStudioCompanion = renderSubtitleStudioCompanionLink(page);
     const flow = context.featureFlows && context.featureFlows[route];
     const flowOutput = voiceTask && flow ? renderVoiceFlowState(flow, route) : flow
       ? `<div class="portal-state" data-state="${safeText(flow.status || "guarded")}"><span class="portal-state-icon" aria-hidden="true">○</span><div><h3>${safeText(flow.message || "Core Bridge đã cập nhật trạng thái.")}</h3><p>Trạng thái canonical: ${safeText(STATE_LABELS[flow.status] || flow.status || "guarded")}. ${flow.status === "completed" ? "Output chỉ được cấp qua asset đã xác minh." : "Bản nháp planning có thể hiển thị; output engine vẫn phải qua job và asset hợp lệ."}</p></div></div>${renderCanonicalFlow(flow, route)}${renderFeatureTracking(flow)}`
       : renderEmpty(videoTask ? uiText("videoUi.output.empty", "Chưa có kết quả video") : voiceTask ? voiceUiText("output.empty", "Chưa có kết quả") : "Chờ Engine Web hoặc integration tùy chọn", videoTask ? uiText("videoUi.output.waiting", "") : voiceTask ? voiceUiText("output.waiting", "") : "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○");
     const voiceVault = page.path === "/voice/saved" ? renderVoiceVault(context) : "";
-    const interactiveWorkbench = videoTask ? "" : renderInteractiveFeatureWorkbench(page, context);
+    const interactiveWorkbench = videoTask || musicTask ? "" : renderInteractiveFeatureWorkbench(page, context);
+    const musicGuidance = musicTask ? renderMusicProductGuidance(page, context) : "";
     const isLegacySubDubRoute = ["/subtitle", "/subtitle/create", "/translate", "/dubbing", "/asr"].includes(route);
     const formContent = route === "/voice/outputs"
       ? `<section class="portal-card portal-card-pad"><p>${safeText(voiceUiText("output.help", ""))}</p><a class="portal-button portal-button--quiet" href="/jobs">${safeText(voiceUiText("output.jobs", "Xem công việc"))}</a></section>`
@@ -31776,7 +31764,7 @@
     const visibleForm = previousFormCollapsed ? `<details class="portal-voice-task-form" data-voice-task-form><summary>${safeText(voiceUiText("flow.form", "Biểu mẫu giọng đọc"))}</summary>${formContent}</details>` : formContent;
     const outputSection = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${videoTask ? safeText(uiText("videoUi.output.title", "")) : voiceTask ? safeText(voiceUiText("output.title", "")) : "Output & trạng thái"}</h2>${videoTask || voiceTask ? "" : '<p class="portal-card-subtitle">Không tạo text, media, transcript hoặc file giả để thay thế engine thật.</p>'}</div>${voiceTask ? "" : badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section>`;
     return `<article class="portal-page${videoTask ? " portal-feature-workspace--video-task" : voiceTask ? " portal-feature-workspace--voice-task" : ""}">${renderHero(page, context)}${voiceTask ? "" : `<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>`}
-      ${interactiveWorkbench}${flowFirst ? outputSection : ""}
+      ${interactiveWorkbench}${musicGuidance}${flowFirst ? outputSection : ""}
       <div class="portal-work-grid"><div>${visibleForm}${subtitleStudioCompanion}</div>${voiceTask ? "" : `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside>`}</div>
       ${voiceVault}${videoTask || voiceTask ? "" : renderFeatureBotHandoff(page, context, flow)}${flowFirst ? "" : outputSection}</article>`;
   }
@@ -36831,6 +36819,47 @@
     if (presetName || rangeName || input.type === "number") rememberTransientFormDraft(form);
   }
 
+  function synchronizeMusicProductForm(form) {
+    if (!form || !form.hasAttribute("data-music-product-form")) return;
+    const routeMode = form.getAttribute("data-music-product-form") === "song" ? "song" : "background";
+    const formEnabled = form.getAttribute("data-music-product-enabled") === "true";
+    const modeInput = form.querySelector('[name="mode"]');
+    const selectedMode = String(modeInput && modeInput.value || (routeMode === "song" ? "lyrics" : "background"));
+    const songMode = routeMode === "song";
+    const hasLyrics = songMode && ["lyrics", "custom"].includes(selectedMode);
+    const hasVocal = songMode && selectedMode !== "melody";
+    const lyricsInput = form.querySelector('[name="lyrics"]');
+    const vocalInput = form.querySelector('[name="vocal_mode"]');
+    const lengthInput = form.querySelector('[name="song_length_mode"]');
+    const durationInput = form.querySelector('[name="duration_seconds"]');
+    const setFieldState = (input, active, required) => {
+      if (!input) return;
+      input.disabled = !formEnabled || !active;
+      input.required = Boolean(required && active);
+      input.setAttribute("aria-disabled", String(!active));
+      input.setAttribute("aria-required", String(Boolean(required && active)));
+      const wrapper = input.closest(".portal-field");
+      if (wrapper) wrapper.setAttribute("data-music-field-state", active ? "active" : "inactive");
+      const requiredMark = wrapper && wrapper.querySelector("[data-portal-required-mark]");
+      const requiredMessage = wrapper && wrapper.querySelector("[data-portal-required-message]");
+      if (requiredMark) requiredMark.hidden = !Boolean(required && active);
+      if (requiredMessage) requiredMessage.hidden = !Boolean(required && active);
+    };
+    setFieldState(lyricsInput, hasLyrics, false);
+    setFieldState(vocalInput, hasVocal, false);
+    const lengthMode = String(lengthInput && lengthInput.value || "seconds");
+    setFieldState(durationInput, !songMode || lengthMode === "seconds", songMode && lengthMode === "seconds");
+    form.setAttribute("data-music-product-mode", songMode ? selectedMode : "background");
+    const state = form.querySelector("[data-music-product-state]");
+    if (state) {
+      const key = songMode
+        ? (selectedMode === "melody" ? "state.songMelody" : "state.songLyrics")
+        : "state.background";
+      state.textContent = musicProductText(key, "Các lựa chọn chỉ nằm trong bản nháp; xử lý thật cần capability và báo giá từ máy chủ.");
+    }
+    rememberTransientFormDraft(form);
+  }
+
   function synchronizeMusicDirectionPresetForm(form) {
     if (!form || form.getAttribute("data-portal-action") !== "music-direction-preset-compose") return;
     const enabled = form.getAttribute("data-music-direction-compose-enabled") === "true";
@@ -39521,6 +39550,7 @@
     });
     document.addEventListener("input", (event) => {
       syncPortalFieldControl(event.target);
+      synchronizeMusicProductForm(event.target.closest && event.target.closest("[data-music-product-form]"));
       if (event.target.id === "free-tools-text-input") {
         updateFreeToolsTextStats(event.target.value);
       }
@@ -39581,6 +39611,7 @@
     });
     document.addEventListener("change", (event) => {
       syncPortalFieldControl(event.target);
+      synchronizeMusicProductForm(event.target.closest && event.target.closest("[data-music-product-form]"));
       if (event.target.matches && event.target.matches("[data-vietqr-input]")) {
         autoUpdateVietQrPreview(false);
       }
@@ -40023,6 +40054,7 @@
       main.querySelectorAll('[data-portal-action="creative-motion-guide-compose"]').forEach((form) => {
         synchronizeCreativeMotionGuideForm(form);
       });
+      main.querySelectorAll("[data-music-product-form]").forEach((form) => synchronizeMusicProductForm(form));
       main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
       main.querySelectorAll('[data-portal-action="quick-image-planner-plan"]').forEach((form) => synchronizeQuickImagePlannerForm(form));
       main.querySelectorAll('[data-portal-action="image-prompt-compose"]').forEach((form) => synchronizeImagePromptComposerStylePreset(form));

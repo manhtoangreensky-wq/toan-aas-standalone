@@ -28,6 +28,14 @@ Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
   tốc độ số `0,1–2,0` với mặc định `1,0` và 3 preset; âm lượng slider `0–200` đồng bộ
   với đúng một field số. Targeted `3/3`, Voice regression `97/97`, full Node `530/530`,
   `node --check` và `git diff --check` đều đạt; chưa có CI/live/runtime execution evidence.
+- [x] MU-00 Music control-level local đã khóa: `/music/create` và `/music/song` dùng một
+  workspace dọc gồm 4 bước, 3 tier và 3 ô phương án guarded; không còn provider badge, giá,
+  player, MP3 hoặc download giả. Form song giữ `brief/tier/mode/vocal_mode/lyrics/song_length_mode/
+  duration_seconds`; route nền cô lập các field song-only; trạng thái thiếu capability không tự
+  mở field. Catalogue `musicProduct.*` cân bằng VI/EN/ZH; test mới `7/7`, focused Music+Voice
+  `19/19`, focused Music hub/prompt/library `25/25`, full Node `537/537`, syntax và diff-check đạt.
+  Đây chỉ là UI/control-level local; quote, confirm, generation, player/download/save/reuse,
+  editor, delivery và browser/CI/live vẫn mở.
 
 ## F0 — Shared contract R218-00/01
 
@@ -53,6 +61,7 @@ Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
 
 ## P2 — Music R218-03 (MU-01..12)
 
+- [~] MU-00 control-level local đã khóa theo C0; các mục runtime và delivery dưới đây chưa đóng.
 - [ ] Nhạc nền/Bài hát/Kho nhạc-SFX/Chỉnh nhạc; capability thật.
 - [ ] Brief/style/lyrics/vocal nam/nữ/song ca/auto/3 tier, không mất draft.
 - [ ] Ba gợi ý chọn/đổi/sửa; quote/confirm/review rõ.

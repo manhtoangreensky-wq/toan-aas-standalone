@@ -74,6 +74,37 @@ PUSH_GATE=READY_FOR_DOCUMENTATION_UPDATE
   và execution, Image/Utilities/AutoPost/Admin control-level evidence, Product Video/Video
   Editor execution và toàn bộ motion cuối.
 - Không merge, deploy, live hoặc gọi provider trong batch này.
+
+## Incremental Music control evidence — candidate sau batch local 18/10/2026
+
+- Phạm vi: `static/portal/portal.js`, `static/portal/portal-i18n.js`,
+  `static/portal/portal-theme.css`, `tests/music-product-controls.test.mjs`.
+- MU-01..MU-07 control-level: `/music/create` và `/music/song` có workspace dọc 4 bước,
+  3 tier, 3 ô phương án guarded; bài hát giữ lyrics/vocal/song length/duration; nhạc nền không
+  lộ field song-only; không còn badge provider, giá hard-code, player, MP3 hoặc download giả.
+- Locale: catalogue `musicProduct.*` cân bằng `vi/en/zh`; placeholder phương án dùng đúng
+  tham số locale; theme light/dark giữ token xanh/ngọc, card dọc và breakpoint 640/980px.
+- Guard: thêm `data-music-product-enabled`; synchronizer không thể mở field khi thiếu
+  capability hoặc bản nháp hợp lệ.
+
+```text
+MUSIC_TARGETED=7/7
+MUSIC_VOICE_FOCUSED=19/19
+MUSIC_EXISTING_FOCUSED=25/25
+FULL_NODE=537/537
+NODE_CHECK=PASS
+GIT_DIFF_CHECK=PASS
+PYTEST=BLOCKED (workspace không có lệnh python/py)
+PROVIDER_CALLS=0
+WALLET_MUTATIONS=0
+PRODUCTION_DATA_MUTATIONS=0
+DEPLOY=NO
+LIVE_PASS=NOT_TESTED
+```
+
+Music generation, quote/confirm, editor, player/download/save/reuse, two-track delivery,
+authenticated browser evidence và CI trên HEAD mới vẫn là `[~]/[ ]`; không được suy diễn
+thành parity runtime hoặc LIVE.
 # Incremental Voice control evidence — candidate `814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd`
 
 - Phạm vi: `static/portal/portal.js`, `static/portal/portal.css`, `tests/voice-controls-contract.test.mjs`.

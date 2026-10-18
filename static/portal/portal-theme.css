@@ -22475,3 +22475,157 @@ html[data-portal-theme="dark"] .portal-landing-theme-switch button.is-active {
     font-size: 28px;
   }
 }
+
+/* R218 Music product workspace: an honest, vertical flow that keeps the
+   existing teal/blue palette and never implies a provider result. */
+.portal-music-product-guidance {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 18px;
+  border: 1px solid var(--portal-border);
+  background: var(--portal-surface);
+  box-shadow: var(--portal-elevation-1, 0 1px 2px rgba(7, 58, 69, .08));
+}
+.portal-music-product-steps,
+.portal-music-product-tier-grid,
+.portal-music-product-suggestions ol {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.portal-music-product-steps {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.portal-music-product-steps li,
+.portal-music-product-tier,
+.portal-music-product-suggestions li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  align-items: start;
+  padding: 13px;
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-sm, 10px);
+  background: var(--portal-surface-soft);
+}
+.portal-music-product-steps li > div,
+.portal-music-product-tier > div,
+.portal-music-product-suggestions li > div {
+  min-width: 0;
+}
+.portal-music-product-index {
+  display: inline-grid;
+  min-width: 28px;
+  min-height: 28px;
+  place-items: center;
+  border: 1px solid var(--portal-border-strong);
+  border-radius: 999px;
+  color: var(--portal-context);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+.portal-music-product-steps strong,
+.portal-music-product-tier strong,
+.portal-music-product-suggestions strong {
+  display: block;
+  color: var(--portal-text);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.portal-music-product-steps p,
+.portal-music-product-tier p,
+.portal-music-product-suggestions p {
+  margin: 4px 0 0;
+  color: var(--portal-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.portal-music-product-tier-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.portal-music-product-tier {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+}
+.portal-music-product-tier .portal-badge {
+  white-space: nowrap;
+}
+.portal-music-product-suggestions {
+  display: grid;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius, 14px);
+  background: var(--portal-surface-strong);
+}
+.portal-music-product-suggestions .portal-card-header {
+  margin-bottom: 0;
+}
+.portal-music-product-suggestions li {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  background: var(--portal-surface);
+}
+.portal-music-product-suggestions li .portal-badge {
+  white-space: nowrap;
+}
+.portal-music-product-state {
+  display: block;
+  flex-basis: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-sm, 10px);
+  background: var(--portal-surface-soft);
+  color: var(--portal-muted-strong);
+}
+[data-music-field-state="inactive"] {
+  opacity: .72;
+}
+[data-music-field-state="inactive"] :is(input, select, textarea)[disabled] {
+  color: var(--portal-muted);
+  cursor: not-allowed;
+}
+html[data-portal-theme="dark"] .portal-music-product-guidance {
+  background: var(--portal-dark-surface-light);
+  box-shadow: var(--portal-dark-elevation-1);
+}
+html[data-portal-theme="dark"] .portal-music-product-steps li,
+html[data-portal-theme="dark"] .portal-music-product-tier,
+html[data-portal-theme="dark"] .portal-music-product-suggestions li,
+html[data-portal-theme="dark"] .portal-music-product-state {
+  background: var(--portal-dark-surface-soft);
+}
+html[data-portal-theme="dark"] .portal-music-product-suggestions {
+  background: var(--portal-dark-surface-strong);
+}
+html[data-portal-theme="dark"] .portal-music-product-index {
+  color: var(--portal-teal-dark-border-strong);
+}
+@media (max-width: 980px) {
+  .portal-music-product-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .portal-music-product-tier-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .portal-music-product-steps {
+    grid-template-columns: 1fr;
+  }
+  .portal-music-product-tier,
+  .portal-music-product-suggestions li {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .portal-music-product-tier .portal-badge,
+  .portal-music-product-suggestions li .portal-badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
