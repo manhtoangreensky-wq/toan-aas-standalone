@@ -71,10 +71,12 @@ PUSH_GATE=REMOTE_MATCHED; PR_OPEN_CONFLICTING; CI_UNKNOWN
 
 ## Current UT-06 Documents / UT-07 Assets candidate identity
 
-Wave UT-06 Documents đã được commit/push sau khi kiểm tra đúng phạm vi control-level. Local
-và GitHub đang trùng SHA; PR #654 vẫn OPEN, `statusCheckRollup=[]` và
-`mergeable=CONFLICTING`. Bản ghi này tách rõ candidate mới khỏi comparator cũ ở trên; CI,
-browser evidence và LIVE trên candidate mới chưa được suy diễn từ run trước.
+Wave UT-06 Documents và UT-07 Assets đã được commit/push sau khi kiểm tra đúng phạm vi
+control-level. Source candidate vẫn là `37aa610...`; checkpoint docs/test được push tại
+`09ba2f63859f089a4e94430857e4d38bcb93a1f6` và remote đã trả đúng SHA này khi xác minh ngay
+sau push. PR #654 vẫn OPEN, `statusCheckRollup=[]` và `mergeable=CONFLICTING`. Bản ghi này
+tách rõ candidate mới khỏi comparator cũ ở trên; CI, browser evidence và LIVE trên candidate
+mới chưa được suy diễn từ run trước.
 
 ```text
 DOCUMENTS_UT06_TARGETED=4/4
@@ -88,7 +90,9 @@ WALLET_MUTATIONS=0
 PRODUCTION_DATA_MUTATIONS=0
 DEPLOY=NO
 LIVE_PASS=NOT_TESTED
-REMOTE_HEAD=37aa610f37c5a99b7ea8fae5eafb5285eb8c9c61 (0/0 local-vs-GitHub)
+SOURCE_CODE_CANDIDATE_SHA=37aa610f37c5a99b7ea8fae5eafb5285eb8c9c61
+PUSH_VERIFIED_COMMIT=09ba2f63859f089a4e94430857e4d38bcb93a1f6
+REMOTE_BRANCH_MATCH_AT_PUSH=YES
 PR_STATE=OPEN
 PR_MERGEABLE=CONFLICTING
 ```
