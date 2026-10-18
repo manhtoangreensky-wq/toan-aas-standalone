@@ -142,9 +142,9 @@ def setup_db_and_env(monkeypatch):
         conn.execute(
             """
             INSERT OR REPLACE INTO web_accounts (id, email, password_hash, role_cache, canonical_user_id, created_at, updated_at)
-            VALUES ('test-transform-user-1', 'transform1@test.local', 'hash1', 'user', '100001', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'),
-                   ('test-transform-user-2', 'transform2@test.local', 'hash2', 'user', '100002', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'),
-                   ('test-transform-admin', 'admin@test.local', 'hashadmin', 'admin', '100000', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z')
+            VALUES ('test-transform-user-1', 'transform1@test.local', 'hash1', 'user', 'canonical_transform_1', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'),
+                   ('test-transform-user-2', 'transform2@test.local', 'hash2', 'user', 'canonical_transform_2', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z'),
+                   ('test-transform-admin', 'admin-transform@test.local', 'hashadmin', 'admin', 'canonical_transform_admin', '2026-10-11T00:00:00Z', '2026-10-11T00:00:00Z')
             """
         )
         conn.execute(
@@ -726,7 +726,7 @@ def test_09_output_asset_rejection_rules():
 def test_10_admin_visibility():
     """Admin endpoint /api/v1/admin/jobs/{job_id} surfaces product, owner, queued status without secrets."""
     client_user, csrf_user = _create_authenticated_client("test-transform-user-1")
-    client_admin, _ = _create_authenticated_client("test-transform-admin", "admin@test.local", role="admin")
+    client_admin, _ = _create_authenticated_client("test-transform-admin", "admin-transform@test.local", role="admin")
 
     from copyfast_auth import require_canonical_admin
     app.dependency_overrides[require_canonical_admin] = lambda: {"id": "test-transform-admin", "role": "admin"}

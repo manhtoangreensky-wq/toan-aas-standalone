@@ -70,7 +70,7 @@
     {
       "file": "copyfast_image_generation_job_bridge.py",
       "kind": "function",
-      "line": 601,
+      "line": 618,
       "target": "_format_image_generation_job_record"
     },
     {
@@ -124,7 +124,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 540,
+      "line": 561,
       "target": "_format_public_job"
     },
     {
@@ -136,7 +136,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 414,
+      "line": 435,
       "target": "_format_public_job"
     },
     {
@@ -280,7 +280,7 @@
     {
       "file": "copyfast_image_generation_job_bridge.py",
       "kind": "function",
-      "line": 781,
+      "line": 798,
       "target": "confirm_image_generation_job"
     },
     {
@@ -424,7 +424,7 @@
     {
       "file": "copyfast_image_generation_job_bridge.py",
       "kind": "function",
-      "line": 371,
+      "line": 388,
       "target": "create_or_replay_image_generation_job"
     },
     {
@@ -478,7 +478,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 368,
+      "line": 389,
       "target": "create_or_replay_subdub_job"
     },
     {
@@ -490,7 +490,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 254,
+      "line": 275,
       "target": "create_or_replay_video_trend_job"
     },
     {
@@ -610,7 +610,7 @@
     {
       "file": "copyfast_image_generation_job_bridge.py",
       "kind": "function",
-      "line": 680,
+      "line": 697,
       "target": "dispatch_image_generation_job_to_canonical_runtime"
     },
     {
@@ -622,7 +622,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 760,
+      "line": 781,
       "target": "dispatch_subdub_job_to_canonical_runtime"
     },
     {
@@ -688,7 +688,7 @@
     {
       "file": "copyfast_image_generation_job_bridge.py",
       "kind": "function",
-      "line": 209,
+      "line": 226,
       "target": "generate_image_generation_job_id"
     },
     {
@@ -712,7 +712,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 286,
+      "line": 307,
       "target": "generate_subdub_job_id"
     },
     {
@@ -724,7 +724,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 217,
+      "line": 238,
       "target": "generate_video_trend_job_id"
     },
     {
@@ -778,7 +778,7 @@
     {
       "file": "copyfast_image_generation_job_bridge.py",
       "kind": "function",
-      "line": 481,
+      "line": 498,
       "target": "get_image_generation_job"
     },
     {
@@ -832,7 +832,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 650,
+      "line": 671,
       "target": "get_internal_subdub_job"
     },
     {
@@ -922,7 +922,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 626,
+      "line": 647,
       "target": "get_subdub_job"
     },
     {
@@ -1006,7 +1006,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 477,
+      "line": 498,
       "target": "get_video_trend_job"
     },
     {
@@ -1060,7 +1060,7 @@
     {
       "file": "copyfast_image_generation_job_bridge.py",
       "kind": "function",
-      "line": 543,
+      "line": 560,
       "target": "image_generation_job_to_native_compat"
     },
     {
@@ -1090,7 +1090,7 @@
     {
       "file": "copyfast_image_generation_job_bridge.py",
       "kind": "function",
-      "line": 522,
+      "line": 539,
       "target": "is_image_generation_job_other_account"
     },
     {
@@ -1138,7 +1138,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 716,
+      "line": 737,
       "target": "is_subdub_job_other_account"
     },
     {
@@ -1150,7 +1150,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 504,
+      "line": 525,
       "target": "is_video_trend_job_other_account"
     },
     {
@@ -1210,7 +1210,7 @@
     {
       "file": "copyfast_image_generation_job_bridge.py",
       "kind": "function",
-      "line": 500,
+      "line": 517,
       "target": "list_image_generation_jobs"
     },
     {
@@ -1330,7 +1330,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 734,
+      "line": 755,
       "target": "list_subdub_jobs"
     },
     {
@@ -1414,7 +1414,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 524,
+      "line": 545,
       "target": "list_video_trend_jobs"
     },
     {
@@ -1570,7 +1570,7 @@
     {
       "file": "copyfast_image_generation_job_bridge.py",
       "kind": "function",
-      "line": 849,
+      "line": 866,
       "target": "reconcile_image_generation_job_status"
     },
     {
@@ -1606,7 +1606,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 907,
+      "line": 928,
       "target": "reconcile_subdub_job_status"
     },
     {
@@ -1672,13 +1672,13 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 1030,
+      "line": 1051,
       "target": "settle_subdub_job_completion"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 1173,
+      "line": 1194,
       "target": "subdub_job_to_native_compat"
     },
     {
@@ -1732,7 +1732,7 @@
     {
       "file": "copyfast_video_trend_job_bridge.py",
       "kind": "function",
-      "line": 549,
+      "line": 570,
       "target": "video_trend_job_to_native_compat"
     },
     {
@@ -5063,49 +5063,49 @@
     },
     {
       "file": "copyfast_image_generation_job_bridge.py",
-      "line": 319,
+      "line": 336,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_image_generation_jobs"
     },
     {
       "file": "copyfast_image_generation_job_bridge.py",
-      "line": 437,
+      "line": 454,
       "operation": "INSERT INTO",
       "table": "web_image_generation_jobs"
     },
     {
       "file": "copyfast_image_generation_job_bridge.py",
-      "line": 730,
+      "line": 747,
       "operation": "UPDATE",
       "table": "web_image_generation_jobs"
     },
     {
       "file": "copyfast_image_generation_job_bridge.py",
-      "line": 744,
+      "line": 761,
       "operation": "UPDATE",
       "table": "web_image_generation_jobs"
     },
     {
       "file": "copyfast_image_generation_job_bridge.py",
-      "line": 757,
+      "line": 774,
       "operation": "UPDATE",
       "table": "web_image_generation_jobs"
     },
     {
       "file": "copyfast_image_generation_job_bridge.py",
-      "line": 769,
+      "line": 786,
       "operation": "UPDATE",
       "table": "web_image_generation_jobs"
     },
     {
       "file": "copyfast_image_generation_job_bridge.py",
-      "line": 831,
+      "line": 848,
       "operation": "UPDATE",
       "table": "web_image_generation_jobs"
     },
     {
       "file": "copyfast_image_generation_job_bridge.py",
-      "line": 893,
+      "line": 910,
       "operation": "UPDATE",
       "table": "web_image_generation_jobs"
     },
@@ -7211,73 +7211,73 @@
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 295,
+      "line": 316,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 460,
+      "line": 481,
       "operation": "INSERT INTO",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 860,
+      "line": 881,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 878,
+      "line": 899,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 895,
+      "line": 916,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 972,
+      "line": 993,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 987,
+      "line": 1008,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 1002,
+      "line": 1023,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 1016,
+      "line": 1037,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 1091,
+      "line": 1112,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 1146,
+      "line": 1167,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 1160,
+      "line": 1181,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
@@ -8045,13 +8045,13 @@
     },
     {
       "file": "copyfast_video_trend_job_bridge.py",
-      "line": 226,
+      "line": 247,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_video_trend_jobs"
     },
     {
       "file": "copyfast_video_trend_job_bridge.py",
-      "line": 352,
+      "line": 373,
       "operation": "INSERT INTO",
       "table": "web_video_trend_jobs"
     },
@@ -10316,7 +10316,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1102,
+      "occurrences": 1104,
       "provider": "PayOS"
     },
     {
@@ -10460,7 +10460,7 @@
         "studio/manifest.json",
         "studio/script.js"
       ],
-      "occurrences": 45,
+      "occurrences": 44,
       "provider": "Suno"
     },
     {
@@ -10534,7 +10534,7 @@
         "copyfast_notification_center.py",
         "copyfast_pages.py"
       ],
-      "occurrences": 2018,
+      "occurrences": 2020,
       "provider": "Telegram"
     }
   ],
@@ -18317,39 +18317,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 286,
+  "source_files_discovered": 287,
   "source_files_scanned": 287,
-  "source_fingerprint_sha256": "29261d3f20b0cfaab478484b1a35135ba3f16d050ceaf0e36afdb5f4fbae488a",
+  "source_fingerprint_sha256": "49b1abb4b91a50f0ee716f8a6c6eae7ec4a4c75f6d9667583466bc8939ab835d",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 33904,
+      "line": 34279,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34220,
+      "line": 34595,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33568,
+      "line": 33943,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33817,
+      "line": 34192,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33189,
+      "line": 33564,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33481,
+      "line": 33856,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -18564,7 +18564,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35323,
+      "line": 35698,
       "path": "/features"
     },
     {
