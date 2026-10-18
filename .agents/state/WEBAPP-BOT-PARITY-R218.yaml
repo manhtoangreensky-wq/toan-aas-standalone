@@ -31,6 +31,9 @@ current_wip:
   ci_head: 8baaa0768600aea4f8da6c7e5515c9781c5bb7a5
   ci_status_at_last_observation: SUCCESS_BEFORE_LOCAL_SUBDUB_PATCH
   ci_scope: "HEAD 8baaa07 đã xanh Verify Web App + Authenticated QA; commit SubDub mới chưa push/CI."
+  ci_latest_run: 39100762508
+  ci_latest_status: "Verify Web App FAILED before product tests: migration evidence fingerprint recorded=4df2602795b3, current=0ccda5aeca61, files=286."
+  migration_evidence_refresh: "Prepared for b040fc0: source_files_scanned=286, source_fingerprint_sha256=0ccda5aeca61faf9bf26383e26ee4d9fdcf5642438ef41baa107bc19635dcf70."
   local_targeted_tests: "13/13 tests/subdub-hub-presentation.test.mjs; node --check static/portal/portal.js; git diff --check"
   local_full_tests: "527/527 tests/*.test.mjs"
   browser_qa_artifact_sha256: e02fc36e875e12e910e327369f2d6bab625cae87ddb4ddc0fc57553fd1e7f0c9
@@ -44,4 +47,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Review và push bộ plan toàn sản phẩm; chốt WIP trước triển khai wave mới; technical backend cuối đợi lệnh."
+next_action: "Push migration evidence refresh with b040fc0, await Verify Web App + Authenticated QA, then continue ordered R218 wave; no merge/deploy/live."
