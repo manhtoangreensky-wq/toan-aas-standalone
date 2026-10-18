@@ -122,6 +122,13 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## P1 — Voice R218-02 (VO-01..13)
 
+- [x] VO-01 SCALAR-DRAFT — 19/10/2026: bốn chế độ chuyển trong cùng document;
+  giữ nội dung/thiết lập, mức âm lượng 0 và locale; Back/Forward hoạt động,
+  Ctrl/Meta-click giữ hành vi link gốc. Đổi/mất phiên xóa bản nháp Voice.
+  Tệp/password không đưa vào Map hoặc browser storage. Test 7/7; browser
+  18 cấu hình, gồm alias `/tts`, session cleanup và overflow; lỗi/request ngoài/
+  mutation đều 0. Full Node 645/645. Reload/file selection/delivery còn mở.
+
 - [x] VO-09 READ-STATE — 19/10/2026: phân biệt loading/failed/guarded với
   empty thật, xóa tên giọng cũ trước await và khi bootstrap, chặn response phiên
   cũ, giữ list khi readiness lỗi, retry chỉ GET. 19/19 test hành vi; cả nhóm

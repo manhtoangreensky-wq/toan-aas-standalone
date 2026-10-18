@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-10-19",
-  "local_files_refresh_scope": "Only portable LF file sizes/hashes were remeasured after the Voice inventory read-state cases; historical remote verification dates are unchanged.",
+  "local_files_refresh_scope": "Only portable LF file sizes/hashes were remeasured after Voice inventory and scalar-draft cases; historical remote verification dates are unchanged.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 210,
-      "bytes": 41903,
-      "sha256": "45cb9aae9a4090e0601abcd2f3d021ca6dc5e04dd4a578d4b5c28d47801ecff2"
+      "lines": 218,
+      "bytes": 42574,
+      "sha256": "d9b35d1c17bdd0f9f14da4f5f02278482c0b046f37e46357fb08780c87df9e7d"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

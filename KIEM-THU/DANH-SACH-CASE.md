@@ -183,6 +183,14 @@ transcript/copy/export, delivery và LIVE là các gate riêng, không được 
 Bằng chứng source hiện tại: `tests/autopost-hub-product-controls.test.mjs` `4/4`, full Node
 `562/562`. Browser/AX/live chưa chạy; không dùng PASS source để thay cho các mức đó.
 
+## VOICE-WORKSPACE-DRAFT-20261019
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| VUI-DRAFT-01 | Nhập TTS Unicode và âm lượng 0 → Kho giọng → Back/Forward → TTS | Nội dung/0% và locale giữ nguyên, cùng document; mode active đúng, không job/provider |
+| VUI-DRAFT-02 | Ctrl/Meta-click, mode hiện tại, alias `/tts`/`/voice/create`/`/voice/vault`/`/voice/asr` | Link ngoài/modified giữ hành vi gốc; không tạo history entry lặp; alias giữ draft canonical |
+| VUI-DRAFT-03 | Signed session mới/đăng xuất/mất token | Xóa riêng draft Voice, không xóa draft khác; không giữ File/password, không browser storage |
+
 ## VOICE-INVENTORY-READ-STATE-20261019
 
 | ID | Kiểm tra | PASS cần ghi |

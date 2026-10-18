@@ -1,6 +1,6 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: WIP_P1_VOICE_INVENTORY_RECOVERY_LOCAL_VERIFIED
+status: WIP_P1_VOICE_SCALAR_DRAFT_BROWSER_VERIFIED
 date: 2026-10-19
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
@@ -49,6 +49,15 @@ artifacts:
   tester_cases: KIEM-THU/DANH-SACH-CASE.md
   tester_guide: KIEM-THU/HUONG-DAN-TESTER.md
 current_wip:
+  voice_scalar_draft:
+    state: "UI_VERIFIED_RUNTIME_OPEN"
+    tests: "7/7; full Node 645/645"
+    browser_configurations: 18
+    checks: "Same-document mode navigation, Back/Forward, zero volume, locale, /tts alias and new-session cleanup; page/console/external/mutation/overflow 0."
+    artifact: "../qa/r218-voice-inventory/draft-probe.json"
+    artifact_sha256: eb9b59b5e005462570e3c0ad5b3663d465d2f5c2c72c67cedeb71f188a3b0ce2
+    limitations: "Scalar tab-memory only; file selection and reload persistence are not closed."
+  last_inventory_ci: "39158580199 SUCCESS on 5a124bb1d3a53698068c796c19be0bc906ff4fc1; Verify Web App and Authenticated WebApp QA both passed."
   voice_inventory_recovery: "2026-10-19: removed speculative Voice Vault management proxies from c6bc455; backend/auth/route-engine/payment source matches 063473a. Added loading/ready/failed/guarded UI, clear-before-await and bootstrap cleanup, independent readiness/profile reads, stale-response fence, GET retry, and full bounded 50-item display without a fake total/pager. Behavior tests 19/19; inventory tests together 34/34; full Node 638/638 after preserving six newer SubDub tests. Browser localhost uses production shell/renderer/integration.js with explicit read-only API fixtures; final result is linked from the PR report. Canonical management/preview/handoff stays open in T0."
   voice_inventory_browser_qa:
     date: 2026-10-19
@@ -83,7 +92,7 @@ current_wip:
   ci_latest_status: "Run 39153828848 terminal SUCCESS: Verify Web App và Authenticated WebApp QA đều succeeded; Music flow contract 12/12, full Node 613/613, Compile Python, JavaScript/contracts, browser verification/runtime, artifact và diff whitespace đều PASS."
   migration_evidence_refresh: "Migration evidence của remote HEAD 5d25544 đã được verify; source_files_scanned=288; source_fingerprint_sha256=3b7eb4af38db2d1350123df056cb009ef9db1c2f59d02fa03fcdb7457a9e53e0. Bot evidence unchanged."
   local_targeted_tests: "STT/workspace 14/14; Voice suites 132/132; voice-flow-state-presentation 51/51; readiness metadata p0-05d kiểm tra độc lập PASS; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
-  local_full_tests: "638/638 tests/*.test.mjs on the Voice inventory recovery candidate after integration with remote SubDub tests; 19 read-state/hydration tests and 15 inventory presentation tests. Prior 613/613 snapshot remains historical."
+  local_full_tests: "645/645 tests/*.test.mjs; 34 inventory read/presentation and 7 scalar draft/navigation tests. Earlier suite counts remain historical."
   python_tests: "NOT_RUN: bundled Python located via workspace dependencies; pytest/FastAPI/Uvicorn are not installed in that runtime. No Python source changed in this batch."
   voice_browser_qa:
     environment: "Localhost production renderer/CSS with synthetic signed-state projection; no integration.js, backend or DB. Browser plugin absent; Playwright + Edge used."
@@ -115,4 +124,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Chốt CI/browser evidence cho P1 inventory recovery; tiếp tục P1 draft/confirm/STT UI còn mở rồi P2 Music UI theo thứ tự. Canonical management/upload/preview/handoff giữ tại T0, không coi API thiếu là blocker toàn bộ UI. Motion làm cuối; merge/deploy chưa được phép."
+next_action: "Chốt CI cho VO-01 scalar-draft; tiếp tục P1 confirm/STT/file-selection UI còn mở rồi P2 Music UI theo thứ tự. Canonical management/upload/preview/handoff giữ tại T0. Motion làm cuối; merge/deploy chưa được phép."

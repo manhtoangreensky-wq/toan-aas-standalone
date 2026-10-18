@@ -38715,6 +38715,11 @@
     }
   });
   window.addEventListener("toanaas:portal-action", handleAction);
+  window.addEventListener("toanaas:voice-workspace-navigation", () => {
+    if (["/voice/tts", "/voice/stt", "/voice/saved", "/voice/clone"].includes(currentPortalPath())) {
+      void hydrateCanonicalData();
+    }
+  });
   function synchronizePortalHistoryNavigation() {
     // `pushState` is used by a small number of native Web handoffs.  Browser
     // Back/Forward changes the URL without remounting the document, so adopt

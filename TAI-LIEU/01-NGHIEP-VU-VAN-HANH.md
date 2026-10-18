@@ -17,6 +17,13 @@ renderer và integration.js production dùng API fixture, chưa phải dữ li�
 Core thật hoặc LIVE. Bằng chứng tại `../qa/r218-voice-inventory/result.json`.
 Các mục vận hành/dữ liệu production bên dưới giữ nguyên phạm vi đo ban đầu.
 
+### Bản nháp Voice VO-01 — 19/10/2026
+
+Bổ sung Voice VO-01 ngày 19/10: đổi chế độ giữ lời thoại và âm lượng trong
+cùng phiên/tab; Back/Forward và locale giữ đúng. Đổi phiên xóa nháp Voice;
+không lưu File/password hoặc ghi browser storage. 7/7 test hành vi, 18 cấu
+hình trình duyệt; full Node mới nhất 645/645. Reload/tệp và runtime chưa đóng.
+
 ## Checkpoint UT-01 — workspace Dịch (ứng viên cục bộ 18/10/2026)
 
 Web đã bổ sung một workspace dọc cho `/subtitle-studio/new?intent=translation&pair=...`:

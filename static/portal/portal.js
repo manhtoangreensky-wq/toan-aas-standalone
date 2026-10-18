@@ -160,6 +160,7 @@
 
   let interactionsBound = false;
   const transientFormDrafts = new Map();
+  let voiceWorkspaceDraftSession = "";
   // A continuation may only open one of these finite local Image Operations.
   // It never carries an operation config, file bytes, URL, Bot state or an
   // unverified reference; the target server still verifies Asset Vault
@@ -25677,6 +25678,39 @@
     return uiText(`voiceUi.${key}`, fallback, params);
   }
 
+  function synchronizeVoiceWorkspaceDraftSession(context) {
+    const session = context && context.session;
+    const token = session && session.authenticated === true && typeof session.csrfToken === "string" ? session.csrfToken : "";
+    if (!token || token !== voiceWorkspaceDraftSession) {
+      ["/voice/tts", "/voice/stt", "/voice/saved", "/voice/clone"].forEach(clearTransientFormDraft);
+    }
+    voiceWorkspaceDraftSession = token;
+  }
+
+  function navigateVoiceWorkspace(event, link) {
+    if (!link || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return false;
+    const routes = ["/voice/tts", "/voice/stt", "/voice/saved", "/voice/clone"];
+    const target = link.getAttribute("href");
+    const context = getBootstrap();
+    const current = normalizePath(resolvePage(context.path).path);
+    if (!routes.includes(target) || !routes.includes(current) || link.getAttribute("target") || link.hasAttribute("download")) return false;
+    if (!(context.session && context.session.authenticated === true && context.session.csrfToken)) return false;
+    if (target === current) { event.preventDefault(); return true; }
+    const form = document.querySelector(`[data-portal-form][data-portal-route="${current}"]`);
+    rememberTransientFormDraft(form);
+    const next = new URL(target, window.location.origin);
+    const locale = new URL(window.location.href).searchParams.get("lang");
+    if (["vi", "en", "zh"].includes(locale)) next.searchParams.set("lang", locale);
+    try { window.history.pushState({}, "", next.pathname + next.search); }
+    catch (_) { return false; }
+    event.preventDefault();
+    mountPortal({ ...window.__TOAN_AAS_PORTAL__, path: target, voiceProfiles: [], voiceInventoryReadState: "guarded" });
+    window.dispatchEvent(new CustomEvent("toanaas:voice-workspace-navigation"));
+    const active = document.querySelector("[data-voice-workspace-mode][aria-current=page]");
+    if (active) active.focus({ preventScroll: true });
+    return true;
+  }
+
   function renderVoiceWorkspaceNav(route) {
     const current = normalizePath(String(route || ""));
     const tabs = [
@@ -39691,6 +39725,8 @@
       handleFreeToolTabKeydown(freeToolTab, event);
     });
     document.addEventListener("click", (event) => {
+      const voiceModeLink = event.target.closest("[data-voice-workspace-mode]");
+      if (navigateVoiceWorkspace(event, voiceModeLink)) return;
       const subDubModeButton = event.target.closest("[data-subdub-mode-select]");
       if (updateSubDubModeSelection(subDubModeButton, window)) return;
       const navSummary = event.target.closest(".portal-nav-summary");
@@ -40391,6 +40427,7 @@
     }
     const focus = focusSnapshot();
     const context = getBootstrap();
+    synchronizeVoiceWorkspaceDraftSession(context);
     const page = resolvePage(context.path);
     applyInterfaceLocale(context);
     const sidebar = document.querySelector("[data-portal-sidebar]");

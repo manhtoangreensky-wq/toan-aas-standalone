@@ -45,6 +45,23 @@ Bot anchors: bot.py:159975,160106,160123,160166,160261,167782,169187,169226,
   contract; các link mở công cụ không mang profile ID. Không tạo nút luôn disabled
   để đánh dấu một control đã hoàn tất.
 
+### Phiếu P1 VO-01 — bản nháp scalar khi đổi chế độ (19/10)
+
+- `navigateVoiceWorkspace` chỉ nhận bốn link hiện có trong workspace Voice;
+  giữ alias đã đăng ký bằng `resolvePage`, giữ `lang` VI/EN/ZH, không nhận
+  profile/return URL/tác vụ từ query. Ctrl/Meta/Shift/Alt và link khác giữ nguyên.
+- Dùng Map tab-memory hiện có cho nội dung/speed/volume; không giữ File hoặc
+  password, không localStorage/sessionStorage, không tự lưu bản nháp lên server.
+- `synchronizeVoiceWorkspaceDraftSession` xóa các route Voice khi token phiên
+  thay đổi, đăng xuất hoặc thiếu token; không xóa nháp các sản phẩm khác.
+- History chỉ đổi route trình bày và GET trạng thái; không estimate/confirm,
+  job/provider/wallet. Link mode hiện tại không tạo history entry lặp.
+- Verify: `node --test tests/voice-workspace-draft-navigation.test.mjs` 7/7;
+  `node ../qa/r218-voice-inventory/verify.cjs --draft-probe` 18 cấu hình, gồm
+  bàn phím, Back/Forward, âm lượng 0, alias `/tts`, locale và đổi phiên.
+- Đây là bản nháp scalar trong cùng document. Reload, file re-selection và
+  canonical runtime vẫn được theo dõi riêng; không đóng VO-12/VO-13.
+
 ### Phiếu P1 VO-06/07 — thời hạn báo giá
 
 - `flowHasFreshEstimate()` đọc `quote_expires_at`, `quote_valid_until` hoặc `expires_at`
