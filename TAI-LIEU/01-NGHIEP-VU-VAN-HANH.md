@@ -1,5 +1,18 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Checkpoint UT-01 — workspace Dịch (ứng viên cục bộ 18/10/2026)
+
+Web đã bổ sung một workspace dọc cho `/subtitle-studio/new?intent=translation&pair=...`:
+nguồn tự nhận diện, 21 lựa chọn ngôn ngữ đích, tìm kiếm cục bộ, giữ bản gốc,
+dịch hai chiều, trạng thái bắt đầu/dừng, kết quả và lịch sử. Đây là lớp trình
+bày/control-level; nút xử lý mặc định bị khóa vì máy chủ chưa công bố
+`translation-runtime-start`. Panel không gửi API action mới, không gọi provider,
+không tạo quote/job/tệp, không sửa ví và chưa được kiểm thử live.
+
+Đã đo: test riêng `3/3`, full Node `547/547`, `node --check` portal `PASS`,
+`git diff --check` `PASS`. Python/pytest chưa chạy được vì workspace không có
+lệnh `python` hoặc `py`.
+
 ## Checkpoint giao diện Image — ứng viên cục bộ 08/10/2026
 
 BASE `dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c` là merge SubDub PR #619;

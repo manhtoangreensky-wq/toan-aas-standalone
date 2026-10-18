@@ -1,5 +1,17 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Đối chiếu UT-01 — workspace Dịch (ứng viên cục bộ 18/10/2026)
+
+| Yêu cầu trong inventory Bot | Hiện tại trên ứng viên Web | Trạng thái |
+|---|---|---|
+| Dịch text/voice/file, nguồn tự động, chọn đích và hai chiều | Workspace một cột có nguồn tự nhận diện, 21 ngôn ngữ đích, ô tìm kiếm, giữ bản gốc và dịch hai chiều ở lớp control-level | ⚠️ |
+| Bắt đầu/dừng, kết quả và lịch sử | Có vùng trình bày trạng thái, kết quả rỗng và lịch sử rỗng; nút bắt đầu/dừng vẫn bị khóa nếu chưa có capability máy chủ | ⚠️ |
+| Chạy dịch thật và giao tệp | Chưa có DTO/capability/provider/quote/job/output/delivery; không được suy diễn từ giao diện | ⚠️ |
+
+Bằng chứng: `docs/superpowers/specs/2026-10-18-r218-06a-translation-workspace-controls.md`,
+`tests/translation-workspace-controls.test.mjs` `3/3`, full Node `547/547`.
+Luồng `/translate` và redirect companion cũ được giữ nguyên.
+
 ## Đối chiếu Image — ứng viên cục bộ 08/10/2026
 
 | Nguồn trước sửa | Candidate hiện tại | Bằng chứng |

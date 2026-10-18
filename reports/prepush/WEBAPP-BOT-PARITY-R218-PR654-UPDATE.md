@@ -218,3 +218,31 @@ LIVE_PASS=NOT_TESTED
 
 Working tree sạch sau commit; runtime dữ liệu thật, upload/download, provider, publish, wallet,
 browser/AX và live vẫn mở; không suy diễn UI control-level thành parity runtime.
+
+## Incremental UT-01 translation workspace evidence — local candidate 18/10/2026
+
+- Phạm vi: `static/portal/portal.js`, `static/portal/portal.css`,
+  `tests/translation-workspace-controls.test.mjs` và tài liệu R218-06A.
+- Workspace Dịch ở `/subtitle-studio/new?intent=translation&pair=...` có nguồn
+  tự nhận diện, 21 ngôn ngữ đích, tìm kiếm cục bộ, giữ bản gốc, dịch hai chiều,
+  trạng thái bắt đầu/dừng, kết quả và lịch sử. Panel không phải form, không có
+  `data-portal-action`, không thay đổi redirect legacy.
+- Nút bắt đầu/dừng chỉ mở theo capability `translation-runtime-start`; source
+  hiện không công bố capability nên mặc định guarded. Không provider, quote, job,
+  upload, output, download, delivery hoặc wallet.
+
+```text
+TRANSLATION_TARGETED=3/3
+FULL_NODE=547/547
+NODE_CHECK=PASS (portal.js, portal-i18n.js)
+GIT_DIFF_CHECK=PASS
+PYTEST=BLOCKED (workspace không có lệnh python/py)
+PROVIDER_CALLS=0
+WALLET_MUTATIONS=0
+PRODUCTION_DATA_MUTATIONS=0
+DEPLOY=NO
+LIVE_PASS=NOT_TESTED
+```
+
+PR #654 vẫn OPEN/CONFLICTING; CI, browser authenticated và live trên candidate
+UT-01 chưa được suy diễn từ comparator cũ.

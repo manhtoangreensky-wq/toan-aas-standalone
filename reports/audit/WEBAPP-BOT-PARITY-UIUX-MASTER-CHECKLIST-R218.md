@@ -1,6 +1,6 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
-Ngày 2026-10-18. WIP_UTILITIES_CONTENT_PROJECTS_LOCALE_GREEN. Source Bot được đọc-only; production chưa kiểm.
+Ngày 2026-10-18. WIP_UT01_TRANSLATION_CONTROL_PARTIAL. Source Bot được đọc-only; production chưa kiểm.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
 
@@ -112,7 +112,13 @@ Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
 
 ## P5/P6 — Các sản phẩm còn lại R218-06/07
 
-- [ ] UT-01 Dịch text/voice/file/two-way/source-target/start-stop/result.
+- [~] UT-01 Dịch text/voice/file/two-way/source-target/start-stop/result. Control-level
+  đã có workspace dọc ở `/subtitle-studio/new?intent=translation&pair=...`: nguồn
+  tự nhận diện, catalog đích 21 ngôn ngữ, tìm kiếm cục bộ, giữ bản gốc, hai chiều,
+  khu vực bắt đầu/dừng, kết quả và lịch sử; VI/EN/ZH riêng, panel không gửi API.
+  Test `tests/translation-workspace-controls.test.mjs` đạt `3/3`, full Node đạt
+  `547/547`. Capability xử lý thật, DTO, quote/confirm, tiến trình, kết quả,
+  lịch sử, browser và live vẫn mở; không đánh dấu runtime parity.
 - [~] UT-02 Content idea/caption/hashtag/hook/script/CTA đã có workspace/brief/detail và
   Prompt Pack với gợi ý, trạng thái rỗng, ranh giới xử lý, lưu vào Ghi chú và locale VI/EN/ZH;
   edit/save/version/handoff runtime chưa có bằng chứng.

@@ -19571,6 +19571,115 @@
   function subtitleStudioTranslationPresetOptions() {
     return SUBTITLE_STUDIO_TRANSLATION_PRESETS.map(([key, label]) => [key, uiText(`subtitlePreset.${key}`, label)]);
   }
+  const TRANSLATION_WORKSPACE_COPY = Object.freeze({
+    vi: Object.freeze({
+      kicker: "Không gian dịch",
+      title: "Dịch văn bản, giọng nói hoặc tệp",
+      body: "Chọn nguồn và ngôn ngữ đích trong một màn hình. Các nút xử lý chỉ mở khi máy chủ công bố capability tương ứng.",
+      source: "Ngôn ngữ nguồn",
+      sourceAuto: "Tự nhận diện",
+      target: "Ngôn ngữ đích",
+      targetSearch: "Tìm ngôn ngữ đích",
+      targetPlaceholder: "Ví dụ: Anh, Trung, Nhật…",
+      targetCount: "{count} ngôn ngữ đang hiển thị",
+      preserve: "Giữ lại bản gốc",
+      twoWay: "Dịch hai chiều",
+      actions: "Điều khiển xử lý",
+      start: "Bắt đầu dịch",
+      stop: "Dừng xử lý",
+      statusTitle: "Chưa có phiên dịch",
+      statusBody: "Các lựa chọn hiện chỉ lưu trong phiên trình duyệt. Chưa có bộ xử lý dịch, báo giá, tác vụ hay tệp kết quả nào được tạo.",
+      resultTitle: "Kết quả dịch",
+      resultEmpty: "Kết quả sẽ xuất hiện ở đây sau khi hệ thống xác nhận xử lý thành công.",
+      historyTitle: "Lịch sử dịch",
+      historyEmpty: "Chưa có bản ghi dịch thuộc tài khoản hiện tại."
+    }),
+    en: Object.freeze({
+      kicker: "Translation workspace",
+      title: "Translate text, voice, or files",
+      body: "Choose a source and target language in one screen. Processing controls open only when the server publishes the matching capability.",
+      source: "Source language",
+      sourceAuto: "Auto-detect",
+      target: "Target language",
+      targetSearch: "Search target language",
+      targetPlaceholder: "For example: English, Chinese, Japanese…",
+      targetCount: "{count} languages shown",
+      preserve: "Keep the original",
+      twoWay: "Two-way translation",
+      actions: "Processing controls",
+      start: "Start translation",
+      stop: "Stop processing",
+      statusTitle: "No translation session",
+      statusBody: "These choices stay in the browser session. No translator, quote, job, or result file has been created.",
+      resultTitle: "Translation result",
+      resultEmpty: "A result appears here only after the system confirms successful processing.",
+      historyTitle: "Translation history",
+      historyEmpty: "No translation record belongs to the current account."
+    }),
+    zh: Object.freeze({
+      kicker: "翻译工作区",
+      title: "翻译文字、语音或文件",
+      body: "在同一页面选择来源和目标语言。只有服务器公布相应能力后，处理按钮才会开放。",
+      source: "来源语言",
+      sourceAuto: "自动识别",
+      target: "目标语言",
+      targetSearch: "搜索目标语言",
+      targetPlaceholder: "例如：英语、中文、日语……",
+      targetCount: "显示 {count} 种语言",
+      preserve: "保留原文",
+      twoWay: "双向翻译",
+      actions: "处理控制",
+      start: "开始翻译",
+      stop: "停止处理",
+      statusTitle: "尚无翻译会话",
+      statusBody: "这些选择只保存在浏览器会话中。尚未创建翻译处理、报价、任务或结果文件。",
+      resultTitle: "翻译结果",
+      resultEmpty: "系统确认处理成功后，结果才会显示在这里。",
+      historyTitle: "翻译历史",
+      historyEmpty: "当前账户没有翻译记录。"
+    })
+  });
+  function translationWorkspaceText(locale, key, fallback, params) {
+    const lang = Object.prototype.hasOwnProperty.call(TRANSLATION_WORKSPACE_COPY, locale) ? locale : "vi";
+    const copy = TRANSLATION_WORKSPACE_COPY[lang] || {};
+    let value = String(copy[key] || fallback || "");
+    Object.entries(params || {}).forEach(([name, replacement]) => {
+      value = value.replaceAll(`{${name}}`, String(replacement));
+    });
+    return value;
+  }
+  function renderTranslationWorkspace(page, context, values) {
+    const locale = ["vi", "en", "zh"].includes(String(context && context.locale || "")) ? String(context.locale) : "vi";
+    const sourceLanguage = String(values && values.source_language || "auto").trim().toLowerCase() || "auto";
+    const targetLanguage = String(values && values.target_language || "en").trim().toLowerCase() || "en";
+    const sourceEntries = [{ value: "auto", labels: { vi: translationWorkspaceText(locale, "sourceAuto", "Tự nhận diện"), en: translationWorkspaceText(locale, "sourceAuto", "Auto-detect"), zh: translationWorkspaceText(locale, "sourceAuto", "自动识别") } }, ...(typeof SUBDUB_LANGUAGE_CATALOG !== "undefined" ? SUBDUB_LANGUAGE_CATALOG : [])];
+    const targetEntries = typeof SUBDUB_LANGUAGE_CATALOG !== "undefined" ? SUBDUB_LANGUAGE_CATALOG : [];
+    const sourceOptions = sourceEntries.map((entry) => `<option value="${safeText(entry.value)}"${entry.value === sourceLanguage ? " selected" : ""}>${safeText(entry.labels[locale] || entry.labels.vi)}</option>`).join("");
+    const targetOptions = targetEntries.map((entry) => {
+      const label = entry.labels[locale] || entry.labels.vi;
+      return `<option value="${safeText(entry.value)}" data-translation-target-option data-translation-search="${safeText(`${entry.value} ${label}`)}"${entry.value === targetLanguage ? " selected" : ""}>${safeText(label)}</option>`;
+    }).join("");
+    const canStart = Boolean(context && context.capabilities && context.capabilities["translation-runtime-start"] === true);
+    const controlDisabled = canStart ? "" : " disabled aria-disabled=\"true\"";
+    const route = String(page && (page.routePath || page.path) || "/subtitle-studio/new");
+    const targetCount = targetEntries.length;
+    return `<section class="portal-card portal-card-pad portal-translation-workspace" data-translation-workspace data-translation-locale="${safeText(locale)}" data-translation-state="${canStart ? "ready" : "guarded"}" data-translation-route="${safeText(route)}" aria-labelledby="portal-translation-workspace-title"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(translationWorkspaceText(locale, "kicker", "Không gian dịch"))}</span><h2 id="portal-translation-workspace-title" class="portal-card-title">${safeText(translationWorkspaceText(locale, "title", "Dịch văn bản, giọng nói hoặc tệp"))}</h2><p class="portal-card-subtitle">${safeText(translationWorkspaceText(locale, "body", "Chọn nguồn và ngôn ngữ đích trong một màn hình."))}</p></div>${badge(canStart ? "ready" : "guarded")}</div><div class="portal-fields portal-translation-workspace-fields"><label class="portal-field"><span>${safeText(translationWorkspaceText(locale, "source", "Ngôn ngữ nguồn"))}</span><select class="portal-select" data-translation-source-language aria-describedby="portal-translation-workspace-help">${sourceOptions}</select></label><label class="portal-field"><span>${safeText(translationWorkspaceText(locale, "target", "Ngôn ngữ đích"))}</span><select class="portal-select" data-translation-target-language aria-describedby="portal-translation-workspace-help">${targetOptions}</select></label><label class="portal-field portal-translation-target-search"><span>${safeText(translationWorkspaceText(locale, "targetSearch", "Tìm ngôn ngữ đích"))}</span><input class="portal-input" type="search" data-translation-target-search autocomplete="off" placeholder="${safeText(translationWorkspaceText(locale, "targetPlaceholder", "Ví dụ: Anh, Trung, Nhật…"))}" aria-controls="portal-translation-target-language"><small id="portal-translation-workspace-help" data-translation-target-count aria-live="polite">${safeText(translationWorkspaceText(locale, "targetCount", "{count} ngôn ngữ đang hiển thị", { count: targetCount }))}</small></label></div><fieldset class="portal-translation-workspace-options"><legend>${safeText(translationWorkspaceText(locale, "actions", "Điều khiển xử lý"))}</legend><label><input type="checkbox" data-translation-preserve-original checked><span>${safeText(translationWorkspaceText(locale, "preserve", "Giữ lại bản gốc"))}</span></label><label><input type="checkbox" data-translation-two-way><span>${safeText(translationWorkspaceText(locale, "twoWay", "Dịch hai chiều"))}</span></label></fieldset><div class="portal-form-footer"><div class="portal-inline-actions"><button class="portal-button portal-button--primary" type="button" data-translation-local-action="start"${controlDisabled}>${safeText(translationWorkspaceText(locale, "start", "Bắt đầu dịch"))}</button><button class="portal-button portal-button--quiet" type="button" data-translation-local-action="stop"${controlDisabled}>${safeText(translationWorkspaceText(locale, "stop", "Dừng xử lý"))}</button></div><span class="portal-form-note" data-translation-status><strong>${safeText(translationWorkspaceText(locale, "statusTitle", "Chưa có phiên dịch"))}</strong> · ${safeText(translationWorkspaceText(locale, "statusBody", "Chưa có bộ xử lý dịch hoặc tệp kết quả nào được tạo."))}</span></div><div class="portal-translation-workspace-results"><article data-translation-result-state="empty"><h3>${safeText(translationWorkspaceText(locale, "resultTitle", "Kết quả dịch"))}</h3><p>${safeText(translationWorkspaceText(locale, "resultEmpty", "Kết quả sẽ xuất hiện sau khi hệ thống xác nhận xử lý thành công."))}</p></article><article data-translation-history-state="empty"><h3>${safeText(translationWorkspaceText(locale, "historyTitle", "Lịch sử dịch"))}</h3><p>${safeText(translationWorkspaceText(locale, "historyEmpty", "Chưa có bản ghi dịch thuộc tài khoản hiện tại."))}</p></article></div></section>`;
+  }
+  function filterTranslationTargets(input) {
+    const workspace = input && input.closest ? input.closest("[data-translation-workspace]") : null;
+    if (!workspace) return;
+    const needle = normalizeCatalogSearch(input.value);
+    const options = Array.from(workspace.querySelectorAll("[data-translation-target-option]"));
+    let visible = 0;
+    options.forEach((option) => {
+      const matches = !needle || normalizeCatalogSearch(option.getAttribute("data-translation-search") || option.textContent).includes(needle);
+      option.hidden = !matches;
+      if (matches) visible += 1;
+    });
+    const output = workspace.querySelector("[data-translation-target-count]");
+    const locale = workspace.getAttribute("data-translation-locale") || "vi";
+    if (output) output.textContent = translationWorkspaceText(locale, "targetCount", "{count} ngôn ngữ đang hiển thị", { count: visible });
+  }
   function subtitleStudioCueFields() {
     return [
       { name: "start_ms", label: "Bắt đầu (ms)", type: "number", required: true, min: 0, max: 86399999, step: 1, inputMode: "numeric" },
@@ -20673,8 +20782,10 @@
       source_mode: draft.source_mode || "manual"
     });
     const isEn = context && context.locale === "en";
+    const translationWorkspace = isTranslationIntake ? renderTranslationWorkspace(page, context, values) : "";
     return `<article class="portal-page portal-subtitle-studio">${renderHero(page, context)}
       <section class="portal-subtitle-studio-intro"><div><span class="portal-section-kicker">${isEn ? "Web-native subtitle authoring" : "Biên tập phụ đề trực tiếp"}</span><h2>${isEn ? "Structured transcript and caption editing, ready for review." : "Biên tập nội dung phụ đề có cấu trúc, dễ rà soát."}</h2><p>${isEn ? "Organize cues, timing, language drafts, and self-review in a private workspace. This is authoring metadata, not ASR, translation, TTS, dubbing, or export files." : "Tổ chức mốc thời gian, bản nháp ngôn ngữ và tự rà soát trong không gian riêng tư. Đây là dữ liệu biên tập, không phải kết quả ASR, dịch, TTS, lồng tiếng hay tệp xuất."}</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>${isEn ? "Subtitle projects" : "Dự án phụ đề"}</dd></div><div><dt>${safeText(String(review))}</dt><dd>${isEn ? "In review" : "Đang rà soát"}</dd></div><div><dt>${safeText(String(approved))}</dt><dd>${isEn ? "Self-reviewed" : "Đã tự rà soát"}</dd></div></dl></section>
+      ${translationWorkspace}
       <div class="portal-interactive-subdub-workbench" data-status="guarded" style="margin-bottom: 24px;">
         <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,78,59,0.2)); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:18px 24px;">
           <div>
@@ -39715,6 +39826,7 @@
       if (event.target.matches && event.target.matches("[data-portal-command-search]")) filterCommandPalette(event.target.value);
       if (event.target.matches && event.target.matches("[data-guide-center-search]")) filterGuideCenter(event.target.value);
       if (event.target.matches && event.target.matches("[data-admin-data-search]")) applyAdminDataViewFilters(event.target.closest("[data-portal-admin-data-surface]"));
+      if (event.target.matches && event.target.matches("[data-translation-target-search]")) filterTranslationTargets(event.target);
     });
     document.addEventListener("change", (event) => {
       syncPortalFieldControl(event.target);
