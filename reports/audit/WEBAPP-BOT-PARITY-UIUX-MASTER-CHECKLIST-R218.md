@@ -77,8 +77,8 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] Các callback động và catalog runtime cần mapping control chi tiết, chưa đủ để
   tuyên bố audit mọi nút hoàn tất.
 - [~] #653 auth responsive/contrast: CI source cũ xanh, delivery chưa đóng.
-- [x] #654 candidate source đã push; SubDub lane patch đạt kiểm thử local và CI/browser trên HEAD `148be4f6ec18e3c7fe3abfee8ca8a34ee1a5d099`.
-- [x] Ghi current SHA/checks #653/#654 và disposition trước mở wave mới: Verify Web App + Authenticated WebApp QA SUCCESS, run `39101124230`, route matrix `456/456`.
+- [x] #654 candidate source đã push; SubDub lane patch đạt kiểm thử local và CI/browser trên HEAD `82ee56ceaddcb9685519c5b7376dfa121240e8f8`.
+- [x] Ghi current SHA/checks #653/#654 và disposition trước mở wave mới: Verify Web App + Authenticated WebApp QA SUCCESS, run `39125923765`, route matrix `456/456`.
 - [x] Review #654 hidden field, default checked, duplicate selector, library link,
   guard blanket, locale, âm lượng dub max 100: đã sửa và khóa bằng 13 kiểm thử mục tiêu;
   CI/browser trên commit mới đã đạt route/render matrix.

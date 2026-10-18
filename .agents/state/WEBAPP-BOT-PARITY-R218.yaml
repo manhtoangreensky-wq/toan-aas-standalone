@@ -6,17 +6,17 @@ scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cu�
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: a20b34b4e85625c3c5e28ed0c56d4ba88445d941
-delivery_head_sha: a20b34b4e85625c3c5e28ed0c56d4ba88445d941
+head_sha: 82ee56ceaddcb9685519c5b7376dfa121240e8f8
+delivery_head_sha: 82ee56ceaddcb9685519c5b7376dfa121240e8f8
 delivery_status: PUSHED_REMOTE_VERIFIED_CI_GREEN
 head_sha_semantics: "Source-code candidate SHA; docs-only checkpoints may advance branch HEAD without changing this code candidate."
 delivery_head_semantics: "Code, refreshed evidence and metadata are on the verified branch tip; PR quality gate and authenticated QA are green."
-branch_head_sha: a20b34b4e85625c3c5e28ed0c56d4ba88445d941
+branch_head_sha: 82ee56ceaddcb9685519c5b7376dfa121240e8f8
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
-last_push_verified_commit: a20b34b4e85625c3c5e28ed0c56d4ba88445d941
-docs_checkpoint_sha: a20b34b4e85625c3c5e28ed0c56d4ba88445d941
-push_command_success_commit: a20b34b4e85625c3c5e28ed0c56d4ba88445d941
-remote_readback: "VERIFIED: gh headRefOid and git ls-remote agree on a20b34b4e85625c3c5e28ed0c56d4ba88445d941."
+last_push_verified_commit: 82ee56ceaddcb9685519c5b7376dfa121240e8f8
+docs_checkpoint_sha: 82ee56ceaddcb9685519c5b7376dfa121240e8f8
+push_command_success_commit: 82ee56ceaddcb9685519c5b7376dfa121240e8f8
+remote_readback: "VERIFIED at the previous delivery checkpoint: gh headRefOid and git ls-remote agree on 82ee56ceaddcb9685519c5b7376dfa121240e8f8."
 batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
@@ -49,7 +49,7 @@ artifacts:
   tester_guide: KIEM-THU/HUONG-DAN-TESTER.md
 current_wip:
   pr653: "Auth responsive/contrast; source CI xanh trước đó; delivery chưa đóng."
-  pr654: "SubDub control patch đã bổ sung source có/chưa có phụ đề, source auto-detect, catalog ngôn ngữ đầy đủ, 7 vị trí subtitle và ba lane Auto canonical; upload/preview/runtime vẫn guarded. Image control patch đã push ở 3ecbdc8. Utilities/Content/Projects locale checkpoint đã commit ở 69ef97f. UT-01 translation workspace control-level đã khóa nguồn tự nhận diện, catalog đích 21 ngôn ngữ, tìm kiếm cục bộ, giữ bản gốc, hai chiều, vùng bắt đầu/dừng/kết quả/lịch sử guarded; UT-04 đã bổ sung 4 utility lane vào `/free-tools`; UT-06 đã khóa bảng Documents và 9 workflow bằng test control-level; UT-07 đã khóa Asset Vault control-level bằng test 5/5 và full Node 558/558; SP-01 Support đã khóa control-level bằng test 4/4 và full Node 566/566. Account Security tiếng Việt đã dọn generic English, test riêng 2/2, Account regression 11/11; AC-01 control-level đạt 6/6 và full Node mới nhất 574/574. Source/delivery SHA cũ đã push là 8ab66d4; runtime/provider/upload/preview/delivery/browser/live vẫn guarded. PR #654 còn OPEN; CI cho delivery HEAD mới cần xác nhận; chưa merge/deploy/live."
+  pr654: "SubDub control patch đã bổ sung source có/chưa có phụ đề, source auto-detect, catalog ngôn ngữ đầy đủ, 7 vị trí subtitle và ba lane Auto canonical; upload/preview/runtime vẫn guarded. Image control patch đã push ở 3ecbdc8. Utilities/Content/Projects locale checkpoint đã commit ở 69ef97f. UT-01 translation workspace control-level đã khóa nguồn tự nhận diện, catalog đích 21 ngôn ngữ, tìm kiếm cục bộ, giữ bản gốc, hai chiều, vùng bắt đầu/dừng/kết quả/lịch sử guarded; UT-04 đã bổ sung 4 utility lane vào `/free-tools`; UT-06 đã khóa bảng Documents và 9 workflow bằng test control-level; UT-07 đã khóa Asset Vault control-level bằng test 5/5 và full Node 558/558; SP-01 Support đã khóa control-level bằng test 4/4 và full Node 566/566. Account Security tiếng Việt đã dọn generic English, test riêng 2/2, Account regression 11/11; AC-01 control-level đạt 6/6 và full Node mới nhất 574/574. Delivery HEAD hiện tại là 82ee56c; runtime/provider/upload/preview/delivery/browser/live vẫn guarded. PR #654 còn OPEN/MERGEABLE; CI delivery HEAD đã xanh ở run 39125923765; chưa merge/deploy/live."
   voice_controls: "VO-03/04/05: đếm từ/ký tự Unicode, giữ volume 0 và cảnh báo không tiếng, đồng bộ number/range, giữ sau hydration; aria-label preset sạch VI/EN/ZH. Input tests 4/4, input/inventory/flow 64/64, full Node 591/591. Browser renderer localhost: 18/18 cấu hình 3 locale x 2 theme x 3 viewport, lỗi/overflow/foreign request/mutation 0. Hai link kho giọng chỉ mở công cụ, không chuyển profile; đã sửa nhãn và bỏ bốn nút luôn disabled. Clone 7 bước chỉ là hướng dẫn. Voice Vault search/page/management, profile-aware handoff, quote/result, backend/CI/live vẫn mở."
   music_controls: "MU-01..MU-07 control-level đã khóa local: /music/create và /music/song dùng workspace dọc bốn bước, ba tier, ba ô phương án guarded, song-only lyrics/vocal/length, VI/EN/ZH cân bằng; không còn provider/player/giá/tệp giả. Guarded form không tự mở khi thiếu capability; runtime/CI/browser/live chưa chứng minh."
   image_controls: "IM-01 control-level đã khóa local trên /image/create: bốn mode dọc create, prompt từ ảnh, AI edit và manual edit; ba mode ngoài create gắn guarded, VI/EN/ZH cân bằng. Upload/source, AI runtime, before/after, quote/result/delivery và browser/live vẫn mở."
@@ -60,12 +60,12 @@ current_wip:
   support_controls: "SP-01 control-level đã khóa local tại `/support`, `/tickets`, `/tickets/:id`, `/admin/support`, `/admin/support/:id`: intake, danh sách/lọc/phân trang, chi tiết/timeline, public/internal reply, state/recovery, resolution feedback và Asset Vault evidence; VI/EN/ZH + palette xanh/ngọc + case grid một cột <=620px. Targeted 4/4; full Node 566/566; syntax và diff check đạt. Capability server, dữ liệu thật, browser/AX, CI, delivery và LIVE chưa chứng minh. SP-02 Guide/Chat Pro/feedback/community còn mở."
   account_controls: "AC-01/AC-02 đã được tách thành spec `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md`: profile/locale/security/session/stale cleanup; wallet/packages/pricing/topup/history/pending/admin handoff. Account profile/activity/dropdown Node targeted 9/9; cả ba block Account Security tiếng Việt đã được quét, test copy 2/2 và Account regression 11/11; control-level AC-01 `6/6`; AC-02 billing control-level `5/5`; full Node mới nhất `579/579`. Ví/lịch sử canonical, QR nạp thủ công chỉ sau method+amount+readiness, PayOS/catalog fail-closed và Admin handoff được khóa ở source contract; billing/Python contracts chưa chạy vì thiếu python/py; browser/AX/QR bytes/runtime/approval/credit/live vẫn mở."
   historical_crosswalk: "Đã kiểm kê 127 plan + 180 spec + 44 audit + 14 state = 365 file; 307 plan/spec được phân lớp; 433 dòng checkbox cũ được truy vết. `unclassified source=0`; semantic review từng dòng trước R217 vẫn mở theo wave, không suy diễn PASS."
-  ci_run: 39099917923
-  ci_head: 69ef97ffdf7f0c86aa950439dd8c83d64989f53e
-  ci_status_at_last_observation: GREEN_ON_A20B34B
-  ci_scope: "HEAD 8baaa07/148be4f prior comparator đã xanh Verify Web App + Authenticated QA; candidate 28cc131 chứa UT-01 translation workspace và tài liệu, GitHub statusCheckRollup hiện rỗng, cần CI/browser run riêng."
-  ci_latest_run: 39125184132
-  ci_latest_status: "PR #654 OPEN/MERGEABLE trên a20b34b; Verify Web App PASS toàn bộ; Authenticated WebApp QA PASS trên DB/fixture cô lập."
+  ci_run: 39125923765
+  ci_head: 82ee56ceaddcb9685519c5b7376dfa121240e8f8
+  ci_status_at_last_observation: GREEN_ON_82EE56CE
+  ci_scope: "Verify Web App và Authenticated WebApp QA trên delivery HEAD 82ee56ce; QA dùng DB/fixture cô lập, không provider, ví hoặc production data."
+  ci_latest_run: 39125923765
+  ci_latest_status: "PR #654 OPEN/MERGEABLE trên 82ee56ce; Verify Web App SUCCESS; Authenticated WebApp QA SUCCESS trên DB/fixture cô lập."
   migration_evidence_refresh: "Refresh and independent verify-web-evidence both exit 0 for da067f4d0a2c90453945370ea97616f330d1b1e5; source_files_scanned=288; source_fingerprint_sha256=3a693d70b395ef1140b28ff448e0076bb9d03aff719292403a695edb5571cf39. Bot evidence unchanged."
   local_targeted_tests: "Voice input 4/4; Voice inventory/flow with expiry 67/67; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
   local_full_tests: "594/594 tests/*.test.mjs"
