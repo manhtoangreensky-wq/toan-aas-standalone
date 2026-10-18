@@ -185,8 +185,11 @@ nhóm hoặc nhầm một thẻ điều hướng là một tính năng đã ch�
 - [~] AP-03 AutoPost Hub đã có lane platform/connection/expiry/target ở trạng thái guarded; OAuth và kết nối kênh chưa mở.
 - [~] AP-04 AutoPost Hub đã có lane queue/published history/status/detail/cancel/review/recovery ở trạng thái guarded; chưa có receipt publish thật.
 - [~] AP-05 AutoPost Hub đã có lane Affiliate/import/list/filter/ads/metrics ở trạng thái guarded; không hiển thị số liệu suy đoán.
-- [ ] AC-01 Profile/locale/session/security và stale data cleanup.
-- [ ] AC-02 Packages/pricing/topup/history/detail/pending, không wallet mutation.
+- [ ] AC-01 Profile/locale/session/security và stale data cleanup; control ledger theo
+  `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md` (AC-01A..E).
+- [ ] AC-02 Packages/pricing/topup/history/detail/pending, không wallet mutation;
+  control ledger theo `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md`
+  (AC-02A..D). QR chỉ sau method+amount+readiness; approval/credit giữ T0.
 - [~] SP-01 Support/ticket/attachments/replies/status/escalation/task refs đã khóa lát
   control-level bằng spec `docs/superpowers/specs/2026-10-18-r218-07b-support-center-controls.md`
   và test `tests/support-hub-product-controls.test.mjs` đạt `4/4`; full Node đạt

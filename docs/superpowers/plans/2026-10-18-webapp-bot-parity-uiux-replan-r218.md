@@ -1,6 +1,6 @@
 # R218 — Kế hoạch UI/UX toàn bộ sản phẩm WebApp theo Bot
 
-Ngày 2026-10-18. Trạng thái WIP_UT07_ASSETS_CONTROL_PARTIAL; chưa mở wave runtime.
+Ngày 2026-10-18. Trạng thái WIP_SP01_SUPPORT_CONTROL_PUSHED_CI_UNKNOWN; chưa mở wave runtime.
 Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong kế hoạch.
 
 ## Bộ tài liệu
@@ -16,6 +16,7 @@ Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong 
 - R218-06D: specs/2026-10-18-r218-06d-assets-product-controls.md.
 - R218-06A: specs/2026-10-18-r218-06a-translation-workspace-controls.md.
 - R218-07B: specs/2026-10-18-r218-07b-support-center-controls.md.
+- R218-07C: specs/2026-10-18-r218-07c-account-controls.md.
 - R218-10/11/12/13: specs/2026-10-18-r218-10-13-qa-motion-delivery-technical.md.
 - State: .agents/state/WEBAPP-BOT-PARITY-R218.yaml.
 
