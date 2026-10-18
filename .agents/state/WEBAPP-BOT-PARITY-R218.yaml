@@ -6,7 +6,7 @@ scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cu�
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: df2b6a6811e2ab80ec06a73f99ac12e63ade6f77
+head_sha: db8faa41fd059467d8f084a7661a01e53f4a5e85
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
   root: "D:/TOANAAS/bot telegram"
@@ -51,4 +51,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "SubDub control-level đã hoàn tất local tại HEAD df2b6a6; cần cập nhật tài liệu, commit/push PR #654, rồi mới chuyển Image theo thứ tự; giữ nguyên no provider/wallet/merge/deploy/live cho tới khi có lệnh Owner riêng."
+next_action: "SubDub control-level đã hoàn tất và đã push PR #654 tại HEAD db8faa4; CI mới đang UNKNOWN vì statusCheckRollup rỗng. Chỉ chuyển Image sau khi Owner cho phép theo thứ tự; giữ nguyên no provider/wallet/merge/deploy/live."

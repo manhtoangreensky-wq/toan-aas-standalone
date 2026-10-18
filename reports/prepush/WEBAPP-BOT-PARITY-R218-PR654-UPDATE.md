@@ -7,7 +7,7 @@
 ```text
 REPOSITORY=manhtoangreensky-wq/toan-aas-standalone
 BRANCH=webapp-r217-subdub-ui-r218
-SOURCE_HEAD_SHA=df2b6a6811e2ab80ec06a73f99ac12e63ade6f77
+SOURCE_HEAD_SHA=db8faa41fd059467d8f084a7661a01e53f4a5e85
 DOCS_ONLY_UPDATE=false
 PR=https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/654
 PROVIDER_CALLS=0
@@ -37,7 +37,7 @@ VERIFY_WEB_APP=SUCCESS (prior comparator)
 AUTHENTICATED_WEBAPP_QA=SUCCESS (prior comparator)
 ROUTE_RENDER_MATRIX=456/456 (prior comparator)
 LOCAL_TARGETED=3 voice control + 97 Voice regression passed; node --check static/portal/portal.js; git diff --check
-LOCAL_REGRESSION=538 passed, 0 failed on source candidate df2b6a6
+LOCAL_REGRESSION=538 passed, 0 failed on source candidate db8faa4
 JSON_EVIDENCE=preflight.json + web_inventory.json parse successfully
 MIGRATION_SOURCE_FILES=recorded in reports/migration/web_inventory.json
 MIGRATION_SOURCE_FINGERPRINT=recorded in reports/migration/preflight.json and web_inventory.json

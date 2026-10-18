@@ -863,7 +863,7 @@ ví/Xu, Bot bridge và dữ liệu production không đổi.
 
 ## R218 — Cập nhật evidence sau WIP SubDub control — 18/10/2026
 
-- Source candidate trước commit tài liệu của PR #654: `df2b6a6811e2ab80ec06a73f99ac12e63ade6f77`.
+- Source candidate đã push của PR #654: `db8faa41fd059467d8f084a7661a01e53f4a5e85`.
 - CI run `39101124230`: `Verify Web App=SUCCESS`, `Authenticated WebApp QA=SUCCESS`;
   ma trận route/render ghi nhận `456/456` case trên customer/admin, VI/EN/ZH,
   light/dark và phone/tablet/desktop.
