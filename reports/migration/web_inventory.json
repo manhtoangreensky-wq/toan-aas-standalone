@@ -10316,7 +10316,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1106,
+      "occurrences": 1108,
       "provider": "PayOS"
     },
     {
@@ -10534,7 +10534,7 @@
         "copyfast_notification_center.py",
         "copyfast_pages.py"
       ],
-      "occurrences": 2021,
+      "occurrences": 2022,
       "provider": "Telegram"
     }
   ],
@@ -18317,39 +18317,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 287,
-  "source_files_scanned": 287,
-  "source_fingerprint_sha256": "04d25a4f9ba8b6a8da923cb60bf2a027a02e9d082094c5ba89b715e566715cc9",
+  "source_files_discovered": 288,
+  "source_files_scanned": 288,
+  "source_fingerprint_sha256": "a10fd0bd3c853d66f0616c1e177e8ea25a1dda07bebad99809c1609ebf9ad8c7",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 34279,
+      "line": 34301,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34595,
+      "line": 34617,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33943,
+      "line": 33965,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34192,
+      "line": 34214,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33564,
+      "line": 33586,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33856,
+      "line": 33878,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -18564,7 +18564,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35698,
+      "line": 35720,
       "path": "/features"
     },
     {
