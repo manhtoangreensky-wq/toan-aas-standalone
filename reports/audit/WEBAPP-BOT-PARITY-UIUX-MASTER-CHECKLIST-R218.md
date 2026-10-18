@@ -36,6 +36,31 @@ nhóm hoặc nhầm một thẻ điều hướng là một tính năng đã ch�
 - [ ] Các lỗi mới phát hiện được thêm vào đúng hàng và đúng thứ tự, không mở nhánh
   ngoài ledger.
 
+### Đối soát file/spec R217 → R218
+
+Các tài liệu R217 không bị xoá hoặc thay thế âm thầm. Bảng này là đường truy vết
+từng file sang wave hiện hành; nếu một mục chưa có evidence tương ứng thì vẫn giữ
+`[~]`/`[ ]` ở wave đích, không được suy diễn là đã hoàn tất.
+
+| Tài liệu R217 | Wave/ledger R218 tiếp nhận | Disposition |
+|---|---|---|
+| `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-20261010.md` | C0, F0, Q0/M0/L0 | Giữ làm lịch sử/comparator; không xoá mục cũ |
+| `2026-10-16-r217-00-evidence-ledger.md` | C0, Q0/L0 | Giữ evidence và quy tắc không suy diễn |
+| `2026-10-16-r217-01-shell-responsive-foundation.md` | F0, Q0 | Shell, màu, type, responsive, touch và overflow |
+| `2026-10-16-r217-02-locale-purity.md` | F0, P5/P6, Q0 | VI/EN/ZH và dữ liệu động không dịch |
+| `2026-10-16-r217-03-auth-accessibility.md` | F0, AC-01, Q0/M0 | Auth lifecycle, focus, keyboard, a11y |
+| `2026-10-16-r217-04-image-lane.md` | P4 | Image create/reference/AI edit/manual edit |
+| `2026-10-16-r217-05-voice-lane.md` | P1 | TTS/STT, Voice Vault, clone, preview và reuse |
+| `2026-10-16-r217-06-music-lane.md` | P2 | Music/SFX, tier, gợi ý, player và delivery |
+| `2026-10-16-r217-07-subdub-lane.md` | P3 | Bốn mode, voice lane, Smart Multi, mix và report |
+| `2026-10-16-r217-08-product-video-lane.md` | V0 | Product Video, profile, addon, report và editor |
+| `2026-10-16-r217-09-admin-customer-visibility.md` | A0, P6 | Customer→Admin record, RBAC presentation và report |
+| `2026-10-16-r217-09a-content-workboard-free-tools.md` | P5/P6 | Content, Free, Projects và Workboard |
+| `2026-10-16-r217-10-motion-performance.md` | M0 | Motion lifecycle, compositor, reduced-motion, trace |
+| `2026-10-16-r217-11-authenticated-qa-matrix.md` | Q0/L0 | Browser/AX matrix và runtime evidence |
+| `2026-10-16-r217-12-live-readonly-recheck.md` | L0 | Read-only live recheck, SHA/DOM/screenshot |
+| `2026-10-16-r217-13-deferred-technical-register.md` | T0 | Giữ cuối, chỉ lập register sau UI/UX/motion |
+
 ## C0 — Bảo toàn / chốt WIP
 
 - [x] Root menu Bot và nhóm sản phẩm ghi tại WEBAPP-BOT-PRODUCT-INVENTORY-R218.md.
