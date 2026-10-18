@@ -10725,3 +10725,45 @@ html .portal-page.portal-image-create .portal-button--primary:disabled {
   background: var(--portal-surface-soft) !important;
   color: var(--portal-muted-strong, var(--portal-muted)) !important;
 }
+
+/* Voice numeric controls: one submitted value, with visual helpers kept
+   outside FormData so changing a slider or preset never duplicates payload. */
+.portal-field-control-stack,
+.portal-range-number {
+  display: grid;
+  gap: 8px;
+}
+
+.portal-range-number__track {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.portal-range-input {
+  width: 100%;
+  min-height: 26px;
+  accent-color: var(--portal-accent);
+  cursor: pointer;
+}
+
+.portal-range-output {
+  min-width: 54px;
+  padding: 4px 8px;
+  border: 1px solid var(--portal-border);
+  border-radius: 999px;
+  color: var(--portal-text);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  background: var(--portal-surface-soft);
+}
+
+.portal-field-preset {
+  min-height: 38px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-range-input { scroll-behavior: auto; }
+}

@@ -791,14 +791,14 @@
     voice: [
       { name: "script", label: "Nội dung lời thoại", control: "textarea", placeholder: "Nhập văn bản để chuẩn bị giọng nói…", required: true, minLength: 1 },
       { name: "default_voice_gender", label: "Giọng đọc mặc định", control: "select", options: [{ value: "female", label: "Nữ (female)" }, { value: "male", label: "Nam (male)" }], required: true, help: "Chọn giọng đọc mặc định miễn phí (bắt buộc chọn 'female' hoặc 'male')." },
-      { name: "speed", label: "Tốc độ đọc", control: "select", options: ["1.0", "0.85", "1.2", "normal", "slow", "fast"], help: "Tốc độ đọc chuẩn canonical (0.5x đến 2.0x)." },
-      { name: "volume_percent", label: "Âm lượng (%)", type: "number", min: 0, max: 200, step: 10, placeholder: "100", help: "Âm lượng đọc canonical (0% đến 200%)." }
+      { name: "speed", label: "Tốc độ đọc", labelKey: "field.speed.label", type: "number", defaultValue: "1.0", min: 0.1, max: 2, step: 0.05, inputMode: "decimal", presets: [{ value: "0.85", label: "Chậm (0,85×)", labelKey: "option.speed.0.85" }, { value: "1.0", label: "Chuẩn (1,0×)", labelKey: "option.speed.1.0" }, { value: "1.2", label: "Nhanh (1,2×)", labelKey: "option.speed.1.2" }], helpKey: "field.speed.help", help: "Tốc độ đọc từ 0,1× đến 2,0×. Bạn có thể chọn mức gợi ý hoặc nhập số trực tiếp." },
+      { name: "volume_percent", label: "Âm lượng (%)", labelKey: "field.volume_percent.label", type: "number", defaultValue: "100", min: 0, max: 200, step: 10, placeholder: "100", placeholderKey: "field.volume_percent.placeholder", range: { ariaLabel: "Thanh âm lượng", ariaLabelKey: "field.volume_percent.label" }, helpKey: "field.volume_percent.help", help: "Âm lượng đọc từ 0% đến 200%; 100% là mức chuẩn." }
     ],
     voiceSaved: [
       { name: "script", label: "Nội dung lời thoại", control: "textarea", placeholder: "Nhập văn bản để chuẩn bị giọng nói…", required: true, minLength: 1 },
       { name: "voice_profile_id", label: "Giọng từ Voice Vault", control: "select", optionsFrom: "voiceProfiles", emptyLabel: "Chọn một giọng đã sẵn sàng", help: "Saved TTS chỉ estimate khi Voice Vault canonical xác nhận profile này thuộc tài khoản và sẵn sàng.", required: true },
-      { name: "speed", label: "Tốc độ đọc", control: "select", options: ["1.0", "0.85", "1.2", "normal", "slow", "fast"], help: "Tốc độ đọc chuẩn canonical (0.5x đến 2.0x)." },
-      { name: "volume_percent", label: "Âm lượng (%)", type: "number", min: 0, max: 200, step: 10, placeholder: "100", help: "Âm lượng đọc canonical (0% đến 200%)." }
+      { name: "speed", label: "Tốc độ đọc", labelKey: "field.speed.label", type: "number", defaultValue: "1.0", min: 0.1, max: 2, step: 0.05, inputMode: "decimal", presets: [{ value: "0.85", label: "Chậm (0,85×)", labelKey: "option.speed.0.85" }, { value: "1.0", label: "Chuẩn (1,0×)", labelKey: "option.speed.1.0" }, { value: "1.2", label: "Nhanh (1,2×)", labelKey: "option.speed.1.2" }], helpKey: "field.speed.help", help: "Tốc độ đọc từ 0,1× đến 2,0×. Bạn có thể chọn mức gợi ý hoặc nhập số trực tiếp." },
+      { name: "volume_percent", label: "Âm lượng (%)", labelKey: "field.volume_percent.label", type: "number", defaultValue: "100", min: 0, max: 200, step: 10, placeholder: "100", placeholderKey: "field.volume_percent.placeholder", range: { ariaLabel: "Thanh âm lượng", ariaLabelKey: "field.volume_percent.label" }, helpKey: "field.volume_percent.help", help: "Âm lượng đọc từ 0% đến 200%; 100% là mức chuẩn." }
     ],
     voiceClone: [
       { name: "display_name", label: "Tên giọng (tuỳ chọn)", placeholder: "Ví dụ: Giọng thương hiệu TOAN AAS", maxLength: 120, help: "Nếu để trống, Bot canonical đặt tên mặc định an toàn; tên này không phải provider voice ID." },
@@ -11150,7 +11150,9 @@
       const disabled = enabled && field.disabled !== true ? "" : " disabled";
       const controlData = dataAttributes(field.controlData);
       const wrapperData = dataAttributes(field.wrapperData);
-      const rawValue = Object.prototype.hasOwnProperty.call(values, field.name) ? values[field.name] : "";
+      const rawValue = Object.prototype.hasOwnProperty.call(values, field.name)
+        ? values[field.name]
+        : (field.defaultValue !== undefined ? field.defaultValue : "");
       const value = rawValue === undefined || rawValue === null ? "" : String(rawValue);
       const stagedUploadCount = field.type === "file" && Array.isArray(values.upload_ids) ? values.upload_ids.filter((item) => typeof item === "string" && item).length : 0;
       const fieldLabel = field.labelKey ? uiText(field.labelKey, field.label) : field.label;
@@ -11260,9 +11262,26 @@
         const accept = type === "file" && field.accept ? ` accept="${safeText(field.accept)}"` : "";
         const valueAttribute = type === "file" || type === "password" ? "" : ` value="${safeText(value)}"`;
         const input = `<input class="portal-input" id="${id}" name="${safeText(field.name)}" type="${type}" placeholder="${safeText(fieldPlaceholder)}"${valueAttribute}${autocomplete}${multiple}${accept}${required}${ariaRequired}${min}${max}${step}${minLength}${maxLength}${pattern}${inputMode}${describedBy}${controlData}${disabled}>`;
+        if (type === "number" && field.range) {
+          const rangeSpec = field.range === true ? {} : field.range;
+          const rangeLabel = rangeSpec.ariaLabelKey ? uiText(rangeSpec.ariaLabelKey, rangeSpec.ariaLabel || fieldLabel || field.name) : (rangeSpec.ariaLabel || fieldLabel || field.name);
+          const rangeInput = `<input class="portal-range-input" type="range" data-portal-range-sync="${safeText(field.name)}" min="${safeText(String(field.min ?? 0))}" max="${safeText(String(field.max ?? 100))}" step="${safeText(String(field.step ?? 1))}" value="${safeText(value)}" aria-label="${safeText(rangeLabel)}"${disabled}>`;
+          const rangeOutput = `<output class="portal-range-output" data-portal-range-output="${safeText(field.name)}" aria-live="polite">${safeText(value)}</output>`;
+          control = `<div class="portal-range-number"><div class="portal-range-number__track">${rangeInput}${rangeOutput}</div>${input}</div>`;
+        } else if (type === "number" && Array.isArray(field.presets) && field.presets.length) {
+          const presetOptions = field.presets.map((preset) => {
+            const presetValue = Array.isArray(preset) ? preset[0] : preset && typeof preset === "object" ? preset.value : preset;
+            const presetLabel = Array.isArray(preset) ? preset[1] : preset && typeof preset === "object" ? preset.label : preset;
+            const localizedPresetLabel = preset && typeof preset === "object" && preset.labelKey ? uiText(preset.labelKey, presetLabel) : presetLabel;
+            const selected = String(presetValue) === String(value) ? " selected" : "";
+            return `<option value="${safeText(String(presetValue))}"${selected}>${safeText(String(localizedPresetLabel))}</option>`;
+          }).join("");
+          const presetSelect = `<select class="portal-select portal-field-preset" data-portal-field-preset="${safeText(field.name)}" aria-label="${safeText(`${fieldLabel} gợi ý`)}"${disabled}>${presetOptions}</select>`;
+          control = `<div class="portal-field-control-stack">${input}${presetSelect}</div>`;
+        }
         // Password visibility is a local, tab-only affordance.  It never
         // persists, emits an action, or changes the signed form contract.
-        control = type === "password"
+        if (!control) control = type === "password"
           ? `<span class="portal-password-control">${input}<button class="portal-password-toggle" type="button" aria-controls="${id}" aria-label="${safeText(passwordShowLabel)}" aria-pressed="false" data-portal-toggle-password${disabled}><span data-portal-password-toggle-label>${safeText(passwordShowText)}</span></button></span>`
           : input;
       }
@@ -36786,6 +36805,32 @@
     transientFormDrafts.set(route, values);
   }
 
+  function syncPortalFieldControl(input) {
+    if (!input || !input.closest) return;
+    const form = input.closest("[data-portal-form]");
+    if (!form) return;
+    const findNamedInput = (name) => Array.from(form.querySelectorAll("input, textarea, select"))
+      .find((candidate) => candidate.name === name && candidate.type !== "file");
+    const presetName = input.getAttribute("data-portal-field-preset");
+    const rangeName = input.getAttribute("data-portal-range-sync");
+    const name = presetName || rangeName || (input.type === "number" ? input.name : "");
+    if (!name) return;
+    const numberInput = findNamedInput(name);
+    if (!numberInput) return;
+    if (presetName) numberInput.value = input.value;
+    if (rangeName) numberInput.value = input.value;
+    if (input.type === "number") {
+      const rangeInput = Array.from(form.querySelectorAll("[data-portal-range-sync]"))
+        .find((candidate) => candidate.getAttribute("data-portal-range-sync") === name);
+      if (rangeInput) rangeInput.value = input.value;
+    }
+    const currentValue = numberInput.value;
+    const output = Array.from(form.querySelectorAll("[data-portal-range-output]"))
+      .find((candidate) => candidate.getAttribute("data-portal-range-output") === name);
+    if (output) output.textContent = currentValue;
+    if (presetName || rangeName || input.type === "number") rememberTransientFormDraft(form);
+  }
+
   function synchronizeMusicDirectionPresetForm(form) {
     if (!form || form.getAttribute("data-portal-action") !== "music-direction-preset-compose") return;
     const enabled = form.getAttribute("data-music-direction-compose-enabled") === "true";
@@ -39475,6 +39520,7 @@
       }
     });
     document.addEventListener("input", (event) => {
+      syncPortalFieldControl(event.target);
       if (event.target.id === "free-tools-text-input") {
         updateFreeToolsTextStats(event.target.value);
       }
@@ -39534,6 +39580,7 @@
       if (event.target.matches && event.target.matches("[data-admin-data-search]")) applyAdminDataViewFilters(event.target.closest("[data-portal-admin-data-surface]"));
     });
     document.addEventListener("change", (event) => {
+      syncPortalFieldControl(event.target);
       if (event.target.matches && event.target.matches("[data-vietqr-input]")) {
         autoUpdateVietQrPreview(false);
       }
