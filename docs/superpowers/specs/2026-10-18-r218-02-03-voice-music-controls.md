@@ -45,6 +45,16 @@ Bot anchors: bot.py:159975,160106,160123,160166,160261,167782,169187,169226,
   contract; các link mở công cụ không mang profile ID. Không tạo nút luôn disabled
   để đánh dấu một control đã hoàn tất.
 
+### Phiếu P1 VO-06/07 — thời hạn báo giá
+
+- `flowHasFreshEstimate()` đọc `quote_expires_at`, `quote_valid_until` hoặc `expires_at`
+  từ receipt estimate. Nếu có giá trị ISO hợp lệ đã quá thời điểm hiện tại, quote được
+  xem là stale và CTA xác nhận bị khóa; người dùng phải lấy báo giá mới. Nếu DTO không
+  có expiry, vẫn dùng receipt/fingerprint hiện hành; không tự dựng thời hạn trên client.
+- Verify: Voice flow thêm future/expired cases ở `3/3` locale; expired không render
+  `feature-confirm`, future vẫn render khi các điều kiện khác hợp lệ. Không đổi backend,
+  receipt HMAC, pricing hoặc wallet.
+
 ## Music
 
 | ID | Vị trí / control | Hiện và hoạt động | State / nghiệm thu |

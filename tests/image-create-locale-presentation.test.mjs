@@ -49,7 +49,7 @@ function model(locale) {
     section('  const FEATURE_BOT_HANDOFFS', '  function copyFields('),
     fn('badge'), fn('canAct'), fn('telegramIdentityLinked'), fn('actionBlockReason'), fn('stateFor'), fn('voiceUiText'), fn('workspaceDraftIdForRoute'),
     section('  function renderFields(', '  function statusMessage('),
-    section('  function flowHasFreshEstimate(', '  const ADMIN_TAB_GROUPS'),
+    fn('flowQuoteExpiry'), section('  function flowHasFreshEstimate(', '  const ADMIN_TAB_GROUPS'),
     section('  const RESULT_LABELS', '  const SUBTITLE_STUDIO_COMPANION_INTENTS'), fn('renderWorkspace')
   ].join('\n'), ctx);
   const context = (overrides = {}) => ({

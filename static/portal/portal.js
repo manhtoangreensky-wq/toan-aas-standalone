@@ -11381,12 +11381,23 @@
     return `<div class="portal-panel-list">${notes.map((note, index) => `<div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${portalIcon(index ? ICONS.security : ICONS.legal)}</span><div><strong>${safeText(index ? safetyTitle : integrationTitle)}</strong><span>${safeText(note)}</span></div></div>`).join("")}</div>`;
   }
 
+  function flowQuoteExpiry(flow) {
+    const data = flow && flow.data && typeof flow.data === "object" ? flow.data : {};
+    const estimate = data.estimate && typeof data.estimate === "object" ? data.estimate : {};
+    const raw = data.quote_expires_at || data.quote_valid_until || estimate.quote_expires_at || estimate.quote_valid_until || estimate.expires_at || "";
+    if (!raw || typeof raw !== "string") return null;
+    const timestamp = Date.parse(raw);
+    return Number.isFinite(timestamp) ? timestamp : null;
+  }
+
   function flowHasFreshEstimate(flow) {
     const estimate = flow && flow.data && typeof flow.data === "object" ? flow.data.estimate : null;
+    const expiry = flowQuoteExpiry(flow);
     return Boolean(
       flow && flow.phase === "estimate" && flow.status === "awaiting_confirm" &&
       estimate && estimate.available === true && estimate.tier_required !== true && estimate.scene_count_required !== true && typeof flow.estimateFingerprint === "string" && flow.estimateFingerprint &&
-      typeof flow.webQuoteReceipt === "string" && /^[A-Za-z0-9_-]{32,160}$/.test(flow.webQuoteReceipt)
+      typeof flow.webQuoteReceipt === "string" && /^[A-Za-z0-9_-]{32,160}$/.test(flow.webQuoteReceipt) &&
+      (expiry === null || expiry > Date.now())
     );
   }
 

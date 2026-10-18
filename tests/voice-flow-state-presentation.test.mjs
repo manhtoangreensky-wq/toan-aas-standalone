@@ -19,7 +19,7 @@ for(const locale of ['vi','en','zh']){
     renderEmpty:(title,body)=>`<h3>${title}</h3><p>${body}</p>`,classifyPageBoundary:()=> 'runtime_generator'};
   vm.createContext(ctx);vm.runInContext(catalog,ctx);ctx.uiText=(k,f,p)=>ctx.TOANAASI18n.has(k)?ctx.TOANAASI18n.t(k,p,locale):f;
   vm.runInContext(fn('safeText')+'\n'+fn('normalizePath')+'\n'+fn('validProjectId')+'\n'+fn('validWorkspaceDraftId')+'\n'+section('  const ALLOWED_STATES','  const PAYMENT_STATUS_LABELS')+'\n'+fn('badge')+'\n'+fn('canAct')+'\n'+fn('telegramIdentityLinked')+'\n'+fn('actionBlockReason')+'\n'+fn('stateFor')+'\n'+fn('voiceUiText')+'\n'+fn('workspaceDraftIdForRoute')+'\n'+
-    section('  function renderFields(', '  function statusMessage(')+'\n'+section('  function flowHasFreshEstimate(', '  const ADMIN_TAB_GROUPS')+'\n'+
+    section('  function renderFields(', '  function statusMessage(')+'\n'+fn('flowQuoteExpiry')+'\n'+section('  function flowHasFreshEstimate(', '  const ADMIN_TAB_GROUPS')+'\n'+
     section('  const RESULT_LABELS', '  const SUBTITLE_STUDIO_COMPANION_INTENTS')+'\n'+fn('renderWorkspace'),ctx);
   const render=(flow,overrides={})=>ctx.renderWorkspace(page,{...makeContext(),...overrides,featureFlows:{[route]:flow}});
   test(`Voice quote is localized, preserves zero/unknown, and hides provider costs (${locale})`,()=>{
@@ -68,6 +68,16 @@ for(const locale of ['vi','en','zh']){
     const html=render(quote());
     assert.ok(html.indexOf('data-voice-sale-price')<html.indexOf('data-portal-form'),'price must precede the confirmation form');
     const stale=visible(render({...quote(),webQuoteReceipt:''}));
+    assert.match(stale,locale==='vi'?/làm mới/:locale==='en'?/refresh/i:/重新获取/);
+  });
+  test(`Voice rejects an expired quote receipt while accepting a future expiry (${locale})`,()=>{
+    const future = quote();
+    future.data.estimate.quote_expires_at = new Date(Date.now() + 60_000).toISOString();
+    assert.match(render(future),/data-portal-action="feature-confirm"/);
+    const expired = quote();
+    expired.data.estimate.quote_expires_at = new Date(Date.now() - 60_000).toISOString();
+    const stale = visible(render(expired));
+    assert.doesNotMatch(render(expired),/data-portal-action="feature-confirm"/);
     assert.match(stale,locale==='vi'?/làm mới/:locale==='en'?/refresh/i:/重新获取/);
   });
   test(`Voice draft controls stay localized when quote execution and local authoring are both available (${locale})`,()=>{
