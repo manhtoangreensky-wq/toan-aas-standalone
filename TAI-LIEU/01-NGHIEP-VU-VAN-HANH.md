@@ -17,6 +17,19 @@ renderer và integration.js production dùng API fixture, chưa phải dữ li�
 Core thật hoặc LIVE. Bằng chứng tại `../qa/r218-voice-inventory/result.json`.
 Các mục vận hành/dữ liệu production bên dưới giữ nguyên phạm vi đo ban đầu.
 
+### Lát UI Voice STT — 19/10/2026
+
+Trang `/voice/stt` và alias `/voice/asr` hiện trình bày riêng luồng chép lời:
+tiêu đề, mô tả, định dạng kết quả, trạng thái rỗng và CTA không còn dùng copy
+“tạo giọng” hoặc bộ đếm âm lượng của TTS. Upload/estimate chỉ mở khi bootstrap
+có capability riêng `voice_stt`; quyền Bridge chung không đủ để mở tệp.
+
+Đã đo bằng Edge/Playwright localhost: 18 cấu hình VI/EN/ZH × sáng/tối ×
+390/768/1440; page/console/request ngoài/write/unknown API/overflow đều `0`.
+Kiểm thử hành vi STT `18/18`, toàn bộ Node của workspace `660/660`. Fixture là
+projection đọc-only; chưa xác minh upload bytes, MIME/size/ownership, transcript,
+progress, delivery, backend thật hoặc LIVE.
+
 ### Bản nháp Voice VO-01 — 19/10/2026
 
 Bổ sung Voice VO-01 ngày 19/10: đổi chế độ giữ lời thoại và âm lượng trong

@@ -203,6 +203,19 @@ Bằng chứng source hiện tại: `tests/autopost-hub-product-controls.test.mj
 Lệnh fixture: `node ../qa/r218-voice-inventory/verify.cjs` (máy đã có Playwright/Edge).
 Đây là API fixture localhost chỉ-đọc; LIVE/backend/parity management vẫn mở.
 
+## VOICE-STT-PRESENTATION-20261019
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| VUI-STT-01 | `/voice/stt` và `/voice/asr`; VI/EN/ZH × sáng/tối × 390/768/1440 | Tiêu đề, mô tả, kết quả rỗng và CTA nói về chép lời; không lẫn bộ đếm âm lượng/TTS hoặc audio giả |
+| VUI-STT-02 | Capability chỉ có Bridge chung hoặc `voice_tts` | Tệp STT, estimate và confirm vẫn khóa; không suy diễn quyền STT từ Bridge chung |
+| VUI-STT-03 | Fixture có bản nháp Web nhưng không có `voice_stt` | Ngôn ngữ/định dạng có thể chỉnh và lưu bản nháp nếu được phép; file không lưu, không tạo transcript/job/provider/charge |
+| VUI-STT-04 | Bàn phím/focus/overflow/network | Chọn ngôn ngữ/định dạng giữ focus; page/console/request ngoài/write/unknown API/overflow đều `0` |
+
+Lệnh fixture: `node ../qa/r218-voice-inventory/verify.cjs --stt-probe`.
+Đây là kiểm tra presentation/control-level localhost; upload bytes, backend STT,
+transcript, delivery và LIVE vẫn mở.
+
 ## SUPPORT-CENTER-UI-CONTROL-20261018
 
 | ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |

@@ -11541,13 +11541,18 @@
   }
 
   function renderFormCard(page, context) {
-    const enabled = canAct(page, context);
+    const route = page.routePath || page.path;
+    // General Bridge access does not advertise a working STT upload/quote.
+    // STT is only enabled when the server explicitly allows that feature.
+    const enabled = canAct(page, context) && (route !== "/voice/stt" || Boolean(
+      context.bridge && Array.isArray(context.bridge.featureExecutionFeatures)
+      && context.bridge.featureExecutionFeatures.includes("voice_stt")
+    ));
     const reason = actionBlockReason(page, context);
     const hasFields = page.fields && page.fields.length;
     if (!hasFields) {
       return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Chờ dữ liệu Core Bridge</h2><p class="portal-card-subtitle">Không có form hay action có thể làm thay đổi trạng thái tại trang này.</p></div>${badge(stateFor(page, context))}</div>${renderNotes(page)}</section>`;
     }
-    const route = page.routePath || page.path;
     const flow = context.featureFlows && context.featureFlows[route];
     const flowStatus = flow && ALLOWED_STATES.has(flow.status) ? flow.status : "";
     const hasFreshEstimate = flowHasFreshEstimate(flow);
@@ -11570,6 +11575,7 @@
     const imageTask = route === "/image/create" || route === "/image/new";
     const videoTask = route === "/video/create" || route === "/video/multiscene";
     const voiceTask = ["/voice/tts", "/voice/stt", "/voice/saved", "/voice/clone"].includes(route);
+    const voiceFormText = (key, fallback) => voiceUiText(route === "/voice/stt" ? `stt.${key}` : key, voiceUiText(key, fallback));
     const musicTask = ["/music/create", "/music/song"].includes(String(route || "").split("?")[0].replace(/\/$/, "") || "/");
     const videoText = (key, fallback) => uiText(`videoUi.${key}`, fallback);
     // When an external engine is not enabled, the primary form action is a
@@ -11596,13 +11602,13 @@
     const imageQuoteVisible = !imageTask || !hasFreshEstimate || voiceQuoteAmount(flow) !== null;
     const confirmControl = hasFreshEstimate
       ? (executionReady && voiceQuoteVisible && imageQuoteVisible
-        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-portal-confirm="${voiceTask ? safeText(voiceUiText("action.confirmPrompt", "")) : imageTask ? safeText(imageUiText("action.confirmPrompt", "")) : "Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định."}">${voiceTask ? safeText(voiceUiText("action.confirm", "Xác nhận chạy")) : imageTask ? safeText(imageUiText("action.confirm", "")) : "Xác nhận chạy"}</button>`
+        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-portal-confirm="${voiceTask ? safeText(voiceFormText("action.confirmPrompt", "")) : imageTask ? safeText(imageUiText("action.confirmPrompt", "")) : "Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định."}">${voiceTask ? safeText(voiceFormText("action.confirm", "Xác nhận chạy")) : imageTask ? safeText(imageUiText("action.confirm", "")) : "Xác nhận chạy"}</button>`
         : `<span class="portal-flow-note" role="status">${voiceTask ? safeText(voiceUiText(voiceQuoteVisible ? "action.waiting" : "flow.priceUnknown", "")) : imageTask ? safeText(imageUiText(imageQuoteVisible ? "action.waiting" : "flow.priceUnknown", "")) : "Đã có estimate canonical. Web App đang chờ adapter tạo job canonical; chưa thể xác nhận chạy hoặc trừ Xu."}</span>`)
       : "";
     const flowControls = estimateControl || confirmControl ? `<div class="portal-flow-actions">${estimateControl}${confirmControl}</div>` : "";
     const fieldValues = { ...(flow && flow.input && typeof flow.input === "object" ? flow.input : {}), ...transientFormValues(route) };
     const primaryActionLabel = localAuthoringOnly ? localDraftLabel : (videoTask ? videoText("action.continue", "Tiếp tục") : voiceTask ? voiceUiText(page.action === "feature-estimate" ? "action.estimate" : "action.continue", "Tiếp tục") : imageTask ? imageUiText(page.action === "feature-estimate" ? "action.estimate" : "action.continue", "Tiếp tục") : (page.actionLabel || "Tiếp tục"));
-    const primaryDisabled = localAuthoringOnly || enabled ? "" : ` disabled title="${safeText(voiceTask ? voiceUiText("form.guarded", reason) : imageTask ? imageUiText("form.guarded", reason) : reason)}"`;
+    const primaryDisabled = localAuthoringOnly || enabled ? "" : ` disabled title="${safeText(voiceTask ? voiceFormText("form.guarded", reason) : imageTask ? imageUiText("form.guarded", reason) : reason)}"`;
     const boundary = classifyPageBoundary(page, context);
     let boundaryNotice = "";
     if (boundary === "canonical_bridge") {
@@ -11654,11 +11660,11 @@
       const voiceCloneGuidance = route === "/voice/clone"
         ? `<details class="portal-card portal-card-pad portal-voice-clone-steps" data-voice-clone-steps><summary>${safeText(voiceUiText("clone.stepsTitle", "Quy trình thêm giọng"))}</summary><ol>${["consent", "sample", "name", "quote", "preview", "save", "back"].map((step) => `<li>${safeText(voiceUiText(`clone.step.${step}`, step))}</li>`).join("")}</ol><p class="portal-form-note" role="status">${safeText(voiceUiText("clone.stepsGuarded", "Các bước xử lý thật chỉ mở theo capability."))}</p></details>`
         : "";
-      return `${voiceCloneGuidance}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(voiceUiText("form.title", "Chuẩn bị giọng đọc"))}</h2><p class="portal-card-subtitle">${safeText(voiceUiText(localAuthoringOnly ? "form.draft" : enabled ? "form.ready" : "form.guarded", reason))}</p></div></div>
+      return `${voiceCloneGuidance}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(voiceFormText("form.title", "Chuẩn bị giọng đọc"))}</h2><p class="portal-card-subtitle">${safeText(voiceFormText(localAuthoringOnly ? "form.draft" : enabled ? "form.ready" : "form.guarded", reason))}</p></div></div>
         <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>
           ${renderFields(orderedFields, formFieldsEnabled, context, fieldValues)}
-          ${route === "/voice/clone" ? "" : renderVoiceFormFeedback(fieldValues)}
-          <div class="portal-form-footer"><span class="portal-form-note">${safeText(voiceUiText(localAuthoringOnly ? "form.draftNote" : "form.processingNote", ""))}</span>${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button></div>
+          ${["/voice/tts", "/voice/saved"].includes(route) ? renderVoiceFormFeedback(fieldValues) : ""}
+          <div class="portal-form-footer"><span class="portal-form-note">${safeText(voiceFormText(localAuthoringOnly ? "form.draftNote" : "form.processingNote", ""))}</span>${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button></div>
         </form>${flowControls}</section>`;
     }
     if (videoTask) {
@@ -32236,7 +32242,7 @@
     const flow = context.featureFlows && context.featureFlows[route];
     const flowOutput = voiceTask && flow ? renderVoiceFlowState(flow, route) : flow
       ? `<div class="portal-state" data-state="${safeText(flow.status || "guarded")}"><span class="portal-state-icon" aria-hidden="true">○</span><div><h3>${safeText(flow.message || "Core Bridge đã cập nhật trạng thái.")}</h3><p>Trạng thái canonical: ${safeText(STATE_LABELS[flow.status] || flow.status || "guarded")}. ${flow.status === "completed" ? "Output chỉ được cấp qua asset đã xác minh." : "Bản nháp planning có thể hiển thị; output engine vẫn phải qua job và asset hợp lệ."}</p></div></div>${renderCanonicalFlow(flow, route)}${renderFeatureTracking(flow)}`
-      : renderEmpty(videoTask ? uiText("videoUi.output.empty", "Chưa có kết quả video") : voiceTask ? voiceUiText("output.empty", "Chưa có kết quả") : "Chờ Engine Web hoặc integration tùy chọn", videoTask ? uiText("videoUi.output.waiting", "") : voiceTask ? voiceUiText("output.waiting", "") : "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○");
+      : renderEmpty(videoTask ? uiText("videoUi.output.empty", "Chưa có kết quả video") : voiceTask ? voiceUiText(route === "/voice/stt" ? "stt.output.empty" : "output.empty", "Chưa có kết quả") : "Chờ Engine Web hoặc integration tùy chọn", videoTask ? uiText("videoUi.output.waiting", "") : voiceTask ? voiceUiText(route === "/voice/stt" ? "stt.output.waiting" : "output.waiting", "") : "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○");
     const voiceVault = page.path === "/voice/saved" ? renderVoiceVault(context) : "";
     const interactiveWorkbench = videoTask || musicTask ? "" : renderInteractiveFeatureWorkbench(page, context);
     const musicGuidance = musicTask ? renderMusicProductGuidance(page, context) : "";

@@ -1,6 +1,6 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
-Ngày 2026-10-18. WIP_P1_VOICE_INPUT_FEEDBACK_BROWSER_VERIFIED. Source Bot được đọc-only; production chưa kiểm.
+Ngày 2026-10-18. WIP_P1_VOICE_STT_PRESENTATION_BROWSER_VERIFIED. Source Bot được đọc-only; production chưa kiểm.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
 Đối soát toàn bộ lịch sử trước R217 nằm tại
@@ -142,8 +142,13 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   ngôn ngữ nguồn, và Văn bản/SRT/VTT trong `FIELD_SETS.voiceStt`; route `/voice/stt`
   và alias `/voice/asr` được nối vào manifest, status, hub, quick switch và workspace.
   Contract `tests/voice-workspace-stt-contract.test.mjs` đạt `4/4`, quick-switch VI/EN/ZH
-  kiểm đúng 152 destination, full Node đạt `598/598`. Upload thật, MIME/size/ownership,
-  progress, transcript/copy/export, browser/AX và delivery vẫn guarded.
+  kiểm đúng 152 destination, full Node trước lát này đạt `598/598`. Lát presentation mới
+  tách rõ tiêu đề/mô tả/kết quả của chép lời khỏi TTS, khóa upload/estimate nếu chưa có
+  `voice_stt` capability riêng và không dùng bộ đếm âm lượng/TTS feedback cho STT.
+  Test `tests/voice-stt-form-presentation.test.mjs` đạt `18/18`; Edge localhost đạt
+  18 cấu hình VI/EN/ZH × sáng/tối × 390/768/1440, lỗi trang/console/request ngoài/
+  mutation/overflow đều 0. Upload thật, MIME/size/ownership, progress, transcript/
+  copy/export, delivery và LIVE vẫn guarded.
 - [ ] Default nữ/nam distinct hoặc fallback một default theo capability.
 - [~] Nội dung/đếm từ/speed 0.1–2.0/volume 0–200: control và giá trị mặc định đã khóa
   bằng test `tests/voice-controls-contract.test.mjs`. VO-03/VO-05 đã có số đếm Unicode,
@@ -164,7 +169,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   gỡ. Chưa có management endpoint, mutation receipt, preview delivery hoặc
   handoff profile/draft thật; phần này giữ tại T0. Không chuyển các mục này
   sang `[x]` khi chưa có endpoint + browser/owner evidence.
-- [~] Renderer/interaction + browser/AX/screenshots: VO-03/04/05 và navigation Voice Vault đã kiểm bằng Edge localhost với dữ liệu mẫu, 18/18 cấu hình, lỗi trang/console/overflow/kết nối ngoài/mutation đều 0. Nhãn trình đọc màn hình của preset tốc độ đã sạch VI/EN/ZH. STT mới có source/locale contract-level; browser upload/AX/runtime và live vẫn mở.
+- [~] Renderer/interaction + browser/AX/screenshots: VO-03/04/05 và navigation Voice Vault đã kiểm bằng Edge localhost với dữ liệu mẫu, 18/18 cấu hình, lỗi trang/console/overflow/kết nối ngoài/mutation đều 0. Nhãn trình đọc màn hình của preset tốc độ đã sạch VI/EN/ZH. STT presentation mới đạt 18/18 cấu hình với focus/overflow/locale và không có TTS feedback/audio giả; browser upload/AX runtime, backend/delivery và live vẫn mở.
   Lát READ-STATE được kiểm thêm bằng shell/renderer/integration.js production
   trên localhost với API fixture chỉ-đọc; kết quả và ảnh tại
   `../qa/r218-voice-inventory/result.json`. Không tính là backend/LIVE.

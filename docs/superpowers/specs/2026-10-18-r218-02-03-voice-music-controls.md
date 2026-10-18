@@ -72,6 +72,20 @@ Bot anchors: bot.py:159975,160106,160123,160166,160261,167782,169187,169226,
   `feature-confirm`, future vẫn render khi các điều kiện khác hợp lệ. Không đổi backend,
   receipt HMAC, pricing hoặc wallet.
 
+### Phiếu P1 VO-12 — phân biệt workspace STT với TTS (19/10/2026)
+
+- `/voice/stt` và alias `/voice/asr` vẫn ở cùng workspace bốn lane nhưng dùng bộ copy riêng:
+  tiêu đề/mô tả nói về bản chép lời, kết quả rỗng là “Chưa có bản chép lời”, và CTA khi có
+  quyền là “Xác nhận chép lời”. Không dùng bộ đếm văn bản/âm lượng hoặc câu “tạo giọng” của TTS.
+- Upload/estimate STT chỉ được mở khi capability server có `voice_stt`; Bridge chung hoặc
+  `voice_tts` không được mở tệp, quote hay confirm. Khi chưa có capability, có thể lưu lựa chọn
+  ngôn ngữ/định dạng vào bản nháp Web nếu phiên được cấp quyền, nhưng không giữ tệp, không tạo
+  transcript, audio, job, provider call hay trừ Xu.
+- Verify: `tests/voice-stt-form-presentation.test.mjs` `18/18`; Edge/Playwright localhost
+  `qa/r218-voice-inventory/verify.cjs --stt-probe` `18` cấu hình VI/EN/ZH × sáng/tối ×
+  390/768/1440, lỗi page/console/request ngoài/write/unknown API/overflow `0`. Fixture
+  chỉ đọc và projection capability tổng hợp; chưa phải backend STT, upload bytes hay LIVE.
+
 ## Music
 
 | ID | Vị trí / control | Hiện và hoạt động | State / nghiệm thu |
