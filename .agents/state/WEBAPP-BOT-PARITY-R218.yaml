@@ -6,6 +6,7 @@ scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cu�
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
+head_sha: 06380789abcc11d118286de3903c5bbab44e4176
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
   root: "D:/TOANAAS/bot telegram"
