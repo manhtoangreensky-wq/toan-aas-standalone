@@ -60,15 +60,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 160,
-      "bytes": 36583,
-      "sha256": "c2dbd8196fa7b2302656a67380ec8b1b9e01875fac666ce2774a1035c5b42cfa"
+      "lines": 186,
+      "bytes": 39275,
+      "sha256": "4eb06f8d4a0a53a0cbe795f00068751a49f9b8a10c5e0b69928fda8cd5331c98"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 202,
-      "bytes": 19442,
-      "sha256": "6a7b1df026ee816542e49ea9e1263ea0f265cdb7a952bae9a0d600be324eebaa"
+      "lines": 237,
+      "bytes": 22386,
+      "sha256": "4dfda5caf16ea4e84f26a880cf94c80f0381a1fe3229da0bf4f4d3871808a9e4"
     },
     {
       "path": "scripts/tester_case_sync.py",
