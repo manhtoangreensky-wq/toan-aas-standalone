@@ -1,7 +1,7 @@
 # WebApp Bot Parity UI/UX Master Checklist R218
 
-**Ngày lập:** 2026-10-18  
-**Nguồn tham chiếu:** Bot docs/source/reports đọc-only  
+**Ngày lập:** 2026-10-18
+**Nguồn tham chiếu:** Bot docs/source/reports đọc-only
 **Phạm vi:** WebApp standalone UI/UX, locale, responsive, accessibility, motion và runtime evidence.
 
 ## Trạng thái chuẩn
