@@ -15,6 +15,7 @@ Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong 
 - R218-06B: specs/2026-10-18-r218-06b-utilities-qr-avatar-rate-weather-download.md.
 - R218-06D: specs/2026-10-18-r218-06d-assets-product-controls.md.
 - R218-06A: specs/2026-10-18-r218-06a-translation-workspace-controls.md.
+- R218-07B: specs/2026-10-18-r218-07b-support-center-controls.md.
 - R218-10/11/12/13: specs/2026-10-18-r218-10-13-qa-motion-delivery-technical.md.
 - State: .agents/state/WEBAPP-BOT-PARITY-R218.yaml.
 
@@ -140,6 +141,20 @@ Spec và test: `docs/superpowers/specs/2026-10-18-r218-07-autopost-hub-controls.
 không phải bằng chứng kênh đã kết nối hoặc bài đăng đã giao. Local verify hiện tại: AutoPost
 `4/4`, full Node `562/562`, hai lệnh `node --check` và `git diff --check` đạt; browser/AX,
 CI và LIVE vẫn chưa được suy diễn.
+
+## Checkpoint R218-07B — Trung tâm hỗ trợ khách hàng control-level
+
+Đã khóa lát trình bày và contract cho `/support`, `/tickets`, `/tickets/:id`,
+`/admin/support` và `/admin/support/:id`: tiếp nhận, danh sách/lọc/phân trang, chi tiết/
+dòng thời gian, phản hồi công khai/nội bộ, trạng thái/khôi phục, phản hồi kết quả và
+liên kết bằng chứng từ Asset Vault. Bố cục giữ một workspace dọc, màu xanh/ngọc và
+chuyển lưới case thành một cột ở `<=620px`; bản Việt dùng “Trung tâm hỗ trợ khách hàng”.
+Không upload bytes thô, không tạo ticket Bot, provider, wallet, payment hoặc thông báo ngoài Web.
+
+Spec và test: `docs/superpowers/specs/2026-10-18-r218-07b-support-center-controls.md`,
+`tests/support-hub-product-controls.test.mjs`. Local verify: Support `4/4`, full Node
+`566/566`, cả hai lệnh `node --check` và `git diff --check` đạt. Đây mới là
+control-level evidence; capability server, browser/AX, CI, delivery và LIVE vẫn mở.
 
 ## 6. Phiếu thực thi cho từng spec
 

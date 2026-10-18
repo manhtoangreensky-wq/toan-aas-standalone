@@ -12524,10 +12524,10 @@
   // timestamps and server-issued lifecycle values remain untranslated data.
   const ADMIN_SUPPORT_MESSAGES = { vi: {}, en: {}, zh: {} };
   const ADMIN_SUPPORT_COPY = Object.freeze([
-    ["page.list.title", "Trung tâm hỗ trợ khách hàng Web", "Web Customer Support Center", "Web 客户支持中心"],
-    ["page.list.description", "Không gian chăm sóc khách hàng trên Web được máy chủ cấp quyền riêng; không phụ thuộc cầu nối quản trị Telegram.", "A server-authorized Web customer care workspace that does not depend on the Telegram administration bridge.", "由服务器授权的 Web 客户服务空间，不依赖 Telegram 管理桥接。"],
+    ["page.list.title", "Trung tâm hỗ trợ khách hàng", "Web Customer Support Center", "Web 客户支持中心"],
+    ["page.list.description", "Không gian chăm sóc khách hàng được máy chủ cấp quyền riêng; không phụ thuộc cầu nối quản trị Telegram.", "A server-authorized Web customer care workspace that does not depend on the Telegram administration bridge.", "由服务器授权的 Web 客户服务空间，不依赖 Telegram 管理桥接。"],
     ["page.detail.title", "Xử lý yêu cầu hỗ trợ", "Handle support request", "处理支持请求"],
-    ["page.detail.description", "Phân loại một yêu cầu trên Web theo quyền hỗ trợ do máy chủ xác minh.", "Triage a Web request within Support permissions verified by the server.", "在服务器验证的支持权限范围内分诊 Web 请求。"],
+    ["page.detail.description", "Phân loại một yêu cầu theo quyền hỗ trợ do máy chủ xác minh.", "Triage a Web request within Support permissions verified by the server.", "在服务器验证的支持权限范围内分诊 Web 请求。"],
     ["hero.list.section", "Quản trị ERP", "ERP Administration", "ERP 管理"],
     ["hero.detail.section", "Quản trị ERP", "ERP Administration", "ERP 管理"],
 
@@ -12539,7 +12539,7 @@
     ["loading.title", "Đang kiểm tra quyền hỗ trợ", "Checking Support permission", "正在检查支持权限"],
     ["loading.body", "Máy chủ đang xác thực phiên đăng nhập và vai trò trên Web trước khi nạp yêu cầu vận hành.", "The server is verifying the signed session and Web role before loading operational requests.", "服务器正在验证登录会话和 Web 角色，然后再加载运营请求。"],
 
-    ["intro.kicker", "Vận hành hỗ trợ trên Web", "Web support operations", "Web 支持运营"],
+    ["intro.kicker", "Vận hành hỗ trợ", "Web support operations", "Web 支持运营"],
     ["intro.title", "Hỗ trợ có phân loại, không bỏ qua quy trình", "Structured support without shortcuts", "有序支持，不跳过流程"],
     ["intro.body", "Nhân viên vận hành xử lý đúng yêu cầu, đúng phiên bản và đúng phạm vi. Mọi thay đổi cần CSRF, xác nhận, chống xử lý trùng và nhật ký kiểm toán do máy chủ thực hiện.", "Operators handle the correct request, revision, and scope. Every change requires server-enforced CSRF, confirmation, idempotency, and audit.", "操作员处理正确的请求、版本和范围。每项更改都需要服务器执行 CSRF、确认、幂等和审计。"],
     ["role.manager", "Quản lý", "Manager", "经理"],

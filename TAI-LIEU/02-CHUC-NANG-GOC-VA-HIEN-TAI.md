@@ -671,3 +671,17 @@ player/download/save/reuse, hai bản giao tệp và browser/CI/live tiếp tụ
 Kết luận: AutoPost mới đóng control-level UI/UX và boundary trung thực. AP-01..05 vẫn giữ
 `[~]` trong completion ledger cho tới khi có capability máy chủ, browser/AX, queue/history
 receipt và delivery evidence riêng.
+
+## Đối chiếu Trung tâm hỗ trợ khách hàng — R218-07B — 18/10/2026
+
+| Chức năng cần đối chiếu | Hiện tại trên WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Tiếp nhận và danh sách yêu cầu | Có form tiếp nhận, lọc nhóm/trạng thái, phân trang, số liệu theo trạng thái và các trạng thái rỗng/đang tải/lỗi/bảo vệ | `static/portal/portal.js`; `tests/support-hub-product-controls.test.mjs` |
+| Chi tiết và phản hồi | Có mã yêu cầu, revision, dòng thời gian, phản hồi khách hàng, đóng/mở lại và recovery theo trạng thái | Control-level `4/4`; chưa có signed browser evidence |
+| Bằng chứng riêng tư | Chỉ chọn tệp đã có trong Asset Vault, xác nhận đã che thông tin, giới hạn loại/kích thước và liên kết theo revision; không upload bytes tại Trung tâm hỗ trợ | Helper `renderSupportEvidence`; capability/delivery server vẫn mở |
+| Quản trị | Có phản hồi công khai/nội bộ tách riêng, cập nhật trạng thái/mức ưu tiên và ghi chú; role/revision do máy chủ kiểm tra | `support-admin-case-reply`, `support-admin-case-update`; browser/AX/live chưa đo |
+| Locale/responsive | Fixed chrome VI/EN/ZH tách catalogue; bản Việt dùng “Trung tâm hỗ trợ khách hàng”; lưới case xếp một cột ở màn hình hẹp | Full Node `566/566`, syntax và `git diff --check` đạt |
+
+Kết luận: Support mới đóng lát control-level UI/UX và ranh giới an toàn; SP-01 vẫn `[~]` trong
+completion ledger cho tới khi có capability máy chủ, dữ liệu thật, browser/AX, CI và LIVE.
+SP-02 (Guide/Chat Pro/feedback/community) vẫn là mục riêng chưa thực thi.

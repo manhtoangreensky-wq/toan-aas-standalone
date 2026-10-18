@@ -170,3 +170,17 @@ Evidence local đặt dưới `D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/`. PASS cu�
 
 Bằng chứng source hiện tại: `tests/autopost-hub-product-controls.test.mjs` `4/4`, full Node
 `562/562`. Browser/AX/live chưa chạy; không dùng PASS source để thay cho các mức đó.
+
+## SUPPORT-CENTER-UI-CONTROL-20261018
+
+| ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |
+|---|---|---|
+| SPUI-01 | `/support`, `/tickets`, `/tickets/:id`; VI/EN/ZH; desktop/tablet/mobile | Tiếp nhận, danh sách/lọc/phân trang, chi tiết/dòng thời gian, trạng thái rỗng/đang tải/lỗi/bảo vệ và phản hồi giữ đúng owner scope |
+| SPUI-02 | `/tickets/:id`; Asset Vault đã có record hợp lệ | Chọn bằng chứng riêng tư, xác nhận đã che dữ liệu, giới hạn loại/kích thước, revision và signed download; không upload bytes thô tại Support |
+| SPUI-03 | `/admin/support`, `/admin/support/:id`; role fixture cô lập | Phản hồi công khai/nội bộ tách riêng; cập nhật trạng thái/mức ưu tiên có ghi chú, role và revision server-gated |
+| SPUI-04 | VI/EN/ZH × sáng/tối × `1440/1024/768/390` | Fixed chrome không trộn locale, màu xanh/ngọc giữ nguyên, case grid chuyển dọc ở `<=620px`, target/focus/overflow/console đạt |
+| SPUI-05 | Boundary/runtime | Không tạo ticket Bot, provider, wallet/PayOS, notification ngoài Web hoặc receipt giả; nếu capability/runtime chưa có phải ghi `guarded` và `LIVE_PASS=NOT_TESTED` |
+
+Bằng chứng source hiện tại: `tests/support-hub-product-controls.test.mjs` `4/4`, full Node
+`566/566`, syntax hai file Portal và `git diff --check` đạt. Browser/AX/CI/live chưa đóng; không
+dùng PASS source để thay cho các mức đó.
