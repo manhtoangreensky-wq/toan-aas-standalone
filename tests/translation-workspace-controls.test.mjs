@@ -80,4 +80,3 @@ test("fresh translation intake defaults the source control to auto-detect", () =
     /renderTranslationWorkspace\(page, context, \{ \.\.\.values, source_language: draft\.source_language \|\| "auto" \}\)/
   );
 });
-
