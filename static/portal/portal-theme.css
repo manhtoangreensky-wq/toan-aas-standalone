@@ -21655,6 +21655,28 @@ html[data-portal-theme="dark"] .portal-voice-studio form .portal-button--primary
   min-height: 44px;
 }
 
+/* R217-01: keep auth controls reachable on every viewport.  The shared
+ * desktop control token is 42px for dense shell chrome, but auth controls
+ * remain part of the primary touch path and must stay at the 44px target. */
+.portal-auth-page--access .portal-auth-header-actions .portal-theme-toggle,
+.portal-auth-page--access .portal-auth-forgot-link {
+  min-height: 44px;
+}
+
+.portal-auth-page--access .portal-auth-forgot-link {
+  display: inline-flex;
+  align-items: center;
+  padding-block: 8px;
+}
+
+/* R217-01: the selected locale cannot use the mid-tone action colour on the
+ * dark tinted chip; use the existing light ink token so the blue/teal theme
+ * remains intact while the active label clears WCAG AA contrast. */
+html[data-portal-theme="dark"] .portal-auth-page--access .portal-auth-locale-link[aria-current="true"] {
+  background: var(--portal-teal-dark-soft);
+  color: var(--portal-teal-dark-ink);
+}
+
 @media (max-height: 680px) and (min-width: 601px) {
   .portal-auth-page--access {
     padding: 12px 0 20px;
