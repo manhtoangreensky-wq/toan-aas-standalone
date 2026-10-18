@@ -9,6 +9,9 @@ Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong 
 - Checklist: reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md.
 - R218-00/01: specs/2026-10-18-r218-00-control-contract.md.
 - R218-02/03: specs/2026-10-18-r218-02-03-voice-music-controls.md.
+- R218-02A: specs/2026-10-18-r218-02a-voice-vault-canonical-contract.md
+  (DTO capability, list/pagination, management receipt và handoff; hiện là
+  contract gap, không được suy diễn từ callback Bot).
 - R218-04: specs/2026-10-18-r218-subdub-bot-parity-uiux.md.
 - R218-05/09: specs/2026-10-18-r218-05-09-image-video-controls.md.
 - R218-06/07/08: specs/2026-10-18-r218-06-08-utilities-admin-controls.md.
@@ -23,9 +26,10 @@ Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong 
   được giữ làm comparator; mapping file-level sang wave R218 nằm ở phần
   “Đối soát file/spec R217 → R218” trong checklist hiện hành.
 - Historical crosswalk trước R217: `reports/audit/WEBAPP-HISTORICAL-CHECKLIST-CROSSWALK-R218.md`.
-  Sổ này đếm toàn bộ 365 tệp plan/spec/audit/state và 433 dòng checkbox cũ, gán disposition
-  về C0/F0/P1–P6/A0/V0/Q0/M0/L0/T0. `unclassified source = 0` chỉ chứng minh không mất
-  nguồn tài liệu; từng yêu cầu vẫn phải được đóng bằng evidence đúng wave.
+  Sổ lịch sử đếm 365 tệp plan/spec/audit/state và 433 dòng checkbox cũ, gán disposition
+  về C0/F0/P1–P6/A0/V0/Q0/M0/L0/T0. Spec R218-02A là một tài liệu hiện hành mới,
+  đã được gắn trực tiếp vào P1 và không làm thay đổi sổ lịch sử. `unclassified source = 0`
+  chỉ chứng minh không mất nguồn tài liệu; từng yêu cầu vẫn phải được đóng bằng evidence đúng wave.
 
 Đường dẫn specs ở trên tương đối docs/superpowers/. Mỗi nhóm spec gộp chỉ để
 đọc gọn; từng phiếu thực thi và tiêu chí đóng vẫn có ID riêng.

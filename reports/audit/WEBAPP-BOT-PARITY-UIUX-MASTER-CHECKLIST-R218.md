@@ -139,6 +139,13 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] VO-02/VO-09/VO-10/VO-13: picker nam/nữ, Voice Vault owner-scoped và route handoff đã được khóa ở source bằng `tests/voice-selection-clone-contract.test.mjs` (4/4); quote, preview, rename/delete, runtime và browser/AX vẫn mở.
 - [~] VO-11: clone consent/upload/tên tùy chọn tối đa 120 ký tự đã khớp bridge hiện hành; form nay có hướng dẫn guarded đủ 7 bước consent → sample → name → quote → preview → save → back, được khóa ở source bằng test clone `5/5`; xác nhận text, quote, preview, save/back và runtime vẫn mở.
 - [!] VO-13 còn thiếu handoff profile/draft thật. Hai link hiện chỉ mở công cụ nên được đặt nhãn “Mở SubDub”/“Mở công cụ video”; không gọi là dùng lại giọng. Bốn nút quản lý luôn khóa đã được bỏ, thay bằng thông tin ngắn về thao tác chưa có. Rename/default/delete/preview vẫn là yêu cầu mở, chưa đạt UI hoàn chỉnh.
+- [!] Contract gap R218-02A đã được tách riêng tại
+  `docs/superpowers/specs/2026-10-18-r218-02a-voice-vault-canonical-contract.md`:
+  Bot có phân trang, đếm tổng, đặt mặc định, nghe thử, đổi tên, xóa mềm và
+  dùng cho Video; Web hiện chỉ có `GET /voice/profiles` với projection metadata.
+  Chưa có DTO capability/default option, search/page/total, mutation receipt,
+  preview delivery hoặc handoff profile/draft thật. Không chuyển các mục này
+  sang `[x]` khi chưa có endpoint + browser/owner evidence.
 - [~] Renderer/interaction + browser/AX/screenshots: VO-03/04/05 và navigation Voice Vault đã kiểm bằng Edge localhost với dữ liệu mẫu, 18/18 cấu hình, lỗi trang/console/overflow/kết nối ngoài/mutation đều 0. Nhãn trình đọc màn hình của preset tốc độ đã sạch VI/EN/ZH. STT mới có source/locale contract-level; browser upload/AX/runtime và live vẫn mở.
 
 ## P2 — Music R218-03 (MU-01..12)

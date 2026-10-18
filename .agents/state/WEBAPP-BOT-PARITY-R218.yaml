@@ -33,6 +33,7 @@ artifacts:
   inventory: reports/audit/WEBAPP-BOT-PRODUCT-INVENTORY-R218.md
   control_contract: docs/superpowers/specs/2026-10-18-r218-00-control-contract.md
   voice_music: docs/superpowers/specs/2026-10-18-r218-02-03-voice-music-controls.md
+  voice_vault_contract: docs/superpowers/specs/2026-10-18-r218-02a-voice-vault-canonical-contract.md
   subdub: docs/superpowers/specs/2026-10-18-r218-subdub-bot-parity-uiux.md
   image_video: docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md
   other_admin: docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md
@@ -59,7 +60,7 @@ current_wip:
   autopost_controls: "AP-01..05 control-level đã khóa local tại `/publishing`: bảy nguồn, năm bước, brand/calendar/review handoff và các lane channels/queue/affiliate guarded; VI/EN/ZH + desktop/tablet/mobile CSS. Targeted 4/4; full Node 562/562; syntax và diff check đạt. Chưa có OAuth, publish, queue receipt, affiliate metrics, browser/AX hoặc LIVE."
   support_controls: "SP-01 control-level đã khóa local tại `/support`, `/tickets`, `/tickets/:id`, `/admin/support`, `/admin/support/:id`: intake, danh sách/lọc/phân trang, chi tiết/timeline, public/internal reply, state/recovery, resolution feedback và Asset Vault evidence; VI/EN/ZH + palette xanh/ngọc + case grid một cột <=620px. Targeted 4/4; full Node 566/566; syntax và diff check đạt. Capability server, dữ liệu thật, browser/AX, CI, delivery và LIVE chưa chứng minh. SP-02 Guide/Chat Pro/feedback/community còn mở."
   account_controls: "AC-01/AC-02 đã được tách thành spec `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md`: profile/locale/security/session/stale cleanup; wallet/packages/pricing/topup/history/pending/admin handoff. Account profile/activity/dropdown Node targeted 9/9; cả ba block Account Security tiếng Việt đã được quét, test copy 2/2 và Account regression 11/11; control-level AC-01 `6/6`; AC-02 billing control-level `5/5`; full Node mới nhất `579/579`. Ví/lịch sử canonical, QR nạp thủ công chỉ sau method+amount+readiness, PayOS/catalog fail-closed và Admin handoff được khóa ở source contract; billing/Python contracts chưa chạy vì thiếu python/py; browser/AX/QR bytes/runtime/approval/credit/live vẫn mở."
-  historical_crosswalk: "Đã kiểm kê 127 plan + 180 spec + 44 audit + 14 state = 365 file; 307 plan/spec được phân lớp; 433 dòng checkbox cũ được truy vết. `unclassified source=0`; semantic review từng dòng trước R217 vẫn mở theo wave, không suy diễn PASS."
+  historical_crosswalk: "Sổ lịch sử vẫn gồm 127 plan + 180 spec + 44 audit + 14 state = 365 file và 433 dòng checkbox cũ; spec hiện hành R218-02A được gắn thêm trực tiếp vào P1, không tạo ledger song song. `unclassified source=0`; semantic review từng dòng trước R217 vẫn mở theo wave, không suy diễn PASS."
   ci_run: 39138175942
   ci_head: 2e4f1410040a53436e7a73f2cb25a00f5c04d301
   ci_status_at_last_observation: SUCCESS_ON_2E4F141
@@ -85,6 +86,7 @@ current_wip:
     result_sha256: 3831427f02b130887334c28de542395cab8d1a47c7156fb49219f9984ab4c56e
   browser_qa_artifact_sha256: e02fc36e875e12e910e327369f2d6bab625cae87ddb4ddc0fc57553fd1e7f0c9
 open_findings:
+  - "R218-02A: Bot read-only source có list/page/count/default/preview/rename/delete/use-video; Web mới proxy GET metadata. Thiếu canonical DTO/endpoint cho capability, pagination/search, mutation receipt, preview delivery và profile handoff; giữ P1 mở."
   - "Authenticated browser matrix đã xanh cho route/render trên HEAD; canonical voice handoff vẫn chờ server capability và execution evidence."
   - "Auto 2/Auto Multi 3-8/Smart Multi là ba callback, không gộp."
   - "Music control-level đã khóa local; Music editor, generation, quote/confirm, player/download/save/reuse và two-track delivery chưa chứng minh."
