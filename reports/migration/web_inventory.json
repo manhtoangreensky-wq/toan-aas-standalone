@@ -10316,7 +10316,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1104,
+      "occurrences": 1106,
       "provider": "PayOS"
     },
     {
@@ -10534,7 +10534,7 @@
         "copyfast_notification_center.py",
         "copyfast_pages.py"
       ],
-      "occurrences": 2020,
+      "occurrences": 2021,
       "provider": "Telegram"
     }
   ],
@@ -18319,7 +18319,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 287,
   "source_files_scanned": 287,
-  "source_fingerprint_sha256": "49b1abb4b91a50f0ee716f8a6c6eae7ec4a4c75f6d9667583466bc8939ab835d",
+  "source_fingerprint_sha256": "612673d883b731b63c4de96863dc9941494b21d629598f4f833d98adf3eebce4",
   "source_root": "repository-root",
   "ui_path_references": [
     {
