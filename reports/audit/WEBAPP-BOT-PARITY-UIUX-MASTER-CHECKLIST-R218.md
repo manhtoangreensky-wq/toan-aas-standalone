@@ -125,7 +125,8 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [x] VO-09 READ-STATE — 19/10/2026: phân biệt loading/failed/guarded với
   empty thật, xóa tên giọng cũ trước await và khi bootstrap, chặn response phiên
   cũ, giữ list khi readiness lỗi, retry chỉ GET. 19/19 test hành vi; cả nhóm
-  inventory 34/34; full Node 632/632. Lát này không đóng management/handoff.
+  inventory 34/34; full Node 638/638 sau khi giữ 6 test SubDub mới từ remote.
+  Lát này không đóng management/handoff.
 
 - [~] TTS/STT/default/saved/clone đã được bố trí trong một workspace dọc có bốn lane
   và deep link riêng; `renderVoiceWorkspaceNav()` giữ lane hiện tại bằng

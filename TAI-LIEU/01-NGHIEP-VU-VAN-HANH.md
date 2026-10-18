@@ -11,7 +11,8 @@ nghe thử/handoff vẫn là yêu cầu mở tại R218-02A/T0.
 
 Đã đo trên localhost: 18 cấu hình VI/EN/ZH × sáng/tối × 390/768/1440,
 7 trạng thái và 18 lượt thử lại bằng bàn phím; console/overflow/request ngoài/
-mutation đều 0. Bộ inventory 34/34 và toàn bộ Node 632/632. Đây là shell,
+mutation đều 0. Bộ inventory 34/34 và toàn bộ Node 638/638 (gồm 6 test SubDub
+mới trên remote). Đây là shell,
 renderer và integration.js production dùng API fixture, chưa phải dữ liệu
 Core thật hoặc LIVE. Bằng chứng tại `../qa/r218-voice-inventory/result.json`.
 Các mục vận hành/dữ liệu production bên dưới giữ nguyên phạm vi đo ban đầu.

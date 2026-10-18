@@ -49,7 +49,7 @@ artifacts:
   tester_cases: KIEM-THU/DANH-SACH-CASE.md
   tester_guide: KIEM-THU/HUONG-DAN-TESTER.md
 current_wip:
-  voice_inventory_recovery: "2026-10-19: removed speculative Voice Vault management proxies from c6bc455; backend/auth/route-engine/payment source matches 063473a. Added loading/ready/failed/guarded UI, clear-before-await and bootstrap cleanup, independent readiness/profile reads, stale-response fence, GET retry, and full bounded 50-item display without a fake total/pager. Behavior tests 19/19; inventory tests together 34/34; full Node 632/632. Browser localhost uses production shell/renderer/integration.js with explicit read-only API fixtures; final result is linked from the PR report. Canonical management/preview/handoff stays open in T0."
+  voice_inventory_recovery: "2026-10-19: removed speculative Voice Vault management proxies from c6bc455; backend/auth/route-engine/payment source matches 063473a. Added loading/ready/failed/guarded UI, clear-before-await and bootstrap cleanup, independent readiness/profile reads, stale-response fence, GET retry, and full bounded 50-item display without a fake total/pager. Behavior tests 19/19; inventory tests together 34/34; full Node 638/638 after preserving six newer SubDub tests. Browser localhost uses production shell/renderer/integration.js with explicit read-only API fixtures; final result is linked from the PR report. Canonical management/preview/handoff stays open in T0."
   voice_inventory_browser_qa:
     date: 2026-10-19
     scope: "Localhost production shell/renderer/CSS/integration.js with synthetic GET-only API fixtures; no backend, provider or production verification."
@@ -83,7 +83,7 @@ current_wip:
   ci_latest_status: "Run 39153828848 terminal SUCCESS: Verify Web App và Authenticated WebApp QA đều succeeded; Music flow contract 12/12, full Node 613/613, Compile Python, JavaScript/contracts, browser verification/runtime, artifact và diff whitespace đều PASS."
   migration_evidence_refresh: "Migration evidence của remote HEAD 5d25544 đã được verify; source_files_scanned=288; source_fingerprint_sha256=3b7eb4af38db2d1350123df056cb009ef9db1c2f59d02fa03fcdb7457a9e53e0. Bot evidence unchanged."
   local_targeted_tests: "STT/workspace 14/14; Voice suites 132/132; voice-flow-state-presentation 51/51; readiness metadata p0-05d kiểm tra độc lập PASS; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
-  local_full_tests: "632/632 tests/*.test.mjs on the Voice inventory recovery candidate; 19 read-state/hydration tests and 15 inventory presentation tests. Prior 613/613 snapshot remains historical."
+  local_full_tests: "638/638 tests/*.test.mjs on the Voice inventory recovery candidate after integration with remote SubDub tests; 19 read-state/hydration tests and 15 inventory presentation tests. Prior 613/613 snapshot remains historical."
   python_tests: "NOT_RUN: bundled Python located via workspace dependencies; pytest/FastAPI/Uvicorn are not installed in that runtime. No Python source changed in this batch."
   voice_browser_qa:
     environment: "Localhost production renderer/CSS with synthetic signed-state projection; no integration.js, backend or DB. Browser plugin absent; Playwright + Edge used."
