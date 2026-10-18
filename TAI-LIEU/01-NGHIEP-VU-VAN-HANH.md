@@ -1031,3 +1031,18 @@ Tương phản cảnh báo: `11,25:1` ở theme sáng và `8,84:1` ở theme t�
 Evidence local ở `../qa/r218-voice-input/result.json`, AX và PNG cùng thư mục. Quote expiry UI
 đã khóa; phần còn treo: search/page server, profile-aware handoff, rename/default/delete/
 preview thật, confirm/progress/output và browser QA đăng nhập thật/live. Các mục này tiếp tục ở P1.
+
+## R218 — Voice STT workspace control-level — 18/10/2026
+
+Voice đã bổ sung lane **Giọng nói thành văn bản** vào cùng workspace dọc với bốn lane
+Văn bản thành giọng nói, Giọng nói thành văn bản, Kho giọng và Thêm giọng. Route `/voice/stt`
+và alias `/voice/asr` giữ cùng ranh giới guarded; biểu mẫu chỉ trình bày tệp audio/video,
+ngôn ngữ nguồn (có Tự nhận diện) và định dạng Văn bản/SRT/VTT. Không tự tạo transcript,
+không upload bytes, không gọi provider và không tạo job/quote/đầu ra.
+
+Đã đo: contract STT/workspace `4/4`, quick-switch locale kiểm đúng `152` destination ở
+`vi/en/zh`, toàn bộ nhóm Voice `132/132`, full Node `598/598`, `node --check` cho
+`portal.js` và `portal-i18n.js`, `git diff --check` đều đạt. Đây là bằng chứng source/control-level;
+MIME/size/ownership server, tiến trình, transcript/copy/export, browser/AX upload, delivery
+và LIVE vẫn chưa đóng. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
+`PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`, `LIVE_PASS=NOT_TESTED`.

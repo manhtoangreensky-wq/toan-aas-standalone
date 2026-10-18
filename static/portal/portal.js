@@ -819,6 +819,11 @@
       { name: "sample", label: "Mẫu audio để clone", type: "file", accept: "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg", requiredUpload: true, help: "Mẫu chỉ vào bot-owned staging sau kiểm tra MIME, chữ ký, kích thước và ownership; browser không gửi tới provider." },
       { name: "consent", label: "Quyền sử dụng mẫu giọng", type: "checkbox", required: true, help: "Tôi xác nhận mình có quyền sử dụng mẫu giọng này và không mạo danh người khác." }
     ],
+    voiceStt: [
+      { name: "source", label: "Tệp âm thanh hoặc video nguồn", type: "file", accept: "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm", requiredUpload: true, help: "Tệp chỉ được nhận sau khi máy chủ kiểm tra MIME, kích thước và quyền sở hữu; chưa tự tạo bản chép lời trong trình duyệt." },
+      { name: "source_language", label: "Ngôn ngữ nguồn", control: "select", options: LANGUAGE_OPTIONS, emptyLabel: "Tự nhận diện", help: "Để Tự nhận diện nếu chưa biết ngôn ngữ; kết quả chỉ mở sau khi hệ thống xác nhận." },
+      { name: "output_format", label: "Định dạng kết quả", control: "select", options: [{ value: "txt", label: "Văn bản" }, { value: "srt", label: "Phụ đề SRT" }, { value: "vtt", label: "Phụ đề VTT" }], required: true, help: "Định dạng chỉ là lựa chọn đầu ra; bản chép lời, phụ đề và tải xuống cần capability riêng." }
+    ],
     music: [
       { name: "brief", label: "Brief âm nhạc", control: "textarea", placeholder: "Bối cảnh, mood, nhịp độ, công cụ, đối tượng nghe…", help: "Bot sẽ chặn yêu cầu mô phỏng nghệ sĩ/bài hát hoặc giai điệu có bản quyền.", required: true, minLength: 1 },
       { name: "tier", label: "Gói chất lượng", control: "select", options: [{ value: "basic", label: "Cơ bản" }, { value: "standard", label: "Tiêu chuẩn" }, { value: "premium", label: "Cao cấp" }], emptyLabel: "Chọn gói chất lượng canonical", required: true, help: "Bắt buộc chọn gói chất lượng; giá và khả năng chỉ lấy từ báo giá máy chủ." },
@@ -902,6 +907,7 @@
   // route; the server still enforces the exact per-feature adapter allowlist.
   const FEATURE_PAGE_KEY_ALIASES = Object.freeze({
     "/voice/tts": "voice_tts",
+    "/voice/stt": "voice_stt",
     "/music": "music_background",
     "/music/create": "music_background"
   });
@@ -1933,6 +1939,7 @@
     ]
   }, ["/voice/hub", "/voice-vault"]);
   featurePage("/voice/tts", "Text-to-Speech", "Chuẩn bị lời thoại và lựa chọn giọng trong flow có estimate rõ ràng.", ICONS.voice, FIELD_SETS.voice, ["/tts", "/voice/create"], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
+  featurePage("/voice/stt", "Speech-to-Text", "Tải âm thanh hoặc video để chuẩn bị bản chép lời theo nguồn được máy chủ xác nhận.", ICONS.voice, FIELD_SETS.voiceStt, ["/voice/asr"], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   featurePage("/voice/saved", "Giọng đã lưu", "Chọn một giọng từ Voice Vault thuộc sở hữu bạn; Core Bridge kiểm tra lại trạng thái trước khi estimate/confirm.", ICONS.voice, FIELD_SETS.voiceSaved, ["/voice/vault"], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   featurePage("/voice/clone", "Voice Clone", "Tính năng clone chỉ khả dụng nếu engine, mẫu audio và quyền sử dụng đã được bridge cho phép.", ICONS.voice, FIELD_SETS.voiceClone);
   readOnlyPage("/voice/preview", "Nghe thử giọng", "Preview là output riêng tư và phải dùng signed/temporary URL.", ICONS.voice, "voices");
@@ -9715,7 +9722,7 @@
       "video_trend", "video_long", "video_multiscene", "video_text_to_video",
       "video_image_to_video", "video_product", "video_quick", "image_create",
       "image_transform", "image_remove_background",
-      "voice_tts", "voice_saved_tts", "music_background",
+      "voice_tts", "voice_stt", "voice_saved_tts", "music_background",
       "music_song"
     ]);
 
@@ -9723,7 +9730,7 @@
       "/video/trend", "/video/long", "/video/multiscene", "/video/text-to-video",
       "/video/image-to-video", "/video/product", "/video/quick", "/image/create",
       "/image/transform", "/image/remove-background",
-      "/voice/create", "/voice/tts", "/voice/saved",
+      "/voice/create", "/voice/tts", "/voice/stt", "/voice/saved",
       "/music/ai", "/music/create", "/music/song"
     ]);
 
@@ -9744,7 +9751,7 @@
       const ready = featureConfirmExecutionReady(page, context);
       return `<span class="portal-badge" data-status="${ready ? "ready" : "guarded"}">${safeText(imageUiText(`status.${ready ? "ready" : "guarded"}`, ""))}</span>`;
     }
-    if (["/voice/tts", "/voice/saved", "/voice/clone", "/voice/outputs"].includes(page.routePath || page.path)) {
+    if (["/voice/tts", "/voice/stt", "/voice/saved", "/voice/clone", "/voice/outputs"].includes(page.routePath || page.path)) {
       const allowed = canAct(page, context);
       return `<span class="portal-badge" data-status="${allowed ? "ready" : "guarded"}">${safeText(voiceUiText(allowed ? "status.ready" : "status.guarded", ""))}</span>`;
     }
@@ -9978,7 +9985,7 @@
     if (path.startsWith("/voice-studio/") && path !== "/voice-studio/direction-composer") return voiceStudioText("detail.title", fallback);
     if (path === "/video-studio" || path === "/video-studio/new") return videoStudioText(path.endsWith("/new") ? "page.newTitle" : "page.title", fallback);
     if (path.startsWith("/video-studio/") && path !== "/video-studio/prompt-planner" && path !== "/video-studio/idea-planner" && path !== "/video-studio/motion-guide" && path !== "/video-studio/long-form-planner" && path !== "/video-studio/self-shot-planner" && path !== "/video-studio/script-to-screen-planner" && path !== "/video-studio/cinematic-concept" && path !== "/video-studio/image-motion-planner" && path !== "/video-studio/reference-format-planner" && path !== "/video-studio/storyboard-composer") return videoStudioText("detail.title", fallback);
-    if (["/voice/tts", "/voice/saved", "/voice/clone", "/voice/preview", "/voice/outputs"].includes(path)) return voiceUiText(`tool.${path.split("/").pop()}.title`, fallback);
+    if (["/voice/tts", "/voice/stt", "/voice/saved", "/voice/clone", "/voice/preview", "/voice/outputs"].includes(path)) return voiceUiText(`tool.${path.split("/").pop()}.title`, fallback);
     if (path === "/video/create" || path === "/video/multiscene") return uiText(`videoUi.${path.endsWith("multiscene") ? "multi" : "quick"}.title`, fallback);
     const featureFamily = featureFamilyForPath(path);
     if (path === "/admin/support") return adminSupportText("page.list.title", fallback);
@@ -10078,7 +10085,7 @@
     if (path.startsWith("/voice-studio/") && path !== "/voice-studio/direction-composer") return voiceStudioText("page.description", fallback);
     if (path === "/video-studio" || path === "/video-studio/new") return videoStudioText("page.description", fallback);
     if (path.startsWith("/video-studio/") && path !== "/video-studio/prompt-planner" && path !== "/video-studio/idea-planner" && path !== "/video-studio/motion-guide" && path !== "/video-studio/long-form-planner" && path !== "/video-studio/self-shot-planner" && path !== "/video-studio/script-to-screen-planner" && path !== "/video-studio/cinematic-concept" && path !== "/video-studio/image-motion-planner" && path !== "/video-studio/reference-format-planner" && path !== "/video-studio/storyboard-composer") return videoStudioText("page.description", fallback);
-    if (["/voice/tts", "/voice/saved", "/voice/clone", "/voice/preview", "/voice/outputs"].includes(path)) return voiceUiText(`tool.${path.split("/").pop()}.description`, fallback);
+    if (["/voice/tts", "/voice/stt", "/voice/saved", "/voice/clone", "/voice/preview", "/voice/outputs"].includes(path)) return voiceUiText(`tool.${path.split("/").pop()}.description`, fallback);
     if (path === "/video/create" || path === "/video/multiscene") return uiText(`videoUi.${path.endsWith("multiscene") ? "multi" : "quick"}.description`, fallback);
     const featureFamily = featureFamilyForPath(path);
     if (path === "/admin/support") return adminSupportText("page.list.description", fallback);
@@ -11560,7 +11567,7 @@
     const formFieldsEnabled = enabled || workspaceDraftEnabled;
     const imageTask = route === "/image/create" || route === "/image/new";
     const videoTask = route === "/video/create" || route === "/video/multiscene";
-    const voiceTask = ["/voice/tts", "/voice/saved", "/voice/clone"].includes(route);
+    const voiceTask = ["/voice/tts", "/voice/stt", "/voice/saved", "/voice/clone"].includes(route);
     const musicTask = ["/music/create", "/music/song"].includes(String(route || "").split("?")[0].replace(/\/$/, "") || "/");
     const videoText = (key, fallback) => uiText(`videoUi.${key}`, fallback);
     // When an external engine is not enabled, the primary form action is a
@@ -12209,7 +12216,7 @@
   }
 
   function renderModuleCards(context) {
-    const quickRoutes = ["/chat", "/content/pack", "/image/create", "/image/edit", "/video/product", "/video/multiscene", "/voice/tts", "/voice/clone", "/music/create", "/subtitle", "/dubbing", "/documents"];
+    const quickRoutes = ["/chat", "/content/pack", "/image/create", "/image/edit", "/video/product", "/video/multiscene", "/voice/tts", "/voice/stt", "/voice/clone", "/music/create", "/subtitle", "/dubbing", "/documents"];
     const cards = quickRoutes.map((path) => manifest[path]).filter(Boolean).map((module) => moduleCard(module, context, "Mở workspace")).join("");
     return `<section><div class="portal-section-heading"><div><span class="portal-section-kicker">Khám phá nhanh</span><h2>Bắt đầu từ workflow phù hợp</h2><p>Một số workspace tiêu biểu; toàn bộ route Web được xem trong danh mục riêng.</p></div><a class="portal-button portal-button--quiet" href="/features">Xem tất cả công cụ →</a></div><div class="portal-module-grid">${cards}</div></section>`;
   }
@@ -25669,6 +25676,17 @@
     return uiText(`voiceUi.${key}`, fallback, params);
   }
 
+  function renderVoiceWorkspaceNav(route) {
+    const current = normalizePath(String(route || ""));
+    const tabs = [
+      ["tts", "/voice/tts"],
+      ["stt", "/voice/stt"],
+      ["saved", "/voice/saved"],
+      ["clone", "/voice/clone"]
+    ];
+    return `<section class="portal-card portal-card-pad portal-voice-workspace" data-voice-workspace aria-labelledby="voice-workspace-title"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceUiText("workspace.kicker", "KHÔNG GIAN GIỌNG NÓI"))}</span><h2 id="voice-workspace-title" class="portal-card-title">${safeText(voiceUiText("workspace.title", "Một không gian cho mọi luồng giọng nói"))}</h2><p class="portal-card-subtitle">${safeText(voiceUiText("workspace.description", "Chuyển giữa đọc văn bản, chép lời, kho giọng và thêm giọng mà không mất bản nháp của từng luồng."))}</p></div></div><nav class="portal-voice-workspace-nav" aria-label="${safeText(voiceUiText("workspace.navLabel", "Các luồng giọng nói"))}">${tabs.map(([key, href]) => { const active = current === href; return `<a class="portal-voice-workspace-tab${active ? " is-active" : ""}" data-voice-workspace-mode="${safeText(key)}" href="${safeText(href)}"${active ? ' aria-current="page"' : ""}><span><strong>${safeText(voiceUiText(`workspace.tab.${key}`, key))}</strong><small>${safeText(voiceUiText(active ? "workspace.active" : "workspace.open", active ? "Đang mở" : "Mở luồng"))}</small></span><span aria-hidden="true">→</span></a>`; }).join("")}</nav></section>`;
+  }
+
   function musicHubText(key, fallback, params) {
     return uiText(`musicHub.${key}`, fallback, params);
   }
@@ -25718,7 +25736,7 @@
 
   function renderVoiceHub(page, context) {
     const tools = [
-      ["tts", "/voice/tts"], ["saved", "/voice/saved"], ["clone", "/voice/clone"],
+      ["tts", "/voice/tts"], ["stt", "/voice/stt"], ["saved", "/voice/saved"], ["clone", "/voice/clone"],
       ["preview", "/voice/preview"], ["outputs", "/voice/outputs"],
       ["studio", "/voice-studio"], ["direction", "/voice-studio/direction-composer"]
     ];
@@ -32134,7 +32152,7 @@
     const route = page.routePath || page.path;
     if (route === "/image/create" || route === "/image/new") return renderImageCreateWorkspace(page, context);
     const videoTask = route === "/video/create" || route === "/video/multiscene";
-    const voiceTask = ["/voice/tts", "/voice/saved", "/voice/clone", "/voice/outputs"].includes(route);
+    const voiceTask = ["/voice/tts", "/voice/stt", "/voice/saved", "/voice/clone", "/voice/outputs"].includes(route);
     const musicTask = ["/music/create", "/music/song"].includes(String(route || "").split("?")[0].replace(/\/$/, "") || "/");
     const subtitleStudioCompanion = renderSubtitleStudioCompanionLink(page);
     const flow = context.featureFlows && context.featureFlows[route];
@@ -32144,6 +32162,7 @@
     const voiceVault = page.path === "/voice/saved" ? renderVoiceVault(context) : "";
     const interactiveWorkbench = videoTask || musicTask ? "" : renderInteractiveFeatureWorkbench(page, context);
     const musicGuidance = musicTask ? renderMusicProductGuidance(page, context) : "";
+    const voiceWorkspaceNav = voiceTask && typeof renderVoiceWorkspaceNav === "function" ? renderVoiceWorkspaceNav(route) : "";
     const isLegacySubDubRoute = ["/subtitle", "/subtitle/create", "/translate", "/dubbing", "/asr"].includes(route);
     const formContent = route === "/voice/outputs"
       ? `<section class="portal-card portal-card-pad"><p>${safeText(voiceUiText("output.help", ""))}</p><a class="portal-button portal-button--quiet" href="/jobs">${safeText(voiceUiText("output.jobs", "Xem công việc"))}</a></section>`
@@ -32152,7 +32171,7 @@
     const previousFormCollapsed = Boolean(voiceTask && flow && flow.phase === "confirm" && FEATURE_TRACKING_JOB_STATES.has(flow.status));
     const visibleForm = previousFormCollapsed ? `<details class="portal-voice-task-form" data-voice-task-form><summary>${safeText(voiceUiText("flow.form", "Biểu mẫu giọng đọc"))}</summary>${formContent}</details>` : formContent;
     const outputSection = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${videoTask ? safeText(uiText("videoUi.output.title", "")) : voiceTask ? safeText(voiceUiText("output.title", "")) : "Output & trạng thái"}</h2>${videoTask || voiceTask ? "" : '<p class="portal-card-subtitle">Không tạo text, media, transcript hoặc file giả để thay thế engine thật.</p>'}</div>${voiceTask ? "" : badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section>`;
-    return `<article class="portal-page${videoTask ? " portal-feature-workspace--video-task" : voiceTask ? " portal-feature-workspace--voice-task" : ""}">${renderHero(page, context)}${voiceTask ? "" : `<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>`}
+    return `<article class="portal-page${videoTask ? " portal-feature-workspace--video-task" : voiceTask ? " portal-feature-workspace--voice-task" : ""}">${renderHero(page, context)}${voiceWorkspaceNav}${voiceTask ? "" : `<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>`}
       ${interactiveWorkbench}${musicGuidance}${flowFirst ? outputSection : ""}
       <div class="portal-work-grid"><div>${visibleForm}${subtitleStudioCompanion}</div>${voiceTask ? "" : `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside>`}</div>
       ${voiceVault}${videoTask || voiceTask ? "" : renderFeatureBotHandoff(page, context, flow)}${flowFirst ? "" : outputSection}</article>`;

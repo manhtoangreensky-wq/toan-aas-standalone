@@ -114,6 +114,18 @@ checkpoint và giữ các trang Video khác/motion ở trạng thái còn mở.
 
 Evidence local đặt dưới `D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/`. PASS cuối phải tách PR merge SHA, CI run, deploy run, runtime SHA và live output.
 
+## VOICE-STT-WORKSPACE-UI-20261018
+
+Case này chỉ kiểm tra presentation/control-level của lane STT; không upload tệp, không lấy
+quote, không tạo job, không gọi provider, không đổi ví/Xu và không dùng production data.
+
+| ID | SPEC_ID | Mức | Môi trường | Route / role / viewport | Case | PASS bắt buộc | Canh lỗi cũ | Evidence |
+|---|---|---|---|---|---|---|---|---|
+| VSTT-01 | R218-02 / VO-12 | 🟠 nặng | local-source | `/voice/stt`, `/voice/asr`; guest renderer; VI/EN/ZH × sáng/tối × 390/768/1440 | Workspace có bốn lane; STT có source audio/video, Tự nhận diện/ngôn ngữ nguồn và Văn bản/SRT/VTT; lane hiện tại có `aria-current` | Không trộn locale; không tràn/clip; target ≥44px; route/alias đúng; không phát sinh request ngoài phạm vi hoặc mutation; contract `4/4`, full Node `598/598` | Route STT từng chưa có trong workspace, quick-switch giữ mốc destination cũ và dễ rơi nhãn tiếng Việt trong EN/ZH | Candidate SHA, DOM/ảnh/AX nếu chạy browser, console/network, output test và ghi rõ upload/runtime chưa chạy |
+
+VSTT-01 là case source/control-level. Browser upload, MIME/size/ownership, progress,
+transcript/copy/export, delivery và LIVE là các gate riêng, không được gộp PASS.
+
 ## WA-44 — A09-OPERATIONS-READINESS-TRUTH
 
 - Mức: nặng; route `/admin/operations`; chỉ đọc, không bấm duyệt.

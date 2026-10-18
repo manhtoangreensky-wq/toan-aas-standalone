@@ -699,3 +699,16 @@ SP-02 (Guide/Chat Pro/feedback/community) vẫn là mục riêng chưa thực th
 Kết luận: đếm nội dung và cảnh báo 0% đã có bằng chứng renderer/interaction. Điều hướng
 không được coi là profile handoff; hướng dẫn clone không phải wizard chạy thật. Voice Vault
 và runtime parity vẫn mở theo ledger.
+
+## Đối chiếu Voice STT workspace — R218 — 18/10/2026
+
+| Chức năng cần đối chiếu | Hiện tại trên WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| STT trong workspace Voice | Có lane Giọng nói thành văn bản cùng TTS, Kho giọng và Thêm giọng; deep link `/voice/stt` và alias `/voice/asr` giữ đúng route | `renderVoiceWorkspaceNav()`; `tests/voice-workspace-stt-contract.test.mjs` `4/4` |
+| Nguồn và ngôn ngữ | Có tệp audio/video nguồn, Tự nhận diện hoặc catalog ngôn ngữ nguồn, không trộn nhãn giữa VI/EN/ZH | `FIELD_SETS.voiceStt`; catalogue `portal-i18n.js`; quick-switch `152` destination mỗi locale |
+| Định dạng đầu ra | Có Văn bản, SRT và VTT; khu vực kết quả vẫn rỗng/guarded khi máy chủ chưa cấp capability | Không tạo transcript, tệp hoặc download giả; upload/progress/copy/export runtime còn mở |
+| Responsive và palette | Bốn lane xếp `4` cột desktop, `2` cột tablet và `1` cột màn hình nhỏ; giữ token xanh dương/xanh ngọc | `portal-theme.css`; contract source-level, chưa có browser AX upload/live evidence riêng cho STT |
+
+Kết luận: STT đã đạt control-level UI/UX và locale parity, chưa đạt runtime parity với Bot.
+Không được dùng `4/4`, `132/132` hoặc full Node `598/598` để suy ra upload, nhận dạng,
+transcript, giao tệp hay LIVE đã hoạt động.
