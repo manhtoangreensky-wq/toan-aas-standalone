@@ -19,6 +19,9 @@ Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong 
 - R218-07C: specs/2026-10-18-r218-07c-account-controls.md.
 - R218-10/11/12/13: specs/2026-10-18-r218-10-13-qa-motion-delivery-technical.md.
 - State: .agents/state/WEBAPP-BOT-PARITY-R218.yaml.
+- R217 preservation crosswalk: checklist R217 và các spec `2026-10-16-r217-*`
+  được giữ làm comparator; mapping file-level sang wave R218 nằm ở phần
+  “Đối soát file/spec R217 → R218” trong checklist hiện hành.
 
 Đường dẫn specs ở trên tương đối docs/superpowers/. Mỗi nhóm spec gộp chỉ để
 đọc gọn; từng phiếu thực thi và tiêu chí đóng vẫn có ID riêng.
