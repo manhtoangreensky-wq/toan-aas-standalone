@@ -1,22 +1,22 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: WIP_P1_VOICE_STT_METADATA_VERIFIED_CI_PENDING_RECHECK
+status: WIP_P1_VOICE_STT_METADATA_VERIFIED_CI_RECHECKING
 date: 2026-10-18
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 4b4478eae6b2f1f551a78d7b1ea452fccf88ee13
-delivery_head_sha: 4b4478eae6b2f1f551a78d7b1ea452fccf88ee13
-delivery_status: LOCAL_EVIDENCE_REFRESH_PENDING_PUSH_CI_RECHECK_OWNER_MERGE_NOT_AUTHORIZED
-head_sha_semantics: "Last verified product/evidence tip before the metadata-only state sync commit; guarded Voice report projection and Web migration evidence refresh are present. Runtime/provider execution remains locked."
-delivery_head_semantics: "The last product/evidence tip is recorded locally; the current branch may have bookkeeping-only commits, and PR/CI state for the tip must be rechecked when GitHub access is available."
-branch_head_sha: 4b4478eae6b2f1f551a78d7b1ea452fccf88ee13
+head_sha: 7fa7f153ef886602814157e17d20c1ef209523db
+delivery_head_sha: 7fa7f153ef886602814157e17d20c1ef209523db
+delivery_status: PUSHED_REMOTE_CI_RECHECK_PENDING_OWNER_MERGE_NOT_AUTHORIZED
+head_sha_semantics: "Current remote evidence/state tip after LF-only migration evidence normalization; product/runtime/provider execution remains locked."
+delivery_head_semantics: "The branch is readable on GitHub at 7fa7f15; the prior failure was whitespace-only and the new CI recheck is pending."
+branch_head_sha: 7fa7f153ef886602814157e17d20c1ef209523db
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
 last_push_verified_commit: 340407b977856f2c7255b8834d358faf93efe796
-docs_checkpoint_sha: 4b4478eae6b2f1f551a78d7b1ea452fccf88ee13
+docs_checkpoint_sha: 7fa7f153ef886602814157e17d20c1ef209523db
 push_command_success_commit: 340407b977856f2c7255b8834d358faf93efe796
-remote_readback: "Local tracking ref github/webapp-r217-subdub-ui-r218 remains at 340407b977856f2c7255b8834d358faf93efe796; local Web evidence refresh tip is 4b4478eae6b2f1f551a78d7b1ea452fccf88ee13 and is not pushed yet. GitHub API/CI for this tip was not revalidated; last independently confirmed terminal CI remains run 39134067820 on 8058ba5."
+remote_readback: "GitHub API readback: branch webapp-r217-subdub-ui-r218 is 7fa7f153ef886602814157e17d20c1ef209523db after LF-only normalization of reports/migration/preflight.json. Prior run 39137147110 failed only Check diff whitespace; a new CI run is pending. No product/runtime/provider mutation is active."
 batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
@@ -60,13 +60,13 @@ current_wip:
   support_controls: "SP-01 control-level đã khóa local tại `/support`, `/tickets`, `/tickets/:id`, `/admin/support`, `/admin/support/:id`: intake, danh sách/lọc/phân trang, chi tiết/timeline, public/internal reply, state/recovery, resolution feedback và Asset Vault evidence; VI/EN/ZH + palette xanh/ngọc + case grid một cột <=620px. Targeted 4/4; full Node 566/566; syntax và diff check đạt. Capability server, dữ liệu thật, browser/AX, CI, delivery và LIVE chưa chứng minh. SP-02 Guide/Chat Pro/feedback/community còn mở."
   account_controls: "AC-01/AC-02 đã được tách thành spec `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md`: profile/locale/security/session/stale cleanup; wallet/packages/pricing/topup/history/pending/admin handoff. Account profile/activity/dropdown Node targeted 9/9; cả ba block Account Security tiếng Việt đã được quét, test copy 2/2 và Account regression 11/11; control-level AC-01 `6/6`; AC-02 billing control-level `5/5`; full Node mới nhất `579/579`. Ví/lịch sử canonical, QR nạp thủ công chỉ sau method+amount+readiness, PayOS/catalog fail-closed và Admin handoff được khóa ở source contract; billing/Python contracts chưa chạy vì thiếu python/py; browser/AX/QR bytes/runtime/approval/credit/live vẫn mở."
   historical_crosswalk: "Đã kiểm kê 127 plan + 180 spec + 44 audit + 14 state = 365 file; 307 plan/spec được phân lớp; 433 dòng checkbox cũ được truy vết. `unclassified source=0`; semantic review từng dòng trước R217 vẫn mở theo wave, không suy diễn PASS."
-  ci_run: 39134067820
-  ci_head: 8058ba5bf748bea0ea87c596b54cf6d625babba5
-  ci_status_at_last_observation: SUCCESS_ON_8058BA5
-  ci_scope: "Verify Web App và Authenticated WebApp QA trên delivery HEAD 8058ba5; QA dùng DB/fixture cô lập, không provider, ví hoặc production data."
-  ci_latest_run: 39134067820
-  ci_latest_status: "Run 39134067820 terminal SUCCESS: Verify Web App và Authenticated WebApp QA đều succeeded trên 8058ba5."
-  migration_evidence_refresh: "Refresh và independent verify-web-evidence exit 0 trên 8058ba5; source_files_scanned=288; source_fingerprint_sha256=0d49859580c06bbc4d3f3174ccc8d6a55f70e9f3ff8feade02241a74e2975a23. Bot evidence unchanged."
+  ci_run: 39137147110
+  ci_head: a5924a4ffcc9881c2d635bd1495b3851f9f5ac80
+  ci_status_at_last_observation: FAILED_DIFF_WHITESPACE_ONLY_PRIOR_HEAD
+  ci_scope: "Verify Web App và Authenticated WebApp QA trên delivery HEAD a5924a4; QA dùng DB/fixture cô lập, không provider, ví hoặc production data."
+  ci_latest_run: 39137147110
+  ci_latest_status: "Run 39137147110: mọi gate Verify Web App, Compile Python, JavaScript/contracts, browser verification/runtime và artifact đều PASS; chỉ Check diff whitespace FAIL vì preflight.json có CRLF trên 46 dòng."
+  migration_evidence_refresh: "Evidence nội dung không đổi; cần chuẩn hóa reports/migration/preflight.json về LF rồi chạy lại diff-check. source_files_scanned=288; source_fingerprint_sha256=0d49859580c06bbc4d3f3174ccc8d6a55f70e9f3ff8feade02241a74e2975a23. Bot evidence unchanged."
   local_targeted_tests: "STT/workspace 14/14; Voice suites 132/132; voice-flow-state-presentation 51/51; readiness metadata p0-05d kiểm tra độc lập PASS; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
   local_full_tests: "601/601 tests/*.test.mjs; voice-flow-state-presentation 51/51"
   python_tests: "NOT_RUN: bundled Python located via workspace dependencies; pytest/FastAPI/Uvicorn are not installed in that runtime. No Python source changed in this batch."
@@ -99,4 +99,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Giữ PR #654 OPEN; tiếp tục P1 Voice VO-07 confirm UI, VO-08 report và Voice Vault DTO gap. STT upload/progress/transcript/export/runtime vẫn guarded; motion remains last. Không merge/deploy/live nếu chưa có lệnh Owner mới."
+next_action: "Chuẩn hóa preflight.json về LF, tạo commit API trên remote branch và chờ CI recheck; chỉ khi quality gate xanh mới tiếp tục P1 Voice VO-07/VO-08/Voice Vault. Runtime/provider/upload/preview/delivery vẫn guarded; motion remains last; không merge/deploy/live nếu chưa có lệnh Owner mới."
