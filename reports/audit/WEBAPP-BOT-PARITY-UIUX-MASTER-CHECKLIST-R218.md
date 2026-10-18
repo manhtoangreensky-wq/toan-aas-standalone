@@ -1,6 +1,6 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
-Ngày 2026-10-18. WIP_UT04_UTILITIES_CONTROL_PARTIAL. Source Bot được đọc-only; production chưa kiểm.
+Ngày 2026-10-18. WIP_UT06_DOCUMENTS_CONTROL_PARTIAL. Source Bot được đọc-only; production chưa kiểm.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
 
@@ -9,6 +9,32 @@ Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 gi�
 [x] Đủ evidence đúng phạm vi. [~] Một phần, chưa đóng. [ ] Chưa thực thi/chưa chứng minh.
 [!] Có gap cụ thể. [→] Kỹ thuật giữ cuối, đợi lệnh sau UI/motion.
 Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
+
+## Reconciliation R217 + R218 + Owner parity matrix
+
+R217 là lịch sử/comparator, R218 là ledger thực thi hiện hành; không có mục nào của
+R217 bị xóa. Bảng dưới là cổng đối soát với ma trận Owner mới nhất, để không bỏ sót
+nhóm hoặc nhầm một thẻ điều hướng là một tính năng đã chạy:
+
+| Nhóm Owner | Inventory Bot | Ledger/spec Web | Trạng thái phải theo dõi |
+|---|---|---|---|
+| Voice | B01–B04 | P1 VO-01..13 / R218-02 | TTS, STT, mặc định nam/nữ, kho/clone, consent, nghe thử, đặt mặc định, đổi tên/xóa, speed/volume, quote và tái sử dụng |
+| Music/SFX | B05–B07 | P2 MU-01..12 / R218-03 | Nhạc nền/bài hát, style/lyrics, nam/nữ/song ca/auto, 3 gói/3 gợi ý, kho/SFX, nghe/tải/lưu/dùng lại, tiến trình và giao tệp |
+| SubDub | B08–B12 | P3 SD-01..21 / R218-04 | Bốn mode cùng workspace, nguồn có/chưa có phụ đề, ngôn ngữ, default/saved/custom voice, Auto 2, Auto Multi 3–8, Smart Multi, mix, vị trí, báo giá, tiến trình và report |
+| Image | B13–B15 | P4 IM-01..10 / R218-05 | Tạo ảnh/reference/prompt, mục tiêu/chủ thể/style/tỷ lệ, biến thể, AI edit, manual edit, chữ/logo, trước–sau, lịch sử và handoff Video |
+| Product Video + Video Editor | B16–B20 | V0 VI-01..15 / R218-09 | 32 profile, trend/script/frame/self-shot/storyboard/series, AI/manual edit, timeline, addon, giọng/nhạc/phụ đề/logo và report |
+| Dịch/Content/Free/Utilities | B21–B24 | P5 UT-01..04 / R218-06 | Dịch text/voice/file, content variants, prompt/library, QR/avatar/tỷ giá/thời tiết/downloader, copy/save/version và state |
+| Memory/Documents/Assets/Projects | B25–B27 | P5 UT-05..08 / R218-06/07 | Ghi chú/reminder, PDF, kho tệp, upload/list/preview/download/quota, project/draft/version/workboard và source→result lineage |
+| AutoPost | B28–B30 | P6 AP-01..05 / R218-07 | Bảy nguồn, brand/plan, kênh, lịch/hàng đợi/lịch sử, affiliate/metrics/ads, review/publish/recovery |
+| Support/Account/Help | B31–B33 | P6 SP-01..02 + AC-01..02 | Trung tâm hỗ trợ, ticket/attachment/reply, profile/locale/session, gói/giá/nạp tiền/pending, Chat Pro/feedback/context help |
+| Admin/internal app | B34 | A0 AD-01..05 / R218-08 | Quyền theo vai trò, bảng/biểu đồ/chi tiết, request→job→asset→report, approval UI, Web/app cùng record và quyền |
+
+- [x] Mỗi hàng đã có mã inventory và wave/spec; không có nhóm Owner nào nằm ngoài
+  B01–B34.
+- [ ] Chỉ đóng một hàng khi có renderer/interaction + browser/AX evidence tương ứng;
+  runtime, provider, wallet, publish và LIVE vẫn giữ cổng riêng.
+- [ ] Các lỗi mới phát hiện được thêm vào đúng hàng và đúng thứ tự, không mở nhánh
+  ngoài ledger.
 
 ## C0 — Bảo toàn / chốt WIP
 
@@ -135,7 +161,12 @@ Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
 - [~] UT-05 Notes create/list/search/detail/edit/reminder/delete confirmation đã có Memory
   Center/Reminder shell, locale và contract owner-scoped; dữ liệu thật, browser và live chưa
   chứng minh.
-- [ ] UT-06 Documents PDF→Word/ảnh→PDF/nén/tách/gộp, multi-file/order/range/result.
+- [~] UT-06 Documents/PDF control-level đã khóa bằng `tests/documents-product-controls.test.mjs`:
+  bảng một nơi, 9 workflow, nguồn Asset Vault, tách theo page range, gộp/ảnh→PDF tối đa
+  8 ô theo thứ tự, tối ưu lossless, OCR/PDF→ảnh/Word, confirm, empty/guarded/result và
+  tải chỉ khi `completed + download_ready`. Spec chi tiết tại
+  `docs/superpowers/specs/2026-10-18-r218-06c-documents-product-controls.md`.
+  Capability server, upload/preview/output/delivery, browser/AX và LIVE vẫn mở.
 - [ ] UT-07 Assets upload/list/preview/download/quota/expiry/privacy.
 - [~] UT-08 Projects/Workboard task/dependency/status/assignee/dates/report đã có Project
   Center, Workboard dọc, checklist, lịch, lịch sử và trạng thái; browser fixture/runtime chưa

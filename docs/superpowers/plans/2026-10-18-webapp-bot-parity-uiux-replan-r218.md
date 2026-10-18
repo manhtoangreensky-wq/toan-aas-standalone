@@ -1,6 +1,6 @@
 # R218 — Kế hoạch UI/UX toàn bộ sản phẩm WebApp theo Bot
 
-Ngày 2026-10-18. Trạng thái WIP_UT01_TRANSLATION_CONTROL_PARTIAL; chưa mở wave runtime.
+Ngày 2026-10-18. Trạng thái WIP_UT06_DOCUMENTS_CONTROL_PARTIAL; chưa mở wave runtime.
 Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong kế hoạch.
 
 ## Bộ tài liệu
@@ -104,6 +104,15 @@ delivery giữ ở wave QA/technical.
 - VI sạch tiếng Việt ngoài tên riêng; EN sạch tiếng Anh; ZH tương ứng.
   Bot dùng tham chiếu tính năng, không chép các chuỗi Bot còn pha ngôn ngữ.
 - Một CTA chính; hành động phụ theo nhóm. Chỉ mở download khi file thực sự sẵn sàng.
+
+## Checkpoint UT-06 — Documents/PDF control-level
+
+Đã khóa lớp trình bày của Tài liệu/PDF bằng spec
+`2026-10-18-r218-06c-documents-product-controls.md` và test
+`tests/documents-product-controls.test.mjs`. Bảng tài liệu giữ một nơi, nhóm PDF cơ
+bản/chuyển đổi/OCR, form nguồn theo Asset Vault, thứ tự nhiều tệp, page range, lựa chọn
+tối ưu, xác nhận và lịch sử kết quả. Chưa đánh dấu runtime: capability, bytes/preview,
+quote/job/output/delivery, browser/AX và LIVE vẫn chờ các wave kỹ thuật/QA.
 
 ## 6. Phiếu thực thi cho từng spec
 
