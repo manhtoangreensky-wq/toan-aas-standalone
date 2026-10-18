@@ -10316,7 +10316,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1100,
+      "occurrences": 1103,
       "provider": "PayOS"
     },
     {
@@ -10460,7 +10460,7 @@
         "studio/manifest.json",
         "studio/script.js"
       ],
-      "occurrences": 45,
+      "occurrences": 44,
       "provider": "Suno"
     },
     {
@@ -10534,7 +10534,7 @@
         "copyfast_notification_center.py",
         "copyfast_pages.py"
       ],
-      "occurrences": 2017,
+      "occurrences": 2020,
       "provider": "Telegram"
     }
   ],
@@ -18317,39 +18317,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 284,
-  "source_files_scanned": 284,
-  "source_fingerprint_sha256": "9b1abc97997b9dc2ace40cc84a2cb4644e51730ed6388213574f2de82cca0c58",
+  "source_files_discovered": 287,
+  "source_files_scanned": 287,
+  "source_fingerprint_sha256": "8657b573fcc72bf6265f60783b557a401fe1960368352acb9364fab33e169098",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 33876,
+      "line": 34247,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34192,
+      "line": 34563,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33540,
+      "line": 33911,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33789,
+      "line": 34160,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33161,
+      "line": 33532,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33453,
+      "line": 33824,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -18564,7 +18564,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35295,
+      "line": 35666,
       "path": "/features"
     },
     {
