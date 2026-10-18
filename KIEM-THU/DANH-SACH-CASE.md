@@ -216,6 +216,18 @@ Lệnh fixture: `node ../qa/r218-voice-inventory/verify.cjs --stt-probe`.
 Đây là kiểm tra presentation/control-level localhost; upload bytes, backend STT,
 transcript, delivery và LIVE vẫn mở.
 
+## MUSIC-PRESENTATION-20261019
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| MUI-01 | `/music/create` và `/music/song`; VI/EN/ZH × sáng/tối × 390/768/1440 | Nhạc nền và bài hát dùng cùng workspace; title/description/status/handoff sạch locale sau hydration |
+| MUI-02 | Hai route và field set | `lyrics`, `vocal_mode`, `song_length_mode` chỉ xuất hiện ở bài hát; nhạc nền không lộ field song-only |
+| MUI-03 | Thiếu capability runtime | Có thể soạn/lưu brief Web khi được phép; không hiện audio/player/giá/download/provider giả |
+| MUI-04 | Focus/responsive/network | Chọn gói giữ focus; page/console/request ngoài/write/unknown API/overflow đều `0` |
+
+Lệnh fixture: `node ../qa/r218-voice-inventory/music-probe.cjs`.
+Đã kiểm `36` cấu hình; generation, quote, player, delivery và LIVE vẫn mở.
+
 ## SUPPORT-CENTER-UI-CONTROL-20261018
 
 | ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |

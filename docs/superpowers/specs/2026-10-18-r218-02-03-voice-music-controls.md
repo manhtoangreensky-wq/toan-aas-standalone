@@ -88,6 +88,19 @@ Bot anchors: bot.py:159975,160106,160123,160166,160261,167782,169187,169226,
 
 ## Music
 
+### Phiếu P2 MU-00 — browser presentation và locale (19/10/2026)
+
+- `/music/create` là nhạc nền; `/music/song` là bài hát. Hai route dùng chung
+  workspace dọc nhưng các field `lyrics`, `vocal_mode`, `song_length_mode` chỉ
+  được render ở bài hát. Gói, brief và thời lượng dùng chung contract phù hợp.
+- Cả hai route phải đợi hydration locale trước khi nghiệm thu; title, description,
+  trạng thái guarded, handoff, output rỗng và form note đều lấy từ `musicProduct.*`.
+  Không dùng fallback tiếng Việt/Anh hardcode trong locale khác.
+- Verify: `qa/r218-voice-inventory/music-probe.cjs` `36` cấu hình VI/EN/ZH ×
+  sáng/tối × 390/768/1440 × hai route; page/console/request ngoài/write/
+  unknown API/overflow `0`. Không có audio/player/giá/download/provider giả.
+  Đây là browser presentation fixture; generation/quote/delivery/LIVE vẫn mở.
+
 | ID | Vị trí / control | Hiện và hoạt động | State / nghiệm thu |
 |---|---|---|---|
 | MU-01 | Tab Nhạc nền / Bài hát / Kho nhạc & SFX | Chung workspace, form theo mode | Bài hát giữ lời; nền không lẫn vocal fields |

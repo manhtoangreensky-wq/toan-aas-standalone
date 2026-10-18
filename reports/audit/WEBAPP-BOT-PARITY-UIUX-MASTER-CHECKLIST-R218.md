@@ -177,6 +177,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 ## P2 — Music R218-03 (MU-01..12)
 
 - [~] MU-00 control-level local đã khóa theo C0; các mục runtime và delivery dưới đây chưa đóng.
+- [~] MU-00 browser presentation — 19/10/2026: `/music/create` và `/music/song` đã kiểm bằng Edge localhost với 36 cấu hình (VI/EN/ZH × sáng/tối × 390/768/1440 × 2 workspace), giữ field bài hát riêng, không hiện audio/player/giá/download giả; page/console/request ngoài/write/unknown API/overflow đều `0`. Đây là fixture đọc-only, chưa phải generation/player/delivery/LIVE.
 - [ ] Nhạc nền/Bài hát/Kho nhạc-SFX/Chỉnh nhạc; capability thật.
 - [ ] Brief/style/lyrics/vocal nam/nữ/song ca/auto/3 tier, không mất draft.
 - [ ] Ba gợi ý chọn/đổi/sửa; quote/confirm/review rõ.

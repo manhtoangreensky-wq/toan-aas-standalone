@@ -30,6 +30,19 @@ Kiểm thử hành vi STT `18/18`, toàn bộ Node của workspace `660/660`. Fi
 projection đọc-only; chưa xác minh upload bytes, MIME/size/ownership, transcript,
 progress, delivery, backend thật hoặc LIVE.
 
+### Lát UI Music — 19/10/2026
+
+`/music/create` (nhạc nền) và `/music/song` (bài hát) hiện dùng workspace dọc
+chung nhưng tách đúng field: lời bài hát, kiểu giọng và dạng bài chỉ xuất hiện
+ở bài hát; nhạc nền không hiển thị các lựa chọn đó. Copy tiêu đề, trạng thái,
+handoff và cảnh báo được lấy theo catalogue VI/EN/ZH, không còn rò chuỗi của
+locale khác sau hydration.
+
+Đã đo bằng Edge/Playwright localhost: `36` cấu hình (VI/EN/ZH × sáng/tối ×
+390/768/1440 × 2 route); page/console/request ngoài/write/unknown API/overflow
+đều `0`. Không có audio, player, giá, download hoặc provider giả. Đây là fixture
+đọc-only; generation, quote, player, tệp, delivery và LIVE vẫn chưa xác minh.
+
 ### Bản nháp Voice VO-01 — 19/10/2026
 
 Bổ sung Voice VO-01 ngày 19/10: đổi chế độ giữ lời thoại và âm lượng trong

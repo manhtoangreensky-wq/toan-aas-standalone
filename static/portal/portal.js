@@ -9976,6 +9976,8 @@
     if (path === "/image/upscale") return mediaOperationText("upscale.page.title", fallback);
     if (path === "/image/transform") return mediaOperationText("transform.page.title", fallback);
     if (path === "/music/sfx") return mediaOperationText("sfx.page.title", fallback);
+    if (path === "/music/create") return musicProductText("background.title", fallback);
+    if (path === "/music/song") return musicProductText("song.title", fallback);
     if (["/image", "/tools/image"].includes(path)) return uiText("imageHub.page.title", fallback);
     if (path === "/tools/video") return uiText("mediaHub.video.page.title", fallback);
     if (path === "/music") return uiText("musicHub.page.title", fallback);
@@ -10076,6 +10078,8 @@
     if (path === "/image/upscale") return mediaOperationText("upscale.page.description", fallback);
     if (path === "/image/transform") return mediaOperationText("transform.page.description", fallback);
     if (path === "/music/sfx") return mediaOperationText("sfx.page.description", fallback);
+    if (path === "/music/create") return musicProductText("background.description", fallback);
+    if (path === "/music/song") return musicProductText("song.description", fallback);
     if (["/image", "/tools/image"].includes(path)) return uiText("imageHub.page.description", fallback);
     if (path === "/tools/video") return uiText("mediaHub.video.page.description", fallback);
     if (path === "/music") return uiText("musicHub.page.description", fallback);
@@ -11616,9 +11620,11 @@
     } else if (boundary === "web_planning") {
       boundaryNotice = `<div class="portal-notice portal-notice--boundary" data-ux-boundary="web_planning"><strong>Không gian Kế hoạch Web:</strong> Đây là công cụ lập kế hoạch, kịch bản và lưu trữ bản nháp trên Web. Không trừ Xu khi soạn thảo.</div>`;
     } else if (boundary === "runtime_generator") {
-      boundaryNotice = executionReady
-        ? `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>Bộ tạo AI:</strong> Bộ tạo này đã sẵn sàng kết nối thực thi runtime.</div>`
-        : `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>Bộ tạo AI (Chế độ An toàn):</strong> Tính năng này thuộc Bot AI và đang trong chế độ an toàn trên Web. Thông số của bạn được lưu thành Bản nháp Web an toàn mà không trừ Xu.</div>`;
+      boundaryNotice = musicTask
+        ? `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>${safeText(musicProductText("boundary.safeTitle", "Bộ tạo âm nhạc đang được bảo vệ"))}:</strong> ${safeText(musicProductText("boundary.safeBody", "Thông số được lưu thành bản nháp Web an toàn; không tạo âm thanh hoặc trừ Xu khi chưa có xác nhận."))}</div>`
+        : executionReady
+          ? `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>Bộ tạo AI:</strong> Bộ tạo này đã sẵn sàng kết nối thực thi runtime.</div>`
+          : `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>Bộ tạo AI (Chế độ An toàn):</strong> Tính năng này thuộc Bot AI và đang trong chế độ an toàn trên Web. Thông số của bạn được lưu thành Bản nháp Web an toàn mà không trừ Xu.</div>`;
     }
     if (imageTask) {
       const fields = page.fields.map((field) => ({
@@ -11695,10 +11701,11 @@
     const genericFields = musicTask ? musicProductFields(page.fields, route) : page.fields;
     const musicMode = musicTask ? musicProductRouteMode(route) : "";
     const musicStatus = musicTask ? `<p class="portal-form-note portal-music-product-state" data-music-product-state role="status" aria-live="polite">${safeText(musicProductText(musicMode === "song" ? "state.song" : "state.background", "Các lựa chọn chỉ nằm trong bản nháp; xử lý thật cần capability và báo giá từ máy chủ."))}</p>` : "";
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.layout === "auth" ? "Thông tin xác thực" : musicTask ? safeText(musicProductText(musicMode === "song" ? "form.songTitle" : "form.backgroundTitle", "Chuẩn bị yêu cầu âm nhạc")) : "Chuẩn bị yêu cầu"}</h2><p class="portal-card-subtitle">${enabled ? "Yêu cầu sẽ được chuyển tới lớp tích hợp thông qua custom event, không gọi trực tiếp từ UI." : (workspaceDraftEnabled ? "Bạn có thể soạn và lưu brief Web; estimate, job và integration ngoài chỉ bật theo capability riêng." : safeText(reason))}</p></div>${badge(flowStatus || stateFor(page, context))}</div>
+    const musicCopy = (key, fallback) => musicProductText(key, fallback);
+    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.layout === "auth" ? "Thông tin xác thực" : musicTask ? safeText(musicCopy(musicMode === "song" ? "form.songTitle" : "form.backgroundTitle", "Chuẩn bị yêu cầu âm nhạc")) : "Chuẩn bị yêu cầu"}</h2><p class="portal-card-subtitle">${musicTask ? safeText(enabled ? musicCopy("form.integrationReady", "") : (workspaceDraftEnabled ? musicCopy("form.draft", "") : reason)) : (enabled ? "Yêu cầu sẽ được chuyển tới lớp tích hợp thông qua custom event, không gọi trực tiếp từ UI." : (workspaceDraftEnabled ? "Bạn có thể soạn và lưu brief Web; estimate, job và integration ngoài chỉ bật theo capability riêng." : safeText(reason)))}</p></div>${badge(flowStatus || stateFor(page, context))}</div>
       ${boundaryNotice}
       <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${musicTask ? ` data-music-product-form="${safeText(musicMode)}" data-music-product-enabled="${formFieldsEnabled ? "true" : "false"}"` : ""}${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>${renderFields(genericFields, formFieldsEnabled, context, fieldValues)}${musicStatus}
-        <div class="portal-form-footer"><span class="portal-form-note">${enabled ? "Máy chủ vẫn phải xác minh phiên, CSRF, schema, ownership và idempotency." : (workspaceDraftEnabled ? "Bản nháp chỉ giữ brief scalar trên Web; không lưu file, upload ID, quote, job, Xu hoặc provider." : "Các trường bị khóa cho tới khi máy chủ cấp khả năng cần thiết.")}</span>
+        <div class="portal-form-footer"><span class="portal-form-note">${musicTask ? safeText(enabled ? musicCopy("form.processingNote", "") : (workspaceDraftEnabled ? musicCopy("form.draftNote", "") : musicCopy("form.guardedNote", ""))) : (enabled ? "Máy chủ vẫn phải xác minh phiên, CSRF, schema, ownership và idempotency." : (workspaceDraftEnabled ? "Bản nháp chỉ giữ brief scalar trên Web; không lưu file, upload ID, quote, job, Xu hoặc provider." : "Các trường bị khóa cho tới khi máy chủ cấp khả năng cần thiết."))}</span>
           ${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button>
         </div>
       </form>${flowControls}</section>`;
@@ -11880,6 +11887,7 @@
     if (["/image", "/tools/image", "/image/create", "/image/new"].includes(route)) return imageUiText("section", "HÌNH ẢNH");
     if (["/image/upscale", "/image/transform"].includes(route)) return mediaOperationText("section.image", "");
     if (route === "/music/sfx") return mediaOperationText("section.audio", "");
+    if (route === "/music/create" || route === "/music/song") return musicProductText("kicker", "KHÔNG GIAN TẠO ÂM NHẠC");
     if (route.startsWith("/voice/")) return voiceUiText("section", "GIỌNG NÓI");
     if (route === "/voice-studio" || route === "/voice-studio/new" || route.startsWith("/voice-studio/")) return voiceStudioText("intro.kicker", "");
     const source = page && typeof page.section === "string" ? page.section : "TOAN AAS";
@@ -31974,20 +31982,22 @@
     const connection = context.telegramConnection && typeof context.telegramConnection === "object" ? context.telegramConnection : {};
     const botUrl = safeTelegramLink(connection.bot_chat_url || "");
     const feature = featureKeyForPage(page, context) || "workflow";
+    const musicHandoff = ["/music/create", "/music/song"].includes(normalizePath(page.routePath || page.path));
+    const handoffText = (key, fallback) => musicHandoff ? musicProductText(`handoff.${key}`, fallback) : fallback;
     const handoff = FEATURE_BOT_HANDOFFS[feature] || null;
     const handoffCommand = handoff ? handoff.command : "/menu";
     const handoffLabel = handoff ? handoff.label : "Mở Bot menu";
-    const title = flowGuarded ? "Integration đang được bảo vệ" : "Engine Web chưa bật";
+    const title = flowGuarded ? handoffText("guardedTitle", "Integration đang được bảo vệ") : handoffText("engineTitle", "Engine Web chưa bật");
     const explanation = flowGuarded
-      ? "Yêu cầu này không được chuyển sang engine. Bạn vẫn có thể tiếp tục soạn và lưu brief trong Web Workspace."
-      : "Web App chưa có Engine Web được phê duyệt cho workflow này. Bạn vẫn có thể lưu brief, Project và Studio Document; không có job hay output nào được tạo.";
+      ? handoffText("guardedBody", "Yêu cầu này không được chuyển sang engine. Bạn vẫn có thể tiếp tục soạn và lưu brief trong Web Workspace.")
+      : handoffText("engineBody", "Web App chưa có Engine Web được phê duyệt cho workflow này. Bạn vẫn có thể lưu brief, Project và Studio Document; không có job hay output nào được tạo.");
     const handoffNote = handoff
-      ? `Nếu bạn đã dùng Bot, đây chỉ là companion tùy chọn mở <code>${safeText(handoffCommand)}</code>; không truyền prompt, upload ID, Telegram ID, quote, Xu, session hoặc token.`
-      : "Bot companion không có command khởi động riêng cho workflow này. Không truyền prompt, upload ID, Telegram ID, quote, Xu, session hoặc token.";
+      ? `${handoffText("companionPrefix", "Nếu bạn đã dùng Bot, đây chỉ là companion tùy chọn mở")} <code>${safeText(handoffCommand)}</code>; ${handoffText("companionSuffix", "không truyền prompt, upload ID, Telegram ID, quote, Xu, session hoặc token.")}`
+      : handoffText("companionMissing", "Bot companion không có command khởi động riêng cho workflow này. Không truyền prompt, upload ID, Telegram ID, quote, Xu, session hoặc token.");
     const companion = botUrl
       ? `<div class="portal-form-footer"><span class="portal-form-note"><strong>Bot companion (tùy chọn).</strong> ${handoffNote}</span><a class="portal-button portal-button--quiet" href="${safeText(botUrl)}" target="_blank" rel="noopener noreferrer">Mở Bot companion</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-bot-companion-command" data-copy-text="${safeText(handoffCommand)}">${safeText(handoffLabel)}</button></div>`
-      : `<p class="portal-form-note">Bot companion chưa được cấu hình. Điều này không ảnh hưởng Project, Studio Document hoặc bản nháp Web.</p>`;
-    return `<section class="portal-card portal-card-pad" data-feature-bot-handoff><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(title)}</h2><p class="portal-card-subtitle">${safeText(explanation)}</p></div>${badge("guarded")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Workflow Web</span><span class="portal-summary-value">${safeText(feature)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Dữ liệu gửi sang companion</span><span class="portal-summary-value">Không có</span></div></div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/projects">Mở Project Center</a></div>${companion}</section>`;
+      : `<p class="portal-form-note">${safeText(handoffText("companionMissing", "Bot companion chưa được cấu hình. Điều này không ảnh hưởng Project, Studio Document hoặc bản nháp Web."))}</p>`;
+    return `<section class="portal-card portal-card-pad" data-feature-bot-handoff><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(title)}</h2><p class="portal-card-subtitle">${safeText(explanation)}</p></div>${badge("guarded")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${safeText(handoffText("workflow", "Workflow Web"))}</span><span class="portal-summary-value">${safeText(feature)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(handoffText("sentData", "Dữ liệu gửi sang companion"))}</span><span class="portal-summary-value">${safeText(handoffText("none", "Không có"))}</span></div></div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/projects">${safeText(handoffText("project", "Mở Project Center"))}</a></div>${companion}</section>`;
   }
 
   const SUBTITLE_STUDIO_COMPANION_INTENTS = Object.freeze({
@@ -32242,7 +32252,7 @@
     const flow = context.featureFlows && context.featureFlows[route];
     const flowOutput = voiceTask && flow ? renderVoiceFlowState(flow, route) : flow
       ? `<div class="portal-state" data-state="${safeText(flow.status || "guarded")}"><span class="portal-state-icon" aria-hidden="true">○</span><div><h3>${safeText(flow.message || "Core Bridge đã cập nhật trạng thái.")}</h3><p>Trạng thái canonical: ${safeText(STATE_LABELS[flow.status] || flow.status || "guarded")}. ${flow.status === "completed" ? "Output chỉ được cấp qua asset đã xác minh." : "Bản nháp planning có thể hiển thị; output engine vẫn phải qua job và asset hợp lệ."}</p></div></div>${renderCanonicalFlow(flow, route)}${renderFeatureTracking(flow)}`
-      : renderEmpty(videoTask ? uiText("videoUi.output.empty", "Chưa có kết quả video") : voiceTask ? voiceUiText(route === "/voice/stt" ? "stt.output.empty" : "output.empty", "Chưa có kết quả") : "Chờ Engine Web hoặc integration tùy chọn", videoTask ? uiText("videoUi.output.waiting", "") : voiceTask ? voiceUiText(route === "/voice/stt" ? "stt.output.waiting" : "output.waiting", "") : "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○");
+      : renderEmpty(videoTask ? uiText("videoUi.output.empty", "Chưa có kết quả video") : voiceTask ? voiceUiText(route === "/voice/stt" ? "stt.output.empty" : "output.empty", "Chưa có kết quả") : musicTask ? musicProductText("output.empty", "Chưa có kết quả") : "Chờ Engine Web hoặc integration tùy chọn", videoTask ? uiText("videoUi.output.waiting", "") : voiceTask ? voiceUiText(route === "/voice/stt" ? "stt.output.waiting" : "output.waiting", "") : musicTask ? musicProductText("output.waiting", "") : "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○");
     const voiceVault = page.path === "/voice/saved" ? renderVoiceVault(context) : "";
     const interactiveWorkbench = videoTask || musicTask ? "" : renderInteractiveFeatureWorkbench(page, context);
     const musicGuidance = musicTask ? renderMusicProductGuidance(page, context) : "";
@@ -32254,10 +32264,12 @@
     const flowFirst = Boolean(voiceTask && flow && flow.phase !== "draft");
     const previousFormCollapsed = Boolean(voiceTask && flow && flow.phase === "confirm" && FEATURE_TRACKING_JOB_STATES.has(flow.status));
     const visibleForm = previousFormCollapsed ? `<details class="portal-voice-task-form" data-voice-task-form><summary>${safeText(voiceUiText("flow.form", "Biểu mẫu giọng đọc"))}</summary>${formContent}</details>` : formContent;
-    const outputSection = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${videoTask ? safeText(uiText("videoUi.output.title", "")) : voiceTask ? safeText(voiceUiText("output.title", "")) : "Output & trạng thái"}</h2>${videoTask || voiceTask ? "" : '<p class="portal-card-subtitle">Không tạo text, media, transcript hoặc file giả để thay thế engine thật.</p>'}</div>${voiceTask ? "" : badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section>`;
+    const outputTitle = videoTask ? safeText(uiText("videoUi.output.title", "")) : voiceTask ? safeText(voiceUiText("output.title", "")) : musicTask ? safeText(musicProductText("output.title", "Kết quả và trạng thái")) : "Output & trạng thái";
+    const outputSubtitle = videoTask || voiceTask ? "" : musicTask ? safeText(musicProductText("output.subtitle", "Không tạo âm thanh, trình phát, tệp hoặc báo giá giả khi máy chủ chưa xác nhận.")) : "Không tạo text, media, transcript hoặc file giả để thay thế engine thật.";
+    const outputSection = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${outputTitle}</h2>${outputSubtitle ? `<p class="portal-card-subtitle">${outputSubtitle}</p>` : ""}</div>${voiceTask ? "" : badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section>`;
     return `<article class="portal-page${videoTask ? " portal-feature-workspace--video-task" : voiceTask ? " portal-feature-workspace--voice-task" : ""}">${renderHero(page, context)}${voiceWorkspaceNav}${voiceTask ? "" : `<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>`}
       ${interactiveWorkbench}${musicGuidance}${flowFirst ? outputSection : ""}
-      <div class="portal-work-grid"><div>${visibleForm}${subtitleStudioCompanion}</div>${voiceTask ? "" : `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside>`}</div>
+      <div class="portal-work-grid"><div>${visibleForm}${subtitleStudioCompanion}</div>${voiceTask || musicTask ? "" : `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside>`}</div>
       ${voiceVault}${videoTask || voiceTask ? "" : renderFeatureBotHandoff(page, context, flow)}${flowFirst ? "" : outputSection}</article>`;
   }
 

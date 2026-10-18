@@ -66,6 +66,14 @@ current_wip:
     artifact: "../qa/r218-voice-inventory/stt-probe.json"
     artifact_sha256: 06f55bbdefb34a839be2f1387843cc46fd0841227d3a443b6f1756d0a36ebed4
     limitations: "Read-only fixture and synthetic capability projection; upload bytes, MIME/size/ownership, transcript, progress, delivery, backend and LIVE are not closed."
+  music_presentation:
+    state: "UI_VERIFIED_RUNTIME_OPEN"
+    tests: "Existing Music control contracts remain green; browser matrix 36 configurations"
+    browser_configurations: 36
+    matrix: "VI/EN/ZH x light/dark x 390/768/1440 x /music/create + /music/song"
+    checks: "Hydrated locale copy, background/song field isolation, guarded suggestions, no audio/player/price/download, focus and responsive overflow; page/console/external/write/unknown/overflow 0."
+    artifact: "../qa/r218-voice-inventory/music-probe.json"
+    limitations: "Read-only fixture; generation, quote, player, download, delivery, backend and LIVE are not closed."
   last_inventory_ci: "39158580199 SUCCESS on 5a124bb1d3a53698068c796c19be0bc906ff4fc1; Verify Web App and Authenticated WebApp QA both passed."
   voice_inventory_recovery: "2026-10-19: removed speculative Voice Vault management proxies from c6bc455; backend/auth/route-engine/payment source matches 063473a. Added loading/ready/failed/guarded UI, clear-before-await and bootstrap cleanup, independent readiness/profile reads, stale-response fence, GET retry, and full bounded 50-item display without a fake total/pager. Behavior tests 19/19; inventory tests together 34/34; full Node 638/638 after preserving six newer SubDub tests. Browser localhost uses production shell/renderer/integration.js with explicit read-only API fixtures; final result is linked from the PR report. Canonical management/preview/handoff stays open in T0."
   voice_inventory_browser_qa:
