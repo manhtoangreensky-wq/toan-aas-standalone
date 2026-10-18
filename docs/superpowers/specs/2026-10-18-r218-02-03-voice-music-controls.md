@@ -26,6 +26,25 @@ Bot/backend/provider/wallet/auth contracts là protected.
 Bot anchors: bot.py:159975,160106,160123,160166,160261,167782,169187,169226,
 169264,169455,170998,171866,174810..174915.
 
+### Phiếu P1 VO-03/04/05 — phản hồi biểu mẫu
+
+- Source: `static/portal/portal.js` — `renderFormCard`, `voiceFeedbackMetrics`,
+  `renderVoiceFormFeedback`, `syncVoiceFormFeedback`; copy `voiceUi.form.*` và
+  `voiceUi.field.speed.presetLabel`; CSS `[data-voice-muted-warning]` ở `portal-theme.css`.
+- Dưới thiết lập, trước CTA: số từ tách theo khoảng trắng và số ký tự Unicode. Đây
+  là phản hồi rà soát, không dùng để tính giá. Không sửa lời thoại khi đếm.
+- Âm lượng đúng 0: cảnh báo file không tiếng, vẫn giữ 0. Trống hoặc khác 0 không
+  hiển thị cảnh báo. Kéo thanh/nhập số cập nhật cảnh báo tại chỗ, giữ focus và draft.
+- Hydration cùng phiên giữ text và giá trị 0. Nhãn preset tốc độ theo locale cả trong
+  accessibility tree. Không đổi payload báo giá/xác nhận, capability hoặc bridge.
+- Verify: `node --test tests/voice-input-feedback.test.mjs` → 4/4; bộ inventory/flow
+  cùng test mới → 64/64. Browser renderer localhost có 18 cấu hình (3 locale × 2 theme
+  × 3 viewport), 2 route `/voice/tts` và `/voice/saved`/cấu hình; không có integration.js.
+  Không tính dữ liệu mẫu hay source renderer thành bằng chứng đăng nhập/backend/live.
+- VO-09/10/13 giữ mở: API `/voice/profiles` hiện không có search/pager/management
+  contract; các link mở công cụ không mang profile ID. Không tạo nút luôn disabled
+  để đánh dấu một control đã hoàn tất.
+
 ## Music
 
 | ID | Vị trí / control | Hiện và hoạt động | State / nghiệm thu |

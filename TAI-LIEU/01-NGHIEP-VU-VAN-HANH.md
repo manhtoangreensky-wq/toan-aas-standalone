@@ -1006,19 +1006,28 @@ server, dữ liệu thật, browser/AX, CI, delivery và LIVE chưa đóng. Trun
 bytes thô, không tạo ticket Bot, không gọi provider, không thay đổi ví/Xu, PayOS hoặc dữ liệu
 production.
 
-## R218 — Voice Vault dùng lại và quản lý có ranh giới — 18/10/2026
+## R218 — Voice: phản hồi biểu mẫu và điều hướng kho giọng — 18/10/2026
 
-`/voice/saved` hiện có một vùng thao tác dọc riêng cho việc dùng lại giọng: `2` liên kết
-owner-facing tới SubDub và Video. Mỗi hồ sơ mở rộng được phần “Quản lý hồ sơ” với `4` thao tác
-được hiển thị rõ nhưng khóa: đổi tên, đặt mặc định, xóa và nghe thử. Nhãn khóa giải thích rằng
-server phải cấp capability cho hồ sơ thuộc tài khoản và signed preview trước khi mở thao tác;
-Web không dựng audio, URL hoặc kết quả thay thế.
+`/voice/tts` và `/voice/saved` đã có số đếm từ/ký tự và cảnh báo khi âm lượng bằng 0.
+Nhập số hoặc kéo thanh cập nhật tại chỗ; hydration giữ nguyên lời thoại và giá trị 0.
+Cảnh báo dùng chữ tương phản trên nền xanh/ngọc ở cả hai theme. Nhãn accessibility của
+preset tốc độ đã được dịch đầy đủ; không còn “Reading speed gợi ý” ở bản tiếng Anh.
 
-Bằng chứng local của batch: Voice inventory/flow/selection/clone `65/65`, full Node `587/587`,
+Kho giọng có `2` liên kết mở SubDub và công cụ video. Các link không chuyển giọng đã chọn,
+nên đã sửa nhãn từ “Dùng trong…” sang “Mở…”. Dãy `4` nút quản lý luôn khóa đã được bỏ,
+thay bằng một thông báo ngắn. Rename/default/delete/preview và profile handoff vẫn chưa có
+contract máy chủ; chúng tiếp tục là yêu cầu chưa hoàn tất trong ledger.
+
+Bằng chứng local: Voice input/inventory/flow `64/64`, full Node `591/591`,
 `node --check` đạt cho `portal.js` và `portal-i18n.js`, `git diff --check` đạt; catalogue có
 đủ `3/3` locale `vi/en/zh`. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
 `PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`, `LIVE_PASS=NOT_TESTED`.
 
-Phần còn treo: search/page server của Voice Vault, handoff giữ profile ID và bản nháp, rename/
-default/delete/preview thật, quote/confirm/progress/output và browser/AX/CI/live. Các mục này
-tiếp tục ở P1 trong checklist R218; không được suy diễn từ vùng UI guarded thành runtime PASS.
+Browser renderer QA localhost: `18/18` cấu hình VI/EN/ZH × sáng/tối × 390/768/1440,
+hai route/cấu hình; lỗi trang/console, overflow, request ngoài localhost và mutation đều `0`.
+Tương phản cảnh báo: `11,25:1` ở theme sáng và `8,84:1` ở theme tối. Dữ liệu phiên là fixture,
+`integration.js` không được nạp: không phải kiểm thử API, DB, provider hoặc LIVE.
+
+Evidence local ở `../qa/r218-voice-input/result.json`, AX và PNG cùng thư mục. Phần còn treo:
+search/page server, profile-aware handoff, rename/default/delete/preview thật, quote/confirm/
+progress/output và browser QA đăng nhập thật/CI/live. Các mục này tiếp tục ở P1.

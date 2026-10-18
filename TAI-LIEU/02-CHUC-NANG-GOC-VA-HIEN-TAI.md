@@ -690,11 +690,12 @@ SP-02 (Guide/Chat Pro/feedback/community) vẫn là mục riêng chưa thực th
 
 | Chức năng gốc cần có | Trạng thái hiện tại trên WebApp | Bằng chứng / giới hạn |
 |---|---|---|
-| Dùng giọng đã lưu ở SubDub và Video | Đã có vùng dùng lại dọc với đúng `2` đường mở workflow: `/subdub?mode=dubbing_only` và `/video/product`. | `static/portal/portal.js`; `tests/voice-inventory-presentation.test.mjs`; chưa giữ profile ID hoặc draft qua server handoff. |
+| Dùng giọng đã lưu ở SubDub và Video | Chưa đạt: có `2` link mở công cụ, không chuyển profile/draft. Nhãn đã sửa thành “Mở…” để phản ánh đúng. | `tests/voice-inventory-presentation.test.mjs`; browser QA xác minh navigation, không tuyên bố reuse. |
 | Trạng thái, quyền, mặc định và nghe thử | Mỗi hồ sơ hiển thị trạng thái, quyền sử dụng, cờ mặc định, metadata nghe thử và thời điểm cập nhật. | Voice inventory test ở `3/3` locale; preview vẫn chỉ là metadata, chưa có signed link. |
-| Đổi tên, đặt mặc định, xóa, nghe thử | Bốn thao tác được đặt trong accordion “Quản lý hồ sơ” nhưng khóa có chủ đích khi capability chưa được server xác nhận. | `4` nút disabled/hồ sơ; không giả thành công, không gọi provider hoặc tạo tệp. |
-| Locale và bố cục | Fixed chrome dùng catalogue VI/EN/ZH; vùng thao tác và hồ sơ xếp dọc, giữ palette xanh dương/xanh ngọc. | `65/65` targeted Voice; `587/587` full Node; browser/AX/live chưa đo. |
+| Đổi tên, đặt mặc định, xóa, nghe thử | Chưa đạt: bỏ `4` nút luôn disabled gây rối; ghi thông báo ngắn và giữ yêu cầu mở trong checklist. | API hiện có `/voice/profiles` dạng list; không có management/search/pager contract để wire UI. |
+| Đếm nội dung và cảnh báo âm lượng 0 | Đã có đếm từ/ký tự Unicode, giữ 0 và cảnh báo không tiếng, đồng bộ range/number và hydration. | `tests/voice-input-feedback.test.mjs` 4/4; browser 18/18 cấu hình. |
+| Locale và bố cục | VI/EN/ZH, gồm aria-label preset tốc độ; palette xanh/ngọc, tương phản cảnh báo 11,25:1 sáng và 8,84:1 tối. | Voice input/inventory/flow `64/64`; full Node `591/591`; browser/AX với fixture, LIVE chưa đo. |
 
-Kết luận: UI đã chỉ rõ đủ các điểm dùng lại và thao tác quản lý thay vì giấu chức năng, nhưng
-runtime Voice Vault vẫn chưa đóng. Không đánh dấu parity Bot hoặc delivery cho tới khi có
-capability, signed preview, profile-aware handoff và bằng chứng browser/runtime riêng.
+Kết luận: đếm nội dung và cảnh báo 0% đã có bằng chứng renderer/interaction. Điều hướng
+không được coi là profile handoff; hướng dẫn clone không phải wizard chạy thật. Voice Vault
+và runtime parity vẫn mở theo ledger.

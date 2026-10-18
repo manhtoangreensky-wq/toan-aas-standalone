@@ -24,7 +24,7 @@ for(const locale of ['vi','en','zh']){
   context.uiText=(key,fallback,params)=>context.TOANAASI18n.t(key,params,locale)||fallback;
   vm.runInContext(source.slice(safeAt,safeEnd)+'\n'+section('  function badge(', '  function subtitleAssetOperationsReadBadge(')+'\n'+renderer+'\n'+
     section('  function renderFields(', '  function statusMessage(')+'\n'+
-    section('  function renderFormCard(', '  const ADMIN_TAB_GROUPS ='), context);
+    section('  function voiceFeedbackMetrics(', '  const ADMIN_TAB_GROUPS ='), context);
   const profiles=[{id:'qa-ready',display_name:'Giọng QA <script>',is_default:true,status:'read_only',tts_ready:true,preview_ready:true,consent_status:'confirmed',updated_at:'2026-10-07'}];
   test(`saved voice inventory shows the default marker and escapes names (${locale})`,()=>{
     const html=context.renderVoiceVault({voiceProfiles:profiles});
@@ -34,16 +34,13 @@ for(const locale of ['vi','en','zh']){
     assert.match(html,/<details\b/);
     assert.doesNotMatch(html,/<table\b/);
   });
-  test(`saved voice inventory exposes guarded reuse and management controls in one vertical surface (${locale})`,()=>{
+  test(`saved voice inventory distinguishes navigation from profile transfer and omits unavailable actions (${locale})`,()=>{
     const html=context.renderVoiceVault({voiceProfiles:profiles});
     assert.match(html,/data-voice-library-actions/);
-    assert.match(html,locale==='vi'?/Dùng trong SubDub/:locale==='en'?/Use in SubDub/:/用于 SubDub/);
-    assert.match(html,locale==='vi'?/Dùng trong Video/:locale==='en'?/Use in Video/:/用于 Video/);
-    for (const operation of ['rename','default','remove','preview']) {
-      assert.match(html,new RegExp(`<button[^>]*disabled[^>]*data-voice-operation="${operation}"`));
-    }
-    assert.match(html,/data-voice-profile-actions/);
-    assert.match(html,locale==='vi'?/đang chờ capability hồ sơ/:locale==='en'?/waiting for a server-confirmed profile capability/:/等待服务器确认档案能力/);
+    assert.match(html,locale==='vi'?/Mở SubDub/:locale==='en'?/Open SubDub/:/打开 SubDub/);
+    assert.match(html,locale==='vi'?/Mở công cụ video/:locale==='en'?/Open video tools/:/打开视频工具/);
+    assert.doesNotMatch(html,/data-voice-operation|data-voice-handoff|data-voice-profile-actions/);
+    assert.match(html,locale==='vi'?/chưa được chuyển/:locale==='en'?/not transferred/:/不会传递/);
     assert.doesNotMatch(html,/<audio\b|href="https?:\/\//i);
   });
   test(`saved voice inventory keeps the server status (${locale})`,()=>{

@@ -1,6 +1,6 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: WIP_P1_VOICE_VAULT_HANDOFF_GUARD_VERIFIED_LOCAL
+status: WIP_P1_VOICE_INPUT_FEEDBACK_BROWSER_VERIFIED
 date: 2026-10-18
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
@@ -13,10 +13,11 @@ head_sha_semantics: "Source-code candidate SHA; docs-only checkpoints may advanc
 delivery_head_semantics: "Push command succeeded for this commit; independent remote readback and CI are not verified in the current environment."
 branch_head_sha: b737aea961905b6c70a585e63f16c7a67cbfc18e
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
-last_push_verified_commit: fd9cc30a1aa68b865ca9ef76a224936000d1cca0
+last_push_verified_commit: 608d506ed86273b945b03b2738437e484ac302b6
 docs_checkpoint_sha: b737aea961905b6c70a585e63f16c7a67cbfc18e
 push_command_success_commit: b737aea961905b6c70a585e63f16c7a67cbfc18e
-remote_readback: "NOT_VERIFIED: git ls-remote failed with getaddrinfo() thread failed to start"
+remote_readback: "VERIFIED: gh headRefOid and git ls-remote agree on 608d506ed86273b945b03b2738437e484ac302b6 before this batch. Sandboxed DNS failed; approved elevated read succeeded."
+batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
   root: "D:/TOANAAS/bot telegram"
@@ -49,7 +50,7 @@ artifacts:
 current_wip:
   pr653: "Auth responsive/contrast; source CI xanh trước đó; delivery chưa đóng."
   pr654: "SubDub control patch đã bổ sung source có/chưa có phụ đề, source auto-detect, catalog ngôn ngữ đầy đủ, 7 vị trí subtitle và ba lane Auto canonical; upload/preview/runtime vẫn guarded. Image control patch đã push ở 3ecbdc8. Utilities/Content/Projects locale checkpoint đã commit ở 69ef97f. UT-01 translation workspace control-level đã khóa nguồn tự nhận diện, catalog đích 21 ngôn ngữ, tìm kiếm cục bộ, giữ bản gốc, hai chiều, vùng bắt đầu/dừng/kết quả/lịch sử guarded; UT-04 đã bổ sung 4 utility lane vào `/free-tools`; UT-06 đã khóa bảng Documents và 9 workflow bằng test control-level; UT-07 đã khóa Asset Vault control-level bằng test 5/5 và full Node 558/558; SP-01 Support đã khóa control-level bằng test 4/4 và full Node 566/566. Account Security tiếng Việt đã dọn generic English, test riêng 2/2, Account regression 11/11; AC-01 control-level đạt 6/6 và full Node mới nhất 574/574. Source/delivery SHA cũ đã push là 8ab66d4; runtime/provider/upload/preview/delivery/browser/live vẫn guarded. PR #654 còn OPEN; CI cho delivery HEAD mới cần xác nhận; chưa merge/deploy/live."
-  voice_controls: "VO-04/VO-05 đã khóa local: speed số 0.1–2.0 + 3 preset, volume slider 0–200 + number một payload. VO-02/VO-09/VO-10/VO-11/VO-13 đã có contract test `tests/voice-selection-clone-contract.test.mjs` đạt 5/5: picker nam/nữ, Voice Vault owner-scoped, clone upload/consent/tên tùy chọn tối đa 120 ký tự theo bridge, route handoff, output boundary và hướng dẫn guarded đủ 7 bước clone. Voice Vault `/voice/saved` nay có vùng dùng lại dọc tới SubDub/Video và hiển thị rõ bốn thao tác quản lý đang guarded (đổi tên/đặt mặc định/xóa/nghe thử), được khóa bằng `tests/voice-inventory-presentation.test.mjs` cho VI/EN/ZH. Bộ Voice liên quan đạt 65/65 trong lượt này; full Node đạt 587/587. Runtime/CI/provider/preview/output/browser/AX/live chưa chứng minh."
+  voice_controls: "VO-03/04/05: đếm từ/ký tự Unicode, giữ volume 0 và cảnh báo không tiếng, đồng bộ number/range, giữ sau hydration; aria-label preset sạch VI/EN/ZH. Input tests 4/4, input/inventory/flow 64/64, full Node 591/591. Browser renderer localhost: 18/18 cấu hình 3 locale x 2 theme x 3 viewport, lỗi/overflow/foreign request/mutation 0. Hai link kho giọng chỉ mở công cụ, không chuyển profile; đã sửa nhãn và bỏ bốn nút luôn disabled. Clone 7 bước chỉ là hướng dẫn. Voice Vault search/page/management, profile-aware handoff, quote/result, backend/CI/live vẫn mở."
   music_controls: "MU-01..MU-07 control-level đã khóa local: /music/create và /music/song dùng workspace dọc bốn bước, ba tier, ba ô phương án guarded, song-only lyrics/vocal/length, VI/EN/ZH cân bằng; không còn provider/player/giá/tệp giả. Guarded form không tự mở khi thiếu capability; runtime/CI/browser/live chưa chứng minh."
   image_controls: "IM-01 control-level đã khóa local trên /image/create: bốn mode dọc create, prompt từ ảnh, AI edit và manual edit; ba mode ngoài create gắn guarded, VI/EN/ZH cân bằng. Upload/source, AI runtime, before/after, quote/result/delivery và browser/live vẫn mở."
   utility_controls: "UT-04 control-level đã khóa local: `/free-tools` có 10 tab/panel, QR giữ flow cũ; Avatar, Tỷ giá & Xu, Thời tiết, Downloader có input, preview/result rỗng, quyền/nguồn và nút guarded. Targeted 5/5, full Node 549/549; external API, dữ liệu thật, delivery, browser/AX/live chưa chứng minh."
@@ -61,14 +62,27 @@ current_wip:
   historical_crosswalk: "Đã kiểm kê 127 plan + 180 spec + 44 audit + 14 state = 365 file; 307 plan/spec được phân lớp; 433 dòng checkbox cũ được truy vết. `unclassified source=0`; semantic review từng dòng trước R217 vẫn mở theo wave, không suy diễn PASS."
   ci_run: 39099917923
   ci_head: 69ef97ffdf7f0c86aa950439dd8c83d64989f53e
-  ci_status_at_last_observation: UNKNOWN_AFTER_VOICE_VAULT_PUSH
+  ci_status_at_last_observation: FAILURE_MIGRATION_FINGERPRINT_STALE_ON_608d506
   ci_scope: "HEAD 8baaa07/148be4f prior comparator đã xanh Verify Web App + Authenticated QA; candidate 28cc131 chứa UT-01 translation workspace và tài liệu, GitHub statusCheckRollup hiện rỗng, cần CI/browser run riêng."
-  ci_latest_run: 39101124230
-  ci_latest_status: "Candidate source UT-06 vẫn ở code head 37aa610f37c5a99b7ea8fae5eafb5285eb8c9c61; sau đó branch có docs-only checkpoint. UT-07 control-level đã verify local; PR #654 vẫn OPEN, statusCheckRollup=[] và mergeable=CONFLICTING tại lần đọc này; không tự xử lý conflict."
+  ci_latest_run: 39121319190
+  ci_latest_status: "PR #654 OPEN/MERGEABLE trên 608d506; Verify Web App FAILURE ở verify-web-evidence: recorded 04d25a4f9ba8 != current 81482c79f51c, files=288. Authenticated QA SKIPPED. Cần refresh bằng script chuẩn sau khi chốt eligible source."
   migration_evidence_refresh: "Verified for candidate 814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd lineage: source_files_scanned=287, source_fingerprint_sha256=29261d3f20b0cfaab478484b1a35135ba3f16d050ceaf0e36afdb5f4fbae488a."
-  local_targeted_tests: "Account Security Vietnamese copy 2/2; Account regression 11/11; AC-01 control-level 6/6; AC-02 billing control-level 5/5; Support 4/4; AutoPost 4/4; UT-07 Assets 5/5; UT-06 Documents 4/4; UT-04 Free Tools 5/5; UT-01 translation workspace 4/4; protected SubDub/redirect/locale 21/21; Voice selection/clone 5/5; Voice focused suite 65/65; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check"
-  local_full_tests: "587/587 tests/*.test.mjs"
-  python_tests: "BLOCKED: PowerShell không có lệnh python hoặc py trong workspace này; chưa thể chạy pytest."
+  local_targeted_tests: "Voice input 4/4; Voice input/inventory/flow 64/64; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
+  local_full_tests: "591/591 tests/*.test.mjs"
+  python_tests: "NOT_RUN: bundled Python located via workspace dependencies; pytest/FastAPI/Uvicorn are not installed in that runtime. No Python source changed in this batch."
+  voice_browser_qa:
+    environment: "Localhost production renderer/CSS with synthetic signed-state projection; no integration.js, backend or DB. Browser plugin absent; Playwright + Edge used."
+    cases: 18
+    routes: "/voice/tts and /voice/saved per configuration"
+    matrix: "vi/en/zh x light/dark x 390/768/1440"
+    result: PASS
+    page_console_errors: 0
+    overflow_px: 0
+    foreign_requests: 0
+    mutations: 0
+    warning_contrast_min: 8.84
+    result_path: "../qa/r218-voice-input/result.json"
+    result_sha256: 3831427f02b130887334c28de542395cab8d1a47c7156fb49219f9984ab4c56e
   browser_qa_artifact_sha256: e02fc36e875e12e910e327369f2d6bab625cae87ddb4ddc0fc57553fd1e7f0c9
 open_findings:
   - "Authenticated browser matrix đã xanh cho route/render trên HEAD; canonical voice handoff vẫn chờ server capability và execution evidence."
@@ -85,4 +99,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Tiếp tục P1 Voice theo ledger: Voice Vault search/page và handoff giữ profile/draft, clone text/quote/preview/save/back, quote/expiry/confirm/progress/player/download/report/retry và browser/AX; giữ provider, wallet, browser/live và deploy ngoài phạm vi cho tới khi có evidence/Owner gate."
+next_action: "Chốt/push source kèm refresh migration evidence; xác minh CI đúng HEAD. Sau đó tiếp tục P1: VO-01 workspace/mode giữ draft, VO-06/07 quote/confirm UI, VO-08 report và VO-12 STT. Voice Vault search/pager/management và profile handoff giữ gap rõ khi chưa có DTO. Motion vẫn cuối."

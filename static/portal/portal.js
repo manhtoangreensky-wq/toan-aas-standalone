@@ -11292,7 +11292,8 @@
             const selected = String(presetValue) === String(value) ? " selected" : "";
             return `<option value="${safeText(String(presetValue))}"${selected}>${safeText(String(localizedPresetLabel))}</option>`;
           }).join("");
-          const presetSelect = `<select class="portal-select portal-field-preset" data-portal-field-preset="${safeText(field.name)}" aria-label="${safeText(`${fieldLabel} gợi ý`)}"${disabled}>${presetOptions}</select>`;
+          const presetAriaLabel = field.presetAriaLabelKey ? uiText(field.presetAriaLabelKey, `${fieldLabel} gợi ý`) : `${fieldLabel} gợi ý`;
+          const presetSelect = `<select class="portal-select portal-field-preset" data-portal-field-preset="${safeText(field.name)}" aria-label="${safeText(presetAriaLabel)}"${disabled}>${presetOptions}</select>`;
           control = `<div class="portal-field-control-stack">${input}${presetSelect}</div>`;
         }
         // Password visibility is a local, tab-only affordance.  It never
@@ -11504,6 +11505,21 @@
     </section>`;
   }
 
+  function voiceFeedbackMetrics(values) {
+    const script = typeof values.script === "string" ? values.script : "";
+    const volume = String(values.volume_percent ?? "100").trim();
+    return {
+      words: (script.match(/\S+/gu) || []).length,
+      characters: Array.from(script).length,
+      muted: volume !== "" && Number(volume) === 0
+    };
+  }
+
+  function renderVoiceFormFeedback(values) {
+    const metrics = voiceFeedbackMetrics(values);
+    return `<div class="portal-voice-input-feedback" data-voice-input-feedback><p class="portal-form-note"><output data-voice-text-count aria-live="polite">${safeText(voiceUiText("form.textCount", "{words} từ · {characters} ký tự", metrics))}</output><br>${safeText(voiceUiText("form.textCountNote", "Số đếm hỗ trợ rà soát nội dung; báo giá được máy chủ xác nhận."))}</p><p class="portal-notice portal-notice--warning" data-voice-muted-warning role="status"${metrics.muted ? "" : " hidden"}>${safeText(voiceUiText("form.mutedWarning", "Âm lượng đang ở 0%. Kết quả sẽ không có tiếng; tăng âm lượng nếu bạn muốn nghe giọng đọc."))}</p></div>`;
+  }
+
   function renderFormCard(page, context) {
     const enabled = canAct(page, context);
     const reason = actionBlockReason(page, context);
@@ -11598,6 +11614,7 @@
         placeholderKey: field.placeholder ? `voiceUi.field.${field.name}.placeholder` : undefined,
         helpKey: field.help ? `voiceUi.field.${field.name}.help` : undefined,
         checkboxLabelKey: field.type === "checkbox" ? "voiceUi.field.consent.confirm" : undefined,
+        presetAriaLabelKey: field.presets ? "voiceUi.field.speed.presetLabel" : undefined,
         emptyLabel: field.emptyLabel || field.name === "default_voice_gender" ? voiceUiText(`field.${field.name}.empty`, field.emptyLabel || "") : undefined,
         disabled: field.disabled === true || (field.type === "file" && !enabled),
         optionsFrom: field.optionsFrom === "voiceProfiles" ? undefined : field.optionsFrom,
@@ -11620,6 +11637,7 @@
       return `${voiceCloneGuidance}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(voiceUiText("form.title", "Chuẩn bị giọng đọc"))}</h2><p class="portal-card-subtitle">${safeText(voiceUiText(localAuthoringOnly ? "form.draft" : enabled ? "form.ready" : "form.guarded", reason))}</p></div></div>
         <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>
           ${renderFields(orderedFields, formFieldsEnabled, context, fieldValues)}
+          ${route === "/voice/clone" ? "" : renderVoiceFormFeedback(fieldValues)}
           <div class="portal-form-footer"><span class="portal-form-note">${safeText(voiceUiText(localAuthoringOnly ? "form.draftNote" : "form.processingNote", ""))}</span>${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button></div>
         </form>${flowControls}</section>`;
     }
@@ -32134,9 +32152,9 @@
     const t = voiceUiText;
     const consent = (value) => t(`consent.${["granted", "confirmed", "required", "pending", "revoked"].includes(value) ? value : "unknown"}`, "");
     const statusLabel = (value) => t(`library.state.${["ready", "read_only", "guarded", "disabled", "queued", "processing", "completed", "failed", "error", "archived", "pending"].includes(value) ? value : "unknown"}`, "");
-    const libraryActions = `<section class="portal-card portal-card-pad portal-voice-library-actions" data-voice-library-actions aria-labelledby="voice-library-actions-title"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(t("library.actionsTitle", "Dùng lại và quản lý giọng"))}</span><h2 id="voice-library-actions-title" class="portal-card-title">${safeText(t("library.actionsTitle", "Dùng lại và quản lý giọng"))}</h2><p class="portal-card-subtitle">${safeText(t("library.actionsDescription", "Chọn workflow để dùng hồ sơ đã sẵn sàng."))}</p></div>${badge("guarded")}</div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" data-voice-handoff="subdub" href="/subdub?mode=dubbing_only">${safeText(t("library.openSubDub", "Dùng trong SubDub"))} <span aria-hidden="true">→</span></a><a class="portal-button portal-button--quiet" data-voice-handoff="video" href="/video/product">${safeText(t("library.openVideo", "Dùng trong Video"))} <span aria-hidden="true">→</span></a></div></section>`;
+    const libraryActions = `<div class="portal-voice-library-actions" data-voice-library-actions><p class="portal-form-note">${safeText(t("library.actionsDescription", "Mở công cụ để xem các lựa chọn giọng. Giọng đang xem chưa được chuyển sang công cụ khác."))}</p><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/subdub?mode=dubbing_only">${safeText(t("library.openSubDub", "Mở SubDub"))} <span aria-hidden="true">→</span></a><a class="portal-button portal-button--quiet" href="/video/product">${safeText(t("library.openVideo", "Mở công cụ video"))} <span aria-hidden="true">→</span></a></div></div>`;
     const list = profiles.length
-      ? `<div class="portal-voice-inventory-list">${profiles.map((profile) => `<details class="portal-voice-inventory-card"><summary><strong>${safeText(profile.display_name || t("library.unnamed", "Giọng chưa đặt tên"))}${profile.is_default ? ` · ${safeText(t("library.default", "Mặc định"))}` : ""}</strong><span>${safeText(t(profile.tts_ready ? "library.ready" : "library.guarded", ""))}</span></summary><dl><div><dt>${safeText(t("library.status", "Trạng thái"))}</dt><dd><span data-status="${safeText(profile.status || "guarded")}">${safeText(statusLabel(String(profile.status || "guarded")))}</span></dd></div><div><dt>${safeText(t("library.consent", "Quyền sử dụng"))}</dt><dd>${safeText(consent(String(profile.consent_status || "")))}</dd></div><div><dt>${safeText(t("library.preview", "Nghe thử"))}</dt><dd>${safeText(t(profile.preview_ready ? "library.previewMetadata" : "library.noPreview", ""))}</dd></div><div><dt>${safeText(t("library.updated", "Cập nhật"))}</dt><dd>${safeText(profile.updated_at || profile.created_at || "—")}</dd></div></dl><details class="portal-voice-profile-actions" data-voice-profile-actions><summary>${safeText(t("library.manageTitle", "Quản lý hồ sơ"))}</summary><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" disabled aria-disabled="true" data-voice-operation="rename">${safeText(t("library.rename", "Đổi tên"))}</button><button class="portal-button portal-button--quiet" type="button" disabled aria-disabled="true" data-voice-operation="default">${safeText(t("library.setDefault", "Đặt mặc định"))}</button><button class="portal-button portal-button--quiet" type="button" disabled aria-disabled="true" data-voice-operation="remove">${safeText(t("library.remove", "Xóa hồ sơ"))}</button><button class="portal-button portal-button--quiet" type="button" disabled aria-disabled="true" data-voice-operation="preview">${safeText(t("library.previewAction", "Nghe thử"))}</button></div><p class="portal-form-note" role="status">${safeText(t("library.manageGuarded", "Các thao tác này đang chờ capability hồ sơ và liên kết nghe thử được máy chủ xác nhận."))}</p></details></details>`).join("")}</div>`
+      ? `<div class="portal-voice-inventory-list">${profiles.map((profile) => `<details class="portal-voice-inventory-card"><summary><strong>${safeText(profile.display_name || t("library.unnamed", "Giọng chưa đặt tên"))}${profile.is_default ? ` · ${safeText(t("library.default", "Mặc định"))}` : ""}</strong><span>${safeText(t(profile.tts_ready ? "library.ready" : "library.guarded", ""))}</span></summary><dl><div><dt>${safeText(t("library.status", "Trạng thái"))}</dt><dd><span data-status="${safeText(profile.status || "guarded")}">${safeText(statusLabel(String(profile.status || "guarded")))}</span></dd></div><div><dt>${safeText(t("library.consent", "Quyền sử dụng"))}</dt><dd>${safeText(consent(String(profile.consent_status || "")))}</dd></div><div><dt>${safeText(t("library.preview", "Nghe thử"))}</dt><dd>${safeText(t(profile.preview_ready ? "library.previewMetadata" : "library.noPreview", ""))}</dd></div><div><dt>${safeText(t("library.updated", "Cập nhật"))}</dt><dd>${safeText(profile.updated_at || profile.created_at || "—")}</dd></div></dl><p class="portal-form-note">${safeText(t("library.manageGuarded", "Chưa thể đổi tên, đặt mặc định, xóa hoặc nghe thử giọng trong trang này."))}</p></details>`).join("")}</div>`
       : renderEmpty(t("library.empty", "Chưa có giọng đã lưu"), t("library.emptyHelp", ""), ICONS.voice);
     return `<section class="portal-card portal-card-pad portal-voice-inventory"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("library.title", "Giọng của bạn"))}</h2><p class="portal-card-subtitle">${safeText(t("library.description", ""))}</p></div></div>${libraryActions}${list}</section>`;
   }
@@ -37181,6 +37199,19 @@
     if (presetName || rangeName || input.type === "number") rememberTransientFormDraft(form);
   }
 
+  function syncVoiceFormFeedback(form) {
+    if (!form) return;
+    const feedback = form.querySelector("[data-voice-input-feedback]");
+    if (!feedback) return;
+    const script = form.querySelector('[name="script"]');
+    const volume = form.querySelector('[name="volume_percent"]');
+    const metrics = voiceFeedbackMetrics({ script: script ? script.value : "", volume_percent: volume ? volume.value : "100" });
+    const count = feedback.querySelector("[data-voice-text-count]");
+    const warning = feedback.querySelector("[data-voice-muted-warning]");
+    if (count) count.textContent = voiceUiText("form.textCount", "{words} từ · {characters} ký tự", metrics);
+    if (warning) warning.hidden = !metrics.muted;
+  }
+
   function synchronizeMusicProductForm(form) {
     if (!form || !form.hasAttribute("data-music-product-form")) return;
     const routeMode = form.getAttribute("data-music-product-form") === "song" ? "song" : "background";
@@ -39912,6 +39943,7 @@
     });
     document.addEventListener("input", (event) => {
       syncPortalFieldControl(event.target);
+      syncVoiceFormFeedback(event.target.closest && event.target.closest("[data-portal-form]"));
       synchronizeMusicProductForm(event.target.closest && event.target.closest("[data-music-product-form]"));
       if (event.target.id === "free-tools-text-input") {
         updateFreeToolsTextStats(event.target.value);
@@ -39974,6 +40006,7 @@
     });
     document.addEventListener("change", (event) => {
       syncPortalFieldControl(event.target);
+      syncVoiceFormFeedback(event.target.closest && event.target.closest("[data-portal-form]"));
       synchronizeMusicProductForm(event.target.closest && event.target.closest("[data-music-product-form]"));
       if (event.target.matches && event.target.matches("[data-vietqr-input]")) {
         autoUpdateVietQrPreview(false);

@@ -21490,6 +21490,7 @@ html[data-portal-theme="dark"] .portal-feature-workspace--video-task form .porta
 :root :is(.portal-voice-hub, .portal-feature-workspace--voice-task, .portal-voice-preview) .portal-eyebrow { color: var(--portal-context); }
 :root .portal-feature-workspace--voice-task .portal-field > label { color: var(--portal-ink); }
 :root .portal-feature-workspace--voice-task :is(.portal-field-help, .portal-form-note) { color: var(--portal-muted); }
+:root .portal-feature-workspace--voice-task [data-voice-muted-warning] { color: var(--portal-ink) !important; background: var(--portal-surface-soft) !important; border-left: 3px solid var(--portal-warning); font-size: 14px; font-weight: 600; line-height: 1.6; }
 .portal-feature-workspace--voice-task :is(.portal-input, .portal-select, .portal-textarea):not(:disabled):not(:focus) { border-color: color-mix(in srgb, var(--portal-muted) 75%, var(--portal-surface-light)) !important; }
 .portal-feature-workspace--voice-task :is(input, textarea)::placeholder { color: var(--portal-muted); opacity: 1; }
 :root .portal-feature-workspace--voice-task .portal-badge[data-status="guarded"] { color: var(--portal-ink); font-size: 12px; line-height: 1.35; text-transform: none; letter-spacing: 0; }

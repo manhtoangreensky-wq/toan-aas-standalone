@@ -1,6 +1,6 @@
 # R218 — Kế hoạch UI/UX toàn bộ sản phẩm WebApp theo Bot
 
-Ngày 2026-10-18. Trạng thái WIP_P1_VOICE_VAULT_HANDOFF_GUARD_VERIFIED_LOCAL; chưa mở wave runtime.
+Ngày 2026-10-18. Trạng thái WIP_P1_VOICE_INPUT_FEEDBACK_BROWSER_VERIFIED; chưa mở wave runtime.
 Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong kế hoạch.
 
 ## Bộ tài liệu
