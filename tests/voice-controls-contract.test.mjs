@@ -80,4 +80,3 @@ test('Voice speed and volume controls use the reviewed locale catalogue and no l
   assert.match(voiceFieldSource, /labelKey: "option\.speed\.1\.2"/);
   assert.doesNotMatch(voiceFieldSource, /options: \["1\.0", "0\.85", "1\.2", "normal", "slow", "fast"\]/);
 });
-
