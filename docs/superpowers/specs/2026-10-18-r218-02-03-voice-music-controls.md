@@ -19,7 +19,7 @@ Bot/backend/provider/wallet/auth contracts là protected.
 | VO-08 | Vùng kết quả | Player/tải/version/report, tạo lại/dùng Video/SubDub | File readiness thật; preview/full phân biệt |
 | VO-09 | Kho: list/search/filter/page | Tên/trạng thái/default/preview/reuse | Chưa ready có retry hợp lệ; no stale account data |
 | VO-10 | Menu hàng giọng | Đổi tên/đặt default/tải/xóa/dùng sản phẩm | Xóa confirm riêng; quyền chính xác; report thật |
-| VO-11 | CTA Thêm giọng mở wizard/drawer | Consent → mẫu → xác nhận text → tên 2–80 → quote → preview → lưu | Back từng bước giữ data, không giả biometric verification |
+| VO-11 | CTA Thêm giọng mở wizard/drawer | Consent → mẫu → xác nhận text → tên tùy chọn, tối đa 120 ký tự → quote → preview → lưu | Back từng bước giữ data, không giả biometric verification; giữ đúng giới hạn bridge hiện hành |
 | VO-12 | STT upload/source panel | File đúng MIME/size, tiến trình/text/copy/export | Capability unavailable có lý do và hướng xử lý |
 | VO-13 | Chọn giọng ở SubDub/Video | Cùng profile ID/owner, returnTo allowlisted | Quay về đúng sản phẩm với draft còn nguyên |
 

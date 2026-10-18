@@ -126,7 +126,8 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   vẫn chờ contract/runtime evidence.
 - [ ] Quote/expiry/confirm/progress/player/download/report/retry đúng state.
 - [ ] Kho giọng search/page/status/default/preview/rename/delete/reuse.
-- [ ] Clone consent/upload/xác nhận text/name 2–80/quote/preview/save/back.
+- [~] VO-02/VO-09/VO-10/VO-13: picker nam/nữ, Voice Vault owner-scoped và route handoff đã được khóa ở source bằng `tests/voice-selection-clone-contract.test.mjs` (4/4); quote, preview, rename/delete, runtime và browser/AX vẫn mở.
+- [~] VO-11: clone consent/upload/tên tùy chọn tối đa 120 ký tự đã khớp bridge hiện hành và được khóa ở source bằng cùng test (4/4); xác nhận text, quote, preview, save/back và runtime vẫn mở.
 - [ ] Voice Vault dùng chung với SubDub/Video, owner scope/return draft.
 - [ ] Renderer/interaction + browser/AX/screenshots đạt, không provider calls.
 
