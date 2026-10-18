@@ -6,8 +6,8 @@ scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cu�
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 28cc131b40d1bc52011bb29241dc75290c475b4c
-delivery_head_sha: 4cec486acfdfba36726cfb66409eddea3c39b1ec
+head_sha: 5150932d124f5df245077ee5516927543412b5e5
+delivery_head_sha: 5150932d124f5df245077ee5516927543412b5e5
 delivery_status: PUSHED_GITHUB_AWAITING_CI
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
@@ -38,10 +38,10 @@ current_wip:
   utility_controls: "UT-04 control-level đã khóa local: `/free-tools` có 10 tab/panel, QR giữ flow cũ; Avatar, Tỷ giá & Xu, Thời tiết, Downloader có input, preview/result rỗng, quyền/nguồn và nút guarded. Targeted 5/5, full Node 549/549; external API, dữ liệu thật, delivery, browser/AX/live chưa chứng minh."
   ci_run: 39099917923
   ci_head: 69ef97ffdf7f0c86aa950439dd8c83d64989f53e
-  ci_status_at_last_observation: UNKNOWN_AFTER_UT01_PUSH
+  ci_status_at_last_observation: UNKNOWN_AFTER_UT04_PUSH
   ci_scope: "HEAD 8baaa07/148be4f prior comparator đã xanh Verify Web App + Authenticated QA; candidate 28cc131 chứa UT-01 translation workspace và tài liệu, GitHub statusCheckRollup hiện rỗng, cần CI/browser run riêng."
   ci_latest_run: 39101124230
-  ci_latest_status: "Candidate UT-01 đã push lên GitHub tại delivery head 4cec486acfdfba36726cfb66409eddea3c39b1ec; PR #654 vẫn OPEN, statusCheckRollup=[] và mergeable=CONFLICTING tại lần đọc này; không tự xử lý conflict."
+  ci_latest_status: "Candidate UT-04 đã push lên GitHub tại delivery head 5150932d124f5df245077ee5516927543412b5e5; PR #654 vẫn OPEN, statusCheckRollup=[] và mergeable=CONFLICTING tại lần đọc này; không tự xử lý conflict."
   migration_evidence_refresh: "Verified for candidate 814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd lineage: source_files_scanned=287, source_fingerprint_sha256=29261d3f20b0cfaab478484b1a35135ba3f16d050ceaf0e36afdb5f4fbae488a."
   local_targeted_tests: "UT-04 Free Tools 5/5; UT-01 translation workspace 4/4; protected SubDub/redirect/locale 21/21; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check"
   local_full_tests: "549/549 tests/*.test.mjs"
