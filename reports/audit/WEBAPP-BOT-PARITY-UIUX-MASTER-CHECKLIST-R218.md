@@ -187,6 +187,10 @@ nhóm hoặc nhầm một thẻ điều hướng là một tính năng đã ch�
 - [~] AP-05 AutoPost Hub đã có lane Affiliate/import/list/filter/ads/metrics ở trạng thái guarded; không hiển thị số liệu suy đoán.
 - [ ] AC-01 Profile/locale/session/security và stale data cleanup; control ledger theo
   `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md` (AC-01A..E).
+- [x] AC-01 locale subgate: catalogue Account Security tiếng Việt đã loại bỏ generic
+  English, giữ nguyên tên riêng/acronym và placeholder; test riêng `2/2`, Account
+  regression `11/11`, full Node `568/568`. Đây chỉ là source-locale evidence;
+  browser/AX, session runtime và control-level vẫn chưa đóng AC-01.
 - [ ] AC-02 Packages/pricing/topup/history/detail/pending, không wallet mutation;
   control ledger theo `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md`
   (AC-02A..D). QR chỉ sau method+amount+readiness; approval/credit giữ T0.
