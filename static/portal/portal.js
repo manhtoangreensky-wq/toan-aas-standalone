@@ -13362,7 +13362,7 @@
           <p>${c("intro.body", "Tất cả công cụ hoạt động ngay trong trình duyệt với tốc độ cao, không gọi API tính phí, không lưu dữ liệu cá nhân và ưu tiên riêng tư.")}</p>
         </div>
         <dl>
-          <div><dt>6</dt><dd>${c("intro.stat.tools", "Công cụ tích hợp")}</dd></div>
+          <div><dt>10</dt><dd>${c("intro.stat.tools", "Công cụ tích hợp")}</dd></div>
           <div><dt>0đ</dt><dd>${c("intro.stat.cost", "Chi phí / Xu")}</dd></div>
           <div><dt>${c("intro.stat.speedValue", "Tức thì")}</dt><dd>${c("intro.stat.speed", "Xử lý tại trình duyệt")}</dd></div>
         </dl>
@@ -13372,6 +13372,10 @@
         <button id="free-tools-tab-subtitle" class="portal-free-tools-tab is-active" role="tab" type="button" data-free-tool-tab="subtitle" aria-selected="true" aria-pressed="true" aria-controls="free-tools-panel-subtitle" tabindex="0">✂️ ${c("nav.subtitle", "Làm sạch phụ đề (SRT/VTT)")}</button>
         <button id="free-tools-tab-youtube" class="portal-free-tools-tab" role="tab" type="button" data-free-tool-tab="youtube" aria-selected="false" aria-pressed="false" aria-controls="free-tools-panel-youtube" tabindex="-1">📺 ${c("nav.youtube", "YouTube · Trích xuất ảnh thu nhỏ")}</button>
         <button id="free-tools-tab-vietqr" class="portal-free-tools-tab" role="tab" type="button" data-free-tool-tab="vietqr" aria-selected="false" aria-pressed="false" aria-controls="free-tools-panel-vietqr" tabindex="-1">⚡ ${c("nav.vietqr", "Tạo mã VietQR")}</button>
+        <button id="free-tools-tab-avatar" class="portal-free-tools-tab" role="tab" type="button" data-free-tool-tab="avatar" aria-selected="false" aria-pressed="false" aria-controls="free-tools-panel-avatar" tabindex="-1">🧑‍🎨 ${c("nav.avatar", "Ảnh đại diện AI")}</button>
+        <button id="free-tools-tab-rate" class="portal-free-tools-tab" role="tab" type="button" data-free-tool-tab="rate" aria-selected="false" aria-pressed="false" aria-controls="free-tools-panel-rate" tabindex="-1">💱 ${c("nav.rate", "Tỷ giá & quy đổi Xu")}</button>
+        <button id="free-tools-tab-weather" class="portal-free-tools-tab" role="tab" type="button" data-free-tool-tab="weather" aria-selected="false" aria-pressed="false" aria-controls="free-tools-panel-weather" tabindex="-1">🌤️ ${c("nav.weather", "Thời tiết")}</button>
+        <button id="free-tools-tab-downloader" class="portal-free-tools-tab" role="tab" type="button" data-free-tool-tab="downloader" aria-selected="false" aria-pressed="false" aria-controls="free-tools-panel-downloader" tabindex="-1">⬇️ ${c("nav.downloader", "Tải video & media")}</button>
         <button id="free-tools-tab-json" class="portal-free-tools-tab" role="tab" type="button" data-free-tool-tab="json" aria-selected="false" aria-pressed="false" aria-controls="free-tools-panel-json" tabindex="-1">📝 ${c("nav.json", "Định dạng và kiểm tra JSON")}</button>
         <button id="free-tools-tab-text" class="portal-free-tools-tab" role="tab" type="button" data-free-tool-tab="text" aria-selected="false" aria-pressed="false" aria-controls="free-tools-panel-text" tabindex="-1">📊 ${c("nav.text", "Xử lý và phân tích văn bản")}</button>
         <button id="free-tools-tab-codec" class="portal-free-tools-tab" role="tab" type="button" data-free-tool-tab="codec" aria-selected="false" aria-pressed="false" aria-controls="free-tools-panel-codec" tabindex="-1">🔐 ${c("nav.codec", "Mã hóa Base64 và URL")}</button>
@@ -13544,7 +13548,110 @@
         </div>
       </section>
 
-      <!-- Panel 4: JSON Formatter & Validator -->
+      <!-- Panel 4: AI Avatar -->
+      <section id="free-tools-panel-avatar" class="portal-card portal-card-pad portal-free-tool-panel" role="tabpanel" aria-labelledby="free-tools-tab-avatar" aria-hidden="true" hidden data-free-tool-panel="avatar">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">${c("avatar.kicker", "Ảnh đại diện")}</span>
+            <h2 class="portal-card-title">${c("avatar.title", "Chuẩn bị ảnh đại diện AI")}</h2>
+            <p class="portal-card-subtitle">${c("avatar.body", "Chọn phong cách và mô tả ngắn để chuẩn bị một yêu cầu ảnh đại diện rõ ràng. Kết quả chỉ xuất hiện khi máy chủ cấp quyền xử lý.")}</p>
+          </div>
+          ${badge("guarded")}
+        </div>
+        <div class="portal-free-tool-layout">
+          <div class="portal-free-tool-col">
+            <div class="portal-field" style="margin-bottom: 12px;">
+              <label class="portal-label" for="free-tools-avatar-style">${c("avatar.field.style", "Phong cách")}</label>
+              <select id="free-tools-avatar-style" class="portal-select">
+                <option value="realistic">${c("avatar.option.realistic", "Chân dung tự nhiên")}</option>
+                <option value="illustration">${c("avatar.option.illustration", "Minh họa sáng tạo")}</option>
+                <option value="business">${c("avatar.option.business", "Chuyên nghiệp công việc")}</option>
+                <option value="creator">${c("avatar.option.creator", "Nhà sáng tạo nội dung")}</option>
+              </select>
+            </div>
+            <div class="portal-field" style="margin-bottom: 12px;">
+              <label class="portal-label" for="free-tools-avatar-brief">${c("avatar.field.brief", "Mô tả ảnh đại diện")}</label>
+              <textarea id="free-tools-avatar-brief" class="portal-textarea" maxlength="500" placeholder="${c("avatar.field.briefPlaceholder", "Ví dụ: gương mặt thân thiện, nền xanh nhạt, ánh sáng mềm…")}"></textarea>
+            </div>
+            <label class="portal-checkbox-label" style="font-size: 12px; display:flex; align-items:center; gap:8px; margin-bottom: 14px;">
+              <input type="checkbox" id="free-tools-avatar-rights" /> ${c("avatar.field.rights", "Tôi có quyền sử dụng ảnh và mô tả này")}
+            </label>
+            <button class="portal-button portal-button--primary" type="button" data-free-tool-action="prepare-avatar" disabled>${c("avatar.action.prepare", "Chuẩn bị ảnh đại diện")}</button>
+          </div>
+          <div class="portal-free-tool-col">
+            <section class="portal-free-tool-result" aria-live="polite" data-free-tool-result="avatar">
+              <div class="portal-card-header"><div><span class="portal-section-kicker">${c("avatar.preview.kicker", "Xem trước")}</span><h3 class="portal-card-title">${c("avatar.preview.title", "Ảnh đại diện của bạn")}</h3></div><span class="portal-status-badge" data-free-tool-state="avatar">${c("avatar.preview.state", "Chưa có kết quả")}</span></div>
+              <div class="portal-free-tool-empty"><strong>${c("avatar.preview.empty", "Chưa có ảnh để xem")}</strong><p>${c("avatar.preview.body", "Màn hình này chỉ giữ lựa chọn cục bộ; không tự tạo ảnh hoặc gọi nhà cung cấp.")}</p></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 5: Exchange rate -->
+      <section id="free-tools-panel-rate" class="portal-card portal-card-pad portal-free-tool-panel" role="tabpanel" aria-labelledby="free-tools-tab-rate" aria-hidden="true" hidden data-free-tool-panel="rate">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">${c("rate.kicker", "Tỷ giá và quy đổi")}</span>
+            <h2 class="portal-card-title">${c("rate.title", "Quy đổi USD, VNĐ và Xu")}</h2>
+            <p class="portal-card-subtitle">${c("rate.body", "Nhập số tiền cần tham khảo. Tỷ giá chỉ được hiển thị khi nguồn dữ liệu có dấu thời gian và được máy chủ xác nhận.")}</p>
+          </div>
+          ${badge("guarded")}
+        </div>
+        <div class="portal-free-tool-layout">
+          <div class="portal-free-tool-col">
+            <div class="portal-field" style="margin-bottom: 12px;"><label class="portal-label" for="free-tools-rate-usd">${c("rate.field.usd", "Số tiền USD")}</label><input id="free-tools-rate-usd" class="portal-input" type="number" min="0" step="0.01" inputmode="decimal" placeholder="${c("rate.field.usdPlaceholder", "Ví dụ: 10")}" /></div>
+            <div class="portal-field" style="margin-bottom: 12px;"><label class="portal-label" for="free-tools-rate-vnd">${c("rate.field.vnd", "Số tiền VNĐ")}</label><input id="free-tools-rate-vnd" class="portal-input" type="number" min="0" step="1000" inputmode="numeric" placeholder="${c("rate.field.vndPlaceholder", "Ví dụ: 250000")}" /></div>
+            <div class="portal-field" style="margin-bottom: 12px;"><label class="portal-label" for="free-tools-rate-xu">${c("rate.field.xu", "Số Xu tham khảo")}</label><input id="free-tools-rate-xu" class="portal-input" type="number" min="0" step="1" inputmode="numeric" placeholder="${c("rate.field.xuPlaceholder", "Nhập số Xu nếu cần")}" /></div>
+            <div class="portal-inline-actions"><button class="portal-button portal-button--primary" type="button" data-free-tool-action="refresh-rate" disabled>${c("rate.action.refresh", "Cập nhật tỷ giá")}</button><button class="portal-button portal-button--quiet" type="button" data-free-tool-action="clear-rate">${c("rate.action.clear", "Xóa lựa chọn")}</button></div>
+          </div>
+          <div class="portal-free-tool-col">
+            <section class="portal-free-tool-result" aria-live="polite" data-free-tool-result="rate"><div class="portal-card-header"><div><span class="portal-section-kicker">${c("rate.preview.kicker", "Nguồn tỷ giá")}</span><h3 class="portal-card-title">${c("rate.preview.title", "Chưa có tỷ giá được xác nhận")}</h3></div><span class="portal-status-badge" data-free-tool-state="rate">${c("rate.preview.state", "Chưa đồng bộ")}</span></div><dl class="portal-free-tool-result-list"><div><dt>${c("rate.preview.source", "Nguồn")}</dt><dd>—</dd></div><div><dt>${c("rate.preview.updated", "Cập nhật lúc")}</dt><dd>—</dd></div><div><dt>${c("rate.preview.stale", "Độ mới")}</dt><dd>${c("rate.preview.unknown", "Chưa xác định")}</dd></div></dl><p class="portal-free-tool-note">${c("rate.preview.body", "Không tự lấy tỷ giá bên ngoài trong lớp giao diện này; tránh dùng số liệu cũ để quyết định thanh toán.")}</p></section>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 6: Weather -->
+      <section id="free-tools-panel-weather" class="portal-card portal-card-pad portal-free-tool-panel" role="tabpanel" aria-labelledby="free-tools-tab-weather" aria-hidden="true" hidden data-free-tool-panel="weather">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">${c("weather.kicker", "Thời tiết")}</span>
+            <h2 class="portal-card-title">${c("weather.title", "Tra cứu thời tiết theo địa điểm")}</h2>
+            <p class="portal-card-subtitle">${c("weather.body", "Chọn địa điểm và đơn vị hiển thị. Kết quả, thời gian cập nhật và lỗi kết nối phải đến từ nguồn được xác nhận.")}</p>
+          </div>
+          ${badge("guarded")}
+        </div>
+        <div class="portal-free-tool-layout">
+          <div class="portal-free-tool-col">
+            <div class="portal-field" style="margin-bottom: 12px;"><label class="portal-label" for="free-tools-weather-location">${c("weather.field.location", "Địa điểm")}</label><input id="free-tools-weather-location" class="portal-input" type="text" maxlength="120" placeholder="${c("weather.field.locationPlaceholder", "Ví dụ: Thành phố Hồ Chí Minh")}" /></div>
+            <div class="portal-field" style="margin-bottom: 12px;"><label class="portal-label" for="free-tools-weather-unit">${c("weather.field.unit", "Đơn vị nhiệt độ")}</label><select id="free-tools-weather-unit" class="portal-select"><option value="celsius">${c("weather.option.celsius", "Độ C")}</option><option value="fahrenheit">${c("weather.option.fahrenheit", "Độ F")}</option></select></div>
+            <button class="portal-button portal-button--primary" type="button" data-free-tool-action="lookup-weather" disabled>${c("weather.action.lookup", "Tra cứu thời tiết")}</button>
+          </div>
+          <div class="portal-free-tool-col"><section class="portal-free-tool-result" aria-live="polite" data-free-tool-result="weather"><div class="portal-card-header"><div><span class="portal-section-kicker">${c("weather.result.kicker", "Kết quả")}</span><h3 class="portal-card-title">${c("weather.result.title", "Chưa có dữ liệu thời tiết")}</h3></div><span class="portal-status-badge" data-free-tool-state="weather">${c("weather.result.state", "Chưa tra cứu")}</span></div><div class="portal-free-tool-empty"><strong>${c("weather.result.empty", "Nhập địa điểm để bắt đầu")}</strong><p>${c("weather.result.body", "Chưa gọi nguồn thời tiết và chưa tạo dữ liệu mô phỏng. Khi có quyền, trạng thái tải, lỗi và dữ liệu cũ sẽ hiển thị riêng.")}</p></div></section></div>
+        </div>
+      </section>
+
+      <!-- Panel 7: Media downloader -->
+      <section id="free-tools-panel-downloader" class="portal-card portal-card-pad portal-free-tool-panel" role="tabpanel" aria-labelledby="free-tools-tab-downloader" aria-hidden="true" hidden data-free-tool-panel="downloader">
+        <div class="portal-card-header">
+          <div>
+            <span class="portal-section-kicker">${c("downloader.kicker", "Tải media có kiểm soát")}</span>
+            <h2 class="portal-card-title">${c("downloader.title", "Chuẩn bị yêu cầu tải video hoặc media")}</h2>
+            <p class="portal-card-subtitle">${c("downloader.body", "Chọn nguồn, nhập liên kết và xác nhận quyền sử dụng trước khi hệ thống phân tích. Không mở tải thật khi chưa có quyền máy chủ.")}</p>
+          </div>
+          ${badge("guarded")}
+        </div>
+        <div class="portal-free-tool-layout">
+          <div class="portal-free-tool-col">
+            <div class="portal-field" style="margin-bottom: 12px;"><label class="portal-label" for="free-tools-downloader-source">${c("downloader.field.source", "Nguồn nội dung")}</label><select id="free-tools-downloader-source" class="portal-select"><option value="youtube">YouTube</option><option value="tiktok">TikTok</option><option value="facebook">Facebook</option><option value="direct">${c("downloader.option.direct", "Liên kết trực tiếp")}</option></select></div>
+            <div class="portal-field" style="margin-bottom: 12px;"><label class="portal-label" for="free-tools-downloader-url">${c("downloader.field.url", "Liên kết nội dung")}</label><input id="free-tools-downloader-url" class="portal-input" type="url" maxlength="2000" placeholder="${c("downloader.field.urlPlaceholder", "Dán liên kết https://…")}" /></div>
+            <label class="portal-checkbox-label" style="font-size: 12px; display:flex; align-items:center; gap:8px; margin-bottom: 14px;"><input type="checkbox" id="free-tools-downloader-rights" /> ${c("downloader.field.rights", "Tôi có quyền tải và sử dụng nội dung này")}</label>
+            <button class="portal-button portal-button--primary" type="button" data-free-tool-action="inspect-download" disabled>${c("downloader.action.inspect", "Kiểm tra liên kết")}</button>
+          </div>
+          <div class="portal-free-tool-col"><section class="portal-free-tool-result" aria-live="polite" data-free-tool-result="downloader"><div class="portal-card-header"><div><span class="portal-section-kicker">${c("downloader.result.kicker", "Kết quả kiểm tra")}</span><h3 class="portal-card-title">${c("downloader.result.title", "Chưa có liên kết được kiểm tra")}</h3></div><span class="portal-status-badge" data-free-tool-state="downloader">${c("downloader.result.state", "Chưa sẵn sàng")}</span></div><div class="portal-free-tool-empty"><strong>${c("downloader.result.empty", "Chưa có tệp để tải")}</strong><p>${c("downloader.result.body", "Chỉ hiện nút tải khi máy chủ xác nhận liên kết, quyền sử dụng, tệp và trạng thái giao tệp.")}</p></div></section></div>
+        </div>
+      </section>
+
+      <!-- Panel 8: JSON Formatter & Validator -->
       <section id="free-tools-panel-json" class="portal-card portal-card-pad portal-free-tool-panel" role="tabpanel" aria-labelledby="free-tools-tab-json" aria-hidden="true" hidden data-free-tool-panel="json">
         <div class="portal-card-header">
           <div>
@@ -13583,7 +13690,7 @@
         </div>
       </section>
 
-      <!-- Panel 5: Text & Word Counter & Tools -->
+      <!-- Panel 9: Text & Word Counter & Tools -->
       <section id="free-tools-panel-text" class="portal-card portal-card-pad portal-free-tool-panel" role="tabpanel" aria-labelledby="free-tools-tab-text" aria-hidden="true" hidden data-free-tool-panel="text">
         <div class="portal-card-header">
           <div>
@@ -13635,7 +13742,7 @@
         </div>
       </section>
 
-      <!-- Panel 6: Base64 & URL Codec -->
+      <!-- Panel 10: Base64 & URL Codec -->
       <section id="free-tools-panel-codec" class="portal-card portal-card-pad portal-free-tool-panel" role="tabpanel" aria-labelledby="free-tools-tab-codec" aria-hidden="true" hidden data-free-tool-panel="codec">
         <div class="portal-card-header">
           <div>

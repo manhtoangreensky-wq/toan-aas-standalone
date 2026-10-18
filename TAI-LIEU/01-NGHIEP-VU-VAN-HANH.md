@@ -13,6 +13,18 @@ không tạo quote/job/tệp, không sửa ví và chưa được kiểm thử l
 `git diff --check` `PASS`. Python/pytest chưa chạy được vì workspace không có
 lệnh `python` hoặc `py`.
 
+## Checkpoint UT-04 — tiện ích miễn phí (ứng viên cục bộ 18/10/2026)
+
+`/free-tools` hiện có 10 tab/panel: phụ đề, YouTube, VietQR, ảnh đại diện AI,
+tỷ giá & quy đổi Xu, thời tiết, tải video & media, JSON, văn bản và mã hóa.
+Bốn lane mới chỉ là control-level: có input, quyền sử dụng/nguồn, vùng kết quả
+rỗng và trạng thái guarded; không gọi API tỷ giá/thời tiết, không tạo avatar,
+không tải media và không mở provider. QR giữ flow cục bộ cũ.
+
+Đã đo: test riêng `5/5`, full Node `549/549`, `node --check` portal và i18n
+`PASS`, `git diff --check` `PASS`. Browser/AX, nguồn dữ liệu thật, stale/error
+runtime, downloader delivery và live chưa chạy.
+
 ## Checkpoint giao diện Image — ứng viên cục bộ 08/10/2026
 
 BASE `dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c` là merge SubDub PR #619;

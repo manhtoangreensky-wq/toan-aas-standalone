@@ -12,6 +12,20 @@ Bằng chứng: `docs/superpowers/specs/2026-10-18-r218-06a-translation-workspac
 `tests/translation-workspace-controls.test.mjs` `4/4`, full Node `548/548`.
 Luồng `/translate` và redirect companion cũ được giữ nguyên.
 
+## Đối chiếu UT-04 — tiện ích miễn phí (ứng viên cục bộ 18/10/2026)
+
+| Yêu cầu trong inventory Bot | Hiện tại trên ứng viên Web | Trạng thái |
+|---|---|---|
+| QR | VietQR giữ bank/account/name/amount/memo/template, preview, tải ảnh và sao chép liên kết cục bộ | ⚠️ |
+| Avatar | Có phong cách, brief, xác nhận quyền sử dụng, preview rỗng và capability gate; chưa tạo ảnh | ⚠️ |
+| Tỷ giá | Có USD/VNĐ/Xu, nguồn, thời gian, độ mới và nút làm mới guarded; chưa lấy nguồn thật | ⚠️ |
+| Thời tiết | Có địa điểm, đơn vị C/F, result/empty copy và boundary loading/error/stale; chưa gọi API | ⚠️ |
+| Downloader | Có nguồn, URL, xác nhận quyền, vùng kiểm tra và gate delivery; chưa kiểm tra/tải tệp | ⚠️ |
+
+Bằng chứng: `docs/superpowers/specs/2026-10-18-r218-06b-utilities-qr-avatar-rate-weather-download.md`,
+`tests/free-tools-hub-presentation.test.mjs` `5/5`, full Node `549/549`.
+Không suy diễn control-level thành runtime parity hoặc LIVE.
+
 ## Đối chiếu Image — ứng viên cục bộ 08/10/2026
 
 | Nguồn trước sửa | Candidate hiện tại | Bằng chứng |

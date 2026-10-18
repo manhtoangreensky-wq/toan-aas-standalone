@@ -57,19 +57,34 @@ function render(locale = "vi") {
   );
 }
 
-test("Free Tools exposes an accessible six-tab presentation with one active panel", () => {
+test("Free Tools exposes an accessible ten-tab presentation with one active panel", () => {
   const html = render();
   assert.match(html, /role="tablist"[^>]*aria-orientation="horizontal"/);
-  assert.equal((html.match(/role="tab"/g) || []).length, 6);
-  assert.equal((html.match(/role="tabpanel"/g) || []).length, 6);
+  assert.equal((html.match(/role="tab"/g) || []).length, 10);
+  assert.equal((html.match(/role="tabpanel"/g) || []).length, 10);
   assert.equal((html.match(/aria-selected="true"/g) || []).length, 1);
-  assert.equal((html.match(/aria-selected="false"/g) || []).length, 5);
+  assert.equal((html.match(/aria-selected="false"/g) || []).length, 9);
   assert.equal((html.match(/tabindex="0"/g) || []).length, 1);
-  assert.equal((html.match(/tabindex="-1"/g) || []).length, 5);
-  assert.equal((html.match(/hidden data-free-tool-panel=/g) || []).length, 5);
+  assert.equal((html.match(/tabindex="-1"/g) || []).length, 9);
+  assert.equal((html.match(/hidden data-free-tool-panel=/g) || []).length, 9);
   assert.match(html, /id="free-tools-panel-subtitle"[^>]*aria-hidden="false"/);
   assert.match(html, /id="free-tools-panel-youtube"[^>]*aria-hidden="true"[^>]*hidden/);
   assert.match(html, /aria-controls="free-tools-panel-codec"/);
+});
+
+test("Free Tools exposes the four utility lanes with explicit guarded states", () => {
+  const html = render();
+  for (const lane of ["avatar", "rate", "weather", "downloader"]) {
+    assert.match(html, new RegExp(`data-free-tool-tab="${lane}"`));
+    assert.match(html, new RegExp(`data-free-tool-panel="${lane}"`));
+    assert.match(html, new RegExp(`data-free-tool-result="${lane}"`));
+  }
+  assert.match(html, /data-free-tool-action="prepare-avatar" disabled/);
+  assert.match(html, /data-free-tool-action="refresh-rate" disabled/);
+  assert.match(html, /data-free-tool-action="lookup-weather" disabled/);
+  assert.match(html, /data-free-tool-action="inspect-download" disabled/);
+  assert.match(html, /free-tools-downloader-rights/);
+  assert.match(html, /free-tools-avatar-rights/);
 });
 
 test("Free Tools keeps fixed copy out of Vietnamese English-generic leakage", () => {
@@ -93,7 +108,7 @@ test("Free Tools keeps fixed copy out of Vietnamese English-generic leakage", ()
   }
   assert.match(rendererSource, /freeToolsText\(/);
   assert.match(i18nSource, /const FREE_TOOLS_COPY_ROWS = \[/);
-  for (const key of ["intro.kicker", "nav.codec", "subtitle.stats", "youtube.title", "vietqr.title", "json.title", "text.title", "codec.title", "privacy.body"]) {
+  for (const key of ["intro.kicker", "nav.codec", "nav.avatar", "nav.rate", "nav.weather", "nav.downloader", "subtitle.stats", "youtube.title", "vietqr.title", "avatar.title", "rate.title", "weather.title", "downloader.title", "json.title", "text.title", "codec.title", "privacy.body"]) {
     assert.match(i18nSource, new RegExp(`\\["${key.replace(".", "\\.")}"`), `${key} has a reviewed locale row`);
   }
 });
@@ -108,7 +123,7 @@ test("Free Tools tab keyboard navigation updates selection and panel visibility 
       return [];
     }
   };
-  const tabs = ["subtitle", "youtube", "vietqr", "json", "text", "codec"].map((key, index) => {
+  const tabs = ["subtitle", "youtube", "vietqr", "avatar", "rate", "weather", "downloader", "json", "text", "codec"].map((key, index) => {
     const attributes = {
       "data-free-tool-tab": key,
       "aria-selected": index === 0 ? "true" : "false",
@@ -125,7 +140,7 @@ test("Free Tools tab keyboard navigation updates selection and panel visibility 
       classList: { toggle() {} }
     };
   });
-  ["subtitle", "youtube", "vietqr", "json", "text", "codec"].forEach((key, index) => {
+  ["subtitle", "youtube", "vietqr", "avatar", "rate", "weather", "downloader", "json", "text", "codec"].forEach((key, index) => {
     const attributes = { "data-free-tool-panel": key, "aria-hidden": index === 0 ? "false" : "true" };
     panels.push({
       attributes,
@@ -147,9 +162,9 @@ test("Free Tools tab keyboard navigation updates selection and panel visibility 
 
   const endEvent = { key: "End", prevented: false, preventDefault() { this.prevented = true; } };
   assert.equal(helpers.handleFreeToolTabKeydown(tabs[1], endEvent), true);
-  assert.equal(tabs[5].focused, true);
-  assert.equal(tabs[5].attributes["aria-selected"], "true");
-  assert.equal(panels[5].hidden, false);
+  assert.equal(tabs[9].focused, true);
+  assert.equal(tabs[9].attributes["aria-selected"], "true");
+  assert.equal(panels[9].hidden, false);
 });
 
 test("Free Tools CSS targets the current renderer classes and stacks on narrow screens", () => {

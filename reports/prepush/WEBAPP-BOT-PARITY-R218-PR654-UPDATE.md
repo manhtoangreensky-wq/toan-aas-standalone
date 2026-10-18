@@ -246,3 +246,29 @@ LIVE_PASS=NOT_TESTED
 
 PR #654 vẫn OPEN/CONFLICTING; CI, browser authenticated và live trên candidate
 UT-01 chưa được suy diễn từ comparator cũ.
+
+## Incremental UT-04 utilities evidence — local candidate 18/10/2026
+
+- Phạm vi: `static/portal/portal.js`, `static/portal/portal.css`,
+  `static/portal/portal-i18n.js`, `tests/free-tools-hub-presentation.test.mjs` và
+  R218-06B spec/checklist.
+- `/free-tools` có 10 tab/panel accessible. QR giữ flow local hiện có; bốn lane
+  mới là Avatar, Tỷ giá & Xu, Thời tiết và Tải video & media. Từng lane có form
+  dọc, vùng result/empty, quyền hoặc nguồn dữ liệu và nút guarded; không gọi API
+  ngoài, không tạo avatar, không lấy tỷ giá/thời tiết, không tải media.
+
+```text
+UTILITY_UT04_TARGETED=5/5
+FULL_NODE=549/549
+NODE_CHECK=PASS (portal.js, portal-i18n.js)
+GIT_DIFF_CHECK=PASS
+PYTEST=BLOCKED (workspace không có lệnh python/py)
+PROVIDER_CALLS=0
+WALLET_MUTATIONS=0
+PRODUCTION_DATA_MUTATIONS=0
+DEPLOY=NO
+LIVE_PASS=NOT_TESTED
+```
+
+UT-04 vẫn control-level `[~]`: browser authenticated/AX, nguồn dữ liệu thật,
+stale/error/loading runtime, downloader delivery và live evidence chưa mở.

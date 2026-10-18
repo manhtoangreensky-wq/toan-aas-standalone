@@ -12,6 +12,7 @@ Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong 
 - R218-04: specs/2026-10-18-r218-subdub-bot-parity-uiux.md.
 - R218-05/09: specs/2026-10-18-r218-05-09-image-video-controls.md.
 - R218-06/07/08: specs/2026-10-18-r218-06-08-utilities-admin-controls.md.
+- R218-06B: specs/2026-10-18-r218-06b-utilities-qr-avatar-rate-weather-download.md.
 - R218-06A: specs/2026-10-18-r218-06a-translation-workspace-controls.md.
 - R218-10/11/12/13: specs/2026-10-18-r218-10-13-qa-motion-delivery-technical.md.
 - State: .agents/state/WEBAPP-BOT-PARITY-R218.yaml.
@@ -81,8 +82,17 @@ phụ thuộc việc đã có giọng cá nhân trong thư viện.
 workspace dọc có nguồn tự nhận diện, 21 ngôn ngữ đích, tìm kiếm cục bộ, giữ
 bản gốc, dịch hai chiều, trạng thái bắt đầu/dừng, kết quả và lịch sử. Panel
 không phải form và không thêm API action; capability server chưa công bố nên
-execution vẫn `guarded`. Test riêng 4/4 và full Node 548/548 đạt. UT-01 vẫn
+execution vẫn `guarded`. Test riêng 4/4 và full Node 549/549 đạt. UT-01 vẫn
 `[~]`; backend/quote/job/output/browser/live giữ ở wave kỹ thuật.
+
+### Checkpoint UT-04 — 18/10/2026
+
+Workspace `/free-tools` đã mở rộng từ 6 lên 10 tab/panel: QR hiện có, Ảnh đại
+diện AI, Tỷ giá & quy đổi Xu, Thời tiết và Tải video & media. Bốn lane mới có
+form dọc, quyền/nguồn dữ liệu, empty result và nút thực thi guarded; không gọi
+API ngoài, không tạo ảnh, không lấy số liệu, không tải tệp. Test focused 5/5 và
+full Node 549/549 đạt. UT-04 vẫn `[~]`; runtime nguồn thật, browser/AX và
+delivery giữ ở wave QA/technical.
 
 ## 5. Bố cục cụ thể
 

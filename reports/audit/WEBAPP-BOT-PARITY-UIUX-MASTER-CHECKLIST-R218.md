@@ -1,6 +1,6 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
-Ngày 2026-10-18. WIP_UT01_TRANSLATION_CONTROL_PARTIAL. Source Bot được đọc-only; production chưa kiểm.
+Ngày 2026-10-18. WIP_UT04_UTILITIES_CONTROL_PARTIAL. Source Bot được đọc-only; production chưa kiểm.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
 
@@ -125,7 +125,13 @@ Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
 - [~] UT-03 Free/prompt library/search/filter/copy/save/publish pack/quota đã có các projection
   giao diện và trạng thái guarded; `Content Prompt Pack` fixed chrome đã cân bằng VI/EN/ZH,
   không trộn tiếng Anh ở bản VI; quota/runtime/provider chưa chứng minh.
-- [ ] UT-04 QR/avatar/tỷ giá/thời tiết/downloader và stale/error states.
+- [~] UT-04 QR/avatar/tỷ giá/thời tiết/downloader: `/free-tools` đã có 10 tab/panel
+  accessible, giữ QR hiện có và bổ sung lane Ảnh đại diện AI, Tỷ giá & quy đổi Xu,
+  Thời tiết, Tải video & media. Mỗi lane có input dọc, preview/result rỗng,
+  quyền sử dụng hoặc nguồn dữ liệu, state guarded và nút thực thi khóa khi chưa có
+  capability; VI/EN/ZH có catalogue riêng. Test `tests/free-tools-hub-presentation.test.mjs`
+  đạt `5/5`, full Node đạt `549/549`; API ngoài, dữ liệu thật, refresh/stale/error
+  runtime, downloader delivery, browser/AX và live vẫn mở.
 - [~] UT-05 Notes create/list/search/detail/edit/reminder/delete confirmation đã có Memory
   Center/Reminder shell, locale và contract owner-scoped; dữ liệu thật, browser và live chưa
   chứng minh.

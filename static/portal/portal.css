@@ -8926,6 +8926,67 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-free-tool-panel:not([hidden]) {
   display: block;
 }
+.portal-free-tool-result {
+  display: grid;
+  gap: 14px;
+  min-height: 220px;
+  padding: 16px;
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--portal-surface-soft) 76%, transparent);
+}
+.portal-free-tool-result .portal-card-header {
+  margin: 0;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--portal-border);
+}
+.portal-free-tool-result-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.portal-free-tool-result-list > div {
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--portal-border);
+}
+.portal-free-tool-result-list dt {
+  color: var(--portal-muted);
+  font-size: 11px;
+}
+.portal-free-tool-result-list dd {
+  margin: 0;
+  color: var(--portal-muted-strong);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: right;
+}
+.portal-free-tool-empty {
+  display: grid;
+  align-content: center;
+  min-height: 128px;
+  padding: 18px;
+  border: 1px dashed var(--portal-border-strong);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--portal-surface) 72%, transparent);
+  text-align: center;
+}
+.portal-free-tool-empty strong {
+  color: var(--portal-muted-strong);
+  font-size: 14px;
+}
+.portal-free-tool-empty p,
+.portal-free-tool-note {
+  margin: 6px 0 0;
+  color: var(--portal-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+.portal-free-tool-result .portal-status-badge {
+  align-self: start;
+}
 .portal-free-tab-btn {
   display: inline-flex;
   align-items: center;
