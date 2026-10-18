@@ -3,6 +3,9 @@
 Ngày 2026-10-18. WIP_UT07_ASSETS_CONTROL_PARTIAL. Source Bot được đọc-only; production chưa kiểm.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
+Đối soát toàn bộ lịch sử trước R217 nằm tại
+`reports/audit/WEBAPP-HISTORICAL-CHECKLIST-CROSSWALK-R218.md`; không dùng tài liệu cũ
+để suy diễn PASS.
 
 ## Quy ước
 
@@ -31,6 +34,12 @@ nhóm hoặc nhầm một thẻ điều hướng là một tính năng đã ch�
 
 - [x] Mỗi hàng đã có mã inventory và wave/spec; không có nhóm Owner nào nằm ngoài
   B01–B34.
+- [x] Đã lập sổ đối soát lịch sử cho 365 tệp plan/spec/audit/state và 433 dòng
+  checkbox cũ; `unclassified source = 0`. Đây là bằng chứng không mất nguồn tài liệu,
+  không phải bằng chứng mọi control đã chạy thật.
+- [~] Các plan/spec trước R217 trước đây chỉ được nối ở cấp nhóm; semantic review từng
+  dòng vẫn phải thực hiện trong wave đích. Yêu cầu mới phát hiện phải thêm ID vào ledger
+  trước khi sửa, không được bỏ qua.
 - [ ] Chỉ đóng một hàng khi có renderer/interaction + browser/AX evidence tương ứng;
   runtime, provider, wallet, publish và LIVE vẫn giữ cổng riêng.
 - [ ] Các lỗi mới phát hiện được thêm vào đúng hàng và đúng thứ tự, không mở nhánh

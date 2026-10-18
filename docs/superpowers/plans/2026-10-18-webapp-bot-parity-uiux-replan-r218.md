@@ -22,13 +22,18 @@ Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong 
 - R217 preservation crosswalk: checklist R217 và các spec `2026-10-16-r217-*`
   được giữ làm comparator; mapping file-level sang wave R218 nằm ở phần
   “Đối soát file/spec R217 → R218” trong checklist hiện hành.
+- Historical crosswalk trước R217: `reports/audit/WEBAPP-HISTORICAL-CHECKLIST-CROSSWALK-R218.md`.
+  Sổ này đếm toàn bộ 365 tệp plan/spec/audit/state và 433 dòng checkbox cũ, gán disposition
+  về C0/F0/P1–P6/A0/V0/Q0/M0/L0/T0. `unclassified source = 0` chỉ chứng minh không mất
+  nguồn tài liệu; từng yêu cầu vẫn phải được đóng bằng evidence đúng wave.
 
 Đường dẫn specs ở trên tương đối docs/superpowers/. Mỗi nhóm spec gộp chỉ để
 đọc gọn; từng phiếu thực thi và tiêu chí đóng vẫn có ID riêng.
 
 ## 1. Thứ tự bắt buộc
 
-1. Lập và đối soát plan/checklist/spec toàn bộ sản phẩm từ menu và handler Bot.
+1. Lập và đối soát plan/checklist/spec toàn bộ sản phẩm từ menu và handler Bot; kiểm tra
+   thêm sổ lịch sử để không bỏ sót tài liệu cũ trước R217.
 2. Bảo toàn và chốt phần đang dở: PR #653 auth responsive/contrast; PR #654 là
    ứng viên UI SubDub cần review/CI. Không gọi thẻ disabled là tính năng hoàn tất.
 3. Theo checklist mới: nền chung → Voice → Music → SubDub → Image → tiện ích,
