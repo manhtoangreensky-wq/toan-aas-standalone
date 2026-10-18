@@ -1,6 +1,6 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: WIP_P1_VOICE_INPUT_FEEDBACK_BROWSER_VERIFIED
+status: WIP_P1_VOICE_QUOTE_EXPIRY_BROWSER_VERIFIED
 date: 2026-10-18
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
@@ -67,8 +67,8 @@ current_wip:
   ci_latest_run: 39123290492
   ci_latest_status: "PR #654 OPEN/MERGEABLE trên ef7fac2; Verify Web App PASS toàn bộ; Authenticated WebApp QA (R217-11) PASS trên DB/fixture cô lập."
   migration_evidence_refresh: "Refresh and independent verify-web-evidence both exit 0 for 3f1534a2d2417ab40b8534df86ada31b7d1e000e; source_files_scanned=288; source_fingerprint_sha256=a10fd0bd3c853d66f0616c1e177e8ea25a1dda07bebad99809c1609ebf9ad8c7. Bot evidence unchanged."
-  local_targeted_tests: "Voice input 4/4; Voice input/inventory/flow 64/64; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
-  local_full_tests: "591/591 tests/*.test.mjs"
+  local_targeted_tests: "Voice input 4/4; Voice inventory/flow with expiry 67/67; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
+  local_full_tests: "594/594 tests/*.test.mjs"
   python_tests: "NOT_RUN: bundled Python located via workspace dependencies; pytest/FastAPI/Uvicorn are not installed in that runtime. No Python source changed in this batch."
   voice_browser_qa:
     environment: "Localhost production renderer/CSS with synthetic signed-state projection; no integration.js, backend or DB. Browser plugin absent; Playwright + Edge used."
@@ -99,4 +99,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Tiếp tục P1 Voice: VO-01 workspace/mode draft retention, VO-06/07 quote/confirm UI, VO-08 report và VO-12 STT. Voice Vault DTO gap search/pager/management/profile handoff vẫn mở rõ; motion remains last."
+next_action: "Tiếp tục P1 Voice: VO-01 workspace/mode draft retention, VO-07 confirm UI, VO-08 report và VO-12 STT. Quote expiry UI đã có; Voice Vault DTO gap search/pager/management/profile handoff vẫn mở rõ; motion remains last."

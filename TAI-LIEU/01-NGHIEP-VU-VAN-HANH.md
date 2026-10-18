@@ -1018,7 +1018,7 @@ nên đã sửa nhãn từ “Dùng trong…” sang “Mở…”. Dãy `4` nú
 thay bằng một thông báo ngắn. Rename/default/delete/preview và profile handoff vẫn chưa có
 contract máy chủ; chúng tiếp tục là yêu cầu chưa hoàn tất trong ledger.
 
-Bằng chứng local: Voice input/inventory/flow `64/64`, full Node `591/591`,
+Bằng chứng local: Voice input/inventory/flow/expiry `67/67`, full Node `594/594`,
 `node --check` đạt cho `portal.js` và `portal-i18n.js`, `git diff --check` đạt; catalogue có
 đủ `3/3` locale `vi/en/zh`. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
 `PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`, `LIVE_PASS=NOT_TESTED`.
@@ -1028,6 +1028,6 @@ hai route/cấu hình; lỗi trang/console, overflow, request ngoài localhost v
 Tương phản cảnh báo: `11,25:1` ở theme sáng và `8,84:1` ở theme tối. Dữ liệu phiên là fixture,
 `integration.js` không được nạp: không phải kiểm thử API, DB, provider hoặc LIVE.
 
-Evidence local ở `../qa/r218-voice-input/result.json`, AX và PNG cùng thư mục. Phần còn treo:
-search/page server, profile-aware handoff, rename/default/delete/preview thật, quote/confirm/
-progress/output và browser QA đăng nhập thật/CI/live. Các mục này tiếp tục ở P1.
+Evidence local ở `../qa/r218-voice-input/result.json`, AX và PNG cùng thư mục. Quote expiry UI
+đã khóa; phần còn treo: search/page server, profile-aware handoff, rename/default/delete/
+preview thật, confirm/progress/output và browser QA đăng nhập thật/live. Các mục này tiếp tục ở P1.

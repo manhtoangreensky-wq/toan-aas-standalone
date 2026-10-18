@@ -126,7 +126,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   cảnh báo 0% giữ nguyên giá trị người dùng, đồng bộ số/thanh kéo và giữ qua hydration;
   browser renderer localhost đạt 18/18 cấu hình VI/EN/ZH × sáng/tối × 390/768/1440.
   Cảnh báo đạt tương phản 11,25:1 (sáng), 8,84:1 (tối); quote stale/runtime vẫn mở.
-- [ ] Quote/expiry/confirm/progress/player/download/report/retry đúng state.
+- [~] Quote/expiry/confirm/progress/player/download/report/retry: expiry client đã tôn trọng `quote_expires_at`/`quote_valid_until`/`expires_at`; quote quá hạn không render CTA confirm và yêu cầu làm mới. Progress/player/report/retry/runtime delivery vẫn mở.
 - [ ] Kho giọng search/page/status/default/preview/rename/delete/reuse.
 - [~] VO-02/VO-09/VO-10/VO-13: picker nam/nữ, Voice Vault owner-scoped và route handoff đã được khóa ở source bằng `tests/voice-selection-clone-contract.test.mjs` (4/4); quote, preview, rename/delete, runtime và browser/AX vẫn mở.
 - [~] VO-11: clone consent/upload/tên tùy chọn tối đa 120 ký tự đã khớp bridge hiện hành; form nay có hướng dẫn guarded đủ 7 bước consent → sample → name → quote → preview → save → back, được khóa ở source bằng test clone `5/5`; xác nhận text, quote, preview, save/back và runtime vẫn mở.
