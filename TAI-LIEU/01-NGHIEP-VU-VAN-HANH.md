@@ -975,3 +975,19 @@ Bằng chứng local: `25/25` test focused Utilities/Content/Projects, `node --c
 `portal.js` và `portal-i18n.js`, `git diff --check` đều đạt. Đây là bằng chứng control-level
 và locale; upload, dữ liệu thật, phiên bản, provider, publish, ví Xu, browser/AX và LIVE vẫn
 chưa được coi là hoàn tất.
+
+## R218 — AutoPost Hub control-level — 18/10/2026
+
+`/publishing` hiện có một không gian làm việc dọc duy nhất cho AutoPost, gồm `7` nguồn đầu vào
+và `5` bước theo thứ tự: chọn nguồn → lập kế hoạch/thương hiệu → chọn kênh → lịch/hàng đợi →
+báo cáo/lịch sử. Các lane thương hiệu, lịch nội bộ, rà soát trước khi đăng, kênh, hàng đợi và
+Affiliate được nối bằng handoff Web-native hoặc hiển thị trạng thái chờ quyền máy chủ.
+
+Đã đo: `tests/autopost-hub-product-controls.test.mjs` `4/4`, full Node `562/562`,
+`node --check static/portal/portal.js` đạt, `node --check static/portal/portal-i18n.js` đạt,
+`git diff --check` đạt. Locale VI/EN/ZH dùng cùng bộ khóa; giao diện giữ màu xanh/ngọc và
+chuyển thành một cột ở màn hình hẹp.
+
+Đây chỉ là control-level/presentation. Chưa có OAuth/kết nối kênh, lịch đăng thật, biên nhận
+publish, Affiliate metrics, queue receipt, provider call, job, giao tệp hoặc live evidence.
+Không tạo dữ liệu production, không gọi provider, không đổi ví/Xu hoặc PayOS.

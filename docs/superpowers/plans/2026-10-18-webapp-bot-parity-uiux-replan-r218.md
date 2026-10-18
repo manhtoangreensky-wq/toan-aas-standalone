@@ -1,6 +1,6 @@
 # R218 — Kế hoạch UI/UX toàn bộ sản phẩm WebApp theo Bot
 
-Ngày 2026-10-18. Trạng thái WIP_UT06_DOCUMENTS_CONTROL_PARTIAL; chưa mở wave runtime.
+Ngày 2026-10-18. Trạng thái WIP_UT07_ASSETS_CONTROL_PARTIAL; chưa mở wave runtime.
 Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong kế hoạch.
 
 ## Bộ tài liệu
@@ -13,6 +13,7 @@ Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong 
 - R218-05/09: specs/2026-10-18-r218-05-09-image-video-controls.md.
 - R218-06/07/08: specs/2026-10-18-r218-06-08-utilities-admin-controls.md.
 - R218-06B: specs/2026-10-18-r218-06b-utilities-qr-avatar-rate-weather-download.md.
+- R218-06D: specs/2026-10-18-r218-06d-assets-product-controls.md.
 - R218-06A: specs/2026-10-18-r218-06a-translation-workspace-controls.md.
 - R218-10/11/12/13: specs/2026-10-18-r218-10-13-qa-motion-delivery-technical.md.
 - State: .agents/state/WEBAPP-BOT-PARITY-R218.yaml.
@@ -113,6 +114,32 @@ delivery giữ ở wave QA/technical.
 bản/chuyển đổi/OCR, form nguồn theo Asset Vault, thứ tự nhiều tệp, page range, lựa chọn
 tối ưu, xác nhận và lịch sử kết quả. Chưa đánh dấu runtime: capability, bytes/preview,
 quote/job/output/delivery, browser/AX và LIVE vẫn chờ các wave kỹ thuật/QA.
+
+## Checkpoint UT-07 — Assets control-level
+
+Đã khóa lớp trình bày của Asset Vault bằng spec
+`2026-10-18-r218-06d-assets-product-controls.md` và test
+`tests/assets-product-controls.test.mjs`. Workspace giữ upload private có allowlist/25 MB,
+gắn Project, lọc active/archived/all, phân trang, tải chỉ bản ghi active, lifecycle redaction
+và archive/restore theo revision. Test riêng đạt `5/5`; full Node đạt `558/558`. Đây chỉ là
+control-level evidence; upload bytes thật, preview, capability server, browser/AX, delivery
+và LIVE vẫn mở. Sau checkpoint này tiếp tục AP/Support/Account theo checklist, không nhảy
+sang motion.
+
+## Checkpoint R218-07A — AutoPost Hub control-level
+
+Đã khóa một workspace `/publishing` theo trình tự nguồn → thương hiệu/kế hoạch → kênh →
+lịch/hàng đợi → báo cáo/lịch sử. Bảy nguồn Bot được trình bày riêng: chủ đề/ý tưởng, URL,
+Affiliate, tệp đa phương tiện, video TOAN AAS, ảnh TOAN AAS và ý tưởng từ kế hoạch. Channel
+Strategy, Content Calendar và gói rà soát trước khi đăng được nối bằng handoff Web-native;
+OAuth, publish, queue, affiliate metrics và delivery vẫn `guarded` vì chưa có capability
+server hợp lệ. Fixed chrome đã cân bằng VI/EN/ZH, desktop/tablet/mobile giữ bố cục dọc.
+
+Spec và test: `docs/superpowers/specs/2026-10-18-r218-07-autopost-hub-controls.md`,
+`tests/autopost-hub-product-controls.test.mjs`. Đây là control-level evidence cho AP-01..05,
+không phải bằng chứng kênh đã kết nối hoặc bài đăng đã giao. Local verify hiện tại: AutoPost
+`4/4`, full Node `562/562`, hai lệnh `node --check` và `git diff --check` đạt; browser/AX,
+CI và LIVE vẫn chưa được suy diễn.
 
 ## 6. Phiếu thực thi cho từng spec
 

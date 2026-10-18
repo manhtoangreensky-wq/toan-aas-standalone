@@ -658,3 +658,16 @@ Candidate này chỉ đóng control-level UI/UX, không tuyên bố TTS/STT/Voic
 Kết luận: batch này khóa **control-level UI/UX và ranh giới guarded**, không được gọi là
 Music parity runtime với Bot hoặc là tệp đã tạo. Các mục quote, confirm, generation, editor,
 player/download/save/reuse, hai bản giao tệp và browser/CI/live tiếp tục theo thứ tự R218.
+
+## Đối chiếu AutoPost Hub — R218 — 18/10/2026
+
+| Chức năng cần đối chiếu | Hiện tại trên WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Bảy nguồn nội dung | Có các nguồn chủ đề/ý tưởng, liên kết tham khảo, Affiliate, tệp đa phương tiện, video, ảnh và kế hoạch/bản nháp | `static/portal/portal.js`; `tests/autopost-hub-product-controls.test.mjs` |
+| Trình tự thao tác | Một workspace dọc có 5 bước: nguồn, kế hoạch/thương hiệu, kênh, lịch/hàng đợi, báo cáo/lịch sử | Test AutoPost `4/4`; chưa có execution runtime |
+| Kênh, lịch, hàng đợi, Affiliate | Có lane trình bày và trạng thái guarded; không tự tạo lịch, bài đăng, số liệu hoặc biên nhận | Không có OAuth, publish receipt, queue receipt hay metrics thật |
+| Locale và responsive | Bộ khóa VI/EN/ZH cân bằng; bố cục giữ palette xanh/ngọc và xếp một cột trên màn hình hẹp | Full Node `562/562`, syntax và `git diff --check` đạt; browser/AX/live chưa đo |
+
+Kết luận: AutoPost mới đóng control-level UI/UX và boundary trung thực. AP-01..05 vẫn giữ
+`[~]` trong completion ledger cho tới khi có capability máy chủ, browser/AX, queue/history
+receipt và delivery evidence riêng.

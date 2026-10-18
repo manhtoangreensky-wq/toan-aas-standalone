@@ -1,6 +1,6 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
-Ngày 2026-10-18. WIP_UT06_DOCUMENTS_CONTROL_PARTIAL. Source Bot được đọc-only; production chưa kiểm.
+Ngày 2026-10-18. WIP_UT07_ASSETS_CONTROL_PARTIAL. Source Bot được đọc-only; production chưa kiểm.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
 
@@ -48,8 +48,10 @@ nhóm hoặc nhầm một thẻ điều hướng là một tính năng đã ch�
 - [x] Review #654 hidden field, default checked, duplicate selector, library link,
   guard blanket, locale, âm lượng dub max 100: đã sửa và khóa bằng 13 kiểm thử mục tiêu;
   CI/browser trên commit mới đã đạt route/render matrix.
-- [x] Toàn bộ plan/checklist/spec đã lên GitHub; provenance được refresh cho HEAD mới và
+- [x] Bản plan/checklist/spec nền R218 đã lên GitHub; provenance được refresh cho HEAD mới và
   candidate gate đã xanh ở run `39101124230`.
+- [~] Checkpoint AutoPost cùng tài liệu vận hành và bộ case Tester đã được rà soát, nằm trong
+  đợt push hiện tại; cần CI/browser/AX riêng trước khi chuyển thành bằng chứng delivery.
 - [x] VO-04/VO-05 Voice controls đã có candidate local `814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd`:
   tốc độ số `0,1–2,0` với mặc định `1,0` và 3 preset; âm lượng slider `0–200` đồng bộ
   với đúng một field số. Targeted `3/3`, Voice regression `97/97`, full Node `530/530`,
@@ -66,6 +68,11 @@ nhóm hoặc nhầm một thẻ điều hướng là một tính năng đã ch�
 - [~] UT-02/UT-03/UT-05/UT-08 control-level đã được rà soát bằng bộ test cố định; riêng
   Content Prompt Pack đã loại các chuỗi tiếng Anh giao diện khỏi bản VI và tách catalogue
   VI/EN/ZH. Runtime tạo nội dung, lưu, phiên bản, dữ liệu thật, browser và live vẫn mở.
+- [~] UT-07 Assets control-level đã khóa bằng `tests/assets-product-controls.test.mjs`:
+  workspace owner-scoped, upload 25 MB/allowlist, gắn Project, lọc active/archived/all,
+  phân trang, download chỉ active, lifecycle redaction, archive/restore theo revision và
+  các trạng thái guarded/failed. Test riêng `5/5`, full Node `558/558`; bytes thật,
+  preview, capability server, browser/AX, delivery và LIVE vẫn mở.
 
 ## F0 — Shared contract R218-00/01
 
@@ -167,15 +174,17 @@ nhóm hoặc nhầm một thẻ điều hướng là một tính năng đã ch�
   tải chỉ khi `completed + download_ready`. Spec chi tiết tại
   `docs/superpowers/specs/2026-10-18-r218-06c-documents-product-controls.md`.
   Capability server, upload/preview/output/delivery, browser/AX và LIVE vẫn mở.
-- [ ] UT-07 Assets upload/list/preview/download/quota/expiry/privacy.
+- [~] UT-07 Assets upload/list/filter/page/download/lifecycle/quota/privacy control-level
+  đã khóa tại `docs/superpowers/specs/2026-10-18-r218-06d-assets-product-controls.md`;
+  upload bytes thật, preview, quota/expiry do server công bố, browser/AX và delivery vẫn mở.
 - [~] UT-08 Projects/Workboard task/dependency/status/assignee/dates/report đã có Project
   Center, Workboard dọc, checklist, lịch, lịch sử và trạng thái; browser fixture/runtime chưa
   chứng minh.
-- [ ] AP-01 Bảy nguồn nội dung AutoPost đúng source lineage.
-- [ ] AP-02 Brand/content plan/draft/edit/preview/review/calendar/version.
-- [ ] AP-03 Channels/platform/connection/expiry/target state.
-- [ ] AP-04 Queue/published history/status/detail/cancel/review/recovery.
-- [ ] AP-05 Affiliate/import/list/filter/ads/metrics, không fake số liệu.
+- [~] AP-01 AutoPost Hub đã khóa presentation bảy nguồn và source lineage ở `/publishing`; picker bytes/URL và capability server vẫn mở.
+- [~] AP-02 AutoPost Hub đã có trình tự brand/content plan → draft/review/calendar bằng các handoff Web-native; edit/version thật vẫn mở.
+- [~] AP-03 AutoPost Hub đã có lane platform/connection/expiry/target ở trạng thái guarded; OAuth và kết nối kênh chưa mở.
+- [~] AP-04 AutoPost Hub đã có lane queue/published history/status/detail/cancel/review/recovery ở trạng thái guarded; chưa có receipt publish thật.
+- [~] AP-05 AutoPost Hub đã có lane Affiliate/import/list/filter/ads/metrics ở trạng thái guarded; không hiển thị số liệu suy đoán.
 - [ ] AC-01 Profile/locale/session/security và stale data cleanup.
 - [ ] AC-02 Packages/pricing/topup/history/detail/pending, không wallet mutation.
 - [ ] SP-01 Support/ticket/attachments/replies/status/escalation/task refs.
