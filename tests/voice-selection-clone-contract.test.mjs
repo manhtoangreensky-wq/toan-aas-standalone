@@ -58,3 +58,16 @@ test('Voice workspace keeps the complete UI route handoff without claiming outpu
   assert.match(portal, /Bot P0 chưa có adapter delivery Voice-output riêng cho Web/);
   assert.match(portal, /Không có preview, URL hay output thay thế nào được hiển thị/);
 });
+
+test('Voice clone route exposes the complete guarded seven-step flow', () => {
+  assert.match(portal, /data-voice-clone-steps/);
+  for (const key of ['consent', 'sample', 'name', 'quote', 'preview', 'save', 'back']) {
+    assert.ok(i18n.includes(`[` + `"clone.step.${key}"`), `missing locale key voiceUi.clone.step.${key}`);
+  }
+  assert.match(portal, /voiceUiText\(`clone\.step\.\$\{step\}`/);
+  assert.match(portal, /clone\.stepsGuarded/);
+  const guidanceStart = portal.indexOf('const voiceCloneGuidance');
+  const guidanceEnd = portal.indexOf('return `${voiceCloneGuidance', guidanceStart);
+  assert.ok(guidanceStart >= 0 && guidanceEnd > guidanceStart, 'clone guidance must be rendered before its form');
+  assert.doesNotMatch(portal.slice(guidanceStart, guidanceEnd), /<audio\b|provider/i);
+});

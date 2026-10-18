@@ -1014,7 +1014,7 @@ owner-facing tới SubDub và Video. Mỗi hồ sơ mở rộng được phần 
 server phải cấp capability cho hồ sơ thuộc tài khoản và signed preview trước khi mở thao tác;
 Web không dựng audio, URL hoặc kết quả thay thế.
 
-Bằng chứng local của batch: Voice inventory/flow/selection `64/64`, full Node `586/586`,
+Bằng chứng local của batch: Voice inventory/flow/selection/clone `65/65`, full Node `587/587`,
 `node --check` đạt cho `portal.js` và `portal-i18n.js`, `git diff --check` đạt; catalogue có
 đủ `3/3` locale `vi/en/zh`. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
 `PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`, `LIVE_PASS=NOT_TESTED`.

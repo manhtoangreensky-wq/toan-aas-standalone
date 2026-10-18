@@ -11614,7 +11614,10 @@
       const orderedFields = route === "/voice/clone"
         ? ["consent", "sample", "display_name"].map((name) => fields.find((field) => field.name === name)).filter(Boolean)
         : fields;
-      return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(voiceUiText("form.title", "Chuẩn bị giọng đọc"))}</h2><p class="portal-card-subtitle">${safeText(voiceUiText(localAuthoringOnly ? "form.draft" : enabled ? "form.ready" : "form.guarded", reason))}</p></div></div>
+      const voiceCloneGuidance = route === "/voice/clone"
+        ? `<details class="portal-card portal-card-pad portal-voice-clone-steps" data-voice-clone-steps><summary>${safeText(voiceUiText("clone.stepsTitle", "Quy trình thêm giọng"))}</summary><ol>${["consent", "sample", "name", "quote", "preview", "save", "back"].map((step) => `<li>${safeText(voiceUiText(`clone.step.${step}`, step))}</li>`).join("")}</ol><p class="portal-form-note" role="status">${safeText(voiceUiText("clone.stepsGuarded", "Các bước xử lý thật chỉ mở theo capability."))}</p></details>`
+        : "";
+      return `${voiceCloneGuidance}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(voiceUiText("form.title", "Chuẩn bị giọng đọc"))}</h2><p class="portal-card-subtitle">${safeText(voiceUiText(localAuthoringOnly ? "form.draft" : enabled ? "form.ready" : "form.guarded", reason))}</p></div></div>
         <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>
           ${renderFields(orderedFields, formFieldsEnabled, context, fieldValues)}
           <div class="portal-form-footer"><span class="portal-form-note">${safeText(voiceUiText(localAuthoringOnly ? "form.draftNote" : "form.processingNote", ""))}</span>${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button></div>
