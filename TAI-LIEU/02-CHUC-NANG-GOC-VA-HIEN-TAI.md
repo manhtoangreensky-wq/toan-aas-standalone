@@ -685,3 +685,16 @@ receipt và delivery evidence riêng.
 Kết luận: Support mới đóng lát control-level UI/UX và ranh giới an toàn; SP-01 vẫn `[~]` trong
 completion ledger cho tới khi có capability máy chủ, dữ liệu thật, browser/AX, CI và LIVE.
 SP-02 (Guide/Chat Pro/feedback/community) vẫn là mục riêng chưa thực thi.
+
+## Đối chiếu Voice Vault dùng lại — R218 — 18/10/2026
+
+| Chức năng gốc cần có | Trạng thái hiện tại trên WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Dùng giọng đã lưu ở SubDub và Video | Đã có vùng dùng lại dọc với đúng `2` đường mở workflow: `/subdub?mode=dubbing_only` và `/video/product`. | `static/portal/portal.js`; `tests/voice-inventory-presentation.test.mjs`; chưa giữ profile ID hoặc draft qua server handoff. |
+| Trạng thái, quyền, mặc định và nghe thử | Mỗi hồ sơ hiển thị trạng thái, quyền sử dụng, cờ mặc định, metadata nghe thử và thời điểm cập nhật. | Voice inventory test ở `3/3` locale; preview vẫn chỉ là metadata, chưa có signed link. |
+| Đổi tên, đặt mặc định, xóa, nghe thử | Bốn thao tác được đặt trong accordion “Quản lý hồ sơ” nhưng khóa có chủ đích khi capability chưa được server xác nhận. | `4` nút disabled/hồ sơ; không giả thành công, không gọi provider hoặc tạo tệp. |
+| Locale và bố cục | Fixed chrome dùng catalogue VI/EN/ZH; vùng thao tác và hồ sơ xếp dọc, giữ palette xanh dương/xanh ngọc. | `64/64` targeted Voice; `586/586` full Node; browser/AX/live chưa đo. |
+
+Kết luận: UI đã chỉ rõ đủ các điểm dùng lại và thao tác quản lý thay vì giấu chức năng, nhưng
+runtime Voice Vault vẫn chưa đóng. Không đánh dấu parity Bot hoặc delivery cho tới khi có
+capability, signed preview, profile-aware handoff và bằng chứng browser/runtime riêng.

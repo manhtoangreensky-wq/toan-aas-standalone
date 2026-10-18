@@ -1005,3 +1005,20 @@ từ Asset Vault. Bản Việt dùng tên “Trung tâm hỗ trợ khách hàng�
 server, dữ liệu thật, browser/AX, CI, delivery và LIVE chưa đóng. Trung tâm hỗ trợ không upload
 bytes thô, không tạo ticket Bot, không gọi provider, không thay đổi ví/Xu, PayOS hoặc dữ liệu
 production.
+
+## R218 — Voice Vault dùng lại và quản lý có ranh giới — 18/10/2026
+
+`/voice/saved` hiện có một vùng thao tác dọc riêng cho việc dùng lại giọng: `2` liên kết
+owner-facing tới SubDub và Video. Mỗi hồ sơ mở rộng được phần “Quản lý hồ sơ” với `4` thao tác
+được hiển thị rõ nhưng khóa: đổi tên, đặt mặc định, xóa và nghe thử. Nhãn khóa giải thích rằng
+server phải cấp capability cho hồ sơ thuộc tài khoản và signed preview trước khi mở thao tác;
+Web không dựng audio, URL hoặc kết quả thay thế.
+
+Bằng chứng local của batch: Voice inventory/flow/selection `64/64`, full Node `586/586`,
+`node --check` đạt cho `portal.js` và `portal-i18n.js`, `git diff --check` đạt; catalogue có
+đủ `3/3` locale `vi/en/zh`. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
+`PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`, `LIVE_PASS=NOT_TESTED`.
+
+Phần còn treo: search/page server của Voice Vault, handoff giữ profile ID và bản nháp, rename/
+default/delete/preview thật, quote/confirm/progress/output và browser/AX/CI/live. Các mục này
+tiếp tục ở P1 trong checklist R218; không được suy diễn từ vùng UI guarded thành runtime PASS.

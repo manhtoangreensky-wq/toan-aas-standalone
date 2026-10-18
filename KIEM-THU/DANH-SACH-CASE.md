@@ -39,7 +39,7 @@ không submit estimate/confirm, upload mẫu, tạo job, dùng provider hay đ�
 
 | ID | Phạm vi | Thao tác | Kết quả cần ghi |
 |---|---|---|---|
-| VUI-01 | `/voice`, `/voice/tts`, `/voice/saved`, `/voice/clone`, `/voice/preview`, `/voice/outputs` | Mở từng route; mở hướng dẫn/thiết lập bằng Enter; kiểm tra tên, thứ tự trường, consent/sample và inventory | Nội dung đúng locale; form/card dọc, không tràn ngang, không mô phỏng âm thanh; action/field/quyền không đổi |
+| VUI-01 | `/voice`, `/voice/tts`, `/voice/saved`, `/voice/clone`, `/voice/preview`, `/voice/outputs` | Mở từng route; mở hướng dẫn/thiết lập bằng Enter; kiểm tra tên, thứ tự trường, consent/sample, inventory, vùng dùng lại SubDub/Video và accordion quản lý hồ sơ | Nội dung đúng locale; form/card dọc, không tràn ngang, không mô phỏng âm thanh; đúng `2` handoff, `4` thao tác quản lý khóa khi thiếu capability; action/field/quyền không đổi |
 | VUI-02 | `/voice-studio`, `/voice-studio/new`, chi tiết hồ sơ QA | Kiểm tra list/filter/create, hồ sơ active/revoked/archived, lời thoại/phiên bản/cue sheet | Quyền server vẫn khóa đúng; fixed copy sạch; accordion, menu và focus dùng được |
 | VUI-03 | `/voice-studio/direction-composer` | QA: trường hợp chưa có/có receipt thật từ helper local; mở kết quả bằng bàn phím | Danh mục và kết quả đúng locale; chỉ kế hoạch văn bản, không hứa hay tạo audio |
 | VUI-04 | TTS/saved/clone flow-state QA | Fixture draft/quote/stale/queued/processing/completed/failed-no-charge/error; mở lại draft và kiểm tra lưu bản mới | Giá công khai hiển thị, cost-only là unknown; nút xác nhận chỉ có khi các gate hiện có đạt; tracking khớp ID/feature/status; không có audio/download suy đoán |

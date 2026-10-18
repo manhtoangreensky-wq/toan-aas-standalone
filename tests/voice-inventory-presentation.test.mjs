@@ -34,6 +34,18 @@ for(const locale of ['vi','en','zh']){
     assert.match(html,/<details\b/);
     assert.doesNotMatch(html,/<table\b/);
   });
+  test(`saved voice inventory exposes guarded reuse and management controls in one vertical surface (${locale})`,()=>{
+    const html=context.renderVoiceVault({voiceProfiles:profiles});
+    assert.match(html,/data-voice-library-actions/);
+    assert.match(html,locale==='vi'?/Dùng trong SubDub/:locale==='en'?/Use in SubDub/:/用于 SubDub/);
+    assert.match(html,locale==='vi'?/Dùng trong Video/:locale==='en'?/Use in Video/:/用于 Video/);
+    for (const operation of ['rename','default','remove','preview']) {
+      assert.match(html,new RegExp(`<button[^>]*disabled[^>]*data-voice-operation="${operation}"`));
+    }
+    assert.match(html,/data-voice-profile-actions/);
+    assert.match(html,locale==='vi'?/đang chờ capability hồ sơ/:locale==='en'?/waiting for a server-confirmed profile capability/:/等待服务器确认档案能力/);
+    assert.doesNotMatch(html,/<audio\b|href="https?:\/\//i);
+  });
   test(`saved voice inventory keeps the server status (${locale})`,()=>{
     const html=context.renderVoiceVault({voiceProfiles:profiles});
     assert.match(html,/data-status="read_only"/);
