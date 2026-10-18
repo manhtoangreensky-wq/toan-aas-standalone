@@ -10911,7 +10911,7 @@ html .portal-page.portal-image-create .portal-button--primary:disabled {
    server-verified delivery. External publishing remains guarded until a
    canonical capability is returned; the presentation never invents a job. */
 .portal-autopost-hub { display: grid; gap: 18px; min-width: 0; }
-.portal-autopost-intro { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); gap: 18px; align-items: center; padding: clamp(22px, 3vw, 34px); border: 1px solid color-mix(in srgb, var(--portal-accent) 30%, var(--portal-border)); border-radius: 22px; background: linear-gradient(145deg, color-mix(in srgb, var(--portal-surface-strong) 92%, var(--portal-accent) 8%), var(--portal-surface)); box-shadow: 0 19px 47px color-mix(in srgb, var(--portal-bg) 72%, transparent); }
+.portal-autopost-intro { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); gap: 18px; align-items: center; padding: clamp(22px, 3vw, 34px); border: 1px solid color-mix(in srgb, var(--portal-accent) 30%, var(--portal-border)); border-radius: 22px; background: color-mix(in srgb, var(--portal-surface-strong) 92%, var(--portal-accent) 8%); box-shadow: 0 19px 47px color-mix(in srgb, var(--portal-bg) 72%, transparent); }
 .portal-autopost-intro h2 { margin: 7px 0 8px; color: var(--portal-text); font-size: clamp(26px, 3vw, 39px); letter-spacing: -.047em; }
 .portal-autopost-intro p { max-width: 770px; margin: 0; color: var(--portal-muted-strong); line-height: 1.72; }
 .portal-autopost-intro dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 0; }
