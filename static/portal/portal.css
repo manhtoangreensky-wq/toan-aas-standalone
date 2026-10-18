@@ -10341,6 +10341,97 @@ html[data-portal-theme="dark"] .portal-manual-topup-form option {
   accent-color: var(--portal-action);
 }
 
+.portal-subdub-voice-lanes {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  background: var(--portal-surface-soft);
+}
+
+.portal-subdub-voice-lanes legend {
+  padding: 0 6px;
+  color: var(--portal-ink);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.portal-subdub-voice-lane-hint,
+.portal-subdub-voice-lane-note {
+  margin: 0;
+  color: var(--portal-muted-strong, var(--portal-muted));
+  font-size: .88rem;
+  line-height: 1.5;
+}
+
+.portal-subdub-voice-lane-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.portal-subdub-voice-lane {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  min-width: 0;
+  min-height: 64px;
+  padding: 11px;
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  background: var(--portal-surface);
+  color: var(--portal-ink);
+}
+
+.portal-subdub-voice-lane input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--portal-action);
+}
+
+.portal-subdub-voice-lane__body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.portal-subdub-voice-lane__body strong {
+  color: var(--portal-ink);
+  font-size: .92rem;
+  line-height: 1.35;
+}
+
+.portal-subdub-voice-lane__body small {
+  color: var(--portal-muted-strong, var(--portal-muted));
+  font-size: .78rem;
+  line-height: 1.4;
+}
+
+.portal-subdub-voice-lane[data-status="guarded"] {
+  border-style: dashed;
+  opacity: .88;
+}
+
+.portal-subdub-speaker-map {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px dashed var(--portal-border);
+  border-radius: 12px;
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+
+.portal-subdub-speaker-map span {
+  color: var(--portal-muted-strong, var(--portal-muted));
+  font-size: .84rem;
+  line-height: 1.45;
+}
+
 .portal-subdub-volume-control input[type="range"] {
   appearance: none;
   border: 0 !important;
@@ -10400,6 +10491,14 @@ html[data-portal-theme="dark"] .portal-manual-topup-form option {
 
   .portal-subdub-volume-controls {
     padding: 11px;
+  }
+
+  .portal-subdub-voice-lanes {
+    padding: 12px;
+  }
+
+  .portal-subdub-voice-lane-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

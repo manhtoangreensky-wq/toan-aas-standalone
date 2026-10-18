@@ -534,6 +534,21 @@ không đổi engine, route/action/field/capability, ví/Xu hoặc dữ liệu p
 Batch này chỉ đóng source presentation của Product Video. Không được gọi đây là parity runtime
 với Bot, không đổi engine, route/action/field/capability, ví/Xu hoặc dữ liệu production.
 
+## Đối chiếu Bot → WebApp — R218 SubDub voice lanes — 18/10/2026
+
+| Chức năng Bot tham chiếu | WebApp hiện tại | Bằng chứng / giới hạn |
+|---|---|---|
+| Bốn lane: phụ đề gốc, phụ đề dịch, lồng tiếng, combo | Một workspace `/subdub` giữ bốn tab và đổi panel tại chỗ | `tests/subdub-hub-presentation.test.mjs` `12/12` |
+| Giọng mặc định nam/nữ | Đã hiển thị thành hai lane riêng, trạng thái guarded | `static/portal/portal.js`; chưa có bridge giọng thật |
+| Giọng đã lưu và giọng tự thêm | Đã có lane, Voice Library link và lý do guarded | Chưa có projection `voice_profile_id` từ server |
+| Multi 2 và Multi 3–8 | Đã tách thành hai lane; speaker-map panel chờ runtime data | Chưa chạy Auto Multi thật, không ép số người nói |
+| Tự nhận diện nhiều giọng | Có lane `auto_many` và selector Smart Multi guarded | Chưa có speaker detection, mapping override hoặc artifact |
+| Báo giá, xác nhận, tiến trình, artifact, receipt | Stage 3/4 vẫn guarded/empty | Không tạo job hoặc output giả; R217-07D/E còn mở |
+
+Tài liệu gốc của Bot mô tả nhiều hơn UI Web hiện tại ở phần speaker mapping, artifact QC,
+delivery receipt và charge sau delivery. R218 giữ các phần đó trong wave runtime riêng, không
+đánh dấu PASS từ source presentation.
+
 ## Đối chiếu bổ sung — SOURCE-CONTENT-01/03 — 17/10/2026
 
 | Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |

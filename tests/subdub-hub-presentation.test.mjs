@@ -271,3 +271,22 @@ test("SubDub exposes guarded Smart Multi speaker mapping and Voice Library contr
   assert.equal((html.match(/data-subdub-voice-library-link/g) || []).length, 2);
   assert.equal((html.match(/href="\/voice-studio"/g) || []).length, 2);
 });
+
+test("SubDub exposes explicit default, saved, custom, two-speaker, three-to-eight and auto-many lanes", () => {
+  const laneValues = [
+    "default_female",
+    "default_male",
+    "saved_voice",
+    "custom_voice",
+    "multi_two",
+    "multi_three_eight",
+    "auto_many"
+  ];
+  for (const locale of ["vi", "en", "zh"]) {
+    const html = renderSubDub(`/subdub?lang=${locale}&mode=dubbing_only`, locale);
+    for (const lane of laneValues) assert.match(html, new RegExp(`value="${lane}"`), `${locale} exposes ${lane}`);
+    assert.match(html, /data-subdub-speaker-map/);
+    assert.match(html, /value="many_3_8"/);
+    assert.match(html, /value="auto_many"/);
+  }
+});

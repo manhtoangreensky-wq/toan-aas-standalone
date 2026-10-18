@@ -411,6 +411,21 @@ Các phần có ngày/SHA cũ dưới đây là lịch sử, không xác nhận 
 - M03B pre-fix rendered/temp DB ngoài repo chỉ là historical diagnostic. Final redacted browser receipt: `reports/prepush/CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002-RENDERED.json`; pre-push review: `reports/prepush/CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002.md`.
 - Các bằng chứng trên chứng minh local source/test; chúng không chứng minh production deployment hoặc live money result.
 
+## Cập nhật vận hành WebApp — R217-07A và R218 plan — 18/10/2026
+
+SubDub WebApp đã bổ sung một workspace duy nhất với bốn hướng xử lý và hiện hiển thị
+bảy lựa chọn gán giọng riêng: mặc định nữ, mặc định nam, giọng đã lưu, giọng tự thêm,
+hai giọng, ba đến tám giọng và tự nhận diện nhiều giọng. Hai panel lồng tiếng có volume
+âm thanh gốc/giọng lồng tiếng, speaker-map guarded và đường sang Voice Library.
+
+- Regression SubDub: `12/12` đạt, `0` lỗi.
+- Full Node suite hiện tại: `526/526` đạt, `0` lỗi.
+- `node --check` Portal JS: `2/2` đạt; `git diff --check`: đạt.
+- Provider calls: `0`; wallet mutations: `0`; production data mutations: `0`.
+- Upload, Voice Library data, preflight, confirm, provider bridge, output artifact và
+  live report vẫn guarded; chưa gọi đây là parity runtime với Bot.
+- Plan/checklist/spec mới: R218 trong `docs/superpowers/` và `reports/audit/`.
+
 ## 20. A09 Auth + Admin shell — trạng thái vận hành candidate 05/09/2026
 
 - A09 là thay đổi presentation-only: không thay API, session, MFA, CSRF, role, schema, payment, wallet, provider hoặc Internal App.

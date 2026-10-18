@@ -804,3 +804,27 @@ LIVE_PASS=NO
 HEAD_SHA=7d2432707d94a91aeff15bbadd620993c4dd298c
 NEXT_ACTION=Chờ Owner delivery approval riêng cho PR #651; sau merge/deploy mới lặp lại route-locale/PWA/auth viewport matrix (390×844 và 1440×900) và chỉ đóng LIVE_PASS khi có bằng chứng runtime mới. Node 525/525, JS syntax 4/4 và diff-check đã đạt; Python verifier NOT_RUN do thiếu python/py. Không provider, wallet, PayOS hoặc production-data action.
 ```
+
+## 13. R218 — Bot parity UI/UX replan 2026-10-18
+
+Plan mới: `docs/superpowers/plans/2026-10-18-webapp-bot-parity-uiux-replan-r218.md`
+Spec mới: `docs/superpowers/specs/2026-10-18-r218-subdub-bot-parity-uiux.md`
+Checklist mới: `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md`
+
+- [x] Đọc-only Bot authority: bốn lane SubDub, source/translation master, quote →
+      confirm → process → QC → delivery/report.
+- [x] Đọc-only Bot voice authority: mặc định nam/nữ, voice đã lưu/tự thêm, Auto
+      speaker và Auto Multi 3–8; fixture evidence có 1/2/3/5/8 người nói.
+- [~] Source SubDub đã bổ sung lane nam/nữ, giọng đã lưu, giọng tự thêm, Multi 2,
+      Multi 3–8, tự nhận diện nhiều giọng và speaker-map panel; Voice Library,
+      upload, preflight, confirm, output và report thật vẫn guarded.
+- [x] R217-07A source lane model + Smart Multi presentation: `tests/subdub-hub-presentation.test.mjs`
+      đạt `12/12`; `node --check static/portal/portal.js` và `portal-motion.js` đạt; không
+      provider/wallet/production mutation.
+- [~] R217-07B→C: speaker mapping/runtime language catalog chưa có dữ liệu máy chủ;
+      UI đã có lane và trạng thái an toàn, chưa claim Auto Multi runtime.
+- [ ] R217-07D→E: upload/preflight/confirm/report thật và isolated QA.
+
+`NEXT_ACTION=Đóng R217-07A→E SubDub WebApp đang dở; sau đó mới thực thi các wave
+R218 Voice/Music/Image/Video theo checklist mới. PROVIDER_CALLS=0,
+WALLET_MUTATIONS=0, PRODUCTION_DATA_MUTATIONS=0, MERGE=NO, DEPLOY=NO, LIVE_PASS=NO.`

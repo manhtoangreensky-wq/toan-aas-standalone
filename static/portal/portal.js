@@ -25581,7 +25581,7 @@
       smartMultiTwo: "Hai giọng",
       smartMultiMany: "Nhiều giọng",
       voiceLibraryLabel: "Giọng từ Thư viện giọng",
-      voiceLibraryGuarded: "Thư viện giọng sẽ liên kết khi Voice và SubDub cùng được máy chủ mở.",
+      voiceLibraryGuarded: "Thư viện giọng sẽ liên kết khi máy chủ mở đồng thời Giọng và SubDub.",
       voiceLibraryLink: "Mở Thư viện giọng",
       smartMultiLabel: "Phân bổ giọng thông minh",
       smartMultiHint: "Tự nhận diện người nói và gán một, hai hoặc nhiều giọng; tính năng vẫn đang được bảo vệ.",
@@ -25590,8 +25590,20 @@
       smartMultiTwo: "Hai giọng",
       smartMultiMany: "Nhiều giọng",
       voiceLibraryLabel: "Giọng từ Thư viện giọng",
-      voiceLibraryGuarded: "Thư viện giọng sẽ liên kết khi Voice và SubDub cùng được máy chủ mở.",
+      voiceLibraryGuarded: "Thư viện giọng sẽ liên kết khi máy chủ mở đồng thời Giọng và SubDub.",
       voiceLibraryLink: "Mở Thư viện giọng",
+      voiceLaneLabel: "Cách gán giọng",
+      voiceLaneHint: "Chọn cách gán giọng. Khi máy chủ chưa mở, các lựa chọn vẫn hiển thị để bạn biết đúng khả năng.",
+      voiceLaneDefaultFemale: "Giọng nữ mặc định",
+      voiceLaneDefaultMale: "Giọng nam mặc định",
+      voiceLaneSaved: "Giọng đã lưu trong Thư viện giọng",
+      voiceLaneCustom: "Giọng tự thêm có xác nhận quyền sử dụng",
+      voiceLaneMultiTwo: "Hai giọng",
+      voiceLaneMultiThreeEight: "Ba đến tám giọng",
+      voiceLaneAutoMany: "Tự nhận diện nhiều giọng",
+      voiceLaneGuarded: "Cách này sẽ mở khi Thư viện giọng và bộ xử lý SubDub sẵn sàng.",
+      speakerMapLabel: "Bản đồ người nói → giọng",
+      speakerMapGuarded: "Chưa có dữ liệu nhận diện. Không tự gán giọng hoặc tạo kết quả giả.",
       audioBalanceLabel: "Cân bằng âm thanh gốc",
       audioBalanceLower: "Giảm nhỏ âm lượng nền khi có tiếng nói (20%)",
       audioBalanceMute: "Tắt hoàn toàn âm thanh gốc (100% Giọng lồng tiếng)",
@@ -25726,8 +25738,20 @@
       smartMultiTwo: "Two voices",
       smartMultiMany: "Many voices",
       voiceLibraryLabel: "Voice Library selection",
-      voiceLibraryGuarded: "Voice Library will connect when Voice and SubDub are opened by the server.",
+      voiceLibraryGuarded: "Voice Library will connect when the server opens Voice and SubDub together.",
       voiceLibraryLink: "Open Voice Library",
+      voiceLaneLabel: "Voice lane",
+      voiceLaneHint: "Choose how voices are assigned. Disabled lanes remain visible so the capability boundary is clear.",
+      voiceLaneDefaultFemale: "Default female voice",
+      voiceLaneDefaultMale: "Default male voice",
+      voiceLaneSaved: "Saved voice from Voice Library",
+      voiceLaneCustom: "Uploaded voice with consent",
+      voiceLaneMultiTwo: "Multi 2 voices",
+      voiceLaneMultiThreeEight: "Multi 3–8 voices",
+      voiceLaneAutoMany: "Auto-detect many voices",
+      voiceLaneGuarded: "This lane opens when Voice Library and the SubDub processor are ready.",
+      speakerMapLabel: "Speaker → voice map",
+      speakerMapGuarded: "No speaker data yet. The UI will not guess voices or create a fake result.",
       smartMultiLabel: "Smart speaker allocation",
       smartMultiHint: "Detect speakers and map one, two, or many voices; this capability remains guarded.",
       smartMultiAuto: "Auto-detect",
@@ -25871,8 +25895,20 @@
       smartMultiTwo: "两个音色",
       smartMultiMany: "多个音色",
       voiceLibraryLabel: "从音色库选择",
-      voiceLibraryGuarded: "服务器开放 Voice 与 SubDub 后，音色库将在此连接。",
+      voiceLibraryGuarded: "服务器同时开放语音与 SubDub 后，音色库将在此连接。",
       voiceLibraryLink: "打开音色库",
+      voiceLaneLabel: "选择音色通道",
+      voiceLaneHint: "选择音色分配方式。服务器未开放时仍显示通道，方便确认能力边界。",
+      voiceLaneDefaultFemale: "默认女声",
+      voiceLaneDefaultMale: "默认男声",
+      voiceLaneSaved: "音色库中的已保存音色",
+      voiceLaneCustom: "已确认授权的自定义音色",
+      voiceLaneMultiTwo: "双人音色",
+      voiceLaneMultiThreeEight: "3–8 人音色",
+      voiceLaneAutoMany: "自动识别多人音色",
+      voiceLaneGuarded: "服务器开放音色库和 SubDub 处理器后，此通道才会启用。",
+      speakerMapLabel: "说话人 → 音色映射",
+      speakerMapGuarded: "暂无说话人数据，不会猜测音色或生成虚假结果。",
       audioBalanceLabel: "原始音频音量",
       audioBalanceLower: "说话时降低背景音量（20%）",
       audioBalanceMute: "完全静音原始音频（仅保留配音）",
@@ -26010,6 +26046,46 @@
       </div>
       <p class="portal-subdub-volume-note" id="subdub-volume-note-${safeText(suffix)}">${safeText(copy.audioControlsNote)}</p>
     </fieldset>`;
+    const voiceLaneHtml = (suffix) => {
+      const lanes = [
+        ["default_female", copy.voiceLaneDefaultFemale],
+        ["default_male", copy.voiceLaneDefaultMale],
+        ["saved_voice", copy.voiceLaneSaved],
+        ["custom_voice", copy.voiceLaneCustom],
+        ["multi_two", copy.voiceLaneMultiTwo],
+        ["multi_three_eight", copy.voiceLaneMultiThreeEight],
+        ["auto_many", copy.voiceLaneAutoMany]
+      ];
+      return `<fieldset class="portal-subdub-voice-lanes" data-status="guarded" aria-describedby="subdub-voice-lane-note-${safeText(suffix)}">
+        <legend>${safeText(copy.voiceLaneLabel)}</legend>
+        <p class="portal-subdub-voice-lane-hint">${safeText(copy.voiceLaneHint)}</p>
+        <div class="portal-subdub-voice-lane-grid">
+          ${lanes.map(([value, label], index) => `<label class="portal-subdub-voice-lane" data-status="guarded">
+            <input type="radio" name="subdub_voice_lane_${safeText(suffix)}" value="${safeText(value)}" disabled ${index === 0 ? "checked" : ""}>
+            <span class="portal-subdub-voice-lane__body"><strong>${safeText(label)}</strong><small>${safeText(copy.voiceLaneGuarded)}</small></span>
+          </label>`).join("")}
+        </div>
+        <p class="portal-subdub-voice-lane-note" id="subdub-voice-lane-note-${safeText(suffix)}">${safeText(copy.voiceLaneGuarded)}</p>
+        <a class="portal-button portal-button--quiet" href="/voice-studio" data-subdub-voice-library-link>${safeText(copy.voiceLibraryLink)}</a>
+        <select class="portal-select" name="voice_profile_id" disabled hidden aria-hidden="true">
+          <option value="" selected>${safeText(copy.voiceLibraryGuarded)}</option>
+        </select>
+        <fieldset class="portal-subdub-smart-multi" data-subdub-smart-multi data-status="guarded" aria-describedby="subdub-smart-multi-note-${safeText(suffix)}">
+          <legend>${safeText(copy.smartMultiLabel)}</legend>
+          <p id="subdub-smart-multi-note-${safeText(suffix)}">${safeText(copy.smartMultiHint)}</p>
+          <select class="portal-select" name="speaker_mode" disabled>
+            <option value="auto" selected>${safeText(copy.smartMultiAuto)}</option>
+            <option value="two">${safeText(copy.smartMultiTwo)}</option>
+            <option value="many_3_8">${safeText(copy.voiceLaneMultiThreeEight)}</option>
+            <option value="auto_many">${safeText(copy.voiceLaneAutoMany)}</option>
+          </select>
+        </fieldset>
+        <div class="portal-subdub-speaker-map" data-subdub-speaker-map data-status="guarded" aria-live="polite">
+          <strong>${safeText(copy.speakerMapLabel)}</strong>
+          <span>${safeText(copy.speakerMapGuarded)}</span>
+        </div>
+      </fieldset>`;
+    };
 
     const stage1Html = `<section class="portal-card portal-card-pad portal-subdub-stage" data-subdub-stage="1" data-status="guarded" data-tool-state="guarded">
       <div class="portal-card-header">
@@ -26105,31 +26181,7 @@
           <input id="subdub-target-lang-dub-custom" class="portal-input" name="target_language_custom" inputmode="text" pattern="[a-zA-Z]{2,5}(?:-[a-zA-Z0-9]{2,5})?" placeholder="${safeText(copy.targetLangCustomPlaceholder)}" aria-describedby="subdub-target-lang-dub-custom-help">
           <small id="subdub-target-lang-dub-custom-help" class="portal-form-note">${safeText(copy.targetLangCustomHelp)}</small>
         </div>
-        <div class="portal-field" data-status="guarded">
-          <label class="portal-label">${safeText(copy.voiceStyleLabel)}</label>
-          <div class="portal-state" data-state="guarded" style="margin:4px 0 8px; padding:12px; font-size:13px;">
-            <strong>${safeText(copy.voiceGuardedTitle)}</strong>
-            <p style="margin:4px 0 0; color:var(--portal-muted, #8fa3b7);">${safeText(copy.voiceGuardedBody)}</p>
-          </div>
-          <select class="portal-select" name="voice_style" disabled>
-            <option value="" selected>${safeText(copy.voiceUnavailableOption)}</option>
-          </select>
-          <label class="portal-label" for="subdub-voice-profile-dub">${safeText(copy.voiceLibraryLabel)}</label>
-          <select id="subdub-voice-profile-dub" class="portal-select" name="voice_profile_id" disabled data-status="guarded">
-            <option value="" selected>${safeText(copy.voiceLibraryGuarded)}</option>
-          </select>
-          <a class="portal-button portal-button--quiet" href="/voice-studio" data-subdub-voice-library-link>${safeText(copy.voiceLibraryLink)}</a>
-          <fieldset class="portal-subdub-smart-multi" data-subdub-smart-multi data-status="guarded" aria-describedby="subdub-smart-multi-note-dub">
-            <legend>${safeText(copy.smartMultiLabel)}</legend>
-            <p id="subdub-smart-multi-note-dub">${safeText(copy.smartMultiHint)}</p>
-            <select class="portal-select" name="speaker_mode" disabled>
-              <option value="auto" selected>${safeText(copy.smartMultiAuto)}</option>
-              <option value="one">${safeText(copy.smartMultiOne)}</option>
-              <option value="two">${safeText(copy.smartMultiTwo)}</option>
-              <option value="many">${safeText(copy.smartMultiMany)}</option>
-            </select>
-          </fieldset>
-        </div>
+        ${voiceLaneHtml("dub")}
         ${localVolumeControlsHtml("dub")}`;
     } else if (modeKey === "SUBTITLE_PLUS_DUBBING") {
       stage2InnerHtml = `
@@ -26167,31 +26219,7 @@
           </div>
           <div class="portal-subdub-config-card">
             <h4>${safeText(copy.dubbingConfigHeading)}</h4>
-            <div class="portal-field" data-status="guarded">
-              <label class="portal-label">${safeText(copy.voiceStyleLabel)}</label>
-              <div class="portal-state" data-state="guarded" style="margin:4px 0 8px; padding:12px; font-size:13px;">
-                <strong>${safeText(copy.voiceGuardedTitle)}</strong>
-                <p style="margin:4px 0 0; color:var(--portal-muted, #8fa3b7);">${safeText(copy.voiceGuardedBody)}</p>
-              </div>
-              <select class="portal-select" name="voice_style" disabled>
-                <option value="" selected>${safeText(copy.voiceUnavailableOption)}</option>
-              </select>
-              <label class="portal-label" for="subdub-voice-profile-combo">${safeText(copy.voiceLibraryLabel)}</label>
-              <select id="subdub-voice-profile-combo" class="portal-select" name="voice_profile_id" disabled data-status="guarded">
-                <option value="" selected>${safeText(copy.voiceLibraryGuarded)}</option>
-              </select>
-              <a class="portal-button portal-button--quiet" href="/voice-studio" data-subdub-voice-library-link>${safeText(copy.voiceLibraryLink)}</a>
-              <fieldset class="portal-subdub-smart-multi" data-subdub-smart-multi data-status="guarded" aria-describedby="subdub-smart-multi-note-combo">
-                <legend>${safeText(copy.smartMultiLabel)}</legend>
-                <p id="subdub-smart-multi-note-combo">${safeText(copy.smartMultiHint)}</p>
-                <select class="portal-select" name="speaker_mode" disabled>
-                  <option value="auto" selected>${safeText(copy.smartMultiAuto)}</option>
-                  <option value="one">${safeText(copy.smartMultiOne)}</option>
-                  <option value="two">${safeText(copy.smartMultiTwo)}</option>
-                  <option value="many">${safeText(copy.smartMultiMany)}</option>
-                </select>
-              </fieldset>
-            </div>
+            ${voiceLaneHtml("combo")}
             ${localVolumeControlsHtml("combo")}
           </div>
         </div>`;
