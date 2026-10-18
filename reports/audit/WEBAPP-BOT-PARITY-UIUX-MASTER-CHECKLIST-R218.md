@@ -218,6 +218,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   `prompt` nối `/image-studio`, `aiEdit` nối `/image/transform`, `manual` nối `/image/edit`.
   Đây mới là control-level projection; source/reference, AI runtime, upload, preview,
   before/after, quote, result và delivery vẫn chưa có bằng chứng.
+- [~] Regression control-level Image đạt `52/52` focused tests: hub 8 route duy nhất,
+  create/edit/prompt/localized mode, quote guard, draft/report truth và không có output/giá/
+  download giả. Browser authenticated/upload/preview/runtime/delivery vẫn mở.
 - [ ] Reference goal/subject/style/ratio/negative prompt/3 biến thể.
 - [ ] Tạo nhanh 5 gợi ý/tự nhập; 7 tier/watermark/quote/confirm.
 - [ ] AI thêm/xóa/nền/màu/product/ratio/custom, phương án và readiness.
