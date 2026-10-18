@@ -20782,7 +20782,7 @@
       source_mode: draft.source_mode || "manual"
     });
     const isEn = context && context.locale === "en";
-    const translationWorkspace = isTranslationIntake ? renderTranslationWorkspace(page, context, values) : "";
+    const translationWorkspace = isTranslationIntake ? renderTranslationWorkspace(page, context, { ...values, source_language: draft.source_language || "auto" }) : "";
     return `<article class="portal-page portal-subtitle-studio">${renderHero(page, context)}
       <section class="portal-subtitle-studio-intro"><div><span class="portal-section-kicker">${isEn ? "Web-native subtitle authoring" : "Biên tập phụ đề trực tiếp"}</span><h2>${isEn ? "Structured transcript and caption editing, ready for review." : "Biên tập nội dung phụ đề có cấu trúc, dễ rà soát."}</h2><p>${isEn ? "Organize cues, timing, language drafts, and self-review in a private workspace. This is authoring metadata, not ASR, translation, TTS, dubbing, or export files." : "Tổ chức mốc thời gian, bản nháp ngôn ngữ và tự rà soát trong không gian riêng tư. Đây là dữ liệu biên tập, không phải kết quả ASR, dịch, TTS, lồng tiếng hay tệp xuất."}</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>${isEn ? "Subtitle projects" : "Dự án phụ đề"}</dd></div><div><dt>${safeText(String(review))}</dt><dd>${isEn ? "In review" : "Đang rà soát"}</dd></div><div><dt>${safeText(String(approved))}</dt><dd>${isEn ? "Self-reviewed" : "Đã tự rà soát"}</dd></div></dl></section>
       ${translationWorkspace}

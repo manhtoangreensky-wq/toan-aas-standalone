@@ -81,7 +81,7 @@ phụ thuộc việc đã có giọng cá nhân trong thư viện.
 workspace dọc có nguồn tự nhận diện, 21 ngôn ngữ đích, tìm kiếm cục bộ, giữ
 bản gốc, dịch hai chiều, trạng thái bắt đầu/dừng, kết quả và lịch sử. Panel
 không phải form và không thêm API action; capability server chưa công bố nên
-execution vẫn `guarded`. Test riêng 3/3 và full Node 547/547 đạt. UT-01 vẫn
+execution vẫn `guarded`. Test riêng 4/4 và full Node 548/548 đạt. UT-01 vẫn
 `[~]`; backend/quote/job/output/browser/live giữ ở wave kỹ thuật.
 
 ## 5. Bố cục cụ thể

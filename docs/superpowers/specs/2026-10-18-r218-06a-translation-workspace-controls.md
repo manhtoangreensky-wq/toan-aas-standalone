@@ -49,8 +49,8 @@ reports/prepush/WEBAPP-BOT-PARITY-R218-PR654-UPDATE.md
 ## Kiểm thử đóng lát
 
 ```text
-node --test tests/translation-workspace-controls.test.mjs = 3/3
-node --test tests/*.test.mjs = 547/547
+node --test tests/translation-workspace-controls.test.mjs = 4/4
+node --test tests/*.test.mjs = 548/548
 node --check static/portal/portal.js = PASS
 node --check static/portal/portal-i18n.js = PASS
 git diff --check = PASS

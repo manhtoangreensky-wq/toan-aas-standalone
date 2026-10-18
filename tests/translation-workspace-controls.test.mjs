@@ -74,3 +74,10 @@ test("translation start controls only open from the server capability gate", () 
   assert.doesNotMatch(html, /data-translation-local-action="stop"[^>]*disabled/);
 });
 
+test("fresh translation intake defaults the source control to auto-detect", () => {
+  assert.match(
+    portalSource,
+    /renderTranslationWorkspace\(page, context, \{ \.\.\.values, source_language: draft\.source_language \|\| "auto" \}\)/
+  );
+});
+

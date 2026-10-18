@@ -9,7 +9,7 @@ bày/control-level; nút xử lý mặc định bị khóa vì máy chủ chưa 
 `translation-runtime-start`. Panel không gửi API action mới, không gọi provider,
 không tạo quote/job/tệp, không sửa ví và chưa được kiểm thử live.
 
-Đã đo: test riêng `3/3`, full Node `547/547`, `node --check` portal `PASS`,
+Đã đo: test riêng `4/4`, full Node `548/548`, `node --check` portal `PASS`,
 `git diff --check` `PASS`. Python/pytest chưa chạy được vì workspace không có
 lệnh `python` hoặc `py`.
 

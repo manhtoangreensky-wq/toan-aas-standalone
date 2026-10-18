@@ -9,7 +9,7 @@
 | Chạy dịch thật và giao tệp | Chưa có DTO/capability/provider/quote/job/output/delivery; không được suy diễn từ giao diện | ⚠️ |
 
 Bằng chứng: `docs/superpowers/specs/2026-10-18-r218-06a-translation-workspace-controls.md`,
-`tests/translation-workspace-controls.test.mjs` `3/3`, full Node `547/547`.
+`tests/translation-workspace-controls.test.mjs` `4/4`, full Node `548/548`.
 Luồng `/translate` và redirect companion cũ được giữ nguyên.
 
 ## Đối chiếu Image — ứng viên cục bộ 08/10/2026

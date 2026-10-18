@@ -232,8 +232,8 @@ browser/AX và live vẫn mở; không suy diễn UI control-level thành parity
   upload, output, download, delivery hoặc wallet.
 
 ```text
-TRANSLATION_TARGETED=3/3
-FULL_NODE=547/547
+TRANSLATION_TARGETED=4/4
+FULL_NODE=548/548
 NODE_CHECK=PASS (portal.js, portal-i18n.js)
 GIT_DIFF_CHECK=PASS
 PYTEST=BLOCKED (workspace không có lệnh python/py)

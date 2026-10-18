@@ -116,8 +116,8 @@ Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
   đã có workspace dọc ở `/subtitle-studio/new?intent=translation&pair=...`: nguồn
   tự nhận diện, catalog đích 21 ngôn ngữ, tìm kiếm cục bộ, giữ bản gốc, hai chiều,
   khu vực bắt đầu/dừng, kết quả và lịch sử; VI/EN/ZH riêng, panel không gửi API.
-  Test `tests/translation-workspace-controls.test.mjs` đạt `3/3`, full Node đạt
-  `547/547`. Capability xử lý thật, DTO, quote/confirm, tiến trình, kết quả,
+  Test `tests/translation-workspace-controls.test.mjs` đạt `4/4`, full Node đạt
+  `548/548`. Capability xử lý thật, DTO, quote/confirm, tiến trình, kết quả,
   lịch sử, browser và live vẫn mở; không đánh dấu runtime parity.
 - [~] UT-02 Content idea/caption/hashtag/hook/script/CTA đã có workspace/brief/detail và
   Prompt Pack với gợi ý, trạng thái rỗng, ranh giới xử lý, lưu vào Ghi chú và locale VI/EN/ZH;
