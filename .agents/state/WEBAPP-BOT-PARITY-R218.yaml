@@ -1,22 +1,22 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: WIP_P1_VOICE_QUOTE_EXPIRY_BROWSER_VERIFIED
+status: WIP_P1_VOICE_STT_CONTROL_VERIFIED_PUSHED
 date: 2026-10-18
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 82ee56ceaddcb9685519c5b7376dfa121240e8f8
-delivery_head_sha: 82ee56ceaddcb9685519c5b7376dfa121240e8f8
-delivery_status: PUSHED_REMOTE_VERIFIED_CI_GREEN
+head_sha: 1211570261dad732cc0aa584da0345f37fc09f32
+delivery_head_sha: 1211570261dad732cc0aa584da0345f37fc09f32
+delivery_status: PUSHED_REMOTE_PENDING_CI
 head_sha_semantics: "Source-code candidate SHA; docs-only checkpoints may advance branch HEAD without changing this code candidate."
 delivery_head_semantics: "Code, refreshed evidence and metadata are on the verified branch tip; PR quality gate and authenticated QA are green."
-branch_head_sha: 82ee56ceaddcb9685519c5b7376dfa121240e8f8
+branch_head_sha: 1211570261dad732cc0aa584da0345f37fc09f32
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
-last_push_verified_commit: 82ee56ceaddcb9685519c5b7376dfa121240e8f8
-docs_checkpoint_sha: 82ee56ceaddcb9685519c5b7376dfa121240e8f8
-push_command_success_commit: 82ee56ceaddcb9685519c5b7376dfa121240e8f8
-remote_readback: "VERIFIED at the previous delivery checkpoint: gh headRefOid and git ls-remote agree on 82ee56ceaddcb9685519c5b7376dfa121240e8f8."
+last_push_verified_commit: 1211570261dad732cc0aa584da0345f37fc09f32
+docs_checkpoint_sha: 1211570261dad732cc0aa584da0345f37fc09f32
+push_command_success_commit: 1211570261dad732cc0aa584da0345f37fc09f32
+remote_readback: "VERIFIED: git push github webapp-r217-subdub-ui-r218 succeeded and updated GitHub branch to 1211570261dad732cc0aa584da0345f37fc09f32. CI readback for this candidate is pending."
 batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
@@ -49,8 +49,8 @@ artifacts:
   tester_guide: KIEM-THU/HUONG-DAN-TESTER.md
 current_wip:
   pr653: "Auth responsive/contrast; source CI xanh trước đó; delivery chưa đóng."
-  pr654: "SubDub control patch đã bổ sung source có/chưa có phụ đề, source auto-detect, catalog ngôn ngữ đầy đủ, 7 vị trí subtitle và ba lane Auto canonical; upload/preview/runtime vẫn guarded. Image control patch đã push ở 3ecbdc8. Utilities/Content/Projects locale checkpoint đã commit ở 69ef97f. UT-01 translation workspace control-level đã khóa nguồn tự nhận diện, catalog đích 21 ngôn ngữ, tìm kiếm cục bộ, giữ bản gốc, hai chiều, vùng bắt đầu/dừng/kết quả/lịch sử guarded; UT-04 đã bổ sung 4 utility lane vào `/free-tools`; UT-06 đã khóa bảng Documents và 9 workflow bằng test control-level; UT-07 đã khóa Asset Vault control-level bằng test 5/5 và full Node 558/558; SP-01 Support đã khóa control-level bằng test 4/4 và full Node 566/566. Account Security tiếng Việt đã dọn generic English, test riêng 2/2, Account regression 11/11; AC-01 control-level đạt 6/6 và full Node mới nhất 574/574. Delivery HEAD hiện tại là 82ee56c; runtime/provider/upload/preview/delivery/browser/live vẫn guarded. PR #654 còn OPEN/MERGEABLE; CI delivery HEAD đã xanh ở run 39125923765; chưa merge/deploy/live."
-  voice_controls: "VO-03/04/05: đếm từ/ký tự Unicode, giữ volume 0 và cảnh báo không tiếng, đồng bộ number/range, giữ sau hydration; aria-label preset sạch VI/EN/ZH. Input tests 4/4, input/inventory/flow 64/64, full Node 591/591. Browser renderer localhost: 18/18 cấu hình 3 locale x 2 theme x 3 viewport, lỗi/overflow/foreign request/mutation 0. Hai link kho giọng chỉ mở công cụ, không chuyển profile; đã sửa nhãn và bỏ bốn nút luôn disabled. Clone 7 bước chỉ là hướng dẫn. Voice Vault search/page/management, profile-aware handoff, quote/result, backend/CI/live vẫn mở."
+  pr654: "SubDub control patch đã bổ sung source có/chưa có phụ đề, source auto-detect, catalog ngôn ngữ đầy đủ, 7 vị trí subtitle và ba lane Auto canonical; upload/preview/runtime vẫn guarded. Image control patch đã push ở 3ecbdc8. Utilities/Content/Projects locale checkpoint đã commit ở 69ef97f. UT-01 translation workspace control-level đã khóa nguồn tự nhận diện, catalog đích 21 ngôn ngữ, tìm kiếm cục bộ, giữ bản gốc, hai chiều, vùng bắt đầu/dừng/kết quả/lịch sử guarded; UT-04 đã bổ sung 4 utility lane vào `/free-tools`; UT-06 đã khóa bảng Documents và 9 workflow bằng test control-level; UT-07 đã khóa Asset Vault control-level bằng test 5/5 và full Node 558/558; SP-01 Support đã khóa control-level bằng test 4/4 và full Node 566/566. Account Security tiếng Việt đã dọn generic English, test riêng 2/2, Account regression 11/11; AC-01 control-level đạt 6/6 và full Node mới nhất 574/574. Voice STT workspace/control lane đã push ở 1211570261dad732cc0aa584da0345f37fc09f32: STT contract 4/4, Voice group 132/132, full Node 598/598; quick-switch VI/EN/ZH giữ 152 destination. Runtime/provider/upload/preview/delivery/browser/live vẫn guarded. PR #654 đang OPEN; candidate 1211570261dad732cc0aa584da0345f37fc09f32 chờ CI readback; chưa merge/deploy/live."
+  voice_controls: "VO-01/VO-12 control-level: một workspace dọc có TTS/STT/Voice Vault/Thêm giọng; `/voice/stt` + `/voice/asr` có source audio/video, Tự nhận diện/ngôn ngữ nguồn và TXT/SRT/VTT; aria-current, locale VI/EN/ZH và palette xanh/ngọc đã khóa. Contract STT/workspace 4/4; quick-switch 152 destination mỗi locale; toàn bộ Voice 132/132; full Node 598/598. Browser upload/AX STT, MIME/size/ownership, transcript/copy/export, Voice Vault management/profile handoff, quote/result, backend/CI/live vẫn mở."
   music_controls: "MU-01..MU-07 control-level đã khóa local: /music/create và /music/song dùng workspace dọc bốn bước, ba tier, ba ô phương án guarded, song-only lyrics/vocal/length, VI/EN/ZH cân bằng; không còn provider/player/giá/tệp giả. Guarded form không tự mở khi thiếu capability; runtime/CI/browser/live chưa chứng minh."
   image_controls: "IM-01 control-level đã khóa local trên /image/create: bốn mode dọc create, prompt từ ảnh, AI edit và manual edit; ba mode ngoài create gắn guarded, VI/EN/ZH cân bằng. Upload/source, AI runtime, before/after, quote/result/delivery và browser/live vẫn mở."
   utility_controls: "UT-04 control-level đã khóa local: `/free-tools` có 10 tab/panel, QR giữ flow cũ; Avatar, Tỷ giá & Xu, Thời tiết, Downloader có input, preview/result rỗng, quyền/nguồn và nút guarded. Targeted 5/5, full Node 549/549; external API, dữ liệu thật, delivery, browser/AX/live chưa chứng minh."
@@ -65,10 +65,10 @@ current_wip:
   ci_status_at_last_observation: GREEN_ON_82EE56CE
   ci_scope: "Verify Web App và Authenticated WebApp QA trên delivery HEAD 82ee56ce; QA dùng DB/fixture cô lập, không provider, ví hoặc production data."
   ci_latest_run: 39125923765
-  ci_latest_status: "PR #654 OPEN/MERGEABLE trên 82ee56ce; Verify Web App SUCCESS; Authenticated WebApp QA SUCCESS trên DB/fixture cô lập."
+  ci_latest_status: "Run 39125923765 trước đó xanh trên 82ee56ce; candidate 1211570 đã push GitHub và đang chờ Verify Web App/Authenticated QA readback trên DB/fixture cô lập."
   migration_evidence_refresh: "Refresh and independent verify-web-evidence both exit 0 for da067f4d0a2c90453945370ea97616f330d1b1e5; source_files_scanned=288; source_fingerprint_sha256=3a693d70b395ef1140b28ff448e0076bb9d03aff719292403a695edb5571cf39. Bot evidence unchanged."
-  local_targeted_tests: "Voice input 4/4; Voice inventory/flow with expiry 67/67; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
-  local_full_tests: "594/594 tests/*.test.mjs"
+  local_targeted_tests: "STT/workspace 14/14; Voice suites 132/132; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
+  local_full_tests: "598/598 tests/*.test.mjs"
   python_tests: "NOT_RUN: bundled Python located via workspace dependencies; pytest/FastAPI/Uvicorn are not installed in that runtime. No Python source changed in this batch."
   voice_browser_qa:
     environment: "Localhost production renderer/CSS with synthetic signed-state projection; no integration.js, backend or DB. Browser plugin absent; Playwright + Edge used."
@@ -99,4 +99,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Tiếp tục P1 Voice: VO-01 workspace/mode draft retention, VO-07 confirm UI, VO-08 report và VO-12 STT. Quote expiry UI đã có; Voice Vault DTO gap search/pager/management/profile handoff vẫn mở rõ; motion remains last."
+next_action: "Đọc CI/browser readback cho candidate 1211570; sau đó tiếp tục P1 Voice VO-07 confirm UI, VO-08 report và Voice Vault DTO gap. STT upload/progress/transcript/export/runtime vẫn guarded; motion remains last."
