@@ -7,14 +7,16 @@ scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Ima
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
 head_sha: b7eef5474273c32b3dd13e4735bb7cd0443e633a
-delivery_head_sha: fd9cc30a1aa68b865ca9ef76a224936000d1cca0
-delivery_status: LOCAL_VALIDATION_PENDING_COMMIT
+delivery_head_sha: 1babe77e2d82fd200fe4a0c8b2a84d085ee83733
+delivery_status: PUSH_COMMAND_SUCCEEDED_REMOTE_READBACK_UNAVAILABLE_AWAITING_CI
 head_sha_semantics: "Source-code candidate SHA; docs-only checkpoints may advance branch HEAD without changing this code candidate."
-delivery_head_semantics: "Last verified pushed branch SHA; current Voice test/spec/checklist/state edits are local until the next push."
-branch_head_sha: fd9cc30a1aa68b865ca9ef76a224936000d1cca0
+delivery_head_semantics: "Push command succeeded for this commit; independent remote readback and CI are not verified in the current environment."
+branch_head_sha: 1babe77e2d82fd200fe4a0c8b2a84d085ee83733
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
 last_push_verified_commit: fd9cc30a1aa68b865ca9ef76a224936000d1cca0
-docs_checkpoint_sha: fd9cc30a1aa68b865ca9ef76a224936000d1cca0
+docs_checkpoint_sha: 1babe77e2d82fd200fe4a0c8b2a84d085ee83733
+push_command_success_commit: 1babe77e2d82fd200fe4a0c8b2a84d085ee83733
+remote_readback: "NOT_VERIFIED: git ls-remote failed with getaddrinfo() thread failed to start"
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
   root: "D:/TOANAAS/bot telegram"
