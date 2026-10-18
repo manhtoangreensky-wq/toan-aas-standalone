@@ -1,100 +1,119 @@
-# WebApp Bot Parity UI/UX Replan R218
+# R218 — Kế hoạch UI/UX toàn bộ sản phẩm WebApp theo Bot
 
-## Mục tiêu
+Ngày 2026-10-18. Trạng thái PLAN_IN_REVIEW; chưa mở wave triển khai mới.
+Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong kế hoạch.
 
-Đưa WebApp standalone về đúng luồng sản phẩm của Bot, giữ trải nghiệm một màn hình,
-gọn nhưng đủ chi tiết, sau đó mới mở các bridge xử lý thật. R218 bắt đầu bằng SubDub
-vì đây là lane đang có khoảng cách lớn nhất giữa giao diện Web và khả năng Bot.
+## Bộ tài liệu
 
-Phạm vi của R218 là WebApp standalone. Bot chỉ là nguồn tham chiếu đọc-only. Không
-sửa Bot/Core, route-engine, provider, ví/Xu, PayOS, dữ liệu production hoặc secret.
+- Inventory: reports/audit/WEBAPP-BOT-PRODUCT-INVENTORY-R218.md (B01–B34).
+- Checklist: reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md.
+- R218-00/01: specs/2026-10-18-r218-00-control-contract.md.
+- R218-02/03: specs/2026-10-18-r218-02-03-voice-music-controls.md.
+- R218-04: specs/2026-10-18-r218-subdub-bot-parity-uiux.md.
+- R218-05/09: specs/2026-10-18-r218-05-09-image-video-controls.md.
+- R218-06/07/08: specs/2026-10-18-r218-06-08-utilities-admin-controls.md.
+- R218-10/11/12/13: specs/2026-10-18-r218-10-13-qa-motion-delivery-technical.md.
+- State: .agents/state/WEBAPP-BOT-PARITY-R218.yaml.
 
-## Nguồn tham chiếu Bot đã kiểm tra
+Đường dẫn specs ở trên tương đối docs/superpowers/. Mỗi nhóm spec gộp chỉ để
+đọc gọn; từng phiếu thực thi và tiêu chí đóng vẫn có ID riêng.
 
-- `D:\TOANAAS\bot telegram\docs\public\TOAN_AAS_HUONG_DAN_SU_DUNG_CHO_KHACH_V2.md`
-  — luồng người dùng: chọn công cụ → gửi tệp/nội dung → chọn cấu hình → xem hóa đơn
-  → xác nhận → xử lý → nhận kết quả.
-- `D:\TOANAAS\bot telegram\docs\subdub\TOAN_AAS_SUBDUB_4LANE_OPTIMAL_PIPELINE_RESEARCH_2026-07-28.md`
-  — bốn lane dùng chung source semantic master và translation master.
-- `D:\TOANAAS\bot telegram\docs\superpowers\specs\2026-08-14-subdub-per-speaker-auto-gender-cast-design.md`
-  — giọng mặc định/thủ công/đã lưu và Auto speaker theo từng người nói.
-- `D:\TOANAAS\bot telegram\docs\superpowers\specs\2026-08-24-subdub-multi-speaker-blackbox-design.md`
-  — lane nhiều người nói tách khỏi lane hai người nói, fail-closed khi thiếu bằng chứng.
-- `D:\TOANAAS\bot telegram\docs\superpowers\specs\2026-09-01-subdub-auto-multi-local-speaker-embedding-design.md`
-  — Auto Multi xác định số người nói trong khoảng 3–8, ánh xạ mỗi người nói tới một
-  giọng khác nhau, không ép số lượng hoặc gán xen kẽ.
-- `D:\TOANAAS\bot telegram\reports\subdub_smart_shadow_comparison.json`
-  — bằng chứng fixture cho 1, 2, 3, 5 và 8 người nói, cùng trạng thái fail-closed.
+## 1. Thứ tự bắt buộc
 
-## Khoảng cách đã xác nhận ở WebApp
+1. Lập và đối soát plan/checklist/spec toàn bộ sản phẩm từ menu và handler Bot.
+2. Bảo toàn và chốt phần đang dở: PR #653 auth responsive/contrast; PR #654 là
+   ứng viên UI SubDub cần review/CI. Không gọi thẻ disabled là tính năng hoàn tất.
+3. Theo checklist mới: nền chung → Voice → Music → SubDub → Image → tiện ích,
+   tài liệu/công việc → AutoPost/Support/Account → Admin trình bày → Video.
+4. Product Video và các công cụ video làm cuối các wave sản phẩm.
+5. Motion/hiệu năng làm cuối. Khi UI/UX và motion đủ bằng chứng, báo cáo rồi đợi
+   lệnh cho backend/bridge; không tự chuyển sang các phần kỹ thuật.
 
-1. SubDub đã có bốn tab và volume control nhưng vẫn là presentation guarded; upload,
-   tạo job, xử lý và kết quả thật chưa nối.
-2. Dubbing/Combo chỉ có lựa chọn `auto`, `one`, `two`, `many`; chưa có lane rõ ràng
-   cho giọng mặc định nam, giọng mặc định nữ, Multi 2, Multi 3–8 và Auto nhiều giọng.
-3. `voice_profile_id` và `voice_style` đang disabled; liên kết sang Voice Studio chưa
-   tải được Voice Library hoặc voice đã lưu.
-4. Smart Multi mới là select và copy; chưa hiển thị bản đồ người nói → giọng, số người
-   nói đã nhận diện, trạng thái chưa đủ bằng chứng hoặc lý do phải chọn thủ công.
-5. Stage 3/4 đang guarded; chưa có receipt thật, tiến trình từng bước, artifact SRT/VTT,
-   audio dubbing, MP4 combo và báo cáo sau xử lý.
-6. Locale VI còn dấu vết thuật ngữ tiếng Anh trong copy SubDub; cần rà toàn bộ catalogue.
+## 2. Nguồn sự thật và phạm vi
 
-## Thứ tự triển khai
+- Bot đọc-only tại `D:/TOANAAS/bot telegram`; root menu
+  `bot.py:72195 localized_main_menu_keyboard`.
+- Hash bot.py: `7eae9610073d3000c2a949e78e2e48e0194eb402eedea7f9b9328fa09d7f0b0f`.
+- Ref local đọc được: `fix/p0-subdub-smart-synth-adapter-signature-r1`.
+  Bot commit và production runtime chưa xác minh trong lượt audit này.
+- Menu → callback/handler → catalog → capability → output evidence là các lớp
+  riêng. Tài liệu thiết kế V2 không tự chứng minh V2 đã chạy.
+- Giữ stack WebApp, palette xanh dương/xanh ngọc, tối navy/chữ sáng; sáng/chữ tối.
+- Không sửa Bot/route-engine/provider/wallet/PayOS/secret hoặc production data.
 
-### W0 — Rebaseline và ledger
+## 3. Gọn nhưng đủ chi tiết
 
-- Ghi R218 vào state/checklist mới.
-- Khóa các yêu cầu Bot parity ở trên thành acceptance criteria.
-- Giữ các wave đã đóng của R217, không mở lại source đã đạt.
+Một workspace/sản phẩm, nhiều chế độ trên cùng trang. Các tùy chọn liên quan xuất
+hiện theo mode; phần nâng cao có disclosure rõ ràng. Không nhân mỗi nút Bot thành
+một route Web, không xóa tính năng để giảm số ô.
 
-### W1 — Đóng phần đang dở của SubDub WebApp
+Mỗi control có ID, nguồn Bot, Web renderer/route, VI/EN/ZH, vị trí, input/default,
+điều kiện enabled, action, next/back, loading/empty/error/stale, test và screenshot.
+Chi tiết tại `2026-10-18-r218-00-control-contract.md`.
 
-- Hoàn thiện IA một màn hình: nguồn → lane → ngôn ngữ → giọng → cân chỉnh âm thanh
-  → báo giá/xác nhận → tiến trình → báo cáo.
-- Bổ sung lane UI rõ ràng: mặc định nữ, mặc định nam, Voice Library/giọng tự thêm,
-  Multi 2, Multi 3–8, Auto nhận diện nhiều giọng.
-- Hiển thị trạng thái guarded đúng sự thật; không bật nút tạo job khi bridge chưa sẵn.
-- Đồng bộ copy VI/EN/ZH; không trộn ngôn ngữ trong từng locale.
-- Giữ màu xanh/navy/teal, không dùng nền đen brand; chuẩn hóa card, spacing, heading,
-  touch target 44px và thứ tự đọc dọc trên mobile.
+Cấu hình local có thể chỉnh khi engine chưa mở nếu không sinh tác vụ. Nút thực thi
+dựa vào capability máy chủ; không hardcode khóa toàn bộ form. Giọng mặc định không
+phụ thuộc việc đã có giọng cá nhân trong thư viện.
 
-### W2 — Đối chiếu Voice và các lane sản phẩm
+## 4. Wave / spec / điều kiện đóng
 
-- Voice: mặc định, giọng đã lưu, giọng tự thêm, preview, tốc độ, âm lượng, consent.
-- Music: nhạc nền, bài hát có lời, giọng nam/nữ/song ca/tự động, gợi ý và hóa đơn.
-- Image: tạo ảnh, chỉnh ảnh, reference, preview, lịch sử và output readiness.
-- Video: các lane video, addon voice/music/subtitle/dubbing, AI/manual editing boundary.
-- Mỗi lane có checklist UI riêng trước khi mở runtime bridge.
+| Wave | Spec | Nội dung | Điều kiện đóng |
+|---|---|---|---|
+| C0 | R218-00 | WIP #653/#654, nguồn Bot, inventory, mapping controls | Checkpoint đủ; không mất việc cũ |
+| F0 | R218-01 | Shell/type/color/spacing/upload/result/states chung | Browser locale/theme/mobile/keyboard đạt |
+| P1 | R218-02 | Voice TTS/STT/default/saved/clone/preview/reuse | Đủ control, consent/state/return flow |
+| P2 | R218-03 | Music nền/bài hát/kho/SFX/chỉnh nhạc | Đủ gợi ý/vocal/tier/result; gap editor/2 bản ghi riêng |
+| P3 | R218-04 | SubDub 4 mode + mọi policy giọng/ngôn ngữ/mixing/report | Đủ Auto 2, Auto Multi 3–8, Smart Multi riêng |
+| P4 | R218-05 | Ảnh AI/reference/prompt/AI edit/manual edit | Đủ mục tiêu/style/ratio/biến thể/local tools |
+| P5 | R218-06 | Dịch/Content/Free/Memory/Docs/Assets/Projects | Mỗi menu root và submenu có disposition |
+| P6 | R218-07 | AutoPost/Brand/Channels/Calendar/Affiliate/Support/Account | Luồng đầy đủ, nối sản phẩm và trạng thái thật |
+| A0 | R218-08 | Admin presentation/role matrix/task/report | Bảng dọc, chi tiết, fixture quyền và references đạt |
+| V0 | R218-09 | Video các lane/32 profile/AI edit/manual/upgrade | Đủ catalog và từng control, không claim CapCut |
+| Q0 | R218-10 | Tổng UI/UX/locale/a11y/responsive | Evidence từng requirement; không chỉ số route/test |
+| M0 | R218-11 | Motion/auth/render lifecycle/perceived performance | Không cut/restart motion; trace/reduced-motion đạt |
+| L0 | R218-12 | Delivery/live khi được phép | SHA đúng + thao tác/DOM/screenshot phù hợp |
+| T0 | R218-13 | Technical register | Chỉ plan, đợi lệnh sau UI/motion |
 
-### W3 — Locale, responsive, accessibility
+## 5. Bố cục cụ thể
 
-- Rà fixed chrome và product copy theo VI/EN/ZH.
-- Kiểm viewport 320/375/390/414/768/1024/1440, không tràn ngang.
-- Kiểm heading order, label thật, focus, keyboard tab, contrast AA, reduced motion.
+- App H1 32–40px, mobile 28–32px; H2 24px; body 16px/line-height 1.5.
+- Label 14–16px; spacing 8/12/16/24/32px; card padding 24px desktop/16px mobile.
+- Control tối thiểu 44px; focus rõ; chọn/disabled/error không chỉ dùng màu.
+- Desktop preview/source và cấu hình chia vùng; DOM order theo thứ tự thao tác.
+  Mobile một cột: nguồn → mode → thiết lập → review → kết quả.
+- VI sạch tiếng Việt ngoài tên riêng; EN sạch tiếng Anh; ZH tương ứng.
+  Bot dùng tham chiếu tính năng, không chép các chuỗi Bot còn pha ngôn ngữ.
+- Một CTA chính; hành động phụ theo nhóm. Chỉ mở download khi file thực sự sẵn sàng.
 
-### W4 — Runtime bridge và báo cáo thật (Owner gate riêng)
+## 6. Phiếu thực thi cho từng spec
 
-- Chỉ mở sau khi UI contract xanh.
-- Mọi lane dùng request ID, job ID, provider task ID, idempotency và audit.
-- Không provider call hoặc wallet mutation trong fixture/QA.
-- Chỉ claim PASS khi có artifact thật và receipt thật.
+1. Inventory controls: menu/callback/handler, từng mục chưa rõ ghi OPEN.
+2. Wireframe và bảng nút/field/states, exact files được phép sửa và protected files.
+3. Lát UI nhỏ có thể review độc lập; không refactor luồng đã khóa.
+4. Test hành vi meaningful: chọn/back/hydration/reload/error; không chỉ regex tồn tại.
+5. Browser QA: VI/EN/ZH × light/dark × 375/390/768/1440; shell mở rộng
+   320/414/1024. Screenshot + AX, contrast/type/touch/overflow measurements.
+6. Cập nhật checklist/evidence/tài liệu; push đúng candidate và đọc CI HEAD mới.
 
-### W5 — Motion cuối
+Một Builder RUNNING tại một thời điểm. Phiếu không tham chiếu mơ hồ hội thoại.
+Không bỏ assertion hoặc thêm field ẩn chỉ để test xanh.
 
-- Chỉ sau khi W1–W4 ổn định.
-- Giữ transform/opacity, không animate layout, có skeleton và reduced-motion.
-- Đo trace desktop/mobile: CLS < 0.10, LCP ≤ 2.5s, INP ≤ 200ms hoặc ghi blocker.
+## 7. Điều kiện không được suy diễn
 
-## Cổng dừng
+- Music editor Bot hiện guard; parser nhiều track không chứng minh giao 2 bản.
+- Video AI edit catalog có 39 khả năng nhưng production mặc định disabled.
+- Video long/multiscene có planning UI; public execution có thể locked.
+- Profile video 32 loại là metadata kế hoạch, không phải 32 engine.
+- SubDub 4-lane V2 shared-master docs là DESIGN; cần đối chiếu V1 đang hoạt động.
+- Candidate #654 bảy thẻ disabled, map rỗng và volume controls không chứng minh
+  kết nối giọng hoặc kết quả thật; vẫn OPEN cho review/browser.
 
-- Không tạo copy giả cho output hoặc báo cáo.
-- Không dùng `HTTP 200`, job ID hoặc cờ `completed` để claim thành công.
-- Không sửa Bot/Core hoặc các luồng đã khóa.
-- Nếu thiếu entitlement/provider/runtime, giữ guarded và ghi rõ blocker trong checklist.
+## 8. Motion cuối và technical register
 
-## Kết quả mong đợi
+Motion dùng transform/opacity, micro 150–300ms; kiểm hydration không cắt animation,
+route cleanup/observer/RAF/timer, reduced-motion, skeleton không gây shift.
+Đo CLS <0.10, LCP ≤2.5s, INP ≤200ms khi có trace hợp lệ; không bịa số.
 
-R218 chỉ được coi là hoàn tất khi mỗi lane có UI/UX acceptance riêng, có bằng chứng
-source và browser phù hợp, locale không rò, mobile không vỡ, và các phần bridge chưa
-được mở vẫn hiển thị đúng trạng thái an toàn.
+DTO/capability/Voice Library projection, upload/quote/job bridge, xử lý provider,
+artifact, quyền server, OAuth/publish, wallet/PayOS nằm R218-13. Không triển khai
+các mục này trong wave UI; khi hết UI/UX/motion báo cáo và đợi lệnh.

@@ -811,20 +811,21 @@ Plan mới: `docs/superpowers/plans/2026-10-18-webapp-bot-parity-uiux-replan-r21
 Spec mới: `docs/superpowers/specs/2026-10-18-r218-subdub-bot-parity-uiux.md`
 Checklist mới: `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md`
 
-- [x] Đọc-only Bot authority: bốn lane SubDub, source/translation master, quote →
-      confirm → process → QC → delivery/report.
+- [~] Đọc-only Bot: bốn lane/callback đã xác nhận; source/translation master V2
+      là DESIGN, chưa chứng minh runtime dùng V2. Không gộp hai mức evidence.
 - [x] Đọc-only Bot voice authority: mặc định nam/nữ, voice đã lưu/tự thêm, Auto
       speaker và Auto Multi 3–8; fixture evidence có 1/2/3/5/8 người nói.
 - [~] Source SubDub đã bổ sung lane nam/nữ, giọng đã lưu, giọng tự thêm, Multi 2,
       Multi 3–8, tự nhận diện nhiều giọng và speaker-map panel; Voice Library,
       upload, preflight, confirm, output và report thật vẫn guarded.
-- [x] R217-07A source lane model + Smart Multi presentation: `tests/subdub-hub-presentation.test.mjs`
-      đạt `12/12`; `node --check static/portal/portal.js` và `portal-motion.js` đạt; không
-      provider/wallet/production mutation.
+- [~] R217-07A candidate source: test presentation `12/12` đã chạy; chưa đóng UX.
+      Cần review radio disabled/selected ngầm, hidden field/selector lặp, Voice Vault link
+      và mix 0–200; không dùng số tests để chứng minh parity hoặc giao diện đẹp.
 - [~] R217-07B→C: speaker mapping/runtime language catalog chưa có dữ liệu máy chủ;
       UI đã có lane và trạng thái an toàn, chưa claim Auto Multi runtime.
 - [ ] R217-07D→E: upload/preflight/confirm/report thật và isolated QA.
 
-`NEXT_ACTION=Đóng R217-07A→E SubDub WebApp đang dở; sau đó mới thực thi các wave
-R218 Voice/Music/Image/Video theo checklist mới. PROVIDER_CALLS=0,
-WALLET_MUTATIONS=0, PRODUCTION_DATA_MUTATIONS=0, MERGE=NO, DEPLOY=NO, LIVE_PASS=NO.`
+`NEXT_ACTION=Chốt bộ plan R218 toàn sản phẩm (inventory B01–B34), chốt WIP #653/#654,
+sau đó theo checklist R218: Voice/Music/SubDub/Image/tiện ích/Admin/Video/motion cuối.
+Không đợi bridge/backend để đóng UI wave; kỹ thuật T0 cuối đợi lệnh.
+PROVIDER_CALLS=0, WALLET_MUTATIONS=0, PRODUCTION_DATA_MUTATIONS=0.`

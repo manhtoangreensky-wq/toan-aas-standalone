@@ -1,0 +1,45 @@
+task_id: WEBAPP-BOT-PARITY-R218
+phase: REVIEW
+status: PLAN_READY_FOR_REVIEW
+date: 2026-10-18
+scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
+scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
+branch: webapp-r217-subdub-ui-r218
+pull_request: 654
+base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
+bot_reference:
+  root: "D:/TOANAAS/bot telegram"
+  access: READ_ONLY_SOURCE
+  commit: UNKNOWN
+  ref: fix/p0-subdub-smart-synth-adapter-signature-r1
+  bot_py_sha256: 7eae9610073d3000c2a949e78e2e48e0194eb402eedea7f9b9328fa09d7f0b0f
+  runtime_verified: false
+artifacts:
+  plan: docs/superpowers/plans/2026-10-18-webapp-bot-parity-uiux-replan-r218.md
+  checklist: reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md
+  inventory: reports/audit/WEBAPP-BOT-PRODUCT-INVENTORY-R218.md
+  control_contract: docs/superpowers/specs/2026-10-18-r218-00-control-contract.md
+  voice_music: docs/superpowers/specs/2026-10-18-r218-02-03-voice-music-controls.md
+  subdub: docs/superpowers/specs/2026-10-18-r218-subdub-bot-parity-uiux.md
+  image_video: docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md
+  other_admin: docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md
+  qa_motion_technical: docs/superpowers/specs/2026-10-18-r218-10-13-qa-motion-delivery-technical.md
+current_wip:
+  pr653: "Auth responsive/contrast; source CI xanh trước đó; delivery chưa đóng."
+  pr654: "Candidate disabled SubDub lanes, source/docs; cần review/browser, không đóng UI parity."
+  ci_run: 39098833727
+  ci_head: 235d836
+  ci_status_at_last_observation: SUCCESS
+  ci_scope: "Candidate 235d836, Verify Web App + Authenticated QA success; docs expansion not yet CI verified."
+  browser_qa_artifact_sha256: ab07f7670eb6527062752504c32a94d782c3b38f0d4b4a6ad9ad8fe8976ca4a8
+open_findings:
+  - "SubDub 0-200 dub volume, canonical voice handoff, duplicate/hidden controls."
+  - "Auto 2/Auto Multi 3-8/Smart Multi là ba callback, không gộp."
+  - "Music edit guarded; two-track delivery chưa chứng minh."
+  - "Video 32 profiles/39 AI edit options; execution capability riêng."
+  - "Control-level dynamic callback và authenticated browser evidence còn mở."
+provider_calls: 0
+wallet_mutations: 0
+production_data_mutations: 0
+live_pass: NOT_TESTED
+next_action: "Review và push bộ plan toàn sản phẩm; chốt WIP trước triển khai wave mới; technical backend cuối đợi lệnh."

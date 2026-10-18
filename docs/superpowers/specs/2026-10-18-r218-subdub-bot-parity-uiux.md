@@ -1,90 +1,80 @@
-# R218-SDUI — SubDub Bot Parity UI/UX
+# R218-04 — SubDub: một workspace, đủ luồng Bot
 
-## Contract
+Trạng thái SPEC_REVIEW. PR #654 là candidate, chưa hoàn tất theo spec này.
+Allowed UI: static/portal/portal.js, portal.css, portal-i18n.js và tests SubDub.
+Không sửa Bot/API schema/provider/route-engine/wallet hoặc dữ liệu production.
 
-- Repository: WebApp standalone.
-- Allowed files: `static/portal/portal.js`, `static/portal/portal.css`,
-  `static/portal/portal-i18n.js`, SubDub-specific tests, R218 docs.
-- Protected: Bot repo, route-engine, provider adapters, wallet/PayOS, production data,
-  existing auth and completed R217 contracts.
-- Side effects: source/UI only; `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`.
+## 1. Workspace theo thứ tự
 
-## Product model
+Nguồn/preview → việc cần làm → ngôn ngữ/lời thoại → giọng → subtitle/mix → review
+→ xử lý → kết quả/report. Mobile một cột; không tách thành 4 trang không liên thông.
 
-The page has one workspace and four product modes:
+Bốn mode: Phụ đề gốc, Phụ đề dịch, Lồng tiếng, Phụ đề và lồng tiếng.
+Chuyển mode giữ nguồn và option phù hợp; field ẩn không tham gia request trái mode.
 
-| Mode | Input | Output contract |
+## 2. Bảng controls
+
+| ID | Vị trí/nhãn | Hành vi và state |
 |---|---|---|
-| Phụ đề gốc | video/audio | SRT/VTT/TXT source subtitle |
-| Phụ đề dịch | source subtitle/audio + target language | translated SRT/VTT, single or bilingual |
-| Lồng tiếng | media + target language + voice lane | dubbed audio/video |
-| Combo | media + target language + subtitle + voice lane | one subtitle artifact + one final dubbed MP4 |
+| SD-01 | Đầu trang, lựa chọn mode | 4 mode in-place, keyboard, query/reload đúng |
+| SD-02 | Nguồn/preview/upload | Audio/video/subtitle theo mode/contract, metadata/progress/cancel/replace/error |
+| SD-03 | “Đã có phụ đề?” | Có: chọn tệp/cue; Chưa: tạo gốc hoặc đi thẳng lane hợp lệ |
+| SD-04 | Ngôn ngữ nguồn | Tự nhận diện khi hỗ trợ; không mặc định Việt cho mọi file |
+| SD-05 | Ngôn ngữ đầu ra | Giữ gốc hoặc dịch; Việt đầu tiên, Anh/Trung và catalog searchable đầy đủ |
+| SD-06 | Phụ đề gốc/dịch | Xem/edit cue nếu Web đã có quyền, original/translated source, mono/bilingual, SRT/VTT/TXT theo contract |
+| SD-07 | Kiểu giọng | Nhóm Mặc định / Đã lưu / Thêm giọng / Tự động thông minh; không trải hàng ngang quá dài |
+| SD-08 | Default → Nữ/Nam | Chọn local config; readiness riêng, không cần kho giọng cá nhân |
+| SD-09 | Đã lưu | Picker profile thật: tên/trạng thái/preview/default; owner/readiness; không gõ provider ID |
+| SD-10 | Thêm giọng | Voice wizard consent/upload/name/quote/preview/save → quay về draft SubDub |
+| SD-11 | Auto 2 người nói | Callback Bot auto_speaker_gender; không tự đổi sang Multi hoặc ép cặp nam/nữ |
+| SD-12 | Auto Multi 3–8 | Callback auto_multi_speaker; count và mapping từ server, không nhập count để giả detection |
+| SD-13 | Smart Multi | Callback auto_smart_multivoice; capability/quality/cost state riêng; không gộp auto_many |
+| SD-14 | Người nói → giọng | Có evidence mới hiện từng speaker, preview/override nếu contract cho; thiếu/ambiguous → review/fallback rõ |
+| SD-15 | Âm thanh gốc | Bật/tắt, slider+number 0–100%; preserve 0, không reset khi đổi mode |
+| SD-16 | Giọng lồng tiếng | Slider+number 0–200%, giữ giá trị; xác nhận mute nếu 0 |
+| SD-17 | Subtitles layout | Vị trí 7 slot khi capability hỗ trợ, style/line rule/mono-bilingual; chỉ mode có subtitle |
+| SD-18 | Review | Nguồn/mode/language/voice/mix/subtitle/duration/count/cost/expiry; Sửa ngay nhóm liên quan |
+| SD-19 | CTA xử lý | Quote/capability/inputs hợp lệ; double-submit guard, progress, lỗi giữ draft |
+| SD-20 | Kết quả/report | Request/job refs, mỗi stage/status, source/target/voices/mix, file readiness/receipt/failure reason/recovery |
+| SD-21 | Handoff | Dùng file/giọng/subtitle cho Voice/Video/Projects/Admin có context và return path |
 
-The UI must expose the same source/target language, voice, quote and confirmation
-concepts in all applicable modes. Combo must visually show that subtitle and dubbing
-share one target language and one translation master.
+## 3. Điều kiện quan trọng
 
-## Voice lane contract
+- Tự động nhận diện nguồn khác đổi locale giao diện, khác nhận diện người nói.
+- Original/translated speech source phải rõ khi giữ ngôn ngữ gốc.
+- Combo dùng cấu hình target chung; không tính 2 lần cùng nguồn dịch nếu backend
+  đang dùng master chung. Tài liệu V2 shared-master là DESIGN, không giả đã triển khai.
+- Chỉ cấu hình local không cần khóa toàn trang. Khi server chưa mở xử lý, CTA nêu
+  lý do thực tế; không dựng giá/ID/tác vụ giả.
+- Target catalog runtime thiếu: ghi T0 + UI state, không dùng một ô ISO thay trải nghiệm tìm kiếm.
+- Voice Vault canonical phải xác minh; /voice-studio không tự thay cho /voice/saved.
+- Download chỉ khi completed + download_ready với file thực tế.
+- Report queued không là “đã nhận kết quả”; failed_delivery có recovery đọc lại đúng job.
 
-The dubbing and combo panels must show these mutually exclusive lanes as cards or a
-segmented control, in this order:
+## 4. Nguồn bằng chứng
 
-1. `default_female` — Giọng nữ mặc định, no saved profile required.
-2. `default_male` — Giọng nam mặc định, no saved profile required.
-3. `saved_voice` — select a Voice Library profile owned by the signed account.
-4. `custom_voice` — use a user-uploaded voice after consent and readiness checks.
-5. `multi_two` — exactly two detected speakers, two distinct voice assignments.
-6. `multi_three_eight` — automatic 3–8 speaker lane; the UI must show detected count
-   and mapping summary when runtime data is available.
-7. `auto_many` — automatic speaker discovery, bounded by server capability and fail-closed
-   when evidence is insufficient.
+Bot: bot.py:234163/234206 (4 mode/source),234652..234709 và236113..236161
+(3 Auto callback + default/saved/create),234604/236039/236083 (language),
+236533/236591 (volume),235906/236005 (subtitle position),234811 (result).
+Web: renderSubDubHub, updateSubDubModeSelection, updateSubDubLocalVolume;
+copyfast_subdub_job_bridge.py là nguồn schema đọc-only cần đối chiếu DTO.
 
-Before bridge enablement, each lane may be disabled, but its label, reason, and link to
-Voice Library must be truthful. A disabled lane must never look like a completed feature.
+## 5. Phiếu có thứ tự
 
-## State and report contract
+SD-A: audit SD-01..21, mapping code/capability/DTO và giá trị còn UNKNOWN.
+SD-B: layout/config state và source/mode/language; test back/hydration/locale.
+SD-C: grouped default/saved/custom/Auto controls, readiness riêng, tránh duplicate selector.
+SD-D: subtitle/mix 0–100/0–200/review/result; không đổi submit contract chưa hỗ trợ.
+SD-E: browser/AX/screenshots từng mode + keyboard/mobile/theme/locale.
+SD-T: những DTO/upload/projection/job còn thiếu vào T0, chưa code backend.
 
-The UI needs explicit states: `draft`, `checking`, `quote_ready`, `awaiting_confirm`,
-`queued`, `processing`, `needs_review`, `completed`, `failed`, `guarded`.
+## 6. Nghiệm thu
 
-The report panel must reserve rows for:
+Focused tests kiểm hành vi từng mode và control, không chỉ value xuất hiện trong HTML.
+VO/SD handoff giữ draft qua trở lại; không lộ stale profile/secret/provider ID.
+Browser VI/EN/ZH × light/dark × 375/390/768/1440; form 320/414 thêm.
+Thao tác local không mạng/charge; confirm chỉ khi authorized capability thật.
 
-- request ID and job ID;
-- selected mode and target language;
-- voice lane and detected speaker count when available;
-- subtitle artifact status (SRT/VTT);
-- dubbed audio/video status;
-- original/dubbing volume policy;
-- failure reason and safe next action;
-- download/export only when `completed` and `download_ready=true`.
-
-## Layout and visual rules
-
-- Use one vertical primary flow on mobile; desktop may use two columns only for independent
-  subtitle and voice configuration cards.
-- All interactive targets are at least 44×44px.
-- Use the existing blue/navy/teal tokens; no black brand canvas and no raw inline gradients.
-- Headings use the established portal type scale; body text stays at least 16px on mobile.
-- Lane selection, disabled state, error state and current step must be distinguishable by
-  text, border and icon, never color alone.
-- Replace generic prose blocks with compact cards that answer: what it does, what is needed,
-  what is ready, and what happens next.
-
-## Acceptance tests
-
-1. DOM contains one SubDub workspace with four modes and no duplicate form for the same mode.
-2. Dubbing and combo DOM expose all seven voice lane keys in VI/EN/ZH.
-3. `multi_two` and `multi_three_eight` are distinct controls; no `many` placeholder remains.
-4. Voice Library and custom voice controls state their guarded reason when unavailable.
-5. Combo has one shared target-language control and separate subtitle/dubbing config cards.
-6. Report rows exist without inventing request/job/output data.
-7. Mobile source gate proves no horizontal overflow and all controls meet 44px minimum.
-8. `prefers-reduced-motion` leaves every state readable and interactive.
-9. Existing SubDub tests and the full Node suite produce `NEW_FAILURES=0`.
-10. No provider, wallet, PayOS or production-data action occurs in tests.
-
-## Runtime gate
-
-Source acceptance does not prove real dubbing. Runtime acceptance requires an isolated QA
-fixture and real artifact evidence. Until then, the UI remains `guarded` and the checklist
-must say `RUNTIME_OPEN`.
+Candidate #654 phải review lại: radio disabled + selected ngầm, hidden profile field,
+hai bộ chọn trùng chức năng, map empty và copy lặp. Các test 12/12 trước đây chỉ
+chứng minh renderer source, không đóng requirement về UX hoặc hoạt động như Bot.

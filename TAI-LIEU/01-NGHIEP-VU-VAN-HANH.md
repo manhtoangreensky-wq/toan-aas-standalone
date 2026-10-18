@@ -859,3 +859,20 @@ ví/Xu, Bot bridge và dữ liệu production không đổi.
   gọi đây là locale đã sửa trên production cho đến khi recheck trực tiếp chứng minh.
 - Blocker kiểm thử: `pytest` chưa chạy vì Python bundled không có module `pytest`; CI phải chạy
   lại bộ Python trước delivery.
+
+## R218 — Toàn sản phẩm, nguồn Bot và checkpoint — 18/10/2026
+
+R218 hiện bao phủ Voice, Music/SFX, SubDub, Image, Product Video/AI và manual edit,
+Dịch/Content/Free/Memory/Documents/Assets/Projects, AutoPost/Support/Account và
+Admin/app nội bộ. Inventory B01–B34 có nguồn menu/handler và spec theo control.
+
+Phần SubDub trong PR #654 là candidate source, chưa đóng UI/UX: thẻ disabled,
+selector lặp/hidden field, link kho giọng và volume 0–200 cần review theo spec mới.
+Bot source không là runtime proof: Music editor còn guard, hai track delivery chưa
+chứng minh, Video AI edit có catalog nhưng disabled, long/series có execution lock.
+
+CI run 39098833727 trên candidate 235d83661e78fd670bf09d58a436f114ea5ce14b đã
+SUCCESS (Verify Web App 2m31s, Authenticated QA 4m09s). Bản mở rộng tài liệu R218
+cần CI riêng sau push. Không suy test xanh thành product parity hoặc LIVE.
+Voice/Music và các sản phẩm khác chỉ mở sau plan + WIP checkpoint, Video sau cùng
+sản phẩm, motion cuối. Backend/provider/wallet/PayOS/publish giữ T0 và đợi lệnh.
