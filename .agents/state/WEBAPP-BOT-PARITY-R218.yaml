@@ -52,7 +52,7 @@ current_wip:
   assets_controls: "UT-07 control-level đã khóa local: Asset Vault owner-scoped, upload allowlist/25 MB, gắn Project, lọc active/archived/all, phân trang, download chỉ active, lifecycle redaction và archive/restore theo revision. Targeted 5/5, full Node 558/558; bytes/preview/quota-expiry server, browser/AX/delivery/live chưa chứng minh."
   autopost_controls: "AP-01..05 control-level đã khóa local tại `/publishing`: bảy nguồn, năm bước, brand/calendar/review handoff và các lane channels/queue/affiliate guarded; VI/EN/ZH + desktop/tablet/mobile CSS. Targeted 4/4; full Node 562/562; syntax và diff check đạt. Chưa có OAuth, publish, queue receipt, affiliate metrics, browser/AX hoặc LIVE."
   support_controls: "SP-01 control-level đã khóa local tại `/support`, `/tickets`, `/tickets/:id`, `/admin/support`, `/admin/support/:id`: intake, danh sách/lọc/phân trang, chi tiết/timeline, public/internal reply, state/recovery, resolution feedback và Asset Vault evidence; VI/EN/ZH + palette xanh/ngọc + case grid một cột <=620px. Targeted 4/4; full Node 566/566; syntax và diff check đạt. Capability server, dữ liệu thật, browser/AX, CI, delivery và LIVE chưa chứng minh. SP-02 Guide/Chat Pro/feedback/community còn mở."
-  account_controls: "AC-01/AC-02 đã được tách thành spec `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md`: profile/locale/security/session/stale cleanup; wallet/packages/pricing/topup/history/pending/admin handoff. Account profile/activity/dropdown Node targeted 9/9; billing/Python contracts chưa chạy vì thiếu python/py; browser/AX/runtime/approval/credit/live vẫn mở."
+  account_controls: "AC-01/AC-02 đã được tách thành spec `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md`: profile/locale/security/session/stale cleanup; wallet/packages/pricing/topup/history/pending/admin handoff. Account profile/activity/dropdown Node targeted 9/9; Account Security Vietnamese copy test 2/2 và Account regression 11/11; full Node 568/568. Generic English copy gate đã xanh; billing/Python contracts chưa chạy vì thiếu python/py; browser/AX/runtime/approval/credit/live vẫn mở."
   ci_run: 39099917923
   ci_head: 69ef97ffdf7f0c86aa950439dd8c83d64989f53e
   ci_status_at_last_observation: UNKNOWN_AFTER_SUPPORT_PUSH
@@ -60,8 +60,8 @@ current_wip:
   ci_latest_run: 39101124230
   ci_latest_status: "Candidate source UT-06 vẫn ở code head 37aa610f37c5a99b7ea8fae5eafb5285eb8c9c61; sau đó branch có docs-only checkpoint. UT-07 control-level đã verify local; PR #654 vẫn OPEN, statusCheckRollup=[] và mergeable=CONFLICTING tại lần đọc này; không tự xử lý conflict."
   migration_evidence_refresh: "Verified for candidate 814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd lineage: source_files_scanned=287, source_fingerprint_sha256=29261d3f20b0cfaab478484b1a35135ba3f16d050ceaf0e36afdb5f4fbae488a."
-  local_targeted_tests: "Support 4/4; AutoPost 4/4; UT-07 Assets 5/5; UT-06 Documents 4/4; UT-04 Free Tools 5/5; UT-01 translation workspace 4/4; protected SubDub/redirect/locale 21/21; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check"
-  local_full_tests: "566/566 tests/*.test.mjs"
+  local_targeted_tests: "Account Security Vietnamese copy 2/2; Account regression 11/11; Support 4/4; AutoPost 4/4; UT-07 Assets 5/5; UT-06 Documents 4/4; UT-04 Free Tools 5/5; UT-01 translation workspace 4/4; protected SubDub/redirect/locale 21/21; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check"
+  local_full_tests: "568/568 tests/*.test.mjs"
   python_tests: "BLOCKED: PowerShell không có lệnh python hoặc py trong workspace này; chưa thể chạy pytest."
   browser_qa_artifact_sha256: e02fc36e875e12e910e327369f2d6bab625cae87ddb4ddc0fc57553fd1e7f0c9
 open_findings:
