@@ -95,7 +95,10 @@ Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
 
 ## P4 — Image R218-05 (IM-01..10)
 
-- [ ] Tạo nhanh/prompt từ ảnh/AI edit/manual là 4 mode rõ.
+- [~] Tạo nhanh/prompt từ ảnh/AI edit/manual đã có 4 mode dọc rõ trên `/image/create`;
+  `prompt` nối `/image-studio`, `aiEdit` nối `/image/transform`, `manual` nối `/image/edit`.
+  Đây mới là control-level projection; source/reference, AI runtime, upload, preview,
+  before/after, quote, result và delivery vẫn chưa có bằng chứng.
 - [ ] Reference goal/subject/style/ratio/negative prompt/3 biến thể.
 - [ ] Tạo nhanh 5 gợi ý/tự nhập; 7 tier/watermark/quote/confirm.
 - [ ] AI thêm/xóa/nền/màu/product/ratio/custom, phương án và readiness.

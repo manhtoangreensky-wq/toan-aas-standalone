@@ -24,9 +24,14 @@ const page = { path: route, access: 'member', type: 'feature', action: 'feature-
 const visible = html => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 const expected = { vi: { form: 'Mô tả hình ảnh', report: 'Báo cáo và kết quả' }, en: { form: 'Image description', report: 'Report and results' }, zh: { form: '图像描述', report: '报告与结果' } };
 const expectedImageTasks = {
-  vi: { nav: 'Chọn tác vụ hình ảnh', create: 'Tạo ảnh AI', edit: 'Chỉnh sửa ảnh', current: 'Đang ở trang này', editNote: 'Chỉnh sửa ảnh bằng AI chưa khả dụng.' },
-  en: { nav: 'Choose an image task', create: 'Create AI images', edit: 'Edit an image', current: 'Current page', editNote: 'AI image editing is not currently available.' },
-  zh: { nav: '选择图像任务', create: '创建 AI 图像', edit: '编辑图像', current: '当前页面', editNote: '当前尚不支持 AI 图像编辑。' }
+  vi: { nav: 'Chọn tác vụ hình ảnh', create: 'Tạo ảnh AI', current: 'Đang ở trang này' },
+  en: { nav: 'Choose an image task', create: 'Create AI images', current: 'Current page' },
+  zh: { nav: '选择图像任务', create: '创建 AI 图像', current: '当前页面' }
+};
+const expectedImageModes = {
+  vi: { label: 'Các chế độ làm ảnh', prompt: 'Câu lệnh từ ảnh', aiEdit: 'Chỉnh sửa AI', manual: 'Chỉnh sửa thủ công', guarded: 'Đang chờ quyền xử lý' },
+  en: { label: 'Image creation modes', prompt: 'Prompts from a reference image', aiEdit: 'AI editing', manual: 'Manual editing', guarded: 'Waiting for processing access' },
+  zh: { label: '图像处理模式', prompt: '根据参考图生成提示词', aiEdit: 'AI 编辑', manual: '手动编辑', guarded: '等待处理权限' }
 };
 function model(locale) {
   const ctx = {
@@ -70,6 +75,19 @@ for (const locale of ['vi', 'en', 'zh']) {
     const missingCopy = Object.entries(copy).filter(([key, value]) => key !== 'nav' && !text.includes(value)).map(([, value]) => value);
     assert.deepEqual(missingCopy, [], `Missing localized workflow copy in ${locale}`);
     assert.ok(html.indexOf('href="/image/create"') < html.indexOf('href="/image/edit"'), 'Creation remains the first task in the workflow list');
+  });
+  test(`Image creation workspace exposes four localized modes without claiming runtime access in ${locale}`, () => {
+    const html = render(null), text = visible(html), modes = expectedImageModes[locale];
+    assert.ok(text.includes(modes.label));
+    for (const value of [modes.prompt, modes.aiEdit, modes.manual, modes.guarded]) assert.ok(text.includes(value), `Missing mode copy: ${value}`);
+    for (const key of ['create', 'prompt', 'aiEdit', 'manual']) assert.match(html, new RegExp(`data-image-mode="${key}"`));
+    assert.equal((html.match(/data-image-mode="/g) || []).length, 4);
+    assert.match(html, /data-image-mode="create"[^>]*data-image-mode-state="current"[^>]*aria-current="page"/);
+    assert.match(html, /href="\/image-studio"[^>]*data-image-mode="prompt"/);
+    assert.match(html, /href="\/image\/transform"[^>]*data-image-mode="aiEdit"/);
+    assert.match(html, /href="\/image\/edit"[^>]*data-image-mode="manual"/);
+    assert.equal((html.match(/data-image-mode-state="guarded"/g) || []).length, 3);
+    assert.doesNotMatch(html, /<img\b|data-portal-action="feature-confirm"/);
   });
   test(`Image fixed form and empty report follow ${locale} while preserving real field contracts`, () => {
     const html = render(null), text = visible(html);

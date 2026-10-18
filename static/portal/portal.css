@@ -10581,9 +10581,43 @@ html[data-portal-theme="dark"] .portal-manual-topup-form option {
   text-decoration: none;
 }
 
+.portal-image-create-mode-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+}
+
+.portal-image-create-mode-card .portal-badge {
+  align-self: start;
+  white-space: nowrap;
+}
+
+.portal-image-create-mode-card[data-image-mode-state="current"] {
+  border-color: var(--portal-action) !important;
+  box-shadow: inset 3px 0 0 var(--portal-action);
+}
+
+.portal-image-create-mode-card[data-image-mode-state="guarded"] {
+  border-style: dashed;
+}
+
+.portal-image-create-mode-card[data-image-mode-state="guarded"] .portal-module-link {
+  color: var(--portal-muted-strong, var(--portal-muted)) !important;
+}
+
 .portal-image-create-workflow-card[aria-current="page"] {
   border-color: var(--portal-action) !important;
   box-shadow: inset 3px 0 0 var(--portal-action);
+}
+
+@media (max-width: 560px) {
+  .portal-image-create-mode-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portal-image-create-mode-card .portal-badge {
+    justify-self: start;
+  }
 }
 
 .portal-page:is(.portal-image-create, .portal-image-suite-hub) :is(h1, h2, h3, h4, label, legend, strong, dt, dd, summary, .portal-label, .portal-title, .portal-card-title, .portal-module-link) {

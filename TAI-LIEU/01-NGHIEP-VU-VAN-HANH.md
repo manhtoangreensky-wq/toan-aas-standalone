@@ -901,6 +901,18 @@ sản phẩm, motion cuối. Backend/provider/wallet/PayOS/publish giữ T0 và 
 - Bằng chứng local: `3/3` test control, `97/97` Voice regression, `530/530` full Node, `node --check static/portal/portal.js`, `git diff --check`.
 - Đây chỉ là khóa trình bày và payload UI. Volume `0` warning, quote stale, Voice Vault/runtime execution, file output và live/CI vẫn chưa được coi là hoàn tất.
 
+## R218 — Image four-mode control checkpoint — 18/10/2026
+
+`/image/create` đã được sắp lại thành một cụm mode dọc, rõ theo đúng thứ tự người dùng:
+Tạo ảnh, Câu lệnh từ ảnh, Chỉnh sửa AI và Chỉnh sửa thủ công. Mode tạo ảnh giữ form
+`prompt/tier/format` và flow báo giá hiện có; mode tham chiếu mở `/image-studio`; mode
+AI mở `/image/transform`; mode thủ công mở `/image/edit`. Ba mode ngoài tạo ảnh hiển thị
+trạng thái chờ quyền xử lý để không nhầm rằng engine đã mở.
+
+Đây chỉ là hoàn thiện control-level UI/UX và locale VI/EN/ZH. Không có upload, preview,
+ảnh giả, provider, job, quote, delivery hoặc thay đổi Xu. IM-02 và IM-07..10 vẫn mở,
+chờ capability/source/runtime/browser evidence.
+
 ## R218 — Music control-level guarded — 18/10/2026
 
 Batch Music chỉ thay đổi lớp trình bày và bản nháp an toàn trên WebApp:

@@ -19,6 +19,20 @@ Bot/backend/provider/wallet/auth contracts protected. Inventory B13–B20 là ng
 | IM-09 | Before/after + apply/reset | Giữ original, state selected/loading/failed, không gọi local upscale là AI upscale |
 | IM-10 | Review/quote/confirm/result/history | Matching job, image thật/download_ready, tạo biến thể/tiếp tục sửa/đưa Video |
 
+### R218 Image control checkpoint — 18/10/2026
+
+`/image/create` hiện có một cụm điều hướng dọc gồm đúng bốn mode theo IM-01:
+
+1. `create` → `/image/create`: mô tả ý tưởng, tỷ lệ và báo giá theo capability thật;
+2. `prompt` → `/image-studio`: chọn ảnh tham chiếu trong Kho tài sản và soạn định hướng;
+3. `aiEdit` → `/image/transform`: mô tả thay đổi trên ảnh nguồn, giữ trạng thái chờ quyền máy chủ;
+4. `manual` → `/image/edit`: chỉnh màu/độ nét/thông số ảnh riêng tư, không gọi AI.
+
+Đây là projection UI/UX, không phải bốn engine đã mở. Ba mode ngoài `create` dùng trạng thái
+`guarded`, không tạo upload, preview, ảnh, quote, job, tệp, provider call hoặc thay đổi Xu.
+Source/reference, AI edit runtime, before/after, giao tệp và browser/live evidence vẫn mở
+theo IM-02 và IM-07..10.
+
 Bot anchors: bot.py:123989,60783..61135,61246..61625,61777..62289,191497..191989.
 Web phạm vi upload/reference/entitlement phải đọc hợp đồng thực tế, không tự mở backend.
 

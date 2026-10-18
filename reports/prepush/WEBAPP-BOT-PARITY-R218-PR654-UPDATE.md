@@ -134,6 +134,34 @@ LIVE_PASS=NOT_TESTED
 SubDub upload/preview/metadata, Voice Vault projection, speaker mapping thật,
 quote/confirm/progress/report, artifact/delivery và browser/live evidence vẫn mở;
 đợt này chỉ khóa presentation và local interaction.
+
+## Incremental Image control evidence — local candidate 18/10/2026
+
+- Phạm vi: `static/portal/portal.js`, `static/portal/portal-i18n.js`,
+  `static/portal/portal.css` và `tests/image-create-locale-presentation.test.mjs`.
+- IM-01 control-level: `/image/create` có đúng bốn mode dọc, không trùng lặp: tạo ảnh,
+  ảnh tham chiếu/soạn câu lệnh (`/image-studio`), chỉnh sửa AI có bảo vệ
+  (`/image/transform`) và chỉnh sửa thủ công (`/image/edit`). VI/EN/ZH có catalogue riêng;
+  ba mode ngoài tạo ảnh gắn `guarded` và không tự mở runtime.
+- Protected contracts giữ nguyên: form `prompt/tier/format`, action/estimate/confirm,
+  report, quote redaction, tracking identity và fail-closed output. Không thêm upload,
+  preview, ảnh giả, provider, job, wallet hoặc payment.
+
+```text
+IMAGE_TARGETED=48/48 (Image create/workbench/hub/operation/studio)
+NODE_CHECK=PASS (portal.js, portal-i18n.js)
+GIT_DIFF_CHECK=PASS
+PYTEST=BLOCKED (workspace không có lệnh python/py)
+PROVIDER_CALLS=0
+WALLET_MUTATIONS=0
+PRODUCTION_DATA_MUTATIONS=0
+DEPLOY=NO
+LIVE_PASS=NOT_TESTED
+```
+
+Image source/reference upload, AI edit runtime, before/after, quote/result/delivery,
+authenticated browser evidence và CI trên HEAD mới vẫn mở; không gọi đây là Image parity
+runtime hoặc LIVE.
 # Incremental Voice control evidence — candidate `814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd`
 
 - Phạm vi: `static/portal/portal.js`, `static/portal/portal.css`, `tests/voice-controls-contract.test.mjs`.
