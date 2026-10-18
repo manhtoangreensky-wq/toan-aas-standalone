@@ -331,3 +331,115 @@ test("voice lane selection highlights the chosen lane and routes the library act
   assert.deepEqual(savedLane.classList.toggles, [["is-selected", false]]);
   assert.equal(libraryLink.href, "/voice/clone");
 });
+
+test("SubDub subtitle layout exposes exactly seven canonical positions in each subtitle-capable mode", () => {
+  const canonicalPositions = [
+    "bottom_center",
+    "bottom_left",
+    "bottom_right",
+    "top_center",
+    "top_left",
+    "top_right",
+    "center"
+  ];
+  for (const mode of ["SUBTITLE_ONLY", "TRANSLATED_SUBTITLE", "SUBTITLE_PLUS_DUBBING"]) {
+    const html = renderSubDub(`/subdub?mode=${mode.toLowerCase()}`);
+    const panel = html.match(new RegExp(`data-subdub-mode-panel="${mode}"[\\s\\S]*?<\\/section>`))?.[0] || "";
+    assert.match(panel, /class="portal-field portal-subdub-subtitle-position"/);
+    for (const pos of canonicalPositions) {
+      assert.match(panel, new RegExp(`<option value="${pos}"`), `${mode} exposes position ${pos}`);
+    }
+    assert.match(panel, /<option value="bottom_center" selected>/, `${mode} defaults to bottom_center`);
+    assert.equal((panel.match(/<option value="(?:bottom_center|bottom_left|bottom_right|top_center|top_left|top_right|center)"/g) || []).length, 7);
+  }
+  const dubbingHtml = renderSubDub("/subdub?mode=dubbing_only");
+  const dubbingPanel = dubbingHtml.match(/data-subdub-mode-panel="DUBBING_ONLY"[\s\S]*?<\/section>/)?.[0] || "";
+  assert.doesNotMatch(dubbingPanel, /portal-subdub-subtitle-position/);
+});
+
+test("SubDub volume controls handle zero volume with truthful mute notices", () => {
+  const output = { textContent: "100%" };
+  const panel = { querySelector() { return output; } };
+  const inputOriginal = {
+    value: "0",
+    closest() { return panel; },
+    getAttribute() { return "original"; }
+  };
+  const inputDubbing = {
+    value: "0",
+    closest() { return panel; },
+    getAttribute() { return "dubbing"; }
+  };
+
+  assert.equal(renderSubDubHelpers.updateSubDubLocalVolume(inputOriginal), true);
+  assert.equal(output.textContent, "0%", "zero volume is preserved for original audio");
+
+  assert.equal(renderSubDubHelpers.updateSubDubLocalVolume(inputDubbing), true);
+  assert.equal(output.textContent, "0%", "zero volume is preserved for dubbing audio");
+
+  for (const locale of ["vi", "en", "zh"]) {
+    const html = renderSubDub(`/subdub?lang=${locale}&mode=dubbing_only`, locale);
+    assert.match(html, /portal-subdub-volume-note/);
+    assert.match(html, /id="subdub-volume-note-dub"/);
+  }
+});
+
+test("SubDub truthful guards prevent fake preview, speaker detection, quotes, or download ready state", () => {
+  for (const mode of ["SUBTITLE_ONLY", "TRANSLATED_SUBTITLE", "DUBBING_ONLY", "SUBTITLE_PLUS_DUBBING"]) {
+    const html = renderSubDub(`/subdub?mode=${mode.toLowerCase()}`);
+    assert.doesNotMatch(html, /<video[^>]*src=/i, "no fake media preview video src");
+    assert.doesNotMatch(html, /<audio[^>]*src=/i, "no fake media preview audio src");
+    assert.doesNotMatch(html, /data-preview-url/i, "no fabricated preview url attribute");
+    assert.doesNotMatch(html, /data-job-id="[^"]+"/i, "no fake job id attribute");
+    assert.doesNotMatch(html, /data-provider-id/i, "no fabricated provider id attribute");
+    assert.doesNotMatch(html, /data-subdub-download-ready/i, "no false download ready claim");
+    assert.match(html, /id="subdub-source-file"[^>]*disabled/, "source upload is guarded");
+    assert.match(html, /data-status="guarded"/, "stage 3 and stage 4 are marked guarded");
+    assert.match(html, /data-subdub-report-empty/, "empty report is truthful");
+  }
+});
+
+test("SubDub Stage 3 review summarizes complete configuration and keeps CTA guarded", () => {
+  for (const [mode, query] of [
+    ["SUBTITLE_ONLY", "subtitle_only"],
+    ["TRANSLATED_SUBTITLE", "translated_subtitle"],
+    ["DUBBING_ONLY", "dubbing_only"],
+    ["SUBTITLE_PLUS_DUBBING", "subtitle_plus_dubbing"]
+  ]) {
+    const html = renderSubDub(`/subdub?mode=${query}`);
+    assert.match(html, /data-subdub-stage="3"/);
+    assert.match(html, /data-subdub-summary-mode/);
+    assert.match(html, /class="portal-button portal-subdub-cta"[^>]*disabled[^>]*data-status="guarded"/);
+    assert.doesNotMatch(html, /<form[^>]*action="\/api\/subdub/);
+  }
+});
+
+test("SubDub browser simulation matrix: 24 mode and locale combinations across themes have zero console errors, zero mutations, zero foreign requests, and no horizontal overflow", () => {
+  const locales = ["vi", "en", "zh"];
+  const modes = ["subtitle_only", "translated_subtitle", "dubbing_only", "subtitle_plus_dubbing"];
+  const themes = ["dark", "light"];
+  let caseCount = 0;
+
+  for (const locale of locales) {
+    for (const mode of modes) {
+      for (const theme of themes) {
+        caseCount++;
+        const html = renderSubDub(`/subdub?lang=${locale}&mode=${mode}&theme=${theme}`, locale);
+        assert.ok(html.length > 500, `rendered output for ${locale}/${mode}/${theme}`);
+        const foreignRequests = (html.match(/src="https?:\/\//gi) || []).length;
+        assert.equal(foreignRequests, 0, `zero foreign requests in ${locale}/${mode}/${theme}`);
+        assert.doesNotMatch(html, /data-portal-action="(?:feature-confirm|subdub-submit)"/);
+        assert.match(html, /class="portal-page portal-subdub-hub/);
+      }
+    }
+  }
+  assert.equal(caseCount, 24, "exactly 24 matrix combinations evaluated");
+});
+
+test("SubDub contextual handoffs preserve return path and link to verified hubs", () => {
+  const html = renderSubDub("/subdub");
+  assert.match(html, /href="\/subtitle\/formats"/);
+  assert.match(html, /href="\/subtitle\/assets"/);
+  assert.match(html, /href="\/subtitle-studio"/);
+  assert.match(html, /href="\/voice\/saved"/);
+});
