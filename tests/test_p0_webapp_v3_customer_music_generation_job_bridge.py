@@ -60,6 +60,18 @@ BOT_AUTHORITY_REPO = "manhtoangreensky-wq/bot"
 BOT_AUTHORITY_SHA = "a77a5e0b13f943eb9fafb82a9fe3e80b6371b921"
 
 
+@pytest.fixture(autouse=True)
+def _isolate_bot_sys_path():
+    """Ensure bot repo path and imported modules do not leak into other test suites."""
+    orig_path = list(sys.path)
+    orig_modules = set(sys.modules.keys())
+    yield
+    sys.path[:] = orig_path
+    for mod in list(sys.modules.keys()):
+        if mod not in orig_modules and (mod == "bot" or mod.startswith("services")):
+            sys.modules.pop(mod, None)
+
+
 # ─── TEST A: FIRST RED ADAPTER ABSENCE PROVEN ────────────────────────────────
 
 def test_a_first_red_music_generation_adapter_absence_proven():
@@ -175,27 +187,24 @@ def test_c_web_music_input_contract_audit_and_tier_authority_gap():
     assert 'name: "mode"' in music_field_block
     assert 'name: "duration_seconds"' in music_field_block
 
-    # FIELD_SETS.music lacks tier / model_tier / quality_tier
-    assert "tier" not in music_field_block
+    # In PR #612 (2026-10-09), canonical tier selector was added to FIELD_SETS.music
+    assert "tier" in music_field_block
     assert "model_tier" not in music_field_block
     assert "package_tier" not in music_field_block
     assert "quality_tier" not in music_field_block
 
-    # copyfast_api.py does NOT include music_background in FEATURE_TIER_REQUIRED_ON_CONFIRM
-    assert "music_background" not in FEATURE_TIER_REQUIRED_ON_CONFIRM
+    # copyfast_api.py includes music_background in FEATURE_TIER_REQUIRED_ON_CONFIRM per PR #612
+    assert "music_background" in FEATURE_TIER_REQUIRED_ON_CONFIRM
 
-    # Per Decision Rule: When Web has no tier field and Bot contract requires customer
-    # tier choice without a source-backed server default tier, silent defaulting is forbidden.
+    # Per Decision Rule: Customer tier choice is strictly required; silent defaulting is forbidden.
     SILENT_MUSIC_TIER_DEFAULT = "NO"
-    MUSIC_TIER_AUTHORITY_RESOLVED = "NO"
-    MUSIC_INPUT_CONTRACT_RESOLVED = "NO"
-    RUNTIME_AUTHORITY_UNRESOLVED = "YES"
+    MUSIC_TIER_AUTHORITY_RESOLVED = "YES"
+    MUSIC_INPUT_CONTRACT_RESOLVED = "YES"
     NO_GUESSED_BRIDGE = "YES"
 
     assert SILENT_MUSIC_TIER_DEFAULT == "NO"
-    assert MUSIC_TIER_AUTHORITY_RESOLVED == "NO"
-    assert MUSIC_INPUT_CONTRACT_RESOLVED == "NO"
-    assert RUNTIME_AUTHORITY_UNRESOLVED == "YES"
+    assert MUSIC_TIER_AUTHORITY_RESOLVED == "YES"
+    assert MUSIC_INPUT_CONTRACT_RESOLVED == "YES"
     assert NO_GUESSED_BRIDGE == "YES"
 
 

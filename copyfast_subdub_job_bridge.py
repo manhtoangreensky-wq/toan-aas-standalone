@@ -27,6 +27,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import hashlib
 import hmac
+import ipaddress
 import json
 import re
 from typing import Any
@@ -114,8 +115,28 @@ def is_safe_subdub_output_url(url: Any) -> bool:
     if parsed.username or parsed.password or "@" in parsed.netloc:
         return False
     hostname = (parsed.hostname or "").lower()
-    if not hostname or not SAFE_HOSTNAME_PATTERN.fullmatch(hostname):
+    if not hostname:
         return False
+
+    # Reject localhost and *.localhost
+    if hostname == "localhost" or hostname.endswith(".localhost"):
+        return False
+
+    # Check IP literal
+    try:
+        ip = ipaddress.ip_address(hostname)
+    except ValueError:
+        ip = None
+
+    if ip is not None:
+        # Non-global IP literals (loopback, private, link-local, multicast, etc.) are strictly rejected
+        if not ip.is_global:
+            return False
+    else:
+        # Must be valid domain name
+        if not SAFE_HOSTNAME_PATTERN.fullmatch(hostname):
+            return False
+
     try:
         port = parsed.port
     except ValueError:

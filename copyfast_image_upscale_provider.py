@@ -37,6 +37,7 @@ MAX_CREATIVITY: float = 0.5
 ALLOWED_OUTPUT_FORMATS: frozenset[str] = frozenset({"png", "jpeg", "webp"})
 DEFAULT_OUTPUT_FORMAT: str = "png"
 MAX_IMAGE_INPUT_BYTES: int = 10 * 1024 * 1024  # 10 MiB official Stability API limit
+MAX_IMAGE_OUTPUT_BYTES: int = 32 * 1024 * 1024  # 32 MiB maximum safe output binary limit
 
 
 # Security & Truth Constants (R24E1-FIX1)
@@ -219,6 +220,11 @@ def parse_stability_upscale_response(
                 "Malformed provider response: image binary corrupted or empty.",
                 status_code=502,
             )
+        if len(output_bytes) > MAX_IMAGE_OUTPUT_BYTES:
+            raise ImageUpscaleProviderResponseError(
+                f"Oversized provider output ({len(output_bytes)} bytes) exceeds maximum allowed {MAX_IMAGE_OUTPUT_BYTES} limit.",
+                status_code=502,
+            )
 
         finish_reason_hdr = raw.headers.get("finish-reason") or raw.headers.get("x-finish-reason")
         finish_reason = str(finish_reason_hdr).strip() if finish_reason_hdr else "SUCCESS"
@@ -284,6 +290,11 @@ def parse_stability_upscale_response(
         if not output_bytes or len(output_bytes) < 16:
             raise ImageUpscaleProviderResponseError(
                 "Malformed provider response: decoded image bytes empty or corrupt.",
+                status_code=502,
+            )
+        if len(output_bytes) > MAX_IMAGE_OUTPUT_BYTES:
+            raise ImageUpscaleProviderResponseError(
+                f"Oversized provider output ({len(output_bytes)} bytes) exceeds maximum allowed {MAX_IMAGE_OUTPUT_BYTES} limit.",
                 status_code=502,
             )
 
