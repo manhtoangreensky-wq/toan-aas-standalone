@@ -10,9 +10,10 @@ head_sha: 8ab66d408ad400765db75e3d4539eff1b1042ce0
 delivery_head_sha: 8ab66d408ad400765db75e3d4539eff1b1042ce0
 delivery_status: PUSHED_GITHUB_AWAITING_CI
 head_sha_semantics: "Source-code candidate SHA; docs-only checkpoints may advance branch HEAD without changing this code candidate."
-branch_head_sha: 8ab66d408ad400765db75e3d4539eff1b1042ce0
+branch_head_sha: fd9cc30a1aa68b865ca9ef76a224936000d1cca0
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
-last_push_verified_commit: 8ab66d408ad400765db75e3d4539eff1b1042ce0
+last_push_verified_commit: fd9cc30a1aa68b865ca9ef76a224936000d1cca0
+docs_checkpoint_sha: fd9cc30a1aa68b865ca9ef76a224936000d1cca0
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
   root: "D:/TOANAAS/bot telegram"
