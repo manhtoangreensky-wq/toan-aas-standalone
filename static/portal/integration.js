@@ -12921,6 +12921,8 @@
     // account response is discarded even while `/auth/me` is still loading.
     ++canonicalSessionEpoch;
     ++canonicalHydrationEpoch;
+    // Hide private Voice data before the first account/session read awaits.
+    merge({ voiceProfiles: [], voiceInventoryReadState: "guarded" });
     invalidateDeliveryReadRefreshState();
     ++canonicalAdminDataHydrationEpoch;
     ++adminManualTopupHydrationEpoch;
@@ -14011,6 +14013,7 @@
       "inbox-item-read": Boolean(account && me.csrf_token && notificationCenterEnabled),
       "inbox-item-dismiss": Boolean(account && me.csrf_token && notificationCenterEnabled),
       "refresh-jobs": Boolean(bridgeAvailable),
+      "refresh-voice-inventory": Boolean(account),
       "refresh-assets": Boolean(bridgeAvailable),
       "refresh-payment": Boolean(bridgeAvailable),
       // Wallet refresh is a signed, owner-scoped read only.  It never
@@ -14594,6 +14597,8 @@
       // No prior account's consent assertion, script, cue estimate, version,
       // or reference metadata may survive a session change/read failure.
       voiceStudioSummary: {},
+      voiceProfiles: [],
+      voiceInventoryReadState: "guarded",
       voiceVaults: [],
       voiceVaultDetail: {},
       voiceStudioReferences: {},
@@ -26327,6 +26332,34 @@
     return { wallet, jobs, assets, tickets, readiness };
   }
 
+  async function hydrateCanonicalVoiceData(path, isCurrent) {
+    if (!isCurrent()) return null;
+    merge({ voiceProfiles: [], voiceInventoryReadState: "loading", readiness: {} });
+    const [profileRead, readinessRead] = await Promise.allSettled([
+      api("/voice/profiles"), api("/features/status")
+    ]);
+    if (!isCurrent()) return null;
+    const response = profileRead.status === "fulfilled" ? profileRead.value : null;
+    const failure = profileRead.status === "rejected" ? profileRead.reason : null;
+    const payload = response || (failure && failure.payload);
+    const unavailable = payload && payload.status === "guarded";
+    const items = response && response.ok === true && !unavailable
+      && response.data && Array.isArray(response.data.items) ? response.data.items : null;
+    const readinessResponse = readinessRead.status === "fulfilled" ? readinessRead.value : null;
+    const readiness = readinessResponse && readinessResponse.ok === true && readinessResponse.data
+      && readinessResponse.data.features && typeof readinessResponse.data.features === "object"
+      && !Array.isArray(readinessResponse.data.features) ? readinessResponse.data : {};
+    merge({
+      voiceProfiles: items ? items.filter(item => item && typeof item === "object" && !Array.isArray(item)).slice(0, 50) : [],
+      voiceInventoryReadState: items ? "ready" : unavailable ? "guarded" : "failed",
+      readiness,
+      pageStates: {
+        ...(base().pageStates || {}),
+        ...featurePageStates(base().catalog || [], readiness, base().bridge && base().bridge.featureExecutionFeatures)
+      }
+    });
+  }
+
   async function hydrateCanonicalData() {
     const context = base();
     const path = (context.path || window.location.pathname).split("?")[0];
@@ -26512,21 +26545,8 @@
           pageStates: featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures)
         });
       } else if (canonicalVoicePath) {
-        const [profiles, readiness] = await Promise.all([api("/voice/profiles?page=1&page_size=5&include_inactive=true"), api("/features/status")]);
+        await hydrateCanonicalVoiceData(path, isCurrent);
         if (!isCurrent()) return null;
-        const profileData = profiles.data && typeof profiles.data === "object" ? profiles.data : {};
-        merge({
-          voiceProfiles: Array.isArray(profileData.items) ? profileData.items : [],
-          voiceVaultCapabilities: profileData.capabilities || profileData.voice_vault_capabilities || {},
-          voiceVaultPage: {
-            page: Number(profileData.page || 1),
-            pageSize: Number(profileData.page_size || 5),
-            total: Number.isFinite(Number(profileData.total)) ? Number(profileData.total) : null,
-            hasNext: profileData.has_next === true
-          },
-          readiness: readiness.data || {},
-          pageStates: featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures)
-        });
       } else if (path === "/tickets") {
         const tickets = await api("/support/tickets");
         if (!isCurrent()) return null;
@@ -37119,6 +37139,12 @@
         } finally {
           setActionBusy(action, route, false);
         }
+        return;
+      }
+      if (action === "refresh-voice-inventory") {
+        if (!["/voice/saved", "/voice/vault", "/voice/preview"].includes(currentPortalPath())) return;
+        if (base().bridge && base().bridge.available === true) await hydrateCanonicalData();
+        else await hydrate();
         return;
       }
       if (action === "refresh-account-activity") {

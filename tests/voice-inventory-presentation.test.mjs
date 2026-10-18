@@ -27,7 +27,7 @@ for(const locale of ['vi','en','zh']){
     section('  function voiceFeedbackMetrics(', '  const ADMIN_TAB_GROUPS ='), context);
   const profiles=[{id:'qa-ready',display_name:'Giọng QA <script>',is_default:true,status:'read_only',tts_ready:true,preview_ready:true,consent_status:'confirmed',updated_at:'2026-10-07'}];
   test(`saved voice inventory shows the default marker and escapes names (${locale})`,()=>{
-    const html=context.renderVoiceVault({voiceProfiles:profiles});
+    const html=context.renderVoiceVault({voiceProfiles:profiles,voiceInventoryReadState:'ready'});
     assert.match(html,/Giọng QA &lt;script&gt;/);
     assert.doesNotMatch(html,/<audio\b|<script\b|onclick=/i);
     assert.match(html,locale==='vi'?/Mặc định/:locale==='en'?/Default/:/默认/);
@@ -35,7 +35,7 @@ for(const locale of ['vi','en','zh']){
     assert.doesNotMatch(html,/<table\b/);
   });
   test(`saved voice inventory distinguishes navigation from profile transfer and omits unavailable actions (${locale})`,()=>{
-    const html=context.renderVoiceVault({voiceProfiles:profiles});
+    const html=context.renderVoiceVault({voiceProfiles:profiles,voiceInventoryReadState:'ready'});
     assert.match(html,/data-voice-library-actions/);
     assert.match(html,locale==='vi'?/Mở SubDub/:locale==='en'?/Open SubDub/:/打开 SubDub/);
     assert.match(html,locale==='vi'?/Mở công cụ video/:locale==='en'?/Open video tools/:/打开视频工具/);
@@ -44,12 +44,12 @@ for(const locale of ['vi','en','zh']){
     assert.doesNotMatch(html,/<audio\b|href="https?:\/\//i);
   });
   test(`saved voice inventory keeps the server status (${locale})`,()=>{
-    const html=context.renderVoiceVault({voiceProfiles:profiles});
+    const html=context.renderVoiceVault({voiceProfiles:profiles,voiceInventoryReadState:'ready'});
     assert.match(html,/data-status="read_only"/);
     assert.match(html,locale==='vi'?/Chỉ xem/:locale==='en'?/View only/:/仅查看/);
   });
   test(`unknown voice status stays unconfirmed rather than ready (${locale})`,()=>{
-    const html=context.renderVoiceVault({voiceProfiles:[{display_name:'QA',status:'unknown_state',tts_ready:false}]});
+    const html=context.renderVoiceVault({voiceProfiles:[{display_name:'QA',status:'unknown_state',tts_ready:false}],voiceInventoryReadState:'ready'});
     assert.match(html,locale==='vi'?/Chưa xác nhận/:locale==='en'?/Unconfirmed/:/尚未确认/);
     assert.doesNotMatch(html,locale==='vi'?/<span>Có thể dùng để đọc<\/span>/:locale==='en'?/<span>Available for speech<\/span>/:/<span>可用于朗读<\/span>/);
   });

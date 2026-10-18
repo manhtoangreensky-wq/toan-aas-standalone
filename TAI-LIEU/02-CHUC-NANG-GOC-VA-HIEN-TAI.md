@@ -702,6 +702,13 @@ và runtime parity vẫn mở theo ledger.
 
 ## Đối chiếu Voice STT workspace — R218 — 18/10/2026
 
+Checkpoint inventory 19/10: đã kiểm read-state/retry/clear-stale bằng 34/34
+test inventory và 18 cấu hình trình duyệt, shell + integration.js thật trên
+API fixture. Đây là nghiệm thu lớp đọc/hiển thị. GET Core hiện trả tối đa 50
+mục, `total` bằng số mục trả về; không chứng minh đã tải toàn bộ kho. Các proxy
+management ở `c6bc455` được gỡ vì không có HTTP endpoint tương ứng phía Core.
+Management/preview/handoff giữ mở; không tính là tính năng đã chạy như Bot.
+
 | Chức năng cần đối chiếu | Hiện tại trên WebApp | Bằng chứng / giới hạn |
 |---|---|---|
 | STT trong workspace Voice | Có lane Giọng nói thành văn bản cùng TTS, Kho giọng và Thêm giọng; deep link `/voice/stt` và alias `/voice/asr` giữ đúng route | `renderVoiceWorkspaceNav()`; `tests/voice-workspace-stt-contract.test.mjs` `4/4` |

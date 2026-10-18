@@ -32,26 +32,30 @@ hoàn thành:
 
 ## 3. Tình trạng Web hiện tại — không suy diễn
 
-Web hiện có:
+Đối soát bổ sung ngày 2026-10-19, nguồn Bot local ref `origin/main` tại
+`4d086ccb4e1c7fec9c29ac949dbe4e28e2a0955e` (không phải LIVE):
 
-- `copyfast_api.py`: `GET /voice/profiles` đã nhận `q`, `page`, `page_size`,
-  `limit`, `offset`, `include_inactive` và chuẩn hóa DTO `items/page/page_size/
-  total/has_next/capabilities` mà không tự bịa tổng hoặc trạng thái.
-- `copyfast_api.py`: đã có các route proxy owner-scoped cho
-  `rename/default/delete/preview`; mọi mutation yêu cầu CSRF + idempotency và
-  mọi thao tác thiếu endpoint canonical vẫn trả guarded.
-- `copyfast_bridge.py`: toàn bộ `/internal/v1/voice/profiles...` được giữ trong
-  surface `voice`, không đi qua generic/admin surface.
-- Bot branch hiện có GET `/internal/v1/voice/profiles` với `items/total`, nhưng
-  chưa có HTTP route management cho rename/default/delete/preview/handoff.
+- `bot.py:284199`, `api_internal_subdub_voice_profiles` gọi
+  `get_owner_voice_profiles_safe(actor)` với limit mặc định 50. Handler bỏ qua
+  `q/page/page_size/limit/offset`; `total=len(items)` là số mục trả về, không
+  phải tổng COUNT của kho. Không được dựng pager hay tổng số kho từ giá trị này.
+- `services/subdub_voice_resolution.py:73` kiểm owner, bỏ record đã xóa mềm và
+  sắp xếp mặc định trước. HTTP API chưa có search hoặc management.
+- `copyfast_api.py`: giữ GET proxy/projection đã có. Những proxy POST
+  rename/default/delete và GET preview thêm ở `c6bc455` bị gỡ sau rà soát vì
+  Core không có các endpoint đó; chúng không phải tính năng đã hoạt động.
 - `copyfast_api.py:1891-1892`: projection chỉ cho phép
   `id`, `display_name`, `status`, `is_default`, `consent_status`, `tts_ready`,
   `preview_ready`, `created_at`, `updated_at`.
-- `static/portal/integration.js:26514-26520`: hydration chỉ đọc danh sách
-  profile và `/features/status`.
-- Chưa có canonical authority cho `search`, mutation receipt, preview delivery,
-  use-for-video hoặc handoff profile/draft; Web chỉ chuẩn bị proxy guarded cho
-  các boundary này.
+- `hydrateCanonicalVoiceData` chỉ GET danh sách và trạng thái dịch vụ; hai lần
+  đọc độc lập. Xóa danh sách trước await, kiểm epoch/phiên/route sau await,
+  phân biệt loading/ready/failed/guarded. Lỗi trạng thái dịch vụ không xóa một
+  danh sách giọng đã đọc thành công. Bootstrap xóa dữ liệu trước await đầu tiên.
+- `renderVoiceVault` chỉ hiển thị record khi read-state=ready, phân biệt lỗi
+  với danh sách rỗng và có nút thử lại dùng GET. Giữ tối đa 50 mục trả về,
+  cảnh báo danh sách có thể chưa đầy đủ khi chạm giới hạn; không tự bịa tổng.
+- Search/management/preview/handoff vẫn được theo dõi tại T0; không thêm nút
+  hoạt động giả hoặc thay Voice Studio metadata cho giọng canonical.
 
 Vì vậy checklist phải giữ các mục quản lý Voice Vault ở trạng thái mở. Không
 được thêm nút disabled để tạo cảm giác đã hoàn thành; cũng không được lấy
@@ -122,8 +126,9 @@ không được sinh hai mutation.
   giữ draft; browser test chứng minh quay về đúng sản phẩm.
 - [ ] Browser VI/EN/ZH × sáng/tối × 390/768/1440 đạt, không overflow/console
   error/foreign request/mutation ngoài thao tác được phép.
-- [ ] Chỉ sau các bằng chứng trên mới chuyển VO-09/VO-10/VO-13 sang `[x]` và
-  mới đủ điều kiện mở P2 Music.
+- [ ] Chỉ sau các bằng chứng trên mới chuyển VO-09/VO-10/VO-13 sang `[x]`.
+  UI được rà và khóa từng lát; phần kỹ thuật còn thiếu giữ ở T0 để tiếp tục
+  wave UI kế tiếp theo thứ tự Owner đã chốt. Không chặn toàn bộ UI vì API thiếu.
 
 ## 6. Bằng chứng hiện có và blocker
 
@@ -132,7 +137,8 @@ không được sinh hai mutation.
   `18/18` pass.
 - Các số trên chỉ chứng minh renderer/control-level, không chứng minh DTO,
   backend, preview, runtime hay delivery.
-- Bằng chứng mới khóa được Web boundary/DTO/CSRF/idempotency ở source; blocker
-  còn lại là **Bot/Core chưa công bố management endpoint và preview/handoff
-  delivery**, không phải lỗi CSS hay lỗi renderer. Giữ P1 mở cho đến khi có
-  endpoint canonical và browser/runtime evidence thật.
+- Lát ngày 2026-10-19 thay bộ regex kiểm tra tên route bằng kiểm thử hành vi
+  read-state/hydration/stale response và trình duyệt localhost chạy renderer +
+  integration.js thật trên API fixture chỉ-đọc. Kết quả cuối ghi tại ledger.
+- Contract kỹ thuật còn thiếu: **Bot/Core management endpoint và preview/handoff
+  delivery**. Giữ P1 runtime mở và xử lý các lát UI còn lại theo thứ tự.

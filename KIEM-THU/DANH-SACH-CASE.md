@@ -183,6 +183,18 @@ transcript/copy/export, delivery và LIVE là các gate riêng, không được 
 Bằng chứng source hiện tại: `tests/autopost-hub-product-controls.test.mjs` `4/4`, full Node
 `562/562`. Browser/AX/live chưa chạy; không dùng PASS source để thay cho các mức đó.
 
+## VOICE-INVENTORY-READ-STATE-20261019
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| VUI-READ-01 | Chậm/lỗi/guarded/malformed/empty/ready trên `/voice/saved` | Tên giọng cũ biến mất trước lần đọc; chỉ empty hợp lệ mới hiện chưa có giọng; thông báo theo locale |
+| VUI-READ-02 | Bàn phím Tab → Thử lại → Enter | Một GET mới, danh sách phục hồi khi response hợp lệ; không POST/provider/giá/tệp giả |
+| VUI-READ-03 | Đổi phiên/route trong lúc GET chưa xong; lỗi readiness độc lập | Response cũ không đè dữ liệu mới; list thành công không bị lỗi readiness che mất |
+| VUI-READ-04 | VI/EN/ZH × sáng/tối × 390/768/1440, 50 record | Không cắt ở 20; không claim tổng kho; thông báo giới hạn 50; ảnh/AX/overflow/console và request ngoài scope đều được ghi |
+
+Lệnh fixture: `node ../qa/r218-voice-inventory/verify.cjs` (máy đã có Playwright/Edge).
+Đây là API fixture localhost chỉ-đọc; LIVE/backend/parity management vẫn mở.
+
 ## SUPPORT-CENTER-UI-CONTROL-20261018
 
 | ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |

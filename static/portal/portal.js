@@ -9269,7 +9269,8 @@
       assetFilter: typeof source.assetFilter === "string" ? source.assetFilter : "all",
       ticketFilter: typeof source.ticketFilter === "string" ? source.ticketFilter : "all",
       readiness: source.readiness && typeof source.readiness === "object" ? source.readiness : {},
-      voiceProfiles: Array.isArray(source.voiceProfiles) ? source.voiceProfiles.slice(0, 20) : [],
+      voiceProfiles: source.voiceInventoryReadState === "ready" && Array.isArray(source.voiceProfiles) ? source.voiceProfiles.slice(0, 50) : [],
+      voiceInventoryReadState: ["loading", "ready", "failed", "guarded"].includes(source.voiceInventoryReadState) ? source.voiceInventoryReadState : "guarded",
       profile: source.profile && typeof source.profile === "object" ? source.profile : {},
       pwaEnabled: source.pwaEnabled === true,
       notifications: Array.isArray(source.notifications) ? source.notifications.slice(0, 5) : []
@@ -32221,22 +32222,21 @@
   }
 
   function renderVoiceVault(context) {
-    const profiles = Array.isArray(context.voiceProfiles) ? context.voiceProfiles : [];
-    const voiceVaultCapabilities = context && context.voiceVaultCapabilities && typeof context.voiceVaultCapabilities === "object"
-      ? context.voiceVaultCapabilities
-      : {};
-    const voiceVaultPage = context && context.voiceVaultPage && typeof context.voiceVaultPage === "object"
-      ? context.voiceVaultPage
-      : {};
     const t = voiceUiText;
+    const readState = ["loading", "ready", "failed", "guarded"].includes(context.voiceInventoryReadState) ? context.voiceInventoryReadState : "guarded";
+    const heading = `<div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("library.title", "Giọng của bạn"))}</h2><p class="portal-card-subtitle">${safeText(t("library.description", ""))}</p></div></div>`;
+    if (readState !== "ready") {
+      return `<section class="portal-card portal-card-pad portal-voice-inventory" data-voice-inventory-state="${readState}">${heading}<div role="status" aria-live="polite">${renderEmpty(t(`library.read.${readState}.title`, ""), t(`library.read.${readState}.body`, ""), ICONS.voice)}</div>${readState === "loading" ? "" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-voice-inventory">${safeText(t("library.retry", "Thử lại"))}</button>`}</section>`;
+    }
+    const profiles = Array.isArray(context.voiceProfiles) ? context.voiceProfiles.slice(0, 50) : [];
     const consent = (value) => t(`consent.${["granted", "confirmed", "required", "pending", "revoked"].includes(value) ? value : "unknown"}`, "");
     const statusLabel = (value) => t(`library.state.${["ready", "read_only", "guarded", "disabled", "queued", "processing", "completed", "failed", "error", "archived", "pending"].includes(value) ? value : "unknown"}`, "");
     const libraryActions = `<div class="portal-voice-library-actions" data-voice-library-actions><p class="portal-form-note">${safeText(t("library.actionsDescription", "Mở công cụ để xem các lựa chọn giọng. Giọng đang xem chưa được chuyển sang công cụ khác."))}</p><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/subdub?mode=dubbing_only">${safeText(t("library.openSubDub", "Mở SubDub"))} <span aria-hidden="true">→</span></a><a class="portal-button portal-button--quiet" href="/video/product">${safeText(t("library.openVideo", "Mở công cụ video"))} <span aria-hidden="true">→</span></a></div></div>`;
     const list = profiles.length
-      ? `<div class="portal-voice-inventory-list">${profiles.map((profile) => { const profileCapabilities = profile && profile.capabilities && typeof profile.capabilities === "object" ? profile.capabilities : {}; const managementReady = voiceVaultCapabilities.read_state === "ready" && profileCapabilities.read_state === "ready"; return `<details class="portal-voice-inventory-card"><summary><strong>${safeText(profile.display_name || t("library.unnamed", "Giọng chưa đặt tên"))}${profile.is_default ? ` · ${safeText(t("library.default", "Mặc định"))}` : ""}</strong><span>${safeText(t(profile.tts_ready ? "library.ready" : "library.guarded", ""))}</span></summary><dl><div><dt>${safeText(t("library.status", "Trạng thái"))}</dt><dd><span data-status="${safeText(profile.status || "guarded")}">${safeText(statusLabel(String(profile.status || "guarded")))}</span></dd></div><div><dt>${safeText(t("library.consent", "Quyền sử dụng"))}</dt><dd>${safeText(consent(String(profile.consent_status || "")))}</dd></div><div><dt>${safeText(t("library.preview", "Nghe thử"))}</dt><dd>${safeText(t(profile.preview_ready ? "library.previewMetadata" : "library.noPreview", ""))}</dd></div><div><dt>${safeText(t("library.updated", "Cập nhật"))}</dt><dd>${safeText(profile.updated_at || profile.created_at || "—")}</dd></div></dl><div data-voice-vault-management="${managementReady ? "ready" : "guarded"}"><p class="portal-form-note">${safeText(managementReady ? t("library.manageReady", "Thao tác quản lý sẽ được mở theo capability của máy chủ.") : t("library.manageGuarded", "Chưa thể đổi tên, đặt mặc định, xóa hoặc nghe thử giọng trong trang này."))}</p></div></details>`; }).join("")}</div>`
+      ? `<div class="portal-voice-inventory-list">${profiles.map((profile) => `<details class="portal-voice-inventory-card"><summary><strong>${safeText(profile.display_name || t("library.unnamed", "Giọng chưa đặt tên"))}${profile.is_default ? ` · ${safeText(t("library.default", "Mặc định"))}` : ""}</strong><span>${safeText(t(profile.tts_ready ? "library.ready" : "library.guarded", ""))}</span></summary><dl><div><dt>${safeText(t("library.status", "Trạng thái"))}</dt><dd><span data-status="${safeText(profile.status || "guarded")}">${safeText(statusLabel(String(profile.status || "guarded")))}</span></dd></div><div><dt>${safeText(t("library.consent", "Quyền sử dụng"))}</dt><dd>${safeText(consent(String(profile.consent_status || "")))}</dd></div><div><dt>${safeText(t("library.preview", "Nghe thử"))}</dt><dd>${safeText(t(profile.preview_ready ? "library.previewMetadata" : "library.noPreview", ""))}</dd></div><div><dt>${safeText(t("library.updated", "Cập nhật"))}</dt><dd>${safeText(profile.updated_at || profile.created_at || "—")}</dd></div></dl><p class="portal-form-note">${safeText(t("library.manageGuarded", "Chưa thể đổi tên, đặt mặc định, xóa hoặc nghe thử giọng trong trang này."))}</p></details>`).join("")}</div>`
       : renderEmpty(t("library.empty", "Chưa có giọng đã lưu"), t("library.emptyHelp", ""), ICONS.voice);
-    const pageMeta = voiceVaultPage.total === null || voiceVaultPage.total === undefined ? "" : `<p class="portal-form-note" data-voice-vault-page="${safeText(String(voiceVaultPage.page || 1))}">${safeText(String(voiceVaultPage.total))} ${safeText(t("library.total", "giọng đã ghi nhận"))}</p>`;
-    return `<section class="portal-card portal-card-pad portal-voice-inventory"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("library.title", "Giọng của bạn"))}</h2><p class="portal-card-subtitle">${safeText(t("library.description", ""))}</p></div></div>${libraryActions}${pageMeta}${list}</section>`;
+    const snapshotNote = profiles.length === 50 ? `<p class="portal-form-note">${safeText(t("library.snapshotLimit", "Đang hiển thị tối đa 50 giọng được tải về. Danh sách có thể chưa đầy đủ."))}</p>` : "";
+    return `<section class="portal-card portal-card-pad portal-voice-inventory" data-voice-inventory-state="ready">${heading}${libraryActions}${snapshotNote}${list}</section>`;
   }
 
   function resolveLegacySubDubCanonicalUrl(pathname, search) {

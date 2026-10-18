@@ -46,6 +46,11 @@ Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong 
 5. Motion/hiệu năng làm cuối. Khi UI/UX và motion đủ bằng chứng, báo cáo rồi đợi
    lệnh cho backend/bridge; không tự chuyển sang các phần kỹ thuật.
 
+Đối soát 19/10: thiếu API/capability được giữ ở T0 với contract và bằng chứng
+cụ thể. UI tiếp tục theo thứ tự trên sau khi ghi rõ phần đang dở và kiểm được
+lát hiện hành; không tự coi toàn wave hoàn tất và không khóa mọi wave UI chỉ
+vì một endpoint kỹ thuật chưa tồn tại. Không tạo proxy tới endpoint suy đoán.
+
 ## 2. Nguồn sự thật và phạm vi
 
 - Bot đọc-only tại `D:/TOANAAS/bot telegram`; root menu

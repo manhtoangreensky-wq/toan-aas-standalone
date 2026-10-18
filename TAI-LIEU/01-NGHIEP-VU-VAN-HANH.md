@@ -1,5 +1,21 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Checkpoint Voice inventory — ứng viên 19/10/2026
+
+Kho giọng `/voice/saved` phân biệt đang tải, lỗi kết nối, chưa kết nối và
+danh sách đã tải. Lỗi không còn hiển thị như tài khoản chưa có giọng; dữ liệu
+cũ được xóa trước lần đọc và khi đổi phiên. Nút Thử lại chỉ đọc dữ liệu.
+Web hiển thị tối đa 50 record nhận được; API Core hiện không có pager/search
+thật nên không công bố tổng kho hoặc nút trang giả. Đổi tên/đặt mặc định/xóa/
+nghe thử/handoff vẫn là yêu cầu mở tại R218-02A/T0.
+
+Đã đo trên localhost: 18 cấu hình VI/EN/ZH × sáng/tối × 390/768/1440,
+7 trạng thái và 18 lượt thử lại bằng bàn phím; console/overflow/request ngoài/
+mutation đều 0. Bộ inventory 34/34 và toàn bộ Node 632/632. Đây là shell,
+renderer và integration.js production dùng API fixture, chưa phải dữ liệu
+Core thật hoặc LIVE. Bằng chứng tại `../qa/r218-voice-inventory/result.json`.
+Các mục vận hành/dữ liệu production bên dưới giữ nguyên phạm vi đo ban đầu.
+
 ## Checkpoint UT-01 — workspace Dịch (ứng viên cục bộ 18/10/2026)
 
 Web đã bổ sung một workspace dọc cho `/subtitle-studio/new?intent=translation&pair=...`:

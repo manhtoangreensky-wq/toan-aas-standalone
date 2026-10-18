@@ -35,9 +35,17 @@
   "push_gate": "A09_ADMIN_CRM_LEADS_PR_PENDING",
   "local_metadata_updated_at": "2026-09-12",
   "remote_verified_at": "2026-09-03",
+  "current_tracker_observation": {
+    "date": "2026-10-19",
+    "issue": 412,
+    "state": "closed",
+    "delivery_evidence": "PR #654; Voice inventory cases in KIEM-THU/DANH-SACH-CASE.md",
+    "labels_present": "12/12",
+    "note": "Earlier tracker/remote_revalidation fields are historical snapshots; no issue was reopened or created."
+  },
   "partial_remote_revalidated_at": "2026-09-12",
-  "local_files_refreshed_at": "2026-10-18",
-  "local_files_refresh_scope": "Only portable LF file sizes/hashes were remeasured after the VUI-01 update; historical remote verification dates are unchanged.",
+  "local_files_refreshed_at": "2026-10-19",
+  "local_files_refresh_scope": "Only portable LF file sizes/hashes were remeasured after the Voice inventory read-state cases; historical remote verification dates are unchanged.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -62,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 198,
-      "bytes": 40833,
-      "sha256": "7a3fd2a517ca95276c444a3f0f31b603fc1195e6dc46c53b5880e8edcf8397a0"
+      "lines": 210,
+      "bytes": 41903,
+      "sha256": "45cb9aae9a4090e0601abcd2f3d021ca6dc5e04dd4a578d4b5c28d47801ecff2"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

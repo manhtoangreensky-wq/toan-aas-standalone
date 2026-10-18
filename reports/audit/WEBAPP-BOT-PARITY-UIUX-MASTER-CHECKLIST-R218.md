@@ -12,6 +12,9 @@ Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 gi�
 [x] Đủ evidence đúng phạm vi. [~] Một phần, chưa đóng. [ ] Chưa thực thi/chưa chứng minh.
 [!] Có gap cụ thể. [→] Kỹ thuật giữ cuối, đợi lệnh sau UI/motion.
 Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
+Các mục API/provider/delivery chưa có giữ riêng ở T0 theo lệnh Owner. Chốt
+lát UI bằng bằng chứng rồi tiếp tục lát UI theo thứ tự; không coi API thiếu
+là lý do dừng toàn bộ UI/UX hoặc tự triển khai backend ngoài phạm vi.
 
 ## Reconciliation R217 + R218 + Owner parity matrix
 
@@ -119,6 +122,11 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## P1 — Voice R218-02 (VO-01..13)
 
+- [x] VO-09 READ-STATE — 19/10/2026: phân biệt loading/failed/guarded với
+  empty thật, xóa tên giọng cũ trước await và khi bootstrap, chặn response phiên
+  cũ, giữ list khi readiness lỗi, retry chỉ GET. 19/19 test hành vi; cả nhóm
+  inventory 34/34; full Node 632/632. Lát này không đóng management/handoff.
+
 - [~] TTS/STT/default/saved/clone đã được bố trí trong một workspace dọc có bốn lane
   và deep link riêng; `renderVoiceWorkspaceNav()` giữ lane hiện tại bằng
   `aria-current="page"`. Draft retention và execution capability vẫn chưa đóng.
@@ -142,12 +150,16 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [!] Contract gap R218-02A đã được tách riêng tại
   `docs/superpowers/specs/2026-10-18-r218-02a-voice-vault-canonical-contract.md`:
   Bot có phân trang, đếm tổng, đặt mặc định, nghe thử, đổi tên, xóa mềm và
-  dùng cho Video; Web đã có DTO read boundary, query page/offset và guarded
-  proxy cho rename/default/delete/preview với CSRF + idempotency. Bot/Core hiện
-  chỉ công bố GET list/total; chưa có management endpoint, mutation receipt,
-  preview delivery hoặc handoff profile/draft thật. Không chuyển các mục này
+  dùng cho Video; Web giữ GET metadata. Rà soát 19/10 trên Bot ref
+  `4d086cc` cho thấy API bỏ qua tham số phân trang và total chỉ bằng số mục trả
+  về (mặc định tối đa 50). Các proxy management suy đoán ở `c6bc455` đã được
+  gỡ. Chưa có management endpoint, mutation receipt, preview delivery hoặc
+  handoff profile/draft thật; phần này giữ tại T0. Không chuyển các mục này
   sang `[x]` khi chưa có endpoint + browser/owner evidence.
 - [~] Renderer/interaction + browser/AX/screenshots: VO-03/04/05 và navigation Voice Vault đã kiểm bằng Edge localhost với dữ liệu mẫu, 18/18 cấu hình, lỗi trang/console/overflow/kết nối ngoài/mutation đều 0. Nhãn trình đọc màn hình của preset tốc độ đã sạch VI/EN/ZH. STT mới có source/locale contract-level; browser upload/AX/runtime và live vẫn mở.
+  Lát READ-STATE được kiểm thêm bằng shell/renderer/integration.js production
+  trên localhost với API fixture chỉ-đọc; kết quả và ảnh tại
+  `../qa/r218-voice-inventory/result.json`. Không tính là backend/LIVE.
 
 ## P2 — Music R218-03 (MU-01..12)
 
