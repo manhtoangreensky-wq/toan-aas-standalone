@@ -142,8 +142,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [!] Contract gap R218-02A đã được tách riêng tại
   `docs/superpowers/specs/2026-10-18-r218-02a-voice-vault-canonical-contract.md`:
   Bot có phân trang, đếm tổng, đặt mặc định, nghe thử, đổi tên, xóa mềm và
-  dùng cho Video; Web hiện chỉ có `GET /voice/profiles` với projection metadata.
-  Chưa có DTO capability/default option, search/page/total, mutation receipt,
+  dùng cho Video; Web đã có DTO read boundary, query page/offset và guarded
+  proxy cho rename/default/delete/preview với CSRF + idempotency. Bot/Core hiện
+  chỉ công bố GET list/total; chưa có management endpoint, mutation receipt,
   preview delivery hoặc handoff profile/draft thật. Không chuyển các mục này
   sang `[x]` khi chưa có endpoint + browser/owner evidence.
 - [~] Renderer/interaction + browser/AX/screenshots: VO-03/04/05 và navigation Voice Vault đã kiểm bằng Edge localhost với dữ liệu mẫu, 18/18 cấu hình, lỗi trang/console/overflow/kết nối ngoài/mutation đều 0. Nhãn trình đọc màn hình của preset tốc độ đã sạch VI/EN/ZH. STT mới có source/locale contract-level; browser upload/AX/runtime và live vẫn mở.

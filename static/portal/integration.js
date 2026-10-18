@@ -26512,10 +26512,18 @@
           pageStates: featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures)
         });
       } else if (canonicalVoicePath) {
-        const [profiles, readiness] = await Promise.all([api("/voice/profiles"), api("/features/status")]);
+        const [profiles, readiness] = await Promise.all([api("/voice/profiles?page=1&page_size=5&include_inactive=true"), api("/features/status")]);
         if (!isCurrent()) return null;
+        const profileData = profiles.data && typeof profiles.data === "object" ? profiles.data : {};
         merge({
-          voiceProfiles: profiles.data && profiles.data.items ? profiles.data.items : [],
+          voiceProfiles: Array.isArray(profileData.items) ? profileData.items : [],
+          voiceVaultCapabilities: profileData.capabilities || profileData.voice_vault_capabilities || {},
+          voiceVaultPage: {
+            page: Number(profileData.page || 1),
+            pageSize: Number(profileData.page_size || 5),
+            total: Number.isFinite(Number(profileData.total)) ? Number(profileData.total) : null,
+            hasNext: profileData.has_next === true
+          },
           readiness: readiness.data || {},
           pageStates: featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures)
         });

@@ -2457,6 +2457,13 @@ class FeatureRequest(BaseModel):
     web_quote_receipt: str = Field(default="", max_length=160)
 
 
+class VoiceProfileManagementRequest(BaseModel):
+    """Small Web envelope for owner-scoped Voice Vault mutations."""
+
+    input: dict[str, Any] = Field(default_factory=dict)
+    idempotency_key: str = Field(default="", max_length=160)
+
+
 class PaymentRequest(BaseModel):
     package_id: str = Field(default="", max_length=120)
     payment_type: str = Field(default="topup_xu", max_length=80)
@@ -3277,7 +3284,7 @@ def _bridge_surface(path: str) -> str:
         if normalized.endswith("/download"):
             return "delivery"
         return "asset"
-    if normalized == "/internal/v1/voice/profiles":
+    if normalized.startswith("/internal/v1/voice/profiles"):
         return "voice"
     if normalized == "/internal/v1/support/tickets":
         return "tickets"
@@ -6472,8 +6479,167 @@ async def asset_download(asset_id: str, request: Request, account: dict = Depend
 
 
 @router.get("/voice/profiles")
-async def voice_profiles(request: Request, account: dict = Depends(require_account)):
-    return await _bridge("GET", "/internal/v1/voice/profiles", account=account, request=request)
+async def voice_profiles(
+    request: Request,
+    account: dict = Depends(require_account),
+    q: str = Query(default="", max_length=120),
+    page: int = Query(default=1, ge=1, le=10_000),
+    page_size: int = Query(default=5, ge=1, le=50),
+    include_inactive: bool = Query(default=True),
+):
+    """Read the canonical Voice Vault page without inventing totals locally."""
+
+    return _voice_profile_read_model(await _bridge(
+        "GET",
+        "/internal/v1/voice/profiles",
+        account=account,
+        request=request,
+        params={
+            "q": str(q or "").strip(),
+            "page": str(page),
+            "page_size": str(page_size),
+            "limit": str(page_size),
+            "offset": str((page - 1) * page_size),
+            "include_inactive": "true" if include_inactive else "false",
+        },
+    ))
+
+
+def _voice_profile_management_key(payload: VoiceProfileManagementRequest, request: Request) -> str:
+    return _require_key(payload.idempotency_key or request.headers.get("Idempotency-Key", ""))
+
+
+def _voice_profile_id(profile_id: str) -> str:
+    return _canonical_route_identifier(profile_id, "Mã Voice Vault")
+
+
+def _voice_profile_mutation_payload(profile_id: str, key: str, **fields: str) -> dict[str, str]:
+    payload = {"profile_id": profile_id, "idempotency_key": key}
+    for name, value in fields.items():
+        if value:
+            payload[name] = value
+    return payload
+
+
+def _voice_profile_read_model(response: dict) -> dict:
+    """Expose a bounded Voice Vault DTO without inventing server totals."""
+
+    if not isinstance(response, dict) or not isinstance(response.get("data"), dict):
+        return response
+    safe_response = dict(response)
+    raw = dict(response["data"])
+    capabilities = raw.get("capabilities") or raw.get("voice_vault_capabilities")
+    if not isinstance(capabilities, dict):
+        capabilities = {
+            "read_state": "ready" if response.get("ok") and ("items" in raw or "total" in raw) else "guarded",
+            "list": bool(response.get("ok")),
+            "search": False,
+            "pagination": "total" in raw,
+            "rename": False,
+            "default": False,
+            "delete": False,
+            "preview": False,
+            "handoff": False,
+        }
+    safe_response["data"] = {
+        **raw,
+        "items": raw.get("items") if isinstance(raw.get("items"), list) else [],
+        "page": raw.get("page"),
+        "page_size": raw.get("page_size"),
+        "total": raw.get("total"),
+        "has_next": raw.get("has_next"),
+        "capabilities": capabilities,
+    }
+    return safe_response
+
+
+@router.post("/voice/profiles/{profile_id}/rename")
+async def rename_voice_profile_route(
+    profile_id: str,
+    payload: VoiceProfileManagementRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    normalized_id = _voice_profile_id(profile_id)
+    key = _voice_profile_management_key(payload, request)
+    display_name = str(payload.input.get("display_name") or "").strip()[:120]
+    if not display_name:
+        raise HTTPException(status_code=422, detail="Tên Voice Vault không được để trống")
+    scope = f"voice_profile_management:rename:{account['id']}:{normalized_id}"
+    return await _run_idempotent(
+        scope,
+        key,
+        lambda: _bridge(
+            "POST",
+            f"/internal/v1/voice/profiles/{normalized_id}/rename",
+            account=account,
+            request=request,
+            payload=_voice_profile_mutation_payload(normalized_id, key, display_name=display_name),
+        ),
+    )
+
+
+@router.post("/voice/profiles/{profile_id}/default")
+async def set_default_voice_profile_route(
+    profile_id: str,
+    payload: VoiceProfileManagementRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    normalized_id = _voice_profile_id(profile_id)
+    key = _voice_profile_management_key(payload, request)
+    scope = f"voice_profile_management:default:{account['id']}:{normalized_id}"
+    return await _run_idempotent(
+        scope,
+        key,
+        lambda: _bridge(
+            "POST",
+            f"/internal/v1/voice/profiles/{normalized_id}/default",
+            account=account,
+            request=request,
+            payload=_voice_profile_mutation_payload(normalized_id, key),
+        ),
+    )
+
+
+@router.post("/voice/profiles/{profile_id}/delete")
+async def delete_voice_profile_route(
+    profile_id: str,
+    payload: VoiceProfileManagementRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    normalized_id = _voice_profile_id(profile_id)
+    key = _voice_profile_management_key(payload, request)
+    scope = f"voice_profile_management:delete:{account['id']}:{normalized_id}"
+    return await _run_idempotent(
+        scope,
+        key,
+        lambda: _bridge(
+            "POST",
+            f"/internal/v1/voice/profiles/{normalized_id}/delete",
+            account=account,
+            request=request,
+            payload=_voice_profile_mutation_payload(normalized_id, key),
+        ),
+    )
+
+
+@router.get("/voice/profiles/{profile_id}/preview")
+async def preview_voice_profile_route(
+    profile_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    """Ask Core for a signed preview; missing canonical delivery stays guarded."""
+
+    normalized_id = _voice_profile_id(profile_id)
+    return await _bridge(
+        "GET",
+        f"/internal/v1/voice/profiles/{normalized_id}/preview",
+        account=account,
+        request=request,
+    )
 
 
 @router.post("/uploads")

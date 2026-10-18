@@ -34,15 +34,24 @@ hoàn thành:
 
 Web hiện có:
 
-- `copyfast_api.py:6474-6476`: chỉ có `GET /voice/profiles`, proxy tới
-  `/internal/v1/voice/profiles`.
+- `copyfast_api.py`: `GET /voice/profiles` đã nhận `q`, `page`, `page_size`,
+  `limit`, `offset`, `include_inactive` và chuẩn hóa DTO `items/page/page_size/
+  total/has_next/capabilities` mà không tự bịa tổng hoặc trạng thái.
+- `copyfast_api.py`: đã có các route proxy owner-scoped cho
+  `rename/default/delete/preview`; mọi mutation yêu cầu CSRF + idempotency và
+  mọi thao tác thiếu endpoint canonical vẫn trả guarded.
+- `copyfast_bridge.py`: toàn bộ `/internal/v1/voice/profiles...` được giữ trong
+  surface `voice`, không đi qua generic/admin surface.
+- Bot branch hiện có GET `/internal/v1/voice/profiles` với `items/total`, nhưng
+  chưa có HTTP route management cho rename/default/delete/preview/handoff.
 - `copyfast_api.py:1891-1892`: projection chỉ cho phép
   `id`, `display_name`, `status`, `is_default`, `consent_status`, `tts_ready`,
   `preview_ready`, `created_at`, `updated_at`.
 - `static/portal/integration.js:26514-26520`: hydration chỉ đọc danh sách
   profile và `/features/status`.
-- Chưa có Web contract cho `search`, `page/offset`, `total`, `rename`,
-  `set-default`, `delete`, `preview`, `use-for-video` hoặc handoff profile/draft.
+- Chưa có canonical authority cho `search`, mutation receipt, preview delivery,
+  use-for-video hoặc handoff profile/draft; Web chỉ chuẩn bị proxy guarded cho
+  các boundary này.
 
 Vì vậy checklist phải giữ các mục quản lý Voice Vault ở trạng thái mở. Không
 được thêm nút disabled để tạo cảm giác đã hoàn thành; cũng không được lấy
@@ -123,6 +132,7 @@ không được sinh hai mutation.
   `18/18` pass.
 - Các số trên chỉ chứng minh renderer/control-level, không chứng minh DTO,
   backend, preview, runtime hay delivery.
-- Blocker hiện tại là **thiếu canonical Web DTO/endpoint cho management và
-  capability**, không phải lỗi CSS hay lỗi renderer. Giữ goal active và giữ
-  P1 mở cho đến khi có evidence thật.
+- Bằng chứng mới khóa được Web boundary/DTO/CSRF/idempotency ở source; blocker
+  còn lại là **Bot/Core chưa công bố management endpoint và preview/handoff
+  delivery**, không phải lỗi CSS hay lỗi renderer. Giữ P1 mở cho đến khi có
+  endpoint canonical và browser/runtime evidence thật.
