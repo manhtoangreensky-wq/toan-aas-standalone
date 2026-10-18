@@ -200,3 +200,17 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 110. DTO/DOM không được có ID, owner, tên, email, nội dung nhu cầu, tag hoặc note; route không có link detail hay action ghi cross-account.
 111. Ở `768/390/360`, mỗi hàng hiển thị dọc với nhãn cột; không cuộn ngang cấp trang hoặc ép chữ. Contrast tối thiểu `4.5:1`, target tối thiểu `44px`.
 112. Browser receipt bắt buộc overflow/table overflow/clipping/private leak/framework overlay/relevant console/write request `0`; filter `review` trả đúng tập con ẩn danh.
+
+## 17. AutoPost Hub — APUI-01..04
+
+113. Mở `/publishing` bằng đúng candidate SHA và ghi môi trường trước khi kiểm tra.
+114. Kiểm theo thứ tự dọc: 7 nguồn → kế hoạch/thương hiệu → kênh → lịch/hàng đợi → báo cáo/lịch sử.
+115. Kiểm từng locale VI/EN/ZH riêng; không đánh dấu đạt nếu bản VI còn từ giao diện tiếng Anh
+     ngoài tên riêng đã được duyệt (`AutoPost`, `Affiliate`, `OAuth`, `Asset Vault`, `Campaign`,
+     `Project`, `TOAN AAS`).
+116. Ở mobile, xác nhận không tràn ngang, không xếp hàng ngang khó thao tác và nút đạt tối thiểu
+     `44×44` nếu có tương tác.
+117. Handoff chỉ được kiểm tra điều hướng; không bấm để tạo OAuth, bài đăng, lịch, queue, số liệu,
+     job, provider call hoặc dữ liệu production. Nếu giao diện hiển thị kết quả/receipt khi chưa có
+     server capability, ghi lỗi APUI-04.
+118. Ghi rõ control-level/source PASS riêng với browser/AX/live; không gộp các mức bằng chứng.

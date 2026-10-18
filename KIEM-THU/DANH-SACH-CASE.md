@@ -158,3 +158,15 @@ Evidence local đặt dưới `D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/`. PASS cu�
   field không đổi; canonical-admin fixture chỉ trong DB QA cô lập.
 - Evidence: candidate SHA, ảnh/DOM/AX, console/network, output `node --test`, và blocker
   Python/runtime nếu chưa có `py`/`pytest`. Không coi source PASS là live PASS.
+
+## AUTOPOST-HUB-UI-CONTROL-20261018
+
+| ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |
+|---|---|---|
+| APUI-01 | `/publishing`; VI/EN/ZH; desktop/tablet/mobile | Có đúng 7 nguồn, 5 bước theo thứ tự; thẻ và lane xếp dọc; không có nguồn trùng hoặc route ngoài allowlist |
+| APUI-02 | `/publishing`; bàn phím và chuột/chạm | Handoff thương hiệu, lịch và gói rà soát mở đúng route; lane chưa có capability chỉ hiển thị trạng thái chờ quyền, không dead click hoặc báo thành công giả |
+| APUI-03 | `/publishing`; light/dark và locale | Fixed chrome sạch từng locale, màu xanh/ngọc giữ nguyên, chữ và trạng thái không xen ngôn ngữ |
+| APUI-04 | `/publishing`; boundary/runtime | Không tạo OAuth, lịch đăng, queue, job, provider call, số liệu Affiliate, tệp hoặc mutation; ghi rõ `control-level` và `LIVE_PASS=NOT_TESTED` khi chưa có runtime evidence |
+
+Bằng chứng source hiện tại: `tests/autopost-hub-product-controls.test.mjs` `4/4`, full Node
+`562/562`. Browser/AX/live chưa chạy; không dùng PASS source để thay cho các mức đó.

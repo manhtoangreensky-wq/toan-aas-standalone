@@ -48,8 +48,10 @@ nhóm hoặc nhầm một thẻ điều hướng là một tính năng đã ch�
 - [x] Review #654 hidden field, default checked, duplicate selector, library link,
   guard blanket, locale, âm lượng dub max 100: đã sửa và khóa bằng 13 kiểm thử mục tiêu;
   CI/browser trên commit mới đã đạt route/render matrix.
-- [x] Toàn bộ plan/checklist/spec đã lên GitHub; provenance được refresh cho HEAD mới và
+- [x] Bản plan/checklist/spec nền R218 đã lên GitHub; provenance được refresh cho HEAD mới và
   candidate gate đã xanh ở run `39101124230`.
+- [~] Checkpoint AutoPost cùng tài liệu vận hành và bộ case Tester đã được rà soát, nằm trong
+  đợt push hiện tại; cần CI/browser/AX riêng trước khi chuyển thành bằng chứng delivery.
 - [x] VO-04/VO-05 Voice controls đã có candidate local `814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd`:
   tốc độ số `0,1–2,0` với mặc định `1,0` và 3 preset; âm lượng slider `0–200` đồng bộ
   với đúng một field số. Targeted `3/3`, Voice regression `97/97`, full Node `530/530`,
@@ -178,11 +180,11 @@ nhóm hoặc nhầm một thẻ điều hướng là một tính năng đã ch�
 - [~] UT-08 Projects/Workboard task/dependency/status/assignee/dates/report đã có Project
   Center, Workboard dọc, checklist, lịch, lịch sử và trạng thái; browser fixture/runtime chưa
   chứng minh.
-- [ ] AP-01 Bảy nguồn nội dung AutoPost đúng source lineage.
-- [ ] AP-02 Brand/content plan/draft/edit/preview/review/calendar/version.
-- [ ] AP-03 Channels/platform/connection/expiry/target state.
-- [ ] AP-04 Queue/published history/status/detail/cancel/review/recovery.
-- [ ] AP-05 Affiliate/import/list/filter/ads/metrics, không fake số liệu.
+- [~] AP-01 AutoPost Hub đã khóa presentation bảy nguồn và source lineage ở `/publishing`; picker bytes/URL và capability server vẫn mở.
+- [~] AP-02 AutoPost Hub đã có trình tự brand/content plan → draft/review/calendar bằng các handoff Web-native; edit/version thật vẫn mở.
+- [~] AP-03 AutoPost Hub đã có lane platform/connection/expiry/target ở trạng thái guarded; OAuth và kết nối kênh chưa mở.
+- [~] AP-04 AutoPost Hub đã có lane queue/published history/status/detail/cancel/review/recovery ở trạng thái guarded; chưa có receipt publish thật.
+- [~] AP-05 AutoPost Hub đã có lane Affiliate/import/list/filter/ads/metrics ở trạng thái guarded; không hiển thị số liệu suy đoán.
 - [ ] AC-01 Profile/locale/session/security và stale data cleanup.
 - [ ] AC-02 Packages/pricing/topup/history/detail/pending, không wallet mutation.
 - [ ] SP-01 Support/ticket/attachments/replies/status/escalation/task refs.

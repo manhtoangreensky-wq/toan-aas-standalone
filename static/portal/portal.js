@@ -319,6 +319,13 @@
     return uiText(`publishReview.${key}`, fallback, params);
   }
 
+  // AutoPost Hub translates fixed planning chrome only. Source titles, URLs,
+  // captions, affiliate metadata and server receipts remain owner-scoped data
+  // and are never rewritten in the browser.
+  function autopostHubText(key, fallback, params) {
+    return uiText(`autopostHub.${key}`, fallback, params);
+  }
+
   // Workboard translates fixed Web chrome only. Titles, descriptions,
   // checklist bodies, reference names, timestamps and server receipts remain
   // owner-scoped data and are never rewritten in the browser.
@@ -1259,10 +1266,10 @@
     ]
   }, ["/tools/free"]);
   customerPage("/publishing", "AutoPost Hub", "Đóng gói copy, rà soát lịch trình và chuẩn bị phân phối đa kênh an toàn.", ICONS.reports, {
-    layout: "publish-review-pack", type: "publish-review-pack", fields: [], action: "none", status: "ready",
+    layout: "autopost-hub", type: "autopost-hub", fields: [], action: "none", status: "ready",
     notes: [
-      "AutoPost Hub đóng gói nội dung và lịch trình để rà soát trước khi xuất bản.",
-      "Không tự động gọi provider hoặc API mạng xã hội khi chưa có cấu hình."
+      "AutoPost Hub gom nguồn nội dung, thương hiệu, kênh, lịch, hàng đợi và lịch sử trong một workspace dọc để rà soát.",
+      "Không tự động gọi provider hoặc API mạng xã hội khi chưa có capability và adapter server được xác minh."
     ]
   });
   customerPage("/media-workspace", "Audio Library & Briefing", "Tổ chức Audio Asset Vault và music/SFX brief riêng tư với version history, không chạy provider hoặc tạo audio giả.", ICONS.music, {
@@ -10032,6 +10039,7 @@
     if (path === "/prompt-library/new") return promptLibraryText("page.newTitle", fallback);
     if (path === "/prompt-library") return promptLibraryText("page.title", fallback);
     if (path === "/prompt-studio") return promptStudioText("page.title", fallback);
+    if (path === "/publishing") return autopostHubText("page.title", fallback);
     if (path === "/content/publish-review") return publishReviewText("page.title", fallback);
     if (path === "/content-studio/new") return contentStudioText("page.newTitle", fallback);
     if (path.startsWith("/content-studio/") && path !== "/content-studio/new") return contentStudioText("detail.pageTitle", fallback);
@@ -10131,6 +10139,7 @@
     if (path === "/prompt-library/new") return promptLibraryText("page.newDescription", fallback);
     if (path === "/prompt-library") return promptLibraryText("page.description", fallback);
     if (path === "/prompt-studio") return promptStudioText("page.description", fallback);
+    if (path === "/publishing") return autopostHubText("page.description", fallback);
     if (path === "/content/publish-review") return publishReviewText("page.description", fallback);
     if (path === "/content-studio/new") return contentStudioText("page.newDescription", fallback);
     if (path.startsWith("/content-studio/") && path !== "/content-studio/new") return contentStudioText("detail.pageDescription", fallback);
@@ -11320,7 +11329,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !serverAuthorizesAdminRoute(context, page.routePath || page.path);
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "free-prompt-gallery", "content-studio", "content-studio-detail", "channel-strategy", "channel-strategy-detail", "content-handoff", "content-handoff-detail", "content-handoff-admin", "partner-crm", "consultation-crm-intake", "partner-crm-detail", "partner-crm-manager", "content-prompt-pack", "publish-review-pack", "contextual-ad-prompt", "trend-research", "quick-image-planner", "image-prompt-composer", "video-prompt-planner", "cinematic-concept", "image-motion-planner", "reference-format-planner", "storyboard-composer", "voice-direction-composer", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "audio-hub", "audio-hub-detail", "music-prompt-composer", "music-direction-presets", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-ocr", "pdf-ocr", "pdf-ocr-to-word", "image-resize", "image-enhance", "image-brand-overlay"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "free-prompt-gallery", "content-studio", "content-studio-detail", "channel-strategy", "channel-strategy-detail", "content-handoff", "content-handoff-detail", "content-handoff-admin", "partner-crm", "consultation-crm-intake", "partner-crm-detail", "partner-crm-manager", "content-prompt-pack", "publish-review-pack", "autopost-hub", "contextual-ad-prompt", "trend-research", "quick-image-planner", "image-prompt-composer", "video-prompt-planner", "cinematic-concept", "image-motion-planner", "reference-format-planner", "storyboard-composer", "voice-direction-composer", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "audio-hub", "audio-hub-detail", "music-prompt-composer", "music-direction-presets", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-ocr", "pdf-ocr", "pdf-ocr-to-word", "image-resize", "image-enhance", "image-brand-overlay"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -15948,6 +15957,29 @@
     const hashtags = Array.isArray(pack.hashtags) ? pack.hashtags : [];
     const prompt = String(pack.source_prompt || "");
     return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(publishReviewText("result.kicker", "Chỉ rà soát trên Web"))}</span><h2 class="portal-card-title">${safeText(String(pack.title || publishReviewText("result.titleFallback", "Gói rà soát")))}</h2><p class="portal-card-subtitle">${safeText(publishReviewText("result.body", "Đây là văn bản để bạn tự kiểm tra. Nó không phải bài đăng, lịch đăng, số liệu, thao tác tài khoản mạng xã hội hoặc biên nhận giao tệp."))}</p></div>${badge("read_only")}</div><div class="portal-content-prompt-pack-layout"><section class="portal-content-prompt-pack-checks"><strong>${safeText(publishReviewText("result.caption", "Chú thích"))}</strong><pre>${safeText(String(pack.caption || ""))}</pre></section><section class="portal-content-prompt-pack-checks"><strong>${safeText(publishReviewText("result.hashtagsCta", "Hashtag và lời kêu gọi"))}</strong><div class="portal-storyboard-composer-hashtags">${hashtags.map((item) => `<span>${safeText(String(item))}</span>`).join("")}</div><p><strong>${safeText(publishReviewText("result.ctaLabel", "Lời kêu gọi"))}:</strong> ${safeText(String(pack.cta || ""))}</p></section></div>${prompt ? `<section class="portal-content-prompt-pack-section"><h3>${safeText(publishReviewText("result.sourcePrompt", "Prompt tham chiếu"))}</h3><div><article><span>REF</span><pre>${safeText(prompt)}</pre></article></div></section>` : ""}<section class="portal-content-prompt-pack-checks"><strong>${safeText(publishReviewText("result.checklistTitle", "Danh sách kiểm tra trước khi dùng bên ngoài"))}</strong>${publishReviewPackList(pack.review_checklist, publishReviewText("result.checklistFallback", "Tự kiểm tra tuyên bố, quyền sử dụng, định dạng và chính sách kênh đích."))}</section><div class="portal-form-footer"><span class="portal-form-note">${safeText(String(pack.copy_instruction || ""))}</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/content-studio">${safeText(publishReviewText("result.openContentStudio", "Mở Content Studio"))}</a><a class="portal-button portal-button--quiet" href="/workboard">${safeText(publishReviewText("result.openWorkboard", "Mở Workboard"))}</a></div></div></section>`;
+  }
+
+  function renderAutoPostHub(page, context) {
+    const sourceCards = [
+      ["topic", "source.topic.title", "source.topic.body"],
+      ["url", "source.url.title", "source.url.body"],
+      ["affiliate", "source.affiliate.title", "source.affiliate.body"],
+      ["media", "source.media.title", "source.media.body"],
+      ["video", "source.video.title", "source.video.body"],
+      ["image", "source.image.title", "source.image.body"],
+      ["plan", "source.plan.title", "source.plan.body"]
+    ];
+    const sourceMarkup = sourceCards.map(([id, titleKey, bodyKey]) => `<li class="portal-autopost-source" data-autopost-source="${id}"><span class="portal-autopost-source-index" aria-hidden="true">${sourceCards.findIndex((item) => item[0] === id) + 1}</span><div><strong>${safeText(autopostHubText(titleKey, id))}</strong><p>${safeText(autopostHubText(bodyKey, "Nguồn chỉ được dùng khi máy chủ công bố capability."))}</p></div><span class="portal-autopost-status">${safeText(autopostHubText("source.guarded", "Chờ cấp quyền"))}</span></li>`).join("");
+    const workflowSteps = [
+      ["01", "step.source.title", "step.source.body"],
+      ["02", "step.plan.title", "step.plan.body"],
+      ["03", "step.channel.title", "step.channel.body"],
+      ["04", "step.schedule.title", "step.schedule.body"],
+      ["05", "step.report.title", "step.report.body"]
+    ];
+    const stepMarkup = workflowSteps.map(([number, titleKey, bodyKey]) => `<li><span>${number}</span><div><strong>${safeText(autopostHubText(titleKey, number))}</strong><small>${safeText(autopostHubText(bodyKey, "Trạng thái sẽ do máy chủ xác minh."))}</small></div></li>`).join("");
+    const laneCard = (className, titleKey, bodyKey, statusKey, href) => `<section class="portal-card portal-card-pad portal-autopost-lane ${className}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(autopostHubText(`${titleKey}.kicker`, "AutoPost"))}</span><h2 class="portal-card-title">${safeText(autopostHubText(`${titleKey}.title`, "Workspace"))}</h2><p class="portal-card-subtitle">${safeText(autopostHubText(`${titleKey}.${bodyKey}`, "Dữ liệu và quyền sẽ được máy chủ xác minh."))}</p></div>${badge("guarded")}</div><div class="portal-autopost-lane-footer"><span>${safeText(autopostHubText(`${titleKey}.${statusKey}`, "Chưa kết nối"))}</span>${href ? `<a class="portal-button portal-button--quiet" href="${href}">${safeText(autopostHubText("action.open", "Mở"))}</a>` : `<button class="portal-button portal-button--quiet" type="button" disabled>${safeText(autopostHubText("action.wait", "Đang chờ"))}</button>`}</div></section>`;
+    return `<article class="portal-page portal-autopost-hub">${renderHero(page, context)}<section class="portal-autopost-intro"><div><span class="portal-section-kicker">${safeText(autopostHubText("intro.kicker", "AutoPost · một workspace rõ ràng"))}</span><h2>${safeText(autopostHubText("intro.title", "Chuẩn bị, rà soát và theo dõi nội dung đa kênh."))}</h2><p>${safeText(autopostHubText("intro.body", "Tất cả nguồn, thương hiệu, kênh, lịch, hàng đợi và báo cáo được đặt theo đúng thứ tự thao tác. Các bước bên ngoài chỉ mở khi máy chủ công bố quyền thật."))}</p></div><dl><div><dt>7</dt><dd>${safeText(autopostHubText("metric.sources", "Nguồn đầu vào"))}</dd></div><div><dt>5</dt><dd>${safeText(autopostHubText("metric.steps", "Bước kiểm soát"))}</dd></div><div><dt>0</dt><dd>${safeText(autopostHubText("metric.external", "Kết nối bên ngoài"))}</dd></div></dl></section><section class="portal-card portal-card-pad portal-autopost-steps"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(autopostHubText("steps.kicker", "Trình tự làm việc"))}</span><h2 class="portal-card-title">${safeText(autopostHubText("steps.title", "Đi từ nguồn đến báo cáo, không bỏ bước"))}</h2><p class="portal-card-subtitle">${safeText(autopostHubText("steps.body", "Mỗi bước giữ bản nháp, trạng thái và ranh giới riêng để dễ kiểm tra."))}</p></div>${badge("read_only")}</div><ol>${stepMarkup}</ol></section><div class="portal-autopost-layout"><section class="portal-card portal-card-pad portal-autopost-sources"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(autopostHubText("source.kicker", "Bước 1 · nguồn"))}</span><h2 class="portal-card-title">${safeText(autopostHubText("source.title", "Chọn nguồn nội dung"))}</h2><p class="portal-card-subtitle">${safeText(autopostHubText("source.body", "Chỉ chọn nguồn thuộc phiên và quyền của tài khoản hiện tại."))}</p></div>${badge("guarded")}</div><ul>${sourceMarkup}</ul></section><div class="portal-autopost-lanes">${laneCard("portal-autopost-brand", "brand", "body", "status", "/content/channel-strategy")}${laneCard("portal-autopost-calendar", "calendar", "body", "status", "/calendar")}${laneCard("portal-autopost-review", "review", "body", "status", "/content/publish-review")}${laneCard("portal-autopost-channels", "channels", "body", "status", "")}${laneCard("portal-autopost-queue", "queue", "body", "status", "")}${laneCard("portal-autopost-affiliate", "affiliate", "body", "status", "")}</div></div><section class="portal-card portal-card-pad portal-autopost-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(autopostHubText("boundary.kicker", "Ranh giới vận hành"))}</span><h2 class="portal-card-title">${safeText(autopostHubText("boundary.title", "Không giả kết nối, lịch đăng hoặc số liệu"))}</h2><p class="portal-card-subtitle">${safeText(autopostHubText("boundary.body", "Đây là lớp trình bày và chuẩn bị. Không tạo publish, quảng cáo, thanh toán, job hoặc báo cáo giả."))}</p></div>${badge("guarded")}</div><div class="portal-autopost-boundary-grid"><div><strong>${safeText(autopostHubText("boundary.content", "Nguồn và nội dung"))}</strong><span>${safeText(autopostHubText("boundary.contentState", "Giữ trong phạm vi tài khoản"))}</span></div><div><strong>${safeText(autopostHubText("boundary.channels", "Kênh và OAuth"))}</strong><span>${safeText(autopostHubText("boundary.channelsState", "Chưa kết nối"))}</span></div><div><strong>${safeText(autopostHubText("boundary.publish", "Lịch và đăng bài"))}</strong><span>${safeText(autopostHubText("boundary.publishState", "Chờ adapter máy chủ"))}</span></div><div><strong>${safeText(autopostHubText("boundary.metrics", "Affiliate và số liệu"))}</strong><span>${safeText(autopostHubText("boundary.metricsState", "Không có số liệu suy đoán"))}</span></div></div></section></article>`;
   }
 
   function renderPublishReviewPack(page, context) {
@@ -36942,6 +36974,7 @@
       case "partner-crm-manager": return renderPartnerCrmManager(page, context);
       case "prompt-studio": return renderPromptStudio(page, context);
       case "content-prompt-pack": return renderContentPromptPack(page, context);
+      case "autopost-hub": return renderAutoPostHub(page, context);
       case "publish-review-pack": return renderPublishReviewPack(page, context);
       case "contextual-ad-prompt": return renderContextualAdPrompt(page, context);
       case "trend-research": return renderTrendResearch(page, context);

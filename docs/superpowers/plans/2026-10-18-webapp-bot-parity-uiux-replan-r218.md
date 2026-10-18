@@ -126,6 +126,21 @@ control-level evidence; upload bytes thật, preview, capability server, browser
 và LIVE vẫn mở. Sau checkpoint này tiếp tục AP/Support/Account theo checklist, không nhảy
 sang motion.
 
+## Checkpoint R218-07A — AutoPost Hub control-level
+
+Đã khóa một workspace `/publishing` theo trình tự nguồn → thương hiệu/kế hoạch → kênh →
+lịch/hàng đợi → báo cáo/lịch sử. Bảy nguồn Bot được trình bày riêng: chủ đề/ý tưởng, URL,
+Affiliate, tệp đa phương tiện, video TOAN AAS, ảnh TOAN AAS và ý tưởng từ kế hoạch. Channel
+Strategy, Content Calendar và gói rà soát trước khi đăng được nối bằng handoff Web-native;
+OAuth, publish, queue, affiliate metrics và delivery vẫn `guarded` vì chưa có capability
+server hợp lệ. Fixed chrome đã cân bằng VI/EN/ZH, desktop/tablet/mobile giữ bố cục dọc.
+
+Spec và test: `docs/superpowers/specs/2026-10-18-r218-07-autopost-hub-controls.md`,
+`tests/autopost-hub-product-controls.test.mjs`. Đây là control-level evidence cho AP-01..05,
+không phải bằng chứng kênh đã kết nối hoặc bài đăng đã giao. Local verify hiện tại: AutoPost
+`4/4`, full Node `562/562`, hai lệnh `node --check` và `git diff --check` đạt; browser/AX,
+CI và LIVE vẫn chưa được suy diễn.
+
 ## 6. Phiếu thực thi cho từng spec
 
 1. Inventory controls: menu/callback/handler, từng mục chưa rõ ghi OPEN.
