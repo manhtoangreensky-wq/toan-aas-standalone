@@ -8,16 +8,16 @@ branch: webapp-r217-subdub-ui-r218
 pull_request: 654
 head_sha: 3f1534a2d2417ab40b8534df86ada31b7d1e000e
 delivery_head_sha: 3f1534a2d2417ab40b8534df86ada31b7d1e000e
-delivery_status: SOURCE_VERIFIED_WITH_REFRESHED_EVIDENCE_PUSH_AND_CI_READBACK_PENDING
+delivery_status: PUSHED_REMOTE_VERIFIED_CI_TESTER_METADATA_CORRECTION
 head_sha_semantics: "Source-code candidate SHA; docs-only checkpoints may advance branch HEAD without changing this code candidate."
 delivery_head_semantics: "Code candidate verified locally with renderer browser evidence. Metadata-only evidence/state commit follows; push/CI are checked after that commit."
 branch_head_sha: 3f1534a2d2417ab40b8534df86ada31b7d1e000e
 branch_head_sha_semantics: "Snapshot immediately before the metadata-only refresh commit; resolve Git HEAD for the actual branch tip."
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
-last_push_verified_commit: 608d506ed86273b945b03b2738437e484ac302b6
+last_push_verified_commit: 88477b9404ca6cac6d98c3f265ca32347a432f30
 docs_checkpoint_sha: 3f1534a2d2417ab40b8534df86ada31b7d1e000e
-push_command_success_commit: b737aea961905b6c70a585e63f16c7a67cbfc18e
-remote_readback: "VERIFIED: gh headRefOid and git ls-remote agree on 608d506ed86273b945b03b2738437e484ac302b6 before this batch. Sandboxed DNS failed; approved elevated read succeeded."
+push_command_success_commit: 88477b9404ca6cac6d98c3f265ca32347a432f30
+remote_readback: "VERIFIED: gh headRefOid and git ls-remote agree on 88477b9404ca6cac6d98c3f265ca32347a432f30."
 batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
@@ -63,10 +63,10 @@ current_wip:
   historical_crosswalk: "Đã kiểm kê 127 plan + 180 spec + 44 audit + 14 state = 365 file; 307 plan/spec được phân lớp; 433 dòng checkbox cũ được truy vết. `unclassified source=0`; semantic review từng dòng trước R217 vẫn mở theo wave, không suy diễn PASS."
   ci_run: 39099917923
   ci_head: 69ef97ffdf7f0c86aa950439dd8c83d64989f53e
-  ci_status_at_last_observation: FAILURE_MIGRATION_FINGERPRINT_STALE_ON_608d506
+  ci_status_at_last_observation: FAILURE_TESTER_METADATA_STALE_ON_88477b9
   ci_scope: "HEAD 8baaa07/148be4f prior comparator đã xanh Verify Web App + Authenticated QA; candidate 28cc131 chứa UT-01 translation workspace và tài liệu, GitHub statusCheckRollup hiện rỗng, cần CI/browser run riêng."
-  ci_latest_run: 39121319190
-  ci_latest_status: "PR #654 OPEN/MERGEABLE trên 608d506; Verify Web App FAILURE ở verify-web-evidence: recorded 04d25a4f9ba8 != current 81482c79f51c, files=288. Authenticated QA SKIPPED. Cần refresh bằng script chuẩn sau khi chốt eligible source."
+  ci_latest_run: 39122434903
+  ci_latest_status: "PR #654 OPEN/MERGEABLE trên 88477b9; migration evidence, Python compile and JS syntax PASS. Bounded contracts: 293 passed / 1 failed at Tester case metadata (recorded 39275 bytes vs current 39517). Remeasured all six metadata files; only VUI-01 source hash/bytes needed update. No test assertion changed."
   migration_evidence_refresh: "Refresh and independent verify-web-evidence both exit 0 for 3f1534a2d2417ab40b8534df86ada31b7d1e000e; source_files_scanned=288; source_fingerprint_sha256=a10fd0bd3c853d66f0616c1e177e8ea25a1dda07bebad99809c1609ebf9ad8c7. Bot evidence unchanged."
   local_targeted_tests: "Voice input 4/4; Voice input/inventory/flow 64/64; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
   local_full_tests: "591/591 tests/*.test.mjs"

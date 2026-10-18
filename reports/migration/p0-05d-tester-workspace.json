@@ -36,6 +36,8 @@
   "local_metadata_updated_at": "2026-09-12",
   "remote_verified_at": "2026-09-03",
   "partial_remote_revalidated_at": "2026-09-12",
+  "local_files_refreshed_at": "2026-10-18",
+  "local_files_refresh_scope": "Only portable LF file sizes/hashes were remeasured after the VUI-01 update; historical remote verification dates are unchanged.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -61,8 +63,8 @@
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
       "lines": 186,
-      "bytes": 39275,
-      "sha256": "4eb06f8d4a0a53a0cbe795f00068751a49f9b8a10c5e0b69928fda8cd5331c98"
+      "bytes": 39517,
+      "sha256": "3ef8c0d015efed02c3190364c6ecc16c22a3a1c3275bb57221206ec9642efb08"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
