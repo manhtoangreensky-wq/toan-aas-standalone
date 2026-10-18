@@ -1,6 +1,6 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
-Ngày 2026-10-18. WIP_UT07_ASSETS_CONTROL_PARTIAL. Source Bot được đọc-only; production chưa kiểm.
+Ngày 2026-10-18. WIP_AC01_ACCOUNT_CONTROLS_PARTIAL. Source Bot được đọc-only; production chưa kiểm.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
 Đối soát toàn bộ lịch sử trước R217 nằm tại
@@ -219,13 +219,15 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] AP-03 AutoPost Hub đã có lane platform/connection/expiry/target ở trạng thái guarded; OAuth và kết nối kênh chưa mở.
 - [~] AP-04 AutoPost Hub đã có lane queue/published history/status/detail/cancel/review/recovery ở trạng thái guarded; chưa có receipt publish thật.
 - [~] AP-05 AutoPost Hub đã có lane Affiliate/import/list/filter/ads/metrics ở trạng thái guarded; không hiển thị số liệu suy đoán.
-- [ ] AC-01 Profile/locale/session/security và stale data cleanup; control ledger theo
+- [~] AC-01 Profile/locale/session/security và stale data cleanup; control-level đã có
+  test `tests/account-control-level-contract.test.mjs` đạt `6/6`, full Node đạt `574/574`;
+  browser/AX, session runtime và live vẫn mở. Control ledger theo
   `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md` (AC-01A..E).
 - [x] AC-01 locale subgate: cả ba block catalogue Account Security tiếng Việt
   (liên hệ/phiên, MFA/tình trạng và action/error) đã loại bỏ generic English, giữ
   nguyên tên riêng/acronym và placeholder; test riêng `2/2`, Account regression
-  `11/11`, full Node `568/568`. Đây chỉ là source-locale evidence;
-  browser/AX, session runtime và control-level vẫn chưa đóng AC-01.
+  `11/11`, full Node mới nhất `574/574`. Đây chỉ là source-locale evidence;
+  browser/AX, session runtime và control-level runtime vẫn chưa đóng AC-01.
 - [ ] AC-02 Packages/pricing/topup/history/detail/pending, không wallet mutation;
   control ledger theo `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md`
   (AC-02A..D). QR chỉ sau method+amount+readiness; approval/credit giữ T0.
