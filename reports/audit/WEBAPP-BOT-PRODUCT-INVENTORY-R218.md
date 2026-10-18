@@ -56,11 +56,13 @@ Commit Bot UNKNOWN; hash bot.py
 1. SubDub V2 shared source/translation master nằm trong DESIGN docs; không báo
    implementation/runtime đã sử dụng chỉ dựa trên tài liệu.
 2. Ba Auto callback riêng: `auto_speaker_gender`, `auto_multi_speaker`,
-   `auto_smart_multivoice`. Candidate Web key `auto_many` cần map tường minh,
-   không gửi thẳng vào API và không nhập ba engine thành một select mơ hồ.
+   `auto_smart_multivoice`. Web control hiện map tường minh qua `auto_two`,
+   `auto_multi_3_8`, `smart_multi`; không gửi lane presentation thẳng vào API
+   và không nhập ba engine thành một select mơ hồ.
 3. `/voice-studio` không mặc nhiên là canonical Voice Vault. Web đang có
    `/voice/saved` và `/voice/clone`; cần xác minh handoff trả về sản phẩm gốc.
-4. Dub volume Bot 0–200 nhưng Web local control 0–100; đây là UI gap có evidence.
+4. Dub volume Bot 0–200; Web local control đã hiển thị max 200, còn number binding,
+   server capability và artifact evidence vẫn mở.
 5. Bot Music edit `bot.py:172099..172105` chỉ trả guard; ghi capability gap.
 6. Music parser nhiều track `164605` chưa chứng minh giao 2 bản; `172553..172589`
    hiện đưa một audio_bytes vào delivery. Yêu cầu 2 bản giữ NEEDS_CONTRACT_CONFIRMATION.

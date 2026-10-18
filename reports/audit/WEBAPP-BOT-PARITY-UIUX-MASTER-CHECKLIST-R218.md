@@ -74,17 +74,19 @@ Bất kỳ mục không browser evidence không gọi là UX/LIVE hoàn thiện.
 
 ## P3 — SubDub R218-04 (SD-01..21)
 
-- [~] Shell một trang/bốn tab có source; chưa đủ bằng chứng UX toàn luồng.
-- [ ] Source có/chưa có subtitle/upload/preview theo mode.
-- [ ] Auto source, giữ gốc/dịch, target Việt/Anh/Trung + searchable catalog đầy đủ.
+- [x] Shell một trang/bốn tab, mode/query/keyboard và panel tại chỗ đã khóa bằng test presentation.
+- [~] Source đã có lựa chọn “đã có/chưa có phụ đề”, bộ chọn tệp và trạng thái source rõ ràng;
+  upload/preview/metadata/progress/cancel/replace/error vẫn chờ capability máy chủ.
+- [~] Auto source mặc định tự nhận diện; target hiển thị catalog đầy đủ, Việt đứng trước rồi Anh/Trung;
+  tìm kiếm runtime và giữ gốc/dịch theo DTO thật vẫn chưa có bằng chứng.
 - [ ] Default Nữ/Nam; saved picker + custom Voice wizard, return đúng draft.
-- [~] Auto 2, Auto Multi 3–8 và Smart Multi riêng, mapping rõ callback/capability;
-  lane presentation, ba callback và authenticated route/render matrix đã có; server
-  capability/execution vẫn mở.
+- [~] Auto 2, Auto Multi 3–8 và Smart Multi đã tách thành ba lane canonical riêng,
+  mapping callback rõ; server capability/execution vẫn mở.
 - [ ] Speaker map/preview/override chỉ khi có dữ liệu; ambiguous/review/fallback rõ.
 - [~] Original audio toggle 0–100, dub 0–200 và number+slider; static dub max 200 đã có,
   number control/backend/browser evidence vẫn mở.
-- [ ] Subtitle position/format/mono-bilingual/original-translated source/review.
+- [~] Subtitle position đã có đủ 7 slot cho các mode có phụ đề; format/mono-bilingual/original-translated
+  source/review runtime vẫn mở.
 - [ ] Quote/progress/result/report/download/recovery không giả.
 - [~] Review candidate #654 theo spec mới: không còn count thẻ disabled là hoàn tất;
   lane selector/link/callback đã được kiểm thử static và CI/browser route/render; chưa có

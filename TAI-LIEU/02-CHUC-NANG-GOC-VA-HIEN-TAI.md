@@ -538,11 +538,13 @@ với Bot, không đổi engine, route/action/field/capability, ví/Xu hoặc d�
 
 | Chức năng Bot tham chiếu | WebApp hiện tại | Bằng chứng / giới hạn |
 |---|---|---|
-| Bốn lane: phụ đề gốc, phụ đề dịch, lồng tiếng, combo | Một workspace `/subdub` giữ bốn tab và đổi panel tại chỗ | `tests/subdub-hub-presentation.test.mjs` `12/12` |
+| Bốn lane: phụ đề gốc, phụ đề dịch, lồng tiếng, combo | Một workspace `/subdub` giữ bốn tab và đổi panel tại chỗ | `tests/subdub-hub-presentation.test.mjs` `14/14` |
 | Giọng mặc định nam/nữ | Đã hiển thị thành hai lane riêng, trạng thái guarded | `static/portal/portal.js`; chưa có bridge giọng thật |
 | Giọng đã lưu và giọng tự thêm | Đã có lane, Voice Library link và lý do guarded | Chưa có projection `voice_profile_id` từ server |
-| Multi 2 và Multi 3–8 | Đã tách thành hai lane; speaker-map panel chờ runtime data | Chưa chạy Auto Multi thật, không ép số người nói |
-| Tự nhận diện nhiều giọng | Có lane `auto_many` và selector Smart Multi guarded | Chưa có speaker detection, mapping override hoặc artifact |
+| Auto 2 và Auto Multi 3–8 | Đã tách thành hai lane canonical `auto_two` và `auto_multi_3_8`; speaker-map panel chờ runtime data | Chưa chạy callback thật, không ép số người nói |
+| Smart Multi | Đã có lane `smart_multi` riêng và callback `auto_smart_multivoice` guarded | Chưa có speaker detection, mapping override hoặc artifact |
+| Nguồn phụ đề và ngôn ngữ | Đã có lựa chọn “đã có/chưa có phụ đề”, tự nhận diện nguồn, catalog target đầy đủ với Việt đứng trước; nhãn được cân bằng VI/EN/ZH | Upload/preview/search/runtime language capability chưa có bằng chứng |
+| Vị trí phụ đề | Đã hiển thị đủ 7 vị trí trong các mode có phụ đề | Chưa áp dụng vào artifact thật khi execution chưa mở |
 | Báo giá, xác nhận, tiến trình, artifact, receipt | Stage 3/4 vẫn guarded/empty | Không tạo job hoặc output giả; R217-07D/E còn mở |
 
 Tài liệu gốc của Bot mô tả nhiều hơn UI Web hiện tại ở phần speaker mapping, artifact QC,

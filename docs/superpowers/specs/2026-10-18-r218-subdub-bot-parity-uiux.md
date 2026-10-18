@@ -1,6 +1,7 @@
 # R218-04 — SubDub: một workspace, đủ luồng Bot
 
-Trạng thái SPEC_REVIEW. PR #654 là candidate, chưa hoàn tất theo spec này.
+Trạng thái SPEC_CONTROL_PARTIAL_LOCKED. PR #654 vẫn là candidate; control-level UI/UX đã
+được khóa cục bộ, còn capability/runtime/provider/upload/quote/job/output/delivery chưa mở.
 Allowed UI: static/portal/portal.js, portal.css, portal-i18n.js và tests SubDub.
 Không sửa Bot/API schema/provider/route-engine/wallet hoặc dữ liệu production.
 
@@ -75,6 +76,9 @@ VO/SD handoff giữ draft qua trở lại; không lộ stale profile/secret/prov
 Browser VI/EN/ZH × light/dark × 375/390/768/1440; form 320/414 thêm.
 Thao tác local không mạng/charge; confirm chỉ khi authorized capability thật.
 
-Candidate #654 phải review lại: radio disabled + selected ngầm, hidden profile field,
-hai bộ chọn trùng chức năng, map empty và copy lặp. Các test 12/12 trước đây chỉ
-chứng minh renderer source, không đóng requirement về UX hoặc hoạt động như Bot.
+Candidate #654 phải review lại: upload/preview vẫn guarded; language catalog mới chỉ là
+presentation; speaker map/quote/progress/result/delivery chưa có server evidence. Đợt
+control hiện tại đã loại bỏ khóa `auto_many` mơ hồ bằng ba lane riêng `auto_two`,
+`auto_multi_3_8`, `smart_multi`, thêm selector “đã có/chưa có phụ đề”, catalog ngôn ngữ
+đầy đủ theo VI/EN/ZH và 7 vị trí phụ đề. Test mục tiêu hiện là 14/14; các test này chỉ
+đóng renderer/interaction local, không đóng requirement runtime như Bot.

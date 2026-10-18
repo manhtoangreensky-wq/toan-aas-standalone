@@ -413,17 +413,18 @@ Các phần có ngày/SHA cũ dưới đây là lịch sử, không xác nhận 
 
 ## Cập nhật vận hành WebApp — R217-07A và R218 plan — 18/10/2026
 
-SubDub WebApp đã bổ sung một workspace duy nhất với bốn hướng xử lý và hiện hiển thị
-bảy lựa chọn gán giọng riêng: mặc định nữ, mặc định nam, giọng đã lưu, giọng tự thêm,
-hai giọng, ba đến tám giọng và tự nhận diện nhiều giọng. Hai panel lồng tiếng có volume
+SubDub WebApp hiện có một workspace duy nhất với bốn hướng xử lý và bảy lựa chọn gán
+giọng riêng: mặc định nữ, mặc định nam, giọng đã lưu, giọng tự thêm, Auto 2,
+Auto Multi 3–8 và Smart Multi. Workspace còn nêu rõ nguồn đã có/chưa có phụ đề,
+source auto-detect, catalog target đầy đủ theo VI/EN/ZH, bảy vị trí phụ đề, volume
 âm thanh gốc/giọng lồng tiếng, speaker-map guarded và đường sang Voice Library.
 
-- Regression SubDub: `12/12` đạt, `0` lỗi.
-- Full Node suite hiện tại: `526/526` đạt, `0` lỗi.
+- Regression SubDub: `14/14` đạt, `0` lỗi.
+- Full Node suite hiện tại: `538/538` đạt, `0` lỗi.
 - `node --check` Portal JS: `2/2` đạt; `git diff --check`: đạt.
 - Provider calls: `0`; wallet mutations: `0`; production data mutations: `0`.
-- Upload, Voice Library data, preflight, confirm, provider bridge, output artifact và
-  live report vẫn guarded; chưa gọi đây là parity runtime với Bot.
+- Upload/preview, Voice Library data, preflight, confirm, provider bridge, speaker
+  detection, output artifact và live report vẫn guarded; chưa gọi đây là parity runtime với Bot.
 - Plan/checklist/spec mới: R218 trong `docs/superpowers/` và `reports/audit/`.
 
 ## 20. A09 Auth + Admin shell — trạng thái vận hành candidate 05/09/2026
@@ -860,29 +861,30 @@ ví/Xu, Bot bridge và dữ liệu production không đổi.
 - Blocker kiểm thử: `pytest` chưa chạy vì Python bundled không có module `pytest`; CI phải chạy
   lại bộ Python trước delivery.
 
-## R218 — Cập nhật evidence sau WIP SubDub — 18/10/2026
+## R218 — Cập nhật evidence sau WIP SubDub control — 18/10/2026
 
-- HEAD candidate hiện tại của PR #654: `148be4f6ec18e3c7fe3abfee8ca8a34ee1a5d099`.
+- Source candidate trước commit tài liệu của PR #654: `df2b6a6811e2ab80ec06a73f99ac12e63ade6f77`.
 - CI run `39101124230`: `Verify Web App=SUCCESS`, `Authenticated WebApp QA=SUCCESS`;
   ma trận route/render ghi nhận `456/456` case trên customer/admin, VI/EN/ZH,
   light/dark và phone/tablet/desktop.
-- Local gate của SubDub presentation: `13/13` test mục tiêu, `node --check
-  static/portal/portal.js`, `git diff --check`, full Node trước đó `527/527`.
+- Local gate của SubDub presentation: `14/14` test mục tiêu, `node --check
+  static/portal/portal.js`, `git diff --check`, full Node `538/538`.
 - Kết luận vận hành: chỉ khóa được lane presentation, locale, selector và route/render
-  evidence. Chưa có bằng chứng server capability, upload, quote, job, provider output,
+  evidence; đợt này bổ sung source state, language catalog, 7 subtitle positions và
+  ba lane Auto canonical. Chưa có bằng chứng server capability, upload, quote, job, provider output,
   artifact delivery hoặc live production; `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
   `PRODUCTION_DATA_MUTATIONS=0`, `LIVE_PASS=NOT_TESTED`.
 - Ba lane Auto 2, Auto Multi 3–8 và Smart Multi vẫn là ba callback riêng; không được
   gộp thành một engine hay suy diễn từ route matrix.
 
-## R218 — Toàn sản phẩm, nguồn Bot và checkpoint — 18/10/2026
+## R218 — Toàn sản phẩm, nguồn Bot và checkpoint trước SubDub control patch — 18/10/2026
 
 R218 hiện bao phủ Voice, Music/SFX, SubDub, Image, Product Video/AI và manual edit,
 Dịch/Content/Free/Memory/Documents/Assets/Projects, AutoPost/Support/Account và
 Admin/app nội bộ. Inventory B01–B34 có nguồn menu/handler và spec theo control.
 
-Phần SubDub trong PR #654 là candidate source, chưa đóng UI/UX: thẻ disabled,
-selector lặp/hidden field, link kho giọng và volume 0–200 cần review theo spec mới.
+Phần SubDub trong đoạn checkpoint này là snapshot trước control patch: thẻ disabled,
+selector lặp/hidden field, link kho giọng và volume 0–200 còn cần review theo spec mới.
 Bot source không là runtime proof: Music editor còn guard, hai track delivery chưa
 chứng minh, Video AI edit có catalog nhưng disabled, long/series có execution lock.
 

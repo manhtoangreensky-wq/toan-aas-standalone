@@ -25572,6 +25572,41 @@
     return ["vi", "en", "zh"].includes(resolved) ? resolved : "vi";
   }
 
+  // SubDub keeps the full Bot language catalog visible in the workspace while
+  // still localizing every label for the selected interface language.  This is
+  // presentation data only: it does not claim that a provider or execution
+  // adapter is available for any individual language.
+  const SUBDUB_LANGUAGE_CATALOG = Object.freeze([
+    { value: "vi", labels: { vi: "Tiếng Việt", en: "Vietnamese", zh: "越南语" } },
+    { value: "en", labels: { vi: "Tiếng Anh", en: "English", zh: "英语" } },
+    { value: "zh", labels: { vi: "Tiếng Trung", en: "Chinese", zh: "中文" } },
+    { value: "zh_cn", labels: { vi: "Tiếng Trung giản thể", en: "Chinese (Simplified)", zh: "简体中文" } },
+    { value: "zh_tw", labels: { vi: "Tiếng Trung phồn thể", en: "Chinese (Traditional)", zh: "繁體中文" } },
+    { value: "ja", labels: { vi: "Tiếng Nhật", en: "Japanese", zh: "日语" } },
+    { value: "ko", labels: { vi: "Tiếng Hàn", en: "Korean", zh: "韩语" } },
+    { value: "th", labels: { vi: "Tiếng Thái", en: "Thai", zh: "泰语" } },
+    { value: "fr", labels: { vi: "Tiếng Pháp", en: "French", zh: "法语" } },
+    { value: "de", labels: { vi: "Tiếng Đức", en: "German", zh: "德语" } },
+    { value: "es", labels: { vi: "Tiếng Tây Ban Nha", en: "Spanish", zh: "西班牙语" } },
+    { value: "id", labels: { vi: "Tiếng Indonesia", en: "Indonesian", zh: "印度尼西亚语" } },
+    { value: "ms", labels: { vi: "Tiếng Mã Lai", en: "Malay", zh: "马来语" } },
+    { value: "pt", labels: { vi: "Tiếng Bồ Đào Nha", en: "Portuguese", zh: "葡萄牙语" } },
+    { value: "ru", labels: { vi: "Tiếng Nga", en: "Russian", zh: "俄语" } },
+    { value: "ar", labels: { vi: "Tiếng Ả Rập", en: "Arabic", zh: "阿拉伯语" } },
+    { value: "hi", labels: { vi: "Tiếng Hindi", en: "Hindi", zh: "印地语" } },
+    { value: "lo", labels: { vi: "Tiếng Lào", en: "Lao", zh: "老挝语" } },
+    { value: "km", labels: { vi: "Tiếng Khmer", en: "Khmer", zh: "高棉语" } },
+    { value: "my", labels: { vi: "Tiếng Myanmar", en: "Burmese", zh: "缅甸语" } },
+    { value: "fil", labels: { vi: "Tiếng Filipino", en: "Filipino", zh: "菲律宾语" } }
+  ]);
+
+  function renderSubDubLanguageOptions(locale, selectedValue, includeAuto) {
+    const entries = includeAuto
+      ? [{ value: "auto", labels: { vi: "Tự nhận diện", en: "Auto-detect", zh: "自动识别" } }, ...SUBDUB_LANGUAGE_CATALOG]
+      : SUBDUB_LANGUAGE_CATALOG;
+    return entries.map((entry) => `<option value="${safeText(entry.value)}"${entry.value === selectedValue ? " selected" : ""}>${safeText(entry.labels[locale] || entry.labels.vi)}</option>`).join("");
+  }
+
   const SUBDUB_PRESENTATION_COPY = Object.freeze({
     vi: {
       heroKicker: "Trung tâm Phụ đề & Lồng tiếng",
@@ -25620,6 +25655,12 @@
       sourceMetaEngine: "Cơ chế xử lý chưa khả dụng",
       sourceMetaGuarded: "Không có tệp giả",
       sourceMetaProtection: "Bảo vệ an toàn",
+      sourceFileLabel: "Tệp âm thanh, video hoặc phụ đề",
+      sourceSubtitleStateLabel: "Nguồn phụ đề",
+      sourceHasSubtitle: "Đã có phụ đề",
+      sourceNoSubtitle: "Chưa có phụ đề",
+      sourceSubtitleStateHelp: "Chọn đúng tình trạng nguồn để máy chủ biết cần đọc cue có sẵn hay nhận diện lời thoại trước.",
+      sourceFileGuarded: "Bộ chọn tệp sẽ mở sau khi máy chủ xác minh quyền sở hữu và khả năng nhận tệp.",
       sourceLanguageLabel: "Ngôn ngữ trong tệp gốc",
       langVi: "Tiếng Việt",
       langEn: "Tiếng Anh",
@@ -25646,6 +25687,14 @@
       subDisplayLabel: "Kiểu hiển thị phụ đề",
       subDisplaySingle: "Phụ đề đơn ngữ (Chỉ bản dịch)",
       subDisplayBilingual: "Phụ đề song ngữ (Gốc + Dịch)",
+      subtitlePositionLabel: "Vị trí phụ đề",
+      subtitlePositionBottomCenter: "Dưới · giữa",
+      subtitlePositionBottomLeft: "Dưới · trái",
+      subtitlePositionBottomRight: "Dưới · phải",
+      subtitlePositionTopCenter: "Trên · giữa",
+      subtitlePositionTopLeft: "Trên · trái",
+      subtitlePositionTopRight: "Trên · phải",
+      subtitlePositionCenter: "Giữa màn hình",
       subtitleConfigHeading: "Cấu hình phụ đề",
       dubbingConfigHeading: "Cấu hình lồng tiếng AI",
       voiceStyleLabel: "Giọng đọc lồng tiếng AI",
@@ -25676,9 +25725,9 @@
       voiceLaneDefaultMale: "Giọng nam mặc định",
       voiceLaneSaved: "Giọng đã lưu trong Thư viện giọng",
       voiceLaneCustom: "Giọng tự thêm có xác nhận quyền sử dụng",
-      voiceLaneMultiTwo: "Hai giọng",
-      voiceLaneMultiThreeEight: "Ba đến tám giọng",
-      voiceLaneAutoMany: "Tự nhận diện nhiều giọng",
+      voiceLaneAutoTwo: "Auto 2 · tự nhận diện hai người nói",
+      voiceLaneAutoMultiThreeEight: "Auto Multi · tự nhận diện 3–8 người nói",
+      voiceLaneSmartMulti: "Smart Multi · phân bổ nhiều giọng thông minh",
       voiceLaneGuarded: "Lựa chọn được lưu trong bản nháp; xử lý chỉ bắt đầu khi máy chủ xác nhận khả năng này.",
       speakerMapLabel: "Bản đồ người nói → giọng",
       speakerMapGuarded: "Chưa có dữ liệu nhận diện. Không tự gán giọng hoặc tạo kết quả giả.",
@@ -25777,6 +25826,12 @@
       sourceMetaEngine: "Engine not ready",
       sourceMetaGuarded: "No synthetic files",
       sourceMetaProtection: "Safety protected",
+      sourceFileLabel: "Audio, video, or subtitle file",
+      sourceSubtitleStateLabel: "Subtitle source",
+      sourceHasSubtitle: "Already has subtitles",
+      sourceNoSubtitle: "No subtitles yet",
+      sourceSubtitleStateHelp: "Tell the server whether it should read existing cues or recognize speech before creating subtitles.",
+      sourceFileGuarded: "The file picker will open after the server verifies ownership and intake capability.",
       sourceLanguageLabel: "Media source language",
       langVi: "Vietnamese",
       langEn: "English",
@@ -25803,6 +25858,14 @@
       subDisplayLabel: "Subtitle display layout",
       subDisplaySingle: "Single language (Target translation only)",
       subDisplayBilingual: "Bilingual (Source + Target)",
+      subtitlePositionLabel: "Subtitle position",
+      subtitlePositionBottomCenter: "Bottom · center",
+      subtitlePositionBottomLeft: "Bottom · left",
+      subtitlePositionBottomRight: "Bottom · right",
+      subtitlePositionTopCenter: "Top · center",
+      subtitlePositionTopLeft: "Top · left",
+      subtitlePositionTopRight: "Top · right",
+      subtitlePositionCenter: "Center",
       subtitleConfigHeading: "Subtitle Configuration",
       dubbingConfigHeading: "AI Dubbing Configuration",
       voiceStyleLabel: "AI Dubbing Voice",
@@ -25824,9 +25887,9 @@
       voiceLaneDefaultMale: "Default male voice",
       voiceLaneSaved: "Saved voice from Voice Library",
       voiceLaneCustom: "Uploaded voice with consent",
-      voiceLaneMultiTwo: "Multi 2 voices",
-      voiceLaneMultiThreeEight: "Multi 3–8 voices",
-      voiceLaneAutoMany: "Auto-detect many voices",
+      voiceLaneAutoTwo: "Auto 2 · detect two speakers",
+      voiceLaneAutoMultiThreeEight: "Auto Multi · detect 3–8 speakers",
+      voiceLaneSmartMulti: "Smart Multi · intelligent multi-voice mapping",
       voiceLaneGuarded: "Saved in this draft; processing starts only after the server confirms this capability.",
       speakerMapLabel: "Speaker → voice map",
       speakerMapGuarded: "No speaker data yet. The UI will not guess voices or create a fake result.",
@@ -25934,6 +25997,12 @@
       sourceMetaEngine: "处理功能尚未开放",
       sourceMetaGuarded: "没有模拟文件",
       sourceMetaProtection: "安全保护中",
+      sourceFileLabel: "音频、视频或字幕文件",
+      sourceSubtitleStateLabel: "字幕来源",
+      sourceHasSubtitle: "已有字幕",
+      sourceNoSubtitle: "尚无字幕",
+      sourceSubtitleStateHelp: "告诉服务器读取现有字幕，还是先识别语音再创建字幕。",
+      sourceFileGuarded: "服务器验证文件所有权和接入能力后，文件选择器才会开放。",
       sourceLanguageLabel: "原始语言",
       langVi: "越南语",
       langEn: "英语",
@@ -25960,6 +26029,14 @@
       subDisplayLabel: "字幕显示方式",
       subDisplaySingle: "单语字幕（仅显示译文）",
       subDisplayBilingual: "双语字幕（原文 + 译文）",
+      subtitlePositionLabel: "字幕位置",
+      subtitlePositionBottomCenter: "底部 · 居中",
+      subtitlePositionBottomLeft: "底部 · 左侧",
+      subtitlePositionBottomRight: "底部 · 右侧",
+      subtitlePositionTopCenter: "顶部 · 居中",
+      subtitlePositionTopLeft: "顶部 · 左侧",
+      subtitlePositionTopRight: "顶部 · 右侧",
+      subtitlePositionCenter: "画面中央",
       subtitleConfigHeading: "字幕设置",
       dubbingConfigHeading: "配音设置",
       voiceStyleLabel: "配音音色",
@@ -25981,9 +26058,9 @@
       voiceLaneDefaultMale: "默认男声",
       voiceLaneSaved: "音色库中的已保存音色",
       voiceLaneCustom: "已确认授权的自定义音色",
-      voiceLaneMultiTwo: "双人音色",
-      voiceLaneMultiThreeEight: "3–8 人音色",
-      voiceLaneAutoMany: "自动识别多人音色",
+      voiceLaneAutoTwo: "自动双人 · 识别两位说话人",
+      voiceLaneAutoMultiThreeEight: "自动多人 · 识别 3–8 位说话人",
+      voiceLaneSmartMulti: "Smart Multi · 智能分配多人音色",
       voiceLaneGuarded: "选项会保存在草稿中；服务器确认相应能力后才会开始处理。",
       speakerMapLabel: "说话人 → 音色映射",
       speakerMapGuarded: "暂无说话人数据，不会猜测音色或生成虚假结果。",
@@ -26138,20 +26215,32 @@
       </div>
       <p class="portal-subdub-volume-note" id="subdub-volume-note-${safeText(suffix)}">${safeText(copy.audioControlsNote)}</p>
     </fieldset>`;
+    const subtitlePositionHtml = (suffix) => `<div class="portal-field portal-subdub-subtitle-position">
+      <label class="portal-label" for="subdub-subtitle-position-${safeText(suffix)}">${safeText(copy.subtitlePositionLabel)}</label>
+      <select id="subdub-subtitle-position-${safeText(suffix)}" class="portal-select" name="subdub_${safeText(suffix)}_subtitle_position">
+        <option value="bottom_center" selected>${safeText(copy.subtitlePositionBottomCenter)}</option>
+        <option value="bottom_left">${safeText(copy.subtitlePositionBottomLeft)}</option>
+        <option value="bottom_right">${safeText(copy.subtitlePositionBottomRight)}</option>
+        <option value="top_center">${safeText(copy.subtitlePositionTopCenter)}</option>
+        <option value="top_left">${safeText(copy.subtitlePositionTopLeft)}</option>
+        <option value="top_right">${safeText(copy.subtitlePositionTopRight)}</option>
+        <option value="center">${safeText(copy.subtitlePositionCenter)}</option>
+      </select>
+    </div>`;
     const voiceLaneHtml = (suffix) => {
       const lanes = [
         ["default_female", copy.voiceLaneDefaultFemale],
         ["default_male", copy.voiceLaneDefaultMale],
         ["saved_voice", copy.voiceLaneSaved],
         ["custom_voice", copy.voiceLaneCustom],
-        ["multi_two", copy.voiceLaneMultiTwo],
-        ["multi_three_eight", copy.voiceLaneMultiThreeEight],
-        ["auto_many", copy.voiceLaneAutoMany]
+        ["auto_two", copy.voiceLaneAutoTwo],
+        ["auto_multi_3_8", copy.voiceLaneAutoMultiThreeEight],
+        ["smart_multi", copy.voiceLaneSmartMulti]
       ];
       const laneCallbacks = {
-        multi_two: "videodub|voice|auto_speaker_gender",
-        multi_three_eight: "videodub|voice|auto_multi_speaker",
-        auto_many: "videodub|voice|auto_smart_multivoice"
+        auto_two: "videodub|voice|auto_speaker_gender",
+        auto_multi_3_8: "videodub|voice|auto_multi_speaker",
+        smart_multi: "videodub|voice|auto_smart_multivoice"
       };
       return `<fieldset class="portal-subdub-voice-lanes" data-status="ready" aria-describedby="subdub-voice-lane-note-${safeText(suffix)}">
         <legend>${safeText(copy.voiceLaneLabel)}</legend>
@@ -26167,7 +26256,7 @@
         <fieldset class="portal-subdub-smart-multi" data-subdub-smart-multi data-status="guarded" data-subdub-callback="videodub|voice|auto_smart_multivoice" aria-describedby="subdub-smart-multi-note-${safeText(suffix)}">
           <legend>${safeText(copy.smartMultiLabel)}</legend>
           <p id="subdub-smart-multi-note-${safeText(suffix)}">${safeText(copy.smartMultiHint)}</p>
-          <p class="portal-form-note">${safeText(copy.voiceLaneAutoMany)} · ${safeText(copy.voiceLaneGuarded)}</p>
+          <p class="portal-form-note">${safeText(copy.voiceLaneSmartMulti)} · ${safeText(copy.voiceLaneGuarded)}</p>
         </fieldset>
         <div class="portal-subdub-speaker-map" data-subdub-speaker-map data-status="guarded" aria-live="polite">
           <strong>${safeText(copy.speakerMapLabel)}</strong>
@@ -26193,15 +26282,23 @@
             <p>${safeText(copy.sourceGuardedBody)}</p>
           </div>
         </div>
+        <div class="portal-field portal-subdub-source-file">
+          <label class="portal-label" for="subdub-source-file">${safeText(copy.sourceFileLabel)}</label>
+          <input id="subdub-source-file" class="portal-input" type="file" accept="audio/*,video/*,.srt,.vtt,.txt" disabled aria-describedby="subdub-source-file-help">
+          <small id="subdub-source-file-help" class="portal-form-note">${safeText(copy.sourceFileGuarded)}</small>
+        </div>
+        <fieldset class="portal-field portal-subdub-source-state" aria-describedby="subdub-source-state-help">
+          <legend class="portal-label">${safeText(copy.sourceSubtitleStateLabel)}</legend>
+          <div class="portal-subdub-radio-options">
+            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-subtitle-source-state" value="with_subtitles"> ${safeText(copy.sourceHasSubtitle)}</label>
+            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-subtitle-source-state" value="without_subtitles" checked> ${safeText(copy.sourceNoSubtitle)}</label>
+          </div>
+          <small id="subdub-source-state-help" class="portal-form-note">${safeText(copy.sourceSubtitleStateHelp)}</small>
+        </fieldset>
         <div class="portal-field">
           <label class="portal-label" for="subdub-source-lang">${safeText(copy.sourceLanguageLabel)}</label>
           <select id="subdub-source-lang" class="portal-select" name="source_language" disabled>
-            <option value="vi" selected>${safeText(copy.langVi)}</option>
-            <option value="en">${safeText(copy.langEn)}</option>
-            <option value="zh">${safeText(copy.langZh)}</option>
-            <option value="ja">${safeText(copy.langJa)}</option>
-            <option value="ko">${safeText(copy.langKo)}</option>
-            <option value="auto">${safeText(copy.langAuto)}</option>
+            ${renderSubDubLanguageOptions(locale, "auto", true)}
           </select>
         </div>
       </div>
@@ -26225,17 +26322,14 @@
             <option value="standard" selected>${safeText(copy.ruleStandard)}</option>
             <option value="short">${safeText(copy.ruleShort)}</option>
           </select>
-        </div>`;
+        </div>
+        ${subtitlePositionHtml("source")}`;
     } else if (modeKey === "TRANSLATED_SUBTITLE") {
       stage2InnerHtml = `
         <div class="portal-field">
           <label class="portal-label" for="subdub-target-lang">${safeText(copy.targetLangLabel)}</label>
           <select id="subdub-target-lang" class="portal-select" name="target_language">
-            <option value="en" selected>${safeText(copy.langEn)}</option>
-            <option value="vi">${safeText(copy.langVi)}</option>
-            <option value="zh">${safeText(copy.langZh)}</option>
-            <option value="ja">${safeText(copy.langJa)}</option>
-            <option value="ko">${safeText(copy.langKo)}</option>
+            ${renderSubDubLanguageOptions(locale, "vi", false)}
           </select>
           <label class="portal-label" for="subdub-target-lang-custom">${safeText(copy.targetLangCustomLabel)}</label>
           <input id="subdub-target-lang-custom" class="portal-input" name="target_language_custom" inputmode="text" pattern="[a-zA-Z]{2,5}(?:-[a-zA-Z0-9]{2,5})?" placeholder="${safeText(copy.targetLangCustomPlaceholder)}" aria-describedby="subdub-target-lang-custom-help">
@@ -26255,16 +26349,13 @@
             <label class="portal-subdub-radio-option"><input type="radio" name="subdub-translated-output-format" value="vtt"> VTT</label>
           </div>
         </div>`;
+      stage2InnerHtml += subtitlePositionHtml("translated");
     } else if (modeKey === "DUBBING_ONLY") {
       stage2InnerHtml = `
         <div class="portal-field">
           <label class="portal-label" for="subdub-target-lang-dub">${safeText(copy.targetLangDubLabel)}</label>
           <select id="subdub-target-lang-dub" class="portal-select" name="target_language">
-            <option value="en" selected>${safeText(copy.langEn)}</option>
-            <option value="vi">${safeText(copy.langVi)}</option>
-            <option value="zh">${safeText(copy.langZh)}</option>
-            <option value="ja">${safeText(copy.langJa)}</option>
-            <option value="ko">${safeText(copy.langKo)}</option>
+            ${renderSubDubLanguageOptions(locale, "vi", false)}
           </select>
           <label class="portal-label" for="subdub-target-lang-dub-custom">${safeText(copy.targetLangCustomLabel)}</label>
           <input id="subdub-target-lang-dub-custom" class="portal-input" name="target_language_custom" inputmode="text" pattern="[a-zA-Z]{2,5}(?:-[a-zA-Z0-9]{2,5})?" placeholder="${safeText(copy.targetLangCustomPlaceholder)}" aria-describedby="subdub-target-lang-dub-custom-help">
@@ -26278,11 +26369,7 @@
           <label class="portal-label" for="subdub-shared-target-lang"><strong>${safeText(copy.sharedTargetLangLabel)}</strong></label>
           <p style="margin:4px 0 12px; font-size:13px; color:var(--portal-muted, #8fa3b7);">${safeText(copy.sharedTargetLangHint)}</p>
           <select id="subdub-shared-target-lang" class="portal-select" name="target_language">
-            <option value="en" selected>${safeText(copy.langEn)}</option>
-            <option value="vi">${safeText(copy.langVi)}</option>
-            <option value="zh">${safeText(copy.langZh)}</option>
-            <option value="ja">${safeText(copy.langJa)}</option>
-            <option value="ko">${safeText(copy.langKo)}</option>
+            ${renderSubDubLanguageOptions(locale, "vi", false)}
           </select>
           <label class="portal-label" for="subdub-shared-target-lang-custom">${safeText(copy.targetLangCustomLabel)}</label>
           <input id="subdub-shared-target-lang-custom" class="portal-input" name="target_language_custom" inputmode="text" pattern="[a-zA-Z]{2,5}(?:-[a-zA-Z0-9]{2,5})?" placeholder="${safeText(copy.targetLangCustomPlaceholder)}" aria-describedby="subdub-shared-target-lang-custom-help">
@@ -26305,6 +26392,7 @@
                 <label class="portal-subdub-radio-option"><input type="radio" name="subdub-combined-output-format" value="vtt"> VTT</label>
               </div>
             </div>
+            ${subtitlePositionHtml("combo")}
           </div>
           <div class="portal-subdub-config-card">
             <h4>${safeText(copy.dubbingConfigHeading)}</h4>

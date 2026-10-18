@@ -10341,6 +10341,37 @@ html[data-portal-theme="dark"] .portal-manual-topup-form option {
   accent-color: var(--portal-action);
 }
 
+.portal-subdub-source-file,
+.portal-subdub-source-state,
+.portal-subdub-subtitle-position {
+  min-width: 0;
+}
+
+.portal-subdub-source-file input[type="file"] {
+  width: 100%;
+  min-height: 44px;
+}
+
+.portal-subdub-source-state {
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--portal-border);
+  border-radius: 12px;
+  background: var(--portal-surface-soft);
+}
+
+.portal-subdub-source-state legend {
+  padding: 0 6px;
+  color: var(--portal-ink);
+  font-size: .95rem;
+  font-weight: 750;
+}
+
+.portal-subdub-source-state .portal-form-note {
+  display: block;
+  margin-top: 4px;
+}
+
 .portal-subdub-voice-lanes {
   display: grid;
   gap: 12px;

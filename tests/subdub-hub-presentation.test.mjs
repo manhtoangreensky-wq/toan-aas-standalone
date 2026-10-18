@@ -275,15 +275,15 @@ test("SubDub exposes guarded Smart Multi speaker mapping and Voice Library contr
   assert.equal((html.match(/href="\/voice\/saved"/g) || []).length, 2);
 });
 
-test("SubDub exposes explicit default, saved, custom, two-speaker, three-to-eight and auto-many lanes", () => {
+test("SubDub exposes explicit default, saved, Auto 2, Auto Multi 3–8 and Smart Multi lanes", () => {
   const laneValues = [
     "default_female",
     "default_male",
     "saved_voice",
     "custom_voice",
-    "multi_two",
-    "multi_three_eight",
-    "auto_many"
+    "auto_two",
+    "auto_multi_3_8",
+    "smart_multi"
   ];
   for (const locale of ["vi", "en", "zh"]) {
     const html = renderSubDub(`/subdub?lang=${locale}&mode=dubbing_only`, locale);
@@ -292,6 +292,28 @@ test("SubDub exposes explicit default, saved, custom, two-speaker, three-to-eigh
     assert.match(html, /data-subdub-callback="videodub\|voice\|auto_multi_speaker"/);
     assert.match(html, /data-subdub-callback="videodub\|voice\|auto_smart_multivoice"/);
   }
+});
+
+test("SubDub keeps source subtitle state and the full localized language catalog explicit", () => {
+  const viHtml = renderSubDub("/subdub?lang=vi&mode=subtitle_plus_dubbing", "vi");
+  assert.match(viHtml, /name="subdub-subtitle-source-state"/);
+  assert.match(viHtml, /value="with_subtitles"/);
+  assert.match(viHtml, /value="without_subtitles" checked/);
+  assert.match(viHtml, /id="subdub-source-file"[^>]*type="file"[^>]*disabled/);
+  assert.match(viHtml, /<option value="auto" selected>Tự nhận diện<\/option>/);
+  for (const code of ["vi", "en", "zh", "fr", "de", "es", "pt", "ru", "ar", "hi", "fil"]) {
+    assert.match(viHtml, new RegExp(`<option value="${code}"`), `vi exposes ${code}`);
+  }
+  assert.match(viHtml, /<option value="vi" selected>Tiếng Việt<\/option>/);
+  assert.equal((viHtml.match(/id="subdub-subtitle-position-/g) || []).length, 3);
+
+  const enHtml = renderSubDub("/subdub?lang=en&mode=dubbing_only", "en");
+  assert.match(enHtml, /<option value="vi" selected>Vietnamese<\/option>/);
+  assert.doesNotMatch(enHtml, /Tiếng Việt|Tiếng Anh|Tiếng Trung/);
+
+  const zhHtml = renderSubDub("/subdub?lang=zh&mode=dubbing_only", "zh");
+  assert.match(zhHtml, /<option value="vi" selected>越南语<\/option>/);
+  assert.doesNotMatch(zhHtml, /Tiếng Việt|Vietnamese/);
 });
 
 test("voice lane selection highlights the chosen lane and routes the library action", () => {

@@ -7,7 +7,7 @@
 ```text
 REPOSITORY=manhtoangreensky-wq/toan-aas-standalone
 BRANCH=webapp-r217-subdub-ui-r218
-SOURCE_HEAD_SHA=427f4bfec16b9ac7d9e9fc4890b4fa7524a9d95a
+SOURCE_HEAD_SHA=df2b6a6811e2ab80ec06a73f99ac12e63ade6f77
 DOCS_ONLY_UPDATE=false
 PR=https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/654
 PROVIDER_CALLS=0
@@ -37,7 +37,7 @@ VERIFY_WEB_APP=SUCCESS (prior comparator)
 AUTHENTICATED_WEBAPP_QA=SUCCESS (prior comparator)
 ROUTE_RENDER_MATRIX=456/456 (prior comparator)
 LOCAL_TARGETED=3 voice control + 97 Voice regression passed; node --check static/portal/portal.js; git diff --check
-LOCAL_REGRESSION=530 passed, 0 failed on candidate 814b70c
+LOCAL_REGRESSION=538 passed, 0 failed on source candidate df2b6a6
 JSON_EVIDENCE=preflight.json + web_inventory.json parse successfully
 MIGRATION_SOURCE_FILES=recorded in reports/migration/web_inventory.json
 MIGRATION_SOURCE_FINGERPRINT=recorded in reports/migration/preflight.json and web_inventory.json
@@ -105,6 +105,35 @@ LIVE_PASS=NOT_TESTED
 Music generation, quote/confirm, editor, player/download/save/reuse, two-track delivery,
 authenticated browser evidence và CI trên HEAD mới vẫn là `[~]/[ ]`; không được suy diễn
 thành parity runtime hoặc LIVE.
+
+## Incremental SubDub control evidence — source candidate 18/10/2026
+
+- Phạm vi: `static/portal/portal.js`, `static/portal/portal.css`,
+  `tests/subdub-hub-presentation.test.mjs` và các tài liệu R218 liên quan.
+- SD-02/03/04/05/07/11/12/13/17 control-level: source nêu rõ đã có/chưa có
+  phụ đề; source language mặc định tự nhận diện; target catalog đầy đủ, Việt đứng
+  trước rồi Anh/Trung; 7 vị trí phụ đề; ba lane canonical `auto_two`,
+  `auto_multi_3_8`, `smart_multi` map đúng ba callback Bot. Không tạo upload,
+  speaker detection, quote, job, output hoặc delivery giả.
+- Locale: nhãn catalog được chiếu riêng cho VI/EN/ZH; không dùng label English lẫn
+  trong bản Việt hoặc fallback tiếng Việt ở bản EN/ZH.
+
+```text
+SUBDUB_TARGETED=14/14
+FULL_NODE=538/538
+NODE_CHECK=PASS
+GIT_DIFF_CHECK=PASS
+PYTEST=BLOCKED (workspace không có lệnh python/py)
+PROVIDER_CALLS=0
+WALLET_MUTATIONS=0
+PRODUCTION_DATA_MUTATIONS=0
+DEPLOY=NO
+LIVE_PASS=NOT_TESTED
+```
+
+SubDub upload/preview/metadata, Voice Vault projection, speaker mapping thật,
+quote/confirm/progress/report, artifact/delivery và browser/live evidence vẫn mở;
+đợt này chỉ khóa presentation và local interaction.
 # Incremental Voice control evidence — candidate `814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd`
 
 - Phạm vi: `static/portal/portal.js`, `static/portal/portal.css`, `tests/voice-controls-contract.test.mjs`.
