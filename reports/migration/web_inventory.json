@@ -10280,6 +10280,7 @@
         "README.md",
         "TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md",
         "TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md",
+        "_giao-viec/BAO-CAO-01-AD-02-MOBILE-DATA.md",
         "admin.html",
         "admin_capability_matrix.json",
         "admin_ops.py",
@@ -10313,10 +10314,9 @@
         "copyfast_mfa.py",
         "copyfast_music_media.py",
         "copyfast_pages.py",
-        "copyfast_partner_readiness.py",
-        "copyfast_pricing_policy.py"
+        "copyfast_partner_readiness.py"
       ],
-      "occurrences": 1111,
+      "occurrences": 1112,
       "provider": "PayOS"
     },
     {
@@ -10390,6 +10390,11 @@
     },
     {
       "files": [
+        "_giao-viec/BAO-CAO-01-AD-02-MOBILE-DATA.md",
+        "_giao-viec/BAO-CAO-05B-AD-01-PRICING-NAV-LOCALE.md",
+        "_giao-viec/DANH-GIA-02-AD-02-STATE-LOCALE.md",
+        "_giao-viec/PHIEU-01-AD-02-MOBILE-DATA.md",
+        "_giao-viec/RECEPTION-01-AD-02-MOBILE-DATA.md",
         "ai_assistant.py",
         "coach.html",
         "coach.py",
@@ -10400,7 +10405,7 @@
         "video.html",
         "video.py"
       ],
-      "occurrences": 15,
+      "occurrences": 21,
       "provider": "Gemini"
     },
     {
@@ -18317,39 +18322,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 288,
-  "source_files_scanned": 288,
-  "source_fingerprint_sha256": "86fb35fccd67853c4f350c47e5ff78b8d09e0da74858aa03a1cc50243c355ddd",
+  "source_files_discovered": 311,
+  "source_files_scanned": 311,
+  "source_fingerprint_sha256": "7bbf57c7c538686de272abecab7946ce03d7ea6c592186823b4df97e2a47b5c0",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 34625,
+      "line": 34648,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34941,
+      "line": 34964,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34289,
+      "line": 34312,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34538,
+      "line": 34561,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33910,
+      "line": 33933,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34202,
+      "line": 34225,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -18564,7 +18569,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36058,
+      "line": 36081,
       "path": "/features"
     },
     {
