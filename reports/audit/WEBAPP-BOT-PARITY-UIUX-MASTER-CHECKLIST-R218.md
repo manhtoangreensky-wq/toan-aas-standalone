@@ -84,6 +84,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] #653 auth responsive/contrast: CI source cũ xanh, delivery chưa đóng.
 - [x] #654 source candidate `57bda4448549e8a42f1fedec198ae0b3f7c42305` đã push; SubDub lane patch và các lát Admin đạt kiểm thử local và CI/browser trên source HEAD.
 - [x] Ghi current SHA/checks #654: Verify Web App + Authenticated WebApp QA SUCCESS ở run `39309260395`; route matrix `456/456`, `0` lỗi. Commit `57bda44` chỉ chuẩn hóa CRLF→LF cho hai file evidence; không đổi logic sản phẩm.
+- [x] **Cập nhật 2026-10-20 — HEAD `5252e445425a5eb6407705fbac8b16ae50797d2d`:** PR #654 đã push đúng HEAD; run `39316630196` xanh. Verify Web App job `118279680769` và Authenticated WebApp QA job `118281015667` đều hoàn tất; ma trận đăng nhập cô lập đạt `456/456`, `0` lỗi, `0` provider call, `0` wallet mutation và `0` production-data mutation. Chỉ khóa bằng chứng source/CI; PR vẫn mở, chưa merge/deploy/LIVE.
 - [x] Review #654 hidden field, default checked, duplicate selector, library link,
   guard blanket, locale, âm lượng dub max 100: đã sửa và khóa bằng 13 kiểm thử mục tiêu;
   CI/browser trên commit mới đã đạt route/render matrix.
@@ -434,15 +435,17 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   `18/18`, full Node `732/732`, syntax hai JS và `git diff --check` đạt. Authenticated
   route/render matrix đạt `456/456` ở run `39309260395`, nhưng record thật và bridge server
   chưa được nạp vào fixture; production và LIVE chưa xác minh.
-- [~] AD-03-RECORD-BRIDGE (server read-only projection): lớp cầu nối Admin đã chuyển
+- [x] AD-03-RECORD-BRIDGE (server read-only projection, source + CI): lớp cầu nối Admin đã chuyển
   `admin_record_references` từ payload server tới record đơn và `items[]` chỉ sau
   `admin_read=True` + role Admin. Allowlist tối đa 6 loại `request/job/asset/report/audit`,
   ID/nhãn giới hạn, path nội bộ `/admin|/jobs|/assets|/reports|/audit`; URL ngoài,
   `//`, `\\`, dot-segment hoặc payload sai hình dạng bị rỗng/loại fail-closed. Account
   không phải Admin không nhận trường; frontend vẫn chiếu lại trước khi render link.
-  Đã thêm contract backend trong `tests/test_copyfast_bridge.py`; `py_compile` và
-  source/browser JS gates cần CI chạy lại trên HEAD. Đây chưa phải record thật hay
-  bằng chứng role/RBAC/bridge production; AD-03 tổng và LIVE vẫn mở.
+  Đã thêm contract backend trong `tests/test_copyfast_bridge.py`; `py_compile`, source/browser
+  JS gates và CI đều đạt trên HEAD `5252e44`. Verify Web App job `118279680769` và
+  Authenticated WebApp QA job `118281015667` xanh trong run `39316630196`; route/render
+  matrix đạt `456/456`, `0` lỗi. Đây chưa phải record fixture thật, bằng chứng role/RBAC,
+  bridge production, approval, deploy hoặc LIVE; AD-03 tổng và LIVE vẫn mở.
 - [x] AD-04-CAPABILITY-AFFORDANCE (local UI): Hàng đợi nạp thủ công không còn hiển
   thị nút tạo quyết định duyệt/cộng Xu trong bảng hoặc thẻ mobile khi server chưa cấp
   `admin-manual-topup-write`; thay bằng nhãn chỉ đọc có lý do quyền hạn, vẫn giữ nút

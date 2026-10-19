@@ -1,22 +1,22 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: ADMIN_RECORD_BRIDGE_LOCAL_CI_PENDING
+status: ADMIN_RECORD_BRIDGE_CI_GREEN_PR_OPEN
 date: 2026-10-20
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 3a0404242dd7e9a70411eba32187c8696627dedf
-delivery_head_sha: 57bda4448549e8a42f1fedec198ae0b3f7c42305
-delivery_status: LOCAL_CANDIDATE_3A04042_CI_PENDING
-head_sha_semantics: "Local candidate 3a04042 adds the server-side read-only Admin record-reference projection on top of the reviewed Admin locale, responsive, chart, record-reference, role/module and manual-topup presentation slices; CI is pending and the candidate is not pushed yet."
-delivery_head_semantics: "GitHub branch readback remains 57bda44 with Verify Web App and Authenticated WebApp QA green in run 39309260395. Local candidate 3a04042 is not yet pushed and makes no delivery, merge, deploy or LIVE claim."
-branch_head_sha: 57bda4448549e8a42f1fedec198ae0b3f7c42305
+head_sha: 5252e445425a5eb6407705fbac8b16ae50797d2d
+delivery_head_sha: 5252e445425a5eb6407705fbac8b16ae50797d2d
+delivery_status: PUSHED_CI_GREEN_PR_OPEN
+head_sha_semantics: "HEAD 5252e44 contains the server-side read-only Admin record-reference projection plus the reviewed Admin locale, responsive, chart, record-reference, role/module and manual-topup presentation slices; the current PR quality gate is green."
+delivery_head_semantics: "GitHub branch readback matches 5252e44; Verify Web App and Authenticated WebApp QA are green in run 39316630196. PR #654 remains open; no merge, deploy or LIVE claim."
+branch_head_sha: 5252e445425a5eb6407705fbac8b16ae50797d2d
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
-last_push_verified_commit: 57bda4448549e8a42f1fedec198ae0b3f7c42305
-docs_checkpoint_sha: 57bda4448549e8a42f1fedec198ae0b3f7c42305
-push_command_success_commit: 57bda4448549e8a42f1fedec198ae0b3f7c42305
-remote_readback: "git ls-remote github confirms refs/heads/webapp-r217-subdub-ui-r218 at 57bda4448549e8a42f1fedec198ae0b3f7c42305. PR #654 remains OPEN; Verify Web App and Authenticated WebApp QA both passed in run 39309260395."
+last_push_verified_commit: 5252e445425a5eb6407705fbac8b16ae50797d2d
+docs_checkpoint_sha: 5252e445425a5eb6407705fbac8b16ae50797d2d
+push_command_success_commit: 5252e445425a5eb6407705fbac8b16ae50797d2d
+remote_readback: "git ls-remote github confirms refs/heads/webapp-r217-subdub-ui-r218 at 5252e445425a5eb6407705fbac8b16ae50797d2d. PR #654 remains OPEN; Verify Web App and Authenticated WebApp QA both passed in run 39316630196."
 batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
@@ -216,13 +216,13 @@ current_wip:
     browser: "NOT_RUN: Playwright fixture could not create its sandbox temp directory (mkdtemp ENOENT); no LIVE or production claim."
     limitations: "Local Inspector presentation only. Real records, server bridge request→job→asset→report→audit, CI, production and LIVE remain open."
   admin_record_reference_bridge_projection:
-    state: "IMPLEMENTED_LOCAL_PYCOMPILE_NODE_GREEN_CI_PENDING"
+    state: "IMPLEMENTED_CI_GREEN_PR_OPEN"
     spec: "docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md#AD-03-RECORD-BRIDGE"
     changed_files: "copyfast_api.py; tests/test_copyfast_bridge.py"
     contract: "Only admin_read=True + server-checked Admin responses may carry max 6 request/job/asset/report/audit references; bounded IDs/labels and internal paths; unsafe paths become empty and malformed kind/ID/shape is omitted; record-level and items[] share the projection; non-admin responses never receive the field; no write/provider/wallet/capability/RBAC change."
-    tests: "Bundled Python py_compile exit0; full Node 735/735; admin reference source 2/2; node --check two Portal JS and git diff --check exit0. Targeted pytest is CI-pending because the local bundled Python has no pytest module."
-    browser: "NOT_RUN: no record fixture or permitted runtime mutation; no production or LIVE claim."
-    limitations: "This only transports an explicitly server-issued read reference. Real Bot record chain, server role/RBAC fixture, CI, production and LIVE remain open."
+    tests: "Bundled Python py_compile exit0; full Node 735/735; admin reference source 2/2; node --check two Portal JS and git diff --check exit0. Verify Web App job 118279680769 and Authenticated WebApp QA job 118281015667 both passed in CI run 39316630196."
+    browser: "Authenticated route/render matrix passed 456/456 in the isolated QA job; no injected Admin record fixture, production mutation or LIVE claim."
+    limitations: "This only transports an explicitly server-issued read reference. Real Bot record chain, server role/RBAC fixture, production approval and LIVE remain open."
   voice_scalar_draft:
     state: "UI_VERIFIED_RUNTIME_OPEN"
     tests: "7/7; full Node 645/645"
@@ -284,11 +284,11 @@ current_wip:
     limitations: "No backend capability/RBAC, approval, Xu credit, wallet, production or LIVE claim. Browser/CI evidence covers read-only presentation and route safety only; it does not prove an approval mutation."
   authenticated_route_matrix_r21711:
     state: "CI_GREEN"
-    run: 39309260395
-    job: 118255789496
-    head_sha: 57bda4448549e8a42f1fedec198ae0b3f7c42305
-    artifact: "webapp-authenticated-qa-57bda4448549e8a42f1fedec198ae0b3f7c42305"
-    artifact_id: 12215735693
+    run: 39316630196
+    job: 118281015667
+    head_sha: 5252e445425a5eb6407705fbac8b16ae50797d2d
+    artifact: "webapp-authenticated-qa-5252e445425a5eb6407705fbac8b16ae50797d2d"
+    artifact_id: "NOT_READ_BACK_FROM_CURRENT_RUN"
     matrix: "Customer 13 routes + Admin 6 routes x VI/EN/ZH x light/dark x phone-375/phone-390/tablet-768/desktop-1440"
     records_expected: 456
     records_completed: 456
@@ -299,12 +299,14 @@ current_wip:
     wallet_mutations: 0
     production_data_mutations: 0
     limitations: "Isolated local QA only. It proves route/render safety and guarded UI states; it does not prove provider execution, wallet approval/credit, real production RBAC, delivery bytes or LIVE."
-  ci_run: 39309260395
-  ci_head: 57bda4448549e8a42f1fedec198ae0b3f7c42305
-  ci_status_at_last_observation: SUCCESS_ON_57BDA44
-  ci_scope: "Verify Web App plus Authenticated WebApp QA on PR #654 delivery HEAD 57bda44; browser evidence is isolated and read-only with no provider, wallet or production-data mutation."
-  ci_latest_run: 39309260395
-  ci_latest_status: "Run 39309260395 terminal SUCCESS: Verify Web App and Authenticated WebApp QA both succeeded; authenticated matrix completed 456/456 records with 0 failures."
+  ci_run: 39316630196
+  ci_verify_job: 118279680769
+  ci_authenticated_job: 118281015667
+  ci_head: 5252e445425a5eb6407705fbac8b16ae50797d2d
+  ci_status_at_last_observation: SUCCESS_ON_5252E44
+  ci_scope: "Verify Web App plus Authenticated WebApp QA on PR #654 HEAD 5252e44; browser evidence is isolated and read-only with no provider, wallet or production-data mutation."
+  ci_latest_run: 39316630196
+  ci_latest_status: "Run 39316630196 terminal SUCCESS: Verify Web App and Authenticated WebApp QA both succeeded; authenticated matrix completed 456/456 records with 0 failures."
   migration_evidence_refresh: "Migration evidence của PR merge ref 0fd3de8a7387dfc320084f6f2aca75c29822605f đã được refresh và verify; source_files_scanned=288; source_fingerprint_sha256=35355579076c55f4d881de173a36cc9962794881142798a6c6913bbcbcee5e36. Bot evidence unchanged."
   local_targeted_tests: "Admin chart source3/3; Admin record-reference source2/2 including chain order; Admin role/module projection2/2; Admin manual-topup capability/data-truth presentation3/3; focused Admin18/18; STT/workspace14/14; Voice suites132/132; voice-flow-state-presentation51/51; readiness metadata p0-05d kiểm tra độc lập PASS; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
   local_full_tests: "735/735 tests/*.test.mjs after Admin role/module, record-chain and manual-topup capability/data-truth projections; full Pricing truth browser72 states (12 configurations), header locale12/12, generic pricing browser12/12 and shared-state7/7/data browser12/12. Prior domain evidence remains historical; old72-route Admin smoke does not prove role/module completeness."
@@ -339,9 +341,9 @@ open_findings:
   - "AD-01-PRICING-NAV-LOCALE: root shared renderer legacy locale confirmed across9groups/48paths; reuse46existing route translations plus commercial/legal, preserve exact role filtering. Detail spec before BUILD, ahead of Pricing fixed-copy."
   - "AD-04-PRICING-AFFORDANCE: enabled write controls in read-only fixture need readiness review; publish-modal-open handler currently only guarded toast. No backend permission bypass or actual write was tested."
   - "AD-02-ZH-GENERIC-COPY: generic CANONICAL/canonical remains in module headers/descriptions; header locale picker itself is fixed and accepted."
-  - "Control-level dynamic callback và Admin server-issued data/bridge runtime vẫn mở; authenticated route/render matrix đã xanh ở run 39309260395."
+  - "Control-level dynamic callback và Admin server-issued data/bridge runtime vẫn mở; current authenticated route/render matrix đã xanh 456/456 ở run 39316630196 trên HEAD 5252e44."
 provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Push candidate 3a04042 to PR #654 and run CI, including targeted Python bridge tests. If green, re-run an allowed Admin record fixture when a permitted temp runtime is available; preserve server-issued role filtering and vertical mobile layout. Then continue remaining product/runtime gates in checklist order; Video and motion remain later. No backend/integration/price-rule/provider/wallet/production-data mutation."
+next_action: "PR #654 is source/CI green and remains open. Continue the next unchecked checklist item in order; re-run an allowed Admin record fixture only when a permitted isolated runtime is available. Preserve server-issued role filtering and vertical mobile layout. Video and motion remain later. No merge, deploy, backend/integration/price-rule/provider/wallet/production-data mutation."
