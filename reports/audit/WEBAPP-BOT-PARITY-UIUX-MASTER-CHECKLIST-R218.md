@@ -152,7 +152,18 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   18 cấu hình VI/EN/ZH × sáng/tối × 390/768/1440, lỗi trang/console/request ngoài/
   mutation/overflow đều 0. Upload thật, MIME/size/ownership, progress, transcript/
   copy/export, delivery và LIVE vẫn guarded.
-- [ ] Default nữ/nam distinct hoặc fallback một default theo capability.
+- [x] VO-03 DEFAULT-GENDER-CAPABILITY — 20/10/2026: lane mặc định giữ đúng hai
+  lựa chọn canonical `female`/`male` khi máy chủ chưa gửi capability rõ ràng;
+  nếu `readiness.features.voice_tts.default_voice_genders` hoặc
+  `default_voice_gender` xác nhận đúng một lựa chọn thì chỉ hiển thị và tự chọn
+  lựa chọn đó; danh sách rỗng giữ trạng thái không có lựa chọn, không tự đổi
+  sang giọng khác. Nhãn hiển thị dùng hoàn toàn theo locale (`Nữ`/`Nam`,
+  `Female`/`Male`, `女声`/`男声`) và không lộ mã canonical. Test riêng
+  `tests/voice-default-gender-capability.test.mjs` đạt `3/3`; bộ Voice liên
+  quan đạt `45/45`; full Node đạt `738/738`; `node --check` hai Portal JS và
+  `git diff --check` đều đạt. Đây là bằng chứng source/control-level; capability
+  backend, quote, preview, runtime, delivery, CI mới, production và LIVE vẫn
+  giữ cổng riêng.
 - [~] Nội dung/đếm từ/speed 0.1–2.0/volume 0–200: control và giá trị mặc định đã khóa
   bằng test `tests/voice-controls-contract.test.mjs`. VO-03/VO-05 đã có số đếm Unicode,
   cảnh báo 0% giữ nguyên giá trị người dùng, đồng bộ số/thanh kéo và giữ qua hydration;

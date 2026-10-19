@@ -240,6 +240,14 @@ current_wip:
     artifact: "../qa/r218-voice-inventory/stt-probe.json"
     artifact_sha256: 06f55bbdefb34a839be2f1387843cc46fd0841227d3a443b6f1756d0a36ebed4
     limitations: "Read-only fixture and synthetic capability projection; upload bytes, MIME/size/ownership, transcript, progress, delivery, backend and LIVE are not closed."
+  voice_default_gender_capability:
+    state: "SOURCE_VERIFIED_RUNTIME_OPEN"
+    spec: "reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md#P1-VOICE"
+    changed_files: "static/portal/portal.js; tests/voice-default-gender-capability.test.mjs"
+    contract: "Keep canonical female/male values when capability is absent; honor one explicit server-issued voice_tts default gender without silent substitution; an explicit empty list remains empty; display labels are locale-only and never expose canonical codes."
+    tests: "Dedicated 3/3; focused Voice suite 45/45; full Node 738/738; node --check static/portal/portal.js and static/portal/portal-i18n.js exit0; git diff --check exit0."
+    browser: "NOT_RUN_FOR_THIS_DELTA: existing isolated Voice browser evidence remains read-only and prior to this capability slice; no production or LIVE claim."
+    limitations: "Server capability delivery, quote/confirm, preview, generation, provider execution, delivery, CI and LIVE remain open."
   music_presentation:
     state: "UI_VERIFIED_RUNTIME_OPEN"
     tests: "Existing Music control contracts remain green; browser matrix 36 configurations"
@@ -308,8 +316,8 @@ current_wip:
   ci_latest_run: 39316630196
   ci_latest_status: "Run 39316630196 terminal SUCCESS: Verify Web App and Authenticated WebApp QA both succeeded; authenticated matrix completed 456/456 records with 0 failures."
   migration_evidence_refresh: "Migration evidence của PR merge ref 0fd3de8a7387dfc320084f6f2aca75c29822605f đã được refresh và verify; source_files_scanned=288; source_fingerprint_sha256=35355579076c55f4d881de173a36cc9962794881142798a6c6913bbcbcee5e36. Bot evidence unchanged."
-  local_targeted_tests: "Admin chart source3/3; Admin record-reference source2/2 including chain order; Admin role/module projection2/2; Admin manual-topup capability/data-truth presentation3/3; focused Admin18/18; STT/workspace14/14; Voice suites132/132; voice-flow-state-presentation51/51; readiness metadata p0-05d kiểm tra độc lập PASS; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
-  local_full_tests: "735/735 tests/*.test.mjs after Admin role/module, record-chain and manual-topup capability/data-truth projections; full Pricing truth browser72 states (12 configurations), header locale12/12, generic pricing browser12/12 and shared-state7/7/data browser12/12. Prior domain evidence remains historical; old72-route Admin smoke does not prove role/module completeness."
+  local_targeted_tests: "Admin chart source3/3; Admin record-reference source2/2 including chain order; Admin role/module projection2/2; Admin manual-topup capability/data-truth presentation3/3; focused Admin18/18; STT/workspace14/14; Voice default-gender/controls/inventory suite45/45; existing Voice suites132/132; voice-flow-state-presentation51/51; readiness metadata p0-05d kiểm tra độc lập PASS; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
+  local_full_tests: "738/738 tests/*.test.mjs after Voice default-gender capability slice; full Pricing truth browser72 states (12 configurations), header locale12/12, generic pricing browser12/12 and shared-state7/7/data browser12/12. Prior domain evidence remains historical; old72-route Admin smoke does not prove role/module completeness."
   python_tests: "NOT_RUN: bundled Python located via workspace dependencies; pytest/FastAPI/Uvicorn are not installed in that runtime. No Python source changed in this batch."
   voice_browser_qa:
     environment: "Localhost production renderer/CSS with synthetic signed-state projection; no integration.js, backend or DB. Browser plugin absent; Playwright + Edge used."
@@ -346,4 +354,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "PR #654 is source/CI green and remains open. Continue the next unchecked checklist item in order; re-run an allowed Admin record fixture only when a permitted isolated runtime is available. Preserve server-issued role filtering and vertical mobile layout. Video and motion remain later. No merge, deploy, backend/integration/price-rule/provider/wallet/production-data mutation."
+next_action: "Voice default-gender capability slice is source-verified locally; commit and push this checkpoint, then continue the next unchecked Voice item in order (Voice Vault management/handoff). Re-run browser/CI only with an allowed isolated runtime. Preserve server-issued role filtering and vertical mobile layout. Video and motion remain later. No merge, deploy, backend/integration/price-rule/provider/wallet/production-data mutation."
