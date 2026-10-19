@@ -1,22 +1,22 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: WIP_ADMIN_TOPUP_CAPABILITY_ACCEPTED_LOCAL_CI_PENDING
+status: ADMIN_PRESENTATION_PUSHED_CI_PENDING
 date: 2026-10-20
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 1730ea41ffda53e6bcd068f45a49c8c9f6949929
-delivery_head_sha: 1730ea41ffda53e6bcd068f45a49c8c9f6949929
-delivery_status: REMOTE_CI_LAST_OBSERVED_SUCCESS_1730EA4_LOCAL_ADMIN_UI_LOCALE_PATCHES_UNCOMMITTED
-head_sha_semantics: "Last observed passing remote snapshot. Admin mobile CSS/test, shared state JS/i18n/test, dynamic chart, record-reference, role/module and manual-topup capability/data-truth JS/tests plus R218 documentation remain local/uncommitted; that remote CI run does not cover these patches."
-delivery_head_semantics: "GitHub Actions run 39212998609 is terminal SUCCESS on remote SHA 1730ea41ffda53e6bcd068f45a49c8c9f6949929."
-branch_head_sha: 1730ea41ffda53e6bcd068f45a49c8c9f6949929
+head_sha: d6ff78259dff8785b5e747986eede1d52eb7f0a2
+delivery_head_sha: d6ff78259dff8785b5e747986eede1d52eb7f0a2
+delivery_status: PUSHED_TO_PR_654_CI_PENDING
+head_sha_semantics: "Candidate source snapshot d6ff782 contains the reviewed Admin locale, responsive, chart, record-reference, role/module and manual-topup capability/data-truth presentation slices plus their R218 plan/spec/checklist evidence."
+delivery_head_semantics: "GitHub branch readback confirms d6ff782 is present on webapp-r217-subdub-ui-r218; CI for this SHA is pending and no merge/deploy/live claim is made."
+branch_head_sha: d6ff78259dff8785b5e747986eede1d52eb7f0a2
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
-last_push_verified_commit: 1730ea41ffda53e6bcd068f45a49c8c9f6949929
-docs_checkpoint_sha: 1730ea41ffda53e6bcd068f45a49c8c9f6949929
-push_command_success_commit: 1730ea41ffda53e6bcd068f45a49c8c9f6949929
-remote_readback: "Last GitHub UI observation: branch webapp-r217-subdub-ui-r218 at 1730ea41ffda53e6bcd068f45a49c8c9f6949929 and run 39212998609 SUCCESS. Remote was not re-read in this local QA turn. Current Admin mobile, shared-state, dynamic-chart and record-reference UI/test/docs changes are uncommitted and not covered by that observation."
+last_push_verified_commit: d6ff78259dff8785b5e747986eede1d52eb7f0a2
+docs_checkpoint_sha: d6ff78259dff8785b5e747986eede1d52eb7f0a2
+push_command_success_commit: d6ff78259dff8785b5e747986eede1d52eb7f0a2
+remote_readback: "git ls-remote confirms refs/heads/webapp-r217-subdub-ui-r218 at d6ff78259dff8785b5e747986eede1d52eb7f0a2. PR #654 remains OPEN; status checks for this new SHA are not yet reported."
 batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
