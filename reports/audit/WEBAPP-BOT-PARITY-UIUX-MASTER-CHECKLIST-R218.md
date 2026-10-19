@@ -308,6 +308,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] Admin focused locale/layout regression đạt `21/21` trên các module tab, customer 360,
   finance/topup, provider, shell boundary và stewardship. Browser role fixture, dynamic
   data, approval/runtime và live vẫn mở.
+- [~] Admin browser fixture đạt `72` cấu hình: `/admin`, `/admin/topups`, `/admin/customers`,
+  `/admin/operations` × VI/EN/ZH × sáng/tối × 390/768/1440; nội dung, focus, overflow,
+  console/request ngoài/write/unknown API đều đạt `0`. Không approve/credit; role/data thật
+  và approval runtime vẫn mở.
 
 ## V0 — Product Video và video tools R218-09 (làm cuối sản phẩm)
 
