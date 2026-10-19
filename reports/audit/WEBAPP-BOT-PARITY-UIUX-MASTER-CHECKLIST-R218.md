@@ -305,6 +305,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] AD-04 Approval/finance UI có reason/review/error, money execution giữ T0.
 - [ ] AD-05 Web và app cùng chức năng theo quyền, app ưu tiên công việc/mobile.
 - [ ] Customer/admin/denied fixture browser matrix, không production mutation.
+- [~] Admin focused locale/layout regression đạt `21/21` trên các module tab, customer 360,
+  finance/topup, provider, shell boundary và stewardship. Browser role fixture, dynamic
+  data, approval/runtime và live vẫn mở.
 
 ## V0 — Product Video và video tools R218-09 (làm cuối sản phẩm)
 
