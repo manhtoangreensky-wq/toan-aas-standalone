@@ -1,22 +1,22 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: ADMIN_PRESENTATION_PUSHED_CI_PENDING
+status: ADMIN_PRESENTATION_CI_GREEN_AUTH_QA_GREEN
 date: 2026-10-20
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: d6ff78259dff8785b5e747986eede1d52eb7f0a2
-delivery_head_sha: d6ff78259dff8785b5e747986eede1d52eb7f0a2
-delivery_status: PUSHED_TO_PR_654_CI_PENDING
-head_sha_semantics: "Candidate source snapshot d6ff782 contains the reviewed Admin locale, responsive, chart, record-reference, role/module and manual-topup capability/data-truth presentation slices plus their R218 plan/spec/checklist evidence."
-delivery_head_semantics: "GitHub branch readback confirms d6ff782 is present on webapp-r217-subdub-ui-r218; CI for this SHA is pending and no merge/deploy/live claim is made."
-branch_head_sha: d6ff78259dff8785b5e747986eede1d52eb7f0a2
+head_sha: 7d126564f61d753caee5f514137ee5e2be057de7
+delivery_head_sha: 7d126564f61d753caee5f514137ee5e2be057de7
+delivery_status: PUSHED_TO_PR_654_CI_GREEN
+head_sha_semantics: "Candidate source snapshot 7d12656 contains the reviewed Admin locale, responsive, chart, record-reference, role/module and manual-topup capability/data-truth presentation slices plus the R218 plan/spec/checklist evidence and the locale contract correction."
+delivery_head_semantics: "GitHub branch readback confirms 7d12656 is present on webapp-r217-subdub-ui-r218; Verify Web App and Authenticated WebApp QA both passed in run 39303469636. PR remains open; no merge/deploy/live claim is made."
+branch_head_sha: 7d126564f61d753caee5f514137ee5e2be057de7
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
-last_push_verified_commit: d6ff78259dff8785b5e747986eede1d52eb7f0a2
-docs_checkpoint_sha: d6ff78259dff8785b5e747986eede1d52eb7f0a2
-push_command_success_commit: d6ff78259dff8785b5e747986eede1d52eb7f0a2
-remote_readback: "git ls-remote confirms refs/heads/webapp-r217-subdub-ui-r218 at d6ff78259dff8785b5e747986eede1d52eb7f0a2. PR #654 remains OPEN; status checks for this new SHA are not yet reported."
+last_push_verified_commit: 7d126564f61d753caee5f514137ee5e2be057de7
+docs_checkpoint_sha: 7d126564f61d753caee5f514137ee5e2be057de7
+push_command_success_commit: 7d126564f61d753caee5f514137ee5e2be057de7
+remote_readback: "git ls-remote github confirms refs/heads/webapp-r217-subdub-ui-r218 at 7d126564f61d753caee5f514137ee5e2be057de7. PR #654 remains OPEN; Verify Web App and Authenticated WebApp QA both passed in run 39303469636."
 batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
@@ -268,18 +268,35 @@ current_wip:
   account_controls: "AC-01/AC-02 đã được tách thành spec `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md`: profile/locale/security/session/stale cleanup; wallet/packages/pricing/topup/history/pending/admin handoff. Account profile/activity/dropdown Node targeted 9/9; cả ba block Account Security tiếng Việt đã được quét, test copy 2/2 và Account regression 11/11; control-level AC-01 `6/6`; AC-02 billing control-level `5/5`; full Node mới nhất `579/579`. Ví/lịch sử canonical, QR nạp thủ công chỉ sau method+amount+readiness, PayOS/catalog fail-closed và Admin handoff được khóa ở source contract; billing/Python contracts chưa chạy vì thiếu python/py; browser/AX/QR bytes/runtime/approval/credit/live vẫn mở."
   historical_crosswalk: "Sổ lịch sử vẫn gồm 127 plan + 180 spec + 44 audit + 14 state = 365 file và 433 dòng checkbox cũ; spec hiện hành R218-02A được gắn thêm trực tiếp vào P1, không tạo ledger song song. `unclassified source=0`; semantic review từng dòng trước R217 vẫn mở theo wave, không suy diễn PASS."
   admin_topup_capability_affordance:
-    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    state: "ACCEPTED_LOCAL_UI_CI_GREEN_AUTH_QA_GREEN"
     spec: "docs/superpowers/specs/2026-10-20-r218-admin-topup-capability-affordance.md"
     changed_files: "static/portal/portal.js; tests/admin-manual-topup-capability-presentation.test.mjs"
     contract: "Desktop table and mobile cards render approval draft only when server-issued admin-manual-topup-write is true; otherwise show localized read-only reason and keep detail inspection. expected_xu/approved_xu are display-only server values; missing values remain unknown and are never derived from amount_vnd. Stale confirmation drafts are hidden when write capability is absent. Inspector confirmation boundary and all wallet/ledger/API contracts unchanged."
     tests: "Focused source 3/3; full Node 735/735; node --check static/portal/portal.js and git diff --check pass."
-    limitations: "No backend capability/RBAC, approval, Xu credit, wallet, browser, CI, production or LIVE claim."
-  ci_run: 39212998609
-  ci_head: 1730ea4
-  ci_status_at_last_observation: SUCCESS_ON_1730EA4
-  ci_scope: "Verify Web App và Authenticated WebApp QA trên remote delivery HEAD 1730ea4; không bao gồm local Admin mobile patch/docs diff; không provider, ví hoặc production data."
-  ci_latest_run: 39212998609
-  ci_latest_status: "Run 39212998609 terminal SUCCESS on 1730ea4: Verify Web App và Authenticated WebApp QA both succeeded. Current local Admin JS/CSS/test/doc diff has no CI yet."
+    limitations: "No backend capability/RBAC, approval, Xu credit, wallet, production or LIVE claim. Browser/CI evidence covers read-only presentation and route safety only; it does not prove an approval mutation."
+  authenticated_route_matrix_r21711:
+    state: "CI_GREEN"
+    run: 39303469636
+    job: 118235854082
+    head_sha: 7d126564f61d753caee5f514137ee5e2be057de7
+    artifact: "webapp-authenticated-qa-7d126564f61d753caee5f514137ee5e2be057de7"
+    artifact_id: 12212812382
+    matrix: "Customer 13 routes + Admin 6 routes x VI/EN/ZH x light/dark x phone-375/phone-390/tablet-768/desktop-1440"
+    records_expected: 456
+    records_completed: 456
+    records_passed: 456
+    records_failed: 0
+    checks: "Authenticated fixture registration/login, route resolution, locale/theme persistence after reload, heading/interactive surface, no horizontal overflow, AX tree capture, no page/console errors, no failed requests, no external requests and no protected mutations."
+    provider_calls: 0
+    wallet_mutations: 0
+    production_data_mutations: 0
+    limitations: "Isolated local QA only. It proves route/render safety and guarded UI states; it does not prove provider execution, wallet approval/credit, real production RBAC, delivery bytes or LIVE."
+  ci_run: 39303469636
+  ci_head: 7d126564f61d753caee5f514137ee5e2be057de7
+  ci_status_at_last_observation: SUCCESS_ON_7D12656
+  ci_scope: "Verify Web App plus Authenticated WebApp QA on PR #654 delivery HEAD 7d12656; browser evidence is isolated and read-only with no provider, wallet or production-data mutation."
+  ci_latest_run: 39303469636
+  ci_latest_status: "Run 39303469636 terminal SUCCESS: Verify Web App and Authenticated WebApp QA both succeeded; authenticated matrix completed 456/456 records with 0 failures."
   migration_evidence_refresh: "Migration evidence của candidate HEAD b276cf0 đã được refresh và verify; source_files_scanned=288; source_fingerprint_sha256=8b68b4f3363f7c0a0e7809d46203f468c75a35491d3c7a56ebd133551464a78a. Bot evidence unchanged."
   local_targeted_tests: "Admin chart source3/3; Admin record-reference source2/2 including chain order; Admin role/module projection2/2; Admin manual-topup capability/data-truth presentation3/3; focused Admin18/18; STT/workspace14/14; Voice suites132/132; voice-flow-state-presentation51/51; readiness metadata p0-05d kiểm tra độc lập PASS; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
   local_full_tests: "735/735 tests/*.test.mjs after Admin role/module, record-chain and manual-topup capability/data-truth projections; full Pricing truth browser72 states (12 configurations), header locale12/12, generic pricing browser12/12 and shared-state7/7/data browser12/12. Prior domain evidence remains historical; old72-route Admin smoke does not prove role/module completeness."
@@ -314,7 +331,7 @@ open_findings:
   - "AD-01-PRICING-NAV-LOCALE: root shared renderer legacy locale confirmed across9groups/48paths; reuse46existing route translations plus commercial/legal, preserve exact role filtering. Detail spec before BUILD, ahead of Pricing fixed-copy."
   - "AD-04-PRICING-AFFORDANCE: enabled write controls in read-only fixture need readiness review; publish-modal-open handler currently only guarded toast. No backend permission bypass or actual write was tested."
   - "AD-02-ZH-GENERIC-COPY: generic CANONICAL/canonical remains in module headers/descriptions; header locale picker itself is fixed and accepted."
-  - "Control-level dynamic callback và authenticated browser evidence còn mở."
+  - "Control-level dynamic callback và Admin server-issued data/bridge runtime vẫn mở; authenticated route/render matrix đã xanh ở run 39303469636."
 provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
