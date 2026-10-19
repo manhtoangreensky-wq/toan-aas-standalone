@@ -1,16 +1,16 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: ADMIN_PRESENTATION_CI_GREEN_AUTH_QA_GREEN
+status: ADMIN_RECORD_BRIDGE_LOCAL_CI_PENDING
 date: 2026-10-20
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 57bda4448549e8a42f1fedec198ae0b3f7c42305
+head_sha: 3a0404242dd7e9a70411eba32187c8696627dedf
 delivery_head_sha: 57bda4448549e8a42f1fedec198ae0b3f7c42305
-delivery_status: PUSHED_TO_PR_654_CI_GREEN_AUTH_QA_GREEN
-head_sha_semantics: "Candidate source snapshot 57bda44 contains the reviewed Admin locale, responsive, chart, record-reference, role/module and manual-topup capability/data-truth presentation slices plus the R218 plan/spec/checklist evidence and the locale contract correction; the latest commit only normalizes evidence line endings."
-delivery_head_semantics: "GitHub branch readback confirms 57bda44 is present on webapp-r217-subdub-ui-r218; Verify Web App and Authenticated WebApp QA both passed in run 39309260395. The commit only normalizes CRLF evidence files to LF; PR remains open; no merge/deploy/live claim is made."
+delivery_status: LOCAL_CANDIDATE_3A04042_CI_PENDING
+head_sha_semantics: "Local candidate 3a04042 adds the server-side read-only Admin record-reference projection on top of the reviewed Admin locale, responsive, chart, record-reference, role/module and manual-topup presentation slices; CI is pending and the candidate is not pushed yet."
+delivery_head_semantics: "GitHub branch readback remains 57bda44 with Verify Web App and Authenticated WebApp QA green in run 39309260395. Local candidate 3a04042 is not yet pushed and makes no delivery, merge, deploy or LIVE claim."
 branch_head_sha: 57bda4448549e8a42f1fedec198ae0b3f7c42305
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
 last_push_verified_commit: 57bda4448549e8a42f1fedec198ae0b3f7c42305
@@ -215,6 +215,14 @@ current_wip:
     tests: "Reference2/2 including chain order; focused Admin18/18; full node --test732/732; node --check portal.js and portal-i18n.js exit0; git diff --check exit0."
     browser: "NOT_RUN: Playwright fixture could not create its sandbox temp directory (mkdtemp ENOENT); no LIVE or production claim."
     limitations: "Local Inspector presentation only. Real records, server bridge request→job→asset→report→audit, CI, production and LIVE remain open."
+  admin_record_reference_bridge_projection:
+    state: "IMPLEMENTED_LOCAL_PYCOMPILE_NODE_GREEN_CI_PENDING"
+    spec: "docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md#AD-03-RECORD-BRIDGE"
+    changed_files: "copyfast_api.py; tests/test_copyfast_bridge.py"
+    contract: "Only admin_read=True + server-checked Admin responses may carry max 6 request/job/asset/report/audit references; bounded IDs/labels and internal paths; unsafe paths become empty and malformed kind/ID/shape is omitted; record-level and items[] share the projection; non-admin responses never receive the field; no write/provider/wallet/capability/RBAC change."
+    tests: "Bundled Python py_compile exit0; full Node 735/735; admin reference source 2/2; node --check two Portal JS and git diff --check exit0. Targeted pytest is CI-pending because the local bundled Python has no pytest module."
+    browser: "NOT_RUN: no record fixture or permitted runtime mutation; no production or LIVE claim."
+    limitations: "This only transports an explicitly server-issued read reference. Real Bot record chain, server role/RBAC fixture, CI, production and LIVE remain open."
   voice_scalar_draft:
     state: "UI_VERIFIED_RUNTIME_OPEN"
     tests: "7/7; full Node 645/645"
@@ -336,4 +344,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Continue AD-03 server-issued record/bridge read-only verification after the local role/module, record-reference and record-chain projections. Re-run the Admin browser fixture when a permitted temp runtime is available; preserve server-issued role filtering and vertical mobile layout. After the Admin presentation wave, continue remaining product/runtime gates; Video and motion remain later. No backend/integration/price-rule/provider/wallet/production-data action."
+next_action: "Push candidate 3a04042 to PR #654 and run CI, including targeted Python bridge tests. If green, re-run an allowed Admin record fixture when a permitted temp runtime is available; preserve server-issued role filtering and vertical mobile layout. Then continue remaining product/runtime gates in checklist order; Video and motion remain later. No backend/integration/price-rule/provider/wallet/production-data mutation."
