@@ -317,6 +317,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## V0 — Product Video và video tools R218-09 (làm cuối sản phẩm)
 
+- [~] Video/Product Video focused UI regression `11/11` xanh: catalog VI/EN/ZH, hub route
+  contracts, ordered brief→report flow, Video Studio home/detail, canonical plan/scene values
+  và không output claim giả. Browser authenticated/runtime/render/delivery vẫn mở.
 - [ ] VI-01 AI chân thật text/ảnh/scenes/brand/review.
 - [ ] VI-02 Trend catalog/search/reference/source/suggestions.
 - [ ] VI-03 Script AI/tự nhập/upload và scene editor.
