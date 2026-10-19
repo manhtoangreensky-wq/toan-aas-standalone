@@ -69,6 +69,29 @@ trong inventory đã chốt, không dùng số route làm bằng chứng.
 
 ## Verify / scope
 
+### AD-02-THEME — preference + CSS core surfaces
+
+- Allowed source: `static/portal/portal-theme.js`, `static/portal/portal-theme.css`;
+  test `tests/portal-admin-theme-preference.test.mjs`; QA driver ngoài repo
+  `qa/r218-voice-inventory/admin-probe.cjs --theme`. Không sửa renderer/auth/API,
+  route-engine, billing, provider, DB, manifest hay service-worker.
+- Policy mặc định Admin Light từ visual-reset cũ được giữ. Lỗi là luôn ép Light
+  kể cả khi người dùng chọn Dark/System, không phải bản thân default Light.
+- Admin `toan-aas-admin-theme-v2` lưu riêng; customer key không đổi. System preference
+  Admin phải lưu được qua reload và nghe media change; explicit Dark/Light không
+  bị media change ghi đè. Storage unavailable chỉ mất persistence, không khóa control.
+- Dùng nút theme đã có, hiển thị/keyboard/label theo locale; target ≥44×44. Không
+  reload hay remount form khi đổi theme. Mọi `meta[name=theme-color]` đồng bộ với
+  selected theme, không phụ thuộc media attribute còn lại.
+- CSS chỉ thêm nhánh Admin dark, dùng palette navy/teal đã có, không obsidian/đen.
+  Light giữ canvas/thẻ/bố cục; CTA và chữ selected nav dùng teal đậm có sẵn cho AA.
+- Verify: Node 17/17 + full Node 704/704. Browser localhost 24 route/locale/viewport
+  cases, mỗi case kiểm dark/light/system, reload preference, email preservation,
+  focus/target, mobile drawer/Escape, headers bảng chẩn đoán, màu nền và contrast.
+  375/390/768/1440 × VI/EN/ZH × home/login. Min measured contrast 7,61 dark / 5,24
+  light, zero page/console/external/write/unknown API/overflow. Không chứng minh
+  backend login, actual role/data, mọi module động hoặc production LIVE.
+
 ### AD-01A / AD-03A — Admin overview shortcuts và count truth
 
 - Allowed: `static/portal/portal.js` (`renderAdminOverview`),

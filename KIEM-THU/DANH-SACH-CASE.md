@@ -251,6 +251,17 @@ Lệnh fixture: `node ../qa/r218-voice-inventory/admin-probe.cjs`.
 Probe `node ../qa/r218-voice-inventory/admin-probe.cjs --shortcuts`: 18 cấu hình,
 108 trạng thái UI projection. Không phải backend RBAC/approval/financial/LIVE evidence.
 
+## ADMIN-THEME-CORE-20261019
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| AUI-07 | `/admin`, `/admin/login`; default/query/saved preference/system/media change | Default Light giữ nguyên; selected Dark/System được áp và lưu riêng; không xóa/sửa theme khách; invalid/storage denied không phá UI |
+| AUI-08 | VI/EN/ZH ×375/390/768/1440; dark/light/system cycle bằng nút thật | Navy canvas `#0b132b`/card `#1c2541`, light canvas/card cũ; target≥44, keyboard/focus, không reload/mất email, reload khôi phục selected theme |
+| AUI-09 | Chữ CTA/selected nav/sidebar/form, bảng chẩn đoán, drawer/Escape và meta colors | Tương phản ≥4,5:1 ở cả hai theme; mọi meta theme-color đồng bộ; page/console/external/write/unknown API/overflow0 |
+
+Probe `node ../qa/r218-voice-inventory/admin-probe.cjs --theme`: 24 cases core,
+không phải backend auth, production data, mọi module động hoặc LIVE evidence.
+
 ## SUPPORT-CENTER-UI-CONTROL-20261018
 
 | ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |

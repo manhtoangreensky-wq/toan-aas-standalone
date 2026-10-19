@@ -1,6 +1,6 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
-Ngày 2026-10-18. WIP_P1_VOICE_STT_PRESENTATION_BROWSER_VERIFIED. Source Bot được đọc-only; production chưa kiểm.
+Ngày 2026-10-18. WIP_ADMIN_THEME_CORE_BROWSER_VERIFIED. Source Bot được đọc-only; production chưa kiểm.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
 Đối soát toàn bộ lịch sử trước R217 nằm tại
@@ -317,8 +317,20 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   18 cấu hình × 6 trạng thái (108), page/console/external/write/unknown API/overflow 0.
   Artifact `../qa/r218-voice-inventory/admin-shortcuts.json`. Chỉ đóng projection UI;
   không đóng RBAC server, tiền hoặc LIVE.
-- [!] AD-02-THEME: OS dark trong probe vẫn render Admin surface trắng. Giữ yêu cầu
-  dark xanh/chữ sáng mở; không suy "dark mode đạt" từ `colorScheme: dark`.
+- [x] AD-02-THEME-A: đã bỏ chốt JS luôn ép Admin light/xóa preference; chọn Dark/System
+  có tác dụng, nút theme hiện và ≥44px. Giữ mặc định Admin light theo policy cũ,
+  lưu theme Admin bằng key riêng, không đổi preference khách; query sai/storage bị chặn
+  không phá UI. `tests/portal-admin-theme-preference.test.mjs` 17/17; full Node 704/704.
+- [x] AD-02-THEME-B (core surfaces): nhánh Admin dark dùng navy sẵn có `#0b132b`, thẻ
+  `#1c2541`, chữ sáng; không sửa palette khách hay luồng auth. Cặp CTA/tab/sidebar sáng
+  dùng teal đậm sẵn có để đạt AA. Browser 24 cases: VI/EN/ZH × 375/390/768/1440 ×
+  `/admin` và `/admin/login`, kiểm cả hai theme, keyboard cycle, persisted preference,
+  email draft không mất khi đổi theme, drawer/Escape, bảng chẩn đoán và meta theme-color.
+  Tương phản chữ đã đo min 7,61:1 dark / 5,24:1 light; page/console/external/write/
+  unknown API/overflow 0. Artifact `../qa/r218-voice-inventory/admin-theme.json`.
+- [~] AD-02-THEME tổng còn cần QA từng module/bảng có dữ liệu thật, biểu đồ và trạng
+  thái động; không dùng 24 cases core để đóng toàn bộ Admin. Đối soát: chỉ đặt OS dark
+  không có nghĩa đã chọn Dark khi policy mặc định Admin vẫn là Light.
 
 ## V0 — Product Video và video tools R218-09 (làm cuối sản phẩm)
 

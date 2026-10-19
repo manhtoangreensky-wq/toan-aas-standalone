@@ -1,5 +1,16 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Đối chiếu Admin theme — 19/10/2026
+
+- Cũ: controller luôn ép Light và xóa preference Admin; CSS áp light tokens
+  cho cả selector dark; nút theme bị ẩn. Mới: giữ default Light, nhưng cho chọn
+  Dark/System, lưu riêng và khôi phục sau reload; customer preference không đổi.
+- Dark không đổi sang đen: dùng các `--portal-dark-*` navy/teal đã có; chỉ nhánh
+  Admin. Light vẫn cùng canvas/thẻ, chỉ sửa AA pairs bằng sắc teal đậm sẵn có.
+- Bằng chứng core: Node 17/17, browser home/login 24 cases, min text contrast
+  7,61 dark/5,24 light; không mất email khi đổi theme, không HTTP write.
+  Không dùng bằng chứng này để đóng mọi module/role/data/backend/LIVE.
+
 ## Đối chiếu Admin overview — 19/10/2026
 
 - Yêu cầu phân quyền từng bộ phận: renderer nay lọc banner/lối tắt bằng
@@ -9,7 +20,7 @@
 - Báo cáo trước ghi Admin browser 72/72 chỉ là smoke nội dung/overflow/focus;
   probe cũ không đủ để kết luận role, locale, rail dọc hoặc dark mode hoàn chỉnh.
   Probe mới `--shortcuts` kiểm 108 trạng thái cho riêng banner/lối tắt/count;
-  backend, approval, dữ liệu thật và dark mode vẫn chưa đóng.
+  backend, approval, dữ liệu thật vẫn mở; core theme được kiểm riêng theo mục trên.
 
 ## Đối chiếu UT-01 — workspace Dịch (ứng viên cục bộ 18/10/2026)
 

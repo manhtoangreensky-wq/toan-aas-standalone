@@ -1,5 +1,20 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Admin theme — ứng viên UI 19/10/2026
+
+Admin vẫn mặc định Sáng như policy visual-reset trước. Nay chọn Tối/Theo hệ
+thống thực sự có tác dụng; không còn JS ép lại Sáng/xóa lựa chọn Admin.
+Lựa chọn lưu riêng, không sửa theme khách. Khi storage bị chặn vẫn đổi được
+trong trang; không ghi API/auth/ví. Đổi theme không reload/remount form.
+
+Dark dùng navy `#0b132b` và thẻ `#1c2541` sẵn có, chữ sáng. Light giữ nền/thẻ/
+bố cục, dùng teal đậm hơn trong cùng palette cho CTA/selected nav. Nút ≥44px;
+hai meta theme-color cùng selected scheme. Node 17/17, full Node 704/704.
+Browser localhost: 24 cases VI/EN/ZH ×375/390/768/1440 ×home/login, cả hai
+theme; measured contrast min 7,61 dark/5,24 light, errors/write/external/
+unknown/overflow 0. Đây là read-only fixture, chưa production/LIVE hay login thật.
+Các bảng có dữ liệu, biểu đồ và module Admin còn cần QA riêng.
+
 ## Admin overview — quyền hiển thị và số liệu hàng đợi (19/10/2026)
 
 Banner nạp tiền, sự cố và lối tắt `/admin` chỉ hiển thị các phân hệ trong
@@ -12,7 +27,8 @@ Nhãn unknown và chẩn đoán theo VI/EN/ZH. 18 test hành vi đạt; browser 
 18 cấu hình × 6 trạng thái = 108 trạng thái đạt, page/console/request ngoài/
 HTTP write/unknown API/overflow 0; tương phản nhãn unknown 5,80:1.
 Fixture kiểm projection UI, không chứng minh backend RBAC, duyệt tiền hay LIVE.
-Admin hiện vẫn dùng surface sáng khi OS yêu cầu tối; dark mode Admin còn mở.
+Ở checkpoint overview trước, Admin vẫn bị ép sáng; xem cập nhật AD-02-THEME
+ở trên để phân biệt default Light với lựa chọn Dark/System đã được sửa.
 
 ## Checkpoint Voice inventory — ứng viên 19/10/2026
 

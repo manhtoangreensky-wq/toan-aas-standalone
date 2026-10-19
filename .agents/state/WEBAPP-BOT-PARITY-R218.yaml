@@ -1,6 +1,6 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: WIP_ADMIN_OVERVIEW_SHORTCUTS_BROWSER_VERIFIED
+status: WIP_ADMIN_THEME_CORE_BROWSER_VERIFIED
 date: 2026-10-19
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
@@ -49,6 +49,16 @@ artifacts:
   tester_cases: KIEM-THU/DANH-SACH-CASE.md
   tester_guide: KIEM-THU/HUONG-DAN-TESTER.md
 current_wip:
+  admin_theme_core:
+    state: "CORE_UI_BROWSER_VERIFIED_MODULE_QA_OPEN"
+    base_sha: 097e808ed3f19063a14283fcb02f79c85cb26fae
+    tests: "Theme controller 17/17; full Node 704/704"
+    browser_cases: 24
+    matrix: "home/login x VI/EN/ZH x375/390/768/1440; explicit dark/light/system cycle + reload, default Admin Light unchanged"
+    checks: "44px target/focus, drawer/Escape, diagnostics headers, canvas/card RGB, email retention, isolated theme storage and both meta tags. Text contrast min dark7.6139/light5.2479; errors/external/write/unknown API/overflow0."
+    artifact: "../qa/r218-voice-inventory/admin-theme.json"
+    artifact_sha256: 47e8cc85783bf69b21cb75893fd166139f918af9c105ea37d58822f81bf7a060
+    limitations: "Production renderer/controller/CSS on read-only fixture, not actual authentication/backend/provider/financial/LIVE. Populated module tables/charts still need QA."
   admin_overview_shortcuts:
     state: "UI_VERIFIED_BACKEND_OPEN"
     base_sha: cf574879c81c24de307a833b558838b3e2108d84
@@ -152,4 +162,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Deliver Admin overview shortcut/count fix with exact-head CI; then AD-02 theme and remaining Admin/product UI gaps in ledger order, before motion. Earlier smoke/regression totals do not close full product waves. Backend/provider/wallet kept T0; no merge/deploy."
+next_action: "Deliver Admin theme core with exact-head CI; continue populated Admin module/contrast and remaining product UI gaps in ledger order before motion. Default Admin Light remains policy; explicit Dark/System now honored. Earlier smoke/regression totals do not close full waves. Backend/provider/wallet kept T0; no merge/deploy."
