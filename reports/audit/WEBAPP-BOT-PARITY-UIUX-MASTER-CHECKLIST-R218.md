@@ -434,6 +434,15 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   `18/18`, full Node `732/732`, syntax hai JS và `git diff --check` đạt. Authenticated
   route/render matrix đạt `456/456` ở run `39309260395`, nhưng record thật và bridge server
   chưa được nạp vào fixture; production và LIVE chưa xác minh.
+- [~] AD-03-RECORD-BRIDGE (server read-only projection): lớp cầu nối Admin đã chuyển
+  `admin_record_references` từ payload server tới record đơn và `items[]` chỉ sau
+  `admin_read=True` + role Admin. Allowlist tối đa 6 loại `request/job/asset/report/audit`,
+  ID/nhãn giới hạn, path nội bộ `/admin|/jobs|/assets|/reports|/audit`; URL ngoài,
+  `//`, `\\`, dot-segment hoặc payload sai hình dạng bị rỗng/loại fail-closed. Account
+  không phải Admin không nhận trường; frontend vẫn chiếu lại trước khi render link.
+  Đã thêm contract backend trong `tests/test_copyfast_bridge.py`; `py_compile` và
+  source/browser JS gates cần CI chạy lại trên HEAD. Đây chưa phải record thật hay
+  bằng chứng role/RBAC/bridge production; AD-03 tổng và LIVE vẫn mở.
 - [x] AD-04-CAPABILITY-AFFORDANCE (local UI): Hàng đợi nạp thủ công không còn hiển
   thị nút tạo quyết định duyệt/cộng Xu trong bảng hoặc thẻ mobile khi server chưa cấp
   `admin-manual-topup-write`; thay bằng nhãn chỉ đọc có lý do quyền hạn, vẫn giữ nút

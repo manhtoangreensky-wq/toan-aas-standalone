@@ -111,6 +111,16 @@ reference `2/2`, focused Admin `18/18`, full Node `732/732`, syntax hai JS và
 `git diff --check` đạt. Browser fixture vẫn bị `mkdtemp ENOENT`; record thật,
 bridge server, CI, production và LIVE chưa xác minh. AD-03 tổng vẫn mở.
 
+Amendment A0 ngày 20/10 (server record bridge): phát hiện lớp `_project_surface_data`
+đang loại bỏ `admin_record_references` trước khi payload Admin tới Inspector, nên
+record thật từ Core Bridge không thể nối vào chuỗi dù UI đã có projection. Đã bổ sung
+allowlist read-only ở server: chỉ account Admin qua `admin_read=True` mới nhận tối đa
+6 reference `request/job/asset/report/audit`; ID/nhãn/path được giới hạn và path
+không an toàn bị rỗng hoặc loại fail-closed. Account không phải Admin không nhận
+trường này; record đơn và `items[]` dùng chung projection. Không có write/provider/
+wallet/capability/RBAC mới. CI và browser fixture record thật phải chạy lại trên HEAD;
+AD-03 tổng, production và LIVE vẫn mở.
+
 Đối soát 19/10: thiếu API/capability được giữ ở T0 với contract và bằng chứng
 cụ thể. UI tiếp tục theo thứ tự trên sau khi ghi rõ phần đang dở và kiểm được
 lát hiện hành; không tự coi toàn wave hoàn tất và không khóa mọi wave UI chỉ

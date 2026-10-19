@@ -263,3 +263,30 @@ report→audit, CI, production và LIVE chưa được xác minh.
 Focused renderer/action tests giữ route/action/revision/CSRF/ownership contract.
 Browser fixture customer/admin/department denied; VI/EN/ZH, light/dark, 375/768/1440.
 Không submit nạp/approval/publish/ads production. Các actions đó T0 sau UI/motion và lệnh riêng.
+
+### AD-03-RECORD-BRIDGE — allowlist reference từ server tới Web Inspector
+
+Lát cầu nối này chỉ mở đúng trường `admin_record_references` trên payload Admin
+đã qua `admin_read=True` và role Admin do server kiểm tra. `copyfast_api.py` chỉ
+giữ tối đa 6 reference thuộc `request`, `job`, `asset`, `report`, `audit`; ID và
+nhãn bị giới hạn; path chỉ nhận các họ route nội bộ `/admin`, `/jobs`, `/assets`,
+`/reports`, `/audit`. Path ngoài, `//`, `\\` hoặc dot-segment thường/mã hóa bị
+giữ metadata với path rỗng; kind/ID sai hoặc payload vượt giới hạn bị loại toàn
+bộ. Mục này không tạo reference từ ID khác, không ghép request/job,
+không gọi thêm bridge và không cấp capability.
+
+Reference cấp ở record đơn và từng `items[]` đều được chuyển qua cùng allowlist;
+payload của account không phải Admin không nhận trường này. Frontend vẫn chiếu lại
+allowlist trước khi tạo DOM link và chuỗi `request → job → asset → report → audit`.
+
+Allowed files của slice này:
+
+- `copyfast_api.py` — server-side read-only projection.
+- `tests/test_copyfast_bridge.py` — allow/deny/path-hardening contract.
+- checklist/state và tài liệu này.
+
+Gate local: `python -m py_compile copyfast_api.py tests/test_copyfast_bridge.py`,
+targeted `test_copyfast_bridge.py`, source reference `2/2`, `node --check` hai
+Portal JS và `git diff --check`. CI phải chạy lại trên đúng HEAD; browser fixture
+record thật, production và LIVE chưa được đánh dấu. AD-03 tổng vẫn mở cho tới khi
+server cấp record thật và có evidence role/RBAC + bridge request→job→asset→report→audit.

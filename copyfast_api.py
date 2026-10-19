@@ -1778,6 +1778,52 @@ def _project_feature_response(value: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+_ADMIN_RECORD_REFERENCE_KINDS = frozenset({"request", "job", "asset", "report", "audit"})
+_ADMIN_RECORD_REFERENCE_PATH = re.compile(
+    r"^(?:/admin(?:/|$)|/jobs(?:/|$)|/assets(?:/|$)|/reports(?:/|$)|/audit(?:/|$))"
+)
+_ADMIN_RECORD_REFERENCE_DOT_SEGMENT = re.compile(r"(?:^|/)(?:(?:\.|%2e){1,2})(?:/|$)", re.IGNORECASE)
+
+
+def _project_admin_record_references(value: Any) -> list[dict[str, str]]:
+    """Project only the bounded record links explicitly issued by Admin Core.
+
+    This is a read-only bridge field.  It is intentionally stricter than the
+    generic recursive redactor: the browser may receive only the five known
+    record kinds, a safe identifier/label, and an internal path.  An invalid
+    record shape fails closed for the whole reference set; an unsafe path is
+    retained as metadata only (``path=""``) so the Inspector cannot navigate
+    outside the reviewed internal route families.
+    """
+    if not isinstance(value, list) or not 1 <= len(value) <= 6:
+        return []
+    projected: list[dict[str, str]] = []
+    for reference in value:
+        if not isinstance(reference, dict):
+            return []
+        kind = str(reference.get("kind") or "").strip().lower()
+        identifier = str(reference.get("id") or "").strip()[:160]
+        label = str(reference.get("label") or "").strip()[:120]
+        path = str(reference.get("path") or "").strip()[:240]
+        if kind not in _ADMIN_RECORD_REFERENCE_KINDS or not re.fullmatch(r"[A-Za-z0-9._:/-]{1,160}", identifier):
+            return []
+        safe_path = (
+            path
+            if _ADMIN_RECORD_REFERENCE_PATH.match(path)
+            and "//" not in path
+            and "\\" not in path
+            and not _ADMIN_RECORD_REFERENCE_DOT_SEGMENT.search(path)
+            else ""
+        )
+        projected.append({
+            "kind": kind,
+            "id": identifier,
+            "label": label or identifier,
+            "path": safe_path,
+        })
+    return projected
+
+
 def _project_surface_data(
     data: Any,
     surface: str,
@@ -1931,8 +1977,29 @@ def _project_surface_data(
         # human label must project a closed, Web-owned enum in their dedicated
         # router instead of reusing this compatibility surface.
         fields = ("id", "feature", "job_type", "status", "created_at", "updated_at", "balance_xu", "total_spent_xu", "is_vip", "amount_vnd", "xu", "type", "paid_at", "refund_status", "output_available", "error_category", "download_ready", "priority", "category", "related_tool", "has_attachment")
+        if allow_admin_user_refs:
+            references = _project_admin_record_references(raw_value.get("admin_record_references"))
+            if references:
+                result["admin_record_references"] = references
         if isinstance(value.get("items"), list):
-            result["items"] = _project_items(value.get("items"), fields, allow_admin_user_refs=allow_admin_user_refs)
+            raw_items = raw_value.get("items") if isinstance(raw_value.get("items"), list) else []
+            projected_items: list[dict[str, Any]] = []
+            for index, item in enumerate(value.get("items")[:100]):
+                if not isinstance(item, dict):
+                    continue
+                record = _project_record(item, fields)
+                raw_item = raw_items[index] if index < len(raw_items) else {}
+                if allow_admin_user_refs and isinstance(raw_item, dict):
+                    for field in ("user_id", "username"):
+                        safe = _browser_scalar(raw_item.get(field), maximum=120)
+                        if safe is not _MISSING:
+                            record[field] = safe
+                    references = _project_admin_record_references(raw_item.get("admin_record_references"))
+                    if references:
+                        record["admin_record_references"] = references
+                if record:
+                    projected_items.append(record)
+            result["items"] = projected_items
         return result
     if surface == "upload":
         return _project_record(value, ("id", "upload_id", "stage_id", "status", "created_at"))
