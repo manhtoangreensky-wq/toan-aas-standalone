@@ -308,12 +308,17 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] Admin focused locale/layout regression đạt `21/21` trên các module tab, customer 360,
   finance/topup, provider, shell boundary và stewardship. Browser role fixture, dynamic
   data, approval/runtime và live vẫn mở.
-- [~] Admin browser fixture đạt `72` cấu hình: `/admin`, `/admin/topups`, `/admin/customers`,
-  `/admin/operations` × VI/EN/ZH × sáng/tối × 390/768/1440; nội dung, focus, overflow,
-  console/request ngoài/write/unknown API đều đạt `0`. Không approve/credit; role/data thật
-  và approval runtime vẫn mở.
-- [~] Admin home banner nạp tiền, cảnh báo sự cố và quick actions đã chuyển sang `adminHome.*`
-  locale catalogue; browser matrix 72/72 xác minh không còn hardcode tiếng Việt ở EN/ZH.
+- [~] Smoke Admin trước đây gồm 72 tổ hợp route/locale/OS scheme/viewport. Probe cũ
+  chỉ kiểm nội dung/focus/overflow/network; không đủ kết luận role, locale, rail dọc
+  hoặc dark mode hoàn thiện. Không dùng số 72 làm bằng chứng các mục đó đã đóng.
+- [x] AD-01A/AD-03A: banner/lối tắt overview chỉ theo module máy chủ đã cấp;
+  aggregate nạp tiền thiếu khác `0` thật, không suy total từ list page. Unknown và
+  diagnostics theo VI/EN/ZH, contrast unknown 5,80:1. Test hành vi 18/18; browser
+  18 cấu hình × 6 trạng thái (108), page/console/external/write/unknown API/overflow 0.
+  Artifact `../qa/r218-voice-inventory/admin-shortcuts.json`. Chỉ đóng projection UI;
+  không đóng RBAC server, tiền hoặc LIVE.
+- [!] AD-02-THEME: OS dark trong probe vẫn render Admin surface trắng. Giữ yêu cầu
+  dark xanh/chữ sáng mở; không suy "dark mode đạt" từ `colorScheme: dark`.
 
 ## V0 — Product Video và video tools R218-09 (làm cuối sản phẩm)
 

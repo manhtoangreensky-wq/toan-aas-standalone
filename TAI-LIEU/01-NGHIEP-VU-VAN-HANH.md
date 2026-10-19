@@ -1,5 +1,19 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Admin overview — quyền hiển thị và số liệu hàng đợi (19/10/2026)
+
+Banner nạp tiền, sự cố và lối tắt `/admin` chỉ hiển thị các phân hệ trong
+manifest điều hướng máy chủ đã cấp. Giao diện không cấp quyền mới; backend
+vẫn kiểm tra từng request. Tổng nạp chờ duyệt chỉ lấy số nguyên không âm từ
+`adminData.counts.pending_topups`: thiếu/null/sai kiểu hiện `— / Chưa xác định`,
+khác số `0` thật. Không đếm trang danh sách hữu hạn thành tổng hàng đợi.
+
+Nhãn unknown và chẩn đoán theo VI/EN/ZH. 18 test hành vi đạt; browser localhost
+18 cấu hình × 6 trạng thái = 108 trạng thái đạt, page/console/request ngoài/
+HTTP write/unknown API/overflow 0; tương phản nhãn unknown 5,80:1.
+Fixture kiểm projection UI, không chứng minh backend RBAC, duyệt tiền hay LIVE.
+Admin hiện vẫn dùng surface sáng khi OS yêu cầu tối; dark mode Admin còn mở.
+
 ## Checkpoint Voice inventory — ứng viên 19/10/2026
 
 Kho giọng `/voice/saved` phân biệt đang tải, lỗi kết nối, chưa kết nối và

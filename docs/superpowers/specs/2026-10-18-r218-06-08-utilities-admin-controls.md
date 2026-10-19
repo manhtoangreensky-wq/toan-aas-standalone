@@ -69,6 +69,23 @@ trong inventory đã chốt, không dùng số route làm bằng chứng.
 
 ## Verify / scope
 
+### AD-01A / AD-03A — Admin overview shortcuts và count truth
+
+- Allowed: `static/portal/portal.js` (`renderAdminOverview`),
+  `static/portal/portal-i18n.js` (`adminHome.metrics.unknown`, `diagnostics.summary`),
+  `tests/admin-overview-operational-shortcuts.test.mjs`, checklist và tài liệu.
+- Không đổi API/RBAC/route-engine/wallet. Mỗi banner/lối tắt dùng exact module
+  đã được manifest máy chủ cấp; `/admin/jobs/failed` kế thừa module `/admin/jobs`
+  qua helper hiện hành, không tự cấp prefix `/admin/*`.
+- Chỉ `counts.pending_topups` là số nguyên không âm mới là total. Null, thiếu,
+  boolean, chuỗi, số âm/lẻ → unknown; `0` → known zero. List page không là total.
+- Unknown label, diagnostics theo VI/EN/ZH; chữ unknown dùng token Admin và
+  contrast ≥4,5:1. Không thêm nút approve/credit hoặc gọi HTTP write.
+- Verify: `node --test tests/admin-overview-operational-shortcuts.test.mjs` →
+  18/18. Local probe `node ../qa/r218-voice-inventory/admin-probe.cjs --shortcuts`
+  → 18 cấu hình × 6 trạng thái, 108 trạng thái; count/route/focus/overflow/locale
+  có assertion riêng. Đây không phải backend RBAC/financial/LIVE evidence.
+
 Focused renderer/action tests giữ route/action/revision/CSRF/ownership contract.
 Browser fixture customer/admin/department denied; VI/EN/ZH, light/dark, 375/768/1440.
 Không submit nạp/approval/publish/ads production. Các actions đó T0 sau UI/motion và lệnh riêng.

@@ -1,5 +1,16 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Đối chiếu Admin overview — 19/10/2026
+
+- Yêu cầu phân quyền từng bộ phận: renderer nay lọc banner/lối tắt bằng
+  `serverAuthorizesAdminRoute`, không coi người mở `/admin` được dùng mọi module.
+- Tổng hàng đợi: không được suy ra từ số dòng của một trang; giá trị thiếu
+  khác `0` thật. UI chỉ nhận aggregate số nguyên không âm do máy chủ trả.
+- Báo cáo trước ghi Admin browser 72/72 chỉ là smoke nội dung/overflow/focus;
+  probe cũ không đủ để kết luận role, locale, rail dọc hoặc dark mode hoàn chỉnh.
+  Probe mới `--shortcuts` kiểm 108 trạng thái cho riêng banner/lối tắt/count;
+  backend, approval, dữ liệu thật và dark mode vẫn chưa đóng.
+
 ## Đối chiếu UT-01 — workspace Dịch (ứng viên cục bộ 18/10/2026)
 
 | Yêu cầu trong inventory Bot | Hiện tại trên ứng viên Web | Trạng thái |

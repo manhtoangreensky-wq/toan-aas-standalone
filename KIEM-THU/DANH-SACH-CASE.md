@@ -239,6 +239,18 @@ Lệnh fixture: `node ../qa/r218-voice-inventory/music-probe.cjs`.
 Lệnh fixture: `node ../qa/r218-voice-inventory/admin-probe.cjs`.
 Đã kiểm `72` cấu hình; approval, credit, dữ liệu production và LIVE vẫn mở.
 
+Đính chính: 72 tổ hợp trên chỉ là smoke nội dung/focus/overflow/network. Chưa đủ
+để đóng role, locale, bố cục dọc hoặc dark mode; các mục nghiệm thu đó vẫn mở.
+
+| ID | Case bổ sung trên `/admin` | PASS cần ghi |
+|---|---|---|
+| AUI-04 | Manifest all/support-only/jobs-only/denied | Banner và shortcuts chỉ trỏ module được cấp; không có lối tắt không quyền hoặc section rỗng |
+| AUI-05 | Aggregate total hợp lệ/0/null/thiếu/sai kiểu và list page một dòng | Chỉ aggregate nguyên không âm là total; unknown hiện `—`, không tự dựng 0 hoặc đếm trang thành tổng |
+| AUI-06 | VI/EN/ZH × OS light/dark × 390/768/1440; 6 trạng thái | Nhãn unknown/diagnostics đúng locale, count note contrast ≥4,5:1, focus/overflow/page/console/external/write/unknown API 0; ghi theme thực tế khác requested scheme |
+
+Probe `node ../qa/r218-voice-inventory/admin-probe.cjs --shortcuts`: 18 cấu hình,
+108 trạng thái UI projection. Không phải backend RBAC/approval/financial/LIVE evidence.
+
 ## SUPPORT-CENTER-UI-CONTROL-20261018
 
 | ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |

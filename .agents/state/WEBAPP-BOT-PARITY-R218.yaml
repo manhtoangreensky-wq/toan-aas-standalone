@@ -1,6 +1,6 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: WIP_P1_VOICE_SCALAR_DRAFT_BROWSER_VERIFIED
+status: WIP_ADMIN_OVERVIEW_SHORTCUTS_BROWSER_VERIFIED
 date: 2026-10-19
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
@@ -49,6 +49,17 @@ artifacts:
   tester_cases: KIEM-THU/DANH-SACH-CASE.md
   tester_guide: KIEM-THU/HUONG-DAN-TESTER.md
 current_wip:
+  admin_overview_shortcuts:
+    state: "UI_VERIFIED_BACKEND_OPEN"
+    base_sha: cf574879c81c24de307a833b558838b3e2108d84
+    tests: "18/18 targeted; full Node 687/687"
+    browser_configurations: 18
+    browser_states: 108
+    scope: "Synthetic navigation/count projections on production renderer/CSS/integration, localhost only; not actual server RBAC or payment execution."
+    checks: "Module-filtered shortcuts, denied/support/jobs scopes, known/unknown/zero totals, locale, focus; overflow/page/console/external/write/unknown API 0. Unknown note contrast 5.797:1."
+    artifact: "../qa/r218-voice-inventory/admin-shortcuts.json"
+    artifact_sha256: 06fc8a9e804c4b09abf067072ec80b1d853affdeb91afb3edcfdd583239b370a
+    limitations: "Earlier 72-route smoke did not prove permissions, locale or vertical layout; OS dark still yields light Admin surfaces. No backend/live/approval closure."
   voice_scalar_draft:
     state: "UI_VERIFIED_RUNTIME_OPEN"
     tests: "7/7; full Node 645/645"
@@ -141,4 +152,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Đã chốt CI 39195064661 SUCCESS trên 5e1729b; SubDub focused 20/20, Image focused 52/52, Image browser 18/18, Admin focused 21/21, Admin browser 72/72, Video focused 11/11; tiếp tục Video browser/runtime gaps rồi QA/motion. Canonical management/upload/preview/handoff và runtime giữ tại T0. Merge/deploy chưa được phép."
+next_action: "Deliver Admin overview shortcut/count fix with exact-head CI; then AD-02 theme and remaining Admin/product UI gaps in ledger order, before motion. Earlier smoke/regression totals do not close full product waves. Backend/provider/wallet kept T0; no merge/deploy."
