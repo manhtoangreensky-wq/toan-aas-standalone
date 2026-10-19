@@ -32605,39 +32605,39 @@
     const failedJobsCount = Number(effectiveCounts && effectiveCounts.failed_jobs) || 0;
     const topupBanner = `<section class="portal-card portal-card-pad portal-admin-topup-hero" style="border-left: 4px solid var(--portal-accent, #0ea5e9); margin-bottom: 1.5rem; background: var(--portal-surface-raised, rgba(14,165,233,0.06)); display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
       <div>
-        <span class="portal-section-kicker" style="color: var(--portal-accent, #0ea5e9); font-weight: 600;">HÀNG ĐỢI DUYỆT TIỀN</span>
-        <h2 style="margin: 0.25rem 0 0.5rem 0; font-size: 1.25rem;">Nạp tiền chờ duyệt: <strong>${pendingTopupsCount}</strong> yêu cầu</h2>
-        <p style="margin: 0; color: var(--portal-text-muted, #94a3b8); font-size: 0.875rem;">Đối soát chuyển khoản ngân hàng ACB/VietQR và cộng Xu trực tiếp vào tài khoản người dùng.</p>
+        <span class="portal-section-kicker" style="color: var(--portal-accent, #0ea5e9); font-weight: 600;">${safeText(adminText("topupQueue.kicker", "HÀNG ĐỢI DUYỆT TIỀN"))}</span>
+        <h2 style="margin: 0.25rem 0 0.5rem 0; font-size: 1.25rem;">${safeText(adminText("topupQueue.title", "Nạp tiền chờ duyệt: {count} yêu cầu", { count: String(pendingTopupsCount) }))}</h2>
+        <p style="margin: 0; color: var(--portal-text-muted, #94a3b8); font-size: 0.875rem;">${safeText(adminText("topupQueue.body", "Đối soát chuyển khoản ngân hàng và cộng Xu chỉ sau khi máy chủ xác nhận."))}</p>
       </div>
       <div class="portal-inline-actions">
-        <a class="portal-button portal-button--primary" href="/admin/topups" style="text-decoration: none;">Mở hàng đợi nạp tiền →</a>
+        <a class="portal-button portal-button--primary" href="/admin/topups" style="text-decoration: none;">${safeText(adminText("topupQueue.action", "Mở hàng đợi nạp tiền →"))}</a>
       </div>
     </section>`;
     const incidentBanner = failedJobsCount > 0
       ? `<section class="portal-card portal-card-pad portal-admin-incident-alert" style="border-left: 4px solid var(--portal-danger, #ef4444); margin-bottom: 1.5rem; background: var(--portal-surface-raised, rgba(239,68,68,0.06)); display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
       <div>
-        <span class="portal-section-kicker" style="color: var(--portal-danger, #ef4444); font-weight: 600;">CẢNH BÁO SỰ CỐ VẬN HÀNH</span>
-        <h2 style="margin: 0.25rem 0 0.5rem 0; font-size: 1.25rem;">Tác vụ gặp sự cố: <strong>${failedJobsCount}</strong> tác vụ cần kiểm tra</h2>
-        <p style="margin: 0; color: var(--portal-text-muted, #94a3b8); font-size: 0.875rem;">Phát hiện lỗi xử lý trong hàng đợi. Quản trị viên cần kiểm tra chi tiết và hỗ trợ xử lý lại nếu cần.</p>
+        <span class="portal-section-kicker" style="color: var(--portal-danger, #ef4444); font-weight: 600;">${safeText(adminText("incident.kicker", "CẢNH BÁO SỰ CỐ VẬN HÀNH"))}</span>
+        <h2 style="margin: 0.25rem 0 0.5rem 0; font-size: 1.25rem;">${safeText(adminText("incident.title", "Tác vụ gặp sự cố: {count} tác vụ cần kiểm tra", { count: String(failedJobsCount) }))}</h2>
+        <p style="margin: 0; color: var(--portal-text-muted, #94a3b8); font-size: 0.875rem;">${safeText(adminText("incident.body", "Phát hiện lỗi xử lý trong hàng đợi; quản trị viên cần kiểm tra chi tiết."))}</p>
       </div>
       <div class="portal-inline-actions">
-        <a class="portal-button portal-button--danger" href="/admin/jobs/failed" style="text-decoration: none;">Kiểm tra tác vụ lỗi →</a>
+        <a class="portal-button portal-button--danger" href="/admin/jobs/failed" style="text-decoration: none;">${safeText(adminText("incident.action", "Kiểm tra tác vụ lỗi →"))}</a>
       </div>
     </section>`
       : "";
     const quickActions = `<section class="portal-card portal-card-pad portal-admin-quick-actions" style="margin-bottom: 1.5rem;">
       <div class="portal-card-header">
         <div>
-          <span class="portal-section-kicker">THAO TÁC VẬN HÀNH</span>
-          <h2 class="portal-card-title">Lối tắt quản trị nhanh</h2>
-          <p class="portal-card-subtitle">Các lối tắt trực tiếp tới phân hệ xử lý nghiệp vụ trọng yếu.</p>
+          <span class="portal-section-kicker">${safeText(adminText("quickActions.kicker", "THAO TÁC VẬN HÀNH"))}</span>
+          <h2 class="portal-card-title">${safeText(adminText("quickActions.title", "Lối tắt quản trị nhanh"))}</h2>
+          <p class="portal-card-subtitle">${safeText(adminText("quickActions.body", "Các lối tắt trực tiếp tới phân hệ xử lý nghiệp vụ trọng yếu."))}</p>
         </div>
       </div>
       <div class="portal-inline-actions" style="gap: 0.75rem; flex-wrap: wrap;">
-        <a class="portal-button portal-button--secondary" href="/admin/topups" style="text-decoration: none;">Duyệt nạp tiền</a>
-        <a class="portal-button portal-button--secondary" href="/admin/customers" style="text-decoration: none;">Quản lý người dùng</a>
-        <a class="portal-button portal-button--secondary" href="/admin/jobs" style="text-decoration: none;">Quản lý tác vụ</a>
-        <a class="portal-button portal-button--secondary" href="/admin/support" style="text-decoration: none;">Trung tâm hỗ trợ</a>
+        <a class="portal-button portal-button--secondary" href="/admin/topups" style="text-decoration: none;">${safeText(adminText("quickActions.topups", "Duyệt nạp tiền"))}</a>
+        <a class="portal-button portal-button--secondary" href="/admin/customers" style="text-decoration: none;">${safeText(adminText("quickActions.customers", "Quản lý người dùng"))}</a>
+        <a class="portal-button portal-button--secondary" href="/admin/jobs" style="text-decoration: none;">${safeText(adminText("quickActions.jobs", "Quản lý tác vụ"))}</a>
+        <a class="portal-button portal-button--secondary" href="/admin/support" style="text-decoration: none;">${safeText(adminText("quickActions.support", "Trung tâm hỗ trợ"))}</a>
       </div>
     </section>`;
     const adminOverviewTabs = typeof renderAdminModuleTabs === "function" ? renderAdminModuleTabs(page, context) : "";

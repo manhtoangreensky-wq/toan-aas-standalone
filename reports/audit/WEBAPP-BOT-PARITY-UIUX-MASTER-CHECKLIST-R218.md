@@ -312,6 +312,8 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   `/admin/operations` × VI/EN/ZH × sáng/tối × 390/768/1440; nội dung, focus, overflow,
   console/request ngoài/write/unknown API đều đạt `0`. Không approve/credit; role/data thật
   và approval runtime vẫn mở.
+- [~] Admin home banner nạp tiền, cảnh báo sự cố và quick actions đã chuyển sang `adminHome.*`
+  locale catalogue; browser matrix 72/72 xác minh không còn hardcode tiếng Việt ở EN/ZH.
 
 ## V0 — Product Video và video tools R218-09 (làm cuối sản phẩm)
 

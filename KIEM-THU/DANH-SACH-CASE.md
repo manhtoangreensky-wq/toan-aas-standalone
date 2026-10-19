@@ -228,6 +228,17 @@ transcript, delivery và LIVE vẫn mở.
 Lệnh fixture: `node ../qa/r218-voice-inventory/music-probe.cjs`.
 Đã kiểm `36` cấu hình; generation, quote, player, delivery và LIVE vẫn mở.
 
+## ADMIN-BROWSER-LOCALE-20261019
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| AUI-01 | `/admin`, `/admin/topups`, `/admin/customers`, `/admin/operations`; VI/EN/ZH × sáng/tối × 390/768/1440 | Nội dung không rỗng, rail/module dọc, banner nạp tiền/sự cố/quick actions theo đúng locale |
+| AUI-02 | canonical_admin_qa fixture | Không hiển thị nút approve/credit trong probe; dữ liệu/role vẫn theo server, không suy diễn từ URL |
+| AUI-03 | Focus/responsive/network | Focus đi vào control; overflow/page/console/request ngoài/write/unknown API đều `0` |
+
+Lệnh fixture: `node ../qa/r218-voice-inventory/admin-probe.cjs`.
+Đã kiểm `72` cấu hình; approval, credit, dữ liệu production và LIVE vẫn mở.
+
 ## SUPPORT-CENTER-UI-CONTROL-20261018
 
 | ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |
