@@ -540,7 +540,11 @@ async def _capture_record(
     documents = event_state.get("document_statuses", [])
     http_status = int(documents[-1].get("status", 0)) if documents else 0
     console = event_state.get("console", [])
-    expected_theme = "light" if actor == "admin" else theme
+    # Admin defaults to light, but an explicit `?theme=dark` is a supported
+    # owner preference and must be verified as dark rather than treated as a
+    # failed route. The theme controller keeps Admin storage isolated from the
+    # customer preference; this matrix validates the rendered result.
+    expected_theme = theme
     row = {
         "actor": actor,
         "requested_route": route,
