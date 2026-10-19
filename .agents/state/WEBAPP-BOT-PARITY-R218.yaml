@@ -15,8 +15,8 @@ branch_head_sha: 1a4bbac8294eb518f308c85a8292d6ced5e832b2
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
 last_push_verified_commit: 1a4bbac8294eb518f308c85a8292d6ced5e832b2
 docs_checkpoint_sha: 1a4bbac8294eb518f308c85a8292d6ced5e832b2
-push_command_success_commit: PENDING
-remote_readback: "PENDING: network push/readback and fresh PR #654 CI are not yet observed for 1a4bbac."
+push_command_success_commit: 2bbee8897c5eb226a775c5bc71ba67ad58528686
+remote_readback: "git ls-remote github confirms refs/heads/webapp-r217-subdub-ui-r218 at 2bbee8897c5eb226a775c5bc71ba67ad58528686. PR #654 remains OPEN; fresh CI failed only because the first provenance refresh included ignored local _giao-viec files and recorded the wrong fingerprint; corrected merge-ref evidence is staged for the next push."
 batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
@@ -315,7 +315,7 @@ current_wip:
   ci_scope: "Verify Web App plus Authenticated WebApp QA on PR #654 HEAD 5252e44; browser evidence is isolated and read-only with no provider, wallet or production-data mutation."
   ci_latest_run: 39316630196
   ci_latest_status: "Run 39316630196 terminal SUCCESS: Verify Web App and Authenticated WebApp QA both succeeded; authenticated matrix completed 456/456 records with 0 failures."
-  migration_evidence_refresh: "Web-only provenance refreshed and verified on HEAD 1a4bbac8294eb518f308c85a8292d6ced5e832b2; source_files_scanned=311; source_fingerprint_sha256=7bbf57c7c538686de272abecab7946ce03d7ea6c592186823b4df97e2a47b5c0. Bot evidence unchanged."
+  migration_evidence_refresh: "Web-only provenance regenerated from clean PR merge ref d367d0b3fe13a923760122e471d75335b3101857; source_files_scanned=288; source_fingerprint_sha256=4607415db7bad0fd20f1f34a18efeed41903a9a1397fcf66ecda84ee5f9e8a0a. Bot evidence unchanged; ignored local _giao-viec files are not part of the committed source tree."
   local_targeted_tests: "Admin chart source3/3; Admin record-reference source2/2 including chain order; Admin role/module projection2/2; Admin manual-topup capability/data-truth presentation3/3; focused Admin18/18; STT/workspace14/14; Voice default-gender/controls/inventory suite45/45; existing Voice suites132/132; voice-flow-state-presentation51/51; readiness metadata p0-05d kiểm tra độc lập PASS; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
   local_full_tests: "738/738 tests/*.test.mjs after Voice default-gender capability slice; full Pricing truth browser72 states (12 configurations), header locale12/12, generic pricing browser12/12 and shared-state7/7/data browser12/12. Prior domain evidence remains historical; old72-route Admin smoke does not prove role/module completeness."
   python_tests: "NOT_RUN: bundled Python located via workspace dependencies; pytest/FastAPI/Uvicorn are not installed in that runtime. No Python source changed in this batch."
