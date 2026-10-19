@@ -1,5 +1,17 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Đối chiếu AD-03 — liên kết request → job → asset → report → audit (20/10/2026)
+
+| Yêu cầu | Hiện tại trên WebApp | Trạng thái và bằng chứng |
+|---|---|---|
+| Admin xem đúng liên kết hồ sơ do máy chủ cấp | `admin_record_references` được chiếu có điều kiện ở record đơn và `items[]`; chỉ nhận 5 kind, tối đa 6 link/tập và 5 họ đường dẫn nội bộ | ⚠️ Source/local đã khóa projection; `tests/test_copyfast_bridge.py -k admin_record_references` `1 passed/56 deselected`; CI, record thật và LIVE còn mở |
+| Không lộ liên kết cho customer/non-Admin | Trường bị bỏ hoàn toàn khi không có `allow_admin_user_refs`; payload sai kind/ID fail-closed, path ngoài allowlist thành rỗng | ✅ Contract local đạt; chưa có browser fixture role thật hoặc production RBAC |
+| Chuỗi nghiệp vụ thật request → job → asset → report → audit | Chưa tự suy diễn hoặc tự tạo chuỗi; projection chỉ trình bày reference explicit từ server, không tạo job, charge, delivery hay audit decision | ❌ Chưa có bridge/record/runtime evidence; giữ mở trong AD-03 tổng |
+
+Các con số trên được đo từ source/test hiện tại, không suy diễn từ HTTP 200 hay
+HTML. `735/735` Node, `py_compile`, `node --check` và `git diff --check` là
+evidence local; chưa phải CI, deployed, LIVE hoặc bằng chứng duyệt tiền.
+
 ## Đối chiếu Admin theme — 19/10/2026
 
 - Cũ: controller luôn ép Light và xóa preference Admin; CSS áp light tokens

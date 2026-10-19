@@ -1,5 +1,26 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## AD-03 — checkpoint chiếu liên kết hồ sơ Admin (20/10/2026)
+
+Lớp cầu nối Admin hiện chỉ đưa `admin_record_references` tới trình duyệt khi
+request đã đi qua cờ đọc Admin (`admin_read=true`) và chốt quyền Admin phía máy
+chủ. Projection chỉ nhận đúng **5** loại hồ sơ (`request`, `job`, `asset`,
+`report`, `audit`), tối đa **6** liên kết trong một tập; liên kết ở record đơn
+và trong `items[]` dùng cùng allowlist. ID, nhãn và đường dẫn đều bị giới hạn
+độ dài; đường dẫn chỉ thuộc **5** họ nội bộ `/admin`, `/jobs`, `/assets`,
+`/reports`, `/audit`. URL ngoài, `//`, `\\` và dot-segment bị loại hoặc làm
+rỗng. Dữ liệu sai kiểu/kind/ID bị fail-closed; tài khoản không phải Admin
+không nhận trường này. Projection không tự tạo record, không nối request → job,
+không cấp quyền và không gọi provider/bridge bổ sung.
+
+Bằng chứng local trên candidate hiện tại: contract Python AD-03 `1 passed,
+56 deselected`; `py_compile` cho `copyfast_api.py` và test không lỗi; toàn bộ
+Node `735/735`; `node --check` hai file Portal và `git diff --check` đều không
+có output lỗi. Đây mới là bằng chứng source/local; CI trên commit mới, record
+thật, RBAC thật, bridge request → job → asset → report → audit và LIVE chưa
+được đóng. Không dùng checkpoint này để kết luận Admin đã duyệt tiền, giao tệp
+hay production đã chạy.
+
 ## Admin theme — ứng viên UI 19/10/2026
 
 Admin vẫn mặc định Sáng như policy visual-reset trước. Nay chọn Tối/Theo hệ

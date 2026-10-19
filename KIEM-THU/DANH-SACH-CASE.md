@@ -271,6 +271,17 @@ không phải backend auth, production data, mọi module động hoặc LIVE ev
 Case này chỉ kiểm tra presentation/interaction của dữ liệu đã được cấp; không kết luận
 RBAC server, dữ liệu production, approval tiền, provider, delivery hoặc LIVE.
 
+## ADMIN-RECORD-REFERENCE-BRIDGE-20261020
+
+| ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |
+|---|---|---|
+| AD03-REF-01 | `/admin`, `/admin/jobs`, `/admin/assets`, `/admin/reports`, `/admin/audit`; signed Admin fixture và foreign/customer fixture; record đơn + `items[]`; VI/EN/ZH × `390/768/1440` | Admin nhận đúng `request/job/asset/report/audit`, tối đa `6` link/tập, path chỉ trong `/admin`, `/jobs`, `/assets`, `/reports`, `/audit`; foreign/customer không có trường; kind/ID sai làm cả tập biến mất; path ngoài/`//`/`\\`/dot-segment không điều hướng; console/overflow/external request/write `0` |
+
+Evidence bắt buộc: candidate SHA, runtime/CI SHA riêng, DOM/ảnh/AX, console/network,
+payload đã redaction và verdict. Contract local hiện có tại
+`tests/test_copyfast_bridge.py::test_admin_record_references_cross_bridge_only_after_admin_read_guard`;
+case này chưa đóng record/RBAC/bridge thật hoặc LIVE.
+
 ## SUPPORT-CENTER-UI-CONTROL-20261018
 
 | ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |

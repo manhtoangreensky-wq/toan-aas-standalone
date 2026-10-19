@@ -235,3 +235,22 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
      top-up, cộng Xu, gọi provider, gửi thông báo ngoài Web hoặc tạo ticket Bot.
 125. Ghi riêng source/control-level, browser/AX, CI và LIVE. Nếu capability hoặc runtime chưa
      có, phải giữ `guarded` và `LIVE_PASS=NOT_TESTED`; không dùng `4/4` source để thay thế.
+
+## 19. AD-03 — kiểm tra liên kết hồ sơ Admin
+
+126. Ghi `BASE` và `HEAD` SHA; dùng đúng Admin fixture đã được cấp quyền và một
+     fixture customer/foreign owner riêng. Không dùng dữ liệu production để bơm
+     reference.
+127. Mở các màn hình Admin có record đơn và danh sách `items[]`. Khi server cấp
+     reference hợp lệ, kiểm đúng 5 kind: `request`, `job`, `asset`, `report`,
+     `audit`; kiểm tối đa 6 link trong một tập và label/id/path không bị cắt sai.
+128. Mở từng path và xác nhận chỉ có 5 họ nội bộ `/admin`, `/jobs`, `/assets`,
+     `/reports`, `/audit`. URL ngoài, `//`, `\\`, dot-segment thường hoặc mã hóa
+     không được điều hướng; record sai kind/ID phải fail-closed.
+129. Lặp cùng payload bằng customer/foreign fixture. Trường
+     `admin_record_references` phải không xuất hiện ở record đơn lẫn `items[]`;
+     không được lộ token, raw bridge field, user khác, provider hoặc URL tải tệp.
+130. Ghi DOM/ảnh/AX, console, network và mutation. Không bấm approve, refund,
+     charge, retry, delivery hoặc provider; case này chỉ đọc và xác minh
+     projection. Contract local `1 passed/56 deselected` không thay cho CI,
+     deployed, record thật, RBAC thật hay LIVE.
