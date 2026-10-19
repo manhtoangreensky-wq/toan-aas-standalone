@@ -1,6 +1,7 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
-Ngày 2026-10-18; cập nhật 19/10. WIP_ADMIN_LOCAL_UI_ACCEPTED_ROLE_MODULE_QA_OPEN.
+Ngày 2026-10-20; cập nhật sau run `39303469636`. WIP_ADMIN_PRESENTATION_CI_GREEN_AUTH_QA_GREEN;
+state-only follow-up HEAD `d6c6ccf` đang chờ CI riêng.
 Source Bot được đọc-only; production chưa kiểm.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
@@ -81,8 +82,8 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] Các callback động và catalog runtime cần mapping control chi tiết, chưa đủ để
   tuyên bố audit mọi nút hoàn tất.
 - [~] #653 auth responsive/contrast: CI source cũ xanh, delivery chưa đóng.
-- [x] #654 candidate source đã push; SubDub lane patch đạt kiểm thử local và CI/browser trên HEAD `82ee56ceaddcb9685519c5b7376dfa121240e8f8`.
-- [x] Ghi current SHA/checks #653/#654 và disposition trước mở wave mới: Verify Web App + Authenticated WebApp QA SUCCESS, run `39125923765`, route matrix `456/456`.
+- [x] #654 source candidate `7d126564f61d753caee5f514137ee5e2be057de7` đã push; SubDub lane patch và các lát Admin đạt kiểm thử local và CI/browser trên source HEAD.
+- [x] Ghi current SHA/checks #654: Verify Web App + Authenticated WebApp QA SUCCESS ở run `39303469636`; route matrix `456/456`, `0` lỗi. State checkpoint chỉ tài liệu `d6c6ccf32e3a242c594347ac1f89033c9423616e` đã được đẩy tiếp; CI của checkpoint này đang chạy riêng.
 - [x] Review #654 hidden field, default checked, duplicate selector, library link,
   guard blanket, locale, âm lượng dub max 100: đã sửa và khóa bằng 13 kiểm thử mục tiêu;
   CI/browser trên commit mới đã đạt route/render matrix.
@@ -410,10 +411,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   không hợp lệ bị loại; DOM link được tạo bằng API an toàn, không chèn HTML thô.
   Bảng giữ metadata `data-admin-record-references`, Inspector có vùng “Liên kết hồ sơ”,
   nhãn loại cân bằng VI/EN/ZH. Test nguồn `2/2`, focused Admin sau slice `16/16`,
-  full Node `730/730`, syntax hai JS và `git diff --check` đạt. Browser fixture chưa
-  chạy được do Playwright `mkdtemp ENOENT`; không có write/provider/capability mới.
-  Đây chỉ là projection UI chỉ đọc; AD-03 tổng (role/RBAC, record thật, bridge
-  request→job→asset→report→audit, backend, CI, production và LIVE) vẫn mở.
+  full Node `730/730`, syntax hai JS và `git diff --check` đạt. Authenticated route/render
+  matrix cùng source đạt `456/456` ở run `39303469636`, nhưng không inject record fixture
+  để chứng minh liên kết hồ sơ. Đây chỉ là projection UI chỉ đọc; AD-03 tổng (role/RBAC,
+  record thật, bridge request→job→asset→report→audit, backend, production và LIVE) vẫn mở.
 - [x] AD-03-ROLE-MODULE (local UI): projection manifest quyền do máy chủ cấp chỉ
   nhận nhóm/phân hệ khi `read_state=ready`; route chỉ nằm dưới `/admin`, loại route
   trùng, route ngoài Admin, `//` nội bộ, `\\` và dot-segment thường/mã hóa (`..`, `%2e`);
@@ -421,18 +422,18 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   được trình bày là `read_only`. Không suy quyền từ `context.isAdmin`, browser role,
   ID nhóm hoặc capability; không thêm route, write, provider, RBAC thật hay dữ liệu
   record. Test projection `2/2`, focused Admin `18/18`, full Node `732/732`, syntax
-  hai JS và `git diff --check` đạt. Browser fixture chưa chạy được do Playwright
-  `mkdtemp ENOENT`; CI/production/LIVE chưa xác minh. AD-03 tổng và chuỗi
-  request→job→asset→report→audit vẫn mở.
+  hai JS và `git diff --check` đạt. Authenticated route/render matrix đạt `456/456` ở run
+  `39303469636`; role/RBAC server-issued manifest và dynamic record fixture vẫn chưa được
+  chứng minh. AD-03 tổng và chuỗi request→job→asset→report→audit vẫn mở.
 - [x] AD-03-RECORD-CHAIN (local UI): Inspector sắp xếp các reference đã được máy
   chủ cấp theo thứ tự cố định `request → job → asset → report → audit`; thiếu mắt
   xích vẫn giữ đúng phần đã cấp, trùng loại lấy reference đầu tiên, dữ liệu được
   chiếu lại qua cùng allowlist path/ID/kind trước khi tạo link. Hiển thị bằng DOM API
   trong danh sách dọc, có catalogue VI/EN/ZH và không thêm approve, write, provider,
   capability, fetch hoặc bridge nghiệp vụ. Test reference `2/2`, focused Admin
-  `18/18`, full Node `732/732`, syntax hai JS và `git diff --check` đạt. Browser
-  fixture vẫn bị Playwright `mkdtemp ENOENT`; record thật, bridge server, CI,
-  production và LIVE chưa xác minh.
+  `18/18`, full Node `732/732`, syntax hai JS và `git diff --check` đạt. Authenticated
+  route/render matrix đạt `456/456` ở run `39303469636`, nhưng record thật và bridge server
+  chưa được nạp vào fixture; production và LIVE chưa xác minh.
 - [x] AD-04-CAPABILITY-AFFORDANCE (local UI): Hàng đợi nạp thủ công không còn hiển
   thị nút tạo quyết định duyệt/cộng Xu trong bảng hoặc thẻ mobile khi server chưa cấp
   `admin-manual-topup-write`; thay bằng nhãn chỉ đọc có lý do quyền hạn, vẫn giữ nút
@@ -441,8 +442,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   để `—`, không suy `amount_vnd / 100` ở trình duyệt; state draft cũ cũng không dựng
   modal xác nhận khi capability ghi đã mất. Test nguồn `3/3` tại
   `tests/admin-manual-topup-capability-presentation.test.mjs`; slice chỉ sửa renderer,
-  không mở wallet/ledger/PayOS/API ghi. Capability thật, approval, cộng Xu, browser,
-  CI, production và LIVE vẫn mở.
+  không mở wallet/ledger/PayOS/API ghi. Capability thật, approval, cộng Xu, browser
+  tương tác nghiệp vụ, production và LIVE vẫn mở; route/render matrix CI đã xanh ở run
+  `39303469636` nhưng không chứng minh mutation.
 
 ## V0 — Product Video và video tools R218-09 (làm cuối sản phẩm)
 
@@ -471,7 +473,8 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   options vi/en/zh, local change/focus/form đúng; Node713/713, syntax/diff-check và scope
   hash comparator đạt. Artifact `admin-header-locale.json` SHA256
   `f099e8e7111316ab9f72e1277c8b24ef1be35d74f3bf1b3ead893d3831900fd1` trong QA folder.
-  Spec `2026-10-19-r218-admin-header-locale.md`. Chưa CI/deploy/LIVE.
+  Spec `2026-10-19-r218-admin-header-locale.md`. Source CI đã xanh trong run
+  `39303469636`; deploy/LIVE vẫn chưa thực hiện.
 - [x] AD-02-ZH-GENERIC-COPY: catalogue Admin Generic ZH đã bỏ `canonical` khỏi toàn bộ
   fixed chrome của guard/bảng/Pricing/Jobs/adapter/quản trị hệ thống/hướng dẫn/runtime;
   test nguồn `1/1`, full Node725/725. Dữ liệu định danh, Bot/Core Bridge/PayOS/Xu và key
