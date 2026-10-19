@@ -1103,6 +1103,18 @@ Bằng chứng local: Voice input/inventory/flow/expiry `67/67`, full Node `594/
 đủ `3/3` locale `vi/en/zh`. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
 `PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`, `LIVE_PASS=NOT_TESTED`.
 
+## R218 — Admin data mobile cards — 19/10/2026
+
+Các bảng dữ liệu Admin đã được cấp vẫn giữ nguyên bảng HTML có tiêu đề cột và bộ lọc/inspector.
+Ở màn hình rộng `<=560px`, mỗi bản ghi được trình bày thành một thẻ dọc; nhãn cột được gắn
+từ chính `thead` sau khi renderer đồng bộ, nên không lặp danh sách nhãn thủ công và không đổi
+record, permission hay trạng thái server. Màn hình desktop/tablet giữ bảng và vùng cuộn hiện tại.
+
+Đã đo: `tests/admin-mobile-data-harmony-source.test.mjs` `2/2`, full Node `705/705`,
+`node --check static/portal/portal.js`, và `git diff --check` đều đạt. Đây là thay đổi
+presentation-only; chưa phải bằng chứng dữ liệu Admin thật, RBAC server, approval tiền,
+browser đăng nhập hoặc LIVE.
+
 Browser renderer QA localhost: `18/18` cấu hình VI/EN/ZH × sáng/tối × 390/768/1440,
 hai route/cấu hình; lỗi trang/console, overflow, request ngoài localhost và mutation đều `0`.
 Tương phản cảnh báo: `11,25:1` ở theme sáng và `8,84:1` ở theme tối. Dữ liệu phiên là fixture,

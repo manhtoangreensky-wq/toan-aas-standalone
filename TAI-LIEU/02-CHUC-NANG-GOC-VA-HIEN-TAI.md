@@ -741,3 +741,13 @@ Management/preview/handoff giữ mở; không tính là tính năng đã chạy 
 Kết luận: STT đã đạt control-level UI/UX và locale parity, chưa đạt runtime parity với Bot.
 Không được dùng `4/4`, `132/132` hoặc full Node `598/598` để suy ra upload, nhận dạng,
 transcript, giao tệp hay LIVE đã hoạt động.
+
+## Bổ sung đối chiếu — Admin data table trên màn hình nhỏ — 19/10/2026
+
+| Chức năng gốc / hiện tại | Đối chiếu candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Bảng quản trị có thể đọc trên điện thoại | Giữ bảng semantic trên desktop/tablet; ở `<=560px` chuyển từng dòng thành thẻ dọc, mỗi ô hiển thị nhãn lấy từ tiêu đề cột. | `static/portal/portal.js`, `static/portal/portal-theme.css`, test `2/2`, full Node `705/705` |
+| Lọc, chọn dòng và xem chi tiết | Không thay đổi event/filter/inspector; `data-label` chỉ là metadata trình bày, row vẫn có `tabindex`, `aria-selected` và focus ring. | Source inspection + `git diff --check`; chưa có browser fixture populated hoặc backend/RBAC |
+
+Phần tài liệu gốc không có mô tả breakpoint hay thẻ điện thoại; đây là phần hoàn thiện UI/UX
+WebApp, không phải mở authority dữ liệu hoặc thao tác tài chính.

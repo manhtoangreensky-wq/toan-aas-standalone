@@ -33130,11 +33130,17 @@
   function syncAdminDataViewRows(root) {
     if (!root || typeof root.querySelectorAll !== "function") return;
     root.querySelectorAll("[data-portal-admin-data-surface]").forEach((surface) => {
+      const headers = Array.from(surface.querySelectorAll("thead th")).map((header) => String(header && header.innerText || header && header.textContent || "").replace(/\s+/g, " ").trim().slice(0, 160));
       const rows = Array.from(surface.querySelectorAll("tbody tr")).filter((row) => !row.querySelector(".portal-empty-cell"));
       rows.forEach((row) => {
         row.setAttribute("data-admin-data-row", "");
         row.setAttribute("tabindex", "0");
         row.setAttribute("aria-selected", "false");
+        Array.from(row.children).forEach((cell, index) => {
+          if (!cell || cell.tagName !== "TD" || cell.classList.contains("portal-empty-cell")) return;
+          const label = headers[index];
+          if (label) cell.setAttribute("data-label", label);
+        });
       });
       const select = surface.querySelector("[data-admin-data-status]");
       if (select) {

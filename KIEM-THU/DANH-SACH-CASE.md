@@ -262,6 +262,15 @@ Probe `node ../qa/r218-voice-inventory/admin-probe.cjs --shortcuts`: 18 cấu h�
 Probe `node ../qa/r218-voice-inventory/admin-probe.cjs --theme`: 24 cases core,
 không phải backend auth, production data, mọi module động hoặc LIVE evidence.
 
+## ADMIN-DATA-MOBILE-20261019
+
+| ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |
+|---|---|---|
+| AUI-10 | `/admin/users`, `/admin/jobs`, `/admin/payments`, `/admin/providers`, `/admin/tickets`; signed Admin fixture; `390/560/768/1440` | Desktop/tablet giữ bảng semantic; `<=560px` mỗi dòng thành thẻ dọc có nhãn cột, filter/clear/no-results và inspector vẫn dùng được; focus/aria-selected/overflow/console không có lỗi; không thêm request ghi hoặc dữ liệu suy đoán |
+
+Case này chỉ kiểm tra presentation/interaction của dữ liệu đã được cấp; không kết luận
+RBAC server, dữ liệu production, approval tiền, provider, delivery hoặc LIVE.
+
 ## SUPPORT-CENTER-UI-CONTROL-20261018
 
 | ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |

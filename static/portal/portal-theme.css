@@ -3943,6 +3943,87 @@ body {
   }
 }
 
+/* Admin ERP compact records -------------------------------------------
+   At phone widths the data remains a real table for semantics, but each
+   issued record is presented as a vertical card. This avoids a horizontal
+   scroll hunt while preserving the same server fields, row selection and
+   inspector behavior. */
+@media (max-width: 560px) {
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table {
+    display: block;
+    border-collapse: separate;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody {
+    display: grid;
+    gap: var(--portal-space-2);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr[data-admin-data-row] {
+    display: grid;
+    gap: 0;
+    padding: var(--portal-space-2) var(--portal-space-3);
+    border: 1px solid var(--portal-border);
+    border-radius: var(--portal-radius);
+    background: var(--portal-surface-light);
+    box-shadow: var(--portal-elevation-1);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr[data-admin-data-row] > td:not(.portal-empty-cell) {
+    display: grid;
+    grid-template-columns: minmax(6.5rem, 34%) minmax(0, 1fr);
+    gap: var(--portal-space-2);
+    align-items: start;
+    min-width: 0;
+    padding: var(--portal-space-2) 0;
+    border: 0;
+    border-bottom: 1px solid var(--portal-border);
+    background: transparent;
+    overflow-wrap: anywhere;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr[data-admin-data-row] > td:last-child {
+    border-bottom: 0;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr[data-admin-data-row] > td::before {
+    content: attr(data-label);
+    color: var(--portal-muted-strong);
+    font-size: 12px;
+    font-weight: 760;
+    line-height: 1.35;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr[data-admin-data-row].is-selected {
+    border-color: var(--portal-action);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr[data-admin-data-row].is-selected > td {
+    border-left: 0;
+    background: transparent;
+    color: var(--portal-ink);
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr[data-admin-data-row]:focus-visible {
+    outline-offset: 3px;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr[hidden] {
+    display: none !important;
+  }
+}
+
 /* Customer Shell Harmony ----------------------------------------------
    The customer app keeps its server-rendered navigation and route manifest;
    this final visual layer only clarifies the already-mounted desktop rail,

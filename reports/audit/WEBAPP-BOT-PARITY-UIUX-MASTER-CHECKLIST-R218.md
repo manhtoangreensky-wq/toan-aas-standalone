@@ -331,6 +331,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] AD-02-THEME tổng còn cần QA từng module/bảng có dữ liệu thật, biểu đồ và trạng
   thái động; không dùng 24 cases core để đóng toàn bộ Admin. Đối soát: chỉ đặt OS dark
   không có nghĩa đã chọn Dark khi policy mặc định Admin vẫn là Light.
+- [~] AD-02-MOBILE-DATA: bảng Admin đã giữ semantic table trên desktop/tablet và chuyển
+  từng bản ghi thành thẻ dọc ở `<=560px`; nhãn cột lấy trực tiếp từ `thead`, giữ lọc/chọn
+  dòng/inspector và không thêm dữ liệu hay quyền. Test `admin-mobile-data-harmony-source`
+  `2/2`, full Node `705/705`. QA populated data, role fixture, biểu đồ và runtime vẫn mở.
 
 ## V0 — Product Video và video tools R218-09 (làm cuối sản phẩm)
 
