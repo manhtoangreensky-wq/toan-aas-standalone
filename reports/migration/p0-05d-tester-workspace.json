@@ -59,38 +59,38 @@
     {
       "path": ".github/ISSUE_TEMPLATE/01-case-test.yml",
       "lines": 113,
-      "bytes": 3211,
-      "sha256": "4b1d455d9cb60aebe33a50eecb918a74aa17a40df063e354f2c52270c6f58d82"
+      "bytes": 3098,
+      "sha256": "7e327aa36a26763198a6e092cbfc87491fa7fa160bbd861c38d8aaece2824508"
     },
     {
       "path": ".github/ISSUE_TEMPLATE/02-bao-loi.yml",
       "lines": 100,
-      "bytes": 2657,
-      "sha256": "d07c37d3a9abecdbb8a6414a2fea856706e9c907e2d9bd6ccaf4071f667b6c74"
+      "bytes": 2557,
+      "sha256": "212f9ce4b6b4459b5a1041ff70ac855fbdae110417e3dddd09d6d898c75841a4"
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
       "lines": 286,
-      "bytes": 48362,
-      "sha256": "e6db48a09451b2b7a0c82788cccbcdc83cf54e67b46e3da7f58adf451f52e997"
+      "bytes": 48076,
+      "sha256": "c34529214454e64b5db6856c70c50d0585bbab1104761da8727b0db12dc2b95d"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
       "lines": 237,
-      "bytes": 22623,
-      "sha256": "0a34c10fc627aff8ae1aa8078a545e2488e53cf94904999e0ecffbe59274c1a9"
+      "bytes": 22386,
+      "sha256": "4dfda5caf16ea4e84f26a880cf94c80f0381a1fe3229da0bf4f4d3871808a9e4"
     },
     {
       "path": "scripts/tester_case_sync.py",
       "lines": 212,
-      "bytes": 8813,
-      "sha256": "b08a712111794f85307026adb7aadb9c0461d15e05856b773f73fa391a6f7ed4"
+      "bytes": 8601,
+      "sha256": "7f621362e137ee6d2db3518da0ca8ad84c8e368c792b25faec8d6450a42f43c6"
     },
     {
       "path": "tests/test_p0_05d_tester_workspace.py",
       "lines": 385,
-      "bytes": 18284,
-      "sha256": "c5e153d066c8f884b35e4651a162bbedbcbe0c347bb17b218a0dbcfe451cace1"
+      "bytes": 17905,
+      "sha256": "33edaabf3c31e006f72638e0eb6f38473fb68572b8716b3e10f36d6b4e764b46"
     }
   ],
   "safety": {
