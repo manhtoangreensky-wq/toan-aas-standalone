@@ -1,12 +1,24 @@
 # R218 — Kế hoạch UI/UX toàn bộ sản phẩm WebApp theo Bot
 
-Ngày 2026-10-18. Trạng thái WIP_ADMIN_THEME_CORE_BROWSER_VERIFIED; chưa mở wave runtime.
+Ngày 2026-10-18. Cập nhật 19/10: WIP_ADMIN_SHARED_NAV_LOCALE_PHASE_A_RUNNING;
+vai trò, dữ liệu động, biểu đồ và các module Admin còn mở; chưa mở wave runtime.
 Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong kế hoạch.
+
+Amendment Admin Pricing 19/10: header locale đã khép local (Node713/713, browser12/12).
+Audit Pricing12 cấu hình/36 trạng thái xác minh cả client fallback7 giá khi thiếu catalogue,
+locale và mobile. Thứ tự trong module: DATA-TRUTH → LOCALE → MOBILE → AFFORDANCE,
+rồi ma trận role/module/charts còn lại; tiền/backend giữ T0, motion cuối. Chi tiết và
+gate tại `2026-10-19-r218-admin-pricing-presentation.md`; không xóa finding cũ.
+
+DATA-TRUTH đã khép local:72/72 trạng thái, Node713/713; không còn giá/approval client
+fallback. Chuẩn bị spec locale đầy đủ trước BUILD, gồm nav tabs Pricing/Packages VI
+trên EN và sentinel draft_id, rồi mobile/affordance. Chưa đóng toàn Pricing/Admin.
 
 ## Bộ tài liệu
 
 - Inventory: reports/audit/WEBAPP-BOT-PRODUCT-INVENTORY-R218.md (B01–B34).
 - Checklist: reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md.
+- Admin Pricing: docs/superpowers/specs/2026-10-19-r218-admin-pricing-presentation.md.
 - R218-00/01: specs/2026-10-18-r218-00-control-contract.md.
 - R218-02/03: specs/2026-10-18-r218-02-03-voice-music-controls.md.
 - R218-02A: specs/2026-10-18-r218-02a-voice-vault-canonical-contract.md
@@ -45,6 +57,59 @@ Phạm vi bao gồm toàn bộ nhóm sản phẩm; SubDub là một nhóm trong 
 4. Product Video và các công cụ video làm cuối các wave sản phẩm.
 5. Motion/hiệu năng làm cuối. Khi UI/UX và motion đủ bằng chứng, báo cáo rồi đợi
    lệnh cho backend/bridge; không tự chuyển sang các phần kỹ thuật.
+
+Amendment A0 ngày 19/10: thẻ dữ liệu Admin đã có browser rerun 8/8 bằng profile Edge
+tạm ngoài sandbox hạn chế. Rerun xác minh `failed_no_charge` rơi về tiếng Việt ở bản
+Anh; root cause là 14 state hợp lệ thiếu mapping locale chung. Sau lát mobile, xử lý
+`AD-02-STATE-LOCALE` theo `2026-10-19-r218-admin-state-locale.md`, rồi tiếp tục ma trận
+role/module. Không chuyển sang backend hoặc đẩy motion lên trước.
+
+Hai lát mobile/state locale nay đã nghiệm thu local: test mục tiêu 3/3 và 7/7, full
+Node713/713, browser8/8 và12/12. Shared enum/function/backend/integration/workflow giữ
+nguyên. Role/module/charts vẫn mở; bảng giá hardcode locale và picker ZH trong fixture
+đã được ghi để kiểm tiếp. Delivery/CI mới/deploy/LIVE chưa được chứng minh.
+
+Amendment A0 ngày 20/10: đã khép thêm lát `AD-02-DYNAMIC-CHART-PROJECTION` ở lớp
+trình bày đọc-only. Renderer chỉ nhận `data.chart` do máy chủ cấp, chặn
+`compatibility_guarded`, giới hạn 1–12 điểm, giá trị không âm và legend theo allowlist;
+không tự tạo số liệu, không fetch, không write, không mở provider hay quyền mới. Chart
+được gắn vào `renderAdminDataSurface()` tùy chọn, có tên vùng/giải thích/trạng thái thanh
+để đọc bằng trợ năng, dùng token màu xanh hiện có và không thêm motion. Test nguồn đạt
+3/3; focused Admin đạt 14/14; full Node đạt 728/728; hai `node --check` và
+`git diff --check` đạt. Browser fixture hiện chưa chạy được trong sandbox vì Playwright
+không tạo được thư mục tạm; không dùng sự cố đó để suy diễn PASS. Role/module/dữ liệu
+thật, approval, backend, CI, production và LIVE vẫn mở.
+
+Amendment A0 ngày 20/10 (tiếp): lát `AD-03-RECORD-REFERENCES` đã khép ở lớp
+projection UI chỉ đọc. `admin_record_references` nhận tối đa 6 reference loại
+`request/job/asset/report/audit`, ID/nhãn bị giới hạn, link chỉ qua allowlist nội bộ
+và bị loại khi là URL ngoài, `//`, `\\` hoặc path không hợp lệ. Inspector tạo link bằng
+DOM API, giữ metadata trên dòng và catalogue VI/EN/ZH; không thêm write/provider/
+capability/RBAC. Test nguồn đạt 2/2, focused Admin sau slice 16/16, full Node 730/730,
+syntax hai JS và `git diff --check` đạt. Browser fixture chưa chạy do Playwright
+`mkdtemp ENOENT`; AD-03 tổng (role/RBAC, record thật, bridge server, CI, production,
+LIVE) vẫn mở. Bước kế tiếp là role/module và chuỗi request→job→asset→report→audit
+read-only presentation, không chuyển sang motion hay backend.
+
+Amendment A0 ngày 20/10 (role/module): lát projection manifest quyền Admin đã khép
+ở lớp UI chỉ đọc. Chỉ render nhóm/phân hệ khi `read_state=ready`; route phải là
+`/admin` hoặc `/admin/...`, loại route trùng, route ngoài Admin, `//` nội bộ, `\\`
+và dot-segment thường/mã hóa (`..`/`%2e`). Trạng thái lạ chuyển `guarded`, các trạng
+thái `available/canonical_read/web_native` chỉ hiện `read_only`; không suy quyền từ
+browser role/`context.isAdmin`, không thêm route, write, provider, capability hoặc
+RBAC. Projection test `2/2`, focused Admin `18/18`, full Node `732/732`, syntax hai
+JS và `git diff --check` đạt. Browser fixture vẫn bị Playwright `mkdtemp ENOENT`,
+CI/production/LIVE chưa xác minh. AD-03 tổng vẫn mở; bước kế tiếp là chuỗi
+request→job→asset→report→audit read-only sau khi có record/bridge do server cấp.
+
+Amendment A0 ngày 20/10 (record chain): Inspector đã bổ sung cách đọc chuỗi
+`request → job → asset → report → audit` từ các reference do server cấp. Không tạo
+placeholder cho mắt xích thiếu, không tự ghép record; trùng loại giữ phần tử đầu
+tiên. Payload được projection lại qua cùng allowlist trước khi dùng DOM API tạo
+link; catalogue VI/EN/ZH cân bằng, bố cục dọc theo token xanh hiện có. Test
+reference `2/2`, focused Admin `18/18`, full Node `732/732`, syntax hai JS và
+`git diff --check` đạt. Browser fixture vẫn bị `mkdtemp ENOENT`; record thật,
+bridge server, CI, production và LIVE chưa xác minh. AD-03 tổng vẫn mở.
 
 Đối soát 19/10: thiếu API/capability được giữ ở T0 với contract và bằng chứng
 cụ thể. UI tiếp tục theo thứ tự trên sau khi ghi rõ phần đang dở và kiểm được

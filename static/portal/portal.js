@@ -522,7 +522,7 @@
     queued: "Đang chờ xử lý",
     processing: "Đang xử lý",
     completed: "Hoàn tất",
-    backlog: "Backlog",
+    backlog: "Việc chờ xử lý",
     planned: "Đã lên kế hoạch",
     in_progress: "Đang thực hiện",
     done: "Hoàn tất",
@@ -556,11 +556,16 @@
   const STATE_I18N_KEYS = Object.freeze({
     ready: "states.ready", draft: "states.draft", awaiting_confirm: "states.awaitingConfirm",
     queued: "states.queued", processing: "states.processing", completed: "states.completed",
-    failed: "states.failed", unavailable: "states.unavailable", guarded: "states.guarded", disabled: "states.disabled",
-    read_only: "states.ready", empty: "states.empty", backlog: "states.backlog",
-    planned: "states.planned", in_progress: "states.inProgress", done: "states.done",
-    review: "states.review", reviewing: "states.reviewing", scheduled: "states.scheduled", cancelled: "states.cancelled",
-    archived: "states.archived"
+    failed: "states.failed", failed_no_charge: "states.failedNoCharge", cancelled: "states.cancelled",
+    refunded: "states.refunded", review: "states.review", in_review: "states.inReview",
+    approved: "states.approved", scheduled: "states.scheduled", archived: "states.archived",
+    unavailable: "states.unavailable", guarded: "states.guarded", disabled: "states.disabled",
+    read_only: "states.ready", error: "states.error", empty: "states.empty",
+    backlog: "states.backlog", planned: "states.planned", in_progress: "states.inProgress", done: "states.done",
+    new: "states.new", reviewing: "states.reviewing", waiting_user: "states.waitingUser",
+    waiting_provider: "states.waitingProvider", refund_pending: "states.refundPending",
+    resolved: "states.resolved", closed: "states.closed",
+    unread: "states.unread", read: "states.read", dismissed: "states.dismissed"
   });
 
   function stateLabel(status) {
@@ -10193,7 +10198,9 @@
       rawModules.slice(0, 40).forEach((module, moduleIndex) => {
         if (!module || typeof module !== "object") return;
         const route = safeCatalogRoute(String(module.route || module.path || ""));
-        if (!route || (route !== "/admin" && !route.startsWith("/admin/")) || seen.has(route)) return;
+        const hasAdminUnsafePathSegment = route.includes("//")
+          || /(?:^|\/)(?:(?:\.|%2e){1,2})(?:\/|$)/i.test(route);
+        if (!route || (route !== "/admin" && !route.startsWith("/admin/")) || hasAdminUnsafePathSegment || seen.has(route)) return;
         const moduleTitle = String(module.title || `Module ${moduleIndex + 1}`).trim().slice(0, 96);
         if (!moduleTitle) return;
         const rawState = String(module.state || module.availability || "read_only").trim().toLowerCase();
@@ -11040,7 +11047,7 @@
     const adminHeaderLocaleForm = adminSurface
       ? `<form class="portal-admin-locale-form" data-portal-form data-portal-action="update-interface-locale" data-portal-route="/admin">
           <label for="portal-admin-header-locale">${safeText(uiText("adminShell.language", "Ngôn ngữ"))}</label>
-          <select id="portal-admin-header-locale" name="locale" aria-label="${safeText(uiText("adminShell.language", "Ngôn ngữ"))}">${localeOption("vi", uiText("locale.vi", "Tiếng Việt"))}${localeOption("en", uiText("locale.en", "English"))}</select>
+          <select id="portal-admin-header-locale" name="locale" aria-label="${safeText(uiText("adminShell.language", "Ngôn ngữ"))}">${localeOption("vi", uiText("locale.vi", "Tiếng Việt"))}${localeOption("en", uiText("locale.en", "English"))}${localeOption("zh", uiText("locale.zh", "Tiếng Trung"))}</select>
           <button type="submit">${safeText(uiText("adminShell.applyLanguage", "Áp dụng"))}</button>
         </form>`
       : "";
@@ -11830,15 +11837,20 @@
     const group = ADMIN_TAB_GROUPS.find((g) => g.matches(currentPath));
     if (!group || !Array.isArray(group.tabs)) return "";
     const authorizedRoutes = (adminErpNavigation(context) && adminErpNavigation(context).routes) || new Set();
-    const isEn = (context && context.locale === "en") || (typeof currentLocale !== "undefined" && currentLocale === "en");
+    const locale = interfaceLocaleFor(context);
     const validTabs = group.tabs.filter((t) => t.path === "/legal" || authorizedRoutes.has(t.path) || (t.alias && t.alias.some((a) => authorizedRoutes.has(a))));
     if (validTabs.length <= 1) return "";
     const tabsHtml = validTabs.map((tab) => {
       const isCurrent = currentPath === tab.path || (tab.alias && tab.alias.includes(currentPath)) || (tab.path !== "/admin" && currentPath.startsWith(tab.path + "/"));
-      const label = isEn && tab.labelEn ? tab.labelEn : tab.label;
+      const fallback = locale === "en" && tab.labelEn ? tab.labelEn : tab.label;
+      const label = tab.path === "/admin/commercial"
+        ? uiText("adminModuleTabs.commercial", fallback)
+        : tab.path === "/legal"
+          ? uiText("adminModuleTabs.legal", fallback)
+          : adminErpRouteText(tab.path, fallback);
       return `<a class="portal-admin-tab${isCurrent ? " is-active" : ""}" href="${safeText(tab.path)}"${isCurrent ? ' aria-current="page"' : ""}>${safeText(label)}</a>`;
     }).join("");
-    return `<nav class="portal-admin-tabs" aria-label="${safeText(isEn ? "Module sections" : "Phân hệ nghiệp vụ")}"><div class="portal-admin-tabs-list">${tabsHtml}</div></nav>`;
+    return `<nav class="portal-admin-tabs" aria-label="${safeText(uiText("adminModuleTabs.ariaLabel", "Phân hệ nghiệp vụ"))}"><div class="portal-admin-tabs-list">${tabsHtml}</div></nav>`;
   }
 
   function renderHero(page, context) {
@@ -21408,9 +21420,49 @@
       <tbody><tr><td class="portal-empty-cell" colspan="${columns.length}">${renderEmpty(emptyTitle, emptyText, "○")}</td></tr></tbody></table>`);
   }
 
+  function adminDataReferenceProjection(item) {
+    const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+    const raw = Array.isArray(source.admin_record_references) ? source.admin_record_references : [];
+    if (raw.length < 1 || raw.length > 6) return [];
+    const allowedKinds = new Set(["request", "job", "asset", "report", "audit"]);
+    const references = raw.map((reference) => {
+      if (!reference || typeof reference !== "object" || Array.isArray(reference)) return null;
+      const kind = String(reference.kind || "").trim().toLowerCase();
+      const id = String(reference.id || "").trim().slice(0, 160);
+      const label = String(reference.label || "").trim().slice(0, 120);
+      const path = String(reference.path || "").trim().slice(0, 240);
+      const safePath = /^(?:\/admin(?:\/|$)|\/jobs(?:\/|$)|\/assets(?:\/|$)|\/reports(?:\/|$)|\/audit(?:\/|$))/.test(path)
+        && !path.includes("//") && !path.includes("\\")
+        && !/(?:^|\/)(?:(?:\.|%2e){1,2})(?:\/|$)/i.test(path)
+        ? path
+        : "";
+      return allowedKinds.has(kind) && /^[A-Za-z0-9._:/-]{1,160}$/.test(id)
+        ? { kind, id, label: label || id, path: safePath }
+        : null;
+    });
+    return references.some((reference) => !reference) ? [] : references;
+  }
+
+  function adminDataReferenceChainProjection(item) {
+    const references = adminDataReferenceProjection(item);
+    const byKind = new Map();
+    references.forEach((reference) => {
+      if (!byKind.has(reference.kind)) byKind.set(reference.kind, reference);
+    });
+    return ["request", "job", "asset", "report", "audit"]
+      .map((kind) => byKind.get(kind))
+      .filter(Boolean);
+  }
+
   function renderRowsTable(columns, rows, renderRow, emptyTitle, emptyText) {
     const body = Array.isArray(rows) && rows.length
-      ? rows.map((row) => `<tr>${renderRow(row)}</tr>`).join("")
+      ? rows.map((row) => {
+        const references = adminDataReferenceProjection(row);
+        const referenceAttribute = references.length
+          ? ` data-admin-record-references="${safeText(JSON.stringify(references))}"`
+          : "";
+        return `<tr${referenceAttribute}>${renderRow(row)}</tr>`;
+      }).join("")
       : `<tr><td class="portal-empty-cell" colspan="${columns.length}">${renderEmpty(emptyTitle, emptyText, "○")}</td></tr>`;
     return renderDataTableWrap(`<table class="portal-data-table"><thead><tr>${columns.map((column) => `<th scope="col">${safeText(column)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table>`);
   }
@@ -33004,6 +33056,64 @@
     return uiText(`adminDataView.${key}`, fallback, params);
   }
 
+  function adminDataChartProjection(data) {
+    const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+    if (source.compatibility_guarded === true) return null;
+    const chart = source.chart && typeof source.chart === "object" && !Array.isArray(source.chart)
+      ? source.chart
+      : null;
+    const title = chart && typeof chart.title === "string" ? chart.title.trim().slice(0, 120) : "";
+    const rawPoints = chart && Array.isArray(chart.points) ? chart.points : [];
+    if (!title || rawPoints.length < 1 || rawPoints.length > 12) return null;
+    const points = rawPoints.map((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+      const label = typeof item.label === "string" ? item.label.trim().slice(0, 80) : "";
+      const value = adminNumericValue(item.value);
+      return label && value !== null && value >= 0 && value <= 1000000000000000 ? { label, value } : null;
+    });
+    if (points.some((item) => !item)) return null;
+    const rawLegend = chart.legend === undefined ? [] : chart.legend;
+    if (!Array.isArray(rawLegend) || rawLegend.length > 6) return null;
+    const allowedTones = new Set(["primary", "success", "warning", "danger", "muted"]);
+    const legend = rawLegend.map((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+      const label = typeof item.label === "string" ? item.label.trim().slice(0, 80) : "";
+      const tone = String(item.tone || "muted");
+      return label && allowedTones.has(tone) ? { label, tone } : null;
+    });
+    if (legend.some((item) => !item)) return null;
+    const max = Math.max(...points.map((item) => item.value), 0);
+    return {
+      title,
+      description: typeof chart.description === "string" ? chart.description.trim().slice(0, 240) : "",
+      unit: typeof chart.unit === "string" ? chart.unit.trim().slice(0, 24) : "",
+      points: points.map((item) => ({
+        ...item,
+        width: max > 0 ? Number(((item.value / max) * 100).toFixed(2)) : 0
+      })),
+      legend
+    };
+  }
+
+  function renderAdminDataChart(module, data) {
+    const chart = adminDataChartProjection(data);
+    if (!chart) return "";
+    const idBase = String(module || "module").replace(/[^a-z0-9_-]/gi, "-").slice(0, 60) || "module";
+    const titleId = `admin-data-${idBase}-chart-title`;
+    const descriptionId = `admin-data-${idBase}-chart-description`;
+    const description = chart.description
+      ? `<p id="${safeText(descriptionId)}">${safeText(chart.description)}</p>`
+      : "";
+    const points = chart.points.map((point) => {
+      const value = `${localizedNumber(point.value)}${chart.unit ? ` ${chart.unit}` : ""}`;
+      return `<li class="portal-admin-data-chart-point"><div class="portal-admin-data-chart-point-meta"><span>${safeText(point.label)}</span><strong>${safeText(value)}</strong></div><div class="portal-admin-data-chart-track" role="img" aria-label="${safeText(`${point.label}: ${value}`)}"><span class="portal-admin-data-chart-fill" style="--portal-admin-chart-width: ${point.width}%;"></span></div></li>`;
+    }).join("");
+    const legend = chart.legend.length
+      ? `<div class="portal-admin-data-chart-legend"><span>${safeText(adminDataViewText("chartLegend", "Chú giải"))}</span><ul>${chart.legend.map((item) => `<li><span class="portal-admin-data-chart-key portal-admin-data-chart-key--${safeText(item.tone)}" aria-hidden="true"></span><span>${safeText(item.label)}</span></li>`).join("")}</ul></div>`
+      : "";
+    return `<figure class="portal-admin-data-chart" aria-labelledby="${safeText(titleId)}"${description ? ` aria-describedby="${safeText(descriptionId)}"` : ""}><figcaption><span class="portal-section-kicker">${safeText(adminDataViewText("chartKicker", "Biểu đồ chỉ đọc"))}</span><h3 id="${safeText(titleId)}">${safeText(chart.title)}</h3>${description}</figcaption><ol class="portal-admin-data-chart-points">${points}</ol>${legend}</figure>`;
+  }
+
   const ADMIN_DATA_VIEW_ROUTE_KEYS = Object.freeze({
     "/admin/users": "users",
     "/admin/jobs": "jobs",
@@ -33122,6 +33232,76 @@
       dd.textContent = value;
       dl.append(dt, dd);
     });
+    let references = [];
+    try {
+      const rawReferences = row.getAttribute("data-admin-record-references");
+      const parsedReferences = rawReferences ? JSON.parse(rawReferences) : [];
+      references = adminDataReferenceProjection({ admin_record_references: parsedReferences });
+    } catch (_) {
+      references = [];
+    }
+    if (Array.isArray(references) && references.length) {
+      const dt = document.createElement("dt");
+      const dd = document.createElement("dd");
+      const list = document.createElement("ul");
+      dt.textContent = adminDataViewText("referenceTitle", "Liên kết hồ sơ");
+      list.className = "portal-admin-data-reference-list";
+      references.slice(0, 6).forEach((reference) => {
+        if (!reference || typeof reference !== "object") return;
+        const kind = String(reference.kind || "").trim().toLowerCase();
+        const id = String(reference.id || "").trim();
+        if (!id || !["request", "job", "asset", "report", "audit"].includes(kind)) return;
+        const item = document.createElement("li");
+        const label = document.createElement("span");
+        const kindLabel = adminDataViewText(`referenceKind.${kind}`, kind);
+        label.textContent = `${kindLabel}: ${String(reference.label || id).trim().slice(0, 120)}`;
+        const path = String(reference.path || "");
+        if (/^(?:\/admin(?:\/|$)|\/jobs(?:\/|$)|\/assets(?:\/|$)|\/reports(?:\/|$)|\/audit(?:\/|$))/.test(path)
+          && !path.includes("//") && !path.includes("\\")) {
+          const link = document.createElement("a");
+          link.href = path;
+          link.textContent = id;
+          link.className = "portal-admin-data-reference-link";
+          item.append(label, " ", link);
+        } else {
+          item.append(label);
+        }
+        list.append(item);
+      });
+      if (list.children.length) {
+        dd.append(list);
+        dl.append(dt, dd);
+      }
+      const chainReferences = adminDataReferenceChainProjection({ admin_record_references: references });
+      if (chainReferences.length) {
+        const chainTitle = document.createElement("dt");
+        const chainBody = document.createElement("dd");
+        const chain = document.createElement("ol");
+        chainTitle.textContent = adminDataViewText("referenceChainTitle", "Chuỗi hồ sơ");
+        chain.className = "portal-admin-data-reference-chain";
+        chainReferences.forEach((reference) => {
+          const kind = String(reference.kind || "").trim().toLowerCase();
+          const id = String(reference.id || "").trim();
+          const step = document.createElement("li");
+          const label = document.createElement("span");
+          const kindLabel = adminDataViewText(`referenceKind.${kind}`, kind);
+          label.textContent = `${kindLabel}: ${String(reference.label || id).trim().slice(0, 120)}`;
+          const path = String(reference.path || "");
+          if (path) {
+            const link = document.createElement("a");
+            link.href = path;
+            link.textContent = id;
+            link.className = "portal-admin-data-reference-link";
+            step.append(label, " ", link);
+          } else {
+            step.append(label);
+          }
+          chain.append(step);
+        });
+        chainBody.append(chain);
+        dl.append(chainTitle, chainBody);
+      }
+    }
     body.replaceChildren(dl);
     const announcement = surface.querySelector("[data-admin-data-selection-announcement]");
     if (announcement) announcement.textContent = adminDataViewText("selectedAnnouncement", "Đã chọn bản ghi");
@@ -33183,7 +33363,7 @@
     const controls = renderAdminDataViewControls(module, rowsGranted, count);
     const prompt = adminDataViewText("inspectorPrompt", "Chọn một dòng để xem các trường đã được máy chủ cấp.");
     const dataView = rowsGranted ? `${controls}<div class="portal-admin-data-layout"><div class="portal-admin-data-list" data-admin-data-list>${content}<div class="portal-admin-data-no-results" data-admin-data-no-results hidden><strong>${safeText(adminDataViewText("noResultsTitle", "Không có kết quả phù hợp"))}</strong><p>${safeText(adminDataViewText("noResultsBody", "Thử đổi từ khóa hoặc trạng thái."))}</p></div></div><aside class="portal-admin-data-inspector" data-admin-data-inspector data-admin-data-inspector-prompt="${safeText(prompt)}"><h3>${safeText(adminDataViewText("inspectorTitle", "Chi tiết bản ghi"))}</h3><div data-admin-data-inspector-body>${safeText(prompt)}</div><p class="portal-sr-only" data-admin-data-selection-announcement aria-live="polite"></p></aside></div>` : content;
-    return `<section class="portal-admin-data-surface" data-portal-admin-data-surface data-admin-data-module="${safeText(module)}"><div class="portal-admin-data-toolbar"><div><span>${safeText(uiText("adminDataSurface.kicker", "Dữ liệu quản trị đã được cấp"))}</span><strong data-portal-admin-data-count>${safeText(countText)}</strong><small data-portal-admin-data-scope>${safeText(scopeText)}</small></div>${badge(state)}</div>${dataView}</section>`;
+    return `<section class="portal-admin-data-surface" data-portal-admin-data-surface data-admin-data-module="${safeText(module)}"><div class="portal-admin-data-toolbar"><div><span>${safeText(uiText("adminDataSurface.kicker", "Dữ liệu quản trị đã được cấp"))}</span><strong data-portal-admin-data-count>${safeText(countText)}</strong><small data-portal-admin-data-scope>${safeText(scopeText)}</small></div>${badge(state)}</div>${renderAdminDataChart(module, source)}${dataView}</section>`;
   }
 
   function adminJobActions(item, context, route) {
@@ -33199,7 +33379,7 @@
     const retryConfirm = adminGenericText("jobAction.retryConfirm", "Retry job {jobId}? Bot canonical sẽ kiểm tra lại quyền, trạng thái và charge trước khi quyết định.", { jobId });
     const refundConfirm = adminGenericText("jobAction.refundConfirm", "Yêu cầu hoàn Xu cho job {jobId}? Bot canonical sẽ kiểm tra charge, output và chính sách refund trước khi quyết định.", { jobId });
     const retry = retryEligible
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-retry" data-portal-route="${safeText(route)}" data-admin-job-id="${safeText(jobId)}" data-portal-confirm="${safeText(retryConfirm)}"${canRetry ? "" : ` disabled title="${safeText(disabledTitle)}"`}>${safeText(adminGenericText("jobAction.retryLabel", "Retry"))}</button>`
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-retry" data-portal-route="${safeText(route)}" data-admin-job-id="${safeText(jobId)}" data-portal-confirm="${safeText(retryConfirm)}"${canRetry ? "" : ` disabled title="${safeText(disabledTitle)}"`}>${safeText(adminGenericText("jobAction.retryLabel", "Thử lại"))}</button>`
       : "";
     const refund = refundEligible
       ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-refund" data-portal-route="${safeText(route)}" data-admin-job-id="${safeText(jobId)}" data-portal-confirm="${safeText(refundConfirm)}"${canRefund ? "" : ` disabled title="${safeText(disabledTitle)}"`}>${safeText(adminGenericText("jobAction.refundLabel", "Yêu cầu hoàn Xu"))}</button>`
@@ -33304,11 +33484,11 @@
     if (["pricing", "packages"].includes(module)) {
       const itemsList = Array.isArray(data.items) ? data.items : (Array.isArray(data.packages) ? data.packages : (Array.isArray(data.topup_packages) ? data.topup_packages : rows));
       return surface(renderRowsTable(
-        ["Mã gói (PACKAGE_ID)", "Tên gói / Dịch vụ (NAME)", "Phân loại (FAMILY)", "Giá Xu (PRICE_XU)", "Giá VND (PRICE_VND)", "Hạn mức / Mô tả (LIMITS)", "Trạng thái (STATUS)", "Cập nhật", "Thao tác (ACTIONS)"],
+        [adminGenericText("pricing.column.packageId", "Mã gói"), adminGenericText("pricing.column.name", "Tên gói / Dịch vụ"), adminGenericText("pricing.column.family", "Phân loại"), adminGenericText("pricing.column.priceXu", "Giá Xu"), adminGenericText("pricing.column.priceVnd", "Giá VND"), adminGenericText("pricing.column.limits", "Hạn mức / Mô tả"), adminGenericText("pricing.column.status", "Trạng thái"), adminGenericText("pricing.column.updatedAt", "Cập nhật"), adminGenericText("pricing.column.actions", "Thao tác")],
         itemsList,
-        (item) => `<td><code>${safeText(item.code || item.id || "—")}</code></td><td><strong>${safeText(item.name || item.label || "—")}</strong></td><td><span class="portal-badge portal-badge--info">${safeText(item.family || item.type || "Dịch vụ")}</span></td><td><strong style="color: var(--portal-accent, #0ea5e9);">${safeText(adminNumber(item.price_xu !== undefined ? item.price_xu : item.xu, " Xu"))}</strong></td><td>${safeText(adminNumber(item.price_vnd !== undefined ? item.price_vnd : item.amount_vnd, " đ"))}</td><td><small>${safeText(item.limits || item.note || item.description || "—")}</small></td><td>${adminManualTopupStatusBadge(item.status || "active")}</td><td><small>${safeText(item.updated_at || "—")}</small></td><td><button class="portal-button portal-button--quiet portal-button--small" type="button" disabled title="${safeText(item.write_locked_reason || "Bảng giá do Bot Core canonical quản trị; thay đổi giá cần cập nhật cấu hình Core.")}">Sửa</button></td>`,
-        "Chưa có bảng giá được cấp",
-        "Bảng giá và gói cước do Core Bridge canonical quản trị; Web hiển thị bảng giá chuẩn thời gian thực."
+        (item) => `<td><code>${safeText(item.code || item.id || "—")}</code></td><td><strong>${safeText(item.name || item.label || "—")}</strong></td><td><span class="portal-badge portal-badge--info">${safeText(item.family || item.type || adminGenericText("pricing.family.default", "Dịch vụ"))}</span></td><td><strong style="color: var(--portal-accent, #0ea5e9);">${safeText(adminNumber(item.price_xu !== undefined ? item.price_xu : item.xu, " Xu"))}</strong></td><td>${safeText(adminNumber(item.price_vnd !== undefined ? item.price_vnd : item.amount_vnd, " đ"))}</td><td><small>${safeText(item.limits || item.note || item.description || "—")}</small></td><td>${adminManualTopupStatusBadge(item.status || "active")}</td><td><small>${safeText(item.updated_at || "—")}</small></td><td><button class="portal-button portal-button--quiet portal-button--small" type="button" disabled title="${safeText(item.write_locked_reason || adminGenericText("pricing.action.lockedReason", "Bảng giá do Core Bridge chuẩn quản trị; thay đổi giá cần cập nhật cấu hình trung tâm."))}">${safeText(adminGenericText("pricing.action.edit", "Sửa"))}</button></td>`,
+        adminGenericText("pricing.emptyTitle", "Chưa có bảng giá được cấp"),
+        adminGenericText("pricing.emptyBody", "Bảng giá và gói cước do Core Bridge chuẩn quản trị; Web hiển thị bảng giá đã được xác minh.")
       ));
     }
     if (module === "providers") {
@@ -33576,7 +33756,7 @@
   }
 
   function adminManualTopupFacts(record) {
-    const expectedXu = record.expected_xu != null ? record.expected_xu : (record.amount_vnd ? Math.floor(record.amount_vnd / 100) : null);
+    const expectedXu = record.expected_xu != null ? record.expected_xu : null;
     return [
       ["field.requestId", "Mã yêu cầu", record.request_id],
       ["field.customer", "Khách hàng", record.display_name || record.email],
@@ -33599,10 +33779,10 @@
     ].filter((entry) => entry[2] !== undefined && entry[2] !== null && entry[2] !== "");
   }
 
-  function renderAdminManualTopupCard(record, selectedId) {
+  function renderAdminManualTopupCard(record, selectedId, writeEnabled) {
     const selected = String(record.request_id || "") === String(selectedId || "");
     const actionButtons = record.status === "pending_admin_review"
-      ? `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;"><button class="portal-button portal-button--primary portal-button--small" type="button" data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}" data-manual-admin-decision="approve" style="background:var(--portal-success,#16a34a);border-color:var(--portal-success,#16a34a);color:#fff;">${safeText(adminManualTopupText("approval.approveTitle", "Duyệt nạp tiền và cộng Xu"))}</button><button class="portal-button portal-button--quiet portal-button--small" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></div>`
+      ? `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">${writeEnabled ? `<button class="portal-button portal-button--primary portal-button--small" type="button" data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}" data-manual-admin-decision="approve" style="background:var(--portal-success,#16a34a);border-color:var(--portal-success,#16a34a);color:#fff;">${safeText(adminManualTopupText("approval.approveTitle", "Duyệt nạp tiền và cộng Xu"))}</button>` : `<span class="portal-badge" data-status="read_only" title="${safeText(adminManualTopupText("actions.permissionBody", "Phiên hiện tại chưa có quyền duyệt hoặc từ chối nạp tiền."))}">${safeText(adminManualTopupText("actions.readOnlyTitle", "Không có thao tác ghi"))}</span>`}<button class="portal-button portal-button--quiet portal-button--small" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></div>`
       : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(record.request_id || "")}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button>`;
     return `<article class="portal-admin-manual-topup-card${selected ? " is-selected" : ""}" data-status="${safeText(record.status || "guarded")}" style="box-sizing:border-box;max-width:100%;overflow-x:hidden;word-break:break-word;"><div class="portal-admin-manual-topup-card-head" style="box-sizing:border-box;max-width:100%;flex-wrap:wrap;gap:8px;"><div><strong>${safeText(record.request_id || "—")}</strong><span>${safeText(record.display_name || record.email || "—")}</span><small style="word-break:break-all;">${safeText(record.email || "—")}</small></div>${adminManualTopupStatusBadge(record.status, record)}</div><dl style="box-sizing:border-box;max-width:100%;"><div><dt>${safeText(adminManualTopupText("column.amount", "Số tiền"))}</dt><dd>${safeText(adminNumber(record.amount_vnd, ` ${record.currency || "VND"}`))}</dd></div><div><dt>${safeText(adminManualTopupText("column.method", "Phương thức"))}</dt><dd>${safeText(record.method || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("field.paymentCode", "Mã nạp tiền"))}</dt><dd style="word-break:break-all;">${safeText(record.payment_code || "—")}</dd></div><div><dt>${safeText(adminManualTopupText("column.submittedAt", "Yêu cầu lúc"))}</dt><dd>${safeText(record.submitted_at || "—")}</dd></div></dl>${actionButtons}</article>`;
   }
@@ -33614,7 +33794,7 @@
         : adminManualTopupText("actions.terminalBody", "Yêu cầu đã ở trạng thái cuối.");
       return `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(adminManualTopupText("actions.readOnlyTitle", "Không có thao tác ghi"))}</strong><p>${safeText(body)}</p></div></div>`;
     }
-    const expectedXu = record.expected_xu || Math.floor((record.amount_vnd || 0) / 100);
+    const expectedXu = record.expected_xu != null ? record.expected_xu : null;
     return `<section class="portal-admin-manual-topup-actions">
       <div style="padding-bottom: 14px; border-bottom: 1px solid var(--portal-border); margin-bottom: 14px;">
         <h3 style="color: var(--portal-success, #22c55e); margin: 0 0 6px 0;">${safeText(adminManualTopupText("approval.approveTitle", "Duyệt nạp tiền và cộng Xu"))}</h3>
@@ -33647,8 +33827,8 @@
     return adminManualTopupText("error.decision", "Quyết định không hợp lệ");
   }
 
-  function renderAdminManualTopupConfirmation(draft, selected) {
-    if (!draft || !draft.confirmation_receipt) return "";
+  function renderAdminManualTopupConfirmation(draft, selected, writeEnabled) {
+    if (!writeEnabled || !draft || !draft.confirmation_receipt) return "";
     const activeSelected = selected && typeof selected === "object" ? selected : null;
     if (activeSelected && draft.request_id && String(activeSelected.request_id || "") !== String(draft.request_id || "")) {
       return "";
@@ -33662,8 +33842,10 @@
     const confirmBtnLabel = isApprove ? "Xác nhận duyệt &amp; cộng Xu" : safeText(adminManualTopupText("action.confirm", "Xác nhận từ chối"));
     const confirmBtnClass = isApprove ? "portal-button portal-button--primary" : "portal-button portal-button--danger";
     const amountVnd = draft.amount_vnd != null ? draft.amount_vnd : (activeSelected && activeSelected.amount_vnd != null ? activeSelected.amount_vnd : null);
-    const targetXu = (draft.approved_xu || draft.expected_xu) || (activeSelected && (activeSelected.approved_xu || activeSelected.expected_xu)) || (amountVnd ? Math.floor(amountVnd / 100) : 0);
-    const xuRow = isApprove && targetXu > 0
+    const xuCandidate = [draft.approved_xu, draft.expected_xu, activeSelected && activeSelected.approved_xu, activeSelected && activeSelected.expected_xu]
+      .find((value) => value !== undefined && value !== null && value !== "");
+    const targetXu = xuCandidate === undefined ? null : adminNumericValue(xuCandidate);
+    const xuRow = isApprove && targetXu !== null && targetXu >= 0
       ? `<div><dt>Số Xu cộng</dt><dd><strong style="color: var(--portal-success, #22c55e);">+${safeText(adminNumber(targetXu, " Xu"))}</strong></dd></div>`
       : "";
     const reqId = draft.request_id || (activeSelected && activeSelected.request_id) || "—";
@@ -33690,14 +33872,14 @@
       visibleRows,
       (item) => {
         const actionBtn = item.status === "pending_admin_review"
-          ? `<div style="display:flex;gap:6px;"><button class="portal-button portal-button--primary portal-button--small" type="button" data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(item.request_id)}" data-manual-admin-decision="approve" style="background:var(--portal-success,#16a34a);border-color:var(--portal-success,#16a34a);color:#fff;">Duyệt &amp; Cộng Xu</button><button class="portal-button portal-button--quiet portal-button--small" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(item.request_id)}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></div>`
+          ? `<div style="display:flex;gap:6px;flex-wrap:wrap;">${writeEnabled ? `<button class="portal-button portal-button--primary portal-button--small" type="button" data-portal-action="admin-manual-topup-draft" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(item.request_id)}" data-manual-admin-decision="approve" style="background:var(--portal-success,#16a34a);border-color:var(--portal-success,#16a34a);color:#fff;">${safeText(adminManualTopupText("approval.approveTitle", "Duyệt nạp tiền và cộng Xu"))}</button>` : `<span class="portal-badge" data-status="read_only" title="${safeText(adminManualTopupText("actions.permissionBody", "Phiên hiện tại chưa có quyền duyệt hoặc từ chối nạp tiền."))}">${safeText(adminManualTopupText("actions.readOnlyTitle", "Không có thao tác ghi"))}</span>`}<button class="portal-button portal-button--quiet portal-button--small" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(item.request_id)}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button></div>`
           : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-select" data-portal-route="/admin/topups" data-manual-admin-request-id="${safeText(item.request_id)}">${safeText(adminManualTopupText("action.detail", "Chi tiết"))}</button>`;
         return `<td>${safeText(String(item.__ordinal))}</td><td>${safeText(item.request_id)}</td><td>${safeText(item.display_name || item.email || "—")}</td><td>${safeText(item.email || "—")}</td><td>${safeText(adminNumber(item.amount_vnd, ` ${item.currency || "VND"}`))}</td><td>${safeText(item.method || "—")}</td><td>${safeText(item.reference || "—")}</td><td>${safeText(item.payment_code || "—")}</td><td>${safeText(item.submitted_at || "—")}</td><td>${adminManualTopupStatusBadge(item.status, item)}</td><td>${actionBtn}</td>`;
       },
       adminManualTopupText("empty.title", "Không có yêu cầu phù hợp"), adminManualTopupText("empty.body", "Không tạo record hoặc số liệu thay thế khi queue trống.")
     );
-    const mobile = visible.map((item) => renderAdminManualTopupCard(item, state.selected && state.selected.request_id)).join("") || renderEmpty(adminManualTopupText("empty.title", "Không có yêu cầu phù hợp"), adminManualTopupText("empty.body", "Không tạo record giả."), ICONS.payments);
-    return `<article class="portal-page portal-admin-manual-topup" data-manual-admin-read-state="${safeText(state.readState || "guarded")}">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-manual-topup-toolbar"><div><span class="portal-section-kicker">${safeText(adminManualTopupText("kicker", "Vận hành tài chính"))}</span><h2>${safeText(adminManualTopupText("title", "Hàng đợi đối soát nạp thủ công"))}</h2><p>${safeText(adminManualTopupText("body", "Quản trị viên kiểm tra yêu cầu nạp tiền và chỉ ghi nhận từ chối sau bước xác nhận cuối."))}</p></div><div class="portal-admin-manual-topup-metrics"><span>${safeText(adminManualTopupText("metric.returned", "Đã trả"))}<strong>${safeText(String(items.length))}</strong></span><span>${safeText(adminManualTopupText("metric.visible", "Đang hiện"))}<strong>${safeText(String(visible.length))}</strong></span></div><div class="portal-admin-manual-topup-controls"><div>${filters}</div><form data-portal-form data-portal-action="admin-manual-topup-search" data-portal-route="/admin/topups"><label><span class="portal-sr-only">${safeText(adminManualTopupText("search.label", "Tìm trong dữ liệu đã trả"))}</span><input class="portal-input" name="q" type="search" maxlength="120" value="${safeText(state.query || "")}" placeholder="${safeText(adminManualTopupText("search.placeholder", "Mã yêu cầu, email, tham chiếu…"))}"></label><button class="portal-button portal-button--quiet" type="submit">${safeText(adminManualTopupText("action.search", "Tìm"))}</button></form><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-refresh" data-portal-route="/admin/topups">${safeText(adminManualTopupText("action.refresh", "Làm mới"))}</button></div>${state.error ? `<div class="portal-notice portal-notice--warning"><span class="portal-notice-icon">!</span><div><p>${safeText(state.error)}</p></div></div>` : ""}</section><div class="portal-admin-manual-topup-layout"><section class="portal-card portal-card-pad portal-admin-manual-topup-table">${state.readState === "loading" ? renderEmpty(adminManualTopupText("loading.title", "Đang tải hàng đợi"), adminManualTopupText("loading.body", "Đang đọc yêu cầu nạp thủ công."), ICONS.payments) : table}<div class="portal-admin-manual-topup-mobile">${mobile}</div></section>${renderAdminManualTopupInspector(state.selected, writeEnabled)}</div>${renderAdminManualTopupConfirmation(state.draft, state.selected)}</article>`;
+    const mobile = visible.map((item) => renderAdminManualTopupCard(item, state.selected && state.selected.request_id, writeEnabled)).join("") || renderEmpty(adminManualTopupText("empty.title", "Không có yêu cầu phù hợp"), adminManualTopupText("empty.body", "Không tạo record giả."), ICONS.payments);
+    return `<article class="portal-page portal-admin-manual-topup" data-manual-admin-read-state="${safeText(state.readState || "guarded")}">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-manual-topup-toolbar"><div><span class="portal-section-kicker">${safeText(adminManualTopupText("kicker", "Vận hành tài chính"))}</span><h2>${safeText(adminManualTopupText("title", "Hàng đợi đối soát nạp thủ công"))}</h2><p>${safeText(adminManualTopupText("body", "Quản trị viên kiểm tra yêu cầu nạp tiền và chỉ ghi nhận từ chối sau bước xác nhận cuối."))}</p></div><div class="portal-admin-manual-topup-metrics"><span>${safeText(adminManualTopupText("metric.returned", "Đã trả"))}<strong>${safeText(String(items.length))}</strong></span><span>${safeText(adminManualTopupText("metric.visible", "Đang hiện"))}<strong>${safeText(String(visible.length))}</strong></span></div><div class="portal-admin-manual-topup-controls"><div>${filters}</div><form data-portal-form data-portal-action="admin-manual-topup-search" data-portal-route="/admin/topups"><label><span class="portal-sr-only">${safeText(adminManualTopupText("search.label", "Tìm trong dữ liệu đã trả"))}</span><input class="portal-input" name="q" type="search" maxlength="120" value="${safeText(state.query || "")}" placeholder="${safeText(adminManualTopupText("search.placeholder", "Mã yêu cầu, email, tham chiếu…"))}"></label><button class="portal-button portal-button--quiet" type="submit">${safeText(adminManualTopupText("action.search", "Tìm"))}</button></form><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-manual-topup-refresh" data-portal-route="/admin/topups">${safeText(adminManualTopupText("action.refresh", "Làm mới"))}</button></div>${state.error ? `<div class="portal-notice portal-notice--warning"><span class="portal-notice-icon">!</span><div><p>${safeText(state.error)}</p></div></div>` : ""}</section><div class="portal-admin-manual-topup-layout"><section class="portal-card portal-card-pad portal-admin-manual-topup-table">${state.readState === "loading" ? renderEmpty(adminManualTopupText("loading.title", "Đang tải hàng đợi"), adminManualTopupText("loading.body", "Đang đọc yêu cầu nạp thủ công."), ICONS.payments) : table}<div class="portal-admin-manual-topup-mobile">${mobile}</div></section>${renderAdminManualTopupInspector(state.selected, writeEnabled)}</div>${renderAdminManualTopupConfirmation(state.draft, state.selected, writeEnabled)}</article>`;
   }
 
   function renderAdminPricingCard(item, isDraft) {
@@ -33709,8 +33891,8 @@
       <h3 style="margin:0 0 4px 0;font-size:1rem;color:var(--portal-text,#f8fafc);">${safeText(item.label || item.code || item.sku || "")}</h3>
       <div style="font-family:monospace;font-size:0.85rem;color:var(--portal-muted,#94a3b8);margin-bottom:8px;">SKU: ${safeText(item.code || item.sku || "")}</div>
       <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:8px;border-top:1px dashed var(--portal-border,#334155);">
-        <span style="font-size:0.85rem;color:var(--portal-muted,#94a3b8);">${isDraft ? "Giá dự thảo:" : "Giá bán công bố:"}</span>
-        <strong style="font-size:1.1rem;color:var(--portal-accent,#0d9488);">${safeText(adminNumber(item.sale_price_xu || 0, " Xu"))}</strong>
+        <span style="font-size:0.85rem;color:var(--portal-muted,#94a3b8);">${safeText(uiText(isDraft ? "adminPricing.card.draftPrice" : "adminPricing.card.salePrice", isDraft ? "Giá dự thảo:" : "Giá bán công bố:"))}</span>
+        <strong style="font-size:1.1rem;color:var(--portal-accent,#0d9488);">${safeText(adminNumber(item.sale_price_xu, " Xu"))}</strong>
       </div>
     </article>`;
   }
@@ -35154,64 +35336,77 @@
     const pricingState = (context && context.adminPricingState && typeof context.adminPricingState === "object")
       ? context.adminPricingState
       : ((context && context.adminData && typeof context.adminData === "object") ? context.adminData : {});
-    const publishedCatalog = pricingState.published_catalog || {
-      catalog_version: "owner-approved-2026-08-11",
-      approval_status: "owner_approved",
-      authority: "Core Bridge GET /internal/v1/pricing",
-      items: [
-        { code: "video_cinematic_multiscene", family: "video", label: "Điện ảnh nhiều cảnh", sale_price_xu: 2360, status: "ready" },
-        { code: "svc_video_single", family: "video", label: "Video AI Single Scene", sale_price_xu: 100, status: "active" },
-        { code: "svc_video_multi", family: "video", label: "Video AI Multi-Scene", sale_price_xu: 350, status: "active" },
-        { code: "svc_image_flux", family: "image", label: "Ảnh AI Chân thật FLUX", sale_price_xu: 10, status: "active" },
-        { code: "svc_voice_clone", family: "voice", label: "Voice Clone & TTS Pro", sale_price_xu: 20, status: "active" },
-        { code: "svc_music_generate", family: "music", label: "Nhạc nền AI bản quyền", sale_price_xu: 50, status: "active" },
-        { code: "svc_pdf_ocr", family: "document", label: "Tài liệu & OCR Tiếng Việt", sale_price_xu: 15, status: "active" }
-      ]
-    };
+    const candidateCatalog = pricingState.published_catalog;
+    const hasServerCatalog = Boolean(
+      candidateCatalog &&
+      typeof candidateCatalog === "object" &&
+      !Array.isArray(candidateCatalog) &&
+      Array.isArray(candidateCatalog.items)
+    );
+    const publishedCatalog = hasServerCatalog ? candidateCatalog : {};
+    const draftBaseReady = hasServerCatalog && typeof publishedCatalog.catalog_version === "string" && publishedCatalog.catalog_version.trim().length > 0;
+    const capabilities = context && context.capabilities && typeof context.capabilities === "object" ? context.capabilities : {};
+    const canDraftCreate = capabilities["admin-pricing-draft-create"] === true;
+    const canDraftSave = capabilities["admin-pricing-draft-save"] === true;
+    const canPublish = capabilities["admin-pricing-publish-modal-open"] === true;
+    const draftCreateDisabled = draftBaseReady && canDraftCreate ? "" : " disabled";
+    const draftSaveDisabled = draftBaseReady && canDraftSave ? "" : " disabled";
+    const publishDisabled = draftBaseReady && canPublish ? "" : " disabled";
     const activeDraft = pricingState.active_draft || null;
     const versionHistory = Array.isArray(pricingState.version_history) ? pricingState.version_history : [];
     const diff = pricingState.diff || (activeDraft && activeDraft.change_summary ? activeDraft.change_summary : null);
     const pubItems = Array.isArray(publishedCatalog.items) ? publishedCatalog.items : [];
     const draftItems = activeDraft && Array.isArray(activeDraft.items) ? activeDraft.items : [];
-    const statusNotice = pricingState.lastStatus === "draft_saved" ? "Đã lưu bản nháp" : (pricingState.lastStatus === "published" ? "Đã phát hành" : "");
+    const pricingText = (key, fallback) => uiText(`adminPricing.${key}`, fallback);
+    const statusNotice = pricingState.lastStatus === "draft_saved" ? pricingText("status.draftSaved", "Đã lưu bản nháp") : (pricingState.lastStatus === "published" ? pricingText("status.published", "Đã phát hành") : "");
 
-    const pubTable = renderRowsTable(
-      ["STT", "Mã SKU", "Phân loại", "Tên dịch vụ / Gói", "Giá bán công bố", "Trạng thái"],
-      pubItems.map((it, idx) => ({ ...it, __ordinal: idx + 1 })),
-      (it) => `<td>${safeText(String(it.__ordinal))}</td><td><code>${safeText(it.code || it.sku || "")}</code></td><td>${safeText(it.family || "—")}</td><td><strong>${safeText(it.label || "—")}</strong></td><td><strong style="color:var(--portal-accent,#0d9488);">${safeText(adminNumber(it.sale_price_xu, " Xu"))}</strong></td><td><span class="portal-badge" data-status="${safeText(it.status || "active")}">${safeText(it.status || "active")}</span></td>`,
-      "Danh mục giá trống",
-      "Chưa có SKU nào trong bảng giá canonical."
-    );
+    const unavailableTitle = uiText("adminPricingReadState.unavailable.title", "Chưa có bảng giá được xác minh");
+    const unavailableBody = uiText("adminPricingReadState.unavailable.body", "Máy chủ chưa cấp danh mục giá có thể xác minh cho phiên này. Hãy làm mới để kiểm tra lại.");
+    const emptyTitle = uiText("adminPricingReadState.empty.title", "Bảng giá chưa có sản phẩm");
+    const emptyBody = uiText("adminPricingReadState.empty.body", "Danh mục đã được máy chủ cấp nhưng chưa có sản phẩm.");
+    const draftDisabledReason = uiText("adminPricingReadState.draftDisabledReason", "Cần danh mục và phiên bản giá đã được xác minh trước khi tạo hoặc lưu bản nháp.");
 
-    const pubMobileCards = pubItems.map((it) => renderAdminPricingCard(it, false)).join("") || "<p>Chưa có dữ liệu giá.</p>";
+    const pubTable = hasServerCatalog
+      ? renderRowsTable(
+        [pricingText("table.ordinal", "STT"), pricingText("table.sku", "Mã SKU"), pricingText("table.family", "Phân loại"), pricingText("table.product", "Tên dịch vụ / Gói"), pricingText("table.salePrice", "Giá bán công bố"), pricingText("table.status", "Trạng thái")],
+          pubItems.map((it, idx) => ({ ...it, __ordinal: idx + 1 })),
+          (it) => `<td>${safeText(String(it.__ordinal))}</td><td><code>${safeText(it.code || it.sku || "")}</code></td><td>${safeText(it.family || "—")}</td><td><strong>${safeText(it.label || "—")}</strong></td><td><strong style="color:var(--portal-accent,#0d9488);">${safeText(adminNumber(it.sale_price_xu, " Xu"))}</strong></td><td><span class="portal-badge" data-status="${safeText(it.status || "active")}">${safeText(it.status || "active")}</span></td>`,
+          emptyTitle,
+          emptyBody
+        )
+      : renderEmpty(unavailableTitle, unavailableBody, ICONS.pricing);
+
+    const pubMobileCards = pubItems.length
+      ? pubItems.map((it) => renderAdminPricingCard(it, false)).join("")
+      : renderEmpty(!hasServerCatalog ? unavailableTitle : emptyTitle, !hasServerCatalog ? unavailableBody : emptyBody, ICONS.pricing);
 
     const diffView = diff ? `<div class="portal-admin-pricing-diff" style="padding:16px;background:var(--portal-surface-sunken,#0f172a);border-radius:8px;border:1px solid var(--portal-border,#334155);margin-top:12px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <span class="portal-tag">DIFF_SOURCE: SERVER_SIDE_CANONICAL</span>
+        <span class="portal-tag">${safeText(pricingText("diff.source", "Nguồn chênh lệch: máy chủ chuẩn"))}</span>
         <small style="color:var(--portal-muted,#94a3b8);">${safeText(diff.summary || "")}</small>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;font-size:0.9rem;">
         <div style="padding:8px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:6px;">
-          <strong style="color:#22c55e;">+ Mới (${(diff.added || []).length})</strong>
+          <strong style="color:#22c55e;">+ ${safeText(pricingText("diff.added", "Mới"))} (${(diff.added || []).length})</strong>
           <ul style="margin:4px 0 0 16px;padding:0;">${(diff.added || []).map((a) => `<li>${safeText(a.sku)}: ${safeText(adminNumber(a.sale_price_xu, " Xu"))}</li>`).join("") || "<li>—</li>"}</ul>
         </div>
         <div style="padding:8px;background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);border-radius:6px;">
-          <strong style="color:#eab308;">~ Thay đổi (${(diff.changed || []).length})</strong>
+          <strong style="color:#eab308;">~ ${safeText(pricingText("diff.changed", "Thay đổi"))} (${(diff.changed || []).length})</strong>
           <ul style="margin:4px 0 0 16px;padding:0;">${(diff.changed || []).map((c) => `<li>${safeText(c.sku)}: ${safeText(adminNumber(c.from_price_xu, " Xu"))} → ${safeText(adminNumber(c.to_price_xu, " Xu"))}</li>`).join("") || "<li>—</li>"}</ul>
         </div>
         <div style="padding:8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:6px;">
-          <strong style="color:#ef4444;">- Loại bỏ (${(diff.removed || []).length})</strong>
+          <strong style="color:#ef4444;">- ${safeText(pricingText("diff.removed", "Loại bỏ"))} (${(diff.removed || []).length})</strong>
           <ul style="margin:4px 0 0 16px;padding:0;">${(diff.removed || []).map((r) => `<li>${safeText(r.sku)}</li>`).join("") || "<li>—</li>"}</ul>
         </div>
       </div>
-    </div>` : `<p style="color:var(--portal-muted,#94a3b8);font-size:0.9rem;">Chưa có thay đổi so với bản canonical đã công bố.</p>`;
+    </div>` : `<p style="color:var(--portal-muted,#94a3b8);font-size:0.9rem;">${safeText(pricingText("diff.none", "Chưa có thay đổi so với bản chuẩn đã công bố."))}</p>`;
 
     const historyTable = renderRowsTable(
-      ["STT", "Phiên bản dự thảo", "Base Catalog", "Tác giả", "Thời gian", "Lý do", "Trạng thái"],
+      [pricingText("table.ordinal", "STT"), pricingText("history.draftVersion", "Phiên bản dự thảo"), pricingText("history.baseCatalog", "Phiên bản bảng giá gốc"), pricingText("history.author", "Tác giả"), pricingText("history.time", "Thời gian"), pricingText("history.reason", "Lý do"), pricingText("table.status", "Trạng thái")],
       versionHistory.map((h, idx) => ({ ...h, __ordinal: idx + 1 })),
-      (h) => `<td>${safeText(String(h.__ordinal))}</td><td><code>${safeText(h.draft_version || h.id || "")}</code></td><td>${safeText(h.base_catalog_version || "—")}</td><td>${safeText(h.created_by || "—")}</td><td>${safeText(h.created_at || "—")}</td><td>${safeText(h.reason || "—")}</td><td><span class="portal-badge" data-status="${safeText(h.state || "draft")}">${safeText(h.state === "published" ? "Đã phát hành" : (h.state === "draft" ? "Bản nháp" : h.state))}</span></td>`,
-      "Lịch sử trống",
-      "Chưa có phiên bản dự thảo nào trong kho lưu trữ."
+      (h) => `<td>${safeText(String(h.__ordinal))}</td><td><code>${safeText(h.draft_version || h.id || "")}</code></td><td>${safeText(h.base_catalog_version || "—")}</td><td>${safeText(h.created_by || "—")}</td><td>${safeText(h.created_at || "—")}</td><td>${safeText(h.reason || "—")}</td><td><span class="portal-badge" data-status="${safeText(h.state || "draft")}">${safeText(h.state === "published" ? pricingText("status.published", "Đã phát hành") : (h.state === "draft" ? pricingText("status.draft", "Bản nháp") : h.state))}</span></td>`,
+      pricingText("history.emptyTitle", "Lịch sử trống"),
+      pricingText("history.emptyBody", "Chưa có phiên bản dự thảo nào trong kho lưu trữ.")
     );
 
     return `<article class="portal-page portal-admin-pricing" style="max-width:100%;overflow-x:hidden;box-sizing:border-box;">
@@ -35221,19 +35416,19 @@
       <section class="portal-card portal-card-pad" style="margin-bottom:20px;box-sizing:border-box;max-width:100%;">
         <div class="portal-card-header" style="flex-wrap:wrap;gap:12px;">
           <div>
-            <span class="portal-section-kicker">Canonical Authority</span>
-            <h2 class="portal-card-title">Bảng giá Niêm yết Đang áp dụng</h2>
-            <p class="portal-card-subtitle">Phiên bản: <code>${safeText(publishedCatalog.catalog_version || "owner-approved")}</code> · Phê duyệt: <strong>${safeText(publishedCatalog.approval_status || "owner_approved")}</strong> · Nguồn: <code>${safeText(publishedCatalog.authority || "/internal/v1/pricing")}</code></p>
+            <span class="portal-section-kicker">${safeText(pricingText("section.canonical", "Nguồn chuẩn"))}</span>
+            <h2 class="portal-card-title">${safeText(pricingText("title.canonical", "Bảng giá đang áp dụng"))}</h2>
+            <p class="portal-card-subtitle">${safeText(pricingText("catalog.version", "Phiên bản"))}: <code>${safeText(publishedCatalog.catalog_version || "—")}</code> · ${safeText(pricingText("catalog.approval", "Phê duyệt"))}: <strong>${safeText(publishedCatalog.approval_status || "—")}</strong> · ${safeText(pricingText("catalog.authority", "Nguồn"))}: <code>${safeText(publishedCatalog.authority || "—")}</code></p>
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
-            <span class="portal-badge" data-status="ready" style="background:#16a34a;color:#fff;">Đã phát hành</span>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-pricing-refresh" data-portal-route="${safeText(page.routePath || page.path)}">Làm mới</button>
+            ${hasServerCatalog ? `<span class="portal-badge" data-status="ready" style="background:#16a34a;color:#fff;">${safeText(pricingText("status.published", "Đã phát hành"))}</span>` : badge("unavailable")}
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-pricing-refresh" data-portal-route="${safeText(page.routePath || page.path)}">${safeText(pricingText("refresh", "Làm mới"))}</button>
           </div>
         </div>
         <div class="portal-admin-pricing-desktop" style="overflow-x:auto;">
           ${pubTable}
         </div>
-        <div class="portal-admin-pricing-mobile portal-admin-pricing-cards" style="display:none;max-width:100%;box-sizing:border-box;">
+        <div class="portal-admin-pricing-mobile portal-admin-pricing-cards" style="max-width:100%;box-sizing:border-box;">
           ${pubMobileCards}
         </div>
       </section>
@@ -35241,41 +35436,42 @@
       <section class="portal-card portal-card-pad" style="margin-bottom:20px;box-sizing:border-box;max-width:100%;">
         <div class="portal-card-header" style="flex-wrap:wrap;gap:12px;">
           <div>
-            <span class="portal-section-kicker">Draft & Proposal Control</span>
-            <h2 class="portal-card-title">Bộ Thay đổi Giá Dự thảo (Change Set)</h2>
-            <p class="portal-card-subtitle">Chỉnh sửa SKU, điều chỉnh giá bán công khai (Xu) và so sánh chênh lệch trước khi gửi duyệt.</p>
+            <span class="portal-section-kicker">${safeText(pricingText("section.draft", "Điều khiển bản nháp và đề xuất"))}</span>
+            <h2 class="portal-card-title">${safeText(pricingText("title.draft", "Bộ thay đổi giá dự thảo"))}</h2>
+            <p class="portal-card-subtitle">${safeText(pricingText("body.draft", "Chỉnh sửa SKU, điều chỉnh giá bán công khai (Xu) và so sánh chênh lệch trước khi gửi duyệt."))}</p>
           </div>
           <div style="display:flex;gap:8px;">
-            <button class="portal-button portal-button--primary" type="button" data-portal-action="admin-pricing-draft-save" data-portal-route="${safeText(page.routePath || page.path)}">Lưu bản nháp</button>
-            <button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-pricing-draft-create" data-portal-route="${safeText(page.routePath || page.path)}">Tạo bản nháp mới</button>
+            <button class="portal-button portal-button--primary" type="button" data-portal-action="admin-pricing-draft-save" data-portal-route="${safeText(page.routePath || page.path)}"${draftSaveDisabled}>${safeText(pricingText("draft.save", "Lưu bản nháp"))}</button>
+            <button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-pricing-draft-create" data-portal-route="${safeText(page.routePath || page.path)}"${draftCreateDisabled}>${safeText(pricingText("draft.create", "Tạo bản nháp mới"))}</button>
           </div>
         </div>
 
         <form data-portal-form data-portal-action="admin-pricing-draft-save" data-portal-route="${safeText(page.routePath || page.path)}" style="margin-top:16px;">
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:16px;">
             <label class="portal-form-field">
-              <span class="portal-form-label">Mã bản nháp hiện tại</span>
+              <span class="portal-form-label">${safeText(pricingText("draft.id", "Mã bản nháp hiện tại"))}</span>
               <input class="portal-input" type="text" readonly name="draft_id" value="${safeText(activeDraft ? (activeDraft.id || activeDraft.draft_version) : "Chưa có dự thảo mở")}">
             </label>
             <label class="portal-form-field">
-              <span class="portal-form-label">Base Catalog Version</span>
-              <input class="portal-input" type="text" readonly name="base_catalog_version" value="${safeText(activeDraft ? activeDraft.base_catalog_version : publishedCatalog.catalog_version)}">
+              <span class="portal-form-label">${safeText(pricingText("draft.baseVersion", "Phiên bản bảng giá gốc"))}</span>
+              <input class="portal-input" type="text" readonly name="base_catalog_version" value="${safeText(activeDraft ? (activeDraft.base_catalog_version || "") : (publishedCatalog.catalog_version || ""))}">
             </label>
             <label class="portal-form-field" style="grid-column:1/-1;">
-              <span class="portal-form-label">Lý do điều chỉnh (bắt buộc)</span>
-              <input class="portal-input" type="text" name="reason" placeholder="Nhập lý do thay đổi bảng giá (vd: Chiến dịch kích cầu Q3, cập nhật giá gói điện ảnh)" value="${safeText(activeDraft ? (activeDraft.reason || "") : "")}">
+              <span class="portal-form-label">${safeText(pricingText("draft.reason", "Lý do điều chỉnh (bắt buộc)"))}</span>
+              <input class="portal-input" type="text" name="reason" placeholder="Nhập lý do thay đổi bảng giá (vd: Chiến dịch kích cầu Q3, cập nhật giá gói điện ảnh)" value="${safeText(activeDraft ? (activeDraft.reason || "") : "")}"${draftSaveDisabled}>
             </label>
           </div>
+          ${!draftBaseReady ? `<p class="portal-form-note" style="color:var(--portal-muted,#94a3b8);margin-top:6px;">${safeText(draftDisabledReason)}</p>` : ""}
 
-          <h3 style="margin:20px 0 10px 0;font-size:1.05rem;">So sánh Chênh lệch Server-side (Diff Preview)</h3>
+          <h3 style="margin:20px 0 10px 0;font-size:1.05rem;">${safeText(pricingText("diff.title", "So sánh chênh lệch từ máy chủ"))}</h3>
           ${diffView}
 
           <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--portal-border,#334155);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
             <div>
-              <span class="portal-badge" data-status="guarded">PUBLISH_BOUNDARY: FAIL_CLOSED</span>
-              <small style="display:block;color:var(--portal-muted,#94a3b8);margin-top:4px;">Chỉ xuất bản khi có adapter canonical từ Core Bridge. Local draft không trở thành giá công bố.</small>
+              <span class="portal-badge" data-status="guarded">${safeText(pricingText("publish.boundary", "Ranh giới phát hành: đóng khi chưa đủ điều kiện"))}</span>
+              <small style="display:block;color:var(--portal-muted,#94a3b8);margin-top:4px;">${safeText(pricingText("publish.boundaryBody", "Chỉ xuất bản khi có nguồn chuẩn từ máy chủ. Bản nháp cục bộ không trở thành giá công bố."))}</small>
             </div>
-            <button class="portal-button portal-button--primary" type="button" data-portal-action="admin-pricing-publish-modal-open" data-portal-route="${safeText(page.routePath || page.path)}" style="background:var(--portal-accent,#0d9488);">Phát hành bảng giá</button>
+            <button class="portal-button portal-button--primary" type="button" data-portal-action="admin-pricing-publish-modal-open" data-portal-route="${safeText(page.routePath || page.path)}"${publishDisabled} style="background:var(--portal-accent,#0d9488);">${safeText(pricingText("publish", "Phát hành bảng giá"))}</button>
           </div>
         </form>
       </section>
@@ -35283,9 +35479,9 @@
       <section class="portal-card portal-card-pad" style="box-sizing:border-box;max-width:100%;">
         <div class="portal-card-header">
           <div>
-            <span class="portal-section-kicker">Audit Trail & History</span>
-            <h2 class="portal-card-title">Lịch sử Phiên bản Bảng giá (Append-only)</h2>
-            <p class="portal-card-subtitle">Lưu vết toàn bộ các lần tạo dự thảo và phát hành bảng giá; không thể chỉnh sửa bản ghi lịch sử.</p>
+            <span class="portal-section-kicker">${safeText(pricingText("section.audit", "Nhật ký và lịch sử"))}</span>
+            <h2 class="portal-card-title">${safeText(pricingText("title.history", "Lịch sử phiên bản bảng giá"))}</h2>
+            <p class="portal-card-subtitle">${safeText(pricingText("body.history", "Lưu vết các lần tạo dự thảo và phát hành bảng giá; không thể chỉnh sửa bản ghi lịch sử."))}</p>
           </div>
         </div>
         <div style="overflow-x:auto;">

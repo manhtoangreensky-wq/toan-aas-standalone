@@ -1,6 +1,7 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
-Ngày 2026-10-18. WIP_ADMIN_THEME_CORE_BROWSER_VERIFIED. Source Bot được đọc-only; production chưa kiểm.
+Ngày 2026-10-18; cập nhật 19/10. WIP_ADMIN_LOCAL_UI_ACCEPTED_ROLE_MODULE_QA_OPEN.
+Source Bot được đọc-only; production chưa kiểm.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
 Đối soát toàn bộ lịch sử trước R217 nằm tại
@@ -331,10 +332,117 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] AD-02-THEME tổng còn cần QA từng module/bảng có dữ liệu thật, biểu đồ và trạng
   thái động; không dùng 24 cases core để đóng toàn bộ Admin. Đối soát: chỉ đặt OS dark
   không có nghĩa đã chọn Dark khi policy mặc định Admin vẫn là Light.
+- [x] AD-02-MOBILE-DATA-CARDS (lát trình bày): trên điện thoại, bảng dữ liệu Admin
+  xếp thành thẻ dọc, không tràn ngang; `thead` vẫn hiện diện trong cây trợ năng; badge,
+  trạng thái và nút tự xuống dòng. Fixture browser trước đó đạt 8/8 cấu hình: VI/EN ×
+  sáng/tối × 390/1440px; tại 390px vùng bảng 318/318px, lọc có kết quả/không kết quả,
+  xóa lọc giữ focus, Enter chọn dòng và mở inspector, 1440px giữ bảng native; lỗi trang/
+  console/request ngoài/request ghi/API lạ đều 0. Test nguồn `3/3`, toàn bộ Node `706/706`.
+  Ảnh: `../qa/r218-voice-inventory/admin-data-mobile-qa-{vi,en}-{light,dark}.png`.
+  Đây là fixture tổng hợp chỉ đọc, không chứng minh RBAC/backend/dữ liệu thật. Rerun mới
+  19/10 bằng Edge profile tạm ngoài sandbox đạt 8/8: table/8 headings trong AX, lọc/empty/
+  clear-focus/Enter-inspector, mobile 318/318px và native desktop table. Lỗi trang/console/
+  request ngoài/write/API lạ đều 0. Artifact mới `../qa/r218-voice-inventory/admin-data-reviewed.json`
+  (SHA256 `8995d3f057bffe687850967652fbc1de7799dc3d1d0068bc3590c87ce2e0c636`).
 - [~] AD-02-MOBILE-DATA: bảng Admin đã giữ semantic table trên desktop/tablet và chuyển
   từng bản ghi thành thẻ dọc ở `<=560px`; nhãn cột lấy trực tiếp từ `thead`, giữ lọc/chọn
-  dòng/inspector và không thêm dữ liệu hay quyền. Test `admin-mobile-data-harmony-source`
-  `2/2`, full Node `705/705`. QA populated data, role fixture, biểu đồ và runtime vẫn mở.
+  dòng/inspector và không thêm dữ liệu hay quyền. Lát cards đã có bằng chứng riêng ở trên;
+  QA từng module với role được phân quyền/từ chối, dữ liệu động, biểu đồ và runtime vẫn mở.
+- [x] ADMIN-RUNTIME-BOOT: browser fixture ban đầu dùng nhầm symbol một-A `window.TOANASPortal`
+  trong khi production export đúng hai-A `window.TOANAASPortal`; đã sửa harness và chạy lại
+  đúng consumer generic. Probe headless đạt `12/12` VI/EN/ZH × sáng/tối × 390/1440,
+  `errors/writes/external/unknown=0`, không còn blocker runtime của production symbol.
+  Artifact `../qa/r218-voice-inventory/admin-commercial-pricing-probe.json`, SHA256
+  `4E5947CF4FA2A86035B786FC5996AFD85E7EADCB312B1E72954A2BF18664331D`. Backend/RBAC,
+  CI, production và LIVE vẫn là phạm vi mở.
+- [x] AD-02-STATE-LOCALE (local UI): thêm 14 mapping để đủ 35 state và catalogue VI/EN/ZH;
+  VI backlog dịch thành “Việc chờ xử lý”. RED pass1/fail6 → GREEN7/7, full Node713/713,
+  syntax/diff check và comparator enum/function/Python/integration/workflow đạt. Browser
+  12/12 × VI/EN/ZH × sáng/tối × 390/1440, state đúng locale; layout/filter/empty/focus/
+  keyboard giữ nguyên, lỗi/write/external/unknown0. Spec `2026-10-19-r218-admin-state-locale.md`;
+  artifact `../qa/r218-voice-inventory/admin-state-locale.json` SHA256
+  `85ebdac2270a7dc393137f4fe5e35717ec7a56518b14d2bb1d459eeac6f73561`. Chưa CI/deploy/LIVE.
+- [x] AD-02-PRICING-LOCALE: specialised `/admin/pricing` renderer/cards đã chuyển fixed
+  chrome sang `adminPricing.*` đủ VI/EN/ZH; browser 12/12 không còn locale finding. Generic
+  table `renderAdminDataTable` cũng đã bỏ schema jargon và dùng `adminGeneric.pricing.*`;
+  focused/full source xanh và đúng consumer generic browser 12/12, không overflow, không
+  request ghi/API lạ. Chỉ đóng localhost read-only presentation; editor/backend/RBAC/CI/
+  production/LIVE còn mở.
+- [x] AD-02-PRICING-DATA-TRUTH (local UI): bỏ7 giá/approval client fallback; phân biệt
+  missing/malformed với verified empty; giữ server IDs/labels/25/0, giá thiếu—; base version
+  chưa xác minh khóa đúng hai nút/reason và giữ base value rỗng, valid base vẫn authoring.
+  Corrected immutable RED18 checks →GREEN72/72 states; Node713/713, syntax/diff0, source
+  ngoài2functions/old i18n values/CSS/tests/backend/integration/workflow giữ nguyên.
+  Artifact `admin-pricing-truth.json` SHA256
+  `3c5b0063939fe299eb976d5786b3ad0518940b89c1dee02dc4a302b4208c93ab` trong QA folder.
+  Data-truth, locale, mobile và affordance của specialised renderer đã accepted local; CI/
+  deploy/LIVE và generic commercial consumer còn mở.
+- [x] AD-02-PRICING-LOCALE runtime (specialised renderer): browser 12/12 VI/EN/ZH × sáng/tối
+  ×390/1440 không còn locale finding; fixed chrome/card dùng namespace `adminPricing`.
+  Generic commercial editor/table vẫn là backlog riêng.
+- [x] AD-01-PRICING-NAV-LOCALE: root shared renderer dùng profile/interface locale; focused9/9,
+  full Node720/720, browser12/12; registry, authorizedRoutes, aliases, legal exception và
+  hrefs giữ nguyên.
+- [x] AD-02-PRICING-MOBILE: bảng desktop ẩn ở ≤700px và card dọc hiện; 72 trạng thái truth
+  và 12 cấu hình presentation đạt, không overflow.
+- [x] AD-04-PRICING-AFFORDANCE: draft create/save/publish chỉ enabled khi có base catalogue
+  hợp lệ và capability server-issued; thiếu readiness/capability disabled; publish vẫn guarded,
+  không suy diễn backend hoặc quyền tiền. Browser findingCodes=[]; real RBAC/publish/LIVE mở.
+- [x] AD-02-GENERIC-LOCALE-CLOSEOUT (local UI): khóa các bản dịch VI còn lẫn thuật ngữ
+  tiếng Anh trong tra cứu kiểm soát, bảo trì, hàng chờ sự cố và trạng thái bảo mật/quyền
+  truy cập; fallback nút thử lại cũng thuần tiếng Việt. Giữ nguyên Bot, Core Bridge, PayOS,
+  Xu, CSRF, mã route/ID và toàn bộ authority/payload. Test focused `11/11`, syntax hai JS
+  và `git diff --check` đạt. Spec `docs/superpowers/specs/2026-10-20-r218-admin-generic-locale-closeout.md`;
+  full Node/CI/browser/backend/production/LIVE phải recheck theo đúng HEAD.
+- [x] AD-02-DYNAMIC-CHART-PROJECTION (local UI): biểu đồ và chú giải tùy chọn chỉ nhận
+  `data.chart` do máy chủ cấp; chặn adapter `compatibility_guarded`, giới hạn 1–12 điểm,
+  nhãn/giá trị số không âm và tone legend theo allowlist. Thanh dữ liệu có tên vùng,
+  mô tả, giá trị và `role="img"` để không phụ thuộc màu; không tự tạo số liệu, không
+  fetch/write/provider/capability mới, không thêm motion và giữ palette token hiện có.
+  Test nguồn `3/3`, focused Admin `14/14`, full Node `728/728`, `node --check` hai JS
+  và `git diff --check` đạt. Browser fixture chưa chạy được trong sandbox do Playwright
+  không tạo được thư mục tạm; không đóng QA role/module, dữ liệu thật, approval, backend,
+  CI, production hoặc LIVE. Phần tổng AD-02 vẫn mở.
+- [x] AD-03-RECORD-REFERENCES (local UI): Inspector Admin nhận projection tùy chọn
+  `admin_record_references` chỉ do server cấp, tối đa 6 liên kết loại `request`, `job`,
+  `asset`, `report`, `audit`; ID/nhãn bị giới hạn và path chỉ qua allowlist nội bộ
+  `/admin`, `/jobs`, `/assets`, `/reports`, `/audit`. URL ngoài, `//`, `\\`, dot-segment và path
+  không hợp lệ bị loại; DOM link được tạo bằng API an toàn, không chèn HTML thô.
+  Bảng giữ metadata `data-admin-record-references`, Inspector có vùng “Liên kết hồ sơ”,
+  nhãn loại cân bằng VI/EN/ZH. Test nguồn `2/2`, focused Admin sau slice `16/16`,
+  full Node `730/730`, syntax hai JS và `git diff --check` đạt. Browser fixture chưa
+  chạy được do Playwright `mkdtemp ENOENT`; không có write/provider/capability mới.
+  Đây chỉ là projection UI chỉ đọc; AD-03 tổng (role/RBAC, record thật, bridge
+  request→job→asset→report→audit, backend, CI, production và LIVE) vẫn mở.
+- [x] AD-03-ROLE-MODULE (local UI): projection manifest quyền do máy chủ cấp chỉ
+  nhận nhóm/phân hệ khi `read_state=ready`; route chỉ nằm dưới `/admin`, loại route
+  trùng, route ngoài Admin, `//` nội bộ, `\\` và dot-segment thường/mã hóa (`..`, `%2e`);
+  trạng thái lạ chuyển thành `guarded`, `available/canonical_read/web_native` chỉ
+  được trình bày là `read_only`. Không suy quyền từ `context.isAdmin`, browser role,
+  ID nhóm hoặc capability; không thêm route, write, provider, RBAC thật hay dữ liệu
+  record. Test projection `2/2`, focused Admin `18/18`, full Node `732/732`, syntax
+  hai JS và `git diff --check` đạt. Browser fixture chưa chạy được do Playwright
+  `mkdtemp ENOENT`; CI/production/LIVE chưa xác minh. AD-03 tổng và chuỗi
+  request→job→asset→report→audit vẫn mở.
+- [x] AD-03-RECORD-CHAIN (local UI): Inspector sắp xếp các reference đã được máy
+  chủ cấp theo thứ tự cố định `request → job → asset → report → audit`; thiếu mắt
+  xích vẫn giữ đúng phần đã cấp, trùng loại lấy reference đầu tiên, dữ liệu được
+  chiếu lại qua cùng allowlist path/ID/kind trước khi tạo link. Hiển thị bằng DOM API
+  trong danh sách dọc, có catalogue VI/EN/ZH và không thêm approve, write, provider,
+  capability, fetch hoặc bridge nghiệp vụ. Test reference `2/2`, focused Admin
+  `18/18`, full Node `732/732`, syntax hai JS và `git diff --check` đạt. Browser
+  fixture vẫn bị Playwright `mkdtemp ENOENT`; record thật, bridge server, CI,
+  production và LIVE chưa xác minh.
+- [x] AD-04-CAPABILITY-AFFORDANCE (local UI): Hàng đợi nạp thủ công không còn hiển
+  thị nút tạo quyết định duyệt/cộng Xu trong bảng hoặc thẻ mobile khi server chưa cấp
+  `admin-manual-topup-write`; thay bằng nhãn chỉ đọc có lý do quyền hạn, vẫn giữ nút
+  xem chi tiết. Khi capability đã cấp, affordance draft hiện hành và inspector xác
+  nhận cuối không đổi. `expected_xu`/`approved_xu` chỉ hiển thị từ máy chủ; thiếu thì
+  để `—`, không suy `amount_vnd / 100` ở trình duyệt; state draft cũ cũng không dựng
+  modal xác nhận khi capability ghi đã mất. Test nguồn `3/3` tại
+  `tests/admin-manual-topup-capability-presentation.test.mjs`; slice chỉ sửa renderer,
+  không mở wallet/ledger/PayOS/API ghi. Capability thật, approval, cộng Xu, browser,
+  CI, production và LIVE vẫn mở.
 
 ## V0 — Product Video và video tools R218-09 (làm cuối sản phẩm)
 
@@ -357,6 +465,17 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] Không claim CapCut parity từ toolbar; browser thao tác từng nhóm.
 
 ## Q0/M0/L0 — Nghiệm thu rồi motion, rồi báo cáo
+
+- [x] Q0-ZH-LOCALE-PICKER (local UI): root cause source thiếu option zh trong Admin header.
+  RED renderer zh/select vi → thêm đúng một option → browser12/12 selected/renderer khớp,
+  options vi/en/zh, local change/focus/form đúng; Node713/713, syntax/diff-check và scope
+  hash comparator đạt. Artifact `admin-header-locale.json` SHA256
+  `f099e8e7111316ab9f72e1277c8b24ef1be35d74f3bf1b3ead893d3831900fd1` trong QA folder.
+  Spec `2026-10-19-r218-admin-header-locale.md`. Chưa CI/deploy/LIVE.
+- [x] AD-02-ZH-GENERIC-COPY: catalogue Admin Generic ZH đã bỏ `canonical` khỏi toàn bộ
+  fixed chrome của guard/bảng/Pricing/Jobs/adapter/quản trị hệ thống/hướng dẫn/runtime;
+  test nguồn `1/1`, full Node725/725. Dữ liệu định danh, Bot/Core Bridge/PayOS/Xu và key
+  máy chủ giữ nguyên; CI/deploy/LIVE chưa mở.
 
 - [ ] Inventory B01–B34 → control ledger; unclassified=0 hoặc ghi reason rõ từng mục.
 - [ ] VI/EN/ZH sạch; dữ liệu user/tên riêng không bị dịch.

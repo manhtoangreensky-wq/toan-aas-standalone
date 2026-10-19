@@ -109,6 +109,157 @@ trong inventory đã chốt, không dùng số route làm bằng chứng.
   → 18 cấu hình × 6 trạng thái, 108 trạng thái; count/route/focus/overflow/locale
   có assertion riêng. Đây không phải backend RBAC/financial/LIVE evidence.
 
+### AD-02-MOBILE-DATA — thẻ dữ liệu dọc trên điện thoại
+
+- Allowed source: `static/portal/portal-theme.css` trong lớp Admin ở `<=560px` và
+  `tests/admin-mobile-data-harmony-source.test.mjs`. Không sửa renderer, API/RBAC,
+  finance/top-up, route-engine, customer palette, database hoặc capability.
+- Desktop/tablet giữ semantic table; điện thoại trình bày mỗi record thành một thẻ dọc,
+  giữ nhãn cột từ `thead` trong cây trợ năng, cho badge/trạng thái/action tự xuống dòng,
+  bỏ lời nhắc cuộn ngang và vô hiệu hóa sticky cột đầu chỉ trong thẻ Admin.
+- Acceptance: VI/EN × sáng/tối × 390/1440px; vùng bảng không vượt viewport trên 390px,
+  bảng vẫn có role `table` và đủ heading, lọc/empty/clear/focus, Enter chọn record/mở
+  inspector; desktop còn display `table`; không có lỗi console, request ngoài, write hoặc
+  API lạ. Dữ liệu là fixture tổng hợp chỉ đọc, không dùng bản ghi khách hàng thật.
+- Evidence đã ghi: test nguồn `3/3`, toàn bộ Node `706/706`; browser fixture trước đó
+  `8/8`, gồm vùng nội dung bảng `318/318px`; ảnh ở
+  `../qa/r218-voice-inventory/admin-data-mobile-qa-{vi,en}-{light,dark}.png`.
+  Lượt trong sandbox trước đó không mở được Edge. Rerun mới ngày 19/10 dùng profile Edge
+  tạm ngoài sandbox đạt 8/8, headings 8/8 còn trong AX, filter/empty/clear-focus/Enter-
+  inspector đạt; page/console/external/write/unknown API đều 0. Artifact mới
+  `../qa/r218-voice-inventory/admin-data-reviewed.json`, SHA256
+  `8995d3f057bffe687850967652fbc1de7799dc3d1d0068bc3590c87ce2e0c636`.
+  Fixture được project sau hydrate vì bridge unavailable phải xóa dữ liệu chưa xác minh.
+  Đây vẫn là presentation fixture. CI run `39212998609` xanh
+  trên remote SHA `1730ea4`, nhưng không chứa hai tệp source/test còn local.
+- Giới hạn: không đóng AD-02 tổng; fixture không chứng minh module/role/RBAC, records
+  thật, charts, approval, backend hay LIVE. Các phần đó giữ mở theo checklist.
+
+### AD-02-STATE-LOCALE — nhãn trạng thái chung
+
+Rerun trên xác minh `failed_no_charge` dùng fallback VI trong bản EN. Mapping chung
+thiếu 14 state; bảng nhãn và RED/GREEN gate nằm tại
+`2026-10-19-r218-admin-state-locale.md`. Thứ tự: mobile presentation → state locale →
+role/module coverage. Chỉ thêm mapping/catalogue/test; giữ enum/payload/API/CSS.
+
+Spec state locale đã được Codex nghiệm thu local ngày 19/10: RED pass1/fail6 → GREEN7/7,
+full Node713/713, browser12/12 với state đúng locale. Không đổi enum/function hay
+backend/integration/workflow. CI/deploy/LIVE và các module/role khác vẫn mở.
+
+### AD-02-DYNAMIC-CHART-PROJECTION — biểu đồ/chú giải từ dữ liệu máy chủ
+
+Mục tiêu của lát này là bổ sung cách trình bày biểu đồ tùy chọn trong Admin Generic mà
+không biến dữ liệu thiếu thành số liệu giả và không mở quyền ghi. `data.chart` là một
+projection do máy chủ cấp trong cùng read model với `items`; nếu response bị
+`compatibility_guarded`, chart malformed hoặc vượt giới hạn thì renderer không hiển thị
+chart. Projection nhận 1–12 điểm, mỗi điểm có nhãn và số không âm trong giới hạn an toàn;
+legend tối đa 6 mục và chỉ dùng các tone `primary/success/warning/danger/muted`. Chiều
+rộng thanh được tính từ cực đại của chính các điểm đã cấp, không gọi API và không lấy số
+từ các trường khác.
+
+`renderAdminDataChart()` tạo figure có tên/mô tả, danh sách điểm có giá trị văn bản và
+`role="img"`/`aria-label` cho từng thanh, cùng chú giải văn bản; `renderAdminDataSurface()`
+chỉ chèn figure khi projection hợp lệ. CSS dùng token palette xanh hiện có, không thêm
+transition/animation/gradient. Catalogue `adminDataView.chartKicker/chartLegend` phải
+cân bằng VI/EN/ZH.
+
+Gate local: `tests/admin-data-chart-source.test.mjs` 3/3; focused Admin 14/14; full
+Node 728/728; hai `node --check` và `git diff --check` đạt. Browser fixture chưa chạy
+được trong sandbox do Playwright không tạo thư mục tạm; vì vậy chỉ đánh dấu lát source/
+presentation local, không đóng AD-02 tổng, role/RBAC, records thật, approval, backend,
+CI, production hoặc LIVE.
+
+### AD-03-RECORD-REFERENCES — liên kết hồ sơ chỉ đọc trong Inspector
+
+Lát này chỉ hoàn thiện cách trình bày liên kết giữa một record Admin và hồ sơ liên quan;
+không tạo bridge nghiệp vụ mới. Renderer chỉ đọc trường tùy chọn
+`admin_record_references` trong record đã được máy chủ cấp. Projection fail-closed khi
+không phải mảng, giới hạn tối đa 6 phần tử, loại chỉ nhận `request`, `job`, `asset`,
+`report`, `audit`, ID chỉ nhận ký tự an toàn trong giới hạn, còn `label` bị giới hạn độ
+dài. Mỗi reference phải trỏ tới path nội bộ hợp lệ theo allowlist `/admin`, `/jobs`,
+`/assets`, `/reports`, `/audit`; URL ngoài, scheme, `//`, `\\`, dot-segment (`..`/`%2e`), path rỗng hoặc path
+không khớp đều bị loại.
+
+`renderRowsTable()` giữ metadata `data-admin-record-references` trên dòng. Inspector
+hiển thị một vùng “Liên kết hồ sơ” khi projection hợp lệ; link được tạo bằng DOM API,
+không dùng HTML string và không thêm nút ghi, approve, credit, publish hay download.
+Nhãn loại reference lấy từ catalogue VI/EN/ZH, không dịch ID, mã kỹ thuật hoặc tên riêng.
+Không có `fetch`, mutation, provider call, capability grant hay thay đổi route/RBAC.
+
+Allowed files của slice này:
+
+- `static/portal/portal.js` — sanitize/allowlist và render projection.
+- `static/portal/portal-theme.css` — bố cục vùng reference theo token Admin hiện có.
+- `static/portal/portal-i18n.js` — nhãn loại reference VI/EN/ZH.
+- `tests/admin-data-reference-source.test.mjs` — source contract 2/2.
+- checklist/state và tài liệu này.
+
+Gate local: source test `2/2`; focused Admin regression sau reference slice `16/16`;
+full `node --test` `730/730`; `node --check static/portal/portal.js`,
+`node --check static/portal/portal-i18n.js` và `git diff --check` đạt. Browser fixture
+chưa chạy được vì Playwright không tạo được thư mục tạm (`mkdtemp ENOENT`), nên không
+đánh dấu browser/CI/production/LIVE. Đây chỉ là local read-only presentation; AD-03
+tổng vẫn cần role/module fixture, record thật và bridge request→job→asset→report→audit
+do server cấp trước khi có thể đóng.
+
+### AD-03-ROLE-MODULE — projection manifest theo quyền máy chủ
+
+Lát này khóa lớp trình bày nhóm/phân hệ Admin từ manifest đã được máy chủ cấp; không
+phải là bộ suy quyền nằm trong browser. Renderer chỉ xử lý khi `read_state=ready` và
+chỉ nhận các module có route `/admin` hoặc `/admin/...`. Ngoài route gốc, route trùng,
+`//` nội bộ, `\\` và dot-segment thường/mã hóa (`..`/`%2e`) đều bị loại trước khi
+đưa vào `routes`, sidebar, mobile dock hoặc command palette. Mỗi module chỉ nhận
+trạng thái trong allowlist; `available`, `canonical_read` và `web_native` được trình
+bày như `read_only`, còn trạng thái lạ chuyển thành `guarded`.
+
+Không dùng `context.isAdmin`, browser role, ID nhóm, capability hoặc prefix
+`/admin/*` để cấp thêm quyền; không mở route mới, không fetch, không ghi, không gọi
+provider và không thay đổi RBAC/backend. Route đích vẫn tự kiểm tra signed session và
+authority ở nơi riêng. Khi manifest không ở `ready`, projection trả nhóm/routing
+rỗng và các cờ authority presentation về trạng thái fail-closed.
+
+Allowed files của slice này:
+
+- `static/portal/portal.js` — route fence riêng cho Admin role/module projection.
+- `tests/admin-erp-navigation-projection.test.mjs` — hai test manifest `ready` và
+  fail-closed `loading` (`2/2`).
+- checklist/state và tài liệu này.
+
+Gate local: projection `2/2`, focused Admin `18/18`, full `node --test` `732/732`,
+`node --check static/portal/portal.js`, `node --check static/portal/portal-i18n.js`
+và `git diff --check` đạt. Browser fixture vẫn bị chặn bởi Playwright
+`mkdtemp ENOENT`; vì vậy chưa đánh dấu browser/CI/production/LIVE. Đây chỉ là
+projection UI chỉ đọc; AD-03 tổng vẫn cần role/RBAC thật, record thật và bridge
+request→job→asset→report→audit do server cấp.
+
+### AD-03-RECORD-CHAIN — chuỗi hồ sơ chỉ đọc trong Inspector
+
+Lát này biến danh sách reference đã được server cấp thành một chuỗi đọc dễ theo dõi
+theo thứ tự cố định `request → job → asset → report → audit`. Không tự suy ra record
+không có trong payload: mắt xích thiếu thì không được tạo placeholder hoặc số liệu;
+trùng loại chỉ giữ reference đầu tiên sau projection. Trước khi render Inspector,
+JSON trên dòng được chiếu lại qua `adminDataReferenceProjection()` để giữ cùng
+allowlist kind, ID, nhãn và path, bao gồm chặn URL ngoài, `//`, `\\` và dot-segment.
+
+Chuỗi được tạo bằng DOM API trong một danh sách dọc, dùng nhãn kind từ catalogue
+VI/EN/ZH và chỉ liên kết tới path nội bộ đã qua projection. Không có fetch, mutation,
+approve, credit, publish, download, provider call, capability grant hoặc bridge
+nghiệp vụ mới; phần này chỉ làm rõ record liên quan đã được máy chủ cấp.
+
+Allowed files của slice này:
+
+- `static/portal/portal.js` — projection thứ tự chuỗi và Inspector DOM.
+- `static/portal/portal-theme.css` — danh sách chuỗi dọc theo token Admin hiện có.
+- `static/portal/portal-i18n.js` — nhãn “chuỗi hồ sơ” VI/EN/ZH.
+- `tests/admin-data-reference-source.test.mjs` — projection/Inspector source contract
+  và thứ tự chuỗi trong test `2/2`.
+- checklist/state và tài liệu này.
+
+Gate local sau slice: reference `2/2`, focused Admin `18/18`, full `node --test`
+`732/732`, hai `node --check` và `git diff --check` đạt. Browser fixture vẫn
+`NOT_RUN` vì Playwright `mkdtemp ENOENT`; record thật, bridge request→job→asset→
+report→audit, CI, production và LIVE chưa được xác minh.
+
 Focused renderer/action tests giữ route/action/revision/CSRF/ownership contract.
 Browser fixture customer/admin/department denied; VI/EN/ZH, light/dark, 375/768/1440.
 Không submit nạp/approval/publish/ads production. Các actions đó T0 sau UI/motion và lệnh riêng.

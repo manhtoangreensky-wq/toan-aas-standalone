@@ -1,22 +1,22 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: WIP_ADMIN_DATA_MOBILE_CARDS_CORE_VERIFIED
-date: 2026-10-19
+status: WIP_ADMIN_TOPUP_CAPABILITY_ACCEPTED_LOCAL_CI_PENDING
+date: 2026-10-20
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 8ab1a02
-delivery_head_sha: 8ab1a02
-delivery_status: ADMIN_THEME_CI_VERIFIED_ADMIN_DATA_MOBILE_CARDS_PENDING_CI
-head_sha_semantics: "Last verified passing remote snapshot. This is historical CI evidence, not the current candidate HEAD; latest candidate checks are read from PR #654, without metadata-only commit loops."
-delivery_head_semantics: "The branch is readable on GitHub at 8ab1a02; Verify Web App and Authenticated WebApp QA are terminal SUCCESS in run 39203058690."
-branch_head_sha: 8ab1a02
+head_sha: 1730ea41ffda53e6bcd068f45a49c8c9f6949929
+delivery_head_sha: 1730ea41ffda53e6bcd068f45a49c8c9f6949929
+delivery_status: REMOTE_CI_LAST_OBSERVED_SUCCESS_1730EA4_LOCAL_ADMIN_UI_LOCALE_PATCHES_UNCOMMITTED
+head_sha_semantics: "Last observed passing remote snapshot. Admin mobile CSS/test, shared state JS/i18n/test, dynamic chart, record-reference, role/module and manual-topup capability/data-truth JS/tests plus R218 documentation remain local/uncommitted; that remote CI run does not cover these patches."
+delivery_head_semantics: "GitHub Actions run 39212998609 is terminal SUCCESS on remote SHA 1730ea41ffda53e6bcd068f45a49c8c9f6949929."
+branch_head_sha: 1730ea41ffda53e6bcd068f45a49c8c9f6949929
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
-last_push_verified_commit: 8ab1a02
-docs_checkpoint_sha: 8ab1a02
-push_command_success_commit: 8ab1a02
-remote_readback: "GitHub UI and git ls-remote readback: branch webapp-r217-subdub-ui-r218 is 8ab1a02. Run 39203058690 terminal SUCCESS: Verify Web App and Authenticated WebApp QA both passed. No product/runtime/provider mutation is active."
+last_push_verified_commit: 1730ea41ffda53e6bcd068f45a49c8c9f6949929
+docs_checkpoint_sha: 1730ea41ffda53e6bcd068f45a49c8c9f6949929
+push_command_success_commit: 1730ea41ffda53e6bcd068f45a49c8c9f6949929
+remote_readback: "Last GitHub UI observation: branch webapp-r217-subdub-ui-r218 at 1730ea41ffda53e6bcd068f45a49c8c9f6949929 and run 39212998609 SUCCESS. Remote was not re-read in this local QA turn. Current Admin mobile, shared-state, dynamic-chart and record-reference UI/test/docs changes are uncommitted and not covered by that observation."
 batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
@@ -37,6 +37,11 @@ artifacts:
   subdub: docs/superpowers/specs/2026-10-18-r218-subdub-bot-parity-uiux.md
   image_video: docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md
   other_admin: docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md
+  admin_state_locale: docs/superpowers/specs/2026-10-19-r218-admin-state-locale.md
+  admin_header_locale: docs/superpowers/specs/2026-10-19-r218-admin-header-locale.md
+  admin_pricing_presentation: docs/superpowers/specs/2026-10-19-r218-admin-pricing-presentation.md
+  admin_module_tabs_locale: docs/superpowers/specs/2026-10-19-r218-admin-module-tabs-locale.md
+  admin_topup_capability_affordance: docs/superpowers/specs/2026-10-20-r218-admin-topup-capability-affordance.md
   translation_controls: docs/superpowers/specs/2026-10-18-r218-06a-translation-workspace-controls.md
   utilities_controls: docs/superpowers/specs/2026-10-18-r218-06b-utilities-qr-avatar-rate-weather-download.md
   qa_motion_technical: docs/superpowers/specs/2026-10-18-r218-10-13-qa-motion-delivery-technical.md
@@ -70,6 +75,146 @@ current_wip:
     artifact: "../qa/r218-voice-inventory/admin-shortcuts.json"
     artifact_sha256: 06fc8a9e804c4b09abf067072ec80b1d853affdeb91afb3edcfdd583239b370a
     limitations: "Earlier 72-route smoke did not prove permissions, locale or vertical layout; OS dark still yields light Admin surfaces. No backend/live/approval closure."
+  admin_mobile_data_cards:
+    state: "ACCEPTED_PRESENTATION_ONLY_REMOTE_CI_PENDING"
+    base_sha: 1730ea41ffda53e6bcd068f45a49c8c9f6949929
+    changed_files: "static/portal/portal-theme.css; tests/admin-mobile-data-harmony-source.test.mjs"
+    tests: "Focused source 3/3; full Node 706/706; git diff --check clean."
+    browser_configurations: 8
+    matrix: "VI/EN x light/dark x 390/1440; synthetic read-only Admin fixture on /admin/jobs"
+    checks: "Mobile table wrapper 318/318px; semantic table/headings; filter/empty/clear-focus; Enter selection/inspector; desktop native table; errors/external/write/unknown API 0."
+    artifacts: "../qa/r218-voice-inventory/admin-data-mobile-qa-{vi,en}-{light,dark}.png"
+    rerun_status: "2026-10-19 fresh Edge temporary-profile rerun outside restricted sandbox: 8/8, native table/8 AX headings, filter/empty/clear-focus/Enter-inspector, 318/318px mobile and zero page/console/external/write/unknown API. Initial QA-fixture attempt failed because hydration correctly cleared unavailable backend data; explicit read-only fixture projection after hydrate resolved the harness error."
+    rerun_artifact: "../qa/r218-voice-inventory/admin-data-reviewed.json"
+    rerun_sha256: "8995d3f057bffe687850967652fbc1de7799dc3d1d0068bc3590c87ce2e0c636"
+    limitations: "Synthetic role/data only; actual RBAC, per-module dynamic records, charts, approvals, backend/runtime and LIVE remain open. Local patch not covered by remote CI run 39212998609 on 1730ea4."
+  antigravity_handoff:
+    state: "MODULE_TABS_LOCALE_PHASE_A_ACCEPTED_RED_READY_PHASE_B"
+    spec_id: "AD-01-PRICING-NAV-LOCALE"
+    conversation_id: "6827266a-7b30-472e-82f1-1742e6ef0e42"
+    previous_pricing_truth_conversation_id: "6d4760c5-4064-4513-8160-3daaf100754c"
+    previous_header_conversation_id: "89fdfc7e-6b56-4478-a6bf-d0eb3210cbf6"
+    previous_mobile_conversation_id: "8b16323b-9a88-4fde-9c95-dd02c8d22f2c"
+    model: "Gemini 3.8 Flash Medium"
+    handoff_round: 1
+    same_defect_failed_handoffs: 0
+    recovery: "Owner-granted exact hooks.json write: remove quotes around a no-space module path; hook stays enabled. Actual worker file reads succeeded after repair; no sign-in or security settings changed."
+    hook_original_sha256: "a613f6f309891b95cb410e24439ce29373af2dff6ffc341da028ef395dced210"
+    hook_repaired_sha256: "e9efb76f0826a01f016971fca4d95de819a745de76e9caa1162b204486a25689"
+    observation_note: "Owner requested background-only Antigravity workflow. CLI help/models verified read-only; no new IDE/window/auth dialog. Phase A is terminal with valid RED; Phase B worker was attempted headless but blocked by the existing telemetry hook, so Codex performed the allowlisted takeover."
+  admin_state_locale:
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    red_tests: "node --test tests/shared-state-label-locale.test.mjs -> exit 1; tests7/pass1/fail6. Unknown/read_only passes; mapping/VI backlog/EN-ZH fallback fail as expected."
+    red_artifact: "../qa/r218-voice-inventory/state-locale-red.txt"
+    locked_test_sha256: "efa2d2685e855a9d8b2d15ce5e6f02a5d24e55b327e1d3553e90a716f94a12cc"
+    green_tests: "Targeted7/7; full Node713/713; both JS syntax/diff-check exit0. ALLOWED_STATES and stateLabel match BASE; Python/integration/workflow diff empty."
+    browser: "12/12 VI/EN/ZH x light/dark x390/1440; exact failed_no_charge locale, 8 AX headings, mobile318/318px, filter/empty/focus/keyboard; errors/writes/external/unknown0."
+    browser_artifact: "../qa/r218-voice-inventory/admin-state-locale.json"
+    browser_sha256: "85ebdac2270a7dc393137f4fe5e35717ec7a56518b14d2bb1d459eeac6f73561"
+    green_artifact: "../qa/r218-voice-inventory/state-locale-green.txt"
+    source_sha256: "portal.js=c667988ae25dd790bcfe2786b8ebf57062c05e763c9d1c4fe97ce8f639312e0a; portal-i18n.js=83b93bc594cf55fbdde96d0cfe1f08abc46e84dd1fbb2dafcc387444c981c0f9"
+    original_finding: "failed_no_charge fell back to Vietnamese in EN in4 browser configurations; 14 allowed states lacked i18n mapping and VI backlog was generic English. Fixed and verified by the evidence below."
+    scope: "Shared state mapping/catalogue and one behavioral test only; no enum/payload/API/CSS change."
+  admin_header_locale:
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    root_cause: "Admin header had only vi/en options while renderer/profile/server allow vi/en/zh; browser selected vi for zh. One option addition fixed it."
+    tests: "Node713/713; syntax/diff0; reverse addition restores previous portal.js hash exactly; i18n/CSS/test hashes unchanged."
+    browser: "12/12 VI/EN/ZH x light/dark x390/1440; options/selected/renderer match, local selection/focus/form + state/data-card regression; errors/write/external/unknown0."
+    artifact: "../qa/r218-voice-inventory/admin-header-locale.json"
+    artifact_sha256: "f099e8e7111316ab9f72e1277c8b24ef1be35d74f3bf1b3ead893d3831900fd1"
+    portal_sha256: "0ebe8dc421eeb28b15b36dd58d339b90a035a49e3ddf8fa5e6eb49f5d36e31e4"
+  admin_pricing_ui_audit:
+    state: "BASELINE_FINDINGS_DATA_TRUTH_FIXED_RESIDUALS_OPEN"
+    matrix: "12 configurations x3 missing/empty/populated states =36; actual renderAdminPricing path."
+    artifact: "../qa/r218-voice-inventory/admin-pricing-audit.json"
+    artifact_sha256: "ac29f4e8d2480868ed8a5a26afba00fb96027849f683455046c0bd4b5866b658"
+    findings: "Baseline missing catalogue showed7 fallback prices/approved claim (now fixed by data-truth). Fixed chrome still mixes locale; mobile cards hidden; action readiness/disabled visuals need review. No backend-permission conclusion."
+    safety: "errors/write/external/unknown0; no action submitted."
+  admin_pricing_data_truth:
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    red: "Corrected button-only QA plus reason/base checks replayed from immutable Git1730 object: target functions equal pre-change candidate after CRLF/LF;1 config/6 states/18 failed checks. No checkout/reset."
+    red_artifact: "../qa/r218-voice-inventory/admin-pricing-truth-baseline1730.json"
+    allowed: "portal.js only renderAdminPricing + price display in renderAdminPricingCard; i18n only5 new keys x3 locales. No CSS/integration/backend/price-rule change."
+    green: "Smoke6/6 and full12 configs x6 states=72/72 truth; Node713/713; syntax/diff0. errors/write/external/unknown0. Residual copy/mobile/affordance open."
+    green_artifact: "../qa/r218-voice-inventory/admin-pricing-truth.json"
+    green_sha256: "3c5b0063939fe299eb976d5786b3ad0518940b89c1dee02dc4a302b4208c93ab"
+    portal_sha256: "5ac629c4fd9a6559da64e60917ca74a50fd92d82b415c7fd8cf8ae5731dcb9ca"
+    i18n_sha256: "14e6e15d94cd70e9331599ba06fe0990c77e36b8dc9eae2c519bddcb971275ea"
+    comparators: "Source outside2pricing functions identical; every prior i18n value identical; only5 new keys per locale; CSS/test hashes and Python/integration/workflow unchanged."
+  admin_pricing_locale:
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    scope_to_inventory: "Active Pricing fixed chrome/cards/diff/history, Pricing/Packages nav VI in EN, state/family display vs server values, draft_id VI sentinel in integration. Preserve payload IDs and user labels."
+    evidence: "admin-pricing-locale-source.test.mjs 1/1; browser nav 12/12 with findingCodes[]; full Node after batch 723/723."
+  admin_pricing_presentation:
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    checklist: "_giao-viec/CHECKLIST-AD-02-PRICING-PRESENTATION.md"
+    report: "_giao-viec/BAO-CAO-06-AD-02-PRICING-PRESENTATION.md"
+    changed_scope: "portal.js Pricing renderer/card; portal-i18n.js adminPricing catalogue; portal-theme.css mobile lane; three focused source tests. No backend/integration/wallet/provider change."
+    tests: "Locale1/1; mobile1/1; affordance1/1; full Node723/723; syntax/diff0."
+    browser_truth: "72/72 states, truthFailures0/navFailures0/errors0/writes0/external0/unknown0; artifact admin-pricing-truth.json SHA256 478f33c258a0a8a5e83250ae081dbc0329dfa910aebcfa5d439f5e175eab20b4."
+    browser_presentation: "12/12 VI/EN/ZH x light/dark x390/1440; findingCodes[]; no locale/mobile/affordance finding. Artifact admin-module-tabs-locale.json SHA256 2a7c374ddcb09e9f66efb901b319e7f2daf0b2590f7e8c71deed7e932ec6fe13."
+    limitations: "Synthetic GET-only fixture; real RBAC, backend publish, production and LIVE remain open."
+  admin_general_probe:
+    state: "READ_ONLY_PRESENTATION_PROBE_PASS"
+    artifact: "../qa/r218-voice-inventory/admin-probe.json"
+    artifact_sha256: "FFCAC27006AFE375DFB6B604052404C24707C92BD95C5877578D953DE1AD0210"
+    scope: "canonical_admin_qa fixture; /admin, /admin/topups, /admin/customers, /admin/operations; VI/EN/ZH x light/dark x390/768/1440."
+    result: "72 records; verticalSurface=true, noApprovalMutation=true, overflow=0 for every record; errors/writes/external/unknown empty."
+    limitations: "Does not prove real backend RBAC, approval, chart data, provider, payment, production or LIVE."
+  admin_pricing_generic:
+    state: "ACCEPTED_LOCAL_UI_BROWSER_FIXTURE_CI_PENDING"
+    checklist: "_giao-viec/CHECKLIST-AD-02-PRICING-GENERIC.md"
+    report: "_giao-viec/BAO-CAO-07-AD-02-PRICING-GENERIC.md"
+    scope: "renderAdminDataTable pricing/packages generic branch; no specialised Pricing renderer, API, data or money logic."
+    tests: "Focused1/1; zh-copy1/1; full Node725/725; syntax/diff0; headless browser12/12 VI/EN/ZH x light/dark x390/1440, errors/writes/external/unknown0."
+    browser_artifact: "../qa/r218-voice-inventory/admin-commercial-pricing-probe.json"
+    browser_sha256: "4E5947CF4FA2A86035B786FC5996AFD85E7EADCB312B1E72954A2BF18664331D"
+    runner_sha256: "9BB758E695FAD7542E303B61758F2B1BCBC04B604E6CCF991F3835AACC4E2DC6"
+    limitation: "Initial probe used the wrong one-A symbol `window.TOANASPortal`; production exports two-A `window.TOANAASPortal`. Harness corrected and rerun passed; all Admin Generic Chinese fixed values now have a source gate. Fixture is localhost read-only and does not prove backend/RBAC, CI, production or LIVE."
+  admin_module_tabs_locale:
+    spec_id: "AD-01-PRICING-NAV-LOCALE"
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    finding: "renderAdminModuleTabs uses legacy context.locale/out-of-scope currentLocale; profile/interface locale is correct elsewhere.9groups/54tab occurrences/48unique paths."
+    existing_assets: "ADMIN_ERP_ROUTE_I18N/adminErpRouteText cover46paths in VI/EN/ZH; commercial/legal need explicit localized fallback. Existing source-only test has2cases."
+    scope_guard: "One tab renderer plus exactly3 new i18n keys x3 locales. Preserve registry/authorizedRoutes/alias/legal exception/href/CSS and accepted Pricing truth. Frozen test SHA256 f8ef4ee478fd7b8e023924ffd2446e189be6c15523fd306f78ef2d092cac4051. Phase A RED: exit1, 9 tests, 2 pass/7 fail, only locale label/aria assertions. Phase B local: focused9/9, full Node720/720, syntax/diff0, browser12/12 nav with truthFailures0/navFailures0/errors/writes/external/unknown0. Remote CI and LIVE remain pending."
+  admin_generic_locale_closeout:
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    spec: "docs/superpowers/specs/2026-10-20-r218-admin-generic-locale-closeout.md"
+    scope: "VI fixed chrome and fallback only for Admin Generic audit, maintenance, incident queue, security/access state and job retry label; preserve technical/product names and all payload/authority contracts."
+    tests: "Focused11/11; node-check portal.js and portal-i18n.js pass; git diff --check pass. Full Node recheck recorded separately."
+    limitations: "No backend/RBAC, provider, wallet, production, CI or LIVE claim; EN/ZH catalogues unchanged."
+  admin_dynamic_chart_projection:
+    state: "ACCEPTED_LOCAL_UI_BROWSER_BLOCKED_CI_PENDING"
+    spec: "docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md#AD-02-DYNAMIC-CHART-PROJECTION"
+    changed_files: "static/portal/portal.js; static/portal/portal-theme.css; static/portal/portal-i18n.js; tests/admin-data-chart-source.test.mjs"
+    contract: "Optional server-issued data.chart only; compatibility_guarded fail-closed; 1-12 bounded non-negative numeric points; legend tone allowlist; accessible figure/bars/legend; no client-generated metrics, fetch, write, provider or capability mutation."
+    tests: "Source 3/3; focused Admin 14/14; full node --test 728/728; node --check portal.js and portal-i18n.js exit0; git diff --check exit0."
+    browser: "NOT_RUN: existing Playwright fixture could not create its sandbox temp directory (mkdtemp ENOENT); no LIVE or production claim."
+    limitations: "Role/module fixture, dynamic records/charts from backend, approval/finance, CI, production and LIVE remain open; AD-02 overall is not closed."
+  admin_record_reference_projection:
+    state: "ACCEPTED_LOCAL_UI_BROWSER_BLOCKED_CI_PENDING"
+    spec: "docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md#AD-03-RECORD-REFERENCES"
+    changed_files: "static/portal/portal.js; static/portal/portal-theme.css; static/portal/portal-i18n.js; tests/admin-data-reference-source.test.mjs"
+    contract: "Optional server-issued admin_record_references only; max 6; request/job/asset/report/audit types; bounded safe IDs/labels; internal route allowlist with dot-segment rejection; DOM API links; Inspector metadata; VI/EN/ZH labels; no HTML string, write, provider, capability or RBAC change."
+    tests: "Source 2/2 including dot-segment path hardening; focused Admin 16/16; full node --test 730/730; node --check portal.js and portal-i18n.js exit0; git diff --check exit0."
+    browser: "NOT_RUN: Playwright fixture could not create its sandbox temp directory (mkdtemp ENOENT); no LIVE or production claim."
+    limitations: "Local read-only projection only. AD-03 role/module permissions, real records and request→job→asset→report→audit server bridge, CI, production and LIVE remain open."
+  admin_role_module_projection:
+    state: "ACCEPTED_LOCAL_UI_BROWSER_BLOCKED_CI_PENDING"
+    spec: "docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md#AD-03-ROLE-MODULE"
+    changed_files: "static/portal/portal.js; tests/admin-erp-navigation-projection.test.mjs"
+    contract: "Server-issued adminErpNavigation only; read_state=ready gate; /admin route allowlist; reject duplicate, outside-admin, internal //, \\ and dot-segment paths; unknown state guarded; available/canonical_read/web_native presented read_only; no browser-role or capability inference, write, provider, RBAC or record bridge."
+    tests: "Projection2/2; focused Admin18/18; full node --test732/732; node --check portal.js and portal-i18n.js exit0; git diff --check exit0."
+    browser: "NOT_RUN: Playwright fixture could not create its sandbox temp directory (mkdtemp ENOENT); no LIVE or production claim."
+    limitations: "Local role/module projection only. Real RBAC, record bridge request→job→asset→report→audit, CI, production and LIVE remain open."
+  admin_record_reference_chain:
+    state: "ACCEPTED_LOCAL_UI_BROWSER_BLOCKED_CI_PENDING"
+    spec: "docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md#AD-03-RECORD-CHAIN"
+    changed_files: "static/portal/portal.js; static/portal/portal-theme.css; static/portal/portal-i18n.js; tests/admin-data-reference-source.test.mjs"
+    contract: "Server-issued admin_record_references only; deterministic request→job→asset→report→audit order; missing links stay absent; duplicate kinds keep first; re-project through the same kind/ID/label/path allowlist before DOM links; VI/EN/ZH labels; no fetch, write, provider, capability or bridge mutation."
+    tests: "Reference2/2 including chain order; focused Admin18/18; full node --test732/732; node --check portal.js and portal-i18n.js exit0; git diff --check exit0."
+    browser: "NOT_RUN: Playwright fixture could not create its sandbox temp directory (mkdtemp ENOENT); no LIVE or production claim."
+    limitations: "Local Inspector presentation only. Real records, server bridge request→job→asset→report→audit, CI, production and LIVE remain open."
   voice_scalar_draft:
     state: "UI_VERIFIED_RUNTIME_OPEN"
     tests: "7/7; full Node 645/645"
@@ -122,15 +267,22 @@ current_wip:
   support_controls: "SP-01 control-level đã khóa local tại `/support`, `/tickets`, `/tickets/:id`, `/admin/support`, `/admin/support/:id`: intake, danh sách/lọc/phân trang, chi tiết/timeline, public/internal reply, state/recovery, resolution feedback và Asset Vault evidence; VI/EN/ZH + palette xanh/ngọc + case grid một cột <=620px. Targeted 4/4; full Node 566/566; syntax và diff check đạt. Capability server, dữ liệu thật, browser/AX, CI, delivery và LIVE chưa chứng minh. SP-02 Guide/Chat Pro/feedback/community còn mở."
   account_controls: "AC-01/AC-02 đã được tách thành spec `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md`: profile/locale/security/session/stale cleanup; wallet/packages/pricing/topup/history/pending/admin handoff. Account profile/activity/dropdown Node targeted 9/9; cả ba block Account Security tiếng Việt đã được quét, test copy 2/2 và Account regression 11/11; control-level AC-01 `6/6`; AC-02 billing control-level `5/5`; full Node mới nhất `579/579`. Ví/lịch sử canonical, QR nạp thủ công chỉ sau method+amount+readiness, PayOS/catalog fail-closed và Admin handoff được khóa ở source contract; billing/Python contracts chưa chạy vì thiếu python/py; browser/AX/QR bytes/runtime/approval/credit/live vẫn mở."
   historical_crosswalk: "Sổ lịch sử vẫn gồm 127 plan + 180 spec + 44 audit + 14 state = 365 file và 433 dòng checkbox cũ; spec hiện hành R218-02A được gắn thêm trực tiếp vào P1, không tạo ledger song song. `unclassified source=0`; semantic review từng dòng trước R217 vẫn mở theo wave, không suy diễn PASS."
-  ci_run: 39203058690
-  ci_head: 8ab1a02
-  ci_status_at_last_observation: SUCCESS_ON_8AB1A02
-  ci_scope: "Verify Web App và Authenticated WebApp QA trên delivery HEAD 8ab1a02; QA dùng DB/fixture cô lập, không provider, ví hoặc production data."
-  ci_latest_run: 39203058690
-  ci_latest_status: "Run 39203058690 terminal SUCCESS on 8ab1a02: Verify Web App và Authenticated WebApp QA đều succeeded; critical contracts, JavaScript/syntax, browser verification/runtime, authenticated route matrix, artifact và diff whitespace đều PASS."
+  admin_topup_capability_affordance:
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    spec: "docs/superpowers/specs/2026-10-20-r218-admin-topup-capability-affordance.md"
+    changed_files: "static/portal/portal.js; tests/admin-manual-topup-capability-presentation.test.mjs"
+    contract: "Desktop table and mobile cards render approval draft only when server-issued admin-manual-topup-write is true; otherwise show localized read-only reason and keep detail inspection. expected_xu/approved_xu are display-only server values; missing values remain unknown and are never derived from amount_vnd. Stale confirmation drafts are hidden when write capability is absent. Inspector confirmation boundary and all wallet/ledger/API contracts unchanged."
+    tests: "Focused source 3/3; full Node 735/735; node --check static/portal/portal.js and git diff --check pass."
+    limitations: "No backend capability/RBAC, approval, Xu credit, wallet, browser, CI, production or LIVE claim."
+  ci_run: 39212998609
+  ci_head: 1730ea4
+  ci_status_at_last_observation: SUCCESS_ON_1730EA4
+  ci_scope: "Verify Web App và Authenticated WebApp QA trên remote delivery HEAD 1730ea4; không bao gồm local Admin mobile patch/docs diff; không provider, ví hoặc production data."
+  ci_latest_run: 39212998609
+  ci_latest_status: "Run 39212998609 terminal SUCCESS on 1730ea4: Verify Web App và Authenticated WebApp QA both succeeded. Current local Admin JS/CSS/test/doc diff has no CI yet."
   migration_evidence_refresh: "Migration evidence của candidate HEAD b276cf0 đã được refresh và verify; source_files_scanned=288; source_fingerprint_sha256=8b68b4f3363f7c0a0e7809d46203f468c75a35491d3c7a56ebd133551464a78a. Bot evidence unchanged."
-  local_targeted_tests: "STT/workspace 14/14; Voice suites 132/132; voice-flow-state-presentation 51/51; readiness metadata p0-05d kiểm tra độc lập PASS; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
-  local_full_tests: "705/705 tests/*.test.mjs; Admin mobile data harmony 2/2, STT presentation 18/18, inventory read/presentation 34/34, Music browser 36 configurations, SubDub focused 20/20, Image focused 52/52, Image browser 18 configurations, Admin focused 21/21, Admin browser 72 configurations, Video focused 11/11 and scalar draft/navigation 7/7. Earlier suite counts remain historical."
+  local_targeted_tests: "Admin chart source3/3; Admin record-reference source2/2 including chain order; Admin role/module projection2/2; Admin manual-topup capability/data-truth presentation3/3; focused Admin18/18; STT/workspace14/14; Voice suites132/132; voice-flow-state-presentation51/51; readiness metadata p0-05d kiểm tra độc lập PASS; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
+  local_full_tests: "735/735 tests/*.test.mjs after Admin role/module, record-chain and manual-topup capability/data-truth projections; full Pricing truth browser72 states (12 configurations), header locale12/12, generic pricing browser12/12 and shared-state7/7/data browser12/12. Prior domain evidence remains historical; old72-route Admin smoke does not prove role/module completeness."
   python_tests: "NOT_RUN: bundled Python located via workspace dependencies; pytest/FastAPI/Uvicorn are not installed in that runtime. No Python source changed in this batch."
   voice_browser_qa:
     environment: "Localhost production renderer/CSS with synthetic signed-state projection; no integration.js, backend or DB. Browser plugin absent; Playwright + Edge used."
@@ -157,9 +309,14 @@ open_findings:
   - "SP-01 Support đã khóa control-level: intake/list/detail/reply/state/recovery/evidence/admin public-vs-internal và responsive vertical layout; capability/dữ liệu thật/browser/CI/live còn mở."
   - "SP-02 Guide/Chat Pro/feedback/community chưa thực thi."
   - "Video 32 profiles/39 AI edit options; execution capability riêng."
+  - "AD-02-MOBILE-DATA fresh synthetic browser rerun passed 8/8 outside sandbox; actual per-module roles/data, charts, approval/runtime remain open."
+  - "AD-02-PRICING-LOCALE/MOBILE: active renderer12 configs/36 states confirmed mixed fixed chrome and no vertical mobile cards. Generic pricing table branch remains a separate consumer to map."
+  - "AD-01-PRICING-NAV-LOCALE: root shared renderer legacy locale confirmed across9groups/48paths; reuse46existing route translations plus commercial/legal, preserve exact role filtering. Detail spec before BUILD, ahead of Pricing fixed-copy."
+  - "AD-04-PRICING-AFFORDANCE: enabled write controls in read-only fixture need readiness review; publish-modal-open handler currently only guarded toast. No backend permission bypass or actual write was tested."
+  - "AD-02-ZH-GENERIC-COPY: generic CANONICAL/canonical remains in module headers/descriptions; header locale picker itself is fixed and accepted."
   - "Control-level dynamic callback và authenticated browser evidence còn mở."
 provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Push the migration-evidence refresh for b276cf0 and obtain exact-head CI; then continue populated Admin module/role fixture and remaining product UI gaps in ledger order before motion. Default Admin Light remains policy; explicit Dark/System now honored. Earlier smoke/regression totals do not close full waves. Backend/provider/wallet kept T0; no merge/deploy."
+next_action: "Continue AD-03 server-issued record/bridge read-only verification after the local role/module, record-reference and record-chain projections. Re-run the Admin browser fixture when a permitted temp runtime is available; preserve server-issued role filtering and vertical mobile layout. After the Admin presentation wave, continue remaining product/runtime gates; Video and motion remain later. No backend/integration/price-rule/provider/wallet/production-data action."

@@ -37,3 +37,14 @@ test("Admin data records expose reviewed column labels for compact phone cards",
   }
   assert.doesNotMatch(compact, /fetch\(|XMLHttpRequest|\/api\/|data-portal-action|wallet|payos|provider|telegram/i);
 });
+
+test("Admin phone cards fit the viewport without hiding table headings from assistive technology", () => {
+  const compactStart = css.indexOf("/* Admin ERP compact records");
+  const compactEnd = css.indexOf("/* Customer Shell Harmony", compactStart);
+  const compact = css.slice(compactStart, compactEnd);
+  assert.match(compact, /\.portal-data-table\s*\{[^}]*width:\s*100%;[^}]*min-width:\s*0;/);
+  assert.match(compact, /\.portal-data-table-scroll-hint\s*\{\s*display:\s*none;/);
+  assert.match(compact, /\.portal-data-table thead\s*\{[^}]*left:\s*-10000px;/);
+  assert.match(compact, /\.portal-data-table tbody tr\[data-admin-data-row\]\s*>\s*td\s+:is\([^)]*\.portal-delivery-state[^)]*\)\s*\{[^}]*white-space:\s*normal;[^}]*overflow-wrap:\s*anywhere;/);
+  assert.match(compact, /td\s+\.portal-inline-actions\s*\{[^}]*justify-content:\s*flex-start;/);
+});

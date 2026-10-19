@@ -3925,6 +3925,20 @@ body {
    The server-issued ERP tables keep their semantic markup and scroll-region
    contract. This final presentation layer only restores a readable light/dark
    token surface for the mobile scroll cue and frozen first cell. */
+.portal-admin-pricing-mobile {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .portal-admin-pricing-desktop {
+    display: none;
+  }
+
+  .portal-admin-pricing-mobile {
+    display: block;
+  }
+}
+
 @media (max-width: 700px) {
   .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table-scroll-hint {
     border-bottom-color: var(--portal-border);
@@ -3951,11 +3965,19 @@ body {
 @media (max-width: 560px) {
   .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table {
     display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     border-collapse: separate;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table-scroll-hint {
+    display: none;
   }
 
   .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table thead {
     position: absolute;
+    left: -10000px;
     width: 1px;
     height: 1px;
     padding: 0;
@@ -3991,6 +4013,26 @@ body {
     border-bottom: 1px solid var(--portal-border);
     background: transparent;
     overflow-wrap: anywhere;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr[data-admin-data-row] > td:first-child:not(.portal-empty-cell) {
+    position: static;
+    left: auto;
+    min-width: 0;
+    max-width: none;
+    box-shadow: none;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr[data-admin-data-row] > td :is(.portal-badge, .portal-delivery-state, .portal-button, .portal-form-note) {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr[data-admin-data-row] > td .portal-inline-actions {
+    min-width: 0;
+    justify-content: flex-start;
   }
 
   .portal-shell[data-portal-app-kind="admin"] .portal-page .portal-admin-data-surface .portal-data-table tbody tr[data-admin-data-row] > td:last-child {
@@ -19306,6 +19348,150 @@ html[data-portal-theme="dark"] .portal-button--primary:hover:not(:disabled) {
   color: var(--portal-muted-strong);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart {
+  display: grid;
+  gap: var(--portal-space-3);
+  margin: var(--portal-space-3) 0;
+  padding: var(--portal-space-3);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius);
+  background: var(--portal-surface-light);
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart figcaption {
+  display: grid;
+  gap: var(--portal-space-1);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart figcaption h3,
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart figcaption p {
+  margin: 0;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart figcaption p {
+  color: var(--portal-muted-strong);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-points {
+  display: grid;
+  gap: var(--portal-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-point {
+  display: grid;
+  gap: var(--portal-space-1);
+  min-width: 0;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-point-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--portal-space-2);
+  color: var(--portal-ink);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-point-meta span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-point-meta strong {
+  flex: 0 0 auto;
+  color: var(--portal-muted-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-track {
+  min-height: 12px;
+  overflow: hidden;
+  border: 1px solid var(--portal-border);
+  border-radius: 999px;
+  background: var(--portal-surface-soft);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-fill {
+  display: block;
+  width: var(--portal-admin-chart-width, 0%);
+  min-height: 10px;
+  border-radius: inherit;
+  background: var(--portal-action);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-legend {
+  display: grid;
+  gap: var(--portal-space-1);
+  color: var(--portal-muted-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-legend ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--portal-space-2) var(--portal-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 500;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--portal-space-1);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-key {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--portal-muted);
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-key--primary { background: var(--portal-action); }
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-key--success { background: var(--portal-success); }
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-key--warning { background: var(--portal-warning); }
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-chart-key--danger { background: var(--portal-danger); }
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-reference-list {
+  display: grid;
+  gap: var(--portal-space-1);
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-reference-list li {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-reference-link {
+  color: var(--portal-action);
+  font-weight: 700;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-reference-chain {
+  display: grid;
+  gap: var(--portal-space-1);
+  margin: 0;
+  padding-left: 1.35rem;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-reference-chain li {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.portal-shell[data-portal-app-kind="admin"] .portal-admin-data-reference-chain li::marker {
+  color: var(--portal-action);
+  font-weight: 700;
 }
 
 .portal-shell[data-portal-app-kind="admin"] .portal-admin-data-layout {
