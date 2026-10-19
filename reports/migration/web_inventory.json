@@ -10280,7 +10280,6 @@
         "README.md",
         "TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md",
         "TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md",
-        "_giao-viec/BAO-CAO-01-AD-02-MOBILE-DATA.md",
         "admin.html",
         "admin_capability_matrix.json",
         "admin_ops.py",
@@ -10314,9 +10313,10 @@
         "copyfast_mfa.py",
         "copyfast_music_media.py",
         "copyfast_pages.py",
-        "copyfast_partner_readiness.py"
+        "copyfast_partner_readiness.py",
+        "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1112,
+      "occurrences": 1111,
       "provider": "PayOS"
     },
     {
@@ -10390,11 +10390,6 @@
     },
     {
       "files": [
-        "_giao-viec/BAO-CAO-01-AD-02-MOBILE-DATA.md",
-        "_giao-viec/BAO-CAO-05B-AD-01-PRICING-NAV-LOCALE.md",
-        "_giao-viec/DANH-GIA-02-AD-02-STATE-LOCALE.md",
-        "_giao-viec/PHIEU-01-AD-02-MOBILE-DATA.md",
-        "_giao-viec/RECEPTION-01-AD-02-MOBILE-DATA.md",
         "ai_assistant.py",
         "coach.html",
         "coach.py",
@@ -10405,7 +10400,7 @@
         "video.html",
         "video.py"
       ],
-      "occurrences": 21,
+      "occurrences": 15,
       "provider": "Gemini"
     },
     {
@@ -18322,9 +18317,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 311,
-  "source_files_scanned": 311,
-  "source_fingerprint_sha256": "4b0cb7442844bb743503787cb33cb17806402d54bac81b1ab1770680c8e42f51",
+  "source_files_discovered": 288,
+  "source_files_scanned": 288,
+  "source_fingerprint_sha256": "bae9b08f50aebf07792192a6f02d53b4471f4228dffe6f5eae5f294ae78ee928",
   "source_root": "repository-root",
   "ui_path_references": [
     {
