@@ -1,0 +1,12 @@
+{
+  "spec_id": "SD-B2",
+  "date": "2026-10-21",
+  "base_sha": "83b6623f45e1c9e99a341690f54fbef3884081c2",
+  "status": "LOCAL_DRAFT_CONSISTENCY_VERIFIED_BROWSER_PENDING",
+  "scope": "SubDub presentation local draft only; no backend, upload, provider, quote, job or delivery.",
+  "targeted": { "command": "node --test tests/subdub-hub-presentation.test.mjs", "tests": 21, "passed": 21, "failed": 0, "exit_code": 0 },
+  "syntax": { "command": "node --check static/portal/portal.js", "exit_code": 0 },
+  "covered": ["Dubbing→Combo compatible target/voice/volume/position/display", "0 and 200 values", "rerender draft projection", "input/change draft capture hooks", "guarded CTA/report unchanged", "24 existing locale/mode/theme combinations"],
+  "not_run": ["browser DOM remount", "AX tree", "mobile layout", "Voice return handoff", "number/mute control", "backend capability/runtime"],
+  "safety": { "provider_calls": 0, "wallet_mutations": 0, "production_mutations": 0, "deploy": "NO", "live_pass": "NOT_TESTED" }
+}

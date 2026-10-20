@@ -406,4 +406,6 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Finish MU-E-02 delivery: commit copy/docs/evidence, refresh clean provenance, push PR654, read fresh CI. Then SubDub SD-B2 shared local draft consistency, SD-C2 handoff, SD-D2 review/volume, SD-E2 semantics/browser; Image/utilities/Admin/Video; Q0 toast-stack and motion last. Keep whole-product/library playback/delivery/backend ownership open; do not implement Bot/route-engine/provider/wallet/PayOS/auth/schema or production data. Goal ACTIVE."
+subdub_shared_draft_evidence: reports/audit/R218-SUBDUB-SHARED-DRAFT-QA-20261021.json
+subdub_shared_draft: "SD-B2 targeted21/21; Dubbing↔Combo compatible local draft and0/200 persistence verified. Browser/AX/rerender integration pending; SD-C2/SD-D2/SD-E2 remain open."
+next_action: "Finish current SD-B2 delivery with source/docs/evidence commit and clean provenance; push PR654 and read fresh CI. Then SD-C2 Voice handoff, SD-D2 review/number-mute, SD-E2 semantics/browser; Image/utilities/Admin/Video; Q0 toast-stack and motion last. Keep whole-product/library playback/delivery/backend ownership open; do not implement Bot/route-engine/provider/wallet/PayOS/auth/schema or production data. Goal ACTIVE."

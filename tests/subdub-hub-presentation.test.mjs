@@ -26,7 +26,7 @@ const escapeHtml = (value) => String(value ?? "")
   .replaceAll('"', "&quot;")
   .replaceAll("'", "&#39;");
 
-function renderSubDub(url, locale = "vi", wallet = { balance_xu: 246 }) {
+function renderSubDub(url, locale = "vi", wallet = { balance_xu: 246 }, draft = null) {
   const parsed = new URL(url, "https://app.example");
   const browserWindow = { location: { search: parsed.search } };
   const render = new Function(
@@ -35,17 +35,36 @@ function renderSubDub(url, locale = "vi", wallet = { balance_xu: 246 }) {
     "safeText",
     "badge",
     "renderHero",
+    "transientFormDrafts",
     `${helperSource}\n${rendererSource}\nreturn { renderSubDubHub, updateSubDubModeSelection, updateSubDubLocalVolume, updateSubDubVoiceLaneSelection };`
   )(
     browserWindow,
     (context) => context?.locale || locale,
     escapeHtml,
     (state) => `<span data-test-badge="${escapeHtml(state)}">${escapeHtml(state)}</span>`,
-    (page) => `<header class="test-route-hero"><h1>${escapeHtml(page?.title || "SubDub")}</h1><p>${escapeHtml(page?.description || "")}</p></header>`
+    (page) => `<header class="test-route-hero"><h1>${escapeHtml(page?.title || "SubDub")}</h1><p>${escapeHtml(page?.description || "")}</p></header>`,
+    new Map(draft ? [["/subdub", draft]] : [])
   );
 
   return render.renderSubDubHub({ title: "SubDub" }, { locale, wallet });
 }
+
+test("SubDub shared draft keeps compatible language, voice and volume values across modes and rerender", () => {
+  const draft = {
+    shared: { target_language: "en", target_language_custom: "", original_volume: "0", dubbing_volume: "200", voice_lane: "default_male", subtitle_position: "top_center", sub_display_type: "bilingual" },
+    modes: { DUBBING_ONLY: { target_language: "en" }, SUBTITLE_PLUS_DUBBING: {} }
+  };
+  const dubbing = renderSubDub("/subdub?mode=dubbing_only", "vi", { balance_xu: 246 }, draft);
+  const combo = renderSubDub("/subdub?mode=subtitle_plus_dubbing", "vi", { balance_xu: 246 }, draft);
+  for (const html of [dubbing, combo]) {
+    assert.match(html, /<option value="en" selected>Tiếng Anh<\/option>/);
+    assert.match(html, /data-subdub-local-volume="original"[^>]*value="0"/);
+    assert.match(html, /data-subdub-local-volume="dubbing"[^>]*value="200"/);
+    assert.match(html, /value="default_male"[^>]*checked/);
+    assert.match(html, /<option value="top_center" selected>/);
+  }
+  assert.match(combo, /data-subdub-mode-select="SUBTITLE_PLUS_DUBBING"[^>]*aria-selected="true"/);
+});
 
 test("SubDub mode selection stays on one screen and exposes all four choices", () => {
   const html = renderSubDub("/subdub?mode=dubbing_only");

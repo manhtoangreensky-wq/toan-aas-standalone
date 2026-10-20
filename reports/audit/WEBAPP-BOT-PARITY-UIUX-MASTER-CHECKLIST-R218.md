@@ -330,6 +330,12 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] Regression SubDub hiện hành đạt `20/20` focused tests; simulation kiểm `24` tổ hợp
   locale/mode/theme, giữ Smart Multi/Auto 2/Auto Multi 3–8 riêng, 7 vị trí phụ đề và
   trạng thái guarded. Browser authenticated/runtime/upload thật vẫn mở.
+- [x] SD-B2 shared local draft: chuyển cấu hình tương thích giữa Lồng tiếng và
+  Combo không reset target/voice/position/display/volume; giá trị0 và200 được giữ
+  khi render lại; input/change ghi tab-memory, không URL/storage/payload. Focused
+  `21/21`, syntax đạt. Evidence `R218-SUBDUB-SHARED-DRAFT-QA-20261021.json`.
+  Browser DOM/AX/rerender thật chưa đóng; SD-C2 handoff, SD-D2 number/mute,
+  SD-E2 semantics vẫn mở.
 - [~] SubDub DOM smoke, chưa đóng interaction/keyboard/AX/locale thực — targeted20/20; browser QA
   48 cases VI/EN/ZH × 4 mode × sáng/tối × 390/1440, tabs4/panels4/lanes7,
   report rỗng trung thực, overflow/audio/confirm/external/writes/page-errors0.

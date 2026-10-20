@@ -26640,6 +26640,7 @@
     const nextMode = modeButton.getAttribute("data-subdub-mode-select") || "";
     const nextQueryMode = modeButton.getAttribute("data-subdub-mode-query") || "";
     if (!subDubPage || !nextMode || !nextQueryMode) return false;
+    captureSubDubDraft(subDubPage);
     subDubPage.querySelectorAll("[data-subdub-mode-select]").forEach((button) => {
       const selected = button === modeButton;
       button.setAttribute("aria-pressed", selected ? "true" : "false");
@@ -26652,6 +26653,7 @@
       panel.hidden = !selected;
       panel.setAttribute("aria-hidden", selected ? "false" : "true");
     });
+    applySubDubDraftDom(subDubPage, subDubDraftSnapshot(), nextMode);
     const selectedLabel = modeButton.getAttribute("data-subdub-summary-label") || "";
     const summary = subDubPage.querySelector("[data-subdub-summary-mode]");
     if (summary) summary.textContent = selectedLabel;
@@ -26706,9 +26708,145 @@
     return true;
   }
 
+  var SUBDUB_DRAFT_ROUTE = "/subdub";
+  var SUBDUB_SHARED_DRAFT_FIELDS = new Set([
+    "target_language", "target_language_custom", "original_volume", "dubbing_volume",
+    "voice_lane", "sub_display_type", "subtitle_position"
+  ]);
+
+  function subDubDraftSnapshot(context) {
+    const fromContext = context && context.subDubDraft && typeof context.subDubDraft === "object" ? context.subDubDraft : null;
+    const fromMemory = typeof transientFormDrafts !== "undefined" && transientFormDrafts instanceof Map
+      ? transientFormDrafts.get(SUBDUB_DRAFT_ROUTE)
+      : null;
+    const source = fromContext || fromMemory;
+    if (!source || typeof source !== "object") return { shared: {}, modes: {} };
+    return {
+      shared: source.shared && typeof source.shared === "object" ? { ...source.shared } : {},
+      modes: source.modes && typeof source.modes === "object" ? Object.fromEntries(Object.entries(source.modes).map(([key, value]) => [key, value && typeof value === "object" ? { ...value } : {}])) : {}
+    };
+  }
+
+  function subDubDraftValue(draft, mode, name, fallback) {
+    const modeValues = draft && draft.modes && draft.modes[mode];
+    if (modeValues && modeValues[name] !== undefined) return String(modeValues[name]);
+    if (draft && draft.shared && draft.shared[name] !== undefined) return String(draft.shared[name]);
+    return String(fallback ?? "");
+  }
+
+  function subDubHasDraftValue(draft, mode, name) {
+    return Boolean(draft && ((draft.modes && draft.modes[mode] && draft.modes[mode][name] !== undefined)
+      || (draft.shared && draft.shared[name] !== undefined)));
+  }
+
+  function subDubDraftFieldValue(control) {
+    if (!control || !control.name) return null;
+    if (control.type === "radio") return control.checked ? control.value : null;
+    if (control.type === "checkbox") return control.checked ? "true" : "false";
+    return control.value;
+  }
+
+  function captureSubDubDraft(root) {
+    if (!root || typeof transientFormDrafts === "undefined" || !(transientFormDrafts instanceof Map)) return null;
+    const draft = subDubDraftSnapshot();
+    const sharedRoot = root.querySelector("[data-subdub-stage=\"1\"]");
+    if (sharedRoot && typeof sharedRoot.querySelectorAll === "function") {
+      sharedRoot.querySelectorAll("input, select, textarea").forEach((control) => {
+        const value = subDubDraftFieldValue(control);
+        if (value !== null) draft.shared[control.name || control.id] = value;
+      });
+    }
+    if (typeof root.querySelectorAll !== "function") return draft;
+    root.querySelectorAll("[data-subdub-mode-panel]").forEach((panel) => {
+      const mode = panel.getAttribute("data-subdub-mode-panel") || "";
+      if (!mode || panel.hidden) return;
+      const values = { ...(draft.modes[mode] || {}) };
+      panel.querySelectorAll("input, select, textarea").forEach((control) => {
+        const value = subDubDraftFieldValue(control);
+        if (value === null) return;
+        const name = control.name || control.getAttribute("data-subdub-local-volume") || control.id;
+        if (!name) return;
+        const normalizedName = control.getAttribute("data-subdub-local-volume") === "original" ? "original_volume"
+          : control.getAttribute("data-subdub-local-volume") === "dubbing" ? "dubbing_volume"
+            : control.matches("[data-subdub-voice-lane-input]") ? "voice_lane" : name;
+        values[normalizedName] = value;
+        if (SUBDUB_SHARED_DRAFT_FIELDS.has(normalizedName)) draft.shared[normalizedName] = value;
+      });
+      draft.modes[mode] = values;
+    });
+    transientFormDrafts.set(SUBDUB_DRAFT_ROUTE, draft);
+    return draft;
+  }
+
+  function subDubSetSelectValue(root, selector, value) {
+    if (!value) return;
+    root.querySelectorAll(selector).forEach((select) => {
+      const option = Array.from(select.options || []).find((item) => item.value === value);
+      if (!option) return;
+      select.value = value;
+      select.querySelectorAll("option").forEach((item) => item.removeAttribute("selected"));
+      option.setAttribute("selected", "selected");
+    });
+  }
+
+  function subDubSetRadioValue(root, selector, value) {
+    if (!value) return;
+    root.querySelectorAll(selector).forEach((input) => { input.checked = input.value === value; });
+  }
+
+  function applySubDubDraftDom(root, draft, mode) {
+    if (!root || !draft || typeof root.querySelector !== "function") return;
+    const target = root.querySelector(`[data-subdub-mode-panel="${mode}"]`);
+    const scope = target || root;
+    if (!scope || typeof scope.querySelectorAll !== "function") return;
+    const targetLanguage = subDubDraftValue(draft, mode, "target_language", "vi");
+    const custom = subDubDraftValue(draft, mode, "target_language_custom", "");
+    if (subDubHasDraftValue(draft, mode, "target_language")) subDubSetSelectValue(scope, 'select[name="target_language"]', targetLanguage);
+    if (subDubHasDraftValue(draft, mode, "target_language_custom")) scope.querySelectorAll('input[name="target_language_custom"]').forEach((input) => { input.value = custom; });
+    if (subDubHasDraftValue(draft, mode, "subtitle_position")) subDubSetSelectValue(scope, 'select[name^="subdub_"][name$="_subtitle_position"]', subDubDraftValue(draft, mode, "subtitle_position", "bottom_center"));
+    if (subDubHasDraftValue(draft, mode, "voice_lane")) subDubSetRadioValue(scope, '[data-subdub-voice-lane-input]', subDubDraftValue(draft, mode, "voice_lane", "default_female"));
+    if (subDubHasDraftValue(draft, mode, "sub_display_type")) subDubSetRadioValue(scope, 'input[name="sub_display_type"]', subDubDraftValue(draft, mode, "sub_display_type", "bilingual"));
+    if (subDubHasDraftValue(draft, mode, "original_volume")) scope.querySelectorAll('[data-subdub-local-volume="original"]').forEach((input) => { input.value = subDubDraftValue(draft, mode, "original_volume", "100"); });
+    if (subDubHasDraftValue(draft, mode, "dubbing_volume")) scope.querySelectorAll('[data-subdub-local-volume="dubbing"]').forEach((input) => { input.value = subDubDraftValue(draft, mode, "dubbing_volume", "100"); });
+    scope.querySelectorAll("[data-subdub-local-volume]").forEach((input) => {
+      const output = scope.querySelector(`[data-subdub-volume-output="${input.getAttribute("data-subdub-local-volume")}"]`);
+      if (output) output.textContent = `${input.value}%`;
+    });
+    updateSubDubVoiceLaneSelection(scope.querySelector("[data-subdub-voice-lane-input]:checked"));
+  }
+
+  function applySubDubDraftHtml(html, draft) {
+    if (!draft || !draft.shared && !draft.modes) return html;
+    const applyMode = (source, mode) => {
+      const modeHasDraft = ["target_language", "target_language_custom", "original_volume", "dubbing_volume", "voice_lane", "sub_display_type", "subtitle_position"].some((name) => subDubHasDraftValue(draft, mode, name));
+      if (!modeHasDraft) return source;
+      const targetLanguage = subDubDraftValue(draft, mode, "target_language", "");
+      const custom = subDubDraftValue(draft, mode, "target_language_custom", "");
+      const original = subDubDraftValue(draft, mode, "original_volume", "100");
+      const dubbing = subDubDraftValue(draft, mode, "dubbing_volume", "100");
+      const voice = subDubDraftValue(draft, mode, "voice_lane", "default_female");
+      const display = subDubDraftValue(draft, mode, "sub_display_type", "");
+      const position = subDubDraftValue(draft, mode, "subtitle_position", "bottom_center");
+      let result = source.replace(/(<select[^>]*name="target_language"[^>]*>)([\s\S]*?)(<\/select>)/, (_m, open, options, close) => `${open}${options.replace(/\sselected(?=>)/g, "").replace(/(<option value=")([^\"]+)("[^>]*>)/g, (m, a, value, b) => `${a}${value}${b}${value === targetLanguage ? "" : ""}`).replace(new RegExp(`(<option value="${targetLanguage}")`), `$1 selected`)}${close}`);
+      result = result.replace(/(<input[^>]*name="target_language_custom"[^>]*)(>)/g, (_m, open, end) => `${open} value="${safeText(custom)}"${end}`);
+      result = result.replace(/(<select[^>]*name="[^"]*subtitle_position"[^>]*>)([\s\S]*?)(<\/select>)/, (_m, open, options, close) => `${open}${options.replace(/\sselected(?=>)/g, "").replace(new RegExp(`(<option value="${position}")`), `$1 selected`)}${close}`);
+      result = result.replace(/<input[^>]*data-subdub-local-volume="original"[^>]*>/, (match) => match.replace(/value="[^\"]*"/, `value="${original}"`));
+      result = result.replace(/<input[^>]*data-subdub-local-volume="dubbing"[^>]*>/, (match) => match.replace(/value="[^\"]*"/, `value="${dubbing}"`));
+      result = result.replace(/<input[^>]*data-subdub-voice-lane-input[^>]*>/g, (match) => {
+        const selected = match.includes(`value="${voice}"`);
+        const clean = match.replace(/\schecked(?=\s|>)/g, "");
+        return selected ? clean.replace(/>$/, " checked>") : clean;
+      });
+      if (display) result = result.replace(new RegExp(`(<input[^>]*name="sub_display_type"[^>]*value="${display}"[^>]*)(>)`), `$1 checked$2`);
+      return result;
+    };
+    return html.replace(/(<section[^>]*data-subdub-mode-panel="([A-Z_]+)"[\s\S]*?<\/section>)/g, (_m, section, mode) => applyMode(section, mode));
+  }
+
   function renderSubDubHub(page, context) {
     const locale = resolveSubDubLocale(context);
     const copy = SUBDUB_PRESENTATION_COPY[locale] || SUBDUB_PRESENTATION_COPY.vi;
+    const draft = subDubDraftSnapshot(context);
 
     const currentModeKey = resolveSubDubJourneyMode(context);
     const modeCopy = copy.modes[currentModeKey] || copy.modes.SUBTITLE_ONLY;
@@ -26727,11 +26865,11 @@
       <legend>${safeText(copy.audioControlsHeading)}</legend>
       <div class="portal-subdub-volume-control">
         <label for="subdub-original-volume-${safeText(suffix)}">${safeText(copy.audioOriginalLabel)}</label>
-        <span class="portal-subdub-volume-control__value"><input id="subdub-original-volume-${safeText(suffix)}" type="range" min="0" max="100" value="100" data-subdub-local-volume="original"><output data-subdub-volume-output="original">100%</output></span>
+        <span class="portal-subdub-volume-control__value"><input id="subdub-original-volume-${safeText(suffix)}" type="range" min="0" max="100" data-subdub-local-volume="original" value="100"><output data-subdub-volume-output="original">100%</output></span>
       </div>
       <div class="portal-subdub-volume-control">
         <label for="subdub-dubbing-volume-${safeText(suffix)}">${safeText(copy.audioDubbingLabel)}</label>
-        <span class="portal-subdub-volume-control__value"><input id="subdub-dubbing-volume-${safeText(suffix)}" type="range" min="0" max="200" value="100" data-subdub-local-volume="dubbing"><output data-subdub-volume-output="dubbing">100%</output></span>
+        <span class="portal-subdub-volume-control__value"><input id="subdub-dubbing-volume-${safeText(suffix)}" type="range" min="0" max="200" data-subdub-local-volume="dubbing" value="100"><output data-subdub-volume-output="dubbing">100%</output></span>
       </div>
       <p class="portal-subdub-volume-note" id="subdub-volume-note-${safeText(suffix)}">${safeText(copy.audioControlsNote)}</p>
     </fieldset>`;
@@ -26767,7 +26905,7 @@
         <p class="portal-subdub-voice-lane-hint">${safeText(copy.voiceLaneHint)}</p>
         <div class="portal-subdub-voice-lane-grid">
           ${lanes.map(([value, label], index) => `<label class="portal-subdub-voice-lane${index === 0 ? " is-selected" : ""}" data-status="ready" data-subdub-voice-lane="${safeText(value)}"${laneCallbacks[value] ? ` data-subdub-callback="${safeText(laneCallbacks[value])}"` : ""}>
-            <input type="radio" name="subdub_voice_lane_${safeText(suffix)}" value="${safeText(value)}" data-subdub-voice-lane-input ${index === 0 ? "checked" : ""}>
+            <input type="radio" name="subdub_voice_lane_${safeText(suffix)}" data-subdub-voice-lane-input value="${safeText(value)}" ${index === 0 ? "checked" : ""}>
             <span class="portal-subdub-voice-lane__body"><strong>${safeText(label)}</strong><small>${safeText(copy.voiceLaneGuarded)}</small></span>
           </label>`).join("")}
         </div>
@@ -27034,7 +27172,7 @@
       </div>
     </section>`;
 
-    return `<article class="portal-page portal-subdub-hub portal-subdub-journey-view" lang="${safeText(locale)}">
+    const rendered = `<article class="portal-page portal-subdub-hub portal-subdub-journey-view" lang="${safeText(locale)}">
       ${renderHero({ ...page, description: copy.heroSubtitle }, context)}
       <section class="portal-subdub-mode-picker" aria-labelledby="subdub-mode-picker-title">
         <h2 class="portal-card-title" id="subdub-mode-picker-title">${safeText(copy.modeSelectorLabel)}</h2>
@@ -27048,6 +27186,7 @@
       ${stage4Html}
       ${companionToolsHtml}
     </article>`;
+    return applySubDubDraftHtml(rendered, draft);
   }
 
   function renderDocumentHub(page, context) {
@@ -40194,10 +40333,14 @@
     document.addEventListener("input", (event) => {
       const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume]");
       updateSubDubLocalVolume(volumeInput);
+      const subDubForm = event.target.closest(".portal-subdub-hub");
+      if (subDubForm) captureSubDubDraft(subDubForm);
     });
     document.addEventListener("change", (event) => {
       const voiceLaneInput = event.target.closest(".portal-subdub-hub [data-subdub-voice-lane-input]");
       updateSubDubVoiceLaneSelection(voiceLaneInput);
+      const subDubForm = event.target.closest(".portal-subdub-hub");
+      if (subDubForm) captureSubDubDraft(subDubForm);
     });
     document.addEventListener("keydown", (event) => {
       const subDubModeButton = event.target.closest(".portal-subdub-hub [data-subdub-mode-select]");
