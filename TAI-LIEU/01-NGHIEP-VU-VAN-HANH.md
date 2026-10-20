@@ -1,5 +1,17 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Music/SFX — trạng thái đọc và phản hồi thao tác, 21/10/2026
+
+Thư viện hiệu ứng âm thanh không kế thừa bộ lọc/trang của thư viện nhạc.
+Tìm kiếm, xóa lọc, phân trang và làm mới chỉ báo thành công khi dữ liệu hợp lệ;
+lỗi và response cũ không được báo thành công. Chữ phân trang/thông báo theo
+VI/EN/ZH, tìm không khớp khác với thư viện chưa có dữ liệu; loading có busy.
+Test36/36 và browser39 cấu hình QA có locale hồ sơ thật, AX/ảnh/bàn phím;
+không page/console error, UIwrite hoặc request ngoài. Đây vẫn là thư viện
+thông tin tổng hợp chỉ đọc, không phát/tải/tạo âm thanh hay chứng minh backend
+ownership. Copy dài và toast xếp chồng còn mở. Evidence:
+`reports/audit/R218-MUSIC-LIBRARY-READ-STATE-QA-20261021.json`.
+
 ## Đính chính nghiệm thu 21/10/2026 — ưu tiên đọc trước checkpoint cũ
 
 Các matrix 48/72/120/48 và motion12 của checkpoint cũ chỉ là smoke: không đủ

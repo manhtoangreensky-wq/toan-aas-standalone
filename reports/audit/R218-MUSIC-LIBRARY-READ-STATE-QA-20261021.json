@@ -1,0 +1,49 @@
+{
+  "spec_id": "MU-E-01",
+  "date": "2026-10-21",
+  "base_sha": "7569f61420e3fe243d5a453e7f1912497d1e8503",
+  "status": "LIBRARY_READ_STATE_UI_VERIFIED_DELIVERY_PENDING",
+  "scope": "Signed QA app with actual profile locale; core/status capability and library GET transport fixtures only. Not backend ownership, playback, generation, download, delivery or LIVE.",
+  "tested_source_sha256": {
+    "portal.js": "1ad04a9c8350c700a1840a6cef927c214ffc00205527e42d7989d434871ade6d",
+    "portal-i18n.js": "c51dd8c7f935b1175dc6cc0069cf9ca0a23999efc6f48682999e1ad2855a2773",
+    "integration.js": "651862570d96bae916742451dab446593a17d560a8ee1a7b9e0b6141c7b875cc"
+  },
+  "red_green": {
+    "runtime_initial": { "passed": 4, "failed": 8 },
+    "empty_loading_initial": { "passed": 9, "failed": 6 },
+    "real_paginator_initial": { "passed": 16, "failed": 2 },
+    "final_targeted": { "passed": 36, "failed": 0, "exit_code": 0 }
+  },
+  "browser": {
+    "origin": "http://127.0.0.1:1780",
+    "browser": "Edge headless, temporary context, reduced motion; Browser plugin unavailable",
+    "routes": ["/music/library", "/music/sfx-library", "/music-library"],
+    "locales_asserted_from_profile_and_html": ["vi", "en", "zh"],
+    "themes": ["light", "dark"],
+    "widths": [390, 768, 1440],
+    "main_configurations": 36,
+    "alias_configurations": 3,
+    "total_configurations": 39,
+    "real_history_route_races": 3,
+    "checked": ["loading-busy-disabled", "bootstrap-role", "ready-populated", "query-empty", "clear-filter", "next-page", "previous-page-keyboard", "failed-no-stale-cards", "retry", "true-empty", "guarded-no-cards", "AX", "overflow", "no-player-or-download"],
+    "page_and_console_errors": 0,
+    "ui_non_get_requests": 0,
+    "external_requests": 0,
+    "result_file": "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/music-library-review-20261021.json",
+    "result_sha256": "eaee67b9193385e1c4b84d35da1a25881ddbfb864397c401890c789b82b4ea6f",
+    "runner_sha256": "51296a4d2057d0b3d46556854fdefb3232c5f71bb4f738ba59212c92d6834556",
+    "setup": "Two temporary accounts across two runs, registration/login and six CSRF locale writes. UI writes are counted separately and blocked. No production data.",
+    "server": "Task-owned exec35856 stopped gracefully, exit0; temporary database cleaned."
+  },
+  "comparators": { "protected_integration_functions_unchanged": 12, "non_music_paginator_outputs_equal": 20 },
+  "regression": { "full_node_passed": 853, "full_node_failed": 0, "python_metadata_i18n_motion_passed": 29, "python_metadata_i18n_motion_failed": 0, "js_syntax_files": 3, "diff_check_exit": 0 },
+  "python_boundary": {
+    "passed": 5,
+    "failed": 1,
+    "baseline_same_failure": "test_library_routes_do_not_fall_back_to_generic_assets_or_audio_execution",
+    "reason": "Obsolete regex cannot find the generic assets branch on both clean d3125fd and candidate; no Python/test weakening."
+  },
+  "remaining": ["MU-E-02 natural concise copy", "Q0-TOAST-STACK observed seven rapid-action notifications covering mobile", "backend ownership not tested", "playback/download/save/reuse not implemented by this spec", "motion metrics not measured"],
+  "safety": { "provider_calls": 0, "wallet_mutations": 0, "production_operations": 0, "deploy": "NO", "live_pass": "NOT_TESTED" }
+}

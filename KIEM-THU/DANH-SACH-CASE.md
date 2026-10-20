@@ -1,5 +1,17 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## MU-E-01 — tải và thao tác thư viện Music/SFX, 21/10/2026
+
+| ID | Luồng | Evidence cần có |
+|---|---|---|
+| MULE-01 | Music/SFX/alias; locale hồ sơ VI/EN/ZH, sáng/tối, 390/768/1440 | GET đúng role, không mang query/trang khác role; loading busy/disabled và không card cũ |
+| MULE-02 | Search không khớp → clear → trang sau → Enter trang trước | Query-empty khác true-empty, offsets đúng, chữ paginator/toast đúng locale, không ghi query vào URL/storage |
+| MULE-03 | Transport/malformed → failed → retry; route/logout/session/capability đổi lúc pending | Không success sai, response stale không ghi đè hoặc toast; không thẻ trái role/tài khoản |
+| MULE-04 | Guarded + AX/ảnh/network | Không player/tải/tệp hoặc quyền giả; lỗi trang/console/UIwrite/external0; dữ liệu tổng hợp không chứng minh backend/LIVE |
+
+Evidence `reports/audit/R218-MUSIC-LIBRARY-READ-STATE-QA-20261021.json`;
+UI copy dài và toast stacking vẫn mở ở ledger, không được gộp vào PASS này.
+
 ## R218-MUSIC-REVIEW-001 — 21/10/2026
 
 | ID | Luồng | Evidence cần có |
@@ -338,7 +350,11 @@ Bằng chứng source hiện tại: `tests/support-hub-product-controls.test.mjs
 `566/566`, syntax hai file Portal và `git diff --check` đạt. Browser/AX/CI/live chưa đóng; không
 dùng PASS source để thay cho các mức đó.
 
-## R218 presentation checkpoint cases — 21/10/2026
+## R218 presentation checkpoint cases — lịch sử, đã phân loại lại 21/10/2026
+
+Bảng dưới giữ số đo cũ, không còn là cổng hoàn tất. Áp dụng
+`R218-EVIDENCE-RECLASSIFICATION-20261021.md`; locale/interaction/AX/motion
+chưa kiểm không được suy ra PASS từ các lượt smoke này.
 
 | Nhóm | Case/ma trận | Kết quả QA hiện tại | Giới hạn bắt buộc |
 |---|---|---|---|

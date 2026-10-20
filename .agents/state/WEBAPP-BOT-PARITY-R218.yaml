@@ -1,18 +1,20 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: MUSIC_REVIEW_VERIFIED_PROVENANCE_REFRESH_PENDING
+status: MUSIC_LIBRARY_READ_STATE_VERIFIED_DELIVERY_PENDING
 date: 2026-10-21
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 4e7943e17fecf63638457f6aaf1ef3854a92043e
+head_sha: 7569f61420e3fe243d5a453e7f1912497d1e8503
 implementation_head_sha: b186b75a2b55b397f802fb992ce0a320039053a4
-delivery_head_sha: 4e7943e17fecf63638457f6aaf1ef3854a92043e
-delivery_status: CI_FAILED_39473056685_PROVENANCE_LOCAL_CORRECTION_VERIFIED_NOT_PUSHED
+delivery_head_sha: 7569f61420e3fe243d5a453e7f1912497d1e8503
+delivery_status: MUSIC_REVIEW_PUSHED_CI_GREEN_39480273557_LIBRARY_CORRECTION_LOCAL_NOT_PUSHED
 review_evidence: reports/audit/R218-MUSIC-RUNTIME-REVIEW-QA-20261021.json
 evidence_reclassification: reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md
-qa_review_server: "STOPPED: task-owned exec54976 at http://127.0.0.1:11076 ended gracefully with exit0; temporary DB cleaned. No active QA server in this checkpoint."
+qa_review_server: "STOPPED: exec54976/11076 and latest exec35856/1780 both ended gracefully exit0; temporary databases cleaned. No active task-owned QA server."
+music_library_read_state_evidence: reports/audit/R218-MUSIC-LIBRARY-READ-STATE-QA-20261021.json
+music_library_read_state: "MU-E-01: targeted36/36; browser39 actual-profile configurations incl alias3/route-race3; errors/UIwrites/external0; protected helpers12 and generic paginator20 comparators unchanged. Copy MU-E-02 and Q0 toast-stack remain open."
 music_review_python_verify: "2026-10-21: exact tester metadata + i18n bundle/locale + motion source-contract subset29 passed/0failed, exit0 outside restricted sandbox. Prior sandbox session70666 interrupted after no progress; not counted as PASS."
 checkpoint_report: reports/audit/R218-CHECKPOINT-20261021.md
 checkpoint_date: 2026-10-21
@@ -21,7 +23,7 @@ prepush_report: reports/prepush/R218-20261021-MUSIC-REVIEW-PROVENANCE.md
 prepush_gate: REVIEW_DELTA_VERIFIED_FINAL_PROVENANCE_PENDING
 postpush_report: reports/prepush/R218-20261021-POSTPUSH.md
 head_sha_semantics: "Last remote HEAD empirically observed before current Music review/provenance correction. Read Git/PR for current HEAD; do not predict this state's own future commit SHA."
-delivery_head_semantics: "PR654 and remote branch4e7943e verified; run39473056685 failed fingerprint, Authenticated QA skipped. Current dirty correction not covered by remote CI yet."
+delivery_head_semantics: "PR654 and remote7569f61 read back; run39480273557 terminal SUCCESS in both Verify and Authenticated QA jobs. Current Library correction is local, not covered by that CI."
 branch_head_sha: 7a463a6b554feffce90055f792a47b5b1c7dccf1
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
 last_push_verified_commit: 7a463a6b554feffce90055f792a47b5b1c7dccf1
@@ -402,4 +404,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Current Music review correction VERIFIED: integrated13/13, independent18/18, full Node826/826, actual-profile VI/EN/ZH browser18 with apply/zero/unknown/edit/revert/report-only; idle expiry3 retains form. Nine historical broad reports reclassified, not whole-product completion. Finish current review docs/tester/provenance from clean source commit, push once to PR654, verify fresh CI and publish exact status. Then continue incomplete UI interactions per ledger: Music library, SubDub, Image, utilities/Admin/Video, motion last. Do not implement Bot/route-engine/provider/wallet/PayOS/auth/schema or production data. Goal ACTIVE."
+next_action: "Finish MU-E-01 delivery with updated tester metadata, source commit and clean provenance; push PR654 and read fresh CI. Then MU-E-02 natural concise library copy, SubDub real-locale interactions/AX, Image, utilities/Admin/Video; Q0 toast-stack and motion last. Music review remote7569f61 has both CI jobs green. Keep whole-product/library playback/delivery/backend ownership open; do not implement Bot/route-engine/provider/wallet/PayOS/auth/schema or production data. Goal ACTIVE."

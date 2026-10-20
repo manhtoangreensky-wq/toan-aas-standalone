@@ -15991,6 +15991,20 @@
   });
 
   const MUSIC_LIBRARY_COPY_ROWS = [
+    ["feedback.route", "Hãy mở thư viện cần thao tác trước.", "Open the library you want to use first.", "请先打开要操作的资料库。"],
+    ["feedback.permission", "Bạn chưa có quyền xem thư viện này.", "You do not have access to this library.", "你尚无权查看此资料库。"],
+    ["feedback.page", "Đã tải trang thư viện.", "Library page loaded.", "已加载资料库页面。"],
+    ["feedback.refresh", "Đã làm mới thư viện.", "Library refreshed.", "资料库已刷新。"],
+    ["feedback.filter", "Đã cập nhật kết quả tìm kiếm.", "Search results updated.", "搜索结果已更新。"],
+    ["feedback.clear", "Đã hiển thị danh sách chưa lọc.", "Showing the unfiltered list.", "已显示未筛选的列表。"],
+    ["feedback.failed", "Chưa thể tải thư viện. Hãy thử lại.", "The library could not be loaded. Please try again.", "暂时无法加载资料库，请重试。"],
+    ["empty.search.title", "Không tìm thấy kết quả", "No matches found", "未找到匹配结果"],
+    ["empty.search.body", "Thử từ khóa khác hoặc xóa bộ lọc để xem lại danh sách.", "Try another search term or clear the filters to see the list again.", "请尝试其他关键词，或清除筛选以重新查看列表。"],
+    ["pagination.range", "Đang hiển thị {from}–{to} {label}", "Showing {from}–{to} {label}", "显示第 {from}–{to} 项{label}"],
+    ["pagination.empty", "Không có {label} ở trang này", "No {label} on this page", "此页没有{label}"],
+    ["pagination.previous", "← Trang trước", "← Previous page", "← 上一页"],
+    ["pagination.next", "Trang sau →", "Next page →", "下一页 →"],
+    ["pagination.aria", "Phân trang {label}", "{label} pagination", "{label}分页"],
     ["page.music.title", "Thư viện nhạc", "Music library", "音乐库"],
     ["page.music.description", "Xem các bản nhạc đã lưu trong tài khoản của bạn.", "View saved music available to your account.", "查看账户中已保存的音乐。"],
     ["page.sfx.title", "Thư viện hiệu ứng âm thanh", "Sound-effects library", "音效库"],

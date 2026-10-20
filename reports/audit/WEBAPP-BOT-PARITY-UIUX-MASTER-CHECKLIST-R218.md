@@ -284,6 +284,17 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   Test9/9; browser routes2/ready cards2/stale hidden2/audio0/download0/
   overflow0/external0/page-errors0. Evidence
   `reports/audit/R218-MU-E-MUSIC-LIBRARY-QA-20261020.json`.
+- [x] MU-E-01 UI read-state ngày21/10: đã sửa SFX kế thừa listing Music,
+  success sai khi failed/stale, toast/paginator lẫn VI trong EN/ZH, query-empty
+  và loading busy. Test36/36; browser39 cấu hình (hai route36 + alias3),
+  locale hồ sơ thật, loading/search/clear/prev-next bàn phím/failed/retry/empty/
+  guarded; route-race3. Không card cũ, không player/download; lỗi trang/console/
+  UIwrite/external0. 12 helper được bảo vệ không đổi; paginator ngoài Music20
+  comparator không khác. Evidence `R218-MUSIC-LIBRARY-READ-STATE-QA-20261021.json`.
+  Không đóng backend ownership, phát/tải/lưu/dùng lại hoặc toàn bộ MU-E.
+- [ ] MU-E-02: rút copy thư viện thành hướng dẫn ngắn tự nhiên, bỏ thuật ngữ
+  kiểm toán khỏi nội dung khách; không đổi ranh giới chưa nghe/tải/tạo âm thanh.
+  Ảnh39 hiện chứng minh controls, chưa phải nghiệm thu chất lượng thiết kế cuối.
 - [ ] Brief/style/lyrics/vocal nam/nữ/song ca/auto/3 tier, không mất draft.
 - [ ] Ba gợi ý chọn/đổi/sửa; quote/confirm/review rõ.
 - [ ] Player/tải/save/reuse/history/progress và generation vs delivery failure.
@@ -629,6 +640,12 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] VI/EN/ZH sạch; dữ liệu user/tên riêng không bị dịch.
 - [ ] Mobile 375/390/768/1440 × themes; shell/forms thêm 320/414/1024.
 - [ ] Keyboard/focus/label/contrast/touch/overflow/empty/loading/error/recovery.
+- [ ] Q0-TOAST-STACK: QA Music/SFX bấm nhanh7 thao tác tạo nhiều toast cùng
+  tồn tại4.8giây, che phần lớn viewport390. Bằng chứng ảnh
+  `../qa/r218-voice-inventory/music-library-review-vi-dark-390-sfx.png`.
+  Cần spec hẹp giới hạn/gộp thông báo, giữ lỗi và aria-live; không giấu bằng
+  chờ screenshot để gọi UI đã tối ưu. Ảnh alias chờ toast tự hết chỉ chứng minh
+  bố cục ổn định, không giải quyết lỗi stacking.
 - [~] Motion lifecycle/source có regression, nhưng browser12 chỉ kiểm nội dung/
   overflow/reduced loader, CHƯA chứng minh chuyển động mượt/hydration runtime:
   static/lifecycle29/29 và browser12 cases welcome/login/dashboard × normal/
@@ -651,6 +668,11 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## T0 — Kỹ thuật cuối, chưa triển khai
 
+- [→] T0-PY-SOURCE-REGEX: hai test static kỳ vọng cấu trúc nguồn cũ đã fail
+  cùng assertion trên clean baseline và candidate: `test_portal_safety_contracts.py::test_storyboard_shortcut_uses_the_native_text_composer_while_image_transform_keeps_its_contract`
+  và `test_music_library_portal_contracts.py::test_library_routes_do_not_fall_back_to_generic_assets_or_audio_execution`.
+  Không sửa route/engine hoặc làm yếu test trong wave Music; cần đặc tả lại
+  hành vi kiểm thay literal/regex sau UI/motion.
 - [→] Canonical DTO/capability/catalog/Voice Library/speaker mapping.
 - [→] Upload/quote/job/output bridge, paid providers và artifact delivery.
 - [→] Backend RBAC/ABAC, cross-product references và mutation nghiệp vụ.

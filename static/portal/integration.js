@@ -4414,6 +4414,13 @@
     return Boolean(musicLibraryRoleForPath(path));
   }
 
+  function musicLibraryFeedbackText(key, fallback) {
+    const i18n = window.TOANAASI18n;
+    if (!i18n || typeof i18n.t !== "function") return fallback;
+    const translated = i18n.t(`musicLibrary.feedback.${key}`);
+    return typeof translated === "string" && translated ? translated : fallback;
+  }
+
   function mediaWorkspaceSafetyError(...values) {
     const text = values.map((value) => String(value || "")).join("\n");
     if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Audio Library không nhận ký tự điều khiển không an toàn.";
@@ -17041,7 +17048,8 @@
     const requestEpoch = ++musicLibraryHydrationEpoch;
     const sessionEpoch = mediaWorkspaceSessionEpoch;
     if (!role || !isNativeMusicLibraryPath(path)) return { stale: true };
-    const priorListing = base().musicLibraryListing && typeof base().musicLibraryListing === "object"
+    const priorListing = base().musicLibraryListing && base().musicLibraryListing.filters
+      && base().musicLibraryListing.filters.role === role
       ? base().musicLibraryListing
       : musicLibraryListingProjection(role, { role, q: "" }, 0, {}, 0);
     const priorPagination = priorListing.pagination && typeof priorListing.pagination === "object" ? priorListing.pagination : {};
@@ -28233,26 +28241,31 @@
       if (["music-library-filter", "music-library-filter-clear", "music-library-page", "music-library-refresh"].includes(action)) {
         const role = musicLibraryRoleForPath(route);
         if (!role || route !== currentPortalPath() || !isNativeMusicLibraryPath(route)) {
-          throw new Error("Chỉ có thể thao tác thư viện Music/SFX ở trang riêng tư hiện tại.");
+          throw new Error(musicLibraryFeedbackText("route", "Hãy mở thư viện cần thao tác trước."));
         }
         if (!(base().capabilities && base().capabilities["music-library-view"] === true)) {
-          throw new Error("Cần signed Web session để xem thư viện Music/SFX riêng tư.");
+          throw new Error(musicLibraryFeedbackText("permission", "Bạn chưa có quyền xem thư viện này."));
         }
+        let result;
+        let feedback;
         if (action === "music-library-page") {
-          await hydrateMusicLibrary(undefined, musicLibraryListOffset(fields.__musicLibraryOffset));
-          toast("Đã tải trang metadata tiếp theo từ Audio Workspace riêng tư.");
-          return;
+          result = await hydrateMusicLibrary(undefined, musicLibraryListOffset(fields.__musicLibraryOffset));
+          feedback = musicLibraryFeedbackText("page", "Đã tải trang thư viện.");
+        } else if (action === "music-library-refresh") {
+          result = await hydrateMusicLibrary();
+          feedback = musicLibraryFeedbackText("refresh", "Đã làm mới thư viện.");
+        } else {
+          const filter = action === "music-library-filter-clear"
+            ? { role, q: "" }
+            : musicLibraryFilterPayload({ q: fields.q, role }, role);
+          result = await hydrateMusicLibrary(filter, 0);
+          feedback = filter.q
+            ? musicLibraryFeedbackText("filter", "Đã cập nhật kết quả tìm kiếm.")
+            : musicLibraryFeedbackText("clear", "Đã hiển thị danh sách chưa lọc.");
         }
-        if (action === "music-library-refresh") {
-          await hydrateMusicLibrary();
-          toast("Đã làm mới thư viện Music/SFX của Web account hiện tại.");
-          return;
-        }
-        const filter = action === "music-library-filter-clear"
-          ? { role, q: "" }
-          : musicLibraryFilterPayload({ q: fields.q, role }, role);
-        await hydrateMusicLibrary(filter, 0);
-        toast(filter.q ? "Đã áp dụng bộ lọc metadata trong thư viện." : "Đã hiển thị toàn bộ metadata Music/SFX active.");
+        if (!result || result.stale) return;
+        if (result.failed) throw new Error(musicLibraryFeedbackText("failed", "Chưa thể tải thư viện. Hãy thử lại."));
+        toast(feedback);
         return;
       }
       if (["audio-change-request-refresh", "audio-change-request-draft", "audio-change-request-estimate", "audio-change-request-confirm"].includes(action)) {

@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-10-21",
-  "local_files_refresh_scope": "Portable LF hashes remeasured for MREV-01..04 and corrected signed-locale/interaction evidence guidance; no new remote Project verification inferred.",
+  "local_files_refresh_scope": "Portable LF hashes remeasured for MREV-01..04, MULE-01..04 and historical smoke disclaimer; no new remote Project verification inferred.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 352,
-      "bytes": 53758,
-      "sha256": "e5c915b7730cb9c6e61e092c47d4c766e1f747f0fa88e08e276aabdd18a62677"
+      "lines": 368,
+      "bytes": 55097,
+      "sha256": "e9d9168c16888b656049e2af08a637946e06c3f1afec8c6881896df6b31ebb9f"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

@@ -29,7 +29,6 @@ function createHarness(locale) {
     memoryListingPagination: sourceListing => sourceListing && typeof sourceListing === 'object' ? sourceListing : {},
     mediaCollectionTags: value => Array.isArray(value) ? value.map(String).slice(0, 16) : [],
     renderFields: fields => fields.map(field => `<label>${field.label}<input placeholder="${field.placeholder || ''}"></label>`).join(''),
-    renderMemoryPagination: () => '<nav>1</nav>',
     renderEmpty: (title, body) => `<section data-empty><h2>${title}</h2><p>${body}</p></section>`,
     badge: state => `<span data-badge="${state}">${state}</span>`
   };
@@ -48,6 +47,7 @@ function createHarness(locale) {
     functionSource('musicLibraryItems'),
     functionSource('musicLibraryDurationLabel'),
     functionSource('renderMusicLibraryCards'),
+    functionSource('renderMemoryPagination'),
     functionSource('localizedPageTitle'),
     functionSource('localizedPageDescription'),
     functionSource('renderMusicLibrary')
@@ -131,5 +131,43 @@ for (const locale of ['vi', 'en', 'zh']) {
     }
     const cards = ctx.renderMusicLibraryCards([], 'music', '/music/library');
     assertLocalePurity(locale, textOf(cards));
+  });
+
+  test(`a search with no matches is not presented as an empty library (${locale})`, () => {
+    const ctx = createHarness(locale);
+    const html = ctx.renderMusicLibrary(pageFor('/music/library'), {
+      path: '/music/library', capabilities: { 'music-library-view': true },
+      musicLibraryReadState: 'ready', musicLibraryItems: [],
+      musicLibraryListing: { filters: { q: 'User & Query' }, pagination: {} }
+    });
+    const want = { vi: 'Không tìm thấy kết quả', en: 'No matches found', zh: '未找到匹配结果' }[locale];
+    assert.match(html, new RegExp(want));
+    assert.match(html, /User &amp; Query/);
+    assertLocalePurity(locale, textOf(html).replace(/User &amp; Query/g, ''));
+  });
+
+  test(`loading announces busy state and cannot be refreshed twice (${locale})`, () => {
+    const ctx = createHarness(locale);
+    const html = ctx.renderMusicLibrary(pageFor('/music/sfx-library'), {
+      path: '/music/sfx-library', capabilities: { 'music-library-view': true },
+      musicLibraryReadState: 'loading', musicLibraryItems: [{ reference_title: 'STALE_PRIVATE_ITEM' }]
+    });
+    assert.match(html, /aria-busy="true"/);
+    assert.match(html, /data-state="processing"/);
+    assert.match(html, /data-portal-action="music-library-refresh"[^>]* disabled/);
+    assert.doesNotMatch(html, /STALE_PRIVATE_ITEM/);
+  });
+
+  test(`real library pagination retains offsets and localizes both directions (${locale})`, () => {
+    const ctx = createHarness(locale);
+    const html = ctx.renderMemoryPagination({ pagination: {
+      offset: 24, returned: 24, previous_offset: 0, has_more: true, next_offset: 48
+    } }, locale === 'vi' ? 'nhạc' : locale === 'en' ? 'music' : '音乐', 'music-library-page', '/music/library', 'data-music-library-offset', 'portal-music-library-pagination');
+    assertLocalePurity(locale, textOf(html));
+    assert.match(html, /data-music-library-offset="0"/);
+    assert.match(html, /data-music-library-offset="48"/);
+    assert.match(html, /25[–-]48/);
+    const before = { vi: 'Trang trước', en: 'Previous page', zh: '上一页' }[locale];
+    assert.match(html, new RegExp(before));
   });
 }

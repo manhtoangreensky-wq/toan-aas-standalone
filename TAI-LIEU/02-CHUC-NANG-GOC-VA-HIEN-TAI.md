@@ -1,5 +1,14 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Đối chiếu Music/SFX Library — 21/10/2026
+
+Yêu cầu Bot gồm nghe/tải/lưu/dùng cho video. Web Library hiện chỉ hiển thị
+thông tin bộ sưu tập; không được gọi là đã đủ các khả năng đó. MU-E-01 sửa
+đúng lỗi role SFX, phản hồi failed/stale, locale phân trang/toast và empty/loading.
+Browser39 cấu hình và test36/36 chứng minh thao tác trình bày, không phải
+khả năng nghe/tải, quyền backend hoặc LIVE. MU-E-02 copy và Q0-TOAST-STACK
+vẫn mở tại completion ledger.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;
