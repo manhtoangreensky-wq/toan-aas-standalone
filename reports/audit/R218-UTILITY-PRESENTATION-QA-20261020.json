@@ -3,9 +3,39 @@
   "date": "2026-10-20",
   "scope": "Translation, free tools, documents, assets/projects, AutoPost, Support, Account, Workboard, Memory presentation",
   "base_sha": "2c216825b2b1fdfcdc4f97853961117299e39547",
-  "focused_tests": {"command": "node --test selected utility/account tests plus tests/account-avatar-presets-local.test.mjs", "passed": 63, "failed": 0},
-  "browser": {"environment": "isolated QA app 127.0.0.1:7628", "cases": 120, "routes": 10, "matrix": "VI/EN/ZH x light/dark x 390/1440", "overflow": 0, "external_requests": 0, "writes": 0, "page_errors": 0, "result": "PASS"},
-  "avatar_fix": {"remote_dicebear_requests": 0, "preset_action_preserved": true, "inline_svg_data_uri": true},
-  "guarded_runtime": {"provider_calls": 0, "wallet_mutations": 0, "deploy": "NO", "live_pass": "NOT_TESTED"},
-  "status": "ACCEPTED_PRESENTATION_ONLY"
+  "focused_tests": {
+    "command": "node --test selected utility/account tests plus tests/account-avatar-presets-local.test.mjs",
+    "passed": 63,
+    "failed": 0
+  },
+  "browser": {
+    "environment": "isolated QA app 127.0.0.1:7628",
+    "cases": 120,
+    "routes": 10,
+    "matrix": "VI/EN/ZH x light/dark x 390/1440",
+    "overflow": 0,
+    "external_requests": 0,
+    "writes": 0,
+    "page_errors": 0,
+    "result": "PASS"
+  },
+  "avatar_fix": {
+    "remote_dicebear_requests": 0,
+    "preset_action_preserved": true,
+    "inline_svg_data_uri": true
+  },
+  "guarded_runtime": {
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "deploy": "NO",
+    "live_pass": "NOT_TESTED"
+  },
+  "status": "PARTIAL_PRESENTATION_SMOKE",
+  "review_20261021": {
+    "limitations": "main/text-length/overflow smoke only; avatar save and workflow interactions not tested",
+    "evidence_policy": "Historical measured counts retained; not product/runtime/interaction/locale completion.",
+    "record": "reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md",
+    "verified_signed_locale_matrix": "NOT_VERIFIED",
+    "note": "Runner changed URL lang but did not set signed profile locale or assert actual rendered locale."
+  }
 }

@@ -1,5 +1,17 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-MUSIC-REVIEW-001 — 21/10/2026
+
+| ID | Luồng | Evidence cần có |
+|---|---|---|
+| MREV-01 | VI/EN/ZH từ hồ sơ QA thật; 390/768/1440 × sáng/tối | HTTP200, đúng route/form/lang/profile; copy/apply nguyên prompt, toast đúng locale, AX + ảnh ổn định |
+| MREV-02 | Quote0/unknown; thay input/revert; idle expiry | Giá trước confirm, unknown không confirm; sửa input khóa; expiry giữ nguyên form/focus, không gửi feature API |
+| MREV-03 | Confirm chỉ có report/tracking hoặc data job trực tiếp | Report hiện không cần draft/estimate giả; 0 khác unknown; tracking khớp; không private URL/audio/download suy đoán |
+| MREV-04 | Generic non-Music comparator | Output baseline bằng candidate, kể cả ký tự & và thẻ; Voice/Image giữ nguyên |
+
+Evidence mới `reports/audit/R218-MUSIC-RUNTIME-REVIEW-QA-20261021.json`;
+record cũ chỉ là smoke theo `R218-EVIDENCE-RECLASSIFICATION-20261021.md`.
+
 Tracker điều phối: `manhtoangreensky-wq/toan-aas-standalone#412`.
 
 Đây là nguồn duy nhất của case; sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.

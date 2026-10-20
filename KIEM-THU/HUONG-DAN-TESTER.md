@@ -1,5 +1,12 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+Đính chính 21/10/2026: các matrix chỉ đổi URL lang không chứng minh locale đã
+đăng nhập; phải set hồ sơ QA bằng endpoint CSRF và assert `html.lang` cùng
+profile locale. Không dùng main/text-length/overflow/no-media để đóng
+interaction/AX/screenshots hoặc motion. Các số smoke lịch sử giữ nguyên,
+nhưng không còn là nghiệm thu toàn nhóm. Nguồn đính chính:
+`reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md`.
+
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.

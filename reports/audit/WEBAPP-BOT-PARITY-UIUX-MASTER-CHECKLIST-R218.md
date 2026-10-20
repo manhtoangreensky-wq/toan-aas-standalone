@@ -247,23 +247,38 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] MU-00 control-level local đã khóa theo C0; các mục runtime và delivery dưới đây chưa đóng.
 - [~] MU-00 browser presentation — 19/10/2026: `/music/create` và `/music/song` đã kiểm bằng Edge localhost với 36 cấu hình (VI/EN/ZH × sáng/tối × 390/768/1440 × 2 workspace), giữ field bài hát riêng, không hiện audio/player/giá/download giả; page/console/request ngoài/write/unknown API/overflow đều `0`. Đây là fixture đọc-only, chưa phải generation/player/delivery/LIVE.
 - [ ] Nhạc nền/Bài hát/Kho nhạc-SFX/Chỉnh nhạc; capability thật.
-- [x] MU-B Music canonical suggestions presentation — chỉ nhận prompt hợp lệ,
+- [x] MU-B UI đóng lại bằng R218-MUSIC-REVIEW-001 ngày21/10, không phải engine:
+  test13/13 dùng actions thật và browser18 locale hồ sơ/apply/toast đã đạt.
+  Evidence `R218-MUSIC-RUNTIME-REVIEW-QA-20261021.json`. Đã MỞ LẠI trước sửa:
+  test tích hợp workspace dùng actions/catalogue thật phát hiện fixed chrome VI
+  còn ở EN/ZH và wrapper kỹ thuật. Helper gate cũ bên dưới là lịch sử, chưa đóng
+  AC runtime mới tại `2026-10-21-r218-music-runtime-review-correction.md`.
+  Chỉ nhận prompt hợp lệ,
   tối đa 3 thẻ thật, không bù thẻ thiếu/malformed; bản địa hóa VI/EN/ZH,
   escape dữ liệu, copy/apply scalar đúng route/field, không audio/download/
   confirm/provider. Targeted31/31, full Node805/805, browser fixture
   3 cards/audio0/confirm0/overflow0/external0. Evidence
   `reports/audit/R218-MU-B-MUSIC-SUGGESTIONS-QA-20261020.json`.
-- [x] MU-C Music quote freshness — giá chưa biết/không hợp lệ không hiện xác
+- [x] MU-C UI đóng lại bằng R218-MUSIC-REVIEW-001 ngày21/10: giá trước confirm,
+  unknown/0, edit/revert ở18 cấu hình; idle expiry3 giữ cùng form, không submit.
+  Đã MỞ LẠI phần trình bày báo giá 21/10/2026:
+  guard helper đã có nhưng workspace không hiển thị giá bán. Không dùng fixture
+  confirm0/1 để kết luận người dùng đã xem được giá. Giá chưa biết/không hợp lệ không hiện xác
   nhận; giá `0` hợp lệ; đổi lựa chọn và hết hạn khóa báo giá tại chỗ, không
   gửi request. Targeted34/34, full Node808/808 (Voice expiry comparator vẫn
   đạt), browser unknown-confirm0/zero-confirm1/external0/page-errors0.
   Evidence `reports/audit/R218-MU-C-MUSIC-QUOTE-FRESHNESS-QA-20261020.json`.
-- [x] MU-D Music report — báo cáo trạng thái riêng cho Music, có tiến độ và
+- [x] MU-D UI đóng lại bằng R218-MUSIC-REVIEW-001 ngày21/10: report-only18
+  cấu hình + direct envelope unit, tracking đúng, không output suy đoán.
+  Đã MỞ LẠI 21/10/2026: report-only envelope thực tế không
+  có draft/estimate bị renderer bỏ qua. Fixture cũ thêm draft rỗng nên không
+  bắt lỗi này. Báo cáo trạng thái riêng cho Music, có tiến độ và
   tín hiệu tệp/tải xuống/bàn giao khi máy chủ trả; không audio/player/URL tải/
   claim hai bản. Targeted38/38, full Node812/812, browser report1/progress
   true/audio0/download0/external0/page-errors0. Evidence
   `reports/audit/R218-MU-D-MUSIC-REPORT-QA-20261020.json`.
-- [x] MU-E Music/SFX Library — hai route phân vai Music/SFX, lọc dữ liệu theo
+- [~] MU-E Music/SFX Library — browser mới chỉ ready/failed; filter/page/role/
+  loading/guarded/empty và isolation chưa nghiệm thu đủ. Hai route phân vai Music/SFX, lọc dữ liệu theo
   bộ sưu tập hợp lệ, trạng thái guarded/failed/empty không giữ dữ liệu cũ,
   bản địa hóa VI/EN/ZH và thẻ dọc chỉ đọc; không player/audio/download.
   Test9/9; browser routes2/ready cards2/stale hidden2/audio0/download0/
@@ -300,7 +315,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] Regression SubDub hiện hành đạt `20/20` focused tests; simulation kiểm `24` tổ hợp
   locale/mode/theme, giữ Smart Multi/Auto 2/Auto Multi 3–8 riêng, 7 vị trí phụ đề và
   trạng thái guarded. Browser authenticated/runtime/upload thật vẫn mở.
-- [x] Renderer/interaction + browser/AX/screenshots — targeted20/20; browser QA
+- [~] SubDub DOM smoke, chưa đóng interaction/keyboard/AX/locale thực — targeted20/20; browser QA
   48 cases VI/EN/ZH × 4 mode × sáng/tối × 390/1440, tabs4/panels4/lanes7,
   report rỗng trung thực, overflow/audio/confirm/external/writes/page-errors0.
   Evidence `reports/audit/R218-SUBDUB-PRESENTATION-QA-20261020.json`.
@@ -320,7 +335,8 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] Image browser presentation đạt `18` cấu hình VI/EN/ZH × sáng/tối × 390/768/1440;
   bốn mode, guarded state, focus/overflow và page/console/request ngoài/write/unknown API
   đều đạt `0`. Shell logo được loại khỏi selector output; không có media/output/download giả.
-- [x] Image presentation/browser closeout — targeted70/70; browser72 cases trên
+- [~] Image presentation/browser smoke — không phải nghiệm thu đủ tương tác/AX;
+  locale UI đã đăng nhập chưa được xác minh riêng. Targeted70/70; browser72 cases trên
   bốn lane, VI/EN/ZH × sáng/tối × 390/768/1440, overflow/audio/video/fake/
   download/external/write/page-errors0. Evidence
   `reports/audit/R218-IMAGE-PRESENTATION-QA-20261020.json`.
@@ -377,6 +393,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   test `tests/account-control-level-contract.test.mjs` đạt `6/6`, full Node đạt `574/574`;
   browser/AX, session runtime và live vẫn mở. Control ledger theo
   `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md` (AC-01A..E).
+- [!] AC-01-AVATAR-PERSISTENCE: API ProfileUpdateRequest chỉ nhận tên/locale/
+  timezone; avatar_url hiện bị bỏ qua. UI preview/preset không chứng minh lưu
+  ảnh được; phải rà lại contract/UI trong spec Account riêng, không sửa auth
+  lẫn vào phiếu Music.
 - [x] AC-01 locale subgate: cả ba block catalogue Account Security tiếng Việt
   (liên hệ/phiên, MFA/tình trạng và action/error) đã loại bỏ generic English, giữ
   nguyên tên riêng/acronym và placeholder; test riêng `2/2`, Account regression
@@ -396,8 +416,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   browser/AX và LIVE vẫn mở; không đánh dấu runtime parity.
 - [ ] SP-02 Guide/Chat Pro/feedback/community, context help đúng sản phẩm.
 - [ ] Mỗi nhóm renderer/interaction + browser evidence, không chỉ navigation.
-- [x] Utility/AutoPost/Support/Account/Workboard/Memory renderer + browser
-  closeout — focused63/63 gồm avatar inline; browser120 cases trên 10 route,
+- [~] Utility/AutoPost/Support/Account/Workboard/Memory renderer + browser
+  smoke — CHƯA đủ evidence tương tác/AX/locale thực tế, không đóng toàn nhóm;
+  focused63/63 gồm avatar inline; browser120 cases trên 10 route,
   VI/EN/ZH × sáng/tối × 390/1440, overflow/external/write/page-errors0.
   Evidence `reports/audit/R218-UTILITY-PRESENTATION-QA-20261020.json`.
 - [!] Runtime upload/OAuth/notes/publish/ticket/approval/provider/live vẫn mở;
@@ -570,7 +591,8 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] Video/Product Video focused UI regression `11/11` xanh: catalog VI/EN/ZH, hub route
   contracts, ordered brief→report flow, Video Studio home/detail, canonical plan/scene values
   và không output claim giả. Browser authenticated/runtime/render/delivery vẫn mở.
-- [x] Video presentation/browser closeout — targeted23/23; browser48 cases trên
+- [~] Video presentation/browser smoke — không đóng tương tác/editor/AX hoặc
+  locale thực tế; targeted23/23; browser48 cases trên
   4 lane cốt lõi, VI/EN/ZH × sáng/tối × 390/1440, overflow/audio/video/download/
   fake/external/write/page-errors0. Evidence
   `reports/audit/R218-VIDEO-PRESENTATION-QA-20261020.json`.
@@ -607,7 +629,8 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] VI/EN/ZH sạch; dữ liệu user/tên riêng không bị dịch.
 - [ ] Mobile 375/390/768/1440 × themes; shell/forms thêm 320/414/1024.
 - [ ] Keyboard/focus/label/contrast/touch/overflow/empty/loading/error/recovery.
-- [x] Motion không bị hydration cắt/restart; route cleanup, reduced-motion:
+- [~] Motion lifecycle/source có regression, nhưng browser12 chỉ kiểm nội dung/
+  overflow/reduced loader, CHƯA chứng minh chuyển động mượt/hydration runtime:
   static/lifecycle29/29 và browser12 cases welcome/login/dashboard × normal/
   reduced × 390/1440, overflow/external/write/page-errors0. Evidence
   `reports/audit/R218-MOTION-QA-20261020.json`.
@@ -619,8 +642,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   Đây là quan sát chưa định nguyên nhân, không khẳng định lỗi production.
   Đo lịch remount/animation/scroll ở M0; không dùng chờ thêm để gọi motion PASS.
   Stack/evidence nằm ở script `../qa/r218-voice-inventory/voice-workspace-final.browser.cjs`.
-- [!] Trace/perceived loading: CLS/LCP/INP chưa chạy vì chưa có quyền trace
-  production/QA tương ứng; không suy diễn PASS từ static/browser smoke.
+- [ ] Trace/perceived loading: CLS/LCP/INP chưa đo; tiếp tục đo chỉ-đọc trên QA
+  cô lập trong phạm vi đã cấp, không suy diễn PASS từ static/browser smoke và
+  không coi thiếu số đo hiện tại là chặn do thiếu quyền.
 - [ ] CI đúng HEAD và authorized live SHA/DOM/screenshots/interaction đúng scope.
 - [ ] Báo cáo UI/UX/motion, giữ goal chưa complete nếu requirements còn mở.
 - [ ] Hết UI/UX/motion thì đợi lệnh cho T0.

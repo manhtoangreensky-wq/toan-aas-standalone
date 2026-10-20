@@ -3,8 +3,34 @@
   "date": "2026-10-20",
   "scope": "Music/SFX owner-scoped read-only libraries",
   "base_sha": "2c216825b2b1fdfcdc4f97853961117299e39547",
-  "targeted_tests": {"command": "node --test tests/music-library-locale-purity.test.mjs", "passed": 9, "failed": 0},
-  "browser_fixture": {"environment": "isolated QA app 127.0.0.1:7628", "routes": 2, "ready_cards": 2, "stale_hidden": 2, "audio_elements": 0, "download_attributes": 0, "overflow_failures": 0, "external_requests": 0, "page_errors": 0, "result": "PASS"},
-  "data_policy": {"owner_scoped_metadata_only": true, "player_or_provider_search": false, "wallet_mutations": 0, "deploy": "NO", "live_pass": "NOT_TESTED"},
-  "status": "ACCEPTED"
+  "targeted_tests": {
+    "command": "node --test tests/music-library-locale-purity.test.mjs",
+    "passed": 9,
+    "failed": 0
+  },
+  "browser_fixture": {
+    "environment": "isolated QA app 127.0.0.1:7628",
+    "routes": 2,
+    "ready_cards": 2,
+    "stale_hidden": 2,
+    "audio_elements": 0,
+    "download_attributes": 0,
+    "overflow_failures": 0,
+    "external_requests": 0,
+    "page_errors": 0,
+    "result": "PASS"
+  },
+  "data_policy": {
+    "owner_scoped_metadata_only": true,
+    "player_or_provider_search": false,
+    "wallet_mutations": 0,
+    "deploy": "NO",
+    "live_pass": "NOT_TESTED"
+  },
+  "status": "PARTIAL_PRESENTATION_SMOKE",
+  "review_20261021": {
+    "limitations": "ready card and failed-stale fixture only; no browser mixed-role/search/pagination/loading/guarded/empty isolation",
+    "evidence_policy": "Historical measured counts retained; not product/runtime/interaction/locale completion.",
+    "record": "reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md"
+  }
 }

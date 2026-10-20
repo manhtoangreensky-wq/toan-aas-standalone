@@ -3,12 +3,38 @@
   "date": "2026-10-20",
   "scope": "Motion lifecycle/compositor/reduced-motion presentation",
   "base_sha": "2c216825b2b1fdfcdc4f97853961117299e39547",
-  "targeted_tests": {"command": "node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs tests/voice-quote-expiry.test.mjs", "passed": 29, "failed": 0},
-  "browser": {"environment": "isolated QA app 127.0.0.1:7628", "cases": 12, "routes": ["/welcome", "/login", "/dashboard"], "matrix": "normal/reduced motion x 390/1440", "overflow": 0, "reduced_loader_static": true, "external_requests": 0, "writes": 0, "page_errors": 0, "result": "PASS"},
-  "trace_metrics": "NOT_RUN — no authorized performance trace/LCP/INP claim",
+  "targeted_tests": {
+    "command": "node --test tests/current-main-motion-static-gates.test.mjs tests/r216-motion-lifecycle-compositor.test.mjs tests/voice-quote-expiry.test.mjs",
+    "passed": 29,
+    "failed": 0
+  },
+  "browser": {
+    "environment": "isolated QA app 127.0.0.1:7628",
+    "cases": 12,
+    "routes": [
+      "/welcome",
+      "/login",
+      "/dashboard"
+    ],
+    "matrix": "normal/reduced motion x 390/1440",
+    "overflow": 0,
+    "reduced_loader_static": true,
+    "external_requests": 0,
+    "writes": 0,
+    "page_errors": 0,
+    "result": "PASS"
+  },
+  "trace_metrics": "NOT_RUN — measurements missing; no extra permission blocker inferred for isolated QA diagnostics",
   "provider_calls": 0,
   "wallet_mutations": 0,
   "deploy": "NO",
   "live_pass": "NOT_TESTED",
-  "status": "ACCEPTED_PRESENTATION_ONLY"
+  "status": "PARTIAL_PRESENTATION_SMOKE",
+  "review_20261021": {
+    "limitations": "source/VM lifecycle assertions; browser body/overflow/reduced-loader smoke only, not smoothness/hydration trace",
+    "evidence_policy": "Historical measured counts retained; not product/runtime/interaction/locale completion.",
+    "record": "reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md",
+    "verified_signed_locale_matrix": "NOT_VERIFIED",
+    "note": "Runner changed URL lang but did not set signed profile locale or assert actual rendered locale."
+  }
 }

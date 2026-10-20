@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-10-21",
-  "local_files_refresh_scope": "Portable LF case-source size/hash remeasured after adding R218 presentation checkpoint cases and tester handoff; historical remote verification dates are unchanged.",
+  "local_files_refresh_scope": "Portable LF hashes remeasured for MREV-01..04 and corrected signed-locale/interaction evidence guidance; no new remote Project verification inferred.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,15 +70,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 340,
-      "bytes": 52787,
-      "sha256": "e895fb96ee0cc779ad017a07c166864966f5b45f9e3da5801dbb367845041f62"
+      "lines": 352,
+      "bytes": 53758,
+      "sha256": "e5c915b7730cb9c6e61e092c47d4c766e1f747f0fa88e08e276aabdd18a62677"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 268,
-      "bytes": 24641,
-      "sha256": "3271905d75655c608843a2eaf2b7bb5b016acc873824165863475138c901c882"
+      "lines": 275,
+      "bytes": 25116,
+      "sha256": "5a3846bfeb66772dd5350f20672a40dfe733fac23d323b04f8b8b8e78771fdd0"
     },
     {
       "path": "scripts/tester_case_sync.py",

@@ -1,23 +1,27 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: MOTION_PRESENTATION_UI_VERIFIED_ACCEPTED
-date: 2026-10-20
+status: MUSIC_REVIEW_VERIFIED_PROVENANCE_REFRESH_PENDING
+date: 2026-10-21
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 7a463a6b554feffce90055f792a47b5b1c7dccf1
+head_sha: 4e7943e17fecf63638457f6aaf1ef3854a92043e
 implementation_head_sha: b186b75a2b55b397f802fb992ce0a320039053a4
-delivery_head_sha: 7a463a6b554feffce90055f792a47b5b1c7dccf1
-delivery_status: LOCAL_PUSH_RECEIPT_CONFIRMED_REMOTE_READBACK_PENDING
+delivery_head_sha: 4e7943e17fecf63638457f6aaf1ef3854a92043e
+delivery_status: CI_FAILED_39473056685_PROVENANCE_LOCAL_CORRECTION_VERIFIED_NOT_PUSHED
+review_evidence: reports/audit/R218-MUSIC-RUNTIME-REVIEW-QA-20261021.json
+evidence_reclassification: reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md
+qa_review_server: "STOPPED: task-owned exec54976 at http://127.0.0.1:11076 ended gracefully with exit0; temporary DB cleaned. No active QA server in this checkpoint."
+music_review_python_verify: "2026-10-21: exact tester metadata + i18n bundle/locale + motion source-contract subset29 passed/0failed, exit0 outside restricted sandbox. Prior sandbox session70666 interrupted after no progress; not counted as PASS."
 checkpoint_report: reports/audit/R218-CHECKPOINT-20261021.md
 checkpoint_date: 2026-10-21
 checkpoint_tests: "Full Node813/813; Python workspace-draft17 passed/78 deselected; JS syntax2 PASS; diff-check PASS; QA server7628 stopped."
-prepush_report: reports/prepush/R218-20261021-PREPUSH.md
-prepush_gate: PUSH_RECEIPT_CONFIRMED_REMOTE_READBACK_PENDING
+prepush_report: reports/prepush/R218-20261021-MUSIC-REVIEW-PROVENANCE.md
+prepush_gate: REVIEW_DELTA_VERIFIED_FINAL_PROVENANCE_PENDING
 postpush_report: reports/prepush/R218-20261021-POSTPUSH.md
-head_sha_semantics: "Last observed committed baseline before Voice idle expiry. Read the latest PR head and delivery comment for the current delivered checkpoint; this file does not predict its own future commit SHA."
-delivery_head_semantics: "Baseline 8d53dab is pushed and CI-green in run 39406730261. The idle expiry delta has local behavior/browser evidence; fresh CI is recorded on PR #654 after push."
+head_sha_semantics: "Last remote HEAD empirically observed before current Music review/provenance correction. Read Git/PR for current HEAD; do not predict this state's own future commit SHA."
+delivery_head_semantics: "PR654 and remote branch4e7943e verified; run39473056685 failed fingerprint, Authenticated QA skipped. Current dirty correction not covered by remote CI yet."
 branch_head_sha: 7a463a6b554feffce90055f792a47b5b1c7dccf1
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
 last_push_verified_commit: 7a463a6b554feffce90055f792a47b5b1c7dccf1
@@ -70,6 +74,7 @@ current_wip:
     tests: "RED0/5 -> GREEN5/5; focused75/75; browser18/18 x9 values=162 states; error/overflow/write/external0"
     source_scope: "One line in safeVoiceReport; backend/integration/CSS/quote/timer unchanged."
   active_qa_server:
+    status: "HISTORICAL_STOPPED_NOT_AN_ACTIVE_RUNTIME; use qa_review_server for current checkpoint"
     environment: "Temporary isolated database/assets via existing CI _start_server; no Core Bridge/PayOS/provider"
     origin: "http://127.0.0.1:9423"
     exec_session: 21213
@@ -397,4 +402,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Music, SubDub, Image, utility/account and Video presentation gates ACCEPTED with evidence; Admin source/core presentation regressions pass80/80 and prior core browser artifacts remain presentation-only. Motion presentation ACCEPTED: static/lifecycle29/29, browser12 cases welcome/login/dashboard normal/reduced ×390/1440 with overflow/external/write/page-errors0. Trace CLS/LCP/INP is NOT_RUN (no authorized trace); runtime uploads/OAuth/notes/publish/tickets/approvals/render/provider/live remain guarded/open. Checkpoint report reports/audit/R218-CHECKPOINT-20261021.md records full Node813/813, Python17/17, syntax/diff-check and QA server stopped. Next: preserve local wave for authorized GitHub push/Tester delivery; do not mark goal complete because runtime/trace/T0 remain open. Exactly one CLI auth window PID19212 was opened under Owner approval; latest Flash READY probe returned empty/0turn/0tokens, so no more auth windows/retries and no Pro."
+next_action: "Current Music review correction VERIFIED: integrated13/13, independent18/18, full Node826/826, actual-profile VI/EN/ZH browser18 with apply/zero/unknown/edit/revert/report-only; idle expiry3 retains form. Nine historical broad reports reclassified, not whole-product completion. Finish current review docs/tester/provenance from clean source commit, push once to PR654, verify fresh CI and publish exact status. Then continue incomplete UI interactions per ledger: Music library, SubDub, Image, utilities/Admin/Video, motion last. Do not implement Bot/route-engine/provider/wallet/PayOS/auth/schema or production data. Goal ACTIVE."

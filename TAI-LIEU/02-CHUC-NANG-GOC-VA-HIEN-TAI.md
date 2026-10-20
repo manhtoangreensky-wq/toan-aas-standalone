@@ -1,5 +1,15 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
+
+Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;
+không đủ để đóng chức năng Bot→Web. Xem
+`reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md`.
+Music correction mới chỉ đóng giá hiển thị/receipt UI, actions và report của
+luồng có dữ liệu, bằng test thực13/13 và browser18 cấu hình dùng locale hồ sơ
+đúng. SubDub/Image/Video/utilities/Admin/AX/motion runtime còn phải nghiệm thu
+từng thao tác, không chỉ tồn tại control. Không mở engine/wallet/auth/schema.
+
 ## Đối chiếu Voice idle expiry — 20/10/2026
 
 | Yêu cầu | Hiện tại và bằng chứng |

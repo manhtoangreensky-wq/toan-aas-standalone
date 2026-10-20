@@ -1,5 +1,22 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Đính chính nghiệm thu 21/10/2026 — ưu tiên đọc trước checkpoint cũ
+
+Các matrix 48/72/120/48 và motion12 của checkpoint cũ chỉ là smoke: không đủ
+đóng toàn nhóm, locale thực, tương tác, AX hoặc độ mượt. Signed locale ưu tiên
+hồ sơ, không thể chứng minh bằng cách đổi query. Chi tiết:
+`reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md`.
+
+Music đã có lượt nghiệm thu riêng mới: 18 cấu hình với locale hồ sơ VI/EN/ZH
+được kiểm thực, chọn gợi ý/copy nhãn/apply, giá0/unknown, sửa và hoàn nguyên
+input, expiry3 không thay form và report-only18; console/page/external/UIwrite0.
+Source hashes và trường hợp cụ thể tại
+`reports/audit/R218-MUSIC-RUNTIME-REVIEW-QA-20261021.json`.
+Nghiệm thu này dùng dữ liệu phản hồi tổng hợp trên app QA; không chứng minh
+generation/provider/delivery/LIVE. Avatar URL hiện chưa có persistence ở API
+hồ sơ; chọn ảnh chưa được báo là lưu được. Trace QA còn cần đo, không bị chặn
+do thiếu quyền mới trong phạm vi kiểm thử cô lập đã cấp.
+
 ## Voice — báo giá hết hạn khi trang đang mở (20/10/2026)
 
 Đến deadline do máy chủ cung cấp, UI ẩn xác nhận cũ và báo “Báo giá đã hết

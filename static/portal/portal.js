@@ -31923,20 +31923,24 @@
       const name = canonicalDraftText(item.name) || musicProductText("suggestion.option", "Phương án {number}", { number: index + 1 });
       const meta = metadata.map(([labelKey, valueKey]) => [musicProductText(`suggestion.meta.${labelKey}`, labelKey), item[valueKey]])
         .filter(([, value]) => typeof value === "string" && value.trim());
-      return `<article class="portal-suggestion-card portal-music-suggestion-card" data-music-suggestion-card="true"><div class="portal-suggestion-card-head"><strong>${safeText(name)}</strong><span>${safeText(musicProductText("suggestion.option", "Phương án {number}", { number: index + 1 }))}</span></div>${meta.length ? `<dl class="portal-suggestion-meta">${meta.map(([label, value]) => `<div><dt>${safeText(label)}</dt><dd>${safeText(String(value))}</dd></div>`).join("")}</dl>` : ""}<div class="portal-result-text">${safeText(prompt)}</div>${canonicalDraftActions(prompt, route, field, musicProductText("suggestion.copy", "mô tả"))}</article>`;
+      const actions = MUSIC_PRODUCT_ROUTES.includes(normalizePath(route)) && /^[a-z][a-z0-9_]{0,80}$/.test(field || "")
+        ? `<div class="portal-canonical-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-canonical-draft" data-canonical-text="${safeText(prompt)}">${safeText(musicProductText("suggestion.copyAction", "Sao chép mô tả"))}</button><button class="portal-button portal-button--primary" type="button" data-portal-action="apply-canonical-draft" data-canonical-text="${safeText(prompt)}" data-canonical-route="${safeText(route)}" data-canonical-field="${safeText(field)}">${safeText(musicProductText("suggestion.apply", "Dùng trong biểu mẫu"))}</button></div>` : "";
+      return `<article class="portal-suggestion-card portal-music-suggestion-card" data-music-suggestion-card="true"><div class="portal-suggestion-card-head"><strong>${safeText(name)}</strong><span>${safeText(musicProductText("suggestion.option", "Phương án {number}", { number: index + 1 }))}</span></div>${meta.length ? `<dl class="portal-suggestion-meta">${meta.map(([label, value]) => `<div><dt>${safeText(label)}</dt><dd>${safeText(String(value))}</dd></div>`).join("")}</dl>` : ""}<div class="portal-result-text">${safeText(prompt)}</div>${actions}</article>`;
     }).join("");
     return `<section class="portal-canonical-suggestions portal-music-canonical-suggestions" data-music-canonical-suggestions><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(musicProductText("suggestion.kicker", "GỢI Ý ÂM NHẠC"))}</span><h4>${safeText(musicProductText("suggestion.title", "Ba phương án để so sánh"))}</h4><p>${safeText(musicProductText("suggestion.description", "Chọn một hướng để tiếp tục."))}</p></div></div><div class="portal-suggestion-grid">${cards}</div></section>`;
   }
 
   function renderMusicCanonicalReport(flow) {
-    const report = safeVoiceReport(flow);
+    const data = flow && flow.data && typeof flow.data === "object" ? flow.data : {};
+    const job = data.job_result && typeof data.job_result === "object" && !Array.isArray(data.job_result) ? data.job_result : null;
+    const report = safeVoiceReport(job && !data.report ? { ...flow, data: { ...data, job } } : flow);
     const t = (key, fallback, params) => musicProductText(`report.${key}`, fallback, params);
     if (!report) {
       return `<section class="portal-canonical-result portal-music-report" data-music-report aria-live="polite"><div class="portal-card-header"><div><h4>${safeText(t("title", "Báo cáo xử lý nhạc"))}</h4><p>${safeText(t("pending", "Chưa có báo cáo chi tiết từ máy chủ."))}</p></div></div></section>`;
     }
     const statusKey = `state.${report.status || "guarded"}`;
     const rows = [
-      ["status", t(statusKey, report.status || "guarded")],
+      ["status", t(statusKey, t("state.guarded", "Chưa xác minh"))],
       report.progress !== null ? ["progress", `${report.progress}%`] : null,
       report.outputKnown ? ["output", report.outputAvailable ? t("outputReady", "Đã có tín hiệu tệp") : t("outputPending", "Chưa có tín hiệu tệp")] : null,
       report.downloadKnown ? ["download", report.downloadReady ? t("downloadReady", "Đủ điều kiện") : t("downloadPending", "Chưa đủ điều kiện")] : null,
@@ -31944,6 +31948,26 @@
       report.reason ? ["reason", report.reason] : null
     ].filter(Boolean);
     return `<section class="portal-canonical-result portal-music-report" data-music-report aria-live="polite"><div class="portal-card-header"><div><h4>${safeText(t("title", "Báo cáo xử lý nhạc"))}</h4><p>${safeText(t("note", "Chỉ hiển thị tín hiệu máy chủ; chưa tự tạo tệp."))}</p></div>${badge(report.status || "guarded")}</div><dl class="portal-summary-list">${rows.map(([key, value]) => `<div class="portal-summary-item"><dt class="portal-summary-key">${safeText(t(key, key))}</dt><dd class="portal-summary-value">${safeText(String(value))}</dd></div>`).join("")}</dl></section>`;
+  }
+
+  function renderMusicFlowState(flow, route) {
+    const expected = route === "/music/song" ? "music_song" : "music_background";
+    const valid = MUSIC_PRODUCT_ROUTES.includes(route) && flow && flow.feature === expected;
+    const status = valid && ALLOWED_STATES.has(flow.status) ? flow.status : "guarded";
+    const data = valid && flow.data && typeof flow.data === "object" && !Array.isArray(flow.data) ? flow.data : {};
+    const t = (key, fallback, params) => musicProductText(`flow.${key}`, fallback, params);
+    const payload = flow && flow.phase === "estimate" ? data.estimate : data.draft;
+    const available = payload && typeof payload === "object" && !Array.isArray(payload) && payload.available !== false;
+    const values = available && payload.content && typeof payload.content === "object" && !Array.isArray(payload.content) ? payload.content : (available ? payload : {});
+    const isQuote = valid && flow.phase === "estimate" && Boolean(data.estimate);
+    const amount = isQuote ? voiceQuoteAmount(flow) : null;
+    const quote = isQuote ? `<section class="portal-music-quote" data-music-quote><h4>${safeText(t("quote", "Báo giá"))}</h4><dl class="portal-summary-list"><div class="portal-summary-item"><dt>${safeText(t("price", "Giá bán"))}</dt><dd data-music-sale-price>${amount === null ? "—" : safeText(`${amount} Xu`)}</dd></div></dl><p>${safeText(t(amount === null ? "priceUnknown" : "quoteNote", ""))}</p></section>` : "";
+    const suggestions = available && Array.isArray(values.suggestions) ? renderMusicCanonicalSuggestions(values.suggestions, route, featureDraftTarget(flow, route)) : "";
+    const tracking = valid && flow.phase === "confirm" ? safeFeatureTracking(flow) : null;
+    const trackingMarkup = valid && flow.phase === "confirm"
+      ? `<div class="portal-music-tracking"><p>${safeText(t(tracking ? "trackingReady" : "trackingPending", ""))}</p><a class="portal-button portal-button--quiet" href="${tracking ? `/jobs/${encodeURIComponent(tracking.id)}` : "/jobs"}">${safeText(t("track", "Xem công việc"))}</a></div>` : "";
+    const report = valid && flow.phase === "confirm" ? renderMusicCanonicalReport(flow) : "";
+    return `<div class="portal-music-flow" data-music-flow-state="${safeText(status)}"><div class="portal-state" data-state="${safeText(status)}"><div><h3>${safeText(t(`state.${status}`, t("state.guarded", "Chưa thể tiếp tục")))}</h3><p>${safeText(t(flow && flow.phase === "confirm" ? "processingNote" : "planningNote", ""))}</p></div></div>${quote}${suggestions}${report}${trackingMarkup}</div>`;
   }
 
   function renderCanonicalSuggestions(value, route, field) {
@@ -31968,10 +31992,7 @@
       return `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Adapter chi tiết đang được bảo vệ</strong><p>${safeText(payload.reason || "Core Bridge đã nhận input nhưng chưa có helper canonical cho bước này.")}</p></div></div>`;
     }
     const content = payload.content || payload;
-    const isMusic = String(flow && flow.feature || "").startsWith("music_");
-    const heading = isMusic
-      ? musicProductText(data.draft ? "suggestion.draftTitle" : "suggestion.quoteTitle", data.draft ? "Bản nháp âm nhạc" : "Ước tính âm nhạc")
-      : (data.draft ? "Bản nháp canonical" : "Ước tính canonical");
+    const heading = data.draft ? "Bản nháp canonical" : "Ước tính canonical";
     const selectedFormat = payload.feature === "image_create" && flow && flow.input && typeof flow.input === "object" ? String(flow.input.format || "").trim() : "";
     const selectionRequired = data.estimate && (data.estimate.tier_required === true || data.estimate.scene_count_required === true);
     const selectionNotice = selectionRequired
@@ -31989,12 +32010,8 @@
       }, Object.create(null))
       : content;
     const suggestions = content && typeof content === "object" && !Array.isArray(content) ? content.suggestions : [];
-    const applyAction = isMusic ? "" : canonicalDraftActions(preferred, route, targetField, "planning");
-    const musicNote = isMusic ? musicProductText("suggestion.flowNote", "Các phương án chỉ là gợi ý từ máy chủ; chưa tạo âm thanh hoặc trừ Xu.") : `Nguồn: ${safeText(payload.source || "canonical_bot")} · Chưa gọi provider · Chưa trừ Xu.`;
-    const contentMarkup = isMusic ? "" : renderCanonicalValue(genericContent, 0);
-    const suggestionsMarkup = isMusic ? renderMusicCanonicalSuggestions(suggestions, route, targetField) : renderCanonicalSuggestions(suggestions, route, targetField);
-    const reportMarkup = isMusic && flow.phase === "confirm" ? renderMusicCanonicalReport(flow) : "";
-    return `<section class="portal-canonical-result${isMusic ? " portal-music-canonical-result" : ""}"><div class="portal-card-header"><div><h3 class="portal-card-title">${safeText(heading)}</h3><p class="portal-card-subtitle">${safeText(musicNote)}</p></div>${badge(flow.status || "draft")}</div>${selectionNotice}${preference}${contentMarkup}${suggestionsMarkup}${reportMarkup}${applyAction}</section>`;
+    const applyAction = canonicalDraftActions(preferred, route, targetField, "planning");
+    return `<section class="portal-canonical-result"><div class="portal-card-header"><div><h3 class="portal-card-title">${heading}</h3><p class="portal-card-subtitle">Nguồn: ${safeText(payload.source || "canonical_bot")} · Chưa gọi provider · Chưa trừ Xu.</p></div>${badge(flow.status || "draft")}</div>${selectionNotice}${preference}${renderCanonicalValue(genericContent, 0)}${renderCanonicalSuggestions(suggestions, route, targetField)}${applyAction}</section>`;
   }
 
   function safeFeatureTracking(flow) {
@@ -32453,7 +32470,7 @@
     const musicTask = ["/music/create", "/music/song"].includes(String(route || "").split("?")[0].replace(/\/$/, "") || "/");
     const subtitleStudioCompanion = renderSubtitleStudioCompanionLink(page);
     const flow = context.featureFlows && context.featureFlows[route];
-    const flowOutput = voiceTask && flow ? renderVoiceFlowState(flow, route) : flow
+    const flowOutput = voiceTask && flow ? renderVoiceFlowState(flow, route) : musicTask && flow ? renderMusicFlowState(flow, route) : flow
       ? `<div class="portal-state" data-state="${safeText(flow.status || "guarded")}"><span class="portal-state-icon" aria-hidden="true">○</span><div><h3>${safeText(flow.message || "Core Bridge đã cập nhật trạng thái.")}</h3><p>Trạng thái canonical: ${safeText(STATE_LABELS[flow.status] || flow.status || "guarded")}. ${flow.status === "completed" ? "Output chỉ được cấp qua asset đã xác minh." : "Bản nháp planning có thể hiển thị; output engine vẫn phải qua job và asset hợp lệ."}</p></div></div>${renderCanonicalFlow(flow, route)}${renderFeatureTracking(flow)}`
       : renderEmpty(videoTask ? uiText("videoUi.output.empty", "Chưa có kết quả video") : voiceTask ? voiceUiText(route === "/voice/stt" ? "stt.output.empty" : "output.empty", "Chưa có kết quả") : musicTask ? musicProductText("output.empty", "Chưa có kết quả") : "Chờ Engine Web hoặc integration tùy chọn", videoTask ? uiText("videoUi.output.waiting", "") : voiceTask ? voiceUiText(route === "/voice/stt" ? "stt.output.waiting" : "output.waiting", "") : musicTask ? musicProductText("output.waiting", "") : "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○");
     const voiceVault = page.path === "/voice/saved" ? renderVoiceVault(context) : "";
@@ -32464,7 +32481,7 @@
     const formContent = route === "/voice/outputs"
       ? `<section class="portal-card portal-card-pad"><p>${safeText(voiceUiText("output.help", ""))}</p><a class="portal-button portal-button--quiet" href="/jobs">${safeText(voiceUiText("output.jobs", "Xem công việc"))}</a></section>`
       : isLegacySubDubRoute ? renderSubDubRedirectPlaceholder(route) : renderFormCard(page, context);
-    const flowFirst = Boolean(voiceTask && flow && flow.phase !== "draft");
+    const flowFirst = Boolean((voiceTask || musicTask) && flow && flow.phase !== "draft");
     const previousFormCollapsed = Boolean(voiceTask && flow && flow.phase === "confirm" && FEATURE_TRACKING_JOB_STATES.has(flow.status));
     const visibleForm = previousFormCollapsed ? `<details class="portal-voice-task-form" data-voice-task-form><summary>${safeText(voiceUiText("flow.form", "Biểu mẫu giọng đọc"))}</summary>${formContent}</details>` : formContent;
     const outputTitle = videoTask ? safeText(uiText("videoUi.output.title", "")) : voiceTask ? safeText(voiceUiText("output.title", "")) : musicTask ? safeText(musicProductText("output.title", "Kết quả và trạng thái")) : "Output & trạng thái";
@@ -38792,7 +38809,7 @@
     const page = manifest[targetRoute] || null;
     const definition = page && Array.isArray(page.fields) ? page.fields.find((item) => item && item.name === name) : null;
     if (!definition || !text || !/^[a-z][a-z0-9_]{0,80}$/.test(name) || ["file", "checkbox", "number"].includes(String(definition.type || "")) || definition.control === "select") {
-      showToast("Nội dung canonical này không phù hợp với trường nhập của workflow hiện tại.", "warning");
+      showToast(MUSIC_PRODUCT_ROUTES.includes(targetRoute) ? musicProductText("suggestion.invalidAction", "Mô tả này chưa phù hợp với mục đang mở.") : "Nội dung canonical này không phù hợp với trường nhập của workflow hiện tại.", "warning");
       return;
     }
     transientFormDrafts.set(targetRoute, { ...transientFormValues(targetRoute), [name]: text });
@@ -38802,7 +38819,7 @@
       const control = form && form.querySelector(`[name="${name}"]`);
       if (control && typeof control.focus === "function") control.focus();
     }, 0);
-    showToast("Đã đưa nội dung planning canonical vào form. Bạn vẫn có thể chỉnh sửa trước khi tạo draft/estimate.");
+    showToast(MUSIC_PRODUCT_ROUTES.includes(targetRoute) ? musicProductText("suggestion.applied", "Đã dùng mô tả này. Bạn có thể chỉnh sửa trước khi xem báo giá.") : "Đã đưa nội dung planning canonical vào form. Bạn vẫn có thể chỉnh sửa trước khi tạo draft/estimate.");
   }
 
   function validWorkspaceDraftId(value) {
@@ -38868,8 +38885,8 @@
     const action = source.getAttribute("data-portal-action") || "";
     if (action === "copy-canonical-draft") {
       copyCanonicalDraftText(source.getAttribute("data-canonical-text") || "")
-        .then(() => showToast("Đã sao chép nội dung planning canonical."))
-        .catch((error) => showToast((error && error.message) || "Không thể sao chép nội dung planning.", "warning"));
+        .then(() => showToast(MUSIC_PRODUCT_ROUTES.includes(context.path) ? musicProductText("suggestion.copied", "Đã sao chép mô tả.") : "Đã sao chép nội dung planning canonical."))
+        .catch((error) => showToast(MUSIC_PRODUCT_ROUTES.includes(context.path) ? musicProductText("suggestion.copyFailed", "Chưa thể sao chép. Hãy chọn và sao chép nội dung trực tiếp.") : ((error && error.message) || "Không thể sao chép nội dung planning."), "warning"));
       return;
     }
     if (action === "apply-canonical-draft") {
