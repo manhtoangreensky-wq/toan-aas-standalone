@@ -179,8 +179,19 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   hình/108 lượt đổi script/giọng/speed number+preset/volume number+range đạt,
   focus/draft giữ nguyên, overflow/console/write/unknown API đều 0 trong fixture.
   Phiếu: `docs/superpowers/specs/2026-10-20-r218-voice-quote-edit-freshness.md`;
-  QA: `reports/audit/R218-VOICE-QUOTE-EDIT-QA-20261020.json`. CI mới còn chờ;
-  STT/clone browser và quote expiry khi để trang lâu vẫn mở.
+  QA: `reports/audit/R218-VOICE-QUOTE-EDIT-QA-20261020.json`. CI tại `8d53dab`
+  đã xanh ở run `39406730261`; generation/STT/clone runtime vẫn mở.
+- [x] VOICE-QUOTE-IDLE-001 UI — 20/10: deadline canonical được theo dõi bằng
+  một timer; hết hạn chỉ ẩn confirm và hiện thông báo thuần VI/EN/ZH tại chỗ.
+  Không remount shell nên giữ form, focus, bản nháp, âm lượng 0 và tệp mẫu.
+  Input/change/revert sau hết hạn không khôi phục confirm. Timer được hủy khi
+  render/đổi route và kiểm deadline mới. Test hành vi 8/8, focused 70/70,
+  full Node 769/769; Edge headless localhost 22/22, 397 GET, 0 write/request
+  ngoài/unknown API/console/overflow. TTS đủ 18 cấu hình; Kho giọng, STT,
+  Thêm giọng và reduced-motion mỗi phần 1 cấu hình. STT vẫn guarded bởi
+  allowlist integration; không coi file fixture là upload thực thi.
+  Evidence `reports/audit/R218-VOICE-QUOTE-IDLE-QA-20261020.json`.
+  CI của delta idle chờ push; receipt/provider/giao âm thanh/LIVE chưa đóng.
 - [ ] Kho giọng search/page/status/default/preview/rename/delete/reuse.
 - [~] VO-02/VO-09/VO-10/VO-13: picker nam/nữ, Voice Vault owner-scoped và route handoff đã được khóa ở source bằng `tests/voice-selection-clone-contract.test.mjs` (4/4); quote, preview, rename/delete, runtime và browser/AX vẫn mở.
 - [~] VO-11: clone consent/upload/tên tùy chọn tối đa 120 ký tự đã khớp bridge hiện hành; form nay có hướng dẫn guarded đủ 7 bước consent → sample → name → quote → preview → save → back, được khóa ở source bằng test clone `5/5`; xác nhận text, quote, preview, save/back và runtime vẫn mở.

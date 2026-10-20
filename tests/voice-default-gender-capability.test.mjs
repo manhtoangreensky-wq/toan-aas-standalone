@@ -34,6 +34,7 @@ function renderer(locale) {
     ? ctx.TOANAASI18n.t(key, params, locale) : fallback;
   ctx.voiceUiText = (key, fallback, params) => ctx.uiText(`voiceUi.${key}`, fallback, params);
   vm.runInContext(fn('safeText') + '\n' + source.slice(fieldsStart, fieldsEnd)
+    + '\n' + fn('flowQuoteExpiry') + '\n' + fn('voiceQuoteExpiryState')
     + '\n' + source.slice(formStart, formEnd), ctx);
   vm.runInContext(`this.voiceFields = ({${source.slice(voiceStart, voiceEnd)}}).voice;`, ctx);
   const page = {path: '/voice/tts', type: 'feature', action: 'feature-estimate', fields: ctx.voiceFields};

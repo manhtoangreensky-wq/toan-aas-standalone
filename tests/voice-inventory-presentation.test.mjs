@@ -6,6 +6,7 @@ import vm from 'node:vm';
 const source=fs.readFileSync('static/portal/portal.js','utf8');
 const catalog=fs.readFileSync('static/portal/portal-i18n.js','utf8');
 function section(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);assert.ok(a>=0&&b>a);return source.slice(a,b);}
+function fn(name){const a=source.indexOf(`  function ${name}(`);assert.ok(a>=0,name);return source.slice(a,source.indexOf('\n  }',a)+4);}
 // The escape helper ends before the next function; preserve its real body.
 const safeAt=source.indexOf('  function safeText(value, fallback) {');
 const safeEnd=source.indexOf('\n  }',safeAt)+4;
@@ -24,6 +25,7 @@ for(const locale of ['vi','en','zh']){
   context.uiText=(key,fallback,params)=>context.TOANAASI18n.t(key,params,locale)||fallback;
   vm.runInContext(source.slice(safeAt,safeEnd)+'\n'+section('  function badge(', '  function subtitleAssetOperationsReadBadge(')+'\n'+renderer+'\n'+
     section('  function renderFields(', '  function statusMessage(')+'\n'+
+    fn('flowQuoteExpiry')+'\n'+fn('voiceQuoteExpiryState')+'\n'+
     section('  function voiceFeedbackMetrics(', '  const ADMIN_TAB_GROUPS ='), context);
   const profiles=[{id:'qa-ready',display_name:'Giọng QA <script>',is_default:true,status:'read_only',tts_ready:true,preview_ready:true,consent_status:'confirmed',updated_at:'2026-10-07'}];
   test(`saved voice inventory shows the default marker and escapes names (${locale})`,()=>{

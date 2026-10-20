@@ -1,5 +1,20 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Voice — báo giá hết hạn khi trang đang mở (20/10/2026)
+
+Đến deadline do máy chủ cung cấp, UI ẩn xác nhận cũ và báo “Báo giá đã hết
+hạn. Xem báo giá mới trước khi xác nhận.” Form được giữ nguyên tại chỗ;
+lời thoại, giọng, tốc độ, âm lượng 0, tệp STT/Thêm giọng và focus không mất.
+Nhập lại nội dung cũ không làm báo giá hết hạn dùng lại được. Một timer được
+dọn khi render/đổi route; không tự lấy báo giá hoặc gọi xử lý.
+
+Đã đo: test hành vi 8/8, focused 70/70, full Node 769/769; Edge headless trên
+fixture localhost đạt 22/22 cấu hình, 397 GET, write/request ngoài/unknown API/
+console/overflow đều 0. STT vẫn guarded theo allowlist integration hiện tại;
+gán tệp QA chỉ kiểm giữ file input. Evidence:
+`reports/audit/R218-VOICE-QUOTE-IDLE-QA-20261020.json`. CI cho delta idle chờ
+push; generation, quản lý kho giọng, giao tệp và LIVE vẫn chưa được đóng.
+
 ## Voice — báo giá sau khi sửa biểu mẫu (20/10/2026)
 
 Khi khách sửa lời thoại, giọng, tốc độ hoặc âm lượng sau báo giá, UI ẩn xác
@@ -11,8 +26,9 @@ receipt còn hiệu lực; trạng thái disabled do đang gửi vẫn giữ ngu
 Test riêng `11/11`, focused `77/77`, full Node `761/761`; Codex browser TTS
 `18/18` cấu hình, `108` lượt đổi input: focus/draft giữ nguyên, overflow/
 console/write/unknown API đều `0` trong fixture localhost chỉ đọc. Backend và
-integration fingerprint check không đổi. Idle expiry, STT/clone browser,
-quote thật, tạo/giao âm thanh và LIVE vẫn mở. CI mới được ghi trên PR #654.
+integration fingerprint check không đổi. CI quote-edit tại `8d53dab` đã xanh
+ở run `39406730261`. Nghiệm thu idle UI nằm ở mục trên; quote thật,
+tạo/giao âm thanh và LIVE vẫn mở.
 
 ## Voice — lựa chọn giọng mặc định, sửa kết luận capability (20/10/2026)
 

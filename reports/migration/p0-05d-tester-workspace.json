@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-10-20",
-  "local_files_refresh_scope": "Portable LF case-source size/hash remeasured after adding VUI-QUOTE-01..03 for edited-quote UI freshness; historical remote verification dates are unchanged.",
+  "local_files_refresh_scope": "Portable LF case-source size/hash remeasured after adding VUI-IDLE-01..03 for idle Voice quote expiry; historical remote verification dates are unchanged.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 314,
-      "bytes": 50430,
-      "sha256": "32e6590c24e358374659e679604e51a6d11c30a90edb732a2e5fb738c8b6a4dc"
+      "lines": 327,
+      "bytes": 51583,
+      "sha256": "b8045680f51bb1ec57c6a99331dc35c6f2810aaaa56a94f4a34ca0f7cff3378d"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

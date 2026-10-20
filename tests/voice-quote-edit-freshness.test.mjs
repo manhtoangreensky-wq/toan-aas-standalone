@@ -20,7 +20,7 @@ function runtime(locale='vi'){
   ctx.voiceUiText=(key,fallback,params)=>ctx.uiText(`voiceUi.${key}`,fallback,params);
   const a=source.indexOf('  function renderFields('),b=source.indexOf('  function statusMessage(',a);
   const c=source.indexOf('  function voiceFeedbackMetrics('),d=source.indexOf('  const ADMIN_TAB_GROUPS',c);
-  vm.runInContext(fn('safeText')+'\n'+source.slice(a,b)+'\n'+fn('flowQuoteExpiry')+'\n'+fn('flowHasFreshEstimate')+'\n'+source.slice(c,d)+'\n'+fn('collectFormFields')+'\n'+fn('synchronizeVoiceQuoteFreshness'),ctx);
+  vm.runInContext(fn('safeText')+'\n'+source.slice(a,b)+'\n'+fn('flowQuoteExpiry')+'\n'+fn('flowHasFreshEstimate')+'\n'+fn('voiceQuoteExpiryState')+'\n'+source.slice(c,d)+'\n'+fn('collectFormFields')+'\n'+fn('synchronizeVoiceQuoteFreshness'),ctx);
   return ctx;
 }
 

@@ -159,6 +159,8 @@
   }
 
   let interactionsBound = false;
+  let voiceQuoteExpiryTimer = null;
+  let voiceQuoteExpiryKey = "";
   const transientFormDrafts = new Map();
   let voiceWorkspaceDraftSession = "";
   // A continuation may only open one of these finite local Image Operations.
@@ -11421,6 +11423,12 @@
     );
   }
 
+  function voiceQuoteExpiryState(flow, now = Date.now()) {
+    const expiry = flowQuoteExpiry(flow);
+    if (expiry === null) return { expiry: null, hasExpiry: false, expired: false };
+    return { expiry, hasExpiry: true, expired: expiry <= now };
+  }
+
   function transientFormValues(route) {
     const targetRoute = normalizePath(route || "");
     // Notes and reminder bodies are deliberately never restored from the
@@ -11581,7 +11589,9 @@
     const flowStatus = flow && ALLOWED_STATES.has(flow.status) ? flow.status : "";
     const voiceQuoteEdited = ["/voice/tts", "/voice/saved", "/voice/stt", "/voice/clone"].includes(route)
       && voiceQuoteHasEdits(page, flow, transientFormValues(route));
-    const hasFreshEstimate = flowHasFreshEstimate(flow) && !voiceQuoteEdited;
+    const voiceQuoteExpiry = voiceQuoteExpiryState(flow);
+    const voiceQuoteExpired = voiceQuoteExpiry.expired;
+    const hasFreshEstimate = flowHasFreshEstimate(flow) && !voiceQuoteEdited && !voiceQuoteExpired;
     const quoteNeedsSelection = Boolean(flow && flow.phase === "estimate" && flow.status === "awaiting_confirm" && !hasFreshEstimate);
     const canEstimate = enabled && page.type === "feature" && !hasFreshEstimate && (
       page.action === "feature-estimate" || page.estimateDirect === true || flowStatus === "draft" || quoteNeedsSelection
@@ -11692,7 +11702,7 @@
         <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>
           ${renderFields(orderedFields, formFieldsEnabled, context, fieldValues)}
           ${["/voice/tts", "/voice/saved"].includes(route) ? renderVoiceFormFeedback(fieldValues) : ""}
-          <p class="portal-form-note" data-voice-quote-edited role="status"${voiceQuoteEdited ? "" : " hidden"}>${safeText(voiceUiText("form.quoteChanged", "Lựa chọn đã thay đổi. Xem báo giá mới trước khi xác nhận."))}</p>
+          <p class="portal-form-note" data-voice-quote-edited role="status"${voiceQuoteEdited || voiceQuoteExpired ? "" : " hidden"}>${safeText(voiceUiText(voiceQuoteExpired ? "form.quoteExpired" : "form.quoteChanged", voiceQuoteExpired ? "Báo giá đã hết hạn. Xem báo giá mới trước khi xác nhận." : "Lựa chọn đã thay đổi. Xem báo giá mới trước khi xác nhận."))}</p>
           <div class="portal-form-footer"><span class="portal-form-note">${safeText(voiceFormText(localAuthoringOnly ? "form.draftNote" : "form.processingNote", ""))}</span>${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button></div>
         </form>${flowControls}</section>`;
     }
@@ -37575,10 +37585,49 @@
     const flows = window.__TOAN_AAS_PORTAL__ && window.__TOAN_AAS_PORTAL__.featureFlows;
     const flow = flows && flows[route];
     const edited = voiceQuoteHasEdits(resolvePage(route), flow, collectFormFields(form));
-    const fresh = flowHasFreshEstimate(flow) && !edited;
+    const expired = voiceQuoteExpiryState(flow).expired;
+    const fresh = flowHasFreshEstimate(flow) && !edited && !expired;
     card.querySelectorAll('[data-portal-action="feature-confirm"]').forEach((button) => { button.hidden = !fresh; });
     const note = form.querySelector("[data-voice-quote-edited]");
-    if (note) note.hidden = !edited;
+    if (note) {
+      note.hidden = !(edited || expired);
+      note.textContent = voiceUiText(expired ? "form.quoteExpired" : "form.quoteChanged", expired ? "Báo giá đã hết hạn. Xem báo giá mới trước khi xác nhận." : "Lựa chọn đã thay đổi. Xem báo giá mới trước khi xác nhận.");
+    }
+  }
+
+  function clearVoiceQuoteExpiryTimer() {
+    if (voiceQuoteExpiryTimer !== null && typeof window.clearTimeout === "function") {
+      window.clearTimeout(voiceQuoteExpiryTimer);
+    }
+    voiceQuoteExpiryTimer = null;
+    voiceQuoteExpiryKey = "";
+  }
+
+  function scheduleVoiceQuoteExpiry(context, page) {
+    clearVoiceQuoteExpiryTimer();
+    const route = normalizePath(page && (page.routePath || page.path) || "");
+    if (!["/voice/tts", "/voice/saved", "/voice/stt", "/voice/clone"].includes(route)) return;
+    const flow = context && context.featureFlows && context.featureFlows[route];
+    const expiry = flowQuoteExpiry(flow);
+    if (expiry === null || expiry <= Date.now() || typeof window.setTimeout !== "function") return;
+    const receipt = flow && typeof flow.webQuoteReceipt === "string" ? flow.webQuoteReceipt : "";
+    const key = `${route}:${expiry}:${receipt}`;
+    voiceQuoteExpiryKey = key;
+    const delay = Math.min(Math.max(expiry - Date.now() + 20, 0), 2147483647);
+    voiceQuoteExpiryTimer = window.setTimeout(() => {
+      voiceQuoteExpiryTimer = null;
+      if (voiceQuoteExpiryKey !== key) return;
+      const current = getBootstrap();
+      const currentRoute = normalizePath(current && current.path || "");
+      if (currentRoute !== route) return;
+      const currentFlow = current.featureFlows && current.featureFlows[route];
+      if (!voiceQuoteExpiryState(currentFlow).expired) {
+        scheduleVoiceQuoteExpiry(current, resolvePage(currentRoute));
+        return;
+      }
+      const form = document.querySelector(`[data-portal-form][data-portal-route="${route}"]`);
+      synchronizeVoiceQuoteFreshness(form);
+    }, delay);
   }
 
   function synchronizeMusicProductForm(form) {
@@ -40833,6 +40882,7 @@
       main.querySelectorAll("[data-admin-archive-type-map]").forEach((form) => synchronizeAdminArchiveDocumentType(form));
       syncDesktopFocusNavigation();
       bindInteractions();
+      scheduleVoiceQuoteExpiry(context, page);
       syncPwaInstallControl();
       const theme = window.TOANAASPortalTheme;
       if (theme && typeof theme.syncControls === "function") theme.syncControls();

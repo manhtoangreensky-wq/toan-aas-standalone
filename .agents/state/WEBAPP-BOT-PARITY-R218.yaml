@@ -1,22 +1,22 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: VOICE_QUOTE_EDIT_LOCAL_QA_GREEN_DELIVERY_PENDING
+status: VOICE_QUOTE_IDLE_UI_VERIFIED_DELIVERY_PENDING
 date: 2026-10-20
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 51c489b968b21ca6cd5b9c8c0af4b55546cf7c27
-delivery_head_sha: 51c489b968b21ca6cd5b9c8c0af4b55546cf7c27
-delivery_status: PUSHED_CI_GREEN_PR_OPEN
-head_sha_semantics: "Last observed committed baseline before the pending Voice quote-edit correction. The new commit cannot name its own future SHA; read the latest PR head and delivery report for the current delivery result."
-delivery_head_semantics: "Baseline 51c489b is pushed and CI-green in run 39403533444. The next Voice quote-edit correction has local renderer/browser evidence; its fresh CI is recorded on PR #654 after push."
-branch_head_sha: 51c489b968b21ca6cd5b9c8c0af4b55546cf7c27
+head_sha: 8d53dabf48f422fd25dd893ce730b2cce49353f1
+delivery_head_sha: 8d53dabf48f422fd25dd893ce730b2cce49353f1
+delivery_status: BASELINE_CI_GREEN_IDLE_LOCAL_QA_GREEN_PUSH_PENDING
+head_sha_semantics: "Last observed committed baseline before Voice idle expiry. Read the latest PR head and delivery comment for the current delivered checkpoint; this file does not predict its own future commit SHA."
+delivery_head_semantics: "Baseline 8d53dab is pushed and CI-green in run 39406730261. The idle expiry delta has local behavior/browser evidence; fresh CI is recorded on PR #654 after push."
+branch_head_sha: 8d53dabf48f422fd25dd893ce730b2cce49353f1
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
-last_push_verified_commit: 51c489b968b21ca6cd5b9c8c0af4b55546cf7c27
-docs_checkpoint_sha: 51c489b968b21ca6cd5b9c8c0af4b55546cf7c27
-push_command_success_commit: 51c489b968b21ca6cd5b9c8c0af4b55546cf7c27
-remote_readback: "GitHub PR head is 51c489b968b21ca6cd5b9c8c0af4b55546cf7c27; PR #654 OPEN. Run 39403533444 SUCCESS: Verify Web App job 118563840899 and Authenticated WebApp QA job 118564829990 passed. Report: issuecomment-6288402938."
+last_push_verified_commit: 8d53dabf48f422fd25dd893ce730b2cce49353f1
+docs_checkpoint_sha: 8d53dabf48f422fd25dd893ce730b2cce49353f1
+push_command_success_commit: 8d53dabf48f422fd25dd893ce730b2cce49353f1
+remote_readback: "GitHub PR head 8d53dabf48f422fd25dd893ce730b2cce49353f1 re-read 2026-10-20; PR #654 OPEN/MERGEABLE. Run 39406730261 SUCCESS: Verify job118574353214 and Authenticated QA job118575563109. Delivery comment issuecomment-6288812623."
 batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
@@ -250,14 +250,25 @@ current_wip:
     artifact: "reports/audit/R218-VOICE-DEFAULT-SELECTION-QA-20261020.json"
     limitations: "Explicit selection CI-green on 51c489b/run39403533444. Canonical capability fallback/neutral, real quote/confirm, Voice Vault management/handoff, preview, provider execution, delivery and LIVE remain open."
   voice_quote_edit_freshness:
-    state: "UI_BROWSER_VERIFIED_CI_PENDING"
+    state: "UI_BROWSER_VERIFIED_CI_GREEN"
     spec: "docs/superpowers/specs/2026-10-20-r218-voice-quote-edit-freshness.md"
     changed_files: "static/portal/portal.js; static/portal/portal-i18n.js; tests/voice-quote-edit-freshness.test.mjs"
     contract: "Only Voice routes: compare page schema fields with quoted input; editing hides existing confirm and shows a localized note without remount/request or busy override. Exact revert can restore only an existing control while receipt remains fresh. Transient edits also suppress confirm at render time."
     tests: "Dedicated11/11; focused77/77; full Node761/761; syntax/diff pass. Reproduction old_quote_confirm_rendered true before, false after."
     browser: "Codex IAB localhost TTS18 configurations/108 edit checks (script/gender/speed number+preset/volume number+range); focus/draft/revert/hydration safety passed; overflow0/console0; fixture write0/unknownAPI0."
     artifact: "reports/audit/R218-VOICE-QUOTE-EDIT-QA-20261020.json"
-    limitations: "STT/clone browser execution, idle expiry timer, real quote/provider/delivery and LIVE remain open. Read fresh CI/delivery on PR #654 after push."
+    limitations: "CI green on 8d53dab/run39406730261. STT/clone real execution, real quote/provider/delivery and LIVE remain open. Idle UI evidence follows below."
+  voice_quote_idle_expiry:
+    state: "UI_BROWSER_VERIFIED_DELIVERY_PENDING"
+    spec_id: "VOICE-QUOTE-IDLE-001"
+    base_sha: 8d53dabf48f422fd25dd893ce730b2cce49353f1
+    spec: "docs/superpowers/specs/2026-10-20-r218-voice-quote-edit-freshness.md"
+    handoff: "Antigravity R1/R2 produced no source/report; primary takeover after worker failures."
+    contract: "One canonical deadline timer updates confirm and localized expiry note in-place; no shell remount/request. Preserve form, focus, values, zero volume and selected files; post-expiry input/revert cannot restore confirm. Cancel/replace timer on new render/route/deadline."
+    tests: "Behavior8/8; focused70/70; full Node769/769; Portal syntax/diff pass."
+    browser: "Edge headless localhost22/22: TTS18 VI/EN/ZH x light/dark x390/768/1440; saved/STT/clone3; reduced-motion1. Form/focus/input/file preserved; 397 GET; console/overflow/write/unknownAPI/external0."
+    artifact: "reports/audit/R218-VOICE-QUOTE-IDLE-QA-20261020.json"
+    limitations: "STT stays guarded by integration allowlist. File assignment is UI-only QA, not upload/engine. Fresh idle CI pending push; real quote/generation/delivery/LIVE remain open."
   music_presentation:
     state: "UI_VERIFIED_RUNTIME_OPEN"
     tests: "Existing Music control contracts remain green; browser matrix 36 configurations"
@@ -364,4 +375,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Commit the current Voice quote-edit correction and ledger, refresh provenance from the clean tracked checkout, push PR #654 and read fresh CI. Record delivery on the PR to avoid a state-only commit/CI loop. Next inspect quote expiry while the page is idle and remaining Voice result UI; canonical Vault management/handoff/capability DTO stay in T0, then continue Music. Video and motion remain later."
+next_action: "Commit Voice idle-expiry UI and ledger, refresh provenance from the clean tracked checkout, push PR #654 and read fresh CI. Record delivery on the PR without a state-only commit loop. Next inspect remaining Voice result/progress/player/report/retry presentation using actual canonical DTO; Vault management/handoff/capability DTO and STT integration allowlist remain T0. Continue Music after the available Voice presentation work. Video and motion remain later."

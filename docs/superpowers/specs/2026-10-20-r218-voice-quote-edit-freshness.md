@@ -47,7 +47,46 @@ provider, ví/PayOS, workflow CI, ENV và dữ liệu production.
 - [x] Re-render/hydration với transient khác input quote không phục hồi confirm.
 - [x] Bản nháp/focus/âm lượng 0 còn nguyên; không đổi disabled do busy.
 - [x] Thông báo VI/EN/ZH rõ; re-estimate là thao tác có chủ đích của khách.
-- [~] Source/UI đã kiểm: test riêng 11/11, focused 77/77, full Node 761/761;
-  browser TTS 18 cấu hình/108 lượt đổi input đạt. CI trên commit mới còn chờ;
-  kết quả delivery sẽ được ghi trên PR #654. STT/clone chỉ có kiểm so sánh
-  source/file/consent, chưa có browser runtime riêng cho hai luồng đó.
+- [x] Quote-edit UI: test riêng 11/11, focused 77/77, full Node 761/761;
+  browser TTS 18 cấu hình/108 lượt đổi input đạt. CI tại `8d53dab` đã đạt:
+  run `39406730261`, cả Verify Web App và Authenticated WebApp QA thành công.
+  Đây là nghiệm thu UI, không thay cho xử lý âm thanh hay LIVE.
+
+## Lát tiếp nối VOICE-QUOTE-IDLE-001 — 20/10/2026
+
+Baseline: `8d53dabf48f422fd25dd893ce730b2cce49353f1`.
+Giữ cùng phạm vi bốn route Voice và các tệp được phép ở trên; bổ sung
+`tests/voice-quote-expiry.test.mjs` cùng các harness renderer Voice đang dùng
+`renderFormCard`. Không thay đổi chữ ký hàm dùng chung hay schema máy chủ.
+
+Lỗi: UI chỉ kiểm deadline khi render/input; khách để trang mở có thể nhìn
+thấy xác nhận báo giá cũ sau deadline. Bản timer đang dở dựng lại cả shell,
+có nguy cơ mất file input và đổi vị trí cuộn. Cách sửa được chốt: một timer
+đọc timestamp canonical, đến hạn chỉ đồng bộ confirm/note trên form đang có.
+Không dựng lại DOM, không fetch, không tạo estimate hoặc đổi quyền.
+
+1. Deadline tương lai: giữ confirm hiện có; timestamp thiếu/sai giữ policy
+   hiện tại, không suy ra hạn mới.
+2. Đến hạn: ẩn confirm, hiện thông báo hết hạn thuần VI/EN/ZH; giữ nội dung,
+   lựa chọn, âm lượng 0, tệp mẫu, form node, focus và vị trí cuộn.
+3. Input/change và nhập lại giá trị cũ sau hết hạn không phục hồi confirm
+   hoặc ẩn thông báo. Busy/disabled hiện có được giữ.
+4. Timer cũ bị hủy khi render mới/chuyển route; callback kiểm route hiện tại
+   và deadline mới. Chỉ áp dụng `/voice/tts`, `/voice/saved`, `/voice/stt`,
+   `/voice/clone`.
+
+### Nghiệm thu lát idle
+
+- [x] Test hành vi timer/freshness: 8/8; nhóm tập trung 70/70, full Node 769/769.
+- [x] Browser Edge headless localhost: TTS 18 cấu hình VI/EN/ZH × sáng/tối ×
+  390/768/1440; Kho giọng/STT/Thêm giọng mỗi route 1 cấu hình; giảm chuyển động
+  1 cấu hình. Tổng 22/22, form/focus/input/tệp còn nguyên, overflow/console/
+  write/unknown API/request ngoài đều 0.
+- [x] STT vẫn guarded bởi allowlist `integration.js`; case STT không coi
+  việc gán tệp vào form tổng hợp là upload/quote/confirm thực thi.
+- [x] Syntax hai file Portal và protected comparator đạt; backend,
+  integration, CSS/palette, route-engine và workflow không đổi.
+- [ ] CI trên checkpoint idle sau push; ghi kết quả trực tiếp trên PR #654.
+
+Evidence: `reports/audit/R218-VOICE-QUOTE-IDLE-QA-20261020.json`.
+Runtime/provider/delivery/LIVE tiếp tục mở theo checklist R218.

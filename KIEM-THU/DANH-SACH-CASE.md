@@ -208,6 +208,19 @@ Evidence: `reports/audit/R218-VOICE-QUOTE-EDIT-QA-20261020.json`.
 Fixture chỉ đọc, quote/capability tổng hợp; không nhấn tạo/confirm thực thi.
 Idle expiry và generation/delivery thật chưa được đóng bằng các case này.
 
+## VOICE-QUOTE-IDLE-20261020
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| VUI-IDLE-01 | TTS có quote còn hạn → giữ trang đến hết hạn; VI/EN/ZH × sáng/tối × 390/768/1440 | Confirm cũ ẩn, thông báo đúng locale; form node/focus/field/0%/scroll giữ nguyên; 18 cấu hình có DOM và network evidence |
+| VUI-IDLE-02 | Kho giọng, STT và Thêm giọng; chọn tệp QA rồi đợi deadline | Tệp và form không bị dựng lại; note hết hạn còn sau input/change/revert. STT guarded không có confirm được ghi đúng, không tạo upload/provider |
+| VUI-IDLE-03 | Timer → render mới/đổi route/quote mới/missing hoặc malformed expiry; reduced-motion | Timer cũ bị hủy; callback không sửa route khác; không tự dựng deadline, lấy quote hay mở quyền; busy/disabled giữ nguyên |
+
+Evidence: `reports/audit/R218-VOICE-QUOTE-IDLE-QA-20261020.json`.
+Local behavior 8/8, focused 70/70, full Node 769/769; browser fixture 22/22,
+console/overflow/write/request ngoài/unknown API 0. Chỉ khóa UI; CI của delta
+sau push, quote/provider/delivery/LIVE thực tế vẫn mở.
+
 ## VOICE-INVENTORY-READ-STATE-20261019
 
 | ID | Kiểm tra | PASS cần ghi |

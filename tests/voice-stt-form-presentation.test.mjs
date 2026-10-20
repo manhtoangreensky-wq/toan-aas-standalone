@@ -25,7 +25,7 @@ for (const locale of ['vi', 'en', 'zh']) {
   vm.runInContext(catalog, ctx);
   ctx.uiText = (key, fallback, params) => ctx.TOANAASI18n.has(key) ? ctx.TOANAASI18n.t(key, params, locale) : fallback;
   ctx.voiceUiText = (key, fallback, params) => ctx.uiText(`voiceUi.${key}`, fallback, params);
-  vm.runInContext(fn('safeText') + '\n' + source.slice(start, end) + '\n' + source.slice(feedbackStart, feedbackEnd), ctx);
+  vm.runInContext(fn('safeText') + '\n' + source.slice(start, end) + '\n' + fn('flowQuoteExpiry') + '\n' + fn('voiceQuoteExpiryState') + '\n' + source.slice(feedbackStart, feedbackEnd), ctx);
   Object.assign(ctx, {renderSubtitleStudioCompanionLink: () => '', renderInteractiveFeatureWorkbench: () => '', renderHero: () => '', renderEmpty: (title, body) => `<h3>${title}</h3><p>${body}</p>`});
   vm.runInContext(fn('renderWorkspace'), ctx);
   const page = { path: '/voice/stt', type: 'feature', action: 'feature-estimate', fields: [

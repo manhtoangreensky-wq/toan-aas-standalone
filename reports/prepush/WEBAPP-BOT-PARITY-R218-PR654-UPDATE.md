@@ -2,6 +2,32 @@
 
 Đang đọc và áp dụng skill owner-governed-codex cho task này.
 
+## Cập nhật Voice idle expiry — 20/10/2026
+
+BASE_SHA=`8d53dabf48f422fd25dd893ce730b2cce49353f1`.
+Baseline được đọc lại từ GitHub: PR #654 OPEN/MERGEABLE, run `39406730261`
+SUCCESS; Verify job `118574353214`, Authenticated QA job `118575563109`.
+
+- Hết hạn quote khi đứng yên: một timer đọc deadline canonical, cập nhật
+  confirm/note tại chỗ trên bốn route Voice. Không remount, giữ form/focus/
+  field/tệp, không phát request. Input/change/revert không phục hồi quote cũ.
+- Thông báo hết hạn VI/EN/ZH có wording riêng. Missing/malformed giữ policy
+  hiện tại; timer cũ bị dọn khi render/đổi route hoặc cập nhật deadline.
+- Test hành vi 8/8; focused 70/70; full Node 769/769. Browser nền Edge localhost
+  22/22, gồm TTS18 + saved/STT/clone3 + reduced-motion1; 397 GET, write/request
+  ngoài/unknown API/console/overflow0. STT vẫn guarded bởi allowlist integration;
+  case file chỉ kiểm DOM, không phải upload/engine.
+- Browser plugin không có trong phiên; lần chạy sandbox lỗi TEMP rồi remote
+  debugging pipe. Đã dùng TEMP QA cục bộ và Edge headless với hồ sơ tạm theo
+  quyền QA đã cấp. Harness đầu giả định STT có confirm và được sửa theo source
+  allowlist; không đổi quyền sản phẩm để làm test xanh.
+- Đã cập nhật spec, master checklist, vận hành, đối chiếu, VUI-IDLE-01..03 và
+  evidence `reports/audit/R218-VOICE-QUOTE-IDLE-QA-20261020.json`.
+- Protected comparator: Python/backend, integration.js, CSS/palette,
+  route-engine và workflow không đổi so với BASE_SHA.
+- CI của delta idle chờ push; real quote/provider/delivery/LIVE vẫn mở.
+  Không tính một checkpoint UI thành hoàn thành toàn bộ R218.
+
 ## Cập nhật Voice quote-edit — 20/10/2026
 
 - Baseline selection checkpoint `51c489b968b21ca6cd5b9c8c0af4b55546cf7c27`

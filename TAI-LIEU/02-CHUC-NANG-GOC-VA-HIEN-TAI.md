@@ -1,5 +1,18 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Đối chiếu Voice idle expiry — 20/10/2026
+
+| Yêu cầu | Hiện tại và bằng chứng |
+|---|---|
+| Quote hết hạn khi khách chưa thao tác | Timer dùng timestamp canonical; ẩn xác nhận cũ và hiện thông báo ngay trên form. Không remount shell hoặc tự lấy quote mới |
+| Giữ công việc khách đang nhập | Browser fixture xác minh form node/focus/các field/âm lượng 0 và tệp STT/Thêm giọng còn nguyên; 22/22 cấu hình, console/overflow/write/request ngoài/unknown API đều 0 |
+| Chuyển trang hoặc thay deadline | Test hành vi timer 8/8; focused 70/70, full Node 769/769. Timer bị hủy hoặc cập nhật theo dữ liệu mới |
+| Parity vận hành với Bot | Chưa đóng: STT vẫn guarded ở integration; file fixture không chứng minh upload/engine; quote thật, generation, kho giọng và delivery còn theo T0/P1 |
+
+Tài liệu trước chỉ ghi “quote expiry UI đã khóa” dựa trên thời điểm render.
+Điều đó chưa chứng minh hết hạn lúc trang đứng yên. Lát này bổ sung đúng
+evidence idle; CI sau push và LIVE vẫn được báo riêng trên PR #654.
+
 ## Đối chiếu Voice quote freshness — 20/10/2026
 
 - Trước: renderer hiện input đã đổi cùng confirm của quote cũ; khi nhấn,
@@ -8,8 +21,8 @@
 - Source regression `11/11`, focused `77/77`, full Node `761/761`; browser
   TTS `18` cấu hình × `6` kiểu đổi input = `108` lượt đạt. File/consent chỉ
   được kiểm ở helper source. API fingerprint/receipt/quote/wallet không đổi.
-- CI mới, STT/clone browser runtime, quote hết hạn khi để trang lâu và
-  audio/provider/delivery/LIVE tiếp tục có gate riêng.
+- CI quote-edit tại `8d53dab` đạt run `39406730261`; idle UI được nghiệm thu
+  ở mục trên. STT/clone runtime và audio/provider/delivery/LIVE có gate riêng.
 
 ## Đối chiếu Voice default — 20/10/2026
 
