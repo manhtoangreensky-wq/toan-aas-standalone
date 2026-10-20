@@ -502,6 +502,7 @@ def get_image_generation_job(account_id: str, job_id: str) -> dict[str, Any] | N
     if not clean_account_id or not clean_job_id:
         return None
 
+    ensure_image_generation_schema()
     with read_transaction() as conn:
         cursor = conn.execute(
             "SELECT * FROM web_image_generation_jobs WHERE id = ? AND account_id = ?",
@@ -521,6 +522,7 @@ def list_image_generation_jobs(account_id: str, limit: int = 50) -> list[dict[st
         return []
 
     safe_limit = max(1, min(limit, 100))
+    ensure_image_generation_schema()
     with read_transaction() as conn:
         cursor = conn.execute(
             """
@@ -543,6 +545,7 @@ def is_image_generation_job_other_account(job_id: str, requester_account_id: str
     if not clean_job_id or not clean_requester:
         return False
 
+    ensure_image_generation_schema()
     with read_transaction() as conn:
         cursor = conn.execute(
             "SELECT account_id FROM web_image_generation_jobs WHERE id = ?",
