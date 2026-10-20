@@ -6,21 +6,22 @@ scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cu�
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 8d53dabf48f422fd25dd893ce730b2cce49353f1
-delivery_head_sha: 8d53dabf48f422fd25dd893ce730b2cce49353f1
-delivery_status: BASELINE_CI_GREEN_IDLE_LOCAL_QA_GREEN_PUSH_PENDING
+head_sha: b186b75a2b55b397f802fb992ce0a320039053a4
+delivery_head_sha: b186b75a2b55b397f802fb992ce0a320039053a4
+delivery_status: LOCAL_PUSH_RECEIPT_CONFIRMED_REMOTE_READBACK_PENDING
 checkpoint_report: reports/audit/R218-CHECKPOINT-20261021.md
 checkpoint_date: 2026-10-21
 checkpoint_tests: "Full Node813/813; Python workspace-draft17 passed/78 deselected; JS syntax2 PASS; diff-check PASS; QA server7628 stopped."
 prepush_report: reports/prepush/R218-20261021-PREPUSH.md
-prepush_gate: PUSH_GATE_READY_PENDING_OWNER_PUSH_AUTHORIZATION
+prepush_gate: PUSH_RECEIPT_CONFIRMED_REMOTE_READBACK_PENDING
+postpush_report: reports/prepush/R218-20261021-POSTPUSH.md
 head_sha_semantics: "Last observed committed baseline before Voice idle expiry. Read the latest PR head and delivery comment for the current delivered checkpoint; this file does not predict its own future commit SHA."
 delivery_head_semantics: "Baseline 8d53dab is pushed and CI-green in run 39406730261. The idle expiry delta has local behavior/browser evidence; fresh CI is recorded on PR #654 after push."
-branch_head_sha: 8d53dabf48f422fd25dd893ce730b2cce49353f1
+branch_head_sha: b186b75a2b55b397f802fb992ce0a320039053a4
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
-last_push_verified_commit: 8d53dabf48f422fd25dd893ce730b2cce49353f1
-docs_checkpoint_sha: 8d53dabf48f422fd25dd893ce730b2cce49353f1
-push_command_success_commit: 8d53dabf48f422fd25dd893ce730b2cce49353f1
+last_push_verified_commit: b186b75a2b55b397f802fb992ce0a320039053a4
+docs_checkpoint_sha: b186b75a2b55b397f802fb992ce0a320039053a4
+push_command_success_commit: b186b75a2b55b397f802fb992ce0a320039053a4
 remote_readback: "GitHub PR head 8d53dabf48f422fd25dd893ce730b2cce49353f1 re-read 2026-10-20; PR #654 OPEN/MERGEABLE. Run 39406730261 SUCCESS: Verify job118574353214 and Authenticated QA job118575563109. Delivery comment issuecomment-6288812623."
 batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
