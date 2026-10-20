@@ -18317,39 +18317,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 288,
-  "source_files_scanned": 288,
-  "source_fingerprint_sha256": "4607415db7bad0fd20f1f34a18efeed41903a9a1397fcf66ecda84ee5f9e8a0a",
+  "source_files_discovered": 289,
+  "source_files_scanned": 289,
+  "source_fingerprint_sha256": "840998aa4df50e83e912326947a920af5c80b589b1d52654c818e1bc6ad10095",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 34648,
+      "line": 34625,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34964,
+      "line": 34941,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34312,
+      "line": 34289,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34561,
+      "line": 34538,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 33933,
+      "line": 33910,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34225,
+      "line": 34202,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -18564,7 +18564,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36081,
+      "line": 36058,
       "path": "/features"
     },
     {
