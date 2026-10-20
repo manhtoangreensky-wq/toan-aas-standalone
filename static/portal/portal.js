@@ -14621,11 +14621,11 @@
   }
 
   function renderMusicLibraryCards(items, role, route) {
-    const roleLabel = musicLibraryText(role === "sfx" ? "role.sfx" : "role.music", role === "sfx" ? "SFX" : "nhạc");
+    const roleLabel = musicLibraryText(role === "sfx" ? "role.sfx" : "role.music", role === "sfx" ? "hiệu ứng âm thanh" : "nhạc");
     if (!items.length) {
       return renderEmpty(
-        musicLibraryText(role === "sfx" ? "empty.sfx.title" : "empty.music.title", role === "sfx" ? "Chưa có SFX trong thư viện" : "Chưa có nhạc trong thư viện"),
-        musicLibraryText("empty.body", "Gắn âm thanh đang hoạt động vào một bộ sưu tập âm thanh riêng tư trước. Trang này không suy đoán danh mục, tệp, bản xem trước hoặc kết quả âm thanh."),
+        musicLibraryText(role === "sfx" ? "empty.sfx.title" : "empty.music.title", role === "sfx" ? "Chưa có hiệu ứng âm thanh trong thư viện" : "Chưa có nhạc trong thư viện"),
+        musicLibraryText("empty.body", "Mở Không gian âm thanh để thêm nội dung vào bộ sưu tập của bạn."),
         ICONS.music
       );
     }
@@ -14654,7 +14654,7 @@
         </dl>
         ${tagMarkup}
         <footer class="portal-music-library-card-footer">
-          <span>${safeText(musicLibraryText("metadataNotice", "Thông tin riêng tư · không có trình phát hoặc bàn giao tệp."))}</span>
+          <span>${safeText(musicLibraryText("metadataNotice", "Thông tin đã lưu · chưa hỗ trợ nghe hoặc tải tại đây."))}</span>
           <a class="portal-button portal-button--quiet" href="${safeText(collectionRoute)}">${safeText(musicLibraryText("openCollection", "Mở bộ sưu tập"))} <span aria-hidden="true">→</span></a>
         </footer>
       </article>`;
@@ -14669,8 +14669,8 @@
     const route = String((context && context.path) || page.routePath || page.path || "/music/library").split("?")[0];
     const role = musicLibraryRoleForPage(page);
     const roleKey = role === "sfx" ? "sfx" : "music";
-    const roleLabel = musicLibraryText(`role.${roleKey}`, role === "sfx" ? "SFX" : "nhạc");
-    const title = musicLibraryText(`intro.title.${roleKey}`, role === "sfx" ? "Thư viện SFX của tôi" : "Thư viện nhạc của tôi");
+    const roleLabel = musicLibraryText(`role.${roleKey}`, role === "sfx" ? "hiệu ứng âm thanh" : "nhạc");
+    const title = musicLibraryText(`intro.title.${roleKey}`, role === "sfx" ? "Hiệu ứng âm thanh đã lưu" : "Nhạc đã lưu");
     const alternate = role === "sfx"
       ? { href: "/music/library", label: musicLibraryText("page.music.title", "Thư viện nhạc") }
       : { href: "/music/sfx-library", label: musicLibraryText("page.sfx.title", "Thư viện hiệu ứng âm thanh") };
@@ -14681,38 +14681,38 @@
     const listing = musicLibraryListing(context);
     const filter = listing.filters;
     const items = musicLibraryItems(context, role);
-    const filterForm = `<form class="portal-music-library-filter" data-portal-form data-portal-no-transient data-portal-action="music-library-filter" data-portal-route="${safeText(route)}" novalidate>${renderFields([{ name: "q", label: musicLibraryText(`filter.label.${roleKey}`, role === "sfx" ? "Tìm SFX" : "Tìm nhạc"), placeholder: musicLibraryText("filter.placeholder", "Tên đã đặt, bộ sưu tập hoặc thẻ…"), maxLength: 100, wide: true }], canView, context, filter, "music-library-filter")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(musicLibraryText("filter.note", "Tìm kiếm chỉ đọc thông tin trong phạm vi tài khoản hiện tại; không lưu vào đường dẫn, Bot hoặc bộ nhớ trình duyệt."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="music-library-filter-clear" data-portal-route="${safeText(route)}"${canView ? "" : " disabled"}>${safeText(musicLibraryText("filter.clear", "Xóa lọc"))}</button><button class="portal-button portal-button--primary" type="submit"${canView ? "" : " disabled"}>${safeText(musicLibraryText("filter.submit", "Tìm trong thư viện"))}</button></div></div></form>`;
+    const filterForm = `<form class="portal-music-library-filter" data-portal-form data-portal-no-transient data-portal-action="music-library-filter" data-portal-route="${safeText(route)}" novalidate>${renderFields([{ name: "q", label: musicLibraryText(`filter.label.${roleKey}`, role === "sfx" ? "Tìm hiệu ứng âm thanh" : "Tìm nhạc"), placeholder: musicLibraryText("filter.placeholder", "Tên đã đặt, bộ sưu tập hoặc thẻ…"), maxLength: 100, wide: true }], canView, context, filter, "music-library-filter")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(musicLibraryText("filter.note", "Tìm theo tên, bộ sưu tập hoặc thẻ. Từ khóa chỉ dùng trong phiên hiện tại."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="music-library-filter-clear" data-portal-route="${safeText(route)}"${canView ? "" : " disabled"}>${safeText(musicLibraryText("filter.clear", "Xóa lọc"))}</button><button class="portal-button portal-button--primary" type="submit"${canView ? "" : " disabled"}>${safeText(musicLibraryText("filter.submit", "Tìm trong thư viện"))}</button></div></div></form>`;
     const guard = !canView || readState !== "ready";
     if (guard) {
       const loading = canView && readState === "loading";
       const failed = canView && readState === "failed";
       const heading = loading
-        ? musicLibraryText("guard.loading.title", "Đang kiểm tra thư viện {role}", { role: roleLabel })
+        ? musicLibraryText("guard.loading.title", "Đang tải thư viện {role}", { role: roleLabel })
         : failed
           ? musicLibraryText("guard.failed.title", "Chưa thể tải thư viện {role}", { role: roleLabel })
-          : musicLibraryText("guard.guarded.title", "Thư viện {role} đang được bảo vệ", { role: roleLabel });
+          : musicLibraryText("guard.guarded.title", "Chưa thể mở thư viện {role}", { role: roleLabel });
       const copy = loading
-        ? musicLibraryText("guard.loading.copy", "Đang nạp thông tin đã được kiểm tra quyền. Dữ liệu cũ không được giữ lại hoặc thay bằng tài sản chung.")
+        ? musicLibraryText("guard.loading.copy", "Đang tải danh sách. Vui lòng chờ trong giây lát.")
         : failed
-          ? musicLibraryText("guard.failed.copy", "Máy chủ chưa trả danh sách hợp lệ nên giao diện đã ẩn dữ liệu cũ. Không dùng Bot, nhà cung cấp, danh mục hoặc tệp thay thế.")
-          : musicLibraryText("guard.guarded.copy", "Đăng nhập bằng phiên Web hợp lệ và chờ Không gian âm thanh được bật để xem thông tin riêng tư. Mã Telegram thô không cấp quyền cho màn này.");
+          ? musicLibraryText("guard.failed.copy", "Chưa lấy được danh sách. Hãy thử tải lại; nội dung đã lưu không bị thay đổi.")
+          : musicLibraryText("guard.guarded.copy", "Bạn cần đăng nhập và được cấp quyền truy cập thư viện âm thanh.");
       const guardButton = loading
         ? musicLibraryText("guard.loading.button", "Đang nạp thông tin")
         : failed
-          ? musicLibraryText("guard.failed.button", "Thử lại dữ liệu riêng tư")
-          : musicLibraryText("guard.guarded.button", "Thử lại sau khi bật quyền");
-      return `<article class="portal-page portal-music-library">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-music-library-guard" aria-live="polite" aria-busy="${loading ? "true" : "false"}"><div class="portal-state" data-state="${loading ? "processing" : failed ? "error" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.music)}</span><div><h2>${safeText(heading)}</h2><p>${safeText(copy)}</p><div class="portal-state-meta"><span>${safeText(musicLibraryText("guard.noGenericAssets", "Không có tài sản chung"))}</span><span>${safeText(musicLibraryText("guard.noPlayerCatalog", "Không có trình phát/danh mục"))}</span><span>${safeText(musicLibraryText("guard.noBotHandoff", "Không bàn giao cho Bot"))}</span></div><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="music-library-refresh" data-portal-route="${safeText(route)}"${canView && !loading ? "" : " disabled"}>${safeText(guardButton)}</button><a class="portal-button portal-button--quiet" href="${safeText(alternate.href)}">${safeText(alternate.label)}</a></div></div></div></section></article>`;
+          ? musicLibraryText("guard.failed.button", "Thử tải lại")
+          : musicLibraryText("guard.guarded.button", "Kiểm tra lại quyền truy cập");
+      return `<article class="portal-page portal-music-library">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-music-library-guard" aria-live="polite" aria-busy="${loading ? "true" : "false"}"><div class="portal-state" data-state="${loading ? "processing" : failed ? "error" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.music)}</span><div><h2>${safeText(heading)}</h2><p>${safeText(copy)}</p><div class="portal-state-meta"><span>${safeText(musicLibraryText("guard.noGenericAssets", "Thông tin riêng tư"))}</span><span>${safeText(musicLibraryText("guard.noPlayerCatalog", "Chưa hỗ trợ nghe thử"))}</span><span>${safeText(musicLibraryText("guard.noBotHandoff", "Chưa hỗ trợ tải tệp"))}</span></div><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="music-library-refresh" data-portal-route="${safeText(route)}"${canView && !loading ? "" : " disabled"}>${safeText(guardButton)}</button><a class="portal-button portal-button--quiet" href="${safeText(alternate.href)}">${safeText(alternate.label)}</a></div></div></div></section></article>`;
     }
     const resultNote = filter.q
-      ? musicLibraryText("result.query", "Kết quả cho “{query}” chỉ tìm trên tên đã đặt, bộ sưu tập và thẻ đã được lọc.", { query: filter.q })
+      ? musicLibraryText("result.query", "Kết quả cho “{query}”.", { query: filter.q })
       : musicLibraryText(`result.all.${roleKey}`, "Chỉ nội dung đang hoạt động đã gắn vào bộ sưu tập âm thanh đang hoạt động của tài khoản hiện tại được hiển thị.");
     const cards = filter.q && !items.length
       ? renderEmpty(musicLibraryText("empty.search.title", "Không tìm thấy kết quả"), musicLibraryText("empty.search.body", "Thử từ khóa khác hoặc xóa bộ lọc để xem lại danh sách."), ICONS.music)
       : renderMusicLibraryCards(items, role, route);
     return `<article class="portal-page portal-music-library">${renderHero(page, context)}
-      <section class="portal-music-library-intro"><div><span class="portal-section-kicker">${safeText(musicLibraryText("intro.kicker", "THƯ VIỆN ÂM THANH RIÊNG TƯ"))}</span><h2>${safeText(title)}</h2><p>${safeText(musicLibraryText("intro.description", "Xem nhanh các tên tham chiếu trong bộ sưu tập âm thanh mà không mở tệp, xem trước hoặc truy cập kho bên ngoài. Mỗi thẻ chỉ là thông tin để bạn tiếp tục trong bộ sưu tập."))}</p></div><div class="portal-music-library-intro-actions"><span class="portal-music-library-read-badge">${safeText(musicLibraryText("intro.readOnly", "Chỉ đọc · phiên đăng nhập"))}</span><a class="portal-button portal-button--quiet" href="${safeText(alternate.href)}">${safeText(alternate.label)}</a></div></section>
-      <section class="portal-card portal-card-pad portal-music-library-board"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicLibraryText("board.kicker", "THÔNG TIN TRONG PHẠM VI TÀI KHOẢN"))}</span><h2 class="portal-card-title">${safeText(musicLibraryText("board.title", "Tìm và mở đúng bộ sưu tập"))}</h2><p class="portal-card-subtitle">${safeText(resultNote)}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="music-library-refresh" data-portal-route="${safeText(route)}">${safeText(musicLibraryText("refresh", "Làm mới"))}</button></div>${filterForm}${cards}${renderMemoryPagination(listing, role === "sfx" ? musicLibraryText("role.sfx", "SFX") : musicLibraryText("role.music", "nhạc"), "music-library-page", route, "data-music-library-offset", "portal-music-library-pagination")}</section>
-      <aside class="portal-music-library-boundary"><div><strong>${safeText(musicLibraryText("boundary.title", "Ranh giới của thư viện"))}</strong><span>${safeText(musicLibraryText("boundary.body", "Chỉ đọc thông tin. Không mở trình phát/xem trước, không tạo âm thanh, tác vụ, ví, thanh toán, tài sản, bàn giao, Bot hoặc Telegram."))}</span></div><a class="portal-button portal-button--quiet" href="/media-workspace">${safeText(musicLibraryText("openWorkspace", "Mở Không gian âm thanh"))}</a></aside>
+      <section class="portal-music-library-intro"><div><span class="portal-section-kicker">${safeText(musicLibraryText("intro.kicker", "THƯ VIỆN ÂM THANH RIÊNG TƯ"))}</span><h2>${safeText(title)}</h2><p>${safeText(musicLibraryText("intro.description", "Tìm nội dung đã lưu và mở bộ sưu tập để xem chi tiết. Thư viện chưa hỗ trợ nghe thử hoặc tải tệp."))}</p></div><div class="portal-music-library-intro-actions"><span class="portal-music-library-read-badge">${safeText(musicLibraryText("intro.readOnly", "Chỉ xem thông tin"))}</span><a class="portal-button portal-button--quiet" href="${safeText(alternate.href)}">${safeText(alternate.label)}</a></div></section>
+      <section class="portal-card portal-card-pad portal-music-library-board"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicLibraryText("board.kicker", "BỘ SƯU TẬP RIÊNG TƯ"))}</span><h2 class="portal-card-title">${safeText(musicLibraryText("board.title", "Tìm và mở đúng bộ sưu tập"))}</h2><p class="portal-card-subtitle">${safeText(resultNote)}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="music-library-refresh" data-portal-route="${safeText(route)}">${safeText(musicLibraryText("refresh", "Làm mới"))}</button></div>${filterForm}${cards}${renderMemoryPagination(listing, role === "sfx" ? musicLibraryText("role.sfx", "hiệu ứng âm thanh") : musicLibraryText("role.music", "nhạc"), "music-library-page", route, "data-music-library-offset", "portal-music-library-pagination")}</section>
+      <aside class="portal-music-library-boundary"><div><strong>${safeText(musicLibraryText("boundary.title", "Khả năng hiện tại"))}</strong><span>${safeText(musicLibraryText("boundary.body", "Chỉ xem thông tin, không phát, tạo hoặc giao âm thanh. Trang không tạo tác vụ hay tài sản, thay đổi ví hoặc thanh toán, hay gọi Bot/Telegram."))}</span></div><a class="portal-button portal-button--quiet" href="/media-workspace">${safeText(musicLibraryText("openWorkspace", "Mở Không gian âm thanh"))}</a></aside>
     </article>`;
   }
 

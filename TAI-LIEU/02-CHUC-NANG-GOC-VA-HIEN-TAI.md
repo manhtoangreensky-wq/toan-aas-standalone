@@ -9,6 +9,10 @@ Browser39 cấu hình và test36/36 chứng minh thao tác trình bày, không p
 khả năng nghe/tải, quyền backend hoặc LIVE. MU-E-02 copy và Q0-TOAST-STACK
 vẫn mở tại completion ledger.
 
+MU-E-02 đã rút câu chữ hiển thị nhưng không mở thêm khả năng nghe, tải, lưu,
+dùng cho video hay quyền backend. Bằng chứng copy/browser nằm ở
+`reports/audit/R218-MUSIC-LIBRARY-COPY-QA-20261021.json`; Q0-TOAST-STACK vẫn mở.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;

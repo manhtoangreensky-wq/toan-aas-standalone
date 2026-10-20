@@ -36,6 +36,12 @@ issue/project hoặc suy ra Project remote đã verified. MU-E-02 copy dài và
 Q0-TOAST-STACK giữ mở. Ảnh đã xem thực phát hiện stacking; ảnh ổn định đợi
 toast hết không được dùng để phủ nhận lỗi này.
 
+MU-E-02 đã rút copy bằng nguồn i18n/renderer allowlist. Test39/39; full Node
+trước delivery856/856; browser39 sau copy (alias3, route-race3) với page/
+console/UIwrite/external0. Help text VI1085→565, EN977→503, ZH329→171 ký tự;
+placeholder/action/route/control giữ nguyên. Evidence
+`reports/audit/R218-MUSIC-LIBRARY-COPY-QA-20261021.json`.
+
 CI trước: run39480273557 trên7569f61 SUCCESS cả Verify và Authenticated QA.
 Patch Library chưa được CI đó cover; commit source rồi refresh/verify provenance
 từ clean checkout trước push. Không đổi workflow hoặc Bot evidence.

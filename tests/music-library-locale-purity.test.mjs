@@ -170,4 +170,20 @@ for (const locale of ['vi', 'en', 'zh']) {
     const before = { vi: 'Trang trước', en: 'Previous page', zh: '上一页' }[locale];
     assert.match(html, new RegExp(before));
   });
+
+  test(`library help explains the task without internal access or audit jargon (${locale})`, () => {
+    const ctx = createHarness(locale);
+    const internal = { vi: /mã Telegram thô|tài sản chung|trong phạm vi tài khoản|ranh giới của thư viện/i,
+      en: /raw Telegram ID|generic assets|signed session|account-scoped|library boundary/i,
+      zh: /原始 Telegram 编号|通用资源|账户范围信息|资料库范围/ }[locale];
+    for (const state of ['ready', 'loading', 'failed', 'guarded']) {
+      const html = ctx.renderMusicLibrary(pageFor('/music/library'), {
+        path: '/music/library', capabilities: { 'music-library-view': true },
+        musicLibraryReadState: state, musicLibraryItems: []
+      });
+      assert.doesNotMatch(textOf(html), internal);
+      assertLocalePurity(locale, textOf(html));
+      assert.doesNotMatch(html, /<audio| download(?:=|\s|>)/);
+    }
+  });
 }

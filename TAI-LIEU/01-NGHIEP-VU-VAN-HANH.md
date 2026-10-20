@@ -12,6 +12,11 @@ thông tin tổng hợp chỉ đọc, không phát/tải/tạo âm thanh hay ch�
 ownership. Copy dài và toast xếp chồng còn mở. Evidence:
 `reports/audit/R218-MUSIC-LIBRARY-READ-STATE-QA-20261021.json`.
 
+Ngày21/10 đã rút lại câu chữ hướng dẫn thư viện: mô tả ngắn gọn việc tìm và
+mở bộ sưu tập, nêu thẳng chưa hỗ trợ nghe/tải, bỏ thuật ngữ kiểm toán nội bộ.
+Browser39 cấu hình sau copy và test39/39 đạt; nội dung khách chưa được xem là
+đã có playback/delivery. Q0-TOAST-STACK vẫn mở.
+
 ## Đính chính nghiệm thu 21/10/2026 — ưu tiên đọc trước checkpoint cũ
 
 Các matrix 48/72/120/48 và motion12 của checkpoint cũ chỉ là smoke: không đủ

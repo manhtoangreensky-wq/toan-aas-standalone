@@ -1,6 +1,6 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: MUSIC_LIBRARY_READ_STATE_VERIFIED_DELIVERY_PENDING
+status: MUSIC_LIBRARY_COPY_VERIFIED_DELIVERY_PENDING
 date: 2026-10-21
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
@@ -14,7 +14,9 @@ review_evidence: reports/audit/R218-MUSIC-RUNTIME-REVIEW-QA-20261021.json
 evidence_reclassification: reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md
 qa_review_server: "STOPPED: exec54976/11076 and latest exec35856/1780 both ended gracefully exit0; temporary databases cleaned. No active task-owned QA server."
 music_library_read_state_evidence: reports/audit/R218-MUSIC-LIBRARY-READ-STATE-QA-20261021.json
-music_library_read_state: "MU-E-01: targeted36/36; browser39 actual-profile configurations incl alias3/route-race3; errors/UIwrites/external0; protected helpers12 and generic paginator20 comparators unchanged. Copy MU-E-02 and Q0 toast-stack remain open."
+music_library_read_state: "MU-E-01: targeted36/36; browser39 actual-profile configurations incl alias3/route-race3; errors/UIwrites/external0; protected helpers12 and generic paginator20 comparators unchanged."
+music_library_copy_evidence: reports/audit/R218-MUSIC-LIBRARY-COPY-QA-20261021.json
+music_library_copy: "MU-E-02: targeted39/39; full Node856/856; browser39 after copy, help VI1085->565 EN977->503 ZH329->171 chars, placeholders/actions/routes unchanged, errors/UIwrites/external0. Q0 toast-stack remains open."
 music_review_python_verify: "2026-10-21: exact tester metadata + i18n bundle/locale + motion source-contract subset29 passed/0failed, exit0 outside restricted sandbox. Prior sandbox session70666 interrupted after no progress; not counted as PASS."
 checkpoint_report: reports/audit/R218-CHECKPOINT-20261021.md
 checkpoint_date: 2026-10-21
@@ -404,4 +406,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Finish MU-E-01 delivery with updated tester metadata, source commit and clean provenance; push PR654 and read fresh CI. Then MU-E-02 natural concise library copy, SubDub real-locale interactions/AX, Image, utilities/Admin/Video; Q0 toast-stack and motion last. Music review remote7569f61 has both CI jobs green. Keep whole-product/library playback/delivery/backend ownership open; do not implement Bot/route-engine/provider/wallet/PayOS/auth/schema or production data. Goal ACTIVE."
+next_action: "Finish MU-E-02 delivery: commit copy/docs/evidence, refresh clean provenance, push PR654, read fresh CI. Then SubDub SD-B2 shared local draft consistency, SD-C2 handoff, SD-D2 review/volume, SD-E2 semantics/browser; Image/utilities/Admin/Video; Q0 toast-stack and motion last. Keep whole-product/library playback/delivery/backend ownership open; do not implement Bot/route-engine/provider/wallet/PayOS/auth/schema or production data. Goal ACTIVE."

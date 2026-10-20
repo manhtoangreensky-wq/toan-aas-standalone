@@ -292,9 +292,13 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   UIwrite/external0. 12 helper được bảo vệ không đổi; paginator ngoài Music20
   comparator không khác. Evidence `R218-MUSIC-LIBRARY-READ-STATE-QA-20261021.json`.
   Không đóng backend ownership, phát/tải/lưu/dùng lại hoặc toàn bộ MU-E.
-- [ ] MU-E-02: rút copy thư viện thành hướng dẫn ngắn tự nhiên, bỏ thuật ngữ
-  kiểm toán khỏi nội dung khách; không đổi ranh giới chưa nghe/tải/tạo âm thanh.
-  Ảnh39 hiện chứng minh controls, chưa phải nghiệm thu chất lượng thiết kế cuối.
+- [x] MU-E-02: rút copy thư viện thành hướng dẫn ngắn tự nhiên, bỏ thuật ngữ
+  kiểm toán khỏi nội dung khách; giữ ranh giới chưa nghe/tải/tạo âm thanh.
+  Test39/39; browser39 cấu hình sau copy, profile VI/EN/ZH, hai theme, 390/768/
+  1440, alias3, route-race3; page/console/UIwrite/external0. Độ dài hướng dẫn
+  chính giảm VI1085→565, EN977→503, ZH329→171 ký tự; placeholder/route/action/
+  field không đổi. Evidence `R218-MUSIC-LIBRARY-COPY-QA-20261021.json` và ảnh
+  `../qa/r218-voice-inventory/music-library-copy-vi-dark-390-sfx.png`.
 - [ ] Brief/style/lyrics/vocal nam/nữ/song ca/auto/3 tier, không mất draft.
 - [ ] Ba gợi ý chọn/đổi/sửa; quote/confirm/review rõ.
 - [ ] Player/tải/save/reuse/history/progress và generation vs delivery failure.
