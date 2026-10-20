@@ -1,5 +1,16 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Đối chiếu Voice quote freshness — 20/10/2026
+
+- Trước: renderer hiện input đã đổi cùng confirm của quote cũ; khi nhấn,
+  integration mới phát hiện fingerprint khác. Sau: UI ẩn confirm và hiện
+  thông báo lấy báo giá mới ngay khi đổi field, giữ focus/bản nháp.
+- Source regression `11/11`, focused `77/77`, full Node `761/761`; browser
+  TTS `18` cấu hình × `6` kiểu đổi input = `108` lượt đạt. File/consent chỉ
+  được kiểm ở helper source. API fingerprint/receipt/quote/wallet không đổi.
+- CI mới, STT/clone browser runtime, quote hết hạn khi để trang lâu và
+  audio/provider/delivery/LIVE tiếp tục có gate riêng.
+
 ## Đối chiếu Voice default — 20/10/2026
 
 | Yêu cầu | Trạng thái đã xác minh |

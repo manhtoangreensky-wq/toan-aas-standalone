@@ -11546,6 +11546,19 @@
     };
   }
 
+  function voiceQuoteHasEdits(page, flow, values) {
+    if (!flow || flow.phase !== "estimate" || flow.status !== "awaiting_confirm") return false;
+    const prior = flow.input && typeof flow.input === "object" ? flow.input : {};
+    const current = values && typeof values === "object" ? values : {};
+    return (Array.isArray(page && page.fields) ? page.fields : []).some((field) => {
+      if (!Object.prototype.hasOwnProperty.call(current, field.name)) return false;
+      const value = current[field.name];
+      if (field.type === "file") return Boolean(value && (!Array.isArray(value) || value.length));
+      const previous = prior[field.name] ?? (field.type === "checkbox" ? false : field.defaultValue ?? "");
+      return String(value ?? "") !== String(previous);
+    });
+  }
+
   function renderVoiceFormFeedback(values) {
     const metrics = voiceFeedbackMetrics(values);
     return `<div class="portal-voice-input-feedback" data-voice-input-feedback><p class="portal-form-note"><output data-voice-text-count aria-live="polite">${safeText(voiceUiText("form.textCount", "{words} từ · {characters} ký tự", metrics))}</output><br>${safeText(voiceUiText("form.textCountNote", "Số đếm hỗ trợ rà soát nội dung; báo giá được máy chủ xác nhận."))}</p><p class="portal-notice portal-notice--warning" data-voice-muted-warning role="status"${metrics.muted ? "" : " hidden"}>${safeText(voiceUiText("form.mutedWarning", "Âm lượng đang ở 0%. Kết quả sẽ không có tiếng; tăng âm lượng nếu bạn muốn nghe giọng đọc."))}</p></div>`;
@@ -11566,7 +11579,9 @@
     }
     const flow = context.featureFlows && context.featureFlows[route];
     const flowStatus = flow && ALLOWED_STATES.has(flow.status) ? flow.status : "";
-    const hasFreshEstimate = flowHasFreshEstimate(flow);
+    const voiceQuoteEdited = ["/voice/tts", "/voice/saved", "/voice/stt", "/voice/clone"].includes(route)
+      && voiceQuoteHasEdits(page, flow, transientFormValues(route));
+    const hasFreshEstimate = flowHasFreshEstimate(flow) && !voiceQuoteEdited;
     const quoteNeedsSelection = Boolean(flow && flow.phase === "estimate" && flow.status === "awaiting_confirm" && !hasFreshEstimate);
     const canEstimate = enabled && page.type === "feature" && !hasFreshEstimate && (
       page.action === "feature-estimate" || page.estimateDirect === true || flowStatus === "draft" || quoteNeedsSelection
@@ -11673,10 +11688,11 @@
       const voiceCloneGuidance = route === "/voice/clone"
         ? `<details class="portal-card portal-card-pad portal-voice-clone-steps" data-voice-clone-steps><summary>${safeText(voiceUiText("clone.stepsTitle", "Quy trình thêm giọng"))}</summary><ol>${["consent", "sample", "name", "quote", "preview", "save", "back"].map((step) => `<li>${safeText(voiceUiText(`clone.step.${step}`, step))}</li>`).join("")}</ol><p class="portal-form-note" role="status">${safeText(voiceUiText("clone.stepsGuarded", "Các bước xử lý thật chỉ mở theo capability."))}</p></details>`
         : "";
-      return `${voiceCloneGuidance}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(voiceFormText("form.title", "Chuẩn bị giọng đọc"))}</h2><p class="portal-card-subtitle">${safeText(voiceFormText(localAuthoringOnly ? "form.draft" : enabled ? "form.ready" : "form.guarded", reason))}</p></div></div>
+      return `${voiceCloneGuidance}<section class="portal-card portal-card-pad" data-voice-form-card><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(voiceFormText("form.title", "Chuẩn bị giọng đọc"))}</h2><p class="portal-card-subtitle">${safeText(voiceFormText(localAuthoringOnly ? "form.draft" : enabled ? "form.ready" : "form.guarded", reason))}</p></div></div>
         <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>
           ${renderFields(orderedFields, formFieldsEnabled, context, fieldValues)}
           ${["/voice/tts", "/voice/saved"].includes(route) ? renderVoiceFormFeedback(fieldValues) : ""}
+          <p class="portal-form-note" data-voice-quote-edited role="status"${voiceQuoteEdited ? "" : " hidden"}>${safeText(voiceUiText("form.quoteChanged", "Lựa chọn đã thay đổi. Xem báo giá mới trước khi xác nhận."))}</p>
           <div class="portal-form-footer"><span class="portal-form-note">${safeText(voiceFormText(localAuthoringOnly ? "form.draftNote" : "form.processingNote", ""))}</span>${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button></div>
         </form>${flowControls}</section>`;
     }
@@ -37550,6 +37566,21 @@
     if (warning) warning.hidden = !metrics.muted;
   }
 
+  function synchronizeVoiceQuoteFreshness(form) {
+    if (!form) return;
+    const route = form.getAttribute("data-portal-route");
+    if (!["/voice/tts", "/voice/saved", "/voice/stt", "/voice/clone"].includes(route)) return;
+    const card = form.closest("[data-voice-form-card]");
+    if (!card) return;
+    const flows = window.__TOAN_AAS_PORTAL__ && window.__TOAN_AAS_PORTAL__.featureFlows;
+    const flow = flows && flows[route];
+    const edited = voiceQuoteHasEdits(resolvePage(route), flow, collectFormFields(form));
+    const fresh = flowHasFreshEstimate(flow) && !edited;
+    card.querySelectorAll('[data-portal-action="feature-confirm"]').forEach((button) => { button.hidden = !fresh; });
+    const note = form.querySelector("[data-voice-quote-edited]");
+    if (note) note.hidden = !edited;
+  }
+
   function synchronizeMusicProductForm(form) {
     if (!form || !form.hasAttribute("data-music-product-form")) return;
     const routeMode = form.getAttribute("data-music-product-form") === "song" ? "song" : "background";
@@ -40284,6 +40315,7 @@
     document.addEventListener("input", (event) => {
       syncPortalFieldControl(event.target);
       syncVoiceFormFeedback(event.target.closest && event.target.closest("[data-portal-form]"));
+      synchronizeVoiceQuoteFreshness(event.target.closest && event.target.closest("[data-portal-form]"));
       synchronizeMusicProductForm(event.target.closest && event.target.closest("[data-music-product-form]"));
       if (event.target.id === "free-tools-text-input") {
         updateFreeToolsTextStats(event.target.value);
@@ -40347,6 +40379,7 @@
     document.addEventListener("change", (event) => {
       syncPortalFieldControl(event.target);
       syncVoiceFormFeedback(event.target.closest && event.target.closest("[data-portal-form]"));
+      synchronizeVoiceQuoteFreshness(event.target.closest && event.target.closest("[data-portal-form]"));
       synchronizeMusicProductForm(event.target.closest && event.target.closest("[data-music-product-form]"));
       if (event.target.matches && event.target.matches("[data-vietqr-input]")) {
         autoUpdateVietQrPreview(false);

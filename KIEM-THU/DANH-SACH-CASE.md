@@ -196,6 +196,18 @@ chưa có trong projection server. Default capability/fallback vẫn mở tại 
 không đóng bằng fixture tổng hợp. Bằng chứng UI mới nằm trong
 `reports/audit/R218-VOICE-DEFAULT-SELECTION-QA-20261020.json`.
 
+## VOICE-QUOTE-EDIT-20261020
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| VUI-QUOTE-01 | Quote fixture hợp lệ → đổi script/giọng/speed số+preset/volume số+range | Confirm cũ ẩn ngay; note VI/EN/ZH yêu cầu báo giá mới; focus/draft/0% giữ nguyên; không tự gửi request |
+| VUI-QUOTE-02 | Sửa input → Kho giọng → TTS hoặc hydration cùng phiên | Input mới còn nguyên; confirm quote cũ không được render trở lại |
+| VUI-QUOTE-03 | Sửa rồi nhập lại đúng input của quote | Chỉ hiện lại control đã có nếu receipt fresh; không mở quyền hoặc đổi disabled do busy |
+
+Evidence: `reports/audit/R218-VOICE-QUOTE-EDIT-QA-20261020.json`.
+Fixture chỉ đọc, quote/capability tổng hợp; không nhấn tạo/confirm thực thi.
+Idle expiry và generation/delivery thật chưa được đóng bằng các case này.
+
 ## VOICE-INVENTORY-READ-STATE-20261019
 
 | ID | Kiểm tra | PASS cần ghi |

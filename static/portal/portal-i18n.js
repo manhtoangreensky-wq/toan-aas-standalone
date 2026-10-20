@@ -16398,6 +16398,7 @@
     ["form.draftNote","Bản nháp chưa tạo âm thanh hoặc trừ Xu. Tệp mẫu và quyền sử dụng cần kiểm tra lại khi gửi xử lý.","A draft does not create audio or spend Xu. Recheck sample files and usage rights before processing.","草稿不会生成音频或扣除 Xu，处理前需重新检查样本文件与使用权。"],
     ["form.processingNote","Chỉ tạo âm thanh sau khi hệ thống xác nhận lựa chọn và bạn đồng ý báo giá.","Audio is created only after the server validates your settings and you accept the quote.","系统确认参数且你同意报价后才生成音频。"],
     ["form.textCount","{words} từ · {characters} ký tự","{words} words · {characters} characters","{words} 个词段 · {characters} 个字符"],
+    ["form.quoteChanged","Lựa chọn đã thay đổi. Xem báo giá mới trước khi xác nhận.","Your settings have changed. Request a new quote before confirming.","设置已更改，请重新获取报价后再确认。"],
     ["form.textCountNote","Số đếm hỗ trợ rà soát nội dung; báo giá được máy chủ xác nhận.","Counts help you review the text; pricing is confirmed by the server.","计数仅用于检查文本，价格由服务器确认。"],
     ["form.mutedWarning","Âm lượng đang ở 0%. Kết quả sẽ không có tiếng; tăng âm lượng nếu bạn muốn nghe giọng đọc.","Volume is set to 0%. The result will be silent; increase the volume to hear the speech.","音量设为 0%，结果将无声。如需听到语音，请提高音量。"],
     ["clone.stepsTitle","Quy trình thêm giọng","Voice clone steps","声音克隆步骤"],

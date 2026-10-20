@@ -1,5 +1,19 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Voice — báo giá sau khi sửa biểu mẫu (20/10/2026)
+
+Khi khách sửa lời thoại, giọng, tốc độ hoặc âm lượng sau báo giá, UI ẩn xác
+nhận cũ ngay và yêu cầu xem báo giá mới. Preset tốc độ và thanh âm lượng có
+cùng hành vi với ô số. Nhập lại đúng input cũ chỉ hiện lại control đã có nếu
+receipt còn hiệu lực; trạng thái disabled do đang gửi vẫn giữ nguyên.
+Đổi chế độ/hydration không làm confirm cũ trở lại khi draft đã khác quote.
+
+Test riêng `11/11`, focused `77/77`, full Node `761/761`; Codex browser TTS
+`18/18` cấu hình, `108` lượt đổi input: focus/draft giữ nguyên, overflow/
+console/write/unknown API đều `0` trong fixture localhost chỉ đọc. Backend và
+integration fingerprint check không đổi. Idle expiry, STT/clone browser,
+quote thật, tạo/giao âm thanh và LIVE vẫn mở. CI mới được ghi trên PR #654.
+
 ## Voice — lựa chọn giọng mặc định, sửa kết luận capability (20/10/2026)
 
 TTS hiện yêu cầu khách chọn rõ Nữ hoặc Nam; hai giá trị gửi máy chủ vẫn là

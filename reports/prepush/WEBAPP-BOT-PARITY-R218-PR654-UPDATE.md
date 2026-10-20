@@ -2,6 +2,21 @@
 
 Đang đọc và áp dụng skill owner-governed-codex cho task này.
 
+## Cập nhật Voice quote-edit — 20/10/2026
+
+- Baseline selection checkpoint `51c489b968b21ca6cd5b9c8c0af4b55546cf7c27`
+  đã có run `39403533444` SUCCESS; báo cáo PR `issuecomment-6288402938`.
+- Lỗi actual renderer có input mới + confirm quote cũ đã được sửa tại UI:
+  so sánh field schema, ẩn confirm khi input đổi, note VI/EN/ZH, giữ focus,
+  draft và disabled do busy. Không sửa integration/backend fingerprint check.
+- Test riêng `11/11`, focused `77/77`, full Node `761/761`; browser TTS
+  `18/18` cấu hình và `108` lượt đổi input đạt; fixture GET-only ghi nhận
+  write0/unknownAPI0, console0, overflow0. Probe before/after và limitations
+  ở `reports/audit/R218-VOICE-QUOTE-EDIT-QA-20261020.json`.
+- Đã cập nhật operating docs, comparison, case VUI-QUOTE-01..03 và spec hẹp.
+  CI của delta mới còn chờ push; idle expiry, STT/clone browser, capability,
+  generation/delivery và LIVE vẫn mở. Các mục lịch sử bên dưới giữ nguyên.
+
 ## Cập nhật mới nhất — Voice default selection, 20/10/2026
 
 - Baseline đã đọc lại trên Codex Web và CLI: `699fb048db76dc2b7cfbc40961fc8fae6d7446f6`,

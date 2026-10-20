@@ -171,6 +171,16 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   browser renderer localhost đạt 18/18 cấu hình VI/EN/ZH × sáng/tối × 390/768/1440.
   Cảnh báo đạt tương phản 11,25:1 (sáng), 8,84:1 (tối); quote stale/runtime vẫn mở.
 - [~] Quote/expiry/confirm/progress/player/download/report/retry: expiry client đã tôn trọng `quote_expires_at`/`quote_valid_until`/`expires_at`; quote quá hạn không render CTA confirm và yêu cầu làm mới. Báo cáo control-level nay chỉ đọc tín hiệu `report`/`job`/`result` do máy chủ trả về, hiển thị trạng thái/tiến độ/tệp/tải xuống/bàn giao khi có cờ canonical, giới hạn reason 240 ký tự và không lộ `output_url` hay tạo CTA tải giả; test `voice-flow-state-presentation` đạt `51/51`, full Node đạt `601/601`. Progress/player/retry/runtime delivery vẫn mở.
+- [~] VO-04/06 QUOTE-EDIT — 20/10: đã sửa UI ẩn confirm cũ ngay khi đổi input;
+  thông báo VI/EN/ZH yêu cầu báo giá mới. Render/hydration dùng transient đã
+  đổi không phục hồi CTA cũ. Revert giữ disabled của busy, không tạo control
+  hoặc quyền mới. Probe trước `old_quote_confirm_rendered=true`, sau `false`.
+  Test riêng 11/11, focused 77/77, full Node 761/761; Codex browser TTS 18 cấu
+  hình/108 lượt đổi script/giọng/speed number+preset/volume number+range đạt,
+  focus/draft giữ nguyên, overflow/console/write/unknown API đều 0 trong fixture.
+  Phiếu: `docs/superpowers/specs/2026-10-20-r218-voice-quote-edit-freshness.md`;
+  QA: `reports/audit/R218-VOICE-QUOTE-EDIT-QA-20261020.json`. CI mới còn chờ;
+  STT/clone browser và quote expiry khi để trang lâu vẫn mở.
 - [ ] Kho giọng search/page/status/default/preview/rename/delete/reuse.
 - [~] VO-02/VO-09/VO-10/VO-13: picker nam/nữ, Voice Vault owner-scoped và route handoff đã được khóa ở source bằng `tests/voice-selection-clone-contract.test.mjs` (4/4); quote, preview, rename/delete, runtime và browser/AX vẫn mở.
 - [~] VO-11: clone consent/upload/tên tùy chọn tối đa 120 ký tự đã khớp bridge hiện hành; form nay có hướng dẫn guarded đủ 7 bước consent → sample → name → quote → preview → save → back, được khóa ở source bằng test clone `5/5`; xác nhận text, quote, preview, save/back và runtime vẫn mở.
