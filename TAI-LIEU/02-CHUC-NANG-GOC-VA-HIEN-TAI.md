@@ -1,5 +1,16 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Đối chiếu Voice default — 20/10/2026
+
+| Yêu cầu | Trạng thái đã xác minh |
+|---|---|
+| Giọng mặc định Nữ/Nam | UI bắt buộc chọn rõ `female`/`male`; nhãn VI/EN/ZH, giữ lựa chọn và lời thoại khi chuyển Kho giọng → TTS. Renderer 15/15, browser fixture 18/18 |
+| Fallback một giọng hoặc trung tính theo capability | Vẫn mở. Projection readiness hiện không cung cấp danh sách giới tính; helper trước chỉ được kiểm bằng dữ liệu tổng hợp và đã bị bỏ |
+| Tạo, nghe, tải và chuyển giọng qua sản phẩm | Các gate runtime/delivery và R218-02A còn mở; kết quả UI không thay cho bằng chứng vận hành thật |
+
+Kết luận `[x] DEFAULT-GENDER-CAPABILITY` trước đây đã được sửa thành `[~]`
+trong ledger R218. Nguồn backend chỉ được đọc để xác minh contract.
+
 ## Đối chiếu AD-03 — liên kết request → job → asset → report → audit (20/10/2026)
 
 | Yêu cầu | Hiện tại trên WebApp | Trạng thái và bằng chứng |

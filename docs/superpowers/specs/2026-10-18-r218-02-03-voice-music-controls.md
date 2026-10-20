@@ -72,6 +72,24 @@ Bot anchors: bot.py:159975,160106,160123,160166,160261,167782,169187,169226,
   `feature-confirm`, future vẫn render khi các điều kiện khác hợp lệ. Không đổi backend,
   receipt HMAC, pricing hoặc wallet.
 
+### Phiếu P1 VO-02 — chọn giọng mặc định đúng contract (20/10/2026)
+
+- Đối soát source: `copyfast_api.py::_project_readiness` chỉ cho qua
+  `configured/public_ready/guarded/reason/adapter/alias_of/missing`; không có
+  `default_voice_genders` hoặc `default_voice_gender`. Vì vậy helper đọc hai
+  trường này chưa có dữ liệu thật và không chứng minh fallback capability.
+- Contract đang dùng tại `copyfast_voice_tts_job_bridge.py::validate_voice_tts_input`
+  yêu cầu người dùng chọn rõ `female` hoặc `male` khi dùng giọng mặc định.
+- Sửa UI tại `static/portal/portal.js::renderFormCard`: dùng hai lựa chọn đã có
+  trong field schema, nhãn theo VI/EN/ZH; lần đầu giữ lựa chọn rỗng bắt buộc,
+  giữ lựa chọn/lời thoại khi render lại. Không tự đổi giới tính dựa trên trường
+  chưa có trong projection server.
+- Verify bằng renderer thật trong `tests/voice-default-gender-capability.test.mjs`:
+  ba locale, lựa chọn ban đầu rỗng, giữ Nam/Nữ + Unicode, bỏ qua capability
+  không được server công bố. Tiếp tục các kiểm thử Voice hiện có.
+- Fallback một giọng theo capability và default trung tính vẫn thuộc gap
+  R218-02A; chỉ đóng khi DTO canonical được công bố và có bằng chứng browser.
+
 ### Phiếu P1 VO-12 — phân biệt workspace STT với TTS (19/10/2026)
 
 - `/voice/stt` và alias `/voice/asr` vẫn ở cùng workspace bốn lane nhưng dùng bộ copy riêng:

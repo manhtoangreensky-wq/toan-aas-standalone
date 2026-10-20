@@ -2,6 +2,26 @@
 
 Đang đọc và áp dụng skill owner-governed-codex cho task này.
 
+## Cập nhật mới nhất — Voice default selection, 20/10/2026
+
+- Baseline đã đọc lại trên Codex Web và CLI: `699fb048db76dc2b7cfbc40961fc8fae6d7446f6`,
+  PR #654 OPEN, run `39392360916` SUCCESS; Verify job `118526688854`, Authenticated
+  QA job `118527618943`. Đây là bằng chứng trước bản sửa hiện tại.
+- Rà contract phát hiện helper auto-default đọc trường bị `_project_readiness`
+  loại bỏ. Đã bỏ helper, giữ hai lựa chọn Nữ/Nam bắt buộc và cập nhật ledger từ
+  hoàn tất thành một phần; capability fallback giữ mở trong R218-02A/T0.
+- Actual renderer `15/15`; Voice/STT `75/75`; full Node `750/750`; syntax và
+  diff-check đạt. Codex IAB localhost `18/18` cấu hình: chọn cả hai giọng,
+  giữ lời thoại/tốc độ/âm lượng 0 qua Kho giọng → TTS, không overflow/console
+  error; fixture GET-only ghi nhận write0/unknownAPI0.
+- Tài liệu vận hành, đối chiếu gốc/hiện tại và case `VUI-DRAFT-01` đã cập nhật.
+  Dùng workspace Tester hiện có; không tạo issue/project trùng.
+- Source diff bảo vệ: backend, integration.js, route-engine, workflow, provider,
+  ví và thanh toán không thay đổi. Báo cáo và limitations đầy đủ tại
+  `reports/audit/R218-VOICE-DEFAULT-SELECTION-QA-20261020.json`.
+- Fresh CI/delivery của bản sửa sẽ ghi trên PR sau push. Không tạo commit state
+  riêng chỉ để ghi SHA của chính commit, tránh lặp push/CI.
+
 ## Identity
 
 ```text

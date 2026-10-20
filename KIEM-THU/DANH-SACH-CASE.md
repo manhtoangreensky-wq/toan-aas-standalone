@@ -187,9 +187,14 @@ Bằng chứng source hiện tại: `tests/autopost-hub-product-controls.test.mj
 
 | ID | Kiểm tra | PASS cần ghi |
 |---|---|---|
-| VUI-DRAFT-01 | Nhập TTS Unicode và âm lượng 0 → Kho giọng → Back/Forward → TTS | Nội dung/0% và locale giữ nguyên, cùng document; mode active đúng, không job/provider |
+| VUI-DRAFT-01 | Lần đầu giọng rỗng → chọn Nữ rồi Nam; nhập TTS Unicode, tốc độ 0.85 và âm lượng 0 → Kho giọng → Back/Forward → TTS | Nhãn đúng VI/EN/ZH; giọng đã chọn/nội dung/tốc độ/0% và locale giữ nguyên, cùng document; mode active đúng, không job/provider |
 | VUI-DRAFT-02 | Ctrl/Meta-click, mode hiện tại, alias `/tts`/`/voice/create`/`/voice/vault`/`/voice/asr` | Link ngoài/modified giữ hành vi gốc; không tạo history entry lặp; alias giữ draft canonical |
 | VUI-DRAFT-03 | Signed session mới/đăng xuất/mất token | Xóa riêng draft Voice, không xóa draft khác; không giữ File/password, không browser storage |
+
+Canh lỗi cũ ngày 20/10: không tự chọn hoặc thay giới tính bằng trường readiness
+chưa có trong projection server. Default capability/fallback vẫn mở tại R218-02A;
+không đóng bằng fixture tổng hợp. Bằng chứng UI mới nằm trong
+`reports/audit/R218-VOICE-DEFAULT-SELECTION-QA-20261020.json`.
 
 ## VOICE-INVENTORY-READ-STATE-20261019
 

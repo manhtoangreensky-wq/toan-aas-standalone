@@ -1,22 +1,22 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: ADMIN_RECORD_BRIDGE_CI_GREEN_PR_OPEN
+status: VOICE_DEFAULT_SELECTION_LOCAL_QA_GREEN_DELIVERY_PENDING
 date: 2026-10-20
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 5a37697317496f41d03fe77146e4698e398349c9
-delivery_head_sha: 5a37697317496f41d03fe77146e4698e398349c9
+head_sha: 699fb048db76dc2b7cfbc40961fc8fae6d7446f6
+delivery_head_sha: 699fb048db76dc2b7cfbc40961fc8fae6d7446f6
 delivery_status: PUSHED_CI_GREEN_PR_OPEN
-head_sha_semantics: "HEAD 5a37697 contains the Voice default-gender capability slice plus clean Web-only migration provenance on top of the prior Admin/SubDub presentation slices; local and PR source gates are green."
-delivery_head_semantics: "GitHub branch readback matches 5a37697; Verify Web App and Authenticated WebApp QA are green in run 39322016379. PR #654 remains open; no merge, deploy or LIVE claim."
-branch_head_sha: 5a37697317496f41d03fe77146e4698e398349c9
+head_sha_semantics: "Last observed committed baseline before the Voice selection correction recorded below. The new commit cannot name its own future SHA; read the latest PR head and delivery report for the current delivery result."
+delivery_head_semantics: "GitHub branch readback matches baseline 699fb04; Verify Web App and Authenticated WebApp QA are green in run 39392360916. The pending Voice correction has local renderer/browser evidence; its fresh CI is recorded on PR #654 after push."
+branch_head_sha: 699fb048db76dc2b7cfbc40961fc8fae6d7446f6
 support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
-last_push_verified_commit: 5a37697317496f41d03fe77146e4698e398349c9
-docs_checkpoint_sha: 5a37697317496f41d03fe77146e4698e398349c9
-push_command_success_commit: 5a37697317496f41d03fe77146e4698e398349c9
-remote_readback: "git ls-remote github confirms refs/heads/webapp-r217-subdub-ui-r218 at 5a37697317496f41d03fe77146e4698e398349c9. PR #654 remains OPEN; Verify Web App job 118298170127 and Authenticated WebApp QA job 118299696389 both passed in run 39322016379."
+last_push_verified_commit: 699fb048db76dc2b7cfbc40961fc8fae6d7446f6
+docs_checkpoint_sha: 699fb048db76dc2b7cfbc40961fc8fae6d7446f6
+push_command_success_commit: 699fb048db76dc2b7cfbc40961fc8fae6d7446f6
+remote_readback: "GitHub PR head is 699fb048db76dc2b7cfbc40961fc8fae6d7446f6; PR #654 OPEN. Run 39392360916 SUCCESS: Verify Web App job 118526688854 and Authenticated WebApp QA job 118527618943 passed."
 batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
 base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
 bot_reference:
@@ -241,13 +241,14 @@ current_wip:
     artifact_sha256: 06f55bbdefb34a839be2f1387843cc46fd0841227d3a443b6f1756d0a36ebed4
     limitations: "Read-only fixture and synthetic capability projection; upload bytes, MIME/size/ownership, transcript, progress, delivery, backend and LIVE are not closed."
   voice_default_gender_capability:
-    state: "SOURCE_VERIFIED_RUNTIME_OPEN"
+    state: "EXPLICIT_SELECTION_UI_VERIFIED_CAPABILITY_FALLBACK_OPEN"
     spec: "reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md#P1-VOICE"
     changed_files: "static/portal/portal.js; tests/voice-default-gender-capability.test.mjs"
-    contract: "Keep canonical female/male values when capability is absent; honor one explicit server-issued voice_tts default gender without silent substitution; an explicit empty list remains empty; display labels are locale-only and never expose canonical codes."
-    tests: "Dedicated 3/3; focused Voice suite 45/45; full Node 738/738; node --check static/portal/portal.js and static/portal/portal-i18n.js exit0; git diff --check exit0."
-    browser: "NOT_RUN_FOR_THIS_DELTA: existing isolated Voice browser evidence remains read-only and prior to this capability slice; no production or LIVE claim."
-    limitations: "Server capability delivery, quote/confirm, preview, generation, provider execution, delivery, CI and LIVE remain open."
+    contract: "Audit corrected the prior conclusion: _project_readiness does not expose the speculative gender capability fields. Use the actual required female/male input schema, initial empty choice and localized labels; retain explicit user selection and Unicode script. The unsupported auto-default helper was removed."
+    tests: "Actual renderer 15/15; focused Voice/STT 75/75; full Node 750/750; node --check static/portal/portal.js exit0; git diff --check exit0."
+    browser: "Codex IAB localhost 18/18 configurations (VI/EN/ZH x light/dark x 390/768/1440); both genders selected, saved->TTS round trip retains script/speed/zero volume; warning visible, overflow0, console errors0. GET-only fixture observed write0 and unknownAPI0."
+    artifact: "reports/audit/R218-VOICE-DEFAULT-SELECTION-QA-20261020.json"
+    limitations: "Canonical capability fallback/neutral, quote/confirm, Voice Vault management/handoff, preview, provider execution, delivery and LIVE remain open; fresh CI for this correction must be read from PR #654."
   music_presentation:
     state: "UI_VERIFIED_RUNTIME_OPEN"
     tests: "Existing Music control contracts remain green; browser matrix 36 configurations"
@@ -307,17 +308,17 @@ current_wip:
     wallet_mutations: 0
     production_data_mutations: 0
     limitations: "Isolated local QA only. It proves route/render safety and guarded UI states; it does not prove provider execution, wallet approval/credit, real production RBAC, delivery bytes or LIVE."
-  ci_run: 39322016379
-  ci_verify_job: 118298170127
-  ci_authenticated_job: 118299696389
-  ci_head: 5a37697317496f41d03fe77146e4698e398349c9
-  ci_status_at_last_observation: SUCCESS_ON_5A37697
-  ci_scope: "Verify Web App plus Authenticated WebApp QA on PR #654 HEAD 5a37697; browser evidence is isolated and read-only with no provider, wallet or production-data mutation."
-  ci_latest_run: 39322016379
-  ci_latest_status: "Run 39322016379 terminal SUCCESS: Verify Web App and Authenticated WebApp QA both succeeded; migration provenance used the clean 288-file source tree and authenticated matrix completed without failure."
+  ci_run: 39392360916
+  ci_verify_job: 118526688854
+  ci_authenticated_job: 118527618943
+  ci_head: 699fb048db76dc2b7cfbc40961fc8fae6d7446f6
+  ci_status_at_last_observation: SUCCESS_ON_699FB04
+  ci_scope: "Prior delivered baseline 699fb04: Verify Web App plus Authenticated WebApp QA; source correction below still needs fresh CI. Browser evidence is isolated and read-only."
+  ci_latest_run: 39392360916
+  ci_latest_status: "Run 39392360916 terminal SUCCESS, verified through Codex Web and gh: Verify Web App 2m20s; Authenticated WebApp QA 4m33s. Artifacts 12250032966 and 12250568141 are available on the run page."
   migration_evidence_refresh: "Web-only provenance regenerated from clean PR merge ref d367d0b3fe13a923760122e471d75335b3101857; source_files_scanned=288; source_fingerprint_sha256=4607415db7bad0fd20f1f34a18efeed41903a9a1397fcf66ecda84ee5f9e8a0a. Bot evidence unchanged; ignored local _giao-viec files are not part of the committed source tree."
-  local_targeted_tests: "Admin chart source3/3; Admin record-reference source2/2 including chain order; Admin role/module projection2/2; Admin manual-topup capability/data-truth presentation3/3; focused Admin18/18; STT/workspace14/14; Voice default-gender/controls/inventory suite45/45; existing Voice suites132/132; voice-flow-state-presentation51/51; readiness metadata p0-05d kiểm tra độc lập PASS; node --check static/portal/portal.js; node --check static/portal/portal-i18n.js; git diff --check. Protected Python/backend/integration/workflow diff empty."
-  local_full_tests: "738/738 tests/*.test.mjs after Voice default-gender capability slice; full Pricing truth browser72 states (12 configurations), header locale12/12, generic pricing browser12/12 and shared-state7/7/data browser12/12. Prior domain evidence remains historical; old72-route Admin smoke does not prove role/module completeness."
+  local_targeted_tests: "Voice explicit default-selection renderer15/15; focused Voice/STT75/75; node --check static/portal/portal.js and git diff --check pass. Previous Admin/STT/flow evidence remains historical. Protected Python/backend/integration/workflow diff empty."
+  local_full_tests: "750/750 tests/*.test.mjs after correcting the unsupported auto-default helper; previous Pricing/Admin/Voice evidence remains historical and does not prove real runtime or production execution."
   python_tests: "NOT_RUN: bundled Python located via workspace dependencies; pytest/FastAPI/Uvicorn are not installed in that runtime. No Python source changed in this batch."
   voice_browser_qa:
     environment: "Localhost production renderer/CSS with synthetic signed-state projection; no integration.js, backend or DB. Browser plugin absent; Playwright + Edge used."
@@ -354,4 +355,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Voice default-gender capability checkpoint is pushed and CI-green on PR #654. Continue the next unchecked Voice item in order (Voice Vault management/handoff); do not claim management until canonical endpoint and browser evidence exist. Re-run browser/CI only with an allowed isolated runtime. Preserve server-issued role filtering and vertical mobile layout. Video and motion remain later. No merge, deploy, backend/integration/price-rule/provider/wallet/production-data mutation."
+next_action: "Commit the current Voice correction and ledger, refresh provenance from a clean tracked source checkout, push PR #654 and read its fresh CI. Record delivery evidence on the PR to avoid a state-only commit/CI loop. Then continue remaining Voice quote/confirm/result UI checks; canonical Vault management/handoff and capability DTO stay in T0. Video and motion remain later."

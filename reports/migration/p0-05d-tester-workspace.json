@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-10-20",
-  "local_files_refresh_scope": "Portable LF file sizes/hashes were remeasured after the AD-03 Admin record-reference case and guide; historical remote verification dates are unchanged.",
+  "local_files_refresh_scope": "Portable LF case-source size/hash remeasured after refining VUI-DRAFT-01 for explicit female/male selection and documenting the unproven capability fallback; historical remote verification dates are unchanged.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 297,
-      "bytes": 49066,
-      "sha256": "cb6ab29c939ea260485bc04517c7cc669a5acae2d6ca51c09e64f7f2f9a9e5ac"
+      "lines": 302,
+      "bytes": 49526,
+      "sha256": "99819711cd16e460907d81b3fd5378e2d177e485069afa9c442a91e57a679ff5"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

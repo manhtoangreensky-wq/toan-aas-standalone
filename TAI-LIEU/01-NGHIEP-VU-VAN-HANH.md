@@ -1,5 +1,20 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Voice — lựa chọn giọng mặc định, sửa kết luận capability (20/10/2026)
+
+TTS hiện yêu cầu khách chọn rõ Nữ hoặc Nam; hai giá trị gửi máy chủ vẫn là
+`female` và `male`. Lần đầu ô chọn rỗng, không tự chọn giới tính. Chuyển qua
+Kho giọng rồi trở lại giữ lựa chọn, lời thoại Unicode, tốc độ và âm lượng 0.
+Nhãn hiển thị theo VI/EN/ZH. Renderer `15/15`, nhóm Voice/STT `75/75`, full
+Node `750/750`; Codex browser localhost `18/18` cấu hình, overflow `0`, console
+không lỗi; fixture chỉ GET ghi nhận write `0`, unknown API `0`.
+
+Helper tự chọn theo `readiness.features.voice_tts.default_voice_genders` trước
+đây không có dữ liệu thật: `_project_readiness` không cho qua trường này.
+Helper đã bị bỏ và mục fallback được mở lại trong R218-02A/T0. Các bằng chứng
+trên là UI fixture, chưa chứng minh default capability, audio delivery hay LIVE.
+Chi tiết: `reports/audit/R218-VOICE-DEFAULT-SELECTION-QA-20261020.json`.
+
 ## AD-03 — checkpoint chiếu liên kết hồ sơ Admin (20/10/2026)
 
 Lớp cầu nối Admin hiện chỉ đưa `admin_record_references` tới trình duyệt khi

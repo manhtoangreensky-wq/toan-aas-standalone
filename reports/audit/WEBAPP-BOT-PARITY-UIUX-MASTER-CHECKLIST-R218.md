@@ -152,18 +152,19 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   18 cấu hình VI/EN/ZH × sáng/tối × 390/768/1440, lỗi trang/console/request ngoài/
   mutation/overflow đều 0. Upload thật, MIME/size/ownership, progress, transcript/
   copy/export, delivery và LIVE vẫn guarded.
-- [x] VO-03 DEFAULT-GENDER-CAPABILITY — 20/10/2026: lane mặc định giữ đúng hai
-  lựa chọn canonical `female`/`male` khi máy chủ chưa gửi capability rõ ràng;
-  nếu `readiness.features.voice_tts.default_voice_genders` hoặc
-  `default_voice_gender` xác nhận đúng một lựa chọn thì chỉ hiển thị và tự chọn
-  lựa chọn đó; danh sách rỗng giữ trạng thái không có lựa chọn, không tự đổi
-  sang giọng khác. Nhãn hiển thị dùng hoàn toàn theo locale (`Nữ`/`Nam`,
-  `Female`/`Male`, `女声`/`男声`) và không lộ mã canonical. Test riêng
-  `tests/voice-default-gender-capability.test.mjs` đạt `3/3`; bộ Voice liên
-  quan đạt `45/45`; full Node đạt `738/738`; `node --check` hai Portal JS và
-  `git diff --check` đều đạt. Đây là bằng chứng source/control-level; capability
-  backend, quote, preview, runtime, delivery, CI mới, production và LIVE vẫn
-  giữ cổng riêng.
+- [~] VO-02 DEFAULT-SELECTION — sửa kết luận ngày 20/10/2026: bản helper trước
+  đọc `default_voice_genders/default_voice_gender` nhưng `_project_readiness`
+  không công bố hai trường đó, nên không đủ bằng chứng đóng fallback capability.
+  Helper suy đoán đã được bỏ. UI hiện dùng đúng schema TTS đang có: hai giá trị
+  `female`/`male`, bắt buộc khách chọn rõ, nhãn thuần VI/EN/ZH; render lại và
+  chuyển Kho giọng → TTS giữ lựa chọn, lời thoại Unicode, tốc độ và âm lượng 0.
+  Renderer test `15/15`, nhóm Voice/STT `75/75`, full Node `750/750`; browser
+  Codex localhost đạt `18/18` cấu hình VI/EN/ZH × sáng/tối × 390/768/1440,
+  không tràn ngang và console không lỗi. Fixture chỉ GET, ghi nhận `0` write
+  và `0` unknown API. Evidence tại
+  `reports/audit/R218-VOICE-DEFAULT-SELECTION-QA-20261020.json`.
+  Chọn Nam/Nữ tường minh đã khóa ở UI; fallback một giọng/trung tính theo DTO
+  canonical tiếp tục mở tại R218-02A/T0, không tính là runtime/delivery/LIVE.
 - [~] Nội dung/đếm từ/speed 0.1–2.0/volume 0–200: control và giá trị mặc định đã khóa
   bằng test `tests/voice-controls-contract.test.mjs`. VO-03/VO-05 đã có số đếm Unicode,
   cảnh báo 0% giữ nguyên giá trị người dùng, đồng bộ số/thanh kéo và giữ qua hydration;

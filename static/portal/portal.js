@@ -810,7 +810,7 @@
     ],
     voice: [
       { name: "script", label: "Nội dung lời thoại", control: "textarea", placeholder: "Nhập văn bản để chuẩn bị giọng nói…", required: true, minLength: 1 },
-      { name: "default_voice_gender", label: "Giọng đọc mặc định", control: "select", options: [{ value: "female", label: "Nữ" }, { value: "male", label: "Nam" }], required: true, help: "Chọn giọng đọc nam hoặc nữ mà hệ thống đã xác nhận. Nếu chỉ có một lựa chọn, hệ thống sẽ chọn đúng lựa chọn đó; không tự chuyển sang giọng khác." },
+      { name: "default_voice_gender", label: "Giọng đọc mặc định", control: "select", options: [{ value: "female", label: "Nữ" }, { value: "male", label: "Nam" }], required: true, help: "Chọn giọng nam hoặc nữ. Hệ thống kiểm tra lựa chọn trước khi xử lý." },
       { name: "speed", label: "Tốc độ đọc", labelKey: "field.speed.label", type: "number", defaultValue: "1.0", min: 0.1, max: 2, step: 0.05, inputMode: "decimal", presets: [{ value: "0.85", label: "Chậm (0,85×)", labelKey: "option.speed.0.85" }, { value: "1.0", label: "Chuẩn (1,0×)", labelKey: "option.speed.1.0" }, { value: "1.2", label: "Nhanh (1,2×)", labelKey: "option.speed.1.2" }], helpKey: "field.speed.help", help: "Tốc độ đọc từ 0,1× đến 2,0×. Bạn có thể chọn mức gợi ý hoặc nhập số trực tiếp." },
       { name: "volume_percent", label: "Âm lượng (%)", labelKey: "field.volume_percent.label", type: "number", defaultValue: "100", min: 0, max: 200, step: 10, placeholder: "100", placeholderKey: "field.volume_percent.placeholder", range: { ariaLabel: "Thanh âm lượng", ariaLabelKey: "field.volume_percent.label" }, helpKey: "field.volume_percent.help", help: "Âm lượng đọc từ 0% đến 200%; 100% là mức chuẩn." }
     ],
@@ -11546,23 +11546,6 @@
     };
   }
 
-  const VOICE_DEFAULT_GENDER_VALUES = Object.freeze(["female", "male"]);
-
-  function voiceDefaultGenderValues(context) {
-    const feature = context && context.readiness && context.readiness.features && context.readiness.features.voice_tts;
-    if (!feature || typeof feature !== "object" || Array.isArray(feature)) {
-      return VOICE_DEFAULT_GENDER_VALUES.slice();
-    }
-    const raw = Array.isArray(feature.default_voice_genders)
-      ? feature.default_voice_genders
-      : (VOICE_DEFAULT_GENDER_VALUES.includes(String(feature.default_voice_gender || "").trim().toLowerCase())
-        ? [feature.default_voice_gender]
-        : null);
-    if (!raw) return VOICE_DEFAULT_GENDER_VALUES.slice();
-    const supported = new Set(raw.map((value) => String(value || "").trim().toLowerCase()));
-    return VOICE_DEFAULT_GENDER_VALUES.filter((value) => supported.has(value));
-  }
-
   function renderVoiceFormFeedback(values) {
     const metrics = voiceFeedbackMetrics(values);
     return `<div class="portal-voice-input-feedback" data-voice-input-feedback><p class="portal-form-note"><output data-voice-text-count aria-live="polite">${safeText(voiceUiText("form.textCount", "{words} từ · {characters} ký tự", metrics))}</output><br>${safeText(voiceUiText("form.textCountNote", "Số đếm hỗ trợ rà soát nội dung; báo giá được máy chủ xác nhận."))}</p><p class="portal-notice portal-notice--warning" data-voice-muted-warning role="status"${metrics.muted ? "" : " hidden"}>${safeText(voiceUiText("form.mutedWarning", "Âm lượng đang ở 0%. Kết quả sẽ không có tiếng; tăng âm lượng nếu bạn muốn nghe giọng đọc."))}</p></div>`;
@@ -11664,12 +11647,8 @@
         </form>${flowControls}</section>`;
     }
     if (voiceTask) {
-      const defaultVoiceGenders = voiceDefaultGenderValues(context);
       const fields = page.fields.map((field) => ({
         ...field,
-        defaultValue: field.name === "default_voice_gender" && defaultVoiceGenders.length === 1
-          ? defaultVoiceGenders[0]
-          : field.defaultValue,
         labelKey: `voiceUi.field.${field.name}.label`,
         placeholderKey: field.placeholder ? `voiceUi.field.${field.name}.placeholder` : undefined,
         helpKey: field.help ? `voiceUi.field.${field.name}.help` : undefined,
@@ -11678,9 +11657,7 @@
         emptyLabel: field.emptyLabel || field.name === "default_voice_gender" ? voiceUiText(`field.${field.name}.empty`, field.emptyLabel || "") : undefined,
         disabled: field.disabled === true || (field.type === "file" && !enabled),
         optionsFrom: field.optionsFrom === "voiceProfiles" ? undefined : field.optionsFrom,
-        options: field.name === "default_voice_gender"
-          ? defaultVoiceGenders.map((value) => ({ value, label: voiceUiText(`option.default_voice_gender.${value}`, value) }))
-          : field.optionsFrom === "voiceProfiles"
+        options: field.optionsFrom === "voiceProfiles"
           ? (Array.isArray(context.voiceProfiles) ? context.voiceProfiles : [])
             .filter((profile) => profile && profile.id && profile.tts_ready)
             .map((profile) => ({ value: String(profile.id), label: `${profile.display_name || voiceUiText("library.unnamed", "Giọng chưa đặt tên")}${profile.is_default ? ` · ${voiceUiText("library.default", "Mặc định")}` : ""}` }))
