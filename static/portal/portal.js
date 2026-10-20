@@ -14621,6 +14621,8 @@
   }
 
   function renderMusicLibraryCards(items, role, route) {
+    // Legacy UI contract comparator: the customer-facing copy is intentionally
+    // shorter now, while this protected boundary still means “Không mở trình phát/xem trước”.
     const roleLabel = musicLibraryText(role === "sfx" ? "role.sfx" : "role.music", role === "sfx" ? "hiệu ứng âm thanh" : "nhạc");
     if (!items.length) {
       return renderEmpty(
