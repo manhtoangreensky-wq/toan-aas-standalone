@@ -163,6 +163,7 @@
   let voiceQuoteExpiryKey = "";
   const transientFormDrafts = new Map();
   let voiceWorkspaceDraftSession = "";
+  let musicWorkspaceDraftSession = "";
   // A continuation may only open one of these finite local Image Operations.
   // It never carries an operation config, file bytes, URL, Bot state or an
   // unverified reference; the target server still verifies Asset Vault
@@ -828,8 +829,8 @@
       { name: "consent", label: "Quyền sử dụng mẫu giọng", type: "checkbox", required: true, help: "Tôi xác nhận mình có quyền sử dụng mẫu giọng này và không mạo danh người khác." }
     ],
     voiceStt: [
-      { name: "source", label: "Tệp âm thanh hoặc video nguồn", type: "file", accept: "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm", requiredUpload: true, help: "Tệp chỉ được nhận sau khi máy chủ kiểm tra MIME, kích thước và quyền sở hữu; chưa tự tạo bản chép lời trong trình duyệt." },
-      { name: "source_language", label: "Ngôn ngữ nguồn", control: "select", options: LANGUAGE_OPTIONS, emptyLabel: "Tự nhận diện", help: "Để Tự nhận diện nếu chưa biết ngôn ngữ; kết quả chỉ mở sau khi hệ thống xác nhận." },
+      { name: "source", label: "Tệp âm thanh hoặc video nguồn", type: "file", accept: "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm", requiredUpload: true, help: "Tệp được kiểm tra định dạng, kích thước và quyền sử dụng trước khi chép lời." },
+      { name: "source_language", label: "Ngôn ngữ nguồn", control: "select", options: LANGUAGE_OPTIONS, defaultValue: "auto", help: "Để Tự nhận diện nếu chưa biết ngôn ngữ; kết quả chỉ mở sau khi hệ thống xác nhận." },
       { name: "output_format", label: "Định dạng kết quả", control: "select", options: [{ value: "txt", label: "Văn bản" }, { value: "srt", label: "Phụ đề SRT" }, { value: "vtt", label: "Phụ đề VTT" }], required: true, help: "Định dạng chỉ là lựa chọn đầu ra; bản chép lời, phụ đề và tải xuống cần capability riêng." }
     ],
     music: [
@@ -11512,6 +11513,7 @@
       copy.label = musicProductText(`field.${name}.label`, field.label || name);
       if (field.placeholder) copy.placeholder = musicProductText(`field.${name}.placeholder`, field.placeholder);
       if (field.help) copy.help = musicProductText(`field.${name}.help`, field.help);
+      if (field.emptyLabel) copy.emptyLabel = musicProductText(`field.${name}.empty`, field.emptyLabel);
       if (Array.isArray(field.options)) {
         copy.options = field.options.map((option) => {
           const value = Array.isArray(option) ? option[0] : (option && typeof option === "object" ? option.value : option);
@@ -11531,16 +11533,18 @@
     const route = normalizePath(page && (page.routePath || page.path));
     if (!MUSIC_PRODUCT_ROUTES.includes(route)) return "";
     const mode = musicProductRouteMode(route);
-    const song = mode === "song";
     const steps = ["input", "options", "suggestions", "result"];
     const tierKeys = ["basic", "standard", "premium"];
-    const tierCards = tierKeys.map((tier, index) => `<article class="portal-music-product-tier" data-music-tier-card="${safeText(tier)}"><span class="portal-music-product-index">${safeText(String(index + 1).padStart(2, "0"))}</span><div><strong>${safeText(musicProductText(`tier.${tier}.title`, tier))}</strong><p>${safeText(musicProductText(`tier.${tier}.description`, "Gói chỉ được định giá khi máy chủ trả báo giá hợp lệ."))}</p></div><span class="portal-badge" data-status="guarded">${safeText(musicProductText("status.server", "Chờ máy chủ xác nhận"))}</span></article>`).join("");
-    const suggestionCards = [1, 2, 3].map((number) => `<li data-music-suggestion-card="${number}"><span class="portal-music-product-index">${safeText(String(number).padStart(2, "0"))}</span><div><strong>${safeText(musicProductText("suggestion.pendingTitle", `Phương án ${number}`, { number: String(number) }))}</strong><p>${safeText(musicProductText("suggestion.pendingBody", "Chưa có dữ liệu từ máy chủ; không dựng nội dung âm thanh thay thế."))}</p></div><span class="portal-badge" data-status="guarded">${safeText(musicProductText("status.pending", "Chưa có dữ liệu"))}</span></li>`).join("");
+    const modes = [["background", "/music/create"], ["song", "/music/song"], ["library", "/music/library"], ["sfx", "/music/sfx"]];
+    const modeLinks = modes.map(([key, href]) => `<a class="portal-music-product-mode" data-music-workspace-mode="${safeText(key)}" href="${safeText(href)}"${route === href ? ' aria-current="page"' : ""}>${safeText(musicProductText(`nav.${key}`, key))}</a>`).join("");
+    const tierCards = tierKeys.map((tier, index) => `<article class="portal-music-product-tier" data-music-tier-card="${safeText(tier)}"><span class="portal-music-product-index">${safeText(String(index + 1).padStart(2, "0"))}</span><div><strong>${safeText(musicProductText(`tier.${tier}.title`, tier))}</strong><p>${safeText(musicProductText(`tier.${tier}.description`, ""))}</p></div></article>`).join("");
     return `<section class="portal-card portal-card-pad portal-music-product-guidance" data-music-product-mode="${safeText(mode)}" aria-labelledby="music-product-flow-title">
-      <div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicProductText("kicker", "KHÔNG GIAN TẠO ÂM NHẠC"))}</span><h2 id="music-product-flow-title" class="portal-card-title">${safeText(song ? musicProductText("song.title", "Sáng tác bài hát trong một luồng") : musicProductText("background.title", "Tạo nhạc nền trong một luồng"))}</h2><p class="portal-card-subtitle">${safeText(song ? musicProductText("song.description", "Giữ lời bài hát, kiểu giọng và thời lượng trong cùng bản nháp.") : musicProductText("background.description", "Tách mục tiêu, phong cách, gói chất lượng và thời lượng để dễ rà soát."))}</p></div><span class="portal-badge" data-status="guarded">${safeText(musicProductText("status.guarded", "Chưa mở xử lý thật"))}</span></div>
+      <div class="portal-card-header"><h2 id="music-product-flow-title" class="portal-card-title">${safeText(musicProductText("nav.title", "Loại âm nhạc"))}</h2></div>
+      <nav class="portal-music-product-nav" aria-label="${safeText(musicProductText("nav.label", "Các công cụ âm nhạc"))}">${modeLinks}</nav>
+      <details class="portal-music-product-help" data-music-flow-help><summary>${safeText(musicProductText("guide.title", "Xem quy trình và các gói"))}</summary>
       <ol class="portal-music-product-steps" aria-label="${safeText(musicProductText("steps.label", "Trình tự tạo âm nhạc"))}">${steps.map((step, index) => `<li data-music-product-step="${safeText(step)}"><span class="portal-music-product-index">${safeText(String(index + 1).padStart(2, "0"))}</span><div><strong>${safeText(musicProductText(`step.${step}.title`, step))}</strong><p>${safeText(musicProductText(`step.${step}.description`, ""))}</p></div></li>`).join("")}</ol>
       <div class="portal-music-product-tier-grid" aria-label="${safeText(musicProductText("tier.label", "Các gói chất lượng"))}">${tierCards}</div>
-      <section class="portal-music-product-suggestions" data-music-suggestion-board="guarded" aria-labelledby="music-product-suggestion-title"><div class="portal-card-header"><div><h3 id="music-product-suggestion-title" class="portal-card-title">${safeText(musicProductText("suggestion.title", "Ba phương án để so sánh"))}</h3><p class="portal-card-subtitle">${safeText(musicProductText("suggestion.description", "Các thẻ chỉ mở khi máy chủ trả ba phương án hợp lệ; không hiển thị bản nhạc hoặc trình phát giả."))}</p></div><span class="portal-badge" data-status="guarded">${safeText(musicProductText("status.pending", "Chưa có dữ liệu"))}</span></div><ol>${suggestionCards}</ol></section>
+      </details>
     </section>`;
   }
 
@@ -11567,6 +11571,34 @@
     });
   }
 
+  function musicQuoteHasEdits(page, flow, values) {
+    if (!flow || flow.phase !== "estimate" || flow.status !== "awaiting_confirm") return false;
+    const prior = flow.input && typeof flow.input === "object" ? flow.input : {};
+    const current = values && typeof values === "object" ? values : {};
+    return (Array.isArray(page && page.fields) ? page.fields : []).some((field) => {
+      if (!Object.prototype.hasOwnProperty.call(current, field.name)) return false;
+      if (field.type === "file" || field.type === "password") return false;
+      const previous = prior[field.name] ?? (field.type === "checkbox" ? false : field.defaultValue ?? "");
+      return String(current[field.name] ?? "") !== String(previous);
+    });
+  }
+
+  function musicQuoteState(page, flow, values, now = Date.now()) {
+    const edited = musicQuoteHasEdits(page, flow, values);
+    const expiry = voiceQuoteExpiryState(flow, now);
+    const fresh = Boolean(flowHasFreshEstimate(flow) && !edited && !expiry.expired);
+    const rawAmount = fresh ? voiceQuoteAmount(flow) : null;
+    const amount = typeof rawAmount === "number" && Number.isFinite(rawAmount) && rawAmount >= 0 ? rawAmount : null;
+    return {
+      edited,
+      expired: expiry.expired,
+      fresh,
+      amount,
+      unknownPrice: fresh && amount === null,
+      confirmAllowed: fresh && amount !== null
+    };
+  }
+
   function renderVoiceFormFeedback(values) {
     const metrics = voiceFeedbackMetrics(values);
     return `<div class="portal-voice-input-feedback" data-voice-input-feedback><p class="portal-form-note"><output data-voice-text-count aria-live="polite">${safeText(voiceUiText("form.textCount", "{words} từ · {characters} ký tự", metrics))}</output><br>${safeText(voiceUiText("form.textCountNote", "Số đếm hỗ trợ rà soát nội dung; báo giá được máy chủ xác nhận."))}</p><p class="portal-notice portal-notice--warning" data-voice-muted-warning role="status"${metrics.muted ? "" : " hidden"}>${safeText(voiceUiText("form.mutedWarning", "Âm lượng đang ở 0%. Kết quả sẽ không có tiếng; tăng âm lượng nếu bạn muốn nghe giọng đọc."))}</p></div>`;
@@ -11586,12 +11618,14 @@
       return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Chờ dữ liệu Core Bridge</h2><p class="portal-card-subtitle">Không có form hay action có thể làm thay đổi trạng thái tại trang này.</p></div>${badge(stateFor(page, context))}</div>${renderNotes(page)}</section>`;
     }
     const flow = context.featureFlows && context.featureFlows[route];
+    const musicTask = ["/music/create", "/music/song"].includes(String(route || "").split("?")[0].replace(/\/$/, "") || "/");
     const flowStatus = flow && ALLOWED_STATES.has(flow.status) ? flow.status : "";
     const voiceQuoteEdited = ["/voice/tts", "/voice/saved", "/voice/stt", "/voice/clone"].includes(route)
       && voiceQuoteHasEdits(page, flow, transientFormValues(route));
     const voiceQuoteExpiry = voiceQuoteExpiryState(flow);
     const voiceQuoteExpired = voiceQuoteExpiry.expired;
-    const hasFreshEstimate = flowHasFreshEstimate(flow) && !voiceQuoteEdited && !voiceQuoteExpired;
+    const musicQuote = musicTask ? musicQuoteState(page, flow, transientFormValues(route)) : null;
+    const hasFreshEstimate = flowHasFreshEstimate(flow) && !voiceQuoteEdited && !voiceQuoteExpired && (!musicQuote || !musicQuote.edited);
     const quoteNeedsSelection = Boolean(flow && flow.phase === "estimate" && flow.status === "awaiting_confirm" && !hasFreshEstimate);
     const canEstimate = enabled && page.type === "feature" && !hasFreshEstimate && (
       page.action === "feature-estimate" || page.estimateDirect === true || flowStatus === "draft" || quoteNeedsSelection
@@ -11611,8 +11645,8 @@
     const imageTask = route === "/image/create" || route === "/image/new";
     const videoTask = route === "/video/create" || route === "/video/multiscene";
     const voiceTask = ["/voice/tts", "/voice/stt", "/voice/saved", "/voice/clone"].includes(route);
-    const voiceFormText = (key, fallback) => voiceUiText(route === "/voice/stt" ? `stt.${key}` : key, voiceUiText(key, fallback));
-    const musicTask = ["/music/create", "/music/song"].includes(String(route || "").split("?")[0].replace(/\/$/, "") || "/");
+    const voiceCopyPrefix = route === "/voice/stt" ? "stt" : route === "/voice/clone" ? "clone" : "";
+    const voiceFormText = (key, fallback) => voiceUiText(voiceCopyPrefix ? `${voiceCopyPrefix}.${key}` : key, voiceUiText(key, fallback));
     const videoText = (key, fallback) => uiText(`videoUi.${key}`, fallback);
     // When an external engine is not enabled, the primary form action is a
     // real, owner-scoped Web draft—not a disabled Bot action. This also makes
@@ -11623,27 +11657,29 @@
       ? videoText(workspaceDraftId ? "draft.update" : "draft.save", "Lưu bản nháp")
       : voiceTask ? voiceUiText(workspaceDraftId ? "draft.update" : "draft.save", "Lưu bản nháp")
       : imageTask ? imageUiText(workspaceDraftId ? "draft.update" : "draft.save", "Lưu bản nháp")
+      : musicTask ? musicProductText(workspaceDraftId ? "draft.update" : "draft.save", "Lưu bản nháp")
       : (workspaceDraftId ? "Cập nhật bản nháp Web" : "Lưu bản nháp Web");
     const formAction = localAuthoringOnly ? localDraftAction : page.action;
     const workspaceDraftControl = workspaceDraftEnabled && !localAuthoringOnly
       ? (workspaceDraftId
-        ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-update" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-workspace-draft-id="${safeText(workspaceDraftId)}">${voiceTask ? safeText(voiceUiText("draft.update", "")) : imageTask ? safeText(imageUiText("draft.update", "")) : "Cập nhật bản nháp Web"}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("draft.saveNew", "")) : imageTask ? safeText(imageUiText("draft.saveNew", "")) : "Lưu thành bản mới"}</button>`
-        : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("draft.save", "")) : imageTask ? safeText(imageUiText("draft.save", "")) : "Lưu bản nháp Web"}</button>`)
+        ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-update" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-workspace-draft-id="${safeText(workspaceDraftId)}">${voiceTask ? safeText(voiceUiText("draft.update", "")) : imageTask ? safeText(imageUiText("draft.update", "")) : musicTask ? safeText(musicProductText("draft.update", "")) : "Cập nhật bản nháp Web"}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("draft.saveNew", "")) : imageTask ? safeText(imageUiText("draft.saveNew", "")) : musicTask ? safeText(musicProductText("draft.saveNew", "")) : "Lưu thành bản mới"}</button>`
+        : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("draft.save", "")) : imageTask ? safeText(imageUiText("draft.save", "")) : musicTask ? safeText(musicProductText("draft.save", "")) : "Lưu bản nháp Web"}</button>`)
       : "";
     const estimateControl = canEstimate && page.action !== "feature-estimate"
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="feature-estimate" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("action.estimate", "Ước tính Xu")) : imageTask ? safeText(imageUiText("action.estimate", "")) : "Ước tính Xu"}</button>`
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="feature-estimate" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">${voiceTask ? safeText(voiceUiText("action.estimate", "Ước tính Xu")) : imageTask ? safeText(imageUiText("action.estimate", "")) : musicTask ? safeText(musicProductText("action.estimate", "")) : "Ước tính Xu"}</button>`
       : "";
     const executionReady = featureConfirmExecutionReady(page, context);
     const voiceQuoteVisible = !voiceTask || !hasFreshEstimate || voiceQuoteAmount(flow) !== null;
     const imageQuoteVisible = !imageTask || !hasFreshEstimate || voiceQuoteAmount(flow) !== null;
+    const musicQuoteVisible = !musicTask || !hasFreshEstimate || Boolean(musicQuote && musicQuote.confirmAllowed);
     const confirmControl = hasFreshEstimate
-      ? (executionReady && voiceQuoteVisible && imageQuoteVisible
-        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-portal-confirm="${voiceTask ? safeText(voiceFormText("action.confirmPrompt", "")) : imageTask ? safeText(imageUiText("action.confirmPrompt", "")) : "Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định."}">${voiceTask ? safeText(voiceFormText("action.confirm", "Xác nhận chạy")) : imageTask ? safeText(imageUiText("action.confirm", "")) : "Xác nhận chạy"}</button>`
-        : `<span class="portal-flow-note" role="status">${voiceTask ? safeText(voiceUiText(voiceQuoteVisible ? "action.waiting" : "flow.priceUnknown", "")) : imageTask ? safeText(imageUiText(imageQuoteVisible ? "action.waiting" : "flow.priceUnknown", "")) : "Đã có estimate canonical. Web App đang chờ adapter tạo job canonical; chưa thể xác nhận chạy hoặc trừ Xu."}</span>`)
+      ? (executionReady && voiceQuoteVisible && imageQuoteVisible && musicQuoteVisible
+        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-portal-confirm="${voiceTask ? safeText(voiceFormText("action.confirmPrompt", "")) : imageTask ? safeText(imageUiText("action.confirmPrompt", "")) : musicTask ? safeText(musicProductText("action.confirmPrompt", "")) : "Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định."}">${voiceTask ? safeText(voiceFormText("action.confirm", "Xác nhận chạy")) : imageTask ? safeText(imageUiText("action.confirm", "")) : musicTask ? safeText(musicProductText("action.confirm", "")) : "Xác nhận chạy"}</button>`
+        : `<span class="portal-flow-note" role="status">${voiceTask ? safeText(voiceUiText(voiceQuoteVisible ? "action.waiting" : "flow.priceUnknown", "")) : imageTask ? safeText(imageUiText(imageQuoteVisible ? "action.waiting" : "flow.priceUnknown", "")) : musicTask ? safeText(musicProductText(musicQuoteVisible ? "action.waiting" : "flow.priceUnknown", "Chưa thể xác nhận khi báo giá chưa rõ.")) : "Đã có estimate canonical. Web App đang chờ adapter tạo job canonical; chưa thể xác nhận chạy hoặc trừ Xu."}</span>`)
       : "";
     const flowControls = estimateControl || confirmControl ? `<div class="portal-flow-actions">${estimateControl}${confirmControl}</div>` : "";
     const fieldValues = { ...(flow && flow.input && typeof flow.input === "object" ? flow.input : {}), ...transientFormValues(route) };
-    const primaryActionLabel = localAuthoringOnly ? localDraftLabel : (videoTask ? videoText("action.continue", "Tiếp tục") : voiceTask ? voiceUiText(page.action === "feature-estimate" ? "action.estimate" : "action.continue", "Tiếp tục") : imageTask ? imageUiText(page.action === "feature-estimate" ? "action.estimate" : "action.continue", "Tiếp tục") : (page.actionLabel || "Tiếp tục"));
+    const primaryActionLabel = localAuthoringOnly ? localDraftLabel : (videoTask ? videoText("action.continue", "Tiếp tục") : voiceTask ? voiceUiText(page.action === "feature-estimate" ? "action.estimate" : "action.continue", "Tiếp tục") : imageTask ? imageUiText(page.action === "feature-estimate" ? "action.estimate" : "action.continue", "Tiếp tục") : musicTask ? musicProductText(page.action === "feature-estimate" ? "action.estimate" : "action.continue", "Tiếp tục") : (page.actionLabel || "Tiếp tục"));
     const primaryDisabled = localAuthoringOnly || enabled ? "" : ` disabled title="${safeText(voiceTask ? voiceFormText("form.guarded", reason) : imageTask ? imageUiText("form.guarded", reason) : reason)}"`;
     const boundary = classifyPageBoundary(page, context);
     let boundaryNotice = "";
@@ -11653,7 +11689,7 @@
       boundaryNotice = `<div class="portal-notice portal-notice--boundary" data-ux-boundary="web_planning"><strong>Không gian Kế hoạch Web:</strong> Đây là công cụ lập kế hoạch, kịch bản và lưu trữ bản nháp trên Web. Không trừ Xu khi soạn thảo.</div>`;
     } else if (boundary === "runtime_generator") {
       boundaryNotice = musicTask
-        ? `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>${safeText(musicProductText("boundary.safeTitle", "Bộ tạo âm nhạc đang được bảo vệ"))}:</strong> ${safeText(musicProductText("boundary.safeBody", "Thông số được lưu thành bản nháp Web an toàn; không tạo âm thanh hoặc trừ Xu khi chưa có xác nhận."))}</div>`
+        ? ""
         : executionReady
           ? `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>Bộ tạo AI:</strong> Bộ tạo này đã sẵn sàng kết nối thực thi runtime.</div>`
           : `<div class="portal-notice portal-notice--boundary" data-ux-boundary="runtime_generator"><strong>Bộ tạo AI (Chế độ An toàn):</strong> Tính năng này thuộc Bot AI và đang trong chế độ an toàn trên Web. Thông số của bạn được lưu thành Bản nháp Web an toàn mà không trừ Xu.</div>`;
@@ -11672,6 +11708,8 @@
         </form>${flowControls}</section>`;
     }
     if (voiceTask) {
+      const localSttSettingsEnabled = route === "/voice/stt" && context.session
+        && context.session.authenticated === true && context.session.csrfReady === true;
       const fields = page.fields.map((field) => ({
         ...field,
         labelKey: `voiceUi.field.${field.name}.label`,
@@ -11700,7 +11738,7 @@
         : "";
       return `${voiceCloneGuidance}<section class="portal-card portal-card-pad" data-voice-form-card><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(voiceFormText("form.title", "Chuẩn bị giọng đọc"))}</h2><p class="portal-card-subtitle">${safeText(voiceFormText(localAuthoringOnly ? "form.draft" : enabled ? "form.ready" : "form.guarded", reason))}</p></div></div>
         <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>
-          ${renderFields(orderedFields, formFieldsEnabled, context, fieldValues)}
+          ${renderFields(orderedFields, formFieldsEnabled || localSttSettingsEnabled, context, fieldValues)}
           ${["/voice/tts", "/voice/saved"].includes(route) ? renderVoiceFormFeedback(fieldValues) : ""}
           <p class="portal-form-note" data-voice-quote-edited role="status"${voiceQuoteEdited || voiceQuoteExpired ? "" : " hidden"}>${safeText(voiceUiText(voiceQuoteExpired ? "form.quoteExpired" : "form.quoteChanged", voiceQuoteExpired ? "Báo giá đã hết hạn. Xem báo giá mới trước khi xác nhận." : "Lựa chọn đã thay đổi. Xem báo giá mới trước khi xác nhận."))}</p>
           <div class="portal-form-footer"><span class="portal-form-note">${safeText(voiceFormText(localAuthoringOnly ? "form.draftNote" : "form.processingNote", ""))}</span>${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button></div>
@@ -11738,7 +11776,7 @@
     return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.layout === "auth" ? "Thông tin xác thực" : musicTask ? safeText(musicCopy(musicMode === "song" ? "form.songTitle" : "form.backgroundTitle", "Chuẩn bị yêu cầu âm nhạc")) : "Chuẩn bị yêu cầu"}</h2><p class="portal-card-subtitle">${musicTask ? safeText(enabled ? musicCopy("form.integrationReady", "") : (workspaceDraftEnabled ? musicCopy("form.draft", "") : reason)) : (enabled ? "Yêu cầu sẽ được chuyển tới lớp tích hợp thông qua custom event, không gọi trực tiếp từ UI." : (workspaceDraftEnabled ? "Bạn có thể soạn và lưu brief Web; estimate, job và integration ngoài chỉ bật theo capability riêng." : safeText(reason)))}</p></div>${badge(flowStatus || stateFor(page, context))}</div>
       ${boundaryNotice}
       <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${musicTask ? ` data-music-product-form="${safeText(musicMode)}" data-music-product-enabled="${formFieldsEnabled ? "true" : "false"}"` : ""}${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>${renderFields(genericFields, formFieldsEnabled, context, fieldValues)}${musicStatus}
-        <div class="portal-form-footer"><span class="portal-form-note">${musicTask ? safeText(enabled ? musicCopy("form.processingNote", "") : (workspaceDraftEnabled ? musicCopy("form.draftNote", "") : musicCopy("form.guardedNote", ""))) : (enabled ? "Máy chủ vẫn phải xác minh phiên, CSRF, schema, ownership và idempotency." : (workspaceDraftEnabled ? "Bản nháp chỉ giữ brief scalar trên Web; không lưu file, upload ID, quote, job, Xu hoặc provider." : "Các trường bị khóa cho tới khi máy chủ cấp khả năng cần thiết."))}</span>
+        <div class="portal-form-footer"><span class="portal-form-note">${musicTask ? safeText(enabled ? musicCopy("form.processingNote", "") : (workspaceDraftEnabled ? musicCopy("form.draftNote", "") : musicCopy("form.guardedNote", ""))) : (enabled ? "Máy chủ vẫn phải xác minh phiên, CSRF, schema, ownership và idempotency." : (workspaceDraftEnabled ? "Bản nháp chỉ giữ brief scalar trên Web; không lưu file, upload ID, quote, job, Xu hoặc provider." : "Các trường bị khóa cho tới khi máy chủ cấp khả năng cần thiết."))}</span>${musicTask ? `<span class="portal-form-note portal-music-quote-freshness" data-music-quote-freshness hidden role="status" aria-live="polite"></span>` : ""}
           ${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button>
         </div>
       </form>${flowControls}</section>`;
@@ -25826,6 +25864,39 @@
     return uiText(`musicProduct.${key}`, fallback, params);
   }
 
+  function synchronizeMusicWorkspaceDraftSession(context) {
+    const session = context && context.session;
+    const token = session && session.authenticated === true && typeof session.csrfToken === "string" ? session.csrfToken : "";
+    if (!token || token !== musicWorkspaceDraftSession) {
+      MUSIC_PRODUCT_ROUTES.forEach(clearTransientFormDraft);
+    }
+    musicWorkspaceDraftSession = token;
+  }
+
+  function navigateMusicWorkspace(event, link) {
+    if (!link || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return false;
+    const target = link.getAttribute("href");
+    const context = getBootstrap();
+    const current = normalizePath(resolvePage(context.path).path);
+    if (!MUSIC_PRODUCT_ROUTES.includes(target) || !MUSIC_PRODUCT_ROUTES.includes(current) || link.getAttribute("target") || link.hasAttribute("download")) return false;
+    if (!(context.session && context.session.authenticated === true && context.session.csrfToken)) return false;
+    if (target === current) { event.preventDefault(); return true; }
+    rememberTransientFormDraft(document.querySelector(`[data-portal-form][data-portal-route="${current}"]`));
+    const next = new URL(target, window.location.origin);
+    const currentUrl = new URL(window.location.href);
+    const locale = currentUrl.searchParams.get("lang");
+    const theme = currentUrl.searchParams.get("theme");
+    if (["vi", "en", "zh"].includes(locale)) next.searchParams.set("lang", locale);
+    if (["light", "dark", "system"].includes(theme)) next.searchParams.set("theme", theme);
+    try { window.history.pushState({}, "", next.pathname + next.search); }
+    catch (_) { return false; }
+    event.preventDefault();
+    mountPortal({ ...window.__TOAN_AAS_PORTAL__, path: target });
+    const active = document.querySelector('[data-music-workspace-mode][aria-current="page"]');
+    if (active) active.focus({ preventScroll: true });
+    return true;
+  }
+
   function mediaOperationText(key, fallback, params) {
     return uiText(`mediaOperation.${key}`, fallback, params);
   }
@@ -29922,6 +29993,12 @@
     return `<nav class="portal-settings-nav" aria-label="${safeText(uiText("interfaceLocale.settingsNav", "Thiết lập tài khoản"))}">${items.map((item) => `<a href="${safeText(item.path)}"${activePath === item.path ? ' aria-current="page"' : ""}>${safeText(item.label)}</a>`).join("")}</nav>`;
   }
 
+  function avatarPresetDataUri(initials, background, accent) {
+    const label = String(initials || "T").slice(0, 2).toUpperCase();
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img"><rect width="160" height="160" rx="80" fill="${background}"/><circle cx="80" cy="62" r="28" fill="${accent}" opacity=".9"/><path d="M30 142c7-34 28-50 50-50s43 16 50 50" fill="${accent}" opacity=".72"/><text x="80" y="154" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#fff">${label}</text></svg>`;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  }
+
   function renderAccount(page, context) {
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
     const session = context.session && typeof context.session === "object" ? context.session : {};
@@ -29960,12 +30037,12 @@
     };
     const currentAvatarUrl = profile.avatar_url || (profile.avatarStyle && profile.avatarStyle.startsWith("http") ? profile.avatarStyle : "") || "";
     const avatarPresets = [
-      { id: "ai_bot", label: "Bot công nghệ", url: "https://api.dicebear.com/7.x/bottts/svg?seed=ToanAAS1" },
-      { id: "creator", label: "Nhà sáng tạo chuyên nghiệp", url: "https://api.dicebear.com/7.x/avataaars/svg?seed=CreatorPro" },
-      { id: "tech_girl", label: "Cô gái công nghệ AI", url: "https://api.dicebear.com/7.x/bottts/svg?seed=TechGirl" },
-      { id: "business", label: "Nhà lãnh đạo doanh nghiệp", url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Business" },
-      { id: "hacker", label: "Công nghệ neon", url: "https://api.dicebear.com/7.x/bottts/svg?seed=NeonHacker" },
-      { id: "artist", label: "Nghệ sĩ kỹ thuật số", url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Artist" }
+      { id: "ai_bot", label: "Bot công nghệ", url: avatarPresetDataUri("TB", "#0b132b", "#00f2fe") },
+      { id: "creator", label: "Nhà sáng tạo chuyên nghiệp", url: avatarPresetDataUri("CR", "#123b5d", "#7dd3fc") },
+      { id: "tech_girl", label: "Cô gái công nghệ AI", url: avatarPresetDataUri("AI", "#153e75", "#a7f3d0") },
+      { id: "business", label: "Nhà lãnh đạo doanh nghiệp", url: avatarPresetDataUri("BL", "#164e63", "#fbbf24") },
+      { id: "hacker", label: "Công nghệ neon", url: avatarPresetDataUri("NX", "#172554", "#c084fc") },
+      { id: "artist", label: "Nghệ sĩ kỹ thuật số", url: avatarPresetDataUri("DS", "#312e81", "#fb7185") }
     ];
 
     const avatarStudio = `
@@ -31828,6 +31905,47 @@
     return canonicalDraftText(suggestions[0] && suggestions[0].prompt);
   }
 
+  function renderMusicCanonicalSuggestions(value, route, field) {
+    const source = Array.isArray(value) ? value : [];
+    const suggestions = source.filter((raw) => {
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
+      return Boolean(canonicalDraftText(raw.prompt));
+    }).slice(0, 3);
+    if (!suggestions.length) {
+      return `<section class="portal-canonical-suggestions portal-music-canonical-suggestions" data-music-canonical-suggestions><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(musicProductText("suggestion.title", "Gợi ý âm nhạc"))}</strong><p>${safeText(musicProductText("suggestion.empty", "Chưa có đủ phương án từ máy chủ."))}</p></div></div></section>`;
+    }
+    const metadata = [
+      ["mood", "mood"], ["tempo", "tempo"], ["instrument", "instrument"],
+      ["duration", "duration"], ["vocal", "vocal"], ["useCase", "use_case"]
+    ];
+    const cards = suggestions.map((item, index) => {
+      const prompt = canonicalDraftText(item.prompt);
+      const name = canonicalDraftText(item.name) || musicProductText("suggestion.option", "Phương án {number}", { number: index + 1 });
+      const meta = metadata.map(([labelKey, valueKey]) => [musicProductText(`suggestion.meta.${labelKey}`, labelKey), item[valueKey]])
+        .filter(([, value]) => typeof value === "string" && value.trim());
+      return `<article class="portal-suggestion-card portal-music-suggestion-card" data-music-suggestion-card="true"><div class="portal-suggestion-card-head"><strong>${safeText(name)}</strong><span>${safeText(musicProductText("suggestion.option", "Phương án {number}", { number: index + 1 }))}</span></div>${meta.length ? `<dl class="portal-suggestion-meta">${meta.map(([label, value]) => `<div><dt>${safeText(label)}</dt><dd>${safeText(String(value))}</dd></div>`).join("")}</dl>` : ""}<div class="portal-result-text">${safeText(prompt)}</div>${canonicalDraftActions(prompt, route, field, musicProductText("suggestion.copy", "mô tả"))}</article>`;
+    }).join("");
+    return `<section class="portal-canonical-suggestions portal-music-canonical-suggestions" data-music-canonical-suggestions><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(musicProductText("suggestion.kicker", "GỢI Ý ÂM NHẠC"))}</span><h4>${safeText(musicProductText("suggestion.title", "Ba phương án để so sánh"))}</h4><p>${safeText(musicProductText("suggestion.description", "Chọn một hướng để tiếp tục."))}</p></div></div><div class="portal-suggestion-grid">${cards}</div></section>`;
+  }
+
+  function renderMusicCanonicalReport(flow) {
+    const report = safeVoiceReport(flow);
+    const t = (key, fallback, params) => musicProductText(`report.${key}`, fallback, params);
+    if (!report) {
+      return `<section class="portal-canonical-result portal-music-report" data-music-report aria-live="polite"><div class="portal-card-header"><div><h4>${safeText(t("title", "Báo cáo xử lý nhạc"))}</h4><p>${safeText(t("pending", "Chưa có báo cáo chi tiết từ máy chủ."))}</p></div></div></section>`;
+    }
+    const statusKey = `state.${report.status || "guarded"}`;
+    const rows = [
+      ["status", t(statusKey, report.status || "guarded")],
+      report.progress !== null ? ["progress", `${report.progress}%`] : null,
+      report.outputKnown ? ["output", report.outputAvailable ? t("outputReady", "Đã có tín hiệu tệp") : t("outputPending", "Chưa có tín hiệu tệp")] : null,
+      report.downloadKnown ? ["download", report.downloadReady ? t("downloadReady", "Đủ điều kiện") : t("downloadPending", "Chưa đủ điều kiện")] : null,
+      report.deliveryKnown ? ["delivery", report.deliveryReady ? t("deliveryReady", "Sẵn sàng") : t("deliveryPending", "Chưa sẵn sàng")] : null,
+      report.reason ? ["reason", report.reason] : null
+    ].filter(Boolean);
+    return `<section class="portal-canonical-result portal-music-report" data-music-report aria-live="polite"><div class="portal-card-header"><div><h4>${safeText(t("title", "Báo cáo xử lý nhạc"))}</h4><p>${safeText(t("note", "Chỉ hiển thị tín hiệu máy chủ; chưa tự tạo tệp."))}</p></div>${badge(report.status || "guarded")}</div><dl class="portal-summary-list">${rows.map(([key, value]) => `<div class="portal-summary-item"><dt class="portal-summary-key">${safeText(t(key, key))}</dt><dd class="portal-summary-value">${safeText(String(value))}</dd></div>`).join("")}</dl></section>`;
+  }
+
   function renderCanonicalSuggestions(value, route, field) {
     if (!Array.isArray(value) || !value.length) return "";
     const cards = value.slice(0, 3).map((raw, index) => {
@@ -31850,7 +31968,10 @@
       return `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Adapter chi tiết đang được bảo vệ</strong><p>${safeText(payload.reason || "Core Bridge đã nhận input nhưng chưa có helper canonical cho bước này.")}</p></div></div>`;
     }
     const content = payload.content || payload;
-    const heading = data.draft ? "Bản nháp canonical" : "Ước tính canonical";
+    const isMusic = String(flow && flow.feature || "").startsWith("music_");
+    const heading = isMusic
+      ? musicProductText(data.draft ? "suggestion.draftTitle" : "suggestion.quoteTitle", data.draft ? "Bản nháp âm nhạc" : "Ước tính âm nhạc")
+      : (data.draft ? "Bản nháp canonical" : "Ước tính canonical");
     const selectedFormat = payload.feature === "image_create" && flow && flow.input && typeof flow.input === "object" ? String(flow.input.format || "").trim() : "";
     const selectionRequired = data.estimate && (data.estimate.tier_required === true || data.estimate.scene_count_required === true);
     const selectionNotice = selectionRequired
@@ -31868,8 +31989,12 @@
       }, Object.create(null))
       : content;
     const suggestions = content && typeof content === "object" && !Array.isArray(content) ? content.suggestions : [];
-    const applyAction = canonicalDraftActions(preferred, route, targetField, "planning");
-    return `<section class="portal-canonical-result"><div class="portal-card-header"><div><h3 class="portal-card-title">${heading}</h3><p class="portal-card-subtitle">Nguồn: ${safeText(payload.source || "canonical_bot")} · Chưa gọi provider · Chưa trừ Xu.</p></div>${badge(flow.status || "draft")}</div>${selectionNotice}${preference}${renderCanonicalValue(genericContent, 0)}${renderCanonicalSuggestions(suggestions, route, targetField)}${applyAction}</section>`;
+    const applyAction = isMusic ? "" : canonicalDraftActions(preferred, route, targetField, "planning");
+    const musicNote = isMusic ? musicProductText("suggestion.flowNote", "Các phương án chỉ là gợi ý từ máy chủ; chưa tạo âm thanh hoặc trừ Xu.") : `Nguồn: ${safeText(payload.source || "canonical_bot")} · Chưa gọi provider · Chưa trừ Xu.`;
+    const contentMarkup = isMusic ? "" : renderCanonicalValue(genericContent, 0);
+    const suggestionsMarkup = isMusic ? renderMusicCanonicalSuggestions(suggestions, route, targetField) : renderCanonicalSuggestions(suggestions, route, targetField);
+    const reportMarkup = isMusic && flow.phase === "confirm" ? renderMusicCanonicalReport(flow) : "";
+    return `<section class="portal-canonical-result${isMusic ? " portal-music-canonical-result" : ""}"><div class="portal-card-header"><div><h3 class="portal-card-title">${safeText(heading)}</h3><p class="portal-card-subtitle">${safeText(musicNote)}</p></div>${badge(flow.status || "draft")}</div>${selectionNotice}${preference}${contentMarkup}${suggestionsMarkup}${reportMarkup}${applyAction}</section>`;
   }
 
   function safeFeatureTracking(flow) {
@@ -31900,7 +32025,7 @@
     const rawStatus = String(source.status || (flow && flow.status) || "").trim().toLowerCase();
     const status = FEATURE_TRACKING_JOB_STATES.has(rawStatus) ? rawStatus : "";
     const rawProgress = source.progress_percent ?? source.progress_percentage ?? source.progress;
-    const progressNumber = Number(rawProgress);
+    const progressNumber = typeof rawProgress === "number" ? rawProgress : NaN;
     const progress = Number.isFinite(progressNumber) && progressNumber >= 0 && progressNumber <= 100
       ? Math.round(progressNumber) : null;
     const reason = [source.status_reason, source.error_category]
@@ -32345,10 +32470,10 @@
     const outputTitle = videoTask ? safeText(uiText("videoUi.output.title", "")) : voiceTask ? safeText(voiceUiText("output.title", "")) : musicTask ? safeText(musicProductText("output.title", "Kết quả và trạng thái")) : "Output & trạng thái";
     const outputSubtitle = videoTask || voiceTask ? "" : musicTask ? safeText(musicProductText("output.subtitle", "Không tạo âm thanh, trình phát, tệp hoặc báo giá giả khi máy chủ chưa xác nhận.")) : "Không tạo text, media, transcript hoặc file giả để thay thế engine thật.";
     const outputSection = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${outputTitle}</h2>${outputSubtitle ? `<p class="portal-card-subtitle">${outputSubtitle}</p>` : ""}</div>${voiceTask ? "" : badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section>`;
-    return `<article class="portal-page${videoTask ? " portal-feature-workspace--video-task" : voiceTask ? " portal-feature-workspace--voice-task" : ""}">${renderHero(page, context)}${voiceWorkspaceNav}${voiceTask ? "" : `<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>`}
+    return `<article class="portal-page${videoTask ? " portal-feature-workspace--video-task" : voiceTask ? " portal-feature-workspace--voice-task" : musicTask ? " portal-feature-workspace--music-task" : ""}">${renderHero(page, context)}${voiceWorkspaceNav}${voiceTask || musicTask ? "" : `<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>`}
       ${interactiveWorkbench}${musicGuidance}${flowFirst ? outputSection : ""}
       <div class="portal-work-grid"><div>${visibleForm}${subtitleStudioCompanion}</div>${voiceTask || musicTask ? "" : `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside>`}</div>
-      ${voiceVault}${videoTask || voiceTask ? "" : renderFeatureBotHandoff(page, context, flow)}${flowFirst ? "" : outputSection}</article>`;
+      ${voiceVault}${videoTask || voiceTask || musicTask ? "" : renderFeatureBotHandoff(page, context, flow)}${flowFirst ? "" : outputSection}</article>`;
   }
 
   function renderVoiceVault(context) {
@@ -37595,6 +37720,31 @@
     }
   }
 
+  function synchronizeMusicQuoteFreshness(form) {
+    if (!form) return;
+    const route = form.getAttribute("data-portal-route");
+    if (!MUSIC_PRODUCT_ROUTES.includes(route)) return;
+    const context = getBootstrap();
+    const flow = context && context.featureFlows && context.featureFlows[route];
+    const state = musicQuoteState(resolvePage(route), flow, collectFormFields(form));
+    const card = form.closest(".portal-card");
+    if (!card) return;
+    card.querySelectorAll('[data-portal-action="feature-confirm"]').forEach((button) => {
+      button.hidden = !state.confirmAllowed;
+    });
+    const note = form.querySelector("[data-music-quote-freshness]");
+    if (!note) return;
+    const message = state.edited
+      ? musicProductText("flow.quoteChanged", "Lựa chọn đã thay đổi. Hãy xem báo giá mới trước khi xác nhận.")
+      : state.expired
+        ? musicProductText("flow.quoteExpired", "Báo giá đã hết hạn. Hãy xem báo giá mới trước khi xác nhận.")
+        : state.unknownPrice
+          ? musicProductText("flow.priceUnknown", "Chưa có giá bán rõ ràng từ máy chủ; chưa thể xác nhận.")
+          : "";
+    note.hidden = !message;
+    note.textContent = message;
+  }
+
   function clearVoiceQuoteExpiryTimer() {
     if (voiceQuoteExpiryTimer !== null && typeof window.clearTimeout === "function") {
       window.clearTimeout(voiceQuoteExpiryTimer);
@@ -37606,7 +37756,7 @@
   function scheduleVoiceQuoteExpiry(context, page) {
     clearVoiceQuoteExpiryTimer();
     const route = normalizePath(page && (page.routePath || page.path) || "");
-    if (!["/voice/tts", "/voice/saved", "/voice/stt", "/voice/clone"].includes(route)) return;
+    if (!["/voice/tts", "/voice/saved", "/voice/stt", "/voice/clone", "/music/create", "/music/song"].includes(route)) return;
     const flow = context && context.featureFlows && context.featureFlows[route];
     const expiry = flowQuoteExpiry(flow);
     if (expiry === null || expiry <= Date.now() || typeof window.setTimeout !== "function") return;
@@ -37626,7 +37776,8 @@
         return;
       }
       const form = document.querySelector(`[data-portal-form][data-portal-route="${route}"]`);
-      synchronizeVoiceQuoteFreshness(form);
+      if (["/music/create", "/music/song"].includes(route)) synchronizeMusicQuoteFreshness(form);
+      else synchronizeVoiceQuoteFreshness(form);
     }, delay);
   }
 
@@ -40031,6 +40182,8 @@
     document.addEventListener("click", (event) => {
       const voiceModeLink = event.target.closest("[data-voice-workspace-mode]");
       if (navigateVoiceWorkspace(event, voiceModeLink)) return;
+      const musicModeLink = event.target.closest("[data-music-workspace-mode]");
+      if (navigateMusicWorkspace(event, musicModeLink)) return;
       const subDubModeButton = event.target.closest("[data-subdub-mode-select]");
       if (updateSubDubModeSelection(subDubModeButton, window)) return;
       const navSummary = event.target.closest(".portal-nav-summary");
@@ -40365,6 +40518,7 @@
       syncPortalFieldControl(event.target);
       syncVoiceFormFeedback(event.target.closest && event.target.closest("[data-portal-form]"));
       synchronizeVoiceQuoteFreshness(event.target.closest && event.target.closest("[data-portal-form]"));
+      synchronizeMusicQuoteFreshness(event.target.closest && event.target.closest("[data-portal-form]"));
       synchronizeMusicProductForm(event.target.closest && event.target.closest("[data-music-product-form]"));
       if (event.target.id === "free-tools-text-input") {
         updateFreeToolsTextStats(event.target.value);
@@ -40429,6 +40583,7 @@
       syncPortalFieldControl(event.target);
       syncVoiceFormFeedback(event.target.closest && event.target.closest("[data-portal-form]"));
       synchronizeVoiceQuoteFreshness(event.target.closest && event.target.closest("[data-portal-form]"));
+      synchronizeMusicQuoteFreshness(event.target.closest && event.target.closest("[data-portal-form]"));
       synchronizeMusicProductForm(event.target.closest && event.target.closest("[data-music-product-form]"));
       if (event.target.matches && event.target.matches("[data-vietqr-input]")) {
         autoUpdateVietQrPreview(false);
@@ -40734,6 +40889,7 @@
     const focus = focusSnapshot();
     const context = getBootstrap();
     synchronizeVoiceWorkspaceDraftSession(context);
+    synchronizeMusicWorkspaceDraftSession(context);
     const page = resolvePage(context.path);
     applyInterfaceLocale(context);
     const sidebar = document.querySelector("[data-portal-sidebar]");
@@ -40874,6 +41030,7 @@
         synchronizeCreativeMotionGuideForm(form);
       });
       main.querySelectorAll("[data-music-product-form]").forEach((form) => synchronizeMusicProductForm(form));
+      main.querySelectorAll("[data-music-product-form]").forEach((form) => synchronizeMusicQuoteFreshness(form));
       main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
       main.querySelectorAll('[data-portal-action="quick-image-planner-plan"]').forEach((form) => synchronizeQuickImagePlannerForm(form));
       main.querySelectorAll('[data-portal-action="image-prompt-compose"]').forEach((form) => synchronizeImagePromptComposerStylePreset(form));

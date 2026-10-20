@@ -12538,13 +12538,21 @@
     return item && item.web_workspace_draft_supported === true && /^[a-z][a-z0-9_]{1,120}$/.test(String(item.key || "")) ? item : null;
   }
 
+  function workspaceDraftText(key, fallback) {
+    const i18n = window.TOANAASI18n;
+    const fullKey = `workspaceDrafts.save.${key}`;
+    return i18n && typeof i18n.t === "function" && typeof i18n.has === "function" && i18n.has(fullKey)
+      ? i18n.t(fullKey) : fallback;
+  }
+
   function workspaceDraftInput(fields) {
     const forbidden = new Set(["upload_ids", "upload_id", "source", "sample", "audio", "document", "documents", "file", "files", "attachment", "voice_profile_id", "web_quote_receipt", "quote_receipt", "idempotency_key", "consent"]);
     const result = {};
     Object.entries(fields && typeof fields === "object" ? fields : {}).forEach(([name, value]) => {
       if (!/^[a-z][a-z0-9_]{0,63}$/.test(name) || forbidden.has(name) || typeof value !== "string") return;
       const text = value.trim();
-      if (text && text.length <= 4000) result[name] = text;
+      if (Array.from(text).length > 4000) throw new Error(workspaceDraftText("tooLong", "Mỗi mục trong bản nháp chỉ được tối đa 4.000 ký tự. Nội dung của bạn vẫn được giữ nguyên; hãy rút gọn trước khi lưu."));
+      if (text) result[name] = text;
     });
     return result;
   }
@@ -36757,22 +36765,23 @@
       }
       if (action === "workspace-draft-save" || action === "workspace-draft-update") {
         const feature = workspaceDraftFeatureForRoute(route);
-        if (!feature) throw new Error("Workflow này chưa có mapping an toàn để lưu bản nháp Web.");
+        if (!feature) throw new Error(workspaceDraftText("unavailable", "Công cụ này chưa hỗ trợ lưu bản nháp."));
         const input = workspaceDraftInput(fields);
-        if (!Object.keys(input).length) throw new Error("Hãy nhập ít nhất một giá trị brief an toàn trước khi lưu bản nháp.");
+        if (!Object.keys(input).length) throw new Error(workspaceDraftText("empty", "Hãy nhập nội dung trước khi lưu bản nháp."));
         const updating = action === "workspace-draft-update";
         const draftId = String(detail.workspaceDraftId || "").trim();
-        if (updating && !validWorkspaceDraftId(draftId)) throw new Error("Mã bản nháp cần cập nhật không hợp lệ.");
-        const title = `Bản nháp · ${String(feature.title || feature.key || "Workflow").trim()}`.slice(0, 120);
+        if (updating && !validWorkspaceDraftId(draftId)) throw new Error(workspaceDraftText("invalidId", "Không tìm thấy bản nháp cần cập nhật. Hãy mở lại bản nháp rồi thử lại."));
+        const heading = document.querySelector("main h1");
+        const title = `${workspaceDraftText("title", "Bản nháp")} · ${String(heading && heading.textContent || workspaceDraftText("featureFallback", "Nội dung")).trim()}`.slice(0, 120);
         const scope = updating ? `workspace-draft:${draftId}:update` : `workspace-draft:${feature.key}:${route}:create`;
         const submission = acquireSubmission(scope, JSON.stringify(input));
         if (!submission) {
-          toast(updating ? "Bản nháp đang được cập nhật. Vui lòng chờ phản hồi từ máy chủ." : "Bản nháp đang được lưu. Vui lòng chờ phản hồi từ máy chủ.", "error");
+          toast(updating ? workspaceDraftText("updating", "Đang cập nhật bản nháp. Vui lòng chờ.") : workspaceDraftText("saving", "Đang lưu bản nháp. Vui lòng chờ."), "error");
           return;
         }
         setActionBusy(action, route, true);
         try {
-          const result = await api(updating ? `/workspace/drafts/${encodeURIComponent(draftId)}` : "/workspace/drafts", {
+          await api(updating ? `/workspace/drafts/${encodeURIComponent(draftId)}` : "/workspace/drafts", {
             method: updating ? "PATCH" : "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updating
@@ -36780,7 +36789,11 @@
               : { feature_key: feature.key, title, input, idempotency_key: submission.key })
           });
           await refreshWorkspaceDraftLibraryAfterMutation();
-          toast(result.message || (updating ? "Đã cập nhật bản nháp Web." : "Đã lưu bản nháp Web."));
+          toast(updating ? workspaceDraftText("updated", "Đã cập nhật bản nháp. Chưa bắt đầu xử lý.") : workspaceDraftText("saved", "Đã lưu bản nháp. Chưa bắt đầu xử lý."));
+        } catch (error) {
+          throw new Error(error && error.status === 413
+            ? workspaceDraftText("tooLarge", "Bản nháp vượt quá dung lượng cho phép. Nội dung vẫn được giữ nguyên; hãy rút gọn trước khi lưu.")
+            : workspaceDraftText("failed", "Chưa lưu được bản nháp. Nội dung vẫn được giữ nguyên; hãy kiểm tra lại và thử lại."));
         } finally {
           releaseSubmission(submission);
           setActionBusy(action, route, false);

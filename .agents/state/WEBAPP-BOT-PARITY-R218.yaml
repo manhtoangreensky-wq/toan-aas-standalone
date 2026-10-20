@@ -1,6 +1,6 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: VOICE_QUOTE_IDLE_UI_VERIFIED_DELIVERY_PENDING
+status: MOTION_PRESENTATION_UI_VERIFIED_ACCEPTED
 date: 2026-10-20
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
@@ -9,6 +9,11 @@ pull_request: 654
 head_sha: 8d53dabf48f422fd25dd893ce730b2cce49353f1
 delivery_head_sha: 8d53dabf48f422fd25dd893ce730b2cce49353f1
 delivery_status: BASELINE_CI_GREEN_IDLE_LOCAL_QA_GREEN_PUSH_PENDING
+checkpoint_report: reports/audit/R218-CHECKPOINT-20261021.md
+checkpoint_date: 2026-10-21
+checkpoint_tests: "Full Node813/813; Python workspace-draft17 passed/78 deselected; JS syntax2 PASS; diff-check PASS; QA server7628 stopped."
+prepush_report: reports/prepush/R218-20261021-PREPUSH.md
+prepush_gate: PUSH_GATE_READY_PENDING_OWNER_PUSH_AUTHORIZATION
 head_sha_semantics: "Last observed committed baseline before Voice idle expiry. Read the latest PR head and delivery comment for the current delivered checkpoint; this file does not predict its own future commit SHA."
 delivery_head_semantics: "Baseline 8d53dab is pushed and CI-green in run 39406730261. The idle expiry delta has local behavior/browser evidence; fresh CI is recorded on PR #654 after push."
 branch_head_sha: 8d53dabf48f422fd25dd893ce730b2cce49353f1
@@ -54,6 +59,21 @@ artifacts:
   tester_cases: KIEM-THU/DANH-SACH-CASE.md
   tester_guide: KIEM-THU/HUONG-DAN-TESTER.md
 current_wip:
+  current_owner_mandate: "Continue all plan/checklist until the goal is satisfied; do not stop after a checkpoint. User mandates only Gemini3.8Flash for future Antigravity calls."
+  builder_runtime_observation: "Flash R1 host3m no code/report; Pro R2 unavailable before Owner prohibited Pro; Flash READY probe30s returned empty response/0turn/0tokens. Do not count CLI SUCCESS as a Builder result or repeat long unproductive calls. No settings/auth/permission changes."
+  voice_report_progress_truth:
+    state: "UI_VERIFIED_WAVE_DELIVERY_PENDING"
+    spec: "docs/superpowers/specs/2026-10-20-r218-voice-report-progress-truth.md"
+    evidence: "reports/audit/R218-VOICE-REPORT-PROGRESS-QA-20261020.json"
+    tests: "RED0/5 -> GREEN5/5; focused75/75; browser18/18 x9 values=162 states; error/overflow/write/external0"
+    source_scope: "One line in safeVoiceReport; backend/integration/CSS/quote/timer unchanged."
+  active_qa_server:
+    environment: "Temporary isolated database/assets via existing CI _start_server; no Core Bridge/PayOS/provider"
+    origin: "http://127.0.0.1:9423"
+    exec_session: 21213
+    db: "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/temp/r218-product-ui-o4pofz02/ui-qa.db"
+    runtime: "Bundled Python plus PYTHONPATH=C:/Users/toann/Documents/Codex/_wa35-r74-qa-python-20261012/site-packages"
+    lifetime: "Task-owned stdin waiting server; send newline to session21213 for graceful shutdown/temporary cleanup."
   admin_theme_core:
     state: "CORE_UI_BROWSER_VERIFIED_MODULE_QA_OPEN"
     base_sha: 097e808ed3f19063a14283fcb02f79c85cb26fae
@@ -375,4 +395,4 @@ provider_calls: 0
 wallet_mutations: 0
 production_data_mutations: 0
 live_pass: NOT_TESTED
-next_action: "Commit Voice idle-expiry UI and ledger, refresh provenance from the clean tracked checkout, push PR #654 and read fresh CI. Record delivery on the PR without a state-only commit loop. Next inspect remaining Voice result/progress/player/report/retry presentation using actual canonical DTO; Vault management/handoff/capability DTO and STT integration allowlist remain T0. Continue Music after the available Voice presentation work. Video and motion remain later."
+next_action: "Music, SubDub, Image, utility/account and Video presentation gates ACCEPTED with evidence; Admin source/core presentation regressions pass80/80 and prior core browser artifacts remain presentation-only. Motion presentation ACCEPTED: static/lifecycle29/29, browser12 cases welcome/login/dashboard normal/reduced ×390/1440 with overflow/external/write/page-errors0. Trace CLS/LCP/INP is NOT_RUN (no authorized trace); runtime uploads/OAuth/notes/publish/tickets/approvals/render/provider/live remain guarded/open. Checkpoint report reports/audit/R218-CHECKPOINT-20261021.md records full Node813/813, Python17/17, syntax/diff-check and QA server stopped. Next: preserve local wave for authorized GitHub push/Tester delivery; do not mark goal complete because runtime/trace/T0 remain open. Exactly one CLI auth window PID19212 was opened under Owner approval; latest Flash READY probe returned empty/0turn/0tokens, so no more auth windows/retries and no Pro."

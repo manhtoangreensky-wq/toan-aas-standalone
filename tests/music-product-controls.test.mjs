@@ -64,7 +64,11 @@ for (const locale of ["vi", "en", "zh"]) {
     assert.match(html, /data-music-product-mode="song"/);
     assert.equal((html.match(/data-music-product-step=/g) || []).length, 4);
     assert.equal((html.match(/data-music-tier-card=/g) || []).length, 3);
-    assert.equal((html.match(/data-music-suggestion-card=/g) || []).length, 3);
+    assert.equal((html.match(/data-music-suggestion-card=/g) || []).length, 0, 'do not manufacture three empty suggestions before data exists');
+    assert.match(html, /<details[^>]*data-music-flow-help/);
+    assert.doesNotMatch(html, /<details[^>]*data-music-flow-help[^>]*\sopen(?:\s|>)/);
+    for (const href of ['/music/create','/music/song','/music/library','/music/sfx']) assert.ok(html.includes(`href="${href}"`));
+    assert.doesNotMatch(text, /brief|capability|canonical/i);
     assert.doesNotMatch(html, /\{number\}|<audio\b|toanaas_lofi|Suno AI Music Generator|onclick="alert/i);
     assert.doesNotMatch(text, /130 Xu|150 Xu|200 Xu|250 Xu|300 Xu/);
     if (locale === "en") assert.doesNotMatch(text, /[À-ỹĐđ]/);
@@ -84,6 +88,25 @@ test("Music product fields keep contracts, remove prices and isolate song contro
   assert.equal(song.find((field) => field.name === "vocal_mode").options.length, 4);
   assert.equal(song.find((field) => field.name === "song_length_mode").options.length, 3);
 });
+
+for (const locale of ['vi','en','zh']) {
+  test(`Music intake removes repeated product intro and technical customer panels (${locale})`, () => {
+    const context=createHarness(locale);
+    Object.assign(context,{
+      renderHero:()=>'<h1>QA Music</h1>',renderFormCard:()=>'<section data-qa-main-form>QA Form</section>',
+      renderSubtitleStudioCompanionLink:()=>'',renderInteractiveFeatureWorkbench:()=>'',
+      renderEmpty:()=>'<p>QA Empty</p>',stateFor:()=> 'guarded',badge:()=>'',
+      renderStatusCard:()=>'<div>QA_TECHNICAL_STATUS</div>',renderSummary:()=>'<div>QA_TECHNICAL_SUMMARY</div>',
+      renderFeatureBotHandoff:()=>'<div>QA_TECHNICAL_HANDOFF</div>'
+    });
+    vm.runInContext(functionSource('renderWorkspace'),context);
+    const html=context.renderWorkspace({path:'/music/song'},{});
+    assert.doesNotMatch(html,/QA_TECHNICAL_/);
+    assert.match(html,/data-qa-main-form/);
+    assert.equal((html.match(/<h1\b/g)||[]).length,1);
+    assert.ok(!html.includes(context.musicProductText('song.title','')),'the product title must not be repeated inside the guidance');
+  });
+}
 
 test("Music product locale keys are balanced", () => {
   const context = {};

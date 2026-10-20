@@ -1169,6 +1169,28 @@ Bằng chứng local: Voice input/inventory/flow/expiry `67/67`, full Node `594/
 đủ `3/3` locale `vi/en/zh`. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
 `PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`, `LIVE_PASS=NOT_TESTED`.
 
+## R218 checkpoint 2026-10-21 — trạng thái vận hành WebApp hiện tại
+
+Đây là số đo của checkout QA hiện tại, không phải số đo production và không phải bằng chứng đã triển khai live.
+
+| Hạng mục | Số đo / trạng thái | Bằng chứng |
+|---|---:|---|
+| JavaScript toàn repo | 813 đạt / 0 lỗi | `node --test tests/*.test.mjs` |
+| Hợp đồng bản nháp an toàn | 17 đạt / 78 bỏ qua theo bộ lọc | `pytest ... -k workspace_draft` |
+| Syntax Portal | 2/2 tệp đạt | `node --check static/portal/portal.js`, `portal-i18n.js` |
+| Music intake | 18 cấu hình, 36 route states, 3 lần ghi QA | `R218-NATIVE-DRAFT-SAFE-FIELDS-QA-20261020.json` |
+| SubDub presentation | 48 trường hợp, 4 mode, 7 voice lane | `R218-SUBDUB-PRESENTATION-QA-20261020.json` |
+| Image presentation | 72 trường hợp, 4 lane | `R218-IMAGE-PRESENTATION-QA-20261020.json` |
+| Utility/Account/AutoPost/Support/Workboard/Memory | 120 trường hợp, 10 route | `R218-UTILITY-PRESENTATION-QA-20261020.json` |
+| Video presentation | 48 trường hợp, 4 lane cốt lõi | `R218-VIDEO-PRESENTATION-QA-20261020.json` |
+| Motion lifecycle | 29 static/lifecycle assertion; 12 browser case | `R218-MOTION-QA-20261020.json` |
+| Provider / wallet / production mutation | 0 / 0 / 0 | các artifact checkpoint R218 |
+| QA server tạm | Đã dừng, port `7628` không còn listener | terminal probe 2026-10-21 |
+
+Runtime engine thật, upload byte, ASR/dịch/lồng tiếng, Smart Multi execution, quote/charge/job/artifact/delivery,
+OAuth/publish, Admin RBAC dữ liệu động và approval/credit vẫn là cổng chưa nghiệm thu. Trace CLS/LCP/INP là
+`NOT_RUN`; không dùng browser smoke thay trace. Máy chủ QA dùng DB/tệp tạm và Core Bridge/PayOS/provider bị vô hiệu hóa.
+
 ## R218 — Admin data mobile cards — 19/10/2026
 
 Các bảng dữ liệu Admin đã được cấp vẫn giữ nguyên bảng HTML có tiêu đề cột và bộ lọc/inspector.

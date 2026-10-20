@@ -21750,6 +21750,22 @@ html:not([data-portal-theme="dark"]) .portal-feature-workspace--video-task form 
 html[data-portal-theme="dark"] .portal-feature-workspace--video-task form .portal-button--primary { background: var(--portal-dark-action) !important; background-image: none !important; border-color: var(--portal-dark-action) !important; color: var(--portal-dark-on-action) !important; }
 html[data-portal-theme="dark"] .portal-feature-workspace--video-task form .portal-button--primary:hover:not(:disabled) { background: var(--portal-dark-action-hover) !important; background-image: none !important; border-color: var(--portal-dark-action-hover) !important; color: var(--portal-dark-on-action) !important; filter: none !important; }
 
+/* Music intake: a compact mode selector and optional detailed guide. */
+.portal-feature-workspace--music-task .portal-work-grid,
+.portal-feature-workspace--music-task .portal-fields { grid-template-columns: minmax(0, 1fr); }
+.portal-music-product-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.portal-music-product-mode { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 14px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius); background: var(--portal-surface-soft); color: var(--portal-ink); font-size: 14px; line-height: 1.4; font-weight: 650; text-align: center; text-decoration: none; }
+.portal-music-product-mode[aria-current="page"] { border-color: var(--portal-brand); box-shadow: inset 0 0 0 1px var(--portal-brand); }
+.portal-music-product-mode:focus-visible,
+.portal-music-product-help > summary:focus-visible { outline: 2px solid var(--portal-focus); outline-offset: 3px; }
+.portal-music-product-help { min-width: 0; margin-top: 12px; border-top: 1px solid var(--portal-border); }
+.portal-music-product-help > summary { min-height: 44px; padding: 12px 0; cursor: pointer; color: var(--portal-ink); font-weight: 650; }
+.portal-music-product-help .portal-music-product-steps { margin-block: 12px 20px; }
+@media (max-width: 640px) {
+  .portal-music-product-nav { grid-template-columns: minmax(0, 1fr); }
+  .portal-music-product-mode { justify-content: flex-start; text-align: start; }
+}
+
 /* Voice UI closeout: speech task forms, hub and private voice inventory. */
 .portal-voice-hub .portal-module-grid,
 .portal-feature-workspace--voice-task :is(.portal-work-grid, .portal-fields) { grid-template-columns: minmax(0, 1fr); }

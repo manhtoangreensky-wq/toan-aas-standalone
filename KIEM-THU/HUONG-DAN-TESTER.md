@@ -254,3 +254,15 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
      charge, retry, delivery hoặc provider; case này chỉ đọc và xác minh
      projection. Contract local `1 passed/56 deselected` không thay cho CI,
      deployed, record thật, RBAC thật hay LIVE.
+
+## R218 checkpoint tester handoff — 21/10/2026
+
+1. Nguồn duy nhất của trạng thái đợt này là `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md`;
+   các artifact `reports/audit/R218-*-QA-20261020.json` trỏ đúng mức bằng chứng.
+2. Đã có browser evidence cho Music `18` cấu hình/36 route states, SubDub `48`, Image `72`,
+   tiện ích `120`, Video `48`, Motion `12`; đây là QA cô lập, không chứng minh provider, wallet,
+   production hay live.
+3. Trước khi báo PASS runtime, tester phải ghi riêng runtime SHA, service health, route/role,
+   output cuối, artifact/download readiness và `PROVIDER_CALLS/WALLET_MUTATIONS`.
+4. Lỗi ngoài phạm vi presentation phải thêm vào đúng nhóm ledger; không đổi tên case để né lịch sử.
+5. Trace CLS/LCP/INP hiện `NOT_RUN`; không được thay bằng screenshot hoặc HTTP 200.

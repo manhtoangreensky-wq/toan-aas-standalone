@@ -22,6 +22,12 @@ for (const locale of ['vi', 'en', 'zh']) {
     classifyPageBoundary: () => 'runtime_generator', ALLOWED_STATES: new Set(['guarded'])
   };
   vm.createContext(ctx);
+  const languageStart = source.indexOf('  const LANGUAGE_OPTIONS =');
+  const languageEnd = source.indexOf('\n  ]);',languageStart)+6;
+  vm.runInContext(source.slice(languageStart,languageEnd)+'\nthis.LANGUAGE_OPTIONS = LANGUAGE_OPTIONS;',ctx);
+  const sttFieldsStart = source.indexOf('    voiceStt: [');
+  const sttFieldsEnd = source.indexOf('    music: [',sttFieldsStart);
+  vm.runInContext('this.actualSttFields = ({'+source.slice(sttFieldsStart,sttFieldsEnd)+'}).voiceStt;',ctx);
   vm.runInContext(catalog, ctx);
   ctx.uiText = (key, fallback, params) => ctx.TOANAASI18n.has(key) ? ctx.TOANAASI18n.t(key, params, locale) : fallback;
   ctx.voiceUiText = (key, fallback, params) => ctx.uiText(`voiceUi.${key}`, fallback, params);
@@ -82,5 +88,30 @@ for (const locale of ['vi', 'en', 'zh']) {
       ctx.flowHasFreshEstimate = () => false;
       ctx.featureConfirmExecutionReady = () => false;
     }
+  });
+  test(`STT actual schema defaults to one automatic language choice (${locale})`, () => {
+    const html=ctx.renderFormCard({...page,fields:ctx.actualSttFields},{bridge:{featureExecutionFeatures:['voice_stt']}});
+    const select=html.match(/<select[^>]*name="source_language"[^>]*>([\s\S]*?)<\/select>/)[1];
+    const label=ctx.voiceUiText('option.source_language.auto','');
+    assert.equal(select.split(`>${label}</option>`).length-1,1);
+    assert.match(select,/<option value="auto" selected>/);
+  });
+  test(`Signed STT allows local scalar setup while upload and processing remain unavailable (${locale})`, () => {
+    const original=ctx.canAct;ctx.canAct=()=>false;
+    try {
+      const html=ctx.renderFormCard({...page,fields:ctx.actualSttFields},{session:{authenticated:true,csrfReady:true},bridge:{featureExecutionFeatures:[]}});
+      assert.doesNotMatch(html,/name="source_language"[^>]* disabled/);
+      assert.doesNotMatch(html,/name="output_format"[^>]* disabled/);
+      assert.match(html,/name="source"[^>]* disabled/);
+      assert.match(html,/type="submit"[^>]* disabled/);
+      assert.doesNotMatch(html,/data-portal-action="feature-confirm"|data-portal-action="workspace-draft-save"/);
+      const unsigned=ctx.renderFormCard({...page,fields:ctx.actualSttFields},{session:{authenticated:false},bridge:{featureExecutionFeatures:[]}});
+      assert.match(unsigned,/name="source_language"[^>]* disabled/);
+    } finally {ctx.canAct=original;}
+  });
+  test(`Clone intake has its own heading instead of a speech-reading form (${locale})`, () => {
+    const html=ctx.renderFormCard({...page,path:'/voice/clone'},{});
+    assert.ok(html.includes({vi:'Thêm giọng mới',en:'Add a new voice',zh:'添加新声音'}[locale]));
+    assert.doesNotMatch(html,/Chuẩn bị giọng đọc|Prepare speech|准备语音/);
   });
 }

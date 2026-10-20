@@ -325,3 +325,16 @@ case này chưa đóng record/RBAC/bridge thật hoặc LIVE.
 Bằng chứng source hiện tại: `tests/support-hub-product-controls.test.mjs` `4/4`, full Node
 `566/566`, syntax hai file Portal và `git diff --check` đạt. Browser/AX/CI/live chưa đóng; không
 dùng PASS source để thay cho các mức đó.
+
+## R218 presentation checkpoint cases — 21/10/2026
+
+| Nhóm | Case/ma trận | Kết quả QA hiện tại | Giới hạn bắt buộc |
+|---|---|---|---|
+| Music | 18 cấu hình, 36 route states; draft 3 lần ghi/readback | Đạt; locale finding `0`, external/write/page-errors `0` | Không generation/player/delivery |
+| SubDub | VI/EN/ZH × 4 mode × sáng/tối × 390/1440 = `48` | Đạt; 4 panel, 7 lane, report empty, confirm `0` | Không upload/ASR/dubbing/Smart Multi thật |
+| Image | 4 lane × VI/EN/ZH × sáng/tối × 390/768/1440 = `72` | Đạt; media/download/fake claim `0` | Không reference/AI/manual runtime |
+| Utility/Account | 10 route × VI/EN/ZH × sáng/tối × 390/1440 = `120` | Đạt; avatar remote request `0` | Không OAuth/publish/ticket/approval |
+| Video | 4 lane × VI/EN/ZH × sáng/tối × 390/1440 = `48` | Đạt; audio/video/download/fake `0` | Không render/editor/delivery |
+| Motion | 3 route × normal/reduced × 390/1440 = `12` | Đạt; overflow/external/write/page-errors `0` | CLS/LCP/INP trace `NOT_RUN` |
+
+Các case trên chỉ được tick khi có artifact tương ứng; không dùng số liệu này để thay cho runtime/live evidence.

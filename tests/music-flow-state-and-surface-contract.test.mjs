@@ -83,14 +83,13 @@ test("Song vs Instrumental mode: song-only controls isolated from background mus
   }
 });
 
-test("Prompt and Suggestions: prompt input is required and suggestions board is guarded", () => {
+test("Prompt and Suggestions: prompt is required without empty suggestion cards before data", () => {
   assert.match(portal, /name: "brief"[\s\S]*?required: true/);
   assert.match(portal, /name: "brief"[\s\S]*?minLength: 1/);
   const context = createHarness("vi");
   const html = context.renderMusicProductGuidance({ path: "/music/song", routePath: "/music/song" }, {});
-  assert.match(html, /data-music-suggestion-board="guarded"/);
-  assert.equal((html.match(/data-music-suggestion-card=/g) || []).length, 3);
-  assert.match(html, /status\.pending|Chưa có dữ liệu/);
+  assert.equal((html.match(/data-music-suggestion-card=/g) || []).length, 0);
+  assert.match(html, /data-music-flow-help/);
 });
 
 test("Editor capability: interactive workbench is withheld for music routes", () => {
@@ -180,7 +179,7 @@ test("Responsive and Accessibility: steps, tiers and suggestion cards keep mobil
   assert.match(html, /aria-labelledby="music-product-flow-title"/);
   assert.match(html, /aria-label="Trình tự tạo âm nhạc"/);
   assert.match(html, /aria-label="Các gói chất lượng"/);
-  assert.match(html, /aria-labelledby="music-product-suggestion-title"/);
+  assert.doesNotMatch(html, /data-music-suggestion-card=/, 'empty placeholders are not customer suggestions');
 });
 
 test("Locale: VI, EN and ZH catalogues maintain balanced musicProduct keys without raw fallbacks", () => {

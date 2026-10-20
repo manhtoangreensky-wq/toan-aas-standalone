@@ -523,6 +523,7 @@ WORKSPACE_DRAFT_ALLOWED_FIELDS = frozenset({
     "tier", "scene_count", "duration_seconds", "display_name", "mode",
     "song_length_mode", "item_count", "output_format", "target_language",
     "operation", "page_count", "page_range", "speed",
+    "lyrics", "vocal_mode", "default_voice_gender", "volume_percent", "source_language",
 })
 WORKSPACE_DRAFT_FORBIDDEN_FIELDS = frozenset({
     "upload_ids", "upload_id", "source", "sample", "audio", "document",

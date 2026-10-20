@@ -1,0 +1,12 @@
+{
+  "spec_id": "MU-B",
+  "date": "2026-10-20",
+  "scope": "Music canonical suggestions presentation only",
+  "base_sha": "2c216825b2b1fdfcdc4f97853961117299e39547",
+  "targeted_tests": {"command": "node --test tests/music-canonical-suggestions-presentation.test.mjs tests/music-product-controls.test.mjs tests/music-flow-state-and-surface-contract.test.mjs tests/music-workspace-draft-navigation.test.mjs", "passed": 31, "failed": 0},
+  "full_node_regression": {"command": "node --test tests/*.test.mjs", "passed": 805, "failed": 0},
+  "syntax": {"portal_js": "PASS", "portal_i18n_js": "PASS", "diff_check": "PASS"},
+  "browser_fixture": {"environment": "isolated QA app 127.0.0.1:7628", "locale": "vi", "cards": 3, "audio": 0, "confirm": 0, "overflow": 0, "external_requests": 0, "page_errors": 0, "result": "PASS"},
+  "data_policy": {"valid_items_only": true, "max_cards": 3, "pads_missing_items": false, "xss_escaped": true, "provider_calls": 0, "wallet_mutations": 0, "deploy": "NO", "live_pass": "NOT_TESTED"},
+  "status": "ACCEPTED"
+}

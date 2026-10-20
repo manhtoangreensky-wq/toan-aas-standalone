@@ -798,3 +798,19 @@ transcript, giao tệp hay LIVE đã hoạt động.
 
 Phần tài liệu gốc không có mô tả breakpoint hay thẻ điện thoại; đây là phần hoàn thiện UI/UX
 WebApp, không phải mở authority dữ liệu hoặc thao tác tài chính.
+
+## Đối chiếu R218 checkpoint 2026-10-21
+
+| Nhóm chức năng gốc | Hiện trạng có bằng chứng | Chưa được suy diễn |
+|---|---|---|
+| Voice | Workspace TTS/STT/Voice Library/Clone, report tiến độ và locale đã có source/browser QA | Voice Vault management, preview signed, upload, TTS/STT runtime và delivery |
+| Music/SFX | Nhạc nền/bài hát, 3 tier, gợi ý, quote freshness, report bounded, Library/SFX read-only | Generation, editor, player, download, save/reuse và hai bản giao thật |
+| SubDub | 4 mode một màn hình, source có/chưa có phụ đề, catalog ngôn ngữ, 7 voice lane, 7 vị trí phụ đề, âm lượng | Upload/ASR/dịch/dubbing/Smart Multi/quote/job/result |
+| Image | Create/prompt/AI edit/manual/upscale/cleanup/transform contracts và guarded UI | Reference upload, AI/manual execution, before-after, artifact/delivery |
+| Video | Hub/Studio/Finishing/Frame Sequence vertical flow và localized guarded shell | 32 profile, render, timeline editor, AI/manual output, delivery |
+| Utility/AutoPost/Support/Account | 10 route QA matrix, locale/responsive, avatar inline SVG, guarded states | OAuth/publish/ticket/approval/notes/role runtime |
+| Admin | Locale/theme/data-card/shortcut/projection focused tests 80/80; core browser artifacts retained | Dynamic RBAC, records, approval/credit, Admin/app shared authority |
+| Motion | Hydration entry, compositor transforms, reduced-motion, route cleanup | CLS/LCP/INP trace và production frame-time |
+
+Nguồn đo: `reports/audit/R218-CHECKPOINT-20261021.md` và các artifact `R218-*-QA-20261020.json`.
+Tất cả số liệu là checkout/QA cô lập; chưa phải trạng thái đã merge/deploy/live.

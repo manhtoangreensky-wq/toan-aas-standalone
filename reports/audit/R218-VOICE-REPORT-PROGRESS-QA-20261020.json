@@ -1,0 +1,13 @@
+{
+  "date":"2026-10-20",
+  "spec_id":"VOICE-REPORT-PROGRESS-001",
+  "base_sha":"2c216825b2b1fdfcdc4f97853961117299e39547",
+  "source_change":"One progress normalization line in safeVoiceReport; require typeof number before finite/range/round checks",
+  "red":{"passed":0,"failed":5},
+  "green":{"dedicated_passed":5,"focused_passed":75,"failed":0},
+  "browser":{"environment":"Edge headless, localhost GET-only synthetic fixture on repository shell/renderer/integration/styles","locales":["vi","en","zh"],"themes":["light","dark"],"widths":[390,768,1440],"configurations":18,"report_states":162,"unknown_hidden":true,"actual_zero_preserved":true,"decimal_rounding_preserved":true,"console_errors":0,"overflow":0,"writes":0,"external_requests":0,"raw":"../qa/r218-voice-inventory/voice-report-progress-browser.json"},
+  "handoff":{"flash_r1":"3m timeout, no source/report","pro_r2":"CLI model unavailable, exit1, no source/report","implementation":"Primary takeover, same immutable RED test and one-line allowlist","owner_override":"Only Gemini3.8Flash for future Builder calls","flash_runtime_probe":"READY prompt30s returned empty response/0 turns/0 tokens; not operational success"},
+  "provider_calls":0,"wallet_mutations":0,"production_data_mutations":0,
+  "delivery":"Pending wave checkpoint; not deployed or LIVE",
+  "remaining":"Real canonical voice generation/delivery/Vault/STT contracts stay in T0; continue Voice workspace UI then Music"
+}
