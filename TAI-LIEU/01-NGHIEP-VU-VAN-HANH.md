@@ -21,6 +21,21 @@ hoặc đăng xuất xóa slot SubDub; file/provider ID không vào draft. Hando
 Voice, bước review đầy đủ, number/mute và semantics vẫn là các spec tiếp theo.
 Không có upload/ASR/dịch/lồng tiếng/quote/job/output thực trong bằng chứng này.
 
+## SubDub SD-D2 — xem lại thiết lập và cân âm lượng, 21/10/2026
+
+Bước 3 của SubDub hiện hiển thị thiết lập dạng hàng dọc theo mode đang chọn:
+nguồn phụ đề do người dùng khai báo, target/ngôn ngữ ISO, lane giọng, âm lượng
+gốc/lồng tiếng, vị trí và định dạng phụ đề. Tệp nguồn, ngôn ngữ đã nhận diện,
+speaker-count, giá và chi phí không có dữ liệu server thì giữ `Chưa xác minh` hoặc
+`—`; không tự tính và không mở nút xử lý.
+
+Âm lượng có thanh kéo và ô số: gốc `0–100%`, lồng tiếng `0–200%`, nhập số nguyên;
+giá trị rỗng, âm, phân số, ký tự sai hoặc ngoài giới hạn giữ mức hợp lệ gần nhất
+và báo lỗi cạnh ô. Khi lồng tiếng `0%`, cảnh báo và ô xác nhận chỉ là thiết lập
+cục bộ; rời `0%` xóa xác nhận, quay lại phải xác nhận lại. 24/24 cấu hình QA đạt,
+page/console/UIwrite/external/overflow đều `0`. Đây chưa phải upload, ASR, dịch,
+lồng tiếng, Smart Multi, quote, job, output, ví hoặc LIVE.
+
 ## Music/SFX — trạng thái đọc và phản hồi thao tác, 21/10/2026
 
 Thư viện hiệu ứng âm thanh không kế thừa bộ lọc/trang của thư viện nhạc.

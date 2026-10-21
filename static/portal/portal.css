@@ -10329,10 +10329,18 @@ html[data-portal-theme="dark"] .portal-manual-topup-form option {
 
 .portal-subdub-volume-control__value {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 48px;
+  grid-template-columns: minmax(0, 1fr) minmax(80px, 96px) 44px;
   align-items: center;
   gap: 12px;
   min-height: 44px;
+}
+
+.portal-subdub-volume-controls .portal-subdub-volume-number {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
 }
 
 .portal-subdub-volume-control input[type="range"] {

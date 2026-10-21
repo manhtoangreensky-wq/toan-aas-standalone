@@ -327,8 +327,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] Auto 2, Auto Multi 3–8 và Smart Multi đã tách thành ba lane canonical riêng,
   mapping callback rõ; server capability/execution vẫn mở.
 - [ ] Speaker map/preview/override chỉ khi có dữ liệu; ambiguous/review/fallback rõ.
-- [~] Original audio toggle 0–100, dub 0–200 và number+slider; static dub max 200 đã có,
-  number control/backend/browser evidence vẫn mở.
+- [~] Original audio toggle 0–100, dub 0–200 và number+slider; đã có ô số đồng bộ
+  hai chiều, giữ 0/100/200, lỗi inline và xác nhận mute cục bộ; backend/engine vẫn mở.
+  SD-D2 browser 24/24 cấu hình, UIwrite/external/page/console/overflow `0`; targeted
+  `44/44`. Evidence `subdub-review-volume-green-20261021.json`.
 - [~] Subtitle position đã có đủ 7 slot cho các mode có phụ đề; format/mono-bilingual/original-translated
   source/review runtime vẫn mở.
 - [ ] Quote/progress/result/report/download/recovery không giả.
@@ -353,6 +355,11 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   48 cases VI/EN/ZH × 4 mode × sáng/tối × 390/1440, tabs4/panels4/lanes7,
   report rỗng trung thực, overflow/audio/confirm/external/writes/page-errors0.
   Evidence `reports/audit/R218-SUBDUB-PRESENTATION-QA-20261020.json`.
+- [x] SD-D2 review thiết lập và cân âm lượng: bước 3 hiển thị hàng dọc theo mode,
+  nguồn tệp/ngôn ngữ nhận diện và giá chưa xác minh giữ `Chưa xác minh`/`—`;
+  number+range và mute ack chỉ là bản nháp local, không mở CTA. Browser 24/24
+  VI/EN/ZH × sáng/tối ×375/390/768/1440; targeted 44/44; evidence
+  `subdub-review-volume-green-20261021.json`. Chưa đóng API/engine/provider/LIVE.
 - [!] Runtime upload/ASR/dịch/lồng tiếng/Smart Multi/quote/job/result/delivery
   vẫn là capability server mở; evidence này chỉ khóa presentation guarded,
   không được báo là engine đã chạy.

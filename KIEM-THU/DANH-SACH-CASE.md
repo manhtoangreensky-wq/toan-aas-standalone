@@ -13,6 +13,17 @@ Evidence `reports/audit/R218-SUBDUB-VOICE-CONTINUATION-QA-20261021.json`.
 Reload toàn bộ/tab mới không được hứa giữ bản nháp tab-memory; consent/profile
 application, preview và giao tệp vẫn chưa được xác minh bởi continuation.
 
+## SD-D2 — tóm tắt thiết lập và cân âm lượng, 21/10/2026
+
+| ID | Thao tác QA | Điều kiện đạt |
+|---|---|---|
+| SDD2-01 | Bốn mode × VI/EN/ZH; đổi target/lane/format/vị trí/hiển thị | Bước 3 chỉ hiện hàng đúng mode, dữ liệu được escape, file/ngôn ngữ nhận diện/giá chưa xác minh không bị dựng thành kết quả |
+| SDD2-02 | Nhập ô số và kéo thanh gốc0–100, lồng tiếng0–200; nhập rỗng, âm, phân số, quá giới hạn, ký tự | Hai control và summary đồng bộ, giữ giá trị hợp lệ gần nhất, báo lỗi ngay cạnh ô, giữ focus và không remount form |
+| SDD2-03 | Lồng tiếng0 → xác nhận mute → rời0 → quay lại0; đổi mode/Voice-return/đổi identity | Cảnh báo và ack chỉ local; rời0 xóa ack, về0 phải xác nhận lại; đổi identity xóa draft; CTA vẫn khóa |
+| SDD2-04 | VI/EN/ZH × sáng/tối ×375/390/768/1440, AX/ảnh/network | 24/24 vòng; page/console/UIwrite/external/overflow0; không upload/quote/job/provider/ví/output thật |
+
+Evidence `C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/subdub-review-volume-green-20261021.json`; case chỉ đóng UI/UX local, không đóng engine hoặc LIVE.
+
 ## SD-B2 correction — capture và đổi chế độ SubDub, 21/10/2026
 
 | ID | Thao tác QA | Điều kiện đạt |

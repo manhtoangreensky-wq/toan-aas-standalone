@@ -175,9 +175,11 @@ test("mode changes update the selected panel, review summary, and query without 
   buttons.forEach((button) => { button.classList.owner = button; });
   const panels = buttons.map((button) => ({ mode: button.key, hidden: true, attributes: {}, getAttribute(name) { return name === "data-subdub-mode-panel" ? this.mode : this.attributes[name] || ""; }, setAttribute(name, value) { this.attributes[name] = value; } }));
   const summary = { textContent: "" };
+  const settings = { innerHTML: "" };
   const page = {
     querySelectorAll(selector) { return selector === "[data-subdub-mode-select]" ? buttons : panels; },
-    querySelector() { return summary; }
+    querySelector(selector) { return selector === "[data-subdub-summary-mode]" ? summary : selector === "[data-subdub-settings-rows]" ? settings : null; },
+    getAttribute(name) { return name === "lang" ? "vi" : null; }
   };
   let replacedUrl = "";
   const browserWindow = {
@@ -192,6 +194,8 @@ test("mode changes update the selected panel, review summary, and query without 
   assert.deepEqual(buttons.map((button) => button.active), [false, false, false, true]);
   assert.deepEqual(panels.map((panel) => panel.hidden), [true, true, true, false]);
   assert.equal(summary.textContent, "SUBTITLE_PLUS_DUBBING summary");
+  assert.match(settings.innerHTML, /data-subdub-setting="voice_lane"/);
+  assert.match(settings.innerHTML, /data-subdub-setting="sub_display_type"/);
   const finalUrl = new URL(replacedUrl);
   assert.equal(finalUrl.pathname, "/subdub");
   assert.equal(finalUrl.searchParams.get("lang"), "vi");
@@ -226,11 +230,13 @@ test("SubDub mode tabs support arrow-key navigation without leaving the hub", ()
     setAttribute(name, value) { this.attributes[name] = value; }
   }));
   const summary = { textContent: "SUBTITLE_ONLY summary" };
+  const settings = { innerHTML: "" };
   const page = {
     querySelectorAll(selector) {
       return selector === "[data-subdub-mode-select]" ? buttons : panels;
     },
-    querySelector() { return summary; }
+    querySelector(selector) { return selector === "[data-subdub-summary-mode]" ? summary : selector === "[data-subdub-settings-rows]" ? settings : null; },
+    getAttribute(name) { return name === "lang" ? "vi" : null; }
   };
   let replacedUrl = "";
   const browserWindow = {
@@ -253,6 +259,8 @@ test("SubDub mode tabs support arrow-key navigation without leaving the hub", ()
   assert.equal(buttons[0].attributes["tabindex"], "-1");
   assert.equal(panels[0].hidden, true);
   assert.equal(panels[1].hidden, false);
+  assert.match(settings.innerHTML, /data-subdub-setting="target_language"/);
+  assert.doesNotMatch(settings.innerHTML, /data-subdub-setting="voice_lane"/);
   assert.equal(new URL(replacedUrl).searchParams.get("mode"), "translated_subtitle");
   press(1, "ArrowDown");
   assert.equal(buttons[2].attributes["aria-selected"], "true");
@@ -271,7 +279,7 @@ test("SubDub mode tabs support arrow-key navigation without leaving the hub", ()
 
 test("local volume input updates its visible value only", () => {
   const output = { textContent: "100%" };
-  const panel = { querySelector() { return output; } };
+  const panel = { querySelector(selector) { return selector.startsWith("[data-subdub-volume-output=") ? output : null; } };
   const input = {
     value: "42",
     closest() { return panel; },
@@ -382,7 +390,7 @@ test("SubDub subtitle layout exposes exactly seven canonical positions in each s
 
 test("SubDub range output preserves zero and the local-setting note exists; mute confirmation is not covered", () => {
   const output = { textContent: "100%" };
-  const panel = { querySelector() { return output; } };
+  const panel = { querySelector(selector) { return selector.startsWith("[data-subdub-volume-output=") ? output : null; } };
   const inputOriginal = {
     value: "0",
     closest() { return panel; },

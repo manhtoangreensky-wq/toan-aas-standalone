@@ -26198,6 +26198,10 @@
       audioOriginalLabel: "Âm lượng âm thanh gốc",
       audioDubbingLabel: "Âm lượng giọng lồng tiếng",
       audioControlsHeading: "Cân chỉnh âm thanh",
+      audioVolumeInvalid: "Nhập số nguyên trong giới hạn hiển thị. Thiết lập vẫn giữ mức hợp lệ gần nhất.",
+      audioOriginalMuted: "Âm thanh gốc đang tắt trong cấu hình.",
+      audioDubbingMuted: "Giọng lồng tiếng đang tắt trong cấu hình.",
+      audioDubbingMuteAck: "Tôi muốn tắt giọng lồng tiếng trong bản nháp này.",
       audioControlsNote: "Bạn có thể chọn mức âm lượng trên màn hình. Các mức này chưa áp dụng vào video khi tính năng xử lý chưa mở.",
       reportEmptyTitle: "Chưa có báo cáo xử lý",
       reportEmptyBody: "Khi có kết quả thật, báo cáo sẽ hiển thị mã yêu cầu, từng bước xử lý và tệp có thể tải xuống.",
@@ -26320,6 +26324,10 @@
       stage3Title: "3. Kiểm tra trước khi tạo",
       stage3Subtitle: "Xem lại lựa chọn và chi phí trước khi bắt đầu.",
       summaryModeKey: "Chế độ đã chọn",
+      summarySettingsTitle: "Thiết lập của bạn",
+      summaryUnknown: "Chưa xác minh",
+      summarySourceStateKey: "Nguồn phụ đề (bạn khai báo)",
+      summarySettingsNote: "Đây là lựa chọn trong bản nháp, chưa phải thông tin tệp hoặc kết quả đã xử lý.",
       summaryPriceKey: "Đơn giá",
       summaryPriceValue: "Giá chưa khả dụng",
       summaryCostKey: "Ước tính chi phí tác vụ",
@@ -26369,6 +26377,10 @@
       audioOriginalLabel: "Original audio level",
       audioDubbingLabel: "Dubbed voice level",
       audioControlsHeading: "Audio levels",
+      audioVolumeInvalid: "Enter a whole number within the displayed limits. Your last valid setting is kept.",
+      audioOriginalMuted: "Original audio is muted in these settings.",
+      audioDubbingMuted: "Dubbing is muted in these settings.",
+      audioDubbingMuteAck: "I want to mute dubbing in this draft.",
       audioControlsNote: "You can adjust these levels first; they will not be applied to a real output until media processing is available.",
       reportEmptyTitle: "No processing report yet",
       reportEmptyBody: "When a real result is available, the report will show the request ID, processing steps, and downloadable files.",
@@ -26488,10 +26500,14 @@
       audioBalanceLower: "Lower background audio during speech (20%)",
       audioBalanceMute: "Mute original audio completely (100% Dubbed voice)",
       stage3Kicker: "Stage 3",
-      stage3Title: "3. Verification & Cost",
-      stage3Subtitle: "Review parameters and estimated cost prior to execution.",
-      summaryModeKey: "Selected journey",
-      summaryPriceKey: "Prescribed unit price",
+      stage3Title: "3. Review settings and cost",
+      stage3Subtitle: "Check your choices and cost before you start.",
+      summaryModeKey: "Selected mode",
+      summarySettingsTitle: "Your settings",
+      summaryUnknown: "Not verified",
+      summarySourceStateKey: "Subtitle source (your selection)",
+      summarySettingsNote: "These are draft choices, not verified file details or processed results.",
+      summaryPriceKey: "Unit price",
       summaryPriceValue: "Pricing unavailable",
       summaryCostKey: "Estimated task cost",
       summaryCostValue: "Cost will be confirmed when feature is ready.",
@@ -26540,6 +26556,10 @@
       audioOriginalLabel: "原始音频音量",
       audioDubbingLabel: "配音音量",
       audioControlsHeading: "音量调节",
+      audioVolumeInvalid: "请输入显示范围内的整数。设置将保留上一次有效值。",
+      audioOriginalMuted: "当前设置已关闭原始音频。",
+      audioDubbingMuted: "当前设置已关闭配音。",
+      audioDubbingMuteAck: "我希望在此草稿中关闭配音。",
       audioControlsNote: "您可以先调整音量；媒体处理尚未开放，因此这些设置暂不会应用到实际结果。",
       reportEmptyTitle: "暂无处理报告",
       reportEmptyBody: "获得真实结果后，报告将在此显示请求编号、处理步骤和可下载文件。",
@@ -26653,6 +26673,10 @@
       stage3Title: "3. 检查设置和费用",
       stage3Subtitle: "开始前确认所选模式和费用信息。",
       summaryModeKey: "已选处理方式",
+      summarySettingsTitle: "你的设置",
+      summaryUnknown: "尚未确认",
+      summarySourceStateKey: "字幕来源（你的选择）",
+      summarySettingsNote: "以上为草稿设置，并非已确认的文件信息或处理结果。",
       summaryPriceKey: "单价",
       summaryPriceValue: "暂不可用",
       summaryCostKey: "预计费用",
@@ -26719,6 +26743,7 @@
     const selectedLabel = modeButton.getAttribute("data-subdub-summary-label") || "";
     const summary = subDubPage.querySelector("[data-subdub-summary-mode]");
     if (summary) summary.textContent = selectedLabel;
+    updateSubDubSettingsSummary(subDubPage, nextMode);
     if (browserWindow.history && typeof browserWindow.history.replaceState === "function") {
       const nextUrl = new URL(browserWindow.location.href);
       nextUrl.searchParams.set("mode", nextQueryMode);
@@ -26750,9 +26775,27 @@
   function updateSubDubLocalVolume(volumeInput) {
     if (!volumeInput) return false;
     const panel = volumeInput.closest("[data-subdub-mode-panel]");
-    const output = panel && panel.querySelector(`[data-subdub-volume-output="${volumeInput.getAttribute("data-subdub-local-volume")}"]`);
+    const kind = volumeInput.getAttribute("data-subdub-local-volume");
+    if (!["original", "dubbing"].includes(kind)) return false;
+    const output = panel && panel.querySelector(`[data-subdub-volume-output="${kind}"]`);
     if (!output) return false;
-    output.textContent = `${volumeInput.value}%`;
+    const numberInput = panel.querySelector(`input[type="number"][data-subdub-local-volume="${kind}"]`);
+    const rangeInput = panel.querySelector(`input[type="range"][data-subdub-local-volume="${kind}"]`);
+    const error = panel.querySelector(`[data-subdub-volume-error="${kind}"]`);
+    const normalized = normalizeSubDubDraftValue(kind + "_volume", volumeInput.value);
+    const valid = normalized !== null && !(volumeInput.validity && volumeInput.validity.badInput);
+    if (numberInput) numberInput.setAttribute("aria-invalid", valid ? "false" : "true");
+    if (error) error.hidden = valid;
+    if (!valid) return false;
+    if (rangeInput && rangeInput !== volumeInput) rangeInput.value = normalized;
+    if (numberInput && numberInput !== volumeInput) numberInput.value = normalized;
+    output.textContent = normalized + "%";
+    const muted = panel.querySelector(`[data-subdub-volume-muted="${kind}"]`);
+    if (muted) muted.hidden = normalized !== "0";
+    if (kind === "dubbing" && normalized !== "0") {
+      const acknowledgement = panel.querySelector("[data-subdub-mute-ack]");
+      if (acknowledgement) acknowledgement.checked = false;
+    }
     return true;
   }
 
@@ -26775,7 +26818,7 @@
   const SUBDUB_DRAFT_ROUTE = "/subdub";
   const SUBDUB_SHARED_DRAFT_FIELDS = new Set([
     "target_language", "target_language_custom", "original_volume", "dubbing_volume",
-    "voice_lane", "sub_display_type", "subtitle_position", "source_subtitle_state"
+    "voice_lane", "sub_display_type", "subtitle_position", "source_subtitle_state", "dubbing_mute_ack"
   ]);
   const SUBDUB_MODE_DRAFT_FIELDS = new Set([
     "subdub-source-output-format", "subdub-translated-output-format",
@@ -26797,6 +26840,7 @@
     if (name === "sub_display_type") return ["single", "bilingual"].includes(text) ? text : null;
     if (name === "source_subtitle_state") return ["with_subtitles", "without_subtitles"].includes(text) ? text : null;
     if (name === "subtitle_format") return ["standard", "short"].includes(text) ? text : null;
+    if (name === "dubbing_mute_ack") return ["true", "false"].includes(text) ? text : null;
     if (SUBDUB_MODE_DRAFT_FIELDS.has(name)) return ["srt", "vtt", "txt"].includes(text) ? text : null;
     return null;
   }
@@ -26809,6 +26853,7 @@
       const value = normalizeSubDubDraftValue(name, source.shared && source.shared[name]);
       if (value !== null) draft.shared[name] = value;
     });
+    if (draft.shared.dubbing_volume !== "0") delete draft.shared.dubbing_mute_ack;
     Object.keys(SUBDUB_PRODUCT_MODES).forEach((mode) => {
       const values = {};
       SUBDUB_MODE_DRAFT_FIELDS.forEach((name) => {
@@ -26823,6 +26868,47 @@
   function subDubDraftValue(draft, mode, name, fallback) {
     const values = SUBDUB_SHARED_DRAFT_FIELDS.has(name) ? draft.shared : draft.modes[mode];
     return values && values[name] !== undefined ? values[name] : String(fallback ?? "");
+  }
+
+  function renderSubDubSettingsRows(draft, mode, locale) {
+    const copy = SUBDUB_PRESENTATION_COPY[locale] || SUBDUB_PRESENTATION_COPY.vi;
+    const value = (name, fallback) => subDubDraftValue(draft, mode, name, fallback);
+    const rows = [
+      ["source_subtitle_state", copy.summarySourceStateKey, value("source_subtitle_state", "without_subtitles") === "with_subtitles" ? copy.sourceHasSubtitle : copy.sourceNoSubtitle],
+      ["source_file", copy.sourceFileLabel, copy.summaryUnknown],
+      ["source_language", copy.sourceLanguageLabel, copy.summaryUnknown]
+    ];
+    if (mode !== "SUBTITLE_ONLY") {
+      const target = SUBDUB_LANGUAGE_CATALOG.find((entry) => entry.value === value("target_language", "vi"));
+      rows.push(["target_language", mode === "DUBBING_ONLY" ? copy.targetLangDubLabel : mode === "SUBTITLE_PLUS_DUBBING" ? copy.sharedTargetLangLabel : copy.targetLangLabel, target ? target.labels[locale] || target.labels.vi : copy.summaryUnknown]);
+      const custom = value("target_language_custom", "");
+      if (custom) rows.push(["target_language_custom", copy.targetLangCustomLabel, custom]);
+    }
+    if (mode === "DUBBING_ONLY" || mode === "SUBTITLE_PLUS_DUBBING") {
+      const lanes = { default_female: copy.voiceLaneDefaultFemale, default_male: copy.voiceLaneDefaultMale, saved_voice: copy.voiceLaneSaved, custom_voice: copy.voiceLaneCustom, auto_two: copy.voiceLaneAutoTwo, auto_multi_3_8: copy.voiceLaneAutoMultiThreeEight, smart_multi: copy.voiceLaneSmartMulti };
+      rows.push(["voice_lane", copy.voiceLaneLabel, lanes[value("voice_lane", "default_female")] || copy.summaryUnknown],
+        ["original_volume", copy.audioOriginalLabel, value("original_volume", "100") + "%"],
+        ["dubbing_volume", copy.audioDubbingLabel, value("dubbing_volume", "100") + "%"]);
+    }
+    if (mode !== "DUBBING_ONLY") {
+      const positions = { bottom_center: copy.subtitlePositionBottomCenter, bottom_left: copy.subtitlePositionBottomLeft, bottom_right: copy.subtitlePositionBottomRight, top_center: copy.subtitlePositionTopCenter, top_left: copy.subtitlePositionTopLeft, top_right: copy.subtitlePositionTopRight, center: copy.subtitlePositionCenter };
+      const formatName = mode === "SUBTITLE_ONLY" ? "subdub-source-output-format" : mode === "TRANSLATED_SUBTITLE" ? "subdub-translated-output-format" : "subdub-combined-output-format";
+      rows.push(["subtitle_position", copy.subtitlePositionLabel, positions[value("subtitle_position", "bottom_center")] || copy.summaryUnknown],
+        ["output_format", copy.outputFormatLabel, { srt: copy.formatSrt, vtt: copy.formatVtt, txt: copy.formatTxt }[value(formatName, "srt")] || copy.summaryUnknown]);
+      if (mode === "SUBTITLE_ONLY") rows.push(["subtitle_format", copy.segmentRuleLabel, value("subtitle_format", "standard") === "short" ? copy.ruleShort : copy.ruleStandard]);
+      else rows.push(["sub_display_type", copy.subDisplayLabel, value("sub_display_type", mode === "SUBTITLE_PLUS_DUBBING" ? "bilingual" : "single") === "bilingual" ? copy.subDisplayBilingual : copy.subDisplaySingle]);
+    }
+    return rows.map(([key, label, text]) => `<div class="portal-summary-item"><span class="portal-summary-key">${safeText(label)}</span><span class="portal-summary-value" data-subdub-setting="${safeText(key)}">${safeText(text)}</span></div>`).join("");
+  }
+
+  function updateSubDubSettingsSummary(root, nextMode) {
+    const container = root && root.querySelector("[data-subdub-settings-rows]");
+    if (!container) return false;
+    const selected = root.querySelector('[data-subdub-mode-select][aria-selected="true"]');
+    const mode = nextMode || selected && selected.getAttribute("data-subdub-mode-select");
+    if (!Object.hasOwn(SUBDUB_PRODUCT_MODES, mode)) return false;
+    container.innerHTML = renderSubDubSettingsRows(subDubDraftSnapshot(), mode, root.getAttribute("lang"));
+    return true;
   }
 
   function subDubDraftControlName(control) {
@@ -26847,11 +26933,12 @@
     scopes.forEach(([scope, mode]) => scope.querySelectorAll("input, select, textarea").forEach((control) => {
       if (control.type === "radio" && !control.checked) return;
       const name = subDubDraftControlName(control);
-      const value = normalizeSubDubDraftValue(name, control.value);
+      const value = normalizeSubDubDraftValue(name, control.type === "checkbox" ? String(control.checked) : control.value);
       if (value === null) return;
       if (SUBDUB_SHARED_DRAFT_FIELDS.has(name)) draft.shared[name] = value;
       else if (mode && SUBDUB_MODE_DRAFT_FIELDS.has(name)) draft.modes[mode][name] = value;
     }));
+    if (draft.shared.dubbing_volume !== "0") delete draft.shared.dubbing_mute_ack;
     transientFormDrafts.set(SUBDUB_DRAFT_ROUTE, draft);
     return draft;
   }
@@ -26864,6 +26951,7 @@
       const values = SUBDUB_SHARED_DRAFT_FIELDS.has(name) ? draft.shared : draft.modes[mode];
       if (!values || values[name] === undefined) return;
       if (control.type === "radio") control.checked = control.value === values[name];
+      else if (control.type === "checkbox") control.checked = values[name] === "true";
       else if (control.tagName !== "SELECT" || Array.from(control.options).some((option) => option.value === values[name])) control.value = values[name];
       if (control.hasAttribute("data-subdub-local-volume")) updateSubDubLocalVolume(control);
     });
@@ -26897,14 +26985,25 @@
     }).join("");
     const localVolumeControlsHtml = (suffix) => `<fieldset class="portal-subdub-volume-controls" aria-describedby="subdub-volume-note-${safeText(suffix)}">
       <legend>${safeText(copy.audioControlsHeading)}</legend>
-      <div class="portal-subdub-volume-control">
-        <label for="subdub-original-volume-${safeText(suffix)}">${safeText(copy.audioOriginalLabel)}</label>
-        <span class="portal-subdub-volume-control__value"><input id="subdub-original-volume-${safeText(suffix)}" type="range" min="0" max="100" data-subdub-local-volume="original" value="${safeText(subDubDraftValue(draft, currentModeKey, "original_volume", "100"))}"><output data-subdub-volume-output="original">${safeText(subDubDraftValue(draft, currentModeKey, "original_volume", "100"))}%</output></span>
-      </div>
-      <div class="portal-subdub-volume-control">
-        <label for="subdub-dubbing-volume-${safeText(suffix)}">${safeText(copy.audioDubbingLabel)}</label>
-        <span class="portal-subdub-volume-control__value"><input id="subdub-dubbing-volume-${safeText(suffix)}" type="range" min="0" max="200" data-subdub-local-volume="dubbing" value="${safeText(subDubDraftValue(draft, currentModeKey, "dubbing_volume", "100"))}"><output data-subdub-volume-output="dubbing">${safeText(subDubDraftValue(draft, currentModeKey, "dubbing_volume", "100"))}%</output></span>
-      </div>
+      ${[["original", copy.audioOriginalLabel, "100", copy.audioOriginalMuted], ["dubbing", copy.audioDubbingLabel, "200", copy.audioDubbingMuted]].map(([kind, label, max, mutedText]) => {
+        const value = subDubDraftValue(draft, currentModeKey, kind + "_volume", "100");
+        const id = "subdub-" + kind + "-volume-" + suffix;
+        const numberId = "subdub-" + kind + "-volume-number-" + suffix;
+        return `<div class="portal-subdub-volume-control">
+          <label for="${safeText(id)}">${safeText(label)}</label>
+          <span class="portal-subdub-volume-control__value">
+            <input id="${safeText(id)}" type="range" min="0" max="${max}" step="1" data-subdub-local-volume="${kind}" value="${safeText(value)}" aria-describedby="${safeText(id)}-error subdub-volume-note-${safeText(suffix)}">
+            <label class="portal-sr-only" for="${safeText(numberId)}">${safeText(label)} (%)</label>
+            <input id="${safeText(numberId)}" class="portal-input portal-subdub-volume-number" type="number" min="0" max="${max}" step="1" inputmode="numeric" data-subdub-local-volume="${kind}" value="${safeText(value)}" aria-invalid="false" aria-describedby="${safeText(id)}-error subdub-volume-note-${safeText(suffix)}">
+            <output data-subdub-volume-output="${kind}" for="${safeText(id)} ${safeText(numberId)}">${safeText(value)}%</output>
+          </span>
+          <p class="portal-form-note" id="${safeText(id)}-error" data-subdub-volume-error="${kind}" hidden>${safeText(copy.audioVolumeInvalid)}</p>
+          <div class="portal-form-note" data-subdub-volume-muted="${kind}"${value === "0" ? "" : " hidden"}>
+            <p>${safeText(mutedText)}</p>
+            ${kind === "dubbing" ? `<label class="portal-subdub-radio-option"><input type="checkbox" name="dubbing_mute_ack" data-subdub-mute-ack${value === "0" && subDubDraftValue(draft, currentModeKey, "dubbing_mute_ack", "false") === "true" ? " checked" : ""}> ${safeText(copy.audioDubbingMuteAck)}</label>` : ""}
+          </div>
+        </div>`;
+      }).join("")}
       <p class="portal-subdub-volume-note" id="subdub-volume-note-${safeText(suffix)}">${safeText(copy.audioControlsNote)}</p>
     </fieldset>`;
     const subtitlePositionHtml = (suffix) => `<div class="portal-field portal-subdub-subtitle-position">
@@ -27122,6 +27221,11 @@
           <p class="portal-card-subtitle">${safeText(copy.stage3Subtitle)}</p>
         </div>
         ${badge("guarded")}
+      </div>
+      <h3 class="portal-card-title">${safeText(copy.summarySettingsTitle)}</h3>
+      <p class="portal-form-note">${safeText(copy.summarySettingsNote)}</p>
+      <div class="portal-summary-list" data-subdub-settings-rows>
+        ${renderSubDubSettingsRows(draft, currentModeKey, locale)}
       </div>
       <div class="portal-summary-list" style="margin-bottom:16px;">
         <div class="portal-summary-item">
@@ -40368,13 +40472,21 @@
       const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume]");
       updateSubDubLocalVolume(volumeInput);
       const subDubForm = event.target.closest(".portal-subdub-hub");
-      if (subDubForm) captureSubDubDraft(subDubForm);
+      if (subDubForm) {
+        captureSubDubDraft(subDubForm);
+        updateSubDubSettingsSummary(subDubForm);
+      }
     });
     document.addEventListener("change", (event) => {
+      const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume]");
+      updateSubDubLocalVolume(volumeInput);
       const voiceLaneInput = event.target.closest(".portal-subdub-hub [data-subdub-voice-lane-input]");
       updateSubDubVoiceLaneSelection(voiceLaneInput);
       const subDubForm = event.target.closest(".portal-subdub-hub");
-      if (subDubForm) captureSubDubDraft(subDubForm);
+      if (subDubForm) {
+        captureSubDubDraft(subDubForm);
+        updateSubDubSettingsSummary(subDubForm);
+      }
     });
     document.addEventListener("keydown", (event) => {
       const subDubModeButton = event.target.closest(".portal-subdub-hub [data-subdub-mode-select]");

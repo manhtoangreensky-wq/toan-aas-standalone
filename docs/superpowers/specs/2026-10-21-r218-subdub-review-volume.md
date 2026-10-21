@@ -26,6 +26,13 @@ auth/schema/API/DTO/provider/Bot/ví, quote/receipt/job/download guard và quy�
    tại chỗ từ cùng draft, không remount form, không request/mutation; unknown
    source/giá/duration/speaker-count giữ unknown, không thành0 hoặc kết quả giả.
 
+   Dùng draft đã chuẩn hóa và truyền `nextMode` khi đổi tab; không đọc query
+   trước `replaceState`. Custom ISO hiển thị riêng, không tự coi là ghi đè
+   dropdown khi chưa có contract. Nguồn phụ đề chỉ là khai báo của người dùng;
+   tệp/ngôn ngữ đã nhận diện, profile cụ thể, speaker-count vẫn chưa xác minh.
+   Subtitle có format/rule/position; Translate thêm target/custom/display;
+   Dubbing có target/custom/lane/mix; Combo gộp các row phù hợp, không row ẩn.
+
 ## SD-D2B — slider + số và mute (sau D2A)
 
 5. RED2–5phút: test thiếu number input và cảnh báo0. Cả hai chiều nhập số↔kéo
@@ -44,12 +51,19 @@ auth/schema/API/DTO/provider/Bot/ví, quote/receipt/job/download guard và quy�
 
 ## AC / evidence gate
 
-- [ ] D2A summary phản ánh chính xác cấu hình hiện tại theo mode/locale.
-- [ ] D2B number/range/output/summary đồng bộ,0 không reset, bounds rõ.
-- [ ] Mute0 có cảnh báo/ack local trung thực; không bị hiểu là output/receipt.
-- [ ] Focus/form giữ nguyên khi cập nhật; palette xanh/ngọc/chữ sáng không đổi.
-- [ ] Browser thật+AX/ảnh, source/protected comparator và regression đạt.
-- [ ] Docs/tester/provenance/PR đúng candidate, CI xanh; không deploy/LIVE suy đoán.
+- [x] D2A summary phản ánh chính xác cấu hình hiện tại theo mode/locale.
+- [x] D2B number/range/output/summary đồng bộ, 0 không reset, bounds rõ.
+- [x] Mute0 có cảnh báo/ack local trung thực; không bị hiểu là output/receipt.
+- [x] Focus/form giữ nguyên khi cập nhật; palette xanh/ngọc/chữ sáng không đổi.
+- [x] Browser thật+AX/ảnh, source/protected comparator và regression đạt.
+- [ ] Docs/tester/provenance/PR đúng candidate, CI xanh; không deploy/LIVE suy đoán. Đang chờ commit/push wave này.
+
+## Evidence SD-D2 — 21/10/2026
+
+- RED browser bắt thiếu summary và number input; GREEN `subdub-review-volume-green-20261021.json`.
+- Browser GREEN: 24/24 cấu hình VI/EN/ZH × sáng/tối × 375/390/768/1440; lỗi trang/console/request ghi/request ngoài/overflow đều `0`. Đã kiểm số↔thanh kéo hai chiều, giá trị sai, mute cục bộ, đổi mode, Voice-return, đổi phiên và AX/ảnh. Không upload, quote, job, provider, ví hoặc output thật.
+- Node targeted: 44/44 pass, full Node 880/880 pass, exit0; `node --check static/portal/portal.js` và `portal-i18n.js` exit0. Python scoped 49/49 pass; các lỗi ngoài scope/baseline được giữ nguyên và phân loại, không làm yếu test. Reviewer độc lập: 0 Critical/Important; khoảng trống updater đã bổ sung test helper production.
+- CSS chỉ đổi bố cục con volume controls và number style; token xanh/ngọc, theme và motion được bảo vệ. Giá/chi phí/nguồn tệp/ngôn ngữ nhận diện vẫn unknown nếu không có dữ liệu server.
 
 Verify: `node --test tests/subdub-review-volume-controls.test.mjs tests/subdub-local-draft-state.test.mjs tests/subdub-hub-presentation.test.mjs tests/subdub-voice-continuation.test.mjs`
 →0fail; sau đó full Node và browser QA cô lập. Nếu cần sửa hợp đồng API/engine/
