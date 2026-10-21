@@ -1,0 +1,31 @@
+{
+  "spec_id": "SD-E2",
+  "date": "2026-10-21",
+  "status": "UI_UX_ACCESSIBILITY_ACCEPTED_LOCAL",
+  "base_sha": "a51e4bd8408438e7f8cf48d9510e9ef3577277e1",
+  "scope": "SubDub semantic live region, labelled settings summary and announced volume output; no runtime/provider mutation.",
+  "tested_source_sha256": {
+    "portal.js": "1c999b1e1681778bee6bc73c87696b11063cfc57a8003cd2fcc937cf5870f0c4",
+    "portal-i18n.js": "c9a52a4d0449a0baddda14958a897976bc574419132f28a8e9789d1e1164ff22"
+  },
+  "red": ["Stage 3 settings had no labelled live region", "volume output had no status announcement"],
+  "tests": {"semantic_targeted": "3/3", "subdub_regression": "47/47", "full_node": "883/883", "python_scoped": "19 passed, 1 deselected", "syntax": "portal.js + portal-i18n.js exit0", "diff_check": "exit0", "known_baseline_mismatch": "Windows private-temp permission mode and legacy voice_style assertion are outside SD-E2"},
+  "browser": {
+    "origin": "http://127.0.0.1:24502",
+    "environment": "Edge headless, reduced motion, signed isolated QA account, temporary DB",
+    "configurations": 24,
+    "locales": ["vi", "en", "zh"],
+    "themes": ["light", "dark"],
+    "widths": [375, 390, 768, 1440],
+    "failures": 0,
+    "page_console_errors": 0,
+    "ui_non_get_requests": 0,
+    "external_requests": 0,
+    "result_path": "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/subdub-semantics-volume-green-20261021.json",
+    "result_sha256": "ddf6dc669e4b484fe725422076c43b54ea5bc8deb5e87594e62f6a4bb14ca643",
+    "runner_sha256": "af4e440e4afe34b291fd0fe2acc264b3ba7d3070f7df682e123969b5449a3b05"
+  },
+  "protected": ["SD-D2", "SD-C2", "theme/motion", "backend/auth/engine/provider/wallet/CTA"],
+  "safety": {"provider_calls": 0, "wallet_mutations": 0, "production_operations": 0, "deploy": "NO", "live_pass": "NOT_TESTED"},
+  "remaining": ["runtime product parity", "trace performance", "motion last"]
+}

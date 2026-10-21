@@ -26995,7 +26995,7 @@
             <input id="${safeText(id)}" type="range" min="0" max="${max}" step="1" data-subdub-local-volume="${kind}" value="${safeText(value)}" aria-describedby="${safeText(id)}-error subdub-volume-note-${safeText(suffix)}">
             <label class="portal-sr-only" for="${safeText(numberId)}">${safeText(label)} (%)</label>
             <input id="${safeText(numberId)}" class="portal-input portal-subdub-volume-number" type="number" min="0" max="${max}" step="1" inputmode="numeric" data-subdub-local-volume="${kind}" value="${safeText(value)}" aria-invalid="false" aria-describedby="${safeText(id)}-error subdub-volume-note-${safeText(suffix)}">
-            <output data-subdub-volume-output="${kind}" for="${safeText(id)} ${safeText(numberId)}">${safeText(value)}%</output>
+            <output data-subdub-volume-output="${kind}" role="status" aria-live="polite" aria-atomic="true" for="${safeText(id)} ${safeText(numberId)}">${safeText(value)}%</output>
           </span>
           <p class="portal-form-note" id="${safeText(id)}-error" data-subdub-volume-error="${kind}" hidden>${safeText(copy.audioVolumeInvalid)}</p>
           <div class="portal-form-note" data-subdub-volume-muted="${kind}"${value === "0" ? "" : " hidden"}>
@@ -27222,9 +27222,9 @@
         </div>
         ${badge("guarded")}
       </div>
-      <h3 class="portal-card-title">${safeText(copy.summarySettingsTitle)}</h3>
+      <h3 class="portal-card-title" id="subdub-settings-title-${safeText(currentModeKey.toLowerCase())}">${safeText(copy.summarySettingsTitle)}</h3>
       <p class="portal-form-note">${safeText(copy.summarySettingsNote)}</p>
-      <div class="portal-summary-list" data-subdub-settings-rows>
+      <div class="portal-summary-list" data-subdub-settings-rows role="region" aria-live="polite" aria-atomic="true" aria-labelledby="subdub-settings-title-${safeText(currentModeKey.toLowerCase())}">
         ${renderSubDubSettingsRows(draft, currentModeKey, locale)}
       </div>
       <div class="portal-summary-list" style="margin-bottom:16px;">

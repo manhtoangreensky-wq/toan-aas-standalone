@@ -36,6 +36,15 @@ cục bộ; rời `0%` xóa xác nhận, quay lại phải xác nhận lại. 24
 page/console/UIwrite/external/overflow đều `0`. Đây chưa phải upload, ASR, dịch,
 lồng tiếng, Smart Multi, quote, job, output, ví hoặc LIVE.
 
+## SubDub SD-E2 — ngữ nghĩa và trợ năng, 21/10/2026
+
+Bước kiểm tra thiết lập có heading theo mode và một vùng đọc trạng thái live;
+trình hỗ trợ có thể biết vùng nào vừa thay đổi. Giá trị âm lượng dùng `status`
+live/atomic, còn ô số và thanh kéo giữ nhãn, giới hạn và liên kết lỗi. Bốn tab
+vẫn trỏ đúng panel và panel ẩn không lọt vào thứ tự đọc. Đã đo 3/3 test ngữ nghĩa,
+hồi quy SubDub 47/47 và 24/24 cấu hình browser; đây chỉ là control-level, không
+phải bằng chứng engine, provider, output hay LIVE.
+
 ## Music/SFX — trạng thái đọc và phản hồi thao tác, 21/10/2026
 
 Thư viện hiệu ứng âm thanh không kế thừa bộ lọc/trang của thư viện nhạc.

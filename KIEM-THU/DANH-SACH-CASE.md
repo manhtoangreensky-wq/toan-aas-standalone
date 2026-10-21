@@ -24,6 +24,17 @@ application, preview và giao tệp vẫn chưa được xác minh bởi continu
 
 Evidence `C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/subdub-review-volume-green-20261021.json`; case chỉ đóng UI/UX local, không đóng engine hoặc LIVE.
 
+## SD-E2 — ngữ nghĩa và trợ năng SubDub, 21/10/2026
+
+| ID | Thao tác QA | Điều kiện đạt |
+|---|---|---|
+| SDE2-01 | Mở bước 3 bằng VI/EN/ZH, đổi cả bốn mode | Vùng thiết lập có heading, `role=region`, `aria-live`, `aria-atomic`, liên kết `aria-labelledby` đúng mode |
+| SDE2-02 | Kéo/nhập âm lượng và đọc bằng trình hỗ trợ | `output` có `role=status`, live polite, atomic; ô số/thanh kéo có nhãn và error reference hợp lệ |
+| SDE2-03 | Dùng Tab/Arrow/Home/End giữa bốn tab | `aria-controls` trỏ đúng panel, `aria-labelledby` trỏ heading hiện hữu, panel ẩn không vào thứ tự đọc |
+| SDE2-04 | VI/EN/ZH × sáng/tối ×375/390/768/1440, AX/ảnh/network | 24/24 vòng; page/console/UIwrite/external/overflow0; không mở engine/provider/CTA |
+
+Evidence `reports/audit/R218-SUBDUB-SEMANTICS-QA-20261021.json`; control-level only.
+
 ## SD-B2 correction — capture và đổi chế độ SubDub, 21/10/2026
 
 | ID | Thao tác QA | Điều kiện đạt |

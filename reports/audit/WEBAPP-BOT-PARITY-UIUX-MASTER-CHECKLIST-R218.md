@@ -360,6 +360,12 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   number+range và mute ack chỉ là bản nháp local, không mở CTA. Browser 24/24
   VI/EN/ZH × sáng/tối ×375/390/768/1440; targeted 44/44; evidence
   `subdub-review-volume-green-20261021.json`. Chưa đóng API/engine/provider/LIVE.
+- [x] SD-E2 semantics/a11y: Stage 3 có heading và vùng `role=region` live theo
+  mode/locale; output âm lượng có `role=status` live; quan hệ tab/panel giữ
+  `aria-controls`/`aria-labelledby`. Test semantic `3/3`, hồi quy SubDub `47/47`;
+  browser 24/24 cấu hình, AX/ảnh/page/console/UIwrite/external/overflow0.
+  Evidence `R218-SUBDUB-SEMANTICS-QA-20261021.json`. Runtime engine và trace hiệu
+  năng vẫn mở; motion vẫn làm cuối.
 - [!] Runtime upload/ASR/dịch/lồng tiếng/Smart Multi/quote/job/result/delivery
   vẫn là capability server mở; evidence này chỉ khóa presentation guarded,
   không được báo là engine đã chạy.
