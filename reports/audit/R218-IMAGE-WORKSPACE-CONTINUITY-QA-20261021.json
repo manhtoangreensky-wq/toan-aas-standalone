@@ -9,7 +9,7 @@
   "browser": {
     "environment": "Edge headless signed isolated QA profile, temporary DB, reduced motion",
     "red": {"cases": 3, "failures": ["full document navigation", "destination had no common nav", "prompt draft lost"]},
-    "baseline_delayed_auth": {"cases": 1, "forms_before_guard": 1, "loading_region": false, "old_record_visible": true},
+    "baseline_delayed_auth": {"cases": 1, "forms_before_guard": 1, "loading_region": false, "old_record_visible": false, "clarification": "The measured baseline showed a stale form/intro, not a visible old record; corrected against the raw artifact on 2026-10-22."},
     "candidate": {"cases": 12, "locales": ["vi", "en", "zh"], "themes": ["light", "dark"], "widths": [390, 1440], "forms_during_loading": 0, "old_record_visible": false, "loading_region": true, "nav_modes": 4, "errors": 0, "ui_writes": 0, "external": 0, "overflow": 0},
     "normal_image_matrix": "24/24 previously GREEN; Image workspace four modes, keyboard loop, Back/Forward, prompt retention, theme/locale, identity cleanup; failures/page/console/UIwrite/external0",
     "result_path": "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/image-studio-pending-green-20261021.json",

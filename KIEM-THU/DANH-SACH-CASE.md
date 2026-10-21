@@ -1,5 +1,17 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## UT-CSP và Q0 nội dung khách — 22/10/2026
+
+| ID | Thao tác | Điều kiện đạt |
+|---|---|---|
+| UTCSP-01 | Mở Free Tools và đổi10tab | Không img src rỗng/inline handler; không request placeholder/CSP warning trước thao tác |
+| UTCSP-02 | YouTube thumbnail load/error/retry | Chỉ ảnh load thật mới hiện; lỗi là1dòng ngắn; retry phục hồi, không khung ảnh giả |
+| UTCSP-03 | Dán SRT, làm sạch, tải TXT | Văn bản bỏ timestamp, bytesTXT tải về đúng nội dung đang thấy |
+| Q0COPY-01 | Voice4mode/Music/SubDub/Image/FreeTools ×VI/EN/ZH ×light/dark ×390/1440 |96initialstates không chữ thử nghiệm/demo/beta/sandbox, không hero pill, Voice không tự điền nội dungQA; overflow0 |
+
+Evidence `R218-CUSTOMER-UI-REALITY-QA-20261022.json`;96states/12utilityflows.
+Thumbnail bytes kiểm soát chỉ chứng minh lifecycle; engine/output/LIVE còn mở.
+
 ## SD-C2 — SubDub qua kho/thêm giọng rồi quay lại, 21/10/2026
 
 | ID | Thao tác QA | Điều kiện đạt |

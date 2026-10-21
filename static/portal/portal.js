@@ -278,6 +278,34 @@
     return uiText(`freeTools.${key}`, fallback, params);
   }
 
+  function setYouTubeThumbnailPreview(imageId, stateId, url, alt) {
+    const image = document.getElementById(imageId);
+    const state = document.getElementById(stateId);
+    if (!image || !state || !url) return;
+    image.hidden = true;
+    state.hidden = false;
+    state.textContent = freeToolsText("youtube.preview.loading", "Đang tải ảnh thu nhỏ…");
+    if (alt) {
+      image.alt = alt;
+    }
+    image.onload = () => {
+      if (image.naturalWidth > 0) {
+        state.hidden = true;
+        image.hidden = false;
+      } else {
+        image.hidden = true;
+        state.hidden = false;
+        state.textContent = freeToolsText("youtube.preview.unavailable", "Không tải được ảnh thu nhỏ từ YouTube.");
+      }
+    };
+    image.onerror = () => {
+      image.hidden = true;
+      state.hidden = false;
+      state.textContent = freeToolsText("youtube.preview.unavailable", "Không tải được ảnh thu nhỏ từ YouTube.");
+    };
+    image.src = url;
+  }
+
   // Free Prompt Gallery translates only fixed catalog chrome. Prompt bodies,
   // server-issued titles, tags, IDs, revisions and receipts remain owner/
   // server-owned data and are rendered exactly as received.
@@ -13597,7 +13625,8 @@
           <div class="portal-yt-thumbs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
               <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.max", "Độ phân giải tối đa (1080p Full HD)")}</div>
-              <img id="free-tools-yt-thumb-max" src="" alt="${c("youtube.imgAltMax", "Ảnh thu nhỏ độ phân giải tối đa")}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" onerror="this.src='https://placehold.co/600x338?text=Kh%C3%B4ng+c%C3%B3+1080p'" />
+              <img id="free-tools-yt-thumb-max" alt="${c("youtube.imgAltMax", "Ảnh thu nhỏ độ phân giải tối đa")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <p id="free-tools-yt-thumb-max-state" role="status" hidden style="margin: 8px 0 0; font-size: 12px; color: var(--portal-muted); text-align: center;"></p>
               <div style="margin-top: 10px; display:flex; gap: 6px;">
                 <a id="free-tools-yt-thumb-max-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">${c("youtube.action.openImage", "Mở ảnh")}</a>
                 <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="max" style="font-size: 11px;">${c("youtube.action.copyLink", "Sao chép liên kết")}</button>
@@ -13605,7 +13634,8 @@
             </div>
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
               <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.high", "Chất lượng cao (720p HD)")}</div>
-              <img id="free-tools-yt-thumb-hq" src="" alt="${c("youtube.imgAltHigh", "Ảnh thu nhỏ chất lượng cao")}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <img id="free-tools-yt-thumb-hq" alt="${c("youtube.imgAltHigh", "Ảnh thu nhỏ chất lượng cao")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <p id="free-tools-yt-thumb-hq-state" role="status" hidden style="margin: 8px 0 0; font-size: 12px; color: var(--portal-muted); text-align: center;"></p>
               <div style="margin-top: 10px; display:flex; gap: 6px;">
                 <a id="free-tools-yt-thumb-hq-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">${c("youtube.action.openImage", "Mở ảnh")}</a>
                 <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="hq" style="font-size: 11px;">${c("youtube.action.copyLink", "Sao chép liên kết")}</button>
@@ -13613,7 +13643,8 @@
             </div>
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
               <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.medium", "Chất lượng tiêu chuẩn (360p)")}</div>
-              <img id="free-tools-yt-thumb-mq" src="" alt="${c("youtube.imgAltMedium", "Ảnh thu nhỏ chất lượng tiêu chuẩn")}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <img id="free-tools-yt-thumb-mq" alt="${c("youtube.imgAltMedium", "Ảnh thu nhỏ chất lượng tiêu chuẩn")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <p id="free-tools-yt-thumb-mq-state" role="status" hidden style="margin: 8px 0 0; font-size: 12px; color: var(--portal-muted); text-align: center;"></p>
               <div style="margin-top: 10px; display:flex; gap: 6px;">
                 <a id="free-tools-yt-thumb-mq-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">${c("youtube.action.openImage", "Mở ảnh")}</a>
                 <button class="portal-button portal-button--primary" type="button" data-free-tool-action="copy-yt-thumb" data-thumb-target="mq" style="font-size: 11px;">${c("youtube.action.copyLink", "Sao chép liên kết")}</button>
@@ -13682,7 +13713,7 @@
             <div id="free-tools-qr-preview-container" class="portal-card portal-card-pad" style="width: 100%; max-width: 360px; text-align:center; background: rgba(0,0,0,0.25); border: 1px solid var(--portal-border-strong); border-radius: 16px; padding: 20px;">
               <div style="font-size: 13px; font-weight: 600; color: var(--portal-accent); margin-bottom: 14px;">${c("vietqr.preview.title", "MÃ VIETQR THANH TOÁN")}</div>
               <div style="min-height: 260px; display:flex; align-items:center; justify-content:center; background: #ffffff; border-radius: 12px; padding: 8px; margin-bottom: 14px;">
-                <img id="free-tools-qr-img" src="" alt="${c("vietqr.preview.alt", "Mã VietQR")}" style="max-width: 100%; height: auto; display:none;" />
+                <img id="free-tools-qr-img" alt="${c("vietqr.preview.alt", "Mã VietQR")}" style="max-width: 100%; height: auto; display:none;" />
                 <div id="free-tools-qr-placeholder" style="color: #666666; font-size: 13px; padding: 40px 10px;">${c("vietqr.preview.placeholder", "Nhập số tài khoản rồi bấm Tạo mã QR để xem trước.")}</div>
               </div>
               <div id="free-tools-qr-actions" style="display:none; gap: 8px; justify-content:center; flex-wrap: wrap;">
@@ -14058,11 +14089,8 @@
       }
       const idEl = document.getElementById("free-tools-yt-id");
       const linkEl = document.getElementById("free-tools-yt-link");
-      const maxImg = document.getElementById("free-tools-yt-thumb-max");
       const maxLink = document.getElementById("free-tools-yt-thumb-max-link");
-      const hqImg = document.getElementById("free-tools-yt-thumb-hq");
       const hqLink = document.getElementById("free-tools-yt-thumb-hq-link");
-      const mqImg = document.getElementById("free-tools-yt-thumb-mq");
       const mqLink = document.getElementById("free-tools-yt-thumb-mq-link");
       const embedEl = document.getElementById("free-tools-yt-embed");
 
@@ -14074,11 +14102,11 @@
 
       if (idEl) idEl.textContent = vidId;
       if (linkEl) linkEl.href = watchUrl;
-      if (maxImg) maxImg.src = maxUrl;
+      setYouTubeThumbnailPreview("free-tools-yt-thumb-max", "free-tools-yt-thumb-max-state", maxUrl, freeToolsText("youtube.imgAltMax", "Ảnh thu nhỏ độ phân giải tối đa"));
       if (maxLink) maxLink.href = maxUrl;
-      if (hqImg) hqImg.src = hqUrl;
+      setYouTubeThumbnailPreview("free-tools-yt-thumb-hq", "free-tools-yt-thumb-hq-state", hqUrl, freeToolsText("youtube.imgAltHigh", "Ảnh thu nhỏ chất lượng cao"));
       if (hqLink) hqLink.href = hqUrl;
-      if (mqImg) mqImg.src = mqUrl;
+      setYouTubeThumbnailPreview("free-tools-yt-thumb-mq", "free-tools-yt-thumb-mq-state", mqUrl, freeToolsText("youtube.imgAltMedium", "Ảnh thu nhỏ chất lượng tiêu chuẩn"));
       if (mqLink) mqLink.href = mqUrl;
       if (embedEl) embedEl.value = embedHtml;
       if (resBox) resBox.style.display = "block";

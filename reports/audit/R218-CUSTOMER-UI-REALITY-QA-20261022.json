@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-22",
+  "base_sha": "d1d042e",
+  "status": "LOCAL_UI_GATES_PASS_DELIVERY_PENDING",
+  "specs": ["UT-CSP-EMPTY-THUMB", "Q0-UI-LABELS recheck", "Q0-CUSTOMER-CONTENT initial states"],
+  "worker": {"model": "gemini-3.8-flash-high", "round": 1, "conversation": "a8b5a807-1fcb-4bfa-b335-6e6426929578", "code_failures": 0, "scope": "3-file packet; source excerpts, test and work order only; stdout patch"},
+  "tests": {"free_tools": "6/6", "full_node": "exit0", "portal_syntax": "exit0", "locale_syntax": "exit0", "diff": "exit0"},
+  "browser": {
+    "environment": "Actual WebApp localhost, temporary isolated SQLite and authenticated profiles; Edge headless. Codex browser also independently logged in to the real QA app.",
+    "routes": ["/voice/tts", "/voice/stt", "/voice/saved", "/voice/clone", "/music/create", "/subdub", "/image/create", "/tools/free"],
+    "locales": ["vi", "en", "zh"], "themes": ["light", "dark"], "widths": [390, 1440],
+    "states": 96, "utility_flow_configurations": 12,
+    "initial_forbidden_words": 0, "visible_hero_badges": 0, "voice_prefilled_script": "empty", "horizontal_overflow": 0,
+    "baseline_csp_messages": 5, "candidate_page_console_errors": 0, "ui_writes": 0, "external_requests": 0,
+    "real_utility_output": "Local subtitle cleaner runs and downloaded TXT bytes equal the cleaned text in all12 configurations.",
+    "thumbnail_lifecycle": "Browser load/error/retry using controlled image bytes; not proof of real YouTube image availability.",
+    "artifact": "C:/Users/toann/Documents/Codex/qa/r218-ui-20261022/result.json",
+    "artifact_sha256": "34559cdd080bde2649720af167f0167b7a7b4654c1de9d7d10204ac6e8c36858",
+    "runner": "C:/Users/toann/Documents/Codex/qa/r218-ui-20261022/verify.cjs",
+    "runner_sha256": "941220c66ce35c63a41f323ca17639a7bcd239207ccab4f337b3c5447ef67880"
+  },
+  "limitations": ["Only listed initial routes and utility interactions are covered", "Generation, provider, engine parity, real quote/payment and delivery are not verified", "Other product dynamic states and motion remain open"],
+  "safety": {"provider_calls": 0, "wallet_mutations": 0, "production_mutations": 0, "deploy": "NO", "live_pass": "NOT_TESTED"}
+}

@@ -18030,6 +18030,8 @@
     ["youtube.imgAltMax", "Ảnh thu nhỏ độ phân giải tối đa", "Maximum-resolution thumbnail", "最高分辨率缩略图"],
     ["youtube.imgAltHigh", "Ảnh thu nhỏ chất lượng cao", "High-quality thumbnail", "高质量缩略图"],
     ["youtube.imgAltMedium", "Ảnh thu nhỏ chất lượng tiêu chuẩn", "Standard-quality thumbnail", "标准质量缩略图"],
+    ["youtube.preview.loading", "Đang tải ảnh thu nhỏ…", "Loading thumbnail…", "正在加载缩略图…"],
+    ["youtube.preview.unavailable", "Không tải được ảnh thu nhỏ từ YouTube.", "The YouTube thumbnail could not be loaded.", "无法加载 YouTube 缩略图。"],
     ["youtube.action.openImage", "Mở ảnh", "Open image", "打开图片"],
     ["youtube.action.copyLink", "Sao chép liên kết", "Copy link", "复制链接"],
     ["youtube.embedLabel", "Mã nhúng Iframe thích ứng (HTML)", "Responsive Iframe embed code (HTML)", "自适应 Iframe 嵌入代码（HTML）"],

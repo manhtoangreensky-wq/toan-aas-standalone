@@ -1,18 +1,19 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: Q0_IMAGE_WAVE_VERIFY_GREEN_DELIVERY_PENDING
-date: 2026-10-21
+status: UT_CSP_Q0_CONTENT_LOCAL_PASS_DELIVERY_PENDING
+date: 2026-10-22
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r217-subdub-ui-r218
 pull_request: 654
-head_sha: 42a78e931cf15da4f8c6117838e29ac3a2248e70
+head_sha: d1d042ed820fe8920fd586abcee43529b6d36882
 implementation_head_sha: b186b75a2b55b397f802fb992ce0a320039053a4
 delivery_head_sha: 42a78e931cf15da4f8c6117838e29ac3a2248e70
 delivery_status: CI_GREEN_39642058056_BOTH_JOBS
 review_evidence: reports/audit/R218-MUSIC-RUNTIME-REVIEW-QA-20261021.json
 evidence_reclassification: reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md
 qa_review_server: "Final SD-B2 QA exec36900 at127.0.0.1:34289 stopped gracefully after browser exec31190 terminal exit0; temporary database/assets cleaned. Earlier Music servers are historical."
+current_qa_runtime: "2026-10-22 actual WebApp http://127.0.0.1:42268; task-owned PTY session88166 waitingstdin; DB/assets temporary isolated through CI _start_server; no bridge/PayOS/provider. Browser task30705 completed exit0; CUA tab1 logged in to actual QA app. Stop owned server with newline on session88166 when inspection ends; no credentials in ledger."
 music_library_read_state_evidence: reports/audit/R218-MUSIC-LIBRARY-READ-STATE-QA-20261021.json
 music_library_read_state: "MU-E-01: targeted36/36; browser39 actual-profile configurations incl alias3/route-race3; errors/UIwrites/external0; protected helpers12 and generic paginator20 comparators unchanged."
 music_library_copy_evidence: reports/audit/R218-MUSIC-LIBRARY-COPY-QA-20261021.json
@@ -417,4 +418,4 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "Q0+IM-A2 wave is pushed and CI-green on PR654 HEAD1273b0a. Continue the next open checklist item in order; keep engine/provider/output/delivery and motion gates open until their own evidence exists. No merge/deploy/LIVE; goal ACTIVE."
+next_action: "UT-CSP-EMPTY-THUMB workerFlashR1 patch reviewed:6/6focused/fullNodeexit0/syntax2/diff0; actualQA96states+12utilityflows, baselineCSP5→0, errors/write/external/overflow0. Finish coherent docs/tester metadata and clean-tracked provenance, pushPR654 and readCI terminal; then Q0-CUSTOMER-CONTENT dynamicstates/Utilities/Admin/Video in order, motionlast. Evidence R218-CUSTOMER-UI-REALITY-QA-20261022.json. GoalACTIVE; no merge/deploy/LIVE."

@@ -1,5 +1,17 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Free Tools và nội dung khách — 22/10/2026
+
+Free Tools không gắn nguồn ảnh rỗng lúc khởi tạo; ảnh YouTube chỉ hiện sau khi
+tải, lỗi có một dòng ngắn theo ngôn ngữ giao diện và có thể trích xuất lại.
+Không còn fallback sang ảnh placeholder ngoài. CSP giữ nguyên: matched baseline
+5messages, candidate0. Subtitle cleaner hoạt động cục bộ và TXT tải về khớp
+văn bản đã làm sạch ở12cấu hình.96initialstates ở8route khách,3ngôn ngữ,
+2theme,2viewport đạt không chữ thử nghiệm/demo/beta/sandbox, không hero badge,
+Voiceinputtrống, không overflow/page/console/UIwrite/external. Dữ liệu quote
+tổng hợp của fileQA cũ không dùng làm bản bàn giao hoặc chứng minh tạo giọng.
+Đây chưa phải nghiệm thu generation/provider/output của tất cả sản phẩm.
+
 ## R218 Q0 — nhãn giao diện thừa và Image continuity, 21/10/2026
 
 Shared customer/Admin không còn trình bày các ô bo tròn kiểu “đang ở trang

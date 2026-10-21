@@ -1,5 +1,13 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Free Tools — đối chiếu ngày22/10/2026
+
+| Chức năng | Đã chứng minh | Còn mở |
+|---|---|---|
+| Làm sạchSRT/VTT và tảiTXT | Làm sạch nội dung rồi tải bytesTXT khớpUI ở12cấu hình appQA thật | Chưa suy ra mọi định dạng phụ đề đều được hỗ trợ |
+| Trích liên kết/mã nhúngYouTube | Parser/link/ID giữ đúng; browserload/error/retry đúng, khôngsrc rỗng/CSPinline | Ảnh kiểm soát không chứng minh YouTube luôn có mọi độ phân giải; không cam kết chất lượng từ nhãn |
+| Voice và sản phẩmBot | InitialUI không tự điền nội dungQA/hero pill ở96states | Không đóng quote/provider/engine/job/output/delivery từ việc kiểm giao diện |
+
 ## SD-C2 — nối giao diện, chưa phải áp dụng giọng canonical
 
 Web đã giữ ngữ cảnh SubDub→kho/thêm giọng→quay lại trong cùng tài liệu;

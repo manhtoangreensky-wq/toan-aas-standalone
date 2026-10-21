@@ -678,11 +678,21 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   external0, Image24/24 và fullNode891/891. Evidence
   `R218-GLOBAL-STATUS-LABELS-QA-20261021.json`; CI/push theo wave còn pending,
   không deploy/LIVE. CSP60 của Tools Free là baseline, không giấu lỗi đó.
-- [ ] UT-CSP-EMPTY-THUMB: `/tools/free` có img src rỗng + inline onerror trỏ
-  placeholder ngoài; CSP chặn5lần/lượt trong QA. Baseline13eb5a1 và candidate
-  cùng5warning khi networkinterception giống nhau. Xử lý ở Utilities: bỏ
-  handler inline/nguồn rỗng, dùng trạng thái rỗng cục bộ; không nới CSP. Evidence
-  `global-labels-csp-baseline-20261021.json`.
+- [x] UT-CSP-EMPTY-THUMB local: bỏ4src rỗng và handler inline/placeholder ngoài;
+  ảnh tải đúng lifecycle, lỗi là một dòng, retry phục hồi. AntigravityFlashR1;
+  focused6/6, fullNodeexit0, browser12utilityflows; baseline5CSP→candidate0;
+  errors/overflow/UIwrite/external0. Evidence
+  `R218-CUSTOMER-UI-REALITY-QA-20261022.json`; delivery chưa đóng.
+- [x] Q0 Owner screenshots recheck: tab được đưa sang appQA thật; Voice input
+  trống và hero badge0;96initialstates trên8route/VI/EN/ZH/light-dark/390-1440
+  không có chữ thử nghiệm/demo/beta/sandbox. Không dùng fixturequote làm chứng
+  cứ generation. Không sửa nội dung thật của khách.
+- [ ] Q0-CUSTOMER-CONTENT: tiếp tục rà dynamicstates và màn còn lại theo spec
+  `2026-10-22-r218-customer-content-action-truth.md`; mọi ô/nhãn phải có mục đích,
+  thao tác/output phải kiểm được; không bỏ control Bot-parity cần thiết.
+- [ ] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p khi chưa đọc kích thước ảnh;
+  phản hồi extractor chỉ nói đã lấy liên kết/mã nhúng, không nói đã đọc metadata
+  video. Thi công copy riêng sau deliveryUT-CSP, giữ URL/parser/controls.
 
 - [x] Q0-ZH-LOCALE-PICKER (local UI): root cause source thiếu option zh trong Admin header.
   RED renderer zh/select vi → thêm đúng một option → browser12/12 selected/renderer khớp,
