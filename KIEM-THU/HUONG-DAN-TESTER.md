@@ -1,5 +1,12 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+Đính chính 21/10/2026: các matrix chỉ đổi URL lang không chứng minh locale đã
+đăng nhập; phải set hồ sơ QA bằng endpoint CSRF và assert `html.lang` cùng
+profile locale. Không dùng main/text-length/overflow/no-media để đóng
+interaction/AX/screenshots hoặc motion. Các số smoke lịch sử giữ nguyên,
+nhưng không còn là nghiệm thu toàn nhóm. Nguồn đính chính:
+`reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md`.
+
 ## 1. Nguồn case
 
 1. Nguồn duy nhất là `KIEM-THU/DANH-SACH-CASE.md`.
@@ -200,3 +207,69 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 110. DTO/DOM không được có ID, owner, tên, email, nội dung nhu cầu, tag hoặc note; route không có link detail hay action ghi cross-account.
 111. Ở `768/390/360`, mỗi hàng hiển thị dọc với nhãn cột; không cuộn ngang cấp trang hoặc ép chữ. Contrast tối thiểu `4.5:1`, target tối thiểu `44px`.
 112. Browser receipt bắt buộc overflow/table overflow/clipping/private leak/framework overlay/relevant console/write request `0`; filter `review` trả đúng tập con ẩn danh.
+
+## 17. AutoPost Hub — APUI-01..04
+
+113. Mở `/publishing` bằng đúng candidate SHA và ghi môi trường trước khi kiểm tra.
+114. Kiểm theo thứ tự dọc: 7 nguồn → kế hoạch/thương hiệu → kênh → lịch/hàng đợi → báo cáo/lịch sử.
+115. Kiểm từng locale VI/EN/ZH riêng; không đánh dấu đạt nếu bản VI còn từ giao diện tiếng Anh
+     ngoài tên riêng đã được duyệt (`AutoPost`, `Affiliate`, `OAuth`, `Asset Vault`, `Campaign`,
+     `Project`, `TOAN AAS`).
+116. Ở mobile, xác nhận không tràn ngang, không xếp hàng ngang khó thao tác và nút đạt tối thiểu
+     `44×44` nếu có tương tác.
+117. Handoff chỉ được kiểm tra điều hướng; không bấm để tạo OAuth, bài đăng, lịch, queue, số liệu,
+     job, provider call hoặc dữ liệu production. Nếu giao diện hiển thị kết quả/receipt khi chưa có
+     server capability, ghi lỗi APUI-04.
+118. Ghi rõ control-level/source PASS riêng với browser/AX/live; không gộp các mức bằng chứng.
+
+## 18. Trung tâm hỗ trợ khách hàng — SPUI-01..05
+
+119. Mở `/support`, `/tickets`, `/tickets/:id`, `/admin/support` và
+     `/admin/support/:id` bằng candidate SHA đúng; dùng fixture tài khoản/role QA cô lập.
+120. Kiểm theo thứ tự dọc: tiếp nhận → lọc/danh sách → chi tiết/dòng thời gian → phản hồi/
+     trạng thái → bằng chứng. Không coi việc thấy route hoặc thẻ disabled là đã hoạt động.
+121. Chọn VI/EN/ZH riêng; bản Việt phải dùng “Trung tâm hỗ trợ khách hàng”, không để
+     `Support Desk`, `Web Support Desk`, `Manager`, `Operator` hoặc thuật ngữ giao diện chưa
+     được duyệt lọt vào fixed chrome. Dữ liệu động như mã case, revision, thời điểm và trạng
+     thái canonical không tự dịch.
+122. Ở desktop/tablet/mobile `1440/1024/768/390`, kiểm focus/keyboard, target tối thiểu
+     `44×44`, contrast, overflow/clipping và lưới case chuyển một cột ở `<=620px`.
+123. Bằng chứng chỉ được chọn từ Asset Vault riêng; không upload bytes thô tại Support.
+     Kiểm loại/kích thước, xác nhận đã che dữ liệu, owner/revision và signed download; không
+     dùng bằng chứng thanh toán, QR, OCR, Telegram hoặc provider.
+124. Ở Admin, xác minh phản hồi công khai và ghi chú nội bộ là hai phạm vi riêng; cập nhật
+     trạng thái/mức ưu tiên phải có ghi chú, role, CSRF và revision do server cấp. Không approve
+     top-up, cộng Xu, gọi provider, gửi thông báo ngoài Web hoặc tạo ticket Bot.
+125. Ghi riêng source/control-level, browser/AX, CI và LIVE. Nếu capability hoặc runtime chưa
+     có, phải giữ `guarded` và `LIVE_PASS=NOT_TESTED`; không dùng `4/4` source để thay thế.
+
+## 19. AD-03 — kiểm tra liên kết hồ sơ Admin
+
+126. Ghi `BASE` và `HEAD` SHA; dùng đúng Admin fixture đã được cấp quyền và một
+     fixture customer/foreign owner riêng. Không dùng dữ liệu production để bơm
+     reference.
+127. Mở các màn hình Admin có record đơn và danh sách `items[]`. Khi server cấp
+     reference hợp lệ, kiểm đúng 5 kind: `request`, `job`, `asset`, `report`,
+     `audit`; kiểm tối đa 6 link trong một tập và label/id/path không bị cắt sai.
+128. Mở từng path và xác nhận chỉ có 5 họ nội bộ `/admin`, `/jobs`, `/assets`,
+     `/reports`, `/audit`. URL ngoài, `//`, `\\`, dot-segment thường hoặc mã hóa
+     không được điều hướng; record sai kind/ID phải fail-closed.
+129. Lặp cùng payload bằng customer/foreign fixture. Trường
+     `admin_record_references` phải không xuất hiện ở record đơn lẫn `items[]`;
+     không được lộ token, raw bridge field, user khác, provider hoặc URL tải tệp.
+130. Ghi DOM/ảnh/AX, console, network và mutation. Không bấm approve, refund,
+     charge, retry, delivery hoặc provider; case này chỉ đọc và xác minh
+     projection. Contract local `1 passed/56 deselected` không thay cho CI,
+     deployed, record thật, RBAC thật hay LIVE.
+
+## R218 checkpoint tester handoff — 21/10/2026
+
+1. Nguồn duy nhất của trạng thái đợt này là `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md`;
+   các artifact `reports/audit/R218-*-QA-20261020.json` trỏ đúng mức bằng chứng.
+2. Đã có browser evidence cho Music `18` cấu hình/36 route states, SubDub `48`, Image `72`,
+   tiện ích `120`, Video `48`, Motion `12`; đây là QA cô lập, không chứng minh provider, wallet,
+   production hay live.
+3. Trước khi báo PASS runtime, tester phải ghi riêng runtime SHA, service health, route/role,
+   output cuối, artifact/download readiness và `PROVIDER_CALLS/WALLET_MUTATIONS`.
+4. Lỗi ngoài phạm vi presentation phải thêm vào đúng nhóm ledger; không đổi tên case để né lịch sử.
+5. Trace CLS/LCP/INP hiện `NOT_RUN`; không được thay bằng screenshot hoặc HTTP 200.

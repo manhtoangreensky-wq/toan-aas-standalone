@@ -1,0 +1,31 @@
+{
+  "spec_id": "SD-B2-CORRECTION",
+  "date": "2026-10-21",
+  "base_sha": "2b858c88e489aa4d134b707afbfa920cc5356259",
+  "status": "SUBDUB_DRAFT_UI_VERIFIED_DELIVERY_PENDING",
+  "supersedes": "R218-SUBDUB-SHARED-DRAFT-QA-20261021.json broad draft capture claims",
+  "source_sha256": "1b0eeb64a1f0dba79510dde61cf633099c9aad941b09ee70265a9679947ac569",
+  "red": { "real_control_configurations": 1, "wrong_values": 14, "exit_code": 1, "artifact": "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/subdub-draft-red-20261021.json" },
+  "tests": { "focused_passed": 25, "focused_failed": 0, "full_node_passed": 861, "full_node_failed": 0, "python_ui_foundation_metadata_i18n_motion_passed": 119, "python_failed": 0 },
+  "review": { "independent_passed": 25, "remaining_important_critical": 0, "reviewer_browser": "NOT_RUN", "scope": "Normalized capture, direct render, shared precedence, session cleanup; not entire SubDub or app." },
+  "browser": {
+    "origin": "http://127.0.0.1:34289",
+    "environment": "Real signed isolated QA app and profile locale, Edge headless/reduced motion; Browser plugin unavailable",
+    "configurations": 24,
+    "profile_locales": ["vi", "en", "zh"],
+    "themes": ["light", "dark"],
+    "widths": [375, 390, 768, 1440],
+    "checks": ["actual capture", "Dubbing-Combo-Dubbing-Combo", "remount", "input/output zero and 200", "one checked voice", "latest shared target", "mode-specific formats", "top-center position", "single display", "presentation identity replacement clears draft", "guarded upload/CTA", "AX/screenshot", "zero overflow"],
+    "failures": 0,
+    "page_console_errors": 0,
+    "ui_non_get_requests": 0,
+    "external_requests": 0,
+    "result_path": "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/subdub-draft-green-final-20261021.json",
+    "result_sha256": "795cb9faaeb7bfb429a2f32c5bd453fc61357bfec69d65d4df3d0a7930105c62",
+    "runner_sha256": "b62cfa30f42cb3c3c072e3c0a77d266b35b92985fd85d3b556befa3b599559cb",
+    "setup": "One temporary account and 3 CSRF locale writes for final run, separate from blocked UI writes. Other RED/smoke runs used separate QA accounts in same isolated DB."
+  },
+  "ci_gate_correction": "Removed comment-only workaround; UI foundation test now checks localized boundary markers, absence of player/download markup and feature-confirm, not a retired Vietnamese sentence. Full foundation suite90/90, combined Python119/119.",
+  "remaining": ["CI on correction HEAD", "SD-C2 Voice continuation", "SD-D2 full review/number/mute", "SD-E2 semantics", "backend upload/provider/output/delivery", "motion last"],
+  "safety": { "provider_calls": 0, "wallet_mutations": 0, "production_operations": 0, "deploy": "NO", "live_pass": "NOT_TESTED" }
+}

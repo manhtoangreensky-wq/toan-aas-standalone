@@ -1,0 +1,45 @@
+{
+  "spec_id": "MU-D",
+  "date": "2026-10-20",
+  "scope": "Music bounded progress/report projection",
+  "base_sha": "2c216825b2b1fdfcdc4f97853961117299e39547",
+  "targeted_tests": {
+    "command": "node --test tests/music-report-projection.test.mjs tests/music-quote-freshness.test.mjs tests/music-canonical-suggestions-presentation.test.mjs tests/music-product-controls.test.mjs tests/music-flow-state-and-surface-contract.test.mjs tests/music-workspace-draft-navigation.test.mjs",
+    "passed": 38,
+    "failed": 0
+  },
+  "full_node_regression": {
+    "command": "node --test tests/*.test.mjs",
+    "passed": 812,
+    "failed": 0
+  },
+  "syntax": {
+    "portal_js": "PASS",
+    "portal_i18n_js": "PASS",
+    "diff_check": "PASS"
+  },
+  "browser_fixture": {
+    "environment": "isolated QA app 127.0.0.1:7628",
+    "report_sections": 1,
+    "progress_visible": true,
+    "audio_elements": 0,
+    "download_attributes": 0,
+    "external_requests": 0,
+    "page_errors": 0,
+    "provider_calls": 0,
+    "result": "PASS"
+  },
+  "data_policy": {
+    "private_urls_exposed": false,
+    "fake_two_track_claim": false,
+    "wallet_mutations": 0,
+    "deploy": "NO",
+    "live_pass": "NOT_TESTED"
+  },
+  "status": "SUPERSEDED_BY_RUNTIME_REVIEW",
+  "review_20261021": {
+    "limitations": "isolated child renderer/fixture inserted draft; real report-only confirm envelope was not tested",
+    "evidence_policy": "Historical measured counts retained; not product/runtime/interaction/locale completion.",
+    "record": "reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md"
+  }
+}

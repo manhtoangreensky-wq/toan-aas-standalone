@@ -19,7 +19,7 @@ for(const locale of ['vi','en','zh']){
     renderEmpty:(title,body)=>`<h3>${title}</h3><p>${body}</p>`,classifyPageBoundary:()=> 'runtime_generator'};
   vm.createContext(ctx);vm.runInContext(catalog,ctx);ctx.uiText=(k,f,p)=>ctx.TOANAASI18n.has(k)?ctx.TOANAASI18n.t(k,p,locale):f;
   vm.runInContext(fn('safeText')+'\n'+fn('normalizePath')+'\n'+fn('validProjectId')+'\n'+fn('validWorkspaceDraftId')+'\n'+section('  const ALLOWED_STATES','  const PAYMENT_STATUS_LABELS')+'\n'+fn('badge')+'\n'+fn('canAct')+'\n'+fn('telegramIdentityLinked')+'\n'+fn('actionBlockReason')+'\n'+fn('stateFor')+'\n'+fn('voiceUiText')+'\n'+fn('workspaceDraftIdForRoute')+'\n'+
-    section('  function renderFields(', '  function statusMessage(')+'\n'+section('  function flowHasFreshEstimate(', '  const ADMIN_TAB_GROUPS')+'\n'+
+    section('  function renderFields(', '  function statusMessage(')+'\n'+fn('flowQuoteExpiry')+'\n'+section('  function flowHasFreshEstimate(', '  const ADMIN_TAB_GROUPS')+'\n'+
     section('  const RESULT_LABELS', '  const SUBTITLE_STUDIO_COMPANION_INTENTS')+'\n'+fn('renderWorkspace'),ctx);
   const render=(flow,overrides={})=>ctx.renderWorkspace(page,{...makeContext(),...overrides,featureFlows:{[route]:flow}});
   test(`Voice quote is localized, preserves zero/unknown, and hides provider costs (${locale})`,()=>{
@@ -70,6 +70,16 @@ for(const locale of ['vi','en','zh']){
     const stale=visible(render({...quote(),webQuoteReceipt:''}));
     assert.match(stale,locale==='vi'?/làm mới/:locale==='en'?/refresh/i:/重新获取/);
   });
+  test(`Voice rejects an expired quote receipt while accepting a future expiry (${locale})`,()=>{
+    const future = quote();
+    future.data.estimate.quote_expires_at = new Date(Date.now() + 60_000).toISOString();
+    assert.match(render(future),/data-portal-action="feature-confirm"/);
+    const expired = quote();
+    expired.data.estimate.quote_expires_at = new Date(Date.now() - 60_000).toISOString();
+    const stale = visible(render(expired));
+    assert.doesNotMatch(render(expired),/data-portal-action="feature-confirm"/);
+    assert.match(stale,locale==='vi'?/làm mới/:locale==='en'?/refresh/i:/重新获取/);
+  });
   test(`Voice draft controls stay localized when quote execution and local authoring are both available (${locale})`,()=>{
     const html=render(quote(),{workspaceDraftFeatures:['voice_tts'],capabilities:{...makeContext().capabilities,'workspace-draft-save':true}});
     assert.match(html,/data-portal-action="workspace-draft-save"/);
@@ -96,6 +106,17 @@ for(const locale of ['vi','en','zh']){
       for(const invalid of [{...f,data:{tracking:{...f.data.tracking,feature:'video_ai_prompt'}}},{...f,data:{tracking:{...f.data.tracking,status:'unknown'}}},{...f,data:{job_id:'QA-job-01'}}])assert.doesNotMatch(render(invalid),/href="\/jobs\/QA-job-01"/);
     });
   }
+  test(`Voice renders a guarded canonical report without exposing a private output URL (${locale})`,()=>{
+    const flow={phase:'confirm',status:'completed',feature:'voice_tts',message:'QA_SERVER_MESSAGE',data:{
+      tracking:{id:'QA-job-report',feature:'voice_tts',status:'completed'},
+      report:{status:'completed',progress_percent:100,output_available:true,download_ready:false,delivery_ready:false,status_reason:'DELIVERY_PENDING'},
+      output_url:'https://invalid.example/private.mp3'
+    }};
+    const html=render(flow);
+    assert.match(html,/data-voice-report-state="available"/);
+    assert.match(visible(html),locale==='vi'?/Chưa sẵn sàng bàn giao/:locale==='en'?/not ready for delivery/i:/尚未准备交付/);
+    assert.doesNotMatch(html,/https:\/\/invalid\.example|data-voice-report-download/);
+  });
   test(`Voice error preserves escaped server feedback without fake output (${locale})`,()=>{
     const html=render({phase:'estimate',status:'error',feature:'voice_tts',message:'QA_ERROR <script>',data:{}});
     assert.match(html,/QA_ERROR &lt;script&gt;/);assert.doesNotMatch(html,/<audio\b|<script\b|feature-confirm/);

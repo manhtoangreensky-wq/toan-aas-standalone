@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-20",
+  "spec_id": "VOICE-QUOTE-IDLE-001",
+  "baseline_sha": "8d53dabf48f422fd25dd893ce730b2cce49353f1",
+  "scope": "Voice quote idle expiry presentation on tts/saved/stt/clone; canonical deadline only, no shell remount or request",
+  "source_raw_sha256": {
+    "static/portal/portal.js": "38e22e479d29c6319d943b3de9cdf57ed62455fa5f64c7610779fdb069bac98a",
+    "static/portal/portal-i18n.js": "b535daf355e01d1a729eb6b68bb6f1635553476a72dd94921e2eb4890a56b008"
+  },
+  "handoff": {"builder": "Antigravity", "rounds": 2, "result": "Worker failed before source change/report; primary takeover on same spec"},
+  "behavior_tests": {"command": "node --test tests/voice-quote-expiry.test.mjs", "passed": 8, "failed": 0},
+  "focused_tests": {"command": "node --test tests/voice-quote-expiry.test.mjs tests/voice-quote-edit-freshness.test.mjs tests/voice-flow-state-presentation.test.mjs", "passed": 70, "failed": 0, "exit_code": 0},
+  "full_node_tests": {"command": "node --test tests/*.test.mjs", "passed": 769, "failed": 0, "exit_code": 0},
+  "baseline_full_node": {"passed": 761, "failed": 0, "evidence": "Prior checkpoint 8d53dab/run39406730261; historical 761-test quote-edit suite"},
+  "browser": {
+    "tool": "Playwright, Edge headless, temporary profile",
+    "browser_plugin": "Not available in this session",
+    "target": "Isolated localhost GET-only synthetic API fixture serving repository shell/renderer/styles/integration.js",
+    "matrix": {"tts": {"locales": ["vi", "en", "zh"], "themes": ["light", "dark"], "widths": [390, 768, 1440], "passed": 18}, "additional_routes": ["/voice/saved", "/voice/stt", "/voice/clone"], "additional_route_cases": 3, "reduced_motion_cases": 1, "total_passed": 22, "total_failed": 0},
+    "observed": {"existing_confirm_hidden_at_expiry": true, "localized_expiry_note": true, "form_node_retained": true, "focus_retained": true, "window_scroll_retained": true, "input_values_retained": true, "zero_volume_retained": true, "selected_stt_clone_files_retained": true, "post_expiry_input_does_not_restore_confirm": true, "horizontal_overflow_px": 0, "console_errors": []},
+    "network": {"fixture_get_requests": 397, "write_requests": [], "unknown_api_requests": [], "external_requests": []},
+    "raw_evidence": "../qa/r218-voice-inventory/voice-quote-idle-browser.json",
+    "raw_evidence_sha256": "f4c1e225e1e8a17a05c8fa68290bc2a9bf5808d2baf212f7f3c274996d9b9121",
+    "screenshot": "../qa/r218-voice-inventory/voice-quote-idle-after-vi-dark-390.png",
+    "screenshot_raw_sha256": "e0dbc487d58a361fb312ed90d077e8ac1d2217061a9a9c70ec45957217c24263",
+    "harness_correction": "Initial harness expected an STT confirm. integration.js excludes voice_stt from its executable feature allowlist; final case correctly expects guarded STT. Product gates were not changed.",
+    "runtime_limitations": "Assigned synthetic local files exercise DOM retention only. No bytes uploaded, estimate requested, confirm invoked, audio generated or real account/provider used. Motion runtime is excluded from the fixture; reduced-motion case checks quote lifecycle under the media preference, not animation performance."
+  },
+  "protected_comparators": "git diff 8d53dab --name-only -- '*.py' static/portal/integration.js static/portal/portal.css static/portal/portal-theme.css .github/workflows -> empty",
+  "provider_calls": 0,
+  "wallet_mutations": 0,
+  "production_data_mutations": 0,
+  "deploy": "NO",
+  "live_pass": "NOT_TESTED",
+  "delivery": "Local idle UI verified; current delivery SHA and fresh CI recorded on PR #654 after push",
+  "remaining": ["Fresh CI for idle source checkpoint", "Canonical Voice Vault management/preview/handoff contracts", "STT execution allowlist/adapter", "Real quote/provider/audio/delivery/LIVE", "Remaining Voice result/progress/player/report/retry presentation"]
+}

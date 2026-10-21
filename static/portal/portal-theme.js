@@ -74,14 +74,7 @@
       } catch (_) { queryTheme = ""; }
       if (valid(queryTheme)) return queryTheme;
 
-      if (isAdminRoute()) {
-        try {
-          if (global.localStorage) global.localStorage.removeItem(ADMIN_THEME_STORAGE_KEY);
-        } catch (_) {}
-        return "light";
-      }
-
-      return valid(global.localStorage && global.localStorage.getItem(STORAGE_KEY));
+      return valid(global.localStorage && global.localStorage.getItem(currentStorageKey()));
     } catch (_) {
       return null;
     }
@@ -101,9 +94,6 @@
   }
 
   function resolve(preference) {
-    if (isAdminRoute()) {
-      return "light";
-    }
     const selected = valid(preference) || fallbackPreference();
     return selected === "system" ? systemTheme() : selected;
   }
@@ -113,16 +103,13 @@
   let resolved = resolve(preference);
 
   function setMetaColor(theme) {
-    if (!global.document || !global.document.querySelector) return;
-    const meta = global.document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", theme === "dark" ? "#062026" : "#0d9488");
+    if (!global.document || !global.document.querySelectorAll) return;
+    const color = theme === "dark" ? (isAdminRoute() ? "#0b132b" : "#062026") : "#0d9488";
+    global.document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => meta.setAttribute("content", color));
   }
 
   function apply(options) {
     const settings = options && typeof options === "object" ? options : {};
-    if (isAdminRoute()) {
-      preference = "light";
-    }
     resolved = resolve(preference);
     const documentElement = global.document && global.document.documentElement;
     if (documentElement) {
@@ -140,7 +127,7 @@
   function persist(value) {
     try {
       if (isAdminRoute()) {
-        if (global.localStorage) global.localStorage.removeItem(ADMIN_THEME_STORAGE_KEY);
+        if (global.localStorage) global.localStorage.setItem(ADMIN_THEME_STORAGE_KEY, value);
       } else {
         if (value === "system") global.localStorage && global.localStorage.removeItem(STORAGE_KEY);
         else if (global.localStorage) global.localStorage.setItem(STORAGE_KEY, value);
@@ -173,9 +160,6 @@
   }
 
   function nextPreference() {
-    if (isAdminRoute()) {
-      return "light";
-    }
     const index = THEMES.indexOf(preference);
     return THEMES[(index + 1) % THEMES.length];
   }
@@ -232,7 +216,7 @@
   }
 
   function onSystemChange() {
-    if (!isAdminRoute() && preference === "system") apply();
+    if (preference === "system") apply();
   }
 
   function bind() {

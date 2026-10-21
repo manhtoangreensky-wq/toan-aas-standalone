@@ -1,5 +1,146 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Free Tools — đối chiếu ngày22/10/2026
+
+| Chức năng | Đã chứng minh | Còn mở |
+|---|---|---|
+| Làm sạchSRT/VTT và tảiTXT | Làm sạch nội dung rồi tải bytesTXT khớpUI ở12cấu hình appQA thật | Chưa suy ra mọi định dạng phụ đề đều được hỗ trợ |
+| Trích liên kết/mã nhúngYouTube | Parser/link/ID giữ đúng; browserload/error/retry đúng, khôngsrc rỗng/CSPinline | Ảnh kiểm soát không chứng minh YouTube luôn có mọi độ phân giải; không cam kết chất lượng từ nhãn |
+| Voice và sản phẩmBot | InitialUI không tự điền nội dungQA/hero pill ở96states | Không đóng quote/provider/engine/job/output/delivery từ việc kiểm giao diện |
+
+## SD-C2 — nối giao diện, chưa phải áp dụng giọng canonical
+
+Web đã giữ ngữ cảnh SubDub→kho/thêm giọng→quay lại trong cùng tài liệu;
+48 vòng browser có profile locale/theme thực, không chỉ kiểm href. Quyền
+lưu/preview/áp dụng profile vào SubDub và báo giá/engine/delivery vẫn chưa
+được chứng minh từ bước điều hướng này. Không chuyển các mục T0 thành PASS.
+
+## SubDub — không đồng nhất control có mặt với parity Bot
+
+Draft UI cần đi theo cấu hình mới nhất, giữ0/200 và format riêng. Bản test21
+đầu chưa chạy capture thật nên kết luận đã giữ draft là quá rộng; đã mở lại
+và sửa cùng SD-B2 bằng kiểm thử control/browser. Khả năng Bot gồm nhận tệp,
+nhận diện người nói, dịch/lồng tiếng, kho giọng, báo giá và giao tệp vẫn chưa
+được chứng minh từ lớp presentation. SD-C2/SD-D2/SD-E2 và các gap T0 giữ mở.
+
+## Đối chiếu Music/SFX Library — 21/10/2026
+
+Yêu cầu Bot gồm nghe/tải/lưu/dùng cho video. Web Library hiện chỉ hiển thị
+thông tin bộ sưu tập; không được gọi là đã đủ các khả năng đó. MU-E-01 sửa
+đúng lỗi role SFX, phản hồi failed/stale, locale phân trang/toast và empty/loading.
+Browser39 cấu hình và test36/36 chứng minh thao tác trình bày, không phải
+khả năng nghe/tải, quyền backend hoặc LIVE. MU-E-02 copy và Q0-TOAST-STACK
+vẫn mở tại completion ledger.
+
+MU-E-02 đã rút câu chữ hiển thị nhưng không mở thêm khả năng nghe, tải, lưu,
+dùng cho video hay quyền backend. Bằng chứng copy/browser nằm ở
+`reports/audit/R218-MUSIC-LIBRARY-COPY-QA-20261021.json`; Q0-TOAST-STACK vẫn mở.
+
+## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
+
+Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;
+không đủ để đóng chức năng Bot→Web. Xem
+`reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md`.
+Music correction mới chỉ đóng giá hiển thị/receipt UI, actions và report của
+luồng có dữ liệu, bằng test thực13/13 và browser18 cấu hình dùng locale hồ sơ
+đúng. SubDub/Image/Video/utilities/Admin/AX/motion runtime còn phải nghiệm thu
+từng thao tác, không chỉ tồn tại control. Không mở engine/wallet/auth/schema.
+
+## Đối chiếu Voice idle expiry — 20/10/2026
+
+| Yêu cầu | Hiện tại và bằng chứng |
+|---|---|
+| Quote hết hạn khi khách chưa thao tác | Timer dùng timestamp canonical; ẩn xác nhận cũ và hiện thông báo ngay trên form. Không remount shell hoặc tự lấy quote mới |
+| Giữ công việc khách đang nhập | Browser fixture xác minh form node/focus/các field/âm lượng 0 và tệp STT/Thêm giọng còn nguyên; 22/22 cấu hình, console/overflow/write/request ngoài/unknown API đều 0 |
+| Chuyển trang hoặc thay deadline | Test hành vi timer 8/8; focused 70/70, full Node 769/769. Timer bị hủy hoặc cập nhật theo dữ liệu mới |
+| Parity vận hành với Bot | Chưa đóng: STT vẫn guarded ở integration; file fixture không chứng minh upload/engine; quote thật, generation, kho giọng và delivery còn theo T0/P1 |
+
+Tài liệu trước chỉ ghi “quote expiry UI đã khóa” dựa trên thời điểm render.
+Điều đó chưa chứng minh hết hạn lúc trang đứng yên. Lát này bổ sung đúng
+evidence idle; CI sau push và LIVE vẫn được báo riêng trên PR #654.
+
+## Đối chiếu Voice quote freshness — 20/10/2026
+
+- Trước: renderer hiện input đã đổi cùng confirm của quote cũ; khi nhấn,
+  integration mới phát hiện fingerprint khác. Sau: UI ẩn confirm và hiện
+  thông báo lấy báo giá mới ngay khi đổi field, giữ focus/bản nháp.
+- Source regression `11/11`, focused `77/77`, full Node `761/761`; browser
+  TTS `18` cấu hình × `6` kiểu đổi input = `108` lượt đạt. File/consent chỉ
+  được kiểm ở helper source. API fingerprint/receipt/quote/wallet không đổi.
+- CI quote-edit tại `8d53dab` đạt run `39406730261`; idle UI được nghiệm thu
+  ở mục trên. STT/clone runtime và audio/provider/delivery/LIVE có gate riêng.
+
+## Đối chiếu Voice default — 20/10/2026
+
+| Yêu cầu | Trạng thái đã xác minh |
+|---|---|
+| Giọng mặc định Nữ/Nam | UI bắt buộc chọn rõ `female`/`male`; nhãn VI/EN/ZH, giữ lựa chọn và lời thoại khi chuyển Kho giọng → TTS. Renderer 15/15, browser fixture 18/18 |
+| Fallback một giọng hoặc trung tính theo capability | Vẫn mở. Projection readiness hiện không cung cấp danh sách giới tính; helper trước chỉ được kiểm bằng dữ liệu tổng hợp và đã bị bỏ |
+| Tạo, nghe, tải và chuyển giọng qua sản phẩm | Các gate runtime/delivery và R218-02A còn mở; kết quả UI không thay cho bằng chứng vận hành thật |
+
+Kết luận `[x] DEFAULT-GENDER-CAPABILITY` trước đây đã được sửa thành `[~]`
+trong ledger R218. Nguồn backend chỉ được đọc để xác minh contract.
+
+## Đối chiếu AD-03 — liên kết request → job → asset → report → audit (20/10/2026)
+
+| Yêu cầu | Hiện tại trên WebApp | Trạng thái và bằng chứng |
+|---|---|---|
+| Admin xem đúng liên kết hồ sơ do máy chủ cấp | `admin_record_references` được chiếu có điều kiện ở record đơn và `items[]`; chỉ nhận 5 kind, tối đa 6 link/tập và 5 họ đường dẫn nội bộ | ⚠️ Source/local đã khóa projection; `tests/test_copyfast_bridge.py -k admin_record_references` `1 passed/56 deselected`; CI, record thật và LIVE còn mở |
+| Không lộ liên kết cho customer/non-Admin | Trường bị bỏ hoàn toàn khi không có `allow_admin_user_refs`; payload sai kind/ID fail-closed, path ngoài allowlist thành rỗng | ✅ Contract local đạt; chưa có browser fixture role thật hoặc production RBAC |
+| Chuỗi nghiệp vụ thật request → job → asset → report → audit | Chưa tự suy diễn hoặc tự tạo chuỗi; projection chỉ trình bày reference explicit từ server, không tạo job, charge, delivery hay audit decision | ❌ Chưa có bridge/record/runtime evidence; giữ mở trong AD-03 tổng |
+
+Các con số trên được đo từ source/test hiện tại, không suy diễn từ HTTP 200 hay
+HTML. `735/735` Node, `py_compile`, `node --check` và `git diff --check` là
+evidence local; chưa phải CI, deployed, LIVE hoặc bằng chứng duyệt tiền.
+
+## Đối chiếu Admin theme — 19/10/2026
+
+- Cũ: controller luôn ép Light và xóa preference Admin; CSS áp light tokens
+  cho cả selector dark; nút theme bị ẩn. Mới: giữ default Light, nhưng cho chọn
+  Dark/System, lưu riêng và khôi phục sau reload; customer preference không đổi.
+- Dark không đổi sang đen: dùng các `--portal-dark-*` navy/teal đã có; chỉ nhánh
+  Admin. Light vẫn cùng canvas/thẻ, chỉ sửa AA pairs bằng sắc teal đậm sẵn có.
+- Bằng chứng core: Node 17/17, browser home/login 24 cases, min text contrast
+  7,61 dark/5,24 light; không mất email khi đổi theme, không HTTP write.
+  Không dùng bằng chứng này để đóng mọi module/role/data/backend/LIVE.
+
+## Đối chiếu Admin overview — 19/10/2026
+
+- Yêu cầu phân quyền từng bộ phận: renderer nay lọc banner/lối tắt bằng
+  `serverAuthorizesAdminRoute`, không coi người mở `/admin` được dùng mọi module.
+- Tổng hàng đợi: không được suy ra từ số dòng của một trang; giá trị thiếu
+  khác `0` thật. UI chỉ nhận aggregate số nguyên không âm do máy chủ trả.
+- Báo cáo trước ghi Admin browser 72/72 chỉ là smoke nội dung/overflow/focus;
+  probe cũ không đủ để kết luận role, locale, rail dọc hoặc dark mode hoàn chỉnh.
+  Probe mới `--shortcuts` kiểm 108 trạng thái cho riêng banner/lối tắt/count;
+  backend, approval, dữ liệu thật vẫn mở; core theme được kiểm riêng theo mục trên.
+
+## Đối chiếu UT-01 — workspace Dịch (ứng viên cục bộ 18/10/2026)
+
+| Yêu cầu trong inventory Bot | Hiện tại trên ứng viên Web | Trạng thái |
+|---|---|---|
+| Dịch text/voice/file, nguồn tự động, chọn đích và hai chiều | Workspace một cột có nguồn tự nhận diện, 21 ngôn ngữ đích, ô tìm kiếm, giữ bản gốc và dịch hai chiều ở lớp control-level | ⚠️ |
+| Bắt đầu/dừng, kết quả và lịch sử | Có vùng trình bày trạng thái, kết quả rỗng và lịch sử rỗng; nút bắt đầu/dừng vẫn bị khóa nếu chưa có capability máy chủ | ⚠️ |
+| Chạy dịch thật và giao tệp | Chưa có DTO/capability/provider/quote/job/output/delivery; không được suy diễn từ giao diện | ⚠️ |
+
+Bằng chứng: `docs/superpowers/specs/2026-10-18-r218-06a-translation-workspace-controls.md`,
+`tests/translation-workspace-controls.test.mjs` `4/4`, full Node `548/548`.
+Luồng `/translate` và redirect companion cũ được giữ nguyên.
+
+## Đối chiếu UT-04 — tiện ích miễn phí (ứng viên cục bộ 18/10/2026)
+
+| Yêu cầu trong inventory Bot | Hiện tại trên ứng viên Web | Trạng thái |
+|---|---|---|
+| QR | VietQR giữ bank/account/name/amount/memo/template, preview, tải ảnh và sao chép liên kết cục bộ | ⚠️ |
+| Avatar | Có phong cách, brief, xác nhận quyền sử dụng, preview rỗng và capability gate; chưa tạo ảnh | ⚠️ |
+| Tỷ giá | Có USD/VNĐ/Xu, nguồn, thời gian, độ mới và nút làm mới guarded; chưa lấy nguồn thật | ⚠️ |
+| Thời tiết | Có địa điểm, đơn vị C/F, result/empty copy và boundary loading/error/stale; chưa gọi API | ⚠️ |
+| Downloader | Có nguồn, URL, xác nhận quyền, vùng kiểm tra và gate delivery; chưa kiểm tra/tải tệp | ⚠️ |
+
+Bằng chứng: `docs/superpowers/specs/2026-10-18-r218-06b-utilities-qr-avatar-rate-weather-download.md`,
+`tests/free-tools-hub-presentation.test.mjs` `5/5`, full Node `549/549`.
+Không suy diễn control-level thành runtime parity hoặc LIVE.
+
 ## Đối chiếu Image — ứng viên cục bộ 08/10/2026
 
 | Nguồn trước sửa | Candidate hiện tại | Bằng chứng |
@@ -534,6 +675,23 @@ không đổi engine, route/action/field/capability, ví/Xu hoặc dữ liệu p
 Batch này chỉ đóng source presentation của Product Video. Không được gọi đây là parity runtime
 với Bot, không đổi engine, route/action/field/capability, ví/Xu hoặc dữ liệu production.
 
+## Đối chiếu Bot → WebApp — R218 SubDub voice lanes — 18/10/2026
+
+| Chức năng Bot tham chiếu | WebApp hiện tại | Bằng chứng / giới hạn |
+|---|---|---|
+| Bốn lane: phụ đề gốc, phụ đề dịch, lồng tiếng, combo | Một workspace `/subdub` giữ bốn tab và đổi panel tại chỗ | `tests/subdub-hub-presentation.test.mjs` `14/14` |
+| Giọng mặc định nam/nữ | Đã hiển thị thành hai lane riêng, trạng thái guarded | `static/portal/portal.js`; chưa có bridge giọng thật |
+| Giọng đã lưu và giọng tự thêm | Đã có lane, Voice Library link và lý do guarded | Chưa có projection `voice_profile_id` từ server |
+| Auto 2 và Auto Multi 3–8 | Đã tách thành hai lane canonical `auto_two` và `auto_multi_3_8`; speaker-map panel chờ runtime data | Chưa chạy callback thật, không ép số người nói |
+| Smart Multi | Đã có lane `smart_multi` riêng và callback `auto_smart_multivoice` guarded | Chưa có speaker detection, mapping override hoặc artifact |
+| Nguồn phụ đề và ngôn ngữ | Đã có lựa chọn “đã có/chưa có phụ đề”, tự nhận diện nguồn, catalog target đầy đủ với Việt đứng trước; nhãn được cân bằng VI/EN/ZH | Upload/preview/search/runtime language capability chưa có bằng chứng |
+| Vị trí phụ đề | Đã hiển thị đủ 7 vị trí trong các mode có phụ đề | Chưa áp dụng vào artifact thật khi execution chưa mở |
+| Báo giá, xác nhận, tiến trình, artifact, receipt | Stage 3/4 vẫn guarded/empty | Không tạo job hoặc output giả; R217-07D/E còn mở |
+
+Tài liệu gốc của Bot mô tả nhiều hơn UI Web hiện tại ở phần speaker mapping, artifact QC,
+delivery receipt và charge sau delivery. R218 giữ các phần đó trong wave runtime riêng, không
+đánh dấu PASS từ source presentation.
+
 ## Đối chiếu bổ sung — SOURCE-CONTENT-01/03 — 17/10/2026
 
 | Chức năng/trạng thái | Hiện tại trong candidate WebApp | Bằng chứng / giới hạn |
@@ -564,3 +722,141 @@ duyệt tiền thật.
 | Route được bảo vệ giữ ngôn ngữ đã chọn khi yêu cầu đăng nhập | `/features?lang=vi|en|zh` nay tạo return target có đúng `lang` và mở `/login` cùng locale; client chỉ nhận một tham số `lang` đã allowlist. | `app.py`, `static/portal/portal-auth.js`, `static/portal/integration.js`; focused `17/17`, full Node `525/525` |
 | An toàn return path | Query ngoài `lang`, fragment, backslash, đường dẫn ngoài và auth-loop bị fail-closed; không đổi route/action/field hoặc quyền. | `node --check`, `py_compile`, `git diff --check`; chưa có live/CI sau candidate |
 | Trạng thái giao nhận | Candidate commit `0ad78e5` đã khóa source nhưng chưa phải merge/deploy/live. | Cần CI và read-only production recheck trước khi đánh dấu ✅ runtime |
+
+## R218 — Sửa lại cách đối chiếu Bot → Web — 18/10/2026
+
+| Nguồn | Kết luận phải dùng khi lập kế hoạch |
+|---|---|
+| Voice menu/handlers | Có TTS/STT/default/Vault/clone/preview/speed/volume và reuse; Web cần đủ controls, không chỉ 3 launcher |
+| Music menu 3-tier | Nền/song/SFX/library có luồng; editor vẫn guard, 2 output chưa có delivery proof; duration legacy cần xác minh reachable |
+| SubDub keyboard | Default/saved/custom + Auto2/Multi3–8/Smart Multi riêng; volume dub 0–200, vị trí subtitle và original/translated source |
+| Video profile catalog | 32 profile planning thay danh mục legacy 12, không tương đương 32 engine |
+| Video AI Edit catalog | 39 options/5 nhóm, production readiness riêng; toolbar không là CapCut parity |
+| Docs shared-master V2 | DESIGN; không coi là runtime authority khi chưa kiểm code/path thật |
+| Các menu còn lại | Free/Dịch/Content/Memory/Docs/AutoPost/Support/Account/Admin đều có inventory và spec R218; không bỏ qua |
+
+Chi tiết nguồn: reports/audit/WEBAPP-BOT-PRODUCT-INVENTORY-R218.md.
+Lịch sử source PASS phía trên chỉ có giá trị đúng scope/HEAD/ngày đã ghi;
+không tự nâng thành hoàn tất toàn bộ sản phẩm hay deployment hiện tại.
+
+## R218 — Đối chiếu hiện tại sau CI run 39101124230 — 18/10/2026
+
+| Phạm vi | Hiện trạng có bằng chứng | Chưa được suy diễn |
+|---|---|---|
+| SubDub voice lanes | HEAD `148be4f6ec18e3c7fe3abfee8ca8a34ee1a5d099`; 13/13 test mục tiêu; CI Verify Web App và Authenticated QA xanh; 456/456 route/render case | Không chứng minh Voice Vault projection, speaker detection, upload, quote, job, output hay delivery |
+| Các nhóm Voice/Music/Image/Video/Utilities/AutoPost/Admin | Inventory B01–B34, plan/checklist/spec R218 đã ghi đủ control cần đối chiếu theo bảng Bot | Chưa có control-level/browser evidence cho từng nhóm; mục chưa có evidence vẫn mở `[ ]`/`[~]` trong checklist |
+| Runtime và production | Không gọi provider, không đổi ví/Xu, không sửa dữ liệu production | `MERGED != DEPLOYED != LIVE`; live pass vẫn `NOT_TESTED` |
+
+Nguồn completion ledger duy nhất của đợt này là
+`reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md`; không đánh dấu hoàn tất
+chỉ vì route trả HTML hoặc CI render xanh.
+## R218 — Voice control contract sau candidate 814b70c — 18/10/2026
+
+| Control | Hiện trạng đã khóa | Bằng chứng | Còn mở |
+|---|---|---|---|
+| Tốc độ đọc | `speed` số `0,1–2,0`, mặc định `1,0`, preset Chậm/Chuẩn/Nhanh; `/voice/tts` và `/voice/saved` dùng cùng field | `tests/voice-controls-contract.test.mjs` `3/3`; Voice regression `97/97` | quote stale, runtime/CI/live |
+| Âm lượng | `volume_percent` số `0–200` + slider đồng bộ, chỉ một field gửi FormData | cùng test `3/3`; full Node `530/530` | cảnh báo mức `0`, output/runtime |
+| Bản địa hóa | label/help/preset dùng catalogue VI/EN/ZH; dữ liệu gửi giữ giá trị số | `portal.js`, catalogue `field.*`/`option.speed.*` | browser screenshot/AX sau deploy |
+
+Candidate này chỉ đóng control-level UI/UX, không tuyên bố TTS/STT/Voice Vault/provider/output đã hoạt động thật.
+
+## Đối chiếu Music product workspace — R218 — 18/10/2026
+
+| Chức năng cần đối chiếu | Trạng thái candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Nhạc nền và bài hát có lời trên hai route rõ ràng | Đã có `/music/create` và `/music/song`, cùng workspace dọc 4 bước; route nền không lộ field bài hát | `static/portal/portal.js`; `tests/music-product-controls.test.mjs` |
+| Gói chất lượng và ba phương án | Có 3 tier và 3 ô phương án ở trạng thái guarded, không tự gán giá hoặc audio | Music control `7/7`; không có quote/provider/output thật |
+| Lời, kiểu giọng, thời lượng | Route bài hát giữ `lyrics`, `vocal_mode` (tự động/nam/nữ/song ca), `song_length_mode` (giây/nửa/đầy đủ) và `duration_seconds`; đổi sang giai điệu khóa field lời/giọng | `musicProductFields()` + synchronizer; server capability chưa chứng minh |
+| Locale và giao diện | Catalogue fixed chrome cân bằng `vi/en/zh`; card dọc, light/dark dùng token xanh/ngọc, không thêm motion | `static/portal/portal-i18n.js`, `static/portal/portal-theme.css`; chưa có screenshot/AX/live |
+| Player/tải/lưu/dùng lại/chỉnh nhạc/giao tệp | Chưa mở; không còn UI giả để thay thế capability thật | Checklist MU-04..MU-12 còn `[ ]/[!]`; provider, asset delivery và runtime chưa chạy |
+
+Kết luận: batch này khóa **control-level UI/UX và ranh giới guarded**, không được gọi là
+Music parity runtime với Bot hoặc là tệp đã tạo. Các mục quote, confirm, generation, editor,
+player/download/save/reuse, hai bản giao tệp và browser/CI/live tiếp tục theo thứ tự R218.
+
+## Đối chiếu AutoPost Hub — R218 — 18/10/2026
+
+| Chức năng cần đối chiếu | Hiện tại trên WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Bảy nguồn nội dung | Có các nguồn chủ đề/ý tưởng, liên kết tham khảo, Affiliate, tệp đa phương tiện, video, ảnh và kế hoạch/bản nháp | `static/portal/portal.js`; `tests/autopost-hub-product-controls.test.mjs` |
+| Trình tự thao tác | Một workspace dọc có 5 bước: nguồn, kế hoạch/thương hiệu, kênh, lịch/hàng đợi, báo cáo/lịch sử | Test AutoPost `4/4`; chưa có execution runtime |
+| Kênh, lịch, hàng đợi, Affiliate | Có lane trình bày và trạng thái guarded; không tự tạo lịch, bài đăng, số liệu hoặc biên nhận | Không có OAuth, publish receipt, queue receipt hay metrics thật |
+| Locale và responsive | Bộ khóa VI/EN/ZH cân bằng; bố cục giữ palette xanh/ngọc và xếp một cột trên màn hình hẹp | Full Node `562/562`, syntax và `git diff --check` đạt; browser/AX/live chưa đo |
+
+Kết luận: AutoPost mới đóng control-level UI/UX và boundary trung thực. AP-01..05 vẫn giữ
+`[~]` trong completion ledger cho tới khi có capability máy chủ, browser/AX, queue/history
+receipt và delivery evidence riêng.
+
+## Đối chiếu Trung tâm hỗ trợ khách hàng — R218-07B — 18/10/2026
+
+| Chức năng cần đối chiếu | Hiện tại trên WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Tiếp nhận và danh sách yêu cầu | Có form tiếp nhận, lọc nhóm/trạng thái, phân trang, số liệu theo trạng thái và các trạng thái rỗng/đang tải/lỗi/bảo vệ | `static/portal/portal.js`; `tests/support-hub-product-controls.test.mjs` |
+| Chi tiết và phản hồi | Có mã yêu cầu, revision, dòng thời gian, phản hồi khách hàng, đóng/mở lại và recovery theo trạng thái | Control-level `4/4`; chưa có signed browser evidence |
+| Bằng chứng riêng tư | Chỉ chọn tệp đã có trong Asset Vault, xác nhận đã che thông tin, giới hạn loại/kích thước và liên kết theo revision; không upload bytes tại Trung tâm hỗ trợ | Helper `renderSupportEvidence`; capability/delivery server vẫn mở |
+| Quản trị | Có phản hồi công khai/nội bộ tách riêng, cập nhật trạng thái/mức ưu tiên và ghi chú; role/revision do máy chủ kiểm tra | `support-admin-case-reply`, `support-admin-case-update`; browser/AX/live chưa đo |
+| Locale/responsive | Fixed chrome VI/EN/ZH tách catalogue; bản Việt dùng “Trung tâm hỗ trợ khách hàng”; lưới case xếp một cột ở màn hình hẹp | Full Node `566/566`, syntax và `git diff --check` đạt |
+
+Kết luận: Support mới đóng lát control-level UI/UX và ranh giới an toàn; SP-01 vẫn `[~]` trong
+completion ledger cho tới khi có capability máy chủ, dữ liệu thật, browser/AX, CI và LIVE.
+SP-02 (Guide/Chat Pro/feedback/community) vẫn là mục riêng chưa thực thi.
+
+## Đối chiếu Voice Vault dùng lại — R218 — 18/10/2026
+
+| Chức năng gốc cần có | Trạng thái hiện tại trên WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Dùng giọng đã lưu ở SubDub và Video | Chưa đạt: có `2` link mở công cụ, không chuyển profile/draft. Nhãn đã sửa thành “Mở…” để phản ánh đúng. | `tests/voice-inventory-presentation.test.mjs`; browser QA xác minh navigation, không tuyên bố reuse. |
+| Trạng thái, quyền, mặc định và nghe thử | Mỗi hồ sơ hiển thị trạng thái, quyền sử dụng, cờ mặc định, metadata nghe thử và thời điểm cập nhật. | Voice inventory test ở `3/3` locale; preview vẫn chỉ là metadata, chưa có signed link. |
+| Đổi tên, đặt mặc định, xóa, nghe thử | Chưa đạt: bỏ `4` nút luôn disabled gây rối; ghi thông báo ngắn và giữ yêu cầu mở trong checklist. | API hiện có `/voice/profiles` dạng list; không có management/search/pager contract để wire UI. |
+| Đếm nội dung và cảnh báo âm lượng 0 | Đã có đếm từ/ký tự Unicode, giữ 0 và cảnh báo không tiếng, đồng bộ range/number và hydration. | `tests/voice-input-feedback.test.mjs` 4/4; browser 18/18 cấu hình. |
+| Locale và bố cục | VI/EN/ZH, gồm aria-label preset tốc độ; palette xanh/ngọc, tương phản cảnh báo 11,25:1 sáng và 8,84:1 tối. | Voice input/inventory/flow `64/64`; full Node `591/591`; browser/AX với fixture, LIVE chưa đo. |
+
+Kết luận: đếm nội dung và cảnh báo 0% đã có bằng chứng renderer/interaction. Điều hướng
+không được coi là profile handoff; hướng dẫn clone không phải wizard chạy thật. Voice Vault
+và runtime parity vẫn mở theo ledger.
+
+## Đối chiếu Voice STT workspace — R218 — 18/10/2026
+
+Checkpoint inventory 19/10: đã kiểm read-state/retry/clear-stale bằng 34/34
+test inventory và 18 cấu hình trình duyệt, shell + integration.js thật trên
+API fixture. Đây là nghiệm thu lớp đọc/hiển thị. GET Core hiện trả tối đa 50
+mục, `total` bằng số mục trả về; không chứng minh đã tải toàn bộ kho. Các proxy
+management ở `c6bc455` được gỡ vì không có HTTP endpoint tương ứng phía Core.
+Management/preview/handoff giữ mở; không tính là tính năng đã chạy như Bot.
+
+| Chức năng cần đối chiếu | Hiện tại trên WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| STT trong workspace Voice | Có lane Giọng nói thành văn bản cùng TTS, Kho giọng và Thêm giọng; deep link `/voice/stt` và alias `/voice/asr` giữ đúng route | `renderVoiceWorkspaceNav()`; `tests/voice-workspace-stt-contract.test.mjs` `4/4` |
+| Nguồn và ngôn ngữ | Có tệp audio/video nguồn, Tự nhận diện hoặc catalog ngôn ngữ nguồn, không trộn nhãn giữa VI/EN/ZH | `FIELD_SETS.voiceStt`; catalogue `portal-i18n.js`; quick-switch `152` destination mỗi locale |
+| Định dạng đầu ra | Có Văn bản, SRT và VTT; khu vực kết quả vẫn rỗng/guarded khi máy chủ chưa cấp capability | Không tạo transcript, tệp hoặc download giả; upload/progress/copy/export runtime còn mở |
+| Responsive và palette | Bốn lane xếp `4` cột desktop, `2` cột tablet và `1` cột màn hình nhỏ; giữ token xanh dương/xanh ngọc | `portal-theme.css`; contract source-level, chưa có browser AX upload/live evidence riêng cho STT |
+
+Kết luận: STT đã đạt control-level UI/UX và locale parity, chưa đạt runtime parity với Bot.
+Không được dùng `4/4`, `132/132` hoặc full Node `598/598` để suy ra upload, nhận dạng,
+transcript, giao tệp hay LIVE đã hoạt động.
+
+## Bổ sung đối chiếu — Admin data table trên màn hình nhỏ — 19/10/2026
+
+| Chức năng gốc / hiện tại | Đối chiếu candidate WebApp | Bằng chứng / giới hạn |
+|---|---|---|
+| Bảng quản trị có thể đọc trên điện thoại | Giữ bảng semantic trên desktop/tablet; ở `<=560px` chuyển từng dòng thành thẻ dọc, mỗi ô hiển thị nhãn lấy từ tiêu đề cột. | `static/portal/portal.js`, `static/portal/portal-theme.css`, test `2/2`, full Node `705/705` |
+| Lọc, chọn dòng và xem chi tiết | Không thay đổi event/filter/inspector; `data-label` chỉ là metadata trình bày, row vẫn có `tabindex`, `aria-selected` và focus ring. | Source inspection + `git diff --check`; chưa có browser fixture populated hoặc backend/RBAC |
+
+Phần tài liệu gốc không có mô tả breakpoint hay thẻ điện thoại; đây là phần hoàn thiện UI/UX
+WebApp, không phải mở authority dữ liệu hoặc thao tác tài chính.
+
+## Đối chiếu R218 checkpoint 2026-10-21
+
+| Nhóm chức năng gốc | Hiện trạng có bằng chứng | Chưa được suy diễn |
+|---|---|---|
+| Voice | Workspace TTS/STT/Voice Library/Clone, report tiến độ và locale đã có source/browser QA | Voice Vault management, preview signed, upload, TTS/STT runtime và delivery |
+| Music/SFX | Nhạc nền/bài hát, 3 tier, gợi ý, quote freshness, report bounded, Library/SFX read-only | Generation, editor, player, download, save/reuse và hai bản giao thật |
+| SubDub | 4 mode một màn hình, source có/chưa có phụ đề, catalog ngôn ngữ, 7 voice lane, 7 vị trí phụ đề, âm lượng | Upload/ASR/dịch/dubbing/Smart Multi/quote/job/result |
+| Image | Create/prompt/AI edit/manual/upscale/cleanup/transform contracts và guarded UI | Reference upload, AI/manual execution, before-after, artifact/delivery |
+| Video | Hub/Studio/Finishing/Frame Sequence vertical flow và localized guarded shell | 32 profile, render, timeline editor, AI/manual output, delivery |
+| Utility/AutoPost/Support/Account | 10 route QA matrix, locale/responsive, avatar inline SVG, guarded states | OAuth/publish/ticket/approval/notes/role runtime |
+| Admin | Locale/theme/data-card/shortcut/projection focused tests 80/80; core browser artifacts retained | Dynamic RBAC, records, approval/credit, Admin/app shared authority |
+| Motion | Hydration entry, compositor transforms, reduced-motion, route cleanup | CLS/LCP/INP trace và production frame-time |
+
+Nguồn đo: `reports/audit/R218-CHECKPOINT-20261021.md` và các artifact `R218-*-QA-20261020.json`.
+Tất cả số liệu là checkout/QA cô lập; chưa phải trạng thái đã merge/deploy/live.

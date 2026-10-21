@@ -1,0 +1,28 @@
+{
+  "spec_id": "Q0-UI-LABELS",
+  "date": "2026-10-21",
+  "status": "LOCAL_UI_ACCEPTED_DELIVERY_PENDING",
+  "base_sha": "13eb5a13531ecd49bb8d96524928b077bd7a1271",
+  "scope": "Hide redundant page/navigation/availability labels across shared customer/Admin styles; real record state remains plain text. No permission/action/data mutation.",
+  "builder": {"name": "Antigravity", "model": "gemini-3.8-flash-high", "handoff_round": 1, "transport_attempts": 2, "code_failures": 0, "output": "stdout patch+9-section report", "primary_action": "Applied worker CSS verbatim; normalized patch hunk marker only", "settings_changed": false},
+  "red": {"signed_image_redundant_labels": 5, "admin_css_failure": "border-radius9999px instead of0"},
+  "verified_source_sha256": {"portal-theme.css": "ad4eb3fe3b8b0df87cdf244dcdfcedf6f5dfbb908946043820b7d1382efea719", "portal.js": "c1d11474cc21bdc486ea356fb863168b4fccaf59a90d98b62901e856335b904e"},
+  "checks": {
+    "customer_admin_css_fixture": "8/8 PASS; customer/Admin x light/dark x375/1440; hidden decorative labels, border/radius/padding0 and transparent record status; alert/retry/account/disabled guards preserved",
+    "full_node": "891/891 PASS, exit0",
+    "signed_customer_pages": "120 rendered states;10 canonical routes x3 actual profile locales x2 themes x2 widths; label/overflow failures0, UIwrites0, external0",
+    "signed_image_regression": "24/24; four modes, keyboard, history, draft and presentation identity cleanup; failures/page/console/UIwrites/external0",
+    "diff_check": "exit0"
+  },
+  "console_baseline": {"matrix_messages": 60, "kind": "CSP blocks pre-existing inline onerror on /tools/free", "baseline_csp_per_page": 5, "candidate_csp_per_page": 5, "new_errors_in_matched_probe": 0, "baseline_revision": "13eb5a13531ecd49bb8d96524928b077bd7a1271", "remaining": "UT-CSP-EMPTY-THUMB in Utilities; not fixed by status CSS, CSP not relaxed"},
+  "artifacts": {
+    "customer_matrix": "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/global-status-labels-green-20261021.json",
+    "customer_matrix_sha256": "a05f11538de4c269281e95fe56b642a463a72321771f213e4e51039a34bd9a74",
+    "image_matrix": "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/image-workspace-labels-green-20261021.json",
+    "image_matrix_sha256": "76a3452f4e869d02a35736db2a71b43310fbf5375b9ecf28ee270fbd12c9dba6",
+    "baseline_probe": "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/global-labels-csp-baseline-20261021.json",
+    "baseline_probe_sha256": "f308f97c829f533d2784bddadce5557dbacf99062f73a483999a6e9bf09e4582"
+  },
+  "delivery": "Uncommitted coherent wave with Image WIP; no new push, merge, deploy or LIVE claim",
+  "safety": {"app_provider_calls": 0, "wallet_mutations": 0, "production_operations": 0, "deploy": "NO", "live_pass": "NOT_TESTED"}
+}

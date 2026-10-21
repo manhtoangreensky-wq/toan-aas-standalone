@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-20",
+  "baseline_sha": "51c489b968b21ca6cd5b9c8c0af4b55546cf7c27",
+  "scope": "Voice quote input freshness in presentation only; backend and integration fingerprint checks unchanged",
+  "before": {"edited_script_rendered": true, "old_quote_confirm_rendered": true},
+  "after": {"edited_script_rendered": true, "old_quote_confirm_rendered": false},
+  "dedicated_tests": {"passed": 11, "failed": 0},
+  "focused_tests": {"passed": 77, "failed": 0},
+  "full_node_tests": {"passed": 761, "failed": 0},
+  "browser": "Codex in-app browser, background localhost fixture serving production shell/renderer/styles/integration.js",
+  "matrix": {"locales": ["vi", "en", "zh"], "themes": ["light", "dark"], "widths": [390, 768, 1440], "configurations_passed": 18, "configurations_failed": 0},
+  "edit_types_per_configuration": ["script", "default_voice_gender", "speed number", "speed preset", "volume number", "volume range"],
+  "total_edit_checks": 108,
+  "observed": {"old_confirm_hidden_immediately": true, "exact_revert_restores_existing_control": true, "focus_retained": true, "draft_retained_across_saved_voice_round_trip": true, "hydration_does_not_restore_stale_confirm": true, "localized_notice": true, "horizontal_overflow_px": 0, "console_errors": []},
+  "fixture": {"read_requests_at_observation": 489, "write_requests": [], "unknown_api_requests": [], "post_policy": "All non-GET requests return 405", "capability_scope": "Synthetic localhost projection only; no real readiness, provider, backend or wallet authority"},
+  "screenshots": "Vietnamese dark-mobile edited quote state captured inline in Codex; old confirm absent and the new-quote notice visible",
+  "external_request_capture": "Not available in this browser tool; no submission action was invoked",
+  "provider_calls": 0,
+  "wallet_mutations": 0,
+  "production_data_mutations": 0,
+  "live_pass": "NOT_TESTED",
+  "remaining": ["Fresh CI for the new source commit", "STT and clone browser execution", "Automatic UI invalidation when an idle quote reaches expiry", "Real quote/provider/delivery/production verification"]
+}
