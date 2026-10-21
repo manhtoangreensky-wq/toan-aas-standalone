@@ -1,5 +1,17 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## SD-B2 correction — capture và đổi chế độ SubDub, 21/10/2026
+
+| ID | Thao tác QA | Điều kiện đạt |
+|---|---|---|
+| SDDRAFT-01 | Lồng tiếng: target Anh, Nam, gốc0, lồng tiếng200 → Combo → Lồng tiếng → Combo → render lại | Giữ input/output0/200 và đúng một giọng được chọn; không dựa vào draft bơm sẵn |
+| SDDRAFT-02 | Combo: vị trí trên-giữa, hiển thị đơn ngữ; đổi target Trung rồi quay lại; ComboVTT và phụ đề gốcTXT | Lựa chọn tương thích mới nhất theo người dùng; format riêng không ghi đè nhau; render lại giữ đúng |
+| SDDRAFT-03 | Đổi identity phiên presentation/đăng xuất trong unit; file/field disabled/giá trị ngoài bounds | Xóa draft cũ đúng slot, không giữ đường dẫn file/profile/provider ID, không mở quyền xử lý |
+| SDDRAFT-04 | Hồ sơ locale VI/EN/ZH × sáng/tối ×375/390/768/1440 | Guard upload/CTA giữ nguyên; AX/ảnh, input/output khớp, overflow/page/console/UIwrite/external0; không suy ra provider/LIVE |
+
+Test21 cũ từng chỉ bơm draft nên bỏ sót capture; đã mở lại trước correction.
+Kết quả mới phải dùng `R218-SUBDUB-DRAFT-RUNTIME-CORRECTION-QA-20261021.json`.
+
 ## MU-E-01 — tải và thao tác thư viện Music/SFX, 21/10/2026
 
 | ID | Luồng | Evidence cần có |

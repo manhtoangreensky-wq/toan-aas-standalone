@@ -1,5 +1,13 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## SubDub — không đồng nhất control có mặt với parity Bot
+
+Draft UI cần đi theo cấu hình mới nhất, giữ0/200 và format riêng. Bản test21
+đầu chưa chạy capture thật nên kết luận đã giữ draft là quá rộng; đã mở lại
+và sửa cùng SD-B2 bằng kiểm thử control/browser. Khả năng Bot gồm nhận tệp,
+nhận diện người nói, dịch/lồng tiếng, kho giọng, báo giá và giao tệp vẫn chưa
+được chứng minh từ lớp presentation. SD-C2/SD-D2/SD-E2 và các gap T0 giữ mở.
+
 ## Đối chiếu Music/SFX Library — 21/10/2026
 
 Yêu cầu Bot gồm nghe/tải/lưu/dùng cho video. Web Library hiện chỉ hiển thị

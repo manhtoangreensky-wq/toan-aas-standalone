@@ -1,5 +1,15 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## SubDub SD-B2 — đính chính capture và trạng thái dùng chung, 21/10/2026
+
+Test21 trước đó chưa chứng minh âm lượng0/200 được chụp từ control thật.
+Review và browser mới tái hiện14 sai lệch; SD-B2 đã mở lại trước khi sửa.
+Correction dùng draft đã chuẩn hóa, render trực tiếp và dùng cùng giá trị mới
+nhất giữa mode tương thích; không sửa HTML bằng regex. Session identity đổi
+hoặc đăng xuất xóa slot SubDub; file/provider ID không vào draft. Handoff
+Voice, bước review đầy đủ, number/mute và semantics vẫn là các spec tiếp theo.
+Không có upload/ASR/dịch/lồng tiếng/quote/job/output thực trong bằng chứng này.
+
 ## Music/SFX — trạng thái đọc và phản hồi thao tác, 21/10/2026
 
 Thư viện hiệu ứng âm thanh không kế thừa bộ lọc/trang của thư viện nhạc.

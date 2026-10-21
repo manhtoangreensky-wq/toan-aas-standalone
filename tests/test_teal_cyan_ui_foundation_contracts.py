@@ -2379,7 +2379,15 @@ def test_light_music_library_keeps_private_metadata_and_guard_states_readable() 
         "portal-music-library-guard",
     ):
         assert marker in PORTAL_CLIENT
-    assert "Không mở trình phát/xem trước" in PORTAL_CLIENT
+    # The wording is localized and may change. Protect the actual read-only
+    # renderer boundary instead of requiring a retired Vietnamese sentence.
+    library_start = PORTAL_CLIENT.index("  function renderMusicLibraryCards(")
+    library_end = PORTAL_CLIENT.index("  function mediaAudioAssetFilterFields(", library_start)
+    library_renderer = PORTAL_CLIENT[library_start:library_end]
+    assert 'musicLibraryText("boundary.body"' in library_renderer
+    assert 'musicLibraryText("metadataNotice"' in library_renderer
+    assert not re.search(r"<audio\b|<video\b|\bdownload(?:=|\s|>)", library_renderer)
+    assert 'data-portal-action="feature-confirm"' not in library_renderer
     assert all(
         selector in PORTAL_CATALOGUE
         for selector in (

@@ -18,13 +18,14 @@ assert.notEqual(rendererEnd, -1, "SubDub renderer boundary is present");
 
 const helperSource = portalSource.slice(helperStart, helperEnd);
 const rendererSource = portalSource.slice(rendererStart, rendererEnd);
-const renderSubDubHelpers = new Function(`${helperSource}\nreturn { updateSubDubModeSelection, updateSubDubLocalVolume, updateSubDubVoiceLaneSelection, handleSubDubModeKeydown };`)();
 const escapeHtml = (value) => String(value ?? "")
   .replaceAll("&", "&amp;")
   .replaceAll("<", "&lt;")
   .replaceAll(">", "&gt;")
   .replaceAll('"', "&quot;")
   .replaceAll("'", "&#39;");
+
+const renderSubDubHelpers = new Function("transientFormDrafts", "safeText", `${rendererSource}\nreturn { updateSubDubModeSelection, updateSubDubLocalVolume, updateSubDubVoiceLaneSelection, handleSubDubModeKeydown };`)(new Map(), escapeHtml);
 
 function renderSubDub(url, locale = "vi", wallet = { balance_xu: 246 }, draft = null) {
   const parsed = new URL(url, "https://app.example");
@@ -36,7 +37,7 @@ function renderSubDub(url, locale = "vi", wallet = { balance_xu: 246 }, draft = 
     "badge",
     "renderHero",
     "transientFormDrafts",
-    `${helperSource}\n${rendererSource}\nreturn { renderSubDubHub, updateSubDubModeSelection, updateSubDubLocalVolume, updateSubDubVoiceLaneSelection };`
+    `${rendererSource}\nreturn { renderSubDubHub, updateSubDubModeSelection, updateSubDubLocalVolume, updateSubDubVoiceLaneSelection };`
   )(
     browserWindow,
     (context) => context?.locale || locale,
@@ -376,7 +377,7 @@ test("SubDub subtitle layout exposes exactly seven canonical positions in each s
   assert.doesNotMatch(dubbingPanel, /portal-subdub-subtitle-position/);
 });
 
-test("SubDub volume controls handle zero volume with truthful mute notices", () => {
+test("SubDub range output preserves zero and the local-setting note exists; mute confirmation is not covered", () => {
   const output = { textContent: "100%" };
   const panel = { querySelector() { return output; } };
   const inputOriginal = {
@@ -418,7 +419,7 @@ test("SubDub truthful guards prevent fake preview, speaker detection, quotes, or
   }
 });
 
-test("SubDub Stage 3 review summarizes complete configuration and keeps CTA guarded", () => {
+test("SubDub Stage 3 contains the selected-mode summary and keeps CTA guarded", () => {
   for (const [mode, query] of [
     ["SUBTITLE_ONLY", "subtitle_only"],
     ["TRANSLATED_SUBTITLE", "translated_subtitle"],
@@ -433,7 +434,7 @@ test("SubDub Stage 3 review summarizes complete configuration and keeps CTA guar
   }
 });
 
-test("SubDub browser simulation matrix: 24 mode and locale combinations across themes have zero console errors, zero mutations, zero foreign requests, and no horizontal overflow", () => {
+test("SubDub markup matrix renders 24 mode-locale-theme combinations without execution controls or external src", () => {
   const locales = ["vi", "en", "zh"];
   const modes = ["subtitle_only", "translated_subtitle", "dubbing_only", "subtitle_plus_dubbing"];
   const themes = ["dark", "light"];
@@ -455,7 +456,7 @@ test("SubDub browser simulation matrix: 24 mode and locale combinations across t
   assert.equal(caseCount, 24, "exactly 24 matrix combinations evaluated");
 });
 
-test("SubDub contextual handoffs preserve return path and link to verified hubs", () => {
+test("SubDub links to existing companion hubs; return path and draft transfer are not covered", () => {
   const html = renderSubDub("/subdub");
   assert.match(html, /href="\/subtitle\/formats"/);
   assert.match(html, /href="\/subtitle\/assets"/);

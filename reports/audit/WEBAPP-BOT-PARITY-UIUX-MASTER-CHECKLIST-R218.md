@@ -330,12 +330,17 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] Regression SubDub hiện hành đạt `20/20` focused tests; simulation kiểm `24` tổ hợp
   locale/mode/theme, giữ Smart Multi/Auto 2/Auto Multi 3–8 riêng, 7 vị trí phụ đề và
   trạng thái guarded. Browser authenticated/runtime/upload thật vẫn mở.
-- [x] SD-B2 shared local draft: chuyển cấu hình tương thích giữa Lồng tiếng và
-  Combo không reset target/voice/position/display/volume; giá trị0 và200 được giữ
-  khi render lại; input/change ghi tab-memory, không URL/storage/payload. Focused
-  `21/21`, syntax đạt. Evidence `R218-SUBDUB-SHARED-DRAFT-QA-20261021.json`.
-  Browser DOM/AX/rerender thật chưa đóng; SD-C2 handoff, SD-D2 number/mute,
-  SD-E2 semantics vẫn mở.
+- [x] SD-B2 correction UI ngày21/10: đã MỞ LẠI sau khi browserRED phát hiện
+  14 sai lệch (range không name, position suffix, display/remount). Không dùng
+  test21 bơm draft để đóng capture. Bản sửa normalize/whitelist, render trực
+  tiếp không regex HTML; latest shared value, format riêng, session cleanup.
+  Targeted25/25, full Node861/861, Python119/119; browser24 actual-profile
+  VI/EN/ZH × themes ×375/390/768/1440: input/output0/200, checked1, đổi mode/
+  render lại, latest target/format và identity presentation cleanup; AX/ảnh,
+  overflow/page/console/UIwrite/external0. Evidence
+  `R218-SUBDUB-DRAFT-RUNTIME-CORRECTION-QA-20261021.json` thay kết luận cũ.
+  CI trên correction, SD-C2 handoff, SD-D2 number/mute/review và SD-E2 semantics
+  vẫn mở; không chứng minh backend logout, upload, engine hoặc LIVE.
 - [~] SubDub DOM smoke, chưa đóng interaction/keyboard/AX/locale thực — targeted20/20; browser QA
   48 cases VI/EN/ZH × 4 mode × sáng/tối × 390/1440, tabs4/panels4/lanes7,
   report rỗng trung thực, overflow/audio/confirm/external/writes/page-errors0.

@@ -14621,8 +14621,6 @@
   }
 
   function renderMusicLibraryCards(items, role, route) {
-    // Legacy UI contract comparator: the customer-facing copy is intentionally
-    // shorter now, while this protected boundary still means “Không mở trình phát/xem trước”.
     const roleLabel = musicLibraryText(role === "sfx" ? "role.sfx" : "role.music", role === "sfx" ? "hiệu ứng âm thanh" : "nhạc");
     if (!items.length) {
       return renderEmpty(
@@ -26710,145 +26708,115 @@
     return true;
   }
 
-  var SUBDUB_DRAFT_ROUTE = "/subdub";
-  var SUBDUB_SHARED_DRAFT_FIELDS = new Set([
+  const SUBDUB_DRAFT_ROUTE = "/subdub";
+  const SUBDUB_SHARED_DRAFT_FIELDS = new Set([
     "target_language", "target_language_custom", "original_volume", "dubbing_volume",
-    "voice_lane", "sub_display_type", "subtitle_position"
+    "voice_lane", "sub_display_type", "subtitle_position", "source_subtitle_state"
   ]);
+  const SUBDUB_MODE_DRAFT_FIELDS = new Set([
+    "subdub-source-output-format", "subdub-translated-output-format",
+    "subdub-combined-output-format", "subtitle_format"
+  ]);
+  let subDubWorkspaceDraftSession = "";
 
-  function subDubDraftSnapshot(context) {
-    const fromContext = context && context.subDubDraft && typeof context.subDubDraft === "object" ? context.subDubDraft : null;
-    const fromMemory = typeof transientFormDrafts !== "undefined" && transientFormDrafts instanceof Map
-      ? transientFormDrafts.get(SUBDUB_DRAFT_ROUTE)
-      : null;
-    const source = fromContext || fromMemory;
-    if (!source || typeof source !== "object") return { shared: {}, modes: {} };
-    return {
-      shared: source.shared && typeof source.shared === "object" ? { ...source.shared } : {},
-      modes: source.modes && typeof source.modes === "object" ? Object.fromEntries(Object.entries(source.modes).map(([key, value]) => [key, value && typeof value === "object" ? { ...value } : {}])) : {}
-    };
-  }
-
-  function subDubDraftValue(draft, mode, name, fallback) {
-    const modeValues = draft && draft.modes && draft.modes[mode];
-    if (modeValues && modeValues[name] !== undefined) return String(modeValues[name]);
-    if (draft && draft.shared && draft.shared[name] !== undefined) return String(draft.shared[name]);
-    return String(fallback ?? "");
-  }
-
-  function subDubHasDraftValue(draft, mode, name) {
-    return Boolean(draft && ((draft.modes && draft.modes[mode] && draft.modes[mode][name] !== undefined)
-      || (draft.shared && draft.shared[name] !== undefined)));
-  }
-
-  function subDubDraftFieldValue(control) {
-    if (!control || !control.name) return null;
-    if (control.type === "radio") return control.checked ? control.value : null;
-    if (control.type === "checkbox") return control.checked ? "true" : "false";
-    return control.value;
-  }
-
-  function captureSubDubDraft(root) {
-    if (!root || typeof transientFormDrafts === "undefined" || !(transientFormDrafts instanceof Map)) return null;
-    const draft = subDubDraftSnapshot();
-    const sharedRoot = root.querySelector("[data-subdub-stage=\"1\"]");
-    if (sharedRoot && typeof sharedRoot.querySelectorAll === "function") {
-      sharedRoot.querySelectorAll("input, select, textarea").forEach((control) => {
-        const value = subDubDraftFieldValue(control);
-        if (value !== null) draft.shared[control.name || control.id] = value;
-      });
+  function normalizeSubDubDraftValue(name, value) {
+    if (typeof value !== "string" && typeof value !== "number") return null;
+    const text = String(value);
+    if (name === "target_language") return SUBDUB_LANGUAGE_CATALOG.some((entry) => entry.value === text) ? text : null;
+    if (name === "target_language_custom") return text.replace(/[\u0000-\u001f\u007f]/g, "").slice(0, 40);
+    if (name === "original_volume" || name === "dubbing_volume") {
+      const number = Number(text);
+      return text.trim() && Number.isInteger(number) && number >= 0 && number <= (name === "original_volume" ? 100 : 200) ? String(number) : null;
     }
-    if (typeof root.querySelectorAll !== "function") return draft;
-    root.querySelectorAll("[data-subdub-mode-panel]").forEach((panel) => {
-      const mode = panel.getAttribute("data-subdub-mode-panel") || "";
-      if (!mode || panel.hidden) return;
-      const values = { ...(draft.modes[mode] || {}) };
-      panel.querySelectorAll("input, select, textarea").forEach((control) => {
-        const value = subDubDraftFieldValue(control);
-        if (value === null) return;
-        const name = control.name || control.getAttribute("data-subdub-local-volume") || control.id;
-        if (!name) return;
-        const normalizedName = control.getAttribute("data-subdub-local-volume") === "original" ? "original_volume"
-          : control.getAttribute("data-subdub-local-volume") === "dubbing" ? "dubbing_volume"
-            : control.matches("[data-subdub-voice-lane-input]") ? "voice_lane" : name;
-        values[normalizedName] = value;
-        if (SUBDUB_SHARED_DRAFT_FIELDS.has(normalizedName)) draft.shared[normalizedName] = value;
+    if (name === "voice_lane") return ["default_female", "default_male", "saved_voice", "custom_voice", "auto_two", "auto_multi_3_8", "smart_multi"].includes(text) ? text : null;
+    if (name === "subtitle_position") return ["bottom_center", "bottom_left", "bottom_right", "top_center", "top_left", "top_right", "center"].includes(text) ? text : null;
+    if (name === "sub_display_type") return ["single", "bilingual"].includes(text) ? text : null;
+    if (name === "source_subtitle_state") return ["with_subtitles", "without_subtitles"].includes(text) ? text : null;
+    if (name === "subtitle_format") return ["standard", "short"].includes(text) ? text : null;
+    if (SUBDUB_MODE_DRAFT_FIELDS.has(name)) return ["srt", "vtt", "txt"].includes(text) ? text : null;
+    return null;
+  }
+
+  function subDubDraftSnapshot() {
+    const stored = transientFormDrafts.get(SUBDUB_DRAFT_ROUTE);
+    const source = stored && typeof stored === "object" ? stored : {};
+    const draft = { shared: {}, modes: {} };
+    SUBDUB_SHARED_DRAFT_FIELDS.forEach((name) => {
+      const value = normalizeSubDubDraftValue(name, source.shared && source.shared[name]);
+      if (value !== null) draft.shared[name] = value;
+    });
+    Object.keys(SUBDUB_PRODUCT_MODES).forEach((mode) => {
+      const values = {};
+      SUBDUB_MODE_DRAFT_FIELDS.forEach((name) => {
+        const value = normalizeSubDubDraftValue(name, source.modes && source.modes[mode] && source.modes[mode][name]);
+        if (value !== null) values[name] = value;
       });
       draft.modes[mode] = values;
     });
+    return draft;
+  }
+
+  function subDubDraftValue(draft, mode, name, fallback) {
+    const values = SUBDUB_SHARED_DRAFT_FIELDS.has(name) ? draft.shared : draft.modes[mode];
+    return values && values[name] !== undefined ? values[name] : String(fallback ?? "");
+  }
+
+  function subDubDraftControlName(control) {
+    if (!control || control.disabled || control.type === "file") return "";
+    const volume = control.getAttribute("data-subdub-local-volume");
+    if (volume === "original" || volume === "dubbing") return volume + "_volume";
+    if (control.hasAttribute("data-subdub-voice-lane-input")) return "voice_lane";
+    if (/^subdub_(source|translated|combo)_subtitle_position$/.test(control.name || "")) return "subtitle_position";
+    if (control.name === "subdub-subtitle-source-state") return "source_subtitle_state";
+    return control.name || "";
+  }
+
+  function captureSubDubDraft(root) {
+    if (!root || !subDubWorkspaceDraftSession) return null;
+    const draft = subDubDraftSnapshot();
+    const scopes = [];
+    const source = root.querySelector('[data-subdub-stage="1"]');
+    if (source && typeof source.querySelectorAll === "function") scopes.push([source, ""]);
+    root.querySelectorAll("[data-subdub-mode-panel]").forEach((panel) => {
+      if (!panel.hidden && typeof panel.querySelectorAll === "function") scopes.push([panel, panel.getAttribute("data-subdub-mode-panel")]);
+    });
+    scopes.forEach(([scope, mode]) => scope.querySelectorAll("input, select, textarea").forEach((control) => {
+      if (control.type === "radio" && !control.checked) return;
+      const name = subDubDraftControlName(control);
+      const value = normalizeSubDubDraftValue(name, control.value);
+      if (value === null) return;
+      if (SUBDUB_SHARED_DRAFT_FIELDS.has(name)) draft.shared[name] = value;
+      else if (mode && SUBDUB_MODE_DRAFT_FIELDS.has(name)) draft.modes[mode][name] = value;
+    }));
     transientFormDrafts.set(SUBDUB_DRAFT_ROUTE, draft);
     return draft;
   }
 
-  function subDubSetSelectValue(root, selector, value) {
-    if (!value) return;
-    root.querySelectorAll(selector).forEach((select) => {
-      const option = Array.from(select.options || []).find((item) => item.value === value);
-      if (!option) return;
-      select.value = value;
-      select.querySelectorAll("option").forEach((item) => item.removeAttribute("selected"));
-      option.setAttribute("selected", "selected");
-    });
-  }
-
-  function subDubSetRadioValue(root, selector, value) {
-    if (!value) return;
-    root.querySelectorAll(selector).forEach((input) => { input.checked = input.value === value; });
-  }
-
   function applySubDubDraftDom(root, draft, mode) {
-    if (!root || !draft || typeof root.querySelector !== "function") return;
-    const target = root.querySelector(`[data-subdub-mode-panel="${mode}"]`);
-    const scope = target || root;
-    if (!scope || typeof scope.querySelectorAll !== "function") return;
-    const targetLanguage = subDubDraftValue(draft, mode, "target_language", "vi");
-    const custom = subDubDraftValue(draft, mode, "target_language_custom", "");
-    if (subDubHasDraftValue(draft, mode, "target_language")) subDubSetSelectValue(scope, 'select[name="target_language"]', targetLanguage);
-    if (subDubHasDraftValue(draft, mode, "target_language_custom")) scope.querySelectorAll('input[name="target_language_custom"]').forEach((input) => { input.value = custom; });
-    if (subDubHasDraftValue(draft, mode, "subtitle_position")) subDubSetSelectValue(scope, 'select[name^="subdub_"][name$="_subtitle_position"]', subDubDraftValue(draft, mode, "subtitle_position", "bottom_center"));
-    if (subDubHasDraftValue(draft, mode, "voice_lane")) subDubSetRadioValue(scope, '[data-subdub-voice-lane-input]', subDubDraftValue(draft, mode, "voice_lane", "default_female"));
-    if (subDubHasDraftValue(draft, mode, "sub_display_type")) subDubSetRadioValue(scope, 'input[name="sub_display_type"]', subDubDraftValue(draft, mode, "sub_display_type", "bilingual"));
-    if (subDubHasDraftValue(draft, mode, "original_volume")) scope.querySelectorAll('[data-subdub-local-volume="original"]').forEach((input) => { input.value = subDubDraftValue(draft, mode, "original_volume", "100"); });
-    if (subDubHasDraftValue(draft, mode, "dubbing_volume")) scope.querySelectorAll('[data-subdub-local-volume="dubbing"]').forEach((input) => { input.value = subDubDraftValue(draft, mode, "dubbing_volume", "100"); });
-    scope.querySelectorAll("[data-subdub-local-volume]").forEach((input) => {
-      const output = scope.querySelector(`[data-subdub-volume-output="${input.getAttribute("data-subdub-local-volume")}"]`);
-      if (output) output.textContent = `${input.value}%`;
+    const panel = root && root.querySelector('[data-subdub-mode-panel="' + mode + '"]');
+    if (!panel || typeof panel.querySelectorAll !== "function") return;
+    panel.querySelectorAll("input, select, textarea").forEach((control) => {
+      const name = subDubDraftControlName(control);
+      const values = SUBDUB_SHARED_DRAFT_FIELDS.has(name) ? draft.shared : draft.modes[mode];
+      if (!values || values[name] === undefined) return;
+      if (control.type === "radio") control.checked = control.value === values[name];
+      else if (control.tagName !== "SELECT" || Array.from(control.options).some((option) => option.value === values[name])) control.value = values[name];
+      if (control.hasAttribute("data-subdub-local-volume")) updateSubDubLocalVolume(control);
     });
-    updateSubDubVoiceLaneSelection(scope.querySelector("[data-subdub-voice-lane-input]:checked"));
+    updateSubDubVoiceLaneSelection(panel.querySelector("[data-subdub-voice-lane-input]:checked"));
   }
 
-  function applySubDubDraftHtml(html, draft) {
-    if (!draft || !draft.shared && !draft.modes) return html;
-    const applyMode = (source, mode) => {
-      const modeHasDraft = ["target_language", "target_language_custom", "original_volume", "dubbing_volume", "voice_lane", "sub_display_type", "subtitle_position"].some((name) => subDubHasDraftValue(draft, mode, name));
-      if (!modeHasDraft) return source;
-      const targetLanguage = subDubDraftValue(draft, mode, "target_language", "");
-      const custom = subDubDraftValue(draft, mode, "target_language_custom", "");
-      const original = subDubDraftValue(draft, mode, "original_volume", "100");
-      const dubbing = subDubDraftValue(draft, mode, "dubbing_volume", "100");
-      const voice = subDubDraftValue(draft, mode, "voice_lane", "default_female");
-      const display = subDubDraftValue(draft, mode, "sub_display_type", "");
-      const position = subDubDraftValue(draft, mode, "subtitle_position", "bottom_center");
-      let result = source.replace(/(<select[^>]*name="target_language"[^>]*>)([\s\S]*?)(<\/select>)/, (_m, open, options, close) => `${open}${options.replace(/\sselected(?=>)/g, "").replace(/(<option value=")([^\"]+)("[^>]*>)/g, (m, a, value, b) => `${a}${value}${b}${value === targetLanguage ? "" : ""}`).replace(new RegExp(`(<option value="${targetLanguage}")`), `$1 selected`)}${close}`);
-      result = result.replace(/(<input[^>]*name="target_language_custom"[^>]*)(>)/g, (_m, open, end) => `${open} value="${safeText(custom)}"${end}`);
-      result = result.replace(/(<select[^>]*name="[^"]*subtitle_position"[^>]*>)([\s\S]*?)(<\/select>)/, (_m, open, options, close) => `${open}${options.replace(/\sselected(?=>)/g, "").replace(new RegExp(`(<option value="${position}")`), `$1 selected`)}${close}`);
-      result = result.replace(/<input[^>]*data-subdub-local-volume="original"[^>]*>/, (match) => match.replace(/value="[^\"]*"/, `value="${original}"`));
-      result = result.replace(/<input[^>]*data-subdub-local-volume="dubbing"[^>]*>/, (match) => match.replace(/value="[^\"]*"/, `value="${dubbing}"`));
-      result = result.replace(/<input[^>]*data-subdub-voice-lane-input[^>]*>/g, (match) => {
-        const selected = match.includes(`value="${voice}"`);
-        const clean = match.replace(/\schecked(?=\s|>)/g, "");
-        return selected ? clean.replace(/>$/, " checked>") : clean;
-      });
-      if (display) result = result.replace(new RegExp(`(<input[^>]*name="sub_display_type"[^>]*value="${display}"[^>]*)(>)`), `$1 checked$2`);
-      return result;
-    };
-    return html.replace(/(<section[^>]*data-subdub-mode-panel="([A-Z_]+)"[\s\S]*?<\/section>)/g, (_m, section, mode) => applyMode(section, mode));
+  function synchronizeSubDubWorkspaceDraftSession(context) {
+    const session = context && context.session;
+    const token = session && session.authenticated === true && typeof session.csrfToken === "string" ? session.csrfToken : "";
+    if (!token || token !== subDubWorkspaceDraftSession) clearTransientFormDraft(SUBDUB_DRAFT_ROUTE);
+    subDubWorkspaceDraftSession = token;
   }
 
   function renderSubDubHub(page, context) {
     const locale = resolveSubDubLocale(context);
     const copy = SUBDUB_PRESENTATION_COPY[locale] || SUBDUB_PRESENTATION_COPY.vi;
-    const draft = subDubDraftSnapshot(context);
+    const draft = subDubDraftSnapshot();
 
     const currentModeKey = resolveSubDubJourneyMode(context);
     const modeCopy = copy.modes[currentModeKey] || copy.modes.SUBTITLE_ONLY;
@@ -26867,24 +26835,24 @@
       <legend>${safeText(copy.audioControlsHeading)}</legend>
       <div class="portal-subdub-volume-control">
         <label for="subdub-original-volume-${safeText(suffix)}">${safeText(copy.audioOriginalLabel)}</label>
-        <span class="portal-subdub-volume-control__value"><input id="subdub-original-volume-${safeText(suffix)}" type="range" min="0" max="100" data-subdub-local-volume="original" value="100"><output data-subdub-volume-output="original">100%</output></span>
+        <span class="portal-subdub-volume-control__value"><input id="subdub-original-volume-${safeText(suffix)}" type="range" min="0" max="100" data-subdub-local-volume="original" value="${safeText(subDubDraftValue(draft, currentModeKey, "original_volume", "100"))}"><output data-subdub-volume-output="original">${safeText(subDubDraftValue(draft, currentModeKey, "original_volume", "100"))}%</output></span>
       </div>
       <div class="portal-subdub-volume-control">
         <label for="subdub-dubbing-volume-${safeText(suffix)}">${safeText(copy.audioDubbingLabel)}</label>
-        <span class="portal-subdub-volume-control__value"><input id="subdub-dubbing-volume-${safeText(suffix)}" type="range" min="0" max="200" data-subdub-local-volume="dubbing" value="100"><output data-subdub-volume-output="dubbing">100%</output></span>
+        <span class="portal-subdub-volume-control__value"><input id="subdub-dubbing-volume-${safeText(suffix)}" type="range" min="0" max="200" data-subdub-local-volume="dubbing" value="${safeText(subDubDraftValue(draft, currentModeKey, "dubbing_volume", "100"))}"><output data-subdub-volume-output="dubbing">${safeText(subDubDraftValue(draft, currentModeKey, "dubbing_volume", "100"))}%</output></span>
       </div>
       <p class="portal-subdub-volume-note" id="subdub-volume-note-${safeText(suffix)}">${safeText(copy.audioControlsNote)}</p>
     </fieldset>`;
     const subtitlePositionHtml = (suffix) => `<div class="portal-field portal-subdub-subtitle-position">
       <label class="portal-label" for="subdub-subtitle-position-${safeText(suffix)}">${safeText(copy.subtitlePositionLabel)}</label>
       <select id="subdub-subtitle-position-${safeText(suffix)}" class="portal-select" name="subdub_${safeText(suffix)}_subtitle_position">
-        <option value="bottom_center" selected>${safeText(copy.subtitlePositionBottomCenter)}</option>
-        <option value="bottom_left">${safeText(copy.subtitlePositionBottomLeft)}</option>
-        <option value="bottom_right">${safeText(copy.subtitlePositionBottomRight)}</option>
-        <option value="top_center">${safeText(copy.subtitlePositionTopCenter)}</option>
-        <option value="top_left">${safeText(copy.subtitlePositionTopLeft)}</option>
-        <option value="top_right">${safeText(copy.subtitlePositionTopRight)}</option>
-        <option value="center">${safeText(copy.subtitlePositionCenter)}</option>
+        <option value="bottom_center"${subDubDraftValue(draft, currentModeKey, "subtitle_position", "bottom_center") === "bottom_center" ? " selected" : ""}>${safeText(copy.subtitlePositionBottomCenter)}</option>
+        <option value="bottom_left"${subDubDraftValue(draft, currentModeKey, "subtitle_position", "bottom_center") === "bottom_left" ? " selected" : ""}>${safeText(copy.subtitlePositionBottomLeft)}</option>
+        <option value="bottom_right"${subDubDraftValue(draft, currentModeKey, "subtitle_position", "bottom_center") === "bottom_right" ? " selected" : ""}>${safeText(copy.subtitlePositionBottomRight)}</option>
+        <option value="top_center"${subDubDraftValue(draft, currentModeKey, "subtitle_position", "bottom_center") === "top_center" ? " selected" : ""}>${safeText(copy.subtitlePositionTopCenter)}</option>
+        <option value="top_left"${subDubDraftValue(draft, currentModeKey, "subtitle_position", "bottom_center") === "top_left" ? " selected" : ""}>${safeText(copy.subtitlePositionTopLeft)}</option>
+        <option value="top_right"${subDubDraftValue(draft, currentModeKey, "subtitle_position", "bottom_center") === "top_right" ? " selected" : ""}>${safeText(copy.subtitlePositionTopRight)}</option>
+        <option value="center"${subDubDraftValue(draft, currentModeKey, "subtitle_position", "bottom_center") === "center" ? " selected" : ""}>${safeText(copy.subtitlePositionCenter)}</option>
       </select>
     </div>`;
     const voiceLaneHtml = (suffix) => {
@@ -26906,13 +26874,13 @@
         <legend>${safeText(copy.voiceLaneLabel)}</legend>
         <p class="portal-subdub-voice-lane-hint">${safeText(copy.voiceLaneHint)}</p>
         <div class="portal-subdub-voice-lane-grid">
-          ${lanes.map(([value, label], index) => `<label class="portal-subdub-voice-lane${index === 0 ? " is-selected" : ""}" data-status="ready" data-subdub-voice-lane="${safeText(value)}"${laneCallbacks[value] ? ` data-subdub-callback="${safeText(laneCallbacks[value])}"` : ""}>
-            <input type="radio" name="subdub_voice_lane_${safeText(suffix)}" data-subdub-voice-lane-input value="${safeText(value)}" ${index === 0 ? "checked" : ""}>
+          ${lanes.map(([value, label]) => `<label class="portal-subdub-voice-lane${value === subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") ? " is-selected" : ""}" data-status="ready" data-subdub-voice-lane="${safeText(value)}"${laneCallbacks[value] ? ` data-subdub-callback="${safeText(laneCallbacks[value])}"` : ""}>
+            <input type="radio" name="subdub_voice_lane_${safeText(suffix)}" data-subdub-voice-lane-input value="${safeText(value)}" ${value === subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") ? "checked" : ""}>
             <span class="portal-subdub-voice-lane__body"><strong>${safeText(label)}</strong><small>${safeText(copy.voiceLaneGuarded)}</small></span>
           </label>`).join("")}
         </div>
         <p class="portal-subdub-voice-lane-note" id="subdub-voice-lane-note-${safeText(suffix)}">${safeText(copy.voiceLaneGuarded)}</p>
-        <a class="portal-button portal-button--quiet" href="/voice/saved" data-subdub-voice-library-link>${safeText(copy.voiceLibraryLink)}</a>
+        <a class="portal-button portal-button--quiet" href="${subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") === "custom_voice" ? "/voice/clone" : "/voice/saved"}" data-subdub-voice-library-link>${safeText(copy.voiceLibraryLink)}</a>
         <fieldset class="portal-subdub-smart-multi" data-subdub-smart-multi data-status="guarded" data-subdub-callback="videodub|voice|auto_smart_multivoice" aria-describedby="subdub-smart-multi-note-${safeText(suffix)}">
           <legend>${safeText(copy.smartMultiLabel)}</legend>
           <p id="subdub-smart-multi-note-${safeText(suffix)}">${safeText(copy.smartMultiHint)}</p>
@@ -26950,8 +26918,8 @@
         <fieldset class="portal-field portal-subdub-source-state" aria-describedby="subdub-source-state-help">
           <legend class="portal-label">${safeText(copy.sourceSubtitleStateLabel)}</legend>
           <div class="portal-subdub-radio-options">
-            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-subtitle-source-state" value="with_subtitles"> ${safeText(copy.sourceHasSubtitle)}</label>
-            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-subtitle-source-state" value="without_subtitles" checked> ${safeText(copy.sourceNoSubtitle)}</label>
+            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-subtitle-source-state" value="with_subtitles"${subDubDraftValue(draft, currentModeKey, "source_subtitle_state", "without_subtitles") === "with_subtitles" ? " checked" : ""}> ${safeText(copy.sourceHasSubtitle)}</label>
+            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-subtitle-source-state" value="without_subtitles"${subDubDraftValue(draft, currentModeKey, "source_subtitle_state", "without_subtitles") === "without_subtitles" ? " checked" : ""}> ${safeText(copy.sourceNoSubtitle)}</label>
           </div>
           <small id="subdub-source-state-help" class="portal-form-note">${safeText(copy.sourceSubtitleStateHelp)}</small>
         </fieldset>
@@ -26971,16 +26939,16 @@
         <div class="portal-field">
           <label class="portal-label">${safeText(copy.outputFormatLabel)}</label>
           <div class="portal-subdub-radio-options">
-            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-source-output-format" value="srt" checked> ${safeText(copy.formatSrt)}</label>
-            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-source-output-format" value="vtt"> ${safeText(copy.formatVtt)}</label>
-            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-source-output-format" value="txt"> ${safeText(copy.formatTxt)}</label>
+            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-source-output-format" value="srt"${subDubDraftValue(draft, modeKey, "subdub-source-output-format", "srt") === "srt" ? " checked" : ""}> ${safeText(copy.formatSrt)}</label>
+            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-source-output-format" value="vtt"${subDubDraftValue(draft, modeKey, "subdub-source-output-format", "srt") === "vtt" ? " checked" : ""}> ${safeText(copy.formatVtt)}</label>
+            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-source-output-format" value="txt"${subDubDraftValue(draft, modeKey, "subdub-source-output-format", "srt") === "txt" ? " checked" : ""}> ${safeText(copy.formatTxt)}</label>
           </div>
         </div>
         <div class="portal-field">
           <label class="portal-label">${safeText(copy.segmentRuleLabel)}</label>
           <select class="portal-select" name="subtitle_format">
-            <option value="standard" selected>${safeText(copy.ruleStandard)}</option>
-            <option value="short">${safeText(copy.ruleShort)}</option>
+            <option value="standard"${subDubDraftValue(draft, modeKey, "subtitle_format", "standard") === "standard" ? " selected" : ""}>${safeText(copy.ruleStandard)}</option>
+            <option value="short"${subDubDraftValue(draft, modeKey, "subtitle_format", "standard") === "short" ? " selected" : ""}>${safeText(copy.ruleShort)}</option>
           </select>
         </div>
         ${subtitlePositionHtml("source")}`;
@@ -26989,24 +26957,24 @@
         <div class="portal-field">
           <label class="portal-label" for="subdub-target-lang">${safeText(copy.targetLangLabel)}</label>
           <select id="subdub-target-lang" class="portal-select" name="target_language">
-            ${renderSubDubLanguageOptions(locale, "vi", false)}
+            ${renderSubDubLanguageOptions(locale, subDubDraftValue(draft, modeKey, "target_language", "vi"), false)}
           </select>
           <label class="portal-label" for="subdub-target-lang-custom">${safeText(copy.targetLangCustomLabel)}</label>
-          <input id="subdub-target-lang-custom" class="portal-input" name="target_language_custom" inputmode="text" pattern="[a-zA-Z]{2,5}(?:-[a-zA-Z0-9]{2,5})?" placeholder="${safeText(copy.targetLangCustomPlaceholder)}" aria-describedby="subdub-target-lang-custom-help">
+          <input id="subdub-target-lang-custom" class="portal-input" name="target_language_custom" value="${safeText(subDubDraftValue(draft, modeKey, "target_language_custom", ""))}" inputmode="text" pattern="[a-zA-Z]{2,5}(?:-[a-zA-Z0-9]{2,5})?" placeholder="${safeText(copy.targetLangCustomPlaceholder)}" aria-describedby="subdub-target-lang-custom-help">
           <small id="subdub-target-lang-custom-help" class="portal-form-note">${safeText(copy.targetLangCustomHelp)}</small>
         </div>
         <div class="portal-field">
           <label class="portal-label">${safeText(copy.subDisplayLabel)}</label>
           <div class="portal-subdub-radio-options">
-            <label class="portal-subdub-radio-option"><input type="radio" name="sub_display_type" value="single" checked> ${safeText(copy.subDisplaySingle)}</label>
-            <label class="portal-subdub-radio-option"><input type="radio" name="sub_display_type" value="bilingual"> ${safeText(copy.subDisplayBilingual)}</label>
+            <label class="portal-subdub-radio-option"><input type="radio" name="sub_display_type" value="single"${subDubDraftValue(draft, modeKey, "sub_display_type", "single") === "single" ? " checked" : ""}> ${safeText(copy.subDisplaySingle)}</label>
+            <label class="portal-subdub-radio-option"><input type="radio" name="sub_display_type" value="bilingual"${subDubDraftValue(draft, modeKey, "sub_display_type", "single") === "bilingual" ? " checked" : ""}> ${safeText(copy.subDisplayBilingual)}</label>
           </div>
         </div>
         <div class="portal-field">
           <label class="portal-label">${safeText(copy.outputFormatLabel)}</label>
           <div class="portal-subdub-radio-options">
-            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-translated-output-format" value="srt" checked> SRT</label>
-            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-translated-output-format" value="vtt"> VTT</label>
+            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-translated-output-format" value="srt"${subDubDraftValue(draft, modeKey, "subdub-translated-output-format", "srt") === "srt" ? " checked" : ""}> SRT</label>
+            <label class="portal-subdub-radio-option"><input type="radio" name="subdub-translated-output-format" value="vtt"${subDubDraftValue(draft, modeKey, "subdub-translated-output-format", "srt") === "vtt" ? " checked" : ""}> VTT</label>
           </div>
         </div>`;
       stage2InnerHtml += subtitlePositionHtml("translated");
@@ -27015,10 +26983,10 @@
         <div class="portal-field">
           <label class="portal-label" for="subdub-target-lang-dub">${safeText(copy.targetLangDubLabel)}</label>
           <select id="subdub-target-lang-dub" class="portal-select" name="target_language">
-            ${renderSubDubLanguageOptions(locale, "vi", false)}
+            ${renderSubDubLanguageOptions(locale, subDubDraftValue(draft, modeKey, "target_language", "vi"), false)}
           </select>
           <label class="portal-label" for="subdub-target-lang-dub-custom">${safeText(copy.targetLangCustomLabel)}</label>
-          <input id="subdub-target-lang-dub-custom" class="portal-input" name="target_language_custom" inputmode="text" pattern="[a-zA-Z]{2,5}(?:-[a-zA-Z0-9]{2,5})?" placeholder="${safeText(copy.targetLangCustomPlaceholder)}" aria-describedby="subdub-target-lang-dub-custom-help">
+          <input id="subdub-target-lang-dub-custom" class="portal-input" name="target_language_custom" value="${safeText(subDubDraftValue(draft, modeKey, "target_language_custom", ""))}" inputmode="text" pattern="[a-zA-Z]{2,5}(?:-[a-zA-Z0-9]{2,5})?" placeholder="${safeText(copy.targetLangCustomPlaceholder)}" aria-describedby="subdub-target-lang-dub-custom-help">
           <small id="subdub-target-lang-dub-custom-help" class="portal-form-note">${safeText(copy.targetLangCustomHelp)}</small>
         </div>
         ${voiceLaneHtml("dub")}
@@ -27029,10 +26997,10 @@
           <label class="portal-label" for="subdub-shared-target-lang"><strong>${safeText(copy.sharedTargetLangLabel)}</strong></label>
           <p style="margin:4px 0 12px; font-size:13px; color:var(--portal-muted, #8fa3b7);">${safeText(copy.sharedTargetLangHint)}</p>
           <select id="subdub-shared-target-lang" class="portal-select" name="target_language">
-            ${renderSubDubLanguageOptions(locale, "vi", false)}
+            ${renderSubDubLanguageOptions(locale, subDubDraftValue(draft, modeKey, "target_language", "vi"), false)}
           </select>
           <label class="portal-label" for="subdub-shared-target-lang-custom">${safeText(copy.targetLangCustomLabel)}</label>
-          <input id="subdub-shared-target-lang-custom" class="portal-input" name="target_language_custom" inputmode="text" pattern="[a-zA-Z]{2,5}(?:-[a-zA-Z0-9]{2,5})?" placeholder="${safeText(copy.targetLangCustomPlaceholder)}" aria-describedby="subdub-shared-target-lang-custom-help">
+          <input id="subdub-shared-target-lang-custom" class="portal-input" name="target_language_custom" value="${safeText(subDubDraftValue(draft, modeKey, "target_language_custom", ""))}" inputmode="text" pattern="[a-zA-Z]{2,5}(?:-[a-zA-Z0-9]{2,5})?" placeholder="${safeText(copy.targetLangCustomPlaceholder)}" aria-describedby="subdub-shared-target-lang-custom-help">
           <small id="subdub-shared-target-lang-custom-help" class="portal-form-note">${safeText(copy.targetLangCustomHelp)}</small>
         </div>
         <div class="portal-subdub-config-pair">
@@ -27041,15 +27009,15 @@
             <div class="portal-field">
               <label class="portal-label">${safeText(copy.subDisplayLabel)}</label>
               <select class="portal-select" name="sub_display_type">
-                <option value="bilingual" selected>${safeText(copy.subDisplayBilingual)}</option>
-                <option value="single">${safeText(copy.subDisplaySingle)}</option>
+                <option value="bilingual"${subDubDraftValue(draft, modeKey, "sub_display_type", "bilingual") === "bilingual" ? " selected" : ""}>${safeText(copy.subDisplayBilingual)}</option>
+                <option value="single"${subDubDraftValue(draft, modeKey, "sub_display_type", "bilingual") === "single" ? " selected" : ""}>${safeText(copy.subDisplaySingle)}</option>
               </select>
             </div>
             <div class="portal-field">
               <label class="portal-label">${safeText(copy.outputFormatLabel)}</label>
               <div class="portal-subdub-radio-options">
-                <label class="portal-subdub-radio-option"><input type="radio" name="subdub-combined-output-format" value="srt" checked> SRT</label>
-                <label class="portal-subdub-radio-option"><input type="radio" name="subdub-combined-output-format" value="vtt"> VTT</label>
+                <label class="portal-subdub-radio-option"><input type="radio" name="subdub-combined-output-format" value="srt"${subDubDraftValue(draft, modeKey, "subdub-combined-output-format", "srt") === "srt" ? " checked" : ""}> SRT</label>
+                <label class="portal-subdub-radio-option"><input type="radio" name="subdub-combined-output-format" value="vtt"${subDubDraftValue(draft, modeKey, "subdub-combined-output-format", "srt") === "vtt" ? " checked" : ""}> VTT</label>
               </div>
             </div>
             ${subtitlePositionHtml("combo")}
@@ -27188,7 +27156,7 @@
       ${stage4Html}
       ${companionToolsHtml}
     </article>`;
-    return applySubDubDraftHtml(rendered, draft);
+    return rendered;
   }
 
   function renderDocumentHub(page, context) {
@@ -41061,6 +41029,7 @@
     const context = getBootstrap();
     synchronizeVoiceWorkspaceDraftSession(context);
     synchronizeMusicWorkspaceDraftSession(context);
+    synchronizeSubDubWorkspaceDraftSession(context);
     const page = resolvePage(context.path);
     applyInterfaceLocale(context);
     const sidebar = document.querySelector("[data-portal-sidebar]");
