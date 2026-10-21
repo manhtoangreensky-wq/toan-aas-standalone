@@ -25850,15 +25850,77 @@
     return true;
   }
 
+  function safeSubDubReturnPath(value) {
+    const modes = ["subtitle_only", "translated_subtitle", "dubbing_only", "subtitle_plus_dubbing"];
+    return typeof value === "string" && modes.some((mode) => value === "/subdub?mode=" + mode) ? value : "";
+  }
+
+  function subDubVoiceReturnPath() {
+    if (typeof window === "undefined" || !window.location) return "";
+    const query = new URLSearchParams(window.location.search || "");
+    return query.getAll("return_to").length === 1 ? safeSubDubReturnPath(query.get("return_to")) : "";
+  }
+
+  function subDubVoiceCompanionUrl(target, mode) {
+    if (!["/voice/saved", "/voice/clone"].includes(target)) return "";
+    const entry = Object.hasOwn(SUBDUB_PRODUCT_MODES, mode) ? SUBDUB_PRODUCT_MODES[mode] : null;
+    return entry ? target + "?return_to=" + encodeURIComponent("/subdub?mode=" + entry.queryMode) : target;
+  }
+
+  function navigateSubDubVoiceContinuation(event, link) {
+    if (!link || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey
+      || link.getAttribute("target") || link.hasAttribute("download")) return false;
+    const context = getBootstrap();
+    if (!(context.session && context.session.authenticated === true && typeof context.session.csrfToken === "string" && context.session.csrfToken)) return false;
+    const current = normalizePath(resolvePage(context.path).path);
+    const href = link.getAttribute("href") || "";
+    if (!href.startsWith("/") || href.startsWith("//") || href.includes("\\")) return false;
+    let next;
+    try { next = new URL(href, window.location.origin); } catch (_) { return false; }
+    if (next.origin !== window.location.origin || next.hash) return false;
+    const voiceRoutes = ["/voice/tts", "/voice/stt", "/voice/saved", "/voice/clone"];
+    const fromSubDub = current === "/subdub" && link.hasAttribute("data-subdub-voice-library-link");
+    const returnPath = fromSubDub
+      ? safeSubDubReturnPath("/subdub?mode=" + SUBDUB_PRODUCT_MODES[resolveSubDubJourneyMode(context)].queryMode)
+      : subDubVoiceReturnPath();
+    if (!returnPath) return false;
+    const returning = !fromSubDub && voiceRoutes.includes(current) && link.hasAttribute("data-subdub-return");
+    if (returning) {
+      if (next.pathname + next.search !== returnPath) return false;
+    } else {
+      if (fromSubDub ? !["/voice/saved", "/voice/clone"].includes(next.pathname)
+        : !voiceRoutes.includes(current) || !link.hasAttribute("data-voice-workspace-mode") || !voiceRoutes.includes(next.pathname)) return false;
+      if (next.searchParams.getAll("return_to").length !== 1 || next.searchParams.get("return_to") !== returnPath
+        || Array.from(next.searchParams.keys()).some((key) => key !== "return_to")) return false;
+    }
+    if (!fromSubDub && !returning && next.pathname === current) { event.preventDefault(); return true; }
+    if (fromSubDub) {
+      if (!captureSubDubDraft(document.querySelector(".portal-subdub-hub"))) return false;
+    } else {
+      rememberTransientFormDraft(document.querySelector(`[data-portal-form][data-portal-route="${current}"]`));
+    }
+    const locale = new URL(window.location.href).searchParams.get("lang");
+    if (["vi", "en", "zh"].includes(locale)) next.searchParams.set("lang", locale);
+    try { window.history.pushState({}, "", next.pathname + next.search); } catch (_) { return false; }
+    event.preventDefault();
+    mountPortal({ ...window.__TOAN_AAS_PORTAL__, path: next.pathname, voiceProfiles: [], voiceInventoryReadState: "guarded" });
+    if (voiceRoutes.includes(next.pathname)) window.dispatchEvent(new CustomEvent("toanaas:voice-workspace-navigation"));
+    const active = document.querySelector(returning ? '[data-subdub-mode-select][aria-selected="true"]' : "[data-subdub-return]");
+    if (active) active.focus({ preventScroll: true });
+    return true;
+  }
+
   function renderVoiceWorkspaceNav(route) {
     const current = normalizePath(String(route || ""));
+    const returnPath = typeof subDubVoiceReturnPath === "function" ? subDubVoiceReturnPath() : "";
     const tabs = [
       ["tts", "/voice/tts"],
       ["stt", "/voice/stt"],
       ["saved", "/voice/saved"],
       ["clone", "/voice/clone"]
     ];
-    return `<section class="portal-card portal-card-pad portal-voice-workspace" data-voice-workspace aria-labelledby="voice-workspace-title"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceUiText("workspace.kicker", "KHÔNG GIAN GIỌNG NÓI"))}</span><h2 id="voice-workspace-title" class="portal-card-title">${safeText(voiceUiText("workspace.title", "Một không gian cho mọi luồng giọng nói"))}</h2><p class="portal-card-subtitle">${safeText(voiceUiText("workspace.description", "Chuyển giữa đọc văn bản, chép lời, kho giọng và thêm giọng mà không mất bản nháp của từng luồng."))}</p></div></div><nav class="portal-voice-workspace-nav" aria-label="${safeText(voiceUiText("workspace.navLabel", "Các luồng giọng nói"))}">${tabs.map(([key, href]) => { const active = current === href; return `<a class="portal-voice-workspace-tab${active ? " is-active" : ""}" data-voice-workspace-mode="${safeText(key)}" href="${safeText(href)}"${active ? ' aria-current="page"' : ""}><span><strong>${safeText(voiceUiText(`workspace.tab.${key}`, key))}</strong><small>${safeText(voiceUiText(active ? "workspace.active" : "workspace.open", active ? "Đang mở" : "Mở luồng"))}</small></span><span aria-hidden="true">→</span></a>`; }).join("")}</nav></section>`;
+    const returnLink = returnPath ? `<div class="portal-inline-actions"><a class="portal-button portal-button--quiet" data-subdub-return href="${safeText(returnPath)}">${safeText(voiceUiText("workspace.returnSubDub", "Quay lại SubDub"))}</a></div>` : "";
+    return `<section class="portal-card portal-card-pad portal-voice-workspace" data-voice-workspace aria-labelledby="voice-workspace-title"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceUiText("workspace.kicker", "KHÔNG GIAN GIỌNG NÓI"))}</span><h2 id="voice-workspace-title" class="portal-card-title">${safeText(voiceUiText("workspace.title", "Một không gian cho mọi luồng giọng nói"))}</h2><p class="portal-card-subtitle">${safeText(voiceUiText("workspace.description", "Chuyển giữa đọc văn bản, chép lời, kho giọng và thêm giọng mà không mất bản nháp của từng luồng."))}</p></div></div><nav class="portal-voice-workspace-nav" aria-label="${safeText(voiceUiText("workspace.navLabel", "Các luồng giọng nói"))}">${tabs.map(([key, href]) => { const active = current === href; return `<a class="portal-voice-workspace-tab${active ? " is-active" : ""}" data-voice-workspace-mode="${safeText(key)}" href="${safeText(returnPath ? href + "?return_to=" + encodeURIComponent(returnPath) : href)}"${active ? ' aria-current="page"' : ""}><span><strong>${safeText(voiceUiText(`workspace.tab.${key}`, key))}</strong><small>${safeText(voiceUiText(active ? "workspace.active" : "workspace.open", active ? "Đang mở" : "Mở luồng"))}</small></span><span aria-hidden="true">→</span></a>`; }).join("")}</nav>${returnLink}</section>`;
   }
 
   function musicHubText(key, fallback, params) {
@@ -26704,7 +26766,9 @@
       lane.classList.toggle("is-selected", selected);
     });
     const libraryLink = lanes.querySelector("[data-subdub-voice-library-link]");
-    if (libraryLink) libraryLink.setAttribute("href", selectedValue === "custom_voice" ? "/voice/clone" : "/voice/saved");
+    const panel = laneInput.closest("[data-subdub-mode-panel]");
+    const mode = panel && typeof panel.getAttribute === "function" ? panel.getAttribute("data-subdub-mode-panel") : "";
+    if (libraryLink) libraryLink.setAttribute("href", subDubVoiceCompanionUrl(selectedValue === "custom_voice" ? "/voice/clone" : "/voice/saved", mode));
     return true;
   }
 
@@ -26880,7 +26944,7 @@
           </label>`).join("")}
         </div>
         <p class="portal-subdub-voice-lane-note" id="subdub-voice-lane-note-${safeText(suffix)}">${safeText(copy.voiceLaneGuarded)}</p>
-        <a class="portal-button portal-button--quiet" href="${subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") === "custom_voice" ? "/voice/clone" : "/voice/saved"}" data-subdub-voice-library-link>${safeText(copy.voiceLibraryLink)}</a>
+        <a class="portal-button portal-button--quiet" href="${safeText(subDubVoiceCompanionUrl(subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") === "custom_voice" ? "/voice/clone" : "/voice/saved", currentModeKey))}" data-subdub-voice-library-link>${safeText(copy.voiceLibraryLink)}</a>
         <fieldset class="portal-subdub-smart-multi" data-subdub-smart-multi data-status="guarded" data-subdub-callback="videodub|voice|auto_smart_multivoice" aria-describedby="subdub-smart-multi-note-${safeText(suffix)}">
           <legend>${safeText(copy.smartMultiLabel)}</legend>
           <p id="subdub-smart-multi-note-${safeText(suffix)}">${safeText(copy.smartMultiHint)}</p>
@@ -40319,6 +40383,8 @@
       handleFreeToolTabKeydown(freeToolTab, event);
     });
     document.addEventListener("click", (event) => {
+      const subDubContinuationLink = event.target.closest("[data-subdub-voice-library-link], [data-subdub-return], [data-voice-workspace-mode]");
+      if (navigateSubDubVoiceContinuation(event, subDubContinuationLink)) return;
       const voiceModeLink = event.target.closest("[data-voice-workspace-mode]");
       if (navigateVoiceWorkspace(event, voiceModeLink)) return;
       const musicModeLink = event.target.closest("[data-music-workspace-mode]");

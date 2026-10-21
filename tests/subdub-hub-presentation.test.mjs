@@ -17,7 +17,10 @@ assert.notEqual(rendererStart, -1, "SubDub renderer source is present");
 assert.notEqual(rendererEnd, -1, "SubDub renderer boundary is present");
 
 const helperSource = portalSource.slice(helperStart, helperEnd);
-const rendererSource = portalSource.slice(rendererStart, rendererEnd);
+const companionStart = portalSource.indexOf("  function subDubVoiceCompanionUrl(");
+assert.notEqual(companionStart, -1, "SubDub companion URL helper is present");
+const companionSource = portalSource.slice(companionStart, portalSource.indexOf("\n  }", companionStart) + 4);
+const rendererSource = companionSource + "\n" + portalSource.slice(rendererStart, rendererEnd);
 const escapeHtml = (value) => String(value ?? "")
   .replaceAll("&", "&amp;")
   .replaceAll("<", "&lt;")
@@ -292,7 +295,7 @@ test("SubDub exposes guarded Smart Multi speaker mapping and Voice Library contr
   assert.match(html, /pattern="\[a-zA-Z\]\{2,5\}/);
   assert.match(html, /data-status="guarded"/);
   assert.equal((html.match(/data-subdub-voice-library-link/g) || []).length, 2);
-  assert.equal((html.match(/href="\/voice\/saved"/g) || []).length, 2);
+  assert.equal((html.match(/href="\/voice\/saved\?return_to=%2Fsubdub%3Fmode%3Dsubtitle_plus_dubbing"/g) || []).length, 2);
 });
 
 test("SubDub exposes explicit default, saved, Auto 2, Auto Multi 3–8 and Smart Multi lanes", () => {
@@ -461,5 +464,5 @@ test("SubDub links to existing companion hubs; return path and draft transfer ar
   assert.match(html, /href="\/subtitle\/formats"/);
   assert.match(html, /href="\/subtitle\/assets"/);
   assert.match(html, /href="\/subtitle-studio"/);
-  assert.match(html, /href="\/voice\/saved"/);
+  assert.match(html, /href="\/voice\/saved\?return_to=%2Fsubdub%3Fmode%3Dsubtitle_only"/);
 });

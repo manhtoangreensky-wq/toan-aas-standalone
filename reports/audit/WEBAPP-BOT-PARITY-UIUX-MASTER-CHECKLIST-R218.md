@@ -316,6 +316,14 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] Auto source mặc định tự nhận diện; target hiển thị catalog đầy đủ, Việt đứng trước rồi Anh/Trung;
   tìm kiếm runtime và giữ gốc/dịch theo DTO thật vẫn chưa có bằng chứng.
 - [ ] Default Nữ/Nam; saved picker + custom Voice wizard, return đúng draft.
+- [x] SD-C2 continuation UI: SubDub→saved/clone→tab Voice→quay lại bằng
+  bàn phím/Back/Forward giữ draft/mode/lane0/200 trong cùng tài liệu; finite
+  return_to, native modified-click, không history trùng. Focused39/39,
+  full Node872/872; browser48 vòng trên24 cấu hình locale/theme/375/390/768/
+  1440 thực, zero failures/page/console/UIwrite/external/overflow. Protected6
+  function và12 output nav Voice thường không đổi. Evidence
+  `R218-SUBDUB-VOICE-CONTINUATION-QA-20261021.json`. Không đóng saved picker/
+  clone/profile application/receipt/backend; không hứa giữ draft qua tab mới.
 - [~] Auto 2, Auto Multi 3–8 và Smart Multi đã tách thành ba lane canonical riêng,
   mapping callback rõ; server capability/execution vẫn mở.
 - [ ] Speaker map/preview/override chỉ khi có dữ liệu; ambiguous/review/fallback rõ.
@@ -688,6 +696,11 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   và `test_music_library_portal_contracts.py::test_library_routes_do_not_fall_back_to_generic_assets_or_audio_execution`.
   Không sửa route/engine hoặc làm yếu test trong wave Music; cần đặc tả lại
   hành vi kiểm thay literal/regex sau UI/motion.
+- [→] T0-PY-LEGACY-VOICE-STYLE: `test_web_subdub_uiux_product_journey_remediation.py::test_voice_authority_and_fictional_voices_purged`
+  vẫn đòi disabled select `voice_style` đã thay bằng lane controls trước SD-C2.
+  Fail cùng assertion trên clean018146e (runtime/test bằng base42a78e9) và
+  candidate; Python broadened134pass/1baseline-fail. Không đưa select cũ trở
+  lại hoặc làm yếu test trong spec continuation.
 - [→] Canonical DTO/capability/catalog/Voice Library/speaker mapping.
 - [→] Upload/quote/job/output bridge, paid providers và artifact delivery.
 - [→] Backend RBAC/ABAC, cross-product references và mutation nghiệp vụ.

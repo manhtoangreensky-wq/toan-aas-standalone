@@ -1,5 +1,18 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## SD-C2 — SubDub qua kho/thêm giọng rồi quay lại, 21/10/2026
+
+| ID | Thao tác QA | Điều kiện đạt |
+|---|---|---|
+| SDRETURN-01 | SubDub chọn giọng đã lưu/thêm giọng, targetAnh và âm lượng0/200 → mở Voice | Cùng tài liệu, return_to chỉ đường SubDub/mode hữu hạn; không mang nội dung/tệp/token/profile ID |
+| SDRETURN-02 | Chuyển tab Voice → Enter “Quay lại SubDub” → Back/Forward | Đúng chế độ, lane và bản nháp; không history trùng khi bấm tab hiện tại; không giả giọng đã được áp dụng |
+| SDRETURN-03 | Đường ngoài/Admin/query lạ/duplicate return_to; Ctrl/Cmd/Shift/middle/target/download | Không đi vào handler continuation không hợp lệ; giữ hành vi native; Voice thông thường không đổi |
+| SDRETURN-04 | Hồ sơ VI/EN/ZH ×2theme ×375/390/768/1440; cả saved/clone | 48 vòng hoàn tất, kiểm theme/lang thực, keyboard/AX/ảnh/overflow, page/console/UIwrite/external0; API/kho giọng/engine vẫn có gate riêng |
+
+Evidence `reports/audit/R218-SUBDUB-VOICE-CONTINUATION-QA-20261021.json`.
+Reload toàn bộ/tab mới không được hứa giữ bản nháp tab-memory; consent/profile
+application, preview và giao tệp vẫn chưa được xác minh bởi continuation.
+
 ## SD-B2 correction — capture và đổi chế độ SubDub, 21/10/2026
 
 | ID | Thao tác QA | Điều kiện đạt |

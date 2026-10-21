@@ -16472,6 +16472,7 @@
     ["workspace.title","Một không gian cho mọi luồng giọng nói","One workspace for every voice flow","一个工作区覆盖所有语音流程"],
     ["workspace.description","Chuyển giữa đọc văn bản, chép lời, kho giọng và thêm giọng mà không mất bản nháp của từng luồng.","Move between speech, transcription, the voice library and adding a voice without losing each flow's draft.","在朗读、转写、声音库和添加声音之间切换，同时保留各流程草稿。"],
     ["workspace.navLabel","Các luồng giọng nói","Voice flows","语音流程"],
+    ["workspace.returnSubDub","Quay lại SubDub","Back to SubDub","返回 SubDub"],
     ["workspace.active","Đang mở","Open","当前打开"],
     ["workspace.open","Mở luồng","Open flow","打开流程"],
     ["workspace.tab.tts","Văn bản thành giọng nói","Text to speech","文字转语音"],

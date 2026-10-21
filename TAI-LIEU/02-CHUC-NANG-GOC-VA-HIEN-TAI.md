@@ -1,5 +1,12 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## SD-C2 — nối giao diện, chưa phải áp dụng giọng canonical
+
+Web đã giữ ngữ cảnh SubDub→kho/thêm giọng→quay lại trong cùng tài liệu;
+48 vòng browser có profile locale/theme thực, không chỉ kiểm href. Quyền
+lưu/preview/áp dụng profile vào SubDub và báo giá/engine/delivery vẫn chưa
+được chứng minh từ bước điều hướng này. Không chuyển các mục T0 thành PASS.
+
 ## SubDub — không đồng nhất control có mặt với parity Bot
 
 Draft UI cần đi theo cấu hình mới nhất, giữ0/200 và format riêng. Bản test21

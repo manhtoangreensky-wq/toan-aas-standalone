@@ -1,5 +1,16 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## SD-C2 — đi tới công cụ giọng và quay lại bản nháp, 21/10/2026
+
+Từ SubDub, link Kho giọng/Thêm giọng mở đúng Voice trong cùng tài liệu khi
+phiên đang hợp lệ. Bốn tab Voice giữ đường quay lại đã kiểm; “Quay lại SubDub”
+khôi phục đúng mode, lane và cấu hình hiện có, kể cả0/200 và Back/Forward.
+URL chỉ chứa đường/mode hữu hạn, không chứa bản nháp/tệp/token/profile ID.
+Đây là giữ ngữ cảnh giao diện, KHÔNG phải đã lưu/áp dụng giọng hay có output.
+Modified click/tab mới/reload đầy đủ giữ hành vi trình duyệt; không hứa giữ
+tab-memory qua tài liệu mới. Browser48 vòng trên locale/theme thực đạt;
+case SDRETURN và evidence SD-C2 ghi phạm vi rõ. Không sửa API/engine/ví.
+
 ## SubDub SD-B2 — đính chính capture và trạng thái dùng chung, 21/10/2026
 
 Test21 trước đó chưa chứng minh âm lượng0/200 được chụp từ control thật.
