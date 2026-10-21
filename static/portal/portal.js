@@ -21628,91 +21628,65 @@
     const readState = dashboardReadState(context);
 
     function renderDashboardProductHero(ctx) {
-      return `<section class="portal-card portal-card-pad portal-dashboard-product-hero" aria-labelledby="dashboard-product-title" style="margin-bottom:20px; background:linear-gradient(135deg, color-mix(in srgb, var(--portal-brand) 6%, var(--portal-surface-light)) 0%, var(--portal-surface-light) 100%); border:1px solid color-mix(in srgb, var(--portal-brand) 20%, var(--portal-border)); border-radius:var(--portal-radius-lg); padding:24px;">
-        <div style="margin-bottom:20px;">
-          <span class="portal-section-kicker" style="color:var(--portal-brand); font-weight:700; font-size:12px; letter-spacing:0.05em;">${dashboardText("productHero.kicker")}</span>
-          <h1 id="dashboard-product-title" style="margin:6px 0 8px; font-weight:800; color:var(--portal-ink);">${dashboardText("productHero.title")}</h1>
-          <p style="margin:0; font-size:14px; color:var(--portal-muted);">${dashboardText("productHero.body")}</p>
+      const copy = {
+        vi: {
+          title: "Bạn muốn tạo gì hôm nay?",
+          description: "Chọn công cụ để chuẩn bị nội dung. Khả năng tạo và chi phí được kiểm tra trong từng công cụ.",
+          open: "Mở công cụ",
+          products: [
+            ["Video", "Kịch bản, phân cảnh và nội dung video."],
+            ["Hình ảnh", "Ý tưởng, ảnh tham chiếu và thiết kế."],
+            ["Giọng nói", "Lời đọc, giọng nói và ngôn ngữ."],
+            ["Phụ đề & lồng tiếng", "Phụ đề, bản dịch và lời lồng tiếng."],
+            ["Nội dung", "Bài viết, câu dẫn và kịch bản."],
+            ["Âm nhạc", "Lời bài hát, nhạc nền và âm thanh."]
+          ]
+        },
+        en: {
+          title: "What would you like to create?",
+          description: "Choose a tool to prepare your content. Generation availability and costs are checked inside each tool.",
+          open: "Open tool",
+          products: [
+            ["Video", "Scripts, scenes and video content."],
+            ["Images", "Ideas, reference images and designs."],
+            ["Voice", "Narration, voices and languages."],
+            ["Subtitles & dubbing", "Subtitles, translations and dubbed speech."],
+            ["Content", "Posts, hooks and scripts."],
+            ["Music", "Lyrics, background music and sound."]
+          ]
+        },
+        zh: {
+          title: "今天想创作什么？",
+          description: "选择工具来准备内容。生成能力和费用将在各工具中核实。",
+          open: "打开工具",
+          products: [
+            ["视频", "脚本、分镜和视频内容。"],
+            ["图像", "创意、参考图像和设计。"],
+            ["语音", "旁白、声音和语言。"],
+            ["字幕与配音", "字幕、翻译和配音。"],
+            ["内容", "文章、开场文案和脚本。"],
+            ["音乐", "歌词、背景音乐和音效。"]
+          ]
+        }
+      };
+      const text = copy[interfaceLocaleFor(ctx)] || copy.vi;
+      const destinations = [
+        ["/studio", ICONS.video], ["/tools/image", ICONS.image],
+        ["/voice", ICONS.voice], ["/subdub", ICONS.subtitle],
+        ["/content", ICONS.prompt], ["/music", ICONS.music]
+      ];
+      return `<section class="portal-card portal-card-pad portal-dashboard-product-hero" aria-labelledby="dashboard-product-title">
+        <div class="portal-dashboard-product-heading">
+          <h2 id="dashboard-product-title">${safeText(text.title)}</h2>
+          <p>${safeText(text.description)}</p>
         </div>
-        <div class="portal-dashboard-launchers-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
-          <a class="portal-product-launcher-card" href="/studio" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
-            <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #3b82f6 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#3b82f6; margin-bottom:12px;">
-                ${portalIcon(ICONS.video)}
-              </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">${dashboardText("productHero.video.title")}</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">${dashboardText("productHero.video.body")}</p>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">${dashboardText("productHero.video.open")} →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">${dashboardText("productHero.video.tag")}</span>
-            </div>
-          </a>
-          <a class="portal-product-launcher-card" href="/tools/image" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
-            <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #8b5cf6 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#8b5cf6; margin-bottom:12px;">
-                ${portalIcon(ICONS.image)}
-              </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">${dashboardText("productHero.image.title")}</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">${dashboardText("productHero.image.body")}</p>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">${dashboardText("productHero.image.open")} →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">${dashboardText("productHero.image.tag")}</span>
-            </div>
-          </a>
-          <a class="portal-product-launcher-card" href="/voice" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
-            <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #06b6d4 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#06b6d4; margin-bottom:12px;">
-                ${portalIcon(ICONS.voice)}
-              </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">${dashboardText("productHero.voice.title")}</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">${dashboardText("productHero.voice.body")}</p>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">${dashboardText("productHero.voice.open")} →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">${dashboardText("productHero.voice.tag")}</span>
-            </div>
-          </a>
-          <a class="portal-product-launcher-card" href="/subdub" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
-            <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #10b981 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#10b981; margin-bottom:12px;">
-                ${portalIcon(ICONS.subtitle)}
-              </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">${dashboardText("productHero.subdub.title")}</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">${dashboardText("productHero.subdub.body")}</p>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">${dashboardText("productHero.subdub.open")} →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">${dashboardText("productHero.subdub.tag")}</span>
-            </div>
-          </a>
-          <a class="portal-product-launcher-card" href="/content" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
-            <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #f59e0b 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#f59e0b; margin-bottom:12px;">
-                ${portalIcon(ICONS.prompt)}
-              </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">${dashboardText("productHero.content.title")}</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">${dashboardText("productHero.content.body")}</p>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">${dashboardText("productHero.content.open")} →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">${dashboardText("productHero.content.tag")}</span>
-            </div>
-          </a>
-          <a class="portal-product-launcher-card" href="/music" style="text-decoration:none; display:flex; flex-direction:column; justify-content:space-between; background:var(--portal-surface); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:18px; transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;">
-            <div>
-              <div style="width:40px; height:40px; border-radius:10px; background:color-mix(in srgb, #ec4899 15%, var(--portal-surface)); display:flex; align-items:center; justify-content:center; color:#ec4899; margin-bottom:12px;">
-                ${portalIcon(ICONS.music)}
-              </div>
-              <h3 style="font-size:16px; font-weight:700; color:var(--portal-ink); margin:0 0 6px;">${dashboardText("productHero.music.title")}</h3>
-              <p style="font-size:13px; color:var(--portal-muted); margin:0 0 12px; line-height:1.5;">${dashboardText("productHero.music.body")}</p>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--portal-border); padding-top:10px;">
-              <span style="font-size:12px; color:var(--portal-action); font-weight:600;">${dashboardText("productHero.music.open")} →</span>
-              <span style="font-size:11px; color:var(--portal-muted);">${dashboardText("productHero.music.tag")}</span>
-            </div>
-          </a>
+        <div class="portal-dashboard-launchers-grid">
+          ${destinations.map(([href, icon], index) => `<a class="portal-product-launcher-card" href="${href}">
+            <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(icon)}</span>
+            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[index][0])}</strong><span>${safeText(text.products[index][1])}</span></span>
+            <span class="portal-product-launcher-arrow" aria-hidden="true">↗</span>
+            <span class="portal-sr-only">${safeText(text.open)}</span>
+          </a>`).join("")}
         </div>
       </section>`;
     }
@@ -21721,15 +21695,30 @@
       const w = canonicalWalletProjection(ctx.wallet);
       const balance = w ? localizedNumber(w.balance_xu) : "—";
       const spent = w ? localizedNumber(w.total_spent_xu) : "—";
+      const copyByLocale = {
+        vi: {
+          balance: "Số dư Xu khả dụng", plan: "Gói tài khoản", vip: "VIP Doanh nghiệp", member: "Thành viên",
+          spent: "Lũy kế đã dùng", topup: "Nạp Xu", wallet: "Ví Xu & Lịch sử", pricing: "Bảng giá & Gói"
+        },
+        en: {
+          balance: "Available Xu balance", plan: "Account plan", vip: "Business VIP", member: "Member",
+          spent: "Total used", topup: "Top up Xu", wallet: "Xu wallet & history", pricing: "Pricing & packages"
+        },
+        zh: {
+          balance: "可用 Xu 余额", plan: "账户套餐", vip: "企业 VIP", member: "会员",
+          spent: "累计使用", topup: "充值 Xu", wallet: "Xu 钱包与记录", pricing: "价格与套餐"
+        }
+      };
+      const copy = copyByLocale[interfaceLocaleFor(ctx)] || copyByLocale.vi;
       const planName = w && w.plan && (w.plan.plan_name || w.plan.current_plan)
         ? String(w.plan.plan_name || w.plan.current_plan)
-        : uiText(w && w.is_vip ? "dashboard.accountSummary.vip" : "dashboard.accountSummary.member", "");
+        : (w && w.is_vip ? copy.vip : copy.member);
       return `<section class="portal-card portal-card-pad portal-dashboard-account-summary-strip" aria-labelledby="dashboard-account-summary-title" style="margin-bottom:24px; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px 20px;">
-        <h2 id="dashboard-account-summary-title" class="portal-sr-only">${dashboardText("accountSummary.title")}</h2>
+        <h2 id="dashboard-account-summary-title" class="portal-sr-only">${safeText(copy.balance)}</h2>
         <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px;">
           <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
             <div>
-              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${dashboardText("accountSummary.balance")}</span>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${safeText(copy.balance)}</span>
               <div style="display:flex; align-items:baseline; gap:6px;">
                 <strong style="font-size:22px; font-weight:900; color:var(--portal-brand);">${safeText(balance)}</strong>
                 <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">Xu</span>
@@ -21737,14 +21726,14 @@
             </div>
             <div style="width:1px; height:32px; background:var(--portal-border);" class="portal-summary-divider"></div>
             <div>
-              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${dashboardText("accountSummary.plan")}</span>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${safeText(copy.plan)}</span>
               <div style="display:flex; align-items:baseline; gap:6px;">
                 <strong style="font-size:15px; font-weight:700; color:var(--portal-ink);">${safeText(planName)}</strong>
               </div>
             </div>
             <div style="width:1px; height:32px; background:var(--portal-border);" class="portal-summary-divider"></div>
             <div>
-              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${dashboardText("accountSummary.used")}</span>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${safeText(copy.spent)}</span>
               <div style="display:flex; align-items:baseline; gap:6px;">
                 <strong style="font-size:15px; font-weight:700; color:var(--portal-ink);">${safeText(spent)}</strong>
                 <span style="font-size:12px; color:var(--portal-muted);">Xu</span>
@@ -21754,19 +21743,18 @@
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <a class="portal-button portal-button--primary" href="/wallet/topup" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 14px;">
               <span aria-hidden="true">${portalIcon(ICONS.payments)}</span>
-              <span>${dashboardText("accountSummary.topup")}</span>
+              <span>${safeText(copy.topup)}</span>
             </a>
             <a class="portal-button portal-button--quiet" href="/wallet" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 12px;">
-              <span>${dashboardText("accountSummary.wallet")}</span>
+              <span>${safeText(copy.wallet)}</span>
             </a>
             <a class="portal-button portal-button--quiet" href="/packages" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 12px;">
-              <span>${dashboardText("accountSummary.plans")}</span>
+              <span>${safeText(copy.pricing)}</span>
             </a>
           </div>
         </div>
       </section>`;
     }
-
     return `<article class="portal-page portal-dashboard-app portal-workspace-command-center" data-dashboard-read-state="${safeText(readState)}">${renderDashboardProductHero(context)}${renderDashboardAccountSummary(context)}${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-command-center-lanes"><section class="portal-command-center-lane portal-command-center-lane--work" aria-labelledby="workspace-work-lane-title"><div class="portal-command-center-lane-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><span class="portal-section-kicker">${dashboardText("work.kicker")}</span><h2 id="workspace-work-lane-title">${dashboardText("work.title")}</h2><p>${dashboardText("work.body")}</p></div></div>${renderDashboardFocusDock(context)}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div></section>${renderDashboardAccountLane(context)}</div>${renderDashboardCanonicalLane(context, readState)}<details class="portal-dashboard-assurance"><summary>${dashboardText("assurance.title")}</summary><p class="portal-form-note">${dashboardText("assurance.body")}</p></details></article>`;
   }
 
@@ -35284,7 +35272,10 @@
       { icon: ICONS.assets, key: "private" }
     ];
     const trustMarkup = trustCards.map((item) => `<article><span class="portal-landing-trust-icon" aria-hidden="true">${portalIcon(item.icon)}</span><strong>${text(`trust.${item.key}.title`)}</strong><p>${text(`trust.${item.key}.body`)}</p></article>`).join("");
-    const localeMarkup = languageLinks.map((item) => `<a class="portal-landing-locale-link" href="${item.href}"${locale === item.code ? ' aria-current="true"' : ""}>${item.label}</a>`).join("");
+    const localeMarkup = languageLinks.map((item) => {
+      const shortLabel = item.code === "zh" ? "中文" : String(item.code || "").toUpperCase();
+      return `<a class="portal-landing-locale-link" href="${item.href}" aria-label="${safeText(item.label)}"${locale === item.code ? ' aria-current="true"' : ""}><span class="portal-landing-locale-full">${safeText(item.label)}</span><span class="portal-landing-locale-short" aria-hidden="true">${safeText(shortLabel)}</span></a>`;
+    }).join("");
     return `<article class="portal-landing portal-landing-public-container" aria-label="TOAN AAS">
       <header class="portal-landing-header">
         <nav class="portal-landing-nav" aria-label="${text("nav.language")}"><a class="portal-landing-brand" href="/welcome"><span class="portal-brand-mark" aria-hidden="true">${portalBrandMark()}</span><span><strong>TOAN AAS</strong><small>${text("brand.workspace")}</small></span></a><div class="portal-landing-nav-links"><a href="#features">${text("nav.features")}</a><a href="#content-workspace">${text("nav.content")}</a><a href="#audio-workspace">${text("nav.audio")}</a><a href="#studios">${text("nav.tools")}</a><a href="#workflow">${text("nav.workflow")}</a></div><div class="portal-landing-nav-actions"><nav class="portal-landing-locale-nav" aria-label="${text("nav.language")}">${localeMarkup}</nav>${renderLandingThemeSwitch()}${secondaryAction}${navigationAction}</div></nav>
@@ -38459,6 +38450,8 @@
   }
 
   function closeSidebarAboveMobileBreakpoint() {
+    const sidebar = document.querySelector("[data-portal-sidebar]");
+    const sidebarIsOpen = Boolean(sidebar && sidebar.classList.contains("is-open"));
     if (!desktopFocusNavigationSupported()) {
       // The dedicated mobile drawer already owns this breakpoint. Do not keep
       // a desktop-only focus preference active if the layout changes while a
@@ -38467,11 +38460,10 @@
         desktopNavigationFocusEnabled = false;
         syncDesktopFocusNavigation();
       }
-      setSidebarAccessibilityState(false);
+      setSidebarAccessibilityState(sidebarIsOpen);
       return;
     }
-    const sidebar = document.querySelector("[data-portal-sidebar]");
-    if (sidebar && sidebar.classList.contains("is-open")) closeSidebar({ restoreFocus: false });
+    if (sidebarIsOpen) closeSidebar({ restoreFocus: false });
     else setSidebarAccessibilityState(false);
   }
 
