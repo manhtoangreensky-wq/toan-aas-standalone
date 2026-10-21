@@ -10280,14 +10280,6 @@
         "README.md",
         "TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md",
         "TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md",
-        "_giao-viec/BAO-CAO-01-AD-02-MOBILE-DATA.md",
-        "_giao-viec/CHECKLIST-VOICE-QUOTE-IDLE-R1.md",
-        "_giao-viec/PHIEU-08-VO-QUOTE-IDLE-R1.md",
-        "_giao-viec/PHIEU-08B-VO-QUOTE-IDLE-R2.md",
-        "_giao-viec/PHIEU-09-VOICE-REPORT-PROGRESS-R1.md",
-        "_giao-viec/PHIEU-09B-VOICE-REPORT-PROGRESS-R2.md",
-        "_giao-viec/PHIEU-10-GLOBAL-LABELS-R1.md",
-        "_giao-viec/PHIEU-11-IMAGE-PENDING-STATE-R1.md",
         "admin.html",
         "admin_capability_matrix.json",
         "admin_ops.py",
@@ -10314,9 +10306,17 @@
         "copyfast_document_operations.py",
         "copyfast_finance_planning.py",
         "copyfast_finance_policy.py",
-        "copyfast_governance.py"
+        "copyfast_governance.py",
+        "copyfast_growth_review.py",
+        "copyfast_image_operations.py",
+        "copyfast_media_factory.py",
+        "copyfast_mfa.py",
+        "copyfast_music_media.py",
+        "copyfast_pages.py",
+        "copyfast_partner_readiness.py",
+        "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1123,
+      "occurrences": 1115,
       "provider": "PayOS"
     },
     {
@@ -10390,19 +10390,6 @@
     },
     {
       "files": [
-        "_giao-viec/BAO-CAO-01-AD-02-MOBILE-DATA.md",
-        "_giao-viec/BAO-CAO-05B-AD-01-PRICING-NAV-LOCALE.md",
-        "_giao-viec/CHECKLIST-VOICE-QUOTE-IDLE-R1.md",
-        "_giao-viec/DANH-GIA-02-AD-02-STATE-LOCALE.md",
-        "_giao-viec/DANH-GIA-10-GLOBAL-LABELS-R1.md",
-        "_giao-viec/PHIEU-01-AD-02-MOBILE-DATA.md",
-        "_giao-viec/PHIEU-08-VO-QUOTE-IDLE-R1.md",
-        "_giao-viec/PHIEU-08B-VO-QUOTE-IDLE-R2.md",
-        "_giao-viec/PHIEU-09B-VOICE-REPORT-PROGRESS-R2.md",
-        "_giao-viec/PHIEU-10-GLOBAL-LABELS-R1.md",
-        "_giao-viec/PHIEU-10A-GLOBAL-LABELS-STDOUT.md",
-        "_giao-viec/PHIEU-11-IMAGE-PENDING-STATE-R1.md",
-        "_giao-viec/RECEPTION-01-AD-02-MOBILE-DATA.md",
         "ai_assistant.py",
         "coach.html",
         "coach.py",
@@ -10416,7 +10403,7 @@
         "video.html",
         "video.py"
       ],
-      "occurrences": 32,
+      "occurrences": 18,
       "provider": "Gemini"
     },
     {
@@ -18333,9 +18320,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 362,
-  "source_files_scanned": 362,
-  "source_fingerprint_sha256": "e39c3321c9e8d0d7e9d8fb5ece410e3c5e3a7f9a079a99c5ac7037f784319415",
+  "source_files_discovered": 325,
+  "source_files_scanned": 325,
+  "source_fingerprint_sha256": "44a46256d96fc6519ae6ab516255c2de9e1111dfc5a22d1ce1395edabbac0c44",
   "source_root": "repository-root",
   "ui_path_references": [
     {
