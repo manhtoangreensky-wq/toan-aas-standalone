@@ -1,0 +1,23 @@
+{
+  "spec_id": "R218-05-IMAGE-PRESENTATION",
+  "date": "2026-10-21",
+  "status": "CONTROL_LEVEL_ACCEPTED_LOCAL",
+  "base_sha": "13eb5a13531ecd49bb8d96524928b077bd7a1271",
+  "scope": "Image four-lane presentation and truthful guarded states; no upload, generation, provider, quote, wallet or delivery.",
+  "tested_source_sha256": {"portal.js": "1c999b1e1681778bee6bc73c87696b11063cfc57a8003cd2fcc937cf5870f0c4"},
+  "node_focused": "58/58",
+  "browser": {
+    "environment": "Edge headless localhost read-only fixture, reduced motion",
+    "configurations": 18,
+    "locales": ["vi", "en", "zh"],
+    "themes": ["light", "dark"],
+    "widths": [390, 768, 1440],
+    "checks": ["four canonical modes", "three guarded modes", "prompt focus", "no fake media/output/download", "no ready claim", "no overflow", "no page/console error", "no write/external/unknown request"],
+    "failures": 0,
+    "result_path": "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/image-probe.json",
+    "result_sha256": "8854c691411ac25a77a30368178c40a56a35dc0dc76b9b5a238896bfe23f3c90",
+    "runner_sha256": "94d1e6392656369fb8a6a22fb69c15a73ac33f208c1bdb84164d6e22d8298400"
+  },
+  "remaining": ["reference upload/ownership", "AI generation/edit", "manual editor", "before-after/history", "quote/job/output/delivery", "AX audit beyond smoke", "LIVE"],
+  "safety": {"provider_calls": 0, "wallet_mutations": 0, "production_operations": 0, "deploy": "NO", "live_pass": "NOT_TESTED"}
+}

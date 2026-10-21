@@ -52,6 +52,10 @@ function createHarness(locale) {
   vm.runInContext(catalogue, ctx);
   ctx.TOANAASI18n.setLocale(locale);
   vm.runInContext([
+    source.slice(source.indexOf('  const IMAGE_WORKSPACE_ROUTES'), source.indexOf('\n  function ', source.indexOf('  const IMAGE_WORKSPACE_ROUTES'))),
+    functionSource('imageUiText'),
+    functionSource('canonicalImageWorkspaceRoute'),
+    functionSource('renderImageWorkspaceNavigation'),
     functionSource('portalI18n'),
     functionSource('uiText'),
     functionSourceOr('mediaOperationText', 'function mediaOperationText(key, fallback) { return fallback; }'),

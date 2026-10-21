@@ -387,6 +387,18 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   bốn lane, VI/EN/ZH × sáng/tối × 390/768/1440, overflow/audio/video/fake/
   download/external/write/page-errors0. Evidence
   `reports/audit/R218-IMAGE-PRESENTATION-QA-20261020.json`.
+- [x] Image control-level hiện tại đã được chạy lại: Node focused `58/58`; browser
+  `18/18` VI/EN/ZH × sáng/tối ×390/768/1440, bốn mode/ba guarded, focus/overflow/
+  page/console/write/external/unknown `0`, không fake media/ready/download. Evidence
+  `R218-IMAGE-PRESENTATION-QA-20261021.json`. Chỉ khóa presentation guarded; các
+  mục upload/reference/AI/manual/before-after/result/delivery vẫn mở.
+- [x] IM-A2 continuity/loading: bốn mode dùng same-document navigation; draft scalar
+  tách theo mode; modified click/alias/Back/Forward/identity cleanup và
+  absent-integration fallback được kiểm; delayed-auth không lộ form/record cũ.
+  Focused `59/59`, full Node `894/894`, signed candidate `12/12`, normal Image
+  `24/24`, protected comparators giữ nguyên. Evidence
+  `R218-IMAGE-WORKSPACE-CONTINUITY-QA-20261021.json`; chỉ khóa UI/UX/auth-lifecycle
+  cục bộ, không đánh dấu engine/upload/output/delivery/LIVE.
 - [ ] Reference goal/subject/style/ratio/negative prompt/3 biến thể.
 - [ ] Tạo nhanh 5 gợi ý/tự nhập; 7 tier/watermark/quote/confirm.
 - [ ] AI thêm/xóa/nền/màu/product/ratio/custom, phương án và readiness.
@@ -659,6 +671,18 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] Không claim CapCut parity từ toolbar; browser thao tác từng nhóm.
 
 ## Q0/M0/L0 — Nghiệm thu rồi motion, rồi báo cáo
+
+- [x] Q0-UI-LABELS local UI: ẩn ô trạng thái trang/nav/khả dụng trong shared
+  CSS khách/Admin; record thật còn chữ thường không box. Antigravity3.8Flash
+  patch lượt1, Codex độc lập CSS8/8, signed120states visual/overflow/UIwrite/
+  external0, Image24/24 và fullNode891/891. Evidence
+  `R218-GLOBAL-STATUS-LABELS-QA-20261021.json`; CI/push theo wave còn pending,
+  không deploy/LIVE. CSP60 của Tools Free là baseline, không giấu lỗi đó.
+- [ ] UT-CSP-EMPTY-THUMB: `/tools/free` có img src rỗng + inline onerror trỏ
+  placeholder ngoài; CSP chặn5lần/lượt trong QA. Baseline13eb5a1 và candidate
+  cùng5warning khi networkinterception giống nhau. Xử lý ở Utilities: bỏ
+  handler inline/nguồn rỗng, dùng trạng thái rỗng cục bộ; không nới CSP. Evidence
+  `global-labels-csp-baseline-20261021.json`.
 
 - [x] Q0-ZH-LOCALE-PICKER (local UI): root cause source thiếu option zh trong Admin header.
   RED renderer zh/select vi → thêm đúng một option → browser12/12 selected/renderer khớp,

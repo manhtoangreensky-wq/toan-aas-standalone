@@ -1,5 +1,24 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## R218 Q0 — nhãn giao diện thừa và Image continuity, 21/10/2026
+
+Shared customer/Admin không còn trình bày các ô bo tròn kiểu “đang ở trang
+này”, “khả dụng”, “guarded” hoặc “read-only” cho chrome điều hướng; trạng thái
+bản ghi thật vẫn là văn bản để không che giấu dữ liệu. CSS fixture đạt `8/8`,
+ma trận signed đạt `120` trạng thái và hồi quy Image nhãn đạt `24/24`; không có
+request ghi/ngoài hoặc overflow. CSP của `/tools/free` vẫn còn đúng `5` cảnh
+báo baseline mỗi lượt và được ghi ở backlog `UT-CSP-EMPTY-THUMB`, chưa nới CSP
+và chưa gọi là đã sửa.
+
+Image hiện giữ một tài liệu với bốn mode `/image/create`, `/image-studio`,
+`/image/transform`, `/image/edit`. Draft chỉ giữ scalar của form theo mode;
+file, token, quote, receipt, provider và job không được ghi. Signed delayed-auth
+candidate đạt `12/12` (không form/record cũ trong loading), normal Image đạt
+`24/24`, focused continuity đạt `59/59` và full Node đạt `894/894`. Đây là
+bằng chứng UI/UX/accessibility và vòng đời draft cục bộ; upload/reference,
+engine AI/manual, before-after/history, quote/job/output/delivery và LIVE vẫn
+chưa đóng.
+
 ## SD-C2 — đi tới công cụ giọng và quay lại bản nháp, 21/10/2026
 
 Từ SubDub, link Kho giọng/Thêm giọng mở đúng Voice trong cùng tài liệu khi
@@ -35,6 +54,16 @@ và báo lỗi cạnh ô. Khi lồng tiếng `0%`, cảnh báo và ô xác nhậ
 cục bộ; rời `0%` xóa xác nhận, quay lại phải xác nhận lại. 24/24 cấu hình QA đạt,
 page/console/UIwrite/external/overflow đều `0`. Đây chưa phải upload, ASR, dịch,
 lồng tiếng, Smart Multi, quote, job, output, ví hoặc LIVE.
+
+## Image R218-05 — lát presentation hiện tại, 21/10/2026
+
+Trang `/image/create` giữ một workspace dọc với bốn lane: Tạo ảnh, Câu lệnh từ
+ảnh, Chỉnh AI và Chỉnh thủ công. Ba lane ngoài tạo ảnh hiển thị guarded; không
+tự nhận đã upload, tạo ảnh, chỉnh ảnh, có preview, quote hoặc tệp kết quả. QA
+18/18 cấu hình VI/EN/ZH × sáng/tối ×390/768/1440 đạt focus, không overflow,
+không lỗi trang/console, request ghi/ngoài/không biết đều `0`. Đây là bằng chứng
+presentation control-level; reference/upload, AI/manual engine, trước-sau,
+history, quote/job/output/delivery và LIVE vẫn mở.
 
 ## SubDub SD-E2 — ngữ nghĩa và trợ năng, 21/10/2026
 

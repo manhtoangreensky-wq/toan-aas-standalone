@@ -35,6 +35,32 @@ Evidence `C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/subdub-review-v
 
 Evidence `reports/audit/R218-SUBDUB-SEMANTICS-QA-20261021.json`; control-level only.
 
+## IM-PRESENTATION — Image control-level, 21/10/2026
+
+| ID | Thao tác QA | Điều kiện đạt |
+|---|---|---|
+| IME-01 | Mở `/image/create` bằng VI/EN/ZH; đổi bốn lane | Tạo ảnh/Câu lệnh từ ảnh/Chỉnh AI/Chỉnh thủ công cùng workspace dọc; ba lane guarded, không route trùng |
+| IME-02 | Fixture không có capability; nhìn prompt, trạng thái và báo cáo | Prompt giữ focus; không ready claim, media/output/download/quote/job giả |
+| IME-03 | VI/EN/ZH × sáng/tối ×390/768/1440 | 18/18 vòng; page/console/UIwrite/external/unknown/overflow0 |
+| IME-04 | Rà control-level Image | Node focused58/58; không suy ra upload/reference/AI/manual engine, before-after, history hoặc LIVE |
+
+Evidence `reports/audit/R218-IMAGE-PRESENTATION-QA-20261021.json`; control-level only.
+
+## IM-A2 — Image workspace continuity and pending projection, 21/10/2026
+
+| ID | Thao tác QA | Điều kiện đạt |
+|---|---|---|
+| IM-A2-01 | `/image/create` → `/image-studio` → `/image/transform` → `/image/edit` → `/image/create`; VI/EN/ZH × sáng/tối ×390/1440 | Điều hướng cùng tài liệu, active mode đúng, không reload ngoài fallback, form đích không nhận projection cũ khi read state còn `loading` |
+| IM-A2-02 | Nhập prompt/scalar ở từng mode, đổi mode, remount, Back/Forward | Bản nháp scalar giữ riêng theo mode; không giữ file/password/token/quote/receipt/job; cùng mode không nhân lịch sử |
+| IM-A2-03 | Click có modifier/middle/target/download và alias `/image/new`, `/image/image-to-image` | Hành vi native được giữ; alias chuẩn hóa đúng mode; query/hash/external/record path bị từ chối |
+| IM-A2-04 | Đổi identity/logout trong lúc draft hoặc estimate pending | Chỉ draft Image và estimate chưa xác nhận bị xóa; job/report đã xác nhận không bị xóa; không lộ draft tài khoản trước |
+| IM-A2-05 | Delayed-auth/loading fixture; VI/EN/ZH × sáng/tối ×390/1440 | `12/12` candidate: không form/record cũ khi loading, có vùng chờ có nhãn, nav 4 mode còn dùng được; page/console/UIwrite/external/overflow `0` |
+| IM-A2-06 | Review scope | `59/59` focused và full Node `894/894`; không suy ra upload/reference/AI/manual engine, before-after/history/output/delivery hoặc LIVE |
+
+Evidence `reports/audit/R218-IMAGE-WORKSPACE-CONTINUITY-QA-20261021.json`;
+control-level/local signed QA only. Sửa case phải sửa file nguồn này trước khi
+sinh thẻ tester.
+
 ## SD-B2 correction — capture và đổi chế độ SubDub, 21/10/2026
 
 | ID | Thao tác QA | Điều kiện đạt |

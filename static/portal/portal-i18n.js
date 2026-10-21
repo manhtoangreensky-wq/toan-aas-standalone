@@ -16770,6 +16770,8 @@
     ["workflow.edit.title", "Chỉnh sửa ảnh", "Edit an image", "编辑图像"],
     ["workflow.edit.description", "Mở công cụ tăng chất lượng ảnh hiện có. Chỉnh sửa ảnh bằng AI chưa khả dụng.", "Open the existing image enhancement tool. AI image editing is not currently available.", "打开现有图像增强工具。当前尚不支持 AI 图像编辑。"],
     ["workflow.open", "Mở công cụ", "Open tool", "打开工具"],
+    ["workflow.loadingTitle", "Đang tải không gian làm ảnh", "Loading your image workspace", "正在加载图像工作区"],
+    ["workflow.loadingBody", "Vui lòng chờ trong giây lát.", "Please wait a moment.", "请稍候。"],
     ["workflow.modeLabel", "Các chế độ làm ảnh", "Image creation modes", "图像处理模式"],
     ["workflow.mode.create.title", "Tạo ảnh AI", "Create AI images", "创建 AI 图像"],
     ["workflow.mode.create.description", "Mô tả ý tưởng, chọn tỷ lệ và xem báo giá trước khi xác nhận.", "Describe an idea, choose an aspect ratio and review the quote before confirming.", "描述想法，选择比例并在确认前查看报价。"],

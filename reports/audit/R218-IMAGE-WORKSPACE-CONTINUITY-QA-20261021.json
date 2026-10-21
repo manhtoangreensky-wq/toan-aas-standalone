@@ -1,0 +1,20 @@
+{
+  "spec_id": "IM-A2",
+  "date": "2026-10-21",
+  "status": "UI_UX_ACCESSIBILITY_ACCEPTED_LOCAL",
+  "base_sha": "13eb5a13531ecd49bb8d96524928b077bd7a1271",
+  "scope": "Image four-mode same-document navigation, scalar draft continuity, history/fallback and stale owner-scoped projection reset; no engine/provider/upload/output.",
+  "worker": {"model": "gemini-3.8-flash-high", "handoff_round": 1, "same_defect_failed_handoffs": 0, "pending_state_patch": "worker stdout; Codex applied/verified"},
+  "tests": {"pending_and_continuity": "59/59", "full_node": "894/894", "portal_syntax": "exit0", "protected_comparators": "13 helpers + entire integration.js equal BASE after normalized line endings"},
+  "browser": {
+    "environment": "Edge headless signed isolated QA profile, temporary DB, reduced motion",
+    "red": {"cases": 3, "failures": ["full document navigation", "destination had no common nav", "prompt draft lost"]},
+    "baseline_delayed_auth": {"cases": 1, "forms_before_guard": 1, "loading_region": false, "old_record_visible": true},
+    "candidate": {"cases": 12, "locales": ["vi", "en", "zh"], "themes": ["light", "dark"], "widths": [390, 1440], "forms_during_loading": 0, "old_record_visible": false, "loading_region": true, "nav_modes": 4, "errors": 0, "ui_writes": 0, "external": 0, "overflow": 0},
+    "normal_image_matrix": "24/24 previously GREEN; Image workspace four modes, keyboard loop, Back/Forward, prompt retention, theme/locale, identity cleanup; failures/page/console/UIwrite/external0",
+    "result_path": "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/image-studio-pending-green-20261021.json",
+    "result_sha256": "bd0b6210a5686618d1c45c57619928f545e9988ce6392d18f67fb7a4638d67fc"
+  },
+  "remaining": ["reference upload/ownership", "AI/manual engine", "before-after/history output", "quote/job/delivery", "CSP utility baseline", "motion last"],
+  "safety": {"provider_calls": 0, "wallet_mutations": 0, "production_operations": 0, "deploy": "NO", "live_pass": "NOT_TESTED"}
+}

@@ -18520,7 +18520,10 @@
         ? imageStudioText("guarded.enabled", "Đăng nhập bằng phiên Web đã ký để mở bảng thiết kế thuộc tài khoản hiện tại. Đường dẫn gốc này không dùng dữ liệu từ /image cũ.")
         : imageStudioText("guarded.disabled", "Xưởng sáng tạo hình ảnh đang được máy chủ giữ ở chế độ bảo vệ. Khi cờ tính năng chưa bật, Web không hiển thị luồng nhà cung cấp, hình giả hoặc đầu ra giả.");
       const title = imageStudioText(imageHub ? "guarded.hubTitle" : "guarded.studioTitle", imageHub ? "Trung tâm thao tác hình ảnh đang được bảo vệ" : "Xưởng sáng tạo hình ảnh đang được bảo vệ");
-      return `<article class="portal-page ${workspaceClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(title, copy, ICONS.image)}</section></article>`;
+      return `<article class="portal-page ${workspaceClass}">${renderHero(page, context)}${renderImageWorkspaceNavigation(page)}<section class="portal-card portal-card-pad">${renderEmpty(title, copy, ICONS.image)}</section></article>`;
+    }
+    if (context.imageStudioReadState === "loading") {
+      return `<article class="portal-page ${workspaceClass}">${renderHero(page, context)}${renderImageWorkspaceNavigation(page)}<section class="portal-card portal-card-pad" role="status" aria-live="polite" aria-busy="true"><h2 class="portal-card-title">${safeText(imageUiText("workflow.loadingTitle", ""))}</h2><p class="portal-card-subtitle">${safeText(imageUiText("workflow.loadingBody", ""))}</p></section></article>`;
     }
     const summary = context.imageStudioSummary && typeof context.imageStudioSummary === "object" ? context.imageStudioSummary : {};
     const artboardsSummary = summary.artboards && typeof summary.artboards === "object" ? summary.artboards : {};
@@ -18532,7 +18535,7 @@
     const overview = imageHub
       ? renderImageHubOverview(summary)
       : `<section class="portal-image-studio-intro"><div><span class="portal-section-kicker">${safeText(imageStudioText("intro.kicker", "Định hướng hình ảnh trên Web"))}</span><h2>${safeText(imageStudioText("intro.title", "Từ định hướng sáng tạo đến rà soát, với ảnh tham chiếu trong Kho tài sản được kiểm soát."))}</h2><p>${safeText(imageStudioText("intro.body", "Giữ mô tả sáng tạo, điều cần tránh và các biến thể trong không gian riêng tư. Mọi số liệu chỉ là siêu dữ liệu biên tập, không phải ảnh, hình thu nhỏ hay bản xem trước đã tạo."))}</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>${safeText(imageStudioText("metric.artboards", "Bảng thiết kế"))}</dd></div><div><dt>${safeText(String(review))}</dt><dd>${safeText(imageStudioText("metric.review", "Đang rà soát"))}</dd></div><div><dt>${safeText(String(approved))}</dt><dd>${safeText(imageStudioText("metric.approved", "Đã tự rà soát"))}</dd></div></dl></section>`;
-    return `<article class="portal-page ${workspaceClass}">${renderHero(page, context)}
+    return `<article class="portal-page ${workspaceClass}">${renderHero(page, context)}${renderImageWorkspaceNavigation(page)}
       ${overview}
       <div class="portal-image-studio-layout"><section class="portal-card portal-card-pad portal-image-studio-create"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageStudioText("create.kicker", "Bảng thiết kế mới"))}</span><h2 class="portal-card-title">${safeText(imageStudioText("create.title", "Lập định hướng hình ảnh"))}</h2><p class="portal-card-subtitle">${safeText(imageStudioText("create.body", "Bắt đầu bằng ý định, tỷ lệ, định dạng đích, mô tả sáng tạo và hướng phong cách. Máy chủ kiểm tra phiên, CSRF, quyền sở hữu, phiên bản và mã chống lặp cho mỗi lần ghi."))}</p></div>${badge(canView && context.capabilities["image-artboard-create"] ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="image-artboard-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(imageStudioArtboardFields(context), Boolean(context.capabilities && context.capabilities["image-artboard-create"]), context, values)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(imageStudioText("create.formNote", "Không nhập URL, đường dẫn tài sản, mã nhà cung cấp/tác vụ, mã bí mật, OTP/CVV hoặc chứng từ thanh toán."))}</span><button class="portal-button portal-button--primary" type="submit"${context.capabilities && context.capabilities["image-artboard-create"] ? "" : " disabled"}>${safeText(imageStudioText("create.action", "Tạo bảng thiết kế"))}</button></div></form></section>${renderImageStudioBoundary()}</div>
       ${imageHub ? renderImageHubNextSteps() : ""}
@@ -27784,7 +27787,7 @@
     const canRunCapability = Boolean(context.capabilities && context.capabilities["image-operation-enhance"] === true);
     const canRefresh = Boolean(context.capabilities && context.capabilities["image-enhance-refresh"] === true);
     if (!canViewCapability) {
-      return `<article class="portal-page portal-image-enhance">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>${safeText(t("guard.title", "Xưởng làm ảnh rõ đang ở chế độ an toàn"))}</h2><p>${safeText(t("guard.body", "Tiện ích chỉ mở khi Kho tài sản và kho đầu ra riêng tư của Web được máy chủ xác nhận. Web không dùng canvas trình duyệt, tác vụ Bot, nhà cung cấp hoặc đầu ra giả."))}</p><div class="portal-state-meta"><span>${safeText(common("guard.session", "Phiên đã xác thực"))}</span><span>${safeText(common("guard.storage", "Kho lưu trữ riêng"))}</span><span>${safeText(common("guard.noAi", "Không tạo AI giả"))}</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-image-enhance">${renderHero(page, context)}${renderImageWorkspaceNavigation(page)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>${safeText(t("guard.title", "Xưởng làm ảnh rõ đang ở chế độ an toàn"))}</h2><p>${safeText(t("guard.body", "Tiện ích chỉ mở khi Kho tài sản và kho đầu ra riêng tư của Web được máy chủ xác nhận. Web không dùng canvas trình duyệt, tác vụ Bot, nhà cung cấp hoặc đầu ra giả."))}</p><div class="portal-state-meta"><span>${safeText(common("guard.session", "Phiên đã xác thực"))}</span><span>${safeText(common("guard.storage", "Kho lưu trữ riêng"))}</span><span>${safeText(common("guard.noAi", "Không tạo AI giả"))}</span></div></div></div></section></article>`;
     }
     const assetReadState = String(context.assetVaultReadState || "loading");
     const operationReadState = String(context.imageEnhanceOperationsReadState || "loading");
@@ -27798,7 +27801,7 @@
       const retry = !loading && canRefresh
         ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-enhance-refresh" data-portal-route="/image/edit">${safeText(common("formRetry", "Thử lại dữ liệu riêng tư"))}</button></div>`
         : "";
-      return `<article class="portal-page portal-image-enhance">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>${safeText(common("state.loadingMeta", "Phiên đã xác thực"))}</span><span>${safeText(common("state.noCache", "Không lưu bộ nhớ đệm riêng tư"))}</span><span>${safeText(common("state.noBrowserFallback", "Không dùng dữ liệu thay thế từ trình duyệt"))}</span></div>${retry}</div></div></section></article>`;
+      return `<article class="portal-page portal-image-enhance">${renderHero(page, context)}${renderImageWorkspaceNavigation(page)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>${safeText(common("state.loadingMeta", "Phiên đã xác thực"))}</span><span>${safeText(common("state.noCache", "Không lưu bộ nhớ đệm riêng tư"))}</span><span>${safeText(common("state.noBrowserFallback", "Không dùng dữ liệu thay thế từ trình duyệt"))}</span></div>${retry}</div></div></section></article>`;
     }
     const sources = imageVaultItems(context);
     const operations = imageEnhanceOperationItems(context);
@@ -27813,7 +27816,7 @@
         : t("runReason.ready", "Nguồn → sao chép cô lập → chỉnh màu/làm nét có thể kiểm tra → PNG được mở lại và xác minh trước khi tải.");
     const sourceSummary = t("sourceCount", "{count} ảnh đang hoạt động", { count: String(sources.length) });
     const completedCount = operations.filter((item) => imageOperationState(item) === "completed" && item.download_ready === true).length;
-    return `<article class="portal-page portal-image-enhance">${renderHero(page, context)}
+    return `<article class="portal-page portal-image-enhance">${renderHero(page, context)}${renderImageWorkspaceNavigation(page)}
       <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">${safeText(t("intro.kicker", "Tiện ích xử lý ảnh trên Web"))}</span><h2>${safeText(t("intro.title", "Làm ảnh sạch, rõ và nhất quán — không hứa hẹn AI"))}</h2><p>${safeText(t("intro.body", "Chọn ảnh riêng tư trong Kho tài sản rồi áp công thức màu/làm nét cục bộ hoặc nhập bốn thông số tùy chỉnh. File gốc được giữ nguyên và PNG mới chỉ xuất hiện sau khi kiểm tra lại."))}</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>${safeText(t("metric.sources", "Nguồn thuộc tài khoản hiện tại"))}</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>${safeText(t("metric.ready", "PNG sẵn sàng tải"))}</dd></div></dl></section>
        <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("form.title", "Tạo bản sao đã chỉnh"))}</h2><p class="portal-card-subtitle">${safeText(t("form.description", "Trình duyệt chỉ gửi mã tài sản và thông số đã giới hạn."))}</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="image-operation-enhance" data-portal-route="/image/edit" data-portal-confirm="${safeText(t("form.confirm", "Tạo PNG riêng tư theo công thức hoặc thông số đã chọn? File gốc trong Kho tài sản sẽ không bị thay đổi."))}" novalidate>${renderFields(imageEnhanceFormFields(formValues), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>${safeText(t("form.submit", "Tạo PNG riêng tư"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("boundary.title", "Giới hạn trung thực"))}</h2><p class="portal-card-subtitle">${safeText(t("boundary.description", "Công thức là xử lý cục bộ có thể kiểm tra, không phải lời hứa chỉnh sửa AI."))}</p></div></div><ol class="portal-project-steps"><li><strong>1. ${safeText(t("step.order.title", "Thứ tự có thể kiểm tra"))}</strong><span>${safeText(t("step.order.body", "Tự cân bằng → sáng → tương phản → bão hòa → nét → sắc độ, theo cùng thứ tự của trình chỉnh sửa cục bộ."))}</span></li><li><strong>2. ${safeText(t("step.upscale.title", "Nâng kích thước cơ bản có trần"))}</strong><span>${safeText(t("step.upscale.body", "Nếu bật, máy chủ chỉ dùng LANCZOS và UnsharpMask tối đa 2×, giữ trần 4096 px/16 MP. Không tạo chi tiết mới."))}</span></li><li><strong>3. ${safeText(t("step.delivery.title", "Phát tệp riêng tư"))}</strong><span>${safeText(t("step.delivery.body", "PNG mới được kiểm tra lại, băm lại và tải qua phiên đã xác thực; không có URL công khai hoặc bộ nhớ đệm PWA."))}</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">${safeText(common("openVault", "Mở Asset Vault"))}</a></div></aside></div>
        <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("results.title", "PNG đã chỉnh"))}</h2><p class="portal-card-subtitle">${safeText(t("results.description", "Chỉ thao tác thuộc tài khoản hiện tại. Tải xuống bị khóa nếu quyền sở hữu hoặc tính toàn vẹn không còn hợp lệ."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-enhance-refresh" data-portal-route="/image/edit"${canRefresh ? "" : " disabled"}>${safeText(common("refresh", "Làm mới"))}</button></div>${renderImageEnhanceOperationCards(operations, context)}${renderImageOperationHistoryPagination(context, canViewCapability, "/image/edit", true)}</section>
@@ -27992,7 +27995,7 @@
       `;
     }
 
-    return `<article class="portal-page portal-image-transform">${renderHero(page, context)}
+    return `<article class="portal-page portal-image-transform">${renderHero(page, context)}${renderImageWorkspaceNavigation(page)}
       <section class="portal-document-operation-intro">
         <div>
           <span class="portal-section-kicker">${safeText(t("intro.kicker"))}</span>
@@ -32456,6 +32459,116 @@
     return `<div class="portal-image-create-flow" data-image-flow-state="${safeText(status)}"><div class="portal-state" data-state="${safeText(status)}"><div><h3>${safeText(t(`flow.state.${status}`, ""))}</h3></div></div>${quote}${details}${suggestionMarkup}${feedback}${trackingMarkup}</div>`;
   }
 
+  const IMAGE_WORKSPACE_ROUTES = Object.freeze(["/image/create", "/image-studio", "/image/transform", "/image/edit"]);
+  let imageWorkspaceDraftSession = "";
+
+  function canonicalImageWorkspaceRoute(path) {
+    const normalized = normalizePath(path);
+    const route = normalized === "/image/new" ? "/image/create" : normalized === "/image/image-to-image" ? "/image/transform" : normalized;
+    return IMAGE_WORKSPACE_ROUTES.includes(route) ? route : "";
+  }
+
+  function synchronizeImageWorkspaceDraftSession(context) {
+    const session = context && context.session;
+    const token = session && session.authenticated === true && typeof session.csrfToken === "string" ? session.csrfToken : "";
+    if (!token || token !== imageWorkspaceDraftSession) {
+      [...IMAGE_WORKSPACE_ROUTES, "/image/new", "/image/image-to-image"].forEach(clearTransientFormDraft);
+    }
+    imageWorkspaceDraftSession = token;
+  }
+
+  function captureImageWorkspaceDraft(sourceRoute) {
+    const route = canonicalImageWorkspaceRoute(sourceRoute);
+    if (!route || !imageWorkspaceDraftSession) return false;
+    const action = route === "/image-studio" ? '[data-portal-action="image-artboard-create"]' : "";
+    const form = document.querySelector(`[data-portal-form][data-portal-route="${route}"]${action}`);
+    if (!form) return false;
+    const names = {
+      "/image/create": ["prompt", "tier", "format"],
+      "/image-studio": ["title", "image_intent", "language", "aspect_ratio", "output_format", "creative_brief", "style_direction", "negative_direction", "tags", "project_id"],
+      "/image/transform": ["image_asset_id", "transform_instruction", "aspect_ratio"],
+      "/image/edit": ["source_asset_id", "preset", "brightness", "contrast", "saturation", "sharpness", "tone", "basic_upscale"]
+    };
+    const values = {};
+    form.querySelectorAll("input, select, textarea").forEach((control) => {
+      if (!names[route].includes(control.name) || ["file", "password"].includes(control.type)) return;
+      if (["source_asset_id", "image_asset_id", "project_id"].includes(control.name)) {
+        if (control.disabled || control.tagName !== "SELECT" || !Array.from(control.options).some((option) => option.value === control.value)) return;
+        if (control.value && !(control.name === "project_id" ? validProjectId(control.value) : validVaultAssetId(control.value))) return;
+      }
+      values[control.name] = control.type === "checkbox" ? control.checked : control.value;
+    });
+    transientFormDrafts.set(route, values);
+    return true;
+  }
+
+  function navigateImageWorkspace(event, link) {
+    if (!link || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey
+      || link.getAttribute("target") || link.hasAttribute("download")) return false;
+    const context = getBootstrap();
+    const current = canonicalImageWorkspaceRoute(context.path);
+    const target = link.getAttribute("href");
+    if (!current || !IMAGE_WORKSPACE_ROUTES.includes(target) || !context.session || context.session.authenticated !== true || !context.session.csrfToken) return false;
+    if (target === current) { event.preventDefault(); return true; }
+    captureImageWorkspaceDraft(current);
+    const next = new URL(target, window.location.origin);
+    const currentUrl = new URL(window.location.href);
+    const locale = currentUrl.searchParams.get("lang");
+    const theme = currentUrl.searchParams.get("theme");
+    if (["vi", "en", "zh"].includes(locale)) next.searchParams.set("lang", locale);
+    if (["light", "dark", "system"].includes(theme)) next.searchParams.set("theme", theme);
+    try { window.history.pushState({}, "", next.pathname + next.search); } catch (_) { return false; }
+    event.preventDefault();
+    // Let the existing signed history hydrator adopt the route before mounting.
+    window.dispatchEvent(new window.PopStateEvent("popstate"));
+    if (canonicalImageWorkspaceRoute(getBootstrap().path) !== target) {
+      window.location.replace(next.pathname + next.search);
+      return true;
+    }
+    const active = document.querySelector('[data-image-workflow-nav] [aria-current="page"]');
+    if (active) active.focus({ preventScroll: true });
+    return true;
+  }
+
+  function prepareImageWorkspaceHistoryNavigation() {
+    const target = canonicalImageWorkspaceRoute(window.location.pathname);
+    const context = getBootstrap();
+    const current = canonicalImageWorkspaceRoute(context.path);
+    if (!target || target === current) return false;
+    if (current) captureImageWorkspaceDraft(current);
+    const bootstrap = window.__TOAN_AAS_PORTAL__;
+    const flows = { ...(bootstrap.featureFlows || {}) };
+    for (const route of [current, target, "/image/create", "/image/new"]) {
+      if (flows[route] && flows[route].phase === "estimate") delete flows[route];
+    }
+    const projection = target === "/image-studio" ? {
+      imageStudioSummary: {}, imageArtboards: [], imageArtboardDetail: {}, imageArtboardEstimate: {},
+      imageStudioReferences: {}, imageStudioFilter: { q: "", state: "active" }, imageStudioListing: {},
+      imageStudioEvents: [], imageStudioPolicy: {}, imageStudioReadState: "loading"
+    } : ["/image/edit", "/image/transform"].includes(target) ? {
+      imageOperationAssetReferences: { items: [], pinned: [], listing: {} }, imageOperationAssetReferenceReadState: "loading",
+      ...(target === "/image/edit" ? { vaultItems: [], assetVaultListing: {}, assetVaultReadState: "loading", assetVaultLifecycle: {}, imageEnhanceOperations: [], imageEnhanceOperationListing: {}, imageEnhanceOperationsReadState: "loading" } : {})
+    } : {};
+    window.__TOAN_AAS_PORTAL__ = { ...bootstrap, ...projection, featureFlows: flows };
+    return true;
+  }
+
+  function renderImageWorkspaceNavigation(page) {
+    const t = imageUiText;
+    const current = canonicalImageWorkspaceRoute(page.routePath || page.path);
+    const imageModes = [
+      { key: "create", href: "/image/create" },
+      { key: "prompt", href: "/image-studio" },
+      { key: "aiEdit", href: "/image/transform" },
+      { key: "manual", href: "/image/edit" }
+    ];
+    return `<section class="portal-card portal-card-pad portal-image-create-workflows"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("workflow.title", ""))}</h2><p class="portal-card-subtitle">${safeText(t("workflow.modeLabel", ""))}</p></div></div><nav class="portal-module-grid portal-image-create-workflow-nav" aria-label="${safeText(t("workflow.navLabel", ""))}" data-image-workflow-nav>${imageModes.map((mode) => {
+      const { key, href } = mode;
+      const selected = href === current;
+      return `<a class="portal-module-card portal-image-create-workflow-card portal-image-create-mode-card" href="${safeText(href)}" data-image-mode="${safeText(mode.key)}" data-image-mode-state="${selected ? "current" : "guarded"}"${selected ? ' aria-current="page"' : ""}><div class="portal-module-copy"><h3>${safeText(t(`workflow.mode.${key}.title`, ""))}</h3><p>${safeText(t(`workflow.mode.${key}.description`, ""))}</p><span class="portal-module-link">${safeText(t(selected ? "workflow.mode.current" : "workflow.mode.guarded", ""))}${selected ? "" : ' <span aria-hidden="true">→</span>'}</span></div><span class="portal-badge" data-status="${selected ? "current" : "guarded"}">${safeText(t(selected ? "workflow.current" : "workflow.mode.guarded", ""))}</span></a>`;
+    }).join("")}</nav></section>`;
+  }
+
   function renderImageCreateWorkspace(page, context) {
     const route = page.routePath || page.path;
     const flow = context.featureFlows && context.featureFlows[route];
@@ -32468,13 +32581,7 @@
     const reportFirst = Boolean(flow && flow.feature === "image_create" && (flow.phase === "estimate" || flow.phase === "confirm"));
     const oldTaskForm = Boolean(flow && flow.feature === "image_create" && flow.phase === "confirm" && FEATURE_TRACKING_JOB_STATES.has(String(flow.status || "").toLowerCase()));
     const form = oldTaskForm ? `<details class="portal-card portal-card-pad portal-image-create-task-form" data-image-task-form><summary>${safeText(t("form.previous", ""))}</summary>${renderFormCard(page, context)}</details>` : renderFormCard(page, context);
-    const imageModes = [
-      { key: "create", href: "/image/create", current: true },
-      { key: "prompt", href: "/image-studio", current: false },
-      { key: "aiEdit", href: "/image/transform", current: false },
-      { key: "manual", href: "/image/edit", current: false }
-    ];
-    const workflow = `<section class="portal-card portal-card-pad portal-image-create-workflows"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("workflow.title", ""))}</h2><p class="portal-card-subtitle">${safeText(t("workflow.modeLabel", ""))}</p></div></div><nav class="portal-module-grid portal-image-create-workflow-nav" aria-label="${safeText(t("workflow.navLabel", ""))}" data-image-workflow-nav>${imageModes.map((mode) => { const state = mode.current ? "current" : "guarded"; const title = t(`workflow.mode.${mode.key}.title`, ""); const description = t(`workflow.mode.${mode.key}.description`, ""); const action = mode.current ? t("workflow.mode.current", "") : t("workflow.mode.guarded", ""); return `<a class="portal-module-card portal-image-create-workflow-card portal-image-create-mode-card" href="${safeText(mode.href)}" data-image-mode="${safeText(mode.key)}" data-image-mode-state="${safeText(state)}"${mode.current ? ' aria-current="page"' : ""}><div class="portal-module-copy"><h3>${safeText(title)}</h3><p>${safeText(description)}</p><span class="portal-module-link">${safeText(action)}${mode.current ? "" : ' <span aria-hidden="true">→</span>'}</span></div><span class="portal-badge" data-status="${safeText(state)}">${safeText(mode.current ? t("workflow.current", "") : t("workflow.mode.guarded", ""))}</span></a>`; }).join("")}</nav></section>`;
+    const workflow = renderImageWorkspaceNavigation(page);
     return `<article class="portal-page portal-image-create">${renderHero(page, context)}${workflow}${reportFirst ? report : ""}${form}${reportFirst ? "" : report}${companion}</article>`;
   }
 
@@ -40495,6 +40602,8 @@
       handleFreeToolTabKeydown(freeToolTab, event);
     });
     document.addEventListener("click", (event) => {
+      const imageModeLink = event.target.closest("[data-image-workflow-nav] [data-image-mode]");
+      if (navigateImageWorkspace(event, imageModeLink)) return;
       const subDubContinuationLink = event.target.closest("[data-subdub-voice-library-link], [data-subdub-return], [data-voice-workspace-mode]");
       if (navigateSubDubVoiceContinuation(event, subDubContinuationLink)) return;
       const voiceModeLink = event.target.closest("[data-voice-workspace-mode]");
@@ -41208,6 +41317,7 @@
     synchronizeVoiceWorkspaceDraftSession(context);
     synchronizeMusicWorkspaceDraftSession(context);
     synchronizeSubDubWorkspaceDraftSession(context);
+    synchronizeImageWorkspaceDraftSession(context);
     const page = resolvePage(context.path);
     applyInterfaceLocale(context);
     const sidebar = document.querySelector("[data-portal-sidebar]");
@@ -42144,6 +42254,7 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
   });
 
   bindPwaInstallEvents();
+  window.addEventListener("popstate", prepareImageWorkspaceHistoryNavigation);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => mountPortal(), { once: true });
   else mountPortal();
 }());
