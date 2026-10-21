@@ -36,6 +36,14 @@ test('Vietnamese Admin fixed chrome removes the reported English leaks', () => {
     '"adminGeneric.failedJobs.column.output": "Kết quả"',
     '"adminGeneric.audit.filter.option.workspace": "Không gian làm việc"',
     '"adminGeneric.maintenance.title": "Bảo trì tính năng chuẩn"',
+    '"adminGeneric.maintenance.catalogReadyNote": "Chỉ bật sau phiên quản trị chuẩn đã ký, CSRF, Core Bridge và cờ ghi riêng."',
+    '"adminGeneric.maintenance.catalogPendingNote": "Chờ danh mục chuẩn để chọn tính năng cần điều khiển."',
+    '"adminGeneric.maintenance.featurePlaceholder": "Chọn tính năng cần điều khiển"',
+    '"adminGeneric.audit.metric.serverLimit": "Giới hạn máy chủ"',
+    '"adminGeneric.audit.metric.redacted": "Đã che bớt"',
+    '"adminGeneric.audit.defaultEvent": "Sự kiện đã che bớt"',
+    '"adminGeneric.audit.pagination.range": "Đang hiển thị {start}–{end} sự kiện đã che bớt"',
+    '"adminGeneric.securityAccess.state.loadingTitle": "Đang xác minh tình trạng bảo mật và quyền truy cập"',
     '"adminGeneric.securityAccess.route.securityTitle": "Tình trạng bảo mật"',
     '"adminGeneric.securityAccess.metric.mfaRuntime.label": "MFA đang chạy"',
     '"adminGeneric.securityAccess.access.roleCounts.label": "Quản trị viên / Quản lý hỗ trợ / Nhân viên hỗ trợ"',
@@ -57,6 +65,15 @@ test('Vietnamese Admin fixed chrome removes the reported English leaks', () => {
     'System & Data Stewardship',
     'Job-Lock'
   ]) assert.equal(vi.includes(phrase), false, `English fixed chrome leaked: ${phrase}`);
+  for (const phrase of [
+    'signed canonical admin session',
+    'catalog canonical',
+    'feature cần điều khiển',
+    'redaction',
+    'Audit Explorer',
+    'raw action',
+    'Security & Access Posture'
+  ]) assert.equal(vi.includes(phrase), false, `Residual mixed-language Admin copy leaked: ${phrase}`);
   for (const phrase of [
     'Security Posture',
     'session reference',

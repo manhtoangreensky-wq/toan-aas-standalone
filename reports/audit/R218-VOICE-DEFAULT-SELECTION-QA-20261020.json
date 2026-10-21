@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-20",
+  "scope": "Voice default selection UI on the local production shell, renderer, styles and integration.js with synthetic GET-only API fixtures",
+  "baseline_sha": "699fb048db76dc2b7cfbc40961fc8fae6d7446f6",
+  "finding": "The prior capability helper read fields that copyfast_api._project_readiness does not expose; its unit fixtures did not prove server capability delivery.",
+  "correction": "Use the existing female/male input schema with an explicit empty required choice; retain selected gender and script, without deriving a default from unpublished readiness fields.",
+  "unit_renderer_tests": {"passed": 15, "failed": 0},
+  "voice_stt_regression": {"passed": 75, "failed": 0},
+  "full_node_regression": {"passed": 750, "failed": 0},
+  "browser": "Codex in-app browser through cua_repl, background tab",
+  "matrix": {"locales": ["vi", "en", "zh"], "themes": ["light", "dark"], "widths": [390, 768, 1440], "completed": 18, "passed": 18, "failed": 0},
+  "checks_per_configuration": [
+    "Initial required gender selection is empty",
+    "Exactly female/male canonical options have localized labels",
+    "Select female, then male through the actual select control",
+    "Enter Unicode script, speed 0.85 and volume 0",
+    "Zero-volume warning is visible",
+    "Open saved voices and return to TTS",
+    "Selected male, original script, speed 0.85 and volume 0 are retained",
+    "Theme and UI locale are retained; Chinese HTML lang is the valid zh-CN tag",
+    "Horizontal overflow is zero"
+  ],
+  "console_errors": [],
+  "fixture_observation": {"get_requests_at_observation": 515, "write_requests": [], "unknown_api_requests": []},
+  "screenshots": "Captured inline in the Codex thread: Vietnamese dark mobile with male/zero-volume warning and Vietnamese light desktop with female selected. Images are not stored in this JSON.",
+  "qa_harness_note": "A first Chinese assertion expected lang=zh; the document uses zh-CN. All six Chinese cases were rerun with the valid tag and passed. A screenshot fill raced initial hydration once; after observing the hydrated DOM the screenshot interaction succeeded. This observation alone is not classified as a product regression.",
+  "external_request_capture": "Not available in this browser tool; no submission or provider action was invoked",
+  "production_data_mutations": 0,
+  "provider_calls": 0,
+  "wallet_mutations": 0,
+  "live_pass": "NOT_TESTED",
+  "remaining": ["Canonical default capability DTO and fallback", "Voice Vault management and profile handoff", "Provider execution and audio delivery", "Production deployment and live verification"]
+}

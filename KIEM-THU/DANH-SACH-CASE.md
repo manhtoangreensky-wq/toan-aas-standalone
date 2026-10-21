@@ -1,5 +1,114 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## UT-CSP và Q0 nội dung khách — 22/10/2026
+
+| ID | Thao tác | Điều kiện đạt |
+|---|---|---|
+| UTCSP-01 | Mở Free Tools và đổi10tab | Không img src rỗng/inline handler; không request placeholder/CSP warning trước thao tác |
+| UTCSP-02 | YouTube thumbnail load/error/retry | Chỉ ảnh load thật mới hiện; lỗi là1dòng ngắn; retry phục hồi, không khung ảnh giả |
+| UTCSP-03 | Dán SRT, làm sạch, tải TXT | Văn bản bỏ timestamp, bytesTXT tải về đúng nội dung đang thấy |
+| Q0COPY-01 | Voice4mode/Music/SubDub/Image/FreeTools ×VI/EN/ZH ×light/dark ×390/1440 |96initialstates không chữ thử nghiệm/demo/beta/sandbox, không hero pill, Voice không tự điền nội dungQA; overflow0 |
+
+Evidence `R218-CUSTOMER-UI-REALITY-QA-20261022.json`;96states/12utilityflows.
+Thumbnail bytes kiểm soát chỉ chứng minh lifecycle; engine/output/LIVE còn mở.
+
+## SD-C2 — SubDub qua kho/thêm giọng rồi quay lại, 21/10/2026
+
+| ID | Thao tác QA | Điều kiện đạt |
+|---|---|---|
+| SDRETURN-01 | SubDub chọn giọng đã lưu/thêm giọng, targetAnh và âm lượng0/200 → mở Voice | Cùng tài liệu, return_to chỉ đường SubDub/mode hữu hạn; không mang nội dung/tệp/token/profile ID |
+| SDRETURN-02 | Chuyển tab Voice → Enter “Quay lại SubDub” → Back/Forward | Đúng chế độ, lane và bản nháp; không history trùng khi bấm tab hiện tại; không giả giọng đã được áp dụng |
+| SDRETURN-03 | Đường ngoài/Admin/query lạ/duplicate return_to; Ctrl/Cmd/Shift/middle/target/download | Không đi vào handler continuation không hợp lệ; giữ hành vi native; Voice thông thường không đổi |
+| SDRETURN-04 | Hồ sơ VI/EN/ZH ×2theme ×375/390/768/1440; cả saved/clone | 48 vòng hoàn tất, kiểm theme/lang thực, keyboard/AX/ảnh/overflow, page/console/UIwrite/external0; API/kho giọng/engine vẫn có gate riêng |
+
+Evidence `reports/audit/R218-SUBDUB-VOICE-CONTINUATION-QA-20261021.json`.
+Reload toàn bộ/tab mới không được hứa giữ bản nháp tab-memory; consent/profile
+application, preview và giao tệp vẫn chưa được xác minh bởi continuation.
+
+## SD-D2 — tóm tắt thiết lập và cân âm lượng, 21/10/2026
+
+| ID | Thao tác QA | Điều kiện đạt |
+|---|---|---|
+| SDD2-01 | Bốn mode × VI/EN/ZH; đổi target/lane/format/vị trí/hiển thị | Bước 3 chỉ hiện hàng đúng mode, dữ liệu được escape, file/ngôn ngữ nhận diện/giá chưa xác minh không bị dựng thành kết quả |
+| SDD2-02 | Nhập ô số và kéo thanh gốc0–100, lồng tiếng0–200; nhập rỗng, âm, phân số, quá giới hạn, ký tự | Hai control và summary đồng bộ, giữ giá trị hợp lệ gần nhất, báo lỗi ngay cạnh ô, giữ focus và không remount form |
+| SDD2-03 | Lồng tiếng0 → xác nhận mute → rời0 → quay lại0; đổi mode/Voice-return/đổi identity | Cảnh báo và ack chỉ local; rời0 xóa ack, về0 phải xác nhận lại; đổi identity xóa draft; CTA vẫn khóa |
+| SDD2-04 | VI/EN/ZH × sáng/tối ×375/390/768/1440, AX/ảnh/network | 24/24 vòng; page/console/UIwrite/external/overflow0; không upload/quote/job/provider/ví/output thật |
+
+Evidence `C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/subdub-review-volume-green-20261021.json`; case chỉ đóng UI/UX local, không đóng engine hoặc LIVE.
+
+## SD-E2 — ngữ nghĩa và trợ năng SubDub, 21/10/2026
+
+| ID | Thao tác QA | Điều kiện đạt |
+|---|---|---|
+| SDE2-01 | Mở bước 3 bằng VI/EN/ZH, đổi cả bốn mode | Vùng thiết lập có heading, `role=region`, `aria-live`, `aria-atomic`, liên kết `aria-labelledby` đúng mode |
+| SDE2-02 | Kéo/nhập âm lượng và đọc bằng trình hỗ trợ | `output` có `role=status`, live polite, atomic; ô số/thanh kéo có nhãn và error reference hợp lệ |
+| SDE2-03 | Dùng Tab/Arrow/Home/End giữa bốn tab | `aria-controls` trỏ đúng panel, `aria-labelledby` trỏ heading hiện hữu, panel ẩn không vào thứ tự đọc |
+| SDE2-04 | VI/EN/ZH × sáng/tối ×375/390/768/1440, AX/ảnh/network | 24/24 vòng; page/console/UIwrite/external/overflow0; không mở engine/provider/CTA |
+
+Evidence `reports/audit/R218-SUBDUB-SEMANTICS-QA-20261021.json`; control-level only.
+
+## IM-PRESENTATION — Image control-level, 21/10/2026
+
+| ID | Thao tác QA | Điều kiện đạt |
+|---|---|---|
+| IME-01 | Mở `/image/create` bằng VI/EN/ZH; đổi bốn lane | Tạo ảnh/Câu lệnh từ ảnh/Chỉnh AI/Chỉnh thủ công cùng workspace dọc; ba lane guarded, không route trùng |
+| IME-02 | Fixture không có capability; nhìn prompt, trạng thái và báo cáo | Prompt giữ focus; không ready claim, media/output/download/quote/job giả |
+| IME-03 | VI/EN/ZH × sáng/tối ×390/768/1440 | 18/18 vòng; page/console/UIwrite/external/unknown/overflow0 |
+| IME-04 | Rà control-level Image | Node focused58/58; không suy ra upload/reference/AI/manual engine, before-after, history hoặc LIVE |
+
+Evidence `reports/audit/R218-IMAGE-PRESENTATION-QA-20261021.json`; control-level only.
+
+## IM-A2 — Image workspace continuity and pending projection, 21/10/2026
+
+| ID | Thao tác QA | Điều kiện đạt |
+|---|---|---|
+| IM-A2-01 | `/image/create` → `/image-studio` → `/image/transform` → `/image/edit` → `/image/create`; VI/EN/ZH × sáng/tối ×390/1440 | Điều hướng cùng tài liệu, active mode đúng, không reload ngoài fallback, form đích không nhận projection cũ khi read state còn `loading` |
+| IM-A2-02 | Nhập prompt/scalar ở từng mode, đổi mode, remount, Back/Forward | Bản nháp scalar giữ riêng theo mode; không giữ file/password/token/quote/receipt/job; cùng mode không nhân lịch sử |
+| IM-A2-03 | Click có modifier/middle/target/download và alias `/image/new`, `/image/image-to-image` | Hành vi native được giữ; alias chuẩn hóa đúng mode; query/hash/external/record path bị từ chối |
+| IM-A2-04 | Đổi identity/logout trong lúc draft hoặc estimate pending | Chỉ draft Image và estimate chưa xác nhận bị xóa; job/report đã xác nhận không bị xóa; không lộ draft tài khoản trước |
+| IM-A2-05 | Delayed-auth/loading fixture; VI/EN/ZH × sáng/tối ×390/1440 | `12/12` candidate: không form/record cũ khi loading, có vùng chờ có nhãn, nav 4 mode còn dùng được; page/console/UIwrite/external/overflow `0` |
+| IM-A2-06 | Review scope | `59/59` focused và full Node `894/894`; không suy ra upload/reference/AI/manual engine, before-after/history/output/delivery hoặc LIVE |
+
+Evidence `reports/audit/R218-IMAGE-WORKSPACE-CONTINUITY-QA-20261021.json`;
+control-level/local signed QA only. Sửa case phải sửa file nguồn này trước khi
+sinh thẻ tester.
+
+## SD-B2 correction — capture và đổi chế độ SubDub, 21/10/2026
+
+| ID | Thao tác QA | Điều kiện đạt |
+|---|---|---|
+| SDDRAFT-01 | Lồng tiếng: target Anh, Nam, gốc0, lồng tiếng200 → Combo → Lồng tiếng → Combo → render lại | Giữ input/output0/200 và đúng một giọng được chọn; không dựa vào draft bơm sẵn |
+| SDDRAFT-02 | Combo: vị trí trên-giữa, hiển thị đơn ngữ; đổi target Trung rồi quay lại; ComboVTT và phụ đề gốcTXT | Lựa chọn tương thích mới nhất theo người dùng; format riêng không ghi đè nhau; render lại giữ đúng |
+| SDDRAFT-03 | Đổi identity phiên presentation/đăng xuất trong unit; file/field disabled/giá trị ngoài bounds | Xóa draft cũ đúng slot, không giữ đường dẫn file/profile/provider ID, không mở quyền xử lý |
+| SDDRAFT-04 | Hồ sơ locale VI/EN/ZH × sáng/tối ×375/390/768/1440 | Guard upload/CTA giữ nguyên; AX/ảnh, input/output khớp, overflow/page/console/UIwrite/external0; không suy ra provider/LIVE |
+
+Test21 cũ từng chỉ bơm draft nên bỏ sót capture; đã mở lại trước correction.
+Kết quả mới phải dùng `R218-SUBDUB-DRAFT-RUNTIME-CORRECTION-QA-20261021.json`.
+
+## MU-E-01 — tải và thao tác thư viện Music/SFX, 21/10/2026
+
+| ID | Luồng | Evidence cần có |
+|---|---|---|
+| MULE-01 | Music/SFX/alias; locale hồ sơ VI/EN/ZH, sáng/tối, 390/768/1440 | GET đúng role, không mang query/trang khác role; loading busy/disabled và không card cũ |
+| MULE-02 | Search không khớp → clear → trang sau → Enter trang trước | Query-empty khác true-empty, offsets đúng, chữ paginator/toast đúng locale, không ghi query vào URL/storage |
+| MULE-03 | Transport/malformed → failed → retry; route/logout/session/capability đổi lúc pending | Không success sai, response stale không ghi đè hoặc toast; không thẻ trái role/tài khoản |
+| MULE-04 | Guarded + AX/ảnh/network | Không player/tải/tệp hoặc quyền giả; lỗi trang/console/UIwrite/external0; dữ liệu tổng hợp không chứng minh backend/LIVE |
+
+Evidence `reports/audit/R218-MUSIC-LIBRARY-READ-STATE-QA-20261021.json`;
+UI copy dài và toast stacking vẫn mở ở ledger, không được gộp vào PASS này.
+
+## R218-MUSIC-REVIEW-001 — 21/10/2026
+
+| ID | Luồng | Evidence cần có |
+|---|---|---|
+| MREV-01 | VI/EN/ZH từ hồ sơ QA thật; 390/768/1440 × sáng/tối | HTTP200, đúng route/form/lang/profile; copy/apply nguyên prompt, toast đúng locale, AX + ảnh ổn định |
+| MREV-02 | Quote0/unknown; thay input/revert; idle expiry | Giá trước confirm, unknown không confirm; sửa input khóa; expiry giữ nguyên form/focus, không gửi feature API |
+| MREV-03 | Confirm chỉ có report/tracking hoặc data job trực tiếp | Report hiện không cần draft/estimate giả; 0 khác unknown; tracking khớp; không private URL/audio/download suy đoán |
+| MREV-04 | Generic non-Music comparator | Output baseline bằng candidate, kể cả ký tự & và thẻ; Voice/Image giữ nguyên |
+
+Evidence mới `reports/audit/R218-MUSIC-RUNTIME-REVIEW-QA-20261021.json`;
+record cũ chỉ là smoke theo `R218-EVIDENCE-RECLASSIFICATION-20261021.md`.
+
 Tracker điều phối: `manhtoangreensky-wq/toan-aas-standalone#412`.
 
 Đây là nguồn duy nhất của case; sửa case thì sửa ở file đó trước, rồi mới đồng bộ issue.
@@ -39,7 +148,7 @@ không submit estimate/confirm, upload mẫu, tạo job, dùng provider hay đ�
 
 | ID | Phạm vi | Thao tác | Kết quả cần ghi |
 |---|---|---|---|
-| VUI-01 | `/voice`, `/voice/tts`, `/voice/saved`, `/voice/clone`, `/voice/preview`, `/voice/outputs` | Mở từng route; mở hướng dẫn/thiết lập bằng Enter; kiểm tra tên, thứ tự trường, consent/sample và inventory | Nội dung đúng locale; form/card dọc, không tràn ngang, không mô phỏng âm thanh; action/field/quyền không đổi |
+| VUI-01 | `/voice`, `/voice/tts`, `/voice/saved`, `/voice/clone`, `/voice/preview`, `/voice/outputs` | Kiểm tên/thứ tự trường, consent/sample và inventory; nhập lời thoại Unicode, đặt âm lượng 0 rồi kéo tăng, remount cùng phiên; đọc tên preset bằng trình đọc màn hình | Số đếm cập nhật, 0 không bị đổi, cảnh báo hiện/ẩn đúng và tương phản ≥4,5:1; draft giữ sau hydration; VI/EN/ZH sạch cả aria-label; hai link chỉ mở công cụ, không gọi là dùng lại profile; không thêm nút luôn khóa để báo đủ chức năng |
 | VUI-02 | `/voice-studio`, `/voice-studio/new`, chi tiết hồ sơ QA | Kiểm tra list/filter/create, hồ sơ active/revoked/archived, lời thoại/phiên bản/cue sheet | Quyền server vẫn khóa đúng; fixed copy sạch; accordion, menu và focus dùng được |
 | VUI-03 | `/voice-studio/direction-composer` | QA: trường hợp chưa có/có receipt thật từ helper local; mở kết quả bằng bàn phím | Danh mục và kết quả đúng locale; chỉ kế hoạch văn bản, không hứa hay tạo audio |
 | VUI-04 | TTS/saved/clone flow-state QA | Fixture draft/quote/stale/queued/processing/completed/failed-no-charge/error; mở lại draft và kiểm tra lưu bản mới | Giá công khai hiển thị, cost-only là unknown; nút xác nhận chỉ có khi các gate hiện có đạt; tracking khớp ID/feature/status; không có audio/download suy đoán |
@@ -114,6 +223,18 @@ checkpoint và giữ các trang Video khác/motion ở trạng thái còn mở.
 
 Evidence local đặt dưới `D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/`. PASS cuối phải tách PR merge SHA, CI run, deploy run, runtime SHA và live output.
 
+## VOICE-STT-WORKSPACE-UI-20261018
+
+Case này chỉ kiểm tra presentation/control-level của lane STT; không upload tệp, không lấy
+quote, không tạo job, không gọi provider, không đổi ví/Xu và không dùng production data.
+
+| ID | SPEC_ID | Mức | Môi trường | Route / role / viewport | Case | PASS bắt buộc | Canh lỗi cũ | Evidence |
+|---|---|---|---|---|---|---|---|---|
+| VSTT-01 | R218-02 / VO-12 | 🟠 nặng | local-source | `/voice/stt`, `/voice/asr`; guest renderer; VI/EN/ZH × sáng/tối × 390/768/1440 | Workspace có bốn lane; STT có source audio/video, Tự nhận diện/ngôn ngữ nguồn và Văn bản/SRT/VTT; lane hiện tại có `aria-current` | Không trộn locale; không tràn/clip; target ≥44px; route/alias đúng; không phát sinh request ngoài phạm vi hoặc mutation; contract `4/4`, full Node `598/598` | Route STT từng chưa có trong workspace, quick-switch giữ mốc destination cũ và dễ rơi nhãn tiếng Việt trong EN/ZH | Candidate SHA, DOM/ảnh/AX nếu chạy browser, console/network, output test và ghi rõ upload/runtime chưa chạy |
+
+VSTT-01 là case source/control-level. Browser upload, MIME/size/ownership, progress,
+transcript/copy/export, delivery và LIVE là các gate riêng, không được gộp PASS.
+
 ## WA-44 — A09-OPERATIONS-READINESS-TRUTH
 
 - Mức: nặng; route `/admin/operations`; chỉ đọc, không bấm duyệt.
@@ -158,3 +279,175 @@ Evidence local đặt dưới `D:/TOANAAS/TOAN_AAS_WEB_APP/evidence/`. PASS cu�
   field không đổi; canonical-admin fixture chỉ trong DB QA cô lập.
 - Evidence: candidate SHA, ảnh/DOM/AX, console/network, output `node --test`, và blocker
   Python/runtime nếu chưa có `py`/`pytest`. Không coi source PASS là live PASS.
+
+## AUTOPOST-HUB-UI-CONTROL-20261018
+
+| ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |
+|---|---|---|
+| APUI-01 | `/publishing`; VI/EN/ZH; desktop/tablet/mobile | Có đúng 7 nguồn, 5 bước theo thứ tự; thẻ và lane xếp dọc; không có nguồn trùng hoặc route ngoài allowlist |
+| APUI-02 | `/publishing`; bàn phím và chuột/chạm | Handoff thương hiệu, lịch và gói rà soát mở đúng route; lane chưa có capability chỉ hiển thị trạng thái chờ quyền, không dead click hoặc báo thành công giả |
+| APUI-03 | `/publishing`; light/dark và locale | Fixed chrome sạch từng locale, màu xanh/ngọc giữ nguyên, chữ và trạng thái không xen ngôn ngữ |
+| APUI-04 | `/publishing`; boundary/runtime | Không tạo OAuth, lịch đăng, queue, job, provider call, số liệu Affiliate, tệp hoặc mutation; ghi rõ `control-level` và `LIVE_PASS=NOT_TESTED` khi chưa có runtime evidence |
+
+Bằng chứng source hiện tại: `tests/autopost-hub-product-controls.test.mjs` `4/4`, full Node
+`562/562`. Browser/AX/live chưa chạy; không dùng PASS source để thay cho các mức đó.
+
+## VOICE-WORKSPACE-DRAFT-20261019
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| VUI-DRAFT-01 | Lần đầu giọng rỗng → chọn Nữ rồi Nam; nhập TTS Unicode, tốc độ 0.85 và âm lượng 0 → Kho giọng → Back/Forward → TTS | Nhãn đúng VI/EN/ZH; giọng đã chọn/nội dung/tốc độ/0% và locale giữ nguyên, cùng document; mode active đúng, không job/provider |
+| VUI-DRAFT-02 | Ctrl/Meta-click, mode hiện tại, alias `/tts`/`/voice/create`/`/voice/vault`/`/voice/asr` | Link ngoài/modified giữ hành vi gốc; không tạo history entry lặp; alias giữ draft canonical |
+| VUI-DRAFT-03 | Signed session mới/đăng xuất/mất token | Xóa riêng draft Voice, không xóa draft khác; không giữ File/password, không browser storage |
+
+Canh lỗi cũ ngày 20/10: không tự chọn hoặc thay giới tính bằng trường readiness
+chưa có trong projection server. Default capability/fallback vẫn mở tại R218-02A;
+không đóng bằng fixture tổng hợp. Bằng chứng UI mới nằm trong
+`reports/audit/R218-VOICE-DEFAULT-SELECTION-QA-20261020.json`.
+
+## VOICE-QUOTE-EDIT-20261020
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| VUI-QUOTE-01 | Quote fixture hợp lệ → đổi script/giọng/speed số+preset/volume số+range | Confirm cũ ẩn ngay; note VI/EN/ZH yêu cầu báo giá mới; focus/draft/0% giữ nguyên; không tự gửi request |
+| VUI-QUOTE-02 | Sửa input → Kho giọng → TTS hoặc hydration cùng phiên | Input mới còn nguyên; confirm quote cũ không được render trở lại |
+| VUI-QUOTE-03 | Sửa rồi nhập lại đúng input của quote | Chỉ hiện lại control đã có nếu receipt fresh; không mở quyền hoặc đổi disabled do busy |
+
+Evidence: `reports/audit/R218-VOICE-QUOTE-EDIT-QA-20261020.json`.
+Fixture chỉ đọc, quote/capability tổng hợp; không nhấn tạo/confirm thực thi.
+Idle expiry và generation/delivery thật chưa được đóng bằng các case này.
+
+## VOICE-QUOTE-IDLE-20261020
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| VUI-IDLE-01 | TTS có quote còn hạn → giữ trang đến hết hạn; VI/EN/ZH × sáng/tối × 390/768/1440 | Confirm cũ ẩn, thông báo đúng locale; form node/focus/field/0%/scroll giữ nguyên; 18 cấu hình có DOM và network evidence |
+| VUI-IDLE-02 | Kho giọng, STT và Thêm giọng; chọn tệp QA rồi đợi deadline | Tệp và form không bị dựng lại; note hết hạn còn sau input/change/revert. STT guarded không có confirm được ghi đúng, không tạo upload/provider |
+| VUI-IDLE-03 | Timer → render mới/đổi route/quote mới/missing hoặc malformed expiry; reduced-motion | Timer cũ bị hủy; callback không sửa route khác; không tự dựng deadline, lấy quote hay mở quyền; busy/disabled giữ nguyên |
+
+Evidence: `reports/audit/R218-VOICE-QUOTE-IDLE-QA-20261020.json`.
+Local behavior 8/8, focused 70/70, full Node 769/769; browser fixture 22/22,
+console/overflow/write/request ngoài/unknown API 0. Chỉ khóa UI; CI của delta
+sau push, quote/provider/delivery/LIVE thực tế vẫn mở.
+
+## VOICE-INVENTORY-READ-STATE-20261019
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| VUI-READ-01 | Chậm/lỗi/guarded/malformed/empty/ready trên `/voice/saved` | Tên giọng cũ biến mất trước lần đọc; chỉ empty hợp lệ mới hiện chưa có giọng; thông báo theo locale |
+| VUI-READ-02 | Bàn phím Tab → Thử lại → Enter | Một GET mới, danh sách phục hồi khi response hợp lệ; không POST/provider/giá/tệp giả |
+| VUI-READ-03 | Đổi phiên/route trong lúc GET chưa xong; lỗi readiness độc lập | Response cũ không đè dữ liệu mới; list thành công không bị lỗi readiness che mất |
+| VUI-READ-04 | VI/EN/ZH × sáng/tối × 390/768/1440, 50 record | Không cắt ở 20; không claim tổng kho; thông báo giới hạn 50; ảnh/AX/overflow/console và request ngoài scope đều được ghi |
+
+Lệnh fixture: `node ../qa/r218-voice-inventory/verify.cjs` (máy đã có Playwright/Edge).
+Đây là API fixture localhost chỉ-đọc; LIVE/backend/parity management vẫn mở.
+
+## VOICE-STT-PRESENTATION-20261019
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| VUI-STT-01 | `/voice/stt` và `/voice/asr`; VI/EN/ZH × sáng/tối × 390/768/1440 | Tiêu đề, mô tả, kết quả rỗng và CTA nói về chép lời; không lẫn bộ đếm âm lượng/TTS hoặc audio giả |
+| VUI-STT-02 | Capability chỉ có Bridge chung hoặc `voice_tts` | Tệp STT, estimate và confirm vẫn khóa; không suy diễn quyền STT từ Bridge chung |
+| VUI-STT-03 | Fixture có bản nháp Web nhưng không có `voice_stt` | Ngôn ngữ/định dạng có thể chỉnh và lưu bản nháp nếu được phép; file không lưu, không tạo transcript/job/provider/charge |
+| VUI-STT-04 | Bàn phím/focus/overflow/network | Chọn ngôn ngữ/định dạng giữ focus; page/console/request ngoài/write/unknown API/overflow đều `0` |
+
+Lệnh fixture: `node ../qa/r218-voice-inventory/verify.cjs --stt-probe`.
+Đây là kiểm tra presentation/control-level localhost; upload bytes, backend STT,
+transcript, delivery và LIVE vẫn mở.
+
+## MUSIC-PRESENTATION-20261019
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| MUI-01 | `/music/create` và `/music/song`; VI/EN/ZH × sáng/tối × 390/768/1440 | Nhạc nền và bài hát dùng cùng workspace; title/description/status/handoff sạch locale sau hydration |
+| MUI-02 | Hai route và field set | `lyrics`, `vocal_mode`, `song_length_mode` chỉ xuất hiện ở bài hát; nhạc nền không lộ field song-only |
+| MUI-03 | Thiếu capability runtime | Có thể soạn/lưu brief Web khi được phép; không hiện audio/player/giá/download/provider giả |
+| MUI-04 | Focus/responsive/network | Chọn gói giữ focus; page/console/request ngoài/write/unknown API/overflow đều `0` |
+
+Lệnh fixture: `node ../qa/r218-voice-inventory/music-probe.cjs`.
+Đã kiểm `36` cấu hình; generation, quote, player, delivery và LIVE vẫn mở.
+
+## ADMIN-BROWSER-LOCALE-20261019
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| AUI-01 | `/admin`, `/admin/topups`, `/admin/customers`, `/admin/operations`; VI/EN/ZH × sáng/tối × 390/768/1440 | Nội dung không rỗng, rail/module dọc, banner nạp tiền/sự cố/quick actions theo đúng locale |
+| AUI-02 | canonical_admin_qa fixture | Không hiển thị nút approve/credit trong probe; dữ liệu/role vẫn theo server, không suy diễn từ URL |
+| AUI-03 | Focus/responsive/network | Focus đi vào control; overflow/page/console/request ngoài/write/unknown API đều `0` |
+
+Lệnh fixture: `node ../qa/r218-voice-inventory/admin-probe.cjs`.
+Đã kiểm `72` cấu hình; approval, credit, dữ liệu production và LIVE vẫn mở.
+
+Đính chính: 72 tổ hợp trên chỉ là smoke nội dung/focus/overflow/network. Chưa đủ
+để đóng role, locale, bố cục dọc hoặc dark mode; các mục nghiệm thu đó vẫn mở.
+
+| ID | Case bổ sung trên `/admin` | PASS cần ghi |
+|---|---|---|
+| AUI-04 | Manifest all/support-only/jobs-only/denied | Banner và shortcuts chỉ trỏ module được cấp; không có lối tắt không quyền hoặc section rỗng |
+| AUI-05 | Aggregate total hợp lệ/0/null/thiếu/sai kiểu và list page một dòng | Chỉ aggregate nguyên không âm là total; unknown hiện `—`, không tự dựng 0 hoặc đếm trang thành tổng |
+| AUI-06 | VI/EN/ZH × OS light/dark × 390/768/1440; 6 trạng thái | Nhãn unknown/diagnostics đúng locale, count note contrast ≥4,5:1, focus/overflow/page/console/external/write/unknown API 0; ghi theme thực tế khác requested scheme |
+
+Probe `node ../qa/r218-voice-inventory/admin-probe.cjs --shortcuts`: 18 cấu hình,
+108 trạng thái UI projection. Không phải backend RBAC/approval/financial/LIVE evidence.
+
+## ADMIN-THEME-CORE-20261019
+
+| ID | Kiểm tra | PASS cần ghi |
+|---|---|---|
+| AUI-07 | `/admin`, `/admin/login`; default/query/saved preference/system/media change | Default Light giữ nguyên; selected Dark/System được áp và lưu riêng; không xóa/sửa theme khách; invalid/storage denied không phá UI |
+| AUI-08 | VI/EN/ZH ×375/390/768/1440; dark/light/system cycle bằng nút thật | Navy canvas `#0b132b`/card `#1c2541`, light canvas/card cũ; target≥44, keyboard/focus, không reload/mất email, reload khôi phục selected theme |
+| AUI-09 | Chữ CTA/selected nav/sidebar/form, bảng chẩn đoán, drawer/Escape và meta colors | Tương phản ≥4,5:1 ở cả hai theme; mọi meta theme-color đồng bộ; page/console/external/write/unknown API/overflow0 |
+
+Probe `node ../qa/r218-voice-inventory/admin-probe.cjs --theme`: 24 cases core,
+không phải backend auth, production data, mọi module động hoặc LIVE evidence.
+
+## ADMIN-DATA-MOBILE-20261019
+
+| ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |
+|---|---|---|
+| AUI-10 | `/admin/users`, `/admin/jobs`, `/admin/payments`, `/admin/providers`, `/admin/tickets`; signed Admin fixture; `390/560/768/1440` | Desktop/tablet giữ bảng semantic; `<=560px` mỗi dòng thành thẻ dọc có nhãn cột, filter/clear/no-results và inspector vẫn dùng được; focus/aria-selected/overflow/console không có lỗi; không thêm request ghi hoặc dữ liệu suy đoán |
+
+Case này chỉ kiểm tra presentation/interaction của dữ liệu đã được cấp; không kết luận
+RBAC server, dữ liệu production, approval tiền, provider, delivery hoặc LIVE.
+
+## ADMIN-RECORD-REFERENCE-BRIDGE-20261020
+
+| ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |
+|---|---|---|
+| AD03-REF-01 | `/admin`, `/admin/jobs`, `/admin/assets`, `/admin/reports`, `/admin/audit`; signed Admin fixture và foreign/customer fixture; record đơn + `items[]`; VI/EN/ZH × `390/768/1440` | Admin nhận đúng `request/job/asset/report/audit`, tối đa `6` link/tập, path chỉ trong `/admin`, `/jobs`, `/assets`, `/reports`, `/audit`; foreign/customer không có trường; kind/ID sai làm cả tập biến mất; path ngoài/`//`/`\\`/dot-segment không điều hướng; console/overflow/external request/write `0` |
+
+Evidence bắt buộc: candidate SHA, runtime/CI SHA riêng, DOM/ảnh/AX, console/network,
+payload đã redaction và verdict. Contract local hiện có tại
+`tests/test_copyfast_bridge.py::test_admin_record_references_cross_bridge_only_after_admin_read_guard`;
+case này chưa đóng record/RBAC/bridge thật hoặc LIVE.
+
+## SUPPORT-CENTER-UI-CONTROL-20261018
+
+| ID | Kiểm tra trên đúng candidate/source hash | PASS cần ghi |
+|---|---|---|
+| SPUI-01 | `/support`, `/tickets`, `/tickets/:id`; VI/EN/ZH; desktop/tablet/mobile | Tiếp nhận, danh sách/lọc/phân trang, chi tiết/dòng thời gian, trạng thái rỗng/đang tải/lỗi/bảo vệ và phản hồi giữ đúng owner scope |
+| SPUI-02 | `/tickets/:id`; Asset Vault đã có record hợp lệ | Chọn bằng chứng riêng tư, xác nhận đã che dữ liệu, giới hạn loại/kích thước, revision và signed download; không upload bytes thô tại Support |
+| SPUI-03 | `/admin/support`, `/admin/support/:id`; role fixture cô lập | Phản hồi công khai/nội bộ tách riêng; cập nhật trạng thái/mức ưu tiên có ghi chú, role và revision server-gated |
+| SPUI-04 | VI/EN/ZH × sáng/tối × `1440/1024/768/390` | Fixed chrome không trộn locale, màu xanh/ngọc giữ nguyên, case grid chuyển dọc ở `<=620px`, target/focus/overflow/console đạt |
+| SPUI-05 | Boundary/runtime | Không tạo ticket Bot, provider, wallet/PayOS, notification ngoài Web hoặc receipt giả; nếu capability/runtime chưa có phải ghi `guarded` và `LIVE_PASS=NOT_TESTED` |
+
+Bằng chứng source hiện tại: `tests/support-hub-product-controls.test.mjs` `4/4`, full Node
+`566/566`, syntax hai file Portal và `git diff --check` đạt. Browser/AX/CI/live chưa đóng; không
+dùng PASS source để thay cho các mức đó.
+
+## R218 presentation checkpoint cases — lịch sử, đã phân loại lại 21/10/2026
+
+Bảng dưới giữ số đo cũ, không còn là cổng hoàn tất. Áp dụng
+`R218-EVIDENCE-RECLASSIFICATION-20261021.md`; locale/interaction/AX/motion
+chưa kiểm không được suy ra PASS từ các lượt smoke này.
+
+| Nhóm | Case/ma trận | Kết quả QA hiện tại | Giới hạn bắt buộc |
+|---|---|---|---|
+| Music | 18 cấu hình, 36 route states; draft 3 lần ghi/readback | Đạt; locale finding `0`, external/write/page-errors `0` | Không generation/player/delivery |
+| SubDub | VI/EN/ZH × 4 mode × sáng/tối × 390/1440 = `48` | Đạt; 4 panel, 7 lane, report empty, confirm `0` | Không upload/ASR/dubbing/Smart Multi thật |
+| Image | 4 lane × VI/EN/ZH × sáng/tối × 390/768/1440 = `72` | Đạt; media/download/fake claim `0` | Không reference/AI/manual runtime |
+| Utility/Account | 10 route × VI/EN/ZH × sáng/tối × 390/1440 = `120` | Đạt; avatar remote request `0` | Không OAuth/publish/ticket/approval |
+| Video | 4 lane × VI/EN/ZH × sáng/tối × 390/1440 = `48` | Đạt; audio/video/download/fake `0` | Không render/editor/delivery |
+| Motion | 3 route × normal/reduced × 390/1440 = `12` | Đạt; overflow/external/write/page-errors `0` | CLS/LCP/INP trace `NOT_RUN` |
+
+Các case trên chỉ được tick khi có artifact tương ứng; không dùng số liệu này để thay cho runtime/live evidence.

@@ -1,0 +1,421 @@
+task_id: WEBAPP-BOT-PARITY-R218
+phase: VERIFY
+status: UT_CSP_Q0_CONTENT_LOCAL_PASS_DELIVERY_PENDING
+date: 2026-10-22
+scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
+scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
+branch: webapp-r217-subdub-ui-r218
+pull_request: 654
+head_sha: d1d042ed820fe8920fd586abcee43529b6d36882
+implementation_head_sha: b186b75a2b55b397f802fb992ce0a320039053a4
+delivery_head_sha: 42a78e931cf15da4f8c6117838e29ac3a2248e70
+delivery_status: CI_GREEN_39642058056_BOTH_JOBS
+review_evidence: reports/audit/R218-MUSIC-RUNTIME-REVIEW-QA-20261021.json
+evidence_reclassification: reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md
+qa_review_server: "Final SD-B2 QA exec36900 at127.0.0.1:34289 stopped gracefully after browser exec31190 terminal exit0; temporary database/assets cleaned. Earlier Music servers are historical."
+current_qa_runtime: "2026-10-22 actual WebApp http://127.0.0.1:42268; task-owned PTY session88166 waitingstdin; DB/assets temporary isolated through CI _start_server; no bridge/PayOS/provider. Browser task30705 completed exit0; CUA tab1 logged in to actual QA app. Stop owned server with newline on session88166 when inspection ends; no credentials in ledger."
+music_library_read_state_evidence: reports/audit/R218-MUSIC-LIBRARY-READ-STATE-QA-20261021.json
+music_library_read_state: "MU-E-01: targeted36/36; browser39 actual-profile configurations incl alias3/route-race3; errors/UIwrites/external0; protected helpers12 and generic paginator20 comparators unchanged."
+music_library_copy_evidence: reports/audit/R218-MUSIC-LIBRARY-COPY-QA-20261021.json
+music_library_copy: "MU-E-02: targeted39/39; full Node856/856; browser39 after copy, help VI1085->565 EN977->503 ZH329->171 chars, placeholders/actions/routes unchanged, errors/UIwrites/external0. Q0 toast-stack remains open."
+music_review_python_verify: "2026-10-21: exact tester metadata + i18n bundle/locale + motion source-contract subset29 passed/0failed, exit0 outside restricted sandbox. Prior sandbox session70666 interrupted after no progress; not counted as PASS."
+checkpoint_report: reports/audit/R218-CHECKPOINT-20261021.md
+checkpoint_date: 2026-10-21
+checkpoint_tests: "Full Node813/813; Python workspace-draft17 passed/78 deselected; JS syntax2 PASS; diff-check PASS; QA server7628 stopped."
+prepush_report: reports/prepush/R218-20261021-MUSIC-REVIEW-PROVENANCE.md
+prepush_gate: REVIEW_DELTA_VERIFIED_FINAL_PROVENANCE_PENDING
+postpush_report: reports/prepush/R218-20261021-POSTPUSH.md
+head_sha_semantics: "Last remote HEAD empirically observed before current Music review/provenance correction. Read Git/PR for current HEAD; do not predict this state's own future commit SHA."
+delivery_head_semantics: "PR654 HEAD42a78e9 read back, both jobs terminalSUCCESS on run39541759094. Verify119030861548:396 bounded contracts and26 runtime tests passed; AuthenticatedQA119031881824 SUCCESS, artifact12320256158. No merge/deploy/LIVE. This local receipt and SD-C2 scope amendment are queued with next code wave, not another receipt-only CI loop."
+branch_head_sha: 42a78e931cf15da4f8c6117838e29ac3a2248e70
+support_candidate_sha: 4650213d75ff339cd59a3dbb13d17c3aa62259ad
+last_push_verified_commit: 7a463a6b554feffce90055f792a47b5b1c7dccf1
+docs_checkpoint_sha: 7a463a6b554feffce90055f792a47b5b1c7dccf1
+push_command_success_commit: 7a463a6b554feffce90055f792a47b5b1c7dccf1
+remote_readback: "GitHub PR head 8d53dabf48f422fd25dd893ce730b2cce49353f1 re-read 2026-10-20; PR #654 OPEN/MERGEABLE. Run 39406730261 SUCCESS: Verify job118574353214 and Authenticated QA job118575563109. Delivery comment issuecomment-6288812623."
+batch_base_sha: 608d506ed86273b945b03b2738437e484ac302b6
+base_sha: 559d982e8391fb7c3eb1dc6f5a41ef6bb3401209
+bot_reference:
+  root: "D:/TOANAAS/bot telegram"
+  access: READ_ONLY_SOURCE
+  commit: UNKNOWN
+  ref: fix/p0-subdub-smart-synth-adapter-signature-r1
+  bot_py_sha256: 7eae9610073d3000c2a949e78e2e48e0194eb402eedea7f9b9328fa09d7f0b0f
+  runtime_verified: false
+artifacts:
+  plan: docs/superpowers/plans/2026-10-18-webapp-bot-parity-uiux-replan-r218.md
+  checklist: reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md
+  historical_crosswalk: reports/audit/WEBAPP-HISTORICAL-CHECKLIST-CROSSWALK-R218.md
+  inventory: reports/audit/WEBAPP-BOT-PRODUCT-INVENTORY-R218.md
+  control_contract: docs/superpowers/specs/2026-10-18-r218-00-control-contract.md
+  voice_music: docs/superpowers/specs/2026-10-18-r218-02-03-voice-music-controls.md
+  voice_vault_contract: docs/superpowers/specs/2026-10-18-r218-02a-voice-vault-canonical-contract.md
+  subdub: docs/superpowers/specs/2026-10-18-r218-subdub-bot-parity-uiux.md
+  image_video: docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md
+  other_admin: docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md
+  admin_state_locale: docs/superpowers/specs/2026-10-19-r218-admin-state-locale.md
+  admin_header_locale: docs/superpowers/specs/2026-10-19-r218-admin-header-locale.md
+  admin_pricing_presentation: docs/superpowers/specs/2026-10-19-r218-admin-pricing-presentation.md
+  admin_module_tabs_locale: docs/superpowers/specs/2026-10-19-r218-admin-module-tabs-locale.md
+  admin_topup_capability_affordance: docs/superpowers/specs/2026-10-20-r218-admin-topup-capability-affordance.md
+  translation_controls: docs/superpowers/specs/2026-10-18-r218-06a-translation-workspace-controls.md
+  utilities_controls: docs/superpowers/specs/2026-10-18-r218-06b-utilities-qr-avatar-rate-weather-download.md
+  qa_motion_technical: docs/superpowers/specs/2026-10-18-r218-10-13-qa-motion-delivery-technical.md
+  assets_controls: docs/superpowers/specs/2026-10-18-r218-06d-assets-product-controls.md
+  autopost_controls: docs/superpowers/specs/2026-10-18-r218-07-autopost-hub-controls.md
+  support_controls: docs/superpowers/specs/2026-10-18-r218-07b-support-center-controls.md
+  account_controls: docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md
+  operational_report: TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md
+  function_matrix: TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md
+  tester_cases: KIEM-THU/DANH-SACH-CASE.md
+  tester_guide: KIEM-THU/HUONG-DAN-TESTER.md
+current_wip:
+  current_owner_mandate: "Continue all plan/checklist until the goal is satisfied; do not stop after a checkpoint. User mandates only Gemini3.8Flash for future Antigravity calls."
+  builder_runtime_observation: "Flash R1 host3m no code/report; Pro R2 unavailable before Owner prohibited Pro; Flash READY probe30s returned empty response/0turn/0tokens. Do not count CLI SUCCESS as a Builder result or repeat long unproductive calls. No settings/auth/permission changes."
+  voice_report_progress_truth:
+    state: "UI_VERIFIED_WAVE_DELIVERY_PENDING"
+    spec: "docs/superpowers/specs/2026-10-20-r218-voice-report-progress-truth.md"
+    evidence: "reports/audit/R218-VOICE-REPORT-PROGRESS-QA-20261020.json"
+    tests: "RED0/5 -> GREEN5/5; focused75/75; browser18/18 x9 values=162 states; error/overflow/write/external0"
+    source_scope: "One line in safeVoiceReport; backend/integration/CSS/quote/timer unchanged."
+  active_qa_server:
+    status: "HISTORICAL_STOPPED_NOT_AN_ACTIVE_RUNTIME; use qa_review_server for current checkpoint"
+    environment: "Temporary isolated database/assets via existing CI _start_server; no Core Bridge/PayOS/provider"
+    origin: "http://127.0.0.1:9423"
+    exec_session: 21213
+    db: "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/temp/r218-product-ui-o4pofz02/ui-qa.db"
+    runtime: "Bundled Python plus PYTHONPATH=C:/Users/toann/Documents/Codex/_wa35-r74-qa-python-20261012/site-packages"
+    lifetime: "Task-owned stdin waiting server; send newline to session21213 for graceful shutdown/temporary cleanup."
+  admin_theme_core:
+    state: "CORE_UI_BROWSER_VERIFIED_MODULE_QA_OPEN"
+    base_sha: 097e808ed3f19063a14283fcb02f79c85cb26fae
+    tests: "Theme controller 17/17; full Node 704/704"
+    browser_cases: 24
+    matrix: "home/login x VI/EN/ZH x375/390/768/1440; explicit dark/light/system cycle + reload, default Admin Light unchanged"
+    checks: "44px target/focus, drawer/Escape, diagnostics headers, canvas/card RGB, email retention, isolated theme storage and both meta tags. Text contrast min dark7.6139/light5.2479; errors/external/write/unknown API/overflow0."
+    artifact: "../qa/r218-voice-inventory/admin-theme.json"
+    artifact_sha256: 47e8cc85783bf69b21cb75893fd166139f918af9c105ea37d58822f81bf7a060
+    limitations: "Production renderer/controller/CSS on read-only fixture, not actual authentication/backend/provider/financial/LIVE. Populated module tables/charts still need QA."
+  admin_overview_shortcuts:
+    state: "UI_VERIFIED_BACKEND_OPEN"
+    base_sha: cf574879c81c24de307a833b558838b3e2108d84
+    tests: "18/18 targeted; full Node 687/687"
+    browser_configurations: 18
+    browser_states: 108
+    scope: "Synthetic navigation/count projections on production renderer/CSS/integration, localhost only; not actual server RBAC or payment execution."
+    checks: "Module-filtered shortcuts, denied/support/jobs scopes, known/unknown/zero totals, locale, focus; overflow/page/console/external/write/unknown API 0. Unknown note contrast 5.797:1."
+    artifact: "../qa/r218-voice-inventory/admin-shortcuts.json"
+    artifact_sha256: 06fc8a9e804c4b09abf067072ec80b1d853affdeb91afb3edcfdd583239b370a
+    limitations: "Earlier 72-route smoke did not prove permissions, locale or vertical layout; OS dark still yields light Admin surfaces. No backend/live/approval closure."
+  admin_mobile_data_cards:
+    state: "ACCEPTED_PRESENTATION_ONLY_REMOTE_CI_PENDING"
+    base_sha: 1730ea41ffda53e6bcd068f45a49c8c9f6949929
+    changed_files: "static/portal/portal-theme.css; tests/admin-mobile-data-harmony-source.test.mjs"
+    tests: "Focused source 3/3; full Node 706/706; git diff --check clean."
+    browser_configurations: 8
+    matrix: "VI/EN x light/dark x 390/1440; synthetic read-only Admin fixture on /admin/jobs"
+    checks: "Mobile table wrapper 318/318px; semantic table/headings; filter/empty/clear-focus; Enter selection/inspector; desktop native table; errors/external/write/unknown API 0."
+    artifacts: "../qa/r218-voice-inventory/admin-data-mobile-qa-{vi,en}-{light,dark}.png"
+    rerun_status: "2026-10-19 fresh Edge temporary-profile rerun outside restricted sandbox: 8/8, native table/8 AX headings, filter/empty/clear-focus/Enter-inspector, 318/318px mobile and zero page/console/external/write/unknown API. Initial QA-fixture attempt failed because hydration correctly cleared unavailable backend data; explicit read-only fixture projection after hydrate resolved the harness error."
+    rerun_artifact: "../qa/r218-voice-inventory/admin-data-reviewed.json"
+    rerun_sha256: "8995d3f057bffe687850967652fbc1de7799dc3d1d0068bc3590c87ce2e0c636"
+    limitations: "Synthetic role/data only; actual RBAC, per-module dynamic records, charts, approvals, backend/runtime and LIVE remain open. Local patch not covered by remote CI run 39212998609 on 1730ea4."
+  antigravity_handoff:
+    state: "MODULE_TABS_LOCALE_PHASE_A_ACCEPTED_RED_READY_PHASE_B"
+    spec_id: "AD-01-PRICING-NAV-LOCALE"
+    conversation_id: "6827266a-7b30-472e-82f1-1742e6ef0e42"
+    previous_pricing_truth_conversation_id: "6d4760c5-4064-4513-8160-3daaf100754c"
+    previous_header_conversation_id: "89fdfc7e-6b56-4478-a6bf-d0eb3210cbf6"
+    previous_mobile_conversation_id: "8b16323b-9a88-4fde-9c95-dd02c8d22f2c"
+    model: "Gemini 3.8 Flash Medium"
+    handoff_round: 1
+    same_defect_failed_handoffs: 0
+    recovery: "Owner-granted exact hooks.json write: remove quotes around a no-space module path; hook stays enabled. Actual worker file reads succeeded after repair; no sign-in or security settings changed."
+    hook_original_sha256: "a613f6f309891b95cb410e24439ce29373af2dff6ffc341da028ef395dced210"
+    hook_repaired_sha256: "e9efb76f0826a01f016971fca4d95de819a745de76e9caa1162b204486a25689"
+    observation_note: "Owner requested background-only Antigravity workflow. CLI help/models verified read-only; no new IDE/window/auth dialog. Phase A is terminal with valid RED; Phase B worker was attempted headless but blocked by the existing telemetry hook, so Codex performed the allowlisted takeover."
+  admin_state_locale:
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    red_tests: "node --test tests/shared-state-label-locale.test.mjs -> exit 1; tests7/pass1/fail6. Unknown/read_only passes; mapping/VI backlog/EN-ZH fallback fail as expected."
+    red_artifact: "../qa/r218-voice-inventory/state-locale-red.txt"
+    locked_test_sha256: "efa2d2685e855a9d8b2d15ce5e6f02a5d24e55b327e1d3553e90a716f94a12cc"
+    green_tests: "Targeted7/7; full Node713/713; both JS syntax/diff-check exit0. ALLOWED_STATES and stateLabel match BASE; Python/integration/workflow diff empty."
+    browser: "12/12 VI/EN/ZH x light/dark x390/1440; exact failed_no_charge locale, 8 AX headings, mobile318/318px, filter/empty/focus/keyboard; errors/writes/external/unknown0."
+    browser_artifact: "../qa/r218-voice-inventory/admin-state-locale.json"
+    browser_sha256: "85ebdac2270a7dc393137f4fe5e35717ec7a56518b14d2bb1d459eeac6f73561"
+    green_artifact: "../qa/r218-voice-inventory/state-locale-green.txt"
+    source_sha256: "portal.js=c667988ae25dd790bcfe2786b8ebf57062c05e763c9d1c4fe97ce8f639312e0a; portal-i18n.js=83b93bc594cf55fbdde96d0cfe1f08abc46e84dd1fbb2dafcc387444c981c0f9"
+    original_finding: "failed_no_charge fell back to Vietnamese in EN in4 browser configurations; 14 allowed states lacked i18n mapping and VI backlog was generic English. Fixed and verified by the evidence below."
+    scope: "Shared state mapping/catalogue and one behavioral test only; no enum/payload/API/CSS change."
+  admin_header_locale:
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    root_cause: "Admin header had only vi/en options while renderer/profile/server allow vi/en/zh; browser selected vi for zh. One option addition fixed it."
+    tests: "Node713/713; syntax/diff0; reverse addition restores previous portal.js hash exactly; i18n/CSS/test hashes unchanged."
+    browser: "12/12 VI/EN/ZH x light/dark x390/1440; options/selected/renderer match, local selection/focus/form + state/data-card regression; errors/write/external/unknown0."
+    artifact: "../qa/r218-voice-inventory/admin-header-locale.json"
+    artifact_sha256: "f099e8e7111316ab9f72e1277c8b24ef1be35d74f3bf1b3ead893d3831900fd1"
+    portal_sha256: "0ebe8dc421eeb28b15b36dd58d339b90a035a49e3ddf8fa5e6eb49f5d36e31e4"
+  admin_pricing_ui_audit:
+    state: "BASELINE_FINDINGS_DATA_TRUTH_FIXED_RESIDUALS_OPEN"
+    matrix: "12 configurations x3 missing/empty/populated states =36; actual renderAdminPricing path."
+    artifact: "../qa/r218-voice-inventory/admin-pricing-audit.json"
+    artifact_sha256: "ac29f4e8d2480868ed8a5a26afba00fb96027849f683455046c0bd4b5866b658"
+    findings: "Baseline missing catalogue showed7 fallback prices/approved claim (now fixed by data-truth). Fixed chrome still mixes locale; mobile cards hidden; action readiness/disabled visuals need review. No backend-permission conclusion."
+    safety: "errors/write/external/unknown0; no action submitted."
+  admin_pricing_data_truth:
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    red: "Corrected button-only QA plus reason/base checks replayed from immutable Git1730 object: target functions equal pre-change candidate after CRLF/LF;1 config/6 states/18 failed checks. No checkout/reset."
+    red_artifact: "../qa/r218-voice-inventory/admin-pricing-truth-baseline1730.json"
+    allowed: "portal.js only renderAdminPricing + price display in renderAdminPricingCard; i18n only5 new keys x3 locales. No CSS/integration/backend/price-rule change."
+    green: "Smoke6/6 and full12 configs x6 states=72/72 truth; Node713/713; syntax/diff0. errors/write/external/unknown0. Residual copy/mobile/affordance open."
+    green_artifact: "../qa/r218-voice-inventory/admin-pricing-truth.json"
+    green_sha256: "3c5b0063939fe299eb976d5786b3ad0518940b89c1dee02dc4a302b4208c93ab"
+    portal_sha256: "5ac629c4fd9a6559da64e60917ca74a50fd92d82b415c7fd8cf8ae5731dcb9ca"
+    i18n_sha256: "14e6e15d94cd70e9331599ba06fe0990c77e36b8dc9eae2c519bddcb971275ea"
+    comparators: "Source outside2pricing functions identical; every prior i18n value identical; only5 new keys per locale; CSS/test hashes and Python/integration/workflow unchanged."
+  admin_pricing_locale:
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    scope_to_inventory: "Active Pricing fixed chrome/cards/diff/history, Pricing/Packages nav VI in EN, state/family display vs server values, draft_id VI sentinel in integration. Preserve payload IDs and user labels."
+    evidence: "admin-pricing-locale-source.test.mjs 1/1; browser nav 12/12 with findingCodes[]; full Node after batch 723/723."
+  admin_pricing_presentation:
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    checklist: "_giao-viec/CHECKLIST-AD-02-PRICING-PRESENTATION.md"
+    report: "_giao-viec/BAO-CAO-06-AD-02-PRICING-PRESENTATION.md"
+    changed_scope: "portal.js Pricing renderer/card; portal-i18n.js adminPricing catalogue; portal-theme.css mobile lane; three focused source tests. No backend/integration/wallet/provider change."
+    tests: "Locale1/1; mobile1/1; affordance1/1; full Node723/723; syntax/diff0."
+    browser_truth: "72/72 states, truthFailures0/navFailures0/errors0/writes0/external0/unknown0; artifact admin-pricing-truth.json SHA256 478f33c258a0a8a5e83250ae081dbc0329dfa910aebcfa5d439f5e175eab20b4."
+    browser_presentation: "12/12 VI/EN/ZH x light/dark x390/1440; findingCodes[]; no locale/mobile/affordance finding. Artifact admin-module-tabs-locale.json SHA256 2a7c374ddcb09e9f66efb901b319e7f2daf0b2590f7e8c71deed7e932ec6fe13."
+    limitations: "Synthetic GET-only fixture; real RBAC, backend publish, production and LIVE remain open."
+  admin_general_probe:
+    state: "READ_ONLY_PRESENTATION_PROBE_PASS"
+    artifact: "../qa/r218-voice-inventory/admin-probe.json"
+    artifact_sha256: "FFCAC27006AFE375DFB6B604052404C24707C92BD95C5877578D953DE1AD0210"
+    scope: "canonical_admin_qa fixture; /admin, /admin/topups, /admin/customers, /admin/operations; VI/EN/ZH x light/dark x390/768/1440."
+    result: "72 records; verticalSurface=true, noApprovalMutation=true, overflow=0 for every record; errors/writes/external/unknown empty."
+    limitations: "Does not prove real backend RBAC, approval, chart data, provider, payment, production or LIVE."
+  admin_pricing_generic:
+    state: "ACCEPTED_LOCAL_UI_BROWSER_FIXTURE_CI_PENDING"
+    checklist: "_giao-viec/CHECKLIST-AD-02-PRICING-GENERIC.md"
+    report: "_giao-viec/BAO-CAO-07-AD-02-PRICING-GENERIC.md"
+    scope: "renderAdminDataTable pricing/packages generic branch; no specialised Pricing renderer, API, data or money logic."
+    tests: "Focused1/1; zh-copy1/1; full Node725/725; syntax/diff0; headless browser12/12 VI/EN/ZH x light/dark x390/1440, errors/writes/external/unknown0."
+    browser_artifact: "../qa/r218-voice-inventory/admin-commercial-pricing-probe.json"
+    browser_sha256: "4E5947CF4FA2A86035B786FC5996AFD85E7EADCB312B1E72954A2BF18664331D"
+    runner_sha256: "9BB758E695FAD7542E303B61758F2B1BCBC04B604E6CCF991F3835AACC4E2DC6"
+    limitation: "Initial probe used the wrong one-A symbol `window.TOANASPortal`; production exports two-A `window.TOANAASPortal`. Harness corrected and rerun passed; all Admin Generic Chinese fixed values now have a source gate. Fixture is localhost read-only and does not prove backend/RBAC, CI, production or LIVE."
+  admin_module_tabs_locale:
+    spec_id: "AD-01-PRICING-NAV-LOCALE"
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    finding: "renderAdminModuleTabs uses legacy context.locale/out-of-scope currentLocale; profile/interface locale is correct elsewhere.9groups/54tab occurrences/48unique paths."
+    existing_assets: "ADMIN_ERP_ROUTE_I18N/adminErpRouteText cover46paths in VI/EN/ZH; commercial/legal need explicit localized fallback. Existing source-only test has2cases."
+    scope_guard: "One tab renderer plus exactly3 new i18n keys x3 locales. Preserve registry/authorizedRoutes/alias/legal exception/href/CSS and accepted Pricing truth. Frozen test SHA256 f8ef4ee478fd7b8e023924ffd2446e189be6c15523fd306f78ef2d092cac4051. Phase A RED: exit1, 9 tests, 2 pass/7 fail, only locale label/aria assertions. Phase B local: focused9/9, full Node720/720, syntax/diff0, browser12/12 nav with truthFailures0/navFailures0/errors/writes/external/unknown0. Remote CI and LIVE remain pending."
+  admin_generic_locale_closeout:
+    state: "ACCEPTED_LOCAL_UI_CI_PENDING"
+    spec: "docs/superpowers/specs/2026-10-20-r218-admin-generic-locale-closeout.md"
+    scope: "VI fixed chrome and fallback only for Admin Generic audit, maintenance, incident queue, security/access state and job retry label; preserve technical/product names and all payload/authority contracts."
+    tests: "Focused11/11; node-check portal.js and portal-i18n.js pass; git diff --check pass. Full Node recheck recorded separately."
+    limitations: "No backend/RBAC, provider, wallet, production, CI or LIVE claim; EN/ZH catalogues unchanged."
+  admin_dynamic_chart_projection:
+    state: "ACCEPTED_LOCAL_UI_BROWSER_BLOCKED_CI_PENDING"
+    spec: "docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md#AD-02-DYNAMIC-CHART-PROJECTION"
+    changed_files: "static/portal/portal.js; static/portal/portal-theme.css; static/portal/portal-i18n.js; tests/admin-data-chart-source.test.mjs"
+    contract: "Optional server-issued data.chart only; compatibility_guarded fail-closed; 1-12 bounded non-negative numeric points; legend tone allowlist; accessible figure/bars/legend; no client-generated metrics, fetch, write, provider or capability mutation."
+    tests: "Source 3/3; focused Admin 14/14; full node --test 728/728; node --check portal.js and portal-i18n.js exit0; git diff --check exit0."
+    browser: "NOT_RUN: existing Playwright fixture could not create its sandbox temp directory (mkdtemp ENOENT); no LIVE or production claim."
+    limitations: "Role/module fixture, dynamic records/charts from backend, approval/finance, CI, production and LIVE remain open; AD-02 overall is not closed."
+  admin_record_reference_projection:
+    state: "ACCEPTED_LOCAL_UI_BROWSER_BLOCKED_CI_PENDING"
+    spec: "docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md#AD-03-RECORD-REFERENCES"
+    changed_files: "static/portal/portal.js; static/portal/portal-theme.css; static/portal/portal-i18n.js; tests/admin-data-reference-source.test.mjs"
+    contract: "Optional server-issued admin_record_references only; max 6; request/job/asset/report/audit types; bounded safe IDs/labels; internal route allowlist with dot-segment rejection; DOM API links; Inspector metadata; VI/EN/ZH labels; no HTML string, write, provider, capability or RBAC change."
+    tests: "Source 2/2 including dot-segment path hardening; focused Admin 16/16; full node --test 730/730; node --check portal.js and portal-i18n.js exit0; git diff --check exit0."
+    browser: "NOT_RUN: Playwright fixture could not create its sandbox temp directory (mkdtemp ENOENT); no LIVE or production claim."
+    limitations: "Local read-only projection only. AD-03 role/module permissions, real records and request→job→asset→report→audit server bridge, CI, production and LIVE remain open."
+  admin_role_module_projection:
+    state: "ACCEPTED_LOCAL_UI_BROWSER_BLOCKED_CI_PENDING"
+    spec: "docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md#AD-03-ROLE-MODULE"
+    changed_files: "static/portal/portal.js; tests/admin-erp-navigation-projection.test.mjs"
+    contract: "Server-issued adminErpNavigation only; read_state=ready gate; /admin route allowlist; reject duplicate, outside-admin, internal //, \\ and dot-segment paths; unknown state guarded; available/canonical_read/web_native presented read_only; no browser-role or capability inference, write, provider, RBAC or record bridge."
+    tests: "Projection2/2; focused Admin18/18; full node --test732/732; node --check portal.js and portal-i18n.js exit0; git diff --check exit0."
+    browser: "NOT_RUN: Playwright fixture could not create its sandbox temp directory (mkdtemp ENOENT); no LIVE or production claim."
+    limitations: "Local role/module projection only. Real RBAC, record bridge request→job→asset→report→audit, CI, production and LIVE remain open."
+  admin_record_reference_chain:
+    state: "ACCEPTED_LOCAL_UI_BROWSER_BLOCKED_CI_PENDING"
+    spec: "docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md#AD-03-RECORD-CHAIN"
+    changed_files: "static/portal/portal.js; static/portal/portal-theme.css; static/portal/portal-i18n.js; tests/admin-data-reference-source.test.mjs"
+    contract: "Server-issued admin_record_references only; deterministic request→job→asset→report→audit order; missing links stay absent; duplicate kinds keep first; re-project through the same kind/ID/label/path allowlist before DOM links; VI/EN/ZH labels; no fetch, write, provider, capability or bridge mutation."
+    tests: "Reference2/2 including chain order; focused Admin18/18; full node --test732/732; node --check portal.js and portal-i18n.js exit0; git diff --check exit0."
+    browser: "NOT_RUN: Playwright fixture could not create its sandbox temp directory (mkdtemp ENOENT); no LIVE or production claim."
+    limitations: "Local Inspector presentation only. Real records, server bridge request→job→asset→report→audit, CI, production and LIVE remain open."
+  admin_record_reference_bridge_projection:
+    state: "IMPLEMENTED_CI_GREEN_PR_OPEN"
+    spec: "docs/superpowers/specs/2026-10-18-r218-06-08-utilities-admin-controls.md#AD-03-RECORD-BRIDGE"
+    changed_files: "copyfast_api.py; tests/test_copyfast_bridge.py"
+    contract: "Only admin_read=True + server-checked Admin responses may carry max 6 request/job/asset/report/audit references; bounded IDs/labels and internal paths; unsafe paths become empty and malformed kind/ID/shape is omitted; record-level and items[] share the projection; non-admin responses never receive the field; no write/provider/wallet/capability/RBAC change."
+    tests: "Bundled Python py_compile exit0; full Node 735/735; admin reference source 2/2; node --check two Portal JS and git diff --check exit0. Verify Web App job 118279680769 and Authenticated WebApp QA job 118281015667 both passed in CI run 39316630196."
+    browser: "Authenticated route/render matrix passed 456/456 in the isolated QA job; no injected Admin record fixture, production mutation or LIVE claim."
+    limitations: "This only transports an explicitly server-issued read reference. Real Bot record chain, server role/RBAC fixture, production approval and LIVE remain open."
+  voice_scalar_draft:
+    state: "UI_VERIFIED_RUNTIME_OPEN"
+    tests: "7/7; full Node 645/645"
+    browser_configurations: 18
+    checks: "Same-document mode navigation, Back/Forward, zero volume, locale, /tts alias and new-session cleanup; page/console/external/mutation/overflow 0."
+    artifact: "../qa/r218-voice-inventory/draft-probe.json"
+    artifact_sha256: eb9b59b5e005462570e3c0ad5b3663d465d2f5c2c72c67cedeb71f188a3b0ce2
+    limitations: "Scalar tab-memory only; file selection and reload persistence are not closed."
+  voice_stt_presentation:
+    state: "UI_VERIFIED_RUNTIME_OPEN"
+    tests: "18/18 targeted; full Node 663/663"
+    browser_configurations: 18
+    matrix: "VI/EN/ZH x light/dark x 390/768/1440"
+    checks: "STT-specific title/copy/empty result/CTA; TTS feedback absent; voice_stt-only capability gate; language/format focus and scalar draft projection; page/console/external/write/unknown/overflow 0."
+    artifact: "../qa/r218-voice-inventory/stt-probe.json"
+    artifact_sha256: 06f55bbdefb34a839be2f1387843cc46fd0841227d3a443b6f1756d0a36ebed4
+    limitations: "Read-only fixture and synthetic capability projection; upload bytes, MIME/size/ownership, transcript, progress, delivery, backend and LIVE are not closed."
+  voice_default_gender_capability:
+    state: "EXPLICIT_SELECTION_UI_CI_GREEN_CAPABILITY_FALLBACK_OPEN"
+    spec: "reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md#P1-VOICE"
+    changed_files: "static/portal/portal.js; tests/voice-default-gender-capability.test.mjs"
+    contract: "Audit corrected the prior conclusion: _project_readiness does not expose the speculative gender capability fields. Use the actual required female/male input schema, initial empty choice and localized labels; retain explicit user selection and Unicode script. The unsupported auto-default helper was removed."
+    tests: "Actual renderer 15/15; focused Voice/STT 75/75; full Node 750/750; node --check static/portal/portal.js exit0; git diff --check exit0."
+    browser: "Codex IAB localhost 18/18 configurations (VI/EN/ZH x light/dark x 390/768/1440); both genders selected, saved->TTS round trip retains script/speed/zero volume; warning visible, overflow0, console errors0. GET-only fixture observed write0 and unknownAPI0."
+    artifact: "reports/audit/R218-VOICE-DEFAULT-SELECTION-QA-20261020.json"
+    limitations: "Explicit selection CI-green on 51c489b/run39403533444. Canonical capability fallback/neutral, real quote/confirm, Voice Vault management/handoff, preview, provider execution, delivery and LIVE remain open."
+  voice_quote_edit_freshness:
+    state: "UI_BROWSER_VERIFIED_CI_GREEN"
+    spec: "docs/superpowers/specs/2026-10-20-r218-voice-quote-edit-freshness.md"
+    changed_files: "static/portal/portal.js; static/portal/portal-i18n.js; tests/voice-quote-edit-freshness.test.mjs"
+    contract: "Only Voice routes: compare page schema fields with quoted input; editing hides existing confirm and shows a localized note without remount/request or busy override. Exact revert can restore only an existing control while receipt remains fresh. Transient edits also suppress confirm at render time."
+    tests: "Dedicated11/11; focused77/77; full Node761/761; syntax/diff pass. Reproduction old_quote_confirm_rendered true before, false after."
+    browser: "Codex IAB localhost TTS18 configurations/108 edit checks (script/gender/speed number+preset/volume number+range); focus/draft/revert/hydration safety passed; overflow0/console0; fixture write0/unknownAPI0."
+    artifact: "reports/audit/R218-VOICE-QUOTE-EDIT-QA-20261020.json"
+    limitations: "CI green on 8d53dab/run39406730261. STT/clone real execution, real quote/provider/delivery and LIVE remain open. Idle UI evidence follows below."
+  voice_quote_idle_expiry:
+    state: "UI_BROWSER_VERIFIED_DELIVERY_PENDING"
+    spec_id: "VOICE-QUOTE-IDLE-001"
+    base_sha: 8d53dabf48f422fd25dd893ce730b2cce49353f1
+    spec: "docs/superpowers/specs/2026-10-20-r218-voice-quote-edit-freshness.md"
+    handoff: "Antigravity R1/R2 produced no source/report; primary takeover after worker failures."
+    contract: "One canonical deadline timer updates confirm and localized expiry note in-place; no shell remount/request. Preserve form, focus, values, zero volume and selected files; post-expiry input/revert cannot restore confirm. Cancel/replace timer on new render/route/deadline."
+    tests: "Behavior8/8; focused70/70; full Node769/769; Portal syntax/diff pass."
+    browser: "Edge headless localhost22/22: TTS18 VI/EN/ZH x light/dark x390/768/1440; saved/STT/clone3; reduced-motion1. Form/focus/input/file preserved; 397 GET; console/overflow/write/unknownAPI/external0."
+    artifact: "reports/audit/R218-VOICE-QUOTE-IDLE-QA-20261020.json"
+    limitations: "STT stays guarded by integration allowlist. File assignment is UI-only QA, not upload/engine. Fresh idle CI pending push; real quote/generation/delivery/LIVE remain open."
+  music_presentation:
+    state: "UI_VERIFIED_RUNTIME_OPEN"
+    tests: "Existing Music control contracts remain green; browser matrix 36 configurations"
+    browser_configurations: 36
+    matrix: "VI/EN/ZH x light/dark x 390/768/1440 x /music/create + /music/song"
+    checks: "Hydrated locale copy, background/song field isolation, guarded suggestions, no audio/player/price/download, focus and responsive overflow; page/console/external/write/unknown/overflow 0."
+    artifact: "../qa/r218-voice-inventory/music-probe.json"
+    limitations: "Read-only fixture; generation, quote, player, download, delivery, backend and LIVE are not closed."
+  last_inventory_ci: "39203058690 SUCCESS on 8ab1a02; Verify Web App and Authenticated WebApp QA both passed."
+  voice_inventory_recovery: "2026-10-19: removed speculative Voice Vault management proxies from c6bc455; backend/auth/route-engine/payment source matches 063473a. Added loading/ready/failed/guarded UI, clear-before-await and bootstrap cleanup, independent readiness/profile reads, stale-response fence, GET retry, and full bounded 50-item display without a fake total/pager. Behavior tests 19/19; inventory tests together 34/34; full Node 638/638 after preserving six newer SubDub tests. Browser localhost uses production shell/renderer/integration.js with explicit read-only API fixtures; final result is linked from the PR report. Canonical management/preview/handoff stays open in T0."
+  voice_inventory_browser_qa:
+    date: 2026-10-19
+    scope: "Localhost production shell/renderer/CSS/integration.js with synthetic GET-only API fixtures; no backend, provider or production verification."
+    configurations: 18
+    states_per_configuration: 7
+    keyboard_retries: 18
+    errors: 0
+    overflow_px: 0
+    external_requests: 0
+    mutations: 0
+    unknown_api_requests: 0
+    result: "../qa/r218-voice-inventory/result.json"
+    result_sha256: bfb28cb66e6f45234ca3fd53f2625a4d387a09378c264357d137fe8413505b7b
+  pr653: "Auth responsive/contrast; source CI xanh trước đó; delivery chưa đóng."
+  pr654: "SubDub control patch đã bổ sung source có/chưa có phụ đề, source auto-detect, catalog ngôn ngữ đầy đủ, 7 vị trí subtitle và ba lane Auto canonical; upload/preview/runtime vẫn guarded. Image control patch đã push ở 3ecbdc8. Utilities/Content/Projects locale checkpoint đã commit ở 69ef97f. UT-01 translation workspace control-level đã khóa nguồn tự nhận diện, catalog đích 21 ngôn ngữ, tìm kiếm cục bộ, giữ bản gốc, hai chiều, vùng bắt đầu/dừng/kết quả/lịch sử guarded; UT-04 đã bổ sung 4 utility lane vào `/free-tools`; UT-06 đã khóa bảng Documents và 9 workflow bằng test control-level; UT-07 đã khóa Asset Vault control-level bằng test 5/5 và full Node 558/558; SP-01 Support đã khóa control-level bằng test 4/4 và full Node 566/566. Account Security tiếng Việt đã dọn generic English, test riêng 2/2, Account regression 11/11; AC-01 control-level đạt 6/6 và full Node mới nhất 574/574. Voice STT workspace/control lane và guarded report projection đã push ở 8058ba5bf748bea0ea87c596b54cf6d625babba5: STT contract 4/4, Voice group 132/132, report test 51/51; quick-switch VI/EN/ZH giữ 152 destination. Remote HEAD 5d25544 giữ Music flow contract 12/12; full Node 613/613; migration fingerprint `3b7eb4af…` trên 288 file. Runtime/provider/upload/preview/delivery vẫn guarded; PR #654 OPEN; run 39153828848 Verify Web App và Authenticated WebApp QA đều SUCCESS; chưa merge/deploy/live."
+  voice_controls: "VO-01/VO-12 control-level: một workspace dọc có TTS/STT/Voice Vault/Thêm giọng; `/voice/stt` + `/voice/asr` có source audio/video, Tự nhận diện/ngôn ngữ nguồn và TXT/SRT/VTT; aria-current, locale VI/EN/ZH và palette xanh/ngọc đã khóa. Contract STT/workspace 4/4; quick-switch 152 destination mỗi locale; toàn bộ Voice 132/132; full Node 598/598. VO-07/VO-08 có guarded report projection đọc report/job/result canonical, không lộ output_url hoặc tạo download giả; test report 51/51, full Node hiện tại 601/601. Browser upload/AX STT, MIME/size/ownership, transcript/copy/export, Voice Vault management/profile handoff, quote/result, progress/player/retry/backend/CI/live vẫn mở."
+  music_controls: "MU-01..MU-07 control-level đã khóa local: /music/create và /music/song dùng workspace dọc bốn bước, ba tier, ba ô phương án guarded, song-only lyrics/vocal/length, VI/EN/ZH cân bằng; test Music flow 12/12 và full Node 613/613 trên remote HEAD 9608ac2; không còn provider/player/giá/tệp giả. Guarded form không tự mở khi thiếu capability; runtime/browser/live chưa chứng minh."
+  image_controls: "IM-01 control-level đã khóa local trên /image/create: bốn mode dọc create, prompt từ ảnh, AI edit và manual edit; ba mode ngoài create gắn guarded, VI/EN/ZH cân bằng. Upload/source, AI runtime, before/after, quote/result/delivery và browser/live vẫn mở."
+  utility_controls: "UT-04 control-level đã khóa local: `/free-tools` có 10 tab/panel, QR giữ flow cũ; Avatar, Tỷ giá & Xu, Thời tiết, Downloader có input, preview/result rỗng, quyền/nguồn và nút guarded. Targeted 5/5, full Node 549/549; external API, dữ liệu thật, delivery, browser/AX/live chưa chứng minh."
+  document_controls: "UT-06 control-level đã khóa local: `/documents` và `/documents/pdf` có board dọc, 9 workflow PDF/OCR/chuyển đổi, source Asset Vault, thứ tự/range, confirm/result và download gate. Targeted 4/4, full Node 553/553; bytes/preview/runtime/delivery, browser/AX/live chưa chứng minh."
+  assets_controls: "UT-07 control-level đã khóa local: Asset Vault owner-scoped, upload allowlist/25 MB, gắn Project, lọc active/archived/all, phân trang, download chỉ active, lifecycle redaction và archive/restore theo revision. Targeted 5/5, full Node 558/558; bytes/preview/quota-expiry server, browser/AX/delivery/live chưa chứng minh."
+  autopost_controls: "AP-01..05 control-level đã khóa local tại `/publishing`: bảy nguồn, năm bước, brand/calendar/review handoff và các lane channels/queue/affiliate guarded; VI/EN/ZH + desktop/tablet/mobile CSS. Targeted 4/4; full Node 562/562; syntax và diff check đạt. Chưa có OAuth, publish, queue receipt, affiliate metrics, browser/AX hoặc LIVE."
+  support_controls: "SP-01 control-level đã khóa local tại `/support`, `/tickets`, `/tickets/:id`, `/admin/support`, `/admin/support/:id`: intake, danh sách/lọc/phân trang, chi tiết/timeline, public/internal reply, state/recovery, resolution feedback và Asset Vault evidence; VI/EN/ZH + palette xanh/ngọc + case grid một cột <=620px. Targeted 4/4; full Node 566/566; syntax và diff check đạt. Capability server, dữ liệu thật, browser/AX, CI, delivery và LIVE chưa chứng minh. SP-02 Guide/Chat Pro/feedback/community còn mở."
+  account_controls: "AC-01/AC-02 đã được tách thành spec `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md`: profile/locale/security/session/stale cleanup; wallet/packages/pricing/topup/history/pending/admin handoff. Account profile/activity/dropdown Node targeted 9/9; cả ba block Account Security tiếng Việt đã được quét, test copy 2/2 và Account regression 11/11; control-level AC-01 `6/6`; AC-02 billing control-level `5/5`; full Node mới nhất `579/579`. Ví/lịch sử canonical, QR nạp thủ công chỉ sau method+amount+readiness, PayOS/catalog fail-closed và Admin handoff được khóa ở source contract; billing/Python contracts chưa chạy vì thiếu python/py; browser/AX/QR bytes/runtime/approval/credit/live vẫn mở."
+  historical_crosswalk: "Sổ lịch sử vẫn gồm 127 plan + 180 spec + 44 audit + 14 state = 365 file và 433 dòng checkbox cũ; spec hiện hành R218-02A được gắn thêm trực tiếp vào P1, không tạo ledger song song. `unclassified source=0`; semantic review từng dòng trước R217 vẫn mở theo wave, không suy diễn PASS."
+  admin_topup_capability_affordance:
+    state: "ACCEPTED_LOCAL_UI_CI_GREEN_AUTH_QA_GREEN"
+    spec: "docs/superpowers/specs/2026-10-20-r218-admin-topup-capability-affordance.md"
+    changed_files: "static/portal/portal.js; tests/admin-manual-topup-capability-presentation.test.mjs"
+    contract: "Desktop table and mobile cards render approval draft only when server-issued admin-manual-topup-write is true; otherwise show localized read-only reason and keep detail inspection. expected_xu/approved_xu are display-only server values; missing values remain unknown and are never derived from amount_vnd. Stale confirmation drafts are hidden when write capability is absent. Inspector confirmation boundary and all wallet/ledger/API contracts unchanged."
+    tests: "Focused source 3/3; full Node 735/735; node --check static/portal/portal.js and git diff --check pass."
+    limitations: "No backend capability/RBAC, approval, Xu credit, wallet, production or LIVE claim. Browser/CI evidence covers read-only presentation and route safety only; it does not prove an approval mutation."
+  authenticated_route_matrix_r21711:
+    state: "CI_GREEN"
+    run: 39316630196
+    job: 118281015667
+    head_sha: 5252e445425a5eb6407705fbac8b16ae50797d2d
+    artifact: "webapp-authenticated-qa-5252e445425a5eb6407705fbac8b16ae50797d2d"
+    artifact_id: "NOT_READ_BACK_FROM_CURRENT_RUN"
+    matrix: "Customer 13 routes + Admin 6 routes x VI/EN/ZH x light/dark x phone-375/phone-390/tablet-768/desktop-1440"
+    records_expected: 456
+    records_completed: 456
+    records_passed: 456
+    records_failed: 0
+    checks: "Authenticated fixture registration/login, route resolution, locale/theme persistence after reload, heading/interactive surface, no horizontal overflow, AX tree capture, no page/console errors, no failed requests, no external requests and no protected mutations."
+    provider_calls: 0
+    wallet_mutations: 0
+    production_data_mutations: 0
+    limitations: "Isolated local QA only. It proves route/render safety and guarded UI states; it does not prove provider execution, wallet approval/credit, real production RBAC, delivery bytes or LIVE."
+  ci_run: 39642058056
+  ci_verify_job: 118563840899
+  ci_authenticated_job: 118564829990
+  ci_head: 51c489b968b21ca6cd5b9c8c0af4b55546cf7c27
+  ci_status_at_last_observation: SUCCESS_ON_51C489B
+  ci_scope: "Prior delivered Voice-selection baseline 51c489b: both jobs passed. The next quote-edit correction still needs fresh CI; browser evidence is isolated and read-only."
+  ci_latest_run: 39642058056
+  ci_latest_status: "Run 39642058056 terminal SUCCESS; Verify Web App and Authenticated WebApp QA both completed successfully. Browser verification/runtime and authenticated route matrix completed; no merge/deploy/LIVE."
+  migration_evidence_refresh: "Web-only provenance regenerated from clean PR merge ref d367d0b3fe13a923760122e471d75335b3101857; source_files_scanned=288; source_fingerprint_sha256=4607415db7bad0fd20f1f34a18efeed41903a9a1397fcf66ecda84ee5f9e8a0a. Bot evidence unchanged; ignored local _giao-viec files are not part of the committed source tree."
+  local_targeted_tests: "Voice quote-edit11/11; quote/default-selection/flow77/77; syntax two JS and diff-check pass. Previous Admin/STT evidence remains historical. Protected Python/backend/integration/workflow diff empty."
+  local_full_tests: "761/761 tests/*.test.mjs after the Voice quote-edit UI correction; previous evidence remains historical and does not prove real provider/production execution."
+  python_tests: "NOT_RUN: bundled Python located via workspace dependencies; pytest/FastAPI/Uvicorn are not installed in that runtime. No Python source changed in this batch."
+  voice_browser_qa:
+    environment: "Localhost production renderer/CSS with synthetic signed-state projection; no integration.js, backend or DB. Browser plugin absent; Playwright + Edge used."
+    cases: 18
+    routes: "/voice/tts and /voice/saved per configuration"
+    matrix: "vi/en/zh x light/dark x 390/768/1440"
+    result: PASS
+    page_console_errors: 0
+    overflow_px: 0
+    foreign_requests: 0
+    mutations: 0
+    warning_contrast_min: 8.84
+    result_path: "../qa/r218-voice-input/result.json"
+    result_sha256: 3831427f02b130887334c28de542395cab8d1a47c7156fb49219f9984ab4c56e
+  browser_qa_artifact_sha256: e02fc36e875e12e910e327369f2d6bab625cae87ddb4ddc0fc57553fd1e7f0c9
+open_findings:
+  - "R218-02A: Bot read-only source có list/page/count/default/preview/rename/delete/use-video; Web mới proxy GET metadata. Thiếu canonical DTO/endpoint cho capability, pagination/search, mutation receipt, preview delivery và profile handoff; giữ P1 mở."
+  - "Authenticated browser matrix đã xanh cho route/render trên HEAD; canonical voice handoff vẫn chờ server capability và execution evidence."
+  - "Auto 2/Auto Multi 3-8/Smart Multi là ba callback, không gộp."
+  - "Music control-level đã khóa local; Music editor, generation, quote/confirm, player/download/save/reuse và two-track delivery chưa chứng minh."
+  - "UT-04 utilities mới đạt control-level; không gọi API tỷ giá/thời tiết, không tạo avatar, không tải media; runtime source/delivery còn mở."
+  - "UT-06 Documents/PDF đã khóa control-level: board, 9 workflow, nguồn Asset Vault, thứ tự/range, confirm/result và download gate; runtime bytes/preview/delivery/browser/live còn mở."
+  - "UT-07 Asset Vault đã khóa control-level: owner-scoped upload/filter/page/download/lifecycle/archive/restore và responsive vertical layout; bytes/preview/quota-expiry server/browser/live còn mở."
+  - "SP-01 Support đã khóa control-level: intake/list/detail/reply/state/recovery/evidence/admin public-vs-internal và responsive vertical layout; capability/dữ liệu thật/browser/CI/live còn mở."
+  - "SP-02 Guide/Chat Pro/feedback/community chưa thực thi."
+  - "Video 32 profiles/39 AI edit options; execution capability riêng."
+  - "AD-02-MOBILE-DATA fresh synthetic browser rerun passed 8/8 outside sandbox; actual per-module roles/data, charts, approval/runtime remain open."
+  - "AD-02-PRICING-LOCALE/MOBILE: active renderer12 configs/36 states confirmed mixed fixed chrome and no vertical mobile cards. Generic pricing table branch remains a separate consumer to map."
+  - "AD-01-PRICING-NAV-LOCALE: root shared renderer legacy locale confirmed across9groups/48paths; reuse46existing route translations plus commercial/legal, preserve exact role filtering. Detail spec before BUILD, ahead of Pricing fixed-copy."
+  - "AD-04-PRICING-AFFORDANCE: enabled write controls in read-only fixture need readiness review; publish-modal-open handler currently only guarded toast. No backend permission bypass or actual write was tested."
+  - "AD-02-ZH-GENERIC-COPY: generic CANONICAL/canonical remains in module headers/descriptions; header locale picker itself is fixed and accepted."
+  - "Control-level dynamic callback và Admin server-issued data/bridge runtime vẫn mở; current authenticated route/render matrix đã xanh 456/456 ở run 39316630196 trên HEAD 5252e44."
+provider_calls: 0
+wallet_mutations: 0
+production_data_mutations: 0
+live_pass: NOT_TESTED
+subdub_shared_draft_evidence: reports/audit/R218-SUBDUB-DRAFT-RUNTIME-CORRECTION-QA-20261021.json
+subdub_shared_draft: "SD-B2 reopened after browserRED14 and capture probe; correction targeted25/25, full Node861/861, Python119/119; actual-profile browser24 with latest-target/independent-formats/presentation-session-replacement and remount, zero failures/page/console/UIwrites/external/overflow. Review independent25/25 no remaining Important/Critical. Old21 report superseded. SD-C2/SD-D2/SD-E2 remain open."
+subdub_voice_continuation_evidence: reports/audit/R218-SUBDUB-VOICE-CONTINUATION-QA-20261021.json
+subdub_voice_continuation: "SD-C2 browserRED3 -> GREEN48 loops/24 actual-profile+theme configs, saved/clone→Voice tab→keyboard return→Back/Forward same document/draft/mode/lane0/200; page/console/UIwrite/external/overflow0. Focused39/39, fullNode872/872; review39/39 no Important/Critical, protected6functions+12normal-nav outputs equal. Python broadened134pass/1baseline-fail obsolete voice_style select; source/test same on clean018146e and base42a78e9. No profile application or receipt claim. QA50561 stopped exit0."
+subdub_voice_continuation_delivery: "PR654 HEAD9bc85a95389beb69c6d973f04b5f1eb14362c7e5 re-read; run39545240718 terminalSUCCESS, Verify119041825275 and AuthenticatedQA119042671747 SUCCESS. Receipt issuecomment-6308311376. No merge/deploy/LIVE."
+subdub_review_volume: "SD-D2A+D2B local UI accepted: targeted44/44; browser24/24 actual signed QA VI/EN/ZH × light/dark ×375/390/768/1440; page/console/UIwrite/external/overflow0; number-range both directions, invalid preserve, mute ack, mode/Voice-return/identity cleanup, AX/screenshots. Evidence subdub-review-volume-green-20261021.json. Backend/engine/provider/quote/job/output/LIVE remain open."
+subdub_semantics_a11y: "SD-E2 local accepted: semantic3/3; SubDub regression47/47; browser24/24 actual signed QA VI/EN/ZH × light/dark ×375/390/768/1440; live region/labelled settings, status output, tab-panel relationships, page/console/UIwrite/external/overflow0. Evidence R218-SUBDUB-SEMANTICS-QA-20261021.json. No engine/provider/output/LIVE."
+image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, browser signed candidate12/12 delayed-auth plus normal Image24/24; same-document four-mode navigation, scoped scalar draft, native modified-click preservation, Back/Forward, identity cleanup, absent-integration fallback and stale destination guard verified. Protected 13 helpers and integration.js equal BASE after normalized line endings. Engine/upload/reference/AI/manual output, quote/job/delivery and LIVE remain open. Evidence R218-IMAGE-WORKSPACE-CONTINUITY-QA-20261021.json."
+owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
+global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
+image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
+next_action: "UT-CSP-EMPTY-THUMB workerFlashR1 patch reviewed:6/6focused/fullNodeexit0/syntax2/diff0; actualQA96states+12utilityflows, baselineCSP5→0, errors/write/external/overflow0. Finish coherent docs/tester metadata and clean-tracked provenance, pushPR654 and readCI terminal; then Q0-CUSTOMER-CONTENT dynamicstates/Utilities/Admin/Video in order, motionlast. Evidence R218-CUSTOMER-UI-REALITY-QA-20261022.json. GoalACTIVE; no merge/deploy/LIVE."

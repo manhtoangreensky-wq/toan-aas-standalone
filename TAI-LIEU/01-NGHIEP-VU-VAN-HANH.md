@@ -1,5 +1,296 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Free Tools và nội dung khách — 22/10/2026
+
+Free Tools không gắn nguồn ảnh rỗng lúc khởi tạo; ảnh YouTube chỉ hiện sau khi
+tải, lỗi có một dòng ngắn theo ngôn ngữ giao diện và có thể trích xuất lại.
+Không còn fallback sang ảnh placeholder ngoài. CSP giữ nguyên: matched baseline
+5messages, candidate0. Subtitle cleaner hoạt động cục bộ và TXT tải về khớp
+văn bản đã làm sạch ở12cấu hình.96initialstates ở8route khách,3ngôn ngữ,
+2theme,2viewport đạt không chữ thử nghiệm/demo/beta/sandbox, không hero badge,
+Voiceinputtrống, không overflow/page/console/UIwrite/external. Dữ liệu quote
+tổng hợp của fileQA cũ không dùng làm bản bàn giao hoặc chứng minh tạo giọng.
+Đây chưa phải nghiệm thu generation/provider/output của tất cả sản phẩm.
+
+## R218 Q0 — nhãn giao diện thừa và Image continuity, 21/10/2026
+
+Shared customer/Admin không còn trình bày các ô bo tròn kiểu “đang ở trang
+này”, “khả dụng”, “guarded” hoặc “read-only” cho chrome điều hướng; trạng thái
+bản ghi thật vẫn là văn bản để không che giấu dữ liệu. CSS fixture đạt `8/8`,
+ma trận signed đạt `120` trạng thái và hồi quy Image nhãn đạt `24/24`; không có
+request ghi/ngoài hoặc overflow. CSP của `/tools/free` vẫn còn đúng `5` cảnh
+báo baseline mỗi lượt và được ghi ở backlog `UT-CSP-EMPTY-THUMB`, chưa nới CSP
+và chưa gọi là đã sửa.
+
+Image hiện giữ một tài liệu với bốn mode `/image/create`, `/image-studio`,
+`/image/transform`, `/image/edit`. Draft chỉ giữ scalar của form theo mode;
+file, token, quote, receipt, provider và job không được ghi. Signed delayed-auth
+candidate đạt `12/12` (không form/record cũ trong loading), normal Image đạt
+`24/24`, focused continuity đạt `59/59` và full Node đạt `894/894`. Đây là
+bằng chứng UI/UX/accessibility và vòng đời draft cục bộ; upload/reference,
+engine AI/manual, before-after/history, quote/job/output/delivery và LIVE vẫn
+chưa đóng.
+
+## SD-C2 — đi tới công cụ giọng và quay lại bản nháp, 21/10/2026
+
+Từ SubDub, link Kho giọng/Thêm giọng mở đúng Voice trong cùng tài liệu khi
+phiên đang hợp lệ. Bốn tab Voice giữ đường quay lại đã kiểm; “Quay lại SubDub”
+khôi phục đúng mode, lane và cấu hình hiện có, kể cả0/200 và Back/Forward.
+URL chỉ chứa đường/mode hữu hạn, không chứa bản nháp/tệp/token/profile ID.
+Đây là giữ ngữ cảnh giao diện, KHÔNG phải đã lưu/áp dụng giọng hay có output.
+Modified click/tab mới/reload đầy đủ giữ hành vi trình duyệt; không hứa giữ
+tab-memory qua tài liệu mới. Browser48 vòng trên locale/theme thực đạt;
+case SDRETURN và evidence SD-C2 ghi phạm vi rõ. Không sửa API/engine/ví.
+
+## SubDub SD-B2 — đính chính capture và trạng thái dùng chung, 21/10/2026
+
+Test21 trước đó chưa chứng minh âm lượng0/200 được chụp từ control thật.
+Review và browser mới tái hiện14 sai lệch; SD-B2 đã mở lại trước khi sửa.
+Correction dùng draft đã chuẩn hóa, render trực tiếp và dùng cùng giá trị mới
+nhất giữa mode tương thích; không sửa HTML bằng regex. Session identity đổi
+hoặc đăng xuất xóa slot SubDub; file/provider ID không vào draft. Handoff
+Voice, bước review đầy đủ, number/mute và semantics vẫn là các spec tiếp theo.
+Không có upload/ASR/dịch/lồng tiếng/quote/job/output thực trong bằng chứng này.
+
+## SubDub SD-D2 — xem lại thiết lập và cân âm lượng, 21/10/2026
+
+Bước 3 của SubDub hiện hiển thị thiết lập dạng hàng dọc theo mode đang chọn:
+nguồn phụ đề do người dùng khai báo, target/ngôn ngữ ISO, lane giọng, âm lượng
+gốc/lồng tiếng, vị trí và định dạng phụ đề. Tệp nguồn, ngôn ngữ đã nhận diện,
+speaker-count, giá và chi phí không có dữ liệu server thì giữ `Chưa xác minh` hoặc
+`—`; không tự tính và không mở nút xử lý.
+
+Âm lượng có thanh kéo và ô số: gốc `0–100%`, lồng tiếng `0–200%`, nhập số nguyên;
+giá trị rỗng, âm, phân số, ký tự sai hoặc ngoài giới hạn giữ mức hợp lệ gần nhất
+và báo lỗi cạnh ô. Khi lồng tiếng `0%`, cảnh báo và ô xác nhận chỉ là thiết lập
+cục bộ; rời `0%` xóa xác nhận, quay lại phải xác nhận lại. 24/24 cấu hình QA đạt,
+page/console/UIwrite/external/overflow đều `0`. Đây chưa phải upload, ASR, dịch,
+lồng tiếng, Smart Multi, quote, job, output, ví hoặc LIVE.
+
+## Image R218-05 — lát presentation hiện tại, 21/10/2026
+
+Trang `/image/create` giữ một workspace dọc với bốn lane: Tạo ảnh, Câu lệnh từ
+ảnh, Chỉnh AI và Chỉnh thủ công. Ba lane ngoài tạo ảnh hiển thị guarded; không
+tự nhận đã upload, tạo ảnh, chỉnh ảnh, có preview, quote hoặc tệp kết quả. QA
+18/18 cấu hình VI/EN/ZH × sáng/tối ×390/768/1440 đạt focus, không overflow,
+không lỗi trang/console, request ghi/ngoài/không biết đều `0`. Đây là bằng chứng
+presentation control-level; reference/upload, AI/manual engine, trước-sau,
+history, quote/job/output/delivery và LIVE vẫn mở.
+
+## SubDub SD-E2 — ngữ nghĩa và trợ năng, 21/10/2026
+
+Bước kiểm tra thiết lập có heading theo mode và một vùng đọc trạng thái live;
+trình hỗ trợ có thể biết vùng nào vừa thay đổi. Giá trị âm lượng dùng `status`
+live/atomic, còn ô số và thanh kéo giữ nhãn, giới hạn và liên kết lỗi. Bốn tab
+vẫn trỏ đúng panel và panel ẩn không lọt vào thứ tự đọc. Đã đo 3/3 test ngữ nghĩa,
+hồi quy SubDub 47/47 và 24/24 cấu hình browser; đây chỉ là control-level, không
+phải bằng chứng engine, provider, output hay LIVE.
+
+## Music/SFX — trạng thái đọc và phản hồi thao tác, 21/10/2026
+
+Thư viện hiệu ứng âm thanh không kế thừa bộ lọc/trang của thư viện nhạc.
+Tìm kiếm, xóa lọc, phân trang và làm mới chỉ báo thành công khi dữ liệu hợp lệ;
+lỗi và response cũ không được báo thành công. Chữ phân trang/thông báo theo
+VI/EN/ZH, tìm không khớp khác với thư viện chưa có dữ liệu; loading có busy.
+Test36/36 và browser39 cấu hình QA có locale hồ sơ thật, AX/ảnh/bàn phím;
+không page/console error, UIwrite hoặc request ngoài. Đây vẫn là thư viện
+thông tin tổng hợp chỉ đọc, không phát/tải/tạo âm thanh hay chứng minh backend
+ownership. Copy dài và toast xếp chồng còn mở. Evidence:
+`reports/audit/R218-MUSIC-LIBRARY-READ-STATE-QA-20261021.json`.
+
+Ngày21/10 đã rút lại câu chữ hướng dẫn thư viện: mô tả ngắn gọn việc tìm và
+mở bộ sưu tập, nêu thẳng chưa hỗ trợ nghe/tải, bỏ thuật ngữ kiểm toán nội bộ.
+Browser39 cấu hình sau copy và test39/39 đạt; nội dung khách chưa được xem là
+đã có playback/delivery. Q0-TOAST-STACK vẫn mở.
+
+## Đính chính nghiệm thu 21/10/2026 — ưu tiên đọc trước checkpoint cũ
+
+Các matrix 48/72/120/48 và motion12 của checkpoint cũ chỉ là smoke: không đủ
+đóng toàn nhóm, locale thực, tương tác, AX hoặc độ mượt. Signed locale ưu tiên
+hồ sơ, không thể chứng minh bằng cách đổi query. Chi tiết:
+`reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md`.
+
+Music đã có lượt nghiệm thu riêng mới: 18 cấu hình với locale hồ sơ VI/EN/ZH
+được kiểm thực, chọn gợi ý/copy nhãn/apply, giá0/unknown, sửa và hoàn nguyên
+input, expiry3 không thay form và report-only18; console/page/external/UIwrite0.
+Source hashes và trường hợp cụ thể tại
+`reports/audit/R218-MUSIC-RUNTIME-REVIEW-QA-20261021.json`.
+Nghiệm thu này dùng dữ liệu phản hồi tổng hợp trên app QA; không chứng minh
+generation/provider/delivery/LIVE. Avatar URL hiện chưa có persistence ở API
+hồ sơ; chọn ảnh chưa được báo là lưu được. Trace QA còn cần đo, không bị chặn
+do thiếu quyền mới trong phạm vi kiểm thử cô lập đã cấp.
+
+## Voice — báo giá hết hạn khi trang đang mở (20/10/2026)
+
+Đến deadline do máy chủ cung cấp, UI ẩn xác nhận cũ và báo “Báo giá đã hết
+hạn. Xem báo giá mới trước khi xác nhận.” Form được giữ nguyên tại chỗ;
+lời thoại, giọng, tốc độ, âm lượng 0, tệp STT/Thêm giọng và focus không mất.
+Nhập lại nội dung cũ không làm báo giá hết hạn dùng lại được. Một timer được
+dọn khi render/đổi route; không tự lấy báo giá hoặc gọi xử lý.
+
+Đã đo: test hành vi 8/8, focused 70/70, full Node 769/769; Edge headless trên
+fixture localhost đạt 22/22 cấu hình, 397 GET, write/request ngoài/unknown API/
+console/overflow đều 0. STT vẫn guarded theo allowlist integration hiện tại;
+gán tệp QA chỉ kiểm giữ file input. Evidence:
+`reports/audit/R218-VOICE-QUOTE-IDLE-QA-20261020.json`. CI cho delta idle chờ
+push; generation, quản lý kho giọng, giao tệp và LIVE vẫn chưa được đóng.
+
+## Voice — báo giá sau khi sửa biểu mẫu (20/10/2026)
+
+Khi khách sửa lời thoại, giọng, tốc độ hoặc âm lượng sau báo giá, UI ẩn xác
+nhận cũ ngay và yêu cầu xem báo giá mới. Preset tốc độ và thanh âm lượng có
+cùng hành vi với ô số. Nhập lại đúng input cũ chỉ hiện lại control đã có nếu
+receipt còn hiệu lực; trạng thái disabled do đang gửi vẫn giữ nguyên.
+Đổi chế độ/hydration không làm confirm cũ trở lại khi draft đã khác quote.
+
+Test riêng `11/11`, focused `77/77`, full Node `761/761`; Codex browser TTS
+`18/18` cấu hình, `108` lượt đổi input: focus/draft giữ nguyên, overflow/
+console/write/unknown API đều `0` trong fixture localhost chỉ đọc. Backend và
+integration fingerprint check không đổi. CI quote-edit tại `8d53dab` đã xanh
+ở run `39406730261`. Nghiệm thu idle UI nằm ở mục trên; quote thật,
+tạo/giao âm thanh và LIVE vẫn mở.
+
+## Voice — lựa chọn giọng mặc định, sửa kết luận capability (20/10/2026)
+
+TTS hiện yêu cầu khách chọn rõ Nữ hoặc Nam; hai giá trị gửi máy chủ vẫn là
+`female` và `male`. Lần đầu ô chọn rỗng, không tự chọn giới tính. Chuyển qua
+Kho giọng rồi trở lại giữ lựa chọn, lời thoại Unicode, tốc độ và âm lượng 0.
+Nhãn hiển thị theo VI/EN/ZH. Renderer `15/15`, nhóm Voice/STT `75/75`, full
+Node `750/750`; Codex browser localhost `18/18` cấu hình, overflow `0`, console
+không lỗi; fixture chỉ GET ghi nhận write `0`, unknown API `0`.
+
+Helper tự chọn theo `readiness.features.voice_tts.default_voice_genders` trước
+đây không có dữ liệu thật: `_project_readiness` không cho qua trường này.
+Helper đã bị bỏ và mục fallback được mở lại trong R218-02A/T0. Các bằng chứng
+trên là UI fixture, chưa chứng minh default capability, audio delivery hay LIVE.
+Chi tiết: `reports/audit/R218-VOICE-DEFAULT-SELECTION-QA-20261020.json`.
+
+## AD-03 — checkpoint chiếu liên kết hồ sơ Admin (20/10/2026)
+
+Lớp cầu nối Admin hiện chỉ đưa `admin_record_references` tới trình duyệt khi
+request đã đi qua cờ đọc Admin (`admin_read=true`) và chốt quyền Admin phía máy
+chủ. Projection chỉ nhận đúng **5** loại hồ sơ (`request`, `job`, `asset`,
+`report`, `audit`), tối đa **6** liên kết trong một tập; liên kết ở record đơn
+và trong `items[]` dùng cùng allowlist. ID, nhãn và đường dẫn đều bị giới hạn
+độ dài; đường dẫn chỉ thuộc **5** họ nội bộ `/admin`, `/jobs`, `/assets`,
+`/reports`, `/audit`. URL ngoài, `//`, `\\` và dot-segment bị loại hoặc làm
+rỗng. Dữ liệu sai kiểu/kind/ID bị fail-closed; tài khoản không phải Admin
+không nhận trường này. Projection không tự tạo record, không nối request → job,
+không cấp quyền và không gọi provider/bridge bổ sung.
+
+Bằng chứng local trên candidate hiện tại: contract Python AD-03 `1 passed,
+56 deselected`; `py_compile` cho `copyfast_api.py` và test không lỗi; toàn bộ
+Node `735/735`; `node --check` hai file Portal và `git diff --check` đều không
+có output lỗi. Đây mới là bằng chứng source/local; CI trên commit mới, record
+thật, RBAC thật, bridge request → job → asset → report → audit và LIVE chưa
+được đóng. Không dùng checkpoint này để kết luận Admin đã duyệt tiền, giao tệp
+hay production đã chạy.
+
+## Admin theme — ứng viên UI 19/10/2026
+
+Admin vẫn mặc định Sáng như policy visual-reset trước. Nay chọn Tối/Theo hệ
+thống thực sự có tác dụng; không còn JS ép lại Sáng/xóa lựa chọn Admin.
+Lựa chọn lưu riêng, không sửa theme khách. Khi storage bị chặn vẫn đổi được
+trong trang; không ghi API/auth/ví. Đổi theme không reload/remount form.
+
+Dark dùng navy `#0b132b` và thẻ `#1c2541` sẵn có, chữ sáng. Light giữ nền/thẻ/
+bố cục, dùng teal đậm hơn trong cùng palette cho CTA/selected nav. Nút ≥44px;
+hai meta theme-color cùng selected scheme. Node 17/17, full Node 704/704.
+Browser localhost: 24 cases VI/EN/ZH ×375/390/768/1440 ×home/login, cả hai
+theme; measured contrast min 7,61 dark/5,24 light, errors/write/external/
+unknown/overflow 0. Đây là read-only fixture, chưa production/LIVE hay login thật.
+Các bảng có dữ liệu, biểu đồ và module Admin còn cần QA riêng.
+
+## Admin overview — quyền hiển thị và số liệu hàng đợi (19/10/2026)
+
+Banner nạp tiền, sự cố và lối tắt `/admin` chỉ hiển thị các phân hệ trong
+manifest điều hướng máy chủ đã cấp. Giao diện không cấp quyền mới; backend
+vẫn kiểm tra từng request. Tổng nạp chờ duyệt chỉ lấy số nguyên không âm từ
+`adminData.counts.pending_topups`: thiếu/null/sai kiểu hiện `— / Chưa xác định`,
+khác số `0` thật. Không đếm trang danh sách hữu hạn thành tổng hàng đợi.
+
+Nhãn unknown và chẩn đoán theo VI/EN/ZH. 18 test hành vi đạt; browser localhost
+18 cấu hình × 6 trạng thái = 108 trạng thái đạt, page/console/request ngoài/
+HTTP write/unknown API/overflow 0; tương phản nhãn unknown 5,80:1.
+Fixture kiểm projection UI, không chứng minh backend RBAC, duyệt tiền hay LIVE.
+Ở checkpoint overview trước, Admin vẫn bị ép sáng; xem cập nhật AD-02-THEME
+ở trên để phân biệt default Light với lựa chọn Dark/System đã được sửa.
+
+## Checkpoint Voice inventory — ứng viên 19/10/2026
+
+Kho giọng `/voice/saved` phân biệt đang tải, lỗi kết nối, chưa kết nối và
+danh sách đã tải. Lỗi không còn hiển thị như tài khoản chưa có giọng; dữ liệu
+cũ được xóa trước lần đọc và khi đổi phiên. Nút Thử lại chỉ đọc dữ liệu.
+Web hiển thị tối đa 50 record nhận được; API Core hiện không có pager/search
+thật nên không công bố tổng kho hoặc nút trang giả. Đổi tên/đặt mặc định/xóa/
+nghe thử/handoff vẫn là yêu cầu mở tại R218-02A/T0.
+
+Đã đo trên localhost: 18 cấu hình VI/EN/ZH × sáng/tối × 390/768/1440,
+7 trạng thái và 18 lượt thử lại bằng bàn phím; console/overflow/request ngoài/
+mutation đều 0. Bộ inventory 34/34 và toàn bộ Node 638/638 (gồm 6 test SubDub
+mới trên remote). Đây là shell,
+renderer và integration.js production dùng API fixture, chưa phải dữ liệu
+Core thật hoặc LIVE. Bằng chứng tại `../qa/r218-voice-inventory/result.json`.
+Các mục vận hành/dữ liệu production bên dưới giữ nguyên phạm vi đo ban đầu.
+
+### Lát UI Voice STT — 19/10/2026
+
+Trang `/voice/stt` và alias `/voice/asr` hiện trình bày riêng luồng chép lời:
+tiêu đề, mô tả, định dạng kết quả, trạng thái rỗng và CTA không còn dùng copy
+“tạo giọng” hoặc bộ đếm âm lượng của TTS. Upload/estimate chỉ mở khi bootstrap
+có capability riêng `voice_stt`; quyền Bridge chung không đủ để mở tệp.
+
+Đã đo bằng Edge/Playwright localhost: 18 cấu hình VI/EN/ZH × sáng/tối ×
+390/768/1440; page/console/request ngoài/write/unknown API/overflow đều `0`.
+Kiểm thử hành vi STT `18/18`, toàn bộ Node của workspace `660/660`. Fixture là
+projection đọc-only; chưa xác minh upload bytes, MIME/size/ownership, transcript,
+progress, delivery, backend thật hoặc LIVE.
+
+### Lát UI Music — 19/10/2026
+
+`/music/create` (nhạc nền) và `/music/song` (bài hát) hiện dùng workspace dọc
+chung nhưng tách đúng field: lời bài hát, kiểu giọng và dạng bài chỉ xuất hiện
+ở bài hát; nhạc nền không hiển thị các lựa chọn đó. Copy tiêu đề, trạng thái,
+handoff và cảnh báo được lấy theo catalogue VI/EN/ZH, không còn rò chuỗi của
+locale khác sau hydration.
+
+Đã đo bằng Edge/Playwright localhost: `36` cấu hình (VI/EN/ZH × sáng/tối ×
+390/768/1440 × 2 route); page/console/request ngoài/write/unknown API/overflow
+đều `0`. Không có audio, player, giá, download hoặc provider giả. Đây là fixture
+đọc-only; generation, quote, player, tệp, delivery và LIVE vẫn chưa xác minh.
+
+### Bản nháp Voice VO-01 — 19/10/2026
+
+Bổ sung Voice VO-01 ngày 19/10: đổi chế độ giữ lời thoại và âm lượng trong
+cùng phiên/tab; Back/Forward và locale giữ đúng. Đổi phiên xóa nháp Voice;
+không lưu File/password hoặc ghi browser storage. 7/7 test hành vi, 18 cấu
+hình trình duyệt; full Node mới nhất 645/645. Reload/tệp và runtime chưa đóng.
+
+## Checkpoint UT-01 — workspace Dịch (ứng viên cục bộ 18/10/2026)
+
+Web đã bổ sung một workspace dọc cho `/subtitle-studio/new?intent=translation&pair=...`:
+nguồn tự nhận diện, 21 lựa chọn ngôn ngữ đích, tìm kiếm cục bộ, giữ bản gốc,
+dịch hai chiều, trạng thái bắt đầu/dừng, kết quả và lịch sử. Đây là lớp trình
+bày/control-level; nút xử lý mặc định bị khóa vì máy chủ chưa công bố
+`translation-runtime-start`. Panel không gửi API action mới, không gọi provider,
+không tạo quote/job/tệp, không sửa ví và chưa được kiểm thử live.
+
+Đã đo: test riêng `4/4`, full Node `548/548`, `node --check` portal `PASS`,
+`git diff --check` `PASS`. Python/pytest chưa chạy được vì workspace không có
+lệnh `python` hoặc `py`.
+
+## Checkpoint UT-04 — tiện ích miễn phí (ứng viên cục bộ 18/10/2026)
+
+`/free-tools` hiện có 10 tab/panel: phụ đề, YouTube, VietQR, ảnh đại diện AI,
+tỷ giá & quy đổi Xu, thời tiết, tải video & media, JSON, văn bản và mã hóa.
+Bốn lane mới chỉ là control-level: có input, quyền sử dụng/nguồn, vùng kết quả
+rỗng và trạng thái guarded; không gọi API tỷ giá/thời tiết, không tạo avatar,
+không tải media và không mở provider. QR giữ flow cục bộ cũ.
+
+Đã đo: test riêng `5/5`, full Node `549/549`, `node --check` portal và i18n
+`PASS`, `git diff --check` `PASS`. Browser/AX, nguồn dữ liệu thật, stale/error
+runtime, downloader delivery và live chưa chạy.
+
 ## Checkpoint giao diện Image — ứng viên cục bộ 08/10/2026
 
 BASE `dee0ac4ccaaf2cb3ebe147ab217e85ec419bec4c` là merge SubDub PR #619;
@@ -410,6 +701,22 @@ Các phần có ngày/SHA cũ dưới đây là lịch sử, không xác nhận 
 - Current-main motion live retest: `evidence/motion-live-retest-b657/`.
 - M03B pre-fix rendered/temp DB ngoài repo chỉ là historical diagnostic. Final redacted browser receipt: `reports/prepush/CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002-RENDERED.json`; pre-push review: `reports/prepush/CUST-WEB-MANUAL-TOPUP-PROGRESSIVE-DISCLOSURE-002.md`.
 - Các bằng chứng trên chứng minh local source/test; chúng không chứng minh production deployment hoặc live money result.
+
+## Cập nhật vận hành WebApp — R217-07A và R218 plan — 18/10/2026
+
+SubDub WebApp hiện có một workspace duy nhất với bốn hướng xử lý và bảy lựa chọn gán
+giọng riêng: mặc định nữ, mặc định nam, giọng đã lưu, giọng tự thêm, Auto 2,
+Auto Multi 3–8 và Smart Multi. Workspace còn nêu rõ nguồn đã có/chưa có phụ đề,
+source auto-detect, catalog target đầy đủ theo VI/EN/ZH, bảy vị trí phụ đề, volume
+âm thanh gốc/giọng lồng tiếng, speaker-map guarded và đường sang Voice Library.
+
+- Regression SubDub: `14/14` đạt, `0` lỗi.
+- Full Node suite hiện tại: `538/538` đạt, `0` lỗi.
+- `node --check` Portal JS: `2/2` đạt; `git diff --check`: đạt.
+- Provider calls: `0`; wallet mutations: `0`; production data mutations: `0`.
+- Upload/preview, Voice Library data, preflight, confirm, provider bridge, speaker
+  detection, output artifact và live report vẫn guarded; chưa gọi đây là parity runtime với Bot.
+- Plan/checklist/spec mới: R218 trong `docs/superpowers/` và `reports/audit/`.
 
 ## 20. A09 Auth + Admin shell — trạng thái vận hành candidate 05/09/2026
 
@@ -844,3 +1151,198 @@ ví/Xu, Bot bridge và dữ liệu production không đổi.
   gọi đây là locale đã sửa trên production cho đến khi recheck trực tiếp chứng minh.
 - Blocker kiểm thử: `pytest` chưa chạy vì Python bundled không có module `pytest`; CI phải chạy
   lại bộ Python trước delivery.
+
+## R218 — Cập nhật evidence sau WIP SubDub control — 18/10/2026
+
+- Source candidate đã push của PR #654: `db8faa41fd059467d8f084a7661a01e53f4a5e85`.
+- CI run `39101124230`: `Verify Web App=SUCCESS`, `Authenticated WebApp QA=SUCCESS`;
+  ma trận route/render ghi nhận `456/456` case trên customer/admin, VI/EN/ZH,
+  light/dark và phone/tablet/desktop.
+- Local gate của SubDub presentation: `14/14` test mục tiêu, `node --check
+  static/portal/portal.js`, `git diff --check`, full Node `538/538`.
+- Kết luận vận hành: chỉ khóa được lane presentation, locale, selector và route/render
+  evidence; đợt này bổ sung source state, language catalog, 7 subtitle positions và
+  ba lane Auto canonical. Chưa có bằng chứng server capability, upload, quote, job, provider output,
+  artifact delivery hoặc live production; `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
+  `PRODUCTION_DATA_MUTATIONS=0`, `LIVE_PASS=NOT_TESTED`.
+- Ba lane Auto 2, Auto Multi 3–8 và Smart Multi vẫn là ba callback riêng; không được
+  gộp thành một engine hay suy diễn từ route matrix.
+
+## R218 — Toàn sản phẩm, nguồn Bot và checkpoint trước SubDub control patch — 18/10/2026
+
+R218 hiện bao phủ Voice, Music/SFX, SubDub, Image, Product Video/AI và manual edit,
+Dịch/Content/Free/Memory/Documents/Assets/Projects, AutoPost/Support/Account và
+Admin/app nội bộ. Inventory B01–B34 có nguồn menu/handler và spec theo control.
+
+Phần SubDub trong đoạn checkpoint này là snapshot trước control patch: thẻ disabled,
+selector lặp/hidden field, link kho giọng và volume 0–200 còn cần review theo spec mới.
+Bot source không là runtime proof: Music editor còn guard, hai track delivery chưa
+chứng minh, Video AI edit có catalog nhưng disabled, long/series có execution lock.
+
+CI run 39098833727 trên candidate 235d83661e78fd670bf09d58a436f114ea5ce14b đã
+SUCCESS (Verify Web App 2m31s, Authenticated QA 4m09s). Bản mở rộng tài liệu R218
+cần CI riêng sau push. Không suy test xanh thành product parity hoặc LIVE.
+Voice/Music và các sản phẩm khác chỉ mở sau plan + WIP checkpoint, Video sau cùng
+sản phẩm, motion cuối. Backend/provider/wallet/PayOS/publish giữ T0 và đợi lệnh.
+## R218 — Khóa control Voice tốc độ và âm lượng — 18/10/2026
+
+- Candidate source cho batch UI/UX hiện tại: `814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd` trên nhánh `webapp-r217-subdub-ui-r218`.
+- `/voice/tts` và `/voice/saved` dùng cùng hợp đồng control: `speed` là một ô số từ `0,1` đến `2,0`, mặc định `1,0`, có 3 mức gợi ý; `volume_percent` là một ô số từ `0` đến `200` kèm thanh kéo đồng bộ, không tạo field gửi trùng.
+- Nhãn, trợ giúp và preset lấy từ catalogue VI/EN/ZH; không còn giá trị biểu tượng `normal/slow/fast` trong payload.
+- Bằng chứng local: `3/3` test control, `97/97` Voice regression, `530/530` full Node, `node --check static/portal/portal.js`, `git diff --check`.
+- Đây chỉ là khóa trình bày và payload UI. Volume `0` warning, quote stale, Voice Vault/runtime execution, file output và live/CI vẫn chưa được coi là hoàn tất.
+
+## R218 — Image four-mode control checkpoint — 18/10/2026
+
+`/image/create` đã được sắp lại thành một cụm mode dọc, rõ theo đúng thứ tự người dùng:
+Tạo ảnh, Câu lệnh từ ảnh, Chỉnh sửa AI và Chỉnh sửa thủ công. Mode tạo ảnh giữ form
+`prompt/tier/format` và flow báo giá hiện có; mode tham chiếu mở `/image-studio`; mode
+AI mở `/image/transform`; mode thủ công mở `/image/edit`. Ba mode ngoài tạo ảnh hiển thị
+trạng thái chờ quyền xử lý để không nhầm rằng engine đã mở.
+
+Đây chỉ là hoàn thiện control-level UI/UX và locale VI/EN/ZH. Không có upload, preview,
+ảnh giả, provider, job, quote, delivery hoặc thay đổi Xu. IM-02 và IM-07..10 vẫn mở,
+chờ capability/source/runtime/browser evidence.
+
+## R218 — Music control-level guarded — 18/10/2026
+
+Batch Music chỉ thay đổi lớp trình bày và bản nháp an toàn trên WebApp:
+
+- `/music/create` và `/music/song` có một workspace dọc gồm `4` bước: nhập mô tả, chọn thông số,
+  so sánh `3` phương án và nhận tệp/báo cáo.
+- Hai route hiển thị `3` tier bằng trạng thái chờ máy chủ; route bài hát giữ các field
+  `brief`, `tier`, `mode`, `vocal_mode`, `lyrics`, `song_length_mode`, `duration_seconds`.
+  Route nhạc nền không lộ các field chỉ dành cho bài hát.
+- Không còn provider badge, giá hard-code, player, tên MP3, download hoặc thông báo tạo tệp
+  giả trong workbench Music. Khi capability chưa bật, cờ `data-music-product-enabled` giữ
+  toàn bộ field ở trạng thái khóa.
+- Catalogue `musicProduct.*` có cùng bộ khóa ở `3/3` locale `vi/en/zh`; theme giữ palette
+  xanh/ngọc hiện tại, card dọc và breakpoint `980px/640px`.
+
+Bằng chứng source-only: Music control `7/7`, focused Music+Voice `19/19`, nhóm Music
+hub/prompt/library `25/25`, full Node `537/537`, `node --check` và `git diff --check`.
+`PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`, `PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`,
+`LIVE_PASS=NOT_TESTED`.
+
+Đây chưa phải Music runtime: tạo nhạc, báo giá/xác nhận, chỉnh nhạc, trình phát, tải, lưu,
+dùng lại, lịch sử, giao tệp hai bản và bằng chứng trình duyệt/CI/live vẫn mở trong checklist
+R218.
+
+## R218 — Utilities/Content/Projects locale checkpoint — 18/10/2026
+
+Đã rà soát và khóa phần giao diện cố định của Content Studio, Content Prompt Pack, Prompt
+Gallery, Công cụ miễn phí, Memory Center/Reminder, Project Center và Workboard. Content Prompt
+Pack hiện dùng một catalogue VI/EN/ZH cân bằng cho biểu mẫu, gợi ý, trạng thái rỗng, kết quả,
+biên nhận và ranh giới xử lý; bản VI không còn các nhãn giao diện tiếng Anh như `Draft composer`,
+`Execution boundary`, `Provider call` hoặc `Local deterministic draft`. Chủ đề, nội dung, tên
+server, nhãn kiểm tra và biên nhận owner-scoped vẫn giữ nguyên, không tự dịch dữ liệu người dùng.
+
+Bằng chứng local: `25/25` test focused Utilities/Content/Projects, `node --check` cho
+`portal.js` và `portal-i18n.js`, `git diff --check` đều đạt. Đây là bằng chứng control-level
+và locale; upload, dữ liệu thật, phiên bản, provider, publish, ví Xu, browser/AX và LIVE vẫn
+chưa được coi là hoàn tất.
+
+## R218 — AutoPost Hub control-level — 18/10/2026
+
+`/publishing` hiện có một không gian làm việc dọc duy nhất cho AutoPost, gồm `7` nguồn đầu vào
+và `5` bước theo thứ tự: chọn nguồn → lập kế hoạch/thương hiệu → chọn kênh → lịch/hàng đợi →
+báo cáo/lịch sử. Các lane thương hiệu, lịch nội bộ, rà soát trước khi đăng, kênh, hàng đợi và
+Affiliate được nối bằng handoff Web-native hoặc hiển thị trạng thái chờ quyền máy chủ.
+
+Đã đo: `tests/autopost-hub-product-controls.test.mjs` `4/4`, full Node `562/562`,
+`node --check static/portal/portal.js` đạt, `node --check static/portal/portal-i18n.js` đạt,
+`git diff --check` đạt. Locale VI/EN/ZH dùng cùng bộ khóa; giao diện giữ màu xanh/ngọc và
+chuyển thành một cột ở màn hình hẹp.
+
+Đây chỉ là control-level/presentation. Chưa có OAuth/kết nối kênh, lịch đăng thật, biên nhận
+publish, Affiliate metrics, queue receipt, provider call, job, giao tệp hoặc live evidence.
+Không tạo dữ liệu production, không gọi provider, không đổi ví/Xu hoặc PayOS.
+
+## R218 — Trung tâm hỗ trợ khách hàng control-level — 18/10/2026
+
+Lát WebApp hiện có một luồng hỗ trợ dọc cho `/support`, `/tickets`, `/tickets/:id`,
+`/admin/support` và `/admin/support/:id`: tiếp nhận, lọc/phân trang, chi tiết/dòng thời gian,
+phản hồi công khai hoặc nội bộ, trạng thái/khôi phục, phản hồi kết quả và liên kết bằng chứng
+từ Asset Vault. Bản Việt dùng tên “Trung tâm hỗ trợ khách hàng”; bố cục case chuyển một cột ở
+`<=620px`, giữ palette xanh dương/xanh ngọc.
+
+Đã đo: `tests/support-hub-product-controls.test.mjs` `4/4`, full Node `566/566`, hai lệnh
+`node --check` và `git diff --check` đạt. Đây là control-level/presentation evidence; capability
+server, dữ liệu thật, browser/AX, CI, delivery và LIVE chưa đóng. Trung tâm hỗ trợ không upload
+bytes thô, không tạo ticket Bot, không gọi provider, không thay đổi ví/Xu, PayOS hoặc dữ liệu
+production.
+
+## R218 — Voice: phản hồi biểu mẫu và điều hướng kho giọng — 18/10/2026
+
+`/voice/tts` và `/voice/saved` đã có số đếm từ/ký tự và cảnh báo khi âm lượng bằng 0.
+Nhập số hoặc kéo thanh cập nhật tại chỗ; hydration giữ nguyên lời thoại và giá trị 0.
+Cảnh báo dùng chữ tương phản trên nền xanh/ngọc ở cả hai theme. Nhãn accessibility của
+preset tốc độ đã được dịch đầy đủ; không còn “Reading speed gợi ý” ở bản tiếng Anh.
+
+Kho giọng có `2` liên kết mở SubDub và công cụ video. Các link không chuyển giọng đã chọn,
+nên đã sửa nhãn từ “Dùng trong…” sang “Mở…”. Dãy `4` nút quản lý luôn khóa đã được bỏ,
+thay bằng một thông báo ngắn. Rename/default/delete/preview và profile handoff vẫn chưa có
+contract máy chủ; chúng tiếp tục là yêu cầu chưa hoàn tất trong ledger.
+
+Bằng chứng local: Voice input/inventory/flow/expiry `67/67`, full Node `594/594`,
+`node --check` đạt cho `portal.js` và `portal-i18n.js`, `git diff --check` đạt; catalogue có
+đủ `3/3` locale `vi/en/zh`. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
+`PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`, `LIVE_PASS=NOT_TESTED`.
+
+## R218 checkpoint 2026-10-21 — trạng thái vận hành WebApp hiện tại
+
+Đây là số đo của checkout QA hiện tại, không phải số đo production và không phải bằng chứng đã triển khai live.
+
+| Hạng mục | Số đo / trạng thái | Bằng chứng |
+|---|---:|---|
+| JavaScript toàn repo | 813 đạt / 0 lỗi | `node --test tests/*.test.mjs` |
+| Hợp đồng bản nháp an toàn | 17 đạt / 78 bỏ qua theo bộ lọc | `pytest ... -k workspace_draft` |
+| Syntax Portal | 2/2 tệp đạt | `node --check static/portal/portal.js`, `portal-i18n.js` |
+| Music intake | 18 cấu hình, 36 route states, 3 lần ghi QA | `R218-NATIVE-DRAFT-SAFE-FIELDS-QA-20261020.json` |
+| SubDub presentation | 48 trường hợp, 4 mode, 7 voice lane | `R218-SUBDUB-PRESENTATION-QA-20261020.json` |
+| Image presentation | 72 trường hợp, 4 lane | `R218-IMAGE-PRESENTATION-QA-20261020.json` |
+| Utility/Account/AutoPost/Support/Workboard/Memory | 120 trường hợp, 10 route | `R218-UTILITY-PRESENTATION-QA-20261020.json` |
+| Video presentation | 48 trường hợp, 4 lane cốt lõi | `R218-VIDEO-PRESENTATION-QA-20261020.json` |
+| Motion lifecycle | 29 static/lifecycle assertion; 12 browser case | `R218-MOTION-QA-20261020.json` |
+| Provider / wallet / production mutation | 0 / 0 / 0 | các artifact checkpoint R218 |
+| QA server tạm | Đã dừng, port `7628` không còn listener | terminal probe 2026-10-21 |
+
+Runtime engine thật, upload byte, ASR/dịch/lồng tiếng, Smart Multi execution, quote/charge/job/artifact/delivery,
+OAuth/publish, Admin RBAC dữ liệu động và approval/credit vẫn là cổng chưa nghiệm thu. Trace CLS/LCP/INP là
+`NOT_RUN`; không dùng browser smoke thay trace. Máy chủ QA dùng DB/tệp tạm và Core Bridge/PayOS/provider bị vô hiệu hóa.
+
+## R218 — Admin data mobile cards — 19/10/2026
+
+Các bảng dữ liệu Admin đã được cấp vẫn giữ nguyên bảng HTML có tiêu đề cột và bộ lọc/inspector.
+Ở màn hình rộng `<=560px`, mỗi bản ghi được trình bày thành một thẻ dọc; nhãn cột được gắn
+từ chính `thead` sau khi renderer đồng bộ, nên không lặp danh sách nhãn thủ công và không đổi
+record, permission hay trạng thái server. Màn hình desktop/tablet giữ bảng và vùng cuộn hiện tại.
+
+Đã đo: `tests/admin-mobile-data-harmony-source.test.mjs` `2/2`, full Node `705/705`,
+`node --check static/portal/portal.js`, và `git diff --check` đều đạt. Đây là thay đổi
+presentation-only; chưa phải bằng chứng dữ liệu Admin thật, RBAC server, approval tiền,
+browser đăng nhập hoặc LIVE.
+
+Browser renderer QA localhost: `18/18` cấu hình VI/EN/ZH × sáng/tối × 390/768/1440,
+hai route/cấu hình; lỗi trang/console, overflow, request ngoài localhost và mutation đều `0`.
+Tương phản cảnh báo: `11,25:1` ở theme sáng và `8,84:1` ở theme tối. Dữ liệu phiên là fixture,
+`integration.js` không được nạp: không phải kiểm thử API, DB, provider hoặc LIVE.
+
+Evidence local ở `../qa/r218-voice-input/result.json`, AX và PNG cùng thư mục. Quote expiry UI
+đã khóa; phần còn treo: search/page server, profile-aware handoff, rename/default/delete/
+preview thật, confirm/progress/output và browser QA đăng nhập thật/live. Các mục này tiếp tục ở P1.
+
+## R218 — Voice STT workspace control-level — 18/10/2026
+
+Voice đã bổ sung lane **Giọng nói thành văn bản** vào cùng workspace dọc với bốn lane
+Văn bản thành giọng nói, Giọng nói thành văn bản, Kho giọng và Thêm giọng. Route `/voice/stt`
+và alias `/voice/asr` giữ cùng ranh giới guarded; biểu mẫu chỉ trình bày tệp audio/video,
+ngôn ngữ nguồn (có Tự nhận diện) và định dạng Văn bản/SRT/VTT. Không tự tạo transcript,
+không upload bytes, không gọi provider và không tạo job/quote/đầu ra.
+
+Đã đo: contract STT/workspace `4/4`, quick-switch locale kiểm đúng `152` destination ở
+`vi/en/zh`, toàn bộ nhóm Voice `132/132`, full Node `598/598`, `node --check` cho
+`portal.js` và `portal-i18n.js`, `git diff --check` đều đạt. Đây là bằng chứng source/control-level;
+MIME/size/ownership server, tiến trình, transcript/copy/export, browser/AX upload, delivery
+và LIVE vẫn chưa đóng. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
+`PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`, `LIVE_PASS=NOT_TESTED`.

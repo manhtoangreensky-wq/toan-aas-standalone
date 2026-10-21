@@ -1043,3 +1043,57 @@ def test_generic_admin_projection_drops_unbounded_incident_text_and_retired_modu
     assert marker not in str(projected)
     assert "internal.security.rotate" not in str(projected)
     assert projected["items"] == [{"id": "safe-row", "status": "guarded"}]
+
+
+def test_admin_record_references_cross_bridge_only_after_admin_read_guard() -> None:
+    raw = {
+        "module": "jobs",
+        "admin_record_references": [
+            {"kind": "request", "id": "REQ-01", "label": "Yêu cầu", "path": "/admin/requests/REQ-01"},
+            {"kind": "job", "id": "JOB-01", "path": "/admin/jobs/JOB-01"},
+            {"kind": "asset", "id": "AST-01", "path": "/assets/AST-01"},
+            {"kind": "report", "id": "REP-01", "path": "/reports/REP-01"},
+            {"kind": "audit", "id": "AUD-01", "path": "/audit/AUD-01"},
+        ],
+        "items": [
+            {
+                "id": "JOB-01",
+                "status": "completed",
+                "admin_record_references": [
+                    {"kind": "request", "id": "REQ-01", "path": "/admin/requests/REQ-01"},
+                    {"kind": "job", "id": "JOB-01", "path": "/admin/jobs/JOB-01"},
+                ],
+            }
+        ],
+        "secret": "must-not-reach-browser",
+    }
+
+    projected = _project_surface_data(raw, "admin", allow_admin_user_refs=True)
+    assert [item["kind"] for item in projected["admin_record_references"]] == [
+        "request", "job", "asset", "report", "audit"
+    ]
+    assert projected["items"][0]["admin_record_references"][0]["id"] == "REQ-01"
+    assert "secret" not in str(projected)
+
+    # A non-admin bridge response must not smuggle the same field to the
+    # browser, even when the upstream payload contains it.
+    denied = _project_surface_data(raw, "admin", allow_admin_user_refs=False)
+    assert "admin_record_references" not in denied
+    assert "admin_record_references" not in denied.get("items", [{}])[0]
+
+    # The server projection fails closed for malformed kinds/IDs and strips
+    # unsafe paths instead of returning an arbitrary browser URL.
+    guarded = _project_surface_data(
+        {
+            "items": [{
+                "id": "JOB-02",
+                "admin_record_references": [
+                    {"kind": "job", "id": "JOB-02", "path": "/admin/../users/JOB-02"},
+                    {"kind": "provider", "id": "PROV-01", "path": "https://evil.example"},
+                ],
+            }]
+        },
+        "admin",
+        allow_admin_user_refs=True,
+    )
+    assert "admin_record_references" not in guarded["items"][0]

@@ -1,0 +1,49 @@
+{
+  "spec_id": "MU-C",
+  "date": "2026-10-20",
+  "scope": "Music quote freshness and safe confirmation presentation",
+  "base_sha": "2c216825b2b1fdfcdc4f97853961117299e39547",
+  "targeted_tests": {
+    "command": "node --test tests/music-quote-freshness.test.mjs tests/music-canonical-suggestions-presentation.test.mjs tests/music-product-controls.test.mjs tests/music-flow-state-and-surface-contract.test.mjs tests/music-workspace-draft-navigation.test.mjs",
+    "passed": 34,
+    "failed": 0
+  },
+  "full_node_regression": {
+    "command": "node --test tests/*.test.mjs",
+    "passed": 808,
+    "failed": 0
+  },
+  "protected_voice_comparator": {
+    "voice-quote-expiry.test.mjs": "PASS in full Node run",
+    "new_failures": 0
+  },
+  "syntax": {
+    "portal_js": "PASS",
+    "portal_i18n_js": "PASS",
+    "diff_check": "PASS"
+  },
+  "browser_fixture": {
+    "environment": "isolated QA app 127.0.0.1:7628",
+    "quote_unknown_confirm_visible": 0,
+    "quote_zero_confirm_visible": 1,
+    "external_requests": 0,
+    "page_errors": 0,
+    "hydration_wait_ms": 300,
+    "provider_calls": 0,
+    "result": "PASS"
+  },
+  "data_policy": {
+    "price_computed": false,
+    "receipt_changed": false,
+    "feature_confirm_sent": false,
+    "wallet_mutations": 0,
+    "deploy": "NO",
+    "live_pass": "NOT_TESTED"
+  },
+  "status": "SUPERSEDED_BY_RUNTIME_REVIEW",
+  "review_20261021": {
+    "limitations": "amount guard and 3 pure helpers only; actual edit/idle-expiry and public-price presentation not proven",
+    "evidence_policy": "Historical measured counts retained; not product/runtime/interaction/locale completion.",
+    "record": "reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md"
+  }
+}

@@ -338,7 +338,7 @@ for (const locale of expected) {
 
 const reviewedAdminSecurityAccessCopy = {
   vi: {
-    loadingTitle: "Đang xác minh Security & Access Posture",
+    loadingTitle: "Đang xác minh tình trạng bảo mật và quyền truy cập",
     boundary: "Chỉ hiển thị aggregate Web-native; không có account, email, session, token, secret, IP hoặc audit detail."
   },
   en: {

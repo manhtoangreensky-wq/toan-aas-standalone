@@ -1,0 +1,43 @@
+{
+  "spec_id": "V0-R218",
+  "date": "2026-10-20",
+  "scope": "Video/Product Video guarded presentation",
+  "base_sha": "2c216825b2b1fdfcdc4f97853961117299e39547",
+  "targeted_tests": {
+    "command": "node --test tests/video-uiux-locale-presentation.test.mjs tests/media-operation-locale-presentation.test.mjs",
+    "passed": 23,
+    "failed": 0
+  },
+  "browser": {
+    "environment": "isolated QA app 127.0.0.1:7628",
+    "cases": 48,
+    "routes": 4,
+    "matrix": "VI/EN/ZH x light/dark x 390/1440",
+    "overflow": 0,
+    "audio": 0,
+    "video": 0,
+    "downloads": 0,
+    "fake_claims": 0,
+    "external_requests": 0,
+    "writes": 0,
+    "page_errors": 0,
+    "result": "PASS"
+  },
+  "guarded_runtime": {
+    "upload": "NOT_RUN",
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "render": "GUARDED",
+    "delivery": "GUARDED",
+    "deploy": "NO",
+    "live_pass": "NOT_TESTED"
+  },
+  "status": "PARTIAL_PRESENTATION_SMOKE",
+  "review_20261021": {
+    "limitations": "body-length/overflow/media-absence smoke only; ordered workflow/editor controls not tested",
+    "evidence_policy": "Historical measured counts retained; not product/runtime/interaction/locale completion.",
+    "record": "reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md",
+    "verified_signed_locale_matrix": "NOT_VERIFIED",
+    "note": "Runner changed URL lang but did not set signed profile locale or assert actual rendered locale."
+  }
+}

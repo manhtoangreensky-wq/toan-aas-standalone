@@ -1,0 +1,16 @@
+{
+  "spec_id": "NATIVE-DRAFT-SAFE-FIELDS-001",
+  "date": "2026-10-20",
+  "scope": "Web-owned draft contract only; Music and Voice planning fields",
+  "base_sha": "2c216825b2b1fdfcdc4f97853961117299e39547",
+  "qa_origin": "http://127.0.0.1:7628",
+  "database": "isolated temporary QA database",
+  "backend_tests": {"command": "pytest tests/test_workspace_draft_product_fields.py -q --tb=short", "passed": 14, "failed": 0},
+  "frontend_tests": {"command": "node --test tests/workspace-draft-save-contract.test.mjs", "passed": 10, "failed": 0},
+  "music_regression_tests": {"command": "node --test tests/music-product-controls.test.mjs tests/music-flow-state-and-surface-contract.test.mjs tests/music-workspace-draft-navigation.test.mjs", "passed": 26, "failed": 0},
+  "syntax": {"integration_js": "PASS", "portal_i18n_js": "PASS", "diff_check": "PASS"},
+  "browser": {"configurations": 18, "route_states": 36, "draft_writes": 3, "receipt_locale_findings": 0, "console_errors": 0, "unexpected_writes": 0, "external_requests": 0, "overflow_failures": 0, "result": "PASS"},
+  "readback": {"feature": "music_song", "fields": 6, "unicode_preserved": true, "zero_volume_preserved": true, "provider_calls": 0, "result": "PASS"},
+  "protected": {"schema_changed": false, "auth_changed": false, "authority_or_file_fields_relaxed": false, "limits_changed": false, "wallet_mutations": 0, "deploy": "NO", "live_pass": "NOT_TESTED"},
+  "status": "ACCEPTED"
+}

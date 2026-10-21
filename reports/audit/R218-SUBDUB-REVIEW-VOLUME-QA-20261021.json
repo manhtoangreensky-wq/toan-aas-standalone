@@ -1,0 +1,48 @@
+{
+  "spec_id": "SD-D2",
+  "date": "2026-10-21",
+  "base_sha": "9bc85a95389beb69c6d973f04b5f1eb14362c7e5",
+  "status": "UI_UX_ACCEPTED_LOCAL",
+  "scope": "SubDub Stage 3 settings summary and local volume controls; no engine, provider, quote, job, wallet or production mutation.",
+  "tested_source_sha256": {
+    "portal.js": "298f1474891de55b9fca577a5035cff7e00af94eee891abe17edc539422ccd63",
+    "portal-i18n.js": "c9a52a4d0449a0baddda14958a897976bc574419132f28a8e9789d1e1164ff22",
+    "portal.css": "62ee44f0b5c21cc17521642ad581abe68a1bc3ee2b4302108c13cc1ba5bd173e",
+    "integration.js": "651862570d96bae916742451dab446593a17d560a8ee1a7b9e0b6141c7b875cc"
+  },
+  "red": {
+    "browser_failures": ["Stage 3 had no settings rows", "dubbing panels had no number input"],
+    "artifact": "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/subdub-review-volume-controls-red-20261021.json"
+  },
+  "tests": {
+    "targeted_node_passed": 44,
+    "targeted_node_failed": 0,
+    "full_node_passed": 880,
+    "full_node_failed": 0,
+    "python_scoped_passed": 49,
+    "python_scoped_failed": 0,
+    "python_baseline_equivalent": ["Windows private-temp permission mode", "legacy voice_style assertion", "pre-existing motion source fingerprint"],
+    "node_syntax": "portal.js exit0",
+    "reviewer": "independent review: Critical 0, Important 0; updater coverage gap closed by production-helper test"
+  },
+  "browser": {
+    "origin": "http://127.0.0.1:7728",
+    "environment": "Edge headless, reduced motion, signed isolated QA account and temporary DB",
+    "configurations": 24,
+    "locales": ["vi", "en", "zh"],
+    "themes": ["light", "dark"],
+    "widths": [375, 390, 768, 1440],
+    "checks": ["mode-specific Stage 3 rows", "escaped custom ISO", "number↔range both directions", "0/100/200 retained", "invalid empty/negative/fraction/bounds/badInput", "local mute acknowledgement and reset", "focus and form node retention", "Voice return", "identity cleanup", "keyboard", "AX", "screenshots", "no overflow"],
+    "cases": 24,
+    "failures": 0,
+    "page_console_errors": 0,
+    "ui_non_get_requests": 0,
+    "external_requests": 0,
+    "result_path": "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/subdub-review-volume-green-20261021.json",
+    "result_sha256": "3f5e156b790910fc87dd789ba42aad881d54397697f788b17ccfd43516bf513b",
+    "runner_sha256": "af4e440e4afe34b291fd0fe2acc264b3ba7d3070f7df682e123969b5449a3b05"
+  },
+  "protected": ["SD-B2", "SD-C2", "Voice/Music navigation", "theme tokens", "backend/auth/schema/engine/provider/wallet/CTA guard"],
+  "safety": {"provider_calls": 0, "wallet_mutations": 0, "production_operations": 0, "deploy": "NO", "live_pass": "NOT_TESTED"},
+  "remaining": ["SD-E2 semantics", "runtime upload/ASR/translation/dubbing/Smart Multi", "quote/job/output/delivery", "motion last"]
+}

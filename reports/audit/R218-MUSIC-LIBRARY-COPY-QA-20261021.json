@@ -1,0 +1,13 @@
+{
+  "spec_id": "MU-E-02",
+  "date": "2026-10-21",
+  "base_sha": "0469183aa15b8f9745b793e057ff9401f626dacf",
+  "status": "LIBRARY_COPY_UI_VERIFIED_DELIVERY_PENDING",
+  "scope": "Music/SFX Library fixed copy only; no behavior, API, backend, playback, download or LIVE claim.",
+  "tested_source_sha256": { "portal.js": "d039370794459f55d2b5dd4e703913da8de6f27eeca65f627e9a6a448b1a99e8", "portal-i18n.js": "aa1a11e9f474ef30f73b13fc992ea7f832aec86a2041117103aa3da36e49f971", "integration.js": "651862570d96bae916742451dab446593a17d560a8ee1a7b9e0b6141c7b875cc" },
+  "copy_comparator": { "changed_values": 78, "changed_keys_prefix": "musicLibrary.", "placeholders_unchanged": true, "portal_code_comparator": "Only Music Library fallback string values changed; no control/action/route logic changed.", "help_characters": { "vi": { "before": 1085, "after": 565 }, "en": { "before": 977, "after": 503 }, "zh": { "before": 329, "after": 171 } } },
+  "tests": { "targeted": 39, "failures": 0, "full_node_before_delivery": 856, "full_node_failures_before_delivery": 0, "syntax": 2, "diff_check": 0 },
+  "browser": { "origin": "http://127.0.0.1:53722", "browser": "Edge headless, temporary context, reduced motion; Browser plugin unavailable", "configurations": 39, "routes": ["/music/library", "/music/sfx-library", "/music-library"], "profile_locales": ["vi", "en", "zh"], "themes": ["light", "dark"], "widths": [390, 768, 1440], "alias_configurations": 3, "route_races": 3, "page_console_errors": 0, "ui_non_get_requests": 0, "external_requests": 0, "result_file": "C:/Users/toann/Documents/Codex/qa/r218-voice-inventory/music-library-copy-20261021.json", "result_sha256": "1fbb679bc41a06179fe5680e633b24a65ca4eb7191777aa7762853a15051e407", "runner_sha256": "6ee9f028db16fe9156b8fb839727f2a7f9280c34cce473668bdd3f45b3ca8b44", "server": "Task-owned QA exec at 53722 stopped after run; temporary DB cleaned." },
+  "remaining": ["Q0-TOAST-STACK", "backend ownership", "playback/download/save/reuse", "motion performance metrics"],
+  "safety": { "provider_calls": 0, "wallet_mutations": 0, "production_operations": 0, "deploy": "NO", "live_pass": "NOT_TESTED" }
+}

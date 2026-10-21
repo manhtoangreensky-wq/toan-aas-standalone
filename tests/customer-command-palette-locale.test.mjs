@@ -20,9 +20,9 @@ function runtime(locale){
   return {window,helpers,state,page,items:()=>helpers.commandPaletteItems(state,page),render:()=>helpers.renderCommandPalette(page,state)};
 }
 const expected={
- vi:{'/music/song':'Bài hát có lời','/content/caption':'Chú thích nội dung','/projects/new':'Tạo dự án','/image-studio/new':'Bảng thiết kế mới'},
- en:{'/music/song':'Song with lyrics','/content/caption':'Caption','/projects/new':'Create a project','/image-studio/new':'New artboard'},
- zh:{'/music/song':'带歌词歌曲','/content/caption':'内容配文','/projects/new':'创建项目','/image-studio/new':'新建画板'}
+ vi:{'/music/song':'Bài hát có lời','/content/caption':'Chú thích nội dung','/projects/new':'Tạo dự án','/image-studio/new':'Bảng thiết kế mới','/voice/stt':'Giọng nói thành văn bản'},
+ en:{'/music/song':'Song with lyrics','/content/caption':'Caption','/projects/new':'Create a project','/image-studio/new':'New artboard','/voice/stt':'Speech to text'},
+ zh:{'/music/song':'带歌词歌曲','/content/caption':'内容配文','/projects/new':'创建项目','/image-studio/new':'新建画板','/voice/stt':'语音转文字'}
 };
 const mixedVi=/\b(?:workflow|workspace|content|caption|hook|studio|library|prompt|voice|image|music|project|lead|brief|review|direction|transcript|audio|media|template|planner|blueprint|readiness|artboard|campaign|autoPost|item)\b/i;
 const allowedZhLatin=new Set(['AI','PDF','OCR','SRT','VTT','XU','CRM','SFX','ASR','MFA','TTS','FFMPEG','TELEGRAM','TOAN','AAS','USD','CNY','VND','VIP','PAYOS','TIKTOK','FACEBOOK','YOUTUBE']);
@@ -32,9 +32,9 @@ for(const locale of ['vi','en','zh']){
   const r=runtime(locale),items=r.items();
   for(const [route,title] of Object.entries(expected[locale]))assert.equal(items.find(item=>item.path===route)?.title,title,route);
  });
- test(`All 151 non-Video quick-switch destinations and sections have clean ${locale} copy`,()=>{
+ test(`All 152 non-Video quick-switch destinations and sections have clean ${locale} copy`,()=>{
   const r=runtime(locale),items=r.items().filter(item=>{const entry=catalog.find(e=>e.route===item.path);return entry?.group!=='video'&&r.helpers.fallbackCatalogGroup(item.path)!=='video'});
-  assert.equal(items.length,151,'Every current non-Video destination must be retained');
+  assert.equal(items.length,152,'Every current non-Video destination must be retained, including Voice STT');
   for(const item of items){const text=item.title+' '+item.section;if(locale==='vi')assert.doesNotMatch(text,mixedVi,item.path);if(locale==='en')assert.doesNotMatch(text,/[\u00c0-\u024f]/u,item.path);if(locale==='zh')assert.deepEqual((text.match(/[a-z][a-z0-9-]*/gi)||[]).filter(word=>!allowedZhLatin.has(word.toUpperCase())),[],item.path);}
  });
 }
