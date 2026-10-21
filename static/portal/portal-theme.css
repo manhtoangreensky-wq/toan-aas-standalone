@@ -271,7 +271,6 @@
   --portal-section-gap: clamp(20px, 2.4vw, 30px);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-
 html { background: var(--portal-app-canvas); }
 body {
   background: var(--portal-app-canvas);
@@ -8760,6 +8759,51 @@ body {
   .portal-page.portal-image-hub-detail .portal-image-hub-detail-board dl {
     grid-template-columns: repeat(auto-fit, minmax(142px, 1fr));
   }
+}
+
+/* Status belongs in the record/report, not in decorative page-level pills. */
+:root :is(.portal-badge, .portal-status-badge) {
+  display: inline !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+
+:root .portal-shell[data-portal-app-kind] :is(.portal-badge, .portal-status-badge) {
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+
+:root :is(.portal-badge, .portal-status-badge)::before {
+  display: none !important;
+  content: none !important;
+}
+
+:root :is(.portal-nav-badge, .portal-admin-pending-badge, .portal-capability-hub-badge, .portal-music-library-read-badge, .portal-smart-install-badge, .portal-status-badge),
+:root .portal-badge:is([data-boundary], [data-status="current"], [data-status="ready"], [data-status="guarded"], [data-status="disabled"], [data-status="read_only"]),
+:root :is(.portal-card-header, .portal-hero, .portal-image-create-workflow-nav) > .portal-badge,
+:root .portal-image-create-workflow-nav .portal-badge,
+:root .portal-image-create-workflow-nav .portal-module-link {
+  display: none !important;
+}
+
+:root :is(.portal-data-table, .portal-table, .portal-job-meta, .portal-summary-value) .portal-badge {
+  display: inline !important;
 }
 
 /* Final light AI Chat Workspace surface */
@@ -23071,49 +23115,4 @@ html:not([data-portal-theme="dark"]) .portal-shell[data-portal-app-kind="admin"]
     grid-column: 2;
     justify-self: start;
   }
-}
-
-/* Status belongs in the record/report, not in decorative page-level pills. */
-:root :is(.portal-badge, .portal-status-badge) {
-  display: inline !important;
-  min-height: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: none !important;
-  box-shadow: none !important;
-  font-size: inherit !important;
-  line-height: inherit !important;
-  letter-spacing: normal !important;
-  text-transform: none !important;
-}
-
-:root .portal-shell[data-portal-app-kind] :is(.portal-badge, .portal-status-badge) {
-  min-height: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: none !important;
-  box-shadow: none !important;
-  font-size: inherit !important;
-  line-height: inherit !important;
-  letter-spacing: normal !important;
-  text-transform: none !important;
-}
-
-:root :is(.portal-badge, .portal-status-badge)::before {
-  display: none !important;
-  content: none !important;
-}
-
-:root :is(.portal-nav-badge, .portal-admin-pending-badge, .portal-capability-hub-badge, .portal-music-library-read-badge, .portal-smart-install-badge, .portal-status-badge),
-:root .portal-badge:is([data-boundary], [data-status="current"], [data-status="ready"], [data-status="guarded"], [data-status="disabled"], [data-status="read_only"]),
-:root :is(.portal-card-header, .portal-hero, .portal-image-create-workflow-nav) > .portal-badge,
-:root .portal-image-create-workflow-nav .portal-badge,
-:root .portal-image-create-workflow-nav .portal-module-link {
-  display: none !important;
-}
-
-:root :is(.portal-data-table, .portal-table, .portal-job-meta, .portal-summary-value) .portal-badge {
-  display: inline !important;
 }
