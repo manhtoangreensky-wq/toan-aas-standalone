@@ -10280,6 +10280,14 @@
         "README.md",
         "TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md",
         "TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md",
+        "_giao-viec/BAO-CAO-01-AD-02-MOBILE-DATA.md",
+        "_giao-viec/CHECKLIST-VOICE-QUOTE-IDLE-R1.md",
+        "_giao-viec/PHIEU-08-VO-QUOTE-IDLE-R1.md",
+        "_giao-viec/PHIEU-08B-VO-QUOTE-IDLE-R2.md",
+        "_giao-viec/PHIEU-09-VOICE-REPORT-PROGRESS-R1.md",
+        "_giao-viec/PHIEU-09B-VOICE-REPORT-PROGRESS-R2.md",
+        "_giao-viec/PHIEU-10-GLOBAL-LABELS-R1.md",
+        "_giao-viec/PHIEU-11-IMAGE-PENDING-STATE-R1.md",
         "admin.html",
         "admin_capability_matrix.json",
         "admin_ops.py",
@@ -10306,17 +10314,9 @@
         "copyfast_document_operations.py",
         "copyfast_finance_planning.py",
         "copyfast_finance_policy.py",
-        "copyfast_governance.py",
-        "copyfast_growth_review.py",
-        "copyfast_image_operations.py",
-        "copyfast_media_factory.py",
-        "copyfast_mfa.py",
-        "copyfast_music_media.py",
-        "copyfast_pages.py",
-        "copyfast_partner_readiness.py",
-        "copyfast_pricing_policy.py"
+        "copyfast_governance.py"
       ],
-      "occurrences": 1115,
+      "occurrences": 1123,
       "provider": "PayOS"
     },
     {
@@ -10390,6 +10390,19 @@
     },
     {
       "files": [
+        "_giao-viec/BAO-CAO-01-AD-02-MOBILE-DATA.md",
+        "_giao-viec/BAO-CAO-05B-AD-01-PRICING-NAV-LOCALE.md",
+        "_giao-viec/CHECKLIST-VOICE-QUOTE-IDLE-R1.md",
+        "_giao-viec/DANH-GIA-02-AD-02-STATE-LOCALE.md",
+        "_giao-viec/DANH-GIA-10-GLOBAL-LABELS-R1.md",
+        "_giao-viec/PHIEU-01-AD-02-MOBILE-DATA.md",
+        "_giao-viec/PHIEU-08-VO-QUOTE-IDLE-R1.md",
+        "_giao-viec/PHIEU-08B-VO-QUOTE-IDLE-R2.md",
+        "_giao-viec/PHIEU-09B-VOICE-REPORT-PROGRESS-R2.md",
+        "_giao-viec/PHIEU-10-GLOBAL-LABELS-R1.md",
+        "_giao-viec/PHIEU-10A-GLOBAL-LABELS-STDOUT.md",
+        "_giao-viec/PHIEU-11-IMAGE-PENDING-STATE-R1.md",
+        "_giao-viec/RECEPTION-01-AD-02-MOBILE-DATA.md",
         "ai_assistant.py",
         "coach.html",
         "coach.py",
@@ -10397,11 +10410,13 @@
         "copyfast_db.py",
         "copyfast_provider_policy.py",
         "reports/audit/R218-CHECKPOINT-20261021.md",
+        "reports/audit/R218-GLOBAL-STATUS-LABELS-QA-20261021.json",
+        "reports/audit/R218-IMAGE-WORKSPACE-CONTINUITY-QA-20261021.json",
         "studio/script.js",
         "video.html",
         "video.py"
       ],
-      "occurrences": 16,
+      "occurrences": 32,
       "provider": "Gemini"
     },
     {
@@ -18318,39 +18333,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 321,
-  "source_files_scanned": 321,
-  "source_fingerprint_sha256": "ee9553cd131e74c5d38de35cf9917ec08ba9de766d43385ec4c24e829a2ed67c",
+  "source_files_discovered": 362,
+  "source_files_scanned": 362,
+  "source_fingerprint_sha256": "e39c3321c9e8d0d7e9d8fb5ece410e3c5e3a7f9a079a99c5ac7037f784319415",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 35079,
+      "line": 35186,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35395,
+      "line": 35502,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34743,
+      "line": 34850,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34992,
+      "line": 35099,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34364,
+      "line": 34471,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34656,
+      "line": 34763,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -18565,7 +18580,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36512,
+      "line": 36619,
       "path": "/features"
     },
     {
