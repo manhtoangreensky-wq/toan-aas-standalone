@@ -291,4 +291,7 @@ test("Free Tools YouTube labels do not promise unmeasured thumbnail resolutions"
   const html = render();
   assert.doesNotMatch(html, /\b1080p\b|\b720p\b|\b360p\b|Full HD/);
   assert.doesNotMatch(rendererSource, /\b1080p\b|\b720p\b|\b360p\b|Full HD/);
+  const unmeasuredQuality = /độ phân giải cao|độ phân giải tối đa|theo độ phân giải|high-resolution|maximum-resolution|by resolution|按分辨率|最高分辨率|大尺寸|中等尺寸/i;
+  assert.doesNotMatch(html, unmeasuredQuality);
+  assert.doesNotMatch(i18nSource, unmeasuredQuality);
 });

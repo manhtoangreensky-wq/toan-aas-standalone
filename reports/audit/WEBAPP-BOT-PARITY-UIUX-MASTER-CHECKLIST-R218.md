@@ -716,9 +716,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] Q0-CUSTOMER-CONTENT: tiếp tục rà dynamicstates và màn còn lại theo spec
   `2026-10-22-r218-customer-content-action-truth.md`; mọi ô/nhãn phải có mục đích,
   thao tác/output phải kiểm được; không bỏ control Bot-parity cần thiết.
-- [ ] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p khi chưa đọc kích thước ảnh;
-  phản hồi extractor chỉ nói đã lấy liên kết/mã nhúng, không nói đã đọc metadata
-  video. Thi công copy riêng sau deliveryUT-CSP, giữ URL/parser/controls.
+- [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
+  lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
+  kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.
+  Test Free Tools7/7 và full Node905/905; không gọi provider hay tải video.
 
 - [x] Q0-ZH-LOCALE-PICKER (local UI): root cause source thiếu option zh trong Admin header.
   RED renderer zh/select vi → thêm đúng một option → browser12/12 selected/renderer khớp,

@@ -13604,7 +13604,7 @@
           <div>
             <span class="portal-section-kicker">${c("youtube.kicker", "Tài nguyên và siêu dữ liệu video")}</span>
             <h2 class="portal-card-title">${c("youtube.title", "Trích xuất ảnh thu nhỏ và mã nhúng YouTube")}</h2>
-            <p class="portal-card-subtitle">${c("youtube.body", "Lấy liên kết ảnh thu nhỏ độ phân giải cao, mã video và mã nhúng Iframe thích ứng.")}</p>
+            <p class="portal-card-subtitle">${c("youtube.body", "Lấy liên kết ảnh thu nhỏ, mã video và mã nhúng Iframe từ liên kết YouTube. Ảnh hiển thị tùy tệp thực tế.")}</p>
           </div>
           ${badge("ready")}
         </div>
@@ -13622,11 +13622,11 @@
             </div>
             <a id="free-tools-yt-link" class="portal-button portal-button--quiet" href="https://www.youtube.com" target="_blank" rel="noopener noreferrer">🔗 ${c("youtube.action.openYoutube", "Mở trên YouTube")} ↗</a>
           </div>
-          <h3 style="font-size: 14px; margin-bottom: 12px;">${c("youtube.result.heading", "Ảnh thu nhỏ theo độ phân giải")}:</h3>
+          <h3 style="font-size: 14px; margin-bottom: 12px;">${c("youtube.result.heading", "Các liên kết ảnh thu nhỏ")}:</h3>
           <div class="portal-yt-thumbs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
-              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.max", "Ảnh thu nhỏ lớn nhất có sẵn")}</div>
-              <img id="free-tools-yt-thumb-max" alt="${c("youtube.imgAltMax", "Ảnh thu nhỏ độ phân giải tối đa")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.max", "Ảnh thu nhỏ ưu tiên")}</div>
+              <img id="free-tools-yt-thumb-max" alt="${c("youtube.imgAltMax", "Ảnh thu nhỏ ưu tiên")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
               <p id="free-tools-yt-thumb-max-state" role="status" hidden style="margin: 8px 0 0; font-size: 12px; color: var(--portal-muted); text-align: center;"></p>
               <div style="margin-top: 10px; display:flex; gap: 6px;">
                 <a id="free-tools-yt-thumb-max-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">${c("youtube.action.openImage", "Mở ảnh")}</a>
@@ -13634,8 +13634,8 @@
               </div>
             </div>
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
-              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.high", "Ảnh thu nhỏ cỡ lớn")}</div>
-              <img id="free-tools-yt-thumb-hq" alt="${c("youtube.imgAltHigh", "Ảnh thu nhỏ chất lượng cao")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.high", "Ảnh thu nhỏ dự phòng 1")}</div>
+              <img id="free-tools-yt-thumb-hq" alt="${c("youtube.imgAltHigh", "Ảnh thu nhỏ dự phòng 1")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
               <p id="free-tools-yt-thumb-hq-state" role="status" hidden style="margin: 8px 0 0; font-size: 12px; color: var(--portal-muted); text-align: center;"></p>
               <div style="margin-top: 10px; display:flex; gap: 6px;">
                 <a id="free-tools-yt-thumb-hq-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">${c("youtube.action.openImage", "Mở ảnh")}</a>
@@ -13643,8 +13643,8 @@
               </div>
             </div>
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
-              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.medium", "Ảnh thu nhỏ cỡ vừa")}</div>
-              <img id="free-tools-yt-thumb-mq" alt="${c("youtube.imgAltMedium", "Ảnh thu nhỏ chất lượng tiêu chuẩn")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.medium", "Ảnh thu nhỏ dự phòng 2")}</div>
+              <img id="free-tools-yt-thumb-mq" alt="${c("youtube.imgAltMedium", "Ảnh thu nhỏ dự phòng 2")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
               <p id="free-tools-yt-thumb-mq-state" role="status" hidden style="margin: 8px 0 0; font-size: 12px; color: var(--portal-muted); text-align: center;"></p>
               <div style="margin-top: 10px; display:flex; gap: 6px;">
                 <a id="free-tools-yt-thumb-mq-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">${c("youtube.action.openImage", "Mở ảnh")}</a>
