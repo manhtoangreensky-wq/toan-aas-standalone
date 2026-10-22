@@ -167,6 +167,12 @@ thích capability theo server thay cho cụm ô OCR/provider/payment/media lặp
 Không đổi API, engine, provider, payment hay delivery. Test riêng `1/1`, toàn
 bộ Node `926/926`.
 
+## Cập nhật Music/SFX boundary — 23/10/2026
+
+Ba workspace authoring Music/SFX chỉ còn một lời giải thích capability thay cho
+các ô provider/player/output/payment lặp; preset, brief, cue và form giữ nguyên.
+Không mở generation/player. Test riêng `1/1`, toàn bộ Node `927/927`.
+
 ## Cập nhật Guard selector accuracy — 22/10/2026
 
 Đã sửa selector route-scoped cho hai card DOM lồng và thay regex kiểm tra hời

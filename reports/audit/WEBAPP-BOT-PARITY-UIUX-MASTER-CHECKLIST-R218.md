@@ -814,6 +814,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   OCR/provider/payment/media. Styling hooks và workflow contracts vẫn giữ.
   Test `tests/workspace-boundary-clarity.test.mjs` `1/1`; không đổi API,
   engine, provider, payment hay delivery.
+- [x] Q0-MUSIC-SFX-BOUNDARY-CLARITY: Music Prompt Composer, Music Directions và
+  SFX Cue Sheet boundary dùng một lời giải thích capability thay cho 6–7 ô
+  provider/player/output/payment lặp. Preset, brief, cue và form vẫn giữ.
+  Test `tests/music-boundary-clarity.test.mjs` `1/1`; không mở generation/player.
 - [x] Q0-GUARD-SELECTOR-ACCURACY: sửa selector route-scoped cho Project Package
   và Video finalization là DOM con của `portal-page`; test clarity đã đổi từ
   regex không ràng buộc sang kiểm tra nguyên block selector và đủ class. Test

@@ -157,6 +157,13 @@ OCR/provider/payment/media bằng một lời giải thích capability theo serv
 class responsive và workflow contracts giữ nguyên. Test riêng đạt `1/1`; toàn
 bộ Node WebApp sau thay đổi đạt `926/926`.
 
+## Music/SFX boundary clarity — 23/10/2026
+
+Music Prompt Composer, Music Directions và SFX Cue Sheet thay các cụm ô lặp về
+provider/player/output/payment bằng một lời giải thích capability theo server.
+Preset, brief, cue và form không đổi. Test riêng đạt `1/1`; toàn bộ Node
+WebApp sau thay đổi đạt `927/927`.
+
 ## Guard selector accuracy — 22/10/2026
 
 Audit độc lập phát hiện selector cũ không khớp DOM lồng của Project Package và
