@@ -12,6 +12,16 @@ Voiceinputtrống, không overflow/page/console/UIwrite/external. Dữ liệu qu
 tổng hợp của fileQA cũ không dùng làm bản bàn giao hoặc chứng minh tạo giọng.
 Đây chưa phải nghiệm thu generation/provider/output của tất cả sản phẩm.
 
+## Music Library guard clarity — 22/10/2026
+
+Khi thư viện nhạc hoặc SFX chưa được máy chủ cấp quyền, customer UI chỉ còn một
+thông báo nguyên nhân, nút kiểm tra lại quyền và đường dẫn sang Không gian âm
+thanh. Ba chip kỹ thuật lặp lại (thông tin riêng tư, nghe thử, tải tệp) đã được
+bỏ khỏi thẻ chặn; capability, API, dữ liệu và boundary delivery không đổi.
+Test riêng đạt `1/1`; focused Music/library đạt `57/57`; toàn bộ Node WebApp
+đạt `908/908`; syntax và `git diff --check` đều đạt. Đây là sửa trình bày tại
+source, chưa phải bằng chứng nghe/tải/giao tệp hoặc LIVE.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

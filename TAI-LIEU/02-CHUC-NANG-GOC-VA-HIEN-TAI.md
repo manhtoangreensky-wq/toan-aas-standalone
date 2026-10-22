@@ -46,6 +46,14 @@ MU-E-02 đã rút câu chữ hiển thị nhưng không mở thêm khả năng n
 dùng cho video hay quyền backend. Bằng chứng copy/browser nằm ở
 `reports/audit/R218-MUSIC-LIBRARY-COPY-QA-20261021.json`; Q0-TOAST-STACK vẫn mở.
 
+## Cập nhật Music/SFX guard — 22/10/2026
+
+Thẻ chặn của `/music/library` và `/music/sfx-library` không còn ba chip kỹ
+thuật lặp lại. Người dùng chỉ thấy lý do cần đăng nhập/cấp quyền, thao tác kiểm
+tra lại và liên kết sang workspace; không có thay đổi về danh sách, capability,
+nghe thử, tải tệp hoặc bàn giao. Test riêng `1/1`, focused Music/library
+`57/57`, toàn bộ Node `908/908`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;
