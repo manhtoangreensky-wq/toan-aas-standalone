@@ -122,6 +122,13 @@ Các ô `0` kỹ thuật về execution, provider call và customer publish đã
 không phải lựa chọn nghiệp vụ của khách. Catalog, route và workflow boundary
 không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `921/921`.
 
+## Free Prompt Gallery zero-metric clarity — 22/10/2026
+
+Free Prompt Gallery chỉ giữ số nhóm mẫu và ngành; ô `0 — Thực thi / thanh
+toán` đã bỏ vì không phải lựa chọn nghiệp vụ của khách. Catalog, filter, xem
+chi tiết, sao chép và lưu không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp
+sau thay đổi đạt `922/922`.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

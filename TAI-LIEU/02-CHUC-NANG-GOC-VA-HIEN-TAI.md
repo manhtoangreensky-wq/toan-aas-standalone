@@ -136,6 +136,12 @@ Guide Center và Video Factory đã bỏ các ô `0` kỹ thuật về execution
 publish, giữ số chủ đề và số bước có ý nghĩa. Không đổi catalog, route hay
 workflow boundary. Test riêng `1/1`, toàn bộ Node `921/921`.
 
+## Cập nhật Free Prompt Gallery zero-metric — 22/10/2026
+
+Gallery giữ số nhóm mẫu/ngành và bỏ ô `0` về thực thi/thanh toán. Không đổi
+catalog, filter, xem chi tiết, sao chép, lưu hoặc boundary. Test riêng `1/1`,
+toàn bộ Node `922/922`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;

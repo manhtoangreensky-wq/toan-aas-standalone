@@ -789,6 +789,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   giữ số liệu có ý nghĩa (số chủ đề/bước), bỏ các ô `0` kỹ thuật về execution,
   provider và publish. Test `tests/guide-video-zero-metric-clarity.test.mjs`
   `1/1`; không đổi catalog, route hay workflow boundary.
+- [x] Q0-FREE-PROMPT-ZERO-METRIC-CLARITY: Free Prompt Gallery chỉ giữ số nhóm
+  mẫu và ngành; bỏ ô `0 — Thực thi / thanh toán` không phải lựa chọn nghiệp vụ.
+  Test `tests/free-prompt-zero-metric-clarity.test.mjs` `1/1`; không đổi
+  catalog/filter/save/boundary.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.
