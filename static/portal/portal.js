@@ -27095,7 +27095,7 @@
         <div class="portal-subdub-voice-lane-grid">
           ${lanes.map(([value, label]) => `<label class="portal-subdub-voice-lane${value === subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") ? " is-selected" : ""}" data-status="ready" data-subdub-voice-lane="${safeText(value)}"${laneCallbacks[value] ? ` data-subdub-callback="${safeText(laneCallbacks[value])}"` : ""}>
             <input type="radio" name="subdub_voice_lane_${safeText(suffix)}" data-subdub-voice-lane-input value="${safeText(value)}" ${value === subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") ? "checked" : ""}>
-            <span class="portal-subdub-voice-lane__body"><strong>${safeText(label)}</strong><small>${safeText(copy.voiceLaneGuarded)}</small></span>
+            <span class="portal-subdub-voice-lane__body"><strong>${safeText(label)}</strong></span>
           </label>`).join("")}
         </div>
         <p class="portal-subdub-voice-lane-note" id="subdub-voice-lane-note-${safeText(suffix)}">${safeText(copy.voiceLaneGuarded)}</p>

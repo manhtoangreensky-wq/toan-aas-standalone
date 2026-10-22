@@ -333,6 +333,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [!] Editor nhạc Bot hiện guard; UI không giả có editor thực thi.
 - [ ] Duration/half/full chỉ options reachable, không chép menu legacy làm authority.
 - [ ] Renderer/interaction + browser/AX/screenshots đạt.
+- [x] SD-VOICE-LANE-READABILITY local UI: giữ đủ 7 lane mặc định nam/nữ, saved,
+  custom, Auto2, Auto Multi3–8 và Smart Multi; bỏ câu guard lặp trên từng thẻ,
+  giữ một ghi chú chung, callback/Voice Library/draft không đổi. SubDub focused
+  `48/48`; browser riêng cho chuỗi voice-lane vẫn chờ runtime QA.
 
 ## P3 — SubDub R218-04 (SD-01..21)
 

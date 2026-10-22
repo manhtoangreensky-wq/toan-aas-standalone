@@ -325,6 +325,12 @@ test("SubDub exposes explicit default, saved, Auto 2, Auto Multi 3–8 and Smart
   }
 });
 
+test("SubDub voice lanes keep one shared guard note instead of repeating it on every card", () => {
+  const html = renderSubDub("/subdub?mode=subtitle_plus_dubbing");
+  assert.doesNotMatch(html, /portal-subdub-voice-lane__body[^>]*>\s*<strong>[^<]+<\/strong>\s*<small>/);
+  assert.match(html, /portal-subdub-voice-lane-note/);
+});
+
 test("SubDub keeps source subtitle state and the full localized language catalog explicit", () => {
   const viHtml = renderSubDub("/subdub?lang=vi&mode=subtitle_plus_dubbing", "vi");
   assert.match(viHtml, /name="subdub-subtitle-source-state"/);
