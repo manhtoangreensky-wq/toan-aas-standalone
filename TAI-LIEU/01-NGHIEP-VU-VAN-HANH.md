@@ -56,6 +56,14 @@ URL, connection guard và ranh giới dữ liệu giữ nguyên. Test riêng đ�
 toàn bộ Node WebApp sau thay đổi đạt `912/912`. Không gửi lệnh, gọi Bot,
 provider hoặc thay đổi tài chính.
 
+## Video Factory và Guide quyền sử dụng — 22/10/2026
+
+Guard của Video Factory Workflow và Guide quyền sử dụng đã bỏ các chip kỹ
+thuật lặp về phiên, execution/publish và license. Nguyên nhân cần phiên Web vẫn
+hiển thị trong nội dung chính; route, quyền và boundary không đổi. Test riêng
+đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `913/913`. Không mở video
+execution, provider hoặc xác minh license thay cho máy chủ.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

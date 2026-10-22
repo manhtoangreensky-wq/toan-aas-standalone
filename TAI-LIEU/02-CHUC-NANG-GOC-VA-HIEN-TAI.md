@@ -80,6 +80,12 @@ Intro handoff Bot/Analytics đã bỏ chip authority, report/charge và identity
 vẫn giữ command, URL, connection guard và ranh giới dữ liệu. Không đổi Bot
 authority hoặc callback. Test riêng `1/1`, toàn bộ Node `912/912`.
 
+## Cập nhật Video Factory và Guide quyền sử dụng — 22/10/2026
+
+Hai guard customer này chỉ còn nguyên nhân cần phiên Web; chip phiên,
+execution/publish/license lặp đã bỏ. Không đổi route, quyền, workflow video,
+hay hợp đồng quyền sử dụng. Test riêng `1/1`, toàn bộ Node `913/913`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;

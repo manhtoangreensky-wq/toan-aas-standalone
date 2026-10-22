@@ -747,6 +747,11 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   report/charge/identity lặp lại khỏi customer UI. Test
   `tests/bot-companion-intro-clarity.test.mjs` `1/1`; không đổi command,
   connection, Bot authority hay callback.
+- [x] Q0-VIDEO-GUIDE-GUARD-CLARITY: guard của Video Factory Workflow và Guide
+  quyền sử dụng chỉ giữ nguyên nhân cần hành động; bỏ chip phiên/execution/
+  publish/license lặp lại khỏi customer UI. Test
+  `tests/video-guide-guard-clarity.test.mjs` `1/1`; không đổi route, quyền,
+  workflow video hay hợp đồng quyền sử dụng.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.
