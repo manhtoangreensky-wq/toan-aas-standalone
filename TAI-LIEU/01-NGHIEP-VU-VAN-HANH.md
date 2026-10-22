@@ -100,6 +100,14 @@ Campaign detail và hàng tự rà soát chỉ giữ giải thích nghiệp vụ
 CSRF, publish và audit lặp đã bỏ. Mốc lịch thật trong Calendar không thay đổi.
 Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `918/918`.
 
+## Voice Studio lane clarity — 22/10/2026
+
+Voice Studio lane rail giữ tiêu đề, mô tả và nút mở khu vực; nhãn trạng thái
+“đang được bảo vệ” lặp trên cả ba lane đã bỏ. Route, capability, Voice Vault và
+handoff không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt
+`919/919`. Đây chỉ là presentation, không phải preview, rename, delete, reuse
+hay engine voice runtime.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

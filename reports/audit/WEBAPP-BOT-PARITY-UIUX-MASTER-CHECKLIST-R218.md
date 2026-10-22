@@ -776,6 +776,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   Mốc lịch thật vẫn giữ ở Calendar. Test
   `tests/campaign-boundary-clarity.test.mjs` `1/1`; không đổi state, lịch,
   publish hay API.
+- [x] Q0-VOICE-LANE-CLARITY: Voice Studio lane rail giữ tiêu đề, mô tả và một
+  action rõ ràng; bỏ nhãn “đang được bảo vệ” lặp trên cả ba lane. Test
+  `tests/voice-lane-clarity.test.mjs` `1/1`; không đổi route, capability,
+  Voice Vault hay handoff.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.

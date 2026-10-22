@@ -118,6 +118,12 @@ Campaign detail và hàng tự rà soát đã bỏ chip mã/CSRF/publish/audit l
 nguyên giải thích nghiệp vụ và mốc lịch thật. Không đổi state, lịch, publish
 hay API. Test riêng `1/1`, toàn bộ Node `918/918`.
 
+## Cập nhật Voice Studio lane — 22/10/2026
+
+Lane rail Voice Studio đã bỏ nhãn bảo vệ lặp, giữ nguyên title/description/
+action và toàn bộ route/capability handoff. Không mở thêm Voice Vault runtime,
+preview, rename, delete hoặc reuse. Test riêng `1/1`, toàn bộ Node `919/919`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;
