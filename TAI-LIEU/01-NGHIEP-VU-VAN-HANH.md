@@ -48,6 +48,14 @@ nút thử lại vẫn giữ nguyên; không thay đổi lịch, publish, quyề
 boundary AutoPost. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt
 `911/911`. Không gọi kênh ngoài, provider, ví hoặc PayOS.
 
+## Bot companion intro clarity — 22/10/2026
+
+Các trang handoff Bot và Analytics không còn ba chip kỹ thuật lặp về authority,
+report/charge và identity. Intro chỉ giữ thông điệp tiếp tục trong Bot; command,
+URL, connection guard và ranh giới dữ liệu giữ nguyên. Test riêng đạt `1/1`;
+toàn bộ Node WebApp sau thay đổi đạt `912/912`. Không gửi lệnh, gọi Bot,
+provider hoặc thay đổi tài chính.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

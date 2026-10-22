@@ -742,6 +742,11 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   bộ nhớ và kết nối thay thế khỏi customer UI. Test
   `tests/campaign-guard-clarity.test.mjs` `1/1`; không đổi lịch, publish,
   capability, API, dữ liệu hay boundary AutoPost.
+- [x] Q0-BOT-COMPANION-INTRO-CLARITY: intro của các trang chuyển tiếp Bot và
+  Analytics chỉ giữ thông điệp tiếp tục cùng nút/handoff; bỏ chip authority,
+  report/charge/identity lặp lại khỏi customer UI. Test
+  `tests/bot-companion-intro-clarity.test.mjs` `1/1`; không đổi command,
+  connection, Bot authority hay callback.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.
