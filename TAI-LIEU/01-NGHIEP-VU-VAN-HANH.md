@@ -31,6 +31,15 @@ máy chủ cho phép, nút thử lại vẫn giữ nguyên. Test riêng đạt `
 Node WebApp sau thay đổi đạt `909/909`. Đây chỉ là lớp trình bày, không mở thêm
 quyền tạo, engine, AI, thanh toán hoặc giao tệp.
 
+## Project Center guard clarity — 22/10/2026
+
+Các trạng thái chưa có quyền/đang tải/tải lỗi của Project Center đã bỏ chip
+phiên, bộ nhớ đệm và cầu nối lặp lại. Màn hình vẫn giữ nguyên nhân, trạng thái
+đang chờ và nút thử lại khi capability được máy chủ cấp; không thay đổi
+authoring, ownership hoặc dữ liệu dự án. Test riêng đạt `1/1`; toàn bộ Node
+WebApp sau thay đổi đạt `910/910`. Chưa có thay đổi engine, provider, ví hay
+giao tệp.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

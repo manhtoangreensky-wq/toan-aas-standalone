@@ -61,6 +61,12 @@ thuật lặp; vẫn giữ thông điệp nguyên nhân và nút thử lại khi
 đã cấp. Không thay đổi authoring, ownership, API hay dữ liệu. Test riêng `1/1`
 và toàn bộ Node `909/909`.
 
+## Cập nhật Project Center guard — 22/10/2026
+
+Project Center giữ lại thông điệp và nút thử lại cần cho người dùng, bỏ các
+chip kỹ thuật lặp trong ba trạng thái chưa xác minh. Không đổi API, quyền sở
+hữu, danh sách dự án hay authoring. Test riêng `1/1`, toàn bộ Node `910/910`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;
