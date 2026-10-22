@@ -167,10 +167,10 @@ Focused `3/3`, full Node `926/926`. Không đổi renderer/backend ngoài CSS v�
 ## Migration evidence refresh — 22/10/2026
 
 Preflight và Web inventory đã được refresh sau các wave UI. Auditor quét `330`
-source files, fingerprint hiện tại là
-`3cc9b2ed53dcf4e644e3040ce62f3ad44d09ca18d44b0d23116230019ed3f15f`; verifier
-Web evidence trả `ok: true`. Đây là evidence source/migration, không phải CI,
-deploy hoặc LIVE.
+source files; fingerprint hiện tại được ghi trực tiếp trong
+`reports/migration/preflight.json` và `web_inventory.json`, còn verifier Web
+evidence trả `ok: true` cho exact HEAD tại lần refresh gần nhất. Đây là
+evidence source/migration, không phải CI, deploy hoặc LIVE.
 
 ## Billing presentation repair — 22/10/2026
 

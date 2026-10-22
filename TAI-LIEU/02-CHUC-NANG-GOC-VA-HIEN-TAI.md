@@ -175,9 +175,10 @@ hợt bằng kiểm tra block selector đầy đủ. Focused clarity `3/3`, full
 
 ## Cập nhật Migration evidence — 22/10/2026
 
-Web inventory/preflight đã cập nhật theo source hiện tại: `330` files, fingerprint
-`3cc9b2ed53dcf4e644e3040ce62f3ad44d09ca18d44b0d23116230019ed3f15f`, verifier
-trả `ok: true`. Không suy diễn từ đây sang deploy hoặc LIVE.
+Web inventory/preflight đã cập nhật theo source hiện tại: `330` files; fingerprint
+được đọc từ hai file generated trong `reports/migration`, verifier trả `ok: true`
+cho exact HEAD tại lần refresh gần nhất. Không suy diễn từ đây sang deploy hoặc
+LIVE.
 
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
