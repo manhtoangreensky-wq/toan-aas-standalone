@@ -11399,11 +11399,8 @@
   function renderStatusCard(page, context) {
     const status = stateFor(page, context);
     const message = statusMessage(page, status, context);
-    const bridgeText = context.bridge.available === true ? "Bot integration đã khai báo" : "Bot integration là tùy chọn";
-    const sessionText = context.session.authenticated === true ? "Signed session hiện diện" : "Chưa có signed session";
     return `<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${safeText(status)}">
-      <span class="portal-state-icon" aria-hidden="true">${portalStatusIcon(status)}</span><div><h2>${safeText(message.title)}</h2><p>${safeText(message.text)}</p>
-      <div class="portal-state-meta"><span>${safeText(bridgeText)}</span><span>${safeText(sessionText)}</span><span>Không có provider/payment call</span></div></div>
+      <span class="portal-state-icon" aria-hidden="true">${portalStatusIcon(status)}</span><div><h2>${safeText(message.title)}</h2><p>${safeText(message.text)}</p></div>
     </div></section>`;
   }
 

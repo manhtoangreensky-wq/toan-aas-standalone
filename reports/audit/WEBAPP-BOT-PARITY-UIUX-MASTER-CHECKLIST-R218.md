@@ -720,6 +720,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] Q0-CUSTOMER-CONTENT: tiếp tục rà dynamicstates và màn còn lại theo spec
   `2026-10-22-r218-customer-content-action-truth.md`; mọi ô/nhãn phải có mục đích,
   thao tác/output phải kiểm được; không bỏ control Bot-parity cần thiết.
+- [x] Q0-CUSTOMER-CONTENT-STATUS-CARD: card trạng thái khách không còn lặp
+  bridge/session/provider-payment metadata đã có trong Summary; giữ icon, tiêu đề,
+  lý do trạng thái và CSS/accessibility. Test `1/1`; SubDub hồi quy `48/48`.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.
