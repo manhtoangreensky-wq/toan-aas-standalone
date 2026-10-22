@@ -130,6 +130,12 @@ Smart Multi chỉ hiển thị mô tả và hook khi chưa có speaker payload; 
 người nói rỗng được ẩn, không đoán giọng hoặc kết quả. Không đổi upload, engine,
 quote hay delivery. Test riêng `1/1`, toàn bộ Node `920/920`.
 
+## Cập nhật Guide/Video zero-metric — 22/10/2026
+
+Guide Center và Video Factory đã bỏ các ô `0` kỹ thuật về execution/provider/
+publish, giữ số chủ đề và số bước có ý nghĩa. Không đổi catalog, route hay
+workflow boundary. Test riêng `1/1`, toàn bộ Node `921/921`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;

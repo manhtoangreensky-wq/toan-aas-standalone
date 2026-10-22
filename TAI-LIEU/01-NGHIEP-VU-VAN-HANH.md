@@ -115,6 +115,13 @@ hiển thị khung bản đồ người nói rỗng khi server chưa trả speak
 không đoán giọng hoặc dựng kết quả giả; upload, engine, quote và delivery vẫn
 chưa mở. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `920/920`.
 
+## Guide/Video zero-metric clarity — 22/10/2026
+
+Guide Center chỉ giữ số chủ đề; Video Factory chỉ giữ số bước có chủ đích.
+Các ô `0` kỹ thuật về execution, provider call và customer publish đã bỏ vì
+không phải lựa chọn nghiệp vụ của khách. Catalog, route và workflow boundary
+không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `921/921`.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

@@ -785,6 +785,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   speaker payload; không đoán giọng hoặc kết quả. Test
   `tests/subdub-speaker-map-clarity.test.mjs` `1/1`; engine/upload/quote vẫn
   guarded.
+- [x] Q0-GUIDE-VIDEO-ZERO-METRIC-CLARITY: Guide Center và Video Factory chỉ
+  giữ số liệu có ý nghĩa (số chủ đề/bước), bỏ các ô `0` kỹ thuật về execution,
+  provider và publish. Test `tests/guide-video-zero-metric-clarity.test.mjs`
+  `1/1`; không đổi catalog, route hay workflow boundary.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.
