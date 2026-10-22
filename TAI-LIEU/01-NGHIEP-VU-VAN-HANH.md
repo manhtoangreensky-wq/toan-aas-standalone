@@ -150,6 +150,13 @@ giải thích capability theo máy chủ; class responsive và route không đ�
 bằng key `boundary.summary` cho VI/EN/ZH. Test riêng đạt `1/1`; toàn bộ Node
 WebApp sau thay đổi đạt `925/925`.
 
+## Workspace boundary clarity — 22/10/2026
+
+Document Workspace, Analytics Workspace và Subtitle Studio thay các cụm ô lặp
+OCR/provider/payment/media bằng một lời giải thích capability theo server; các
+class responsive và workflow contracts giữ nguyên. Test riêng đạt `1/1`; toàn
+bộ Node WebApp sau thay đổi đạt `926/926`.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

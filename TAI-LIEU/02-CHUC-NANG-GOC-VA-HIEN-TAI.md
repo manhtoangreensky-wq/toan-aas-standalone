@@ -160,6 +160,13 @@ Image Studio chỉ còn một lời giải thích capability thay cho bốn ô p
 preview/job/payment lặp; key mới đã cân bằng VI/EN/ZH. Không đổi route, image
 engine, Asset Vault, API hay output. Test riêng `1/1`, toàn bộ Node `925/925`.
 
+## Cập nhật Workspace boundary — 22/10/2026
+
+Document Workspace, Analytics Workspace và Subtitle Studio chỉ còn một lời giải
+thích capability theo server thay cho cụm ô OCR/provider/payment/media lặp.
+Không đổi API, engine, provider, payment hay delivery. Test riêng `1/1`, toàn
+bộ Node `926/926`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;
