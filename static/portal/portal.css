@@ -720,13 +720,15 @@ a { color: inherit; text-decoration: none; }
 /* Remaining customer-only guard surfaces use the same compact explanation.
    Keep real metrics elsewhere intact; these selectors cover only the cards
    whose chips repeat implementation boundaries already stated in the body. */
-.portal-page:is(
+.portal-page :is(
   .portal-project-package-panel,
+  .portal-finalization-intro
+) .portal-state-meta,
+.portal-page:is(
   .portal-asset-vault,
   .portal-inbox,
   .portal-notification-automation,
-  .portal-operations,
-  .portal-finalization-intro
+  .portal-operations
 ) .portal-state-meta { display: none; }
 
 /* Smart Multi has no speaker payload before a real server analysis. Do not

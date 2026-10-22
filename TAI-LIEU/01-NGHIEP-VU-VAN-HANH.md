@@ -157,6 +157,13 @@ OCR/provider/payment/media bằng một lời giải thích capability theo serv
 class responsive và workflow contracts giữ nguyên. Test riêng đạt `1/1`; toàn
 bộ Node WebApp sau thay đổi đạt `926/926`.
 
+## Guard selector accuracy — 22/10/2026
+
+Audit độc lập phát hiện selector cũ không khớp DOM lồng của Project Package và
+Video finalization, trong khi regex test vẫn cho kết quả xanh. Selector đã sửa
+đúng quan hệ DOM; ba test guard clarity được siết để kiểm block selector thật.
+Focused `3/3`, full Node `926/926`. Không đổi renderer/backend ngoài CSS và test.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

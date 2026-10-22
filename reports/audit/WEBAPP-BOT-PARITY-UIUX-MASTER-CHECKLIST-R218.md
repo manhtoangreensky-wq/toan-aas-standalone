@@ -810,6 +810,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   OCR/provider/payment/media. Styling hooks và workflow contracts vẫn giữ.
   Test `tests/workspace-boundary-clarity.test.mjs` `1/1`; không đổi API,
   engine, provider, payment hay delivery.
+- [x] Q0-GUARD-SELECTOR-ACCURACY: sửa selector route-scoped cho Project Package
+  và Video finalization là DOM con của `portal-page`; test clarity đã đổi từ
+  regex không ràng buộc sang kiểm tra nguyên block selector và đủ class. Test
+  guard clarity `3/3`, full Node `926/926`; không đổi renderer/backend.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.

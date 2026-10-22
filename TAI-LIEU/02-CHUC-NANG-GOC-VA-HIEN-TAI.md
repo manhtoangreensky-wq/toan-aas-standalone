@@ -167,6 +167,12 @@ thích capability theo server thay cho cụm ô OCR/provider/payment/media lặp
 Không đổi API, engine, provider, payment hay delivery. Test riêng `1/1`, toàn
 bộ Node `926/926`.
 
+## Cập nhật Guard selector accuracy — 22/10/2026
+
+Đã sửa selector route-scoped cho hai card DOM lồng và thay regex kiểm tra hời
+hợt bằng kiểm tra block selector đầy đủ. Focused clarity `3/3`, full Node
+`926/926`; không đổi workflow hay backend.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;
