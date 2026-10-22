@@ -180,6 +180,21 @@ và direction composer. Search/filter/page/status/default/rename/archive/restore
 đã có contract; preview audio/provider và apply/reuse profile vào SubDub/Video
 vẫn chưa có canonical contract, nên UI không dựng action giả.
 
+Đính chính ranh giới: `22` endpoint trên thuộc **hồ sơ hướng đọc/lời thoại của
+Web tại `/voice-studio`**, không phải Kho giọng âm thanh tại `/voice/saved`.
+Không dùng số endpoint metadata để đóng yêu cầu quản lý giọng thật của Bot.
+Canonical audio hiện chỉ có GET tối đa50 mục đã xác minh; search/phân trang/
+đổi tên/mặc định/xóa/nghe thử/áp dụng sang SubDub/Video còn mở theo R218-02A.
+
+QA mới trên source3090311: Node927/927; Python source10/10 và runtime metadata/
+direction31/31. App thật với SQLite/tài khoản tạm đi trọn6 cấu hình VI/EN/ZH ×
+(dark390/light1440): tạo, ưu tiên, đổi tên, lưu trữ/khôi phục, tìm/xóa bộ lọc,
+API đọc lại;24 lần ghi metadata QA, không lỗi trang/console/overflow/request ngoài.
+Không phải6cấu hình đầy đủ mọi tổ hợp. EN/ZH còn4finding: thông báo lọc vẫn
+bằng tiếng Việt. Cụm3ô kỹ thuật của soạn hướng đọc đã tái hiện nhưng chưa sửa;
+Antigravity chưa trả patch hợp lệ, không được gọi CLI exit0 là sửa đạt.
+Evidence `reports/audit/R218-VOICE-METADATA-QA-20261023.json`.
+
 ## Migration evidence refresh — 22/10/2026
 
 Preflight và Web inventory đã được refresh sau các wave UI. Auditor quét `330`

@@ -218,11 +218,22 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   allowlist integration; không coi file fixture là upload thực thi.
   Evidence `reports/audit/R218-VOICE-QUOTE-IDLE-QA-20261020.json`.
   CI của delta idle chờ push; receipt/provider/giao âm thanh/LIVE chưa đóng.
-- [~] Kho giọng đã có projection search/filter/page/status/default và backend
-  Web-owned inventory `22` endpoint cho create/update/archive/restore/duplicate/
-  version restore/compose/script/cue-sheet; UI quản lý revision đã nối theo
-  capability. Preview audio/provider và apply/reuse profile trực tiếp vào
-  SubDub/Video chưa có contract canonical, không dựng nút giả.
+- [~] **Hồ sơ hướng đọc `/voice-studio` khác Kho giọng thật `/voice/saved`.**
+  Inventory `22` endpoint Web-owned chỉ quản lý metadata, quyền tự khai, lời
+  thoại, phiên bản và hướng thể hiện; không phải voice profile dùng cho TTS.
+  Bộ Python runtime cô lập ngày23/10 đạt31/31 và source contract10/10; browser
+  app QA thật đã đi trọn vòng metadata ở6 cấu hình VI/EN/ZH×(dark390/light1440),
+  24 lần ghi metadata QA/đọc lại, lỗi trang/console/overflow/external0.
+  Không đóng toàn bộ browser matrix từ6 cấu hình này. Evidence
+  `R218-VOICE-METADATA-QA-20261023.json`.
+- [!] VO-09/VO-10/VO-13 Kho giọng thật: canonical hiện chỉ GET tối đa50 mục,
+  không có search/pagination/rename/default/delete/preview/handoff đã xác minh.
+  Không lấy22endpoint metadata của Voice Studio làm bằng chứng Bot-parity;
+  contract canonical tiếp tục theo `2026-10-18-r218-02a-voice-vault-canonical-contract.md`.
+- [!] VO-MANAGEMENT-FEEDBACK-LOCALE: filter của hồ sơ hướng đọc vẫn báo tiếng Việt
+  trên cả4 cấu hình EN/ZH đã đo; các nhánh filter/clear/page/refresh có chuỗi cứng
+  trong integration. Spec `2026-10-23-r218-voice-management-feedback-locale.md`;
+  chưa BUILD, xử lý sau cụm3ô lặp đang dở, không sửa backend/canonical vault.
 - [x] VOICE-REPORT-PROGRESS-001 UI — đã tái hiện dữ liệu tiến độ rỗng/boolean/
   chuỗi khoảng trắng bị ép thành 0%. Chỉ nhận số hữu hạn 0–100; giữ số 0 thật,
   làm tròn và trạng thái bàn giao. Spec hẹp:
@@ -818,6 +829,12 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   SFX Cue Sheet boundary dùng một lời giải thích capability thay cho 6–7 ô
   provider/player/output/payment lặp. Preset, brief, cue và form vẫn giữ.
   Test `tests/music-boundary-clarity.test.mjs` `1/1`; không mở generation/player.
+- [ ] Q0-VOICE-DIRECTION-CLARITY: disclosure soạn hướng đọc còn ba ô kỹ thuật
+  âm thanh/nhà cung cấp/tác vụ lặp; bỏ đúng cụm này, giữ lời giải thích và mọi
+  control/capability. Spec `2026-10-23-r218-voice-direction-clarity.md`; cần
+  renderer RED/GREEN và browser18 cấu hình trước khi đóng.
+  Browser đã tái hiện3ô ởbaseline; Antigravity Flash2 lượt chưa trả patch hợp lệ.
+  Không sửa app source hoặc gọi CLI exit0 là PASS; chờ quyền tiếp quản đã hỏi.
 - [x] Q0-GUARD-SELECTOR-ACCURACY: sửa selector route-scoped cho Project Package
   và Video finalization là DOM con của `portal-page`; test clarity đã đổi từ
   regex không ràng buộc sang kiểm tra nguyên block selector và đủ class. Test

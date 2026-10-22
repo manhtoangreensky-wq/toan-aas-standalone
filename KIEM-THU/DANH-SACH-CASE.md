@@ -461,3 +461,23 @@ Các case trên chỉ được tick khi có artifact tương ứng; không dùng
 | BILL-04 | vừa | portrait QR thật ở 375/390/768/1440 | ảnh natural ratio, transform none, overflow0 | browser-result.json |
 | BILL-05 | vừa | `/packages` và `/pricing` hydrate | 24 package cards; không suy giá; public sale thiếu thì hiển thị chờ catalog | production read-only DOM/API |
 | UT-YT-01 | nhẹ | Free Tools YouTube panel | nhãn không hứa kích thước chưa đo; load/error/retry giữ | free-tools7/7 |
+
+## R218-VOICE-20261023 — phiên tester READY, source3090311
+
+Chỉ QA SQLite/tài khoản tạm. Không dùng production hoặc giọng/file khách.
+Evidence local: `C:/Users/toann/Documents/Codex/qa/r218-voice-direction-20261023/`.
+Đây là phiên kiểm thử trong repo, không tạo chat/project GitHub hoặc đổi nhãn.
+
+| Case | Mức | Bước thực hiện | Kết quả cần thấy / trạng thái |
+|---|---|---|---|
+| VO-META-01 | vừa | `/voice-studio/new` → tạo hồ sơ hướng đọc Unicode, đánh dấu ưu tiên → mở detail → gọi GET record | Tên/ngữ cảnh/ưu tiên khớp; revision1; metadata không trở thành audio. Đã đo6cấu hình |
+| VO-META-02 | vừa | Detail → đổi tên → lưu → GET → archive → kiểm form khóa → restore → GET | Revision tăng, tên còn nguyên, archived khóa edit, restore về active. Đã đo6cấu hình |
+| VO-META-03 | vừa | Danh sách → tìm từ không khớp → xóa bộ lọc | Empty thật rồi record trở lại; không output/audio. Đã đo6cấu hình |
+| VO-META-04 | vừa | Filter/clear/page/refresh trên EN/ZH và VI | Locale đúng. Hiện filter FAIL ở4cấu hình EN/ZH; giữ lỗi mở theo spec VO-MANAGEMENT-FEEDBACK-LOCALE |
+| VO-CLARITY-01 | nhẹ | `/voice-studio/direction-composer` → mở disclosure bằng Enter/Space | Một summary và giải thích, không3ô kỹ thuật; hiện FAIL đã tái hiện, chưa có worker patch |
+| VO-BOUNDARY-01 | nặng | Đối chiếu `/voice-studio` với `/voice/saved` | Không dùng22endpoint metadata để tick canonical rename/default/delete/preview/SubDub reuse |
+
+Ma trận đã đo là VI/EN/ZH × (dark390/light1440), không phải toàn bộ12 tổ hợp.
+Case mới cần đủ VI/EN/ZH×light/dark×390/768/1440 trước khi đóng phạm vi tương ứng.
+Rate gate120read/phút giữ nguyên; runner giãn30giây giữa cấu hình, không sửa auth/rate
+hoặc thêm bypass để đạt test. Server QA34910/26491 đã dừng, exit0.

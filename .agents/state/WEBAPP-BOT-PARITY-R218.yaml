@@ -1,12 +1,21 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: UT_CSP_Q0_CONTENT_LOCAL_PASS_DELIVERY_PENDING
-date: 2026-10-22
+status: P1_Q0_AUDIT_WITH_OPEN_UI_FINDINGS
+date: 2026-10-23
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
-branch: webapp-r217-subdub-ui-r218
-pull_request: 654
-head_sha: d1d042ed820fe8920fd586abcee43529b6d36882
+branch: webapp-r218-billing-ui-20261022
+pull_request: 661
+head_sha: 30903110482f0c15b20fc959b30796dc0c7a1490
+checkpoint_20261023:
+  evidence: reports/audit/R218-VOICE-METADATA-QA-20261023.json
+  source_changed: false
+  tests: "Node927/927; Python source10/10; isolated Voice metadata/direction runtime31/31. No full pytest or LIVE claim."
+  browser: "Actual isolated app6 configurations VI/EN/ZH x dark390/light1440; metadata create/default/rename/archive/restore/search/readback;24 QA metadata writes; page/console/overflow/external0. Four EN/ZH filter-toast locale findings open."
+  voice_boundary: "22 Web-owned endpoints are direction/script metadata only, NOT canonical audio Voice Vault. Canonical management/preview/SubDub reuse remain open."
+  worker: "Q0-VOICE-DIRECTION-CLARITY round1+continuation and round2 Flash-high returned no valid patch at print timeout. Not a successful build. Owner direct-fix fallback requested; no source edited."
+  delivery: "PR661 OPEN, remoteHEAD3090311, mergeStateDIRTY, checkRollup empty; main406127e. merge-tree conflicts only preflight.json/web_inventory.json; no working-tree merge."
+  qa_cleanup: "Owned server34910 at127.0.0.1:26491 stopped via newline, exit0; temp DB/assets cleaned, listener absent. Older runtime records below are historical."
 implementation_head_sha: b186b75a2b55b397f802fb992ce0a320039053a4
 delivery_head_sha: 42a78e931cf15da4f8c6117838e29ac3a2248e70
 delivery_status: CI_GREEN_39642058056_BOTH_JOBS
@@ -418,7 +427,7 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "PR654 delivery closed at merge/runtime e5b1f586, CI39654608580 and deploy39656066624 SUCCESS; receipt6324091156. New branch webapp-r218-billing-ui-20261022 / Issue660: review Antigravity Flash stdout patch (session19386), apply tests first/RED then repair metadata read-state/retry and safe QR/ACB. Wallet21/21 outside sandbox; baseline CSS2 reproduced at base/candidate. Current candidate not browser accepted/pushed/deployed; motion last, goal ACTIVE."
+next_action: "Use checkpoint_20261023 before historical records: finish Q0-VOICE-DIRECTION-CLARITY only via valid worker patch or Owner-approved takeover, then VO-MANAGEMENT-FEEDBACK-LOCALE. Sync PR661 with main406127e and regenerate two conflicted migration evidence files under fresh tests before any merge/deploy. Canonical Voice Vault remains distinct/open; motion last; goal ACTIVE."
 active_billing_batch:
   id: R218-BILLING-20261022
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660

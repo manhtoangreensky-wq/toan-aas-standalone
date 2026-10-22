@@ -1,5 +1,22 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Voice — phân biệt hồ sơ hướng đọc với kho giọng thật, 23/10/2026
+
+Nguồn yêu cầu Bot giữ tại `2026-10-18-r218-02a-voice-vault-canonical-contract.md`:
+list/rename/default/soft-delete/preview/use-video là chức năng giọng âm thanh.
+Các số endpoint của Web không được thay thế yêu cầu này.
+
+| Chức năng gốc | Hiện trạng đo được | Không được suy diễn |
+|---|---|---|
+| Quản lý giọng dùng TTS/SubDub/Video | `/voice/saved` chỉ có GET tối đa50 mục đã xác minh; management/preview/apply còn mở |22endpoint metadata không chứng minh đủ Bot-parity |
+| Hồ sơ hướng thể hiện và lời thoại (Web bổ sung) | `/voice-studio` có22endpoint metadata; Python runtime31/31, source10/10; lifecycle/readback6cấu hình qua24ghi QA | Không sinh audio/provider voice profile |
+| Thông báo theo ngôn ngữ giao diện |4cấu hình EN/ZH thực còn toast lọc tiếng Việt | Không đóng locale từ catalogue render đúng |
+| Bố cục gọn, không ô kỹ thuật lặp |Disclosure soạn hướng đọc còn3ô đã tái hiện trên browser | Chưa sửa, chưa đóng chỉ vì plan hoặc worker exit0 |
+
+Đính chính mọi cách đọc tài liệu cũ: “Voice Vault” trong tên endpoint
+`copyfast_voice_studio.py` là bản ghi hướng đọc Web, không đồng nghĩa giọng đã
+huấn luyện/lưu trong Bot. Không xóa mục thiếu khỏi checklist để gọi là hoàn thiện.
+
 ## Free Tools — đối chiếu ngày22/10/2026
 
 | Chức năng | Đã chứng minh | Còn mở |
