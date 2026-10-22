@@ -10400,13 +10400,14 @@
         "reports/audit/R218-CUSTOMER-UI-REALITY-QA-20261022.json",
         "reports/audit/R218-GLOBAL-STATUS-LABELS-QA-20261021.json",
         "reports/audit/R218-IMAGE-WORKSPACE-CONTINUITY-QA-20261021.json",
+        "reports/audit/R218-VOICE-DIRECTION-CLARITY-QA-20261023.json",
         "reports/audit/R218-VOICE-METADATA-QA-20261023.json",
         "reports/prepush/R218-20261023-VOICE-AUDIT-DOCS.md",
         "studio/script.js",
         "video.html",
         "video.py"
       ],
-      "occurrences": 21,
+      "occurrences": 22,
       "provider": "Gemini"
     },
     {
@@ -18323,9 +18324,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 332,
-  "source_files_scanned": 332,
-  "source_fingerprint_sha256": "9078f9ea443f42ef29d0e12c1be79de297d748bacebcc1338439a571289fd838",
+  "source_files_discovered": 334,
+  "source_files_scanned": 334,
+  "source_fingerprint_sha256": "9a2552635049a8ed9b935e0a3d61f0782162eae966fca25c85d1d6d40d401401",
   "source_root": "repository-root",
   "ui_path_references": [
     {
