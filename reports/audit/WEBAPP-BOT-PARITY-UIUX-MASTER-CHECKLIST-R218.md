@@ -103,6 +103,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## C0 — Bảo toàn / chốt WIP
 
+- [ ] C0-PR661-MAIN-SYNC: branchf63d69e xung đột2tệp evidence với main406127e;
+  đồng bộ upstream UI bằng Git, giữ delta PR661, refresh provenance và test lại.
+  Spec `2026-10-23-r218-pr661-main-sync.md`; không merge PR/deploy ở lát này.
+
 - [x] Root menu Bot và nhóm sản phẩm ghi tại WEBAPP-BOT-PRODUCT-INVENTORY-R218.md.
 - [x] Đọc menu/handler/catalog chính cho Voice/Music/SubDub/Image/Video và tiện ích.
 - [~] Các callback động và catalog runtime cần mapping control chi tiết, chưa đủ để
