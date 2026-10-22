@@ -38101,11 +38101,20 @@
 
   function showToast(message, mode) {
     const region = document.querySelector("[data-portal-toast]");
-    if (!region) return;
+    const text = String(message || "").trim();
+    if (!region || !text) return;
+    const className = `portal-toast${mode === "warning" ? " portal-toast--warning" : ""}`;
+    const existing = typeof region.querySelectorAll === "function" ? Array.from(region.querySelectorAll(".portal-toast")) : [];
+    const duplicate = existing
+      .find((item) => item.textContent === text && item.className === className);
+    if (duplicate) return;
     const toast = document.createElement("div");
-    toast.className = `portal-toast${mode === "warning" ? " portal-toast--warning" : ""}`;
-    toast.textContent = message;
+    toast.className = className;
+    if (typeof toast.setAttribute === "function") toast.setAttribute("role", mode === "warning" ? "alert" : "status");
+    toast.textContent = text;
     region.appendChild(toast);
+    const visible = typeof region.querySelectorAll === "function" ? region.querySelectorAll(".portal-toast") : [];
+    for (let index = 0; index < visible.length - 2; index += 1) visible[index].remove();
     const motion = window.TOANAASPortalMotion;
     if (motion && typeof motion.enter === "function") motion.enter(toast, "pop");
     window.setTimeout(() => { toast.remove(); }, 4800);

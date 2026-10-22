@@ -16,20 +16,23 @@ Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 gi�
   khớp. Live SubDub7lane/4mode/volume/Voice-return, Voice/Image control smoke đã
   kiểm trên327x668. Receipt: PR654#issuecomment-6324091156. Chỉ UI/control scope,
   không đóng engine/provider/output/giá/gói/QR dưới đây.
-- [~] Batch `R218-BILLING-20261022`, Issue660: bỏ top-up client fallback,
-  phân biệt options/history read state, khôi phục GET đúng; chưa nghiệm thu xong.
-  Wallet regression21/21 outside sandbox; các kết luận TestClient không chạy ở
-  Windows trước đó được thay bằng bằng chứng socket self-pipe bị sandbox chặn.
-- [!] AC-02-QR-ACB-PRESENTATION mở lại: candidate scale/crop QR chưa an toàn và
-  ACB dedupe chưa xét readiness. Antigravity Flash đang sửa; không dùng unit/source
-  literal để gọi QR size/scan/UX PASS. Không thay QR bytes/destination/financial IDs.
+- [x] Batch `R218-BILLING-20261022`, Issue660: bỏ top-up client fallback,
+  phân biệt options/history read state, khôi phục GET đúng; QR dùng tỷ lệ tự nhiên
+  không crop và ACB chỉ còn một lựa chọn theo readiness. Wallet regression21/21,
+  billing/QR 24/24, pricing11/11, Free Tools7/7; không đổi QR bytes/destination/
+  financial IDs. Verify Web App + Authenticated WebApp QA xanh ở run `39767604255`.
+- [x] AC-02-QR-ACB-PRESENTATION: kích thước QR tự nhiên, không `scale/crop`,
+  mobile dùng đủ chiều rộng; dedupe `bank_acb`/`bank_acb_vietqr` theo method sẵn
+  sàng, vẫn giữ canonical IDs/history và không thay bytes/destination.
 - [~] AC-02-PRICING-PACKAGES: production supplies4monthly+20combos, card xuất hiện
   sau hydrate. Sale price/publication chưa chứng minh; không suy từ tên gói.
   Note legacy chỉ được localize, không tự chuyển thành visibility/checkout authority.
-- [~] UT-YT-RESULT-TRUTH: candidate bỏ1080p/720p/360p label; FreeTools7/7. Browser
-  hậu sửa/copy success/delivery vẫn mở, không coi URL chuẩn bị xong là tải video.
-- [ ] Batch mới chưa commit/push/CI/deploy; source đang sửa không phải bản production.
-  Spec: `docs/superpowers/specs/2026-10-22-r218-billing-presentation-truth.md`.
+- [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p khi chưa có kích thước ảnh;
+  extractor chỉ báo đã nhận liên kết/mã nhúng. FreeTools7/7 và browser gate xanh;
+  không coi URL chuẩn bị xong là tải video.
+- [x] Batch mới đã commit/push trên PR #661, HEAD `e3efa895e73ded8794e73fc626c6ff0abddfe8b7`;
+  run `39767604255` xanh cả Verify Web App và Authenticated WebApp QA. Chưa
+  merge/deploy/LIVE. Spec: `docs/superpowers/specs/2026-10-22-r218-billing-presentation-truth.md`.
 
 ## Quy ước
 
@@ -231,13 +234,13 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   390/768/1440, mode/back giữ cấu hình và tên, consent unchecked, upload/
   submit vẫn guarded, console/overflow/UI write/external0. Setup ngôn ngữ
   chỉ cập nhật hồ sơ QA qua endpoint CSRF, không thay policy signed profile.
-- [ ] MUSIC-INTAKE-READABILITY-001 — app QA thấy intro lặp, nhiều thẻ chờ trước
-  form và tiếng Anh kỹ thuật trong bản VI. Spec đã sẵn sàng ở
-  `docs/superpowers/specs/2026-10-20-r218-music-intake-readability.md`.
-  Actual app QA UI-only 18/18 cấu hình, 36 route states đã đạt; Music mode/back
-  giữ draft, hướng dẫn keyboard, locale/theme, overflow/console/external0.
-  Native save chưa đóng: POST422 do contract thiếu trường, không tính UI-only
-  là lưu nháp đạt. Raw evidence `../qa/r218-voice-inventory/music-intake-ui-browser.json`.
+- [x] MUSIC-INTAKE-READABILITY-001 — đã bỏ intro lặp, thẻ gợi ý rỗng trước form
+  và jargon kỹ thuật; giữ bốn bước/gói/field trong disclosure, mode/back giữ
+  draft và VI/EN/ZH cân bằng. App QA18/18 cấu hình,36 route states; native draft
+  safe-fields14/14 backend +10/10 frontend +26/26 Music regression, readback
+  Unicode/volume0 đạt. Full Node905/905; provider/output/delivery vẫn guarded.
+  Spec `docs/superpowers/specs/2026-10-20-r218-music-intake-readability.md`;
+  raw evidence `../qa/r218-voice-inventory/music-intake-ui-browser.json`.
 - [x] NATIVE-DRAFT-SAFE-FIELDS-001 — Owner duyệt đúng năm trường lyrics,
   vocal_mode, default_voice_gender, volume_percent, source_language; frontend
   báo lỗi quá dài trước request và giữ nguyên dữ liệu; title/toast VI/EN/ZH.
@@ -732,12 +735,13 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] VI/EN/ZH sạch; dữ liệu user/tên riêng không bị dịch.
 - [ ] Mobile 375/390/768/1440 × themes; shell/forms thêm 320/414/1024.
 - [ ] Keyboard/focus/label/contrast/touch/overflow/empty/loading/error/recovery.
-- [ ] Q0-TOAST-STACK: QA Music/SFX bấm nhanh7 thao tác tạo nhiều toast cùng
-  tồn tại4.8giây, che phần lớn viewport390. Bằng chứng ảnh
-  `../qa/r218-voice-inventory/music-library-review-vi-dark-390-sfx.png`.
-  Cần spec hẹp giới hạn/gộp thông báo, giữ lỗi và aria-live; không giấu bằng
-  chờ screenshot để gọi UI đã tối ưu. Ảnh alias chờ toast tự hết chỉ chứng minh
-  bố cục ổn định, không giải quyết lỗi stacking.
+- [~] Q0-TOAST-STACK: đã sửa đúng ba entry point `portal.js`, `integration.js`,
+  `portal-auth.js`: bỏ thông báo rỗng, gộp trùng, tối đa2 node đang hiện và
+  giữ `aria-live` bằng role `status/alert`. RED4node→GREEN3/3, auth popup4/4,
+  full Node905/905, syntax/diff-check đạt. Spec
+  `docs/superpowers/specs/2026-10-22-r218-toast-stack.md`. Browser QA riêng
+  chuỗi7 thao tác trên390px và ảnh chứng minh không che màn hình còn mở; không
+  đánh dấu UX hoàn toàn cho đến khi chạy đúng runtime QA.
 - [~] Motion lifecycle/source có regression, nhưng browser12 chỉ kiểm nội dung/
   overflow/reduced loader, CHƯA chứng minh chuyển động mượt/hydration runtime:
   static/lifecycle29/29 và browser12 cases welcome/login/dashboard × normal/
