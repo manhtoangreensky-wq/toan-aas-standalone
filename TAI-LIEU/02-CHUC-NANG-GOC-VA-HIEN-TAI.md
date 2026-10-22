@@ -173,6 +173,12 @@ bộ Node `926/926`.
 hợt bằng kiểm tra block selector đầy đủ. Focused clarity `3/3`, full Node
 `926/926`; không đổi workflow hay backend.
 
+## Cập nhật Migration evidence — 22/10/2026
+
+Web inventory/preflight đã cập nhật theo source hiện tại: `330` files, fingerprint
+`f88f9064e4e06317d3dc6e5bb167aa6ab30d510eae8fadaf39a6ab081e3baffb`, verifier
+trả `ok: true`. Không suy diễn từ đây sang deploy hoặc LIVE.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;

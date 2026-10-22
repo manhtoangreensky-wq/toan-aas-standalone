@@ -814,6 +814,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   và Video finalization là DOM con của `portal-page`; test clarity đã đổi từ
   regex không ràng buộc sang kiểm tra nguyên block selector và đủ class. Test
   guard clarity `3/3`, full Node `926/926`; không đổi renderer/backend.
+- [x] Q0-MIGRATION-EVIDENCE-REFRESH: refresh preflight/web inventory sau các
+  wave UI gần đây; 330 source files được quét, fingerprint hiện tại
+  `f88f9064e4e06317d3dc6e5bb167aa6ab30d510eae8fadaf39a6ab081e3baffb`, verifier
+  trả `ok: true`; không còn dùng fingerprint `0892a9…` cũ làm evidence HEAD.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.

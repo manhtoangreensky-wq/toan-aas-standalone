@@ -164,6 +164,14 @@ Video finalization, trong khi regex test vẫn cho kết quả xanh. Selector đ
 đúng quan hệ DOM; ba test guard clarity được siết để kiểm block selector thật.
 Focused `3/3`, full Node `926/926`. Không đổi renderer/backend ngoài CSS và test.
 
+## Migration evidence refresh — 22/10/2026
+
+Preflight và Web inventory đã được refresh sau các wave UI. Auditor quét `330`
+source files, fingerprint hiện tại là
+`f88f9064e4e06317d3dc6e5bb167aa6ab30d510eae8fadaf39a6ab081e3baffb`; verifier
+Web evidence trả `ok: true`. Đây là evidence source/migration, không phải CI,
+deploy hoặc LIVE.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.
