@@ -86,6 +86,14 @@ quyền do máy chủ cấp. Ba chip kỹ thuật về vai trò, cầu nối và
 đã bỏ; loading, RBAC, danh sách yêu cầu và boundary tài chính không đổi. Test
 riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `916/916`.
 
+## Remaining customer guard surfaces — 22/10/2026
+
+Project Package, Asset Vault, Inbox, Automation, Operations và Video
+finalization đã ẩn các chip implementation lặp trong guard card theo đúng
+route. Metric thật ở các surface khác không bị ẩn; capability, storage, job,
+API và delivery không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay
+đổi đạt `917/917`.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

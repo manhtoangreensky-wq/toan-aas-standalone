@@ -717,6 +717,18 @@ a { color: inherit; text-decoration: none; }
   .portal-image-to-pdf
 ) .portal-state-meta { display: none; }
 
+/* Remaining customer-only guard surfaces use the same compact explanation.
+   Keep real metrics elsewhere intact; these selectors cover only the cards
+   whose chips repeat implementation boundaries already stated in the body. */
+.portal-page:is(
+  .portal-project-package-panel,
+  .portal-asset-vault,
+  .portal-inbox,
+  .portal-notification-automation,
+  .portal-operations,
+  .portal-finalization-intro
+) .portal-state-meta { display: none; }
+
 .portal-summary-list { display: grid; gap: 10px; }
 .portal-summary-item { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(155, 178, 193, .1); }
 .portal-summary-item:last-child { padding-bottom: 0; border-bottom: 0; }

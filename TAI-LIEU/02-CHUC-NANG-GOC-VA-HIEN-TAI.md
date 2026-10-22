@@ -105,6 +105,13 @@ Thẻ guard `/admin/support` chỉ còn nguyên nhân cần quyền; chip vai tr
 dữ liệu dự phòng được bỏ. Không đổi RBAC, yêu cầu, reply, escalation hoặc
 finance boundary. Test riêng `1/1`, toàn bộ Node `916/916`.
 
+## Cập nhật remaining customer guard surfaces — 22/10/2026
+
+Project Package, Asset Vault, Inbox, Automation, Operations và Video
+finalization đã bỏ chip implementation lặp theo selector route-scoped, giữ
+nguyên metric thật và action. Không đổi capability, storage, job, API hay
+delivery. Test riêng `1/1`, toàn bộ Node `917/917`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;
