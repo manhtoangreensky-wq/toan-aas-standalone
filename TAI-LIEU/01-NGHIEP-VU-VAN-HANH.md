@@ -164,6 +164,15 @@ Video finalization, trong khi regex test vẫn cho kết quả xanh. Selector đ
 đúng quan hệ DOM; ba test guard clarity được siết để kiểm block selector thật.
 Focused `3/3`, full Node `926/926`. Không đổi renderer/backend ngoài CSS và test.
 
+## Voice Vault endpoint audit — 23/10/2026
+
+Rà AST `copyfast_voice_studio.py` đếm được `22` endpoint Web-owned: summary,
+policy, references, list có offset, create, detail/update, archive/restore,
+restore-version, duplicate, compose, script CRUD/lifecycle, cue-sheet, events
+và direction composer. Search/filter/page/status/default/rename/archive/restore
+đã có contract; preview audio/provider và apply/reuse profile vào SubDub/Video
+vẫn chưa có canonical contract, nên UI không dựng action giả.
+
 ## Migration evidence refresh — 22/10/2026
 
 Preflight và Web inventory đã được refresh sau các wave UI. Auditor quét `330`

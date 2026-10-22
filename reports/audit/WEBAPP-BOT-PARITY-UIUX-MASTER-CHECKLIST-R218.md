@@ -218,7 +218,11 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   allowlist integration; không coi file fixture là upload thực thi.
   Evidence `reports/audit/R218-VOICE-QUOTE-IDLE-QA-20261020.json`.
   CI của delta idle chờ push; receipt/provider/giao âm thanh/LIVE chưa đóng.
-- [ ] Kho giọng search/page/status/default/preview/rename/delete/reuse.
+- [~] Kho giọng đã có projection search/filter/page/status/default và backend
+  Web-owned inventory `22` endpoint cho create/update/archive/restore/duplicate/
+  version restore/compose/script/cue-sheet; UI quản lý revision đã nối theo
+  capability. Preview audio/provider và apply/reuse profile trực tiếp vào
+  SubDub/Video chưa có contract canonical, không dựng nút giả.
 - [x] VOICE-REPORT-PROGRESS-001 UI — đã tái hiện dữ liệu tiến độ rỗng/boolean/
   chuỗi khoảng trắng bị ép thành 0%. Chỉ nhận số hữu hạn 0–100; giữ số 0 thật,
   làm tròn và trạng thái bàn giao. Spec hẹp:

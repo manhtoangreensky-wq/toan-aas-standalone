@@ -173,6 +173,13 @@ bộ Node `926/926`.
 hợt bằng kiểm tra block selector đầy đủ. Focused clarity `3/3`, full Node
 `926/926`; không đổi workflow hay backend.
 
+## Cập nhật Voice Vault endpoint audit — 23/10/2026
+
+Web Voice Studio hiện có `22` endpoint owner-scoped cho danh sách/phân trang,
+CRUD hồ sơ, archive/restore, duplicate, version restore, compose/script,
+cue-sheet, events và direction composer. Preview audio/provider và apply/reuse
+profile trực tiếp vào SubDub/Video vẫn mở vì chưa có contract canonical.
+
 ## Cập nhật Migration evidence — 22/10/2026
 
 Web inventory/preflight đã cập nhật theo source hiện tại: `330` files; fingerprint
