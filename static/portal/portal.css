@@ -9843,7 +9843,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
 
 .portal-manual-payment-method {
   display: grid;
-  grid-template-columns: minmax(360px, 420px) minmax(0, 1fr);
+  grid-template-columns: minmax(400px, 520px) minmax(0, 1fr);
   gap: 24px;
   align-items: start;
   min-width: 0;
@@ -9869,10 +9869,10 @@ button, a, input, select, textarea { touch-action: manipulation; }
 
 .portal-manual-payment-method img {
   display: block;
-  width: min(380px, 100%);
-  max-width: 420px;
+  width: min(480px, 100%);
+  max-width: 520px;
   height: auto;
-  aspect-ratio: 1;
+  aspect-ratio: auto;
   object-fit: contain;
   border-radius: 14px;
   background: #fff;

@@ -418,4 +418,17 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "UT-CSP-EMPTY-THUMB workerFlashR1 patch reviewed:6/6focused/fullNodeexit0/syntax2/diff0; actualQA96states+12utilityflows, baselineCSP5→0, errors/write/external/overflow0. Finish coherent docs/tester metadata and clean-tracked provenance, pushPR654 and readCI terminal; then Q0-CUSTOMER-CONTENT dynamicstates/Utilities/Admin/Video in order, motionlast. Evidence R218-CUSTOMER-UI-REALITY-QA-20261022.json. GoalACTIVE; no merge/deploy/LIVE."
+next_action: "PR654 delivery closed at merge/runtime e5b1f586, CI39654608580 and deploy39656066624 SUCCESS; receipt6324091156. New branch webapp-r218-billing-ui-20261022 / Issue660: review Antigravity Flash stdout patch (session19386), apply tests first/RED then repair metadata read-state/retry and safe QR/ACB. Wallet21/21 outside sandbox; baseline CSS2 reproduced at base/candidate. Current candidate not browser accepted/pushed/deployed; motion last, goal ACTIVE."
+active_billing_batch:
+  id: R218-BILLING-20261022
+  issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660
+  base_sha: e5b1f5866867221f6ffd131a43f1644dc2c6249a
+  branch: webapp-r218-billing-ui-20261022
+  status: RUNNING_REVIEW_CORRECTION
+  worker: gemini-3.8-flash-high
+  worker_round: 2
+  worker_code_failures: 0
+  transport_correction: "Absolute CLI C:/Users/toann/AppData/Local/agy/bin/agy.exe works; previous default sandbox LOCALAPPDATA path did not. No install/login/settings changes."
+  wallet_tests: "21 passed,16warnings,20.06s outside sandbox; isolated DB/mocked bridge, no application/test/eventloop change."
+  protected: "No financial/PayOS/Bot/backend/schema/ENV/QR bytes/destination/provider mutation."
+  acceptance: "Unaccepted: history state/retry is not options state/retry; blind QR1.18 crop and readiness-insensitive ACB dedupe reopened."

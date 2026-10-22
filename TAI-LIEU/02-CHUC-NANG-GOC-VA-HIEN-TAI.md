@@ -8,6 +8,16 @@
 | Trích liên kết/mã nhúngYouTube | Parser/link/ID giữ đúng; browserload/error/retry đúng, khôngsrc rỗng/CSPinline | Ảnh kiểm soát không chứng minh YouTube luôn có mọi độ phân giải; không cam kết chất lượng từ nhãn |
 | Voice và sản phẩmBot | InitialUI không tự điền nội dungQA/hero pill ở96states | Không đóng quote/provider/engine/job/output/delivery từ việc kiểm giao diện |
 
+## Billing / QR — đối chiếu ngày22/10/2026
+
+| Chức năng | Hiện tại có bằng chứng | Còn mở |
+|---|---|---|
+| Nạp Xu PayOS | Guard capability và catalog server; catalog rỗng không tạo radio giả; contract Node6/6 | Không gọi checkout/provider; production delivery chờ push |
+| Nạp thủ công | Method/amount progressive disclosure; options/history state tách; retry options GET; wallet21/21 cô lập | Không submit production, không chứng minh Admin approval/credit |
+| Gói dịch vụ | 4 monthly +20 combos từ API; UI 24 card sau hydrate; không suy giá local | Public sale SKU/giá Core Bridge chưa phát hành; desktop production chưa có viewport override đáng tin |
+| ACB/VietQR | Selector readiness chỉ một ACB; IDs/history giữ; QR natural portrait không crop; browser120 cases | Chưa deploy/live recheck |
+| YouTube thumbnail labels | Bỏ hứa 1080p/720p/360p khi chưa đo; Free Tools7/7 | Không chứng minh mọi URL YouTube có ảnh hoặc media download |
+
 ## SD-C2 — nối giao diện, chưa phải áp dụng giọng canonical
 
 Web đã giữ ngữ cảnh SubDub→kho/thêm giọng→quay lại trong cùng tài liệu;

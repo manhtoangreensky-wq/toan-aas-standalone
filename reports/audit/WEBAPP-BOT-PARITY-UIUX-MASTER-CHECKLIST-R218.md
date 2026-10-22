@@ -2,12 +2,34 @@
 
 Ngày 2026-10-20; cập nhật sau run `39309260395`. WIP_ADMIN_PRESENTATION_CI_GREEN_AUTH_QA_GREEN;
 state-only follow-up HEAD `57bda44` đã có CI riêng xanh.
-Source Bot được đọc-only; production chưa kiểm.
+Source Bot được đọc-only; các dòng dưới đây giữ lịch sử evidence theo ngày.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
 Đối soát toàn bộ lịch sử trước R217 nằm tại
 `reports/audit/WEBAPP-HISTORICAL-CHECKLIST-CROSSWALK-R218.md`; không dùng tài liệu cũ
 để suy diễn PASS.
+
+## Checkpoint mới nhất — 22/10/2026
+
+- [x] Delivery PR654: merge `e5b1f5866867221f6ffd131a43f1644dc2c6249a`, CI
+  `39654608580` SUCCESS, deploy `39656066624` SUCCESS; VPS revision/asset blobs
+  khớp. Live SubDub7lane/4mode/volume/Voice-return, Voice/Image control smoke đã
+  kiểm trên327x668. Receipt: PR654#issuecomment-6324091156. Chỉ UI/control scope,
+  không đóng engine/provider/output/giá/gói/QR dưới đây.
+- [~] Batch `R218-BILLING-20261022`, Issue660: bỏ top-up client fallback,
+  phân biệt options/history read state, khôi phục GET đúng; chưa nghiệm thu xong.
+  Wallet regression21/21 outside sandbox; các kết luận TestClient không chạy ở
+  Windows trước đó được thay bằng bằng chứng socket self-pipe bị sandbox chặn.
+- [!] AC-02-QR-ACB-PRESENTATION mở lại: candidate scale/crop QR chưa an toàn và
+  ACB dedupe chưa xét readiness. Antigravity Flash đang sửa; không dùng unit/source
+  literal để gọi QR size/scan/UX PASS. Không thay QR bytes/destination/financial IDs.
+- [~] AC-02-PRICING-PACKAGES: production supplies4monthly+20combos, card xuất hiện
+  sau hydrate. Sale price/publication chưa chứng minh; không suy từ tên gói.
+  Note legacy chỉ được localize, không tự chuyển thành visibility/checkout authority.
+- [~] UT-YT-RESULT-TRUTH: candidate bỏ1080p/720p/360p label; FreeTools7/7. Browser
+  hậu sửa/copy success/delivery vẫn mở, không coi URL chuẩn bị xong là tải video.
+- [ ] Batch mới chưa commit/push/CI/deploy; source đang sửa không phải bản production.
+  Spec: `docs/superpowers/specs/2026-10-22-r218-billing-presentation-truth.md`.
 
 ## Quy ước
 

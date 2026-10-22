@@ -9296,6 +9296,7 @@
       telegramLoginFlow: source.telegramLoginFlow && typeof source.telegramLoginFlow === "object" ? source.telegramLoginFlow : {},
       mfaLoginFlow: normalizeMfaLoginFlowBootstrap(source.mfaLoginFlow),
       paymentOptions: source.paymentOptions && typeof source.paymentOptions === "object" ? source.paymentOptions : {},
+      paymentOptionsReadState: ["loading", "ready", "failed", "guarded"].includes(source.paymentOptionsReadState) ? source.paymentOptionsReadState : "guarded",
       paymentFlow: source.paymentFlow && typeof source.paymentFlow === "object" ? source.paymentFlow : {},
       manualTopupFlow: source.manualTopupFlow && typeof source.manualTopupFlow === "object" ? source.manualTopupFlow : {},
       manualTopupHistory: Array.isArray(source.manualTopupHistory) ? source.manualTopupHistory.slice(0, 50) : [],
@@ -13624,7 +13625,7 @@
           <h3 style="font-size: 14px; margin-bottom: 12px;">${c("youtube.result.heading", "Ảnh thu nhỏ theo độ phân giải")}:</h3>
           <div class="portal-yt-thumbs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
-              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.max", "Độ phân giải tối đa (1080p Full HD)")}</div>
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.max", "Ảnh thu nhỏ lớn nhất có sẵn")}</div>
               <img id="free-tools-yt-thumb-max" alt="${c("youtube.imgAltMax", "Ảnh thu nhỏ độ phân giải tối đa")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
               <p id="free-tools-yt-thumb-max-state" role="status" hidden style="margin: 8px 0 0; font-size: 12px; color: var(--portal-muted); text-align: center;"></p>
               <div style="margin-top: 10px; display:flex; gap: 6px;">
@@ -13633,7 +13634,7 @@
               </div>
             </div>
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
-              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.high", "Chất lượng cao (720p HD)")}</div>
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.high", "Ảnh thu nhỏ cỡ lớn")}</div>
               <img id="free-tools-yt-thumb-hq" alt="${c("youtube.imgAltHigh", "Ảnh thu nhỏ chất lượng cao")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
               <p id="free-tools-yt-thumb-hq-state" role="status" hidden style="margin: 8px 0 0; font-size: 12px; color: var(--portal-muted); text-align: center;"></p>
               <div style="margin-top: 10px; display:flex; gap: 6px;">
@@ -13642,7 +13643,7 @@
               </div>
             </div>
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
-              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.medium", "Chất lượng tiêu chuẩn (360p)")}</div>
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.medium", "Ảnh thu nhỏ cỡ vừa")}</div>
               <img id="free-tools-yt-thumb-mq" alt="${c("youtube.imgAltMedium", "Ảnh thu nhỏ chất lượng tiêu chuẩn")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
               <p id="free-tools-yt-thumb-mq-state" role="status" hidden style="margin: 8px 0 0; font-size: 12px; color: var(--portal-muted); text-align: center;"></p>
               <div style="margin-top: 10px; display:flex; gap: 6px;">
@@ -22785,10 +22786,14 @@
       const code = canonicalCatalogCode(item.code);
       if (!code) return [];
       const manual = item.manual === true;
+      const rawNote = canonicalShortText(item.note, 240);
+      const note = /^Legacy hidden package kept for existing wallets(?:\/tests)?\.?$/i.test(rawNote)
+        ? billingCatalogText("catalog.legacyNote", "Gói này chỉ giữ cho dữ liệu cũ, không mở bán mới.")
+        : rawNote;
       return [{
         code,
         label: canonicalShortText(item.label, 120) || code,
-        note: canonicalShortText(item.note, 240) || "Gói canonical do Core Bridge cấp.",
+        note: note || "Gói canonical do Core Bridge cấp.",
         manual,
         status: "read_only"
       }];
@@ -22810,15 +22815,6 @@
     const data = flow && flow.data && typeof flow.data === "object" ? flow.data : {};
     return String(data.payment_id || data.order_code || data.id || "").trim();
   }
-
-  const PAYMENT_DISPLAY_FALLBACK_PACKAGES = Object.freeze([
-    { code: "topup_10k", label: "10.000 đ", amount_vnd: 10_000, xu: 100 },
-    { code: "topup_20k", label: "20.000 đ", amount_vnd: 20_000, xu: 200 },
-    { code: "topup_50k", label: "50.000 đ", amount_vnd: 50_000, xu: 500 },
-    { code: "topup_100k", label: "100.000 đ", amount_vnd: 100_000, xu: 1_000 },
-    { code: "topup_200k", label: "200.000 đ", amount_vnd: 200_000, xu: 2_000 },
-    { code: "topup_500k", label: "500.000 đ", amount_vnd: 500_000, xu: 5_000 }
-  ]);
 
   function paymentWebCatalogReady(context) {
     const payos = context && context.paymentOptions && context.paymentOptions.payos;
@@ -23020,16 +23016,47 @@
         : "";
       return !rawMethodIds.has(id) && label ? [{ id, label, destination_only: true }] : [];
     });
-    const selectorMethods = [...rawMethods, ...destinationOnlyMethods].slice(0, 12);
+    const isMethodReady = (item) => Boolean(
+      item &&
+      item.destination_only !== true &&
+      hasDestinationContract &&
+      manualTopupMethodHasCanonicalQr(item, paymentDestinations[item.id])
+    );
+    const acbVietQr = rawMethods.find((item) => item.id === "bank_acb_vietqr");
+    const acbBank = rawMethods.find((item) => item.id === "bank_acb");
+    const selectedMethodId = String(transient.method || "");
+    const preferredAcbMethod = (selectedMethodId === "bank_acb" && isMethodReady(acbBank))
+      ? acbBank
+      : (selectedMethodId === "bank_acb_vietqr" && isMethodReady(acbVietQr))
+        ? acbVietQr
+        : isMethodReady(acbVietQr)
+          ? acbVietQr
+          : isMethodReady(acbBank)
+            ? acbBank
+            : (acbVietQr || acbBank);
+    const selectorMethods = [
+      ...(preferredAcbMethod ? [preferredAcbMethod] : []),
+      ...rawMethods.filter((item) => !["bank_acb", "bank_acb_vietqr"].includes(item.id)),
+      ...destinationOnlyMethods
+    ].slice(0, 12);
     const enabledMethods = rawMethods.filter((item) => hasDestinationContract && manualTopupMethodHasCanonicalQr(item, paymentDestinations[item.id]));
     const available = manual.available === true && manual.history_in_web === true && enabledMethods.length > 0;
     const flow = context.manualTopupFlow && typeof context.manualTopupFlow === "object" ? context.manualTopupFlow : {};
     const history = Array.isArray(context.manualTopupHistory) ? context.manualTopupHistory.slice(0, 50) : [];
-    const readState = String(context.manualTopupReadState || "guarded");
+    const optionsReadState = String(context.paymentOptionsReadState || "guarded");
+    const historyReadState = String(context.manualTopupReadState || "guarded");
     const submitting = flow.status === "submitting";
 
     if (!available || !enabledMethods.length) {
-      return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="guarded" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("guardedTitle", "Nạp thủ công chưa sẵn sàng"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("guardedBody", "Phiên Web chưa tải được phương thức nạp thủ công. Hãy tải lại trang hoặc thử lại sau."))}</p></div></div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/account">${safeText(uiText("nav.account", "Tài khoản"))}</a></div></section>`;
+      const stateKey = optionsReadState === "loading" ? "loading" : optionsReadState === "failed" ? "failed" : "guarded";
+      const stateTitle = manualTopupText(`${stateKey}Title`, stateKey === "loading" ? "Đang tải phương thức nạp" : stateKey === "failed" ? "Chưa lấy được phương thức nạp" : "Nạp thủ công chưa sẵn sàng");
+      const stateBody = manualTopupText(`${stateKey}Body`, stateKey === "loading" ? "Đang tải dữ liệu từ hệ thống." : stateKey === "failed" ? "Chưa lấy được dữ liệu nạp tiền. Hãy thử làm mới." : "Phương thức nạp thủ công chưa được máy chủ mở cho phiên này.");
+      const stateAction = stateKey === "loading"
+        ? ""
+        : stateKey === "failed"
+          ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="payment-options-refresh" data-portal-route="/wallet/topup">${safeText(manualTopupText("reloadMethods", "Tải lại phương thức"))}</button>`
+          : `<a class="portal-button portal-button--primary" href="/account">${safeText(uiText("nav.account", "Tài khoản"))}</a>`;
+      return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="${safeText(stateKey)}" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(stateTitle)}</h2><p class="portal-card-subtitle"${stateKey === "loading" ? ' role="status"' : ""}>${safeText(stateBody)}</p></div></div><div class="portal-form-footer">${stateAction}</div></section>`;
     }
 
     const flowData = flow.data && typeof flow.data === "object" ? flow.data : {};
@@ -23045,7 +23072,7 @@
     const isSelectionConfirmed = confirmedFlag && isPositiveIntAmount && isConfirmedMethodValid;
     const recordOptions = { revealTransferDetails: isSelectionConfirmed };
     const currentRecord = flowData.request_id ? renderManualTopupRecord(flowData, recordOptions) : "";
-    const historyMarkup = readState === "loading" ? `<p class="portal-manual-topup-empty">${safeText(manualTopupText("loading", "Đang tải dữ liệu…"))}</p>` : history.length ? history.map((item) => renderManualTopupRecord(item, recordOptions)).join("") : `<p class="portal-manual-topup-empty">${safeText(manualTopupText(readState === "failed" ? "failed" : "historyEmpty", readState === "failed" ? "Chưa thể xử lý" : "Chưa có yêu cầu nạp thủ công."))}</p>`;
+    const historyMarkup = historyReadState === "loading" ? `<p class="portal-manual-topup-empty">${safeText(manualTopupText("loading", "Đang tải dữ liệu…"))}</p>` : history.length ? history.map((item) => renderManualTopupRecord(item, recordOptions)).join("") : `<p class="portal-manual-topup-empty">${safeText(manualTopupText(historyReadState === "failed" ? "failed" : "historyEmpty", historyReadState === "failed" ? "Chưa thể xử lý" : "Chưa có yêu cầu nạp thủ công."))}</p>`;
 
     if (!isSelectionConfirmed) {
       const currentSelectedMethod = String(transient.method || "");
@@ -23097,9 +23124,7 @@
         ? context.paymentOptions.payos.topup_packages
         : [])
     ];
-    const packages = [
-      ...(serverPackages.length ? serverPackages : PAYMENT_DISPLAY_FALLBACK_PACKAGES)
-    ].flatMap((item) => {
+    const packages = serverPackages.flatMap((item) => {
       if (!item || typeof item !== "object" || Array.isArray(item) || item.available === false) return [];
       const code = canonicalCatalogCode(item.code);
       const amount = Number(item.amount_vnd);

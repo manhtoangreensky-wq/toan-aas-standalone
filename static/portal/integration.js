@@ -14225,6 +14225,7 @@
       } : {},
       linkStatus: { linked: telegramLinked },
       paymentOptions: {},
+      paymentOptionsReadState: account && initialPortalPath === "/wallet/topup" ? "loading" : "guarded",
       manualTopupFlow: {},
       manualTopupHistory: [],
       manualTopupReadState: account && initialPortalPath === "/wallet/topup" ? "loading" : "guarded",
@@ -16334,17 +16335,18 @@
     const requestEpoch = ++paymentOptionsHydrationEpoch;
     const sessionEpoch = paymentOptionsSessionEpoch;
     const expectedPath = currentPortalPath();
+    merge({ paymentOptions: {}, paymentOptionsReadState: "loading" });
     try {
       const options = await api("/payments/options");
       if (!paymentOptionsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
       const data = options.data && typeof options.data === "object" && !Array.isArray(options.data) ? options.data : {};
-      merge({ paymentOptions: { ...data, manual: safeManualPaymentOptions(data.manual) } });
+      merge({ paymentOptions: { ...data, manual: safeManualPaymentOptions(data.manual) }, paymentOptionsReadState: "ready" });
       return options;
     } catch (_) {
       // This local/read-only metadata is optional presentation.  Do not infer
       // a payment method or expose legacy billing data after a failed request.
       if (!paymentOptionsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
-      merge({ paymentOptions: {} });
+      merge({ paymentOptions: {}, paymentOptionsReadState: "failed" });
       return null;
     }
   }
@@ -27453,6 +27455,16 @@
           }
           return;
         }
+      }
+      if (action === "payment-options-refresh") {
+        if (route !== "/wallet/topup" || currentPortalPath() !== "/wallet/topup") throw new Error(manualTopupText("failed", "Chưa thể xử lý"));
+        setActionBusy(action, route, true);
+        try {
+          await hydratePaymentOptions();
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
       }
       if (action === "manual-topup-refresh") {
         if (route !== "/wallet/topup" || currentPortalPath() !== "/wallet/topup") throw new Error(manualTopupText("failed", "Chưa thể xử lý"));

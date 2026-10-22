@@ -651,7 +651,7 @@ def test_9_instruction_css_matches_the_markup_instead_of_dead_component_classes(
     ):
         assert dead not in manual_css
     desktop = re.search(r"\.portal-manual-payment-method\s*\{(?P<body>.*?)\n\}", manual_css, re.S)
-    assert "grid-template-columns: minmax(360px, 420px) minmax(0, 1fr)" in desktop.group("body")
+    assert "grid-template-columns: minmax(400px, 520px) minmax(0, 1fr)" in desktop.group("body")
 
 
 def test_10_confirmed_instruction_focus_stays_visible_below_the_sticky_header():
@@ -751,8 +751,41 @@ process.stdout.write(JSON.stringify({
             "otherCardCount": 0,
             "finalSubmit": True,
         }
-    assert 'value="bank_acb"' in result["bankOption"]
-    assert "disabled" in result["bankOption"]
+    assert result["bankOption"] == "", "Duplicate ACB alias must not render as a second option"
     assert result["blockedQr"] is False
     assert result["blockedFinalSubmit"] is False
     assert result["actionEvents"] == 0
+
+
+def test_13_empty_server_topup_catalog_does_not_render_browser_owned_packages():
+    """PayOS empty catalog must show a truthful empty state, never six client tiers."""
+    script = r'''
+mountPortal({ topup_lane: "payos" });
+const html = main.innerHTML;
+process.stdout.write(JSON.stringify({
+  packageInputs: (html.match(/name="package"/g) || []).length,
+  fallbackCodes: (html.match(/topup_(?:10k|20k|50k|100k|200k|500k)/g) || []).length,
+  emptyCopy: html.includes("Cổng PayOS hoặc danh mục mệnh giá hiện chưa sẵn sàng.")
+}));
+'''
+    result = _run_node_script(script)
+    assert result == {"packageInputs": 0, "fallbackCodes": 0, "emptyCopy": True}
+
+
+def test_14_duplicate_acb_methods_share_one_visible_selector_and_qr_scale_is_explicit():
+    """ACB bank/VietQR aliases use one customer choice while legacy IDs remain server data."""
+    script = r'''
+mountPortal({ topup_lane: "manual" });
+const html = main.innerHTML;
+process.stdout.write(JSON.stringify({
+  acbBankOptions: (html.match(/<option value="bank_acb"/g) || []).length,
+  acbVietQrOptions: (html.match(/<option value="bank_acb_vietqr"/g) || []).length
+}));
+'''
+    result = _run_node_script(script)
+    assert result == {"acbBankOptions": 0, "acbVietQrOptions": 1}
+
+    css = PORTAL_CSS.read_text(encoding="utf-8")
+    manual_css = css[css.index("/* Manual top-up"):]
+    assert "overflow: hidden" not in manual_css
+    assert "transform: scale(1.18)" not in manual_css

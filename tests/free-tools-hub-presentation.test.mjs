@@ -286,3 +286,9 @@ test("Free Tools YouTube thumbnail preview helper manages lifecycle and replaces
   assert.equal(state.hidden, false, "State visible when naturalWidth is 0");
   assert.equal(state.textContent, "Không tải được ảnh thu nhỏ từ YouTube.");
 });
+
+test("Free Tools YouTube labels do not promise unmeasured thumbnail resolutions", () => {
+  const html = render();
+  assert.doesNotMatch(html, /\b1080p\b|\b720p\b|\b360p\b|Full HD/);
+  assert.doesNotMatch(rendererSource, /\b1080p\b|\b720p\b|\b360p\b|Full HD/);
+});

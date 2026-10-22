@@ -226,6 +226,13 @@ def test_package_and_membership_prices_use_only_approved_public_sale_skus() -> N
     assert "price_vnd" not in catalog
 
 
+def test_package_legacy_visibility_note_is_localized_before_customer_render() -> None:
+    package_normalizer = _section(PORTAL, "function canonicalPackageCatalog(value)", "function safePayosCheckout")
+    assert "catalog.legacyNote" in package_normalizer
+    assert "rawNote" in package_normalizer
+    assert "Legacy hidden package kept for existing wallets/tests." not in package_normalizer
+
+
 def test_packages_and_membership_hydrate_approved_sale_catalog_on_direct_visit() -> None:
     packages_route = _section(
         INTEGRATION,

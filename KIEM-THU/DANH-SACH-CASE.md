@@ -451,3 +451,13 @@ chưa kiểm không được suy ra PASS từ các lượt smoke này.
 | Motion | 3 route × normal/reduced × 390/1440 = `12` | Đạt; overflow/external/write/page-errors `0` | CLS/LCP/INP trace `NOT_RUN` |
 
 Các case trên chỉ được tick khi có artifact tương ứng; không dùng số liệu này để thay cho runtime/live evidence.
+## R218-BILLING-20261022 — cases bổ sung
+
+| Case | Mức | Điều kiện | Kết quả cần thấy | Evidence |
+|---|---|---|---|---|
+| BILL-01 | nặng | `/wallet/topup`, `topup_packages=[]` | 0 package radio, không có sáu tier client, empty state rõ | billing metadata test |
+| BILL-02 | nặng | options GET fail rồi retry | `payment-options-refresh` gọi đúng GET; history count không đổi; state phục hồi | browser120 + metadata5/5 |
+| BILL-03 | vừa | ACB + ACB VietQR cùng ready/blocked | một option theo readiness; alias/history không bị đổi | browser120 + QR24/24 |
+| BILL-04 | vừa | portrait QR thật ở 375/390/768/1440 | ảnh natural ratio, transform none, overflow0 | browser-result.json |
+| BILL-05 | vừa | `/packages` và `/pricing` hydrate | 24 package cards; không suy giá; public sale thiếu thì hiển thị chờ catalog | production read-only DOM/API |
+| UT-YT-01 | nhẹ | Free Tools YouTube panel | nhãn không hứa kích thước chưa đo; load/error/retry giữ | free-tools7/7 |

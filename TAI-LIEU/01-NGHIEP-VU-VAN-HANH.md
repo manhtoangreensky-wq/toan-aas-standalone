@@ -12,6 +12,28 @@ Voiceinputtrống, không overflow/page/console/UIwrite/external. Dữ liệu qu
 tổng hợp của fileQA cũ không dùng làm bản bàn giao hoặc chứng minh tạo giọng.
 Đây chưa phải nghiệm thu generation/provider/output của tất cả sản phẩm.
 
+## Billing presentation repair — 22/10/2026
+
+Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.
+`/api/v1/packages` production đã quan sát `available=true`, 4 gói tháng và 20
+combo; `/packages` render 24 card sau hydrate ở viewport 327×668, overflow 0.
+Giá bán chỉ được phép xuất hiện khi `public_sale_catalog` có SKU, version và
+`approval_status=owner_approved`; Web giữ giá trống khi upstream chưa cấp.
+
+Nạp thủ công giữ hai nguồn đọc riêng: `/payments/options` cho method/QR và
+`/payments/manual` cho history. Lỗi options không được hiển thị như lỗi history;
+retry method gọi lại đúng GET options. Không có fallback sáu gói nạp client.
+Hai method ACB trùng QR chỉ còn một lựa chọn hiển thị theo readiness; canonical
+IDs/history giữ nguyên. Ảnh QR portrait giữ tỷ lệ tự nhiên và hiển thị rộng hơn
+trên desktop/mobile, không crop/scale mã.
+
+Evidence local: Node 902/902; wallet truth 21/21 trên DB cô lập + bridge giả lập;
+billing/QR Python 24/24 (CSS baseline exclusions đã tái hiện trên BASE);
+browser QA 120/120 cấu hình VI/EN/ZH × light/dark × 375/390/768/1440,
+console errors 0, UI writes 0, external requests 0, overflow 0. Không gọi
+provider, không tạo giao dịch, không thay wallet/PayOS. Batch chưa push/deploy;
+production vẫn chạy commit `e5b1f586` cho tới khi Owner mở delivery.
+
 ## R218 Q0 — nhãn giao diện thừa và Image continuity, 21/10/2026
 
 Shared customer/Admin không còn trình bày các ô bo tròn kiểu “đang ở trang
