@@ -688,6 +688,19 @@ a { color: inherit; text-decoration: none; }
 .portal-state-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .portal-state-meta span { padding: 5px 7px; border-radius: 7px; background: rgba(109, 166, 192, .09); color: #a7c2cf; font-size: 10px; }
 
+/* Image utility guards already explain the required action in their heading
+   and body. Keep the customer surface calm by removing repeated technical
+   session/cache/fallback chips; this does not hide an error or change a
+   capability gate. */
+.portal-page:is(
+  .portal-image-background-cleanup,
+  .portal-image-operation-history,
+  .portal-image-brand-overlay,
+  .portal-storyboard-grid,
+  .portal-image-resize,
+  .portal-image-enhance
+) .portal-state-meta { display: none; }
+
 .portal-summary-list { display: grid; gap: 10px; }
 .portal-summary-item { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(155, 178, 193, .1); }
 .portal-summary-item:last-child { padding-bottom: 0; border-bottom: 0; }

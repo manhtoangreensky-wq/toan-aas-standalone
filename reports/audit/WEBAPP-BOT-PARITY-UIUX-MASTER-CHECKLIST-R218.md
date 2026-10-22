@@ -752,6 +752,11 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   publish/license lặp lại khỏi customer UI. Test
   `tests/video-guide-guard-clarity.test.mjs` `1/1`; không đổi route, quyền,
   workflow video hay hợp đồng quyền sử dụng.
+- [x] Q0-IMAGE-UTILITY-GUARD-CLARITY: các guard/loading/failed card của sáu
+  Image utility giữ nguyên nhân và nút thử lại, nhưng ẩn chip phiên/cache/
+  fallback kỹ thuật lặp khỏi customer UI bằng selector route-scoped. Test
+  `tests/image-utility-guard-clarity.test.mjs` `1/1`; không đổi engine, file,
+  capability, API hay output.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.

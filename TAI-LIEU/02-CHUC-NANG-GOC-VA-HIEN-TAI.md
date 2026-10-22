@@ -86,6 +86,12 @@ Hai guard customer này chỉ còn nguyên nhân cần phiên Web; chip phiên,
 execution/publish/license lặp đã bỏ. Không đổi route, quyền, workflow video,
 hay hợp đồng quyền sử dụng. Test riêng `1/1`, toàn bộ Node `913/913`.
 
+## Cập nhật Image utility guard — 22/10/2026
+
+Các thẻ guard của sáu Image utility chỉ còn thông điệp nguyên nhân và hành động
+cần làm; chip phiên/cache/fallback được ẩn theo selector route-scoped. Không đổi
+engine, file, capability, API hay output. Test riêng `1/1`, toàn bộ Node `914/914`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;

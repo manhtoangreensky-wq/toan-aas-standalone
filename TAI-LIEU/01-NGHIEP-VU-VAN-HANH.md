@@ -64,6 +64,14 @@ hiển thị trong nội dung chính; route, quyền và boundary không đổi.
 đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `913/913`. Không mở video
 execution, provider hoặc xác minh license thay cho máy chủ.
 
+## Image utility guard clarity — 22/10/2026
+
+Sáu nhóm Image utility (xóa nền, lịch sử, gắn thương hiệu, storyboard, đổi
+canvas và nâng chất lượng) ẩn chip kỹ thuật phiên/cache/fallback trong các guard
+card bằng selector chỉ áp dụng cho đúng route. Nguyên nhân và thao tác cần làm
+vẫn giữ; không đổi engine, file, capability, API hay output. Test riêng `1/1`;
+toàn bộ Node WebApp sau thay đổi đạt `914/914`.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.
