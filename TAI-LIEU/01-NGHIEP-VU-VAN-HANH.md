@@ -168,7 +168,7 @@ Focused `3/3`, full Node `926/926`. Không đổi renderer/backend ngoài CSS v�
 
 Preflight và Web inventory đã được refresh sau các wave UI. Auditor quét `330`
 source files, fingerprint hiện tại là
-`f88f9064e4e06317d3dc6e5bb167aa6ab30d510eae8fadaf39a6ab081e3baffb`; verifier
+`3cc9b2ed53dcf4e644e3040ce62f3ad44d09ca18d44b0d23116230019ed3f15f`; verifier
 Web evidence trả `ok: true`. Đây là evidence source/migration, không phải CI,
 deploy hoặc LIVE.
 
