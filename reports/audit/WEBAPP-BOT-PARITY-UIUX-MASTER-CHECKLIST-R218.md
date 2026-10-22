@@ -762,6 +762,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   theo selector route-scoped. Test
   `tests/document-utility-guard-clarity.test.mjs` `1/1`; không đổi bytes,
   storage, capability, API hay delivery.
+- [x] Q0-SUPPORT-ADMIN-GUARD-CLARITY: guard của Trung tâm hỗ trợ khách hàng
+  trong Admin chỉ giữ nguyên nhân cần quyền; bỏ chip vai trò/cầu nối/dữ liệu dự
+  phòng lặp lại. Test `tests/support-admin-guard-clarity.test.mjs` `1/1`; không
+  đổi RBAC, dữ liệu yêu cầu, reply, escalation hay finance boundary.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.

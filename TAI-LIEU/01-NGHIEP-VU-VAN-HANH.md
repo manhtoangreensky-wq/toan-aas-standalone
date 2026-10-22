@@ -79,6 +79,13 @@ và OCR) ẩn chip kỹ thuật phiên/storage/runtime/fallback theo từng rout
 và action thật vẫn giữ nguyên; không đổi bytes, storage, capability, API hay
 delivery. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `915/915`.
 
+## Support Admin guard clarity — 22/10/2026
+
+Guard của Trung tâm hỗ trợ khách hàng trong Admin chỉ còn thông điệp yêu cầu
+quyền do máy chủ cấp. Ba chip kỹ thuật về vai trò, cầu nối và dữ liệu dự phòng
+đã bỏ; loading, RBAC, danh sách yêu cầu và boundary tài chính không đổi. Test
+riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `916/916`.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.
