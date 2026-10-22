@@ -195,6 +195,14 @@ bằng tiếng Việt. Cụm3ô kỹ thuật của soạn hướng đọc đã t
 Antigravity chưa trả patch hợp lệ, không được gọi CLI exit0 là sửa đạt.
 Evidence `reports/audit/R218-VOICE-METADATA-QA-20261023.json`.
 
+Cập nhật tiếp23/10: đã thu hồi patch từ cùng phiên Antigravity3.8Flash, xóa
+đúng3ô kỹ thuật trong disclosure soạn hướng đọc bằng1line production. Test
+RED6→GREEN6, fullNode933/933, Python10/10; browser18configs/36states giữ
+keyboard/focus/5field/defaults, không lỗi/overflow/external/write. Form, màu,
+capability và backend giữ nguyên. Đây là local UI, chưa CI/deploy/LIVE.
+Thử đồng bộ main406127e cho13regression assertions fail (Dashboard0H1 cả3locale),
+nên merge thử đã abort; bản vá hiện tại không chứa thay đổi upstream đó.
+
 ## Migration evidence refresh — 22/10/2026
 
 Preflight và Web inventory đã được refresh sau các wave UI. Auditor quét `330`

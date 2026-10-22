@@ -106,6 +106,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] C0-PR661-MAIN-SYNC: branchf63d69e xung đột2tệp evidence với main406127e;
   đồng bộ upstream UI bằng Git, giữ delta PR661, refresh provenance và test lại.
   Spec `2026-10-23-r218-pr661-main-sync.md`; không merge PR/deploy ở lát này.
+  Merge thử choNode914/927 (13fail), Python25/25; renderer Dashboard mấtH1
+  cả3locale. Đã abort đúng merge thử, source trở lại và Node927/927. Không
+  làm yếu test hoặc đẩy candidate lỗi; compatibility còn mở theo spec.
 
 - [x] Root menu Bot và nhóm sản phẩm ghi tại WEBAPP-BOT-PRODUCT-INVENTORY-R218.md.
 - [x] Đọc menu/handler/catalog chính cho Voice/Music/SubDub/Image/Video và tiện ích.
@@ -833,12 +836,12 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   SFX Cue Sheet boundary dùng một lời giải thích capability thay cho 6–7 ô
   provider/player/output/payment lặp. Preset, brief, cue và form vẫn giữ.
   Test `tests/music-boundary-clarity.test.mjs` `1/1`; không mở generation/player.
-- [ ] Q0-VOICE-DIRECTION-CLARITY: disclosure soạn hướng đọc còn ba ô kỹ thuật
-  âm thanh/nhà cung cấp/tác vụ lặp; bỏ đúng cụm này, giữ lời giải thích và mọi
-  control/capability. Spec `2026-10-23-r218-voice-direction-clarity.md`; cần
-  renderer RED/GREEN và browser18 cấu hình trước khi đóng.
-  Browser đã tái hiện3ô ởbaseline; Antigravity Flash2 lượt chưa trả patch hợp lệ.
-  Không sửa app source hoặc gọi CLI exit0 là PASS; chờ quyền tiếp quản đã hỏi.
+- [x] Q0-VOICE-DIRECTION-CLARITY (local UI): worker Flash đã trả bản vá1line
+  trong cùng phiên; bỏ3ô âm thanh/provider/job lặp, giữ disclosure/form/quyền.
+  RED6fail→GREEN6/6; worker lượt2 sửa harness vm, fullNode933/933, Python10/10.
+  Browser18configs/36states VI/EN/ZH×light/dark×390/768/1440×capability on/off:
+  keyboard/focus/5field/defaults giữ, errors/overflow/external/write0. Evidence
+  `R218-VOICE-DIRECTION-CLARITY-QA-20261023.json`. Chưa CI/deploy/LIVE toàn nhóm.
 - [x] Q0-GUARD-SELECTOR-ACCURACY: sửa selector route-scoped cho Project Package
   và Video finalization là DOM con của `portal-page`; test clarity đã đổi từ
   regex không ràng buộc sang kiểm tra nguyên block selector và đủ class. Test

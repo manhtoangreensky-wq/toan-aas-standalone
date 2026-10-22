@@ -11,7 +11,7 @@ Các số endpoint của Web không được thay thế yêu cầu này.
 | Quản lý giọng dùng TTS/SubDub/Video | `/voice/saved` chỉ có GET tối đa50 mục đã xác minh; management/preview/apply còn mở |22endpoint metadata không chứng minh đủ Bot-parity |
 | Hồ sơ hướng thể hiện và lời thoại (Web bổ sung) | `/voice-studio` có22endpoint metadata; Python runtime31/31, source10/10; lifecycle/readback6cấu hình qua24ghi QA | Không sinh audio/provider voice profile |
 | Thông báo theo ngôn ngữ giao diện |4cấu hình EN/ZH thực còn toast lọc tiếng Việt | Không đóng locale từ catalogue render đúng |
-| Bố cục gọn, không ô kỹ thuật lặp |Disclosure soạn hướng đọc còn3ô đã tái hiện trên browser | Chưa sửa, chưa đóng chỉ vì plan hoặc worker exit0 |
+| Bố cục gọn, không ô kỹ thuật lặp |Disclosure soạn hướng đọc đã bỏ3ô; worker1line, renderer6/6, browser18configs/36states và fullNode933/933 | Chỉ đóng cụm này ở local UI; không đóng toàn sản phẩm hoặc LIVE |
 
 Đính chính mọi cách đọc tài liệu cũ: “Voice Vault” trong tên endpoint
 `copyfast_voice_studio.py` là bản ghi hướng đọc Web, không đồng nghĩa giọng đã

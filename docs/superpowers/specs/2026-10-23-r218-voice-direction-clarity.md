@@ -32,11 +32,16 @@ ENV, DB và workflow đều là protected comparator.
 ## Checklist và cổng
 
 - [x] Đọc renderer và xác định cụm ba ô lặp trong disclosure.
-- [ ] RED thực thi renderer cho VI/EN/ZH × capability on/off.
-- [ ] Antigravity Flash lượt 1 trả patch; Codex kiểm đúng allowlist.
-- [ ] GREEN mục tiêu và full Node/syntax/protected comparators.
-- [ ] Browser disclosure mở/đóng, form không đổi, locale/theme/viewport.
-- [ ] Cập nhật ledger bằng evidence; chỉ đóng đúng lát UI này.
+- [x] RED thực thi renderer cho VI/EN/ZH × capability on/off:6/6fail đúng guard-list.
+- [x] Antigravity trả patch trong cùng phiên; production1line đúng allowlist.
+- [x] Worker lượt2 sửa lỗi harness vm; GREEN6/6, full Node933/933, syntax/diff đạt.
+- [x] Browser18configs/36states: disclosure bàn phím, form/locale/theme giữ,
+  errors/overflow/external/write0.
+- [x] Ledger/evidence cập nhật; ACCEPTED_LOCAL_UI_ONLY, không đóng toàn Voice.
+
+Evidence: `reports/audit/R218-VOICE-DIRECTION-CLARITY-QA-20261023.json`.
+Không cần Codex tự viết thay implementation; quyền tiếp quản hỏi trước đó
+không còn là điều kiện chặn vì worker đã trả bản vá và Codex nghiệm thu.
 
 Worker một phiên nền, model `gemini-3.8-flash-high`; không đổi settings/login,
 không mở IDE. Hai lượt cùng AC vẫn sai mới Codex tiếp quản.

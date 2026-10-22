@@ -474,7 +474,7 @@ Evidence local: `C:/Users/toann/Documents/Codex/qa/r218-voice-direction-20261023
 | VO-META-02 | vừa | Detail → đổi tên → lưu → GET → archive → kiểm form khóa → restore → GET | Revision tăng, tên còn nguyên, archived khóa edit, restore về active. Đã đo6cấu hình |
 | VO-META-03 | vừa | Danh sách → tìm từ không khớp → xóa bộ lọc | Empty thật rồi record trở lại; không output/audio. Đã đo6cấu hình |
 | VO-META-04 | vừa | Filter/clear/page/refresh trên EN/ZH và VI | Locale đúng. Hiện filter FAIL ở4cấu hình EN/ZH; giữ lỗi mở theo spec VO-MANAGEMENT-FEEDBACK-LOCALE |
-| VO-CLARITY-01 | nhẹ | `/voice-studio/direction-composer` → mở disclosure bằng Enter/Space | Một summary và giải thích, không3ô kỹ thuật; hiện FAIL đã tái hiện, chưa có worker patch |
+| VO-CLARITY-01 | nhẹ | `/voice-studio/direction-composer` → mở disclosure bằng Enter/Space | Local UI đạt18configs/36states:1summary/1paragraph,0ô kỹ thuật;5field/defaults/quyền/focus giữ. Renderer6/6, fullNode933/933; chưa LIVE |
 | VO-BOUNDARY-01 | nặng | Đối chiếu `/voice-studio` với `/voice/saved` | Không dùng22endpoint metadata để tick canonical rename/default/delete/preview/SubDub reuse |
 
 Ma trận đã đo là VI/EN/ZH × (dark390/light1440), không phải toàn bộ12 tổ hợp.
