@@ -124,6 +124,12 @@ Lane rail Voice Studio đã bỏ nhãn bảo vệ lặp, giữ nguyên title/des
 action và toàn bộ route/capability handoff. Không mở thêm Voice Vault runtime,
 preview, rename, delete hoặc reuse. Test riêng `1/1`, toàn bộ Node `919/919`.
 
+## Cập nhật SubDub Smart Multi empty-map — 22/10/2026
+
+Smart Multi chỉ hiển thị mô tả và hook khi chưa có speaker payload; khung bản đồ
+người nói rỗng được ẩn, không đoán giọng hoặc kết quả. Không đổi upload, engine,
+quote hay delivery. Test riêng `1/1`, toàn bộ Node `920/920`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;

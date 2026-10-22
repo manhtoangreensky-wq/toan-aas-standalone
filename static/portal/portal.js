@@ -27100,7 +27100,7 @@
         <fieldset class="portal-subdub-smart-multi" data-subdub-smart-multi data-status="guarded" data-subdub-callback="videodub|voice|auto_smart_multivoice" aria-describedby="subdub-smart-multi-note-${safeText(suffix)}">
           <legend>${safeText(copy.smartMultiLabel)}</legend>
           <p id="subdub-smart-multi-note-${safeText(suffix)}">${safeText(copy.smartMultiHint)}</p>
-          <p class="portal-form-note">${safeText(copy.voiceLaneSmartMulti)} · ${safeText(copy.voiceLaneGuarded)}</p>
+          <p class="portal-form-note">${safeText(copy.smartMultiHint)}</p>
         </fieldset>
         <div class="portal-subdub-speaker-map" data-subdub-speaker-map data-status="guarded" aria-live="polite">
           <strong>${safeText(copy.speakerMapLabel)}</strong>

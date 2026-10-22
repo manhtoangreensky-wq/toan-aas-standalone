@@ -108,6 +108,13 @@ handoff không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay
 `919/919`. Đây chỉ là presentation, không phải preview, rename, delete, reuse
 hay engine voice runtime.
 
+## SubDub Smart Multi empty-map clarity — 22/10/2026
+
+Smart Multi giữ mô tả nhận diện một/nhiều giọng và callback guarded, nhưng không
+hiển thị khung bản đồ người nói rỗng khi server chưa trả speaker payload. UI
+không đoán giọng hoặc dựng kết quả giả; upload, engine, quote và delivery vẫn
+chưa mở. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `920/920`.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

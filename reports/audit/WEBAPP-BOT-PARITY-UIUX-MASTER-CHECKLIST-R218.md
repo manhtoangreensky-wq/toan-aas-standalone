@@ -780,6 +780,11 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   action rõ ràng; bỏ nhãn “đang được bảo vệ” lặp trên cả ba lane. Test
   `tests/voice-lane-clarity.test.mjs` `1/1`; không đổi route, capability,
   Voice Vault hay handoff.
+- [x] SD-SPEAKER-MAP-EMPTY-CLARITY: Smart Multi giữ mô tả nhận diện và hook
+  dữ liệu, nhưng không dựng khung bản đồ người nói rỗng khi server chưa trả
+  speaker payload; không đoán giọng hoặc kết quả. Test
+  `tests/subdub-speaker-map-clarity.test.mjs` `1/1`; engine/upload/quote vẫn
+  guarded.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.
