@@ -801,6 +801,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   capability theo server thay cho năm ô lặp receipt/model/provider/payment/
   output; composer, thread và auth boundary không đổi. Test
   `tests/chat-boundary-clarity.test.mjs` `1/1`; không mở provider/Bot/PayOS.
+- [x] Q0-IMAGE-STUDIO-BOUNDARY-CLARITY: Image Studio boundary giữ một lời
+  giải thích capability thay cho bốn ô provider/preview/job/payment lặp; các
+  class responsive vẫn giữ nguyên. Test `tests/image-boundary-clarity.test.mjs`
+  `1/1`; không đổi image engine, Asset Vault, API hay output.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.

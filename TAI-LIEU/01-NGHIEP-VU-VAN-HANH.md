@@ -143,6 +143,13 @@ bằng một thông điệp capability theo server; composer, thread, auth và d
 Chat Run không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt
 `924/924`.
 
+## Image Studio boundary clarity — 22/10/2026
+
+Image Studio boundary thay bốn ô provider/preview/job/payment lặp bằng một lời
+giải thích capability theo máy chủ; class responsive và route không đổi. Đã cân
+bằng key `boundary.summary` cho VI/EN/ZH. Test riêng đạt `1/1`; toàn bộ Node
+WebApp sau thay đổi đạt `925/925`.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

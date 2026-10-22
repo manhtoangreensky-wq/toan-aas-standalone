@@ -154,6 +154,12 @@ Chat Workspace chỉ còn một thông điệp capability theo server thay cho n
 receipt/model/provider/payment/output lặp. Không đổi composer, thread, auth,
 Chat Run hoặc boundary dữ liệu. Test riêng `1/1`, toàn bộ Node `924/924`.
 
+## Cập nhật Image Studio boundary — 22/10/2026
+
+Image Studio chỉ còn một lời giải thích capability thay cho bốn ô provider/
+preview/job/payment lặp; key mới đã cân bằng VI/EN/ZH. Không đổi route, image
+engine, Asset Vault, API hay output. Test riêng `1/1`, toàn bộ Node `925/925`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;

@@ -16893,6 +16893,7 @@
     ["boundary.kicker", "Ranh giới biên tập", "Authoring boundary", "创作边界"],
     ["boundary.title", "Định hướng và tự rà soát, không tạo ảnh", "Direction and self-review, no image generation", "方向与自审，不生成图像"],
     ["boundary.body", "Không gian chỉ lưu mô tả, tham chiếu Kho tài sản đã được kiểm tra quyền sở hữu và các biến thể định hướng. Không gọi nhà cung cấp, không tạo ảnh/bản xem trước/tác vụ, không trừ Xu hay khởi tạo thanh toán.", "The workspace stores briefs, owner-checked Asset Vault references and direction variants only. It does not call providers, create images/previews/jobs, spend Xu or start payments.", "工作区只保存简报、已检查所有权的 Asset Vault 参考和方向变体。不会调用服务商、生成图像/预览/任务，也不会扣除 Xu 或发起付款。"],
+    ["boundary.summary", "Tạo ảnh, bản xem trước, tác vụ, bàn giao và thanh toán chỉ mở khi máy chủ công bố capability tương ứng.", "Image creation, preview, jobs, delivery and payment open only when the server publishes the matching capability.", "生成图像、预览、任务、交付和付款仅在服务器公布相应能力后开放。"],
     ["boundary.provider", "Gọi nhà cung cấp ảnh", "Provider image call", "图像服务商调用"],
     ["boundary.image", "Ảnh / bản xem trước", "Image / preview", "图像 / 预览"],
     ["boundary.job", "Tác vụ / bàn giao", "Job / delivery", "任务 / 交付"],
