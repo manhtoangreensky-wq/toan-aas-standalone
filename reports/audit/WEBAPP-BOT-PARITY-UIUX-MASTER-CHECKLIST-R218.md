@@ -737,6 +737,11 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   Center chỉ giữ nguyên nhân và thao tác cần làm; bỏ chip phiên/bộ nhớ/cầu nối
   lặp lại khỏi customer UI. Test `tests/project-center-guard-clarity.test.mjs`
   `1/1`; không đổi capability, API, dữ liệu hay boundary authoring.
+- [x] Q0-CAMPAIGN-GUARD-CLARITY: ba trạng thái chưa đăng nhập/đang tải/tải lỗi
+  của Campaign Planner chỉ giữ nguyên nhân và thao tác cần làm; bỏ chip phiên,
+  bộ nhớ và kết nối thay thế khỏi customer UI. Test
+  `tests/campaign-guard-clarity.test.mjs` `1/1`; không đổi lịch, publish,
+  capability, API, dữ liệu hay boundary AutoPost.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.

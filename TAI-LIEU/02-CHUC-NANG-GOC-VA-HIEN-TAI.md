@@ -67,6 +67,13 @@ Project Center giữ lại thông điệp và nút thử lại cần cho ngườ
 chip kỹ thuật lặp trong ba trạng thái chưa xác minh. Không đổi API, quyền sở
 hữu, danh sách dự án hay authoring. Test riêng `1/1`, toàn bộ Node `910/910`.
 
+## Cập nhật Campaign Planner guard — 22/10/2026
+
+Campaign Planner giữ nguyên thông điệp và nút thử lại cần thiết, bỏ chip kỹ
+thuật lặp trong ba trạng thái chưa xác minh. Không đổi lịch, publish,
+capability, API, dữ liệu hoặc boundary AutoPost. Test riêng `1/1`, toàn bộ Node
+`911/911`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;
