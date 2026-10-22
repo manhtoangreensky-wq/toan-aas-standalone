@@ -22,6 +22,15 @@ Test riêng đạt `1/1`; focused Music/library đạt `57/57`; toàn bộ Node 
 đạt `908/908`; syntax và `git diff --check` đều đạt. Đây là sửa trình bày tại
 source, chưa phải bằng chứng nghe/tải/giao tệp hoặc LIVE.
 
+## Content Studio guard clarity — 22/10/2026
+
+Ba trạng thái chưa xác minh của Content Studio (chưa có quyền, đang tải, tải
+thất bại) chỉ hiển thị nguyên nhân và thao tác cần làm; các chip kỹ thuật lặp
+về phiên, bộ nhớ đệm, cầu nối hoặc đầu ra giả đã được bỏ khỏi customer UI. Khi
+máy chủ cho phép, nút thử lại vẫn giữ nguyên. Test riêng đạt `1/1`; toàn bộ
+Node WebApp sau thay đổi đạt `909/909`. Đây chỉ là lớp trình bày, không mở thêm
+quyền tạo, engine, AI, thanh toán hoặc giao tệp.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

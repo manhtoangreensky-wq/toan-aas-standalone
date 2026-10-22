@@ -54,6 +54,13 @@ tra lại và liên kết sang workspace; không có thay đổi về danh sách
 nghe thử, tải tệp hoặc bàn giao. Test riêng `1/1`, focused Music/library
 `57/57`, toàn bộ Node `908/908`.
 
+## Cập nhật Content Studio guard — 22/10/2026
+
+Các trạng thái chưa có quyền/đang tải/tải lỗi của Content Studio đã bỏ chip kỹ
+thuật lặp; vẫn giữ thông điệp nguyên nhân và nút thử lại khi capability server
+đã cấp. Không thay đổi authoring, ownership, API hay dữ liệu. Test riêng `1/1`
+và toàn bộ Node `909/909`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;
