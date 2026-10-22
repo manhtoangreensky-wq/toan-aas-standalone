@@ -30,9 +30,10 @@ Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 gi�
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p khi chưa có kích thước ảnh;
   extractor chỉ báo đã nhận liên kết/mã nhúng. FreeTools7/7 và browser gate xanh;
   không coi URL chuẩn bị xong là tải video.
-- [x] Batch mới đã commit/push trên PR #661, HEAD `e3efa895e73ded8794e73fc626c6ff0abddfe8b7`;
-  run `39767604255` xanh cả Verify Web App và Authenticated WebApp QA. Chưa
-  merge/deploy/LIVE. Spec: `docs/superpowers/specs/2026-10-22-r218-billing-presentation-truth.md`.
+- [x] Batch mới đã commit/push trên PR #661, HEAD `e8f3d76` (toast follow-up đã
+  kèm provenance); run `39771663986` xanh cả Verify Web App và Authenticated
+  WebApp QA. Chưa merge/deploy/LIVE. Spec:
+  `docs/superpowers/specs/2026-10-22-r218-billing-presentation-truth.md`.
 
 ## Quy ước
 
