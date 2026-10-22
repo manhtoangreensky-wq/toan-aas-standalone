@@ -136,6 +136,13 @@ bằng một lời giải thích theo trạng thái máy chủ; consent notice v
 Đã bổ sung key VI/EN/ZH cho thông điệp mới để không rò tiếng Việt khi đổi locale.
 Test riêng `1/1`; toàn bộ Node WebApp sau thay đổi đạt `923/923`.
 
+## Chat Workspace boundary clarity — 22/10/2026
+
+Chat Workspace boundary thay năm ô lặp về receipt/model/provider/payment/output
+bằng một thông điệp capability theo server; composer, thread, auth và dữ liệu
+Chat Run không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt
+`924/924`.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.
