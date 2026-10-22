@@ -129,6 +129,13 @@ toán` đã bỏ vì không phải lựa chọn nghiệp vụ của khách. Cata
 chi tiết, sao chép và lưu không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp
 sau thay đổi đạt `922/922`.
 
+## Voice Studio policy clarity — 22/10/2026
+
+Voice Studio policy thay bốn ô capability lặp (TTS, clone, preview, delivery)
+bằng một lời giải thích theo trạng thái máy chủ; consent notice vẫn giữ nguyên.
+Đã bổ sung key VI/EN/ZH cho thông điệp mới để không rò tiếng Việt khi đổi locale.
+Test riêng `1/1`; toàn bộ Node WebApp sau thay đổi đạt `923/923`.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

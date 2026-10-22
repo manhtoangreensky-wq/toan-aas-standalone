@@ -142,6 +142,12 @@ Gallery giữ số nhóm mẫu/ngành và bỏ ô `0` về thực thi/thanh toá
 catalog, filter, xem chi tiết, sao chép, lưu hoặc boundary. Test riêng `1/1`,
 toàn bộ Node `922/922`.
 
+## Cập nhật Voice Studio policy — 22/10/2026
+
+Policy Voice Studio chỉ còn một lời giải thích capability theo trạng thái máy
+chủ thay cho bốn ô lặp; consent notice và guard thật giữ nguyên. Đã cân bằng
+catalog VI/EN/ZH cho key mới. Test riêng `1/1`, toàn bộ Node `923/923`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;

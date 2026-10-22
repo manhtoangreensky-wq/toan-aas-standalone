@@ -17885,13 +17885,11 @@
   }
   function renderVoiceStudioPolicy(context) {
     const policy = context.voiceStudioPolicy && typeof context.voiceStudioPolicy === "object" ? context.voiceStudioPolicy : {};
-    const guardItems = [
-      [voiceStudioText("policy.features.speech", "Chuyển văn bản thành giọng nói"), policy.tts || "guarded"],
-      [voiceStudioText("policy.features.clone", "Nhân bản giọng nói"), policy.voice_clone || "guarded"],
-      [voiceStudioText("policy.features.preview", "Nghe thử"), policy.preview || "guarded"],
-      [voiceStudioText("policy.features.delivery", "Bàn giao tệp"), policy.output_delivery || "guarded"]
-    ];
-    return `<aside class="portal-card portal-card-pad portal-voice-studio-policy"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceStudioText("policy.kicker", "GIỚI HẠN CỦA TRANG"))}</span><h2 class="portal-card-title">${safeText(voiceStudioText("policy.title", "Soạn và lưu hồ sơ, không tạo giọng nói"))}</h2><p class="portal-card-subtitle">${safeText(voiceStudioText("policy.description", "Trang chỉ giữ thông tin riêng tư và lời thoại. Không tải lên âm thanh hoặc kết nối dịch vụ tạo giọng."))}</p></div>${badge("guarded")}</div><div class="portal-voice-studio-guard-list">${guardItems.map(([label, state]) => `<span><strong>${safeText(label)}</strong><em>${safeText(voiceStudioPolicyState(state))}</em></span>`).join("")}</div><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(voiceStudioText("policy.consent.title", "Xác nhận quyền là do bạn tự khai báo"))}</strong><p>${safeText(voiceStudioText("policy.consent.description", "Hệ thống lưu lời xác nhận để tham khảo nội bộ; không xác minh danh tính, cấp quyền sử dụng hoặc mở tính năng nhân bản giọng."))}</p></div></div></aside>`;
+    const runtimeReady = [policy.tts, policy.voice_clone, policy.preview, policy.output_delivery].some((value) => ["ready", "available", "enabled"].includes(String(value || "").trim().toLowerCase()));
+    const runtimeSummary = runtimeReady
+      ? voiceStudioText("policy.runtimeReady", "Một số capability đã được máy chủ công bố; từng thao tác vẫn cần kiểm tra quyền và trạng thái riêng.")
+      : voiceStudioText("policy.runtimeGuarded", "Tạo giọng, nhân bản, nghe thử và bàn giao chỉ mở khi máy chủ công bố capability tương ứng.");
+    return `<aside class="portal-card portal-card-pad portal-voice-studio-policy"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceStudioText("policy.kicker", "GIỚI HẠN CỦA TRANG"))}</span><h2 class="portal-card-title">${safeText(voiceStudioText("policy.title", "Soạn và lưu hồ sơ, không tạo giọng nói"))}</h2><p class="portal-card-subtitle">${safeText(voiceStudioText("policy.description", "Trang chỉ giữ thông tin riêng tư và lời thoại. Không tải lên âm thanh hoặc kết nối dịch vụ tạo giọng."))}</p></div>${badge("guarded")}</div><div class="portal-voice-studio-guard-list"><p class="portal-form-note portal-voice-studio-guard-summary">${safeText(runtimeSummary)}</p></div><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(voiceStudioText("policy.consent.title", "Xác nhận quyền là do bạn tự khai báo"))}</strong><p>${safeText(voiceStudioText("policy.consent.description", "Hệ thống lưu lời xác nhận để tham khảo nội bộ; không xác minh danh tính, cấp quyền sử dụng hoặc mở tính năng nhân bản giọng."))}</p></div></div></aside>`;
   }
   function renderVoiceVaultCards(items, context) {
     const canView = Boolean(context.capabilities && context.capabilities["voice-studio-view"] === true);

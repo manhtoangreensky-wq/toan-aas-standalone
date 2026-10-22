@@ -16251,6 +16251,8 @@
     ["policy.kicker","GIỚI HẠN CỦA TRANG","WORKSPACE LIMITS","工作区范围"],
     ["policy.title","Soạn và lưu hồ sơ, không tạo giọng nói","Manage profiles; do not generate voices","管理档案，不生成语音"],
     ["policy.description","Trang chỉ giữ thông tin riêng tư và lời thoại. Không tải lên âm thanh hoặc kết nối dịch vụ tạo giọng.","This workspace stores private information and scripts only. It does not accept audio uploads or connect to voice-generation services.","此工作区仅保存私密信息和台词，不接收音频上传，也不连接语音生成服务。"],
+    ["policy.runtimeGuarded","Tạo giọng, nhân bản, nghe thử và bàn giao chỉ mở khi máy chủ công bố capability tương ứng.","Voice creation, cloning, preview and delivery open only when the server publishes the matching capability.","生成语音、克隆、试听和交付仅在服务器公布相应能力后开放。"],
+    ["policy.runtimeReady","Một số capability đã được máy chủ công bố; từng thao tác vẫn cần kiểm tra quyền và trạng thái riêng.","Some capabilities are published by the server; each action still requires its own permission and state check.","服务器已公布部分能力；每项操作仍需单独检查权限和状态。"],
     ["policy.consent.title","Xác nhận quyền là do bạn tự khai báo","Rights confirmation is self-reported","使用权由您自行声明"],
     ["policy.consent.description","Hệ thống lưu lời xác nhận để tham khảo nội bộ; không xác minh danh tính, cấp quyền sử dụng hoặc mở tính năng nhân bản giọng.","The workspace stores your statement for internal review; it does not verify identity, grant usage rights or enable voice cloning.","工作区保存您的声明供内部审核；不会验证身份、授予使用权或启用语音克隆。"],
     ["policy.features.speech","Chuyển văn bản thành giọng nói","Text-to-speech","文字转语音"],

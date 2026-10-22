@@ -793,6 +793,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   mẫu và ngành; bỏ ô `0 — Thực thi / thanh toán` không phải lựa chọn nghiệp vụ.
   Test `tests/free-prompt-zero-metric-clarity.test.mjs` `1/1`; không đổi
   catalog/filter/save/boundary.
+- [x] Q0-VOICE-POLICY-CLARITY: Voice Studio policy giữ một lời giải thích
+  capability theo trạng thái máy chủ thay cho bốn ô lặp TTS/clone/preview/
+  delivery; consent notice vẫn giữ nguyên. Test
+  `tests/voice-policy-clarity.test.mjs` `1/1`; không đổi capability/API/runtime.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.
