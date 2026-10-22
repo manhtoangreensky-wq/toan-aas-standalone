@@ -22218,23 +22218,48 @@
         }
       };
       const text = copy[interfaceLocaleFor(ctx)] || copy.vi;
-      const destinations = [
-        ["/studio", ICONS.video], ["/tools/image", ICONS.image],
-        ["/voice", ICONS.voice], ["/subdub", ICONS.subtitle],
-        ["/content", ICONS.prompt], ["/music", ICONS.music]
-      ];
       return `<section class="portal-card portal-card-pad portal-dashboard-product-hero" aria-labelledby="dashboard-product-title">
         <div class="portal-dashboard-product-heading">
           <h2 id="dashboard-product-title">${safeText(text.title)}</h2>
           <p>${safeText(text.description)}</p>
         </div>
         <div class="portal-dashboard-launchers-grid">
-          ${destinations.map(([href, icon], index) => `<a class="portal-product-launcher-card" href="${href}">
-            <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(icon)}</span>
-            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[index][0])}</strong><span>${safeText(text.products[index][1])}</span></span>
+          <a class="portal-product-launcher-card" href="/studio">
+            <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span>
+            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[0][0])}</strong><span>${safeText(text.products[0][1])}</span></span>
             <span class="portal-product-launcher-arrow" aria-hidden="true">↗</span>
             <span class="portal-sr-only">${safeText(text.open)}</span>
-          </a>`).join("")}
+          </a>
+          <a class="portal-product-launcher-card" href="/tools/image">
+            <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(ICONS.image)}</span>
+            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[1][0])}</strong><span>${safeText(text.products[1][1])}</span></span>
+            <span class="portal-product-launcher-arrow" aria-hidden="true">↗</span>
+            <span class="portal-sr-only">${safeText(text.open)}</span>
+          </a>
+          <a class="portal-product-launcher-card" href="/voice">
+            <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(ICONS.voice)}</span>
+            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[2][0])}</strong><span>${safeText(text.products[2][1])}</span></span>
+            <span class="portal-product-launcher-arrow" aria-hidden="true">↗</span>
+            <span class="portal-sr-only">${safeText(text.open)}</span>
+          </a>
+          <a class="portal-product-launcher-card" href="/subdub">
+            <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(ICONS.subtitle)}</span>
+            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[3][0])}</strong><span>${safeText(text.products[3][1])}</span></span>
+            <span class="portal-product-launcher-arrow" aria-hidden="true">↗</span>
+            <span class="portal-sr-only">${safeText(text.open)}</span>
+          </a>
+          <a class="portal-product-launcher-card" href="/content">
+            <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(ICONS.prompt)}</span>
+            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[4][0])}</strong><span>${safeText(text.products[4][1])}</span></span>
+            <span class="portal-product-launcher-arrow" aria-hidden="true">↗</span>
+            <span class="portal-sr-only">${safeText(text.open)}</span>
+          </a>
+          <a class="portal-product-launcher-card" href="/music">
+            <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(ICONS.music)}</span>
+            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[5][0])}</strong><span>${safeText(text.products[5][1])}</span></span>
+            <span class="portal-product-launcher-arrow" aria-hidden="true">↗</span>
+            <span class="portal-sr-only">${safeText(text.open)}</span>
+          </a>
         </div>
       </section>`;
     }
