@@ -112,6 +112,12 @@ finalization đã bỏ chip implementation lặp theo selector route-scoped, gi�
 nguyên metric thật và action. Không đổi capability, storage, job, API hay
 delivery. Test riêng `1/1`, toàn bộ Node `917/917`.
 
+## Cập nhật Campaign boundary — 22/10/2026
+
+Campaign detail và hàng tự rà soát đã bỏ chip mã/CSRF/publish/audit lặp, giữ
+nguyên giải thích nghiệp vụ và mốc lịch thật. Không đổi state, lịch, publish
+hay API. Test riêng `1/1`, toàn bộ Node `918/918`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;

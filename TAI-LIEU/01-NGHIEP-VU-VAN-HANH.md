@@ -94,6 +94,12 @@ route. Metric thật ở các surface khác không bị ẩn; capability, storag
 API và delivery không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay
 đổi đạt `917/917`.
 
+## Campaign boundary clarity — 22/10/2026
+
+Campaign detail và hàng tự rà soát chỉ giữ giải thích nghiệp vụ; chip mã,
+CSRF, publish và audit lặp đã bỏ. Mốc lịch thật trong Calendar không thay đổi.
+Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `918/918`.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.
