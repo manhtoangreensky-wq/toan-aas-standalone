@@ -334,7 +334,8 @@
     });
     const pendingTargets = targets.filter((target) => target.classList.contains("is-pending"));
     const revealReadablePendingTargets = () => {
-      pendingTargets.filter(targetIsInReadableViewport).forEach(revealTarget);
+      pendingTargets.filter((target) => target.classList.contains("is-pending")
+        && targetIsInReadableViewport(target)).forEach(revealTarget);
     };
     const scheduleViewportFallback = () => {
       if (!isCurrentMount()) return;
@@ -557,6 +558,7 @@
       });
       pointerHandlers.forEach(({ target, move, leave }) => {
         if (!target || typeof target.removeEventListener !== "function") return;
+        leave();
         target.removeEventListener("pointermove", move);
         target.removeEventListener("pointerleave", leave);
         target.removeEventListener("pointercancel", leave);
@@ -621,36 +623,32 @@
         ? Math.max(viewportHeight, Number(documentElement && documentElement.scrollHeight) || viewportHeight)
         : Math.max(viewportHeight, Number(scrollOwner.scrollHeight) || viewportHeight);
       const pageProgress = clamp(scrollPos / Math.max(1, scrollHeight - viewportHeight), 0, 1);
-      setStyleProperty(root, "--landing-scroll-progress", pageProgress.toFixed(4));
-      const progressPercent = String(Math.round(pageProgress * 100));
-      if (root.getAttribute("data-landing-scroll-progress") !== progressPercent) {
-        root.setAttribute("data-landing-scroll-progress", progressPercent);
-      }
 
-      const ownerRect = !isWindowOwner && typeof scrollOwner.getBoundingClientRect === "function"
-        ? scrollOwner.getBoundingClientRect()
-        : null;
-      const ownerTop = ownerRect ? Number(ownerRect.top) || 0 : 0;
-
+      // Snapshot all geometry before changing presentation variables. Reading
+      // the next section after a style write forces repeated style flushes.
       const heroRect = hero && typeof hero.getBoundingClientRect === "function" ? hero.getBoundingClientRect() : null;
-      const heroTop = heroRect ? (Number(heroRect.top || 0) - ownerTop) : 0;
+      const layerRects = scrollLayers
+        .filter((layer) => layer && typeof layer.getBoundingClientRect === "function")
+        .map((layer) => ({ layer, rect: layer.getBoundingClientRect() }));
+
       const heroProgress = heroRect
-        ? clamp((viewportHeight * 0.38 - heroTop) / Math.max(1, Number(heroRect.height || viewportHeight) * 0.86), 0, 1)
+        ? clamp((viewportHeight * 0.38 - Number(heroRect.top || 0)) / Math.max(1, Number(heroRect.height || viewportHeight) * 0.86), 0, 1)
         : pageProgress;
+      setStyleProperty(root, "--landing-scroll-progress", pageProgress.toFixed(4));
+      root.setAttribute("data-landing-scroll-progress", String(Math.round(pageProgress * 100)));
       setStyleProperty(root, "--landing-hero-progress", heroProgress.toFixed(4));
-      setStyleProperty(hero, "--landing-hero-progress", heroProgress.toFixed(4));
+      if (hero) setStyleProperty(hero, "--landing-hero-progress", heroProgress.toFixed(4));
 
       let activeLayer = "hero";
       let activeDistance = Number.POSITIVE_INFINITY;
-      scrollLayers.forEach((layer) => {
-        if (!layer || typeof layer.getBoundingClientRect !== "function") return;
-        const rect = layer.getBoundingClientRect();
-        const layerTop = Number(rect.top || 0) - ownerTop;
+      layerRects.forEach(({ layer, rect }) => {
         const height = Math.max(1, Number(rect.height) || viewportHeight);
-        const center = layerTop + (height / 2);
+        const center = Number(rect.top || 0) + (height / 2);
         const travel = Math.max(1, (height + viewportHeight) * 0.55);
         const progress = clamp(1 - (Math.abs(center - (viewportHeight * 0.52)) / travel), 0, 1);
+        const distance = clamp((center - (viewportHeight * 0.52)) / travel, -1, 1);
         setStyleProperty(layer, "--landing-section-progress", progress.toFixed(4));
+        setStyleProperty(layer, "--landing-section-offset", `${Math.round(distance * 18)}px`);
         if (layer.getAttribute) {
           const name = String(layer.getAttribute("data-landing-layer") || "");
           const currentDistance = Math.abs(center - (viewportHeight * 0.52));
@@ -660,9 +658,7 @@
           }
         }
       });
-      if (root.getAttribute("data-landing-motion-section") !== activeLayer) {
-        root.setAttribute("data-landing-motion-section", activeLayer);
-      }
+      root.setAttribute("data-landing-motion-section", activeLayer);
     };
 
     const resetPointer = (target) => {
@@ -700,7 +696,14 @@
           });
           pointerFrames.add(pointerFrame);
         };
-        const leave = () => resetPointer(target);
+        const leave = () => {
+          if (pointerFrame) {
+            window.cancelAnimationFrame(pointerFrame);
+            pointerFrames.delete(pointerFrame);
+          }
+          pointerFrame = 0;
+          resetPointer(target);
+        };
         target.addEventListener("pointermove", move, { passive: true });
         target.addEventListener("pointerleave", leave, { passive: true });
         target.addEventListener("pointercancel", leave, { passive: true });
@@ -818,14 +821,13 @@
     const syncHeader = () => {
       scrollFrame = 0;
       if (!isCurrentMount()) return;
-      const scrollPos = getScrollPosition();
+      syncScrollMotion();
       if (header) {
         header.setAttribute(
           "data-landing-motion-header",
-          scrollPos > 20 ? "compact" : "default"
+          getScrollPosition() > 20 ? "compact" : "default"
         );
       }
-      syncScrollMotion();
     };
     const onScroll = () => {
       if (!isCurrentMount()) return;
