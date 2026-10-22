@@ -92,6 +92,13 @@ Các thẻ guard của sáu Image utility chỉ còn thông điệp nguyên nhâ
 cần làm; chip phiên/cache/fallback được ẩn theo selector route-scoped. Không đổi
 engine, file, capability, API hay output. Test riêng `1/1`, toàn bộ Node `914/914`.
 
+## Cập nhật Document/PDF utility guard — 22/10/2026
+
+Các guard Document/PDF utility chỉ còn nguyên nhân và thao tác cần làm; chip
+phiên/storage/runtime/fallback được ẩn theo selector route-scoped. Không đổi
+bytes, storage, capability, API hay delivery. Test riêng `1/1`, toàn bộ Node
+`915/915`.
+
 ## Đính chính 21/10/2026 — không đồng nhất thẻ/route với chức năng
 
 Các kết luận checkpoint “presentation accepted” rộng được hạ lại mức smoke;

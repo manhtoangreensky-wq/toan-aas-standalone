@@ -72,6 +72,13 @@ card bằng selector chỉ áp dụng cho đúng route. Nguyên nhân và thao t
 vẫn giữ; không đổi engine, file, capability, API hay output. Test riêng `1/1`;
 toàn bộ Node WebApp sau thay đổi đạt `914/914`.
 
+## Document/PDF utility guard clarity — 22/10/2026
+
+Các guard card của Document/PDF utility (hub, split, merge, optimize, convert
+và OCR) ẩn chip kỹ thuật phiên/storage/runtime/fallback theo từng route. Lý do
+và action thật vẫn giữ nguyên; không đổi bytes, storage, capability, API hay
+delivery. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `915/915`.
+
 ## Billing presentation repair — 22/10/2026
 
 Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.

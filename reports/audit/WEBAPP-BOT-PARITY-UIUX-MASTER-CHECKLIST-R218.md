@@ -757,6 +757,11 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   fallback kỹ thuật lặp khỏi customer UI bằng selector route-scoped. Test
   `tests/image-utility-guard-clarity.test.mjs` `1/1`; không đổi engine, file,
   capability, API hay output.
+- [x] Q0-DOCUMENT-UTILITY-GUARD-CLARITY: guard card của Document/PDF utility
+  giữ nguyên nguyên nhân và action, ẩn chip phiên/storage/runtime/fallback lặp
+  theo selector route-scoped. Test
+  `tests/document-utility-guard-clarity.test.mjs` `1/1`; không đổi bytes,
+  storage, capability, API hay delivery.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
   lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
   kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.

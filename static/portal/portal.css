@@ -701,6 +701,22 @@ a { color: inherit; text-decoration: none; }
   .portal-image-enhance
 ) .portal-state-meta { display: none; }
 
+/* Document/PDF utility guards use the same single-message pattern. Hide only
+   their repeated implementation chips and keep the route's real explanation
+   and retry/action controls visible. */
+.portal-page:is(
+  .portal-document-hub,
+  .portal-pdf-split,
+  .portal-pdf-merge,
+  .portal-pdf-optimize,
+  .portal-pdf-to-images,
+  .portal-pdf-to-word,
+  .portal-image-ocr,
+  .portal-pdf-ocr,
+  .portal-pdf-ocr-to-word,
+  .portal-image-to-pdf
+) .portal-state-meta { display: none; }
+
 .portal-summary-list { display: grid; gap: 10px; }
 .portal-summary-item { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(155, 178, 193, .1); }
 .portal-summary-item:last-child { padding-bottom: 0; border-bottom: 0; }
