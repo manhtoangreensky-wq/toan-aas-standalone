@@ -1,5 +1,25 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Dashboard — tương thích main, kiểm tra local ngày 23/10/2026
+
+Dashboard giữ bố cục sáu lối vào sản phẩm của main, dùng catalogue VI/EN/ZH
+chung với WebApp. Màn hình có một tiêu đề trang H1, sáu tiêu đề sản phẩm H3
+và vùng “Tóm tắt tài khoản” có tên trợ năng riêng. Cờ VIP không được biến thành
+tên một gói doanh nghiệp; tên gói máy chủ cung cấp vẫn được giữ và escape.
+Khi chưa có số dư/chi tiêu canonical, giao diện giữ dấu —, không dựng số 0.
+Không thay đổi nguồn ví, cách tính giá, thanh toán hoặc quyền của người dùng.
+
+Đã chạy actual app localhost với tài khoản ký hợp lệ trong SQLite tạm:
+18 cấu hình VI/EN/ZH × sáng/tối ×390/768/1440, 12 vòng menu mobile/resize/Escape
+và 3 lần mở Voice bằng bàn phím. Lỗi trang/console, tràn ngang, request ngoài
+localhost và ghi dữ liệu từ UI đều bằng 0. Nền tối đo được rgb(6,32,38), thẻ
+rgb(10,45,53); không đổi thành đen. Đây là bằng chứng UI local, chưa deploy/LIVE.
+
+Lưu ý CSS: các quy tắc dễ đọc hiện hành có ưu tiên cao hơn khai báo compact:
+H1 đo được 32px trên390/768 và44px trên1440; H3 sản phẩm20px. Không lấy
+giá trị fallback trong source làm số đo thực tế. Bằng chứng C0 được ghi tại
+`reports/audit/R218-PR661-MAIN-COMPAT-QA-20261023.json` khi các gate còn lại kết thúc.
+
 ## Free Tools và nội dung khách — 22/10/2026
 
 Free Tools không gắn nguồn ảnh rỗng lúc khởi tạo; ảnh YouTube chỉ hiện sau khi

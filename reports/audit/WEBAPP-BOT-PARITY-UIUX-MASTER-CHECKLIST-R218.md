@@ -103,12 +103,23 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## C0 — Bảo toàn / chốt WIP
 
-- [ ] C0-PR661-MAIN-SYNC: branchf63d69e xung đột2tệp evidence với main406127e;
-  đồng bộ upstream UI bằng Git, giữ delta PR661, refresh provenance và test lại.
-  Spec `2026-10-23-r218-pr661-main-sync.md`; không merge PR/deploy ở lát này.
-  Merge thử choNode914/927 (13fail), Python25/25; renderer Dashboard mấtH1
-  cả3locale. Đã abort đúng merge thử, source trở lại và Node927/927. Không
-  làm yếu test hoặc đẩy candidate lỗi; compatibility còn mở theo spec.
+- [~] C0-PR661-MAIN-SYNC: tiếp tục từ BASEcb995c7, main406127e; chỉ hai báo cáo
+  sinh tự động xung đột. Lần thử cũ đã abort vì13 assertion lỗi; lịch sử đó giữ
+  tại spec `2026-10-23-r218-pr661-main-sync.md`. Candidate hiện tại đã sửa tương
+  thích bằng các mục dưới; provenance/push/CI/mergeability phải có receipt riêng.
+  Không merge PR/deploy trong lát này.
+- [x] C0-A Dashboard semantics/catalogue: giữ layout gọn/sáu route; phục hồi một
+  H1/sáu H3/tên vùng tài khoản, nhãn VIP không bịa gói. Node22/22, Python6/6,
+  browser actual app18/18 với12drawer/resize/Escape và3keyboardVoice navigation;
+  errors/overflow/UIwrites/external0. Dark bodyrgb(6,32,38), cardrgb(10,45,53).
+- [x] C0-B metadata compatibility: RED mới ghi2attribute trùng; GREEN helper7/7
+  và Node motion11/11, giữ geometry batching/pointer cancel/reveal/teardown.
+  Không tinh chỉnh hiệu ứng hoặc kết luận FPS/INP/LCP; M0 vẫn mở.
+- [~] C0-C regression/delivery: fullNode942/942, bounded upstream+Voice Python27/27,
+  syntax6JS/compile2Python/diff-check đạt. Windows POSIX0600 baseline failure
+  được giữ nguyên test; CI Linux phải chạy đủ. Metadata Tester được refresh;
+  bounded CI local395passed/1deselected/0failed. Evidence
+  `R218-PR661-MAIN-COMPAT-QA-20261023.json`; remote CI chưa được suy là xanh.
 
 - [x] Root menu Bot và nhóm sản phẩm ghi tại WEBAPP-BOT-PRODUCT-INVENTORY-R218.md.
 - [x] Đọc menu/handler/catalog chính cho Voice/Music/SubDub/Image/Video và tiện ích.

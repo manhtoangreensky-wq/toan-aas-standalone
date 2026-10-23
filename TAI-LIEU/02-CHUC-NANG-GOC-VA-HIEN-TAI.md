@@ -1,5 +1,23 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Dashboard — đối chiếu ngày 23/10/2026
+
+Nguồn đối chiếu: `tests/test_p0_webapp_v2_01_customer_dashboard_transformation.py`,
+`tests/test_webapp_u01_e01_dashboard_launcher_consolidation.py` và catalogue
+`DASHBOARD_ENTRY_COPY_ROWS` trong `static/portal/portal-i18n.js`.
+
+| Yêu cầu/luồng gốc | Hiện trạng được đo ở local | Giới hạn |
+|---|---|---|
+| Sáu lối vào sản phẩm, không nhân đôi điều hướng | Sáu route giữ nguyên trên18 cấu hình; main layout gọn được giữ | Có link không chứng minh engine sản phẩm hoạt động |
+| Tiêu đề và ngôn ngữ đúng | Một H1, sáu H3, vùng tài khoản có H2 riêng; Node22/22 và Python6/6 | Không suy ra toàn bộ trang sau đăng nhập đã đạt |
+| Tóm tắt tài khoản dùng dữ liệu canonical | Server plan được escape; boolean VIP dùng nhãn thành viên VIP, không tự đặt tên gói; unknown giữ— | QA không liên kết ví thật, không xác minh số dư production |
+| Menu mobile còn dùng được sau resize | 12 vòng mở/resize/Escape và3 lần mở Voice bằng bàn phím đạt | Chưa phải kiểm thử mọi trình duyệt/thiết bị thật |
+
+Đính chính source main406127e: H2 sản phẩm thay H1, nhãn số dư làm tên vùng
+tài khoản và fallback “Business VIP” không phải chuẩn để bỏ regression test.
+Giữ bố cục mới nhưng phục hồi ngữ nghĩa/catalogue; không diễn giải booleanVIP
+thành quyền lợi, giá hoặc tên gói dịch vụ chưa được máy chủ xác nhận.
+
 ## Voice — phân biệt hồ sơ hướng đọc với kho giọng thật, 23/10/2026
 
 Nguồn yêu cầu Bot giữ tại `2026-10-18-r218-02a-voice-vault-canonical-contract.md`:

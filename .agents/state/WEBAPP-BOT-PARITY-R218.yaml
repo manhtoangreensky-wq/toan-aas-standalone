@@ -1,12 +1,25 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: VOICE_FEEDBACK_LOCAL_UI_ACCEPTED_DELIVERY_PENDING
+status: C0_MAIN_COMPAT_LOCAL_ACCEPTED_DELIVERY_PENDING
 date: 2026-10-23
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r218-billing-ui-20261022
 pull_request: 661
-head_sha: 1fe27c3dcf74272fb4db79e3dbc9ab9e902e3a35
+head_sha: cb995c7809c8da086b5f3e80f09546374832ef8a
+checkpoint_main_compat_20261023:
+  base_sha: cb995c7809c8da086b5f3e80f09546374832ef8a
+  upstream_sha: 406127e6c128f08c27a33b66b132eff56b01542a
+  contract_commit: a0470b8
+  evidence: reports/audit/R218-PR661-MAIN-COMPAT-QA-20261023.json
+  result: LOCAL_UI_ACCEPTED_DELIVERY_PENDING
+  dashboard: "Node22/22; Python6/6; browser18/18 with12drawer resize/Escape and3keyboardVoice navigations; errors/overflow/UIwrites/external0. Darkbody6,32,38; card10,45,53; existing readable32/44pxH1 and20pxH3 retained."
+  builder: "C0-A Flash3.8Low R1 prefix/patch/harness errors, R2 corrected; supervisor removed2 obsolete CSS rules after2rounds. C0-B R1 contextdiff/harness rejected, R2 valid; production patch applied verbatim. No third worker round."
+  motion: "Compatibility only: newRED1fail/6pass(count2!=0), GREEN7/7; Node11/11. Geometry-before-writes/pointer/reveal/20teardown preserved; no FPS/LCP/INP or LIVE claim."
+  tests: "FullNode942/942; upstream+Voice Python27/27; JSsyntax6/6; py_compile app.py/copyfast_pages.py; diff-check0. BoundedCI Windows395passed/1deselected/0failed/16warnings; LinuxCI must run unchanged POSIXtest."
+  baseline_windows: "POSIX0600 test observes0666 onWindows; source/test Gitblob hashes identical toBASE, no test/source modification. LinuxCI must run it unchanged."
+  qa_cleanup: "Task-owned PTY28258 origin127.0.0.1:2250 stopped bynewline, terminalexit0; temporary DB/assets context cleaned."
+  delivery: "Uncommitted task-owned merge candidate; source/evidence commit, provenance refresh/verify, push/readback/CI pending. No PR merge/deploy."
 checkpoint_20261023:
   evidence: reports/audit/R218-VOICE-METADATA-QA-20261023.json
   source_changed: false
@@ -28,7 +41,7 @@ checkpoint_voice_feedback_20261023:
   evidence: reports/audit/R218-VOICE-MANAGEMENT-FEEDBACK-QA-20261023.json
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/662
   result: ACCEPTED_LOCAL_UI_ONLY
-  worker: "Flash3.8Low rounds1+2; R1 test harness had5fail, R2 corrected VM/catalogue/strict ready guard. Codex applied R2 test patch and3production guard lines; no third worker round."
+  worker: "Flash3.8Low rounds1+2; worker production patch retained, with3strict ready guards. After2rounds Codex corrected test harness only: incomplete fakeDOM and read-only i18n export fallback context; added negative/alias cases. No third worker round."
   tests: "Focused9/9; fullNode942/942; Python10/10; syntax2/2; diff-check0."
   browser: "18configs vi/en/zh x light/dark x390/768/1440 with51 temporary metadata profiles; filter/clear/refresh/page,503 after retry, recovery; controlled50372, rate4290, errors/external/UIwrites/overflow0."
   next: "Update docs/evidence/provenance, commit/push branch, then C0 main compatibility triage; canonical audio Voice Vault and LIVE remain open."
@@ -445,7 +458,7 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "Use checkpoint_voice_feedback_20261023 before historical records: Voice direction and feedback UI slices accepted locally and pushed at 1fe27c3. Next triage main406127e compatibility (13 assertions, zero H1) before any merge/deploy. Canonical audio Voice Vault remains distinct/open; motion last; goal ACTIVE."
+next_action: "Read checkpoint_main_compat_20261023 first. C0-A/B local gates accepted; finish boundedCI/provenance/push/readback/CI and record mergeability, without PR merge/deploy until delivery gates ready. Then resume P1 canonical Voice UI gaps under the existing ledger; metadata is not audio Voice Vault. Final M0 motion/performance and LIVE remain open; goal ACTIVE."
 active_billing_batch:
   id: R218-BILLING-20261022
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660

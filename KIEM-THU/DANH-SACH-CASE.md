@@ -1,5 +1,25 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## C0 — PR661 tương thích main, phiên R218-C0-COMPAT-20261023
+
+Tracker hiện hành: Issue662 trong đúng repo standalone; không tạo bộ case cạnh tranh.
+BASE cb995c7809c8da086b5f3e80f09546374832ef8a, main406127e. Chưa merge/deploy.
+
+| ID | Thao tác | Điều kiện đạt / canh lỗi cũ |
+|---|---|---|
+| C0A-01 | Dashboard VI/EN/ZH ×2theme ×390/768/1440 | Một H1, sáu H3, vùng tài khoản có tên; sáu route sản phẩm và ba route tài khoản không đổi |
+| C0A-02 | Fixture unknown, member, VIP và server plan chứa HTML | Unknown không thành0; VIP không tự mang tên gói doanh nghiệp; HTML không thực thi |
+| C0A-03 | Tab qua hai thẻ; menu mobile mở→resize→Escape; Enter vào Voice | Focus đúng, drawer không mất trạng thái sau resize, điều hướng có nội dung thật; overflow/errors/UIwrite/external0 |
+| C0B-01 | Helper motion thật nhận cùng scroll0 và800 nhiều lần | Không ghi lại hai metadata attribute khi giá trị không đổi; progress thay đổi vẫn cập nhật |
+| C0B-02 | Geometry/pointer leave/reveal/20teardown/reduced motion | Giữ toàn bộ hành vi upstream; không suy ra FPS/INP/LCP hay LIVE từ helper |
+| C0C-01 | CI trên HEAD đã push, provenance và GitHub mergeability | Mọi check cần thiết phải thực sự kết thúc; không gọi local PASS là CI/deployed/LIVE |
+
+Evidence local: `C:/Users/toann/Documents/Codex/qa/r218-main-compat-20261023/`.
+Node Dashboard22/22, Python Dashboard6/6 và browser18/18 đã đạt; C0B đạt7/7
+helper tests và11/11 Node motion contracts. C0C vẫn chờ provenance/remote CI.
+Một test POSIX mode0600 không tương thích Windows: giữ test nguyên trong repo,
+đối chiếu hash BASE và yêu cầu CI Linux chạy đủ; không biến lỗi nền thành PASS.
+
 ## UT-CSP và Q0 nội dung khách — 22/10/2026
 
 | ID | Thao tác | Điều kiện đạt |
