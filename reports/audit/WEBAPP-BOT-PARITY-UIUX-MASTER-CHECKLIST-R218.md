@@ -269,6 +269,8 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   bundle sau stripping paragraph bằngBASE. Browser30configs/300profiles/120readviews,
   gồm375/landscape, contrastmin5.522:1, errors/overflow/external/UIwrite0; cóREADfixtures
   đã khai báo. Evidence `R218-VOICE-VAULT-NOTICE-CLARITY-QA-20261023.json`.
+  DeliveryHEAD2d6f61f3; CI39921027250bothSUCCESS, Linux396critical+26browserruntime;
+  receiptIssue662#issuecomment-6361097358. Canonicalaudio/merge/deploy/LIVEkhôngđóng.
   Delivery/CI mới chưa đóng; không suy là management hoặcLIVE đã mở.
   Không mở management/provider/backend hoặc sửa ké nhãn/ngôn ngữ generic.
 - [x] VO-MANAGEMENT-FEEDBACK-LOCALE: bốn thông báo filter/clear/page/refresh đã
@@ -328,6 +330,18 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## P2 — Music R218-03 (MU-01..12)
 
+- [x] MU-INTERACTION-FEEDBACK localUI (23/10):4functions/2rows sửaVIleak và
+  stalewarningedit2/3; FlashR1/R2 cùngACfail→primarytakeover/noR3.
+  Spec `2026-10-23-r218-music-sfx-interaction-feedback.md`; RED8/22→GREEN30/30,
+  focused34/34, fullNode987/987, Python21/21 baseline/branch; reviewCritical0/Important0.
+  Signedactualbrowser60configs/300presetselections/180edits/120explicittextPOSTs,
+ 3resultitems/compose, noresponsefixtures, errors/external/unapprovedwrite/HTTP/overflow0.
+  Ngoài4functions/2rows+9protectedfiles byteequalBASE; evidence
+  `R218-MUSIC-SFX-INTERACTION-QA-20261023.json`. Delivery/CI/receiptcònchờ;
+  khôngđóngfullpagelocale, generation/player/output/Botparity.
+- [ ] MU-NATIVE-SUBMIT-FEEDBACK-LOCALE: screenshotSFXzhdark390 xácnhận toastsuccess
+  vẫnVI/vănbảnkỹthuật trongEN/ZH; integration.js cũchưasửa. READ/formalspec/checklist
+  vàFlashhandoff kếtiếp saudeliverylátinteraction, khôngsửakétrong4hàmđãkhóa.
 - [~] MU-00 control-level local đã khóa theo C0; các mục runtime và delivery dưới đây chưa đóng.
 - [~] MU-00 browser presentation — 19/10/2026: `/music/create` và `/music/song` đã kiểm bằng Edge localhost với 36 cấu hình (VI/EN/ZH × sáng/tối × 390/768/1440 × 2 workspace), giữ field bài hát riêng, không hiện audio/player/giá/download giả; page/console/request ngoài/write/unknown API/overflow đều `0`. Đây là fixture đọc-only, chưa phải generation/player/delivery/LIVE.
 - [ ] Nhạc nền/Bài hát/Kho nhạc-SFX/Chỉnh nhạc; capability thật.

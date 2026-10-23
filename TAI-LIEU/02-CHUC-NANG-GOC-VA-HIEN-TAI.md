@@ -1,5 +1,22 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 23/10/2026 — Music/SFX interaction, không thay scope sản phẩm
+
+Nguồn gốc: R218-03/P2, hai locale-presentation test và hai catalogue Music
+Directions/SFX. Catalogue cân bằng và renderer ban đầu xanh không chứng minh
+thông báo sau thao tác đã dịch: bốn hàm late-event từng ghi literalVI; stale
+chỉ ghi lầnđầu nên edit2 thay bằngselectedmessage. Probe6lane/locale và RED
+22assertions tái hiện lỗi này. Không dùng testsource banđầu để đóng interaction.
+
+| Yêu cầu gốc | Hiện trạng kiểm được | Ranh giới chưa đóng |
+|---|---|---|
+| Chọn5preset, biểu mẫu giữ ngôn ngữ | Realfunction30/30 sau sửa, VI/EN/ZH; unknown/disabled fail-closed | Chưa tự suy ra âm thanh/provider |
+| Biết kết quả không khớp nội dung mới | Edit1/2/3 giữ cảnh báo địa phương hóa, kết quả/input/event không đổi | Không tự gửi yêu cầu hoặc tạo lại kết quả |
+| Nhạc nền/bài hát/KhoSFX/player/reuse nhưBot | Hai endpoint này chỉ trả3hướng hoặc3cue bằngvăn bản | Generation/editor/player/audio/download/save/reuse/finaloutput vẫn ởP2 mở |
+
+Evidence `reports/audit/R218-MUSIC-SFX-INTERACTION-QA-20261023.json` phân biệt
+Node/Python/browser/delivery. Không thay danh sách gốc hay xóa các finding cũ.
+
 ## Voice notice — đối chiếu 23/10/2026
 
 | Yêu cầu gốc / điều phải giữ | Hiện trạng local được đo | Không được suy diễn |

@@ -1,5 +1,35 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 23/10/2026 — Music/SFX: phản hồi khi chọn và sửa nội dung
+
+Hai công cụ `/media-workspace/music-directions` và
+`/media-workspace/sfx-cue-sheet` hiện lập **văn bản hướng dẫn**, không tạo nhạc
+hoặc tệp âm thanh. Chọn preset/nhập nội dung chỉ thay đổi biểu mẫu. Một lần
+bấm lập mới gửi một POST native có phiên và CSRF; server trả đúng ba hướng
+hoặc ba vị trí hiệu ứng, các cờ provider/audio/job/wallet vẫn false.
+
+Lát `MU-INTERACTION-FEEDBACK` sửa đúng4hàm thông báo và thêm2row catalogue:
+VI/EN/ZH giữ đúng sau thao tác; khi sửa nội dung, thông báo kết quả cũ không
+bị mất ở lần sửa2/3. Kết quả trước, nội dung nhập, nút, event fencing và SFX
+tab-memory được giữ; không bổ sung ô, nút hoặc chức năng giả.
+
+Đã đo source: interactionRED8pass/22fail sau sửa harnesswindow export,
+GREEN30/30; focused34/34; fullNode987/987; Python4native/portal files21/21
+trước và sau sửa,2deprecationwarnings cũ. Mọi byte ngoài4hàm/2row bằngBASE,
+9tệp protected bằngBASE. Browser/delivery xem evidence hiện hành
+`reports/audit/R218-MUSIC-SFX-INTERACTION-QA-20261023.json`; chưa lấy các số
+này làm bằng chứng generation/player/delivery/production/LIVE.
+Browserlocal đãđạt60cấuhình/300selection/180edit/120explicittextPOSTs, mỗi
+lầnlậptrả3mục; errors/external/unapprovedwrites/HTTP/overflow0. Khôngđóng
+locale toàntrang: toastxácnhậnsaulập vẫnVI/technicalởEN/ZH đãghimP2tiếp.
+FulltesterWindows còn1baselinePOSIX0600khôngápdụngNTFS(32pass/1fail),
+source/testGitblobgiữnguyênBASE;32portablepass/1deselected, LinuxCIphảichạynguyênytest.
+
+Hai lượtFlash3.8 trả patch/test không hợp lệ cùngAC; Codex tiếp quản sauR2,
+không vòng3. QA dùng SQLite/tài khoản tạm; signed auth có cập nhật timestamp
+phiên, không gọi đó là “không ghi DB”. Chỉ không có mutation miền Music/
+asset/job/Memory/tiền và không có dữ liệu production.
+
 ## Voice — thông báo quản lý dùng chung, 23/10/2026
 
 Kho giọng ready/nonempty chỉ hiển thị một thông báo về các thao tác chưa hỗ trợ,

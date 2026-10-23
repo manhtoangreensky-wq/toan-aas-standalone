@@ -1,5 +1,24 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-MUSIC-SFX-INTERACTION-20261023 — phiên Tester độc lập
+
+BASE2d6f61f3a700cea49a6c61ec1eb57a5740dae541; branchwebapp-r218-billing-ui-20261022;
+PR661; trackerIssue664. Chỉ appQA signedlocalhost với DB/assets/tài khoản tạm.
+VI/EN/ZH × light/dark ×375/390/768/1440/844landscape cho cảhai route.
+Browserpluginabsent, PlaywrightEdgeheadless; không mở IDE/loginproduction.
+Evidence `reports/audit/R218-MUSIC-SFX-INTERACTION-QA-20261023.json` và raw tại
+`C:/Users/toann/Documents/Codex/qa/r218-music-sfx-interaction-20261023/`.
+
+| Case | Mức | Bước thực hiện | Kết quả bắt buộc / canh lỗi cũ |
+|---|---|---|---|
+| MU-FB-01 | vừa | MusicDirections vàSFX → chưa chọn → dùngSpace/chọn lầnlượt5preset | Locale giữđúng; chỉ1cardselected; unknown/unselected/disabled khôngmởsubmit; selection khôngPOST |
+| MU-FB-02 | vừa | Nhậpbrief → submitnative → kiểmresponsevàDOM | MộtPOSTđúng3field;3direction/3cue khớp; audio/provider/job/walletfalse; khôngfallback/fakemedia |
+| MU-FB-03 | nặng | Giữkếtquả, sửa cùngbrief lần1/2/3 | Mỗilần cảnhbáostale đúnglocale; result/inputkhôngmất; editkhôngPOST; FAILnếuedit2hếtcảnhbáo |
+| MU-FB-04 | vừa | Bấm lậplại sauedit3 → xemresult/focus/AX/mobile | Đúng1POSTmới; staleđượcbỏ; aria-livepolite; khôngconsole/page/external/overflow/unapprovedwrite; palettegiữ |
+
+Không dùng hai công cụ text-only để tick Music generation/player/save/reuse.
+Signedrequest có session.last_seen_at write; chỉ domain/production writesbịcấm.
+
 ## VNOTICE — R218-VOICE-NOTICE-20261023, local UI
 
 BASEefbe362da9158762136820aa63112fa6882bd870; PR661/Issue662.

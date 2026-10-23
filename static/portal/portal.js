@@ -38266,8 +38266,8 @@
     const announcement = form.querySelector("[data-music-direction-selection]");
     if (announcement) {
       announcement.textContent = preset
-        ? `Đã chọn ${preset.label}. Hoàn tất brief rồi bấm lập direction.`
-        : "Chưa chọn preset. Hãy chọn một hướng trước khi lập direction.";
+        ? musicDirectionUiText("form.selected", "Đã chọn {label}. Hoàn tất brief rồi bấm lập hướng.", { label: musicDirectionPresetText(preset, "label") })
+        : musicDirectionUiText("form.unselected", "Chưa chọn preset. Hãy chọn một hướng trước khi lập hướng.");
     }
   }
 
@@ -38275,14 +38275,14 @@
     if (!form || form.getAttribute("data-portal-action") !== "music-direction-preset-compose") return;
     synchronizeMusicDirectionPresetForm(form);
     // Preserve the existing receipt instead of silently clearing the form,
-    // but label it once as stale when its source brief no longer matches the
+    // but keep it labelled stale when its source brief no longer matches the
     // local draft. The next successful explicit request renders a fresh
     // receipt without this marker.
     const receipt = form.closest(".portal-music-directions")?.querySelector('.portal-music-directions-result[aria-live="polite"]');
-    if (receipt && receipt.getAttribute("data-stale") !== "true") {
+    if (receipt) {
       receipt.setAttribute("data-stale", "true");
       const announcement = form.querySelector("[data-music-direction-selection]");
-      if (announcement) announcement.textContent = "Brief đã đổi. Receipt bên dưới thuộc brief trước; bấm lập direction khi bạn sẵn sàng tạo receipt mới.";
+      if (announcement) announcement.textContent = musicDirectionUiText("form.stale", "Nội dung đã thay đổi. Các hướng bên dưới thuộc nội dung trước; lập lại hướng âm nhạc để cập nhật.");
     }
     // This is request fencing only. It has no navigation, storage, submit or
     // network behavior; integration discards a now-stale receipt if the user
@@ -38307,8 +38307,8 @@
     const announcement = form.querySelector("[data-sfx-cue-sheet-selection]");
     if (announcement) {
       announcement.textContent = preset
-        ? `Đã chọn ${preset.label}. Hoàn tất brief rồi bấm lập cue sheet.`
-        : "Chưa chọn preset. Hãy chọn một hướng trước khi lập cue sheet.";
+        ? sfxCueSheetUiText("form.selected", "Đã chọn {label}. Hoàn tất brief rồi bấm lập cue sheet.", { label: sfxCueSheetPresetText(preset, "label") })
+        : sfxCueSheetUiText("form.unselected", "Chưa chọn preset. Hãy chọn một hướng trước khi lập cue sheet.");
     }
   }
 
@@ -38319,10 +38319,10 @@
     // Keep the last valid receipt visible but explicitly stale. An edit never
     // sends a request, changes route, resets fields or fabricates a cue sheet.
     const receipt = form.closest(".portal-sfx-cue-sheet")?.querySelector(".portal-sfx-cue-sheet-result[data-sfx-cue-sheet-receipt]");
-    if (receipt && receipt.getAttribute("data-stale") !== "true") {
+    if (receipt) {
       receipt.setAttribute("data-stale", "true");
       const announcement = form.querySelector("[data-sfx-cue-sheet-selection]");
-      if (announcement) announcement.textContent = "Brief đã đổi. Receipt bên dưới thuộc brief trước; bấm lập cue sheet khi bạn sẵn sàng tạo receipt mới.";
+      if (announcement) announcement.textContent = sfxCueSheetUiText("form.stale", "Nội dung đã thay đổi. Bảng hiệu ứng bên dưới thuộc nội dung trước; lập lại bảng để cập nhật.");
     }
     // Integration uses this event only to fence a delayed explicit request.
     // It has no storage, submit, network or navigation side effect.
