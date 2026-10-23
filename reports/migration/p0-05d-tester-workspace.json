@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-10-23",
-  "local_files_refresh_scope": "Portable LF metadata remeasured after MU-SUB-01..04 A+C cases. Music tracker664 and Voice662 remain separate; issue412 and remote snapshots historical. Project scope absent; no new Project verification inferred.",
+  "local_files_refresh_scope": "Portable LF metadata remeasured after MU-ERR-01..04 B+D0 cases. Music tracker664 and Voice662 separate; issue412 and remote snapshots historical. Project scope absent; no new Project verification inferred.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 576,
-      "bytes": 74587,
-      "sha256": "cd40aecc945211cfb051162ddcd1a7a81de090a6f3b5ff586233e60f4c675b68"
+      "lines": 595,
+      "bytes": 76214,
+      "sha256": "a5196f7428053055a635da78b73c305e8a349ca89714da18531d1a8a0e8567d6"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

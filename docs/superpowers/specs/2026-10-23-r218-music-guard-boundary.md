@@ -93,4 +93,4 @@ Helper21132 verifiedSPEC/round2/overlaySHA, dừng sauJSONSUCCESS; wrapper
 - [x] C02 17keys/16strictfalse; negativeflags vàsuccessvalidator unchanged.
 - [x] C03 helper/2calls only; Atestdependency/Pythonwire; comparator đạt.
 - [x] C04 local47focused/1000Node/21Python/36two-phasebrowser; evidence/docs.
-- [ ] Branchdelivery: prepush/provenance/push/readback/CI/receipt Issue664.
+- [x] Branchdelivery: HEADfc8deb6/CI39950590927bothSUCCESS/receipt Issue6646364623486.

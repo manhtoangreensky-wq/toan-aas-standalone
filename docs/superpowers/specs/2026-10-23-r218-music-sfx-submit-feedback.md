@@ -152,4 +152,4 @@ B vẫn mở; screenshot còn field hint VI/technicalcopy ngoài phạm vi9site.
 - [x] AC03 unsafe/stale/wrongroute/capability/API spy đạt, không success giả.
 - [x] AC04 signednativeQA36uniqueconfigs/72POST/72pending đạt, có phase disclosure.
 - [x] AC05 focused47/fullNode1000/Python21/syntax/compile/diff đạt.
-- [ ] Delivery: prepush/provenance/push/readback/CI/receipt Issue664.
+- [x] Delivery: HEADfc8deb6/CI39950590927bothSUCCESS/receipt Issue6646364623486.

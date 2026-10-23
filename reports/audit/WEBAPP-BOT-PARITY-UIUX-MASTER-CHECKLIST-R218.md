@@ -353,12 +353,26 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   realvalidator/caller cleanRED0/3→GREEN3/3. Successvalidators/SFX/backend/API
   byteunchanged; allflags strictfalse. Independent47/47,Critical0/Important0.
   Spec `2026-10-23-r218-music-guard-boundary.md`; no reset of A's two handoffs.
-- [ ] A+C branch delivery: docs/Tester/prepush/Web-onlyprovenance/push/readback/CI/
-  Issue664receipt; no merge/deploy/LIVE implied by localUI ticks.
-- [ ] MU-NATIVE-VALIDATION-ERROR-LOCALE-B: validation/wrongroute/notready/invalid
-  receipt/boundary/retry/outercatch remains open. Screenshot also confirms source
-  field hints stillVIinEN/ZH and technicalboundarycopy; inventory before own
-  spec/allowlist, no hidden fix to sharedsafety/auth or locked4interactionhelpers.
+- [x] A+C branch delivery: docs/Tester/prepush/Web-onlyprovenance/push/readbackHEAD
+  fc8deb6; CI39950590927bothSUCCESS (396Python+26browserruntime),
+  receipt664#issuecomment-6364623486; no merge/deploy/LIVE implied by UI ticks.
+- [x] MU-NATIVE-VALIDATION-ERROR-LOCALE-B localUI: validation/wrongroute/notready/invalid
+  receipt/boundary/retry/outercatch remains open. READ28uniqueerrors/6realprobes;
+  spec `2026-10-23-r218-music-sfx-error-feedback.md` presentationonly,
+  exact2actions/newhelper/2inline/outertoast/20rows; payload/safety/API/authprotected.
+- [x] MU-NATIVE-ERROR-FOCUS-D0 localUI: baselinefocusBUTTON→BODYdisabled→BODYreenabled,
+  sameBASE/candidateactualJSoverlaycomparator. Bcopy24/focused53/full1006/Python21
+  localpass, nhưngB04focusgiữmở. Spec `2026-10-23-r218-music-sfx-error-focus.md`:
+  capture/flag/restore10logical lines in2actions, no sharedbusychange; beforeBdelivery.
+  FinalD0RED8/2→GREEN10/10,combined63focused/full1016/Python21,review81/81
+  Critical0/Important0. Actualstrictfocus24/24 on5ac46bc3,focusrestored24,
+  validation0POST/24intentionalabort+24native retrysuccess3texts;
+  expectednetworkerrors24separate,unexpectederror/external/unapprovedwrite/overflow0.
+  Evidence `R218-MUSIC-SFX-ERROR-FEEDBACK-QA-20261023.json`; B04notdropped.
+- [ ] B+D0branchdelivery: docs/Tester/prepush/Webprovenance/push/readback/newCI/
+  Issue664receipt; no wholeMusic/audio/Botparity/LIVEclaim.
+- [ ] MU-NATIVE-PRESENTATION-COPY-D: sourcefieldhintVIinEN/ZH vàtechnical/empty
+  cards; ownREAD/contractafterB, nothiddeninsideB. Keeptext-onlytruth/noaudiofake.
 - [~] MU-00 control-level local đã khóa theo C0; các mục runtime và delivery dưới đây chưa đóng.
 - [~] MU-00 browser presentation — 19/10/2026: `/music/create` và `/music/song` đã kiểm bằng Edge localhost với 36 cấu hình (VI/EN/ZH × sáng/tối × 390/768/1440 × 2 workspace), giữ field bài hát riêng, không hiện audio/player/giá/download giả; page/console/request ngoài/write/unknown API/overflow đều `0`. Đây là fixture đọc-only, chưa phải generation/player/delivery/LIVE.
 - [ ] Nhạc nền/Bài hát/Kho nhạc-SFX/Chỉnh nhạc; capability thật.

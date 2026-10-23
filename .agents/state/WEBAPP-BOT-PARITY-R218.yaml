@@ -1,17 +1,54 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: MUSIC_SUBMIT_A_GUARD_C_LOCAL_GATES_PASS_DELIVERY_PENDING
+status: MUSIC_B_D0_LOCAL_UI_ACCEPTED_DELIVERY_PENDING
 date: 2026-10-23
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r218-billing-ui-20261022
 pull_request: 661
-head_sha: 80f12d220c83ae4febebb99ca9742560f3c2ac85
+head_sha: fc8deb6a96566021a58cdcdf8ab77ed6796539cd
+checkpoint_music_sfx_errors_b_20261023:
+  base_sha: fc8deb6a96566021a58cdcdf8ab77ed6796539cd
+  spec: docs/superpowers/specs/2026-10-23-r218-music-sfx-error-feedback.md
+  result: LOCAL_UI_ACCEPTED_WITH_D0_DELIVERY_PENDING
+  dependency: "A+Cbranchdeliveryaccepted,CI39950590927bothSUCCESS,receipt664#issuecomment-6364623486; trackerA/Ctickreadbacktrue,B/Dopen."
+  finding: "2payload×5literal,3safety×3literal,actions10failure sites,28unique;6realpayloadlengthprobes keepVI. Outerrawcatchwins. Source/realfunctionprobe only, notproduction."
+  scope: "Presentationonlyhelper/actionexact2,2inlinefailures/outertoast/20rows/newtest. Do not change payload/safety/validator/API/auth/epoch/merge/finally/A+C; no sharedsignature/refactor. Dfieldhint/technicalcardsseparateafterB."
+  handoff_round: 2
+  contract_receipt: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664#issuecomment-6364652753
+  packet: "Prepared23942chars/source-only/runtime_payloads0, modelFlash3.8High; worker.py --source-only --round1. No tools/Git/filewrite/DB/runtimepayload, stdoutJSONonly."
+  runtime: "BtaskownedFlashcontroller42439; stdout../qa/r218-music-sfx-errors-20261023/worker-R1.json; no sourcepatchapplied. QAserver39795at127.0.0.1:51738,temp../qa/r218-music-sfx-interaction-20261023/music_sfx_qa_fvve9_12. KeepforGREEN, stopnewline39795andverifycleanupafter."
+  browser_red: "Actualsignedzhdark390invalidURL: observedVI'Music Prompt Composer không nhận URL hoặc scheme tệp trong mô tả direction.' vsChinesecontentexpected. Exit1assertion,0POST; browser-red.json. No responsefixture."
+  browser_fault_red: "Actualsignedzhdark390, oneintentionalPOSTabort: inlineVI'Không thể lập direction...' / toast'Failed to fetch', expectChinese. Draftpreserved=true/buttonEnabled=true; exit1assertion; browser-red-transport.json. ExpectednetERR_CONNECTION_RESETseparate, nofakeHTTPresponse."
+  r1_result: "OuterstatusERROR500.306589s/1turn; innerJSONbadcontrolchar28661. ValidcompleteTEST_FILEprefixparsedandappliedVERBATIMforQAonly; production0diff. Diagnostic0/10: literalbackslashnfunctionextractor, wrongfirstpaymentactioncatch, nullrealpayload. NotcleanRED; sameB01failure1. Controllerexit0doesnotmeanPASS."
+  r1_transport_detail: "Outererror explicitly sayspreviousresponse exceededoutputtokenlimit/retriesremaining3; report481-linetest bloated. R2amendmentcaps200testlines/100helperlines toreduceoutput; noauth/settingschange."
+  r2_amendment: "ExactNLcode/catchfullmarker/tabletest<=200lines/sameVMcontext/realpayload/inlineactionconsumer; top-levelnumericHTTPstatusonly, notpayload.status401. NoR3."
+  r2_runtime: "Taskownedcontroller86599,Flash3.8High/source-onlypacket29240chars/runtimepayload0; checkedfullcommandline<32000UTF16beforelaunch. Result../qa/r218-music-sfx-errors-20261023/worker-R2.json; amendmentIssue6646364955418. No settings/auth/sourcechange."
+  r2_result: "SUCCESS451.055s/1turn validJSON184linetest; diagnostic1pass3fail, inlinewrongroute/capability/epochs and1ENliteraltypo. SameB01failed2; primaryharnesstakeover/noR3. CleanRED2pass4assertionfail; R2source5pass1unknownprototypefail; own-propertyfix→6/6."
+  source_corrections: "R2plus2one-linecorrections: strictownpropertylookup toavoidconstructor/__proto__/toString VI fallback; exact2actionconditionalbeforeouterhelpercall toavoidnewdependency onnonMusic. FirstfullNode1000pass6libraryVMReferenceErrors; currentfull1006/1006, existingtestsunchanged."
+  tests: "Focused53/53; full1006/1006 27615.8318ms;Python21/21 25.46s; independent53/53+MusicLibrary18/18,Critical0/Important0.15protectedfunctions/10files/20cataloguerows sourcecomparatorPASS."
+  focus_finding: "Bcopybrowser24/24 butstrictfocusFAIL. ActualBASE/candidateJSoverlaycomparison bothBUTTON→BODYdisabled→BODYreenabled; baselinebeforefeedback, notBregression. B04NOTTICKED, D0dependencybeforeBdelivery; no weakenedcriterion."
+  final: "D0strictactualbrowser24/24focusrestored;validation0POST,24intentionalabort+24native retrysuccess3texts;expectedneterrors24separate,unexpectederror/external/unapprovedwrite/overflow0. AllJSsha5ac46bc3...;raw2b2c75da4b950ce78421064e7d11e1a35dcdae2562c86d706d2aa2b1b7535946. Full1016/1016/Python21/21;independent81/81,Critical0/Important0."
+  next: "Docs/Tester/prepush/provenance/onebatchpush/readback/newCI/receipt664; thenpresentationDREAD. B/D0countersretain,noR3. QA39795stoppedexit0,tempremoved,51738listener0."
+checkpoint_music_sfx_focus_d0_20261023:
+  base_sha: fc8deb6a96566021a58cdcdf8ab77ed6796539cd
+  overlay_sha256: 0a737c3e1d0755d7a8259350b059c37ec19ed4ee9631815b01f5d58989e2f9fa
+  spec: docs/superpowers/specs/2026-10-23-r218-music-sfx-error-focus.md
+  contract_receipt: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664#issuecomment-6365407001
+  result: LOCAL_UI_ACCEPTED_DELIVERY_PENDING
+  handoff_round: 2
+  worker: "Flash3.8Low/source-only21230chars/runtimepayload0;exec9409;focus-worker-R1.json.10logicalfocuslines/2actions+newtest only; notBcounterreset."
+  export_safety: "FirstlaunchDENIEDbeforeCreateProcess dueMAP/specauthorityquestion. Read-onlyproof:repoPUBLIC,local/GitHubMAPblob3916d78c9ac83896bb0c210d36f290a7a925a916 equal;specpubliccomment6365407001. Samecommandre-reviewedapproved withproof, no workaround/noenv/settings/authchange. Preflightf-stringNameErrorfixedbeforelaunch, notworkerfailure."
+  r1_result: "Flash3.8LowSUCCESS75.719576s/1turn,valid197linetest/source10logicalfocuslines. TestappliedVERBATIM cleanRED1pass1assertionfail(focus0vs1); noD0sourceapplied. R1tests missedexplicitF02epoch/wrongroute, completenessamendmentnotcodefailure."
+  r2_runtime: "Ownexec46633/source-only22996chars/runtimepayload0,Flash3.8LowR2;sameD0F02, addactualepochhook/post/prewrongroute+otherpriorinput tests;source10linesmuststayR1identical. Resultfocus-worker-R2.json. NoR3, do not resetBcounter2."
+  final: "R2SUCCESS61.664s,productionidenticalR1verbatim. R2testmissingpriorR1duringrequestfocus/directguard2cases; after2F02gaps primaryadds2tablecases only,noR3/noD0productiontakeover. CleanRED8/2→GREEN10/10;focused63/full1016/Python21;independent81/81,Critical0/Important0. Strictbrowser24/24 on5ac46bc3,focusrestored24,raw2b2c75da4...; B04nowlocaltick."
+  cleanup: "Allworkers/browsers terminal,QA39795newlineexit0,tempDB/assetsremoved,outsideSandbox.NETlisteners51738=0."
+  next: "B+D0deliverybatch/prepush/provenance/push/newCI/receipt, no merge/deploy/LIVEuntilwholePRscopeaccepted."
 checkpoint_music_guard_boundary_c_20261023:
   git_base_sha: 80f12d220c83ae4febebb99ca9742560f3c2ac85
   integration_overlay_sha256: c19fbc13446f404526518578b8dbbc26ecb871c423d4453519f0950cd98b6b7a
   spec: docs/superpowers/specs/2026-10-23-r218-music-guard-boundary.md
-  result: LOCAL_UI_ACCEPTED_DELIVERY_PENDING
+  result: ACCEPTED_UI_BRANCH_DELIVERY_NO_DEPLOY
   finding: "RealnativeguardDTO:17keys/16booleanfalse/noextra; oldMusicconsumerrejects onlymissingcomposer. ConsumerbyteequalGitBASE, baselinebugnotAcopyregression. Actualguard-probe.json/log preserved; no responsefixture."
   scope: "Addstrictguardvalidator usingexisting17keyBOUNDARY_KEYS, change2Musicguardcalls only; nofakecomposer/no relaxedflag/no successvalidator/API/backend/auth/provider/walletchange. NodeCactualvalidator/caller, NodeAdependencyname andPythonMusicsourceguardwireassert only."
   worker: "Flash3.8Medium R1 source-onlypacket20398chars, taskownedexec28252; result ../qa/r218-music-guard-boundary-20261023/worker-R1.json. stdinDEVNULL/background; no Cpatchapplied. A retains2failedhandoffs, no reset."
@@ -26,12 +63,13 @@ checkpoint_music_guard_boundary_c_20261023:
   browser: "ActualsignedMusic18/18afterC,36POST/36pending; SFX18/18beforeC preservedbyteequalC. Unique36configs VI/EN/ZH×light390/light1440/dark390/dark1440/dark375/dark844landscape.72nativePOST/72pendingchecks,3textitems/success;realcopyrightguard;errors/external/unapprovedwrite/HTTP/overflow0. Noresponsefixtures."
   comparator: "GitBASE→AR2→overlayc19fbc→CR2→actual6f67e5 allverbatim. ReverseCequalsintegration-before-C.js; SFXblock/4oldvalidators/9protectedfilesBYTE_EQUAL_NORMALIZED."
   evidence: reports/audit/R218-MUSIC-SFX-SUBMIT-GUARD-QA-20261023.json
-  next: "Docs/Tester/prepush/provenance,pushonebatch/readback/CI/Issue664receipt; thenBREAD. No merge/deploy/LIVEinthisslice."
+  delivery: "HEADfc8deb6readback; CI39950590927terminalSUCCESS:Verify120403796918(396Python+26browserruntime),AuthenticatedQA120404995895SUCCESS. Provenanceac58680d/mergeeb4f0d4/recordedb5f56f1 oktrue; receipt664#issuecomment-6364623486. No merge/deploy/LIVE."
+  next: "ClosedscopedCdelivery; BREAD/contract nowactive, keepcanonicalaudio/M0open."
 checkpoint_music_sfx_submit_feedback_20261023:
   base_sha: 80f12d220c83ae4febebb99ca9742560f3c2ac85
   spec: docs/superpowers/specs/2026-10-23-r218-music-sfx-submit-feedback.md
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664
-  result: LOCAL_UI_ACCEPTED_WITH_C_DELIVERY_PENDING
+  result: ACCEPTED_UI_BRANCH_DELIVERY_NO_DEPLOY
   scope: "SpecA only pending/success/validguarded feedback in2nativeactions:9callsite+1localehelper+8cataloguerows+1realactiontest. Preserveportal.js,validators,allAPI/auth/safety/route/capability/epoch/data/palette/provider/wallet."
   finding: "ActualSFXZHdark390showsVItechnicaltoast. Native2actions139lines contain19message-sites/6rawserver-messagepreferences. A fixes onlydeclaredstates; B validation/error/outercatch remainsopenwithseparateREADcontract."
   dependency: "Interactiondelivery80f12d2,CI39934950954bothSUCCESS,Linux396+26,receipt664#issuecomment-6362432472."
@@ -46,7 +84,8 @@ checkpoint_music_sfx_submit_feedback_20261023:
   actual_runtime_finding: "AactualbrowsercopyrightMusic timedout: realDTOvalidguard/nooutput butoldconsumerrequirescomposer; statusmislabelsconnectionfailure/rawVItoast. Baselinehelperbyteequal80f12d2. Cnewdistinctconsumerbug isdependency, not resettingAcodecounter; A/runtime staysopen."
   verified: "AcleanRED3pass/7assertionfail→GREEN10/10; C0/3→3/3; combinedfocused47/full1000/Python21/Testerportable32pass1deselected. Actualbrowser36two-phaseconfigurations/72POST/72pendingPASS. A/CproductionverbatimR2; noR3."
   cleanup: "Server53124stoppednewlineexit0; browsercontextsclosed. TempDB/assetsremoved; listenerverificationmustuseoutside-sandbox .NET because sandboxAccessDeniedisnotclosedportevidence."
-  next: "Finishbatchdelivery; Bvalidation/error/outercatchlocale andsourcehint/technical-copyfindingsremainopen, donotclaimwholepagelocale/audio/Botparity."
+  delivery: "SameA+CHEADfc8deb6/CI39950590927bothSUCCESS/receipt6364623486; issueA/Ctickedonlyafterreceipt, B/D/audio/LIVEstillopen."
+  next: "Bvalidation/error/outercatchlocale ready; Dsourcehint/technicalcopyseparate. No wholepagelocale/audio/Botparityclaim."
 checkpoint_music_sfx_interaction_20261023:
   base_sha: 2d6f61f3a700cea49a6c61ec1eb57a5740dae541
   spec: docs/superpowers/specs/2026-10-23-r218-music-sfx-interaction-feedback.md
@@ -542,7 +581,7 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "FinishA+Cdocs/Tester/prepush, cleanWebprovenance/push/readback/CI/Issue664receipt; thenBREADcontract. Combinedfocused47/full1000/Python21/browser36PASS; A/CproductionverbatimR2. NoR3/reapply. QAserverstopped. Canonicalaudio/Botparity/backend/M0remainopen; goalACTIVE,motionlast."
+next_action: "B+D0localUIaccepted:10D0/6B/63focused/1016full/Python21/independent81/browserstrictfocus24. Commit/prepush/Webprovenance/push/readback/newCI/receipt664,thenpresentationDREAD(fieldhintVI/technicalemptycards). NoR3/reapply;QA39795closed/51738listener0. Canonicalaudio/Botparity/backend/M0open; goalACTIVE,motionlast."
 active_billing_batch:
   id: R218-BILLING-20261022
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660

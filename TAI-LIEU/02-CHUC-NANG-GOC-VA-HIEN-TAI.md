@@ -1,5 +1,20 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 23/10/2026 — đối chiếu lỗi/khôi phục thao tác Music/SFX
+
+| Yêu cầu từ P2/nativeflow | Hiện trạng có bằng chứng | Giới hạn |
+|---|---|---|
+| Lỗi cùng ngôn ngữ giao diện |28localmessages→10nhóm/tool,20cataloguerows; realcatch consumer/realpayload lengthshape | Không sửa servererror, quyền hoặc bộvalidator |
+| Không lộ thông báo kỹ thuật từ máy chủ | Unknown/serverpayload→localizedretry, numericHTTP401/403→auth; prototypekeystrictownproperty | Không giải thích lý do lỗi không được xác minh |
+| Luồng khác không bị ảnh hưởng | Exact2actionguard ởoutercatch; MusicLibrary18/18,15helpers/10files equalBASE | Không toàntrang/Product/BotparityPASS |
+| Gửi lỗi vẫn thao tác tiếp được bằng phím | D0capture/flag/restore10lines, test10/10 inclotherfocus/stale/wrongroute/disconnected/success/guard | Actualfocusmatrix vàdelivery xem evidenceJSON, không suy từ syntheticDOM |
+
+FullNode1016/1016; Python21/21. BworkerR1/R2harnessfails→primarytesttakeover
+và2sourcecorrections; D0productionR1/R2identicalverbatim, testF02 bổsung2cases
+sau hai lượt thiếucoverage. Không vòng3 hoặc resetSPEC để néfail. Văn bản gốc
+chỉ kiểm rendering/copy cân bằng đã thiếu lateerror/focus; đây là bổ sungđúng
+luồngthật, không thêm nhạc/audio/player/providerjob giả.
+
 ## 23/10/2026 — đối chiếu Music/SFX submit và guard
 
 Nguồn gốc: R218-03/P2, hai native action và backend guard contract hiện có.

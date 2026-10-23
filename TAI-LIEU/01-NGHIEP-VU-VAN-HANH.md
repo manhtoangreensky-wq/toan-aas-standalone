@@ -1,5 +1,32 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 23/10/2026 — Music/SFX: lỗi có hướng xử lý và phục hồi focus
+
+Hai action lập hướng/cue nay phân loại28thông báo lỗi local ở lớp trình bày
+riêng; top-level HTTP401/403 dùng thông báo phiên/quyền, serverpayload khác và
+lỗi không rõ nguyên nhân dùng hướng dẫn gửi lại. Không hiển thị rawmessage/
+URL/chi tiết kỹ thuật.20cataloguerows VI/EN/ZH;2inlinefailure và finaltoast chỉ
+gọi helper cho đúng2action. NonMusic giữ fallback cũ, không dependency mới.
+Payload/safety/strictvalidation/API/auth/CSRF/requestepoch/body giữ nguyên.
+
+Focus của nút gửi vốn mất khi bị disabled: actualBASE vàcandidate đều có
+BUTTON→BODY→BODY. DependencyD0 thêm10logical lines trong2form, chỉ nhớ nút
+đang focus trước gửi; chỉ trả focus sau lỗi khi target cònconnected, current
+route/request vẫn đúng và activeElement cònBODY. Nếu người dùng chuyển sang
+input khác, target tháo, success/guard hoặc requestmuộn thì không trảfocus.
+Không đổi sharedsetActionBusy và không thêmDOM/control/motion.
+
+Source/test đã đo: BcleanRED2/4→GREEN6/6; D0RED8/2→GREEN10/10;
+focused63/63; fullNode1016/1016; Pythonnative/portal21/21.15protectedhelpers/
+10files unchanged; comparator BworkerR2+2one-linecorrections, D0R1/R2verbatim.
+Browser/receipt hiện hành xem `reports/audit/R218-MUSIC-SFX-ERROR-FEEDBACK-QA-20261023.json`;
+không suy từ source số này ra focusruntime, CI, deploy hoặc LIVE.
+FieldhintVI/technicalemptycards vẫn ở presentationD; audio/Botparity vẫn mở.
+FinalactualsignedQA B+D0strictfocus24/24,validation0POST,24intentionalaborts+
+24native retrysuccess3texts; focusrestored24,unexpectederror/external/
+unapprovedwrite/overflow0.24expectednetworkconsoleerrors ghi riêng. NoAPIfixture;
+all24downloadedJSsha5ac46bc3...;server39795dừngexit0,tempcleanup/listener51738=0.
+
 ## 23/10/2026 — Music/SFX: thông báo sau gửi và cảnh báo bản quyền
 
 Hai công cụ text-only giữ nguyên đầu vào, POST có phiên/CSRF và ba kết quả

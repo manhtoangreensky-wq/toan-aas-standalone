@@ -1,5 +1,24 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-MUSIC-SFX-ERRORS-20261023 — B + dependency D0
+
+BASEfc8deb6a96566021a58cdcdf8ab77ed6796539cd;PR661/Issue664. Bcopy source QA,
+D0focuslocalPASS,branchdeliverypending. ChỉisolatedsignedQA, không production.
+Ma trận2tools×VI/EN/ZH×light/dark×390/1440=24; Browserpluginabsent,Edgeheadless.
+Evidence `reports/audit/R218-MUSIC-SFX-ERROR-FEEDBACK-QA-20261023.json`.
+
+| Case | Mức | Bước thực hiện | PASS bắt buộc / canh lỗi cũ |
+|---|---|---|---|
+| MU-ERR-01 | vừa | Chọnpreset,nhậpURL/markup,clicksubmit | Localvalidation đúngVI/EN/ZH,0POST,khôngrawtechnicalcopy; validator/safety khôngnới |
+| MU-ERR-02 | nặng | Chặnđúng1POSTQAconnectionreset,rồithảlỗivàgửilại | Inline/toastđúnglocale,draft/nútgiữ;1abortintentional+1nativePOSTthànhcông3texts; lỗi mạngchủđíchghiriêng |
+| MU-ERR-03 | nặng | Unitunknown/null/primitive/prototype/payload.status/top-levelHTTP401/403 | Unknownretryđúnglocale;khôngrawserver;constructor/__proto__/toStringkhôngtrúngmap;nonMusicfallbackgiữnguyên |
+| MU-ERR-04 | nặng | D0: focusnút→gửi→lỗitrongtrang;testinputkhác/stale/disconnected/success/guard | Priorbuttonconnected/current+BODY→focus1preventScroll;khônggiànhinputkhác,khôngfocusrequestmuộn/success/guard. Localstrictbrowser24/24đãđạt |
+
+Đãđo B+D0strictfocus24/24,focused63/full1016/Python21;review81/Critical0/Important0.
+FocusbaselinevàBcandidateđềuBUTTON→BODY→BODY;D0candidategiờBUTTON→BODY→BUTTON.
+MU-ERR-04chỉđạtsaukhiD0strictbrowserxanh,khôngtừcopyPASS. DeliveryB+D0đangchờ;
+Audio/Botparity/LIVEmở.
+
 ## R218-MUSIC-SFX-SUBMIT-GUARD-20261023 — phiên Tester độc lập
 
 BASE80f12d220c83ae4febebb99ca9742560f3c2ac85; PR661; Issue664; branch

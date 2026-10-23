@@ -1387,6 +1387,79 @@
     return fallback;
   }
 
+  function musicSfxEditorialErrorText(action, error) {
+    const tool = action === "music-direction-preset-compose" ? "music" : (action === "sfx-cue-sheet-compose" ? "sfx" : null);
+    if (!tool) return null;
+    const keyMap = {
+      "Music Directions chỉ nhận thao tác từ màn hình Music Directions đang mở.": "route",
+      "SFX Cue Sheet chỉ nhận thao tác từ màn hình SFX Cue Sheet đang mở.": "route",
+      "Cần signed Web session, CSRF và Music Workspace đang sẵn sàng để lập Music Directions.": "unavailable",
+      "Cần signed Web session, CSRF và Music Workspace đang sẵn sàng để lập SFX Cue Sheet.": "unavailable",
+      "Music Directions chỉ nhận brief, ngôn ngữ và một preset Web.": "fields",
+      "Music Directions cần brief, ngôn ngữ và preset dạng text hợp lệ.": "fields",
+      "SFX Cue Sheet chỉ nhận brief, ngôn ngữ và một preset Web.": "fields",
+      "SFX Cue Sheet cần brief, ngôn ngữ và preset dạng text hợp lệ.": "fields",
+      "Brief âm nhạc cần từ 2 đến 500 ký tự hợp lệ.": "length",
+      "Brief SFX cần từ 2 đến 500 ký tự hợp lệ.": "length",
+      "Ngôn ngữ hoặc preset Web không hợp lệ. Hãy chọn lại từ các lựa chọn trong trang.": "selection",
+      "Ngôn ngữ hoặc preset SFX Web không hợp lệ. Hãy chọn lại từ các lựa chọn trong trang.": "selection",
+      "Brief không nhận callback, lệnh hoặc keyword Bot. Hãy viết mô tả Web đầy đủ.": "content",
+      "Audio Library không nhận ký tự điều khiển không an toàn.": "content",
+      "Music Prompt Composer không nhận markup hoặc chỉ dẫn thực thi.": "content",
+      "Music Prompt Composer không nhận URL hoặc scheme tệp trong mô tả direction.": "content",
+      "Music Prompt Composer không nhận handle hệ thống, audio, job, asset hoặc Telegram trong mô tả direction.": "content",
+      "SFX Cue Sheet không nhận markup hoặc chỉ dẫn thực thi.": "content",
+      "SFX Cue Sheet không nhận URL hoặc scheme tệp trong brief.": "content",
+      "SFX Cue Sheet không nhận handle hệ thống, source media, job, asset hoặc Telegram trong brief.": "content",
+      "Audio Library không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.": "sensitive",
+      "Audio Library không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.": "sensitive",
+      "Máy chủ chưa trả ranh giới Music Directions an toàn.": "receipt",
+      "Máy chủ chưa trả Music Directions Web-native an toàn và khớp brief hiện tại.": "receipt",
+      "Máy chủ chưa trả ranh giới SFX Cue Sheet an toàn.": "receipt",
+      "Máy chủ chưa trả SFX Cue Sheet Web-native an toàn và khớp brief hiện tại.": "receipt",
+      "Không thể lập direction. Kiểm tra lại brief, preset và kết nối rồi thử lại.": "retry",
+      "Không thể lập cue sheet. Kiểm tra lại brief, preset và kết nối rồi thử lại.": "retry"
+    };
+    const fallbacks = {
+      music: {
+        route: "Mở lại trang Hướng âm nhạc trước khi gửi.",
+        unavailable: "Chức năng lập hướng âm nhạc hiện chưa sẵn sàng. Vui lòng quay lại sau.",
+        fields: "Kiểm tra mô tả và các lựa chọn trước khi gửi.",
+        length: "Mô tả cần từ 2 đến 500 ký tự.",
+        selection: "Chọn một hướng và ngôn ngữ có sẵn trong biểu mẫu.",
+        content: "Viết mô tả bằng lời, không nhập liên kết, mã lệnh hoặc mã tệp.",
+        sensitive: "Xóa mật khẩu, mã xác thực, khóa truy cập và thông tin thanh toán khỏi mô tả.",
+        receipt: "Chưa nhận được kết quả hợp lệ cho nội dung này. Hãy gửi lại.",
+        auth: "Phiên làm việc không hợp lệ hoặc chưa có quyền. Hãy đăng nhập lại.",
+        retry: "Chưa thể lập hướng âm nhạc. Kiểm tra nội dung và kết nối rồi gửi lại."
+      },
+      sfx: {
+        route: "Mở lại trang Bảng hiệu ứng trước khi gửi.",
+        unavailable: "Chức năng lập bảng hiệu ứng hiện chưa sẵn sàng. Vui lòng quay lại sau.",
+        fields: "Kiểm tra mô tả và các lựa chọn trước khi gửi.",
+        length: "Mô tả cần từ 2 đến 500 ký tự.",
+        selection: "Chọn một loại hiệu ứng và ngôn ngữ có sẵn trong biểu mẫu.",
+        content: "Viết mô tả bằng lời, không nhập liên kết, mã lệnh hoặc mã tệp.",
+        sensitive: "Xóa mật khẩu, mã xác thực, khóa truy cập và thông tin thanh toán khỏi mô tả.",
+        receipt: "Chưa nhận được kết quả hợp lệ cho nội dung này. Hãy gửi lại.",
+        auth: "Phiên làm việc không hợp lệ hoặc chưa có quyền. Hãy đăng nhập lại.",
+        retry: "Chưa thể lập bảng hiệu ứng. Kiểm tra nội dung và kết nối rồi gửi lại."
+      }
+    };
+    let key = "retry";
+    if (error && typeof error === "object") {
+      if (typeof error.status === "number" && (error.status === 401 || error.status === 403)) {
+        key = "auth";
+      } else if (error.payload) {
+        key = "retry";
+      } else if (typeof error.message === "string" && Object.prototype.hasOwnProperty.call(keyMap, error.message)) {
+        key = keyMap[error.message];
+      }
+    }
+    const fallback = (fallbacks[tool] && fallbacks[tool][key]) || fallbacks[tool].retry;
+    return musicSfxEditorialFeedbackText(tool, `error.${key}`, fallback);
+  }
+
   function setMusicDirectionPresetSubmissionStatus(message) {
     const form = document.querySelector('[data-portal-form][data-portal-action="music-direction-preset-compose"][data-portal-route="/media-workspace/music-directions"]');
     const announcement = form && form.querySelector("[data-music-direction-selection]");
@@ -29236,6 +29309,9 @@
           throw new Error("Cần signed Web session, CSRF và Music Workspace đang sẵn sàng để lập Music Directions.");
         }
         const payload = musicDirectionPresetPayload(fields);
+        const composeFocusTarget = window.document && window.document.activeElement;
+        const restoreComposeFocusTarget = composeFocusTarget && typeof composeFocusTarget.matches === "function" && composeFocusTarget.matches('form[data-portal-action="music-direction-preset-compose"][data-portal-route="/media-workspace/music-directions"] [data-music-direction-submit]') ? composeFocusTarget : null;
+        let restoreComposeFocus = false;
         const requestEpoch = ++musicDirectionPresetComposeRequestEpoch;
         musicDirectionPresetComposePendingRequestEpoch = requestEpoch;
         // Do not merge/reset here: the native form intentionally keeps the
@@ -29284,7 +29360,8 @@
           const guarded = error && error.payload && error.payload.status === "guarded" ? error.payload : null;
           const guardedData = guarded && guarded.data && typeof guarded.data === "object" ? guarded.data : null;
           if (!guarded || !musicDirectionPresetGuardBoundaryIsSafe(guardedData)) {
-            setMusicDirectionPresetSubmissionStatus("Không thể lập direction. Kiểm tra lại brief, preset và kết nối rồi thử lại.");
+            restoreComposeFocus = true;
+            setMusicDirectionPresetSubmissionStatus(musicSfxEditorialFeedbackText("music", "error.retry", "Chưa thể lập hướng âm nhạc. Kiểm tra nội dung và kết nối rồi gửi lại."));
             throw error;
           }
           merge({
@@ -29305,6 +29382,7 @@
             && currentPortalPath() === expectedPath) {
             musicDirectionPresetComposePendingRequestEpoch = 0;
             setActionBusy(action, route, false);
+            if (restoreComposeFocus && restoreComposeFocusTarget && restoreComposeFocusTarget.isConnected && window.document.activeElement === window.document.body) restoreComposeFocusTarget.focus({ preventScroll: true });
           }
         }
         return;
@@ -29319,6 +29397,9 @@
           throw new Error("Cần signed Web session, CSRF và Music Workspace đang sẵn sàng để lập SFX Cue Sheet.");
         }
         const payload = sfxCueSheetPayload(fields);
+        const composeFocusTarget = window.document && window.document.activeElement;
+        const restoreComposeFocusTarget = composeFocusTarget && typeof composeFocusTarget.matches === "function" && composeFocusTarget.matches('form[data-portal-action="sfx-cue-sheet-compose"][data-portal-route="/media-workspace/sfx-cue-sheet"] [data-sfx-cue-sheet-submit]') ? composeFocusTarget : null;
+        let restoreComposeFocus = false;
         const requestEpoch = ++sfxCueSheetComposeRequestEpoch;
         sfxCueSheetComposePendingRequestEpoch = requestEpoch;
         setActionBusy(action, route, true);
@@ -29362,7 +29443,8 @@
           const guarded = error && error.payload && error.payload.status === "guarded" ? error.payload : null;
           const guardedData = guarded && guarded.data && typeof guarded.data === "object" ? guarded.data : null;
           if (!guarded || !sfxCueSheetBoundaryIsSafe(guardedData)) {
-            setSfxCueSheetSubmissionStatus("Không thể lập cue sheet. Kiểm tra lại brief, preset và kết nối rồi thử lại.");
+            restoreComposeFocus = true;
+            setSfxCueSheetSubmissionStatus(musicSfxEditorialFeedbackText("sfx", "error.retry", "Chưa thể lập bảng hiệu ứng. Kiểm tra nội dung và kết nối rồi gửi lại."));
             throw error;
           }
           merge({
@@ -29383,6 +29465,7 @@
             && currentPortalPath() === expectedPath) {
             sfxCueSheetComposePendingRequestEpoch = 0;
             setActionBusy(action, route, false);
+            if (restoreComposeFocus && restoreComposeFocusTarget && restoreComposeFocusTarget.isConnected && window.document.activeElement === window.document.body) restoreComposeFocusTarget.focus({ preventScroll: true });
           }
         }
         return;
@@ -38635,7 +38718,8 @@
           }
         });
       }
-      toast((error && error.payload && error.payload.message) || (error && error.message) || "Yêu cầu chưa được xác nhận.", "error");
+      const editorialError = (action === "music-direction-preset-compose" || action === "sfx-cue-sheet-compose") ? musicSfxEditorialErrorText(action, error) : null;
+      toast(editorialError || (error && error.payload && error.payload.message) || (error && error.message) || "Yêu cầu chưa được xác nhận.", "error");
     } finally {
       if (featureSubmission) {
         releaseSubmission(featureSubmission);
