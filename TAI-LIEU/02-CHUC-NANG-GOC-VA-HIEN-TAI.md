@@ -1,5 +1,19 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — Music MU08 và trạng thái rỗng F/H
+
+| Yêu cầu gốc | Hiện trạng có bằng chứng | Giới hạn còn mở |
+|---|---|---|
+| Xem lại trước xác nhận | Snapshot flow.input được trình bày trước CTA, VI/EN/ZH; F172tests/browser48 | Controlled quote state không chứng minh native báo giá hoặc âm thanh |
+| Không ô vô nghĩa | Hai form Music chưa có flow không render card kết quả; H12tests/54VMomissions/browser48 | Không giấu error/guarded/draft/report có dữ liệu; nonMusic giữ nguyên |
+| Không mất draft/gate | Edit giữ snapshot, khóa confirm; revert/expiry/newestimate đúng; 48browsercases | Không sửa hợp đồng engine/thu Xu hoặc biến sửa form thành quote mới |
+| Nội dung đầy đủ, dễ đọc | Full escapedUnicode/lyrics;720contrast>=5,522;2xt textstress,disclosure44px | Không suy thành Dynamic Type máy thật hoặc canonical output PASS |
+
+Tài liệu gốc không còn đúng nếu diễn giải “có control” thành “đã có đầu ra”.
+MU08 UI gap đã xử lý; MU02 style/style_prompt, MU06 half/full, MU07 đổi bộ
+gợi ý và MU09..12 audio/editor/recovery giữ nguyên checklist mở, không bỏ sót.
+Đây là source nhánh/QA; không khẳng định production đã đổi.
+
 ## 23/10/2026 — đối soát Music và bản vá đọc/nhập E
 
 | Yêu cầu gốc | Hiện trạng có bằng chứng | Không được suy diễn |
@@ -8,7 +22,7 @@
 | Không mất lựa chọn khi đổi gói/giọng/mode | 144 tier checks, 288 vocal checks, 48 mode/Back draft checks | Không chứng minh giọng trong audio output |
 | Đủ yêu cầu MU01..12 | Có bảng đối soát từng yêu cầu, source anchor và giới hạn test | Không coi 27 test VM là toàn bộ Bot parity |
 | Idea và phong cách riêng | Chưa có style input tách biệt; draft `style` và bridge `style_prompt` không đồng nhất | Không thêm field/mapping phỏng đoán |
-| Review trước xác nhận | Có giá/gate, thiếu summary các lựa chọn đã gửi | Tách MU08-F UI-only; không sửa tiền/receipt/confirm |
+| Review trước xác nhận | F/H đã có summary snapshot và initial-state gọn | Không sửa tiền/receipt/confirm; native output/LIVE còn mở |
 | Độ dài half/full, hai bản, player/editor | Control hoặc metadata không đủ proof xử lý | Giữ backlog contract/runtime, không dựng output hoặc editor giả |
 
 Nguồn chi tiết: `reports/audit/R218-MUSIC-REMAINING-UI-CROSSWALK-20261023.md`.

@@ -8904,6 +8904,43 @@ article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) :is(.por
   color: var(--portal-input-placeholder, var(--portal-muted));
 }
 
+.portal-music-request-review {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--portal-border);
+  color: var(--portal-ink);
+}
+.portal-music-request-review h3 { margin: 0; font-size: 16px; }
+.portal-music-request-review > p { color: var(--portal-muted); }
+.portal-music-request-review dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+.portal-music-request-review dl > div { min-width: 0; }
+.portal-music-request-review dt { color: var(--portal-muted); font-size: 13px; }
+.portal-music-request-review dd { margin: 4px 0 0; color: var(--portal-ink); overflow-wrap: anywhere; }
+.portal-music-request-review .portal-music-review-text {
+  margin: 8px 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  line-height: 1.65;
+  color: var(--portal-ink);
+}
+.portal-music-request-review summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--portal-ink);
+  cursor: pointer;
+}
+.portal-music-request-review summary:focus-visible { outline: 3px solid var(--portal-focus); outline-offset: 3px; }
+@media (max-width: 600px) {
+  .portal-music-request-review dl { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* Final light AI Chat Workspace surface */
 .portal-page:is(.portal-chat-workspace, .portal-chat-workspace-detail) :is(.portal-chat-workspace-create, .portal-chat-workspace-boundary, .portal-chat-workspace-filters, .portal-chat-context-card, .portal-chat-turn, .portal-chat-version-list > article, .portal-chat-event-list > div, .portal-chat-execution, .portal-chat-execution-layout > section, .portal-chat-run-card) {
   border-color: var(--portal-border);

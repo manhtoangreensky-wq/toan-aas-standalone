@@ -11799,13 +11799,77 @@
     const musicMode = musicTask ? musicProductRouteMode(route) : "";
     const musicStatus = musicTask ? `<p class="portal-form-note portal-music-product-state" data-music-product-state role="status" aria-live="polite">${safeText(musicProductText(musicMode === "song" ? "state.song" : "state.background", "Các lựa chọn chỉ nằm trong bản nháp; xử lý thật cần capability và báo giá từ máy chủ."))}</p>` : "";
     const musicCopy = (key, fallback) => musicProductText(key, fallback);
+    const musicRequestReview = (() => {
+      const hasOwn = (obj, prop) => Boolean(obj && Object.prototype.hasOwnProperty.call(obj, prop));
+      if (!musicTask || !enabled) return "";
+      if (!context || !context.session || context.session.authenticated !== true || context.session.csrfReady !== true) return "";
+      if (!flow || typeof flow !== "object" || Array.isArray(flow)) return "";
+      const expectedFeature = musicMode === "song" ? "music_song" : "music_background";
+      if (flow.feature !== expectedFeature || flow.phase !== "estimate" || flow.status !== "awaiting_confirm") return "";
+      if (!hasFreshEstimate || !musicQuote || musicQuote.confirmAllowed !== true) return "";
+      const input = flow.input;
+      if (!input || typeof input !== "object" || Array.isArray(input)) return "";
+      if (!hasOwn(input, "brief") || typeof input.brief !== "string" || !input.brief.trim()) return "";
+
+      const rows = [];
+      const productName = musicMode === "song" ? musicCopy("nav.song", "Bài hát") : musicCopy("nav.background", "Nhạc nền");
+      rows.push(`<div data-music-review-field="product"><dt>${safeText(musicCopy("review.product", "Sản phẩm"))}</dt><dd>${safeText(productName)}</dd></div>`);
+
+      const VALID_TIERS = ["basic", "standard", "premium"];
+      if (hasOwn(input, "tier") && typeof input.tier === "string" && VALID_TIERS.includes(input.tier)) {
+        rows.push(`<div data-music-review-field="tier"><dt>${safeText(musicCopy("field.tier.label", "Gói chất lượng"))}</dt><dd>${safeText(musicCopy(`option.tier.${input.tier}`, input.tier))}</dd></div>`);
+      }
+
+      const validModes = musicMode === "song" ? ["lyrics", "melody", "custom"] : ["background", "melody", "custom"];
+      const ownMode = hasOwn(input, "mode") && typeof input.mode === "string" && validModes.includes(input.mode) ? input.mode : null;
+      if (ownMode) {
+        rows.push(`<div data-music-review-field="mode"><dt>${safeText(musicCopy("field.mode.label", "Loại sản phẩm"))}</dt><dd>${safeText(musicCopy(`option.mode.${ownMode}`, ownMode))}</dd></div>`);
+      }
+
+      if (musicMode === "song" && (ownMode === "lyrics" || ownMode === "custom")) {
+        const VALID_VOCALS = ["auto", "male", "female", "duet"];
+        if (hasOwn(input, "vocal_mode") && typeof input.vocal_mode === "string" && VALID_VOCALS.includes(input.vocal_mode)) {
+          rows.push(`<div data-music-review-field="vocal_mode"><dt>${safeText(musicCopy("field.vocal_mode.label", "Kiểu giọng hát"))}</dt><dd>${safeText(musicCopy(`option.vocal_mode.${input.vocal_mode}`, input.vocal_mode))}</dd></div>`);
+        }
+      }
+
+      const VALID_LENGTH_MODES = ["seconds", "half", "full"];
+      const ownSongLengthMode = musicMode === "song" && hasOwn(input, "song_length_mode") && typeof input.song_length_mode === "string" && VALID_LENGTH_MODES.includes(input.song_length_mode) ? input.song_length_mode : null;
+      if (ownSongLengthMode) {
+        rows.push(`<div data-music-review-field="song_length_mode"><dt>${safeText(musicCopy("field.song_length_mode.label", "Dạng bài hát"))}</dt><dd>${safeText(musicCopy(`option.song_length_mode.${ownSongLengthMode}`, ownSongLengthMode))}</dd></div>`);
+      }
+
+      const durationEligible = musicMode === "background" || (musicMode === "song" && ownSongLengthMode === "seconds");
+      if (durationEligible && hasOwn(input, "duration_seconds")) {
+        const val = input.duration_seconds;
+        let validNum = null;
+        if (typeof val === "number" && Number.isInteger(val) && val >= 1 && val <= 600) {
+          validNum = val;
+        } else if (typeof val === "string" && /^\d{1,3}$/.test(val)) {
+          const parsed = Number(val);
+          if (parsed >= 1 && parsed <= 600) validNum = parsed;
+        }
+        if (validNum !== null) {
+          rows.push(`<div data-music-review-field="duration_seconds"><dt>${safeText(musicCopy("field.duration_seconds.label", "Thời lượng (giây)"))}</dt><dd>${safeText(String(val))}</dd></div>`);
+        }
+      }
+
+      let lyricsMarkup = "";
+      if (musicMode === "song" && (ownMode === "lyrics" || ownMode === "custom")) {
+        if (hasOwn(input, "lyrics") && typeof input.lyrics === "string" && input.lyrics.length > 0) {
+          lyricsMarkup = `<details class="portal-music-review-lyrics" data-music-review-lyrics><summary>${safeText(musicCopy("review.lyrics", "Xem lời bài hát"))}</summary><pre class="portal-music-review-text">${safeText(input.lyrics)}</pre></details>`;
+        }
+      }
+
+      return `<section class="portal-music-request-review" data-music-request-review aria-labelledby="music-request-review-title"><h3 id="music-request-review-title">${safeText(musicCopy("review.title", "Kiểm tra yêu cầu"))}</h3><p>${safeText(musicCopy("review.note", "Các lựa chọn đã gửi để nhận báo giá này."))}</p><dl>${rows.join("")}</dl><div class="portal-music-review-brief"><strong>${safeText(musicCopy("field.brief.label", "Mô tả âm nhạc"))}</strong><p class="portal-music-review-text" data-music-review-brief>${safeText(input.brief)}</p></div>${lyricsMarkup}</section>`;
+    })();
     return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.layout === "auth" ? "Thông tin xác thực" : musicTask ? safeText(musicCopy(musicMode === "song" ? "form.songTitle" : "form.backgroundTitle", "Chuẩn bị yêu cầu âm nhạc")) : "Chuẩn bị yêu cầu"}</h2><p class="portal-card-subtitle">${musicTask ? safeText(enabled ? musicCopy("form.integrationReady", "") : (workspaceDraftEnabled ? musicCopy("form.draft", "") : reason)) : (enabled ? "Yêu cầu sẽ được chuyển tới lớp tích hợp thông qua custom event, không gọi trực tiếp từ UI." : (workspaceDraftEnabled ? "Bạn có thể soạn và lưu brief Web; estimate, job và integration ngoài chỉ bật theo capability riêng." : safeText(reason)))}</p></div>${badge(flowStatus || stateFor(page, context))}</div>
       ${boundaryNotice}
       <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${musicTask ? ` data-music-product-form="${safeText(musicMode)}" data-music-product-enabled="${formFieldsEnabled ? "true" : "false"}"` : ""}${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>${renderFields(genericFields, formFieldsEnabled, context, fieldValues)}${musicStatus}
         <div class="portal-form-footer"><span class="portal-form-note">${musicTask ? safeText(enabled ? musicCopy("form.processingNote", "") : (workspaceDraftEnabled ? musicCopy("form.draftNote", "") : musicCopy("form.guardedNote", ""))) : (enabled ? "Máy chủ vẫn phải xác minh phiên, CSRF, schema, ownership và idempotency." : (workspaceDraftEnabled ? "Bản nháp chỉ giữ brief scalar trên Web; không lưu file, upload ID, quote, job, Xu hoặc provider." : "Các trường bị khóa cho tới khi máy chủ cấp khả năng cần thiết."))}</span>${musicTask ? `<span class="portal-form-note portal-music-quote-freshness" data-music-quote-freshness hidden role="status" aria-live="polite"></span>` : ""}
           ${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button>
         </div>
-      </form>${flowControls}</section>`;
+      </form>${musicRequestReview}${flowControls}</section>`;
   }
 
   const ADMIN_TAB_GROUPS = [
@@ -32885,7 +32949,7 @@
     const visibleForm = previousFormCollapsed ? `<details class="portal-voice-task-form" data-voice-task-form><summary>${safeText(voiceUiText("flow.form", "Biểu mẫu giọng đọc"))}</summary>${formContent}</details>` : formContent;
     const outputTitle = videoTask ? safeText(uiText("videoUi.output.title", "")) : voiceTask ? safeText(voiceUiText("output.title", "")) : musicTask ? safeText(musicProductText("output.title", "Kết quả và trạng thái")) : "Output & trạng thái";
     const outputSubtitle = videoTask || voiceTask ? "" : musicTask ? safeText(musicProductText("output.subtitle", "Không tạo âm thanh, trình phát, tệp hoặc báo giá giả khi máy chủ chưa xác nhận.")) : "Không tạo text, media, transcript hoặc file giả để thay thế engine thật.";
-    const outputSection = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${outputTitle}</h2>${outputSubtitle ? `<p class="portal-card-subtitle">${outputSubtitle}</p>` : ""}</div>${voiceTask ? "" : badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section>`;
+    const outputSection = musicTask && !(flow && typeof flow === "object" && !Array.isArray(flow) && Object.keys(flow).length > 0) ? "" : `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${outputTitle}</h2>${outputSubtitle ? `<p class="portal-card-subtitle">${outputSubtitle}</p>` : ""}</div>${voiceTask ? "" : badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section>`;
     return `<article class="portal-page${videoTask ? " portal-feature-workspace--video-task" : voiceTask ? " portal-feature-workspace--voice-task" : musicTask ? " portal-feature-workspace--music-task" : ""}">${renderHero(page, context)}${voiceWorkspaceNav}${voiceTask || musicTask ? "" : `<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>`}
       ${interactiveWorkbench}${musicGuidance}${flowFirst ? outputSection : ""}
       <div class="portal-work-grid"><div>${visibleForm}${subtitleStudioCompanion}</div>${voiceTask || musicTask ? "" : `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside>`}</div>

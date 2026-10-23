@@ -21,7 +21,7 @@ hai product form `/music/create` và `/music/song`.
 | MU05 — ba tier | basic/standard/premium; không hardcode giá bán | portal.js866/872/11534; E144 tier checks; quote tests có 0/unknown | Giá canonical/runtime chỉ từ receipt; không tự tính Xu |
 | MU06 — độ dài | seconds/half/full và số giây trong form | portal.js876/API2252/integration1984; job bridge143/207 chỉ normalize giây | Semantic contract gap; không tự quy đổi half/full hoặc sửa min theo suy đoán |
 | MU07 — ba gợi ý | Tối đa 3 item server, Copy/Apply prompt vào brief | portal.js32203/39216; integrated tests và receipt review cũ | Chưa đủ workflow Đổi/Sửa/Back riêng; đổi bộ gợi ý cần contract, không fabricate alternate set |
-| MU08 — review/confirm | Giá server và confirm gate có; thiếu summary input đã gửi | portal.js11612/11697/32248; integration38674 giữ flow.input | UI gap F: sản phẩm/tier/vocal/lyrics/length/brief read-only; không sửa DTO/confirm |
+| MU08 — review/confirm | F đã có summary input đã gửi, H bỏ initial empty output | F172/H12tests;actual48;720AA samples;integration flow.input/gates giữ | UI local accepted; delivery CI còn gate riêng, canonical quote/audio/LIVE chưa chứng minh |
 | MU09 — output/2 bản | Report/tracking; public job có một artifact_url | portal.js32228; music job bridge324 | Chưa có proof 2 audio/player/tải/lưu/reuse; không vẽ hai audio card cho đủ yêu cầu |
 | MU10 — thư viện/SFX | Metadata/search/clear/refresh/pagination | portal.js14690; MU-E01/E02 evidence39 configs | Nghe/tải/chọn dùng thật ngoài metadata authority; không giả sound catalog |
 | MU11 — chỉnh nhạc | Chưa có Web Music editor contract được xác minh | Không thấy renderer/editor proof trong inventory Music | T0 contract/runtime backlog; không dựng editor giả |
@@ -46,11 +46,16 @@ engine thực thi đúng duration/giọng.
    thiếu gate nhãn/placeholder nên E02 đã mở lại trước push; R2 bổ sung đúng
    hai rule còn lại, final48 nhãn264/placeholder120 cũng đạt AA. Tổng14dòng/
    4rule, không đổi JS. Chỉ đóng delivery khi CI mới/receipt đạt.
-2. **F — review trước xác nhận:** sau E delivery, thêm summary read-only
+2. **F — review trước xác nhận:** E delivery1e01f241/CI39992812318/receipt6370628830
+   đã nhận. F/H local đã đạt172/12unit,Node1257,Python119,browser48.
+   Có summary read-only
    từ `flow.input` của estimate hợp lệ. Dữ liệu cũ được ghi rõ là snapshot
    đã gửi; quote expiry/fingerprint/confirm giữ nguyên. Không giả ordinal/ID
    phương án vì Apply hiện chỉ lưu prompt vào brief. Missing field không bù
    giả; half/full chỉ là lựa chọn, không tự diễn giải số giây.
+   H đã bỏ initial output card ở noflow/null/primitive/array/emptyobject;
+   48realflowoutputs và40nonMusicworkspaceoutputs bằng acceptedF,54initial
+   omissions,không sửa flow/flowFirst/renderer. Delivery chung còn mở.
 3. **MU07 — chọn/sửa/quay lại:** thao tác sửa brief sau Apply đã tồn tại.
    Chốt workflow riêng trước khi thêm nút. Nếu không có contract đổi bộ
    gợi ý thì đưa T0, không tạo các bộ ngẫu nhiên giả.

@@ -1,5 +1,31 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — Music: xem lại yêu cầu và trạng thái ban đầu gọn
+
+Source nhánh F/H đã qua QA localhost, chưa deploy. Khi có báo giá hợp lệ,
+hai form Music hiện phần “Kiểm tra yêu cầu” trong cùng card, sau form và
+trước xác nhận. Nội dung lấy từ snapshot đã gửi: sản phẩm/gói/loại/giọng/
+dạng bài/thời lượng thực có, mô tả đầy đủ và lời bài hát trong disclosure.
+Không dịch dữ liệu khách, không đoán số giây half/full hoặc tạo giá/audio.
+Sửa form giữ snapshot cũ, existing freshness gate khóa xác nhận; báo giá
+hết hạn/không rõ, sai feature hoặc thiếu signed session không hiện summary.
+
+Khi chưa có flow record, card kết quả rỗng được bỏ riêng ở hai route này.
+Draft/gợi ý/báo giá/error/guarded/report/tracking có dữ liệu giữ nguyên.
+Form, bốn link công cụ và action lưu nháp vẫn hiện trong cả48 cấu hình.
+QA final VI/EN/ZH/light-dark/mobile-desktop có720 mẫu chữ review đạt tối
+thiểu5,797:1 sáng/5,522:1 tối; disclosure>=44px, keyboard/AX/focus và text2x
+không tràn ngang. 144asset checks khớp source, lỗi trang/external/UIwrites0.
+
+New F172 + H12 tests và fullNode1257 đạt; Python119 đạt/2warningcũ.
+F dùng actual signed app cộng controlled client quote/capability fixtures;
+H initial app là GET thật, không API response fixtures. Đăng ký/đăng nhập/
+locale/sessionlastseen có ghi DB QA tạm; không tuyên bố zero DB writes.
+Không quote/confirm/provider thật, không thay ví/PayOS/auth/backend/Bot.
+Evidence `reports/audit/R218-MUSIC-REQUEST-REVIEW-FH-QA-20261024.json`.
+MU07 workflow Đổi/Sửa/Back, style mapping, half/full semantics, hai bản audio,
+player/reuse/editor và LIVE còn mở; motion vẫn làm cuối.
+
 ## 23/10/2026 — Nhạc nền/Bài hát: chữ hướng dẫn và ô nhập
 
 Hai form `/music/create` và `/music/song` dùng màu `--portal-muted` sẵn có
@@ -19,7 +45,7 @@ giữ nguyên. Evidence R1 được giữ riêng, không lấy helper PASS thay 
 
 Danh sách thiếu còn lại đã được đối soát riêng trong
 `reports/audit/R218-MUSIC-REMAINING-UI-CROSSWALK-20261023.md`: review trước
-xác nhận còn thiếu; style/draft mapping, half/full, hai bản audio và editor
+xác nhận đã có UI F/H; style/draft mapping, half/full, hai bản audio và editor
 vẫn cần hợp đồng hoặc bằng chứng runtime. Không lấy bản vá đọc chữ để đóng
 những yêu cầu sản phẩm này.
 

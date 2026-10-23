@@ -15834,6 +15834,10 @@
   });
 
   const MUSIC_PRODUCT_COPY_ROWS = [
+    ["review.title", "Kiểm tra yêu cầu", "Review your request", "核对请求"],
+    ["review.note", "Các lựa chọn đã gửi để nhận báo giá này.", "These are the selections submitted for this quote.", "以下为获取此报价时提交的选项。"],
+    ["review.product", "Sản phẩm", "Product", "产品"],
+    ["review.lyrics", "Xem lời bài hát", "View lyrics", "查看歌词"],
     ["kicker", "ÂM NHẠC", "MUSIC", "音乐"],
     ["background.title", "Tạo nhạc nền", "Create background music", "创作背景音乐"],
     ["background.description", "Mô tả ý tưởng, chọn phong cách và thời lượng cho bản nhạc của bạn.", "Describe your idea, style and duration for your music.", "描述音乐创意、风格与时长。"],

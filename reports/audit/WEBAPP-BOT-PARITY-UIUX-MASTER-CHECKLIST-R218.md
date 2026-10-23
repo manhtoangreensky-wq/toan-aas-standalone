@@ -394,7 +394,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   TwoFlashhandoffsfailedretained,Soltest+oneanchoronly/noR3. Finaldelivery
   HEAD e8738b5a/CI39985131009bothSUCCESS/396Linux+26runtime;
   receipt664#issuecomment-6369576116,IssueD2+parentDcheckedreadback.
-- [ ] MU-PRODUCT-READABILITY-E: riêng`/music/create`/`song`,4CSSrulesonly.
+- [x] MU-PRODUCT-READABILITY-E: riêng`/music/create`/`song`,4CSSrulesonly.
   Actual24baseline66lightcontrastfails+132fontfails→green48configsAA5.797/
   5.522,input16;144tier/288vocal/48Backdraft/AX/keyboard/textstress,
   0errors/UIwrites/external/overflow. FlashR1verbatim/Node1073/Python111/
@@ -403,10 +403,16 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   E02mởlạitrướcpushvìthiếugatelabel/placeholder;R1làmđúngspec2rules.
   R2final48labels264AA12.352/13.903,placeholder120>=5.522,helper/inputgiữ;
   all144tier/288vocal/48Back/AX/keyboard/textstressđạtlại. Node1073/Python111/
-  independentR1+R2compositionC0I0M0,noR3;deliverychờnewCI/receipt.
-- [ ] MU08-F REVIEW-SUMMARY: read-onlyproduct/tier/vocal/lyrics/length/brief
+  independentR1+R2compositionC0I0M0,noR3. DeliveredHEAD1e01f241,
+  CI39992812318bothSUCCESS,receipt664#issuecomment-6370628830.
+- [~] MU08-F REVIEW-SUMMARY: read-onlyproduct/tier/vocal/lyrics/length/brief
   từsnapshotflow.input;khôngđổiquote/confirm/fingerprint/API,nofakechoiceID.
-  ChờEdeliveryacceptedvàspecchốttrướcBUILD.
+  LocalacceptedF172tests,browser48;R1R2failgates→Soltestrepair+4copykeys,
+  noR3;quote/confirm/APIunchanged. FinalFHNode1257/Python119/reviewC0I0M0,
+  browser48/720AA>=5.522/144assethashes/0errors. DeliveryCIreceiptpending.
+- [~] MU-PRODUCT-EMPTY-H: localaccepted,exact1prefix/no-flowemptycardhidden,
+  H12tests,54initialomissions/48realflowoutputs/40nonMusicworkspaceoutputs
+  checked;finalactual48emptyheadings0/formnavdraftretained. SameFHdelivery.
 - [ ] MU-P2 remaining crosswalk: `R218-MUSIC-REMAINING-UI-CROSSWALK-20261023.md`
   giữ12MUrequirements,phânbiệtUIgapsvàcontract/runtime. MU02stylemapping/
   MU06lengthsemantics/media2tracks/editor/providerkhôngbịbỏsót,đểcuốiT0.

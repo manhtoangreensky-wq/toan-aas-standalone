@@ -1,5 +1,24 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-MUSIC-FH-20261024 — review snapshot và bỏ output rỗng
+
+Phiên Tester READY; BASE1e01f2417e3000a09c45186e11ee144e52a22fa5; PR661/Issue664.
+Chỉ localhost/tài khoảnDBtạm. Quote/capabilityfixtures là client presentation,
+không estimate/confirm/provider thật. Initial app GET không API responsefixtures.
+Evidence `reports/audit/R218-MUSIC-REQUEST-REVIEW-FH-QA-20261024.json`.
+
+| Case | Mức | Bước thực hiện | Kết quả cần thấy / bằng chứng |
+|---|---|---|---|
+| MU-F-01 | nặng | Hai form Music → inject quote hợp lệ có0Xu/flow.inputUnicode → xem trước xác nhận | Một review sau form/trước CTA/trong cùngcard; đúng VI/EN/ZH;fullescapedbrief/lyrics;lyrics đóng mặc định,Enter mởđóng. F172unit/final48browser |
+| MU-F-02 | nặng | Quote hợp lệ → sửa brief → hoàn tác → quote hết hạn/unknown/invalid/sai feature/sessionfalse | Edit giữ snapshot cũ và khóaCTA; revert chỉ khôi phục quote còn hạn; summary absent khi invalid;focus/form không mất. Final48browser |
+| MU-F-03 | vừa | Đối chiếu tier/mode/vocal/length/duration và inherited/unknown/private fields | Chỉ own scalar/enums;melody/background không lyrics/vocal;half/full không giả sốgiây;không leak extra-key;F172unit |
+| MU-H-01 | vừa | Mở `/music/create`/`song` chưa cóflow ởVIENZH/sángtối/390/1440+360/375/768/844landscape | Emptyoutputheading/card0;form1/nav4/draftaction1;H12unit/54VMomissions/final48actualGET |
+| MU-H-02 | nặng | Códraft3gợiý,quote0/unknown,error/guarded,report50/tracking | Giữ output và nội dung;48actualrendereroutputs+40nonMusicworkspaceoutputs bằngacceptedF;không audio/download giả |
+| MU-FH-03 | vừa | Mobilekeyboard/AX/2xtext/lyricsdisclosure/lightdark | 720mẫuchữ>=4.5:1,min5.522;summary>=44px;0overflow/errors/external/UIwrites;144assethashes khớpsource |
+
+Canh lỗi cũ: D1/D2/E/Chat/API/auth/quote/confirm/oldtests không đổi;fullNode1257,
+Python119/2warningcũ. Không suy thành Bot parity/âm thanh/2tracks/LIVE PASS.
+
 ## R218-MUSIC-PRODUCT-READABILITY-E-20261023 — chữ hướng dẫn và ô nhập
 
 BASE `e8738b5ac6078c86e8793632cab3d0f3488e3f09`; PR661 / Issue664.
