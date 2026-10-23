@@ -379,6 +379,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   edgeguard36+focus24 allPASS,0unexpectederrors/overflow/external/unapproved.
   D1cards4unchanged; D2musthideidentifiedsecondaryblocksnext,notclaimDcomplete.
   Evidence `R218-MUSIC-PRESENTATION-D1-QA-20261023.json`;deliverypending.
+  CI39971274631reopenedP04:1ChatEOFboundaryfail/168pass,authQAskipped.
+  SameD1FlashR2movesonly2rulesbeforeChat,notestweakening. LocalR2Node1021/
+  foundation90/boundedCI395portable/independentC0I0M0/signed48configs96states
+  allPASS;oldCSS/Chatcontent+orderretainedafterCRLFnormalization. NewCIpending.
 - [ ] D1branchdelivery: docs/Tester/prepush/provenance/push/readback/newCI/
   receipt664;D2lockeduntilD1accepted.
 - [ ] MU-NATIVE-PRESENTATION-D2: auditplanDRAFT scopedhideintro/boundary/empty/

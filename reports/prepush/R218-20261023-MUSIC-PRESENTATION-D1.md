@@ -83,7 +83,7 @@ TESTER_SCOPE=KIEM-THU/DANH-SACH-CASE.md MU-D1-01..04
 TESTER_EVIDENCE=reports/audit/R218-MUSIC-PRESENTATION-D1-QA-20261023.json
 TESTER_EVIDENCE_DIR=C:/Users/toann/Documents/Codex/qa/r218-music-presentation-D-20261023
 TESTER_PORTABLE=32pass/1POSIXdeselected,exit0,1.02s;unchangedLinuxPOSIXtestrequiredinCI
-CASE_METADATA=613lines/77598LFbytes/SHA1199a9763f4187f099224258dbfe077725858f76f1ce3bf7c717bf0bfffd0a1b
+CASE_METADATA=615lines/77760LFbytes/SHAace17cda3561949cd052b3c382e60f879015e8b94903f17e28185b2088de7483
 GITHUB_TESTER_SETUP=CurrentIssue664,12requiredlabels/2templatesretained;closed412untouched
 GITHUB_PROJECTS=NOT_REVALIDATED_MISSING_READ_PROJECT_SCOPE;noauthrefresh/logout
 PUSH_GATE=READY_AFTER_CLEAN_FINAL_WEB_PROVENANCE_VERIFY
@@ -104,3 +104,38 @@ LIVE_PASS=NOT_TESTED
 GOAL=ACTIVE
 MOTION=LAST
 LESSON_CANDIDATE=NONE
+
+## P04 CI reopened and R2 correction — current prepush gate
+
+InitialHEAD480b25bf/run39971274631FAILED1/168Pythonpass; authenticatedQA
+SKIPPED. R1followedappend-at-EOFcontract;existingChatregexrequiresoldmobile
+layeratEOF. SPECplacementgap,notworkerfailure;oldtestneverweakened.
+R2onlymovesexact2rulesbeforeFinalChatmarker. Flash3.8Low39.2298928s/1turn,
+source-only13965chars/runtimepayload0;2recordsverbatim,noprimarysemanticfix.
+Atomicfirstapplyfailedonreversedhunkorder;QAemittersortedunchangedrecords.
+
+CORRECTION_SOURCE_ANCHOR=480b25bf03944e75d4abcfd45796c8f48af381e5 plus reviewed CSS placement diff; final clean source/docs HEAD recorded by provenance/terminal, not guessed here.
+R2_VERIFY=FullNode1021/1021,29768.6626ms;foundation90/90,2.27s;
+independent90/90,1.60s,C0/I0/M0. BoundedCI49selectors395pass/1POSIXdeselected/
+16existingwarnings111.08s,exit0. LinuxnewCIrequires396inclunchangedPOSIXtest.
+Firstboundedattemptcancelledwithoutterminalresult,notcountedPASS.
+R2_ACTUAL_QA=Fresh48configs/96states/48nativetextPOST3items;lightcontrast5.797/
+dark5.522,input16px,textstress48,noerror/overflow/external/unapprovedwrites.
+Raw98c5a6da47b74c18e34edf564d306c47cd42e09617e7a6c0b5554aecf404f8db;
+theme4eddc847578964eec85ef2f4213d2ad0cd03fc93fa1f4ed11c6c0cf68231759c,
+JS/i18nunchanged;all48downloadedassetshashesmatch. R1rawpreserved,separateR2dir.
+Fourfield-in-viewportscreenscapturedfromseparatefreshQA,0pageerrors.
+TwoinitialdefaultbrowserlaunchesfailedinvalidsandboxTempbeforestart;
+authorizedheadlessfallbackpassedwithoutsettings/ENVpersistentchanges.
+R2_PROTECTED=11filesBASEequal,R1six+R2twoexactrecords;alltrackedtests/JS/
+i18nunchangedvs480b. OldCSS/entireChattailcontent+orderunchanged AFTER
+CRLF→LFnormalization,notrawbyteequality. Noauth/backend/API/motionchanges.
+R2_CLEANUP=50739/2089+66125/22070newlineexit0/tempDBandassetsremoved;
+outsideSandbox.NETlistenersboth0;workers/browsersterminal.
+R2_TESTER=SameD1project/cases01..04;case4addsChatplacementregressionnote;
+metadataupdated,portableTester32pass/1POSIXdeselected/1warning0.91sexit0. Operations/comparisondocs
+updated;no newlabels/projects/authrefresh required,Issue664remainscurrent.
+R2_PUSH_GATE=READY_AFTER_FINAL_CLEAN_WEB_PROVENANCE_VERIFY;Tester passed.
+P04tickandD2unlockonlyafternewCIbothjobssuccess+Issue664receipt;notbefore.
+BRANCH_FAILURES=1initialCIChatplacementfailure_FIXED_LOCALLY; newCIpending.
+NEW_FAILURES=0 in fresh comparable local R2 tests; CI outcome not yet claimed.

@@ -1,6 +1,6 @@
 # MU-NATIVE-PRESENTATION-D1 — chữ đúng ngôn ngữ, helper đọc được
 
-23/10/2026, LOCAL_UI_ACCEPTED_DELIVERY_PENDING. Contract/checklist trướcBUILD.
+23/10/2026, R2_LOCAL_VERIFIED_DELIVERY_PENDING. Contract/checklist trướcBUILD.
 Repo standalone,rootC:/Users/toann/Documents/Codex/_webapp-r218-voice;
 branchwebapp-r218-billing-ui-20261022;BASE1144896dde1e957e54de7f1dee361ed927d71529.
 PR661/Issue664;dependencyB+D0acceptedreceipt6366118699/CI39960845682bothSUCCESS.
@@ -21,7 +21,9 @@ Không đổi data languagevi/en, validators, nativePOST, DOMcontrol hoặc card
 1. static/portal/portal.js: chỉmusicDirectionPresetFields,sfxCueSheetFields
    descriptionplaceholder/help; renderSfxCueSheetResult3dtlabels+2fallbacks.
 2. static/portal/portal-i18n.js: đúng9newrows trong2namespace hiện có.
-3. static/portal/portal-theme.css: append2scopedrules bên dưới, không sửa rulecũ.
+3. static/portal/portal-theme.css: thêm2scopedrules bên dưới, không sửa rulecũ;
+   amendmentCI: đặt ngaytrước `/* Final light AI Chat Workspace surface */`,
+   không nối sauprotectedfinalChatlayer (testgiữranhgiớiEOF).
 4. tests/music-sfx-presentation-copy.test.mjs mới.
 
 Codexquảnlýspec/master/state/checklist/evidence/docs/Tester. Không existingtest
@@ -60,7 +62,7 @@ vẫnrequire>=1review. Testfallback bằngsyntheticpresentationstate ghi rõ gi�
 }
 ```
 
-AppendcuốithemeCSS quaexactuniqueoldtail; giữ oldrulesbyteforbyte. Khôngimportant/
+ĐặtngaytrướcfinalChatmarker đã chỉ định; giữ oldrules sauCRLF→LFnormalization. Khôngimportant/
 newvariables/palette/fonts/globalCSS/specificityhack. Nếu computedstyle chưa
 đạt, ghiFAILđểreview, không mở rộngselector bừa. Không thêmmotion.
 
@@ -103,7 +105,8 @@ DEPLOY=NO;LIVE_PASS=NOT_TESTED;GOAL=ACTIVE;MOTION=LAST.
 ## Kết quả 23/10/2026
 
 Flash3.8LowR1SUCCESS80.9040656s/1turn; test176lines/source6editrecordsáp
-nguyênvăn production; testchỉbỏ1blankEOFprepush,noR2/noCodexproductioncorrection.
+nguyênvăn production; testchỉbỏ1blankEOFprepush. Đây làR1history;
+sauCIreopencóR2placementbêndưới, khôngCodexproductionsemanticcorrection.
 CleanRED0/5assertionfail→GREEN5/5,
 localefocused9/9; fullNode1021/1021; Python21/21; independent86/86,
 Critical0/Important0/Minor0.3productionfiles21add/5remove;11protectedfiles
@@ -126,3 +129,37 @@ audits/receipt/terminalhasheshistorical, khôngnóifilecũcòntạiđó. D1basel
 greenfilesgiữriêng, allfurtheredgeartifactsdistinctdirs, khôngrestoregiả.
 QA3serversallstoppedexit0/tempclean/listeners42644,27983,9713=0.
 Evidence `reports/audit/R218-MUSIC-PRESENTATION-D1-QA-20261023.json`.
+
+## CI reopening P04 — CSS placement contract gap, sameD1/R2
+
+HEAD480b25bf push/readback, CI39971274631FAIL atVerify120474294897,
+168Pythonpassed/1fail `test_light_chat_workspace_final_surface_keeps_private_authoring_readable`;
+authenticatedjobSKIPPED. Actualtest `mobile`regexends\ZinfinalChatlayer;
+D1append2rulesatsheetEOFmadeprotectedlayernotendwithitsmobileblock.
+Localrepro sameFAIL;Chatdeclarations/test unchanged, notcontrast/runtimefailure.
+P04delivery chưa tick, D2khóa. Đây làSPECplacementgap (R1làmđúngphiếuappend),
+không resetID/lịch sử hoặc nới testChat. R2chỉdi chuyển2D1rules từEOF về
+ngaytrướcmarkerFinalChat. JS/i18n/newtest vàmọiCSSdeclaration/value/specificity
+giữ nguyên; Chat/Admin/Productlayersgiữbytes/order. RerunfullfoundationPython,
+boundedCIsuiteportable/unchangedLinuxCI+computedbrowser sauplacement trước push.
+
+## R2 local nghiệm thu — cùngSPEC_ID, không vòng3
+
+Flash3.8LowR2SUCCESS39.2298928s/1turn,source-only13965chars/runtimepayload0.
+Hai editrecords áp nguyênvăn. Lầnapplyđầu atomicFAILdo thứtựhunkngược;
+chỉsắp xếp QApatchhunk tăngdầnrồiáp cùngrecords, khôngđổinội dungthợ.
+ExistingChatRED→foundation90/90;independent90/90,1.60s,C0/I0/M0.
+FullNode1021/1021,29768.6626ms; boundedCIđúng49selectors395pass/
+1POSIXdeselected/16existingwarnings111.08s,exit0. LinuxCIvẫnphảichạy396.
+Firstboundedattemptđãhủykhichưacóterminalresult,khôngtínhPASS.
+
+R2actualsigned48configs/96states/48nativePOST3items trênfreshQA2089:
+light5.797/dark5.522,input16px,textstress48,0unexpectederror/external/
+unapproved/overflow. Raw98c5a6da47b74c18e34edf564d306c47cd42e09617e7a6c0b5554aecf404f8db
+trongr2-placement,khôngghiđèR1. NormalizedthemeSHA4eddc847578964eec85ef2f4213d2ad0cd03fc93fa1f4ed11c6c0cf68231759c;
+JS/i18nunchanged,all48downloadedassetsmatch. R1guard/focus48+36+24evidence
+giữlịch sử;khôngcộnglượtR2thànhuniqueconfigshoặcgiảaudiooutput.
+ComparatorcompositionR1six+R2two;11protectedfilesunchanged;alltrackedtests
+unchangedvs480b. Removing2D1rulesreproducesBASECSS;entireChatmarkertoEOF
+content/orderunchangedAFTERCRLF→LF,khôngrawbyteequalityclaim.
+P04vẫnchờnewpush/CIbothjobs/receipt;D2chưamởBUILD.

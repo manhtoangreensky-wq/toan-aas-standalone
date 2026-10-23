@@ -12,6 +12,9 @@
 Full1021Node/Python21/independent86.Newtestsrealrenderer+catalogue,nhưng
 normalizeridentitydouble nênkhôngDTOproof;actualsignednativeQA táchriêng.
 Lỗigốc làbỏqua catalogueởvàichỗvàlegacyhelpercolor,khôngphảithiếuprovider.
+CIpháthiệnappendCSSởEOFviphạmranhgiớifinalChatlayer,khônglỗiChatdeclaration.
+R2chỉdời2rulestrướclớpChat;testChatgiữnguyên,90foundation/395portableCIđạt;
+actual48configs96statesđolạivẫngiữcontrast/input16px. KhôngsuyraLIVE/audioPASS.
 
 ## 23/10/2026 — đối chiếu lỗi/khôi phục thao tác Music/SFX
 

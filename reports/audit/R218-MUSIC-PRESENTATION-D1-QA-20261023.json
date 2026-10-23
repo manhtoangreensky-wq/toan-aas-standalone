@@ -1,14 +1,14 @@
 {
   "task":"MU-NATIVE-PRESENTATION-D1",
   "date":"2026-10-23",
-  "result":"LOCAL_UI_ACCEPTED_DELIVERY_PENDING",
+  "result":"R2_LOCAL_VERIFIED_P04_REOPEN_NEW_CI_PENDING",
   "base_sha":"1144896dde1e957e54de7f1dee361ed927d71529",
   "branch":"webapp-r218-billing-ui-20261022",
   "pr":661,
   "tracker":664,
   "contract_receipt":"https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664#issuecomment-6366608009",
   "scope":"Nine fixed UI copy rows consumed by two field functions/SFXresult; two route-scoped CSS rules for existingmutedtoken helpercolor and textarea/select16px. No layout/cardvisibility/data/schema/normalizer/integration/auth/provider/wallet/motion change.",
-  "handoff":{"model":"gemini-3.8-flash-low","round":1,"status":"SUCCESS","seconds":80.9040656,"turns":1,"packet_chars":22290,"runtime_payloads_exported":0,"test":"VERBATIM_R1_EXCEPT_ONE_TRAILING_BLANK_LINE_REMOVED_PREPUSH","production":"VERBATIM_R1_6_EDIT_RECORDS","code_corrections_by_primary":0,"round2":"NOT_REQUIRED"},
+  "handoff":{"model":"gemini-3.8-flash-low","round":1,"status":"SUCCESS","seconds":80.9040656,"turns":1,"packet_chars":22290,"runtime_payloads_exported":0,"test":"VERBATIM_R1_EXCEPT_ONE_TRAILING_BLANK_LINE_REMOVED_PREPUSH","production":"VERBATIM_R1_6_EDIT_RECORDS","code_corrections_by_primary":0,"round2":"REQUIRED_AFTER_CI_PLACEMENT_SPEC_GAP; see R2 evidence"},
   "tests":{
     "clean_red":"0pass/5assertionfail,exit1; notharnesscrash",
     "new_green":"5pass/0fail,exit0",
@@ -25,7 +25,7 @@
     "protected_files":11,
     "schema":"Onlydescriptionplaceholder/help in2fields; names,textarea,required,min2/max500,wide,selectoptionsvi/en unchanged",
     "data":"Servercue/caution/review/title/content untouched andescaped; 3dt labels+2fallbacks only",
-    "CSS":"Append7lines/2rules only, no palette/token/layout/cardhiding/globalCSS/motion mutation",
+    "CSS":"R1 added2rules; R2 only moved same rules before Final Chat marker. No declaration/palette/token/layout/cardhiding/globalCSS/motion mutation. Equality is LF-normalized, not raw working-file bytes.",
     "existing_tests_changed":0
   },
   "baseline":{
@@ -43,7 +43,7 @@
     "native_radio_label_height_vi390":"Music103.09..123.23px;SFX128.59px.20pxradioitselfnotentiretoucharea.",
     "gate":"72helpercontrastfailures+96inputfontfailures; measured baseline exit1"
   },
-  "browser_final":{
+  "browser_R1_historical":{
     "environment":"Actualsignedlocalhost42644/temporaryDB+assets; no APIresponsefixtures; Browserpluginabsent,existingPlaywright/Edgeheadless",
     "configs":48,
     "states":96,
@@ -65,7 +65,7 @@
     "overflow_px":0,
     "raw_sha256":"9359f4c4b6a743f56dd0939a996cfe891d118e35d148862a27892922ce0b48dc",
     "assets":{"portal-theme.css":"3d57118a00012650d51658897d37c3374bf5c3dda6c5a72ebb4fe7ebfb913631","portal-i18n.js":"03ca711d73d2572c9d0ac69c0147b2a591dee14b12ff4fe554c6c4944af8ee02","portal.js":"70f1d1f70bfea3a0098ceb8d779d54a7552992e9c993c16507e7a41d8d352dfb"},
-    "all48_downloaded_assets_match_current_source":true,
+    "all48_downloaded_assets_matched_R1_source":true,
     "raw_directory":"C:/Users/toann/Documents/Codex/qa/r218-music-presentation-D-20261023",
     "auth_writes":"Temporaryregister/login/locale/sessionlastseen only, notzero totalDBwrites"
   },
@@ -82,7 +82,17 @@
   },
   "evidence_retention":"Legacyharnessdefault paths reused by firstsupplementalrun replaced historical local raw JSON/PNGs. Committed earlier audit/receipt hashes and terminal results remainhistorical; do notclaim old rawfiles stillpresent. D1mainbaseline.json/green-D1.json preserved. New optional outputDir routes all further regression artifacts into D1-specific directories; no productcodechange or fabricated restoration.",
   "cleanup":"QA79086/42644,23133/27983,99483/9713 allnewlineexit0;3tempDB/assetsdirsremoved;outsideSandbox.NETlistenersall3ports=0;workers/browsersterminal",
-  "delivery":{"push":"PENDING","ci":"NOT_RUN_D1","merge":"NO","deploy":"NO","live":"NOT_TESTED"},
+  "r2":{
+    "model":"gemini-3.8-flash-low","round":2,"seconds":39.2298928,"turns":1,"packet_chars":13965,"runtime_payloads_exported":0,"worker_exit":0,
+    "production":"VERBATIM_2_PLACEMENT_RECORDS; first apply failed atomically due to reverse hunk ordering, QA emitter sorted unchanged records; no source semantic correction, no R3",
+    "ci_reopened":{"head":"480b25bf03944e75d4abcfd45796c8f48af381e5","run":39971274631,"verify_job":120474294897,"passed_before_stop":168,"failed":1,"test":"test_light_chat_workspace_final_surface_keeps_private_authoring_readable","authenticated_job":120474944845,"authenticated_result":"SKIPPED","classification":"SPEC_PLACEMENT_GAP_R1_FOLLOWED_CONTRACT"},
+    "tests":{"full_node_passed":1021,"full_node_failed":0,"full_node_skipped":0,"full_node_duration_ms":29768.6626,"foundation_passed":90,"foundation_failed":0,"foundation_seconds":2.27,"independent_foundation_seconds":1.60,"independent_critical":0,"independent_important":0,"independent_minor":0,"bounded_CI_selectors":49,"bounded_CI_passed":395,"bounded_CI_failed":0,"bounded_CI_POSIX_deselected":1,"bounded_CI_existing_warnings":16,"bounded_CI_seconds":111.08,"bounded_CI_exit":0,"first_bounded_attempt":"Cancelled without terminal result, not PASS","Linux_CI_requirement":"All396 including unchanged POSIX test"},
+    "browser":{"origin":"http://127.0.0.1:2089","configs":48,"states":96,"native_text_posts":48,"items_per_result":3,"light_contrast_min":5.797,"dark_contrast_min":5.522,"input_px":16,"scoped_200percent_textstress":48,"errors":0,"external":0,"unapproved":0,"overflow":0,"raw_directory":"r2-placement","raw_sha256":"98c5a6da47b74c18e34edf564d306c47cd42e09617e7a6c0b5554aecf404f8db","theme_sha256":"4eddc847578964eec85ef2f4213d2ad0cd03fc93fa1f4ed11c6c0cf68231759c","JS_i18n_asset_hashes":"UNCHANGED_FROM_R1","all48_actual_asset_hashes_match_source":true,"first_launches":"2 default-sandbox launches failed ENOENT invalid sandbox Temp before browser start; authorized headless fallback succeeded, no config change"},
+    "protected":{"comparator":"compare-r2.cjs PASS; R1six plus R2two records exact","old_CSS_content_and_order":"UNCHANGED_AFTER_CRLF_TO_LF_NORMALIZATION","entire_Chat_marker_to_EOF":"UNCHANGED_AFTER_CRLF_TO_LF_NORMALIZATION","normalized_Chat_tail_sha256":"22829d265c0c79a7c0b84b1562a13914167472a4e38abcfd0f98532082f0ce7f","files_equal_BASE":11,"JS_i18n_and_all_tracked_tests_equal_HEAD480b":true,"equality_limit":"Working CSS uses CRLF, Git LF; not raw-byte equality"},
+    "screenshots":{"field_viewports":4,"page_errors":0,"directory":"r2-placement/field-*.png","scope":"Actual target fields in viewport; old full-page initial screenshots do not show lower form because shell scrolls internally"},
+    "cleanup":"Owned50739/2089 and66125/22070newlineexit0; both temporaryDB/assetsdirsremoved; outsideSandbox.NET listeners both ports0. Browser/workers terminal. R1 evidence retained."
+  },
+  "delivery":{"initial_push_head":"480b25bf03944e75d4abcfd45796c8f48af381e5","initial_ci":"FAILED39971274631; authenticated SKIPPED","correction_push":"PENDING_FINAL_PROVENANCE","correction_ci":"NOT_RUN_YET","merge":"NO","deploy":"NO","live":"NOT_TESTED"},
   "open":"D2technical/emptycardcleanup,Musicgeneration/player/download/save/reuse/canonicalaudio/Botparity/wholeproduct/PWAdevice/livetrace/M0",
   "safety":{"provider_calls_app":0,"wallet_mutations":0,"production_data_mutations":0,"persistent_ENV_mutations":0,"goal":"ACTIVE","motion":"LAST"}
 }

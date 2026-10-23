@@ -12,7 +12,10 @@ khôngẩncard/layoutởD1;D2chuyêndọnkhối phụvànghiệp vụvẫntext-o
 2.021→5.797,dark5.522giữnguyên;input15→16px. QA-onlyCSS200%textstress48
 khôngtrànngang;khôngclaimnativeOSDynamicType. Newtest5/5,fullNode1021/1021,
 Python21/21,review86/86/Critical0/Important0;3productionfilesđúng6workerR1
-editrecords,11protectedfilesbyteequalBASE. NoR2/primaryproductioncorrection.
+editrecords,11protectedfilesLF-normalizedequalBASE. R2sauCIplacementgap
+chỉdời2CSSrulestrướcfinalChatmarker,khôngđổivalues/JS/i18n/tests.
+R2đolại48configs/96statescùngcontrast/font/0overflow;Node1021/foundation90/
+boundedCI395portableđạt,independentC0/I0/M0. Linux396/newCI/deliverychờreceipt.
 Edge/release/latestreceipt xem `reports/audit/R218-MUSIC-PRESENTATION-D1-QA-20261023.json`.
 Khôngdùngcopy/contrastPASSđểđóngnhạc/audio/player/Botparity/production/LIVE.
 

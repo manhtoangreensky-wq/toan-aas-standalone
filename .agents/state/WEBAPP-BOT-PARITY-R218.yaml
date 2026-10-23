@@ -1,34 +1,41 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: MUSIC_PRESENTATION_D1_R1_VERBATIM_LOCAL_PASS_EDGE_REGRESSION_PENDING
+status: MUSIC_D1_R2_LOCAL_VERIFIED_DELIVERY_PENDING
 date: 2026-10-23
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r218-billing-ui-20261022
 pull_request: 661
-head_sha: 1144896dde1e957e54de7f1dee361ed927d71529
+head_sha: 480b25bf03944e75d4abcfd45796c8f48af381e5
 checkpoint_music_presentation_d_20261023:
   base_sha: 1144896dde1e957e54de7f1dee361ed927d71529
   dependency: "B+D0branchdeliveryaccepted; CI39960845682terminalSUCCESS:Verify120438143348396Python+26browserruntime,AuthenticatedQA120439998582SUCCESS. Receipt664#issuecomment-6366118699; issueB/D0tickreadbacktrue,Dopen."
-  result: D1_LOCAL_UI_ACCEPTED_DELIVERY_PENDING
+  result: P04_CI_REOPEN_R2_LOCAL_VERIFIED_NEW_DELIVERY_PENDING
   scope: "2nativeMusic/SFXpages only. VanillaJS/FastAPI, keepcurrentblue/navy/teal tokens; noTailwindmigration/globaldesignsystem/motion. D1localizedfieldhint/resultlabels+scopedcontrast/inputfont, thenD2visibletechnical/emptycards. Sharedfiles=>SINGLEsequential, no parallelworkers."
   skills: "ui-audit-plan+ui-ux-pro-max fullyread inclframework/PWA/severity/token/output/pro-rules; quickref1-6+8; localUXsearchreturnedempty-state/submit-feedback andloading/z-index rules. Ownerbrand/lockedscope overridesgenericglobaltokenrewrite."
   source_inventory: "portal.js fields15724/15808 eachdescriptionplaceholder+helpVI; SFXresult15829 fixeddtDirection/Mixnote/Tránh+2VIfallbacks.9copyrows candidate, noAPI/normalizer changes. Nativecautionsmin0fallbackreachable; reviewmin1fallbackdefensiveonly, donotfakevalidDTO."
   actual_inventory: "Read-onlysignedQA24configs/48states (2tools×VI/EN/ZH×light/dark×390/1440),24native deterministictextPOSTs/3items;errors/external/unapproved0,noAPIresponsefixtures. ../qa/r218-music-presentation-D-20261023/baseline.json."
   findings: "Eachpageinitial4visiblecards(form,boundary,emptyresult,scope) +visibleintro5/3/0stattiles. SFXresultEN dt repeatsDirection/Mixnote/Tránh×3; databrieflanguageEN independentofUIlocale. Lighthelpers72samples CSScolor170184199/backgroundwhite=>2.021contrast, dark72samples5.522; backgroundImages1lightneedsopaque-chainclassification, notpixeltrace. Inputs15px(2fields), submit44px; radios20visualwithlabeltargetneedmeasurelabelnotassume20touchfail."
-  qa_runtime: "Taskownedserver79086at127.0.0.1:42644,temp../qa/r218-music-sfx-interaction-20261023/music_sfx_qa_tk91sspc. Inventorycontroller96581exit0. KeepforD1RED/GREENorstopnewline79086+verifycleanup ifending; no oldserverrestore."
+  qa_runtime: "R1serversclosed. R2matrix50739/2089+screenshot66125/22070newlineexit0;both temporaryDB/assetsdirsremoved,outsideSandbox.NETlistenersboth0. Browser/workersterminal."
   audit_plan: docs/superpowers/plans/2026-10-23-r218-music-presentation-audit.md
   D1_spec: docs/superpowers/specs/2026-10-23-r218-music-presentation-d1.md
   D2_spec_draft: docs/superpowers/specs/2026-10-23-r218-music-presentation-d2-draft.md
   contract_receipt: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664#issuecomment-6366608009
-  D1_worker: "Flash3.8LowR1SUCCESS80.904s/1turn/source-only22290chars/runtimepayload0. Newtest+all6productioneditrecordsVERBATIM, primarycorrections0,noR2needed. Source3files:portal.js5replacedlines/i18n9rows/themeCSS7appendlines2rules."
+  D1_worker: "Flash3.8LowR1SUCCESS80.904s/1turn/source-only22290chars/runtimepayload0. Newtest+all6productioneditrecordsVERBATIM, primarycorrections0. R1initiallocalgatespassed,thenCIplacementgaprequiredR2below;historynotreset."
   D1_tests: "CleanRED0/5assertionfail→GREEN5/5;localefocused9/9;fullNode1021/1021 30301.7792ms;Python21/21 20.89s;independent86/86,Critical0/Important0/Minor0.11protectedfiles/integration/B+C+D0unchanged."
   D1_browser: "Actualsigned48configs/96states/48nativePOST/3items,lighthelpcontrast5.797(72samples),dark5.522(216);input16px;scopedCSS200percenttextstress48(noOSDynamicTypeclaim),overflow/errors/external/unapproved0. All48downloaded3assetshashesmatchsource. Raw9359f4c4b6a743f56dd0939a996cfe891d118e35d148862a27892922ce0b48dc. Cards4unchangedforD2."
   edge_harness: "Firstshared-serverconcurrentA/C+B/D0supplementhit429compose/register; notPASS/noappconfig/ratelimitweakening. Legacydefaultoutputoverwroteoldlocalraw/PNGs;earliercommittedaudits/hashes/terminalremainhistorical,do notclaimoldrawstillpresent. AddedoptionaloutputDir toQAhelperonly, furtherD1regressionsdistinctdirs."
   edge_final: "Freshsequentialguard36/72POST/pending72 andstrictfocus24/24abort+24native retrysuccess3texts allPASS. GuardrawSHA d4936908f7be68733e88aeea2d4445586391bed37711f8c1ec90a0c46ba4fef3 +d202803137c02e9982a9e473759025cd36b2fe3950e1f7f96b014b6bcfffcc2c;focusrawc09b1949a4897a0d24908c51e6fe2b6c9042a5363c8215689a381acf50da9def;D1-specificdirs. Expectednet24separate,unexpectederror/external/unapproved/overflow0."
   current_qa: "All3D1servers79086/42644,23133/27983,99483/9713newlineexit0;all3temporaryDB/assetsdirsremoved;outsideSandbox.NETlistenersallports0. Workers/browsersterminal."
   evidence: reports/audit/R218-MUSIC-PRESENTATION-D1-QA-20261023.json
-  next: "D1docs/Tester/prepush/provenance/push/readback/newCI/receipt664,thenD2READYspecfromDRAFT. NoD1R2/reapply;D2stilllockeduntilD1deliveryaccepted."
+  delivery_attempt: "Sourcee2ee0775/doc809ff3f7/finalHEAD480b25bf push/readbackdone; CI39971274631FAILEDVerify120474294897 (1fail168pass). Failingexistingtest_teal_cyan_ui_foundation_contracts.py::test_light_chat_workspace_final_surface_keeps_private_authoring_readable;authenticated120474944845SKIPPED. NoD1deliverytick/noD2unlock."
+  ci_root_cause: "TwoD1CSSrulesappendatEOFviolatedexistingChatlayerregexmobile...\\Z; localreprosameFAIL, actualChatdeclarationsunchanged. R1followedoriginalappendcontract: SPECplacementgap, notworkererror. SameD1/P04,R2onlymove2rulesbeforeFinalChatmarker8846, keepdeclarations/oldCSS/testbytes exact."
+  r2_contract_receipt: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664#issuecomment-6367537839
+  r2_runtime: "Source-onlyFlash3.8LowR2SUCCESS39.2298928s/1turn/packet13965/runtimepayload0;exec79567terminal0. Exact2placementrecordsapplied;patchhunkordercorrectedafteratomicfailedapply,nosemanticcorrection/noR3."
+  r2_tests: "FullNode1021pass/0fail/0skip29768.6626ms;foundation90/90exit0(own2.27s,independent1.60s). BoundedCI49selectors395pass/1POSIXdeselected/16existingwarnings111.08sexit0;LinuxCIrequireall396. Syntax2JS/py_compile2/diff0. Firstboundedattemptcancelledwithoutterminalresult,notPASS."
+  r2_browser: "Freshactualsigned2089:48configs/96states/48nativetextPOST/3items;contrast5.797light/5.522dark,input16px,textstress48,errors/external/unapproved/overflow0. Raw98c5a6da47b74c18e34edf564d306c47cd42e09617e7a6c0b5554aecf404f8db;newr2-placementdir,R1preserved. ThemeSHA4eddc847578964eec85ef2f4213d2ad0cd03fc93fa1f4ed11c6c0cf68231759c;JS/i18nassetsunchanged."
+  r2_review: "C0/I0/M0. ExactR1six+R2twoeditcomposition;11protectedfilesunchanged;alltrackedtestsandJS/i18nunchangedvs480b. AlloriginalCSS+entireChattailcontent/orderpreservedafterCRLFtoLFnormalization,notrawbyteclaim. ChatTailSHA22829d265c0c79a7c0b84b1562a13914167472a4e38abcfd0f98532082f0ce7f."
+  next: "Docs/Tester32pass1POSIXdeselected0.91s/cleanupdone. CommitreviewedcorrectionthenrefreshcleanWebprovenance/pushreadback/newCIbothjobs/receipt664. D2lockeduntilD1deliveryaccepted. NoR3/wholeMusic/audio/LIVEclaim."
 checkpoint_music_sfx_errors_b_20261023:
   base_sha: fc8deb6a96566021a58cdcdf8ab77ed6796539cd
   spec: docs/superpowers/specs/2026-10-23-r218-music-sfx-error-feedback.md
@@ -605,7 +612,7 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "D1localUIacceptedR1verbatim:5new/9locale/1021full/Python21/independent86,actual48/96states+guard36+focus24 allPASS. FinishD1prepush/provenance/push/newCI/receipt664,thenD2READYfromdraft. AllQAserversclosed. B+D0delivery1144896receipt6366118699locked. Canonicalaudio/Botparity/backend/M0open; goalACTIVE,motionlast."
+next_action: "D1sameP04/R2placementlocallyverified:Node1021/foundation90/boundedCI395portable/Tester32portable/independentC0I0M0/actual48configs96statesallgreen. BothownedQAserversclosed/tempclean/listeners0. Commitcorrection/docs,refreshcleanWebprovenance/pushnewCIbothjobs/receipt664. PreserveCI39971274631FAILhistory. D2LOCKEDuntilD1deliveryaccepted;noR3/audio/Botparity/LIVEclaim. GoalACTIVE,motionlast."
 active_billing_batch:
   id: R218-BILLING-20261022
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660
