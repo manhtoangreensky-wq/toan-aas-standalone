@@ -10401,6 +10401,7 @@
         "reports/audit/R218-GLOBAL-STATUS-LABELS-QA-20261021.json",
         "reports/audit/R218-IMAGE-WORKSPACE-CONTINUITY-QA-20261021.json",
         "reports/audit/R218-MUSIC-PRESENTATION-D1-QA-20261023.json",
+        "reports/audit/R218-MUSIC-PRESENTATION-D2-QA-20261023.json",
         "reports/audit/R218-MUSIC-SFX-INTERACTION-QA-20261023.json",
         "reports/audit/R218-PR661-MAIN-COMPAT-QA-20261023.json",
         "reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json",
@@ -10412,7 +10413,7 @@
         "video.html",
         "video.py"
       ],
-      "occurrences": 28,
+      "occurrences": 30,
       "provider": "Gemini"
     },
     {
@@ -18329,39 +18330,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 350,
-  "source_files_scanned": 350,
-  "source_fingerprint_sha256": "1d4f02c936c43774a1de027f33e978afdc2d448f1ae5c2a0f0c8b2af748c2de0",
+  "source_files_discovered": 352,
+  "source_files_scanned": 352,
+  "source_fingerprint_sha256": "5be584c9edfba29d4a5ace91e64045699f47ce25d5eb77a359600946f1fde8d6",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 35191,
+      "line": 35192,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35507,
+      "line": 35508,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34855,
+      "line": 34856,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35104,
+      "line": 35105,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34476,
+      "line": 34477,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34768,
+      "line": 34769,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -18576,7 +18577,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36627,
+      "line": 36628,
       "path": "/features"
     },
     {
