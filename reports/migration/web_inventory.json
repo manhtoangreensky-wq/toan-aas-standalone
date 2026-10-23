@@ -10400,6 +10400,7 @@
         "reports/audit/R218-CUSTOMER-UI-REALITY-QA-20261022.json",
         "reports/audit/R218-GLOBAL-STATUS-LABELS-QA-20261021.json",
         "reports/audit/R218-IMAGE-WORKSPACE-CONTINUITY-QA-20261021.json",
+        "reports/audit/R218-MUSIC-PRESENTATION-D1-QA-20261023.json",
         "reports/audit/R218-MUSIC-SFX-INTERACTION-QA-20261023.json",
         "reports/audit/R218-PR661-MAIN-COMPAT-QA-20261023.json",
         "reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json",
@@ -10411,7 +10412,7 @@
         "video.html",
         "video.py"
       ],
-      "occurrences": 26,
+      "occurrences": 27,
       "provider": "Gemini"
     },
     {
@@ -18328,9 +18329,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 348,
-  "source_files_scanned": 348,
-  "source_fingerprint_sha256": "2d827cc1f66e62937d6398e5712f6565b77641206ef31edb2ad8faa0c7bf60c6",
+  "source_files_discovered": 350,
+  "source_files_scanned": 350,
+  "source_fingerprint_sha256": "f6c1b3138be8bf8a0aa73aff11e8731ac03907759941a91091d9324d9a2e1976",
   "source_root": "repository-root",
   "ui_path_references": [
     {
