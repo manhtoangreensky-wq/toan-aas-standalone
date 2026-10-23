@@ -10404,12 +10404,13 @@
         "reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json",
         "reports/audit/R218-VOICE-DIRECTION-CLARITY-QA-20261023.json",
         "reports/audit/R218-VOICE-METADATA-QA-20261023.json",
+        "reports/audit/R218-VOICE-VAULT-NOTICE-CLARITY-QA-20261023.json",
         "reports/prepush/R218-20261023-VOICE-AUDIT-DOCS.md",
         "studio/script.js",
         "video.html",
         "video.py"
       ],
-      "occurrences": 24,
+      "occurrences": 25,
       "provider": "Gemini"
     },
     {
@@ -18326,9 +18327,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 340,
-  "source_files_scanned": 340,
-  "source_fingerprint_sha256": "a1a48033df9a8a3797ad86061fa7030ce12e2de2b2a190486b09a1dc75b6eaac",
+  "source_files_discovered": 342,
+  "source_files_scanned": 342,
+  "source_fingerprint_sha256": "df0c7618589c88984a3de8186571afbfc157d036c651b3f34145c63a06e5aeb2",
   "source_root": "repository-root",
   "ui_path_references": [
     {
