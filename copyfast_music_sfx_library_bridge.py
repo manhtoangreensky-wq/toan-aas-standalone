@@ -206,6 +206,104 @@ class SfxLibrarySelectRequest(BaseModel):
         return v
 
 
+_TEST_EXPLICIT_MOCK_RESULTS: list[dict] | None = None
+
+
+def set_test_explicit_mock_results(results: list[dict] | None) -> None:
+    """Explicit testing seam for test fixtures only."""
+    global _TEST_EXPLICIT_MOCK_RESULTS
+    _TEST_EXPLICIT_MOCK_RESULTS = results
+
+
+def reset_test_explicit_mock_results() -> None:
+    """Clear explicit testing seam."""
+    global _TEST_EXPLICIT_MOCK_RESULTS
+    _TEST_EXPLICIT_MOCK_RESULTS = None
+
+
+def freesound_auth_candidates(api_key: str, client_secret: str) -> list[tuple[str, str, dict[str, str]]]:
+    """Return auth candidates strictly mirroring Bot freesound_auth_candidates."""
+    candidates: list[tuple[str, str, dict[str, str]]] = []
+    clean_api_key = str(api_key or "").strip()
+    clean_secret = str(client_secret or "").strip()
+    if clean_api_key:
+        candidates.append(("query_token", clean_api_key, {}))
+        candidates.append(("header_token", "", {"Authorization": f"Token {clean_api_key}"}))
+    if clean_secret and clean_secret != clean_api_key:
+        candidates.append(("client_secret_token", clean_secret, {}))
+    return candidates
+
+
+def _execute_canonical_freesound_search(
+    query: str,
+    limit: int = 5,
+    api_key: str = "",
+    client_secret: str = "",
+    timeout: float = 18.0,
+) -> list[dict]:
+    """Execute real canonical Freesound HTTP search matching Bot timeout and request shape."""
+    candidates = freesound_auth_candidates(api_key, client_secret)
+    if not candidates:
+        raise HTTPException(
+            status_code=503,
+            detail="Kho hiệu ứng âm thanh chưa được cấu hình credential hợp lệ (FREESOUND_API_KEY hoặc FREESOUND_CLIENT_SECRET). Chưa trừ Xu.",
+        )
+
+    base_params = {
+        "query": query,
+        "page_size": max(1, min(limit, MAX_SEARCH_LIMIT)),
+        "fields": FREESOUND_SEARCH_FIELDS,
+    }
+
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+
+    last_error: Exception | None = None
+    for mode, token_value, headers in candidates:
+        params = dict(base_params)
+        if token_value:
+            params["token"] = token_value
+
+        url = f"{FREESOUND_SEARCH_ENDPOINT}?{urllib.parse.urlencode(params)}"
+        req_headers = {"User-Agent": "TOAN-AAS-Web/1.0"}
+        req_headers.update(headers)
+
+        req = urllib.request.Request(url, headers=req_headers)
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                status_code = resp.getcode()
+                if status_code < 400:
+                    payload = json.loads(resp.read().decode("utf-8"))
+                    return payload.get("results") or []
+        except urllib.error.HTTPError as e:
+            last_error = e
+            if e.code == 429:
+                raise HTTPException(
+                    status_code=429,
+                    detail="Kho hiệu ứng âm thanh đang quá tải hoặc đạt giới hạn lượt. Chưa trừ Xu.",
+                )
+            if e.code in (401, 403):
+                continue
+            raise HTTPException(
+                status_code=502,
+                detail=f"Thư viện Freesound báo lỗi HTTP {e.code}. Chưa trừ Xu.",
+            )
+        except Exception as e:
+            last_error = e
+            continue
+
+    if last_error:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Freesound key chưa hợp lệ hoặc lỗi kết nối: {str(last_error)[:100]}. Chưa trừ Xu.",
+        )
+    raise HTTPException(
+        status_code=502,
+        detail="Kho hiệu ứng âm thanh tạm thời không phản hồi. Chưa trừ Xu.",
+    )
+
+
 def search_sfx_library(
     account_id: str,
     query: str,
@@ -231,41 +329,39 @@ def search_sfx_library(
     if force_provider_error:
         raise HTTPException(status_code=502, detail="Kho hiệu ứng âm thanh tạm thời không phản hồi. Chưa trừ Xu.")
 
-    is_test_env = (
-        os.environ.get("APP_ENV") == "test"
-        or os.environ.get("WEBAPP_PROVIDER_CALLS_ENABLED", "false").lower() != "true"
-    )
+    active_mock = mock_results if mock_results is not None else _TEST_EXPLICIT_MOCK_RESULTS
+    is_test_env = (os.environ.get("APP_ENV") == "test")
 
-    if mock_results is not None:
-        raw_items = mock_results
-    elif is_test_env:
-        raw_items = _generate_mock_freesound_results(clean_query, limit=limit)
+    if active_mock is not None:
+        if not is_test_env:
+            raise HTTPException(
+                status_code=403,
+                detail="Chỉ cho phép sử dụng mock fixture trong môi trường kiểm thử (APP_ENV=test).",
+            )
+        raw_items = active_mock
     else:
-        # Live execution path (only when explicitly enabled and credentials exist)
+        provider_calls_enabled = (os.environ.get("WEBAPP_PROVIDER_CALLS_ENABLED", "false").lower() == "true")
+        if not provider_calls_enabled:
+            raise HTTPException(
+                status_code=503,
+                detail="WEBAPP_PROVIDER_CALLS_DISABLED: Kho hiệu ứng âm thanh tạm thời bị tắt do tính năng gọi provider chưa được kích hoạt.",
+            )
+
         api_key = (os.environ.get("FREESOUND_API_KEY") or "").strip()
         client_secret = (os.environ.get("FREESOUND_CLIENT_SECRET") or "").strip()
         if not (api_key or client_secret):
-            # Graceful fallback when not configured, mirrors Bot behavior
-            raw_items = []
-        else:
-            try:
-                import urllib.parse
-                import urllib.request
-                params = urllib.parse.urlencode({
-                    "query": clean_query,
-                    "page_size": limit,
-                    "fields": FREESOUND_SEARCH_FIELDS,
-                    "token": api_key,
-                })
-                req = urllib.request.Request(
-                    f"{FREESOUND_SEARCH_ENDPOINT}?{params}",
-                    headers={"User-Agent": "TOAN-AAS-Web/1.0", "Authorization": f"Token {api_key}" if api_key else ""},
-                )
-                with urllib.request.urlopen(req, timeout=10.0) as resp:
-                    data = json.loads(resp.read().decode("utf-8"))
-                    raw_items = data.get("results") or []
-            except Exception as e:
-                raise HTTPException(status_code=502, detail=f"Lỗi kết nối thư viện Freesound: {str(e)[:100]}. Chưa trừ Xu.")
+            raise HTTPException(
+                status_code=503,
+                detail="Kho hiệu ứng âm thanh chưa được cấu hình credential hợp lệ (FREESOUND_API_KEY hoặc FREESOUND_CLIENT_SECRET). Chưa trừ Xu.",
+            )
+
+        raw_items = _execute_canonical_freesound_search(
+            clean_query,
+            limit=limit,
+            api_key=api_key,
+            client_secret=client_secret,
+            timeout=18.0,
+        )
 
     normalized_items = [normalize_freesound_preview_item(item) for item in raw_items[:limit]]
     callback_token = uuid.uuid4().hex
@@ -288,8 +384,16 @@ def search_sfx_library(
         "results": normalized_items,
         "callback_token": callback_token,
         "provider": "Freesound",
-        "xu_charged": 0,
-        "pricing_model": "free_public_library",
+        "xu_charged": SFX_LIBRARY_SEARCH_IMMEDIATE_CHARGE_XU,
+        "search_immediate_cost_xu": SFX_LIBRARY_SEARCH_IMMEDIATE_CHARGE_XU,
+        "select_immediate_cost_xu": SFX_LIBRARY_SELECT_IMMEDIATE_CHARGE_XU,
+        "downstream_video_usage_pricing": {
+            "mode": SFX_LIBRARY_USAGE_PRICING_MODE,
+            "per_item_xu": SFX_LIBRARY_XU_PER_ITEM,
+            "min_xu": SFX_LIBRARY_MIN_XU,
+            "charge_trigger": SFX_LIBRARY_USAGE_CHARGE_TRIGGER,
+        },
+        "pricing_terms": "search_and_select_immediate_free_downstream_usage_priced",
     }
 
 
@@ -381,6 +485,12 @@ def select_sfx_library_item(
         "xu_charged": SFX_LIBRARY_SELECT_IMMEDIATE_CHARGE_XU,
         "message": "Đã chọn hiệu ứng âm thanh từ thư viện Freesound thành công. Bot chưa trừ Xu ở bước chọn.",
         "selected_at": now_iso,
+        "downstream_video_usage_pricing": {
+            "mode": SFX_LIBRARY_USAGE_PRICING_MODE,
+            "per_item_xu": SFX_LIBRARY_XU_PER_ITEM,
+            "min_xu": SFX_LIBRARY_MIN_XU,
+            "charge_trigger": SFX_LIBRARY_USAGE_CHARGE_TRIGGER,
+        },
     }
 
 

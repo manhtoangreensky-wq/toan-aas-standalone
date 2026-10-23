@@ -59,6 +59,9 @@ def setup_test_env(monkeypatch):
     ensure_copyfast_schema()
     with transaction() as conn:
         bridge.ensure_sfx_library_schema(conn)
+    bridge.set_test_explicit_mock_results(bridge._generate_mock_freesound_results("test", 5))
+    yield
+    bridge.reset_test_explicit_mock_results()
 
 
 def _create_test_account(account_id: str, email: str, role: str = "member") -> None:
@@ -527,3 +530,242 @@ def test_sfx_library_provider_error_handling():
     with pytest.raises(Exception) as exc_info:
         bridge.search_sfx_library(account_id, "fail query", force_provider_error=True)
     assert "502" in str(exc_info.value) or "Chưa trừ Xu" in str(exc_info.value)
+
+
+# ─── 8. R36 FIX3 RUNTIME TRUTH & FAIL-CLOSED GUARD REGRESSION TESTS ───────────
+
+def test_1_app_env_test_explicit_mock_fixture_deterministic_results_pass():
+    """TEST 1: APP_ENV=test with explicit mock fixture returns deterministic results."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    _create_test_account(account_id, f"{account_id}@test.vn")
+    fixture_items = [
+        {
+            "id": "fs_fixture_01",
+            "name": "Fixture Laser Sound",
+            "username": "fx_artist",
+            "duration": 2.5,
+            "license": "Creative Commons 0",
+            "url": "https://freesound.org/sounds/fs_fixture_01/",
+            "previews": {"preview-hq-mp3": "https://cdn.freesound.org/previews/fs_fixture_01_hq.mp3"},
+        }
+    ]
+    res = bridge.search_sfx_library(account_id, "laser", mock_results=fixture_items)
+    assert res["count"] == 1
+    assert res["results"][0]["id"] == "fs_fixture_01"
+    assert res["results"][0]["title"] == "Fixture Laser Sound"
+
+
+def test_2_app_env_production_provider_disabled_fails_closed(monkeypatch):
+    """TEST 2: APP_ENV=production, WEBAPP_PROVIDER_CALLS_ENABLED=false -> FAIL CLOSED with 503."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("WEBAPP_PROVIDER_CALLS_ENABLED", "false")
+    bridge.reset_test_explicit_mock_results()
+
+    from fastapi import HTTPException
+    with pytest.raises(HTTPException) as exc_info:
+        bridge.search_sfx_library(account_id, "whoosh")
+    assert exc_info.value.status_code == 503
+    assert "WEBAPP_PROVIDER_CALLS_DISABLED" in exc_info.value.detail
+
+
+def test_3_provider_disabled_mock_generator_never_called(monkeypatch):
+    """TEST 3: provider disabled -> _generate_mock_freesound_results is NEVER CALLED."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("WEBAPP_PROVIDER_CALLS_ENABLED", "false")
+    bridge.reset_test_explicit_mock_results()
+
+    from fastapi import HTTPException
+
+    def _forbidden_generator(*args, **kwargs):
+        raise AssertionError("CRITICAL_FAULT: Mock generator must never be invoked when provider is disabled!")
+
+    monkeypatch.setattr(bridge, "_generate_mock_freesound_results", _forbidden_generator)
+
+    with pytest.raises(HTTPException) as exc_info:
+        bridge.search_sfx_library(account_id, "whoosh")
+    assert exc_info.value.status_code == 503
+
+
+def test_4_provider_disabled_zero_synthetic_result_rows_persisted(monkeypatch):
+    """TEST 4: provider disabled -> zero synthetic result rows persisted to SQLite."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    _create_test_account(account_id, f"{account_id}@test.vn")
+    bridge.reset_test_explicit_mock_results()
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("WEBAPP_PROVIDER_CALLS_ENABLED", "false")
+
+    from fastapi import HTTPException
+    with pytest.raises(HTTPException):
+        bridge.search_sfx_library(account_id, "metal clang")
+
+    monkeypatch.setenv("APP_ENV", "test")
+    with read_transaction() as conn:
+        bridge.ensure_sfx_library_schema(conn)
+        row = conn.execute("SELECT COUNT(*) FROM web_sfx_library_searches WHERE account_id = ?", (account_id,)).fetchone()
+        assert row[0] == 0
+
+
+def test_5_provider_disabled_wallet_unchanged(monkeypatch):
+    """TEST 5: provider disabled -> wallet balance / ledger completely unchanged."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    _create_test_account(account_id, f"{account_id}@test.vn")
+    with read_transaction() as conn:
+        count_before = conn.execute("SELECT COUNT(*) FROM web_manual_topup_requests WHERE account_id = ?", (account_id,)).fetchone()[0]
+
+    bridge.reset_test_explicit_mock_results()
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("WEBAPP_PROVIDER_CALLS_ENABLED", "false")
+
+    from fastapi import HTTPException
+    with pytest.raises(HTTPException):
+        bridge.search_sfx_library(account_id, "thunder storm")
+
+    monkeypatch.setenv("APP_ENV", "test")
+    with read_transaction() as conn:
+        count_after = conn.execute("SELECT COUNT(*) FROM web_manual_topup_requests WHERE account_id = ?", (account_id,)).fetchone()[0]
+
+    assert count_before == count_after
+
+
+def test_6_provider_enabled_missing_canonical_credential_fails_before_network(monkeypatch):
+    """TEST 6: provider enabled + missing credentials -> fail closed 503 before any network call."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("WEBAPP_PROVIDER_CALLS_ENABLED", "true")
+    monkeypatch.delenv("FREESOUND_API_KEY", raising=False)
+    monkeypatch.delenv("FREESOUND_CLIENT_SECRET", raising=False)
+    bridge.reset_test_explicit_mock_results()
+
+    import urllib.request
+    from fastapi import HTTPException
+
+    def _forbidden_network(*args, **kwargs):
+        raise AssertionError("CRITICAL_FAULT: Network must never be called when credentials are missing!")
+
+    monkeypatch.setattr(urllib.request, "urlopen", _forbidden_network)
+
+    with pytest.raises(HTTPException) as exc_info:
+        bridge.search_sfx_library(account_id, "bell toll")
+    assert exc_info.value.status_code == 503
+    assert "credential" in exc_info.value.detail.lower()
+
+
+def test_7_provider_error_fails_truthfully_no_synthetic_fallback():
+    """TEST 7: provider error -> fails truthfully (502), zero synthetic fallback."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    from fastapi import HTTPException
+    with pytest.raises(HTTPException) as exc_info:
+        bridge.search_sfx_library(account_id, "glitch sound", force_provider_error=True)
+    assert exc_info.value.status_code == 502
+    assert "Chưa trừ Xu" in exc_info.value.detail
+
+
+def test_8_empty_legitimate_provider_result_truthful_empty_no_fabricated_assets():
+    """TEST 8: empty legitimate provider result -> returns empty list, no fabricated assets."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    _create_test_account(account_id, f"{account_id}@test.vn")
+    res = bridge.search_sfx_library(account_id, "nonexistentquery123456", mock_results=[])
+    assert res["count"] == 0
+    assert res["results"] == []
+
+
+def test_9_search_immediate_charge_zero():
+    """TEST 9: search immediate charge is strictly 0 Xu."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    _create_test_account(account_id, f"{account_id}@test.vn")
+    res = bridge.search_sfx_library(account_id, "horn blast", mock_results=[])
+    assert res["xu_charged"] == 0
+    assert res["search_immediate_cost_xu"] == 0
+
+
+def test_10_select_immediate_charge_zero():
+    """TEST 10: select immediate charge is strictly 0 Xu and notice reflects 'Bot chưa trừ Xu'."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    _create_test_account(account_id, f"{account_id}@test.vn")
+    fixture_items = [
+        {
+            "id": "fs_test_item_10",
+            "name": "Pop Sound",
+            "username": "fx_user",
+            "duration": 0.5,
+            "license": "CC0",
+            "url": "https://freesound.org/sounds/fs_test_item_10/",
+            "previews": {"preview-hq-mp3": "https://cdn.freesound.org/previews/10.mp3"},
+        }
+    ]
+    bridge.search_sfx_library(account_id, "pop", mock_results=fixture_items)
+    sel = bridge.select_sfx_library_item(account_id, index=1)
+    assert sel["xu_charged"] == 0
+    assert "chưa trừ Xu" in sel["message"]
+
+
+def test_11_downstream_usage_pricing_matches_bot_contract():
+    """TEST 11: downstream usage pricing reflects canonical Bot calculate_music_price contract."""
+    policy = bridge.get_sfx_library_policy()
+    usage = policy.get("usage_pricing", {})
+    assert usage["mode"] == "sfx_library"
+    assert usage["per_item_xu"] == 10
+    assert usage["min_xu"] == 10
+    assert usage["charge_trigger"] == "video_workflow_calculate_music_price"
+
+
+def test_12_pricing_response_does_not_claim_global_free_usage():
+    """TEST 12: pricing response does not claim global free usage."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    _create_test_account(account_id, f"{account_id}@test.vn")
+    res = bridge.search_sfx_library(account_id, "click", mock_results=[])
+    assert res.get("pricing_model") != "free_public_library"
+    assert res.get("globally_free") is not True
+    assert "downstream_video_usage_pricing" in res
+
+
+def test_13_wrong_account_selection_blocked():
+    """TEST 13: cross-account selection using another account's callback_token is blocked."""
+    account_a = f"acc_a_{uuid.uuid4().hex[:8]}"
+    account_b = f"acc_b_{uuid.uuid4().hex[:8]}"
+    _create_test_account(account_a, f"{account_a}@test.vn")
+    _create_test_account(account_b, f"{account_b}@test.vn")
+    fixture_items = [
+        {
+            "id": "fs_item_13",
+            "name": "Ding",
+            "username": "sound_guy",
+            "duration": 1.0,
+            "license": "CC-BY",
+            "url": "https://freesound.org/sounds/fs_item_13/",
+            "previews": {"preview-hq-mp3": "https://cdn.freesound.org/previews/13.mp3"},
+        }
+    ]
+    res_a = bridge.search_sfx_library(account_a, "ding", mock_results=fixture_items)
+    token_a = res_a["callback_token"]
+
+    from fastapi import HTTPException
+    with pytest.raises(HTTPException) as exc_info:
+        bridge.select_sfx_library_item(account_b, index=1, callback_token=token_a)
+    assert exc_info.value.status_code == 400
+
+
+def test_14_sfx_selection_readback_remains_correct():
+    """TEST 14: active selection persists and is accurately read back."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    _create_test_account(account_id, f"{account_id}@test.vn")
+    fixture_items = [
+        {
+            "id": "fs_item_14",
+            "name": "Applause Audience",
+            "username": "crowd_audio",
+            "duration": 4.2,
+            "license": "Creative Commons 0",
+            "url": "https://freesound.org/sounds/fs_item_14/",
+            "previews": {"preview-hq-mp3": "https://cdn.freesound.org/previews/14.mp3"},
+        }
+    ]
+    bridge.search_sfx_library(account_id, "applause", mock_results=fixture_items)
+    bridge.select_sfx_library_item(account_id, index=1)
+    readback = bridge.get_selected_sfx_library_item(account_id)
+    assert readback is not None
+    assert readback["id"] == "fs_item_14"
+    assert readback["title"] == "Applause Audience"
+    assert readback["provider"] == "Freesound"
