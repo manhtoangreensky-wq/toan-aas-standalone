@@ -89,7 +89,7 @@ def _client_with_auth(account_id: str, email: str) -> tuple[TestClient, str]:
 # ─── 1. POLICY CONTRACT ───────────────────────────────────────────────────────
 
 def test_sfx_library_policy_contract():
-    """Verify SFX library policy endpoint returns truthful Freesound 0 Xu metadata."""
+    """Verify SFX library policy endpoint returns truthful Freesound 0 Xu immediate charge and downstream usage contract."""
     client = TestClient(app)
     resp = client.get("/api/v1/music/sfx-library/policy")
     assert resp.status_code == 200
@@ -98,8 +98,57 @@ def test_sfx_library_policy_contract():
     assert data.get("capability") == "sfx_library"
     assert data.get("customer_entrypoint") == "/music/sfx-library"
     assert data.get("generative_ai") is False
-    assert data.get("pricing", {}).get("search_xu") == 0
-    assert data.get("pricing", {}).get("select_xu") == 0
+    assert data.get("search_immediate_charge_xu") == 0
+    assert data.get("select_immediate_charge_xu") == 0
+    usage = data.get("usage_pricing", {})
+    assert usage.get("mode") == "sfx_library"
+    assert usage.get("per_item_xu") == 10
+    assert usage.get("min_xu") == 10
+    assert usage.get("charge_trigger") == "video_workflow_calculate_music_price"
+    pricing = data.get("pricing", {})
+    assert pricing.get("search_xu") == 0
+    assert pricing.get("select_xu") == 0
+    assert pricing.get("usage_xu_per_item") == 10
+    assert pricing.get("usage_min_xu") == 10
+
+
+def test_bot_pricing_constants_match_current_source():
+    """Verify bridge constants match canonical bot.py source exactly."""
+    assert bridge.SFX_LIBRARY_SEARCH_IMMEDIATE_CHARGE_XU == 0
+    assert bridge.SFX_LIBRARY_SELECT_IMMEDIATE_CHARGE_XU == 0
+    assert bridge.SFX_LIBRARY_XU_PER_ITEM == 10
+    assert bridge.SFX_LIBRARY_MIN_XU == 10
+    assert bridge.SFX_LIBRARY_USAGE_CHARGE_TRIGGER == "video_workflow_calculate_music_price"
+    assert bridge.SFX_LIBRARY_USAGE_PRICING_MODE == "sfx_library"
+
+
+def test_downstream_usage_pricing_parity():
+    """Verify downstream usage pricing formula replicates bot.py::calculate_music_price."""
+    policy = bridge.get_sfx_library_policy()
+    usage = policy.get("usage_pricing", {})
+    per_item = usage.get("per_item_xu", 10)
+    min_xu = usage.get("min_xu", 10)
+
+    # 1 SFX: max(10, 1 * 10) = 10
+    assert max(min_xu, 1 * per_item) == 10
+    # 2 SFX: max(10, 2 * 10) = 20
+    assert max(min_xu, 2 * per_item) == 20
+    # 5 SFX: max(10, 5 * 10) = 50
+    assert max(min_xu, 5 * per_item) == 50
+
+
+def test_policy_does_not_claim_globally_free_if_false():
+    """Policy must truthfully distinguish immediate 0 Xu from downstream usage."""
+    client = TestClient(app)
+    resp = client.get("/api/v1/music/sfx-library/policy")
+    assert resp.status_code == 200
+    data = resp.json().get("data", {})
+    # Must not claim globally free
+    assert data.get("globally_free") is not True
+    assert data.get("pricing_model") != "free_public_library"
+    # Must disclose downstream usage pricing
+    assert "usage_pricing" in data
+    assert data["usage_pricing"]["per_item_xu"] > 0
 
 
 # ─── 2. VALID SUCCESS PATH & OUTPUT NORMALIZATION ─────────────────────────────
@@ -356,10 +405,79 @@ def test_sfx_library_zero_wallet_impact():
     assert sel_resp.status_code == 200
     assert sel_resp.json().get("data", {}).get("xu_charged") == 0
 
-    # Policy confirms 0 Xu
+    # Policy confirms 0 Xu immediate
     policy_resp = client.get("/api/v1/music/sfx-library/policy")
     assert policy_resp.json().get("data", {}).get("pricing", {}).get("search_xu") == 0
     assert policy_resp.json().get("data", {}).get("pricing", {}).get("select_xu") == 0
+
+
+def test_search_immediate_charge_parity():
+    """Search endpoint must charge 0 Xu immediately."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    client, csrf = _client_with_auth(account_id, f"{account_id}@test.vn")
+    resp = client.post(
+        "/api/v1/music/sfx-library/search",
+        headers={"X-CSRF-Token": csrf},
+        json={"query": "chime bell", "limit": 2},
+    )
+    assert resp.status_code == 200
+    assert resp.json().get("data", {}).get("xu_charged") == 0
+
+
+def test_select_immediate_charge_parity():
+    """Select endpoint must charge 0 Xu immediately and state 'Bot chưa trừ Xu ở bước chọn'."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    client, csrf = _client_with_auth(account_id, f"{account_id}@test.vn")
+    client.post(
+        "/api/v1/music/sfx-library/search",
+        headers={"X-CSRF-Token": csrf},
+        json={"query": "chime bell", "limit": 2},
+    )
+    resp = client.post(
+        "/api/v1/music/sfx-library/select",
+        headers={"X-CSRF-Token": csrf},
+        json={"index": 1},
+    )
+    assert resp.status_code == 200
+    assert resp.json().get("data", {}).get("xu_charged") == 0
+    assert "chưa trừ Xu" in resp.json().get("data", {}).get("message", "")
+
+
+def test_no_wallet_mutation_on_search():
+    """Ensure search does not alter web_manual_topup or any financial state."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    client, csrf = _client_with_auth(account_id, f"{account_id}@test.vn")
+    with read_transaction() as conn:
+        before_count = conn.execute("SELECT COUNT(*) FROM web_manual_topup_requests WHERE account_id = ?", (account_id,)).fetchone()[0]
+    client.post(
+        "/api/v1/music/sfx-library/search",
+        headers={"X-CSRF-Token": csrf},
+        json={"query": "explosion boom", "limit": 2},
+    )
+    with read_transaction() as conn:
+        after_count = conn.execute("SELECT COUNT(*) FROM web_manual_topup_requests WHERE account_id = ?", (account_id,)).fetchone()[0]
+    assert before_count == after_count
+
+
+def test_no_wallet_mutation_on_select():
+    """Ensure select does not alter web_manual_topup or any financial state."""
+    account_id = f"acc_{uuid.uuid4().hex[:8]}"
+    client, csrf = _client_with_auth(account_id, f"{account_id}@test.vn")
+    client.post(
+        "/api/v1/music/sfx-library/search",
+        headers={"X-CSRF-Token": csrf},
+        json={"query": "explosion boom", "limit": 2},
+    )
+    with read_transaction() as conn:
+        before_count = conn.execute("SELECT COUNT(*) FROM web_manual_topup_requests WHERE account_id = ?", (account_id,)).fetchone()[0]
+    client.post(
+        "/api/v1/music/sfx-library/select",
+        headers={"X-CSRF-Token": csrf},
+        json={"index": 1},
+    )
+    with read_transaction() as conn:
+        after_count = conn.execute("SELECT COUNT(*) FROM web_manual_topup_requests WHERE account_id = ?", (account_id,)).fetchone()[0]
+    assert before_count == after_count
 
 
 # ─── 6. DUPLICATE & IDEMPOTENCY ───────────────────────────────────────────────

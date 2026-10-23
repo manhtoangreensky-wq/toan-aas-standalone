@@ -47,8 +47,26 @@ from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, u
 
 FREESOUND_SEARCH_ENDPOINT = "https://freesound.org/apiv2/search/text/"
 FREESOUND_SEARCH_FIELDS = "id,name,username,duration,license,previews,url,tags"
-SFX_LIBRARY_XU_PER_ITEM = 0
-SFX_LIBRARY_MIN_XU = 0
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, default))
+    except Exception:
+        return default
+
+
+# Canonical pricing contracts mirroring Bot source (bot.py::calculate_music_price):
+# Immediate charges on /sfx_library search and /select_sfx selection are 0 Xu ("Bot chưa trừ Xu")
+SFX_LIBRARY_SEARCH_IMMEDIATE_CHARGE_XU = 0
+SFX_LIBRARY_SELECT_IMMEDIATE_CHARGE_XU = 0
+
+# Downstream consumption pricing when used in video rendering pipeline:
+SFX_LIBRARY_XU_PER_ITEM = max(0, _env_int("SFX_LIBRARY_XU_PER_ITEM", 10))
+SFX_LIBRARY_MIN_XU = max(0, _env_int("SFX_LIBRARY_MIN_XU", 10))
+SFX_LIBRARY_USAGE_CHARGE_TRIGGER = "video_workflow_calculate_music_price"
+SFX_LIBRARY_USAGE_PRICING_MODE = "sfx_library"
+
 MAX_QUERY_LENGTH = 160
 DEFAULT_SEARCH_LIMIT = 5
 MAX_SEARCH_LIMIT = 5
@@ -360,8 +378,8 @@ def select_sfx_library_item(
 
     return {
         "selected": selected_item,
-        "xu_charged": 0,
-        "message": "Đã chọn hiệu ứng âm thanh miễn phí từ thư viện Freesound thành công.",
+        "xu_charged": SFX_LIBRARY_SELECT_IMMEDIATE_CHARGE_XU,
+        "message": "Đã chọn hiệu ứng âm thanh từ thư viện Freesound thành công. Bot chưa trừ Xu ở bước chọn.",
         "selected_at": now_iso,
     }
 
@@ -412,12 +430,23 @@ def get_sfx_library_policy() -> dict:
             "selected": "/api/v1/music/sfx-library/selected",
             "policy": "/api/v1/music/sfx-library/policy",
         },
+        "search_immediate_charge_xu": SFX_LIBRARY_SEARCH_IMMEDIATE_CHARGE_XU,
+        "select_immediate_charge_xu": SFX_LIBRARY_SELECT_IMMEDIATE_CHARGE_XU,
+        "usage_pricing": {
+            "mode": SFX_LIBRARY_USAGE_PRICING_MODE,
+            "per_item_xu": SFX_LIBRARY_XU_PER_ITEM,
+            "min_xu": SFX_LIBRARY_MIN_XU,
+            "charge_trigger": SFX_LIBRARY_USAGE_CHARGE_TRIGGER,
+        },
         "pricing": {
-            "search_xu": SFX_LIBRARY_XU_PER_ITEM,
-            "select_xu": SFX_LIBRARY_XU_PER_ITEM,
+            "search_xu": SFX_LIBRARY_SEARCH_IMMEDIATE_CHARGE_XU,
+            "select_xu": SFX_LIBRARY_SELECT_IMMEDIATE_CHARGE_XU,
+            "usage_xu_per_item": SFX_LIBRARY_XU_PER_ITEM,
+            "usage_min_xu": SFX_LIBRARY_MIN_XU,
+            "charge_trigger": SFX_LIBRARY_USAGE_CHARGE_TRIGGER,
             "currency": "Xu",
         },
         "type": "public_library_search",
         "generative_ai": False,
-        "bot_parity_source": "bot.py::cmd_sfx_library / cmd_select_sfx",
+        "bot_parity_source": "bot.py::cmd_sfx_library / cmd_select_sfx / calculate_music_price",
     }
