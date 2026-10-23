@@ -1,5 +1,21 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-MUSIC-PRODUCT-READABILITY-E-20261023 — chữ hướng dẫn và ô nhập
+
+BASE `e8738b5ac6078c86e8793632cab3d0f3488e3f09`; PR661 / Issue664.
+Phạm vi chỉ hai form `/music/create`, `/music/song`; không phải native D1/D2.
+Bằng chứng: `reports/audit/R218-MUSIC-PRODUCT-READABILITY-E-QA-20261023.json`.
+
+| Case | Mức | Thao tác | PASS / canh lỗi cũ |
+|---|---|---|---|
+| MU-E-READ-01 | nặng | Đo nhãn, chữ hướng dẫn và placeholder trên cả hai form, VI/EN/ZH, sáng/tối, 390/1440 và mobile/landscape | Cả ba nhóm chữ >=4,5:1; helper sáng5,797/tối5,522, label sáng12,352/tối13,903, placeholder>=5,522; giữ association và opacity |
+| MU-E-READ-02 | nặng | Nhập mô tả/lời Unicode; đổi đủ 3 gói và 4 giọng, chuyển mode rồi Back; mở/đóng hướng dẫn bằng bàn phím | Input/select/textarea 16px; giữ giá trị/lời/giọng/thời lượng; nút gửi >=44px; không có request ghi từ UI; text CSS 200% không tràn ngang |
+| MU-E-READ-03 | nặng | Đối chiếu source và hồi quy Music/SFX/Chat | Đúng 4 rule/14 dòng sau R1+R2; bỏ block mới cho CSS bằng BASE sau LF-normalize; Chat, JS, i18n, API/auth/backend/ví/motion và test cũ không đổi |
+
+Actual signed QA 48 cấu hình; không API fixtures. Phần auth/locale có ghi DB QA
+tạm, còn thao tác UI chỉ GET. Không dùng CSS/viewport PASS để kết luận audio,
+Bot parity, native Dynamic Type, installed PWA hoặc production/LIVE.
+
 ## R218-MUSIC-PRESENTATION-D2-20261023 — bỏ khối thừa, giữ kết quả thật
 
 BASE3e91dbd8244c0f51b42139c86cd62cdb0e243af1;PR661/Issue664.

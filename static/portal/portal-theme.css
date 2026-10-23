@@ -8890,6 +8890,20 @@ article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) :is(.por
   line-height: 1.65;
 }
 
+[data-music-product-form] .portal-field-help {
+  color: var(--portal-muted);
+}
+[data-music-product-form] :is(input, select, textarea) {
+  font-size: 16px;
+}
+
+[data-music-product-form] .portal-field > label {
+  color: var(--portal-ink);
+}
+[data-music-product-form] :is(input, textarea)::placeholder {
+  color: var(--portal-input-placeholder, var(--portal-muted));
+}
+
 /* Final light AI Chat Workspace surface */
 .portal-page:is(.portal-chat-workspace, .portal-chat-workspace-detail) :is(.portal-chat-workspace-create, .portal-chat-workspace-boundary, .portal-chat-workspace-filters, .portal-chat-context-card, .portal-chat-turn, .portal-chat-version-list > article, .portal-chat-event-list > div, .portal-chat-execution, .portal-chat-execution-layout > section, .portal-chat-run-card) {
   border-color: var(--portal-border);

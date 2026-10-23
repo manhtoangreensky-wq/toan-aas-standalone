@@ -371,7 +371,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   Evidence `R218-MUSIC-SFX-ERROR-FEEDBACK-QA-20261023.json`; B04notdropped.
 - [x] B+D0branchdelivery: HEAD1144896/CI39960845682bothSUCCESS,
   396Python+26browserruntime,Issue664receipt6366118699;noaudio/Botparity/LIVEclaim.
-- [ ] MU-NATIVE-PRESENTATION-COPY-D: sourcefieldhintVIinEN/ZH vàtechnical/empty
+- [x] MU-NATIVE-PRESENTATION-COPY-D: sourcefieldhintVIinEN/ZH vàtechnical/empty
   cards; ownREAD/contractafterB, nothiddeninsideB. Keeptext-onlytruth/noaudiofake.
 - [x] MU-NATIVE-PRESENTATION-D1 localUI:9copyrows/2fields/SFXdt+fallbacks,
   scopedhelpercontrastlight2.021→5.797/dark5.522,input16. WorkerR1verbatim,
@@ -385,13 +385,31 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   allPASS;oldCSS/Chatcontent+orderretainedafterCRLFnormalization. NewCIpending.
 - [x] D1branchdelivery: HEAD3e91dbd8/CI39975608329bothSUCCESS,396Linux+26runtime;
   receipt664#issuecomment-6368236480,IssueD1tickreadbacktrue. D2unlockedonlynow.
-- [ ] MU-NATIVE-PRESENTATION-D2: detailedspecREADYafterD1;scopedhideintro/boundary/empty/
+- [x] MU-NATIVE-PRESENTATION-D2: detailedspecREADYafterD1;scopedhideintro/boundary/empty/
   scope,onecolumn/noblankgap,flattermetadata+truthfulsingletext-outputnote;
   noinput/result/normalizer/integration/A/B/C/D0/motionchange.
   LocalUIaccepted:52new/138focused/1073Node/395portablePython/32Tester;
   independentC0I0M0,main48+focus24+guard36actualPASS. Initial1/result2cards,
   3items/all5presets/stale+remount/AX/textstress,0unexpectederrors/overflow.
-  TwoFlashhandoffsfailedretained,Soltest+oneanchoronly/noR3;deliverypending.
+  TwoFlashhandoffsfailedretained,Soltest+oneanchoronly/noR3. Finaldelivery
+  HEAD e8738b5a/CI39985131009bothSUCCESS/396Linux+26runtime;
+  receipt664#issuecomment-6369576116,IssueD2+parentDcheckedreadback.
+- [ ] MU-PRODUCT-READABILITY-E: riêng`/music/create`/`song`,4CSSrulesonly.
+  Actual24baseline66lightcontrastfails+132fontfails→green48configsAA5.797/
+  5.522,input16;144tier/288vocal/48Backdraft/AX/keyboard/textstress,
+  0errors/UIwrites/external/overflow. FlashR1verbatim/Node1073/Python111/
+  independentsourceC0I0M0;deliverypending. Evidence
+  `R218-MUSIC-PRODUCT-READABILITY-E-QA-20261023.json`.
+  E02mởlạitrướcpushvìthiếugatelabel/placeholder;R1làmđúngspec2rules.
+  R2final48labels264AA12.352/13.903,placeholder120>=5.522,helper/inputgiữ;
+  all144tier/288vocal/48Back/AX/keyboard/textstressđạtlại. Node1073/Python111/
+  independentR1+R2compositionC0I0M0,noR3;deliverychờnewCI/receipt.
+- [ ] MU08-F REVIEW-SUMMARY: read-onlyproduct/tier/vocal/lyrics/length/brief
+  từsnapshotflow.input;khôngđổiquote/confirm/fingerprint/API,nofakechoiceID.
+  ChờEdeliveryacceptedvàspecchốttrướcBUILD.
+- [ ] MU-P2 remaining crosswalk: `R218-MUSIC-REMAINING-UI-CROSSWALK-20261023.md`
+  giữ12MUrequirements,phânbiệtUIgapsvàcontract/runtime. MU02stylemapping/
+  MU06lengthsemantics/media2tracks/editor/providerkhôngbịbỏsót,đểcuốiT0.
 - [~] MU-00 control-level local đã khóa theo C0; các mục runtime và delivery dưới đây chưa đóng.
 - [~] MU-00 browser presentation — 19/10/2026: `/music/create` và `/music/song` đã kiểm bằng Edge localhost với 36 cấu hình (VI/EN/ZH × sáng/tối × 390/768/1440 × 2 workspace), giữ field bài hát riêng, không hiện audio/player/giá/download giả; page/console/request ngoài/write/unknown API/overflow đều `0`. Đây là fixture đọc-only, chưa phải generation/player/delivery/LIVE.
 - [ ] Nhạc nền/Bài hát/Kho nhạc-SFX/Chỉnh nhạc; capability thật.

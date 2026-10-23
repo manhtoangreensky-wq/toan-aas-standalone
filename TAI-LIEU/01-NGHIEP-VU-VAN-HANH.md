@@ -1,5 +1,28 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 23/10/2026 — Nhạc nền/Bài hát: chữ hướng dẫn và ô nhập
+
+Hai form `/music/create` và `/music/song` dùng màu `--portal-muted` sẵn có
+cho chữ hướng dẫn, màu chữ chính cho label, token placeholder hiện có và cỡ
+16px cho input/select/textarea. Chỉ thêm bốn rule CSS theo hook
+`data-music-product-form`, không sửa trường, giá trị, giới hạn nhập,
+đăng nhập, lưu nháp, báo giá hay xác nhận. Các trang native D1/D2 không đổi.
+
+App QA đã đăng nhập được đo ở 48 cấu hình: tương phản hướng dẫn sáng tăng
+2,021 → 5,797; tối giữ 5,522; toàn bộ 264 mẫu ô nhập đạt 16px. 144 lượt chọn
+gói, 288 lượt chọn giọng và 48 lượt chuyển mode/Back giữ bản nháp. Không có
+request ghi từ UI, lỗi trang/console, request ngoài phạm vi hoặc tràn ngang.
+Sau khi ảnh QA phát hiện gate nhãn/placeholder còn thiếu, R2 đã đo lại đủ:
+264nhãn sáng12,352/tối13,903 và120placeholder đều>=5,522;association vàopacity
+giữ nguyên. Evidence R1 được giữ riêng, không lấy helper PASS thay toànform.
+Đây là source nhánh và QA localhost, chưa phải thay đổi đã deploy.
+
+Danh sách thiếu còn lại đã được đối soát riêng trong
+`reports/audit/R218-MUSIC-REMAINING-UI-CROSSWALK-20261023.md`: review trước
+xác nhận còn thiếu; style/draft mapping, half/full, hai bản audio và editor
+vẫn cần hợp đồng hoặc bằng chứng runtime. Không lấy bản vá đọc chữ để đóng
+những yêu cầu sản phẩm này.
+
 ## 23/10/2026 — Music/SFX D2 trong source nhánh, chưa deploy
 
 Hai công cụ lập hướng âm nhạc/bảng hiệu ứng là luồng văn bản, không phải

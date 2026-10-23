@@ -1,5 +1,20 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 23/10/2026 — đối soát Music và bản vá đọc/nhập E
+
+| Yêu cầu gốc | Hiện trạng có bằng chứng | Không được suy diễn |
+|---|---|---|
+| Form Music dễ đọc, dễ nhập | Final48 actual QA: helper/label/placeholder >=4,5:1 và input16px | Không chứng minh tạo nhạc/giao tệp hoặc iOS Dynamic Type |
+| Không mất lựa chọn khi đổi gói/giọng/mode | 144 tier checks, 288 vocal checks, 48 mode/Back draft checks | Không chứng minh giọng trong audio output |
+| Đủ yêu cầu MU01..12 | Có bảng đối soát từng yêu cầu, source anchor và giới hạn test | Không coi 27 test VM là toàn bộ Bot parity |
+| Idea và phong cách riêng | Chưa có style input tách biệt; draft `style` và bridge `style_prompt` không đồng nhất | Không thêm field/mapping phỏng đoán |
+| Review trước xác nhận | Có giá/gate, thiếu summary các lựa chọn đã gửi | Tách MU08-F UI-only; không sửa tiền/receipt/confirm |
+| Độ dài half/full, hai bản, player/editor | Control hoặc metadata không đủ proof xử lý | Giữ backlog contract/runtime, không dựng output hoặc editor giả |
+
+Nguồn chi tiết: `reports/audit/R218-MUSIC-REMAINING-UI-CROSSWALK-20261023.md`.
+Sai lệch của tài liệu cũ là đã gộp control có sẵn với khả năng thực thi/đầu ra;
+hai trạng thái này nay được theo dõi riêng, không xóa yêu cầu chưa đạt.
+
 ## 23/10/2026 — Music/SFX D2, cùng chức năng nhưng bỏ màn hình kỹ thuật
 
 | Yêu cầu gốc/P2 | Source hiện tại | Bằng chứng/giới hạn |

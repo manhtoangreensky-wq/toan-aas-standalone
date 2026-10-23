@@ -181,7 +181,7 @@ No new packages or visible IDE/browser; source-only Gemini packet, no QA data.
 - [x] P02 sourceexact/oldtests+11protected+Chat/D1 unchanged; no drift.
 - [x] P03 actualsignedinitial1/result2,3items/allpresets; localized stale warning,
   SFX remount/focus/error/guard/draft; AX/viewport/contrast/scale gates all đạt.
-- [ ] P04 regression/review/docs/Tester/prepush/provenance/pushCI/receipt.
+- [x] P04 regression/review/docs/Tester/prepush/provenance/pushCI/receipt.
 
 One worker/project, Flash3.8 background, max R1/R2 same D2, no R3.
 Không take over code trước hai lượt cùng acceptance không đạt. Spec gap ghi
@@ -214,3 +214,6 @@ Finalactualedge:focus24strict/24abort+24native retrysuccess,guard36configs/
 72POSTattempts/72pendingchecks/36success+36denied,all3items;expectednetwork
 console24separate,unexpectederror/external/unapproved/overflow0. P03accepted.
 All5ownedQAserversclosedexit0/tempremoved/listeners0. P04deliverypending.
+FinalP04accepted:HEAD e8738b5a/CI39985131009bothSUCCESS/396Linux+26runtime,
+receiptIssue664#6369576116;IssueD2+parentDtickreadback. D2closedinscope,
+fullMusic/audio/Botparity/merge/deploy/LIVEvẫnmở. RollstatusinErealcodebatch.
