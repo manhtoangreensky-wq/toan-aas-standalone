@@ -8941,6 +8941,24 @@ article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) :is(.por
   .portal-music-request-review dl { grid-template-columns: minmax(0, 1fr); }
 }
 
+.portal-music-suggestion-history { margin-top: 16px; }
+.portal-feature-workspace--music-task .portal-music-canonical-suggestions {
+  --portal-saas-teal: var(--portal-action);
+  --portal-saas-emerald: var(--portal-action);
+}
+.portal-feature-workspace--music-task .portal-suggestion-card-head span {
+  color: var(--portal-muted);
+}
+.portal-music-suggestion-history > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--portal-ink);
+  cursor: pointer;
+}
+.portal-music-suggestion-history > summary:focus-visible { outline: 3px solid var(--portal-focus); outline-offset: 3px; }
+.portal-music-suggestion-history > p { color: var(--portal-muted); margin: 8px 0; }
+
 /* Final light AI Chat Workspace surface */
 .portal-page:is(.portal-chat-workspace, .portal-chat-workspace-detail) :is(.portal-chat-workspace-create, .portal-chat-workspace-boundary, .portal-chat-workspace-filters, .portal-chat-context-card, .portal-chat-turn, .portal-chat-version-list > article, .portal-chat-event-list > div, .portal-chat-execution, .portal-chat-execution-layout > section, .portal-chat-run-card) {
   border-color: var(--portal-border);

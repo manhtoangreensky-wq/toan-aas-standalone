@@ -1,5 +1,31 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — Music MU07-A: xem lại các phương án sau báo giá
+
+Source nhánh, chưa deploy: hai form Music giữ tối đa ba phương án đã nhận
+trong memory của từng route/tab/phiên. Khi estimate không trả suggestions,
+khách mở disclosure đóng mặc định “Xem lại các phương án”, dùng Copy/Apply
+hiện có. Chọn hướng khác thay brief và khóa báo giá cũ; phải lấy báo giá mới.
+Không lưu kho trình duyệt, không phục hồi quote/receipt hoặc tạo prompt/audio.
+Logout, token đổi, flow thiếu/sai, error/guarded/confirm và suggestions rỗng
+hoặc sai dạng xóa snapshot theo route. Không đọc token vào báo cáo/payload.
+
+QA app đăng nhập thật với client flow fixtures có kiểm soát: 48 cấu hình,
+VI/EN/ZH, sáng/tối, 360/375/390/768/844 ngang/1440. Có 2.304 mẫu chữ ở bộ
+hiện tại và bộ giữ lại, tương phản tối thiểu 5,217:1; hover 48 mẫu tối thiểu
+5,161:1, focus 48 mẫu tối thiểu 5,2:1. Summary >=44px, Enter/AX, giữ field,
+đổi chế độ/Back, edit/new quote, logout/token và text2x đều đạt; tràn ngang,
+lỗi trang, external request và UI write sau auth setup đều 0. 144 asset hash
+khớp source sau chuẩn hóa LF. Đây không phải native quote/provider proof.
+
+Root gap: estimate thay toàn bộ flow.data, làm mất gợi ý ở draft trước đó.
+Hai lỗi tương phản thực tế cùng component được sửa bằng token hiện có,
+không đổi palette, motion, form F/H hoặc global button. Unit mới 19 đạt,
+full Node 1.276 đạt; Python giới hạn 119 đạt/2 warning cũ. Evidence:
+`reports/audit/R218-MUSIC-RETAINED-OPTIONS-QA-20261024.json`.
+MU07 tổng, next-set/edit-regenerate, audio/editor/output thật và LIVE còn mở.
+Motion chỉ xử lý sau toàn bộ UI/UX, không dùng thời gian Back làm FPS PASS.
+
 ## 24/10/2026 — Music: xem lại yêu cầu và trạng thái ban đầu gọn
 
 Source nhánh F/H đã qua QA localhost, chưa deploy. Khi có báo giá hợp lệ,

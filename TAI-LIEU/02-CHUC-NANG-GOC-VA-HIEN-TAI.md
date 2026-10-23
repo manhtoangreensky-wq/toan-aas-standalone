@@ -1,5 +1,19 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — Music MU07: tách quay lại bộ cũ và tạo bộ mới
+
+| Yêu cầu gốc | Hiện trạng có bằng chứng | Chưa được coi là hoàn thành |
+|---|---|---|
+| Chọn/sửa/quay lại ba gợi ý | MU07-A giữ tối đa ba prompt thực nhận, hai route/phiên; sau estimate mở native disclosure, Copy/Apply handler cũ; 19 unit/48 browser | Không sinh bộ mới, selected ID hoặc prompt giả |
+| Chọn lại không dùng báo giá sai | Actual Apply1→quote→history→Apply2/edit→new quote; field/focus và quote-stale giữ đúng cả 48 cấu hình | Không khôi phục receipt/giá hoặc mở quyền confirm từ cache |
+| Dễ đọc ở hai theme | 2.304 mẫu current/retained >=5,217:1; hover48 >=5,161; focus48 >=5,2; disclosure44px/AX/text2x | Không phải OS Dynamic Type/PWA/FPS/production evidence |
+| Bot có đổi bộ/sửa mô tả tạo lại | Git snapshot Bot 0d2f376… có offset và pending input; Web chưa có contract rotation/version/no-effect được xác minh | Next-set và edit-regenerate giữ T0 sau UI/motion; không giả bằng shuffle hoặc gọi draft tùy tiện |
+
+Nguồn gốc MU01..12: `2026-10-18-r218-02-03-voice-music-controls.md`.
+Chi tiết từng callback và contract: `reports/audit/R218-MU07-BOT-WEB-CONTRACT-20261024.md`.
+Bot snapshot không phải production truth. Source nhánh/QA không đồng nghĩa
+đã deploy, tạo âm thanh hoặc toàn bộ Music ngang Bot. MU07 tổng vẫn mở.
+
 ## 24/10/2026 — Music MU08 và trạng thái rỗng F/H
 
 | Yêu cầu gốc | Hiện trạng có bằng chứng | Giới hạn còn mở |

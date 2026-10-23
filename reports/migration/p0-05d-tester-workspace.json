@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-10-24",
-  "local_files_refresh_scope": "F/H six new Music QA cases; local portable LF metadata remeasured. Existing48WAcasecount and remote/project history unchanged; currentTracker664/PR661,closed412untouched.",
+  "local_files_refresh_scope": "MU07-A six new Music QA cases; local portable LF metadata remeasured. Existing48WAcasecount and remote/project history unchanged; currentTracker664/PR661,closed412untouched.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 668,
-      "bytes": 83002,
-      "sha256": "fae6ee82c023d3dd867bbf3eaa79d663a3d8c1eb343b96297f74ca10bbe20803"
+      "lines": 687,
+      "bytes": 85177,
+      "sha256": "415a02dcc1a6091b047d2febef794740b77b06e6698a9995d0d6a2608b550f49"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

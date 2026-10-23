@@ -1,5 +1,24 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-MUSIC-MU07A-20261024 — phương án đã nhận không mất sau báo giá
+
+Phiên Tester READY; BASE520174941470fab34c60c26e62607ba2d4b3568f; PR661/Issue664.
+App localhost đăng nhập/DB tạm; controlled client flow/capability fixtures,
+không gọi draft/estimate/confirm/provider thật. Evidence:
+`reports/audit/R218-MUSIC-RETAINED-OPTIONS-QA-20261024.json`.
+
+| Case | Mức | Bước thực hiện | Kết quả cần thấy / bằng chứng |
+|---|---|---|---|
+| MU07A-01 | nặng | Hai route Music: draft ba prompt → Apply1 → estimate bỏ suggestions → mở history | Một disclosure đóng mặc định, đúng ba prompt thực nhận; không padding, shuffle, audio hoặc card trống; 19 unit/48 browser |
+| MU07A-02 | nặng | Mở history → Apply2 → sửa brief → lấy quote mới; đổi mode và Back | Giữ tier/vocal/lyrics/duration/focus; quote cũ và F summary bị khóa khi đổi; quote mới mới mở tiếp; 48 browser |
+| MU07A-03 | nặng | Session không hợp lệ/token đổi/logout; flow thiếu/sai feature/error/guarded/confirm; own suggestions rỗng/sai dạng | Xóa đúng route cache, không rò sang phiên mới; estimate đầu tiên không có cache không dựng bộ giả; unit/lifecycle browser |
+| MU07A-04 | nặng | Payload inherited/unknown/object/private metadata; hơn ba items, hai routes | Chỉ own prompt + bảy scalar metadata cho phép, clone và bounds; không mutate input, storage/network/timer; 19 unit |
+| MU07A-05 | vừa | VI/EN/ZH × sáng/tối × 390/1440 + tối360/375/768/844ngang; mở/đóng bằng Enter, hover/focus | 48 cấu hình; 2.304 mẫu current/retained >=5,217:1, hover48 >=5,161/focus48 >=5,2; summary44px/AX/text2x, overflow0; 144 LF asset hashes khớp |
+| MU07A-06 | nặng | Chạy hồi quy/source comparator | Node1276/Python119; 9records/3productionfiles/13protectedfunctions/12protectedfiles/oldtests/Chattail không đổi ngoài spec; pageerrors/external/UIwrites0 |
+
+Canh lỗi cũ: F/H/Apply/sessiondraftsync/quote gates/API/auth/backend/Chat/motion
+khóa nguyên. Không dùng các case trên tick MU07 tổng/đổi bộ/tạo nhạc/LIVE.
+
 ## R218-MUSIC-FH-20261024 — review snapshot và bỏ output rỗng
 
 Phiên Tester READY; BASE1e01f2417e3000a09c45186e11ee144e52a22fa5; PR661/Issue664.

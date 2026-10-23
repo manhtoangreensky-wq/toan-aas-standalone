@@ -15885,6 +15885,8 @@
     ["suggestion.description", "Các thẻ chỉ mở khi máy chủ trả ba phương án hợp lệ; không hiển thị bản nhạc hoặc trình phát giả.", "Cards open only after the server returns three valid options; no fake track or player is shown.", "仅在服务器返回三个有效方案后打开卡片；不会显示虚假曲目或播放器。"],
     ["suggestion.kicker", "GỢI Ý ÂM NHẠC", "MUSIC SUGGESTIONS", "音乐方案"],
     ["suggestion.empty", "Chưa có đủ phương án từ máy chủ.", "The server has not returned enough options.", "服务器尚未返回足够的方案。"],
+    ["suggestion.historyTitle", "Xem lại các phương án", "Review previous options", "查看之前的方案"],
+    ["suggestion.historyNote", "Chọn hướng khác sẽ cần báo giá mới.", "Choosing another direction requires a new quote.", "选择其他方向后需要重新报价。"],
     ["suggestion.option", "Phương án {number}", "Option {number}", "方案 {number}"],
     ["suggestion.copy", "mô tả", "description", "描述"],
     ["suggestion.copyAction", "Sao chép mô tả", "Copy description", "复制描述"],

@@ -164,6 +164,8 @@
   const transientFormDrafts = new Map();
   let voiceWorkspaceDraftSession = "";
   let musicWorkspaceDraftSession = "";
+  const musicSuggestionSnapshots = new Map();
+  let musicSuggestionSnapshotSession = "";
   // A continuation may only open one of these finite local Image Operations.
   // It never carries an operation config, file bytes, URL, Bot state or an
   // unverified reference; the target server still verifies Asset Vault
@@ -26017,6 +26019,52 @@
     musicWorkspaceDraftSession = token;
   }
 
+  function synchronizeMusicSuggestionSnapshots(context) {
+    const session = context && context.session;
+    const token = session && session.authenticated === true && session.csrfReady === true && typeof session.csrfToken === "string" ? session.csrfToken : "";
+    if (!token) {
+      musicSuggestionSnapshots.clear();
+      musicSuggestionSnapshotSession = "";
+      return;
+    }
+    if (token !== musicSuggestionSnapshotSession) musicSuggestionSnapshots.clear();
+    musicSuggestionSnapshotSession = token;
+    const flows = context && context.featureFlows;
+    MUSIC_PRODUCT_ROUTES.forEach((route) => {
+      const expected = route === "/music/song" ? "music_song" : "music_background";
+      const flow = flows && flows[route];
+      const valid = flow && typeof flow === "object" && !Array.isArray(flow) && flow.feature === expected
+        && ((flow.phase === "draft" && ["draft", "ready"].includes(flow.status)) || (flow.phase === "estimate" && flow.status === "awaiting_confirm"));
+      const data = valid && flow.data && typeof flow.data === "object" && !Array.isArray(flow.data) ? flow.data : null;
+      const payload = data && data[flow.phase];
+      if (!payload || typeof payload !== "object" || Array.isArray(payload) || payload.available === false) {
+        musicSuggestionSnapshots.delete(route);
+        return;
+      }
+      const values = payload.content && typeof payload.content === "object" && !Array.isArray(payload.content) ? payload.content : payload;
+      if (!Object.prototype.hasOwnProperty.call(values, "suggestions")) {
+        if (flow.phase === "draft") musicSuggestionSnapshots.delete(route);
+        return;
+      }
+      const suggestions = [];
+      if (Array.isArray(values.suggestions)) {
+        for (const item of values.suggestions) {
+          if (!item || typeof item !== "object" || Array.isArray(item) || !Object.prototype.hasOwnProperty.call(item, "prompt")) continue;
+          const prompt = canonicalDraftText(item.prompt);
+          if (!prompt) continue;
+          const copy = { prompt };
+          for (const key of ["name", "mood", "tempo", "instrument", "duration", "vocal", "use_case"]) {
+            if (Object.prototype.hasOwnProperty.call(item, key) && typeof item[key] === "string" && item[key].length <= 2_000) copy[key] = item[key];
+          }
+          suggestions.push(copy);
+          if (suggestions.length === 3) break;
+        }
+      }
+      if (suggestions.length) musicSuggestionSnapshots.set(route, { feature: expected, suggestions });
+      else musicSuggestionSnapshots.delete(route);
+    });
+  }
+
   function navigateMusicWorkspace(event, link) {
     if (!link || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return false;
     const target = link.getAttribute("href");
@@ -32322,11 +32370,17 @@
     const amount = isQuote ? voiceQuoteAmount(flow) : null;
     const quote = isQuote ? `<section class="portal-music-quote" data-music-quote><h4>${safeText(t("quote", "Báo giá"))}</h4><dl class="portal-summary-list"><div class="portal-summary-item"><dt>${safeText(t("price", "Giá bán"))}</dt><dd data-music-sale-price>${amount === null ? "—" : safeText(`${amount} Xu`)}</dd></div></dl><p>${safeText(t(amount === null ? "priceUnknown" : "quoteNote", ""))}</p></section>` : "";
     const suggestions = available && Array.isArray(values.suggestions) ? renderMusicCanonicalSuggestions(values.suggestions, route, featureDraftTarget(flow, route)) : "";
+    const snapshot = valid && flow.phase === "estimate" && status === "awaiting_confirm" && available
+      && !Object.prototype.hasOwnProperty.call(values, "suggestions")
+      && typeof musicSuggestionSnapshots !== "undefined" && typeof musicSuggestionSnapshotSession === "string" && musicSuggestionSnapshotSession
+      ? musicSuggestionSnapshots.get(route) : null;
+    const retainedSuggestions = snapshot && snapshot.feature === expected && Array.isArray(snapshot.suggestions) && snapshot.suggestions.length
+      ? `<details class="portal-music-suggestion-history" data-music-suggestion-history><summary>${safeText(musicProductText("suggestion.historyTitle", "Xem lại các phương án"))}</summary><p>${safeText(musicProductText("suggestion.historyNote", "Chọn hướng khác sẽ cần báo giá mới."))}</p>${renderMusicCanonicalSuggestions(snapshot.suggestions, route, featureDraftTarget(flow, route))}</details>` : "";
     const tracking = valid && flow.phase === "confirm" ? safeFeatureTracking(flow) : null;
     const trackingMarkup = valid && flow.phase === "confirm"
       ? `<div class="portal-music-tracking"><p>${safeText(t(tracking ? "trackingReady" : "trackingPending", ""))}</p><a class="portal-button portal-button--quiet" href="${tracking ? `/jobs/${encodeURIComponent(tracking.id)}` : "/jobs"}">${safeText(t("track", "Xem công việc"))}</a></div>` : "";
     const report = valid && flow.phase === "confirm" ? renderMusicCanonicalReport(flow) : "";
-    return `<div class="portal-music-flow" data-music-flow-state="${safeText(status)}"><div class="portal-state" data-state="${safeText(status)}"><div><h3>${safeText(t(`state.${status}`, t("state.guarded", "Chưa thể tiếp tục")))}</h3><p>${safeText(t(flow && flow.phase === "confirm" ? "processingNote" : "planningNote", ""))}</p></div></div>${quote}${suggestions}${report}${trackingMarkup}</div>`;
+    return `<div class="portal-music-flow" data-music-flow-state="${safeText(status)}"><div class="portal-state" data-state="${safeText(status)}"><div><h3>${safeText(t(`state.${status}`, t("state.guarded", "Chưa thể tiếp tục")))}</h3><p>${safeText(t(flow && flow.phase === "confirm" ? "processingNote" : "planningNote", ""))}</p></div></div>${quote}${suggestions}${retainedSuggestions}${report}${trackingMarkup}</div>`;
   }
 
   function renderCanonicalSuggestions(value, route, field) {
@@ -41399,6 +41453,7 @@
     const context = getBootstrap();
     synchronizeVoiceWorkspaceDraftSession(context);
     synchronizeMusicWorkspaceDraftSession(context);
+    synchronizeMusicSuggestionSnapshots(context);
     synchronizeSubDubWorkspaceDraftSession(context);
     synchronizeImageWorkspaceDraftSession(context);
     const page = resolvePage(context.path);

@@ -405,14 +405,23 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   all144tier/288vocal/48Back/AX/keyboard/textstressđạtlại. Node1073/Python111/
   independentR1+R2compositionC0I0M0,noR3. DeliveredHEAD1e01f241,
   CI39992812318bothSUCCESS,receipt664#issuecomment-6370628830.
-- [~] MU08-F REVIEW-SUMMARY: read-onlyproduct/tier/vocal/lyrics/length/brief
+- [x] MU08-F REVIEW-SUMMARY: read-onlyproduct/tier/vocal/lyrics/length/brief
   từsnapshotflow.input;khôngđổiquote/confirm/fingerprint/API,nofakechoiceID.
   LocalacceptedF172tests,browser48;R1R2failgates→Soltestrepair+4copykeys,
   noR3;quote/confirm/APIunchanged. FinalFHNode1257/Python119/reviewC0I0M0,
-  browser48/720AA>=5.522/144assethashes/0errors. DeliveryCIreceiptpending.
-- [~] MU-PRODUCT-EMPTY-H: localaccepted,exact1prefix/no-flowemptycardhidden,
+  browser48/720AA>=5.522/144assethashes/0errors. DeliveredHEAD52017494,
+  CI40001922044attempt2bothSUCCESS/456authenticatedrecords,receipt6372116359.
+- [x] MU-PRODUCT-EMPTY-H: localaccepted,exact1prefix/no-flowemptycardhidden,
   H12tests,54initialomissions/48realflowoutputs/40nonMusicworkspaceoutputs
   checked;finalactual48emptyheadings0/formnavdraftretained. SameFHdelivery.
+- [ ] MU07-A-RETAINED-OPTIONS: sourceauditBotpin0d2+WebDTO xácnhậnestimate
+  replacesdraftdata;tabmemory/sessionfencedretention+closeddisclosure/Apply
+  giữquote-stale. LocalA01..A05pass:19unit/fullNode1276/Python119/browser48,
+  2304AA>=5.217/hover48>=5.161/focus48>=5.2/144LFassethashes/0errors.
+  IndependentC0I0M0/9records/13functions/12files/oldtests/Chatprotected;
+  evidenceR218-MUSIC-RETAINED-OPTIONS-QA-20261024.json. A06deliverypending,
+  chưa tick từlocalPASS. FHR1R2historykhôngreset;MU07AFlashR1R2fail→Sol,noR3.
+  UI-AkhôngđóngMU07tổng/regenerate3/edit-regeneratecontractT0.
 - [ ] MU-P2 remaining crosswalk: `R218-MUSIC-REMAINING-UI-CROSSWALK-20261023.md`
   giữ12MUrequirements,phânbiệtUIgapsvàcontract/runtime. MU02stylemapping/
   MU06lengthsemantics/media2tracks/editor/providerkhôngbịbỏsót,đểcuốiT0.
@@ -1023,7 +1032,39 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] Báo cáo UI/UX/motion, giữ goal chưa complete nếu requirements còn mở.
 - [ ] Hết UI/UX/motion thì đợi lệnh cho T0.
 
+## Motion cuối — nghiệm thu runtime sau toàn bộ UI/UX
+
+Owner táikhẳngđịnh24/10: “phần cuối là xử lý motion ... vẫn khựng khựng”.
+Không mở BUILDmotion khiUI/UXsảnphẩmtrên cònđangdở. Không lấy CSS/source/
+HTTP200/smoke/CIxanh thaybằngchứngchuyểnđộngthật.
+
+- [ ] M-FINAL-01 READ baseline:render/hydration/route/scroll/drawer/modal/
+  toast/statusfeedback trênQA đúngsourceSHA vàproductionchỉkhiđượccấpquyền;
+  ghi thiết bị,trìnhduyệt,refresh/load,normal/reducedmotion,cold/warm.
+- [ ] M-FINAL-02 rootcause: đối chiếu state/DOMmount timeline với trace/video,
+  animationbịcắt,layoutshift,reflow/paint,longtasks,scrollscrub hoặc inputblock;
+  findingClaude/authrenderdouble phải táixácminhcurrentcode,khôngcoilàchânlýcũ.
+- [ ] M-FINAL-03 sửa từngrootcause,khóaUI/UXđãđạt;khôngtinhchỉnheasing để
+  che remount/statebug. No globalopacityforce/timerdelaybypass;noauthbusinesschange.
+- [ ] M-FINAL-04 đo lạiít nhất3lượt tươngđươngtrước/sau ở375/390/768/1440,
+  landscape vànormal/reduced;ghi frameinterval/longtasks/CLS/input evidence,
+  khôngbịaFPS/LCP/INP hoặc dùng averageche lầnkhựng. Ngưỡngpasschốttrên
+  baselinethực ởM-FINAL-01 trướcbuild;video/manualreviewphảikhớpmetrics.
+- [ ] M-FINAL-05 everyroute/action touched vẫn đọc/nhập được khôngmotion,
+  focus/draft/AX/quote/role giữ;exactruntimeSHA/trace/screenshot/video/receipt
+  mapvềspec. Chỉđóng“hếtkhựng”khiđúngcácluồngđãtáihiệnđạt.
+- [ ] M-FINAL-06 hếtUIUX+motion thì báo tổngrequirement-by-requirement và
+  đợiOwner choT0;khôngtựmởengine/paidprovider/ví/chuyểnphạmvikhác.
+
 ## T0 — Kỹ thuật cuối, chưa triển khai
+
+- [→] T0-CI-AUTH-OBSERVABILITY: CI40001922044attempt1record052SubDubVI/light/
+  desktop1440False,455/456;failedrecordartifact khôngđượcupload,nêncauseUNKNOWN.
+  Sameassertionlocal56/56vàsameSHArerun456/456PASSkhônglấythayrootcausefix.
+  EvidenceIssue664#6371964272/#6372116359;khôngsửaCIgateởUIbatch.
+- [→] MU07-NEXT-SET/EDIT-REGENERATE: WebchưaDTOrotation/version/idempotency/
+  no-effecttruth;Botpin0d2cóprompt_moreoffset+3vàeditdescriptiontạolạiba.
+  Giữđủrequirement,tránhshuffle3promptclienthoặctạonútkhônghoạtđộng.
 
 - [→] T0-PY-SOURCE-REGEX: hai test static kỳ vọng cấu trúc nguồn cũ đã fail
   cùng assertion trên clean baseline và candidate: `test_portal_safety_contracts.py::test_storyboard_shortcut_uses_the_native_text_composer_while_image_transform_keeps_its_contract`
