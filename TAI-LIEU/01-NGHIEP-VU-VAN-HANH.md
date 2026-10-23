@@ -1,5 +1,21 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 23/10/2026 — Music presentationD1: chữ và khả năng đọc
+
+Chỉhai trangMusicDirections/SFXCueSheet: placeholder/help mô tả đã theoVI/EN/ZH;
+SFX3nhãnchi tiết và2fallbackdefensive cũng dùngcatalogue,khôngđổiserverdata.
+Schema2..500,optionsvi/en,required/nativeaction/inputvalue/receipt/stale giữnguyên.
+CSS dùngtoken--portal-mutedđãcó chohelper,textarea/select16px. Khôngthêmcard,
+khôngẩncard/layoutởD1;D2chuyêndọnkhối phụvànghiệp vụvẫntext-only.
+
+Đãđoactualsigned48configs/96states/48native textPOST/3items,lighthelpcontrast
+2.021→5.797,dark5.522giữnguyên;input15→16px. QA-onlyCSS200%textstress48
+khôngtrànngang;khôngclaimnativeOSDynamicType. Newtest5/5,fullNode1021/1021,
+Python21/21,review86/86/Critical0/Important0;3productionfilesđúng6workerR1
+editrecords,11protectedfilesbyteequalBASE. NoR2/primaryproductioncorrection.
+Edge/release/latestreceipt xem `reports/audit/R218-MUSIC-PRESENTATION-D1-QA-20261023.json`.
+Khôngdùngcopy/contrastPASSđểđóngnhạc/audio/player/Botparity/production/LIVE.
+
 ## 23/10/2026 — Music/SFX: lỗi có hướng xử lý và phục hồi focus
 
 Hai action lập hướng/cue nay phân loại28thông báo lỗi local ở lớp trình bày

@@ -15723,7 +15723,7 @@
 
   function musicDirectionPresetFields() {
     return [
-      { name: "description", label: musicDirectionUiText("field.brief", "Tóm tắt âm nhạc"), control: "textarea", required: true, minLength: 2, maxLength: 500, wide: true, placeholder: "Ví dụ: video giới thiệu ứng dụng quản lý công việc cho chủ shop nhỏ, cần nhịp tin cậy và hiện đại", help: "Viết mục tiêu, đối tượng và cảm xúc cần truyền tải. Không nhập URL, token, file ID, nguồn âm thanh, yêu cầu mô phỏng nghệ sĩ/ca sĩ/bài hát hoặc thông tin thanh toán." },
+      { name: "description", label: musicDirectionUiText("field.brief", "Tóm tắt âm nhạc"), control: "textarea", required: true, minLength: 2, maxLength: 500, wide: true, placeholder: musicDirectionUiText("field.briefPlaceholder", "Ví dụ: nhạc nhẹ, hiện đại cho video giới thiệu ứng dụng."), help: musicDirectionUiText("field.briefHelp", "Nêu bối cảnh, người nghe và cảm xúc. Chỉ nhập mô tả, không kèm liên kết hay thông tin riêng tư.") },
       { name: "language", label: musicDirectionUiText("field.language", "Ngôn ngữ tóm tắt"), control: "select", required: true, options: [["vi", musicDirectionUiText("field.vietnamese", "Tiếng Việt")], ["en", musicDirectionUiText("field.english", "Tiếng Anh")]], help: musicDirectionUiText("field.languageHelp", "Ngôn ngữ để máy chủ dựng ba văn bản hướng dẫn; không phải lựa chọn giọng hát hoặc ngôn ngữ âm thanh.") }
     ];
   }
@@ -15807,7 +15807,7 @@
 
   function sfxCueSheetFields() {
     return [
-      { name: "description", label: sfxCueSheetUiText("field.brief", "Tóm tắt hiệu ứng"), control: "textarea", required: true, minLength: 2, maxLength: 500, wide: true, placeholder: "Ví dụ: video onboarding ứng dụng, cần làm rõ lúc chuyển màn hình và khi hiện CTA cuối", help: "Nêu bối cảnh, hành động cần làm rõ và cảm giác mong muốn. Không nhập URL, token, file ID, nguồn media, callback/keyword Bot, yêu cầu mô phỏng tác giả/tác phẩm hoặc thông tin thanh toán." },
+      { name: "description", label: sfxCueSheetUiText("field.brief", "Tóm tắt hiệu ứng"), control: "textarea", required: true, minLength: 2, maxLength: 500, wide: true, placeholder: sfxCueSheetUiText("field.briefPlaceholder", "Ví dụ: hiệu ứng nhẹ khi chuyển cảnh và khi hiện lời kêu gọi cuối video."), help: sfxCueSheetUiText("field.briefHelp", "Nêu vị trí, hành động và cảm giác cần nhấn. Chỉ nhập mô tả, không kèm liên kết hay thông tin riêng tư.") },
       { name: "language", label: sfxCueSheetUiText("field.language", "Ngôn ngữ cue sheet"), control: "select", required: true, options: [["vi", sfxCueSheetUiText("field.vietnamese", "Tiếng Việt")], ["en", sfxCueSheetUiText("field.english", "Tiếng Anh")]], help: sfxCueSheetUiText("field.languageHelp", "Ngôn ngữ để máy chủ dựng ba chỉ dẫn biên tập; không phải lựa chọn giọng đọc hoặc tệp âm thanh.") }
     ];
   }
@@ -15837,9 +15837,9 @@
     const selectedPreset = SFX_CUE_SHEET_PRESETS.find((item) => item.id === source.web_sfx_preset_id);
     const cues = Array.isArray(cueSheet.cues) ? cueSheet.cues : [];
     const cautionItems = Array.isArray(cueSheet.cautions) && cueSheet.cautions.length
-      ? cueSheet.cautions : ["Vẫn cần kiểm tra quyền sử dụng, claim, thương hiệu, consent và ngữ cảnh trước khi đưa direction sang workflow khác."];
+      ? cueSheet.cautions : [sfxCueSheetUiText("result.cautionFallback", "Kiểm tra quyền sử dụng và bối cảnh trước khi dùng.")];
     const reviewItems = Array.isArray(cueSheet.review_before_use) && cueSheet.review_before_use.length
-      ? cueSheet.review_before_use : ["Review cùng người biên tập trước khi quyết định dùng bất kỳ nguồn âm thanh nào ở workflow được cấp riêng."];
+      ? cueSheet.review_before_use : [sfxCueSheetUiText("result.reviewFallback", "Rà soát cùng người biên tập trước khi chọn âm thanh.")];
     // A tab-local edit is deliberately allowed to make this receipt stale,
     // but it never replaces its last server-validated content. This check
     // survives an unrelated Portal remount without browser persistence.
@@ -15849,7 +15849,7 @@
     const receiptIsStale = source.description !== activeSource.description
       || source.language !== activeSource.language
       || source.web_sfx_preset_id !== activeSource.web_sfx_preset_id;
-    const cueItems = cues.map((cue) => `<li><span class="portal-sfx-cue-sheet-index">${safeText(String(cue.ordinal || "").padStart(2, "0"))}</span><div><div class="portal-sfx-cue-sheet-list-head"><strong>${safeText(sfxCueSheetPlacementLabel(String(cue.placement_id || ""), String(cue.placement || "")))}</strong><em>${safeText(String(cue.cue_role || ""))}</em></div><p>${safeText(String(cue.editorial_note || ""))}</p><dl><div><dt>Direction</dt><dd>${safeText(String(cue.direction || ""))}</dd></div><div><dt>Mix note</dt><dd>${safeText(String(cue.mix_note || ""))}</dd></div><div><dt>Tránh</dt><dd>${safeText(String(cue.avoid_note || ""))}</dd></div></dl></div></li>`).join("");
+    const cueItems = cues.map((cue) => `<li><span class="portal-sfx-cue-sheet-index">${safeText(String(cue.ordinal || "").padStart(2, "0"))}</span><div><div class="portal-sfx-cue-sheet-list-head"><strong>${safeText(sfxCueSheetPlacementLabel(String(cue.placement_id || ""), String(cue.placement || "")))}</strong><em>${safeText(String(cue.cue_role || ""))}</em></div><p>${safeText(String(cue.editorial_note || ""))}</p><dl><div><dt>${safeText(sfxCueSheetUiText("result.directionLabel", "Hướng hiệu ứng"))}</dt><dd>${safeText(String(cue.direction || ""))}</dd></div><div><dt>${safeText(sfxCueSheetUiText("result.mixLabel", "Gợi ý hòa âm"))}</dt><dd>${safeText(String(cue.mix_note || ""))}</dd></div><div><dt>${safeText(sfxCueSheetUiText("result.avoidLabel", "Cần tránh"))}</dt><dd>${safeText(String(cue.avoid_note || ""))}</dd></div></dl></div></li>`).join("");
     const cautionMarkup = cautionItems.map((item) => `<li>${safeText(String(item || ""))}</li>`).join("");
     const reviewMarkup = reviewItems.map((item) => `<li>${safeText(String(item || ""))}</li>`).join("");
     return `<section class="portal-card portal-card-pad portal-sfx-cue-sheet-result" data-sfx-cue-sheet-receipt data-stale="${receiptIsStale ? "true" : "false"}">

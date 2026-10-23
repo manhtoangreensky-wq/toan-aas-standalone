@@ -1,5 +1,18 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 23/10/2026 — đối chiếu Music presentationD1
+
+| Mục gốcP2/copycatalogue | Hiện trạng được đo | Giới hạn |
+|---|---|---|
+| Hai form đúngngônngữ |4descriptionplaceholder/help dùnghelperlocale,schemagiữnguyên |Khôngđổifieldname/options/validation |
+| SFXresultchrome |Direction/Mixnote/Tránh→3localizeddt,2fallbackVI→localized |Generatedserverdatatheobrieflanguage,khôngtheoUIlocale |
+| Themeđọcđược |Helperlight2.021→5.797contrast,dark5.522;input16px |Scoped2rules,khôngtái thiết kếdesignsystem |
+| Webgọn/appthật |48configs/96states,3nativeitems,0overflow/error |D2boundary/empty/scope/intro vẫnchưadọn;khôngwholeproductPASS |
+
+Full1021Node/Python21/independent86.Newtestsrealrenderer+catalogue,nhưng
+normalizeridentitydouble nênkhôngDTOproof;actualsignednativeQA táchriêng.
+Lỗigốc làbỏqua catalogueởvàichỗvàlegacyhelpercolor,khôngphảithiếuprovider.
+
 ## 23/10/2026 — đối chiếu lỗi/khôi phục thao tác Music/SFX
 
 | Yêu cầu từ P2/nativeflow | Hiện trạng có bằng chứng | Giới hạn |

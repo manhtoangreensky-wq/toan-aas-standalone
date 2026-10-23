@@ -1,5 +1,23 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-MUSIC-PRESENTATION-D1-20261023 — chữ và khả năng đọc
+
+BASE1144896dde1e957e54de7f1dee361ed927d71529;PR661/Issue664;4fileBuilder
+allowlist,khôngintegration/normalizer/engine/ví. D2cardcleanupchưanằmtrongPASSD1.
+Evidence `reports/audit/R218-MUSIC-PRESENTATION-D1-QA-20261023.json`.
+SignedQA48configs/96states,VI/EN/ZH,sángtối,360/375/390/768/1440/844landscape.
+
+| Case | Mức | Thao tác | PASS / canh lỗi cũ |
+|---|---|---|---|
+| MU-D1-01 | vừa | Mở2formởVI/EN/ZH,đọcplaceholder/help |9rowtheoUIlocale;schemarequired/textarea2..500/optionsvi/en giữnguyên |
+| MU-D1-02 | nặng | Đocomputedhelpervàinputởlight/dark |Helper>=4.5:1;light5.797/dark5.522đãđo;textarea/select16px;khôngđổipalette/globalCSS |
+| MU-D1-03 | vừa | NativecomposeSFXvớibrieflanguageEN,giao diệnZH/VI |3dtlabelstheoUIlocale×3cues;serverdataENkhôngbịdịch/đổi;cautions/reviewtruegiữ;escaping<>&quoteđúng |
+| MU-D1-04 | nặng | 360..1440/landscape,QA-onlyCSStext2x;A/Cguard+B/D0error/focusregression |0unexpectederrors/overflow/external/unapprovedwrite;native3items;cardsvẫn4ởD1;D2mớiẩnôthừa |
+
+Newtest5/5;fullNode1021/1021/Python21/21;review86/86,Critical0/Important0.
+RendererfixturetestkhôngchứngminhDTOvalid/engine;200%CSSstresskhôngphảinative
+OSDynamicType/keyboard/installedPWA. Delivery/edgegatesxemevidencehiệnhành.
+
 ## R218-MUSIC-SFX-ERRORS-20261023 — B + dependency D0
 
 BASEfc8deb6a96566021a58cdcdf8ab77ed6796539cd;PR661/Issue664. Bcopy source QA,

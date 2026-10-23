@@ -357,7 +357,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   fc8deb6; CI39950590927bothSUCCESS (396Python+26browserruntime),
   receipt664#issuecomment-6364623486; no merge/deploy/LIVE implied by UI ticks.
 - [x] MU-NATIVE-VALIDATION-ERROR-LOCALE-B localUI: validation/wrongroute/notready/invalid
-  receipt/boundary/retry/outercatch remains open. READ28uniqueerrors/6realprobes;
+  receipt/boundary/retry/outercatch localized. READ28uniqueerrors/6realprobes;
   spec `2026-10-23-r218-music-sfx-error-feedback.md` presentationonly,
   exact2actions/newhelper/2inline/outertoast/20rows; payload/safety/API/authprotected.
 - [x] MU-NATIVE-ERROR-FOCUS-D0 localUI: baselinefocusBUTTON→BODYdisabled→BODYreenabled,
@@ -369,10 +369,21 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   validation0POST/24intentionalabort+24native retrysuccess3texts;
   expectednetworkerrors24separate,unexpectederror/external/unapprovedwrite/overflow0.
   Evidence `R218-MUSIC-SFX-ERROR-FEEDBACK-QA-20261023.json`; B04notdropped.
-- [ ] B+D0branchdelivery: docs/Tester/prepush/Webprovenance/push/readback/newCI/
-  Issue664receipt; no wholeMusic/audio/Botparity/LIVEclaim.
+- [x] B+D0branchdelivery: HEAD1144896/CI39960845682bothSUCCESS,
+  396Python+26browserruntime,Issue664receipt6366118699;noaudio/Botparity/LIVEclaim.
 - [ ] MU-NATIVE-PRESENTATION-COPY-D: sourcefieldhintVIinEN/ZH vàtechnical/empty
   cards; ownREAD/contractafterB, nothiddeninsideB. Keeptext-onlytruth/noaudiofake.
+- [x] MU-NATIVE-PRESENTATION-D1 localUI:9copyrows/2fields/SFXdt+fallbacks,
+  scopedhelpercontrastlight2.021→5.797/dark5.522,input16. WorkerR1verbatim,
+  RED0/5→GREEN5/5,fullNode1021/Python21/review86;actual48configs/96states,
+  edgeguard36+focus24 allPASS,0unexpectederrors/overflow/external/unapproved.
+  D1cards4unchanged; D2musthideidentifiedsecondaryblocksnext,notclaimDcomplete.
+  Evidence `R218-MUSIC-PRESENTATION-D1-QA-20261023.json`;deliverypending.
+- [ ] D1branchdelivery: docs/Tester/prepush/provenance/push/readback/newCI/
+  receipt664;D2lockeduntilD1accepted.
+- [ ] MU-NATIVE-PRESENTATION-D2: auditplanDRAFT scopedhideintro/boundary/empty/
+  scope,onecolumn/noblankgap,flattermetadata+truthfulsingletext-outputnote;
+  noinput/result/normalizer/integration/A/B/C/D0/motionchange.
 - [~] MU-00 control-level local đã khóa theo C0; các mục runtime và delivery dưới đây chưa đóng.
 - [~] MU-00 browser presentation — 19/10/2026: `/music/create` và `/music/song` đã kiểm bằng Edge localhost với 36 cấu hình (VI/EN/ZH × sáng/tối × 390/768/1440 × 2 workspace), giữ field bài hát riêng, không hiện audio/player/giá/download giả; page/console/request ngoài/write/unknown API/overflow đều `0`. Đây là fixture đọc-only, chưa phải generation/player/delivery/LIVE.
 - [ ] Nhạc nền/Bài hát/Kho nhạc-SFX/Chỉnh nhạc; capability thật.
