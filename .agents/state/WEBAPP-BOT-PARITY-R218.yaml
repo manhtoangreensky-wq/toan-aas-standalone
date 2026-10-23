@@ -1,12 +1,23 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: VOICE_CANONICAL_FLAG_TRUTH_LOCAL_ACCEPTED_DELIVERY_PENDING
+status: VOICE_VAULT_NOTICE_CLARITY_LOCAL_ACCEPTED_DELIVERY_PENDING
 date: 2026-10-23
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r218-billing-ui-20261022
 pull_request: 661
-head_sha: 9d941fbd52e444d3093f781c48f49ea6dcf30350
+head_sha: efbe362da9158762136820aa63112fa6882bd870
+checkpoint_voice_notice_clarity_20261023:
+  base_sha: efbe362da9158762136820aa63112fa6882bd870
+  spec: docs/superpowers/specs/2026-10-23-r218-voice-vault-notice-clarity.md
+  result: ACCEPTED_LOCAL_UI_DELIVERY_PENDING
+  finding: "Management-unavailable paragraph repeats perprofile; actual renderer0/1/10profiles ->0/1/10notices. Move unchanged paragraph once beforelist whenready/nonempty."
+  scope: "Only renderVoiceVault list HTML and existing presentation testfile; protect7strictflagpredicates, allmetadata/limit/escape/routes, noAPI/CSS/auth/provider/wallet/motion."
+  evidence: reports/audit/R218-VOICE-VAULT-NOTICE-CLARITY-QA-20261023.json
+  tests: "Flash3.8R1 patchverbatim; RED27pass/3fail->GREEN30/30, focused54/54, fullNode957/957(concurrency2), PythonSource10/10. Paragraphliteralpreserved, remainingbundlebytes equalBASE; noR2/takeover."
+  browser: "30configs/300profile states/120readviews,3locales/2themes/5viewports incl375/landscape; commonnotice1 and0incards/empty/guarded/failed; mincomputedcontrast5.522, errors/overflow/external/UIwrite0. DeclaredREADfixtures, no canonical/link/provider/audio/LIVEproof."
+  cleanup: "OwnedPTY43665 stoppednewlineexit0; tempDB/assetscleaned,23629listeners0."
+  next: "Finish docs/portablemetadata/prepush, sourcecommit/provenance, push/readback/CI; then orderedP1/P2 ledger audit, not more speculative Voice polish. CanonicalbackendT0, motionlast."
 checkpoint_voice_flag_truth_20261023:
   base_sha: 9d941fbd52e444d3093f781c48f49ea6dcf30350
   spec: docs/superpowers/specs/2026-10-23-r218-voice-canonical-flag-truth.md
@@ -472,7 +483,7 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "Read checkpoint_voice_flag_truth_20261023 first. R1/R2 finished and R2 production applied verbatim: localUI accepted,951Node/48focused/10Python/18browserconfigs. Do not start worker round3 or redo C0. Finish boundedregression/prepush/sourcecommit/provenance/push/readback/CI, then remaining P1/P2 UI. Canonical backend staysT0, M0motionlast, goalACTIVE."
+next_action: "Read checkpoint_voice_notice_clarity_20261023 first. NoticeR1 sourceappliedverbatim andlocalaccepted30/54/957Node/10Python/30browserconfigs; do not rerunworker or alterlockedflags. Finish docs/metadata/prepush/sourcecommit/provenance/push/readback/CI, then audit remainingP1/P2 checklist in order; no speculative Voicepolish. CanonicalbackendT0,M0last,goalACTIVE."
 active_billing_batch:
   id: R218-BILLING-20261022
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660

@@ -1,5 +1,21 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Voice — thông báo quản lý dùng chung, 23/10/2026
+
+Kho giọng ready/nonempty chỉ hiển thị một thông báo về các thao tác chưa hỗ trợ,
+đặt trước danh sách. Không lặp paragraph này trong mỗi thẻ giọng; không thêm vào
+empty/loading/failed/guarded. Nội dung/catalogue/class giữ nguyên; từng giọng vẫn
+có status, quyền sử dụng, thông tin nghe thử, ngày cập nhật và các cờ đã xác nhận.
+Không bổ sung nút quản lý hoặc nghe thử hoạt động giả, không đổi API/quyền/màu.
+
+Renderer0/1/2/50/51profiles ở3locale và nonready states: presentation30/30,
+focusedVoice54/54, fullNode957/957, PythonSource10/10. Browser30configs gồm375px
+và844x390landscape,300profile states/120read-view states; notice count1trướclist,
+0trongcards/empty/guarded/failed. Min computed contrast5.522:1; errors/overflow/
+external/UIwrite0. Đây là signed localhost với READfixtures bootstrap/profile
+được khai báo, không chứng minh canonical backend/provider/preview/output/LIVE.
+Evidence `reports/audit/R218-VOICE-VAULT-NOTICE-CLARITY-QA-20261023.json`.
+
 ## Voice — nhãn và lựa chọn giọng cần boolean xác nhận, 23/10/2026
 
 Kho giọng và hai nơi dựng ô chọn giọng chỉ nhận booleantrue cho is_default,

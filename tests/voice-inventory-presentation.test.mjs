@@ -141,4 +141,65 @@ for(const locale of ['vi','en','zh']){
       assert.match(html,new RegExp(`<option[^>]*value="qa-good"[^>]*>Good Voice &lt;tag&gt;${expectedMarker}<\\/option>`));
     }
   });
+  test(`ready inventory renders exactly one notice before the list for nonempty profiles and none in cards (${locale})`,()=>{
+    const noticeText={
+      vi:'Chưa thể đổi tên, đặt mặc định, xóa hoặc nghe thử giọng trong trang này.',
+      en:'Renaming, setting a default, deleting and previewing voices are not available on this page yet.',
+      zh:'此页面暂不支持重命名、设为默认、删除或试听声音。'
+    }[locale];
+    const countNotices=(str)=>str.split(noticeText).length-1;
+    for(const n of [0,1,2,50,51]){
+      const rawProfiles=Array.from({length:n},(_,i)=>({
+        id:`profile-${i+1}`,
+        display_name:`Voice Profile ${i+1} <tag>`,
+        is_default:i===0,
+        tts_ready:true,
+        preview_ready:false,
+        status:'read_only',
+        consent_status:'confirmed',
+        created_at:'2026-10-23'
+      }));
+      const snapshot=JSON.stringify(rawProfiles);
+      const html=context.renderVoiceVault({voiceProfiles:rawProfiles,voiceInventoryReadState:'ready'});
+      assert.equal(JSON.stringify(rawProfiles),snapshot);
+      assert.equal(countNotices(html),n===0?0:1);
+      const cardCount=Math.min(n,50);
+      const cardMatches=html.match(/<details class="portal-voice-inventory-card">/g);
+      assert.equal(cardMatches?cardMatches.length:0,cardCount);
+      if(n>0){
+        const noticeIdx=html.indexOf(noticeText);
+        const firstDetailsIdx=html.indexOf('<details');
+        assert.ok(noticeIdx>=0&&firstDetailsIdx>=0&&noticeIdx<firstDetailsIdx);
+        const detailsBlocks=html.match(/<details[\s\S]*?<\/details>/g)||[];
+        assert.equal(detailsBlocks.length,cardCount);
+        for(const card of detailsBlocks){
+          assert.equal(countNotices(card),0);
+          assert.match(card,/<dl>/);
+          assert.match(card,/data-status="read_only"/);
+          assert.match(card,/<dt>[^<]*<\/dt><dd>[^<]*<\/dd>/);
+          assert.doesNotMatch(card,/<audio\b/i);
+        }
+      }
+    }
+  });
+  test(`nonready states render zero notices and zero cards regardless of stale profiles (${locale})`,()=>{
+    const noticeText={
+      vi:'Chưa thể đổi tên, đặt mặc định, xóa hoặc nghe thử giọng trong trang này.',
+      en:'Renaming, setting a default, deleting and previewing voices are not available on this page yet.',
+      zh:'此页面暂不支持重命名、设为默认、删除或试听声音。'
+    }[locale];
+    const countNotices=(str)=>str.split(noticeText).length-1;
+    const staleProfiles=[
+      {id:'stale-1',display_name:'Stale Alpha',is_default:true,tts_ready:true,status:'ready'},
+      {id:'stale-2',display_name:'Stale Beta',is_default:false,tts_ready:false,status:'guarded'}
+    ];
+    for(const readState of ['loading','failed','guarded']){
+      const snapshot=JSON.stringify(staleProfiles);
+      const html=context.renderVoiceVault({voiceProfiles:staleProfiles,voiceInventoryReadState:readState});
+      assert.equal(JSON.stringify(staleProfiles),snapshot);
+      assert.equal(countNotices(html),0);
+      assert.doesNotMatch(html,/<details\b/);
+      assert.doesNotMatch(html,/Stale Alpha|Stale Beta/);
+    }
+  });
 }

@@ -259,7 +259,17 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   fullNode951/951, Python source10/10. Flash3.8R1/R2; patchR2 áp nguyên văn,
   bảy predicate/5productionlines. Browser18configs/180states, noerror/overflow/
   UIwrite/external; signed app có fixture READ bootstrap/profile được ghi rõ.
-  Evidence `R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json`; delivery/CI mới còn mở.
+  Evidence `R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json`; deliveryefbe362,
+  CI39908802221bothSUCCESS, Linux396+26, receiptIssue662#issuecomment-6358673449.
+- [x] VO-VAULT-NOTICE-CLARITY local UI:10giọng từng lặp10thông báo hạn chế giống nhau;
+  chuyển paragraph hiện tại ra trước list, chỉ một lần khi ready/nonempty;
+  không thêm ởempty/loading/failed/guarded, không xóa metadata hay đổi flags.
+  Spec `2026-10-23-r218-voice-vault-notice-clarity.md`; Flash3.8R1patch áp nguyênvăn,
+  RED27/3→GREEN30/30, focused54/54, fullNode957/957, PythonSource10/10. So byte
+  bundle sau stripping paragraph bằngBASE. Browser30configs/300profiles/120readviews,
+  gồm375/landscape, contrastmin5.522:1, errors/overflow/external/UIwrite0; cóREADfixtures
+  đã khai báo. Evidence `R218-VOICE-VAULT-NOTICE-CLARITY-QA-20261023.json`.
+  Delivery/CI mới chưa đóng; không suy là management hoặcLIVE đã mở.
   Không mở management/provider/backend hoặc sửa ké nhãn/ngôn ngữ generic.
 - [x] VO-MANAGEMENT-FEEDBACK-LOCALE: bốn thông báo filter/clear/page/refresh đã
   cân bằng VI/EN/ZH; ba nhánh read không báo thành công khi failed/stale/null/

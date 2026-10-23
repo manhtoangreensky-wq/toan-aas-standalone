@@ -1,5 +1,16 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Voice notice — đối chiếu 23/10/2026
+
+| Yêu cầu gốc / điều phải giữ | Hiện trạng local được đo | Không được suy diễn |
+|---|---|---|
+| Hạn chế thao tác cần rõ, không nút giả | Nguyên văn manageGuarded chỉ một lần trước ready/nonemptylist thay10lần cho10giọng;0ởempty/nonready | Không phải các thao tác rename/default/delete/preview đã được triển khai |
+| Thông tin từng giọng đầy đủ | Stripping đúng paragraph cho thấy toàn bộ bundle còn lại bằngBASEefbe362; metadata/escaping/flags/limit/routes giữ nguyên;957Node/10PythonSource | Không chứng minh dữ liệu canonical production hoặc audio thật |
+| UI gọn nhưng đọc được, sáng/tối/mobile |30configs VI/EN/ZH,375/landscape,300profile states/120readviews; noticecontrast>=5.522:1, error/overflow/write/external0 | QA dùng READfixtures rõ nguồn, chưa phảiLIVE hoặc mọi thiết bị thật |
+
+Đợt này chỉ bỏ sự lặp nội dung, không xóa ý nghĩa giới hạn và không thu gọn mất
+field sản phẩm. Các mục canonical Voice Vault trong R218-02A vẫn mở/T0.
+
 ## Voice canonical flags — đối chiếu 23/10/2026
 
 Nguồn gốc: R218-02A yêu cầu tts_ready/preview_ready/default do canonical authority

@@ -1,5 +1,20 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## VNOTICE — R218-VOICE-NOTICE-20261023, local UI
+
+BASEefbe362da9158762136820aa63112fa6882bd870; PR661/Issue662.
+
+| ID | Thao tác | Điều kiện đạt / canh lỗi cũ |
+|---|---|---|
+| VNOTICE-01 | Renderer3locale, ready0/1/2/50/51 và loading/failed/guarded cóstaledata | Một notice trước list khi nonempty,0ởcard/empty/nonready; cardcount=min(n,50), không stale names |
+| VNOTICE-02 | So BASE/current sau stripping đúng paragraph | Nguyên văn paragraph và mọi byte còn lại của bundle bằng nhau;7strictflags/metadata/route/guard/CSS không đổi |
+| VNOTICE-03 | Signedapp30configs:3locale×2theme×5viewport, gồm375 và844x390 |300profile states/120readviews, notice1/0đúng, keyboard/AX, contrast>=4.5, noerror/overflow/external/UIwrite/noaudio |
+| VNOTICE-04 | Source/tests/provenance/CI |30presentation/54focused/957fullNode/10PythonSource; CI đúngHEAD trước tickdelivery; không nhận là canonicalmanagement hoặcLIVE |
+
+Evidence `reports/audit/R218-VOICE-VAULT-NOTICE-CLARITY-QA-20261023.json`.
+Browser chỉ có READfixtures bootstrap/profile, realidentity/CSRF/role giữ;
+providerexecutionfalse, serverbridge absent. Không test nghe thử/provider thật.
+
 ## VO-FLAG — phiên R218-VOICE-FLAG-20261023, local UI
 
 BASE9d941fbd52e444d3093f781c48f49ea6dcf30350; PR661/Issue662.
