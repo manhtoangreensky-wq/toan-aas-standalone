@@ -8841,7 +8841,7 @@
     },
     {
       "file": "copyfast_music_sfx_library_bridge.py",
-      "line": 235,
+      "line": 333,
       "name": "APP_ENV"
     },
     {
@@ -8971,12 +8971,12 @@
     },
     {
       "file": "copyfast_music_sfx_library_bridge.py",
-      "line": 245,
+      "line": 350,
       "name": "FREESOUND_API_KEY"
     },
     {
       "file": "copyfast_music_sfx_library_bridge.py",
-      "line": 246,
+      "line": 351,
       "name": "FREESOUND_CLIENT_SECRET"
     },
     {
@@ -9911,7 +9911,7 @@
     },
     {
       "file": "copyfast_music_sfx_library_bridge.py",
-      "line": 236,
+      "line": 343,
       "name": "WEBAPP_PROVIDER_CALLS_ENABLED"
     },
     {
@@ -18403,7 +18403,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 328,
   "source_files_scanned": 328,
-  "source_fingerprint_sha256": "5a69b9606ddb10c17421b13bf846a31a8f81f9a1f6a9e6c2ff98445ec142fed3",
+  "source_fingerprint_sha256": "d0fa3435ffb28fd977ecf7d8b4c84df4146929bad300ae345b4fd85c7846f0df",
   "source_root": "repository-root",
   "ui_path_references": [
     {
