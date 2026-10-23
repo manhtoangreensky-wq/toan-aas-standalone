@@ -1791,7 +1791,7 @@
     "commands": 0,
     "conversations": 0,
     "database_tables": 253,
-    "env_references": 288,
+    "env_references": 290,
     "providers": 14,
     "routes": 868,
     "ui_path_references": 52
@@ -7067,13 +7067,13 @@
     },
     {
       "file": "copyfast_music_sfx_library_bridge.py",
-      "line": 64,
+      "line": 82,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_sfx_library_searches"
     },
     {
       "file": "copyfast_music_sfx_library_bridge.py",
-      "line": 76,
+      "line": 94,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_sfx_library_selections"
     },
@@ -8841,7 +8841,7 @@
     },
     {
       "file": "copyfast_music_sfx_library_bridge.py",
-      "line": 217,
+      "line": 235,
       "name": "APP_ENV"
     },
     {
@@ -8971,12 +8971,12 @@
     },
     {
       "file": "copyfast_music_sfx_library_bridge.py",
-      "line": 227,
+      "line": 245,
       "name": "FREESOUND_API_KEY"
     },
     {
       "file": "copyfast_music_sfx_library_bridge.py",
-      "line": 228,
+      "line": 246,
       "name": "FREESOUND_CLIENT_SECRET"
     },
     {
@@ -9103,6 +9103,16 @@
       "file": "config.py",
       "line": 35,
       "name": "REQUIRE_PERSISTENT_DB"
+    },
+    {
+      "file": "copyfast_music_sfx_library_bridge.py",
+      "line": 66,
+      "name": "SFX_LIBRARY_MIN_XU"
+    },
+    {
+      "file": "copyfast_music_sfx_library_bridge.py",
+      "line": 65,
+      "name": "SFX_LIBRARY_XU_PER_ITEM"
     },
     {
       "file": "billing.py",
@@ -9901,7 +9911,7 @@
     },
     {
       "file": "copyfast_music_sfx_library_bridge.py",
-      "line": 218,
+      "line": 236,
       "name": "WEBAPP_PROVIDER_CALLS_ENABLED"
     },
     {
@@ -18393,7 +18403,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 328,
   "source_files_scanned": 328,
-  "source_fingerprint_sha256": "7c6efc7b9692b34a4ac3cc2fd2752dcc97d68a0438668066758ded2bd107f185",
+  "source_fingerprint_sha256": "5a69b9606ddb10c17421b13bf846a31a8f81f9a1f6a9e6c2ff98445ec142fed3",
   "source_root": "repository-root",
   "ui_path_references": [
     {
