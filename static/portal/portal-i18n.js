@@ -16191,6 +16191,10 @@
   });
 
   const VOICE_STUDIO_UI_COPY_ROWS = [
+    ["feedback.filtered","Đã áp dụng bộ lọc.","Filters applied.","已应用筛选条件。"],
+    ["feedback.all","Đã hiển thị tất cả hồ sơ.","Showing all profiles.","已显示全部档案。"],
+    ["feedback.page","Đã tải trang hồ sơ.","Profile page loaded.","档案页已加载。"],
+    ["feedback.refreshed","Đã làm mới hồ sơ.","Profiles refreshed.","档案已刷新。"],
     ["page.title","Hồ sơ giọng và lời thoại","Voice profiles and scripts","声音档案与台词"],
     ["page.newTitle","Tạo hồ sơ giọng","Create a voice profile","创建声音档案"],
     ["create.toggle","Tạo hồ sơ mới","Create a profile","创建档案"],

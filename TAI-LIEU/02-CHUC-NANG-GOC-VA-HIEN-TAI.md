@@ -17,6 +17,12 @@ Các số endpoint của Web không được thay thế yêu cầu này.
 `copyfast_voice_studio.py` là bản ghi hướng đọc Web, không đồng nghĩa giọng đã
 huấn luyện/lưu trong Bot. Không xóa mục thiếu khỏi checklist để gọi là hoàn thiện.
 
+Thông báo hồ sơ hướng đọc đã được sửa và kiểm tra ở18 cấu hình VI/EN/ZH ×
+light/dark ×390/768/1440. Các action read giữ payload/offset/route, không thông
+báo thành công khi failed/stale/null/undefined/non-ready hoặc đổi trang. Failure
+503 sau retry xóa dữ liệu cũ, khôi phục sau khi đọc lại; rate gate thật không bị
+nới (72 phản hồi503 điều khiển, 0 phản hồi429).
+
 ## Free Tools — đối chiếu ngày22/10/2026
 
 | Chức năng | Đã chứng minh | Còn mở |

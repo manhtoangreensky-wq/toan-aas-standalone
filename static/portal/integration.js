@@ -7262,6 +7262,16 @@
   const VOICE_STUDIO_MAX_LIST_OFFSET = 10000;
   const VOICE_STUDIO_IMITATION_PATTERN = /(?:clone\s+(?:giọng|voice)|clone\s*voice|nhái\s+giọng|bắt\s+chước\s+giọng|giống\s+(?:giọng|ca\s*sĩ|nghệ\s*sĩ)|giọng\s+của|voice\s+clone|imitate\s+voice|impersonate|sound(?:s)?\s+like|in\s+the\s+voice\s+of|voice\s+of|celebrity\s+voice|artist\s+voice|same\s+voice)/i;
 
+  function voiceStudioFeedbackText(key, fallback) {
+    const i18n = window.TOANAASI18n;
+    if (!i18n || typeof i18n.t !== "function") return fallback;
+    const fullKey = `customerVoiceStudio.feedback.${key}`;
+    const translated = i18n.t(fullKey);
+    if (typeof translated === "string" && translated && translated !== fullKey) {
+      return translated;
+    }
+    return fallback;
+  }
   function validVoiceStudioVaultId(value) { return validProjectId(value); }
   function validVoiceStudioScriptId(value) { return validProjectId(value); }
   function validVoiceStudioRevision(value) { return validMemoryRevision(value); }
@@ -33881,21 +33891,26 @@
         const filter = action === "voice-studio-filter-clear"
           ? { q: "", tag: "", state: "all" }
           : voiceStudioFilterPayload(fields);
-        await hydrateVoiceStudio(filter, 0);
-        toast(filter.q || filter.tag || filter.state !== "all" ? "Đã áp dụng bộ lọc Voice Studio." : "Đã hiển thị tất cả Voice Vault riêng tư.");
+        const feedbackPath = currentPortalPath();
+        const result = await hydrateVoiceStudio(filter, 0);
+        if (!result || result.stale === true || currentPortalPath() !== feedbackPath || base().voiceStudioReadState !== "ready") return;
+        toast(filter.q || filter.tag || filter.state !== "all" ? voiceStudioFeedbackText("filtered", "Đã áp dụng bộ lọc.") : voiceStudioFeedbackText("all", "Đã hiển thị tất cả hồ sơ."));
         return;
       }
       if (action === "voice-studio-page") {
         if (!(base().capabilities && base().capabilities["voice-studio-page"] === true)) throw new Error("Cần signed Web session để xem Voice Vault riêng tư.");
-        await hydrateVoiceStudio(undefined, voiceStudioListOffset(fields.__voiceStudioOffset));
-        toast("Đã tải trang Voice Vault từ API owner-scoped.");
+        const feedbackPath = currentPortalPath();
+        const result = await hydrateVoiceStudio(undefined, voiceStudioListOffset(fields.__voiceStudioOffset));
+        if (!result || result.stale === true || currentPortalPath() !== feedbackPath || base().voiceStudioReadState !== "ready") return;
+        toast(voiceStudioFeedbackText("page", "Đã tải trang hồ sơ."));
         return;
       }
       if (action === "voice-studio-refresh") {
+        const feedbackPath = currentPortalPath();
         const vaultId = voiceVaultIdFromPath(route);
-        if (vaultId) await hydrateVoiceVault(vaultId);
-        else await hydrateVoiceStudio();
-        toast("Đã làm mới Voice Studio của Web account hiện tại.");
+        const result = vaultId ? await hydrateVoiceVault(vaultId) : await hydrateVoiceStudio();
+        if (!result || result.stale === true || currentPortalPath() !== feedbackPath || base().voiceStudioReadState !== "ready") return;
+        toast(voiceStudioFeedbackText("refreshed", "Đã làm mới hồ sơ."));
         return;
       }
       if (action === "voice-vault-create") {

@@ -203,6 +203,14 @@ capability và backend giữ nguyên. Đây là local UI, chưa CI/deploy/LIVE.
 Thử đồng bộ main406127e cho13regression assertions fail (Dashboard0H1 cả3locale),
 nên merge thử đã abort; bản vá hiện tại không chứa thay đổi upstream đó.
 
+Voice management feedback — 23/10: Filter, xóa bộ lọc, phân trang và làm mới
+hồ sơ hướng đọc nay dùng thông báo VI/EN/ZH theo locale. Web chỉ báo thành công
+khi read result còn hiện hành, route không đổi và read state đúng là `ready`.
+Đọc lỗi sau ba lần retry không giữ hồ sơ cũ hoặc báo thành công. QA thật đã kiểm
+18 cấu hình, 51 hồ sơ tạm, 72 phản hồi503 điều khiển, 0 phản hồi429, 0 lỗi trang/
+console, 0 request ngoài và 0 UI write. Đây là metadata Web, không phải giọng
+âm thanh canonical hoặc đầu ra TTS.
+
 ## Migration evidence refresh — 22/10/2026
 
 Preflight và Web inventory đã được refresh sau các wave UI. Auditor quét `330`

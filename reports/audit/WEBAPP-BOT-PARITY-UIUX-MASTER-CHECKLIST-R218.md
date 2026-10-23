@@ -237,10 +237,12 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   không có search/pagination/rename/default/delete/preview/handoff đã xác minh.
   Không lấy22endpoint metadata của Voice Studio làm bằng chứng Bot-parity;
   contract canonical tiếp tục theo `2026-10-18-r218-02a-voice-vault-canonical-contract.md`.
-- [!] VO-MANAGEMENT-FEEDBACK-LOCALE: filter của hồ sơ hướng đọc vẫn báo tiếng Việt
-  trên cả4 cấu hình EN/ZH đã đo; các nhánh filter/clear/page/refresh có chuỗi cứng
-  trong integration. Spec `2026-10-23-r218-voice-management-feedback-locale.md`;
-  chưa BUILD, xử lý sau cụm3ô lặp đang dở, không sửa backend/canonical vault.
+- [x] VO-MANAGEMENT-FEEDBACK-LOCALE: bốn thông báo filter/clear/page/refresh đã
+  cân bằng VI/EN/ZH; ba nhánh read không báo thành công khi failed/stale/null/
+  undefined/đổi route/non-ready. RED5fail→focused9/9, fullNode942/942, Python10/10.
+  Browser18configs với51 hồ sơ QA: filter/clear/refresh/page,503 sau retry,
+  recovery, overflow/console/external/UIwrite0; rate4290. Evidence
+  `reports/audit/R218-VOICE-MANAGEMENT-FEEDBACK-QA-20261023.json`.
 - [x] VOICE-REPORT-PROGRESS-001 UI — đã tái hiện dữ liệu tiến độ rỗng/boolean/
   chuỗi khoảng trắng bị ép thành 0%. Chỉ nhận số hữu hạn 0–100; giữ số 0 thật,
   làm tròn và trạng thái bàn giao. Spec hẹp:
