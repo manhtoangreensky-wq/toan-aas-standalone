@@ -26385,6 +26385,10 @@
       ruleStandard: "Tiêu chuẩn (Tối đa 42 ký tự/dòng, tối đa 2 dòng)",
       ruleShort: "Ngắn gọn cho video ngắn (Tối đa 25 ký tự/dòng, 1 dòng)",
       targetLangLabel: "Ngôn ngữ dịch mục tiêu",
+      targetLangSearchLabel: "Tìm ngôn ngữ",
+      targetLangSearchPlaceholder: "Nhập tên hoặc mã ngôn ngữ",
+      targetLangSearchResults: "{count} ngôn ngữ phù hợp. Lựa chọn hiện tại được giữ nguyên.",
+      targetLangSearchEmpty: "Không tìm thấy ngôn ngữ phù hợp. Lựa chọn hiện tại được giữ nguyên.",
       targetLangDubLabel: "Ngôn ngữ lồng tiếng mục tiêu",
       sharedTargetLangLabel: "Ngôn ngữ đầu ra",
       sharedTargetLangHint: "Dùng chung cho phụ đề và giọng lồng tiếng.",
@@ -26564,6 +26568,10 @@
       ruleStandard: "Standard (Max 42 chars/line, up to 2 lines)",
       ruleShort: "Short for short-form video (Max 25 chars/line, 1 line)",
       targetLangLabel: "Target translation language",
+      targetLangSearchLabel: "Find a language",
+      targetLangSearchPlaceholder: "Enter a language name or code",
+      targetLangSearchResults: "{count} matching languages. Your current selection is kept.",
+      targetLangSearchEmpty: "No matching language. Your current selection is kept.",
       targetLangDubLabel: "Target dubbing language",
       sharedTargetLangLabel: "Output language",
       sharedTargetLangHint: "Used for both subtitles and the dubbed voice.",
@@ -26743,6 +26751,10 @@
       ruleStandard: "标准（每行最多 42 个字符，最多 2 行）",
       ruleShort: "短视频（每行最多 25 个字符，仅 1 行）",
       targetLangLabel: "字幕目标语言",
+      targetLangSearchLabel: "查找语言",
+      targetLangSearchPlaceholder: "输入语言名称或代码",
+      targetLangSearchResults: "找到 {count} 种语言。当前选择保持不变。",
+      targetLangSearchEmpty: "未找到匹配语言。当前选择保持不变。",
       targetLangDubLabel: "配音目标语言",
       sharedTargetLangLabel: "输出语言",
       sharedTargetLangHint: "只需选择一次，即可同时用于字幕和配音。",
@@ -26859,6 +26871,12 @@
       const selected = panel.getAttribute("data-subdub-mode-panel") === nextMode;
       panel.hidden = !selected;
       panel.setAttribute("aria-hidden", selected ? "false" : "true");
+    });
+    subDubPage.querySelectorAll("[data-subdub-language-search]").forEach((input) => {
+      if (input && (input.getAttribute("type") === "search" || input.type === "search") && input.hasAttribute && input.hasAttribute("data-subdub-language-search")) {
+        input.value = "";
+        updateSubDubLanguageSearch(input);
+      }
     });
     applySubDubDraftDom(subDubPage, subDubDraftSnapshot(), nextMode);
     const selectedLabel = modeButton.getAttribute("data-subdub-summary-label") || "";
@@ -27086,6 +27104,70 @@
     subDubWorkspaceDraftSession = token;
   }
 
+  function updateSubDubLanguageSearch(input) {
+    if (!input) return false;
+    if (typeof input.hasAttribute !== "function" || typeof input.getAttribute !== "function" || typeof input.closest !== "function") {
+      return false;
+    }
+    if (!input.hasAttribute("data-subdub-language-search")) return false;
+    if ((input.getAttribute("type") || input.type) !== "search" || (input.type && input.type !== "search")) return false;
+    if (input.disabled || input.hasAttribute("disabled")) return false;
+    const panel = input.closest(".portal-subdub-hub [data-subdub-mode-panel]");
+    if (!panel || typeof panel.querySelector !== "function") return false;
+    const doc = input.ownerDocument;
+    if (!doc || typeof doc.createElement !== "function") return false;
+    const select = panel.querySelector("select[name=\"target_language\"]");
+    if (!select || typeof select.replaceChildren !== "function") return false;
+    const status = panel.querySelector("[data-subdub-language-search-status]");
+    if (!status) return false;
+    if (!select.id || input.getAttribute("aria-controls") !== select.id) return false;
+    if (!status.id || input.getAttribute("aria-describedby") !== status.id) return false;
+    const currentValue = select.value;
+    const currentEntry = SUBDUB_LANGUAGE_CATALOG.find((entry) => entry.value === currentValue);
+    if (!currentEntry) return false;
+
+    let locale = input.getAttribute("data-subdub-language-locale") || "vi";
+    if (locale !== "vi" && locale !== "en" && locale !== "zh") {
+      locale = "vi";
+    }
+
+    const rawQuery = String(input.value || "").slice(0, 64);
+    const normalizedQuery = normalizeCatalogSearch(rawQuery);
+
+    const matchedEntries = SUBDUB_LANGUAGE_CATALOG.filter((entry) => {
+      if (!normalizedQuery) return true;
+      const targets = [entry.value, entry.labels.vi, entry.labels.en, entry.labels.zh];
+      return targets.some((text) => normalizeCatalogSearch(text).includes(normalizedQuery));
+    });
+    const count = matchedEntries.length;
+
+    const optionEntries = SUBDUB_LANGUAGE_CATALOG.filter(
+      (entry) => entry.value === currentValue || matchedEntries.includes(entry)
+    );
+
+    const options = optionEntries.map((entry) => {
+      const opt = doc.createElement("option");
+      opt.value = entry.value;
+      opt.textContent = entry.labels[locale] || entry.labels.vi;
+      if (entry.value === currentValue) {
+        opt.selected = true;
+      }
+      return opt;
+    });
+
+    select.replaceChildren(...options);
+    select.value = currentValue;
+
+    const copy = SUBDUB_PRESENTATION_COPY[locale] || SUBDUB_PRESENTATION_COPY.vi;
+    if (count > 0) {
+      status.textContent = (copy.targetLangSearchResults || "").replace("{count}", String(count));
+    } else {
+      status.textContent = copy.targetLangSearchEmpty || "";
+    }
+
+    return true;
+  }
+
   function renderSubDubHub(page, context) {
     const locale = resolveSubDubLocale(context);
     const copy = SUBDUB_PRESENTATION_COPY[locale] || SUBDUB_PRESENTATION_COPY.vi;
@@ -27239,6 +27321,9 @@
     } else if (modeKey === "TRANSLATED_SUBTITLE") {
       stage2InnerHtml = `
         <div class="portal-field">
+          <label class="portal-label" for="subdub-target-lang-search">${safeText(copy.targetLangSearchLabel)}</label>
+          <input id="subdub-target-lang-search" type="search" class="portal-input" placeholder="${safeText(copy.targetLangSearchPlaceholder)}" autocomplete="off" spellcheck="false" maxlength="64" aria-controls="subdub-target-lang" aria-describedby="subdub-target-lang-search-status" data-subdub-language-search data-subdub-language-locale="${safeText(locale)}">
+          <small id="subdub-target-lang-search-status" class="portal-form-note" data-subdub-language-search-status role="status" aria-live="polite" aria-atomic="true">${safeText(copy.targetLangSearchResults.replace("{count}", "21"))}</small>
           <label class="portal-label" for="subdub-target-lang">${safeText(copy.targetLangLabel)}</label>
           <select id="subdub-target-lang" class="portal-select" name="target_language">
             ${renderSubDubLanguageOptions(locale, subDubDraftValue(draft, modeKey, "target_language", "vi"), false)}
@@ -27265,6 +27350,9 @@
     } else if (modeKey === "DUBBING_ONLY") {
       stage2InnerHtml = `
         <div class="portal-field">
+          <label class="portal-label" for="subdub-target-lang-dub-search">${safeText(copy.targetLangSearchLabel)}</label>
+          <input id="subdub-target-lang-dub-search" type="search" class="portal-input" placeholder="${safeText(copy.targetLangSearchPlaceholder)}" autocomplete="off" spellcheck="false" maxlength="64" aria-controls="subdub-target-lang-dub" aria-describedby="subdub-target-lang-dub-search-status" data-subdub-language-search data-subdub-language-locale="${safeText(locale)}">
+          <small id="subdub-target-lang-dub-search-status" class="portal-form-note" data-subdub-language-search-status role="status" aria-live="polite" aria-atomic="true">${safeText(copy.targetLangSearchResults.replace("{count}", "21"))}</small>
           <label class="portal-label" for="subdub-target-lang-dub">${safeText(copy.targetLangDubLabel)}</label>
           <select id="subdub-target-lang-dub" class="portal-select" name="target_language">
             ${renderSubDubLanguageOptions(locale, subDubDraftValue(draft, modeKey, "target_language", "vi"), false)}
@@ -27278,6 +27366,9 @@
     } else if (modeKey === "SUBTITLE_PLUS_DUBBING") {
       stage2InnerHtml = `
         <div class="portal-field" style="background:var(--portal-bg-card-subtle, rgba(255,255,255,0.02)); padding:16px; border-radius:8px; border:1px solid var(--portal-border, #2d3748);">
+          <label class="portal-label" for="subdub-shared-target-lang-search">${safeText(copy.targetLangSearchLabel)}</label>
+          <input id="subdub-shared-target-lang-search" type="search" class="portal-input" placeholder="${safeText(copy.targetLangSearchPlaceholder)}" autocomplete="off" spellcheck="false" maxlength="64" aria-controls="subdub-shared-target-lang" aria-describedby="subdub-shared-target-lang-search-status" data-subdub-language-search data-subdub-language-locale="${safeText(locale)}">
+          <small id="subdub-shared-target-lang-search-status" class="portal-form-note" data-subdub-language-search-status role="status" aria-live="polite" aria-atomic="true">${safeText(copy.targetLangSearchResults.replace("{count}", "21"))}</small>
           <label class="portal-label" for="subdub-shared-target-lang"><strong>${safeText(copy.sharedTargetLangLabel)}</strong></label>
           <p style="margin:4px 0 12px; font-size:13px; color:var(--portal-muted, #8fa3b7);">${safeText(copy.sharedTargetLangHint)}</p>
           <select id="subdub-shared-target-lang" class="portal-select" name="target_language">
@@ -40713,6 +40804,13 @@
     if (interactionsBound) return;
     interactionsBound = true;
     document.addEventListener("input", (event) => {
+      const searchInput = event.target && typeof event.target.closest === "function"
+        ? event.target.closest(".portal-subdub-hub [data-subdub-language-search]")
+        : null;
+      if (searchInput && (searchInput.getAttribute("type") === "search" || searchInput.type === "search")) {
+        updateSubDubLanguageSearch(searchInput);
+        return;
+      }
       const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume]");
       updateSubDubLocalVolume(volumeInput);
       const subDubForm = event.target.closest(".portal-subdub-hub");
@@ -40722,6 +40820,12 @@
       }
     });
     document.addEventListener("change", (event) => {
+      const searchInput = event.target && typeof event.target.closest === "function"
+        ? event.target.closest(".portal-subdub-hub [data-subdub-language-search]")
+        : null;
+      if (searchInput && (searchInput.getAttribute("type") === "search" || searchInput.type === "search")) {
+        return;
+      }
       const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume]");
       updateSubDubLocalVolume(volumeInput);
       const voiceLaneInput = event.target.closest(".portal-subdub-hub [data-subdub-voice-lane-input]");
@@ -40730,6 +40834,16 @@
       if (subDubForm) {
         captureSubDubDraft(subDubForm);
         updateSubDubSettingsSummary(subDubForm);
+      }
+      const targetSelect = event.target && typeof event.target.closest === "function"
+        ? event.target.closest(".portal-subdub-hub [data-subdub-mode-panel] select[name=\"target_language\"]")
+        : null;
+      if (targetSelect) {
+        const panel = targetSelect.closest("[data-subdub-mode-panel]");
+        const panelSearchInput = panel ? panel.querySelector("[data-subdub-language-search]") : null;
+        if (panelSearchInput) {
+          updateSubDubLanguageSearch(panelSearchInput);
+        }
       }
     });
     document.addEventListener("keydown", (event) => {

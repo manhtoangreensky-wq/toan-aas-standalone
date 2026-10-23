@@ -63,7 +63,7 @@ existingSD-B2/C2/D2/E2/MusicFH/MU07-A/alloldtests/Chattail/motion.
 - [x] B302final96/552font16samples/288LFassetchecks/focus+Tab/screenshots/overflow0;noallAXclaim.
 - [x] B303actualsource/format/position/language/Smart/volume0-200/modereturn/gatespreserved96.
 - [x] B304focused68/fullNode1276/Python21/reviewC0I0M0/reverseCSS/JSbackendoldtestsChatunchanged.
-- [ ] B305Tester/docs/provenance/CIreceipt.
+- [x] B305Tester32/docs/provenancea9d49f62/source32d3b4e2/HEAD4d66ef14/CI40020963811bothSUCCESS456records/receipt6374462006/IssueB3checkedreadback.
 
 ## Steps 2–5minutes each / verify
 

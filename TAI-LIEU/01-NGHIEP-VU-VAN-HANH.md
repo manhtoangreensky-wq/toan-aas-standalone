@@ -1,5 +1,36 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SubDub: tìm ngôn ngữ trong cấu hình hiện có
+
+Source nhánh, chưa deploy: ba mode Phụ đề dịch/Lồng tiếng/Combo có ô tìm theo
+mã hoặc tên ngôn ngữ VI/EN/ZH, dùng native select 21 mã hiện có. Phụ đề gốc
+không có ô tìm đích. Gõ không dấu, tiếng Anh hoặc tiếng Trung đều lọc cùng
+catalog; không bổ sung mã hay tự suy capability của nhà cung cấp.
+
+Lọc không đổi ngôn ngữ đang chọn: option hiện tại được giữ ngay cả khi không
+khớp; count chỉ tính kết quả khớp. Không có kết quả thì giữ đúng option đang
+chọn; xóa từ khóa trả đủ21. Chỉ chọn trong select mới cập nhật draft/review.
+Query tối đa64 ký tự, không có name, không vào draft/request/storage/URL.
+Native blur/change của search không capture hoặc render lại phần thiết lập.
+Mode transition khôi phục danh sách trước khi áp draft: tránh mất target khi
+panel sắp mở trước đó đã lọc mất option đó. Quay về từ Voice giữ target,
+custom ISO, giọng và mix0/200; query tìm kiếm được đặt lại, không persist.
+
+QA96 thực:72 target states/24 source-only, VI/EN/ZH, sáng/tối và8 cấu hình
+viewport/theme. Các thao tác tìm/chọn/khôngkhớp/xóalọc/đổi mode/Voice return
+giữ đúng cấu hình; status/label/placeholder mới có288 mẫu tương phản tối
+thiểu5,2238:1, input16px/height46px; focus/AX/scopedtext2x không tràn ngang.
+288 response/source LF hash checks khớp, errors/external/UIwrites0. Đây là
+app QA đăng nhập/DB tạm, không client-flow/API response fixtures; auth setup
+có ghi DB tạm. Không gọi upload/dịch/dub/provider hoặc thay tiền.
+
+Antigravity R2 source được giữ nguyên10records. Solxhigh chỉ sửa newunit
+sau hai handoff gate chưa đạt, không rewrite production/oldtests. Unit5,
+focused73, fullNode1281, Python111 và review C0/I0/M0 đạt trong scope này.
+Evidence `reports/audit/R218-SUBDUB-LANGUAGE-FINDABILITY-QA-20261024.json`.
+C3 cụm giọng, D3 report rỗng, E3 full SubDub UI, engine/runtime và motion còn
+checklist riêng. Không dùng UI này chứng minh tự dịch/lồng tiếng đã chạy.
+
 ## 24/10/2026 — SubDub: cỡ chữ ô nhập và các việc còn mở
 
 Source nhánh sau MU07-A, chưa deploy: ô nhập/select có class portal-input

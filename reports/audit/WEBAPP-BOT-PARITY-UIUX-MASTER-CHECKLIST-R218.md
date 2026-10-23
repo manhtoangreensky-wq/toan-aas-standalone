@@ -500,13 +500,20 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   21targetcodesmatchpinnedBotcatalog/notproductiontruth. 36targetstatesfont15/
   nosearch;24Smartboxesduplicateparagraphs;48initialemptyreports. Orderedplan
   `2026-10-24-r218-subdub-ui-closeout.md`mapsallSD01..21,locksB2C2D2E2.
-- [ ] SD-B3-INPUT-FONT:oneCSSruleonly,actualfont15RED→16GREEN/controls/draft
+- [x] SD-B3-INPUT-FONT:oneCSSruleonly,actualfont15RED→16GREEN/controls/draft
   protectedbeforeB4search,C3voice,D3emptyreport. Local96/552samples16px/
   288LFassethashes/0errors-external-UIwrites-overflow;Node68focused1276full/
-  Python21/independentC0I0M0. Deliverypending,spec2026-10-24-r218-subdub-input-font.md;
+  Python21/independentC0I0M0. DeliveredSOURCE32d3b4e2/HEAD4d66ef14,
+  CI40020963811bothSUCCESS456records/receipt6374462006/IssueB3checked.
+  Spec2026-10-24-r218-subdub-input-font.md;
   evidenceR218-SUBDUB-INPUT-FONT-QA-20261024.json. NoalltextAA/nativeiOSclaim.
 - [ ] SD-B4-LANGUAGE-FINDABILITY→SD-C3-VOICE-CLARITY→SD-D3-EMPTY-REVIEW→SD-E3
   finalmatrix;eachrequirescontract+evidence,notfakenativeexecution/rendererPASS.
+  B4spec2026-10-24-r218-subdub-language-findability.md/contract6374610644:
+  local96/72target24source-only/288AAmin5.2238/288LFassets/0errors,draft/Voice/
+  latesttargetpreserved;unit5/focused73/Node1281/Python111/reviewC0I0M0.
+  R2production10recordsverbatim,Solnewtestonly/noR3;B405deliverypending.
+  C3/D3stilllockeduntilacceptance. No newlanguage/provider capabilityclaim.
 - [x] Shell một trang/bốn tab, mode/query/keyboard và panel tại chỗ đã khóa bằng test presentation.
 - [~] Source đã có lựa chọn “đã có/chưa có phụ đề”, bộ chọn tệp và trạng thái source rõ ràng;
   upload/preview/metadata/progress/cancel/replace/error vẫn chờ capability máy chủ.

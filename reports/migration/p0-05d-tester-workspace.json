@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-10-24",
-  "local_files_refresh_scope": "SD-B3 three new SubDub QA cases; local portable LF metadata remeasured. Existing48WAcasecount and remote/project history unchanged; currentTracker664/PR661,closed412untouched.",
+  "local_files_refresh_scope": "SD-B4 six new SubDub language-search QA cases; portable LF metadata remeasured. Existing48WAcasecount and remote/project history unchanged; currentTracker664/PR661,closed412untouched.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 704,
-      "bytes": 86480,
-      "sha256": "4017ae9591f77b3932fed18c4618f4d4cd9dd9bc14f388ed3f1c3fa6e3d994b6"
+      "lines": 723,
+      "bytes": 88436,
+      "sha256": "b2914ffee539b21e43b5c9e8b99e01ea95b4db8f4e28d0b693abc598d1a33e1b"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

@@ -46,7 +46,10 @@ VanillaJS/FastAPI/existingblue-nav-teal;notNext/Tailwindmigration.
 | 5 | SD-E3-FINAL-UI | Fourmodes×VIENZH×themes×mobile/tablet/desktop/landscape;all21requirementsmapped;keyboardAXcontrast/nooverflow | B3..D3accepted | QA;noengineproof |
 | T0 | SD-CANONICAL-GAPS | upload/ASR/translation/voices/speakers/quotes/jobs/output/recovery | UI/motiondone+authority | technicalnotfakeUI |
 
-Firstspec `docs/superpowers/specs/2026-10-24-r218-subdub-input-font.md`.
+Firstspec `docs/superpowers/specs/2026-10-24-r218-subdub-input-font.md` accepted
+receipt6374462006/HEAD4d66ef14/CI40020963811bothSUCCESS. Next B4 exact spec
+`docs/superpowers/specs/2026-10-24-r218-subdub-language-findability.md`,
+contract6374610644;currentFlashR1/testfirst,notyetaccepted. C3/D3locked.
 Eachspec getsownAC/RED/protectedcomparator/Testercases/evidencebeforecode.
 AntigravityFlash3.8R1/R2max→sameSPEC_IDSolxhighonlyaftertwofailures/noR3.
 Singleworker/sharedsource;Codexreview/actualbrowser/onebatchdelivery.

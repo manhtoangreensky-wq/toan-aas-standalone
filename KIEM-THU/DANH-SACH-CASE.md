@@ -1,5 +1,24 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-SUBDUB-B4-20261024 — tìm ngôn ngữ, giữ lựa chọn
+
+Tester READY; BASE4d66ef14aa9aa74d57cd4c3cbac1e9d35e55bb21; PR661/Issue664.
+Spec `2026-10-24-r218-subdub-language-findability.md`; evidence
+`reports/audit/R218-SUBDUB-LANGUAGE-FINDABILITY-QA-20261024.json`.
+App QA/DB tạm, không flow/API response fixtures hoặc feature/provider call.
+
+| Case | Mức | Thao tác | Kết quả / bằng chứng |
+|---|---|---|---|
+| SDB4-01 | nặng | 3 mode đích, tìm tiengnhat/Japanese/日语/zh/Đức/duc ởVI/EN/ZH | Match đúng21catalog, selected pin và count thật; source-only không cósearch;72target/24source-only states |
+| SDB4-02 | nặng | Tìm Nhật khiđangchọnViệt → Tab/EndchọnNhật → no-match → xóa lọc | Querykhôngtựđổi select/URL/flow hoặc dispatchchange;no-matchgiữNhật/clear21;summaryMutationObserver0 khiinput/blur |
+| SDB4-03 | nặng | Chọn Nhật/custompt-BR/Smart/volume0-200 → lọc khôngkhớp → đổi mode chọn Đức → quay lại → Voice library/return | Khôi phục21 options trướcapply/latesttargetĐức;giữcustom/giọng/mix khiVoice return;source/CTA guardednguyên |
+| SDB4-04 | nặng | UnitpartialDOM/malformedARIA[/noownerDoc/missingmethod,query64+đuôi/HTML | False/no-op với chính fixture invalid;khôngnetwork/storage/timer/event/focus/HTML/draft mutation;actualhelper5unit |
+| SDB4-05 | vừa | VI/EN/ZH × light3901440/dark3901440/360375768844ngang | 96configs;288newtextAAmin5.2238;input16px/46px,labelARIA/status/focusAX/2x/overflow0;288LFassetchecks;errors/external/UIwrites0 |
+| SDB4-06 | nặng | Exactsource+regression và phạm vi | Original10R2records/2files;17functions/12files/oldtests/Chattailprotected;Node73focused1281full/Python111/reviewC0I0M0;Solnewtestonly |
+
+Canh lỗi cũ: không sửa sharednormalizer/draft/Voicecontinuation/Music/quote/
+API/auth/motion. Không suy UI PASS thành ngôn ngữ provider/output/LIVE PASS.
+
 ## R218-SUBDUB-B3-20261024 — cỡ chữ ô nhập
 
 Phiên Tester READY; BASE06afc2c3abc554e69c7be36604fee310f877c8c6; PR661/Issue664.

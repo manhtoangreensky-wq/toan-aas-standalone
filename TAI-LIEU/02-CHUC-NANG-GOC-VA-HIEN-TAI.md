@@ -1,5 +1,19 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SD-05: danh mục dễ tìm, không mở quyền dịch giả
+
+| Yêu cầu gốc | Hiện trạng có bằng chứng | Giới hạn còn mở |
+|---|---|---|
+| Catalog searchable đầy đủ | B4 tìm21 mã/tên VI/EN/ZH trong3 mode; actual72targetstates/24source-only | Không phải mọi ngôn ngữ provider; catalog chỉ khớp snapshot Bot đã pin |
+| Giữ cấu hình khi tìm | Pin selected/count không tínhpin/no-match giữ lựa chọn/clear21; unit5+actual96 | Query không được coi là lựa chọn đã xác nhận hoặc đầu vào dịch |
+| Mode/Voice return không mất target | Reset options trước apply, latest target/customISO/giọng/mix0-200 giữ trong browser | Không chứng minh saved-profile application/upload/speaker detection |
+| UI dễ đọc và dùng bàn phím | 288 mẫu chữ mới >=5,2238:1, input16px/46px/focusAX/text2x, không overflow | Không OS textscale/nativekeyboard/PWA/scroll-motion/fullpageAA proof |
+
+Nguồn gốc SD01..21: `2026-10-18-r218-subdub-bot-parity-uiux.md`.
+Spec thực hiện: `2026-10-24-r218-subdub-language-findability.md`.
+B4 chỉ khép tìm ngôn ngữ và giữ draft trong UI; không thay engine, auth,
+giọng đã lưu, quote/job/output. C3/D3/E3 và runtime/LIVE vẫn mở.
+
 ## 24/10/2026 — SubDub SD01..21, không đếm nút thành chạy thật
 
 | Yêu cầu | Hiện trạng đo được | Còn thiếu, giữ checklist |
