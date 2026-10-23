@@ -10401,6 +10401,7 @@
         "reports/audit/R218-GLOBAL-STATUS-LABELS-QA-20261021.json",
         "reports/audit/R218-IMAGE-WORKSPACE-CONTINUITY-QA-20261021.json",
         "reports/audit/R218-PR661-MAIN-COMPAT-QA-20261023.json",
+        "reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json",
         "reports/audit/R218-VOICE-DIRECTION-CLARITY-QA-20261023.json",
         "reports/audit/R218-VOICE-METADATA-QA-20261023.json",
         "reports/prepush/R218-20261023-VOICE-AUDIT-DOCS.md",
@@ -10408,7 +10409,7 @@
         "video.html",
         "video.py"
       ],
-      "occurrences": 23,
+      "occurrences": 24,
       "provider": "Gemini"
     },
     {
@@ -10542,7 +10543,7 @@
         "copyfast_notification_center.py",
         "copyfast_pages.py"
       ],
-      "occurrences": 2027,
+      "occurrences": 2031,
       "provider": "Telegram"
     }
   ],
@@ -18325,9 +18326,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 338,
-  "source_files_scanned": 338,
-  "source_fingerprint_sha256": "a06287d771f48fb74665c08408256cd07d43f26601028695cd6cc2d82647d40e",
+  "source_files_discovered": 340,
+  "source_files_scanned": 340,
+  "source_fingerprint_sha256": "a1a48033df9a8a3797ad86061fa7030ce12e2de2b2a190486b09a1dc75b6eaac",
   "source_root": "repository-root",
   "ui_path_references": [
     {
