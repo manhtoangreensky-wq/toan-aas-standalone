@@ -12,7 +12,7 @@ TRACKER=https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664
 
 ## Review, nghiệp vụ và đối chiếu ban đầu
 
-16files,908insertions/24deletions; production2JS: integration90lines(86add/4remove),
+16files,908insertions/24deletions; production2JS: integration90lines(87add/3remove),
 catalogue20add. B chỉ errorpresentation helper28localstrings/10groups/tool,
 2inlinefailure/finaltoastscopedexact2actions. NumericHTTP401/403→auth; server
 payload/unknown→localizedretry. NonMusic retains oldfallback/dependencies.
