@@ -1,6 +1,7 @@
 {
   "task": "VO-VAULT-NOTICE-CLARITY",
   "base_sha": "efbe362da9158762136820aa63112fa6882bd870",
+  "reviewed_source_sha": "1eb4bba090beecb46e4afc5d83a737b384e11fff",
   "branch": "webapp-r218-billing-ui-20261022",
   "pr": 661,
   "tracker_issue": 662,
