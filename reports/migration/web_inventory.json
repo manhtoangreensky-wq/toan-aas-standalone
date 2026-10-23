@@ -10412,7 +10412,7 @@
         "video.html",
         "video.py"
       ],
-      "occurrences": 27,
+      "occurrences": 28,
       "provider": "Gemini"
     },
     {
@@ -18331,7 +18331,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 350,
   "source_files_scanned": 350,
-  "source_fingerprint_sha256": "f6c1b3138be8bf8a0aa73aff11e8731ac03907759941a91091d9324d9a2e1976",
+  "source_fingerprint_sha256": "1d4f02c936c43774a1de027f33e978afdc2d448f1ae5c2a0f0c8b2af748c2de0",
   "source_root": "repository-root",
   "ui_path_references": [
     {
