@@ -199,7 +199,7 @@ draft/estimate/confirm/provider thật để lấygợiý. Không dùng fixtures
 - [x] A03 actualChoose/Edit/Back interactions,quote-stalepreserved:48mountedUIrecords.
 - [x] A04 signedbrowser48/2304AA>=5.217/48hover>=5.161/48focus>=5.2/keyboardAX/44px/144LFassetchecks/0errors.
 - [x] A05 Node1276/Python119/9exactrecords/13functions/12files/oldtests/Chat/independentreviewC0I0M0.
-- [ ] A06 deliverydocs/Tester/provenance/CI/receipt.
+- [x] A06 source99efd807/HEAD06afc2c3/provenance77db1726/CI40016578805bothSUCCESS456records/receipt6373888334/IssueAcheckedreadback.
 
 Evidence `reports/audit/R218-MUSIC-RETAINED-OPTIONS-QA-20261024.json`.
 R1FlashLow57.895231s failedgate;R2FlashHigh446.9415278s malformed/contextshape;

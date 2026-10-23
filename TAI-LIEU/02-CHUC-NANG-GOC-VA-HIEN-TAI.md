@@ -1,5 +1,18 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SubDub SD01..21, không đếm nút thành chạy thật
+
+| Yêu cầu | Hiện trạng đo được | Còn thiếu, giữ checklist |
+|---|---|---|
+| Ô nhập dễ đọc | SD-B3: 96 cấu hình/552 mẫu computed16px, giữ cấu hình và gate; source một rule CSS | iOS/OS text-scale/contrast toàn trang chưa đo trong B3 |
+| Ngôn ngữ đầy đủ và dễ tìm | 21 target code khớp catalog Bot pin, Việt/Anh/Trung đầu danh sách; actual selection/review đúng | 36 trạng thái chưa có search; SD-B4 kế tiếp, engine language support không suy từ catalog |
+| Bảy lane giọng riêng | Nữ/Nam/saved/custom/Auto2/AutoMulti3–8/Smart có lựa chọn local | 24 khối Smart lặp hai câu; SD-C3; saved-profile application/speaker detection còn contract |
+| Không ô vô nghĩa | Source hiện có 48 report rỗng trong READ48 | SD-D3 phải dọn không che kết quả/lỗi thật; upload/quote/job/output vẫn T0 |
+
+Nguồn gốc `2026-10-18-r218-subdub-bot-parity-uiux.md` SD01..21; plan tiếp
+`2026-10-24-r218-subdub-ui-closeout.md` giữ từng mục và các lock B2/C2/D2/E2.
+Không bỏ chức năng để giao diện gọn, không bật control giả khi chưa có authority.
+
 ## 24/10/2026 — Music MU07: tách quay lại bộ cũ và tạo bộ mới
 
 | Yêu cầu gốc | Hiện trạng có bằng chứng | Chưa được coi là hoàn thành |

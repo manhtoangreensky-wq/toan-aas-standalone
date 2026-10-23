@@ -1,5 +1,25 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SubDub: cỡ chữ ô nhập và các việc còn mở
+
+Source nhánh sau MU07-A, chưa deploy: ô nhập/select có class portal-input
+hoặc portal-select trong riêng SubDub dùng 16px thay vì kế thừa 15px. Chỉ
+một rule CSS, không đổi JS, trường, giá trị, capability hay chốt thực thi.
+96 cấu hình thực với 552 mẫu input đều 16px; chọn ngôn ngữ, Smart Multi,
+âm lượng 0/200, đổi mode rồi chọn lại tab gốc giữ draft; source/CTA vẫn khóa.
+288 asset hash chuẩn hóa LF khớp source; overflow/errors/external/UIwrites0.
+QA auth/locale setup ghi DB tạm, không phải toàn bộ thao tác zero DB writes.
+Node68 focused/1276 full và Python21 đạt; source review C0/I0/M0, exactR1.
+Evidence `reports/audit/R218-SUBDUB-INPUT-FONT-QA-20261024.json`.
+
+READ trước sửa còn thấy 36 trạng thái target thiếu tìm kiếm, 24 khối Smart
+Multi lặp nội dung và 48 report rỗng. Những mục này theo thứ tự SD-B4/C3/D3,
+không sửa ké trong rule cỡ chữ. Toàn bộ SD01..21 đã ánh xạ trong plan mới.
+21 mã ngôn ngữ Web khớp catalog Git snapshot Bot đã pin; không dùng nguồn
+đó chứng minh production/provider có thể xử lý mọi ngôn ngữ. Upload, nhận
+diện/dịch/lồng tiếng, giọng đã lưu, quote, job, output và recovery còn cổng
+canonical. Không chứng minh iOS autozoom, text scale máy thật hay motion.
+
 ## 24/10/2026 — Music MU07-A: xem lại các phương án sau báo giá
 
 Source nhánh, chưa deploy: hai form Music giữ tối đa ba phương án đã nhận

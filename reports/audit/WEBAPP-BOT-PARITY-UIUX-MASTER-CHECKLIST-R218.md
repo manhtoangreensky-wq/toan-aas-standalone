@@ -414,13 +414,14 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [x] MU-PRODUCT-EMPTY-H: localaccepted,exact1prefix/no-flowemptycardhidden,
   H12tests,54initialomissions/48realflowoutputs/40nonMusicworkspaceoutputs
   checked;finalactual48emptyheadings0/formnavdraftretained. SameFHdelivery.
-- [ ] MU07-A-RETAINED-OPTIONS: sourceauditBotpin0d2+WebDTO xácnhậnestimate
+- [x] MU07-A-RETAINED-OPTIONS: sourceauditBotpin0d2+WebDTO xácnhậnestimate
   replacesdraftdata;tabmemory/sessionfencedretention+closeddisclosure/Apply
   giữquote-stale. LocalA01..A05pass:19unit/fullNode1276/Python119/browser48,
   2304AA>=5.217/hover48>=5.161/focus48>=5.2/144LFassethashes/0errors.
   IndependentC0I0M0/9records/13functions/12files/oldtests/Chatprotected;
-  evidenceR218-MUSIC-RETAINED-OPTIONS-QA-20261024.json. A06deliverypending,
-  chưa tick từlocalPASS. FHR1R2historykhôngreset;MU07AFlashR1R2fail→Sol,noR3.
+  evidenceR218-MUSIC-RETAINED-OPTIONS-QA-20261024.json. DeliveredSOURCE99efd807/
+  HEAD06afc2c3/CI40016578805bothSUCCESS/456records/receipt6373888334.
+  FHR1R2historykhôngreset;MU07AFlashR1R2fail→Sol,noR3.
   UI-AkhôngđóngMU07tổng/regenerate3/edit-regeneratecontractT0.
 - [ ] MU-P2 remaining crosswalk: `R218-MUSIC-REMAINING-UI-CROSSWALK-20261023.md`
   giữ12MUrequirements,phânbiệtUIgapsvàcontract/runtime. MU02stylemapping/
@@ -495,6 +496,17 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## P3 — SubDub R218-04 (SD-01..21)
 
+- [x] SD-A currentREAD24/10:48actualsignedstates/0errors-external-UIwrites-overflow;
+  21targetcodesmatchpinnedBotcatalog/notproductiontruth. 36targetstatesfont15/
+  nosearch;24Smartboxesduplicateparagraphs;48initialemptyreports. Orderedplan
+  `2026-10-24-r218-subdub-ui-closeout.md`mapsallSD01..21,locksB2C2D2E2.
+- [ ] SD-B3-INPUT-FONT:oneCSSruleonly,actualfont15RED→16GREEN/controls/draft
+  protectedbeforeB4search,C3voice,D3emptyreport. Local96/552samples16px/
+  288LFassethashes/0errors-external-UIwrites-overflow;Node68focused1276full/
+  Python21/independentC0I0M0. Deliverypending,spec2026-10-24-r218-subdub-input-font.md;
+  evidenceR218-SUBDUB-INPUT-FONT-QA-20261024.json. NoalltextAA/nativeiOSclaim.
+- [ ] SD-B4-LANGUAGE-FINDABILITY→SD-C3-VOICE-CLARITY→SD-D3-EMPTY-REVIEW→SD-E3
+  finalmatrix;eachrequirescontract+evidence,notfakenativeexecution/rendererPASS.
 - [x] Shell một trang/bốn tab, mode/query/keyboard và panel tại chỗ đã khóa bằng test presentation.
 - [~] Source đã có lựa chọn “đã có/chưa có phụ đề”, bộ chọn tệp và trạng thái source rõ ràng;
   upload/preview/metadata/progress/cancel/replace/error vẫn chờ capability máy chủ.

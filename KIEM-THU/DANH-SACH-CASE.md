@@ -1,5 +1,22 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-SUBDUB-B3-20261024 — cỡ chữ ô nhập
+
+Phiên Tester READY; BASE06afc2c3abc554e69c7be36604fee310f877c8c6; PR661/Issue664.
+Spec `2026-10-24-r218-subdub-input-font.md`; evidence
+`reports/audit/R218-SUBDUB-INPUT-FONT-QA-20261024.json`. App QA/DB tạm,
+không flow/API response fixtures hoặc gọi chức năng/provider thật.
+
+| Case | Mức | Thao tác | Kết quả / bằng chứng |
+|---|---|---|---|
+| SDB3-01 | vừa | Bốn mode × VI/EN/ZH × light390/1440 và dark360/375/390/768/844ngang/1440 | 96 cấu hình,552 visible input/select mẫu đều computed16px;288 LFassetchecks;overflow0 |
+| SDB3-02 | nặng | Chọn Nhật, Smart Multi, gốc0/lồng200; đổi mode rồi chọn lại tab gốc; focus ô nhập | Giữ field/draft/range đồng bộ,7lane còn đủ;sourcefile/sourcelanguage/CTA vẫn disabled;96records giữgates/focus |
+| SDB3-03 | nặng | Source diff/reverseCSS, Music và hồi quy | Đúng1R1rule,reverseCSS=BASE,JS/backend/oldtests/Chat khôngđổi;Musicbrief16px;Node68focused/1276full/Python21/C0I0M0 |
+
+Canh lỗi cũ: tab mode dùng replaceState, không tạo history riêng; Voice
+continuation Back giữ lock C2. Không suy fontPASS thành native iOS/AA/LIVE.
+Search21/Smartduplicate/reportempty còn mở SD-B4/C3/D3; motion làm cuối.
+
 ## R218-MUSIC-MU07A-20261024 — phương án đã nhận không mất sau báo giá
 
 Phiên Tester READY; BASE520174941470fab34c60c26e62607ba2d4b3568f; PR661/Issue664.

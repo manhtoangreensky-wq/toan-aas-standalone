@@ -1,6 +1,6 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: MUSIC_MU07_A_LOCAL_GATES_PASS_DELIVERY_PENDING
+status: SUBDUB_B3_LOCAL_GATES_PASS_DELIVERY_PENDING
 date: 2026-10-24
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
@@ -10,7 +10,7 @@ head_sha: 520174941470fab34c60c26e62607ba2d4b3568f
 checkpoint_music_mu07_a_20261024:
   base_sha: 520174941470fab34c60c26e62607ba2d4b3568f
   phase: REPORT
-  status: A01_A05_PASS_A06_DELIVERY_PENDING
+  status: DELIVERED_CI_GREEN_NO_DEPLOY
   handoff: "R1FlashLow57.895231s gatefail;R2FlashHigh446.9415278s responseJSONmalformed/contextschemamismatch. NoAGYR3;Solxhigh owns4fileallowlist/newtestREDbeforeminimalGREEN. Artifacts preserved;root QA separate."
   clarification: "Spec now spells exact context.session csrfReady/token and context.featureFlows[route] fixture;root acknowledges sourcefixture clarity needed before handoff,not inventing APIshape."
   spec: docs/superpowers/specs/2026-10-24-r218-music-retained-options.md
@@ -26,7 +26,23 @@ checkpoint_music_mu07_a_20261024:
   review: "IndependentC0I0M0;9exactSolrecords/3productionfiles/13protectedfunctions/12protectedfiles/oldtests/ChattailunchangedafterLFnormalization."
   evidence: reports/audit/R218-MUSIC-RETAINED-OPTIONS-QA-20261024.json
   cleanup: "Own57885newlineexit0,temp06pqmj78removed,listener32417=0;nootherprocessstopped."
-  next: "FinishTesterportablemetadata/prepush/compile/provenance/onepushgithub/CIboth/receipt;tickAonlyafterdelivery. ThenfollowremainingMusiccrosswalkbeforeSubDub;motionlast."
+  delivery: "SOURCE99efd807/HEAD06afc2c3;CI40016578805bothSUCCESS,396Linux61.25s+26runtime0.24s,456authenticatedrecords;receipt6373888334/IssueAcheckedreadback. PR661OPEN/CLEAN,no merge/deploy."
+  next: "MU07total/newset/editregenerate/style/length/audio/editorT0remainOPEN;nextorderedSubDubUI. Motionlast."
+checkpoint_subdub_b3_20261024:
+  base_sha: 06afc2c3abc554e69c7be36604fee310f877c8c6
+  phase: REPORT
+  status: B301_B304_PASS_B305_DELIVERY_PENDING
+  plan: docs/superpowers/plans/2026-10-24-r218-subdub-ui-closeout.md
+  spec: docs/superpowers/specs/2026-10-24-r218-subdub-input-font.md
+  read: "Actualsigned48/0errors-external-UIwrites-overflow;36targetstatesfont15/nosearch;24duplicatedSmartparagraphs/48emptyreports;21targetcodesmatchBotpin0d2notproductiontruth."
+  scope: "Onefont16CSSruleportal-theme.cssonlybeforeChat;allJS/API/backend/auth/Music/oldtests/motionprotected. B3fontfirst,B4search,C3voice,D3reportafteraccepted."
+  raw_read_sha256: 712cd264586acda482a62391ec380b93b17ee242ad0f83639f13073a1ed7c155
+  cleanup: "READ92105/B396476/85885allnewlineexit0;alltemporaryDBassetsremoved/listeners51978/55730/14007=0outsidecheck.Nootherprocessstop."
+  builder: "Flash3.8HighR1SUCCESS117.4125259s/1turn/10521UTF16chars;exact1CSSrecord/noR2/noR3;workerVERIFYNOT_RUN."
+  verify: "ActualRED4font15assertion→GREEN96/552inputs16px/288LFassethashes/0errors-external-UIwrites-overflow/values-gates-focuspreserved. Focused68/fullNode1276/Python21pass;independentC0I0M0/exactR1reverseCSS/JSbackendoldtestsChatunchanged."
+  qa_clarification: "Firstgreen16pxthenharnessBacktimeout:tabsintentionalreplaceState;correctonlyharnesstoselectoriginaltab,failedrawpreserved.Finalgreenstoredseparately,noapphistorychange."
+  evidence: reports/audit/R218-SUBDUB-INPUT-FONT-QA-20261024.json
+  next: "FinishB305cleanup/Tester/docs/prepush/provenance/pushCIreceipt. ThenB4search21;C3voice/D3emptyreportstayqueued. Noalltextcontrast/nativeiOS/motion/runtimeclaim."
 checkpoint_music_fh_20261024:
   base_sha: 1e01f2417e3000a09c45186e11ee144e52a22fa5
   result: DELIVERED_CI_GREEN_NO_DEPLOY
@@ -689,7 +705,7 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "MU07-AA01_A05pass19unit/1276Node/119Python/48browser/C0I0M0;finishA06Tester/prepush/provenance/pushCIreceipt,thennextorderedUIitem. FHdelivered52017494locked;MU07total/newset/edit-regenerate/audio/T0stayopen. MotionLAST;goalACTIVE."
+next_action: "SD-B3local96/552font16/68focused/1276Node/21Python/C0I0M0;finishB305Tester-prepush-provenance-pushCIreceiptbeforeB4search21. MU07-Adelivered06afc2c3locked. WholeMusic/SD/T0open;motionLAST;goalACTIVE."
 active_billing_batch:
   id: R218-BILLING-20261022
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660
