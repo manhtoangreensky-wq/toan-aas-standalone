@@ -187,7 +187,7 @@ def test_music_directions_requires_signed_capability_csrf_and_validates_matching
         'api("/media-workspace/tools/music-directions/compose", {',
         'method: "POST"',
         "musicDirectionPresetResultMatchesSource(payload, data)",
-        "musicDirectionPresetBoundaryIsSafe(data)",
+        "musicDirectionPresetGuardBoundaryIsSafe(data)",
         "musicDirectionPresetResult: { source: payload, receipt: data }",
         "musicDirectionPresetDraft: payload",
     ):

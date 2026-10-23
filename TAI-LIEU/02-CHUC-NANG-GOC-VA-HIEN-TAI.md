@@ -1,5 +1,22 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 23/10/2026 — đối chiếu Music/SFX submit và guard
+
+Nguồn gốc: R218-03/P2, hai native action và backend guard contract hiện có.
+Catalogue/presentation tests ban đầu không bao phủ pending/toast sau gửi;
+ngay cả HTTP200 có thể là guarded, không phải kết quả thành công.
+
+| Yêu cầu / giả định trước | Hiện trạng có bằng chứng | Chưa đóng |
+|---|---|---|
+| Thông báo đúng ngôn ngữ sau gửi |9feedbacksites/helper/8cataloguerows; testA10/10, signedQA36 cấu hình | Validation/error/outercatch và fieldhint/technicalcopy |
+| Bị chặn không mất nội dung hoặc báo nhầm kết nối | Guard Music17keys/16strictfalse không composer; parser/caller thật3/3 và actualMusic18 | Không mở quyền/provider/job/output hoặc chứng minh bản quyền |
+| Kết quả thành công phải đúng input và đủ cấu trúc | Success validators/matcher byteequalBASE80f12d2; Python21/21; nativebrowser3items | Không dùng boundaryshell composer:{} hay testdouble làm fullDTOproof |
+| Music/SFX như Bot | Hai công cụ này chỉ lập hướng/cue bằng văn bản | Audio generation/editor/player/download/save/reuse/Botparity |
+
+Tổng hồi quy1000Node; độc lập47/47, Critical0/Important0. Evidence
+`reports/audit/R218-MUSIC-SFX-SUBMIT-GUARD-QA-20261023.json`; đây là localQA,
+chưa merge/deploy/LIVE. Không xóa hoặc gắn PASS các finding lịch sử ngoài scope.
+
 ## 23/10/2026 — Music/SFX interaction, không thay scope sản phẩm
 
 Nguồn gốc: R218-03/P2, hai locale-presentation test và hai catalogue Music

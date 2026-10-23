@@ -1,5 +1,28 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-MUSIC-SFX-SUBMIT-GUARD-20261023 — phiên Tester độc lập
+
+BASE80f12d220c83ae4febebb99ca9742560f3c2ac85; PR661; Issue664; branch
+webapp-r218-billing-ui-20261022. SPEC A+C; trạng thái READY để test lại.
+Chỉ signedQA localhost/DB/assets tạm; Browserplugin absent, Playwright/Edge.
+VI/EN/ZH × light390/light1440/dark390/dark1440/dark375×812/dark844×390,
+cảhai route `/media-workspace/music-directions` và `/media-workspace/sfx-cue-sheet`.
+Evidence `reports/audit/R218-MUSIC-SFX-SUBMIT-GUARD-QA-20261023.json`;
+raw `C:/Users/toann/Documents/Codex/qa/r218-music-sfx-submit-20261023`.
+
+| Case | Mức | Bước thực hiện | PASS bắt buộc / canh lỗi cũ |
+|---|---|---|---|
+| MU-SUB-01 | vừa | Chọn preset, điền brief gốc; giữ request thật rồi bấm lập; thả request | Pending đúng interface locale; chỉ1POST; receipt3texts và toastsuccess đúng VI/EN/ZH, rawVIserver không thắng |
+| MU-SUB-02 | nặng | Nhập yêu cầu mô phỏng tác giả/tác phẩm; gửi native thật | Copyrightguard đúng locale, draft còn nguyên, kết quả cũ bị xóa; không audio/job/provider/wallet; Music không báo nhầm kết nối |
+| MU-SUB-03 | nặng | Unit realparser: đủ17keys/16false; đổi từngflag/thiếu/extra/composer/sai execution | Chỉ strictfalse hợp lệ; không bỏ key hoặc nhận0/stringfalse/null; success validator cũ vẫn giữ |
+| MU-SUB-04 | nặng | Unit route/capability/stale/unsafe receipt; keyboard + screenshot/AX/DOM responsive | Không POST hoặc success giả, không late update;0page/console/external/unapprovedwrite/HTTP/overflow; palette giữ |
+
+QA hiện có36uniqueconfigs/72POST/72pendingchecks. SFX18trướcC, Music18sauC;
+SFXconsumer đã byte-equal quaC. Không ghi36lượt cùngrevision. TestA có DTO/
+validator doubles, không thay thế parser thật của C hoặc browser/native.
+Bvalidation/error/fieldhint/technicalcopy còn mở; audio/player/Botparity/LIVE
+không nằm trong PASS này. Không dùng production hoặc gọi provider để retest.
+
 ## R218-MUSIC-SFX-INTERACTION-20261023 — phiên Tester độc lập
 
 BASE2d6f61f3a700cea49a6c61ec1eb57a5740dae541; branchwebapp-r218-billing-ui-20261022;

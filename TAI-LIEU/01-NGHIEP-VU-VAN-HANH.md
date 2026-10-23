@@ -1,5 +1,29 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 23/10/2026 — Music/SFX: thông báo sau gửi và cảnh báo bản quyền
+
+Hai công cụ text-only giữ nguyên đầu vào, POST có phiên/CSRF và ba kết quả
+văn bản. Chín thông báo đang xử lý/thành công/chặn hợp lệ nay lấy đúng VI/EN/ZH
+từ catalogue, không ưu tiên câu tiếng Việt kỹ thuật của máy chủ. Không thêm
+ô, chức năng, âm thanh hoặc kết quả giả.
+
+Music từng báo nhầm lỗi kết nối khi bị chặn: DTO cảnh báo có execution và16
+cờ booleanfalse, không composer; UI dùng bộ kiểm tra thành công đòi composer.
+Helper riêng nay chỉ nhận đúng17khóa và16cờ ===false, dùng ở2nhánh cảnh báo.
+Bộ kiểm tra thành công, matcher nguồn, API/auth/backend/SFX giữ nguyên byte.
+
+Đo lại: focused47/47, fullNode1000/1000, Python native/portal21/21; review độc
+lập Critical0/Important0. Actual signed QA36 cấu hình/72POST/72pendingchecks,
+ba mục mỗi success và copyrightguard thật; error/external/unapprovedwrite/
+HTTP/overflow0. SFX18trướcC và Music18sauC là hai phase riêng; SFXbyte-equal
+quaC. Evidence `reports/audit/R218-MUSIC-SFX-SUBMIT-GUARD-QA-20261023.json`.
+
+Đây chưa phải toàn trang đã dịch: validation/error/outercatch, field hint và
+technicalcopy còn mở trong B/READ kế tiếp. Không chứng minh generation,
+player/download/save/reuse, Bot parity hoặc LIVE. QA temporaryDB có signed
+auth/session writes; không có Music/provider/wallet/production mutation.
+Server53124 đã dừngexit0, thư mục tạm tự dọn, listener58258=0 đo ngoài sandbox.
+
 ## 23/10/2026 — Music/SFX: phản hồi khi chọn và sửa nội dung
 
 Hai công cụ `/media-workspace/music-directions` và

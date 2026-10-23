@@ -280,7 +280,10 @@ def test_sfx_cue_sheet_keeps_unsent_edits_stale_across_remount_without_storage_o
     assert 'tabindex="-1" data-sfx-cue-sheet-result-heading' in result
     assert "layout.insertBefore(receipt, boundary);" in placement
     assert 'status.setAttribute("role", "status")' in placement
-    assert 'setSfxCueSheetSubmissionStatus("Đã lập 3 cue semantic. Kết quả ở bên dưới.")' in action
+    success_feedback = action.split(
+        "sfxCueSheetResult: { source: payload, receipt: data },", 1
+    )[1].split("} catch (error)", 1)[0]
+    assert "setSfxCueSheetSubmissionStatus(" in success_feedback
 
     assert "function clearSessionScopedTransientDrafts()" in INTEGRATION
     assert "clearTransientFormDraft(SFX_CUE_SHEET_ROUTE)" in INTEGRATION

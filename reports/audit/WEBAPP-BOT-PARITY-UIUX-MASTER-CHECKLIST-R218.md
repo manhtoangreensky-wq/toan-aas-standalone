@@ -337,11 +337,28 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   Signedactualbrowser60configs/300presetselections/180edits/120explicittextPOSTs,
  3resultitems/compose, noresponsefixtures, errors/external/unapprovedwrite/HTTP/overflow0.
   Ngoài4functions/2rows+9protectedfiles byteequalBASE; evidence
-  `R218-MUSIC-SFX-INTERACTION-QA-20261023.json`. Delivery/CI/receiptcònchờ;
+  `R218-MUSIC-SFX-INTERACTION-QA-20261023.json`. Delivery80f12d2,
+  CI39934950954bothSUCCESS, Linux396+26; receipt664#issuecomment-6362432472;
   khôngđóngfullpagelocale, generation/player/output/Botparity.
-- [ ] MU-NATIVE-SUBMIT-FEEDBACK-LOCALE: screenshotSFXzhdark390 xácnhận toastsuccess
-  vẫnVI/vănbảnkỹthuật trongEN/ZH; integration.js cũchưasửa. READ/formalspec/checklist
-  vàFlashhandoff kếtiếp saudeliverylátinteraction, khôngsửakétrong4hàmđãkhóa.
+- [x] MU-NATIVE-SUBMIT-FEEDBACK-LOCALE-A localUI:9feedbacksites/helper/8rows,
+  pending/success/validguard VI/EN/ZH. ARED3/7→GREEN10/10; FlashR1/R2sameACfail,
+  primarytestharnesstakeover/noR3; productionR2verbatim. Combinedfocused47/47,
+  fullNode1000/1000, Python21/21, Testerportable32pass/1POSIXdeselected.
+  Actualsignedbrowser36configs/72POST/72pendingchecks/3textitems, realcopyrightguard;
+  errors/external/unapprovedwrite/HTTP/overflow0; noresponsefixtures.
+  Evidence `R218-MUSIC-SFX-SUBMIT-GUARD-QA-20261023.json` documents two phases:
+  SFX18 beforeC, Music18 afterC; SFXconsumer byteequal acrossC. Deliverypending.
+- [x] MU-MUSIC-GUARD-BOUNDARY-C localUI: baselineguard17keys/16false/no composer
+  previously failedsuccessRESULT_KEYS. Strictnewhelper+2Musicguardcalls only;
+  realvalidator/caller cleanRED0/3→GREEN3/3. Successvalidators/SFX/backend/API
+  byteunchanged; allflags strictfalse. Independent47/47,Critical0/Important0.
+  Spec `2026-10-23-r218-music-guard-boundary.md`; no reset of A's two handoffs.
+- [ ] A+C branch delivery: docs/Tester/prepush/Web-onlyprovenance/push/readback/CI/
+  Issue664receipt; no merge/deploy/LIVE implied by localUI ticks.
+- [ ] MU-NATIVE-VALIDATION-ERROR-LOCALE-B: validation/wrongroute/notready/invalid
+  receipt/boundary/retry/outercatch remains open. Screenshot also confirms source
+  field hints stillVIinEN/ZH and technicalboundarycopy; inventory before own
+  spec/allowlist, no hidden fix to sharedsafety/auth or locked4interactionhelpers.
 - [~] MU-00 control-level local đã khóa theo C0; các mục runtime và delivery dưới đây chưa đóng.
 - [~] MU-00 browser presentation — 19/10/2026: `/music/create` và `/music/song` đã kiểm bằng Edge localhost với 36 cấu hình (VI/EN/ZH × sáng/tối × 390/768/1440 × 2 workspace), giữ field bài hát riêng, không hiện audio/player/giá/download giả; page/console/request ngoài/write/unknown API/overflow đều `0`. Đây là fixture đọc-only, chưa phải generation/player/delivery/LIVE.
 - [ ] Nhạc nền/Bài hát/Kho nhạc-SFX/Chỉnh nhạc; capability thật.

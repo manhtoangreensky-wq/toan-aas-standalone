@@ -1374,6 +1374,19 @@
     merge({ deliveryReadRefresh: null });
   }
 
+  function musicSfxEditorialFeedbackText(tool, key, fallback) {
+    const namespace = tool === "music" ? "musicDirectionUi" : (tool === "sfx" ? "sfxCueSheetUi" : null);
+    if (!namespace) return fallback;
+    const i18n = window.TOANAASI18n;
+    if (!i18n || typeof i18n.t !== "function") return fallback;
+    const fullKey = `${namespace}.feedback.${key}`;
+    const translated = i18n.t(fullKey);
+    if (typeof translated === "string" && translated && translated !== fullKey) {
+      return translated;
+    }
+    return fallback;
+  }
+
   function setMusicDirectionPresetSubmissionStatus(message) {
     const form = document.querySelector('[data-portal-form][data-portal-action="music-direction-preset-compose"][data-portal-route="/media-workspace/music-directions"]');
     const announcement = form && form.querySelector("[data-music-direction-selection]");
@@ -4536,6 +4549,12 @@
       && value.job_created === false && value.wallet_mutated === false && value.payment_started === false
       && value.asset_saved === false && value.collection_saved === false && value.publish_action_created === false
       && value.telegram_called === false && value.rights_verified === false;
+  }
+
+  function musicDirectionPresetGuardBoundaryIsSafe(value) {
+    return musicPromptComposerExactKeys(value, MUSIC_PROMPT_COMPOSER_BOUNDARY_KEYS)
+      && value.execution === "web_native_deterministic_music_direction_only"
+      && MUSIC_PROMPT_COMPOSER_BOUNDARY_KEYS.every((key) => key === "execution" || value[key] === false);
   }
 
   function musicDirectionPresetBoundaryIsSafe(value) {
@@ -29223,7 +29242,7 @@
         // customer's visible local selection and brief until this explicit
         // request either yields the matching receipt or is superseded.
         setActionBusy(action, route, true);
-        setMusicDirectionPresetSubmissionStatus("Đang lập ba music direction từ preset và brief hiện tại…");
+        setMusicDirectionPresetSubmissionStatus(musicSfxEditorialFeedbackText("music", "pending", "Đang lập ba hướng âm nhạc…"));
         try {
           const result = await api("/media-workspace/tools/music-directions/compose", {
             method: "POST",
@@ -29233,7 +29252,7 @@
           if (requestEpoch !== musicDirectionPresetComposeRequestEpoch || currentPortalPath() !== expectedPath) return;
           const data = result.data && typeof result.data === "object" ? result.data : {};
           if (result.status === "guarded") {
-            if (!musicDirectionPresetBoundaryIsSafe(data)) throw new Error("Máy chủ chưa trả ranh giới Music Directions an toàn.");
+            if (!musicDirectionPresetGuardBoundaryIsSafe(data)) throw new Error("Máy chủ chưa trả ranh giới Music Directions an toàn.");
             merge({
               // Keep the bounded local draft in tab memory so a policy guard
               // never erases the customer's preset/brief. It is not stored
@@ -29242,7 +29261,13 @@
               musicDirectionPresetResult: {},
               pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
             });
-            toast(result.message || "Brief cần được điều chỉnh trước khi lập music direction.");
+            toast(musicSfxEditorialFeedbackText(
+              "music",
+              result.error_code === "WEB_MUSIC_DIRECTION_COPYRIGHT_GUARD" ? "copyright" : "guarded",
+              result.error_code === "WEB_MUSIC_DIRECTION_COPYRIGHT_GUARD"
+                ? "Hãy mô tả phong cách riêng, không yêu cầu mô phỏng nghệ sĩ hoặc tác phẩm có bản quyền."
+                : "Điều chỉnh nội dung trước khi lập hướng âm nhạc."
+            ));
             return;
           }
           if (result.status !== "draft" || !musicDirectionPresetResultMatchesSource(payload, data)) {
@@ -29253,12 +29278,12 @@
             musicDirectionPresetResult: { source: payload, receipt: data },
             pageStates: { ...(base().pageStates || {}), [expectedPath]: "ready" }
           });
-          toast(result.message || "Đã lập ba music direction để review trong phiên hiện tại.");
+          toast(musicSfxEditorialFeedbackText("music", "success", "Đã lập ba hướng âm nhạc."));
         } catch (error) {
           if (requestEpoch !== musicDirectionPresetComposeRequestEpoch || currentPortalPath() !== expectedPath) return;
           const guarded = error && error.payload && error.payload.status === "guarded" ? error.payload : null;
           const guardedData = guarded && guarded.data && typeof guarded.data === "object" ? guarded.data : null;
-          if (!guarded || !musicDirectionPresetBoundaryIsSafe(guardedData)) {
+          if (!guarded || !musicDirectionPresetGuardBoundaryIsSafe(guardedData)) {
             setMusicDirectionPresetSubmissionStatus("Không thể lập direction. Kiểm tra lại brief, preset và kết nối rồi thử lại.");
             throw error;
           }
@@ -29267,7 +29292,13 @@
             musicDirectionPresetResult: {},
             pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
           });
-          toast(guarded.message || "Brief cần được điều chỉnh trước khi lập music direction.");
+          toast(musicSfxEditorialFeedbackText(
+            "music",
+            guarded.error_code === "WEB_MUSIC_DIRECTION_COPYRIGHT_GUARD" ? "copyright" : "guarded",
+            guarded.error_code === "WEB_MUSIC_DIRECTION_COPYRIGHT_GUARD"
+              ? "Hãy mô tả phong cách riêng, không yêu cầu mô phỏng nghệ sĩ hoặc tác phẩm có bản quyền."
+              : "Điều chỉnh nội dung trước khi lập hướng âm nhạc."
+          ));
         } finally {
           if (musicDirectionPresetComposePendingRequestEpoch === requestEpoch
             && requestEpoch === musicDirectionPresetComposeRequestEpoch
@@ -29291,7 +29322,7 @@
         const requestEpoch = ++sfxCueSheetComposeRequestEpoch;
         sfxCueSheetComposePendingRequestEpoch = requestEpoch;
         setActionBusy(action, route, true);
-        setSfxCueSheetSubmissionStatus("Đang lập ba cue semantic từ preset và brief hiện tại…");
+        setSfxCueSheetSubmissionStatus(musicSfxEditorialFeedbackText("sfx", "pending", "Đang lập ba vị trí hiệu ứng…"));
         try {
           const result = await api("/media-workspace/tools/sfx-cue-sheet/compose", {
             method: "POST",
@@ -29307,7 +29338,13 @@
               sfxCueSheetResult: {},
               pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
             });
-            toast(result.message || "Brief cần được điều chỉnh trước khi lập cue sheet.");
+            toast(musicSfxEditorialFeedbackText(
+              "sfx",
+              result.error_code === "WEB_SFX_CUE_COPYRIGHT_GUARD" ? "copyright" : "guarded",
+              result.error_code === "WEB_SFX_CUE_COPYRIGHT_GUARD"
+                ? "Hãy mô tả hiệu ứng riêng, không yêu cầu mô phỏng nghệ sĩ hoặc tác phẩm có bản quyền."
+                : "Điều chỉnh nội dung trước khi lập bảng hiệu ứng."
+            ));
             return;
           }
           if (result.status !== "draft" || !sfxCueSheetResultMatchesSource(payload, data)) {
@@ -29318,8 +29355,8 @@
             sfxCueSheetResult: { source: payload, receipt: data },
             pageStates: { ...(base().pageStates || {}), [expectedPath]: "ready" }
           });
-          setSfxCueSheetSubmissionStatus("Đã lập 3 cue semantic. Kết quả ở bên dưới.");
-          toast(result.message || "Đã lập ba cue semantic để review trong phiên hiện tại.");
+          setSfxCueSheetSubmissionStatus(musicSfxEditorialFeedbackText("sfx", "success", "Đã lập ba vị trí hiệu ứng."));
+          toast(musicSfxEditorialFeedbackText("sfx", "success", "Đã lập ba vị trí hiệu ứng."));
         } catch (error) {
           if (requestEpoch !== sfxCueSheetComposeRequestEpoch || currentPortalPath() !== expectedPath) return;
           const guarded = error && error.payload && error.payload.status === "guarded" ? error.payload : null;
@@ -29333,7 +29370,13 @@
             sfxCueSheetResult: {},
             pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
           });
-          toast(guarded.message || "Brief cần được điều chỉnh trước khi lập cue sheet.");
+          toast(musicSfxEditorialFeedbackText(
+            "sfx",
+            guarded.error_code === "WEB_SFX_CUE_COPYRIGHT_GUARD" ? "copyright" : "guarded",
+            guarded.error_code === "WEB_SFX_CUE_COPYRIGHT_GUARD"
+              ? "Hãy mô tả hiệu ứng riêng, không yêu cầu mô phỏng nghệ sĩ hoặc tác phẩm có bản quyền."
+              : "Điều chỉnh nội dung trước khi lập bảng hiệu ứng."
+          ));
         } finally {
           if (sfxCueSheetComposePendingRequestEpoch === requestEpoch
             && requestEpoch === sfxCueSheetComposeRequestEpoch
