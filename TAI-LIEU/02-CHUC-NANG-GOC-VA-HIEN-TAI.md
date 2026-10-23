@@ -1,5 +1,19 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## Voice canonical flags — đối chiếu 23/10/2026
+
+Nguồn gốc: R218-02A yêu cầu tts_ready/preview_ready/default do canonical authority
+xác nhận; catalogue `voiceUi.library.*` chỉ là nhãn, không phải quyền thực thi.
+
+| Yêu cầu | Bằng chứng hiện tại | Không được suy diễn |
+|---|---|---|
+| Nhãn mặc định và sẵn sàng phản ánh dữ liệu xác nhận | Bảy predicate tại renderer/2select builders dùng===true; Node24/24 với true/false và13badflag vectors ở3locale | Không suy rằng mọi DTO production đều sai kiểu hoặc cần đổi backend |
+| Giọng ready được giữ, tên/consent/status không đổi | Focused48/48, fullNode951/951; thẻ/option giữ giọng true, default sai kiểu chỉ mất marker; input không mutate | Không chứng minh đặt mặc định/rename/delete/preview audio hoạt động |
+| UI và integration render trạng thái đúng |18configs/180profile states trong signed app với read-only fixtures, lỗi/tràn ngang/UIwrite/external0 | Không gọi fixture bootstrap/profile là API canonical hoặc LIVE đã đạt |
+
+Các mục kho giọng thật, tìm kiếm/phân trang/management/preview/apply/reuse vẫn mở
+theo contractR218-02A; không dùng lần sửa flag này để đóng Bot-parity toàn Voice.
+
 ## Dashboard — đối chiếu ngày 23/10/2026
 
 Nguồn đối chiếu: `tests/test_p0_webapp_v2_01_customer_dashboard_transformation.py`,

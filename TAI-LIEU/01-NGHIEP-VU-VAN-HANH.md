@@ -1,5 +1,22 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## Voice — nhãn và lựa chọn giọng cần boolean xác nhận, 23/10/2026
+
+Kho giọng và hai nơi dựng ô chọn giọng chỉ nhận booleantrue cho is_default,
+tts_ready và preview_ready. Chuỗi/số/object/array không tự biến thành nhãn
+“Mặc định”, “Có thể dùng để đọc”, thông tin nghe thử hoặc option sẵn sàng.
+Giọng có tts_ready=true nhưng default sai kiểu vẫn nằm trong danh sách chọn,
+chỉ không có nhãn mặc định. Tên giọng vẫn escape; status/consent/thứ tự/limit50,
+field/route/capability và mọi API không đổi. Đây là sửa UI, không tạo audio.
+
+Node presentation24/24, focused Voice48/48, fullNode951/951, Python source10/10.
+Browser18 cấu hình/180profile states đạt, không console/page/dialog error,
+overflow, external hoặc UIwrite. Signed localhost app giữ auth/account/CSRF/role
+thật; response đọc bootstrap/profile có fixture rõ nguồn để target được render
+khi QA server không có bridge. Không xem fixture này là bằng chứng liên kết
+Telegram, Core Bridge, provider, kho giọng production hoặc LIVE đã chạy thật.
+Chi tiết `reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json`.
+
 ## Dashboard — tương thích main, kiểm tra local ngày 23/10/2026
 
 Dashboard giữ bố cục sáu lối vào sản phẩm của main, dùng catalogue VI/EN/ZH

@@ -1,12 +1,24 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: C0_MAIN_COMPAT_LOCAL_ACCEPTED_DELIVERY_PENDING
+status: VOICE_CANONICAL_FLAG_TRUTH_LOCAL_ACCEPTED_DELIVERY_PENDING
 date: 2026-10-23
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r218-billing-ui-20261022
 pull_request: 661
-head_sha: cb995c7809c8da086b5f3e80f09546374832ef8a
+head_sha: 9d941fbd52e444d3093f781c48f49ea6dcf30350
+checkpoint_voice_flag_truth_20261023:
+  base_sha: 9d941fbd52e444d3093f781c48f49ea6dcf30350
+  spec: docs/superpowers/specs/2026-10-23-r218-voice-canonical-flag-truth.md
+  result: ACCEPTED_LOCAL_UI_DELIVERY_PENDING
+  finding: "Controlled malformed string/object/array flags confer Default/Available for speech/preview metadata in real renderer. Not a production API fault claim."
+  scope: "Seven strictboolean predicates in portal.js across renderFields/renderFormCard Voice/renderVoiceVault; existing presentation test harness. No API/auth/capability/provider/wallet/CSS changes."
+  baseline: "Focused Voice39/39; C0CIrun39904684572bothSUCCESS on9d941fb, Linux396+26."
+  evidence: reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json
+  tests: "R2 test-only RED15pass/9fail; GREEN24/24, focused48/48, fullNode951/951, Python source10/10; local boundedCI395pass/1WindowsPOSIXdeselected/0fail/16warnings in112.86s; syntax/diff0. R2 production applied verbatim; no thirdround."
+  browser: "18configs/180profile states; signed localhost with documented browser-onlyREAD bootstrap/profile fixtures, real identity/CSRF/role unchanged, server bridge absent/executionfalse; errors/overflow/UIwrite/external0. Not canonical/preview/output/LIVE."
+  cleanup: "Owned QAserverPTY76092 stopped via newline exit0; temporaryDB/assetscleaned,43347listeners0."
+  next: "Finish docs/portableTester metadata, boundedregression, prepush, sourcecommit/provenance, push/readback/CI. Then resume remaining P1/P2 UI without unlocking canonical backend or M0 early."
 checkpoint_main_compat_20261023:
   base_sha: cb995c7809c8da086b5f3e80f09546374832ef8a
   upstream_sha: 406127e6c128f08c27a33b66b132eff56b01542a
@@ -458,7 +470,7 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "Read checkpoint_main_compat_20261023 first. C0-A/B local gates accepted; finish boundedCI/provenance/push/readback/CI and record mergeability, without PR merge/deploy until delivery gates ready. Then resume P1 canonical Voice UI gaps under the existing ledger; metadata is not audio Voice Vault. Final M0 motion/performance and LIVE remain open; goal ACTIVE."
+next_action: "Read checkpoint_voice_flag_truth_20261023 first. R1/R2 finished and R2 production applied verbatim: localUI accepted,951Node/48focused/10Python/18browserconfigs. Do not start worker round3 or redo C0. Finish boundedregression/prepush/sourcecommit/provenance/push/readback/CI, then remaining P1/P2 UI. Canonical backend staysT0, M0motionlast, goalACTIVE."
 active_billing_batch:
   id: R218-BILLING-20261022
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660

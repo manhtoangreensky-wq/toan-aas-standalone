@@ -1,5 +1,21 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## VO-FLAG — phiên R218-VOICE-FLAG-20261023, local UI
+
+BASE9d941fbd52e444d3093f781c48f49ea6dcf30350; PR661/Issue662.
+
+| ID | Thao tác | Điều kiện đạt / canh lỗi cũ |
+|---|---|---|
+| VFLAG-01 | Inventory VI/EN/ZH nhận true/false/undefined/null, số, chuỗi, object/array | Chỉbooleantrue có default/ready/preview metadata; tiếngTrung so exact speech label, không regex substring |
+| VFLAG-02 | RenderFields và Voice renderFormCard dựng options từ cùngDTO | ChỉID+tts_ready===true được chọn; default sai kiểu không có marker nhưng giọng true vẫn có; tên escape, input không mutate |
+| VFLAG-03 | Signed localhost app ×VI/EN/ZH ×light/dark ×390/768/1440; mở details bằng phím |18configs/180states; noaudio, đúng3ready options trong fixture; page/console/dialog/error/overflow/write/external0 |
+| VFLAG-04 | Rà diff và delivery | Đúng7predicate/5productionlines, không API/auth/CSS/capability/engine;951Node/10Python source; provenance và CI trên đúngHEAD trước đóng delivery |
+
+Fixture chỉ sửa READ responses bootstrap/profile trong browser; server bridge
+không có, provider execution false; giữ signed identity/CSRF/role thật. Không
+claim liên kếtTelegram, backend Voice Vault, preview/output hoặc LIVE. Evidence
+`reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json`.
+
 ## C0 — PR661 tương thích main, phiên R218-C0-COMPAT-20261023
 
 Tracker hiện hành: Issue662 trong đúng repo standalone; không tạo bộ case cạnh tranh.

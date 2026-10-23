@@ -103,7 +103,8 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## C0 — Bảo toàn / chốt WIP
 
-- [~] C0-PR661-MAIN-SYNC: tiếp tục từ BASEcb995c7, main406127e; chỉ hai báo cáo
+- [x] C0-PR661-MAIN-SYNC (branch+CI, không deploy): tiếp tục từ BASEcb995c7,
+  main406127e; chỉ hai báo cáo
   sinh tự động xung đột. Lần thử cũ đã abort vì13 assertion lỗi; lịch sử đó giữ
   tại spec `2026-10-23-r218-pr661-main-sync.md`. Candidate hiện tại đã sửa tương
   thích bằng các mục dưới; provenance/push/CI/mergeability phải có receipt riêng.
@@ -115,11 +116,14 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [x] C0-B metadata compatibility: RED mới ghi2attribute trùng; GREEN helper7/7
   và Node motion11/11, giữ geometry batching/pointer cancel/reveal/teardown.
   Không tinh chỉnh hiệu ứng hoặc kết luận FPS/INP/LCP; M0 vẫn mở.
-- [~] C0-C regression/delivery: fullNode942/942, bounded upstream+Voice Python27/27,
+- [x] C0-C branch regression/delivery: HEAD9d941fb đã đọc lại, PR661CLEAN/MERGEABLE;
+  run39904684572 cả2jobsSUCCESS, Linux396critical+26browserruntime. Receipt
+  Issue662#issuecomment-6358064715. Không merge PR/deploy/LIVE; fullNode942/942,
+  bounded upstream+Voice Python27/27,
   syntax6JS/compile2Python/diff-check đạt. Windows POSIX0600 baseline failure
   được giữ nguyên test; CI Linux phải chạy đủ. Metadata Tester được refresh;
   bounded CI local395passed/1deselected/0failed. Evidence
-  `R218-PR661-MAIN-COMPAT-QA-20261023.json`; remote CI chưa được suy là xanh.
+  `R218-PR661-MAIN-COMPAT-QA-20261023.json`; receiptCI được đọc trực tiếp trênGitHub.
 
 - [x] Root menu Bot và nhóm sản phẩm ghi tại WEBAPP-BOT-PRODUCT-INVENTORY-R218.md.
 - [x] Đọc menu/handler/catalog chính cho Voice/Music/SubDub/Image/Video và tiện ích.
@@ -248,6 +252,15 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   không có search/pagination/rename/default/delete/preview/handoff đã xác minh.
   Không lấy22endpoint metadata của Voice Studio làm bằng chứng Bot-parity;
   contract canonical tiếp tục theo `2026-10-18-r218-02a-voice-vault-canonical-contract.md`.
+- [x] VO-CANONICAL-FLAG-TRUTH local UI: controlled malformed flags từng bị hiểu thành
+  default/ready/preview và có thể vào option ở hai builder. Chỉ booleantrue mới
+  được mang nhãn tích cực; spec `2026-10-23-r218-voice-canonical-flag-truth.md`.
+  Baseline39/39; RED15/9 sau sửa harnessZH; GREEN24/24, focused48/48,
+  fullNode951/951, Python source10/10. Flash3.8R1/R2; patchR2 áp nguyên văn,
+  bảy predicate/5productionlines. Browser18configs/180states, noerror/overflow/
+  UIwrite/external; signed app có fixture READ bootstrap/profile được ghi rõ.
+  Evidence `R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json`; delivery/CI mới còn mở.
+  Không mở management/provider/backend hoặc sửa ké nhãn/ngôn ngữ generic.
 - [x] VO-MANAGEMENT-FEEDBACK-LOCALE: bốn thông báo filter/clear/page/refresh đã
   cân bằng VI/EN/ZH; ba nhánh read không báo thành công khi failed/stale/null/
   undefined/đổi route/non-ready. RED5fail→focused9/9, fullNode942/942, Python10/10.
