@@ -1,6 +1,7 @@
 {
   "task": "VO-CANONICAL-FLAG-TRUTH",
   "base_sha": "9d941fbd52e444d3093f781c48f49ea6dcf30350",
+  "reviewed_source_sha": "b397ef488c0a5b089eedca9c7053c3d8d2187c77",
   "branch": "webapp-r218-billing-ui-20261022",
   "pr": 661,
   "tracker_issue": 662,

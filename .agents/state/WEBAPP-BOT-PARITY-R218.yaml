@@ -18,6 +18,8 @@ checkpoint_voice_flag_truth_20261023:
   tests: "R2 test-only RED15pass/9fail; GREEN24/24, focused48/48, fullNode951/951, Python source10/10; local boundedCI395pass/1WindowsPOSIXdeselected/0fail/16warnings in112.86s; syntax/diff0. R2 production applied verbatim; no thirdround."
   browser: "18configs/180profile states; signed localhost with documented browser-onlyREAD bootstrap/profile fixtures, real identity/CSRF/role unchanged, server bridge absent/executionfalse; errors/overflow/UIwrite/external0. Not canonical/preview/output/LIVE."
   cleanup: "Owned QAserverPTY76092 stopped via newline exit0; temporaryDB/assetscleaned,43347listeners0."
+  reviewed_source_sha: b397ef488c0a5b089eedca9c7053c3d8d2187c77
+  prepush_report: reports/prepush/R218-20261023-VOICE-CANONICAL-FLAG-TRUTH.md
   next: "Finish docs/portableTester metadata, boundedregression, prepush, sourcecommit/provenance, push/readback/CI. Then resume remaining P1/P2 UI without unlocking canonical backend or M0 early."
 checkpoint_main_compat_20261023:
   base_sha: cb995c7809c8da086b5f3e80f09546374832ef8a
