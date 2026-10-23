@@ -1,5 +1,19 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 23/10/2026 — Music/SFX D2, cùng chức năng nhưng bỏ màn hình kỹ thuật
+
+| Yêu cầu gốc/P2 | Source hiện tại | Bằng chứng/giới hạn |
+|---|---|---|
+| Web gọn, không ô vô nghĩa | Intro/stat/boundary/empty/scopeẩn;formvàresultcódata mớihiện | D2actualbrowsergate,khôngsuytừCSSsource |
+| Native5preset/3textitems | IDs,fields,validators,explicitPOSTvà3items/cautions/reviewgiữ | FullNode1073/Python395portable;DTO/nativebrowsertáchkhỏipresentationdoubles |
+| Chữ đúng ngôn ngữ | 2localH1/8copyrows/cảnhbáostale dùngcatalogue | New52tests;khôngdịchserverdata |
+| Không mất nội dung khi sửa | LocalizedstaleDOMparagraphthayVIpseudocopy;SFXcomparison/remountlogicgiữ | Actualremountcheckbắtbuộc;khôngdùngrendererunitthaylifecycleproof |
+| Giao nhạc/hiệu ứng thật | Lát này vẫnchỉhướng/bảngvănbản | Audio/player/download/save/reuse/BotparityvẫnOPEN |
+
+Tài liệu cũ trình bày nhiều panel giới hạn như sản phẩm hoàn chỉnh không còn
+phù hợp: giao diện gọn không đồng nghĩa engine đã tạo âm thanh. Không xoá
+cảnh báo nội dung thực hoặc nới các cổng engine để tạo cảm giác đã xong.
+
 ## 23/10/2026 — đối chiếu Music presentationD1
 
 | Mục gốcP2/copycatalogue | Hiện trạng được đo | Giới hạn |

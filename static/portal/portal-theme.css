@@ -8850,6 +8850,46 @@ body {
   font-size: 16px;
 }
 
+article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) {
+  gap: 16px;
+}
+article.portal-page.portal-music-directions :is(.portal-music-directions-intro, .portal-music-directions-boundary, .portal-music-directions-scope),
+article.portal-page.portal-sfx-cue-sheet :is(.portal-sfx-cue-sheet-intro, .portal-sfx-cue-sheet-boundary, .portal-sfx-cue-sheet-scope),
+article.portal-page.portal-music-directions .portal-music-directions-result:not([aria-live="polite"]),
+article.portal-page.portal-sfx-cue-sheet .portal-sfx-cue-sheet-result:not([data-sfx-cue-sheet-receipt]) {
+  display: none;
+}
+article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-directions-layout, .portal-sfx-cue-sheet-layout) {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: none;
+  gap: 16px;
+}
+article.portal-page.portal-sfx-cue-sheet .portal-sfx-cue-sheet-layout > :is(.portal-sfx-cue-sheet-form, .portal-sfx-cue-sheet-result) {
+  grid-area: auto;
+}
+article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-directions-meta, .portal-sfx-cue-sheet-meta) > span {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--portal-muted);
+  font-size: 13px;
+}
+article.portal-page.portal-sfx-cue-sheet [data-sfx-cue-sheet-family],
+article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) .portal-native-output-detail,
+article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-directions-result, .portal-sfx-cue-sheet-result) > .portal-form-note,
+article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) .portal-native-stale-note,
+article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-directions-result, .portal-sfx-cue-sheet-result)[data-stale="true"]::after {
+  display: none;
+}
+article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) :is(.portal-music-directions-result, .portal-sfx-cue-sheet-result)[data-stale="true"] > .portal-native-stale-note {
+  display: block;
+  margin: 12px 0 0;
+  color: var(--portal-warning);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
 /* Final light AI Chat Workspace surface */
 .portal-page:is(.portal-chat-workspace, .portal-chat-workspace-detail) :is(.portal-chat-workspace-create, .portal-chat-workspace-boundary, .portal-chat-workspace-filters, .portal-chat-context-card, .portal-chat-turn, .portal-chat-version-list > article, .portal-chat-event-list > div, .portal-chat-execution, .portal-chat-execution-layout > section, .portal-chat-run-card) {
   border-color: var(--portal-border);

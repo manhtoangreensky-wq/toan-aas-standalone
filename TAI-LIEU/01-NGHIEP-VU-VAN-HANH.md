@@ -1,5 +1,22 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 23/10/2026 — Music/SFX D2 trong source nhánh, chưa deploy
+
+Hai công cụ lập hướng âm nhạc/bảng hiệu ứng là luồng văn bản, không phải
+trình tạo tệp âm thanh. Màn hình giữ form và năm lựa chọn; các khối thống kê,
+giới hạn lặp, phạm vi phụ và kết quả rỗng được ẩn. Native success hiện thêm
+kết quả có ba item. Một ghi chú ở form nói đúng loại đầu ra; không dựng
+player, download, giá hay thành công provider giả.
+
+Metadata trình bày bằng chữ, raw family enum không còn hiện; dữ liệu server,
+cảnh báo/review thật và escaping giữ nguyên. Sửa nội dung vẫn đánh dấu kết
+quả cũ; warning là paragraph đúng ngôn ngữ và vẫn có sau SFX remount. Boundary
+DOM còn để placement helper tìm đúng vị trí nhưng không chiếm cột trống.
+Sharedhero/state/normalizer/input/API/auth/ví/backend/motion không đổi.
+
+Focused138/fullNode1073/boundedCI395portable đã chạy;actualbrowser/delivery
+xem evidence D2 hiện hành. Không suy từ source/QA local ra VPS hoặc LIVE.
+
 ## 23/10/2026 — Music presentationD1: chữ và khả năng đọc
 
 Chỉhai trangMusicDirections/SFXCueSheet: placeholder/help mô tả đã theoVI/EN/ZH;

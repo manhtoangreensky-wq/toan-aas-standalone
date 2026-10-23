@@ -1,5 +1,23 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-MUSIC-PRESENTATION-D2-20261023 — bỏ khối thừa, giữ kết quả thật
+
+BASE3e91dbd8244c0f51b42139c86cd62cdb0e243af1;PR661/Issue664.
+Chỉ2nativeMusic/SFXpages;D1/A/B/C/D0/backend/API/provider/ví/motiongiữkhóa.
+Evidence `reports/audit/R218-MUSIC-PRESENTATION-D2-QA-20261023.json`.
+
+| Case | Mức | Thao tác | PASS / canh lỗi cũ |
+|---|---|---|---|
+| MU-D2-01 | nặng | MởMusicDirections/SFXCueSheet ởVI/EN/ZH,sáng/tối,360..1440/landscape | Banđầu1formcard,oneH1đúnglocale;intro/stat/boundary/empty/scopeẩnkhỏiAX;khôngcộtrỗng;input16px/helperAA |
+| MU-D2-02 | nặng | Chọnđủ5preset/tool/locale,composeexplicitnative | Đúng3textitems;form+result2cards,cùngcột/gap16px;giữserverdescription/cautions/review/escaping;familyenumvàtechnicalcopylặpẩn;khôngaudio/playergiả |
+| MU-D2-03 | nặng | Sửa3lầnrồiremountSFX bằngpublicmountkhôngoverridecontext | CảnhbáostaleDOMđúnglocale,data/inputgiữ,pseudocũẩn;edit/remountkhôngPOST;SFXstale/draftvẫncòn;actualnativekhácunittestdoubles |
+| MU-D2-04 | nặng | Validation/copyrightguard/networkfault/retry/keyboard/focus,text2x | Khôngmấtguard/error/pending/success/focus/draft;submit>=44pxởtrạngtháitĩnh;0unexpectederror/overflow/external/unapprovedwrite;intentionalnetworkerrorsghiriêng |
+
+Mới52renderer/copytests dùngSUTthật,normalizer/inputdoubleschỉpresentation.
+CSSsourcetestkhôngchứngminhcomputedlayout/AX;actualbrowsergatebắtbuộc.
+HaiFlashhandoffkhôngđạtđãgiữlog;Solxhighsửađúngtest/mộtanchor,khôngAGYR3.
+KhôngdùngscopedD2PASSđểđóngwholeMusic/audio/Botparity/deploy/LIVE.
+
 ## R218-MUSIC-PRESENTATION-D1-20261023 — chữ và khả năng đọc
 
 BASE1144896dde1e957e54de7f1dee361ed927d71529;PR661/Issue664;4fileBuilder

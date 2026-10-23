@@ -112,11 +112,11 @@ No backend/API/engine/provider or motion work. Detailed packet before BUILD.
 ## 8. Checklist nghiệm thu
 
 - [x] Baseline24configs/48states vàopaquebackground/touchlabelmeasure.
-- [ ] D1nineUIstrings VI/EN/ZH, không thay nguồn/ngôn ngữ dữ liệu server.
-- [ ] Helpercontrast>=4.5 hai theme; textarea/select16px,labels/submit>=44px.
-- [ ] D1/D2realnativeflow vẫn3items, error/guard/stale/focus/draft không mất.
-- [ ] D2initialvisiblecard1, resultstate2; khôngsidebarcolumnrỗng/stat0/audiofake.
-- [ ] 360/375/390/768/1440/landscape vàreducedmotion/textscale browser checks.
+- [x] D1nineUIstrings VI/EN/ZH, không thay nguồn/ngôn ngữ dữ liệu server.
+- [x] Helpercontrast>=4.5 hai theme; textarea/select16px,labels/submit>=44px.
+- [x] D1/D2realnativeflow vẫn3items, error/guard/stale/focus/draft không mất.
+- [x] D2initialvisiblecard1, resultstate2; khôngsidebarcolumnrỗng/stat0/audiofake.
+- [x] 360/375/390/768/1440/landscape vàreducedmotion/textscale browser checks.
 - [ ] Source/regression/Python/browser/review/prepush/CI/receipt trước mỗi bước.
 
 ## 9. Chưa kiểm được / ngoài phạm vi

@@ -1,5 +1,8 @@
 # MU-NATIVE-PRESENTATION-D2 — dọn khối phụ và chỗ trống
 
+HISTORICAL_DRAFT: hợp đồng thực thi hiện tại là
+`2026-10-23-r218-music-presentation-d2.md`; không dùng giả thuyết dưới để BUILD.
+
 23/10/2026 DRAFT, **không BUILD trước D1accepted**. ROOT/branch/Issue664/PR661
 theoD1; BASEphảilấylạisaudeliveryD1. B/C/D0locks giữ nguyên, motioncuối.
 Ownerđãyêucầuẩnôvônghĩa/toànwebapp; lát này chỉ2nativeMusic/SFXpages.

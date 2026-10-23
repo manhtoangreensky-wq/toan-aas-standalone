@@ -383,11 +383,15 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   SameD1FlashR2movesonly2rulesbeforeChat,notestweakening. LocalR2Node1021/
   foundation90/boundedCI395portable/independentC0I0M0/signed48configs96states
   allPASS;oldCSS/Chatcontent+orderretainedafterCRLFnormalization. NewCIpending.
-- [ ] D1branchdelivery: docs/Tester/prepush/provenance/push/readback/newCI/
-  receipt664;D2lockeduntilD1accepted.
-- [ ] MU-NATIVE-PRESENTATION-D2: auditplanDRAFT scopedhideintro/boundary/empty/
+- [x] D1branchdelivery: HEAD3e91dbd8/CI39975608329bothSUCCESS,396Linux+26runtime;
+  receipt664#issuecomment-6368236480,IssueD1tickreadbacktrue. D2unlockedonlynow.
+- [ ] MU-NATIVE-PRESENTATION-D2: detailedspecREADYafterD1;scopedhideintro/boundary/empty/
   scope,onecolumn/noblankgap,flattermetadata+truthfulsingletext-outputnote;
   noinput/result/normalizer/integration/A/B/C/D0/motionchange.
+  LocalUIaccepted:52new/138focused/1073Node/395portablePython/32Tester;
+  independentC0I0M0,main48+focus24+guard36actualPASS. Initial1/result2cards,
+  3items/all5presets/stale+remount/AX/textstress,0unexpectederrors/overflow.
+  TwoFlashhandoffsfailedretained,Soltest+oneanchoronly/noR3;deliverypending.
 - [~] MU-00 control-level local đã khóa theo C0; các mục runtime và delivery dưới đây chưa đóng.
 - [~] MU-00 browser presentation — 19/10/2026: `/music/create` và `/music/song` đã kiểm bằng Edge localhost với 36 cấu hình (VI/EN/ZH × sáng/tối × 390/768/1440 × 2 workspace), giữ field bài hát riêng, không hiện audio/player/giá/download giả; page/console/request ngoài/write/unknown API/overflow đều `0`. Đây là fixture đọc-only, chưa phải generation/player/delivery/LIVE.
 - [ ] Nhạc nền/Bài hát/Kho nhạc-SFX/Chỉnh nhạc; capability thật.
