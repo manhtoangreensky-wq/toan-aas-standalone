@@ -8,7 +8,7 @@
   "tracker":664,
   "contract_receipt":"https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664#issuecomment-6366608009",
   "scope":"Nine fixed UI copy rows consumed by two field functions/SFXresult; two route-scoped CSS rules for existingmutedtoken helpercolor and textarea/select16px. No layout/cardvisibility/data/schema/normalizer/integration/auth/provider/wallet/motion change.",
-  "handoff":{"model":"gemini-3.8-flash-low","round":1,"status":"SUCCESS","seconds":80.9040656,"turns":1,"packet_chars":22290,"runtime_payloads_exported":0,"test":"VERBATIM_R1","production":"VERBATIM_R1_6_EDIT_RECORDS","code_corrections_by_primary":0,"round2":"NOT_REQUIRED"},
+  "handoff":{"model":"gemini-3.8-flash-low","round":1,"status":"SUCCESS","seconds":80.9040656,"turns":1,"packet_chars":22290,"runtime_payloads_exported":0,"test":"VERBATIM_R1_EXCEPT_ONE_TRAILING_BLANK_LINE_REMOVED_PREPUSH","production":"VERBATIM_R1_6_EDIT_RECORDS","code_corrections_by_primary":0,"round2":"NOT_REQUIRED"},
   "tests":{
     "clean_red":"0pass/5assertionfail,exit1; notharnesscrash",
     "new_green":"5pass/0fail,exit0",

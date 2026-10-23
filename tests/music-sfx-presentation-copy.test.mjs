@@ -173,4 +173,3 @@ test("renderSfxCueSheetResult renders caution and review defensive fallbacks", (
     assert.ok(html.includes(`<li>${reviewFallback}</li>`));
   }
 });
-
