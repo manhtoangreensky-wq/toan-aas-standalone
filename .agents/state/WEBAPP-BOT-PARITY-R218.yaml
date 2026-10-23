@@ -19,7 +19,7 @@ checkpoint_main_compat_20261023:
   tests: "FullNode942/942; upstream+Voice Python27/27; JSsyntax6/6; py_compile app.py/copyfast_pages.py; diff-check0. BoundedCI Windows395passed/1deselected/0failed/16warnings; LinuxCI must run unchanged POSIXtest."
   baseline_windows: "POSIX0600 test observes0666 onWindows; source/test Gitblob hashes identical toBASE, no test/source modification. LinuxCI must run it unchanged."
   qa_cleanup: "Task-owned PTY28258 origin127.0.0.1:2250 stopped bynewline, terminalexit0; temporary DB/assets context cleaned."
-  delivery: "Uncommitted task-owned merge candidate; source/evidence commit, provenance refresh/verify, push/readback/CI pending. No PR merge/deploy."
+  delivery: "Clean source merge commit ccb84fd8abccb6610bdc37708c3226e6d0b359c9 contains main406127e. Prepush report reports/prepush/R218-20261023-PR661-MAIN-COMPAT.md; provenance refresh/verify, push/readback/CI pending. No PR merge/deploy."
 checkpoint_20261023:
   evidence: reports/audit/R218-VOICE-METADATA-QA-20261023.json
   source_changed: false

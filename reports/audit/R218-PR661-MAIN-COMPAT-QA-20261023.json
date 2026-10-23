@@ -3,6 +3,7 @@
   "date": "2026-10-23",
   "base_sha": "cb995c7809c8da086b5f3e80f09546374832ef8a",
   "upstream_sha": "406127e6c128f08c27a33b66b132eff56b01542a",
+  "reviewed_source_merge_sha": "ccb84fd8abccb6610bdc37708c3226e6d0b359c9",
   "branch": "webapp-r218-billing-ui-20261022",
   "pr": 661,
   "tracker_issue": 662,
