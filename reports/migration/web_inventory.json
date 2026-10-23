@@ -10316,7 +10316,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1122,
+      "occurrences": 1123,
       "provider": "PayOS"
     },
     {
@@ -10402,18 +10402,20 @@
         "reports/audit/R218-IMAGE-WORKSPACE-CONTINUITY-QA-20261021.json",
         "reports/audit/R218-MUSIC-PRESENTATION-D1-QA-20261023.json",
         "reports/audit/R218-MUSIC-PRESENTATION-D2-QA-20261023.json",
+        "reports/audit/R218-MUSIC-PRODUCT-READABILITY-E-QA-20261023.json",
         "reports/audit/R218-MUSIC-SFX-INTERACTION-QA-20261023.json",
         "reports/audit/R218-PR661-MAIN-COMPAT-QA-20261023.json",
         "reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json",
         "reports/audit/R218-VOICE-DIRECTION-CLARITY-QA-20261023.json",
         "reports/audit/R218-VOICE-METADATA-QA-20261023.json",
         "reports/audit/R218-VOICE-VAULT-NOTICE-CLARITY-QA-20261023.json",
+        "reports/prepush/R218-20261023-MUSIC-PRODUCT-READABILITY-E.md",
         "reports/prepush/R218-20261023-VOICE-AUDIT-DOCS.md",
         "studio/script.js",
         "video.html",
         "video.py"
       ],
-      "occurrences": 30,
+      "occurrences": 33,
       "provider": "Gemini"
     },
     {
@@ -18330,9 +18332,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 352,
-  "source_files_scanned": 352,
-  "source_fingerprint_sha256": "5be584c9edfba29d4a5ace91e64045699f47ce25d5eb77a359600946f1fde8d6",
+  "source_files_discovered": 355,
+  "source_files_scanned": 355,
+  "source_fingerprint_sha256": "efe6d9a8ca2fc75508d43b50f17217a63f2f646f27b9dfdb78d64837bfc6b515",
   "source_root": "repository-root",
   "ui_path_references": [
     {
