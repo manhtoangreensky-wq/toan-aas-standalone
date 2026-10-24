@@ -1,12 +1,12 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: SUBDUB_D3_LOCAL_GATES_PASS_DELIVERY_PENDING
+status: SUBDUB_E3_LABEL_CONTRAST_LOCAL_PASS_RANGE_NEXT
 date: 2026-10-24
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r218-billing-ui-20261022
 pull_request: 661
-head_sha: 00a34c2b9aea1c43ba387bd70004ea6a90b5b55f
+head_sha: 79cd75d3d8ee50685bbecd4056f7d84a79f8e68a
 checkpoint_music_mu07_a_20261024:
   base_sha: 520174941470fab34c60c26e62607ba2d4b3568f
   phase: REPORT
@@ -87,8 +87,8 @@ checkpoint_subdub_c3_20261024:
   next: "D3unlocked;E3AXreadiness/hydrationauditretainsunknownfirstmismatch. No wholevoice/runtime/motion/LIVEclaim."
 checkpoint_subdub_d3_20261024:
   base_sha: 00a34c2b9aea1c43ba387bd70004ea6a90b5b55f
-  phase: VERIFY
-  status: D301_D305_LOCAL_PASS_D306_DELIVERY_PENDING
+  phase: REPORT
+  status: DELIVERED_CI_GREEN_NO_DEPLOY
   spec: docs/superpowers/specs/2026-10-24-r218-subdub-empty-review.md
   checklist: _giao-viec/CHECKLIST-36-SD-D3.md
   contract: "Issue664#6379928009;2staticpricecostmarkers+2CSSrules;realbalance/settings/gateskept;reportfailopenforchangedstate/status/additionalcontent."
@@ -101,7 +101,21 @@ checkpoint_subdub_d3_20261024:
   review: "IndependentC0I0M0/exact3records/reversewholeJSCSSBASELF/protected12/oldtestsChatunchanged."
   evidence: reports/audit/R218-SUBDUB-EMPTY-REVIEW-QA-20261024.json
   cleanup: "Owned37857/95723newlineexit0/tempwdsco22q-phxu3ty1removed/listeners4639-23976=0outsidecheck;workerbrowsersterminal/nootherprocessstop."
-  next: "D306source/provenance/push/exactHEADCIboth/receiptbeforeE3;E3AXreadinessUNKNOWNretained/motionLAST/noengineLIVEclaim."
+  delivery: "SOURCEd643ce55/HEAD79cd75d3/CI40063985662bothSUCCESS396Linux63.35s+26runtime0.27s/456True0False;receipt6380165981/D3tickreadback. No merge/deploy."
+  next: "E3fullUI/readiness;AXUNKNOWNretained/motionLAST/noengineLIVEclaim."
+checkpoint_subdub_e3_lc_20261024:
+  base_sha: 79cd75d3d8ee50685bbecd4056f7d84a79f8e68a
+  phase: VERIFY
+  status: LOCAL_CHILD_GATES_PASS_PARENT_E3_OPEN_NOT_PUSHED
+  contracts: "E3parent6380189875/LC6380526568/R2amendment6380636456. OneE3batchpushafterRANGE-GROUP-EDIT-READINESS-finalQA."
+  audit: "Actual168complete/588choices168Voicereturns/504LFassets/0interaction-errors-external-UIwrites-overflow;84unlabelled/483nondecorativetextAAfails/12Combo320range36x44;flatgroups/missingeditnav. Raw5937654f...f511e723."
+  handoff: "R1FlashHigh135.2326405s/3records;LABELpassed/CONTRAST84darkfailsfromrootSPECcascadegap;R2sameCONTRASTFlashHigh202.5577788s/oneexactselectorrecord. NoR3/productionrewritebyroot."
+  source: "Onlyfouruniqueidforattrs+oneinkhelperCSSrule,finalspecificity0,5,1beatsknown0,4,1;reverseJSCSSBASELF/protected12/oldtestsChat/C0I0M0. JS2469ac87...5c1d4d/CSS0d01f5d7...1b25c5a."
+  verify: "Stable-signed48/24associationsHome-nondefaultmode-return-review/768helpersmin8.83653/unknown0/label-textfails0/errors-external-UIwrites-overflow0. Node1281/58.7203667s/PythonCSS21/1.48s,existingwarning1. Raw827d9dd4...8dff2a."
+  retained_unknown: "FirstenhancedR2probevi-dark1440source-line-rule reviewmismatchcauseUNKNOWN/originalDOMglobalAXsnapshotmissing. Actualauthbootstrappreconditionrerunpassed,noassertionrelaxation/noauthfix;parentREADINESSopen. C3AXnotreproduced84statesstillUNKNOWN."
+  evidence: reports/audit/R218-SUBDUB-LABEL-CONTRAST-QA-20261024.json
+  cleanup: "OwnedQA9592newlineexit0/tempvh_xzepqremoved/listener26962=0outsidecheck;workers/currentbrowsersclosed. EarlierstalledownedPID3100treeonlystopped."
+  next: "E3-RANGEformalcontract+actualRED12thenFlashR1;DRAFT40readyforfinalization. ThenGROUP/EDIT/READINESS/final168/Tester/docs/provenance/onepush. MotionLAST,goalACTIVE."
 checkpoint_music_fh_20261024:
   base_sha: 1e01f2417e3000a09c45186e11ee144e52a22fa5
   result: DELIVERED_CI_GREEN_NO_DEPLOY
@@ -764,7 +778,7 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "D3localRED48GREEN96/480diagnostics/336choices96returns/288LFassets/Node1281/Python21/Tester32/C0I0M0;finishsource-provenance-push-exactHEADCIreceiptbeforeE3. B4C3locked/E3AXreadinessunknownfindingretained,motionLAST,goalACTIVE."
+next_action: "E3LABELR1+CONTRASTR2localgatespass48/768helpersmin8.83653/Node1281/Python21/C0I0M0;savecheckpointthenE3-RANGE(DRAFT40)RED12→FlashR1. GROUP/EDIT/READINESS/final168andoneE3pushremain;D3deliveryreceipt6380165981closed,motionLAST,goalACTIVE."
 active_billing_batch:
   id: R218-BILLING-20261022
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660

@@ -1,5 +1,17 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — E3 label/contrast, không đánh đồng có nút với đủ UX
+
+| Yêu cầu | Hiện trạng mới đo | Chưa hoàn tất |
+|---|---|---|
+| SD06/17 chọn quy tắc/hiển thị | 2uniqueidforpairs;24association/keyboard/mode-review tests trong48configs | Không cueeditor/outputthật |
+| Hướng dẫn đọc được sáng/tối | Scopedhelperink;768mẫumin8.83653/unknown0 | Không fullpageWCAG/device/motionproof |
+| SD07 nhóm giọng/SD18 sửa từreview | READ168 xác nhận flat7radios và thiếueditnav | GROUP/EDIT tiếp tục,khôngchuyểnT0đểbỏsótUI |
+| Slider trênmobile | Combo320range36x44 ở12mẫu | RANGE sẽ sửa theoUIcontract riêng |
+| Khởi tạo/sessiondraft | Mộtline-rule reviewmismatchởenhancedprobe;causeUNKNOWN | ParentREADINESS giữmở dùstable-signed48rerunđạt |
+
+OriginalSD01..21 vẫn giữ;label/contrast chỉ hai childlocal,khôngfullE3/Botparity.
+
 ## 24/10/2026 — SD18..20: review có dữ liệu, không bày report rỗng
 
 | Yêu cầu gốc | Hiện trạng có bằng chứng | Giới hạn còn mở |

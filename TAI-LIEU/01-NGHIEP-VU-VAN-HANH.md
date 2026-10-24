@@ -1,5 +1,24 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — E3: nhãn chọn và chữ hướng dẫn SubDub
+
+Source nhánh, chưa push/deploy E3: hai select Quy tắc dòng/Hiển thị phụ đề
+Combo được gắn label-for/id riêng, không đổi tên trường/giá trị/event. Chữ
+hướng dẫn/mute/error/review và ghi chú giọng dùng ink hiện có trong đúng
+SubDub. Selector đủ mạnh để không bị theme tối phía sau ghi đè; không dùng
+important, không đổi token/màu nền hay logic. R1 thiếu độ ưu tiên là lỗi spec,
+R2 chỉ sửa selector. LABEL vẫn bản R1, không có R3 hoặc viết lại production.
+
+Stable-signedQA48 đạt24association/keyboardHome/mode-return/review;768mẫu
+helpernormal-mute-invalid có min8.83653:1,unknownbackground0,0label/textfail/
+pageerror/external/UIwrites/overflow. Node1281/PythonCSS21/reviewC0I0M0;
+hai ảnhreview sáng/tối390 đã xem. Không gọi đây là fullpageAA/engine/LIVE.
+Firstenhancedprobevi-dark1440 gặp reviewline-rule mismatch,causeUNKNOWN;
+chờactualauthenticatedbootstrap trướcfirstinteraction thì48 đạt,nhưng
+parentE3-READINESS vẫn mở,khôngcoilàrootcausefix. RANGE/GROUP/EDIT còn làm.
+Evidence `reports/audit/R218-SUBDUB-LABEL-CONTRAST-QA-20261024.json`.
+D3 đã deliveredHEAD79cd75d3/CI40063985662bothSUCCESS456/receipt6380165981.
+
 ## 24/10/2026 — SubDub: bỏ report rỗng và dòng giá chưa có dữ liệu
 
 Source nhánh D3, chưa deploy: hai dòng giá/chi phí tĩnh chưa được cấp dữ liệu

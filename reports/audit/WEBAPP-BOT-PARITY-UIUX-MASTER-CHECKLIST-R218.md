@@ -524,15 +524,30 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   C305deliveredSOURCE00239d7f/HEAD00a34c2b/CI40061704379bothSUCCESS456records/
   receipt6379877100/readback. FirstAXnotemismatchcauseUNKNOWN;probe3correct/
   newexpectedlocale-readinessQAonly,unchangedtextassertion/nofurtherappchange.
-- [ ] SD-D3-EMPTY-REVIEW:spec2026-10-24-r218-subdub-empty-review.md/
+- [x] SD-D3-EMPTY-REVIEW:spec2026-10-24-r218-subdub-empty-review.md/
   contract6379928009;localRED48→GREEN96/480diagnostics/336choices/96returns/
   288LFassets/visual2gap16/0errors;exact3FlashR1records2attrs+2rules,
   reverseJSCSS/protected12/oldtestsChat/C0I0M0/Node1281/focused54/Python21/
-  Tester32. D306deliverypending;E3fullUI/AXunknown/runtime/LIVEremainOPEN.
+  Tester32. DeliveredSOURCEd643ce55/HEAD79cd75d3/CI40063985662bothSUCCESS456/
+  receipt6380165981;E3fullUI/AXunknown/runtime/LIVEremainOPEN.
 - [ ] SD-E3-AX-READINESS: C3firstmatrix30rows+ENdark844DubbingAXnote literal
   mismatchcauseUNKNOWN(originalsnapshotnotcaptured);visualtrue/probe3AXtrue/
   final48initializedUItrue doesnotdiagnosetransient. Rerender/hydration/locale
   readiness tobeauditedatE3,notclosedfromrerun orCSS-onlyreview.
+- [ ] SD-E3-FINAL-UI actualREAD168finishedBASE79cd75d3/contract6380189875;
+  588choices/168Voicereturns/504LFassets/0interaction-page-external-UIwrite-
+  overflowfailures. UIstillFAILEDpending5children:LABEL84unlabelledsamples,
+  CONTRAST483nondecorativetextfails(min1.84162),RANGE12samples36x44Combo320,
+  GROUPmissing4semanticgroups,EDITmissingper-groupreviewnavigation.
+  LABEL+CONTRASTcontract6380526568/probeRED48(24label390textfails),LABELR1+
+  CONTRASTR2local48/24associations/768helpersmin8.83653/unknown0/Node1281/
+  Python21/C0I0M0. R1darkcascadeSPECgap6380636456resolvedselectoronly,noR3.
+  Nochildpush,oneE3batchafterlocalgates. AXmismatchnot
+  reproduced84voicestates,causeUNKNOWNnotfixed. MotionLAST,goalACTIVE.
+- [ ] E3-READINESS:enhancedLCprobeVI-dark1440source-line-rule review mismatch;
+  causeUNKNOWN,originalglobalstate/AXsnapshotnotcaptured. Stable-signed48
+  passesafteractualauthbootstrapwait,notrootcausefix;keepownearly-input/
+  hydration/draftcontractbeforefullE3close. No authbusinessmutation.
 - [x] Shell một trang/bốn tab, mode/query/keyboard và panel tại chỗ đã khóa bằng test presentation.
 - [~] Source đã có lựa chọn “đã có/chưa có phụ đề”, bộ chọn tệp và trạng thái source rõ ràng;
   upload/preview/metadata/progress/cancel/replace/error vẫn chờ capability máy chủ.

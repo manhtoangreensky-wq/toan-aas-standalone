@@ -27311,8 +27311,8 @@
           </div>
         </div>
         <div class="portal-field">
-          <label class="portal-label">${safeText(copy.segmentRuleLabel)}</label>
-          <select class="portal-select" name="subtitle_format">
+          <label class="portal-label" for="subdub-source-line-rule">${safeText(copy.segmentRuleLabel)}</label>
+          <select class="portal-select" id="subdub-source-line-rule" name="subtitle_format">
             <option value="standard"${subDubDraftValue(draft, modeKey, "subtitle_format", "standard") === "standard" ? " selected" : ""}>${safeText(copy.ruleStandard)}</option>
             <option value="short"${subDubDraftValue(draft, modeKey, "subtitle_format", "standard") === "short" ? " selected" : ""}>${safeText(copy.ruleShort)}</option>
           </select>
@@ -27382,8 +27382,8 @@
           <div class="portal-subdub-config-card">
             <h4>${safeText(copy.subtitleConfigHeading)}</h4>
             <div class="portal-field">
-              <label class="portal-label">${safeText(copy.subDisplayLabel)}</label>
-              <select class="portal-select" name="sub_display_type">
+              <label class="portal-label" for="subdub-combo-display-type">${safeText(copy.subDisplayLabel)}</label>
+              <select class="portal-select" id="subdub-combo-display-type" name="sub_display_type">
                 <option value="bilingual"${subDubDraftValue(draft, modeKey, "sub_display_type", "bilingual") === "bilingual" ? " selected" : ""}>${safeText(copy.subDisplayBilingual)}</option>
                 <option value="single"${subDubDraftValue(draft, modeKey, "sub_display_type", "bilingual") === "single" ? " selected" : ""}>${safeText(copy.subDisplaySingle)}</option>
               </select>

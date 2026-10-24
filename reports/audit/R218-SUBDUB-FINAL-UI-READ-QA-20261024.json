@@ -1,0 +1,115 @@
+{
+  "task": "SD-E3-FINAL-UI",
+  "date": "2026-10-24",
+  "base_sha": "79cd75d3d8ee50685bbecd4056f7d84a79f8e68a",
+  "contract": 6380189875,
+  "status": "READ_COMPLETE_UI_FAILED_PENDING_ORDERED_REMEDIATION",
+  "dependency": "SD-D3receipt6380165981/CI40063985662bothSUCCESS456records",
+  "actual": {
+    "configs": 168,
+    "complete": 168,
+    "modes": 4,
+    "locales": [
+      "vi",
+      "en",
+      "zh"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "views": [
+      "320x800",
+      "375x812",
+      "390x900",
+      "414x896",
+      "768x1024",
+      "1440x900",
+      "844x390"
+    ],
+    "radio_choices": 588,
+    "Voice_returns": 168,
+    "asset_LF_checks": 504,
+    "interaction_failures": 0,
+    "page_console_errors": 0,
+    "external": 0,
+    "UI_writes": 0,
+    "horizontal_overflow": 0,
+    "input_text_font_below16": 0,
+    "note_AX_mismatch": 0,
+    "raw_sha256": "5937654ff1e1c7ebe026431f5efb0864a60778c8f615efb64d9b7d14f511e723",
+    "raw_path": "C:/Users/toann/Documents/Codex/qa/r218-music-review-FH-20261024/SDE3-read-durable/result.json"
+  },
+  "findings": [
+    {
+      "id": "E3-LABEL",
+      "priority": "P2",
+      "measured_samples": 84,
+      "consumers": 2,
+      "scope": "source-onlysubtitle_format andCombosub_display_type enabledselects have nolabelassociation",
+      "next": "Childcontract6380526568/FlashR1afterprobeRED"
+    },
+    {
+      "id": "E3-CONTRAST",
+      "priority": "P2",
+      "measured_non_decorative_samples": 483,
+      "minimum_ratio": 1.8416205588267522,
+      "other_ratios": [
+        2.0211528714891385,
+        3.5100441173202004
+      ],
+      "threshold": 4.5,
+      "scope": "Helper/mute/review/sharedvoice notes",
+      "next": "Childcontract6380526568/FlashR1afterprobeRED"
+    },
+    {
+      "id": "E3-RANGE",
+      "priority": "P2",
+      "measured_samples": 12,
+      "viewport_width": 320,
+      "mode": "SUBTITLE_PLUS_DUBBING",
+      "controls": 2,
+      "width_px": 36,
+      "height_px": 44,
+      "scope": "Threecolumnvolumegrid compressesrange",
+      "next": "FormalboundedresponsiveCSScontractafterLABELCONTRASTlocalgates"
+    },
+    {
+      "id": "E3-GROUP",
+      "priority": "P2",
+      "source_confirmed": true,
+      "scope": "SD07flat7radio grid lacks4requiredsemanticgroups;actualscreenshotsreviewed",
+      "next": "Exactgroupingdesign/specbeforeFlash"
+    },
+    {
+      "id": "E3-EDIT",
+      "priority": "P2",
+      "source_confirmed": true,
+      "scope": "SD18readonlyreview has noper-groupeditnavigation",
+      "next": "Exactcontrolmapping/focusspecbeforeFlash"
+    }
+  ],
+  "review": {
+    "source_crosswalk": "SD01..21allmapped;C0I3M0 UI(source1labeldefect+2requirementgaps)",
+    "runtime": "Additionalcontrast/rangefindingsrootactualQA,notcoveredbysource-onlyreview"
+  },
+  "known_AX_issue": "OriginalC3AXnotemismatchNOT_REPRODUCEDin84voicestates,rootcauseUNKNOWN;do notclaimfixed",
+  "QA_history": [
+    "Initialformatlabelassertion expectedSRT whileexistingreviewSRT(Standard);harnesscorrectedtoactualselectedformatcode prefix,noappchange;firstpartialrawkept.",
+    "Aggregatewriterlatersluggish/truncatedrawafter104observedrows;notacceptedmatrix. OwnedPID3100treeexplicitidentitycheckthenstopped;only7ownedprocesses. Newper-rowatomicprogressandfewerphotos preserved168andallcontrolassertions;finalcompleteexit0.",
+    "Rawsummary651textfailsincludes168decorativearia-hiddenlockicons;acceptedfindingaggregate483excludesonlydecorativeicons/uncertainbackgroundpairs. Leaftextonly,notfullAAaudit."
+  ],
+  "environment": "SignedisolatedQA/headlessEdge/Playwright;Browserpluginabsent;noinstalls/visiblewindow/IDE/authsettingschanges;UIGETonlyafterQAauthlocale",
+  "limitations": [
+    "Collectionexit0isnotUIacceptance;fivefindingIDsremainopen",
+    "Leaftextnotallmixedtextnodes/gradientpixelproof/nativeSafari/iOS/OStextscale/PWA/motionproof",
+    "Realupload/speaker/profile/quote/job/output/reuse/BotparityauthorityremainsT0"
+  ],
+  "provider_calls": 0,
+  "wallet_mutations": 0,
+  "production_data_mutations": 0,
+  "deploy": "NO",
+  "live_pass": "NOT_TESTED",
+  "goal": "ACTIVE",
+  "motion": "LAST"
+}
