@@ -1,5 +1,24 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SubDub: bỏ report rỗng và dòng giá chưa có dữ liệu
+
+Source nhánh D3, chưa deploy: hai dòng giá/chi phí tĩnh chưa được cấp dữ liệu
+được đánh dấu riêng rồi ẩn. Mode, settings, số dư được server chiếu và lý do
+khóa nguồn/CTA giữ nguyên; không tính giá hay tự điền số dư. Reportwrapper
+chỉ ẩn khi guarded và chỉ có header/emptychild. Childstate/status khác hoặc
+thêm directoutput đều làm wrapper hiện lại; không che trạng thái có dữ liệu.
+
+Đã đo RED48→GREEN96,336 lượt chọn7lane/96Voice returns,480 selector diagnostics,
+288assetLFhashes,0errors/external/UIwrites/overflow. Reviewsettings kiểm đúng
+keyset theo mode, kể cả customISO thêm dòng hợp lệ. Balance text bằng baseline;
+diagnostic `0 Xu` chỉDOM,khôngphải ví thật. Gap review→tools16px đúng gridgap
+ởVI/lightdark/390; hai ảnhreview theo vùngcuộn đã xem. Fullpagecapture bịclip
+ởscrollcontainer không được dùng làm bằng chứng toàntrang khôngtrống.
+Node54focused/1281full,PythonCSS21,Tester32/1POSIXdeselected; reviewC0/I0/M0.
+Evidence `reports/audit/R218-SUBDUB-EMPTY-REVIEW-QA-20261024.json`.
+C3 đã deliveredHEAD00a34c2b/CI40061704379bothSUCCESS/receipt6379877100.
+E3/AXreadiness, upload/engine/reportthật/motion/production/LIVE còn mở.
+
 ## 24/10/2026 — SubDub: dọn mô tả giọng thừa, giữ đủ lựa chọn
 
 Source nhánh C3, chưa deploy: chỉ thêm một rule CSS để ẩn fieldset Smart

@@ -80,7 +80,8 @@ Không giả player/profile/giá/Smart execution. Không sửa báo cáo rỗng 
 - [x] Flash3.8LowR1SUCCESS34.9398881s/1turn/139outputtokens,exact1record;noR2/noR3.
 - [x] C302/C303 final48/336choices/96VoiceReturns/AX/inertboxhint0/note1/radio7/callbacks3/B4mixdraftgatesheld.
 - [x] C304 Node1281/focused54/Python21/reviewC0I0M0/reversewholeCSS/JSbackendoldtestsChatunchanged/144LFassetchecks/errors0.
-- [ ] C305 Tester/docs/provenance/push/CIreceipt.
+- [x] C305 Tester/docs/provenance/push/CIreceipt: SOURCE00239d7f/HEAD00a34c2b,
+  CI40061704379bothSUCCESS456records/receipt6379877100/readback. Scoped only.
 
 ### AX-readiness diagnostic và giới hạn
 

@@ -1,5 +1,23 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-SUBDUB-D3-20261024 — báo cáo rỗng và dòng giá chưa có dữ liệu
+
+TesterREADY;BASE00a34c2b9aea1c43ba387bd70004ea6a90b5b55f;PR661/Issue664.
+Spec `2026-10-24-r218-subdub-empty-review.md`, contract6379928009.
+Chỉ QA signed-localhost/DBtạm; không production/provider/ví. Chẩn đoán DOM
+trạng thái và `0 Xu` chỉ kiểm selector, không phải giá/report/balance thật.
+
+| Case | Mức | Thao tác | Kết quả cần thấy |
+|---|---|---|---|
+| SDD3-01 | vừa | Bốn mode ×VIENZH×light3901440/dark3901440/360375768844ngang | Không khung report rỗng hoặc2dòng unavailable;mode/balance/settings/guard vẫn hiện;reporttitle vàplaceholder không vàoAX |
+| SDD3-02 | nặng | Diagnostic đổi childstate,errorstatus,thêm directoutput rồi hoàn nguyên | Mỗi nonemptyboundary làm wrapper hiện lại;trở về đúngempty thì ẩn;không dùng diagnostic tick engine/report |
+| SDD3-03 | nặng | Chọn đủ7giọng/saved-customVoiceđivề,Nhật/custompt-BR/mix0_200 | Lane/target/customISO/mix/review/draft giữ;baAuto callbacks riêng;không mở nguồn/CTAgiả |
+| SDD3-04 | nặng | So exactR1/reverseJS-CSS/protected/Node-Python/browser/receipt | Chỉ2attrs+2rules,oldtests/backend/Chat nguyên;0errors/external/UIwrites/overflow;exactHEADCI/receipt trước tickD3 |
+
+Canh lỗi cũ: customISO hợp lệ thêm reviewrow; kiểm exactkeyset + optionalcustom,
+không so count với drafttrống. E3AXreadinessUNKNOWN còn mở;D3không đóng motion,
+upload/quote/job/output/SmartMulti/Botparity/LIVE. NativeiOS/OStextscale chưađo.
+
 ## R218-SUBDUB-C3-20261024 — bỏ giải thích giọng trùng, giữ7lane
 
 TesterREADY;BASE89f6d6fe1a12047e79fa76a06f51a46c784dff95;PR661/Issue664.

@@ -1,5 +1,18 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SD18..20: review có dữ liệu, không bày report rỗng
+
+| Yêu cầu gốc | Hiện trạng có bằng chứng | Giới hạn còn mở |
+|---|---|---|
+| Review cấu hình trước xử lý | Exactkeyset/copy/mode/balance giữ trong96 cấu hình;2dòng unavailable tĩnh ẩn riêng | Không có canonical quote;không biến placeholder thành giá |
+| Kết quả/báo cáo | Khung khởi đầu rỗng ẩn cảwrapper;3nonemptyboundary diagnostics khôi phục | Không có reportDTOconsumer/job/outputthật;khôngtickSD20runtime |
+| Không mất chức năng | 336lanechoices/96VoiceReturns/B4/mix/draft/gates giữ,2attrs+2rulesonly | E3fullUI vàT0authority vẫn mở |
+
+Nguồn gốc `2026-10-18-r218-subdub-bot-parity-uiux.md` SD18..20; đối chiếu
+với `2026-10-24-r218-subdub-empty-review.md`. Snapshot tài liệu cũ về report
+đang trống không còn là UI hiện tại; chức năng engine chưa được hoàn thành
+chỉ vì không còn khung rỗng. C3receipt6379877100 là deliverynhánh,khôngLIVE.
+
 ## 24/10/2026 — SD07..14: clarity không thay cho chức năng giọng thật
 
 | Yêu cầu | Hiện trạng có bằng chứng | Giới hạn còn mở |

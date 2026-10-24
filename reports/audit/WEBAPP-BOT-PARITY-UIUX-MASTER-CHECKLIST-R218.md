@@ -517,12 +517,18 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   No newlanguage/provider capabilityclaim.
 - [x] SD-B4-LANGUAGE-FINDABILITY scopedUI+branchdeliveryacceptedasabove;
   wholeSubDub/provider/upload/speaker/output/LIVEstillOPEN.
-- [ ] SD-C3-VOICE-CLARITY:spec2026-10-24-r218-subdub-voice-clarity.md/
+- [x] SD-C3-VOICE-CLARITY:spec2026-10-24-r218-subdub-voice-clarity.md/
   contract6379509521;exact1FlashR1CSSrulehideinertguardedSmartbox+hint,
   keep7radios/sharednote/callbacks/Voice/B4/draft. RED24;sourceC0I0M0/
   Node1281/Python21;final48/336choices/96returns/144LFassets/0errors,
-  C305deliverypending. FirstAXnotemismatchcauseUNKNOWN;probe3correct/
+  C305deliveredSOURCE00239d7f/HEAD00a34c2b/CI40061704379bothSUCCESS456records/
+  receipt6379877100/readback. FirstAXnotemismatchcauseUNKNOWN;probe3correct/
   newexpectedlocale-readinessQAonly,unchangedtextassertion/nofurtherappchange.
+- [ ] SD-D3-EMPTY-REVIEW:spec2026-10-24-r218-subdub-empty-review.md/
+  contract6379928009;localRED48→GREEN96/480diagnostics/336choices/96returns/
+  288LFassets/visual2gap16/0errors;exact3FlashR1records2attrs+2rules,
+  reverseJSCSS/protected12/oldtestsChat/C0I0M0/Node1281/focused54/Python21/
+  Tester32. D306deliverypending;E3fullUI/AXunknown/runtime/LIVEremainOPEN.
 - [ ] SD-E3-AX-READINESS: C3firstmatrix30rows+ENdark844DubbingAXnote literal
   mismatchcauseUNKNOWN(originalsnapshotnotcaptured);visualtrue/probe3AXtrue/
   final48initializedUItrue doesnotdiagnosetransient. Rerender/hydration/locale

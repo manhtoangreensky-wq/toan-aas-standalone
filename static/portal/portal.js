@@ -27444,11 +27444,11 @@
           <span class="portal-summary-key">${safeText(copy.summaryModeKey)}</span>
           <span class="portal-summary-value" data-subdub-summary-mode>${safeText(modeCopy.title)} (${safeText(modeCopy.badge)})</span>
         </div>
-        <div class="portal-summary-item">
+        <div class="portal-summary-item" data-subdub-summary-placeholder="unavailable">
           <span class="portal-summary-key">${safeText(copy.summaryPriceKey)}</span>
           <span class="portal-summary-value">${safeText(copy.summaryPriceValue)}</span>
         </div>
-        <div class="portal-summary-item">
+        <div class="portal-summary-item" data-subdub-summary-placeholder="unavailable">
           <span class="portal-summary-key">${safeText(copy.summaryCostKey)}</span>
           <span class="portal-summary-value">${safeText(copy.summaryCostValue)}</span>
         </div>

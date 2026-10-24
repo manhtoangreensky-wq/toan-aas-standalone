@@ -8973,6 +8973,13 @@ article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) :is(.por
   display: none;
 }
 
+.portal-subdub-hub [data-subdub-summary-placeholder="unavailable"] {
+  display: none;
+}
+.portal-subdub-hub [data-subdub-stage="4"][data-status="guarded"]:has(> .portal-subdub-report-empty[data-state="empty"]):not(:has(> :not(.portal-card-header, .portal-subdub-report-empty[data-state="empty"]))) {
+  display: none;
+}
+
 /* Final light AI Chat Workspace surface */
 .portal-page:is(.portal-chat-workspace, .portal-chat-workspace-detail) :is(.portal-chat-workspace-create, .portal-chat-workspace-boundary, .portal-chat-workspace-filters, .portal-chat-context-card, .portal-chat-turn, .portal-chat-version-list > article, .portal-chat-event-list > div, .portal-chat-execution, .portal-chat-execution-layout > section, .portal-chat-run-card) {
   border-color: var(--portal-border);
