@@ -11,19 +11,36 @@ Connects the Web customer flow (/music/sfx-library) to a truthful mirror of the
 Telegram Bot's canonical public SFX library capability:
 - Bot Search: /sfx_library <query> -> freesound_search(query, limit=5)
 - Bot Select: /select_sfx <number> -> select_media_preview("sfx", ...)
-- Pricing & Xu: 0 Xu per search, 0 Xu per item selection (music_no_xu_text).
+- Immediate Intake Charges: 0 Xu per search, 0 Xu per item selection ("Bot chưa trừ Xu").
+- Downstream Video Usage Pricing: SFX library items consumed in paid video workflows
+  are priced according to bot.py::calculate_music_price:
+  max(SFX_LIBRARY_MIN_XU, sfx_count * SFX_LIBRARY_XU_PER_ITEM) (default: 10 Xu/item, min 10 Xu).
+  Charge trigger: "video_workflow_calculate_music_price".
+  The capability is NOT globally free.
 - Provider: Freesound public library asset search (NOT generative AI).
 - Separation: Generative SFX (/music/sfx) is separate and remains a Web-only extension.
 
+Runtime Truth & Fail-Closed Guard:
+- Explicit Test Mock: Deterministic mock fixtures are permitted strictly in test
+  environments (APP_ENV=test) via explicit dependency injection
+  (set_test_explicit_mock_results(...) or mock_results=<fixture>).
+  Mock injection in non-test environments is rejected with HTTP 403.
+- Non-Test Provider Disabled Fail-Closed: When WEBAPP_PROVIDER_CALLS_ENABLED!=true
+  in non-test environments (or when no explicit test fixture is provided), requests fail closed
+  with HTTP 503 (WEBAPP_PROVIDER_CALLS_DISABLED). No synthetic items are generated, no rows
+  are persisted to SQLite, and no wallet balance is altered.
+- Missing Canonical Credential: If FREESOUND_API_KEY / FREESOUND_CLIENT_SECRET is missing,
+  fails closed with HTTP 503 before any network socket is opened (0 network calls).
+- Provider Error Truth: Provider errors (HTTP 502, rate-limiting, network failures) fail
+  truthfully without synthetic mock fallback and without charging Xu.
+- Empty Provider Result: Legitimate empty results return an empty list [], without fabricating assets.
+
 Invariants:
-- Provider-Free Testing: When running in test environments (APP_ENV=test or
-  WEBAPP_PROVIDER_CALLS_ENABLED!=true), returns deterministic mock library results
-  without external network calls (0 provider network calls, 0 paid spend).
 - Fail-Closed Admission: Empty query, invalid query, out-of-range index, and invalid
   asset IDs fail closed with HTTP 400.
 - Owner Isolation: Search sessions and selection states are strictly scoped to account_id.
   Cross-account search session access and selection leakage are forbidden.
-- Zero Wallet Impact: Search and selection operations are 0 Xu (cost_xu=0).
+- Zero Immediate Wallet Impact: Search and selection intake operations charge 0 Xu immediately.
 - Normalization: Normalized preview items match Bot schema: id, provider, title,
   author, duration, license, source_url, preview_url.
 """
@@ -138,7 +155,7 @@ def normalize_freesound_preview_item(item: dict) -> dict:
 
 
 def _generate_mock_freesound_results(query: str, limit: int = 5) -> list[dict]:
-    """Generate deterministic mock Freesound items for provider-free testing."""
+    """Generate deterministic mock Freesound items strictly for explicit test fixtures in APP_ENV=test."""
     clean_query = query.strip().lower()
     results = []
     limit = max(1, min(limit, MAX_SEARCH_LIMIT))
@@ -311,7 +328,15 @@ def search_sfx_library(
     mock_results: list[dict] | None = None,
     force_provider_error: bool = False,
 ) -> dict:
-    """Execute public SFX library search, normalize items, and save search session."""
+    """Execute public SFX library search, normalize items, and save search session.
+
+    Enforces runtime truth and fail-closed guards:
+    - Explicit test mock fixtures permitted strictly under APP_ENV=test.
+    - Non-test runtime with WEBAPP_PROVIDER_CALLS_ENABLED!=true fails closed (HTTP 503).
+    - Missing canonical Freesound credentials fails closed before network dispatch (HTTP 503).
+    - Provider errors fail truthfully (HTTP 502/503) without synthetic fallback.
+    - Immediate intake charges 0 Xu; downstream video workflow consumption is priced.
+    """
     clean_account = str(account_id or "").strip()
     if not clean_account:
         raise HTTPException(status_code=401, detail="Yêu cầu đăng nhập tài khoản")
@@ -403,7 +428,7 @@ def select_sfx_library_item(
     asset_id: str | None = None,
     callback_token: str | None = None,
 ) -> dict:
-    """Select an SFX item from the account's latest search session."""
+    """Select an SFX item from the account's latest search session (charges 0 Xu immediately)."""
     clean_account = str(account_id or "").strip()
     if not clean_account:
         raise HTTPException(status_code=401, detail="Yêu cầu đăng nhập tài khoản")
