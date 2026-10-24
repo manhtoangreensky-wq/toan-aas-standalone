@@ -71,7 +71,7 @@ class MockVoiceVaultState:
                 "status": "active",
                 "is_default": 0,
                 "consent_status": "consented",
-                "preview_audio_ref": "mock_audio_data_1.mp3",
+                "preview_audio_ref": "outputs/voice_previews/1001_1.mp3",
                 "provider_voice_id": "pv_secret_mock_1",
                 "source_file_id": "file_src_1",
                 "source_file_ref": "/private/bot/src/1.wav",
@@ -97,11 +97,11 @@ class MockVoiceVaultState:
             3: {
                 "id": 3,
                 "user_id": "1001",
-                "display_name": "Giọng Có Preview URL",
+                "display_name": "Giọng Có Telegram File ID",
                 "status": "active",
                 "is_default": 0,
                 "consent_status": "consented",
-                "preview_audio_ref": "https://cdn.toanaas.vn/preview_voice_3.mp3",
+                "preview_audio_ref": "CQACAgIAAxkBAAICk_valid_telegram_id_3",
                 "provider_voice_id": "pv_secret_mock_3",
                 "source_file_id": "file_src_3",
                 "source_file_ref": "",
@@ -112,11 +112,11 @@ class MockVoiceVaultState:
             4: {
                 "id": 4,
                 "user_id": "1001",
-                "display_name": "Giọng Loopback Unsafe",
+                "display_name": "Giọng Có Stale Telegram ID",
                 "status": "active",
                 "is_default": 0,
                 "consent_status": "consented",
-                "preview_audio_ref": "http://127.0.0.1:8000/internal_secret.mp3",
+                "preview_audio_ref": "stale_telegram_file_id_4",
                 "provider_voice_id": "pv_secret_mock_4",
                 "source_file_id": "file_src_4",
                 "source_file_ref": "",
@@ -127,11 +127,11 @@ class MockVoiceVaultState:
             5: {
                 "id": 5,
                 "user_id": "1001",
-                "display_name": "Giọng Private IP Unsafe",
+                "display_name": "Giọng Đường Dẫn Trái Phép",
                 "status": "active",
                 "is_default": 0,
                 "consent_status": "consented",
-                "preview_audio_ref": "http://192.168.1.50/private.mp3",
+                "preview_audio_ref": "C:/Windows/System32/drivers/etc/hosts",
                 "provider_voice_id": "pv_secret_mock_5",
                 "source_file_id": "file_src_5",
                 "source_file_ref": "",
@@ -142,46 +142,16 @@ class MockVoiceVaultState:
             6: {
                 "id": 6,
                 "user_id": "1001",
-                "display_name": "Giọng Link Local Unsafe",
+                "display_name": "Giọng Có Remote HTTP URL",
                 "status": "active",
                 "is_default": 0,
                 "consent_status": "consented",
-                "preview_audio_ref": "http://169.254.169.254/latest/meta-data/",
+                "preview_audio_ref": "https://cdn.toanaas.vn/voice6.mp3",
                 "provider_voice_id": "pv_secret_mock_6",
                 "source_file_id": "file_src_6",
                 "source_file_ref": "",
                 "created_at": "2026-10-24T10:14:00Z",
                 "updated_at": "2026-10-24T10:14:00Z",
-                "deleted_at": None,
-            },
-            7: {
-                "id": 7,
-                "user_id": "1001",
-                "display_name": "Giọng File Scheme Unsafe",
-                "status": "active",
-                "is_default": 0,
-                "consent_status": "consented",
-                "preview_audio_ref": "file:///etc/passwd",
-                "provider_voice_id": "pv_secret_mock_7",
-                "source_file_id": "file_src_7",
-                "source_file_ref": "",
-                "created_at": "2026-10-24T10:15:00Z",
-                "updated_at": "2026-10-24T10:15:00Z",
-                "deleted_at": None,
-            },
-            8: {
-                "id": 8,
-                "user_id": "1001",
-                "display_name": "Giọng Có Query Token Bí Mật",
-                "status": "active",
-                "is_default": 0,
-                "consent_status": "consented",
-                "preview_audio_ref": "https://cdn.toanaas.vn/voice8.mp3?token=SUPER_SECRET_QUERY_TOKEN&sig=abc123secret",
-                "provider_voice_id": "pv_secret_mock_8",
-                "source_file_id": "file_src_8",
-                "source_file_ref": "",
-                "created_at": "2026-10-24T10:16:00Z",
-                "updated_at": "2026-10-24T10:16:00Z",
                 "deleted_at": None,
             },
             99: {
@@ -191,7 +161,7 @@ class MockVoiceVaultState:
                 "status": "active",
                 "is_default": 1,
                 "consent_status": "consented",
-                "preview_audio_ref": "mock_audio_data_99.mp3",
+                "preview_audio_ref": "CQACAgIAAxkBAAICk_foreign_99",
                 "provider_voice_id": "pv_foreign_secret_99",
                 "source_file_id": "file_src_99",
                 "source_file_ref": "/private/bot/foreign/99.wav",
@@ -200,29 +170,6 @@ class MockVoiceVaultState:
                 "deleted_at": None,
             },
         }
-
-    @staticmethod
-    def _validate_safe_remote_url(url: str) -> bool:
-        try:
-            parsed = urllib.parse.urlsplit(url)
-            if parsed.scheme.lower() not in ("http", "https"):
-                return False
-            hostname = parsed.hostname
-            if not hostname:
-                return False
-            hostname = hostname.lower()
-            if hostname in ("localhost", "127.0.0.1", "::1"):
-                return False
-            import ipaddress
-            try:
-                ip = ipaddress.ip_address(hostname)
-                if ip.is_loopback or ip.is_private or ip.is_link_local or ip.is_reserved:
-                    return False
-            except ValueError:
-                pass
-            return True
-        except Exception:
-            return False
 
     def _sanitize(self, p: dict) -> dict:
         return {
@@ -310,19 +257,39 @@ class MockVoiceVaultState:
                 if profile["status"] not in ("active", "ready") or not profile.get("preview_audio_ref"):
                     return 400, {"ok": False, "error_code": "PREVIEW_NOT_READY", "message": "Bản nghe thử chưa sẵn sàng"}
                 ref = profile["preview_audio_ref"]
-                is_remote = ref.startswith(("http://", "https://")) or "://" in ref
-                if is_remote:
-                    if not self._validate_safe_remote_url(ref):
-                        return 400, {"ok": False, "error_code": "PREVIEW_NOT_READY", "message": "Bản nghe thử không khả dụng hoặc địa chỉ không an toàn"}
-                # Safe preview metadata: NO preview_url, NO token, NO path
+
+                # Remote URLs rejected (REMOTE_URL_LANE_REMOVED=YES)
+                if ref.startswith(("http://", "https://")) or "://" in ref:
+                    return 404, {"ok": False, "error_code": "PREVIEW_MISSING_ARTIFACT", "message": "Định dạng bản nghe thử không được hỗ trợ"}
+
+                # Path like (local file)
+                if "/" in ref or "\\" in ref:
+                    # Canonical root check: must be in outputs/
+                    if not ref.startswith("outputs/"):
+                        return 404, {"ok": False, "error_code": "PREVIEW_MISSING_ARTIFACT", "message": "Bản nghe thử không tìm thấy trên hệ thống lưu trữ"}
+                    return 200, {
+                        "ok": True,
+                        "profile_id": pid,
+                        "display_name": profile["display_name"],
+                        "delivery_mode": "file",
+                        "content_type": "audio/mpeg",
+                        "download_ready": True,
+                    }
+
+                # Telegram file ID
+                if ref.startswith("stale_") or ref.startswith("missing_"):
+                    return 404, {"ok": False, "error_code": "PREVIEW_MISSING_ARTIFACT", "message": "Không thể tải bản nghe thử từ Telegram"}
+
                 return 200, {
                     "ok": True,
                     "profile_id": pid,
                     "display_name": profile["display_name"],
-                    "delivery_mode": "remote" if is_remote else "file",
+                    "delivery_mode": "telegram",
                     "content_type": "audio/mpeg",
                     "download_ready": True,
                 }
+
+        return 404, {"ok": False, "error_code": "NOT_FOUND", "message": "Not found"}
 
         return 404, {"ok": False, "error_code": "NOT_FOUND", "message": "Not found"}
 
@@ -507,24 +474,36 @@ def test_rename_voice_profile_foreign_blocked():
 
 
 def test_rename_voice_profile_invalid_name():
-    """Verify invalid name lengths are rejected."""
+    """Verify invalid name lengths (min 2, max 80) are rejected with VOICE_PROFILE_INVALID_NAME."""
     client, csrf = _create_test_account(canonical_user_id="1001")
 
-    # Name too short
+    # Name too short (< 2 chars)
     resp_short = client.patch(
         "/api/v1/voice/profiles/1",
         json={"display_name": "A"},
         headers={"X-CSRF-Token": csrf},
     )
+    assert resp_short.status_code == 400
     assert resp_short.json()["ok"] is False
     assert resp_short.json()["error_code"] == "VOICE_PROFILE_INVALID_NAME"
 
-    # Name too long
+    # Name empty (0 chars)
+    resp_empty = client.patch(
+        "/api/v1/voice/profiles/1",
+        json={"display_name": ""},
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert resp_empty.status_code == 400
+    assert resp_empty.json()["ok"] is False
+    assert resp_empty.json()["error_code"] == "VOICE_PROFILE_INVALID_NAME"
+
+    # Name too long (> 80 chars)
     resp_long = client.patch(
         "/api/v1/voice/profiles/1",
         json={"display_name": "A" * 85},
         headers={"X-CSRF-Token": csrf},
     )
+    assert resp_long.status_code == 400
     assert resp_long.json()["ok"] is False
     assert resp_long.json()["error_code"] == "VOICE_PROFILE_INVALID_NAME"
 
@@ -602,53 +581,79 @@ def test_soft_delete_foreign_blocked():
 
 # ─── 5. PREVIEW DELIVERY (STREAM, DOWNLOAD, META, FOREIGN) ───────────────────
 
-def test_preview_delivery_stream_and_download():
-    """Verify preview delivery streams audio or sets attachment disposition on download."""
+def test_preview_delivery_telegram_file_id_stream_and_download():
+    """Verify Telegram file ID preview delivery streams audio or sets attachment disposition on download."""
     client, _ = _create_test_account(canonical_user_id="1001")
 
-    # PREVIEW_LISTEN (inline stream)
-    resp_listen = client.get("/api/v1/voice/profiles/1/preview")
+    # 1. TELEGRAM_FILE_ID_OWNER_STREAM (inline stream)
+    resp_listen = client.get("/api/v1/voice/profiles/3/preview")
     assert resp_listen.status_code == 200
     assert resp_listen.headers["content-type"] == "audio/mpeg"
     assert "inline" in resp_listen.headers["content-disposition"]
     assert len(resp_listen.content) > 0
 
-    # PREVIEW_DOWNLOAD (attachment download)
-    resp_dl = client.get("/api/v1/voice/profiles/1/preview?download=true")
+    # 2. TELEGRAM_FILE_ID_DOWNLOAD (attachment download)
+    resp_dl = client.get("/api/v1/voice/profiles/3/preview?download=true")
     assert resp_dl.status_code == 200
     assert resp_dl.headers["content-type"] == "audio/mpeg"
     assert "attachment" in resp_dl.headers["content-disposition"]
     assert len(resp_dl.content) > 0
 
-
-def test_preview_delivery_meta_mode():
-    """Verify mode=meta returns clean JSON envelope with safe delivery metadata and ZERO raw URLs."""
-    client, _ = _create_test_account(canonical_user_id="1001")
-    resp = client.get("/api/v1/voice/profiles/1/preview?mode=meta")
-    assert resp.status_code == 200
-    body = resp.json()
+    # 3. TELEGRAM_FILE_ID_META_NO_ID_LEAK
+    resp_meta = client.get("/api/v1/voice/profiles/3/preview?mode=meta")
+    assert resp_meta.status_code == 200
+    body = resp_meta.json()
     assert body["ok"] is True
     data = body["data"]
-    assert data.get("profile_id") == 1
-    assert data["delivery_mode"] == "file"
+    assert data.get("profile_id") == 3
+    assert data["delivery_mode"] == "telegram"
     assert data["content_type"] == "audio/mpeg"
     assert data["download_ready"] is True
-    # Invariant: RAW_PREVIEW_URL_META_EXPOSURE = NO
+    # Invariants: RAW_TELEGRAM_FILE_ID_BROWSER_EXPOSURE=NO & RAW_PREVIEW_URL_BROWSER_EXPOSURE=NO
+    assert "CQACAgIAAxkBAAICk" not in resp_meta.text
     assert "preview_url" not in data
     assert "preview_audio_ref" not in data
-    assert "raw_url" not in data
 
 
-def test_preview_delivery_remote_safe_stream():
-    """Verify preview with safe remote URL streams audio directly instead of redirecting browser."""
+def test_preview_delivery_local_file_stream_and_download():
+    """Verify local filesystem path preview delivery in canonical storage root."""
     client, _ = _create_test_account(canonical_user_id="1001")
-    # Profile 3 has safe remote URL: https://cdn.toanaas.vn/preview_voice_3.mp3
-    resp = client.get("/api/v1/voice/profiles/3/preview", follow_redirects=False)
-    # Invariant: RAW_PREVIEW_URL_BROWSER_EXPOSURE = NO (200 OK stream, NOT 307 redirect)
-    assert resp.status_code == 200
-    assert resp.headers["content-type"] == "audio/mpeg"
-    assert len(resp.content) > 0
-    assert "location" not in resp.headers
+
+    # Local stream
+    resp_listen = client.get("/api/v1/voice/profiles/1/preview")
+    assert resp_listen.status_code == 200
+    assert resp_listen.headers["content-type"] == "audio/mpeg"
+    assert len(resp_listen.content) > 0
+
+    # Local meta mode
+    resp_meta = client.get("/api/v1/voice/profiles/1/preview?mode=meta")
+    assert resp_meta.status_code == 200
+    data = resp_meta.json()["data"]
+    assert data["delivery_mode"] == "file"
+    assert data["download_ready"] is True
+    # PRIVATE_PATH_EXPOSURE_COUNT=0
+    assert "outputs" not in resp_meta.text
+    assert "1001_1.mp3" not in resp_meta.text
+
+
+def test_preview_delivery_stale_and_remote_and_arbitrary_path_fails_closed():
+    """Verify stale Telegram file ID, arbitrary local path, and remote URLs fail closed."""
+    client, _ = _create_test_account(canonical_user_id="1001")
+
+    # 1. TELEGRAM_FILE_ID_STALE_FAILS_CLOSED (Profile 4 has stale/unreachable Telegram ID)
+    resp_stale = client.get("/api/v1/voice/profiles/4/preview")
+    assert resp_stale.status_code == 404
+    assert resp_stale.json()["error_code"] == "PREVIEW_MISSING_ARTIFACT"
+
+    # 2. CANONICAL_STORAGE_ROOT_ENFORCED & ARBITRARY_PATH_READ=NO (Profile 5 points to system path)
+    resp_arb = client.get("/api/v1/voice/profiles/5/preview")
+    assert resp_arb.status_code == 404
+    assert resp_arb.json()["error_code"] == "PREVIEW_MISSING_ARTIFACT"
+
+    # 3. REMOTE_URL_LANE_REMOVED=YES (Profile 6 has remote HTTP URL, not supported in Bot)
+    resp_url = client.get("/api/v1/voice/profiles/6/preview")
+    assert resp_url.status_code == 404
+    assert resp_url.json()["error_code"] == "PREVIEW_MISSING_ARTIFACT"
 
 
 def test_preview_redirect_strictly_blocked():
@@ -664,60 +669,21 @@ def test_preview_redirect_strictly_blocked():
         vault_state.force_redirect = False
 
 
-def test_remote_preview_url_safety_and_no_token_leak():
-    """Verify SSRF protection guards and zero leak of signed query tokens or source URLs."""
-    client, _ = _create_test_account(canonical_user_id="1001")
-
-    # 1. LOOPBACK_URL_BLOCKED (Profile 4: 127.0.0.1)
-    resp_loopback = client.get("/api/v1/voice/profiles/4/preview")
-    assert resp_loopback.status_code == 400
-    assert resp_loopback.json()["error_code"] == "PREVIEW_NOT_READY"
-
-    # 2. PRIVATE_IP_URL_BLOCKED (Profile 5: 192.168.1.50)
-    resp_private_ip = client.get("/api/v1/voice/profiles/5/preview")
-    assert resp_private_ip.status_code == 400
-    assert resp_private_ip.json()["error_code"] == "PREVIEW_NOT_READY"
-
-    # 3. LINK_LOCAL_URL_BLOCKED (Profile 6: 169.254.169.254)
-    resp_link_local = client.get("/api/v1/voice/profiles/6/preview")
-    assert resp_link_local.status_code == 400
-    assert resp_link_local.json()["error_code"] == "PREVIEW_NOT_READY"
-
-    # 4. UNSAFE_SCHEME_BLOCKED (Profile 7: file://)
-    resp_scheme = client.get("/api/v1/voice/profiles/7/preview")
-    assert resp_scheme.status_code == 400
-    assert resp_scheme.json()["error_code"] == "PREVIEW_NOT_READY"
-
-    # 5. SIGNED_QUERY_TOKEN_NOT_LEAKED (Profile 8 has secret token & signature)
-    resp_meta8 = client.get("/api/v1/voice/profiles/8/preview?mode=meta")
-    assert resp_meta8.status_code == 200
-    assert "SUPER_SECRET_QUERY_TOKEN" not in resp_meta8.text
-    assert "abc123secret" not in resp_meta8.text
-
-    resp_stream8 = client.get("/api/v1/voice/profiles/8/preview")
-    assert resp_stream8.status_code == 200
-    assert "SUPER_SECRET_QUERY_TOKEN" not in str(resp_stream8.headers)
-
-    # 6. RAW_SOURCE_URL_NOT_LEAKED
-    assert "voice8.mp3" not in resp_meta8.text
-    assert "cdn.toanaas.vn" not in resp_meta8.text
-
-
 def test_preview_delivery_not_ready_and_foreign_blocked():
     """Verify unready preview returns 400, foreign returns 404, and deleted returns 404."""
     client, csrf = _create_test_account(canonical_user_id="1001")
 
-    # Not ready preview (profile 2 has no preview artifact)
+    # NOT_READY_PREVIEW_BLOCKED (profile 2 has no preview artifact)
     resp_nr = client.get("/api/v1/voice/profiles/2/preview")
     assert resp_nr.status_code == 400
     assert resp_nr.json()["error_code"] == "PREVIEW_NOT_READY"
 
-    # Foreign profile (profile 99 belongs to user 9999)
+    # TELEGRAM_FILE_ID_FOREIGN_BLOCKED (profile 99 belongs to user 9999)
     resp_foreign = client.get("/api/v1/voice/profiles/99/preview")
     assert resp_foreign.status_code == 404
     assert resp_foreign.json()["error_code"] == "PROFILE_NOT_FOUND"
 
-    # Soft deleted profile (DELETED_PREVIEW_BLOCKED)
+    # DELETED_PREVIEW_BLOCKED (Soft deleted profile 1)
     del_resp = client.delete("/api/v1/voice/profiles/1", headers={"X-CSRF-Token": csrf})
     assert del_resp.status_code == 200
     resp_del_prev = client.get("/api/v1/voice/profiles/1/preview")

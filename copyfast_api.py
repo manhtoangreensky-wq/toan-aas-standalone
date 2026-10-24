@@ -2679,7 +2679,7 @@ class TicketRequest(BaseModel):
 
 class VoiceProfileRenameRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    display_name: str = Field(min_length=1, max_length=120)
+    display_name: str = Field(min_length=2, max_length=80)
 
 
 def _campaign_text(value: Any, *, label: str, minimum: int, maximum: int, allow_empty: bool = False) -> str:
