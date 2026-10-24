@@ -555,6 +555,18 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   0errors-external-UIwrites-overflow/Node1281/Python21/sourceC0I0M0.
   R403probegapclosedbyfollowupwithoutappchange;parentE3/GROUP/EDIT/
   READINESS/final168/deliveryremainOPEN. EvidenceR218-SUBDUB-MOBILE-RANGE-QA-20261024.json.
+- [x] E3-GROUP scopedLOCAL:contract6381189391/BASE3d5e59dc;fourborderless
+  semanticgroups2/1/1/3/sevennativeradios/fullARIA-reviewnames. R1invalid
+  packet/newunit,R2tokenlimittruncated;neitherapplied/noR3. Solxhigh repaired
+  packet/newunitonly,R1fourJSrecords+SPEC CSSbodyexact. TrueRED2pass4assert0harness
+  →unit6/focused60/fullNode1287/Python21;sourceC0I0M0/protected17helpers12files/
+  672oldtestpathsChat. Actual84/588clicks588arrows168VoiceReturns/36matched
+  heights65.20–156.36pxshorter/min75.47x44/1092AAmin8.836529/252LFassets/
+  errors-external-UIwrites-overflow0. Supplemental84voice+84nonvoice:82fit
+  Defaultpairs same-row,2ENCombo320wrap;48phoneAuto3rows/wholepage nonvoice
+  visiblecontrols0. IndependentsupplementC0I0M0. EDITnext/READINESS/final168/
+  Tester/deliveryopen;nochildpush/LIVE/motionclaim. Evidence
+  `reports/audit/R218-SUBDUB-VOICE-GROUPS-QA-20261024.json`.
 - [x] Shell một trang/bốn tab, mode/query/keyboard và panel tại chỗ đã khóa bằng test presentation.
 - [~] Source đã có lựa chọn “đã có/chưa có phụ đề”, bộ chọn tệp và trạng thái source rõ ràng;
   upload/preview/metadata/progress/cancel/replace/error vẫn chờ capability máy chủ.

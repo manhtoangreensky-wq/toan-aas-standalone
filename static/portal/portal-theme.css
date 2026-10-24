@@ -8993,6 +8993,64 @@ article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) :is(.por
   }
 }
 
+:root .portal-page.portal-subdub-hub [data-subdub-voice-grouped] .portal-subdub-voice-groups {
+  display: grid;
+  gap: 12px;
+}
+:root .portal-page.portal-subdub-hub [data-subdub-voice-grouped] .portal-subdub-voice-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  column-gap: 16px;
+  row-gap: 4px;
+}
+:root .portal-page.portal-subdub-hub [data-subdub-voice-grouped] .portal-subdub-voice-group-title {
+  flex: 0 1 140px;
+  min-width: 0;
+  margin: 0;
+  padding-block: 12px;
+  color: var(--portal-ink);
+  font-weight: 700;
+  line-height: 1.4;
+}
+:root .portal-page.portal-subdub-hub [data-subdub-voice-grouped] .portal-subdub-voice-group-choices {
+  display: flex;
+  flex: 1 1 220px;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+:root .portal-page.portal-subdub-hub [data-subdub-voice-grouped] .portal-subdub-voice-lane {
+  align-items: center;
+  min-width: min-content;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  gap: 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+}
+:root .portal-page.portal-subdub-hub [data-subdub-voice-grouped] .portal-subdub-voice-lane.is-selected {
+  background: var(--portal-surface-soft);
+  box-shadow: inset 0 0 0 1px var(--portal-action);
+}
+:root .portal-page.portal-subdub-hub [data-subdub-voice-grouped] .portal-subdub-voice-lane:focus-within {
+  outline: 2px solid var(--portal-ink);
+  outline-offset: 2px;
+}
+@media (max-width: 720px) {
+  :root .portal-page.portal-subdub-hub [data-subdub-voice-grouped] .portal-subdub-voice-group-title {
+    flex-basis: 100%;
+    padding-block: 0;
+  }
+  :root .portal-page.portal-subdub-hub [data-subdub-voice-grouped] [data-subdub-voice-group="auto"] .portal-subdub-voice-group-choices {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 /* Final light AI Chat Workspace surface */
 .portal-page:is(.portal-chat-workspace, .portal-chat-workspace-detail) :is(.portal-chat-workspace-create, .portal-chat-workspace-boundary, .portal-chat-workspace-filters, .portal-chat-context-card, .portal-chat-turn, .portal-chat-version-list > article, .portal-chat-event-list > div, .portal-chat-execution, .portal-chat-execution-layout > section, .portal-chat-run-card) {
   border-color: var(--portal-border);

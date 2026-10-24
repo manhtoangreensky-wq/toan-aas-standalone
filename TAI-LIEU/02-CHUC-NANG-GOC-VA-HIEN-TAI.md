@@ -1,5 +1,18 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SD07..14: nhóm lựa chọn giọng, không rút gọn chức năng
+
+| Yêu cầu gốc | Hiện trạng có bằng chứng | Giới hạn |
+|---|---|---|
+| Bốn nhóm Default/Saved/Add/SmartAuto | 4role-group,7radio/native order2/1/1/3;84signedconfigs/588click+588arrow | Không bốn radiogroup/card mới;không actualvoice capability |
+| Đủ Nữ/Nam/saved/custom/Auto2/AutoMulti3–8/Smart | Tên ngắn hiển thị,tên đầy đủ ARIA/review;168VoiceReturns và3callback giữ | Không savedpicker/profileapply/clone/detection/engineoutput |
+| Gọn trênphone/desktop,không giấu lựa chọn | 36matched ngắn hơn65.20–156.36px;48phoneAuto3hàng;82fitDefaultpairs cùnghàng | 2ENCombo320 hẹpwrap;khôngnativeiOS/fullpageAA/motionproof |
+| Không lộ control sai mode | 84nonvoice checks assert zero visible inputs/labels/groups toàntrang | EDIT/READINESS/parentfinal168/Testerdelivery còn mở |
+
+OriginalSD07/SD08..14 được giữ trong spec2026-10-18; flat7radio là trạng thái
+trướcGROUP,không còn UIcục bộ hiện tại. SourceGROUP chưa push/deploy; không
+ticktoànSubDub/Botparity vì group/UI đạt. EvidenceVOICE-GROUPS-QA20261024.
+
 ## 24/10/2026 — SD15/16: thao tác âm lượng trên điện thoại
 
 | Yêu cầu | Hiện trạng đo được | Giới hạn |

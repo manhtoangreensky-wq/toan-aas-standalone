@@ -1,5 +1,25 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — E3: nhóm giọng gọn, đủ bảy lựa chọn
+
+SourceGROUP cục bộ,chưa push/deploy: giữ mộtfieldset và bảy native radio;
+chia bốn hàng Mặc định/Đã lưu/Thêm giọng/Tự động thông minh,không thêm card
+hướng dẫn. Nữ/Nam; Thư viện giọng; Giọng tự thêm; Auto2/3–8người/SmartMulti
+luôn hiện trong hai mode lồng tiếng. Tên đầy đủ giữ trong ARIA và review;
+callback/draft/Voice link/capabilityguard không đổi. Đây là nhóm lựa chọn UI,
+không chứng minh saved-profile application, nhận diện người nói hay lồng tiếng.
+
+Signed QA84:588click/588ArrowRight/168VoiceReturns/84modeRoundTrips,252LF
+assethashes;1008mẫuchữ+84focus,min8.836529:1/unknown0,targetmin75.47x44,
+text2x/overflow0.36so sánh matched ngắn hơn65.20–156.36px. Supplemental84
+chứng minh82Defaultpair vừa ngang cùng hàng,2ENCombo320 hẹp đượcwrap;
+48phoneAuto xếp3hàng;84nonvoice toàntrang không còn visible voice controls.
+Node1287/focused60/unit6/PythonCSS21,source+supplement review C0I0M0.
+R1/R2handoff fail được giữ lịch sử;Solxhigh chỉ sửa packet/newunit,không có
+R3/đổi lại production logic. Owned QA đã tắt/tempDB dọn/listener6821=0.
+Evidence `reports/audit/R218-SUBDUB-VOICE-GROUPS-QA-20261024.json`.
+EDIT/READINESS/finalE3/Tester/delivery còn mở;motion cuối,goal ACTIVE.
+
 ## 24/10/2026 — E3: slider âm lượng mobile đủ rộng
 
 SourceRANGE,chưa push/deploy E3: ởviewport<=480px, slider được đặt nguyên

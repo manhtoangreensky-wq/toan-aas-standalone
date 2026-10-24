@@ -26430,6 +26430,17 @@
       voiceLibraryLabel: "Giọng từ Thư viện giọng",
       voiceLibraryGuarded: "Thư viện giọng sẽ liên kết khi máy chủ mở đồng thời Giọng và SubDub.",
       voiceLibraryLink: "Mở Thư viện giọng",
+      voiceGroupDefault: "Mặc định",
+      voiceGroupSaved: "Đã lưu",
+      voiceGroupAdd: "Thêm giọng",
+      voiceGroupAuto: "Tự động thông minh",
+      voiceCompactFemale: "Nữ",
+      voiceCompactMale: "Nam",
+      voiceCompactSaved: "Thư viện giọng",
+      voiceCompactCustom: "Giọng tự thêm",
+      voiceCompactAutoTwo: "Auto 2",
+      voiceCompactAutoMulti: "3–8 người nói",
+      voiceCompactSmart: "Smart Multi",
       voiceLaneLabel: "Cách gán giọng",
       voiceLaneHint: "Chọn cách gán giọng cho bản nháp. Lựa chọn được giữ lại để dùng khi máy chủ xác nhận khả năng xử lý.",
       voiceLaneDefaultFemale: "Giọng nữ mặc định",
@@ -26604,6 +26615,17 @@
       voiceLibraryLabel: "Voice Library selection",
       voiceLibraryGuarded: "Voice Library will connect when the server opens Voice and SubDub together.",
       voiceLibraryLink: "Open Voice Library",
+      voiceGroupDefault: "Default",
+      voiceGroupSaved: "Saved voices",
+      voiceGroupAdd: "Add voice",
+      voiceGroupAuto: "Smart automation",
+      voiceCompactFemale: "Female",
+      voiceCompactMale: "Male",
+      voiceCompactSaved: "Voice Library",
+      voiceCompactCustom: "Uploaded voice",
+      voiceCompactAutoTwo: "Auto 2",
+      voiceCompactAutoMulti: "3–8 speakers",
+      voiceCompactSmart: "Smart Multi",
       voiceLaneLabel: "Voice lane",
       voiceLaneHint: "Choose how voices are assigned in this draft. Your choice stays here until the server confirms processing capability.",
       voiceLaneDefaultFemale: "Default female voice",
@@ -26787,6 +26809,17 @@
       voiceLibraryLabel: "从音色库选择",
       voiceLibraryGuarded: "服务器同时开放语音与 SubDub 后，音色库将在此连接。",
       voiceLibraryLink: "打开音色库",
+      voiceGroupDefault: "默认音色",
+      voiceGroupSaved: "已保存",
+      voiceGroupAdd: "添加音色",
+      voiceGroupAuto: "智能自动",
+      voiceCompactFemale: "女声",
+      voiceCompactMale: "男声",
+      voiceCompactSaved: "音色库",
+      voiceCompactCustom: "自定义音色",
+      voiceCompactAutoTwo: "自动双人",
+      voiceCompactAutoMulti: "3–8 位说话人",
+      voiceCompactSmart: "Smart Multi",
       voiceLaneLabel: "选择音色通道",
       voiceLaneHint: "选择本次草稿的音色分配方式。提交处理前会由服务器确认相应能力。",
       voiceLaneDefaultFemale: "默认女声",
@@ -27236,14 +27269,31 @@
         auto_multi_3_8: "videodub|voice|auto_multi_speaker",
         smart_multi: "videodub|voice|auto_smart_multivoice"
       };
-      return `<fieldset class="portal-subdub-voice-lanes" data-status="ready" aria-describedby="subdub-voice-lane-note-${safeText(suffix)}">
+      const compactLabels = {
+        default_female: copy.voiceCompactFemale, default_male: copy.voiceCompactMale,
+        saved_voice: copy.voiceCompactSaved, custom_voice: copy.voiceCompactCustom,
+        auto_two: copy.voiceCompactAutoTwo, auto_multi_3_8: copy.voiceCompactAutoMulti,
+        smart_multi: copy.voiceCompactSmart
+      };
+      const groups = [
+        ["default", copy.voiceGroupDefault, lanes.slice(0, 2)],
+        ["saved", copy.voiceGroupSaved, lanes.slice(2, 3)],
+        ["add", copy.voiceGroupAdd, lanes.slice(3, 4)],
+        ["auto", copy.voiceGroupAuto, lanes.slice(4)]
+      ];
+      return `<fieldset class="portal-subdub-voice-lanes" data-status="ready" data-subdub-voice-grouped aria-describedby="subdub-voice-lane-note-${safeText(suffix)}">
         <legend>${safeText(copy.voiceLaneLabel)}</legend>
         <p class="portal-subdub-voice-lane-hint">${safeText(copy.voiceLaneHint)}</p>
-        <div class="portal-subdub-voice-lane-grid">
-          ${lanes.map(([value, label]) => `<label class="portal-subdub-voice-lane${value === subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") ? " is-selected" : ""}" data-status="ready" data-subdub-voice-lane="${safeText(value)}"${laneCallbacks[value] ? ` data-subdub-callback="${safeText(laneCallbacks[value])}"` : ""}>
-            <input type="radio" name="subdub_voice_lane_${safeText(suffix)}" data-subdub-voice-lane-input value="${safeText(value)}" ${value === subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") ? "checked" : ""}>
-            <span class="portal-subdub-voice-lane__body"><strong>${safeText(label)}</strong></span>
-          </label>`).join("")}
+        <div class="portal-subdub-voice-groups">
+          ${groups.map(([groupKey, groupTitle, groupLanes]) => `<div class="portal-subdub-voice-group" role="group" data-subdub-voice-group="${safeText(groupKey)}" id="subdub-voice-group-${safeText(groupKey)}-${safeText(suffix)}" aria-labelledby="subdub-voice-group-title-${safeText(groupKey)}-${safeText(suffix)}">
+            <p class="portal-subdub-voice-group-title" id="subdub-voice-group-title-${safeText(groupKey)}-${safeText(suffix)}">${safeText(groupTitle)}</p>
+            <div class="portal-subdub-voice-lane-grid portal-subdub-voice-group-choices">
+              ${groupLanes.map(([value, label]) => `<label class="portal-subdub-voice-lane${value === subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") ? " is-selected" : ""}" data-status="ready" data-subdub-voice-lane="${safeText(value)}"${laneCallbacks[value] ? ` data-subdub-callback="${safeText(laneCallbacks[value])}"` : ""}>
+                <input type="radio" name="subdub_voice_lane_${safeText(suffix)}" data-subdub-voice-lane-input value="${safeText(value)}" ${value === subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") ? "checked" : ""} aria-label="${safeText(label)}">
+                <span class="portal-subdub-voice-lane__body"><strong>${safeText(compactLabels[value])}</strong></span>
+              </label>`).join("")}
+            </div>
+          </div>`).join("")}
         </div>
         <p class="portal-subdub-voice-lane-note" id="subdub-voice-lane-note-${safeText(suffix)}">${safeText(copy.voiceLaneGuarded)}</p>
         <a class="portal-button portal-button--quiet" href="${safeText(subDubVoiceCompanionUrl(subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") === "custom_voice" ? "/voice/clone" : "/voice/saved", currentModeKey))}" data-subdub-voice-library-link>${safeText(copy.voiceLibraryLink)}</a>
