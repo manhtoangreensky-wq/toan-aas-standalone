@@ -1,12 +1,12 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: SUBDUB_B4_LOCAL_GATES_PASS_DELIVERY_PENDING
+status: SUBDUB_C3_LOCAL_GATES_PASS_DELIVERY_PENDING
 date: 2026-10-24
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r218-billing-ui-20261022
 pull_request: 661
-head_sha: 4d66ef14aa9aa74d57cd4c3cbac1e9d35e55bb21
+head_sha: 89f6d6fe1a12047e79fa76a06f51a46c784dff95
 checkpoint_music_mu07_a_20261024:
   base_sha: 520174941470fab34c60c26e62607ba2d4b3568f
   phase: REPORT
@@ -47,7 +47,7 @@ checkpoint_subdub_b3_20261024:
 checkpoint_subdub_b4_20261024:
   base_sha: 4d66ef14aa9aa74d57cd4c3cbac1e9d35e55bb21
   phase: REPORT
-  status: B401_B404_PASS_B405_DELIVERY_PENDING
+  status: DELIVERED_CI_GREEN_NO_DEPLOY
   spec: docs/superpowers/specs/2026-10-24-r218-subdub-language-findability.md
   checklist: _giao-viec/CHECKLIST-34-SD-B4.md
   contract: "Issue664#6374610644;21existingtargets,3targetpanelsnativeinputsearch+select;pinselection/noimplicitvaluechange/querynotdraft/mode-resetbeforeapply;source-onlynone."
@@ -64,7 +64,26 @@ checkpoint_subdub_b4_20261024:
   review: "IndependentC0I0M0;exact10R2records/2productionfiles/12protectedfiles/17functions/oldtests/ChatLFunchanged;JSab39955e...a5b86e/CSS653f4ce7...de907a."
   evidence: reports/audit/R218-SUBDUB-LANGUAGE-FINDABILITY-QA-20261024.json
   cleanup: "Ownservers10118/83313newlineexit0,tempDB/assetsremoved/listeners1183/45539=0outsidechecks.Workers/browsers terminal,nootherprocessstopped."
-  next: "FinishB405Tester/prepush/provenance/onepushgithub/exactHEADCIboth/receipt;C3lockeduntildelivery. No nativeprovider/wholeSD/motion/LIVEclaim."
+  delivery: "SOURCE93cf390d/HEAD89f6d6fe/CI40027725649bothSUCCESS396Linux60.52s+26runtime0.23s/456records/receipt6379454063/IssueB4checkedreadback. VerifyfirstChromeCDPtimeoutrecoveredexistingretry,notrootcausefix;no merge/deploy."
+  next: "B4locked;C3voiceclarity next. No nativeprovider/wholeSD/motion/LIVEclaim."
+checkpoint_subdub_c3_20261024:
+  base_sha: 89f6d6fe1a12047e79fa76a06f51a46c784dff95
+  phase: VERIFY
+  status: C301_C304_PASS_C305_DELIVERY_PENDING
+  spec: docs/superpowers/specs/2026-10-24-r218-subdub-voice-clarity.md
+  checklist: _giao-viec/CHECKLIST-35-SD-C3.md
+  contract: "Issue664#6379509521;hideinertguardedSmartdescriptionfieldset+genericvoicehintonly,keep7radios/sharednote/callbacks/Voice/draft/B4/mix/gates."
+  scope: "OnegroupedCSSdisplaynone rule/5linesbeforeFinalChat;allJS/i18n/backend/tests/motionprotected."
+  handoff: "Flash3.8LowR1SUCCESS34.9398881s/1turn/139outputtokens/0thinking,10991UTF16chars;exact1record/noR2/noR3. Source-onlyemptydir,no--add-dir,perrun--sandbox. CLIwarned--modeplanignoredwithdisabledslashexpansion;notclaimedaspermissionenforcement. No tool/filewritesbyworker."
+  transport: "Initialcombinedcallwithrepoadddirrejectedbeforelaunch;PUBLICrepoverified/CLIhelpread. Safealternativeemptycwd+noadddir+sandboxaccepted;no settings/auth/globalpermissionschanged."
+  red: "Actual24configsallshowinertbox/hint;expectedassertionexit1,0errors-external-UIwritesbeforeapply."
+  source_review: "IndependentC0I0M0/exact1R1record/reversewholeCSSBASE/JS-Python-oldtests-ChatLFunchanged;CSS35552a5b...6b1413."
+  tests: "FocusedSubDub54pass3464.8572ms/fullNode1281pass0fail0skip39129.4059ms/Python21pass1existingwarning2.26s."
+  browser_first: "Green30completedthenENdark844DubbingAXnote literal mismatch;notevisualtrue/0pageerrors. Originalsnapshotnotcaptured,causeUNKNOWN. ProbeENdark844threecasesactualAXnotevisible/includedalltrue;noappcodechange."
+  browser_final: "ExpectedlocaleDOMreadinessbeforefreshAX+failureAXrawcapture,unchangedtextassertion;final48PASS/336radiochoices/96Voicereturns/inertboxhintvisualAX0/note1/radios7/callbacks3/B4mixdraftgatesheld/144LFassets/0errors-external-UIwrites-overflow. Rawcc8f35af...1b1b63.No rootcausefixclaim."
+  cleanup: "Owned30502newlineexit0/tempfru3qkhfremoved/listener39026=0outsidecheck;workers/browsers terminal,nootherprocessstopped."
+  evidence: reports/audit/R218-SUBDUB-VOICE-CLARITY-QA-20261024.json
+  next: "FinishC305Tester/prepush/provenance/onepushgithub/exactHEADCIboth/receipt. D3locked;E3AXreadiness/hydrationauditretainsunknownfirstmismatch. No wholevoice/runtime/motion/LIVEclaim."
 checkpoint_music_fh_20261024:
   base_sha: 1e01f2417e3000a09c45186e11ee144e52a22fa5
   result: DELIVERED_CI_GREEN_NO_DEPLOY
@@ -727,7 +746,7 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "SD-B4local96+visual6/5unit/73focused/1281Node/111Python/C0I0M0passed;finishB405Tester-prepush-provenance-pushCIreceiptbeforeC3voice. SD-B3locked,D3E3queued,motionLAST,goalACTIVE."
+next_action: "C3local48/336choices/96returns/Node1281/Python21/C0I0M0passed;finishC305Tester-prepush-provenance-pushCIreceiptbeforeD3. B4locked/E3AXreadinessunknownfindingretained,motionLAST,goalACTIVE."
 active_billing_batch:
   id: R218-BILLING-20261022
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660

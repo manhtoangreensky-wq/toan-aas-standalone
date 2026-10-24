@@ -512,8 +512,21 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   B4spec2026-10-24-r218-subdub-language-findability.md/contract6374610644:
   local96/72target24source-only/288AAmin5.2238/288LFassets/0errors,draft/Voice/
   latesttargetpreserved;unit5/focused73/Node1281/Python111/reviewC0I0M0.
-  R2production10recordsverbatim,Solnewtestonly/noR3;B405deliverypending.
-  C3/D3stilllockeduntilacceptance. No newlanguage/provider capabilityclaim.
+  R2production10recordsverbatim,Solnewtestonly/noR3. B4deliveredHEAD89f6d6fe/
+  SOURCE93cf390d/CI40027725649bothSUCCESS456records/receipt6379454063.
+  No newlanguage/provider capabilityclaim.
+- [x] SD-B4-LANGUAGE-FINDABILITY scopedUI+branchdeliveryacceptedasabove;
+  wholeSubDub/provider/upload/speaker/output/LIVEstillOPEN.
+- [ ] SD-C3-VOICE-CLARITY:spec2026-10-24-r218-subdub-voice-clarity.md/
+  contract6379509521;exact1FlashR1CSSrulehideinertguardedSmartbox+hint,
+  keep7radios/sharednote/callbacks/Voice/B4/draft. RED24;sourceC0I0M0/
+  Node1281/Python21;final48/336choices/96returns/144LFassets/0errors,
+  C305deliverypending. FirstAXnotemismatchcauseUNKNOWN;probe3correct/
+  newexpectedlocale-readinessQAonly,unchangedtextassertion/nofurtherappchange.
+- [ ] SD-E3-AX-READINESS: C3firstmatrix30rows+ENdark844DubbingAXnote literal
+  mismatchcauseUNKNOWN(originalsnapshotnotcaptured);visualtrue/probe3AXtrue/
+  final48initializedUItrue doesnotdiagnosetransient. Rerender/hydration/locale
+  readiness tobeauditedatE3,notclosedfromrerun orCSS-onlyreview.
 - [x] Shell một trang/bốn tab, mode/query/keyboard và panel tại chỗ đã khóa bằng test presentation.
 - [~] Source đã có lựa chọn “đã có/chưa có phụ đề”, bộ chọn tệp và trạng thái source rõ ràng;
   upload/preview/metadata/progress/cancel/replace/error vẫn chờ capability máy chủ.

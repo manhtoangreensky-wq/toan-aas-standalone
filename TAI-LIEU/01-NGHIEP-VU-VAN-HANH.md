@@ -1,5 +1,28 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SubDub: dọn mô tả giọng thừa, giữ đủ lựa chọn
+
+Source nhánh C3, chưa deploy: chỉ thêm một rule CSS để ẩn fieldset Smart
+đang guarded (legend và hai đoạn văn trùng, không điều khiển/dữ liệu) và hint
+chung bị lặp. Vẫn giữ một ghi chú có aria-describedby, đủ7 radio Nữ/Nam,
+Đã lưu/Tự thêm/Auto2/AutoMulti3–8/Smart, ba callback Auto riêng và link Voice.
+Không xóa DOM/copy, không đổi JS/gate/engine; non-guarded Smart không match
+selector. CSS diagnostic statusready không phải capability thật.
+
+ActualRED24 còn thấy box/hint; finalGREEN48 VI/EN/ZH/theme/mobile-tablet-
+desktop-landscape ẩn box/hint khỏi visual/AX, note1/radio7/checked1. Đã chọn
+336 lượt lane,96 lượt saved/custom sang Voice rồi về; giữ target/customISO,
+mix0/200/B4search/review/sourceCTAguarded. 144assetLFhashes khớp; lỗi trang,
+request ngoài/UIwrite/overflow0. Node54focused/1281full,Python21 và review
+C0/I0/M0 đạt. Evidence `reports/audit/R218-SUBDUB-VOICE-CLARITY-QA-20261024.json`.
+
+Lượt green đầu hoàn tất30 dòng rồi AX-note mismatch ởENdark844; visualnote
+vẫn có, snapshot lỗi không được lưu nên causeUNKNOWN. Probe ba trường hợp
+cùng kích thước đều có note trongAX. QA được bổ sung chờ đúng ngôn ngữ DOM
+trước freshAX và ghi rawfailure; final48 đạt, không đổi thêm app hoặc tuyên
+bố rootcause đã sửa. E3 còn phải rà readiness/hydration và motion làm cuối.
+QA temporaryDB/auth setup có writes, không provider/ví/production mutation.
+
 ## 24/10/2026 — SubDub: tìm ngôn ngữ trong cấu hình hiện có
 
 Source nhánh, chưa deploy: ba mode Phụ đề dịch/Lồng tiếng/Combo có ô tìm theo

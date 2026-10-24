@@ -1,5 +1,24 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-SUBDUB-C3-20261024 — bỏ giải thích giọng trùng, giữ7lane
+
+TesterREADY;BASE89f6d6fe1a12047e79fa76a06f51a46c784dff95;PR661/Issue664.
+Spec `2026-10-24-r218-subdub-voice-clarity.md`; evidence
+`reports/audit/R218-SUBDUB-VOICE-CLARITY-QA-20261024.json`. QAđăngnhập/DBtạm,
+không feature/provider calls; chỉreadyattribute CSSdiagnostic, khôngengineproof.
+
+| Case | Mức | Thao tác | Kết quả / bằng chứng |
+|---|---|---|---|
+| SDC3-01 | vừa | Dubbing/Combo ×VIENZH×light3901440/dark3901440/360375768844ngang | RED24box/hintcònhiện→final48visualAX0;sharednote1/radios7/checked1;giữnoteARIA |
+| SDC3-02 | nặng | Chọn lần lượt7lane và xemreview;SpacechọnNam | 336lượt đúngvalue/review;Auto2/Multi3_8/Smart3callbackkhácnhau;nguồn/CTAkhôngmởgiả |
+| SDC3-03 | nặng | Saved/Custom→Voice→return;targetNhật/custompt-BR/mix0_200/B4search | 96returngiữdraft/lane/target/mix;subtitle-only/translatedkhôngcóvoicecontrols;noerrors/external/UIwrites/overflow |
+| SDC3-04 | nặng | ScopedCSSreverse,non-guardeddiagnostic vàhồiquy | Exact1R1record/reversewholeCSS=BASE/JSbackendoldtestsChatunchanged;statusreadydiagnosticvisible(notcapability);Node54focused1281full/Python21/C0I0M0/144LFassets |
+
+Canh lỗi cũ: firstgreenAX-note mismatchENdark844causeUNKNOWN;probe3cóAXnote,
+final48chờ đúnglocaleDOMtrướcAXđạt;khôngclaimrootcausefix/E3closed. C3không
+đóngD3/report/runtime/Smartengine/motion/LIVE. Ảnhfieldsetcófixedheadercrop,
+khôngdùngảnhcropđểkhẳngđịnhtoànlayout;7laneđãkiểmbằngtươngtácthật.
+
 ## R218-SUBDUB-B4-20261024 — tìm ngôn ngữ, giữ lựa chọn
 
 Tester READY; BASE4d66ef14aa9aa74d57cd4c3cbac1e9d35e55bb21; PR661/Issue664.

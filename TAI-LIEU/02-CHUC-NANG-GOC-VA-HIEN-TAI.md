@@ -1,5 +1,19 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SD07..14: clarity không thay cho chức năng giọng thật
+
+| Yêu cầu | Hiện trạng có bằng chứng | Giới hạn còn mở |
+|---|---|---|
+| Không ô giải thích lặp/vô nghĩa | C3 chỉ ẩn guardedSmartdescription/hint, giữnote1; final48visual/AX | Không gọi đây là redesign/grouping toàn bộ voice UI |
+| Không mất lane nhưBot | 7radio/3Autocallback riêng;336 lượt chọn/review,96Voice returngiữdraft | Saved profile application/clone/detection/Smart engine còn authorityT0 |
+| Giữ cấu hình, tìm ngôn ngữ | B4filter/target/customISO/mix0_200/review/sourceCTAkhôngđổi | Không actualprovider/output/LIVEproof |
+| Không che trạng thái có dữ liệu | Selector chỉ Smart statusguarded; non-guarded CSSdiagnostic còn hiện | Diagnostic không chứng minh server đã cấp capability |
+
+Nguồn gốc SD01..21/SD07..14 được giữ; C3source chỉ một rule/5 dòng CSS,
+JS/API/auth/backend/oldtests/Chat không đổi. FirstAXmismatchcauseUNKNOWN,
+final48 sau localizedreadiness đạt không đồng nghĩa đã chẩn đoán transient.
+D3emptyreport/E3fullUI/motion và runtime vẫn theo checklist mở.
+
 ## 24/10/2026 — SD-05: danh mục dễ tìm, không mở quyền dịch giả
 
 | Yêu cầu gốc | Hiện trạng có bằng chứng | Giới hạn còn mở |

@@ -49,7 +49,9 @@ VanillaJS/FastAPI/existingblue-nav-teal;notNext/Tailwindmigration.
 Firstspec `docs/superpowers/specs/2026-10-24-r218-subdub-input-font.md` accepted
 receipt6374462006/HEAD4d66ef14/CI40020963811bothSUCCESS. Next B4 exact spec
 `docs/superpowers/specs/2026-10-24-r218-subdub-language-findability.md`,
-contract6374610644;currentFlashR1/testfirst,notyetaccepted. C3/D3locked.
+contract6374610644;acceptedreceipt6379454063/HEAD89f6d6fe/CI40027725649
+bothSUCCESS/456records. CurrentC3spec2026-10-24-r218-subdub-voice-clarity.md,
+contract6379509521/oneCSSrule/actualQA;D3lockeduntilC3receipt.
 Eachspec getsownAC/RED/protectedcomparator/Testercases/evidencebeforecode.
 AntigravityFlash3.8R1/R2max→sameSPEC_IDSolxhighonlyaftertwofailures/noR3.
 Singleworker/sharedsource;Codexreview/actualbrowser/onebatchdelivery.

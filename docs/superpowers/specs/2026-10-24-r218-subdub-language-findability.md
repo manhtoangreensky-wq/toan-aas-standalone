@@ -156,7 +156,7 @@ sau hai lần fail cùng acceptance. Không login/logout/settings hoặc IDE m�
 - [x] FlashR1/R2review/historygiữ;R2sourceapplied10recordsverbatimaftercleanRED,Solnewtestonly/noR3.
 - [x] B402 unit5GREEN176.4382ms/privacy/no-effects/bound64/HTML/negativefixture/order/reset21.
 - [x] B403/B404 actual96/72target24source-only/288AAmin5.2238/input16height46/focusAX/2x/latesttarget-Voice-draft/288LFassetchecks/0errors;visual6supplement.
-- [ ] B405 regression/review/Tester/docs/delivery/receipt.
+- [x] B405 Node1281/Python111/reviewC0I0M0/Tester32/docs/provenance4bb98050/SOURCE93cf390d/HEAD89f6d6fe/pushreadback/CI40027725649bothSUCCESS456records/receipt6379454063/IssueB4checkedreadback.
 
 ## R1 review trước apply — R2 cùng SPEC_ID, không reset lịch sử
 
