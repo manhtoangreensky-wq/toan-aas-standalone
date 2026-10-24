@@ -673,6 +673,12 @@ _PUBLIC_BRIDGE_ERROR_CODES = frozenset({
     "WALLET_DATABASE_UNAVAILABLE", "PRICING_CATALOG_UNAVAILABLE", "PACKAGES_CATALOG_UNAVAILABLE",
     "PROFILE_NOT_FOUND", "VOICE_PROFILE_NOT_FOUND", "VOICE_PROFILE_NOT_READY",
     "VOICE_PROFILE_INVALID_NAME", "PREVIEW_NOT_READY", "PREVIEW_MISSING_ARTIFACT",
+    "RATE_INVALID_INPUT", "RATE_SOURCE_UNAVAILABLE",
+    "WEATHER_INVALID_LOCATION", "WEATHER_SOURCE_ERROR", "WEATHER_EMPTY_RESULT",
+    "AVATAR_RIGHTS_REQUIRED", "AVATAR_INVALID_SEED", "AVATAR_UNSAFE_URL_BLOCKED", "AVATAR_SOURCE_ERROR",
+    "DOWNLOADER_RIGHTS_REQUIRED", "DOWNLOADER_INVALID_URL",
+    "DOWNLOADER_UNSUPPORTED_OR_PRIVATE_URL_BLOCKED", "DOWNLOADER_PROVIDER_DISABLED_FAIL_CLOSED",
+    "DOWNLOADER_SUSPICIOUS_RESULT_BLOCKED", "DOWNLOADER_JOB_NOT_FOUND",
 })
 ADMIN_BRIDGE_MODULES = frozenset({
     "overview", "summary", "users", "user", "wallet", "payments", "topups", "revenue", "refunds",
@@ -684,6 +690,8 @@ ADMIN_BRIDGE_MODULE_ALIASES = {"backup": "backups", "export": "reports"}
 _ACTORLESS_CATALOG_PATHS = frozenset({
     "/internal/v1/pricing",
     "/internal/v1/packages",
+    "/internal/v1/free-tools/rate",
+    "/internal/v1/free-tools/weather",
 })
 
 
@@ -1959,6 +1967,14 @@ def _project_surface_data(
         if isinstance(raw_value.get("profile"), dict):
             item_record["profile"] = _project_record(raw_value["profile"], fields)
         return item_record
+    if surface == "free_tools":
+        free_tools_fields = (
+            "text", "raw_input", "target_lang", "location", "report", "unit",
+            "avatar_url", "seed", "style", "avatar_set",
+            "url", "asset_type", "title", "duration_seconds", "status",
+            "download_url", "xu_charged", "refund_issued", "source",
+        )
+        return _project_record(raw_value, free_tools_fields, text_limit=2000)
     if surface == "tickets":
         fields = ("id", "category", "related_tool", "subject", "status", "created_at", "updated_at")
         return {"items": _project_items(value.get("items"), fields)}
@@ -3389,6 +3405,8 @@ def _bridge_surface(path: str) -> str:
         return "admin"
     if normalized == "/internal/v1/uploads":
         return "upload"
+    if normalized.startswith("/internal/v1/free-tools/"):
+        return "free_tools"
     return "generic"
 
 
@@ -10044,3 +10062,245 @@ async def admin_product_video_reconcile(
     )
     _record_admin_write_audit(account, request, "admin.product_video.reconcile", "dispatcher", res_envelope)
     return res_envelope
+
+
+# ─── FREE TOOLS BOT RUNTIME PARITY (R38) ──────────────────────────────────────
+
+class FreeToolsRateRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    raw_input: str = Field(default="", max_length=200)
+    query: str = Field(default="", max_length=200)
+    target_lang: str = Field(default="vi", max_length=10)
+
+
+class FreeToolsWeatherRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    location: str = Field(default="", max_length=120)
+    unit: str = Field(default="celsius", max_length=20)
+
+
+class FreeToolsAvatarRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    seed: str = Field(default="toanaas_user", max_length=200)
+    style: str = Field(default="realistic", max_length=50)
+    avatar_set: int = Field(default=1, ge=1, le=5)
+    confirmed_rights: bool = Field(default=False)
+
+
+class FreeToolsDownloaderInspectRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    url: str = Field(default="", max_length=2000)
+    requested_asset: str = Field(default="video", max_length=20)
+
+
+class FreeToolsDownloaderDownloadRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    url: str = Field(default="", max_length=2000)
+    requested_asset: str = Field(default="video", max_length=20)
+    confirmed_rights: bool = Field(default=False)
+
+
+async def _forward_free_tools_bridge(
+    method: str,
+    path: str,
+    *,
+    account: dict,
+    request: Request,
+    payload: dict | None = None,
+    params: dict | None = None,
+):
+    result = await _bridge(method, path, account=account, request=request, payload=payload, params=params)
+    if not result.get("ok"):
+        err_code = str(result.get("error_code") or "")
+        status_code = 400
+        if err_code in {"WEATHER_EMPTY_RESULT", "DOWNLOADER_JOB_NOT_FOUND"}:
+            status_code = 404
+        elif err_code in {
+            "RATE_SOURCE_UNAVAILABLE",
+            "WEATHER_SOURCE_ERROR",
+            "AVATAR_SOURCE_ERROR",
+            "DOWNLOADER_PROVIDER_DISABLED_FAIL_CLOSED",
+            "CORE_BRIDGE_UNAVAILABLE",
+        }:
+            status_code = 503
+        return JSONResponse(result, status_code=status_code)
+    out = dict(result)
+    inner_data = result.get("data")
+    if isinstance(inner_data, dict):
+        for k, v in inner_data.items():
+            if k not in out:
+                out[k] = v
+    return JSONResponse(out, status_code=200)
+
+
+@router.post("/free-tools/rate")
+@router.post("/tools/rate")
+async def free_tools_rate_post(
+    request: Request,
+    payload: FreeToolsRateRequest,
+    account: dict = Depends(require_account),
+):
+    inp = payload.raw_input or payload.query
+    if not str(inp).strip():
+        return JSONResponse(
+            envelope(False, "Số tiền hoặc công thức quy đổi không được để trống.", error_code="RATE_INVALID_INPUT"),
+            status_code=400,
+        )
+    return await _forward_free_tools_bridge(
+        "POST",
+        "/internal/v1/free-tools/rate",
+        account=account,
+        request=request,
+        payload={"raw_input": inp, "target_lang": payload.target_lang},
+    )
+
+
+@router.get("/free-tools/rate")
+@router.get("/tools/rate")
+async def free_tools_rate_get(
+    request: Request,
+    raw_input: str = Query(default="", max_length=200),
+    query: str = Query(default="", max_length=200),
+    target_lang: str = Query(default="vi", max_length=10),
+    account: dict = Depends(require_account),
+):
+    inp = raw_input or query
+    if not str(inp).strip():
+        return JSONResponse(
+            envelope(False, "Số tiền hoặc công thức quy đổi không được để trống.", error_code="RATE_INVALID_INPUT"),
+            status_code=400,
+        )
+    return await _forward_free_tools_bridge(
+        "GET",
+        "/internal/v1/free-tools/rate",
+        account=account,
+        request=request,
+        params={"raw_input": inp, "target_lang": target_lang},
+    )
+
+
+@router.post("/free-tools/weather")
+@router.post("/tools/weather")
+async def free_tools_weather_post(
+    request: Request,
+    payload: FreeToolsWeatherRequest,
+    account: dict = Depends(require_account),
+):
+    if not str(payload.location).strip():
+        return JSONResponse(
+            envelope(False, "Địa điểm tra cứu thời tiết không được để trống.", error_code="WEATHER_INVALID_LOCATION"),
+            status_code=400,
+        )
+    return await _forward_free_tools_bridge(
+        "POST",
+        "/internal/v1/free-tools/weather",
+        account=account,
+        request=request,
+        payload={"location": payload.location, "unit": payload.unit},
+    )
+
+
+@router.get("/free-tools/weather")
+@router.get("/tools/weather")
+async def free_tools_weather_get(
+    request: Request,
+    location: str = Query(default="", max_length=120),
+    unit: str = Query(default="celsius", max_length=20),
+    account: dict = Depends(require_account),
+):
+    if not str(location).strip():
+        return JSONResponse(
+            envelope(False, "Địa điểm tra cứu thời tiết không được để trống.", error_code="WEATHER_INVALID_LOCATION"),
+            status_code=400,
+        )
+    return await _forward_free_tools_bridge(
+        "GET",
+        "/internal/v1/free-tools/weather",
+        account=account,
+        request=request,
+        params={"location": location, "unit": unit},
+    )
+
+
+@router.post("/free-tools/avatar")
+@router.post("/tools/avatar")
+async def free_tools_avatar(
+    request: Request,
+    payload: FreeToolsAvatarRequest,
+    account: dict = Depends(require_csrf),
+):
+    if not payload.confirmed_rights:
+        return JSONResponse(
+            envelope(False, "Bạn cần xác nhận quyền sử dụng hình ảnh.", error_code="AVATAR_RIGHTS_REQUIRED"),
+            status_code=400,
+        )
+    s_lower = str(payload.seed or "").strip().lower()
+    dangerous_schemes = ("javascript:", "data:", "file:", "vbscript:", "blob:")
+    if any(s_lower.startswith(sch) for sch in dangerous_schemes) or "<script" in s_lower or "javascript:" in s_lower:
+        return JSONResponse(
+            envelope(False, "Mô tả hoặc seed avatar chứa ký tự không an toàn.", error_code="AVATAR_UNSAFE_URL_BLOCKED"),
+            status_code=400,
+        )
+    return await _forward_free_tools_bridge(
+        "POST",
+        "/internal/v1/free-tools/avatar",
+        account=account,
+        request=request,
+        payload={
+            "seed": payload.seed,
+            "style": payload.style,
+            "avatar_set": payload.avatar_set,
+            "confirmed_rights": payload.confirmed_rights,
+        },
+    )
+
+
+@router.post("/free-tools/downloader/inspect")
+@router.post("/tools/downloader/inspect")
+async def free_tools_downloader_inspect(
+    request: Request,
+    payload: FreeToolsDownloaderInspectRequest,
+    account: dict = Depends(require_account),
+):
+    if not str(payload.url).strip():
+        return JSONResponse(
+            envelope(False, "Liên kết không được để trống.", error_code="DOWNLOADER_INVALID_URL"),
+            status_code=400,
+        )
+    return await _forward_free_tools_bridge(
+        "POST",
+        "/internal/v1/free-tools/downloader/inspect",
+        account=account,
+        request=request,
+        payload={"url": payload.url, "requested_asset": payload.requested_asset},
+    )
+
+
+@router.post("/free-tools/downloader/download")
+@router.post("/tools/downloader/download")
+async def free_tools_downloader_download(
+    request: Request,
+    payload: FreeToolsDownloaderDownloadRequest,
+    account: dict = Depends(require_csrf),
+):
+    if not payload.confirmed_rights:
+        return JSONResponse(
+            envelope(False, "Vui lòng chỉ tải nội dung anh/chị có quyền sử dụng hoặc được phép lưu lại.", error_code="DOWNLOADER_RIGHTS_REQUIRED"),
+            status_code=400,
+        )
+    if not str(payload.url).strip():
+        return JSONResponse(
+            envelope(False, "Liên kết không được để trống.", error_code="DOWNLOADER_INVALID_URL"),
+            status_code=400,
+        )
+    return await _forward_free_tools_bridge(
+        "POST",
+        "/internal/v1/free-tools/downloader/download",
+        account=account,
+        request=request,
+        payload={
+            "url": payload.url,
+            "requested_asset": payload.requested_asset,
+            "confirmed_rights": payload.confirmed_rights,
+        },
+    )
