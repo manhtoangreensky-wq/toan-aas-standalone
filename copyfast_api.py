@@ -671,6 +671,8 @@ _PUBLIC_BRIDGE_ERROR_CODES = frozenset({
     "CORE_BRIDGE_INVALID_RESPONSE",
     "WALLET_LEDGER_UNRECONCILED", "BOT_USER_NOT_INITIALIZED", "ACCOUNT_TELEGRAM_UNLINKED",
     "WALLET_DATABASE_UNAVAILABLE", "PRICING_CATALOG_UNAVAILABLE", "PACKAGES_CATALOG_UNAVAILABLE",
+    "PROFILE_NOT_FOUND", "VOICE_PROFILE_NOT_FOUND", "VOICE_PROFILE_NOT_READY",
+    "VOICE_PROFILE_INVALID_NAME", "PREVIEW_NOT_READY", "PREVIEW_MISSING_ARTIFACT",
 })
 ADMIN_BRIDGE_MODULES = frozenset({
     "overview", "summary", "users", "user", "wallet", "payments", "topups", "revenue", "refunds",
@@ -1945,7 +1947,18 @@ def _project_surface_data(
         return {"items": _project_items(value.get("items"), fields)} if isinstance(value.get("items"), list) else _project_record(value, fields)
     if surface == "voice":
         fields = ("id", "display_name", "status", "is_default", "consent_status", "tts_ready", "preview_ready", "created_at", "updated_at")
-        return {"items": _project_items(value.get("items"), fields)}
+        if isinstance(value.get("items"), list):
+            return {"items": _project_items(value.get("items"), fields)}
+        mutation_fields = (
+            "id", "profile_id", "display_name", "status", "is_default",
+            "consent_status", "tts_ready", "preview_ready", "created_at",
+            "updated_at", "deleted", "delivery_type", "media_type",
+            "filename", "download_ready", "delivery_mode", "content_type",
+        )
+        item_record = _project_record(raw_value, mutation_fields, text_limit=500)
+        if isinstance(raw_value.get("profile"), dict):
+            item_record["profile"] = _project_record(raw_value["profile"], fields)
+        return item_record
     if surface == "tickets":
         fields = ("id", "category", "related_tool", "subject", "status", "created_at", "updated_at")
         return {"items": _project_items(value.get("items"), fields)}
@@ -2664,6 +2677,11 @@ class TicketRequest(BaseModel):
     idempotency_key: str = Field(min_length=12, max_length=160)
 
 
+class VoiceProfileRenameRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    display_name: str = Field(min_length=2, max_length=80)
+
+
 def _campaign_text(value: Any, *, label: str, minimum: int, maximum: int, allow_empty: bool = False) -> str:
     """Normalize human planning text without turning it into HTML or an audit payload."""
     text = re.sub(r"\s+", " ", str(value or "")).strip()
@@ -3353,7 +3371,7 @@ def _bridge_surface(path: str) -> str:
         if normalized.endswith("/download"):
             return "delivery"
         return "asset"
-    if normalized == "/internal/v1/voice/profiles":
+    if normalized == "/internal/v1/voice/profiles" or normalized.startswith("/internal/v1/voice/profiles/"):
         return "voice"
     if normalized == "/internal/v1/support/tickets":
         return "tickets"
@@ -6550,6 +6568,111 @@ async def asset_download(asset_id: str, request: Request, account: dict = Depend
 @router.get("/voice/profiles")
 async def voice_profiles(request: Request, account: dict = Depends(require_account)):
     return await _bridge("GET", "/internal/v1/voice/profiles", account=account, request=request)
+
+
+@router.patch("/voice/profiles/{profile_id}")
+async def voice_profile_rename(
+    profile_id: int,
+    payload: VoiceProfileRenameRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if profile_id <= 0:
+        raise HTTPException(status_code=422, detail="profile_id không hợp lệ")
+    return await _bridge(
+        "PATCH",
+        f"/internal/v1/voice/profiles/{profile_id}",
+        account=account,
+        request=request,
+        payload={"display_name": payload.display_name},
+    )
+
+
+@router.post("/voice/profiles/{profile_id}/default")
+async def voice_profile_set_default(
+    profile_id: int,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if profile_id <= 0:
+        raise HTTPException(status_code=422, detail="profile_id không hợp lệ")
+    return await _bridge(
+        "POST",
+        f"/internal/v1/voice/profiles/{profile_id}/default",
+        account=account,
+        request=request,
+    )
+
+
+@router.delete("/voice/profiles/{profile_id}")
+async def voice_profile_delete(
+    profile_id: int,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if profile_id <= 0:
+        raise HTTPException(status_code=422, detail="profile_id không hợp lệ")
+    return await _bridge(
+        "DELETE",
+        f"/internal/v1/voice/profiles/{profile_id}",
+        account=account,
+        request=request,
+    )
+
+
+@router.get("/voice/profiles/{profile_id}/preview")
+async def voice_profile_preview(
+    profile_id: int,
+    request: Request,
+    download: bool = False,
+    mode: str = "stream",
+    account: dict = Depends(require_account),
+):
+    if profile_id <= 0:
+        raise HTTPException(status_code=422, detail="profile_id không hợp lệ")
+    if mode == "meta":
+        params = {"mode": "meta", "download": "1" if download else "0"}
+        return await _bridge(
+            "GET",
+            f"/internal/v1/voice/profiles/{profile_id}/preview",
+            account=account,
+            request=request,
+            params=params,
+        )
+    user_id = _linked(account)
+    if not bridge_configured():
+        raise HTTPException(status_code=503, detail="Core Bridge chưa được cấu hình")
+    from copyfast_bridge import CoreBridgeClient
+    import httpx
+    import urllib.parse
+    bridge = CoreBridgeClient()
+    params = {"download": "1" if download else "0"}
+    query_str = urllib.parse.urlencode({"user_id": user_id, **params})
+    url = f"{bridge.base_url}/internal/v1/voice/profiles/{profile_id}/preview?{query_str}"
+    headers = bridge._headers(
+        "GET",
+        f"/internal/v1/voice/profiles/{profile_id}/preview",
+        b"",
+        request_id=_request_id(request),
+        actor_id=user_id,
+    )
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=False) as client:
+        resp = await client.get(url, headers=headers)
+        if resp.status_code in (301, 302, 307, 308):
+            raise HTTPException(status_code=502, detail="Chuyển hướng không được phép cho bản nghe thử")
+        if resp.status_code >= 400:
+            try:
+                err_payload = resp.json()
+                return JSONResponse(status_code=resp.status_code, content=err_payload)
+            except Exception:
+                raise HTTPException(status_code=resp.status_code, detail="Không thể tải bản nghe thử từ Bot Core")
+        content_type = resp.headers.get("content-type") or "audio/mpeg"
+        disposition = "attachment" if download else "inline"
+        return Response(
+            content=resp.content,
+            media_type=content_type,
+            headers={"Content-Disposition": f'{disposition}; filename="voice_preview_{profile_id}.mp3"'},
+        )
 
 
 @router.post("/uploads")
