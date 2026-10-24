@@ -10316,7 +10316,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1129,
+      "occurrences": 1130,
       "provider": "PayOS"
     },
     {
@@ -10405,6 +10405,7 @@
         "reports/audit/R218-MUSIC-PRODUCT-READABILITY-E-QA-20261023.json",
         "reports/audit/R218-MUSIC-SFX-INTERACTION-QA-20261023.json",
         "reports/audit/R218-PR661-MAIN-COMPAT-QA-20261023.json",
+        "reports/audit/R218-SUBDUB-EMPTY-REVIEW-QA-20261024.json",
         "reports/audit/R218-SUBDUB-INPUT-FONT-QA-20261024.json",
         "reports/audit/R218-SUBDUB-VOICE-CLARITY-QA-20261024.json",
         "reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json",
@@ -10418,7 +10419,7 @@
         "video.html",
         "video.py"
       ],
-      "occurrences": 36,
+      "occurrences": 37,
       "provider": "Gemini"
     },
     {
@@ -18335,9 +18336,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 366,
-  "source_files_scanned": 366,
-  "source_fingerprint_sha256": "2c63237bbd0979d07632be6afd212a51c03b73c1e4038462c0e5c66ec05152b7",
+  "source_files_discovered": 368,
+  "source_files_scanned": 368,
+  "source_fingerprint_sha256": "f09a4eb38d906bcd1b286b3ec38b7cd5dfdf426b9c1b94433ed839d9ca315736",
   "source_root": "repository-root",
   "ui_path_references": [
     {
