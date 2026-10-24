@@ -6815,6 +6815,11 @@ def ensure_copyfast_schema() -> None:
             copyfast_pricing_policy.ensure_pricing_schema(conn)
         except Exception:
             pass
+        try:
+            import copyfast_music_sfx_library_bridge
+            copyfast_music_sfx_library_bridge.ensure_sfx_library_schema(conn)
+        except Exception:
+            pass
 
 
 def as_row(row: sqlite3.Row | tuple | None, columns: tuple[str, ...]) -> dict | None:

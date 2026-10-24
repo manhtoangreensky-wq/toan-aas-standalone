@@ -184,6 +184,14 @@ from copyfast_music_sfx_job_bridge import (
     list_admin_music_sfx_jobs,
     validate_music_sfx_input,
 )
+from copyfast_music_sfx_library_bridge import (
+    SfxLibrarySearchRequest,
+    SfxLibrarySelectRequest,
+    search_sfx_library,
+    select_sfx_library_item,
+    get_selected_sfx_library_item,
+    get_sfx_library_policy,
+)
 from copyfast_video_trend_job_bridge import (
     CANONICAL_PRODUCT_KEY as VIDEO_TREND_PRODUCT_KEY,
     SUPPORTED_CANONICAL_JOB_ADAPTERS as VIDEO_TREND_ADAPTER_KEYS,
@@ -7673,6 +7681,71 @@ async def get_music_sfx_job_route(
     if is_music_sfx_job_other_account(job_id, account_id):
         raise HTTPException(status_code=403, detail="Không có quyền truy cập job của tài khoản khác")
     raise HTTPException(status_code=404, detail="Không tìm thấy job SFX của tài khoản.")
+
+
+@router.post("/music/sfx-library/search")
+async def music_sfx_library_search_route(
+    payload: SfxLibrarySearchRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    res = search_sfx_library(account_id=account_id, query=payload.query, limit=payload.limit or 5)
+    return envelope(
+        True,
+        "Đã tìm kiếm thư viện hiệu ứng âm thanh Freesound thành công.",
+        data=res,
+        status_name="search_completed",
+    )
+
+
+@router.post("/music/sfx-library/select")
+async def music_sfx_library_select_route(
+    payload: SfxLibrarySelectRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    account_id = str(account.get("id") or "")
+    res = select_sfx_library_item(
+        account_id=account_id,
+        index=payload.index,
+        asset_id=payload.asset_id,
+        callback_token=payload.callback_token,
+    )
+    return envelope(
+        True,
+        res.get("message") or "Đã chọn hiệu ứng âm thanh thành công.",
+        data=res,
+        status_name="selection_confirmed",
+    )
+
+
+@router.get("/music/sfx-library/selected")
+async def music_sfx_library_selected_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    account_id = str(account.get("id") or "")
+    item = get_selected_sfx_library_item(account_id)
+    return envelope(
+        True,
+        "Đã tải hiệu ứng âm thanh được chọn của tài khoản.",
+        data={"selected": item},
+        status_name="read_only",
+    )
+
+
+@router.get("/music/sfx-library/policy")
+async def music_sfx_library_policy_route(
+    request: Request,
+):
+    policy = get_sfx_library_policy()
+    return envelope(
+        True,
+        "Chính sách thư viện hiệu ứng âm thanh TOAN AAS (Freesound public library).",
+        data=policy,
+        status_name="read_only",
+    )
 
 
 @router.post("/features/video_trend/jobs")
