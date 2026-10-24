@@ -1,4 +1,53 @@
-# SD-E3 — source crosswalk, chưa phải runtime PASS
+# SD-E3 — đối chiếu đầy đủ 21 yêu cầu, UI candidate và T0 tách riêng
+
+## Kết quả candidate cuối — 24/10/2026
+
+ParentBASE79cd75d3;source26a966e25778229a0b76cfb045fa384d5d34b4eb,
+PR661/Issue664. Các số dưới là signed QA localhost, khôngproduction/deploy/LIVE.
+Parent actual168unique/4modes×VIENZH×lightdark×7views:
+320x800,375x812,390x900,414x896,768x1024,1440x900,844x390.
+588voicechoices/168VoiceReturns/672fourassetLFcomparisons;14448nondecorative
+leaftextsamples min5.223799:1/unknown0;168rangesmin200×44. Mọi summary counter:
+interaction/AA/unlabelled/AXnote/unknown/range/font/overflow/reportvisible/
+missingEdit/errors/external/UIwrites=0. Commandexit0;rawSHA
+249be2cfe57d9d9464156358cf1e2529ddc674a99ba05f35ea6fa88e7734782a.
+Sourcehashes bind actualservedfourassets, không suy từ HEADlabel.
+
+| SD | Yêu cầu gốc / UI candidate có bằng chứng | Trạng thái chưa được đóng |
+|---|---|---|
+| 01 |4modeinplace/query/oneactive/ARIAcontrols/HomeEndArrow;actual168 vàEDIT168modeLoops | Khôngđồngnghĩa4engineđãchạythật |
+| 02 |Labeltệp/accept/sourceguard;file luônnative-disabled,khôngfakepreview | Uploadbytes/metadata/progress/cancel/replace/ownerT0 |
+| 03 |Có/chưa phụđề;actual168 chọncả2/source review khớp;EDIT focusradio | Actualfile/cuebinding/ASRsourceT0 |
+| 04 |Sourceauto/catalogguard;actual168 valueauto/disabled | Nhậndiệnngônngữgốc vàprovidercatalogT0;khôngtrộnlocale |
+| 05 |21targetVI/EN/ZHfirst/searchChinesealias/ja/customISO;searchkhôngđổivalue;B4actual96 vàfinal168 | CatalogUIkhôngphải mọi ngônngữprovider;servertranslationT0 |
+| 06 |SRT/VTT/TXT/localreview;mono/bilingual vàlineruleselect cólabel;parentformats/controls | Cueeditor/cueownership/original-translatedoutputs/fileT0 |
+| 07 |Bốnsemanticgroup2/1/1/3;7radios;compactlabels/fullARIAreview;GROUP84+supplement,final168 | Khônghứa canonicalvoicecapability từ selectedlocal |
+| 08 |Nữ/Namnativechoice,khôngcầnpersonalprofileID;click/nativearrow GROUP588/588 | Engine/defaultvoiceavailabilityT0 |
+| 09 |Savedlane→VoiceLibrary/return;actual168VoiceReturns gồmSaved+Custom | Pickerprofile/preview/default/ownerapplicationreceiptT0 |
+| 10 |Customlane→Voicewizardroute/safereturn,draftpreserved | Consent/upload/name/quote/preview/saveprofile thựcT0 |
+| 11 |Auto2 riêngcallbackauto_speaker_gender;actualcallback+selection+review | Actual2speakerdetection/voiceassignment/outputT0 |
+| 12 |AutoMulti3–8 riêngcallbackauto_multi_speaker;khôngfakecount | Count/map/serveroverrideT0 |
+| 13 |SmartMulti riêngcallbackauto_smart_multivoice;khônggộpAuto;C3ẩnkhốilặp,4groupgiữđủlane | Quality/cost/canonicalcapability/executionT0 |
+| 14 |Speakermapguarded/khôngemptyrows;khôngtạo speakerảo | Detect/ambiguous/preview/override/fallback/reportT0 |
+| 15 |Original0–100range+number/0retained/invalidpreserve/review;final168,D2/RANGEsupplement. 0%mute là hànhviđãđo,CHƯAcónútBật/tắtriêng | UIgapSD-D4-ORIGINAL-AUDIO-TOGGLE cònOPEN,khôngđẩysangT0. Actualmixingaudio/noise/outputT0 |
+| 16 |Dub0–200/ackmute0/200clear;localnumber-range-review;phonefullrowmin200×44 | Actualoutputloudness/limit/providerengineT0 |
+| 17 |Đủ7positions/mono-bilingual/linerule/outputformats theo mode;label/focus/review | Cue-renderstyle/capability/outputfileT0 |
+| 18 |Actualeditable reviewrows+mode cóSửa;EDIT1218click336keys1050edits,stickyfocus44×44;readonlysourcekhôngnútgiả | Duration/count/cost/expiry/quoteserverT0;khôngfakefinancialcells |
+| 19 |CTA/sourceguards giữ;readiness36early0enabled/72readycoherent;khôngUIwrites | Admission/quotevalidity/dedup/progress/retry/chargesT0 |
+| 20 |D3initialemptyreport ẩn;parentreportRects0;thaystatus/contentfailopen quaD3diagnostics | Actualrequest/job/stages/filedownload/delivery/recoveryT0 |
+| 21 |SafeVoicecontinuation códraft/correctmode;actual168returns;companionanchorsgiữ | Canonicalprofile/file/subtitle→VideoProjectsAdminreuseT0 |
+
+UI findings LABEL/CONTRAST/RANGE/GROUP/EDIT/READINESS có localacceptance/
+receipt riêng. Parent evidence không tự đóng mọi SD nhưBot: cộtT0 cònnguyên.
+Tester phát hiện qualifierSD15on/off bịthiếutrongbảngfinal dùbảngREADđãghi;
+đãbổsunglại. UIgapnútBật/tắtriêngchưatriểnkhai,khôngtựcoi0%làđủtoànbộ
+yêucầugốc. SD-D4đượcxếpngaysauE3delivery/trướcImage,cầnBotevidence/spec/RED.
+OriginalC3AXcauseUNKNOWN và originalLCstateUNKNOWN khôngđượcchẩnđoánngược;
+currentearlyauthoringdefect có actualRED→GREEN riêng. NativeSafari/iOS,
+OStextscale/PWA vàperformance trace chưađo;motionfinalwave. Tester/deliveryCI
+còn gate riêng,khôngbáo wholeGoalCOMPLETE.
+
+## Lịch sử READ tại BASE — giữ nguyên để đối chiếu trước/sau
 
 BASE79cd75d3d8ee50685bbecd4056f7d84a79f8e68a;PR661/Issue664;
 E3contract6380189875;D3receipt6380165981accepted. Independentread-onlyreview

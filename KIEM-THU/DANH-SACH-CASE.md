@@ -1,5 +1,24 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-SUBDUB-E3-20261024 — phiên Tester độc lập
+
+Session `R218-SDE3-TESTER-20261024`; parentBASE79cd75d3,
+candidateSOURCE26a966e25778229a0b76cfb045fa384d5d34b4eb;PR661/Issue664.
+QA-only signed localhost/DBtạm, khôngproduction/provider/ví. Các case dưới
+không thêm/đổi48caseWA cũ. Đây là nguồn case duy nhất, không sinh issue hàng loạt.
+
+| Case | Mức | Bước và phạm vi | PASS bắt buộc / canh lỗi cũ | Evidence |
+|---|---|---|---|---|
+| SDE3-01 | nặng | Bốnmode×VI/EN/ZH×light/dark×320/375/390/414/768/1440/844landscape |168unique;source có/chưa;21target/searchkhôngđổi lựa chọn;7positions/format/line/display;query/keyboard/draft/review/Voice khớp;không errors/external/UIwrites/overflow | finalparent168raw+SD01..21crosswalk |
+| SDE3-02 | nặng | HaiDubmode,4group/7lane;chọn bằngclick+nativearrow |2/1/1/3membership,3Auto distinctcallback;compactlabel nhưngfullARIA/reviewname;nonvoice không lộvoicecontrols;saved/custom→Voice→returngiữ cấu hình | GROUP84+supplement;parent168 |
+| SDE3-03 | vừa | Label/contrast/range tại mọiviewport/theme;Edit từreview |2select cólabel;nondecorativeAA>=4.5/large>=3/unknown0;range>=44×44;Edit44×44/focus>=3;không clipping/text2x overlap;1218Editclick336keyboard | LC/RANGE/EDIT/READINESS+parentraw |
+| SDE3-04 | nặng | Giữ lại realauth/me response trước hydrate rồinormalclick/Tab;release cùngresponse |36early0enabled/normalattemptblocked;72readycoherent/modeLoops;không force/fakepayload;permanentupload/sourceLang/CTAstilldisabled/publicanchorssame | native72SHA1851c1f9…f12de89 |
+| SDE3-05 | vừa | PendingVI/EN/ZH×light/dark×390/1440 |12unique/statusonce/actualvisibleAX/AA>=4.5/unknown0;readyabsent;noemptycard;khôngsuy12ownassethashes | pending12SHA0323f956…70130fa |
+| SDE3-06 | nặng | E607 blurISO→mousedownEdit;E608focusselect dướiheader | No-opreviewHTML không thaychild;click giữ focusđúng target;stickyheader khôngche;mode/URL/draft/root/requestsame,noneditable khôngnútgiả |EDITregression168SHA4598041a…1a5684e+unit8 |
+| SDE3-07 | nặng | Đối chiếu sourceBASE→SOURCE/oldtests/Chat/auth/integration/CSS/motion |Exact8READINESSrecords/17helper14files674oldtests;parentonlydeclaredUIchanges;identityfenceunchanged;historicalUNKNOWNkhôngđóngngược |independentreview/comparators |
+| SDE3-08 | nặng | Handoff/CI/live ranhgiới |Local/remoteCI/deployed/LIVE báo riêng;không tickupload/voiceprofile/detection/quote/job/fileoutput/reuseT0;motionlast;0provider/wallet/productionmutation |prepush/receipt/CIexactHEAD |
+
+
 ## R218-SUBDUB-D3-20261024 — báo cáo rỗng và dòng giá chưa có dữ liệu
 
 TesterREADY;BASE00a34c2b9aea1c43ba387bd70004ea6a90b5b55f;PR661/Issue664.

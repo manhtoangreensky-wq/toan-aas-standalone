@@ -1,5 +1,31 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — đối chiếu readiness, giữ đủ yêu cầu gốc SD01..21
+
+Tài liệu gốc tìm thấy: `docs/superpowers/specs/2026-10-18-r218-subdub-bot-parity-uiux.md`,
+bảng21controls; plan kế tiếp24/10 và crosswalk final giữ nguyên từng ID. Đây là
+spec của dự án, không phải thông tin quảng cáo hay trạng thái production.
+
+| Chữ trong yêu cầu gốc | Candidate hiện tại / khác biệt cần biết | Giới hạn |
+|---|---|---|
+| “Chỉ cấu hình local không cần khóa toàn trang.” | Cấu hình mở sau signed session+CSRF; trước đó chỉ native formcontrols SubDub khóa, public links vẫn giữ. READ36early mismatch/27changed → GREEN36earlyblocked,72readycoherent | Không mang draft ẩn danh sang tài khoản; không đổi auth hoặc session-clear fence |
+| “Sửa ngay nhóm liên quan” | NútSửa tới controlactive; giữ cacheE607/focusE608; final168/1218click336keyboard1050edits | Không tạo nút sửa tệp/source-language chưa được cấp |
+| “Mặc định / Đã lưu / Thêm giọng / Tự động thông minh” | Bốn nhóm semantic2/1/1/3, đủ7lane; Auto2,AutoMulti3–8,SmartMulti có3callback riêng | Lựa chọn UI không phải giọng/speaker capability/output engine |
+| “Review” và “Kết quả/report” | Thiết lập local/review khớp sauready; statuschờ một lần rồi biến mất; initialreport rỗng/giá chưa có bị ẩn | Không tự tạo duration/count/cost/expiry/request/job/report/đầu ra |
+
+Điểm tài liệu cũ không được hiểu là đã hoàn tất: “control-level đã khóa” chỉ nói
+renderer/interaction được đo; không chứng minh upload, ASR/dịch, picker giọng
+canonical, consent/preview/save, detection/mapping, quote/charge/job/filedelivery.
+21target languages khớp catalog Bot pin đã đọc; không suy ra mọi provider/ngôn ngữ
+production hỗ trợ. Crosswalk `R218-SUBDUB-FINAL-UI-CROSSWALK-20261024.md` sẽ ghi
+bằng chứng hiện tại từng SD, không xóa yêu cầu còn T0.
+
+Không có deadcode/library/imagecleanup trong đợt này: CHƯA AUDIT, không kết luận
+“không còn rác” từ diff UI. Không refactor/xóa fieldsetSmart đang retained/guarded.
+Historical C3AXcauseUNKNOWN và LC originalrunstateUNKNOWN vẫn là unknown,
+không đóng ngược bằng một lượt chạy xanh. Evidence readiness receipt6383548657.
+
+
 ## 24/10/2026 — SD18: sửa ngay cấu hình liên quan
 
 | Yêu cầu gốc | Hiện trạng có bằng chứng | Còn mở |

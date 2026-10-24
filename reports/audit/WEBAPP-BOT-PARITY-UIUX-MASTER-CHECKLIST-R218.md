@@ -534,24 +534,25 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   mismatchcauseUNKNOWN(originalsnapshotnotcaptured);visualtrue/probe3AXtrue/
   final48initializedUItrue doesnotdiagnosetransient. Rerender/hydration/locale
   readiness tobeauditedatE3,notclosedfromrerun orCSS-onlyreview.
-- [ ] SD-E3-FINAL-UI actualREAD168finishedBASE79cd75d3/contract6380189875;
-  588choices/168Voicereturns/504LFassets/0interaction-page-external-UIwrite-
-  overflowfailures. UIstillFAILEDpending5children:LABEL84unlabelledsamples,
-  CONTRAST483nondecorativetextfails(min1.84162),RANGE12samples36x44Combo320,
-  GROUPmissing4semanticgroups,EDITmissingper-groupreviewnavigation.
-  LABEL+CONTRASTcontract6380526568/probeRED48(24label390textfails),LABELR1+
-  CONTRASTR2local48/24associations/768helpersmin8.83653/unknown0/Node1281/
-  Python21/C0I0M0. R1darkcascadeSPECgap6380636456resolvedselectoronly,noR3.
-  Nochildpush,oneE3batchafterlocalgates. AXmismatchnot
-  reproduced84voicestates,causeUNKNOWNnotfixed. MotionLAST,goalACTIVE.
-- [ ] E3-READINESS:enhancedLCprobeVI-dark1440source-line-rule review mismatch;
+- [x] SD-E3-FINAL-UI scopedLOCAL:originalREAD168BASE79cd75d3 foundLABEL84/
+  CONTRAST483/RANGE12/GROUP/EDIT. Allsixremediationchildren inclREADINESS now
+  localaccepted. Finalactual168unique/588choices168VoiceReturns672fourLFassets/
+  14448nondecorativetextmin5.223799unknown0/168rangesmin200x44/allstrict
+  counters0. TesterR218-SDE3-TESTER-20261024READY_FOR_PARENT_LOCAL_ACCEPTANCE;
+  own74Node/32portable1deselected;4raws+21IDs+8cases+672/674oldtestsverified.
+  MinorSD15qualifierrestored/dedicatedtoggleUIgapSD-D4OPEN,notall21done.
+  EvidenceR218-SUBDUB-FINAL-UI-QA-20261024.json/raw249be2cf…34782a.
+- [ ] SD-E3-DELIVERY:maincompat0e1b49b5SFX#663/2provenanceconflictsonly,
+  preserveSFX5files+UI4assets/Webonlyrefresh/ONEE3push/exactHEADCIreceipt.
+  Nochildpush/mergeintomain/deploy/LIVE. MotionLAST,goalACTIVE.
+- [ ] E3-HISTORICAL-LC-RUN-STATE:enhancedLCprobeVI-dark1440source-line-rule review mismatch;
   causeUNKNOWN,originalglobalstate/AXsnapshotnotcaptured. Stable-signed48
-  passesafteractualauthbootstrapwait,notrootcausefix;keepownearly-input/
-  hydration/draftcontractbeforefullE3close. No authbusinessmutation.
+  passesafteractualauthbootstrapwait,notretroactiverootcauseproof. CurrentUI
+  earlyauthoringfixacceptedbelow;originalrunstateremainsUNKNOWN. Noauthbusinessmutation.
   READcontract6382724646/finding6382804310 nowactual72scenarios:36held-realme
   early/36stable,early36reviewmismatch27changedcontrols/stable0mismatch0loss,
-  noteAX0/errors-external-UIwrites0/288LFassets. CurrentE3-RDY-EARLY-AUTHORING
-  ImportantneedsUIreadinessfixcontractbeforecode;secureidentityfencesprotected.
+  noteAX0/errors-external-UIwrites0/288LFassets. ThisREADfinding ledtobounded
+  E3-READINESSfixaccepted26a966e2/receipt6383548657;identityfencesprotected.
   C3AXnotreproducedcauseUNKNOWN;LCsamefreshsymptomproved/originalrununknown.
   EvidenceR218-SUBDUB-READINESS-READ-QA-20261024.json;collection0NOTUXPASS.
 - [x] E3-RANGE scopedLOCAL:contract6380830198/BASE6da9b14a/oneFlashR1CSSblock;
@@ -573,7 +574,12 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   visiblecontrols0. IndependentsupplementC0I0M0. EDITnext/READINESS/final168/
   Tester/deliveryopen;nochildpush/LIVE/motionclaim. Evidence
   `reports/audit/R218-SUBDUB-VOICE-GROUPS-QA-20261024.json`.
-- [~] E3-READINESS UI-only local gates passed;checkpoint/receipt finalizing.
+- [ ] SD-D4-ORIGINAL-AUDIO-TOGGLE UIgap:originalSD15cóBật/tắtriêng;
+  hiệnchỉcó0%mute/range/number,khôngđánhđồngvớiđủmọicontrolgốc.
+  TesterE3pháthiệnfinalcrosswalkthiếuqualifier;đãkhôiphụcbảnđốichiếu.
+  XếpngaysauE3delivery,trướcImage;đọclạiflowBot/chốtsemanticsdraft/giátrị
+  khôiphục/keyboard/label rồiSPEC+RED+FlashR1/R2. KhôngđẩygapUIsangT0.
+- [x] E3-READINESS scopedLOCAL accepted;checkpoint26a966e2/receipt6383548657.
   Contract6382914858;FlashR1/R2unitgatefail→sameSolxhighnewtestonly/noR3;
   exact8R1sourcefrozen. ActualRED6assert0harness→GREEN6/focused74/Node1301/
   Python21;native72/36earlyordinaryattemptsblocked/readycoherent72/288LFassets;

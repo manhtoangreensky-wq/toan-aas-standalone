@@ -1,5 +1,44 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SubDub: chờ phiên hợp lệ trước khi chỉnh thiết lập
+
+Phạm vi là candidate WebApp ở branch `webapp-r218-billing-ui-20261022`,
+PR661/Issue664; không phải xác nhận đã chạy trên VPS. Checkpoint readiness
+`26a966e2`, receipt6383548657; chưa push riêng, chờ một đợt E3 chung.
+
+Khi shell chưa nhận được phiên đăng nhập đã xác nhận và CSRF chuỗi không rỗng,
+mọi nút/input/select/textarea trong SubDub có native `disabled`; liên kết công cụ
+công khai vẫn giữ. Một câu thông báo VI/EN/ZH xuất hiện đúng một lần, không thêm
+thẻ rỗng. Khi hydrate phiên thật xong, form được dựng lại, thông báo biến mất và
+cấu hình local được mở. Upload, ngôn ngữ nguồn và CTA xử lý vẫn khóa khi chưa có
+contract/capability tương ứng. Không đồng nghĩa đăng nhập xong là có thể lồng tiếng.
+
+Nguyên nhân lỗi đã đo: shell dựng controls trước signed draft session; capture
+không ghi khi session chưa có, nhưng controls vẫn cho nhập và review đọc defaults.
+READ72 ghi36early review mismatch, trong đó27case đổi control sau hydrate;
+36stable không mismatch/đổi control. Không gọi tất cả36 là mất dữ liệu.
+Bản sửa chặn authoring sớm; không mang draft ẩn danh sang tài khoản và không đổi
+cổng xóa draft khi đổi phiên. E607 cache tránh thay HTML review giống hệt và
+E608 focus khỏi sticky header được giữ nguyên.
+
+Đã đo local: newunit6, focused74, fullNode1301, PythonCSS21 đều0fail; Python có
+1warning cũ. Actual native72:36early bị chặn thao tác thường,72ready review khớp,
+72mode roundtrips/288asset checks. Pending12 qua actual AX/visible, mincontrast
+11.772481:1 ở VI/EN/ZH×light/dark×390/1440, unknown0, sauready không còn status.
+Stable168:1218Editclick/336keyboard/1050edits/168VoiceReturns/504assetchecks,
+nút44×44, không lỗi/overflow/external/UIwrite. Source+runtime review C0/I0/M0;
+17helper/14file nhạy cảm/674test cũ và Chat không đổi so với readinessBASE.
+
+Các số trên không phải generation/quote/job/output/LIVE. Tệp nguồn, giọng đã lưu
+áp vào engine, nhận diện2/3–8/SmartMulti, báo giá, xử lý, giao tệp và reuse thật
+vẫn thuộc T0; không tạo capability/giá/báo cáo giả để thay thế. Parent final21
+yêu cầu, Tester, docs/provenance và CI exactHEAD còn riêng. Motion làm cuối.
+Evidence: `reports/audit/R218-SUBDUB-AUTHORING-READINESS-QA-20261024.json`.
+
+Production revision, số tài khoản/bảng/bản ghi production trong đợt này:
+CHƯA ĐO, không đọc DBproduction. Provider/wallet/productiondata mutation0.
+
+
 ## 24/10/2026 — E3: sửa trực tiếp từ bảng xem lại
 
 SourceEDIT cục bộ,chưa push/deploy: chỉ dòng cấu hình đang sửa được mới có

@@ -1,5 +1,28 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Phiên SubDub E3 — 24/10/2026
+
+ID`R218-SDE3-TESTER-20261024`, manifest
+`reports/tester/R218-SUBDUB-E3-20261024.md`;8caseSDE3-01..08 trong nguồn
+`KIEM-THU/DANH-SACH-CASE.md`. Không mở lạiissue412đãđóng. Trackerbatch664/PR661.
+Sourcecandidate26a966e2;đọc riêng finaldeliveryHEAD từGit saupush,không đoán SHA.
+
+Chỉ QA DB/tàikhoản tạm; không tài khoản/filegiọngkhách. Browserplugin không có,
+dùngheadlessEdgeđãcài; không mởIDE/cửa sổ/login/logout/settings. Test normal
+click/Tab khiSubDubpending,không forceclick haygáncontrol để giảauthoring.
+Khi giữnguồnresponse dùng realroute.fetch rồifulfill cùngresponse;không logtoken.
+
+Đọc đầy đủartifact và số tổ hợp: readiness72, pending12, regression168 là ba
+ma trận khác nhau,không cộngthành sốngườidùng. Pending12 không cóhashassetriêng.
+Parentfinal168 riêng phải qua strictcounters0/actualfourassethashes/sourceSHA.
+Disabledupload/CTA không phải lỗiUIđượcphép bật;capability/engine/outputT0.
+U1C3AXcauseUNKNOWN/U2originalrunstateUNKNOWN cònnguyên dùcurrentgateđãsửa.
+
+Mỗi kết quả ghi command/exit/count/source/rawhash và phạmvi đãkiểm. Giữ riêng
+32portabletestercontracts/1WindowsPOSIXdeselected,khôngche thành33pass.
+ProjectGitHub thiếu read:project thì ghiunavailable;khôngtựauthrefresh/xóađăngnhập.
+
+
 Đính chính 21/10/2026: các matrix chỉ đổi URL lang không chứng minh locale đã
 đăng nhập; phải set hồ sơ QA bằng endpoint CSRF và assert `html.lang` cùng
 profile locale. Không dùng main/text-length/overflow/no-media để đóng

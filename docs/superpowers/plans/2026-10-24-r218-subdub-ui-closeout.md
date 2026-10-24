@@ -44,6 +44,7 @@ VanillaJS/FastAPI/existingblue-nav-teal;notNext/Tailwindmigration.
 | 3 | SD-C3-VOICE-CLARITY | Sevenchoicesremain;Smartexplanationonce,noduplicateinertbox;Voicecontinuationunchanged | B4accepted | Bounded;formalcontractbeforeBUILD |
 | 4 | SD-D3-EMPTY-REVIEW | Noinitialemptyreport/meaninglessfinancialcells;realstatusnotconcealed | C3accepted | Bounded;formalcontractbeforeBUILD |
 | 5 | SD-E3-FINAL-UI | Fourmodes×VIENZH×themes×mobile/tablet/desktop/landscape;all21requirementsmapped;keyboardAXcontrast/nooverflow | B3..D3accepted | QA;noengineproof |
+| 6 | SD-D4-ORIGINAL-AUDIO-TOGGLE | OriginalSD15Bật/tắtriêngstillOPEN;0%mutealreadytestednotfullcontrolcompletion. Botsemantics/spec/REDbeforebuild | E3scopeddeliveryaccepted | COMPLEX/SINGLE,beforeImage |
 | T0 | SD-CANONICAL-GAPS | upload/ASR/translation/voices/speakers/quotes/jobs/output/recovery | UI/motiondone+authority | technicalnotfakeUI |
 
 Firstspec `docs/superpowers/specs/2026-10-24-r218-subdub-input-font.md` accepted
@@ -76,6 +77,14 @@ Eachspec getsownAC/RED/protectedcomparator/Testercases/evidencebeforecode.
 AntigravityFlash3.8R1/R2max→sameSPEC_IDSolxhighonlyaftertwofailures/noR3.
 Singleworker/sharedsource;Codexreview/actualbrowser/onebatchdelivery.
 Thisplan doesnotcloseallSD/Music/master,productionorMotion.
+READINESSnowLOCALaccepted26a966e2/receipt6383548657/native72/pending12/
+stable168/Node1301;parentfinal168unique/allstrictcounters0/672LFassets/
+14448leaftextsmin5.223799/168rangesmin200x44/raw249be2cf…34782a.
+IndependentTesterREADY_FOR_SCOPED_LOCAL_ACCEPTANCE/report9b5f29a4…3e82b9;
+notall21requirementsdone. Deliverynextmaincompat0e1b49b5SFX#663/exact2
+provenanceconflictsonly/keepUI4assets+main5files;Webonlyrefresh/ONEpushCI.
+TesterE3finalreadfoundSD15dedicatedon/off absent;retainedasUIgapD4above,
+notT0andnotdiscarded. CompletecurrentE3remediationdeliveryfirstthenthisgap.
 
 READactual48rawSHA712cd264586acda482a62391ec380b93b17ee242ad0f83639f13073a1ed7c155:
 noerrors/external/UIwrites/overflow;36targetstatesfont15andnosearch;

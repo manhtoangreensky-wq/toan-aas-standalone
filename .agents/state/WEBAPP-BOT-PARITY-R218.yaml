@@ -1,12 +1,12 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: SUBDUB_E3_READINESS_LOCAL_GATES_PASS_CHECKPOINT_RECEIPT_PENDING
+status: SUBDUB_E3_SCOPED_LOCAL_ACCEPTED_MAIN_COMPAT_PROVENANCE_PENDING
 date: 2026-10-24
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r218-billing-ui-20261022
 pull_request: 661
-head_sha: 7e35f0ab78a32b2d4d7bffc7536a4dd381c21151
+head_sha: 26a966e25778229a0b76cfb045fa384d5d34b4eb
 checkpoint_music_mu07_a_20261024:
   base_sha: 520174941470fab34c60c26e62607ba2d4b3568f
   phase: REPORT
@@ -178,7 +178,7 @@ checkpoint_subdub_e3_readiness_read_20261024:
 checkpoint_subdub_e3_readiness_fix_20261024:
   base_sha: 7e35f0ab78a32b2d4d7bffc7536a4dd381c21151
   phase: REPORT
-  status: LOCAL_R711_R715_PASS_CHECKPOINT_RECEIPT_PENDING_NOT_PUSHED
+  status: LOCAL_R711_R716_ACCEPTED_NOT_PUSHED
   contract: "Issue664#6382914858/spec2026-10-24-r218-subdub-authoring-readiness.md. No anonymousdraftadoption; nativeauthoringgatedtosigneddraftreadinessonly."
   handoff: "FlashR1source8accepted/newunit6harnessfail;R2newtestonly1pass1assert4harness. NoR3. SameSolxhighrepairednewtestonly;source8R1frozenSHA46b97b444b32b5d33decbe00ab1fd469a24ad1bc0205ef4756d969a3d8596c53."
   scope: "3copykeys/purequote-awareSubDubformmarkuphelper/genuinesessionpredicate/articleflag/oneinlinependingstatus/summarywrapper. NoCSS/authbusiness/sessioncapture-clear/integration/backend/engine/wallet/motionchange."
@@ -188,8 +188,22 @@ checkpoint_subdub_e3_readiness_fix_20261024:
   review: "Independentsource+newunit+runtimeC0I0M0/exact8records/reverseLFBASE/17wholehelpers14files674oldtestpathsChat/E607unchanged/all3rawhashesuniqueCartesian72-12-168. Pending12noownassethashes,notextra12assetclaim."
   evidence: reports/audit/R218-SUBDUB-AUTHORING-READINESS-QA-20261024.json
   historical: "CurrentearlyauthoringdefectresolvedbyUIreadinessgate;originalC3AXcauseUNKNOWN/U2originalLCrunstateUNKNOWN. READ36mismatch27changednot36loss."
-  runtime: "Browsers82556/37435terminal0;ownedserver48945/52156retainedforparentQA. SandboxvirtualTempENOENTresolvedbyapprovedheadlessoutsidecommand,nosettings/security/window/IDEchanges."
-  next: "Localcheckpoint/Issue receipt thenparentfinalSD01..21audit168/Tester/currentdocs/comparison/provenance/oneE3push/exactHEADCI. Nochildpush/merge/deploy/LIVE. MotionLAST/goalACTIVE."
+  runtime: "Browsers82556/37435/parent45772terminal0;ownedserver48945newlineexit0/listener52156=0/temp0vfy_b36removed outsideprobe. SandboxvirtualTempENOENTresolvedbyapprovedheadlessoutsidecommand,nosettings/security/window/IDEchanges."
+  delivery: "Localcheckpoint26a966e2/Issue664receipt6383548657/childtickreadback,NOT_PUSHED."
+  next: "Parentfinal168runtimepassed,independentTester/docs/maincompat/provenance/ONEE3push/exactHEADCI gatesopen. Nochildpush/merge/deploy/LIVE. MotionLAST/goalACTIVE."
+checkpoint_subdub_e3_parent_20261024:
+  base_sha: 79cd75d3d8ee50685bbecd4056f7d84a79f8e68a
+  source_sha: 26a966e25778229a0b76cfb045fa384d5d34b4eb
+  phase: VERIFY
+  status: SCOPED_LOCAL_UI_ACCEPTED_TESTER_PASS_DELIVERY_PENDING
+  contract: "Issue664#6380189875/allchildrenlocalaccepted;AMENDMENT45parentQA reviewedbeforelaunchC0I0M0. NoappeditduringparentQA."
+  verify: "Actual168unique/4modesVIENZHlightdark7views/588choices168VoiceReturns672fourLFassets/14448nondecorativeleaftextsmin5.223799unknown0/168rangesmin200x44/allstrictcounters0/exit0. Raw249be2cf...34782a."
+  evidence: reports/audit/R218-SUBDUB-FINAL-UI-QA-20261024.json
+  crosswalk: reports/audit/R218-SUBDUB-FINAL-UI-CROSSWALK-20261024.md
+  tester: "IndependentseatR218-SDE3-TESTER-20261024READY_FOR_SCOPED_LOCAL_ACCEPTANCE;reportSHA9b5f29a4aafd8f423d9eaf21a5d09a99466d7f4490509aebfe330d8b453e82b9. Own74Node/32portable1deselected;4rawhashes/21IDs/8caseIDs/old48WA/6metadataexact;C0I0new/M1SD15qualifierrestoredimplementationOPEN. NonewTesterbrowser."
+  retained_UI: "SD-D4-ORIGINAL-AUDIO-TOGGLE:originalSD15dedicatedon/offabsent;only0percentmuteandrange/numbertested. Testerrestoredfinalqualifier;OPENafterE3deliverybeforeImage,notT0."
+  main_compat: "PR661DIRTY. Newmain0e1b49b5SFX#663;read-onlymerge-treeconflictsONLY2generatedJSON. AMENDMENT45preserveallmainSFXfiles/exactUI4assets;mainintofeatureafterTester/docscheckpointthenWebonlyprovenancerefresh. Noactualmergeyet."
+  next: "FinishTester/localdocscheckpoint -> mechanicalmaincompat -> cleanWebprovenance -> ONEgithubpush/exactHEADCI/receipt -> SD-D4READformalcontract. No mergeintomain/deploy/engineLIVEmutation."
 checkpoint_music_fh_20261024:
   base_sha: 1e01f2417e3000a09c45186e11ee144e52a22fa5
   result: DELIVERED_CI_GREEN_NO_DEPLOY
@@ -852,7 +866,7 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "E3READINESS actualRED6assert→GREEN6/focused74/fullNode1301/Python21/native72/pending12/final168/source+runtimeC0I0M0. Finalizelocalcheckpoint/Issue receipt thenparentSD01..21finalaudit/Tester/docs/comparison/provenance/ONEE3push/exactHEADCI. Preserveidentityfences/originalAXUNKNOWN;motionLAST/goalACTIVE."
+next_action: "E3READINESSlocalaccepted26a966e2/receipt6383548657;parentfinal168/allstrictcounters0. FinishindependentTester/docscheckpoint thenmain0e1b49b5compat(exact2provenanceconflicts)/Webonlyrefresh/ONEgithubpush/exactHEADCI. NextSD-D4originalaudiotoggleUIgapbeforeImage;keepT0/originalUNKNOWN. MotionLAST/goalACTIVE."
 active_billing_batch:
   id: R218-BILLING-20261022
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660
