@@ -1,0 +1,146 @@
+{
+  "task": "E3-LABEL R1 + E3-CONTRAST R2",
+  "date": "2026-10-24",
+  "base_sha": "79cd75d3d8ee50685bbecd4056f7d84a79f8e68a",
+  "parent": "SD-E3-FINAL-UI",
+  "parent_contract": 6380189875,
+  "child_contract": 6380526568,
+  "amendment": 6380636456,
+  "status": "SCOPED_LOCAL_GATES_PASS_PARENT_E3_OPEN_NOT_PUSHED",
+  "source_files": [
+    "static/portal/portal.js",
+    "static/portal/portal-theme.css"
+  ],
+  "changes": "Fouruniqueidforattributesonly;onehelperforegroundCSSruleusingexistinginktoken,higherfeature-scopedspecificitybeatsknownlaterdarkrule.Nohandler/copy/value/business/motionchanges.",
+  "workers": [
+    {
+      "specs": [
+        "E3-LABEL",
+        "E3-CONTRAST"
+      ],
+      "round": 1,
+      "model": "gemini-3.8-flash-high",
+      "duration_seconds": 135.2326405,
+      "turns": 1,
+      "records": 3,
+      "command_UTF16_chars": 11126,
+      "status": "SUCCESS_SOURCE_RESPONSE_NOT_VERIFY"
+    },
+    {
+      "spec": "E3-CONTRAST",
+      "round": 2,
+      "model": "gemini-3.8-flash-high",
+      "duration_seconds": 202.5577788,
+      "turns": 1,
+      "records": 1,
+      "command_UTF16_chars": 11064,
+      "status": "SUCCESS_SOURCE_RESPONSE_NOT_VERIFY",
+      "reason": "RootSPEC_CASCADE_GAP;R1followedprescribedselector0,2,1;laterdark0,4,1wins. R2selector0,5,1,noimportantorpalettechange."
+    }
+  ],
+  "red": {
+    "configs": 48,
+    "label_fails": 24,
+    "text_fails": 390,
+    "errors": 0,
+    "external": 0,
+    "UI_writes": 0,
+    "exit_code": 1
+  },
+  "R1_green": {
+    "configs": 48,
+    "label_fails": 0,
+    "text_fails": 84,
+    "unknown_backgrounds": 0,
+    "helper_samples": 759,
+    "exit_code": 1
+  },
+  "first_R2_enhanced_probe": {
+    "outcome": "FAILED_REVIEW_VALUE_ASSERTION",
+    "active": "vi/dark1440/SUBTITLE_ONLY",
+    "expected": "Shortline-rule review",
+    "observed": "Standardline-rule review",
+    "cause": "UNKNOWN;originalfailureglobalstate/DOMsnapshotnotcaptured;notattributedtofourattributes",
+    "scope": "ParentE3-READINESSopen,notfixedbyrerun",
+    "QA_change": "WaitactualauthenticatedbootstrapandnonemptycsrfTokenbooleanbeforefirstinteraction;no tokenlogging/forceready/arbitrarysleeps/assertionrelaxation. Home/nondefaultmode-return/reviewassertionsretained."
+  },
+  "final": {
+    "command": "node <QA>/browser-SDE3-LC.cjs http://127.0.0.1:26962 green green-signed-final",
+    "configs": 48,
+    "associations": 24,
+    "keyboard_Home_mode_return_review": 24,
+    "helper_samples": 768,
+    "min_contrast": 8.836529045485037,
+    "unknown_backgrounds": 0,
+    "label_fails": 0,
+    "text_fails": 0,
+    "errors": 0,
+    "external": 0,
+    "UI_writes": 0,
+    "overflow": 0,
+    "exit_code": 0,
+    "raw_sha256": "827d9dd40fa8cf66688f3a1ca29a5d470db69f911c6db696774f987adc8dff2a",
+    "raw_path": "C:/Users/toann/Documents/Codex/qa/r218-music-review-FH-20261024/SDE3-LC-green-signed-final/result.json"
+  },
+  "visual": {
+    "configs": 2,
+    "scope": "VIlightdark390actualreviewelementcapturesinspected;displaynoneemptyreport/review-toolsgap16unchanged",
+    "path": "SDE3-LC-visual",
+    "exit_code": 0
+  },
+  "tests": {
+    "focused": {
+      "pass": 54,
+      "fail": 0,
+      "duration_ms": 4223.4144
+    },
+    "full_node_R1": {
+      "pass": 1281,
+      "fail": 0,
+      "skip": 0,
+      "duration_ms": 61507.5279
+    },
+    "full_node_R2": {
+      "pass": 1281,
+      "fail": 0,
+      "skip": 0,
+      "duration_ms": 58720.3667
+    },
+    "python_R2": {
+      "pass": 21,
+      "fail": 0,
+      "existing_warnings": 1,
+      "duration_seconds": 1.48
+    },
+    "syntax": "exit0",
+    "full_repository_pytest": "NOT_RUN;existingT0legacybacklogunchanged"
+  },
+  "review": {
+    "critical": 0,
+    "important": 0,
+    "minor": 0,
+    "exact_composition": "R1three+R2one recordsverbatim",
+    "reverse_JS_CSS_BASE_LF": true,
+    "protected_files": 12,
+    "oldtests_Chat_unchanged": true,
+    "comparator_exit": 0,
+    "prior_Important": "R1SPECcascadegapresolvedbyR2;uncertaintyacceptancegapresolvedbyunknown0gate. Actualreadinessmismatchremainsparentopen."
+  },
+  "source_sha256_LF": {
+    "portal.js": "2469ac873b373c0373ec25dcae488cd783812740dcae34568b2078d0e95c1d4d",
+    "portal-theme.css": "0d01f5d7cd1de3f3e6285d71b8da5b3556082f07f8c0345b033c4b72e1b25c5a"
+  },
+  "cleanup": "OwnedQA9592newlineexit0/tempvh_xzepqremoved/listener26962=0outsidecheck;workersandcurrentbrowsersclosed. OnlyownedstalledPID3100treepreviouslyterminated,unrelatedprocessesuntouched.",
+  "limitations": [
+    "Stable-signedlocalchildrenonly;notfullE3/wholepageAA/nativeiOS/PWA/motion/engine/LIVE",
+    "RANGE/GROUP/EDITandparentREADINESSremainopen;nochildpush/merge/deploy",
+    "OriginalC3AXmismatchNOT_REPRODUCED84voicestatesbutcauseUNKNOWNretained"
+  ],
+  "provider_calls": 0,
+  "wallet_mutations": 0,
+  "production_data_mutations": 0,
+  "deploy": "NO",
+  "live_pass": "NOT_TESTED",
+  "goal": "ACTIVE",
+  "motion": "LAST"
+}

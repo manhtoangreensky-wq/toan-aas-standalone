@@ -2,12 +2,38 @@
 
 Ngày 2026-10-20; cập nhật sau run `39309260395`. WIP_ADMIN_PRESENTATION_CI_GREEN_AUTH_QA_GREEN;
 state-only follow-up HEAD `57bda44` đã có CI riêng xanh.
-Source Bot được đọc-only; production chưa kiểm.
+Source Bot được đọc-only; các dòng dưới đây giữ lịch sử evidence theo ngày.
 Không thay goal tổng; checklist này bổ sung và nối tiếp công việc R217 còn dở.
 Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 giữ nguyên bằng chứng cũ.
 Đối soát toàn bộ lịch sử trước R217 nằm tại
 `reports/audit/WEBAPP-HISTORICAL-CHECKLIST-CROSSWALK-R218.md`; không dùng tài liệu cũ
 để suy diễn PASS.
+
+## Checkpoint mới nhất — 22/10/2026
+
+- [x] Delivery PR654: merge `e5b1f5866867221f6ffd131a43f1644dc2c6249a`, CI
+  `39654608580` SUCCESS, deploy `39656066624` SUCCESS; VPS revision/asset blobs
+  khớp. Live SubDub7lane/4mode/volume/Voice-return, Voice/Image control smoke đã
+  kiểm trên327x668. Receipt: PR654#issuecomment-6324091156. Chỉ UI/control scope,
+  không đóng engine/provider/output/giá/gói/QR dưới đây.
+- [x] Batch `R218-BILLING-20261022`, Issue660: bỏ top-up client fallback,
+  phân biệt options/history read state, khôi phục GET đúng; QR dùng tỷ lệ tự nhiên
+  không crop và ACB chỉ còn một lựa chọn theo readiness. Wallet regression21/21,
+  billing/QR 24/24, pricing11/11, Free Tools7/7; không đổi QR bytes/destination/
+  financial IDs. Verify Web App + Authenticated WebApp QA xanh ở run `39767604255`.
+- [x] AC-02-QR-ACB-PRESENTATION: kích thước QR tự nhiên, không `scale/crop`,
+  mobile dùng đủ chiều rộng; dedupe `bank_acb`/`bank_acb_vietqr` theo method sẵn
+  sàng, vẫn giữ canonical IDs/history và không thay bytes/destination.
+- [~] AC-02-PRICING-PACKAGES: production supplies4monthly+20combos, card xuất hiện
+  sau hydrate. Sale price/publication chưa chứng minh; không suy từ tên gói.
+  Note legacy chỉ được localize, không tự chuyển thành visibility/checkout authority.
+- [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p khi chưa có kích thước ảnh;
+  extractor chỉ báo đã nhận liên kết/mã nhúng. FreeTools7/7 và browser gate xanh;
+  không coi URL chuẩn bị xong là tải video.
+- [x] Batch mới đã commit/push trên PR #661, HEAD `e8f3d76` (toast follow-up đã
+  kèm provenance); run `39771663986` xanh cả Verify Web App và Authenticated
+  WebApp QA. Chưa merge/deploy/LIVE. Spec:
+  `docs/superpowers/specs/2026-10-22-r218-billing-presentation-truth.md`.
 
 ## Quy ước
 
@@ -76,6 +102,28 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 | `2026-10-16-r217-13-deferred-technical-register.md` | T0 | Giữ cuối, chỉ lập register sau UI/UX/motion |
 
 ## C0 — Bảo toàn / chốt WIP
+
+- [x] C0-PR661-MAIN-SYNC (branch+CI, không deploy): tiếp tục từ BASEcb995c7,
+  main406127e; chỉ hai báo cáo
+  sinh tự động xung đột. Lần thử cũ đã abort vì13 assertion lỗi; lịch sử đó giữ
+  tại spec `2026-10-23-r218-pr661-main-sync.md`. Candidate hiện tại đã sửa tương
+  thích bằng các mục dưới; provenance/push/CI/mergeability phải có receipt riêng.
+  Không merge PR/deploy trong lát này.
+- [x] C0-A Dashboard semantics/catalogue: giữ layout gọn/sáu route; phục hồi một
+  H1/sáu H3/tên vùng tài khoản, nhãn VIP không bịa gói. Node22/22, Python6/6,
+  browser actual app18/18 với12drawer/resize/Escape và3keyboardVoice navigation;
+  errors/overflow/UIwrites/external0. Dark bodyrgb(6,32,38), cardrgb(10,45,53).
+- [x] C0-B metadata compatibility: RED mới ghi2attribute trùng; GREEN helper7/7
+  và Node motion11/11, giữ geometry batching/pointer cancel/reveal/teardown.
+  Không tinh chỉnh hiệu ứng hoặc kết luận FPS/INP/LCP; M0 vẫn mở.
+- [x] C0-C branch regression/delivery: HEAD9d941fb đã đọc lại, PR661CLEAN/MERGEABLE;
+  run39904684572 cả2jobsSUCCESS, Linux396critical+26browserruntime. Receipt
+  Issue662#issuecomment-6358064715. Không merge PR/deploy/LIVE; fullNode942/942,
+  bounded upstream+Voice Python27/27,
+  syntax6JS/compile2Python/diff-check đạt. Windows POSIX0600 baseline failure
+  được giữ nguyên test; CI Linux phải chạy đủ. Metadata Tester được refresh;
+  bounded CI local395passed/1deselected/0failed. Evidence
+  `R218-PR661-MAIN-COMPAT-QA-20261023.json`; receiptCI được đọc trực tiếp trênGitHub.
 
 - [x] Root menu Bot và nhóm sản phẩm ghi tại WEBAPP-BOT-PRODUCT-INVENTORY-R218.md.
 - [x] Đọc menu/handler/catalog chính cho Voice/Music/SubDub/Image/Video và tiện ích.
@@ -192,7 +240,45 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   allowlist integration; không coi file fixture là upload thực thi.
   Evidence `reports/audit/R218-VOICE-QUOTE-IDLE-QA-20261020.json`.
   CI của delta idle chờ push; receipt/provider/giao âm thanh/LIVE chưa đóng.
-- [ ] Kho giọng search/page/status/default/preview/rename/delete/reuse.
+- [~] **Hồ sơ hướng đọc `/voice-studio` khác Kho giọng thật `/voice/saved`.**
+  Inventory `22` endpoint Web-owned chỉ quản lý metadata, quyền tự khai, lời
+  thoại, phiên bản và hướng thể hiện; không phải voice profile dùng cho TTS.
+  Bộ Python runtime cô lập ngày23/10 đạt31/31 và source contract10/10; browser
+  app QA thật đã đi trọn vòng metadata ở6 cấu hình VI/EN/ZH×(dark390/light1440),
+  24 lần ghi metadata QA/đọc lại, lỗi trang/console/overflow/external0.
+  Không đóng toàn bộ browser matrix từ6 cấu hình này. Evidence
+  `R218-VOICE-METADATA-QA-20261023.json`.
+- [!] VO-09/VO-10/VO-13 Kho giọng thật: canonical hiện chỉ GET tối đa50 mục,
+  không có search/pagination/rename/default/delete/preview/handoff đã xác minh.
+  Không lấy22endpoint metadata của Voice Studio làm bằng chứng Bot-parity;
+  contract canonical tiếp tục theo `2026-10-18-r218-02a-voice-vault-canonical-contract.md`.
+- [x] VO-CANONICAL-FLAG-TRUTH local UI: controlled malformed flags từng bị hiểu thành
+  default/ready/preview và có thể vào option ở hai builder. Chỉ booleantrue mới
+  được mang nhãn tích cực; spec `2026-10-23-r218-voice-canonical-flag-truth.md`.
+  Baseline39/39; RED15/9 sau sửa harnessZH; GREEN24/24, focused48/48,
+  fullNode951/951, Python source10/10. Flash3.8R1/R2; patchR2 áp nguyên văn,
+  bảy predicate/5productionlines. Browser18configs/180states, noerror/overflow/
+  UIwrite/external; signed app có fixture READ bootstrap/profile được ghi rõ.
+  Evidence `R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json`; deliveryefbe362,
+  CI39908802221bothSUCCESS, Linux396+26, receiptIssue662#issuecomment-6358673449.
+- [x] VO-VAULT-NOTICE-CLARITY local UI:10giọng từng lặp10thông báo hạn chế giống nhau;
+  chuyển paragraph hiện tại ra trước list, chỉ một lần khi ready/nonempty;
+  không thêm ởempty/loading/failed/guarded, không xóa metadata hay đổi flags.
+  Spec `2026-10-23-r218-voice-vault-notice-clarity.md`; Flash3.8R1patch áp nguyênvăn,
+  RED27/3→GREEN30/30, focused54/54, fullNode957/957, PythonSource10/10. So byte
+  bundle sau stripping paragraph bằngBASE. Browser30configs/300profiles/120readviews,
+  gồm375/landscape, contrastmin5.522:1, errors/overflow/external/UIwrite0; cóREADfixtures
+  đã khai báo. Evidence `R218-VOICE-VAULT-NOTICE-CLARITY-QA-20261023.json`.
+  DeliveryHEAD2d6f61f3; CI39921027250bothSUCCESS, Linux396critical+26browserruntime;
+  receiptIssue662#issuecomment-6361097358. Canonicalaudio/merge/deploy/LIVEkhôngđóng.
+  Delivery/CI mới chưa đóng; không suy là management hoặcLIVE đã mở.
+  Không mở management/provider/backend hoặc sửa ké nhãn/ngôn ngữ generic.
+- [x] VO-MANAGEMENT-FEEDBACK-LOCALE: bốn thông báo filter/clear/page/refresh đã
+  cân bằng VI/EN/ZH; ba nhánh read không báo thành công khi failed/stale/null/
+  undefined/đổi route/non-ready. RED5fail→focused9/9, fullNode942/942, Python10/10.
+  Browser18configs với51 hồ sơ QA: filter/clear/refresh/page,503 sau retry,
+  recovery, overflow/console/external/UIwrite0; rate4290. Evidence
+  `reports/audit/R218-VOICE-MANAGEMENT-FEEDBACK-QA-20261023.json`.
 - [x] VOICE-REPORT-PROGRESS-001 UI — đã tái hiện dữ liệu tiến độ rỗng/boolean/
   chuỗi khoảng trắng bị ép thành 0%. Chỉ nhận số hữu hạn 0–100; giữ số 0 thật,
   làm tròn và trạng thái bàn giao. Spec hẹp:
@@ -209,13 +295,13 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   390/768/1440, mode/back giữ cấu hình và tên, consent unchecked, upload/
   submit vẫn guarded, console/overflow/UI write/external0. Setup ngôn ngữ
   chỉ cập nhật hồ sơ QA qua endpoint CSRF, không thay policy signed profile.
-- [ ] MUSIC-INTAKE-READABILITY-001 — app QA thấy intro lặp, nhiều thẻ chờ trước
-  form và tiếng Anh kỹ thuật trong bản VI. Spec đã sẵn sàng ở
-  `docs/superpowers/specs/2026-10-20-r218-music-intake-readability.md`.
-  Actual app QA UI-only 18/18 cấu hình, 36 route states đã đạt; Music mode/back
-  giữ draft, hướng dẫn keyboard, locale/theme, overflow/console/external0.
-  Native save chưa đóng: POST422 do contract thiếu trường, không tính UI-only
-  là lưu nháp đạt. Raw evidence `../qa/r218-voice-inventory/music-intake-ui-browser.json`.
+- [x] MUSIC-INTAKE-READABILITY-001 — đã bỏ intro lặp, thẻ gợi ý rỗng trước form
+  và jargon kỹ thuật; giữ bốn bước/gói/field trong disclosure, mode/back giữ
+  draft và VI/EN/ZH cân bằng. App QA18/18 cấu hình,36 route states; native draft
+  safe-fields14/14 backend +10/10 frontend +26/26 Music regression, readback
+  Unicode/volume0 đạt. Full Node905/905; provider/output/delivery vẫn guarded.
+  Spec `docs/superpowers/specs/2026-10-20-r218-music-intake-readability.md`;
+  raw evidence `../qa/r218-voice-inventory/music-intake-ui-browser.json`.
 - [x] NATIVE-DRAFT-SAFE-FIELDS-001 — Owner duyệt đúng năm trường lyrics,
   vocal_mode, default_voice_gender, volume_percent, source_language; frontend
   báo lỗi quá dài trước request và giữ nguyên dữ liệu; title/toast VI/EN/ZH.
@@ -244,6 +330,102 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## P2 — Music R218-03 (MU-01..12)
 
+- [x] MU-INTERACTION-FEEDBACK localUI (23/10):4functions/2rows sửaVIleak và
+  stalewarningedit2/3; FlashR1/R2 cùngACfail→primarytakeover/noR3.
+  Spec `2026-10-23-r218-music-sfx-interaction-feedback.md`; RED8/22→GREEN30/30,
+  focused34/34, fullNode987/987, Python21/21 baseline/branch; reviewCritical0/Important0.
+  Signedactualbrowser60configs/300presetselections/180edits/120explicittextPOSTs,
+ 3resultitems/compose, noresponsefixtures, errors/external/unapprovedwrite/HTTP/overflow0.
+  Ngoài4functions/2rows+9protectedfiles byteequalBASE; evidence
+  `R218-MUSIC-SFX-INTERACTION-QA-20261023.json`. Delivery80f12d2,
+  CI39934950954bothSUCCESS, Linux396+26; receipt664#issuecomment-6362432472;
+  khôngđóngfullpagelocale, generation/player/output/Botparity.
+- [x] MU-NATIVE-SUBMIT-FEEDBACK-LOCALE-A localUI:9feedbacksites/helper/8rows,
+  pending/success/validguard VI/EN/ZH. ARED3/7→GREEN10/10; FlashR1/R2sameACfail,
+  primarytestharnesstakeover/noR3; productionR2verbatim. Combinedfocused47/47,
+  fullNode1000/1000, Python21/21, Testerportable32pass/1POSIXdeselected.
+  Actualsignedbrowser36configs/72POST/72pendingchecks/3textitems, realcopyrightguard;
+  errors/external/unapprovedwrite/HTTP/overflow0; noresponsefixtures.
+  Evidence `R218-MUSIC-SFX-SUBMIT-GUARD-QA-20261023.json` documents two phases:
+  SFX18 beforeC, Music18 afterC; SFXconsumer byteequal acrossC. Deliverypending.
+- [x] MU-MUSIC-GUARD-BOUNDARY-C localUI: baselineguard17keys/16false/no composer
+  previously failedsuccessRESULT_KEYS. Strictnewhelper+2Musicguardcalls only;
+  realvalidator/caller cleanRED0/3→GREEN3/3. Successvalidators/SFX/backend/API
+  byteunchanged; allflags strictfalse. Independent47/47,Critical0/Important0.
+  Spec `2026-10-23-r218-music-guard-boundary.md`; no reset of A's two handoffs.
+- [x] A+C branch delivery: docs/Tester/prepush/Web-onlyprovenance/push/readbackHEAD
+  fc8deb6; CI39950590927bothSUCCESS (396Python+26browserruntime),
+  receipt664#issuecomment-6364623486; no merge/deploy/LIVE implied by UI ticks.
+- [x] MU-NATIVE-VALIDATION-ERROR-LOCALE-B localUI: validation/wrongroute/notready/invalid
+  receipt/boundary/retry/outercatch localized. READ28uniqueerrors/6realprobes;
+  spec `2026-10-23-r218-music-sfx-error-feedback.md` presentationonly,
+  exact2actions/newhelper/2inline/outertoast/20rows; payload/safety/API/authprotected.
+- [x] MU-NATIVE-ERROR-FOCUS-D0 localUI: baselinefocusBUTTON→BODYdisabled→BODYreenabled,
+  sameBASE/candidateactualJSoverlaycomparator. Bcopy24/focused53/full1006/Python21
+  localpass, nhưngB04focusgiữmở. Spec `2026-10-23-r218-music-sfx-error-focus.md`:
+  capture/flag/restore10logical lines in2actions, no sharedbusychange; beforeBdelivery.
+  FinalD0RED8/2→GREEN10/10,combined63focused/full1016/Python21,review81/81
+  Critical0/Important0. Actualstrictfocus24/24 on5ac46bc3,focusrestored24,
+  validation0POST/24intentionalabort+24native retrysuccess3texts;
+  expectednetworkerrors24separate,unexpectederror/external/unapprovedwrite/overflow0.
+  Evidence `R218-MUSIC-SFX-ERROR-FEEDBACK-QA-20261023.json`; B04notdropped.
+- [x] B+D0branchdelivery: HEAD1144896/CI39960845682bothSUCCESS,
+  396Python+26browserruntime,Issue664receipt6366118699;noaudio/Botparity/LIVEclaim.
+- [x] MU-NATIVE-PRESENTATION-COPY-D: sourcefieldhintVIinEN/ZH vàtechnical/empty
+  cards; ownREAD/contractafterB, nothiddeninsideB. Keeptext-onlytruth/noaudiofake.
+- [x] MU-NATIVE-PRESENTATION-D1 localUI:9copyrows/2fields/SFXdt+fallbacks,
+  scopedhelpercontrastlight2.021→5.797/dark5.522,input16. WorkerR1verbatim,
+  RED0/5→GREEN5/5,fullNode1021/Python21/review86;actual48configs/96states,
+  edgeguard36+focus24 allPASS,0unexpectederrors/overflow/external/unapproved.
+  D1cards4unchanged; D2musthideidentifiedsecondaryblocksnext,notclaimDcomplete.
+  Evidence `R218-MUSIC-PRESENTATION-D1-QA-20261023.json`;deliverypending.
+  CI39971274631reopenedP04:1ChatEOFboundaryfail/168pass,authQAskipped.
+  SameD1FlashR2movesonly2rulesbeforeChat,notestweakening. LocalR2Node1021/
+  foundation90/boundedCI395portable/independentC0I0M0/signed48configs96states
+  allPASS;oldCSS/Chatcontent+orderretainedafterCRLFnormalization. NewCIpending.
+- [x] D1branchdelivery: HEAD3e91dbd8/CI39975608329bothSUCCESS,396Linux+26runtime;
+  receipt664#issuecomment-6368236480,IssueD1tickreadbacktrue. D2unlockedonlynow.
+- [x] MU-NATIVE-PRESENTATION-D2: detailedspecREADYafterD1;scopedhideintro/boundary/empty/
+  scope,onecolumn/noblankgap,flattermetadata+truthfulsingletext-outputnote;
+  noinput/result/normalizer/integration/A/B/C/D0/motionchange.
+  LocalUIaccepted:52new/138focused/1073Node/395portablePython/32Tester;
+  independentC0I0M0,main48+focus24+guard36actualPASS. Initial1/result2cards,
+  3items/all5presets/stale+remount/AX/textstress,0unexpectederrors/overflow.
+  TwoFlashhandoffsfailedretained,Soltest+oneanchoronly/noR3. Finaldelivery
+  HEAD e8738b5a/CI39985131009bothSUCCESS/396Linux+26runtime;
+  receipt664#issuecomment-6369576116,IssueD2+parentDcheckedreadback.
+- [x] MU-PRODUCT-READABILITY-E: riêng`/music/create`/`song`,4CSSrulesonly.
+  Actual24baseline66lightcontrastfails+132fontfails→green48configsAA5.797/
+  5.522,input16;144tier/288vocal/48Backdraft/AX/keyboard/textstress,
+  0errors/UIwrites/external/overflow. FlashR1verbatim/Node1073/Python111/
+  independentsourceC0I0M0;deliverypending. Evidence
+  `R218-MUSIC-PRODUCT-READABILITY-E-QA-20261023.json`.
+  E02mởlạitrướcpushvìthiếugatelabel/placeholder;R1làmđúngspec2rules.
+  R2final48labels264AA12.352/13.903,placeholder120>=5.522,helper/inputgiữ;
+  all144tier/288vocal/48Back/AX/keyboard/textstressđạtlại. Node1073/Python111/
+  independentR1+R2compositionC0I0M0,noR3. DeliveredHEAD1e01f241,
+  CI39992812318bothSUCCESS,receipt664#issuecomment-6370628830.
+- [x] MU08-F REVIEW-SUMMARY: read-onlyproduct/tier/vocal/lyrics/length/brief
+  từsnapshotflow.input;khôngđổiquote/confirm/fingerprint/API,nofakechoiceID.
+  LocalacceptedF172tests,browser48;R1R2failgates→Soltestrepair+4copykeys,
+  noR3;quote/confirm/APIunchanged. FinalFHNode1257/Python119/reviewC0I0M0,
+  browser48/720AA>=5.522/144assethashes/0errors. DeliveredHEAD52017494,
+  CI40001922044attempt2bothSUCCESS/456authenticatedrecords,receipt6372116359.
+- [x] MU-PRODUCT-EMPTY-H: localaccepted,exact1prefix/no-flowemptycardhidden,
+  H12tests,54initialomissions/48realflowoutputs/40nonMusicworkspaceoutputs
+  checked;finalactual48emptyheadings0/formnavdraftretained. SameFHdelivery.
+- [x] MU07-A-RETAINED-OPTIONS: sourceauditBotpin0d2+WebDTO xácnhậnestimate
+  replacesdraftdata;tabmemory/sessionfencedretention+closeddisclosure/Apply
+  giữquote-stale. LocalA01..A05pass:19unit/fullNode1276/Python119/browser48,
+  2304AA>=5.217/hover48>=5.161/focus48>=5.2/144LFassethashes/0errors.
+  IndependentC0I0M0/9records/13functions/12files/oldtests/Chatprotected;
+  evidenceR218-MUSIC-RETAINED-OPTIONS-QA-20261024.json. DeliveredSOURCE99efd807/
+  HEAD06afc2c3/CI40016578805bothSUCCESS/456records/receipt6373888334.
+  FHR1R2historykhôngreset;MU07AFlashR1R2fail→Sol,noR3.
+  UI-AkhôngđóngMU07tổng/regenerate3/edit-regeneratecontractT0.
+- [ ] MU-P2 remaining crosswalk: `R218-MUSIC-REMAINING-UI-CROSSWALK-20261023.md`
+  giữ12MUrequirements,phânbiệtUIgapsvàcontract/runtime. MU02stylemapping/
+  MU06lengthsemantics/media2tracks/editor/providerkhôngbịbỏsót,đểcuốiT0.
 - [~] MU-00 control-level local đã khóa theo C0; các mục runtime và delivery dưới đây chưa đóng.
 - [~] MU-00 browser presentation — 19/10/2026: `/music/create` và `/music/song` đã kiểm bằng Edge localhost với 36 cấu hình (VI/EN/ZH × sáng/tối × 390/768/1440 × 2 workspace), giữ field bài hát riêng, không hiện audio/player/giá/download giả; page/console/request ngoài/write/unknown API/overflow đều `0`. Đây là fixture đọc-only, chưa phải generation/player/delivery/LIVE.
 - [ ] Nhạc nền/Bài hát/Kho nhạc-SFX/Chỉnh nhạc; capability thật.
@@ -307,9 +489,117 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [!] Editor nhạc Bot hiện guard; UI không giả có editor thực thi.
 - [ ] Duration/half/full chỉ options reachable, không chép menu legacy làm authority.
 - [ ] Renderer/interaction + browser/AX/screenshots đạt.
+- [x] SD-VOICE-LANE-READABILITY local UI: giữ đủ 7 lane mặc định nam/nữ, saved,
+  custom, Auto2, Auto Multi3–8 và Smart Multi; bỏ câu guard lặp trên từng thẻ,
+  giữ một ghi chú chung, callback/Voice Library/draft không đổi. SubDub focused
+  `48/48`; browser riêng cho chuỗi voice-lane vẫn chờ runtime QA.
 
 ## P3 — SubDub R218-04 (SD-01..21)
 
+- [x] SD-A currentREAD24/10:48actualsignedstates/0errors-external-UIwrites-overflow;
+  21targetcodesmatchpinnedBotcatalog/notproductiontruth. 36targetstatesfont15/
+  nosearch;24Smartboxesduplicateparagraphs;48initialemptyreports. Orderedplan
+  `2026-10-24-r218-subdub-ui-closeout.md`mapsallSD01..21,locksB2C2D2E2.
+- [x] SD-B3-INPUT-FONT:oneCSSruleonly,actualfont15RED→16GREEN/controls/draft
+  protectedbeforeB4search,C3voice,D3emptyreport. Local96/552samples16px/
+  288LFassethashes/0errors-external-UIwrites-overflow;Node68focused1276full/
+  Python21/independentC0I0M0. DeliveredSOURCE32d3b4e2/HEAD4d66ef14,
+  CI40020963811bothSUCCESS456records/receipt6374462006/IssueB3checked.
+  Spec2026-10-24-r218-subdub-input-font.md;
+  evidenceR218-SUBDUB-INPUT-FONT-QA-20261024.json. NoalltextAA/nativeiOSclaim.
+- [ ] SD-B4-LANGUAGE-FINDABILITY→SD-C3-VOICE-CLARITY→SD-D3-EMPTY-REVIEW→SD-E3
+  finalmatrix;eachrequirescontract+evidence,notfakenativeexecution/rendererPASS.
+  B4spec2026-10-24-r218-subdub-language-findability.md/contract6374610644:
+  local96/72target24source-only/288AAmin5.2238/288LFassets/0errors,draft/Voice/
+  latesttargetpreserved;unit5/focused73/Node1281/Python111/reviewC0I0M0.
+  R2production10recordsverbatim,Solnewtestonly/noR3. B4deliveredHEAD89f6d6fe/
+  SOURCE93cf390d/CI40027725649bothSUCCESS456records/receipt6379454063.
+  No newlanguage/provider capabilityclaim.
+- [x] SD-B4-LANGUAGE-FINDABILITY scopedUI+branchdeliveryacceptedasabove;
+  wholeSubDub/provider/upload/speaker/output/LIVEstillOPEN.
+- [x] SD-C3-VOICE-CLARITY:spec2026-10-24-r218-subdub-voice-clarity.md/
+  contract6379509521;exact1FlashR1CSSrulehideinertguardedSmartbox+hint,
+  keep7radios/sharednote/callbacks/Voice/B4/draft. RED24;sourceC0I0M0/
+  Node1281/Python21;final48/336choices/96returns/144LFassets/0errors,
+  C305deliveredSOURCE00239d7f/HEAD00a34c2b/CI40061704379bothSUCCESS456records/
+  receipt6379877100/readback. FirstAXnotemismatchcauseUNKNOWN;probe3correct/
+  newexpectedlocale-readinessQAonly,unchangedtextassertion/nofurtherappchange.
+- [x] SD-D3-EMPTY-REVIEW:spec2026-10-24-r218-subdub-empty-review.md/
+  contract6379928009;localRED48→GREEN96/480diagnostics/336choices/96returns/
+  288LFassets/visual2gap16/0errors;exact3FlashR1records2attrs+2rules,
+  reverseJSCSS/protected12/oldtestsChat/C0I0M0/Node1281/focused54/Python21/
+  Tester32. DeliveredSOURCEd643ce55/HEAD79cd75d3/CI40063985662bothSUCCESS456/
+  receipt6380165981;E3fullUI/AXunknown/runtime/LIVEremainOPEN.
+- [ ] SD-E3-AX-READINESS: C3firstmatrix30rows+ENdark844DubbingAXnote literal
+  mismatchcauseUNKNOWN(originalsnapshotnotcaptured);visualtrue/probe3AXtrue/
+  final48initializedUItrue doesnotdiagnosetransient. Rerender/hydration/locale
+  readiness tobeauditedatE3,notclosedfromrerun orCSS-onlyreview.
+- [x] SD-E3-FINAL-UI scopedLOCAL:originalREAD168BASE79cd75d3 foundLABEL84/
+  CONTRAST483/RANGE12/GROUP/EDIT. Allsixremediationchildren inclREADINESS now
+  localaccepted. Finalactual168unique/588choices168VoiceReturns672fourLFassets/
+  14448nondecorativetextmin5.223799unknown0/168rangesmin200x44/allstrict
+  counters0. TesterR218-SDE3-TESTER-20261024READY_FOR_PARENT_LOCAL_ACCEPTANCE;
+  own74Node/32portable1deselected;4raws+21IDs+8cases+672/674oldtestsverified.
+  MinorSD15qualifierrestored/dedicatedtoggleUIgapSD-D4OPEN,notall21done.
+  EvidenceR218-SUBDUB-FINAL-UI-QA-20261024.json/raw249be2cf…34782a.
+- [ ] SD-E3-DELIVERY:maincompat0e1b49b5SFX#663 nowsource2a925079;
+  exactSFX5files+UI4assetspreserved/Node1301/Python85pass1deselectedexternal0.
+  FinalsourceWebonlyrefresh/ONEE3push/exactHEADCIreceiptremain.
+  Nochildpush/mergeintomain/deploy/LIVE. MotionLAST,goalACTIVE.
+- [ ] E3-HISTORICAL-LC-RUN-STATE:enhancedLCprobeVI-dark1440source-line-rule review mismatch;
+  causeUNKNOWN,originalglobalstate/AXsnapshotnotcaptured. Stable-signed48
+  passesafteractualauthbootstrapwait,notretroactiverootcauseproof. CurrentUI
+  earlyauthoringfixacceptedbelow;originalrunstateremainsUNKNOWN. Noauthbusinessmutation.
+  READcontract6382724646/finding6382804310 nowactual72scenarios:36held-realme
+  early/36stable,early36reviewmismatch27changedcontrols/stable0mismatch0loss,
+  noteAX0/errors-external-UIwrites0/288LFassets. ThisREADfinding ledtobounded
+  E3-READINESSfixaccepted26a966e2/receipt6383548657;identityfencesprotected.
+  C3AXnotreproducedcauseUNKNOWN;LCsamefreshsymptomproved/originalrununknown.
+  EvidenceR218-SUBDUB-READINESS-READ-QA-20261024.json;collection0NOTUXPASS.
+- [x] E3-RANGE scopedLOCAL:contract6380830198/BASE6da9b14a/oneFlashR1CSSblock;
+  RED12phone+24desktop→GREEN72/phone48min200x44/desktop24geometryexact;
+  main144VoiceReturns+supplement24scenarios48modeRoundTrips48VoiceReturns,
+  muteack/number-range-review-liveoutput/lane-targetISOkept. 216LFassets/
+  0errors-external-UIwrites-overflow/Node1281/Python21/sourceC0I0M0.
+  R403probegapclosedbyfollowupwithoutappchange;parentE3/GROUP/EDIT/
+  READINESS/final168/deliveryremainOPEN. EvidenceR218-SUBDUB-MOBILE-RANGE-QA-20261024.json.
+- [x] E3-GROUP scopedLOCAL:contract6381189391/BASE3d5e59dc;fourborderless
+  semanticgroups2/1/1/3/sevennativeradios/fullARIA-reviewnames. R1invalid
+  packet/newunit,R2tokenlimittruncated;neitherapplied/noR3. Solxhigh repaired
+  packet/newunitonly,R1fourJSrecords+SPEC CSSbodyexact. TrueRED2pass4assert0harness
+  →unit6/focused60/fullNode1287/Python21;sourceC0I0M0/protected17helpers12files/
+  672oldtestpathsChat. Actual84/588clicks588arrows168VoiceReturns/36matched
+  heights65.20–156.36pxshorter/min75.47x44/1092AAmin8.836529/252LFassets/
+  errors-external-UIwrites-overflow0. Supplemental84voice+84nonvoice:82fit
+  Defaultpairs same-row,2ENCombo320wrap;48phoneAuto3rows/wholepage nonvoice
+  visiblecontrols0. IndependentsupplementC0I0M0. EDITnext/READINESS/final168/
+  Tester/deliveryopen;nochildpush/LIVE/motionclaim. Evidence
+  `reports/audit/R218-SUBDUB-VOICE-GROUPS-QA-20261024.json`.
+- [ ] SD-D4-ORIGINAL-AUDIO-TOGGLE UIgap:originalSD15cóBật/tắtriêng;
+  hiệnchỉcó0%mute/range/number,khôngđánhđồngvớiđủmọicontrolgốc.
+  TesterE3pháthiệnfinalcrosswalkthiếuqualifier;đãkhôiphụcbảnđốichiếu.
+  XếpngaysauE3delivery,trướcImage;đọclạiflowBot/chốtsemanticsdraft/giátrị
+  khôiphục/keyboard/label rồiSPEC+RED+FlashR1/R2. KhôngđẩygapUIsangT0.
+- [x] E3-READINESS scopedLOCAL accepted;checkpoint26a966e2/receipt6383548657.
+  Contract6382914858;FlashR1/R2unitgatefail→sameSolxhighnewtestonly/noR3;
+  exact8R1sourcefrozen. ActualRED6assert0harness→GREEN6/focused74/Node1301/
+  Python21;native72/36earlyordinaryattemptsblocked/readycoherent72/288LFassets;
+  pending12visibleAX/readyabsent/minAA11.772481unknown0;final168/1218clicks/
+  336keys1050edits168modeLoops168VoiceReturns504assets/44x44/errors0.
+  Independentsource/runtimeC0I0M0/17helpers14files674oldtestsChat unchanged.
+  EvidenceR218-SUBDUB-AUTHORING-READINESS-QA-20261024.json. HistoricalU1cause
+  UNKNOWN/U2originalrunstateUNKNOWN remain;currentearlyauthoringdefectfixed,
+  notall36READcaseslostinput. Parent/Tester/onepushCI/LIVE/motion stillopen.
+- [x] E3-EDIT scopedLOCAL:contract6381974676/amendments6382042415/6382437256/
+  6382548623;initialRED24/newunit6assertRED→exact8Solrecords. R1routing/unitgate
+  fail,R2invalidinnerJSON;noinvalidhandoffas-is/noR3,7R1recordsfrozen. Actual
+  runtimeE607blurremount cancelsclick/RED7th→sameHTMLguard;E608focusunderheader/
+  RED8th→instantcenter(validtargetonly). Final168/1218click336keys1050edits/
+  168modeLoops168VoiceReturns/504LFassets/44x44/text12.35focus5.86/unknown0/
+  text2x/errors-external-UIwrites-overflow0. Node1295/focused68/unit8/Python21/
+  exact10records/reverseLFBASE/15helpers12files673oldtestsChat/C0I0M0.
+  EvidenceR218-SUBDUB-REVIEW-EDIT-QA-20261024.json;READINESSnext,parentfinal/
+  Tester/deliveryopen. Nochildpush/merge/deploy/LIVE/motionclaim.
 - [x] Shell một trang/bốn tab, mode/query/keyboard và panel tại chỗ đã khóa bằng test presentation.
 - [~] Source đã có lựa chọn “đã có/chưa có phụ đề”, bộ chọn tệp và trạng thái source rõ ràng;
   upload/preview/metadata/progress/cancel/replace/error vẫn chờ capability máy chủ.
@@ -690,9 +980,119 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] Q0-CUSTOMER-CONTENT: tiếp tục rà dynamicstates và màn còn lại theo spec
   `2026-10-22-r218-customer-content-action-truth.md`; mọi ô/nhãn phải có mục đích,
   thao tác/output phải kiểm được; không bỏ control Bot-parity cần thiết.
-- [ ] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p khi chưa đọc kích thước ảnh;
-  phản hồi extractor chỉ nói đã lấy liên kết/mã nhúng, không nói đã đọc metadata
-  video. Thi công copy riêng sau deliveryUT-CSP, giữ URL/parser/controls.
+- [x] Q0-CUSTOMER-CONTENT-STATUS-CARD: card trạng thái khách không còn lặp
+  bridge/session/provider-payment metadata đã có trong Summary; giữ icon, tiêu đề,
+  lý do trạng thái và CSS/accessibility. Test `1/1`; SubDub hồi quy `48/48`.
+- [x] Q0-MUSIC-LIBRARY-GUARD-CLARITY: thẻ chặn Thư viện nhạc/SFX chỉ giữ thông
+  báo cần thiết, nút kiểm tra lại quyền và đường dẫn chuyển workspace; đã bỏ ba
+  chip kỹ thuật lặp lại (thông tin riêng tư/nghe thử/tải tệp) khỏi customer UI.
+  Test `tests/music-library-guard-clarity.test.mjs` `1/1`; focused Music/library
+  suite `57/57`; không đổi capability, API, dữ liệu hay boundary delivery.
+- [x] Q0-CONTENT-GUARD-CLARITY: ba trạng thái guarded/loading/failed của Content
+  Studio chỉ giữ thông điệp cần hành động (và nút thử lại khi server cho phép),
+  bỏ chip kỹ thuật lặp lại khỏi customer UI. Test
+  `tests/content-studio-guard-clarity.test.mjs` `1/1`; không đổi capability,
+  API, dữ liệu hay boundary authoring.
+- [x] Q0-PROJECT-GUARD-CLARITY: ba trạng thái guarded/loading/failed của Project
+  Center chỉ giữ nguyên nhân và thao tác cần làm; bỏ chip phiên/bộ nhớ/cầu nối
+  lặp lại khỏi customer UI. Test `tests/project-center-guard-clarity.test.mjs`
+  `1/1`; không đổi capability, API, dữ liệu hay boundary authoring.
+- [x] Q0-CAMPAIGN-GUARD-CLARITY: ba trạng thái chưa đăng nhập/đang tải/tải lỗi
+  của Campaign Planner chỉ giữ nguyên nhân và thao tác cần làm; bỏ chip phiên,
+  bộ nhớ và kết nối thay thế khỏi customer UI. Test
+  `tests/campaign-guard-clarity.test.mjs` `1/1`; không đổi lịch, publish,
+  capability, API, dữ liệu hay boundary AutoPost.
+- [x] Q0-BOT-COMPANION-INTRO-CLARITY: intro của các trang chuyển tiếp Bot và
+  Analytics chỉ giữ thông điệp tiếp tục cùng nút/handoff; bỏ chip authority,
+  report/charge/identity lặp lại khỏi customer UI. Test
+  `tests/bot-companion-intro-clarity.test.mjs` `1/1`; không đổi command,
+  connection, Bot authority hay callback.
+- [x] Q0-VIDEO-GUIDE-GUARD-CLARITY: guard của Video Factory Workflow và Guide
+  quyền sử dụng chỉ giữ nguyên nhân cần hành động; bỏ chip phiên/execution/
+  publish/license lặp lại khỏi customer UI. Test
+  `tests/video-guide-guard-clarity.test.mjs` `1/1`; không đổi route, quyền,
+  workflow video hay hợp đồng quyền sử dụng.
+- [x] Q0-IMAGE-UTILITY-GUARD-CLARITY: các guard/loading/failed card của sáu
+  Image utility giữ nguyên nhân và nút thử lại, nhưng ẩn chip phiên/cache/
+  fallback kỹ thuật lặp khỏi customer UI bằng selector route-scoped. Test
+  `tests/image-utility-guard-clarity.test.mjs` `1/1`; không đổi engine, file,
+  capability, API hay output.
+- [x] Q0-DOCUMENT-UTILITY-GUARD-CLARITY: guard card của Document/PDF utility
+  giữ nguyên nguyên nhân và action, ẩn chip phiên/storage/runtime/fallback lặp
+  theo selector route-scoped. Test
+  `tests/document-utility-guard-clarity.test.mjs` `1/1`; không đổi bytes,
+  storage, capability, API hay delivery.
+- [x] Q0-SUPPORT-ADMIN-GUARD-CLARITY: guard của Trung tâm hỗ trợ khách hàng
+  trong Admin chỉ giữ nguyên nhân cần quyền; bỏ chip vai trò/cầu nối/dữ liệu dự
+  phòng lặp lại. Test `tests/support-admin-guard-clarity.test.mjs` `1/1`; không
+  đổi RBAC, dữ liệu yêu cầu, reply, escalation hay finance boundary.
+- [x] Q0-REMAINING-CUSTOMER-GUARD-CLARITY: Project Package, Asset Vault,
+  Inbox, Automation, Operations và Video finalization guard giữ nguyên nội
+  dung nguyên nhân/action, ẩn chip implementation lặp theo selector route.
+  Test `tests/customer-guard-meta-clarity.test.mjs` `1/1`; không đổi metric
+  thật, capability, API, storage, job hay delivery.
+- [x] Q0-CAMPAIGN-BOUNDARY-CLARITY: boundary của Campaign detail và hàng tự
+  rà soát chỉ giữ giải thích nghiệp vụ; bỏ chip mã/CSRF/publish/audit lặp.
+  Mốc lịch thật vẫn giữ ở Calendar. Test
+  `tests/campaign-boundary-clarity.test.mjs` `1/1`; không đổi state, lịch,
+  publish hay API.
+- [x] Q0-VOICE-LANE-CLARITY: Voice Studio lane rail giữ tiêu đề, mô tả và một
+  action rõ ràng; bỏ nhãn “đang được bảo vệ” lặp trên cả ba lane. Test
+  `tests/voice-lane-clarity.test.mjs` `1/1`; không đổi route, capability,
+  Voice Vault hay handoff.
+- [x] SD-SPEAKER-MAP-EMPTY-CLARITY: Smart Multi giữ mô tả nhận diện và hook
+  dữ liệu, nhưng không dựng khung bản đồ người nói rỗng khi server chưa trả
+  speaker payload; không đoán giọng hoặc kết quả. Test
+  `tests/subdub-speaker-map-clarity.test.mjs` `1/1`; engine/upload/quote vẫn
+  guarded.
+- [x] Q0-GUIDE-VIDEO-ZERO-METRIC-CLARITY: Guide Center và Video Factory chỉ
+  giữ số liệu có ý nghĩa (số chủ đề/bước), bỏ các ô `0` kỹ thuật về execution,
+  provider và publish. Test `tests/guide-video-zero-metric-clarity.test.mjs`
+  `1/1`; không đổi catalog, route hay workflow boundary.
+- [x] Q0-FREE-PROMPT-ZERO-METRIC-CLARITY: Free Prompt Gallery chỉ giữ số nhóm
+  mẫu và ngành; bỏ ô `0 — Thực thi / thanh toán` không phải lựa chọn nghiệp vụ.
+  Test `tests/free-prompt-zero-metric-clarity.test.mjs` `1/1`; không đổi
+  catalog/filter/save/boundary.
+- [x] Q0-VOICE-POLICY-CLARITY: Voice Studio policy giữ một lời giải thích
+  capability theo trạng thái máy chủ thay cho bốn ô lặp TTS/clone/preview/
+  delivery; consent notice vẫn giữ nguyên. Test
+  `tests/voice-policy-clarity.test.mjs` `1/1`; không đổi capability/API/runtime.
+- [x] Q0-CHAT-BOUNDARY-CLARITY: Chat Workspace boundary giữ một thông điệp
+  capability theo server thay cho năm ô lặp receipt/model/provider/payment/
+  output; composer, thread và auth boundary không đổi. Test
+  `tests/chat-boundary-clarity.test.mjs` `1/1`; không mở provider/Bot/PayOS.
+- [x] Q0-IMAGE-STUDIO-BOUNDARY-CLARITY: Image Studio boundary giữ một lời
+  giải thích capability thay cho bốn ô provider/preview/job/payment lặp; các
+  class responsive vẫn giữ nguyên. Test `tests/image-boundary-clarity.test.mjs`
+  `1/1`; không đổi image engine, Asset Vault, API hay output.
+- [x] Q0-WORKSPACE-BOUNDARY-CLARITY: Document Workspace, Analytics Workspace
+  và Subtitle Studio boundary dùng một lời giải thích thay cho các cụm ô lặp
+  OCR/provider/payment/media. Styling hooks và workflow contracts vẫn giữ.
+  Test `tests/workspace-boundary-clarity.test.mjs` `1/1`; không đổi API,
+  engine, provider, payment hay delivery.
+- [x] Q0-MUSIC-SFX-BOUNDARY-CLARITY: Music Prompt Composer, Music Directions và
+  SFX Cue Sheet boundary dùng một lời giải thích capability thay cho 6–7 ô
+  provider/player/output/payment lặp. Preset, brief, cue và form vẫn giữ.
+  Test `tests/music-boundary-clarity.test.mjs` `1/1`; không mở generation/player.
+- [x] Q0-VOICE-DIRECTION-CLARITY (local UI): worker Flash đã trả bản vá1line
+  trong cùng phiên; bỏ3ô âm thanh/provider/job lặp, giữ disclosure/form/quyền.
+  RED6fail→GREEN6/6; worker lượt2 sửa harness vm, fullNode933/933, Python10/10.
+  Browser18configs/36states VI/EN/ZH×light/dark×390/768/1440×capability on/off:
+  keyboard/focus/5field/defaults giữ, errors/overflow/external/write0. Evidence
+  `R218-VOICE-DIRECTION-CLARITY-QA-20261023.json`. Chưa CI/deploy/LIVE toàn nhóm.
+- [x] Q0-GUARD-SELECTOR-ACCURACY: sửa selector route-scoped cho Project Package
+  và Video finalization là DOM con của `portal-page`; test clarity đã đổi từ
+  regex không ràng buộc sang kiểm tra nguyên block selector và đủ class. Test
+  guard clarity `3/3`, full Node `926/926`; không đổi renderer/backend.
+- [x] Q0-MIGRATION-EVIDENCE-REFRESH: refresh preflight/web inventory sau các
+  wave UI gần đây; `330` source files được quét. Fingerprint hiện tại phải đọc
+  trực tiếp từ `reports/migration/preflight.json` và `web_inventory.json`; verifier
+  trả `ok: true` cho exact HEAD tại lần refresh gần nhất, không dùng fingerprint
+  cũ làm evidence HEAD.
+- [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p và cả nhãn “độ phân giải cao/
+  lớn nhất” khi chưa đọc kích thước ảnh; phản hồi extractor chỉ nói đã lấy liên
+  kết/mã nhúng, không nói đã đọc metadata video. Giữ URL/parser/controls.
+  Test Free Tools7/7 và full Node905/905; không gọi provider hay tải video.
 
 - [x] Q0-ZH-LOCALE-PICKER (local UI): root cause source thiếu option zh trong Admin header.
   RED renderer zh/select vi → thêm đúng một option → browser12/12 selected/renderer khớp,
@@ -710,12 +1110,13 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] VI/EN/ZH sạch; dữ liệu user/tên riêng không bị dịch.
 - [ ] Mobile 375/390/768/1440 × themes; shell/forms thêm 320/414/1024.
 - [ ] Keyboard/focus/label/contrast/touch/overflow/empty/loading/error/recovery.
-- [ ] Q0-TOAST-STACK: QA Music/SFX bấm nhanh7 thao tác tạo nhiều toast cùng
-  tồn tại4.8giây, che phần lớn viewport390. Bằng chứng ảnh
-  `../qa/r218-voice-inventory/music-library-review-vi-dark-390-sfx.png`.
-  Cần spec hẹp giới hạn/gộp thông báo, giữ lỗi và aria-live; không giấu bằng
-  chờ screenshot để gọi UI đã tối ưu. Ảnh alias chờ toast tự hết chỉ chứng minh
-  bố cục ổn định, không giải quyết lỗi stacking.
+- [~] Q0-TOAST-STACK: đã sửa đúng ba entry point `portal.js`, `integration.js`,
+  `portal-auth.js`: bỏ thông báo rỗng, gộp trùng, tối đa2 node đang hiện và
+  giữ `aria-live` bằng role `status/alert`. RED4node→GREEN3/3, auth popup4/4,
+  full Node905/905, syntax/diff-check đạt. Spec
+  `docs/superpowers/specs/2026-10-22-r218-toast-stack.md`. Browser QA riêng
+  chuỗi7 thao tác trên390px và ảnh chứng minh không che màn hình còn mở; không
+  đánh dấu UX hoàn toàn cho đến khi chạy đúng runtime QA.
 - [~] Motion lifecycle/source có regression, nhưng browser12 chỉ kiểm nội dung/
   overflow/reduced loader, CHƯA chứng minh chuyển động mượt/hydration runtime:
   static/lifecycle29/29 và browser12 cases welcome/login/dashboard × normal/
@@ -736,7 +1137,39 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] Báo cáo UI/UX/motion, giữ goal chưa complete nếu requirements còn mở.
 - [ ] Hết UI/UX/motion thì đợi lệnh cho T0.
 
+## Motion cuối — nghiệm thu runtime sau toàn bộ UI/UX
+
+Owner táikhẳngđịnh24/10: “phần cuối là xử lý motion ... vẫn khựng khựng”.
+Không mở BUILDmotion khiUI/UXsảnphẩmtrên cònđangdở. Không lấy CSS/source/
+HTTP200/smoke/CIxanh thaybằngchứngchuyểnđộngthật.
+
+- [ ] M-FINAL-01 READ baseline:render/hydration/route/scroll/drawer/modal/
+  toast/statusfeedback trênQA đúngsourceSHA vàproductionchỉkhiđượccấpquyền;
+  ghi thiết bị,trìnhduyệt,refresh/load,normal/reducedmotion,cold/warm.
+- [ ] M-FINAL-02 rootcause: đối chiếu state/DOMmount timeline với trace/video,
+  animationbịcắt,layoutshift,reflow/paint,longtasks,scrollscrub hoặc inputblock;
+  findingClaude/authrenderdouble phải táixácminhcurrentcode,khôngcoilàchânlýcũ.
+- [ ] M-FINAL-03 sửa từngrootcause,khóaUI/UXđãđạt;khôngtinhchỉnheasing để
+  che remount/statebug. No globalopacityforce/timerdelaybypass;noauthbusinesschange.
+- [ ] M-FINAL-04 đo lạiít nhất3lượt tươngđươngtrước/sau ở375/390/768/1440,
+  landscape vànormal/reduced;ghi frameinterval/longtasks/CLS/input evidence,
+  khôngbịaFPS/LCP/INP hoặc dùng averageche lầnkhựng. Ngưỡngpasschốttrên
+  baselinethực ởM-FINAL-01 trướcbuild;video/manualreviewphảikhớpmetrics.
+- [ ] M-FINAL-05 everyroute/action touched vẫn đọc/nhập được khôngmotion,
+  focus/draft/AX/quote/role giữ;exactruntimeSHA/trace/screenshot/video/receipt
+  mapvềspec. Chỉđóng“hếtkhựng”khiđúngcácluồngđãtáihiệnđạt.
+- [ ] M-FINAL-06 hếtUIUX+motion thì báo tổngrequirement-by-requirement và
+  đợiOwner choT0;khôngtựmởengine/paidprovider/ví/chuyểnphạmvikhác.
+
 ## T0 — Kỹ thuật cuối, chưa triển khai
+
+- [→] T0-CI-AUTH-OBSERVABILITY: CI40001922044attempt1record052SubDubVI/light/
+  desktop1440False,455/456;failedrecordartifact khôngđượcupload,nêncauseUNKNOWN.
+  Sameassertionlocal56/56vàsameSHArerun456/456PASSkhônglấythayrootcausefix.
+  EvidenceIssue664#6371964272/#6372116359;khôngsửaCIgateởUIbatch.
+- [→] MU07-NEXT-SET/EDIT-REGENERATE: WebchưaDTOrotation/version/idempotency/
+  no-effecttruth;Botpin0d2cóprompt_moreoffset+3vàeditdescriptiontạolạiba.
+  Giữđủrequirement,tránhshuffle3promptclienthoặctạonútkhônghoạtđộng.
 
 - [→] T0-PY-SOURCE-REGEX: hai test static kỳ vọng cấu trúc nguồn cũ đã fail
   cùng assertion trên clean baseline và candidate: `test_portal_safety_contracts.py::test_storyboard_shortcut_uses_the_native_text_composer_while_image_transform_keeps_its_contract`

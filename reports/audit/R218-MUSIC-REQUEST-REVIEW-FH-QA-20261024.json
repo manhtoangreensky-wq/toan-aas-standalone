@@ -1,0 +1,147 @@
+{
+  "baseline_revision": "1e01f2417e3000a09c45186e11ee144e52a22fa5",
+  "date": "2026-10-24",
+  "task": "MU08-F-REQUEST-REVIEW -> MU-PRODUCT-EMPTY-H",
+  "scope": [
+    "/music/create",
+    "/music/song"
+  ],
+  "source_files": [
+    "static/portal/portal.js",
+    "static/portal/portal-i18n.js",
+    "static/portal/portal-theme.css"
+  ],
+  "environment": "Actual signed app + controlled client flow/capability fixtures for presentation only. Not native quote/confirm/backend/provider/output proof. UI GET-only; no API response fixtures.",
+  "browser": {
+    "configs": 48,
+    "viewport_matrix": [
+      "light:390x900",
+      "light:1440x900",
+      "dark:390x900",
+      "dark:1440x900",
+      "dark:360x800",
+      "dark:375x812",
+      "dark:768x1024",
+      "dark:844x390"
+    ],
+    "locales": [
+      "vi",
+      "en",
+      "zh"
+    ],
+    "initial_empty_heading_counts": [
+      0
+    ],
+    "initial_form_counts": [
+      1
+    ],
+    "initial_mode_links": [
+      4
+    ],
+    "initial_draft_actions": [
+      1
+    ],
+    "contrast_samples": 720,
+    "contrast_min_light": 5.797,
+    "contrast_min_dark": 5.522,
+    "lyrics_summary_min_height": 44,
+    "keyboard_AX_focus_edit_revert_expiry_new_quote": true,
+    "controlled_session_guard_checks": 192,
+    "invalid_price_checks": 144,
+    "text_stress": "2x scoped CSS text, not OS Dynamic Type",
+    "overflow": 0,
+    "page_console_errors": 0,
+    "external_requests": 0,
+    "UI_writes": 0,
+    "downloaded_asset_checks": 144,
+    "asset_hashes": {
+      "portal-theme.css": "ba37935161782bd29982db79b0f2b663b3d7fe6510a9d822fc283a3909f981fd",
+      "portal-i18n.js": "f4538ae392ea9be3ba260f2765774cc745800f610cd0cb4b23b3d7a5af4065ac",
+      "portal.js": "2c3f5fdc8b2a24ea38ed8ffec2f1ad56a22eb09e00ac1af7d183ff7c82c2d4f7"
+    },
+    "raw_sha256": "d03da7bb8148a35fb25575acfa29b3be4a2e89aa851d21f872a950c3f36aa059"
+  },
+  "tests": {
+    "F": {
+      "red": {
+        "total": 172,
+        "pass": 66,
+        "expected_assertion_failures": 106,
+        "harness_errors": 0
+      },
+      "green": {
+        "pass": 172,
+        "fail": 0
+      }
+    },
+    "H": {
+      "red": {
+        "pass": 6,
+        "expected_assertion_failures": 6
+      },
+      "green": {
+        "pass": 12,
+        "fail": 0
+      },
+      "limitation": "H new tests verify wrapper retention. Existing runtime tests and root source-H comparator additionally verify real Music envelope content."
+    },
+    "focused_node": {
+      "pass": 270,
+      "fail": 0,
+      "duration_ms": 1606.5042
+    },
+    "full_node": {
+      "pass": 1257,
+      "fail": 0,
+      "skip": 0,
+      "duration_ms": 16379.4606
+    },
+    "python": {
+      "pass": 119,
+      "warnings": 2,
+      "duration_seconds": 29.58,
+      "command": "python -m pytest -q tests/test_copyfast_music_directions.py tests/test_copyfast_sfx_cue_sheet.py tests/test_teal_cyan_ui_foundation_contracts.py tests/test_portal_aura_theme_contracts.py"
+    }
+  },
+  "source_review": {
+    "critical": 0,
+    "important": 0,
+    "minor": 0,
+    "previous_namespace_important": "RESOLVED; only four relative row keys corrected after two Flash rounds",
+    "protected_files": 12,
+    "old_tests_unchanged": true,
+    "Chat_tail_unchanged": true,
+    "non_music_form_outputs_equal": 40,
+    "non_music_workspace_outputs_equal": 40,
+    "real_music_flow_outputs_equal": 48,
+    "initial_VM_omissions": 54,
+    "reverse_H_matches_accepted_F": true
+  },
+  "handoff": {
+    "F": "Flash R1/R2 rejected at gates; Codex Sol xhigh test repair and 4 relative copy keys only; no R3",
+    "H": "Flash R1 SUCCESS48.416725s/1turn; one prefix applied verbatim",
+    "runtime_data_sent_to_worker": 0
+  },
+  "cleanup": {
+    "owned_session": 78665,
+    "exit_code": 0,
+    "temp_QA_DB_assets_removed": true,
+    "listener_14647": 0,
+    "workers_and_browsers_terminal": true
+  },
+  "safety": {
+    "application_provider_calls": 0,
+    "wallet_mutations": 0,
+    "production_data_mutations": 0,
+    "ENV_mutations": 0,
+    "deploy": "NO",
+    "LIVE_PASS": "NOT_TESTED"
+  },
+  "limitations": [
+    "Client quote/capability fixtures are not native server quote/confirm/audio proof.",
+    "Auth setup and session last-seen write only temporary QA DB; no zero-total-DB-writes claim.",
+    "No generated audio, two-track output, player, editor, paid provider, Bot parity, FPS/LCP/INP/CLS or LIVE proof.",
+    "F/H local acceptance only; CI/receipt are post-push delivery gates."
+  ],
+  "next": "MU07 explicit Change/Edit/Back workflow contract; preserve all remaining crosswalk items; motion last; goal active"
+}

@@ -1,0 +1,154 @@
+{
+  "task": "E3-RANGE",
+  "date": "2026-10-24",
+  "base_sha": "6da9b14a355bae62b6c745c54d9e16aab774b12b",
+  "parent": "SD-E3-FINAL-UI",
+  "contract": 6380830198,
+  "status": "LOCAL_R401_R405_GATES_PASS_PARENT_OPEN_NOT_PUSHED",
+  "production_files": [
+    "static/portal/portal-theme.css"
+  ],
+  "production_change": "One9line@media<=480block/two scopedrules:rangefullfirstrow,number/outputsecondrow. NoJS/markup/values/handler/palette/token/motion changes;>480unchanged.",
+  "red": {
+    "command": "node <QA>/browser-SDE3-RANGE.cjs http://127.0.0.1:41475 red",
+    "configs": 36,
+    "phone_configs": 12,
+    "desktop_baseline_configs": 24,
+    "DUBBING320_range_width": 62,
+    "COMBO320_range_width": 36,
+    "range_height": 44,
+    "controls_under44": 12,
+    "phone_controls_under100": 24,
+    "errors": 0,
+    "external": 0,
+    "UI_writes": 0,
+    "exit_code": 1
+  },
+  "worker": {
+    "model": "gemini-3.8-flash-high",
+    "round": 1,
+    "status": "SUCCESS_SOURCE_ONLY_NOT_VERIFY",
+    "duration_seconds": 101.8012838,
+    "turns": 1,
+    "production_records": 1,
+    "command_UTF16_chars": 11270,
+    "transport": "DedicatedemptyCWD/noadddir/perrunsandbox/no tools/sourceSPEC-MAPonly/noQAdata-secrets-settings-authchanges",
+    "R2": "NONE",
+    "R3": "NONE"
+  },
+  "browser": {
+    "command": "node <QA>/browser-SDE3-RANGE.cjs http://127.0.0.1:41475 green",
+    "configs": 72,
+    "modes": 2,
+    "locales": [
+      "vi",
+      "en",
+      "zh"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "widths": [
+      320,
+      375,
+      390,
+      414,
+      768,
+      1440
+    ],
+    "phone_configs": 48,
+    "desktop_configs_exact_geometry_comparator": 24,
+    "min_phone_range_width": 200,
+    "min_range_height": 44,
+    "number_output_below_no_overlap": true,
+    "numbers_font16": true,
+    "sync_HomeEnd_invalid_mute": true,
+    "Voice_returns": 144,
+    "AX_labels": true,
+    "gates_preserved": true,
+    "asset_LF_checks": 216,
+    "all_assets_match": true,
+    "errors": 0,
+    "external": 0,
+    "UI_writes": 0,
+    "overflow": 0,
+    "exit_code": 0,
+    "raw_sha256": "33d71b472013061e2ef0c3e06f8894cf2add939d5840ad63ee7f6377eec827f7"
+  },
+  "review": {
+    "source_critical": 0,
+    "source_important": 0,
+    "source_minor": 0,
+    "exact_R1": true,
+    "reverse_whole_CSS_BASE_LF": true,
+    "protected_files": 12,
+    "old_tests_Chat_unchanged": true,
+    "comparator_exit": 0,
+    "acceptance_gap": "R403initialprobe didnotroundtripmode aftervalues,assertmuteackclear,orcheckrange-review-liveoutputsafterVoice. Rootaddressedwithsupplemental24actualsignedscenarios;noappchange/R2."
+  },
+  "followup": {
+    "command": "node <QA>/followup-SDE3-RANGE.cjs http://127.0.0.1:41475",
+    "configs": 24,
+    "scope": "VIENZH/lightdark/3201440/twoDubbingmodes;subsetwidthsofmainmatrix,newscenariosnot24additionaluniqueconfigurations",
+    "mode_round_trips": 48,
+    "Voice_returns": 48,
+    "number_range_review_liveoutputs_after_mode_and_Voice": true,
+    "mute_ack_zero_retained_and_clear_at200": true,
+    "lane_target_customISO_preserved": true,
+    "gates": true,
+    "errors": 0,
+    "external": 0,
+    "UI_writes": 0,
+    "overflow": 0,
+    "exit_code": 0,
+    "raw_sha256": "6759bb6db3901242bc38ee39eca5c198042c6bde636f6480c8155d87397f3c43"
+  },
+  "visual": {
+    "inspected": [
+      "light-320-SUBTITLE_PLUS_DUBBING-volume.png",
+      "dark-320-SUBTITLE_PLUS_DUBBING-volume.png",
+      "light-1440-DUBBING_ONLY-volume.png"
+    ],
+    "scope": "Actualvolumefieldsetcaptures;phonefullrow/numberoutputsecondrowanddesktopoldlayout,no wholepageAA/nativeorengineclaim"
+  },
+  "tests": {
+    "focused": {
+      "pass": 54,
+      "fail": 0,
+      "duration_ms": 4053.3225,
+      "exit_code": 0
+    },
+    "full_node": {
+      "pass": 1281,
+      "fail": 0,
+      "skip": 0,
+      "duration_ms": 82408.5308,
+      "exit_code": 0
+    },
+    "python_CSS": {
+      "pass": 21,
+      "fail": 0,
+      "existing_warnings": 1,
+      "duration_seconds": 6.34,
+      "exit_code": 0
+    },
+    "compile6": "exit0",
+    "full_repository_pytest": "NOT_RUN;existingT0legacybacklogunchanged"
+  },
+  "CSS_SHA256_LF": "8b60aab7b828e813a033a3ac62f4fc295cf14e52ac8fc26a8e9e273d630892bb",
+  "cleanup": "Ownedserver59737newlineexit0/tempmdroabvfremoved/listener41475=0outsidecheck;workerandbrowsersclosed;unrelatedprocessesuntouched",
+  "limitations": [
+    "RANGEpresentation/localvolumeUIonly;notrealmixing/engine/provideroutput",
+    "GROUP/EDIT/READINESSandparentfinal168remainopen;knownAX/readinessunknownnotclosed",
+    "NotnativeiOS/OStextscale/PWA/motion/fullpageAA/LIVE"
+  ],
+  "provider_calls": 0,
+  "wallet_mutations": 0,
+  "production_data_mutations": 0,
+  "deploy": "NO",
+  "live_pass": "NOT_TESTED",
+  "goal": "ACTIVE",
+  "motion": "LAST",
+  "delivery": "Localchildcheckpointonly;nochildpush,oneE3batchafteralllocalgates"
+}

@@ -635,7 +635,10 @@
         ? clamp((viewportHeight * 0.38 - Number(heroRect.top || 0)) / Math.max(1, Number(heroRect.height || viewportHeight) * 0.86), 0, 1)
         : pageProgress;
       setStyleProperty(root, "--landing-scroll-progress", pageProgress.toFixed(4));
-      root.setAttribute("data-landing-scroll-progress", String(Math.round(pageProgress * 100)));
+      const progressPercent = String(Math.round(pageProgress * 100));
+      if (root.getAttribute("data-landing-scroll-progress") !== progressPercent) {
+        root.setAttribute("data-landing-scroll-progress", progressPercent);
+      }
       setStyleProperty(root, "--landing-hero-progress", heroProgress.toFixed(4));
       if (hero) setStyleProperty(hero, "--landing-hero-progress", heroProgress.toFixed(4));
 
@@ -646,9 +649,7 @@
         const center = Number(rect.top || 0) + (height / 2);
         const travel = Math.max(1, (height + viewportHeight) * 0.55);
         const progress = clamp(1 - (Math.abs(center - (viewportHeight * 0.52)) / travel), 0, 1);
-        const distance = clamp((center - (viewportHeight * 0.52)) / travel, -1, 1);
         setStyleProperty(layer, "--landing-section-progress", progress.toFixed(4));
-        setStyleProperty(layer, "--landing-section-offset", `${Math.round(distance * 18)}px`);
         if (layer.getAttribute) {
           const name = String(layer.getAttribute("data-landing-layer") || "");
           const currentDistance = Math.abs(center - (viewportHeight * 0.52));
@@ -658,7 +659,9 @@
           }
         }
       });
-      root.setAttribute("data-landing-motion-section", activeLayer);
+      if (root.getAttribute("data-landing-motion-section") !== activeLayer) {
+        root.setAttribute("data-landing-motion-section", activeLayer);
+      }
     };
 
     const resetPointer = (target) => {

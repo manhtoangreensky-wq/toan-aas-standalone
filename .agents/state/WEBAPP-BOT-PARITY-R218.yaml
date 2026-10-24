@@ -1,19 +1,467 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: UT_CSP_Q0_CONTENT_LOCAL_PASS_DELIVERY_PENDING
-date: 2026-10-22
+status: SUBDUB_E3_MAIN_COMPAT_PASS_FINAL_PROVENANCE_PUSH_CI_PENDING
+date: 2026-10-24
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
-branch: webapp-r217-subdub-ui-r218
-pull_request: 654
-head_sha: d1d042ed820fe8920fd586abcee43529b6d36882
+branch: webapp-r218-billing-ui-20261022
+pull_request: 661
+head_sha: 2a9250793c55936083a5f26dfa368af82757d71d
+checkpoint_music_mu07_a_20261024:
+  base_sha: 520174941470fab34c60c26e62607ba2d4b3568f
+  phase: REPORT
+  status: DELIVERED_CI_GREEN_NO_DEPLOY
+  handoff: "R1FlashLow57.895231s gatefail;R2FlashHigh446.9415278s responseJSONmalformed/contextschemamismatch. NoAGYR3;Solxhigh owns4fileallowlist/newtestREDbeforeminimalGREEN. Artifacts preserved;root QA separate."
+  clarification: "Spec now spells exact context.session csrfReady/token and context.featureFlows[route] fixture;root acknowledges sourcefixture clarity needed before handoff,not inventing APIshape."
+  spec: docs/superpowers/specs/2026-10-24-r218-music-retained-options.md
+  plan: docs/superpowers/plans/2026-10-24-r218-mu07-options-workflow.md
+  checklist: _giao-viec/CHECKLIST-32-MU07-A.md
+  bot_reference: "Read-onlyGit0d2f37669732eb2e23a78e75b728172ff41aebbd;notproductiontruth,noBotrun/write."
+  contract: "Tab-only2routes/3realoptions snapshots,strictsignedCSRFsessionfence/clonewhitelist;nativecloseddisclosureafterestimatewithoutcurrentoptions;existingApply/quote-staleremains. NoAPI/provider/storage/newselectedID."
+  scope: "portal.js2globals+newsync+1mountcall+readonlyMusicflowfallback;2copyrows/scopedCSS/newtest. Alloldgates/FH/Apply/integration/backend/auth/motionprotected."
+  acceptance: "ActualREDGREEN/lifecycle/48browser/choose-edit-back/protectedcomparators/regressions/review/Tester/delivery. NoBroaderMU07close."
+  retained_gaps: "Nextsetrotation/edit-regenerate lackWebcontract;remainT0afterUIUX/motion,notfakedbyA."
+  tests: "SolunitRED19/1pass/18expectedassertions/harness0 -> GREEN19;fullNode1276pass0fail0skip14296.0041ms;Python119pass2existingwarnings74.32s."
+  browser: "Signedisolated48controlledclientfixtures;2304normalAAmin5.217/48hover5.161/48focus5.2,summary44px/keyboardAX/text2x/overflow0;allApplyEditBack/sessioncleartrue;144LFassethashesmatch,0errors/external/UIwrites. Notnativequote/audio/motionproof."
+  review: "IndependentC0I0M0;9exactSolrecords/3productionfiles/13protectedfunctions/12protectedfiles/oldtests/ChattailunchangedafterLFnormalization."
+  evidence: reports/audit/R218-MUSIC-RETAINED-OPTIONS-QA-20261024.json
+  cleanup: "Own57885newlineexit0,temp06pqmj78removed,listener32417=0;nootherprocessstopped."
+  delivery: "SOURCE99efd807/HEAD06afc2c3;CI40016578805bothSUCCESS,396Linux61.25s+26runtime0.24s,456authenticatedrecords;receipt6373888334/IssueAcheckedreadback. PR661OPEN/CLEAN,no merge/deploy."
+  next: "MU07total/newset/editregenerate/style/length/audio/editorT0remainOPEN;nextorderedSubDubUI. Motionlast."
+checkpoint_subdub_b3_20261024:
+  base_sha: 06afc2c3abc554e69c7be36604fee310f877c8c6
+  phase: REPORT
+  status: DELIVERED_CI_GREEN_NO_DEPLOY
+  plan: docs/superpowers/plans/2026-10-24-r218-subdub-ui-closeout.md
+  spec: docs/superpowers/specs/2026-10-24-r218-subdub-input-font.md
+  read: "Actualsigned48/0errors-external-UIwrites-overflow;36targetstatesfont15/nosearch;24duplicatedSmartparagraphs/48emptyreports;21targetcodesmatchBotpin0d2notproductiontruth."
+  scope: "Onefont16CSSruleportal-theme.cssonlybeforeChat;allJS/API/backend/auth/Music/oldtests/motionprotected. B3fontfirst,B4search,C3voice,D3reportafteraccepted."
+  raw_read_sha256: 712cd264586acda482a62391ec380b93b17ee242ad0f83639f13073a1ed7c155
+  cleanup: "READ92105/B396476/85885allnewlineexit0;alltemporaryDBassetsremoved/listeners51978/55730/14007=0outsidecheck.Nootherprocessstop."
+  builder: "Flash3.8HighR1SUCCESS117.4125259s/1turn/10521UTF16chars;exact1CSSrecord/noR2/noR3;workerVERIFYNOT_RUN."
+  verify: "ActualRED4font15assertion→GREEN96/552inputs16px/288LFassethashes/0errors-external-UIwrites-overflow/values-gates-focuspreserved. Focused68/fullNode1276/Python21pass;independentC0I0M0/exactR1reverseCSS/JSbackendoldtestsChatunchanged."
+  qa_clarification: "Firstgreen16pxthenharnessBacktimeout:tabsintentionalreplaceState;correctonlyharnesstoselectoriginaltab,failedrawpreserved.Finalgreenstoredseparately,noapphistorychange."
+  evidence: reports/audit/R218-SUBDUB-INPUT-FONT-QA-20261024.json
+  delivery: "SOURCE32d3b4e2/HEAD4d66ef14;CI40020963811bothSUCCESS396Linux47.80s+26runtime0.21s/456records;receipt6374462006/IssueB3checkedreadback/PR661OPEN_CLEAN. No merge/deploy."
+  next: "B3locked;B4search21 next. C3voice/D3emptyreportstayqueued.Noalltextcontrast/nativeiOS/motion/runtimeclaim."
+checkpoint_subdub_b4_20261024:
+  base_sha: 4d66ef14aa9aa74d57cd4c3cbac1e9d35e55bb21
+  phase: REPORT
+  status: DELIVERED_CI_GREEN_NO_DEPLOY
+  spec: docs/superpowers/specs/2026-10-24-r218-subdub-language-findability.md
+  checklist: _giao-viec/CHECKLIST-34-SD-B4.md
+  contract: "Issue664#6374610644;21existingtargets,3targetpanelsnativeinputsearch+select;pinselection/noimplicitvaluechange/querynotdraft/mode-resetbeforeapply;source-onlynone."
+  scope: "portal.js12copyrows/newsync/3markup/scopedinputchangeguards+additivemodereset;2CSSrules/newunit<=240.Oldsignatures/draft/Voice/Music/API/backend/auth/motionprotected."
+  handoff: "Flash3.8HighR1source-only24633UTF16chars/session43942;noQAdata/Botsource/ENV. Initialcombinedcallauto-reviewrejected;PUBLICrepo/sourceproof+trustedOwnerGeminiallowlistauthorizationverifiedbeforeretry,singledispatch."
+  qa: "Actualsigned96/72target+24sourceonly,288newtextAAmin5.2238/input16/height46/focusAX/2x/288LFassets/0errors-external-UIwrites-overflow. Latesttarget/mode/Voice/draft/mix0_200/blurSummaryMutation0/URLsamepassed. Supplement6fieldvisualpassed;noAPI/clientflowfixtures."
+  r1_result: "SUCCESS237.4791486s/1turn,11productionrecordsJSsyntax0butNOT_APPLIED;independentreviewC0I3M1. Test211linesappliedonly,RED4fail(3missinghelper+parent),0harnesserrors136.0685ms. ActualbrowserRED48/missing36/0errors-external-UIwrites."
+  r1_findings: "Changeorderbeforecapture/review;unsafeIDselector/partialDOM/globaldocumentfallback;testswallowevalerrorsandnoactualIO/boundassertions;combomarkuporder. RootspecgapnativeblursearchchangeclarifiedbeforeR2. Receipt6374731772."
+  r2_handoff: "Flash3.8High26908UTF16chars/source-only/session30424;R2sameSPEC_ID/counter,oldproductionstillBASE. NoR3."
+  r2_result: "SUCCESS368.9327411s/1turn/10records/candidateJSsyntax0/test230lines;test-onlyrun5fail:3missinghelper+1expectedmissingrefresh+1HARNESSmissingpanel.setAttribute. No production applied."
+  r2_review: "IndependentC0I1M0;allR1sourcefindingsresolved;remainingnewunitharness/evidenceonly. Rootescapedselectorhypothesiswithdrawn:literal-eval0backslashes/validruntimeCSSstrings. PreserveR2sourceverbatimpendingactualtests."
+  takeover: "CodexSolxhigh repairedONLYnewunit240lines;cleanBASE5assertionRED0harnesserrors153.9235ms→rootappliedR2verbatim→GREEN5/5. Followupnegativefixture snapshotaftertestmutate;noSolproductionrewrite/noR3."
+  tests: "Unit5pass176.4382ms/focused73pass4104.9939ms/fullNode1281pass0fail0skip19615.55ms/Python111pass1existingwarning3.02s;syntax/compile6modules0."
+  review: "IndependentC0I0M0;exact10R2records/2productionfiles/12protectedfiles/17functions/oldtests/ChatLFunchanged;JSab39955e...a5b86e/CSS653f4ce7...de907a."
+  evidence: reports/audit/R218-SUBDUB-LANGUAGE-FINDABILITY-QA-20261024.json
+  cleanup: "Ownservers10118/83313newlineexit0,tempDB/assetsremoved/listeners1183/45539=0outsidechecks.Workers/browsers terminal,nootherprocessstopped."
+  delivery: "SOURCE93cf390d/HEAD89f6d6fe/CI40027725649bothSUCCESS396Linux60.52s+26runtime0.23s/456records/receipt6379454063/IssueB4checkedreadback. VerifyfirstChromeCDPtimeoutrecoveredexistingretry,notrootcausefix;no merge/deploy."
+  next: "B4locked;C3voiceclarity next. No nativeprovider/wholeSD/motion/LIVEclaim."
+checkpoint_subdub_c3_20261024:
+  base_sha: 89f6d6fe1a12047e79fa76a06f51a46c784dff95
+  phase: REPORT
+  status: DELIVERED_CI_GREEN_NO_DEPLOY
+  spec: docs/superpowers/specs/2026-10-24-r218-subdub-voice-clarity.md
+  checklist: _giao-viec/CHECKLIST-35-SD-C3.md
+  contract: "Issue664#6379509521;hideinertguardedSmartdescriptionfieldset+genericvoicehintonly,keep7radios/sharednote/callbacks/Voice/draft/B4/mix/gates."
+  scope: "OnegroupedCSSdisplaynone rule/5linesbeforeFinalChat;allJS/i18n/backend/tests/motionprotected."
+  handoff: "Flash3.8LowR1SUCCESS34.9398881s/1turn/139outputtokens/0thinking,10991UTF16chars;exact1record/noR2/noR3. Source-onlyemptydir,no--add-dir,perrun--sandbox. CLIwarned--modeplanignoredwithdisabledslashexpansion;notclaimedaspermissionenforcement. No tool/filewritesbyworker."
+  transport: "Initialcombinedcallwithrepoadddirrejectedbeforelaunch;PUBLICrepoverified/CLIhelpread. Safealternativeemptycwd+noadddir+sandboxaccepted;no settings/auth/globalpermissionschanged."
+  red: "Actual24configsallshowinertbox/hint;expectedassertionexit1,0errors-external-UIwritesbeforeapply."
+  source_review: "IndependentC0I0M0/exact1R1record/reversewholeCSSBASE/JS-Python-oldtests-ChatLFunchanged;CSS35552a5b...6b1413."
+  tests: "FocusedSubDub54pass3464.8572ms/fullNode1281pass0fail0skip39129.4059ms/Python21pass1existingwarning2.26s."
+  browser_first: "Green30completedthenENdark844DubbingAXnote literal mismatch;notevisualtrue/0pageerrors. Originalsnapshotnotcaptured,causeUNKNOWN. ProbeENdark844threecasesactualAXnotevisible/includedalltrue;noappcodechange."
+  browser_final: "ExpectedlocaleDOMreadinessbeforefreshAX+failureAXrawcapture,unchangedtextassertion;final48PASS/336radiochoices/96Voicereturns/inertboxhintvisualAX0/note1/radios7/callbacks3/B4mixdraftgatesheld/144LFassets/0errors-external-UIwrites-overflow. Rawcc8f35af...1b1b63.No rootcausefixclaim."
+  cleanup: "Owned30502newlineexit0/tempfru3qkhfremoved/listener39026=0outsidecheck;workers/browsers terminal,nootherprocessstopped."
+  evidence: reports/audit/R218-SUBDUB-VOICE-CLARITY-QA-20261024.json
+  delivery: "SOURCE00239d7f/HEAD00a34c2b/CI40061704379bothSUCCESS/456records;receipt6379877100/IssueC3tickreadback. No merge/deploy."
+  next: "D3unlocked;E3AXreadiness/hydrationauditretainsunknownfirstmismatch. No wholevoice/runtime/motion/LIVEclaim."
+checkpoint_subdub_d3_20261024:
+  base_sha: 00a34c2b9aea1c43ba387bd70004ea6a90b5b55f
+  phase: REPORT
+  status: DELIVERED_CI_GREEN_NO_DEPLOY
+  spec: docs/superpowers/specs/2026-10-24-r218-subdub-empty-review.md
+  checklist: _giao-viec/CHECKLIST-36-SD-D3.md
+  contract: "Issue664#6379928009;2staticpricecostmarkers+2CSSrules;realbalance/settings/gateskept;reportfailopenforchangedstate/status/additionalcontent."
+  handoff: "Flash3.8HighR1SUCCESS125.7527614s/1turn/3exactrecords/12621UTF16chars/sourceonlyemptyCWD/noadddir/perrunsandbox/noR2noR3/noapprewritebyroot."
+  red: "Actual48/48emptyreports48staticrowpairsvisible/0errors-external-UIwrites/expectedassertionexit1beforeapply."
+  browser: "Final96/placeholderreportvisualAX0/modebalanceequal/exactsettingskeysets/336choices96Voicereturns/480diagnostics/288LFassets/0errors-external-UIwrites-overflow. ZeroDOMdiagnosticnotwalletproof. Rawb767cec6...f0697981."
+  visual: "VIlightdark390reviewelement+viewportinspected;reportrects0/displaynone/review-toolsgap16matchesgrid16. Fullpagecaptureclipsinternalappscroll/notwholepagelayoutproof."
+  QA_clarification: "FirstGREEN2rowsfailedcount8vs7becausevalidcustomISOfrompriorflowaddsrow;literalexpectedkeyset+conditionalcustom+eachvisiblecorrectedharness,summarybalanceequalitykept. Reviewerconfirmed;noappchange/R2. InitialREDwaitselectorcorrectedbeforeactualRED."
+  tests: "BaselineNode1281/16.4397647s;focused54/0.9368669s/finalNode1281/21.7019209s/PythonCSS21/0.86s/Tester32+1POSIXdeselected/0.72s,existingwarning1. Syntaxcompile6exit0. FullpytestNOT_RUN."
+  review: "IndependentC0I0M0/exact3records/reversewholeJSCSSBASELF/protected12/oldtestsChatunchanged."
+  evidence: reports/audit/R218-SUBDUB-EMPTY-REVIEW-QA-20261024.json
+  cleanup: "Owned37857/95723newlineexit0/tempwdsco22q-phxu3ty1removed/listeners4639-23976=0outsidecheck;workerbrowsersterminal/nootherprocessstop."
+  delivery: "SOURCEd643ce55/HEAD79cd75d3/CI40063985662bothSUCCESS396Linux63.35s+26runtime0.27s/456True0False;receipt6380165981/D3tickreadback. No merge/deploy."
+  next: "E3fullUI/readiness;AXUNKNOWNretained/motionLAST/noengineLIVEclaim."
+checkpoint_subdub_e3_lc_20261024:
+  base_sha: 79cd75d3d8ee50685bbecd4056f7d84a79f8e68a
+  phase: VERIFY
+  status: LOCAL_CHILD_GATES_PASS_PARENT_E3_OPEN_NOT_PUSHED
+  contracts: "E3parent6380189875/LC6380526568/R2amendment6380636456. OneE3batchpushafterRANGE-GROUP-EDIT-READINESS-finalQA."
+  audit: "Actual168complete/588choices168Voicereturns/504LFassets/0interaction-errors-external-UIwrites-overflow;84unlabelled/483nondecorativetextAAfails/12Combo320range36x44;flatgroups/missingeditnav. Raw5937654f...f511e723."
+  handoff: "R1FlashHigh135.2326405s/3records;LABELpassed/CONTRAST84darkfailsfromrootSPECcascadegap;R2sameCONTRASTFlashHigh202.5577788s/oneexactselectorrecord. NoR3/productionrewritebyroot."
+  source: "Onlyfouruniqueidforattrs+oneinkhelperCSSrule,finalspecificity0,5,1beatsknown0,4,1;reverseJSCSSBASELF/protected12/oldtestsChat/C0I0M0. JS2469ac87...5c1d4d/CSS0d01f5d7...1b25c5a."
+  verify: "Stable-signed48/24associationsHome-nondefaultmode-return-review/768helpersmin8.83653/unknown0/label-textfails0/errors-external-UIwrites-overflow0. Node1281/58.7203667s/PythonCSS21/1.48s,existingwarning1. Raw827d9dd4...8dff2a."
+  retained_unknown: "FirstenhancedR2probevi-dark1440source-line-rule reviewmismatchcauseUNKNOWN/originalDOMglobalAXsnapshotmissing. Actualauthbootstrappreconditionrerunpassed,noassertionrelaxation/noauthfix;parentREADINESSopen. C3AXnotreproduced84statesstillUNKNOWN."
+  evidence: reports/audit/R218-SUBDUB-LABEL-CONTRAST-QA-20261024.json
+  cleanup: "OwnedQA9592newlineexit0/tempvh_xzepqremoved/listener26962=0outsidecheck;workers/currentbrowsersclosed. EarlierstalledownedPID3100treeonlystopped."
+  next: "E3-RANGEformalcontract+actualRED12thenFlashR1;DRAFT40readyforfinalization. ThenGROUP/EDIT/READINESS/final168/Tester/docs/provenance/onepush. MotionLAST,goalACTIVE."
+checkpoint_subdub_e3_range_20261024:
+  base_sha: 6da9b14a355bae62b6c745c54d9e16aab774b12b
+  phase: VERIFY
+  status: LOCAL_R401_R405_PASS_PARENT_E3_OPEN_NOT_PUSHED
+  contract: "Issue664#6380830198/spec2026-10-24-r218-subdub-mobile-range.md;oneE3pushafterremainingchildren."
+  handoff: "Flash3.8HighR1SUCCESS101.8012838s/1turn/11270UTF16chars/oneexactCSSrecord;noR2/noR3/noRootproductionrewrite."
+  red: "36configs=12phone+24desktopbaseline;320Dub62x44/Combo36x44/12controlsunder44/24under100;expectedassertionexit1,errors0."
+  verify: "ActualGREEN72/48phone min200x44/24desktopexactgeometry/144Voicereturns/216LFassets/AX/gates/overflow-errors-external-UIwrites0. Raw33d71b47...ec827f7."
+  R403_supplement: "ReviewfoundmissingmodeRoundTrip/muteackclear/range-review-outputafterVoiceasserts;actual24signedscenarios(3201440/VIENZH/boththemes/twoDubbingmodes)passed48modeRoundTrips/48Voicereturns/allnumber-range-review-liveoutputs/muteack0retain200clear/lane-targetISO. Raw6759bb6d...7f3c43. Noappchange/R2."
+  review: "SourceC0I0M0/exact1R1/reversewholeCSSBASELF/protected12/oldtestsChatunchanged;CSS8b60aab7...0892bb. Rootactualsupplementclosesacceptancegap."
+  tests: "Focused54pass4.0533225s/fullNode1281pass0fail0skip82.4085308s/PythonCSS21pass1existingwarning6.34s/compile6exit0. FullpytestNOT_RUN."
+  evidence: reports/audit/R218-SUBDUB-MOBILE-RANGE-QA-20261024.json
+  visual: "Inspectedlightdark320Combofieldset+light1440Dubbing;nofullpageAA/nativephysicaltouch/mixing/LIVEclaim."
+  cleanup: "Owned59737newlineexit0/tempmdroabvfremoved/listener41475=0outsidecheck;worker/browsersclosed/nootherprocessstop."
+  next: "SaveRANGEcheckpointthenformalGROUPfromDRAFT41/compact4borderlessgroups7visiblechoices/fullARIA-reviewcopy;EDIT/READINESS/final168thenoneE3push. MotionLAST,goalACTIVE."
+checkpoint_subdub_e3_group_20261024:
+  base_sha: 3d5e59dc4303cb0fb50fbf5cd9e59795541945af
+  phase: REPORT
+  status: LOCAL_ACCEPTANCE_PASS_PARENT_E3_OPEN_NOT_PUSHED
+  contract: "Issue664#6381189391/spec2026-10-24-r218-subdub-voice-groups.md;oneE3pushafterremainingchildren."
+  handoff: "Flash3.8R1SUCCESS325.7712074s but packet/newunitgatefail;R2ERROR524.5373769s outputtokenlimittruncated/exit0notPASS;neitherinvalidartifactapplied/noR3. Solxhighpacket/newunitonly;fourR1JSrecords+SPEC CSSbodyexact."
+  red: "Browser36allmissing4groups/radios7/errors0/expectedexit1;testonly6/2pass4expectedassertionfail0harness then exact5productionrecords."
+  verify: "Actual84/588click588nativearrows168VoiceReturns84modeRoundTrips/36matchedheightsall65.20–156.36pxshorter/1008text84focusmin8.836529unknown0/target75.46875x44/text2x/252LFassets/errors-external-UIwrites-overflow0. Raw7c53d56a...ca169ad."
+  supplement: "IndependentreviewG503G504gapsclosedbyactual84geometry+84globalnonvoice:82fitDefaultpairssamerow/2ENCombo320wrap/48phoneAuto3rows/visibleinputslabelsgroups0. Raw92de808d...e5b179f;reviewC0I0M0."
+  review: "Exactpacket/reversewholeJSCSSBASELF/17helpers12files672oldtestpathsChatunchanged/newunit208lines6tests/sourceC0I0M0."
+  tests: "unit6/focused60/fullNode1287pass0fail0skip48.2462758s/PythonCSS21pass1existingwarning3.35s/syntaxcompile6diff0;latestunit6recheck1070.2234ms. FullpytestNOT_RUN."
+  evidence: reports/audit/R218-SUBDUB-VOICE-GROUPS-QA-20261024.json
+  cleanup: "Browser40385/supplement90281terminal0;ownedserver11765newlineexit0/temp6_vmwmqfremoved/listener6821=0outsidecheck;otherprocessesuntouched."
+  retained_unknown: "Firstfocuscomputed3pxvsCSSOM2pxcauseUNKNOWN;QAminimum>=2pxsolid/contrast>=3notappchange. OriginalC3AXandLCearly-inputunknownsstayREADINESSopen."
+  next: "E3-EDITformalcontract/RED/FlashR1;thenREADINESS/final168/Tester/docs/provenance/oneE3pushCIreceipt. MotionLAST,goalACTIVE."
+checkpoint_subdub_e3_edit_20261024:
+  base_sha: c5f09f2ee68e822ea56e2c4cb652731405e48753
+  phase: REPORT
+  status: LOCAL_E601_E608_PASS_PARENT_OPEN_NOT_PUSHED
+  contract: "Issue664#6381974676/amendments6382042415-6382437256-6382548623;spec2026-10-24-r218-subdub-review-edit-navigation.md."
+  handoff: "FlashR1SUCCESS390.3542173s but routing/newunitgatefail;R2outerSUCCESS316.2480453s but malformedinnerJSONposition17429/nohandoffappliedas-is/noR3. Solxhighpacket/helper/testonly;7validR1recordsfrozen,3helperfixes,thenactualruntimeamendmentsE607/E608."
+  red: "Actual24missing24/errors0/exit1;unit-only6expectedassert0harness then8records;E607testonly6pass1RED thenninthguard;E6087pass1RED thententhoptionalinstantcenter."
+  E607: "ISOchangeblur replacedidenticalreviewHTML betweenmousedown/mouseup disconnectingEdit/no click. ActualREDtrace→GREENmutation0/clickpresent/focusSELECT/ko-KRretained. ElementlocalgeneratedHTMLcacheonly."
+  E608: "CorrectfocuspositionSELECTatviewporty~0 wasundersticky65pxheader. Actual3widthprobe+matrixfailure→nativeoptionalinstantcenter;15actionsnowuncovered/positiony427ish. NoCSSshell/motionfile change."
+  verify: "Finalactualsigned168/1218Editclick336EnterSpace1050valueedits/168modeLoops168VoiceReturns/504LFassets/44x44/textmin12.35155focus5.86008unknown0/2xgeometry/errors-external-UIwrites-overflow0. Raw3948ebd2...ffa6d1."
+  tests: "Unit8/181.1246ms/focused68/2297.8798ms/fullNode1295pass0fail0skip20.6354979s/PythonCSS21pass1existingwarning1.19s/syntaxcompile6diff0. FullpytestNOT_RUN/T0unchanged."
+  review: "Root+independentC0I0M0/exact10records/reversewholeJSCSSBASELF/15wholehelpers12files673oldtestpathsChat;rowdataprefix/spans/oldguardlogicprotected;first7newtestbodiesexact/newunit232lines."
+  provenance: "VisibilityprobeoutputfolderreusedoverwroteinitialREDraw/screenshots;do notclaimcurrentGREEN85deb9dc...aa24c asoldc3RED. ActualREDterminal+separatefullmatrixfailure608ccaf8...d7b55 remain. Allotherfailedartifactsretained."
+  evidence: reports/audit/R218-SUBDUB-REVIEW-EDIT-QA-20261024.json
+  cleanup: "Browser83515terminal0/server68259newlineexit0/temp_o5vqiwjxremoved/listener57350=0;ownedstuckR2AGYonlystoppedafteridentitycheck,parent14748worker15752bothabsent. Othersuntouched."
+  next: "SaveEDITcheckpoint/receipt thenformalREADINESSaudit retainedC3AX/LCearlyinputUNKNOWN;parentfinal168/Tester/docs/provenance/oneE3pushCI. MotionLAST,goalACTIVE,noengineLIVEclaim."
+checkpoint_subdub_e3_readiness_read_20261024:
+  base_sha: 7e35f0ab78a32b2d4d7bffc7536a4dd381c21151
+  phase: READ
+  status: READ_COMPLETE_CURRENT_UI_DEFECT_OPEN_NOT_ACCEPTED
+  contract: "Issue664#6382724646/READfinding6382804310;spec2026-10-24-r218-subdub-readiness-investigation.md. NoRDYproductionedits."
+  source: "Publicshellnosession/CSRF;SubDubcontrolseditbeforeauth;capturerequiresdraftsession;summaryreadsdefaults;integrationawaitrealme/otherGETthenremount. Secureidentityclearfenceprotected."
+  verify: "Collection72=36held-realmeearly+36matchedstable/4modesVIENZHdark3908441440/288LFassets/errors-external-UIwrites0. Early36reviewmismatch/27changedcontrols/stable0mismatch0loss/noteAX0mismatch. Collectionexit0NOTUXPASS."
+  raw_sha256: 47d1070c69e0fd57bc3f922d2ef0c11ba89945d47b1345663e43723c53ff3685
+  current_finding: "E3-RDY-EARLY-AUTHORINGImportant:enabledUIbeforecaptureSessionready. UIreadinessfixrequired;donotretainanonymousdraftsacrossaccounts orchangeauthpolicy."
+  historical: "C3AXnotreproducedcauseUNKNOWN;LCsamefreshsymptomVI-dark1440proved butexactoriginalrunstateunknown. No retroactive diagnosis/closure."
+  evidence: reports/audit/R218-SUBDUB-READINESS-READ-QA-20261024.json
+  runtime: "OwnedQAserver48945/origin52156/temp0vfy_b36stillrunningfornextQA;browser60432terminal0. Provider/PayOS/bridgeOFF."
+  next: "Independentread-onlyevidence/source/designreviewthenboundedUI-onlyREADINESSfixcontract/newunitRED/Flash3.8R1first. Allproduction/oldtests/auth/motionlockedbeforecontract. Parentfinal/Tester/docs/provenance/ONEE3pushCIopen."
+checkpoint_subdub_e3_readiness_fix_20261024:
+  base_sha: 7e35f0ab78a32b2d4d7bffc7536a4dd381c21151
+  phase: REPORT
+  status: LOCAL_R711_R716_ACCEPTED_NOT_PUSHED
+  contract: "Issue664#6382914858/spec2026-10-24-r218-subdub-authoring-readiness.md. No anonymousdraftadoption; nativeauthoringgatedtosigneddraftreadinessonly."
+  handoff: "FlashR1source8accepted/newunit6harnessfail;R2newtestonly1pass1assert4harness. NoR3. SameSolxhighrepairednewtestonly;source8R1frozenSHA46b97b444b32b5d33decbe00ab1fd469a24ad1bc0205ef4756d969a3d8596c53."
+  scope: "3copykeys/purequote-awareSubDubformmarkuphelper/genuinesessionpredicate/articleflag/oneinlinependingstatus/summarywrapper. NoCSS/authbusiness/sessioncapture-clear/integration/backend/engine/wallet/motionchange."
+  red_green: "Actualtestonly0pass6expectedassert0harness189.1968ms thenexact8source;GREEN6/435.8412ms. NativeRED12all12enabledpreauth preserved. Firstpatchattemptatomicallyrejectedunorderedhunks;sourceunchanged/sortedidenticalrecordsthenapply."
+  tests: "Focused74/926.7807ms/fullNode1301pass0fail0skip15.7318125s/PythonCSS21pass1existingwarning0.73s/syntaxcompile6diff0. FullpytestNOT_RUN/T0unchanged."
+  browser: "Native72=36held-realmeearly+36stable/36ordinaryclickTabattemptsblocked/earlyenabled0/readycoherent72/modeLoops72/288LFassets;pending12VIENZHlightdark3901440visibleAX/readyabsent/minAA11.772481unknown0. Final168/1218click336keyboard1050edits168modeLoops168VoiceReturns504LFassets/44x44/text12.35155focus5.86008unknown0/errors-external-UIwrites-overflow0."
+  review: "Independentsource+newunit+runtimeC0I0M0/exact8records/reverseLFBASE/17wholehelpers14files674oldtestpathsChat/E607unchanged/all3rawhashesuniqueCartesian72-12-168. Pending12noownassethashes,notextra12assetclaim."
+  evidence: reports/audit/R218-SUBDUB-AUTHORING-READINESS-QA-20261024.json
+  historical: "CurrentearlyauthoringdefectresolvedbyUIreadinessgate;originalC3AXcauseUNKNOWN/U2originalLCrunstateUNKNOWN. READ36mismatch27changednot36loss."
+  runtime: "Browsers82556/37435/parent45772terminal0;ownedserver48945newlineexit0/listener52156=0/temp0vfy_b36removed outsideprobe. SandboxvirtualTempENOENTresolvedbyapprovedheadlessoutsidecommand,nosettings/security/window/IDEchanges."
+  delivery: "Localcheckpoint26a966e2/Issue664receipt6383548657/childtickreadback,NOT_PUSHED."
+  next: "Parentfinal168runtimepassed,independentTester/docs/maincompat/provenance/ONEE3push/exactHEADCI gatesopen. Nochildpush/merge/deploy/LIVE. MotionLAST/goalACTIVE."
+checkpoint_subdub_e3_parent_20261024:
+  base_sha: 79cd75d3d8ee50685bbecd4056f7d84a79f8e68a
+  source_sha: 26a966e25778229a0b76cfb045fa384d5d34b4eb
+  phase: VERIFY
+  status: SCOPED_LOCAL_UI_ACCEPTED_TESTER_PASS_DELIVERY_PENDING
+  contract: "Issue664#6380189875/allchildrenlocalaccepted;AMENDMENT45parentQA reviewedbeforelaunchC0I0M0. NoappeditduringparentQA."
+  verify: "Actual168unique/4modesVIENZHlightdark7views/588choices168VoiceReturns672fourLFassets/14448nondecorativeleaftextsmin5.223799unknown0/168rangesmin200x44/allstrictcounters0/exit0. Raw249be2cf...34782a."
+  evidence: reports/audit/R218-SUBDUB-FINAL-UI-QA-20261024.json
+  crosswalk: reports/audit/R218-SUBDUB-FINAL-UI-CROSSWALK-20261024.md
+  tester: "IndependentseatR218-SDE3-TESTER-20261024READY_FOR_SCOPED_LOCAL_ACCEPTANCE;reportSHA9b5f29a4aafd8f423d9eaf21a5d09a99466d7f4490509aebfe330d8b453e82b9. Own74Node/32portable1deselected;4rawhashes/21IDs/8caseIDs/old48WA/6metadataexact;C0I0new/M1SD15qualifierrestoredimplementationOPEN. NonewTesterbrowser."
+  retained_UI: "SD-D4-ORIGINAL-AUDIO-TOGGLE:originalSD15dedicatedon/offabsent;only0percentmuteandrange/numbertested. Testerrestoredfinalqualifier;OPENafterE3deliverybeforeImage,notT0."
+  main_compat: "ActualmergeSOURCE2a925079 incorporatesmain0e1b49b5SFX#663;only2generatedJSONconflicts/exactmain5files+UI4assets kept. FreshNode1301/21992.9395ms andisolatedPython85pass1deselected2warnings6.18s/externalconnect0/localIPC36. FirstQAguard15falsefailsWindowsloopback+secondsandboxhangownedPID19028stopped,tempremoved;approvedoutsideQApassed,noapp/test/settingschange."
+  next: "FinalizecurrentdocsSOURCEcheckpoint -> cleanWebonlyprovenancerefresh/verifyfinalHEAD -> ONEgithubpush/exactHEADCIreceipt -> SD-D4READformalcontract. No mergeintomain/deploy/engineLIVEmutation."
+checkpoint_music_fh_20261024:
+  base_sha: 1e01f2417e3000a09c45186e11ee144e52a22fa5
+  result: DELIVERED_CI_GREEN_NO_DEPLOY
+  delivery: "HEAD52017494/CI40001922044attempt2bothSUCCESS/receipt664#6372116359;456authenticatedrecords. Attempt1SubDub052isolatedFalseUNKNOWNcauseopenT0;localdiagnostic56/56andsameSHArerun456/456,nocode/workflowchange."
+  plan: docs/superpowers/plans/2026-10-24-r218-music-review-empty-fh.md
+  specs: "MU08-F-REQUEST-REVIEW -> MU-PRODUCT-EMPTY-H;both local accepted in order"
+  worker: "F Flash3.8R1/R2 gatefail;Solxhigh newtest+4relativecopykeys only,noR3. H Flash3.8R1SUCCESS48.416725s/1turn,exact1prefix. No worker tools/runtime payloads."
+  tests: "F172GREEN after106expectedRED/0harnesserrors;H12GREEN after6expectedRED;focused270/fullNode1257pass0fail16379.4606ms;Python119pass2existingwarnings29.58s."
+  browser: "Actualsigned48+controlledclientquote/capabilityfixtures;initialGETnoAPIresponsefixtures. Emptyheading0/form1/nav4/draftaction1;720contrastAA5.797light5.522dark,summary44px/keyboardAX/focus/editrevert/expiry/sessionguards/text2x/overflow0.144assetchecks matchsource;errors/external/UIwrites0."
+  protected: "ExactF4records+4keycorrection+H1prefix;reverseHreturnsacceptedFhash;12protected/oldtests/Chat unchanged;40nonMusicforms+40nonMusicworkspaces/48realMusicflows equal.IndependentC0I0M0."
+  evidence: reports/audit/R218-MUSIC-REQUEST-REVIEW-FH-QA-20261024.json
+  cleanup: "Owned78665newlineexit0;tempDBassetsmusic_product_qa_s9tlsjx8removed;listener14647=0. Workers/browsers terminal."
+  boundaries: "UI-only;no realquote/confirm/job/audio/provider/wallet/backend/auth/Bot/ENV/productionmutation. Motionlast;goalACTIVE."
+checkpoint_music_product_readability_e_20261023:
+  base_sha: e8738b5ac6078c86e8793632cab3d0f3488e3f09
+  spec: docs/superpowers/specs/2026-10-23-r218-music-product-readability-e.md
+  checklist: _giao-viec/CHECKLIST-29-MUSIC-PRODUCT-READABILITY-E.md
+  contract_receipt: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664#issuecomment-6369813736
+  result: DELIVERED_CI_GREEN_NO_DEPLOY
+  delivery: "HEAD1e01f2417e3000a09c45186e11ee144e52a22fa5/CI39992812318bothSUCCESS/receipt664#6370628830;currentbranchstillOPEN,noLIVEclaim."
+  worker: "Flash3.8LowR1SUCCESS37.4855106s/1turn;source-only10375chars/runtimepayload0;1CSSrecord/7linesappliedVERBATIM,noR2/primarycorrection."
+  baseline: "Actualsigned24configs/132helpers/132inputs;light66samplescontrast2.021/dark66samples5.522,input15px. GateRED66contrast+132fontfailedchecks,exit1;raw2e6c4f6f14284a7051949bced0e940e9dbc7fd5af37cacc625c5d3289e374730."
+  green: "Actualsigned48configs/264helpers/264inputs;light5.797/dark5.522/input16;144tier/288vocal/48modeBackdraft/48keyboard/48AX/48scopedCSS2xstress,0errors/external/UIwrites/overflow. Raw20cbee08147a12ef1678d8305a4f304df6c08d272b7414e0c76f24135f19745e;all144downloadedassetchecks matchsource."
+  tests: "FullNode1073pass0fail0skip35519.83ms;Python21native+90foundation111pass2existingwarnings32.39s;independentsourceC0I0M0/exact1record/12protectedfiles+oldtests+entireoldCSSChatLF-normalizedunchanged."
+  cleanup: "Owned98439/35978newlineexit0/tempDBassetsdirremoved/.NETlistener0;worker/browserterminal. AuthwritesQAsetup/sessionlastseenonly,notzerototalDBwrites."
+  r2_amendment: "R1followed2rulecontract. SupervisorvisualQAfoundomittedlabel/placeholderAA;SPEC_GAPnotworkerfailure. Fresh24labelRED132samples66lightfail1.265/dark11.528,association0fail,raw85f0feddc73ae17b60446e3c9376b24527a6479004091a67eb44208975d62e7d. Probe4/10placeholder5lightfail3.233/dark5.522/opacity1. Receipt664#6370176077."
+  r2_worker: "SameE/R2Flash3.8Low source-only12117UTF16chars/runtimepayload0;exec39278. Onlyaddlabelink+placeholderexistingtokenrulesbeforeChat,R1rulesprotected. Noopacity/important/newtoken/JS/motionchange,noR3."
+  r2_qa: "Owned98268at127.0.0.1:37013/temp...music_product_qa_r67ui7gd(labelRED/probe only). StopnewlineafterR2;usefreshDB/processforgreen-r2 toavoidregisterquota. Previousgreen48R1historicalnotfulltextAA."
+  r2_final: "FlashR2SUCCESS35.0134596s/1turn/source-only12117chars/1recordverbatim/noCodexcorrection/noR3. Final48helper264AA5.797light5.522dark/label264AA12.352light13.903dark/placeholder120>=5.522opacity1/input26416px;association0fail;144tier288vocal48modeBack+keyboardAXtextstress,0errors/external/UIwrites/overflow. Raw1e706412c245756e72ec2593b24a64e76ca7725a83f8ad11d7b74c0d8ba759f2,theme794b14e5d50d461462923273c4a882cbe51e7b11594160fb466c80cff506376c."
+  r2_final_tests: "FullNode1073pass0fail0skip35143.7118ms/Python111pass2existingwarnings32.67s/sourceindependentC0I0M0/exactR1thenR2/reverseoldCSS/ChatD1D2/12protected+oldtestsunchanged."
+  r2_cleanup: "All3owned98439/35978,98268/37013,21525/16785newlineexit0;3tempDBassetsdirsremoved/.NETlistenersall0;workers/browsersterminal."
+  evidence: reports/audit/R218-MUSIC-PRODUCT-READABILITY-E-QA-20261023.json
+  remaining_crosswalk: reports/audit/R218-MUSIC-REMAINING-UI-CROSSWALK-20261023.md
+  next: "FinalR2localalltextAA+interactions/regressions/review/cleanupaccepted;finishdocs/Tester649metadata/prepush/provenance/pushCIbothjobs/receipt. ThenMU08Freviewsummarycontract. NoR3/merge/deploy/audio/LIVEclaim."
+checkpoint_music_presentation_d2_20261023:
+  base_sha: 3e91dbd8244c0f51b42139c86cd62cdb0e243af1
+  spec: docs/superpowers/specs/2026-10-23-r218-music-presentation-d2.md
+  checklist: _giao-viec/CHECKLIST-28-MUSIC-PRESENTATION-D2.md
+  dependency: "D1acceptedreceipt664#issuecomment-6368236480;CI39975608329bothSUCCESS/396Linux+26runtime;IssueD1ticktrue/D2openreadback."
+  result: ACCEPTED_UI_BRANCH_DELIVERY_NO_DEPLOY
+  contract_receipt: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664#issuecomment-6368368409
+  worker: "gemini-3.8-flash-low;source-only23638UTF16chars/15uniqueJSanchors/8i18nanchors/completeMAP/runtimepayload0;exec62519. NoIDE/auth/settings/Git/tools."
+  r1: "SUCCESS83.130014s/1turn,24sourceeditrecords/210linetest. Newtestappliedverbatimbutcrashesbeforeassertions:musicDirectionUiCatalognotfound,wrongdependency/fixture names. SourceNOTapplied;23/24recordsunique,index22wrongSFXclosingnewlineandstaleVI fallback. NotvalidRED/notaccepted."
+  r2: "SameD2/round2source-only28582chars/command29447chars/runtimepayload0;exec10698terminal0butnoresponse:workerattemptedforbiddencommandinheadlessmode,auto-denied. No settings/permission/auth change,noR3. Amendment664#issuecomment-6368518838."
+  takeover: "AftertwoP01handoffsnotmet,CodexSolxhighisolatedmusic_d2_test_repairmayeditONLYnewtest<=250lines andreturnindex22replacementJSON;other23R1source recordsimmutable. RootQAindependent. AllproductionstillBASE3e91dbd8."
+  takeover_result: "Newtest178lines actualVM/catalogue/4renderers/helpers;rootcleanRED52total15pass37assertionfail0harnesserror. Exact23R1+takeoverindex22appliedafterRED. Focused138/138;fullNode1073/1073,26327.3022ms;boundedCI395pass1POSIXdeselected16warnings124.10s. Independent138/1384308.0518ms,C0/I0/M0;11protected/oldtests/Chat/D1/outside4renderersequalBASEafterLFnormalization."
+  browser_attempt: "Firstactualmatrix46completedrowsthenFAILZHdark844x390Musicpostsubmitheight>=44;failingvalueNOT_CAPTURED,notPASS. OneprobePOSTmeasuredstaticCSS/minheight/rect44 and180msexistingtransformtransition,notreproduced/sub44causeunproven;noappCSSchange. Rawgreenpreserved."
+  browser_recheck: "Freshowned76820/127.0.0.1:32063,tempqa90s153dx;exec81640,green-finaloutput. Awaitfinitebuttonanimationsbeforestaticheight,threshold44unchanged/detailedfailurecapture. Old50216/55879newlineexit0."
+  browser_final: "Main48configs96initialresultstates/48nativePOST3items,1initial/2resultcards,all5presets/tool/locale;144edits/24SFXremount/144AXhidden/48scopedtextstress;helper5.797light5.522dark/input16/staticbutton44;all48downloadedassetsmatchsource. Raw3a162c32833ad95b8bd56e5729cbc859cb529b4ac8151d7ece6a0948fc333f25. Noerror/external/unapproved/overflow."
+  edge_final: "Actualfocus24/24,24intentionalabort+24native retry,expectednetworkconsole24/unexpected0;raw632039f85b1ceed89ca70fc4a52c9e0748df361b2f54511af0ed23f3ed4aeec7. Actualguard36/72POSTattempts/72pending,36success+36denied,Musicraw7d80589c49378186e1a75468af001fde44b8e837a37ca8112e3debcbacafa6f5/SFXraw1fddc73786bf28dde85d2a3acacc68b7e86d8d1c55de9d01b4194b32d817f919. Passed108configs/168POSTattempts/108nativetextsuccess;firstfailedmatrix/probeexcluded."
+  cleanup: "All5ownedservers50216/55879,76820/32063,15749/42166,47598/16679,21226/14492newlineexit0/tempDBassetsremoved/.NETlistenersall5ports0;workers/browsersterminal. Nootherprocesses/settings/authchanged."
+  final_delivery: "HEAD e8738b5a/source863cd270;CI39985131009terminalSUCCESSbothVerify120522206598/Authenticated120523812989,396Linux69.19s+26runtime0.21s;PR661OPEN/CLEAN;receipt664#issuecomment-6369576116. IssueD2+parentDchecked,wholeMusic/merge/deploy/LIVEopenreadback."
+  baseline_D2: "ReuseactualD1R2raw48configs/96states,all3assetshashesmatchD2BASE3e91dbd8. Expectedinitial1/result2,actual4/4:96assertionfailures. Notnewrun/nofixtureclaim."
+  scope: "Same2nativeMusicSFXpages:initial1form/result2cards,hideintro/boundary/empty/scope;onecolumn/noemptytracks,8copyrows/2localH1,flattermetadata/SFXfamilyhidden;realDOMlocalizedstalewarningretained.3productionfiles+newtestonly."
+  protected: "D1/A/B/C/D0;allnormalizers/presets/fields/edithelpers/placement/integration/API/auth/backend/Bot/wallet/ENV/motion andoldtests. R1/R2max,source-onlyFlash3.8/background/noIDE/auth/settings."
+  next: "D2closedscopedreceipt6369576116,donotredo. RemainingMusiccrosswalk/EreadabilitythenFreviewsummaryUI;canonicaltechnicalgapsdeferred,wholeproductgoalACTIVE."
+checkpoint_music_presentation_d_20261023:
+  base_sha: 1144896dde1e957e54de7f1dee361ed927d71529
+  dependency: "B+D0branchdeliveryaccepted; CI39960845682terminalSUCCESS:Verify120438143348396Python+26browserruntime,AuthenticatedQA120439998582SUCCESS. Receipt664#issuecomment-6366118699; issueB/D0tickreadbacktrue,Dopen."
+  result: ACCEPTED_UI_BRANCH_DELIVERY_NO_DEPLOY
+  scope: "2nativeMusic/SFXpages only. VanillaJS/FastAPI, keepcurrentblue/navy/teal tokens; noTailwindmigration/globaldesignsystem/motion. D1localizedfieldhint/resultlabels+scopedcontrast/inputfont, thenD2visibletechnical/emptycards. Sharedfiles=>SINGLEsequential, no parallelworkers."
+  skills: "ui-audit-plan+ui-ux-pro-max fullyread inclframework/PWA/severity/token/output/pro-rules; quickref1-6+8; localUXsearchreturnedempty-state/submit-feedback andloading/z-index rules. Ownerbrand/lockedscope overridesgenericglobaltokenrewrite."
+  source_inventory: "portal.js fields15724/15808 eachdescriptionplaceholder+helpVI; SFXresult15829 fixeddtDirection/Mixnote/Tránh+2VIfallbacks.9copyrows candidate, noAPI/normalizer changes. Nativecautionsmin0fallbackreachable; reviewmin1fallbackdefensiveonly, donotfakevalidDTO."
+  actual_inventory: "Read-onlysignedQA24configs/48states (2tools×VI/EN/ZH×light/dark×390/1440),24native deterministictextPOSTs/3items;errors/external/unapproved0,noAPIresponsefixtures. ../qa/r218-music-presentation-D-20261023/baseline.json."
+  findings: "Eachpageinitial4visiblecards(form,boundary,emptyresult,scope) +visibleintro5/3/0stattiles. SFXresultEN dt repeatsDirection/Mixnote/Tránh×3; databrieflanguageEN independentofUIlocale. Lighthelpers72samples CSScolor170184199/backgroundwhite=>2.021contrast, dark72samples5.522; backgroundImages1lightneedsopaque-chainclassification, notpixeltrace. Inputs15px(2fields), submit44px; radios20visualwithlabeltargetneedmeasurelabelnotassume20touchfail."
+  qa_runtime: "R1serversclosed. R2matrix50739/2089+screenshot66125/22070newlineexit0;both temporaryDB/assetsdirsremoved,outsideSandbox.NETlistenersboth0. Browser/workersterminal."
+  audit_plan: docs/superpowers/plans/2026-10-23-r218-music-presentation-audit.md
+  D1_spec: docs/superpowers/specs/2026-10-23-r218-music-presentation-d1.md
+  D2_spec_draft: docs/superpowers/specs/2026-10-23-r218-music-presentation-d2-draft.md
+  contract_receipt: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664#issuecomment-6366608009
+  D1_worker: "Flash3.8LowR1SUCCESS80.904s/1turn/source-only22290chars/runtimepayload0. Newtest+all6productioneditrecordsVERBATIM, primarycorrections0. R1initiallocalgatespassed,thenCIplacementgaprequiredR2below;historynotreset."
+  D1_tests: "CleanRED0/5assertionfail→GREEN5/5;localefocused9/9;fullNode1021/1021 30301.7792ms;Python21/21 20.89s;independent86/86,Critical0/Important0/Minor0.11protectedfiles/integration/B+C+D0unchanged."
+  D1_browser: "Actualsigned48configs/96states/48nativePOST/3items,lighthelpcontrast5.797(72samples),dark5.522(216);input16px;scopedCSS200percenttextstress48(noOSDynamicTypeclaim),overflow/errors/external/unapproved0. All48downloaded3assetshashesmatchsource. Raw9359f4c4b6a743f56dd0939a996cfe891d118e35d148862a27892922ce0b48dc. Cards4unchangedforD2."
+  edge_harness: "Firstshared-serverconcurrentA/C+B/D0supplementhit429compose/register; notPASS/noappconfig/ratelimitweakening. Legacydefaultoutputoverwroteoldlocalraw/PNGs;earliercommittedaudits/hashes/terminalremainhistorical,do notclaimoldrawstillpresent. AddedoptionaloutputDir toQAhelperonly, furtherD1regressionsdistinctdirs."
+  edge_final: "Freshsequentialguard36/72POST/pending72 andstrictfocus24/24abort+24native retrysuccess3texts allPASS. GuardrawSHA d4936908f7be68733e88aeea2d4445586391bed37711f8c1ec90a0c46ba4fef3 +d202803137c02e9982a9e473759025cd36b2fe3950e1f7f96b014b6bcfffcc2c;focusrawc09b1949a4897a0d24908c51e6fe2b6c9042a5363c8215689a381acf50da9def;D1-specificdirs. Expectednet24separate,unexpectederror/external/unapproved/overflow0."
+  current_qa: "All3D1servers79086/42644,23133/27983,99483/9713newlineexit0;all3temporaryDB/assetsdirsremoved;outsideSandbox.NETlistenersallports0. Workers/browsersterminal."
+  evidence: reports/audit/R218-MUSIC-PRESENTATION-D1-QA-20261023.json
+  delivery_attempt: "Sourcee2ee0775/doc809ff3f7/finalHEAD480b25bf push/readbackdone; CI39971274631FAILEDVerify120474294897 (1fail168pass). Failingexistingtest_teal_cyan_ui_foundation_contracts.py::test_light_chat_workspace_final_surface_keeps_private_authoring_readable;authenticated120474944845SKIPPED. NoD1deliverytick/noD2unlock."
+  ci_root_cause: "TwoD1CSSrulesappendatEOFviolatedexistingChatlayerregexmobile...\\Z; localreprosameFAIL, actualChatdeclarationsunchanged. R1followedoriginalappendcontract: SPECplacementgap, notworkererror. SameD1/P04,R2onlymove2rulesbeforeFinalChatmarker8846, keepdeclarations/oldCSS/testbytes exact."
+  r2_contract_receipt: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664#issuecomment-6367537839
+  r2_runtime: "Source-onlyFlash3.8LowR2SUCCESS39.2298928s/1turn/packet13965/runtimepayload0;exec79567terminal0. Exact2placementrecordsapplied;patchhunkordercorrectedafteratomicfailedapply,nosemanticcorrection/noR3."
+  r2_tests: "FullNode1021pass/0fail/0skip29768.6626ms;foundation90/90exit0(own2.27s,independent1.60s). BoundedCI49selectors395pass/1POSIXdeselected/16existingwarnings111.08sexit0;LinuxCIrequireall396. Syntax2JS/py_compile2/diff0. Firstboundedattemptcancelledwithoutterminalresult,notPASS."
+  r2_browser: "Freshactualsigned2089:48configs/96states/48nativetextPOST/3items;contrast5.797light/5.522dark,input16px,textstress48,errors/external/unapproved/overflow0. Raw98c5a6da47b74c18e34edf564d306c47cd42e09617e7a6c0b5554aecf404f8db;newr2-placementdir,R1preserved. ThemeSHA4eddc847578964eec85ef2f4213d2ad0cd03fc93fa1f4ed11c6c0cf68231759c;JS/i18nassetsunchanged."
+  r2_review: "C0/I0/M0. ExactR1six+R2twoeditcomposition;11protectedfilesunchanged;alltrackedtestsandJS/i18nunchangedvs480b. AlloriginalCSS+entireChattailcontent/orderpreservedafterCRLFtoLFnormalization,notrawbyteclaim. ChatTailSHA22829d265c0c79a7c0b84b1562a13914167472a4e38abcfd0f98532082f0ce7f."
+  final_delivery: "Source235a1aa9/provenance3e91dbd8pushed/readback;CI39975608329terminalSUCCESSbothjobs120489250057+120490574037;Linux396/16warnings44.54s+runtime26/1warning0.18s. Fingerprint1d4f02c936c43774a1de027f33e978afdc2d448f1ae5c2a0f0c8b2af748c2de0;PR661OPEN/CLEAN;receipt664#issuecomment-6368236480,IssueD1ticktrue/D2open."
+  next: "D1closedinscope,do notredo. D2readyspec/checklistsource-onlyFlashR1next. WholeMusic/audio/Botparity/masterstillOPEN;nomerge/deploy/LIVE."
+checkpoint_music_sfx_errors_b_20261023:
+  base_sha: fc8deb6a96566021a58cdcdf8ab77ed6796539cd
+  spec: docs/superpowers/specs/2026-10-23-r218-music-sfx-error-feedback.md
+  result: ACCEPTED_UI_BRANCH_DELIVERY_NO_DEPLOY
+  dependency: "A+Cbranchdeliveryaccepted,CI39950590927bothSUCCESS,receipt664#issuecomment-6364623486; trackerA/Ctickreadbacktrue,B/Dopen."
+  finding: "2payload×5literal,3safety×3literal,actions10failure sites,28unique;6realpayloadlengthprobes keepVI. Outerrawcatchwins. Source/realfunctionprobe only, notproduction."
+  scope: "Presentationonlyhelper/actionexact2,2inlinefailures/outertoast/20rows/newtest. Do not change payload/safety/validator/API/auth/epoch/merge/finally/A+C; no sharedsignature/refactor. Dfieldhint/technicalcardsseparateafterB."
+  handoff_round: 2
+  contract_receipt: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664#issuecomment-6364652753
+  packet: "Prepared23942chars/source-only/runtime_payloads0, modelFlash3.8High; worker.py --source-only --round1. No tools/Git/filewrite/DB/runtimepayload, stdoutJSONonly."
+  runtime: "BtaskownedFlashcontroller42439; stdout../qa/r218-music-sfx-errors-20261023/worker-R1.json; no sourcepatchapplied. QAserver39795at127.0.0.1:51738,temp../qa/r218-music-sfx-interaction-20261023/music_sfx_qa_fvve9_12. KeepforGREEN, stopnewline39795andverifycleanupafter."
+  browser_red: "Actualsignedzhdark390invalidURL: observedVI'Music Prompt Composer không nhận URL hoặc scheme tệp trong mô tả direction.' vsChinesecontentexpected. Exit1assertion,0POST; browser-red.json. No responsefixture."
+  browser_fault_red: "Actualsignedzhdark390, oneintentionalPOSTabort: inlineVI'Không thể lập direction...' / toast'Failed to fetch', expectChinese. Draftpreserved=true/buttonEnabled=true; exit1assertion; browser-red-transport.json. ExpectednetERR_CONNECTION_RESETseparate, nofakeHTTPresponse."
+  r1_result: "OuterstatusERROR500.306589s/1turn; innerJSONbadcontrolchar28661. ValidcompleteTEST_FILEprefixparsedandappliedVERBATIMforQAonly; production0diff. Diagnostic0/10: literalbackslashnfunctionextractor, wrongfirstpaymentactioncatch, nullrealpayload. NotcleanRED; sameB01failure1. Controllerexit0doesnotmeanPASS."
+  r1_transport_detail: "Outererror explicitly sayspreviousresponse exceededoutputtokenlimit/retriesremaining3; report481-linetest bloated. R2amendmentcaps200testlines/100helperlines toreduceoutput; noauth/settingschange."
+  r2_amendment: "ExactNLcode/catchfullmarker/tabletest<=200lines/sameVMcontext/realpayload/inlineactionconsumer; top-levelnumericHTTPstatusonly, notpayload.status401. NoR3."
+  r2_runtime: "Taskownedcontroller86599,Flash3.8High/source-onlypacket29240chars/runtimepayload0; checkedfullcommandline<32000UTF16beforelaunch. Result../qa/r218-music-sfx-errors-20261023/worker-R2.json; amendmentIssue6646364955418. No settings/auth/sourcechange."
+  r2_result: "SUCCESS451.055s/1turn validJSON184linetest; diagnostic1pass3fail, inlinewrongroute/capability/epochs and1ENliteraltypo. SameB01failed2; primaryharnesstakeover/noR3. CleanRED2pass4assertionfail; R2source5pass1unknownprototypefail; own-propertyfix→6/6."
+  source_corrections: "R2plus2one-linecorrections: strictownpropertylookup toavoidconstructor/__proto__/toString VI fallback; exact2actionconditionalbeforeouterhelpercall toavoidnewdependency onnonMusic. FirstfullNode1000pass6libraryVMReferenceErrors; currentfull1006/1006, existingtestsunchanged."
+  tests: "Focused53/53; full1006/1006 27615.8318ms;Python21/21 25.46s; independent53/53+MusicLibrary18/18,Critical0/Important0.15protectedfunctions/10files/20cataloguerows sourcecomparatorPASS."
+  focus_finding: "Bcopybrowser24/24 butstrictfocusFAIL. ActualBASE/candidateJSoverlaycomparison bothBUTTON→BODYdisabled→BODYreenabled; baselinebeforefeedback, notBregression. B04NOTTICKED, D0dependencybeforeBdelivery; no weakenedcriterion."
+  final: "D0strictactualbrowser24/24focusrestored;validation0POST,24intentionalabort+24native retrysuccess3texts;expectedneterrors24separate,unexpectederror/external/unapprovedwrite/overflow0. AllJSsha5ac46bc3...;raw2b2c75da4b950ce78421064e7d11e1a35dcdae2562c86d706d2aa2b1b7535946. Full1016/1016/Python21/21;independent81/81,Critical0/Important0."
+  delivery: "HEAD1144896readback,CI39960845682bothSUCCESS,Linux396+26;receipt664#issuecomment-6366118699,IssueB/D0ticksreadbacktrue. 19batchpaths,worktreeclean/0unpushedatdelivery. Noglobalgoalclose/merge/deploy/LIVE."
+  next: "ClosedBdelivery;continuepresentationDREAD. Do not rerunBworkers/testharness/code. QA39795stopped."
+checkpoint_music_sfx_focus_d0_20261023:
+  base_sha: fc8deb6a96566021a58cdcdf8ab77ed6796539cd
+  overlay_sha256: 0a737c3e1d0755d7a8259350b059c37ec19ed4ee9631815b01f5d58989e2f9fa
+  spec: docs/superpowers/specs/2026-10-23-r218-music-sfx-error-focus.md
+  contract_receipt: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664#issuecomment-6365407001
+  result: ACCEPTED_UI_BRANCH_DELIVERY_NO_DEPLOY
+  handoff_round: 2
+  worker: "Flash3.8Low/source-only21230chars/runtimepayload0;exec9409;focus-worker-R1.json.10logicalfocuslines/2actions+newtest only; notBcounterreset."
+  export_safety: "FirstlaunchDENIEDbeforeCreateProcess dueMAP/specauthorityquestion. Read-onlyproof:repoPUBLIC,local/GitHubMAPblob3916d78c9ac83896bb0c210d36f290a7a925a916 equal;specpubliccomment6365407001. Samecommandre-reviewedapproved withproof, no workaround/noenv/settings/authchange. Preflightf-stringNameErrorfixedbeforelaunch, notworkerfailure."
+  r1_result: "Flash3.8LowSUCCESS75.719576s/1turn,valid197linetest/source10logicalfocuslines. TestappliedVERBATIM cleanRED1pass1assertionfail(focus0vs1); noD0sourceapplied. R1tests missedexplicitF02epoch/wrongroute, completenessamendmentnotcodefailure."
+  r2_runtime: "Ownexec46633/source-only22996chars/runtimepayload0,Flash3.8LowR2;sameD0F02, addactualepochhook/post/prewrongroute+otherpriorinput tests;source10linesmuststayR1identical. Resultfocus-worker-R2.json. NoR3, do not resetBcounter2."
+  final: "R2SUCCESS61.664s,productionidenticalR1verbatim. R2testmissingpriorR1duringrequestfocus/directguard2cases; after2F02gaps primaryadds2tablecases only,noR3/noD0productiontakeover. CleanRED8/2→GREEN10/10;focused63/full1016/Python21;independent81/81,Critical0/Important0. Strictbrowser24/24 on5ac46bc3,focusrestored24,raw2b2c75da4...; B04nowlocaltick."
+  cleanup: "Allworkers/browsers terminal,QA39795newlineexit0,tempDB/assetsremoved,outsideSandbox.NETlisteners51738=0."
+  delivery: "SameHEAD1144896/CI39960845682bothSUCCESS/receipt6366118699;D0scopeclosed,do not redo."
+  next: "PresentationDREAD; no merge/deploy/LIVEuntilwholePRscopeaccepted."
+checkpoint_music_guard_boundary_c_20261023:
+  git_base_sha: 80f12d220c83ae4febebb99ca9742560f3c2ac85
+  integration_overlay_sha256: c19fbc13446f404526518578b8dbbc26ecb871c423d4453519f0950cd98b6b7a
+  spec: docs/superpowers/specs/2026-10-23-r218-music-guard-boundary.md
+  result: ACCEPTED_UI_BRANCH_DELIVERY_NO_DEPLOY
+  finding: "RealnativeguardDTO:17keys/16booleanfalse/noextra; oldMusicconsumerrejects onlymissingcomposer. ConsumerbyteequalGitBASE, baselinebugnotAcopyregression. Actualguard-probe.json/log preserved; no responsefixture."
+  scope: "Addstrictguardvalidator usingexisting17keyBOUNDARY_KEYS, change2Musicguardcalls only; nofakecomposer/no relaxedflag/no successvalidator/API/backend/auth/provider/walletchange. NodeCactualvalidator/caller, NodeAdependencyname andPythonMusicsourceguardwireassert only."
+  worker: "Flash3.8Medium R1 source-onlypacket20398chars, taskownedexec28252; result ../qa/r218-music-guard-boundary-20261023/worker-R1.json. stdinDEVNULL/background; no Cpatchapplied. A retains2failedhandoffs, no reset."
+  export_safety: "Original C launch with QAguard envelope was auto-reviewDENIEDbeforeCreateProcess; no runtimepayloadsent. Switchedgenuine saferalternative: source-onlyticket plus code/test/MAP and3purebackendfunctionsource, no QA/log/screenshot/DB/runtimeartifact reads in worker script. Newlaunch approved, runtime_payloads=0; realQAremainslocal."
+  contract_receipt: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664#issuecomment-6363352687
+  r1_review: "C/R1source-onlyJSONSUCCESS310.86s butverbatimNode0/3harnessReferenceError: broadconstants→first rights_verified slice omitsMusichelper/pullsundeclaredLANGUAGES. Pythoneditdropscomma; no Cproductionapplied. R2sameSPEC/C01, noR3; exactfn extraction andsinglelinePythoneditrequired."
+  r1_cleanup: "OnlyC/R1CLI21900 stoppedaftercompleteJSON; ownershipSPEC+overlaySHAverified, noIDE/auth/otherprocesschange."
+  sfx_runtime: "AactualSFX18/18 configs,36pendingchecks/36nativePOSTs,success3text+copyrightguard,errors/external/unapprovedwrite/HTTP/overflow0; browser-green-sfx.json containsactualdownloadedJSshaAoverlay. CmustleaveSFXbyteunchanged."
+  r2_result: "Flash3.8Medium source-onlyR2 SUCCESS205.684s/1turn; exacttest/productionapplied. CleanRED0/3assertionfail→GREEN3/3; focused47/47; fullNode1000/1000; Python21/21; syntax2JS/py_compile2files/diffPASS. NoR3."
+  r2_cleanup: "CompletedJSONverified; CIMmatchedSPEC+HANDOFF_ROUND2+overlaySHA, onlyownCLI21132stopped. Wrapper4294967295isintentionalcleanup, notproductfailure; noIDE/authchange."
+  review: "Independent47/47,Critical0/Important0; Aunitreceipt/validatorsaredoubles, Cactualguardparser/16flagnegativefixture, browserseparate. Oldsuccessboundary/matcherbyteequalBASE."
+  browser: "ActualsignedMusic18/18afterC,36POST/36pending; SFX18/18beforeC preservedbyteequalC. Unique36configs VI/EN/ZH×light390/light1440/dark390/dark1440/dark375/dark844landscape.72nativePOST/72pendingchecks,3textitems/success;realcopyrightguard;errors/external/unapprovedwrite/HTTP/overflow0. Noresponsefixtures."
+  comparator: "GitBASE→AR2→overlayc19fbc→CR2→actual6f67e5 allverbatim. ReverseCequalsintegration-before-C.js; SFXblock/4oldvalidators/9protectedfilesBYTE_EQUAL_NORMALIZED."
+  evidence: reports/audit/R218-MUSIC-SFX-SUBMIT-GUARD-QA-20261023.json
+  delivery: "HEADfc8deb6readback; CI39950590927terminalSUCCESS:Verify120403796918(396Python+26browserruntime),AuthenticatedQA120404995895SUCCESS. Provenanceac58680d/mergeeb4f0d4/recordedb5f56f1 oktrue; receipt664#issuecomment-6364623486. No merge/deploy/LIVE."
+  next: "ClosedscopedCdelivery; BREAD/contract nowactive, keepcanonicalaudio/M0open."
+checkpoint_music_sfx_submit_feedback_20261023:
+  base_sha: 80f12d220c83ae4febebb99ca9742560f3c2ac85
+  spec: docs/superpowers/specs/2026-10-23-r218-music-sfx-submit-feedback.md
+  issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664
+  result: ACCEPTED_UI_BRANCH_DELIVERY_NO_DEPLOY
+  scope: "SpecA only pending/success/validguarded feedback in2nativeactions:9callsite+1localehelper+8cataloguerows+1realactiontest. Preserveportal.js,validators,allAPI/auth/safety/route/capability/epoch/data/palette/provider/wallet."
+  finding: "ActualSFXZHdark390showsVItechnicaltoast. Native2actions139lines contain19message-sites/6rawserver-messagepreferences. A fixes onlydeclaredstates; B validation/error/outercatch remainsopenwithseparateREADcontract."
+  dependency: "Interactiondelivery80f12d2,CI39934950954bothSUCCESS,Linux396+26,receipt664#issuecomment-6362432472."
+  contract_receipt: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664#issuecomment-6362601692
+  worker: "Flash3.8High R1 terminalSUCCESS408.87s but verbatimtest0/13harnessTypeError(frozeni18nObject.assign); productionnotapplied. SameAC01failure1; R2packet25345chars prepared withplainobjectbridge/real3fieldfixtures/alllocaleguards/top-levelerrorcodeonly. NoR3. TestR1isuntrackeddiagnostic, mustreplacefromR2beforecleanRED."
+  scope_amendment: "Addonly tests/test_sfx_cue_sheet_portal_contracts.py existingVIcopyassert→acceptedreceipt success-branch statuswiring; preserveallotherassertions. SpecgapfoundbeforesourceBUILD, notcountedasworkerR1failure. Max4files:2JS+newNodetest+onePythonsource-testassert."
+  r2_runtime: "Taskownedexec77496; Flash3.8HighR2 packet25504chars; result ../qa/r218-music-sfx-submit-20261023/worker-R2.json. Amendment receipt664#issuecomment-6362845763. Do notrestart frommissinghandle; readoutput/terminalfirst."
+  browser_red: "ActualsignedQA58258,ZHdark390 pendingmessage isVI: 'Đang lập ba music direction từ preset và brief hiện tại…' vsChineseexpected. browser-red.json/log in ../qa/r218-music-sfx-submit-20261023. REDassertionexit1, notharnesserror; noresponsefixtures."
+  qa_runtime: "OwnedPTY53124 at127.0.0.1:58258, startedwithpreviousreviewed server.py helper; tempDB/assets in ../qa/r218-music-sfx-interaction-20261023/music_sfx_qa_dvnik4_u. NativeMusictextonlyflaginchild, no bridge/PayOS/provider. KeepforGREEN, thenstopnewline53124 andverifycleanup; notproduction."
+  code_and_tests: "R2test3pass/7fail withreadonlyexportTypeError; primarytakeoverafter2sameAC01fails. Isolatedrealcataloguecontext/plainbridge +deferredpending/realmasserts/unsafe/APIspy fixedtest; cleanRED3pass/7assertionfail→GREEN10/10,focused44/44,full997/997,Python21/21. R2productionappliedVERBATIM; comparator9feedbacksites/8rows+9protectedfiles passes."
+  worker_cleanup: "R2JSONSUCCESS335.08s wascomplete butCLI2748 lingered. CIMprovedexacttask/spec/R2ownership; only2748stopped afterreport, wrapperexit4294967295 intentionalcleanup, IDE/auth/otherprocessesuntouched. NoR3."
+  actual_runtime_finding: "AactualbrowsercopyrightMusic timedout: realDTOvalidguard/nooutput butoldconsumerrequirescomposer; statusmislabelsconnectionfailure/rawVItoast. Baselinehelperbyteequal80f12d2. Cnewdistinctconsumerbug isdependency, not resettingAcodecounter; A/runtime staysopen."
+  verified: "AcleanRED3pass/7assertionfail→GREEN10/10; C0/3→3/3; combinedfocused47/full1000/Python21/Testerportable32pass1deselected. Actualbrowser36two-phaseconfigurations/72POST/72pendingPASS. A/CproductionverbatimR2; noR3."
+  cleanup: "Server53124stoppednewlineexit0; browsercontextsclosed. TempDB/assetsremoved; listenerverificationmustuseoutside-sandbox .NET because sandboxAccessDeniedisnotclosedportevidence."
+  delivery: "SameA+CHEADfc8deb6/CI39950590927bothSUCCESS/receipt6364623486; issueA/Ctickedonlyafterreceipt, B/D/audio/LIVEstillopen."
+  next: "Bvalidation/error/outercatchlocale ready; Dsourcehint/technicalcopyseparate. No wholepagelocale/audio/Botparityclaim."
+checkpoint_music_sfx_interaction_20261023:
+  base_sha: 2d6f61f3a700cea49a6c61ec1eb57a5740dae541
+  spec: docs/superpowers/specs/2026-10-23-r218-music-sfx-interaction-feedback.md
+  issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/664
+  result: ACCEPTED_UI_BRANCH_DELIVERY_NO_DEPLOY
+  finding: "Production4functions/realcatalogue probe6lane-locale combinations confirms hardcodedVI afterselection and selectedannouncement replacingstalewarning onedit2. No productionAPI fault claim."
+  scope: "Only4feedbackfunctions inportal.js +2catalogueform.stale rows +1realfunction test; noAPI/integration/CSS/Voice/auth/provider/wallet/motion."
+  worker: "Flash3.8Low R1+R2 terminalSUCCESS but sameAC01 invalidtest/context; no workerpatch applied/noR3. Codexprimary takeoverwithinallowlist, assessment _giao-viec/DANH-GIA-22-MUSIC-SFX-INTERACTION.md."
+  tests: "CleanRED8pass22assertionfail afterharnesswindowexportcorrection; GREEN30/30,focused34/34,fullNode987/987; Python4nativeportal21/21 baselineandbranch,2existingwarnings. Outside4functions/2rows+9protectedfiles byteequalBASE."
+  evidence: reports/audit/R218-MUSIC-SFX-INTERACTION-QA-20261023.json
+  qa_runtime: "Ownedserver38401 stoppednewlineexit0; temporaryDB/assetscontextcleaned. BundledPython3.12+readonly ../_wa35-r74-qa-python-20261012/site-packages processPYTHONPATH; noinstall/persistentENV."
+  browser: "60/60actualsignednativePOST/noresponsefixtures;300selections/180edits/120explicittextPOSTs/3itemspercompose; errors/external/unapprovedwrites/HTTP/overflow0. RawSHAf5e31eed7d462c838ef13652d06de965624c61acfad94703cb39052f0a026b14. Harnesshydrationwait andzh-CNexpectationcorrected, noappbypass. Normal authlastseenwritesintempDB; nodomain/prodwriteclaim."
+  review: "Independent34/34,Critical0/Important0; eventassertionsperhelperinvocation, notpergesture; realDOMandtabmemorynotinferredfromunitstub."
+  tester: "Portable32pass/1POSIXdeselected. FullWindows32pass/1knownbaseline0600!=0666; scripts/testGitblobsequalBASE. LinuxCIunchangedtestrequired."
+  delivery: "FinalHEAD80f12d2 readback; CI39934950954bothSUCCESS,396Python+26browserruntime; receipt664#issuecomment-6362432472. Worktreeclean0unpushed; no merge/deploy/LIVE."
+  next: "Closed; proceedMU-NATIVE-SUBMIT-FEEDBACK-LOCALE-A thenseparateBvalidation/error. Keepgeneration/player/output/canonical/M0open."
+checkpoint_voice_notice_clarity_20261023:
+  base_sha: efbe362da9158762136820aa63112fa6882bd870
+  spec: docs/superpowers/specs/2026-10-23-r218-voice-vault-notice-clarity.md
+  result: ACCEPTED_UI_BRANCH_DELIVERY_NO_DEPLOY
+  finding: "Management-unavailable paragraph repeats perprofile; actual renderer0/1/10profiles ->0/1/10notices. Move unchanged paragraph once beforelist whenready/nonempty."
+  scope: "Only renderVoiceVault list HTML and existing presentation testfile; protect7strictflagpredicates, allmetadata/limit/escape/routes, noAPI/CSS/auth/provider/wallet/motion."
+  evidence: reports/audit/R218-VOICE-VAULT-NOTICE-CLARITY-QA-20261023.json
+  tests: "Flash3.8R1 patchverbatim; RED27pass/3fail->GREEN30/30, focused54/54, fullNode957/957(concurrency2), PythonSource10/10. Paragraphliteralpreserved, remainingbundlebytes equalBASE; noR2/takeover."
+  browser: "30configs/300profile states/120readviews,3locales/2themes/5viewports incl375/landscape; commonnotice1 and0incards/empty/guarded/failed; mincomputedcontrast5.522, errors/overflow/external/UIwrite0. DeclaredREADfixtures, no canonical/link/provider/audio/LIVEproof."
+  cleanup: "OwnedPTY43665 stoppednewlineexit0; tempDB/assetscleaned,23629listeners0."
+  reviewed_source_sha: 1eb4bba090beecb46e4afc5d83a737b384e11fff
+  prepush_report: reports/prepush/R218-20261023-VOICE-VAULT-NOTICE-CLARITY.md
+  delivery: "HEAD2d6f61f3 readback; CI39921027250 bothSUCCESS, Linux396critical+26browserruntime; receiptIssue662#issuecomment-6361097358, Issue662/checklist21 ticked."
+  next: "Noticeclosed; continueP2 MU-INTERACTION-FEEDBACK, do not rerunVoiceworker or polishlockedVoice. CanonicalbackendT0, motionlast."
+checkpoint_voice_flag_truth_20261023:
+  base_sha: 9d941fbd52e444d3093f781c48f49ea6dcf30350
+  spec: docs/superpowers/specs/2026-10-23-r218-voice-canonical-flag-truth.md
+  result: ACCEPTED_LOCAL_UI_DELIVERY_PENDING
+  finding: "Controlled malformed string/object/array flags confer Default/Available for speech/preview metadata in real renderer. Not a production API fault claim."
+  scope: "Seven strictboolean predicates in portal.js across renderFields/renderFormCard Voice/renderVoiceVault; existing presentation test harness. No API/auth/capability/provider/wallet/CSS changes."
+  baseline: "Focused Voice39/39; C0CIrun39904684572bothSUCCESS on9d941fb, Linux396+26."
+  evidence: reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json
+  tests: "R2 test-only RED15pass/9fail; GREEN24/24, focused48/48, fullNode951/951, Python source10/10; local boundedCI395pass/1WindowsPOSIXdeselected/0fail/16warnings in112.86s; syntax/diff0. R2 production applied verbatim; no thirdround."
+  browser: "18configs/180profile states; signed localhost with documented browser-onlyREAD bootstrap/profile fixtures, real identity/CSRF/role unchanged, server bridge absent/executionfalse; errors/overflow/UIwrite/external0. Not canonical/preview/output/LIVE."
+  cleanup: "Owned QAserverPTY76092 stopped via newline exit0; temporaryDB/assetscleaned,43347listeners0."
+  reviewed_source_sha: b397ef488c0a5b089eedca9c7053c3d8d2187c77
+  prepush_report: reports/prepush/R218-20261023-VOICE-CANONICAL-FLAG-TRUTH.md
+  next: "Finish docs/portableTester metadata, boundedregression, prepush, sourcecommit/provenance, push/readback/CI. Then resume remaining P1/P2 UI without unlocking canonical backend or M0 early."
+checkpoint_main_compat_20261023:
+  base_sha: cb995c7809c8da086b5f3e80f09546374832ef8a
+  upstream_sha: 406127e6c128f08c27a33b66b132eff56b01542a
+  contract_commit: a0470b8
+  evidence: reports/audit/R218-PR661-MAIN-COMPAT-QA-20261023.json
+  result: LOCAL_UI_ACCEPTED_DELIVERY_PENDING
+  dashboard: "Node22/22; Python6/6; browser18/18 with12drawer resize/Escape and3keyboardVoice navigations; errors/overflow/UIwrites/external0. Darkbody6,32,38; card10,45,53; existing readable32/44pxH1 and20pxH3 retained."
+  builder: "C0-A Flash3.8Low R1 prefix/patch/harness errors, R2 corrected; supervisor removed2 obsolete CSS rules after2rounds. C0-B R1 contextdiff/harness rejected, R2 valid; production patch applied verbatim. No third worker round."
+  motion: "Compatibility only: newRED1fail/6pass(count2!=0), GREEN7/7; Node11/11. Geometry-before-writes/pointer/reveal/20teardown preserved; no FPS/LCP/INP or LIVE claim."
+  tests: "FullNode942/942; upstream+Voice Python27/27; JSsyntax6/6; py_compile app.py/copyfast_pages.py; diff-check0. BoundedCI Windows395passed/1deselected/0failed/16warnings; LinuxCI must run unchanged POSIXtest."
+  baseline_windows: "POSIX0600 test observes0666 onWindows; source/test Gitblob hashes identical toBASE, no test/source modification. LinuxCI must run it unchanged."
+  qa_cleanup: "Task-owned PTY28258 origin127.0.0.1:2250 stopped bynewline, terminalexit0; temporary DB/assets context cleaned."
+  delivery: "Clean source merge commit ccb84fd8abccb6610bdc37708c3226e6d0b359c9 contains main406127e. Prepush report reports/prepush/R218-20261023-PR661-MAIN-COMPAT.md; provenance refresh/verify, push/readback/CI pending. No PR merge/deploy."
+checkpoint_20261023:
+  evidence: reports/audit/R218-VOICE-METADATA-QA-20261023.json
+  source_changed: false
+  tests: "Node927/927; Python source10/10; isolated Voice metadata/direction runtime31/31. No full pytest or LIVE claim."
+  browser: "Actual isolated app6 configurations VI/EN/ZH x dark390/light1440; metadata create/default/rename/archive/restore/search/readback;24 QA metadata writes; page/console/overflow/external0. Four EN/ZH filter-toast locale findings open."
+  voice_boundary: "22 Web-owned endpoints are direction/script metadata only, NOT canonical audio Voice Vault. Canonical management/preview/SubDub reuse remain open."
+  worker: "Q0-VOICE-DIRECTION-CLARITY round1+continuation and round2 Flash-high returned no valid patch at print timeout. Not a successful build. Owner direct-fix fallback requested; no source edited."
+  delivery: "PR661 OPEN, remoteHEAD3090311, mergeStateDIRTY, checkRollup empty; main406127e. merge-tree conflicts only preflight.json/web_inventory.json; no working-tree merge."
+  qa_cleanup: "Owned server34910 at127.0.0.1:26491 stopped via newline, exit0; temp DB/assets cleaned, listener absent. Older runtime records below are historical."
+checkpoint_voice_direction_20261023:
+  evidence: reports/audit/R218-VOICE-DIRECTION-CLARITY-QA-20261023.json
+  result: ACCEPTED_LOCAL_UI_ONLY
+  builder: "Same conversation237eb7ae; Flash3.8Low recovery returned round1 patch; round2 corrected vm harness. Codex applied worker production patch verbatim,1line; no direct implementation takeover."
+  tests: "RED6guard-list fails; GREEN6/6; fullNode933/933; Python source10/10; syntax/diff0."
+  browser: "18configs/36states;3locales/2themes/3widths/capability on-off; keyboard/focus/form preserved; errors/overflow/external/write0."
+  main_sync: "Merge406127e trial: Node914/927 (13fail), Python25/25; Dashboard0H1 in3locales. Aborted own uncommitted merge; source restored, baseline927/927; current patch excludes upstream changes."
+  next: "VO-MANAGEMENT-FEEDBACK-LOCALE, then C0 compatibility triage. C0 merge/deploy still closed, motion last."
+checkpoint_voice_feedback_20261023:
+  evidence: reports/audit/R218-VOICE-MANAGEMENT-FEEDBACK-QA-20261023.json
+  issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/662
+  result: ACCEPTED_LOCAL_UI_ONLY
+  worker: "Flash3.8Low rounds1+2; worker production patch retained, with3strict ready guards. After2rounds Codex corrected test harness only: incomplete fakeDOM and read-only i18n export fallback context; added negative/alias cases. No third worker round."
+  tests: "Focused9/9; fullNode942/942; Python10/10; syntax2/2; diff-check0."
+  browser: "18configs vi/en/zh x light/dark x390/768/1440 with51 temporary metadata profiles; filter/clear/refresh/page,503 after retry, recovery; controlled50372, rate4290, errors/external/UIwrites/overflow0."
+  next: "Update docs/evidence/provenance, commit/push branch, then C0 main compatibility triage; canonical audio Voice Vault and LIVE remain open."
+  pushed_head: "1fe27c3dcf74272fb4db79e3dbc9ab9e902e3a35"
+  issue_comment: "https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/662#issuecomment-6357398910"
 implementation_head_sha: b186b75a2b55b397f802fb992ce0a320039053a4
 delivery_head_sha: 42a78e931cf15da4f8c6117838e29ac3a2248e70
 delivery_status: CI_GREEN_39642058056_BOTH_JOBS
 review_evidence: reports/audit/R218-MUSIC-RUNTIME-REVIEW-QA-20261021.json
 evidence_reclassification: reports/audit/R218-EVIDENCE-RECLASSIFICATION-20261021.md
 qa_review_server: "Final SD-B2 QA exec36900 at127.0.0.1:34289 stopped gracefully after browser exec31190 terminal exit0; temporary database/assets cleaned. Earlier Music servers are historical."
-current_qa_runtime: "2026-10-22 actual WebApp http://127.0.0.1:42268; task-owned PTY session88166 waitingstdin; DB/assets temporary isolated through CI _start_server; no bridge/PayOS/provider. Browser task30705 completed exit0; CUA tab1 logged in to actual QA app. Stop owned server with newline on session88166 when inspection ends; no credentials in ledger."
+current_qa_runtime: "SpecAownedserver53124/127.0.0.1:58258 activewithisolatedtempDB/assets forRED/GREEN. StopnewlineonlythissessionafterQA. Priorserver38401/57982 stoppedexit0/listeners0; older42268/88166historical, do not managefromstaleledger. No claim about otherchats."
 music_library_read_state_evidence: reports/audit/R218-MUSIC-LIBRARY-READ-STATE-QA-20261021.json
 music_library_read_state: "MU-E-01: targeted36/36; browser39 actual-profile configurations incl alias3/route-race3; errors/UIwrites/external0; protected helpers12 and generic paginator20 comparators unchanged."
 music_library_copy_evidence: reports/audit/R218-MUSIC-LIBRARY-COPY-QA-20261021.json
@@ -418,4 +866,17 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "UT-CSP-EMPTY-THUMB workerFlashR1 patch reviewed:6/6focused/fullNodeexit0/syntax2/diff0; actualQA96states+12utilityflows, baselineCSP5→0, errors/write/external/overflow0. Finish coherent docs/tester metadata and clean-tracked provenance, pushPR654 and readCI terminal; then Q0-CUSTOMER-CONTENT dynamicstates/Utilities/Admin/Video in order, motionlast. Evidence R218-CUSTOMER-UI-REALITY-QA-20261022.json. GoalACTIVE; no merge/deploy/LIVE."
+next_action: "E3scopedlocalUI+Testeraccepted;maincompatSOURCE2a925079/exactmain5files+UI4assets/Node1301/Python85pass1deselectedexternal0. CommitfinaldocsSOURCEthenWebonlyrefresh2JSON/verifyfinalHEAD/ONEgithubpush/exactHEADCIreceipt. NextSD-D4toggleUIgapbeforeImage;keepT0/originalUNKNOWN. MotionLAST/goalACTIVE."
+active_billing_batch:
+  id: R218-BILLING-20261022
+  issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660
+  base_sha: e5b1f5866867221f6ffd131a43f1644dc2c6249a
+  branch: webapp-r218-billing-ui-20261022
+  status: RUNNING_REVIEW_CORRECTION
+  worker: gemini-3.8-flash-high
+  worker_round: 2
+  worker_code_failures: 0
+  transport_correction: "Absolute CLI C:/Users/toann/AppData/Local/agy/bin/agy.exe works; previous default sandbox LOCALAPPDATA path did not. No install/login/settings changes."
+  wallet_tests: "21 passed,16warnings,20.06s outside sandbox; isolated DB/mocked bridge, no application/test/eventloop change."
+  protected: "No financial/PayOS/Bot/backend/schema/ENV/QR bytes/destination/provider mutation."
+  acceptance: "Unaccepted: history state/retry is not options state/retry; blind QR1.18 crop and readiness-insensitive ACB dedupe reopened."

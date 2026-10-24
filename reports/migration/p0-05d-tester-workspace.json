@@ -44,8 +44,8 @@
     "note": "Earlier tracker/remote_revalidation fields are historical snapshots; no issue was reopened or created."
   },
   "partial_remote_revalidated_at": "2026-09-12",
-  "local_files_refreshed_at": "2026-10-21",
-  "local_files_refresh_scope": "Portable LF hashes remeasured for SDRETURN-01..04, SDDRAFT/MREV/MULE cases and historical smoke disclaimer; no new remote Project verification inferred.",
+  "local_files_refreshed_at": "2026-10-24",
+  "local_files_refresh_scope": "SD-E3 eight additional SubDub QA cases and independent Tester session/guide; portable LF metadata remeasured. Existing48WAcasecount and remote/project history unchanged; currentTracker664/PR661,closed412untouched. Labels22/required12of12 revalidated2026-10-24;Projectscope unavailable,noauthrefresh.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,15 +70,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 453,
-      "bytes": 63353,
-      "sha256": "2ff878ab6d658ffe31cf8112f93d1dd0bc5457d3294b5a17c5bec4c12bd12a3f"
+      "lines": 779,
+      "bytes": 94262,
+      "sha256": "be038085cfa882358fa3e16443b230fbb80868d6f76503f7627c5376299f3cb8"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 275,
-      "bytes": 25116,
-      "sha256": "5a3846bfeb66772dd5350f20672a40dfe733fac23d323b04f8b8b8e78771fdd0"
+      "lines": 298,
+      "bytes": 26516,
+      "sha256": "22abd42b7b78599ee4a5bba7cfb587a51b128785b1a639f7150bfd8d0c87eb93"
     },
     {
       "path": "scripts/tester_case_sync.py",

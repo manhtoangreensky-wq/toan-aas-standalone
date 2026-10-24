@@ -1,0 +1,22 @@
+{
+  "spec": "Q0-VOICE-DIRECTION-CLARITY",
+  "base_sha": "1e30101c9c12b25afba9738eac1db37b9e3f7eb9",
+  "status": "ACCEPTED_LOCAL_UI_ONLY",
+  "builder": {"conversation": "237eb7ae-e7ea-49f9-a66c-11764a53ca88", "model": "gemini-3.8-flash-low", "rounds": 2, "implementation": "Worker patch applied verbatim; one production line changed", "round2": "Worker corrected vm-realm strict comparison in its test and added bounded disclosure/capability/field assertions", "supervisor_authored_production_code": false},
+  "change": "Remove three redundant audio/provider/job-off boxes from Voice direction scope disclosure; retain summary, paragraph, all five fields, defaults, form action and capability gate",
+  "tests": {"red": "6/6 failed on original guard-list", "green": "6/6 passed", "full_node": {"passed": 933, "failed": 0, "exit": 0}, "python_source": {"passed": 10, "failed": 0, "warnings": 1}, "portal_js_syntax": "exit0", "diff_check": "exit0"},
+  "browser": {
+    "environment": "Real renderer/CSS on read-only localhost fixture; integration and motion omitted. Edge headless, regular Playwright; Browser plugin absent from available catalog.",
+    "matrix": "vi/en/zh x light/dark x390/768/1440 x capability true/false",
+    "configurations": 18, "states": 36,
+    "baseline_boxes": 3, "candidate_boxes": 0,
+    "checks": ["scope disclosure exactly one nonempty summary and paragraph", "Enter/Space opens and closes disclosure", "focus remains on summary", "all5field names/defaults/capability preserved", "editing survives disclosure toggle", "no audio output invented", "theme and locale match"],
+    "page_console_errors": 0, "horizontal_overflow": 0, "external_requests": 0, "writes": 0,
+    "artifact": "C:/Users/toann/Documents/Codex/qa/r218-voice-direction-20261023/result.json",
+    "artifact_sha256": "812d8df5bf2aeb9bfe055eb837102a0928ad279123674b8f9d6ec095e1af74e9",
+    "runner_sha256": "70c98d40b8a83d29097339e95df4b0736307f17beecbc05f52c1c8b04d75ba78"
+  },
+  "disclosure_gate": "Initial auto-review rejected MAP transfer. Repo visibility PUBLIC and exact remote/local MAP blob3916d78c9ac83896bb0c210d36f290a7a925a916 were verified before re-review approved the same public content. No credential or private document sent.",
+  "limitations": ["Not audio generation, canonical Voice Vault, backend capability, delivery or LIVE evidence", "Voice metadata EN/ZH feedback remains open under VO-MANAGEMENT-FEEDBACK-LOCALE", "PR661 upstream merge attempt had13regression failures and was aborted; candidate here contains no upstream merge"],
+  "safety": {"product_provider_calls": 0, "wallet_mutations": 0, "production_data_mutations": 0, "deploy": "NO", "live_pass": "NOT_TESTED", "goal": "ACTIVE"}
+}
