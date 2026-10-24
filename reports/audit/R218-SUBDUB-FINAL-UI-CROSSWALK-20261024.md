@@ -1,5 +1,22 @@
 # SD-E3 — đối chiếu đầy đủ 21 yêu cầu, UI candidate và T0 tách riêng
 
+## Follow-up SD-D4 — 24/10/2026, sau E3 đã giao
+
+E3 deliveryHEADba4b2dfa/CI40092099397/receipt6384081882 đã đóng đúng scope.
+GapSD15không bị bỏ: SD-D4 candidate nay có native switch riêng trong Dub/Combo.
+Owner duyệt restore-last:off0/manualpositiveOn/onlastpositive1–100, thiếu thì100.
+Một metadata private signedtabdraft, không boolean/storage/API/provider/mix mới.
+SourceNEW_TEST-only RED6assert/0harness→exact9productionGREEN6;focused80/fullNode1307;
+independentcodeC0I0M0/17helper676oldtests/allotherproductionunchanged.
+Main48unique/96VoiceReturns/48modeLoops/48text2x/192LFassets/counters0,
+rawSHAd48beec7b6eb94fed80ff0b2c0017cdc2dd9aaa36a88f343adfad48797275780.
+Supplement42terminalPASS/24nonvoice12pending6accountfences/168assets,
+exact6expectedlogoutauthme401/unexpectederrors0;raw5167f89c…72844.
+Tester/delivery cònOPEN, không gọi toànSD15output hoàn thành.
+Nội dung bảngE3 bên dưới là lịch sử trước SD-D4, không xóa
+qualifier để viết lại kết quả quá khứ. Actualaudio/noise/output và các cộtT0
+khác vẫn giữ nguyên. SD01..21/master/goal không tự đóng;motionLAST.
+
 ## Kết quả candidate cuối — 24/10/2026
 
 ParentBASE79cd75d3;source26a966e25778229a0b76cfb045fa384d5d34b4eb,

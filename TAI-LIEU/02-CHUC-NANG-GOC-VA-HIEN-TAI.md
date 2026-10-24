@@ -1,5 +1,24 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SD15: nút Bật/tắt âm thanh gốc không đồng nhất với mức0%
+
+Nguồn gốc: spec `2026-10-18-r218-subdub-bot-parity-uiux.md`, SD15 và
+crosswalk đủ21SD. Bản E3 chỉ chứng minh range/number/0%-mute, chưa có nút
+Bật/tắt riêng; Tester đã phát hiện và giữ UIgap SD-D4, không đẩy sang T0.
+
+| Yêu cầu / nguồn | Candidate hiện tại | Bằng chứng / giới hạn |
+|---|---|---|
+| Bật/tắt âm thanh gốc riêng trong Lồng tiếng và Combo | Native switch có nhãn3locale; off0, manualpositiveOn | Actual48QA,96VoiceReturns/48modeLoops; không thay mixing engine |
+| Bot bật lại dùng mức được cấu hình, tắt đưa0 | Web khôi phục mức dương vừa dùng1–100; thiếu thì default100 | Owner duyệt restore-last. Đây là tối ưu Web, không gán hành vi đó cho Bot |
+| Giữ cấu hình khi đổi mode và quay lại từ Voice | Private metadata chỉ trong signed tabdraft | Actual48QA; supplement6account/logout/relogin giữ khônglâynhớ37/53;unitfenceđạt |
+| Dubbing và âm gốc độc lập | Dubbing0–200/ackmute không bị công tắc âm gốc thay đổi | Unit6/focused80 và48QA; không là output loudness/file proof |
+
+Bot được đọc-only tại pin0d2f376, runtime ENV UNKNOWN. Fallback30 trong
+source Bot không được gọi là giá trị production. Không gửi source Bot cho
+Gemini, không chạy/import/sửa Bot. Các phần upload/profile/speaker/quote/job/
+file delivery T0 giữ nguyên. MainQA48đạt không đóng toàn bộ21SD hoặc goal.
+Dead-code/dependency/borrowed-image audit không thực hiện trong SD-D4.
+
 ## 24/10/2026 — đối chiếu readiness, giữ đủ yêu cầu gốc SD01..21
 
 Tài liệu gốc tìm thấy: `docs/superpowers/specs/2026-10-18-r218-subdub-bot-parity-uiux.md`,

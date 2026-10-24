@@ -1,12 +1,12 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: SUBDUB_E3_MAIN_COMPAT_PASS_FINAL_PROVENANCE_PUSH_CI_PENDING
+status: SUBDUB_D4_LOCAL_ACCEPTED_DELIVERY_PROVENANCE_PENDING
 date: 2026-10-24
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r218-billing-ui-20261022
 pull_request: 661
-head_sha: 2a9250793c55936083a5f26dfa368af82757d71d
+head_sha: ba4b2dfa1be096e35198e8bf60f3fa5596ed5af8
 checkpoint_music_mu07_a_20261024:
   base_sha: 520174941470fab34c60c26e62607ba2d4b3568f
   phase: REPORT
@@ -204,6 +204,33 @@ checkpoint_subdub_e3_parent_20261024:
   retained_UI: "SD-D4-ORIGINAL-AUDIO-TOGGLE:originalSD15dedicatedon/offabsent;only0percentmuteandrange/numbertested. Testerrestoredfinalqualifier;OPENafterE3deliverybeforeImage,notT0."
   main_compat: "ActualmergeSOURCE2a925079 incorporatesmain0e1b49b5SFX#663;only2generatedJSONconflicts/exactmain5files+UI4assets kept. FreshNode1301/21992.9395ms andisolatedPython85pass1deselected2warnings6.18s/externalconnect0/localIPC36. FirstQAguard15falsefailsWindowsloopback+secondsandboxhangownedPID19028stopped,tempremoved;approvedoutsideQApassed,noapp/test/settingschange."
   next: "FinalizecurrentdocsSOURCEcheckpoint -> cleanWebonlyprovenancerefresh/verifyfinalHEAD -> ONEgithubpush/exactHEADCIreceipt -> SD-D4READformalcontract. No mergeintomain/deploy/engineLIVEmutation."
+checkpoint_subdub_e3_final_delivery_20261024:
+  phase: REPORT
+  status: SCOPED_BRANCH_DELIVERY_ACCEPTED_NO_DEPLOY
+  source_sha: 83b342294011d6c6e93cceab8a75981c893e1844
+  delivery_head: ba4b2dfa1be096e35198e8bf60f3fa5596ed5af8
+  verify: "ONEgithubpush/remoteDelta0/worktreecleanbeforeD4;CI40092099397bothterminalSUCCESS:Verify120866709766/396contracts16warnings63.15s+26runtime1warning0.25s;Auth120867371661456True0False4m23s."
+  provenance: "10beea8e7476dd446f7073e105dff13e2fca988d82c093577a54d4a306238105 verifiedlocalfinalHEADandCIsynthetic02ac4d8ae326d8be39e1238287f1b6103b624a21/source83b34229."
+  receipt: "Issue664#6384081882/checkboxreadback;explicitOwnerfinalreceiptapproval. PR661OPEN_CLEAN;notmerged/deployed/LIVE."
+  artifacts: "12559915392browser/12559129893auth41430572bytes/unexpiredreadback. No receipt-onlypush loop;thistrackedstatequeuedwithnextcodewave."
+checkpoint_subdub_d4_20261024:
+  base_sha: ba4b2dfa1be096e35198e8bf60f3fa5596ed5af8
+  phase: VERIFY
+  status: LOCAL_ACCEPTED_TESTER_C0I0M0_DELIVERY_PENDING
+  contract: "Issue664#6384391647/spec2026-10-24-r218-subdub-original-audio-toggle.md/checklist46. Ownerapprovedrestorelastpositive(defaultWeb100)/R1packet+MAP."
+  read: "PinnedBotGitonly0d2f376 keyboardtoggle+numericpositiveOn/zeroOff/callbackOnconfigureddefault(30fallback,runtimeENVUNKNOWN). WebrestorelastisOwnerapprovedoptimization,noBotsourcepayload/edits/Multiwork."
+  red: "Actualsource-render12views/6DubComboMissing/expectedassert1;actualbrowser48all48missing192assets/errors-external-UIwrites0/raw874aa00d146b6596e26cb470e5e402106e34cb041997e74cf10031fbdc111723."
+  r1: "Flash3.8High31542UTF16chars/sourceonly0runtime0Botsourcepayload/terminal7191exit0/SUCCESS423.7250344s/1turn/strict9records/anchors1/syntaxreverseLFBASE. Newunit6/271lines>240;BASE0pass6assert0harness/candidate4pass2assert0harness. No source/testapplied."
+  review: "IndependentC0I3M1:foreigncheckboxidentity/typeguardmissing,invalidrangecoercedinsteadfailclosed,newunitcoveragegaps/linecap;17wholehelpers14files676oldtestsunchanged. Other8records frozenSHAe77b67326848bf2f8dec02460309313e0f3758406124d36534928cbda58940d7."
+  r2: "OwnerexactSD-D4R2+MAPapprovedafterprelaunchrejection;95271terminal0/308.5968138s/27504UTF16chars/rawae18bfce25edeca10c17b97070eba7716d911f2589084468c0229f1c6cc6d762. ProductionC0I0M0/guardsfalse+nowrites;artifactC0I2M1/newtest245>240/BASE0pass4assert2harness/candidate2pass0assert4harness. RootreadFileSyncaliasfixedseparately,remainingworkerfixtureerrorsconfirmedindependently. No app/testapplied."
+  takeover: "SolxhighsameSPEC_ID/HANDOFF_ROUND2/FAILED_HANDOFFS2;NEW_TESTonly. FreezeR2helperccc3fbd31144d6a76da085c8f2edcbfe38e9d5c9aa76f5cca9ebee3af614247f+other8records+oldvolumetwohooks. NoAGYR3. ReviewREVIEW-46-SDD4-R2.md."
+  applied: "SolNEW_TESTonly215lines6tests;all9sourcefrozen3b9dacc9a8495e7f2b52ed2aff996eff1a6d703707551b55c347531974c6a574. ActualtestonlyRED6assert0harness175.6253ms→exact9sourceGREEN6/281.8306ms;focused80/1771.1795ms/fullNode1307/15350.8214ms/Python85+1deselected2existingwarnings3.98s/external0/compile6syntaxdiff0."
+  QA_correction: "Firstgreenraw1792851549843FAILonlyrawURLafterVoicereturn;lockedfiniteReturnPathdrops theme/addslang. QAcomparatorcorrected:fullURLexactmodeRoundtrip/canonicalmode+localeexactVoicereturn/actualtheme-locale-controls-reviewstillfullcompare;noappchange."
+  runtime: "Main48uniquePASS96VoiceReturns48modeLoops48text2x/192LFassets/labelmin270x44/text12.351554focus5.860080unknown0/allstrictcounters0/rawd48beec7…275780. Supplement42uniquePASS24nonvoice12pending6realaccountfences/168assets/raw5167f89c…72844;exact6expectedGETauthme401responses+consoleafterlogoutoneeach/unexpectederrors0."
+  independent_review: "C0I0M0/ownfreshunit6andgateexit0/exact9frozenrecords/reversewholeLFBASE/17helpers676oldtests/allotherproductionunchanged."
+  cleanup: "Browsers31646/77123terminal0;server22251/81354newlineexit0;outside26271/48150/58023NO_LISTENER. Current2tempsremoved;priorinterruptedijtcycn7exactresolvedQApathnonreparse/childrennonreparse/portabsentthenremovedTestPathFalse."
+  tester: "READY_FOR_SCOPED_LOCAL_ACCEPTANCE_ONLY/C0I0M0;ownNode80/1025.2863ms+portable32pass1POSIXdeselected1existingwarning0.64s;strict48+42/360assets/6exactlogout401/3PNGs/protectedcomparators. Verbatimreporte9d47f1478cd5151e336f3a69b8cbced83320a55c5b8faf81bd0496b6b9ceff0."
+  next: "LocalSD-D4accepted;currentdocs/cases/metadata/audit/Testerreportready. Sourcecommit/cleanWeb-onlyprovenance/onebranchdelivery/exactHEADCIreceiptopen;exactpublicpackageOwnerapprovalpending. No merge/deploy/LIVE/engine/full21claim. MotionLAST/goalACTIVE."
 checkpoint_music_fh_20261024:
   base_sha: 1e01f2417e3000a09c45186e11ee144e52a22fa5
   result: DELIVERED_CI_GREEN_NO_DEPLOY
@@ -866,7 +893,7 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "E3scopedlocalUI+Testeraccepted;maincompatSOURCE2a925079/exactmain5files+UI4assets/Node1301/Python85pass1deselectedexternal0. CommitfinaldocsSOURCEthenWebonlyrefresh2JSON/verifyfinalHEAD/ONEgithubpush/exactHEADCIreceipt. NextSD-D4toggleUIgapbeforeImage;keepT0/originalUNKNOWN. MotionLAST/goalACTIVE."
+next_action: "SD-D4LOCAL_ACCEPTED/C0I0M0review+Tester/48+42PASS. Sourcecommit/cleanWeb-onlyprovenance/onebranchpush/exactHEADCIreceiptbeforeImage;awaitexactSD-D4publicpackageapproval. NoAGYR3/merge/deploy;motionLAST/goalACTIVE."
 active_billing_batch:
   id: R218-BILLING-20261022
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660

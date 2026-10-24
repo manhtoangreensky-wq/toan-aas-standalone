@@ -542,9 +542,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   own74Node/32portable1deselected;4raws+21IDs+8cases+672/674oldtestsverified.
   MinorSD15qualifierrestored/dedicatedtoggleUIgapSD-D4OPEN,notall21done.
   EvidenceR218-SUBDUB-FINAL-UI-QA-20261024.json/raw249be2cf…34782a.
-- [ ] SD-E3-DELIVERY:maincompat0e1b49b5SFX#663 nowsource2a925079;
-  exactSFX5files+UI4assetspreserved/Node1301/Python85pass1deselectedexternal0.
-  FinalsourceWebonlyrefresh/ONEE3push/exactHEADCIreceiptremain.
+- [x] SD-E3-DELIVERY:HEADba4b2dfa/source83b34229/ONEpush/CI40092099397
+  bothSUCCESS/396contracts+26runtime/456True0False/receipt6384081882readback.
+  Main0e1b49b5SFX5files+UI4assetspreserved/Node1301/Python85pass1deselectedexternal0;
+  Webonlyfp10beea8e…238105verifiedsynthetic02ac4d8a. PR661OPEN_CLEAN.
   Nochildpush/mergeintomain/deploy/LIVE. MotionLAST,goalACTIVE.
 - [ ] E3-HISTORICAL-LC-RUN-STATE:enhancedLCprobeVI-dark1440source-line-rule review mismatch;
   causeUNKNOWN,originalglobalstate/AXsnapshotnotcaptured. Stable-signed48
@@ -580,6 +581,21 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   TesterE3pháthiệnfinalcrosswalkthiếuqualifier;đãkhôiphụcbảnđốichiếu.
   XếpngaysauE3delivery,trướcImage;đọclạiflowBot/chốtsemanticsdraft/giátrị
   khôiphục/keyboard/label rồiSPEC+RED+FlashR1/R2. KhôngđẩygapUIsangT0.
+  Ownerduyệtrestorelastpositive/defaultWeb100vàR1UI/test/spec/MAPegress.
+  Contract6384391647/spec2026-10-24-r218-subdub-original-audio-toggle.md;
+  actualsourceRED12/6missing +browserRED48/48missing/192assets/errors0.
+  FlashR1outerSUCCESS423.725s nhưngsource2guardfail/newunit271>240 và
+  candidate4pass2assert0harness;khôngapply. IndependentC0I3M1/frozenother8.
+  OwnerexactR2+MAPapproved/95271terminal0/308.5968s;productionguardsC0I0M0,
+  newtest245>240/candidate2pass4harness/BASE4assert2harness. Source/testnotapplied.
+  Samecounter2SolxhighNEW_TESTonlyactive/frozenR2helper+other8;noAGYR3.
+  LATESTlocalSD-D4ACCEPTED:actualRED6→exact9productionGREEN6/focused80/
+  fullNode1307/Python85+1POSIXdeselected2warnings;main48+supp42terminalPASS,
+  96VoiceReturns48modeLoops48text2x/360LFassets/unexpectederrors0.
+  Exact6expectedlogoutauthme401recorded,response+console1/case,notignoredblindly.
+  IndependentcodeC0I0M0/TesterC0I0M0/own80+portable32+1deselected;
+  reportSHAe9d47f14…ceff0. SD15toggleUIclosedLOCALonly;delivery/provenance/
+  exactHEADCIreceiptpending,notall21SD/engine/LIVE. MotionLAST.
 - [x] E3-READINESS scopedLOCAL accepted;checkpoint26a966e2/receipt6383548657.
   Contract6382914858;FlashR1/R2unitgatefail→sameSolxhighnewtestonly/noR3;
   exact8R1sourcefrozen. ActualRED6assert0harness→GREEN6/focused74/Node1301/

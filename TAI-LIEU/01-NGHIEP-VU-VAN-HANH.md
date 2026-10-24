@@ -1,5 +1,39 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SD-D4: bật/tắt âm thanh gốc, giữ mức vừa dùng
+
+Candidate trên PR661/Issue664, BASEba4b2dfa; chưa merge/deploy/LIVE.
+Hai panel Lồng tiếng và Combo có native switch “Giữ âm thanh gốc”, nhãn
+VI/EN/ZH và associated label. Tắt đưa range/number/review về0%; bật lại lấy
+mức dương gần nhất1–100 trong bản nháp tab đã đăng nhập; chưa có mức nhớ hợp
+lệ thì dùng100%, là mặc định Web trước đợt sửa. Nhập/kéo mức dương tự bật.
+Mức0 vẫn chỉnh được bằng number/range, không có boolean thứ hai hoặc storage/API.
+Đổi mode hoặc đi Kho giọng/Thêm giọng rồi quay lại giữ cấu hình. Đổi phiên/
+tài khoản hoặc đăng xuất phải xóa draft, không mang mức nhớ sang người khác.
+Dubbing0–200 và xác nhận tắt giọng riêng được giữ; không đổi engine/mixing.
+
+Đã đo: NEW_TEST-only RED6assertion/0harness trước source rồi GREEN6;
+focusedSubDub80, fullNode1307, isolatedPython85pass/1POSIXdeselected/
+2warning cũ. Main signed QA48unique,96VoiceReturns,48modeLoops,48text2x;
+nhãn nhỏ nhất270×44px, contrast text12.351554:1/focus5.860080:1,
+unknown0,192servedassetchecks, errors/external/UIwrites/overflow0.
+Đây là đo nhãn/focus cụ thể, không phải full-page WCAG hoặc OS text-scale.
+Source review độc lập C0/I0/M0: đúng9records,17helper và676test cũ nguyên vẹn.
+
+Supplement24nonvoice/12pending/6accountfences đã terminalPASS,42unique và
+168servedassetchecks. Sáu401dựkiến làGETauth/me sauactual logout,mỗi ca1response
+và1console exactURL/message;unexpectederrors0. Tester độc lập còn gate riêng.
+Giới hạn đăng ký4/login8 mỗi60giây giữ nguyên; runner QA
+giãn31giây giữa case tài khoản, không bypass rate-limit. Voice return dùng
+URL hữu hạn theo mode+locale; kiểm state/theme thật thay vì so query string thô.
+Upload/ASR/dịch, chọn profile giọng canonical, speaker detection, báo giá,
+job/output/giao tệp vẫn T0. Nút âm gốc này là cấu hình local thật, không chứng
+minh video đã được xử lý. Production revision/tài khoản/DB chưa đo trong task.
+
+Evidence main48 SHA256 d48beec7b6eb94fed80ff0b2c0017cdc2dd9aaa36a88f343adfad48797275780.
+Supplement42 SHA2565167f89c40152fc668649d8a0e63b3e00eddc1ca5790d5241612601038e72844.
+Provider/wallet/productiondata mutation0; motion vẫn cuối cùng.
+
 ## 24/10/2026 — SubDub: chờ phiên hợp lệ trước khi chỉnh thiết lập
 
 Phạm vi là candidate WebApp ở branch `webapp-r218-billing-ui-20261022`,

@@ -1,0 +1,65 @@
+{
+  "task": "SD-D4-ORIGINAL-AUDIO-TOGGLE",
+  "round": 2,
+  "failed_handoffs": 2,
+  "base_sha": "ba4b2dfa1be096e35198e8bf60f3fa5596ed5af8",
+  "status": "FAILED_ARTIFACT_GATE_PRODUCTION_NOT_APPLIED",
+  "egress_approval": "Owner explicitly approved exact SD-D4 R2 + MAP after initial prelaunch rejection; no bypass.",
+  "worker": {
+    "model": "gemini-3.8-flash-high",
+    "pty": 95271,
+    "terminal_exit": 0,
+    "seconds": 308.5968138,
+    "turns": 1,
+    "command_UTF16_chars": 27504,
+    "runtime_payloads": 0,
+    "Bot_source_payloads": 0,
+    "raw_sha256": "ae18bfce25edeca10c17b97070eba7716d911f2589084468c0229f1c6cc6d762"
+  },
+  "static": {
+    "strict_JSON": true,
+    "records": 9,
+    "unique_old_anchors": 9,
+    "virtual_JS_syntax": true,
+    "reverse_whole_JS_LF_BASE": true,
+    "protected_whole_helpers": 17,
+    "actual_production_equals_BASE": true,
+    "other_eight_records_sha256": "e77b67326848bf2f8dec02460309313e0f3758406124d36534928cbda58940d7",
+    "corrected_helper_sha256": "ccc3fbd31144d6a76da085c8f2edcbfe38e9d5c9aa76f5cca9ebee3af614247f",
+    "old_updater_and_two_hooks_retained": true
+  },
+  "review": {
+    "production": { "critical": 0, "important": 0, "minor": 0 },
+    "artifact": { "critical": 0, "important": 2, "minor": 1 },
+    "guard_probes": "Independent in-memory actual-candidate foreign clone, invalid range, badInput and disabled number each false with pair/checked/Map unchanged; not runtime proof.",
+    "test_lines_actual": 245,
+    "test_lines_worker_claimed": 236,
+    "test_line_limit": 240,
+    "test_top_levels": 6,
+    "root_evaluator_correction": "Named readFileSync import binding added before evaluation; initial alias error was root harness, not worker defect.",
+    "BASE": { "pass": 0, "assertion_failures": 4, "harness_errors": 2 },
+    "candidate": { "pass": 2, "assertion_failures": 0, "harness_errors": 4 },
+    "remaining": [
+      "Missing real volume-muted selector and wrong mute-ack hook in fixtures.",
+      "applySubDubDraftDom called with wrong signature, missing root/draft/mode.",
+      "Mode loop unused, incomplete renderer/pending/checked/label proof.",
+      "No actual input/change listener invocation; lifecycle/guards/no-writes coverage incomplete.",
+      "245 lines exceeds 240; worker report count incorrect."
+    ]
+  },
+  "takeover": "Same spec and round2 Sol xhigh, NEW_TEST only; all assembled production records frozen, no AGY R3.",
+  "QA_harness_recheck": {
+    "critical": 0, "important": 0, "minor": 0,
+    "browser_script_sha256": "fd7aafe19fcbf69b29d3f4587d90d5251f5d866900e84dba86c2e7d0dfdcc3d3",
+    "supplement_script_sha256": "751aa83e0f53c7e7c322f7ccaa8603d5733b3992552f5bceec329002ed30847b",
+    "scope": "Static recheck and fresh syntax exit0 only; GREEN48 and supplement42 NOT_RUN."
+  },
+  "production_applied": false,
+  "new_test_applied": false,
+  "provider_calls_app": 0,
+  "wallet_mutations": 0,
+  "deploy": "NO",
+  "live_pass": "NOT_TESTED",
+  "goal": "ACTIVE",
+  "motion": "LAST"
+}

@@ -26317,6 +26317,7 @@
       heroSubtitle: "Chọn phụ đề, lồng tiếng hoặc kết hợp cả hai. Thiết lập và xem kết quả trong cùng một màn hình.",
       authoringSessionPending: "Thiết lập mở sau khi phiên đăng nhập được xác nhận.",
       modeSelectorLabel: "Bạn muốn tạo gì?",
+      audioOriginalToggleLabel: "Giữ âm thanh gốc",
       audioOriginalLabel: "Âm lượng âm thanh gốc",
       audioDubbingLabel: "Âm lượng giọng lồng tiếng",
       audioControlsHeading: "Cân chỉnh âm thanh",
@@ -26513,6 +26514,7 @@
       heroSubtitle: "Choose subtitles, dubbing, or both. Set up your output and view results in one place.",
       authoringSessionPending: "Settings open after your sign-in session is confirmed.",
       modeSelectorLabel: "What do you want to create?",
+      audioOriginalToggleLabel: "Keep original audio",
       audioOriginalLabel: "Original audio level",
       audioDubbingLabel: "Dubbed voice level",
       audioControlsHeading: "Audio levels",
@@ -26709,6 +26711,7 @@
       heroSubtitle: "选择所需的处理方式，设置输出选项，并在同一页面查看真实任务报告。",
       authoringSessionPending: "登录状态确认后即可编辑设置。",
       modeSelectorLabel: "选择需要的处理方式",
+      audioOriginalToggleLabel: "保留原始音频",
       audioOriginalLabel: "原始音频音量",
       audioDubbingLabel: "配音音量",
       audioControlsHeading: "音量调节",
@@ -26950,8 +26953,96 @@
     return true;
   }
 
+  function updateSubDubOriginalAudioToggle(control) {
+    if (!control || typeof control.closest !== "function" || typeof control.getAttribute !== "function" || typeof control.hasAttribute !== "function") return false;
+    if (!subDubWorkspaceDraftSession) return false;
+    if (control.disabled || control.readOnly) return false;
+    const root = control.closest(".portal-subdub-hub");
+    if (!root || !root.dataset || root.dataset.subdubAuthoringReady !== "true") return false;
+    const panel = control.closest("[data-subdub-mode-panel]");
+    if (!panel || panel.hidden || typeof panel.getAttribute !== "function" || typeof panel.querySelector !== "function") return false;
+    const mode = panel.getAttribute("data-subdub-mode-panel");
+    if (mode !== "DUBBING_ONLY" && mode !== "SUBTITLE_PLUS_DUBBING") return false;
+    const rangeInput = panel.querySelector('input[type="range"][data-subdub-local-volume="original"]');
+    const numberInput = panel.querySelector('input[type="number"][data-subdub-local-volume="original"]');
+    const toggleCheckbox = panel.querySelector('input[type="checkbox"][data-subdub-original-audio-toggle]');
+    if (!rangeInput || !numberInput || !toggleCheckbox) return false;
+    if (rangeInput.type !== "range" || numberInput.type !== "number" || toggleCheckbox.type !== "checkbox") return false;
+    if (typeof rangeInput.closest !== "function" || rangeInput.closest("[data-subdub-mode-panel]") !== panel) return false;
+    if (typeof numberInput.closest !== "function" || numberInput.closest("[data-subdub-mode-panel]") !== panel) return false;
+    if (typeof toggleCheckbox.closest !== "function" || toggleCheckbox.closest("[data-subdub-mode-panel]") !== panel) return false;
+    if (rangeInput.disabled || rangeInput.readOnly || numberInput.disabled || numberInput.readOnly || toggleCheckbox.disabled || toggleCheckbox.readOnly) return false;
+
+    const isCheckbox = control.hasAttribute("data-subdub-original-audio-toggle");
+    if (isCheckbox) {
+      if (control !== toggleCheckbox || control.type !== "checkbox") return false;
+    } else {
+      if (control !== rangeInput && control !== numberInput) return false;
+      if (control.getAttribute("data-subdub-local-volume") !== "original") return false;
+      if (control.type !== "range" && control.type !== "number") return false;
+    }
+
+    const currentDraft = transientFormDrafts.get(SUBDUB_DRAFT_ROUTE);
+    const privateRestore = currentDraft && currentDraft.shared
+      ? normalizeSubDubDraftValue("original_volume_restore", currentDraft.shared.original_volume_restore)
+      : null;
+    const draftOriginal = currentDraft && currentDraft.shared
+      ? normalizeSubDubDraftValue("original_volume", currentDraft.shared.original_volume)
+      : null;
+    const draftPositive = draftOriginal && draftOriginal !== "0" ? draftOriginal : null;
+
+    if (isCheckbox) {
+      const rangeNorm = normalizeSubDubDraftValue("original_volume", rangeInput.value);
+      if (rangeNorm === null || (rangeInput.validity && rangeInput.validity.badInput)) return false;
+      const rangePositive = rangeNorm !== "0" ? rangeNorm : null;
+      if (!control.checked) {
+        if (rangePositive) {
+          const draft = subDubDraftSnapshot();
+          if (draft && draft.shared) {
+            draft.shared.original_volume_restore = rangePositive;
+            transientFormDrafts.set(SUBDUB_DRAFT_ROUTE, draft);
+          }
+        }
+        rangeInput.value = "0";
+        numberInput.value = "0";
+      } else {
+        if (!rangePositive || rangeInput.value === "0") {
+          const target = privateRestore || draftPositive || "100";
+          rangeInput.value = target;
+          numberInput.value = target;
+        }
+      }
+      updateSubDubLocalVolume(numberInput);
+      control.checked = numberInput.value !== "0";
+      return true;
+    }
+
+    const normalized = normalizeSubDubDraftValue("original_volume", control.value);
+    const valid = normalized !== null && !(control.validity && control.validity.badInput);
+    if (!valid) return false;
+
+    toggleCheckbox.checked = normalized !== "0";
+    if (normalized !== "0") {
+      const draft = subDubDraftSnapshot();
+      if (draft && draft.shared) {
+        draft.shared.original_volume_restore = normalized;
+        transientFormDrafts.set(SUBDUB_DRAFT_ROUTE, draft);
+      }
+    } else if (!privateRestore && draftPositive) {
+      const draft = subDubDraftSnapshot();
+      if (draft && draft.shared) {
+        draft.shared.original_volume_restore = draftPositive;
+        transientFormDrafts.set(SUBDUB_DRAFT_ROUTE, draft);
+      }
+    }
+    return true;
+  }
+
   function updateSubDubLocalVolume(volumeInput) {
     if (!volumeInput) return false;
+    if (typeof volumeInput.hasAttribute === "function" && volumeInput.hasAttribute("data-subdub-original-audio-toggle")) {
+      return updateSubDubOriginalAudioToggle(volumeInput);
+    }
     const panel = volumeInput.closest("[data-subdub-mode-panel]");
     const kind = volumeInput.getAttribute("data-subdub-local-volume");
     if (!["original", "dubbing"].includes(kind)) return false;
@@ -26973,6 +27064,9 @@
     if (kind === "dubbing" && normalized !== "0") {
       const acknowledgement = panel.querySelector("[data-subdub-mute-ack]");
       if (acknowledgement) acknowledgement.checked = false;
+    }
+    if (kind === "original") {
+      updateSubDubOriginalAudioToggle(volumeInput);
     }
     return true;
   }
@@ -26996,7 +27090,8 @@
   const SUBDUB_DRAFT_ROUTE = "/subdub";
   const SUBDUB_SHARED_DRAFT_FIELDS = new Set([
     "target_language", "target_language_custom", "original_volume", "dubbing_volume",
-    "voice_lane", "sub_display_type", "subtitle_position", "source_subtitle_state", "dubbing_mute_ack"
+    "voice_lane", "sub_display_type", "subtitle_position", "source_subtitle_state", "dubbing_mute_ack",
+    "original_volume_restore"
   ]);
   const SUBDUB_MODE_DRAFT_FIELDS = new Set([
     "subdub-source-output-format", "subdub-translated-output-format",
@@ -27012,6 +27107,10 @@
     if (name === "original_volume" || name === "dubbing_volume") {
       const number = Number(text);
       return text.trim() && Number.isInteger(number) && number >= 0 && number <= (name === "original_volume" ? 100 : 200) ? String(number) : null;
+    }
+    if (name === "original_volume_restore") {
+      const number = Number(text);
+      return text.trim() && Number.isInteger(number) && number >= 1 && number <= 100 ? String(number) : null;
     }
     if (name === "voice_lane") return ["default_female", "default_male", "saved_voice", "custom_voice", "auto_two", "auto_multi_3_8", "smart_multi"].includes(text) ? text : null;
     if (name === "subtitle_position") return ["bottom_center", "bottom_left", "bottom_right", "top_center", "top_left", "top_right", "center"].includes(text) ? text : null;
@@ -27324,7 +27423,9 @@
         const value = subDubDraftValue(draft, currentModeKey, kind + "_volume", "100");
         const id = "subdub-" + kind + "-volume-" + suffix;
         const numberId = "subdub-" + kind + "-volume-number-" + suffix;
+        const toggleId = "subdub-original-audio-toggle-" + suffix;
         return `<div class="portal-subdub-volume-control">
+          ${kind === "original" ? `<label class="portal-subdub-radio-option" for="${safeText(toggleId)}"><input id="${safeText(toggleId)}" type="checkbox" role="switch" data-subdub-original-audio-toggle${Number(value) > 0 ? " checked" : ""}> ${safeText(copy.audioOriginalToggleLabel)}</label>` : ""}
           <label for="${safeText(id)}">${safeText(label)}</label>
           <span class="portal-subdub-volume-control__value">
             <input id="${safeText(id)}" type="range" min="0" max="${max}" step="1" data-subdub-local-volume="${kind}" value="${safeText(value)}" aria-describedby="${safeText(id)}-error subdub-volume-note-${safeText(suffix)}">
@@ -40962,7 +41063,7 @@
         updateSubDubLanguageSearch(searchInput);
         return;
       }
-      const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume]");
+      const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume], .portal-subdub-hub [data-subdub-original-audio-toggle]");
       updateSubDubLocalVolume(volumeInput);
       const subDubForm = event.target.closest(".portal-subdub-hub");
       if (subDubForm) {
@@ -40977,7 +41078,7 @@
       if (searchInput && (searchInput.getAttribute("type") === "search" || searchInput.type === "search")) {
         return;
       }
-      const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume]");
+      const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume], .portal-subdub-hub [data-subdub-original-audio-toggle]");
       updateSubDubLocalVolume(volumeInput);
       const voiceLaneInput = event.target.closest(".portal-subdub-hub [data-subdub-voice-lane-input]");
       updateSubDubVoiceLaneSelection(voiceLaneInput);

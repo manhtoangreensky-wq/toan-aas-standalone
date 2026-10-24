@@ -1,5 +1,26 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-SUBDUB-D4-20261024 — công tắc âm thanh gốc
+
+Session `R218-SDD4-TESTER-20261024`, BASEba4b2dfa, PR661/Issue664.
+Source candidate là worktree có portal.js LF SHA256bb0b90fb9d45eb310127e3177c06da7ba73034bf04801fa1b9ad440d4d3c9879.
+Chỉ signedlocalhost/DBtạm; không sửa48WAcase cũ hoặc sinh issue hàng loạt.
+
+| Case | Mức | Thao tác | PASS bắt buộc / canh lỗi cũ | Evidence |
+|---|---|---|---|---|
+| SDD4-01 | nặng | Dub/Combo×VIENZH×lightdark×390/768/1440/844ngang |48unique/native switch cólabel/role;off0/on37;1/100/manual0/invalid;khôngđổi dubbing0ack/200 |main48raw+unit6 |
+| SDD4-02 | nặng | Tắt ở37→đổi mode→Kho giọng/Thêm giọng→quay lại→bật |48modeLoops/96VoiceReturns;giữ targetja/customISO/Combo vịtrí-format-display/dub200;on37 |main48snapshot/canonicalVoiceURL+actualtheme |
+| SDD4-03 | vừa | KeyboardSpace/focus/text2x hai theme |Label>=44×44,text>=4.5/focus>=3,unknown0;khôngche/clip/chồng/overflow;restore styleexact |48geometry/AX/PNG |
+| SDD4-04 | nặng | Hai nonvoice modes×VIENZH×lightdark×390/1440 |24unique;0switchvisible dù2hiddenDubcontrols tồn tại;khôngemptybox mới |supplement24 |
+| SDD4-05 | nặng | Giữ actualauth/me response trước ready, normalclick/Tab rồi releasecùngresponse |12unique;2switchdisabled/0enabled;readyoff0/on100;khôngforceclick/fakesession |supplement12 |
+| SDD4-06 | nặng | AccountA37off→loginB→B53off→logout→realreloginB |6unique;A/Bemailkhác/projectedđúng;B100,retainedroot1/switch2disabled,loginlạion/offon100 không37/53 |supplement6;persistedhandlerdiagnostic,khôngnativeBFCache |
+| SDD4-07 | nặng | Artifact/source/testdiff/negativeguards |9recordsreverseLFBASE;17helper676oldtestsunchanged;clone-invalid-badInput-disabled no privatewrite;RED6→GREEN6 |independentreview/packet/regressions |
+| SDD4-08 | nặng | Delivery/giới hạn |AllrawterminalPASS/served4assetshashes;localCIdeployLIVEtáchriêng;provider/wallet/production0;motionlast |receipt/CIexactHEAD chỉ sau Tester |
+
+QA accountcases cách31giây để tôn trọng register4/login8 mỗi60giây; không tắt
+rate-limit hoặc lặp request429. Không gửi token/password vào báo cáo. Upload/
+translation/dubbing/speaker/canonicalvoice/quote/output vẫn T0, không fake PASS.
+
 ## R218-SUBDUB-E3-20261024 — phiên Tester độc lập
 
 Session `R218-SDE3-TESTER-20261024`; parentBASE79cd75d3,
