@@ -1,5 +1,16 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SD15/16: thao tác âm lượng trên điện thoại
+
+| Yêu cầu | Hiện trạng đo được | Giới hạn |
+|---|---|---|
+| Slider gốc/lồng tiếng dễ thao tác | <=480px fullrow,min200x44 ở48phoneconfigs,thayCombo32036x44 | Không chứng minh nativeiOS/physicaltouch |
+| Giữ0–100/0–200/mute/draft | Main72+followup24/48modeRoundTrips/192VoiceReturns/number-range-review-output đồngbộ | Không realaudio/provider/mixingoutput |
+| Không phá desktop | 24configs so exactcomputedgrid/geometry vớiRED | Không fullpageAA/motion/LIVE |
+
+SourcechỉCSS2rules/9dòng;SD15/16semanticstừBotvẫngiữ. GROUP/EDIT/READINESS
+vàE3finalmatrix chưađóng;khônglấyRANGEcục bộđểticktoànSubDub.
+
 ## 24/10/2026 — E3 label/contrast, không đánh đồng có nút với đủ UX
 
 | Yêu cầu | Hiện trạng mới đo | Chưa hoàn tất |

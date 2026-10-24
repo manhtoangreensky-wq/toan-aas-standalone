@@ -1,5 +1,21 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — E3: slider âm lượng mobile đủ rộng
+
+SourceRANGE,chưa push/deploy E3: ởviewport<=480px, slider được đặt nguyên
+hàng đầu; ô số và phần trăm ở hàng dưới. Chỉ mộtblockCSS9dòng,khôngđổiJS/
+giátrị/handler/track/thumb/mute/draft. Tablet/desktop>480px giữ3cột cũ.
+
+ActualRED12phone+24desktopbaseline:320pxDub62x44,Combo36x44. GREEN72
+đạt48phone slider min200x44 và24desktop exactgeometry nhưBASE. Main144
+VoiceReturns,followup24scenarios bổsung48modeRoundTrips/48VoiceReturns;
+number/range/review/liveoutputs,muteack0→200,lane/target/customISO đều giữ.
+216LFassethashes/0errors-external-UIwrites-overflow;Node1281/focused54/
+PythonCSS21/sourceC0I0M0. Ba ảnhfieldset sáng/tối320 vàdesktop đã xem.
+Followup24làscenario bổsungtrongcùngsubsetviewport,khôngđếmlà24configmới.
+Evidence `reports/audit/R218-SUBDUB-MOBILE-RANGE-QA-20261024.json`.
+UIvolumeđạt khôngphảiaudiomixingoutput;GROUP/EDIT/READINESS/finalE3 còn mở.
+
 ## 24/10/2026 — E3: nhãn chọn và chữ hướng dẫn SubDub
 
 Source nhánh, chưa push/deploy E3: hai select Quy tắc dòng/Hiển thị phụ đề

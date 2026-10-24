@@ -548,6 +548,13 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   causeUNKNOWN,originalglobalstate/AXsnapshotnotcaptured. Stable-signed48
   passesafteractualauthbootstrapwait,notrootcausefix;keepownearly-input/
   hydration/draftcontractbeforefullE3close. No authbusinessmutation.
+- [x] E3-RANGE scopedLOCAL:contract6380830198/BASE6da9b14a/oneFlashR1CSSblock;
+  RED12phone+24desktop→GREEN72/phone48min200x44/desktop24geometryexact;
+  main144VoiceReturns+supplement24scenarios48modeRoundTrips48VoiceReturns,
+  muteack/number-range-review-liveoutput/lane-targetISOkept. 216LFassets/
+  0errors-external-UIwrites-overflow/Node1281/Python21/sourceC0I0M0.
+  R403probegapclosedbyfollowupwithoutappchange;parentE3/GROUP/EDIT/
+  READINESS/final168/deliveryremainOPEN. EvidenceR218-SUBDUB-MOBILE-RANGE-QA-20261024.json.
 - [x] Shell một trang/bốn tab, mode/query/keyboard và panel tại chỗ đã khóa bằng test presentation.
 - [~] Source đã có lựa chọn “đã có/chưa có phụ đề”, bộ chọn tệp và trạng thái source rõ ràng;
   upload/preview/metadata/progress/cancel/replace/error vẫn chờ capability máy chủ.

@@ -2,7 +2,7 @@
   "date": "2026-10-24",
   "task": "SD-D3-EMPTY-REVIEW",
   "base_sha": "00a34c2b9aea1c43ba387bd70004ea6a90b5b55f",
-  "status": "D301_D305_LOCAL_PASS_D306_DELIVERY_PENDING",
+  "status": "SCOPED_BRANCH_DELIVERY_ACCEPTED_NO_DEPLOY",
   "contract": 6379928009,
   "dependency": "SD-C3 receipt6379877100;CI40061704379bothSUCCESS456records",
   "production_files": [
@@ -157,5 +157,5 @@
   "live_pass": "NOT_TESTED",
   "goal": "ACTIVE",
   "motion": "LAST",
-  "delivery": "D306pending source/provenance/push/exactHEADCIboth/receipt;do notmergeunfinishedmaster"
+  "delivery": "SOURCEd643ce559d304e449c7ec2d5899ccf598b87dc76/HEAD79cd75d3d8ee50685bbecd4056f7d84a79f8e68a;CI40063985662bothterminalSUCCESS/456True0False;receipt6380165981/D3onlytickreadback. RolledforwardinrealRANGEcodebatch;no merge/deploy/LIVE."
 }

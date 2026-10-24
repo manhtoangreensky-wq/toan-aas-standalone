@@ -1,12 +1,12 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: SUBDUB_E3_LABEL_CONTRAST_LOCAL_PASS_RANGE_NEXT
+status: SUBDUB_E3_RANGE_LOCAL_PASS_GROUP_NEXT
 date: 2026-10-24
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r218-billing-ui-20261022
 pull_request: 661
-head_sha: 79cd75d3d8ee50685bbecd4056f7d84a79f8e68a
+head_sha: 6da9b14a355bae62b6c745c54d9e16aab774b12b
 checkpoint_music_mu07_a_20261024:
   base_sha: 520174941470fab34c60c26e62607ba2d4b3568f
   phase: REPORT
@@ -116,6 +116,21 @@ checkpoint_subdub_e3_lc_20261024:
   evidence: reports/audit/R218-SUBDUB-LABEL-CONTRAST-QA-20261024.json
   cleanup: "OwnedQA9592newlineexit0/tempvh_xzepqremoved/listener26962=0outsidecheck;workers/currentbrowsersclosed. EarlierstalledownedPID3100treeonlystopped."
   next: "E3-RANGEformalcontract+actualRED12thenFlashR1;DRAFT40readyforfinalization. ThenGROUP/EDIT/READINESS/final168/Tester/docs/provenance/onepush. MotionLAST,goalACTIVE."
+checkpoint_subdub_e3_range_20261024:
+  base_sha: 6da9b14a355bae62b6c745c54d9e16aab774b12b
+  phase: VERIFY
+  status: LOCAL_R401_R405_PASS_PARENT_E3_OPEN_NOT_PUSHED
+  contract: "Issue664#6380830198/spec2026-10-24-r218-subdub-mobile-range.md;oneE3pushafterremainingchildren."
+  handoff: "Flash3.8HighR1SUCCESS101.8012838s/1turn/11270UTF16chars/oneexactCSSrecord;noR2/noR3/noRootproductionrewrite."
+  red: "36configs=12phone+24desktopbaseline;320Dub62x44/Combo36x44/12controlsunder44/24under100;expectedassertionexit1,errors0."
+  verify: "ActualGREEN72/48phone min200x44/24desktopexactgeometry/144Voicereturns/216LFassets/AX/gates/overflow-errors-external-UIwrites0. Raw33d71b47...ec827f7."
+  R403_supplement: "ReviewfoundmissingmodeRoundTrip/muteackclear/range-review-outputafterVoiceasserts;actual24signedscenarios(3201440/VIENZH/boththemes/twoDubbingmodes)passed48modeRoundTrips/48Voicereturns/allnumber-range-review-liveoutputs/muteack0retain200clear/lane-targetISO. Raw6759bb6d...7f3c43. Noappchange/R2."
+  review: "SourceC0I0M0/exact1R1/reversewholeCSSBASELF/protected12/oldtestsChatunchanged;CSS8b60aab7...0892bb. Rootactualsupplementclosesacceptancegap."
+  tests: "Focused54pass4.0533225s/fullNode1281pass0fail0skip82.4085308s/PythonCSS21pass1existingwarning6.34s/compile6exit0. FullpytestNOT_RUN."
+  evidence: reports/audit/R218-SUBDUB-MOBILE-RANGE-QA-20261024.json
+  visual: "Inspectedlightdark320Combofieldset+light1440Dubbing;nofullpageAA/nativephysicaltouch/mixing/LIVEclaim."
+  cleanup: "Owned59737newlineexit0/tempmdroabvfremoved/listener41475=0outsidecheck;worker/browsersclosed/nootherprocessstop."
+  next: "SaveRANGEcheckpointthenformalGROUPfromDRAFT41/compact4borderlessgroups7visiblechoices/fullARIA-reviewcopy;EDIT/READINESS/final168thenoneE3push. MotionLAST,goalACTIVE."
 checkpoint_music_fh_20261024:
   base_sha: 1e01f2417e3000a09c45186e11ee144e52a22fa5
   result: DELIVERED_CI_GREEN_NO_DEPLOY
@@ -778,7 +793,7 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "E3LABELR1+CONTRASTR2localgatespass48/768helpersmin8.83653/Node1281/Python21/C0I0M0;savecheckpointthenE3-RANGE(DRAFT40)RED12→FlashR1. GROUP/EDIT/READINESS/final168andoneE3pushremain;D3deliveryreceipt6380165981closed,motionLAST,goalACTIVE."
+next_action: "E3RANGELOCALpass72+supplement24/192Voicereturns/48modeRoundTrips/phone200x44/desktop24geometryexact/Node1281/Python21/sourceC0I0M0;saveRANGEthenformalGROUPfromDRAFT41. GROUP/EDIT/READINESS/final168andoneE3pushremain;D3receipt6380165981closed,motionLAST,goalACTIVE."
 active_billing_batch:
   id: R218-BILLING-20261022
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660
