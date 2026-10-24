@@ -26460,6 +26460,7 @@
       stage3Title: "3. Kiểm tra trước khi tạo",
       stage3Subtitle: "Xem lại lựa chọn và chi phí trước khi bắt đầu.",
       summaryModeKey: "Chế độ đã chọn",
+      summaryEditAction: "Sửa",
       summarySettingsTitle: "Thiết lập của bạn",
       summaryUnknown: "Chưa xác minh",
       summarySourceStateKey: "Nguồn phụ đề (bạn khai báo)",
@@ -26654,6 +26655,7 @@
       stage3Title: "3. Review settings and cost",
       stage3Subtitle: "Check your choices and cost before you start.",
       summaryModeKey: "Selected mode",
+      summaryEditAction: "Edit",
       summarySettingsTitle: "Your settings",
       summaryUnknown: "Not verified",
       summarySourceStateKey: "Subtitle source (your selection)",
@@ -26839,6 +26841,7 @@
       stage3Title: "3. 检查设置和费用",
       stage3Subtitle: "开始前确认所选模式和费用信息。",
       summaryModeKey: "已选处理方式",
+      summaryEditAction: "修改",
       summarySettingsTitle: "你的设置",
       summaryUnknown: "尚未确认",
       summarySourceStateKey: "字幕来源（你的选择）",
@@ -27070,7 +27073,86 @@
       if (mode === "SUBTITLE_ONLY") rows.push(["subtitle_format", copy.segmentRuleLabel, value("subtitle_format", "standard") === "short" ? copy.ruleShort : copy.ruleStandard]);
       else rows.push(["sub_display_type", copy.subDisplayLabel, value("sub_display_type", mode === "SUBTITLE_PLUS_DUBBING" ? "bilingual" : "single") === "bilingual" ? copy.subDisplayBilingual : copy.subDisplaySingle]);
     }
-    return rows.map(([key, label, text]) => `<div class="portal-summary-item"><span class="portal-summary-key">${safeText(label)}</span><span class="portal-summary-value" data-subdub-setting="${safeText(key)}">${safeText(text)}</span></div>`).join("");
+    const editableKeys = new Set([
+      "source_subtitle_state",
+      "target_language",
+      "target_language_custom",
+      "voice_lane",
+      "original_volume",
+      "dubbing_volume",
+      "subtitle_position",
+      "output_format",
+      "subtitle_format",
+      "sub_display_type"
+    ]);
+    const action = copy.summaryEditAction;
+    return rows.map(([key, label, text]) => {
+      const isEditable = editableKeys.has(key);
+      const rowClass = isEditable ? "portal-summary-item portal-subdub-review-edit-row" : "portal-summary-item";
+      const editButton = isEditable
+        ? `<button class="portal-subdub-review-edit" type="button" data-subdub-review-edit="${safeText(key)}" aria-label="${safeText(action + ": " + label)}">${safeText(action)}</button>`
+        : "";
+      return `<div class="${rowClass}"><span class="portal-summary-key">${safeText(label)}</span><span class="portal-summary-value" data-subdub-setting="${safeText(key)}">${safeText(text)}</span>${editButton}</div>`;
+    }).join("");
+  }
+
+  const SUBDUB_REVIEW_EDIT_SELECTORS = Object.freeze({
+    target_language: 'select[name="target_language"]',
+    target_language_custom: 'input[name="target_language_custom"]',
+    voice_lane: '[data-subdub-voice-lane-input]:checked',
+    original_volume: 'input[type="number"][data-subdub-local-volume="original"]',
+    dubbing_volume: 'input[type="number"][data-subdub-local-volume="dubbing"]',
+    subtitle_position: 'select[name^="subdub_"][name$="_subtitle_position"]',
+    output_format: 'input[name$="-output-format"]:checked',
+    subtitle_format: 'select[name="subtitle_format"]',
+    sub_display_type: 'select[name="sub_display_type"],input[name="sub_display_type"]:checked'
+  });
+
+  function focusSubDubReviewSetting(button) {
+    if (!button || typeof button.closest !== "function") {
+      return false;
+    }
+    const root = button.closest(".portal-subdub-hub");
+    if (!root || typeof root.querySelector !== "function") {
+      return false;
+    }
+    const key = typeof button.getAttribute === "function"
+      ? button.getAttribute("data-subdub-review-edit")
+      : null;
+    if (!key) {
+      return false;
+    }
+    const modeButton = root.querySelector('[data-subdub-mode-select][aria-selected="true"]');
+    if (!modeButton || typeof modeButton.getAttribute !== "function") {
+      return false;
+    }
+    const selectedMode = modeButton.getAttribute("data-subdub-mode-select");
+    if (!selectedMode || !Object.hasOwn(SUBDUB_PRODUCT_MODES, selectedMode)) {
+      return false;
+    }
+    const panel = root.querySelector(`[data-subdub-mode-panel="${selectedMode}"]`);
+    if (!panel || panel.hidden || (typeof panel.getAttribute === "function" && panel.getAttribute("aria-hidden") === "true")) {
+      return false;
+    }
+    let target = null;
+    if (key === "mode") {
+      target = modeButton;
+    } else if (key === "source_subtitle_state") {
+      target = root.querySelector('[data-subdub-stage="1"] input[name="subdub-subtitle-source-state"]:checked');
+    } else if (Object.hasOwn(SUBDUB_REVIEW_EDIT_SELECTORS, key)) {
+      target = panel.querySelector(SUBDUB_REVIEW_EDIT_SELECTORS[key]);
+    } else {
+      return false;
+    }
+    if (!target || typeof target.focus !== "function") {
+      return false;
+    }
+    if (target.disabled || (typeof target.matches === "function" && target.matches(":disabled")) || (typeof target.getAttribute === "function" && target.getAttribute("disabled") !== null)) {
+      return false;
+    }
+    target.focus();
+    if (typeof target.scrollIntoView === "function") target.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
+    return true;
   }
 
   function updateSubDubSettingsSummary(root, nextMode) {
@@ -27079,7 +27161,10 @@
     const selected = root.querySelector('[data-subdub-mode-select][aria-selected="true"]');
     const mode = nextMode || selected && selected.getAttribute("data-subdub-mode-select");
     if (!Object.hasOwn(SUBDUB_PRODUCT_MODES, mode)) return false;
-    container.innerHTML = renderSubDubSettingsRows(subDubDraftSnapshot(), mode, root.getAttribute("lang"));
+    const nextHtml = renderSubDubSettingsRows(subDubDraftSnapshot(), mode, root.getAttribute("lang"));
+    if (container.__subDubSettingsRowsHtml === nextHtml) return true;
+    container.innerHTML = nextHtml;
+    container.__subDubSettingsRowsHtml = nextHtml;
     return true;
   }
 
@@ -27490,9 +27575,10 @@
         ${renderSubDubSettingsRows(draft, currentModeKey, locale)}
       </div>
       <div class="portal-summary-list" style="margin-bottom:16px;">
-        <div class="portal-summary-item">
+        <div class="portal-summary-item portal-subdub-review-edit-row">
           <span class="portal-summary-key">${safeText(copy.summaryModeKey)}</span>
           <span class="portal-summary-value" data-subdub-summary-mode>${safeText(modeCopy.title)} (${safeText(modeCopy.badge)})</span>
+          <button class="portal-subdub-review-edit" type="button" data-subdub-review-edit="mode" aria-label="${safeText(copy.summaryEditAction + ": " + copy.summaryModeKey)}">${safeText(copy.summaryEditAction)}</button>
         </div>
         <div class="portal-summary-item" data-subdub-summary-placeholder="unavailable">
           <span class="portal-summary-key">${safeText(copy.summaryPriceKey)}</span>
@@ -40911,6 +40997,8 @@
       if (navigateVoiceWorkspace(event, voiceModeLink)) return;
       const musicModeLink = event.target.closest("[data-music-workspace-mode]");
       if (navigateMusicWorkspace(event, musicModeLink)) return;
+      const subDubReviewEdit = event.target.closest(".portal-subdub-hub [data-subdub-review-edit]");
+      if (focusSubDubReviewSetting(subDubReviewEdit)) { event.preventDefault(); return; }
       const subDubModeButton = event.target.closest("[data-subdub-mode-select]");
       if (updateSubDubModeSelection(subDubModeButton, window)) return;
       const navSummary = event.target.closest(".portal-nav-summary");

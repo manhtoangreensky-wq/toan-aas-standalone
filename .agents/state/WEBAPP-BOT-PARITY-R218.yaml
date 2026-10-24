@@ -1,12 +1,12 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: SUBDUB_E3_GROUP_LOCAL_PASS_EDIT_NEXT
+status: SUBDUB_E3_EDIT_LOCAL_PASS_READINESS_NEXT
 date: 2026-10-24
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r218-billing-ui-20261022
 pull_request: 661
-head_sha: 3d5e59dc4303cb0fb50fbf5cd9e59795541945af
+head_sha: c5f09f2ee68e822ea56e2c4cb652731405e48753
 checkpoint_music_mu07_a_20261024:
   base_sha: 520174941470fab34c60c26e62607ba2d4b3568f
   phase: REPORT
@@ -146,6 +146,22 @@ checkpoint_subdub_e3_group_20261024:
   cleanup: "Browser40385/supplement90281terminal0;ownedserver11765newlineexit0/temp6_vmwmqfremoved/listener6821=0outsidecheck;otherprocessesuntouched."
   retained_unknown: "Firstfocuscomputed3pxvsCSSOM2pxcauseUNKNOWN;QAminimum>=2pxsolid/contrast>=3notappchange. OriginalC3AXandLCearly-inputunknownsstayREADINESSopen."
   next: "E3-EDITformalcontract/RED/FlashR1;thenREADINESS/final168/Tester/docs/provenance/oneE3pushCIreceipt. MotionLAST,goalACTIVE."
+checkpoint_subdub_e3_edit_20261024:
+  base_sha: c5f09f2ee68e822ea56e2c4cb652731405e48753
+  phase: REPORT
+  status: LOCAL_E601_E608_PASS_PARENT_OPEN_NOT_PUSHED
+  contract: "Issue664#6381974676/amendments6382042415-6382437256-6382548623;spec2026-10-24-r218-subdub-review-edit-navigation.md."
+  handoff: "FlashR1SUCCESS390.3542173s but routing/newunitgatefail;R2outerSUCCESS316.2480453s but malformedinnerJSONposition17429/nohandoffappliedas-is/noR3. Solxhighpacket/helper/testonly;7validR1recordsfrozen,3helperfixes,thenactualruntimeamendmentsE607/E608."
+  red: "Actual24missing24/errors0/exit1;unit-only6expectedassert0harness then8records;E607testonly6pass1RED thenninthguard;E6087pass1RED thententhoptionalinstantcenter."
+  E607: "ISOchangeblur replacedidenticalreviewHTML betweenmousedown/mouseup disconnectingEdit/no click. ActualREDtrace→GREENmutation0/clickpresent/focusSELECT/ko-KRretained. ElementlocalgeneratedHTMLcacheonly."
+  E608: "CorrectfocuspositionSELECTatviewporty~0 wasundersticky65pxheader. Actual3widthprobe+matrixfailure→nativeoptionalinstantcenter;15actionsnowuncovered/positiony427ish. NoCSSshell/motionfile change."
+  verify: "Finalactualsigned168/1218Editclick336EnterSpace1050valueedits/168modeLoops168VoiceReturns/504LFassets/44x44/textmin12.35155focus5.86008unknown0/2xgeometry/errors-external-UIwrites-overflow0. Raw3948ebd2...ffa6d1."
+  tests: "Unit8/181.1246ms/focused68/2297.8798ms/fullNode1295pass0fail0skip20.6354979s/PythonCSS21pass1existingwarning1.19s/syntaxcompile6diff0. FullpytestNOT_RUN/T0unchanged."
+  review: "Root+independentC0I0M0/exact10records/reversewholeJSCSSBASELF/15wholehelpers12files673oldtestpathsChat;rowdataprefix/spans/oldguardlogicprotected;first7newtestbodiesexact/newunit232lines."
+  provenance: "VisibilityprobeoutputfolderreusedoverwroteinitialREDraw/screenshots;do notclaimcurrentGREEN85deb9dc...aa24c asoldc3RED. ActualREDterminal+separatefullmatrixfailure608ccaf8...d7b55 remain. Allotherfailedartifactsretained."
+  evidence: reports/audit/R218-SUBDUB-REVIEW-EDIT-QA-20261024.json
+  cleanup: "Browser83515terminal0/server68259newlineexit0/temp_o5vqiwjxremoved/listener57350=0;ownedstuckR2AGYonlystoppedafteridentitycheck,parent14748worker15752bothabsent. Othersuntouched."
+  next: "SaveEDITcheckpoint/receipt thenformalREADINESSaudit retainedC3AX/LCearlyinputUNKNOWN;parentfinal168/Tester/docs/provenance/oneE3pushCI. MotionLAST,goalACTIVE,noengineLIVEclaim."
 checkpoint_music_fh_20261024:
   base_sha: 1e01f2417e3000a09c45186e11ee144e52a22fa5
   result: DELIVERED_CI_GREEN_NO_DEPLOY
@@ -808,7 +824,7 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "E3GROUPLOCALaccepted84/588click588arrow168VoiceReturns/geometry84+globalnonvoice84/Node1287/Python21/source-supplementC0I0M0. SaveGROUPthenformalE3-EDIT/RED/FlashR1;READINESS/final168/Tester/docs/provenance/oneE3pushremain. Nochildpush/merge/deploy,motionLAST,goalACTIVE."
+next_action: "E3EDITLOCALacceptedfinal168/1218click336keys1050edits168VoiceReturns/Node1295/Python21/exact10recordsC0I0M0/E607E608actualREDGREEN. SaveEDITreceipt thenformalREADINESSaudit originalC3AX/LCearlyinputUNKNOWN,notclosedfromrerun. Parentfinal168/Tester/docs/provenance/oneE3pushCIremain. Nochildpush/merge/deploy,motionLAST,goalACTIVE."
 active_billing_batch:
   id: R218-BILLING-20261022
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660

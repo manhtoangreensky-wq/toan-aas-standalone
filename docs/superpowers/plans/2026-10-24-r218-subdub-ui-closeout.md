@@ -67,7 +67,11 @@ sourceC0I0M0. GROUPnowLOCALacceptedcontract6381189391:4borderlesssemanticgroups,
 Supplement84voice+84nonvoice closesgeometry/globalvisibilityreviewgaps;
 source+supplementC0I0M0/Node1287/Python21. R1R2gatefailed,noinvalidartifact
 applied;Solxhighpacket/newunitonly,R1JS+SPEC CSSpreserved/noR3.
-NextE3-EDITformalcontract/RED/FlashR1,thenREADINESS/final168/Testerdelivery.
+E3-EDITnowLOCALacceptedcontract6381974676/amendments:review→actualsettingfocus,
+E607no-opHTMLguard/E608instantcenteronlyafteractualRED. Final168/1218click/
+336keyboard1050edits168VoiceReturns/504LFassets/errors0/Node1295/Python21/
+sourceC0I0M0/exact10records. NextREADINESSformalcontractforretainedUNKNOWN,
+thenparentfinal168/Tester/docs/provenance/oneE3push/exactHEADCIreceipt.
 Eachspec getsownAC/RED/protectedcomparator/Testercases/evidencebeforecode.
 AntigravityFlash3.8R1/R2max→sameSPEC_IDSolxhighonlyaftertwofailures/noR3.
 Singleworker/sharedsource;Codexreview/actualbrowser/onebatchdelivery.

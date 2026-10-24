@@ -1,5 +1,18 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SD18: sửa ngay cấu hình liên quan
+
+| Yêu cầu gốc | Hiện trạng có bằng chứng | Còn mở |
+|---|---|---|
+| Sửa ngay nhóm liên quan | NútSửa theo từngeditable row+mode;1218actualclick/336keyboard đúngfocus trong168configs | Không mở tệp/source-language còncapabilityguarded |
+| Không mất bản nháp hoặc chuyển màn | 1050editsreviewupdates/168modeLoops168VoiceReturns;perEditURL/mode/draft/root/requestsame | Không giữfile/preview/providerprofile/quote/job |
+| Bấm thật,không bị remount/che | E607blurtraceRED→GREEN giữpressednode;E60815actions/3widths thấycontrolgiữfocus;strictfinal168 | OriginalreadinessUNKNOWNvẫnE3-READINESS,khôngđánhđồngrootcause |
+| Dùngđượcphone/keyboard/theme/locale | 44x44/text12.35/focus5.86/2x/504LFassets/0overflow-errors | KhôngnativeSafari/PWA/OStextscale/fullpageAA/motion/LIVEproof |
+
+SD18review navigation trướcEDIT chưa có,nayđạtUIcụcbộ;source/engine/cost/
+expiry/readiness theoDTOthật vẫn chưađược tựsuy. Finalparent/Tester/oneE3
+push chưađóng. EvidenceR218-SUBDUB-REVIEW-EDIT-QA-20261024.json.
+
 ## 24/10/2026 — SD07..14: nhóm lựa chọn giọng, không rút gọn chức năng
 
 | Yêu cầu gốc | Hiện trạng có bằng chứng | Giới hạn |

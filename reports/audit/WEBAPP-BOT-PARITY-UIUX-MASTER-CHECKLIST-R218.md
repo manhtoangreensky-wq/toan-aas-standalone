@@ -567,6 +567,16 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   visiblecontrols0. IndependentsupplementC0I0M0. EDITnext/READINESS/final168/
   Tester/deliveryopen;nochildpush/LIVE/motionclaim. Evidence
   `reports/audit/R218-SUBDUB-VOICE-GROUPS-QA-20261024.json`.
+- [x] E3-EDIT scopedLOCAL:contract6381974676/amendments6382042415/6382437256/
+  6382548623;initialRED24/newunit6assertRED→exact8Solrecords. R1routing/unitgate
+  fail,R2invalidinnerJSON;noinvalidhandoffas-is/noR3,7R1recordsfrozen. Actual
+  runtimeE607blurremount cancelsclick/RED7th→sameHTMLguard;E608focusunderheader/
+  RED8th→instantcenter(validtargetonly). Final168/1218click336keys1050edits/
+  168modeLoops168VoiceReturns/504LFassets/44x44/text12.35focus5.86/unknown0/
+  text2x/errors-external-UIwrites-overflow0. Node1295/focused68/unit8/Python21/
+  exact10records/reverseLFBASE/15helpers12files673oldtestsChat/C0I0M0.
+  EvidenceR218-SUBDUB-REVIEW-EDIT-QA-20261024.json;READINESSnext,parentfinal/
+  Tester/deliveryopen. Nochildpush/merge/deploy/LIVE/motionclaim.
 - [x] Shell một trang/bốn tab, mode/query/keyboard và panel tại chỗ đã khóa bằng test presentation.
 - [~] Source đã có lựa chọn “đã có/chưa có phụ đề”, bộ chọn tệp và trạng thái source rõ ràng;
   upload/preview/metadata/progress/cancel/replace/error vẫn chờ capability máy chủ.

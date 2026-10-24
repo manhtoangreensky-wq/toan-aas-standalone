@@ -9051,6 +9051,45 @@ article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) :is(.por
   }
 }
 
+:root .portal-page.portal-subdub-hub .portal-subdub-review-edit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+:root .portal-page.portal-subdub-hub .portal-subdub-review-edit {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--portal-ink);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  text-decoration: underline;
+  cursor: pointer;
+}
+:root .portal-page.portal-subdub-hub .portal-subdub-review-edit:focus-visible {
+  outline: 2px solid var(--portal-ink);
+  outline-offset: 2px;
+}
+@media (max-width: 480px) {
+  :root .portal-page.portal-subdub-hub .portal-subdub-review-edit-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  :root .portal-page.portal-subdub-hub .portal-subdub-review-edit-row > .portal-summary-key,
+  :root .portal-page.portal-subdub-hub .portal-subdub-review-edit-row > .portal-summary-value {
+    grid-column: 1;
+    text-align: left;
+  }
+  :root .portal-page.portal-subdub-hub .portal-subdub-review-edit {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+
 /* Final light AI Chat Workspace surface */
 .portal-page:is(.portal-chat-workspace, .portal-chat-workspace-detail) :is(.portal-chat-workspace-create, .portal-chat-workspace-boundary, .portal-chat-workspace-filters, .portal-chat-context-card, .portal-chat-turn, .portal-chat-version-list > article, .portal-chat-event-list > div, .portal-chat-execution, .portal-chat-execution-layout > section, .portal-chat-run-card) {
   border-color: var(--portal-border);

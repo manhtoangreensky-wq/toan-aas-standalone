@@ -1,5 +1,28 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — E3: sửa trực tiếp từ bảng xem lại
+
+SourceEDIT cục bộ,chưa push/deploy: chỉ dòng cấu hình đang sửa được mới có
+nút Sửa; dòng tệp/ngôn ngữ nguồn còn khóa không có nút giả. Sửa đưa focus
+về đúng control ởmodeactive hoặc tabmode đang chọn,không đổi mode/URL/draft,
+không remount/gửirequest. Control được đưa tức thời vào giữa vùng nhìn thấy,
+tránh stickyheader;không thêm animation hoặc đổi motion. SourceCTA vẫnguarded.
+
+Runtime tìm và sửa thêm2lỗi trong cùngEDIT:blurISOchange vẽ lại reviewHTML
+khôngđổi làmxóa nút giữa mousedown/click;cache generatedHTML trênchínhregion
+giữnodekhinộidungkhôngđổi. Nativefocus đôi khi giữ SELECTdướiheader65px;
+optional instantcenter scroll chỉvalidtarget giúpnhìnthấycontrol. Không
+sửaauth/sessionbusiness/engine/provider. TestREDtrước mỗi sửa,giữoldtests.
+
+Finalsigned168:1218click/336EnterSpace/1050sửagiátrị+review/168modeLoops/
+168VoiceReturns;target44x44,textmin12.35155/focusmin5.86008/unknown0;
+2xgeometry/504LFassets/errors-external-UIwrites-overflow0. Node1295/focused68/
+unit8/PythonCSS21/sourceC0I0M0;15helpers12files673oldtestsChatunchanged.
+E607probe0mutation/clickgiữ;E60815actionsđềunhìnthấy ở320375390.
+Evidence `reports/audit/R218-SUBDUB-REVIEW-EDIT-QA-20261024.json` giữ failhistory,
+specamendments vàQAprovenance;server/DBtạm đãdọn. READINESS/finalE3/Tester/
+delivery cònmở;khônggọiUIEditPASS làupload/engine/quote/output/LIVE.
+
 ## 24/10/2026 — E3: nhóm giọng gọn, đủ bảy lựa chọn
 
 SourceGROUP cục bộ,chưa push/deploy: giữ mộtfieldset và bảy native radio;
