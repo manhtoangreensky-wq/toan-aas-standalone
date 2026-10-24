@@ -542,8 +542,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   own74Node/32portable1deselected;4raws+21IDs+8cases+672/674oldtestsverified.
   MinorSD15qualifierrestored/dedicatedtoggleUIgapSD-D4OPEN,notall21done.
   EvidenceR218-SUBDUB-FINAL-UI-QA-20261024.json/raw249be2cf…34782a.
-- [ ] SD-E3-DELIVERY:maincompat0e1b49b5SFX#663/2provenanceconflictsonly,
-  preserveSFX5files+UI4assets/Webonlyrefresh/ONEE3push/exactHEADCIreceipt.
+- [ ] SD-E3-DELIVERY:maincompat0e1b49b5SFX#663 nowsource2a925079;
+  exactSFX5files+UI4assetspreserved/Node1301/Python85pass1deselectedexternal0.
+  FinalsourceWebonlyrefresh/ONEE3push/exactHEADCIreceiptremain.
   Nochildpush/mergeintomain/deploy/LIVE. MotionLAST,goalACTIVE.
 - [ ] E3-HISTORICAL-LC-RUN-STATE:enhancedLCprobeVI-dark1440source-line-rule review mismatch;
   causeUNKNOWN,originalglobalstate/AXsnapshotnotcaptured. Stable-signed48

@@ -5,7 +5,7 @@
 PRODUCT=standaloneWebApp;BRANCH=webapp-r218-billing-ui-20261022;PR661;Issue664.
 PARENT_BASE=79cd75d3d8ee50685bbecd4056f7d84a79f8e68a.
 UI_SOURCE=26a966e25778229a0b76cfb045fa384d5d34b4eb.
-PUSH_GATE=PENDING_MAIN_PROVENANCE_COMPAT
+PUSH_GATE=DOCS_TESTER_MAIN_COMPAT_READY_FINAL_PROVENANCE_NEXT_GIT_GATE
 PUSH=NO;MERGE_TO_MAIN=NO;DEPLOY=NO;LIVE_PASS=NOT_TESTED.
 
 ## One cohesive E3 source batch
@@ -60,6 +60,28 @@ refresh+verify,exactmain5file/UI4assetcomparators andfreshlocalregressions.
 No rebase/forcepush/sourcefix/provider/wallet/production actionauthorizedbythisgate.
 Do notpush untilgeneratedevidence matchesmergedsource/Testeraccepted.
 
+ActualmaincompatSOURCE `2a9250793c55936083a5f26dfa368af82757d71d` nowcommitted:
+main5nonartifactfiles byte-exact andUI4assets byte-exact toacceptedcandidate;
+only2generatedartifactconflicts resolvedwith declaredintermediatemainversions,
+thenWeb-onlyrefresh oncleantrackedsource snapshot. NoSFXlogic authoredhere.
+FreshNode1301/0fail0skip/21992.9395ms. IsolatedPythoncombined85pass1deselected/
+2warnings/6.18s,exit0;externalconnectattempts0,36Windowslocalloopbackconnects.
+Syntax/compile8modules/diffexit0. Providers/productionDBnotused.
+
+QA history retained:initialnetworkguard blockedWindowsasyncio127.0.0.1selfpipe,
+15fail70pass1deselected20.96s beforeapprequests;QAguardcorrectedloopbackonly.
+Sandboxloopbackrerunthenhung;ownedexactwrapperPID19028 verified/nochildren,
+stoppedonlythatwrapper;terminal-1,ownedtempgti3r0myremovedafterabsolute-path/
+reparse checks. Approvedoutside-sandboxsameQA85pass;noapp/test/securitychange.
+LocalclonefirstMSYSsandboxAccessDenied;freshuniquelocalcloneoutsideapproved,
+Web-onlyrefresh+verifyexit0 atsource2a925079. NoBotread/import/provider.
+
+This report is a sourcecheckpoint document. Its own edit changes the audit
+fingerprint; aftercommittingcurrentdocs,regenerate2WebevidenceJSON fromclean
+finalsource andverify atfinaldeliveryHEAD BEFOREpush. Actualfingerprint livesin
+reports/migration/preflight.json andweb_inventory.json,notself-referentialhere.
+GitHubIssue664finalreceipt willrecordexactdeliveryHEAD/run/result separately.
+
 ## Runtime cleanup and truth boundaries
 
 Ownedbrowsers82556/37435/45772terminal0;QAserver48945newlineexit0.
@@ -73,7 +95,7 @@ GoalACTIVE;motionLAST. AfterallUIUX+motion,stopforOwnerbeforetechnicalT0.
 
 ## Final delivery evidence fields — populate from actual terminal only
 
-TESTER=SCOPED_LOCAL_ACCEPTED;MAIN_COMPAT=OPEN;PROVENANCE=OPEN;FINAL_HEAD=NOT_YET_CREATED.
+TESTER=SCOPED_LOCAL_ACCEPTED;MAIN_COMPAT=PASS;PROVENANCE=FINAL_SOURCE_REFRESH_REQUIRED;FINAL_HEAD=NOT_YET_CREATED.
 TESTER_DISPOSITION=ACCEPTED_LOCAL_ONLY_REPORT_SHA9b5f29a4aafd8f423d9eaf21a5d09a99466d7f4490509aebfe330d8b453e82b9;
 fresh74Node/32portable1deselected;runtime4rawindependentinspection,notnewbrowser.
 REMOTE_HEAD=79cd75d3d8ee50685bbecd4056f7d84a79f8e68a;CI_EXACT_HEAD=NOT_RUN.

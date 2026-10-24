@@ -10360,7 +10360,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1116,
+      "occurrences": 1132,
       "provider": "PayOS"
     },
     {
@@ -10444,11 +10444,31 @@
         "reports/audit/R218-CUSTOMER-UI-REALITY-QA-20261022.json",
         "reports/audit/R218-GLOBAL-STATUS-LABELS-QA-20261021.json",
         "reports/audit/R218-IMAGE-WORKSPACE-CONTINUITY-QA-20261021.json",
+        "reports/audit/R218-MUSIC-PRESENTATION-D1-QA-20261023.json",
+        "reports/audit/R218-MUSIC-PRESENTATION-D2-QA-20261023.json",
+        "reports/audit/R218-MUSIC-PRODUCT-READABILITY-E-QA-20261023.json",
+        "reports/audit/R218-MUSIC-SFX-INTERACTION-QA-20261023.json",
+        "reports/audit/R218-PR661-MAIN-COMPAT-QA-20261023.json",
+        "reports/audit/R218-SUBDUB-AUTHORING-READINESS-QA-20261024.json",
+        "reports/audit/R218-SUBDUB-EMPTY-REVIEW-QA-20261024.json",
+        "reports/audit/R218-SUBDUB-INPUT-FONT-QA-20261024.json",
+        "reports/audit/R218-SUBDUB-LABEL-CONTRAST-QA-20261024.json",
+        "reports/audit/R218-SUBDUB-MOBILE-RANGE-QA-20261024.json",
+        "reports/audit/R218-SUBDUB-REVIEW-EDIT-QA-20261024.json",
+        "reports/audit/R218-SUBDUB-VOICE-CLARITY-QA-20261024.json",
+        "reports/audit/R218-SUBDUB-VOICE-GROUPS-QA-20261024.json",
+        "reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json",
+        "reports/audit/R218-VOICE-DIRECTION-CLARITY-QA-20261023.json",
+        "reports/audit/R218-VOICE-METADATA-QA-20261023.json",
+        "reports/audit/R218-VOICE-VAULT-NOTICE-CLARITY-QA-20261023.json",
+        "reports/prepush/R218-20261023-MUSIC-PRODUCT-READABILITY-E.md",
+        "reports/prepush/R218-20261023-VOICE-AUDIT-DOCS.md",
+        "reports/prepush/R218-20261024-MUSIC-REQUEST-REVIEW-FH.md",
         "studio/script.js",
         "video.html",
         "video.py"
       ],
-      "occurrences": 19,
+      "occurrences": 44,
       "provider": "Gemini"
     },
     {
@@ -10582,7 +10602,7 @@
         "copyfast_music_sfx_library_bridge.py",
         "copyfast_notification_center.py"
       ],
-      "occurrences": 2022,
+      "occurrences": 2034,
       "provider": "Telegram"
     }
   ],
@@ -18401,39 +18421,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 328,
-  "source_files_scanned": 328,
-  "source_fingerprint_sha256": "7e2286c9b7b7a8bc5d6b15981d8f4421fb0af0b33651346bab7fdcccc59c5a72",
+  "source_files_discovered": 381,
+  "source_files_scanned": 381,
+  "source_fingerprint_sha256": "7f34393bf34fd6cb8b9474a489a9ebeb0465f815a1292874f14a39157727c528",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 35227,
+      "line": 35552,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35543,
+      "line": 35868,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34891,
+      "line": 35216,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35140,
+      "line": 35465,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34512,
+      "line": 34837,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34804,
+      "line": 35129,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -18648,7 +18668,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36663,
+      "line": 36988,
       "path": "/features"
     },
     {
