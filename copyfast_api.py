@@ -1953,7 +1953,7 @@ def _project_surface_data(
             "id", "profile_id", "display_name", "status", "is_default",
             "consent_status", "tts_ready", "preview_ready", "created_at",
             "updated_at", "deleted", "delivery_type", "media_type",
-            "filename", "preview_url", "download_ready", "delivery_mode", "content_type",
+            "filename", "download_ready", "delivery_mode", "content_type",
         )
         item_record = _project_record(raw_value, mutation_fields, text_limit=500)
         if isinstance(raw_value.get("profile"), dict):
@@ -6658,8 +6658,8 @@ async def voice_profile_preview(
     )
     async with httpx.AsyncClient(timeout=15.0, follow_redirects=False) as client:
         resp = await client.get(url, headers=headers)
-        if resp.status_code in (301, 302, 307, 308) and "location" in resp.headers:
-            return RedirectResponse(resp.headers["location"], status_code=307)
+        if resp.status_code in (301, 302, 307, 308):
+            raise HTTPException(status_code=502, detail="Chuyển hướng không được phép cho bản nghe thử")
         if resp.status_code >= 400:
             try:
                 err_payload = resp.json()

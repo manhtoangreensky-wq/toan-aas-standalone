@@ -58,9 +58,11 @@ class MockVoiceVaultState:
     def __init__(self):
         self.profiles: dict[int, dict] = {}
         self.next_id = 100
+        self.force_redirect = False
         self.reset()
 
     def reset(self):
+        self.force_redirect = False
         self.profiles = {
             1: {
                 "id": 1,
@@ -107,6 +109,81 @@ class MockVoiceVaultState:
                 "updated_at": "2026-10-24T10:10:00Z",
                 "deleted_at": None,
             },
+            4: {
+                "id": 4,
+                "user_id": "1001",
+                "display_name": "Giọng Loopback Unsafe",
+                "status": "active",
+                "is_default": 0,
+                "consent_status": "consented",
+                "preview_audio_ref": "http://127.0.0.1:8000/internal_secret.mp3",
+                "provider_voice_id": "pv_secret_mock_4",
+                "source_file_id": "file_src_4",
+                "source_file_ref": "",
+                "created_at": "2026-10-24T10:12:00Z",
+                "updated_at": "2026-10-24T10:12:00Z",
+                "deleted_at": None,
+            },
+            5: {
+                "id": 5,
+                "user_id": "1001",
+                "display_name": "Giọng Private IP Unsafe",
+                "status": "active",
+                "is_default": 0,
+                "consent_status": "consented",
+                "preview_audio_ref": "http://192.168.1.50/private.mp3",
+                "provider_voice_id": "pv_secret_mock_5",
+                "source_file_id": "file_src_5",
+                "source_file_ref": "",
+                "created_at": "2026-10-24T10:13:00Z",
+                "updated_at": "2026-10-24T10:13:00Z",
+                "deleted_at": None,
+            },
+            6: {
+                "id": 6,
+                "user_id": "1001",
+                "display_name": "Giọng Link Local Unsafe",
+                "status": "active",
+                "is_default": 0,
+                "consent_status": "consented",
+                "preview_audio_ref": "http://169.254.169.254/latest/meta-data/",
+                "provider_voice_id": "pv_secret_mock_6",
+                "source_file_id": "file_src_6",
+                "source_file_ref": "",
+                "created_at": "2026-10-24T10:14:00Z",
+                "updated_at": "2026-10-24T10:14:00Z",
+                "deleted_at": None,
+            },
+            7: {
+                "id": 7,
+                "user_id": "1001",
+                "display_name": "Giọng File Scheme Unsafe",
+                "status": "active",
+                "is_default": 0,
+                "consent_status": "consented",
+                "preview_audio_ref": "file:///etc/passwd",
+                "provider_voice_id": "pv_secret_mock_7",
+                "source_file_id": "file_src_7",
+                "source_file_ref": "",
+                "created_at": "2026-10-24T10:15:00Z",
+                "updated_at": "2026-10-24T10:15:00Z",
+                "deleted_at": None,
+            },
+            8: {
+                "id": 8,
+                "user_id": "1001",
+                "display_name": "Giọng Có Query Token Bí Mật",
+                "status": "active",
+                "is_default": 0,
+                "consent_status": "consented",
+                "preview_audio_ref": "https://cdn.toanaas.vn/voice8.mp3?token=SUPER_SECRET_QUERY_TOKEN&sig=abc123secret",
+                "provider_voice_id": "pv_secret_mock_8",
+                "source_file_id": "file_src_8",
+                "source_file_ref": "",
+                "created_at": "2026-10-24T10:16:00Z",
+                "updated_at": "2026-10-24T10:16:00Z",
+                "deleted_at": None,
+            },
             99: {
                 "id": 99,
                 "user_id": "9999",
@@ -123,6 +200,29 @@ class MockVoiceVaultState:
                 "deleted_at": None,
             },
         }
+
+    @staticmethod
+    def _validate_safe_remote_url(url: str) -> bool:
+        try:
+            parsed = urllib.parse.urlsplit(url)
+            if parsed.scheme.lower() not in ("http", "https"):
+                return False
+            hostname = parsed.hostname
+            if not hostname:
+                return False
+            hostname = hostname.lower()
+            if hostname in ("localhost", "127.0.0.1", "::1"):
+                return False
+            import ipaddress
+            try:
+                ip = ipaddress.ip_address(hostname)
+                if ip.is_loopback or ip.is_private or ip.is_link_local or ip.is_reserved:
+                    return False
+            except ValueError:
+                pass
+            return True
+        except Exception:
+            return False
 
     def _sanitize(self, p: dict) -> dict:
         return {
@@ -210,21 +310,18 @@ class MockVoiceVaultState:
                 if profile["status"] not in ("active", "ready") or not profile.get("preview_audio_ref"):
                     return 400, {"ok": False, "error_code": "PREVIEW_NOT_READY", "message": "Bản nghe thử chưa sẵn sàng"}
                 ref = profile["preview_audio_ref"]
-                if ref.startswith("http://") or ref.startswith("https://"):
-                    return 200, {
-                        "ok": True,
-                        "profile_id": pid,
-                        "display_name": profile["display_name"],
-                        "delivery_mode": "url",
-                        "preview_url": ref,
-                        "content_type": "audio/mpeg",
-                    }
+                is_remote = ref.startswith(("http://", "https://")) or "://" in ref
+                if is_remote:
+                    if not self._validate_safe_remote_url(ref):
+                        return 400, {"ok": False, "error_code": "PREVIEW_NOT_READY", "message": "Bản nghe thử không khả dụng hoặc địa chỉ không an toàn"}
+                # Safe preview metadata: NO preview_url, NO token, NO path
                 return 200, {
                     "ok": True,
                     "profile_id": pid,
                     "display_name": profile["display_name"],
-                    "delivery_mode": "file",
+                    "delivery_mode": "remote" if is_remote else "file",
                     "content_type": "audio/mpeg",
+                    "download_ready": True,
                 }
 
         return 404, {"ok": False, "error_code": "NOT_FOUND", "message": "Not found"}
@@ -294,10 +391,13 @@ def setup_test_env(monkeypatch):
             if status_code >= 400:
                 return MockHttpxResponse(status_code, json.dumps(resp_data).encode("utf-8"), {"content-type": "application/json"})
 
-            if resp_data.get("delivery_mode") == "url":
-                return MockHttpxResponse(307, b"", {"location": resp_data["preview_url"]})
+            if vault_state.force_redirect:
+                return MockHttpxResponse(307, b"", {"location": "https://cdn.toanaas.vn/rogue_redirect.mp3"})
 
-            # file mode: return audio bytes
+            if query.get("mode") == ["meta"]:
+                return MockHttpxResponse(200, json.dumps(resp_data).encode("utf-8"), {"content-type": "application/json"})
+
+            # file or remote safe stream mode: return audio bytes
             audio_bytes = b"\xFF\xFB\x90\x44" + b"\x00" * 256
             disp = "attachment" if download else "inline"
             return MockHttpxResponse(
@@ -522,7 +622,7 @@ def test_preview_delivery_stream_and_download():
 
 
 def test_preview_delivery_meta_mode():
-    """Verify mode=meta returns clean JSON envelope with safe delivery metadata."""
+    """Verify mode=meta returns clean JSON envelope with safe delivery metadata and ZERO raw URLs."""
     client, _ = _create_test_account(canonical_user_id="1001")
     resp = client.get("/api/v1/voice/profiles/1/preview?mode=meta")
     assert resp.status_code == 200
@@ -532,19 +632,80 @@ def test_preview_delivery_meta_mode():
     assert data.get("profile_id") == 1
     assert data["delivery_mode"] == "file"
     assert data["content_type"] == "audio/mpeg"
+    assert data["download_ready"] is True
+    # Invariant: RAW_PREVIEW_URL_META_EXPOSURE = NO
+    assert "preview_url" not in data
+    assert "preview_audio_ref" not in data
+    assert "raw_url" not in data
 
 
-def test_preview_delivery_url_redirect():
-    """Verify preview with external URL issues 307 redirect."""
+def test_preview_delivery_remote_safe_stream():
+    """Verify preview with safe remote URL streams audio directly instead of redirecting browser."""
     client, _ = _create_test_account(canonical_user_id="1001")
+    # Profile 3 has safe remote URL: https://cdn.toanaas.vn/preview_voice_3.mp3
     resp = client.get("/api/v1/voice/profiles/3/preview", follow_redirects=False)
-    assert resp.status_code == 307
-    assert resp.headers["location"] == "https://cdn.toanaas.vn/preview_voice_3.mp3"
+    # Invariant: RAW_PREVIEW_URL_BROWSER_EXPOSURE = NO (200 OK stream, NOT 307 redirect)
+    assert resp.status_code == 200
+    assert resp.headers["content-type"] == "audio/mpeg"
+    assert len(resp.content) > 0
+    assert "location" not in resp.headers
+
+
+def test_preview_redirect_strictly_blocked():
+    """Verify Web refuses 300-level redirects from Bot and returns 502 fail-closed."""
+    client, _ = _create_test_account(canonical_user_id="1001")
+    vault_state.force_redirect = True
+    try:
+        resp = client.get("/api/v1/voice/profiles/3/preview", follow_redirects=False)
+        assert resp.status_code == 502
+        body = resp.json()
+        assert "Chuyển hướng không được phép" in (body.get("message") or body.get("detail", ""))
+    finally:
+        vault_state.force_redirect = False
+
+
+def test_remote_preview_url_safety_and_no_token_leak():
+    """Verify SSRF protection guards and zero leak of signed query tokens or source URLs."""
+    client, _ = _create_test_account(canonical_user_id="1001")
+
+    # 1. LOOPBACK_URL_BLOCKED (Profile 4: 127.0.0.1)
+    resp_loopback = client.get("/api/v1/voice/profiles/4/preview")
+    assert resp_loopback.status_code == 400
+    assert resp_loopback.json()["error_code"] == "PREVIEW_NOT_READY"
+
+    # 2. PRIVATE_IP_URL_BLOCKED (Profile 5: 192.168.1.50)
+    resp_private_ip = client.get("/api/v1/voice/profiles/5/preview")
+    assert resp_private_ip.status_code == 400
+    assert resp_private_ip.json()["error_code"] == "PREVIEW_NOT_READY"
+
+    # 3. LINK_LOCAL_URL_BLOCKED (Profile 6: 169.254.169.254)
+    resp_link_local = client.get("/api/v1/voice/profiles/6/preview")
+    assert resp_link_local.status_code == 400
+    assert resp_link_local.json()["error_code"] == "PREVIEW_NOT_READY"
+
+    # 4. UNSAFE_SCHEME_BLOCKED (Profile 7: file://)
+    resp_scheme = client.get("/api/v1/voice/profiles/7/preview")
+    assert resp_scheme.status_code == 400
+    assert resp_scheme.json()["error_code"] == "PREVIEW_NOT_READY"
+
+    # 5. SIGNED_QUERY_TOKEN_NOT_LEAKED (Profile 8 has secret token & signature)
+    resp_meta8 = client.get("/api/v1/voice/profiles/8/preview?mode=meta")
+    assert resp_meta8.status_code == 200
+    assert "SUPER_SECRET_QUERY_TOKEN" not in resp_meta8.text
+    assert "abc123secret" not in resp_meta8.text
+
+    resp_stream8 = client.get("/api/v1/voice/profiles/8/preview")
+    assert resp_stream8.status_code == 200
+    assert "SUPER_SECRET_QUERY_TOKEN" not in str(resp_stream8.headers)
+
+    # 6. RAW_SOURCE_URL_NOT_LEAKED
+    assert "voice8.mp3" not in resp_meta8.text
+    assert "cdn.toanaas.vn" not in resp_meta8.text
 
 
 def test_preview_delivery_not_ready_and_foreign_blocked():
-    """Verify unready preview returns 400 and foreign preview returns 404."""
-    client, _ = _create_test_account(canonical_user_id="1001")
+    """Verify unready preview returns 400, foreign returns 404, and deleted returns 404."""
+    client, csrf = _create_test_account(canonical_user_id="1001")
 
     # Not ready preview (profile 2 has no preview artifact)
     resp_nr = client.get("/api/v1/voice/profiles/2/preview")
@@ -555,6 +716,13 @@ def test_preview_delivery_not_ready_and_foreign_blocked():
     resp_foreign = client.get("/api/v1/voice/profiles/99/preview")
     assert resp_foreign.status_code == 404
     assert resp_foreign.json()["error_code"] == "PROFILE_NOT_FOUND"
+
+    # Soft deleted profile (DELETED_PREVIEW_BLOCKED)
+    del_resp = client.delete("/api/v1/voice/profiles/1", headers={"X-CSRF-Token": csrf})
+    assert del_resp.status_code == 200
+    resp_del_prev = client.get("/api/v1/voice/profiles/1/preview")
+    assert resp_del_prev.status_code == 404
+    assert resp_del_prev.json()["error_code"] == "PROFILE_NOT_FOUND"
 
 
 # ─── 6. NO_PRIVATE_METADATA_LEAK ─────────────────────────────────────────────
