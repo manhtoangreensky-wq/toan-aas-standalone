@@ -26315,6 +26315,7 @@
       heroKicker: "Trung tâm Phụ đề & Lồng tiếng",
       heroTitle: "Hành trình phụ đề & lồng tiếng thông minh",
       heroSubtitle: "Chọn phụ đề, lồng tiếng hoặc kết hợp cả hai. Thiết lập và xem kết quả trong cùng một màn hình.",
+      authoringSessionPending: "Thiết lập mở sau khi phiên đăng nhập được xác nhận.",
       modeSelectorLabel: "Bạn muốn tạo gì?",
       audioOriginalLabel: "Âm lượng âm thanh gốc",
       audioDubbingLabel: "Âm lượng giọng lồng tiếng",
@@ -26510,6 +26511,7 @@
       heroKicker: "Subtitles & Dubbing Center",
       heroTitle: "Intelligent Subtitle & Dubbing Journey",
       heroSubtitle: "Choose subtitles, dubbing, or both. Set up your output and view results in one place.",
+      authoringSessionPending: "Settings open after your sign-in session is confirmed.",
       modeSelectorLabel: "What do you want to create?",
       audioOriginalLabel: "Original audio level",
       audioDubbingLabel: "Dubbed voice level",
@@ -26705,6 +26707,7 @@
       heroKicker: "字幕与配音",
       heroTitle: "字幕与配音，一站式处理",
       heroSubtitle: "选择所需的处理方式，设置输出选项，并在同一页面查看真实任务报告。",
+      authoringSessionPending: "登录状态确认后即可编辑设置。",
       modeSelectorLabel: "选择需要的处理方式",
       audioOriginalLabel: "原始音频音量",
       audioDubbingLabel: "配音音量",
@@ -27161,7 +27164,7 @@
     const selected = root.querySelector('[data-subdub-mode-select][aria-selected="true"]');
     const mode = nextMode || selected && selected.getAttribute("data-subdub-mode-select");
     if (!Object.hasOwn(SUBDUB_PRODUCT_MODES, mode)) return false;
-    const nextHtml = renderSubDubSettingsRows(subDubDraftSnapshot(), mode, root.getAttribute("lang"));
+    const nextHtml = subDubAuthoringMarkup(renderSubDubSettingsRows(subDubDraftSnapshot(), mode, root.getAttribute("lang")), root.dataset?.subdubAuthoringReady === "true");
     if (container.__subDubSettingsRowsHtml === nextHtml) return true;
     container.innerHTML = nextHtml;
     container.__subDubSettingsRowsHtml = nextHtml;
@@ -27286,9 +27289,20 @@
     return true;
   }
 
+  function subDubAuthoringMarkup(html, ready) {
+    if (ready === true) return html;
+    return html.replace(/<(?:button|input|select|textarea)\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi, (tag) => {
+      const attributes = tag.replace(/"[^"]*"|'[^']*'/g, "");
+      return /\sdisabled(?:\s|=|\/?>)/i.test(attributes) ? tag : tag.replace(/^<([a-z]+)/i, "<$1 disabled");
+    });
+  }
+
   function renderSubDubHub(page, context) {
     const locale = resolveSubDubLocale(context);
     const copy = SUBDUB_PRESENTATION_COPY[locale] || SUBDUB_PRESENTATION_COPY.vi;
+    const session = context && context.session;
+    const authoringReady = Boolean(session && session.authenticated === true
+      && typeof session.csrfToken === "string" && session.csrfToken.length > 0);
     const draft = subDubDraftSnapshot();
 
     const currentModeKey = resolveSubDubJourneyMode(context);
@@ -27658,8 +27672,9 @@
       </div>
     </section>`;
 
-    const rendered = `<article class="portal-page portal-subdub-hub portal-subdub-journey-view" lang="${safeText(locale)}">
+    const rendered = `<article class="portal-page portal-subdub-hub portal-subdub-journey-view" lang="${safeText(locale)}" data-subdub-authoring-ready="${authoringReady ? "true" : "false"}">
       ${renderHero({ ...page, description: copy.heroSubtitle }, context)}
+      ${authoringReady ? "" : `<p class="portal-form-note" role="status" data-subdub-authoring-session-status>${safeText(copy.authoringSessionPending)}</p>`}
       <section class="portal-subdub-mode-picker" aria-labelledby="subdub-mode-picker-title">
         <h2 class="portal-card-title" id="subdub-mode-picker-title">${safeText(copy.modeSelectorLabel)}</h2>
       <nav class="portal-subdub-mode-nav" role="tablist" aria-orientation="horizontal" aria-label="${safeText(copy.modeSelectorLabel)}">
@@ -27672,7 +27687,7 @@
       ${stage4Html}
       ${companionToolsHtml}
     </article>`;
-    return rendered;
+    return subDubAuthoringMarkup(rendered, authoringReady);
   }
 
   function renderDocumentHub(page, context) {

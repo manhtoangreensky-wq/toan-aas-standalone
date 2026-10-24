@@ -1,12 +1,12 @@
 task_id: WEBAPP-BOT-PARITY-R218
 phase: VERIFY
-status: SUBDUB_E3_EDIT_LOCAL_PASS_READINESS_NEXT
+status: SUBDUB_E3_READINESS_LOCAL_GATES_PASS_CHECKPOINT_RECEIPT_PENDING
 date: 2026-10-24
 scope: "Toàn bộ sản phẩm WebApp: UI/UX/locale/responsive/a11y; motion cuối."
 scope_order: "plan -> WIP #653/#654 -> shared -> Voice -> Music -> SubDub -> Image -> utilities -> Admin -> Video -> QA -> motion -> report/wait"
 branch: webapp-r218-billing-ui-20261022
 pull_request: 661
-head_sha: c5f09f2ee68e822ea56e2c4cb652731405e48753
+head_sha: 7e35f0ab78a32b2d4d7bffc7536a4dd381c21151
 checkpoint_music_mu07_a_20261024:
   base_sha: 520174941470fab34c60c26e62607ba2d4b3568f
   phase: REPORT
@@ -162,6 +162,34 @@ checkpoint_subdub_e3_edit_20261024:
   evidence: reports/audit/R218-SUBDUB-REVIEW-EDIT-QA-20261024.json
   cleanup: "Browser83515terminal0/server68259newlineexit0/temp_o5vqiwjxremoved/listener57350=0;ownedstuckR2AGYonlystoppedafteridentitycheck,parent14748worker15752bothabsent. Othersuntouched."
   next: "SaveEDITcheckpoint/receipt thenformalREADINESSaudit retainedC3AX/LCearlyinputUNKNOWN;parentfinal168/Tester/docs/provenance/oneE3pushCI. MotionLAST,goalACTIVE,noengineLIVEclaim."
+checkpoint_subdub_e3_readiness_read_20261024:
+  base_sha: 7e35f0ab78a32b2d4d7bffc7536a4dd381c21151
+  phase: READ
+  status: READ_COMPLETE_CURRENT_UI_DEFECT_OPEN_NOT_ACCEPTED
+  contract: "Issue664#6382724646/READfinding6382804310;spec2026-10-24-r218-subdub-readiness-investigation.md. NoRDYproductionedits."
+  source: "Publicshellnosession/CSRF;SubDubcontrolseditbeforeauth;capturerequiresdraftsession;summaryreadsdefaults;integrationawaitrealme/otherGETthenremount. Secureidentityclearfenceprotected."
+  verify: "Collection72=36held-realmeearly+36matchedstable/4modesVIENZHdark3908441440/288LFassets/errors-external-UIwrites0. Early36reviewmismatch/27changedcontrols/stable0mismatch0loss/noteAX0mismatch. Collectionexit0NOTUXPASS."
+  raw_sha256: 47d1070c69e0fd57bc3f922d2ef0c11ba89945d47b1345663e43723c53ff3685
+  current_finding: "E3-RDY-EARLY-AUTHORINGImportant:enabledUIbeforecaptureSessionready. UIreadinessfixrequired;donotretainanonymousdraftsacrossaccounts orchangeauthpolicy."
+  historical: "C3AXnotreproducedcauseUNKNOWN;LCsamefreshsymptomVI-dark1440proved butexactoriginalrunstateunknown. No retroactive diagnosis/closure."
+  evidence: reports/audit/R218-SUBDUB-READINESS-READ-QA-20261024.json
+  runtime: "OwnedQAserver48945/origin52156/temp0vfy_b36stillrunningfornextQA;browser60432terminal0. Provider/PayOS/bridgeOFF."
+  next: "Independentread-onlyevidence/source/designreviewthenboundedUI-onlyREADINESSfixcontract/newunitRED/Flash3.8R1first. Allproduction/oldtests/auth/motionlockedbeforecontract. Parentfinal/Tester/docs/provenance/ONEE3pushCIopen."
+checkpoint_subdub_e3_readiness_fix_20261024:
+  base_sha: 7e35f0ab78a32b2d4d7bffc7536a4dd381c21151
+  phase: REPORT
+  status: LOCAL_R711_R715_PASS_CHECKPOINT_RECEIPT_PENDING_NOT_PUSHED
+  contract: "Issue664#6382914858/spec2026-10-24-r218-subdub-authoring-readiness.md. No anonymousdraftadoption; nativeauthoringgatedtosigneddraftreadinessonly."
+  handoff: "FlashR1source8accepted/newunit6harnessfail;R2newtestonly1pass1assert4harness. NoR3. SameSolxhighrepairednewtestonly;source8R1frozenSHA46b97b444b32b5d33decbe00ab1fd469a24ad1bc0205ef4756d969a3d8596c53."
+  scope: "3copykeys/purequote-awareSubDubformmarkuphelper/genuinesessionpredicate/articleflag/oneinlinependingstatus/summarywrapper. NoCSS/authbusiness/sessioncapture-clear/integration/backend/engine/wallet/motionchange."
+  red_green: "Actualtestonly0pass6expectedassert0harness189.1968ms thenexact8source;GREEN6/435.8412ms. NativeRED12all12enabledpreauth preserved. Firstpatchattemptatomicallyrejectedunorderedhunks;sourceunchanged/sortedidenticalrecordsthenapply."
+  tests: "Focused74/926.7807ms/fullNode1301pass0fail0skip15.7318125s/PythonCSS21pass1existingwarning0.73s/syntaxcompile6diff0. FullpytestNOT_RUN/T0unchanged."
+  browser: "Native72=36held-realmeearly+36stable/36ordinaryclickTabattemptsblocked/earlyenabled0/readycoherent72/modeLoops72/288LFassets;pending12VIENZHlightdark3901440visibleAX/readyabsent/minAA11.772481unknown0. Final168/1218click336keyboard1050edits168modeLoops168VoiceReturns504LFassets/44x44/text12.35155focus5.86008unknown0/errors-external-UIwrites-overflow0."
+  review: "Independentsource+newunit+runtimeC0I0M0/exact8records/reverseLFBASE/17wholehelpers14files674oldtestpathsChat/E607unchanged/all3rawhashesuniqueCartesian72-12-168. Pending12noownassethashes,notextra12assetclaim."
+  evidence: reports/audit/R218-SUBDUB-AUTHORING-READINESS-QA-20261024.json
+  historical: "CurrentearlyauthoringdefectresolvedbyUIreadinessgate;originalC3AXcauseUNKNOWN/U2originalLCrunstateUNKNOWN. READ36mismatch27changednot36loss."
+  runtime: "Browsers82556/37435terminal0;ownedserver48945/52156retainedforparentQA. SandboxvirtualTempENOENTresolvedbyapprovedheadlessoutsidecommand,nosettings/security/window/IDEchanges."
+  next: "Localcheckpoint/Issue receipt thenparentfinalSD01..21audit168/Tester/currentdocs/comparison/provenance/oneE3push/exactHEADCI. Nochildpush/merge/deploy/LIVE. MotionLAST/goalACTIVE."
 checkpoint_music_fh_20261024:
   base_sha: 1e01f2417e3000a09c45186e11ee144e52a22fa5
   result: DELIVERED_CI_GREEN_NO_DEPLOY
@@ -824,7 +852,7 @@ image_presentation: "IM-A2 accepted locally: focused59/59, full Node894/894, bro
 owner_supervision_workflow: "Owner2026-10-21: Antigravity implements, Codex delegates/observes/independently verifies. Primary may directly fix only after same AC fails two Antigravity implementation rounds. Model gemini-3.8-flash-high only; background, no new IDE/login/logout/settings change."
 global_status_labels: "Q0-UI-LABELS delivery accepted on PR654 HEAD1273b0a after CI run39642058056. Worker Gemini3.8Flash round1 validPATCH from stdout exec71605 exit0; CSS14lines applied verbatim, hunk marker normalized only. Supervisor CSS8/8, signed120 visualstates failures/UIwrite/external/overflow0, Image24/24 failures/page/console/UIwrites/external0, Node891/891. CSP60 from ToolsFree baseline; matched baseline13eb5a1=5/candidate=5,0new; UT-CSP-EMPTY-THUMB queued Utilities. No settings/auth change. Evidence R218-GLOBAL-STATUS-LABELS-QA-20261021.json."
 image_pending_worker: "IM-A2 worker round1 terminal; code failures0. Stdout TEST_PATCH+IMPLEMENTATION_PATCH+9-section report was independently reviewed and applied within the allowlist. No further Antigravity round required."
-next_action: "E3EDITLOCALacceptedfinal168/1218click336keys1050edits168VoiceReturns/Node1295/Python21/exact10recordsC0I0M0/E607E608actualREDGREEN. SaveEDITreceipt thenformalREADINESSaudit originalC3AX/LCearlyinputUNKNOWN,notclosedfromrerun. Parentfinal168/Tester/docs/provenance/oneE3pushCIremain. Nochildpush/merge/deploy,motionLAST,goalACTIVE."
+next_action: "E3READINESS actualRED6assert→GREEN6/focused74/fullNode1301/Python21/native72/pending12/final168/source+runtimeC0I0M0. Finalizelocalcheckpoint/Issue receipt thenparentSD01..21finalaudit/Tester/docs/comparison/provenance/ONEE3push/exactHEADCI. Preserveidentityfences/originalAXUNKNOWN;motionLAST/goalACTIVE."
 active_billing_batch:
   id: R218-BILLING-20261022
   issue: https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/660

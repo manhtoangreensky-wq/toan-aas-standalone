@@ -548,6 +548,12 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   causeUNKNOWN,originalglobalstate/AXsnapshotnotcaptured. Stable-signed48
   passesafteractualauthbootstrapwait,notrootcausefix;keepownearly-input/
   hydration/draftcontractbeforefullE3close. No authbusinessmutation.
+  READcontract6382724646/finding6382804310 nowactual72scenarios:36held-realme
+  early/36stable,early36reviewmismatch27changedcontrols/stable0mismatch0loss,
+  noteAX0/errors-external-UIwrites0/288LFassets. CurrentE3-RDY-EARLY-AUTHORING
+  ImportantneedsUIreadinessfixcontractbeforecode;secureidentityfencesprotected.
+  C3AXnotreproducedcauseUNKNOWN;LCsamefreshsymptomproved/originalrununknown.
+  EvidenceR218-SUBDUB-READINESS-READ-QA-20261024.json;collection0NOTUXPASS.
 - [x] E3-RANGE scopedLOCAL:contract6380830198/BASE6da9b14a/oneFlashR1CSSblock;
   RED12phone+24desktop→GREEN72/phone48min200x44/desktop24geometryexact;
   main144VoiceReturns+supplement24scenarios48modeRoundTrips48VoiceReturns,
@@ -567,6 +573,16 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   visiblecontrols0. IndependentsupplementC0I0M0. EDITnext/READINESS/final168/
   Tester/deliveryopen;nochildpush/LIVE/motionclaim. Evidence
   `reports/audit/R218-SUBDUB-VOICE-GROUPS-QA-20261024.json`.
+- [~] E3-READINESS UI-only local gates passed;checkpoint/receipt finalizing.
+  Contract6382914858;FlashR1/R2unitgatefail→sameSolxhighnewtestonly/noR3;
+  exact8R1sourcefrozen. ActualRED6assert0harness→GREEN6/focused74/Node1301/
+  Python21;native72/36earlyordinaryattemptsblocked/readycoherent72/288LFassets;
+  pending12visibleAX/readyabsent/minAA11.772481unknown0;final168/1218clicks/
+  336keys1050edits168modeLoops168VoiceReturns504assets/44x44/errors0.
+  Independentsource/runtimeC0I0M0/17helpers14files674oldtestsChat unchanged.
+  EvidenceR218-SUBDUB-AUTHORING-READINESS-QA-20261024.json. HistoricalU1cause
+  UNKNOWN/U2originalrunstateUNKNOWN remain;currentearlyauthoringdefectfixed,
+  notall36READcaseslostinput. Parent/Tester/onepushCI/LIVE/motion stillopen.
 - [x] E3-EDIT scopedLOCAL:contract6381974676/amendments6382042415/6382437256/
   6382548623;initialRED24/newunit6assertRED→exact8Solrecords. R1routing/unitgate
   fail,R2invalidinnerJSON;noinvalidhandoffas-is/noR3,7R1recordsfrozen. Actual
