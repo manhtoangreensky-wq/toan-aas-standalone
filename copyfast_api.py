@@ -671,6 +671,15 @@ _PUBLIC_BRIDGE_ERROR_CODES = frozenset({
     "CORE_BRIDGE_INVALID_RESPONSE",
     "WALLET_LEDGER_UNRECONCILED", "BOT_USER_NOT_INITIALIZED", "ACCOUNT_TELEGRAM_UNLINKED",
     "WALLET_DATABASE_UNAVAILABLE", "PRICING_CATALOG_UNAVAILABLE", "PACKAGES_CATALOG_UNAVAILABLE",
+    "PROFILE_NOT_FOUND", "VOICE_PROFILE_NOT_FOUND", "VOICE_PROFILE_NOT_READY",
+    "VOICE_PROFILE_INVALID_NAME", "PREVIEW_NOT_READY", "PREVIEW_MISSING_ARTIFACT",
+    "RATE_INVALID_INPUT", "RATE_SOURCE_UNAVAILABLE",
+    "WEATHER_INVALID_LOCATION", "WEATHER_SOURCE_ERROR", "WEATHER_EMPTY_RESULT",
+    "AVATAR_RIGHTS_REQUIRED", "AVATAR_INVALID_SEED", "AVATAR_UNSAFE_URL_BLOCKED", "AVATAR_SOURCE_ERROR",
+    "DOWNLOADER_RIGHTS_REQUIRED", "DOWNLOADER_INVALID_URL",
+    "DOWNLOADER_UNSUPPORTED_OR_PRIVATE_URL_BLOCKED", "DOWNLOADER_PROVIDER_DISABLED_FAIL_CLOSED",
+    "DOWNLOADER_SUSPICIOUS_RESULT_BLOCKED", "DOWNLOADER_JOB_NOT_FOUND",
+    "DOWNLOADER_FOREIGN_OWNER_BLOCKED", "DOWNLOADER_STALE_ARTIFACT_TRUTH",
 })
 ADMIN_BRIDGE_MODULES = frozenset({
     "overview", "summary", "users", "user", "wallet", "payments", "topups", "revenue", "refunds",
@@ -682,6 +691,8 @@ ADMIN_BRIDGE_MODULE_ALIASES = {"backup": "backups", "export": "reports"}
 _ACTORLESS_CATALOG_PATHS = frozenset({
     "/internal/v1/pricing",
     "/internal/v1/packages",
+    "/internal/v1/free-tools/rate",
+    "/internal/v1/free-tools/weather",
 })
 
 
@@ -1945,7 +1956,39 @@ def _project_surface_data(
         return {"items": _project_items(value.get("items"), fields)} if isinstance(value.get("items"), list) else _project_record(value, fields)
     if surface == "voice":
         fields = ("id", "display_name", "status", "is_default", "consent_status", "tts_ready", "preview_ready", "created_at", "updated_at")
-        return {"items": _project_items(value.get("items"), fields)}
+        if isinstance(value.get("items"), list):
+            return {"items": _project_items(value.get("items"), fields)}
+        mutation_fields = (
+            "id", "profile_id", "display_name", "status", "is_default",
+            "consent_status", "tts_ready", "preview_ready", "created_at",
+            "updated_at", "deleted", "delivery_type", "media_type",
+            "filename", "download_ready", "delivery_mode", "content_type",
+        )
+        item_record = _project_record(raw_value, mutation_fields, text_limit=500)
+        if isinstance(raw_value.get("profile"), dict):
+            item_record["profile"] = _project_record(raw_value["profile"], fields)
+        return item_record
+    if surface == "free_tools":
+        free_tools_fields = (
+            # Rate fields
+            "raw_input", "target_lang", "text", "amount_in", "currency_in",
+            "currency_in_name", "target_currency", "target_converted",
+            "target_currency_name", "usd", "vnd", "xu", "cny", "hkd", "eur",
+            "jpy", "rate_usd_vnd",
+            # Weather fields
+            "location", "report", "city", "country", "temperature",
+            "windspeed", "weathercode", "description", "unit",
+            # Avatar fields
+            "avatar_url", "seed", "avatar_set", "style",
+            # Downloader fields
+            "job_id", "platform", "kind", "title", "duration", "duration_seconds",
+            "bytes", "status", "charged_xu", "xu_charged", "refund_issued",
+            "rights_notice", "delivery_ready", "delivery_url", "download_url",
+            "url", "asset_type",
+            # Common safe fields
+            "source", "content_type",
+        )
+        return _project_record(raw_value, free_tools_fields, text_limit=2000)
     if surface == "tickets":
         fields = ("id", "category", "related_tool", "subject", "status", "created_at", "updated_at")
         return {"items": _project_items(value.get("items"), fields)}
@@ -2664,6 +2707,11 @@ class TicketRequest(BaseModel):
     idempotency_key: str = Field(min_length=12, max_length=160)
 
 
+class VoiceProfileRenameRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    display_name: str = Field(min_length=2, max_length=80)
+
+
 def _campaign_text(value: Any, *, label: str, minimum: int, maximum: int, allow_empty: bool = False) -> str:
     """Normalize human planning text without turning it into HTML or an audit payload."""
     text = re.sub(r"\s+", " ", str(value or "")).strip()
@@ -3353,7 +3401,7 @@ def _bridge_surface(path: str) -> str:
         if normalized.endswith("/download"):
             return "delivery"
         return "asset"
-    if normalized == "/internal/v1/voice/profiles":
+    if normalized == "/internal/v1/voice/profiles" or normalized.startswith("/internal/v1/voice/profiles/"):
         return "voice"
     if normalized == "/internal/v1/support/tickets":
         return "tickets"
@@ -3371,6 +3419,8 @@ def _bridge_surface(path: str) -> str:
         return "admin"
     if normalized == "/internal/v1/uploads":
         return "upload"
+    if normalized.startswith("/internal/v1/free-tools/"):
+        return "free_tools"
     return "generic"
 
 
@@ -6550,6 +6600,111 @@ async def asset_download(asset_id: str, request: Request, account: dict = Depend
 @router.get("/voice/profiles")
 async def voice_profiles(request: Request, account: dict = Depends(require_account)):
     return await _bridge("GET", "/internal/v1/voice/profiles", account=account, request=request)
+
+
+@router.patch("/voice/profiles/{profile_id}")
+async def voice_profile_rename(
+    profile_id: int,
+    payload: VoiceProfileRenameRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if profile_id <= 0:
+        raise HTTPException(status_code=422, detail="profile_id không hợp lệ")
+    return await _bridge(
+        "PATCH",
+        f"/internal/v1/voice/profiles/{profile_id}",
+        account=account,
+        request=request,
+        payload={"display_name": payload.display_name},
+    )
+
+
+@router.post("/voice/profiles/{profile_id}/default")
+async def voice_profile_set_default(
+    profile_id: int,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if profile_id <= 0:
+        raise HTTPException(status_code=422, detail="profile_id không hợp lệ")
+    return await _bridge(
+        "POST",
+        f"/internal/v1/voice/profiles/{profile_id}/default",
+        account=account,
+        request=request,
+    )
+
+
+@router.delete("/voice/profiles/{profile_id}")
+async def voice_profile_delete(
+    profile_id: int,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if profile_id <= 0:
+        raise HTTPException(status_code=422, detail="profile_id không hợp lệ")
+    return await _bridge(
+        "DELETE",
+        f"/internal/v1/voice/profiles/{profile_id}",
+        account=account,
+        request=request,
+    )
+
+
+@router.get("/voice/profiles/{profile_id}/preview")
+async def voice_profile_preview(
+    profile_id: int,
+    request: Request,
+    download: bool = False,
+    mode: str = "stream",
+    account: dict = Depends(require_account),
+):
+    if profile_id <= 0:
+        raise HTTPException(status_code=422, detail="profile_id không hợp lệ")
+    if mode == "meta":
+        params = {"mode": "meta", "download": "1" if download else "0"}
+        return await _bridge(
+            "GET",
+            f"/internal/v1/voice/profiles/{profile_id}/preview",
+            account=account,
+            request=request,
+            params=params,
+        )
+    user_id = _linked(account)
+    if not bridge_configured():
+        raise HTTPException(status_code=503, detail="Core Bridge chưa được cấu hình")
+    from copyfast_bridge import CoreBridgeClient
+    import httpx
+    import urllib.parse
+    bridge = CoreBridgeClient()
+    params = {"download": "1" if download else "0"}
+    query_str = urllib.parse.urlencode({"user_id": user_id, **params})
+    url = f"{bridge.base_url}/internal/v1/voice/profiles/{profile_id}/preview?{query_str}"
+    headers = bridge._headers(
+        "GET",
+        f"/internal/v1/voice/profiles/{profile_id}/preview",
+        b"",
+        request_id=_request_id(request),
+        actor_id=user_id,
+    )
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=False) as client:
+        resp = await client.get(url, headers=headers)
+        if resp.status_code in (301, 302, 307, 308):
+            raise HTTPException(status_code=502, detail="Chuyển hướng không được phép cho bản nghe thử")
+        if resp.status_code >= 400:
+            try:
+                err_payload = resp.json()
+                return JSONResponse(status_code=resp.status_code, content=err_payload)
+            except Exception:
+                raise HTTPException(status_code=resp.status_code, detail="Không thể tải bản nghe thử từ Bot Core")
+        content_type = resp.headers.get("content-type") or "audio/mpeg"
+        disposition = "attachment" if download else "inline"
+        return Response(
+            content=resp.content,
+            media_type=content_type,
+            headers={"Content-Disposition": f'{disposition}; filename="voice_preview_{profile_id}.mp3"'},
+        )
 
 
 @router.post("/uploads")
@@ -9921,3 +10076,318 @@ async def admin_product_video_reconcile(
     )
     _record_admin_write_audit(account, request, "admin.product_video.reconcile", "dispatcher", res_envelope)
     return res_envelope
+
+
+# ─── FREE TOOLS BOT RUNTIME PARITY (R38) ──────────────────────────────────────
+
+class FreeToolsRateRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    raw_input: str = Field(default="", max_length=200)
+    query: str = Field(default="", max_length=200)
+    target_lang: str = Field(default="vi", max_length=10)
+
+
+class FreeToolsWeatherRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    location: str = Field(default="", max_length=120)
+    unit: str = Field(default="celsius", max_length=20)
+
+
+class FreeToolsAvatarRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    seed: str = Field(default="toanaas_user", max_length=200)
+    style: str = Field(default="realistic", max_length=50)
+    avatar_set: int = Field(default=1, ge=1, le=5)
+    confirmed_rights: bool = Field(default=False)
+
+
+class FreeToolsDownloaderInspectRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    url: str = Field(default="", max_length=2000)
+    requested_asset: str = Field(default="video", max_length=20)
+
+
+class FreeToolsDownloaderDownloadRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    url: str = Field(default="", max_length=2000)
+    requested_asset: str = Field(default="video", max_length=20)
+    confirmed_rights: bool = Field(default=False)
+
+
+async def _forward_free_tools_bridge(
+    method: str,
+    path: str,
+    *,
+    account: dict,
+    request: Request,
+    payload: dict | None = None,
+    params: dict | None = None,
+):
+    result = await _bridge(method, path, account=account, request=request, payload=payload, params=params)
+    if not result.get("ok"):
+        err_code = str(result.get("error_code") or "")
+        status_code = 400
+        if err_code in {"WEATHER_EMPTY_RESULT", "DOWNLOADER_JOB_NOT_FOUND", "DOWNLOADER_STALE_ARTIFACT_TRUTH"}:
+            status_code = 404
+        elif err_code in {"DOWNLOADER_FOREIGN_OWNER_BLOCKED"}:
+            status_code = 403
+        elif err_code in {
+            "RATE_SOURCE_UNAVAILABLE",
+            "WEATHER_SOURCE_ERROR",
+            "AVATAR_SOURCE_ERROR",
+            "DOWNLOADER_PROVIDER_DISABLED_FAIL_CLOSED",
+            "CORE_BRIDGE_UNAVAILABLE",
+        }:
+            status_code = 503
+        return JSONResponse(result, status_code=status_code)
+    out = dict(result)
+    inner_data = result.get("data")
+    if isinstance(inner_data, dict):
+        for k, v in inner_data.items():
+            if k not in out:
+                out[k] = v
+    return JSONResponse(out, status_code=200)
+
+
+@router.post("/free-tools/rate")
+@router.post("/tools/rate")
+async def free_tools_rate_post(
+    request: Request,
+    payload: FreeToolsRateRequest,
+    account: dict = Depends(require_account),
+):
+    inp = payload.raw_input or payload.query
+    if not str(inp).strip():
+        return JSONResponse(
+            envelope(False, "Số tiền hoặc công thức quy đổi không được để trống.", error_code="RATE_INVALID_INPUT"),
+            status_code=400,
+        )
+    return await _forward_free_tools_bridge(
+        "POST",
+        "/internal/v1/free-tools/rate",
+        account=account,
+        request=request,
+        payload={"raw_input": inp, "target_lang": payload.target_lang},
+    )
+
+
+@router.get("/free-tools/rate")
+@router.get("/tools/rate")
+async def free_tools_rate_get(
+    request: Request,
+    raw_input: str = Query(default="", max_length=200),
+    query: str = Query(default="", max_length=200),
+    target_lang: str = Query(default="vi", max_length=10),
+    account: dict = Depends(require_account),
+):
+    inp = raw_input or query
+    if not str(inp).strip():
+        return JSONResponse(
+            envelope(False, "Số tiền hoặc công thức quy đổi không được để trống.", error_code="RATE_INVALID_INPUT"),
+            status_code=400,
+        )
+    return await _forward_free_tools_bridge(
+        "GET",
+        "/internal/v1/free-tools/rate",
+        account=account,
+        request=request,
+        params={"raw_input": inp, "target_lang": target_lang},
+    )
+
+
+@router.post("/free-tools/weather")
+@router.post("/tools/weather")
+async def free_tools_weather_post(
+    request: Request,
+    payload: FreeToolsWeatherRequest,
+    account: dict = Depends(require_account),
+):
+    if not str(payload.location).strip():
+        return JSONResponse(
+            envelope(False, "Địa điểm tra cứu thời tiết không được để trống.", error_code="WEATHER_INVALID_LOCATION"),
+            status_code=400,
+        )
+    return await _forward_free_tools_bridge(
+        "POST",
+        "/internal/v1/free-tools/weather",
+        account=account,
+        request=request,
+        payload={"location": payload.location, "unit": payload.unit},
+    )
+
+
+@router.get("/free-tools/weather")
+@router.get("/tools/weather")
+async def free_tools_weather_get(
+    request: Request,
+    location: str = Query(default="", max_length=120),
+    unit: str = Query(default="celsius", max_length=20),
+    account: dict = Depends(require_account),
+):
+    if not str(location).strip():
+        return JSONResponse(
+            envelope(False, "Địa điểm tra cứu thời tiết không được để trống.", error_code="WEATHER_INVALID_LOCATION"),
+            status_code=400,
+        )
+    return await _forward_free_tools_bridge(
+        "GET",
+        "/internal/v1/free-tools/weather",
+        account=account,
+        request=request,
+        params={"location": location, "unit": unit},
+    )
+
+
+@router.post("/free-tools/avatar")
+@router.post("/tools/avatar")
+async def free_tools_avatar(
+    request: Request,
+    payload: FreeToolsAvatarRequest,
+    account: dict = Depends(require_csrf),
+):
+    if not payload.confirmed_rights:
+        return JSONResponse(
+            envelope(False, "Bạn cần xác nhận quyền sử dụng hình ảnh.", error_code="AVATAR_RIGHTS_REQUIRED"),
+            status_code=400,
+        )
+    s_lower = str(payload.seed or "").strip().lower()
+    dangerous_schemes = ("javascript:", "data:", "file:", "vbscript:", "blob:")
+    if any(s_lower.startswith(sch) for sch in dangerous_schemes) or "<script" in s_lower or "javascript:" in s_lower:
+        return JSONResponse(
+            envelope(False, "Mô tả hoặc seed avatar chứa ký tự không an toàn.", error_code="AVATAR_UNSAFE_URL_BLOCKED"),
+            status_code=400,
+        )
+    return await _forward_free_tools_bridge(
+        "POST",
+        "/internal/v1/free-tools/avatar",
+        account=account,
+        request=request,
+        payload={
+            "seed": payload.seed,
+            "style": payload.style,
+            "avatar_set": payload.avatar_set,
+            "confirmed_rights": payload.confirmed_rights,
+        },
+    )
+
+
+@router.post("/free-tools/downloader/inspect")
+@router.post("/tools/downloader/inspect")
+async def free_tools_downloader_inspect(
+    request: Request,
+    payload: FreeToolsDownloaderInspectRequest,
+    account: dict = Depends(require_account),
+):
+    if not str(payload.url).strip():
+        return JSONResponse(
+            envelope(False, "Liên kết không được để trống.", error_code="DOWNLOADER_INVALID_URL"),
+            status_code=400,
+        )
+    return await _forward_free_tools_bridge(
+        "POST",
+        "/internal/v1/free-tools/downloader/inspect",
+        account=account,
+        request=request,
+        payload={"url": payload.url, "requested_asset": payload.requested_asset},
+    )
+
+
+@router.post("/free-tools/downloader/download")
+@router.post("/tools/downloader/download")
+async def free_tools_downloader_download(
+    request: Request,
+    payload: FreeToolsDownloaderDownloadRequest,
+    account: dict = Depends(require_csrf),
+):
+    if not payload.confirmed_rights:
+        return JSONResponse(
+            envelope(False, "Vui lòng chỉ tải nội dung anh/chị có quyền sử dụng hoặc được phép lưu lại.", error_code="DOWNLOADER_RIGHTS_REQUIRED"),
+            status_code=400,
+        )
+    if not str(payload.url).strip():
+        return JSONResponse(
+            envelope(False, "Liên kết không được để trống.", error_code="DOWNLOADER_INVALID_URL"),
+            status_code=400,
+        )
+    return await _forward_free_tools_bridge(
+        "POST",
+        "/internal/v1/free-tools/downloader/download",
+        account=account,
+        request=request,
+        payload={
+            "url": payload.url,
+            "requested_asset": payload.requested_asset,
+            "confirmed_rights": payload.confirmed_rights,
+        },
+    )
+
+
+@router.get("/free-tools/downloader/delivery/{job_id}")
+@router.get("/tools/downloader/delivery/{job_id}")
+async def free_tools_downloader_delivery(
+    job_id: str,
+    request: Request,
+    kind: str = "video",
+    mode: str = "stream",
+    download: bool = False,
+    account: dict = Depends(require_account),
+):
+    clean_id = (job_id or "").strip()
+    if not clean_id or not re.match(r"^[a-zA-Z0-9_\-\.]{1,128}$", clean_id):
+        raise HTTPException(status_code=422, detail="job_id không hợp lệ")
+    if kind not in ("video", "audio", "cover"):
+        raise HTTPException(status_code=422, detail="Loại tài sản không hợp lệ (hỗ trợ video, audio, cover)")
+
+    if mode == "meta":
+        return await _forward_free_tools_bridge(
+            "GET",
+            f"/internal/v1/free-tools/downloader/delivery/{clean_id}",
+            account=account,
+            request=request,
+            params={"kind": kind, "mode": "meta"},
+        )
+
+    user_id = _linked(account)
+    if not bridge_configured():
+        raise HTTPException(status_code=503, detail="Core Bridge chưa được cấu hình")
+
+    from copyfast_bridge import CoreBridgeClient
+    import httpx
+    import urllib.parse
+    bridge = CoreBridgeClient()
+    params = {"user_id": user_id, "kind": kind, "mode": "stream", "download": "1" if download else "0"}
+    query_str = urllib.parse.urlencode(params)
+    url = f"{bridge.base_url}/internal/v1/free-tools/downloader/delivery/{clean_id}?{query_str}"
+    headers = bridge._headers(
+        "GET",
+        f"/internal/v1/free-tools/downloader/delivery/{clean_id}",
+        b"",
+        request_id=_request_id(request),
+        actor_id=user_id,
+    )
+    async with httpx.AsyncClient(timeout=30.0, follow_redirects=False) as client:
+        resp = await client.get(url, headers=headers)
+        if resp.status_code in (301, 302, 307, 308):
+            raise HTTPException(status_code=502, detail="Chuyển hướng không được phép cho tệp tải về")
+        if resp.status_code >= 400:
+            try:
+                err_payload = resp.json()
+                return JSONResponse(status_code=resp.status_code, content=err_payload)
+            except Exception:
+                raise HTTPException(status_code=resp.status_code, detail="Không thể tải tệp từ Bot Core")
+
+        content_type = resp.headers.get("content-type") or "application/octet-stream"
+        disposition = "attachment" if download else "inline"
+        ext_map = {"video": "mp4", "audio": "mp3", "cover": "jpg"}
+        ext = ext_map.get(kind, "bin")
+        content_disp = f'{disposition}; filename="download_{clean_id}.{ext}"'
+
+        return Response(
+            content=resp.content,
+            media_type=content_type,
+            headers={
+                "Content-Disposition": content_disp,
+                "X-Content-Type-Options": "nosniff",
+                "Cache-Control": "private, no-cache",
+            },
+        )
