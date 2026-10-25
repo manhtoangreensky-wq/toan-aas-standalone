@@ -88,7 +88,6 @@ class MusicLibrarySearchRequest(BaseModel):
 
     query: StrictStr
     limit: StrictInt | None = DEFAULT_SEARCH_LIMIT
-    mock_results: list[dict] | None = None
 
     @field_validator("query")
     @classmethod

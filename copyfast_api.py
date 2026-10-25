@@ -2152,11 +2152,14 @@ def _browser_safe_bridge_response(
         error_code = "CORE_BRIDGE_RESPONSE_GUARDED"
     else:
         error_code = ""
+    payload_data = source.get("data")
+    if not isinstance(payload_data, dict):
+        payload_data = source
     return envelope(
         bool(source.get("ok")),
         _PUBLIC_BRIDGE_MESSAGES[status],
         data=_project_surface_data(
-            source.get("data"),
+            payload_data,
             surface,
             allow_admin_user_refs=allow_admin_user_refs,
             allow_admin_provider_refs=allow_admin_provider_refs,
@@ -8017,13 +8020,6 @@ async def _forward_music_library_bridge(
     elif path == "/internal/v1/music/library/select":
         sel = out.get("selected") or {}
         save_music_library_selection(account_id, sel)
-    elif path == "/internal/v1/music/library/selected":
-        if not out.get("selected"):
-            local_sel = get_local_music_library_selection(account_id)
-            if local_sel:
-                out["selected"] = local_sel
-                if isinstance(inner_data, dict):
-                    inner_data["selected"] = local_sel
     elif path == "/internal/v1/music/library/preview":
         preview_url = str(out.get("preview_url") or "")
         if preview_url and not is_safe_preview_url(preview_url):
@@ -8042,11 +8038,6 @@ async def music_library_search_route(
     request: Request,
     account: dict = Depends(require_csrf),
 ):
-    if payload.mock_results is not None and os.environ.get("APP_ENV") != "test":
-        return JSONResponse(
-            envelope(False, "Chỉ cho phép sử dụng mock fixture trong môi trường test (APP_ENV=test).", error_code="JAMENDO_MOCK_DISALLOWED"),
-            status_code=403,
-        )
     return await _forward_music_library_bridge(
         "POST",
         "/internal/v1/music/library/search",
@@ -8055,7 +8046,6 @@ async def music_library_search_route(
         payload={
             "query": payload.query,
             "limit": payload.limit or 8,
-            "mock_results": payload.mock_results,
         },
     )
 
