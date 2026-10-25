@@ -192,6 +192,15 @@ from copyfast_music_sfx_library_bridge import (
     get_selected_sfx_library_item,
     get_sfx_library_policy,
 )
+from copyfast_music_library_bridge import (
+    MusicLibrarySearchRequest,
+    MusicLibrarySelectRequest,
+    get_music_library_policy,
+    save_music_library_search,
+    save_music_library_selection,
+    get_local_music_library_selection,
+    is_safe_preview_url,
+)
 from copyfast_video_trend_job_bridge import (
     CANONICAL_PRODUCT_KEY as VIDEO_TREND_PRODUCT_KEY,
     SUPPORTED_CANONICAL_JOB_ADAPTERS as VIDEO_TREND_ADAPTER_KEYS,
@@ -680,6 +689,10 @@ _PUBLIC_BRIDGE_ERROR_CODES = frozenset({
     "DOWNLOADER_UNSUPPORTED_OR_PRIVATE_URL_BLOCKED", "DOWNLOADER_PROVIDER_DISABLED_FAIL_CLOSED",
     "DOWNLOADER_SUSPICIOUS_RESULT_BLOCKED", "DOWNLOADER_JOB_NOT_FOUND",
     "DOWNLOADER_FOREIGN_OWNER_BLOCKED", "DOWNLOADER_STALE_ARTIFACT_TRUTH",
+    "JAMENDO_CREDENTIALS_MISSING", "JAMENDO_FETCH_FAILED", "JAMENDO_API_ERROR",
+    "JAMENDO_MOCK_DISALLOWED", "SEARCH_SESSION_EMPTY", "SEARCH_SESSION_EXPIRED",
+    "SELECTION_NOT_FOUND", "PREVIEW_UNSAFE_URL_BLOCKED",
+    "RAW_PROVIDER_TRACK_ID_CLIENT_AUTHORITY_BLOCKED",
 })
 ADMIN_BRIDGE_MODULES = frozenset({
     "overview", "summary", "users", "user", "wallet", "payments", "topups", "revenue", "refunds",
@@ -2059,6 +2072,62 @@ def _project_surface_data(
         # A delivery URL requires its own reviewed adapter. Do not let a
         # future bridge response smuggle a URL or file reference here.
         return _project_record(value, ("id", "status", "download_ready"))
+    if surface == "music_library":
+        clean_results = []
+        raw_results = raw_value.get("results") if isinstance(raw_value.get("results"), list) else []
+        for item in raw_results[:10]:
+            if not isinstance(item, dict):
+                continue
+            clean_results.append({
+                "id": str(item.get("id") or "")[:80],
+                "provider": "Jamendo",
+                "title": str(item.get("title") or "")[:160],
+                "author": str(item.get("author") or "")[:120],
+                "duration": str(item.get("duration") or "-")[:20],
+                "license": str(item.get("license") or "-")[:240],
+                "preview_url": str(item.get("preview_url") or "")[:500],
+                "source_url": str(item.get("source_url") or "")[:500],
+            })
+        clean_selected = None
+        raw_sel = raw_value.get("selected")
+        if isinstance(raw_sel, dict):
+            clean_selected = {
+                "id": str(raw_sel.get("id") or "")[:80],
+                "provider": "Jamendo",
+                "title": str(raw_sel.get("title") or "")[:160],
+                "author": str(raw_sel.get("author") or "")[:120],
+                "duration": str(raw_sel.get("duration") or "-")[:20],
+                "license": str(raw_sel.get("license") or "-")[:240],
+                "preview_url": str(raw_sel.get("preview_url") or "")[:500],
+                "source_url": str(raw_sel.get("source_url") or "")[:500],
+            }
+        res = {
+            "query": str(raw_value.get("query") or "")[:160],
+            "count": len(clean_results) if clean_results else int(raw_value.get("count") or 0),
+            "results": clean_results,
+            "callback_token": str(raw_value.get("callback_token") or "")[:80],
+            "provider": "Jamendo",
+            "xu_charged": 0,
+            "search_immediate_cost_xu": 0,
+            "select_immediate_cost_xu": 0,
+            "downstream_usage_pricing": {
+                "mode": "stock_music_library",
+                "per_item_xu": 0,
+                "min_xu": 0,
+                "included": True,
+            },
+            "pricing_terms": "search_and_select_immediate_free_downstream_stock_included",
+        }
+        if clean_selected:
+            res["selected"] = clean_selected
+        if raw_value.get("preview_url"):
+            res["preview_url"] = str(raw_value.get("preview_url") or "")[:500]
+            res["safe_to_stream"] = bool(raw_value.get("safe_to_stream", True))
+            res["index"] = int(raw_value.get("index") or 0)
+            res["title"] = str(raw_value.get("title") or "")[:160]
+            res["author"] = str(raw_value.get("author") or "")[:120]
+            res["license"] = str(raw_value.get("license") or "-")[:240]
+        return res
     return value
 
 
@@ -3421,6 +3490,8 @@ def _bridge_surface(path: str) -> str:
         return "upload"
     if normalized.startswith("/internal/v1/free-tools/"):
         return "free_tools"
+    if normalized.startswith("/internal/v1/music/library"):
+        return "music_library"
     return "generic"
 
 
@@ -6119,13 +6190,13 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
         return envelope(False, "Hãy chọn gói từ catalog canonical trước khi tạo yêu cầu thanh toán.", status_name="failed", error_code="PAYMENT_PACKAGE_REQUIRED")
     if package_id not in {str(item["code"]) for item in topup_packages}:
         return envelope(False, "Mệnh giá nạp không còn thuộc catalog canonical hiện hành.", status_name="failed", error_code="PAYMENT_PACKAGE_NOT_IN_CATALOG")
-    
+
     amount = next((pkg.get("amount_vnd", 0) for pkg in topup_packages if pkg.get("code") == package_id), 0)
     base_xu = next((pkg.get("xu", 0) for pkg in topup_packages if pkg.get("code") == package_id), 0)
     expected_xu = base_xu
 
     public_base_url = (os.environ.get("PUBLIC_BASE_URL") or os.environ.get("WEBAPP_BASE_URL") or "https://app.toanaas.vn").rstrip("/")
-    
+
     key = _require_key(payload.idempotency_key)
     owner_id = _linked(account)
     scope = f"payment:{account['id']}"
@@ -7898,6 +7969,178 @@ async def music_sfx_library_policy_route(
     return envelope(
         True,
         "Chính sách thư viện hiệu ứng âm thanh TOAN AAS (Freesound public library).",
+        data=policy,
+        status_name="read_only",
+    )
+
+
+async def _forward_music_library_bridge(
+    method: str,
+    path: str,
+    *,
+    account: dict,
+    request: Request,
+    payload: dict | None = None,
+    params: dict | None = None,
+):
+    account_id = str(account.get("id") or "")
+    result = await _bridge(method, path, account=account, request=request, payload=payload, params=params)
+    if not result.get("ok"):
+        err_code = str(result.get("error_code") or "")
+        status_code = 400
+        if err_code in {"SEARCH_SESSION_EXPIRED", "SEARCH_SESSION_EMPTY", "SELECTION_NOT_FOUND"}:
+            status_code = 404
+        elif err_code in {"PREVIEW_UNSAFE_URL_BLOCKED", "JAMENDO_MOCK_DISALLOWED"}:
+            status_code = 403
+        elif err_code in {"JAMENDO_FETCH_FAILED", "JAMENDO_API_ERROR"}:
+            status_code = 502
+        elif err_code in {
+            "JAMENDO_CREDENTIALS_MISSING",
+            "CORE_BRIDGE_UNAVAILABLE",
+            "WEBAPP_PROVIDER_CALLS_DISABLED",
+        }:
+            status_code = 503
+        return JSONResponse(result, status_code=status_code)
+
+    out = dict(result)
+    inner_data = result.get("data")
+    if isinstance(inner_data, dict):
+        for k, v in inner_data.items():
+            if k not in out:
+                out[k] = v
+
+    if path == "/internal/v1/music/library/search":
+        items = out.get("results") or []
+        token = out.get("callback_token") or ""
+        q = payload.get("query") if payload else ""
+        save_music_library_search(account_id, q, items, token)
+    elif path == "/internal/v1/music/library/select":
+        sel = out.get("selected") or {}
+        save_music_library_selection(account_id, sel)
+    elif path == "/internal/v1/music/library/selected":
+        if not out.get("selected"):
+            local_sel = get_local_music_library_selection(account_id)
+            if local_sel:
+                out["selected"] = local_sel
+                if isinstance(inner_data, dict):
+                    inner_data["selected"] = local_sel
+    elif path == "/internal/v1/music/library/preview":
+        preview_url = str(out.get("preview_url") or "")
+        if preview_url and not is_safe_preview_url(preview_url):
+            return JSONResponse(
+                envelope(False, "Liên kết nghe thử không an toàn hoặc nằm ngoài miền tin cậy.", error_code="PREVIEW_UNSAFE_URL_BLOCKED"),
+                status_code=403,
+            )
+
+    return JSONResponse(out, status_code=200)
+
+
+@router.post("/music/library/search")
+@router.post("/music-library/search")
+async def music_library_search_route(
+    payload: MusicLibrarySearchRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if payload.mock_results is not None and os.environ.get("APP_ENV") != "test":
+        return JSONResponse(
+            envelope(False, "Chỉ cho phép sử dụng mock fixture trong môi trường test (APP_ENV=test).", error_code="JAMENDO_MOCK_DISALLOWED"),
+            status_code=403,
+        )
+    return await _forward_music_library_bridge(
+        "POST",
+        "/internal/v1/music/library/search",
+        account=account,
+        request=request,
+        payload={
+            "query": payload.query,
+            "limit": payload.limit or 8,
+            "mock_results": payload.mock_results,
+        },
+    )
+
+
+@router.post("/music/library/select")
+@router.post("/music-library/select")
+async def music_library_select_route(
+    payload: MusicLibrarySelectRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    if payload.track_id or payload.asset_id:
+        return JSONResponse(
+            envelope(
+                False,
+                "Trình duyệt không được tự gửi track_id làm thẩm quyền chọn. Vui lòng chọn theo số thứ tự (1-based index).",
+                error_code="RAW_PROVIDER_TRACK_ID_CLIENT_AUTHORITY_BLOCKED",
+            ),
+            status_code=400,
+        )
+    if payload.index is None or payload.index < 1:
+        return JSONResponse(
+            envelope(False, "Số thứ tự (index) phải lớn hơn hoặc bằng 1.", error_code="SELECT_INVALID_INDEX"),
+            status_code=400,
+        )
+    return await _forward_music_library_bridge(
+        "POST",
+        "/internal/v1/music/library/select",
+        account=account,
+        request=request,
+        payload={
+            "index": payload.index,
+            "callback_token": payload.callback_token,
+        },
+    )
+
+
+@router.get("/music/library/selected")
+@router.get("/music-library/selected")
+async def music_library_selected_route(
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    return await _forward_music_library_bridge(
+        "GET",
+        "/internal/v1/music/library/selected",
+        account=account,
+        request=request,
+    )
+
+
+@router.get("/music/library/preview")
+@router.get("/music-library/preview")
+async def music_library_preview_route(
+    request: Request,
+    index: int = Query(default=0, ge=1),
+    callback_token: str | None = Query(default=None),
+    account: dict = Depends(require_account),
+):
+    if index < 1:
+        return JSONResponse(
+            envelope(False, "Số thứ tự (index) phải lớn hơn hoặc bằng 1.", error_code="PREVIEW_INVALID_INDEX"),
+            status_code=400,
+        )
+    return await _forward_music_library_bridge(
+        "GET",
+        "/internal/v1/music/library/preview",
+        account=account,
+        request=request,
+        params={
+            "index": index,
+            "callback_token": callback_token,
+        },
+    )
+
+
+@router.get("/music/library/policy")
+@router.get("/music-library/policy")
+async def music_library_policy_route(
+    request: Request,
+):
+    policy = get_music_library_policy()
+    return envelope(
+        True,
+        "Chính sách thư viện nhạc TOAN AAS (Jamendo public music library).",
         data=policy,
         status_name="read_only",
     )
