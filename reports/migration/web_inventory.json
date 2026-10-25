@@ -124,7 +124,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 561,
+      "line": 605,
       "target": "_format_public_job"
     },
     {
@@ -478,7 +478,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 389,
+      "line": 428,
       "target": "create_or_replay_subdub_job"
     },
     {
@@ -622,7 +622,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 781,
+      "line": 826,
       "target": "dispatch_subdub_job_to_canonical_runtime"
     },
     {
@@ -712,7 +712,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 307,
+      "line": 345,
       "target": "generate_subdub_job_id"
     },
     {
@@ -832,7 +832,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 671,
+      "line": 716,
       "target": "get_internal_subdub_job"
     },
     {
@@ -922,7 +922,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 647,
+      "line": 692,
       "target": "get_subdub_job"
     },
     {
@@ -1138,7 +1138,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 737,
+      "line": 782,
       "target": "is_subdub_job_other_account"
     },
     {
@@ -1330,7 +1330,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 755,
+      "line": 800,
       "target": "list_subdub_jobs"
     },
     {
@@ -1606,7 +1606,7 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 928,
+      "line": 974,
       "target": "reconcile_subdub_job_status"
     },
     {
@@ -1672,13 +1672,13 @@
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 1051,
+      "line": 1097,
       "target": "settle_subdub_job_completion"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
       "kind": "function",
-      "line": 1194,
+      "line": 1240,
       "target": "subdub_job_to_native_compat"
     },
     {
@@ -7223,73 +7223,73 @@
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 316,
+      "line": 354,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 481,
+      "line": 523,
       "operation": "INSERT INTO",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 881,
+      "line": 927,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 899,
+      "line": 945,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 916,
+      "line": 962,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 993,
+      "line": 1039,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 1008,
+      "line": 1054,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 1023,
+      "line": 1069,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 1037,
+      "line": 1083,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 1112,
+      "line": 1158,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 1167,
+      "line": 1213,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
     {
       "file": "copyfast_subdub_job_bridge.py",
-      "line": 1181,
+      "line": 1227,
       "operation": "UPDATE",
       "table": "web_subdub_jobs"
     },
@@ -18583,7 +18583,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 328,
   "source_files_scanned": 328,
-  "source_fingerprint_sha256": "26a37b946de7df31b23c99cb8bbe917ee6508429bc30a625f130e3c635b0f83d",
+  "source_fingerprint_sha256": "5b01d65f79fe38845659cc87989d292da63351e87d6cd2399053c7c244fb5369",
   "source_root": "repository-root",
   "ui_path_references": [
     {
