@@ -679,6 +679,7 @@ _PUBLIC_BRIDGE_ERROR_CODES = frozenset({
     "DOWNLOADER_RIGHTS_REQUIRED", "DOWNLOADER_INVALID_URL",
     "DOWNLOADER_UNSUPPORTED_OR_PRIVATE_URL_BLOCKED", "DOWNLOADER_PROVIDER_DISABLED_FAIL_CLOSED",
     "DOWNLOADER_SUSPICIOUS_RESULT_BLOCKED", "DOWNLOADER_JOB_NOT_FOUND",
+    "DOWNLOADER_FOREIGN_OWNER_BLOCKED", "DOWNLOADER_STALE_ARTIFACT_TRUTH",
 })
 ADMIN_BRIDGE_MODULES = frozenset({
     "overview", "summary", "users", "user", "wallet", "payments", "topups", "revenue", "refunds",
@@ -1969,10 +1970,23 @@ def _project_surface_data(
         return item_record
     if surface == "free_tools":
         free_tools_fields = (
-            "text", "raw_input", "target_lang", "location", "report", "unit",
-            "avatar_url", "seed", "style", "avatar_set",
-            "url", "asset_type", "title", "duration_seconds", "status",
-            "download_url", "xu_charged", "refund_issued", "source",
+            # Rate fields
+            "raw_input", "target_lang", "text", "amount_in", "currency_in",
+            "currency_in_name", "target_currency", "target_converted",
+            "target_currency_name", "usd", "vnd", "xu", "cny", "hkd", "eur",
+            "jpy", "rate_usd_vnd",
+            # Weather fields
+            "location", "report", "city", "country", "temperature",
+            "windspeed", "weathercode", "description", "unit",
+            # Avatar fields
+            "avatar_url", "seed", "avatar_set", "style",
+            # Downloader fields
+            "job_id", "platform", "kind", "title", "duration", "duration_seconds",
+            "bytes", "status", "charged_xu", "xu_charged", "refund_issued",
+            "rights_notice", "delivery_ready", "delivery_url", "download_url",
+            "url", "asset_type",
+            # Common safe fields
+            "source", "content_type",
         )
         return _project_record(raw_value, free_tools_fields, text_limit=2000)
     if surface == "tickets":
@@ -10113,8 +10127,10 @@ async def _forward_free_tools_bridge(
     if not result.get("ok"):
         err_code = str(result.get("error_code") or "")
         status_code = 400
-        if err_code in {"WEATHER_EMPTY_RESULT", "DOWNLOADER_JOB_NOT_FOUND"}:
+        if err_code in {"WEATHER_EMPTY_RESULT", "DOWNLOADER_JOB_NOT_FOUND", "DOWNLOADER_STALE_ARTIFACT_TRUTH"}:
             status_code = 404
+        elif err_code in {"DOWNLOADER_FOREIGN_OWNER_BLOCKED"}:
+            status_code = 403
         elif err_code in {
             "RATE_SOURCE_UNAVAILABLE",
             "WEATHER_SOURCE_ERROR",
@@ -10304,3 +10320,74 @@ async def free_tools_downloader_download(
             "confirmed_rights": payload.confirmed_rights,
         },
     )
+
+
+@router.get("/free-tools/downloader/delivery/{job_id}")
+@router.get("/tools/downloader/delivery/{job_id}")
+async def free_tools_downloader_delivery(
+    job_id: str,
+    request: Request,
+    kind: str = "video",
+    mode: str = "stream",
+    download: bool = False,
+    account: dict = Depends(require_account),
+):
+    clean_id = (job_id or "").strip()
+    if not clean_id or not re.match(r"^[a-zA-Z0-9_\-\.]{1,128}$", clean_id):
+        raise HTTPException(status_code=422, detail="job_id không hợp lệ")
+    if kind not in ("video", "audio", "cover"):
+        raise HTTPException(status_code=422, detail="Loại tài sản không hợp lệ (hỗ trợ video, audio, cover)")
+
+    if mode == "meta":
+        return await _forward_free_tools_bridge(
+            "GET",
+            f"/internal/v1/free-tools/downloader/delivery/{clean_id}",
+            account=account,
+            request=request,
+            params={"kind": kind, "mode": "meta"},
+        )
+
+    user_id = _linked(account)
+    if not bridge_configured():
+        raise HTTPException(status_code=503, detail="Core Bridge chưa được cấu hình")
+
+    from copyfast_bridge import CoreBridgeClient
+    import httpx
+    import urllib.parse
+    bridge = CoreBridgeClient()
+    params = {"user_id": user_id, "kind": kind, "mode": "stream", "download": "1" if download else "0"}
+    query_str = urllib.parse.urlencode(params)
+    url = f"{bridge.base_url}/internal/v1/free-tools/downloader/delivery/{clean_id}?{query_str}"
+    headers = bridge._headers(
+        "GET",
+        f"/internal/v1/free-tools/downloader/delivery/{clean_id}",
+        b"",
+        request_id=_request_id(request),
+        actor_id=user_id,
+    )
+    async with httpx.AsyncClient(timeout=30.0, follow_redirects=False) as client:
+        resp = await client.get(url, headers=headers)
+        if resp.status_code in (301, 302, 307, 308):
+            raise HTTPException(status_code=502, detail="Chuyển hướng không được phép cho tệp tải về")
+        if resp.status_code >= 400:
+            try:
+                err_payload = resp.json()
+                return JSONResponse(status_code=resp.status_code, content=err_payload)
+            except Exception:
+                raise HTTPException(status_code=resp.status_code, detail="Không thể tải tệp từ Bot Core")
+
+        content_type = resp.headers.get("content-type") or "application/octet-stream"
+        disposition = "attachment" if download else "inline"
+        ext_map = {"video": "mp4", "audio": "mp3", "cover": "jpg"}
+        ext = ext_map.get(kind, "bin")
+        content_disp = f'{disposition}; filename="download_{clean_id}.{ext}"'
+
+        return Response(
+            content=resp.content,
+            media_type=content_type,
+            headers={
+                "Content-Disposition": content_disp,
+                "X-Content-Type-Options": "nosniff",
+                "Cache-Control": "private, no-cache",
+            },
+        )
