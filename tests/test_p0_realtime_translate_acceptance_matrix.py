@@ -161,7 +161,13 @@ def test_06_extension_session_handshake_and_cross_owner():
 
 
 def test_07_real_route_mount():
-    endpoints = {path for _, path, _ in getattr(router, "routes", [])}
+    """REAL_ROUTE_MOUNT: All 5 required route endpoints must be discoverable."""
+    endpoints = set()
+    for r in getattr(router, "routes", []):
+        if hasattr(r, "path"):
+            endpoints.add(r.path)
+        elif isinstance(r, (tuple, list)) and len(r) > 1:
+            endpoints.add(r[1])
     required = {
         "/api/v1/live-translate/sessions",
         "/api/v1/live-translate/sessions/{session_id}",
