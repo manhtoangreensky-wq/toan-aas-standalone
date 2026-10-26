@@ -80,6 +80,10 @@ jobs:
           node --check static/portal/integration.js
           node --check static/portal/service-worker.js
 
+      - name: Realtime Translate & Dub Acceptance Matrix
+        run: |
+          python tests/test_p0_realtime_translate_acceptance_matrix.py
+
       - name: Run critical Web App contracts (bounded)
         shell: bash
         run: |

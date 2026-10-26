@@ -1,0 +1,797 @@
+"""Canonical Web App Realtime Gateway & WebSocket Router (RT-02 / RT-FIX1).
+
+Governed by owner-governed-codex, locked-focus-engineering.
+Enforces:
+1. Account Authority: Strict authentication via require_account. No guest_user fallback.
+2. Token Security: Fail-closed on missing REALTIME_STREAM_SECRET. Binds session_id, owner_id, device_id, expires_at, nonce.
+3. Owner Isolation: Every REST route and WebSocket verifies session ownership (FOREIGN_OWNER_BLOCKED).
+4. Full route family:
+   - POST /api/v1/live-translate/sessions
+   - GET  /api/v1/live-translate/sessions/{session_id}
+   - POST /api/v1/live-translate/sessions/{session_id}/stop
+   - GET  /api/v1/live-translate/sessions/{session_id}/export
+   - WS   /api/v1/live-translate/sessions/{session_id}/stream
+5. Monotonic sequence handling, server ACK, and reconnect support.
+"""
+
+from __future__ import annotations
+
+import base64
+import enum
+import hashlib
+import hmac
+import io
+import json
+import logging
+import math
+import os
+import struct
+import time
+import uuid
+import wave
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+
+try:
+    from fastapi import APIRouter, Depends, HTTPException, Query, Request, WebSocket, WebSocketDisconnect, status
+    from pydantic import BaseModel, Field
+except ImportError:
+    class BaseModel:
+        def __init__(self, **kwargs):
+            for k, v in kwargs.items():
+                setattr(self, k, v)
+    def Field(default=None, **kwargs):
+        return default
+    class APIRouter:
+        def __init__(self, *args, **kwargs):
+            self.prefix = kwargs.get("prefix", "")
+            self.tags = kwargs.get("tags", [])
+            self.routes = []
+        def post(self, path, *args, **kwargs):
+            def decorator(f):
+                self.routes.append(("POST", self.prefix + path, f))
+                return f
+            return decorator
+        def get(self, path, *args, **kwargs):
+            def decorator(f):
+                self.routes.append(("GET", self.prefix + path, f))
+                return f
+            return decorator
+        def websocket(self, path, *args, **kwargs):
+            def decorator(f):
+                self.routes.append(("WS", self.prefix + path, f))
+                return f
+            return decorator
+    class HTTPException(Exception):
+        def __init__(self, status_code: int, detail: str = ""):
+            super().__init__(f"{status_code}: {detail}")
+            self.status_code = status_code
+            self.detail = detail
+    class WebSocketDisconnect(Exception):
+        pass
+    class Request: pass
+    class WebSocket: pass
+    def Query(default=None, **kwargs):
+        return default
+    def Depends(dependency=None):
+        return dependency
+    class _Status:
+        HTTP_400_BAD_REQUEST = 400
+        HTTP_401_UNAUTHORIZED = 401
+        HTTP_403_FORBIDDEN = 403
+        HTTP_404_NOT_FOUND = 404
+        HTTP_500_INTERNAL_SERVER_ERROR = 500
+    status = _Status()
+
+try:
+    from copyfast_auth import require_account
+except Exception:
+    def require_account(request: Request) -> dict:
+        user_id = getattr(getattr(request, "state", None), "user_id", None)
+        if not user_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Yêu cầu đăng nhập tài khoản TOAN AAS")
+        return {"id": user_id, "account_id": user_id, "role": "user"}
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/api/v1/live-translate", tags=["TOAN AAS Live Translate & Dub"])
+
+# Product & Authority Invariants
+PRICING_STATE: str = "OWNER_DECISION_REQUIRED"
+PRODUCTION_PAID_ADMISSION: str = "FAIL_CLOSED"
+PROCESS_RESTART_DURABILITY: str = "NOT_SUPPORTED"
+TOKEN_TTL_SECONDS: int = 300  # 5 minutes
+
+
+class RealtimeSessionState(str, enum.Enum):
+    CREATED = "created"
+    ACTIVE = "active"
+    PAUSED = "paused"
+    ENDED = "ended"
+    ERROR = "error"
+
+
+class RealtimeTranslateMode(str, enum.Enum):
+    CAPTION_ONLY = "CAPTION_ONLY"
+    CAPTION_TRANSLATE = "CAPTION_TRANSLATE"
+    LIVE_DUB = "LIVE_DUB"
+    LIVE_DUB_BILINGUAL = "LIVE_DUB_BILINGUAL"
+
+
+VALID_SESSION_TRANSITIONS: Dict[RealtimeSessionState, Set[RealtimeSessionState]] = {
+    RealtimeSessionState.CREATED: {RealtimeSessionState.ACTIVE, RealtimeSessionState.ERROR, RealtimeSessionState.ENDED},
+    RealtimeSessionState.ACTIVE: {RealtimeSessionState.PAUSED, RealtimeSessionState.ENDED, RealtimeSessionState.ERROR},
+    RealtimeSessionState.PAUSED: {RealtimeSessionState.ACTIVE, RealtimeSessionState.ENDED, RealtimeSessionState.ERROR},
+    RealtimeSessionState.ENDED: {RealtimeSessionState.ENDED},
+    RealtimeSessionState.ERROR: {RealtimeSessionState.ERROR, RealtimeSessionState.ENDED},
+}
+
+
+@dataclass
+class RealtimeSessionConfig:
+    owner_id: str
+    source_language: str = "auto"
+    target_language: str = "vi"
+    mode: RealtimeTranslateMode = RealtimeTranslateMode.LIVE_DUB_BILINGUAL
+    voice_profile_id: Optional[str] = None
+    gender_preference: Optional[str] = "male"
+    client_device_id: Optional[str] = None
+    metering_block_seconds: int = 60
+
+
+@dataclass
+class RealtimeTranscriptSegment:
+    segment_id: str
+    sequence: int
+    start_ms: int
+    end_ms: int
+    source_text: str
+    translated_text: str = ""
+    is_final: bool = False
+    speaker_id: Optional[str] = None
+    tts_audio_base64: Optional[str] = None
+    created_at_ms: int = field(default_factory=lambda: int(time.time() * 1000))
+
+
+class RealtimeTranslateSession:
+    """Core state machine and event coordinator for a live translate/dub session."""
+
+    def __init__(self, session_id: str, config: RealtimeSessionConfig):
+        self.session_id: str = session_id or str(uuid.uuid4())
+        self.config: RealtimeSessionConfig = config
+        self.state: RealtimeSessionState = RealtimeSessionState.CREATED
+        self.created_at: float = time.time()
+        self.started_at: Optional[float] = None
+        self.ended_at: Optional[float] = None
+
+        self.last_client_seq: int = 0
+        self.last_processed_seq: int = 0
+        self.last_ack_seq: int = 0
+        self.processed_seq_set: Set[int] = set()
+
+        self.total_audio_ms: int = 0
+        self.last_metered_seconds: int = 0
+        self.consumed_blocks: int = 0
+        self.settled_blocks: int = 0
+        self.settled_xu: int = 0
+
+        self.segments: List[RealtimeTranscriptSegment] = []
+        self.error_message: Optional[str] = None
+
+    def start(self) -> None:
+        self._transition_to(RealtimeSessionState.ACTIVE)
+        if self.started_at is None:
+            self.started_at = time.time()
+
+    def pause(self) -> None:
+        self._transition_to(RealtimeSessionState.PAUSED)
+
+    def resume(self) -> None:
+        self._transition_to(RealtimeSessionState.ACTIVE)
+
+    def end(self) -> None:
+        """Idempotently finalizes the session. Safe to call multiple times or after error."""
+        if self.state == RealtimeSessionState.ENDED:
+            return
+        self._transition_to(RealtimeSessionState.ENDED)
+        if self.ended_at is None:
+            self.ended_at = time.time()
+
+    def fail(self, error_message: str) -> None:
+        """Idempotently marks session as ERROR. Safe to call multiple times."""
+        if self.state in (RealtimeSessionState.ENDED, RealtimeSessionState.ERROR):
+            if not self.error_message:
+                self.error_message = error_message
+            return
+        self.error_message = error_message
+        self._transition_to(RealtimeSessionState.ERROR)
+        if self.ended_at is None:
+            self.ended_at = time.time()
+
+    def _transition_to(self, new_state: RealtimeSessionState) -> None:
+        if new_state not in VALID_SESSION_TRANSITIONS.get(self.state, set()):
+            raise ValueError(f"Invalid session state transition: {self.state} -> {new_state}")
+        self.state = new_state
+
+    def accept_audio_sequence(self, seq: int, duration_ms: int) -> bool:
+        """Enforces monotonic client sequence and deduplication."""
+        if self.state not in (RealtimeSessionState.ACTIVE, RealtimeSessionState.CREATED):
+            return False
+        if seq <= 0:
+            return False
+        if seq in self.processed_seq_set:
+            return False
+        if seq <= self.last_processed_seq:
+            return False
+
+        self.processed_seq_set.add(seq)
+        self.last_client_seq = max(self.last_client_seq, seq)
+        self.total_audio_ms += max(0, duration_ms)
+        return True
+
+    def mark_sequence_processed(self, seq: int) -> int:
+        self.last_processed_seq = max(self.last_processed_seq, seq)
+        self.last_ack_seq = self.last_processed_seq
+        return self.last_ack_seq
+
+    def handle_reconnect(self, client_last_ack_seq: int) -> Dict[str, Any]:
+        return {
+            "reconnected": True,
+            "session_id": self.session_id,
+            "server_last_ack_seq": self.last_processed_seq,
+            "client_last_ack_seq": client_last_ack_seq,
+            "state": self.state.value,
+        }
+
+    def compute_pending_metering_blocks(self) -> int:
+        total_seconds = self.total_audio_ms // 1000
+        block_sec = max(1, self.config.metering_block_seconds)
+        current_blocks = total_seconds // block_sec
+        new_blocks = current_blocks - self.consumed_blocks
+        if new_blocks > 0:
+            self.consumed_blocks = current_blocks
+            self.last_metered_seconds = current_blocks * block_sec
+            return new_blocks
+        return 0
+
+    def settle_blocks(self, block_count: int, xu_per_block: int = 0) -> Dict[str, Any]:
+        if block_count <= 0:
+            return {
+                "settled": False,
+                "settled_blocks": self.settled_blocks,
+                "xu_consumed": self.settled_xu,
+            }
+        self.settled_blocks += block_count
+        charge = block_count * max(0, xu_per_block)
+        self.settled_xu += charge
+        return {
+            "settled": True,
+            "blocks_settled": block_count,
+            "total_settled_blocks": self.settled_blocks,
+            "total_settled_seconds": self.settled_blocks * self.config.metering_block_seconds,
+            "xu_charged": charge,
+            "total_xu_consumed": self.settled_xu,
+        }
+
+    def add_segment(self, segment: RealtimeTranscriptSegment) -> None:
+        self.segments.append(segment)
+
+    def export_srt(self, requesting_owner_id: str) -> str:
+        if str(requesting_owner_id).strip() != str(self.config.owner_id).strip():
+            raise PermissionError("Forbidden: requesting owner does not match session owner")
+
+        lines = []
+        idx = 1
+        for seg in self.segments:
+            if not seg.is_final:
+                continue
+            text = seg.translated_text if seg.translated_text else seg.source_text
+            if not text.strip():
+                continue
+            start_str = self._format_srt_time(seg.start_ms)
+            end_str = self._format_srt_time(seg.end_ms)
+            lines.append(f"{idx}\n{start_str} --> {end_str}\n{text}\n")
+            idx += 1
+        return "\n".join(lines)
+
+    def export_vtt(self, requesting_owner_id: str) -> str:
+        if str(requesting_owner_id).strip() != str(self.config.owner_id).strip():
+            raise PermissionError("Forbidden: requesting owner does not match session owner")
+
+        lines = ["WEBVTT", ""]
+        for seg in self.segments:
+            if not seg.is_final:
+                continue
+            text = seg.translated_text if seg.translated_text else seg.source_text
+            if not text.strip():
+                continue
+            start_str = self._format_vtt_time(seg.start_ms)
+            end_str = self._format_vtt_time(seg.end_ms)
+            lines.append(f"{start_str} --> {end_str}\n{text}\n")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _format_srt_time(ms: int) -> str:
+        s, msec = divmod(ms, 1000)
+        m, s = divmod(s, 60)
+        h, m = divmod(m, 60)
+        return f"{h:02d}:{m:02d}:{s:02d},{msec:03d}"
+
+    @staticmethod
+    def _format_vtt_time(ms: int) -> str:
+        s, msec = divmod(ms, 1000)
+        m, s = divmod(s, 60)
+        h, m = divmod(m, 60)
+        return f"{h:02d}:{m:02d}:{s:02d}.{msec:03d}"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "session_id": self.session_id,
+            "owner_id": self.config.owner_id,
+            "state": self.state.value,
+            "mode": self.config.mode.value,
+            "source_language": self.config.source_language,
+            "target_language": self.config.target_language,
+            "voice_profile_id": self.config.voice_profile_id,
+            "gender_preference": self.config.gender_preference,
+            "total_audio_ms": self.total_audio_ms,
+            "consumed_blocks": self.consumed_blocks,
+            "settled_blocks": self.settled_blocks,
+            "settled_xu": self.settled_xu,
+            "last_processed_seq": self.last_processed_seq,
+            "last_ack_seq": self.last_ack_seq,
+            "segment_count": len([s for s in self.segments if s.is_final]),
+            "started_at": self.started_at,
+            "ended_at": self.ended_at,
+            "error_message": self.error_message,
+            "pricing_state": PRICING_STATE,
+            "production_paid_admission": PRODUCTION_PAID_ADMISSION,
+            "process_restart_durability": PROCESS_RESTART_DURABILITY,
+        }
+
+
+@dataclass
+class SpeechSegment:
+    segment_id: str
+    sequence_start: int
+    sequence_end: int
+    start_ms: int
+    end_ms: int
+    pcm_bytes: bytes
+    is_silence: bool = False
+
+    @property
+    def duration_ms(self) -> int:
+        return max(0, self.end_ms - self.start_ms)
+
+    def to_wav_bytes(self, sample_rate: int = 16000, channels: int = 1, sample_width: int = 2) -> bytes:
+        out = io.BytesIO()
+        with wave.open(out, "wb") as wf:
+            wf.setnchannels(channels)
+            wf.setsampwidth(sample_width)
+            wf.setframerate(sample_rate)
+            wf.writeframes(self.pcm_bytes)
+        return out.getvalue()
+
+
+class RealtimeAudioIngressBuffer:
+    def __init__(
+        self,
+        sample_rate: int = 16000,
+        silence_threshold_rms: float = 350.0,
+        silence_duration_trigger_ms: int = 600,
+        min_speech_duration_ms: int = 600,
+        max_segment_duration_ms: int = 7000,
+    ):
+        self.sample_rate = sample_rate
+        self.bytes_per_second = sample_rate * 2
+        self.silence_threshold_rms = silence_threshold_rms
+        self.silence_duration_trigger_ms = silence_duration_trigger_ms
+        self.min_speech_duration_ms = min_speech_duration_ms
+        self.max_segment_duration_ms = max_segment_duration_ms
+
+        self._current_pcm: bytearray = bytearray()
+        self._segment_start_ms: int = 0
+        self._current_ms: int = 0
+        self._seq_start: int = 0
+        self._last_seq: int = 0
+        self._silence_ms_accum: int = 0
+        self._segment_counter: int = 0
+        self._has_speech_in_current: bool = False
+
+    @staticmethod
+    def calculate_rms(pcm_bytes: bytes) -> float:
+        if not pcm_bytes:
+            return 0.0
+        num_samples = len(pcm_bytes) // 2
+        if num_samples == 0:
+            return 0.0
+        format_str = f"<{num_samples}h"
+        samples = struct.unpack(format_str, pcm_bytes[: num_samples * 2])
+        sum_squares = sum(s * s for s in samples)
+        mean_square = sum_squares / num_samples
+        return math.sqrt(mean_square)
+
+    def push_chunk(
+        self,
+        seq: int,
+        pcm_bytes: bytes,
+        timestamp_ms: Optional[int] = None,
+    ) -> List[SpeechSegment]:
+        if not pcm_bytes:
+            return []
+        aligned_len = len(pcm_bytes) - (len(pcm_bytes) % 2)
+        if aligned_len <= 0:
+            return []
+        valid_bytes = pcm_bytes[:aligned_len]
+        chunk_duration_ms = int((aligned_len / self.bytes_per_second) * 1000)
+
+        if self._current_ms == 0 and timestamp_ms is not None:
+            self._segment_start_ms = timestamp_ms
+            self._current_ms = timestamp_ms
+            self._seq_start = seq
+        elif timestamp_ms is not None:
+            self._current_ms = timestamp_ms
+
+        if self._seq_start == 0:
+            self._seq_start = seq
+        self._last_seq = seq
+
+        rms = self.calculate_rms(valid_bytes)
+        is_chunk_silent = rms < self.silence_threshold_rms
+
+        if not is_chunk_silent:
+            self._has_speech_in_current = True
+            self._silence_ms_accum = 0
+        else:
+            self._silence_ms_accum += chunk_duration_ms
+
+        self._current_pcm.extend(valid_bytes)
+        self._current_ms += chunk_duration_ms
+        current_dur_ms = self._current_ms - self._segment_start_ms
+
+        segments_to_emit: List[SpeechSegment] = []
+        hit_silence_boundary = (
+            self._has_speech_in_current
+            and self._silence_ms_accum >= self.silence_duration_trigger_ms
+            and current_dur_ms >= self.min_speech_duration_ms
+        )
+        hit_max_duration = current_dur_ms >= self.max_segment_duration_ms
+
+        if hit_silence_boundary or hit_max_duration:
+            segment = self._emit_current_segment()
+            if segment:
+                segments_to_emit.append(segment)
+
+        return segments_to_emit
+
+    def flush(self) -> Optional[SpeechSegment]:
+        if len(self._current_pcm) > 0 and self._has_speech_in_current:
+            return self._emit_current_segment()
+        self._current_pcm.clear()
+        self._has_speech_in_current = False
+        return None
+
+    def _emit_current_segment(self) -> Optional[SpeechSegment]:
+        if not self._current_pcm:
+            return None
+        self._segment_counter += 1
+        seg_id = f"seg_{self._segment_counter:04d}"
+        pcm_data = bytes(self._current_pcm)
+
+        segment = SpeechSegment(
+            segment_id=seg_id,
+            sequence_start=self._seq_start,
+            sequence_end=self._last_seq,
+            start_ms=self._segment_start_ms,
+            end_ms=self._current_ms,
+            pcm_bytes=pcm_data,
+            is_silence=not self._has_speech_in_current,
+        )
+
+        self._current_pcm.clear()
+        self._segment_start_ms = self._current_ms
+        self._seq_start = self._last_seq + 1
+        self._silence_ms_accum = 0
+        self._has_speech_in_current = False
+        return segment
+
+
+# In-memory registry for active sessions
+_ACTIVE_SESSIONS: Dict[str, RealtimeTranslateSession] = {}
+_ACTIVE_INGRESS_BUFFERS: Dict[str, RealtimeAudioIngressBuffer] = {}
+
+
+def get_stream_secret() -> str:
+    """Retrieves secret for signing stream tokens. FAILS CLOSED if not set."""
+    secret = os.environ.get("REALTIME_STREAM_SECRET", "").strip()
+    if not secret or len(secret) < 16:
+        raise RuntimeError("REALTIME_STREAM_SECRET_NOT_CONFIGURED")
+    return secret
+
+
+def generate_stream_token(
+    session_id: str,
+    owner_id: str,
+    device_id: str,
+    expires_at: int,
+    nonce: Optional[str] = None,
+) -> str:
+    secret = get_stream_secret()
+    nonce_val = nonce or uuid.uuid4().hex[:8]
+    payload = f"{session_id}:{owner_id}:{device_id}:{expires_at}:{nonce_val}"
+    signature = hmac.new(
+        secret.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    token_data = {
+        "session_id": session_id,
+        "owner_id": owner_id,
+        "device_id": device_id,
+        "exp": expires_at,
+        "nonce": nonce_val,
+        "sig": signature,
+    }
+    return base64.urlsafe_b64encode(json.dumps(token_data).encode("utf-8")).decode("ascii")
+
+
+def verify_stream_token(token: str, session_id: str) -> Optional[Tuple[str, str]]:
+    try:
+        secret = get_stream_secret()
+        token_clean = token.strip()
+        trans = token_clean.replace("-", "+").replace("_", "/")
+        raw_bytes = base64.b64decode(trans.encode("ascii"), validate=True)
+        raw = raw_bytes.decode("utf-8")
+        data = json.loads(raw)
+        if data.get("session_id") != session_id:
+            return None
+        if time.time() > data.get("exp", 0):
+            return None
+        nonce_val = data.get("nonce", "")
+        device_id = data.get("device_id", "")
+        owner_id = data.get("owner_id", "")
+        payload = f"{data['session_id']}:{owner_id}:{device_id}:{data['exp']}:{nonce_val}"
+        expected_sig = hmac.new(
+            secret.encode("utf-8"),
+            payload.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+        if hmac.compare_digest(data.get("sig", ""), expected_sig):
+            return str(owner_id), str(device_id)
+    except Exception:
+        return None
+    return None
+
+
+class CreateSessionRequest(BaseModel):
+    source_language: str = Field(default="auto", description="Source audio language (e.g. en, zh, ja, auto)")
+    target_language: str = Field(default="vi", description="Target translated language (e.g. vi)")
+    mode: str = Field(default="LIVE_DUB_BILINGUAL", description="Mode: CAPTION_ONLY, CAPTION_TRANSLATE, LIVE_DUB, LIVE_DUB_BILINGUAL")
+    voice_profile_id: Optional[str] = Field(default=None, description="Optional Voice Vault profile ID")
+    gender_preference: Optional[str] = Field(default="male", description="male or female")
+    device_id: Optional[str] = Field(default=None, description="Client device identifier")
+
+
+class SessionResponse(BaseModel):
+    ok: bool
+    session_id: str
+    stream_token: str
+    websocket_url: str
+    mode: str
+    target_language: str
+
+
+@router.post("/sessions", response_model=SessionResponse)
+async def create_live_translate_session(
+    req: CreateSessionRequest,
+    request: Request,
+    account: dict = Depends(require_account),
+) -> SessionResponse:
+    """Creates a new real-time translation session requiring authenticated account."""
+    owner_id = str(account.get("id") or account.get("account_id") or "").strip()
+    if not owner_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="CREATE_OWNER_AUTH: Invalid account identity")
+
+    session_id = f"rts_{uuid.uuid4().hex[:12]}"
+    device_id = req.device_id or f"dev_{uuid.uuid4().hex[:8]}"
+    mode_enum = (
+        RealtimeTranslateMode(req.mode)
+        if req.mode in RealtimeTranslateMode._value2member_map_
+        else RealtimeTranslateMode.LIVE_DUB_BILINGUAL
+    )
+
+    config = RealtimeSessionConfig(
+        owner_id=owner_id,
+        source_language=req.source_language,
+        target_language=req.target_language,
+        mode=mode_enum,
+        voice_profile_id=req.voice_profile_id,
+        gender_preference=req.gender_preference or "male",
+        client_device_id=device_id,
+    )
+
+    session = RealtimeTranslateSession(session_id, config)
+    _ACTIVE_SESSIONS[session_id] = session
+    _ACTIVE_INGRESS_BUFFERS[session_id] = RealtimeAudioIngressBuffer()
+
+    exp = int(time.time()) + TOKEN_TTL_SECONDS
+    try:
+        stream_token = generate_stream_token(session_id, owner_id, device_id, exp)
+    except RuntimeError as e:
+        logger.error(f"Failed to generate stream token (fail closed): {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Server stream security configuration missing")
+
+    ws_url = f"/api/v1/live-translate/sessions/{session_id}/stream?token={stream_token}"
+
+    return SessionResponse(
+        ok=True,
+        session_id=session_id,
+        stream_token=stream_token,
+        websocket_url=ws_url,
+        mode=mode_enum.value,
+        target_language=req.target_language,
+    )
+
+
+@router.get("/sessions/{session_id}")
+async def get_session_status(
+    session_id: str,
+    account: dict = Depends(require_account),
+) -> Dict[str, Any]:
+    """Retrieves session metadata, enforcing owner isolation (STATUS_OWNER_AUTH)."""
+    owner_id = str(account.get("id") or account.get("account_id") or "").strip()
+    session = _ACTIVE_SESSIONS.get(session_id)
+    if not session:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if str(session.config.owner_id) != owner_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden: session belongs to another owner")
+    return {"ok": True, **session.to_dict()}
+
+
+@router.post("/sessions/{session_id}/stop")
+async def stop_session(
+    session_id: str,
+    account: dict = Depends(require_account),
+) -> Dict[str, Any]:
+    """Idempotently stops a session, enforcing owner isolation (STOP_OWNER_AUTH)."""
+    owner_id = str(account.get("id") or account.get("account_id") or "").strip()
+    session = _ACTIVE_SESSIONS.get(session_id)
+    if not session:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if str(session.config.owner_id) != owner_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden: session belongs to another owner")
+
+    session.end()
+    _ACTIVE_INGRESS_BUFFERS.pop(session_id, None)
+    return {"ok": True, "session_id": session_id, "state": session.state.value}
+
+
+@router.get("/sessions/{session_id}/export")
+async def export_session_subtitles(
+    session_id: str,
+    format: str = Query("srt", regex="^(srt|vtt)$"),
+    account: dict = Depends(require_account),
+) -> Dict[str, Any]:
+    """Exports transcript as SRT or WebVTT subtitles, enforcing owner scope (EXPORT_OWNER_AUTH)."""
+    owner_id = str(account.get("id") or account.get("account_id") or "").strip()
+    session = _ACTIVE_SESSIONS.get(session_id)
+    if not session:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if str(session.config.owner_id) != owner_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden: session belongs to another owner")
+
+    content = session.export_srt(owner_id) if format == "srt" else session.export_vtt(owner_id)
+    return {"ok": True, "format": format, "content": content}
+
+
+@router.websocket("/sessions/{session_id}/stream")
+async def websocket_live_stream(websocket: WebSocket, session_id: str, token: str = Query(...)):
+    """WebSocket bidirectional live streaming route for audio and subtitles.
+
+    Enforces:
+    1. WS_OWNER_AUTH: Valid stream token signature and expiration.
+    2. TOKEN_OWNER_ID == SESSION_OWNER_ID verification.
+    3. Monotonic sequence deduplication and server ACK.
+    4. Client reconnect handling.
+    """
+    token_res = verify_stream_token(token, session_id)
+    if not token_res:
+        await websocket.close(code=4401, reason="Unauthorized or invalid stream token")
+        return
+    token_owner_id, token_device_id = token_res
+
+    session = _ACTIVE_SESSIONS.get(session_id)
+    ingress = _ACTIVE_INGRESS_BUFFERS.get(session_id)
+    if not session or not ingress:
+        await websocket.close(code=4404, reason="Session not found")
+        return
+
+    # Verify TOKEN_OWNER_ID == SESSION_OWNER_ID
+    if str(token_owner_id) != str(session.config.owner_id):
+        await websocket.close(code=4403, reason="Forbidden: token owner mismatch")
+        return
+
+    await websocket.accept()
+    session.start()
+
+    try:
+        await websocket.send_json({
+            "type": "session.ready",
+            "session_id": session_id,
+            "mode": session.config.mode.value,
+            "target_language": session.config.target_language,
+            "last_ack_seq": session.last_ack_seq,
+        })
+
+        while True:
+            message = await websocket.receive()
+            if "bytes" in message and message["bytes"]:
+                raw = message["bytes"]
+                if len(raw) < 4:
+                    continue
+
+                seq = struct.unpack("<I", raw[:4])[0]
+                pcm_bytes = raw[4:]
+                chunk_dur_ms = int((len(pcm_bytes) / 32000) * 1000)
+
+                if not session.accept_audio_sequence(seq, duration_ms=chunk_dur_ms):
+                    await websocket.send_json({"type": "ack", "seq": seq, "status": "duplicate_ignored"})
+                    continue
+
+                completed_segments = ingress.push_chunk(seq=seq, pcm_bytes=pcm_bytes)
+                for speech_seg in completed_segments:
+                    # In Web Gateway mode, segments are acknowledged and recorded
+                    transcript_seg = RealtimeTranscriptSegment(
+                        segment_id=speech_seg.segment_id,
+                        sequence=seq,
+                        start_ms=speech_seg.start_ms,
+                        end_ms=speech_seg.end_ms,
+                        source_text="[Audio segment]",
+                        translated_text="",
+                        is_final=True,
+                    )
+                    session.add_segment(transcript_seg)
+
+                ack_seq = session.mark_sequence_processed(seq)
+                await websocket.send_json({"type": "ack", "seq": ack_seq})
+
+                new_blocks = session.compute_pending_metering_blocks()
+                if new_blocks > 0:
+                    settlement = session.settle_blocks(new_blocks, xu_per_block=0)
+                    await websocket.send_json({
+                        "type": "usage.updated",
+                        **settlement,
+                    })
+
+            elif "text" in message and message["text"]:
+                try:
+                    ctrl = json.loads(message["text"])
+                    msg_type = ctrl.get("type", "")
+                    if msg_type == "session.reconnect":
+                        client_last_ack = int(ctrl.get("last_ack_seq", 0))
+                        recon_info = session.handle_reconnect(client_last_ack)
+                        await websocket.send_json({"type": "session.reconnected", **recon_info})
+                    elif msg_type == "session.control":
+                        action = ctrl.get("action", "").lower()
+                        if action == "pause":
+                            session.pause()
+                            await websocket.send_json({"type": "session.state", "state": "paused"})
+                        elif action == "resume":
+                            session.resume()
+                            await websocket.send_json({"type": "session.state", "state": "active"})
+                        elif action == "stop":
+                            session.end()
+                            await websocket.send_json({"type": "session.state", "state": "ended"})
+                            break
+                except Exception as e:
+                    logger.warning(f"Error handling control message: {e}")
+
+    except WebSocketDisconnect:
+        logger.info(f"Session {session_id} WebSocket disconnected.")
+    except Exception as e:
+        logger.error(f"Session {session_id} unexpected error: {e}")
+        session.fail(str(e))
+    finally:
+        session.end()
+        _ACTIVE_INGRESS_BUFFERS.pop(session_id, None)
