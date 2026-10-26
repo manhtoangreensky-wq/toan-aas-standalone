@@ -1790,8 +1790,8 @@
     "callback_templates": 0,
     "commands": 0,
     "conversations": 0,
-    "database_tables": 253,
-    "env_references": 291,
+    "database_tables": 254,
+    "env_references": 292,
     "providers": 14,
     "routes": 872,
     "ui_path_references": 52
@@ -8516,6 +8516,12 @@
       "line": 884,
       "operation": "INSERT INTO",
       "table": "web_workspace_starter_kit_installs"
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "line": 294,
+      "operation": "UPDATE",
+      "table": "without"
     }
   ],
   "database_tables": [
@@ -8771,7 +8777,8 @@
     "web_workspace_draft_handoffs",
     "web_workspace_drafts",
     "web_workspace_setup_profiles",
-    "web_workspace_starter_kit_installs"
+    "web_workspace_starter_kit_installs",
+    "without"
   ],
   "env_references": [
     {
@@ -9101,7 +9108,12 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 507,
+      "line": 637,
+      "name": "REALTIME_ALLOW_UNPRICED_TEST_SESSION"
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "line": 538,
       "name": "REALTIME_STREAM_SECRET"
     },
     {
@@ -16463,7 +16475,7 @@
     {
       "endpoint": "create_live_translate_session",
       "file": "copyfast_realtime_translate.py",
-      "line": 586,
+      "line": 618,
       "methods": [
         "POST"
       ],
@@ -16472,7 +16484,7 @@
     {
       "endpoint": "get_session_status",
       "file": "copyfast_realtime_translate.py",
-      "line": 638,
+      "line": 682,
       "methods": [
         "GET"
       ],
@@ -16481,7 +16493,7 @@
     {
       "endpoint": "export_session_subtitles",
       "file": "copyfast_realtime_translate.py",
-      "line": 671,
+      "line": 715,
       "methods": [
         "GET"
       ],
@@ -16490,7 +16502,7 @@
     {
       "endpoint": "stop_session",
       "file": "copyfast_realtime_translate.py",
-      "line": 653,
+      "line": 697,
       "methods": [
         "POST"
       ],
@@ -18444,7 +18456,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 329,
   "source_files_scanned": 329,
-  "source_fingerprint_sha256": "2ac850daeedd4bd12ff477d3c2b5fc4c1287024855f572ba6e6be0533c6d0991",
+  "source_fingerprint_sha256": "ee51b47a449f5889ba598aa391263b8df23b0bf5361f418fe0fbbdc775732594",
   "source_root": "repository-root",
   "ui_path_references": [
     {
