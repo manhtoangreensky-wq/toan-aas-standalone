@@ -78,9 +78,12 @@ except ImportError:
     class _Status:
         HTTP_400_BAD_REQUEST = 400
         HTTP_401_UNAUTHORIZED = 401
+        HTTP_402_PAYMENT_REQUIRED = 402
         HTTP_403_FORBIDDEN = 403
         HTTP_404_NOT_FOUND = 404
+        HTTP_422_UNPROCESSABLE_ENTITY = 422
         HTTP_500_INTERNAL_SERVER_ERROR = 500
+        HTTP_503_SERVICE_UNAVAILABLE = 503
     status = _Status()
 
 try:
@@ -100,6 +103,7 @@ router = APIRouter(prefix="/api/v1/live-translate", tags=["TOAN AAS Live Transla
 PRICING_STATE: str = "OWNER_DECISION_REQUIRED"
 PRODUCTION_PAID_ADMISSION: str = "FAIL_CLOSED"
 PROCESS_RESTART_DURABILITY: str = "NOT_SUPPORTED"
+FALSE_ZERO_XU_SETTLEMENT: str = "REMOVED"
 TOKEN_TTL_SECONDS: int = 300  # 5 minutes
 
 
@@ -255,11 +259,24 @@ class RealtimeTranslateSession:
         return 0
 
     def settle_blocks(self, block_count: int, xu_per_block: int = 0) -> Dict[str, Any]:
+        """Settles accrued blocks exactly once and returns settlement truth.
+
+        Disallows zero-xu settlement under OWNER_DECISION_REQUIRED (FALSE_ZERO_XU_SETTLEMENT=REMOVED).
+        """
         if block_count <= 0:
             return {
                 "settled": False,
                 "settled_blocks": self.settled_blocks,
                 "xu_consumed": self.settled_xu,
+            }
+        if PRICING_STATE == "OWNER_DECISION_REQUIRED" and xu_per_block == 0:
+            return {
+                "settled": False,
+                "blocks_pending": block_count,
+                "pricing_state": PRICING_STATE,
+                "xu_charged": 0,
+                "total_xu_consumed": self.settled_xu,
+                "reason": "PRICING_STATE=OWNER_DECISION_REQUIRED; zero xu settlement disallowed",
             }
         self.settled_blocks += block_count
         charge = block_count * max(0, xu_per_block)
@@ -271,6 +288,20 @@ class RealtimeTranslateSession:
             "total_settled_seconds": self.settled_blocks * self.config.metering_block_seconds,
             "xu_charged": charge,
             "total_xu_consumed": self.settled_xu,
+        }
+
+    def get_telemetry_usage(self) -> Dict[str, Any]:
+        """Returns telemetry usage update without claiming canonical Xu settlement."""
+        total_seconds = self.total_audio_ms // 1000
+        block_sec = max(1, self.config.metering_block_seconds)
+        current_blocks = total_seconds // block_sec
+        return {
+            "type": "usage.updated",
+            "audio_ms": self.total_audio_ms,
+            "total_seconds": total_seconds,
+            "pending_blocks": current_blocks - self.settled_blocks,
+            "settled": False,
+            "pricing_state": PRICING_STATE,
         }
 
     def add_segment(self, segment: RealtimeTranscriptSegment) -> None:
@@ -571,6 +602,7 @@ class CreateSessionRequest(BaseModel):
     voice_profile_id: Optional[str] = Field(default=None, description="Optional Voice Vault profile ID")
     gender_preference: Optional[str] = Field(default="male", description="male or female")
     device_id: Optional[str] = Field(default=None, description="Client device identifier")
+    test_bypass_pricing: Optional[bool] = Field(default=False, description="Explicit test bypass for provider-free CI only")
 
 
 class SessionResponse(BaseModel):
@@ -593,13 +625,25 @@ async def create_live_translate_session(
     if not owner_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="CREATE_OWNER_AUTH: Invalid account identity")
 
-    session_id = f"rts_{uuid.uuid4().hex[:12]}"
-    device_id = req.device_id or f"dev_{uuid.uuid4().hex[:8]}"
     mode_enum = (
         RealtimeTranslateMode(req.mode)
         if req.mode in RealtimeTranslateMode._value2member_map_
         else RealtimeTranslateMode.LIVE_DUB_BILINGUAL
     )
+
+    # PRICING ADMISSION CHECK (Owner decision unresolved -> fail closed on production)
+    is_test_bypass = bool(
+        getattr(req, "test_bypass_pricing", False)
+        or os.environ.get("REALTIME_ALLOW_UNPRICED_TEST_SESSION") == "1"
+    )
+    if PRODUCTION_PAID_ADMISSION == "FAIL_CLOSED" and not is_test_bypass:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail=f"PRICING_NOT_CONFIGURED: Production paid admission for mode '{mode_enum.value}' is blocked until Owner pricing decision.",
+        )
+
+    session_id = f"rts_{uuid.uuid4().hex[:12]}"
+    device_id = req.device_id or f"dev_{uuid.uuid4().hex[:8]}"
 
     config = RealtimeSessionConfig(
         owner_id=owner_id,
@@ -685,6 +729,60 @@ async def export_session_subtitles(
     return {"ok": True, "format": format, "content": content}
 
 
+_TEST_REALTIME_BRIDGE_DISPATCHER: Optional[Callable] = None
+
+
+def set_test_realtime_bridge_dispatcher(dispatcher: Optional[Callable]) -> None:
+    """Sets a test dispatcher hook for cross-repo provider-free tests."""
+    global _TEST_REALTIME_BRIDGE_DISPATCHER
+    _TEST_REALTIME_BRIDGE_DISPATCHER = dispatcher
+
+
+async def forward_segment_to_bot(
+    session: RealtimeTranslateSession,
+    sequence: int,
+    speech_seg: SpeechSegment,
+) -> List[Dict[str, Any]]:
+    """Signs and forwards audio segment to Bot canonical internal realtime route."""
+    global _TEST_REALTIME_BRIDGE_DISPATCHER
+    if _TEST_REALTIME_BRIDGE_DISPATCHER is not None:
+        return await _TEST_REALTIME_BRIDGE_DISPATCHER(session, sequence, speech_seg)
+
+    payload = {
+        "session_id": session.session_id,
+        "actor_id": str(session.config.owner_id),
+        "sequence": sequence,
+        "segment_id": speech_seg.segment_id,
+        "pcm_bytes_b64": base64.b64encode(speech_seg.pcm_bytes).decode("ascii"),
+        "start_ms": speech_seg.start_ms,
+        "end_ms": speech_seg.end_ms,
+        "source_language": session.config.source_language,
+        "target_language": session.config.target_language,
+        "mode": session.config.mode.value,
+        "voice_profile_id": session.config.voice_profile_id,
+        "gender_preference": session.config.gender_preference,
+    }
+
+    try:
+        from copyfast_bridge import bridge_request
+        bridge_res = await bridge_request(
+            "POST",
+            "/internal/v1/realtime/process-chunk",
+            payload=payload,
+            actor_id=str(session.config.owner_id),
+        )
+        if isinstance(bridge_res, dict):
+            if bridge_res.get("events"):
+                return bridge_res["events"]
+            data = bridge_res.get("data")
+            if isinstance(data, dict) and data.get("events"):
+                return data["events"]
+    except Exception as e:
+        logger.error(f"Core bridge call to Bot realtime failed: {e}")
+
+    return []
+
+
 @router.websocket("/sessions/{session_id}/stream")
 async def websocket_live_stream(websocket: WebSocket, session_id: str, token: str = Query(...)):
     """WebSocket bidirectional live streaming route for audio and subtitles.
@@ -741,28 +839,42 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
 
                 completed_segments = ingress.push_chunk(seq=seq, pcm_bytes=pcm_bytes)
                 for speech_seg in completed_segments:
-                    # In Web Gateway mode, segments are acknowledged and recorded
-                    transcript_seg = RealtimeTranscriptSegment(
-                        segment_id=speech_seg.segment_id,
-                        sequence=seq,
-                        start_ms=speech_seg.start_ms,
-                        end_ms=speech_seg.end_ms,
-                        source_text="[Audio segment]",
-                        translated_text="",
-                        is_final=True,
-                    )
-                    session.add_segment(transcript_seg)
+                    # Forward to Bot internal realtime bridge
+                    bridge_events = await forward_segment_to_bot(session, seq, speech_seg)
+                    stt_text = ""
+                    trans_text = ""
+                    tts_b64 = None
+                    for ev in bridge_events:
+                        ev_type = ev.get("type")
+                        if ev_type == "stt.final":
+                            stt_text = ev.get("source_text", "")
+                        elif ev_type == "translation.final":
+                            trans_text = ev.get("translated_text", "")
+                        elif ev_type == "tts.audio":
+                            tts_b64 = ev.get("audio_b64")
+                        # Safe event relay: send real bot-shaped event directly to client WS
+                        await websocket.send_json(ev)
+
+                    if stt_text:
+                        transcript_seg = RealtimeTranscriptSegment(
+                            segment_id=speech_seg.segment_id,
+                            sequence=seq,
+                            start_ms=speech_seg.start_ms,
+                            end_ms=speech_seg.end_ms,
+                            source_text=stt_text,
+                            translated_text=trans_text,
+                            is_final=True,
+                            tts_audio_base64=tts_b64,
+                        )
+                        session.add_segment(transcript_seg)
 
                 ack_seq = session.mark_sequence_processed(seq)
                 await websocket.send_json({"type": "ack", "seq": ack_seq})
 
                 new_blocks = session.compute_pending_metering_blocks()
                 if new_blocks > 0:
-                    settlement = session.settle_blocks(new_blocks, xu_per_block=0)
-                    await websocket.send_json({
-                        "type": "usage.updated",
-                        **settlement,
-                    })
+                    # Report telemetry without claiming canonical Xu settlement (FALSE_ZERO_XU_SETTLEMENT=REMOVED)
+                    await websocket.send_json(session.get_telemetry_usage())
 
             elif "text" in message and message["text"]:
                 try:

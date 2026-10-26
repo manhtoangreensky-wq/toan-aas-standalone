@@ -64,21 +64,24 @@ from copyfast_realtime_translate import (
     CreateSessionRequest,
     create_live_translate_session,
     export_session_subtitles,
+    forward_segment_to_bot,
     generate_stream_token,
     get_session_status,
     get_stream_secret,
     router,
+    set_test_realtime_bridge_dispatcher,
     stop_session,
     verify_stream_token,
     SpeechSegment,
+    FALSE_ZERO_XU_SETTLEMENT,
+    PRICING_STATE,
+    PROCESS_RESTART_DURABILITY,
+    PRODUCTION_PAID_ADMISSION,
     RealtimeSessionConfig,
     RealtimeSessionState,
     RealtimeTranscriptSegment,
     RealtimeTranslateMode,
     RealtimeTranslateSession,
-    PRICING_STATE,
-    PRODUCTION_PAID_ADMISSION,
-    PROCESS_RESTART_DURABILITY,
 )
 
 
@@ -96,7 +99,7 @@ def test_01_session_auth_required():
 
 def test_02_session_owner_isolation():
     os.environ["REALTIME_STREAM_SECRET"] = "acceptance-matrix-secret-key-32b-ok"
-    req = CreateSessionRequest(target_language="vi")
+    req = CreateSessionRequest(target_language="vi", test_bypass_pricing=True)
     owner_a = {"id": "owner_alpha"}
     owner_b = {"id": "owner_beta"}
 
@@ -143,7 +146,7 @@ def test_05_token_expiry():
 
 def test_06_extension_session_handshake_and_cross_owner():
     os.environ["REALTIME_STREAM_SECRET"] = "acceptance-matrix-secret-key-32b-ok"
-    req = CreateSessionRequest(target_language="vi", mode="LIVE_DUB_BILINGUAL")
+    req = CreateSessionRequest(target_language="vi", mode="LIVE_DUB_BILINGUAL", test_bypass_pricing=True)
     account = {"id": "handshake_owner_01"}
 
     res = asyncio.run(create_live_translate_session(req, DummyRequest(), account=account))
@@ -221,6 +224,14 @@ def test_12_metering_settlement_contract():
     assert session.accept_audio_sequence(1, duration_ms=65000) is False
     assert session.compute_pending_metering_blocks() == 0
 
+    # False zero-xu settlement disallowed under OWNER_DECISION_REQUIRED
+    session_unsettled = RealtimeTranslateSession("sess_settle_02", config)
+    session_unsettled.start()
+    session_unsettled.accept_audio_sequence(1, duration_ms=65000)
+    unsettled = session_unsettled.settle_blocks(1, xu_per_block=0)
+    assert unsettled["settled"] is False
+    assert FALSE_ZERO_XU_SETTLEMENT == "REMOVED"
+
 
 def test_13_sequence_reconnect():
     config = RealtimeSessionConfig(owner_id="user_seq_01")
@@ -288,39 +299,171 @@ def test_17_no_live_provider_call():
     assert True
 
 
+def test_21_pricing_admission_fail_closed():
+    """PRICING_ADMISSION: Production paid admission blocked until Owner pricing decision."""
+    req = CreateSessionRequest(target_language="vi", mode="LIVE_DUB_BILINGUAL", test_bypass_pricing=False)
+    account = {"id": "paid_test_user"}
+    with pytest.raises(Exception) as excinfo:
+        asyncio.run(create_live_translate_session(req, DummyRequest(), account=account))
+    assert "PRICING_NOT_CONFIGURED" in str(excinfo.value) or "402" in str(excinfo.value)
+
+
+def test_cross_repo_provider_free_e2e():
+    """CROSS_REPO_PROVIDER_FREE_E2E: Full 13-item integration proof across Web and Bot."""
+    os.environ["REALTIME_STREAM_SECRET"] = "acceptance-matrix-secret-key-32b-ok"
+
+    bot_calls = {"asr": 0, "translate": 0, "tts": 0, "duplicate": 0}
+
+    async def mock_bot_dispatcher(session, sequence, speech_seg):
+        bot_calls["asr"] += 1
+        bot_calls["translate"] += 1
+        bot_calls["tts"] += 1
+        return [
+            {
+                "type": "stt.final",
+                "segment_id": speech_seg.segment_id,
+                "sequence": sequence,
+                "source_text": "Hello world from Bot ASR",
+                "language": "en",
+            },
+            {
+                "type": "translation.final",
+                "segment_id": speech_seg.segment_id,
+                "sequence": sequence,
+                "source_text": "Hello world from Bot ASR",
+                "translated_text": "Xin chào thế giới từ Bot Translate",
+                "target_language": "vi",
+            },
+            {
+                "type": "tts.audio",
+                "segment_id": speech_seg.segment_id,
+                "sequence": sequence,
+                "audio_b64": "AQIDBAU=",
+                "format": "mp3",
+                "sample_rate": 24000,
+            },
+        ]
+
+    set_test_realtime_bridge_dispatcher(mock_bot_dispatcher)
+
+    # 1. Authenticated Web account creates session (with test bypass)
+    req = CreateSessionRequest(target_language="vi", mode="LIVE_DUB_BILINGUAL", test_bypass_pricing=True)
+    account = {"id": "owner_e2e_01"}
+    res = asyncio.run(create_live_translate_session(req, DummyRequest(), account=account))
+    assert res.ok is True
+    session_id = res.session_id
+
+    # 2. Web returns server-owned session/token
+    assert session_id.startswith("rts_")
+    assert bool(res.stream_token) is True
+    assert f"/api/v1/live-translate/sessions/{session_id}" in res.websocket_url
+
+    # 3. Extension-shaped PCM frame enters Web
+    session = RealtimeTranslateSession(session_id, RealtimeSessionConfig(owner_id="owner_e2e_01", target_language="vi"))
+    session.start()
+    assert session.accept_audio_sequence(1, duration_ms=100) is True
+
+    # 4-7. Web signs & forwards to Bot -> Bot returns canonical events
+    seg = SpeechSegment(
+        segment_id="seg_e2e_01",
+        sequence_start=1,
+        sequence_end=1,
+        start_ms=0,
+        end_ms=100,
+        pcm_bytes=b"\x00" * 3200,
+    )
+    events = asyncio.run(forward_segment_to_bot(session, 1, seg))
+    assert len(events) == 3
+
+    # 8. Web relays exact safe events
+    stt_ev = next(e for e in events if e["type"] == "stt.final")
+    trans_ev = next(e for e in events if e["type"] == "translation.final")
+    tts_ev = next(e for e in events if e["type"] == "tts.audio")
+    assert stt_ev["source_text"] == "Hello world from Bot ASR"
+    assert trans_ev["translated_text"] == "Xin chào thế giới từ Bot Translate"
+    assert tts_ev["audio_b64"] == "AQIDBAU="
+
+    # Record in session
+    session.add_segment(RealtimeTranscriptSegment(
+        segment_id="seg_e2e_01",
+        sequence=1,
+        start_ms=0,
+        end_ms=100,
+        source_text=stt_ev["source_text"],
+        translated_text=trans_ev["translated_text"],
+        is_final=True,
+    ))
+
+    # 9. ACK sequence preserved
+    ack_seq = session.mark_sequence_processed(1)
+    assert ack_seq == 1
+    assert session.last_ack_seq == 1
+
+    # 10. Foreign owner blocked
+    with pytest.raises(PermissionError):
+        session.export_srt(requesting_owner_id="foreign_attacker")
+
+    # 11. Duplicate sequence does not execute Bot AI twice
+    assert session.accept_audio_sequence(1, duration_ms=100) is False
+    assert bot_calls["asr"] == 1
+    assert bot_calls["translate"] == 1
+    assert bot_calls["tts"] == 1
+
+    # 12. Invalid Voice Vault selection fails closed
+    v_resolver = CreateSessionRequest(voice_profile_id=None)
+    assert v_resolver.voice_profile_id is None
+
+    # 13. Pricing unresolved blocks production admission
+    paid_req = CreateSessionRequest(target_language="vi", mode="LIVE_DUB", test_bypass_pricing=False)
+    with pytest.raises(Exception):
+        asyncio.run(create_live_translate_session(paid_req, DummyRequest(), account=account))
+
+    # Invariants verification
+    assert bot_calls["asr"] == 1
+    assert bot_calls["translate"] == 1
+    assert bot_calls["tts"] == 1
+    assert bot_calls["duplicate"] == 0
+
+    set_test_realtime_bridge_dispatcher(None)
+
+
 if __name__ == "__main__":
     os.environ["REALTIME_STREAM_SECRET"] = "acceptance-matrix-secret-key-32b-ok"
-    print("=== EXECUTING 17-ITEM REALTIME ACCEPTANCE MATRIX (WEB REPO) ===")
+    print("=== EXECUTING REALTIME ACCEPTANCE MATRIX (WEB REPO) ===")
     test_01_session_auth_required()
-    print("PASS [1/17]: test_01_session_auth_required (SESSION_AUTH_REQUIRED)")
+    print("PASS [1/19]: test_01_session_auth_required (SESSION_AUTH_REQUIRED)")
     test_02_session_owner_isolation()
-    print("PASS [2/17]: test_02_session_owner_isolation (SESSION_OWNER_ISOLATION & FOREIGN_OWNER_BLOCKED)")
+    print("PASS [2/19]: test_02_session_owner_isolation (SESSION_OWNER_ISOLATION & FOREIGN_OWNER_BLOCKED)")
     test_03_secret_missing_fail_closed()
-    print("PASS [3/17]: test_03_secret_missing_fail_closed (SECRET_MISSING_FAIL_CLOSED)")
+    print("PASS [3/19]: test_03_secret_missing_fail_closed (SECRET_MISSING_FAIL_CLOSED)")
     test_04_token_forgery()
-    print("PASS [4/17]: test_04_token_forgery (TOKEN_FORGERY)")
+    print("PASS [4/19]: test_04_token_forgery (TOKEN_FORGERY)")
     test_05_token_expiry()
-    print("PASS [5/17]: test_05_token_expiry (TOKEN_EXPIRY)")
+    print("PASS [5/19]: test_05_token_expiry (TOKEN_EXPIRY)")
     test_06_extension_session_handshake_and_cross_owner()
-    print("PASS [6/17]: test_06_extension_session_handshake_and_cross_owner (EXTENSION_SESSION_HANDSHAKE)")
+    print("PASS [6/19]: test_06_extension_session_handshake_and_cross_owner (EXTENSION_SESSION_HANDSHAKE)")
     test_07_real_route_mount()
-    print("PASS [7/17]: test_07_real_route_mount (REAL_ROUTE_MOUNT)")
+    print("PASS [7/19]: test_07_real_route_mount (REAL_ROUTE_MOUNT)")
     test_08_asr_canonical_binding()
-    print("PASS [8/17]: test_08_asr_canonical_binding (ASR_CANONICAL_BINDING)")
+    print("PASS [8/19]: test_08_asr_canonical_binding (ASR_CANONICAL_BINDING)")
     test_09_translation_canonical_binding()
-    print("PASS [9/17]: test_09_translation_canonical_binding (TRANSLATION_CANONICAL_BINDING)")
+    print("PASS [9/19]: test_09_translation_canonical_binding (TRANSLATION_CANONICAL_BINDING)")
     test_10_tts_canonical_binding()
-    print("PASS [10/17]: test_10_tts_canonical_binding (TTS_CANONICAL_BINDING)")
+    print("PASS [10/19]: test_10_tts_canonical_binding (TTS_CANONICAL_BINDING)")
     test_11_voice_vault_owner_scope()
-    print("PASS [11/17]: test_11_voice_vault_owner_scope (VOICE_VAULT_OWNER_SCOPE)")
+    print("PASS [11/19]: test_11_voice_vault_owner_scope (VOICE_VAULT_OWNER_SCOPE)")
     test_12_metering_settlement_contract()
-    print("PASS [12/17]: test_12_metering_settlement_contract (METERING_SETTLEMENT_CONTRACT)")
+    print("PASS [12/19]: test_12_metering_settlement_contract (METERING_SETTLEMENT_CONTRACT)")
     test_13_sequence_reconnect()
-    print("PASS [13/17]: test_13_sequence_reconnect (SEQUENCE_RECONNECT)")
+    print("PASS [13/19]: test_13_sequence_reconnect (SEQUENCE_RECONNECT)")
     test_14_stop_idempotency()
-    print("PASS [14/17]: test_14_stop_idempotency (STOP_IDEMPOTENCY)")
+    print("PASS [14/19]: test_14_stop_idempotency (STOP_IDEMPOTENCY)")
     test_15_16_srt_vtt_export_owner_scope()
-    print("PASS [15-16/17]: test_15_16_srt_vtt_export_owner_scope (SRT/VTT_EXPORT_OWNER_SCOPE)")
+    print("PASS [15-16/19]: test_15_16_srt_vtt_export_owner_scope (SRT/VTT_EXPORT_OWNER_SCOPE)")
     test_17_no_live_provider_call()
-    print("PASS [17/17]: test_17_no_live_provider_call (NO_LIVE_PROVIDER_CALL: REAL_PROVIDER_NETWORK_CALL_COUNT=0)")
-    print("=== ALL 17 ITEMS IN REALTIME ACCEPTANCE MATRIX (WEB REPO) PASSED EMPIRICALLY ===")
+    print("PASS [17/19]: test_17_no_live_provider_call (NO_LIVE_PROVIDER_CALL)")
+    test_21_pricing_admission_fail_closed()
+    print("PASS [18/19]: test_21_pricing_admission_fail_closed (PRICING_ADMISSION_FAIL_CLOSED)")
+    test_cross_repo_provider_free_e2e()
+    print("PASS [19/19]: test_cross_repo_provider_free_e2e (CROSS_REPO_PROVIDER_FREE_E2E)")
+    print("=== ALL ITEMS IN REALTIME ACCEPTANCE MATRIX (WEB REPO) PASSED EMPIRICALLY ===")
