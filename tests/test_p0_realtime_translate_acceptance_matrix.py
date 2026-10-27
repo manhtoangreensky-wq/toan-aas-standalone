@@ -490,10 +490,28 @@ if not bot_loaded:
         if req.voice_profile_id and resolved_voice.validation_status != "valid":
             code = 403 if resolved_voice.error_code == "FOREIGN_PROFILE_BLOCKED" else 422
             raise HTTPException(status_code=code, detail=f"Voice profile validation failed: {resolved_voice.error_code}")
+        source_text = "Hello world from Bot ASR"
+        if _CANONICAL_ASR_PRIMITIVE:
+            asr_res = await _CANONICAL_ASR_PRIMITIVE(b"", content_type="audio/wav", language=req.source_language)
+            if isinstance(asr_res, dict) and asr_res.get("text"):
+                source_text = asr_res["text"]
+
+        translated_text = "Xin chào thế giới từ Bot Translate"
+        if _CANONICAL_TRANSLATION_PRIMITIVE:
+            trans_res = await _CANONICAL_TRANSLATION_PRIMITIVE(source_text, target_lang=req.target_language)
+            if isinstance(trans_res, dict) and trans_res.get("text"):
+                translated_text = trans_res["text"]
+
+        audio_b64 = "AQIDBAU="
+        if _CANONICAL_TTS_PRIMITIVE:
+            tts_res = await _CANONICAL_TTS_PRIMITIVE(translated_text, voice_id=resolved_voice.voice_id)
+            if isinstance(tts_res, tuple) and len(tts_res) > 1 and isinstance(tts_res[1], bytes):
+                audio_b64 = base64.b64encode(tts_res[1]).decode("ascii")
+
         events = [
-            {"type": "stt.final", "segment_id": req.segment_id, "sequence": req.sequence, "source_text": "Hello world from Bot ASR", "language": "en"},
-            {"type": "translation.final", "segment_id": req.segment_id, "sequence": req.sequence, "source_text": "Hello world from Bot ASR", "translated_text": "Xin chào thế giới từ Bot Translate", "target_language": "vi"},
-            {"type": "tts.audio", "segment_id": req.segment_id, "sequence": req.sequence, "audio_b64": "AQIDBAU=", "format": "mp3", "sample_rate": 24000},
+            {"type": "stt.final", "segment_id": req.segment_id, "sequence": req.sequence, "source_text": source_text, "language": "en"},
+            {"type": "translation.final", "segment_id": req.segment_id, "sequence": req.sequence, "source_text": source_text, "translated_text": translated_text, "target_language": req.target_language},
+            {"type": "tts.audio", "segment_id": req.segment_id, "sequence": req.sequence, "audio_b64": audio_b64, "format": "mp3", "sample_rate": 24000},
         ]
         return {"ok": True, "session_id": req.session_id, "sequence": req.sequence, "events": events}
 
