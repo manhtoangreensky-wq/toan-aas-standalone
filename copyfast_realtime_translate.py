@@ -172,7 +172,9 @@ class RealtimeTranslateSession:
         self.last_processed_seq: int = 0
         self.last_ack_seq: int = 0
         self.received_seq_set: Set[int] = set()
+        self.buffered_seq_set: Set[int] = set()
         self.processed_seq_set: Set[int] = set()
+        self.rejected_seq_set: Set[int] = set()
         self.pending_retry_segments: Dict[int, Any] = {}
 
         self.total_audio_ms: int = 0
@@ -224,14 +226,16 @@ class RealtimeTranslateSession:
 
         Strictly separates:
         1. RECEIVED/IN_FLIGHT: tracks sequences received/in-flight (retryable upon transient failure).
-        2. PROCESSED/ACKED: sequences already successfully processed return False (duplicate_ignored).
-        3. processed_seq_set / last_processed_seq / last_ack_seq ONLY advance after BOT_BRIDGE_SUCCESS.
+        2. BUFFERED: sequences stored in ingress buffer awaiting VAD segment boundary.
+        3. PROCESSED/ACKED: sequences already successfully processed by Bot return False (duplicate_ignored).
+        4. REJECTED: sequences permanently rejected by server authority return False.
+        5. processed_seq_set / last_processed_seq / last_ack_seq ONLY advance after BOT_BRIDGE_SUCCESS.
         """
         if self.state not in (RealtimeSessionState.ACTIVE, RealtimeSessionState.CREATED):
             return False
         if seq <= 0:
             return False
-        if seq in self.processed_seq_set or seq <= self.last_processed_seq:
+        if seq in self.processed_seq_set or seq in self.rejected_seq_set or seq <= self.last_processed_seq:
             return False
 
         if seq not in self.received_seq_set:
@@ -239,6 +243,12 @@ class RealtimeTranslateSession:
             self.total_audio_ms += max(0, duration_ms)
         self.last_client_seq = max(self.last_client_seq, seq)
         return True
+
+    def mark_sequence_buffered(self, seq: int) -> None:
+        """Tracks sequences buffered in ingress awaiting segment boundary.
+        DOES NOT advance last_processed_seq, last_ack_seq, or processed_seq_set.
+        """
+        self.buffered_seq_set.add(seq)
 
     def mark_sequence_processed(self, seq: int) -> int:
         """Advances processed/acked state strictly upon BOT_BRIDGE_SUCCESS."""
@@ -248,11 +258,19 @@ class RealtimeTranslateSession:
         self.last_ack_seq = self.last_processed_seq
         return self.last_ack_seq
 
+    def mark_sequence_rejected(self, seq: int) -> None:
+        """Records permanent rejection without marking as Bot success."""
+        self.rejected_seq_set.add(seq)
+        self.pending_retry_segments.pop(seq, None)
+
     def is_sequence_processed(self, seq: int) -> bool:
         return seq in self.processed_seq_set
 
+    def is_sequence_buffered(self, seq: int) -> bool:
+        return seq in self.buffered_seq_set and seq not in self.processed_seq_set
+
     def is_sequence_in_flight(self, seq: int) -> bool:
-        return seq in self.received_seq_set and seq not in self.processed_seq_set
+        return seq in self.received_seq_set and seq not in self.processed_seq_set and seq not in self.rejected_seq_set
 
     def handle_reconnect(self, client_last_ack_seq: int) -> Dict[str, Any]:
         return {
@@ -960,9 +978,12 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                     await websocket.send_json({"type": "ack", "seq": seq, "status": "duplicate_ignored"})
                     continue
 
-                completed_segments = ingress.push_chunk(seq=seq, pcm_bytes=pcm_bytes)
-                if not completed_segments and seq in session.pending_retry_segments:
+                if seq in session.pending_retry_segments:
+                    # Retry of pending segment: reuse stored SpeechSegment directly;
+                    # DO NOT re-ingest PCM into ingress buffer (RETRY_PCM_REINGEST_COUNT=0)!
                     completed_segments = [session.pending_retry_segments[seq]]
+                else:
+                    completed_segments = ingress.push_chunk(seq=seq, pcm_bytes=pcm_bytes)
 
                 if completed_segments:
                     for speech_seg in completed_segments:
@@ -1006,7 +1027,7 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
 
                         elif bridge_res.status == "permanent_rejection":
                             # BOT_PERMANENT_REJECTION -> safe error event -> NO false success ACK
-                            session.pending_retry_segments.pop(seq, None)
+                            session.mark_sequence_rejected(seq)
                             safe_err_event = {
                                 "type": "error",
                                 "error_code": bridge_res.error_code or "PERMANENT_REJECTION",
@@ -1029,9 +1050,10 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                             # NO mark_sequence_processed(seq)
                             # NO success ACK
                 else:
-                    # Ingress buffer accepted chunk; segment boundary not yet reached
-                    ack_seq = session.mark_sequence_processed(seq)
-                    await websocket.send_json({"type": "ack", "seq": ack_seq})
+                    # Ingress buffer accepted chunk; segment boundary not yet reached.
+                    # CRITICAL (Section A): Do NOT mark processed as Bot success!
+                    session.mark_sequence_buffered(seq)
+                    await websocket.send_json({"type": "buffered", "seq": seq})
 
             elif "text" in message and message["text"]:
                 try:

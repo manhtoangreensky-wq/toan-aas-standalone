@@ -27,8 +27,10 @@ import hashlib
 import hmac
 import json
 import os
+import struct
 import sys
 import time
+import uuid
 from pathlib import Path
 
 _REPO_ROOT = str(Path(__file__).resolve().parent.parent)
@@ -674,117 +676,228 @@ def test_cross_repo_provider_free_e2e():
             os.environ.pop("CORE_BRIDGE_HMAC_SECRET", None)
 
 
-def test_23_true_two_phase_sequence_ack_and_retryable_regression():
-    """Mandatory RT-FIX5 Two-Phase Sequence ACK & Retryable Regression:
-    attempt_1 = transient failure -> NO processed mark, NO ACK
-    replay same seq -> retryable (not blocked as duplicate)
-    attempt_2 = success -> mark_sequence_processed -> exactly 1 success ACK
-    replay after success -> blocked as duplicate
-    bridge_call_count = 2
-    ACK_AFTER_ATTEMPT_1 = 0
-    SUCCESS_ACK_TOTAL = 1
-    permanent_rejection = safe error event, NO success ACK
+def test_23_websocket_runtime_ack_and_retry_ingress_idempotency():
+    """Mandatory RT-FIX6: Actual WebSocket runtime regression test executing
+    websocket_live_stream -> RealtimeAudioIngressBuffer -> forward_segment_to_bot.
+    Creates real VAD/segment boundary and proves:
+    1. initial PCM accepted
+    2. Bot attempt #1 transient fails
+    3. no success ACK
+    4. sequence remains retryable
+    5. same sequence is replayed
+    6. PCM is NOT pushed through ingress again (RETRY_PCM_REINGEST_COUNT=0)
+    7. stored pending segment is used (PENDING_SEGMENT_REUSED=YES)
+    8. Bot attempt #2 succeeds
+    9. exactly one processed ACK
+    10. pending segment removed
+    11. no duplicate PCM remains buffered (INGRESS_RESIDUAL_DUPLICATE_PCM=0)
+    12. replay after success is duplicate and does not call Bot #3
+    13. partial buffer chunk sends 'buffered' event, does NOT advance processed state
+    14. permanent rejection emits safe error event, removes pending state, NO success ACK
     """
-    config = RealtimeSessionConfig(owner_id="user_retry_regression_01", target_language="vi")
-    session = RealtimeTranslateSession("sess_retry_reg_01", config)
-    session.start()
-
-    seq = 42
-    seg = SpeechSegment(
-        segment_id="seg_retry_42",
-        sequence_start=seq,
-        sequence_end=seq,
-        start_ms=0,
-        end_ms=100,
-        pcm_bytes=b"\x00" * 3200,
+    from copyfast_realtime_translate import (
+        _ACTIVE_SESSIONS,
+        _ACTIVE_INGRESS_BUFFERS,
+        websocket_live_stream,
+        RealtimeAudioIngressBuffer,
     )
+    import copyfast_bridge
 
-    bridge_call_count = 0
-    ack_after_attempt_1 = 0
-    success_ack_total = 0
+    owner_id = "ws_test_owner_01"
+    session_id = f"rts_ws_test_{uuid.uuid4().hex[:8]}"
+    device_id = "dev_ws_01"
+    exp = int(time.time()) + 3600
+    token = generate_stream_token(session_id, owner_id, device_id, exp)
 
-    # ATTEMPT 1: Transient failure
-    assert session.accept_audio_sequence(seq, duration_ms=100) is True
-    assert session.is_sequence_in_flight(seq) is True
-    assert session.is_sequence_processed(seq) is False
+    config = RealtimeSessionConfig(owner_id=owner_id, target_language="vi")
+    session = RealtimeTranslateSession(session_id, config)
+    ingress = RealtimeAudioIngressBuffer()
 
-    bridge_call_count += 1
-    transient_res = BotBridgeResponse(
-        events=[],
-        status="transient_failure",
-        error_code="CORE_BRIDGE_UNAVAILABLE",
-        status_code=503,
-    )
-    if transient_res.status == "success":
-        ack_seq = session.mark_sequence_processed(seq)
-        ack_after_attempt_1 += 1
-    else:
-        session.pending_retry_segments[seq] = seg
+    _ACTIVE_SESSIONS[session_id] = session
+    _ACTIVE_INGRESS_BUFFERS[session_id] = ingress
 
-    assert ack_after_attempt_1 == 0
-    assert session.is_sequence_processed(seq) is False
-    assert session.last_processed_seq == 0
-    assert session.last_ack_seq == 0
+    # Instrument ingress.push_chunk to verify RETRY_PCM_REINGEST_COUNT
+    orig_push_chunk = ingress.push_chunk
+    push_chunk_calls = []
 
-    # ATTEMPT 2: Client reconnects / replays the SAME sequence
-    # accept_audio_sequence MUST accept it (retryable!)
-    assert session.accept_audio_sequence(seq, duration_ms=100) is True
-    assert session.is_sequence_processed(seq) is False
+    def tracked_push_chunk(seq, pcm_bytes, timestamp_ms=None):
+        push_chunk_calls.append({"seq": seq, "bytes_len": len(pcm_bytes)})
+        return orig_push_chunk(seq=seq, pcm_bytes=pcm_bytes, timestamp_ms=timestamp_ms)
 
-    bridge_call_count += 1
-    success_res = BotBridgeResponse(
-        events=[{"type": "stt.final", "source_text": "OK"}],
-        status="success",
-        status_code=200,
-    )
-    if success_res.status == "success":
-        ack_seq = session.mark_sequence_processed(seq)
-        success_ack_total += 1
+    ingress.push_chunk = tracked_push_chunk
 
-    assert success_ack_total == 1
-    assert session.is_sequence_processed(seq) is True
-    assert session.last_processed_seq == seq
-    assert session.last_ack_seq == seq
-    assert bridge_call_count == 2
-    assert seq not in session.pending_retry_segments
+    # Real VAD segment boundary: 7000ms PCM with non-silent amplitude
+    speech_pcm = b"\x50\x05" * 112000
+    seq = 100
 
-    # ATTEMPT 3: Client sends the same sequence AFTER success -> must be blocked as duplicate!
-    assert session.accept_audio_sequence(seq, duration_ms=100) is False
-    assert bridge_call_count == 2
-    assert success_ack_total == 1
+    # Instrument Bot bridge responses
+    bridge_invocations = []
+    orig_bridge_request = copyfast_bridge.bridge_request
 
-    # PERMANENT REJECTION TEST
-    perm_seq = 43
-    perm_seg = SpeechSegment(
-        segment_id="seg_perm_43",
-        sequence_start=perm_seq,
-        sequence_end=perm_seq,
-        start_ms=100,
-        end_ms=200,
-        pcm_bytes=b"\x00" * 3200,
-    )
-    assert session.accept_audio_sequence(perm_seq, duration_ms=100) is True
-    perm_res = BotBridgeResponse(
-        events=[],
-        status="permanent_rejection",
-        error_code="FOREIGN_PROFILE_BLOCKED",
-        status_code=403,
-    )
-    perm_safe_events = []
-    if perm_res.status == "permanent_rejection":
-        session.pending_retry_segments.pop(perm_seq, None)
-        perm_safe_events.append({
-            "type": "error",
-            "error_code": perm_res.error_code,
-            "message": "Speech processing rejected by server authority.",
-            "sequence": perm_seq,
-        })
+    async def mock_bridge_request(method, path, payload=None, actor_id=None, **kwargs):
+        bridge_invocations.append({"method": method, "path": path, "payload": payload, "actor": actor_id})
+        call_num = len(bridge_invocations)
+        if call_num == 1:
+            # Attempt 1: Transient network failure
+            return {
+                "ok": False,
+                "status": "transient_failure",
+                "error_code": "CORE_BRIDGE_UNAVAILABLE",
+                "message": "Bot unreachable (transient)",
+                "status_code": 503,
+            }
+        elif call_num == 2:
+            # Attempt 2: Bot success
+            return {
+                "ok": True,
+                "status": "success",
+                "status_code": 200,
+                "events": [
+                    {"type": "stt.final", "sequence": seq, "source_text": "Hello world from Bot ASR", "language": "en"},
+                    {"type": "translation.final", "sequence": seq, "translated_text": "Xin chào thế giới từ Bot Translate", "target_language": "vi"},
+                    {"type": "tts.audio", "sequence": seq, "audio_b64": "AQIDBAU="},
+                ],
+            }
+        elif call_num == 3:
+            # Attempt 3 (for permanent rejection test): 403 Forbidden
+            return {
+                "ok": False,
+                "status": "permanent_rejection",
+                "error_code": "FOREIGN_PROFILE_BLOCKED",
+                "message": "Voice profile foreign",
+                "status_code": 403,
+            }
+        return {"ok": False, "status": "transient_failure", "status_code": 500}
 
-    assert len(perm_safe_events) == 1
-    assert perm_safe_events[0]["error_code"] == "FOREIGN_PROFILE_BLOCKED"
-    assert session.is_sequence_processed(perm_seq) is False
-    assert session.last_ack_seq == seq  # Still 42
-    assert success_ack_total == 1       # Still 1
+    copyfast_bridge.bridge_request = mock_bridge_request
+
+    class FakeWebSocket:
+        def __init__(self, incoming):
+            self._incoming = list(incoming)
+            self.sent_json = []
+            self.closed = False
+            self.close_code = None
+
+        async def accept(self):
+            pass
+
+        async def close(self, code=1000, reason=""):
+            self.closed = True
+            self.close_code = code
+
+        async def send_json(self, data):
+            self.sent_json.append(data)
+
+        async def receive(self):
+            if self._incoming:
+                return self._incoming.pop(0)
+            from fastapi import WebSocketDisconnect
+            raise WebSocketDisconnect(code=1000)
+
+    try:
+        # Construct raw binary messages:
+        # 1. Initial PCM chunk for sequence 100 (triggers VAD segment emission)
+        msg_attempt1 = {"bytes": struct.pack("<I", seq) + speech_pcm}
+        # 2. Replay of same sequence 100 (retry)
+        msg_attempt2 = {"bytes": struct.pack("<I", seq) + speech_pcm}
+        # 3. Duplicate replay of sequence 100 after success
+        msg_attempt3 = {"bytes": struct.pack("<I", seq) + speech_pcm}
+        # 4. Partial buffer chunk (100ms silence -> boundary NOT reached)
+        silence_pcm = b"\x00\x00" * 1600
+        msg_partial = {"bytes": struct.pack("<I", 101) + silence_pcm}
+        # 5. Permanent rejection chunk (triggers VAD segment emission)
+        msg_perm = {"bytes": struct.pack("<I", 102) + speech_pcm}
+        # 6. Replay of permanently rejected chunk
+        msg_perm_retry = {"bytes": struct.pack("<I", 102) + speech_pcm}
+
+        fake_ws = FakeWebSocket([
+            msg_attempt1,
+            msg_attempt2,
+            msg_attempt3,
+            msg_partial,
+            msg_perm,
+            msg_perm_retry,
+        ])
+
+        try:
+            asyncio.run(websocket_live_stream(fake_ws, session_id, token=token))
+        except Exception as e:
+            if "WebSocketDisconnect" not in type(e).__name__:
+                raise
+
+        # PROOF 1: Initial PCM accepted and pushed to ingress
+        assert len(push_chunk_calls) >= 1
+        assert push_chunk_calls[0]["seq"] == seq
+        assert push_chunk_calls[0]["bytes_len"] == len(speech_pcm)
+
+        # PROOF 2: Bot attempt #1 transient fails, invoked bridge
+        assert len(bridge_invocations) >= 1
+        assert bridge_invocations[0]["payload"]["sequence"] == seq
+
+        # PROOF 3: No success ACK after attempt 1; exactly one success ACK total
+        acks_for_100 = [m for m in fake_ws.sent_json if m.get("type") == "ack" and m.get("seq") == seq and m.get("status") is None]
+        assert len(acks_for_100) == 1, f"Expected exactly 1 success ACK for seq {seq}, got {len(acks_for_100)}"
+
+        # PROOF 4: Sequence remained retryable after attempt 1
+        # PROOF 5: Same sequence replayed in attempt 2
+        # PROOF 6: PCM was NOT pushed through ingress again on retry! (RETRY_PCM_REINGEST_COUNT == 0)
+        push_for_100 = [c for c in push_chunk_calls if c["seq"] == seq]
+        assert len(push_for_100) == 1, f"RETRY_PCM_REINGEST_COUNT != 0: expected 1 push_chunk for seq {seq}, got {len(push_for_100)}"
+
+        # PROOF 7: Stored pending segment was reused for attempt 2 bridge call (PENDING_SEGMENT_REUSED == YES)
+        assert len(bridge_invocations) >= 2
+        assert bridge_invocations[1]["payload"]["sequence"] == seq
+        assert bridge_invocations[1]["payload"]["segment_id"] == bridge_invocations[0]["payload"]["segment_id"]
+
+        # PROOF 8: Bot attempt #2 succeeded, events relayed
+        stt_events = [m for m in fake_ws.sent_json if m.get("type") == "stt.final"]
+        assert len(stt_events) >= 1
+        assert stt_events[0]["source_text"] == "Hello world from Bot ASR"
+
+        # PROOF 9: Exactly one processed ACK emitted
+        assert len(acks_for_100) == 1
+        assert session.is_sequence_processed(seq) is True
+        assert session.last_processed_seq >= seq
+        assert session.last_ack_seq >= seq
+
+        # PROOF 10: Pending segment removed from session
+        assert seq not in session.pending_retry_segments
+
+        # PROOF 11: No duplicate PCM remains buffered in ingress (INGRESS_RESIDUAL_DUPLICATE_PCM == 0)
+        assert len(ingress._current_pcm) == 0, f"Expected 0 residual duplicate PCM, got {len(ingress._current_pcm)}"
+
+        # PROOF 12: Replay after success is duplicate and does not call Bot #3
+        dup_acks = [m for m in fake_ws.sent_json if m.get("type") == "ack" and m.get("seq") == seq and m.get("status") == "duplicate_ignored"]
+        assert len(dup_acks) == 1
+
+        # PROOF 13: Partial buffer chunk (seq=101) sends 'buffered' event, does NOT advance processed state
+        buffered_events = [m for m in fake_ws.sent_json if m.get("type") == "buffered" and m.get("seq") == 101]
+        assert len(buffered_events) == 1
+        assert session.is_sequence_buffered(101) is True
+        assert session.is_sequence_processed(101) is False
+        assert session.last_processed_seq == seq  # Still 100, NOT 101!
+        assert session.last_ack_seq == seq        # Still 100, NOT 101!
+
+        # PROOF 14: Permanent rejection (seq=102)
+        # Emits safe error event
+        err_events = [m for m in fake_ws.sent_json if m.get("type") == "error" and m.get("sequence") == 102]
+        assert len(err_events) == 1
+        assert err_events[0]["error_code"] == "FOREIGN_PROFILE_BLOCKED"
+        # Pending state removed
+        assert 102 not in session.pending_retry_segments
+        # Does NOT emit success ACK
+        perm_acks = [m for m in fake_ws.sent_json if m.get("type") == "ack" and m.get("seq") == 102 and m.get("status") is None]
+        assert len(perm_acks) == 0
+        # Does NOT mark processed as Bot success
+        assert session.is_sequence_processed(102) is False
+        assert session.last_processed_seq == seq  # Still 100, NOT 102!
+        # Replay does not call Bot again
+        assert len(bridge_invocations) == 3
+
+    finally:
+        copyfast_bridge.bridge_request = orig_bridge_request
+        _ACTIVE_SESSIONS.pop(session_id, None)
+        _ACTIVE_INGRESS_BUFFERS.pop(session_id, None)
 
 
 def test_cross_repo_contract_fixture():
@@ -841,7 +954,7 @@ def test_cross_repo_contract_fixture():
 
 if __name__ == "__main__":
     os.environ["REALTIME_STREAM_SECRET"] = "acceptance-matrix-secret-key-32b-ok"
-    print("=== EXECUTING REALTIME ACCEPTANCE MATRIX (WEB REPO FIX5) ===")
+    print("=== EXECUTING REALTIME ACCEPTANCE MATRIX (WEB REPO FIX6) ===")
     test_01_session_auth_required()
     print("PASS [1/21]: test_01_session_auth_required (SESSION_AUTH_REQUIRED)")
     test_02_session_owner_isolation()
@@ -878,8 +991,8 @@ if __name__ == "__main__":
     print("PASS [18/21]: test_21_pricing_admission_fail_closed (PRICING_ADMISSION_FAIL_CLOSED)")
     test_cross_repo_provider_free_e2e()
     print("PASS [19/21]: test_cross_repo_provider_free_e2e (CROSS_REPO_PROVIDER_FREE_E2E)")
-    test_23_true_two_phase_sequence_ack_and_retryable_regression()
-    print("PASS [20/21]: test_23_true_two_phase_sequence_ack_and_retryable_regression (TRUE_TWO_PHASE_SEQUENCE_ACK)")
+    test_23_websocket_runtime_ack_and_retry_ingress_idempotency()
+    print("PASS [20/21]: test_23_websocket_runtime_ack_and_retry_ingress_idempotency (WEBSOCKET_RUNTIME_ACK_AND_RETRY_INGRESS_IDEMPOTENCY)")
     test_cross_repo_contract_fixture()
     print("PASS [21/21]: test_cross_repo_contract_fixture (CROSS_REPO_CONTRACT_FIXTURE)")
-    print("=== ALL 21 ITEMS IN REALTIME ACCEPTANCE MATRIX (WEB REPO FIX5) PASSED EMPIRICALLY ===")
+    print("=== ALL 21 ITEMS IN REALTIME ACCEPTANCE MATRIX (WEB REPO FIX6) PASSED EMPIRICALLY ===")
