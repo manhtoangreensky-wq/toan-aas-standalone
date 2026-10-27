@@ -595,6 +595,49 @@ def verify_stream_token(token: str, session_id: str) -> Optional[Tuple[str, str]
     return None
 
 
+_TEST_PRICING_ADMISSION_OVERRIDE: Optional[Callable[[RealtimeTranslateMode], bool]] = None
+
+
+def set_test_pricing_admission_override(override: Optional[Callable[[RealtimeTranslateMode], bool]]) -> None:
+    """Sets a server-side test authority for pricing admission in provider-free tests."""
+    global _TEST_PRICING_ADMISSION_OVERRIDE
+    _TEST_PRICING_ADMISSION_OVERRIDE = override
+
+
+def is_pricing_admission_allowed(mode: RealtimeTranslateMode) -> bool:
+    """Determines whether realtime session admission is allowed.
+
+    Fails closed on production paid modes until Owner approves prices.
+    Never allows environment or client bypass in production environment.
+    """
+    if PRODUCTION_PAID_ADMISSION != "FAIL_CLOSED":
+        return True
+
+    env_name = (
+        os.environ.get("ENV")
+        or os.environ.get("ENVIRONMENT")
+        or os.environ.get("TOAN_AAS_ENV")
+        or ""
+    ).lower()
+    is_production = env_name in ("production", "prod", "live")
+    if is_production:
+        return False
+
+    if _TEST_PRICING_ADMISSION_OVERRIDE is not None:
+        return bool(_TEST_PRICING_ADMISSION_OVERRIDE(mode))
+
+    is_test_env = (
+        os.environ.get("ENV") == "test"
+        or os.environ.get("TESTING") == "1"
+        or os.environ.get("CI") == "true"
+        or os.environ.get("PYTEST_CURRENT_TEST") is not None
+    )
+    if is_test_env and os.environ.get("REALTIME_ALLOW_UNPRICED_TEST_SESSION") == "1":
+        return True
+
+    return False
+
+
 class CreateSessionRequest(BaseModel):
     source_language: str = Field(default="auto", description="Source audio language (e.g. en, zh, ja, auto)")
     target_language: str = Field(default="vi", description="Target translated language (e.g. vi)")
@@ -602,7 +645,6 @@ class CreateSessionRequest(BaseModel):
     voice_profile_id: Optional[str] = Field(default=None, description="Optional Voice Vault profile ID")
     gender_preference: Optional[str] = Field(default="male", description="male or female")
     device_id: Optional[str] = Field(default=None, description="Client device identifier")
-    test_bypass_pricing: Optional[bool] = Field(default=False, description="Explicit test bypass for provider-free CI only")
 
 
 class SessionResponse(BaseModel):
@@ -632,11 +674,7 @@ async def create_live_translate_session(
     )
 
     # PRICING ADMISSION CHECK (Owner decision unresolved -> fail closed on production)
-    is_test_bypass = bool(
-        getattr(req, "test_bypass_pricing", False)
-        or os.environ.get("REALTIME_ALLOW_UNPRICED_TEST_SESSION") == "1"
-    )
-    if PRODUCTION_PAID_ADMISSION == "FAIL_CLOSED" and not is_test_bypass:
+    if not is_pricing_admission_allowed(mode_enum):
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail=f"PRICING_NOT_CONFIGURED: Production paid admission for mode '{mode_enum.value}' is blocked until Owner pricing decision.",
@@ -729,24 +767,12 @@ async def export_session_subtitles(
     return {"ok": True, "format": format, "content": content}
 
 
-_TEST_REALTIME_BRIDGE_DISPATCHER: Optional[Callable] = None
-
-
-def set_test_realtime_bridge_dispatcher(dispatcher: Optional[Callable]) -> None:
-    """Sets a test dispatcher hook for cross-repo provider-free tests."""
-    global _TEST_REALTIME_BRIDGE_DISPATCHER
-    _TEST_REALTIME_BRIDGE_DISPATCHER = dispatcher
-
-
 async def forward_segment_to_bot(
     session: RealtimeTranslateSession,
     sequence: int,
     speech_seg: SpeechSegment,
 ) -> List[Dict[str, Any]]:
-    """Signs and forwards audio segment to Bot canonical internal realtime route."""
-    global _TEST_REALTIME_BRIDGE_DISPATCHER
-    if _TEST_REALTIME_BRIDGE_DISPATCHER is not None:
-        return await _TEST_REALTIME_BRIDGE_DISPATCHER(session, sequence, speech_seg)
+    """Signs and forwards audio segment to Bot canonical internal realtime route via actual Core Bridge."""
 
     payload = {
         "session_id": session.session_id,
