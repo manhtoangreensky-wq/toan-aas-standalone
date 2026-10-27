@@ -1791,7 +1791,7 @@
     "commands": 0,
     "conversations": 0,
     "database_tables": 254,
-    "env_references": 292,
+    "env_references": 298,
     "providers": 14,
     "routes": 872,
     "ui_path_references": 52
@@ -8962,6 +8962,16 @@
       "name": "DEEPGRAM_API_KEY"
     },
     {
+      "file": "copyfast_realtime_translate.py",
+      "line": 617,
+      "name": "ENV"
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "line": 630,
+      "name": "ENV"
+    },
+    {
       "file": "copyfast_db.py",
       "line": 40,
       "name": "ENVIRONMENT"
@@ -8969,6 +8979,11 @@
     {
       "file": "copyfast_notification_center.py",
       "line": 225,
+      "name": "ENVIRONMENT"
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "line": 618,
       "name": "ENVIRONMENT"
     },
     {
@@ -9092,6 +9107,11 @@
       "name": "PUBLIC_BASE_URL"
     },
     {
+      "file": "copyfast_realtime_translate.py",
+      "line": 633,
+      "name": "PYTEST_CURRENT_TEST"
+    },
+    {
       "file": "copyfast_db.py",
       "line": 41,
       "name": "RAILWAY_ENVIRONMENT"
@@ -9108,7 +9128,7 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 637,
+      "line": 635,
       "name": "REALTIME_ALLOW_UNPRICED_TEST_SESSION"
     },
     {
@@ -9157,9 +9177,19 @@
       "name": "TELEGRAM_LINK_TTL_MINUTES"
     },
     {
+      "file": "copyfast_realtime_translate.py",
+      "line": 631,
+      "name": "TESTING"
+    },
+    {
       "file": "copyfast_product_video_dispatcher.py",
       "line": 104,
       "name": "TOANAAS_WORKER_SECRET"
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "line": 619,
+      "name": "TOAN_AAS_ENV"
     },
     {
       "file": "copyfast_admin_erp_navigation.py",
@@ -16475,7 +16505,7 @@
     {
       "endpoint": "create_live_translate_session",
       "file": "copyfast_realtime_translate.py",
-      "line": 618,
+      "line": 660,
       "methods": [
         "POST"
       ],
@@ -16484,7 +16514,7 @@
     {
       "endpoint": "get_session_status",
       "file": "copyfast_realtime_translate.py",
-      "line": 682,
+      "line": 720,
       "methods": [
         "GET"
       ],
@@ -16493,7 +16523,7 @@
     {
       "endpoint": "export_session_subtitles",
       "file": "copyfast_realtime_translate.py",
-      "line": 715,
+      "line": 753,
       "methods": [
         "GET"
       ],
@@ -16502,7 +16532,7 @@
     {
       "endpoint": "stop_session",
       "file": "copyfast_realtime_translate.py",
-      "line": 697,
+      "line": 735,
       "methods": [
         "POST"
       ],
@@ -18456,7 +18486,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 329,
   "source_files_scanned": 329,
-  "source_fingerprint_sha256": "ee51b47a449f5889ba598aa391263b8df23b0bf5361f418fe0fbbdc775732594",
+  "source_fingerprint_sha256": "9c823a5f44add4a6c53f640dad1d27eb008b4eda8cb49182a5eb35514dc008d0",
   "source_root": "repository-root",
   "ui_path_references": [
     {
