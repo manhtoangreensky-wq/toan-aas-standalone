@@ -113,11 +113,7 @@ async function startCapture(streamId, config) {
         frame.set(new Uint8Array(pcm16.buffer), 4);
 
         // Retain frame in unacked buffer (bounded)
-        if (unackedFrames.size >= MAX_UNACKED_FRAMES) {
-          const oldestSeq = unackedFrames.keys().next().value;
-          unackedFrames.delete(oldestSeq);
-        }
-        unackedFrames.set(currentSeq, frame);
+        recordUnackedFrame(currentSeq, frame);
 
         if (webSocket && webSocket.readyState === (typeof WebSocket !== "undefined" ? WebSocket.OPEN : 1) && !isReplaying) {
           webSocket.send(frame.buffer);
@@ -133,20 +129,19 @@ async function startCapture(streamId, config) {
   initWebSocket();
 }
 
-function initWebSocket() {
-  if (!isCapturing || !currentConfig?.websocketUrl) return;
-
-  try {
-    webSocket = new WebSocket(currentConfig.websocketUrl);
-  } catch (e) {
-    console.error("[TOAN_AAS_OFFSCREEN] Failed to initialize WebSocket:", e);
-    scheduleReconnect();
-    return;
+function recordUnackedFrame(seq, frame) {
+  if (unackedFrames.size >= MAX_UNACKED_FRAMES) {
+    const oldestSeq = unackedFrames.keys().next().value;
+    unackedFrames.delete(oldestSeq);
   }
+  unackedFrames.set(seq, frame);
+}
 
-  webSocket.binaryType = "arraybuffer";
+function attachWebSocketHandlers(ws) {
+  if (!ws) return;
+  ws.binaryType = "arraybuffer";
 
-  webSocket.onopen = () => {
+  ws.onopen = () => {
     console.log("[TOAN_AAS_OFFSCREEN] WebSocket connected.");
     reconnectAttempts = 0;
 
@@ -157,15 +152,15 @@ function initWebSocket() {
         type: "session.reconnect",
         last_ack_seq: lastAckSeq,
       });
-      webSocket.send(reconMsg);
+      ws.send(reconMsg);
     }
   };
 
-  webSocket.onerror = (err) => {
+  ws.onerror = (err) => {
     console.error("[TOAN_AAS_OFFSCREEN] WebSocket error:", err);
   };
 
-  webSocket.onclose = (event) => {
+  ws.onclose = (event) => {
     console.warn(`[TOAN_AAS_OFFSCREEN] WebSocket closed (code ${event.code}): ${event.reason}`);
 
     // AUTH_TERMINAL_CLOSE_NO_RETRY: Terminal close codes must fail closed immediately
@@ -181,9 +176,23 @@ function initWebSocket() {
     }
   };
 
-  webSocket.onmessage = (event) => {
+  ws.onmessage = (event) => {
     handleDownstreamEvent(event.data);
   };
+}
+
+function initWebSocket() {
+  if (!isCapturing || !currentConfig?.websocketUrl) return;
+
+  try {
+    webSocket = new WebSocket(currentConfig.websocketUrl);
+  } catch (e) {
+    console.error("[TOAN_AAS_OFFSCREEN] Failed to initialize WebSocket:", e);
+    scheduleReconnect();
+    return;
+  }
+
+  attachWebSocketHandlers(webSocket);
 }
 
 function scheduleReconnect() {
@@ -361,6 +370,7 @@ if (typeof module !== "undefined" && module.exports) {
     MAX_UNACKED_FRAMES,
     MAX_RECONNECT_ATTEMPTS,
     TERMINAL_CLOSE_CODES,
+    recordUnackedFrame,
     evictAcknowledgedFrames,
     replayUnackedFrames,
     scheduleReconnect,
@@ -368,6 +378,31 @@ if (typeof module !== "undefined" && module.exports) {
     startCapture,
     stopCapture,
     initWebSocket,
+    attachWebSocketHandlers,
     downsampleAndConvertToPcm16,
+    setWebSocket: (ws) => { webSocket = ws; },
+    getWebSocket: () => webSocket,
+    getCurrentSeq: () => currentSeq,
+    setCurrentSeq: (seq) => { currentSeq = seq; },
+    getLastAckSeq: () => lastAckSeq,
+    setLastAckSeq: (seq) => { lastAckSeq = seq; },
+    getIsCapturing: () => isCapturing,
+    setIsCapturing: (val) => { isCapturing = val; },
+    getReconnectAttempts: () => reconnectAttempts,
+    setReconnectAttempts: (n) => { reconnectAttempts = n; },
+    getReconnectTimer: () => reconnectTimer,
+    resetTestState: () => {
+      unackedFrames.clear();
+      currentSeq = 0;
+      lastAckSeq = 0;
+      reconnectAttempts = 0;
+      isCapturing = false;
+      isReplaying = false;
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+      webSocket = null;
+    },
   };
 }

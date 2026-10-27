@@ -84,6 +84,10 @@ jobs:
           node --check extensions/chrome-live-translate/content.js
           node --check extensions/chrome-live-translate/popup.js
 
+      - name: Executable Chrome Extension Unit Tests
+        run: |
+          node tests/test_extension_offscreen_reconnect.test.js
+
       - name: Check out canonical Bot core authority (exact-head cross-repo gate)
         run: |
           git clone https://github.com/manhtoangreensky-wq/bot.git /tmp/bot_core

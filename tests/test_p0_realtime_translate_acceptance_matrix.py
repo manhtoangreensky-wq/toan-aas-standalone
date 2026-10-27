@@ -28,6 +28,7 @@ import hmac
 import json
 import os
 import struct
+import subprocess
 import sys
 import time
 import uuid
@@ -677,39 +678,46 @@ def test_cross_repo_provider_free_e2e():
 
 
 def test_23_segment_range_idempotency_and_real_client_reconnect_replay():
-    """Mandatory RT-FIX7: Multi-sequence segment range idempotency and realistic client reconnect/replay.
+    """Mandatory RT-FIX8: Server socket detach reconnect lifecycle, segment range idempotency,
+    and executable extension replay.
     Proves:
-    1. Multi-sequence segment range tracking (MULTI_SEQ_SEGMENT_RANGE_TRACKING=PASS)
-       Feeds small 100ms frames [101..112] (6 speech + 6 silence), emitting one SpeechSegment spanning [101..112].
-    2. Transient bridge failure on segment:
-       - No success ACK for any sequence in range [101..112]
-       - Segment preserved in pending_retry_segments across entire range [101..112]
-    3. Client real reconnect & replay:
-       - Client sends session.reconnect(last_ack_seq=0)
-       - Server replies session.reconnected(server_last_ack_seq=0)
-       - Server clears partial ingress buffer
-       - Client replays unacked frames starting from last_ack_seq + 1 = 101
-       - Sequence 101 reuses stored segment directly WITHOUT calling ingress.push_chunk()
-       - Bot attempt #2 succeeds
-       - All sequences in range [101..112] marked processed
-       - One cumulative success ACK sent: {"type": "ack", "seq": 112} (SUCCESS_RANGE_CLOSED_BY_CUMULATIVE_ACK=PASS)
-       - Subsequent replayed sequences 102..112 recognized as processed, skipped as duplicate_ignored WITHOUT calling ingress.push_chunk()
-       - PENDING_RANGE_PCM_REINGEST_COUNT = 0
-    4. Multi-sequence permanent rejection range:
-       - Frames [201..212] emit one SpeechSegment spanning [201..212]
-       - Bot returns 403 permanent rejection (FOREIGN_PROFILE_BLOCKED)
-       - Entire range [201..212] marked rejected
-       - Safe error event emitted
-       - No success ACK emitted
-       - Replay of earlier sequence 201 or 212 recognized as rejected, does NOT call ingress or Bot
-       - REJECTED_RANGE_PCM_REINGEST_COUNT = 0
-    5. Client unacked frame buffer & reconnect contract:
-       - CLIENT_UNACKED_FRAME_BUFFER=PASS
-       - CLIENT_SESSION_RECONNECT_SENT=PASS
-       - CLIENT_REPLAY_FROM_LAST_ACK_PLUS_ONE=PASS
+    1. Socket #1 connects and ingests small 100ms frames [101..112] (6 speech + 6 silence).
+    2. Silence boundary triggers Bot attempt #1, which fails transiently (503).
+       - No success ACK sent for any sequence in range [101..112].
+       - Pending SpeechSegment retained covering range [101..112].
+    3. Socket #1 experiences transient network disconnect (WebSocketDisconnect):
+       - TRANSIENT_SOCKET_DISCONNECT_SESSION_END_COUNT = 0 (session NOT ended).
+       - TRANSIENT_SOCKET_DISCONNECT_INGRESS_DELETE_COUNT = 0 (ingress buffer NOT deleted).
+       - PENDING_RANGE_SURVIVES_SOCKET_DETACH = PASS.
+    4. Socket #2 connects to the SAME session with the same token:
+       - SECOND_SOCKET_SAME_SESSION_ACCEPTED = PASS (no 4404 Session Not Found).
+       - Client sends session.reconnect(last_ack_seq=0).
+       - Server replies session.reconnected(server_last_ack_seq=0) (SECOND_SOCKET_SESSION_RECONNECTED=PASS).
+       - Server clears partial ingress buffer.
+    5. Replay after real socket reconnect:
+       - Client replays frames [101..112] across Socket #2.
+       - Frame 101 reuses stored segment from pending_retry_segments WITHOUT calling ingress.push_chunk().
+       - Bot attempt #2 succeeds.
+       - Exactly one cumulative success ACK sent: {"type": "ack", "seq": 112} (SUCCESS_RANGE_CLOSED_BY_CUMULATIVE_ACK=PASS).
+       - Replay of subsequent frames 102..112 skipped as duplicate_ignored WITHOUT calling ingress.push_chunk().
+       - PENDING_RANGE_PCM_REINGEST_COUNT = 0.
+       - REPLAY_AFTER_REAL_SOCKET_RECONNECT = PASS.
+    6. Multi-sequence permanent rejection range on Socket #2:
+       - Frames [201..212] emit one SpeechSegment spanning [201..212].
+       - Bot returns 403 permanent rejection (FOREIGN_PROFILE_BLOCKED).
+       - Entire range [201..212] marked rejected, safe error event emitted, no success ACK.
+       - Replay of 201 or 212 does NOT call ingress or Bot (REJECTED_RANGE_PCM_REINGEST_COUNT = 0).
+    7. Clean shutdown via explicit session.control stop:
+       - Session transitions to ENDED and ingress buffer cleaned up.
+    8. Executable Chrome Extension offscreen reconnect test (EXECUTABLE_OFFSCREEN_RECONNECT_TEST=PASS):
+       - Executes actual extensions/chrome-live-translate/offscreen.js in Node.js.
+       - CLIENT_UNACKED_FRAME_BUFFER_ACTUAL_CODE=PASS
+       - CLIENT_REPLAY_ACTUAL_CODE=PASS
+       - AUTH_TERMINAL_CLOSE_ACTUAL_CODE=PASS
+       - RECONNECT_BOUND_ACTUAL_CODE=PASS
+       - UNACKED_BUFFER_OVERFLOW_SAFE=PASS
        - CUMULATIVE_ACK_EVICTS_BUFFER=PASS
-       - AUTH_TERMINAL_CLOSE_NO_RETRY=PASS
-       - RECONNECT_RETRY_BOUNDED=PASS
+       - CLIENT_SESSION_RECONNECT_SENT=PASS
     """
     from copyfast_realtime_translate import (
         _ACTIVE_SESSIONS,
@@ -719,9 +727,9 @@ def test_23_segment_range_idempotency_and_real_client_reconnect_replay():
     )
     import copyfast_bridge
 
-    owner_id = "ws_test_owner_fix7"
-    session_id = f"rts_ws_fix7_{uuid.uuid4().hex[:8]}"
-    device_id = "dev_ws_fix7"
+    owner_id = "ws_test_owner_fix8"
+    session_id = f"rts_ws_fix8_{uuid.uuid4().hex[:8]}"
+    device_id = "dev_ws_fix8"
     exp = int(time.time()) + 3600
     token = generate_stream_token(session_id, owner_id, device_id, exp)
 
@@ -749,7 +757,6 @@ def test_23_segment_range_idempotency_and_real_client_reconnect_replay():
     # Multi-sequence range: 101 to 112 (6 speech frames + 6 silence frames = 1200ms -> triggers silence boundary)
     speech_seqs = list(range(101, 107))    # 101..106
     silence_seqs = list(range(107, 113))   # 107..112
-    range1_seqs = speech_seqs + silence_seqs  # 101..112 (12 frames)
 
     # Instrument Bot bridge responses
     bridge_invocations = []
@@ -816,159 +823,140 @@ def test_23_segment_range_idempotency_and_real_client_reconnect_replay():
             raise WebSocketDisconnect(code=1000)
 
     try:
-        # Build message stream:
-        messages = []
-
-        # 1. Initial 12 small frames for range [101..112]:
+        # === SOCKET 1: Initial ingestion + transient failure + transient disconnect ===
+        messages_ws1 = []
         for s in speech_seqs:
-            messages.append({"bytes": struct.pack("<I", s) + speech_frame_pcm})
+            messages_ws1.append({"bytes": struct.pack("<I", s) + speech_frame_pcm})
         for s in silence_seqs:
-            messages.append({"bytes": struct.pack("<I", s) + silence_frame_pcm})
+            messages_ws1.append({"bytes": struct.pack("<I", s) + silence_frame_pcm})
 
-        # 2. Client reconnect control message: session.reconnect(last_ack_seq=0)
-        messages.append({"text": json.dumps({"type": "session.reconnect", "last_ack_seq": 0})})
-
-        # 3. Client replays unacked frames starting from last_ack_seq + 1 = 101 through 112:
-        for s in speech_seqs:
-            messages.append({"bytes": struct.pack("<I", s) + speech_frame_pcm})
-        for s in silence_seqs:
-            messages.append({"bytes": struct.pack("<I", s) + silence_frame_pcm})
-
-        # 4. Multi-sequence range for permanent rejection test: [201..212]
-        perm_speech_seqs = list(range(201, 207))
-        perm_silence_seqs = list(range(207, 213))
-        for s in perm_speech_seqs:
-            messages.append({"bytes": struct.pack("<I", s) + speech_frame_pcm})
-        for s in perm_silence_seqs:
-            messages.append({"bytes": struct.pack("<I", s) + silence_frame_pcm})
-
-        # 5. Replay of earlier sequence in permanently rejected range (201) and terminal sequence (212)
-        messages.append({"bytes": struct.pack("<I", 201) + speech_frame_pcm})
-        messages.append({"bytes": struct.pack("<I", 212) + silence_frame_pcm})
-
-        fake_ws = FakeWebSocket(messages)
-
+        fake_ws1 = FakeWebSocket(messages_ws1)
         try:
-            asyncio.run(websocket_live_stream(fake_ws, session_id, token=token))
+            asyncio.run(websocket_live_stream(fake_ws1, session_id, token=token))
         except Exception as e:
             if "WebSocketDisconnect" not in type(e).__name__:
                 raise
 
-        # PROOF 1: Multi-sequence segment range tracking
-        # First 11 frames (101..111) were buffered, sending 'buffered' events
-        buffered_101_111 = [m for m in fake_ws.sent_json if m.get("type") == "buffered" and 101 <= m.get("seq", 0) <= 111]
-        assert len(buffered_101_111) == 11, f"Expected 11 buffered events, got {len(buffered_101_111)}"
+        # Check Socket 1 Detach Invariants:
+        # TRANSIENT_SOCKET_DISCONNECT_SESSION_END_COUNT = 0
+        assert session.state != RealtimeSessionState.ENDED, "Session MUST NOT end on transient WebSocketDisconnect"
+        assert session.state == RealtimeSessionState.ACTIVE
 
-        # Frame 112 triggered silence boundary and emitted SpeechSegment spanning [101..112]
-        assert len(bridge_invocations) >= 1
-        bridge_payload_1 = bridge_invocations[0]["payload"]
-        assert bridge_payload_1["sequence"] == 112
+        # TRANSIENT_SOCKET_DISCONNECT_INGRESS_DELETE_COUNT = 0
+        assert session_id in _ACTIVE_INGRESS_BUFFERS, "Ingress buffer MUST NOT be deleted on transient WebSocketDisconnect"
 
-        # PROOF 2: Transient failure did NOT advance processed or ack state for ANY sequence in [101..112]
-        # And sent NO success ACK for attempt 1
-        # Exactly one cumulative success ACK for seq 112 should be sent total (after attempt 2)
-        acks_for_range1 = [m for m in fake_ws.sent_json if m.get("type") == "ack" and m.get("status") is None and 101 <= m.get("seq", 0) <= 112]
-        assert len(acks_for_range1) == 1, f"Expected exactly 1 success ACK for range [101..112], got {len(acks_for_range1)}"
-        assert acks_for_range1[0]["seq"] == 112, f"Cumulative ACK must be for terminal seq 112, got {acks_for_range1[0]['seq']}"
+        # PENDING_RANGE_SURVIVES_SOCKET_DETACH = PASS
+        assert 101 in session.pending_retry_segments, "Pending retry segment range must survive socket detach"
+        assert 112 in session.pending_retry_segments
 
-        # PROOF 3: Client session.reconnect was handled and acknowledged
-        recon_events = [m for m in fake_ws.sent_json if m.get("type") == "session.reconnected"]
-        assert len(recon_events) == 1
+        # Verify Socket 1 events: 11 buffered events, attempt #1 transient failure, 0 success ACKs
+        buffered_ws1 = [m for m in fake_ws1.sent_json if m.get("type") == "buffered" and 101 <= m.get("seq", 0) <= 111]
+        assert len(buffered_ws1) == 11, f"Expected 11 buffered events on socket 1, got {len(buffered_ws1)}"
+        assert len(bridge_invocations) == 1
+        assert bridge_invocations[0]["payload"]["sequence"] == 112
+        acks_ws1 = [m for m in fake_ws1.sent_json if m.get("type") == "ack" and m.get("status") is None and 101 <= m.get("seq", 0) <= 112]
+        assert len(acks_ws1) == 0, f"Expected 0 success ACKs on attempt 1, got {len(acks_ws1)}"
+
+        # === SOCKET 2: Real second socket reconnect + replay + range rejection + explicit stop ===
+        messages_ws2 = []
+        # 1. Reconnect control message
+        messages_ws2.append({"text": json.dumps({"type": "session.reconnect", "last_ack_seq": 0})})
+        # 2. Replay of range [101..112]
+        for s in speech_seqs:
+            messages_ws2.append({"bytes": struct.pack("<I", s) + speech_frame_pcm})
+        for s in silence_seqs:
+            messages_ws2.append({"bytes": struct.pack("<I", s) + silence_frame_pcm})
+        # 3. Permanent rejection range [201..212]
+        perm_speech_seqs = list(range(201, 207))
+        perm_silence_seqs = list(range(207, 213))
+        for s in perm_speech_seqs:
+            messages_ws2.append({"bytes": struct.pack("<I", s) + speech_frame_pcm})
+        for s in perm_silence_seqs:
+            messages_ws2.append({"bytes": struct.pack("<I", s) + silence_frame_pcm})
+        # 4. Replay of rejected sequence (201 and 212)
+        messages_ws2.append({"bytes": struct.pack("<I", 201) + speech_frame_pcm})
+        messages_ws2.append({"bytes": struct.pack("<I", 212) + silence_frame_pcm})
+        # 5. Explicit stop control
+        messages_ws2.append({"text": json.dumps({"type": "session.control", "action": "stop"})})
+
+        fake_ws2 = FakeWebSocket(messages_ws2)
+        asyncio.run(websocket_live_stream(fake_ws2, session_id, token=token))
+
+        # SECOND_SOCKET_SAME_SESSION_ACCEPTED = PASS (not closed 4404)
+        assert fake_ws2.close_code != 4404, "Second socket MUST NOT be closed with 4404 Session Not Found"
+        assert fake_ws2.close_code != 4403, "Second socket MUST NOT be closed with 4403 Forbidden"
+
+        # SECOND_SOCKET_SESSION_RECONNECTED = PASS
+        recon_events = [m for m in fake_ws2.sent_json if m.get("type") == "session.reconnected"]
+        assert len(recon_events) == 1, f"Expected 1 session.reconnected event on socket 2, got {len(recon_events)}"
         assert recon_events[0]["reconnected"] is True
         assert recon_events[0]["server_last_ack_seq"] == 0
 
-        # PROOF 4: Replay of sequence 101 reused stored segment without re-ingesting PCM!
-        # Ingress push calls for sequence 101: initial push only, zero on retry!
+        # REPLAY_AFTER_REAL_SOCKET_RECONNECT = PASS
+        # Replay of sequence 101 reused stored segment without re-ingesting PCM!
         push_for_101 = [c for c in push_chunk_calls if c["seq"] == 101]
         assert len(push_for_101) == 1, f"PENDING_RANGE_PCM_REINGEST_COUNT != 0: push count for seq 101 was {len(push_for_101)}"
 
-        # PROOF 5: Replay of sequence 101 invoked Bot bridge (Attempt 2) with the exact same segment!
+        # Bot attempt #2 succeeded on the same segment
         assert len(bridge_invocations) >= 2
-        bridge_payload_2 = bridge_invocations[1]["payload"]
-        assert bridge_payload_2["segment_id"] == bridge_payload_1["segment_id"]
+        assert bridge_invocations[1]["payload"]["segment_id"] == bridge_invocations[0]["payload"]["segment_id"]
 
-        # PROOF 6: Cumulative ACK closed the entire range [101..112]
+        # SUCCESS_RANGE_CLOSED_BY_CUMULATIVE_ACK = PASS
+        acks_for_range1 = [m for m in fake_ws2.sent_json if m.get("type") == "ack" and m.get("status") is None and 101 <= m.get("seq", 0) <= 112]
+        assert len(acks_for_range1) == 1, f"Expected exactly 1 success ACK on socket 2, got {len(acks_for_range1)}"
+        assert acks_for_range1[0]["seq"] == 112, f"Cumulative ACK must be for terminal seq 112, got {acks_for_range1[0]['seq']}"
+
         assert session.is_sequence_processed(101) is True
         assert session.is_sequence_processed(106) is True
         assert session.is_sequence_processed(112) is True
         assert session.last_processed_seq >= 112
         assert session.last_ack_seq >= 112
 
-        # PROOF 7: Replay of sequences 102..112 were deduplicated as duplicate_ignored
-        # and NEVER touched ingress.push_chunk!
-        dup_acks_range1 = [m for m in fake_ws.sent_json if m.get("type") == "ack" and m.get("status") == "duplicate_ignored" and 102 <= m.get("seq", 0) <= 112]
+        # Duplicate ignored for 102..112
+        dup_acks_range1 = [m for m in fake_ws2.sent_json if m.get("type") == "ack" and m.get("status") == "duplicate_ignored" and 102 <= m.get("seq", 0) <= 112]
         assert len(dup_acks_range1) == 11, f"Expected 11 duplicate_ignored ACKs for 102..112, got {len(dup_acks_range1)}"
 
-        # Ingress push count for EVERY sequence in range 101..112 is exactly 1 (0 during replay)!
+        # Ingress push count for EVERY sequence in range 101..112 is exactly 1 (0 during replay across both sockets)!
         for s in range(101, 113):
             push_for_s = [c for c in push_chunk_calls if c["seq"] == s]
             assert len(push_for_s) == 1, f"PENDING_RANGE_PCM_REINGEST_COUNT != 0 for seq {s}: got {len(push_for_s)}"
 
-        # PROOF 8: Permanent Rejection for range [201..212]
-        # Invocations 3 is for [201..212]
+        # Permanent Rejection for range [201..212]
         assert len(bridge_invocations) == 3
-        bridge_payload_3 = bridge_invocations[2]["payload"]
-        assert bridge_payload_3["sequence"] == 212
-
-        # Safe error event emitted
-        err_events = [m for m in fake_ws.sent_json if m.get("type") == "error" and m.get("error_code") == "FOREIGN_PROFILE_BLOCKED"]
+        err_events = [m for m in fake_ws2.sent_json if m.get("type") == "error" and m.get("error_code") == "FOREIGN_PROFILE_BLOCKED"]
         assert len(err_events) == 1
         assert err_events[0]["sequence_start"] == 201
         assert err_events[0]["sequence_end"] == 212
 
-        # NO success ACK emitted for any sequence in [201..212]
-        perm_acks = [m for m in fake_ws.sent_json if m.get("type") == "ack" and m.get("status") is None and 201 <= m.get("seq", 0) <= 212]
-        assert len(perm_acks) == 0, f"Expected 0 success ACKs for rejected range, got {len(perm_acks)}"
+        perm_acks = [m for m in fake_ws2.sent_json if m.get("type") == "ack" and m.get("status") is None and 201 <= m.get("seq", 0) <= 212]
+        assert len(perm_acks) == 0
 
-        # Replay of seq 201 and 212 did NOT call ingress again! (REJECTED_RANGE_PCM_REINGEST_COUNT == 0)
         push_for_201 = [c for c in push_chunk_calls if c["seq"] == 201]
         assert len(push_for_201) == 1, f"REJECTED_RANGE_PCM_REINGEST_COUNT != 0 for seq 201: got {len(push_for_201)}"
         push_for_212 = [c for c in push_chunk_calls if c["seq"] == 212]
         assert len(push_for_212) == 1, f"REJECTED_RANGE_PCM_REINGEST_COUNT != 0 for seq 212: got {len(push_for_212)}"
 
-        # Bridge was not called again after rejection replay
-        assert len(bridge_invocations) == 3
+        # Explicit stop ended the session cleanly
+        assert session.state == RealtimeSessionState.ENDED
+        assert session_id not in _ACTIVE_INGRESS_BUFFERS
 
     finally:
         copyfast_bridge.bridge_request = orig_bridge_request
         _ACTIVE_SESSIONS.pop(session_id, None)
         _ACTIVE_INGRESS_BUFFERS.pop(session_id, None)
 
-    # PROOF 9: Client unacked frame buffer, evict, terminal close, bounded retry contracts
-    unacked_frames = {}
-    MAX_UNACKED = 500
-    last_ack = 0
-
-    # Add frames
-    for s in range(1, 15):
-        frame = struct.pack("<I", s) + speech_frame_pcm
-        if len(unacked_frames) >= MAX_UNACKED:
-            oldest = min(unacked_frames.keys())
-            del unacked_frames[oldest]
-        unacked_frames[s] = frame
-
-    assert len(unacked_frames) == 14  # CLIENT_UNACKED_FRAME_BUFFER = PASS
-
-    # Cumulative ACK for seq 10 evicts frames 1..10
-    ack_seq = 10
-    last_ack = max(last_ack, ack_seq)
-    for s in list(unacked_frames.keys()):
-        if s <= last_ack:
-            del unacked_frames[s]
-
-    assert list(unacked_frames.keys()) == [11, 12, 13, 14]  # CUMULATIVE_ACK_EVICTS_BUFFER = PASS
-
-    # Reconnect replays from last_ack + 1
-    replayed = [s for s in sorted(unacked_frames.keys()) if s > last_ack]
-    assert replayed == [11, 12, 13, 14]  # CLIENT_REPLAY_FROM_LAST_ACK_PLUS_ONE = PASS
-
-    # Terminal close codes: no retry
-    TERMINAL_CODES = {4401, 4403, 4404, 4001, 4003, 4004, 1008}
-    assert 4401 in TERMINAL_CODES and 4403 in TERMINAL_CODES  # AUTH_TERMINAL_CLOSE_NO_RETRY = PASS
-
-    # Bounded reconnect attempts
-    MAX_RECONNECT_ATTEMPTS = 5
-    assert MAX_RECONNECT_ATTEMPTS == 5  # RECONNECT_RETRY_BOUNDED = PASS
+    # PROOF: Executable Chrome Extension Unit Tests (EXECUTABLE_OFFSCREEN_RECONNECT_TEST=PASS)
+    test_js_path = os.path.join(os.path.dirname(__file__), "test_extension_offscreen_reconnect.test.js")
+    node_proc = subprocess.run(["node", test_js_path], capture_output=True, text=True, check=False)
+    assert node_proc.returncode == 0, f"Executable extension tests failed: {node_proc.stderr}\n{node_proc.stdout}"
+    assert "ALL EXECUTABLE OFFSCREEN RECONNECT TESTS PASSED" in node_proc.stdout
+    assert "CLIENT_UNACKED_FRAME_BUFFER_ACTUAL_CODE" in node_proc.stdout
+    assert "UNACKED_BUFFER_OVERFLOW_SAFE" in node_proc.stdout
+    assert "CUMULATIVE_ACK_EVICTS_BUFFER" in node_proc.stdout
+    assert "CLIENT_SESSION_RECONNECT_SENT" in node_proc.stdout
+    assert "CLIENT_REPLAY_ACTUAL_CODE" in node_proc.stdout
+    assert "AUTH_TERMINAL_CLOSE_ACTUAL_CODE" in node_proc.stdout
+    assert "RECONNECT_BOUND_ACTUAL_CODE" in node_proc.stdout
 
 
 def test_cross_repo_contract_fixture():
@@ -1025,7 +1013,7 @@ def test_cross_repo_contract_fixture():
 
 if __name__ == "__main__":
     os.environ["REALTIME_STREAM_SECRET"] = "acceptance-matrix-secret-key-32b-ok"
-    print("=== EXECUTING REALTIME ACCEPTANCE MATRIX (WEB REPO FIX7) ===")
+    print("=== EXECUTING REALTIME ACCEPTANCE MATRIX (WEB REPO FIX8) ===")
     test_01_session_auth_required()
     print("PASS [1/21]: test_01_session_auth_required (SESSION_AUTH_REQUIRED)")
     test_02_session_owner_isolation()
@@ -1066,4 +1054,4 @@ if __name__ == "__main__":
     print("PASS [20/21]: test_23_segment_range_idempotency_and_real_client_reconnect_replay (SEGMENT_RANGE_IDEMPOTENCY_AND_REAL_CLIENT_RECONNECT_REPLAY)")
     test_cross_repo_contract_fixture()
     print("PASS [21/21]: test_cross_repo_contract_fixture (CROSS_REPO_CONTRACT_FIXTURE)")
-    print("=== ALL 21 ITEMS IN REALTIME ACCEPTANCE MATRIX (WEB REPO FIX7) PASSED EMPIRICALLY ===")
+    print("=== ALL 21 ITEMS IN REALTIME ACCEPTANCE MATRIX (WEB REPO FIX8) PASSED EMPIRICALLY ===")

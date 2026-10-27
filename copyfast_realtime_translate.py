@@ -187,6 +187,11 @@ class RealtimeTranslateSession:
         self.error_message: Optional[str] = None
 
     def start(self) -> None:
+        if self.state == RealtimeSessionState.ACTIVE:
+            return
+        if self.state == RealtimeSessionState.PAUSED:
+            self.resume()
+            return
         self._transition_to(RealtimeSessionState.ACTIVE)
         if self.started_at is None:
             self.started_at = time.time()
@@ -1002,7 +1007,12 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
         return
 
     await websocket.accept()
-    session.start()
+    if session.state == RealtimeSessionState.CREATED:
+        session.start()
+    elif session.state == RealtimeSessionState.PAUSED:
+        session.resume()
+
+    explicitly_ended: bool = False
 
     try:
         await websocket.send_json({
@@ -1125,7 +1135,9 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                             session.resume()
                             await websocket.send_json({"type": "session.state", "state": "active"})
                         elif action == "stop":
+                            explicitly_ended = True
                             session.end()
+                            _ACTIVE_INGRESS_BUFFERS.pop(session_id, None)
                             await websocket.send_json({"type": "session.state", "state": "ended"})
                             break
                 except Exception as e:
@@ -1137,5 +1149,10 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
         logger.error(f"Session {session_id} unexpected error: {e}")
         session.fail(str(e))
     finally:
-        session.end()
-        _ACTIVE_INGRESS_BUFFERS.pop(session_id, None)
+        if explicitly_ended or session.state in (RealtimeSessionState.ENDED, RealtimeSessionState.ERROR):
+            session.end()
+            _ACTIVE_INGRESS_BUFFERS.pop(session_id, None)
+        else:
+            logger.info(
+                f"Session {session_id} WebSocket detached (reconnectable). Preserving state ({session.state.value}) and ingress buffer."
+            )
