@@ -371,6 +371,7 @@ for cand in bot_candidates:
             pass
 
 if not bot_loaded:
+    from typing import Optional, Dict, Any, Callable
     from fastapi import APIRouter, HTTPException, Request
     from pydantic import BaseModel, Field
 
