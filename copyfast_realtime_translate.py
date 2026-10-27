@@ -234,9 +234,13 @@ class RealtimeTranslateSession:
         return True
 
     def mark_sequence_processed(self, seq: int) -> int:
+        self.processed_seq_set.add(seq)
         self.last_processed_seq = max(self.last_processed_seq, seq)
         self.last_ack_seq = self.last_processed_seq
         return self.last_ack_seq
+
+    def is_sequence_processed(self, seq: int) -> bool:
+        return seq in self.processed_seq_set
 
     def handle_reconnect(self, client_last_ack_seq: int) -> Dict[str, Any]:
         return {
@@ -767,11 +771,33 @@ async def export_session_subtitles(
     return {"ok": True, "format": format, "content": content}
 
 
+class BotBridgeResponse(list):
+    """Encapsulates canonical Bot bridge events and execution outcome.
+
+    Inherits from list for backward-compatibility with code iterating directly over safe events.
+    Exposes status ('success', 'permanent_rejection', 'transient_failure'), error_code, and error_detail.
+    """
+    def __init__(
+        self,
+        events: Optional[List[Dict[str, Any]]] = None,
+        status: str = "success",
+        error_code: str = "",
+        error_detail: str = "",
+        status_code: int = 200,
+    ):
+        super().__init__(events or [])
+        self.status = status  # 'success' | 'permanent_rejection' | 'transient_failure'
+        self.error_code = error_code
+        self.error_detail = error_detail
+        self.status_code = status_code
+        self.ok = (status == "success")
+
+
 async def forward_segment_to_bot(
     session: RealtimeTranslateSession,
     sequence: int,
     speech_seg: SpeechSegment,
-) -> List[Dict[str, Any]]:
+) -> BotBridgeResponse:
     """Signs and forwards audio segment to Bot canonical internal realtime route via actual Core Bridge."""
 
     payload = {
@@ -798,15 +824,74 @@ async def forward_segment_to_bot(
             actor_id=str(session.config.owner_id),
         )
         if isinstance(bridge_res, dict):
-            if bridge_res.get("events"):
-                return bridge_res["events"]
-            data = bridge_res.get("data")
-            if isinstance(data, dict) and data.get("events"):
-                return data["events"]
+            events = bridge_res.get("events")
+            if events is None and isinstance(bridge_res.get("data"), dict):
+                events = bridge_res["data"].get("events")
+
+            if bridge_res.get("ok", True) and events is not None:
+                return BotBridgeResponse(
+                    events=events if isinstance(events, list) else [],
+                    status="success",
+                    status_code=200,
+                )
+
+            err_code = str(bridge_res.get("error_code") or "")
+            err_msg = str(bridge_res.get("message") or "")
+            status_name = str(bridge_res.get("status") or "")
+
+            is_permanent = (
+                err_code in {
+                    "CORE_BRIDGE_FORBIDDEN",
+                    "CORE_BRIDGE_UNAUTHORIZED",
+                    "CORE_BRIDGE_UNPROCESSABLE",
+                    "CORE_BRIDGE_BAD_REQUEST",
+                    "FOREIGN_PROFILE_BLOCKED",
+                    "DELETED_PROFILE_BLOCKED",
+                    "NOT_READY_PROFILE_BLOCKED",
+                    "MISSING_PROFILE_BLOCKED",
+                    "MISSING_PROVIDER_VOICE_ID",
+                    "VOICE_VALIDATION_FAILED",
+                    "ACTOR_BODY_HEADER_MISMATCH",
+                }
+                or "PROFILE" in err_code
+                or "VOICE" in err_code
+                or "AUTH" in err_code
+                or "ACTOR" in err_code
+                or "SIGNATURE" in err_code
+            )
+
+            if is_permanent:
+                return BotBridgeResponse(
+                    events=[],
+                    status="permanent_rejection",
+                    error_code=err_code or "PERMANENT_REJECTION",
+                    error_detail=err_msg or status_name,
+                    status_code=422 if "PROFILE" in err_code or "VOICE" in err_code else 400,
+                )
+            else:
+                return BotBridgeResponse(
+                    events=[],
+                    status="transient_failure",
+                    error_code=err_code or "CORE_BRIDGE_UNAVAILABLE",
+                    error_detail=err_msg or status_name,
+                    status_code=503,
+                )
     except Exception as e:
         logger.error(f"Core bridge call to Bot realtime failed: {e}")
+        return BotBridgeResponse(
+            events=[],
+            status="transient_failure",
+            error_code="CORE_BRIDGE_UNAVAILABLE",
+            error_detail=str(e),
+            status_code=503,
+        )
 
-    return []
+    return BotBridgeResponse(
+        events=[],
+        status="transient_failure",
+        error_code="CORE_BRIDGE_INVALID_RESPONSE",
+        status_code=500,
+    )
 
 
 @router.websocket("/sessions/{session_id}/stream")
@@ -864,43 +949,72 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                     continue
 
                 completed_segments = ingress.push_chunk(seq=seq, pcm_bytes=pcm_bytes)
-                for speech_seg in completed_segments:
-                    # Forward to Bot internal realtime bridge
-                    bridge_events = await forward_segment_to_bot(session, seq, speech_seg)
-                    stt_text = ""
-                    trans_text = ""
-                    tts_b64 = None
-                    for ev in bridge_events:
-                        ev_type = ev.get("type")
-                        if ev_type == "stt.final":
-                            stt_text = ev.get("source_text", "")
-                        elif ev_type == "translation.final":
-                            trans_text = ev.get("translated_text", "")
-                        elif ev_type == "tts.audio":
-                            tts_b64 = ev.get("audio_b64")
-                        # Safe event relay: send real bot-shaped event directly to client WS
-                        await websocket.send_json(ev)
+                if completed_segments:
+                    for speech_seg in completed_segments:
+                        # Forward to Bot internal realtime bridge
+                        bridge_res = await forward_segment_to_bot(session, seq, speech_seg)
+                        if bridge_res.status == "success":
+                            stt_text = ""
+                            trans_text = ""
+                            tts_b64 = None
+                            for ev in bridge_res:
+                                ev_type = ev.get("type")
+                                if ev_type == "stt.final":
+                                    stt_text = ev.get("source_text", "")
+                                elif ev_type == "translation.final":
+                                    trans_text = ev.get("translated_text", "")
+                                elif ev_type == "tts.audio":
+                                    tts_b64 = ev.get("audio_b64")
+                                # Safe event relay: send real bot-shaped event directly to client WS
+                                await websocket.send_json(ev)
 
-                    if stt_text:
-                        transcript_seg = RealtimeTranscriptSegment(
-                            segment_id=speech_seg.segment_id,
-                            sequence=seq,
-                            start_ms=speech_seg.start_ms,
-                            end_ms=speech_seg.end_ms,
-                            source_text=stt_text,
-                            translated_text=trans_text,
-                            is_final=True,
-                            tts_audio_base64=tts_b64,
-                        )
-                        session.add_segment(transcript_seg)
+                            if stt_text:
+                                transcript_seg = RealtimeTranscriptSegment(
+                                    segment_id=speech_seg.segment_id,
+                                    sequence=seq,
+                                    start_ms=speech_seg.start_ms,
+                                    end_ms=speech_seg.end_ms,
+                                    source_text=stt_text,
+                                    translated_text=trans_text,
+                                    is_final=True,
+                                    tts_audio_base64=tts_b64,
+                                )
+                                session.add_segment(transcript_seg)
 
-                ack_seq = session.mark_sequence_processed(seq)
-                await websocket.send_json({"type": "ack", "seq": ack_seq})
+                            # BOT_PROCESS_SUCCESS -> mark_sequence_processed -> ACK
+                            ack_seq = session.mark_sequence_processed(seq)
+                            await websocket.send_json({"type": "ack", "seq": ack_seq})
 
-                new_blocks = session.compute_pending_metering_blocks()
-                if new_blocks > 0:
-                    # Report telemetry without claiming canonical Xu settlement (FALSE_ZERO_XU_SETTLEMENT=REMOVED)
-                    await websocket.send_json(session.get_telemetry_usage())
+                            new_blocks = session.compute_pending_metering_blocks()
+                            if new_blocks > 0:
+                                await websocket.send_json(session.get_telemetry_usage())
+
+                        elif bridge_res.status == "permanent_rejection":
+                            # BOT_PERMANENT_REJECTION -> safe error event -> NO false success ACK
+                            safe_err_event = {
+                                "type": "error",
+                                "error_code": bridge_res.error_code or "PERMANENT_REJECTION",
+                                "message": "Speech processing rejected by server authority.",
+                                "sequence": seq,
+                                "segment_id": speech_seg.segment_id,
+                                "fatal": False,
+                            }
+                            await websocket.send_json(safe_err_event)
+                            # NO mark_sequence_processed(seq)
+                            # NO success ACK
+
+                        else:
+                            # BOT_TIMEOUT/5XX/NETWORK/MALFORMED -> NO mark processed -> NO success ACK -> retry/reconnect eligible
+                            logger.warning(
+                                "Transient Bot bridge failure for seq=%s session=%s: %s",
+                                seq, session_id, bridge_res.error_code
+                            )
+                            # NO mark_sequence_processed(seq)
+                            # NO success ACK
+                else:
+                    # Ingress buffer accepted chunk; segment boundary not yet reached
+                    ack_seq = session.mark_sequence_processed(seq)
+                    await websocket.send_json({"type": "ack", "seq": ack_seq})
 
             elif "text" in message and message["text"]:
                 try:
