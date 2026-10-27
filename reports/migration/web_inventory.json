@@ -8519,7 +8519,7 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 328,
+      "line": 370,
       "operation": "UPDATE",
       "table": "without"
     }
@@ -8963,12 +8963,12 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 651,
+      "line": 701,
       "name": "ENV"
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 664,
+      "line": 714,
       "name": "ENV"
     },
     {
@@ -8983,7 +8983,7 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 652,
+      "line": 702,
       "name": "ENVIRONMENT"
     },
     {
@@ -9108,7 +9108,7 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 667,
+      "line": 717,
       "name": "PYTEST_CURRENT_TEST"
     },
     {
@@ -9128,12 +9128,12 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 669,
+      "line": 719,
       "name": "REALTIME_ALLOW_UNPRICED_TEST_SESSION"
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 572,
+      "line": 622,
       "name": "REALTIME_STREAM_SECRET"
     },
     {
@@ -9178,7 +9178,7 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 665,
+      "line": 715,
       "name": "TESTING"
     },
     {
@@ -9188,7 +9188,7 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 653,
+      "line": 703,
       "name": "TOAN_AAS_ENV"
     },
     {
@@ -16505,7 +16505,7 @@
     {
       "endpoint": "create_live_translate_session",
       "file": "copyfast_realtime_translate.py",
-      "line": 694,
+      "line": 744,
       "methods": [
         "POST"
       ],
@@ -16514,7 +16514,7 @@
     {
       "endpoint": "get_session_status",
       "file": "copyfast_realtime_translate.py",
-      "line": 754,
+      "line": 804,
       "methods": [
         "GET"
       ],
@@ -16523,7 +16523,7 @@
     {
       "endpoint": "export_session_subtitles",
       "file": "copyfast_realtime_translate.py",
-      "line": 787,
+      "line": 837,
       "methods": [
         "GET"
       ],
@@ -16532,7 +16532,7 @@
     {
       "endpoint": "stop_session",
       "file": "copyfast_realtime_translate.py",
-      "line": 769,
+      "line": 819,
       "methods": [
         "POST"
       ],
@@ -18484,9 +18484,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 329,
-  "source_files_scanned": 329,
-  "source_fingerprint_sha256": "bbd82505805f8e4ce9ed4cf9032e850df2cabb91d227325ef64b0fe2f0065da9",
+  "source_files_discovered": 337,
+  "source_files_scanned": 337,
+  "source_fingerprint_sha256": "4eb84c19b4f304b8a2f193fd718d521f5c093f01719976b06be130f8de87ec83",
   "source_root": "repository-root",
   "ui_path_references": [
     {
