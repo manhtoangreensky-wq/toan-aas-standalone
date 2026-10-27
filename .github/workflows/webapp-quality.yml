@@ -79,6 +79,10 @@ jobs:
           node --check static/portal/portal-theme.js
           node --check static/portal/integration.js
           node --check static/portal/service-worker.js
+          node --check extensions/chrome-live-translate/offscreen.js
+          node --check extensions/chrome-live-translate/background.js
+          node --check extensions/chrome-live-translate/content.js
+          node --check extensions/chrome-live-translate/popup.js
 
       - name: Check out canonical Bot core authority (exact-head cross-repo gate)
         run: |

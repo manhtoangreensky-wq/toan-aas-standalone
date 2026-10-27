@@ -250,21 +250,63 @@ class RealtimeTranslateSession:
         """
         self.buffered_seq_set.add(seq)
 
-    def mark_sequence_processed(self, seq: int) -> int:
-        """Advances processed/acked state strictly upon BOT_BRIDGE_SUCCESS."""
-        self.processed_seq_set.add(seq)
-        self.pending_retry_segments.pop(seq, None)
-        self.last_processed_seq = max(self.last_processed_seq, seq)
+    def add_pending_retry_segment(self, segment: Any) -> None:
+        """Stores a speech segment across its entire covered sequence range [sequence_start..sequence_end]
+        so that replay of any sequence inside that range reuses the stored segment without re-ingesting PCM.
+        """
+        seq_start = getattr(segment, "sequence_start", 0)
+        seq_end = getattr(segment, "sequence_end", 0)
+        if seq_start > 0 and seq_end >= seq_start:
+            for s in range(seq_start, seq_end + 1):
+                self.pending_retry_segments[s] = segment
+        else:
+            seq = getattr(segment, "sequence", 0)
+            if seq > 0:
+                self.pending_retry_segments[seq] = segment
+
+    def mark_range_processed(self, seq_start: int, seq_end: int) -> int:
+        """Closes the entire covered sequence range [seq_start..seq_end] upon BOT_BRIDGE_SUCCESS.
+        Advances last_processed_seq and last_ack_seq cumulatively to seq_end.
+        """
+        if seq_start > 0 and seq_end >= seq_start:
+            for s in range(seq_start, seq_end + 1):
+                self.processed_seq_set.add(s)
+                self.buffered_seq_set.discard(s)
+                self.pending_retry_segments.pop(s, None)
+            self.last_processed_seq = max(self.last_processed_seq, seq_end)
+        else:
+            self.processed_seq_set.add(seq_end)
+            self.buffered_seq_set.discard(seq_end)
+            self.pending_retry_segments.pop(seq_end, None)
+            self.last_processed_seq = max(self.last_processed_seq, seq_end)
+
         self.last_ack_seq = self.last_processed_seq
         return self.last_ack_seq
 
+    def mark_range_rejected(self, seq_start: int, seq_end: int) -> None:
+        """Marks the entire covered sequence range [seq_start..seq_end] rejected by server authority.
+        Prevents any sequence in the range from being re-ingested or processed.
+        """
+        if seq_start > 0 and seq_end >= seq_start:
+            for s in range(seq_start, seq_end + 1):
+                self.rejected_seq_set.add(s)
+                self.buffered_seq_set.discard(s)
+                self.pending_retry_segments.pop(s, None)
+        else:
+            self.rejected_seq_set.add(seq_end)
+            self.buffered_seq_set.discard(seq_end)
+            self.pending_retry_segments.pop(seq_end, None)
+
+    def mark_sequence_processed(self, seq: int) -> int:
+        """Advances processed/acked state strictly upon BOT_BRIDGE_SUCCESS."""
+        return self.mark_range_processed(seq, seq)
+
     def mark_sequence_rejected(self, seq: int) -> None:
         """Records permanent rejection without marking as Bot success."""
-        self.rejected_seq_set.add(seq)
-        self.pending_retry_segments.pop(seq, None)
+        self.mark_range_rejected(seq, seq)
 
     def is_sequence_processed(self, seq: int) -> bool:
-        return seq in self.processed_seq_set
+        return seq in self.processed_seq_set or (seq <= self.last_processed_seq and seq > 0)
 
     def is_sequence_buffered(self, seq: int) -> bool:
         return seq in self.buffered_seq_set and seq not in self.processed_seq_set
@@ -498,7 +540,7 @@ class RealtimeAudioIngressBuffer:
         elif timestamp_ms is not None:
             self._current_ms = timestamp_ms
 
-        if self._seq_start == 0:
+        if len(self._current_pcm) == 0 or self._seq_start == 0:
             self._seq_start = seq
         self._last_seq = seq
 
@@ -530,10 +572,18 @@ class RealtimeAudioIngressBuffer:
 
         return segments_to_emit
 
+    def clear_partial(self) -> None:
+        """Clears partial un-emitted audio in ingress to prevent duplication on reconnect replay."""
+        self._current_pcm.clear()
+        self._seq_start = 0
+        self._has_speech_in_current = False
+        self._silence_ms_accum = 0
+
     def flush(self) -> Optional[SpeechSegment]:
         if len(self._current_pcm) > 0 and self._has_speech_in_current:
             return self._emit_current_segment()
         self._current_pcm.clear()
+        self._seq_start = 0
         self._has_speech_in_current = False
         return None
 
@@ -556,7 +606,7 @@ class RealtimeAudioIngressBuffer:
 
         self._current_pcm.clear()
         self._segment_start_ms = self._current_ms
-        self._seq_start = self._last_seq + 1
+        self._seq_start = 0
         self._silence_ms_accum = 0
         self._has_speech_in_current = False
         return segment
@@ -979,8 +1029,8 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                     continue
 
                 if seq in session.pending_retry_segments:
-                    # Retry of pending segment: reuse stored SpeechSegment directly;
-                    # DO NOT re-ingest PCM into ingress buffer (RETRY_PCM_REINGEST_COUNT=0)!
+                    # Retry of pending segment covering range: reuse stored SpeechSegment directly;
+                    # DO NOT re-ingest PCM into ingress buffer (PENDING_RANGE_PCM_REINGEST_COUNT=0)!
                     completed_segments = [session.pending_retry_segments[seq]]
                 else:
                     completed_segments = ingress.push_chunk(seq=seq, pcm_bytes=pcm_bytes)
@@ -988,7 +1038,7 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                 if completed_segments:
                     for speech_seg in completed_segments:
                         # Forward to Bot internal realtime bridge
-                        bridge_res = await forward_segment_to_bot(session, seq, speech_seg)
+                        bridge_res = await forward_segment_to_bot(session, speech_seg.sequence_end, speech_seg)
                         if bridge_res.status == "success":
                             stt_text = ""
                             trans_text = ""
@@ -1007,7 +1057,7 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                             if stt_text:
                                 transcript_seg = RealtimeTranscriptSegment(
                                     segment_id=speech_seg.segment_id,
-                                    sequence=seq,
+                                    sequence=speech_seg.sequence_end,
                                     start_ms=speech_seg.start_ms,
                                     end_ms=speech_seg.end_ms,
                                     source_text=stt_text,
@@ -1017,8 +1067,8 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                                 )
                                 session.add_segment(transcript_seg)
 
-                            # BOT_PROCESS_SUCCESS -> mark_sequence_processed -> ACK
-                            ack_seq = session.mark_sequence_processed(seq)
+                            # BOT_PROCESS_SUCCESS -> mark_range_processed -> cumulative ACK closing whole range
+                            ack_seq = session.mark_range_processed(speech_seg.sequence_start, speech_seg.sequence_end)
                             await websocket.send_json({"type": "ack", "seq": ack_seq})
 
                             new_blocks = session.compute_pending_metering_blocks()
@@ -1026,28 +1076,30 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                                 await websocket.send_json(session.get_telemetry_usage())
 
                         elif bridge_res.status == "permanent_rejection":
-                            # BOT_PERMANENT_REJECTION -> safe error event -> NO false success ACK
-                            session.mark_sequence_rejected(seq)
+                            # BOT_PERMANENT_REJECTION -> safe error event -> mark entire range rejected
+                            session.mark_range_rejected(speech_seg.sequence_start, speech_seg.sequence_end)
                             safe_err_event = {
                                 "type": "error",
                                 "error_code": bridge_res.error_code or "PERMANENT_REJECTION",
                                 "message": "Speech processing rejected by server authority.",
-                                "sequence": seq,
+                                "sequence": speech_seg.sequence_end,
+                                "sequence_start": speech_seg.sequence_start,
+                                "sequence_end": speech_seg.sequence_end,
                                 "segment_id": speech_seg.segment_id,
                                 "fatal": False,
                             }
                             await websocket.send_json(safe_err_event)
-                            # NO mark_sequence_processed(seq)
+                            # NO mark_range_processed
                             # NO success ACK
 
                         else:
-                            # BOT_TIMEOUT/5XX/NETWORK/MALFORMED -> NO mark processed -> NO success ACK -> retry/reconnect eligible
-                            session.pending_retry_segments[seq] = speech_seg
+                            # BOT_TIMEOUT/5XX/NETWORK/MALFORMED -> NO mark processed -> NO success ACK -> preserve segment across full range
+                            session.add_pending_retry_segment(speech_seg)
                             logger.warning(
-                                "Transient Bot bridge failure for seq=%s session=%s: %s",
-                                seq, session_id, bridge_res.error_code
+                                "Transient Bot bridge failure for seq range [%s..%s] session=%s: %s",
+                                speech_seg.sequence_start, speech_seg.sequence_end, session_id, bridge_res.error_code
                             )
-                            # NO mark_sequence_processed(seq)
+                            # NO mark_range_processed
                             # NO success ACK
                 else:
                     # Ingress buffer accepted chunk; segment boundary not yet reached.
@@ -1062,6 +1114,7 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                     if msg_type == "session.reconnect":
                         client_last_ack = int(ctrl.get("last_ack_seq", 0))
                         recon_info = session.handle_reconnect(client_last_ack)
+                        ingress.clear_partial()
                         await websocket.send_json({"type": "session.reconnected", **recon_info})
                     elif msg_type == "session.control":
                         action = ctrl.get("action", "").lower()
