@@ -171,7 +171,9 @@ class RealtimeTranslateSession:
         self.last_client_seq: int = 0
         self.last_processed_seq: int = 0
         self.last_ack_seq: int = 0
+        self.received_seq_set: Set[int] = set()
         self.processed_seq_set: Set[int] = set()
+        self.pending_retry_segments: Dict[int, Any] = {}
 
         self.total_audio_ms: int = 0
         self.last_metered_seconds: int = 0
@@ -217,30 +219,40 @@ class RealtimeTranslateSession:
             raise ValueError(f"Invalid session state transition: {self.state} -> {new_state}")
         self.state = new_state
 
-    def accept_audio_sequence(self, seq: int, duration_ms: int) -> bool:
-        """Enforces monotonic client sequence and deduplication."""
+    def accept_audio_sequence(self, seq: int, duration_ms: int = 0) -> bool:
+        """Enforces monotonic client sequence and deduplication.
+
+        Strictly separates:
+        1. RECEIVED/IN_FLIGHT: tracks sequences received/in-flight (retryable upon transient failure).
+        2. PROCESSED/ACKED: sequences already successfully processed return False (duplicate_ignored).
+        3. processed_seq_set / last_processed_seq / last_ack_seq ONLY advance after BOT_BRIDGE_SUCCESS.
+        """
         if self.state not in (RealtimeSessionState.ACTIVE, RealtimeSessionState.CREATED):
             return False
         if seq <= 0:
             return False
-        if seq in self.processed_seq_set:
-            return False
-        if seq <= self.last_processed_seq:
+        if seq in self.processed_seq_set or seq <= self.last_processed_seq:
             return False
 
-        self.processed_seq_set.add(seq)
+        if seq not in self.received_seq_set:
+            self.received_seq_set.add(seq)
+            self.total_audio_ms += max(0, duration_ms)
         self.last_client_seq = max(self.last_client_seq, seq)
-        self.total_audio_ms += max(0, duration_ms)
         return True
 
     def mark_sequence_processed(self, seq: int) -> int:
+        """Advances processed/acked state strictly upon BOT_BRIDGE_SUCCESS."""
         self.processed_seq_set.add(seq)
+        self.pending_retry_segments.pop(seq, None)
         self.last_processed_seq = max(self.last_processed_seq, seq)
         self.last_ack_seq = self.last_processed_seq
         return self.last_ack_seq
 
     def is_sequence_processed(self, seq: int) -> bool:
         return seq in self.processed_seq_set
+
+    def is_sequence_in_flight(self, seq: int) -> bool:
+        return seq in self.received_seq_set and seq not in self.processed_seq_set
 
     def handle_reconnect(self, client_last_ack_seq: int) -> Dict[str, Any]:
         return {
@@ -949,6 +961,9 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                     continue
 
                 completed_segments = ingress.push_chunk(seq=seq, pcm_bytes=pcm_bytes)
+                if not completed_segments and seq in session.pending_retry_segments:
+                    completed_segments = [session.pending_retry_segments[seq]]
+
                 if completed_segments:
                     for speech_seg in completed_segments:
                         # Forward to Bot internal realtime bridge
@@ -991,6 +1006,7 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
 
                         elif bridge_res.status == "permanent_rejection":
                             # BOT_PERMANENT_REJECTION -> safe error event -> NO false success ACK
+                            session.pending_retry_segments.pop(seq, None)
                             safe_err_event = {
                                 "type": "error",
                                 "error_code": bridge_res.error_code or "PERMANENT_REJECTION",
@@ -1005,6 +1021,7 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
 
                         else:
                             # BOT_TIMEOUT/5XX/NETWORK/MALFORMED -> NO mark processed -> NO success ACK -> retry/reconnect eligible
+                            session.pending_retry_segments[seq] = speech_seg
                             logger.warning(
                                 "Transient Bot bridge failure for seq=%s session=%s: %s",
                                 seq, session_id, bridge_res.error_code

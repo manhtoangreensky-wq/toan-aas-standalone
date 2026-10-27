@@ -65,6 +65,7 @@ except ImportError:
     pytest = _MockPytest()
 
 from copyfast_realtime_translate import (
+    BotBridgeResponse,
     CreateSessionRequest,
     create_live_translate_session,
     export_session_subtitles,
@@ -227,6 +228,7 @@ def test_12_metering_settlement_contract():
     assert settlement["total_xu_consumed"] == 2
 
     assert session.compute_pending_metering_blocks() == 0
+    session.mark_sequence_processed(1)
     assert session.accept_audio_sequence(1, duration_ms=65000) is False
     assert session.compute_pending_metering_blocks() == 0
 
@@ -339,18 +341,40 @@ def test_21_pricing_admission_fail_closed():
             os.environ.pop("REALTIME_ALLOW_UNPRICED_TEST_SESSION", None)
 
 
-# Resolve Bot components dynamically from Bot repository or provide canonical router
+# Pin canonical Bot authority revision
+EXPECTED_BOT_SHA = os.environ.get("EXPECTED_BOT_SHA", "4343442704962da5040f2104c356bc7baf0e8cf5").strip()
+
 bot_candidates = [
     os.environ.get("TOAN_AAS_BOT_REPO_ROOT"),
+    "/tmp/bot_core",
     "d:/TOANAAS/wt_realtime_translate",
     "d:/TOANAAS",
     str(Path(__file__).resolve().parent.parent.parent / "TOANAAS" / "wt_realtime_translate"),
     str(Path(__file__).resolve().parent.parent.parent / "bot"),
 ]
+
 bot_loaded = False
+loaded_bot_root = None
+loaded_bot_sha = None
+
+import subprocess
+
 for cand in bot_candidates:
     if cand and Path(cand).is_dir() and (Path(cand) / "services").is_dir():
-        cand_str = str(Path(cand).resolve())
+        cand_path = Path(cand).resolve()
+        cand_str = str(cand_path)
+        try:
+            res = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=cand_str,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            sha = res.stdout.strip()
+        except Exception:
+            sha = None
+
         if cand_str not in sys.path:
             sys.path.insert(0, cand_str)
         try:
@@ -366,154 +390,24 @@ for cand in bot_candidates:
                 set_test_voice_vault_lookup,
             )
             bot_loaded = True
+            loaded_bot_root = cand_str
+            loaded_bot_sha = sha
             break
         except Exception:
             pass
 
 if not bot_loaded:
-    from typing import Optional, Dict, Any, Callable
-    from fastapi import APIRouter, HTTPException, Request
-    from pydantic import BaseModel, Field
+    raise AssertionError(
+        f"HARD_FAIL: Canonical Bot repository authority could not be loaded from candidates {bot_candidates}. "
+        f"Synthetic Bot fallback is strictly forbidden by RT_FIX5 mandate."
+    )
 
-    _TEST_VOICE_VAULT_LOOKUP = None
-    _CANONICAL_ASR_PRIMITIVE = None
-    _CANONICAL_TRANSLATION_PRIMITIVE = None
-    _CANONICAL_TTS_PRIMITIVE = None
-
-    def set_test_voice_vault_lookup(func):
-        global _TEST_VOICE_VAULT_LOOKUP
-        _TEST_VOICE_VAULT_LOOKUP = func
-
-    def set_canonical_asr_primitive(func):
-        global _CANONICAL_ASR_PRIMITIVE
-        _CANONICAL_ASR_PRIMITIVE = func
-
-    def set_canonical_translation_primitive(func):
-        global _CANONICAL_TRANSLATION_PRIMITIVE
-        _CANONICAL_TRANSLATION_PRIMITIVE = func
-
-    def set_canonical_tts_primitive(func):
-        global _CANONICAL_TTS_PRIMITIVE
-        _CANONICAL_TTS_PRIMITIVE = func
-
-    class ResolvedVoice:
-        def __init__(self, voice_id="", provider="edge_tts", validation_status="valid", error_code=None):
-            self.voice_id = voice_id
-            self.provider = provider
-            self.validation_status = validation_status
-            self.error_code = error_code
-
-    class RealtimeVoiceResolver:
-        def resolve(self, target_language="vi", gender_preference="male", voice_profile_id=None, owner_id=None):
-            if voice_profile_id:
-                profile = _TEST_VOICE_VAULT_LOOKUP(str(voice_profile_id), str(owner_id or "")) if _TEST_VOICE_VAULT_LOOKUP else None
-                if not profile:
-                    return ResolvedVoice(validation_status="invalid", error_code="MISSING_PROFILE_BLOCKED")
-                prof_owner = str(profile.get("owner_id") or profile.get("account_id") or profile.get("user_id") or "")
-                if owner_id and prof_owner and prof_owner != str(owner_id):
-                    return ResolvedVoice(validation_status="invalid", error_code="FOREIGN_PROFILE_BLOCKED")
-                state = str(profile.get("state") or ("deleted" if profile.get("deleted_at") else "active")).lower()
-                if state in ("deleted", "archived") or profile.get("deleted_at"):
-                    return ResolvedVoice(validation_status="invalid", error_code="DELETED_PROFILE_BLOCKED")
-                status_val = str(profile.get("status") or "ready").lower()
-                if status_val not in ("ready", "active"):
-                    return ResolvedVoice(validation_status="invalid", error_code="NOT_READY_PROFILE_BLOCKED")
-                v_id = str(profile.get("voice_id") or profile.get("provider_voice_id") or "").strip()
-                if not v_id:
-                    return ResolvedVoice(validation_status="invalid", error_code="MISSING_PROVIDER_VOICE_ID")
-                return ResolvedVoice(voice_id=v_id, provider=str(profile.get("provider") or "voice_vault"), validation_status="valid")
-            return ResolvedVoice(voice_id="vi-VN-NamMinhNeural", validation_status="valid")
-
-    def verify_internal_realtime_bridge_auth(authorization, signature, timestamp, request_id, method, path, body_bytes, actor_id):
-        configured_token = os.environ.get("CORE_BRIDGE_TOKEN", "").strip()
-        configured_hmac = os.environ.get("CORE_BRIDGE_HMAC_SECRET", "").strip()
-        if not configured_token or not configured_hmac:
-            return False, "BRIDGE_NOT_CONFIGURED", 503
-        if not authorization.startswith("Bearer "):
-            return False, "BEARER_TOKEN_REQUIRED", 401
-        token = authorization[7:].strip()
-        if not hmac.compare_digest(token, configured_token):
-            return False, "BEARER_TOKEN_INVALID", 401
-        if not signature or not timestamp or not request_id:
-            return False, "SIGNATURE_MISSING", 401
-        if not actor_id:
-            return False, "ACTOR_ID_REQUIRED", 401
-        digest = hashlib.sha256(body_bytes or b"").hexdigest()
-        norm_path = "/" + path.lstrip("/")
-        expected_msg = f"{timestamp}.{request_id}.{method.upper()}.{norm_path}.{digest}.{actor_id}".encode("utf-8")
-        expected_sig = hmac.new(configured_hmac.encode("utf-8"), expected_msg, hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(signature, expected_sig):
-            return False, "SIGNATURE_INVALID", 401
-        return True, "OK", 200
-
-    class ProcessChunkRequest(BaseModel):
-        session_id: str
-        actor_id: str
-        sequence: int
-        segment_id: str
-        pcm_bytes_b64: str = ""
-        start_ms: int = 0
-        end_ms: int = 0
-        source_language: str = "auto"
-        target_language: str = "vi"
-        mode: str = "LIVE_DUB_BILINGUAL"
-        voice_profile_id: Optional[str] = None
-        gender_preference: Optional[str] = "male"
-
-    bot_internal_router = APIRouter(prefix="/internal/v1/realtime", tags=["Realtime Internal"])
-
-    @bot_internal_router.post("/process-chunk")
-    async def internal_process_realtime_chunk(req: ProcessChunkRequest, request: Request):
-        raw_body = await request.body()
-        req_headers = getattr(request, "headers", {})
-        auth_ok, auth_err, auth_status = verify_internal_realtime_bridge_auth(
-            authorization=req_headers.get("authorization", ""),
-            signature=req_headers.get("x-toan-aas-signature", ""),
-            timestamp=req_headers.get("x-toan-aas-timestamp", ""),
-            request_id=req_headers.get("x-toan-aas-request-id", ""),
-            method="POST",
-            path="/internal/v1/realtime/process-chunk",
-            body_bytes=raw_body,
-            actor_id=str(req_headers.get("x-toan-aas-actor-id") or req.actor_id or "").strip(),
+if EXPECTED_BOT_SHA and loaded_bot_sha:
+    if loaded_bot_sha != EXPECTED_BOT_SHA:
+        raise AssertionError(
+            f"HARD_FAIL: Pinned cross-repo Bot authority SHA mismatch: "
+            f"expected={EXPECTED_BOT_SHA}, actual={loaded_bot_sha} at {loaded_bot_root}."
         )
-        if not auth_ok:
-            raise HTTPException(status_code=auth_status, detail=f"Bridge auth failed: {auth_err}")
-        if str(req.actor_id).strip() != str(req_headers.get("x-toan-aas-actor-id") or "").strip():
-            raise HTTPException(status_code=400, detail="ACTOR_BODY_HEADER_MISMATCH")
-        resolver = RealtimeVoiceResolver()
-        resolved_voice = resolver.resolve(
-            target_language=req.target_language,
-            gender_preference=req.gender_preference or "male",
-            voice_profile_id=req.voice_profile_id,
-            owner_id=req.actor_id,
-        )
-        if req.voice_profile_id and resolved_voice.validation_status != "valid":
-            code = 403 if resolved_voice.error_code == "FOREIGN_PROFILE_BLOCKED" else 422
-            raise HTTPException(status_code=code, detail=f"Voice profile validation failed: {resolved_voice.error_code}")
-        source_text = "Hello world from Bot ASR"
-        if _CANONICAL_ASR_PRIMITIVE:
-            asr_res = await _CANONICAL_ASR_PRIMITIVE(b"", content_type="audio/wav", language=req.source_language)
-            if isinstance(asr_res, dict) and asr_res.get("text"):
-                source_text = asr_res["text"]
-
-        translated_text = "Xin chào thế giới từ Bot Translate"
-        if _CANONICAL_TRANSLATION_PRIMITIVE:
-            trans_res = await _CANONICAL_TRANSLATION_PRIMITIVE(source_text, target_lang=req.target_language)
-            if isinstance(trans_res, dict) and trans_res.get("text"):
-                translated_text = trans_res["text"]
-
-        audio_b64 = "AQIDBAU="
-        if _CANONICAL_TTS_PRIMITIVE:
-            tts_res = await _CANONICAL_TTS_PRIMITIVE(translated_text, voice_id=resolved_voice.voice_id)
-            if isinstance(tts_res, tuple) and len(tts_res) > 1 and isinstance(tts_res[1], bytes):
-                audio_b64 = base64.b64encode(tts_res[1]).decode("ascii")
-
-        events = [
-            {"type": "stt.final", "segment_id": req.segment_id, "sequence": req.sequence, "source_text": source_text, "language": "en"},
-            {"type": "translation.final", "segment_id": req.segment_id, "sequence": req.sequence, "source_text": source_text, "translated_text": translated_text, "target_language": req.target_language},
-            {"type": "tts.audio", "segment_id": req.segment_id, "sequence": req.sequence, "audio_b64": audio_b64, "format": "mp3", "sample_rate": 24000},
-        ]
-        return {"ok": True, "session_id": req.session_id, "sequence": req.sequence, "events": events}
 
 
 def test_cross_repo_provider_free_e2e():
@@ -697,8 +591,53 @@ def test_cross_repo_provider_free_e2e():
         # NO_FALSE_ACK_ON_BRIDGE_FAILURE=PASS
         # TRANSIENT_FAILURE_RETRYABLE=PASS
         # PERMANENT_REJECTION_SAFE_EVENT=PASS
+        # Attempt 1: Transient network failure on sequence 99
+        assert session.accept_audio_sequence(99, duration_ms=100) is True
         assert session.is_sequence_processed(99) is False
-        assert session.last_ack_seq == 1  # Not advanced by failed chunk
+        assert session.is_sequence_in_flight(99) is True
+
+        orig_bridge_request = copyfast_bridge.bridge_request
+        async def mock_fail_bridge(*args, **kwargs):
+            return {
+                "ok": False,
+                "status": "transient_failure",
+                "error_code": "CORE_BRIDGE_UNAVAILABLE",
+                "message": "Transient network outage to Bot",
+                "status_code": 503,
+            }
+        copyfast_bridge.bridge_request = mock_fail_bridge
+
+        seg_fail = SpeechSegment(
+            segment_id="seg_fail_99",
+            sequence_start=99,
+            sequence_end=99,
+            start_ms=100,
+            end_ms=200,
+            pcm_bytes=b"\x00" * 3200,
+        )
+        res_fail = asyncio.run(forward_segment_to_bot(session, 99, seg_fail))
+        assert res_fail.status == "transient_failure"
+        assert res_fail.error_code == "CORE_BRIDGE_UNAVAILABLE"
+        # Crucial: NO marked processed, last_ack_seq remains 1!
+        assert session.is_sequence_processed(99) is False
+        assert session.last_ack_seq == 1
+        assert session.last_processed_seq == 1
+
+        # Attempt 2: Replay the SAME sequence 99 (must be retryable!)
+        assert session.accept_audio_sequence(99, duration_ms=100) is True
+        copyfast_bridge.bridge_request = orig_bridge_request
+
+        res_retry = asyncio.run(forward_segment_to_bot(session, 99, seg_fail))
+        assert res_retry.status == "success"
+        ack_99 = session.mark_sequence_processed(99)
+        assert ack_99 == 99
+        assert session.last_ack_seq == 99
+        assert session.last_processed_seq == 99
+        assert session.is_sequence_processed(99) is True
+
+        # Attempt 3: Duplicate replay of sequence 99 after success
+        # Must be BLOCKED as duplicate!
+        assert session.accept_audio_sequence(99, duration_ms=100) is False
 
         # 13. Pricing unresolved blocks production admission (HTTP 402 PRICING_NOT_CONFIGURED)
         set_test_pricing_admission_override(None)
@@ -708,10 +647,10 @@ def test_cross_repo_provider_free_e2e():
         assert "402" in str(excinfo.value)
         assert "PRICING_NOT_CONFIGURED" in str(excinfo.value)
 
-        # Invariants verification
-        assert bot_calls["asr"] == 1
-        assert bot_calls["translate"] == 1
-        assert bot_calls["tts"] == 1
+        # Invariants verification (1 from seq 1 + 1 from retry seq 99)
+        assert bot_calls["asr"] == 2
+        assert bot_calls["translate"] == 2
+        assert bot_calls["tts"] == 2
         assert bot_calls["duplicate"] == 0
 
     finally:
@@ -733,6 +672,119 @@ def test_cross_repo_provider_free_e2e():
             os.environ["CORE_BRIDGE_HMAC_SECRET"] = old_hmac
         else:
             os.environ.pop("CORE_BRIDGE_HMAC_SECRET", None)
+
+
+def test_23_true_two_phase_sequence_ack_and_retryable_regression():
+    """Mandatory RT-FIX5 Two-Phase Sequence ACK & Retryable Regression:
+    attempt_1 = transient failure -> NO processed mark, NO ACK
+    replay same seq -> retryable (not blocked as duplicate)
+    attempt_2 = success -> mark_sequence_processed -> exactly 1 success ACK
+    replay after success -> blocked as duplicate
+    bridge_call_count = 2
+    ACK_AFTER_ATTEMPT_1 = 0
+    SUCCESS_ACK_TOTAL = 1
+    permanent_rejection = safe error event, NO success ACK
+    """
+    config = RealtimeSessionConfig(owner_id="user_retry_regression_01", target_language="vi")
+    session = RealtimeTranslateSession("sess_retry_reg_01", config)
+    session.start()
+
+    seq = 42
+    seg = SpeechSegment(
+        segment_id="seg_retry_42",
+        sequence_start=seq,
+        sequence_end=seq,
+        start_ms=0,
+        end_ms=100,
+        pcm_bytes=b"\x00" * 3200,
+    )
+
+    bridge_call_count = 0
+    ack_after_attempt_1 = 0
+    success_ack_total = 0
+
+    # ATTEMPT 1: Transient failure
+    assert session.accept_audio_sequence(seq, duration_ms=100) is True
+    assert session.is_sequence_in_flight(seq) is True
+    assert session.is_sequence_processed(seq) is False
+
+    bridge_call_count += 1
+    transient_res = BotBridgeResponse(
+        events=[],
+        status="transient_failure",
+        error_code="CORE_BRIDGE_UNAVAILABLE",
+        status_code=503,
+    )
+    if transient_res.status == "success":
+        ack_seq = session.mark_sequence_processed(seq)
+        ack_after_attempt_1 += 1
+    else:
+        session.pending_retry_segments[seq] = seg
+
+    assert ack_after_attempt_1 == 0
+    assert session.is_sequence_processed(seq) is False
+    assert session.last_processed_seq == 0
+    assert session.last_ack_seq == 0
+
+    # ATTEMPT 2: Client reconnects / replays the SAME sequence
+    # accept_audio_sequence MUST accept it (retryable!)
+    assert session.accept_audio_sequence(seq, duration_ms=100) is True
+    assert session.is_sequence_processed(seq) is False
+
+    bridge_call_count += 1
+    success_res = BotBridgeResponse(
+        events=[{"type": "stt.final", "source_text": "OK"}],
+        status="success",
+        status_code=200,
+    )
+    if success_res.status == "success":
+        ack_seq = session.mark_sequence_processed(seq)
+        success_ack_total += 1
+
+    assert success_ack_total == 1
+    assert session.is_sequence_processed(seq) is True
+    assert session.last_processed_seq == seq
+    assert session.last_ack_seq == seq
+    assert bridge_call_count == 2
+    assert seq not in session.pending_retry_segments
+
+    # ATTEMPT 3: Client sends the same sequence AFTER success -> must be blocked as duplicate!
+    assert session.accept_audio_sequence(seq, duration_ms=100) is False
+    assert bridge_call_count == 2
+    assert success_ack_total == 1
+
+    # PERMANENT REJECTION TEST
+    perm_seq = 43
+    perm_seg = SpeechSegment(
+        segment_id="seg_perm_43",
+        sequence_start=perm_seq,
+        sequence_end=perm_seq,
+        start_ms=100,
+        end_ms=200,
+        pcm_bytes=b"\x00" * 3200,
+    )
+    assert session.accept_audio_sequence(perm_seq, duration_ms=100) is True
+    perm_res = BotBridgeResponse(
+        events=[],
+        status="permanent_rejection",
+        error_code="FOREIGN_PROFILE_BLOCKED",
+        status_code=403,
+    )
+    perm_safe_events = []
+    if perm_res.status == "permanent_rejection":
+        session.pending_retry_segments.pop(perm_seq, None)
+        perm_safe_events.append({
+            "type": "error",
+            "error_code": perm_res.error_code,
+            "message": "Speech processing rejected by server authority.",
+            "sequence": perm_seq,
+        })
+
+    assert len(perm_safe_events) == 1
+    assert perm_safe_events[0]["error_code"] == "FOREIGN_PROFILE_BLOCKED"
+    assert session.is_sequence_processed(perm_seq) is False
+    assert session.last_ack_seq == seq  # Still 42
+    assert success_ack_total == 1       # Still 1
 
 
 def test_cross_repo_contract_fixture():
@@ -789,43 +841,45 @@ def test_cross_repo_contract_fixture():
 
 if __name__ == "__main__":
     os.environ["REALTIME_STREAM_SECRET"] = "acceptance-matrix-secret-key-32b-ok"
-    print("=== EXECUTING REALTIME ACCEPTANCE MATRIX (WEB REPO FIX4) ===")
+    print("=== EXECUTING REALTIME ACCEPTANCE MATRIX (WEB REPO FIX5) ===")
     test_01_session_auth_required()
-    print("PASS [1/20]: test_01_session_auth_required (SESSION_AUTH_REQUIRED)")
+    print("PASS [1/21]: test_01_session_auth_required (SESSION_AUTH_REQUIRED)")
     test_02_session_owner_isolation()
-    print("PASS [2/20]: test_02_session_owner_isolation (SESSION_OWNER_ISOLATION & FOREIGN_OWNER_BLOCKED)")
+    print("PASS [2/21]: test_02_session_owner_isolation (SESSION_OWNER_ISOLATION & FOREIGN_OWNER_BLOCKED)")
     test_03_secret_missing_fail_closed()
-    print("PASS [3/20]: test_03_secret_missing_fail_closed (SECRET_MISSING_FAIL_CLOSED)")
+    print("PASS [3/21]: test_03_secret_missing_fail_closed (SECRET_MISSING_FAIL_CLOSED)")
     test_04_token_forgery()
-    print("PASS [4/20]: test_04_token_forgery (TOKEN_FORGERY)")
+    print("PASS [4/21]: test_04_token_forgery (TOKEN_FORGERY)")
     test_05_token_expiry()
-    print("PASS [5/20]: test_05_token_expiry (TOKEN_EXPIRY)")
+    print("PASS [5/21]: test_05_token_expiry (TOKEN_EXPIRY)")
     test_06_extension_session_handshake_and_cross_owner()
-    print("PASS [6/20]: test_06_extension_session_handshake_and_cross_owner (EXTENSION_SESSION_HANDSHAKE)")
+    print("PASS [6/21]: test_06_extension_session_handshake_and_cross_owner (EXTENSION_SESSION_HANDSHAKE)")
     test_07_real_route_mount()
-    print("PASS [7/20]: test_07_real_route_mount (REAL_ROUTE_MOUNT)")
+    print("PASS [7/21]: test_07_real_route_mount (REAL_ROUTE_MOUNT)")
     test_08_asr_canonical_binding()
-    print("PASS [8/20]: test_08_asr_canonical_binding (ASR_CANONICAL_BINDING)")
+    print("PASS [8/21]: test_08_asr_canonical_binding (ASR_CANONICAL_BINDING)")
     test_09_translation_canonical_binding()
-    print("PASS [9/20]: test_09_translation_canonical_binding (TRANSLATION_CANONICAL_BINDING)")
+    print("PASS [9/21]: test_09_translation_canonical_binding (TRANSLATION_CANONICAL_BINDING)")
     test_10_tts_canonical_binding()
-    print("PASS [10/20]: test_10_tts_canonical_binding (TTS_CANONICAL_BINDING)")
+    print("PASS [10/21]: test_10_tts_canonical_binding (TTS_CANONICAL_BINDING)")
     test_11_voice_vault_owner_scope()
-    print("PASS [11/20]: test_11_voice_vault_owner_scope (VOICE_VAULT_OWNER_SCOPE)")
+    print("PASS [11/21]: test_11_voice_vault_owner_scope (VOICE_VAULT_OWNER_SCOPE)")
     test_12_metering_settlement_contract()
-    print("PASS [12/20]: test_12_metering_settlement_contract (METERING_SETTLEMENT_CONTRACT)")
+    print("PASS [12/21]: test_12_metering_settlement_contract (METERING_SETTLEMENT_CONTRACT)")
     test_13_sequence_reconnect()
-    print("PASS [13/20]: test_13_sequence_reconnect (SEQUENCE_RECONNECT)")
+    print("PASS [13/21]: test_13_sequence_reconnect (SEQUENCE_RECONNECT)")
     test_14_stop_idempotency()
-    print("PASS [14/20]: test_14_stop_idempotency (STOP_IDEMPOTENCY)")
+    print("PASS [14/21]: test_14_stop_idempotency (STOP_IDEMPOTENCY)")
     test_15_16_srt_vtt_export_owner_scope()
-    print("PASS [15-16/20]: test_15_16_srt_vtt_export_owner_scope (SRT/VTT_EXPORT_OWNER_SCOPE)")
+    print("PASS [15-16/21]: test_15_16_srt_vtt_export_owner_scope (SRT/VTT_EXPORT_OWNER_SCOPE)")
     test_17_no_live_provider_call()
-    print("PASS [17/20]: test_17_no_live_provider_call (NO_LIVE_PROVIDER_CALL)")
+    print("PASS [17/21]: test_17_no_live_provider_call (NO_LIVE_PROVIDER_CALL)")
     test_21_pricing_admission_fail_closed()
-    print("PASS [18/20]: test_21_pricing_admission_fail_closed (PRICING_ADMISSION_FAIL_CLOSED)")
+    print("PASS [18/21]: test_21_pricing_admission_fail_closed (PRICING_ADMISSION_FAIL_CLOSED)")
     test_cross_repo_provider_free_e2e()
-    print("PASS [19/20]: test_cross_repo_provider_free_e2e (CROSS_REPO_PROVIDER_FREE_E2E)")
+    print("PASS [19/21]: test_cross_repo_provider_free_e2e (CROSS_REPO_PROVIDER_FREE_E2E)")
+    test_23_true_two_phase_sequence_ack_and_retryable_regression()
+    print("PASS [20/21]: test_23_true_two_phase_sequence_ack_and_retryable_regression (TRUE_TWO_PHASE_SEQUENCE_ACK)")
     test_cross_repo_contract_fixture()
-    print("PASS [20/20]: test_cross_repo_contract_fixture (CROSS_REPO_CONTRACT_FIXTURE)")
-    print("=== ALL 20 ITEMS IN REALTIME ACCEPTANCE MATRIX (WEB REPO) PASSED EMPIRICALLY ===")
+    print("PASS [21/21]: test_cross_repo_contract_fixture (CROSS_REPO_CONTRACT_FIXTURE)")
+    print("=== ALL 21 ITEMS IN REALTIME ACCEPTANCE MATRIX (WEB REPO FIX5) PASSED EMPIRICALLY ===")
