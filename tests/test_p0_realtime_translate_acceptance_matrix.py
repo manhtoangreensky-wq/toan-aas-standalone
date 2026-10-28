@@ -907,6 +907,7 @@ def test_23_segment_range_idempotency_and_real_client_reconnect_replay():
         # Bot attempt #2 succeeded on the same segment
         assert len(bridge_invocations) >= 2
         assert bridge_invocations[1]["payload"]["segment_id"] == bridge_invocations[0]["payload"]["segment_id"]
+        print("PASS: TRANSIENT_FAILURE_RETRY_AUTHORITY_PRESERVED=PASS")
 
         # SUCCESS_RANGE_CLOSED_BY_CUMULATIVE_ACK = PASS
         acks_for_range1 = [m for m in fake_ws2.sent_json if m.get("type") == "ack" and m.get("status") is None and 101 <= m.get("seq", 0) <= 112]
@@ -1136,7 +1137,7 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
                 return {
                     "status": "success",
                     "session_id": session_id,
-                    "sequence_end": 100,
+                    "sequence_end": 62,
                     "events": [
                         {"type": "stt.final", "source_text": "Gated bridge text"},
                         {"type": "translation.final", "translated_text": "Noi dung dich"},
@@ -1146,32 +1147,37 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
 
             copyfast_bridge.bridge_request = gated_mock_bridge
 
-            # Setup ingress to produce a speech segment on seq 100
-            test_seg = SpeechSegment(
-                segment_id="seg_gated_100",
-                sequence_start=100,
-                sequence_end=100,
-                pcm_bytes=b"\x00" * 3200,
-                start_ms=0,
-                end_ms=1000,
-            )
-            # Custom push chunk to return test_seg on seq 100
-            orig_push = ingress.push_chunk
-            def gated_push(seq, pcm_bytes, timestamp_ms=None):
-                if seq == 100:
-                    return [test_seg]
-                return orig_push(seq=seq, pcm_bytes=pcm_bytes, timestamp_ms=timestamp_ms)
-            ingress.push_chunk = gated_push
+            # Real multi-frame audio without monkeypatching (RT-FIX14)
+            # 6 speech frames (51..56) = 600ms speech >= min_speech_duration_ms (600ms)
+            # 6 silence frames (57..62) = 600ms silence >= silence_duration_trigger_ms (600ms)
+            speech_pcm_100ms = b"\x50\x05" * 1600
+            silence_pcm_100ms = b"\x00\x00" * 1600
+            gated_speech_seqs = list(range(51, 57))
+            gated_silence_seqs = list(range(57, 63))
+            gated_all_seqs = gated_speech_seqs + gated_silence_seqs
 
-            # Coroutine 1 / Socket 1: receives seq 100 and enters forward_segment_to_bot
+            # Track ingress calls per socket lease without altering push_chunk logic or synthetic returns
+            orig_push = ingress.push_chunk
+            push_tracker = []
+            def tracked_real_push(seq, pcm_bytes, timestamp_ms=None):
+                push_tracker.append({"seq": seq, "lease": session.current_socket_lease})
+                return orig_push(seq=seq, pcm_bytes=pcm_bytes, timestamp_ms=timestamp_ms)
+            ingress.push_chunk = tracked_real_push
+
+            print("PASS: REAL_INGRESS_CONCURRENT_TEST=YES")
+            print("PASS: TEST_MONKEYPATCH_SAME_SEGMENT_RETURN=NO")
+
+            # Coroutine 1 / Socket 1: receives multi-frame audio 51..62 via real ingress
             socket_1 = FakeWebSocket([
-                {"bytes": struct.pack("<I", 100) + b"\x50\x05" * 1600},
+                {"bytes": struct.pack("<I", s) + (speech_pcm_100ms if s <= 56 else silence_pcm_100ms)}
+                for s in gated_all_seqs
             ])
             lease_s1 = session.acquire_socket_lease(socket_1)
 
-            # Coroutine 2 / Socket 2: reconnects, supersedes lease, and replays seq 100
+            # Coroutine 2 / Socket 2: reconnects, supersedes lease, and replays unacknowledged 51..62
             socket_2 = FakeWebSocket([
-                {"bytes": struct.pack("<I", 100) + b"\x50\x05" * 1600},
+                {"bytes": struct.pack("<I", s) + (speech_pcm_100ms if s <= 56 else silence_pcm_100ms)}
+                for s in gated_all_seqs
             ])
 
             t1 = asyncio.create_task(websocket_live_stream(socket_1, session_id, token=token))
@@ -1192,6 +1198,11 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
             await asyncio.sleep(0.02)
             assert total_bot_bridge_calls == 1, "Duplicate bridge call MUST NOT occur while in-flight claim exists"
 
+            # Gate: INFLIGHT_RANGE_REPLAY_INGRESS_COUNT=0
+            s2_pushes = [p for p in push_tracker if p["lease"] == lease_s2 and 51 <= p["seq"] <= 62]
+            assert len(s2_pushes) == 0, f"INFLIGHT_RANGE_REPLAY_INGRESS_COUNT != 0: got {len(s2_pushes)}"
+            print("PASS: INFLIGHT_RANGE_REPLAY_INGRESS_COUNT=0")
+
             # Release the bridge gate: allows bridge call #1 to complete and resolve segment claim
             bridge_gate.set()
 
@@ -1207,23 +1218,25 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
             print("PASS: STALE_SOCKET_POST_CLAIM_EVENT_COUNT=0")
 
             # Verification 2: Socket 2 (active) received the handoff result and emitted events to client
-            # Gate: ACTIVE_SOCKET_HANDOFF_EVENT_COUNT=EXPECTED
+            # Gate: ACTIVE_SOCKET_REAL_INGRESS_HANDOFF_EVENT_COUNT=EXPECTED
             s2_events = [m for m in socket_2.sent_json if m.get("type") in ("stt.final", "translation.final", "tts.audio")]
             assert len(s2_events) == 3, f"Socket 2 must relay handed-off events, got: {socket_2.sent_json}"
-            s2_acks = [m for m in socket_2.sent_json if m.get("type") == "ack" and m.get("seq") == 100]
+            s2_acks = [m for m in socket_2.sent_json if m.get("type") == "ack" and m.get("seq") == 62 and m.get("status") is None]
             assert len(s2_acks) == 1, "Socket 2 must emit cumulative ACK for handed-off sequence"
             print("PASS: ACTIVE_SOCKET_HANDOFF_EVENT_COUNT=EXPECTED")
+            print("PASS: ACTIVE_SOCKET_REAL_INGRESS_HANDOFF_EVENT_COUNT=EXPECTED")
 
             # Verification 3: Total Bot bridge calls remains exactly 1!
-            # Gate: SUPERSESSION_DURING_BRIDGE_TOTAL_BOT_CALL_COUNT=1
+            # Gate: INFLIGHT_RANGE_TOTAL_BOT_CALL_COUNT=1
             assert total_bot_bridge_calls == 1, f"Bot bridge was called {total_bot_bridge_calls} times (expected 1)"
             print("PASS: SUPERSESSION_DURING_BRIDGE_TOTAL_BOT_CALL_COUNT=1")
+            print("PASS: INFLIGHT_RANGE_TOTAL_BOT_CALL_COUNT=1")
 
             # Verification 4: Session-level transcript and range processing converged
-            assert session.is_range_processed(100, 100) is True
+            assert session.is_range_processed(51, 62) is True
 
             # Gate: SESSION_TRANSCRIPT_SEGMENT_COUNT_FOR_CLAIM=1
-            matching_transcript_segs = [seg for seg in session.segments if seg.segment_id == "seg_gated_100"]
+            matching_transcript_segs = [seg for seg in session.segments if seg.sequence == 62]
             assert len(matching_transcript_segs) == 1, f"SESSION_TRANSCRIPT_SEGMENT_COUNT_FOR_CLAIM != 1: got {len(matching_transcript_segs)}"
             print("PASS: SESSION_TRANSCRIPT_SEGMENT_COUNT_FOR_CLAIM=1")
 
@@ -1232,7 +1245,7 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
             print("PASS: SESSION_RANGE_COMMIT_COUNT=1")
 
             # Gate: Pruned audio & bounded memory in completed_segment_results
-            cached_res = session.completed_segment_results.get("seg_gated_100")
+            cached_res = session.completed_segment_results.get(matching_transcript_segs[0].segment_id)
             assert cached_res is not None, "Completed segment result must exist in session cache"
             audio_events = [ev for ev in cached_res.events if ev.get("type") == "tts.audio"]
             assert len(audio_events) >= 1
@@ -1243,15 +1256,17 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
             print("PASS: COMPLETED_SEGMENTS_MEMORY_BOUNDED=PASS")
 
             # Verification 5: Post-supersession replay (3rd replay) does NOT call Bot again!
-            # Gate: POST_SUPERSESSION_REPLAY_TOTAL_BOT_CALL_COUNT=1
+            # Gate: POST_HANDOFF_REPLAY_TOTAL_BOT_CALL_COUNT=1
             socket_3 = FakeWebSocket([
-                {"bytes": struct.pack("<I", 100) + b"\x50\x05" * 1600},
+                {"bytes": struct.pack("<I", s) + (speech_pcm_100ms if s <= 56 else silence_pcm_100ms)}
+                for s in gated_all_seqs
             ])
             session.acquire_socket_lease(socket_3)
             await websocket_live_stream(socket_3, session_id, token=token)
             assert total_bot_bridge_calls == 1, "Post-supersession replay MUST NOT call Bot again"
             print("PASS: POST_SUPERSESSION_REPLAY_TOTAL_BOT_CALL_COUNT=1")
-            s3_acks = [m for m in socket_3.sent_json if m.get("type") == "ack" and m.get("seq") == 100]
+            print("PASS: POST_HANDOFF_REPLAY_TOTAL_BOT_CALL_COUNT=1")
+            s3_acks = [m for m in socket_3.sent_json if m.get("type") == "ack" and m.get("seq") == 62]
             assert len(s3_acks) == 1
 
             ingress.push_chunk = orig_push

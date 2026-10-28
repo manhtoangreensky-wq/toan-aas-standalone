@@ -234,6 +234,8 @@ class RealtimeTranslateSession:
         self.active_websocket: Optional[Any] = None
         self.in_flight_segments: Set[str] = set()
         self.segment_claims: Dict[str, asyncio.Future] = {}
+        self.inflight_claims_by_range: Dict[Tuple[int, int], Tuple[Any, asyncio.Future]] = {}
+        self.inflight_claims_by_seq: Dict[int, Tuple[Any, asyncio.Future]] = {}
         self.completed_segment_results: Dict[str, Any] = {}
 
     def acquire_socket_lease(self, websocket: Any = None) -> int:
@@ -543,6 +545,32 @@ class RealtimeTranslateSession:
         while len(self.completed_segment_results) > 16:
             oldest_k = next(iter(self.completed_segment_results))
             self.completed_segment_results.pop(oldest_k, None)
+
+    def register_inflight_claim(self, speech_seg: Any, claim_future: asyncio.Future) -> None:
+        """Registers an active in-flight segment claim mapped by segment_id, sequence range,
+        and all covered individual sequence numbers.
+        Enables incoming reconnecting sockets to join the in-flight claim without re-ingesting PCM.
+        """
+        self.segment_claims[speech_seg.segment_id] = claim_future
+        self.inflight_claims_by_range[(speech_seg.sequence_start, speech_seg.sequence_end)] = (speech_seg, claim_future)
+        if speech_seg.sequence_start > 0 and speech_seg.sequence_end >= speech_seg.sequence_start:
+            for s in range(speech_seg.sequence_start, speech_seg.sequence_end + 1):
+                self.inflight_claims_by_seq[s] = (speech_seg, claim_future)
+        else:
+            self.inflight_claims_by_seq[speech_seg.sequence_end] = (speech_seg, claim_future)
+
+    def unregister_inflight_claim(self, speech_seg: Any) -> None:
+        """Unregisters an in-flight segment claim upon completion or failure."""
+        seg_id = getattr(speech_seg, "segment_id", str(speech_seg))
+        self.segment_claims.pop(seg_id, None)
+        seq_start = getattr(speech_seg, "sequence_start", 0)
+        seq_end = getattr(speech_seg, "sequence_end", 0)
+        self.inflight_claims_by_range.pop((seq_start, seq_end), None)
+        if seq_start > 0 and seq_end >= seq_start:
+            for s in range(seq_start, seq_end + 1):
+                self.inflight_claims_by_seq.pop(s, None)
+        elif seq_end > 0:
+            self.inflight_claims_by_seq.pop(seq_end, None)
 
     def export_srt(self, requesting_owner_id: str) -> str:
         if str(requesting_owner_id).strip() != str(self.config.owner_id).strip():
@@ -1253,6 +1281,11 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                     # Retry of pending segment covering range: reuse stored SpeechSegment directly;
                     # DO NOT re-ingest PCM into ingress buffer (PENDING_RANGE_PCM_REINGEST_COUNT=0)!
                     completed_segments = [session.pending_retry_segments[seq]]
+                elif seq in session.inflight_claims_by_seq:
+                    # Replay of sequence belonging to an active in-flight segment claim:
+                    # Reuse stored SpeechSegment directly; DO NOT re-ingest PCM into ingress buffer!
+                    speech_seg, _ = session.inflight_claims_by_seq[seq]
+                    completed_segments = [speech_seg]
                 elif seq in session.buffered_seq_set:
                     # Frame already buffered in ingress awaiting VAD segment boundary: ignore duplicate PCM!
                     await websocket.send_json({"type": "buffered", "seq": seq})
@@ -1288,7 +1321,7 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                         else:
                             loop = asyncio.get_running_loop()
                             claim_future = loop.create_future()
-                            session.segment_claims[speech_seg.segment_id] = claim_future
+                            session.register_inflight_claim(speech_seg, claim_future)
                             try:
                                 bridge_res = await forward_segment_to_bot(session, speech_seg.sequence_end, speech_seg)
                                 if bridge_res is None:
@@ -1351,7 +1384,7 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                                     claim_future.set_exception(exc)
                                 raise
                             finally:
-                                session.segment_claims.pop(speech_seg.segment_id, None)
+                                session.unregister_inflight_claim(speech_seg)
 
                         if claim_outcome is None:
                             continue
