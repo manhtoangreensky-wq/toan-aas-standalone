@@ -10537,11 +10537,14 @@
     {
       "files": [
         "copyfast_provider_policy.py",
+        "receipt_webapp_final_closeout_step1_ledger_reconciliation_r1.md",
+        "reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md",
+        "reports/audit/receipt_webapp_final_closeout_step1_ledger_reconciliation_r1.md",
         "static/portal/portal.js",
         "studio/index.html",
         "studio/script.js"
       ],
-      "occurrences": 16,
+      "occurrences": 21,
       "provider": "Kling"
     },
     {
@@ -18424,9 +18427,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 387,
-  "source_files_scanned": 387,
-  "source_fingerprint_sha256": "9d48851970b0d75fe63e97137803d9210a1ef63877133006e3a3c959bfaae1bc",
+  "source_files_discovered": 389,
+  "source_files_scanned": 389,
+  "source_fingerprint_sha256": "d3af5e8237906ccff32966c598f241dc0a4617550ede930fafc49399562bfbce",
   "source_root": "repository-root",
   "ui_path_references": [
     {
