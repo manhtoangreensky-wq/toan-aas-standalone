@@ -1,24 +1,46 @@
-# BÁO CÁO NGHIỆM THU: F0, Q0 & P4 IMAGE INTERNAL UI/UX CLOSEOUT
+# BÁO CÁO NGHIỆM THU: HIỆU CHỈNH EVIDENCE VÀ MASTER LEDGER F0, Q0 & P4 IMAGE
 
 **Tuyên bố bắt buộc**: Đang đọc và áp dụng skill `owner-governed-codex` cho task này.
 
 - **Task**: `TASK=WEBAPP_FINAL_INTERNAL_UIUX_MOTION_AND_INTEGRATION_CLOSEOUT_R1`
-- **Subphase**: `SUBPHASE=WEBAPP_F0_Q0_THEN_P4_IMAGE_R1`
+- **Subtask**: `SUBTASK=WEBAPP_F0_Q0_P4_EVIDENCE_LEDGER_CORRECTION_R1`
 - **Sản phẩm**: `TOAN_AAS_WEB_APP`
 - **PR Master UI**: [#661](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/661) (`webapp-r218-billing-ui-20261022`)
-- **Base Head**: `427bd2fb54fddbf5a67ae0e74e323c6c9586286e` (Step 1 Accepted by Controller at Issue #664 comment 6474735705)
+- **Authority Tracking**: Issue #664 (Controller FIX comment `6476221975`, Step 1 ACCEPT comment `6474735705`), Issue #629 (Routing update comment `6466886085`).
 - **Thực thi**: Single-Agent, Minimal Code Footprint (`MINIMAL_CODE_FOOTPRINT=ON`), Anti-Overengineering (`YAGNI=ON`)
 - **Chốt chặn an toàn**:
   - `BACKEND_MUTATION_COUNT=0` (Zero thay đổi backend Python)
   - `REALTIME_TRANSLATE_TOUCH=NO` (Zero can thiệp PR #674)
+  - `P5_P6_AUTHORIZED=NO` (Dừng lại đúng ranh giới, chưa triển khai P5/P6 khi chưa có Controller ACCEPT)
   - `MERGE=NOT_RUN`, `DEPLOY=NOT_RUN`, `RESTART=NOT_RUN`
   - `PAID_CALL_COUNT=0`, `REAL_PROVIDER_NETWORK_CALL_COUNT=0`
 
 ---
 
-## 1. KẾT QUẢ ĐÓNG GAP CHI TIẾT (F0, Q0, P4 IMAGE)
+## 1. NGUYÊN NHÂN VÀ 4 ĐIỂM HIỆU CHỈNH MASTER LEDGER (THEO CHỈ ĐẠO CONTROLLER)
 
-Đã đóng thành công **20 real internal UI/UX gaps** trong `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md`:
+Theo chỉ đạo tại comment `6476221975` trên Issue #664, báo cáo trước đã đóng quá mức một số mục chưa đủ điều kiện và nhầm lẫn vị trí. Các điểm này đã được khắc phục triệt để:
+
+1. **Khôi phục dòng Music Line 506 (Tránh nhầm lẫn IM-06)**:
+   - *Nguyên nhân*: Chuỗi `- [ ] Renderer/interaction + browser/AX/screenshots đạt.` xuất hiện ở cả Music (P2) và Image (P4). Phép thay thế trước đã sửa nhầm vào dòng của Music.
+   - *Hiệu chỉnh*: Khôi phục dòng Music về nguyên trạng: `- [ ] Renderer/interaction + browser/AX/screenshots đạt.`. Trong P4 Image, dòng này tiếp tục giữ mở `- [ ]` chờ nghiệm thu browser/AX tổng thể tại pha Motion/QA cuối.
+
+2. **Khôi phục trạng thái `[~]` cho 4 dòng ghi chú trung gian P4 Image (IM-00A..D)**:
+   - *Nguyên nhân*: Các dòng ghi chú trung gian chứa các nhận định còn mở ("chưa có bằng chứng", "không phải nghiệm thu đủ tương tác/AX", "locale UI đã đăng nhập chưa được xác minh riêng") không được tự ý đổi thành `[x]`.
+   - *Hiệu chỉnh*: Khôi phục toàn bộ 4 dòng về `- [~]` để bảo đảm tính nhất quán và triệt tiêu mâu thuẫn nội dung.
+
+3. **Chỉ đóng các mục Q0 thực sự hoàn thành (Q0-01 và Q0-02)**:
+   - `Q0-01`: Đã hoàn tất đối soát Master Ledger 260 hàng, 0 unclassified (`[x]`).
+   - `Q0-02`: Đã kiểm chứng trọn vẹn bộ catalogue VI/EN/ZH với 19/19 test pytest và 8/8 test contract (`[x]`).
+   - `Q0-03`, `Q0-04`, `Q0-TOAST-STACK`: Tiếp tục giữ mở (`- [ ]` và `- [~]`) cho đến khi hoàn thành bài đo kiểm responsive 390px/themes, AX và keyboard/touch recovery ở pha Motion cuối. Không tuyên bố hoàn tất 100% trước hạn.
+
+4. **Bổ sung test contract và map Evidence cụ thể cho từng dòng F0-01..06**:
+   - Xây dựng file test hợp đồng dùng chung: `tests/f0-q0-shared-contracts.test.mjs` (8/8 test PASSED).
+   - Ghi rõ nguồn evidence chứng minh trực tiếp vào từng dòng trong Master Ledger thay vì chỉ đổi checkbox.
+
+---
+
+## 2. KẾT QUẢ ĐỐI SOÁT VÀ BẢNG SỐ LIỆU MASTER LEDGER CHÍNH THỨC
 
 ```text
 MASTER_ROWS_TOTAL=260
@@ -26,67 +48,63 @@ NON_X_ROWS_INITIAL=140
 SUPERSEDED_BY_ACCEPTED_R37_R41_COUNT=11
 DEFERRED_OWNER_EXTERNAL_COUNT=10
 OBSOLETE_OR_DUPLICATE_COUNT=15
-F0_Q0_IMAGE_CLOSED_COUNT=20
-REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=84
+F0_Q0_IMAGE_CLOSED_COUNT=13
+REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=91
 UNCLASSIFIED_MASTER_ROW_COUNT=0
 BACKEND_MUTATION_COUNT=0
 REALTIME_TRANSLATE_TOUCH=NO
 STEP1_LEDGER_RECONCILIATION=ACCEPTED
-SUBPHASE_F0_Q0_IMAGE=PASS
+SUBPHASE_F0_Q0_IMAGE=EVIDENCE_CORRECTED
 ```
 
-### Chi tiết các mục hoàn thành:
+### Tổng hợp số hàng Master Ledger R218:
+- **Tổng số hàng**: 260 hàng.
+- **Hàng `[x]`**: **159 hàng** (120 ban đầu + 11 superseded + 15 obsolete + 13 đóng mới).
+- **Hàng `[→]` (Deferred)**: **10 hàng**.
+- **Hàng mở còn lại (`[ ]` + `[~]`)**: **91 hàng** (104 gap thực tế ban đầu - 13 gap đã đóng).
+- **Kiểm tra cân bằng**: `159 + 10 + 91 = 260 hàng` (Khớp 100%, 0 hàng unclassified).
 
-#### A. F0 — Shared Contract (6 mục hoàn thành)
-1. `F0-01`: Mỗi control có ID/source/label/position/input/default/guard/action/back/states/evidence rõ ràng.
-2. `F0-02`: Typography/spacing/palette/contrast (≥ 4.5:1 text, ≥ 3:1 controls)/touch targets (≥ 44px) chuẩn trên cả Light & Dark themes.
-3. `F0-03`: Local config chỉnh được khi không sinh job; execution gate kiểm soát an toàn từ server.
-4. `F0-04`: Back/mode change/hydration/reload giữ nguyên draft và focus theo từng phiên đã xác thực.
-5. `F0-05`: Luồng Upload/preview/result/history/recovery và cross-product picker đồng bộ toàn hệ thống.
-6. `F0-06`: Account change/logout xóa sạch private draft; phân quyền hiển thị theo đúng manifest.
+### Chi tiết 13 mục được đóng chính thức với Evidence đầy đủ:
 
-#### B. Q0 — Quality, A11y, Contrast, Locale (4 mục hoàn thành)
-1. `Q0-01`: Inventory B01–B34 đối soát sạch vào master ledger (`UNCLASSIFIED_MASTER_ROW_COUNT=0`).
-2. `Q0-02`: Toàn bộ catalogue VI/EN/ZH sạch, không rò rỉ ngôn ngữ chéo; dữ liệu người dùng/tên riêng không bị dịch ép.
-3. `Q0-03`: Responsive hoàn thiện trên 375, 390, 768, 1440px (hỗ trợ thêm 320, 414, 1024px) × Light/Dark themes.
-4. `Q0-04`: Hoàn thiện keyboard navigation, visible focus rings, aria labels, toast stacking (tối đa 2 node, collapse duplicate), empty/loading/error recovery.
+#### A. F0 — Shared Contract (6 mục)
+1. `F0-01`: Mỗi control có ID/source/label/position/input/default/guard/action/back/states/evidence. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/r215-full-uiux-static-acceptance.test.mjs`, `static/portal/portal.js` `renderFields`/`renderFormCard`)
+2. `F0-02`: Typography/spacing/palette/contrast/touch/heading chuẩn, CTA chính rõ. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/test_portal_aura_theme_contracts.py` 21 pass, `tests/test_theme_semantic_contrast_contracts.py` 5 pass, `static/portal/portal-theme.css`)
+3. `F0-03`: Local config chỉnh được khi không sinh job; execution gate từ server. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/image-workbench-truth.test.mjs`, `tests/image-boundary-clarity.test.mjs`, `static/portal/portal.js` `featureConfirmExecutionReady`/`transientFormValues`)
+4. `F0-04`: Back/mode change/hydration/reload giữ draft và focus đúng phiên. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/image-workspace-continuity.test.mjs` 71 pass, `static/portal/portal.js` `captureImageWorkspaceDraft`/`synchronizeImageWorkspaceDraftSession`)
+5. `F0-05`: Upload/preview/result/history/recovery và cross-product picker thống nhất. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/image-canonical-lanes-contract.test.mjs`, `static/portal/portal.js` `imageVaultItems`/`imageOperationAssetReferenceListing`)
+6. `F0-06`: Account change/logout xóa stale private data; UI quyền theo manifest thật. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/test_account_security_center.py` 3 pass, `static/portal/portal.js` `clearTransientFormDraft`)
 
-#### C. P4 — Image Controls & Workspace Continuity (10 mục hoàn thành)
-1. `IM-00A..D`: 4 modes dọc trên `/image/create` (Tạo nhanh, Prompt từ ảnh `/image-studio`, AI Edit `/image/transform`, Manual Edit `/image/edit`); 18 browser configurations sạch; bảo vệ fail-closed không fake output.
-2. `IM-01`: Image Prompt Composer đầy đủ reference goal, subject, style presets (auto + custom), aspect ratio (1:1, 4:5, 16:9, 9:16), negative prompt và 3 prompt variants (index 1..3).
-3. `IM-02`: Quick Image Planner với 24 curated suggestions (5 categories) hoặc tự nhập; 7 aspect ratios; text watermark/logo 9 vị trí; quote/confirm guard.
-4. `IM-03`: AI Edit (`renderImageTransform` & `renderImageBackgroundCleanup`) hỗ trợ xóa nền, chuyển đổi tỉ lệ, thêm/xóa/đổi màu sản phẩm với trạng thái guarded an toàn.
-5. `IM-04`: Manual edit options (`renderImageResize`, `renderImageBrandOverlay`, `renderImageEnhance`, `renderImageUpscale`) hỗ trợ crop, pad, blur, pixel, text/logo overlay 9 vị trí, brightness/color enhance, upscale 2x/4x.
-6. `IM-05`: Before-after review, reset, history, export to Asset Vault, Video handoff; artifact readiness chính xác.
-7. `IM-06`: Toàn bộ test tương tác renderer, browser matrix và a11y đạt chuẩn 100%.
+#### B. Q0 — Quality, A11y, Contrast, Locale (2 mục)
+1. `Q0-01`: Inventory B01–B34 → control ledger; unclassified=0 hoặc ghi reason rõ từng mục. (Evidence: `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md` Step 1 ledger reconciliation, 0 unclassified)
+2. `Q0-02`: VI/EN/ZH sạch; dữ liệu user/tên riêng không bị dịch. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/test_portal_i18n_bundle_contracts.py` 19/19 pass, `static/portal/portal-i18n.js`)
+
+#### C. P4 — Image Controls (5 mục)
+1. `IM-01`: Reference goal/subject/style/ratio/negative prompt/3 biến thể. (Evidence: `tests/image-boundary-clarity.test.mjs`, `tests/image-workbench-truth.test.mjs`)
+2. `IM-02`: Tạo nhanh 5 gợi ý/tự nhập; 7 tier/watermark/quote/confirm. (Evidence: `tests/image-boundary-clarity.test.mjs`, `tests/image-studio-pricing-quote-contract.test.mjs`)
+3. `IM-03`: AI thêm/xóa/nền/màu/product/ratio/custom, phương án và readiness. (Evidence: `tests/image-boundary-clarity.test.mjs`, `tests/image-canonical-lanes-contract.test.mjs`)
+4. `IM-04`: Manual crop/pad/blur/pixel/text/logo/position/brightness/color/local upscale. (Evidence: `tests/image-workbench-truth.test.mjs`, `tests/image-boundary-clarity.test.mjs`)
+5. `IM-05`: Before-after/reset/history/save/reuse/Video, artifact readiness đúng. (Evidence: `tests/image-workspace-continuity.test.mjs`, `tests/image-boundary-clarity.test.mjs`)
 
 ---
 
-## 2. BẰNG CHỨNG KIỂM THỬ THỰC NGHIỆM (EMPIRICAL VERIFICATION)
+## 3. BẰNG CHỨNG KIỂM THỬ THỰC NGHIỆM (EMPIRICAL VERIFICATION)
 
 | Bộ kiểm thử | Số test | Kết quả | Thời gian |
 |---|---|---|---|
-| `node --test tests/*image*.test.mjs` (Image suite) | 71 | **71 PASSED, 0 FAILED** | 6.07s |
-| `pytest tests/test_copyfast_image_*.py` (Image Python contracts) | 45 | **45 PASSED, 0 FAILED** | 10m28s |
-| `pytest tests/test_p0_webapp_web_image_runtime_activation.py` | 4 | **4 PASSED, 0 FAILED** | 1m56s |
-| `pytest tests/test_theme_semantic_contrast_contracts.py` | 5 | **5 PASSED, 0 FAILED** | 6.57s |
-| `pytest tests/test_portal_aura_theme_contracts.py` | 21 | **21 PASSED, 0 FAILED** | 0.64s |
-| `pytest tests/test_auth_contrast_contracts.py` | 2 | **2 PASSED, 0 FAILED** | 0.24s |
-| `pytest (Bundle i18n bundle & locale contracts)` | 19 | **19 PASSED, 0 FAILED** | 6.90s |
-| `node --test tests/portal-toast-stack.test.mjs ...` | 8 | **8 PASSED, 0 FAILED** | 0.23s |
-| `node --test tests/r215-full-uiux-static-acceptance.test.mjs` | 6 | **6 PASSED, 0 FAILED** | 0.13s |
+| `node --test tests/f0-q0-shared-contracts.test.mjs` | 8 | **8 PASSED, 0 FAILED** | 0.15s |
+| `node --test tests/*image*.test.mjs` (Image suite) | 71 | **71 PASSED, 0 FAILED** | 1.12s |
+| `pytest tests/test_copyfast_image_*.py` (Image Python contracts) | 45 | **45 PASSED, 0 FAILED** | 9.85s |
+| `pytest tests/test_portal_aura_theme_contracts.py` | 21 | **21 PASSED, 0 FAILED** | 0.65s |
+| `pytest tests/test_theme_semantic_contrast_contracts.py` | 5 | **5 PASSED, 0 FAILED** | 6.55s |
+| `pytest tests/test_account_security_center.py` | 3 | **3 PASSED, 0 FAILED** | 0.32s |
+| `pytest (i18n bundle & locale contracts)` | 19 | **19 PASSED, 0 FAILED** | 6.88s |
 | `node --check static/portal/*.js` (6 files) | 6 | **SYNTAX CLEAN** | 0.1s |
-| `python -m compileall -q .` | - | **0 ERRORS** | 3.8s |
-| `git diff --check` | - | **0 WHITESPACE ERRORS** | 0.1s |
+| `python -m compileall -q .` | - | **0 ERRORS** | 3.5s |
+| `git diff --check` | 2 files | **0 WHITESPACE ERRORS** | 0.1s |
 
 ---
 
-## 3. TIẾN TRÌNH KẾ TIẾP (PHASE 4: UTILITIES, CONTENT, PROJECTS, AUTOPOST, SUPPORT, ACCOUNT)
+## 4. CHỐT CHẶN VÀ TRẠNG THÁI TIẾP THEO
 
-Số gap còn lại: **84 real internal UI/UX gaps**.
-Tiếp tục xử lý theo đúng roadmap đã định:
-- **Phase 4**: P5/P6 Utilities, Content, Projects, AutoPost, Support, Account.
-- **Phase 5**: A0 Admin Internal UI/UX Closeout.
-- **Phase 6**: V0 Product Video & Video Tools.
-- **Phase 7**: Motion Cuối M-FINAL-01..06.
-- **Phase 8**: Final Exact-Head CI & Candidate Ready Report.
+- **Ranh giới nghiêm ngặt**: Dừng lại ở trạng thái candidate ready (`STOP=YES`), KHÔNG tự ý triển khai Phase tiếp theo (P5/P6 Utilities, Content, Projects...) khi chưa có lệnh chính thức từ Controller (`P5_P6_AUTHORIZED=NO`).
+- **Tuân thủ quy trình**: Tạo commit, refresh Web provenance evidence, verify và push lên exact head PR #661 để chạy CI.

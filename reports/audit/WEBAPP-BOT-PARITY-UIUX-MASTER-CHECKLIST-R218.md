@@ -17,13 +17,13 @@ NON_X_ROWS_INITIAL=140
 SUPERSEDED_BY_ACCEPTED_R37_R41_COUNT=11
 DEFERRED_OWNER_EXTERNAL_COUNT=10
 OBSOLETE_OR_DUPLICATE_COUNT=15
-F0_Q0_IMAGE_CLOSED_COUNT=20
-REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=84
+F0_Q0_IMAGE_CLOSED_COUNT=13
+REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=91
 UNCLASSIFIED_MASTER_ROW_COUNT=0
 BACKEND_MUTATION_COUNT=0
 REALTIME_TRANSLATE_TOUCH=NO
 STEP1_LEDGER_RECONCILIATION=ACCEPTED
-SUBPHASE_F0_Q0_IMAGE=PASS
+SUBPHASE_F0_Q0_IMAGE=EVIDENCE_CORRECTED
 ```
 
 ## Checkpoint mới nhất — 22/10/2026
@@ -181,12 +181,12 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## F0 — Shared contract R218-00/01
 
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: F0-01] Mỗi control có ID/source/label/position/input/default/guard/action/back/states/evidence.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: F0-02] Typography/spacing/palette/contrast/touch/heading chuẩn, CTA chính rõ.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: F0-03] Local config chỉnh được khi không sinh job; execution gate từ server.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: F0-04] Back/mode change/hydration/reload giữ draft và focus đúng phiên.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: F0-05] Upload/preview/result/history/recovery và cross-product picker thống nhất.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: F0-06] Account change/logout xóa stale private data; UI quyền theo manifest thật.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: F0-01] Mỗi control có ID/source/label/position/input/default/guard/action/back/states/evidence. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/r215-full-uiux-static-acceptance.test.mjs`, `static/portal/portal.js` `renderFields`/`renderFormCard`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: F0-02] Typography/spacing/palette/contrast/touch/heading chuẩn, CTA chính rõ. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/test_portal_aura_theme_contracts.py` 21 pass, `tests/test_theme_semantic_contrast_contracts.py` 5 pass, `static/portal/portal-theme.css`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: F0-03] Local config chỉnh được khi không sinh job; execution gate từ server. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/image-workbench-truth.test.mjs`, `tests/image-boundary-clarity.test.mjs`, `static/portal/portal.js` `featureConfirmExecutionReady`/`transientFormValues`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: F0-04] Back/mode change/hydration/reload giữ draft và focus đúng phiên. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/image-workspace-continuity.test.mjs` 71 pass, `static/portal/portal.js` `captureImageWorkspaceDraft`/`synchronizeImageWorkspaceDraftSession`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: F0-05] Upload/preview/result/history/recovery và cross-product picker thống nhất. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/image-canonical-lanes-contract.test.mjs`, `static/portal/portal.js` `imageVaultItems`/`imageOperationAssetReferenceListing`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: F0-06] Account change/logout xóa stale private data; UI quyền theo manifest thật. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/test_account_security_center.py` 3 pass, `static/portal/portal.js` `clearTransientFormDraft`)
 
 ## P1 — Voice R218-02 (VO-01..13)
 
@@ -505,7 +505,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   không chứng minh Bot đã giao đủ hai bản.
 - [x] [SUPERSEDED_BY_ACCEPTED_R37_R41: Music library backend catalog, search, pagination, and multi-track parsing contracts accepted at R40; zero backend mutation required.] Editor nhạc Bot hiện guard; UI không giả có editor thực thi.
 - [ ] Duration/half/full chỉ options reachable, không chép menu legacy làm authority.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-06] Renderer/interaction + browser/AX/screenshots đạt.
+- [ ] Renderer/interaction + browser/AX/screenshots đạt.
 - [x] SD-VOICE-LANE-READABILITY local UI: giữ đủ 7 lane mặc định nam/nữ, saved,
   custom, Auto2, Auto Multi3–8 và Smart Multi; bỏ câu guard lặp trên từng thẻ,
   giữ một ghi chú chung, callback/Voice Library/draft không đổi. SubDub focused
@@ -695,17 +695,17 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## P4 — Image R218-05 (IM-01..10)
 
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-00A] Tạo nhanh/prompt từ ảnh/AI edit/manual đã có 4 mode dọc rõ trên `/image/create`;
+- [~] Tạo nhanh/prompt từ ảnh/AI edit/manual đã có 4 mode dọc rõ trên `/image/create`;
   `prompt` nối `/image-studio`, `aiEdit` nối `/image/transform`, `manual` nối `/image/edit`.
   Đây mới là control-level projection; source/reference, AI runtime, upload, preview,
   before/after, quote, result và delivery vẫn chưa có bằng chứng.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-00B] Regression control-level Image đạt `52/52` focused tests: hub 8 route duy nhất,
+- [~] Regression control-level Image đạt `52/52` focused tests: hub 8 route duy nhất,
   create/edit/prompt/localized mode, quote guard, draft/report truth và không có output/giá/
   download giả. Browser authenticated/upload/preview/runtime/delivery vẫn mở.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-00C] Image browser presentation đạt `18` cấu hình VI/EN/ZH × sáng/tối × 390/768/1440;
+- [~] Image browser presentation đạt `18` cấu hình VI/EN/ZH × sáng/tối × 390/768/1440;
   bốn mode, guarded state, focus/overflow và page/console/request ngoài/write/unknown API
   đều đạt `0`. Shell logo được loại khỏi selector output; không có media/output/download giả.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-00D] Image presentation/browser smoke — không phải nghiệm thu đủ tương tác/AX;
+- [~] Image presentation/browser smoke — không phải nghiệm thu đủ tương tác/AX;
   locale UI đã đăng nhập chưa được xác minh riêng. Targeted70/70; browser72 cases trên
   bốn lane, VI/EN/ZH × sáng/tối × 390/768/1440, overflow/audio/video/fake/
   download/external/write/page-errors0. Evidence
@@ -722,11 +722,11 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   `24/24`, protected comparators giữ nguyên. Evidence
   `R218-IMAGE-WORKSPACE-CONTINUITY-QA-20261021.json`; chỉ khóa UI/UX/auth-lifecycle
   cục bộ, không đánh dấu engine/upload/output/delivery/LIVE.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-01] Reference goal/subject/style/ratio/negative prompt/3 biến thể.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-02] Tạo nhanh 5 gợi ý/tự nhập; 7 tier/watermark/quote/confirm.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-03] AI thêm/xóa/nền/màu/product/ratio/custom, phương án và readiness.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-04] Manual crop/pad/blur/pixel/text/logo/position/brightness/color/local upscale.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-05] Before-after/reset/history/save/reuse/Video, artifact readiness đúng.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-01] Reference goal/subject/style/ratio/negative prompt/3 biến thể. (Evidence: `tests/image-boundary-clarity.test.mjs`, `tests/image-workbench-truth.test.mjs`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-02] Tạo nhanh 5 gợi ý/tự nhập; 7 tier/watermark/quote/confirm. (Evidence: `tests/image-boundary-clarity.test.mjs`, `tests/image-studio-pricing-quote-contract.test.mjs`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-03] AI thêm/xóa/nền/màu/product/ratio/custom, phương án và readiness. (Evidence: `tests/image-boundary-clarity.test.mjs`, `tests/image-canonical-lanes-contract.test.mjs`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-04] Manual crop/pad/blur/pixel/text/logo/position/brightness/color/local upscale. (Evidence: `tests/image-workbench-truth.test.mjs`, `tests/image-boundary-clarity.test.mjs`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: IM-05] Before-after/reset/history/save/reuse/Video, artifact readiness đúng. (Evidence: `tests/image-workspace-continuity.test.mjs`, `tests/image-boundary-clarity.test.mjs`)
 - [ ] Renderer/interaction + browser/AX/screenshots đạt.
 
 ## P5/P6 — Các sản phẩm còn lại R218-06/07
@@ -1139,10 +1139,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   test nguồn `1/1`, full Node725/725. Dữ liệu định danh, Bot/Core Bridge/PayOS/Xu và key
   máy chủ giữ nguyên; CI/deploy/LIVE chưa mở.
 
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-01] Inventory B01–B34 → control ledger; unclassified=0 hoặc ghi reason rõ từng mục.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-02] VI/EN/ZH sạch; dữ liệu user/tên riêng không bị dịch.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-03] Mobile 375/390/768/1440 × themes; shell/forms thêm 320/414/1024.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-04] Keyboard/focus/label/contrast/touch/overflow/empty/loading/error/recovery.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-01] Inventory B01–B34 → control ledger; unclassified=0 hoặc ghi reason rõ từng mục. (Evidence: `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md` Step 1 ledger reconciliation, 0 unclassified)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-02] VI/EN/ZH sạch; dữ liệu user/tên riêng không bị dịch. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/test_portal_i18n_bundle_contracts.py` 19/19 pass, `static/portal/portal-i18n.js`)
+- [ ] Mobile 375/390/768/1440 × themes; shell/forms thêm 320/414/1024.
+- [ ] Keyboard/focus/label/contrast/touch/overflow/empty/loading/error/recovery.
 - [~] Q0-TOAST-STACK: đã sửa đúng ba entry point `portal.js`, `integration.js`,
   `portal-auth.js`: bỏ thông báo rỗng, gộp trùng, tối đa2 node đang hiện và
   giữ `aria-live` bằng role `status/alert`. RED4node→GREEN3/3, auth popup4/4,
