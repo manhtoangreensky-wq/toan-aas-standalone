@@ -186,6 +186,21 @@ class RealtimeTranslateSession:
         self.segments: List[RealtimeTranscriptSegment] = []
         self.error_message: Optional[str] = None
 
+        self.current_socket_lease: int = 0
+        self.active_websocket: Optional[Any] = None
+
+    def acquire_socket_lease(self, websocket: Any = None) -> int:
+        """Acquires a new monotonic socket generation lease for this session.
+        Supersedes any prior socket connection to prevent stale socket overlap.
+        """
+        self.current_socket_lease += 1
+        self.active_websocket = websocket
+        return self.current_socket_lease
+
+    def is_socket_lease_active(self, lease_id: int) -> bool:
+        """Returns True if the given lease_id is the active generation."""
+        return lease_id > 0 and lease_id == self.current_socket_lease
+
     def start(self) -> None:
         if self.state == RealtimeSessionState.ACTIVE:
             return
@@ -823,10 +838,43 @@ async def get_session_status(
 @router.post("/sessions/{session_id}/stop")
 async def stop_session(
     session_id: str,
-    account: dict = Depends(require_account),
+    request: Request = None,
+    token: Optional[str] = Query(None),
+    account: Optional[dict] = Depends(lambda: None),
 ) -> Dict[str, Any]:
-    """Idempotently stops a session, enforcing owner isolation (STOP_OWNER_AUTH)."""
-    owner_id = str(account.get("id") or account.get("account_id") or "").strip()
+    """Idempotently stops a session, enforcing owner isolation (STOP_OWNER_AUTH).
+    Supports either session cookie account authentication OR stream token authentication.
+    """
+    owner_id = ""
+    if account and isinstance(account, dict):
+        owner_id = str(account.get("id") or account.get("account_id") or "").strip()
+
+    if not owner_id and token:
+        token_claims = verify_stream_token(token, session_id)
+        if token_claims and token_claims[0]:
+            owner_id = str(token_claims[0]).strip()
+
+    if not owner_id and request:
+        auth_header = request.headers.get("Authorization", "").strip()
+        if auth_header.lower().startswith("bearer "):
+            bearer = auth_header[7:].strip()
+            token_claims = verify_stream_token(bearer, session_id)
+            if token_claims and token_claims[0]:
+                owner_id = str(token_claims[0]).strip()
+        if not owner_id:
+            try:
+                acc = require_account(request)
+                if acc:
+                    owner_id = str(acc.get("id") or acc.get("account_id") or "").strip()
+            except Exception:
+                pass
+
+    if not owner_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required: valid session cookie or stream token required",
+        )
+
     session = _ACTIVE_SESSIONS.get(session_id)
     if not session:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
@@ -1007,6 +1055,7 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
         return
 
     await websocket.accept()
+    socket_lease: int = session.acquire_socket_lease(websocket)
     if session.state == RealtimeSessionState.CREATED:
         session.start()
     elif session.state == RealtimeSessionState.PAUSED:
@@ -1024,6 +1073,13 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
         })
 
         while True:
+            if not session.is_socket_lease_active(socket_lease):
+                logger.info(
+                    f"Session {session_id} socket lease {socket_lease} superseded by active lease {session.current_socket_lease}. Closing stale socket."
+                )
+                await websocket.close(code=4409, reason="Socket lease superseded by newer connection")
+                break
+
             message = await websocket.receive()
             if "bytes" in message and message["bytes"]:
                 raw = message["bytes"]
@@ -1042,6 +1098,10 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                     # Retry of pending segment covering range: reuse stored SpeechSegment directly;
                     # DO NOT re-ingest PCM into ingress buffer (PENDING_RANGE_PCM_REINGEST_COUNT=0)!
                     completed_segments = [session.pending_retry_segments[seq]]
+                elif seq in session.buffered_seq_set:
+                    # Frame already buffered in ingress awaiting VAD segment boundary: ignore duplicate PCM!
+                    await websocket.send_json({"type": "buffered", "seq": seq})
+                    continue
                 else:
                     completed_segments = ingress.push_chunk(seq=seq, pcm_bytes=pcm_bytes)
 
@@ -1153,6 +1213,11 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
             session.end()
             _ACTIVE_INGRESS_BUFFERS.pop(session_id, None)
         else:
-            logger.info(
-                f"Session {session_id} WebSocket detached (reconnectable). Preserving state ({session.state.value}) and ingress buffer."
-            )
+            if session.is_socket_lease_active(socket_lease):
+                logger.info(
+                    f"Session {session_id} WebSocket detached (reconnectable). Preserving state ({session.state.value}) and ingress buffer."
+                )
+            else:
+                logger.info(
+                    f"Session {session_id} stale socket lease {socket_lease} detached. Active lease {session.current_socket_lease} retained."
+                )

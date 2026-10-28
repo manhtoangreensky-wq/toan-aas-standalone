@@ -1,7 +1,7 @@
 /**
  * Executable Extension Unit Test for TOAN AAS Live Translate Offscreen Worker
  * Verifies real code execution in extensions/chrome-live-translate/offscreen.js
- * Governed by owner-governed-codex, locked-focus-engineering (RT-FIX8).
+ * Governed by owner-governed-codex, locked-focus-engineering (RT-FIX10).
  */
 
 const assert = require("assert");
@@ -16,6 +16,15 @@ function createMockWebSocket() {
     binaryType: "arraybuffer",
     send: (data) => {
       sentMessages.push(data);
+      try {
+        if (typeof data === "string") {
+          const parsed = JSON.parse(data);
+          if (parsed.type === "session.control" && parsed.action === "stop") {
+            // Emulate server immediate stop confirmation via handleDownstreamEvent
+            offscreen.handleDownstreamEvent(JSON.stringify({ type: "session.state", state: "ended" }));
+          }
+        }
+      } catch (e) {}
     },
     close: (code, reason) => {
       ws.readyState = 3; // CLOSED
@@ -29,7 +38,7 @@ function createMockWebSocket() {
 }
 
 async function runSuite() {
-  console.log("=== RUNNING EXECUTABLE OFFSCREEN RECONNECT TEST SUITE (RT-FIX8) ===");
+  console.log("=== RUNNING EXECUTABLE OFFSCREEN RECONNECT TEST SUITE (RT-FIX10) ===");
 
   // TEST 1: Unacked frame buffer retention (CLIENT_UNACKED_FRAME_BUFFER_ACTUAL_CODE)
   {
@@ -45,23 +54,43 @@ async function runSuite() {
     console.log("PASS: CLIENT_UNACKED_FRAME_BUFFER_ACTUAL_CODE");
   }
 
-  // TEST 2: Unacked buffer bounded overflow safety (UNACKED_BUFFER_OVERFLOW_SAFE)
+  // TEST 2: Lossless unacked buffer - fail-closed on overflow without silent drop
+  // (UNACKED_FRAME_SILENT_DROP=0, UNACKED_OVERFLOW_FAIL_CLOSED_OR_BACKPRESSURE=PASS)
   {
     offscreen.resetTestState();
-    const totalFrames = offscreen.MAX_UNACKED_FRAMES + 50; // 550 frames
-    for (let i = 1; i <= totalFrames; i++) {
+    // Fill buffer completely up to MAX_UNACKED_FRAMES (500 frames)
+    for (let i = 1; i <= offscreen.MAX_UNACKED_FRAMES; i++) {
       const frame = new Uint8Array([i & 0xff, (i >> 8) & 0xff, 0, 0]);
-      offscreen.recordUnackedFrame(i, frame);
+      const recorded = offscreen.recordUnackedFrame(i, frame);
+      assert.strictEqual(recorded, true, `Frame ${i} must be accepted`);
     }
 
     assert.strictEqual(offscreen.unackedFrames.size, offscreen.MAX_UNACKED_FRAMES);
-    // Oldest frames 1..50 must have been dropped
-    assert.strictEqual(offscreen.unackedFrames.has(1), false);
-    assert.strictEqual(offscreen.unackedFrames.has(50), false);
-    // Frames 51..550 must exist
-    assert.strictEqual(offscreen.unackedFrames.has(51), true);
-    assert.strictEqual(offscreen.unackedFrames.has(totalFrames), true);
-    console.log("PASS: UNACKED_BUFFER_OVERFLOW_SAFE");
+
+    // Attempting to record frame 501 MUST FAIL-CLOSED (return false, NOT drop frame 1!)
+    const frameOverflow = new Uint8Array([0x01, 0x02, 0, 0]);
+    const accepted = offscreen.recordUnackedFrame(offscreen.MAX_UNACKED_FRAMES + 1, frameOverflow);
+    assert.strictEqual(accepted, false, "Overflow frame must be rejected fail-closed");
+
+    // CRITICAL: Oldest frame 1 MUST NOT have been silently dropped!
+    assert.strictEqual(offscreen.unackedFrames.has(1), true, "Frame 1 must NOT be silently dropped");
+    assert.strictEqual(offscreen.unackedFrames.has(offscreen.MAX_UNACKED_FRAMES), true, "Frame 500 must exist");
+    assert.strictEqual(offscreen.unackedFrames.has(offscreen.MAX_UNACKED_FRAMES + 1), false, "Frame 501 must not be inserted");
+    assert.strictEqual(offscreen.unackedFrames.size, offscreen.MAX_UNACKED_FRAMES);
+
+    // Verify contiguous sequence range 1..500 without gaps
+    let missingCount = 0;
+    for (let i = 1; i <= offscreen.MAX_UNACKED_FRAMES; i++) {
+      if (!offscreen.unackedFrames.has(i)) {
+        missingCount++;
+      }
+    }
+    assert.strictEqual(missingCount, 0, "No sequences should be missing in unacked buffer");
+
+    console.log("PASS: UNACKED_FRAME_SILENT_DROP=0");
+    console.log("PASS: UNACKED_OVERFLOW_FAIL_CLOSED_OR_BACKPRESSURE=PASS");
+    console.log("PASS: REPLAY_RANGE_CONTIGUOUS=PASS");
+    console.log("PASS: MISSING_UNACKED_SEQUENCE_COUNT=0");
   }
 
   // TEST 3: Cumulative ACK evicts buffer (CUMULATIVE_ACK_EVICTS_BUFFER)
@@ -88,7 +117,9 @@ async function runSuite() {
     console.log("PASS: CUMULATIVE_ACK_EVICTS_BUFFER");
   }
 
-  // TEST 4: Client session.reconnect sent on socket onopen (CLIENT_SESSION_RECONNECT_SENT)
+  // TEST 4: Reconnect budget resets strictly after server handshake, NOT TCP open
+  // (RECONNECT_BUDGET_RESETS_ON_TCP_OPEN=NO, RECONNECT_BUDGET_RESETS_AFTER_HANDSHAKE=YES,
+  //  FLAPPING_OPEN_CLOSE_MAX_ATTEMPTS=5, FLAPPING_OPEN_CLOSE_FAILS_CLOSED=PASS)
   {
     offscreen.resetTestState();
     const ws = createMockWebSocket();
@@ -102,12 +133,54 @@ async function runSuite() {
     // Trigger onopen on reconnected socket
     ws.onopen();
 
-    assert.strictEqual(offscreen.getReconnectAttempts(), 0, "reconnectAttempts should reset to 0 on open");
+    // STRICT CHECK: reconnectAttempts must NOT reset to 0 on TCP onopen!
+    assert.strictEqual(offscreen.getReconnectAttempts(), 2, "reconnectAttempts MUST NOT reset on TCP ws.onopen");
+    console.log("PASS: RECONNECT_BUDGET_RESETS_ON_TCP_OPEN=NO");
+
+    // Verify session.reconnect frame was sent
     assert.strictEqual(ws.sentMessages.length, 1);
     const sent = JSON.parse(ws.sentMessages[0]);
     assert.strictEqual(sent.type, "session.reconnect");
     assert.strictEqual(sent.last_ack_seq, 110);
     console.log("PASS: CLIENT_SESSION_RECONNECT_SENT");
+
+    // Now server handshake arrives (session.reconnected)
+    await offscreen.handleDownstreamEvent(JSON.stringify({
+      type: "session.reconnected",
+      reconnected: true,
+      server_last_ack_seq: 110,
+    }));
+
+    // STRICT CHECK: reconnectAttempts resets to 0 ONLY after server handshake!
+    assert.strictEqual(offscreen.getReconnectAttempts(), 0, "reconnectAttempts MUST reset after server handshake");
+    console.log("PASS: RECONNECT_BUDGET_RESETS_AFTER_HANDSHAKE=YES");
+
+    // Flapping open/close without handshake fails closed after 5 attempts
+    offscreen.resetTestState();
+    offscreen.setIsCapturing(true);
+
+    for (let flap = 1; flap <= 5; flap++) {
+      const flapWs = createMockWebSocket();
+      offscreen.attachWebSocketHandlers(flapWs);
+      offscreen.setWebSocket(flapWs);
+      flapWs.onopen(); // Opens TCP socket, but no server handshake!
+      assert.strictEqual(offscreen.getReconnectAttempts(), flap - 1);
+      flapWs.onclose({ code: 1006, reason: "Abnormal TCP disconnect before handshake" });
+      assert.strictEqual(offscreen.getReconnectAttempts(), flap);
+      if (flap < 5) {
+        assert.notStrictEqual(offscreen.getReconnectTimer(), null);
+        clearTimeout(offscreen.getReconnectTimer());
+      }
+    }
+
+    assert.strictEqual(offscreen.getReconnectAttempts(), 5);
+    console.log("PASS: FLAPPING_OPEN_CLOSE_MAX_ATTEMPTS=5");
+
+    // 6th attempt fails closed
+    offscreen.scheduleReconnect();
+    assert.strictEqual(offscreen.getIsCapturing(), false);
+    assert.strictEqual(offscreen.getReconnectTimer(), null);
+    console.log("PASS: FLAPPING_OPEN_CLOSE_FAILS_CLOSED=PASS");
   }
 
   // TEST 5: Client replay of unacked frames on session.reconnected (CLIENT_REPLAY_ACTUAL_CODE)
@@ -124,7 +197,7 @@ async function runSuite() {
     offscreen.setLastAckSeq(110);
 
     // Server acknowledges reconnection with server_last_ack_seq = 112
-    offscreen.handleDownstreamEvent(JSON.stringify({
+    await offscreen.handleDownstreamEvent(JSON.stringify({
       type: "session.reconnected",
       reconnected: true,
       server_last_ack_seq: 112,
@@ -188,16 +261,18 @@ async function runSuite() {
     console.log("PASS: RECONNECT_BOUND_ACTUAL_CODE");
   }
 
-  // TEST 8: User stop sends explicit server stop control before teardown (EXTENSION_USER_STOP_SENDS_SERVER_STOP)
+  // TEST 8: Explicit Stop confirmation and Fallback
+  // (EXTENSION_USER_STOP_SENDS_SERVER_STOP=PASS, LOCAL_TEARDOWN_AFTER_SERVER_STOP_CONFIRMATION=PASS, STOP_WHEN_WS_NOT_OPEN_FAILS_CLOSED=PASS)
   {
+    // Case 8a: WebSocket OPEN -> sends session.control stop, awaits server confirmation, then tears down
     offscreen.resetTestState();
     offscreen.setIsCapturing(true);
     const ws = createMockWebSocket();
     offscreen.attachWebSocketHandlers(ws);
     offscreen.setWebSocket(ws);
+    offscreen.setCurrentConfig({ websocketUrl: "ws://localhost:8000/api/v1/live-translate/sessions/s1/stream?token=tok1" });
 
-    // Call stopCapture
-    offscreen.stopCapture();
+    await offscreen.stopCapture();
 
     assert.strictEqual(offscreen.getIsCapturing(), false);
     assert.strictEqual(offscreen.getReconnectTimer(), null);
@@ -207,7 +282,31 @@ async function runSuite() {
     assert.strictEqual(stopMsg.action, "stop");
     assert.strictEqual(ws.readyState, 3); // CLOSED
     assert.strictEqual(offscreen.getWebSocket(), null);
+    assert.strictEqual(offscreen.getCurrentConfig(), null);
     console.log("PASS: EXTENSION_USER_STOP_SENDS_SERVER_STOP");
+    console.log("PASS: LOCAL_TEARDOWN_AFTER_SERVER_STOP_CONFIRMATION");
+
+    // Case 8b: WebSocket NOT OPEN (closed or null) -> fallback to REST stop POST /api/v1/live-translate/sessions/{session_id}/stop
+    offscreen.resetTestState();
+    offscreen.setIsCapturing(true);
+    offscreen.setCurrentConfig({ websocketUrl: "ws://localhost:8000/api/v1/live-translate/sessions/s_rest/stream?token=tok_rest" });
+
+    let restFetchUrl = null;
+    let restFetchMethod = null;
+    global.fetch = async (url, opts) => {
+      restFetchUrl = url;
+      restFetchMethod = opts?.method;
+      return { ok: true, status: 200, json: async () => ({ ok: true, state: "ended" }) };
+    };
+
+    // WebSocket is null (not open)
+    assert.strictEqual(offscreen.getWebSocket(), null);
+    await offscreen.stopCapture();
+
+    assert.strictEqual(offscreen.getIsCapturing(), false);
+    assert.strictEqual(restFetchUrl, "http://localhost:8000/api/v1/live-translate/sessions/s_rest/stop?token=tok_rest");
+    assert.strictEqual(restFetchMethod, "POST");
+    console.log("PASS: STOP_WHEN_WS_NOT_OPEN_FAILS_CLOSED");
   }
 
   // TEST 9: Canonical Bot TTS event audio_b64 playback with ducking and restore (EXTENSION_CANONICAL_TTS_PLAYBACK)

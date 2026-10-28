@@ -957,18 +957,150 @@ def test_23_segment_range_idempotency_and_real_client_reconnect_replay():
     assert node_proc.returncode == 0, f"Executable extension tests failed: {node_proc.stderr}\n{node_proc.stdout}"
     assert "ALL EXECUTABLE OFFSCREEN RECONNECT TESTS PASSED" in node_proc.stdout
     assert "CLIENT_UNACKED_FRAME_BUFFER_ACTUAL_CODE" in node_proc.stdout
-    assert "UNACKED_BUFFER_OVERFLOW_SAFE" in node_proc.stdout
+    assert "UNACKED_FRAME_SILENT_DROP=0" in node_proc.stdout
+    assert "UNACKED_OVERFLOW_FAIL_CLOSED_OR_BACKPRESSURE=PASS" in node_proc.stdout
+    assert "REPLAY_RANGE_CONTIGUOUS=PASS" in node_proc.stdout
+    assert "MISSING_UNACKED_SEQUENCE_COUNT=0" in node_proc.stdout
     assert "CUMULATIVE_ACK_EVICTS_BUFFER" in node_proc.stdout
+    assert "RECONNECT_BUDGET_RESETS_ON_TCP_OPEN=NO" in node_proc.stdout
     assert "CLIENT_SESSION_RECONNECT_SENT" in node_proc.stdout
+    assert "RECONNECT_BUDGET_RESETS_AFTER_HANDSHAKE=YES" in node_proc.stdout
+    assert "FLAPPING_OPEN_CLOSE_MAX_ATTEMPTS=5" in node_proc.stdout
+    assert "FLAPPING_OPEN_CLOSE_FAILS_CLOSED=PASS" in node_proc.stdout
     assert "CLIENT_REPLAY_ACTUAL_CODE" in node_proc.stdout
     assert "AUTH_TERMINAL_CLOSE_ACTUAL_CODE" in node_proc.stdout
     assert "RECONNECT_BOUND_ACTUAL_CODE" in node_proc.stdout
     assert "EXTENSION_USER_STOP_SENDS_SERVER_STOP" in node_proc.stdout
+    assert "LOCAL_TEARDOWN_AFTER_SERVER_STOP_CONFIRMATION" in node_proc.stdout
+    assert "STOP_WHEN_WS_NOT_OPEN_FAILS_CLOSED" in node_proc.stdout
     assert "CANONICAL_BOT_TTS_FIELD=audio_b64" in node_proc.stdout
     assert "EXTENSION_CANONICAL_TTS_PLAYBACK" in node_proc.stdout
     assert "TTS_AUDIO_DECODE_CALLED" in node_proc.stdout
     assert "TTS_AUDIO_PLAYBACK_STARTED" in node_proc.stdout
     assert "AUDIO_DUCKING_RESTORE" in node_proc.stdout
+
+
+def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
+    """Requirement for RT-FIX10: Stale socket overlap mitigation, socket lease generation,
+    in-flight buffered deduplication, and user stop confirmation ending server session.
+    """
+    from copyfast_realtime_translate import (
+        _ACTIVE_SESSIONS,
+        _ACTIVE_INGRESS_BUFFERS,
+        websocket_live_stream,
+        RealtimeAudioIngressBuffer,
+    )
+
+    owner_id = "user_lease_001"
+    session_id = f"rts_lease_{uuid.uuid4().hex[:8]}"
+    device_id = "dev_lease_001"
+    exp = int(time.time()) + 3600
+    token = generate_stream_token(session_id, owner_id, device_id, exp)
+
+    config = RealtimeSessionConfig(owner_id=owner_id, target_language="vi")
+    session = RealtimeTranslateSession(session_id, config)
+    ingress = RealtimeAudioIngressBuffer()
+
+    _ACTIVE_SESSIONS[session_id] = session
+    _ACTIVE_INGRESS_BUFFERS[session_id] = ingress
+
+    orig_push_chunk = ingress.push_chunk
+    push_chunk_calls = []
+
+    def tracked_push_chunk(seq, pcm_bytes, timestamp_ms=None):
+        push_chunk_calls.append({"seq": seq, "bytes_len": len(pcm_bytes)})
+        return orig_push_chunk(seq=seq, pcm_bytes=pcm_bytes, timestamp_ms=timestamp_ms)
+
+    ingress.push_chunk = tracked_push_chunk
+
+    class FakeWebSocket:
+        def __init__(self, incoming):
+            self._incoming = list(incoming)
+            self.sent_json = []
+            self.closed = False
+            self.close_code = None
+
+        async def accept(self):
+            pass
+
+        async def close(self, code=1000, reason=""):
+            self.closed = True
+            self.close_code = code
+
+        async def send_json(self, data):
+            self.sent_json.append(data)
+
+        async def receive(self):
+            if self._incoming:
+                return self._incoming.pop(0)
+            from fastapi import WebSocketDisconnect
+            raise WebSocketDisconnect(code=1000)
+
+    try:
+        # Step 1: Lease generation & superseding verification
+        fake_ws1 = FakeWebSocket([])
+        fake_ws2 = FakeWebSocket([])
+
+        lease1 = session.acquire_socket_lease(fake_ws1)
+        assert lease1 == 1
+        assert session.is_socket_lease_active(lease1) is True
+        assert session.current_socket_lease == 1
+
+        lease2 = session.acquire_socket_lease(fake_ws2)
+        assert lease2 == 2
+        assert session.is_socket_lease_active(lease2) is True
+        assert session.is_socket_lease_active(lease1) is False, "Lease 1 MUST be superseded by Lease 2"
+
+        # Step 2: Stale socket overlap closure (OLD_SOCKET_AFTER_NEW_LEASE_REJECTED_OR_IGNORED=PASS)
+        bump_on_msg = FakeWebSocket([
+            {"bytes": struct.pack("<I", 10) + b"\x50\x05" * 1600},
+            {"bytes": struct.pack("<I", 11) + b"\x50\x05" * 1600},
+        ])
+        orig_send = bump_on_msg.send_json
+        async def send_hook(data):
+            await orig_send(data)
+            if data.get("type") == "buffered" and data.get("seq") == 10:
+                # External reconnecting socket arrives and supersedes lease:
+                session.acquire_socket_lease(fake_ws2)
+        bump_on_msg.send_json = send_hook
+
+        try:
+            asyncio.run(websocket_live_stream(bump_on_msg, session_id, token=token))
+        except Exception as e:
+            if "WebSocketDisconnect" not in type(e).__name__:
+                raise
+
+        assert bump_on_msg.closed is True
+        assert bump_on_msg.close_code == 4409, f"Stale socket must close with 4409, got {bump_on_msg.close_code}"
+
+        # Step 3: In-flight buffered deduplication (OVERLAP_DUPLICATE_INGRESS_COUNT=0)
+        assert 10 in session.buffered_seq_set
+        initial_push_count = len(push_chunk_calls)
+
+        resend_ws = FakeWebSocket([
+            {"bytes": struct.pack("<I", 10) + b"\x50\x05" * 1600},
+        ])
+        try:
+            asyncio.run(websocket_live_stream(resend_ws, session_id, token=token))
+        except Exception as e:
+            if "WebSocketDisconnect" not in type(e).__name__:
+                raise
+
+        # Frame 10 duplicate was NOT pushed to ingress buffer!
+        assert len(push_chunk_calls) == initial_push_count, "Duplicate in-flight sequence must NOT re-push to ingress"
+        buffered_acks = [m for m in resend_ws.sent_json if m.get("type") == "buffered" and m.get("seq") == 10]
+        assert len(buffered_acks) == 1
+
+        # Step 4: User stop confirmation ends server session and removes ingress
+        stop_res = asyncio.run(stop_session(session_id, token=token))
+        assert stop_res["ok"] is True
+        assert stop_res["state"] == "ended"
+        assert session.state == RealtimeSessionState.ENDED
+        assert session_id not in _ACTIVE_INGRESS_BUFFERS
+
+    finally:
+        _ACTIVE_SESSIONS.pop(session_id, None)
+        _ACTIVE_INGRESS_BUFFERS.pop(session_id, None)
 
 
 def test_cross_repo_contract_fixture():
@@ -1025,7 +1157,7 @@ def test_cross_repo_contract_fixture():
 
 if __name__ == "__main__":
     os.environ["REALTIME_STREAM_SECRET"] = "acceptance-matrix-secret-key-32b-ok"
-    print("=== EXECUTING REALTIME ACCEPTANCE MATRIX (WEB REPO FIX9) ===")
+    print("=== EXECUTING REALTIME ACCEPTANCE MATRIX (WEB REPO FIX10) ===")
     test_01_session_auth_required()
     print("PASS [1/21]: test_01_session_auth_required (SESSION_AUTH_REQUIRED)")
     test_02_session_owner_isolation()
@@ -1063,7 +1195,9 @@ if __name__ == "__main__":
     test_cross_repo_provider_free_e2e()
     print("PASS [19/21]: test_cross_repo_provider_free_e2e (CROSS_REPO_PROVIDER_FREE_E2E)")
     test_23_segment_range_idempotency_and_real_client_reconnect_replay()
-    print("PASS [20/21]: test_23_segment_range_idempotency_and_real_client_reconnect_replay (SEGMENT_RANGE_IDEMPOTENCY_AND_REAL_CLIENT_RECONNECT_REPLAY)")
+    print("PASS [20/22]: test_23_segment_range_idempotency_and_real_client_reconnect_replay (SEGMENT_RANGE_IDEMPOTENCY_AND_REAL_CLIENT_RECONNECT_REPLAY)")
+    test_24_lossless_reconnect_stop_confirmation_and_socket_lease()
+    print("PASS [21/22]: test_24_lossless_reconnect_stop_confirmation_and_socket_lease (LOSSLESS_RECONNECT_STOP_CONFIRMATION_AND_SOCKET_LEASE)")
     test_cross_repo_contract_fixture()
-    print("PASS [21/21]: test_cross_repo_contract_fixture (CROSS_REPO_CONTRACT_FIXTURE)")
-    print("=== ALL 21 ITEMS IN REALTIME ACCEPTANCE MATRIX (WEB REPO FIX9) PASSED EMPIRICALLY ===")
+    print("PASS [22/22]: test_cross_repo_contract_fixture (CROSS_REPO_CONTRACT_FIXTURE)")
+    print("=== ALL 22 ITEMS IN REALTIME ACCEPTANCE MATRIX (WEB REPO FIX10) PASSED EMPIRICALLY ===")

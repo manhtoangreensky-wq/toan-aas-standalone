@@ -112,8 +112,10 @@ async function startCapture(streamId, config) {
         new DataView(frame.buffer).setUint32(0, currentSeq, true);
         frame.set(new Uint8Array(pcm16.buffer), 4);
 
-        // Retain frame in unacked buffer (bounded)
-        recordUnackedFrame(currentSeq, frame);
+        // Retain frame in unacked buffer (lossless: fail-closed if overflow)
+        if (!recordUnackedFrame(currentSeq, frame)) {
+          return;
+        }
 
         if (webSocket && webSocket.readyState === (typeof WebSocket !== "undefined" ? WebSocket.OPEN : 1) && !isReplaying) {
           webSocket.send(frame.buffer);
@@ -131,10 +133,12 @@ async function startCapture(streamId, config) {
 
 function recordUnackedFrame(seq, frame) {
   if (unackedFrames.size >= MAX_UNACKED_FRAMES) {
-    const oldestSeq = unackedFrames.keys().next().value;
-    unackedFrames.delete(oldestSeq);
+    console.error(`[TOAN_AAS_OFFSCREEN] Unacked buffer limit reached (${unackedFrames.size} >= ${MAX_UNACKED_FRAMES}). Failing closed to prevent silent audio loss.`);
+    notifyFailure(`Bộ đệm khung chưa xác nhận đã đầy (${MAX_UNACKED_FRAMES} khung). Dừng phiên làm việc.`);
+    return false;
   }
   unackedFrames.set(seq, frame);
+  return true;
 }
 
 function attachWebSocketHandlers(ws) {
@@ -143,7 +147,7 @@ function attachWebSocketHandlers(ws) {
 
   ws.onopen = () => {
     console.log("[TOAN_AAS_OFFSCREEN] WebSocket connected.");
-    reconnectAttempts = 0;
+    // Note: Reconnect budget resets strictly after authoritative server handshake (session.ready / session.reconnected)
 
     // CLIENT_SESSION_RECONNECT_SENT: If reconnecting existing session with prior sequence progress
     if (currentSeq > 0 || lastAckSeq > 0) {
@@ -267,11 +271,27 @@ function downsampleAndConvertToPcm16(inputBuffer, inputSampleRate, targetSampleR
   return pcm16;
 }
 
+let stopConfirmationResolver = null;
+
 async function handleDownstreamEvent(rawData) {
   if (typeof rawData !== "string") return;
 
   try {
     const event = JSON.parse(rawData);
+
+    // Reset reconnect budget strictly after authoritative server handshake (session.ready or session.reconnected)
+    if (event.type === "session.ready" || event.type === "session.reconnected") {
+      reconnectAttempts = 0;
+    }
+
+    // Stop confirmation from server (session.state ended)
+    if (event.type === "session.state" && event.state === "ended") {
+      if (typeof stopConfirmationResolver === "function") {
+        stopConfirmationResolver(true);
+        stopConfirmationResolver = null;
+      }
+      return;
+    }
 
     // 1. Session Reconnected acknowledgment from server
     if (event.type === "session.reconnected") {
@@ -332,7 +352,58 @@ async function handleDownstreamEvent(rawData) {
   }
 }
 
-function stopCapture() {
+async function requestServerStop() {
+  // 1. Try active WebSocket if open
+  if (webSocket && webSocket.readyState === (typeof WebSocket !== "undefined" ? WebSocket.OPEN : 1)) {
+    try {
+      const waitPromise = new Promise((resolve) => {
+        const timer = setTimeout(() => {
+          stopConfirmationResolver = null;
+          resolve(false);
+        }, 800);
+        stopConfirmationResolver = (val) => {
+          clearTimeout(timer);
+          resolve(val);
+        };
+      });
+
+      webSocket.send(JSON.stringify({
+        type: "session.control",
+        action: "stop",
+      }));
+
+      const confirmed = await waitPromise;
+      if (confirmed) {
+        return true;
+      }
+    } catch (err) {
+      console.warn("[TOAN_AAS_OFFSCREEN] Error during WebSocket stop control:", err);
+    }
+  }
+
+  // 2. Fallback to REST stop if WebSocket not open or did not confirm in time
+  if (currentConfig?.websocketUrl) {
+    try {
+      const wsUrl = new URL(currentConfig.websocketUrl);
+      const protocol = wsUrl.protocol === "wss:" ? "https:" : "http:";
+      const stopPath = wsUrl.pathname.replace(/\/stream\/?$/, "/stop");
+      const restStopUrl = `${protocol}//${wsUrl.host}${stopPath}${wsUrl.search}`;
+
+      if (typeof fetch === "function") {
+        const resp = await fetch(restStopUrl, { method: "POST" });
+        if (resp && (resp.ok || resp.status === 200)) {
+          return true;
+        }
+      }
+    } catch (err) {
+      console.warn("[TOAN_AAS_OFFSCREEN] Error during REST stop fallback:", err);
+    }
+  }
+
+  return false;
+}
+
+async function stopCapture() {
   isCapturing = false;
   if (reconnectTimer) {
     clearTimeout(reconnectTimer);
@@ -340,9 +411,17 @@ function stopCapture() {
   }
   reconnectAttempts = 0;
   isReplaying = false;
+
+  // Await server stop confirmation before local teardown
+  await requestServerStop();
+
   unackedFrames.clear();
   currentConfig = null;
 
+  if (webSocket) {
+    webSocket.close();
+    webSocket = null;
+  }
   if (scriptProcessor) {
     scriptProcessor.disconnect();
     scriptProcessor = null;
@@ -358,20 +437,6 @@ function stopCapture() {
   if (audioContext && audioContext.state !== "closed") {
     audioContext.close();
     audioContext = null;
-  }
-  if (webSocket) {
-    if (webSocket.readyState === (typeof WebSocket !== "undefined" ? WebSocket.OPEN : 1)) {
-      try {
-        webSocket.send(JSON.stringify({
-          type: "session.control",
-          action: "stop",
-        }));
-      } catch (err) {
-        console.warn("[TOAN_AAS_OFFSCREEN] Error sending explicit stop control:", err);
-      }
-    }
-    webSocket.close();
-    webSocket = null;
   }
 }
 
@@ -403,6 +468,11 @@ if (typeof module !== "undefined" && module.exports) {
     getReconnectAttempts: () => reconnectAttempts,
     setReconnectAttempts: (n) => { reconnectAttempts = n; },
     getReconnectTimer: () => reconnectTimer,
+    requestServerStop,
+    setStopConfirmationResolver: (fn) => { stopConfirmationResolver = fn; },
+    getStopConfirmationResolver: () => stopConfirmationResolver,
+    setCurrentConfig: (cfg) => { currentConfig = cfg; },
+    getCurrentConfig: () => currentConfig,
     setAudioContext: (ctx) => { audioContext = ctx; },
     getAudioContext: () => audioContext,
     setOriginalGainNode: (gain) => { originalGainNode = gain; },
@@ -419,6 +489,8 @@ if (typeof module !== "undefined" && module.exports) {
         reconnectTimer = null;
       }
       webSocket = null;
+      stopConfirmationResolver = null;
+      currentConfig = null;
       audioContext = null;
       originalGainNode = null;
       scriptProcessor = null;
