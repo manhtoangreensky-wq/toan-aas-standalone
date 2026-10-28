@@ -28,7 +28,7 @@ function createMockWebSocket() {
   return ws;
 }
 
-function runSuite() {
+async function runSuite() {
   console.log("=== RUNNING EXECUTABLE OFFSCREEN RECONNECT TEST SUITE (RT-FIX8) ===");
 
   // TEST 1: Unacked frame buffer retention (CLIENT_UNACKED_FRAME_BUFFER_ACTUAL_CODE)
@@ -188,8 +188,136 @@ function runSuite() {
     console.log("PASS: RECONNECT_BOUND_ACTUAL_CODE");
   }
 
+  // TEST 8: User stop sends explicit server stop control before teardown (EXTENSION_USER_STOP_SENDS_SERVER_STOP)
+  {
+    offscreen.resetTestState();
+    offscreen.setIsCapturing(true);
+    const ws = createMockWebSocket();
+    offscreen.attachWebSocketHandlers(ws);
+    offscreen.setWebSocket(ws);
+
+    // Call stopCapture
+    offscreen.stopCapture();
+
+    assert.strictEqual(offscreen.getIsCapturing(), false);
+    assert.strictEqual(offscreen.getReconnectTimer(), null);
+    assert.strictEqual(ws.sentMessages.length, 1);
+    const stopMsg = JSON.parse(ws.sentMessages[0]);
+    assert.strictEqual(stopMsg.type, "session.control");
+    assert.strictEqual(stopMsg.action, "stop");
+    assert.strictEqual(ws.readyState, 3); // CLOSED
+    assert.strictEqual(offscreen.getWebSocket(), null);
+    console.log("PASS: EXTENSION_USER_STOP_SENDS_SERVER_STOP");
+  }
+
+  // TEST 9: Canonical Bot TTS event audio_b64 playback with ducking and restore (EXTENSION_CANONICAL_TTS_PLAYBACK)
+  {
+    offscreen.resetTestState();
+    let decodeAudioDataCalled = false;
+    let playbackStarted = false;
+    let duckingGain = null;
+    let restoredGain = null;
+
+    const mockGainNode = {
+      gain: {
+        setValueAtTime: (val, time) => {
+          if (val < 1.0) duckingGain = val;
+          else restoredGain = val;
+        },
+        cancelScheduledValues: (time) => {},
+      },
+      disconnect: () => {},
+    };
+
+    let onEndedCallback = null;
+    const mockAudioBuffer = { duration: 1.5 };
+    const mockAudioContext = {
+      currentTime: 10.0,
+      destination: {},
+      decodeAudioData: async (buffer) => {
+        decodeAudioDataCalled = true;
+        return mockAudioBuffer;
+      },
+      createBufferSource: () => {
+        const src = {
+          buffer: null,
+          connect: (dest) => {},
+          start: () => {
+            playbackStarted = true;
+          },
+          set onended(fn) {
+            onEndedCallback = fn;
+          },
+          get onended() {
+            return onEndedCallback;
+          },
+        };
+        return src;
+      },
+      close: () => {},
+    };
+
+    offscreen.setOriginalGainNode(mockGainNode);
+    offscreen.setAudioContext(mockAudioContext);
+
+    // Canonical Bot event: {"type":"tts.audio","audio_b64":"..."}
+    const dummyAudioB64 = Buffer.from("WAV_OR_PCM_DATA").toString("base64");
+    const canonicalBotEvent = {
+      type: "tts.audio",
+      audio_b64: dummyAudioB64,
+    };
+
+    await offscreen.handleDownstreamEvent(JSON.stringify(canonicalBotEvent));
+
+    assert.strictEqual(decodeAudioDataCalled, true, "TTS audio decode must be called");
+    console.log("PASS: TTS_AUDIO_DECODE_CALLED");
+
+    assert.strictEqual(playbackStarted, true, "TTS playback must be started");
+    console.log("PASS: TTS_AUDIO_PLAYBACK_STARTED");
+
+    assert.strictEqual(duckingGain, 0.25, "Audio ducking must reduce gain to 0.25 during TTS");
+    console.log("PASS: AUDIO_DUCKING_ACTIVE");
+
+    assert.strictEqual(typeof onEndedCallback, "function", "onended callback must be set on audio source");
+    onEndedCallback();
+    assert.strictEqual(restoredGain, 1.0, "Audio ducking must restore gain to 1.0 when TTS ends");
+    console.log("PASS: AUDIO_DUCKING_RESTORE");
+
+    console.log("PASS: CANONICAL_BOT_TTS_FIELD=audio_b64");
+    console.log("PASS: EXTENSION_CANONICAL_TTS_PLAYBACK");
+  }
+
+  // TEST 10: Backward-compatible audio_base64 playback
+  {
+    offscreen.resetTestState();
+    let decodeCalled = false;
+    const mockGainNode = {
+      gain: { setValueAtTime: () => {}, cancelScheduledValues: () => {} },
+      disconnect: () => {},
+    };
+    const mockAudioContext = {
+      currentTime: 1.0,
+      destination: {},
+      decodeAudioData: async () => { decodeCalled = true; return {}; },
+      createBufferSource: () => ({ buffer: null, connect: () => {}, start: () => {}, set onended(fn) {} }),
+      close: () => {},
+    };
+    offscreen.setOriginalGainNode(mockGainNode);
+    offscreen.setAudioContext(mockAudioContext);
+
+    await offscreen.handleDownstreamEvent(JSON.stringify({
+      type: "tts.audio",
+      audio_base64: Buffer.from("LEGACY_DATA").toString("base64"),
+    }));
+    assert.strictEqual(decodeCalled, true);
+    console.log("PASS: BACKWARD_COMPATIBLE_AUDIO_BASE64_PLAYBACK");
+  }
+
   offscreen.resetTestState();
   console.log("=== ALL EXECUTABLE OFFSCREEN RECONNECT TESTS PASSED (EXECUTABLE_OFFSCREEN_RECONNECT_TEST=PASS) ===");
 }
 
-runSuite();
+runSuite().catch((err) => {
+  console.error("TEST FAILED:", err);
+  process.exit(1);
+});

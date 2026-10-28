@@ -291,12 +291,14 @@ async function handleDownstreamEvent(rawData) {
       evictAcknowledgedFrames(lastAckSeq);
     }
 
-    // 3. Audio Ducking & TTS playback
-    if (event.type === "tts.audio" && event.audio_base64 && originalGainNode && audioContext) {
+    // 3. Audio Ducking & TTS playback (consumes canonical Bot audio_b64, fallback audio_base64)
+    const rawAudioB64 = event.audio_b64 || event.audio_base64;
+    if (event.type === "tts.audio" && rawAudioB64 && originalGainNode && audioContext) {
       originalGainNode.gain.cancelScheduledValues(audioContext.currentTime);
       originalGainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
 
-      const binaryString = atob(event.audio_base64);
+      const atobFn = typeof atob === "function" ? atob : (b64) => Buffer.from(b64, "base64").toString("binary");
+      const binaryString = atobFn(rawAudioB64);
       const len = binaryString.length;
       const bytes = new Uint8Array(len);
       for (let i = 0; i < len; i++) {
@@ -358,6 +360,16 @@ function stopCapture() {
     audioContext = null;
   }
   if (webSocket) {
+    if (webSocket.readyState === (typeof WebSocket !== "undefined" ? WebSocket.OPEN : 1)) {
+      try {
+        webSocket.send(JSON.stringify({
+          type: "session.control",
+          action: "stop",
+        }));
+      } catch (err) {
+        console.warn("[TOAN_AAS_OFFSCREEN] Error sending explicit stop control:", err);
+      }
+    }
     webSocket.close();
     webSocket = null;
   }
@@ -391,6 +403,10 @@ if (typeof module !== "undefined" && module.exports) {
     getReconnectAttempts: () => reconnectAttempts,
     setReconnectAttempts: (n) => { reconnectAttempts = n; },
     getReconnectTimer: () => reconnectTimer,
+    setAudioContext: (ctx) => { audioContext = ctx; },
+    getAudioContext: () => audioContext,
+    setOriginalGainNode: (gain) => { originalGainNode = gain; },
+    getOriginalGainNode: () => originalGainNode,
     resetTestState: () => {
       unackedFrames.clear();
       currentSeq = 0;
@@ -403,6 +419,10 @@ if (typeof module !== "undefined" && module.exports) {
         reconnectTimer = null;
       }
       webSocket = null;
+      audioContext = null;
+      originalGainNode = null;
+      scriptProcessor = null;
+      mediaStream = null;
     },
   };
 }

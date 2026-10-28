@@ -718,6 +718,12 @@ def test_23_segment_range_idempotency_and_real_client_reconnect_replay():
        - UNACKED_BUFFER_OVERFLOW_SAFE=PASS
        - CUMULATIVE_ACK_EVICTS_BUFFER=PASS
        - CLIENT_SESSION_RECONNECT_SENT=PASS
+       - EXTENSION_USER_STOP_SENDS_SERVER_STOP=PASS
+       - CANONICAL_BOT_TTS_FIELD=audio_b64
+       - EXTENSION_CANONICAL_TTS_PLAYBACK=PASS
+       - TTS_AUDIO_DECODE_CALLED=PASS
+       - TTS_AUDIO_PLAYBACK_STARTED=PASS
+       - AUDIO_DUCKING_RESTORE=PASS
     """
     from copyfast_realtime_translate import (
         _ACTIVE_SESSIONS,
@@ -957,6 +963,12 @@ def test_23_segment_range_idempotency_and_real_client_reconnect_replay():
     assert "CLIENT_REPLAY_ACTUAL_CODE" in node_proc.stdout
     assert "AUTH_TERMINAL_CLOSE_ACTUAL_CODE" in node_proc.stdout
     assert "RECONNECT_BOUND_ACTUAL_CODE" in node_proc.stdout
+    assert "EXTENSION_USER_STOP_SENDS_SERVER_STOP" in node_proc.stdout
+    assert "CANONICAL_BOT_TTS_FIELD=audio_b64" in node_proc.stdout
+    assert "EXTENSION_CANONICAL_TTS_PLAYBACK" in node_proc.stdout
+    assert "TTS_AUDIO_DECODE_CALLED" in node_proc.stdout
+    assert "TTS_AUDIO_PLAYBACK_STARTED" in node_proc.stdout
+    assert "AUDIO_DUCKING_RESTORE" in node_proc.stdout
 
 
 def test_cross_repo_contract_fixture():
@@ -1013,7 +1025,7 @@ def test_cross_repo_contract_fixture():
 
 if __name__ == "__main__":
     os.environ["REALTIME_STREAM_SECRET"] = "acceptance-matrix-secret-key-32b-ok"
-    print("=== EXECUTING REALTIME ACCEPTANCE MATRIX (WEB REPO FIX8) ===")
+    print("=== EXECUTING REALTIME ACCEPTANCE MATRIX (WEB REPO FIX9) ===")
     test_01_session_auth_required()
     print("PASS [1/21]: test_01_session_auth_required (SESSION_AUTH_REQUIRED)")
     test_02_session_owner_isolation()
@@ -1054,4 +1066,4 @@ if __name__ == "__main__":
     print("PASS [20/21]: test_23_segment_range_idempotency_and_real_client_reconnect_replay (SEGMENT_RANGE_IDEMPOTENCY_AND_REAL_CLIENT_RECONNECT_REPLAY)")
     test_cross_repo_contract_fixture()
     print("PASS [21/21]: test_cross_repo_contract_fixture (CROSS_REPO_CONTRACT_FIXTURE)")
-    print("=== ALL 21 ITEMS IN REALTIME ACCEPTANCE MATRIX (WEB REPO FIX8) PASSED EMPIRICALLY ===")
+    print("=== ALL 21 ITEMS IN REALTIME ACCEPTANCE MATRIX (WEB REPO FIX9) PASSED EMPIRICALLY ===")
