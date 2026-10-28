@@ -412,6 +412,373 @@ async function runSuite() {
     console.log("PASS: BACKWARD_COMPATIBLE_AUDIO_BASE64_PLAYBACK");
   }
 
+  // TEST 11: Reconnect budget handshake differentiation & Flapping drop prevention
+  // (RECONNECT_BUDGET_RESETS_ON_RECONNECT_READY=NO, RECONNECT_BUDGET_RESETS_AFTER_SESSION_RECONNECTED=YES,
+  //  READY_THEN_DROP_FLAP_MAX_ATTEMPTS=5, READY_THEN_DROP_FLAP_FAILS_CLOSED=PASS)
+  {
+    offscreen.resetTestState();
+    const ws = createMockWebSocket();
+    offscreen.attachWebSocketHandlers(ws);
+    offscreen.setWebSocket(ws);
+
+    offscreen.setCurrentSeq(50);
+    offscreen.setLastAckSeq(45);
+    offscreen.setReconnectAttempts(2);
+
+    // Socket opens
+    ws.onopen();
+    // Reconnect flag is set
+    assert.strictEqual(offscreen.getIsReconnecting(), true);
+
+    // Server sends session.ready (e.g. FastAPI route sends session.ready right after accept)
+    await offscreen.handleDownstreamEvent(JSON.stringify({
+      type: "session.ready",
+      session_id: "s_flap_001",
+    }));
+
+    // CRITICAL: reconnectAttempts must NOT reset on session.ready when reconnecting!
+    assert.strictEqual(offscreen.getReconnectAttempts(), 2, "reconnectAttempts MUST NOT reset on session.ready during reconnect");
+    console.log("PASS: RECONNECT_BUDGET_RESETS_ON_RECONNECT_READY=NO");
+
+    // Server sends session.reconnected
+    await offscreen.handleDownstreamEvent(JSON.stringify({
+      type: "session.reconnected",
+      reconnected: true,
+      server_last_ack_seq: 45,
+    }));
+
+    // Authoritative session.reconnected resets the budget
+    assert.strictEqual(offscreen.getReconnectAttempts(), 0, "reconnectAttempts MUST reset after session.reconnected");
+    assert.strictEqual(offscreen.getIsReconnecting(), false);
+    console.log("PASS: RECONNECT_BUDGET_RESETS_AFTER_SESSION_RECONNECTED=YES");
+
+    // Flapping drop test: connect -> receive session.ready -> drop before session.reconnected
+    offscreen.resetTestState();
+    offscreen.setIsCapturing(true);
+    offscreen.setCurrentSeq(80);
+    offscreen.setLastAckSeq(70);
+
+    for (let flap = 1; flap <= 5; flap++) {
+      const flapWs = createMockWebSocket();
+      offscreen.attachWebSocketHandlers(flapWs);
+      offscreen.setWebSocket(flapWs);
+      flapWs.onopen();
+
+      // Receive session.ready
+      await offscreen.handleDownstreamEvent(JSON.stringify({
+        type: "session.ready",
+        session_id: "s_flap_002",
+      }));
+
+      // Verify budget did NOT reset
+      assert.strictEqual(offscreen.getReconnectAttempts(), flap - 1);
+
+      // Drops abnormal TCP disconnect before session.reconnected
+      flapWs.onclose({ code: 1006, reason: "Dropped before session.reconnected" });
+      assert.strictEqual(offscreen.getReconnectAttempts(), flap);
+
+      if (flap < 5) {
+        assert.notStrictEqual(offscreen.getReconnectTimer(), null);
+        clearTimeout(offscreen.getReconnectTimer());
+      }
+    }
+
+    assert.strictEqual(offscreen.getReconnectAttempts(), 5);
+    console.log("PASS: READY_THEN_DROP_FLAP_MAX_ATTEMPTS=5");
+
+    // Attempting 6th reconnect fails closed
+    offscreen.scheduleReconnect();
+    assert.strictEqual(offscreen.getIsCapturing(), false);
+    assert.strictEqual(offscreen.getReconnectTimer(), null);
+    console.log("PASS: READY_THEN_DROP_FLAP_FAILS_CLOSED=PASS");
+  }
+
+  // TEST 12: Stop failure preserves retry authority & zero silent success
+  // (STOP_AUTHORITY_FAILURE_SILENT_SUCCESS=0, STOP_FAILURE_PRESERVES_RETRY_AUTHORITY=PASS)
+  {
+    offscreen.resetTestState();
+    offscreen.setIsCapturing(true);
+
+    // Fill unacked frames 201..205
+    for (let i = 201; i <= 205; i++) {
+      offscreen.recordUnackedFrame(i, new Uint8Array([i & 0xff, 0, 0, 0, 0x11, 0x22]));
+    }
+    const cfg = {
+      sessionId: "s_fail_001",
+      websocketUrl: "ws://localhost:8000/api/v1/live-translate/sessions/s_fail_001/stream?token=tok",
+    };
+    offscreen.setCurrentConfig(cfg);
+
+    // Mock fetch to fail (500 internal server error)
+    global.fetch = async () => ({
+      ok: false,
+      status: 500,
+      json: async () => ({ error: "Server Internal Error" }),
+    });
+
+    // Call stopCapture without force - server fails
+    const stopRes = await offscreen.stopCapture();
+
+    // MUST NOT claim success!
+    assert.strictEqual(stopRes.ok, false, "Stop must return ok: false when server stop fails");
+    console.log("PASS: STOP_AUTHORITY_FAILURE_SILENT_SUCCESS=0");
+
+    // Local retry authority MUST be preserved:
+    // unackedFrames must NOT be wiped!
+    assert.strictEqual(offscreen.unackedFrames.size, 5, "unackedFrames must be preserved when stop fails");
+    for (let i = 201; i <= 205; i++) {
+      assert.strictEqual(offscreen.unackedFrames.has(i), true, `Frame ${i} must still be in unackedFrames`);
+    }
+    // currentConfig must NOT be wiped!
+    assert.deepStrictEqual(offscreen.getCurrentConfig(), cfg, "currentConfig must be preserved when stop fails");
+    console.log("PASS: STOP_FAILURE_PRESERVES_RETRY_AUTHORITY=PASS");
+  }
+
+  // TEST 13: Background service worker stop authority
+  // (BACKGROUND_WAITS_AUTHORITATIVE_STOP_RESULT=PASS, WS_STOP_CONFIRMATION_SUCCESS=PASS,
+  //  REST_STOP_FALLBACK_SUCCESS=PASS, REST_STOP_401_FAILS_CLOSED=PASS,
+  //  REST_STOP_5XX_FAILS_CLOSED=PASS, REST_STOP_NETWORK_FAILURE_FAILS_CLOSED=PASS)
+  {
+    const background = require(path.join(__dirname, "../extensions/chrome-live-translate/background.js"));
+
+    // Case 13a: WS Stop confirmation success via offscreen
+    {
+      background.resetTestState();
+      let tabMessages = [];
+      let offscreenMessages = [];
+
+      global.chrome = {
+        runtime: {
+          sendMessage: (msg, cb) => {
+            offscreenMessages.push(msg);
+            if (msg.type === "STOP_AUDIO_CAPTURE") {
+              if (typeof cb === "function") cb({ ok: true, via: "ws" });
+            }
+          },
+          lastError: null,
+          onMessage: { addListener: () => {} },
+        },
+        tabs: {
+          sendMessage: async (tabId, msg) => {
+            tabMessages.push({ tabId, msg });
+          },
+        },
+      };
+
+      background.setActiveSession({
+        active: true,
+        tabId: 99,
+        sessionId: "s_ws_ok",
+        streamToken: "tok_ws_ok",
+        websocketUrl: "ws://localhost/stream",
+      });
+
+      const res = await background.handleStopCapture();
+      assert.strictEqual(res.ok, true);
+      assert.strictEqual(res.via, "ws");
+      assert.strictEqual(background.getActiveSession(), null, "activeSession must be cleared on WS stop success");
+      assert.strictEqual(tabMessages.length, 1);
+      assert.strictEqual(tabMessages[0].msg.type, "SESSION_STOPPED");
+      console.log("PASS: WS_STOP_CONFIRMATION_SUCCESS=PASS");
+      console.log("PASS: BACKGROUND_WAITS_AUTHORITATIVE_STOP_RESULT=PASS");
+    }
+
+    // Case 13b: Offscreen fails, background authenticated REST fallback succeeds
+    {
+      background.resetTestState();
+      let tabMessages = [];
+      let offscreenCalls = [];
+      let restCalledUrl = null;
+
+      global.chrome = {
+        runtime: {
+          sendMessage: (msg, cb) => {
+            offscreenCalls.push(msg);
+            if (msg.type === "STOP_AUDIO_CAPTURE") {
+              if (msg.force) {
+                if (typeof cb === "function") cb({ ok: true });
+              } else {
+                if (typeof cb === "function") cb({ ok: false, error: "WS_STOP_TIMEOUT" });
+              }
+            }
+          },
+          lastError: null,
+          onMessage: { addListener: () => {} },
+        },
+        tabs: {
+          sendMessage: async (tabId, msg) => {
+            tabMessages.push({ tabId, msg });
+          },
+        },
+      };
+
+      global.fetch = async (url, opts) => {
+        restCalledUrl = url;
+        return { ok: true, status: 200, json: async () => ({ ok: true, state: "ended" }) };
+      };
+
+      background.setActiveSession({
+        active: true,
+        tabId: 100,
+        sessionId: "s_rest_ok",
+        streamToken: "tok_rest_ok",
+        websocketUrl: "ws://localhost:8000/api/v1/live-translate/sessions/s_rest_ok/stream?token=tok_rest_ok",
+      });
+
+      const res = await background.handleStopCapture();
+      assert.strictEqual(res.ok, true);
+      assert.strictEqual(res.via, "rest");
+      assert.strictEqual(background.getActiveSession(), null, "activeSession must be cleared on REST stop success");
+      assert.strictEqual(restCalledUrl, "http://localhost:8000/api/v1/live-translate/sessions/s_rest_ok/stop?token=tok_rest_ok");
+      assert.strictEqual(tabMessages.some(m => m.msg.type === "SESSION_STOPPED"), true);
+      console.log("PASS: REST_STOP_FALLBACK_SUCCESS=PASS");
+    }
+
+    // Case 13c: REST 401 Unauthorized fails-closed, preserves activeSession
+    {
+      background.resetTestState();
+      let tabMessages = [];
+
+      global.chrome = {
+        runtime: {
+          sendMessage: (msg, cb) => {
+            if (typeof cb === "function") cb({ ok: false, error: "WS_CLOSED" });
+          },
+          lastError: null,
+          onMessage: { addListener: () => {} },
+        },
+        tabs: {
+          sendMessage: async (tabId, msg) => {
+            tabMessages.push({ tabId, msg });
+          },
+        },
+      };
+
+      global.fetch = async () => ({
+        ok: false,
+        status: 401,
+        json: async () => ({ error: "Unauthorized" }),
+      });
+
+      const sess401 = {
+        active: true,
+        tabId: 101,
+        sessionId: "s_401",
+        streamToken: "tok_bad",
+        websocketUrl: "ws://localhost:8000/api/v1/live-translate/sessions/s_401/stream",
+      };
+      background.setActiveSession(sess401);
+
+      let thrownErr = null;
+      try {
+        await background.handleStopCapture();
+      } catch (e) {
+        thrownErr = e;
+      }
+
+      assert.notStrictEqual(thrownErr, null, "Must throw on REST 401");
+      assert.strictEqual(thrownErr.message, "REST_STOP_401");
+      assert.strictEqual(background.getActiveSession(), sess401, "activeSession must be preserved for retry on 401");
+      assert.strictEqual(tabMessages.some(m => m.msg.type === "SESSION_STOP_FAILED"), true);
+      assert.strictEqual(tabMessages.some(m => m.msg.type === "SESSION_STOPPED"), false);
+      console.log("PASS: REST_STOP_401_FAILS_CLOSED=PASS");
+    }
+
+    // Case 13d: REST 5XX fails-closed, preserves activeSession
+    {
+      background.resetTestState();
+      let tabMessages = [];
+
+      global.chrome = {
+        runtime: {
+          sendMessage: (msg, cb) => {
+            if (typeof cb === "function") cb({ ok: false, error: "WS_CLOSED" });
+          },
+          lastError: null,
+          onMessage: { addListener: () => {} },
+        },
+        tabs: {
+          sendMessage: async (tabId, msg) => { tabMessages.push({ tabId, msg }); },
+        },
+      };
+
+      global.fetch = async () => ({
+        ok: false,
+        status: 503,
+        json: async () => ({ error: "Service Unavailable" }),
+      });
+
+      const sess5xx = {
+        active: true,
+        tabId: 102,
+        sessionId: "s_503",
+        streamToken: "tok_503",
+        websocketUrl: "ws://localhost:8000/api/v1/live-translate/sessions/s_503/stream",
+      };
+      background.setActiveSession(sess5xx);
+
+      let thrownErr = null;
+      try {
+        await background.handleStopCapture();
+      } catch (e) {
+        thrownErr = e;
+      }
+
+      assert.notStrictEqual(thrownErr, null, "Must throw on REST 503");
+      assert.strictEqual(thrownErr.message, "REST_STOP_5XX");
+      assert.strictEqual(background.getActiveSession(), sess5xx, "activeSession must be preserved for retry on 5xx");
+      assert.strictEqual(tabMessages.some(m => m.msg.type === "SESSION_STOP_FAILED"), true);
+      assert.strictEqual(tabMessages.some(m => m.msg.type === "SESSION_STOPPED"), false);
+      console.log("PASS: REST_STOP_5XX_FAILS_CLOSED=PASS");
+    }
+
+    // Case 13e: REST Network failure fails-closed, preserves activeSession
+    {
+      background.resetTestState();
+      let tabMessages = [];
+
+      global.chrome = {
+        runtime: {
+          sendMessage: (msg, cb) => {
+            if (typeof cb === "function") cb({ ok: false, error: "WS_CLOSED" });
+          },
+          lastError: null,
+          onMessage: { addListener: () => {} },
+        },
+        tabs: {
+          sendMessage: async (tabId, msg) => { tabMessages.push({ tabId, msg }); },
+        },
+      };
+
+      global.fetch = async () => {
+        throw new Error("ECONNREFUSED connection reset by peer");
+      };
+
+      const sessNet = {
+        active: true,
+        tabId: 103,
+        sessionId: "s_net",
+        streamToken: "tok_net",
+        websocketUrl: "ws://localhost:8000/api/v1/live-translate/sessions/s_net/stream",
+      };
+      background.setActiveSession(sessNet);
+
+      let thrownErr = null;
+      try {
+        await background.handleStopCapture();
+      } catch (e) {
+        thrownErr = e;
+      }
+
+      assert.notStrictEqual(thrownErr, null, "Must throw on REST network failure");
+      assert.strictEqual(thrownErr.message, "REST_STOP_NETWORK_FAILURE");
+      assert.strictEqual(background.getActiveSession(), sessNet, "activeSession must be preserved on network failure");
+      assert.strictEqual(tabMessages.some(m => m.msg.type === "SESSION_STOP_FAILED"), true);
+      assert.strictEqual(tabMessages.some(m => m.msg.type === "SESSION_STOPPED"), false);
+      console.log("PASS: REST_STOP_NETWORK_FAILURE_FAILS_CLOSED=PASS");
+    }
+  }
+
   offscreen.resetTestState();
   console.log("=== ALL EXECUTABLE OFFSCREEN RECONNECT TESTS PASSED (EXECUTABLE_OFFSCREEN_RECONNECT_TEST=PASS) ===");
 }

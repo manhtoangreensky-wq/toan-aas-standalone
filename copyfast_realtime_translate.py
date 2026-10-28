@@ -188,6 +188,7 @@ class RealtimeTranslateSession:
 
         self.current_socket_lease: int = 0
         self.active_websocket: Optional[Any] = None
+        self.in_flight_segments: Set[str] = set()
 
     def acquire_socket_lease(self, websocket: Any = None) -> int:
         """Acquires a new monotonic socket generation lease for this session.
@@ -1081,7 +1082,21 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                 break
 
             message = await websocket.receive()
+
+            # CRITICAL (RT-FIX11): LEASE_RECHECK_AFTER_RECEIVE
+            # Re-check lease immediately after unblocking from receive()
+            if not session.is_socket_lease_active(socket_lease):
+                logger.info(
+                    f"Session {session_id} socket lease {socket_lease} superseded during receive. "
+                    f"Active lease: {session.current_socket_lease}. Dropping message and closing stale socket."
+                )
+                await websocket.close(code=4409, reason="Socket lease superseded during receive")
+                break
+
             if "bytes" in message and message["bytes"]:
+                if not session.is_socket_lease_active(socket_lease):
+                    await websocket.close(code=4409, reason="Socket lease superseded")
+                    break
                 raw = message["bytes"]
                 if len(raw) < 4:
                     continue
@@ -1107,8 +1122,25 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
 
                 if completed_segments:
                     for speech_seg in completed_segments:
-                        # Forward to Bot internal realtime bridge
-                        bridge_res = await forward_segment_to_bot(session, speech_seg.sequence_end, speech_seg)
+                        if not session.is_socket_lease_active(socket_lease):
+                            logger.info(f"Socket lease {socket_lease} superseded before Bot bridge call. Aborting.")
+                            break
+
+                        # Concurrency guard: exactly-one bridge execution per segment across concurrent sockets
+                        if speech_seg.segment_id in session.in_flight_segments:
+                            logger.info(f"Segment {speech_seg.segment_id} already in-flight to Bot bridge. Skipping concurrent duplicate.")
+                            continue
+
+                        session.in_flight_segments.add(speech_seg.segment_id)
+                        try:
+                            # Forward to Bot internal realtime bridge
+                            bridge_res = await forward_segment_to_bot(session, speech_seg.sequence_end, speech_seg)
+                        finally:
+                            session.in_flight_segments.discard(speech_seg.segment_id)
+
+                        if not session.is_socket_lease_active(socket_lease):
+                            logger.info(f"Socket lease {socket_lease} superseded during Bot bridge call. Aborting.")
+                            break
                         if bridge_res.status == "success":
                             stt_text = ""
                             trans_text = ""

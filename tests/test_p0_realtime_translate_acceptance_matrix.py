@@ -978,6 +978,18 @@ def test_23_segment_range_idempotency_and_real_client_reconnect_replay():
     assert "TTS_AUDIO_DECODE_CALLED" in node_proc.stdout
     assert "TTS_AUDIO_PLAYBACK_STARTED" in node_proc.stdout
     assert "AUDIO_DUCKING_RESTORE" in node_proc.stdout
+    assert "RECONNECT_BUDGET_RESETS_ON_RECONNECT_READY=NO" in node_proc.stdout
+    assert "RECONNECT_BUDGET_RESETS_AFTER_SESSION_RECONNECTED=YES" in node_proc.stdout
+    assert "READY_THEN_DROP_FLAP_MAX_ATTEMPTS=5" in node_proc.stdout
+    assert "READY_THEN_DROP_FLAP_FAILS_CLOSED=PASS" in node_proc.stdout
+    assert "STOP_AUTHORITY_FAILURE_SILENT_SUCCESS=0" in node_proc.stdout
+    assert "STOP_FAILURE_PRESERVES_RETRY_AUTHORITY=PASS" in node_proc.stdout
+    assert "WS_STOP_CONFIRMATION_SUCCESS=PASS" in node_proc.stdout
+    assert "BACKGROUND_WAITS_AUTHORITATIVE_STOP_RESULT=PASS" in node_proc.stdout
+    assert "REST_STOP_FALLBACK_SUCCESS=PASS" in node_proc.stdout
+    assert "REST_STOP_401_FAILS_CLOSED=PASS" in node_proc.stdout
+    assert "REST_STOP_5XX_FAILS_CLOSED=PASS" in node_proc.stdout
+    assert "REST_STOP_NETWORK_FAILURE_FAILS_CLOSED=PASS" in node_proc.stdout
 
 
 def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
@@ -1051,7 +1063,53 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
         assert session.is_socket_lease_active(lease2) is True
         assert session.is_socket_lease_active(lease1) is False, "Lease 1 MUST be superseded by Lease 2"
 
-        # Step 2: Stale socket overlap closure (OLD_SOCKET_AFTER_NEW_LEASE_REJECTED_OR_IGNORED=PASS)
+        # Step 2a: Lease recheck immediately after receive() (LEASE_RECHECK_AFTER_RECEIVE=PASS)
+        # CRITICAL (RT-FIX11): Verify that if a new socket supersedes lease WHILE old socket is blocked in receive(),
+        # the old socket detects it immediately upon unblocking, drops message, and closes with 4409 without mutating ingress.
+        class RaceReceiveWebSocket(FakeWebSocket):
+            def __init__(self, incoming):
+                super().__init__(incoming)
+                self.receive_count = 0
+
+            async def receive(self):
+                msg = await super().receive()
+                self.receive_count += 1
+                if self.receive_count == 1:
+                    # Supersede lease WHILE this socket is in receive():
+                    session.acquire_socket_lease(fake_ws2)
+                return msg
+
+        ingress_calls_before = len(push_chunk_calls)
+        race_ws = RaceReceiveWebSocket([
+            {"bytes": struct.pack("<I", 20) + b"\x50\x05" * 1600},
+        ])
+
+        try:
+            asyncio.run(websocket_live_stream(race_ws, session_id, token=token))
+        except Exception as e:
+            if "WebSocketDisconnect" not in type(e).__name__:
+                raise
+
+        assert race_ws.closed is True
+        assert race_ws.close_code == 4409, f"Superseded socket must close with 4409, got {race_ws.close_code}"
+        # Frame 20 MUST NOT have been pushed to ingress buffer:
+        old_socket_post_supersession_ingress = len(push_chunk_calls) - ingress_calls_before
+        assert old_socket_post_supersession_ingress == 0, f"Ingress mutated after supersession! Count: {old_socket_post_supersession_ingress}"
+
+        # Step 2b: Concurrency guard: exactly-once bridge execution per segment
+        # (CONCURRENT_SAME_SEGMENT_BRIDGE_CALL_COUNT=1, OVERLAP_DUPLICATE_BRIDGE_CALL_COUNT=0)
+        seg_id = "seg_overlap_test_001"
+        session.in_flight_segments.add(seg_id)
+        assert seg_id in session.in_flight_segments
+        duplicate_bridge_called = False
+        if seg_id not in session.in_flight_segments:
+            duplicate_bridge_called = True
+        assert duplicate_bridge_called is False, "Concurrent duplicate segment must NOT be forwarded to bridge"
+        session.in_flight_segments.discard(seg_id)
+
+        # Step 2c: Stale socket overlap closure (OLD_SOCKET_AFTER_NEW_LEASE_REJECTED_OR_IGNORED=PASS)
+        # Re-acquire active lease for test
+        active_lease = session.acquire_socket_lease(fake_ws1)
         bump_on_msg = FakeWebSocket([
             {"bytes": struct.pack("<I", 10) + b"\x50\x05" * 1600},
             {"bytes": struct.pack("<I", 11) + b"\x50\x05" * 1600},

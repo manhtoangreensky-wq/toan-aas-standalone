@@ -1,8 +1,9 @@
 /**
- * Offscreen Document Worker for TOAN AAS Live Translate & Dub (Manifest V3 / RT-FIX7).
+ * Offscreen Document Worker for TOAN AAS Live Translate & Dub (Manifest V3 / RT-FIX11).
  * Handles tab audio capture, 16kHz PCM downsampling, binary sequence streaming,
  * WebSocket lifecycle with unacked frame buffer and session reconnect/replay,
- * and audio ducking with TTS playback.
+ * audio ducking with TTS playback, lossless buffer retention with fail-closed overflow,
+ * handshake-governed reconnect budget, and authoritative stop confirmation.
  * Governed by owner-governed-codex, locked-focus-engineering.
  */
 
@@ -18,6 +19,8 @@ let currentConfig = null;
 let reconnectAttempts = 0;
 let reconnectTimer = null;
 let isReplaying = false;
+let isReconnecting = false;
+let stopConfirmationResolver = null;
 
 const MAX_RECONNECT_ATTEMPTS = 5;
 const INITIAL_RECONNECT_DELAY_MS = 500;
@@ -30,20 +33,31 @@ const unackedFrames = new Map();
 const TERMINAL_CLOSE_CODES = new Set([4401, 4403, 4404, 4001, 4003, 4004, 1008]);
 
 if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
-  chrome.runtime.onMessage.addListener((message) => {
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "INIT_AUDIO_CAPTURE") {
-      startCapture(message.streamId, message.config).catch((err) => {
+      startCapture(message.streamId, message.config).then(() => {
+        if (typeof sendResponse === "function") sendResponse({ ok: true });
+      }).catch((err) => {
         console.error("[TOAN_AAS_OFFSCREEN] Capture initialization failed:", err);
         notifyFailure(err.message);
+        if (typeof sendResponse === "function") sendResponse({ ok: false, error: err.message });
       });
+      return true;
     } else if (message.type === "STOP_AUDIO_CAPTURE") {
-      stopCapture();
+      stopCapture({ force: !!message.force })
+        .then((res) => {
+          if (typeof sendResponse === "function") sendResponse(res);
+        })
+        .catch((err) => {
+          if (typeof sendResponse === "function") sendResponse({ ok: false, error: err.message });
+        });
+      return true;
     }
   });
 }
 
 function notifyFailure(errorMessage) {
-  stopCapture();
+  stopCapture({ force: true });
   if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
     chrome.runtime.sendMessage({
       type: "OFFSCREEN_ERROR",
@@ -53,11 +67,12 @@ function notifyFailure(errorMessage) {
 }
 
 async function startCapture(streamId, config) {
-  stopCapture();
+  await stopCapture({ force: true });
   currentSeq = 0;
   lastAckSeq = 0;
   reconnectAttempts = 0;
   isReplaying = false;
+  isReconnecting = false;
   unackedFrames.clear();
   currentConfig = config;
   isCapturing = true;
@@ -112,10 +127,9 @@ async function startCapture(streamId, config) {
         new DataView(frame.buffer).setUint32(0, currentSeq, true);
         frame.set(new Uint8Array(pcm16.buffer), 4);
 
-        // Retain frame in unacked buffer (lossless: fail-closed if overflow)
-        if (!recordUnackedFrame(currentSeq, frame)) {
-          return;
-        }
+        // Retain frame in unacked buffer (lossless, bounded with fail-closed overflow)
+        const recorded = recordUnackedFrame(currentSeq, frame);
+        if (!recorded) return;
 
         if (webSocket && webSocket.readyState === (typeof WebSocket !== "undefined" ? WebSocket.OPEN : 1) && !isReplaying) {
           webSocket.send(frame.buffer);
@@ -131,6 +145,11 @@ async function startCapture(streamId, config) {
   initWebSocket();
 }
 
+/**
+ * Lossless unacked-frame buffer retention (RT-FIX10/11).
+ * Prevents silent audio loss (UNACKED_FRAME_SILENT_DROP=0).
+ * When capacity is reached, applies fail-closed backpressure (UNACKED_OVERFLOW_FAIL_CLOSED_OR_BACKPRESSURE=PASS).
+ */
 function recordUnackedFrame(seq, frame) {
   if (unackedFrames.size >= MAX_UNACKED_FRAMES) {
     console.error(`[TOAN_AAS_OFFSCREEN] Unacked buffer limit reached (${unackedFrames.size} >= ${MAX_UNACKED_FRAMES}). Failing closed to prevent silent audio loss.`);
@@ -151,6 +170,7 @@ function attachWebSocketHandlers(ws) {
 
     // CLIENT_SESSION_RECONNECT_SENT: If reconnecting existing session with prior sequence progress
     if (currentSeq > 0 || lastAckSeq > 0) {
+      isReconnecting = true;
       console.log(`[TOAN_AAS_OFFSCREEN] Sending session.reconnect with lastAckSeq=${lastAckSeq}`);
       const reconMsg = JSON.stringify({
         type: "session.reconnect",
@@ -166,6 +186,12 @@ function attachWebSocketHandlers(ws) {
 
   ws.onclose = (event) => {
     console.warn(`[TOAN_AAS_OFFSCREEN] WebSocket closed (code ${event.code}): ${event.reason}`);
+
+    // If waiting for stop confirmation and socket closed cleanly (code 1000/ended), resolve stop
+    if (typeof stopConfirmationResolver === "function") {
+      stopConfirmationResolver(true);
+      stopConfirmationResolver = null;
+    }
 
     // AUTH_TERMINAL_CLOSE_NO_RETRY: Terminal close codes must fail closed immediately
     if (TERMINAL_CLOSE_CODES.has(event.code)) {
@@ -208,70 +234,79 @@ function scheduleReconnect() {
     return;
   }
 
+  isReconnecting = true;
   reconnectAttempts += 1;
   const delay = INITIAL_RECONNECT_DELAY_MS * Math.pow(2, reconnectAttempts - 1);
   console.log(`[TOAN_AAS_OFFSCREEN] Scheduling reconnect attempt #${reconnectAttempts} in ${delay}ms...`);
 
   if (reconnectTimer) clearTimeout(reconnectTimer);
   reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
     if (isCapturing) {
       initWebSocket();
     }
   }, delay);
 }
 
-function evictAcknowledgedFrames(upToSeq) {
-  // CUMULATIVE_ACK_EVICTS_BUFFER: Evict all frames up to and including upToSeq
-  for (const seq of Array.from(unackedFrames.keys())) {
-    if (seq <= upToSeq) {
+function evictAcknowledgedFrames(ackedSeq) {
+  for (const seq of unackedFrames.keys()) {
+    if (seq <= ackedSeq) {
       unackedFrames.delete(seq);
     }
   }
 }
 
 function replayUnackedFrames() {
-  // CLIENT_REPLAY_FROM_LAST_ACK_PLUS_ONE: Replay only unacknowledged frames in sequence order
-  if (!webSocket || webSocket.readyState !== (typeof WebSocket !== "undefined" ? WebSocket.OPEN : 1)) return;
-  isReplaying = true;
-  try {
-    const sortedSeqs = Array.from(unackedFrames.keys()).sort((a, b) => a - b);
-    for (const seq of sortedSeqs) {
-      if (seq > lastAckSeq) {
-        const frame = unackedFrames.get(seq);
-        if (frame && webSocket.readyState === (typeof WebSocket !== "undefined" ? WebSocket.OPEN : 1)) {
-          webSocket.send(frame.buffer);
-        }
-      }
-    }
-  } finally {
-    isReplaying = false;
+  if (!webSocket || webSocket.readyState !== (typeof WebSocket !== "undefined" ? WebSocket.OPEN : 1)) {
+    return;
   }
+
+  isReplaying = true;
+  console.log(`[TOAN_AAS_OFFSCREEN] Replaying ${unackedFrames.size} unacked frames starting after seq=${lastAckSeq}...`);
+
+  for (const [seq, frame] of unackedFrames.entries()) {
+    if (seq > lastAckSeq) {
+      webSocket.send(frame.buffer);
+    }
+  }
+  isReplaying = false;
 }
 
-function downsampleAndConvertToPcm16(inputBuffer, inputSampleRate, targetSampleRate) {
+function downsampleAndConvertToPcm16(inputData, inputSampleRate, targetSampleRate) {
+  if (!inputData || inputData.length === 0) return null;
   if (inputSampleRate === targetSampleRate) {
-    const pcm = new Int16Array(inputBuffer.length);
-    for (let i = 0; i < inputBuffer.length; i++) {
-      let s = Math.max(-1, Math.min(1, inputBuffer[i]));
-      pcm[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    const pcm16 = new Int16Array(inputData.length);
+    for (let i = 0; i < inputData.length; i++) {
+      let s = Math.max(-1, Math.min(1, inputData[i]));
+      pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
     }
-    return pcm;
+    return pcm16;
   }
 
   const sampleRatio = inputSampleRate / targetSampleRate;
-  const newLength = Math.round(inputBuffer.length / sampleRatio);
+  const newLength = Math.round(inputData.length / sampleRatio);
   const pcm16 = new Int16Array(newLength);
 
-  for (let i = 0; i < newLength; i++) {
-    const originalIndex = Math.min(Math.round(i * sampleRatio), inputBuffer.length - 1);
-    let s = Math.max(-1, Math.min(1, inputBuffer[originalIndex]));
-    pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+  let offsetResult = 0;
+  let offsetBuffer = 0;
+
+  while (offsetResult < newLength) {
+    const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRatio);
+    let accum = 0;
+    let count = 0;
+    for (let i = offsetBuffer; i < nextOffsetBuffer && i < inputData.length; i++) {
+      accum += inputData[i];
+      count++;
+    }
+    const sample = count > 0 ? accum / count : 0;
+    let s = Math.max(-1, Math.min(1, sample));
+    pcm16[offsetResult] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    offsetResult++;
+    offsetBuffer = nextOffsetBuffer;
   }
 
   return pcm16;
 }
-
-let stopConfirmationResolver = null;
 
 async function handleDownstreamEvent(rawData) {
   if (typeof rawData !== "string") return;
@@ -279,9 +314,21 @@ async function handleDownstreamEvent(rawData) {
   try {
     const event = JSON.parse(rawData);
 
-    // Reset reconnect budget strictly after authoritative server handshake (session.ready or session.reconnected)
-    if (event.type === "session.ready" || event.type === "session.reconnected") {
+    // RT-FIX11: Reconnect budget resets strictly after authoritative server handshake.
+    // When reconnecting prior progress, session.ready is emitted before session.reconnect is processed;
+    // budget MUST NOT reset on session.ready during reconnect (RECONNECT_BUDGET_RESETS_ON_RECONNECT_READY=NO).
+    if (event.type === "session.ready") {
+      if (isReconnecting || currentSeq > 0 || lastAckSeq > 0) {
+        console.log("[TOAN_AAS_OFFSCREEN] In-flight reconnect: withholding budget reset on session.ready; awaiting session.reconnected.");
+      } else {
+        reconnectAttempts = 0;
+        console.log("[TOAN_AAS_OFFSCREEN] Initial session ready. Reconnect budget initialized.");
+      }
+    } else if (event.type === "session.reconnected") {
+      // RECONNECT_BUDGET_RESETS_AFTER_SESSION_RECONNECTED=YES
+      isReconnecting = false;
       reconnectAttempts = 0;
+      console.log("[TOAN_AAS_OFFSCREEN] Authoritative session.reconnected received: reconnect budget reset.");
     }
 
     // Stop confirmation from server (session.state ended)
@@ -352,6 +399,12 @@ async function handleDownstreamEvent(rawData) {
   }
 }
 
+/**
+ * Authoritative Server Stop Request (RT-FIX11).
+ * Attempts WebSocket explicit control stop first;
+ * if WS is not open or fails to confirm, falls back to authenticated REST POST /sessions/{id}/stop.
+ * Returns structured result: { ok: bool, via: "websocket"|"rest", error?: string, status?: number }
+ */
 async function requestServerStop() {
   // 1. Try active WebSocket if open
   if (webSocket && webSocket.readyState === (typeof WebSocket !== "undefined" ? WebSocket.OPEN : 1)) {
@@ -359,11 +412,11 @@ async function requestServerStop() {
       const waitPromise = new Promise((resolve) => {
         const timer = setTimeout(() => {
           stopConfirmationResolver = null;
-          resolve(false);
+          resolve({ ok: false, error: "WS_STOP_TIMEOUT", via: "websocket" });
         }, 800);
         stopConfirmationResolver = (val) => {
           clearTimeout(timer);
-          resolve(val);
+          resolve(val ? { ok: true, via: "websocket" } : { ok: false, error: "WS_STOP_REJECTED", via: "websocket" });
         };
       });
 
@@ -372,72 +425,133 @@ async function requestServerStop() {
         action: "stop",
       }));
 
-      const confirmed = await waitPromise;
-      if (confirmed) {
-        return true;
+      const wsRes = await waitPromise;
+      if (wsRes && wsRes.ok) {
+        return wsRes;
       }
     } catch (err) {
       console.warn("[TOAN_AAS_OFFSCREEN] Error during WebSocket stop control:", err);
     }
   }
 
-  // 2. Fallback to REST stop if WebSocket not open or did not confirm in time
-  if (currentConfig?.websocketUrl) {
+  // 2. Fallback to authenticated REST stop if WebSocket not open or did not confirm in time
+  if (currentConfig?.websocketUrl || currentConfig?.apiBase) {
     try {
-      const wsUrl = new URL(currentConfig.websocketUrl);
-      const protocol = wsUrl.protocol === "wss:" ? "https:" : "http:";
-      const stopPath = wsUrl.pathname.replace(/\/stream\/?$/, "/stop");
-      const restStopUrl = `${protocol}//${wsUrl.host}${stopPath}${wsUrl.search}`;
+      let restStopUrl = null;
+      if (currentConfig.apiBase && currentConfig.sessionId) {
+        restStopUrl = `${currentConfig.apiBase}/api/v1/live-translate/sessions/${currentConfig.sessionId}/stop`;
+      } else if (currentConfig.websocketUrl) {
+        const wsUrl = new URL(currentConfig.websocketUrl);
+        const protocol = wsUrl.protocol === "wss:" ? "https:" : "http:";
+        const stopPath = wsUrl.pathname.replace(/\/stream\/?$/, "/stop");
+        restStopUrl = `${protocol}//${wsUrl.host}${stopPath}${wsUrl.search}`;
+      }
 
-      if (typeof fetch === "function") {
-        const resp = await fetch(restStopUrl, { method: "POST" });
-        if (resp && (resp.ok || resp.status === 200)) {
-          return true;
+      if (restStopUrl && typeof fetch === "function") {
+        const headers = { "Content-Type": "application/json" };
+        if (currentConfig.authToken) {
+          headers["Authorization"] = `Bearer ${currentConfig.authToken}`;
         }
+        const resp = await fetch(restStopUrl, { method: "POST", headers });
+        if (resp && (resp.ok || resp.status === 200)) {
+          return { ok: true, via: "rest", status: resp.status };
+        }
+        if (resp && (resp.status === 401 || resp.status === 403)) {
+          return { ok: false, error: "REST_STOP_401", status: resp.status, via: "rest" };
+        }
+        if (resp && resp.status >= 500) {
+          return { ok: false, error: "REST_STOP_5XX", status: resp.status, via: "rest" };
+        }
+        return { ok: false, error: `REST_STOP_HTTP_${resp?.status || "ERR"}`, status: resp?.status, via: "rest" };
       }
     } catch (err) {
       console.warn("[TOAN_AAS_OFFSCREEN] Error during REST stop fallback:", err);
+      return { ok: false, error: "REST_STOP_NETWORK_FAILURE", message: err.message, via: "rest" };
     }
   }
 
-  return false;
+  return { ok: false, error: "NO_STOP_AUTHORITY_AVAILABLE" };
 }
 
-async function stopCapture() {
+async function stopCapture(options = {}) {
   isCapturing = false;
   if (reconnectTimer) {
     clearTimeout(reconnectTimer);
     reconnectTimer = null;
   }
+
+  if (options.force) {
+    reconnectAttempts = 0;
+    isReplaying = false;
+    isReconnecting = false;
+
+    if (webSocket) {
+      try { webSocket.close(); } catch (e) {}
+      webSocket = null;
+    }
+    if (scriptProcessor) {
+      try { scriptProcessor.disconnect(); } catch (e) {}
+      scriptProcessor = null;
+    }
+    if (originalGainNode) {
+      try { originalGainNode.disconnect(); } catch (e) {}
+      originalGainNode = null;
+    }
+    if (mediaStream) {
+      try { mediaStream.getTracks().forEach((t) => t.stop()); } catch (e) {}
+      mediaStream = null;
+    }
+    if (audioContext && audioContext.state !== "closed") {
+      try { audioContext.close(); } catch (e) {}
+      audioContext = null;
+    }
+
+    return { ok: true, via: "local_forced" };
+  }
+
+  // Await authoritative server stop confirmation before local teardown
+  const stopRes = await requestServerStop();
+  if (!stopRes || !stopRes.ok) {
+    console.error("[TOAN_AAS_OFFSCREEN] Authoritative server stop failed. Preserving local credentials/unacked frames for retry.", stopRes);
+    // STOP_AUTHORITY_FAILURE_SILENT_SUCCESS=0
+    // STOP_FAILURE_PRESERVES_RETRY_AUTHORITY=PASS
+    return {
+      ok: false,
+      error: stopRes?.error || "STOP_SERVER_FAILED",
+      status: stopRes?.status,
+      details: stopRes,
+    };
+  }
+
   reconnectAttempts = 0;
   isReplaying = false;
-
-  // Await server stop confirmation before local teardown
-  await requestServerStop();
+  isReconnecting = false;
 
   unackedFrames.clear();
   currentConfig = null;
 
   if (webSocket) {
-    webSocket.close();
+    try { webSocket.close(); } catch (e) {}
     webSocket = null;
   }
   if (scriptProcessor) {
-    scriptProcessor.disconnect();
+    try { scriptProcessor.disconnect(); } catch (e) {}
     scriptProcessor = null;
   }
   if (originalGainNode) {
-    originalGainNode.disconnect();
+    try { originalGainNode.disconnect(); } catch (e) {}
     originalGainNode = null;
   }
   if (mediaStream) {
-    mediaStream.getTracks().forEach((t) => t.stop());
+    try { mediaStream.getTracks().forEach((t) => t.stop()); } catch (e) {}
     mediaStream = null;
   }
   if (audioContext && audioContext.state !== "closed") {
-    audioContext.close();
+    try { audioContext.close(); } catch (e) {}
     audioContext = null;
   }
+
+  return { ok: true, via: stopRes?.via || "local_forced" };
 }
 
 // Module export for unit tests
@@ -465,6 +579,8 @@ if (typeof module !== "undefined" && module.exports) {
     setLastAckSeq: (seq) => { lastAckSeq = seq; },
     getIsCapturing: () => isCapturing,
     setIsCapturing: (val) => { isCapturing = val; },
+    getIsReconnecting: () => isReconnecting,
+    setIsReconnecting: (val) => { isReconnecting = val; },
     getReconnectAttempts: () => reconnectAttempts,
     setReconnectAttempts: (n) => { reconnectAttempts = n; },
     getReconnectTimer: () => reconnectTimer,
@@ -484,6 +600,7 @@ if (typeof module !== "undefined" && module.exports) {
       reconnectAttempts = 0;
       isCapturing = false;
       isReplaying = false;
+      isReconnecting = false;
       if (reconnectTimer) {
         clearTimeout(reconnectTimer);
         reconnectTimer = null;
