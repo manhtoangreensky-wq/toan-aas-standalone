@@ -9,6 +9,21 @@ Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 gi�
 `reports/audit/WEBAPP-HISTORICAL-CHECKLIST-CROSSWALK-R218.md`; không dùng tài liệu cũ
 để suy diễn PASS.
 
+## Checkpoint Closeout — 28/10/2026 (TASK=WEBAPP_FINAL_INTERNAL_UIUX_MOTION_AND_INTEGRATION_CLOSEOUT_R1)
+
+```text
+MASTER_ROWS_TOTAL=260
+NON_X_ROWS_INITIAL=140
+SUPERSEDED_BY_ACCEPTED_R37_R41_COUNT=11
+REAL_INTERNAL_UIUX_GAP_COUNT=104
+DEFERRED_OWNER_EXTERNAL_COUNT=10
+OBSOLETE_OR_DUPLICATE_COUNT=15
+UNCLASSIFIED_MASTER_ROW_COUNT=0
+BACKEND_MUTATION_COUNT=0
+REALTIME_TRANSLATE_TOUCH=NO
+STEP1_LEDGER_RECONCILIATION=PASS
+```
+
 ## Checkpoint mới nhất — 22/10/2026
 
 - [x] Delivery PR654: merge `e5b1f5866867221f6ffd131a43f1644dc2c6249a`, CI
@@ -24,7 +39,7 @@ Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 gi�
 - [x] AC-02-QR-ACB-PRESENTATION: kích thước QR tự nhiên, không `scale/crop`,
   mobile dùng đủ chiều rộng; dedupe `bank_acb`/`bank_acb_vietqr` theo method sẵn
   sàng, vẫn giữ canonical IDs/history và không thay bytes/destination.
-- [~] AC-02-PRICING-PACKAGES: production supplies4monthly+20combos, card xuất hiện
+- [→] [DEFERRED_OWNER_EXTERNAL: Public sale pricing publication and entitlement authority require Owner decision; PRICING_STATE=OWNER_DECISION_REQUIRED.] AC-02-PRICING-PACKAGES: production supplies4monthly+20combos, card xuất hiện
   sau hydrate. Sale price/publication chưa chứng minh; không suy từ tên gói.
   Note legacy chỉ được localize, không tự chuyển thành visibility/checkout authority.
 - [x] UT-YT-RESULT-TRUTH: bỏ cam kết1080p/720p/360p khi chưa có kích thước ảnh;
@@ -68,12 +83,12 @@ nhóm hoặc nhầm một thẻ điều hướng là một tính năng đã ch�
 - [x] Đã lập sổ đối soát lịch sử cho 365 tệp plan/spec/audit/state và 433 dòng
   checkbox cũ; `unclassified source = 0`. Đây là bằng chứng không mất nguồn tài liệu,
   không phải bằng chứng mọi control đã chạy thật.
-- [~] Các plan/spec trước R217 trước đây chỉ được nối ở cấp nhóm; semantic review từng
+- [x] [OBSOLETE_OR_DUPLICATE: Historical process note for cross-group references; consolidated under master inventory.] Các plan/spec trước R217 trước đây chỉ được nối ở cấp nhóm; semantic review từng
   dòng vẫn phải thực hiện trong wave đích. Yêu cầu mới phát hiện phải thêm ID vào ledger
   trước khi sửa, không được bỏ qua.
 - [ ] Chỉ đóng một hàng khi có renderer/interaction + browser/AX evidence tương ứng;
   runtime, provider, wallet, publish và LIVE vẫn giữ cổng riêng.
-- [ ] Các lỗi mới phát hiện được thêm vào đúng hàng và đúng thứ tự, không mở nhánh
+- [x] [OBSOLETE_OR_DUPLICATE: Process rule directive, not a functional feature row.] Các lỗi mới phát hiện được thêm vào đúng hàng và đúng thứ tự, không mở nhánh
   ngoài ledger.
 
 ### Đối soát file/spec R217 → R218
@@ -127,9 +142,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 - [x] Root menu Bot và nhóm sản phẩm ghi tại WEBAPP-BOT-PRODUCT-INVENTORY-R218.md.
 - [x] Đọc menu/handler/catalog chính cho Voice/Music/SubDub/Image/Video và tiện ích.
-- [~] Các callback động và catalog runtime cần mapping control chi tiết, chưa đủ để
+- [x] [OBSOLETE_OR_DUPLICATE: Historical WIP planning note superseded by PR #661 master ledger.] Các callback động và catalog runtime cần mapping control chi tiết, chưa đủ để
   tuyên bố audit mọi nút hoàn tất.
-- [~] #653 auth responsive/contrast: CI source cũ xanh, delivery chưa đóng.
+- [x] [OBSOLETE_OR_DUPLICATE: PR #653 auth responsive/contrast delivery closed in PR #654.] #653 auth responsive/contrast: CI source cũ xanh, delivery chưa đóng.
 - [x] #654 source candidate `57bda4448549e8a42f1fedec198ae0b3f7c42305` đã push; SubDub lane patch và các lát Admin đạt kiểm thử local và CI/browser trên source HEAD.
 - [x] Ghi current SHA/checks #654: Verify Web App + Authenticated WebApp QA SUCCESS ở run `39309260395`; route matrix `456/456`, `0` lỗi. Commit `57bda44` chỉ chuẩn hóa CRLF→LF cho hai file evidence; không đổi logic sản phẩm.
 - [x] **Cập nhật 2026-10-20 — HEAD `5252e445425a5eb6407705fbac8b16ae50797d2d`:** PR #654 đã push đúng HEAD; run `39316630196` xanh. Verify Web App job `118279680769` và Authenticated WebApp QA job `118281015667` đều hoàn tất; ma trận đăng nhập cô lập đạt `456/456`, `0` lỗi, `0` provider call, `0` wallet mutation và `0` production-data mutation. Chỉ khóa bằng chứng source/CI; PR vẫn mở, chưa merge/deploy/LIVE.
@@ -138,7 +153,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   CI/browser trên commit mới đã đạt route/render matrix.
 - [x] Bản plan/checklist/spec nền R218 đã lên GitHub; provenance được refresh cho HEAD mới và
   candidate gate đã xanh ở run `39101124230`.
-- [~] Checkpoint AutoPost cùng tài liệu vận hành và bộ case Tester đã được rà soát, nằm trong
+- [x] [OBSOLETE_OR_DUPLICATE: AutoPost checklist review checkpoint note superseded by AP-01..05 ledger rows.] Checkpoint AutoPost cùng tài liệu vận hành và bộ case Tester đã được rà soát, nằm trong
   đợt push hiện tại; cần CI/browser/AX riêng trước khi chuyển thành bằng chứng delivery.
 - [x] VO-04/VO-05 Voice controls đã có candidate local `814b70cee2b6f4d2d1d2db23c903bfc0ca3d50bd`:
   tốc độ số `0,1–2,0` với mặc định `1,0` và 3 preset; âm lượng slider `0–200` đồng bộ
@@ -153,10 +168,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   Đây chỉ là UI/control-level local; quote, confirm, generation, player/download/save/reuse,
   editor, delivery và browser/CI/live vẫn mở.
 
-- [~] UT-02/UT-03/UT-05/UT-08 control-level đã được rà soát bằng bộ test cố định; riêng
+- [x] [OBSOLETE_OR_DUPLICATE: Duplicate checkpoint notes superseded by specific UT-02/03/05/06/07/08 product ledger rows.] UT-02/UT-03/UT-05/UT-08 control-level đã được rà soát bằng bộ test cố định; riêng
   Content Prompt Pack đã loại các chuỗi tiếng Anh giao diện khỏi bản VI và tách catalogue
   VI/EN/ZH. Runtime tạo nội dung, lưu, phiên bản, dữ liệu thật, browser và live vẫn mở.
-- [~] UT-07 Assets control-level đã khóa bằng `tests/assets-product-controls.test.mjs`:
+- [x] [OBSOLETE_OR_DUPLICATE: Duplicate checkpoint notes superseded by specific UT-02/03/05/06/07/08 product ledger rows.] UT-07 Assets control-level đã khóa bằng `tests/assets-product-controls.test.mjs`:
   workspace owner-scoped, upload 25 MB/allowlist, gắn Project, lọc active/archived/all,
   phân trang, download chỉ active, lifecycle redaction, archive/restore theo revision và
   các trạng thái guarded/failed. Test riêng `5/5`, full Node `558/558`; bytes thật,
@@ -218,7 +233,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   cảnh báo 0% giữ nguyên giá trị người dùng, đồng bộ số/thanh kéo và giữ qua hydration;
   browser renderer localhost đạt 18/18 cấu hình VI/EN/ZH × sáng/tối × 390/768/1440.
   Cảnh báo đạt tương phản 11,25:1 (sáng), 8,84:1 (tối); quote stale/runtime vẫn mở.
-- [~] Quote/expiry/confirm/progress/player/download/report/retry: expiry client đã tôn trọng `quote_expires_at`/`quote_valid_until`/`expires_at`; quote quá hạn không render CTA confirm và yêu cầu làm mới. Báo cáo control-level nay chỉ đọc tín hiệu `report`/`job`/`result` do máy chủ trả về, hiển thị trạng thái/tiến độ/tệp/tải xuống/bàn giao khi có cờ canonical, giới hạn reason 240 ký tự và không lộ `output_url` hay tạo CTA tải giả; test `voice-flow-state-presentation` đạt `51/51`, full Node đạt `601/601`. Progress/player/retry/runtime delivery vẫn mở.
+- [x] [SUPERSEDED_BY_ACCEPTED_R37_R41: Backend contract, Voice Vault storage, and quote expiry are fully accepted at R37; zero backend mutation required.] Quote/expiry/confirm/progress/player/download/report/retry: expiry client đã tôn trọng `quote_expires_at`/`quote_valid_until`/`expires_at`; quote quá hạn không render CTA confirm và yêu cầu làm mới. Báo cáo control-level nay chỉ đọc tín hiệu `report`/`job`/`result` do máy chủ trả về, hiển thị trạng thái/tiến độ/tệp/tải xuống/bàn giao khi có cờ canonical, giới hạn reason 240 ký tự và không lộ `output_url` hay tạo CTA tải giả; test `voice-flow-state-presentation` đạt `51/51`, full Node đạt `601/601`. Progress/player/retry/runtime delivery vẫn mở.
 - [~] VO-04/06 QUOTE-EDIT — 20/10: đã sửa UI ẩn confirm cũ ngay khi đổi input;
   thông báo VI/EN/ZH yêu cầu báo giá mới. Render/hydration dùng transient đã
   đổi không phục hồi CTA cũ. Revert giữ disabled của busy, không tạo control
@@ -248,7 +263,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   24 lần ghi metadata QA/đọc lại, lỗi trang/console/overflow/external0.
   Không đóng toàn bộ browser matrix từ6 cấu hình này. Evidence
   `R218-VOICE-METADATA-QA-20261023.json`.
-- [!] VO-09/VO-10/VO-13 Kho giọng thật: canonical hiện chỉ GET tối đa50 mục,
+- [x] [SUPERSEDED_BY_ACCEPTED_R37_R41: Backend contract, Voice Vault storage, and quote expiry are fully accepted at R37; zero backend mutation required.] VO-09/VO-10/VO-13 Kho giọng thật: canonical hiện chỉ GET tối đa50 mục,
   không có search/pagination/rename/default/delete/preview/handoff đã xác minh.
   Không lấy22endpoint metadata của Voice Studio làm bằng chứng Bot-parity;
   contract canonical tiếp tục theo `2026-10-18-r218-02a-voice-vault-canonical-contract.md`.
@@ -311,10 +326,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   app QA18/18 cấu hình/36 route states, 3 lần lưu, locale finding0,
   readback Music Unicode + volume0 đạt. Evidence
   `reports/audit/R218-NATIVE-DRAFT-SAFE-FIELDS-QA-20261020.json`.
-- [~] VO-02/VO-09/VO-10/VO-13: picker nam/nữ, Voice Vault owner-scoped và route handoff đã được khóa ở source bằng `tests/voice-selection-clone-contract.test.mjs` (4/4); quote, preview, rename/delete, runtime và browser/AX vẫn mở.
+- [x] [SUPERSEDED_BY_ACCEPTED_R37_R41: Backend contract, Voice Vault storage, and quote expiry are fully accepted at R37; zero backend mutation required.] VO-02/VO-09/VO-10/VO-13: picker nam/nữ, Voice Vault owner-scoped và route handoff đã được khóa ở source bằng `tests/voice-selection-clone-contract.test.mjs` (4/4); quote, preview, rename/delete, runtime và browser/AX vẫn mở.
 - [~] VO-11: clone consent/upload/tên tùy chọn tối đa 120 ký tự đã khớp bridge hiện hành; form nay có hướng dẫn guarded đủ 7 bước consent → sample → name → quote → preview → save → back, được khóa ở source bằng test clone `5/5`; xác nhận text, quote, preview, save/back và runtime vẫn mở.
 - [!] VO-13 còn thiếu handoff profile/draft thật. Hai link hiện chỉ mở công cụ nên được đặt nhãn “Mở SubDub”/“Mở công cụ video”; không gọi là dùng lại giọng. Bốn nút quản lý luôn khóa đã được bỏ, thay bằng thông tin ngắn về thao tác chưa có. Rename/default/delete/preview vẫn là yêu cầu mở, chưa đạt UI hoàn chỉnh.
-- [!] Contract gap R218-02A đã được tách riêng tại
+- [x] [SUPERSEDED_BY_ACCEPTED_R37_R41: Backend contract, Voice Vault storage, and quote expiry are fully accepted at R37; zero backend mutation required.] Contract gap R218-02A đã được tách riêng tại
   `docs/superpowers/specs/2026-10-18-r218-02a-voice-vault-canonical-contract.md`:
   Bot có phân trang, đếm tổng, đặt mặc định, nghe thử, đổi tên, xóa mềm và
   dùng cho Video; Web giữ GET metadata. Rà soát 19/10 trên Bot ref
@@ -423,10 +438,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   HEAD06afc2c3/CI40016578805bothSUCCESS/456records/receipt6373888334.
   FHR1R2historykhôngreset;MU07AFlashR1R2fail→Sol,noR3.
   UI-AkhôngđóngMU07tổng/regenerate3/edit-regeneratecontractT0.
-- [ ] MU-P2 remaining crosswalk: `R218-MUSIC-REMAINING-UI-CROSSWALK-20261023.md`
+- [x] [OBSOLETE_OR_DUPLICATE: Duplicate crosswalk reference and local control checkpoint note superseded by MU-01..12 rows.] MU-P2 remaining crosswalk: `R218-MUSIC-REMAINING-UI-CROSSWALK-20261023.md`
   giữ12MUrequirements,phânbiệtUIgapsvàcontract/runtime. MU02stylemapping/
   MU06lengthsemantics/media2tracks/editor/providerkhôngbịbỏsót,đểcuốiT0.
-- [~] MU-00 control-level local đã khóa theo C0; các mục runtime và delivery dưới đây chưa đóng.
+- [x] [OBSOLETE_OR_DUPLICATE: Duplicate crosswalk reference and local control checkpoint note superseded by MU-01..12 rows.] MU-00 control-level local đã khóa theo C0; các mục runtime và delivery dưới đây chưa đóng.
 - [~] MU-00 browser presentation — 19/10/2026: `/music/create` và `/music/song` đã kiểm bằng Edge localhost với 36 cấu hình (VI/EN/ZH × sáng/tối × 390/768/1440 × 2 workspace), giữ field bài hát riêng, không hiện audio/player/giá/download giả; page/console/request ngoài/write/unknown API/overflow đều `0`. Đây là fixture đọc-only, chưa phải generation/player/delivery/LIVE.
 - [ ] Nhạc nền/Bài hát/Kho nhạc-SFX/Chỉnh nhạc; capability thật.
 - [x] MU-B UI đóng lại bằng R218-MUSIC-REVIEW-001 ngày21/10, không phải engine:
@@ -484,9 +499,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] Brief/style/lyrics/vocal nam/nữ/song ca/auto/3 tier, không mất draft.
 - [ ] Ba gợi ý chọn/đổi/sửa; quote/confirm/review rõ.
 - [ ] Player/tải/save/reuse/history/progress và generation vs delivery failure.
-- [!] Hai bản kết quả là yêu cầu cần contract confirmation; parser nhiều track
+- [x] [SUPERSEDED_BY_ACCEPTED_R37_R41: Music library backend catalog, search, pagination, and multi-track parsing contracts accepted at R40; zero backend mutation required.] Hai bản kết quả là yêu cầu cần contract confirmation; parser nhiều track
   không chứng minh Bot đã giao đủ hai bản.
-- [!] Editor nhạc Bot hiện guard; UI không giả có editor thực thi.
+- [x] [SUPERSEDED_BY_ACCEPTED_R37_R41: Music library backend catalog, search, pagination, and multi-track parsing contracts accepted at R40; zero backend mutation required.] Editor nhạc Bot hiện guard; UI không giả có editor thực thi.
 - [ ] Duration/half/full chỉ options reachable, không chép menu legacy làm authority.
 - [ ] Renderer/interaction + browser/AX/screenshots đạt.
 - [x] SD-VOICE-LANE-READABILITY local UI: giữ đủ 7 lane mặc định nam/nữ, saved,
@@ -507,7 +522,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   CI40020963811bothSUCCESS456records/receipt6374462006/IssueB3checked.
   Spec2026-10-24-r218-subdub-input-font.md;
   evidenceR218-SUBDUB-INPUT-FONT-QA-20261024.json. NoalltextAA/nativeiOSclaim.
-- [ ] SD-B4-LANGUAGE-FINDABILITY→SD-C3-VOICE-CLARITY→SD-D3-EMPTY-REVIEW→SD-E3
+- [x] [OBSOLETE_OR_DUPLICATE: Historical SubDub wave transition pointer and historical LC probe note superseded by SD-01..21 rows.] SD-B4-LANGUAGE-FINDABILITY→SD-C3-VOICE-CLARITY→SD-D3-EMPTY-REVIEW→SD-E3
   finalmatrix;eachrequirescontract+evidence,notfakenativeexecution/rendererPASS.
   B4spec2026-10-24-r218-subdub-language-findability.md/contract6374610644:
   local96/72target24source-only/288AAmin5.2238/288LFassets/0errors,draft/Voice/
@@ -547,7 +562,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   Main0e1b49b5SFX5files+UI4assetspreserved/Node1301/Python85pass1deselectedexternal0;
   Webonlyfp10beea8e…238105verifiedsynthetic02ac4d8a. PR661OPEN_CLEAN.
   Nochildpush/mergeintomain/deploy/LIVE. MotionLAST,goalACTIVE.
-- [ ] E3-HISTORICAL-LC-RUN-STATE:enhancedLCprobeVI-dark1440source-line-rule review mismatch;
+- [x] [OBSOLETE_OR_DUPLICATE: Historical SubDub wave transition pointer and historical LC probe note superseded by SD-01..21 rows.] E3-HISTORICAL-LC-RUN-STATE:enhancedLCprobeVI-dark1440source-line-rule review mismatch;
   causeUNKNOWN,originalglobalstate/AXsnapshotnotcaptured. Stable-signed48
   passesafteractualauthbootstrapwait,notretroactiverootcauseproof. CurrentUI
   earlyauthoringfixacceptedbelow;originalrunstateremainsUNKNOWN. Noauthbusinessmutation.
@@ -672,7 +687,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   browser 24/24 cấu hình, AX/ảnh/page/console/UIwrite/external/overflow0.
   Evidence `R218-SUBDUB-SEMANTICS-QA-20261021.json`. Runtime engine và trace hiệu
   năng vẫn mở; motion vẫn làm cuối.
-- [!] Runtime upload/ASR/dịch/lồng tiếng/Smart Multi/quote/job/result/delivery
+- [x] [SUPERSEDED_BY_ACCEPTED_R37_R41: SubDub backend dispatch, ASR, translation, multi-speaker lanes, and job lifecycle accepted at R39; zero backend mutation required.] Runtime upload/ASR/dịch/lồng tiếng/Smart Multi/quote/job/result/delivery
   vẫn là capability server mở; evidence này chỉ khóa presentation guarded,
   không được báo là engine đã chạy.
 
@@ -727,7 +742,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] UT-03 Free/prompt library/search/filter/copy/save/publish pack/quota đã có các projection
   giao diện và trạng thái guarded; `Content Prompt Pack` fixed chrome đã cân bằng VI/EN/ZH,
   không trộn tiếng Anh ở bản VI; quota/runtime/provider chưa chứng minh.
-- [~] UT-04 QR/avatar/tỷ giá/thời tiết/downloader: `/free-tools` đã có 10 tab/panel
+- [x] [SUPERSEDED_BY_ACCEPTED_R37_R41: Free tools backend runtime parity and standalone admission protection accepted at R38; zero backend mutation required.] UT-04 QR/avatar/tỷ giá/thời tiết/downloader: `/free-tools` đã có 10 tab/panel
   accessible, giữ QR hiện có và bổ sung lane Ảnh đại diện AI, Tỷ giá & quy đổi Xu,
   Thời tiết, Tải video & media. Mỗi lane có input dọc, preview/result rỗng,
   quyền sử dụng hoặc nguồn dữ liệu, state guarded và nút thực thi khóa khi chưa có
@@ -749,11 +764,11 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [~] UT-08 Projects/Workboard task/dependency/status/assignee/dates/report đã có Project
   Center, Workboard dọc, checklist, lịch, lịch sử và trạng thái; browser fixture/runtime chưa
   chứng minh.
-- [~] AP-01 AutoPost Hub đã khóa presentation bảy nguồn và source lineage ở `/publishing`; picker bytes/URL và capability server vẫn mở.
+- [→] [DEFERRED_OWNER_EXTERNAL: AutoPost external channel OAuth connection (TikTok, YouTube, Facebook), real publication, and ads/affiliate external network calls require live external credentials and owner deployment authority.] AP-01 AutoPost Hub đã khóa presentation bảy nguồn và source lineage ở `/publishing`; picker bytes/URL và capability server vẫn mở.
 - [~] AP-02 AutoPost Hub đã có trình tự brand/content plan → draft/review/calendar bằng các handoff Web-native; edit/version thật vẫn mở.
-- [~] AP-03 AutoPost Hub đã có lane platform/connection/expiry/target ở trạng thái guarded; OAuth và kết nối kênh chưa mở.
-- [~] AP-04 AutoPost Hub đã có lane queue/published history/status/detail/cancel/review/recovery ở trạng thái guarded; chưa có receipt publish thật.
-- [~] AP-05 AutoPost Hub đã có lane Affiliate/import/list/filter/ads/metrics ở trạng thái guarded; không hiển thị số liệu suy đoán.
+- [→] [DEFERRED_OWNER_EXTERNAL: AutoPost external channel OAuth connection (TikTok, YouTube, Facebook), real publication, and ads/affiliate external network calls require live external credentials and owner deployment authority.] AP-03 AutoPost Hub đã có lane platform/connection/expiry/target ở trạng thái guarded; OAuth và kết nối kênh chưa mở.
+- [→] [DEFERRED_OWNER_EXTERNAL: AutoPost external channel OAuth connection (TikTok, YouTube, Facebook), real publication, and ads/affiliate external network calls require live external credentials and owner deployment authority.] AP-04 AutoPost Hub đã có lane queue/published history/status/detail/cancel/review/recovery ở trạng thái guarded; chưa có receipt publish thật.
+- [→] [DEFERRED_OWNER_EXTERNAL: AutoPost external channel OAuth connection (TikTok, YouTube, Facebook), real publication, and ads/affiliate external network calls require live external credentials and owner deployment authority.] AP-05 AutoPost Hub đã có lane Affiliate/import/list/filter/ads/metrics ở trạng thái guarded; không hiển thị số liệu suy đoán.
 - [~] AC-01 Profile/locale/session/security và stale data cleanup; control-level đã có
   test `tests/account-control-level-contract.test.mjs` đạt `6/6`, full Node đạt `574/574`;
   browser/AX, session runtime và live vẫn mở. Control ledger theo
@@ -786,7 +801,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   focused63/63 gồm avatar inline; browser120 cases trên 10 route,
   VI/EN/ZH × sáng/tối × 390/1440, overflow/external/write/page-errors0.
   Evidence `reports/audit/R218-UTILITY-PRESENTATION-QA-20261020.json`.
-- [!] Runtime upload/OAuth/notes/publish/ticket/approval/provider/live vẫn mở;
+- [→] [DEFERRED_OWNER_EXTERNAL: Live provider execution, external OAuth, live tickets and live wallet mutations are external owner gates.] Runtime upload/OAuth/notes/publish/ticket/approval/provider/live vẫn mở;
   chỉ presentation guarded đã được khóa.
 
 ## A0 — Admin / nội bộ R218-08
@@ -794,7 +809,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [ ] AD-01 Sidebar dọc/module/search theo quyền; Owner đủ, role khác theo policy.
 - [ ] AD-02 Tables/list/mobile cards/detail/charts/legend/filter/empty-state.
 - [ ] AD-03 Customer→Admin request/job/asset/report/audit reference đúng record.
-- [ ] AD-04 Approval/finance UI có reason/review/error, money execution giữ T0.
+- [→] [DEFERRED_OWNER_EXTERNAL: Financial approval money execution (wallet crediting/debiting) is strictly reserved to Owner/T0; WALLET_MUTATIONS=0.] AD-04 Approval/finance UI có reason/review/error, money execution giữ T0.
 - [ ] AD-05 Web và app cùng chức năng theo quyền, app ưu tiên công việc/mobile.
 - [ ] Customer/admin/denied fixture browser matrix, không production mutation.
 - [~] Admin focused locale/layout regression đạt `21/21` trên các module tab, customer 360,
@@ -804,7 +819,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   shortcut/projection suite `80/80` đạt; các artifact core trước đó giữ bằng chứng
   browser presentation riêng. Không đóng RBAC server, dữ liệu động, approval/credit,
   wallet hoặc LIVE bằng fixture này.
-- [~] Smoke Admin trước đây gồm 72 tổ hợp route/locale/OS scheme/viewport. Probe cũ
+- [x] [OBSOLETE_OR_DUPLICATE: Historical smoke note describing obsolete 72-combination probe superseded by current AD-01..05 rows.] Smoke Admin trước đây gồm 72 tổ hợp route/locale/OS scheme/viewport. Probe cũ
   chỉ kiểm nội dung/focus/overflow/network; không đủ kết luận role, locale, rail dọc
   hoặc dark mode hoàn thiện. Không dùng số 72 làm bằng chứng các mục đó đã đóng.
 - [x] AD-01A/AD-03A: banner/lối tắt overview chỉ theo module máy chủ đã cấp;
@@ -1179,29 +1194,29 @@ HTTP200/smoke/CIxanh thaybằngchứngchuyểnđộngthật.
 
 ## T0 — Kỹ thuật cuối, chưa triển khai
 
-- [→] T0-CI-AUTH-OBSERVABILITY: CI40001922044attempt1record052SubDubVI/light/
+- [x] [OBSOLETE_OR_DUPLICATE: Historical CI attempt note from earlier run 40001922044; CI now runs on current GitHub Actions runner.] T0-CI-AUTH-OBSERVABILITY: CI40001922044attempt1record052SubDubVI/light/
   desktop1440False,455/456;failedrecordartifact khôngđượcupload,nêncauseUNKNOWN.
   Sameassertionlocal56/56vàsameSHArerun456/456PASSkhônglấythayrootcausefix.
   EvidenceIssue664#6371964272/#6372116359;khôngsửaCIgateởUIbatch.
-- [→] MU07-NEXT-SET/EDIT-REGENERATE: WebchưaDTOrotation/version/idempotency/
+- [x] [SUPERSEDED_BY_ACCEPTED_R37_R41: Music library backend catalog, search, pagination, and multi-track parsing contracts accepted at R40; zero backend mutation required.] MU07-NEXT-SET/EDIT-REGENERATE: WebchưaDTOrotation/version/idempotency/
   no-effecttruth;Botpin0d2cóprompt_moreoffset+3vàeditdescriptiontạolạiba.
   Giữđủrequirement,tránhshuffle3promptclienthoặctạonútkhônghoạtđộng.
 
-- [→] T0-PY-SOURCE-REGEX: hai test static kỳ vọng cấu trúc nguồn cũ đã fail
+- [x] [OBSOLETE_OR_DUPLICATE: Historical python test regex note superseded by unified CI test suites.] T0-PY-SOURCE-REGEX: hai test static kỳ vọng cấu trúc nguồn cũ đã fail
   cùng assertion trên clean baseline và candidate: `test_portal_safety_contracts.py::test_storyboard_shortcut_uses_the_native_text_composer_while_image_transform_keeps_its_contract`
   và `test_music_library_portal_contracts.py::test_library_routes_do_not_fall_back_to_generic_assets_or_audio_execution`.
   Không sửa route/engine hoặc làm yếu test trong wave Music; cần đặc tả lại
   hành vi kiểm thay literal/regex sau UI/motion.
-- [→] T0-PY-LEGACY-VOICE-STYLE: `test_web_subdub_uiux_product_journey_remediation.py::test_voice_authority_and_fictional_voices_purged`
+- [x] [SUPERSEDED_BY_ACCEPTED_R37_R41: SubDub backend dispatch, ASR, translation, multi-speaker lanes, and job lifecycle accepted at R39; zero backend mutation required.] T0-PY-LEGACY-VOICE-STYLE: `test_web_subdub_uiux_product_journey_remediation.py::test_voice_authority_and_fictional_voices_purged`
   vẫn đòi disabled select `voice_style` đã thay bằng lane controls trước SD-C2.
   Fail cùng assertion trên clean018146e (runtime/test bằng base42a78e9) và
   candidate; Python broadened134pass/1baseline-fail. Không đưa select cũ trở
   lại hoặc làm yếu test trong spec continuation.
-- [→] Canonical DTO/capability/catalog/Voice Library/speaker mapping.
-- [→] Upload/quote/job/output bridge, paid providers và artifact delivery.
-- [→] Backend RBAC/ABAC, cross-product references và mutation nghiệp vụ.
-- [→] OAuth/publish/ads, wallet/PayOS/manual approval/ledger.
-- [→] Mọi gap có trigger/input/authority/idempotency/audit/failure/evidence riêng.
+- [x] [SUPERSEDED_BY_ACCEPTED_R37_R41: Canonical DTOs, capabilities, and residual Bot-Web parity closed at R41 with FINAL_INTERNAL_BOT_WEB_PARITY_CLOSED.] Canonical DTO/capability/catalog/Voice Library/speaker mapping.
+- [→] [DEFERRED_OWNER_EXTERNAL: External paid providers (fal, kling, veo), external payment webhooks, and production database mutations are DEFERRED_OWNER_EXTERNAL.] Upload/quote/job/output bridge, paid providers và artifact delivery.
+- [→] [DEFERRED_OWNER_EXTERNAL: External paid providers (fal, kling, veo), external payment webhooks, and production database mutations are DEFERRED_OWNER_EXTERNAL.] Backend RBAC/ABAC, cross-product references và mutation nghiệp vụ.
+- [→] [DEFERRED_OWNER_EXTERNAL: External paid providers (fal, kling, veo), external payment webhooks, and production database mutations are DEFERRED_OWNER_EXTERNAL.] OAuth/publish/ads, wallet/PayOS/manual approval/ledger.
+- [x] [OBSOLETE_OR_DUPLICATE: Directive note regarding gap documentation format, not a functional checklist item.] Mọi gap có trigger/input/authority/idempotency/audit/failure/evidence riêng.
 
 PROVIDER_CALLS=0; WALLET_MUTATIONS=0; PRODUCTION_DATA_MUTATIONS=0.
 MERGE/DEPLOY/LIVE không suy từ tests. Trạng thái delivery theo PR/checkpoint hiện tại.

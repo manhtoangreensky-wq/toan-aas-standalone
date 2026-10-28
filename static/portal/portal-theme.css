@@ -23281,8 +23281,8 @@ html[data-portal-theme="dark"] .portal-music-product-index {
   color: var(--portal-teal-dark-border-strong);
 }
 /* AD-02-THEME: explicit Admin dark choice; preserve light ERP geometry. */
-html[data-portal-theme="dark"] .portal-shell[data-portal-app-kind="admin"],
-html[data-portal-theme="dark"] .portal-shell[data-portal-app-kind="admin"] :is(.portal-card, .portal-header, .portal-sidebar, .portal-auth-page--admin, .portal-admin-titlebar, .portal-admin-tabs) {
+html[data-portal-theme="dark"] .portal-shell[data-portal-app-kind="admin"] :is(.portal-card, .portal-header, .portal-sidebar, .portal-auth-page--admin, .portal-admin-titlebar, .portal-admin-tabs),
+html[data-portal-theme="dark"] .portal-shell[data-portal-app-kind="admin"] {
   --portal-app-canvas: var(--portal-dark-app-canvas);
   --portal-surface: var(--portal-dark-surface-light);
   --portal-surface-light: var(--portal-dark-surface-light);
