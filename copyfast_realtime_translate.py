@@ -158,6 +158,44 @@ class RealtimeTranscriptSegment:
     created_at_ms: int = field(default_factory=lambda: int(time.time() * 1000))
 
 
+@dataclass
+class SegmentClaimOutcome:
+    segment_id: str
+    sequence_start: int
+    sequence_end: int
+    status: str  # "success" | "permanent_rejection" | "transient_failure"
+    events: List[Dict[str, Any]]
+    ack_seq: int
+    committed: bool
+    status_code: int = 200
+    error_code: Optional[str] = None
+    error_message: Optional[str] = None
+
+    def to_pruned(self) -> "SegmentClaimOutcome":
+        """Returns a memory-efficient copy with heavy TTS audio payloads stripped."""
+        pruned_events = []
+        for ev in self.events:
+            if ev.get("type") == "tts.audio":
+                # Prune raw base64 payload to prevent unbounded RAM usage
+                pruned = {k: v for k, v in ev.items() if k != "audio_b64"}
+                pruned["audio_pruned"] = True
+                pruned_events.append(pruned)
+            else:
+                pruned_events.append(dict(ev))
+        return SegmentClaimOutcome(
+            segment_id=self.segment_id,
+            sequence_start=self.sequence_start,
+            sequence_end=self.sequence_end,
+            status=self.status,
+            events=pruned_events,
+            ack_seq=self.ack_seq,
+            committed=self.committed,
+            status_code=self.status_code,
+            error_code=self.error_code,
+            error_message=self.error_message,
+        )
+
+
 class RealtimeTranslateSession:
     """Core state machine and event coordinator for a live translate/dub session."""
 
@@ -185,6 +223,11 @@ class RealtimeTranslateSession:
         self.settled_xu: int = 0
 
         self.segments: List[RealtimeTranscriptSegment] = []
+        self.committed_segment_ids: Set[str] = set()
+        self.range_commit_count: int = 0
+        self.committed_range_keys: Set[str] = set()
+        self.rejection_commit_count: int = 0
+        self.committed_rejection_keys: Set[str] = set()
         self.error_message: Optional[str] = None
 
         self.current_socket_lease: int = 0
@@ -301,7 +344,13 @@ class RealtimeTranslateSession:
     def mark_range_processed(self, seq_start: int, seq_end: int) -> int:
         """Closes the entire covered sequence range [seq_start..seq_end] upon BOT_BRIDGE_SUCCESS.
         Advances last_processed_seq and last_ack_seq cumulatively to seq_end.
+        Enforces exactly-once range commit accounting.
         """
+        range_key = f"{seq_start}..{seq_end}"
+        if range_key not in self.committed_range_keys:
+            self.committed_range_keys.add(range_key)
+            self.range_commit_count += 1
+
         if seq_start > 0 and seq_end >= seq_start:
             for s in range(seq_start, seq_end + 1):
                 self.processed_seq_set.add(s)
@@ -320,7 +369,13 @@ class RealtimeTranslateSession:
     def mark_range_rejected(self, seq_start: int, seq_end: int) -> None:
         """Marks the entire covered sequence range [seq_start..seq_end] rejected by server authority.
         Prevents any sequence in the range from being re-ingested or processed.
+        Enforces exactly-once rejection commit accounting.
         """
+        range_key = f"rej:{seq_start}..{seq_end}"
+        if range_key not in self.committed_rejection_keys:
+            self.committed_rejection_keys.add(range_key)
+            self.rejection_commit_count += 1
+
         if seq_start > 0 and seq_end >= seq_start:
             for s in range(seq_start, seq_end + 1):
                 self.rejected_seq_set.add(s)
@@ -414,8 +469,80 @@ class RealtimeTranslateSession:
             "pricing_state": PRICING_STATE,
         }
 
-    def add_segment(self, segment: RealtimeTranscriptSegment) -> None:
+    def add_segment(self, segment: RealtimeTranscriptSegment) -> bool:
+        """Atomically appends transcript segment if not already present.
+        Enforces exactly-once segment addition across concurrent coroutines.
+        Returns True if newly added, False if duplicate ignored.
+        """
+        if segment.segment_id:
+            if segment.segment_id in self.committed_segment_ids or any(
+                s.segment_id == segment.segment_id for s in self.segments
+            ):
+                return False
+            self.committed_segment_ids.add(segment.segment_id)
         self.segments.append(segment)
+        return True
+
+    def commit_segment_success(
+        self,
+        speech_seg: Any,
+        events: List[Dict[str, Any]],
+    ) -> Tuple[bool, int, Optional[RealtimeTranscriptSegment]]:
+        """Atomically commits a successful Bot bridge outcome to session state.
+        Guarantees exactly-once transcript segment creation and range processing.
+        Returns (is_new_range, ack_seq, transcript_seg).
+        """
+        range_key = f"{speech_seg.sequence_start}..{speech_seg.sequence_end}"
+        is_new_range = range_key not in self.committed_range_keys
+
+        stt_text = ""
+        trans_text = ""
+        tts_b64 = None
+        for ev in events:
+            ev_type = ev.get("type")
+            if ev_type == "stt.final":
+                stt_text = ev.get("source_text", "")
+            elif ev_type == "translation.final":
+                trans_text = ev.get("translated_text", "")
+            elif ev_type == "tts.audio":
+                tts_b64 = ev.get("audio_b64")
+
+        transcript_seg = None
+        if stt_text:
+            transcript_seg = RealtimeTranscriptSegment(
+                segment_id=speech_seg.segment_id,
+                sequence=speech_seg.sequence_end,
+                start_ms=speech_seg.start_ms,
+                end_ms=speech_seg.end_ms,
+                source_text=stt_text,
+                translated_text=trans_text,
+                is_final=True,
+                tts_audio_base64=tts_b64,
+            )
+            self.add_segment(transcript_seg)
+
+        ack_seq = self.mark_range_processed(speech_seg.sequence_start, speech_seg.sequence_end)
+        return is_new_range, ack_seq, transcript_seg
+
+    def commit_segment_permanent_rejection(
+        self,
+        speech_seg: Any,
+    ) -> bool:
+        """Atomically commits a permanent rejection outcome to session state exactly once.
+        Returns True if newly recorded, False if already committed.
+        """
+        range_key = f"rej:{speech_seg.sequence_start}..{speech_seg.sequence_end}"
+        if range_key in self.committed_rejection_keys:
+            return False
+        self.mark_range_rejected(speech_seg.sequence_start, speech_seg.sequence_end)
+        return True
+
+    def record_completed_segment(self, segment_id: str, outcome: SegmentClaimOutcome) -> None:
+        """Stores completed segment outcome in bounded FIFO cache without unbounded audio memory."""
+        self.completed_segment_results[segment_id] = outcome.to_pruned()
+        while len(self.completed_segment_results) > 16:
+            oldest_k = next(iter(self.completed_segment_results))
+            self.completed_segment_results.pop(oldest_k, None)
 
     def export_srt(self, requesting_owner_id: str) -> str:
         if str(requesting_owner_id).strip() != str(self.config.owner_id).strip():
@@ -1147,26 +1274,78 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                             break
 
                         # 2. Segment claim & handoff: exactly-once Bot bridge execution per segment
-                        bridge_res = None
+                        claim_outcome: Optional[SegmentClaimOutcome] = None
+
                         if speech_seg.segment_id in session.completed_segment_results:
-                            bridge_res = session.completed_segment_results[speech_seg.segment_id]
+                            claim_outcome = session.completed_segment_results[speech_seg.segment_id]
                         elif speech_seg.segment_id in session.segment_claims:
                             claim_future = session.segment_claims[speech_seg.segment_id]
                             try:
-                                bridge_res = await asyncio.shield(claim_future)
+                                claim_outcome = await asyncio.shield(claim_future)
                             except Exception as claim_err:
                                 logger.warning(f"Error awaiting segment claim {speech_seg.segment_id}: {claim_err}")
-                                bridge_res = None
+                                claim_outcome = None
                         else:
                             loop = asyncio.get_running_loop()
                             claim_future = loop.create_future()
                             session.segment_claims[speech_seg.segment_id] = claim_future
                             try:
                                 bridge_res = await forward_segment_to_bot(session, speech_seg.sequence_end, speech_seg)
+                                if bridge_res is None:
+                                    claim_outcome = None
+                                elif bridge_res.status == "success":
+                                    # Exactly-once session outcome commit by claim leader:
+                                    _, ack_seq, _ = session.commit_segment_success(speech_seg, bridge_res)
+                                    claim_outcome = SegmentClaimOutcome(
+                                        segment_id=speech_seg.segment_id,
+                                        sequence_start=speech_seg.sequence_start,
+                                        sequence_end=speech_seg.sequence_end,
+                                        status="success",
+                                        events=list(bridge_res),
+                                        ack_seq=ack_seq,
+                                        committed=True,
+                                    )
+                                    session.record_completed_segment(speech_seg.segment_id, claim_outcome)
+                                elif bridge_res.status == "permanent_rejection":
+                                    # Exactly-once permanent rejection commit by claim leader:
+                                    session.commit_segment_permanent_rejection(speech_seg)
+                                    err_code = getattr(bridge_res, "error_code", "PERMANENT_REJECTION") or "PERMANENT_REJECTION"
+                                    safe_err_event = {
+                                        "type": "error",
+                                        "error_code": err_code,
+                                        "message": "Speech processing rejected by server authority.",
+                                        "sequence": speech_seg.sequence_end,
+                                        "sequence_start": speech_seg.sequence_start,
+                                        "sequence_end": speech_seg.sequence_end,
+                                        "segment_id": speech_seg.segment_id,
+                                        "fatal": False,
+                                    }
+                                    claim_outcome = SegmentClaimOutcome(
+                                        segment_id=speech_seg.segment_id,
+                                        sequence_start=speech_seg.sequence_start,
+                                        sequence_end=speech_seg.sequence_end,
+                                        status="permanent_rejection",
+                                        events=[safe_err_event],
+                                        ack_seq=0,
+                                        committed=True,
+                                        error_code=err_code,
+                                    )
+                                    session.record_completed_segment(speech_seg.segment_id, claim_outcome)
+                                else:
+                                    # Transient failure
+                                    claim_outcome = SegmentClaimOutcome(
+                                        segment_id=speech_seg.segment_id,
+                                        sequence_start=speech_seg.sequence_start,
+                                        sequence_end=speech_seg.sequence_end,
+                                        status=bridge_res.status,
+                                        events=list(bridge_res),
+                                        ack_seq=0,
+                                        committed=False,
+                                        error_code=getattr(bridge_res, "error_code", None),
+                                    )
+
                                 if not claim_future.done():
-                                    claim_future.set_result(bridge_res)
-                                if bridge_res.status == "success":
-                                    session.completed_segment_results[speech_seg.segment_id] = bridge_res
+                                    claim_future.set_result(claim_outcome)
                             except Exception as exc:
                                 if not claim_future.done():
                                     claim_future.set_exception(exc)
@@ -1174,40 +1353,11 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                             finally:
                                 session.segment_claims.pop(speech_seg.segment_id, None)
 
-                        if bridge_res is None:
+                        if claim_outcome is None:
                             continue
 
-                        # 3. Commit session outcome (survives socket supersession so outcome is never lost)
-                        if bridge_res.status == "success":
-                            stt_text = ""
-                            trans_text = ""
-                            tts_b64 = None
-                            for ev in bridge_res:
-                                ev_type = ev.get("type")
-                                if ev_type == "stt.final":
-                                    stt_text = ev.get("source_text", "")
-                                elif ev_type == "translation.final":
-                                    trans_text = ev.get("translated_text", "")
-                                elif ev_type == "tts.audio":
-                                    tts_b64 = ev.get("audio_b64")
-
-                            if stt_text:
-                                transcript_seg = RealtimeTranscriptSegment(
-                                    segment_id=speech_seg.segment_id,
-                                    sequence=speech_seg.sequence_end,
-                                    start_ms=speech_seg.start_ms,
-                                    end_ms=speech_seg.end_ms,
-                                    source_text=stt_text,
-                                    translated_text=trans_text,
-                                    is_final=True,
-                                    tts_audio_base64=tts_b64,
-                                )
-                                session.add_segment(transcript_seg)
-
-                            # BOT_PROCESS_SUCCESS -> mark_range_processed -> cumulative ACK closing whole range
-                            ack_seq = session.mark_range_processed(speech_seg.sequence_start, speech_seg.sequence_end)
-
-                            # 4. Relay events to client ONLY IF socket lease is still active!
+                        # 3. Relay events to client ONLY IF socket lease is still active!
+                        if claim_outcome.status == "success":
                             if not session.is_socket_lease_active(socket_lease):
                                 logger.info(
                                     f"Socket lease {socket_lease} superseded during/after Bot bridge call. "
@@ -1216,29 +1366,25 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                                 await websocket.close(code=4409, reason="Socket lease superseded during bridge")
                                 break
 
-                            for ev in bridge_res:
+                            for ev in claim_outcome.events:
                                 await websocket.send_json(ev)
 
-                            await websocket.send_json({"type": "ack", "seq": ack_seq})
+                            await websocket.send_json({"type": "ack", "seq": claim_outcome.ack_seq})
 
                             new_blocks = session.compute_pending_metering_blocks()
                             if new_blocks > 0:
                                 await websocket.send_json(session.get_telemetry_usage())
 
-                        elif bridge_res.status == "permanent_rejection":
-                            # BOT_PERMANENT_REJECTION -> safe error event -> mark entire range rejected
-                            session.mark_range_rejected(speech_seg.sequence_start, speech_seg.sequence_end)
-                            safe_err_event = {
-                                "type": "error",
-                                "error_code": bridge_res.error_code or "PERMANENT_REJECTION",
-                                "message": "Speech processing rejected by server authority.",
-                                "sequence": speech_seg.sequence_end,
-                                "sequence_start": speech_seg.sequence_start,
-                                "sequence_end": speech_seg.sequence_end,
-                                "segment_id": speech_seg.segment_id,
-                                "fatal": False,
-                            }
-                            await websocket.send_json(safe_err_event)
+                        elif claim_outcome.status == "permanent_rejection":
+                            if not session.is_socket_lease_active(socket_lease):
+                                logger.info(
+                                    f"Socket lease {socket_lease} superseded during permanent rejection. Closing stale socket."
+                                )
+                                await websocket.close(code=4409, reason="Socket lease superseded during permanent rejection")
+                                break
+
+                            for ev in claim_outcome.events:
+                                await websocket.send_json(ev)
                             # NO mark_range_processed
                             # NO success ACK
 

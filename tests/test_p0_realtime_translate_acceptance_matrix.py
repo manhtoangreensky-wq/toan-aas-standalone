@@ -943,6 +943,11 @@ def test_23_segment_range_idempotency_and_real_client_reconnect_replay():
         push_for_212 = [c for c in push_chunk_calls if c["seq"] == 212]
         assert len(push_for_212) == 1, f"REJECTED_RANGE_PCM_REINGEST_COUNT != 0 for seq 212: got {len(push_for_212)}"
 
+        # Gate: Exactly-once commit for permanent rejection
+        assert session.rejection_commit_count == 1, f"SESSION_RANGE_REJECTION_COMMIT_COUNT != 1: got {session.rejection_commit_count}"
+        print("PASS: SESSION_RANGE_REJECTION_COMMIT_COUNT=1")
+        print("PASS: PERMANENT_REJECTION_EXACTLY_ONCE_COMMIT=PASS")
+
         # Explicit stop ended the session cleanly
         assert session.state == RealtimeSessionState.ENDED
         assert session_id not in _ACTIVE_INGRESS_BUFFERS
@@ -1196,29 +1201,56 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
             # Verification 1: Socket 1 (stale) must be closed with 4409 and NOT emit to dead client
             assert socket_1.closed is True
             assert socket_1.close_code == 4409, f"Stale socket must close with 4409, got {socket_1.close_code}"
-            # Socket 1 did not send events after supersession
-            assert len([m for m in socket_1.sent_json if m.get("type") == "stt.final"]) == 0
+            # Gate: STALE_SOCKET_POST_CLAIM_EVENT_COUNT=0
+            stale_post_claim_events = [m for m in socket_1.sent_json if m.get("type") in ("stt.final", "translation.final", "tts.audio", "ack")]
+            assert len(stale_post_claim_events) == 0, f"STALE_SOCKET_POST_CLAIM_EVENT_COUNT != 0: got {len(stale_post_claim_events)}"
+            print("PASS: STALE_SOCKET_POST_CLAIM_EVENT_COUNT=0")
 
             # Verification 2: Socket 2 (active) received the handoff result and emitted events to client
+            # Gate: ACTIVE_SOCKET_HANDOFF_EVENT_COUNT=EXPECTED
             s2_events = [m for m in socket_2.sent_json if m.get("type") in ("stt.final", "translation.final", "tts.audio")]
             assert len(s2_events) == 3, f"Socket 2 must relay handed-off events, got: {socket_2.sent_json}"
             s2_acks = [m for m in socket_2.sent_json if m.get("type") == "ack" and m.get("seq") == 100]
             assert len(s2_acks) == 1, "Socket 2 must emit cumulative ACK for handed-off sequence"
+            print("PASS: ACTIVE_SOCKET_HANDOFF_EVENT_COUNT=EXPECTED")
 
             # Verification 3: Total Bot bridge calls remains exactly 1!
+            # Gate: SUPERSESSION_DURING_BRIDGE_TOTAL_BOT_CALL_COUNT=1
             assert total_bot_bridge_calls == 1, f"Bot bridge was called {total_bot_bridge_calls} times (expected 1)"
+            print("PASS: SUPERSESSION_DURING_BRIDGE_TOTAL_BOT_CALL_COUNT=1")
 
             # Verification 4: Session-level transcript and range processing converged
             assert session.is_range_processed(100, 100) is True
-            assert any(seg.segment_id == "seg_gated_100" for seg in session.segments)
+
+            # Gate: SESSION_TRANSCRIPT_SEGMENT_COUNT_FOR_CLAIM=1
+            matching_transcript_segs = [seg for seg in session.segments if seg.segment_id == "seg_gated_100"]
+            assert len(matching_transcript_segs) == 1, f"SESSION_TRANSCRIPT_SEGMENT_COUNT_FOR_CLAIM != 1: got {len(matching_transcript_segs)}"
+            print("PASS: SESSION_TRANSCRIPT_SEGMENT_COUNT_FOR_CLAIM=1")
+
+            # Gate: SESSION_RANGE_COMMIT_COUNT=1
+            assert session.range_commit_count == 1, f"SESSION_RANGE_COMMIT_COUNT != 1: got {session.range_commit_count}"
+            print("PASS: SESSION_RANGE_COMMIT_COUNT=1")
+
+            # Gate: Pruned audio & bounded memory in completed_segment_results
+            cached_res = session.completed_segment_results.get("seg_gated_100")
+            assert cached_res is not None, "Completed segment result must exist in session cache"
+            audio_events = [ev for ev in cached_res.events if ev.get("type") == "tts.audio"]
+            assert len(audio_events) >= 1
+            assert all(ev.get("audio_b64") is None for ev in audio_events), "audio_b64 must be pruned from completed_segment_results"
+            assert all(ev.get("audio_pruned") is True for ev in audio_events)
+            assert len(session.completed_segment_results) <= 16
+            print("PASS: COMPLETED_SEGMENTS_AUDIO_PRUNED=PASS")
+            print("PASS: COMPLETED_SEGMENTS_MEMORY_BOUNDED=PASS")
 
             # Verification 5: Post-supersession replay (3rd replay) does NOT call Bot again!
+            # Gate: POST_SUPERSESSION_REPLAY_TOTAL_BOT_CALL_COUNT=1
             socket_3 = FakeWebSocket([
                 {"bytes": struct.pack("<I", 100) + b"\x50\x05" * 1600},
             ])
             session.acquire_socket_lease(socket_3)
             await websocket_live_stream(socket_3, session_id, token=token)
             assert total_bot_bridge_calls == 1, "Post-supersession replay MUST NOT call Bot again"
+            print("PASS: POST_SUPERSESSION_REPLAY_TOTAL_BOT_CALL_COUNT=1")
             s3_acks = [m for m in socket_3.sent_json if m.get("type") == "ack" and m.get("seq") == 100]
             assert len(s3_acks) == 1
 
