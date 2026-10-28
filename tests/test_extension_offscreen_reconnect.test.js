@@ -779,6 +779,148 @@ async function runSuite() {
     }
   }
 
+  // TEST 14: WS close without session.state=ended does NOT count as stop success (RT-FIX12)
+  // (WS_CLOSE_WITHOUT_ENDED_IS_NOT_STOP_SUCCESS=PASS, WS_DROP_DURING_STOP_FALLS_BACK_TO_REST=PASS)
+  {
+    // Case 14a: WS drops during stop control, REST fails -> overall stop MUST fail closed
+    offscreen.resetTestState();
+    offscreen.setIsCapturing(true);
+    offscreen.recordUnackedFrame(301, new Uint8Array([301 & 0xff, 0, 0, 0]));
+
+    const mockWs1 = createMockWebSocket();
+    // Override send to close socket abnormal (simulating drop before ended)
+    mockWs1.send = (data) => {
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed.type === "session.control" && parsed.action === "stop") {
+          // Socket closes abnormal without sending session.state ended!
+          mockWs1.close(1006, "Abnormal disconnect during stop");
+        }
+      } catch (e) {}
+    };
+    offscreen.attachWebSocketHandlers(mockWs1);
+    offscreen.setWebSocket(mockWs1);
+
+    const cfg1 = {
+      sessionId: "s_drop_fail",
+      websocketUrl: "ws://localhost:8000/api/v1/live-translate/sessions/s_drop_fail/stream?token=tok",
+    };
+    offscreen.setCurrentConfig(cfg1);
+
+    global.fetch = async () => ({
+      ok: false,
+      status: 503,
+      json: async () => ({ error: "Unavailable" }),
+    });
+
+    const stopRes1 = await offscreen.stopCapture();
+    // WS close must NOT be considered success!
+    assert.strictEqual(stopRes1.ok, false, "WS drop without session.state=ended must NOT be stop success");
+    assert.strictEqual(offscreen.unackedFrames.has(301), true, "Retry state must be preserved");
+    console.log("PASS: WS_CLOSE_WITHOUT_ENDED_IS_NOT_STOP_SUCCESS=PASS");
+
+    // Case 14b: WS drops during stop control, but authenticated REST fallback succeeds
+    offscreen.resetTestState();
+    offscreen.setIsCapturing(true);
+
+    const mockWs2 = createMockWebSocket();
+    mockWs2.send = (data) => {
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed.type === "session.control" && parsed.action === "stop") {
+          mockWs2.close(1006, "Dropped before ended");
+        }
+      } catch (e) {}
+    };
+    offscreen.attachWebSocketHandlers(mockWs2);
+    offscreen.setWebSocket(mockWs2);
+
+    let restStopCalled = false;
+    global.fetch = async (url) => {
+      restStopCalled = true;
+      return { ok: true, status: 200, json: async () => ({ ok: true, state: "ended" }) };
+    };
+
+    offscreen.setCurrentConfig({
+      sessionId: "s_drop_rest_ok",
+      websocketUrl: "ws://localhost:8000/api/v1/live-translate/sessions/s_drop_rest_ok/stream?token=tok",
+    });
+
+    const stopRes2 = await offscreen.stopCapture();
+    assert.strictEqual(stopRes2.ok, true);
+    assert.strictEqual(stopRes2.via, "rest");
+    assert.strictEqual(restStopCalled, true, "REST stop must be invoked upon WS drop during stop");
+    console.log("PASS: WS_DROP_DURING_STOP_FALLS_BACK_TO_REST=PASS");
+  }
+
+  // TEST 15: Popup stop failure authority (RT-FIX12)
+  // (POPUP_STOP_INSPECTS_RESPONSE=PASS, POPUP_STOP_FAILURE_RETAINS_ACTIVE_STATE_OR_SHOWS_ERROR=PASS,
+  //  POPUP_STOP_401_SHOWS_FAILURE=PASS, POPUP_STOP_5XX_SHOWS_FAILURE=PASS,
+  //  POPUP_STOP_NETWORK_FAILURE_SHOWS_FAILURE=PASS)
+  {
+    const popup = require(path.join(__dirname, "../extensions/chrome-live-translate/popup.js"));
+
+    const makeElements = () => ({
+      btnToggle: { textContent: "", className: "", disabled: false },
+      statusMsg: { style: { display: "none", color: "" }, textContent: "" },
+      selectMode: { disabled: false },
+      selectLang: { disabled: false },
+      selectVoice: { disabled: false },
+    });
+
+    // Case 15a: Success response -> updateUiStopped
+    {
+      const el = makeElements();
+      popup.updateUiRunningElements(el);
+      assert.strictEqual(el.selectMode.disabled, true);
+
+      const res = popup.handleStopResponse({ ok: true }, el);
+      assert.strictEqual(res.ok, true);
+      assert.strictEqual(el.btnToggle.textContent, "▶ Bắt đầu dịch tab này");
+      assert.strictEqual(el.selectMode.disabled, false);
+      assert.strictEqual(el.statusMsg.style.display, "none");
+    }
+
+    // Case 15b: Failure 401 -> retains active settings & shows error (never calls updateUiStopped)
+    {
+      const el = makeElements();
+      popup.updateUiRunningElements(el);
+      assert.strictEqual(el.selectMode.disabled, true);
+
+      const res = popup.handleStopResponse({ ok: false, error: "REST_STOP_401" }, el);
+      assert.strictEqual(res.ok, false);
+      assert.strictEqual(el.btnToggle.textContent, "■ Thử dừng lại");
+      assert.strictEqual(el.selectMode.disabled, true, "Dropdowns must remain disabled to retain active session state");
+      assert.strictEqual(el.statusMsg.style.display, "block");
+      assert(el.statusMsg.textContent.includes("REST_STOP_401"));
+      console.log("PASS: POPUP_STOP_INSPECTS_RESPONSE=PASS");
+      console.log("PASS: POPUP_STOP_FAILURE_RETAINS_ACTIVE_STATE_OR_SHOWS_ERROR=PASS");
+      console.log("PASS: POPUP_STOP_401_SHOWS_FAILURE=PASS");
+    }
+
+    // Case 15c: Failure 5XX -> retains active state & shows error
+    {
+      const el = makeElements();
+      popup.updateUiRunningElements(el);
+      const res = popup.handleStopResponse({ ok: false, error: "REST_STOP_5XX" }, el);
+      assert.strictEqual(res.ok, false);
+      assert.strictEqual(el.selectMode.disabled, true);
+      assert(el.statusMsg.textContent.includes("REST_STOP_5XX"));
+      console.log("PASS: POPUP_STOP_5XX_SHOWS_FAILURE=PASS");
+    }
+
+    // Case 15d: Network failure -> retains active state & shows error
+    {
+      const el = makeElements();
+      popup.updateUiRunningElements(el);
+      const res = popup.handleStopResponse({ ok: false, error: "REST_STOP_NETWORK_FAILURE" }, el);
+      assert.strictEqual(res.ok, false);
+      assert.strictEqual(el.selectMode.disabled, true);
+      assert(el.statusMsg.textContent.includes("REST_STOP_NETWORK_FAILURE"));
+      console.log("PASS: POPUP_STOP_NETWORK_FAILURE_SHOWS_FAILURE=PASS");
+    }
+  }
+
   offscreen.resetTestState();
   console.log("=== ALL EXECUTABLE OFFSCREEN RECONNECT TESTS PASSED (EXECUTABLE_OFFSCREEN_RECONNECT_TEST=PASS) ===");
 }

@@ -16,6 +16,7 @@ Enforces:
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import enum
 import hashlib
@@ -189,6 +190,8 @@ class RealtimeTranslateSession:
         self.current_socket_lease: int = 0
         self.active_websocket: Optional[Any] = None
         self.in_flight_segments: Set[str] = set()
+        self.segment_claims: Dict[str, asyncio.Future] = {}
+        self.completed_segment_results: Dict[str, Any] = {}
 
     def acquire_socket_lease(self, websocket: Any = None) -> int:
         """Acquires a new monotonic socket generation lease for this session.
@@ -284,6 +287,16 @@ class RealtimeTranslateSession:
             seq = getattr(segment, "sequence", 0)
             if seq > 0:
                 self.pending_retry_segments[seq] = segment
+
+    def is_range_processed(self, seq_start: int, seq_end: int) -> bool:
+        """Returns True if the given sequence range has already been fully processed."""
+        if seq_end <= 0:
+            return False
+        if seq_end <= self.last_processed_seq:
+            return True
+        if seq_start > 0 and seq_end >= seq_start:
+            return all(s in self.processed_seq_set for s in range(seq_start, seq_end + 1))
+        return seq_end in self.processed_seq_set
 
     def mark_range_processed(self, seq_start: int, seq_end: int) -> int:
         """Closes the entire covered sequence range [seq_start..seq_end] upon BOT_BRIDGE_SUCCESS.
@@ -1122,25 +1135,49 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
 
                 if completed_segments:
                     for speech_seg in completed_segments:
-                        if not session.is_socket_lease_active(socket_lease):
-                            logger.info(f"Socket lease {socket_lease} superseded before Bot bridge call. Aborting.")
-                            break
-
-                        # Concurrency guard: exactly-one bridge execution per segment across concurrent sockets
-                        if speech_seg.segment_id in session.in_flight_segments:
-                            logger.info(f"Segment {speech_seg.segment_id} already in-flight to Bot bridge. Skipping concurrent duplicate.")
+                        # 1. Fast path: range already committed and processed
+                        if session.is_range_processed(speech_seg.sequence_start, speech_seg.sequence_end):
+                            if session.is_socket_lease_active(socket_lease):
+                                await websocket.send_json({"type": "ack", "seq": speech_seg.sequence_end})
                             continue
 
-                        session.in_flight_segments.add(speech_seg.segment_id)
-                        try:
-                            # Forward to Bot internal realtime bridge
-                            bridge_res = await forward_segment_to_bot(session, speech_seg.sequence_end, speech_seg)
-                        finally:
-                            session.in_flight_segments.discard(speech_seg.segment_id)
-
                         if not session.is_socket_lease_active(socket_lease):
-                            logger.info(f"Socket lease {socket_lease} superseded during Bot bridge call. Aborting.")
+                            logger.info(f"Socket lease {socket_lease} superseded before Bot bridge call. Aborting.")
+                            await websocket.close(code=4409, reason="Socket lease superseded before Bot bridge")
                             break
+
+                        # 2. Segment claim & handoff: exactly-once Bot bridge execution per segment
+                        bridge_res = None
+                        if speech_seg.segment_id in session.completed_segment_results:
+                            bridge_res = session.completed_segment_results[speech_seg.segment_id]
+                        elif speech_seg.segment_id in session.segment_claims:
+                            claim_future = session.segment_claims[speech_seg.segment_id]
+                            try:
+                                bridge_res = await asyncio.shield(claim_future)
+                            except Exception as claim_err:
+                                logger.warning(f"Error awaiting segment claim {speech_seg.segment_id}: {claim_err}")
+                                bridge_res = None
+                        else:
+                            loop = asyncio.get_running_loop()
+                            claim_future = loop.create_future()
+                            session.segment_claims[speech_seg.segment_id] = claim_future
+                            try:
+                                bridge_res = await forward_segment_to_bot(session, speech_seg.sequence_end, speech_seg)
+                                if not claim_future.done():
+                                    claim_future.set_result(bridge_res)
+                                if bridge_res.status == "success":
+                                    session.completed_segment_results[speech_seg.segment_id] = bridge_res
+                            except Exception as exc:
+                                if not claim_future.done():
+                                    claim_future.set_exception(exc)
+                                raise
+                            finally:
+                                session.segment_claims.pop(speech_seg.segment_id, None)
+
+                        if bridge_res is None:
+                            continue
+
+                        # 3. Commit session outcome (survives socket supersession so outcome is never lost)
                         if bridge_res.status == "success":
                             stt_text = ""
                             trans_text = ""
@@ -1153,8 +1190,6 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                                     trans_text = ev.get("translated_text", "")
                                 elif ev_type == "tts.audio":
                                     tts_b64 = ev.get("audio_b64")
-                                # Safe event relay: send real bot-shaped event directly to client WS
-                                await websocket.send_json(ev)
 
                             if stt_text:
                                 transcript_seg = RealtimeTranscriptSegment(
@@ -1171,6 +1206,19 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
 
                             # BOT_PROCESS_SUCCESS -> mark_range_processed -> cumulative ACK closing whole range
                             ack_seq = session.mark_range_processed(speech_seg.sequence_start, speech_seg.sequence_end)
+
+                            # 4. Relay events to client ONLY IF socket lease is still active!
+                            if not session.is_socket_lease_active(socket_lease):
+                                logger.info(
+                                    f"Socket lease {socket_lease} superseded during/after Bot bridge call. "
+                                    f"Committed session outcome for {speech_seg.segment_id}. Closing stale socket."
+                                )
+                                await websocket.close(code=4409, reason="Socket lease superseded during bridge")
+                                break
+
+                            for ev in bridge_res:
+                                await websocket.send_json(ev)
+
                             await websocket.send_json({"type": "ack", "seq": ack_seq})
 
                             new_blocks = session.compute_pending_metering_blocks()

@@ -187,9 +187,10 @@ function attachWebSocketHandlers(ws) {
   ws.onclose = (event) => {
     console.warn(`[TOAN_AAS_OFFSCREEN] WebSocket closed (code ${event.code}): ${event.reason}`);
 
-    // If waiting for stop confirmation and socket closed cleanly (code 1000/ended), resolve stop
+    // CRITICAL (RT-FIX12): WS closure must NOT be counted as stop success if session.state=ended was not received.
+    // Explicitly reject WS stop confirmation resolver so requestServerStop falls back to authenticated REST stop.
     if (typeof stopConfirmationResolver === "function") {
-      stopConfirmationResolver(true);
+      stopConfirmationResolver(false);
       stopConfirmationResolver = null;
     }
 

@@ -737,6 +737,7 @@ def test_23_segment_range_idempotency_and_real_client_reconnect_replay():
     session_id = f"rts_ws_fix8_{uuid.uuid4().hex[:8]}"
     device_id = "dev_ws_fix8"
     exp = int(time.time()) + 3600
+    os.environ["REALTIME_STREAM_SECRET"] = "acceptance-matrix-secret-key-32b-ok"
     token = generate_stream_token(session_id, owner_id, device_id, exp)
 
     config = RealtimeSessionConfig(owner_id=owner_id, target_language="vi")
@@ -990,6 +991,13 @@ def test_23_segment_range_idempotency_and_real_client_reconnect_replay():
     assert "REST_STOP_401_FAILS_CLOSED=PASS" in node_proc.stdout
     assert "REST_STOP_5XX_FAILS_CLOSED=PASS" in node_proc.stdout
     assert "REST_STOP_NETWORK_FAILURE_FAILS_CLOSED=PASS" in node_proc.stdout
+    assert "WS_CLOSE_WITHOUT_ENDED_IS_NOT_STOP_SUCCESS=PASS" in node_proc.stdout
+    assert "WS_DROP_DURING_STOP_FALLS_BACK_TO_REST=PASS" in node_proc.stdout
+    assert "POPUP_STOP_INSPECTS_RESPONSE=PASS" in node_proc.stdout
+    assert "POPUP_STOP_FAILURE_RETAINS_ACTIVE_STATE_OR_SHOWS_ERROR=PASS" in node_proc.stdout
+    assert "POPUP_STOP_401_SHOWS_FAILURE=PASS" in node_proc.stdout
+    assert "POPUP_STOP_5XX_SHOWS_FAILURE=PASS" in node_proc.stdout
+    assert "POPUP_STOP_NETWORK_FAILURE_SHOWS_FAILURE=PASS" in node_proc.stdout
 
 
 def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
@@ -1007,6 +1015,7 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
     session_id = f"rts_lease_{uuid.uuid4().hex[:8]}"
     device_id = "dev_lease_001"
     exp = int(time.time()) + 3600
+    os.environ["REALTIME_STREAM_SECRET"] = "acceptance-matrix-secret-key-32b-ok"
     token = generate_stream_token(session_id, owner_id, device_id, exp)
 
     config = RealtimeSessionConfig(owner_id=owner_id, target_language="vi")
@@ -1096,28 +1105,141 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
         old_socket_post_supersession_ingress = len(push_chunk_calls) - ingress_calls_before
         assert old_socket_post_supersession_ingress == 0, f"Ingress mutated after supersession! Count: {old_socket_post_supersession_ingress}"
 
-        # Step 2b: Concurrency guard: exactly-once bridge execution per segment
-        # (CONCURRENT_SAME_SEGMENT_BRIDGE_CALL_COUNT=1, OVERLAP_DUPLICATE_BRIDGE_CALL_COUNT=0)
-        seg_id = "seg_overlap_test_001"
-        session.in_flight_segments.add(seg_id)
-        assert seg_id in session.in_flight_segments
-        duplicate_bridge_called = False
-        if seg_id not in session.in_flight_segments:
-            duplicate_bridge_called = True
-        assert duplicate_bridge_called is False, "Concurrent duplicate segment must NOT be forwarded to bridge"
-        session.in_flight_segments.discard(seg_id)
+        # Step 2b: Real asynchronous gated test with two websocket coroutines (RT-FIX12)
+        # Verifies:
+        # 1. CONCURRENT_TEST_USES_TWO_SOCKET_COROUTINES=YES
+        # 2. CONCURRENT_TEST_GATES_REAL_FORWARD_SEGMENT_TO_BOT=YES
+        # 3. SUPERSESSION_DURING_BRIDGE_TOTAL_BOT_CALL_COUNT=1
+        # 4. SUPERSESSION_DURING_BRIDGE_RESULT_NOT_LOST=PASS
+        # 5. POST_SUPERSESSION_REPLAY_TOTAL_BOT_CALL_COUNT=1
+        # 6. FINAL_RANGE_PROCESSED_AFTER_HANDOFF=PASS
+        # 7. OVERLAP_DUPLICATE_BRIDGE_CALL_COUNT=0
+        import copyfast_bridge
+        orig_bridge_req = copyfast_bridge.bridge_request
+
+        async def run_concurrent_gated_bridge_handoff():
+            total_bot_bridge_calls = 0
+            bridge_call_started = asyncio.Event()
+            bridge_gate = asyncio.Event()
+
+            async def gated_mock_bridge(method, path, *args, **kwargs):
+                nonlocal total_bot_bridge_calls
+                total_bot_bridge_calls += 1
+                bridge_call_started.set()
+                # Gated: Wait until released by test coordinator after lease supersession
+                await bridge_gate.wait()
+                return {
+                    "status": "success",
+                    "session_id": session_id,
+                    "sequence_end": 100,
+                    "events": [
+                        {"type": "stt.final", "source_text": "Gated bridge text"},
+                        {"type": "translation.final", "translated_text": "Noi dung dich"},
+                        {"type": "tts.audio", "audio_b64": "QUVFRg=="},
+                    ],
+                }
+
+            copyfast_bridge.bridge_request = gated_mock_bridge
+
+            # Setup ingress to produce a speech segment on seq 100
+            test_seg = SpeechSegment(
+                segment_id="seg_gated_100",
+                sequence_start=100,
+                sequence_end=100,
+                pcm_bytes=b"\x00" * 3200,
+                start_ms=0,
+                end_ms=1000,
+            )
+            # Custom push chunk to return test_seg on seq 100
+            orig_push = ingress.push_chunk
+            def gated_push(seq, pcm_bytes, timestamp_ms=None):
+                if seq == 100:
+                    return [test_seg]
+                return orig_push(seq=seq, pcm_bytes=pcm_bytes, timestamp_ms=timestamp_ms)
+            ingress.push_chunk = gated_push
+
+            # Coroutine 1 / Socket 1: receives seq 100 and enters forward_segment_to_bot
+            socket_1 = FakeWebSocket([
+                {"bytes": struct.pack("<I", 100) + b"\x50\x05" * 1600},
+            ])
+            lease_s1 = session.acquire_socket_lease(socket_1)
+
+            # Coroutine 2 / Socket 2: reconnects, supersedes lease, and replays seq 100
+            socket_2 = FakeWebSocket([
+                {"bytes": struct.pack("<I", 100) + b"\x50\x05" * 1600},
+            ])
+
+            t1 = asyncio.create_task(websocket_live_stream(socket_1, session_id, token=token))
+
+            # Wait until socket 1 is actively inside gated forward_segment_to_bot
+            await bridge_call_started.wait()
+            assert total_bot_bridge_calls == 1
+
+            # While bridge call #1 is blocked in flight, Socket 2 arrives and supersedes lease:
+            lease_s2 = session.acquire_socket_lease(socket_2)
+            assert session.is_socket_lease_active(lease_s1) is False
+            assert session.is_socket_lease_active(lease_s2) is True
+
+            # Start coroutine 2 with socket 2
+            t2 = asyncio.create_task(websocket_live_stream(socket_2, session_id, token=token))
+
+            # Allow coroutine 2 to enter and see segment claim
+            await asyncio.sleep(0.02)
+            assert total_bot_bridge_calls == 1, "Duplicate bridge call MUST NOT occur while in-flight claim exists"
+
+            # Release the bridge gate: allows bridge call #1 to complete and resolve segment claim
+            bridge_gate.set()
+
+            # Await both coroutines
+            results = await asyncio.gather(t1, t2, return_exceptions=True)
+
+            # Verification 1: Socket 1 (stale) must be closed with 4409 and NOT emit to dead client
+            assert socket_1.closed is True
+            assert socket_1.close_code == 4409, f"Stale socket must close with 4409, got {socket_1.close_code}"
+            # Socket 1 did not send events after supersession
+            assert len([m for m in socket_1.sent_json if m.get("type") == "stt.final"]) == 0
+
+            # Verification 2: Socket 2 (active) received the handoff result and emitted events to client
+            s2_events = [m for m in socket_2.sent_json if m.get("type") in ("stt.final", "translation.final", "tts.audio")]
+            assert len(s2_events) == 3, f"Socket 2 must relay handed-off events, got: {socket_2.sent_json}"
+            s2_acks = [m for m in socket_2.sent_json if m.get("type") == "ack" and m.get("seq") == 100]
+            assert len(s2_acks) == 1, "Socket 2 must emit cumulative ACK for handed-off sequence"
+
+            # Verification 3: Total Bot bridge calls remains exactly 1!
+            assert total_bot_bridge_calls == 1, f"Bot bridge was called {total_bot_bridge_calls} times (expected 1)"
+
+            # Verification 4: Session-level transcript and range processing converged
+            assert session.is_range_processed(100, 100) is True
+            assert any(seg.segment_id == "seg_gated_100" for seg in session.segments)
+
+            # Verification 5: Post-supersession replay (3rd replay) does NOT call Bot again!
+            socket_3 = FakeWebSocket([
+                {"bytes": struct.pack("<I", 100) + b"\x50\x05" * 1600},
+            ])
+            session.acquire_socket_lease(socket_3)
+            await websocket_live_stream(socket_3, session_id, token=token)
+            assert total_bot_bridge_calls == 1, "Post-supersession replay MUST NOT call Bot again"
+            s3_acks = [m for m in socket_3.sent_json if m.get("type") == "ack" and m.get("seq") == 100]
+            assert len(s3_acks) == 1
+
+            ingress.push_chunk = orig_push
+
+        try:
+            asyncio.run(run_concurrent_gated_bridge_handoff())
+        finally:
+            copyfast_bridge.bridge_request = orig_bridge_req
 
         # Step 2c: Stale socket overlap closure (OLD_SOCKET_AFTER_NEW_LEASE_REJECTED_OR_IGNORED=PASS)
-        # Re-acquire active lease for test
+        # Sequences 110, 111 > last_processed_seq (100)
         active_lease = session.acquire_socket_lease(fake_ws1)
         bump_on_msg = FakeWebSocket([
-            {"bytes": struct.pack("<I", 10) + b"\x50\x05" * 1600},
-            {"bytes": struct.pack("<I", 11) + b"\x50\x05" * 1600},
+            {"bytes": struct.pack("<I", 110) + b"\x50\x05" * 1600},
+            {"bytes": struct.pack("<I", 111) + b"\x50\x05" * 1600},
         ])
         orig_send = bump_on_msg.send_json
         async def send_hook(data):
             await orig_send(data)
-            if data.get("type") == "buffered" and data.get("seq") == 10:
+            if data.get("type") == "buffered" and data.get("seq") == 110:
                 # External reconnecting socket arrives and supersedes lease:
                 session.acquire_socket_lease(fake_ws2)
         bump_on_msg.send_json = send_hook
@@ -1132,11 +1254,11 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
         assert bump_on_msg.close_code == 4409, f"Stale socket must close with 4409, got {bump_on_msg.close_code}"
 
         # Step 3: In-flight buffered deduplication (OVERLAP_DUPLICATE_INGRESS_COUNT=0)
-        assert 10 in session.buffered_seq_set
+        assert 110 in session.buffered_seq_set
         initial_push_count = len(push_chunk_calls)
 
         resend_ws = FakeWebSocket([
-            {"bytes": struct.pack("<I", 10) + b"\x50\x05" * 1600},
+            {"bytes": struct.pack("<I", 110) + b"\x50\x05" * 1600},
         ])
         try:
             asyncio.run(websocket_live_stream(resend_ws, session_id, token=token))
@@ -1144,9 +1266,9 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
             if "WebSocketDisconnect" not in type(e).__name__:
                 raise
 
-        # Frame 10 duplicate was NOT pushed to ingress buffer!
+        # Frame 110 duplicate was NOT pushed to ingress buffer!
         assert len(push_chunk_calls) == initial_push_count, "Duplicate in-flight sequence must NOT re-push to ingress"
-        buffered_acks = [m for m in resend_ws.sent_json if m.get("type") == "buffered" and m.get("seq") == 10]
+        buffered_acks = [m for m in resend_ws.sent_json if m.get("type") == "buffered" and m.get("seq") == 110]
         assert len(buffered_acks) == 1
 
         # Step 4: User stop confirmation ends server session and removes ingress
