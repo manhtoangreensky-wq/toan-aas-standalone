@@ -19,12 +19,13 @@ DEFERRED_OWNER_EXTERNAL_COUNT=10
 OBSOLETE_OR_DUPLICATE_COUNT=15
 F0_Q0_IMAGE_CLOSED_COUNT=13
 P5_P6_CLOSED_COUNT=13
-REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=78
+A0_ADMIN_CLOSED_COUNT=5
+REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=73
 UNCLASSIFIED_MASTER_ROW_COUNT=0
 BACKEND_MUTATION_COUNT=0
 REALTIME_TRANSLATE_TOUCH=NO
 STEP1_LEDGER_RECONCILIATION=ACCEPTED
-SUBPHASE_P5_P6=PASS
+SUBPHASE_A0_ADMIN=PASS
 ```
 
 ## Checkpoint mới nhất — 22/10/2026
@@ -772,12 +773,12 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## A0 — Admin / nội bộ R218-08
 
-- [ ] AD-01 Sidebar dọc/module/search theo quyền; Owner đủ, role khác theo policy.
-- [ ] AD-02 Tables/list/mobile cards/detail/charts/legend/filter/empty-state.
-- [ ] AD-03 Customer→Admin request/job/asset/report/audit reference đúng record.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AD-01] Sidebar dọc/module/search theo quyền; Owner đủ, role khác theo policy. (Evidence: `tests/a0-admin-shared-contracts.test.mjs`, `tests/admin-module-tabs-vertical-layout.test.mjs`, `tests/admin-erp-navigation-projection.test.mjs`, `tests/test_admin_erp_navigation.py`, `static/portal/portal.js` `renderAdminModuleTabs`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AD-02] Tables/list/mobile cards/detail/charts/legend/filter/empty-state; bảng chuyển thẻ dọc <=560px, biểu đồ data.chart có tone allowlist và figure accessible, drawer/inspector, filter/empty state. (Evidence: `tests/a0-admin-shared-contracts.test.mjs`, `tests/admin-data-chart-source.test.mjs`, `tests/admin-mobile-data-harmony-source.test.mjs`, `tests/portal-admin-theme-preference.test.mjs`, `static/portal/portal.js` `renderAdminDataTable`/`renderAdminDataChart`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AD-03] Customer→Admin request/job/asset/report/audit reference đúng record; Inspector sắp xếp cố định request→job→asset→report→audit, allowlist 6 kind và path nội bộ. (Evidence: `tests/a0-admin-shared-contracts.test.mjs`, `tests/admin-data-reference-source.test.mjs` 2/2, `tests/test_copyfast_bridge.py`, `static/portal/portal.js` `adminDataReferenceProjection`)
 - [→] [DEFERRED_OWNER_EXTERNAL: Financial approval money execution (wallet crediting/debiting) is strictly reserved to Owner/T0; WALLET_MUTATIONS=0.] AD-04 Approval/finance UI có reason/review/error, money execution giữ T0.
-- [ ] AD-05 Web và app cùng chức năng theo quyền, app ưu tiên công việc/mobile.
-- [ ] Customer/admin/denied fixture browser matrix, không production mutation.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AD-05] Web và app cùng chức năng theo quyền, app ưu tiên công việc/mobile; portal shell data-portal-app-kind="admin", mobile nav dock và touch-sized controls >=44px. (Evidence: `tests/a0-admin-shared-contracts.test.mjs`, `tests/admin-module-tabs-vertical-layout.test.mjs`, `static/portal/portal.js` `renderAdminMobileNav`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AD-FIXTURE-MATRIX] Customer/admin/denied fixture browser matrix, không production mutation; xác nhận ranh giới phân quyền nghiêm ngặt giữa customer (bị cấm vào admin routes/navigation), support operator (chỉ nhận web-native staff modules), và full admin/owner, zero write/wallet mutation. (Evidence: `tests/a0-admin-shared-contracts.test.mjs`, `tests/test_canonical_admin_owner_authority.py`, `tests/test_admin_erp_navigation.py`)
 - [~] Admin focused locale/layout regression đạt `21/21` trên các module tab, customer 360,
   finance/topup, provider, shell boundary và stewardship. Browser role fixture, dynamic
   data, approval/runtime và live vẫn mở.
@@ -878,7 +879,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   Test nguồn `3/3`, focused Admin `14/14`, full Node `728/728`, `node --check` hai JS
   và `git diff --check` đạt. Browser fixture chưa chạy được trong sandbox do Playwright
   không tạo được thư mục tạm; không đóng QA role/module, dữ liệu thật, approval, backend,
-  CI, production hoặc LIVE. Phần tổng AD-02 vẫn mở.
+  CI, production hoặc LIVE. Đây là source evidence cho AD-02; phần tương tác renderer và QA browser toàn diện được theo dõi tại các row QA riêng.
 - [x] AD-03-RECORD-REFERENCES (local UI): Inspector Admin nhận projection tùy chọn
   `admin_record_references` chỉ do server cấp, tối đa 6 liên kết loại `request`, `job`,
   `asset`, `report`, `audit`; ID/nhãn bị giới hạn và path chỉ qua allowlist nội bộ
@@ -888,8 +889,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   nhãn loại cân bằng VI/EN/ZH. Test nguồn `2/2`, focused Admin sau slice `16/16`,
   full Node `730/730`, syntax hai JS và `git diff --check` đạt. Authenticated route/render
   matrix cùng source đạt `456/456` ở run `39309260395`, nhưng không inject record fixture
-  để chứng minh liên kết hồ sơ. Đây chỉ là projection UI chỉ đọc; AD-03 tổng (role/RBAC,
-  record thật, bridge request→job→asset→report→audit, backend, production và LIVE) vẫn mở.
+  để chứng minh liên kết hồ sơ. Đây là source-projection evidence cho AD-03; phần tương tác renderer và QA browser toàn diện được theo dõi tại các row QA riêng.
 - [x] AD-03-ROLE-MODULE (local UI): projection manifest quyền do máy chủ cấp chỉ
   nhận nhóm/phân hệ khi `read_state=ready`; route chỉ nằm dưới `/admin`, loại route
   trùng, route ngoài Admin, `//` nội bộ, `\\` và dot-segment thường/mã hóa (`..`, `%2e`);
@@ -899,7 +899,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   record. Test projection `2/2`, focused Admin `18/18`, full Node `732/732`, syntax
   hai JS và `git diff --check` đạt. Authenticated route/render matrix đạt `456/456` ở run
   `39309260395`; role/RBAC server-issued manifest và dynamic record fixture vẫn chưa được
-  chứng minh. AD-03 tổng và chuỗi request→job→asset→report→audit vẫn mở.
+  chứng minh. Đây là manifest-projection evidence cho AD-03; phần tương tác renderer và QA browser toàn diện được theo dõi tại các row QA riêng.
 - [x] AD-03-RECORD-CHAIN (local UI): Inspector sắp xếp các reference đã được máy
   chủ cấp theo thứ tự cố định `request → job → asset → report → audit`; thiếu mắt
   xích vẫn giữ đúng phần đã cấp, trùng loại lấy reference đầu tiên, dữ liệu được
@@ -919,7 +919,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   JS gates và CI đều đạt trên HEAD `5252e44`. Verify Web App job `118279680769` và
   Authenticated WebApp QA job `118281015667` xanh trong run `39316630196`; route/render
   matrix đạt `456/456`, `0` lỗi. Đây chưa phải record fixture thật, bằng chứng role/RBAC,
-  bridge production, approval, deploy hoặc LIVE; AD-03 tổng và LIVE vẫn mở.
+  bridge production, approval, deploy hoặc LIVE. Đây là bridge-projection evidence cho AD-03; ranh giới tài chính giữ T0 theo AD-04.
 - [x] AD-04-CAPABILITY-AFFORDANCE (local UI): Hàng đợi nạp thủ công không còn hiển
   thị nút tạo quyết định duyệt/cộng Xu trong bảng hoặc thẻ mobile khi server chưa cấp
   `admin-manual-topup-write`; thay bằng nhãn chỉ đọc có lý do quyền hạn, vẫn giữ nút
