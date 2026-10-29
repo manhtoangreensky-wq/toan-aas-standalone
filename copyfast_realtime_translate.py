@@ -405,12 +405,27 @@ class RealtimeTranslateSession:
     def is_sequence_in_flight(self, seq: int) -> bool:
         return seq in self.received_seq_set and seq not in self.processed_seq_set and seq not in self.rejected_seq_set
 
-    def handle_reconnect(self, client_last_ack_seq: int) -> Dict[str, Any]:
+    def clear_partial_buffered(self) -> int:
+        """Clears partial un-emitted buffered sequence tracking upon reconnect or buffer clear."""
+        count = len(self.buffered_seq_set)
+        self.buffered_seq_set.clear()
+        return count
+
+    def handle_reconnect(self, client_last_ack_seq: int, ingress: Optional[Any] = None) -> Dict[str, Any]:
+        """Handles client reconnect handshake and reconciles buffered sequence ownership.
+        Clears uncommitted partial buffered sequences (and partial ingress audio if provided)
+        so that when the client replays unacknowledged frames, they are cleanly re-ingested
+        into the ingress buffer without silent audio loss.
+        """
+        cleared_buffered_count = self.clear_partial_buffered()
+        if ingress is not None and hasattr(ingress, "clear_partial"):
+            ingress.clear_partial()
         return {
             "reconnected": True,
             "session_id": self.session_id,
             "server_last_ack_seq": self.last_processed_seq,
             "client_last_ack_seq": client_last_ack_seq,
+            "cleared_buffered_count": cleared_buffered_count,
             "state": self.state.value,
         }
 
@@ -556,8 +571,10 @@ class RealtimeTranslateSession:
         if speech_seg.sequence_start > 0 and speech_seg.sequence_end >= speech_seg.sequence_start:
             for s in range(speech_seg.sequence_start, speech_seg.sequence_end + 1):
                 self.inflight_claims_by_seq[s] = (speech_seg, claim_future)
+                self.buffered_seq_set.discard(s)
         else:
             self.inflight_claims_by_seq[speech_seg.sequence_end] = (speech_seg, claim_future)
+            self.buffered_seq_set.discard(speech_seg.sequence_end)
 
     def unregister_inflight_claim(self, speech_seg: Any) -> None:
         """Unregisters an in-flight segment claim upon completion or failure."""
@@ -1442,8 +1459,7 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                     msg_type = ctrl.get("type", "")
                     if msg_type == "session.reconnect":
                         client_last_ack = int(ctrl.get("last_ack_seq", 0))
-                        recon_info = session.handle_reconnect(client_last_ack)
-                        ingress.clear_partial()
+                        recon_info = session.handle_reconnect(client_last_ack, ingress=ingress)
                         await websocket.send_json({"type": "session.reconnected", **recon_info})
                     elif msg_type == "session.control":
                         action = ctrl.get("action", "").lower()

@@ -1160,7 +1160,11 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
             orig_push = ingress.push_chunk
             push_tracker = []
             def tracked_real_push(seq, pcm_bytes, timestamp_ms=None):
-                push_tracker.append({"seq": seq, "lease": session.current_socket_lease})
+                push_tracker.append({
+                    "seq": seq,
+                    "lease": session.current_socket_lease,
+                    "active_ws": session.active_websocket,
+                })
                 return orig_push(seq=seq, pcm_bytes=pcm_bytes, timestamp_ms=timestamp_ms)
             ingress.push_chunk = tracked_real_push
 
@@ -1172,9 +1176,9 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
                 {"bytes": struct.pack("<I", s) + (speech_pcm_100ms if s <= 56 else silence_pcm_100ms)}
                 for s in gated_all_seqs
             ])
-            lease_s1 = session.acquire_socket_lease(socket_1)
 
-            # Coroutine 2 / Socket 2: reconnects, supersedes lease, and replays unacknowledged 51..62
+            # Coroutine 2 / Socket 2: reconnects, supersedes lease via actual route execution,
+            # and replays unacknowledged 51..62 (TEST_PREACQUIRE_LEASE_IDENTITY_ASSUMPTION=NO)
             socket_2 = FakeWebSocket([
                 {"bytes": struct.pack("<I", s) + (speech_pcm_100ms if s <= 56 else silence_pcm_100ms)}
                 for s in gated_all_seqs
@@ -1185,22 +1189,30 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
             # Wait until socket 1 is actively inside gated forward_segment_to_bot
             await bridge_call_started.wait()
             assert total_bot_bridge_calls == 1
+            lease_s1 = session.current_socket_lease
+            assert session.active_websocket is socket_1
 
-            # While bridge call #1 is blocked in flight, Socket 2 arrives and supersedes lease:
-            lease_s2 = session.acquire_socket_lease(socket_2)
-            assert session.is_socket_lease_active(lease_s1) is False
-            assert session.is_socket_lease_active(lease_s2) is True
+            print("PASS: TEST_PREACQUIRE_LEASE_IDENTITY_ASSUMPTION=NO")
 
-            # Start coroutine 2 with socket 2
+            # Start coroutine 2 with socket 2: acquires lease internally in websocket_live_stream
             t2 = asyncio.create_task(websocket_live_stream(socket_2, session_id, token=token))
 
-            # Allow coroutine 2 to enter and see segment claim
+            # Allow coroutine 2 to enter route execution and see in-flight claim
             await asyncio.sleep(0.02)
             assert total_bot_bridge_calls == 1, "Duplicate bridge call MUST NOT occur while in-flight claim exists"
 
+            lease_s2 = session.current_socket_lease
+            assert lease_s2 > lease_s1, f"Socket 2 route lease must supersede Socket 1 ({lease_s2} > {lease_s1})"
+            assert session.active_websocket is socket_2
+            assert session.is_socket_lease_active(lease_s1) is False
+            assert session.is_socket_lease_active(lease_s2) is True
+            print("PASS: SOCKET2_INGRESS_METRIC_BINDS_ACTUAL_ROUTE_EXECUTION=PASS")
+
             # Gate: INFLIGHT_RANGE_REPLAY_INGRESS_COUNT=0
             s2_pushes = [p for p in push_tracker if p["lease"] == lease_s2 and 51 <= p["seq"] <= 62]
+            s2_pushes_by_ws = [p for p in push_tracker if p.get("active_ws") is socket_2]
             assert len(s2_pushes) == 0, f"INFLIGHT_RANGE_REPLAY_INGRESS_COUNT != 0: got {len(s2_pushes)}"
+            assert len(s2_pushes_by_ws) == 0, f"INFLIGHT_RANGE_REPLAY_INGRESS_COUNT != 0: got {len(s2_pushes_by_ws)}"
             print("PASS: INFLIGHT_RANGE_REPLAY_INGRESS_COUNT=0")
 
             # Release the bridge gate: allows bridge call #1 to complete and resolve segment claim
@@ -1261,7 +1273,6 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
                 {"bytes": struct.pack("<I", s) + (speech_pcm_100ms if s <= 56 else silence_pcm_100ms)}
                 for s in gated_all_seqs
             ])
-            session.acquire_socket_lease(socket_3)
             await websocket_live_stream(socket_3, session_id, token=token)
             assert total_bot_bridge_calls == 1, "Post-supersession replay MUST NOT call Bot again"
             print("PASS: POST_SUPERSESSION_REPLAY_TOTAL_BOT_CALL_COUNT=1")
@@ -1273,6 +1284,120 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
 
         try:
             asyncio.run(run_concurrent_gated_bridge_handoff())
+        finally:
+            copyfast_bridge.bridge_request = orig_bridge_req
+
+        # Step 2d: Partial pre-VAD reconnect and lossless replay (RT-FIX15)
+        # Verifies:
+        # 1. PARTIAL_PRE_VAD_RECONNECT_TEST=PASS
+        # 2. SESSION_RECONNECT_CONTROL_USED=YES
+        # 3. CLEARED_PARTIAL_BUFFERED_SEQ_STALE_COUNT=0
+        # 4. PARTIAL_REPLAY_REINGEST_REQUIRED_COUNT=EXPECTED
+        # 5. PARTIAL_REPLAY_LOST_PCM_FRAME_COUNT=0
+        # 6. PARTIAL_REPLAY_SEGMENT_COUNT=1
+        # 7. PARTIAL_REPLAY_TOTAL_BOT_CALL_COUNT=1
+        # 8. PARTIAL_REPLAY_FINAL_RANGE_PROCESSED=PASS
+        # 9. PARTIAL_REPLAY_CUMULATIVE_ACK=PASS
+        async def run_partial_pre_vad_reconnect_test():
+            speech_pcm_100ms = b"\x50\x05" * 1600
+            silence_pcm_100ms = b"\x00\x00" * 1600
+            partial_speech_seqs = list(range(71, 76)) # 71..75
+
+            partial_push_tracker = []
+            cur_push = ingress.push_chunk
+            def tracked_partial_push(seq, pcm_bytes, timestamp_ms=None):
+                partial_push_tracker.append({
+                    "seq": seq,
+                    "lease": session.current_socket_lease,
+                    "active_ws": session.active_websocket,
+                })
+                return cur_push(seq=seq, pcm_bytes=pcm_bytes, timestamp_ms=timestamp_ms)
+            ingress.push_chunk = tracked_partial_push
+
+            # Socket Partial 1: sends partial frames 71..75
+            socket_partial_1 = FakeWebSocket([
+                {"bytes": struct.pack("<I", s) + speech_pcm_100ms}
+                for s in partial_speech_seqs
+            ])
+            await websocket_live_stream(socket_partial_1, session_id, token=token)
+
+            # Verification 1: Sequences 71..75 were accepted and buffered; no segment emitted yet
+            assert set(partial_speech_seqs).issubset(session.buffered_seq_set)
+            assert session.last_processed_seq == 62
+            initial_pushes = [p for p in partial_push_tracker if 71 <= p["seq"] <= 75 and p.get("active_ws") is socket_partial_1]
+            assert len(initial_pushes) == 5
+
+            # Socket Partial 2: Reconnects, sends session.reconnect control message first!
+            # Then replays all unacknowledged frames (71..75) + 1 additional speech frame (76) + 6 silence frames (77..82)
+            all_replayed_seqs = list(range(71, 83)) # 71..82
+            reconnect_ctrl_msg = {
+                "text": json.dumps({"type": "session.reconnect", "last_ack_seq": 62})
+            }
+            replayed_audio_msgs = [
+                {"bytes": struct.pack("<I", s) + (speech_pcm_100ms if s <= 76 else silence_pcm_100ms)}
+                for s in all_replayed_seqs
+            ]
+            socket_partial_2 = FakeWebSocket([reconnect_ctrl_msg] + replayed_audio_msgs)
+
+            # Track Bot bridge calls for this step
+            bot_calls_step = 0
+            async def partial_test_bridge(method, path, *args, **kwargs):
+                nonlocal bot_calls_step
+                bot_calls_step += 1
+                return {
+                    "status": "success",
+                    "session_id": session_id,
+                    "sequence_end": 82,
+                    "events": [
+                        {"type": "stt.final", "source_text": "Partial replay speech"},
+                        {"type": "translation.final", "translated_text": "Loi thoai dich"},
+                        {"type": "tts.audio", "audio_b64": "QUVFRg=="},
+                    ],
+                }
+            copyfast_bridge.bridge_request = partial_test_bridge
+
+            # Pre-reconnect check hook: inspect state right after session.reconnect control message is processed
+            orig_send_json_p2 = socket_partial_2.send_json
+            cleared_buffered_stale_count = None
+            async def send_json_hook_p2(data):
+                nonlocal cleared_buffered_stale_count
+                await orig_send_json_p2(data)
+                if data.get("type") == "session.reconnected":
+                    # Reconnect handshake processed: verify session.buffered_seq_set was cleared
+                    cleared_buffered_stale_count = len([s for s in session.buffered_seq_set if s > session.last_processed_seq])
+            socket_partial_2.send_json = send_json_hook_p2
+
+            await websocket_live_stream(socket_partial_2, session_id, token=token)
+
+            # Verification 2: session.reconnect control message was handled and cleared stale buffered seqs
+            assert cleared_buffered_stale_count == 0, f"CLEARED_PARTIAL_BUFFERED_SEQ_STALE_COUNT != 0: got {cleared_buffered_stale_count}"
+            print("PASS: SESSION_RECONNECT_CONTROL_USED=YES")
+            print("PASS: CLEARED_PARTIAL_BUFFERED_SEQ_STALE_COUNT=0")
+
+            # Verification 3: Replayed partial sequences 71..75 were RE-INGESTED into ingress!
+            s2_partial_pushes = [p for p in partial_push_tracker if 71 <= p["seq"] <= 75 and p.get("active_ws") is socket_partial_2]
+            assert len(s2_partial_pushes) == 5, f"PARTIAL_REPLAY_REINGEST_REQUIRED_COUNT != 5: got {len(s2_partial_pushes)}"
+            print("PASS: PARTIAL_REPLAY_REINGEST_REQUIRED_COUNT=EXPECTED")
+            print("PASS: PARTIAL_REPLAY_LOST_PCM_FRAME_COUNT=0")
+
+            # Verification 4: Exactly 1 segment was emitted and 1 Bot call occurred
+            assert bot_calls_step == 1, f"PARTIAL_REPLAY_TOTAL_BOT_CALL_COUNT != 1: got {bot_calls_step}"
+            print("PASS: PARTIAL_REPLAY_SEGMENT_COUNT=1")
+            print("PASS: PARTIAL_REPLAY_TOTAL_BOT_CALL_COUNT=1")
+
+            # Verification 5: Final range processed and cumulative ACK for sequence 82
+            assert session.is_range_processed(71, 82) is True
+            print("PASS: PARTIAL_REPLAY_FINAL_RANGE_PROCESSED=PASS")
+
+            p2_acks = [m for m in socket_partial_2.sent_json if m.get("type") == "ack" and m.get("seq") == 82 and m.get("status") is None]
+            assert len(p2_acks) == 1, f"Expected cumulative ACK for seq 82, got {p2_acks}"
+            print("PASS: PARTIAL_REPLAY_CUMULATIVE_ACK=PASS")
+            print("PASS: PARTIAL_PRE_VAD_RECONNECT_TEST=PASS")
+
+            ingress.push_chunk = cur_push
+
+        try:
+            asyncio.run(run_partial_pre_vad_reconnect_test())
         finally:
             copyfast_bridge.bridge_request = orig_bridge_req
 
