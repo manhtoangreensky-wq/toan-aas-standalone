@@ -19,8 +19,8 @@ DEFERRED_OWNER_EXTERNAL_COUNT=10
 OBSOLETE_OR_DUPLICATE_COUNT=15
 F0_Q0_IMAGE_CLOSED_COUNT=13
 P5_P6_CLOSED_COUNT=13
-A0_ADMIN_CLOSED_COUNT=5
-REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=73
+A0_ADMIN_CLOSED_COUNT=4
+REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=74
 UNCLASSIFIED_MASTER_ROW_COUNT=0
 BACKEND_MUTATION_COUNT=0
 REALTIME_TRANSLATE_TOUCH=NO
@@ -775,10 +775,10 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AD-01] Sidebar dọc/module/search theo quyền; Owner đủ, role khác theo policy. (Evidence: `tests/a0-admin-shared-contracts.test.mjs`, `tests/admin-module-tabs-vertical-layout.test.mjs`, `tests/admin-erp-navigation-projection.test.mjs`, `tests/test_admin_erp_navigation.py`, `static/portal/portal.js` `renderAdminModuleTabs`)
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AD-02] Tables/list/mobile cards/detail/charts/legend/filter/empty-state; bảng chuyển thẻ dọc <=560px, biểu đồ data.chart có tone allowlist và figure accessible, drawer/inspector, filter/empty state. (Evidence: `tests/a0-admin-shared-contracts.test.mjs`, `tests/admin-data-chart-source.test.mjs`, `tests/admin-mobile-data-harmony-source.test.mjs`, `tests/portal-admin-theme-preference.test.mjs`, `static/portal/portal.js` `renderAdminDataTable`/`renderAdminDataChart`)
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AD-03] Customer→Admin request/job/asset/report/audit reference đúng record; Inspector sắp xếp cố định request→job→asset→report→audit, allowlist 6 kind và path nội bộ. (Evidence: `tests/a0-admin-shared-contracts.test.mjs`, `tests/admin-data-reference-source.test.mjs` 2/2, `tests/test_copyfast_bridge.py`, `static/portal/portal.js` `adminDataReferenceProjection`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AD-03] Customer→Admin request/job/asset/report/audit reference đúng record; Inspector sắp xếp cố định request→job→asset→report→audit, allowlist 5 kind và path nội bộ. (Evidence: `tests/a0-admin-shared-contracts.test.mjs`, `tests/admin-data-reference-source.test.mjs` 2/2, `tests/test_copyfast_bridge.py`, `static/portal/portal.js` `adminDataReferenceProjection`)
 - [→] [DEFERRED_OWNER_EXTERNAL: Financial approval money execution (wallet crediting/debiting) is strictly reserved to Owner/T0; WALLET_MUTATIONS=0.] AD-04 Approval/finance UI có reason/review/error, money execution giữ T0.
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AD-05] Web và app cùng chức năng theo quyền, app ưu tiên công việc/mobile; portal shell data-portal-app-kind="admin", mobile nav dock và touch-sized controls >=44px. (Evidence: `tests/a0-admin-shared-contracts.test.mjs`, `tests/admin-module-tabs-vertical-layout.test.mjs`, `static/portal/portal.js` `renderAdminMobileNav`)
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AD-FIXTURE-MATRIX] Customer/admin/denied fixture browser matrix, không production mutation; xác nhận ranh giới phân quyền nghiêm ngặt giữa customer (bị cấm vào admin routes/navigation), support operator (chỉ nhận web-native staff modules), và full admin/owner, zero write/wallet mutation. (Evidence: `tests/a0-admin-shared-contracts.test.mjs`, `tests/test_canonical_admin_owner_authority.py`, `tests/test_admin_erp_navigation.py`)
+- [ ] Customer/admin/denied fixture browser matrix, không production mutation.
 - [~] Admin focused locale/layout regression đạt `21/21` trên các module tab, customer 360,
   finance/topup, provider, shell boundary và stewardship. Browser role fixture, dynamic
   data, approval/runtime và live vẫn mở.

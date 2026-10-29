@@ -47,10 +47,10 @@ test("AD-FIXTURE-MATRIX: Customer, admin, and denied roles enforce strict bounda
   assert.doesNotMatch(portalSource, /data-portal-action="mutate-xu"/i);
 });
 
-test("A0: Master Ledger accounting enforces exact 5 closed A0 rows and 73 remaining open rows", () => {
+test("A0: Master Ledger accounting enforces exact 4 closed A0 rows and 74 remaining open rows", () => {
   const masterLedger = fs.readFileSync(path.join(repoRoot, "reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md"), "utf8");
   assert.match(masterLedger, /MASTER_ROWS_TOTAL=260/);
-  assert.match(masterLedger, /A0_ADMIN_CLOSED_COUNT=5/);
-  assert.match(masterLedger, /REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=73/);
+  assert.match(masterLedger, /A0_ADMIN_CLOSED_COUNT=4/);
+  assert.match(masterLedger, /REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=74/);
   assert.match(masterLedger, /UNCLASSIFIED_MASTER_ROW_COUNT=0/);
 });
