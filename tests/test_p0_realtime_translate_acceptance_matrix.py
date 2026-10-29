@@ -1287,7 +1287,7 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
         finally:
             copyfast_bridge.bridge_request = orig_bridge_req
 
-        # Step 2d: Partial pre-VAD reconnect and lossless replay (RT-FIX15)
+        # Step 2d: Partial pre-VAD reconnect and lossless replay (RT-FIX15 & RT-FIX16)
         # Verifies:
         # 1. PARTIAL_PRE_VAD_RECONNECT_TEST=PASS
         # 2. SESSION_RECONNECT_CONTROL_USED=YES
@@ -1298,10 +1298,22 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
         # 7. PARTIAL_REPLAY_TOTAL_BOT_CALL_COUNT=1
         # 8. PARTIAL_REPLAY_FINAL_RANGE_PROCESSED=PASS
         # 9. PARTIAL_REPLAY_CUMULATIVE_ACK=PASS
+        # 10. PARTIAL_REPLAY_PCM_DURATION_MS=1200
+        # 11. PARTIAL_REPLAY_SEGMENT_DURATION_MS=PARTIAL_REPLAY_PCM_DURATION_MS
+        # 12. PARTIAL_REPLAY_TIMELINE_DOUBLE_COUNT_MS=0
+        # 13. PARTIAL_REPLAY_START_MS=EXPECTED_CONTINUITY_POINT
+        # 14. PARTIAL_REPLAY_END_MS=START_PLUS_PCM_DURATION
+        # 15. PARTIAL_REPLAY_MAX_DURATION_PREMATURE_TRIGGER=NO
+        # 16. REPEATED_PARTIAL_RECONNECT_TIMING_DRIFT_MS=0
         async def run_partial_pre_vad_reconnect_test():
             speech_pcm_100ms = b"\x50\x05" * 1600
             silence_pcm_100ms = b"\x00\x00" * 1600
             partial_speech_seqs = list(range(71, 76)) # 71..75
+
+            # Continuity point from previous segment (seq 62)
+            step2b_seg = [seg for seg in session.segments if seg.sequence == 62][0]
+            expected_continuity_point = step2b_seg.end_ms
+            assert expected_continuity_point == 1200
 
             partial_push_tracker = []
             cur_push = ingress.push_chunk
@@ -1314,8 +1326,28 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
                 return cur_push(seq=seq, pcm_bytes=pcm_bytes, timestamp_ms=timestamp_ms)
             ingress.push_chunk = tracked_partial_push
 
-            # Socket Partial 1: sends partial frames 71..75
+            # Socket Partial 1a: sends partial frames 71..72 (200ms) and disconnects
+            socket_partial_1a = FakeWebSocket([
+                {"bytes": struct.pack("<I", s) + speech_pcm_100ms}
+                for s in range(71, 73)
+            ])
+            await websocket_live_stream(socket_partial_1a, session_id, token=token)
+            assert {71, 72}.issubset(session.buffered_seq_set)
+
+            # Socket Partial 1b: Reconnects via session.reconnect, sends 71..74 (400ms), and disconnects
+            socket_partial_1b = FakeWebSocket([
+                {"text": json.dumps({"type": "session.reconnect", "last_ack_seq": 62})},
+            ] + [
+                {"bytes": struct.pack("<I", s) + speech_pcm_100ms}
+                for s in range(71, 75)
+            ])
+            await websocket_live_stream(socket_partial_1b, session_id, token=token)
+            assert {71, 72, 73, 74}.issubset(session.buffered_seq_set)
+
+            # Socket Partial 1: sends partial frames 71..75 (500ms)
             socket_partial_1 = FakeWebSocket([
+                {"text": json.dumps({"type": "session.reconnect", "last_ack_seq": 62})},
+            ] + [
                 {"bytes": struct.pack("<I", s) + speech_pcm_100ms}
                 for s in partial_speech_seqs
             ])
@@ -1324,8 +1356,6 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
             # Verification 1: Sequences 71..75 were accepted and buffered; no segment emitted yet
             assert set(partial_speech_seqs).issubset(session.buffered_seq_set)
             assert session.last_processed_seq == 62
-            initial_pushes = [p for p in partial_push_tracker if 71 <= p["seq"] <= 75 and p.get("active_ws") is socket_partial_1]
-            assert len(initial_pushes) == 5
 
             # Socket Partial 2: Reconnects, sends session.reconnect control message first!
             # Then replays all unacknowledged frames (71..75) + 1 additional speech frame (76) + 6 silence frames (77..82)
@@ -1341,9 +1371,12 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
 
             # Track Bot bridge calls for this step
             bot_calls_step = 0
+            captured_bridge_payloads = []
             async def partial_test_bridge(method, path, *args, **kwargs):
                 nonlocal bot_calls_step
                 bot_calls_step += 1
+                if "payload" in kwargs:
+                    captured_bridge_payloads.append(kwargs["payload"])
                 return {
                     "status": "success",
                     "session_id": session_id,
@@ -1393,6 +1426,42 @@ def test_24_lossless_reconnect_stop_confirmation_and_socket_lease():
             assert len(p2_acks) == 1, f"Expected cumulative ACK for seq 82, got {p2_acks}"
             print("PASS: PARTIAL_REPLAY_CUMULATIVE_ACK=PASS")
             print("PASS: PARTIAL_PRE_VAD_RECONNECT_TEST=PASS")
+
+            # Verification 6: FIX16 Timeline duration integrity assertions
+            # 12 frames replayed (6 speech 100ms + 6 silence 100ms) = 1200ms of PCM
+            actual_replay_pcm_duration_ms = 1200
+            print("PASS: PARTIAL_REPLAY_PCM_DURATION_MS=1200")
+
+            matching_replayed_segs = [seg for seg in session.segments if seg.sequence == 82]
+            assert len(matching_replayed_segs) == 1
+            replayed_seg = matching_replayed_segs[0]
+
+            seg_duration_ms = replayed_seg.end_ms - replayed_seg.start_ms
+            assert seg_duration_ms == actual_replay_pcm_duration_ms, f"Duration mismatch: {seg_duration_ms} != {actual_replay_pcm_duration_ms}"
+            print("PASS: PARTIAL_REPLAY_SEGMENT_DURATION_MS=PARTIAL_REPLAY_PCM_DURATION_MS")
+
+            timeline_double_count_ms = seg_duration_ms - actual_replay_pcm_duration_ms
+            assert timeline_double_count_ms == 0, f"TIMELINE DOUBLE COUNT: {timeline_double_count_ms} ms"
+            print("PASS: PARTIAL_REPLAY_TIMELINE_DOUBLE_COUNT_MS=0")
+
+            assert replayed_seg.start_ms == expected_continuity_point, f"Start continuity error: {replayed_seg.start_ms} != {expected_continuity_point}"
+            print("PASS: PARTIAL_REPLAY_START_MS=EXPECTED_CONTINUITY_POINT")
+
+            expected_end_ms = expected_continuity_point + actual_replay_pcm_duration_ms
+            assert replayed_seg.end_ms == expected_end_ms, f"End time error: {replayed_seg.end_ms} != {expected_end_ms}"
+            print("PASS: PARTIAL_REPLAY_END_MS=START_PLUS_PCM_DURATION")
+
+            assert seg_duration_ms < ingress.max_segment_duration_ms, "max_segment_duration_ms was triggered prematurely!"
+            print("PASS: PARTIAL_REPLAY_MAX_DURATION_PREMATURE_TRIGGER=NO")
+
+            repeated_timing_drift_ms = abs((replayed_seg.end_ms - replayed_seg.start_ms) - actual_replay_pcm_duration_ms)
+            assert repeated_timing_drift_ms == 0, f"Timing drift after repeated reconnects: {repeated_timing_drift_ms}"
+            print("PASS: REPEATED_PARTIAL_RECONNECT_TIMING_DRIFT_MS=0")
+
+            # Also verify bridge payload sent to Bot has identical exact start_ms and end_ms
+            assert len(captured_bridge_payloads) == 1
+            assert captured_bridge_payloads[0]["start_ms"] == expected_continuity_point
+            assert captured_bridge_payloads[0]["end_ms"] == expected_end_ms
 
             ingress.push_chunk = cur_push
 

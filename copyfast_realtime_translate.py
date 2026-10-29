@@ -739,7 +739,7 @@ class RealtimeAudioIngressBuffer:
         valid_bytes = pcm_bytes[:aligned_len]
         chunk_duration_ms = int((aligned_len / self.bytes_per_second) * 1000)
 
-        if self._current_ms == 0 and timestamp_ms is not None:
+        if (self._current_ms == 0 or len(self._current_pcm) == 0) and timestamp_ms is not None:
             self._segment_start_ms = timestamp_ms
             self._current_ms = timestamp_ms
             self._seq_start = seq
@@ -779,8 +779,12 @@ class RealtimeAudioIngressBuffer:
         return segments_to_emit
 
     def clear_partial(self) -> None:
-        """Clears partial un-emitted audio in ingress to prevent duplication on reconnect replay."""
+        """Clears partial un-emitted audio in ingress to prevent duplication on reconnect replay.
+        Resets _current_ms to _segment_start_ms to maintain timeline duration integrity
+        and prevent double-counting un-emitted partial frame duration upon replay.
+        """
         self._current_pcm.clear()
+        self._current_ms = self._segment_start_ms
         self._seq_start = 0
         self._has_speech_in_current = False
         self._silence_ms_accum = 0
@@ -789,6 +793,7 @@ class RealtimeAudioIngressBuffer:
         if len(self._current_pcm) > 0 and self._has_speech_in_current:
             return self._emit_current_segment()
         self._current_pcm.clear()
+        self._current_ms = self._segment_start_ms
         self._seq_start = 0
         self._has_speech_in_current = False
         return None
