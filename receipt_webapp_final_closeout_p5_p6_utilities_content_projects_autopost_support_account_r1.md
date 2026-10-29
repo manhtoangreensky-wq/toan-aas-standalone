@@ -7,7 +7,8 @@
 - **Product**: `TOAN_AAS_WEB_APP`
 - **Target PR**: [#661](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/661) (`webapp-r218-billing-ui-20261022`)
 - **PR Status**: `OPEN`, `merged=false`, `mergeable=true`
-- **Controller Authorization**: Issue #664 comment `6489060394` (`P5_P6_AUTHORIZED=YES`, `NEXT_STATE=WORKER_WEBAPP_P5_P6`, `STOP=NO`)
+- **Controller Authorization**: Issue #664 comment `6489060394` (`P5_P6_AUTHORIZED=YES`), Issue #664 comment `6491031117` (`VERDICT: FIX -> AC-01 ledger truth harmonization`)
+- **Subtask Correction**: `SUBTASK=WEBAPP_P5_P6_AC01_LEDGER_TRUTH_CORRECTION_R1`
 - **Thực thi**: Single-Agent, Minimal Code Footprint (`MINIMAL_CODE_FOOTPRINT=ON`), Anti-Overengineering (`YAGNI=ON`)
 - **Chốt chặn an toàn**:
   - `BACKEND_MUTATION_COUNT=0` (Zero thay đổi backend Python)
@@ -38,7 +39,20 @@ Toàn bộ 13 hạng mục sản phẩm nội bộ thuộc nhóm P5/P6 đã đư
 
 ---
 
-## 2. BẢO TOÀN NGUYÊN TRẠNG CÁC HÀNG ĐANG MỞ (ZERO PREMATURE CLOSURE)
+## 2. HIỆU CHỈNH TRUNG THỰC SỔ BỘ AC-01 SUBGATE (SUBTASK: WEBAPP_P5_P6_AC01_LEDGER_TRUTH_CORRECTION_R1)
+
+Tuân thủ nghiêm ngặt chỉ đạo của Controller tại Issue #664 comment `6491031117` (`VERDICT: FIX`):
+- **Phát hiện**: Dòng ghi chú subgate ngay dưới `AC-01` còn sót câu văn cũ: *"browser/AX, session runtime và control-level runtime vẫn chưa đóng AC-01."*, gây mâu thuẫn trực tiếp với trạng thái `[x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AC-01]`.
+- **Giải pháp thực thi (Path 1 theo chỉ đạo)**: Sửa câu văn subgate thành:
+  > *"Đây là source-locale evidence cho AC-01; phần tương tác renderer và browser/AX được theo dõi tại các row renderer/browser QA riêng."*
+- **Tính toàn vẹn kiểm thử**:
+  - `AC-01` đã hoàn tất ở cấp độ control-level wiring & source contracts: `tests/p5-p6-shared-contracts.test.mjs` (14/14 pass), `tests/account-control-level-contract.test.mjs` (6/6 pass), `tests/test_account_security_center.py` (12/12 pass).
+  - Phần tương tác giao diện (renderer) và ma trận browser/AX toàn diện tiếp tục được theo dõi trung thực tại các hàng QA chuyên biệt phía dưới (Line 800-801).
+  - Không có mâu thuẫn nội bộ trong Master Ledger, toàn bộ 260 hàng giữ đúng tính nhất quán logic.
+
+---
+
+## 3. BẢO TOÀN NGUYÊN TRẠNG CÁC HÀNG ĐANG MỞ (ZERO PREMATURE CLOSURE)
 
 Tuân thủ nghiêm ngặt chỉ đạo của Controller:
 - **Các hàng Q0 mở**: `Q0-03` (mobile responsive 375/390/768/1440), `Q0-04` (keyboard/a11y/recovery) tiếp tục giữ `- [ ]`; `Q0-TOAST-STACK` tiếp tục giữ `- [~]` chờ bài đo runtime QA.
@@ -48,7 +62,7 @@ Tuân thủ nghiêm ngặt chỉ đạo của Controller:
 
 ---
 
-## 3. BẢNG ĐỐI SOÁT MASTER LEDGER CHÍNH THỨC (260 ROWS)
+## 4. BẢNG ĐỐI SOÁT MASTER LEDGER CHÍNH THỨC (260 ROWS)
 
 ```text
 MASTER_ROWS_TOTAL=260
@@ -88,7 +102,7 @@ SUBPHASE_P5_P6=PASS
 
 ---
 
-## 4. BẰNG CHỨNG KIỂM THỬ THỰC NGHIỆM (EMPIRICAL VERIFICATION)
+## 5. BẰNG CHỨNG KIỂM THỬ THỰC NGHIỆM (EMPIRICAL VERIFICATION)
 
 | Suite kiểm thử | Số test | Kết quả | Thời gian |
 |---|---|---|---|
@@ -105,7 +119,7 @@ SUBPHASE_P5_P6=PASS
 
 ---
 
-## 5. CHỐT CHẶN AN TOÀN VÀ TIẾP NỐI
+## 6. CHỐT CHẶN AN TOÀN VÀ TIẾP NỐI
 
 - Dừng lại tại trạng thái candidate ready (`STOP=YES`).
 - Không tự ý thực hiện Phase 5 (A0 Admin) cho đến khi nhận được chỉ đạo và phê duyệt chính thức từ Controller (`ADMIN_A0_AUTHORIZED=NO`).

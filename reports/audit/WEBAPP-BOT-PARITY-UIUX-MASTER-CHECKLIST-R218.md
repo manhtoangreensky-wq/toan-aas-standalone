@@ -756,8 +756,8 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [x] AC-01 locale subgate: cả ba block catalogue Account Security tiếng Việt
   (liên hệ/phiên, MFA/tình trạng và action/error) đã loại bỏ generic English, giữ
   nguyên tên riêng/acronym và placeholder; test riêng `2/2`, Account regression
-  `11/11`, full Node mới nhất `574/574`. Đây chỉ là source-locale evidence;
-  browser/AX, session runtime và control-level runtime vẫn chưa đóng AC-01.
+  `11/11`, full Node mới nhất `574/574`. Đây là source-locale evidence cho AC-01;
+  phần tương tác renderer và browser/AX được theo dõi tại các row renderer/browser QA riêng.
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AC-02] Packages/pricing/topup/history/detail/pending, không wallet mutation; control-level đã có `tests/account-billing-control-level-contract.test.mjs` đạt `5/5`; ví/lịch sử canonical, nạp thủ công bắt buộc method+amount trước QR, PayOS/catalog fail-closed và Admin handoff giữ request/confirmation boundary. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/account-billing-control-level-contract.test.mjs` 5/5 pass, `tests/billing-metadata-recovery.test.mjs`, `static/portal/portal.js` `renderWallet`)
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: SP-01] Support/ticket/attachments/replies/status/escalation/task refs đã khóa lát control-level bằng spec `docs/superpowers/specs/2026-10-18-r218-07b-support-center-controls.md` và test `tests/support-hub-product-controls.test.mjs` đạt `4/4`. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/support-hub-product-controls.test.mjs` 4/4 pass, `tests/support-admin-guard-clarity.test.mjs`, `static/portal/portal.js` `renderSupportCaseCards`/`renderSupportEvidence`)
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: SP-02] Guide/Chat Pro/feedback/community, context help đúng sản phẩm; Advisor guide, Consultation brief và Community Trust Center có ranh giới kênh xác minh. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/chat-boundary-clarity.test.mjs`, `static/portal/portal.js` `renderSupportAdvisor`/`renderSupportConsultationBrief`/`renderCommunityTrustCenter`)
