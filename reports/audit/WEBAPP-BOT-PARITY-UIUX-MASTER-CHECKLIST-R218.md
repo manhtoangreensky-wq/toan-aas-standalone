@@ -20,12 +20,14 @@ OBSOLETE_OR_DUPLICATE_COUNT=15
 F0_Q0_IMAGE_CLOSED_COUNT=13
 P5_P6_CLOSED_COUNT=13
 A0_ADMIN_CLOSED_COUNT=4
-REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=74
+V0_VIDEO_CLOSED_COUNT=13
+REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=61
 UNCLASSIFIED_MASTER_ROW_COUNT=0
 BACKEND_MUTATION_COUNT=0
 REALTIME_TRANSLATE_TOUCH=NO
 STEP1_LEDGER_RECONCILIATION=ACCEPTED
 SUBPHASE_A0_ADMIN=PASS
+SUBPHASE_V0_VIDEO=PASS
 ```
 
 ## Checkpoint mới nhất — 22/10/2026
@@ -942,20 +944,20 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   4 lane cốt lõi, VI/EN/ZH × sáng/tối × 390/1440, overflow/audio/video/download/
   fake/external/write/page-errors0. Evidence
   `reports/audit/R218-VIDEO-PRESENTATION-QA-20261020.json`.
-- [ ] VI-01 AI chân thật text/ảnh/scenes/brand/review.
-- [ ] VI-02 Trend catalog/search/reference/source/suggestions.
-- [ ] VI-03 Script AI/tự nhập/upload và scene editor.
-- [ ] VI-04 Frame video source/order/cover/duration/fit/transitions/motion/audio/text.
-- [ ] VI-05 Selfshot đổi cảnh/điện ảnh/timeline/preservation.
-- [ ] VI-06 Storyboard grid/detail/source/prompts/addons/review.
-- [ ] VI-07 Series/long bible/continuity/planning và khóa execution thật.
-- [ ] VI-08 Idea/reference/library/profile/downloader/handoff.
-- [ ] VI-09..12 Manual/AI/upgrade hub, timeline/segments/transforms/layers/exports.
-- [ ] VI-13 39 AI edit options/5 nhóm, detail/reference/mask/preservation/readiness.
-- [ ] VI-14 Upgrade chỉ hứa khả năng runtime đã chứng minh.
-- [ ] VI-15 Addons selected/applied, quote/report/output/download/reuse.
-- [ ] Đủ 32 profile/3 nhóm; catalog khác bộ legacy 12.
-- [ ] Không claim CapCut parity từ toolbar; browser thao tác từng nhóm.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-01] AI chân thật text/ảnh/scenes/brand/review (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/test_video_factory_workflow_portal_contracts.py`; workflow 7 bước ordered brief-to-review, brand review, route `/video/product` và `/video-studio/workflow`, không có execution/mutation trái phép).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-02] Trend catalog/search/reference/source/suggestions (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/test_video_idea_planner_portal_contracts.py`, `tests/test_copyfast_video_idea_planner.py`; đa nền tảng, 5 context, suggestion sets, route `/video-studio/idea-planner` bounded API).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-03] Script AI/tự nhập/upload và scene editor (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/test_story_video_plan_portal_contracts.py`, `tests/test_copyfast_story_video_plan.py`; Story Video Plan route `/video-studio/story-plan`, 5 pace, 8 style, scene editor với trường source/profile/preservation, prompt-only).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-04] Frame video source/order/cover/duration/fit/transitions/motion/audio/text (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/test_frame_video_portal_contracts.py`, `tests/test_copyfast_frame_video_operations.py`; route `/video/frame-sequence`, thumbnail ordering, 4 fit modes, duration per frame, session-fenced và no fake output synthesis).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-05] Selfshot đổi cảnh/điện ảnh/timeline/preservation (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `static/portal/portal.js`; Cinematic Ad Concept Composer route `/video-studio/cinematic-concept`, 7 style, timeline/transitions/shot_direction preservation).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-06] Storyboard grid/detail/source/prompts/addons/review (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `static/portal/portal.js`, `tests/test_story_video_plan_portal_contracts.py`; route `/video/storyboard-grid`, storyboard cells, detail cards, prompt planning, review/quality contracts).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-07] Series/long bible/continuity/planning và khóa execution thật (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/test_long_form_video_planner_portal_contracts.py`, `tests/test_copyfast_long_form_video_planner.py`; Long-Form Roadmap Planner route `/video-studio/long-form`, chapters/bible continuity, planning-only boundary, execution locked `action: "none"`).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-08] Idea/reference/library/profile/downloader/handoff (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/test_video_prompt_planner_portal_contracts.py`, `tests/test_copyfast_video_prompt_planner.py`; Video Prompt Planner route `/video-studio/prompt-planner`, compact planning catalog, draft video plan handoff qua `data-portal-action="video-prompt-planner-save-plan"`).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-09..12] Manual/AI/upgrade hub, timeline/segments/transforms/layers/exports (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/video-uiux-locale-presentation.test.mjs`, `tests/test_video_finishing_portal_contracts.py`; Video Hub route `/tools/video` với 4 lane planning/creation/editing/delivery, 7 journey steps, editor mode ai/manual, transform operations).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-13] 39 AI edit options/5 nhóm, detail/reference/mask/preservation/readiness (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md`, `static/portal/portal.js`; 5 nhóm Scene/Person/Object/Style/Other, detail fields, capability readiness guard).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-14] Upgrade chỉ hứa khả năng runtime đã chứng minh (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/video-guide-guard-clarity.test.mjs`, `tests/test_video_finishing_portal_contracts.py`; `data-tool-state="guarded"`, không claim unproven stabilization/denoise/restore nếu chưa chứng minh runtime, fail-closed).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-15] Addons selected/applied, quote/report/output/download/reuse (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/test_video_finishing_portal_contracts.py`; phân tách rõ ràng addons được chọn selected và đã áp dụng applied, quote/report minh bạch, verified attachment download, không tạo output giả).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-PROFILE-CATALOG-32] Đủ 32 profile/3 nhóm; catalog khác bộ legacy 12 (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md`; catalog 32 profile seeds across 3 nhóm 10/10/12, picker search/filter, 1 primary + tối đa 2 linked profiles).
+- [ ] Không claim CapCut parity từ toolbar; toolbar contract đã khóa (không claim CapCut, bounded tools), browser thao tác từng nhóm duy trì mở chờ Q0 matrix.
 
 ## Q0/M0/L0 — Nghiệm thu rồi motion, rồi báo cáo
 
