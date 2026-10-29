@@ -10360,7 +10360,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1133,
+      "occurrences": 1135,
       "provider": "PayOS"
     },
     {
@@ -10608,7 +10608,7 @@
         "copyfast_music_sfx_library_bridge.py",
         "copyfast_notification_center.py"
       ],
-      "occurrences": 2034,
+      "occurrences": 2036,
       "provider": "Telegram"
     }
   ],
@@ -18427,9 +18427,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 391,
-  "source_files_scanned": 391,
-  "source_fingerprint_sha256": "a200fd713f8cb5703bb6b761e33c1811e95e7ed9aef0ad89e08f2b8bb294e234",
+  "source_files_discovered": 393,
+  "source_files_scanned": 393,
+  "source_fingerprint_sha256": "8ba33a739685e4c4aa36491c09db132bdf722f132cbcf5f28d790eafa62919a4",
   "source_root": "repository-root",
   "ui_path_references": [
     {
