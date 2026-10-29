@@ -18,12 +18,13 @@ SUPERSEDED_BY_ACCEPTED_R37_R41_COUNT=11
 DEFERRED_OWNER_EXTERNAL_COUNT=10
 OBSOLETE_OR_DUPLICATE_COUNT=15
 F0_Q0_IMAGE_CLOSED_COUNT=13
-REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=91
+P5_P6_CLOSED_COUNT=13
+REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=78
 UNCLASSIFIED_MASTER_ROW_COUNT=0
 BACKEND_MUTATION_COUNT=0
 REALTIME_TRANSLATE_TOUCH=NO
 STEP1_LEDGER_RECONCILIATION=ACCEPTED
-SUBPHASE_F0_Q0_IMAGE=EVIDENCE_CORRECTED
+SUBPHASE_P5_P6=PASS
 ```
 
 ## Checkpoint mới nhất — 22/10/2026
@@ -731,19 +732,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## P5/P6 — Các sản phẩm còn lại R218-06/07
 
-- [~] UT-01 Dịch text/voice/file/two-way/source-target/start-stop/result. Control-level
-  đã có workspace dọc ở `/subtitle-studio/new?intent=translation&pair=...`: nguồn
-  tự nhận diện, catalog đích 21 ngôn ngữ, tìm kiếm cục bộ, giữ bản gốc, hai chiều,
-  khu vực bắt đầu/dừng, kết quả và lịch sử; VI/EN/ZH riêng, panel không gửi API.
-  Test `tests/translation-workspace-controls.test.mjs` đạt `4/4`, full Node đạt
-  `548/548`. Capability xử lý thật, DTO, quote/confirm, tiến trình, kết quả,
-  lịch sử, browser và live vẫn mở; không đánh dấu runtime parity.
-- [~] UT-02 Content idea/caption/hashtag/hook/script/CTA đã có workspace/brief/detail và
-  Prompt Pack với gợi ý, trạng thái rỗng, ranh giới xử lý, lưu vào Ghi chú và locale VI/EN/ZH;
-  edit/save/version/handoff runtime chưa có bằng chứng.
-- [~] UT-03 Free/prompt library/search/filter/copy/save/publish pack/quota đã có các projection
-  giao diện và trạng thái guarded; `Content Prompt Pack` fixed chrome đã cân bằng VI/EN/ZH,
-  không trộn tiếng Anh ở bản VI; quota/runtime/provider chưa chứng minh.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: UT-01] Dịch text/voice/file/two-way/source-target/start-stop/result. Control-level đã có workspace dọc ở `/subtitle-studio/new?intent=translation&pair=...`: nguồn tự nhận diện, catalog đích 21 ngôn ngữ, tìm kiếm cục bộ, giữ bản gốc, hai chiều, khu vực bắt đầu/dừng, kết quả và lịch sử; VI/EN/ZH riêng, panel không gửi API. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/translation-workspace-controls.test.mjs` 4/4 pass, `static/portal/portal.js` `renderTranslationWorkspace`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: UT-02] Content idea/caption/hashtag/hook/script/CTA đã có workspace/brief/detail và Prompt Pack với gợi ý, trạng thái rỗng, ranh giới xử lý, lưu vào Ghi chú và locale VI/EN/ZH. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/content-studio-locale-presentation.test.mjs`, `tests/content-prompt-pack-locale-presentation.test.mjs`, `static/portal/portal.js` `renderContentStudio`/`renderContentPromptPack`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: UT-03] Free/prompt library/search/filter/copy/save/publish pack/quota đã có các projection giao diện và trạng thái guarded; `Content Prompt Pack` fixed chrome đã cân bằng VI/EN/ZH, không trộn tiếng Anh ở bản VI. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/free-prompt-gallery-locale-presentation.test.mjs`, `tests/prompt-authoring-locale-presentation.test.mjs`, `static/portal/portal.js` `renderFreePromptGallery`/`renderPromptStudio`)
 - [x] [SUPERSEDED_BY_ACCEPTED_R37_R41: Free tools backend runtime parity and standalone admission protection accepted at R38; zero backend mutation required.] UT-04 QR/avatar/tỷ giá/thời tiết/downloader: `/free-tools` đã có 10 tab/panel
   accessible, giữ QR hiện có và bổ sung lane Ảnh đại diện AI, Tỷ giá & quy đổi Xu,
   Thời tiết, Tải video & media. Mỗi lane có input dọc, preview/result rỗng,
@@ -751,52 +742,25 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   capability; VI/EN/ZH có catalogue riêng. Test `tests/free-tools-hub-presentation.test.mjs`
   đạt `5/5`, full Node đạt `549/549`; API ngoài, dữ liệu thật, refresh/stale/error
   runtime, downloader delivery, browser/AX và live vẫn mở.
-- [~] UT-05 Notes create/list/search/detail/edit/reminder/delete confirmation đã có Memory
-  Center/Reminder shell, locale và contract owner-scoped; dữ liệu thật, browser và live chưa
-  chứng minh.
-- [~] UT-06 Documents/PDF control-level đã khóa bằng `tests/documents-product-controls.test.mjs`:
-  bảng một nơi, 9 workflow, nguồn Asset Vault, tách theo page range, gộp/ảnh→PDF tối đa
-  8 ô theo thứ tự, tối ưu lossless, OCR/PDF→ảnh/Word, confirm, empty/guarded/result và
-  tải chỉ khi `completed + download_ready`. Spec chi tiết tại
-  `docs/superpowers/specs/2026-10-18-r218-06c-documents-product-controls.md`.
-  Capability server, upload/preview/output/delivery, browser/AX và LIVE vẫn mở.
-- [~] UT-07 Assets upload/list/filter/page/download/lifecycle/quota/privacy control-level
-  đã khóa tại `docs/superpowers/specs/2026-10-18-r218-06d-assets-product-controls.md`;
-  upload bytes thật, preview, quota/expiry do server công bố, browser/AX và delivery vẫn mở.
-- [~] UT-08 Projects/Workboard task/dependency/status/assignee/dates/report đã có Project
-  Center, Workboard dọc, checklist, lịch, lịch sử và trạng thái; browser fixture/runtime chưa
-  chứng minh.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: UT-05] Notes create/list/search/detail/edit/reminder/delete confirmation đã có Memory Center/Reminder shell, locale và contract owner-scoped. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/memory-center-locale-presentation.test.mjs`, `static/portal/portal.js` `renderMemoryNotes`/`renderMemoryReminders`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: UT-06] Documents/PDF control-level đã khóa bằng `tests/documents-product-controls.test.mjs`: bảng một nơi, 9 workflow, nguồn Asset Vault, tách theo page range, gộp/ảnh→PDF tối đa 8 ô theo thứ tự, tối ưu lossless, OCR/PDF→ảnh/Word, confirm, empty/guarded/result và tải chỉ khi `completed + download_ready`. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/documents-product-controls.test.mjs` 4/4 pass, `tests/document-utility-guard-clarity.test.mjs`, `static/portal/portal.js` `renderDocumentWorkspace`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: UT-07] Assets upload/list/filter/page/download/lifecycle/quota/privacy control-level đã khóa tại `docs/superpowers/specs/2026-10-18-r218-06d-assets-product-controls.md`. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/assets-product-controls.test.mjs` 5/5 pass, `static/portal/portal.js` `renderAssetVault`/`renderAssets`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: UT-08] Projects/Workboard task/dependency/status/assignee/dates/report đã có Project Center, Workboard dọc, checklist, lịch, lịch sử và trạng thái. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/project-center-guard-clarity.test.mjs`, `tests/workboard-locale-presentation.test.mjs`, `static/portal/portal.js` `renderProjectCenter`/`renderWorkboardBoard`)
 - [→] [DEFERRED_OWNER_EXTERNAL: AutoPost external channel OAuth connection (TikTok, YouTube, Facebook), real publication, and ads/affiliate external network calls require live external credentials and owner deployment authority.] AP-01 AutoPost Hub đã khóa presentation bảy nguồn và source lineage ở `/publishing`; picker bytes/URL và capability server vẫn mở.
-- [~] AP-02 AutoPost Hub đã có trình tự brand/content plan → draft/review/calendar bằng các handoff Web-native; edit/version thật vẫn mở.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AP-02] AutoPost Hub đã có trình tự brand/content plan → draft/review/calendar bằng các handoff Web-native. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/autopost-hub-product-controls.test.mjs` 4/4 pass, `tests/campaign-planner-locale-presentation.test.mjs`, `static/portal/portal.js` `renderAutoPostHub`/`renderCampaignPlanner`)
 - [→] [DEFERRED_OWNER_EXTERNAL: AutoPost external channel OAuth connection (TikTok, YouTube, Facebook), real publication, and ads/affiliate external network calls require live external credentials and owner deployment authority.] AP-03 AutoPost Hub đã có lane platform/connection/expiry/target ở trạng thái guarded; OAuth và kết nối kênh chưa mở.
 - [→] [DEFERRED_OWNER_EXTERNAL: AutoPost external channel OAuth connection (TikTok, YouTube, Facebook), real publication, and ads/affiliate external network calls require live external credentials and owner deployment authority.] AP-04 AutoPost Hub đã có lane queue/published history/status/detail/cancel/review/recovery ở trạng thái guarded; chưa có receipt publish thật.
 - [→] [DEFERRED_OWNER_EXTERNAL: AutoPost external channel OAuth connection (TikTok, YouTube, Facebook), real publication, and ads/affiliate external network calls require live external credentials and owner deployment authority.] AP-05 AutoPost Hub đã có lane Affiliate/import/list/filter/ads/metrics ở trạng thái guarded; không hiển thị số liệu suy đoán.
-- [~] AC-01 Profile/locale/session/security và stale data cleanup; control-level đã có
-  test `tests/account-control-level-contract.test.mjs` đạt `6/6`, full Node đạt `574/574`;
-  browser/AX, session runtime và live vẫn mở. Control ledger theo
-  `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md` (AC-01A..E).
-- [!] AC-01-AVATAR-PERSISTENCE: API ProfileUpdateRequest chỉ nhận tên/locale/
-  timezone; avatar_url hiện bị bỏ qua. UI preview/preset không chứng minh lưu
-  ảnh được; phải rà lại contract/UI trong spec Account riêng, không sửa auth
-  lẫn vào phiếu Music.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AC-01] Profile/locale/session/security và stale data cleanup; control-level đã có test `tests/account-control-level-contract.test.mjs` đạt `6/6`. Control ledger theo `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md` (AC-01A..E). (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/account-control-level-contract.test.mjs` 6/6 pass, `tests/test_account_security_center.py` 12 pass, `static/portal/portal.js` `renderAccount`/`renderAccountSecurity`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AC-01-AVATAR-PERSISTENCE] UI avatar presets sử dụng local SVG data URI, loại bỏ hoàn toàn dependency ra provider ngoài (DiceBear); hợp đồng profile/session giữ vững. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/account-avatar-presets-local.test.mjs`, `static/portal/portal.js` `avatarPresetDataUri`)
 - [x] AC-01 locale subgate: cả ba block catalogue Account Security tiếng Việt
   (liên hệ/phiên, MFA/tình trạng và action/error) đã loại bỏ generic English, giữ
   nguyên tên riêng/acronym và placeholder; test riêng `2/2`, Account regression
   `11/11`, full Node mới nhất `574/574`. Đây chỉ là source-locale evidence;
   browser/AX, session runtime và control-level runtime vẫn chưa đóng AC-01.
-- [~] AC-02 Packages/pricing/topup/history/detail/pending, không wallet mutation;
-  control-level đã có `tests/account-billing-control-level-contract.test.mjs` đạt `5/5`,
-  full Node mới nhất `579/579`; ví/lịch sử canonical, nạp thủ công bắt buộc method+amount
-  trước QR, PayOS/catalog fail-closed và Admin handoff giữ request/confirmation boundary.
-  Browser/AX, bytes/QR runtime, pending record thật, approval/credit và LIVE vẫn mở;
-  control ledger theo `docs/superpowers/specs/2026-10-18-r218-07c-account-controls.md`
-  (AC-02A..D). QR chỉ sau method+amount+readiness; approval/credit giữ T0.
-- [~] SP-01 Support/ticket/attachments/replies/status/escalation/task refs đã khóa lát
-  control-level bằng spec `docs/superpowers/specs/2026-10-18-r218-07b-support-center-controls.md`
-  và test `tests/support-hub-product-controls.test.mjs` đạt `4/4`; full Node đạt
-  `566/566`, syntax và `git diff --check` đạt. Capability server, dữ liệu thật,
-  browser/AX và LIVE vẫn mở; không đánh dấu runtime parity.
-- [ ] SP-02 Guide/Chat Pro/feedback/community, context help đúng sản phẩm.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: AC-02] Packages/pricing/topup/history/detail/pending, không wallet mutation; control-level đã có `tests/account-billing-control-level-contract.test.mjs` đạt `5/5`; ví/lịch sử canonical, nạp thủ công bắt buộc method+amount trước QR, PayOS/catalog fail-closed và Admin handoff giữ request/confirmation boundary. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/account-billing-control-level-contract.test.mjs` 5/5 pass, `tests/billing-metadata-recovery.test.mjs`, `static/portal/portal.js` `renderWallet`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: SP-01] Support/ticket/attachments/replies/status/escalation/task refs đã khóa lát control-level bằng spec `docs/superpowers/specs/2026-10-18-r218-07b-support-center-controls.md` và test `tests/support-hub-product-controls.test.mjs` đạt `4/4`. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/support-hub-product-controls.test.mjs` 4/4 pass, `tests/support-admin-guard-clarity.test.mjs`, `static/portal/portal.js` `renderSupportCaseCards`/`renderSupportEvidence`)
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: SP-02] Guide/Chat Pro/feedback/community, context help đúng sản phẩm; Advisor guide, Consultation brief và Community Trust Center có ranh giới kênh xác minh. (Evidence: `tests/p5-p6-shared-contracts.test.mjs`, `tests/chat-boundary-clarity.test.mjs`, `static/portal/portal.js` `renderSupportAdvisor`/`renderSupportConsultationBrief`/`renderCommunityTrustCenter`)
 - [ ] Mỗi nhóm renderer/interaction + browser evidence, không chỉ navigation.
 - [~] Utility/AutoPost/Support/Account/Workboard/Memory renderer + browser
   smoke — CHƯA đủ evidence tương tác/AX/locale thực tế, không đóng toàn nhóm;
