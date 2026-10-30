@@ -4,7 +4,7 @@
     {
       "file": "app.py",
       "kind": "create_task",
-      "line": 240,
+      "line": 241,
       "target": "<dynamic>"
     },
     {
@@ -1504,7 +1504,7 @@
     {
       "file": "app.py",
       "kind": "function",
-      "line": 2714,
+      "line": 2716,
       "target": "pwa_service_worker"
     },
     {
@@ -1654,7 +1654,7 @@
     {
       "file": "app.py",
       "kind": "function",
-      "line": 2488,
+      "line": 2489,
       "target": "root_service_worker"
     },
     {
@@ -1790,10 +1790,10 @@
     "callback_templates": 0,
     "commands": 0,
     "conversations": 0,
-    "database_tables": 253,
-    "env_references": 290,
+    "database_tables": 254,
+    "env_references": 298,
     "providers": 14,
-    "routes": 868,
+    "routes": 872,
     "ui_path_references": 52
   },
   "database_references": [
@@ -2189,7 +2189,7 @@
     },
     {
       "file": "app.py",
-      "line": 1711,
+      "line": 1712,
       "operation": "UPDATE",
       "table": "family"
     },
@@ -8516,6 +8516,12 @@
       "line": 884,
       "operation": "INSERT INTO",
       "table": "web_workspace_starter_kit_installs"
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "line": 476,
+      "operation": "UPDATE",
+      "table": "without"
     }
   ],
   "database_tables": [
@@ -8771,7 +8777,8 @@
     "web_workspace_draft_handoffs",
     "web_workspace_drafts",
     "web_workspace_setup_profiles",
-    "web_workspace_starter_kit_installs"
+    "web_workspace_starter_kit_installs",
+    "without"
   ],
   "env_references": [
     {
@@ -8781,7 +8788,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 190,
+      "line": 194,
       "name": "ADMIN_ID"
     },
     {
@@ -8906,7 +8913,7 @@
     },
     {
       "file": "app.py",
-      "line": 142,
+      "line": 143,
       "name": "CORS_ALLOW_ORIGINS"
     },
     {
@@ -8955,6 +8962,16 @@
       "name": "DEEPGRAM_API_KEY"
     },
     {
+      "file": "copyfast_realtime_translate.py",
+      "line": 912,
+      "name": "ENV"
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "line": 925,
+      "name": "ENV"
+    },
+    {
       "file": "copyfast_db.py",
       "line": 40,
       "name": "ENVIRONMENT"
@@ -8962,6 +8979,11 @@
     {
       "file": "copyfast_notification_center.py",
       "line": 225,
+      "name": "ENVIRONMENT"
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "line": 913,
       "name": "ENVIRONMENT"
     },
     {
@@ -8996,7 +9018,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 361,
+      "line": 365,
       "name": "INTERNAL_MANUAL_ADMIN_TOKEN"
     },
     {
@@ -9026,7 +9048,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 190,
+      "line": 194,
       "name": "OWNER_IDS"
     },
     {
@@ -9085,6 +9107,11 @@
       "name": "PUBLIC_BASE_URL"
     },
     {
+      "file": "copyfast_realtime_translate.py",
+      "line": 928,
+      "name": "PYTEST_CURRENT_TEST"
+    },
+    {
       "file": "copyfast_db.py",
       "line": 41,
       "name": "RAILWAY_ENVIRONMENT"
@@ -9098,6 +9125,16 @@
       "file": "copyfast_db.py",
       "line": 59,
       "name": "RAILWAY_VOLUME_MOUNT_PATH"
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "line": 930,
+      "name": "REALTIME_ALLOW_UNPRICED_TEST_SESSION"
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "line": 833,
+      "name": "REALTIME_STREAM_SECRET"
     },
     {
       "file": "config.py",
@@ -9140,9 +9177,19 @@
       "name": "TELEGRAM_LINK_TTL_MINUTES"
     },
     {
+      "file": "copyfast_realtime_translate.py",
+      "line": 926,
+      "name": "TESTING"
+    },
+    {
       "file": "copyfast_product_video_dispatcher.py",
       "line": 104,
       "name": "TOANAAS_WORKER_SECRET"
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "line": 914,
+      "name": "TOAN_AAS_ENV"
     },
     {
       "file": "copyfast_admin_erp_navigation.py",
@@ -10617,7 +10664,7 @@
     {
       "endpoint": "legacy_admin_redirect",
       "file": "app.py",
-      "line": 2730,
+      "line": 2732,
       "methods": [
         "GET"
       ],
@@ -11085,7 +11132,7 @@
     {
       "endpoint": "legacy_affiliate_redirect",
       "file": "app.py",
-      "line": 2750,
+      "line": 2752,
       "methods": [
         "GET"
       ],
@@ -11283,7 +11330,7 @@
     {
       "endpoint": "durable_login",
       "file": "app.py",
-      "line": 2555,
+      "line": 2556,
       "methods": [
         "POST"
       ],
@@ -11292,7 +11339,7 @@
     {
       "endpoint": "durable_register",
       "file": "app.py",
-      "line": 2541,
+      "line": 2542,
       "methods": [
         "POST"
       ],
@@ -11301,7 +11348,7 @@
     {
       "endpoint": "durable_password_change",
       "file": "app.py",
-      "line": 2569,
+      "line": 2570,
       "methods": [
         "POST"
       ],
@@ -11337,7 +11384,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2702,
+      "line": 2704,
       "methods": [
         "GET"
       ],
@@ -11742,7 +11789,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2761,
+      "line": 2763,
       "methods": [
         "GET"
       ],
@@ -11787,7 +11834,7 @@
     {
       "endpoint": "legacy_b2b_redirect",
       "file": "app.py",
-      "line": 2766,
+      "line": 2768,
       "methods": [
         "GET"
       ],
@@ -12030,7 +12077,7 @@
     {
       "endpoint": "legacy_campaign_redirect",
       "file": "app.py",
-      "line": 2745,
+      "line": 2747,
       "methods": [
         "GET"
       ],
@@ -12264,7 +12311,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2761,
+      "line": 2763,
       "methods": [
         "GET"
       ],
@@ -14217,7 +14264,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2702,
+      "line": 2704,
       "methods": [
         "GET"
       ],
@@ -14631,7 +14678,7 @@
     {
       "endpoint": "pwa_manifest",
       "file": "app.py",
-      "line": 2708,
+      "line": 2710,
       "methods": [
         "GET"
       ],
@@ -14640,7 +14687,7 @@
     {
       "endpoint": "pwa_manifest",
       "file": "app.py",
-      "line": 2708,
+      "line": 2710,
       "methods": [
         "GET"
       ],
@@ -14685,7 +14732,7 @@
     {
       "endpoint": "legacy_media_redirect",
       "file": "app.py",
-      "line": 2755,
+      "line": 2757,
       "methods": [
         "GET"
       ],
@@ -14901,7 +14948,7 @@
     {
       "endpoint": "pwa_offline_page",
       "file": "app.py",
-      "line": 2724,
+      "line": 2726,
       "methods": [
         "GET"
       ],
@@ -15441,7 +15488,7 @@
     {
       "endpoint": "pwa_service_worker",
       "file": "app.py",
-      "line": 2714,
+      "line": 2716,
       "methods": [
         "GET"
       ],
@@ -16449,11 +16496,47 @@
     {
       "endpoint": "root_service_worker",
       "file": "app.py",
-      "line": 2488,
+      "line": 2489,
       "methods": [
         "GET"
       ],
       "path": "/service-worker.js"
+    },
+    {
+      "endpoint": "create_live_translate_session",
+      "file": "copyfast_realtime_translate.py",
+      "line": 955,
+      "methods": [
+        "POST"
+      ],
+      "path": "/sessions"
+    },
+    {
+      "endpoint": "get_session_status",
+      "file": "copyfast_realtime_translate.py",
+      "line": 1015,
+      "methods": [
+        "GET"
+      ],
+      "path": "/sessions/{session_id}"
+    },
+    {
+      "endpoint": "export_session_subtitles",
+      "file": "copyfast_realtime_translate.py",
+      "line": 1081,
+      "methods": [
+        "GET"
+      ],
+      "path": "/sessions/{session_id}/export"
+    },
+    {
+      "endpoint": "stop_session",
+      "file": "copyfast_realtime_translate.py",
+      "line": 1030,
+      "methods": [
+        "POST"
+      ],
+      "path": "/sessions/{session_id}/stop"
     },
     {
       "endpoint": "add_post",
@@ -17601,7 +17684,7 @@
     {
       "endpoint": "legacy_video_redirect",
       "file": "app.py",
-      "line": 2740,
+      "line": 2742,
       "methods": [
         "GET"
       ],
@@ -17628,7 +17711,7 @@
     {
       "endpoint": "legacy_wallet_redirect",
       "file": "app.py",
-      "line": 2735,
+      "line": 2737,
       "methods": [
         "GET"
       ],
@@ -18150,7 +18233,7 @@
     {
       "endpoint": "page",
       "file": "app.py",
-      "line": 2771,
+      "line": 2773,
       "methods": [
         "GET"
       ],
@@ -18401,9 +18484,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 328,
-  "source_files_scanned": 328,
-  "source_fingerprint_sha256": "7e2286c9b7b7a8bc5d6b15981d8f4421fb0af0b33651346bab7fdcccc59c5a72",
+  "source_files_discovered": 337,
+  "source_files_scanned": 337,
+  "source_fingerprint_sha256": "749458c18bfe3cb481cfb32ddfd11a2ca39f19c1c8c24ac29eb0652adf8ce29c",
   "source_root": "repository-root",
   "ui_path_references": [
     {

@@ -85,6 +85,7 @@ import copyfast_trend_research
 import copyfast_video_operations
 import copyfast_video_studio
 import copyfast_voice_studio
+import copyfast_realtime_translate
 import copyfast_workboard
 import copyfast_workspace_setup
 from copyfast_auth import (
@@ -2674,6 +2675,7 @@ app.include_router(copyfast_trend_research.router)
 app.include_router(copyfast_growth_review.router)
 app.include_router(copyfast_media_factory.router)
 app.include_router(copyfast_voice_studio.router)
+app.include_router(copyfast_realtime_translate.router)
 app.include_router(copyfast_video_studio.router)
 app.include_router(copyfast_subtitle_workspace.router)
 app.include_router(copyfast_image_studio.router)
