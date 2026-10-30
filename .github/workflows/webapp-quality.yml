@@ -80,6 +80,26 @@ jobs:
           node --check static/portal/integration.js
           node --check static/portal/service-worker.js
 
+      - name: Check out Bot authoritative catalog
+        env:
+          BOT_AUTHORITY_SHA: 83a994aea6fb253ee9e64fcfc845d4c31aa2934d
+        run: |
+          mkdir -p ../bot
+          git init ../bot
+          git -C ../bot remote add origin https://github.com/manhtoangreensky-wq/bot.git
+          git -C ../bot fetch --depth 1 origin "$BOT_AUTHORITY_SHA"
+          git -C ../bot checkout FETCH_HEAD
+
+      - name: Run Web App shared contract suites
+        env:
+          BOT_ROOT: ${{ github.workspace }}/../bot
+          BOT_AUTHORITY_SHA: 83a994aea6fb253ee9e64fcfc845d4c31aa2934d
+        run: |
+          node --test tests/v0-video-shared-contracts.test.mjs
+          node --test tests/a0-admin-shared-contracts.test.mjs
+          node --test tests/p5-p6-shared-contracts.test.mjs
+          node --test tests/f0-q0-shared-contracts.test.mjs
+
       - name: Run critical Web App contracts (bounded)
         shell: bash
         run: |

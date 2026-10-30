@@ -4,11 +4,11 @@
 
 - **Task**: `TASK=WEBAPP_FINAL_INTERNAL_UIUX_MOTION_AND_INTEGRATION_CLOSEOUT_R1`
 - **Subphase**: `SUBPHASE=WEBAPP_V0_PRODUCT_VIDEO_VIDEO_TOOLS_INTERNAL_UIUX_CLOSEOUT_R1`
-- **Subtask Fix**: `SUBTASK=WEBAPP_V0_LEDGER_CANONICAL_IDENTIFIERS_AND_EVIDENCE_TRUTH_R1` (Issue #664 comment ID `6514597016`)
+- **Subtask Fix**: `SUBTASK=WEBAPP_V0_AUTHORITATIVE_BOT_CATALOG_BINDING_AND_CI_GATE_R1` (Issue #664 comment ID `6515282071`)
 - **Product**: `TOAN_AAS_WEB_APP`
 - **Target PR**: [#661](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/661) (`webapp-r218-billing-ui-20261022`)
 - **PR Status**: `OPEN`, `merged=false`, `mergeable=true`
-- **Controller Authorization**: Issue #664 comment `6505319831` (`VIDEO_V0_AUTHORIZED=YES`), Issue #664 comment `6514597016` (`VERDICT=FIX -> Sửa 3 identifier trong ledger; bind test 39 options & 32 profiles vào authoritative source/catalog thực`)
+- **Controller Authorization**: Issue #664 comment `6505319831` (`VIDEO_V0_AUTHORIZED=YES`), Issue #664 comment `6515282071` (`VERDICT=FIX -> Bot catalog phải được checkout/read ở explicit authority SHA trong CI; thiếu Bot source phải fail chứ không skip; VI-13 phải parse trực tiếp video_ai_edit_catalog.py; VI-PROFILE-CATALOG-32 phải parse trực tiếp video_profile_catalog.py; suite V0 phải được chạy trong exact-head GitHub CI`)
 - **Thực thi**: Single-Agent, Minimal Code Footprint (`MINIMAL_CODE_FOOTPRINT=ON`), Anti-Overengineering (`YAGNI=ON`)
 - **Chốt chặn an toàn bất biến**:
   - `BACKEND_MUTATION_COUNT=0` (Không chỉnh sửa router/service Python backend)
@@ -19,20 +19,51 @@
 
 ---
 
-## 1. HIỆU CHỈNH CANONICAL IDENTIFIERS VÀ DYNAMIC EVIDENCE TRUTH
+## 1. RÀNG BUỘC TRỰC TIẾP BOT CATALOG VÀ BỔ SUNG GATE CI CHÍNH XÁC
 
-Đáp ứng 100% hai yêu cầu điều chỉnh của Controller tại comment `6514597016`:
+Đáp ứng đầy đủ 4 yêu cầu kiểm thử và bằng chứng thực nghiệm của Controller tại comment `6515282071`:
 
-### 1.1. Đồng bộ 3 Canonical Identifiers trong Master Ledger
-Đã chỉnh sửa file `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md` để khớp hoàn toàn với source code và test assertions:
-- `VI-03`: Sửa route từ `/video-studio/story-plan` thành canonical `/video-studio/story-video-plan`.
-- `VI-07`: Sửa route từ `/video-studio/long-form` thành canonical `/video-studio/long-form-planner`.
-- `VI-08`: Sửa action từ `video-prompt-planner-save-plan` thành canonical `video-prompt-plan-save`.
+### 1.1. Tự động Checkout Bot Repository tại Explicit Authority SHA trong CI
+- Trong workflow CI `.github/workflows/webapp-quality.yml`, đã tích hợp bước tải repository Bot chính thức:
+  - Repository: `https://github.com/manhtoangreensky-wq/bot.git`
+  - Explicit Authority SHA: `83a994aea6fb253ee9e64fcfc845d4c31aa2934d`
+  - Thư mục đích: `../bot` (nằm ngoài root Web App, bảo toàn tuyệt đối tính toàn vẹn của git status và migration evidence của Web App).
+- Thiết lập biến môi trường `BOT_ROOT=${{ github.workspace }}/../bot` và `BOT_AUTHORITY_SHA=83a994aea6fb253ee9e64fcfc845d4c31aa2934d` phục vụ các bài kiểm thử.
 
-### 1.2. Chuyển đổi bài test sang Dynamic Parsing từ Authoritative Source/Catalog (Xóa bỏ Tautology)
-Trong `tests/v0-video-shared-contracts.test.mjs`, đã xóa bỏ toàn bộ hằng số tự khai báo (`const optionsCount = 39` và `const profileSeeds = [...]`):
-- `VI-13`: Đọc trực tiếp từ đặc tả thẩm quyền `docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md`, phân tích cú pháp khối `## AI edit catalog coverage`, trích xuất 5 nhóm (`Scene: 12`, `Person: 7`, `Object: 8`, `Style: 8`, `Other: 4`) và xác thực tổng đúng 39 options phân phối đều; đồng thời đối soát các hàm/hợp đồng giao diện trong `static/portal/portal.js` (`videoTransformOperationSources`, `videoTransformPortalSpec`, `VIDEO_TRANSFORM_PORTAL_RATIOS`, `VIDEO_TRANSFORM_PORTAL_FIT_LABELS`, `VIDEO_TRANSFORM_PORTAL_PRESET_LABELS`).
-- `VI-PROFILE-CATALOG-32`: Phân tích cú pháp khối `## Profile video: phải giữ đầy đủ catalog` từ đặc tả thẩm quyền `docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md`, trích xuất đúng 32 profile seeds, xác thực 3 nhóm (10/10/12) khác biệt bộ legacy 12; đồng thời cross-check đối soát trực tiếp 1:1 với `PROFILE_SEEDS` trong `services/video_profile_catalog.py` (32/32 trùng khớp tuyệt đối).
+### 1.2. Chính sách Bắt Buộc Có Nguồn Bot (Fail-Closed, Zero Skip)
+- Trong `tests/v0-video-shared-contracts.test.mjs`, hàm `resolveBotRoot()` kiểm tra sự tồn tại của cả hai tệp catalog:
+  - `services/video_ai_edit_catalog.py`
+  - `services/video_profile_catalog.py`
+- Nếu không tìm thấy tệp hoặc đường dẫn Bot, kiểm thử sẽ **FAIL NGAY LẬP TỨC** (`throw new Error(...)`), tuyệt đối không bỏ qua (`skip`) hay rơi vào kịch bản suy diễn giả mạo.
+- Bổ sung kiểm tra hợp đồng thẩm quyền `VI-BOT-AUTHORITY`: xác nhận đối soát commit SHA của repository Bot với `BOT_AUTHORITY_SHA`.
+
+### 1.3. Parse Trực Tiếp `services/video_ai_edit_catalog.py` (VI-13)
+- `VI-13` đọc và phân tích cú pháp trực tiếp từ mã nguồn Bot catalog:
+  - Xác thực 5 categories chuẩn: `scene`, `person`, `object`, `style`, `text`.
+  - Xác thực đúng 39 capabilities phân bổ chính xác: `scene`: 12, `person`: 7, `object`: 8, `style`: 8, `text`: 4.
+  - Xác thực metadata đầu vào: `requires_reference_image=True` chỉ áp dụng cho `person_replace` và `person_appearance_reference`.
+  - Xác thực 7 preset styles: `detail_kind="preset"`.
+  - Xác thực ranh giới an toàn: `enabled_production: bool = False`, `enabled_offline: bool = True` (mặc định tắt production, fail-closed).
+  - Đối soát chéo 1:1 với Web spec (`docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md`) và các bộ điều khiển transform trong `static/portal/portal.js`.
+
+### 1.4. Parse Trực Tiếp `services/video_profile_catalog.py` (VI-PROFILE-CATALOG-32)
+- `VI-PROFILE-CATALOG-32` đọc và phân tích cú pháp trực tiếp từ mã nguồn Bot catalog:
+  - Xác thực `SCHEMA_VERSION = 2` và `MAX_LINKED_PROFILES = 2`.
+  - Xác thực 3 page groups: `sales_social`, `story_knowledge_emotion`, `industry_visual`.
+  - Trích xuất toàn bộ danh mục `PROFILE_SEEDS` gồm đúng 32 profiles độc nhất:
+    - `sales_social`: 10 profiles.
+    - `story_knowledge_emotion`: 10 profiles.
+    - `industry_visual`: 12 profiles.
+  - Xác thực tính độc lập và phân biệt hoàn toàn so với bộ legacy 12 profiles.
+  - Đối soát chéo 1:1 danh sách 32 profiles giữa Bot catalog và Web spec.
+
+### 1.5. Kích Hoạt Chạy Bộ Shared Contracts Trong Exact-Head GitHub Actions CI
+- Trong `.github/workflows/webapp-quality.yml`, bước `Run Web App shared contract suites` chạy tự động:
+  - `node --test tests/v0-video-shared-contracts.test.mjs`
+  - `node --test tests/a0-admin-shared-contracts.test.mjs`
+  - `node --test tests/p5-p6-shared-contracts.test.mjs`
+  - `node --test tests/f0-q0-shared-contracts.test.mjs`
+- Đảm bảo CI chứng thực trực tiếp logic V0 thay vì chỉ kiểm tra cú pháp tệp.
 
 ---
 
@@ -47,16 +78,16 @@ Trong `tests/v0-video-shared-contracts.test.mjs`, đã xóa bỏ toàn bộ hằ
 7. `VI-07` (`[x]`): Series/long bible/continuity/planning và khóa execution thật: Long-Form Roadmap Planner tại `/video-studio/long-form-planner`, quản lý chương/tập/bible tính liên tục nội dung, phân lập ranh giới kế hoạch (*planning-only*), khóa thực thi `action: "none"`. *(Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/test_long_form_video_planner_portal_contracts.py`, `tests/test_copyfast_long_form_video_planner.py`, `static/portal/portal.js` `renderLongFormRoadmapResult`)*
 8. `VI-08` (`[x]`): Idea/reference/library/profile/downloader/handoff: Video Prompt Planner tại `/video-studio/prompt-planner`, danh mục kế hoạch tinh gọn, chuyển tiếp bản nháp sang Video Plan an toàn qua `data-portal-action="video-prompt-plan-save"`. *(Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/test_video_prompt_planner_portal_contracts.py`, `tests/test_copyfast_video_prompt_planner.py`, `static/portal/portal.js` `renderVideoPromptPlanner`)*
 9. `VI-09..12` (`[x]`): Manual/AI/upgrade hub, timeline/segments/transforms/layers/exports: Video Hub tại route `/tools/video` phân lập 4 lane cốt lõi (*planning, creation, editing, delivery*), 7 bước hành trình (*input, plan, quote, confirm, progress, result, recovery*), chế độ editor mode `ai` và `manual`, các thao tác transform vận hành độc lập. *(Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/video-uiux-locale-presentation.test.mjs`, `tests/test_video_finishing_portal_contracts.py`, `static/portal/portal.js` `renderVideoHub`/`renderVideoTransformOperations`)*
-10. `VI-13` (`[x]`): 39 AI edit options/5 nhóm, detail/reference/mask/preservation/readiness: 5 nhóm độc lập (*Scene, Person, Object, Style, Other*), các trường chi tiết chuyên biệt, trạng thái capability readiness guard bảo vệ runtime. *(Evidence: `tests/v0-video-shared-contracts.test.mjs`, `docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md`, `static/portal/portal.js` `videoTransformOperationSources`)*
+10. `VI-13` (`[x]`): 39 AI edit options/5 nhóm, detail/reference/mask/preservation/readiness: 5 nhóm độc lập (*Scene, Person, Object, Style, Text*), 39 capabilities được parse trực tiếp từ Bot catalog `services/video_ai_edit_catalog.py`, trạng thái capability readiness guard bảo vệ runtime fail-closed. *(Evidence: `tests/v0-video-shared-contracts.test.mjs`, `bot:services/video_ai_edit_catalog.py`, `docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md`, `static/portal/portal.js` `videoTransformOperationSources`)*
 11. `VI-14` (`[x]`): Upgrade chỉ hứa khả năng runtime đã chứng minh: `data-tool-state="guarded"`, không hứa hẹn tính năng chưa chứng minh như stabilization/denoise/restore khi chưa có runtime thực nghiệm, fail-closed an toàn. *(Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/video-guide-guard-clarity.test.mjs`, `tests/test_video_finishing_portal_contracts.py`)*
 12. `VI-15` (`[x]`): Addons selected/applied, quote/report/output/download/reuse: phân tách tường minh giữa tiện ích được chọn (*selected*) và đã áp dụng (*applied*), báo giá/báo cáo minh bạch, tải tệp đính kèm đã xác thực, triệt tiêu việc sinh output giả. *(Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/test_video_finishing_portal_contracts.py`, `static/portal/portal.js` `renderVideoFinalization`)*
-13. `VI-PROFILE-CATALOG-32` (`[x]`): Đủ 32 profile/3 nhóm; catalog khác bộ legacy 12: danh mục 32 profile seeds (`sales_ads`, `product_review_demo`, ..., `music_video_performance`) chia 3 nhóm 10/10/12, bộ chọn hỗ trợ tìm kiếm/lọc, 1 profile chính và tối đa 2 profile liên kết, khác biệt hoàn toàn so với bộ 12 legacy. *(Evidence: `tests/v0-video-shared-contracts.test.mjs`, `docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md`)*
+13. `VI-PROFILE-CATALOG-32` (`[x]`): Đủ 32 profile/3 nhóm; catalog khác bộ legacy 12: danh mục 32 profile seeds chia 3 nhóm 10/10/12 được parse trực tiếp từ Bot catalog `services/video_profile_catalog.py`, bộ chọn hỗ trợ tìm kiếm/lọc, 1 profile chính và tối đa 2 profile liên kết, khác biệt hoàn toàn so với bộ 12 legacy. *(Evidence: `tests/v0-video-shared-contracts.test.mjs`, `bot:services/video_profile_catalog.py`, `docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md`)*
 
 ---
 
 ## 3. BẢO TOÀN NGUYÊN TRẠNG CÁC HÀNG BROWSER MATRIX VÀ HÀNG ĐANG MỞ (ZERO PREMATURE CLOSURE)
 
-Tuân thủ nghiêm ngặt chỉ đạo của Controller tại Issue #664 comment `6505319831` và comment `6514597016`:
+Tuân thủ nghiêm ngặt chỉ đạo của Controller tại Issue #664:
 - **Giữ mở hàng toolbar CapCut & browser**: `- [ ] Không claim CapCut parity từ toolbar; toolbar contract đã khóa (không claim CapCut, bounded tools), browser thao tác từng nhóm duy trì mở chờ Q0 matrix.` tiếp tục giữ trạng thái mở `- [ ]`. Hợp đồng toolbar không claim CapCut đã được chứng minh, nhưng vế `browser thao tác từng nhóm` phải chờ đo tại bộ QA matrix toàn diện (Q0/L0).
 - **Giữ mở 2 hàng QA tổng V0**: 2 dòng ghi chú kiểm thử hồi quy/smoke (Line 937 `[~]` và Line 940 `[~]`) tiếp tục giữ nguyên `[~]` chờ nghiệm thu runtime browser tổng thể.
 - **Giữ nguyên các hàng hoãn & mở của các phân hệ khác**:
@@ -110,11 +141,12 @@ SUBPHASE_V0_VIDEO=PASS
 
 | Suite kiểm thử | Số test | Kết quả | Thời gian |
 |---|---|---|---|
-| `node --test tests/v0-video-shared-contracts.test.mjs` | 14 | **14 PASSED, 0 FAILED** | 0.17s |
+| `node --test tests/v0-video-shared-contracts.test.mjs` | 15 | **15 PASSED, 0 FAILED** | 0.55s |
 | `node --test tests/a0-admin-shared-contracts.test.mjs` | 6 | **6 PASSED, 0 FAILED** | 0.25s |
 | `node --test tests/p5-p6-shared-contracts.test.mjs` | 14 | **14 PASSED, 0 FAILED** | 0.26s |
 | `node --test tests/f0-q0-shared-contracts.test.mjs` | 8 | **8 PASSED, 0 FAILED** | 0.23s |
-| `node --test tests/*video*.test.mjs` (Full Video suite) | 27 | **27 PASSED, 0 FAILED** | 0.57s |
+| `node --test tests/*video*.test.mjs` (Full Video suite) | 28 | **28 PASSED, 0 FAILED** | 0.65s |
+| `pytest tests/test_portal_aura_theme_contracts.py ...` | 42 | **42 PASSED, 0 FAILED** | 2.09s |
 | `node --check static/portal/*.js` (6 files) | 6 | **SYNTAX CLEAN** | 0.1s |
 | `python -m compileall -q .` | - | **0 ERRORS** | 3.5s |
 | `git diff --check HEAD^^ HEAD` | - | **0 WHITESPACE ERRORS** | 0.1s |
