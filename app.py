@@ -2425,6 +2425,17 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
 @app.exception_handler(RequestValidationError)
 async def copyfast_validation_exception(request: Request, _exc: RequestValidationError):
     if request.url.path.startswith("/api/") or request.url.path.startswith("/internal/"):
+        if request.url.path.startswith("/api/v1/voice/profiles/"):
+            return JSONResponse(
+                envelope(
+                    False,
+                    "Tên giọng phải từ 2 đến 80 ký tự.",
+                    data={},
+                    status_name="failed",
+                    error_code="VOICE_PROFILE_INVALID_NAME",
+                ),
+                status_code=400,
+            )
         is_reliability_followup = request.url.path.startswith("/api/v1/operations/admin/reliability/") or request.url.path.startswith("/api/v1/operations/admin/followups")
         is_notification_center = request.url.path.startswith("/api/v1/inbox/") or request.url.path.startswith("/internal/v1/notifications/")
         is_governance = request.url.path.startswith("/api/v1/admin/governance/")

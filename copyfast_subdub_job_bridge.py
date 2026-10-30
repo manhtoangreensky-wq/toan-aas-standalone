@@ -81,7 +81,28 @@ FORBIDDEN_AUTHORITY_FIELDS_NORMALIZED = frozenset({
     "accountid", "ownerid", "userid", "user_id", "account_id", "owner_id", "refund", "refund_status",
     "bridgeenvelope", "outputmetadata", "providervoiceid", "providervoice", "voiceid",
     "chargedxu", "estimatedxu", "providerspendxu", "fakeoutputurl",
+    "speakercount", "detectedspeakercount", "speakermapping", "speakermappinginternals",
+    "providermodelid", "providermodel", "rawworkerroute",
 })
+
+CANONICAL_AUTO_SPEAKER_LANES = frozenset({
+    "auto_2",
+    "auto_multi_3_8",
+    "smart_multi",
+})
+
+AUTO_SPEAKER_LANE_MAP = {
+    "auto_2": "auto_2",
+    "auto_two": "auto_2",
+    "two_speaker": "auto_2",
+    "auto_speaker": "auto_2",
+    "auto_multi_3_8": "auto_multi_3_8",
+    "auto_multi": "auto_multi_3_8",
+    "multi": "auto_multi_3_8",
+    "smart_multi": "smart_multi",
+    "auto_smart_multivoice": "smart_multi",
+    "smart": "smart_multi",
+}
 
 CANONICAL_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
 SAFE_HOSTNAME_PATTERN = re.compile(r"^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
@@ -236,6 +257,21 @@ def validate_subdub_input(values: dict[str, Any]) -> tuple[bool, str, dict[str, 
     # 5. Voice profile (for dubbing lanes)
     voice_profile_id = str(values.get("voice_profile_id") or "").strip()[:80]
 
+    # 5B. Auto speaker lane normalization (auto_2, auto_multi_3_8, smart_multi)
+    raw_auto_lane = values.get("auto_speaker_lane") or values.get("voice_lane")
+    auto_speaker_lane = ""
+    if raw_auto_lane is not None and str(raw_auto_lane).strip() != "":
+        clean_lane = str(raw_auto_lane).strip().lower()
+        if clean_lane in AUTO_SPEAKER_LANE_MAP:
+            auto_speaker_lane = AUTO_SPEAKER_LANE_MAP[clean_lane]
+        elif clean_lane in {"default_female", "default_male", "saved_voice", "custom_voice", "none", ""}:
+            auto_speaker_lane = ""
+        else:
+            return False, "INVALID_AUTO_SPEAKER_LANE", {}
+
+    if auto_speaker_lane and voice_profile_id:
+        return False, "CONFLICTING_VOICE_CONFIGURATION", {}
+
     # 6. Speed multiplier (0.7 to 1.8)
     speed_raw = values.get("speed", 1.0)
     try:
@@ -267,6 +303,7 @@ def validate_subdub_input(values: dict[str, Any]) -> tuple[bool, str, dict[str, 
         "source_language": source_lang,
         "target_language": target_lang,
         "voice_profile_id": voice_profile_id,
+        "auto_speaker_lane": auto_speaker_lane,
         "output_format": output_format,
         "speed": speed,
         "product_key": CANONICAL_PRODUCT_KEY,
@@ -283,6 +320,7 @@ def compute_payload_hash(payload: dict[str, Any]) -> str:
         "source_language": str(payload.get("source_language") or "auto").strip(),
         "target_language": str(payload.get("target_language") or "").strip(),
         "voice_profile_id": str(payload.get("voice_profile_id") or "").strip(),
+        "auto_speaker_lane": str(payload.get("auto_speaker_lane") or "").strip(),
         "output_format": str(payload.get("output_format") or "srt").strip(),
         "speed": round(float(payload.get("speed") or 1.0), 2),
         "product_key": str(payload.get("product_key") or CANONICAL_PRODUCT_KEY),
@@ -362,6 +400,7 @@ def ensure_subdub_schema() -> None:
             ("settlement_id", "TEXT"),
             ("charged_xu", "INTEGER DEFAULT 0"),
             ("settled_at", "TEXT"),
+            ("auto_speaker_lane", "TEXT DEFAULT ''"),
         ]
         for col_name, col_def in runtime_cols:
             if col_name not in existing_cols:
@@ -382,7 +421,7 @@ _SUBDUB_JOB_COLUMNS = (
     "idempotency_key_hash, payload_hash, bridge_envelope, output_metadata, "
     "created_at, updated_at, output_url, "
     "runtime_job_id, runtime_dispatch_status, runtime_dispatched_at, runtime_request_id, runtime_last_error, "
-    "settlement_status, settlement_id, charged_xu, settled_at"
+    "settlement_status, settlement_id, charged_xu, settled_at, auto_speaker_lane"
 )
 
 
@@ -414,6 +453,8 @@ def create_or_replay_subdub_job(
             "INVALID_SUBDUB_MODE": "Chế độ SubDub không hợp lệ (subtitle_create, subtitle_translate, dub, subtitle_plus_dub).",
             "TARGET_LANGUAGE_REQUIRED": "Ngôn ngữ đích là bắt buộc đối với dịch phụ đề hoặc lồng tiếng.",
             "INVALID_TARGET_LANGUAGE": "Mã ngôn ngữ đích không hợp lệ.",
+            "INVALID_AUTO_SPEAKER_LANE": "Làn phân vai tự động không hợp lệ (hỗ trợ auto_2, auto_multi_3_8, smart_multi).",
+            "CONFLICTING_VOICE_CONFIGURATION": "Không thể đồng thời chỉ định voice_profile_id và làn tự động auto_speaker_lane.",
         }
         raise HTTPException(status_code=400, detail=error_messages.get(error_code, error_code))
 
@@ -463,6 +504,7 @@ def create_or_replay_subdub_job(
             "source_language": normalized["source_language"],
             "target_language": normalized["target_language"],
             "voice_profile_id": normalized["voice_profile_id"],
+            "auto_speaker_lane": normalized["auto_speaker_lane"],
             "output_format": normalized["output_format"],
             "speed": normalized["speed"],
             "request_id": final_req_id,
@@ -485,8 +527,8 @@ def create_or_replay_subdub_job(
                 idempotency_key_hash, payload_hash, bridge_envelope,
                 output_metadata, created_at, updated_at, output_url,
                 runtime_job_id, runtime_dispatch_status, runtime_dispatched_at,
-                runtime_request_id, runtime_last_error
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, NULL, 'pending', NULL, NULL, NULL)
+                runtime_request_id, runtime_last_error, auto_speaker_lane
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, NULL, 'pending', NULL, NULL, NULL, ?)
             """,
             (
                 job_id,
@@ -507,6 +549,7 @@ def create_or_replay_subdub_job(
                 envelope_json,
                 now,
                 now,
+                normalized["auto_speaker_lane"],
             ),
         )
 
@@ -521,6 +564,7 @@ def create_or_replay_subdub_job(
             "source_language": normalized["source_language"],
             "target_language": normalized["target_language"],
             "voice_profile_id": normalized["voice_profile_id"],
+            "auto_speaker_lane": normalized["auto_speaker_lane"],
             "output_format": normalized["output_format"],
             "speed": normalized["speed"],
             "status": STATUS_QUEUED,
@@ -641,6 +685,7 @@ def _format_public_job(row: tuple, *, idempotent_replay: bool = False) -> dict[s
         "settlement_id": str(row[26]) if len(row) > 26 and row[26] else None,
         "charged_xu": int(row[27] or 0) if len(row) > 27 and row[27] is not None else 0,
         "settled_at": str(row[28]) if len(row) > 28 and row[28] else None,
+        "auto_speaker_lane": str(row[29]) if len(row) > 29 and row[29] else "",
     }
 
 
@@ -825,7 +870,7 @@ async def dispatch_subdub_job_to_canonical_runtime(
             """
             SELECT id, request_id, account_id, subdub_mode, upload_id,
                    source_language, target_language, voice_profile_id, output_format, speed,
-                   runtime_job_id, runtime_dispatch_status
+                   runtime_job_id, runtime_dispatch_status, auto_speaker_lane
             FROM web_subdub_jobs
             WHERE id = ? AND account_id = ?
             LIMIT 1
@@ -853,6 +898,7 @@ async def dispatch_subdub_job_to_canonical_runtime(
             "source_language": str(row[5] or "auto"),
             "target_language": str(row[6] or ""),
             "voice_profile_id": str(row[7] or ""),
+            "auto_speaker_lane": str(row[12] or "") if len(row) > 12 and row[12] else "",
             "output_format": str(row[8] or "vtt"),
             "speed": float(row[9] or 1.0),
             "web_job_id": clean_job_id,
@@ -1208,6 +1254,7 @@ def subdub_job_to_native_compat(job: dict[str, Any]) -> dict[str, Any]:
         "output_url": job.get("output_url"),
         "settlement_status": job.get("settlement_status", "pending"),
         "charged_xu": job.get("charged_xu", 0),
+        "auto_speaker_lane": job.get("auto_speaker_lane", ""),
         "read_model": "jobs",
         "canonical_available": False,
     }
