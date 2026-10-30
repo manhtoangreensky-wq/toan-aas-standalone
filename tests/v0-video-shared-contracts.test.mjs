@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const portalSource = fs.readFileSync(path.join(repoRoot, "static/portal/portal.js"), "utf8");
 const i18nSource = fs.readFileSync(path.join(repoRoot, "static/portal/portal-i18n.js"), "utf8");
+const specPath = path.join(repoRoot, "docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md");
 
 test("VI-01: Video Factory Workflow enforces ordered 7-step brief-to-review journey with no unapproved execution", () => {
   assert.match(portalSource, /const VIDEO_FACTORY_WORKFLOW_STEPS/);
@@ -81,13 +82,40 @@ test("VI-09..12: Video Hub and Video Transform Operations structure 4 lanes, 7 j
   assert.match(portalSource, /function renderVideoTransformOperations\(page, context\)/);
 });
 
-test("VI-13: 39 AI edit options across 5 groups enforce capability readiness and disclosure", () => {
-  const groups = ["Scene", "Person", "Object", "Style", "Other"];
-  assert.ok(groups.length === 5, "5 distinct AI edit groups exist");
-  const optionsCount = 39;
-  assert.equal(optionsCount, 39, "Catalog specifies exactly 39 AI edit options");
+test("VI-13: 39 AI edit options across 5 groups dynamically parsed from authoritative specification", () => {
+  assert.ok(fs.existsSync(specPath), "Authoritative R218-05/09 specification must exist");
+  const specText = fs.readFileSync(specPath, "utf8");
+
+  // Dynamically extract the AI edit catalog coverage section
+  const aiEditMatch = specText.match(/## AI edit catalog coverage\s*\n+([\s\S]*?)\n\s*## UI acceptance/);
+  assert.ok(aiEditMatch, "Authoritative AI edit catalog coverage section must exist in spec");
+
+  const lines = aiEditMatch[1].split("\n").map((l) => l.trim()).filter((l) => l.includes(":"));
+  const groups = new Map();
+  let totalOptionsCount = 0;
+  for (const line of lines) {
+    const colonIdx = line.indexOf(":");
+    const groupName = line.slice(0, colonIdx).trim();
+    const options = line.slice(colonIdx + 1).split("/").map((o) => o.trim().replace(/\.$/, "")).filter(Boolean);
+    groups.set(groupName, options);
+    totalOptionsCount += options.length;
+  }
+
+  assert.equal(groups.size, 5, "Authoritative specification must define exactly 5 AI edit groups");
+  assert.deepEqual(Array.from(groups.keys()), ["Scene", "Person", "Object", "Style", "Other"]);
+  assert.equal(groups.get("Scene").length, 12, "Scene group must contain 12 options");
+  assert.equal(groups.get("Person").length, 7, "Person group must contain 7 options");
+  assert.equal(groups.get("Object").length, 8, "Object group must contain 8 options");
+  assert.equal(groups.get("Style").length, 8, "Style group must contain 8 options");
+  assert.equal(groups.get("Other").length, 4, "Other group must contain 4 options");
+  assert.equal(totalOptionsCount, 39, "Authoritative catalog must dynamically resolve exactly 39 AI edit options");
+
+  // Portal source transform operation contracts
   assert.match(portalSource, /videoTransformOperationSources/);
   assert.match(portalSource, /videoTransformPortalSpec/);
+  assert.match(portalSource, /VIDEO_TRANSFORM_PORTAL_RATIOS/);
+  assert.match(portalSource, /VIDEO_TRANSFORM_PORTAL_FIT_LABELS/);
+  assert.match(portalSource, /VIDEO_TRANSFORM_PORTAL_PRESET_LABELS/);
 });
 
 test("VI-14: Upgrade and transform operations fail closed and never claim unproven stabilization/denoise/restore", () => {
@@ -104,27 +132,58 @@ test("VI-15: Video finishing clearly separates selected addons from applied addo
   assert.doesNotMatch(portalSource, /fake_media_synthesized/i);
 });
 
-test("VI-PROFILE-CATALOG-32: Video profile catalog specifies 32 profiles across 3 groups (10/10/12) distinct from legacy 12", () => {
-  const profileSeeds = [
-    "sales_ads", "product_review_demo", "affiliate_ugc", "testimonial_case_study", "brand_corporate",
-    "social_creator_trend", "meme_parody_comedy", "event_highlight", "news_data_analysis",
-    "podcast_interview_talking_head", "storytelling_life", "short_film_trailer", "tutorial_howto",
-    "knowledge_explainer", "history_culture_mythology", "philosophy_morality", "motivation_self_help",
-    "kids_education", "documentary_series", "asmr_relax_lofi_visualizer", "architecture_interior_renovation",
-    "real_estate_place_walkthrough", "fashion_beauty_lookbook", "food_cooking_asmr", "travel_local_experience",
-    "sports_esports", "app_website_saas", "game_trailer", "engineering_industry_automation",
-    "product_3d_showcase", "character_animation_vfx", "music_video_performance"
+test("VI-PROFILE-CATALOG-32: Video profile catalog dynamically parsed from authoritative specification and verified against Bot catalog", () => {
+  assert.ok(fs.existsSync(specPath), "Authoritative R218-05/09 specification must exist");
+  const specText = fs.readFileSync(specPath, "utf8");
+
+  // Dynamically extract the profile section from the specification
+  const profileMatch = specText.match(/## Profile video:[\s\S]*?Không dùng bộ legacy 12 làm danh mục đầy đủ\.\s*\n+([\s\S]*?)\n\s*## AI edit catalog coverage/);
+  assert.ok(profileMatch, "Authoritative Profile video section must exist in spec");
+
+  const rawProfiles = profileMatch[1].replace(/\n/g, " ");
+  const parsedProfiles = rawProfiles.split(",").map((p) => p.trim().replace(/\.$/, "")).filter(Boolean);
+
+  assert.equal(parsedProfiles.length, 32, "Authoritative specification must define exactly 32 canonical profiles");
+  const uniqueProfiles = new Set(parsedProfiles);
+  assert.equal(uniqueProfiles.size, 32, "All 32 parsed profiles must be distinct");
+  assert.ok(uniqueProfiles.size > 12, "Must not be restricted to the legacy 12 profiles");
+
+  // Spec explicit structure verification
+  assert.match(profileMatch[0], /32 loại,\s*3 nhóm 10\/10\/12/);
+  assert.match(profileMatch[0], /MAX_LINKED_PROFILES=2/);
+
+  // If Bot service catalog is available in workspace, cross-check 1:1 parity with Bot's PROFILE_SEEDS
+  const botCatalogCandidates = [
+    path.join(repoRoot, "../bot telegram/services/video_profile_catalog.py"),
+    path.join(repoRoot, "../wt_voice_vault_r37/services/video_profile_catalog.py")
   ];
-  assert.equal(profileSeeds.length, 32, "Must define exactly 32 canonical profiles");
-  const uniqueSeeds = new Set(profileSeeds);
-  assert.equal(uniqueSeeds.size, 32, "All 32 seeds must be unique");
-  assert.ok(uniqueSeeds.size > 12, "Must not be limited to the legacy 12 profiles");
+  for (const botPath of botCatalogCandidates) {
+    if (fs.existsSync(botPath)) {
+      const botText = fs.readFileSync(botPath, "utf8");
+      const botSeeds = [...botText.matchAll(/_profile\(\s*"([^"]+)"/g)].map((m) => m[1]);
+      assert.equal(botSeeds.length, 32, "Bot service catalog PROFILE_SEEDS must contain exactly 32 profiles");
+      assert.deepEqual(parsedProfiles, botSeeds, "Spec parsed profiles must have 100% exact parity with Bot PROFILE_SEEDS");
+      break;
+    }
+  }
+
+  // Verify portal source reflects video studio canonical planning and format sets
+  assert.match(portalSource, /VIDEO_STUDIO_FORMATS/);
+  assert.match(portalSource, /VIDEO_STUDIO_SCENE_TYPES/);
 });
 
-test("V0: Master Ledger accounting enforces exact 13 closed V0 rows and 61 remaining open rows", () => {
+test("V0: Master Ledger accounting enforces exact 13 closed V0 rows, 61 remaining open rows, and canonical identifiers", () => {
   const masterLedger = fs.readFileSync(path.join(repoRoot, "reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md"), "utf8");
   assert.match(masterLedger, /MASTER_ROWS_TOTAL=260/);
   assert.match(masterLedger, /V0_VIDEO_CLOSED_COUNT=13/);
   assert.match(masterLedger, /REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=61/);
   assert.match(masterLedger, /UNCLASSIFIED_MASTER_ROW_COUNT=0/);
+
+  // Assert canonical identifiers in Master Ledger
+  assert.match(masterLedger, /\/video-studio\/story-video-plan/);
+  assert.doesNotMatch(masterLedger, /Story Video Plan route `\/video-studio\/story-plan`/);
+  assert.match(masterLedger, /\/video-studio\/long-form-planner/);
+  assert.doesNotMatch(masterLedger, /Long-Form Roadmap Planner route `\/video-studio\/long-form`/);
+  assert.match(masterLedger, /data-portal-action="video-prompt-plan-save"/);
+  assert.doesNotMatch(masterLedger, /data-portal-action="video-prompt-planner-save-plan"/);
 });
