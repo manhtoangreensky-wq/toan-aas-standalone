@@ -104,6 +104,42 @@ jobs:
         run: |
           python tests/test_p0_realtime_translate_acceptance_matrix.py
 
+      - name: Check out Bot authoritative catalog
+        env:
+          BOT_AUTHORITY_SHA: 83a994aea6fb253ee9e64fcfc845d4c31aa2934d
+        run: |
+          mkdir -p ../bot
+          git init ../bot
+          git -C ../bot remote add origin https://github.com/manhtoangreensky-wq/bot.git
+          git -C ../bot fetch --depth 1 origin "$BOT_AUTHORITY_SHA"
+          git -C ../bot checkout FETCH_HEAD
+
+      - name: Run Web App shared contract suites
+        env:
+          BOT_ROOT: ${{ github.workspace }}/../bot
+          BOT_AUTHORITY_SHA: 83a994aea6fb253ee9e64fcfc845d4c31aa2934d
+        run: |
+          node --test tests/q0-l0-shared-contracts.test.mjs
+          node --test tests/v0-video-shared-contracts.test.mjs
+          node --test tests/a0-admin-shared-contracts.test.mjs
+          node --test tests/p5-p6-shared-contracts.test.mjs
+          node --test tests/f0-q0-shared-contracts.test.mjs
+
+      - name: Route Engine, Safety, and R37-R40 Integration Gate
+        shell: bash
+        run: |
+          timeout --signal=TERM --kill-after=30s 10m python -m pytest -v \
+            tests/test_route_engine.py \
+            tests/test_route_engine_contracts.py \
+            tests/test_route_engine_deferred_portal_contracts.py \
+            tests/test_public_sale_pricing_projection_contracts.py \
+            tests/test_bridge_runtime_hardening.py \
+            tests/test_copyfast_bridge_loopback_base_url.py \
+            tests/test_webapp_r37_voice_vault_canonical_parity.py \
+            tests/test_webapp_r38_free_tools_bot_parity.py \
+            tests/test_webapp_r39_subdub_auto_speaker_lanes.py \
+            tests/test_webapp_r40_music_library_jamendo_parity.py
+
       - name: Run critical Web App contracts (bounded)
         shell: bash
         run: |

@@ -1,5 +1,53 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Phiên SD-D4 — 24/10/2026
+
+Session `R218-SDD4-TESTER-20261024`, manifest
+`reports/tester/R218-SUBDUB-D4-20261024.md`, case SDD4-01..08 trong nguồn duy nhất.
+BASEba4b2dfa; source là worktree chưa push, xác minh bằng bốn LF hash, không chỉ HEAD.
+Chỉ DB/tài khoản QA cô lập; không điều khiển IDE, không đụng đăng nhập hiện có.
+Khi dùng tài khoản giả, email phải lowercase như register/login hiện có.
+
+Nút “Giữ âm thanh gốc”: thử37→tắt0→bật37, nhập0/1/100 và giá trị sai;
+kiểm cả number/range/output/review và âm lồng tiếng0/200/ack riêng. Thiếu mức nhớ
+hợp lệ thì bật về100. Hai mode/Voice saved+custom phải giữ draft; kiểm URL mode
+roundtrip đầy đủ, Voice return canonicalmode+locale và actualtheme giữ nguyên.
+
+AccountA/B phải khác email và browser projection khớp; sau B53off→logout,
+root vẫn có2switch disabled, không chấp nhận assertion rỗng. Real login lại B
+phải100/on/offon100. Dispatch persisted-pageshow là diagnostic handler thật,
+không phải native BFCache. Respect register4/login8 mỗi60s:giãn31s/case.
+Không disableauth/rate hoặc giả payload/session để chạy nhanh. Đếm UIwrites0
+khác tổngHTTPwrites: setup register/login/profile trong QA là mutation có thật.
+
+Main48 đã terminalPASS; supplement42 phải terminalPASS trước verdict cuối.
+Đối chiếu rawSHA/unique/4assetLF/sourceHEAD/scriptSHA và các ảnh thực. Source
+review độc lập C0/I0/M0; Tester vẫn phải tự chạy unit/portable contracts và đọc
+artifact. Không suy engine/output/production/LIVE hoặc hoàn tất toàn21SD.
+
+## Phiên SubDub E3 — 24/10/2026
+
+ID`R218-SDE3-TESTER-20261024`, manifest
+`reports/tester/R218-SUBDUB-E3-20261024.md`;8caseSDE3-01..08 trong nguồn
+`KIEM-THU/DANH-SACH-CASE.md`. Không mở lạiissue412đãđóng. Trackerbatch664/PR661.
+Sourcecandidate26a966e2;đọc riêng finaldeliveryHEAD từGit saupush,không đoán SHA.
+
+Chỉ QA DB/tàikhoản tạm; không tài khoản/filegiọngkhách. Browserplugin không có,
+dùngheadlessEdgeđãcài; không mởIDE/cửa sổ/login/logout/settings. Test normal
+click/Tab khiSubDubpending,không forceclick haygáncontrol để giảauthoring.
+Khi giữnguồnresponse dùng realroute.fetch rồifulfill cùngresponse;không logtoken.
+
+Đọc đầy đủartifact và số tổ hợp: readiness72, pending12, regression168 là ba
+ma trận khác nhau,không cộngthành sốngườidùng. Pending12 không cóhashassetriêng.
+Parentfinal168 riêng phải qua strictcounters0/actualfourassethashes/sourceSHA.
+Disabledupload/CTA không phải lỗiUIđượcphép bật;capability/engine/outputT0.
+U1C3AXcauseUNKNOWN/U2originalrunstateUNKNOWN cònnguyên dùcurrentgateđãsửa.
+
+Mỗi kết quả ghi command/exit/count/source/rawhash và phạmvi đãkiểm. Giữ riêng
+32portabletestercontracts/1WindowsPOSIXdeselected,khôngche thành33pass.
+ProjectGitHub thiếu read:project thì ghiunavailable;khôngtựauthrefresh/xóađăngnhập.
+
+
 Đính chính 21/10/2026: các matrix chỉ đổi URL lang không chứng minh locale đã
 đăng nhập; phải set hồ sơ QA bằng endpoint CSRF và assert `html.lang` cùng
 profile locale. Không dùng main/text-length/overflow/no-media để đóng

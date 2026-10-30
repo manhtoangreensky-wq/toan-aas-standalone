@@ -1,5 +1,494 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 24/10/2026 — SD-D4: bật/tắt âm thanh gốc, giữ mức vừa dùng
+
+Candidate trên PR661/Issue664, BASEba4b2dfa; chưa merge/deploy/LIVE.
+Hai panel Lồng tiếng và Combo có native switch “Giữ âm thanh gốc”, nhãn
+VI/EN/ZH và associated label. Tắt đưa range/number/review về0%; bật lại lấy
+mức dương gần nhất1–100 trong bản nháp tab đã đăng nhập; chưa có mức nhớ hợp
+lệ thì dùng100%, là mặc định Web trước đợt sửa. Nhập/kéo mức dương tự bật.
+Mức0 vẫn chỉnh được bằng number/range, không có boolean thứ hai hoặc storage/API.
+Đổi mode hoặc đi Kho giọng/Thêm giọng rồi quay lại giữ cấu hình. Đổi phiên/
+tài khoản hoặc đăng xuất phải xóa draft, không mang mức nhớ sang người khác.
+Dubbing0–200 và xác nhận tắt giọng riêng được giữ; không đổi engine/mixing.
+
+Đã đo: NEW_TEST-only RED6assertion/0harness trước source rồi GREEN6;
+focusedSubDub80, fullNode1307, isolatedPython85pass/1POSIXdeselected/
+2warning cũ. Main signed QA48unique,96VoiceReturns,48modeLoops,48text2x;
+nhãn nhỏ nhất270×44px, contrast text12.351554:1/focus5.860080:1,
+unknown0,192servedassetchecks, errors/external/UIwrites/overflow0.
+Đây là đo nhãn/focus cụ thể, không phải full-page WCAG hoặc OS text-scale.
+Source review độc lập C0/I0/M0: đúng9records,17helper và676test cũ nguyên vẹn.
+
+Supplement24nonvoice/12pending/6accountfences đã terminalPASS,42unique và
+168servedassetchecks. Sáu401dựkiến làGETauth/me sauactual logout,mỗi ca1response
+và1console exactURL/message;unexpectederrors0. Tester độc lập còn gate riêng.
+Giới hạn đăng ký4/login8 mỗi60giây giữ nguyên; runner QA
+giãn31giây giữa case tài khoản, không bypass rate-limit. Voice return dùng
+URL hữu hạn theo mode+locale; kiểm state/theme thật thay vì so query string thô.
+Upload/ASR/dịch, chọn profile giọng canonical, speaker detection, báo giá,
+job/output/giao tệp vẫn T0. Nút âm gốc này là cấu hình local thật, không chứng
+minh video đã được xử lý. Production revision/tài khoản/DB chưa đo trong task.
+
+Evidence main48 SHA256 d48beec7b6eb94fed80ff0b2c0017cdc2dd9aaa36a88f343adfad48797275780.
+Supplement42 SHA2565167f89c40152fc668649d8a0e63b3e00eddc1ca5790d5241612601038e72844.
+Provider/wallet/productiondata mutation0; motion vẫn cuối cùng.
+
+## 24/10/2026 — SubDub: chờ phiên hợp lệ trước khi chỉnh thiết lập
+
+Phạm vi là candidate WebApp ở branch `webapp-r218-billing-ui-20261022`,
+PR661/Issue664; không phải xác nhận đã chạy trên VPS. Checkpoint readiness
+`26a966e2`, receipt6383548657; chưa push riêng, chờ một đợt E3 chung.
+
+Khi shell chưa nhận được phiên đăng nhập đã xác nhận và CSRF chuỗi không rỗng,
+mọi nút/input/select/textarea trong SubDub có native `disabled`; liên kết công cụ
+công khai vẫn giữ. Một câu thông báo VI/EN/ZH xuất hiện đúng một lần, không thêm
+thẻ rỗng. Khi hydrate phiên thật xong, form được dựng lại, thông báo biến mất và
+cấu hình local được mở. Upload, ngôn ngữ nguồn và CTA xử lý vẫn khóa khi chưa có
+contract/capability tương ứng. Không đồng nghĩa đăng nhập xong là có thể lồng tiếng.
+
+Nguyên nhân lỗi đã đo: shell dựng controls trước signed draft session; capture
+không ghi khi session chưa có, nhưng controls vẫn cho nhập và review đọc defaults.
+READ72 ghi36early review mismatch, trong đó27case đổi control sau hydrate;
+36stable không mismatch/đổi control. Không gọi tất cả36 là mất dữ liệu.
+Bản sửa chặn authoring sớm; không mang draft ẩn danh sang tài khoản và không đổi
+cổng xóa draft khi đổi phiên. E607 cache tránh thay HTML review giống hệt và
+E608 focus khỏi sticky header được giữ nguyên.
+
+Đã đo local: newunit6, focused74, fullNode1301, PythonCSS21 đều0fail; Python có
+1warning cũ. Actual native72:36early bị chặn thao tác thường,72ready review khớp,
+72mode roundtrips/288asset checks. Pending12 qua actual AX/visible, mincontrast
+11.772481:1 ở VI/EN/ZH×light/dark×390/1440, unknown0, sauready không còn status.
+Stable168:1218Editclick/336keyboard/1050edits/168VoiceReturns/504assetchecks,
+nút44×44, không lỗi/overflow/external/UIwrite. Source+runtime review C0/I0/M0;
+17helper/14file nhạy cảm/674test cũ và Chat không đổi so với readinessBASE.
+
+Các số trên không phải generation/quote/job/output/LIVE. Tệp nguồn, giọng đã lưu
+áp vào engine, nhận diện2/3–8/SmartMulti, báo giá, xử lý, giao tệp và reuse thật
+vẫn thuộc T0; không tạo capability/giá/báo cáo giả để thay thế. Parent final21
+yêu cầu, Tester, docs/provenance và CI exactHEAD còn riêng. Motion làm cuối.
+Evidence: `reports/audit/R218-SUBDUB-AUTHORING-READINESS-QA-20261024.json`.
+
+Production revision, số tài khoản/bảng/bản ghi production trong đợt này:
+CHƯA ĐO, không đọc DBproduction. Provider/wallet/productiondata mutation0.
+
+
+## 24/10/2026 — E3: sửa trực tiếp từ bảng xem lại
+
+SourceEDIT cục bộ,chưa push/deploy: chỉ dòng cấu hình đang sửa được mới có
+nút Sửa; dòng tệp/ngôn ngữ nguồn còn khóa không có nút giả. Sửa đưa focus
+về đúng control ởmodeactive hoặc tabmode đang chọn,không đổi mode/URL/draft,
+không remount/gửirequest. Control được đưa tức thời vào giữa vùng nhìn thấy,
+tránh stickyheader;không thêm animation hoặc đổi motion. SourceCTA vẫnguarded.
+
+Runtime tìm và sửa thêm2lỗi trong cùngEDIT:blurISOchange vẽ lại reviewHTML
+khôngđổi làmxóa nút giữa mousedown/click;cache generatedHTML trênchínhregion
+giữnodekhinộidungkhôngđổi. Nativefocus đôi khi giữ SELECTdướiheader65px;
+optional instantcenter scroll chỉvalidtarget giúpnhìnthấycontrol. Không
+sửaauth/sessionbusiness/engine/provider. TestREDtrước mỗi sửa,giữoldtests.
+
+Finalsigned168:1218click/336EnterSpace/1050sửagiátrị+review/168modeLoops/
+168VoiceReturns;target44x44,textmin12.35155/focusmin5.86008/unknown0;
+2xgeometry/504LFassets/errors-external-UIwrites-overflow0. Node1295/focused68/
+unit8/PythonCSS21/sourceC0I0M0;15helpers12files673oldtestsChatunchanged.
+E607probe0mutation/clickgiữ;E60815actionsđềunhìnthấy ở320375390.
+Evidence `reports/audit/R218-SUBDUB-REVIEW-EDIT-QA-20261024.json` giữ failhistory,
+specamendments vàQAprovenance;server/DBtạm đãdọn. READINESS/finalE3/Tester/
+delivery cònmở;khônggọiUIEditPASS làupload/engine/quote/output/LIVE.
+
+## 24/10/2026 — E3: nhóm giọng gọn, đủ bảy lựa chọn
+
+SourceGROUP cục bộ,chưa push/deploy: giữ mộtfieldset và bảy native radio;
+chia bốn hàng Mặc định/Đã lưu/Thêm giọng/Tự động thông minh,không thêm card
+hướng dẫn. Nữ/Nam; Thư viện giọng; Giọng tự thêm; Auto2/3–8người/SmartMulti
+luôn hiện trong hai mode lồng tiếng. Tên đầy đủ giữ trong ARIA và review;
+callback/draft/Voice link/capabilityguard không đổi. Đây là nhóm lựa chọn UI,
+không chứng minh saved-profile application, nhận diện người nói hay lồng tiếng.
+
+Signed QA84:588click/588ArrowRight/168VoiceReturns/84modeRoundTrips,252LF
+assethashes;1008mẫuchữ+84focus,min8.836529:1/unknown0,targetmin75.47x44,
+text2x/overflow0.36so sánh matched ngắn hơn65.20–156.36px. Supplemental84
+chứng minh82Defaultpair vừa ngang cùng hàng,2ENCombo320 hẹp đượcwrap;
+48phoneAuto xếp3hàng;84nonvoice toàntrang không còn visible voice controls.
+Node1287/focused60/unit6/PythonCSS21,source+supplement review C0I0M0.
+R1/R2handoff fail được giữ lịch sử;Solxhigh chỉ sửa packet/newunit,không có
+R3/đổi lại production logic. Owned QA đã tắt/tempDB dọn/listener6821=0.
+Evidence `reports/audit/R218-SUBDUB-VOICE-GROUPS-QA-20261024.json`.
+EDIT/READINESS/finalE3/Tester/delivery còn mở;motion cuối,goal ACTIVE.
+
+## 24/10/2026 — E3: slider âm lượng mobile đủ rộng
+
+SourceRANGE,chưa push/deploy E3: ởviewport<=480px, slider được đặt nguyên
+hàng đầu; ô số và phần trăm ở hàng dưới. Chỉ mộtblockCSS9dòng,khôngđổiJS/
+giátrị/handler/track/thumb/mute/draft. Tablet/desktop>480px giữ3cột cũ.
+
+ActualRED12phone+24desktopbaseline:320pxDub62x44,Combo36x44. GREEN72
+đạt48phone slider min200x44 và24desktop exactgeometry nhưBASE. Main144
+VoiceReturns,followup24scenarios bổsung48modeRoundTrips/48VoiceReturns;
+number/range/review/liveoutputs,muteack0→200,lane/target/customISO đều giữ.
+216LFassethashes/0errors-external-UIwrites-overflow;Node1281/focused54/
+PythonCSS21/sourceC0I0M0. Ba ảnhfieldset sáng/tối320 vàdesktop đã xem.
+Followup24làscenario bổsungtrongcùngsubsetviewport,khôngđếmlà24configmới.
+Evidence `reports/audit/R218-SUBDUB-MOBILE-RANGE-QA-20261024.json`.
+UIvolumeđạt khôngphảiaudiomixingoutput;GROUP/EDIT/READINESS/finalE3 còn mở.
+
+## 24/10/2026 — E3: nhãn chọn và chữ hướng dẫn SubDub
+
+Source nhánh, chưa push/deploy E3: hai select Quy tắc dòng/Hiển thị phụ đề
+Combo được gắn label-for/id riêng, không đổi tên trường/giá trị/event. Chữ
+hướng dẫn/mute/error/review và ghi chú giọng dùng ink hiện có trong đúng
+SubDub. Selector đủ mạnh để không bị theme tối phía sau ghi đè; không dùng
+important, không đổi token/màu nền hay logic. R1 thiếu độ ưu tiên là lỗi spec,
+R2 chỉ sửa selector. LABEL vẫn bản R1, không có R3 hoặc viết lại production.
+
+Stable-signedQA48 đạt24association/keyboardHome/mode-return/review;768mẫu
+helpernormal-mute-invalid có min8.83653:1,unknownbackground0,0label/textfail/
+pageerror/external/UIwrites/overflow. Node1281/PythonCSS21/reviewC0I0M0;
+hai ảnhreview sáng/tối390 đã xem. Không gọi đây là fullpageAA/engine/LIVE.
+Firstenhancedprobevi-dark1440 gặp reviewline-rule mismatch,causeUNKNOWN;
+chờactualauthenticatedbootstrap trướcfirstinteraction thì48 đạt,nhưng
+parentE3-READINESS vẫn mở,khôngcoilàrootcausefix. RANGE/GROUP/EDIT còn làm.
+Evidence `reports/audit/R218-SUBDUB-LABEL-CONTRAST-QA-20261024.json`.
+D3 đã deliveredHEAD79cd75d3/CI40063985662bothSUCCESS456/receipt6380165981.
+
+## 24/10/2026 — SubDub: bỏ report rỗng và dòng giá chưa có dữ liệu
+
+Source nhánh D3, chưa deploy: hai dòng giá/chi phí tĩnh chưa được cấp dữ liệu
+được đánh dấu riêng rồi ẩn. Mode, settings, số dư được server chiếu và lý do
+khóa nguồn/CTA giữ nguyên; không tính giá hay tự điền số dư. Reportwrapper
+chỉ ẩn khi guarded và chỉ có header/emptychild. Childstate/status khác hoặc
+thêm directoutput đều làm wrapper hiện lại; không che trạng thái có dữ liệu.
+
+Đã đo RED48→GREEN96,336 lượt chọn7lane/96Voice returns,480 selector diagnostics,
+288assetLFhashes,0errors/external/UIwrites/overflow. Reviewsettings kiểm đúng
+keyset theo mode, kể cả customISO thêm dòng hợp lệ. Balance text bằng baseline;
+diagnostic `0 Xu` chỉDOM,khôngphải ví thật. Gap review→tools16px đúng gridgap
+ởVI/lightdark/390; hai ảnhreview theo vùngcuộn đã xem. Fullpagecapture bịclip
+ởscrollcontainer không được dùng làm bằng chứng toàntrang khôngtrống.
+Node54focused/1281full,PythonCSS21,Tester32/1POSIXdeselected; reviewC0/I0/M0.
+Evidence `reports/audit/R218-SUBDUB-EMPTY-REVIEW-QA-20261024.json`.
+C3 đã deliveredHEAD00a34c2b/CI40061704379bothSUCCESS/receipt6379877100.
+E3/AXreadiness, upload/engine/reportthật/motion/production/LIVE còn mở.
+
+## 24/10/2026 — SubDub: dọn mô tả giọng thừa, giữ đủ lựa chọn
+
+Source nhánh C3, chưa deploy: chỉ thêm một rule CSS để ẩn fieldset Smart
+đang guarded (legend và hai đoạn văn trùng, không điều khiển/dữ liệu) và hint
+chung bị lặp. Vẫn giữ một ghi chú có aria-describedby, đủ7 radio Nữ/Nam,
+Đã lưu/Tự thêm/Auto2/AutoMulti3–8/Smart, ba callback Auto riêng và link Voice.
+Không xóa DOM/copy, không đổi JS/gate/engine; non-guarded Smart không match
+selector. CSS diagnostic statusready không phải capability thật.
+
+ActualRED24 còn thấy box/hint; finalGREEN48 VI/EN/ZH/theme/mobile-tablet-
+desktop-landscape ẩn box/hint khỏi visual/AX, note1/radio7/checked1. Đã chọn
+336 lượt lane,96 lượt saved/custom sang Voice rồi về; giữ target/customISO,
+mix0/200/B4search/review/sourceCTAguarded. 144assetLFhashes khớp; lỗi trang,
+request ngoài/UIwrite/overflow0. Node54focused/1281full,Python21 và review
+C0/I0/M0 đạt. Evidence `reports/audit/R218-SUBDUB-VOICE-CLARITY-QA-20261024.json`.
+
+Lượt green đầu hoàn tất30 dòng rồi AX-note mismatch ởENdark844; visualnote
+vẫn có, snapshot lỗi không được lưu nên causeUNKNOWN. Probe ba trường hợp
+cùng kích thước đều có note trongAX. QA được bổ sung chờ đúng ngôn ngữ DOM
+trước freshAX và ghi rawfailure; final48 đạt, không đổi thêm app hoặc tuyên
+bố rootcause đã sửa. E3 còn phải rà readiness/hydration và motion làm cuối.
+QA temporaryDB/auth setup có writes, không provider/ví/production mutation.
+
+## 24/10/2026 — SubDub: tìm ngôn ngữ trong cấu hình hiện có
+
+Source nhánh, chưa deploy: ba mode Phụ đề dịch/Lồng tiếng/Combo có ô tìm theo
+mã hoặc tên ngôn ngữ VI/EN/ZH, dùng native select 21 mã hiện có. Phụ đề gốc
+không có ô tìm đích. Gõ không dấu, tiếng Anh hoặc tiếng Trung đều lọc cùng
+catalog; không bổ sung mã hay tự suy capability của nhà cung cấp.
+
+Lọc không đổi ngôn ngữ đang chọn: option hiện tại được giữ ngay cả khi không
+khớp; count chỉ tính kết quả khớp. Không có kết quả thì giữ đúng option đang
+chọn; xóa từ khóa trả đủ21. Chỉ chọn trong select mới cập nhật draft/review.
+Query tối đa64 ký tự, không có name, không vào draft/request/storage/URL.
+Native blur/change của search không capture hoặc render lại phần thiết lập.
+Mode transition khôi phục danh sách trước khi áp draft: tránh mất target khi
+panel sắp mở trước đó đã lọc mất option đó. Quay về từ Voice giữ target,
+custom ISO, giọng và mix0/200; query tìm kiếm được đặt lại, không persist.
+
+QA96 thực:72 target states/24 source-only, VI/EN/ZH, sáng/tối và8 cấu hình
+viewport/theme. Các thao tác tìm/chọn/khôngkhớp/xóalọc/đổi mode/Voice return
+giữ đúng cấu hình; status/label/placeholder mới có288 mẫu tương phản tối
+thiểu5,2238:1, input16px/height46px; focus/AX/scopedtext2x không tràn ngang.
+288 response/source LF hash checks khớp, errors/external/UIwrites0. Đây là
+app QA đăng nhập/DB tạm, không client-flow/API response fixtures; auth setup
+có ghi DB tạm. Không gọi upload/dịch/dub/provider hoặc thay tiền.
+
+Antigravity R2 source được giữ nguyên10records. Solxhigh chỉ sửa newunit
+sau hai handoff gate chưa đạt, không rewrite production/oldtests. Unit5,
+focused73, fullNode1281, Python111 và review C0/I0/M0 đạt trong scope này.
+Evidence `reports/audit/R218-SUBDUB-LANGUAGE-FINDABILITY-QA-20261024.json`.
+C3 cụm giọng, D3 report rỗng, E3 full SubDub UI, engine/runtime và motion còn
+checklist riêng. Không dùng UI này chứng minh tự dịch/lồng tiếng đã chạy.
+
+## 24/10/2026 — SubDub: cỡ chữ ô nhập và các việc còn mở
+
+Source nhánh sau MU07-A, chưa deploy: ô nhập/select có class portal-input
+hoặc portal-select trong riêng SubDub dùng 16px thay vì kế thừa 15px. Chỉ
+một rule CSS, không đổi JS, trường, giá trị, capability hay chốt thực thi.
+96 cấu hình thực với 552 mẫu input đều 16px; chọn ngôn ngữ, Smart Multi,
+âm lượng 0/200, đổi mode rồi chọn lại tab gốc giữ draft; source/CTA vẫn khóa.
+288 asset hash chuẩn hóa LF khớp source; overflow/errors/external/UIwrites0.
+QA auth/locale setup ghi DB tạm, không phải toàn bộ thao tác zero DB writes.
+Node68 focused/1276 full và Python21 đạt; source review C0/I0/M0, exactR1.
+Evidence `reports/audit/R218-SUBDUB-INPUT-FONT-QA-20261024.json`.
+
+READ trước sửa còn thấy 36 trạng thái target thiếu tìm kiếm, 24 khối Smart
+Multi lặp nội dung và 48 report rỗng. Những mục này theo thứ tự SD-B4/C3/D3,
+không sửa ké trong rule cỡ chữ. Toàn bộ SD01..21 đã ánh xạ trong plan mới.
+21 mã ngôn ngữ Web khớp catalog Git snapshot Bot đã pin; không dùng nguồn
+đó chứng minh production/provider có thể xử lý mọi ngôn ngữ. Upload, nhận
+diện/dịch/lồng tiếng, giọng đã lưu, quote, job, output và recovery còn cổng
+canonical. Không chứng minh iOS autozoom, text scale máy thật hay motion.
+
+## 24/10/2026 — Music MU07-A: xem lại các phương án sau báo giá
+
+Source nhánh, chưa deploy: hai form Music giữ tối đa ba phương án đã nhận
+trong memory của từng route/tab/phiên. Khi estimate không trả suggestions,
+khách mở disclosure đóng mặc định “Xem lại các phương án”, dùng Copy/Apply
+hiện có. Chọn hướng khác thay brief và khóa báo giá cũ; phải lấy báo giá mới.
+Không lưu kho trình duyệt, không phục hồi quote/receipt hoặc tạo prompt/audio.
+Logout, token đổi, flow thiếu/sai, error/guarded/confirm và suggestions rỗng
+hoặc sai dạng xóa snapshot theo route. Không đọc token vào báo cáo/payload.
+
+QA app đăng nhập thật với client flow fixtures có kiểm soát: 48 cấu hình,
+VI/EN/ZH, sáng/tối, 360/375/390/768/844 ngang/1440. Có 2.304 mẫu chữ ở bộ
+hiện tại và bộ giữ lại, tương phản tối thiểu 5,217:1; hover 48 mẫu tối thiểu
+5,161:1, focus 48 mẫu tối thiểu 5,2:1. Summary >=44px, Enter/AX, giữ field,
+đổi chế độ/Back, edit/new quote, logout/token và text2x đều đạt; tràn ngang,
+lỗi trang, external request và UI write sau auth setup đều 0. 144 asset hash
+khớp source sau chuẩn hóa LF. Đây không phải native quote/provider proof.
+
+Root gap: estimate thay toàn bộ flow.data, làm mất gợi ý ở draft trước đó.
+Hai lỗi tương phản thực tế cùng component được sửa bằng token hiện có,
+không đổi palette, motion, form F/H hoặc global button. Unit mới 19 đạt,
+full Node 1.276 đạt; Python giới hạn 119 đạt/2 warning cũ. Evidence:
+`reports/audit/R218-MUSIC-RETAINED-OPTIONS-QA-20261024.json`.
+MU07 tổng, next-set/edit-regenerate, audio/editor/output thật và LIVE còn mở.
+Motion chỉ xử lý sau toàn bộ UI/UX, không dùng thời gian Back làm FPS PASS.
+
+## 24/10/2026 — Music: xem lại yêu cầu và trạng thái ban đầu gọn
+
+Source nhánh F/H đã qua QA localhost, chưa deploy. Khi có báo giá hợp lệ,
+hai form Music hiện phần “Kiểm tra yêu cầu” trong cùng card, sau form và
+trước xác nhận. Nội dung lấy từ snapshot đã gửi: sản phẩm/gói/loại/giọng/
+dạng bài/thời lượng thực có, mô tả đầy đủ và lời bài hát trong disclosure.
+Không dịch dữ liệu khách, không đoán số giây half/full hoặc tạo giá/audio.
+Sửa form giữ snapshot cũ, existing freshness gate khóa xác nhận; báo giá
+hết hạn/không rõ, sai feature hoặc thiếu signed session không hiện summary.
+
+Khi chưa có flow record, card kết quả rỗng được bỏ riêng ở hai route này.
+Draft/gợi ý/báo giá/error/guarded/report/tracking có dữ liệu giữ nguyên.
+Form, bốn link công cụ và action lưu nháp vẫn hiện trong cả48 cấu hình.
+QA final VI/EN/ZH/light-dark/mobile-desktop có720 mẫu chữ review đạt tối
+thiểu5,797:1 sáng/5,522:1 tối; disclosure>=44px, keyboard/AX/focus và text2x
+không tràn ngang. 144asset checks khớp source, lỗi trang/external/UIwrites0.
+
+New F172 + H12 tests và fullNode1257 đạt; Python119 đạt/2warningcũ.
+F dùng actual signed app cộng controlled client quote/capability fixtures;
+H initial app là GET thật, không API response fixtures. Đăng ký/đăng nhập/
+locale/sessionlastseen có ghi DB QA tạm; không tuyên bố zero DB writes.
+Không quote/confirm/provider thật, không thay ví/PayOS/auth/backend/Bot.
+Evidence `reports/audit/R218-MUSIC-REQUEST-REVIEW-FH-QA-20261024.json`.
+MU07 workflow Đổi/Sửa/Back, style mapping, half/full semantics, hai bản audio,
+player/reuse/editor và LIVE còn mở; motion vẫn làm cuối.
+
+## 23/10/2026 — Nhạc nền/Bài hát: chữ hướng dẫn và ô nhập
+
+Hai form `/music/create` và `/music/song` dùng màu `--portal-muted` sẵn có
+cho chữ hướng dẫn, màu chữ chính cho label, token placeholder hiện có và cỡ
+16px cho input/select/textarea. Chỉ thêm bốn rule CSS theo hook
+`data-music-product-form`, không sửa trường, giá trị, giới hạn nhập,
+đăng nhập, lưu nháp, báo giá hay xác nhận. Các trang native D1/D2 không đổi.
+
+App QA đã đăng nhập được đo ở 48 cấu hình: tương phản hướng dẫn sáng tăng
+2,021 → 5,797; tối giữ 5,522; toàn bộ 264 mẫu ô nhập đạt 16px. 144 lượt chọn
+gói, 288 lượt chọn giọng và 48 lượt chuyển mode/Back giữ bản nháp. Không có
+request ghi từ UI, lỗi trang/console, request ngoài phạm vi hoặc tràn ngang.
+Sau khi ảnh QA phát hiện gate nhãn/placeholder còn thiếu, R2 đã đo lại đủ:
+264nhãn sáng12,352/tối13,903 và120placeholder đều>=5,522;association vàopacity
+giữ nguyên. Evidence R1 được giữ riêng, không lấy helper PASS thay toànform.
+Đây là source nhánh và QA localhost, chưa phải thay đổi đã deploy.
+
+Danh sách thiếu còn lại đã được đối soát riêng trong
+`reports/audit/R218-MUSIC-REMAINING-UI-CROSSWALK-20261023.md`: review trước
+xác nhận đã có UI F/H; style/draft mapping, half/full, hai bản audio và editor
+vẫn cần hợp đồng hoặc bằng chứng runtime. Không lấy bản vá đọc chữ để đóng
+những yêu cầu sản phẩm này.
+
+## 23/10/2026 — Music/SFX D2 trong source nhánh, chưa deploy
+
+Hai công cụ lập hướng âm nhạc/bảng hiệu ứng là luồng văn bản, không phải
+trình tạo tệp âm thanh. Màn hình giữ form và năm lựa chọn; các khối thống kê,
+giới hạn lặp, phạm vi phụ và kết quả rỗng được ẩn. Native success hiện thêm
+kết quả có ba item. Một ghi chú ở form nói đúng loại đầu ra; không dựng
+player, download, giá hay thành công provider giả.
+
+Metadata trình bày bằng chữ, raw family enum không còn hiện; dữ liệu server,
+cảnh báo/review thật và escaping giữ nguyên. Sửa nội dung vẫn đánh dấu kết
+quả cũ; warning là paragraph đúng ngôn ngữ và vẫn có sau SFX remount. Boundary
+DOM còn để placement helper tìm đúng vị trí nhưng không chiếm cột trống.
+Sharedhero/state/normalizer/input/API/auth/ví/backend/motion không đổi.
+
+Focused138/fullNode1073/boundedCI395portable đã chạy;actualbrowser/delivery
+xem evidence D2 hiện hành. Không suy từ source/QA local ra VPS hoặc LIVE.
+
+## 23/10/2026 — Music presentationD1: chữ và khả năng đọc
+
+Chỉhai trangMusicDirections/SFXCueSheet: placeholder/help mô tả đã theoVI/EN/ZH;
+SFX3nhãnchi tiết và2fallbackdefensive cũng dùngcatalogue,khôngđổiserverdata.
+Schema2..500,optionsvi/en,required/nativeaction/inputvalue/receipt/stale giữnguyên.
+CSS dùngtoken--portal-mutedđãcó chohelper,textarea/select16px. Khôngthêmcard,
+khôngẩncard/layoutởD1;D2chuyêndọnkhối phụvànghiệp vụvẫntext-only.
+
+Đãđoactualsigned48configs/96states/48native textPOST/3items,lighthelpcontrast
+2.021→5.797,dark5.522giữnguyên;input15→16px. QA-onlyCSS200%textstress48
+khôngtrànngang;khôngclaimnativeOSDynamicType. Newtest5/5,fullNode1021/1021,
+Python21/21,review86/86/Critical0/Important0;3productionfilesđúng6workerR1
+editrecords,11protectedfilesLF-normalizedequalBASE. R2sauCIplacementgap
+chỉdời2CSSrulestrướcfinalChatmarker,khôngđổivalues/JS/i18n/tests.
+R2đolại48configs/96statescùngcontrast/font/0overflow;Node1021/foundation90/
+boundedCI395portableđạt,independentC0/I0/M0. Linux396/newCI/deliverychờreceipt.
+Edge/release/latestreceipt xem `reports/audit/R218-MUSIC-PRESENTATION-D1-QA-20261023.json`.
+Khôngdùngcopy/contrastPASSđểđóngnhạc/audio/player/Botparity/production/LIVE.
+
+## 23/10/2026 — Music/SFX: lỗi có hướng xử lý và phục hồi focus
+
+Hai action lập hướng/cue nay phân loại28thông báo lỗi local ở lớp trình bày
+riêng; top-level HTTP401/403 dùng thông báo phiên/quyền, serverpayload khác và
+lỗi không rõ nguyên nhân dùng hướng dẫn gửi lại. Không hiển thị rawmessage/
+URL/chi tiết kỹ thuật.20cataloguerows VI/EN/ZH;2inlinefailure và finaltoast chỉ
+gọi helper cho đúng2action. NonMusic giữ fallback cũ, không dependency mới.
+Payload/safety/strictvalidation/API/auth/CSRF/requestepoch/body giữ nguyên.
+
+Focus của nút gửi vốn mất khi bị disabled: actualBASE vàcandidate đều có
+BUTTON→BODY→BODY. DependencyD0 thêm10logical lines trong2form, chỉ nhớ nút
+đang focus trước gửi; chỉ trả focus sau lỗi khi target cònconnected, current
+route/request vẫn đúng và activeElement cònBODY. Nếu người dùng chuyển sang
+input khác, target tháo, success/guard hoặc requestmuộn thì không trảfocus.
+Không đổi sharedsetActionBusy và không thêmDOM/control/motion.
+
+Source/test đã đo: BcleanRED2/4→GREEN6/6; D0RED8/2→GREEN10/10;
+focused63/63; fullNode1016/1016; Pythonnative/portal21/21.15protectedhelpers/
+10files unchanged; comparator BworkerR2+2one-linecorrections, D0R1/R2verbatim.
+Browser/receipt hiện hành xem `reports/audit/R218-MUSIC-SFX-ERROR-FEEDBACK-QA-20261023.json`;
+không suy từ source số này ra focusruntime, CI, deploy hoặc LIVE.
+FieldhintVI/technicalemptycards vẫn ở presentationD; audio/Botparity vẫn mở.
+FinalactualsignedQA B+D0strictfocus24/24,validation0POST,24intentionalaborts+
+24native retrysuccess3texts; focusrestored24,unexpectederror/external/
+unapprovedwrite/overflow0.24expectednetworkconsoleerrors ghi riêng. NoAPIfixture;
+all24downloadedJSsha5ac46bc3...;server39795dừngexit0,tempcleanup/listener51738=0.
+
+## 23/10/2026 — Music/SFX: thông báo sau gửi và cảnh báo bản quyền
+
+Hai công cụ text-only giữ nguyên đầu vào, POST có phiên/CSRF và ba kết quả
+văn bản. Chín thông báo đang xử lý/thành công/chặn hợp lệ nay lấy đúng VI/EN/ZH
+từ catalogue, không ưu tiên câu tiếng Việt kỹ thuật của máy chủ. Không thêm
+ô, chức năng, âm thanh hoặc kết quả giả.
+
+Music từng báo nhầm lỗi kết nối khi bị chặn: DTO cảnh báo có execution và16
+cờ booleanfalse, không composer; UI dùng bộ kiểm tra thành công đòi composer.
+Helper riêng nay chỉ nhận đúng17khóa và16cờ ===false, dùng ở2nhánh cảnh báo.
+Bộ kiểm tra thành công, matcher nguồn, API/auth/backend/SFX giữ nguyên byte.
+
+Đo lại: focused47/47, fullNode1000/1000, Python native/portal21/21; review độc
+lập Critical0/Important0. Actual signed QA36 cấu hình/72POST/72pendingchecks,
+ba mục mỗi success và copyrightguard thật; error/external/unapprovedwrite/
+HTTP/overflow0. SFX18trướcC và Music18sauC là hai phase riêng; SFXbyte-equal
+quaC. Evidence `reports/audit/R218-MUSIC-SFX-SUBMIT-GUARD-QA-20261023.json`.
+
+Đây chưa phải toàn trang đã dịch: validation/error/outercatch, field hint và
+technicalcopy còn mở trong B/READ kế tiếp. Không chứng minh generation,
+player/download/save/reuse, Bot parity hoặc LIVE. QA temporaryDB có signed
+auth/session writes; không có Music/provider/wallet/production mutation.
+Server53124 đã dừngexit0, thư mục tạm tự dọn, listener58258=0 đo ngoài sandbox.
+
+## 23/10/2026 — Music/SFX: phản hồi khi chọn và sửa nội dung
+
+Hai công cụ `/media-workspace/music-directions` và
+`/media-workspace/sfx-cue-sheet` hiện lập **văn bản hướng dẫn**, không tạo nhạc
+hoặc tệp âm thanh. Chọn preset/nhập nội dung chỉ thay đổi biểu mẫu. Một lần
+bấm lập mới gửi một POST native có phiên và CSRF; server trả đúng ba hướng
+hoặc ba vị trí hiệu ứng, các cờ provider/audio/job/wallet vẫn false.
+
+Lát `MU-INTERACTION-FEEDBACK` sửa đúng4hàm thông báo và thêm2row catalogue:
+VI/EN/ZH giữ đúng sau thao tác; khi sửa nội dung, thông báo kết quả cũ không
+bị mất ở lần sửa2/3. Kết quả trước, nội dung nhập, nút, event fencing và SFX
+tab-memory được giữ; không bổ sung ô, nút hoặc chức năng giả.
+
+Đã đo source: interactionRED8pass/22fail sau sửa harnesswindow export,
+GREEN30/30; focused34/34; fullNode987/987; Python4native/portal files21/21
+trước và sau sửa,2deprecationwarnings cũ. Mọi byte ngoài4hàm/2row bằngBASE,
+9tệp protected bằngBASE. Browser/delivery xem evidence hiện hành
+`reports/audit/R218-MUSIC-SFX-INTERACTION-QA-20261023.json`; chưa lấy các số
+này làm bằng chứng generation/player/delivery/production/LIVE.
+Browserlocal đãđạt60cấuhình/300selection/180edit/120explicittextPOSTs, mỗi
+lầnlậptrả3mục; errors/external/unapprovedwrites/HTTP/overflow0. Khôngđóng
+locale toàntrang: toastxácnhậnsaulập vẫnVI/technicalởEN/ZH đãghimP2tiếp.
+FulltesterWindows còn1baselinePOSIX0600khôngápdụngNTFS(32pass/1fail),
+source/testGitblobgiữnguyênBASE;32portablepass/1deselected, LinuxCIphảichạynguyênytest.
+
+Hai lượtFlash3.8 trả patch/test không hợp lệ cùngAC; Codex tiếp quản sauR2,
+không vòng3. QA dùng SQLite/tài khoản tạm; signed auth có cập nhật timestamp
+phiên, không gọi đó là “không ghi DB”. Chỉ không có mutation miền Music/
+asset/job/Memory/tiền và không có dữ liệu production.
+
+## Voice — thông báo quản lý dùng chung, 23/10/2026
+
+Kho giọng ready/nonempty chỉ hiển thị một thông báo về các thao tác chưa hỗ trợ,
+đặt trước danh sách. Không lặp paragraph này trong mỗi thẻ giọng; không thêm vào
+empty/loading/failed/guarded. Nội dung/catalogue/class giữ nguyên; từng giọng vẫn
+có status, quyền sử dụng, thông tin nghe thử, ngày cập nhật và các cờ đã xác nhận.
+Không bổ sung nút quản lý hoặc nghe thử hoạt động giả, không đổi API/quyền/màu.
+
+Renderer0/1/2/50/51profiles ở3locale và nonready states: presentation30/30,
+focusedVoice54/54, fullNode957/957, PythonSource10/10. Browser30configs gồm375px
+và844x390landscape,300profile states/120read-view states; notice count1trướclist,
+0trongcards/empty/guarded/failed. Min computed contrast5.522:1; errors/overflow/
+external/UIwrite0. Đây là signed localhost với READfixtures bootstrap/profile
+được khai báo, không chứng minh canonical backend/provider/preview/output/LIVE.
+Evidence `reports/audit/R218-VOICE-VAULT-NOTICE-CLARITY-QA-20261023.json`.
+
+## Voice — nhãn và lựa chọn giọng cần boolean xác nhận, 23/10/2026
+
+Kho giọng và hai nơi dựng ô chọn giọng chỉ nhận booleantrue cho is_default,
+tts_ready và preview_ready. Chuỗi/số/object/array không tự biến thành nhãn
+“Mặc định”, “Có thể dùng để đọc”, thông tin nghe thử hoặc option sẵn sàng.
+Giọng có tts_ready=true nhưng default sai kiểu vẫn nằm trong danh sách chọn,
+chỉ không có nhãn mặc định. Tên giọng vẫn escape; status/consent/thứ tự/limit50,
+field/route/capability và mọi API không đổi. Đây là sửa UI, không tạo audio.
+
+Node presentation24/24, focused Voice48/48, fullNode951/951, Python source10/10.
+Browser18 cấu hình/180profile states đạt, không console/page/dialog error,
+overflow, external hoặc UIwrite. Signed localhost app giữ auth/account/CSRF/role
+thật; response đọc bootstrap/profile có fixture rõ nguồn để target được render
+khi QA server không có bridge. Không xem fixture này là bằng chứng liên kết
+Telegram, Core Bridge, provider, kho giọng production hoặc LIVE đã chạy thật.
+Chi tiết `reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json`.
+
+## Dashboard — tương thích main, kiểm tra local ngày 23/10/2026
+
+Dashboard giữ bố cục sáu lối vào sản phẩm của main, dùng catalogue VI/EN/ZH
+chung với WebApp. Màn hình có một tiêu đề trang H1, sáu tiêu đề sản phẩm H3
+và vùng “Tóm tắt tài khoản” có tên trợ năng riêng. Cờ VIP không được biến thành
+tên một gói doanh nghiệp; tên gói máy chủ cung cấp vẫn được giữ và escape.
+Khi chưa có số dư/chi tiêu canonical, giao diện giữ dấu —, không dựng số 0.
+Không thay đổi nguồn ví, cách tính giá, thanh toán hoặc quyền của người dùng.
+
+Đã chạy actual app localhost với tài khoản ký hợp lệ trong SQLite tạm:
+18 cấu hình VI/EN/ZH × sáng/tối ×390/768/1440, 12 vòng menu mobile/resize/Escape
+và 3 lần mở Voice bằng bàn phím. Lỗi trang/console, tràn ngang, request ngoài
+localhost và ghi dữ liệu từ UI đều bằng 0. Nền tối đo được rgb(6,32,38), thẻ
+rgb(10,45,53); không đổi thành đen. Đây là bằng chứng UI local, chưa deploy/LIVE.
+
+Lưu ý CSS: các quy tắc dễ đọc hiện hành có ưu tiên cao hơn khai báo compact:
+H1 đo được 32px trên390/768 và44px trên1440; H3 sản phẩm20px. Không lấy
+giá trị fallback trong source làm số đo thực tế. Bằng chứng C0 được ghi tại
+`reports/audit/R218-PR661-MAIN-COMPAT-QA-20261023.json` khi các gate còn lại kết thúc.
+
 ## Free Tools và nội dung khách — 22/10/2026
 
 Free Tools không gắn nguồn ảnh rỗng lúc khởi tạo; ảnh YouTube chỉ hiện sau khi
@@ -11,6 +500,235 @@ văn bản đã làm sạch ở12cấu hình.96initialstates ở8route khách,3n
 Voiceinputtrống, không overflow/page/console/UIwrite/external. Dữ liệu quote
 tổng hợp của fileQA cũ không dùng làm bản bàn giao hoặc chứng minh tạo giọng.
 Đây chưa phải nghiệm thu generation/provider/output của tất cả sản phẩm.
+
+## Music Library guard clarity — 22/10/2026
+
+Khi thư viện nhạc hoặc SFX chưa được máy chủ cấp quyền, customer UI chỉ còn một
+thông báo nguyên nhân, nút kiểm tra lại quyền và đường dẫn sang Không gian âm
+thanh. Ba chip kỹ thuật lặp lại (thông tin riêng tư, nghe thử, tải tệp) đã được
+bỏ khỏi thẻ chặn; capability, API, dữ liệu và boundary delivery không đổi.
+Test riêng đạt `1/1`; focused Music/library đạt `57/57`; toàn bộ Node WebApp
+đạt `908/908`; syntax và `git diff --check` đều đạt. Đây là sửa trình bày tại
+source, chưa phải bằng chứng nghe/tải/giao tệp hoặc LIVE.
+
+## Content Studio guard clarity — 22/10/2026
+
+Ba trạng thái chưa xác minh của Content Studio (chưa có quyền, đang tải, tải
+thất bại) chỉ hiển thị nguyên nhân và thao tác cần làm; các chip kỹ thuật lặp
+về phiên, bộ nhớ đệm, cầu nối hoặc đầu ra giả đã được bỏ khỏi customer UI. Khi
+máy chủ cho phép, nút thử lại vẫn giữ nguyên. Test riêng đạt `1/1`; toàn bộ
+Node WebApp sau thay đổi đạt `909/909`. Đây chỉ là lớp trình bày, không mở thêm
+quyền tạo, engine, AI, thanh toán hoặc giao tệp.
+
+## Project Center guard clarity — 22/10/2026
+
+Các trạng thái chưa có quyền/đang tải/tải lỗi của Project Center đã bỏ chip
+phiên, bộ nhớ đệm và cầu nối lặp lại. Màn hình vẫn giữ nguyên nhân, trạng thái
+đang chờ và nút thử lại khi capability được máy chủ cấp; không thay đổi
+authoring, ownership hoặc dữ liệu dự án. Test riêng đạt `1/1`; toàn bộ Node
+WebApp sau thay đổi đạt `910/910`. Chưa có thay đổi engine, provider, ví hay
+giao tệp.
+
+## Campaign Planner guard clarity — 22/10/2026
+
+Các trạng thái chưa đăng nhập/đang tải/tải lỗi của Campaign Planner đã bỏ chip
+phiên, bộ nhớ và kết nối thay thế lặp lại. Lý do truy cập, trạng thái chờ và
+nút thử lại vẫn giữ nguyên; không thay đổi lịch, publish, quyền, dữ liệu hay
+boundary AutoPost. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt
+`911/911`. Không gọi kênh ngoài, provider, ví hoặc PayOS.
+
+## Bot companion intro clarity — 22/10/2026
+
+Các trang handoff Bot và Analytics không còn ba chip kỹ thuật lặp về authority,
+report/charge và identity. Intro chỉ giữ thông điệp tiếp tục trong Bot; command,
+URL, connection guard và ranh giới dữ liệu giữ nguyên. Test riêng đạt `1/1`;
+toàn bộ Node WebApp sau thay đổi đạt `912/912`. Không gửi lệnh, gọi Bot,
+provider hoặc thay đổi tài chính.
+
+## Video Factory và Guide quyền sử dụng — 22/10/2026
+
+Guard của Video Factory Workflow và Guide quyền sử dụng đã bỏ các chip kỹ
+thuật lặp về phiên, execution/publish và license. Nguyên nhân cần phiên Web vẫn
+hiển thị trong nội dung chính; route, quyền và boundary không đổi. Test riêng
+đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `913/913`. Không mở video
+execution, provider hoặc xác minh license thay cho máy chủ.
+
+## Image utility guard clarity — 22/10/2026
+
+Sáu nhóm Image utility (xóa nền, lịch sử, gắn thương hiệu, storyboard, đổi
+canvas và nâng chất lượng) ẩn chip kỹ thuật phiên/cache/fallback trong các guard
+card bằng selector chỉ áp dụng cho đúng route. Nguyên nhân và thao tác cần làm
+vẫn giữ; không đổi engine, file, capability, API hay output. Test riêng `1/1`;
+toàn bộ Node WebApp sau thay đổi đạt `914/914`.
+
+## Document/PDF utility guard clarity — 22/10/2026
+
+Các guard card của Document/PDF utility (hub, split, merge, optimize, convert
+và OCR) ẩn chip kỹ thuật phiên/storage/runtime/fallback theo từng route. Lý do
+và action thật vẫn giữ nguyên; không đổi bytes, storage, capability, API hay
+delivery. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `915/915`.
+
+## Support Admin guard clarity — 22/10/2026
+
+Guard của Trung tâm hỗ trợ khách hàng trong Admin chỉ còn thông điệp yêu cầu
+quyền do máy chủ cấp. Ba chip kỹ thuật về vai trò, cầu nối và dữ liệu dự phòng
+đã bỏ; loading, RBAC, danh sách yêu cầu và boundary tài chính không đổi. Test
+riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `916/916`.
+
+## Remaining customer guard surfaces — 22/10/2026
+
+Project Package, Asset Vault, Inbox, Automation, Operations và Video
+finalization đã ẩn các chip implementation lặp trong guard card theo đúng
+route. Metric thật ở các surface khác không bị ẩn; capability, storage, job,
+API và delivery không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay
+đổi đạt `917/917`.
+
+## Campaign boundary clarity — 22/10/2026
+
+Campaign detail và hàng tự rà soát chỉ giữ giải thích nghiệp vụ; chip mã,
+CSRF, publish và audit lặp đã bỏ. Mốc lịch thật trong Calendar không thay đổi.
+Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `918/918`.
+
+## Voice Studio lane clarity — 22/10/2026
+
+Voice Studio lane rail giữ tiêu đề, mô tả và nút mở khu vực; nhãn trạng thái
+“đang được bảo vệ” lặp trên cả ba lane đã bỏ. Route, capability, Voice Vault và
+handoff không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt
+`919/919`. Đây chỉ là presentation, không phải preview, rename, delete, reuse
+hay engine voice runtime.
+
+## SubDub Smart Multi empty-map clarity — 22/10/2026
+
+Smart Multi giữ mô tả nhận diện một/nhiều giọng và callback guarded, nhưng không
+hiển thị khung bản đồ người nói rỗng khi server chưa trả speaker payload. UI
+không đoán giọng hoặc dựng kết quả giả; upload, engine, quote và delivery vẫn
+chưa mở. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `920/920`.
+
+## Guide/Video zero-metric clarity — 22/10/2026
+
+Guide Center chỉ giữ số chủ đề; Video Factory chỉ giữ số bước có chủ đích.
+Các ô `0` kỹ thuật về execution, provider call và customer publish đã bỏ vì
+không phải lựa chọn nghiệp vụ của khách. Catalog, route và workflow boundary
+không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt `921/921`.
+
+## Free Prompt Gallery zero-metric clarity — 22/10/2026
+
+Free Prompt Gallery chỉ giữ số nhóm mẫu và ngành; ô `0 — Thực thi / thanh
+toán` đã bỏ vì không phải lựa chọn nghiệp vụ của khách. Catalog, filter, xem
+chi tiết, sao chép và lưu không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp
+sau thay đổi đạt `922/922`.
+
+## Voice Studio policy clarity — 22/10/2026
+
+Voice Studio policy thay bốn ô capability lặp (TTS, clone, preview, delivery)
+bằng một lời giải thích theo trạng thái máy chủ; consent notice vẫn giữ nguyên.
+Đã bổ sung key VI/EN/ZH cho thông điệp mới để không rò tiếng Việt khi đổi locale.
+Test riêng `1/1`; toàn bộ Node WebApp sau thay đổi đạt `923/923`.
+
+## Chat Workspace boundary clarity — 22/10/2026
+
+Chat Workspace boundary thay năm ô lặp về receipt/model/provider/payment/output
+bằng một thông điệp capability theo server; composer, thread, auth và dữ liệu
+Chat Run không đổi. Test riêng đạt `1/1`; toàn bộ Node WebApp sau thay đổi đạt
+`924/924`.
+
+## Image Studio boundary clarity — 22/10/2026
+
+Image Studio boundary thay bốn ô provider/preview/job/payment lặp bằng một lời
+giải thích capability theo máy chủ; class responsive và route không đổi. Đã cân
+bằng key `boundary.summary` cho VI/EN/ZH. Test riêng đạt `1/1`; toàn bộ Node
+WebApp sau thay đổi đạt `925/925`.
+
+## Workspace boundary clarity — 22/10/2026
+
+Document Workspace, Analytics Workspace và Subtitle Studio thay các cụm ô lặp
+OCR/provider/payment/media bằng một lời giải thích capability theo server; các
+class responsive và workflow contracts giữ nguyên. Test riêng đạt `1/1`; toàn
+bộ Node WebApp sau thay đổi đạt `926/926`.
+
+## Music/SFX boundary clarity — 23/10/2026
+
+Music Prompt Composer, Music Directions và SFX Cue Sheet thay các cụm ô lặp về
+provider/player/output/payment bằng một lời giải thích capability theo server.
+Preset, brief, cue và form không đổi. Test riêng đạt `1/1`; toàn bộ Node
+WebApp sau thay đổi đạt `927/927`.
+
+## Guard selector accuracy — 22/10/2026
+
+Audit độc lập phát hiện selector cũ không khớp DOM lồng của Project Package và
+Video finalization, trong khi regex test vẫn cho kết quả xanh. Selector đã sửa
+đúng quan hệ DOM; ba test guard clarity được siết để kiểm block selector thật.
+Focused `3/3`, full Node `926/926`. Không đổi renderer/backend ngoài CSS và test.
+
+## Voice Vault endpoint audit — 23/10/2026
+
+Rà AST `copyfast_voice_studio.py` đếm được `22` endpoint Web-owned: summary,
+policy, references, list có offset, create, detail/update, archive/restore,
+restore-version, duplicate, compose, script CRUD/lifecycle, cue-sheet, events
+và direction composer. Search/filter/page/status/default/rename/archive/restore
+đã có contract; preview audio/provider và apply/reuse profile vào SubDub/Video
+vẫn chưa có canonical contract, nên UI không dựng action giả.
+
+Đính chính ranh giới: `22` endpoint trên thuộc **hồ sơ hướng đọc/lời thoại của
+Web tại `/voice-studio`**, không phải Kho giọng âm thanh tại `/voice/saved`.
+Không dùng số endpoint metadata để đóng yêu cầu quản lý giọng thật của Bot.
+Canonical audio hiện chỉ có GET tối đa50 mục đã xác minh; search/phân trang/
+đổi tên/mặc định/xóa/nghe thử/áp dụng sang SubDub/Video còn mở theo R218-02A.
+
+QA mới trên source3090311: Node927/927; Python source10/10 và runtime metadata/
+direction31/31. App thật với SQLite/tài khoản tạm đi trọn6 cấu hình VI/EN/ZH ×
+(dark390/light1440): tạo, ưu tiên, đổi tên, lưu trữ/khôi phục, tìm/xóa bộ lọc,
+API đọc lại;24 lần ghi metadata QA, không lỗi trang/console/overflow/request ngoài.
+Không phải6cấu hình đầy đủ mọi tổ hợp. EN/ZH còn4finding: thông báo lọc vẫn
+bằng tiếng Việt. Cụm3ô kỹ thuật của soạn hướng đọc đã tái hiện nhưng chưa sửa;
+Antigravity chưa trả patch hợp lệ, không được gọi CLI exit0 là sửa đạt.
+Evidence `reports/audit/R218-VOICE-METADATA-QA-20261023.json`.
+
+Cập nhật tiếp23/10: đã thu hồi patch từ cùng phiên Antigravity3.8Flash, xóa
+đúng3ô kỹ thuật trong disclosure soạn hướng đọc bằng1line production. Test
+RED6→GREEN6, fullNode933/933, Python10/10; browser18configs/36states giữ
+keyboard/focus/5field/defaults, không lỗi/overflow/external/write. Form, màu,
+capability và backend giữ nguyên. Đây là local UI, chưa CI/deploy/LIVE.
+Thử đồng bộ main406127e cho13regression assertions fail (Dashboard0H1 cả3locale),
+nên merge thử đã abort; bản vá hiện tại không chứa thay đổi upstream đó.
+
+Voice management feedback — 23/10: Filter, xóa bộ lọc, phân trang và làm mới
+hồ sơ hướng đọc nay dùng thông báo VI/EN/ZH theo locale. Web chỉ báo thành công
+khi read result còn hiện hành, route không đổi và read state đúng là `ready`.
+Đọc lỗi sau ba lần retry không giữ hồ sơ cũ hoặc báo thành công. QA thật đã kiểm
+18 cấu hình, 51 hồ sơ tạm, 72 phản hồi503 điều khiển, 0 phản hồi429, 0 lỗi trang/
+console, 0 request ngoài và 0 UI write. Đây là metadata Web, không phải giọng
+âm thanh canonical hoặc đầu ra TTS.
+
+## Migration evidence refresh — 22/10/2026
+
+Preflight và Web inventory đã được refresh sau các wave UI. Auditor quét `330`
+source files; fingerprint hiện tại được ghi trực tiếp trong
+`reports/migration/preflight.json` và `web_inventory.json`, còn verifier Web
+evidence trả `ok: true` cho exact HEAD tại lần refresh gần nhất. Đây là
+evidence source/migration, không phải CI, deploy hoặc LIVE.
+
+## Billing presentation repair — 22/10/2026
+
+Batch `R218-BILLING-20261022` hoạt động ở lớp Web UI và read-only projection.
+`/api/v1/packages` production đã quan sát `available=true`, 4 gói tháng và 20
+combo; `/packages` render 24 card sau hydrate ở viewport 327×668, overflow 0.
+Giá bán chỉ được phép xuất hiện khi `public_sale_catalog` có SKU, version và
+`approval_status=owner_approved`; Web giữ giá trống khi upstream chưa cấp.
+
+Nạp thủ công giữ hai nguồn đọc riêng: `/payments/options` cho method/QR và
+`/payments/manual` cho history. Lỗi options không được hiển thị như lỗi history;
+retry method gọi lại đúng GET options. Không có fallback sáu gói nạp client.
+Hai method ACB trùng QR chỉ còn một lựa chọn hiển thị theo readiness; canonical
+IDs/history giữ nguyên. Ảnh QR portrait giữ tỷ lệ tự nhiên và hiển thị rộng hơn
+trên desktop/mobile, không crop/scale mã.
+
+Evidence local: Node 902/902; wallet truth 21/21 trên DB cô lập + bridge giả lập;
+billing/QR Python 24/24 (CSS baseline exclusions đã tái hiện trên BASE);
+browser QA 120/120 cấu hình VI/EN/ZH × light/dark × 375/390/768/1440,
+console errors 0, UI writes 0, external requests 0, overflow 0. Không gọi
+provider, không tạo giao dịch, không thay wallet/PayOS. Batch chưa push/deploy;
+production vẫn chạy commit `e5b1f586` cho tới khi Owner mở delivery.
 
 ## R218 Q0 — nhãn giao diện thừa và Image continuity, 21/10/2026
 

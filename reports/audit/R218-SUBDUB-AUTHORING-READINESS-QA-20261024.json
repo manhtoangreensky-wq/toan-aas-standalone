@@ -1,0 +1,72 @@
+{
+  "task":"E3-READINESS",
+  "date":"2026-10-24",
+  "base_sha":"7e35f0ab78a32b2d4d7bffc7536a4dd381c21151",
+  "branch":"webapp-r218-billing-ui-20261022",
+  "pr":661,"issue":664,
+  "contract":6382914858,
+  "read_contract":6382724646,
+  "status":"LOCAL_R711_R716_GATES_PASS_PARENT_OPEN_NOT_PUSHED",
+  "production_files":["static/portal/portal.js"],
+  "production_change":"Native SubDub authoring is disabled before an authenticated session with nonempty string CSRF is available. One localized inline status explains pending state and disappears after genuine ready remount. Summary Edit regeneration follows the same article flag. No anonymous draft adoption, auth business or identity-fence change; permanent file/source-language/execution guards retained.",
+  "read_actual":{"early_cases":36,"early_review_mismatch_cases":36,"early_changed_control_cases":27,"early_unchanged_cases":9,"stable_cases":36,"stable_review_mismatch_cases":0,"stable_changed_control_cases":0,"raw_sha256":"47d1070c69e0fd57bc3f922d2ef0c11ba89945d47b1345663e43723c53ff3685","clarification":"All nine unchanged cases were DUBBING_ONLY but still had immediate review mismatches. Exact event timing retaining those nine was not captured; do not call all36 lost input."},
+  "handoff":{
+    "model":"gemini-3.8-flash-high","round":2,"R3":"NONE",
+    "consent":"Owner explicitly approved exact E3-READINESS R1 UI allowlist/test/spec/task/fullMAP to Gemini. Initial pre-consent launch rejected before execution; subsequent R1 and narrower R2 approved and terminal.",
+    "R1":{"seconds":362.1090779,"outer_exit":0,"command_UTF16_chars":20498,"runtime_payload":0,"source_records":8,"source_review":"C0/I0/M0","unit_gate":"BASE and candidate 0pass/0assert/6harness; undefined drafts and other fixture/assertion gaps; no source/test applied","raw_sha256":"2d7e2e2568e8a33ed21899905b3064a3e9ff76f45093ad3b9b8f8ed15dec994d","review_receipt":6383127943},
+    "R2":{"seconds":298.4167379,"outer_exit":0,"command_UTF16_chars":22736,"runtime_payload":0,"scope":"NEW_TEST only, source frozen","unit_gate":"BASE0pass2assert4harness/candidate1pass1assert4harness; wrong renderer signature/draft shape/radio scope; no source/test applied","raw_sha256":"37d2ac316853b18b2f34ecf6d927db40618ffa6747d0e94a0610705edbbae404","review_receipt":6383220355},
+    "takeover":"Same spec/round2 Codex Sol xhigh repaired new test only. All8 R1 production records retained byte-identically, no production rewrite or AGY R3.",
+    "frozen_records_sha256":"46b97b444b32b5d33decbe00ab1fd469a24ad1bc0205ef4756d969a3d8596c53",
+    "sol_packet_sha256":"50ebcd32c2a58a719227a014bb64d514ccea1945aa1241a81558705d9ac52c9e",
+    "sol_report_sha256":"c72f4267d22dcced98a33537c3b8c3ccd51a240442592a92f05a98219fa96d19"
+  },
+  "red":{
+    "native_browser":{"configs":12,"cases_enabled_before_auth":12,"errors_external_UIwrites":0,"exit_code":1,"raw_sha256":"969156da1fa801b26a4e45679418258c04c0ff0f2eeb702a3f2c908c9f2eef9d"},
+    "actual_test_only":{"pass":0,"expected_assertion_failures":6,"harness_errors":0,"duration_ms":189.1968,"exit_code":1},
+    "application":"NEW_TEST alone first, actual assertion RED, then exact8 production records. First apply_patch attempt rejected atomically because hunks were not in source order; verified source unchanged, sorted hunks and applied identical records."
+  },
+  "tests":{
+    "new_unit":{"tests":6,"pass":6,"fail":0,"duration_ms":435.8412,"exit_code":0},
+    "focused_SubDub":{"pass":74,"fail":0,"duration_ms":926.7807,"exit_code":0},
+    "full_Node":{"pass":1301,"fail":0,"skipped":0,"duration_ms":15731.8125,"exit_code":0},
+    "python_CSS":{"pass":21,"fail":0,"existing_warnings":1,"duration_seconds":0.73,"exit_code":0},
+    "syntax":"node --check static/portal/portal.js exit0",
+    "compile":"python -m py_compile app.py copyfast_pages.py copyfast_api.py copyfast_auth.py copyfast_bridge.py config.py exit0",
+    "diff_check":"git diff --check exit0; existing LF-to-CRLF advisory only",
+    "full_repository_pytest":"NOT_RUN; historical technical backlog unchanged"
+  },
+  "browser_readiness":{
+    "command":"node <QA>/browser-SDE3-READINESS.cjs http://127.0.0.1:52156 green",
+    "configs":72,"early":36,"stable":36,"modes":4,"locales":["vi","en","zh"],"theme":"dark","views":["390x900","844x390","1440x900"],
+    "held_response":"Actual first authenticated auth/me response fetched and held in memory, then same response fulfilled; no fake session/capability or forced mount.",
+    "early_enabled_native_controls":0,"ordinary_click_Tab_blocked_cases":36,"ready_review_mismatch_cases":0,"mode_round_trips":72,
+    "permanent_guards_and_public_anchors_retained":true,"asset_LF_checks":288,"assets_match":true,
+    "min_pending_contrast":16.111146384818927,"errors":0,"external":0,"UI_writes":0,"overflow":0,"exit_code":0,
+    "raw_path":"C:/Users/toann/Documents/Codex/qa/r218-music-review-FH-20261024/SDE3-READINESS-native-green-1792839341797/result.json",
+    "raw_sha256":"1851c1f9a14d48901f80aac438281dfaf373550a9ed84cc245bd76907f12de89"
+  },
+  "browser_pending":{
+    "configs":12,"locales":["vi","en","zh"],"themes":["light","dark"],"widths":[390,1440],
+    "once_visible_actual_AX":true,"ready_absent":true,"min_contrast":11.77248113218246,"unknown_backgrounds":0,
+    "errors":0,"external":0,"UI_writes":0,"exit_code":0,
+    "raw_path":"C:/Users/toann/Documents/Codex/qa/r218-music-review-FH-20261024/SDE3-READINESS-pending-1792839578984/result.json",
+    "raw_sha256":"0323f95687dc3ad38b397aa88798d72674b9f6486ac7f60c6aebbf77570130fa",
+    "visual":"Four actual VI viewport screenshots at light/dark390/1440 inspected; one inline factual status, no new card/spinner/empty region. Not whole-page AA or native Safari proof."
+  },
+  "browser_stable_final":{
+    "configs":168,"Edit_clicks":1218,"Enter_Space":336,"actual_value_edits":1050,"mode_round_trips":168,"Voice_returns":168,
+    "modes":4,"locales":["vi","en","zh"],"themes":["light","dark"],"widths":[320,375,390,414,768,1440,844],
+    "text_samples":1218,"focus_samples":336,"min_text_contrast":12.351554732138213,"min_focus_contrast":5.860080947953878,"unknown_backgrounds":0,
+    "min_Edit_width":44,"min_Edit_height":44,"text2x_no_overlap_clip_or_overflow":true,"protected_Group_Range_Edit_Voice_gates":true,
+    "asset_LF_checks":504,"errors":0,"external":0,"UI_writes":0,"overflow":0,"exit_code":0,
+    "raw_path":"C:/Users/toann/Documents/Codex/qa/r218-music-review-FH-20261024/SDE3-EDIT-readiness-final-20261024-r1/result.json",
+    "raw_sha256":"4598041a730d5366f841c93cdc9b387b971a53548fbc56ef676c9b68d1a5684e"
+  },
+  "source_review":{"critical":0,"important":0,"minor":0,"exact_records":8,"reverse_whole_JS_BASE_LF":true,"protected_whole_helpers":17,"protected_files":14,"old_test_paths_unchanged":674,"Chat_unchanged":true,"E607_cache_unchanged":true,"independent_new_unit":{"pass":6,"fail":0,"duration_ms":600.6108,"exit_code":0},"final_runtime_review":"Independent C0/I0/M0; all three raw hashes and unique Cartesian72/12/168 configurations verified, native288/Edit504 servedassetcomparisons match currentsource. Pending12 has no own asset hashes; source binding is companion72 plus retained same server context, not12 extraassetchecks."},
+  "source_sha256_LF":{"JS":"d2eb7048f62619ed22a01b9cae70cd6672d55cb22948cf818c654edc2e8c522e","new_unit":"ef5fdc95af729d4b5396eab57ef776df7b8b33e593964a3df4a96356aaa51962"},
+  "environment":"Existing headless Edge/Playwright, Browser plugin unavailable; signed isolated QA DB, bridge/provider/PayOS off. Two sandbox launch attempts failed pre-browser with virtual Temp ENOENT; process-local TEMP override did not resolve it. Approved exact headless QA command outside sandbox ran successfully, no security/settings/IDE/window changes.",
+  "cleanup":"Owned browsers82556/37435 and parent45772 terminal0; owned server48945 received newline and exited0 after parent QA. Outside probe listener52156=0 and isolatedtemp0vfy_b36 removed. No unrelated process affected.",
+  "historical_unknowns":{"U1":"Original C3 AX mismatch not reproduced; missing original failure snapshot means cause remains UNKNOWN, not retroactively fixed.","U2":"Current early-authoring mismatch reproduced and fixed by this UI readiness gate; exact original LC run state remains UNKNOWN."},
+  "limitations":["No upload/voice-profile application/speaker detection/translation/quote/job/dubbing/file output proof; canonical contracts remain T0","Parent SD01..21 final audit, independent Tester, operating-doc comparison, provenance and one E3 push/exact-HEAD CI remain open","No native Safari/iOS/OS text-scale/PWA/motion/FPS/CLS/INP or production LIVE claim"],
+  "provider_calls_app":0,"wallet_mutations":0,"production_data_mutations":0,"deploy":"NO","live_pass":"NOT_TESTED","goal":"ACTIVE","motion":"LAST","delivery":"NOT_PUSHED; parent batch gates remain"
+}

@@ -1,5 +1,322 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## R218-SUBDUB-D4-20261024 — công tắc âm thanh gốc
+
+Session `R218-SDD4-TESTER-20261024`, BASEba4b2dfa, PR661/Issue664.
+Source candidate là worktree có portal.js LF SHA256bb0b90fb9d45eb310127e3177c06da7ba73034bf04801fa1b9ad440d4d3c9879.
+Chỉ signedlocalhost/DBtạm; không sửa48WAcase cũ hoặc sinh issue hàng loạt.
+
+| Case | Mức | Thao tác | PASS bắt buộc / canh lỗi cũ | Evidence |
+|---|---|---|---|---|
+| SDD4-01 | nặng | Dub/Combo×VIENZH×lightdark×390/768/1440/844ngang |48unique/native switch cólabel/role;off0/on37;1/100/manual0/invalid;khôngđổi dubbing0ack/200 |main48raw+unit6 |
+| SDD4-02 | nặng | Tắt ở37→đổi mode→Kho giọng/Thêm giọng→quay lại→bật |48modeLoops/96VoiceReturns;giữ targetja/customISO/Combo vịtrí-format-display/dub200;on37 |main48snapshot/canonicalVoiceURL+actualtheme |
+| SDD4-03 | vừa | KeyboardSpace/focus/text2x hai theme |Label>=44×44,text>=4.5/focus>=3,unknown0;khôngche/clip/chồng/overflow;restore styleexact |48geometry/AX/PNG |
+| SDD4-04 | nặng | Hai nonvoice modes×VIENZH×lightdark×390/1440 |24unique;0switchvisible dù2hiddenDubcontrols tồn tại;khôngemptybox mới |supplement24 |
+| SDD4-05 | nặng | Giữ actualauth/me response trước ready, normalclick/Tab rồi releasecùngresponse |12unique;2switchdisabled/0enabled;readyoff0/on100;khôngforceclick/fakesession |supplement12 |
+| SDD4-06 | nặng | AccountA37off→loginB→B53off→logout→realreloginB |6unique;A/Bemailkhác/projectedđúng;B100,retainedroot1/switch2disabled,loginlạion/offon100 không37/53 |supplement6;persistedhandlerdiagnostic,khôngnativeBFCache |
+| SDD4-07 | nặng | Artifact/source/testdiff/negativeguards |9recordsreverseLFBASE;17helper676oldtestsunchanged;clone-invalid-badInput-disabled no privatewrite;RED6→GREEN6 |independentreview/packet/regressions |
+| SDD4-08 | nặng | Delivery/giới hạn |AllrawterminalPASS/served4assetshashes;localCIdeployLIVEtáchriêng;provider/wallet/production0;motionlast |receipt/CIexactHEAD chỉ sau Tester |
+
+QA accountcases cách31giây để tôn trọng register4/login8 mỗi60giây; không tắt
+rate-limit hoặc lặp request429. Không gửi token/password vào báo cáo. Upload/
+translation/dubbing/speaker/canonicalvoice/quote/output vẫn T0, không fake PASS.
+
+## R218-SUBDUB-E3-20261024 — phiên Tester độc lập
+
+Session `R218-SDE3-TESTER-20261024`; parentBASE79cd75d3,
+candidateSOURCE26a966e25778229a0b76cfb045fa384d5d34b4eb;PR661/Issue664.
+QA-only signed localhost/DBtạm, khôngproduction/provider/ví. Các case dưới
+không thêm/đổi48caseWA cũ. Đây là nguồn case duy nhất, không sinh issue hàng loạt.
+
+| Case | Mức | Bước và phạm vi | PASS bắt buộc / canh lỗi cũ | Evidence |
+|---|---|---|---|---|
+| SDE3-01 | nặng | Bốnmode×VI/EN/ZH×light/dark×320/375/390/414/768/1440/844landscape |168unique;source có/chưa;21target/searchkhôngđổi lựa chọn;7positions/format/line/display;query/keyboard/draft/review/Voice khớp;không errors/external/UIwrites/overflow | finalparent168raw+SD01..21crosswalk |
+| SDE3-02 | nặng | HaiDubmode,4group/7lane;chọn bằngclick+nativearrow |2/1/1/3membership,3Auto distinctcallback;compactlabel nhưngfullARIA/reviewname;nonvoice không lộvoicecontrols;saved/custom→Voice→returngiữ cấu hình | GROUP84+supplement;parent168 |
+| SDE3-03 | vừa | Label/contrast/range tại mọiviewport/theme;Edit từreview |2select cólabel;nondecorativeAA>=4.5/large>=3/unknown0;range>=44×44;Edit44×44/focus>=3;không clipping/text2x overlap;1218Editclick336keyboard | LC/RANGE/EDIT/READINESS+parentraw |
+| SDE3-04 | nặng | Giữ lại realauth/me response trước hydrate rồinormalclick/Tab;release cùngresponse |36early0enabled/normalattemptblocked;72readycoherent/modeLoops;không force/fakepayload;permanentupload/sourceLang/CTAstilldisabled/publicanchorssame | native72SHA1851c1f9…f12de89 |
+| SDE3-05 | vừa | PendingVI/EN/ZH×light/dark×390/1440 |12unique/statusonce/actualvisibleAX/AA>=4.5/unknown0;readyabsent;noemptycard;khôngsuy12ownassethashes | pending12SHA0323f956…70130fa |
+| SDE3-06 | nặng | E607 blurISO→mousedownEdit;E608focusselect dướiheader | No-opreviewHTML không thaychild;click giữ focusđúng target;stickyheader khôngche;mode/URL/draft/root/requestsame,noneditable khôngnútgiả |EDITregression168SHA4598041a…1a5684e+unit8 |
+| SDE3-07 | nặng | Đối chiếu sourceBASE→SOURCE/oldtests/Chat/auth/integration/CSS/motion |Exact8READINESSrecords/17helper14files674oldtests;parentonlydeclaredUIchanges;identityfenceunchanged;historicalUNKNOWNkhôngđóngngược |independentreview/comparators |
+| SDE3-08 | nặng | Handoff/CI/live ranhgiới |Local/remoteCI/deployed/LIVE báo riêng;không tickupload/voiceprofile/detection/quote/job/fileoutput/reuseT0;motionlast;0provider/wallet/productionmutation |prepush/receipt/CIexactHEAD |
+
+
+## R218-SUBDUB-D3-20261024 — báo cáo rỗng và dòng giá chưa có dữ liệu
+
+TesterREADY;BASE00a34c2b9aea1c43ba387bd70004ea6a90b5b55f;PR661/Issue664.
+Spec `2026-10-24-r218-subdub-empty-review.md`, contract6379928009.
+Chỉ QA signed-localhost/DBtạm; không production/provider/ví. Chẩn đoán DOM
+trạng thái và `0 Xu` chỉ kiểm selector, không phải giá/report/balance thật.
+
+| Case | Mức | Thao tác | Kết quả cần thấy |
+|---|---|---|---|
+| SDD3-01 | vừa | Bốn mode ×VIENZH×light3901440/dark3901440/360375768844ngang | Không khung report rỗng hoặc2dòng unavailable;mode/balance/settings/guard vẫn hiện;reporttitle vàplaceholder không vàoAX |
+| SDD3-02 | nặng | Diagnostic đổi childstate,errorstatus,thêm directoutput rồi hoàn nguyên | Mỗi nonemptyboundary làm wrapper hiện lại;trở về đúngempty thì ẩn;không dùng diagnostic tick engine/report |
+| SDD3-03 | nặng | Chọn đủ7giọng/saved-customVoiceđivề,Nhật/custompt-BR/mix0_200 | Lane/target/customISO/mix/review/draft giữ;baAuto callbacks riêng;không mở nguồn/CTAgiả |
+| SDD3-04 | nặng | So exactR1/reverseJS-CSS/protected/Node-Python/browser/receipt | Chỉ2attrs+2rules,oldtests/backend/Chat nguyên;0errors/external/UIwrites/overflow;exactHEADCI/receipt trước tickD3 |
+
+Canh lỗi cũ: customISO hợp lệ thêm reviewrow; kiểm exactkeyset + optionalcustom,
+không so count với drafttrống. E3AXreadinessUNKNOWN còn mở;D3không đóng motion,
+upload/quote/job/output/SmartMulti/Botparity/LIVE. NativeiOS/OStextscale chưađo.
+
+## R218-SUBDUB-C3-20261024 — bỏ giải thích giọng trùng, giữ7lane
+
+TesterREADY;BASE89f6d6fe1a12047e79fa76a06f51a46c784dff95;PR661/Issue664.
+Spec `2026-10-24-r218-subdub-voice-clarity.md`; evidence
+`reports/audit/R218-SUBDUB-VOICE-CLARITY-QA-20261024.json`. QAđăngnhập/DBtạm,
+không feature/provider calls; chỉreadyattribute CSSdiagnostic, khôngengineproof.
+
+| Case | Mức | Thao tác | Kết quả / bằng chứng |
+|---|---|---|---|
+| SDC3-01 | vừa | Dubbing/Combo ×VIENZH×light3901440/dark3901440/360375768844ngang | RED24box/hintcònhiện→final48visualAX0;sharednote1/radios7/checked1;giữnoteARIA |
+| SDC3-02 | nặng | Chọn lần lượt7lane và xemreview;SpacechọnNam | 336lượt đúngvalue/review;Auto2/Multi3_8/Smart3callbackkhácnhau;nguồn/CTAkhôngmởgiả |
+| SDC3-03 | nặng | Saved/Custom→Voice→return;targetNhật/custompt-BR/mix0_200/B4search | 96returngiữdraft/lane/target/mix;subtitle-only/translatedkhôngcóvoicecontrols;noerrors/external/UIwrites/overflow |
+| SDC3-04 | nặng | ScopedCSSreverse,non-guardeddiagnostic vàhồiquy | Exact1R1record/reversewholeCSS=BASE/JSbackendoldtestsChatunchanged;statusreadydiagnosticvisible(notcapability);Node54focused1281full/Python21/C0I0M0/144LFassets |
+
+Canh lỗi cũ: firstgreenAX-note mismatchENdark844causeUNKNOWN;probe3cóAXnote,
+final48chờ đúnglocaleDOMtrướcAXđạt;khôngclaimrootcausefix/E3closed. C3không
+đóngD3/report/runtime/Smartengine/motion/LIVE. Ảnhfieldsetcófixedheadercrop,
+khôngdùngảnhcropđểkhẳngđịnhtoànlayout;7laneđãkiểmbằngtươngtácthật.
+
+## R218-SUBDUB-B4-20261024 — tìm ngôn ngữ, giữ lựa chọn
+
+Tester READY; BASE4d66ef14aa9aa74d57cd4c3cbac1e9d35e55bb21; PR661/Issue664.
+Spec `2026-10-24-r218-subdub-language-findability.md`; evidence
+`reports/audit/R218-SUBDUB-LANGUAGE-FINDABILITY-QA-20261024.json`.
+App QA/DB tạm, không flow/API response fixtures hoặc feature/provider call.
+
+| Case | Mức | Thao tác | Kết quả / bằng chứng |
+|---|---|---|---|
+| SDB4-01 | nặng | 3 mode đích, tìm tiengnhat/Japanese/日语/zh/Đức/duc ởVI/EN/ZH | Match đúng21catalog, selected pin và count thật; source-only không cósearch;72target/24source-only states |
+| SDB4-02 | nặng | Tìm Nhật khiđangchọnViệt → Tab/EndchọnNhật → no-match → xóa lọc | Querykhôngtựđổi select/URL/flow hoặc dispatchchange;no-matchgiữNhật/clear21;summaryMutationObserver0 khiinput/blur |
+| SDB4-03 | nặng | Chọn Nhật/custompt-BR/Smart/volume0-200 → lọc khôngkhớp → đổi mode chọn Đức → quay lại → Voice library/return | Khôi phục21 options trướcapply/latesttargetĐức;giữcustom/giọng/mix khiVoice return;source/CTA guardednguyên |
+| SDB4-04 | nặng | UnitpartialDOM/malformedARIA[/noownerDoc/missingmethod,query64+đuôi/HTML | False/no-op với chính fixture invalid;khôngnetwork/storage/timer/event/focus/HTML/draft mutation;actualhelper5unit |
+| SDB4-05 | vừa | VI/EN/ZH × light3901440/dark3901440/360375768844ngang | 96configs;288newtextAAmin5.2238;input16px/46px,labelARIA/status/focusAX/2x/overflow0;288LFassetchecks;errors/external/UIwrites0 |
+| SDB4-06 | nặng | Exactsource+regression và phạm vi | Original10R2records/2files;17functions/12files/oldtests/Chattailprotected;Node73focused1281full/Python111/reviewC0I0M0;Solnewtestonly |
+
+Canh lỗi cũ: không sửa sharednormalizer/draft/Voicecontinuation/Music/quote/
+API/auth/motion. Không suy UI PASS thành ngôn ngữ provider/output/LIVE PASS.
+
+## R218-SUBDUB-B3-20261024 — cỡ chữ ô nhập
+
+Phiên Tester READY; BASE06afc2c3abc554e69c7be36604fee310f877c8c6; PR661/Issue664.
+Spec `2026-10-24-r218-subdub-input-font.md`; evidence
+`reports/audit/R218-SUBDUB-INPUT-FONT-QA-20261024.json`. App QA/DB tạm,
+không flow/API response fixtures hoặc gọi chức năng/provider thật.
+
+| Case | Mức | Thao tác | Kết quả / bằng chứng |
+|---|---|---|---|
+| SDB3-01 | vừa | Bốn mode × VI/EN/ZH × light390/1440 và dark360/375/390/768/844ngang/1440 | 96 cấu hình,552 visible input/select mẫu đều computed16px;288 LFassetchecks;overflow0 |
+| SDB3-02 | nặng | Chọn Nhật, Smart Multi, gốc0/lồng200; đổi mode rồi chọn lại tab gốc; focus ô nhập | Giữ field/draft/range đồng bộ,7lane còn đủ;sourcefile/sourcelanguage/CTA vẫn disabled;96records giữgates/focus |
+| SDB3-03 | nặng | Source diff/reverseCSS, Music và hồi quy | Đúng1R1rule,reverseCSS=BASE,JS/backend/oldtests/Chat khôngđổi;Musicbrief16px;Node68focused/1276full/Python21/C0I0M0 |
+
+Canh lỗi cũ: tab mode dùng replaceState, không tạo history riêng; Voice
+continuation Back giữ lock C2. Không suy fontPASS thành native iOS/AA/LIVE.
+Search21/Smartduplicate/reportempty còn mở SD-B4/C3/D3; motion làm cuối.
+
+## R218-MUSIC-MU07A-20261024 — phương án đã nhận không mất sau báo giá
+
+Phiên Tester READY; BASE520174941470fab34c60c26e62607ba2d4b3568f; PR661/Issue664.
+App localhost đăng nhập/DB tạm; controlled client flow/capability fixtures,
+không gọi draft/estimate/confirm/provider thật. Evidence:
+`reports/audit/R218-MUSIC-RETAINED-OPTIONS-QA-20261024.json`.
+
+| Case | Mức | Bước thực hiện | Kết quả cần thấy / bằng chứng |
+|---|---|---|---|
+| MU07A-01 | nặng | Hai route Music: draft ba prompt → Apply1 → estimate bỏ suggestions → mở history | Một disclosure đóng mặc định, đúng ba prompt thực nhận; không padding, shuffle, audio hoặc card trống; 19 unit/48 browser |
+| MU07A-02 | nặng | Mở history → Apply2 → sửa brief → lấy quote mới; đổi mode và Back | Giữ tier/vocal/lyrics/duration/focus; quote cũ và F summary bị khóa khi đổi; quote mới mới mở tiếp; 48 browser |
+| MU07A-03 | nặng | Session không hợp lệ/token đổi/logout; flow thiếu/sai feature/error/guarded/confirm; own suggestions rỗng/sai dạng | Xóa đúng route cache, không rò sang phiên mới; estimate đầu tiên không có cache không dựng bộ giả; unit/lifecycle browser |
+| MU07A-04 | nặng | Payload inherited/unknown/object/private metadata; hơn ba items, hai routes | Chỉ own prompt + bảy scalar metadata cho phép, clone và bounds; không mutate input, storage/network/timer; 19 unit |
+| MU07A-05 | vừa | VI/EN/ZH × sáng/tối × 390/1440 + tối360/375/768/844ngang; mở/đóng bằng Enter, hover/focus | 48 cấu hình; 2.304 mẫu current/retained >=5,217:1, hover48 >=5,161/focus48 >=5,2; summary44px/AX/text2x, overflow0; 144 LF asset hashes khớp |
+| MU07A-06 | nặng | Chạy hồi quy/source comparator | Node1276/Python119; 9records/3productionfiles/13protectedfunctions/12protectedfiles/oldtests/Chattail không đổi ngoài spec; pageerrors/external/UIwrites0 |
+
+Canh lỗi cũ: F/H/Apply/sessiondraftsync/quote gates/API/auth/backend/Chat/motion
+khóa nguyên. Không dùng các case trên tick MU07 tổng/đổi bộ/tạo nhạc/LIVE.
+
+## R218-MUSIC-FH-20261024 — review snapshot và bỏ output rỗng
+
+Phiên Tester READY; BASE1e01f2417e3000a09c45186e11ee144e52a22fa5; PR661/Issue664.
+Chỉ localhost/tài khoảnDBtạm. Quote/capabilityfixtures là client presentation,
+không estimate/confirm/provider thật. Initial app GET không API responsefixtures.
+Evidence `reports/audit/R218-MUSIC-REQUEST-REVIEW-FH-QA-20261024.json`.
+
+| Case | Mức | Bước thực hiện | Kết quả cần thấy / bằng chứng |
+|---|---|---|---|
+| MU-F-01 | nặng | Hai form Music → inject quote hợp lệ có0Xu/flow.inputUnicode → xem trước xác nhận | Một review sau form/trước CTA/trong cùngcard; đúng VI/EN/ZH;fullescapedbrief/lyrics;lyrics đóng mặc định,Enter mởđóng. F172unit/final48browser |
+| MU-F-02 | nặng | Quote hợp lệ → sửa brief → hoàn tác → quote hết hạn/unknown/invalid/sai feature/sessionfalse | Edit giữ snapshot cũ và khóaCTA; revert chỉ khôi phục quote còn hạn; summary absent khi invalid;focus/form không mất. Final48browser |
+| MU-F-03 | vừa | Đối chiếu tier/mode/vocal/length/duration và inherited/unknown/private fields | Chỉ own scalar/enums;melody/background không lyrics/vocal;half/full không giả sốgiây;không leak extra-key;F172unit |
+| MU-H-01 | vừa | Mở `/music/create`/`song` chưa cóflow ởVIENZH/sángtối/390/1440+360/375/768/844landscape | Emptyoutputheading/card0;form1/nav4/draftaction1;H12unit/54VMomissions/final48actualGET |
+| MU-H-02 | nặng | Códraft3gợiý,quote0/unknown,error/guarded,report50/tracking | Giữ output và nội dung;48actualrendereroutputs+40nonMusicworkspaceoutputs bằngacceptedF;không audio/download giả |
+| MU-FH-03 | vừa | Mobilekeyboard/AX/2xtext/lyricsdisclosure/lightdark | 720mẫuchữ>=4.5:1,min5.522;summary>=44px;0overflow/errors/external/UIwrites;144assethashes khớpsource |
+
+Canh lỗi cũ: D1/D2/E/Chat/API/auth/quote/confirm/oldtests không đổi;fullNode1257,
+Python119/2warningcũ. Không suy thành Bot parity/âm thanh/2tracks/LIVE PASS.
+
+## R218-MUSIC-PRODUCT-READABILITY-E-20261023 — chữ hướng dẫn và ô nhập
+
+BASE `e8738b5ac6078c86e8793632cab3d0f3488e3f09`; PR661 / Issue664.
+Phạm vi chỉ hai form `/music/create`, `/music/song`; không phải native D1/D2.
+Bằng chứng: `reports/audit/R218-MUSIC-PRODUCT-READABILITY-E-QA-20261023.json`.
+
+| Case | Mức | Thao tác | PASS / canh lỗi cũ |
+|---|---|---|---|
+| MU-E-READ-01 | nặng | Đo nhãn, chữ hướng dẫn và placeholder trên cả hai form, VI/EN/ZH, sáng/tối, 390/1440 và mobile/landscape | Cả ba nhóm chữ >=4,5:1; helper sáng5,797/tối5,522, label sáng12,352/tối13,903, placeholder>=5,522; giữ association và opacity |
+| MU-E-READ-02 | nặng | Nhập mô tả/lời Unicode; đổi đủ 3 gói và 4 giọng, chuyển mode rồi Back; mở/đóng hướng dẫn bằng bàn phím | Input/select/textarea 16px; giữ giá trị/lời/giọng/thời lượng; nút gửi >=44px; không có request ghi từ UI; text CSS 200% không tràn ngang |
+| MU-E-READ-03 | nặng | Đối chiếu source và hồi quy Music/SFX/Chat | Đúng 4 rule/14 dòng sau R1+R2; bỏ block mới cho CSS bằng BASE sau LF-normalize; Chat, JS, i18n, API/auth/backend/ví/motion và test cũ không đổi |
+
+Actual signed QA 48 cấu hình; không API fixtures. Phần auth/locale có ghi DB QA
+tạm, còn thao tác UI chỉ GET. Không dùng CSS/viewport PASS để kết luận audio,
+Bot parity, native Dynamic Type, installed PWA hoặc production/LIVE.
+
+## R218-MUSIC-PRESENTATION-D2-20261023 — bỏ khối thừa, giữ kết quả thật
+
+BASE3e91dbd8244c0f51b42139c86cd62cdb0e243af1;PR661/Issue664.
+Chỉ2nativeMusic/SFXpages;D1/A/B/C/D0/backend/API/provider/ví/motiongiữkhóa.
+Evidence `reports/audit/R218-MUSIC-PRESENTATION-D2-QA-20261023.json`.
+
+| Case | Mức | Thao tác | PASS / canh lỗi cũ |
+|---|---|---|---|
+| MU-D2-01 | nặng | MởMusicDirections/SFXCueSheet ởVI/EN/ZH,sáng/tối,360..1440/landscape | Banđầu1formcard,oneH1đúnglocale;intro/stat/boundary/empty/scopeẩnkhỏiAX;khôngcộtrỗng;input16px/helperAA |
+| MU-D2-02 | nặng | Chọnđủ5preset/tool/locale,composeexplicitnative | Đúng3textitems;form+result2cards,cùngcột/gap16px;giữserverdescription/cautions/review/escaping;familyenumvàtechnicalcopylặpẩn;khôngaudio/playergiả |
+| MU-D2-03 | nặng | Sửa3lầnrồiremountSFX bằngpublicmountkhôngoverridecontext | CảnhbáostaleDOMđúnglocale,data/inputgiữ,pseudocũẩn;edit/remountkhôngPOST;SFXstale/draftvẫncòn;actualnativekhácunittestdoubles |
+| MU-D2-04 | nặng | Validation/copyrightguard/networkfault/retry/keyboard/focus,text2x | Khôngmấtguard/error/pending/success/focus/draft;submit>=44pxởtrạngtháitĩnh;0unexpectederror/overflow/external/unapprovedwrite;intentionalnetworkerrorsghiriêng |
+
+Mới52renderer/copytests dùngSUTthật,normalizer/inputdoubleschỉpresentation.
+CSSsourcetestkhôngchứngminhcomputedlayout/AX;actualbrowsergatebắtbuộc.
+HaiFlashhandoffkhôngđạtđãgiữlog;Solxhighsửađúngtest/mộtanchor,khôngAGYR3.
+KhôngdùngscopedD2PASSđểđóngwholeMusic/audio/Botparity/deploy/LIVE.
+
+## R218-MUSIC-PRESENTATION-D1-20261023 — chữ và khả năng đọc
+
+BASE1144896dde1e957e54de7f1dee361ed927d71529;PR661/Issue664;4fileBuilder
+allowlist,khôngintegration/normalizer/engine/ví. D2cardcleanupchưanằmtrongPASSD1.
+Evidence `reports/audit/R218-MUSIC-PRESENTATION-D1-QA-20261023.json`.
+SignedQA48configs/96states,VI/EN/ZH,sángtối,360/375/390/768/1440/844landscape.
+
+| Case | Mức | Thao tác | PASS / canh lỗi cũ |
+|---|---|---|---|
+| MU-D1-01 | vừa | Mở2formởVI/EN/ZH,đọcplaceholder/help |9rowtheoUIlocale;schemarequired/textarea2..500/optionsvi/en giữnguyên |
+| MU-D1-02 | nặng | Đocomputedhelpervàinputởlight/dark |Helper>=4.5:1;light5.797/dark5.522đãđo;textarea/select16px;khôngđổipalette/globalCSS |
+| MU-D1-03 | vừa | NativecomposeSFXvớibrieflanguageEN,giao diệnZH/VI |3dtlabelstheoUIlocale×3cues;serverdataENkhôngbịdịch/đổi;cautions/reviewtruegiữ;escaping<>&quoteđúng |
+| MU-D1-04 | nặng | 360..1440/landscape,QA-onlyCSStext2x;A/Cguard+B/D0error/focusregression |0unexpectederrors/overflow/external/unapprovedwrite;native3items;cardsvẫn4ởD1;D2mớiẩnôthừa |
+
+Newtest5/5;fullNode1021/1021/Python21/21;review86/86,Critical0/Important0.
+RendererfixturetestkhôngchứngminhDTOvalid/engine;200%CSSstresskhôngphảinative
+OSDynamicType/keyboard/installedPWA. Delivery/edgegatesxemevidencehiệnhành.
+CanhlỗiR2:2rulesphảiđứngtrướcFinalChatmarker,khôngđổitestChat/oldCSS.
+Foundation90/90,boundedCI395portable/1POSIXdeselected;LinuxCIphảichạy396.
+
+## R218-MUSIC-SFX-ERRORS-20261023 — B + dependency D0
+
+BASEfc8deb6a96566021a58cdcdf8ab77ed6796539cd;PR661/Issue664. Bcopy source QA,
+D0focuslocalPASS,branchdeliverypending. ChỉisolatedsignedQA, không production.
+Ma trận2tools×VI/EN/ZH×light/dark×390/1440=24; Browserpluginabsent,Edgeheadless.
+Evidence `reports/audit/R218-MUSIC-SFX-ERROR-FEEDBACK-QA-20261023.json`.
+
+| Case | Mức | Bước thực hiện | PASS bắt buộc / canh lỗi cũ |
+|---|---|---|---|
+| MU-ERR-01 | vừa | Chọnpreset,nhậpURL/markup,clicksubmit | Localvalidation đúngVI/EN/ZH,0POST,khôngrawtechnicalcopy; validator/safety khôngnới |
+| MU-ERR-02 | nặng | Chặnđúng1POSTQAconnectionreset,rồithảlỗivàgửilại | Inline/toastđúnglocale,draft/nútgiữ;1abortintentional+1nativePOSTthànhcông3texts; lỗi mạngchủđíchghiriêng |
+| MU-ERR-03 | nặng | Unitunknown/null/primitive/prototype/payload.status/top-levelHTTP401/403 | Unknownretryđúnglocale;khôngrawserver;constructor/__proto__/toStringkhôngtrúngmap;nonMusicfallbackgiữnguyên |
+| MU-ERR-04 | nặng | D0: focusnút→gửi→lỗitrongtrang;testinputkhác/stale/disconnected/success/guard | Priorbuttonconnected/current+BODY→focus1preventScroll;khônggiànhinputkhác,khôngfocusrequestmuộn/success/guard. Localstrictbrowser24/24đãđạt |
+
+Đãđo B+D0strictfocus24/24,focused63/full1016/Python21;review81/Critical0/Important0.
+FocusbaselinevàBcandidateđềuBUTTON→BODY→BODY;D0candidategiờBUTTON→BODY→BUTTON.
+MU-ERR-04chỉđạtsaukhiD0strictbrowserxanh,khôngtừcopyPASS. DeliveryB+D0đangchờ;
+Audio/Botparity/LIVEmở.
+
+## R218-MUSIC-SFX-SUBMIT-GUARD-20261023 — phiên Tester độc lập
+
+BASE80f12d220c83ae4febebb99ca9742560f3c2ac85; PR661; Issue664; branch
+webapp-r218-billing-ui-20261022. SPEC A+C; trạng thái READY để test lại.
+Chỉ signedQA localhost/DB/assets tạm; Browserplugin absent, Playwright/Edge.
+VI/EN/ZH × light390/light1440/dark390/dark1440/dark375×812/dark844×390,
+cảhai route `/media-workspace/music-directions` và `/media-workspace/sfx-cue-sheet`.
+Evidence `reports/audit/R218-MUSIC-SFX-SUBMIT-GUARD-QA-20261023.json`;
+raw `C:/Users/toann/Documents/Codex/qa/r218-music-sfx-submit-20261023`.
+
+| Case | Mức | Bước thực hiện | PASS bắt buộc / canh lỗi cũ |
+|---|---|---|---|
+| MU-SUB-01 | vừa | Chọn preset, điền brief gốc; giữ request thật rồi bấm lập; thả request | Pending đúng interface locale; chỉ1POST; receipt3texts và toastsuccess đúng VI/EN/ZH, rawVIserver không thắng |
+| MU-SUB-02 | nặng | Nhập yêu cầu mô phỏng tác giả/tác phẩm; gửi native thật | Copyrightguard đúng locale, draft còn nguyên, kết quả cũ bị xóa; không audio/job/provider/wallet; Music không báo nhầm kết nối |
+| MU-SUB-03 | nặng | Unit realparser: đủ17keys/16false; đổi từngflag/thiếu/extra/composer/sai execution | Chỉ strictfalse hợp lệ; không bỏ key hoặc nhận0/stringfalse/null; success validator cũ vẫn giữ |
+| MU-SUB-04 | nặng | Unit route/capability/stale/unsafe receipt; keyboard + screenshot/AX/DOM responsive | Không POST hoặc success giả, không late update;0page/console/external/unapprovedwrite/HTTP/overflow; palette giữ |
+
+QA hiện có36uniqueconfigs/72POST/72pendingchecks. SFX18trướcC, Music18sauC;
+SFXconsumer đã byte-equal quaC. Không ghi36lượt cùngrevision. TestA có DTO/
+validator doubles, không thay thế parser thật của C hoặc browser/native.
+Bvalidation/error/fieldhint/technicalcopy còn mở; audio/player/Botparity/LIVE
+không nằm trong PASS này. Không dùng production hoặc gọi provider để retest.
+
+## R218-MUSIC-SFX-INTERACTION-20261023 — phiên Tester độc lập
+
+BASE2d6f61f3a700cea49a6c61ec1eb57a5740dae541; branchwebapp-r218-billing-ui-20261022;
+PR661; trackerIssue664. Chỉ appQA signedlocalhost với DB/assets/tài khoản tạm.
+VI/EN/ZH × light/dark ×375/390/768/1440/844landscape cho cảhai route.
+Browserpluginabsent, PlaywrightEdgeheadless; không mở IDE/loginproduction.
+Evidence `reports/audit/R218-MUSIC-SFX-INTERACTION-QA-20261023.json` và raw tại
+`C:/Users/toann/Documents/Codex/qa/r218-music-sfx-interaction-20261023/`.
+
+| Case | Mức | Bước thực hiện | Kết quả bắt buộc / canh lỗi cũ |
+|---|---|---|---|
+| MU-FB-01 | vừa | MusicDirections vàSFX → chưa chọn → dùngSpace/chọn lầnlượt5preset | Locale giữđúng; chỉ1cardselected; unknown/unselected/disabled khôngmởsubmit; selection khôngPOST |
+| MU-FB-02 | vừa | Nhậpbrief → submitnative → kiểmresponsevàDOM | MộtPOSTđúng3field;3direction/3cue khớp; audio/provider/job/walletfalse; khôngfallback/fakemedia |
+| MU-FB-03 | nặng | Giữkếtquả, sửa cùngbrief lần1/2/3 | Mỗilần cảnhbáostale đúnglocale; result/inputkhôngmất; editkhôngPOST; FAILnếuedit2hếtcảnhbáo |
+| MU-FB-04 | vừa | Bấm lậplại sauedit3 → xemresult/focus/AX/mobile | Đúng1POSTmới; staleđượcbỏ; aria-livepolite; khôngconsole/page/external/overflow/unapprovedwrite; palettegiữ |
+
+Không dùng hai công cụ text-only để tick Music generation/player/save/reuse.
+Signedrequest có session.last_seen_at write; chỉ domain/production writesbịcấm.
+
+## VNOTICE — R218-VOICE-NOTICE-20261023, local UI
+
+BASEefbe362da9158762136820aa63112fa6882bd870; PR661/Issue662.
+
+| ID | Thao tác | Điều kiện đạt / canh lỗi cũ |
+|---|---|---|
+| VNOTICE-01 | Renderer3locale, ready0/1/2/50/51 và loading/failed/guarded cóstaledata | Một notice trước list khi nonempty,0ởcard/empty/nonready; cardcount=min(n,50), không stale names |
+| VNOTICE-02 | So BASE/current sau stripping đúng paragraph | Nguyên văn paragraph và mọi byte còn lại của bundle bằng nhau;7strictflags/metadata/route/guard/CSS không đổi |
+| VNOTICE-03 | Signedapp30configs:3locale×2theme×5viewport, gồm375 và844x390 |300profile states/120readviews, notice1/0đúng, keyboard/AX, contrast>=4.5, noerror/overflow/external/UIwrite/noaudio |
+| VNOTICE-04 | Source/tests/provenance/CI |30presentation/54focused/957fullNode/10PythonSource; CI đúngHEAD trước tickdelivery; không nhận là canonicalmanagement hoặcLIVE |
+
+Evidence `reports/audit/R218-VOICE-VAULT-NOTICE-CLARITY-QA-20261023.json`.
+Browser chỉ có READfixtures bootstrap/profile, realidentity/CSRF/role giữ;
+providerexecutionfalse, serverbridge absent. Không test nghe thử/provider thật.
+
+## VO-FLAG — phiên R218-VOICE-FLAG-20261023, local UI
+
+BASE9d941fbd52e444d3093f781c48f49ea6dcf30350; PR661/Issue662.
+
+| ID | Thao tác | Điều kiện đạt / canh lỗi cũ |
+|---|---|---|
+| VFLAG-01 | Inventory VI/EN/ZH nhận true/false/undefined/null, số, chuỗi, object/array | Chỉbooleantrue có default/ready/preview metadata; tiếngTrung so exact speech label, không regex substring |
+| VFLAG-02 | RenderFields và Voice renderFormCard dựng options từ cùngDTO | ChỉID+tts_ready===true được chọn; default sai kiểu không có marker nhưng giọng true vẫn có; tên escape, input không mutate |
+| VFLAG-03 | Signed localhost app ×VI/EN/ZH ×light/dark ×390/768/1440; mở details bằng phím |18configs/180states; noaudio, đúng3ready options trong fixture; page/console/dialog/error/overflow/write/external0 |
+| VFLAG-04 | Rà diff và delivery | Đúng7predicate/5productionlines, không API/auth/CSS/capability/engine;951Node/10Python source; provenance và CI trên đúngHEAD trước đóng delivery |
+
+Fixture chỉ sửa READ responses bootstrap/profile trong browser; server bridge
+không có, provider execution false; giữ signed identity/CSRF/role thật. Không
+claim liên kếtTelegram, backend Voice Vault, preview/output hoặc LIVE. Evidence
+`reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json`.
+
+## C0 — PR661 tương thích main, phiên R218-C0-COMPAT-20261023
+
+Tracker hiện hành: Issue662 trong đúng repo standalone; không tạo bộ case cạnh tranh.
+BASE cb995c7809c8da086b5f3e80f09546374832ef8a, main406127e. Chưa merge/deploy.
+
+| ID | Thao tác | Điều kiện đạt / canh lỗi cũ |
+|---|---|---|
+| C0A-01 | Dashboard VI/EN/ZH ×2theme ×390/768/1440 | Một H1, sáu H3, vùng tài khoản có tên; sáu route sản phẩm và ba route tài khoản không đổi |
+| C0A-02 | Fixture unknown, member, VIP và server plan chứa HTML | Unknown không thành0; VIP không tự mang tên gói doanh nghiệp; HTML không thực thi |
+| C0A-03 | Tab qua hai thẻ; menu mobile mở→resize→Escape; Enter vào Voice | Focus đúng, drawer không mất trạng thái sau resize, điều hướng có nội dung thật; overflow/errors/UIwrite/external0 |
+| C0B-01 | Helper motion thật nhận cùng scroll0 và800 nhiều lần | Không ghi lại hai metadata attribute khi giá trị không đổi; progress thay đổi vẫn cập nhật |
+| C0B-02 | Geometry/pointer leave/reveal/20teardown/reduced motion | Giữ toàn bộ hành vi upstream; không suy ra FPS/INP/LCP hay LIVE từ helper |
+| C0C-01 | CI trên HEAD đã push, provenance và GitHub mergeability | Mọi check cần thiết phải thực sự kết thúc; không gọi local PASS là CI/deployed/LIVE |
+
+Evidence local: `C:/Users/toann/Documents/Codex/qa/r218-main-compat-20261023/`.
+Node Dashboard22/22, Python Dashboard6/6 và browser18/18 đã đạt; C0B đạt7/7
+helper tests và11/11 Node motion contracts. C0C vẫn chờ provenance/remote CI.
+Một test POSIX mode0600 không tương thích Windows: giữ test nguyên trong repo,
+đối chiếu hash BASE và yêu cầu CI Linux chạy đủ; không biến lỗi nền thành PASS.
+
 ## UT-CSP và Q0 nội dung khách — 22/10/2026
 
 | ID | Thao tác | Điều kiện đạt |
@@ -451,3 +768,33 @@ chưa kiểm không được suy ra PASS từ các lượt smoke này.
 | Motion | 3 route × normal/reduced × 390/1440 = `12` | Đạt; overflow/external/write/page-errors `0` | CLS/LCP/INP trace `NOT_RUN` |
 
 Các case trên chỉ được tick khi có artifact tương ứng; không dùng số liệu này để thay cho runtime/live evidence.
+## R218-BILLING-20261022 — cases bổ sung
+
+| Case | Mức | Điều kiện | Kết quả cần thấy | Evidence |
+|---|---|---|---|---|
+| BILL-01 | nặng | `/wallet/topup`, `topup_packages=[]` | 0 package radio, không có sáu tier client, empty state rõ | billing metadata test |
+| BILL-02 | nặng | options GET fail rồi retry | `payment-options-refresh` gọi đúng GET; history count không đổi; state phục hồi | browser120 + metadata5/5 |
+| BILL-03 | vừa | ACB + ACB VietQR cùng ready/blocked | một option theo readiness; alias/history không bị đổi | browser120 + QR24/24 |
+| BILL-04 | vừa | portrait QR thật ở 375/390/768/1440 | ảnh natural ratio, transform none, overflow0 | browser-result.json |
+| BILL-05 | vừa | `/packages` và `/pricing` hydrate | 24 package cards; không suy giá; public sale thiếu thì hiển thị chờ catalog | production read-only DOM/API |
+| UT-YT-01 | nhẹ | Free Tools YouTube panel | nhãn không hứa kích thước chưa đo; load/error/retry giữ | free-tools7/7 |
+
+## R218-VOICE-20261023 — phiên tester READY, source3090311
+
+Chỉ QA SQLite/tài khoản tạm. Không dùng production hoặc giọng/file khách.
+Evidence local: `C:/Users/toann/Documents/Codex/qa/r218-voice-direction-20261023/`.
+Đây là phiên kiểm thử trong repo, không tạo chat/project GitHub hoặc đổi nhãn.
+
+| Case | Mức | Bước thực hiện | Kết quả cần thấy / trạng thái |
+|---|---|---|---|
+| VO-META-01 | vừa | `/voice-studio/new` → tạo hồ sơ hướng đọc Unicode, đánh dấu ưu tiên → mở detail → gọi GET record | Tên/ngữ cảnh/ưu tiên khớp; revision1; metadata không trở thành audio. Đã đo6cấu hình |
+| VO-META-02 | vừa | Detail → đổi tên → lưu → GET → archive → kiểm form khóa → restore → GET | Revision tăng, tên còn nguyên, archived khóa edit, restore về active. Đã đo6cấu hình |
+| VO-META-03 | vừa | Danh sách → tìm từ không khớp → xóa bộ lọc | Empty thật rồi record trở lại; không output/audio. Đã đo6cấu hình |
+| VO-META-04 | vừa | Filter/clear/page/refresh trên EN/ZH và VI | Locale đúng. Hiện filter FAIL ở4cấu hình EN/ZH; giữ lỗi mở theo spec VO-MANAGEMENT-FEEDBACK-LOCALE |
+| VO-CLARITY-01 | nhẹ | `/voice-studio/direction-composer` → mở disclosure bằng Enter/Space | Local UI đạt18configs/36states:1summary/1paragraph,0ô kỹ thuật;5field/defaults/quyền/focus giữ. Renderer6/6, fullNode933/933; chưa LIVE |
+| VO-BOUNDARY-01 | nặng | Đối chiếu `/voice-studio` với `/voice/saved` | Không dùng22endpoint metadata để tick canonical rename/default/delete/preview/SubDub reuse |
+
+Ma trận đã đo là VI/EN/ZH × (dark390/light1440), không phải toàn bộ12 tổ hợp.
+Case mới cần đủ VI/EN/ZH×light/dark×390/768/1440 trước khi đóng phạm vi tương ứng.
+Rate gate120read/phút giữ nguyên; runner giãn30giây giữa cấu hình, không sửa auth/rate
+hoặc thêm bypass để đạt test. Server QA34910/26491 đã dừng, exit0.

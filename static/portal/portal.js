@@ -164,6 +164,8 @@
   const transientFormDrafts = new Map();
   let voiceWorkspaceDraftSession = "";
   let musicWorkspaceDraftSession = "";
+  const musicSuggestionSnapshots = new Map();
+  let musicSuggestionSnapshotSession = "";
   // A continuation may only open one of these finite local Image Operations.
   // It never carries an operation config, file bytes, URL, Bot state or an
   // unverified reference; the target server still verifies Asset Vault
@@ -9296,6 +9298,7 @@
       telegramLoginFlow: source.telegramLoginFlow && typeof source.telegramLoginFlow === "object" ? source.telegramLoginFlow : {},
       mfaLoginFlow: normalizeMfaLoginFlowBootstrap(source.mfaLoginFlow),
       paymentOptions: source.paymentOptions && typeof source.paymentOptions === "object" ? source.paymentOptions : {},
+      paymentOptionsReadState: ["loading", "ready", "failed", "guarded"].includes(source.paymentOptionsReadState) ? source.paymentOptionsReadState : "guarded",
       paymentFlow: source.paymentFlow && typeof source.paymentFlow === "object" ? source.paymentFlow : {},
       manualTopupFlow: source.manualTopupFlow && typeof source.manualTopupFlow === "object" ? source.manualTopupFlow : {},
       manualTopupHistory: Array.isArray(source.manualTopupHistory) ? source.manualTopupHistory.slice(0, 50) : [],
@@ -11249,8 +11252,8 @@
         if (field.optionsFrom === "voiceProfiles") {
           const profiles = context && Array.isArray(context.voiceProfiles) ? context.voiceProfiles : [];
           options = profiles
-            .filter((profile) => profile && profile.id && profile.tts_ready)
-            .map((profile) => ({ value: String(profile.id), label: `${profile.display_name || "Giọng chưa đặt tên"}${profile.is_default ? " · Mặc định" : ""}` }));
+            .filter((profile) => profile && profile.id && profile.tts_ready === true)
+            .map((profile) => ({ value: String(profile.id), label: `${profile.display_name || "Giọng chưa đặt tên"}${profile.is_default === true ? " · Mặc định" : ""}` }));
         }
         if (field.optionsFrom === "imageTiers" || field.optionsFrom === "videoTiers") {
           const key = field.optionsFrom === "imageTiers" ? "image_tiers" : "video_tiers";
@@ -11398,11 +11401,8 @@
   function renderStatusCard(page, context) {
     const status = stateFor(page, context);
     const message = statusMessage(page, status, context);
-    const bridgeText = context.bridge.available === true ? "Bot integration đã khai báo" : "Bot integration là tùy chọn";
-    const sessionText = context.session.authenticated === true ? "Signed session hiện diện" : "Chưa có signed session";
     return `<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${safeText(status)}">
-      <span class="portal-state-icon" aria-hidden="true">${portalStatusIcon(status)}</span><div><h2>${safeText(message.title)}</h2><p>${safeText(message.text)}</p>
-      <div class="portal-state-meta"><span>${safeText(bridgeText)}</span><span>${safeText(sessionText)}</span><span>Không có provider/payment call</span></div></div>
+      <span class="portal-state-icon" aria-hidden="true">${portalStatusIcon(status)}</span><div><h2>${safeText(message.title)}</h2><p>${safeText(message.text)}</p></div>
     </div></section>`;
   }
 
@@ -11750,8 +11750,8 @@
         optionsFrom: field.optionsFrom === "voiceProfiles" ? undefined : field.optionsFrom,
         options: field.optionsFrom === "voiceProfiles"
           ? (Array.isArray(context.voiceProfiles) ? context.voiceProfiles : [])
-            .filter((profile) => profile && profile.id && profile.tts_ready)
-            .map((profile) => ({ value: String(profile.id), label: `${profile.display_name || voiceUiText("library.unnamed", "Giọng chưa đặt tên")}${profile.is_default ? ` · ${voiceUiText("library.default", "Mặc định")}` : ""}` }))
+            .filter((profile) => profile && profile.id && profile.tts_ready === true)
+            .map((profile) => ({ value: String(profile.id), label: `${profile.display_name || voiceUiText("library.unnamed", "Giọng chưa đặt tên")}${profile.is_default === true ? ` · ${voiceUiText("library.default", "Mặc định")}` : ""}` }))
           : Array.isArray(field.options) ? field.options.map((option) => {
           const value = typeof option === "object" ? option.value : option;
           const label = typeof option === "object" ? option.label : option;
@@ -11801,13 +11801,77 @@
     const musicMode = musicTask ? musicProductRouteMode(route) : "";
     const musicStatus = musicTask ? `<p class="portal-form-note portal-music-product-state" data-music-product-state role="status" aria-live="polite">${safeText(musicProductText(musicMode === "song" ? "state.song" : "state.background", "Các lựa chọn chỉ nằm trong bản nháp; xử lý thật cần capability và báo giá từ máy chủ."))}</p>` : "";
     const musicCopy = (key, fallback) => musicProductText(key, fallback);
+    const musicRequestReview = (() => {
+      const hasOwn = (obj, prop) => Boolean(obj && Object.prototype.hasOwnProperty.call(obj, prop));
+      if (!musicTask || !enabled) return "";
+      if (!context || !context.session || context.session.authenticated !== true || context.session.csrfReady !== true) return "";
+      if (!flow || typeof flow !== "object" || Array.isArray(flow)) return "";
+      const expectedFeature = musicMode === "song" ? "music_song" : "music_background";
+      if (flow.feature !== expectedFeature || flow.phase !== "estimate" || flow.status !== "awaiting_confirm") return "";
+      if (!hasFreshEstimate || !musicQuote || musicQuote.confirmAllowed !== true) return "";
+      const input = flow.input;
+      if (!input || typeof input !== "object" || Array.isArray(input)) return "";
+      if (!hasOwn(input, "brief") || typeof input.brief !== "string" || !input.brief.trim()) return "";
+
+      const rows = [];
+      const productName = musicMode === "song" ? musicCopy("nav.song", "Bài hát") : musicCopy("nav.background", "Nhạc nền");
+      rows.push(`<div data-music-review-field="product"><dt>${safeText(musicCopy("review.product", "Sản phẩm"))}</dt><dd>${safeText(productName)}</dd></div>`);
+
+      const VALID_TIERS = ["basic", "standard", "premium"];
+      if (hasOwn(input, "tier") && typeof input.tier === "string" && VALID_TIERS.includes(input.tier)) {
+        rows.push(`<div data-music-review-field="tier"><dt>${safeText(musicCopy("field.tier.label", "Gói chất lượng"))}</dt><dd>${safeText(musicCopy(`option.tier.${input.tier}`, input.tier))}</dd></div>`);
+      }
+
+      const validModes = musicMode === "song" ? ["lyrics", "melody", "custom"] : ["background", "melody", "custom"];
+      const ownMode = hasOwn(input, "mode") && typeof input.mode === "string" && validModes.includes(input.mode) ? input.mode : null;
+      if (ownMode) {
+        rows.push(`<div data-music-review-field="mode"><dt>${safeText(musicCopy("field.mode.label", "Loại sản phẩm"))}</dt><dd>${safeText(musicCopy(`option.mode.${ownMode}`, ownMode))}</dd></div>`);
+      }
+
+      if (musicMode === "song" && (ownMode === "lyrics" || ownMode === "custom")) {
+        const VALID_VOCALS = ["auto", "male", "female", "duet"];
+        if (hasOwn(input, "vocal_mode") && typeof input.vocal_mode === "string" && VALID_VOCALS.includes(input.vocal_mode)) {
+          rows.push(`<div data-music-review-field="vocal_mode"><dt>${safeText(musicCopy("field.vocal_mode.label", "Kiểu giọng hát"))}</dt><dd>${safeText(musicCopy(`option.vocal_mode.${input.vocal_mode}`, input.vocal_mode))}</dd></div>`);
+        }
+      }
+
+      const VALID_LENGTH_MODES = ["seconds", "half", "full"];
+      const ownSongLengthMode = musicMode === "song" && hasOwn(input, "song_length_mode") && typeof input.song_length_mode === "string" && VALID_LENGTH_MODES.includes(input.song_length_mode) ? input.song_length_mode : null;
+      if (ownSongLengthMode) {
+        rows.push(`<div data-music-review-field="song_length_mode"><dt>${safeText(musicCopy("field.song_length_mode.label", "Dạng bài hát"))}</dt><dd>${safeText(musicCopy(`option.song_length_mode.${ownSongLengthMode}`, ownSongLengthMode))}</dd></div>`);
+      }
+
+      const durationEligible = musicMode === "background" || (musicMode === "song" && ownSongLengthMode === "seconds");
+      if (durationEligible && hasOwn(input, "duration_seconds")) {
+        const val = input.duration_seconds;
+        let validNum = null;
+        if (typeof val === "number" && Number.isInteger(val) && val >= 1 && val <= 600) {
+          validNum = val;
+        } else if (typeof val === "string" && /^\d{1,3}$/.test(val)) {
+          const parsed = Number(val);
+          if (parsed >= 1 && parsed <= 600) validNum = parsed;
+        }
+        if (validNum !== null) {
+          rows.push(`<div data-music-review-field="duration_seconds"><dt>${safeText(musicCopy("field.duration_seconds.label", "Thời lượng (giây)"))}</dt><dd>${safeText(String(val))}</dd></div>`);
+        }
+      }
+
+      let lyricsMarkup = "";
+      if (musicMode === "song" && (ownMode === "lyrics" || ownMode === "custom")) {
+        if (hasOwn(input, "lyrics") && typeof input.lyrics === "string" && input.lyrics.length > 0) {
+          lyricsMarkup = `<details class="portal-music-review-lyrics" data-music-review-lyrics><summary>${safeText(musicCopy("review.lyrics", "Xem lời bài hát"))}</summary><pre class="portal-music-review-text">${safeText(input.lyrics)}</pre></details>`;
+        }
+      }
+
+      return `<section class="portal-music-request-review" data-music-request-review aria-labelledby="music-request-review-title"><h3 id="music-request-review-title">${safeText(musicCopy("review.title", "Kiểm tra yêu cầu"))}</h3><p>${safeText(musicCopy("review.note", "Các lựa chọn đã gửi để nhận báo giá này."))}</p><dl>${rows.join("")}</dl><div class="portal-music-review-brief"><strong>${safeText(musicCopy("field.brief.label", "Mô tả âm nhạc"))}</strong><p class="portal-music-review-text" data-music-review-brief>${safeText(input.brief)}</p></div>${lyricsMarkup}</section>`;
+    })();
     return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.layout === "auth" ? "Thông tin xác thực" : musicTask ? safeText(musicCopy(musicMode === "song" ? "form.songTitle" : "form.backgroundTitle", "Chuẩn bị yêu cầu âm nhạc")) : "Chuẩn bị yêu cầu"}</h2><p class="portal-card-subtitle">${musicTask ? safeText(enabled ? musicCopy("form.integrationReady", "") : (workspaceDraftEnabled ? musicCopy("form.draft", "") : reason)) : (enabled ? "Yêu cầu sẽ được chuyển tới lớp tích hợp thông qua custom event, không gọi trực tiếp từ UI." : (workspaceDraftEnabled ? "Bạn có thể soạn và lưu brief Web; estimate, job và integration ngoài chỉ bật theo capability riêng." : safeText(reason)))}</p></div>${badge(flowStatus || stateFor(page, context))}</div>
       ${boundaryNotice}
       <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(formAction)}" data-portal-route="${safeText(route)}"${musicTask ? ` data-music-product-form="${safeText(musicMode)}" data-music-product-enabled="${formFieldsEnabled ? "true" : "false"}"` : ""}${workspaceDraftId ? ` data-workspace-draft-id="${safeText(workspaceDraftId)}"` : ""} novalidate>${renderFields(genericFields, formFieldsEnabled, context, fieldValues)}${musicStatus}
         <div class="portal-form-footer"><span class="portal-form-note">${musicTask ? safeText(enabled ? musicCopy("form.processingNote", "") : (workspaceDraftEnabled ? musicCopy("form.draftNote", "") : musicCopy("form.guardedNote", ""))) : (enabled ? "Máy chủ vẫn phải xác minh phiên, CSRF, schema, ownership và idempotency." : (workspaceDraftEnabled ? "Bản nháp chỉ giữ brief scalar trên Web; không lưu file, upload ID, quote, job, Xu hoặc provider." : "Các trường bị khóa cho tới khi máy chủ cấp khả năng cần thiết."))}</span>${musicTask ? `<span class="portal-form-note portal-music-quote-freshness" data-music-quote-freshness hidden role="status" aria-live="polite"></span>` : ""}
           ${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${primaryDisabled}>${safeText(primaryActionLabel)}</button>
         </div>
-      </form>${flowControls}</section>`;
+      </form>${musicRequestReview}${flowControls}</section>`;
   }
 
   const ADMIN_TAB_GROUPS = [
@@ -12680,10 +12744,10 @@
     const canView = Boolean(context.capabilities && context.capabilities["projects-refresh"] === true);
     const canCreate = Boolean(context.capabilities && context.capabilities["project-create"] === true);
     const readState = projectCenterReadState(context);
-    if (!canView) return `<article class="portal-page portal-project-center portal-project-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><h2>${safeText(projectCenterText("guard.title", "Bảng vận hành dự án đang được bảo vệ"))}</h2><p>${safeText(projectCenterText("guard.body", "Chỉ phiên Web đã xác thực mới mở dự án, tài liệu Studio và lịch sử theo chủ sở hữu. Web không thay bằng dữ liệu Telegram, Bot, nhà cung cấp hay bộ nhớ đệm trình duyệt."))}</p><div class="portal-state-meta"><span>${safeText(projectCenterText("guard.session", "Phiên đã xác thực"))}</span><span>${safeText(projectCenterText("guard.ownerScoped", "Theo chủ sở hữu"))}</span><span>${safeText(projectCenterText("guard.noFakeOutput", "Không có kết quả giả"))}</span></div></div></div></section></article>`;
+    if (!canView) return `<article class="portal-page portal-project-center portal-project-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><h2>${safeText(projectCenterText("guard.title", "Bảng vận hành dự án đang được bảo vệ"))}</h2><p>${safeText(projectCenterText("guard.body", "Chỉ phiên Web đã xác thực mới mở dự án, tài liệu Studio và lịch sử theo chủ sở hữu. Web không thay bằng dữ liệu Telegram, Bot, nhà cung cấp hay bộ nhớ đệm trình duyệt."))}</p></div></div></section></article>`;
     if (authoringRoute) return renderProjectCenterAuthoring(page, context, canCreate);
-    if (readState === "loading") return `<article class="portal-page portal-project-center portal-project-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.refresh)}</span><div><h2>${safeText(projectCenterText("loading.title", "Đang xác minh dự án riêng tư"))}</h2><p>${safeText(projectCenterText("loading.body", "Không gian làm việc Web đang tải danh sách dự án theo chủ sở hữu của tài khoản hiện tại. Không hiển thị không gian cũ, danh sách Bot hay phương án dự phòng trình duyệt trong khi chờ máy chủ."))}</p><div class="portal-state-meta"><span>${safeText(projectCenterText("loading.noCache", "Không dùng bộ nhớ đệm riêng tư"))}</span><span>${safeText(projectCenterText("loading.noBotFallback", "Không có dự phòng từ Bot"))}</span><span>${safeText(projectCenterText("loading.ownerCheck", "Kiểm tra phía máy chủ"))}</span></div></div></div></section></article>`;
-    if (readState !== "ready") return `<article class="portal-page portal-project-center portal-project-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><h2>${safeText(projectCenterText("failed.title", "Chưa thể tải dự án riêng tư"))}</h2><p>${safeText(projectCenterText("failed.body", "Máy chủ chưa trả danh sách dự án an toàn theo chủ sở hữu nên Web đã xóa trạng thái cũ. Không thay bằng dự án Bot, danh sách đệm, kết quả nhà cung cấp hay hoạt động mô phỏng."))}</p><div class="portal-state-meta"><span>${safeText(projectCenterText("failed.noStaleData", "Không có dữ liệu cũ"))}</span><span>${safeText(projectCenterText("failed.noBridgeFallback", "Không có dự phòng cầu nối"))}</span><span>${safeText(projectCenterText("failed.noFakeActivity", "Không có hoạt động giả"))}</span></div><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="projects-refresh" data-portal-route="/projects">${safeText(projectCenterText("failed.retry", "Thử lại dữ liệu riêng tư"))}</button></div></div></div></section></article>`;
+    if (readState === "loading") return `<article class="portal-page portal-project-center portal-project-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.refresh)}</span><div><h2>${safeText(projectCenterText("loading.title", "Đang xác minh dự án riêng tư"))}</h2><p>${safeText(projectCenterText("loading.body", "Không gian làm việc Web đang tải danh sách dự án theo chủ sở hữu của tài khoản hiện tại. Không hiển thị không gian cũ, danh sách Bot hay phương án dự phòng trình duyệt trong khi chờ máy chủ."))}</p></div></div></section></article>`;
+    if (readState !== "ready") return `<article class="portal-page portal-project-center portal-project-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><h2>${safeText(projectCenterText("failed.title", "Chưa thể tải dự án riêng tư"))}</h2><p>${safeText(projectCenterText("failed.body", "Máy chủ chưa trả danh sách dự án an toàn theo chủ sở hữu nên Web đã xóa trạng thái cũ. Không thay bằng dữ liệu Bot, danh sách đệm, kết quả nhà cung cấp hay hoạt động mô phỏng."))}</p><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="projects-refresh" data-portal-route="/projects">${safeText(projectCenterText("failed.retry", "Thử lại dữ liệu riêng tư"))}</button></div></div></div></section></article>`;
     const projects = (Array.isArray(context.projects) ? context.projects : []).filter((item) => item && typeof item === "object" && validProjectId(item.id)).slice(0, 100);
     const listing = projectListing(context);
     const filter = listing.filters;
@@ -13346,7 +13410,7 @@
     const categoryCount = Array.isArray(catalog.categories) ? catalog.categories.length : 0;
     const industryCount = Array.isArray(catalog.industries) ? catalog.industries.length : 0;
     const catalogTotal = Number.isInteger(Number(catalog.total_items)) ? Number(catalog.total_items) : 0;
-    return `<article class="portal-page portal-content-prompt-pack portal-free-prompt-gallery">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("intro.kicker", "Không gian Web riêng · chỉ đọc"))}</span><h2>${safeText(freePromptGalleryText("intro.title", "Tìm một mẫu câu lệnh rõ ngữ cảnh rồi tự rà soát trước khi dùng."))}</h2><p>${safeText(freePromptGalleryText("intro.body", "Thư viện đưa các mẫu đã được rà soát lên một danh mục gọn, có lọc, phân trang và xem chi tiết theo thao tác của bạn. Trang không tạo đầu ra AI hay kết nối runtime bên ngoài."))}</p></div><dl><div><dt>${safeText(String(categoryCount))}</dt><dd>${safeText(freePromptGalleryText("intro.stat.categories", "Nhóm mẫu"))}</dd></div><div><dt>${safeText(String(industryCount))}</dt><dd>${safeText(freePromptGalleryText("intro.stat.industries", "Ngành"))}</dd></div><div><dt>0</dt><dd>${safeText(freePromptGalleryText("intro.stat.execution", "Thực thi / thanh toán"))}</dd></div></dl></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("catalog.kicker", "Danh mục bản chụp"))}</span><h2 class="portal-card-title">${safeText(freePromptGalleryText("catalog.title", "Khám phá {count} mẫu", { count: String(catalogTotal || "—") }))}</h2><p class="portal-card-subtitle">${safeText(String(catalog.description || freePromptGalleryText("catalog.descriptionFallback", "Danh mục sẽ xuất hiện sau khi phiên đăng nhập đã được máy chủ xác minh.")))}</p></div>${badge(canBrowse ? "read_only" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="free-prompt-gallery-filter" data-portal-route="/free-prompt-gallery" novalidate>${renderFields(freePromptGalleryFilterFields(catalog), canBrowse, context, listing.filters, "free-prompt-gallery-filter")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(freePromptGalleryText("catalog.filterNote", "Bộ lọc và truy vấn chỉ dùng cho request hiện tại; không lưu vào URL, bộ nhớ trình duyệt, Project hay Kho ghi nhớ."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-refresh" data-portal-route="/free-prompt-gallery"${canRead ? "" : " disabled"}>${safeText(freePromptGalleryText("catalog.refresh", "Làm mới danh mục"))}</button><button class="portal-button portal-button--primary" type="submit"${canBrowse ? "" : " disabled"}>${safeText(freePromptGalleryText("catalog.submit", "Áp dụng bộ lọc"))}</button></div></div></form></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("results.kicker", "Kết quả chỉ đọc"))}</span><h2 class="portal-card-title">${safeText(freePromptGalleryText("results.title", "Mẫu phù hợp"))}</h2><p class="portal-card-subtitle">${safeText(freePromptGalleryText("results.body", "Mỗi thẻ là dữ liệu bản chụp do máy chủ trả về; chỉ nút xem chi tiết mới gọi endpoint chi tiết riêng."))}</p></div>${badge(canBrowse ? "ready" : "guarded")}</div>${renderFreePromptGalleryCards(listing.items, canBrowse)}${renderFreePromptGalleryPagination(listing.pagination, canBrowse)}</section>${renderFreePromptGalleryDetail(context.freePromptGalleryDetail, canBrowse, canSave)}${renderFreePromptGallerySaveResult(context.freePromptGallerySaveResult, context.freePromptGalleryDetail && context.freePromptGalleryDetail.item && context.freePromptGalleryDetail.item.id)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("boundary.kicker", "Ranh giới thực thi"))}</span><h2 class="portal-card-title">${safeText(freePromptGalleryText("boundary.title", "Danh mục để tham khảo, không thực thi"))}</h2><p class="portal-card-subtitle">${safeText(freePromptGalleryText("boundary.body", "Gallery không có nhà cung cấp, Bot, Core Bridge, tác vụ, ví Xu, PayOS, tài sản, kết xuất, đăng bài hoặc bàn giao. Hãy kiểm tra claim, nguồn và quyền sử dụng trước khi đưa mẫu vào workflow khác."))}</p></div>${badge("guarded")}</div><div class="portal-content-prompt-pack-guard-list"><span><strong>${safeText(freePromptGalleryText("boundary.provider", "Nhà cung cấp / Bot / cầu nối"))}</strong><em>${safeText(freePromptGalleryText("boundary.off", "tắt"))}</em></span><span><strong>${safeText(freePromptGalleryText("boundary.job", "Tác vụ / ví / thanh toán"))}</strong><em>${safeText(freePromptGalleryText("boundary.off", "tắt"))}</em></span><span><strong>${safeText(freePromptGalleryText("boundary.asset", "Tài sản / đăng bài / bàn giao"))}</strong><em>${safeText(freePromptGalleryText("boundary.off", "tắt"))}</em></span></div>${renderNotes(page)}</section></article>`;
+    return `<article class="portal-page portal-content-prompt-pack portal-free-prompt-gallery">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("intro.kicker", "Không gian Web riêng · chỉ đọc"))}</span><h2>${safeText(freePromptGalleryText("intro.title", "Tìm một mẫu câu lệnh rõ ngữ cảnh rồi tự rà soát trước khi dùng."))}</h2><p>${safeText(freePromptGalleryText("intro.body", "Thư viện đưa các mẫu đã được rà soát lên một danh mục gọn, có lọc, phân trang và xem chi tiết theo thao tác của bạn. Trang không tạo đầu ra AI hay kết nối runtime bên ngoài."))}</p></div><dl><div><dt>${safeText(String(categoryCount))}</dt><dd>${safeText(freePromptGalleryText("intro.stat.categories", "Nhóm mẫu"))}</dd></div><div><dt>${safeText(String(industryCount))}</dt><dd>${safeText(freePromptGalleryText("intro.stat.industries", "Ngành"))}</dd></div></dl></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("catalog.kicker", "Danh mục bản chụp"))}</span><h2 class="portal-card-title">${safeText(freePromptGalleryText("catalog.title", "Khám phá {count} mẫu", { count: String(catalogTotal || "—") }))}</h2><p class="portal-card-subtitle">${safeText(String(catalog.description || freePromptGalleryText("catalog.descriptionFallback", "Danh mục sẽ xuất hiện sau khi phiên đăng nhập đã được máy chủ xác minh.")))}</p></div>${badge(canBrowse ? "read_only" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="free-prompt-gallery-filter" data-portal-route="/free-prompt-gallery" novalidate>${renderFields(freePromptGalleryFilterFields(catalog), canBrowse, context, listing.filters, "free-prompt-gallery-filter")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(freePromptGalleryText("catalog.filterNote", "Bộ lọc và truy vấn chỉ dùng cho request hiện tại; không lưu vào URL, bộ nhớ trình duyệt, Project hay Kho ghi nhớ."))}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-refresh" data-portal-route="/free-prompt-gallery"${canRead ? "" : " disabled"}>${safeText(freePromptGalleryText("catalog.refresh", "Làm mới danh mục"))}</button><button class="portal-button portal-button--primary" type="submit"${canBrowse ? "" : " disabled"}>${safeText(freePromptGalleryText("catalog.submit", "Áp dụng bộ lọc"))}</button></div></div></form></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("results.kicker", "Kết quả chỉ đọc"))}</span><h2 class="portal-card-title">${safeText(freePromptGalleryText("results.title", "Mẫu phù hợp"))}</h2><p class="portal-card-subtitle">${safeText(freePromptGalleryText("results.body", "Mỗi thẻ là dữ liệu bản chụp do máy chủ trả về; chỉ nút xem chi tiết mới gọi endpoint chi tiết riêng."))}</p></div>${badge(canBrowse ? "ready" : "guarded")}</div>${renderFreePromptGalleryCards(listing.items, canBrowse)}${renderFreePromptGalleryPagination(listing.pagination, canBrowse)}</section>${renderFreePromptGalleryDetail(context.freePromptGalleryDetail, canBrowse, canSave)}${renderFreePromptGallerySaveResult(context.freePromptGallerySaveResult, context.freePromptGalleryDetail && context.freePromptGalleryDetail.item && context.freePromptGalleryDetail.item.id)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(freePromptGalleryText("boundary.kicker", "Ranh giới thực thi"))}</span><h2 class="portal-card-title">${safeText(freePromptGalleryText("boundary.title", "Danh mục để tham khảo, không thực thi"))}</h2><p class="portal-card-subtitle">${safeText(freePromptGalleryText("boundary.body", "Gallery không có nhà cung cấp, Bot, Core Bridge, tác vụ, ví Xu, PayOS, tài sản, kết xuất, đăng bài hoặc bàn giao. Hãy kiểm tra claim, nguồn và quyền sử dụng trước khi đưa mẫu vào workflow khác."))}</p></div>${badge("guarded")}</div><div class="portal-content-prompt-pack-guard-list"><span><strong>${safeText(freePromptGalleryText("boundary.provider", "Nhà cung cấp / Bot / cầu nối"))}</strong><em>${safeText(freePromptGalleryText("boundary.off", "tắt"))}</em></span><span><strong>${safeText(freePromptGalleryText("boundary.job", "Tác vụ / ví / thanh toán"))}</strong><em>${safeText(freePromptGalleryText("boundary.off", "tắt"))}</em></span><span><strong>${safeText(freePromptGalleryText("boundary.asset", "Tài sản / đăng bài / bàn giao"))}</strong><em>${safeText(freePromptGalleryText("boundary.off", "tắt"))}</em></span></div>${renderNotes(page)}</section></article>`;
   }
 
   const VIETQR_BANKS = [
@@ -13603,7 +13667,7 @@
           <div>
             <span class="portal-section-kicker">${c("youtube.kicker", "Tài nguyên và siêu dữ liệu video")}</span>
             <h2 class="portal-card-title">${c("youtube.title", "Trích xuất ảnh thu nhỏ và mã nhúng YouTube")}</h2>
-            <p class="portal-card-subtitle">${c("youtube.body", "Lấy liên kết ảnh thu nhỏ độ phân giải cao, mã video và mã nhúng Iframe thích ứng.")}</p>
+            <p class="portal-card-subtitle">${c("youtube.body", "Lấy liên kết ảnh thu nhỏ, mã video và mã nhúng Iframe từ liên kết YouTube. Ảnh hiển thị tùy tệp thực tế.")}</p>
           </div>
           ${badge("ready")}
         </div>
@@ -13621,11 +13685,11 @@
             </div>
             <a id="free-tools-yt-link" class="portal-button portal-button--quiet" href="https://www.youtube.com" target="_blank" rel="noopener noreferrer">🔗 ${c("youtube.action.openYoutube", "Mở trên YouTube")} ↗</a>
           </div>
-          <h3 style="font-size: 14px; margin-bottom: 12px;">${c("youtube.result.heading", "Ảnh thu nhỏ theo độ phân giải")}:</h3>
+          <h3 style="font-size: 14px; margin-bottom: 12px;">${c("youtube.result.heading", "Các liên kết ảnh thu nhỏ")}:</h3>
           <div class="portal-yt-thumbs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
-              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.max", "Độ phân giải tối đa (1080p Full HD)")}</div>
-              <img id="free-tools-yt-thumb-max" alt="${c("youtube.imgAltMax", "Ảnh thu nhỏ độ phân giải tối đa")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.max", "Ảnh thu nhỏ ưu tiên")}</div>
+              <img id="free-tools-yt-thumb-max" alt="${c("youtube.imgAltMax", "Ảnh thu nhỏ ưu tiên")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
               <p id="free-tools-yt-thumb-max-state" role="status" hidden style="margin: 8px 0 0; font-size: 12px; color: var(--portal-muted); text-align: center;"></p>
               <div style="margin-top: 10px; display:flex; gap: 6px;">
                 <a id="free-tools-yt-thumb-max-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">${c("youtube.action.openImage", "Mở ảnh")}</a>
@@ -13633,8 +13697,8 @@
               </div>
             </div>
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
-              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.high", "Chất lượng cao (720p HD)")}</div>
-              <img id="free-tools-yt-thumb-hq" alt="${c("youtube.imgAltHigh", "Ảnh thu nhỏ chất lượng cao")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.high", "Ảnh thu nhỏ dự phòng 1")}</div>
+              <img id="free-tools-yt-thumb-hq" alt="${c("youtube.imgAltHigh", "Ảnh thu nhỏ dự phòng 1")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
               <p id="free-tools-yt-thumb-hq-state" role="status" hidden style="margin: 8px 0 0; font-size: 12px; color: var(--portal-muted); text-align: center;"></p>
               <div style="margin-top: 10px; display:flex; gap: 6px;">
                 <a id="free-tools-yt-thumb-hq-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">${c("youtube.action.openImage", "Mở ảnh")}</a>
@@ -13642,8 +13706,8 @@
               </div>
             </div>
             <div class="portal-yt-thumb-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; overflow: hidden; padding: 12px;">
-              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.medium", "Chất lượng tiêu chuẩn (360p)")}</div>
-              <img id="free-tools-yt-thumb-mq" alt="${c("youtube.imgAltMedium", "Ảnh thu nhỏ chất lượng tiêu chuẩn")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">${c("youtube.card.medium", "Ảnh thu nhỏ dự phòng 2")}</div>
+              <img id="free-tools-yt-thumb-mq" alt="${c("youtube.imgAltMedium", "Ảnh thu nhỏ dự phòng 2")}" hidden style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000;" />
               <p id="free-tools-yt-thumb-mq-state" role="status" hidden style="margin: 8px 0 0; font-size: 12px; color: var(--portal-muted); text-align: center;"></p>
               <div style="margin-top: 10px; display:flex; gap: 6px;">
                 <a id="free-tools-yt-thumb-mq-link" href="https://www.youtube.com" target="_blank" class="portal-button portal-button--quiet" style="flex:1; font-size: 11px; text-align:center;">${c("youtube.action.openImage", "Mở ảnh")}</a>
@@ -14454,7 +14518,7 @@
     const ui = catalog.ui && typeof catalog.ui === "object" ? catalog.ui : {};
     const groups = Array.isArray(catalog.groups) ? catalog.groups : [];
     const total = groups.reduce((count, group) => count + (Array.isArray(group.topics) ? group.topics.length : 0), 0);
-    return `<article class="portal-page portal-guide-center" data-guide-center data-guide-center-all-count="${safeText(guideCenterCountText(ui.all_count, total))}" data-guide-center-result-template="${safeText(String(ui.result_count || ""))}">${renderHero(page, context)}<section class="portal-guide-center-intro"><div><span class="portal-section-kicker">${safeText(String(ui.kicker || ""))}</span><h2>${safeText(String(ui.heading || ""))}</h2><p>${safeText(String(ui.body || catalog.description || ""))}</p></div><dl><div><dt>${safeText(localizedNumber(total))}</dt><dd>${safeText(String(ui.topic_count_label || ""))}</dd></div><div><dt>0</dt><dd>${safeText(String(ui.execution_count || ""))}</dd></div></dl></section><section class="portal-card portal-card-pad portal-guide-center-search"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(ui.kicker || ""))}</span><h2 class="portal-card-title">${safeText(String(ui.search_label || ""))}</h2><p class="portal-card-subtitle">${safeText(String(ui.search_help || ""))}</p></div>${badge("read_only")}</div><label class="portal-field" for="guide-center-search"><span>${safeText(String(ui.search_label || ""))}</span><input class="portal-input" id="guide-center-search" type="search" maxlength="120" autocomplete="off" placeholder="${safeText(String(ui.search_placeholder || ""))}" data-guide-center-search aria-controls="guide-center-results" aria-describedby="guide-center-search-help"><small id="guide-center-search-help">${safeText(String(ui.search_help || ""))}</small></label><div class="portal-form-footer"><span class="portal-form-note" data-guide-center-result-count aria-live="polite">${safeText(guideCenterCountText(ui.all_count, total))}</span></div></section><section id="guide-center-results" class="portal-guide-center-groups" aria-label="${safeText(String(ui.search_label || ""))}">${groups.map((group) => `<section class="portal-guide-center-group" data-guide-center-group><header><h2>${safeText(String(group.title || ""))}</h2><p>${safeText(String(group.summary || ""))}</p></header><div class="portal-guide-center-grid">${(Array.isArray(group.topics) ? group.topics : []).map((topic) => renderGuideCenterTopic(topic, ui)).join("")}</div></section>`).join("")}</section><section class="portal-card portal-card-pad portal-guide-center-empty" data-guide-center-empty hidden aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(ui.search_label || ""))}</span><h2 class="portal-card-title">${safeText(String(ui.empty_title || ""))}</h2><p class="portal-card-subtitle">${safeText(String(ui.empty_body || ""))}</p></div>${badge("empty")}</div></section><section class="portal-card portal-card-pad portal-guide-center-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(ui.kicker || ""))}</span><h2 class="portal-card-title">${safeText(String(ui.boundary_title || ""))}</h2><p class="portal-card-subtitle">${safeText(String(ui.boundary_body || ""))}</p></div>${badge("read_only")}</div></section></article>`;
+    return `<article class="portal-page portal-guide-center" data-guide-center data-guide-center-all-count="${safeText(guideCenterCountText(ui.all_count, total))}" data-guide-center-result-template="${safeText(String(ui.result_count || ""))}">${renderHero(page, context)}<section class="portal-guide-center-intro"><div><span class="portal-section-kicker">${safeText(String(ui.kicker || ""))}</span><h2>${safeText(String(ui.heading || ""))}</h2><p>${safeText(String(ui.body || catalog.description || ""))}</p></div><dl><div><dt>${safeText(localizedNumber(total))}</dt><dd>${safeText(String(ui.topic_count_label || ""))}</dd></div></dl></section><section class="portal-card portal-card-pad portal-guide-center-search"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(ui.kicker || ""))}</span><h2 class="portal-card-title">${safeText(String(ui.search_label || ""))}</h2><p class="portal-card-subtitle">${safeText(String(ui.search_help || ""))}</p></div>${badge("read_only")}</div><label class="portal-field" for="guide-center-search"><span>${safeText(String(ui.search_label || ""))}</span><input class="portal-input" id="guide-center-search" type="search" maxlength="120" autocomplete="off" placeholder="${safeText(String(ui.search_placeholder || ""))}" data-guide-center-search aria-controls="guide-center-results" aria-describedby="guide-center-search-help"><small id="guide-center-search-help">${safeText(String(ui.search_help || ""))}</small></label><div class="portal-form-footer"><span class="portal-form-note" data-guide-center-result-count aria-live="polite">${safeText(guideCenterCountText(ui.all_count, total))}</span></div></section><section id="guide-center-results" class="portal-guide-center-groups" aria-label="${safeText(String(ui.search_label || ""))}">${groups.map((group) => `<section class="portal-guide-center-group" data-guide-center-group><header><h2>${safeText(String(group.title || ""))}</h2><p>${safeText(String(group.summary || ""))}</p></header><div class="portal-guide-center-grid">${(Array.isArray(group.topics) ? group.topics : []).map((topic) => renderGuideCenterTopic(topic, ui)).join("")}</div></section>`).join("")}</section><section class="portal-card portal-card-pad portal-guide-center-empty" data-guide-center-empty hidden aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(ui.search_label || ""))}</span><h2 class="portal-card-title">${safeText(String(ui.empty_title || ""))}</h2><p class="portal-card-subtitle">${safeText(String(ui.empty_body || ""))}</p></div>${badge("empty")}</div></section><section class="portal-card portal-card-pad portal-guide-center-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(ui.kicker || ""))}</span><h2 class="portal-card-title">${safeText(String(ui.boundary_title || ""))}</h2><p class="portal-card-subtitle">${safeText(String(ui.boundary_body || ""))}</p></div>${badge("read_only")}</div></section></article>`;
   }
 
   function filterGuideCenter(value) {
@@ -14729,7 +14793,7 @@
         : failed
           ? musicLibraryText("guard.failed.button", "Thử tải lại")
           : musicLibraryText("guard.guarded.button", "Kiểm tra lại quyền truy cập");
-      return `<article class="portal-page portal-music-library">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-music-library-guard" aria-live="polite" aria-busy="${loading ? "true" : "false"}"><div class="portal-state" data-state="${loading ? "processing" : failed ? "error" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.music)}</span><div><h2>${safeText(heading)}</h2><p>${safeText(copy)}</p><div class="portal-state-meta"><span>${safeText(musicLibraryText("guard.noGenericAssets", "Thông tin riêng tư"))}</span><span>${safeText(musicLibraryText("guard.noPlayerCatalog", "Chưa hỗ trợ nghe thử"))}</span><span>${safeText(musicLibraryText("guard.noBotHandoff", "Chưa hỗ trợ tải tệp"))}</span></div><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="music-library-refresh" data-portal-route="${safeText(route)}"${canView && !loading ? "" : " disabled"}>${safeText(guardButton)}</button><a class="portal-button portal-button--quiet" href="${safeText(alternate.href)}">${safeText(alternate.label)}</a></div></div></div></section></article>`;
+      return `<article class="portal-page portal-music-library">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-music-library-guard" aria-live="polite" aria-busy="${loading ? "true" : "false"}"><div class="portal-state" data-state="${loading ? "processing" : failed ? "error" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.music)}</span><div><h2>${safeText(heading)}</h2><p>${safeText(copy)}</p><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="music-library-refresh" data-portal-route="${safeText(route)}"${canView && !loading ? "" : " disabled"}>${safeText(guardButton)}</button><a class="portal-button portal-button--quiet" href="${safeText(alternate.href)}">${safeText(alternate.label)}</a></div></div></div></section></article>`;
     }
     const resultNote = filter.q
       ? musicLibraryText("result.query", "Kết quả cho “{query}”.", { query: filter.q })
@@ -15375,11 +15439,11 @@
     const canCreate = Boolean(context.capabilities && context.capabilities["content-studio-create"] === true);
     const canRefresh = Boolean(context.capabilities && context.capabilities["content-studio-refresh"] === true);
     const readState = String(context.contentStudioReadState || "guarded");
-    if (!canView) return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.prompt)}</span><div><h2>${safeText(contentStudioText("guard.title", "Nội dung sáng tạo đang được bảo vệ"))}</h2><p>${safeText(contentStudioText("guard.body", "Chỉ phiên Web đã xác minh mới có thể mở yêu cầu, tài liệu tham chiếu, lịch sử hoặc hoạt động thuộc tài khoản hiện tại. Web không thay thế bằng dữ liệu Telegram, Bot, nhà cung cấp hoặc bộ nhớ trình duyệt."))}</p><div class="portal-state-meta"><span>${safeText(contentStudioText("guard.signed", "Phiên đã xác minh"))}</span><span>${safeText(contentStudioText("guard.owner", "Theo tài khoản hiện tại"))}</span><span>${safeText(contentStudioText("guard.noOutput", "Không có đầu ra giả"))}</span></div></div></div></section></article>`;
-    if (readState === "loading") return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>${safeText(contentStudioText("loading.title", "Đang xác minh không gian nội dung riêng tư"))}</h2><p>${safeText(contentStudioText("loading.body", "Web đang tải bản tóm tắt, chính sách, tài liệu tham chiếu, yêu cầu và hoạt động thuộc tài khoản đã xác minh. Trong lúc chờ máy chủ, không hiển thị dữ liệu cũ, danh sách Bot hoặc nội dung dự phòng từ trình duyệt."))}</p><div class="portal-state-meta"><span>${safeText(contentStudioText("loading.noCache", "Không dùng bộ nhớ cũ"))}</span><span>${safeText(contentStudioText("loading.noBot", "Không có dữ liệu Bot dự phòng"))}</span><span>${safeText(contentStudioText("loading.serverPolicy", "Chính sách từ máy chủ"))}</span></div></div></div></section></article>`;
+    if (!canView) return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.prompt)}</span><div><h2>${safeText(contentStudioText("guard.title", "Nội dung sáng tạo đang được bảo vệ"))}</h2><p>${safeText(contentStudioText("guard.body", "Chỉ phiên Web đã xác minh mới có thể mở yêu cầu, tài liệu tham chiếu, lịch sử hoặc hoạt động thuộc tài khoản hiện tại. Web không thay thế bằng dữ liệu Telegram, Bot, nhà cung cấp hoặc bộ nhớ trình duyệt."))}</p></div></div></section></article>`;
+    if (readState === "loading") return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>${safeText(contentStudioText("loading.title", "Đang xác minh không gian nội dung riêng tư"))}</h2><p>${safeText(contentStudioText("loading.body", "Web đang tải bản tóm tắt, chính sách, tài liệu tham chiếu, yêu cầu và hoạt động thuộc tài khoản đã xác minh. Trong lúc chờ máy chủ, không hiển thị dữ liệu cũ, danh sách Bot hoặc nội dung dự phòng từ trình duyệt."))}</p></div></div></section></article>`;
     if (readState !== "ready") {
       const retry = canRefresh ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="content-studio-refresh" data-portal-route="${safeText(route)}">${safeText(contentStudioText("unavailable.retry", "Thử lại dữ liệu riêng tư"))}</button></div>` : "";
-      return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">!</span><div><h2>${safeText(contentStudioText("unavailable.title", "Chưa thể tải không gian nội dung riêng tư"))}</h2><p>${safeText(contentStudioText("unavailable.body", "Máy chủ chưa trả về dữ liệu theo tài khoản an toàn nên Web đã xóa state cũ. Không thay thế bằng prompt, yêu cầu, hoạt động, callback Telegram, nhà cung cấp hoặc đầu ra mô phỏng."))}</p><div class="portal-state-meta"><span>${safeText(contentStudioText("unavailable.noCache", "Không có bộ nhớ dự phòng"))}</span><span>${safeText(contentStudioText("unavailable.noBridge", "Không có cầu nối dự phòng"))}</span><span>${safeText(contentStudioText("unavailable.noPublish", "Không đăng bài giả"))}</span></div>${retry}</div></div></section></article>`;
+      return `<article class="portal-page portal-content-studio ${pageClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">!</span><div><h2>${safeText(contentStudioText("unavailable.title", "Chưa thể tải không gian nội dung riêng tư"))}</h2><p>${safeText(contentStudioText("unavailable.body", "Máy chủ chưa trả về dữ liệu theo tài khoản an toàn nên Web đã xóa state cũ. Không thay thế bằng prompt, yêu cầu, hoạt động, callback Telegram, nhà cung cấp hoặc đầu ra mô phỏng."))}</p>${retry}</div></div></section></article>`;
     }
     if (authoringRoute) return renderContentStudioAuthoring(page, context, canCreate);
     const summary = context.contentStudioSummary && typeof context.contentStudioSummary === "object" ? context.contentStudioSummary : {};
@@ -15686,7 +15750,7 @@
     const values = { description: "", mode: "background", language: "vi", suggestion_set: "primary", selected_suggestion: "1" };
     return `<article class="portal-page portal-music-prompt-composer">${renderHero(page, context)}
       <section class="portal-music-prompt-composer-intro"><div><span class="portal-section-kicker">${safeText(musicPromptComposerUiText("page.kicker", "Lập kế hoạch âm nhạc trên Web"))}</span><h2>${safeText(musicPromptComposerUiText("page.title", "Chọn hướng âm nhạc trước khi mở xử lý âm thanh"))}</h2><p>${safeText(musicPromptComposerUiText("page.body", "So sánh ba hướng, chọn một hướng và sao chép nội dung để rà soát. Mọi phần đều là kế hoạch do bạn kiểm tra."))}</p></div><dl><div><dt>3</dt><dd>${safeText(musicPromptComposerUiText("stats.directions", "Hướng âm nhạc"))}</dd></div><div><dt>4</dt><dd>${safeText(musicPromptComposerUiText("stats.notes", "Ghi chú sử dụng"))}</dd></div><div><dt>0</dt><dd>${safeText(musicPromptComposerUiText("stats.created", "Âm thanh đã tạo"))}</dd></div></dl></section>
-      <div class="portal-music-prompt-composer-layout"><section class="portal-card portal-card-pad portal-music-prompt-composer-form"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicPromptComposerUiText("form.kicker", "Tóm tắt hướng"))}</span><h2 class="portal-card-title">${safeText(musicPromptComposerUiText("form.title", "Lập hướng âm nhạc"))}</h2><p class="portal-card-subtitle">${safeText(musicPromptComposerUiText("form.body", "Máy chủ kiểm tra phiên Web và trả mẫu văn bản; nội dung không được lưu vào thư viện âm thanh hoặc bản nháp trình duyệt."))}</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="music-prompt-compose" data-portal-route="/media-workspace/music-prompt-composer" novalidate>${renderFields(musicPromptComposerFields(), canCompose, context, values, "music-prompt-composer")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(musicPromptComposerUiText("form.note", "Chỉ tạo văn bản để rà soát; không tạo âm thanh, bản xem trước, tệp, tác vụ, thanh toán hoặc đăng bài."))}</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>${safeText(musicPromptComposerUiText("form.submit", "Lập ba hướng âm nhạc"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-music-prompt-composer-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicPromptComposerUiText("boundary.kicker", "Ranh giới thực thi"))}</span><h2 class="portal-card-title">${safeText(musicPromptComposerUiText("boundary.title", "Lập hướng, không tạo nhạc"))}</h2><p class="portal-card-subtitle">${safeText(musicPromptComposerUiText("boundary.body", "Công cụ này không có nguồn âm thanh, trình phát, nhà cung cấp, tạo lời, bản xem trước, đầu ra, tác vụ, ví, thanh toán, tài sản, bộ sưu tập hoặc hành động Telegram."))}</p></div>${badge("guarded")}</div><div class="portal-music-prompt-composer-guard-list"><span><strong>${safeText(musicPromptComposerUiText("boundary.audio", "Nguồn âm thanh / trình phát"))}</strong><em>off</em></span><span><strong>${safeText(musicPromptComposerUiText("boundary.provider", "Nhà cung cấp"))}</strong><em>off</em></span><span><strong>${safeText(musicPromptComposerUiText("boundary.music", "Nhạc và lời bằng AI"))}</strong><em>off</em></span><span><strong>${safeText(musicPromptComposerUiText("boundary.preview", "Bản xem trước / đầu ra"))}</strong><em>off</em></span><span><strong>${safeText(musicPromptComposerUiText("boundary.job", "Tác vụ / ví / thanh toán"))}</strong><em>off</em></span><span><strong>${safeText(musicPromptComposerUiText("boundary.asset", "Tài sản / bộ sưu tập / giao tệp"))}</strong><em>off</em></span><span><strong>${safeText(musicPromptComposerUiText("boundary.telegram", "Hành động Telegram"))}</strong><em>off</em></span></div></aside></div>
+      <div class="portal-music-prompt-composer-layout"><section class="portal-card portal-card-pad portal-music-prompt-composer-form"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicPromptComposerUiText("form.kicker", "Tóm tắt hướng"))}</span><h2 class="portal-card-title">${safeText(musicPromptComposerUiText("form.title", "Lập hướng âm nhạc"))}</h2><p class="portal-card-subtitle">${safeText(musicPromptComposerUiText("form.body", "Máy chủ kiểm tra phiên Web và trả mẫu văn bản; nội dung không được lưu vào thư viện âm thanh hoặc bản nháp trình duyệt."))}</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="music-prompt-compose" data-portal-route="/media-workspace/music-prompt-composer" novalidate>${renderFields(musicPromptComposerFields(), canCompose, context, values, "music-prompt-composer")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(musicPromptComposerUiText("form.note", "Chỉ tạo văn bản để rà soát; không tạo âm thanh, bản xem trước, tệp, tác vụ, thanh toán hoặc đăng bài."))}</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>${safeText(musicPromptComposerUiText("form.submit", "Lập ba hướng âm nhạc"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-music-prompt-composer-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicPromptComposerUiText("boundary.kicker", "Ranh giới thực thi"))}</span><h2 class="portal-card-title">${safeText(musicPromptComposerUiText("boundary.title", "Lập hướng, không tạo nhạc"))}</h2><p class="portal-card-subtitle">${safeText(musicPromptComposerUiText("boundary.body", "Công cụ này không có nguồn âm thanh, trình phát, nhà cung cấp, tạo lời, bản xem trước, đầu ra, tác vụ, ví, thanh toán, tài sản, bộ sưu tập hoặc hành động Telegram."))}</p></div>${badge("guarded")}</div><div class="portal-music-prompt-composer-guard-list"><p class="portal-form-note">${safeText(musicPromptComposerUiText("boundary.summary", "Âm thanh, provider, preview, output, job, tài sản, thanh toán và Telegram chỉ mở khi server công bố capability tương ứng."))}</p></div></aside></div>
       ${renderMusicPromptComposerResult(context.musicPromptComposerResult, context.musicPromptComposerSaveSource, canSaveToMemory)}
       ${renderMusicPromptComposerSaveReceipt(context.musicPromptComposerSaveReceipt)}
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicPromptComposerUiText("scope.kicker", "Phạm vi rõ ràng"))}</span><h2 class="portal-card-title">${safeText(musicPromptComposerUiText("scope.title", "Rà soát hướng trước, thực thi bằng hợp đồng riêng sau"))}</h2><p class="portal-card-subtitle">${safeText(musicPromptComposerUiText("scope.body", "Dùng hướng như bản tóm tắt để kiểm tra quyền sử dụng, thông tin công khai, thương hiệu và giọng điệu. Lưu lịch sử trong thư viện cũng không tạo âm thanh."))}</p></div></div>${renderNotes(page)}</section>
@@ -15725,7 +15789,7 @@
 
   function musicDirectionPresetFields() {
     return [
-      { name: "description", label: musicDirectionUiText("field.brief", "Tóm tắt âm nhạc"), control: "textarea", required: true, minLength: 2, maxLength: 500, wide: true, placeholder: "Ví dụ: video giới thiệu ứng dụng quản lý công việc cho chủ shop nhỏ, cần nhịp tin cậy và hiện đại", help: "Viết mục tiêu, đối tượng và cảm xúc cần truyền tải. Không nhập URL, token, file ID, nguồn âm thanh, yêu cầu mô phỏng nghệ sĩ/ca sĩ/bài hát hoặc thông tin thanh toán." },
+      { name: "description", label: musicDirectionUiText("field.brief", "Tóm tắt âm nhạc"), control: "textarea", required: true, minLength: 2, maxLength: 500, wide: true, placeholder: musicDirectionUiText("field.briefPlaceholder", "Ví dụ: nhạc nhẹ, hiện đại cho video giới thiệu ứng dụng."), help: musicDirectionUiText("field.briefHelp", "Nêu bối cảnh, người nghe và cảm xúc. Chỉ nhập mô tả, không kèm liên kết hay thông tin riêng tư.") },
       { name: "language", label: musicDirectionUiText("field.language", "Ngôn ngữ tóm tắt"), control: "select", required: true, options: [["vi", musicDirectionUiText("field.vietnamese", "Tiếng Việt")], ["en", musicDirectionUiText("field.english", "Tiếng Anh")]], help: musicDirectionUiText("field.languageHelp", "Ngôn ngữ để máy chủ dựng ba văn bản hướng dẫn; không phải lựa chọn giọng hát hoặc ngôn ngữ âm thanh.") }
     ];
   }
@@ -15741,7 +15805,7 @@
     const selectedPreset = MUSIC_DIRECTION_PRESETS.find((item) => item.id === source.web_preset_id);
     const suggestions = Array.isArray(composer.suggestions) ? composer.suggestions : [];
     const selected = composer.selected_direction && typeof composer.selected_direction === "object" ? composer.selected_direction : {};
-    return `<section class="portal-card portal-card-pad portal-music-directions-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicDirectionUiText("result.kicker", "Biên nhận hướng · chỉ trong phiên"))}</span><h2 class="portal-card-title">${safeText(String(composer.title || musicDirectionUiText("result.titleFallback", "Các hướng âm nhạc")))}</h2><p class="portal-card-subtitle">${safeText(String(composer.description || ""))} ${safeText(musicDirectionUiText("result.bodySuffix", "Đây là ba hướng văn bản để rà soát, không phải bản nhạc, âm thanh, trình phát, bản xem trước, đầu ra hoặc xác nhận giao tệp."))}</p></div>${badge("read_only")}</div><div class="portal-music-directions-meta"><span>${safeText(selectedPreset ? musicDirectionPresetText(selectedPreset, "label") : musicDirectionUiText("form.presetLegend", "Preset Web"))}</span><span>${safeText(String(composer.language || "").toUpperCase())}</span><span>${safeText(musicDirectionUiText("result.selected", "Hướng {choice} được máy chủ chọn theo preset", { choice: String(composer.selected_suggestion || "") }))}</span></div><ol class="portal-music-directions-list">${suggestions.map((item) => `<li${Number(item.choice) === Number(selected.choice) ? " data-selected=\"true\"" : ""}><span class="portal-music-directions-index">${safeText(String(item.choice || "").padStart(2, "0"))}</span><div><div class="portal-music-directions-list-head"><strong>${safeText(String(item.name || ""))}</strong>${Number(item.choice) === Number(selected.choice) ? `<em>${safeText(musicDirectionUiText("result.reviewing", "Đang rà soát"))}</em>` : ""}</div><p>${safeText(String(item.mood || ""))} · ${safeText(String(item.tempo || ""))} · ${safeText(String(item.duration || ""))}</p><dl><div><dt>${safeText(musicDirectionUiText("result.useCase", "Mục đích dùng"))}</dt><dd>${safeText(String(item.use_case || ""))}</dd></div><div><dt>${safeText(musicDirectionUiText("result.prompt", "Văn bản hướng dẫn"))}</dt><dd><pre>${safeText(String(item.prompt || ""))}</pre></dd></div></dl></div></li>`).join("")}</ol><section class="portal-music-directions-review"><strong>${safeText(musicDirectionUiText("result.checklist", "Kiểm tra trước khi dùng ở quy trình khác"))}</strong><ul>${(Array.isArray(composer.review_before_use) ? composer.review_before_use : []).map((item) => `<li>${safeText(String(item || ""))}</li>`).join("")}</ul></section><p class="portal-form-note">${safeText(musicDirectionUiText("result.note", "Biên nhận chỉ tồn tại trong phiên hiện tại và không tạo âm thanh, lời, nhà cung cấp, tác vụ, ví Xu, PayOS, tài sản, bộ sưu tập, đăng bài, giao tệp hoặc Telegram."))}</p></section>`;
+    return `<section class="portal-card portal-card-pad portal-music-directions-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicDirectionUiText("result.kicker", "Biên nhận hướng · chỉ trong phiên"))}</span><h2 class="portal-card-title">${safeText(String(composer.title || musicDirectionUiText("result.titleFallback", "Các hướng âm nhạc")))}</h2><p class="portal-card-subtitle">${safeText(String(composer.description || ""))} <span class="portal-native-output-detail">${safeText(musicDirectionUiText("result.bodySuffix", "Đây là ba hướng văn bản để rà soát, không phải bản nhạc, âm thanh, trình phát, bản xem trước, đầu ra hoặc xác nhận giao tệp."))}</span></p></div>${badge("read_only")}</div><div class="portal-music-directions-meta"><span>${safeText(selectedPreset ? musicDirectionPresetText(selectedPreset, "label") : musicDirectionUiText("form.presetLegend", "Preset Web"))}</span><span>${safeText(String(composer.language || "").toUpperCase())}</span><span>${safeText(musicDirectionUiText("result.selected", "Hướng {choice} được máy chủ chọn theo preset", { choice: String(composer.selected_suggestion || "") }))}</span></div><ol class="portal-music-directions-list">${suggestions.map((item) => `<li${Number(item.choice) === Number(selected.choice) ? " data-selected=\"true\"" : ""}><span class="portal-music-directions-index">${safeText(String(item.choice || "").padStart(2, "0"))}</span><div><div class="portal-music-directions-list-head"><strong>${safeText(String(item.name || ""))}</strong>${Number(item.choice) === Number(selected.choice) ? `<em>${safeText(musicDirectionUiText("result.reviewing", "Đang rà soát"))}</em>` : ""}</div><p>${safeText(String(item.mood || ""))} · ${safeText(String(item.tempo || ""))} · ${safeText(String(item.duration || ""))}</p><dl><div><dt>${safeText(musicDirectionUiText("result.useCase", "Mục đích dùng"))}</dt><dd>${safeText(String(item.use_case || ""))}</dd></div><div><dt>${safeText(musicDirectionUiText("result.prompt", "Văn bản hướng dẫn"))}</dt><dd><pre>${safeText(String(item.prompt || ""))}</pre></dd></div></dl></div></li>`).join("")}</ol><section class="portal-music-directions-review"><strong>${safeText(musicDirectionUiText("result.checklist", "Kiểm tra trước khi dùng ở quy trình khác"))}</strong><ul>${(Array.isArray(composer.review_before_use) ? composer.review_before_use : []).map((item) => `<li>${safeText(String(item || ""))}</li>`).join("")}</ul></section><p class="portal-form-note">${safeText(musicDirectionUiText("result.note", "Biên nhận chỉ tồn tại trong phiên hiện tại và không tạo âm thanh, lời, nhà cung cấp, tác vụ, ví Xu, PayOS, tài sản, bộ sưu tập, đăng bài, giao tệp hoặc Telegram."))}</p><p class="portal-native-stale-note">${safeText(musicDirectionUiText("form.stale", "Nội dung đã thay đổi. Các hướng bên dưới thuộc nội dung trước; lập lại hướng âm nhạc để cập nhật."))}</p></section>`;
   }
 
   function renderMusicDirectionPresets(page, context) {
@@ -15755,11 +15819,11 @@
     const submitEnabled = canCompose && Boolean(selectedPresetId);
     const selectedPreset = MUSIC_DIRECTION_PRESETS.find((item) => item.id === selectedPresetId);
     const selectedLabel = selectedPreset ? musicDirectionPresetText(selectedPreset, "label") : musicDirectionUiText("form.presetLegend", "Preset Web");
-    return `<article class="portal-page portal-music-directions">${renderHero(page, context)}
+    return `<article class="portal-page portal-music-directions"><header class="portal-hero"><div class="portal-hero-copy"><h1 class="portal-title">${safeText(musicDirectionUiText("page.workspaceTitle", "Hướng âm nhạc"))}</h1></div></header>
       <section class="portal-music-directions-intro"><div><span class="portal-section-kicker">${safeText(musicDirectionUiText("page.kicker", "Lập kế hoạch âm nhạc trên Web"))}</span><h2>${safeText(musicDirectionUiText("page.title", "Chọn hướng nhạc có chủ đích trước khi làm việc khác"))}</h2><p>${safeText(musicDirectionUiText("page.body", "Năm preset giúp bắt đầu nhanh nhưng vẫn yêu cầu bạn xem lại brief và bấm lập hướng. Không nhận trạng thái chờ hoặc lệnh từ Telegram Bot."))}</p></div><dl><div><dt>5</dt><dd>${safeText(musicDirectionUiText("stats.presets", "Preset đã rà soát"))}</dd></div><div><dt>3</dt><dd>${safeText(musicDirectionUiText("stats.directions", "Hướng để so sánh"))}</dd></div><div><dt>0</dt><dd>${safeText(musicDirectionUiText("stats.created", "Âm thanh đã tạo"))}</dd></div></dl></section>
-      <div class="portal-music-directions-layout"><section class="portal-card portal-card-pad portal-music-directions-form"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicDirectionUiText("form.step", "Bước 1 · chọn preset"))}</span><h2 class="portal-card-title">${safeText(musicDirectionUiText("form.title", "Lập hướng âm nhạc"))}</h2><p class="portal-card-subtitle">${safeText(musicDirectionUiText("form.body", "Chọn một preset rồi viết brief. Việc chọn chỉ thay đổi biểu mẫu cục bộ; yêu cầu chỉ gửi sau khi bạn bấm nút."))}</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="music-direction-preset-compose" data-portal-route="/media-workspace/music-directions" data-music-direction-compose-enabled="${canCompose ? "true" : "false"}" novalidate><fieldset class="portal-music-directions-picker"><legend>${safeText(musicDirectionUiText("form.presetLegend", "Preset Web"))} <span aria-hidden="true">*</span></legend><p id="music-directions-preset-help" class="portal-field-help">${safeText(musicDirectionUiText("form.presetHelp", "Chỉ chọn một preset. Đổi lựa chọn không gửi yêu cầu, điều hướng hoặc tự gửi biểu mẫu."))}</p><div class="portal-music-directions-preset-grid">${cards}</div><p class="portal-music-directions-selection" data-music-direction-selection aria-live="polite">${selectedPresetId ? safeText(musicDirectionUiText("form.selected", "Đã chọn {label}. Hoàn tất brief rồi bấm lập hướng.", { label: String(selectedLabel) })) : safeText(musicDirectionUiText("form.unselected", "Chưa chọn preset. Hãy chọn một hướng trước khi lập hướng."))}</p></fieldset>${renderFields(musicDirectionPresetFields(), canCompose, context, values, "music-directions")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(musicDirectionUiText("form.note", "Máy chủ chỉ dựng ba văn bản hướng dẫn đã giới hạn. Không có âm thanh, lời, nhà cung cấp, bản xem trước, đầu ra, tác vụ, thanh toán hoặc lưu dữ liệu."))}</span><button class="portal-button portal-button--primary" type="submit" data-music-direction-submit${submitEnabled ? "" : " disabled"}>${safeText(musicDirectionUiText("form.submit", "Lập ba hướng âm nhạc"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-music-directions-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicDirectionUiText("boundary.kicker", "Ranh giới thực thi"))}</span><h2 class="portal-card-title">${safeText(musicDirectionUiText("boundary.title", "Chỉ lập văn bản hướng dẫn"))}</h2><p class="portal-card-subtitle">${safeText(musicDirectionUiText("boundary.body", "Đây không phải trình tạo nhạc. Công cụ không mở trình phát, danh mục bản nhạc, giọng hát, nguồn âm thanh hoặc quy trình thực thi."))}</p></div>${badge("guarded")}</div><div class="portal-music-directions-guard-list"><span><strong>${safeText(musicDirectionUiText("boundary.bot", "Callback / từ khóa Bot"))}</strong><em>off</em></span><span><strong>${safeText(musicDirectionUiText("boundary.provider", "Nhà cung cấp / AI âm nhạc"))}</strong><em>off</em></span><span><strong>${safeText(musicDirectionUiText("boundary.audio", "Lời / âm thanh / bản xem trước"))}</strong><em>off</em></span><span><strong>${safeText(musicDirectionUiText("boundary.output", "Đầu ra / tác vụ / thanh toán"))}</strong><em>off</em></span><span><strong>${safeText(musicDirectionUiText("boundary.asset", "Tài sản / bộ sưu tập / giao tệp"))}</strong><em>off</em></span><span><strong>${safeText(musicDirectionUiText("boundary.telegram", "Hành động Telegram"))}</strong><em>off</em></span></div></aside></div>
+      <div class="portal-music-directions-layout"><section class="portal-card portal-card-pad portal-music-directions-form"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicDirectionUiText("form.step", "Bước 1 · chọn preset"))}</span><h2 class="portal-card-title">${safeText(musicDirectionUiText("form.title", "Lập hướng âm nhạc"))}</h2><p class="portal-card-subtitle">${safeText(musicDirectionUiText("form.body", "Chọn phong cách và mô tả cảnh, người nghe, cảm xúc bạn muốn truyền tải."))}</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="music-direction-preset-compose" data-portal-route="/media-workspace/music-directions" data-music-direction-compose-enabled="${canCompose ? "true" : "false"}" novalidate><fieldset class="portal-music-directions-picker"><legend>${safeText(musicDirectionUiText("form.presetLegend", "Preset Web"))} <span aria-hidden="true">*</span></legend><p id="music-directions-preset-help" class="portal-field-help">${safeText(musicDirectionUiText("form.presetHelp", "Chỉ chọn một preset. Đổi lựa chọn không gửi yêu cầu, điều hướng hoặc tự gửi biểu mẫu."))}</p><div class="portal-music-directions-preset-grid">${cards}</div><p class="portal-music-directions-selection" data-music-direction-selection aria-live="polite">${selectedPresetId ? safeText(musicDirectionUiText("form.selected", "Đã chọn {label}. Hoàn tất brief rồi bấm lập hướng.", { label: String(selectedLabel) })) : safeText(musicDirectionUiText("form.unselected", "Chưa chọn preset. Hãy chọn một hướng trước khi lập hướng."))}</p></fieldset>${renderFields(musicDirectionPresetFields(), canCompose, context, values, "music-directions")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(musicDirectionUiText("form.note", "Nhận ba hướng âm nhạc bằng văn bản để biên tập; không tạo tệp nhạc."))}</span><button class="portal-button portal-button--primary" type="submit" data-music-direction-submit${submitEnabled ? "" : " disabled"}>${safeText(musicDirectionUiText("form.submit", "Lập ba hướng âm nhạc"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-music-directions-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicDirectionUiText("boundary.kicker", "Ranh giới thực thi"))}</span><h2 class="portal-card-title">${safeText(musicDirectionUiText("boundary.title", "Chỉ lập văn bản hướng dẫn"))}</h2><p class="portal-card-subtitle">${safeText(musicDirectionUiText("boundary.body", "Đây không phải trình tạo nhạc. Công cụ không mở trình phát, danh mục bản nhạc, giọng hát, nguồn âm thanh hoặc quy trình thực thi."))}</p></div>${badge("guarded")}</div><div class="portal-music-directions-guard-list"><p class="portal-form-note">${safeText(musicDirectionUiText("boundary.summary", "Callback, provider, audio, preview, output, job, asset, payment và Telegram chỉ mở khi server công bố capability tương ứng."))}</p></div></aside></div>
       ${renderMusicDirectionPresetResult(context.musicDirectionPresetResult)}
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicDirectionUiText("scope.kicker", "Phạm vi rõ ràng"))}</span><h2 class="portal-card-title">${safeText(musicDirectionUiText("scope.title", "Preset giúp bắt đầu nhanh, không thay thế việc rà soát"))}</h2><p class="portal-card-subtitle">${safeText(musicDirectionUiText("scope.body", "Kiểm tra quyền sử dụng, claim, thương hiệu, sự đồng ý và bối cảnh trước khi chuyển nội dung sang quy trình được cấp riêng."))}</p></div></div>${renderNotes(page)}</section>
+      <section class="portal-card portal-card-pad portal-music-directions-scope"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(musicDirectionUiText("scope.kicker", "Phạm vi rõ ràng"))}</span><h2 class="portal-card-title">${safeText(musicDirectionUiText("scope.title", "Preset giúp bắt đầu nhanh, không thay thế việc rà soát"))}</h2><p class="portal-card-subtitle">${safeText(musicDirectionUiText("scope.body", "Kiểm tra quyền sử dụng, claim, thương hiệu, sự đồng ý và bối cảnh trước khi chuyển nội dung sang quy trình được cấp riêng."))}</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -15809,7 +15873,7 @@
 
   function sfxCueSheetFields() {
     return [
-      { name: "description", label: sfxCueSheetUiText("field.brief", "Tóm tắt hiệu ứng"), control: "textarea", required: true, minLength: 2, maxLength: 500, wide: true, placeholder: "Ví dụ: video onboarding ứng dụng, cần làm rõ lúc chuyển màn hình và khi hiện CTA cuối", help: "Nêu bối cảnh, hành động cần làm rõ và cảm giác mong muốn. Không nhập URL, token, file ID, nguồn media, callback/keyword Bot, yêu cầu mô phỏng tác giả/tác phẩm hoặc thông tin thanh toán." },
+      { name: "description", label: sfxCueSheetUiText("field.brief", "Tóm tắt hiệu ứng"), control: "textarea", required: true, minLength: 2, maxLength: 500, wide: true, placeholder: sfxCueSheetUiText("field.briefPlaceholder", "Ví dụ: hiệu ứng nhẹ khi chuyển cảnh và khi hiện lời kêu gọi cuối video."), help: sfxCueSheetUiText("field.briefHelp", "Nêu vị trí, hành động và cảm giác cần nhấn. Chỉ nhập mô tả, không kèm liên kết hay thông tin riêng tư.") },
       { name: "language", label: sfxCueSheetUiText("field.language", "Ngôn ngữ cue sheet"), control: "select", required: true, options: [["vi", sfxCueSheetUiText("field.vietnamese", "Tiếng Việt")], ["en", sfxCueSheetUiText("field.english", "Tiếng Anh")]], help: sfxCueSheetUiText("field.languageHelp", "Ngôn ngữ để máy chủ dựng ba chỉ dẫn biên tập; không phải lựa chọn giọng đọc hoặc tệp âm thanh.") }
     ];
   }
@@ -15839,9 +15903,9 @@
     const selectedPreset = SFX_CUE_SHEET_PRESETS.find((item) => item.id === source.web_sfx_preset_id);
     const cues = Array.isArray(cueSheet.cues) ? cueSheet.cues : [];
     const cautionItems = Array.isArray(cueSheet.cautions) && cueSheet.cautions.length
-      ? cueSheet.cautions : ["Vẫn cần kiểm tra quyền sử dụng, claim, thương hiệu, consent và ngữ cảnh trước khi đưa direction sang workflow khác."];
+      ? cueSheet.cautions : [sfxCueSheetUiText("result.cautionFallback", "Kiểm tra quyền sử dụng và bối cảnh trước khi dùng.")];
     const reviewItems = Array.isArray(cueSheet.review_before_use) && cueSheet.review_before_use.length
-      ? cueSheet.review_before_use : ["Review cùng người biên tập trước khi quyết định dùng bất kỳ nguồn âm thanh nào ở workflow được cấp riêng."];
+      ? cueSheet.review_before_use : [sfxCueSheetUiText("result.reviewFallback", "Rà soát cùng người biên tập trước khi chọn âm thanh.")];
     // A tab-local edit is deliberately allowed to make this receipt stale,
     // but it never replaces its last server-validated content. This check
     // survives an unrelated Portal remount without browser persistence.
@@ -15851,16 +15915,17 @@
     const receiptIsStale = source.description !== activeSource.description
       || source.language !== activeSource.language
       || source.web_sfx_preset_id !== activeSource.web_sfx_preset_id;
-    const cueItems = cues.map((cue) => `<li><span class="portal-sfx-cue-sheet-index">${safeText(String(cue.ordinal || "").padStart(2, "0"))}</span><div><div class="portal-sfx-cue-sheet-list-head"><strong>${safeText(sfxCueSheetPlacementLabel(String(cue.placement_id || ""), String(cue.placement || "")))}</strong><em>${safeText(String(cue.cue_role || ""))}</em></div><p>${safeText(String(cue.editorial_note || ""))}</p><dl><div><dt>Direction</dt><dd>${safeText(String(cue.direction || ""))}</dd></div><div><dt>Mix note</dt><dd>${safeText(String(cue.mix_note || ""))}</dd></div><div><dt>Tránh</dt><dd>${safeText(String(cue.avoid_note || ""))}</dd></div></dl></div></li>`).join("");
+    const cueItems = cues.map((cue) => `<li><span class="portal-sfx-cue-sheet-index">${safeText(String(cue.ordinal || "").padStart(2, "0"))}</span><div><div class="portal-sfx-cue-sheet-list-head"><strong>${safeText(sfxCueSheetPlacementLabel(String(cue.placement_id || ""), String(cue.placement || "")))}</strong><em>${safeText(String(cue.cue_role || ""))}</em></div><p>${safeText(String(cue.editorial_note || ""))}</p><dl><div><dt>${safeText(sfxCueSheetUiText("result.directionLabel", "Hướng hiệu ứng"))}</dt><dd>${safeText(String(cue.direction || ""))}</dd></div><div><dt>${safeText(sfxCueSheetUiText("result.mixLabel", "Gợi ý hòa âm"))}</dt><dd>${safeText(String(cue.mix_note || ""))}</dd></div><div><dt>${safeText(sfxCueSheetUiText("result.avoidLabel", "Cần tránh"))}</dt><dd>${safeText(String(cue.avoid_note || ""))}</dd></div></dl></div></li>`).join("");
     const cautionMarkup = cautionItems.map((item) => `<li>${safeText(String(item || ""))}</li>`).join("");
     const reviewMarkup = reviewItems.map((item) => `<li>${safeText(String(item || ""))}</li>`).join("");
     return `<section class="portal-card portal-card-pad portal-sfx-cue-sheet-result" data-sfx-cue-sheet-receipt data-stale="${receiptIsStale ? "true" : "false"}">
-      <div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(sfxCueSheetUiText("result.kicker", "Cue sheet · chỉ trong phiên"))}</span><h2 class="portal-card-title" tabindex="-1" data-sfx-cue-sheet-result-heading>${safeText(String(cueSheet.title || sfxCueSheetUiText("result.titleFallback", "Cue Sheet hiệu ứng")))}</h2><p class="portal-card-subtitle">${safeText(String(cueSheet.description || ""))} ${safeText(sfxCueSheetUiText("result.bodySuffix", "Đây là ba chỉ dẫn biên tập để rà soát, không phải hiệu ứng, tệp, trình phát, xem trước, đầu ra hoặc xác nhận giao tệp."))}</p></div>${badge("read_only")}</div>
-      <div class="portal-sfx-cue-sheet-meta"><span>${safeText(selectedPreset ? sfxCueSheetPresetText(selectedPreset, "label") : sfxCueSheetUiText("form.presetLegend", "Preset hiệu ứng Web"))}</span><span>${safeText(String(cueSheet.cue_family || "").toUpperCase())}</span><span>${safeText(String(cueSheet.language || "").toUpperCase())}</span><span>${safeText(sfxCueSheetUiText("result.positions", "3 vị trí biên tập · không có mốc thời gian media"))}</span></div>
+      <div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(sfxCueSheetUiText("result.kicker", "Cue sheet · chỉ trong phiên"))}</span><h2 class="portal-card-title" tabindex="-1" data-sfx-cue-sheet-result-heading>${safeText(String(cueSheet.title || sfxCueSheetUiText("result.titleFallback", "Cue Sheet hiệu ứng")))}</h2><p class="portal-card-subtitle">${safeText(String(cueSheet.description || ""))} <span class="portal-native-output-detail">${safeText(sfxCueSheetUiText("result.bodySuffix", "Đây là ba chỉ dẫn biên tập để rà soát, không phải hiệu ứng, tệp, trình phát, xem trước, đầu ra hoặc xác nhận giao tệp."))}</span></p></div>${badge("read_only")}</div>
+      <div class="portal-sfx-cue-sheet-meta"><span>${safeText(selectedPreset ? sfxCueSheetPresetText(selectedPreset, "label") : sfxCueSheetUiText("form.presetLegend", "Preset hiệu ứng Web"))}</span><span data-sfx-cue-sheet-family>${safeText(String(cueSheet.cue_family || "").toUpperCase())}</span><span>${safeText(String(cueSheet.language || "").toUpperCase())}</span><span>${safeText(sfxCueSheetUiText("result.positions", "3 vị trí biên tập · không có mốc thời gian media"))}</span></div>
       <p class="portal-sfx-cue-sheet-notice">${safeText(String(cueSheet.placement_notice || ""))}</p>
       <ol class="portal-sfx-cue-sheet-list">${cueItems}</ol>
       <section class="portal-sfx-cue-sheet-review"><strong>${safeText(sfxCueSheetUiText("result.reviewTitle", "Cảnh báo và rà soát trước khi dùng ở quy trình khác"))}</strong><ul>${cautionMarkup}</ul><div><strong>${safeText(sfxCueSheetUiText("result.checklist", "Danh sách kiểm tra"))}</strong><ul>${reviewMarkup}</ul></div></section>
       <p class="portal-form-note">${safeText(sfxCueSheetUiText("result.note", "Biên nhận chỉ tồn tại trong phiên hiện tại. Module không kiểm tra nguồn video/audio, không tìm danh mục, tạo hiệu ứng, xem trước, đầu ra, tác vụ, ví Xu, PayOS, tài sản, bộ sưu tập, đăng bài, giao tệp hoặc Telegram."))}</p>
+      <p class="portal-native-stale-note">${safeText(sfxCueSheetUiText("form.stale", "Nội dung đã thay đổi. Bảng hiệu ứng bên dưới thuộc nội dung trước; lập lại bảng để cập nhật."))}</p>
     </section>`;
   }
 
@@ -15875,11 +15940,11 @@
     const submitEnabled = canCompose && Boolean(selectedPresetId);
     const selectedPreset = SFX_CUE_SHEET_PRESETS.find((item) => item.id === selectedPresetId);
     const selectedLabel = selectedPreset ? sfxCueSheetPresetText(selectedPreset, "label") : sfxCueSheetUiText("form.presetLegend", "Preset hiệu ứng Web");
-    return `<article class="portal-page portal-sfx-cue-sheet">${renderHero(page, context)}
+    return `<article class="portal-page portal-sfx-cue-sheet"><header class="portal-hero"><div class="portal-hero-copy"><h1 class="portal-title">${safeText(sfxCueSheetUiText("page.workspaceTitle", "Gợi ý hiệu ứng âm thanh"))}</h1></div></header>
       <section class="portal-sfx-cue-sheet-intro"><div><span class="portal-section-kicker">${safeText(sfxCueSheetUiText("page.kicker", "Lập kế hoạch hiệu ứng âm thanh trên Web"))}</span><h2>${safeText(sfxCueSheetUiText("page.title", "Đặt điểm nhấn theo ngữ cảnh thật"))}</h2><p>${safeText(sfxCueSheetUiText("page.body", "Năm preset tạo ba vị trí biên tập: mở đầu, chuyển đoạn và kết. Module không kiểm tra nguồn video hoặc âm thanh."))}</p></div><dl><div><dt>5</dt><dd>${safeText(sfxCueSheetUiText("stats.presets", "Preset đã rà soát"))}</dd></div><div><dt>3</dt><dd>${safeText(sfxCueSheetUiText("stats.positions", "Vị trí biên tập"))}</dd></div><div><dt>0</dt><dd>${safeText(sfxCueSheetUiText("stats.files", "Tệp hoặc xem trước"))}</dd></div></dl></section>
-      <div class="portal-sfx-cue-sheet-layout"><section class="portal-card portal-card-pad portal-sfx-cue-sheet-form"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(sfxCueSheetUiText("form.step", "Bước 1 · chọn hướng"))}</span><h2 class="portal-card-title">${safeText(sfxCueSheetUiText("form.title", "Lập Cue Sheet hiệu ứng"))}</h2><p class="portal-card-subtitle">${safeText(sfxCueSheetUiText("form.body", "Chọn preset và viết brief. Việc chọn chỉ thay đổi form cục bộ; yêu cầu chỉ gửi khi bạn bấm nút."))}</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="sfx-cue-sheet-compose" data-portal-route="/media-workspace/sfx-cue-sheet" data-sfx-cue-sheet-compose-enabled="${canCompose ? "true" : "false"}" novalidate><fieldset class="portal-sfx-cue-sheet-picker"><legend>${safeText(sfxCueSheetUiText("form.presetLegend", "Preset hiệu ứng Web"))} <span aria-hidden="true">*</span></legend><p id="sfx-cue-sheet-preset-help" class="portal-field-help">${safeText(sfxCueSheetUiText("form.presetHelp", "Chỉ chọn một preset. Đổi lựa chọn không gửi yêu cầu, điều hướng hoặc tự gửi biểu mẫu."))}</p><div class="portal-sfx-cue-sheet-preset-grid">${cards}</div><p class="portal-sfx-cue-sheet-selection" data-sfx-cue-sheet-selection aria-live="polite">${selectedPresetId ? safeText(sfxCueSheetUiText("form.selected", "Đã chọn {label}. Hoàn tất brief rồi bấm lập cue sheet.", { label: String(selectedLabel) })) : safeText(sfxCueSheetUiText("form.unselected", "Chưa chọn preset. Hãy chọn một hướng trước khi lập cue sheet."))}</p></fieldset>${renderFields(sfxCueSheetFields(), canCompose, context, values, "sfx-cue-sheet")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(sfxCueSheetUiText("form.note", "Máy chủ chỉ dựng ba chỉ dẫn biên tập. Không có nguồn media, danh mục, hiệu ứng, xem trước, đầu ra, tác vụ, thanh toán hoặc lưu dữ liệu."))}</span><button class="portal-button portal-button--primary" type="submit" data-sfx-cue-sheet-submit${submitEnabled ? "" : " disabled"}>${safeText(sfxCueSheetUiText("form.submit", "Lập ba cue sheet"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-sfx-cue-sheet-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(sfxCueSheetUiText("boundary.kicker", "Ranh giới thực thi"))}</span><h2 class="portal-card-title">${safeText(sfxCueSheetUiText("boundary.title", "Chỉ lập cue văn bản"))}</h2><p class="portal-card-subtitle">${safeText(sfxCueSheetUiText("boundary.body", "Đây không phải thư viện hoặc trình tạo hiệu ứng. Module không kiểm tra nguồn media, mở danh mục/trình phát, chọn âm thanh hoặc chạy quy trình thực thi."))}</p></div>${badge("guarded")}</div><div class="portal-sfx-cue-sheet-guard-list"><span><strong>${safeText(sfxCueSheetUiText("boundary.bot", "Callback / từ khóa Bot"))}</strong><em>off</em></span><span><strong>${safeText(sfxCueSheetUiText("boundary.source", "Kiểm tra nguồn video / âm thanh"))}</strong><em>off</em></span><span><strong>${safeText(sfxCueSheetUiText("boundary.catalog", "Danh mục / nhà cung cấp / SFX"))}</strong><em>off</em></span><span><strong>${safeText(sfxCueSheetUiText("boundary.preview", "Trình phát / xem trước / đầu ra"))}</strong><em>off</em></span><span><strong>${safeText(sfxCueSheetUiText("boundary.job", "Tác vụ / ví / thanh toán"))}</strong><em>off</em></span><span><strong>${safeText(sfxCueSheetUiText("boundary.asset", "Tài sản / bộ sưu tập / giao tệp"))}</strong><em>off</em></span><span><strong>${safeText(sfxCueSheetUiText("boundary.telegram", "Hành động Telegram"))}</strong><em>off</em></span></div></aside></div>
+      <div class="portal-sfx-cue-sheet-layout"><section class="portal-card portal-card-pad portal-sfx-cue-sheet-form"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(sfxCueSheetUiText("form.step", "Bước 1 · chọn hướng"))}</span><h2 class="portal-card-title">${safeText(sfxCueSheetUiText("form.title", "Bảng gợi ý hiệu ứng"))}</h2><p class="portal-card-subtitle">${safeText(sfxCueSheetUiText("form.body", "Chọn loại hiệu ứng và mô tả những điểm cần nhấn trong video."))}</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="sfx-cue-sheet-compose" data-portal-route="/media-workspace/sfx-cue-sheet" data-sfx-cue-sheet-compose-enabled="${canCompose ? "true" : "false"}" novalidate><fieldset class="portal-sfx-cue-sheet-picker"><legend>${safeText(sfxCueSheetUiText("form.presetLegend", "Preset hiệu ứng Web"))} <span aria-hidden="true">*</span></legend><p id="sfx-cue-sheet-preset-help" class="portal-field-help">${safeText(sfxCueSheetUiText("form.presetHelp", "Chỉ chọn một preset. Đổi lựa chọn không gửi yêu cầu, điều hướng hoặc tự gửi biểu mẫu."))}</p><div class="portal-sfx-cue-sheet-preset-grid">${cards}</div><p class="portal-sfx-cue-sheet-selection" data-sfx-cue-sheet-selection aria-live="polite">${selectedPresetId ? safeText(sfxCueSheetUiText("form.selected", "Đã chọn {label}. Hoàn tất brief rồi bấm lập cue sheet.", { label: String(selectedLabel) })) : safeText(sfxCueSheetUiText("form.unselected", "Chưa chọn preset. Hãy chọn một hướng trước khi lập cue sheet."))}</p></fieldset>${renderFields(sfxCueSheetFields(), canCompose, context, values, "sfx-cue-sheet")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(sfxCueSheetUiText("form.note", "Nhận một bảng gồm ba gợi ý hiệu ứng bằng văn bản; không tạo tệp âm thanh."))}</span><button class="portal-button portal-button--primary" type="submit" data-sfx-cue-sheet-submit${submitEnabled ? "" : " disabled"}>${safeText(sfxCueSheetUiText("form.submit", "Lập bảng gợi ý hiệu ứng"))}</button></div></form></section><aside class="portal-card portal-card-pad portal-sfx-cue-sheet-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(sfxCueSheetUiText("boundary.kicker", "Ranh giới thực thi"))}</span><h2 class="portal-card-title">${safeText(sfxCueSheetUiText("boundary.title", "Chỉ lập cue văn bản"))}</h2><p class="portal-card-subtitle">${safeText(sfxCueSheetUiText("boundary.body", "Đây không phải thư viện hoặc trình tạo hiệu ứng. Module không kiểm tra nguồn media, mở danh mục/trình phát, chọn âm thanh hoặc chạy quy trình thực thi."))}</p></div>${badge("guarded")}</div><div class="portal-sfx-cue-sheet-guard-list"><p class="portal-form-note">${safeText(sfxCueSheetUiText("boundary.summary", "Nguồn media, catalog, provider, preview, output, job, tài sản, payment và Telegram chỉ mở khi server công bố capability tương ứng."))}</p></div></aside></div>
       ${renderSfxCueSheetResult(context.sfxCueSheetResult)}
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(sfxCueSheetUiText("scope.kicker", "Phạm vi rõ ràng"))}</span><h2 class="portal-card-title">${safeText(sfxCueSheetUiText("scope.title", "Cue sheet giúp bắt đầu đúng chỗ"))}</h2><p class="portal-card-subtitle">${safeText(sfxCueSheetUiText("scope.body", "Kiểm tra quyền sử dụng, claim, thương hiệu, sự đồng ý và ngữ cảnh nguồn thật trước khi chọn âm thanh trong quy trình được cấp."))}</p></div></div>${renderNotes(page)}</section>
+      <section class="portal-card portal-card-pad portal-sfx-cue-sheet-scope"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(sfxCueSheetUiText("scope.kicker", "Phạm vi rõ ràng"))}</span><h2 class="portal-card-title">${safeText(sfxCueSheetUiText("scope.title", "Cue sheet giúp bắt đầu đúng chỗ"))}</h2><p class="portal-card-subtitle">${safeText(sfxCueSheetUiText("scope.body", "Kiểm tra quyền sử dụng, claim, thương hiệu, sự đồng ý và ngữ cảnh nguồn thật trước khi chọn âm thanh trong quy trình được cấp."))}</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -16450,9 +16515,9 @@
       return `<article class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Bước ${safeText(step.number)}</span><h2 class="portal-card-title">${safeText(step.title)}</h2><p class="portal-card-subtitle">${safeText(step.text)}</p></div>${badge(step.number === "07" ? "guarded" : "read_only")}</div><div class="portal-inline-actions">${links}</div></article>`;
     }).join("");
     if (!available) {
-      return `<article class="portal-page portal-video-factory-workflow">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span><div><h2>Video Factory Workflow cần phiên Web đã xác thực</h2><p>Đây là bản đồ private giữa các workspace Web. Nó không có fallback sang Bot, provider, browser storage hoặc một quy trình xuất bản giả.</p><div class="portal-state-meta"><span>Signed session</span><span>Không có execution</span><span>Không có publish</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-video-factory-workflow">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span><div><h2>Video Factory Workflow cần phiên Web đã xác thực</h2><p>Đây là bản đồ private giữa các workspace Web. Nó không có fallback sang Bot, provider, browser storage hoặc một quy trình xuất bản giả.</p></div></div></section></article>`;
     }
-    return `<article class="portal-page portal-video-factory-workflow">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">Bot-derived · workflow map</span><h2>Từ insight đến review, từng bước có ranh giới rõ ràng.</h2><p>Quy trình này chuyển flow tĩnh của Bot thành màn hình điều phối Web chuyên nghiệp. Nó giúp chọn đúng workspace ở đúng thời điểm nhưng không tự chạy engine, lấy nguồn, tạo output hay đăng nội dung.</p></div><dl><div><dt>7</dt><dd>Bước có chủ đích</dd></div><div><dt>0</dt><dd>Provider call</dd></div><div><dt>0</dt><dd>Customer publish</dd></div></dl></section><section class="portal-finalization-grid">${cards}</section><section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Không vượt rào bằng workflow</strong><p>Liên kết chỉ mở trang kế tiếp. Chúng không chuyển dữ liệu, cấp quyền, khởi tạo job hay mở provider. Video thật, live trend và auto-publish vẫn phải có adapter/runtimes riêng được kiểm chứng.</p></div></div>${renderNotes(page)}</section></article>`;
+    return `<article class="portal-page portal-video-factory-workflow">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">Bot-derived · workflow map</span><h2>Từ insight đến review, từng bước có ranh giới rõ ràng.</h2><p>Quy trình này chuyển flow tĩnh của Bot thành màn hình điều phối Web chuyên nghiệp. Nó giúp chọn đúng workspace ở đúng thời điểm nhưng không tự chạy engine, lấy nguồn, tạo output hay đăng nội dung.</p></div><dl><div><dt>7</dt><dd>Bước có chủ đích</dd></div></dl></section><section class="portal-finalization-grid">${cards}</section><section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Không vượt rào bằng workflow</strong><p>Liên kết chỉ mở trang kế tiếp. Chúng không chuyển dữ liệu, cấp quyền, khởi tạo job hay mở provider. Video thật, live trend và auto-publish vẫn phải có adapter/runtimes riêng được kiểm chứng.</p></div></div>${renderNotes(page)}</section></article>`;
   }
 
   const STORY_VIDEO_LANGUAGE_OPTIONS = Object.freeze([["vi", "Tiếng Việt"], ["en", "English"]]);
@@ -16519,7 +16584,7 @@
   function renderSourceRightsGuide(page, context) {
     const available = Boolean(context.session && context.session.authenticated);
     if (!available) {
-      return `<article class="portal-page portal-source-rights-guide">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><h2>Guide quyền sử dụng cần phiên Web đã xác thực</h2><p>Trang private này không hiển thị hoặc lưu dữ liệu nguồn của bạn; nó cũng không fallback sang Telegram, provider hay public cache.</p><div class="portal-state-meta"><span>Signed session</span><span>Read-only</span><span>Không xác minh license</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-source-rights-guide">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div><h2>Guide quyền sử dụng cần phiên Web đã xác thực</h2><p>Trang private này không hiển thị hoặc lưu dữ liệu nguồn của bạn; nó cũng không fallback sang Telegram, provider hay public cache.</p></div></div></section></article>`;
     }
     return `<article class="portal-page portal-source-rights-guide">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">Bot-derived · rights-aware guidance</span><h2>Giữ nguồn hợp lệ trước khi bắt đầu sáng tạo.</h2><p>Guide này chuyển hai lệnh public của Bot — nguồn tư liệu và dịch/lồng tiếng hợp lệ — thành một bề mặt Web dễ dùng. Nó là khung kiểm tra, không phải tư vấn pháp lý hay bằng chứng quyền sử dụng.</p></div><dl><div><dt>5</dt><dd>Nguồn nên dùng</dd></div><div><dt>4</dt><dd>Hành vi chặn</dd></div><div><dt>0</dt><dd>Provider / publish</dd></div></dl></section><div class="portal-content-prompt-pack-layout"><section class="portal-card portal-card-pad portal-content-prompt-pack-checks"><div class="portal-card-header"><div><span class="portal-section-kicker">Có thể dùng</span><h2 class="portal-card-title">Nguồn tư liệu hợp lệ</h2><p class="portal-card-subtitle">Lưu lại license, bằng chứng cho phép và phạm vi quyền dùng của bạn. Web không tự xác minh chúng.</p></div>${badge("read_only")}</div>${guideList(SOURCE_RIGHTS_ALLOWED)}</section><section class="portal-card portal-card-pad portal-content-prompt-pack-checks"><div class="portal-card-header"><div><span class="portal-section-kicker">Không hỗ trợ</span><h2 class="portal-card-title">Hành vi cần tránh</h2><p class="portal-card-subtitle">Không có workflow Web nào được dùng để đi vòng các giới hạn này.</p></div>${badge("guarded")}</div>${guideList(SOURCE_RIGHTS_NOT_SUPPORTED)}</section></div><div class="portal-content-prompt-pack-layout"><section class="portal-card portal-card-pad portal-content-prompt-pack-checks"><div class="portal-card-header"><div><span class="portal-section-kicker">Dịch & voice-over</span><h2 class="portal-card-title">Nguyên tắc dubbing</h2><p class="portal-card-subtitle">Tạo nội dung mới có quyền, không thay âm thanh để ngụy trang một video không có license.</p></div>${badge("read_only")}</div>${guideList(DUBBING_RIGHTS_RULES)}</section><section class="portal-card portal-card-pad portal-content-prompt-pack-checks"><div class="portal-card-header"><div><span class="portal-section-kicker">Bước tiếp theo</span><h2 class="portal-card-title">Chọn đúng workspace</h2><p class="portal-card-subtitle">Liên kết mở công cụ riêng; nó không cấp quyền engine, không chuyển nguồn và không tạo output.</p></div></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/trend-research">Trend Research</a><a class="portal-button portal-button--quiet" href="/media-factory">Media Factory</a><a class="portal-button portal-button--quiet" href="/subtitle-studio">Subtitle Studio</a><a class="portal-button portal-button--quiet" href="/voice-studio/direction-composer">Voice Direction</a></div></section></div><section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Giữ bằng chứng ngoài guide</strong><p>Danh sách này không fact-check hay rights-verify nguồn của bạn. Khi rủi ro cao, hãy xin quyền rõ ràng và tham vấn chuyên môn phù hợp trước khi render hoặc publish.</p></div></div>${renderNotes(page)}</section></article>`;
   }
@@ -17743,7 +17808,7 @@
     return `<article class="portal-page portal-voice-direction-composer">${renderHero(page, context)}
       <div class="portal-voice-direction-composer-layout"><section class="portal-card portal-card-pad portal-voice-direction-composer-form"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(t("composer.direction.form.title", ""))}</h2><p class="portal-card-subtitle">${safeText(t("composer.direction.form.note", ""))}</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="voice-direction-compose" data-portal-route="/voice-studio/direction-composer" novalidate>${renderFields(voiceDirectionComposerFields(), canCompose, context, values, "voice-direction-composer")}<div class="portal-form-footer"><span class="portal-form-note">${safeText(t("composer.direction.form.description", ""))}</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>${safeText(t("composer.direction.form.submit", ""))}</button></div></form></section></div>
       ${renderVoiceDirectionComposerResult(context.voiceDirectionComposerResult)}
-      <details class="portal-card portal-card-pad portal-voice-direction-composer-boundary"><summary>${safeText(t("composer.direction.scope.title", ""))}</summary><p>${safeText(t("composer.direction.scope.description", ""))}</p><div class="portal-voice-direction-composer-guard-list"><span><strong>${safeText(t("composer.direction.guard.audio", ""))}</strong><em>${safeText(t("composer.off", ""))}</em></span><span><strong>${safeText(t("composer.direction.guard.provider", ""))}</strong><em>${safeText(t("composer.off", ""))}</em></span><span><strong>${safeText(t("composer.direction.guard.job", ""))}</strong><em>${safeText(t("composer.off", ""))}</em></span></div></details>
+      <details class="portal-card portal-card-pad portal-voice-direction-composer-boundary"><summary>${safeText(t("composer.direction.scope.title", ""))}</summary><p>${safeText(t("composer.direction.scope.description", ""))}</p></details>
     </article>`;
   }
 
@@ -17887,13 +17952,11 @@
   }
   function renderVoiceStudioPolicy(context) {
     const policy = context.voiceStudioPolicy && typeof context.voiceStudioPolicy === "object" ? context.voiceStudioPolicy : {};
-    const guardItems = [
-      [voiceStudioText("policy.features.speech", "Chuyển văn bản thành giọng nói"), policy.tts || "guarded"],
-      [voiceStudioText("policy.features.clone", "Nhân bản giọng nói"), policy.voice_clone || "guarded"],
-      [voiceStudioText("policy.features.preview", "Nghe thử"), policy.preview || "guarded"],
-      [voiceStudioText("policy.features.delivery", "Bàn giao tệp"), policy.output_delivery || "guarded"]
-    ];
-    return `<aside class="portal-card portal-card-pad portal-voice-studio-policy"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceStudioText("policy.kicker", "GIỚI HẠN CỦA TRANG"))}</span><h2 class="portal-card-title">${safeText(voiceStudioText("policy.title", "Soạn và lưu hồ sơ, không tạo giọng nói"))}</h2><p class="portal-card-subtitle">${safeText(voiceStudioText("policy.description", "Trang chỉ giữ thông tin riêng tư và lời thoại. Không tải lên âm thanh hoặc kết nối dịch vụ tạo giọng."))}</p></div>${badge("guarded")}</div><div class="portal-voice-studio-guard-list">${guardItems.map(([label, state]) => `<span><strong>${safeText(label)}</strong><em>${safeText(voiceStudioPolicyState(state))}</em></span>`).join("")}</div><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(voiceStudioText("policy.consent.title", "Xác nhận quyền là do bạn tự khai báo"))}</strong><p>${safeText(voiceStudioText("policy.consent.description", "Hệ thống lưu lời xác nhận để tham khảo nội bộ; không xác minh danh tính, cấp quyền sử dụng hoặc mở tính năng nhân bản giọng."))}</p></div></div></aside>`;
+    const runtimeReady = [policy.tts, policy.voice_clone, policy.preview, policy.output_delivery].some((value) => ["ready", "available", "enabled"].includes(String(value || "").trim().toLowerCase()));
+    const runtimeSummary = runtimeReady
+      ? voiceStudioText("policy.runtimeReady", "Một số capability đã được máy chủ công bố; từng thao tác vẫn cần kiểm tra quyền và trạng thái riêng.")
+      : voiceStudioText("policy.runtimeGuarded", "Tạo giọng, nhân bản, nghe thử và bàn giao chỉ mở khi máy chủ công bố capability tương ứng.");
+    return `<aside class="portal-card portal-card-pad portal-voice-studio-policy"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(voiceStudioText("policy.kicker", "GIỚI HẠN CỦA TRANG"))}</span><h2 class="portal-card-title">${safeText(voiceStudioText("policy.title", "Soạn và lưu hồ sơ, không tạo giọng nói"))}</h2><p class="portal-card-subtitle">${safeText(voiceStudioText("policy.description", "Trang chỉ giữ thông tin riêng tư và lời thoại. Không tải lên âm thanh hoặc kết nối dịch vụ tạo giọng."))}</p></div>${badge("guarded")}</div><div class="portal-voice-studio-guard-list"><p class="portal-form-note portal-voice-studio-guard-summary">${safeText(runtimeSummary)}</p></div><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${safeText(voiceStudioText("policy.consent.title", "Xác nhận quyền là do bạn tự khai báo"))}</strong><p>${safeText(voiceStudioText("policy.consent.description", "Hệ thống lưu lời xác nhận để tham khảo nội bộ; không xác minh danh tính, cấp quyền sử dụng hoặc mở tính năng nhân bản giọng."))}</p></div></div></aside>`;
   }
   function renderVoiceVaultCards(items, context) {
     const canView = Boolean(context.capabilities && context.capabilities["voice-studio-view"] === true);
@@ -17914,7 +17977,7 @@
       ["/voice/saved", "saved", t("lane.saved.title", "Giọng đã lưu"), t("lane.saved.description", ""), "🔖"],
       ["/voice/clone", "add", t("lane.add.title", "Thêm giọng"), t("lane.add.description", ""), "＋"]
     ];
-    const laneRail = `<section class="portal-voice-lane-rail" aria-labelledby="voice-lane-title"><div class="portal-voice-lane-heading"><span class="portal-section-kicker">${safeText(t("lane.kicker", "CHỌN CÁCH LÀM VIỆC"))}</span><h2 id="voice-lane-title">${safeText(t("lane.title", "Chọn đúng khu vực trước khi bắt đầu"))}</h2><p>${safeText(t("lane.description", ""))}</p></div><nav class="portal-voice-lane-grid" aria-label="${safeText(t("lane.title", "Khu vực giọng nói"))}">${lanes.map(([href, kind, title, description, icon]) => `<a class="portal-voice-lane-card" data-voice-lane="${safeText(kind)}" href="${safeText(href)}"><span class="portal-voice-lane-icon" aria-hidden="true">${icon}</span><span class="portal-voice-lane-copy"><strong>${safeText(title)}</strong><span>${safeText(description)}</span><em>${safeText(t("lane.guarded", "Đang được bảo vệ"))}</em></span><span class="portal-voice-lane-action">${safeText(t("lane.open", "Mở khu vực"))} <span aria-hidden="true">→</span></span></a>`).join("")}</nav></section>`;
+    const laneRail = `<section class="portal-voice-lane-rail" aria-labelledby="voice-lane-title"><div class="portal-voice-lane-heading"><span class="portal-section-kicker">${safeText(t("lane.kicker", "CHỌN CÁCH LÀM VIỆC"))}</span><h2 id="voice-lane-title">${safeText(t("lane.title", "Chọn đúng khu vực trước khi bắt đầu"))}</h2><p>${safeText(t("lane.description", ""))}</p></div><nav class="portal-voice-lane-grid" aria-label="${safeText(t("lane.title", "Khu vực giọng nói"))}">${lanes.map(([href, kind, title, description, icon]) => `<a class="portal-voice-lane-card" data-voice-lane="${safeText(kind)}" href="${safeText(href)}"><span class="portal-voice-lane-icon" aria-hidden="true">${icon}</span><span class="portal-voice-lane-copy"><strong>${safeText(title)}</strong><span>${safeText(description)}</span></span><span class="portal-voice-lane-action">${safeText(t("lane.open", "Mở khu vực"))} <span aria-hidden="true">→</span></span></a>`).join("")}</nav></section>`;
     const canView = Boolean(context.capabilities && context.capabilities["voice-studio-view"] === true);
     const canCreate = Boolean(context.capabilities && context.capabilities["voice-vault-create"] === true);
     if (!canView) return `<article class="portal-page portal-voice-studio">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(t("access.title", ""), t("access.description", ""), ICONS.voice)}</section></article>`;
@@ -18443,7 +18506,7 @@
     return key ? imageStudioDetailText(`event.${key}`, "Hoạt động bảng thiết kế") : imageStudioDetailText("event.unknown", "Hoạt động bảng thiết kế");
   }
   function renderImageStudioBoundary() {
-    return `<aside class="portal-card portal-card-pad portal-image-studio-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageStudioText("boundary.kicker", "Ranh giới biên tập"))}</span><h2 class="portal-card-title">${safeText(imageStudioText("boundary.title", "Định hướng và tự rà soát, không tạo ảnh"))}</h2><p class="portal-card-subtitle">${safeText(imageStudioText("boundary.body", "Không gian chỉ lưu mô tả, tham chiếu Kho tài sản đã được kiểm tra quyền sở hữu và các biến thể định hướng. Không gọi nhà cung cấp, không tạo ảnh/bản xem trước/tác vụ, không trừ Xu hay khởi tạo thanh toán."))}</p></div>${badge("guarded")}</div><div class="portal-image-studio-guard-list"><span><strong>${safeText(imageStudioText("boundary.provider", "Gọi nhà cung cấp ảnh"))}</strong><em>guarded</em></span><span><strong>${safeText(imageStudioText("boundary.image", "Ảnh / bản xem trước"))}</strong><em>guarded</em></span><span><strong>${safeText(imageStudioText("boundary.job", "Tác vụ / bàn giao"))}</strong><em>guarded</em></span><span><strong>${safeText(imageStudioText("boundary.wallet", "Ví / thanh toán"))}</strong><em>guarded</em></span></div></aside>`;
+    return `<aside class="portal-card portal-card-pad portal-image-studio-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageStudioText("boundary.kicker", "Ranh giới biên tập"))}</span><h2 class="portal-card-title">${safeText(imageStudioText("boundary.title", "Định hướng và tự rà soát, không tạo ảnh"))}</h2><p class="portal-card-subtitle">${safeText(imageStudioText("boundary.body", "Không gian chỉ lưu mô tả, tham chiếu Kho tài sản đã được kiểm tra quyền sở hữu và các biến thể định hướng. Không gọi nhà cung cấp, không tạo ảnh/bản xem trước/tác vụ, không trừ Xu hay khởi tạo thanh toán."))}</p></div>${badge("guarded")}</div><div class="portal-image-studio-guard-list"><p class="portal-form-note">${safeText(imageStudioText("boundary.summary", "Tạo ảnh, preview, tác vụ, bàn giao và thanh toán chỉ mở khi máy chủ công bố capability tương ứng."))}</p></div></aside>`;
   }
   function isImageHubRoute(value) {
     const route = String(value || "").split("?")[0].replace(/\/+$/, "") || "/";
@@ -18849,7 +18912,7 @@
   function renderChatWorkspaceBoundary(context) {
     const execution = chatExecutionProjection(context);
     const canSubmit = execution.run_submission_available === true;
-    return '<aside class="portal-card portal-card-pad portal-chat-workspace-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Authoring & run boundary</span><h2 class="portal-card-title">Không tự chạy AI hoặc tạo output</h2><p class="portal-card-subtitle">Thread, context card và lượt ghi chú do bạn biên tập. Chat Run chỉ nhận request qua server khi boundary xác nhận; nó không tạo assistant message, stream provider, Bot transcript, Xu, PayOS, job, file output hoặc delivery trong cấu hình hiện tại.</p></div>' + badge(canSubmit ? "ready" : "guarded") + '</div><div class="portal-chat-workspace-guard-list"><span><strong>Run receipt</strong><em>' + (canSubmit ? "available" : "guarded") + '</em></span><span><strong>Model / assistant</strong><em>guarded</em></span><span><strong>Provider / Bot</strong><em>guarded</em></span><span><strong>Wallet / payment</strong><em>guarded</em></span><span><strong>Job / output</strong><em>guarded</em></span></div></aside>';
+    return '<aside class="portal-card portal-card-pad portal-chat-workspace-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Authoring & run boundary</span><h2 class="portal-card-title">Không tự chạy AI hoặc tạo output</h2><p class="portal-card-subtitle">Thread, context card và lượt ghi chú do bạn biên tập. Chat Run chỉ nhận request qua server khi boundary xác nhận; nó không tạo assistant message, stream provider, Bot transcript, Xu, PayOS, job, file output hoặc delivery trong cấu hình hiện tại.</p></div>' + badge(canSubmit ? "ready" : "guarded") + '</div><div class="portal-chat-workspace-guard-list"><p class="portal-form-note">' + (canSubmit ? "Máy chủ đã công bố khả năng gửi request; kết quả vẫn chỉ xuất hiện khi có receipt hợp lệ." : "Máy chủ chưa công bố capability gửi request; các luồng AI, provider, Bot, thanh toán và delivery vẫn được bảo vệ.") + '</p></div></aside>';
   }
   function renderChatWorkspaceCards(items, context) {
     const canView = Boolean(context.capabilities && context.capabilities["chat-workspace-view"] === true);
@@ -19090,7 +19153,7 @@
     return attrs;
   }
   function renderAnalyticsWorkspaceBoundary() {
-    return '<aside class="portal-card portal-card-pad portal-analytics-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Manual-only boundary</span><h2 class="portal-card-title">Ghi nhận có trách nhiệm, không giả analytics</h2><p class="portal-card-subtitle">Chỉ lưu metric, snapshot và nhận định do Web account tự nhập. Không kết nối/đọc nền tảng, không tạo AI insight hoặc báo cáo canonical, và không tạo thao tác vận hành bên ngoài.</p></div>' + badge("guarded") + '</div><div class="portal-analytics-guard-list"><span><strong>Platform / live API</strong><em>guarded</em></span><span><strong>Bot / provider report</strong><em>guarded</em></span><span><strong>AI insight / revenue</strong><em>guarded</em></span><span><strong>Wallet / publish / CSV Campaign canonical</strong><em>guarded</em></span></div><p class="portal-form-note">CSV dữ liệu Web thủ công chỉ có thể xuất riêng từ report đã chốt khi server bật feature flag; đó không phải báo cáo Campaign/Bot canonical.</p></aside>';
+    return '<aside class="portal-card portal-card-pad portal-analytics-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Manual-only boundary</span><h2 class="portal-card-title">Ghi nhận có trách nhiệm, không giả analytics</h2><p class="portal-card-subtitle">Chỉ lưu metric, snapshot và nhận định do Web account tự nhập. Không kết nối/đọc nền tảng, không tạo AI insight hoặc báo cáo canonical, và không tạo thao tác vận hành bên ngoài.</p></div>' + badge("guarded") + '</div><div class="portal-analytics-guard-list"><p class="portal-form-note">Nền tảng live, report Bot/provider, AI insight, doanh thu, ví, publish và CSV Campaign canonical chỉ mở khi server công bố capability tương ứng.</p></div><p class="portal-form-note">CSV dữ liệu Web thủ công chỉ có thể xuất riêng từ report đã chốt khi server bật feature flag; đó không phải báo cáo Campaign/Bot canonical.</p></aside>';
   }
   function renderAnalyticsReportCards(items, context) {
     const canView = Boolean(context.capabilities && context.capabilities["analytics-workspace-view"] === true);
@@ -19404,7 +19467,7 @@
     return labels[String(value || "")] || String(value || "document_workspace_updated").replace(/_/g, " ");
   }
   function renderDocumentWorkspaceBoundary() {
-    return '<aside class="portal-card portal-card-pad portal-document-workspace-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Authoring boundary</span><h2 class="portal-card-title">Brief & processing plan, không xử lý file</h2><p class="portal-card-subtitle">Workspace chỉ lưu metadata review và opaque Asset Vault reference. Không upload/đọc file, tạo preview/output, gọi OCR/dịch/provider/Bot job hay trừ Xu/khởi tạo thanh toán.</p></div>' + badge("guarded") + '</div><div class="portal-document-workspace-guard-list"><span><strong>OCR / translation</strong><em>guarded</em></span><span><strong>Convert / output</strong><em>guarded</em></span><span><strong>Provider / Bot job</strong><em>guarded</em></span><span><strong>Wallet / payment</strong><em>guarded</em></span></div></aside>';
+    return '<aside class="portal-card portal-card-pad portal-document-workspace-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Authoring boundary</span><h2 class="portal-card-title">Brief & processing plan, không xử lý file</h2><p class="portal-card-subtitle">Workspace chỉ lưu metadata review và opaque Asset Vault reference. Không upload/đọc file, tạo preview/output, gọi OCR/dịch/provider/Bot job hay trừ Xu/khởi tạo thanh toán.</p></div>' + badge("guarded") + '</div><div class="portal-document-workspace-guard-list"><p class="portal-form-note">OCR, dịch, chuyển đổi, provider, Bot job, ví và thanh toán chỉ mở ở công cụ có capability server tương ứng.</p></div></aside>';
   }
   function renderDocumentWorkspaceCards(items, context) {
     const canView = Boolean(context.capabilities && context.capabilities["document-workspace-view"] === true);
@@ -20048,7 +20111,7 @@
     return labels[String(value || "")] || String(value || "subtitle_studio_updated").replace(/_/g, " ");
   }
   function renderSubtitleStudioBoundary() {
-    return `<aside class="portal-card portal-card-pad portal-subtitle-studio-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Text-only authoring boundary</span><h2 class="portal-card-title">Cue để review, không tạo media</h2><p class="portal-card-subtitle">Workspace lưu transcript và cue thuộc Web account. SRT/VTT chỉ có thể được parse hoặc sao chép dưới dạng văn bản tác giả; không upload, ASR, dịch máy, TTS, dubbing, player, tệp, URL media hay delivery được tạo ở đây.</p></div>${badge("guarded")}</div><div class="portal-subtitle-studio-guard-list"><span><strong>ASR / transcription</strong><em>guarded</em></span><span><strong>Translation provider</strong><em>guarded</em></span><span><strong>TTS / dubbing</strong><em>guarded</em></span><span><strong>Media/file delivery</strong><em>guarded</em></span></div></aside>`;
+    return `<aside class="portal-card portal-card-pad portal-subtitle-studio-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Text-only authoring boundary</span><h2 class="portal-card-title">Cue để review, không tạo media</h2><p class="portal-card-subtitle">Workspace lưu transcript và cue thuộc Web account. SRT/VTT chỉ có thể được parse hoặc sao chép dưới dạng văn bản tác giả; không upload, ASR, dịch máy, TTS, dubbing, player, tệp, URL media hay delivery được tạo ở đây.</p></div>${badge("guarded")}</div><div class="portal-subtitle-studio-guard-list"><p class="portal-form-note">ASR, dịch, TTS, dubbing và bàn giao media chỉ mở ở workflow có capability server tương ứng.</p></div></aside>`;
   }
   function subtitleFormatLabFields() {
     return [
@@ -20074,7 +20137,7 @@
     const resultMarkup = hasResult ? `<section class="portal-card portal-card-pad portal-subtitle-format-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Text transform receipt</span><h2 class="portal-card-title">Kết quả đã chuẩn hóa</h2><p class="portal-card-subtitle">${safeText(subtitleFormatModeLabel(result.mode))} · ${safeText(String(result.cue_count || 0))} cues · ${safeText(String(result.format || "srt").toUpperCase())}. Đây là plain text để sao chép, không phải file hay delivery.</p></div>${badge("read_only")}</div><textarea class="portal-subtitle-format-output" readonly aria-label="Kết quả SRT/VTT đã chuẩn hóa">${safeText(result.text)}</textarea><p class="portal-form-note">Không có job, thanh toán, output media hoặc trạng thái delivery nào được tạo từ kết quả này.</p></section>` : `<section class="portal-card portal-card-pad portal-subtitle-format-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Text-only result</span><h2 class="portal-card-title">Chưa có văn bản đã chuẩn hóa</h2><p class="portal-card-subtitle">Dán nội dung và chạy chuyển đổi để nhận plain text ở đây. Browser không tự tạo SRT/VTT trước khi server xác nhận.</p></div>${badge("empty")}</div></section>`;
     return `<article class="portal-page portal-subtitle-format-lab">${renderHero(page, context)}
       <section class="portal-subtitle-format-lab-intro"><div><span class="portal-section-kicker">${isEn ? "Web-native deterministic tool" : "Công cụ xác định Web-native"}</span><h2>Chuẩn hóa caption text, không giả media output.</h2><p>Format Lab chuyển đổi định dạng cue bằng thuật toán cục bộ trên server. Nó không nghe video/audio, không dịch, không đọc provider và không tạo tệp.</p></div><dl><div><dt>SRT</dt><dd>Numbered cues · comma timing</dd></div><div><dt>VTT</dt><dd>WEBVTT · dot timing</dd></div><div><dt>Text</dt><dd>12 words per cue</dd></div></dl></section>
-      <div class="portal-subtitle-format-lab-layout"><section class="portal-card portal-card-pad portal-subtitle-format-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Format converter</span><h2 class="portal-card-title">Dán text để chuyển đổi</h2><p class="portal-card-subtitle">Session và CSRF được server kiểm tra trước khi xử lý. Nội dung không được lưu thành project, asset, job hoặc audit detail.</p></div>${badge(canConvert ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="subtitle-format-convert" data-portal-route="/subtitle/formats" novalidate>${renderFields(subtitleFormatLabFields(), canConvert, context, defaultValues, "subtitle-format-lab")}<div class="portal-form-footer"><span class="portal-form-note">Không nhập secret, mã thanh toán hoặc nội dung không có quyền sử dụng. SRT/VTT metadata và style không được giữ lại.</span><button class="portal-button portal-button--primary" type="submit"${canConvert ? "" : " disabled"}>Chuyển đổi văn bản</button></div></form></section><aside class="portal-card portal-card-pad portal-subtitle-format-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Không gọi engine bên ngoài</h2><p class="portal-card-subtitle">Module này chỉ parse và render text. Với media, ASR, dịch, TTS hoặc dubbing, dùng workflow guarded có contract riêng.</p></div>${badge("guarded")}</div><div class="portal-subtitle-studio-guard-list"><span><strong>Media / upload</strong><em>off</em></span><span><strong>Provider / Bot</strong><em>off</em></span><span><strong>Job / payment</strong><em>off</em></span><span><strong>File delivery</strong><em>off</em></span></div></aside></div>
+      <div class="portal-subtitle-format-lab-layout"><section class="portal-card portal-card-pad portal-subtitle-format-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Format converter</span><h2 class="portal-card-title">Dán text để chuyển đổi</h2><p class="portal-card-subtitle">Session và CSRF được server kiểm tra trước khi xử lý. Nội dung không được lưu thành project, asset, job hoặc audit detail.</p></div>${badge(canConvert ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="subtitle-format-convert" data-portal-route="/subtitle/formats" novalidate>${renderFields(subtitleFormatLabFields(), canConvert, context, defaultValues, "subtitle-format-lab")}<div class="portal-form-footer"><span class="portal-form-note">Không nhập secret, mã thanh toán hoặc nội dung không có quyền sử dụng. SRT/VTT metadata và style không được giữ lại.</span><button class="portal-button portal-button--primary" type="submit"${canConvert ? "" : " disabled"}>Chuyển đổi văn bản</button></div></form></section><aside class="portal-card portal-card-pad portal-subtitle-format-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Không gọi engine bên ngoài</h2><p class="portal-card-subtitle">Module này chỉ parse và render text. Với media, ASR, dịch, TTS hoặc dubbing, dùng workflow guarded có contract riêng.</p></div>${badge("guarded")}</div><div class="portal-subtitle-studio-guard-list"><p class="portal-form-note">Media, provider, Bot, job, payment và file delivery chỉ mở ở workflow có capability server tương ứng.</p></div></aside></div>
       ${resultMarkup}
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Đúng việc của Format Lab</h2><p class="portal-card-subtitle">Sử dụng kết quả để review hoặc dán vào công cụ khác; nếu cần file media hoặc transcript từ audio/video, trang sẽ giữ guarded cho đến khi engine có contract riêng.</p></div></div>${renderNotes(page)}</section>
     </article>`;
@@ -22176,89 +22239,47 @@
     const readState = dashboardReadState(context);
 
     function renderDashboardProductHero(ctx) {
-      const copy = {
-        vi: {
-          title: "Bạn muốn tạo gì hôm nay?",
-          description: "Chọn công cụ để chuẩn bị nội dung. Khả năng tạo và chi phí được kiểm tra trong từng công cụ.",
-          open: "Mở công cụ",
-          products: [
-            ["Video", "Kịch bản, phân cảnh và nội dung video."],
-            ["Hình ảnh", "Ý tưởng, ảnh tham chiếu và thiết kế."],
-            ["Giọng nói", "Lời đọc, giọng nói và ngôn ngữ."],
-            ["Phụ đề & lồng tiếng", "Phụ đề, bản dịch và lời lồng tiếng."],
-            ["Nội dung", "Bài viết, câu dẫn và kịch bản."],
-            ["Âm nhạc", "Lời bài hát, nhạc nền và âm thanh."]
-          ]
-        },
-        en: {
-          title: "What would you like to create?",
-          description: "Choose a tool to prepare your content. Generation availability and costs are checked inside each tool.",
-          open: "Open tool",
-          products: [
-            ["Video", "Scripts, scenes and video content."],
-            ["Images", "Ideas, reference images and designs."],
-            ["Voice", "Narration, voices and languages."],
-            ["Subtitles & dubbing", "Subtitles, translations and dubbed speech."],
-            ["Content", "Posts, hooks and scripts."],
-            ["Music", "Lyrics, background music and sound."]
-          ]
-        },
-        zh: {
-          title: "今天想创作什么？",
-          description: "选择工具来准备内容。生成能力和费用将在各工具中核实。",
-          open: "打开工具",
-          products: [
-            ["视频", "脚本、分镜和视频内容。"],
-            ["图像", "创意、参考图像和设计。"],
-            ["语音", "旁白、声音和语言。"],
-            ["字幕与配音", "字幕、翻译和配音。"],
-            ["内容", "文章、开场文案和脚本。"],
-            ["音乐", "歌词、背景音乐和音效。"]
-          ]
-        }
-      };
-      const text = copy[interfaceLocaleFor(ctx)] || copy.vi;
       return `<section class="portal-card portal-card-pad portal-dashboard-product-hero" aria-labelledby="dashboard-product-title">
         <div class="portal-dashboard-product-heading">
-          <h2 id="dashboard-product-title">${safeText(text.title)}</h2>
-          <p>${safeText(text.description)}</p>
+          <h1 id="dashboard-product-title">${dashboardText("productHero.title")}</h1>
+          <p>${dashboardText("productHero.body")}</p>
         </div>
         <div class="portal-dashboard-launchers-grid">
           <a class="portal-product-launcher-card" href="/studio">
             <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(ICONS.video)}</span>
-            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[0][0])}</strong><span>${safeText(text.products[0][1])}</span></span>
+            <div class="portal-product-launcher-copy"><h3>${dashboardText("productHero.video.title")}</h3><span>${dashboardText("productHero.video.body")}</span></div>
             <span class="portal-product-launcher-arrow" aria-hidden="true">↗</span>
-            <span class="portal-sr-only">${safeText(text.open)}</span>
+            <span class="portal-sr-only">${dashboardText("productHero.video.open")}</span>
           </a>
           <a class="portal-product-launcher-card" href="/tools/image">
             <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(ICONS.image)}</span>
-            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[1][0])}</strong><span>${safeText(text.products[1][1])}</span></span>
+            <div class="portal-product-launcher-copy"><h3>${dashboardText("productHero.image.title")}</h3><span>${dashboardText("productHero.image.body")}</span></div>
             <span class="portal-product-launcher-arrow" aria-hidden="true">↗</span>
-            <span class="portal-sr-only">${safeText(text.open)}</span>
+            <span class="portal-sr-only">${dashboardText("productHero.image.open")}</span>
           </a>
           <a class="portal-product-launcher-card" href="/voice">
             <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(ICONS.voice)}</span>
-            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[2][0])}</strong><span>${safeText(text.products[2][1])}</span></span>
+            <div class="portal-product-launcher-copy"><h3>${dashboardText("productHero.voice.title")}</h3><span>${dashboardText("productHero.voice.body")}</span></div>
             <span class="portal-product-launcher-arrow" aria-hidden="true">↗</span>
-            <span class="portal-sr-only">${safeText(text.open)}</span>
+            <span class="portal-sr-only">${dashboardText("productHero.voice.open")}</span>
           </a>
           <a class="portal-product-launcher-card" href="/subdub">
             <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(ICONS.subtitle)}</span>
-            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[3][0])}</strong><span>${safeText(text.products[3][1])}</span></span>
+            <div class="portal-product-launcher-copy"><h3>${dashboardText("productHero.subdub.title")}</h3><span>${dashboardText("productHero.subdub.body")}</span></div>
             <span class="portal-product-launcher-arrow" aria-hidden="true">↗</span>
-            <span class="portal-sr-only">${safeText(text.open)}</span>
+            <span class="portal-sr-only">${dashboardText("productHero.subdub.open")}</span>
           </a>
           <a class="portal-product-launcher-card" href="/content">
             <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(ICONS.prompt)}</span>
-            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[4][0])}</strong><span>${safeText(text.products[4][1])}</span></span>
+            <div class="portal-product-launcher-copy"><h3>${dashboardText("productHero.content.title")}</h3><span>${dashboardText("productHero.content.body")}</span></div>
             <span class="portal-product-launcher-arrow" aria-hidden="true">↗</span>
-            <span class="portal-sr-only">${safeText(text.open)}</span>
+            <span class="portal-sr-only">${dashboardText("productHero.content.open")}</span>
           </a>
           <a class="portal-product-launcher-card" href="/music">
             <span class="portal-product-launcher-icon" aria-hidden="true">${portalIcon(ICONS.music)}</span>
-            <span class="portal-product-launcher-copy"><strong>${safeText(text.products[5][0])}</strong><span>${safeText(text.products[5][1])}</span></span>
+            <div class="portal-product-launcher-copy"><h3>${dashboardText("productHero.music.title")}</h3><span>${dashboardText("productHero.music.body")}</span></div>
             <span class="portal-product-launcher-arrow" aria-hidden="true">↗</span>
-            <span class="portal-sr-only">${safeText(text.open)}</span>
+            <span class="portal-sr-only">${dashboardText("productHero.music.open")}</span>
           </a>
         </div>
       </section>`;
@@ -22268,30 +22289,16 @@
       const w = canonicalWalletProjection(ctx.wallet);
       const balance = w ? localizedNumber(w.balance_xu) : "—";
       const spent = w ? localizedNumber(w.total_spent_xu) : "—";
-      const copyByLocale = {
-        vi: {
-          balance: "Số dư Xu khả dụng", plan: "Gói tài khoản", vip: "VIP Doanh nghiệp", member: "Thành viên",
-          spent: "Lũy kế đã dùng", topup: "Nạp Xu", wallet: "Ví Xu & Lịch sử", pricing: "Bảng giá & Gói"
-        },
-        en: {
-          balance: "Available Xu balance", plan: "Account plan", vip: "Business VIP", member: "Member",
-          spent: "Total used", topup: "Top up Xu", wallet: "Xu wallet & history", pricing: "Pricing & packages"
-        },
-        zh: {
-          balance: "可用 Xu 余额", plan: "账户套餐", vip: "企业 VIP", member: "会员",
-          spent: "累计使用", topup: "充值 Xu", wallet: "Xu 钱包与记录", pricing: "价格与套餐"
-        }
-      };
-      const copy = copyByLocale[interfaceLocaleFor(ctx)] || copyByLocale.vi;
+      const fallbackPlan = uiText(w && w.is_vip ? "dashboard.accountSummary.vip" : "dashboard.accountSummary.member", "");
       const planName = w && w.plan && (w.plan.plan_name || w.plan.current_plan)
         ? String(w.plan.plan_name || w.plan.current_plan)
-        : (w && w.is_vip ? copy.vip : copy.member);
+        : fallbackPlan;
       return `<section class="portal-card portal-card-pad portal-dashboard-account-summary-strip" aria-labelledby="dashboard-account-summary-title" style="margin-bottom:24px; background:var(--portal-surface-light); border:1px solid var(--portal-border); border-radius:var(--portal-radius-md); padding:16px 20px;">
-        <h2 id="dashboard-account-summary-title" class="portal-sr-only">${safeText(copy.balance)}</h2>
+        <h2 id="dashboard-account-summary-title" class="portal-sr-only">${dashboardText("accountSummary.title")}</h2>
         <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px;">
           <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
             <div>
-              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${safeText(copy.balance)}</span>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${dashboardText("accountSummary.balance")}</span>
               <div style="display:flex; align-items:baseline; gap:6px;">
                 <strong style="font-size:22px; font-weight:900; color:var(--portal-brand);">${safeText(balance)}</strong>
                 <span style="font-size:12px; font-weight:600; color:var(--portal-muted);">Xu</span>
@@ -22299,14 +22306,14 @@
             </div>
             <div style="width:1px; height:32px; background:var(--portal-border);" class="portal-summary-divider"></div>
             <div>
-              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${safeText(copy.plan)}</span>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${dashboardText("accountSummary.plan")}</span>
               <div style="display:flex; align-items:baseline; gap:6px;">
                 <strong style="font-size:15px; font-weight:700; color:var(--portal-ink);">${safeText(planName)}</strong>
               </div>
             </div>
             <div style="width:1px; height:32px; background:var(--portal-border);" class="portal-summary-divider"></div>
             <div>
-              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${safeText(copy.spent)}</span>
+              <span style="font-size:11px; font-weight:700; color:var(--portal-muted); text-transform:uppercase; letter-spacing:0.04em;">${dashboardText("accountSummary.used")}</span>
               <div style="display:flex; align-items:baseline; gap:6px;">
                 <strong style="font-size:15px; font-weight:700; color:var(--portal-ink);">${safeText(spent)}</strong>
                 <span style="font-size:12px; color:var(--portal-muted);">Xu</span>
@@ -22316,13 +22323,13 @@
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <a class="portal-button portal-button--primary" href="/wallet/topup" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 14px;">
               <span aria-hidden="true">${portalIcon(ICONS.payments)}</span>
-              <span>${safeText(copy.topup)}</span>
+              <span>${dashboardText("accountSummary.topup")}</span>
             </a>
             <a class="portal-button portal-button--quiet" href="/wallet" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 12px;">
-              <span>${safeText(copy.wallet)}</span>
+              <span>${dashboardText("accountSummary.wallet")}</span>
             </a>
             <a class="portal-button portal-button--quiet" href="/packages" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:7px 12px;">
-              <span>${safeText(copy.pricing)}</span>
+              <span>${dashboardText("accountSummary.plans")}</span>
             </a>
           </div>
         </div>
@@ -22798,10 +22805,14 @@
       const code = canonicalCatalogCode(item.code);
       if (!code) return [];
       const manual = item.manual === true;
+      const rawNote = canonicalShortText(item.note, 240);
+      const note = /^Legacy hidden package kept for existing wallets(?:\/tests)?\.?$/i.test(rawNote)
+        ? billingCatalogText("catalog.legacyNote", "Gói này chỉ giữ cho dữ liệu cũ, không mở bán mới.")
+        : rawNote;
       return [{
         code,
         label: canonicalShortText(item.label, 120) || code,
-        note: canonicalShortText(item.note, 240) || "Gói canonical do Core Bridge cấp.",
+        note: note || "Gói canonical do Core Bridge cấp.",
         manual,
         status: "read_only"
       }];
@@ -22823,15 +22834,6 @@
     const data = flow && flow.data && typeof flow.data === "object" ? flow.data : {};
     return String(data.payment_id || data.order_code || data.id || "").trim();
   }
-
-  const PAYMENT_DISPLAY_FALLBACK_PACKAGES = Object.freeze([
-    { code: "topup_10k", label: "10.000 đ", amount_vnd: 10_000, xu: 100 },
-    { code: "topup_20k", label: "20.000 đ", amount_vnd: 20_000, xu: 200 },
-    { code: "topup_50k", label: "50.000 đ", amount_vnd: 50_000, xu: 500 },
-    { code: "topup_100k", label: "100.000 đ", amount_vnd: 100_000, xu: 1_000 },
-    { code: "topup_200k", label: "200.000 đ", amount_vnd: 200_000, xu: 2_000 },
-    { code: "topup_500k", label: "500.000 đ", amount_vnd: 500_000, xu: 5_000 }
-  ]);
 
   function paymentWebCatalogReady(context) {
     const payos = context && context.paymentOptions && context.paymentOptions.payos;
@@ -23033,16 +23035,47 @@
         : "";
       return !rawMethodIds.has(id) && label ? [{ id, label, destination_only: true }] : [];
     });
-    const selectorMethods = [...rawMethods, ...destinationOnlyMethods].slice(0, 12);
+    const isMethodReady = (item) => Boolean(
+      item &&
+      item.destination_only !== true &&
+      hasDestinationContract &&
+      manualTopupMethodHasCanonicalQr(item, paymentDestinations[item.id])
+    );
+    const acbVietQr = rawMethods.find((item) => item.id === "bank_acb_vietqr");
+    const acbBank = rawMethods.find((item) => item.id === "bank_acb");
+    const selectedMethodId = String(transient.method || "");
+    const preferredAcbMethod = (selectedMethodId === "bank_acb" && isMethodReady(acbBank))
+      ? acbBank
+      : (selectedMethodId === "bank_acb_vietqr" && isMethodReady(acbVietQr))
+        ? acbVietQr
+        : isMethodReady(acbVietQr)
+          ? acbVietQr
+          : isMethodReady(acbBank)
+            ? acbBank
+            : (acbVietQr || acbBank);
+    const selectorMethods = [
+      ...(preferredAcbMethod ? [preferredAcbMethod] : []),
+      ...rawMethods.filter((item) => !["bank_acb", "bank_acb_vietqr"].includes(item.id)),
+      ...destinationOnlyMethods
+    ].slice(0, 12);
     const enabledMethods = rawMethods.filter((item) => hasDestinationContract && manualTopupMethodHasCanonicalQr(item, paymentDestinations[item.id]));
     const available = manual.available === true && manual.history_in_web === true && enabledMethods.length > 0;
     const flow = context.manualTopupFlow && typeof context.manualTopupFlow === "object" ? context.manualTopupFlow : {};
     const history = Array.isArray(context.manualTopupHistory) ? context.manualTopupHistory.slice(0, 50) : [];
-    const readState = String(context.manualTopupReadState || "guarded");
+    const optionsReadState = String(context.paymentOptionsReadState || "guarded");
+    const historyReadState = String(context.manualTopupReadState || "guarded");
     const submitting = flow.status === "submitting";
 
     if (!available || !enabledMethods.length) {
-      return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="guarded" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(manualTopupText("guardedTitle", "Nạp thủ công chưa sẵn sàng"))}</h2><p class="portal-card-subtitle">${safeText(manualTopupText("guardedBody", "Phiên Web chưa tải được phương thức nạp thủ công. Hãy tải lại trang hoặc thử lại sau."))}</p></div></div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/account">${safeText(uiText("nav.account", "Tài khoản"))}</a></div></section>`;
+      const stateKey = optionsReadState === "loading" ? "loading" : optionsReadState === "failed" ? "failed" : "guarded";
+      const stateTitle = manualTopupText(`${stateKey}Title`, stateKey === "loading" ? "Đang tải phương thức nạp" : stateKey === "failed" ? "Chưa lấy được phương thức nạp" : "Nạp thủ công chưa sẵn sàng");
+      const stateBody = manualTopupText(`${stateKey}Body`, stateKey === "loading" ? "Đang tải dữ liệu từ hệ thống." : stateKey === "failed" ? "Chưa lấy được dữ liệu nạp tiền. Hãy thử làm mới." : "Phương thức nạp thủ công chưa được máy chủ mở cho phiên này.");
+      const stateAction = stateKey === "loading"
+        ? ""
+        : stateKey === "failed"
+          ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="payment-options-refresh" data-portal-route="/wallet/topup">${safeText(manualTopupText("reloadMethods", "Tải lại phương thức"))}</button>`
+          : `<a class="portal-button portal-button--primary" href="/account">${safeText(uiText("nav.account", "Tài khoản"))}</a>`;
+      return `<section class="portal-card portal-card-pad portal-manual-topup-card portal-topup-pane" data-portal-topup-pane="manual" data-manual-topup-state="${safeText(stateKey)}" style="display:${displayStyle}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(manualTopupText("title", "Nạp Xu thủ công"))}</span><h2 class="portal-card-title">${safeText(stateTitle)}</h2><p class="portal-card-subtitle"${stateKey === "loading" ? ' role="status"' : ""}>${safeText(stateBody)}</p></div></div><div class="portal-form-footer">${stateAction}</div></section>`;
     }
 
     const flowData = flow.data && typeof flow.data === "object" ? flow.data : {};
@@ -23058,7 +23091,7 @@
     const isSelectionConfirmed = confirmedFlag && isPositiveIntAmount && isConfirmedMethodValid;
     const recordOptions = { revealTransferDetails: isSelectionConfirmed };
     const currentRecord = flowData.request_id ? renderManualTopupRecord(flowData, recordOptions) : "";
-    const historyMarkup = readState === "loading" ? `<p class="portal-manual-topup-empty">${safeText(manualTopupText("loading", "Đang tải dữ liệu…"))}</p>` : history.length ? history.map((item) => renderManualTopupRecord(item, recordOptions)).join("") : `<p class="portal-manual-topup-empty">${safeText(manualTopupText(readState === "failed" ? "failed" : "historyEmpty", readState === "failed" ? "Chưa thể xử lý" : "Chưa có yêu cầu nạp thủ công."))}</p>`;
+    const historyMarkup = historyReadState === "loading" ? `<p class="portal-manual-topup-empty">${safeText(manualTopupText("loading", "Đang tải dữ liệu…"))}</p>` : history.length ? history.map((item) => renderManualTopupRecord(item, recordOptions)).join("") : `<p class="portal-manual-topup-empty">${safeText(manualTopupText(historyReadState === "failed" ? "failed" : "historyEmpty", historyReadState === "failed" ? "Chưa thể xử lý" : "Chưa có yêu cầu nạp thủ công."))}</p>`;
 
     if (!isSelectionConfirmed) {
       const currentSelectedMethod = String(transient.method || "");
@@ -23110,9 +23143,7 @@
         ? context.paymentOptions.payos.topup_packages
         : [])
     ];
-    const packages = [
-      ...(serverPackages.length ? serverPackages : PAYMENT_DISPLAY_FALLBACK_PACKAGES)
-    ].flatMap((item) => {
+    const packages = serverPackages.flatMap((item) => {
       if (!item || typeof item !== "object" || Array.isArray(item) || item.available === false) return [];
       const code = canonicalCatalogCode(item.code);
       const amount = Number(item.amount_vnd);
@@ -25988,6 +26019,52 @@
     musicWorkspaceDraftSession = token;
   }
 
+  function synchronizeMusicSuggestionSnapshots(context) {
+    const session = context && context.session;
+    const token = session && session.authenticated === true && session.csrfReady === true && typeof session.csrfToken === "string" ? session.csrfToken : "";
+    if (!token) {
+      musicSuggestionSnapshots.clear();
+      musicSuggestionSnapshotSession = "";
+      return;
+    }
+    if (token !== musicSuggestionSnapshotSession) musicSuggestionSnapshots.clear();
+    musicSuggestionSnapshotSession = token;
+    const flows = context && context.featureFlows;
+    MUSIC_PRODUCT_ROUTES.forEach((route) => {
+      const expected = route === "/music/song" ? "music_song" : "music_background";
+      const flow = flows && flows[route];
+      const valid = flow && typeof flow === "object" && !Array.isArray(flow) && flow.feature === expected
+        && ((flow.phase === "draft" && ["draft", "ready"].includes(flow.status)) || (flow.phase === "estimate" && flow.status === "awaiting_confirm"));
+      const data = valid && flow.data && typeof flow.data === "object" && !Array.isArray(flow.data) ? flow.data : null;
+      const payload = data && data[flow.phase];
+      if (!payload || typeof payload !== "object" || Array.isArray(payload) || payload.available === false) {
+        musicSuggestionSnapshots.delete(route);
+        return;
+      }
+      const values = payload.content && typeof payload.content === "object" && !Array.isArray(payload.content) ? payload.content : payload;
+      if (!Object.prototype.hasOwnProperty.call(values, "suggestions")) {
+        if (flow.phase === "draft") musicSuggestionSnapshots.delete(route);
+        return;
+      }
+      const suggestions = [];
+      if (Array.isArray(values.suggestions)) {
+        for (const item of values.suggestions) {
+          if (!item || typeof item !== "object" || Array.isArray(item) || !Object.prototype.hasOwnProperty.call(item, "prompt")) continue;
+          const prompt = canonicalDraftText(item.prompt);
+          if (!prompt) continue;
+          const copy = { prompt };
+          for (const key of ["name", "mood", "tempo", "instrument", "duration", "vocal", "use_case"]) {
+            if (Object.prototype.hasOwnProperty.call(item, key) && typeof item[key] === "string" && item[key].length <= 2_000) copy[key] = item[key];
+          }
+          suggestions.push(copy);
+          if (suggestions.length === 3) break;
+        }
+      }
+      if (suggestions.length) musicSuggestionSnapshots.set(route, { feature: expected, suggestions });
+      else musicSuggestionSnapshots.delete(route);
+    });
+  }
+
   function navigateMusicWorkspace(event, link) {
     if (!link || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return false;
     const target = link.getAttribute("href");
@@ -26238,7 +26315,9 @@
       heroKicker: "Trung tâm Phụ đề & Lồng tiếng",
       heroTitle: "Hành trình phụ đề & lồng tiếng thông minh",
       heroSubtitle: "Chọn phụ đề, lồng tiếng hoặc kết hợp cả hai. Thiết lập và xem kết quả trong cùng một màn hình.",
+      authoringSessionPending: "Thiết lập mở sau khi phiên đăng nhập được xác nhận.",
       modeSelectorLabel: "Bạn muốn tạo gì?",
+      audioOriginalToggleLabel: "Giữ âm thanh gốc",
       audioOriginalLabel: "Âm lượng âm thanh gốc",
       audioDubbingLabel: "Âm lượng giọng lồng tiếng",
       audioControlsHeading: "Cân chỉnh âm thanh",
@@ -26308,6 +26387,10 @@
       ruleStandard: "Tiêu chuẩn (Tối đa 42 ký tự/dòng, tối đa 2 dòng)",
       ruleShort: "Ngắn gọn cho video ngắn (Tối đa 25 ký tự/dòng, 1 dòng)",
       targetLangLabel: "Ngôn ngữ dịch mục tiêu",
+      targetLangSearchLabel: "Tìm ngôn ngữ",
+      targetLangSearchPlaceholder: "Nhập tên hoặc mã ngôn ngữ",
+      targetLangSearchResults: "{count} ngôn ngữ phù hợp. Lựa chọn hiện tại được giữ nguyên.",
+      targetLangSearchEmpty: "Không tìm thấy ngôn ngữ phù hợp. Lựa chọn hiện tại được giữ nguyên.",
       targetLangDubLabel: "Ngôn ngữ lồng tiếng mục tiêu",
       sharedTargetLangLabel: "Ngôn ngữ đầu ra",
       sharedTargetLangHint: "Dùng chung cho phụ đề và giọng lồng tiếng.",
@@ -26349,6 +26432,17 @@
       voiceLibraryLabel: "Giọng từ Thư viện giọng",
       voiceLibraryGuarded: "Thư viện giọng sẽ liên kết khi máy chủ mở đồng thời Giọng và SubDub.",
       voiceLibraryLink: "Mở Thư viện giọng",
+      voiceGroupDefault: "Mặc định",
+      voiceGroupSaved: "Đã lưu",
+      voiceGroupAdd: "Thêm giọng",
+      voiceGroupAuto: "Tự động thông minh",
+      voiceCompactFemale: "Nữ",
+      voiceCompactMale: "Nam",
+      voiceCompactSaved: "Thư viện giọng",
+      voiceCompactCustom: "Giọng tự thêm",
+      voiceCompactAutoTwo: "Auto 2",
+      voiceCompactAutoMulti: "3–8 người nói",
+      voiceCompactSmart: "Smart Multi",
       voiceLaneLabel: "Cách gán giọng",
       voiceLaneHint: "Chọn cách gán giọng cho bản nháp. Lựa chọn được giữ lại để dùng khi máy chủ xác nhận khả năng xử lý.",
       voiceLaneDefaultFemale: "Giọng nữ mặc định",
@@ -26368,6 +26462,7 @@
       stage3Title: "3. Kiểm tra trước khi tạo",
       stage3Subtitle: "Xem lại lựa chọn và chi phí trước khi bắt đầu.",
       summaryModeKey: "Chế độ đã chọn",
+      summaryEditAction: "Sửa",
       summarySettingsTitle: "Thiết lập của bạn",
       summaryUnknown: "Chưa xác minh",
       summarySourceStateKey: "Nguồn phụ đề (bạn khai báo)",
@@ -26417,7 +26512,9 @@
       heroKicker: "Subtitles & Dubbing Center",
       heroTitle: "Intelligent Subtitle & Dubbing Journey",
       heroSubtitle: "Choose subtitles, dubbing, or both. Set up your output and view results in one place.",
+      authoringSessionPending: "Settings open after your sign-in session is confirmed.",
       modeSelectorLabel: "What do you want to create?",
+      audioOriginalToggleLabel: "Keep original audio",
       audioOriginalLabel: "Original audio level",
       audioDubbingLabel: "Dubbed voice level",
       audioControlsHeading: "Audio levels",
@@ -26487,6 +26584,10 @@
       ruleStandard: "Standard (Max 42 chars/line, up to 2 lines)",
       ruleShort: "Short for short-form video (Max 25 chars/line, 1 line)",
       targetLangLabel: "Target translation language",
+      targetLangSearchLabel: "Find a language",
+      targetLangSearchPlaceholder: "Enter a language name or code",
+      targetLangSearchResults: "{count} matching languages. Your current selection is kept.",
+      targetLangSearchEmpty: "No matching language. Your current selection is kept.",
       targetLangDubLabel: "Target dubbing language",
       sharedTargetLangLabel: "Output language",
       sharedTargetLangHint: "Used for both subtitles and the dubbed voice.",
@@ -26519,6 +26620,17 @@
       voiceLibraryLabel: "Voice Library selection",
       voiceLibraryGuarded: "Voice Library will connect when the server opens Voice and SubDub together.",
       voiceLibraryLink: "Open Voice Library",
+      voiceGroupDefault: "Default",
+      voiceGroupSaved: "Saved voices",
+      voiceGroupAdd: "Add voice",
+      voiceGroupAuto: "Smart automation",
+      voiceCompactFemale: "Female",
+      voiceCompactMale: "Male",
+      voiceCompactSaved: "Voice Library",
+      voiceCompactCustom: "Uploaded voice",
+      voiceCompactAutoTwo: "Auto 2",
+      voiceCompactAutoMulti: "3–8 speakers",
+      voiceCompactSmart: "Smart Multi",
       voiceLaneLabel: "Voice lane",
       voiceLaneHint: "Choose how voices are assigned in this draft. Your choice stays here until the server confirms processing capability.",
       voiceLaneDefaultFemale: "Default female voice",
@@ -26547,6 +26659,7 @@
       stage3Title: "3. Review settings and cost",
       stage3Subtitle: "Check your choices and cost before you start.",
       summaryModeKey: "Selected mode",
+      summaryEditAction: "Edit",
       summarySettingsTitle: "Your settings",
       summaryUnknown: "Not verified",
       summarySourceStateKey: "Subtitle source (your selection)",
@@ -26596,7 +26709,9 @@
       heroKicker: "字幕与配音",
       heroTitle: "字幕与配音，一站式处理",
       heroSubtitle: "选择所需的处理方式，设置输出选项，并在同一页面查看真实任务报告。",
+      authoringSessionPending: "登录状态确认后即可编辑设置。",
       modeSelectorLabel: "选择需要的处理方式",
+      audioOriginalToggleLabel: "保留原始音频",
       audioOriginalLabel: "原始音频音量",
       audioDubbingLabel: "配音音量",
       audioControlsHeading: "音量调节",
@@ -26666,6 +26781,10 @@
       ruleStandard: "标准（每行最多 42 个字符，最多 2 行）",
       ruleShort: "短视频（每行最多 25 个字符，仅 1 行）",
       targetLangLabel: "字幕目标语言",
+      targetLangSearchLabel: "查找语言",
+      targetLangSearchPlaceholder: "输入语言名称或代码",
+      targetLangSearchResults: "找到 {count} 种语言。当前选择保持不变。",
+      targetLangSearchEmpty: "未找到匹配语言。当前选择保持不变。",
       targetLangDubLabel: "配音目标语言",
       sharedTargetLangLabel: "输出语言",
       sharedTargetLangHint: "只需选择一次，即可同时用于字幕和配音。",
@@ -26698,6 +26817,17 @@
       voiceLibraryLabel: "从音色库选择",
       voiceLibraryGuarded: "服务器同时开放语音与 SubDub 后，音色库将在此连接。",
       voiceLibraryLink: "打开音色库",
+      voiceGroupDefault: "默认音色",
+      voiceGroupSaved: "已保存",
+      voiceGroupAdd: "添加音色",
+      voiceGroupAuto: "智能自动",
+      voiceCompactFemale: "女声",
+      voiceCompactMale: "男声",
+      voiceCompactSaved: "音色库",
+      voiceCompactCustom: "自定义音色",
+      voiceCompactAutoTwo: "自动双人",
+      voiceCompactAutoMulti: "3–8 位说话人",
+      voiceCompactSmart: "Smart Multi",
       voiceLaneLabel: "选择音色通道",
       voiceLaneHint: "选择本次草稿的音色分配方式。提交处理前会由服务器确认相应能力。",
       voiceLaneDefaultFemale: "默认女声",
@@ -26717,6 +26847,7 @@
       stage3Title: "3. 检查设置和费用",
       stage3Subtitle: "开始前确认所选模式和费用信息。",
       summaryModeKey: "已选处理方式",
+      summaryEditAction: "修改",
       summarySettingsTitle: "你的设置",
       summaryUnknown: "尚未确认",
       summarySourceStateKey: "字幕来源（你的选择）",
@@ -26783,6 +26914,12 @@
       panel.hidden = !selected;
       panel.setAttribute("aria-hidden", selected ? "false" : "true");
     });
+    subDubPage.querySelectorAll("[data-subdub-language-search]").forEach((input) => {
+      if (input && (input.getAttribute("type") === "search" || input.type === "search") && input.hasAttribute && input.hasAttribute("data-subdub-language-search")) {
+        input.value = "";
+        updateSubDubLanguageSearch(input);
+      }
+    });
     applySubDubDraftDom(subDubPage, subDubDraftSnapshot(), nextMode);
     const selectedLabel = modeButton.getAttribute("data-subdub-summary-label") || "";
     const summary = subDubPage.querySelector("[data-subdub-summary-mode]");
@@ -26816,8 +26953,96 @@
     return true;
   }
 
+  function updateSubDubOriginalAudioToggle(control) {
+    if (!control || typeof control.closest !== "function" || typeof control.getAttribute !== "function" || typeof control.hasAttribute !== "function") return false;
+    if (!subDubWorkspaceDraftSession) return false;
+    if (control.disabled || control.readOnly) return false;
+    const root = control.closest(".portal-subdub-hub");
+    if (!root || !root.dataset || root.dataset.subdubAuthoringReady !== "true") return false;
+    const panel = control.closest("[data-subdub-mode-panel]");
+    if (!panel || panel.hidden || typeof panel.getAttribute !== "function" || typeof panel.querySelector !== "function") return false;
+    const mode = panel.getAttribute("data-subdub-mode-panel");
+    if (mode !== "DUBBING_ONLY" && mode !== "SUBTITLE_PLUS_DUBBING") return false;
+    const rangeInput = panel.querySelector('input[type="range"][data-subdub-local-volume="original"]');
+    const numberInput = panel.querySelector('input[type="number"][data-subdub-local-volume="original"]');
+    const toggleCheckbox = panel.querySelector('input[type="checkbox"][data-subdub-original-audio-toggle]');
+    if (!rangeInput || !numberInput || !toggleCheckbox) return false;
+    if (rangeInput.type !== "range" || numberInput.type !== "number" || toggleCheckbox.type !== "checkbox") return false;
+    if (typeof rangeInput.closest !== "function" || rangeInput.closest("[data-subdub-mode-panel]") !== panel) return false;
+    if (typeof numberInput.closest !== "function" || numberInput.closest("[data-subdub-mode-panel]") !== panel) return false;
+    if (typeof toggleCheckbox.closest !== "function" || toggleCheckbox.closest("[data-subdub-mode-panel]") !== panel) return false;
+    if (rangeInput.disabled || rangeInput.readOnly || numberInput.disabled || numberInput.readOnly || toggleCheckbox.disabled || toggleCheckbox.readOnly) return false;
+
+    const isCheckbox = control.hasAttribute("data-subdub-original-audio-toggle");
+    if (isCheckbox) {
+      if (control !== toggleCheckbox || control.type !== "checkbox") return false;
+    } else {
+      if (control !== rangeInput && control !== numberInput) return false;
+      if (control.getAttribute("data-subdub-local-volume") !== "original") return false;
+      if (control.type !== "range" && control.type !== "number") return false;
+    }
+
+    const currentDraft = transientFormDrafts.get(SUBDUB_DRAFT_ROUTE);
+    const privateRestore = currentDraft && currentDraft.shared
+      ? normalizeSubDubDraftValue("original_volume_restore", currentDraft.shared.original_volume_restore)
+      : null;
+    const draftOriginal = currentDraft && currentDraft.shared
+      ? normalizeSubDubDraftValue("original_volume", currentDraft.shared.original_volume)
+      : null;
+    const draftPositive = draftOriginal && draftOriginal !== "0" ? draftOriginal : null;
+
+    if (isCheckbox) {
+      const rangeNorm = normalizeSubDubDraftValue("original_volume", rangeInput.value);
+      if (rangeNorm === null || (rangeInput.validity && rangeInput.validity.badInput)) return false;
+      const rangePositive = rangeNorm !== "0" ? rangeNorm : null;
+      if (!control.checked) {
+        if (rangePositive) {
+          const draft = subDubDraftSnapshot();
+          if (draft && draft.shared) {
+            draft.shared.original_volume_restore = rangePositive;
+            transientFormDrafts.set(SUBDUB_DRAFT_ROUTE, draft);
+          }
+        }
+        rangeInput.value = "0";
+        numberInput.value = "0";
+      } else {
+        if (!rangePositive || rangeInput.value === "0") {
+          const target = privateRestore || draftPositive || "100";
+          rangeInput.value = target;
+          numberInput.value = target;
+        }
+      }
+      updateSubDubLocalVolume(numberInput);
+      control.checked = numberInput.value !== "0";
+      return true;
+    }
+
+    const normalized = normalizeSubDubDraftValue("original_volume", control.value);
+    const valid = normalized !== null && !(control.validity && control.validity.badInput);
+    if (!valid) return false;
+
+    toggleCheckbox.checked = normalized !== "0";
+    if (normalized !== "0") {
+      const draft = subDubDraftSnapshot();
+      if (draft && draft.shared) {
+        draft.shared.original_volume_restore = normalized;
+        transientFormDrafts.set(SUBDUB_DRAFT_ROUTE, draft);
+      }
+    } else if (!privateRestore && draftPositive) {
+      const draft = subDubDraftSnapshot();
+      if (draft && draft.shared) {
+        draft.shared.original_volume_restore = draftPositive;
+        transientFormDrafts.set(SUBDUB_DRAFT_ROUTE, draft);
+      }
+    }
+    return true;
+  }
+
   function updateSubDubLocalVolume(volumeInput) {
     if (!volumeInput) return false;
+    if (typeof volumeInput.hasAttribute === "function" && volumeInput.hasAttribute("data-subdub-original-audio-toggle")) {
+      return updateSubDubOriginalAudioToggle(volumeInput);
+    }
     const panel = volumeInput.closest("[data-subdub-mode-panel]");
     const kind = volumeInput.getAttribute("data-subdub-local-volume");
     if (!["original", "dubbing"].includes(kind)) return false;
@@ -26839,6 +27064,9 @@
     if (kind === "dubbing" && normalized !== "0") {
       const acknowledgement = panel.querySelector("[data-subdub-mute-ack]");
       if (acknowledgement) acknowledgement.checked = false;
+    }
+    if (kind === "original") {
+      updateSubDubOriginalAudioToggle(volumeInput);
     }
     return true;
   }
@@ -26862,7 +27090,8 @@
   const SUBDUB_DRAFT_ROUTE = "/subdub";
   const SUBDUB_SHARED_DRAFT_FIELDS = new Set([
     "target_language", "target_language_custom", "original_volume", "dubbing_volume",
-    "voice_lane", "sub_display_type", "subtitle_position", "source_subtitle_state", "dubbing_mute_ack"
+    "voice_lane", "sub_display_type", "subtitle_position", "source_subtitle_state", "dubbing_mute_ack",
+    "original_volume_restore"
   ]);
   const SUBDUB_MODE_DRAFT_FIELDS = new Set([
     "subdub-source-output-format", "subdub-translated-output-format",
@@ -26878,6 +27107,10 @@
     if (name === "original_volume" || name === "dubbing_volume") {
       const number = Number(text);
       return text.trim() && Number.isInteger(number) && number >= 0 && number <= (name === "original_volume" ? 100 : 200) ? String(number) : null;
+    }
+    if (name === "original_volume_restore") {
+      const number = Number(text);
+      return text.trim() && Number.isInteger(number) && number >= 1 && number <= 100 ? String(number) : null;
     }
     if (name === "voice_lane") return ["default_female", "default_male", "saved_voice", "custom_voice", "auto_two", "auto_multi_3_8", "smart_multi"].includes(text) ? text : null;
     if (name === "subtitle_position") return ["bottom_center", "bottom_left", "bottom_right", "top_center", "top_left", "top_right", "center"].includes(text) ? text : null;
@@ -26942,7 +27175,86 @@
       if (mode === "SUBTITLE_ONLY") rows.push(["subtitle_format", copy.segmentRuleLabel, value("subtitle_format", "standard") === "short" ? copy.ruleShort : copy.ruleStandard]);
       else rows.push(["sub_display_type", copy.subDisplayLabel, value("sub_display_type", mode === "SUBTITLE_PLUS_DUBBING" ? "bilingual" : "single") === "bilingual" ? copy.subDisplayBilingual : copy.subDisplaySingle]);
     }
-    return rows.map(([key, label, text]) => `<div class="portal-summary-item"><span class="portal-summary-key">${safeText(label)}</span><span class="portal-summary-value" data-subdub-setting="${safeText(key)}">${safeText(text)}</span></div>`).join("");
+    const editableKeys = new Set([
+      "source_subtitle_state",
+      "target_language",
+      "target_language_custom",
+      "voice_lane",
+      "original_volume",
+      "dubbing_volume",
+      "subtitle_position",
+      "output_format",
+      "subtitle_format",
+      "sub_display_type"
+    ]);
+    const action = copy.summaryEditAction;
+    return rows.map(([key, label, text]) => {
+      const isEditable = editableKeys.has(key);
+      const rowClass = isEditable ? "portal-summary-item portal-subdub-review-edit-row" : "portal-summary-item";
+      const editButton = isEditable
+        ? `<button class="portal-subdub-review-edit" type="button" data-subdub-review-edit="${safeText(key)}" aria-label="${safeText(action + ": " + label)}">${safeText(action)}</button>`
+        : "";
+      return `<div class="${rowClass}"><span class="portal-summary-key">${safeText(label)}</span><span class="portal-summary-value" data-subdub-setting="${safeText(key)}">${safeText(text)}</span>${editButton}</div>`;
+    }).join("");
+  }
+
+  const SUBDUB_REVIEW_EDIT_SELECTORS = Object.freeze({
+    target_language: 'select[name="target_language"]',
+    target_language_custom: 'input[name="target_language_custom"]',
+    voice_lane: '[data-subdub-voice-lane-input]:checked',
+    original_volume: 'input[type="number"][data-subdub-local-volume="original"]',
+    dubbing_volume: 'input[type="number"][data-subdub-local-volume="dubbing"]',
+    subtitle_position: 'select[name^="subdub_"][name$="_subtitle_position"]',
+    output_format: 'input[name$="-output-format"]:checked',
+    subtitle_format: 'select[name="subtitle_format"]',
+    sub_display_type: 'select[name="sub_display_type"],input[name="sub_display_type"]:checked'
+  });
+
+  function focusSubDubReviewSetting(button) {
+    if (!button || typeof button.closest !== "function") {
+      return false;
+    }
+    const root = button.closest(".portal-subdub-hub");
+    if (!root || typeof root.querySelector !== "function") {
+      return false;
+    }
+    const key = typeof button.getAttribute === "function"
+      ? button.getAttribute("data-subdub-review-edit")
+      : null;
+    if (!key) {
+      return false;
+    }
+    const modeButton = root.querySelector('[data-subdub-mode-select][aria-selected="true"]');
+    if (!modeButton || typeof modeButton.getAttribute !== "function") {
+      return false;
+    }
+    const selectedMode = modeButton.getAttribute("data-subdub-mode-select");
+    if (!selectedMode || !Object.hasOwn(SUBDUB_PRODUCT_MODES, selectedMode)) {
+      return false;
+    }
+    const panel = root.querySelector(`[data-subdub-mode-panel="${selectedMode}"]`);
+    if (!panel || panel.hidden || (typeof panel.getAttribute === "function" && panel.getAttribute("aria-hidden") === "true")) {
+      return false;
+    }
+    let target = null;
+    if (key === "mode") {
+      target = modeButton;
+    } else if (key === "source_subtitle_state") {
+      target = root.querySelector('[data-subdub-stage="1"] input[name="subdub-subtitle-source-state"]:checked');
+    } else if (Object.hasOwn(SUBDUB_REVIEW_EDIT_SELECTORS, key)) {
+      target = panel.querySelector(SUBDUB_REVIEW_EDIT_SELECTORS[key]);
+    } else {
+      return false;
+    }
+    if (!target || typeof target.focus !== "function") {
+      return false;
+    }
+    if (target.disabled || (typeof target.matches === "function" && target.matches(":disabled")) || (typeof target.getAttribute === "function" && target.getAttribute("disabled") !== null)) {
+      return false;
+    }
+    target.focus();
+    if (typeof target.scrollIntoView === "function") target.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
+    return true;
   }
 
   function updateSubDubSettingsSummary(root, nextMode) {
@@ -26951,7 +27263,10 @@
     const selected = root.querySelector('[data-subdub-mode-select][aria-selected="true"]');
     const mode = nextMode || selected && selected.getAttribute("data-subdub-mode-select");
     if (!Object.hasOwn(SUBDUB_PRODUCT_MODES, mode)) return false;
-    container.innerHTML = renderSubDubSettingsRows(subDubDraftSnapshot(), mode, root.getAttribute("lang"));
+    const nextHtml = subDubAuthoringMarkup(renderSubDubSettingsRows(subDubDraftSnapshot(), mode, root.getAttribute("lang")), root.dataset?.subdubAuthoringReady === "true");
+    if (container.__subDubSettingsRowsHtml === nextHtml) return true;
+    container.innerHTML = nextHtml;
+    container.__subDubSettingsRowsHtml = nextHtml;
     return true;
   }
 
@@ -27009,9 +27324,84 @@
     subDubWorkspaceDraftSession = token;
   }
 
+  function updateSubDubLanguageSearch(input) {
+    if (!input) return false;
+    if (typeof input.hasAttribute !== "function" || typeof input.getAttribute !== "function" || typeof input.closest !== "function") {
+      return false;
+    }
+    if (!input.hasAttribute("data-subdub-language-search")) return false;
+    if ((input.getAttribute("type") || input.type) !== "search" || (input.type && input.type !== "search")) return false;
+    if (input.disabled || input.hasAttribute("disabled")) return false;
+    const panel = input.closest(".portal-subdub-hub [data-subdub-mode-panel]");
+    if (!panel || typeof panel.querySelector !== "function") return false;
+    const doc = input.ownerDocument;
+    if (!doc || typeof doc.createElement !== "function") return false;
+    const select = panel.querySelector("select[name=\"target_language\"]");
+    if (!select || typeof select.replaceChildren !== "function") return false;
+    const status = panel.querySelector("[data-subdub-language-search-status]");
+    if (!status) return false;
+    if (!select.id || input.getAttribute("aria-controls") !== select.id) return false;
+    if (!status.id || input.getAttribute("aria-describedby") !== status.id) return false;
+    const currentValue = select.value;
+    const currentEntry = SUBDUB_LANGUAGE_CATALOG.find((entry) => entry.value === currentValue);
+    if (!currentEntry) return false;
+
+    let locale = input.getAttribute("data-subdub-language-locale") || "vi";
+    if (locale !== "vi" && locale !== "en" && locale !== "zh") {
+      locale = "vi";
+    }
+
+    const rawQuery = String(input.value || "").slice(0, 64);
+    const normalizedQuery = normalizeCatalogSearch(rawQuery);
+
+    const matchedEntries = SUBDUB_LANGUAGE_CATALOG.filter((entry) => {
+      if (!normalizedQuery) return true;
+      const targets = [entry.value, entry.labels.vi, entry.labels.en, entry.labels.zh];
+      return targets.some((text) => normalizeCatalogSearch(text).includes(normalizedQuery));
+    });
+    const count = matchedEntries.length;
+
+    const optionEntries = SUBDUB_LANGUAGE_CATALOG.filter(
+      (entry) => entry.value === currentValue || matchedEntries.includes(entry)
+    );
+
+    const options = optionEntries.map((entry) => {
+      const opt = doc.createElement("option");
+      opt.value = entry.value;
+      opt.textContent = entry.labels[locale] || entry.labels.vi;
+      if (entry.value === currentValue) {
+        opt.selected = true;
+      }
+      return opt;
+    });
+
+    select.replaceChildren(...options);
+    select.value = currentValue;
+
+    const copy = SUBDUB_PRESENTATION_COPY[locale] || SUBDUB_PRESENTATION_COPY.vi;
+    if (count > 0) {
+      status.textContent = (copy.targetLangSearchResults || "").replace("{count}", String(count));
+    } else {
+      status.textContent = copy.targetLangSearchEmpty || "";
+    }
+
+    return true;
+  }
+
+  function subDubAuthoringMarkup(html, ready) {
+    if (ready === true) return html;
+    return html.replace(/<(?:button|input|select|textarea)\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi, (tag) => {
+      const attributes = tag.replace(/"[^"]*"|'[^']*'/g, "");
+      return /\sdisabled(?:\s|=|\/?>)/i.test(attributes) ? tag : tag.replace(/^<([a-z]+)/i, "<$1 disabled");
+    });
+  }
+
   function renderSubDubHub(page, context) {
     const locale = resolveSubDubLocale(context);
     const copy = SUBDUB_PRESENTATION_COPY[locale] || SUBDUB_PRESENTATION_COPY.vi;
+    const session = context && context.session;
+    const authoringReady = Boolean(session && session.authenticated === true
+      && typeof session.csrfToken === "string" && session.csrfToken.length > 0);
     const draft = subDubDraftSnapshot();
 
     const currentModeKey = resolveSubDubJourneyMode(context);
@@ -27033,7 +27423,9 @@
         const value = subDubDraftValue(draft, currentModeKey, kind + "_volume", "100");
         const id = "subdub-" + kind + "-volume-" + suffix;
         const numberId = "subdub-" + kind + "-volume-number-" + suffix;
+        const toggleId = "subdub-original-audio-toggle-" + suffix;
         return `<div class="portal-subdub-volume-control">
+          ${kind === "original" ? `<label class="portal-subdub-radio-option" for="${safeText(toggleId)}"><input id="${safeText(toggleId)}" type="checkbox" role="switch" data-subdub-original-audio-toggle${Number(value) > 0 ? " checked" : ""}> ${safeText(copy.audioOriginalToggleLabel)}</label>` : ""}
           <label for="${safeText(id)}">${safeText(label)}</label>
           <span class="portal-subdub-volume-control__value">
             <input id="${safeText(id)}" type="range" min="0" max="${max}" step="1" data-subdub-local-volume="${kind}" value="${safeText(value)}" aria-describedby="${safeText(id)}-error subdub-volume-note-${safeText(suffix)}">
@@ -27077,21 +27469,38 @@
         auto_multi_3_8: "videodub|voice|auto_multi_speaker",
         smart_multi: "videodub|voice|auto_smart_multivoice"
       };
-      return `<fieldset class="portal-subdub-voice-lanes" data-status="ready" aria-describedby="subdub-voice-lane-note-${safeText(suffix)}">
+      const compactLabels = {
+        default_female: copy.voiceCompactFemale, default_male: copy.voiceCompactMale,
+        saved_voice: copy.voiceCompactSaved, custom_voice: copy.voiceCompactCustom,
+        auto_two: copy.voiceCompactAutoTwo, auto_multi_3_8: copy.voiceCompactAutoMulti,
+        smart_multi: copy.voiceCompactSmart
+      };
+      const groups = [
+        ["default", copy.voiceGroupDefault, lanes.slice(0, 2)],
+        ["saved", copy.voiceGroupSaved, lanes.slice(2, 3)],
+        ["add", copy.voiceGroupAdd, lanes.slice(3, 4)],
+        ["auto", copy.voiceGroupAuto, lanes.slice(4)]
+      ];
+      return `<fieldset class="portal-subdub-voice-lanes" data-status="ready" data-subdub-voice-grouped aria-describedby="subdub-voice-lane-note-${safeText(suffix)}">
         <legend>${safeText(copy.voiceLaneLabel)}</legend>
         <p class="portal-subdub-voice-lane-hint">${safeText(copy.voiceLaneHint)}</p>
-        <div class="portal-subdub-voice-lane-grid">
-          ${lanes.map(([value, label]) => `<label class="portal-subdub-voice-lane${value === subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") ? " is-selected" : ""}" data-status="ready" data-subdub-voice-lane="${safeText(value)}"${laneCallbacks[value] ? ` data-subdub-callback="${safeText(laneCallbacks[value])}"` : ""}>
-            <input type="radio" name="subdub_voice_lane_${safeText(suffix)}" data-subdub-voice-lane-input value="${safeText(value)}" ${value === subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") ? "checked" : ""}>
-            <span class="portal-subdub-voice-lane__body"><strong>${safeText(label)}</strong><small>${safeText(copy.voiceLaneGuarded)}</small></span>
-          </label>`).join("")}
+        <div class="portal-subdub-voice-groups">
+          ${groups.map(([groupKey, groupTitle, groupLanes]) => `<div class="portal-subdub-voice-group" role="group" data-subdub-voice-group="${safeText(groupKey)}" id="subdub-voice-group-${safeText(groupKey)}-${safeText(suffix)}" aria-labelledby="subdub-voice-group-title-${safeText(groupKey)}-${safeText(suffix)}">
+            <p class="portal-subdub-voice-group-title" id="subdub-voice-group-title-${safeText(groupKey)}-${safeText(suffix)}">${safeText(groupTitle)}</p>
+            <div class="portal-subdub-voice-lane-grid portal-subdub-voice-group-choices">
+              ${groupLanes.map(([value, label]) => `<label class="portal-subdub-voice-lane${value === subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") ? " is-selected" : ""}" data-status="ready" data-subdub-voice-lane="${safeText(value)}"${laneCallbacks[value] ? ` data-subdub-callback="${safeText(laneCallbacks[value])}"` : ""}>
+                <input type="radio" name="subdub_voice_lane_${safeText(suffix)}" data-subdub-voice-lane-input value="${safeText(value)}" ${value === subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") ? "checked" : ""} aria-label="${safeText(label)}">
+                <span class="portal-subdub-voice-lane__body"><strong>${safeText(compactLabels[value])}</strong></span>
+              </label>`).join("")}
+            </div>
+          </div>`).join("")}
         </div>
         <p class="portal-subdub-voice-lane-note" id="subdub-voice-lane-note-${safeText(suffix)}">${safeText(copy.voiceLaneGuarded)}</p>
         <a class="portal-button portal-button--quiet" href="${safeText(subDubVoiceCompanionUrl(subDubDraftValue(draft, currentModeKey, "voice_lane", "default_female") === "custom_voice" ? "/voice/clone" : "/voice/saved", currentModeKey))}" data-subdub-voice-library-link>${safeText(copy.voiceLibraryLink)}</a>
         <fieldset class="portal-subdub-smart-multi" data-subdub-smart-multi data-status="guarded" data-subdub-callback="videodub|voice|auto_smart_multivoice" aria-describedby="subdub-smart-multi-note-${safeText(suffix)}">
           <legend>${safeText(copy.smartMultiLabel)}</legend>
           <p id="subdub-smart-multi-note-${safeText(suffix)}">${safeText(copy.smartMultiHint)}</p>
-          <p class="portal-form-note">${safeText(copy.voiceLaneSmartMulti)} · ${safeText(copy.voiceLaneGuarded)}</p>
+          <p class="portal-form-note">${safeText(copy.smartMultiHint)}</p>
         </fieldset>
         <div class="portal-subdub-speaker-map" data-subdub-speaker-map data-status="guarded" aria-live="polite">
           <strong>${safeText(copy.speakerMapLabel)}</strong>
@@ -27152,8 +27561,8 @@
           </div>
         </div>
         <div class="portal-field">
-          <label class="portal-label">${safeText(copy.segmentRuleLabel)}</label>
-          <select class="portal-select" name="subtitle_format">
+          <label class="portal-label" for="subdub-source-line-rule">${safeText(copy.segmentRuleLabel)}</label>
+          <select class="portal-select" id="subdub-source-line-rule" name="subtitle_format">
             <option value="standard"${subDubDraftValue(draft, modeKey, "subtitle_format", "standard") === "standard" ? " selected" : ""}>${safeText(copy.ruleStandard)}</option>
             <option value="short"${subDubDraftValue(draft, modeKey, "subtitle_format", "standard") === "short" ? " selected" : ""}>${safeText(copy.ruleShort)}</option>
           </select>
@@ -27162,6 +27571,9 @@
     } else if (modeKey === "TRANSLATED_SUBTITLE") {
       stage2InnerHtml = `
         <div class="portal-field">
+          <label class="portal-label" for="subdub-target-lang-search">${safeText(copy.targetLangSearchLabel)}</label>
+          <input id="subdub-target-lang-search" type="search" class="portal-input" placeholder="${safeText(copy.targetLangSearchPlaceholder)}" autocomplete="off" spellcheck="false" maxlength="64" aria-controls="subdub-target-lang" aria-describedby="subdub-target-lang-search-status" data-subdub-language-search data-subdub-language-locale="${safeText(locale)}">
+          <small id="subdub-target-lang-search-status" class="portal-form-note" data-subdub-language-search-status role="status" aria-live="polite" aria-atomic="true">${safeText(copy.targetLangSearchResults.replace("{count}", "21"))}</small>
           <label class="portal-label" for="subdub-target-lang">${safeText(copy.targetLangLabel)}</label>
           <select id="subdub-target-lang" class="portal-select" name="target_language">
             ${renderSubDubLanguageOptions(locale, subDubDraftValue(draft, modeKey, "target_language", "vi"), false)}
@@ -27188,6 +27600,9 @@
     } else if (modeKey === "DUBBING_ONLY") {
       stage2InnerHtml = `
         <div class="portal-field">
+          <label class="portal-label" for="subdub-target-lang-dub-search">${safeText(copy.targetLangSearchLabel)}</label>
+          <input id="subdub-target-lang-dub-search" type="search" class="portal-input" placeholder="${safeText(copy.targetLangSearchPlaceholder)}" autocomplete="off" spellcheck="false" maxlength="64" aria-controls="subdub-target-lang-dub" aria-describedby="subdub-target-lang-dub-search-status" data-subdub-language-search data-subdub-language-locale="${safeText(locale)}">
+          <small id="subdub-target-lang-dub-search-status" class="portal-form-note" data-subdub-language-search-status role="status" aria-live="polite" aria-atomic="true">${safeText(copy.targetLangSearchResults.replace("{count}", "21"))}</small>
           <label class="portal-label" for="subdub-target-lang-dub">${safeText(copy.targetLangDubLabel)}</label>
           <select id="subdub-target-lang-dub" class="portal-select" name="target_language">
             ${renderSubDubLanguageOptions(locale, subDubDraftValue(draft, modeKey, "target_language", "vi"), false)}
@@ -27201,6 +27616,9 @@
     } else if (modeKey === "SUBTITLE_PLUS_DUBBING") {
       stage2InnerHtml = `
         <div class="portal-field" style="background:var(--portal-bg-card-subtle, rgba(255,255,255,0.02)); padding:16px; border-radius:8px; border:1px solid var(--portal-border, #2d3748);">
+          <label class="portal-label" for="subdub-shared-target-lang-search">${safeText(copy.targetLangSearchLabel)}</label>
+          <input id="subdub-shared-target-lang-search" type="search" class="portal-input" placeholder="${safeText(copy.targetLangSearchPlaceholder)}" autocomplete="off" spellcheck="false" maxlength="64" aria-controls="subdub-shared-target-lang" aria-describedby="subdub-shared-target-lang-search-status" data-subdub-language-search data-subdub-language-locale="${safeText(locale)}">
+          <small id="subdub-shared-target-lang-search-status" class="portal-form-note" data-subdub-language-search-status role="status" aria-live="polite" aria-atomic="true">${safeText(copy.targetLangSearchResults.replace("{count}", "21"))}</small>
           <label class="portal-label" for="subdub-shared-target-lang"><strong>${safeText(copy.sharedTargetLangLabel)}</strong></label>
           <p style="margin:4px 0 12px; font-size:13px; color:var(--portal-muted, #8fa3b7);">${safeText(copy.sharedTargetLangHint)}</p>
           <select id="subdub-shared-target-lang" class="portal-select" name="target_language">
@@ -27214,8 +27632,8 @@
           <div class="portal-subdub-config-card">
             <h4>${safeText(copy.subtitleConfigHeading)}</h4>
             <div class="portal-field">
-              <label class="portal-label">${safeText(copy.subDisplayLabel)}</label>
-              <select class="portal-select" name="sub_display_type">
+              <label class="portal-label" for="subdub-combo-display-type">${safeText(copy.subDisplayLabel)}</label>
+              <select class="portal-select" id="subdub-combo-display-type" name="sub_display_type">
                 <option value="bilingual"${subDubDraftValue(draft, modeKey, "sub_display_type", "bilingual") === "bilingual" ? " selected" : ""}>${safeText(copy.subDisplayBilingual)}</option>
                 <option value="single"${subDubDraftValue(draft, modeKey, "sub_display_type", "bilingual") === "single" ? " selected" : ""}>${safeText(copy.subDisplaySingle)}</option>
               </select>
@@ -27272,15 +27690,16 @@
         ${renderSubDubSettingsRows(draft, currentModeKey, locale)}
       </div>
       <div class="portal-summary-list" style="margin-bottom:16px;">
-        <div class="portal-summary-item">
+        <div class="portal-summary-item portal-subdub-review-edit-row">
           <span class="portal-summary-key">${safeText(copy.summaryModeKey)}</span>
           <span class="portal-summary-value" data-subdub-summary-mode>${safeText(modeCopy.title)} (${safeText(modeCopy.badge)})</span>
+          <button class="portal-subdub-review-edit" type="button" data-subdub-review-edit="mode" aria-label="${safeText(copy.summaryEditAction + ": " + copy.summaryModeKey)}">${safeText(copy.summaryEditAction)}</button>
         </div>
-        <div class="portal-summary-item">
+        <div class="portal-summary-item" data-subdub-summary-placeholder="unavailable">
           <span class="portal-summary-key">${safeText(copy.summaryPriceKey)}</span>
           <span class="portal-summary-value">${safeText(copy.summaryPriceValue)}</span>
         </div>
-        <div class="portal-summary-item">
+        <div class="portal-summary-item" data-subdub-summary-placeholder="unavailable">
           <span class="portal-summary-key">${safeText(copy.summaryCostKey)}</span>
           <span class="portal-summary-value">${safeText(copy.summaryCostValue)}</span>
         </div>
@@ -27354,8 +27773,9 @@
       </div>
     </section>`;
 
-    const rendered = `<article class="portal-page portal-subdub-hub portal-subdub-journey-view" lang="${safeText(locale)}">
+    const rendered = `<article class="portal-page portal-subdub-hub portal-subdub-journey-view" lang="${safeText(locale)}" data-subdub-authoring-ready="${authoringReady ? "true" : "false"}">
       ${renderHero({ ...page, description: copy.heroSubtitle }, context)}
+      ${authoringReady ? "" : `<p class="portal-form-note" role="status" data-subdub-authoring-session-status>${safeText(copy.authoringSessionPending)}</p>`}
       <section class="portal-subdub-mode-picker" aria-labelledby="subdub-mode-picker-title">
         <h2 class="portal-card-title" id="subdub-mode-picker-title">${safeText(copy.modeSelectorLabel)}</h2>
       <nav class="portal-subdub-mode-nav" role="tablist" aria-orientation="horizontal" aria-label="${safeText(copy.modeSelectorLabel)}">
@@ -27368,7 +27788,7 @@
       ${stage4Html}
       ${companionToolsHtml}
     </article>`;
-    return rendered;
+    return subDubAuthoringMarkup(rendered, authoringReady);
   }
 
   function renderDocumentHub(page, context) {
@@ -30239,7 +30659,7 @@
     const loading = context.supportAdminReadState === "loading";
     const copy = (key, fallback, params) => safeText(adminSupportText(key, fallback, params));
     if (!allowed && !loading) {
-      return `<article class="portal-page portal-support-admin">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><h2>${copy("guard.title", "Quyền hỗ trợ chưa được cấp")}</h2><p>${copy("guard.body", "Máy chủ chỉ mở dữ liệu chăm sóc khách hàng cho tài khoản Web đã đăng nhập có quyền phù hợp.")}</p><div class="portal-state-meta"><span>${copy("guard.serverRole", "Vai trò do máy chủ xác minh")}</span><span>${copy("guard.noBotBridge", "Không gọi cầu nối Bot")}</span><span>${copy("guard.noPiiFallback", "Không dùng dữ liệu cá nhân dự phòng")}</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-support-admin">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><h2>${copy("guard.title", "Quyền hỗ trợ chưa được cấp")}</h2><p>${copy("guard.body", "Máy chủ chỉ mở dữ liệu chăm sóc khách hàng cho tài khoản Web đã đăng nhập có quyền phù hợp.")}</p></div></div></section></article>`;
     }
     if (loading) {
       return `<article class="portal-page portal-support-admin">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>${copy("loading.title", "Đang kiểm tra quyền hỗ trợ")}</h2><p>${copy("loading.body", "Máy chủ đang xác thực phiên đăng nhập và vai trò trên Web trước khi nạp yêu cầu vận hành.")}</p></div></div></section></article>`;
@@ -32293,11 +32713,17 @@
     const amount = isQuote ? voiceQuoteAmount(flow) : null;
     const quote = isQuote ? `<section class="portal-music-quote" data-music-quote><h4>${safeText(t("quote", "Báo giá"))}</h4><dl class="portal-summary-list"><div class="portal-summary-item"><dt>${safeText(t("price", "Giá bán"))}</dt><dd data-music-sale-price>${amount === null ? "—" : safeText(`${amount} Xu`)}</dd></div></dl><p>${safeText(t(amount === null ? "priceUnknown" : "quoteNote", ""))}</p></section>` : "";
     const suggestions = available && Array.isArray(values.suggestions) ? renderMusicCanonicalSuggestions(values.suggestions, route, featureDraftTarget(flow, route)) : "";
+    const snapshot = valid && flow.phase === "estimate" && status === "awaiting_confirm" && available
+      && !Object.prototype.hasOwnProperty.call(values, "suggestions")
+      && typeof musicSuggestionSnapshots !== "undefined" && typeof musicSuggestionSnapshotSession === "string" && musicSuggestionSnapshotSession
+      ? musicSuggestionSnapshots.get(route) : null;
+    const retainedSuggestions = snapshot && snapshot.feature === expected && Array.isArray(snapshot.suggestions) && snapshot.suggestions.length
+      ? `<details class="portal-music-suggestion-history" data-music-suggestion-history><summary>${safeText(musicProductText("suggestion.historyTitle", "Xem lại các phương án"))}</summary><p>${safeText(musicProductText("suggestion.historyNote", "Chọn hướng khác sẽ cần báo giá mới."))}</p>${renderMusicCanonicalSuggestions(snapshot.suggestions, route, featureDraftTarget(flow, route))}</details>` : "";
     const tracking = valid && flow.phase === "confirm" ? safeFeatureTracking(flow) : null;
     const trackingMarkup = valid && flow.phase === "confirm"
       ? `<div class="portal-music-tracking"><p>${safeText(t(tracking ? "trackingReady" : "trackingPending", ""))}</p><a class="portal-button portal-button--quiet" href="${tracking ? `/jobs/${encodeURIComponent(tracking.id)}` : "/jobs"}">${safeText(t("track", "Xem công việc"))}</a></div>` : "";
     const report = valid && flow.phase === "confirm" ? renderMusicCanonicalReport(flow) : "";
-    return `<div class="portal-music-flow" data-music-flow-state="${safeText(status)}"><div class="portal-state" data-state="${safeText(status)}"><div><h3>${safeText(t(`state.${status}`, t("state.guarded", "Chưa thể tiếp tục")))}</h3><p>${safeText(t(flow && flow.phase === "confirm" ? "processingNote" : "planningNote", ""))}</p></div></div>${quote}${suggestions}${report}${trackingMarkup}</div>`;
+    return `<div class="portal-music-flow" data-music-flow-state="${safeText(status)}"><div class="portal-state" data-state="${safeText(status)}"><div><h3>${safeText(t(`state.${status}`, t("state.guarded", "Chưa thể tiếp tục")))}</h3><p>${safeText(t(flow && flow.phase === "confirm" ? "processingNote" : "planningNote", ""))}</p></div></div>${quote}${suggestions}${retainedSuggestions}${report}${trackingMarkup}</div>`;
   }
 
   function renderCanonicalSuggestions(value, route, field) {
@@ -32920,7 +33346,7 @@
     const visibleForm = previousFormCollapsed ? `<details class="portal-voice-task-form" data-voice-task-form><summary>${safeText(voiceUiText("flow.form", "Biểu mẫu giọng đọc"))}</summary>${formContent}</details>` : formContent;
     const outputTitle = videoTask ? safeText(uiText("videoUi.output.title", "")) : voiceTask ? safeText(voiceUiText("output.title", "")) : musicTask ? safeText(musicProductText("output.title", "Kết quả và trạng thái")) : "Output & trạng thái";
     const outputSubtitle = videoTask || voiceTask ? "" : musicTask ? safeText(musicProductText("output.subtitle", "Không tạo âm thanh, trình phát, tệp hoặc báo giá giả khi máy chủ chưa xác nhận.")) : "Không tạo text, media, transcript hoặc file giả để thay thế engine thật.";
-    const outputSection = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${outputTitle}</h2>${outputSubtitle ? `<p class="portal-card-subtitle">${outputSubtitle}</p>` : ""}</div>${voiceTask ? "" : badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section>`;
+    const outputSection = musicTask && !(flow && typeof flow === "object" && !Array.isArray(flow) && Object.keys(flow).length > 0) ? "" : `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${outputTitle}</h2>${outputSubtitle ? `<p class="portal-card-subtitle">${outputSubtitle}</p>` : ""}</div>${voiceTask ? "" : badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section>`;
     return `<article class="portal-page${videoTask ? " portal-feature-workspace--video-task" : voiceTask ? " portal-feature-workspace--voice-task" : musicTask ? " portal-feature-workspace--music-task" : ""}">${renderHero(page, context)}${voiceWorkspaceNav}${voiceTask || musicTask ? "" : `<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>`}
       ${interactiveWorkbench}${musicGuidance}${flowFirst ? outputSection : ""}
       <div class="portal-work-grid"><div>${visibleForm}${subtitleStudioCompanion}</div>${voiceTask || musicTask ? "" : `<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside>`}</div>
@@ -32939,7 +33365,7 @@
     const statusLabel = (value) => t(`library.state.${["ready", "read_only", "guarded", "disabled", "queued", "processing", "completed", "failed", "error", "archived", "pending"].includes(value) ? value : "unknown"}`, "");
     const libraryActions = `<div class="portal-voice-library-actions" data-voice-library-actions><p class="portal-form-note">${safeText(t("library.actionsDescription", "Mở công cụ để xem các lựa chọn giọng. Giọng đang xem chưa được chuyển sang công cụ khác."))}</p><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/subdub?mode=dubbing_only">${safeText(t("library.openSubDub", "Mở SubDub"))} <span aria-hidden="true">→</span></a><a class="portal-button portal-button--quiet" href="/video/product">${safeText(t("library.openVideo", "Mở công cụ video"))} <span aria-hidden="true">→</span></a></div></div>`;
     const list = profiles.length
-      ? `<div class="portal-voice-inventory-list">${profiles.map((profile) => `<details class="portal-voice-inventory-card"><summary><strong>${safeText(profile.display_name || t("library.unnamed", "Giọng chưa đặt tên"))}${profile.is_default ? ` · ${safeText(t("library.default", "Mặc định"))}` : ""}</strong><span>${safeText(t(profile.tts_ready ? "library.ready" : "library.guarded", ""))}</span></summary><dl><div><dt>${safeText(t("library.status", "Trạng thái"))}</dt><dd><span data-status="${safeText(profile.status || "guarded")}">${safeText(statusLabel(String(profile.status || "guarded")))}</span></dd></div><div><dt>${safeText(t("library.consent", "Quyền sử dụng"))}</dt><dd>${safeText(consent(String(profile.consent_status || "")))}</dd></div><div><dt>${safeText(t("library.preview", "Nghe thử"))}</dt><dd>${safeText(t(profile.preview_ready ? "library.previewMetadata" : "library.noPreview", ""))}</dd></div><div><dt>${safeText(t("library.updated", "Cập nhật"))}</dt><dd>${safeText(profile.updated_at || profile.created_at || "—")}</dd></div></dl><p class="portal-form-note">${safeText(t("library.manageGuarded", "Chưa thể đổi tên, đặt mặc định, xóa hoặc nghe thử giọng trong trang này."))}</p></details>`).join("")}</div>`
+      ? `<p class="portal-form-note">${safeText(t("library.manageGuarded", "Chưa thể đổi tên, đặt mặc định, xóa hoặc nghe thử giọng trong trang này."))}</p><div class="portal-voice-inventory-list">${profiles.map((profile) => `<details class="portal-voice-inventory-card"><summary><strong>${safeText(profile.display_name || t("library.unnamed", "Giọng chưa đặt tên"))}${profile.is_default === true ? ` · ${safeText(t("library.default", "Mặc định"))}` : ""}</strong><span>${safeText(t(profile.tts_ready === true ? "library.ready" : "library.guarded", ""))}</span></summary><dl><div><dt>${safeText(t("library.status", "Trạng thái"))}</dt><dd><span data-status="${safeText(profile.status || "guarded")}">${safeText(statusLabel(String(profile.status || "guarded")))}</span></dd></div><div><dt>${safeText(t("library.consent", "Quyền sử dụng"))}</dt><dd>${safeText(consent(String(profile.consent_status || "")))}</dd></div><div><dt>${safeText(t("library.preview", "Nghe thử"))}</dt><dd>${safeText(t(profile.preview_ready === true ? "library.previewMetadata" : "library.noPreview", ""))}</dd></div><div><dt>${safeText(t("library.updated", "Cập nhật"))}</dt><dd>${safeText(profile.updated_at || profile.created_at || "—")}</dd></div></dl></details>`).join("")}</div>`
       : renderEmpty(t("library.empty", "Chưa có giọng đã lưu"), t("library.emptyHelp", ""), ICONS.voice);
     const snapshotNote = profiles.length === 50 ? `<p class="portal-form-note">${safeText(t("library.snapshotLimit", "Đang hiển thị tối đa 50 giọng được tải về. Danh sách có thể chưa đầy đủ."))}</p>` : "";
     return `<section class="portal-card portal-card-pad portal-voice-inventory" data-voice-inventory-state="ready">${heading}${libraryActions}${snapshotNote}${list}</section>`;
@@ -34088,7 +34514,7 @@
       return surface(renderRowsTable(
         [adminGenericText("pricing.column.packageId", "Mã gói"), adminGenericText("pricing.column.name", "Tên gói / Dịch vụ"), adminGenericText("pricing.column.family", "Phân loại"), adminGenericText("pricing.column.priceXu", "Giá Xu"), adminGenericText("pricing.column.priceVnd", "Giá VND"), adminGenericText("pricing.column.limits", "Hạn mức / Mô tả"), adminGenericText("pricing.column.status", "Trạng thái"), adminGenericText("pricing.column.updatedAt", "Cập nhật"), adminGenericText("pricing.column.actions", "Thao tác")],
         itemsList,
-        (item) => `<td><code>${safeText(item.code || item.id || "—")}</code></td><td><strong>${safeText(item.name || item.label || "—")}</strong></td><td><span class="portal-badge portal-badge--info">${safeText(item.family || item.type || adminGenericText("pricing.family.default", "Dịch vụ"))}</span></td><td><strong style="color: var(--portal-accent, #0ea5e9);">${safeText(adminNumber(item.price_xu !== undefined ? item.price_xu : item.xu, " Xu"))}</strong></td><td>${safeText(adminNumber(item.price_vnd !== undefined ? item.price_vnd : item.amount_vnd, " đ"))}</td><td><small>${safeText(item.limits || item.note || item.description || "—")}</small></td><td>${adminManualTopupStatusBadge(item.status || "active")}</td><td><small>${safeText(item.updated_at || "—")}</small></td><td><button class="portal-button portal-button--quiet portal-button--small" type="button" disabled title="${safeText(item.write_locked_reason || adminGenericText("pricing.action.lockedReason", "Bảng giá do Core Bridge chuẩn quản trị; thay đổi giá cần cập nhật cấu hình trung tâm."))}">${safeText(adminGenericText("pricing.action.edit", "Sửa"))}</button></td>`,
+        (item) => `<td><code>${safeText(item.code || item.id || "—")}</code></td><td><strong>${safeText(item.name || item.label || "—")}</strong></td><td><span class="portal-badge portal-badge--info">${safeText(item.family || item.type || adminGenericText("pricing.family.default", "Dịch vụ"))}</span></td><td><strong style="color: var(--portal-accent, #0ea5e9);">${safeText(adminNumber(item.price_xu !== undefined ? item.price_xu : item.xu, " Xu"))}</strong></td><td>${safeText(adminNumber(item.amount_vnd !== undefined ? item.amount_vnd : item.vnd, " đ"))}</td><td><small>${safeText(item.limits || item.note || item.description || "—")}</small></td><td>${adminManualTopupStatusBadge(item.status || "active")}</td><td><small>${safeText(item.updated_at || "—")}</small></td><td><button class="portal-button portal-button--quiet portal-button--small" type="button" disabled title="${safeText(item.write_locked_reason || adminGenericText("pricing.action.lockedReason", "Bảng giá do Core Bridge chuẩn quản trị; thay đổi giá cần cập nhật cấu hình trung tâm."))}">${safeText(adminGenericText("pricing.action.edit", "Sửa"))}</button></td>`,
         adminGenericText("pricing.emptyTitle", "Chưa có bảng giá được cấp"),
         adminGenericText("pricing.emptyBody", "Bảng giá và gói cước do Core Bridge chuẩn quản trị; Web hiển thị bảng giá đã được xác minh.")
       ));
@@ -36155,7 +36581,7 @@
       ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">⌁</span><div><strong>Handoff Bot canonical</strong><p>Mở đúng Bot đã cấu hình, sau đó gửi lệnh. Portal không truyền Telegram ID, nội dung ghi chú, trạng thái reward hay dữ liệu riêng tư sang Telegram.</p></div><a class="portal-button portal-button--quiet" href="${safeText(botUrl)}" target="_blank" rel="noopener noreferrer">Mở Bot</a></div>`
       : `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Bot chưa có URL công khai</strong><p>Web đang chờ <code>BOT_USERNAME</code> hợp lệ. Các lệnh bên dưới được giữ khóa để không tạo handoff mơ hồ.</p></div></div>`;
     const cards = commands.map((entry) => `<article class="portal-bot-companion-card"><div class="portal-bot-companion-card-head"><code class="portal-link-code">${safeText(entry.command)}</code>${badge("read_only")}</div><h3>${safeText(entry.title)}</h3><p>${safeText(entry.text)}</p><div class="portal-form-footer"><span class="portal-form-note">State, quyền lợi và lịch sử được Bot xác minh.</span><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-bot-companion-command" data-copy-text="${safeText(entry.command)}"${botReady ? "" : " disabled title=\"Cần BOT_USERNAME hợp lệ để mở đúng Bot.\""}>Sao chép lệnh</button></div></article>`).join("");
-    return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-bot-companion-intro"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>Tiếp tục trong Bot, không nhân bản state</h2><p>${safeText(page.description)}</p><div class="portal-state-meta"><span>Bot là authority</span><span>Không có dữ liệu giả</span><span>Không gửi identity qua browser</span></div></div></div></section>${connectionState}<section class="portal-bot-companion-grid" aria-label="Lệnh Bot canonical">${cards || renderEmpty("Chưa có lệnh Bot được công bố", "Module này chưa có handoff an toàn.", "⌁")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới dữ liệu</h2><p class="portal-card-subtitle">Các module này giữ parity điều hướng với Bot nhưng không nhận dữ liệu/customer state từ browser.</p></div>${badge("read_only")}</div>${renderNotes(page)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account">Tài khoản & liên kết</a><a class="portal-button portal-button--quiet" href="/support">Cần hỗ trợ</a></div></section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-bot-companion-intro"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>Tiếp tục trong Bot, không nhân bản state</h2><p>${safeText(page.description)}</p></div></div></section>${connectionState}<section class="portal-bot-companion-grid" aria-label="Lệnh Bot canonical">${cards || renderEmpty("Chưa có lệnh Bot được công bố", "Module này chưa có handoff an toàn.", "⌁")}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới dữ liệu</h2><p class="portal-card-subtitle">Các module này giữ parity điều hướng với Bot nhưng không nhận dữ liệu/customer state từ browser.</p></div>${badge("read_only")}</div>${renderNotes(page)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account">Tài khoản & liên kết</a><a class="portal-button portal-button--quiet" href="/support">Cần hỗ trợ</a></div></section></article>`;
   }
 
   const ANALYTICS_BOT_COMMAND_PATTERN = /^\/(?:campaign_report)$/;
@@ -36193,7 +36619,7 @@
     const resultNotice = isGrowth
       ? "Bot chỉ charge khi dữ liệu thật có mặt và workflow phân tích tiếp tục. Kết quả AI xuất hiện trong chính cuộc hội thoại Telegram."
       : "Bot chọn TXT/CSV, tạo file và xử lý lỗi/hoàn Xu nếu cần. Web không tự tổng hợp performance hay doanh thu.";
-    return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-bot-companion-intro"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>Analytics nằm trong Bot canonical</h2><p>${safeText(page.description)}</p><div class="portal-state-meta"><span>Không có report giả</span><span>Không charge tại browser</span><span>Không lộ identity</span></div></div></div></section>${connectionState}${form}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Kết quả & chi phí</h2><p class="portal-card-subtitle">${safeText(resultNotice)}</p></div>${badge("read_only")}</div>${renderNotes(page)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/jobs">Job Center</a><a class="portal-button portal-button--quiet" href="/wallet">Ví Xu canonical</a><a class="portal-button portal-button--quiet" href="/support">Cần hỗ trợ</a></div></section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-bot-companion-intro"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>Analytics nằm trong Bot canonical</h2><p>${safeText(page.description)}</p></div></div></section>${connectionState}${form}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Kết quả & chi phí</h2><p class="portal-card-subtitle">${safeText(resultNotice)}</p></div>${badge("read_only")}</div>${renderNotes(page)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/jobs">Job Center</a><a class="portal-button portal-button--quiet" href="/wallet">Ví Xu canonical</a><a class="portal-button portal-button--quiet" href="/support">Cần hỗ trợ</a></div></section></article>`;
   }
 
   const CAMPAIGN_PLAN_STATUSES = Object.freeze(["draft", "review", "approved", "scheduled", "archived"]);
@@ -36405,12 +36831,12 @@
     const signedSession = Boolean(context && context.session && context.session.authenticated === true);
     const canView = Boolean(context && context.capabilities && context.capabilities["campaigns-refresh"] === true);
     const canCreate = Boolean(context && context.session && context.session.authenticated === true && context.session.csrfReady === true && context.capabilities && context.capabilities["campaign-create"] === true);
-    if (!signedSession) return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><h2>${safeText(campaignText("board.signedTitle", "Bảng kế hoạch đang được bảo vệ"))}</h2><p>${safeText(campaignText("board.signedBody", "Chỉ phiên Web đã đăng nhập mới xem được dữ liệu kế hoạch riêng. Không thay bằng danh sách Bot, bộ nhớ trình duyệt hoặc hàng đợi đăng bài."))}</p><div class="portal-state-meta"><span>Phiên đăng nhập</span><span>Phạm vi tài khoản</span><span>Không có đăng bài giả</span></div></div></div></section></article>`;
+    if (!signedSession) return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><div><h2>${safeText(campaignText("board.signedTitle", "Bảng kế hoạch đang được bảo vệ"))}</h2><p>${safeText(campaignText("board.signedBody", "Chỉ phiên Web đã đăng nhập mới xem được dữ liệu kế hoạch riêng. Không thay bằng danh sách Bot, bộ nhớ trình duyệt hoặc hàng đợi đăng bài."))}</p></div></div></section></article>`;
     if (authoringRoute) return renderCampaignPlannerAuthoring(page, context, canAct(page, context));
     if (!canView) return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><h2>${safeText(campaignText("board.unavailableTitle", "Bảng kế hoạch chưa sẵn sàng"))}</h2><p>${safeText(campaignText("board.unavailableBody", "Máy chủ chưa cấp quyền đọc dữ liệu trong phiên này; dữ liệu cũ không được hiển thị thay thế."))}</p></div></div></section></article>`;
     const readState = campaignPlannerReadState(context);
-    if (readState === "loading") return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.refresh)}</span><div><h2>${safeText(campaignText("board.loadingTitle", "Đang xác minh kế hoạch riêng"))}</h2><p>${safeText(campaignText("board.loadingBody", "Đang tải dữ liệu theo tài khoản hiện tại. Không dùng kế hoạch cũ, danh sách Bot hoặc dữ liệu trình duyệt trong lúc chờ."))}</p><div class="portal-state-meta"><span>Không dùng bộ nhớ cũ</span><span>Không có dữ liệu Bot thay thế</span><span>Máy chủ xác minh quyền</span></div></div></div></section></article>`;
-    if (readState !== "ready") return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><h2>${safeText(campaignText("board.failedTitle", "Chưa thể tải kế hoạch riêng"))}</h2><p>${safeText(campaignText("board.failedBody", "Máy chủ chưa trả dữ liệu an toàn nên trạng thái cũ đã được xóa. Hãy thử lại; không dùng dữ liệu Bot, bộ nhớ đệm hoặc hoạt động mô phỏng."))}</p><div class="portal-state-meta"><span>Không có dữ liệu cũ</span><span>Không có kết nối thay thế</span><span>Không có hoạt động giả</span></div><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="campaigns-refresh" data-portal-route="/campaigns">${safeText(campaignText("board.retry", "Thử tải lại kế hoạch"))}</button></div></div></div></section></article>`;
+    if (readState === "loading") return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.refresh)}</span><div><h2>${safeText(campaignText("board.loadingTitle", "Đang xác minh kế hoạch riêng"))}</h2><p>${safeText(campaignText("board.loadingBody", "Đang tải dữ liệu theo tài khoản hiện tại. Không dùng kế hoạch cũ, danh sách Bot hoặc dữ liệu trình duyệt trong lúc chờ."))}</p></div></div></section></article>`;
+    if (readState !== "ready") return `<article class="portal-page portal-campaign-planner portal-campaign-operations-board">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><h2>${safeText(campaignText("board.failedTitle", "Chưa thể tải kế hoạch riêng"))}</h2><p>${safeText(campaignText("board.failedBody", "Máy chủ chưa trả dữ liệu an toàn nên trạng thái cũ đã được xóa. Hãy thử lại; không dùng dữ liệu Bot, bộ nhớ đệm hoặc hoạt động mô phỏng."))}</p><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="campaigns-refresh" data-portal-route="/campaigns">${safeText(campaignText("board.retry", "Thử tải lại kế hoạch"))}</button></div></div></div></section></article>`;
     const plans = campaignPlanItems(context);
     const reviewCount = plans.filter((plan) => campaignPlanStatus(plan) === "review").length;
     const readyCount = plans.filter((plan) => ["approved", "scheduled"].includes(campaignPlanStatus(plan))).length;
@@ -36453,7 +36879,7 @@
       ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(campaignText("detail.reviewNote", "Ghi chú tự rà soát"))}</h2><p class="portal-card-subtitle">${safeText(campaignText("detail.reviewNoteBody", "Ghi chú này chỉ thuộc kế hoạch riêng trong ứng dụng."))}</p></div>${badge("read_only")}</div><div class="portal-result-text">${safeText(reviewNote)}</div></section>`
       : `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(campaignText("detail.reviewNote", "Ghi chú tự rà soát"))}</h2><p class="portal-card-subtitle">${safeText(campaignText("detail.reviewNoteEmpty", "Chưa có ghi chú. Bạn có thể thêm ghi chú khi đổi trạng thái kế hoạch."))}</p></div>${badge("empty")}</div></section>`;
     return `<article class="portal-page portal-campaign-detail">${renderHero(page, context)}
-      <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>${safeText(campaignText("detail.title", "Chi tiết kế hoạch"))}</h2><p>${safeText(campaignText("detail.boundaryBody", "Trang này quản lý brief, lời kêu gọi hành động, mốc nội bộ và phần tự rà soát của kế hoạch thuộc tài khoản hiện tại. Không tạo hàng đợi đăng bài, phân tích, doanh thu, tác vụ, Xu hoặc PayOS."))}</p><div class="portal-state-meta"><span>${safeText(campaignText("detail.idNote", "Mã kế hoạch riêng"))}</span><span>CSRF + chống gửi lặp</span><span>Không gọi Bot hoặc nhà cung cấp</span></div></div></div></section>
+      <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>${safeText(campaignText("detail.title", "Chi tiết kế hoạch"))}</h2><p>${safeText(campaignText("detail.boundaryBody", "Trang này quản lý brief, lời kêu gọi hành động, mốc nội bộ và phần tự rà soát của kế hoạch thuộc tài khoản hiện tại. Không tạo hàng đợi đăng bài, phân tích, doanh thu, tác vụ, Xu hoặc PayOS."))}</p></div></div></section>
       <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-eyebrow">${safeText(platform)} · ${safeText(objective)}</span><h2 class="portal-card-title">${safeText(String(plan.title || campaignText("board.noTitle", "Kế hoạch chưa đặt tên")))}</h2><p class="portal-card-subtitle">${safeText(campaignText("detail.idBoundary", "Mã này chỉ dùng trong tài khoản hiện tại và không đọc chéo dữ liệu."))} <code>${safeText(expectedId)}</code></p></div>${badge(status)}</div>${facts}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/campaigns">${safeText(campaignText("detail.allPlans", "Tất cả kế hoạch"))}</a><a class="portal-button portal-button--quiet" href="/calendar">${safeText(campaignText("detail.openCalendar", "Mở lịch"))}</a><a class="portal-button portal-button--quiet" href="/approvals">${safeText(campaignText("detail.openApprovals", "Mở hàng tự rà soát"))}</a></div></section><aside class="portal-stack">${reviewCard}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(campaignText("detail.canonicalTitle", "Ranh giới nguồn chuẩn"))}</h2><p class="portal-card-subtitle">${safeText(campaignText("detail.canonicalBody", "Để xem phân tích, báo cáo hoặc đăng bài thật, hãy dùng quy trình Bot đã được phê duyệt."))}</p></div>${badge("read_only")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/growth/ai">Growth Review thủ công</a><a class="portal-button portal-button--quiet" href="/campaign/report">Báo cáo kế hoạch</a></div></section></aside></div>
       ${renderCampaignScheduleControls(plan, context, actionRoute)}
       <section class="portal-campaign-board" aria-label="${safeText(campaignText("detail.editSummary", "Chỉnh sửa brief và mốc lịch"))}"><article class="portal-campaign-card"><div class="portal-campaign-card-head"><div><h2>${safeText(campaignText("detail.editSummary", "Chỉnh sửa brief và mốc lịch"))}</h2><p>${safeText(campaignText("detail.editConfirm", "Chỉ cập nhật dữ liệu mô tả của kế hoạch này."))}</p></div>${badge(editEnabled ? "ready" : "guarded")}</div>${campaignEditControls(plan, editEnabled, actionRoute)}</article><article class="portal-campaign-card"><div class="portal-campaign-card-head"><div><h2>${safeText(campaignText("approvals.title", "Tự rà soát"))}</h2><p>${safeText(campaignText("detail.statusHelp", "Chỉ thay đổi trạng thái riêng của kế hoạch này."))}</p></div>${badge(reviewEnabled ? status : "guarded")}</div>${campaignStatusControls(plan, reviewEnabled, actionRoute)}</article></section>
@@ -36576,7 +37002,7 @@
       ? reviewPlans.map((plan) => `<article class="portal-campaign-card" id="approval-${safeText(plan.id)}"><div class="portal-campaign-card-head"><div><div class="portal-eyebrow">${safeText(campaignPlatformText(plan.platform))} · ${safeText(campaignObjectiveText(plan.objective))}</div><h3><a href="${safeText(campaignPlanHref(plan))}">${safeText(String(plan.title || campaignText("board.noTitle", "Kế hoạch chưa đặt tên")))}</a></h3></div>${badge("review")}</div><dl class="portal-campaign-facts"><div><dt>${safeText(campaignText("approvals.date", "Mốc lịch"))}</dt><dd>${safeText(campaignScheduleLabel(plan.scheduled_for))}</dd></div><div><dt>${safeText(campaignText("board.target", "Liên kết đích"))}</dt><dd>${campaignDestinationLink(plan.destination_url)}</dd></div></dl><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${safeText(campaignPlanHref(plan))}">${safeText(campaignText("approvals.openDetail", "Mở chi tiết →"))}</a></div>${campaignStatusControls(plan, reviewEnabled)}</article>`).join("")
       : renderEmpty(campaignText("approvals.emptyTitle", "Không có kế hoạch cần tự rà soát"), campaignText("approvals.emptyBody", "Khi bạn chuyển một bản nháp sang tự rà soát, bản đó sẽ xuất hiện tại đây. Đây không phải hàng duyệt của quản trị hoặc Bot."), "✓");
     return `<article class="portal-page portal-campaign-approvals">${renderHero(page, context)}
-      <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>${safeText(campaignText("approvals.boundaryTitle", "Hàng tự rà soát của riêng bạn"))}</h2><p>${safeText(campaignText("approvals.boundaryBody", "Chỉ bạn thay đổi vòng đời của kế hoạch riêng. Trạng thái sẵn sàng tại đây không cấp quyền cho kênh, hàng đợi đăng bài, tác vụ, Xu hay nhà cung cấp."))}</p><div class="portal-state-meta"><span>${safeText(campaignText("approvals.noAdmin", "Không thay thế hàng duyệt quản trị"))}</span><span>${safeText(campaignText("approvals.noPublish", "Không đăng bài"))}</span><span>${safeText(campaignText("approvals.audit", "Máy chủ ghi nhận thay đổi"))}</span></div></div></div></section>
+      <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>${safeText(campaignText("approvals.boundaryTitle", "Hàng tự rà soát của riêng bạn"))}</h2><p>${safeText(campaignText("approvals.boundaryBody", "Chỉ bạn thay đổi vòng đời của kế hoạch riêng. Trạng thái sẵn sàng tại đây không cấp quyền cho kênh, hàng đợi đăng bài, tác vụ, Xu hay nhà cung cấp."))}</p></div></div></section>
       <section class="portal-campaign-metrics" aria-label="${safeText(campaignText("approvals.summary", "Tóm tắt tự rà soát"))}"><div class="portal-metric"><span>${safeText(campaignText("approvals.drafts", "Bản nháp"))}</span><strong>${safeText(String(draftCount))}</strong><em>${safeText(campaignText("approvals.draftsHelp", "Có thể chuyển sang tự rà soát"))}</em></div><div class="portal-metric"><span>${safeText(campaignText("approvals.inReview", "Đang tự rà soát"))}</span><strong>${safeText(String(reviewPlans.length))}</strong><em>${safeText(campaignText("approvals.inReviewHelp", "Cần quyết định trong kế hoạch riêng"))}</em></div><div class="portal-metric"><span>${safeText(campaignText("approvals.ready", "Sẵn sàng / đã xếp lịch"))}</span><strong>${safeText(String(readyCount))}</strong><em>${safeText(campaignText("approvals.readyHelp", "Không phải trạng thái chính thức"))}</em></div></section>
       <section class="portal-campaign-board" aria-label="${safeText(campaignText("approvals.title", "Hàng tự rà soát"))}">${cards}</section>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(campaignText("approvals.actualTitle", "Cần duyệt tác vụ thật?"))}</h2><p class="portal-card-subtitle">${safeText(campaignText("approvals.actualBody", "Tác vụ, đầu ra, kênh và đăng bài cần hàng đợi chính thức từ Bot hoặc ERP quản trị; trang này không thay thế quy trình đó."))}</p></div>${badge("read_only")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/campaigns">${safeText(campaignText("approvals.openPlanner", "Mở kế hoạch"))}</a>${serverAuthorizesAdminRoute(context, "/admin/approvals") ? `<a class="portal-button portal-button--quiet" href="/admin/approvals">${safeText(campaignText("approvals.openAdmin", "Hàng duyệt quản trị"))}</a>` : ""}<a class="portal-button portal-button--quiet" href="/support">${safeText(campaignText("approvals.support", "Cần hỗ trợ"))}</a></div></section>
@@ -38092,11 +38518,20 @@
 
   function showToast(message, mode) {
     const region = document.querySelector("[data-portal-toast]");
-    if (!region) return;
+    const text = String(message || "").trim();
+    if (!region || !text) return;
+    const className = `portal-toast${mode === "warning" ? " portal-toast--warning" : ""}`;
+    const existing = typeof region.querySelectorAll === "function" ? Array.from(region.querySelectorAll(".portal-toast")) : [];
+    const duplicate = existing
+      .find((item) => item.textContent === text && item.className === className);
+    if (duplicate) return;
     const toast = document.createElement("div");
-    toast.className = `portal-toast${mode === "warning" ? " portal-toast--warning" : ""}`;
-    toast.textContent = message;
+    toast.className = className;
+    if (typeof toast.setAttribute === "function") toast.setAttribute("role", mode === "warning" ? "alert" : "status");
+    toast.textContent = text;
     region.appendChild(toast);
+    const visible = typeof region.querySelectorAll === "function" ? region.querySelectorAll(".portal-toast") : [];
+    for (let index = 0; index < visible.length - 2; index += 1) visible[index].remove();
     const motion = window.TOANAASPortalMotion;
     if (motion && typeof motion.enter === "function") motion.enter(toast, "pop");
     window.setTimeout(() => { toast.remove(); }, 4800);
@@ -38293,8 +38728,8 @@
     const announcement = form.querySelector("[data-music-direction-selection]");
     if (announcement) {
       announcement.textContent = preset
-        ? `Đã chọn ${preset.label}. Hoàn tất brief rồi bấm lập direction.`
-        : "Chưa chọn preset. Hãy chọn một hướng trước khi lập direction.";
+        ? musicDirectionUiText("form.selected", "Đã chọn {label}. Hoàn tất brief rồi bấm lập hướng.", { label: musicDirectionPresetText(preset, "label") })
+        : musicDirectionUiText("form.unselected", "Chưa chọn preset. Hãy chọn một hướng trước khi lập hướng.");
     }
   }
 
@@ -38302,14 +38737,14 @@
     if (!form || form.getAttribute("data-portal-action") !== "music-direction-preset-compose") return;
     synchronizeMusicDirectionPresetForm(form);
     // Preserve the existing receipt instead of silently clearing the form,
-    // but label it once as stale when its source brief no longer matches the
+    // but keep it labelled stale when its source brief no longer matches the
     // local draft. The next successful explicit request renders a fresh
     // receipt without this marker.
     const receipt = form.closest(".portal-music-directions")?.querySelector('.portal-music-directions-result[aria-live="polite"]');
-    if (receipt && receipt.getAttribute("data-stale") !== "true") {
+    if (receipt) {
       receipt.setAttribute("data-stale", "true");
       const announcement = form.querySelector("[data-music-direction-selection]");
-      if (announcement) announcement.textContent = "Brief đã đổi. Receipt bên dưới thuộc brief trước; bấm lập direction khi bạn sẵn sàng tạo receipt mới.";
+      if (announcement) announcement.textContent = musicDirectionUiText("form.stale", "Nội dung đã thay đổi. Các hướng bên dưới thuộc nội dung trước; lập lại hướng âm nhạc để cập nhật.");
     }
     // This is request fencing only. It has no navigation, storage, submit or
     // network behavior; integration discards a now-stale receipt if the user
@@ -38334,8 +38769,8 @@
     const announcement = form.querySelector("[data-sfx-cue-sheet-selection]");
     if (announcement) {
       announcement.textContent = preset
-        ? `Đã chọn ${preset.label}. Hoàn tất brief rồi bấm lập cue sheet.`
-        : "Chưa chọn preset. Hãy chọn một hướng trước khi lập cue sheet.";
+        ? sfxCueSheetUiText("form.selected", "Đã chọn {label}. Hoàn tất brief rồi bấm lập cue sheet.", { label: sfxCueSheetPresetText(preset, "label") })
+        : sfxCueSheetUiText("form.unselected", "Chưa chọn preset. Hãy chọn một hướng trước khi lập cue sheet.");
     }
   }
 
@@ -38346,10 +38781,10 @@
     // Keep the last valid receipt visible but explicitly stale. An edit never
     // sends a request, changes route, resets fields or fabricates a cue sheet.
     const receipt = form.closest(".portal-sfx-cue-sheet")?.querySelector(".portal-sfx-cue-sheet-result[data-sfx-cue-sheet-receipt]");
-    if (receipt && receipt.getAttribute("data-stale") !== "true") {
+    if (receipt) {
       receipt.setAttribute("data-stale", "true");
       const announcement = form.querySelector("[data-sfx-cue-sheet-selection]");
-      if (announcement) announcement.textContent = "Brief đã đổi. Receipt bên dưới thuộc brief trước; bấm lập cue sheet khi bạn sẵn sàng tạo receipt mới.";
+      if (announcement) announcement.textContent = sfxCueSheetUiText("form.stale", "Nội dung đã thay đổi. Bảng hiệu ứng bên dưới thuộc nội dung trước; lập lại bảng để cập nhật.");
     }
     // Integration uses this event only to fence a delayed explicit request.
     // It has no storage, submit, network or navigation side effect.
@@ -40621,7 +41056,14 @@
     if (interactionsBound) return;
     interactionsBound = true;
     document.addEventListener("input", (event) => {
-      const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume]");
+      const searchInput = event.target && typeof event.target.closest === "function"
+        ? event.target.closest(".portal-subdub-hub [data-subdub-language-search]")
+        : null;
+      if (searchInput && (searchInput.getAttribute("type") === "search" || searchInput.type === "search")) {
+        updateSubDubLanguageSearch(searchInput);
+        return;
+      }
+      const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume], .portal-subdub-hub [data-subdub-original-audio-toggle]");
       updateSubDubLocalVolume(volumeInput);
       const subDubForm = event.target.closest(".portal-subdub-hub");
       if (subDubForm) {
@@ -40630,7 +41072,13 @@
       }
     });
     document.addEventListener("change", (event) => {
-      const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume]");
+      const searchInput = event.target && typeof event.target.closest === "function"
+        ? event.target.closest(".portal-subdub-hub [data-subdub-language-search]")
+        : null;
+      if (searchInput && (searchInput.getAttribute("type") === "search" || searchInput.type === "search")) {
+        return;
+      }
+      const volumeInput = event.target.closest(".portal-subdub-hub [data-subdub-local-volume], .portal-subdub-hub [data-subdub-original-audio-toggle]");
       updateSubDubLocalVolume(volumeInput);
       const voiceLaneInput = event.target.closest(".portal-subdub-hub [data-subdub-voice-lane-input]");
       updateSubDubVoiceLaneSelection(voiceLaneInput);
@@ -40638,6 +41086,16 @@
       if (subDubForm) {
         captureSubDubDraft(subDubForm);
         updateSubDubSettingsSummary(subDubForm);
+      }
+      const targetSelect = event.target && typeof event.target.closest === "function"
+        ? event.target.closest(".portal-subdub-hub [data-subdub-mode-panel] select[name=\"target_language\"]")
+        : null;
+      if (targetSelect) {
+        const panel = targetSelect.closest("[data-subdub-mode-panel]");
+        const panelSearchInput = panel ? panel.querySelector("[data-subdub-language-search]") : null;
+        if (panelSearchInput) {
+          updateSubDubLanguageSearch(panelSearchInput);
+        }
       }
     });
     document.addEventListener("keydown", (event) => {
@@ -40655,6 +41113,8 @@
       if (navigateVoiceWorkspace(event, voiceModeLink)) return;
       const musicModeLink = event.target.closest("[data-music-workspace-mode]");
       if (navigateMusicWorkspace(event, musicModeLink)) return;
+      const subDubReviewEdit = event.target.closest(".portal-subdub-hub [data-subdub-review-edit]");
+      if (focusSubDubReviewSetting(subDubReviewEdit)) { event.preventDefault(); return; }
       const subDubModeButton = event.target.closest("[data-subdub-mode-select]");
       if (updateSubDubModeSelection(subDubModeButton, window)) return;
       const navSummary = event.target.closest(".portal-nav-summary");
@@ -41361,6 +41821,7 @@
     const context = getBootstrap();
     synchronizeVoiceWorkspaceDraftSession(context);
     synchronizeMusicWorkspaceDraftSession(context);
+    synchronizeMusicSuggestionSnapshots(context);
     synchronizeSubDubWorkspaceDraftSession(context);
     synchronizeImageWorkspaceDraftSession(context);
     const page = resolvePage(context.path);

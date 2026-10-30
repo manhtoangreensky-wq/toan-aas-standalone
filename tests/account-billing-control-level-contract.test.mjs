@@ -55,9 +55,18 @@ test("AC-02B/AC-02C payment and catalog lanes fail closed without server capabil
   assert.match(paymentGate, /\["payment-create"\] === true/);
   assert.match(payos, /data-portal-action="payment-create"/);
   assert.match(payos, /disabled aria-disabled/);
-  assert.match(payos, /PAYMENT_DISPLAY_FALLBACK_PACKAGES|topup_packages/);
+  assert.match(payos, /topup_packages/);
+  assert.doesNotMatch(payos, /PAYMENT_DISPLAY_FALLBACK_PACKAGES/);
   assert.match(portal, /protocol === "https:"/);
   assert.match(portal, /pay\.payos\.vn/);
+});
+
+test("AC-02C PayOS never renders browser-owned packages when server catalog is empty", () => {
+  assert.doesNotMatch(portal, /const PAYMENT_DISPLAY_FALLBACK_PACKAGES/);
+  assert.doesNotMatch(payos, /serverPackages\.length \? serverPackages :/);
+  assert.match(payos, /const packages = serverPackages\.flatMap/);
+  assert.match(payos, /topup_packages/);
+  assert.match(payos, /Cổng PayOS hoặc danh mục mệnh giá hiện chưa sẵn sàng/);
 });
 
 test("AC-02C packages and pricing are read-only canonical catalogs", () => {

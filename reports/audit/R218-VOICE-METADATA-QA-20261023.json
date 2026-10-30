@@ -1,0 +1,61 @@
+{
+  "task": "R218-P1-Q0-VOICE-20261023",
+  "source_sha": "30903110482f0c15b20fc959b30796dc0c7a1490",
+  "status": "OPEN_FINDINGS_NO_APPLICATION_SOURCE_CHANGED",
+  "product_boundary": {
+    "web_authoring": "/voice-studio stores direction/profile metadata, self-attestations, scripts and revisions; 22 Web-owned endpoints",
+    "canonical_audio_vault": "/voice/saved is separate; canonical management, preview and SubDub/Video application remain unverified",
+    "no_equivalence_claim": true
+  },
+  "terminal": {
+    "node_full": {"command": "node --test tests/*.test.mjs", "passed": 927, "failed": 0, "exit": 0},
+    "python_source_contracts": {"files": ["tests/test_voice_direction_composer_portal_contracts.py", "tests/test_voice_studio_portal_contracts.py"], "passed": 10, "failed": 0, "warnings": 1, "exit": 0},
+    "python_isolated_runtime": {"files": ["tests/test_copyfast_voice_studio.py", "tests/test_copyfast_voice_direction_composer.py"], "passed": 31, "failed": 0, "warnings": 1, "exit": 0},
+    "python_environment_note": "Runtime attempt inside sandbox was interrupted without PASS. The same runtime suite completed on the authorized host against temporary test databases."
+  },
+  "browser": {
+    "environment": "Actual localhost WebApp, isolated temporary SQLite/assets, ephemeral QA identities, Edge headless; no production session",
+    "browser_plugin": "Absent from this turn's available browser tool/skill catalog; regular Playwright used",
+    "configurations": 6,
+    "matrix": "vi/en/zh x (dark 390, light 1440); not the full locale/theme/viewport cross product",
+    "verified": ["create and actual API readback", "metadata default flag readback", "rename and revision readback", "archive locks edit fields", "restore and readback", "search empty state and clear returns actual record"],
+    "ui_metadata_writes": 24,
+    "page_console_errors": 0,
+    "horizontal_overflow": 0,
+    "external_requests": 0,
+    "blocked_out_of_scope_writes": 0,
+    "audio_elements": 0,
+    "open_locale_findings": 4,
+    "finding_id": "VO-MANAGEMENT-FEEDBACK-LOCALE",
+    "finding": "Filter feedback remains Vietnamese in all four EN/ZH configurations",
+    "artifact": "C:/Users/toann/Documents/Codex/qa/r218-voice-direction-20261023/vault-actual-result.json",
+    "artifact_sha256": "2ad2a124c4a2cd7cf8bd47b02c12e3b17e9465cf2dc367dde198cf9942314c82",
+    "runner": "C:/Users/toann/Documents/Codex/qa/r218-voice-direction-20261023/vault.actual.cjs",
+    "runner_sha256": "1d73a289aef9135040af441d430d7e876215d1a146586319216a8a8f09e15124",
+    "harness_correction": "An earlier unpaced run hit the real 120/minute read limit. Final run was paced by 30 seconds between configurations; app rate/auth controls were not changed.",
+    "cleanup": "Owned server PTY34910 received newline, exited0; temporary DB/assets cleaned by context manager. Port26491 has no listener."
+  },
+  "voice_direction_clarity": {
+    "status": "OPEN_NO_VALID_WORKER_PATCH",
+    "red": "Production renderer on localhost: baseline scope disclosure contains3 technical boxes; candidate assertion observed7 matching div/span/em nodes instead of0",
+    "baseline_screenshot_sha256": "5dd76b55aec76f623ca0ebf242af4d707b1e111a6e913d664f7856e736944044",
+    "handoff_rounds": 2,
+    "round1_conversation": "237eb7ae-e7ea-49f9-a66c-11764a53ca88",
+    "worker": "gemini-3.8-flash-high",
+    "worker_result": "Host print timeouts3m and2m on round1/continuation; round2 self-contained no-tool packet2m also returned no patch. CLI exit0/SUCCESS is not acceptance.",
+    "model_catalog_verified": true,
+    "fallback": "Owner approval requested asynchronously before direct implementation; no application source edited"
+  },
+  "delivery": {
+    "pr": "https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/661",
+    "state": "OPEN",
+    "remote_head": "30903110482f0c15b20fc959b30796dc0c7a1490",
+    "merge_state": "DIRTY",
+    "status_check_rollup": [],
+    "current_main": "406127e",
+    "merge_tree_conflicts": ["reports/migration/preflight.json", "reports/migration/web_inventory.json"],
+    "working_tree_merge_performed": false,
+    "note": "Read-only merge-tree auto-merged portal.js; only generated evidence conflicts. Integration and fresh provenance/test gate must precede merge/deploy claims."
+  },
+  "safety": {"product_provider_calls": 0, "wallet_mutations": 0, "production_data_mutations": 0, "application_source_changed": false, "deploy": "NO", "live_pass": "NOT_TESTED", "goal": "ACTIVE"}
+}

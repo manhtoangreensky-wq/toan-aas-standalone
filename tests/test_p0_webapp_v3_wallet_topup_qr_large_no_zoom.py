@@ -75,9 +75,9 @@ def test_09_desktop_qr_size_contract() -> None:
     img_rule = re.search(r"\.portal-manual-payment-method\s+img\s*\{(?P<body>[^}]+)\}", PORTAL_CSS)
     assert img_rule, "Expected .portal-manual-payment-method img rule in CSS"
     body = img_rule.group("body")
-    assert "width: min(380px, 100%)" in body
-    assert "max-width: 420px" in body
-    assert "aspect-ratio: 1" in body
+    assert "width: min(480px, 100%)" in body
+    assert "max-width: 520px" in body
+    assert "aspect-ratio: auto" in body
     assert "object-fit: contain" in body
 
 

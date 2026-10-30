@@ -74,10 +74,16 @@ const out={};
 }
 {
   const e=env(); e.motion.mountLanding(e.root); e.flush(); e.flush(); e.log.length=0;
+  e.win.fire('scroll'); e.flush();
+  out.repeatInitialMetadataWrites=e.log.filter(x=>x==='write-attribute:root').length;
+  e.log.length=0;
   e.win.scrollY=800; e.win.fire('scroll'); e.win.fire('scroll');
   out.scrollFrames=e.raf.size; e.flush(); out.scrollOrder=[...e.log];
   out.scrollProgress=e.root.styles.get('--landing-scroll-progress');
   out.layerProgress=e.layers.map(x=>x.styles.get('--landing-section-progress'));
+  e.log.length=0;
+  e.win.fire('scroll'); e.flush();
+  out.repeatMovedMetadataWrites=e.log.filter(x=>x==='write-attribute:root').length;
   e.motion.unmountLanding();
 }
 {
@@ -123,6 +129,11 @@ def observed():
         capture_output=True, text=True, check=True, timeout=20,
     )
     return json.loads(result.stdout)
+
+
+def test_repeated_same_scroll_state_does_not_rewrite_metadata_attributes(observed):
+    assert observed["repeatInitialMetadataWrites"] == 0
+    assert observed["repeatMovedMetadataWrites"] == 0
 
 
 def test_scroll_batches_geometry_before_style_writes(observed):

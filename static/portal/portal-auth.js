@@ -207,11 +207,20 @@
 
   function toast(message, type) {
     const region = document.querySelector("[data-portal-toast]");
-    if (!region || !message) return;
+    const text = String(message || "").trim();
+    if (!region || !text) return;
+    const className = `portal-toast${type === "error" ? " portal-toast--warning" : ""}`;
+    const existing = typeof region.querySelectorAll === "function" ? Array.from(region.querySelectorAll(".portal-toast")) : [];
+    const duplicate = existing
+      .find((item) => item.textContent === text && item.className === className);
+    if (duplicate) return;
     const node = document.createElement("div");
-    node.className = `portal-toast${type === "error" ? " portal-toast--warning" : ""}`;
-    node.textContent = message;
+    node.className = className;
+    if (typeof node.setAttribute === "function") node.setAttribute("role", type === "error" ? "alert" : "status");
+    node.textContent = text;
     region.appendChild(node);
+    const visible = typeof region.querySelectorAll === "function" ? region.querySelectorAll(".portal-toast") : [];
+    for (let index = 0; index < visible.length - 2; index += 1) visible[index].remove();
     window.setTimeout(() => node.remove(), 6500);
   }
 

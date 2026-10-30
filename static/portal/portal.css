@@ -688,6 +688,54 @@ a { color: inherit; text-decoration: none; }
 .portal-state-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .portal-state-meta span { padding: 5px 7px; border-radius: 7px; background: rgba(109, 166, 192, .09); color: #a7c2cf; font-size: 10px; }
 
+/* Image utility guards already explain the required action in their heading
+   and body. Keep the customer surface calm by removing repeated technical
+   session/cache/fallback chips; this does not hide an error or change a
+   capability gate. */
+.portal-page:is(
+  .portal-image-background-cleanup,
+  .portal-image-operation-history,
+  .portal-image-brand-overlay,
+  .portal-storyboard-grid,
+  .portal-image-resize,
+  .portal-image-enhance
+) .portal-state-meta { display: none; }
+
+/* Document/PDF utility guards use the same single-message pattern. Hide only
+   their repeated implementation chips and keep the route's real explanation
+   and retry/action controls visible. */
+.portal-page:is(
+  .portal-document-hub,
+  .portal-pdf-split,
+  .portal-pdf-merge,
+  .portal-pdf-optimize,
+  .portal-pdf-to-images,
+  .portal-pdf-to-word,
+  .portal-image-ocr,
+  .portal-pdf-ocr,
+  .portal-pdf-ocr-to-word,
+  .portal-image-to-pdf
+) .portal-state-meta { display: none; }
+
+/* Remaining customer-only guard surfaces use the same compact explanation.
+   Keep real metrics elsewhere intact; these selectors cover only the cards
+   whose chips repeat implementation boundaries already stated in the body. */
+.portal-page :is(
+  .portal-project-package-panel,
+  .portal-finalization-intro
+) .portal-state-meta,
+.portal-page:is(
+  .portal-asset-vault,
+  .portal-inbox,
+  .portal-notification-automation,
+  .portal-operations
+) .portal-state-meta { display: none; }
+
+/* Smart Multi has no speaker payload before a real server analysis. Do not
+   render an empty mapping box; the data hook remains available for a future
+   canonical speaker map when the server supplies one. */
+.portal-subdub-speaker-map[data-status="guarded"] { display: none; }
+
 .portal-summary-list { display: grid; gap: 10px; }
 .portal-summary-item { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(155, 178, 193, .1); }
 .portal-summary-item:last-child { padding-bottom: 0; border-bottom: 0; }
@@ -9843,7 +9891,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
 
 .portal-manual-payment-method {
   display: grid;
-  grid-template-columns: minmax(360px, 420px) minmax(0, 1fr);
+  grid-template-columns: minmax(400px, 520px) minmax(0, 1fr);
   gap: 24px;
   align-items: start;
   min-width: 0;
@@ -9869,10 +9917,10 @@ button, a, input, select, textarea { touch-action: manipulation; }
 
 .portal-manual-payment-method img {
   display: block;
-  width: min(380px, 100%);
-  max-width: 420px;
+  width: min(480px, 100%);
+  max-width: 520px;
   height: auto;
-  aspect-ratio: 1;
+  aspect-ratio: auto;
   object-fit: contain;
   border-radius: 14px;
   background: #fff;

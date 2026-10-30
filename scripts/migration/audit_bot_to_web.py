@@ -47,6 +47,10 @@ STANDARD_MIGRATION_OUTPUT_RELATIVE_DIRS = (Path("docs") / "migration", Path("rep
 STANDARD_WEB_AUDIT_EXCLUDED_RELATIVE_DIRS = (
     *STANDARD_MIGRATION_OUTPUT_RELATIVE_DIRS,
     Path("docs") / "superpowers",
+    # Local Antigravity work orders are intentionally gitignored and are not
+    # Web runtime source.  Including them makes a Windows checkout fingerprint
+    # diverge from the clean GitHub Actions checkout.
+    Path("_giao-viec"),
     # The auditor is migration tooling, never an application runtime module.
     # Its static parser helpers, provider terms and SQL examples must not
     # inflate a Web App runtime inventory or its source fingerprint.

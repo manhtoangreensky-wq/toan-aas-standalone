@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MAP — _webapp-r218-voice</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+/* Cột dọc co giãn: thanh hình dạng làm header cao thêm 1 dòng, và header tự xuống dòng
+   ở màn hẹp — chiều cao #wrap PHẢI tính theo flex, không viết cứng calc(100vh - 46px). */
+/* 100dvh phải đứng SAU 100vh: Safari iOS tính 100vh theo lúc thanh địa chỉ ẩn nên trang
+   bị hụt/tràn khi cuộn; dvh mới là chiều cao thấy được thật. Trình duyệt cũ không hiểu
+   dvh sẽ bỏ qua dòng sau và giữ 100vh. */
+body{background:#12151c;color:#e6e9ef;font:14px/1.5 "Be Vietnam Pro",Segoe UI,system-ui,sans-serif;overflow:hidden;height:100vh;height:100dvh;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:14px;padding:10px 16px;background:#1a1f2b;border-bottom:1px solid #2a3142;flex-wrap:wrap;flex:0 0 auto}
+header h1{font-size:15px;font-weight:600;letter-spacing:.2px}
+header h1 span{color:#4FC3F7}
+#modes{display:flex;gap:6px}
+.btn{background:#12151c;border:1px solid #2a3142;color:#8b95a8;padding:5px 13px;border-radius:6px;font:inherit;font-size:12.5px;cursor:pointer}
+.btn:hover{color:#e6e9ef}
+.btn.on{background:#1c2c40;border-color:#4FC3F7;color:#e6e9ef}
+.stat{font-size:12px;color:#8b95a8}
+.stat b{color:#e6e9ef;font-weight:600}
+#q{margin-left:auto;background:#12151c;border:1px solid #2a3142;color:#e6e9ef;padding:6px 10px;border-radius:6px;width:230px;font:inherit;font-size:13px}
+#q:focus{outline:none;border-color:#4FC3F7}
+#shapes{display:flex;align-items:center;gap:7px;padding:7px 16px;background:#161b25;border-bottom:1px solid #2a3142;flex-wrap:wrap;flex:0 0 auto}
+#shapes .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:#5d6678;font-weight:600;margin-right:3px}
+.chip{background:#12151c;border:1px solid #2a3142;color:#8b95a8;padding:3px 11px;border-radius:20px;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}
+.chip:hover{color:#e6e9ef;border-color:#3d465c}
+.chip b{color:#c9d2e0;font-weight:600;margin-left:5px}
+.chip.on{background:#1c2c40;border-color:#4FC3F7;color:#e6e9ef}
+.chip.bug{border-color:#7a2b3c;color:#ff8fa3}
+.chip.bug b{color:#ff8fa3}
+.chip.bug.on{background:#3d1622;border-color:#ff4d6d;color:#ffd0d8}
+.chip.zero{opacity:.42;cursor:default}
+#wrap{position:relative;flex:1 1 auto;min-height:0}
+/* touch-action:none = BẮT BUỘC. Thiếu nó thì Safari iOS tự cuộn trang / phóng to cả trang
+   khi ta vuốt hay chụm trên canvas, và mã điều khiển không bao giờ nhận đủ sự kiện. */
+canvas{display:block;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+canvas.drag{cursor:grabbing}
+#pclose{display:none;position:absolute;top:8px;right:10px;z-index:3;background:#232937;border:1px solid #2a3142;color:#b9c2d0;width:30px;height:30px;border-radius:50%;font:inherit;font-size:15px;line-height:1;cursor:pointer}
+#panel{position:absolute;top:0;right:0;width:320px;height:100%;background:#1a1f2b;border-left:1px solid #2a3142;padding:16px;overflow-y:auto;font-size:13px}
+#panel h2{font-size:13px;font-weight:600;word-break:break-all;margin-bottom:4px;color:#fff}
+#panel .meta{color:#8b95a8;font-size:12px;margin-bottom:14px}
+#panel h3{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:#8b95a8;margin:14px 0 6px;font-weight:600}
+#panel ul{list-style:none}
+#panel li{padding:3px 0;border-bottom:1px solid #232937;word-break:break-all;cursor:pointer;color:#b9c2d0}
+#panel li:hover{color:#4FC3F7}
+#panel .empty{color:#5d6678;font-style:italic}
+.pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;background:#2a3142;margin-right:5px}
+.pill.red{background:#5a2230;color:#ff8fa3}
+#legend,#tmlegend{position:absolute;left:12px;bottom:12px;background:rgba(26,31,43,.94);border:1px solid #2a3142;border-radius:8px;padding:9px 11px;max-width:300px;font-size:11px;line-height:1.9}
+#tmlegend{display:none;max-width:600px}
+.lg{display:inline-block;margin-right:11px;white-space:nowrap;color:#b9c2d0}
+.lg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+#hint{position:absolute;left:12px;top:12px;font-size:11px;color:#5d6678;line-height:1.7}
+#tip{display:none;position:absolute;pointer-events:none;background:rgba(26,31,43,.97);border:1px solid #2a3142;border-radius:6px;padding:7px 10px;font-size:12px;max-width:420px;word-break:break-all;z-index:5}
+body.tm #legend,body.tm #panel,body.tm #hint,body.tm #q,body.tm #shapes,body.tm #pclose{display:none}
+body.tm #tmlegend{display:block}
+body.tm canvas{cursor:default}
+.only-m{display:none}
+
+/* ── Màn hẹp (điện thoại) ────────────────────────────────────────────────────
+   Đổi 3 thứ, không phải "thu nhỏ mọi thứ lại":
+   1) Bảng chi tiết 320px cột phải → TẤM TRƯỢT TỪ DƯỚI LÊN, chỉ hiện khi có nội dung.
+      Trên iPhone cột phải 320px ăn gần hết bề ngang màn hình.
+   2) Thanh chip hình dạng → cuộn ngang (5 chip không bao giờ vừa 1 dòng).
+   3) Bỏ bớt chữ ở thanh trên cùng, đổi lời hướng dẫn sang ngôn ngữ CHẠM. */
+@media (max-width:720px){
+  header{gap:9px;padding:8px 11px}
+  header h1{font-size:13px;width:100%}
+  .stat.hide-m{display:none}
+  #q{margin-left:0;width:100%;order:9}
+  #shapes{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:7px 11px}
+  #shapes::-webkit-scrollbar{display:none}
+  #shapes .lbl,#shapes .stat{display:none}
+  #panel{top:auto;bottom:0;left:0;width:100%;height:62%;border-left:none;border-top:1px solid #2a3142;
+         border-radius:15px 15px 0 0;box-shadow:0 -10px 28px rgba(0,0,0,.5);
+         transform:translateY(101%);transition:transform .22s ease;padding-top:22px}
+  #panel.open{transform:translateY(0)}
+  #pclose{display:block}
+  #legend{max-height:58px;overflow:auto;font-size:10px;line-height:1.7;max-width:calc(100% - 24px);bottom:8px}
+  #hint{font-size:10px;max-width:64%}
+  .only-d{display:none}
+  .only-m{display:inline}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Bản đồ phụ thuộc — <span>_webapp-r218-voice</span></h1>
+  <nav id="modes">
+    <button id="btn-net" class="btn on" type="button">Mạng lưới</button>
+    <button id="btn-tm" class="btn" type="button">Khối lượng</button>
+  </nav>
+  <div class="stat"><b>16</b> file</div>
+  <div class="stat hide-m"><b>0</b> cạnh</div>
+  <div class="stat hide-m">sinh <b>22/10/2026 02:56</b></div>
+  <input id="q" placeholder="Tìm file… (Enter để nhảy tới)">
+</header>
+<div id="shapes"><span class="lbl">Hình dạng</span><span class="stat">⚠️ không áp dụng — 0 quan hệ import giữa 16 file (dự án nạp mã bằng thẻ &lt;script&gt;, không phải ES module). "Node lẻ = tất cả" ở đây là cách nạp, không phải lỗi.</span></div>
+<div id="wrap">
+  <canvas id="cv"></canvas>
+  <div id="hint"><span class="only-d">Kéo node để gỡ rối · kéo nền để di chuyển · cuộn để phóng to · phím <b>F</b> canh vừa màn hình<br>Bấm node để xem chi tiết · viền đỏ = điểm nhạy cảm</span><span class="only-m">Chạm node để xem chi tiết · kéo để di chuyển<br>chụm 2 ngón để phóng to · viền đỏ = điểm nhạy cảm</span></div>
+  <div id="legend"><span class="lg"><i style="background:#4FC3F7"></i>(gốc)</span><span class="lg"><i style="background:#81C784"></i>static</span><span class="lg"><i style="background:#FFB74D"></i>static/portal</span><span class="lg"><i style="background:#BA68C8"></i>studio</span></div>
+  <div id="tmlegend"></div>
+  <div id="tip"></div>
+  <div id="panel"><button id="pclose" type="button" aria-label="Đóng">✕</button><div id="pbody"><div class="empty">Chạm vào một node để xem chi tiết.</div></div></div>
+</div>
+<script>
+var DATA = {"nodes":[{"id":"customer_app.js","path":"customer_app.js","folder":"(gốc)","fanIn":0,"fanOut":0,"loc":145,"sensitive":false,"churn":2},{"id":"static/portal/admin-customer-directory.js","path":"static/portal/admin-customer-directory.js","folder":"static/portal","fanIn":0,"fanOut":0,"loc":294,"sensitive":false,"churn":3},{"id":"static/portal/integration.js","path":"static/portal/integration.js","folder":"static/portal","fanIn":0,"fanOut":0,"loc":38810,"sensitive":true,"churn":179},{"id":"static/portal/offline.js","path":"static/portal/offline.js","folder":"static/portal","fanIn":0,"fanOut":0,"loc":55,"sensitive":false,"churn":1},{"id":"static/portal/portal-auth.js","path":"static/portal/portal-auth.js","folder":"static/portal","fanIn":0,"fanOut":0,"loc":664,"sensitive":false,"churn":5},{"id":"static/portal/portal-feature-catalog-copy.js","path":"static/portal/portal-feature-catalog-copy.js","folder":"static/portal","fanIn":0,"fanOut":0,"loc":1308,"sensitive":false,"churn":1},{"id":"static/portal/portal-features.js","path":"static/portal/portal-features.js","folder":"static/portal","fanIn":0,"fanOut":0,"loc":574,"sensitive":false,"churn":5},{"id":"static/portal/portal-i18n.js","path":"static/portal/portal-i18n.js","folder":"static/portal","fanIn":0,"fanOut":0,"loc":18704,"sensitive":false,"churn":95},{"id":"static/portal/portal-motion.js","path":"static/portal/portal-motion.js","folder":"static/portal","fanIn":0,"fanOut":0,"loc":921,"sensitive":false,"churn":26},{"id":"static/portal/portal-theme.js","path":"static/portal/portal-theme.js","folder":"static/portal","fanIn":0,"fanOut":0,"loc":284,"sensitive":false,"churn":11},{"id":"static/portal/portal.js","path":"static/portal/portal.js","folder":"static/portal","fanIn":0,"fanOut":0,"loc":42295,"sensitive":false,"churn":342},{"id":"static/portal/service-worker.js","path":"static/portal/service-worker.js","folder":"static/portal","fanIn":0,"fanOut":0,"loc":308,"sensitive":false,"churn":57},{"id":"static/sw.js","path":"static/sw.js","folder":"static","fanIn":0,"fanOut":0,"loc":47,"sensitive":false,"churn":1},{"id":"studio/script.js","path":"studio/script.js","folder":"studio","fanIn":0,"fanOut":0,"loc":1496,"sensitive":false,"churn":1},{"id":"studio/sw.js","path":"studio/sw.js","folder":"studio","fanIn":0,"fanOut":0,"loc":47,"sensitive":false,"churn":1},{"id":"wallet.js","path":"wallet.js","folder":"(gốc)","fanIn":0,"fanOut":0,"loc":6,"sensitive":false,"churn":2}],"edges":[],"colors":{"(gốc)":"#4FC3F7","static":"#81C784","static/portal":"#FFB74D","studio":"#BA68C8"},"projectName":"_webapp-r218-voice","generatedAt":"22/10/2026 02:56","churn":{"mode":"fast","flat":false,"note":"1 lượt git log --name-only, KHÔNG lần theo file đổi tên (cần thì --theo-doi-doi-ten)"},"tmShades":["#54402B","#7A5730","#A17036","#C98A3B","#F2A542"],"tmNeutral":"#3E4553","shapes":{"band":"nhỏ","nguong":{"hub":5,"tangle":8},"soFile":16,"soCanh":0,"vongMem":[],"hinh":[{"key":"vong-tron","ten":"Vòng tròn phụ thuộc","loi":true,"theoQuyMo":false,"mota":"A cần B mà B lại cần A bằng import TĨNH — lỗi thật, đúng ở mọi quy mô","items":[],"ids":[]},{"key":"sao-trung-tam","ten":"Sao trung tâm","loi":false,"theoQuyMo":true,"mota":"fanIn ≥ 5 — đụng vào là lan rộng","items":[],"ids":[]},{"key":"cum-day-nhop","ten":"Cụm dây nhợ","loi":false,"theoQuyMo":true,"mota":"≥ 8 cạnh nối 2 file trong CÙNG một thư mục (xếp theo mật độ cạnh/file)","items":[],"ids":[]},{"key":"node-le","ten":"Node lẻ","loi":false,"theoQuyMo":false,"mota":"fanIn = 0 và fanOut = 0 — không nối vào đâu cả","items":[{"id":"static/portal/portal.js","loc":42295},{"id":"static/portal/integration.js","loc":38810},{"id":"static/portal/portal-i18n.js","loc":18704},{"id":"studio/script.js","loc":1496},{"id":"static/portal/portal-feature-catalog-copy.js","loc":1308},{"id":"static/portal/portal-motion.js","loc":921},{"id":"static/portal/portal-auth.js","loc":664},{"id":"static/portal/portal-features.js","loc":574},{"id":"static/portal/service-worker.js","loc":308},{"id":"static/portal/admin-customer-directory.js","loc":294},{"id":"static/portal/portal-theme.js","loc":284},{"id":"customer_app.js","loc":145},{"id":"static/portal/offline.js","loc":55},{"id":"static/sw.js","loc":47},{"id":"studio/sw.js","loc":47},{"id":"wallet.js","loc":6}],"ids":["static/portal/portal.js","static/portal/integration.js","static/portal/portal-i18n.js","studio/script.js","static/portal/portal-feature-catalog-copy.js","static/portal/portal-motion.js","static/portal/portal-auth.js","static/portal/portal-features.js","static/portal/service-worker.js","static/portal/admin-customer-directory.js","static/portal/portal-theme.js","customer_app.js","static/portal/offline.js","static/sw.js","studio/sw.js","wallet.js"]},{"key":"chuoi-dai","ten":"Chuỗi dài","loi":false,"theoQuyMo":false,"mota":"≥ 4 file nối đuôi, mắt xích giữa chỉ có đúng 1 vào / 1 ra","items":[],"ids":[]}]}};
+var MODE = 'net';
+(function () {
+  var bn = document.getElementById('btn-net'), bt = document.getElementById('btn-tm');
+  window.__setMode = function (m) {
+    MODE = m;
+    document.body.className = m === 'tm' ? 'tm' : '';
+    bn.className = 'btn' + (m === 'net' ? ' on' : '');
+    bt.className = 'btn' + (m === 'tm' ? ' on' : '');
+    if (m === 'tm' && window.__tmDraw) window.__tmDraw();
+  };
+  bn.addEventListener('click', function () { window.__setMode('net'); });
+  bt.addEventListener('click', function () { window.__setMode('tm'); });
+})();
+</script>
+<script>
+var nodes = DATA.nodes, edges = DATA.edges, COL = DATA.colors;
+var N = nodes.length;
+var byId = {}, inMap = {}, outMap = {};
+nodes.forEach(function (n) { byId[n.id] = n; });
+edges.forEach(function (e) {
+  (outMap[e.from] = outMap[e.from] || []).push(e.to);
+  (inMap[e.to] = inMap[e.to] || []).push(e.from);
+});
+var E = edges.map(function (e) { return { a: byId[e.from], b: byId[e.to] }; })
+             .filter(function (e) { return e.a && e.b; });
+
+var R0 = Math.max(260, Math.sqrt(N) * 38);
+nodes.forEach(function (n, i) {
+  var a = (i / N) * Math.PI * 2;
+  n.x = Math.cos(a) * R0 + (i % 7 - 3) * 6;
+  n.y = Math.sin(a) * R0 + (i % 5 - 2) * 6;
+  n.vx = 0; n.vy = 0;
+  n.r = 3.2 + Math.sqrt(n.fanIn) * 2.7;
+});
+
+var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+// pbody = THÂN bảng (nơi ghi nội dung). Nút đóng ✕ là anh em của nó bên trong #panel —
+// ghi đè thẳng vào #panel sẽ xoá mất nút, nên mọi chỗ ghi nội dung phải dùng pbody.
+var panel = document.getElementById('panel'), pbody = document.getElementById('pbody');
+var q = document.getElementById('q');
+var dpr = window.devicePixelRatio || 1, W = 0, H = 0;
+var scale = 0.75, ox = 0, oy = 0, alpha = 1;
+var sel = null, hov = null, dragNode = null, panning = false;
+var lastX = 0, lastY = 0, moved = 0, filter = '', userMoved = false;
+
+// Canh cả đồ thị vừa khung nhìn. Tự chạy trong lúc layout còn giãn, dừng ngay khi người
+// dùng chạm vào (kéo/cuộn) để không giật khỏi tay. Phím F gọi lại bất cứ lúc nào.
+// Bảng chi tiết chiếm cột phải 320px ở màn rộng, nhưng ở màn hẹp nó là tấm TRƯỢT TỪ
+// DƯỚI LÊN (không chiếm bề ngang) ⇒ phải chừa 0px, nếu không đồ thị bị đẩy lệch hẳn
+// sang trái trên điện thoại.
+function panelW() { return window.innerWidth <= 720 ? 0 : 320; }
+
+function fit() {
+  var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+  for (var i = 0; i < N; i++) {
+    var n = nodes[i];
+    if (n.x < minX) minX = n.x;
+    if (n.x > maxX) maxX = n.x;
+    if (n.y < minY) minY = n.y;
+    if (n.y > maxY) maxY = n.y;
+  }
+  var pw = panelW();
+  var vw = Math.max(120, W - pw - 70), vh = Math.max(120, H - 70);
+  scale = Math.min(vw / Math.max(1, maxX - minX), vh / Math.max(1, maxY - minY), 2.2);
+  ox = (W - pw) / 2 - ((minX + maxX) / 2) * scale;
+  oy = H / 2 - ((minY + maxY) / 2) * scale;
+}
+
+function resize() {
+  W = document.getElementById('wrap').clientWidth;
+  H = document.getElementById('wrap').clientHeight;
+  // HiDPI chuẩn: bitmap = W×dpr NHƯNG PHẢI khoá CSS size = W, nếu không canvas hiển thị
+  // phóng dpr lần và bị xén mép (màn Windows 125%: mất 20% bên phải, chuột lệch 25%).
+  // (cv.clientWidth là thuộc tính CHỈ ĐỌC — gán vào nó bị nuốt im lặng, đừng dùng.)
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  cv.width = W * dpr; cv.height = H * dpr;
+  if (!ox && !oy) { ox = (W - 320) / 2; oy = H / 2; }
+}
+window.addEventListener('resize', function () { resize(); });
+resize();
+
+function tick() {
+  if (alpha < 0.0025) return;
+  var i, j, a, b, dx, dy, d2, d, f, ux, uy;
+  for (i = 0; i < N; i++) {
+    a = nodes[i];
+    for (j = i + 1; j < N; j++) {
+      b = nodes[j];
+      dx = b.x - a.x; dy = b.y - a.y;
+      d2 = dx * dx + dy * dy;
+      if (d2 > 360000 || d2 < 0.01) continue;
+      // TRẦN LỰC bắt buộc: 2 node trùng chỗ lúc khởi tạo cho d2≈0.01 ⇒ 2600/d2 = 260.000,
+      // node bị bắn ra vô cực và kéo cả phép canh khung nhìn thu về scale 0,03.
+      d = Math.sqrt(d2); f = Math.min(2600 / d2, 30);
+      ux = dx / d; uy = dy / d;
+      a.vx -= ux * f; a.vy -= uy * f;
+      b.vx += ux * f; b.vy += uy * f;
+    }
+  }
+  for (i = 0; i < E.length; i++) {
+    a = E[i].a; b = E[i].b;
+    dx = b.x - a.x; dy = b.y - a.y;
+    d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+    f = Math.max(-20, Math.min(20, (d - 95) * 0.011));
+    ux = dx / d; uy = dy / d;
+    a.vx += ux * f; a.vy += uy * f;
+    b.vx -= ux * f; b.vy -= uy * f;
+  }
+  for (i = 0; i < N; i++) {
+    a = nodes[i];
+    a.vx -= a.x * 0.0017; a.vy -= a.y * 0.0017;
+    if (a === dragNode) { a.vx = 0; a.vy = 0; continue; }
+    var sp = Math.abs(a.vx) + Math.abs(a.vy); // trần vận tốc — lưới an toàn thứ 2
+    if (sp > 90) { a.vx *= 90 / sp; a.vy *= 90 / sp; }
+    a.x += a.vx * alpha; a.y += a.vy * alpha;
+    a.vx *= 0.83; a.vy *= 0.83;
+  }
+  alpha *= 0.994;
+}
+
+// Bộ lọc hình dạng (window.SHAPE_IDS, do shapeScript đặt) chồng LÊN ô tìm kiếm chữ:
+// bật chip rồi gõ tên file = giao của cả hai, không phải cái này đè cái kia.
+function dim(n) {
+  if (window.SHAPE_IDS && !window.SHAPE_IDS[n.id]) return true;
+  return filter && n.id.toLowerCase().indexOf(filter) < 0;
+}
+function near(n) {
+  if (!sel) return false;
+  return n === sel || (inMap[sel.id] || []).indexOf(n.id) >= 0 || (outMap[sel.id] || []).indexOf(n.id) >= 0;
+}
+
+function draw() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#12151c'; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.translate(ox, oy); ctx.scale(scale, scale);
+
+  ctx.lineWidth = 0.7 / scale;
+  for (var i = 0; i < E.length; i++) {
+    var a = E[i].a, b = E[i].b;
+    var on = sel && (a === sel || b === sel);
+    if (!on && (dim(a) || dim(b))) continue;
+    ctx.strokeStyle = on ? 'rgba(79,195,247,.85)' : 'rgba(140,155,180,.16)';
+    ctx.lineWidth = (on ? 1.6 : 0.7) / scale;
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
+
+  for (var k = 0; k < N; k++) {
+    var n = nodes[k], faded = dim(n) || (sel && !near(n));
+    ctx.globalAlpha = faded ? 0.13 : 1;
+    ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, 6.2832);
+    ctx.fillStyle = COL[n.folder] || '#8b95a8'; ctx.fill();
+    if (n.sensitive) { ctx.strokeStyle = '#ff4d6d'; ctx.lineWidth = 2.2 / scale; ctx.stroke(); }
+    if (n === sel) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.4 / scale; ctx.stroke(); }
+  }
+  ctx.globalAlpha = 1; ctx.restore();
+
+  ctx.font = '11px "Be Vietnam Pro",Segoe UI,sans-serif';
+  ctx.textAlign = 'center';
+  for (var m = 0; m < N; m++) {
+    var p = nodes[m];
+    var show = p === sel || p === hov || (filter && !dim(p)) || (scale > 0.85 && p.r > 7.5);
+    if (!show) continue;
+    var sx = p.x * scale + ox, sy = p.y * scale + oy;
+    if (sx < -60 || sx > W + 60 || sy < -20 || sy > H + 20) continue;
+    var label = p.id.split('/').pop();
+    ctx.fillStyle = 'rgba(18,21,28,.82)';
+    var w = ctx.measureText(label).width;
+    ctx.fillRect(sx - w / 2 - 3, sy - p.r * scale - 15, w + 6, 13);
+    ctx.fillStyle = p === sel ? '#fff' : '#c9d2e0';
+    ctx.fillText(label, sx, sy - p.r * scale - 5);
+  }
+}
+
+function loop() {
+  if (MODE === 'net') { tick(); if (!userMoved && alpha > 0.05) fit(); draw(); }
+  requestAnimationFrame(loop); // giữ vòng rAF sống để quay lại từ chế độ Khối lượng là chạy tiếp
+}
+loop();
+window.addEventListener('keydown', function (ev) {
+  if (MODE !== 'net') return;
+  // Chỉ bắt phím F khi con trỏ KHÔNG ở trong ô nhập nào — nếu không, gõ chữ 'f' trong
+  // tên file (vd "Iconify") sẽ vô tình canh lại khung nhìn.
+  var t = ev.target || {};
+  if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) return;
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  if (ev.key === 'f' || ev.key === 'F') { userMoved = false; fit(); userMoved = true; }
+});
+
+// tol = bán kính bắt tính bằng pixel màn hình. Con trỏ chuột 7px là đủ; đầu ngón tay
+// phải ~20px, nếu không trên điện thoại gần như không bấm trúng node nào.
+function pick(mx, my, tol) {
+  var t = tol || 7;
+  var wx = (mx - ox) / scale, wy = (my - oy) / scale, best = null, bd = 1e9;
+  for (var i = 0; i < N; i++) {
+    var n = nodes[i], dx = n.x - wx, dy = n.y - wy, d = dx * dx + dy * dy;
+    var rr = Math.max(n.r + 4 / scale, t / scale);
+    if (d < rr * rr && d < bd) { bd = d; best = n; }
+  }
+  return best;
+}
+
+// Kéo/thả/phóng/chọn nằm ở render-input.mjs (Pointer Events) — nối vào CÙNG thẻ <script>
+// này nên dùng chung mọi biến ở trên. Tách file chỉ để giữ trần 300 dòng/module.
+
+function list(arr, title) {
+  if (!arr || !arr.length) return '<h3>' + title + ' (0)</h3><div class="empty">— không có —</div>';
+  var s = '<h3>' + title + ' (' + arr.length + ')</h3><ul>';
+  arr.slice().sort().forEach(function (id) { s += '<li data-go="' + id + '">' + id + '</li>'; });
+  return s + '</ul>';
+}
+function render() {
+  // Lớp 'open' điều khiển tấm trượt ở màn hẹp; màn rộng CSS bỏ qua lớp này (bảng luôn hiện).
+  panel.classList.toggle('open', !!sel);
+  if (!sel) { pbody.innerHTML = '<div class="empty">Chạm vào một node để xem chi tiết.</div>'; return; }
+  pbody.innerHTML =
+    '<h2>' + sel.id + '</h2>' +
+    '<div class="meta">' +
+      '<span class="pill">' + sel.loc + ' dòng</span>' +
+      '<span class="pill">' + sel.folder + '</span>' +
+      (sel.sensitive ? '<span class="pill red">nhạy cảm</span>' : '') +
+    '</div>' +
+    list(inMap[sel.id], 'Được import bởi') +
+    list(outMap[sel.id], 'Đang import');
+}
+function select(n) { sel = n; render(); }
+panel.addEventListener('click', function (ev) {
+  var id = ev.target && ev.target.getAttribute && ev.target.getAttribute('data-go');
+  if (!id || !byId[id]) return;
+  select(byId[id]); center(byId[id]);
+});
+function center(n) {
+  ox = (W - panelW()) / 2 - n.x * scale;
+  oy = H / 2 - n.y * scale;
+}
+q.addEventListener('input', function () { filter = q.value.trim().toLowerCase(); });
+q.addEventListener('keydown', function (ev) {
+  if (ev.key !== 'Enter' || !filter) return;
+  for (var i = 0; i < N; i++) {
+    if (nodes[i].id.toLowerCase().indexOf(filter) >= 0) { select(nodes[i]); center(nodes[i]); return; }
+  }
+});
+
+
+var PTR = {}, nPtr = 0;
+var pinchD0 = 0, pinchS0 = 1, pinchWx = 0, pinchWy = 0;
+var tapSlop = 4;
+var TOUCH_R = 20, MOUSE_R = 7;
+
+function ptrList() { var a = []; for (var k in PTR) a.push(PTR[k]); return a; }
+function isMouse(t) { return t === 'mouse'; }
+
+cv.addEventListener('pointerdown', function (ev) {
+  if (MODE !== 'net' || PTR[ev.pointerId]) return;
+  try { cv.setPointerCapture(ev.pointerId); } catch (e) { /* trình duyệt cũ: bỏ qua, vẫn chạy được */ }
+  PTR[ev.pointerId] = { x: ev.offsetX, y: ev.offsetY };
+  nPtr++;
+  tapSlop = isMouse(ev.pointerType) ? 4 : 12;
+  if (nPtr === 1) {
+    lastX = ev.offsetX; lastY = ev.offsetY; moved = 0; userMoved = true;
+    dragNode = pick(lastX, lastY, isMouse(ev.pointerType) ? MOUSE_R : TOUCH_R);
+    panning = !dragNode;
+    cv.classList.add('drag');
+  } else if (nPtr === 2) {
+    // Chụm 2 ngón: huỷ mọi thao tác 1 ngón đang dở, không vừa kéo node vừa phóng to.
+    dragNode = null; panning = false;
+    var p = ptrList();
+    var cx = (p[0].x + p[1].x) / 2, cy = (p[0].y + p[1].y) / 2;
+    pinchD0 = Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y) || 1;
+    pinchS0 = scale;
+    pinchWx = (cx - ox) / scale; // điểm TRÊN ĐỒ THỊ đang nằm dưới tâm 2 ngón
+    pinchWy = (cy - oy) / scale;
+  }
+});
+
+cv.addEventListener('pointermove', function (ev) {
+  if (MODE !== 'net') return;
+  var me = PTR[ev.pointerId];
+  if (!me) {
+    // Chuột rê mà không bấm → chỉ làm nổi node dưới con trỏ. Ngón tay không vào nhánh này.
+    if (isMouse(ev.pointerType)) {
+      hov = pick(ev.offsetX, ev.offsetY, MOUSE_R);
+      cv.style.cursor = hov ? 'pointer' : 'grab';
+    }
+    return;
+  }
+  me.x = ev.offsetX; me.y = ev.offsetY;
+
+  if (nPtr >= 2) {
+    var p = ptrList();
+    var cx = (p[0].x + p[1].x) / 2, cy = (p[0].y + p[1].y) / 2;
+    var d = Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y) || 1;
+    var ns = Math.min(6, Math.max(0.12, pinchS0 * (d / pinchD0)));
+    // Ghim điểm đồ thị dưới tâm 2 ngón ⇒ MỘT cử chỉ làm cả 2 việc: chụm để phóng,
+    // trượt 2 ngón để di chuyển. Không cần cử chỉ riêng cho việc di chuyển.
+    scale = ns; ox = cx - pinchWx * ns; oy = cy - pinchWy * ns;
+    moved += 99; // đã phóng/di chuyển thì nhấc tay lên KHÔNG được tính là chạm chọn
+    userMoved = true;
+    return;
+  }
+
+  var dx = ev.offsetX - lastX, dy = ev.offsetY - lastY;
+  if (dragNode) { dragNode.x += dx / scale; dragNode.y += dy / scale; alpha = Math.max(alpha, 0.35); }
+  else if (panning) { ox += dx; oy += dy; }
+  moved += Math.abs(dx) + Math.abs(dy);
+  lastX = ev.offsetX; lastY = ev.offsetY;
+});
+
+function endPtr(ev) {
+  if (!PTR[ev.pointerId]) return;
+  delete PTR[ev.pointerId];
+  nPtr = Math.max(0, nPtr - 1);
+
+  if (nPtr > 0) {
+    // Nhấc 1 trong 2 ngón: ngón còn lại chuyển sang di chuyển nền, KHÔNG nhảy giật
+    // (phải nạp lại mốc toạ độ, nếu không dx tính từ vị trí ngón vừa nhấc).
+    var r = ptrList()[0];
+    if (r) { lastX = r.x; lastY = r.y; }
+    dragNode = null; panning = true; moved += 99;
+    return;
+  }
+
+  if (MODE === 'net' && moved < tapSlop) {
+    if (dragNode) select(dragNode);
+    else if (panning) { sel = null; render(); }
+  }
+  dragNode = null; panning = false; hov = null; cv.classList.remove('drag');
+}
+cv.addEventListener('pointerup', endPtr);
+cv.addEventListener('pointercancel', endPtr);
+
+cv.addEventListener('wheel', function (ev) {
+  if (MODE !== 'net') return;
+  ev.preventDefault(); userMoved = true;
+  var f = ev.deltaY < 0 ? 1.12 : 1 / 1.12, ns = Math.min(6, Math.max(0.12, scale * f));
+  ox = ev.offsetX - (ev.offsetX - ox) * (ns / scale);
+  oy = ev.offsetY - (ev.offsetY - oy) * (ns / scale);
+  scale = ns;
+}, { passive: false });
+
+// Nút đóng bảng chi tiết — CHỈ hiện ở màn hẹp (bảng là tấm trượt từ dưới lên, che mất
+// đồ thị). Màn rộng bảng nằm cột phải cố định nên nút bị CSS ẩn đi.
+(function () {
+  var b = document.getElementById('pclose');
+  if (b) b.addEventListener('click', function () { panel.classList.remove('open'); });
+})();
+</script>
+<script>
+(function () {
+  var tip = document.getElementById('tip');
+  var tl = document.getElementById('tmlegend');
+  var CH = DATA.churn || { mode: null, flat: true, note: '' };
+  var SH = DATA.tmShades, NEU = DATA.tmNeutral;
+  var useColor = CH.mode !== null && !CH.flat;
+
+  // Ngưỡng 5 bậc = ngũ phân vị trên các GIÁ TRỊ churn KHÁC NHAU — phân bố lệch nặng
+  // (đa số file 1 commit) nên chia theo giá trị; chia theo file thì 4 bậc đầu dính nhau.
+  var thresholds = [];
+  if (useColor) {
+    var uniq = [];
+    nodes.forEach(function (n) { if (uniq.indexOf(n.churn) < 0) uniq.push(n.churn); });
+    uniq.sort(function (a, b) { return a - b; });
+    for (var q = 1; q < 5; q++) thresholds.push(uniq[Math.min(uniq.length - 1, Math.floor(uniq.length * q / 5))]);
+  }
+  function bucket(c) {
+    if (!useColor) return -1;
+    for (var i = 0; i < 4; i++) if (c < thresholds[i]) return i;
+    return 4;
+  }
+
+  // Cây thư mục lồng nhau từ danh sách file đã index
+  var TREE = (function () {
+    var root = { name: '', dir: true, kids: {}, items: [] };
+    nodes.forEach(function (n) {
+      var parts = n.id.split('/');
+      var cur = root;
+      for (var i = 0; i < parts.length - 1; i++) {
+        if (!cur.kids[parts[i]]) cur.kids[parts[i]] = { name: parts[i], dir: true, kids: {}, items: [] };
+        cur = cur.kids[parts[i]];
+      }
+      cur.items.push({ name: parts[parts.length - 1], node: n, size: Math.max(1, n.loc) });
+    });
+    (function finish(d) {
+      Object.keys(d.kids).forEach(function (k) { finish(d.kids[k]); d.items.push(d.kids[k]); });
+      d.size = 0;
+      d.items.forEach(function (it) { d.size += it.size; });
+      d.items.sort(function (a, b) { return b.size - a.size; }); // squarify đòi giảm dần
+    })(root);
+    return root;
+  })();
+
+  var fileRects = [];
+
+  function worst(row, sum, side) {
+    var thick = sum / side, mx = 0;
+    for (var i = 0; i < row.length; i++) {
+      var len = row[i]._a / thick, ar = len > thick ? len / thick : thick / len;
+      if (ar > mx) mx = ar;
+    }
+    return mx;
+  }
+
+  // Squarified: xếp từng dải bám cạnh NGẮN, chỉ nhận thêm ô khi tỉ lệ xấu nhất không tệ đi.
+  function squarify(items, x, y, w, h) {
+    if (!items.length || w <= 2 || h <= 2) return;
+    var total = 0;
+    items.forEach(function (it) { total += it.size; });
+    if (!total) return;
+    var k = w * h / total;
+    items.forEach(function (it) { it._a = it.size * k; });
+    var i = 0;
+    while (i < items.length) {
+      var side = Math.min(w, h), row = [items[i]], sum = items[i]._a;
+      var best = worst(row, sum, side), j = i + 1;
+      while (j < items.length) {
+        row.push(items[j]);
+        var wr = worst(row, sum + items[j]._a, side);
+        if (wr <= best) { sum += items[j]._a; best = wr; j++; }
+        else { row.pop(); break; }
+      }
+      var thick = sum / side, off = 0, r, len;
+      for (r = 0; r < row.length; r++) {
+        len = row[r]._a / thick;
+        if (w > h) place(row[r], x, y + off, thick, len);
+        else place(row[r], x + off, y, len, thick);
+        off += len;
+      }
+      if (w > h) { x += thick; w -= thick; } else { y += thick; h -= thick; }
+      i = j;
+    }
+  }
+
+  function place(it, x, y, w, h) { if (it.dir) drawDir(it, x, y, w, h); else drawFile(it, x, y, w, h); }
+
+  function clipText(s, x, y, maxW) {
+    if (maxW <= 16) return;
+    var t = s;
+    while (t.length > 2 && ctx.measureText(t).width > maxW) t = t.slice(0, -2);
+    if (t !== s) t = t + '…';
+    ctx.fillText(t, x, y);
+  }
+
+  function drawDir(d, x, y, w, h) {
+    ctx.strokeStyle = 'rgba(165,180,205,.6)'; // viền thư mục: sáng + dày = RÕ hơn viền file
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    var label = w >= 64 && h >= 30; // ô quá nhỏ thì không in chữ, tránh chồng lấn
+    if (label) {
+      ctx.fillStyle = 'rgba(230,233,239,.78)';
+      ctx.font = '600 11px "Be Vietnam Pro",Segoe UI,sans-serif';
+      ctx.textAlign = 'left';
+      clipText(d.name + '/', x + 5, y + 12, w - 10);
+    }
+    var iy = y + (label ? 16 : 3);
+    squarify(d.items.slice(), x + 3, iy, w - 6, h - (label ? 16 : 3) - 3);
+  }
+
+  function drawFile(f, x, y, w, h) {
+    var n = f.node, b = bucket(n.churn || 0);
+    ctx.fillStyle = b < 0 ? NEU : SH[b];
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = '#12151c'; ctx.lineWidth = 1; // viền file: mảnh + tối = YẾU hơn viền thư mục
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    if (n.loc > 500) { ctx.strokeStyle = '#ff4d6d'; ctx.lineWidth = 2; ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3); }
+    if (w >= 88 && h >= 20) {
+      ctx.fillStyle = b >= 3 ? 'rgba(20,24,33,.88)' : 'rgba(235,238,244,.9)'; // chữ tối trên ô sáng, chữ sáng trên ô tối
+      ctx.font = '10px "Be Vietnam Pro",Segoe UI,sans-serif';
+      ctx.textAlign = 'left';
+      clipText(f.name, x + 5, y + 13, w - 10);
+    }
+    fileRects.push({ x: x, y: y, w: w, h: h, n: n });
+  }
+
+  window.__tmDraw = function () {
+    if (MODE !== 'tm') return;
+    fileRects = [];
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#12151c'; ctx.fillRect(0, 0, W, H);
+    squarify(TREE.items.slice(), 10, 10, W - 20, H - 20);
+    window.__tmRects = fileRects; // phơi ra cho kiểm thử tự động — không dùng trong luồng chính
+  };
+  window.addEventListener('resize', function () { if (MODE === 'tm') setTimeout(window.__tmDraw, 0); });
+
+  // Ngón tay KHÔNG rê được ⇒ không có "hover". Cùng một hàm phục vụ 2 cách: chuột rê
+  // (máy tính) và CHẠM (điện thoại). Thiếu nhánh chạm thì trên iPhone chú giải không
+  // bao giờ hiện — mà chú giải là chỗ DUY NHẤT đọc được tên file ở chế độ này.
+  function showTip(mx, my) {
+    if (MODE !== 'tm') { tip.style.display = 'none'; return; }
+    var hit = null;
+    for (var i = 0; i < fileRects.length; i++) {
+      var r = fileRects[i];
+      if (mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) { hit = r; break; }
+    }
+    if (!hit) { tip.style.display = 'none'; return; }
+    var n = hit.n;
+    tip.innerHTML = '<b>' + n.id + '</b><br>' + n.loc + ' dòng' + (n.loc > 500 ? ' ⚠️ >500' : '') +
+      (CH.mode !== null ? ' · sửa ' + (n.churn || 0) + ' lần' : '') + ' · fanIn ' + n.fanIn;
+    tip.style.display = 'block';
+    // Kẹp trong khung nhìn cả 2 chiều — chạm ô ở mép dưới màn hình thì chú giải phải
+    // nhảy LÊN TRÊN ngón tay, nếu không nó nằm ngoài màn hình và coi như không hiện.
+    var tw = tip.offsetWidth || 320, th = tip.offsetHeight || 46;
+    tip.style.left = Math.max(6, Math.min(W - tw - 6, mx + 14)) + 'px';
+    tip.style.top = (my + th + 22 > H ? Math.max(6, my - th - 12) : my + 16) + 'px';
+  }
+  cv.addEventListener('mousemove', function (ev) { showTip(ev.offsetX, ev.offsetY); });
+  cv.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
+  cv.addEventListener('pointerdown', function (ev) {
+    if (ev.pointerType === 'mouse') return; // chuột đã có nhánh rê ở trên
+    showTip(ev.offsetX, ev.offsetY);
+  });
+
+  // Chú thích: dải bậc ghi RÕ khoảng giá trị thật — không để người đọc đoán
+  (function legend() {
+    var sw = function (bg, extra, text) {
+      return '<span class="lg"><i style="border-radius:2px;' + bg + (extra || '') + '"></i>' + text + '</span>';
+    };
+    var s = '';
+    if (!useColor) {
+      s += sw('background:' + NEU + ';', '', CH.mode === null ? CH.note : 'lịch sử git quá mỏng, không đủ phân bậc — tô 1 màu');
+    } else {
+      var minC = Infinity, maxC = 0;
+      nodes.forEach(function (n) { var c = n.churn || 0; if (c < minC) minC = c; if (c > maxC) maxC = c; });
+      var lo = minC;
+      for (var b = 0; b < 5; b++) {
+        var hi = b < 4 ? thresholds[b] - 1 : maxC;
+        if (hi >= lo) { s += sw('background:' + SH[b] + ';', '', 'sửa ' + (lo === hi ? lo : lo + '–' + hi) + ' lần'); lo = hi + 1; }
+      }
+    }
+    s += sw('background:transparent;', 'border:2px solid #ff4d6d;', '&gt;500 dòng (CẤM số 1)');
+    s += '<br><span style="color:#5d6678">Diện tích ô = số dòng · rê chuột xem chi tiết · ' + CH.note + '</span>';
+    tl.innerHTML = s;
+  })();
+})();
+</script>
+<script>
+(function () {
+  var S = DATA.shapes; if (!S || !S.hinh) return;
+  var bar = document.getElementById('shapes');
+  var panel = document.getElementById('panel'), pbody = document.getElementById('pbody');
+  var cur = null;
+  var byKey = {}; S.hinh.forEach(function (h) { byKey[h.key] = h; });
+
+  function arrow(a) { return a.join(' → '); }
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function detail(h) {
+    var L = ['<h2>' + esc(h.ten) + '</h2><div class="meta">' + esc(h.mota) +
+             (h.theoQuyMo ? ' · ngưỡng theo vùng quy mô <b>' + esc(S.band) + '</b>' : '') + '</div>'];
+    if (h.loi) L.push('<div class="meta" style="color:#ff8fa3">Đây là lỗi thật — sửa được ngay.</div>');
+    else L.push('<div class="meta" style="color:#8b95a8">Tín hiệu thống kê: đầu mối đặt câu hỏi, KHÔNG phải bằng chứng.</div>');
+    L.push('<h3>' + h.items.length + ' ca</h3><ul>');
+    h.items.slice(0, 200).forEach(function (it) {
+      if (h.key === 'vong-tron') L.push('<li data-go="' + esc(it.vidu[0]) + '">' + esc(arrow(it.vidu)) + ' → ' + esc(it.vidu[0]) + '</li>');
+      else if (h.key === 'cum-day-nhop') L.push('<li data-go="' + esc(it.ids[0]) + '"><b>' + it.matDo + '</b> cạnh/file — ' + esc(it.folder) + ' (' + it.canhTrong + ' cạnh trong / ' + it.soFile + ' file)</li>');
+      else if (h.key === 'chuoi-dai') L.push('<li data-go="' + esc(it.files[0]) + '">' + esc(arrow(it.files)) + '</li>');
+      else if (h.key === 'sao-trung-tam') L.push('<li data-go="' + esc(it.id) + '">' + esc(it.id) + ' ← ' + it.fanIn + ' nơi</li>');
+      else L.push('<li data-go="' + esc(it.id) + '">' + esc(it.id) + ' (' + it.loc + ' dòng)</li>');
+    });
+    if (h.items.length > 200) L.push('<li class="empty">… còn ' + (h.items.length - 200) + ' ca nữa</li>');
+    L.push('</ul>');
+    // Vòng mềm: hiện ngay dưới vòng cứng để không ai tưởng công cụ bỏ sót chúng.
+    if (h.key === 'vong-tron' && S.vongMem && S.vongMem.length) {
+      L.push('<h3>Vòng mềm (' + S.vongMem.length + ') — KHÔNG phải lỗi</h3>');
+      L.push('<div class="meta">Đã phá bằng <b>import() động</b>: nạp lúc chạy nên thứ tự nạp module không vướng. Vẫn là chỗ 2 file quấn nhau.</div><ul>');
+      S.vongMem.slice(0, 60).forEach(function (c) {
+        L.push('<li data-go="' + esc(c.vidu[0]) + '">' + esc(arrow(c.vidu)) + ' → ' + esc(c.vidu[0]) + '</li>');
+      });
+      L.push('</ul>');
+    }
+    return L.join('');
+  }
+
+  function idsOf(h) {
+    // Vòng cứng rỗng → tô sáng theo vòng MỀM, đừng để bộ lọc làm tối sạch màn hình.
+    if (h.key === 'vong-tron' && !h.ids.length && S.vongMem) {
+      var acc = []; S.vongMem.forEach(function (c) { acc = acc.concat(c.files); }); return acc;
+    }
+    return h.ids;
+  }
+
+  function apply(key) {
+    cur = (cur === key) ? null : key;
+    var h = cur ? byKey[cur] : null;
+    if (h) { var m = {}; idsOf(h).forEach(function (id) { m[id] = 1; }); window.SHAPE_IDS = m; }
+    else window.SHAPE_IDS = null;
+    [].forEach.call(bar.querySelectorAll('.chip'), function (b) {
+      var on = b.getAttribute('data-shape') === cur;
+      b.className = b.className.replace(/ on\b/g, '') + (on ? ' on' : '');
+    });
+    pbody.innerHTML = h ? detail(h) : '<div class="empty">Chạm vào một node để xem chi tiết.</div>';
+    panel.classList.toggle('open', !!h); // màn hẹp: bấm chip là tấm trượt hiện lên
+
+  }
+
+  bar.addEventListener('click', function (ev) {
+    var b = ev.target; while (b && b !== bar && !b.getAttribute('data-shape')) b = b.parentNode;
+    var k = b && b.getAttribute && b.getAttribute('data-shape');
+    if (!k || !byKey[k]) return;
+    if (byKey[k].items.length || (k === 'vong-tron' && S.vongMem && S.vongMem.length)) apply(k);
+  });
+})();
+</script>
+</body>
+</html>

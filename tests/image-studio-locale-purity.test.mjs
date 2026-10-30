@@ -21,7 +21,7 @@ const renderer = portalSource.slice(renderStart, renderEnd);
 const genericEnglish = /\b(?:signed|server|provider|browser|workspace|image|creative|direction|self-review|artboard|review|metadata|target|brief|style|asset|job|delivery|wallet|payment|archive|guarded|native|legacy|fallback|thumbnail|preview)\b/i;
 
 test("Image Studio locale catalogue stays balanced and Vietnamese fixed copy is clean", () => {
-  assert.equal(rows.length, 37, "Image Studio fixed catalogue must keep every reviewed key");
+  assert.equal(rows.length, 38, "Image Studio fixed catalogue must keep every reviewed key");
   assert.equal(vi.length, en.length);
   assert.equal(vi.length, zh.length);
   assert.doesNotMatch(vi.join(" | ").replace(/\{[^}]+\}/g, "").replace(/\/image\b/g, ""), genericEnglish);
