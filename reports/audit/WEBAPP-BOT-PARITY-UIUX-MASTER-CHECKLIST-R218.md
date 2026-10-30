@@ -21,8 +21,8 @@ F0_Q0_IMAGE_CLOSED_COUNT=13
 P5_P6_CLOSED_COUNT=13
 A0_ADMIN_CLOSED_COUNT=4
 V0_VIDEO_CLOSED_COUNT=13
-Q0_L0_CLOSED_COUNT=7
-REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=54
+Q0_L0_CLOSED_COUNT=4
+REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=57
 UNCLASSIFIED_MASTER_ROW_COUNT=0
 BACKEND_MUTATION_COUNT=0
 REALTIME_TRANSLATE_TOUCH=NO
@@ -972,7 +972,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   trống và hero badge0;96initialstates trên8route/VI/EN/ZH/light-dark/390-1440
   không có chữ thử nghiệm/demo/beta/sandbox. Không dùng fixturequote làm chứng
   cứ generation. Không sửa nội dung thật của khách.
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-CUSTOMER-CONTENT] Customer content action truth: đã rà toàn bộ fixed chrome và dynamic states theo spec `2026-10-22-r218-customer-content-action-truth.md`; mọi ô/nhãn có mục đích, không còn chuỗi "thử nghiệm", "demo", "beta", "sandbox", action handler hợp lệ, giữ nguyên control Bot-parity. (Evidence: `docs/superpowers/specs/2026-10-22-r218-customer-content-action-truth.md`, `tests/q0-l0-shared-contracts.test.mjs`, `scripts/ci/run_authenticated_qa_matrix.py` 456 records verified).
+- [ ] Q0-CUSTOMER-CONTENT: tiếp tục rà dynamicstates và màn còn lại theo spec `2026-10-22-r218-customer-content-action-truth.md`; mọi ô/nhãn phải có mục đích, thao tác/output phải kiểm được; không bỏ control Bot-parity cần thiết.
 - [x] Q0-CUSTOMER-CONTENT-STATUS-CARD: card trạng thái khách không còn lặp
   bridge/session/provider-payment metadata đã có trong Summary; giữ icon, tiêu đề,
   lý do trạng thái và CSS/accessibility. Test `1/1`; SubDub hồi quy `48/48`.
@@ -1101,8 +1101,8 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-01] Inventory B01–B34 → control ledger; unclassified=0 hoặc ghi reason rõ từng mục. (Evidence: `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md` Step 1 ledger reconciliation, 0 unclassified)
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-02] VI/EN/ZH sạch; dữ liệu user/tên riêng không bị dịch. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/test_portal_i18n_bundle_contracts.py` 19/19 pass, `static/portal/portal-i18n.js`)
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-03] Mobile 375/390/768/1440 × themes; shell/forms responsive 320/414/1024, zero horizontal overflow, main view visible và theme persistence. (Evidence: `tests/q0-l0-shared-contracts.test.mjs`, `scripts/ci/run_authenticated_qa_matrix.py` 456 records matrix across phone-375/390, tablet-768, desktop-1440 với 0 overflow, `scripts/ci/run_browser_verification.py` 18 screenshots 375/768/1440, `static/portal/portal.css` media queries).
-- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-04] Keyboard navigation, focus order, accessible contrast tokens, 44px touch targets, zero clipping/overflow, empty/loading/error states. (Evidence: `tests/q0-l0-shared-contracts.test.mjs`, `tests/test_browser_runtime_gate.py` basic a11y & screenshot tests, `scripts/ci/run_authenticated_qa_matrix.py` full AX tree nodes và focus order capture across 456 cases, `static/portal/portal.css`, `static/portal/portal-theme.css`).
+- [ ] Mobile 375/390/768/1440 × themes; shell/forms thêm 320/414/1024.
+- [ ] Keyboard/focus/label/contrast/touch/overflow/empty/loading/error/recovery.
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-TOAST-STACK] Toast stack: đã sửa đúng ba entry point `portal.js`, `integration.js`, `portal-auth.js`: bỏ thông báo rỗng, gộp trùng, tối đa 2 node đang hiện, giữ `aria-live` bằng role `status/alert`, bottom-dock non-obscuring layout trên mobile 390px. (Evidence: `tests/portal-toast-stack.test.mjs` 3/3 pass, `docs/superpowers/specs/2026-10-22-r218-toast-stack.md`, `tests/q0-l0-shared-contracts.test.mjs`, `scripts/ci/run_authenticated_qa_matrix.py` status/alert nodes).
 - [~] Motion lifecycle/source có regression, nhưng browser12 chỉ kiểm nội dung/
   overflow/reduced loader, CHƯA chứng minh chuyển động mượt/hydration runtime:

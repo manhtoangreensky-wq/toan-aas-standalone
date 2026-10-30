@@ -118,6 +118,8 @@ def ensure_core_bridge_readiness() -> None:
 
 
 def _safe_error_code(status_code: int) -> str:
+    if status_code == 400:
+        return "CORE_BRIDGE_BAD_REQUEST"
     if status_code == 401:
         return "CORE_BRIDGE_UNAUTHORIZED"
     if status_code == 403:
@@ -126,6 +128,8 @@ def _safe_error_code(status_code: int) -> str:
         return "CORE_BRIDGE_NOT_AVAILABLE"
     if status_code == 409:
         return "VERSION_CONFLICT_STALE_WRITE"
+    if status_code == 422:
+        return "CORE_BRIDGE_UNPROCESSABLE"
     if status_code == 429:
         return "CORE_BRIDGE_RATE_LIMITED"
     return "CORE_BRIDGE_UNAVAILABLE"

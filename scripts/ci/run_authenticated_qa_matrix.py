@@ -568,6 +568,10 @@ async def _capture_record(
         "focus_order": (dom or {}).get("focus_order", []),
         "status_nodes": (dom or {}).get("status_nodes", []),
         "status_markers": (dom or {}).get("status_markers", []),
+        "main_visible": bool((dom or {}).get("main_visible")),
+        "horizontal_overflow": bool((dom or {}).get("horizontal_overflow")),
+        "ax_nodes_count": len(ax_nodes),
+        "focus_order_count": len((dom or {}).get("focus_order", [])),
         "console_errors": [item for item in console if item.get("type") == "error"],
         "console_warnings": [item for item in console if item.get("type") == "warning"],
         "page_errors": event_state.get("page_errors", []),
@@ -590,7 +594,10 @@ async def _capture_record(
         and bool(row["title"])
         and bool(row["heading"])
         and int(row["interactive_count"]) > 0
-        and not bool((dom or {}).get("horizontal_overflow"))
+        and not row["horizontal_overflow"]
+        and row["main_visible"]
+        and row["ax_nodes_count"] > 0
+        and row["focus_order_count"] > 0
         and not row["console_errors"]
         and not row["console_warnings"]
         and not row["page_errors"]

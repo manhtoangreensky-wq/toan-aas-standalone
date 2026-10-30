@@ -13,20 +13,24 @@ const qaMatrixRunner = fs.readFileSync(path.join(repoRoot, "scripts/ci/run_authe
 const browserVerificationRunner = fs.readFileSync(path.join(repoRoot, "scripts/ci/run_browser_verification.py"), "utf8");
 const masterLedger = fs.readFileSync(path.join(repoRoot, "reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md"), "utf8");
 
-test("Q0-03: Responsive shell and multi-viewport matrix contracts (375/390/768/1440, themes, zero overflow)", () => {
+test("Q0-03: Responsive shell and multi-viewport matrix contracts (375/390/768/1440, themes, zero overflow, main_visible recorded & enforced)", () => {
   // CSS responsive media queries
   assert.match(portalCss, /@media\s*\([^)]*max-width:\s*768px\)/);
   assert.match(portalCss, /@media\s*\([^)]*max-width:\s*480px\)/);
 
-  // Authenticated QA runner covers 4 canonical viewports and checks overflow
+  // Authenticated QA runner covers 4 canonical viewports
   assert.match(qaMatrixRunner, /"phone-375",\s*375,\s*812/);
   assert.match(qaMatrixRunner, /"phone-390",\s*390,\s*844/);
   assert.match(qaMatrixRunner, /"tablet-768",\s*768,\s*1024/);
   assert.match(qaMatrixRunner, /"desktop-1440",\s*1440,\s*900/);
-  assert.match(qaMatrixRunner, /horizontal_overflow:\s*document\.documentElement\.scrollWidth\s*>\s*window\.innerWidth\s*\+\s*1/);
-  assert.match(qaMatrixRunner, /main_visible:\s*Boolean\(/);
 
-  // Browser verification runner covers 3 viewports and touch targets
+  // Evidence gate truth: main_visible and horizontal_overflow must be stored in record and enforced in pass predicate
+  assert.match(qaMatrixRunner, /"main_visible":\s*bool\(\(dom or \{\}\)\.get\("main_visible"\)\)/);
+  assert.match(qaMatrixRunner, /"horizontal_overflow":\s*bool\(\(dom or \{\}\)\.get\("horizontal_overflow"\)\)/);
+  assert.match(qaMatrixRunner, /and not row\["horizontal_overflow"\]/);
+  assert.match(qaMatrixRunner, /and row\["main_visible"\]/);
+
+  // Browser verification runner covers 3 viewports
   assert.match(browserVerificationRunner, /1440,\s*900/);
   assert.match(browserVerificationRunner, /768,\s*1024/);
   assert.match(browserVerificationRunner, /375,\s*812/);
@@ -40,10 +44,12 @@ test("Q0-04: Accessibility tree extraction, focus order, accessible contrast tok
   assert.match(portalThemeCss, /--portal-ink:\s*#073a45/);
   assert.match(portalThemeCss, /--portal-dark-ink:\s*#f0fbff/);
 
-  // Authenticated QA runner extracts full accessibility tree and focus order
+  // Authenticated QA runner extracts full accessibility tree and focus order and enforces non-empty counts
   assert.match(qaMatrixRunner, /Accessibility\.getFullAXTree/);
-  assert.match(qaMatrixRunner, /focus_order:\s*focus/);
-  assert.match(qaMatrixRunner, /interactive_count:\s*controls\.length/);
+  assert.match(qaMatrixRunner, /"ax_nodes_count":\s*len\(ax_nodes\)/);
+  assert.match(qaMatrixRunner, /"focus_order_count":\s*len\(\(dom or \{\}\)\.get\("focus_order", \[\]\)\)/);
+  assert.match(qaMatrixRunner, /and row\["ax_nodes_count"\] > 0/);
+  assert.match(qaMatrixRunner, /and row\["focus_order_count"\] > 0/);
 });
 
 test("Q0-TOAST-STACK: Toast notification stack bounds, duplicate collapsing, and ARIA live regions", () => {
@@ -62,11 +68,11 @@ test("Q0-TOAST-STACK: Toast notification stack bounds, duplicate collapsing, and
 });
 
 test("Q0-CUSTOMER-CONTENT: Customer content action truth and zero unverified placeholder claims in fixed chrome", () => {
-  // No demo/beta/sandbox mock labels in fixed UI chrome
+  // No demo/beta/sandbox mock bypass actions in customer chrome
   assert.doesNotMatch(portalSource, /data-portal-action="fake-generate-bypass"/);
   assert.doesNotMatch(portalSource, /data-fake-transparent-preview/i);
 
-  // Customer routes are verified in authenticated QA runner
+  // Customer routes are verified in authenticated QA matrix
   assert.match(qaMatrixRunner, /CUSTOMER_ROUTES\s*=/);
   assert.match(qaMatrixRunner, /"\/welcome"/);
   assert.match(qaMatrixRunner, /"\/dashboard"/);
@@ -96,14 +102,14 @@ test("VI-TOOLBAR-CAPCUT-BOUNDED: Toolbar tools contract enforces bounded tools w
   assert.match(portalSource, /video-hub/i);
 });
 
-test("Q0/L0 Master Ledger Reconciliation: 260 total = 196 closed + 10 deferred + 54 open", () => {
+test("Q0/L0 Master Ledger Reconciliation: 260 total = 193 closed + 10 deferred + 57 open", () => {
   assert.match(masterLedger, /MASTER_ROWS_TOTAL=260/);
   assert.match(masterLedger, /UNCLASSIFIED_MASTER_ROW_COUNT=0/);
   assert.match(masterLedger, /F0_Q0_IMAGE_CLOSED_COUNT=13/);
   assert.match(masterLedger, /P5_P6_CLOSED_COUNT=13/);
   assert.match(masterLedger, /A0_ADMIN_CLOSED_COUNT=4/);
   assert.match(masterLedger, /V0_VIDEO_CLOSED_COUNT=13/);
-  assert.match(masterLedger, /Q0_L0_CLOSED_COUNT=7/);
-  assert.match(masterLedger, /REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=54/);
+  assert.match(masterLedger, /Q0_L0_CLOSED_COUNT=4/);
+  assert.match(masterLedger, /REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=57/);
   assert.match(masterLedger, /SUBPHASE_Q0_L0=PASS/);
 });
