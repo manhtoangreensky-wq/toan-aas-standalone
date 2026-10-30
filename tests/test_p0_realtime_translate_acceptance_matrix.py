@@ -345,7 +345,7 @@ def test_21_pricing_admission_fail_closed():
 
 
 # Pin canonical Bot authority revision
-EXPECTED_BOT_SHA = os.environ.get("EXPECTED_BOT_SHA", "4343442704962da5040f2104c356bc7baf0e8cf5").strip()
+EXPECTED_BOT_SHA = os.environ.get("EXPECTED_BOT_SHA", "804e23dad74dce0dfcaf3f472f1d2231a86931ba").strip()
 
 bot_candidates = [
     os.environ.get("TOAN_AAS_BOT_REPO_ROOT"),
