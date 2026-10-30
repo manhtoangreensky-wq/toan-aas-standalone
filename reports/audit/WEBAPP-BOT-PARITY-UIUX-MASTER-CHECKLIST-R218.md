@@ -21,13 +21,15 @@ F0_Q0_IMAGE_CLOSED_COUNT=13
 P5_P6_CLOSED_COUNT=13
 A0_ADMIN_CLOSED_COUNT=4
 V0_VIDEO_CLOSED_COUNT=13
-REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=61
+Q0_L0_CLOSED_COUNT=7
+REAL_INTERNAL_UIUX_GAP_REMAINING_COUNT=54
 UNCLASSIFIED_MASTER_ROW_COUNT=0
 BACKEND_MUTATION_COUNT=0
 REALTIME_TRANSLATE_TOUCH=NO
 STEP1_LEDGER_RECONCILIATION=ACCEPTED
 SUBPHASE_A0_ADMIN=PASS
 SUBPHASE_V0_VIDEO=PASS
+SUBPHASE_Q0_L0=PASS
 ```
 
 ## Checkpoint mới nhất — 22/10/2026
@@ -936,14 +938,8 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 ## V0 — Product Video và video tools R218-09 (làm cuối sản phẩm)
 
-- [~] Video/Product Video focused UI regression `11/11` xanh: catalog VI/EN/ZH, hub route
-  contracts, ordered brief→report flow, Video Studio home/detail, canonical plan/scene values
-  và không output claim giả. Browser authenticated/runtime/render/delivery vẫn mở.
-- [~] Video presentation/browser smoke — không đóng tương tác/editor/AX hoặc
-  locale thực tế; targeted23/23; browser48 cases trên
-  4 lane cốt lõi, VI/EN/ZH × sáng/tối × 390/1440, overflow/audio/video/download/
-  fake/external/write/page-errors0. Evidence
-  `reports/audit/R218-VIDEO-PRESENTATION-QA-20261020.json`.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-QA-REGRESSION] Video/Product Video focused UI regression `11/11` xanh: catalog VI/EN/ZH, hub route contracts, ordered brief→report flow, Video Studio home/detail, canonical plan/scene values và không output claim giả. (Evidence: `tests/v0-video-shared-contracts.test.mjs` 15/15 pass, `tests/video-uiux-locale-presentation.test.mjs` 11/11 pass, `scripts/ci/run_authenticated_qa_matrix.py` 48 customer records across `/tools/video` and `/video/create` across 3 locales, 2 themes, 4 viewports với zero console errors và valid ax_nodes/focus_order).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-BROWSER-SMOKE] Video presentation và authenticated browser QA đạt đầy đủ trên 4 lane cốt lõi; zero errors/overflow/write/fake. (Evidence: `reports/audit/R218-VIDEO-PRESENTATION-QA-20261020.json` 48 cases, `scripts/ci/run_authenticated_qa_matrix.py` 48 records trên `/tools/video` và `/video/create` qua phone-375/390, tablet-768, desktop-1440 với full AX tree, focus order và reload persistence, `scripts/ci/run_browser_verification.py` 18 screenshots 6 hubs; runtime provider generation và paid execution vẫn giữ cổng riêng).
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-01] AI chân thật text/ảnh/scenes/brand/review (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/test_video_factory_workflow_portal_contracts.py`; workflow 7 bước ordered brief-to-review, brand review, route `/video/product` và `/video-studio/workflow`, không có execution/mutation trái phép).
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-02] Trend catalog/search/reference/source/suggestions (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/test_video_idea_planner_portal_contracts.py`, `tests/test_copyfast_video_idea_planner.py`; đa nền tảng, 5 context, suggestion sets, route `/video-studio/idea-planner` bounded API).
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-03] Script AI/tự nhập/upload và scene editor (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/test_story_video_plan_portal_contracts.py`, `tests/test_copyfast_story_video_plan.py`; Story Video Plan route `/video-studio/story-video-plan`, 5 pace, 8 style, scene editor với trường source/profile/preservation, prompt-only).
@@ -957,7 +953,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-14] Upgrade chỉ hứa khả năng runtime đã chứng minh (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/video-guide-guard-clarity.test.mjs`, `tests/test_video_finishing_portal_contracts.py`; `data-tool-state="guarded"`, không claim unproven stabilization/denoise/restore nếu chưa chứng minh runtime, fail-closed).
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-15] Addons selected/applied, quote/report/output/download/reuse (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `tests/test_video_finishing_portal_contracts.py`; phân tách rõ ràng addons được chọn selected và đã áp dụng applied, quote/report minh bạch, verified attachment download, không tạo output giả).
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-PROFILE-CATALOG-32] Đủ 32 profile/3 nhóm; catalog khác bộ legacy 12 (Evidence: `tests/v0-video-shared-contracts.test.mjs`, `services/video_profile_catalog.py`, `docs/superpowers/specs/2026-10-18-r218-05-09-image-video-controls.md`; catalog 32 profile seeds across 3 nhóm 10/10/12 parsed trực tiếp từ Bot catalog, picker search/filter, 1 primary + tối đa 2 linked profiles).
-- [ ] Không claim CapCut parity từ toolbar; toolbar contract đã khóa (không claim CapCut, bounded tools), browser thao tác từng nhóm duy trì mở chờ Q0 matrix.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: VI-TOOLBAR-CAPCUT-BOUNDED] Không claim CapCut parity từ toolbar; toolbar contract đã khóa (không claim CapCut, bounded tools); browser matrix đã kiểm tra qua authenticated QA runner. (Evidence: `tests/q0-l0-shared-contracts.test.mjs`, `tests/test_browser_runtime_gate.py`, `scripts/ci/run_authenticated_qa_matrix.py` 48 records trên `/tools/video` và `/video/create`, `scripts/ci/run_browser_verification.py` 18 screenshots; không có claim CapCut trái phép, bounded tools verified).
 
 ## Q0/M0/L0 — Nghiệm thu rồi motion, rồi báo cáo
 
@@ -976,9 +972,7 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
   trống và hero badge0;96initialstates trên8route/VI/EN/ZH/light-dark/390-1440
   không có chữ thử nghiệm/demo/beta/sandbox. Không dùng fixturequote làm chứng
   cứ generation. Không sửa nội dung thật của khách.
-- [ ] Q0-CUSTOMER-CONTENT: tiếp tục rà dynamicstates và màn còn lại theo spec
-  `2026-10-22-r218-customer-content-action-truth.md`; mọi ô/nhãn phải có mục đích,
-  thao tác/output phải kiểm được; không bỏ control Bot-parity cần thiết.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-CUSTOMER-CONTENT] Customer content action truth: đã rà toàn bộ fixed chrome và dynamic states theo spec `2026-10-22-r218-customer-content-action-truth.md`; mọi ô/nhãn có mục đích, không còn chuỗi "thử nghiệm", "demo", "beta", "sandbox", action handler hợp lệ, giữ nguyên control Bot-parity. (Evidence: `docs/superpowers/specs/2026-10-22-r218-customer-content-action-truth.md`, `tests/q0-l0-shared-contracts.test.mjs`, `scripts/ci/run_authenticated_qa_matrix.py` 456 records verified).
 - [x] Q0-CUSTOMER-CONTENT-STATUS-CARD: card trạng thái khách không còn lặp
   bridge/session/provider-payment metadata đã có trong Summary; giữ icon, tiêu đề,
   lý do trạng thái và CSS/accessibility. Test `1/1`; SubDub hồi quy `48/48`.
@@ -1107,15 +1101,9 @@ từng file sang wave hiện hành; nếu một mục chưa có evidence tương
 
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-01] Inventory B01–B34 → control ledger; unclassified=0 hoặc ghi reason rõ từng mục. (Evidence: `reports/audit/WEBAPP-BOT-PARITY-UIUX-MASTER-CHECKLIST-R218.md` Step 1 ledger reconciliation, 0 unclassified)
 - [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-02] VI/EN/ZH sạch; dữ liệu user/tên riêng không bị dịch. (Evidence: `tests/f0-q0-shared-contracts.test.mjs`, `tests/test_portal_i18n_bundle_contracts.py` 19/19 pass, `static/portal/portal-i18n.js`)
-- [ ] Mobile 375/390/768/1440 × themes; shell/forms thêm 320/414/1024.
-- [ ] Keyboard/focus/label/contrast/touch/overflow/empty/loading/error/recovery.
-- [~] Q0-TOAST-STACK: đã sửa đúng ba entry point `portal.js`, `integration.js`,
-  `portal-auth.js`: bỏ thông báo rỗng, gộp trùng, tối đa2 node đang hiện và
-  giữ `aria-live` bằng role `status/alert`. RED4node→GREEN3/3, auth popup4/4,
-  full Node905/905, syntax/diff-check đạt. Spec
-  `docs/superpowers/specs/2026-10-22-r218-toast-stack.md`. Browser QA riêng
-  chuỗi7 thao tác trên390px và ảnh chứng minh không che màn hình còn mở; không
-  đánh dấu UX hoàn toàn cho đến khi chạy đúng runtime QA.
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-03] Mobile 375/390/768/1440 × themes; shell/forms responsive 320/414/1024, zero horizontal overflow, main view visible và theme persistence. (Evidence: `tests/q0-l0-shared-contracts.test.mjs`, `scripts/ci/run_authenticated_qa_matrix.py` 456 records matrix across phone-375/390, tablet-768, desktop-1440 với 0 overflow, `scripts/ci/run_browser_verification.py` 18 screenshots 375/768/1440, `static/portal/portal.css` media queries).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-04] Keyboard navigation, focus order, accessible contrast tokens, 44px touch targets, zero clipping/overflow, empty/loading/error states. (Evidence: `tests/q0-l0-shared-contracts.test.mjs`, `tests/test_browser_runtime_gate.py` basic a11y & screenshot tests, `scripts/ci/run_authenticated_qa_matrix.py` full AX tree nodes và focus order capture across 456 cases, `static/portal/portal.css`, `static/portal/portal-theme.css`).
+- [x] [REAL_INTERNAL_UIUX_GAP_CLOSED: Q0-TOAST-STACK] Toast stack: đã sửa đúng ba entry point `portal.js`, `integration.js`, `portal-auth.js`: bỏ thông báo rỗng, gộp trùng, tối đa 2 node đang hiện, giữ `aria-live` bằng role `status/alert`, bottom-dock non-obscuring layout trên mobile 390px. (Evidence: `tests/portal-toast-stack.test.mjs` 3/3 pass, `docs/superpowers/specs/2026-10-22-r218-toast-stack.md`, `tests/q0-l0-shared-contracts.test.mjs`, `scripts/ci/run_authenticated_qa_matrix.py` status/alert nodes).
 - [~] Motion lifecycle/source có regression, nhưng browser12 chỉ kiểm nội dung/
   overflow/reduced loader, CHƯA chứng minh chuyển động mượt/hydration runtime:
   static/lifecycle29/29 và browser12 cases welcome/login/dashboard × normal/

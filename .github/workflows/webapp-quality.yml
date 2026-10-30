@@ -95,6 +95,7 @@ jobs:
           BOT_ROOT: ${{ github.workspace }}/../bot
           BOT_AUTHORITY_SHA: 83a994aea6fb253ee9e64fcfc845d4c31aa2934d
         run: |
+          node --test tests/q0-l0-shared-contracts.test.mjs
           node --test tests/v0-video-shared-contracts.test.mjs
           node --test tests/a0-admin-shared-contracts.test.mjs
           node --test tests/p5-p6-shared-contracts.test.mjs
