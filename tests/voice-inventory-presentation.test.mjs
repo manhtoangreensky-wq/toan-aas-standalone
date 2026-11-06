@@ -39,7 +39,7 @@ for(const locale of ['vi','en','zh']){
   test(`saved voice inventory distinguishes navigation from profile transfer and omits unavailable actions (${locale})`,()=>{
     const html=context.renderVoiceVault({voiceProfiles:profiles,voiceInventoryReadState:'ready'});
     assert.match(html,/data-voice-library-actions/);
-    assert.match(html,locale==='vi'?/Mở SubDub/:locale==='en'?/Open SubDub/:/打开 SubDub/);
+    assert.match(html,locale==='vi'?/Mở Phụ đề &amp; Lồng tiếng/:locale==='en'?/Open SubDub/:/打开 SubDub/);
     assert.match(html,locale==='vi'?/Mở công cụ video/:locale==='en'?/Open video tools/:/打开视频工具/);
     assert.doesNotMatch(html,/data-voice-operation|data-voice-handoff|data-voice-profile-actions/);
     assert.match(html,locale==='vi'?/chưa được chuyển/:locale==='en'?/not transferred/:/不会传递/);

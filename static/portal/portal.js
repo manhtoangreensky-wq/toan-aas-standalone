@@ -9881,6 +9881,7 @@
     "Image Suite": "shellNav.imageSuite",
     "AI Voice": "shellNav.aiVoice",
     "AI Music": "shellNav.aiMusic",
+    "SubDub": "customerChrome.nav.subdub",
     "AI SubDub": "shellNav.aiSubDub",
     "AutoPost Hub": "shellNav.autoPostHub",
     "Dự án & Lịch sử": "shellNav.projectsHistory",

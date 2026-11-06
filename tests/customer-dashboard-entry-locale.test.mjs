@@ -37,7 +37,7 @@ function render(locale, wallet = {}, dashboardReadState = 'guarded') {
 }
 const visible = (html) => html.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
 const expected = {
-  vi: { heading: 'Bạn muốn làm gì hôm nay?', products: ['Video AI', 'Ảnh AI', 'Giọng đọc AI', 'SubDub', 'Nội dung', 'Âm nhạc AI'],
+  vi: { heading: 'Bạn muốn làm gì hôm nay?', products: ['Video AI', 'Ảnh AI', 'Giọng đọc AI', 'Phụ đề &amp; Lồng tiếng', 'Nội dung', 'Âm nhạc AI'],
     account: ['Xu khả dụng', 'Gói tài khoản', 'Đã sử dụng', 'Nạp Xu', 'Ví & lịch sử', 'Gói dịch vụ'], member: 'Thành viên', vip: 'Thành viên VIP' },
   en: { heading: 'What would you like to make today?', products: ['AI video', 'AI image', 'AI voice', 'SubDub', 'Content', 'AI music'],
     account: ['Available Xu', 'Account plan', 'Used so far', 'Top up Xu', 'Wallet & history', 'Plans & pricing'], member: 'Member', vip: 'VIP member' },

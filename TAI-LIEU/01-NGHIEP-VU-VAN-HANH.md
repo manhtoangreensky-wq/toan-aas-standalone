@@ -2007,6 +2007,33 @@ Bằng chứng local: Voice input/inventory/flow/expiry `67/67`, full Node `594/
 đủ `3/3` locale `vi/en/zh`. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
 `PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`, `LIVE_PASS=NOT_TESTED`.
 
+## 2026-11-05 — Sửa nhãn tiếng Việt `/studio` và SubDub
+
+**Cập nhật 06/11:** Owner yêu cầu bàn giao từng cụm đã đạt. Cụm này đã được chạy lại:
+Node liên quan `89/89`, Python locale/title `16/16`, giao diện candidate `/studio`
+`18/18` (VI/EN/ZH × sáng/tối × 360/768/1440), không lỗi trang/console/tràn ngang.
+Toàn bộ bộ test Node thuộc đúng bản chuẩn bị commit: `1.365/1.365`, `185` tệp,
+dùng bản Bot tham chiếu chỉ-đọc đúng SHA chuẩn của CI; không sửa Bot hoặc test.
+Đây là renderer thật với dữ liệu trình bày giả, không phải đăng nhập/backend/LIVE.
+Hồ sơ hiện hành: `reports/audit/R218-LOCALE-183-RELEASE-20261106.md`.
+Các số đo 05/11 bên dưới là lịch sử; merge/deploy phải có bằng chứng mới trong PR.
+
+Ảnh production cho thấy `/studio` tiếng Việt vẫn dùng tên “Media Studio” và các từ giao diện
+`media`, `brief`, `workspace`, `job`, `browser`; menu sản phẩm còn nhãn “SubDub”. Candidate
+trên nhánh sạch từ `e8be944232a0d1317cbc68eee111a9b087645d8a` đổi phần hiển thị cố định thành
+“Xưởng sáng tạo” và “Phụ đề & Lồng tiếng”, giữ nguyên route, mã sản phẩm, dữ liệu máy chủ và
+nội dung khách nhập. EN/ZH tiếp tục giữ tên Media Studio/SubDub.
+
+Đã đo tại checkout candidate: renderer `/studio` và nhãn SubDub `7/7`; nhóm locale/sidebar/
+dashboard/assistant/voice `89/89`; Python locale/title `19/19`; Node locale suite rộng `373/373`
+trong `67` tệp kiểm thử; cú pháp JS `2/2`; Python compile `1/1`; `git diff --check` đạt. Toàn
+Node suite có `1,350` test đạt và `1` file suite không đạt
+do yêu cầu checkout Bot cục bộ trong `tests/v0-video-shared-contracts.test.mjs`; Bot không được
+nạp trong công việc này. Không có browser/live QA mới. Candidate chưa commit/push/merge/deploy;
+read-only verification xác nhận GitHub `main` và VPS vẫn ở SHA
+`e8be944232a0d1317cbc68eee111a9b087645d8a`, `toanaas-web.service` và `nginx.service`
+đang active. Candidate chưa thay đổi production.
+
 ## R218 checkpoint 2026-10-21 — trạng thái vận hành WebApp hiện tại
 
 Đây là số đo của checkout QA hiện tại, không phải số đo production và không phải bằng chứng đã triển khai live.

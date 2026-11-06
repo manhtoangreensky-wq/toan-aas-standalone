@@ -87,7 +87,7 @@ for(const locale of ['vi','en','zh'])test(`Voice return link uses the real ${loc
  h.location.search='?return_to=%2Fsubdub%3Fmode%3Dsubtitle_plus_dubbing';
  const html=h.ctx.renderVoiceWorkspaceNav('/voice/saved');
  assert.match(html,/data-subdub-return href="\/subdub\?mode=subtitle_plus_dubbing"/);
- assert.match(html,new RegExp({vi:'Quay lại SubDub',en:'Back to SubDub',zh:'返回 SubDub'}[locale]));
+ assert.match(html,new RegExp({vi:'Quay lại Phụ đề &amp; Lồng tiếng',en:'Back to SubDub',zh:'返回 SubDub'}[locale]));
  assert.equal((html.match(/href="\/voice\/(?:tts|stt|saved|clone)\?return_to=/g)||[]).length,4);
  for(const bad of ['%2Fadmin','https%3A%2F%2Fevil.invalid','%2Fsubdub%3Fmode%3Ddubbing_only%26profile_id%3D1']){
   h.location.search='?return_to='+bad;assert.doesNotMatch(h.ctx.renderVoiceWorkspaceNav('/voice/saved'),/data-subdub-return|evil\.invalid|profile_id/);

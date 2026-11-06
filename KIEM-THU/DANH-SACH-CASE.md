@@ -798,3 +798,14 @@ Ma trận đã đo là VI/EN/ZH × (dark390/light1440), không phải toàn bộ
 Case mới cần đủ VI/EN/ZH×light/dark×390/768/1440 trước khi đóng phạm vi tương ứng.
 Rate gate120read/phút giữ nguyên; runner giãn30giây giữa cấu hình, không sửa auth/rate
 hoặc thêm bypass để đạt test. Server QA34910/26491 đã dừng, exit0.
+
+## LOCALE-183 — nhãn tiếng Việt Studio và SubDub — candidate 2026-11-05
+
+06/11: case Studio đã có browser candidate `18/18`; Node liên quan `89/89`, Python
+`16/16`. Đây là trình bày với bootstrap giả; trạng thái production của hai case
+vẫn chờ exact-SHA CI/deploy/live trong PR. Hồ sơ: `R218-LOCALE-183-RELEASE-20261106.md`.
+
+| Case | Mức | Bước | Kết quả cần thấy | Trạng thái candidate |
+|---|---|---|---|---|
+| LOCALE-183-STUDIO-01 | vừa | Chọn VI, mở `/studio`; kiểm tiêu đề, breadcrumb, giới thiệu, sáu thẻ; mở lại EN/ZH | VI dùng “Xưởng sáng tạo”, toàn bộ fixed copy của sáu bước thuần VI; đủ sáu route/link; EN “Media Studio”, ZH “媒体工作室” và nội dung tương ứng không đổi | Renderer `7/7`; browser/live sau deploy chưa chạy |
+| LOCALE-183-SUBDUB-02 | vừa | Chọn VI, kiểm menu trái, chip trợ lý, dashboard, link quay lại Voice và link từ kho giọng; mở EN/ZH | VI hiển thị “Phụ đề & Lồng tiếng”; EN/ZH vẫn `SubDub`; chỉ chữ thay đổi, route `/subdub` và nội dung người dùng giữ nguyên | Nhóm `89/89`; browser/live sau deploy chưa chạy |
