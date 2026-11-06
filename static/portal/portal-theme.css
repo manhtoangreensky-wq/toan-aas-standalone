@@ -9097,6 +9097,13 @@ article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) :is(.por
   display: none;
 }
 
+/* Channel Strategy small-screen form legibility. */
+@media (max-width: 620px) {
+  form:is([data-portal-action="channel-strategy-create"], [data-portal-action="channel-strategy-update"], [data-portal-action="channel-strategy-filter"]) :is(.portal-input, .portal-select, .portal-textarea) {
+    font-size: 16px;
+  }
+}
+
 /* Final light AI Chat Workspace surface */
 .portal-page:is(.portal-chat-workspace, .portal-chat-workspace-detail) :is(.portal-chat-workspace-create, .portal-chat-workspace-boundary, .portal-chat-workspace-filters, .portal-chat-context-card, .portal-chat-turn, .portal-chat-version-list > article, .portal-chat-event-list > div, .portal-chat-execution, .portal-chat-execution-layout > section, .portal-chat-run-card) {
   border-color: var(--portal-border);

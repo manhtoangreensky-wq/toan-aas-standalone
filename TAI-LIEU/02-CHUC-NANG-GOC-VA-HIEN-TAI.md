@@ -1,5 +1,24 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 06/11/2026 — đối chiếu Chiến lược kênh
+
+Nguồn chức năng ban đầu: `docs/migration/CHANNEL_STRATEGY_CONTRACT.md`.
+Các mục gốc “multiple private profiles”, “version changes”, “archive or restore”
+và “deterministic direction for human review” vẫn là hợp đồng đang giữ.
+
+| Hiện trạng trước | Candidate có bằng chứng | Giới hạn |
+|---|---|---|
+| Catalogue có nhưng gợi ý nhập, lựa chọn và hoạt động còn chữ khác ngôn ngữ | 152 khóa VI/EN/ZH; 29/29 Node, không đổi EN cũ, giá trị máy hoặc nội dung khách | Không dịch mù dữ liệu phản hồi và không mở quyền đăng bài |
+| HTML ban đầu dùng tên chung, chi tiết không có mapping riêng | Sáu trường hợp parent/detail × ba ngôn ngữ đạt | Không thêm route hoặc đổi auth |
+| Chi tiết gọi helper không tồn tại trong phạm vi bundle | Helper cục bộ giữ đúng số nguyên 1–1.000.000; chi tiết/lưu trữ hiển thị được | Backend, chữ ký helper và kiểm tra quyền giữ nguyên |
+| Ô nhập điện thoại 15px | Ba form riêng dùng 16px khi ≤620px; 54/54 browser và 90/90 CSS đạt sau sửa font | Không đổi desktop, dữ liệu hoặc motion |
+| Detail rơi vào nhóm Công cụ dù parent thuộc Đăng bài | Một prefix bổ sung giữ cả hai trong Đăng bài; kiểm hành vi parent/detail và nhóm khác/admin | Không đổi route, resolver hoặc quyền; native/CSS106/106 |
+
+Tài liệu gốc không được hiểu là bằng chứng kết nối mạng xã hội hay tự đăng.
+Các cổng CI và triển khai cuối vẫn phải nghiệm thu trước khi gọi candidate này
+là đã triển khai. Không audit hoặc xóa mã chết/phụ thuộc/ảnh
+trong đợt sửa chữ; không suy “không còn lỗi toàn app” từ bộ kiểm tra của cụm này.
+
 ## 24/10/2026 — SD15: nút Bật/tắt âm thanh gốc không đồng nhất với mức0%
 
 Nguồn gốc: spec `2026-10-18-r218-subdub-bot-parity-uiux.md`, SD15 và

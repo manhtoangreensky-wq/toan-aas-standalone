@@ -1,5 +1,24 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Phiên Chiến lược kênh — 06/11/2026
+
+ID `CHANNEL-STRATEGY-LOCALE-20261106`, nguồn case CS-LOCALE-01..CS-NAV-04
+trong `KIEM-THU/DANH-SACH-CASE.md`; BASE `8c85f84966ab3e0f53bf97a2999e221b23901bcf`.
+Phạm vi là hai route `/content/channel-strategy` và trang chi tiết bên dưới.
+Giữ nguyên dữ liệu khách; chỉ chữ cố định theo VI/EN/ZH được dịch. “Trang web” là
+nhãn tiếng Việt hợp lệ cho giá trị `website`; tên Facebook/TikTok giữ nguyên.
+
+Chạy 29 kiểm tra Node và 6 first-paint, rồi kiểm library/detail/archive ở ba
+ngôn ngữ, sáng/tối, 360/768/1440. Sau sửa font đã có 54/54 cấu hình trình bày đạt;
+chỉ báo Đăng bài ở trang chi tiết cũng đạt54/54 sau RED nhầm sang Công cụ.
+Helper revision cục bộ phải giữ giới hạn 1–1.000.000; kiểm sai/thiếu revision
+không được mở quyền. Không bỏ qua lỗi hoặc dùng cờ ép thành công.
+
+Bản trình duyệt dùng dữ liệu tổng hợp và chặn request ngoài/API/ghi; không phải
+bằng chứng phiên đăng nhập production, tạo/lưu hồ sơ thật hoặc kết nối mạng xã hội.
+Trước bàn giao, ghi source revision/hash, output hồi quy, review, CI và runtime
+riêng; không lấy báo cáo người sửa thay cho kết quả Tester độc lập.
+
 ## Phiên SD-D4 — 24/10/2026
 
 Session `R218-SDD4-TESTER-20261024`, manifest
