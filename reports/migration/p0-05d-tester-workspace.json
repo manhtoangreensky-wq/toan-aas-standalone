@@ -44,8 +44,8 @@
     "note": "Earlier tracker/remote_revalidation fields are historical snapshots; no issue was reopened or created."
   },
   "partial_remote_revalidated_at": "2026-09-12",
-  "local_files_refreshed_at": "2026-10-24",
-  "local_files_refresh_scope": "SD-D4 eight additional SubDub original-audio-toggle QA cases and independent Tester guide/session; six portable LF metadata entries remeasured. Existing48WA cases and remote/project history unchanged; currentTracker664/PR661,closed412untouched. No new remote mutations or project/auth refresh.",
+  "local_files_refreshed_at": "2026-11-06",
+  "local_files_refresh_scope": "LOCALE-183 Studio/SubDub release: case source and Tester guide portable LF metadata remeasured after adding the release cases/session. Four other local file entries and existing48WA cases unchanged. Historical remote/project fields preserved; current release tracked in PR676, closed tracker664 untouched. No project/auth refresh.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,15 +70,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 800,
-      "bytes": 96587,
-      "sha256": "074afd431865d9b73a379cf5b3d6f46ee3ad1ebe151bff050d0438013ff55305"
+      "lines": 811,
+      "bytes": 97818,
+      "sha256": "92cc4e3933c077435d2e90063c40a04cc319f130df5eada734ede59fa39eb20d"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 323,
-      "bytes": 28213,
-      "sha256": "e8ca4e8c5aac008512d46256bcd7002e9d4f32d05e4d4ffefa84231b8b83aaa1"
+      "lines": 345,
+      "bytes": 30173,
+      "sha256": "3939d7d9cf87b26f00288d14300e5fcea634d0bbcc501d0fd70266f161ee4e9c"
     },
     {
       "path": "scripts/tester_case_sync.py",
