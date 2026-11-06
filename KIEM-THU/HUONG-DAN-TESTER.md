@@ -9,7 +9,9 @@ Kiểm đủ VI/EN/ZH và năm trạng thái: đang tải, tải lỗi, chưa c�
 hoặc số 0 khi chưa đọc được. Tên khách và Facebook/TikTok phải giữ nguyên.
 
 Hai khối giải thích tĩnh không còn; biểu mẫu tháng/trạng thái/nền tảng và hai liên
-kết cuối trang phải còn. Count đúng ở đầu bộ lọc chỉ khi đã đọc xong; thử ba thẻ
+kết cuối trang phải còn. Count đúng ở đầu bộ lọc chỉ khi đã đọc xong và phải nhìn
+thấy trên ảnh/thực tế, không chỉ tồn tại trong DOM. Không dùng class huy hiệu đã
+bị chính sách giao diện khách ẩn để chứa count. Thử ba thẻ
 trong grid và bốn mục trong agenda để bảo vệ overflow. Input/select ở ≤620px cần
 16px, không tắt zoom. Thử đổi tháng/status/platform rồi trả lại, không submit trong
 ma trận presentation. Kiểm theme, menu/Escape, palette/Escape, Tab/focus và tràn.

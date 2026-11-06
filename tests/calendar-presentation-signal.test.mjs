@@ -15,7 +15,7 @@ for(const locale of ['vi','en','zh'])for(const state of ['guarded','loading','fa
   for(const href of ['/campaigns','/approvals'])assert.ok(r.html.includes(`href="${href}"`));
   for(const name of ['month','status','platform'])assert.ok(r.html.includes(`name="${name}"`));
   const count=words[locale].count(state==='ready'?6:0);
-  const markup=`<span class="portal-badge">${count}</span>`;
+  const markup=`<p class="portal-card-subtitle portal-calendar-count">${count}</p>`;
   if(['ready','empty'].includes(state))assert.ok(r.html.includes(markup),'Only a completed read may show its matching count');
   else assert.ok(!r.html.includes(markup),'Unknown loading/failed/guarded counts must not be presented as zero');
   if(state==='loading'){

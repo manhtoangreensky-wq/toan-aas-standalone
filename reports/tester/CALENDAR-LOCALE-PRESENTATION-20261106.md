@@ -38,6 +38,17 @@ mistaken for a numeric matching count. No application change or skipped state
 was used to resolve that measurement error; the entire 90-config matrix was
 remeasured successfully into separate evidence directories.
 
+Manual PNG review then reopened a separate missing visibility assertion: the
+numeric count used a badge class hidden by the customer-UI policy. The candidate
+was not pushed or deployed. The final count is an ordinary subtitle paragraph,
+not a badge or new box. A strict pilot first failed 2/2; after the worker patch,
+the full 90/90 matrix was remeasured with client rects and ancestor CSS visibility,
+display and opacity checks. All 36 ready/empty read configurations show the count;
+the other 54 show no numeric result. Ninety PNG files and unchanged served assets
+across states were validated. Previous DOM-text-only results are not used as this
+visibility evidence. Final 39 focused,1,562 full Node and8 native checks passed
+again; independent narrow review C0/I0/M0 preserves form/footer/agenda/CSS/catalog.
+
 ## Scope, authority and release limits
 
 Calendar title/description, overflow and missing-title fallback are localized;
