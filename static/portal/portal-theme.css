@@ -23423,3 +23423,29 @@ html:not([data-portal-theme="dark"]) .portal-shell[data-portal-app-kind="admin"]
     justify-self: start;
   }
 }
+
+/* Workspace drafts: readable input text without mobile focus zoom. */
+@media (max-width: 620px) {
+  .portal-page.portal-workspace-drafts :is(.portal-input, .portal-select, .portal-textarea) { font-size: 16px; }
+}
+
+/* Workspace drafts: keep the library primary and its actions readable. */
+.portal-page.portal-workspace-drafts[data-workspace-draft-read-state="ready"] > .portal-campaign-boundary,
+.portal-page.portal-workspace-drafts[data-workspace-draft-read-state="ready"] > .portal-card:last-child:has(> .portal-notice--info):not(:has([data-portal-form])) {
+  display: none;
+}
+@media (max-width: 620px) {
+  .portal-page.portal-workspace-drafts[data-workspace-draft-read-state="ready"] > .portal-card > .portal-card-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .portal-page.portal-workspace-drafts[data-workspace-draft-read-state="ready"] > .portal-card > .portal-card-header > .portal-inline-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+  }
+  .portal-page.portal-workspace-drafts[data-workspace-draft-read-state="ready"] > .portal-card > .portal-card-header > .portal-inline-actions > .portal-button {
+    width: 100%;
+    min-height: 44px;
+  }
+}

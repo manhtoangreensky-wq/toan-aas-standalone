@@ -322,6 +322,24 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 4. Lỗi ngoài phạm vi presentation phải thêm vào đúng nhóm ledger; không đổi tên case để né lịch sử.
 5. Trace CLS/LCP/INP hiện `NOT_RUN`; không được thay bằng screenshot hoặc HTTP 200.
 
+## Phiên Bản nháp — WORKSPACE-LOCALE-20261106
+
+Phạm vi chỉ là nhãn/cỡ chữ của trang Bản nháp và kỳ vọng chữ của kiểm thử bàn giao.
+Chạy các case WS-LOCALE-01/WS-FONT-02/WS-HANDOFF-03 trong file nguồn case.
+Kiểm VI/EN/ZH × sáng/tối ×360/768/1440. Bốn control tìm kiếm, trạng thái, quy trình,
+chọn dự án phải có nhãn; chữ16px trên điện thoại, desktop15px. Gõ văn bản rồi kiểm
+focus/Tab và menu/Escape; không gửi biểu mẫu hoặc dùng dữ liệu khách thật.
+
+Phiên local READY: renderer10/10, bộNode1.375/1.375, nativePython41/41, trình bày18/18
+và54lượt kiểmloading/failed/guarded. Kiểm hai ô giải thích đã ẩn nhưng form/trạng thái
+lỗi không bị ẩn; nút thư viện đủ chiều rộng, ≥44px ở điện thoại. Chỉ đóng nghiệm thu
+production khi có đúng SHA đã triển khai và bằng chứng tương ứng; CI xanh không thay
+thế kiểm tra phiên đăng nhập production. Không sửa auth, ví, provider hoặc motion.
+
+Kiểm bổ sung375×812 và844×390 đã đạt12/12cấu hình (3ngônngữ×2theme×2kích thước),
+thêm36lượt readstate; ô đang focus không bị thanh điều hướng dưới che. Tổng browser
+trình bày của đợt là30cấu hình và90lượt readstate, không phải bằng chứng native backend/LIVE.
+
 ## Phiên locale `/studio` và nhãn SubDub — LOCALE-183
 
 Phiên hiện hành `LOCALE183-RELEASE-QA-20261106` ở trạng thái READY: 89 test Node,

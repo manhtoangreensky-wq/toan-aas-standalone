@@ -831,11 +831,11 @@ def test_customer_authoring_uses_reviewed_copy_without_translating_records() -> 
 
     source = BUNDLE.read_text(encoding="utf-8")
     expected = {
-        "workspaceDrafts.page.title": ("Bản nháp Workspace", "Workspace drafts", "工作台草稿"),
+        "workspaceDrafts.page.title": ("Bản nháp không gian làm việc", "Workspace drafts", "工作台草稿"),
         "workspaceDrafts.filter.searchLabel": ("Tìm bản nháp", "Search drafts", "搜索草稿"),
-        "workspaceDrafts.card.resume": ("Tiếp tục brief", "Continue brief", "继续简报"),
-        "workspaceDrafts.card.attach": ("Đưa vào Project", "Add to Project", "加入项目"),
-        "workspaceDrafts.card.attachProjectLabel": ("Đưa vào Project", "Add to Project", "加入项目"),
+        "workspaceDrafts.card.resume": ("Tiếp tục bản nháp", "Continue brief", "继续简报"),
+        "workspaceDrafts.card.attach": ("Thêm vào dự án", "Add to Project", "加入项目"),
+        "workspaceDrafts.card.attachProjectLabel": ("Thêm vào dự án", "Add to Project", "加入项目"),
         "projectCenter.page.title": ("Bảng vận hành dự án", "Project Operations Board", "项目运营看板"),
         "projectCenter.filter.searchLabel": ("Tìm dự án", "Search projects", "搜索项目"),
         "projectCenter.authoring.createTitle": ("Tạo dự án", "Create a project", "创建项目"),
@@ -877,7 +877,7 @@ def test_customer_authoring_uses_reviewed_copy_without_translating_records() -> 
 
 def test_customer_authoring_first_paint_titles_are_reviewed_for_all_locales() -> None:
     titles = _between(PAGES, "_PORTAL_SHELL_TITLES = {", "}\n\n\ndef _safe_portal_build_id")
-    assert '"/workspace": {"vi": "Bản nháp Workspace · TOAN AAS", "en": "Workspace drafts · TOAN AAS", "zh": "工作台草稿 · TOAN AAS"}' in titles
+    assert '"/workspace": {"vi": "Bản nháp không gian làm việc · TOAN AAS", "en": "Workspace drafts · TOAN AAS", "zh": "工作台草稿 · TOAN AAS"}' in titles
     shell_titles = _between(PAGES, "def _shell_title_for", "\n\ndef _fallback_template")
     assert "if PROJECT_PATH.fullmatch(normalized):" in shell_titles
     for title in ("Project Workspace · TOAN AAS", "项目工作区 · TOAN AAS"):

@@ -2007,6 +2007,25 @@ Bằng chứng local: Voice input/inventory/flow/expiry `67/67`, full Node `594/
 đủ `3/3` locale `vi/en/zh`. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
 `PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`, `LIVE_PASS=NOT_TESTED`.
 
+## 2026-11-06 — Bản nháp: ngôn ngữ và cỡ chữ điện thoại
+
+Candidate tiếp theo chỉ đổi phần trình bày `/workspace`: 29 giá trị tiếng Việt, tiêu đề
+trang, hai nhãn quy trình lấy từ danh mục theo ngôn ngữ giao diện, và cỡ chữ ô nhập 16px
+ở chiều rộng không quá 620px. Tên bản nháp/dự án do khách nhập, khóa đã lưu, URL,
+quyền và các thao tác tiếp tục/lưu trữ/thêm vào dự án không đổi. Màn 768/1440px giữ15px.
+
+Đã đo ở candidate: renderer10/10; browser trình bày18/18 (VI/EN/ZH × sáng/tối ×
+360/768/1440), không lỗi trang/console/tràn ngang hoặc yêu cầu ngoài/API/ghi dữ liệu.
+Đây là template/CSS/renderer thật với dữ liệu tổng hợp, không phải bằng chứng backend
+hay phiên đăng nhập production. Bản đang chạy trước đợt này là PR676; chỉ cập nhật
+trạng thái triển khai cụm Bản nháp khi có CI và đối chiếu VPS của chính đợt này.
+
+Đã khớp riêng kỳ vọng chữ của kiểm thử bàn giao Dự án, không đưa chữ Anh trở lại
+giao diện và không đổi logic tải/guard/history. Kiểm thử native QA41/41 và bộ Node
+1.375/1.375 đạt. Hai ô giải thích dư chỉ ẩn ở trạng thái ready; nút đầu thư viện
+rộng đủ khối và cao44px trên điện thoại. Browser mở rộng18/18 và54 lượt kiểm trạng
+thái loading/failed/guarded vẫn hiển thị đạt. Không thay auth/backend/ENV/motion.
+
 ## 2026-11-05 — Sửa nhãn tiếng Việt `/studio` và SubDub
 
 **Cập nhật 06/11:** Owner yêu cầu bàn giao từng cụm đã đạt. Cụm này đã được chạy lại:
