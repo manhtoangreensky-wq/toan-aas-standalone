@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-06",
-  "local_files_refresh_scope": "Channel Strategy locale/first-paint/mobile font/navigation: four scoped case rows and Tester guide refreshed from measured local gates; legacy48core cases and historicalremote/project snapshots preserved. No GitHub/auth/project mutation in metadata refresh.",
+  "local_files_refresh_scope": "Publish Review feedback-preservation follow-up: three scoped cases and Tester guide refreshed from measured local gates. Historical 48 core cases, push_gate, tracker and project snapshots retained; no auth/project mutation.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,15 +70,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 869,
-      "bytes": 104519,
-      "sha256": "3c62c5c40c30ced89c7fce4a4d10f09c2bdcee8e7d2d34ebdf4da159b6e8fb2b"
+      "lines": 884,
+      "bytes": 105959,
+      "sha256": "d6940a71c6def07bd3b69f89f900a201d6a3a3cbfd208afbe59babd85e2b0936"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 426,
-      "bytes": 36059,
-      "sha256": "579157e9191453f8b80846c2eaac70d663e7bdd97de3935c40e86df06c81198c"
+      "lines": 442,
+      "bytes": 37202,
+      "sha256": "43272d9fc1cd939f57da592a95dac5a9065fda87688711a9e91bb357af20c3a6"
     },
     {
       "path": "scripts/tester_case_sync.py",
@@ -101,22 +101,21 @@
     "github_mutations": 0
   },
   "active_release": {
-    "id": "CHANNEL-STRATEGY-LOCALE-20261106",
-    "base_sha": "8c85f84966ab3e0f53bf97a2999e221b23901bcf",
-    "case_count": 4,
+    "id": "PUBLISH-REVIEW-FEEDBACK-PRESERVATION-20261106",
+    "base_sha": "5aa0683c72b79445e525d8c33c4dd0eecf8934eb",
+    "case_count": 3,
     "case_ids": [
-      "CS-LOCALE-01",
-      "CS-FIRSTPAINT-02",
-      "CS-FONT-03",
-      "CS-NAV-04"
+      "PR-FEEDBACK-06",
+      "PR-FEEDBACK-07",
+      "PR-FEEDBACK-08"
     ],
     "status": "LOCAL_ACCEPTED_PENDING_CI_DEPLOY_LIVE",
-    "local_node": 1406,
-    "targeted_node": 29,
-    "native_python": 106,
-    "browser_configurations": 54,
-    "independent_review": "C0/I0/M0;29Node+11Python+26CSS rerun",
-    "manifest": "reports/tester/CHANNEL-STRATEGY-LOCALE-20261106.md",
+    "local_node": 1523,
+    "targeted_node": 119,
+    "native_python": 10,
+    "feedback_node": 42,
+    "independent_review": "C0/I0/M0;42Node rerun;70 balanced locale keys;68 previous EN values unchanged",
+    "manifest": "reports/tester/PUBLISH-REVIEW-FEEDBACK-PRESERVATION-20261106.md",
     "signed_ui_live": "NOT_TESTED",
     "legacy_push_gate_field": "Historical snapshot retained for its contract; not the gate of this release."
   }

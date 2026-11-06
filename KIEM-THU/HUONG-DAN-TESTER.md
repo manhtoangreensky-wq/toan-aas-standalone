@@ -1,5 +1,21 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Phiên bổ sung giữ nguyên phản hồi — 06/11/2026
+
+ID `PUBLISH-REVIEW-FEEDBACK-PRESERVATION-20261106`, BASE
+`5aa0683c72b79445e525d8c33c4dd0eecf8934eb`; case PR-FEEDBACK-06..08.
+Thông báo riêng ngoài bảng phải giữ nguyên ở VI/EN/ZH, không bị thay bằng câu chung.
+Kiểm success, guarded, guarded-error và transport; thử cả constructor/toString/
+__proto__. Bảy câu hệ thống được ánh xạ đúng ngôn ngữ; không dịch nội dung khách.
+
+Chạy `node --test tests/publish-review-feedback-preservation.test.mjs`: 42/42 đạt
+sau baseline 21 đạt/21 lỗi. Bộ tập trung hiện tại 119/119, full indexed Node
+1.523/1.523; Python/native 10/10 gồm native API→integration→toast ở ba locale.
+Metadata Tester trên Windows có một lỗi quyền tệp POSIX đã tồn tại (0666 thay
+0600), 32 ca khác đạt; không bỏ qua hoặc hạ yêu cầu, phải kiểm lại trên Linux CI.
+Đọc riêng kết quả CI, merge, deploy, runtime SHA và giao diện production. Không
+lấy DB tạm, thông báo thành công hoặc HTTP200 làm bằng chứng đã đăng bài thật.
+
 ## Phiên Gói rà soát trước khi đăng — 06/11/2026
 
 ID `PUBLISH-REVIEW-LOCALE-20261106`, nguồn PR-RECEIPT-01..PR-FEEDBACK-05.
