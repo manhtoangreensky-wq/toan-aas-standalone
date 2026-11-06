@@ -799,6 +799,14 @@ Case mới cần đủ VI/EN/ZH×light/dark×390/768/1440 trước khi đóng ph
 Rate gate120read/phút giữ nguyên; runner giãn30giây giữa cấu hình, không sửa auth/rate
 hoặc thêm bypass để đạt test. Server QA34910/26491 đã dừng, exit0.
 
+## PUBLISHING-LOCALE — candidate 06/11/2026
+
+| Case | Mức | Bước | Kết quả bắt buộc | Bằng chứng local |
+|---|---|---|---|---|
+| AP-LOCALE-01 | vừa | Mở/publishingVI,EN,ZH; kiểm tiêu đề, breadcrumb và các thẻ | VI Đăng bài tự động, không chữ Anh chung; ZH自动发布中心; ENAutoPost Hub | Renderer4/4, browser18/18 |
+| AP-DENSITY-02 | vừa | Xem sáng/tối ở360/768/1440 | Ba khối hướng dẫn ẩn, vùng công cụ không trống;7nguồn/6khuvực/3link/3khóa giữ nguyên; menu/theme/Escape dùng được | Browser18/18, không page/console/overflow/request ngoài |
+| AP-FIRSTPAINT-03 | vừa | Xem titleHTML trướcJS ởVI/EN/ZH | Tên đúng ngôn ngữ ngay từ đầu, không genericWorkspace |3/3PythonGREEN; bội18n/boundary33/33, reviewđạt |
+
 ## WORKSPACE-LOCALE — candidate 06/11/2026
 
 | Case | Mức | Bước | Kết quả bắt buộc | Bằng chứng hiện có |

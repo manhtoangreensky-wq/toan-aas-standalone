@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-06",
-  "local_files_refresh_scope": "Workspace drafts locale/mobile presentation: case source and Tester guide portable LF metadata remeasured. Four other local file entries and existing48WA core cases unchanged. Historical remote/project fields preserved. No project/auth refresh.",
+  "local_files_refresh_scope": "Publishing locale/first-paint/tutorial-panel presentation: case source and Tester guide portable LF metadata remeasured. Four other entries and existing48WA core cases unchanged; historical remote/project fields preserved. No project/auth refresh.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,15 +70,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 820,
-      "bytes": 99133,
-      "sha256": "6d879262a8fae1c9a3d703bf3a7c42c0eca83b34d668e7bff3941a07605ffc33"
+      "lines": 828,
+      "bytes": 99953,
+      "sha256": "55c99214cb90aaef42c90a9897c9bf5e8f127a7b8b4ad48e2a77d8888c0b185b"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 363,
-      "bytes": 31566,
-      "sha256": "82dba3a7901a86003d4c2444d325bd36d84cbf7b7d17f51f5f0ba9229ac0b9f8"
+      "lines": 378,
+      "bytes": 32701,
+      "sha256": "32c138e300d45e0965b22d54fecbf8d2183ce188c1f4ece6568cfd5c91470644"
     },
     {
       "path": "scripts/tester_case_sync.py",

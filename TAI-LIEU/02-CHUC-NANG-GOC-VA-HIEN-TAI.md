@@ -1377,3 +1377,14 @@ browser trình bày đã đo, còn signed-session/backend/LIVE vẫn phải xác
 | Ô nhập điện thoại15px | Scoped16px khi ≤620px; 768/1440px vẫn15px | Browser18/18; không đổi bố cục, motion hoặc desktop |
 
 Đây là sửa bản trình bày, không thêm dịch vụ tạo nội dung, quyền, biểu phí hoặc tác vụ.
+
+## Đối chiếu trang Đăng bài — candidate 06/11/2026
+
+| Hiện trạng trước | Candidate | Giới hạn |
+|---|---|---|
+| VI vẫn dùng AutoPost Hub, Affiliate, Asset Vault, Campaign/Project/Web | VI dùng Đăng bài tự động, tiếp thị liên kết, kho tệp, chiến dịch/dự án/ứng dụng; ZHdịch tên, ENgiữ nguyên | Chỉ catalog và nhãn điều hướng; không đổi route/data/brand |
+| Ba khối hướng dẫn tĩnh chiếm diện tích trước vùng công cụ | Ẩn ba khối, giữ bảy nguồn/sáu khu vực/ba liên kết và ba hành động ngoài bị khóa | Không biến placeholder hoặc trạng thái chờ thành kết quả thật |
+| Kiểm thử điều khiển mới xác nhận cân bằng key/topology, chưa bắt chữ Anh lẫn VI | Thêm renderer4ca và browser18cấu hình theo nội dung nhìn thấy | Có RED/GREEN; production phiên đăng nhập vẫn phải xác minh riêng |
+
+Nguồn thiết kế trước: `tests/autopost-hub-product-controls.test.mjs` và renderer
+`renderAutoPostHub`. Không tuyên bố hoàn tất tích hợp mạng xã hội từ thay đổi giao diện.

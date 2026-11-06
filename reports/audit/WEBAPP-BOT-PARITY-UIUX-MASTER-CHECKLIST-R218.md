@@ -11,6 +11,15 @@ Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 gi�
 
 ## Cập nhật bàn giao theo cụm — 06/11/2026
 
+- [x] Bản nháp đã triển khai PR677, main/VPS8e23f9501865b74187b5985d9330f61ad5e221fc;
+  CI42173989023 và deploy42175272526 đạt; local/main/VPS+assets/buildstamp khớp.
+- [~] Ownerảnh/publishing: AP188chữVI/ZH vàAP189ẩn3panel đã qua4renderer/18browser;
+  giữnguyên7nguồn/6khu vực/3link/3khóa, Node1.379/1.379. Chưa deploy.
+- [x] AP190tiêuđềHTML banđầu3locale; RED3/3→GREEN3/3; bội18n/boundary33/33,reviewđạt.
+- [ ] Publishing: CI exact-head, merge/deploy và đối chiếu local/main/VPS/assets/buildstamp.
+- [ ] Rà tiếp whole-app locale theo từng route; properbrand/customertext giữ nguyên;
+  không dùng việc đổi một title hoặc hiddenpanels để đóng kết nối/engine/auth/LIVE.
+
 - [x] Studio/SubDub: PR676 đã merge/deploy; runtime4cddcf193a36fdb097cbfd653853f9809c043faa;
   CI42164947312 và deploy42165894483 đạt. Local release/GitHub/VPS đã đối chiếu.
 - [x] Candidate Bản nháp: 29 nhãnVI + tiêu đề + hai nhãn danh mục, renderer10/10;
@@ -19,7 +28,8 @@ Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 gi�
   fullNode1.375/1.375. Không hoàn tác bản dịch hoặc sửa luồng tải/quyền/lịch sử.
 - [x] Hai ô giải thích dư và nút bó hẹp: pilot2/2RED→browser18/18GREEN,
   54readstates còn hiển thị. Chỉ CSS route-ready; giữ form/guard/lỗi và motion.
-- [ ] Cụm Bản nháp: CI exact-head, merge, deploy, đối chiếu local/GitHub/VPS và live gate.
+- [x] Cụm Bản nháp: CI/merge/deploy và đối chiếu local/GitHub/VPS đã có receiptPR677;
+  phiênproductionUIvẫnNOT_TESTED, không gộp bằng chứngsource thànhLIVE.
 - [ ] Toàn app: locale/responsive/AX/auth lifecycle và production UI vẫn còn mở;
   motion làm cuối, không dùng checkpoint lịch sử bên dưới để đóng goal hiện tại.
 
