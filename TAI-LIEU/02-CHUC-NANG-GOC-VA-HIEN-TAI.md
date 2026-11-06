@@ -1367,3 +1367,13 @@ Sai khác là phạm vi tên hiển thị theo locale, không phải chức năn
 Ngày 06/11, browser candidate đã kiểm đủ `18/18` cấu hình `/studio` ở ba ngôn ngữ,
 hai giao diện và ba chiều rộng. Cột “chưa browser/live” phía trên là mốc 05/11:
 browser trình bày đã đo, còn signed-session/backend/LIVE vẫn phải xác minh riêng.
+
+## Đối chiếu Bản nháp — candidate 06/11/2026
+
+| Thiết kế/chức năng trước | Candidate | Bằng chứng/giới hạn |
+|---|---|---|
+| Bản nháp riêng tư có bộ lọc, tiếp tục, lưu trữ và thêm vào dự án | Chức năng và khóa lưu giữ nguyên; 29 nhãn cố định VI và tiêu đề được dịch | Renderer10/10; không suy ra thao tác lưu backend đã được chạy |
+| Thẻ hiển thị tên quy trình từ API và mã nội bộ | Tên quy trình lấy từ danh mục VI/EN/ZH; mã vẫn tồn tại trong dữ liệu, không hiện làm nhãn | Ba ca tên danh mục và ca fallback/giữ dữ liệu; không dịch tên khách nhập |
+| Ô nhập điện thoại15px | Scoped16px khi ≤620px; 768/1440px vẫn15px | Browser18/18; không đổi bố cục, motion hoặc desktop |
+
+Đây là sửa bản trình bày, không thêm dịch vụ tạo nội dung, quyền, biểu phí hoặc tác vụ.

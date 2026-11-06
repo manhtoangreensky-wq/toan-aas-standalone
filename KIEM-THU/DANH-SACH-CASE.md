@@ -799,6 +799,15 @@ Case mới cần đủ VI/EN/ZH×light/dark×390/768/1440 trước khi đóng ph
 Rate gate120read/phút giữ nguyên; runner giãn30giây giữa cấu hình, không sửa auth/rate
 hoặc thêm bypass để đạt test. Server QA34910/26491 đã dừng, exit0.
 
+## WORKSPACE-LOCALE — candidate 06/11/2026
+
+| Case | Mức | Bước | Kết quả bắt buộc | Bằng chứng hiện có |
+|---|---|---|---|---|
+| WS-LOCALE-01 | vừa | Mở Bản nháp ở VI/EN/ZH, có dữ liệu, rỗng và lỗi tải | VI không lẫn chữ Anh chung; tên quy trình theo locale; không lộ mã; tên khách và thao tác giữ nguyên | Renderer10/10; chưa production |
+| WS-FONT-02 | vừa | Kiểm bốn ô nhập/chọn ở360/768/1440, sáng/tối; gõ rồi Tab, mở/đóng menu/tìm kiếm | 360px16px; 768/1440px15px; nhãn/focus/nội dung còn đúng, không tràn hoặc gửi yêu cầu | Browser18/18 với dữ liệu tổng hợp; chưa production |
+| WS-HANDOFF-03 | vừa | Kiểm Dự án đang tải, bị giới hạn và lịch sử chuyển trang | Không báo không tìm thấy khi còn tải; giữ liên kết đăng nhập, trạng thái và lịch sử |8/8Python; bộ native41/41, chỉ đổi kỳ vọng chữ cũ |
+| WS-DENSITY-04 | vừa | Xem Bản nháp sẵn sàng ở điện thoại/desktop, rồi chuyển loading/failed/guarded | Không có hai ô giải thích dư; nút thư viện đủ rộng/≥44px trên điện thoại; trạng thái lỗi/tải và form không bị ẩn |18/18browser+54readstate checks đạt; chưa production |
+
 ## LOCALE-183 — nhãn tiếng Việt Studio và SubDub — candidate 2026-11-05
 
 06/11: case Studio đã có browser candidate `18/18`; Node liên quan `89/89`, Python

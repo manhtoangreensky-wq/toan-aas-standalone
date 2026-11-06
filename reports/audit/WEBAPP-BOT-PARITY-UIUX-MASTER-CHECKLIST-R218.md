@@ -9,6 +9,20 @@ Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 gi�
 `reports/audit/WEBAPP-HISTORICAL-CHECKLIST-CROSSWALK-R218.md`; không dùng tài liệu cũ
 để suy diễn PASS.
 
+## Cập nhật bàn giao theo cụm — 06/11/2026
+
+- [x] Studio/SubDub: PR676 đã merge/deploy; runtime4cddcf193a36fdb097cbfd653853f9809c043faa;
+  CI42164947312 và deploy42165894483 đạt. Local release/GitHub/VPS đã đối chiếu.
+- [x] Candidate Bản nháp: 29 nhãnVI + tiêu đề + hai nhãn danh mục, renderer10/10;
+  cỡ chữ mobile16px/desktop15px, browser trình bày18/18 không lỗi.
+- [x] Kỳ vọng kiểm thử bàn giao Dự án đã khớp bản dịch:8/8; native bộ41/41;
+  fullNode1.375/1.375. Không hoàn tác bản dịch hoặc sửa luồng tải/quyền/lịch sử.
+- [x] Hai ô giải thích dư và nút bó hẹp: pilot2/2RED→browser18/18GREEN,
+  54readstates còn hiển thị. Chỉ CSS route-ready; giữ form/guard/lỗi và motion.
+- [ ] Cụm Bản nháp: CI exact-head, merge, deploy, đối chiếu local/GitHub/VPS và live gate.
+- [ ] Toàn app: locale/responsive/AX/auth lifecycle và production UI vẫn còn mở;
+  motion làm cuối, không dùng checkpoint lịch sử bên dưới để đóng goal hiện tại.
+
 ## Checkpoint Closeout — 28/10/2026 (TASK=WEBAPP_FINAL_INTERNAL_UIUX_MOTION_AND_INTEGRATION_CLOSEOUT_R1)
 
 ```text

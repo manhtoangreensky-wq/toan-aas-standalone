@@ -80,8 +80,8 @@ def test_pending_project_route_never_announces_not_found_before_owner_read_retur
     route = "/projects/8a0d55e2-2287-4387-8bd1-3774a56f023f"
     html = _render_project_detail({route: "processing"})
 
-    assert "Đang tải Project" in html
-    assert "Không tìm thấy Project" not in html
+    assert "Đang tải dự án" in html
+    assert "Không tìm thấy dự án" not in html
     assert 'role="status"' in html
     assert 'data-icon="refresh"' in html
 
@@ -91,8 +91,8 @@ def test_direct_project_route_starts_loading_before_the_owner_scoped_read_return
 
     html = _render_project_detail({})
 
-    assert "Đang tải Project" in html
-    assert "Không tìm thấy Project" not in html
+    assert "Đang tải dự án" in html
+    assert "Không tìm thấy dự án" not in html
 
 
 def test_guarded_project_route_explains_sign_in_instead_of_claiming_not_found() -> None:
@@ -101,8 +101,8 @@ def test_guarded_project_route_explains_sign_in_instead_of_claiming_not_found() 
     route = "/projects/8a0d55e2-2287-4387-8bd1-3774a56f023f"
     html = _render_project_detail({route: "guarded"}, authenticated=False)
 
-    assert "Project đang được bảo vệ" in html
-    assert "Không tìm thấy Project" not in html
+    assert "Dự án đang được bảo vệ" in html
+    assert "Không tìm thấy dự án" not in html
     assert 'href="/login?next=%2Fprojects%2F8a0d55e2-2287-4387-8bd1-3774a56f023f"' in html
 
 
@@ -172,13 +172,13 @@ def test_project_handoff_discards_an_acknowledged_retry_key_and_syncs_browser_hi
 
 def test_project_loading_copy_is_available_in_every_supported_interface_locale() -> None:
     for key, translations in {
-        "project.detail.loadingTitle": ("Đang tải Project", "Loading Project", "正在加载项目"),
+        "project.detail.loadingTitle": ("Đang tải dự án", "Loading Project", "正在加载项目"),
         "project.detail.loadingBody": (
-            "Portal đang kiểm tra Project owner-scoped",
+            "Portal đang kiểm tra dự án theo chủ sở hữu trước khi hiển thị dữ liệu.",
             "The Portal is checking the owner-scoped Project",
             "Portal 正在检查此账户范围内的项目",
         ),
-        "project.detail.guardedTitle": ("Project đang được bảo vệ", "Project access is protected", "项目访问已受保护"),
+        "project.detail.guardedTitle": ("Dự án đang được bảo vệ", "Project access is protected", "项目访问已受保护"),
         "project.detail.signIn": ("Đăng nhập để tiếp tục", "Sign in to continue", "登录以继续"),
     }.items():
         for translation in translations:
