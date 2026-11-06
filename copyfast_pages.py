@@ -143,6 +143,7 @@ _PORTAL_SHELL_TITLES = {
     "/studio": {"vi": "Xưởng sáng tạo · TOAN AAS", "en": "Media Studio · TOAN AAS", "zh": "媒体工作室 · TOAN AAS"},
     "/publishing": {"vi": "Đăng bài tự động · TOAN AAS", "en": "AutoPost Hub · TOAN AAS", "zh": "自动发布中心 · TOAN AAS"},
     "/content/channel-strategy": {"vi": "Chiến lược kênh · TOAN AAS", "en": "Channel strategy · TOAN AAS", "zh": "频道策略 · TOAN AAS"},
+    "/content/publish-review": {"vi": "Gói rà soát trước khi đăng · TOAN AAS", "en": "Pre-publish review pack · TOAN AAS", "zh": "发布前审核包 · TOAN AAS"},
     "/growth/ai": {"vi": "Growth Review · TOAN AAS", "en": "Growth Review · TOAN AAS", "zh": "增长复盘 · TOAN AAS"},
     "/campaign/report": {"vi": "Báo cáo campaign · TOAN AAS", "en": "Campaign report · TOAN AAS", "zh": "活动报告 · TOAN AAS"},
     "/features/content": {"vi": "Content & Chat · TOAN AAS", "en": "Content & Chat · TOAN AAS", "zh": "内容与对话 · TOAN AAS"},

@@ -1,5 +1,33 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## PUBLISH-REVIEW-LOCALE-20261106 — biên nhận, phản hồi và phiên hiện tại
+
+| Case | Mức | Thao tác | PASS bắt buộc / canh lỗi cũ | Evidence hiện có |
+|---|---|---|---|---|
+| PR-RECEIPT-01 | nặng | API trả receipt đủ execution + 12 false flags; render lại hai lần | Customer fields nguyên vẹn/escaped; không media/job/output | 21/21 Node receipt; native API |
+| PR-LOCALE-02 | vừa | Empty/valid/rejected × VI/EN/ZH | Fixed UI/feedback đúng locale; EN cũ không đổi; không dịch khách | 77/77 Node + 10/10 Python/native |
+| PR-CURRENT-03 | nặng | POST pending rồi đổi route/epoch/account/logout/capability/CSRF hoặc gửi lượt mới | Response cũ không merge/toast/mở control; bridge=false vẫn chạy | 41/41 deferred-response |
+| PR-SAFETY-04 | nặng | Cờ true/thiếu, execution sai, field thừa, package sai, transport lỗi | Bị loại, không tự tạo receipt; 12 flags giữ nguyên | 21 receipt safety cases |
+| PR-FEEDBACK-05 | vừa | Success/guard/error VI/EN/ZH và message động lạ | Năm fixed feedback map; message không khớp giữ nguyên | 3 locale toast cases; 68×3 catalog |
+
+QA dùng SQLite/phiên giả cô lập và deferred fetch local; không tài khoản khách,
+provider, ví, thanh toán, OAuth, đăng bài hoặc production session. Full Node/CI và
+runtime revision phải được đọc riêng trước khi tick phát hành.
+
+## PUBLISH-REVIEW-LOCALE-20261106 — biên nhận, phản hồi và phiên hiện tại
+
+| Case | Mức | Thao tác | PASS bắt buộc / canh lỗi cũ | Evidence hiện có |
+|---|---|---|---|---|
+| PR-RECEIPT-01 | nặng | API trả receipt đủ execution + 12 false flags; render lại hai lần | Customer title/caption/hashtags/CTA/source/checklist/copy còn nguyên; HTML escape; không media/job/output | 21/21 Node receipt; native API 1/1 |
+| PR-LOCALE-02 | vừa | Empty/valid/rejected × VI/EN/ZH, form/result/boundary/scope | Fixed UI và feedback theo locale; EN cũ không đổi; dữ liệu khách không dịch | 77/77 Node + 10/10 Python/native |
+| PR-CURRENT-03 | nặng | Giữ POST pending rồi đổi route/epoch/account/logout/capability/CSRF hoặc gửi lượt mới | Response cũ không merge/toast/mở control; lượt hiện tại vẫn chạy; bridge=false vẫn dùng được | 41/41 deferred-response |
+| PR-SAFETY-04 | nặng | Cờ true/thiếu, execution sai, field thừa, package sai, lỗi transport | Bị từ chối, không tự tạo receipt; không đổi 12 boundary flags | 12×2 rejection + 2 unsafe trong21 receipt |
+| PR-FEEDBACK-05 | vừa | Success/guard/error ở VI/EN/ZH; message động lạ | Năm feedback cố định map catalog; message không khớp giữ nguyên | 3 locale toast cases; catalog68×3 |
+
+QA dùng SQLite/phiên giả cô lập và deferred fetch local; không tài khoản khách,
+provider, ví, thanh toán, OAuth, đăng bài hay production session. Full Node/CI và
+runtime revision phải được đọc riêng trước khi tick phát hành.
+
 ## CHANNEL-STRATEGY-LOCALE-20261106 — ngôn ngữ, điện thoại và định hướng
 
 | Case | Mức | Thao tác | PASS bắt buộc / canh lỗi cũ | Evidence hiện có |

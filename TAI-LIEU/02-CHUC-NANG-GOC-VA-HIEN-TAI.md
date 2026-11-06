@@ -1,5 +1,34 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 06/11/2026 — đối chiếu Gói rà soát trước khi đăng
+
+| Yêu cầu gốc | Candidate | Evidence / giới hạn |
+|---|---|---|
+| Receipt text-only giữ ranh giới | Chuẩn hóa lặp giữ execution+12 false flags; sai bị loại | 21 Node receipt + native API |
+| Fixed chrome đúng VI/EN/ZH | 68 khóa cân bằng, EN cũ không đổi; feedback cố định map locale | 77 Node + 10 Python/native |
+| Response cũ không ghi đè | Fence theo request/session/account/route/capability/CSRF | 41 deferred-response |
+| Không tự điền nội dung khách | Hashtag form ban đầu rỗng; backend fallback giữ nguyên | Native form/render |
+
+Đây là gói văn bản để người dùng tự rà soát, không phải lịch đăng, social/OAuth,
+provider job, media output, thanh toán hoặc delivery. Signed production UI và motion
+vẫn mở; không dùng HTTP200 để kết luận đã đăng bài.
+
+## 06/11/2026 — đối chiếu Gói rà soát trước khi đăng
+
+Nguồn chức năng: `docs/migration/PUBLISH_REVIEW_PACK_CONTRACT.md` và native API hiện có.
+
+| Yêu cầu gốc | Candidate có bằng chứng | Giới hạn |
+|---|---|---|
+| Receipt text-only giữ đủ ranh giới, không tạo post/job/provider | Chuẩn hóa lặp vẫn giữ `execution` + 12 cờ false; receipt sai bị loại | 21 Node receipt + native API contract; không phải provider/output proof |
+| VI/EN/ZH fixed chrome đúng ngôn ngữ | 68 khóa cân bằng; EN cũ không đổi; field/help/result/boundary/scope và feedback cố định đã map | 77 Node + 10 Python/native; dynamic server/customer text không dịch mù |
+| Không để response cũ ghi đè phiên mới | Chốt epoch/session/account/route/capability/CSRF riêng cho action | 41 deferred-response cases; không đổi API chung hoặc hủy request |
+| Form không tự điền nội dung khách | Hashtag ban đầu rỗng; backend fallback khi request rỗng giữ nguyên hợp đồng | Native form/render test; không đổi DTO/server mặc định |
+
+Gói rà soát là văn bản để người dùng tự kiểm tra, không phải lịch đăng, kết nối
+mạng xã hội, output media, job, thanh toán hay delivery. Signed production UI và
+full accessibility/motion vẫn là cổng mở; không dùng HTTP 200 hoặc fixture local
+để kết luận đã đăng bài thật.
+
 ## 06/11/2026 — đối chiếu Chiến lược kênh
 
 Nguồn chức năng ban đầu: `docs/migration/CHANNEL_STRATEGY_CONTRACT.md`.

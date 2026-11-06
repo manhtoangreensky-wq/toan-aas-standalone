@@ -185,6 +185,7 @@
   // separate from Web-native workspace state, but they are still private
   // signed-session data and need the same route/session/order fence.
   let canonicalSessionEpoch = 0;
+  let publishReviewPackComposeRequestEpoch = 0;
   let canonicalHydrationEpoch = 0;
   let canonicalAdminDataHydrationEpoch = 0;
   let adminManualTopupHydrationEpoch = 0;
@@ -6377,6 +6378,37 @@
   const PUBLISH_REVIEW_PACK_KEYS = Object.freeze([
     "title", "caption", "hashtags", "cta", "source_prompt", "review_checklist", "copy_instruction"
   ]);
+  function publishReviewPackRequestIsCurrent(requestEpoch, sessionEpoch, expectedAccountId, expectedPath, expectedCsrfToken) {
+    const current = base();
+    const account = current.account && typeof current.account === "object" ? current.account : {};
+    const session = current.session && typeof current.session === "object" ? current.session : {};
+    return requestEpoch === publishReviewPackComposeRequestEpoch
+      && sessionEpoch === canonicalSessionEpoch
+      && Boolean(expectedAccountId && expectedCsrfToken)
+      && String(account.id || "") === expectedAccountId
+      && expectedPath === "/content/publish-review"
+      && currentPortalPath() === expectedPath
+      && current.publishReviewPackEnabled === true
+      && Boolean(current.capabilities && current.capabilities["publish-review-pack-compose"] === true)
+      && session.authenticated === true
+      && typeof session.csrfToken === "string" && session.csrfToken === expectedCsrfToken;
+  }
+
+  const PUBLISH_REVIEW_FEEDBACK_KEYS = Object.freeze({
+    "Máy chủ chưa trả ranh giới gói review an toàn.": "feedback.boundary",
+    "Nội dung cần được điều chỉnh trước khi tạo gói review.": "feedback.guard",
+    "Máy chủ chưa trả gói review Web-native an toàn.": "feedback.invalid",
+    "Đã tạo gói review text; chưa có post hoặc publish action.": "feedback.success",
+    "Yêu cầu chưa được xác nhận.": "feedback.error"
+  });
+  function publishReviewPackFeedbackText(value, fallbackKey = "feedback.error") {
+    const text = String(value || "").trim();
+    const key = PUBLISH_REVIEW_FEEDBACK_KEYS[text] || fallbackKey;
+    const i18n = window.TOANAASI18n;
+    if (!i18n || typeof i18n.t !== "function") return text;
+    const translated = i18n.t("publishReview." + key);
+    return typeof translated === "string" && translated && translated !== ("publishReview." + key) ? translated : text;
+  }
   function publishReviewPackHashtags(value) {
     const source = String(value || "").trim();
     if (!source) return [];
@@ -28941,7 +28973,13 @@
         return;
       }
       if (action === "publish-review-pack-compose") {
+        const sessionEpoch = canonicalSessionEpoch;
+        const accountId = String((base().account && base().account.id) || "");
+        const csrfToken = String((base().session && base().session.csrfToken) || "");
+        if (!publishReviewPackRequestIsCurrent(publishReviewPackComposeRequestEpoch, sessionEpoch, accountId, route, csrfToken)) return;
         const payload = publishReviewPackPayload(fields);
+        const requestEpoch = ++publishReviewPackComposeRequestEpoch;
+        const requestIsCurrent = () => publishReviewPackRequestIsCurrent(requestEpoch, sessionEpoch, accountId, route, csrfToken);
         // The Bot formatted a pending result. This independent Web flow keeps
         // no pending record, no idempotency receipt and no hidden social
         // action: one signed request returns one bounded review package.
@@ -28952,6 +28990,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
+          if (!requestIsCurrent()) return;
           const data = result.data && typeof result.data === "object" ? result.data : {};
           if (result.status === "guarded") {
             if (!publishReviewPackBoundaryIsSafe(data)) throw new Error("Máy chủ chưa trả ranh giới gói review an toàn.");
@@ -28959,7 +28998,7 @@
               publishReviewPackResult: {},
               pageStates: { ...(base().pageStates || {}), "/content/publish-review": "guarded" }
             });
-            toast(result.message || "Nội dung cần được điều chỉnh trước khi tạo gói review.");
+            toast(publishReviewPackFeedbackText(result.message || "Nội dung cần được điều chỉnh trước khi tạo gói review.", "feedback.guard"));
             return;
           }
           if (!publishReviewPackResultIsSafe(data)) {
@@ -28969,8 +29008,9 @@
             publishReviewPackResult: data,
             pageStates: { ...(base().pageStates || {}), "/content/publish-review": "ready" }
           });
-          toast(result.message || "Đã tạo gói review text; chưa có post hoặc publish action.");
+          toast(publishReviewPackFeedbackText(result.message || "Đã tạo gói review text; chưa có post hoặc publish action.", "feedback.success"));
         } catch (error) {
+          if (!requestIsCurrent()) return;
           const guarded = error && error.payload && error.payload.status === "guarded" ? error.payload : null;
           const guardedData = guarded && guarded.data && typeof guarded.data === "object" ? guarded.data : null;
           if (!guarded || !publishReviewPackBoundaryIsSafe(guardedData)) throw error;
@@ -28978,9 +29018,9 @@
             publishReviewPackResult: {},
             pageStates: { ...(base().pageStates || {}), "/content/publish-review": "guarded" }
           });
-          toast(guarded.message || "Nội dung cần được điều chỉnh trước khi tạo gói review.");
+          toast(publishReviewPackFeedbackText(guarded.message || "Nội dung cần được điều chỉnh trước khi tạo gói review.", "feedback.guard"));
         } finally {
-          setActionBusy(action, route, false);
+          if (requestIsCurrent()) setActionBusy(action, route, false);
         }
         return;
       }
@@ -38719,7 +38759,8 @@
         });
       }
       const editorialError = (action === "music-direction-preset-compose" || action === "sfx-cue-sheet-compose") ? musicSfxEditorialErrorText(action, error) : null;
-      toast(editorialError || (error && error.payload && error.payload.message) || (error && error.message) || "Yêu cầu chưa được xác nhận.", "error");
+      const errorMessage = editorialError || (error && error.payload && error.payload.message) || (error && error.message) || "Yêu cầu chưa được xác nhận.";
+      toast(action === "publish-review-pack-compose" ? publishReviewPackFeedbackText(errorMessage, "feedback.error") : errorMessage, "error");
     } finally {
       if (featureSubmission) {
         releaseSubmission(featureSubmission);

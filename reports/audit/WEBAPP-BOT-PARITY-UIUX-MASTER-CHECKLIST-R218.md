@@ -1,5 +1,12 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## AP192 — Publish Review 06/11/2026
+
+- [x] Receipt21/21, customer content/12 flags preserved; native API verified.
+- [x] Locale/currentness/feedback Node77/77, Python/native10/10, catalog68×3.
+- [x] Full indexed Node1481/1481; protected backend/auth/provider/wallet/motion unchanged.
+- [ ] Exact-head CI, Tester publication, merge/deploy/reconcile and signed production UI.
+
 Ngày 2026-10-20; cập nhật sau run `39309260395`. WIP_ADMIN_PRESENTATION_CI_GREEN_AUTH_QA_GREEN;
 state-only follow-up HEAD `57bda44` đã có CI riêng xanh.
 Source Bot được đọc-only; các dòng dưới đây giữ lịch sử evidence theo ngày.
@@ -27,6 +34,13 @@ Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 gi�
 - [ ] Chiến lược kênh: hồi quy cuối/Tester/CI/merge/deploy/reconcile và signedproductionUI.
 - [ ] Gói rà soát: nativeAPI→renderer tái hiện mất kết quả do chuẩn hóa hai lần;
   nhãn/gợi ý/hướng dẫn hệ thống còn sai ngôn ngữ. Chưa appBUILD.
+- [x] Gói rà soát P1/P2A/P2B/P3: receipt21/21, Node copy/receipt/currentness77/77,
+  Python/native10/10, catalog68×3, ENcũ unchanged; customercopy/rawflags giữ nguyên.
+- [x] Currentness fence: 41/41 deferred same-document cases pass; response cũ
+  không merge/toast/mở control; API chung/auth/backend không đổi.
+- [x] Feedback fixed success/guard/invalid/error: 3 locale toast cases; generic
+  catch ngoài Publish Review giữ nguyên.
+- [ ] Gói rà soát: exact-head CI/Tester/merge/deploy/reconcile và signed production UI.
 - [ ] Lịch nội dung: 18/21rendererRED,2/3firstpaintRED; giữ3ca điều hướng/giá trị đã đạt.
 - [ ] Rà tiếp whole-app locale theo từng route; properbrand/customertext giữ nguyên;
   không dùng việc đổi một title hoặc hiddenpanels để đóng kết nối/engine/auth/LIVE.

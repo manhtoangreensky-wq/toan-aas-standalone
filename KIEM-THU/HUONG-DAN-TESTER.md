@@ -1,5 +1,34 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Phiên Gói rà soát trước khi đăng — 06/11/2026
+
+ID `PUBLISH-REVIEW-LOCALE-20261106`, nguồn PR-RECEIPT-01..PR-FEEDBACK-05.
+Kiểm API native trong DB tạm, rồi đưa response vào renderer thật ở VI/EN/ZH.
+Không thay title/caption/hashtags/CTA/source prompt/checklist/copy_instruction của
+khách; chỉ kiểm nhãn/hướng dẫn/phản hồi cố định. Đọc receipt lần hai; thử từng cờ
+true/thiếu, execution sai, field thừa và transport lỗi.
+
+Với currentness, giữ request pending rồi đổi route, epoch, account, authenticated,
+capability và CSRF; gửi thêm lượt compose để kiểm response cũ không merge/toast/mở
+control. Lặp guarded/error/success và xác nhận bridge không cần bật. Evidence local:
+Node77 copy/receipt/currentness, Python/native10, full indexed Node1481; CI exact-head,
+deploy và signed UI quan sát thực tế vẫn phải ghi riêng.
+
+## Phiên Gói rà soát trước khi đăng — 06/11/2026
+
+ID `PUBLISH-REVIEW-LOCALE-20261106`, nguồn PR-RECEIPT-01..PR-FEEDBACK-05.
+Kiểm API native trong DB tạm, rồi đưa đúng response vào renderer thật ở VI/EN/ZH.
+Không thay title/caption/hashtags/CTA/source prompt/checklist/copy_instruction của
+khách; chỉ kiểm nhãn/hướng dẫn/phản hồi cố định. Đọc lại receipt lần hai để bắt
+lỗi mất proof; thử từng cờ true/thiếu, execution sai, field thừa và lỗi transport.
+
+Với currentness, giữ request pending rồi đổi route, session epoch, account,
+authenticated, capability và CSRF; gửi thêm lượt compose để kiểm response cũ
+không merge/toast/mở control. Lặp guarded/error/success và xác nhận bridge không
+cần bật. Các cổng đạt hiện tại: Node77 copy/receipt/currentness, Python/native10,
+full indexed Node1.481; CI exact-head/deploy/live vẫn phải ghi riêng. Không dùng
+HTTP 200 để kết luận đăng bài, provider hay output media thành công.
+
 ## Phiên Chiến lược kênh — 06/11/2026
 
 ID `CHANNEL-STRATEGY-LOCALE-20261106`, nguồn case CS-LOCALE-01..CS-NAV-04
