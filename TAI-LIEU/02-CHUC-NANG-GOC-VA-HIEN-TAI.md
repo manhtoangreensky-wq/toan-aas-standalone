@@ -1353,3 +1353,17 @@ WebApp, không phải mở authority dữ liệu hoặc thao tác tài chính.
 
 Nguồn đo: `reports/audit/R218-CHECKPOINT-20261021.md` và các artifact `R218-*-QA-20261020.json`.
 Tất cả số liệu là checkout/QA cô lập; chưa phải trạng thái đã merge/deploy/live.
+
+## Bổ sung đối chiếu — locale `/studio` và tên hiển thị SubDub — 2026-11-05
+
+| Chức năng/thiết kế trước đây | Candidate hiện tại | Bằng chứng và giới hạn |
+|---|---|---|
+| `/studio` là trang điều hướng sáu bước, tên danh mục “Media Studio” | Route và sáu liên kết giữ nguyên; trong VI tên hiển thị là “Xưởng sáng tạo”, nội dung cố định được dịch; EN vẫn “Media Studio”, ZH vẫn “媒体工作室” | `tests/media-studio-vietnamese-purity.test.mjs` `7/7`; chưa browser/live |
+| Spec `docs/superpowers/specs/2026-10-08-subdub-single-screen-ui.md` giữ tên SubDub trong bản dịch VI khi xem như danh từ sản phẩm | Theo yêu cầu Owner mới, các nhãn giao diện VI dùng “Phụ đề & Lồng tiếng”; EN/ZH và route `/subdub` giữ nguyên, định danh/API không đổi | Nhóm locale/sidebar/assistant/dashboard/voice `89/89`; không suy ra runtime parity |
+
+Sai khác là phạm vi tên hiển thị theo locale, không phải chức năng hay route. Tên SubDub trong mã
+định danh và ngôn ngữ EN/ZH giữ nguyên; riêng phần chữ VI được dịch theo yêu cầu mới.
+
+Ngày 06/11, browser candidate đã kiểm đủ `18/18` cấu hình `/studio` ở ba ngôn ngữ,
+hai giao diện và ba chiều rộng. Cột “chưa browser/live” phía trên là mốc 05/11:
+browser trình bày đã đo, còn signed-session/backend/LIVE vẫn phải xác minh riêng.

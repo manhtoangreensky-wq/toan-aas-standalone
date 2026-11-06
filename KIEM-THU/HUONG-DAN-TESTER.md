@@ -321,3 +321,25 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
    output cuối, artifact/download readiness và `PROVIDER_CALLS/WALLET_MUTATIONS`.
 4. Lỗi ngoài phạm vi presentation phải thêm vào đúng nhóm ledger; không đổi tên case để né lịch sử.
 5. Trace CLS/LCP/INP hiện `NOT_RUN`; không được thay bằng screenshot hoặc HTTP 200.
+
+## Phiên locale `/studio` và nhãn SubDub — LOCALE-183
+
+Phiên hiện hành `LOCALE183-RELEASE-QA-20261106` ở trạng thái READY: 89 test Node,
+16 test Python và 18 cấu hình browser candidate đạt. Phần số liệu 05/11 phía dưới
+là lịch sử; đối chiếu hồ sơ `reports/audit/R218-LOCALE-183-RELEASE-20261106.md`
+và PR bàn giao để lấy CI, SHA triển khai và kết quả production mới nhất.
+
+Các case `LOCALE-183-STUDIO-01` và `LOCALE-183-SUBDUB-02` trong `KIEM-THU/DANH-SACH-CASE.md`
+kiểm tra đúng hai yêu cầu hiển thị, không thay chức năng.
+
+1. Sau khi có build SHA mới, mở ứng dụng bằng tài khoản QA được cấp; ghi lại SHA, locale, theme
+   và viewport. Thử ở màn rộng `1440px` và điện thoại `390px`.
+2. Chọn Tiếng Việt rồi mở `/studio`. Kiểm breadcrumb, nhãn đầu trang, tiêu đề, đoạn giới thiệu,
+   sáu thẻ và các liên kết. Không được còn `Media Studio`, `media`, `brief`, `workspace`, `job`
+   hay `browser` trong fixed copy; tên riêng và mã kỹ thuật được giữ nguyên.
+3. Kiểm menu trái, trợ lý, dashboard và liên kết Voice ↔ SubDub. VI phải ghi “Phụ đề & Lồng tiếng”; EN/ZH vẫn ghi `SubDub`.
+4. Chụp ảnh sau khi tải lại ở từng locale; ghi riêng lỗi console, tràn khung và route đích.
+   Không gửi biểu mẫu, không tạo job, không nhập dữ liệu khách thật.
+5. Candidate local hiện có `7/7` renderer, `89/89` nhóm locale liên quan, `373/373` test locale rộng trên `67` file và `19/19` Python locale/title.
+   Chưa có browser/live evidence cho candidate này; không đánh dấu case production đạt trước khi xem build SHA.
+6. Repo hiện đã có `22` nhãn và `2` issue template kiểm thử. Danh sách GitHub Projects không đọc được do thiếu scope `read:project`; không refresh auth và không sửa board.
