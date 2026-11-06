@@ -1,5 +1,33 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 06/11/2026 — Chiến lược kênh: bản trình bày đa ngôn ngữ
+
+Candidate từ BASE `8c85f84966ab3e0f53bf97a2999e221b23901bcf`, chưa merge/deploy.
+Trang danh sách và chi tiết dùng tên “Chiến lược kênh” trong VI, “Channel strategy”
+trong EN và “频道策略” trong ZH ngay từ HTML ban đầu. Nhãn, gợi ý nhập, lựa chọn,
+tiếp thị liên kết, khôi phục và tên hoạt động đi qua bộ dịch; tên/nội dung khách,
+giá trị lưu, phiên bản, trạng thái, quyền và thao tác máy chủ không đổi.
+Tổng 152 khóa của cụm cân bằng ở ba ngôn ngữ; mọi giá trị EN đã có giữ nguyên.
+
+Đã đo: 29/29 Node về ngôn ngữ/giá trị/giới hạn phiên bản/điều hướng; 6/6 tiêu đề HTML;
+review độc lập không có finding Critical/Important/Minor. Chi tiết trước đây lỗi
+do gọi hàm chỉ tồn tại trong bundle khác; helper cục bộ nay giữ đúng phép kiểm tra
+số nguyên 1–1.000.000. Không thay kiểm tra phiên bản hoặc quyền ở backend.
+Font điện thoại của ba biểu mẫu được nâng từ 15px lên 16px khi ≤620px; CSS chỉ
+chạm cụm này. Sau bản sửa font, trình duyệt 54/54 cấu hình đạt, 90/90 hợp đồng CSS
+đạt; không lỗi trang/console/tràn hoặc request API/ghi/mạng ngoài trong ma trận.
+Đây là template/renderer/CSS thật với dữ liệu tổng hợp, không phải signed LIVE.
+
+Trang chi tiết và danh sách nay cùng chọn đúng mục Đăng bài; chỉ thêm một prefix
+vào map có sẵn, không đổi resolver, URL hoặc quyền. Bộ native/CSS liên quan đạt
+106/106; phép kiểm literal cũ được đối chiếu đúng map và bổ sung kiểm hành vi,
+không bỏ qua hoặc hạ kiểm tra. CI và triển khai vẫn phải hoàn tất trước bàn giao.
+Hồ sơ kênh là dữ liệu lập chiến lược riêng tư, không chứng minh tài khoản mạng xã
+hội đã kết nối, tự đăng, số liệu phân tích hoặc đầu ra nhà cung cấp. Hai trang kế
+tiếp là gói rà soát và lịch nội dung; lỗi kết quả hợp lệ biến mất ở gói rà soát đã
+được tái hiện bằng native API→renderer và chưa được sửa trong candidate này.
+Provider/wallet/production-data mutation bằng 0; chuyển động tiếp tục để cuối.
+
 ## 24/10/2026 — SD-D4: bật/tắt âm thanh gốc, giữ mức vừa dùng
 
 Candidate trên PR661/Issue664, BASEba4b2dfa; chưa merge/deploy/LIVE.

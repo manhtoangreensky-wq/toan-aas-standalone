@@ -50,12 +50,14 @@ def test_channel_strategy_has_private_native_routes_and_workspace_discoverabilit
     assert 'case "channel-strategy": return renderChannelStrategy(page, context);' in PORTAL
     assert 'case "channel-strategy-detail": return renderChannelStrategyDetail(page, context);' in PORTAL
     # The compact rail no longer mirrors the full feature catalogue. This
-    # private route remains in the manifest-backed command palette and keeps
-    # its Workspace mobile-family orientation without acquiring new access.
+    # private route remains in the manifest-backed command palette. Mobile
+    # family membership now lives in the fixed group map, not inline here.
     assert '"/content/channel-strategy", "Channel Strategy"' not in desktop_nav
     assert "Object.values(manifest)" in palette
     assert 'candidate.access === "admin" && !authorizedAdminRoutes.has(path)' in palette
-    assert '"/content/channel-strategy"' in mobile_nav
+    mobile_groups = _section(PORTAL, "const CUSTOMER_MOBILE_NAV_GROUPS", "function isMobileNavCurrent")
+    assert '"/content/channel-strategy"' in mobile_groups
+    assert "customerMobileNavGroupForPath(path)" in mobile_nav
     assert 'if (linkPath === "/content/channel-strategy")' in PORTAL
 
 

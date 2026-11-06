@@ -13,10 +13,21 @@ Từ ngày này, bảng dưới là completion ledger R218; lịch sử R217 gi�
 
 - [x] Bản nháp đã triển khai PR677, main/VPS8e23f9501865b74187b5985d9330f61ad5e221fc;
   CI42173989023 và deploy42175272526 đạt; local/main/VPS+assets/buildstamp khớp.
-- [~] Ownerảnh/publishing: AP188chữVI/ZH vàAP189ẩn3panel đã qua4renderer/18browser;
-  giữnguyên7nguồn/6khu vực/3link/3khóa, Node1.379/1.379. Chưa deploy.
+- [x] Ownerảnh/publishing: AP188/AP189 đã triển khai PR678 tại8c85f84966ab3e0f53bf97a2999e221b23901bcf;
+  CI42181804791 và deploy42182726554 đạt; 30browser/1.379Node,7nguồn/6khu vực/3link/3khóa giữ nguyên.
 - [x] AP190tiêuđềHTML banđầu3locale; RED3/3→GREEN3/3; bội18n/boundary33/33,reviewđạt.
-- [ ] Publishing: CI exact-head, merge/deploy và đối chiếu local/main/VPS/assets/buildstamp.
+- [x] Publishing PR678: local/main/VPS/assets/buildstamp đã đối chiếu; đọc lại publicassets06/11
+  vẫn khớp3/3 và buildlocal-24a673df044b7f266411. Phiên production UI vẫn NOT_TESTED.
+- [x] Candidate Chiến lược kênh: 29Node/6firstpaint,152khóa×3locale, ENcũ giữ nguyên;
+  helperrevision cục bộ sửa lỗi chi tiết với cùnggiới hạn; review độc lập C0/I0/M0.
+- [x] Candidate font riêng baform kênh: 18mobilefail→54/54browserGREEN;90/90CSS,
+  không page/console/overflow/API/write/external/unknown; chưa là delivery/LIVE.
+- [x] Candidate chỉ báo Đăng bài của chi tiết kênh: RED nhầm nhóm Công cụ→1prefix,
+  haiNodehànhvi và54browserđạt; native/CSS106/106, không skip/xfail.
+- [ ] Chiến lược kênh: hồi quy cuối/Tester/CI/merge/deploy/reconcile và signedproductionUI.
+- [ ] Gói rà soát: nativeAPI→renderer tái hiện mất kết quả do chuẩn hóa hai lần;
+  nhãn/gợi ý/hướng dẫn hệ thống còn sai ngôn ngữ. Chưa appBUILD.
+- [ ] Lịch nội dung: 18/21rendererRED,2/3firstpaintRED; giữ3ca điều hướng/giá trị đã đạt.
 - [ ] Rà tiếp whole-app locale theo từng route; properbrand/customertext giữ nguyên;
   không dùng việc đổi một title hoặc hiddenpanels để đóng kết nối/engine/auth/LIVE.
 

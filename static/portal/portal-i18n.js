@@ -17608,22 +17608,22 @@
   const CHANNEL_STRATEGY_COPY_ROWS = [
     ["boundary.kicker", "Ranh giới xử lý", "Processing boundary", "处理边界"],
     ["boundary.title", "Hồ sơ và rà soát, không kết nối hay tự đăng", "Profiles and review, with no connection or auto-posting", "仅做档案与审核，不连接或自动发布"],
-    ["boundary.body", "Không có Telegram, Bot/Core Bridge, tra cứu mạng xã hội, nhà cung cấp, phân tích, tác vụ, Xu, PayOS, tài sản, xuất bản hoặc giao tệp trong hồ sơ kênh.", "Channel profiles do not connect Telegram, Bot/Core Bridge, social lookup, providers, analytics, jobs, Xu, PayOS, assets, publishing or delivery.", "频道档案不会连接 Telegram、Bot/Core Bridge、社交查询、服务商、分析、任务、Xu、PayOS、资产、发布或交付。"],
-    ["boundary.item.one", "Hồ sơ chỉ thuộc tài khoản Web đã xác thực và được lưu theo phiên bản.", "Each profile belongs to the authenticated Web account and is versioned.", "每个档案属于已验证的 Web 账户并按版本保存。"],
+    ["boundary.body","Không kết nối Telegram, gọi nhà cung cấp, tra cứu mạng xã hội, tạo số liệu phân tích, tác vụ, Xu, thanh toán PayOS, tài sản, bài đăng hoặc tệp bàn giao.","Channel profiles do not connect Telegram, Bot/Core Bridge, social lookup, providers, analytics, jobs, Xu, PayOS, assets, publishing or delivery.","频道档案不会连接Telegram、调用服务商、查询社交网络、生成分析数据、任务、Xu、PayOS支付、资产、帖子或交付文件。"],
+    ["boundary.item.one","Hồ sơ chỉ thuộc tài khoản đã xác thực và được lưu theo phiên bản.","Each profile belongs to the authenticated Web account and is versioned.","每个档案属于已验证的账户并按版本保存。"],
     ["boundary.item.two", "Định hướng là danh sách kiểm tra để con người rà soát, không phải dự báo lượt tiếp cận hay chuyển đổi.", "Directions are human review checklists, not reach or conversion forecasts.", "方向是供人工审核的清单，不是触达或转化预测。"],
     ["boundary.item.three", "Kiểm tra nội dung, quyền sử dụng, thông tin công khai và chính sách nền tảng trước khi dùng ở quy trình được cấp.", "Check claims, rights, disclosures and platform policies before using an approved workflow.", "在获授权流程中使用前，请检查声明、权利、披露和平台政策。"],
     ["guard.title", "Hồ sơ kênh đang được bảo vệ", "Channel profiles are protected", "频道档案受到保护"],
-    ["guard.body", "Đăng nhập bằng phiên Web đã xác thực để quản lý hồ sơ kênh riêng tư.", "Sign in with an authenticated Web session to manage private channel profiles.", "请使用已验证的 Web 会话管理私有频道档案。"],
+    ["guard.body","Đăng nhập bằng tài khoản đã xác thực để quản lý hồ sơ kênh riêng tư.","Sign in with an authenticated Web session to manage private channel profiles.","请使用已验证的账户会话管理私有频道档案。"],
     ["intro.kicker", "Hệ thống định hướng kênh", "Channel operating system", "频道运营系统"],
     ["intro.title", "Cố định khán giả, nguyên tắc thương hiệu và hướng nội dung trước khi tạo bài.", "Set audience, brand guardrails and content direction before creating posts.", "在创建内容前明确受众、品牌边界和内容方向。"],
-    ["intro.body", "Hồ sơ Web riêng tư thay thế các bước rời rạc bằng phiên bản rõ ràng, nguyên tắc kiểm tra và hướng nội dung dễ rà soát.", "Private Web profiles replace scattered steps with clear versions, review guardrails and reusable content direction.", "私有 Web 档案用清晰版本、审核边界和可复用内容方向取代零散步骤。"],
+    ["intro.body","Hồ sơ kênh riêng tư tập trung phiên bản, nguyên tắc kiểm tra và hướng nội dung để dễ rà soát.","Private Web profiles replace scattered steps with clear versions, review guardrails and reusable content direction.","私有频道档案集中管理版本、审核原则和内容方向，便于审核。"],
     ["metric.active", "Hồ sơ đang hoạt động", "Active profiles", "活跃档案"],
     ["metric.archived", "Hồ sơ đã lưu trữ", "Archived profiles", "已归档档案"],
     ["metric.total", "Tổng hồ sơ", "All profiles", "档案总数"],
     ["create.kicker", "Tạo mới", "Create", "创建"],
     ["create.title", "Bắt đầu từ hồ sơ, không từ biểu mẫu chung.", "Start with a profile, not a generic form.", "从档案开始，而不是从通用表单开始。"],
     ["create.body", "Lưu định hướng kênh theo tài khoản; mỗi lần ghi đều dùng bảo vệ yêu cầu, chống lặp và nhật ký máy chủ.", "Save channel direction to the account; every write uses request protection, idempotency and server audit.", "将频道方向保存到账户；每次写入都使用请求保护、幂等和服务器审计。"],
-    ["create.noExternal", "Không tạo tài khoản xã hội, yêu cầu AI, tác vụ hoặc bài đăng.", "No social account, AI request, job or post is created.", "不会创建社交账户、AI 请求、任务或帖子。"],
+    ["create.noExternal","Không tạo tài khoản mạng xã hội, yêu cầu tạo nội dung, tác vụ hoặc bài đăng.","No social account, AI request, job or post is created.","不会创建社交账户、AI 请求、任务或帖子。"],
     ["create.submit", "Tạo hồ sơ kênh", "Create channel profile", "创建频道档案"],
     ["library.kicker", "Thư viện hồ sơ", "Profile library", "档案库"],
     ["library.title", "Tiếp tục từ hồ sơ đã kiểm soát", "Continue from a controlled profile", "从受控档案继续"],
@@ -17637,7 +17637,7 @@
     ["filter.all", "Tất cả", "All", "全部"],
     ["filter.active", "Đang hoạt động", "Active", "活跃"],
     ["filter.archived", "Đã lưu trữ", "Archived", "已归档"],
-    ["filter.note", "Bộ lọc chỉ tồn tại trong phiên hiện tại; không lưu từ khóa vào URL, Telegram, Bot hoặc bộ nhớ trình duyệt.", "Filters stay in the current session; search text is not stored in the URL, Telegram, Bot or browser storage.", "筛选仅存在于当前会话；搜索文本不会保存到 URL、Telegram、Bot 或浏览器存储。"],
+    ["filter.note","Bộ lọc chỉ dùng trong phiên hiện tại; không lưu từ khóa vào đường dẫn, Telegram hoặc bộ nhớ trình duyệt.","Filters stay in the current session; search text is not stored in the URL, Telegram, Bot or browser storage.","筛选仅存在于当前会话；搜索文本不会保存到链接、Telegram、机器人或浏览器存储。"],
     ["filter.clear", "Xóa lọc", "Clear filter", "清除筛选"],
     ["filter.submit", "Tìm hồ sơ", "Find profiles", "查找档案"],
     ["empty.title", "Chưa có hồ sơ kênh", "No channel profiles yet", "暂无频道档案"],
@@ -17653,7 +17653,7 @@
     ["preview.emptyReview", "Cần rà soát thủ công trước khi dùng định hướng.", "Manual review is required before using this direction.", "使用此方向前需要人工审核。"],
     ["preview.note", "Hướng này chỉ nằm trong phiên hiện tại; không trở thành lịch đăng, thao tác mạng xã hội, báo cáo phân tích, tài sản, tác vụ, thanh toán hoặc bài đăng.", "This direction stays in the current session; it does not become a schedule, social action, analytics report, asset, job, payment or post.", "此方向仅存在于当前会话；不会变成日程、社交操作、分析报告、资产、任务、支付或帖子。"],
     ["detail.notFoundTitle", "Không tìm thấy hồ sơ kênh", "Channel profile not found", "未找到频道档案"],
-    ["detail.notFoundBody", "Hồ sơ có thể không thuộc tài khoản Web hiện tại hoặc máy chủ chưa xác minh.", "The profile may not belong to the current Web account or may not be verified by the server.", "该档案可能不属于当前 Web 账户，或尚未通过服务器验证。"],
+    ["detail.notFoundBody","Hồ sơ có thể không thuộc tài khoản hiện tại hoặc chưa được máy chủ xác minh.","The profile may not belong to the current Web account or may not be verified by the server.","该档案可能不属于当前账户，或尚未通过服务器验证。"],
     ["detail.back", "Về hồ sơ kênh", "Back to channel profiles", "返回频道档案"],
     ["detail.status", "Trạng thái", "State", "状态"],
     ["detail.revision", "Phiên bản", "Version", "版本"],
@@ -17665,7 +17665,7 @@
     ["detail.save", "Lưu phiên bản mới", "Save new version", "保存新版本"],
     ["detail.lifecycleKicker", "Vòng đời hồ sơ", "Profile lifecycle", "档案生命周期"],
     ["detail.lifecycleTitle", "Trạng thái hồ sơ", "Profile state", "档案状态"],
-    ["detail.lifecycleBody", "Lưu trữ và khôi phục đều cần phiên bản hiện tại, CSRF, chống lặp, quyền sở hữu và nhật ký máy chủ.", "Archive and restore require the current version, CSRF, idempotency, ownership and server audit.", "归档和恢复需要当前版本、CSRF、幂等、所有权和服务器审计。"],
+    ["detail.lifecycleBody","Lưu trữ và khôi phục đều kiểm tra phiên bản hiện tại, mã bảo vệ biểu mẫu, chống lặp, quyền sở hữu và nhật ký máy chủ.","Archive and restore require the current version, CSRF, idempotency, ownership and server audit.","归档和恢复会检查当前版本、表单保护码、重复请求保护、所有权和服务器审计。"],
     ["detail.lifecycleNote", "Lưu trữ giữ lịch sử riêng tư; không xóa dữ liệu, không gọi tài khoản xã hội hoặc đăng bài.", "Archive keeps private history; it does not delete data, call social accounts or publish.", "归档会保留私有历史；不会删除数据、调用社交账户或发布。"],
     ["detail.previewKicker", "Hướng nội dung", "Content direction", "内容方向"],
     ["detail.previewTitle", "Biến hồ sơ thành hướng nội dung có cấu trúc", "Turn the profile into structured content direction", "将档案转为结构化内容方向"],
@@ -17699,11 +17699,11 @@
     ["detail.historyEmptyTitle", "Chưa có lịch sử", "No history yet", "暂无历史"],
     ["detail.historyEmptyBody", "Phiên bản đầu tiên sẽ xuất hiện sau khi máy chủ lưu hồ sơ.", "The first version appears after the server saves the profile.", "服务器保存档案后将显示第一个版本。"]
     , ["field.channelName", "Tên kênh / thương hiệu", "Channel or brand name", "频道或品牌名称"]
-    , ["field.channelNamePlaceholder", "Ví dụ: TOAN AAS Creators", "Example: TOAN AAS Creators", "例如：TOAN AAS Creators"]
+    , ["field.channelNamePlaceholder","Ví dụ: kênh TOAN AAS","Example: TOAN AAS Creators","例如：TOAN AAS频道"]
     , ["field.channelNameHelp", "Tên nội bộ để phân biệt hồ sơ; không phải tài khoản mạng xã hội đã kết nối.", "An internal name for this profile; it is not a connected social account.", "用于区分档案的内部名称；不是已连接的社交账户。"]
     , ["field.platform", "Nền tảng ưu tiên", "Preferred platform", "首选平台"]
-    , ["field.channelUrl", "URL kênh (tùy chọn)", "Channel URL (optional)", "频道 URL（可选）"]
-    , ["field.channelUrlHelp", "Chỉ lưu siêu dữ liệu HTTPS. Web không mở URL, thu thập dữ liệu, xác minh quyền sở hữu hoặc lấy số liệu phân tích.", "Only HTTPS metadata is saved. The Web App does not open, crawl, verify ownership or analyze this URL.", "仅保存 HTTPS 元数据。Web 不会打开、抓取、验证所有权或分析此 URL。"]
+    , ["field.channelUrl","Liên kết kênh (tùy chọn)","Channel URL (optional)","频道链接（可选）"]
+    , ["field.channelUrlHelp","Chỉ lưu thông tin mô tả liên kết HTTPS. Ứng dụng không mở liên kết, thu thập dữ liệu, xác minh quyền sở hữu hoặc lấy số liệu phân tích.","Only HTTPS metadata is saved. The Web App does not open, crawl, verify ownership or analyze this URL.","仅保存HTTPS链接的描述信息。应用不会打开链接、抓取数据、验证所有权或获取分析数据。"]
     , ["field.niche", "Ngành / chủ đề kênh", "Channel topic or niche", "频道主题或领域"]
     , ["field.audience", "Khán giả mục tiêu", "Target audience", "目标受众"]
     , ["field.style", "Phong cách nội dung", "Content style", "内容风格"]
@@ -17720,6 +17720,44 @@
     , ["field.duration", "Thời lượng hướng dẫn (giây)", "Direction duration (seconds)", "方向时长（秒）"]
     , ["field.goal", "Mục tiêu chính", "Primary goal", "主要目标"]
     , ["field.notes", "Ghi chú chiến lược và rà soát", "Strategy and review notes", "策略与审核备注"]
+    , ["field.affiliateConfirm", "Tôi xác nhận", "I confirm", "我确认"]
+    , ["page.description","Quản lý hồ sơ kênh, khán giả, nguyên tắc thương hiệu và hướng nội dung riêng tư theo từng phiên bản.","Manage private channel profiles, audiences, brand guidelines and content directions with version history.","按版本管理私有频道档案、目标受众、品牌规范和内容方向。"]
+    , ["option.platform.website","Trang web","Website","网站"]
+    , ["option.platform.other","Nền tảng khác","Other platform","其他平台"]
+    , ["option.goal.content","Xây nền nội dung","Build content foundations","建立内容基础"]
+    , ["option.goal.authority","Xây uy tín","Build credibility","建立信誉"]
+    , ["option.goal.community","Xây cộng đồng","Build a community","建立社群"]
+    , ["option.goal.follow","Tăng người theo dõi","Grow followers","增加关注者"]
+    , ["option.goal.lead","Khách hàng tiềm năng và tin nhắn","Leads and messages","潜在客户与消息"]
+    , ["option.goal.sales","Hỗ trợ bán hàng","Support sales","支持销售"]
+    , ["option.goal.website","Thu hút lượt truy cập trang","Drive website visits","吸引网站访问"]
+    , ["option.ratio.9:16","9:16 · dọc","9:16 · portrait","9:16 · 竖屏"]
+    , ["option.ratio.16:9","16:9 · ngang","16:9 · landscape","16:9 · 横屏"]
+    , ["option.ratio.1:1","1:1 · vuông","1:1 · square","1:1 · 方形"]
+    , ["option.ratio.4:5","4:5 · bảng tin","4:5 · feed","4:5 · 信息流"]
+    , ["field.nichePlaceholder","Ví dụ: hướng dẫn kinh doanh cho doanh nghiệp nhỏ","Example: practical business guidance for small companies","例如：面向小企业的实用经营指南"]
+    , ["field.audiencePlaceholder","Ai cần nội dung này và trong bối cảnh nào?","Who needs this content, and in what context?","谁需要这些内容，以及在什么情境下需要？"]
+    , ["field.stylePlaceholder","Ví dụ: hướng dẫn rõ ràng, theo tình huống","Example: clear, scenario-based guidance","例如：清晰、基于场景的指南"]
+    , ["field.tonePlaceholder","Ví dụ: chuyên nghiệp, ấm áp","Example: professional and warm","例如：专业、温暖"]
+    , ["field.allowedTopicsPlaceholder","Kinh doanh thực tế, hướng dẫn sản phẩm","Practical business, product guides","实用经营、产品指南"]
+    , ["field.allowedTopicsHelp","Ngăn cách bằng dấu phẩy; tối đa 16 mục.","Separate with commas; up to 16 items.","以逗号分隔，最多16项。"]
+    , ["field.blockedTopicsPlaceholder","Tuyên bố chưa kiểm chứng, tin đồn","Unverified claims, rumors","未经证实的声明、传闻"]
+    , ["field.blockedTopicsHelp","Ngăn cách bằng dấu phẩy; dùng như nguyên tắc kiểm tra, không thay thế chính sách nền tảng.","Separate with commas; these review guidelines do not replace platform policies.","以逗号分隔；这些审核原则不能替代平台政策。"]
+    , ["field.brandKeywordsPlaceholder","TOAN AAS, không gian sáng tạo","TOAN AAS, creative workspace","TOAN AAS，创意工作区"]
+    , ["field.ctaPlaceholder","Ví dụ: Xem hướng dẫn đầy đủ trong không gian làm việc","Example: See the full guide in your workspace","例如：在工作区查看完整指南"]
+    , ["field.productsPlaceholder","Phần mềm, khóa học, tư vấn","Software, courses, consulting","软件、课程、咨询"]
+    , ["field.frequencyPlaceholder","Ví dụ: 3 bài / tuần","Example: 3 posts per week","例如：每周3篇"]
+    , ["field.notesPlaceholder","Ràng buộc thương hiệu, tuyên bố cần rà soát, nguyên tắc công khai hoặc lưu ý trước khi dùng hướng nội dung…","Brand constraints, claims to review, disclosure rules or notes before using a content direction…","品牌约束、待审核声明、披露规则或使用内容方向前的注意事项…"]
+    , ["affiliate.allowed","Tiếp thị liên kết · cần rà soát","Affiliate · review required","联盟营销 · 需审核"]
+    , ["affiliate.disabled","Không dùng tiếp thị liên kết","No affiliate marketing","不使用联盟营销"]
+    , ["detail.restore","Khôi phục hồ sơ","Restore profile","恢复档案"]
+    , ["preview.cadenceFallback","Chọn nhịp đăng bền vững trước khi lập lịch.","Choose a sustainable posting cadence before scheduling.","安排日程前，请选择可持续的发布频率。"]
+    , ["event.profile_created","Đã tạo hồ sơ","Profile created","已创建档案"]
+    , ["event.profile_updated","Đã cập nhật hồ sơ","Profile updated","已更新档案"]
+    , ["event.profile_archived","Đã lưu trữ hồ sơ","Profile archived","已归档档案"]
+    , ["event.profile_restored","Đã khôi phục hồ sơ","Profile restored","已恢复档案"]
+    , ["event.strategy_previewed","Đã lập hướng nội dung","Content direction prepared","已生成内容方向"]
+    , ["event.unknown","Hoạt động hồ sơ","Profile activity","档案活动"]
   ];
   ["vi", "en", "zh"].forEach((locale, index) => {
     CHANNEL_STRATEGY_COPY_ROWS.forEach((row) => { MESSAGES[locale][`channelStrategyUi.${row[0]}`] = row[index + 1]; });

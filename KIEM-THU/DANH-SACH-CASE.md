@@ -1,5 +1,18 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## CHANNEL-STRATEGY-LOCALE-20261106 — ngôn ngữ, điện thoại và định hướng
+
+| Case | Mức | Thao tác | PASS bắt buộc / canh lỗi cũ | Evidence hiện có |
+|---|---|---|---|---|
+| CS-LOCALE-01 | vừa | Library/detail/archive/guarded/empty/missing ở VI/EN/ZH | Chữ cố định/gợi ý/lựa chọn/hoạt động đúng ngôn ngữ; nội dung khách và giá trị lưu nguyên vẹn | 29/29 Node; review độc lập đạt |
+| CS-FIRSTPAINT-02 | vừa | Đọc title HTML trước JavaScript ở parent và detail × ba ngôn ngữ | Đúng Chiến lược kênh / Channel strategy / 频道策略, không tên chung | 6/6 Python |
+| CS-FONT-03 | vừa | Library/detail/archive × ba locale × sáng/tối ×360/768/1440; gõ/Tab/menu/Escape/theme | Ô nhập điện thoại ≥16px, không tràn/che focus; website vẫn là giá trị lưu; không API/ghi/ngoại mạng | Sau font 54/54 browser, 90/90 CSS |
+| CS-NAV-04 | vừa | Từ library mở detail và archive, quan sát mục Đăng bài đang chọn | Parent/detail cùng nhóm Đăng bài; nhóm khác/admin không đổi | RED nhầm Công cụ → 2/2 Node mới; active destination đúng trong54/54browser; native/CSS106/106 |
+
+Không dùng tài khoản/file khách. Những con số này là QA cô lập; cần CI exact-SHA,
+runtime revision và kiểm tra phiên production riêng. Không thử kết nối/OAuth,
+đăng bài, nhà cung cấp, ví hoặc thanh toán trong các case này.
+
 ## R218-SUBDUB-D4-20261024 — công tắc âm thanh gốc
 
 Session `R218-SDD4-TESTER-20261024`, BASEba4b2dfa, PR661/Issue664.
