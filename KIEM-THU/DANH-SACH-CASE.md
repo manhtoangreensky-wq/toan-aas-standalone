@@ -1,5 +1,22 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## CALENDAR-LOCALE-PRESENTATION-20261106 — Lịch nội dung
+
+Candidate BASE `9137c0c037995b59e178edc1055eec825ace6f73`; kiểm tiếp sang
+07/11/2026. Các case dưới không thay 48 case lõi hoặc các snapshot tracker cũ.
+
+| Case | Mức | Thao tác | PASS bắt buộc / canh lỗi cũ | Evidence hiện có |
+|---|---|---|---|---|
+| CAL-LOCALE-01 | vừa | VI/EN/ZH, năm trạng thái, title HTML/JS, overflow và thiếu tên | Đúng locale, tên khách/Media/Studio/Facebook/TikTok không bị dịch | 24/24 Node locale; 3/3 first-paint |
+| CAL-STATE-02 | nặng | Loading/failed/guarded/empty/ready | Không coi tải lỗi/chưa có quyền như rỗng, không số 0 khi chưa đọc; đủ title/body | 15/15 Node trình bày/trạng thái |
+| CAL-COMPACT-03 | vừa | Mở Calendar, xem bộ lọc và cuối trang | Không hai tutorial container; count chỉ read_only; nguyên vẹn biểu mẫu và hai anchor | Review so byte BASE; 39/39 Node tổng |
+| CAL-FONT-04 | vừa | Năm trạng thái × ba locale × sáng/tối ×360/768/1440 | Input/select mobile ≥16px; không tràn trang/che focus/lỗi trang; theme/menu/palette và edit giá trị gốc | 90/90 browser,0page/console/API/external/write/unknown |
+| CAL-SAFETY-05 | nặng | Đọc tháng/lọc/tháng sai và tài khoản khác, grid/agenda/URL/action | Ownership/giới hạn200/capability/currentness/CSRF/API/DTO không đổi; ba grid/bốn agenda giữ đủ | 8/8 Python/native; 1.562/1.562 full Node |
+
+QA localhost dùng DB tạm hoặc bootstrap tổng hợp, không tài khoản/file khách,
+provider, ví/PayOS, kết nối/đăng bài thật hoặc phiên production. CI exact-head,
+triển khai/runtime SHA và signed production UI phải được ghi bằng chứng riêng.
+
 ## PUBLISH-REVIEW-FEEDBACK-PRESERVATION-20261106 — bổ sung không mất thông báo
 
 BASE `5aa0683c72b79445e525d8c33c4dd0eecf8934eb`. Mục này thay kỳ vọng thiếu

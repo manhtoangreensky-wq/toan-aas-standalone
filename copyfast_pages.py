@@ -185,7 +185,7 @@ _PORTAL_SHELL_TITLES = {
     "/admin/access": {"vi": "Access Posture · TOAN AAS", "en": "Access Posture · TOAN AAS", "zh": "访问态势 · TOAN AAS"},
     "/admin/automation": {"vi": "Automation Monitor · TOAN AAS", "en": "Automation Monitor · TOAN AAS", "zh": "自动化监控 · TOAN AAS"},
     "/admin/system-stewardship": {"vi": "System & Data Stewardship · TOAN AAS", "en": "System & Data Stewardship · TOAN AAS", "zh": "系统与数据治理 · TOAN AAS"},
-    "/calendar": {"vi": "Content Calendar · TOAN AAS", "en": "Content Calendar · TOAN AAS", "zh": "内容日历 · TOAN AAS"},
+    "/calendar": {"vi": "Lịch nội dung · TOAN AAS", "en": "Content calendar · TOAN AAS", "zh": "内容日历 · TOAN AAS"},
     "/approvals": {"vi": "Self-review Queue · TOAN AAS", "en": "Self-review Queue · TOAN AAS", "zh": "自审队列 · TOAN AAS"},
     "/operations": {"vi": "Operations Autopilot", "en": "Operations Autopilot", "zh": "Operations Autopilot"},
     "/admin/operations": {"vi": "Operations Autopilot", "en": "Operations Autopilot", "zh": "Operations Autopilot"},

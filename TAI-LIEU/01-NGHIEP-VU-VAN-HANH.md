@@ -1,5 +1,33 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 07/11/2026 — Lịch nội dung: đúng ngôn ngữ, trạng thái và thao tác
+
+Candidate từ bản đang triển khai `9137c0c037995b59e178edc1055eec825ace6f73`,
+chưa phát hành đợt Calendar. Tên “Lịch nội dung”/“Content calendar”/“内容日历”
+được dùng ngay từ HTML ban đầu và sau khi giao diện được dựng. Mô tả, số mốc,
+phần vượt quá ba thẻ trong một ngày và tiêu đề dự phòng đều theo locale. Tên
+khách đã nhập, kể cả chữ Media/Studio hoặc tên Facebook/TikTok, không bị dịch.
+Sanitizer, giới hạn 180 ký tự, dữ liệu, số đếm và liên kết bản ghi giữ nguyên.
+
+Hai khối giải thích tĩnh được bỏ khỏi Calendar, không để khung rỗng. Hai liên kết
+tới kế hoạch và hàng tự rà soát giữ nguyên; số mốc phù hợp chuyển vào đầu bộ lọc
+và chỉ xuất hiện sau khi đọc xong. Đang tải, tải lỗi và chưa có quyền xem có thông
+báo riêng; không trình bày như kết quả rỗng hoặc số 0 đã xác nhận. Ô nhập/chọn
+Calendar ở chiều rộng ≤620px dùng 16px; các CSS khác không đổi từng byte.
+
+Đã đo: 39/39 Node cho ngôn ngữ/trạng thái/trình bày, 8/8 Python/native cho HTML,
+renderer và API tháng/quyền sở hữu; toàn bộ Node 1.562/1.562. Review độc lập
+C0/I0/M0; 211 khóa `campaignUi.*` cân bằng mỗi locale và 8.943 giá trị EN cũ
+không đổi. Ma trận browser 90/90 cấu hình đạt, không lỗi trang/console hoặc request
+API/ngoại mạng/ghi/không biết nguồn; không tràn trang. Các phép so
+sánh xác nhận biểu mẫu bộ lọc và hai anchor cuối trang giống nguyên văn BASE.
+
+Lịch vẫn chỉ đọc một khoảng tháng của tài khoản, tối đa 200 mục, không tự đọc
+toàn bộ lịch sử hoặc tạo lời nhắc/lịch đăng/tác vụ. API, xác thực, CSRF, stale
+guards, schema, Bot, provider, ví, PayOS và motion không đổi. Provider/ví/dữ liệu
+production mutation bằng 0. CI, triển khai/VPS và signed production UI là các cổng
+riêng; không dùng QA tổng hợp hoặc HTTP200 để khẳng định đầu ra bên ngoài.
+
 ## 06/11/2026 — Đính chính phản hồi Gói rà soát trước khi đăng
 
 Bản đang phục vụ trước đợt sửa này là `5aa0683c72b79445e525d8c33c4dd0eecf8934eb`

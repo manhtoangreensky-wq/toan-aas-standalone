@@ -1,4 +1,5 @@
 from pathlib import Path
+import subprocess
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -65,7 +66,20 @@ def test_campaign_calendar_renderer_is_ephemeral_no_network_and_has_month_and_ag
     assert "campaign-calendar-month" in calendar
     assert "campaign-calendar-refresh" in calendar
     assert "Agenda" in calendar
-    assert "+${entries.length - 3} mốc đã tải" in calendar
+    overflow = subprocess.run(
+        ["node", "--input-type=module", "--eval", """
+import assert from 'node:assert/strict';
+import {renderChild,calendarContext} from './tests/helpers/publishing-child-render.mjs';
+for (const [locale, expected] of [['vi','+1 mốc đã tải'],['en','+1 loaded dates'],['zh','+1 个已加载日期']]) {
+  const view = renderChild(locale, '/calendar', calendarContext());
+  assert.ok(view.text.includes(expected), locale + ': overflow must use the interface language');
+  assert.equal((view.html.match(/class="portal-calendar-event"/g) || []).length, 3);
+  assert.equal((view.html.match(/class="portal-calendar-agenda-item"/g) || []).length, 4);
+}
+"""],
+        cwd=ROOT, capture_output=True, text=True, encoding="utf-8", timeout=30,
+    )
+    assert overflow.returncode == 0, overflow.stdout + overflow.stderr
     assert "fetch(" not in calendar
     assert "localStorage" not in calendar
     assert "/api/v1/" not in calendar

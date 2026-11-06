@@ -44,8 +44,8 @@
     "note": "Earlier tracker/remote_revalidation fields are historical snapshots; no issue was reopened or created."
   },
   "partial_remote_revalidated_at": "2026-09-12",
-  "local_files_refreshed_at": "2026-11-06",
-  "local_files_refresh_scope": "Publish Review feedback-preservation follow-up: three scoped cases and Tester guide refreshed from measured local gates. Historical 48 core cases, push_gate, tracker and project snapshots retained; no auth/project mutation.",
+  "local_files_refreshed_at": "2026-11-07",
+  "local_files_refresh_scope": "Calendar locale/state/compact presentation/mobile font: five scoped cases and Tester guide refreshed from measured local gates. Historical48core cases, push_gate, tracker/project snapshots preserved; no auth/project mutation.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,15 +70,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 884,
-      "bytes": 105959,
-      "sha256": "d6940a71c6def07bd3b69f89f900a201d6a3a3cbfd208afbe59babd85e2b0936"
+      "lines": 901,
+      "bytes": 107741,
+      "sha256": "4a77434ecae41078cf7fc1bd17d82563b57b2d238cd6431d98e745ca1c693cb6"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 442,
-      "bytes": 37202,
-      "sha256": "43272d9fc1cd939f57da592a95dac5a9065fda87688711a9e91bb357af20c3a6"
+      "lines": 464,
+      "bytes": 38847,
+      "sha256": "a2c637628330d210c250a8601820c22dd4d2d6c73eed54fb0e75671b462940af"
     },
     {
       "path": "scripts/tester_case_sync.py",
@@ -101,21 +101,23 @@
     "github_mutations": 0
   },
   "active_release": {
-    "id": "PUBLISH-REVIEW-FEEDBACK-PRESERVATION-20261106",
-    "base_sha": "5aa0683c72b79445e525d8c33c4dd0eecf8934eb",
-    "case_count": 3,
+    "id": "CALENDAR-LOCALE-PRESENTATION-20261106",
+    "base_sha": "9137c0c037995b59e178edc1055eec825ace6f73",
+    "case_count": 5,
     "case_ids": [
-      "PR-FEEDBACK-06",
-      "PR-FEEDBACK-07",
-      "PR-FEEDBACK-08"
+      "CAL-LOCALE-01",
+      "CAL-STATE-02",
+      "CAL-COMPACT-03",
+      "CAL-FONT-04",
+      "CAL-SAFETY-05"
     ],
     "status": "LOCAL_ACCEPTED_PENDING_CI_DEPLOY_LIVE",
-    "local_node": 1523,
-    "targeted_node": 119,
-    "native_python": 10,
-    "feedback_node": 42,
-    "independent_review": "C0/I0/M0;42Node rerun;70 balanced locale keys;68 previous EN values unchanged",
-    "manifest": "reports/tester/PUBLISH-REVIEW-FEEDBACK-PRESERVATION-20261106.md",
+    "local_node": 1562,
+    "targeted_node": 39,
+    "native_python": 8,
+    "browser_configurations": 90,
+    "independent_review": "C0/I0/M0;39Node rerun;211 balanced keys;8943 old EN unchanged;CSS/form/2links exact-base comparators",
+    "manifest": "reports/tester/CALENDAR-LOCALE-PRESENTATION-20261106.md",
     "signed_ui_live": "NOT_TESTED",
     "legacy_push_gate_field": "Historical snapshot retained for its contract; not the gate of this release."
   }

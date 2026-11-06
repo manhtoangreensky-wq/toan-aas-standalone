@@ -23438,6 +23438,11 @@ html:not([data-portal-theme="dark"]) .portal-shell[data-portal-app-kind="admin"]
   }
 }
 
+/* Calendar: readable input text without mobile focus zoom. */
+@media (max-width: 620px) {
+  .portal-page.portal-campaign-calendar :is(.portal-input, .portal-select) { font-size: 16px; }
+}
+
 /* Workspace drafts: readable input text without mobile focus zoom. */
 @media (max-width: 620px) {
   .portal-page.portal-workspace-drafts :is(.portal-input, .portal-select, .portal-textarea) { font-size: 16px; }
