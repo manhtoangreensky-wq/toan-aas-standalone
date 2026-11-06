@@ -1,5 +1,40 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 06/11/2026 — Gói rà soát trước khi đăng
+
+Candidate từ runtime `c709afa6947a8653ea27791cd86b9dad7a36f13b`, không phải LIVE.
+Receipt hợp lệ giữ `execution` và 12 cờ ranh giới `false` sau chuẩn hóa lặp; receipt
+sai vẫn bị loại. Đã đo 77 Node, 10 Python/native và full Node1.481/1.481. 68 khóa
+Publish Review cân bằng VI/EN/ZH, EN cũ giữ nguyên; customer fields không dịch.
+
+Currentness so epoch phiên, tài khoản, route, capability, authenticated và CSRF chỉ
+cho action `publish-review-pack-compose`; response cũ không merge/toast/mở control.
+Feedback cố định success/guard/invalid/error map theo locale; message động lạ giữ
+nguyên. API chung, auth, schema, provider, ví, PayOS, Bot và motion không đổi.
+Provider/wallet/production mutation=0. Signed UI production, CI, deploy và runtime
+revision là cổng riêng; không suy từ fixture/HTTP200 thành đăng bài thật.
+
+## 06/11/2026 — Gói rà soát trước khi đăng: biên nhận và phản hồi theo ngôn ngữ
+
+Candidate bắt đầu từ runtime `c709afa6947a8653ea27791cd86b9dad7a36f13b`, chưa
+merge/deploy trong đợt AP192 này. Biên nhận hợp lệ trước đây bị mất sau lần chuẩn
+hóa thứ hai vì chỉ giữ `package`; bản sửa giữ đúng `execution` và 12 cờ ranh
+giới `false` đã được máy chủ xác minh. Receipt thiếu cờ, cờ `true`, sai execution,
+field thừa hoặc package sai vẫn bị loại.
+
+Đã đo: 77 kiểm tra Node cho copy/receipt/currentness/feedback, 10 kiểm tra
+Python/native, và full indexed Node 1.481/1.481. Native API→renderer giữ nguyên
+tiêu đề, chú thích, thẻ chủ đề, CTA và yêu cầu gốc của khách ở cả ba ngôn ngữ;
+không dịch hay lưu thêm nội dung khách. 68 khóa `publishReview.*` cân bằng ở
+VI/EN/ZH; mọi giá trị EN cũ giữ nguyên. Feedback cố định success/guard/invalid/
+error đi qua catalog; thông báo động không khớp bảng vẫn giữ nguyên.
+
+Currentness của request chỉ áp dụng cho action native này: so epoch phiên, tài
+khoản, route, capability, authenticated session và CSRF; response cũ không được
+merge, toast hoặc mở lại nút của lượt mới. Không hủy request mạng, không đổi API
+chung, auth, CSRF, schema, ví, PayOS, provider, Bot hoặc motion. QA browser/CI và
+signed production UI là các cổng riêng; chưa gọi đây là output đăng bài thật.
+
 ## 06/11/2026 — Chiến lược kênh: bản trình bày đa ngôn ngữ
 
 Candidate từ BASE `8c85f84966ab3e0f53bf97a2999e221b23901bcf`, chưa merge/deploy.
