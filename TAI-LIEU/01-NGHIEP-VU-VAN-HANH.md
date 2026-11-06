@@ -1,5 +1,26 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 06/11/2026 — Đính chính phản hồi Gói rà soát trước khi đăng
+
+Bản đang phục vụ trước đợt sửa này là `5aa0683c72b79445e525d8c33c4dd0eecf8934eb`
+(PR680). Những mô tả phía dưới rằng thông báo không khớp bảng luôn được giữ nguyên
+chưa đúng ở bản đó: helper đã thay nội dung bằng phản hồi chung. Kiểm tra bổ sung
+42 ca có 21 ca lỗi: 12 ca mất thông báo lạ, ba ca còn từ tiếng Anh trong tiếng Việt
+và sáu ca thiếu ánh xạ thông báo cố định thực tế của máy chủ.
+
+Candidate tiếp nối chỉ sửa bảng/helper phản hồi trong `integration.js` và các dòng
+dịch phản hồi trong `portal-i18n.js`. Thông báo không rỗng ngoài bảng được giữ nguyên,
+kể cả tên giống thuộc tính prototype; bảy thông báo cố định dùng catalog. Hai khóa
+mới đưa tổng `publishReview.*` lên 70 ở mỗi ngôn ngữ, mọi giá trị EN cũ giữ nguyên.
+Không thay chữ ký/helper caller, API, currentness, xác thực, CSRF hay hợp đồng receipt.
+
+Sau patch Antigravity, 119/119 Node tập trung và 1.523/1.523 Node toàn bộ đạt. Bộ
+Python/native liên quan đạt 10/10, gồm phản hồi native thực tế trong DB tạm đi qua
+bundle integration và toast ở ba ngôn ngữ. Nội dung riêng không bị dịch hoặc thay
+bằng chữ chung. Provider, ví và thay đổi dữ liệu production bằng 0. CI, triển khai,
+revision VPS và giao diện production có đăng nhập vẫn là các cổng riêng; candidate
+này chưa được gọi là LIVE. Calendar chưa có thay đổi ứng dụng, motion vẫn để cuối.
+
 ## 06/11/2026 — Gói rà soát trước khi đăng
 
 Candidate từ runtime `c709afa6947a8653ea27791cd86b9dad7a36f13b`, không phải LIVE.

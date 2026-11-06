@@ -6399,10 +6399,13 @@
     "Nội dung cần được điều chỉnh trước khi tạo gói review.": "feedback.guard",
     "Máy chủ chưa trả gói review Web-native an toàn.": "feedback.invalid",
     "Đã tạo gói review text; chưa có post hoặc publish action.": "feedback.success",
+    "Đã chuẩn bị gói review text. Web không kết nối social, không tạo lịch, job, thanh toán hoặc publish action.": "feedback.prepared",
+    "Nội dung cần được viết lại theo hướng nguyên bản, không mô phỏng tác giả, nghệ sĩ, bài hát hoặc phong cách cụ thể.": "feedback.originality",
     "Yêu cầu chưa được xác nhận.": "feedback.error"
   });
   function publishReviewPackFeedbackText(value, fallbackKey = "feedback.error") {
     const text = String(value || "").trim();
+    if (text && !Object.prototype.hasOwnProperty.call(PUBLISH_REVIEW_FEEDBACK_KEYS, text)) return text;
     const key = PUBLISH_REVIEW_FEEDBACK_KEYS[text] || fallbackKey;
     const i18n = window.TOANAASI18n;
     if (!i18n || typeof i18n.t !== "function") return text;

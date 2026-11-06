@@ -1,5 +1,21 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 06/11/2026 — Đối chiếu bổ sung: không làm mất nội dung phản hồi
+
+Nguồn: `docs/migration/PUBLISH_REVIEW_PACK_CONTRACT.md`, helper phản hồi hiện hành
+và hai thông báo cố định của native Web formatter. Không đổi backend hoặc DTO.
+
+| Hợp đồng / mô tả cũ | Đo được ở bản PR680 | Candidate và bằng chứng |
+|---|---|---|
+| Thông báo lạ giữ nguyên | Không đúng: fallback thay nội dung; 12 ca RED | Own-property guard trả nội dung ngoài bảng; kiểm cả constructor/toString/__proto__ |
+| Chữ cố định theo VI/EN/ZH | Ba câu VI còn review/Web-native; thiếu hai thông báo native | Bảy ánh xạ, 70 khóa mỗi locale; EN cũ không đổi |
+| Không báo nội dung chung thay kết quả thực | Native API→renderer cũ chưa kiểm toast | Native API→integration→toast ba locale; giữ receipt và nội dung khách |
+| Không gây lỗi luồng cũ | Receipt/currentness đã khóa | 119 Node tập trung, 10 Python/native, 1.523 Node toàn bộ đạt |
+
+Các khẳng định giữ nguyên mọi thông báo lạ trong hai mục lịch sử bên dưới được
+đính chính bởi mục này. Không dùng bản sửa chữ để khẳng định đã kết nối mạng xã hội,
+đăng bài, tạo tác vụ trả phí hoặc hoàn thành kiểm tra giao diện production.
+
 ## 06/11/2026 — đối chiếu Gói rà soát trước khi đăng
 
 | Yêu cầu gốc | Candidate | Evidence / giới hạn |

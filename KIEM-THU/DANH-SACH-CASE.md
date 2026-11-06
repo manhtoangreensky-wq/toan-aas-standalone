@@ -1,5 +1,20 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## PUBLISH-REVIEW-FEEDBACK-PRESERVATION-20261106 — bổ sung không mất thông báo
+
+BASE `5aa0683c72b79445e525d8c33c4dd0eecf8934eb`. Mục này thay kỳ vọng thiếu
+bằng chứng về unknown-message trong PR-FEEDBACK-05 của phiên PR680 bên dưới.
+
+| Case | Mức | Thao tác | PASS bắt buộc / canh lỗi cũ | Evidence hiện có |
+|---|---|---|---|---|
+| PR-FEEDBACK-06 | nặng | Thông báo riêng không khớp bảng qua success/guard/guarded-error/transport ở VI/EN/ZH | Giữ nguyên nội dung, không thay fallback; không dịch dữ liệu khách | 12 unknown-message ca trong 42/42 Node |
+| PR-FEEDBACK-07 | vừa | Dùng thông báo native chuẩn bị gói và yêu cầu viết nguyên bản | Đúng locale, giữ đầy đủ lý do/ranh giới; bảy câu cố định, 70 khóa mỗi locale | 42/42 Node + native API→integration→toast ba locale |
+| PR-FEEDBACK-08 | nặng | constructor/toString/__proto__, lỗi ranh giới và lượt phản hồi cũ | Không coi prototype là khóa dịch; validator/currentness/receipt giữ nguyên | 119/119 Node tập trung, 10/10 Python/native, 1.523/1.523 Node toàn bộ |
+
+QA chỉ dùng DB tạm và phản hồi local; provider/ví/production mutation bằng 0.
+Hai tệp kiểm tra Calendar chưa được theo dõi không nằm trong đợt phát hành này.
+CI exact-head, VPS revision và signed production UI vẫn phải xác minh riêng.
+
 ## PUBLISH-REVIEW-LOCALE-20261106 — biên nhận, phản hồi và phiên hiện tại
 
 | Case | Mức | Thao tác | PASS bắt buộc / canh lỗi cũ | Evidence hiện có |

@@ -42,13 +42,13 @@ export function reviewActionRuntime(locale='en'){
   vm.runInContext(integration.replace(anchor,injected+anchor),sandbox);
   assert.ok(listeners.has('toanaas:portal-action'));
   const fields={title:'Nội dung cần rà soát',caption:'Nội dung rõ ràng dành cho người đọc.',hashtags:'#NoiDung',cta:'Xem thêm thông tin',source_prompt:''};
-  function settle(index,kind='valid',label='A'){
+  function settle(index,kind='valid',label='A',message=''){
     const p=pending[index];assert.ok(p,'request must have reached fetch');
-    if(kind==='transport_error'){p.reject(new Error('network unavailable'));return;}
+    if(kind==='transport_error'){p.reject(new Error(message || 'network unavailable'));return;}
     const data=actionReceipt(label),guarded=kind.startsWith('guarded');if(guarded)delete data.package;
-    if(kind==='unsafe')data.provider_called=true;
+    if(kind==='unsafe'||kind==='guarded_unsafe')data.provider_called=true;
     if(kind==='wrong_execution')data.execution='provider_output';
-    const payload={ok:kind!=='guarded_error',status:guarded?'guarded':'draft',message:'',data};
+    const payload={ok:kind!=='guarded_error',status:guarded?'guarded':'draft',message,data};
     p.resolve({ok:kind!=='guarded_error',status:kind==='guarded_error'?422:200,json:async()=>payload});
   }
   return {pending,toasts,fields,networkLog,run:()=>listeners.get('toanaas:portal-action')({detail:{action:'publish-review-pack-compose',route:reviewRoute,fields:{...fields}}}),settle,get state(){return state;},get button(){return button;},replace(next,{epoch=true,disabled=true}={}){state=next;window.location.pathname=next.path;resetForm(disabled);if(epoch)window.__reviewActionTest.advanceSession();}};

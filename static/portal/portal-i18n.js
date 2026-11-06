@@ -14254,11 +14254,13 @@
   });
 
   const PUBLISH_REVIEW_FEEDBACK_ROWS = [
-    ["feedback.boundary","Máy chủ chưa trả ranh giới gói review an toàn.","The server did not return a safe review-package boundary.","服务器未返回安全的审核包边界。"],
-    ["feedback.guard","Nội dung cần được điều chỉnh trước khi tạo gói review.","Adjust the content before creating a review package.","请调整内容后再创建审核包。"],
-    ["feedback.invalid","Máy chủ chưa trả gói review Web-native an toàn.","The server did not return a safe Web-native review package.","服务器未返回安全的网页审核包。"],
+    ["feedback.boundary","Máy chủ chưa trả thông tin xác nhận gói rà soát an toàn.","The server did not return a safe review-package boundary.","服务器未返回安全的审核包边界。"],
+    ["feedback.guard","Nội dung cần được điều chỉnh trước khi tạo gói rà soát.","Adjust the content before creating a review package.","请调整内容后再创建审核包。"],
+    ["feedback.invalid","Máy chủ chưa trả gói rà soát an toàn.","The server did not return a safe Web-native review package.","服务器未返回安全的网页审核包。"],
     ["feedback.success","Đã tạo gói văn bản để rà soát; chưa có thao tác đăng bài.","Review text created; no publishing action was made.","已创建审核文字包；未执行发布操作。"],
     ["feedback.error","Yêu cầu chưa được xác nhận.","The request was not confirmed.","请求尚未得到确认。"]
+    , ["feedback.prepared","Đã chuẩn bị gói văn bản để rà soát. Ứng dụng không kết nối mạng xã hội, không tạo lịch, tác vụ, thanh toán hoặc thao tác đăng bài.","Review text is prepared. The app does not connect social accounts or create schedules, jobs, payments or publishing actions.","已准备审核文字包。应用不会连接社交账户，也不会创建日程、任务、付款或发布操作。"]
+    , ["feedback.originality","Nội dung cần được viết lại theo hướng nguyên bản, không mô phỏng tác giả, nghệ sĩ, bài hát hoặc phong cách cụ thể.","Rewrite the content in an original direction without imitating a specific author, artist, song or style.","请以原创方向改写内容，不模仿特定作者、艺术家、歌曲或风格。"]
   ];
   PUBLISH_REVIEW_FEEDBACK_ROWS.forEach(([key, vi, en, zh]) => {
     PUBLISH_REVIEW_MESSAGES.vi["publishReview." + key] = vi;

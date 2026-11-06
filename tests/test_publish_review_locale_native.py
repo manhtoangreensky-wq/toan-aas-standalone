@@ -41,3 +41,9 @@ def test_native_review_receipt_renders_customer_copy_and_localized_system_guidan
             capture_output=True, cwd=ROOT, timeout=30,
         )
         assert rendered.returncode == 0, rendered.stdout + rendered.stderr
+        feedback = subprocess.run(
+            ['node', str(ROOT / 'tests' / 'helpers' / 'render-native-publish-review-feedback.mjs')],
+            input=json.dumps(response.json(), ensure_ascii=False), text=True, encoding='utf-8',
+            capture_output=True, cwd=ROOT, timeout=30,
+        )
+        assert feedback.returncode == 0, feedback.stdout + feedback.stderr
