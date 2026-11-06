@@ -2007,6 +2007,23 @@ Bằng chứng local: Voice input/inventory/flow/expiry `67/67`, full Node `594/
 đủ `3/3` locale `vi/en/zh`. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
 `PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`, `LIVE_PASS=NOT_TESTED`.
 
+## 2026-11-06 — Đăng bài: ngôn ngữ giao diện
+
+Candidate `/publishing` đổi tên VI thành “Đăng bài tự động”, dùng chữ Việt cho tiếp thị
+liên kết, kho tệp, chiến dịch, dự án và thẻ chủ đề. Tên ZH là“自动发布中心”; EN vẫn
+“AutoPost Hub”. Tên hiển thị, tiêu đề trang sau tải và điều hướng dùng cùng ngôn ngữ.
+Ba khối hướng dẫn/giới thiệu/ranh giới tĩnh được ẩn; bảy nguồn, sáu khu vực công cụ,
+ba liên kết thật và ba hành động ngoài đang khóa được giữ nguyên. Không tạo kết nối,
+lịch đăng, bài đăng hoặc số liệu giả; bản dịch không thay quyền hoặc dịch vụ đăng bài.
+
+Renderer4/4, nhóm điều khiển+bản dịch8/8 và bộNode1.379/1.379 đã đạt ở local. Browser
+trình bày30/30 (VI/EN/ZH×sáng/tối×360/375/768/1440 và844×390xoay ngang) không lỗi
+trang/console/tràn hoặc yêu cầu ngoài/API/ghi. Tiêu đề first-paint bổ sung một mục
+riêng cho `/publishing` ở cả ba ngôn ngữ; không còn tiêu đề genericWorkspace.
+KiểmPythonfirst-paint3/3 vàbội18n/boundary33/33đạt; reviewđộclậpcả3phầnkhôngcólỗichặn.
+Signed production UI và khả năng kết nối/đăng thật vẫn có cổng riêng, không đóng bằng
+việc đổi chữ hoặc ẩn hướng dẫn. Các hành động liên quan provider/OAuth/tiền không chạy.
+
 ## 2026-11-06 — Bản nháp: ngôn ngữ và cỡ chữ điện thoại
 
 Candidate tiếp theo chỉ đổi phần trình bày `/workspace`: 29 giá trị tiếng Việt, tiêu đề

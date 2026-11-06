@@ -23449,3 +23449,10 @@ html:not([data-portal-theme="dark"]) .portal-shell[data-portal-app-kind="admin"]
     min-height: 44px;
   }
 }
+
+/* Publishing overview: keep functional sources and tools, not tutorial panels. */
+.portal-page.portal-autopost-hub > .portal-autopost-intro,
+.portal-page.portal-autopost-hub > .portal-autopost-steps,
+.portal-page.portal-autopost-hub > .portal-autopost-boundary {
+  display: none;
+}

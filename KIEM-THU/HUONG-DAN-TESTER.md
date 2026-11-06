@@ -322,6 +322,21 @@ python scripts/tester_case_sync.py --bo=31 --so=3 --json
 4. Lỗi ngoài phạm vi presentation phải thêm vào đúng nhóm ledger; không đổi tên case để né lịch sử.
 5. Trace CLS/LCP/INP hiện `NOT_RUN`; không được thay bằng screenshot hoặc HTTP 200.
 
+## Phiên Đăng bài — PUBLISHING-LOCALE-20261106
+
+Kiểm ba case AP-LOCALE-01/AP-DENSITY-02/AP-FIRSTPAINT-03 trong file nguồn. Đổi VI/EN/ZH,
+sáng/tối và360/768/1440; đọc tiêu đề ban đầu và sau tải, breadcrumb, các thẻ. VI không
+giữ AutoPost/Hub/Affiliate/AssetVault/Campaign/Project/Web/hashtag làm chữ cố định.
+Giữ tên khách/thương hiệu và các đường dẫn; không thử OAuth, đăng bài hoặc nhập dữ liệu
+khách thật. Ba khối hướng dẫn được ẩn, nhưng7nguồn/6khu vực/3link/3nút đang khóa giữ
+đúng. Không ghi thành công tích hợp từ việc giao diện đã dịch. Local hiện18cấu hình
+trình bày và4renderer; first-paint hiện3/3đạt, bộPythoni18n/boundary33/33; chỉbàn giao
+sauCI/merge/deploy vàđốichiếuđúngrevision.
+
+Đã thêm375×812 và844×390 ở3locale×2theme:12/12cấu hình bổ sung đạt. Tổng trình bày
+Publishing30/30, giữ7nguồn/6khu vực/3link/3khóa và không lỗi trang/console/tràn/ngắt
+luồng menu/theme. BộNode1.379/1.379 và Pythoni18n+boundary30/30 cũng đã đo local.
+
 ## Phiên Bản nháp — WORKSPACE-LOCALE-20261106
 
 Phạm vi chỉ là nhãn/cỡ chữ của trang Bản nháp và kỳ vọng chữ của kiểm thử bàn giao.
