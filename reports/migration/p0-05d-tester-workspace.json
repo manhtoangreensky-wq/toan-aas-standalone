@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-07",
-  "local_files_refresh_scope": "Calendar native-action feedback continuation: three scoped cases, actual API-to-integration handoff and 36 browser action cases; historical48core cases/push_gate/tracker/project snapshots preserved. No auth/project mutation.",
+  "local_files_refresh_scope": "CI-OBS-001: one failure-evidence retention case and measured 5/5 workflow contract; historical48core cases/push_gate/tracker/project snapshots preserved. No auth/project mutation; original Dashboard predicate remains unknown.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,15 +70,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 915,
-      "bytes": 109242,
-      "sha256": "3e55c94d521b5d70225eaac8ecd8bbbf91ef2be50a9725f030ea749a3350dea6"
+      "lines": 928,
+      "bytes": 110233,
+      "sha256": "69dffca96ee795796a85283fb507172093e7acfbbcecff6aa1058b5418275892"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 487,
-      "bytes": 40567,
-      "sha256": "3be183f28d08a09af6daeed38d5bce246851088771f91899f2104c8b8e15fb4a"
+      "lines": 500,
+      "bytes": 41491,
+      "sha256": "4060d626181e3ddfde1e90677257bf63b04516f2855ef0c67f37ff17be919a77"
     },
     {
       "path": "scripts/tester_case_sync.py",
@@ -101,21 +101,20 @@
     "github_mutations": 0
   },
   "active_release": {
-    "id": "CALENDAR-ACTION-FEEDBACK-20261107",
-    "base_sha": "f70d653da80642c9a844a05179a46d3277a464ca",
-    "case_count": 3,
+    "id": "CI-OBS-001-20261107",
+    "base_sha": "a67ebbcdd8e9369bef2a264dd0e62839e668eb4c",
+    "case_count": 1,
     "case_ids": [
-      "CAL-ACTION-01",
-      "CAL-ACTION-02",
-      "CAL-ACTION-03"
+      "CI-OBS-01"
     ],
-    "status": "LOCAL_ACCEPTED_PENDING_CI_DEPLOY_LIVE",
-    "local_node": 1670,
-    "targeted_node": 108,
-    "native_python": 9,
-    "browser_configurations": 36,
-    "independent_review": "C0/I0/M0;108Node rerun;219balanced keys;8950oldENunchanged;10protectedfunctions byte-exactBASE",
-    "manifest": "reports/tester/CALENDAR-ACTION-FEEDBACK-20261107.md",
+    "status": "LOCAL_ACCEPTED_PENDING_EXACT_HEAD_CI_ARTIFACT",
+    "local_node": 4,
+    "targeted_node": 4,
+    "native_python": 0,
+    "workflow_contract_python": 5,
+    "browser_configurations": 0,
+    "independent_review": "C0/I0/M0;5Python rerun;workflow exact BASE plus one always line;runner/deploy/application unchanged",
+    "manifest": "reports/tester/CI-OBS-001-20261107.md",
     "signed_ui_live": "NOT_TESTED",
     "legacy_push_gate_field": "Historical snapshot retained for its contract; not the gate of this release."
   }
