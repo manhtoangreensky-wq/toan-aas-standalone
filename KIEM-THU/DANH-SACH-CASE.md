@@ -1,5 +1,20 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## AP195-WRITE-CURRENTNESS-20261107 — phản hồi ghi kế hoạch
+
+BASE81374e73bcedbb1541c36a1cd79706dae55c5dc2; không thay48case lõi.
+
+| Case | Mức | Thao tác | PASS bắt buộc | Bằng chứng |
+|---|---|---|---|---|
+| AP195-WRITE-01 | nặng | Giữ mutation/detail pending, đổi route/session/account/logout/quyền/CSRF | Receipt/lỗi cũ không merge/toast/clear/redirect/mở controls mới; lỗi current vẫn báo |48Node tổng,16baseline PASS/32RED→48/48 |
+| AP195-WRITE-02 | nặng | Hai record/action độc lập, bấm trùng, cùng scope payload mới, `/approvals` | Scope độc lập đều giữ receipt; duplicate không vô hiệu lượt đầu; nhóm nút còn pending không mở sớm |48Node; Approvals assert busy trước/sau |
+| AP195-WRITE-03 | nặng | Native3ghi DB tạm→client và12normal-click browser | Đúng method/path/body/revision/receipt/redirect; CSRF403/replay/crossowner; browser không request ngoài | Native2/2; browser12/12; fullNode1.718/1.718 |
+
+Browser/bootstrap/API tổng hợp chỉ chứng minh UI action, không chứng minh phiên
+production, đăng bài hoặc provider. Một native test lịch sử còn dừng ở kỳ vọng
+title Calendar tiếng Anh đã cũ; không hạ assertion hoặc thay application để né.
+Test native mới kiểm riêng quyền sở hữu thực và không phụ thuộc nhãn trang.
+
 ## CI-OBS-001-20261107 — giữ bằng chứng khi kiểm tra không đạt
 
 BASE `a67ebbcdd8e9369bef2a264dd0e62839e668eb4c`; không thay 48 case lõi.

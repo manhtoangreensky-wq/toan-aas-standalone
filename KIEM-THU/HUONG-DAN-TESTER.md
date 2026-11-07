@@ -1,5 +1,22 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Phiên phản hồi ghi kế hoạch — 07/11/2026
+
+ID AP195-WRITE-CURRENTNESS-20261107; case AP195-WRITE-01..03. Không chỉ đọc
+tiêu đề: giữ response ghi hoặc detail GET pending rồi đổi ngữ cảnh, sau đó trả
+response cũ. Không được thấy toast, receipt, clear draft, redirect hoặc nút mới
+bị mở bởi lượt cũ. Lượt còn hiện hành vẫn cần hiện lỗi và mở controls khi xong.
+
+Kiểm hai record độc lập theo hai thứ tự và hai action edit/status; không dùng
+bộ đếm global loại hết lượt cũ. Bấm trùng không tạo mutation thứ hai hoặc làm
+mất lượt đầu. Trên `/approvals`, form dùng action route `/campaigns`; kiểm nút
+thực sự khóa trước ACK và mở sau cùng nhóm. Không đổi form route cho dễ test.
+
+Đã đo48/48Node,1.718/1.718fullNode,native2/2 và browser12/12 trên360/1440.
+Native dùng DB tạm; browser dùng bootstrap/API giả và không hydrate auth ban
+đầu. Không dùng các kết quả này làm bằng chứng signed production LIVE. Toàn
+locale Campaign/ACK validation/motion vẫn còn trong checklist riêng.
+
 ## Phiên giữ bằng chứng CI — 07/11/2026
 
 CI-OBS-001 chỉ sửa bước lưu bằng chứng; case CI-OBS-01 ở nguồn case. Chạy
