@@ -32,10 +32,16 @@ def test_campaign_native_receipts_keep_owner_csrf_idempotency_and_client_project
         edited = client.patch(f'/api/v1/campaigns/{plan_id}', headers=headers,
                               json={**edit_fields, 'idempotency_key': 'campaign-native-edit-0001'}).json()
         assert edited['ok'] is True and edited['data']['item']['revision'] == 2
+        upper_edit = client.patch(f'/api/v1/campaigns/{plan_id.upper()}', headers=headers,
+                                  json={**edit_fields, 'idempotency_key': 'campaign-native-edit-0001'}).json()
+        assert upper_edit == edited, 'native uppercase path replays the same canonical UUID receipt'
         status_fields = {'plan_id': plan_id, 'approval_status': 'review', 'review_note': 'OWNER_NATIVE_NOTE'}
         status = client.post(f'/api/v1/campaigns/{plan_id}/status', headers=headers,
                              json={**status_fields, 'idempotency_key': 'campaign-native-status-0001'}).json()
         assert status['ok'] is True and status['data']['item']['revision'] == 3
+        upper_status = client.post(f'/api/v1/campaigns/{plan_id.upper()}/status', headers=headers,
+                                   json={**status_fields, 'idempotency_key': 'campaign-native-status-0001'}).json()
+        assert upper_status == status
         samples = {'campaign-create': {'fields': fields, 'response': created},
                    'campaign-update': {'fields': {**edit_fields, 'plan_id': plan_id}, 'response': edited},
                    'campaign-update-status': {'fields': status_fields, 'response': status}}

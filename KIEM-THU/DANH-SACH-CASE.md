@@ -1,5 +1,18 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## AP195-ACK-TRUTH-20261107 — xác nhận bản ghi lưu
+
+BASE3de678d3a8e9707ae60514aa1b4fce8160371c4b; giữ48case lõi.
+
+| Case | Mức | Thao tác | PASS bắt buộc | Bằng chứng |
+|---|---|---|---|---|
+| AP195-ACK-01 | nặng | Thiếu/sai item,11field/type/enum/revision/outer status, ID sai ở edit/status | Không success/merge/read/clear/redirect; giữ state/input và mở nút |100ACK22PASS/78RED→100/100 |
+| AP195-ACK-02 | nặng | UUID server mới, extra field, empty optional, revision lớn, uppercase target | Tất cả hợp lệ vẫn nhận; currentness48không đổi |148/148combined;19protectedhelpers |
+| AP195-ACK-03 | nặng |3nativeenvelopes→5clientcases;18normal-click360/1440 | API replay/CSRF/crossowner đúng; browser nhận đúng hoặc hiện alert và giữ bản gõ |2/2native;18/18browser;1.818/1.818fullNode |
+
+ACK sai không chứng minh server chưa ghi hoặc rollback. Không gọi provider/ví,
+không dùng DB tạm/bootstrap giả làm LIVE. FullCampaign locale/motion vẫn mở.
+
 ## AP195-WRITE-CURRENTNESS-20261107 — phản hồi ghi kế hoạch
 
 BASE81374e73bcedbb1541c36a1cd79706dae55c5dc2; không thay48case lõi.
