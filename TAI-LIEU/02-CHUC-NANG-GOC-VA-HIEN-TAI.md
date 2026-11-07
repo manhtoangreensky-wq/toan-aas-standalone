@@ -1,5 +1,18 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 07/11/2026 — Đối chiếu lưu bằng chứng kiểm tra đăng nhập
+
+Nguồn: `.github/workflows/webapp-quality.yml` và
+`scripts/ci/run_authenticated_qa_matrix.py`, BASE `a67ebbcdd8e9369bef2a264dd0e62839e668eb4c`.
+
+| Hiện trạng trước | Candidate CI-OBS-001 | Giới hạn |
+|---|---|---|
+| Runner ghi JSON/ảnh trước khi báo lỗi, bước upload chỉ chạy khi thành công | Upload có `if: always()`, giữ nguyên tên/đường dẫn và lỗi khi không có tệp | Không thay runner, 456 cấu hình hoặc điều kiện PASS |
+| Run main 455/456, không còn JSON/ảnh của ca lỗi | Hợp đồng 5/5 kiểm bước upload và gate cũ; review C0/I0/M0 | Không khôi phục được bằng chứng cũ, không khẳng định đã sửa Dashboard |
+
+Không thay chức năng khách hàng, API/auth/schema, ví/provider hoặc workflow deploy.
+Không khảo sát/xóa mã chết hay phụ thuộc trong bản sửa bằng chứng này.
+
 ## 07/11/2026 — Đối chiếu phản hồi thao tác Lịch nội dung
 
 Nguồn chức năng: `docs/migration/CAMPAIGN_CALENDAR_WINDOW_CONTRACT.md` — đọc một

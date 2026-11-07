@@ -252,6 +252,7 @@ jobs:
               --head-sha "$HEAD_SHA"
 
       - name: Upload authenticated QA evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: webapp-authenticated-qa-${{ github.event.pull_request.head.sha || github.sha }}

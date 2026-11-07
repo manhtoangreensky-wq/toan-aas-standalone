@@ -1,5 +1,18 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Phiên giữ bằng chứng CI — 07/11/2026
+
+CI-OBS-001 chỉ sửa bước lưu bằng chứng; case CI-OBS-01 ở nguồn case. Chạy
+`python -m pytest tests/test_r21711_authenticated_qa_runner_contract.py -q`: 5/5
+đạt. Đọc kết quả CI đúng HEAD, tải artifact đăng nhập, phân tích đủ JSON và đối
+chiếu ảnh theo hash. Nếu matrix lỗi, job phải vẫn FAIL và bằng chứng vẫn có.
+Không giảm số cấu hình, bỏ lỗi hoặc dùng lần chạy xanh để che lần lỗi trước.
+
+Main `42324003356`: 455/456 đạt; điều kiện lỗi của Dashboard VI/sáng/768px chưa
+xác định vì bước upload cũ bị bỏ qua. Candidate không sửa ứng dụng/runner hoặc
+nguyên nhân này. Review C0/I0/M0; 22 chẩn đoán local chỉ là tập con giới hạn.
+Production phiên đăng nhập chưa được kiểm tra; không gọi provider, ví hoặc PayOS.
+
 ## Phiên thông báo thao tác Lịch nội dung — 07/11/2026
 
 ID `CALENDAR-ACTION-FEEDBACK-20261107`, BASE

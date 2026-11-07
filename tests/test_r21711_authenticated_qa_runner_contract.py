@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 from scripts.ci import run_authenticated_qa_matrix as matrix
 
@@ -61,3 +62,17 @@ def test_r21711_fixture_locale_uses_web_profile_schema() -> None:
     assert "INSERT INTO web_account_profiles" in source
     assert "SET locale=excluded.locale" in source
     assert "UPDATE web_accounts SET locale" not in source
+
+
+def test_authenticated_failure_evidence_upload_is_unconditional_without_weakening_gate() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "webapp-quality.yml").read_text(encoding="utf-8")
+    job = workflow[workflow.index("  authenticated-qa:"):]
+    step = job[job.index("      - name: Upload authenticated QA evidence"):]
+    condition = re.search(r"^        if:\s*(.+)$", step, re.MULTILINE)
+    assert condition is not None, "Failed QA must retain the JSON/PNG needed to identify the failed predicate"
+    assert condition.group(1).strip() == "always()"
+    assert "continue-on-error" not in job
+    assert "if-no-files-found: error" in step
+    assert "path: reports/qa_authenticated/" in step
+    assert "needs: verify" in job
+    assert 'raise RuntimeError(f"R217-11 matrix failed closed:' in RUNNER.read_text(encoding="utf-8")

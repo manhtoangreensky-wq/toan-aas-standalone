@@ -1,5 +1,18 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## CI-OBS-001-20261107 — giữ bằng chứng khi kiểm tra không đạt
+
+BASE `a67ebbcdd8e9369bef2a264dd0e62839e668eb4c`; không thay 48 case lõi.
+
+| Case | Mức | Thao tác | PASS bắt buộc / canh lỗi cũ | Evidence hiện có |
+|---|---|---|---|---|
+| CI-OBS-01 | nặng | Chạy hợp đồng workflow và đọc artifact của CI exact-head | Upload chạy kể cả matrix lỗi; JSON/ảnh được giữ, job vẫn FAIL nếu matrix không đạt; không hạ bất kỳ tiêu chí nào | RED 4/5; GREEN 5/5; review C0/I0/M0; CI artifact mới còn chờ |
+
+Run main `42324003356` có 455/456 đạt, một lỗi Dashboard VI/sáng/768px; predicate
+gây lỗi chưa biết vì artifact không được tải lên. 22 chẩn đoán giới hạn đạt không
+phải bằng chứng 456/456 hay sửa nguyên nhân. Nếu lỗi lặp, đọc đúng record/ảnh trước
+khi thay code; không chạy lại liên tục để lấy xanh. Không gọi provider/ví/production.
+
 ## CALENDAR-ACTION-FEEDBACK-20261107 — thông báo và quyền sở hữu lượt đọc
 
 BASE `f70d653da80642c9a844a05179a46d3277a464ca`; nối tiếp cùng AP193 sau renderer.

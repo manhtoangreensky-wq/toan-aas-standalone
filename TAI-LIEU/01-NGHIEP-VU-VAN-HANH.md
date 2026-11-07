@@ -1,5 +1,19 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 07/11/2026 — Giữ bằng chứng khi ma trận kiểm tra thất bại
+
+Run main `42324003356` hoàn thành 456 cấu hình, 455 đạt và một lỗi ở Dashboard
+VI/sáng/768px. Cùng cây ứng dụng trước đó đạt 456/456 trong PR683. JSON/ảnh đã
+được runner ghi trước khi báo lỗi nhưng bước tải bằng chứng bị bỏ qua, nên điều
+kiện chính xác gây lỗi vẫn CHƯA XÁC ĐỊNH. Không coi đây là xác nhận lỗi ngẫu nhiên.
+
+Candidate CI-OBS-001 chỉ thêm `if: always()` vào bước tải bằng chứng đăng nhập.
+Runner, ứng dụng, 456 tiêu chí, exit thất bại, quyền, ENV và triển khai không đổi.
+Hợp đồng trước sửa 4 đạt/1 lỗi; sau patch Antigravity 5/5 đạt, review C0/I0/M0.
+22 lượt chẩn đoán Dashboard giới hạn đạt không thay thế ma trận đầy đủ hoặc chứng
+minh nguyên nhân đã được sửa. CI mới phải giữ và đọc JSON/ảnh, kể cả khi có lỗi.
+Không có thay đổi provider, ví, dữ liệu production hoặc chuyển động.
+
 ## 07/11/2026 — Lịch nội dung: thông báo sau thao tác và phản hồi còn hiện hành
 
 Candidate tiếp nối bản giao diện đang triển khai
