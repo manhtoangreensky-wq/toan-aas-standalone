@@ -6412,6 +6412,25 @@
     const translated = i18n.t("publishReview." + key);
     return typeof translated === "string" && translated && translated !== ("publishReview." + key) ? translated : text;
   }
+  const CAMPAIGN_CALENDAR_FEEDBACK_KEYS = Object.freeze({
+    "Calendar chỉ nhận thao tác từ trang Calendar của signed Web session.": "calendar.feedback.route",
+    "Cần signed Web session để xem Calendar riêng tư.": "calendar.feedback.view",
+    "Phiên hiện tại chưa có quyền làm mới Calendar.": "calendar.feedback.refreshDenied",
+    "Không thể nạp cửa sổ Calendar owner-scoped an toàn. Hãy thử lại.": "calendar.feedback.readFailed",
+    "Đã áp dụng bộ lọc Calendar trong phiên hiện tại.": "calendar.feedback.filterApplied",
+    "Đã đổi cửa sổ tháng Calendar.": "calendar.feedback.monthChanged",
+    "Đã làm mới Calendar từ API owner-scoped.": "calendar.feedback.refreshed",
+    "Yêu cầu chưa được xác nhận.": "calendar.feedback.unconfirmed"
+  });
+  function campaignCalendarFeedbackText(value) {
+    const text = String(value || "").trim();
+    if (!Object.prototype.hasOwnProperty.call(CAMPAIGN_CALENDAR_FEEDBACK_KEYS, text)) return text;
+    const key = "campaignUi." + CAMPAIGN_CALENDAR_FEEDBACK_KEYS[text];
+    const i18n = window.TOANAASI18n;
+    if (!i18n || typeof i18n.t !== "function") return text;
+    const translated = i18n.t(key);
+    return typeof translated === "string" && translated && translated !== key ? translated : text;
+  }
   function publishReviewPackHashtags(value) {
     const source = String(value || "").trim();
     if (!source) return [];
@@ -27881,9 +27900,14 @@
               platform: fields.platform
             }, currentSelection)
             : currentSelection;
+        const feedbackRequestEpoch = campaignCalendarHydrationEpoch + 1;
+        const feedbackSessionEpoch = campaignSessionEpoch;
+        const feedbackSelectionKey = campaignCalendarSelectionKey(requestedSelection);
+        const feedbackIsCurrent = () => campaignCalendarRequestIsCurrent(feedbackRequestEpoch, feedbackSessionEpoch, feedbackSelectionKey);
         setActionBusy(action, route, true);
         try {
           const refreshed = await hydrateCampaignCalendar(requestedSelection);
+          if (!feedbackIsCurrent()) return;
           // A route/session switch makes the request stale and deliberately
           // returns null without an error.  Only surface a failure if this
           // exact Calendar view remains active and the read state confirms it.
@@ -27891,14 +27915,17 @@
             throw new Error("Không thể nạp cửa sổ Calendar owner-scoped an toàn. Hãy thử lại.");
           }
           if (refreshed) {
-            toast(action === "campaign-calendar-filter"
+            toast(campaignCalendarFeedbackText(action === "campaign-calendar-filter"
               ? "Đã áp dụng bộ lọc Calendar trong phiên hiện tại."
               : action === "campaign-calendar-month"
                 ? "Đã đổi cửa sổ tháng Calendar."
-                : "Đã làm mới Calendar từ API owner-scoped.");
+                : "Đã làm mới Calendar từ API owner-scoped."));
           }
+        } catch (error) {
+          if (!feedbackIsCurrent()) return;
+          throw error;
         } finally {
-          setActionBusy(action, route, false);
+          if (feedbackIsCurrent()) setActionBusy(action, route, false);
         }
         return;
       }
@@ -38763,7 +38790,7 @@
       }
       const editorialError = (action === "music-direction-preset-compose" || action === "sfx-cue-sheet-compose") ? musicSfxEditorialErrorText(action, error) : null;
       const errorMessage = editorialError || (error && error.payload && error.payload.message) || (error && error.message) || "Yêu cầu chưa được xác nhận.";
-      toast(action === "publish-review-pack-compose" ? publishReviewPackFeedbackText(errorMessage, "feedback.error") : errorMessage, "error");
+      toast(action === "publish-review-pack-compose" ? publishReviewPackFeedbackText(errorMessage, "feedback.error") : (["campaign-calendar-filter", "campaign-calendar-month", "campaign-calendar-refresh"].includes(action) ? campaignCalendarFeedbackText(errorMessage) : errorMessage), "error");
     } finally {
       if (featureSubmission) {
         releaseSubmission(featureSubmission);

@@ -1,5 +1,26 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Phiên thông báo thao tác Lịch nội dung — 07/11/2026
+
+ID `CALENDAR-ACTION-FEEDBACK-20261107`, BASE
+`f70d653da80642c9a844a05179a46d3277a464ca`; case CAL-ACTION-01..03. Kiểm cả
+bấm Lọc, Tháng trước/sau và Làm mới, không chỉ đọc tiêu đề hoặc nội dung tĩnh.
+VI/EN/ZH phải có thông báo thành công/lỗi/guard đúng ngôn ngữ; unknown message
+không bị thay bằng câu chung. Dữ liệu lịch, tên khách và giá trị bộ lọc giữ nguyên.
+
+Giữ GET pending rồi đổi trang, phiên/tài khoản, đăng xuất, selection hoặc gửi
+lượt mới; response cũ không được hiện toast hoặc mở lại nút mới. Lượt hiện hành
+vẫn phải hiển thị lỗi nếu tải thất bại và mở controls khi chính lượt đó kết thúc.
+Không bỏ qua lỗi hiện hành chỉ để làm test stale xanh.
+
+Đã đo 108/108 Node, 1.670/1.670 full Node và9/9 Python/native/contracts. Ba GET
+nguyên gốc từ DB tạm qua full integration kiểm đủ chín action/locale. Browser
+36/36 bấm nút/submit thông thường đạt, mỗi case đúng một GET và toast nhìn thấy,
+0page/console/external/write/unknown. Khởi tạo đăng nhập browser bị chặn ở seam
+QA và bootstrap tổng hợp; không gọi đây là bằng chứng signed production auth.
+Không gọi provider/ví/PayOS hoặc tạo lịch đăng/tác vụ. Ghi CI exact-head, runtime
+VPS và signed production UI riêng; metadata POSIX Linux phải đạt, không hạ test.
+
 ## Phiên Lịch nội dung — 06–07/11/2026
 
 ID `CALENDAR-LOCALE-PRESENTATION-20261106`, BASE

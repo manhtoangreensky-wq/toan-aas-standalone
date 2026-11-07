@@ -1,5 +1,22 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 07/11/2026 — Đối chiếu phản hồi thao tác Lịch nội dung
+
+Nguồn chức năng: `docs/migration/CAMPAIGN_CALENDAR_WINDOW_CONTRACT.md` — đọc một
+tháng riêng, bộ lọc giới hạn và bỏ phản hồi cũ; không có thao tác ghi từ Calendar.
+
+| Hợp đồng / giới hạn bản PR682 | Candidate có bằng chứng | Điều không thay đổi |
+|---|---|---|
+| Renderer dịch nhưng toast ba action chưa dịch | Tám fixed message map locale; unknown qua helper/catch giữ nội dung | Không dịch mù metadata hoặc API error payload |
+| Read helper đã bỏ dữ liệu cũ, outer handler vẫn báo lỗi/mở nút mới | Dùng lại cùng request/session/selection predicate cho feedback/finally; 66 currentness cases | Không thay predicate, read hydrate, query, auth hoặc capability |
+| Thành công đọc phải phản ánh cửa sổ thật | Ba GET native DB tạm → full integration → chín action/locale toast, projection giữ nguyên | Không suy ra lịch đăng, reminder, task hay output |
+| UI action phải hiện thông báo nhìn thấy | 36/36 normal click/submit và36 GET QA; toast role=status/visible; 108 Node | Không dùng DOM text-only hoặc fake success làm LIVE proof |
+
+Toàn bộ Node 1.670/1.670; native/hợp đồng 9/9. Các hàm API/toast/merge/busy,
+selection/key/path/read predicate/hydrate và PublishReview helper giống BASE
+từng byte. Chỉ thêm nhánh catch cho đúng ba action. Phần còn lại toàn ứng dụng,
+physical PWA, signed production UI và chuyển động vẫn chưa đóng.
+
 ## 07/11/2026 — Đối chiếu Lịch nội dung
 
 Nguồn ban đầu: `docs/migration/CAMPAIGN_CALENDAR_WINDOW_CONTRACT.md` — “signed,
