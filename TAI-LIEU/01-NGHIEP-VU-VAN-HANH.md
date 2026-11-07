@@ -1,5 +1,30 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 07/11/2026 — Chỉ xác nhận lưu khi phản hồi có bản ghi đúng hợp đồng
+
+Candidate AP195-ACK-TRUTH kiểm ba phản hồi tạo/sửa/đổi trạng thái trước khi
+cập nhật giao diện. Bản ghi phải có11trường metadata đúng kiểu, UUID hợp lệ,
+nền tảng/mục tiêu/trạng thái hợp lệ và phiên bản nguyên dương. Sửa/đổi trạng
+thái phải trả đúng ID yêu cầu, so không phân biệt hoa/thường. Trạng thái ngoài
+và trong bản ghi phải khớp; tạo mới là bản nháp, đổi trạng thái đúng lựa chọn.
+
+Phản hồi không hợp lệ không được báo thành công, thay dữ liệu, xóa bản gõ,
+điều hướng hoặc kích hoạt lượt đọc chi tiết. Vẫn giữ dữ liệu/bản gõ hiện tại
+và mở lại nút. Đây không phải rollback: máy chủ có thể đã ghi thành công;
+client chỉ chưa xác minh được dữ liệu trả về. Không tự gửi lại mutation.
+
+Đã đo100ca ACK:22đạt/78lỗi trước sửa→100/100; cùng48ca currentness đạt148/148.
+FullNode1.818/1.818; native2/2, gồm3envelope ghi gốc→5clientcontrols và hai
+replay UUID hoa/thường. Browser18/18 thao tác form thật ở360/1440 với phản hồi
+đúng/thiếu/sai; bản gõ và trạng thái cũ được giữ khi báo lỗi. ReviewC0/I0/M0;
+19helper và currentnessMap giữ nguyên. Dữ liệu native là DB tạm; browser là
+bootstrap/API tổng hợp localhost, không phải signed production LIVE.
+
+Không thêm giới hạn độ dài/ngày/URL hoặc trần phiên bản của lịch nhắc cho
+ACK. Chuỗi tùy chọn rỗng, phiên bản lớn và trường bổ sung vẫn được giữ. API,
+auth/backend/schema/ví/provider/Bot/motion không đổi. Việt hóa và phản hồi theo
+ngôn ngữ Campaign vẫn là phần tiếp theo, không đóng bằng bản sửa này.
+
 ## 07/11/2026 — Phản hồi ghi kế hoạch chỉ thuộc giao diện còn hiện hành
 
 Candidate AP195 giữ đúng phạm vi tạo/sửa/đổi trạng thái kế hoạch. Sau khi rời

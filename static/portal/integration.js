@@ -247,6 +247,19 @@
   let campaignSessionEpoch = 0;
   const campaignWriteRequests = new Map();
 
+  function campaignWriteReceiptItem(result, expectedId = "", expectedStatus = "") {
+    const item = result && result.data && result.data.item;
+    if (!result || result.ok !== true || !item || typeof item !== "object" || Array.isArray(item)) return null;
+    if (typeof item.id !== "string" || !validCampaignPlanId(item.id)) return null;
+    if (expectedId && item.id.trim().toLowerCase() !== String(expectedId).trim().toLowerCase()) return null;
+    const stringFields = ["title", "destination_url", "scheduled_for", "review_note", "created_at", "updated_at"];
+    if (!stringFields.every((name) => typeof item[name] === "string")) return null;
+    if (!CAMPAIGN_PLAN_PLATFORMS.has(item.platform) || !CAMPAIGN_PLAN_OBJECTIVES.has(item.objective) || !CAMPAIGN_PLAN_STATUSES.has(item.approval_status)) return null;
+    if (!Number.isInteger(item.revision) || item.revision < 1) return null;
+    if (result.status !== item.approval_status || (expectedStatus && item.approval_status !== expectedStatus)) return null;
+    return item;
+  }
+
   function beginCampaignWriteRequest(scope, action, route) {
     const context = {
       scope,
@@ -36952,8 +36965,8 @@
             body: JSON.stringify({ ...campaign, idempotency_key: submission.key })
           });
           if (!campaignWriteRequestIsCurrent(writeRequest)) return;
-          const item = result.data && result.data.item && typeof result.data.item === "object" ? result.data.item : null;
-          if (!item || !validCampaignPlanId(item.id)) throw new Error("Máy chủ chưa trả Campaign hợp lệ.");
+          const item = campaignWriteReceiptItem(result, "", "draft");
+          if (!item) throw new Error("Máy chủ chưa trả Campaign hợp lệ.");
           mergeCampaignPlan(item);
           if (window.TOANAASPortal && typeof window.TOANAASPortal.clearTransientFormDraft === "function") {
             window.TOANAASPortal.clearTransientFormDraft(CAMPAIGN_CREATE_ROUTE);
@@ -37010,7 +37023,9 @@
             body: JSON.stringify({ ...campaign, idempotency_key: submission.key })
           });
           if (!campaignWriteRequestIsCurrent(writeRequest)) return;
-          mergeCampaignPlan(result.data && result.data.item);
+          const item = campaignWriteReceiptItem(result, planId, "");
+          if (!item) throw new Error("Máy chủ chưa trả Campaign hợp lệ.");
+          mergeCampaignPlan(item);
           if (campaignPlanIdFromPath(route) === planId) await hydrateCampaignPlanDetail(route);
           if (!campaignWriteRequestIsCurrent(writeRequest)) return;
           toast(result.message || "Đã cập nhật kế hoạch Web.");
@@ -37039,7 +37054,9 @@
             body: JSON.stringify({ approval_status: update.approval_status, review_note: update.review_note, idempotency_key: submission.key })
           });
           if (!campaignWriteRequestIsCurrent(writeRequest)) return;
-          mergeCampaignPlan(result.data && result.data.item);
+          const item = campaignWriteReceiptItem(result, update.plan_id, update.approval_status);
+          if (!item) throw new Error("Máy chủ chưa trả Campaign hợp lệ.");
+          mergeCampaignPlan(item);
           if (campaignPlanIdFromPath(route) === update.plan_id) await hydrateCampaignPlanDetail(route);
           if (!campaignWriteRequestIsCurrent(writeRequest)) return;
           toast(result.message || "Đã cập nhật kế hoạch Web.");

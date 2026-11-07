@@ -1,5 +1,23 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 07/11/2026 — Đối chiếu xác nhận lưu kế hoạch
+
+Nguồn: `docs/migration/CAMPAIGN_PLANNER_BOUNDARY.md`, projection native
+`_campaign_plan_public` và ba handler hiện hữu; BASE3de678d3.
+
+| Trước sửa | Candidate có bằng chứng | Ranh giới |
+|---|---|---|
+| Sửa/status có thể merge nhầm ID hoặc báo thành công khi thiếu item | Kiểm11field/type/enum/UUID/revision và ID đích trước mọi side effect | Không thay API/DTO, không coi ID client là quyền sở hữu |
+| Create chỉ kiểm UUID | Giữ UUID mới bất kỳ từ server, yêu cầu bản ghi đủ và trạng thái draft | Không tự đặt trước ID create |
+| Receipt không có kiểm tra outer/item/target status | Các trạng thái phải nhất quán; lỗi không clear/redirect/hydrate | Không hủy/retry/rollback write đã gửi |
+| Native UUID canonical có thể khác hoa/thường của request | Hai native uppercase replay trả đúng envelope cũ;5clientcontrols | Không đổi đường dẫn/payload/idempotency |
+
+100ACK+48currentness đạt148/148; fullNode1.818/1.818, native2/2, browser18/18;
+reviewC0/I0/M0,19helper/currentnessMap byte-identical. Row cũ sai enum có thể
+vẫn được server ghi rồi trả ACK; client chặn metadata sai nhưng không tuyên
+bố write chưa xảy ra. Không sửa DB hoặc tạo chính sách backend mới. Không
+đóng toàn locale Campaign, provider/output hay signed UI; không audit dependency.
+
 ## 07/11/2026 — Đối chiếu quyền sở hữu phản hồi ghi kế hoạch
 
 Nguồn gốc: `docs/migration/CAMPAIGN_PLANNER_BOUNDARY.md` và ba handler ghi

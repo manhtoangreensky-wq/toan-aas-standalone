@@ -100,7 +100,7 @@ export function campaignActionRuntime(action, options = {}) {
     networkLog.push({ path: parsed.pathname, method, body: options.body ? JSON.parse(options.body) : undefined });
     assert.equal(options.credentials, 'same-origin');
     assert.equal(options.cache, 'no-store');
-    assert.match(parsed.pathname, /^\/api\/v1\/campaigns(?:\/[0-9a-f-]{36}(?:\/(?:status|schedule-intents))?)?$/);
+    assert.match(parsed.pathname, /^\/api\/v1\/campaigns(?:\/[0-9a-f-]{36}(?:\/(?:status|schedule-intents))?)?$/i);
     if (method === 'GET') {
       assert.equal(options.body, undefined);
       const id = parsed.pathname.split('/')[4];

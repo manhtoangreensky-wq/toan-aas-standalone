@@ -1,5 +1,22 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Phiên xác nhận lưu kế hoạch — 07/11/2026
+
+AP195-ACK-TRUTH-20261107: kiểm AP195-ACK-01..03. Giữ request hiện hành và trả
+ACK thiếu/sai item, sai UUID edit/status hoặc trạng thái mâu thuẫn. Phải có
+thông báo lỗi, không nhận receipt, không điều hướng/xóa form/tải detail; nội dung
+đang gõ và state cũ giữ nguyên, nút được mở. Không báo là server chắc chắn chưa
+lưu: máy chủ có thể đã ghi; client chỉ từ chối dữ liệu trả về không hợp lệ.
+
+Kiểm create với UUID server khác vẫn nhận; update/status cùng UUID khác hoa/
+thường vẫn nhận. Không hạ hợp đồng để bỏ trường thiếu, nhưng không thêm kiểm
+ngày/URL/length hoặc trần phiên bản lịch nhắc. Giữ extra fields và empty optional.
+
+Đã đo100ACK+48currentness đạt148/148, fullNode1.818/1.818, native2/2 (3envelopes
+gốc→5clientcases) và browser18/18 trên360/1440. Browser/API tổng hợp localhost;
+DB native tạm và tài khoản giả, không signed production LIVE. Ghi riêng CI exact
+HEAD/deploy/VPS, không đóng tiếng Việt/Anh/Trung toàn Campaign hoặc motion.
+
 ## Phiên phản hồi ghi kế hoạch — 07/11/2026
 
 ID AP195-WRITE-CURRENTNESS-20261107; case AP195-WRITE-01..03. Không chỉ đọc

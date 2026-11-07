@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-07",
-  "local_files_refresh_scope": "AP195 Campaign response currentness: three scoped cases;48Node,1718fullNode,2native and12browser controls; historical48core cases/push_gate/tracker/project snapshots preserved. No auth/project mutation; whole Campaign locale remains open.",
+  "local_files_refresh_scope": "AP195 ACK truth: three scoped cases;100ACK+48currentness,1818fullNode,2native and18browser; historical48core cases/push_gate/tracker/project snapshots preserved. No auth/project mutation; whole Campaign locale remains open.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,15 +70,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 943,
-      "bytes": 111632,
-      "sha256": "8cbf3ca36ab0997be87512ad6115105f752009c532f94f77fd2c6095b8b380ce"
+      "lines": 956,
+      "bytes": 112674,
+      "sha256": "9d8d3fc93f539d3f4a62edc60dc8a83842bbc2a169e6ba73258e74ab3b1f6f86"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 517,
-      "bytes": 42647,
-      "sha256": "1ba8c035fe729c05396954d3932d2ed70e67d402a4302ed9ba54dbd8ba74726d"
+      "lines": 534,
+      "bytes": 43837,
+      "sha256": "056eeea551cb7ab903cee6707970f9a68820a81bc133a860f606d2aa1ef8830b"
     },
     {
       "path": "scripts/tester_case_sync.py",
@@ -101,21 +101,21 @@
     "github_mutations": 0
   },
   "active_release": {
-    "id": "AP195-WRITE-CURRENTNESS-20261107",
-    "base_sha": "81374e73bcedbb1541c36a1cd79706dae55c5dc2",
+    "id": "AP195-ACK-TRUTH-20261107",
+    "base_sha": "3de678d3a8e9707ae60514aa1b4fce8160371c4b",
     "case_count": 3,
     "case_ids": [
-      "AP195-WRITE-01",
-      "AP195-WRITE-02",
-      "AP195-WRITE-03"
+      "AP195-ACK-01",
+      "AP195-ACK-02",
+      "AP195-ACK-03"
     ],
     "status": "LOCAL_ACCEPTED_PENDING_EXACT_HEAD_CI_DEPLOY_LIVE",
-    "local_node": 1718,
-    "targeted_node": 48,
+    "local_node": 1818,
+    "targeted_node": 148,
     "native_python": 2,
-    "browser_configurations": 12,
-    "independent_review": "C0/I0/M1;48Node rerun;14protectedhelpers exactBASE;minor fakeApprovals control route corrected and busy assertions rerun",
-    "manifest": "reports/tester/AP195-WRITE-CURRENTNESS-20261107.md",
+    "browser_configurations": 18,
+    "independent_review": "C0/I0/M0;148Node rerun;19protectedhelpers andcurrentnessMap exactBASE;nativeprojection/casing audited",
+    "manifest": "reports/tester/AP195-ACK-TRUTH-20261107.md",
     "signed_ui_live": "NOT_TESTED",
     "legacy_push_gate_field": "Historical snapshot retained for its contract; not the gate of this release."
   }
