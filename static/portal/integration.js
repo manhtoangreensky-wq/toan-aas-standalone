@@ -245,6 +245,56 @@
   // ordered so a delayed response cannot cross a signed account, route or
   // newer filter/detail selection.
   let campaignSessionEpoch = 0;
+  const campaignWriteRequests = new Map();
+
+  function beginCampaignWriteRequest(scope, action, route) {
+    const context = {
+      scope,
+      action,
+      route,
+      expectedPath: currentPortalPath(),
+      sessionEpoch: campaignSessionEpoch,
+      accountId: String((base().account && base().account.id) || ""),
+      csrfToken: String((base().session && base().session.csrfToken) || "")
+    };
+    campaignWriteRequests.set(scope, context);
+    return context;
+  }
+
+  function campaignWriteRequestIsCurrent(context) {
+    if (!context || typeof context !== "object") return false;
+    if (campaignWriteRequests.get(context.scope) !== context) return false;
+    if (context.sessionEpoch !== campaignSessionEpoch) return false;
+    if (currentPortalPath() !== context.expectedPath) return false;
+    const currentBase = base();
+    if (!currentBase || !currentBase.session || currentBase.session.authenticated !== true) return false;
+    if (context.accountId !== String((currentBase.account && currentBase.account.id) || "")) return false;
+    if (context.csrfToken !== String((currentBase.session && currentBase.session.csrfToken) || "")) return false;
+    if (!currentBase.capabilities || currentBase.capabilities[context.action] !== true) return false;
+    return true;
+  }
+
+  function finishCampaignWriteRequest(context) {
+    if (!context || typeof context !== "object") return;
+    const wasCurrent = campaignWriteRequestIsCurrent(context);
+    if (campaignWriteRequests.get(context.scope) === context) {
+      campaignWriteRequests.delete(context.scope);
+    }
+    if (wasCurrent) {
+      let hasOtherCurrent = false;
+      for (const other of campaignWriteRequests.values()) {
+        if (other && other !== context && other.action === context.action && other.route === context.route) {
+          if (campaignWriteRequestIsCurrent(other)) {
+            hasOtherCurrent = true;
+            break;
+          }
+        }
+      }
+      if (!hasOtherCurrent) {
+        setActionBusy(context.action, context.route, false);
+      }
+    }
+  }
   let campaignListHydrationEpoch = 0;
   let campaignDetailHydrationEpoch = 0;
   // Calendar has its own selected month/filter response. Keep it separate
@@ -36893,6 +36943,7 @@
           toast("Kế hoạch đang được lưu. Vui lòng chờ phản hồi từ máy chủ.", "error");
           return;
         }
+        const writeRequest = beginCampaignWriteRequest(scope, action, route);
         setActionBusy(action, route, true);
         try {
           const result = await api("/campaigns", {
@@ -36900,6 +36951,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...campaign, idempotency_key: submission.key })
           });
+          if (!campaignWriteRequestIsCurrent(writeRequest)) return;
           const item = result.data && result.data.item && typeof result.data.item === "object" ? result.data.item : null;
           if (!item || !validCampaignPlanId(item.id)) throw new Error("Máy chủ chưa trả Campaign hợp lệ.");
           mergeCampaignPlan(item);
@@ -36908,9 +36960,11 @@
           }
           toast(result.message || "Đã lưu kế hoạch Web.");
           window.location.assign(`/campaigns/${encodeURIComponent(String(item.id))}`);
+        } catch (error) {
+          if (campaignWriteRequestIsCurrent(writeRequest)) throw error;
         } finally {
           releaseSubmission(submission);
-          setActionBusy(action, route, false);
+          finishCampaignWriteRequest(writeRequest);
         }
         return;
       }
@@ -36947,6 +37001,7 @@
           toast("Kế hoạch đang được cập nhật. Vui lòng chờ phản hồi từ máy chủ.", "error");
           return;
         }
+        const writeRequest = beginCampaignWriteRequest(scope, action, route);
         setActionBusy(action, route, true);
         try {
           const result = await api(`/campaigns/${encodeURIComponent(planId)}`, {
@@ -36954,12 +37009,16 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...campaign, idempotency_key: submission.key })
           });
+          if (!campaignWriteRequestIsCurrent(writeRequest)) return;
           mergeCampaignPlan(result.data && result.data.item);
           if (campaignPlanIdFromPath(route) === planId) await hydrateCampaignPlanDetail(route);
+          if (!campaignWriteRequestIsCurrent(writeRequest)) return;
           toast(result.message || "Đã cập nhật kế hoạch Web.");
+        } catch (error) {
+          if (campaignWriteRequestIsCurrent(writeRequest)) throw error;
         } finally {
           releaseSubmission(submission);
-          setActionBusy(action, route, false);
+          finishCampaignWriteRequest(writeRequest);
         }
         return;
       }
@@ -36971,6 +37030,7 @@
           toast("Trạng thái kế hoạch đang được cập nhật. Vui lòng chờ phản hồi từ máy chủ.", "error");
           return;
         }
+        const writeRequest = beginCampaignWriteRequest(scope, action, route);
         setActionBusy(action, route, true);
         try {
           const result = await api(`/campaigns/${encodeURIComponent(update.plan_id)}/status`, {
@@ -36978,12 +37038,16 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ approval_status: update.approval_status, review_note: update.review_note, idempotency_key: submission.key })
           });
+          if (!campaignWriteRequestIsCurrent(writeRequest)) return;
           mergeCampaignPlan(result.data && result.data.item);
           if (campaignPlanIdFromPath(route) === update.plan_id) await hydrateCampaignPlanDetail(route);
+          if (!campaignWriteRequestIsCurrent(writeRequest)) return;
           toast(result.message || "Đã cập nhật kế hoạch Web.");
+        } catch (error) {
+          if (campaignWriteRequestIsCurrent(writeRequest)) throw error;
         } finally {
           releaseSubmission(submission);
-          setActionBusy(action, route, false);
+          finishCampaignWriteRequest(writeRequest);
         }
         return;
       }

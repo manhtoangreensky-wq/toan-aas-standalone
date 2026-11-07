@@ -1,5 +1,26 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 07/11/2026 — Phản hồi ghi kế hoạch chỉ thuộc giao diện còn hiện hành
+
+Candidate AP195 giữ đúng phạm vi tạo/sửa/đổi trạng thái kế hoạch. Sau khi rời
+trang, thay phiên/tài khoản, đổi mã chống giả mạo hoặc mất quyền thao tác, phản
+hồi cũ không cập nhật giao diện, hiện thông báo, xóa bản gõ hoặc điều hướng.
+Chốt cũng áp dụng khi phản hồi ghi đã về nhưng lượt tải chi tiết còn đang chờ.
+Lỗi của lượt hiện hành vẫn được hiển thị; không che lỗi để báo thành công.
+
+Mỗi phạm vi chống gửi trùng hiện có giữ một identity riêng trong RAM. Hai bản
+ghi hoặc thao tác độc lập không vô hiệu hóa nhau; bấm trùng bị từ chối không
+làm mất lượt đã gửi. Các nút chung chỉ mở khi không còn lượt hiện hành cùng
+nhóm đang chờ. Trang tự rà soát giữ đường dẫn thao tác riêng với trang đang xem.
+
+Đã đo 48 ca trước sửa:16 đạt/32 lỗi; sau patch48/48 đạt, toàn bộ Node1.718/1.718.
+Native2/2, gồm ba envelope ghi nguyên gốc từ DB tạm qua client thực, chống gửi
+trùng, CSRF và kiểm tài khoản khác. Browser12/12 thao tác bấm form thật ở360/1440
+đạt; dữ liệu/phiên/API là tổng hợp localhost, không phải production LIVE.
+Review C0/I0/M1; điểm nhỏ là route control mô phỏng đã sửa và kiểm lại busy.
+API/auth/backend/receipt,14helper được khóa và chuyển động giữ nguyên. Việc
+dịch toàn bộ Campaign, validation ACK và signed production UI vẫn chưa đóng.
+
 ## 07/11/2026 — Giữ bằng chứng khi ma trận kiểm tra thất bại
 
 Run main `42324003356` hoàn thành 456 cấu hình, 455 đạt và một lỗi ở Dashboard

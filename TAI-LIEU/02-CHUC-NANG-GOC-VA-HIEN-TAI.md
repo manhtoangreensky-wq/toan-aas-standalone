@@ -1,5 +1,21 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 07/11/2026 — Đối chiếu quyền sở hữu phản hồi ghi kế hoạch
+
+Nguồn gốc: `docs/migration/CAMPAIGN_PLANNER_BOUNDARY.md` và ba handler ghi
+hiện hữu; BASE81374e73bcedbb1541c36a1cd79706dae55c5dc2.
+
+| Trước sửa | Candidate có bằng chứng | Ranh giới giữ nguyên |
+|---|---|---|
+| Receipt ghi cũ vẫn merge/toast/điều hướng sau đổi context |48ca đầy đủ gồm32RED; sau sửa48/48 | Không hủy hoặc gửi lại mutation, máy chủ vẫn quyết định dữ liệu |
+| Mở nút vô điều kiện sau hoàn tất | Chỉ lượt hiện hành mở nhóm nút khi không có peer cùng nhóm chờ | Helper controls, API và scope chống gửi trùng không đổi |
+| Board, trang chi tiết và tự rà soát có route thao tác khác nhau | Lưu actual UI path riêng; native và browser gồm `/approvals` | Không đổi route form hoặc DTO |
+| Luồng đọc đã có chốt riêng |14helper khóa byte-identical,150Calendar/PublishReview regression đạt | Không thay read fence hoặc nguồn quyền |
+
+Toàn bộ Node1.718/1.718; native2/2; browser12/12. Bản này không dịch lại dữ liệu
+khách hoặc thông báo native, không hoàn thành toàn locale Campaign hay kết nối
+mạng xã hội/provider. Không khảo sát/xóa dependency hoặc mã chết trong phạm vi này.
+
 ## 07/11/2026 — Đối chiếu lưu bằng chứng kiểm tra đăng nhập
 
 Nguồn: `.github/workflows/webapp-quality.yml` và
