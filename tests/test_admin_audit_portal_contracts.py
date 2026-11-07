@@ -32,9 +32,12 @@ def test_admin_audit_portal_never_binds_raw_audit_identity_or_detail_fields() ->
     integration = _read("static/portal/integration.js")
     backend = _read("copyfast_admin_audit.py")
 
-    assert "account_id" not in integration[integration.index("function normalizedAdminAudit(data)"):integration.index("async function hydrateLinkStatus")]
-    assert "canonical_user_id" not in integration[integration.index("function normalizedAdminAudit(data)"):integration.index("async function hydrateLinkStatus")]
-    assert "request_id" not in integration[integration.index("function normalizedAdminAudit(data)"):integration.index("async function hydrateLinkStatus")]
+    normalizer_start = integration.index("function normalizedAdminAudit(data)")
+    normalizer_end = integration.index("function adminAuditRequestIsCurrent(requestEpoch, sessionEpoch)", normalizer_start)
+    normalizer = integration[normalizer_start:normalizer_end]
+    assert "account_id" not in normalizer
+    assert "canonical_user_id" not in normalizer
+    assert "request_id" not in normalizer
     assert "SELECT action, outcome, created_at" in backend
     assert "account_id, canonical_user_id" not in backend[backend.index("SELECT action, outcome, created_at"):]
     assert "@router.post" not in backend

@@ -409,7 +409,7 @@ def test_admin_support_detail_guarded_and_loading_states_are_localized(locale, g
 def test_admin_support_catalogue_has_symmetric_keys_and_locale_specific_anchors() -> None:
     rendered = {locale: _render_admin_support(locale) for locale in ("vi", "en", "zh")}
 
-    assert rendered["vi"]["listTitle"] == "Trung tâm hỗ trợ khách hàng Web"
+    assert rendered["vi"]["listTitle"] == "Trung tâm hỗ trợ khách hàng"
     assert rendered["en"]["listTitle"] == "Web Customer Support Center"
     assert rendered["zh"]["listTitle"] == "Web 客户支持中心"
     assert rendered["vi"]["detailTitle"] == "Xử lý yêu cầu hỗ trợ"
