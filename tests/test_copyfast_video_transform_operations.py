@@ -21,10 +21,10 @@ MODULES = [
 ]
 
 
-def make_client(tmp_path, monkeypatch) -> TestClient:
+def make_client(tmp_path, monkeypatch, *, asset_vault_enabled: bool = True) -> TestClient:
     monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "copyfast-video-transform-test.db"))
     monkeypatch.setenv("WEB_SESSION_SECRET", "test-video-transform-session-secret")
-    monkeypatch.setenv("WEBAPP_ASSET_VAULT_ENABLED", "true")
+    monkeypatch.setenv("WEBAPP_ASSET_VAULT_ENABLED", "true" if asset_vault_enabled else "false")
     monkeypatch.setenv("WEBAPP_ASSET_VAULT_ROOT", str(tmp_path / "private-web-assets"))
     monkeypatch.setenv("WEBAPP_ASSET_VAULT_MAX_FILE_MB", "25")
     monkeypatch.setenv("WEBAPP_ASSET_VAULT_QUOTA_MB", "100")

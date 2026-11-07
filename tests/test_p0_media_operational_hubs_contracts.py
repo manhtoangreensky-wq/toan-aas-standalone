@@ -217,7 +217,11 @@ def test_behavioral_free_tool_representative_behavior_e2e(tmp_path: Path, monkey
     shell = copyfast_pages.render_portal("/tools/free")
     assert shell.status_code == 200
 
-    with vto.make_client(tmp_path, monkeypatch) as client:
+    # This read-only Free Tool flow does not use Asset Vault. Keep its fixture
+    # from starting the unrelated deferred vault reconciliation writer beside
+    # the auth throttle transaction, which can otherwise create CI-only SQLite
+    # startup contention before the first register response.
+    with vto.make_client(tmp_path, monkeypatch, asset_vault_enabled=False) as client:
         csrf = vto.register_and_login(client, "free-tool-e2e@example.com")
         res = client.get("/api/v1/free-prompt-gallery/catalog")
         assert res.status_code == 200
