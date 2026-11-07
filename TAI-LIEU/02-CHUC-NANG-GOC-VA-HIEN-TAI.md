@@ -1,5 +1,27 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 07/11/2026 — Đối chiếu Lịch nội dung
+
+Nguồn ban đầu: `docs/migration/CAMPAIGN_CALENDAR_WINDOW_CONTRACT.md` — “signed,
+read-only monthly view”, khoảng tháng 2000-01..2100-12, tối đa 200 mục và loại bỏ
+phản hồi cũ. Các ranh giới này không thay đổi trong đợt giao diện.
+
+| Hợp đồng / hiện trạng cũ | Candidate có bằng chứng | Giới hạn |
+|---|---|---|
+| Một khoảng tháng riêng của tài khoản, bộ lọc và thứ tự thời gian | API/DTO/owner predicate/giới hạn không đổi; 8/8 Python/native | Không tạo lịch đăng hoặc ý định nhắc việc từ Calendar |
+| Tiêu đề HTML/JS và phần lớn câu cố định chưa nhất quán locale | VI/EN/ZH đầy đủ; fallback rỗng đặt tại renderer; 211 khóa nhóm cân bằng | Tên khách và thương hiệu không dịch mù; 8.943 EN cũ giữ nguyên |
+| Summary ghép số hai lần, overflow là VI | Câu đếm một lần và overflow theo locale; ba thẻ grid/bốn mục agenda vẫn đủ | Không đổi nguồn total/returned hoặc tự tải thêm dữ liệu |
+| Loading/failed/guarded dễ bị diễn đạt như lịch rỗng | Tách title/body theo trạng thái đọc có sẵn, không có số 0 giả | Chỉ đổi chữ; không cấp quyền hoặc thay luồng request |
+| Hai khối giải thích tĩnh, một khối nói tới bản ghi chưa có ngày mà API không trả | Bỏ hai container, giữ nguyên hai liên kết và đưa count thật vào bộ lọc | Không mất điều khiển hoặc giấu lỗi/đang tải |
+| Input/select điện thoại 15px | Một khối Calendar ≤620px nâng lên 16px; phần CSS còn lại giống BASE | Không đổi style desktop, màu hoặc motion |
+
+39 Node tập trung, 1.562 Node toàn bộ và browser 90/90 cấu hình đạt. Browser không
+có lỗi trang/console hoặc request API/ngoại mạng/ghi. Tài liệu gốc không được hiểu
+là quyền kết nối mạng xã hội, đăng bài,
+provider/job/output, ví/PayOS, lịch quản trị hay ý định nhắc việc ở trang chi tiết.
+Không audit/xóa phụ thuộc hoặc mã chết trong đợt này. Signed UI production và
+phần còn lại toàn ứng dụng/chuyển động vẫn là các mục chưa hoàn thành.
+
 ## 06/11/2026 — Đối chiếu bổ sung: không làm mất nội dung phản hồi
 
 Nguồn: `docs/migration/PUBLISH_REVIEW_PACK_CONTRACT.md`, helper phản hồi hiện hành

@@ -1,5 +1,29 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Phiên Lịch nội dung — 06–07/11/2026
+
+ID `CALENDAR-LOCALE-PRESENTATION-20261106`, BASE
+`9137c0c037995b59e178edc1055eec825ace6f73`, case CAL-LOCALE-01..CAL-SAFETY-05.
+Kiểm đủ VI/EN/ZH và năm trạng thái: đang tải, tải lỗi, chưa có quyền, đọc xong rỗng,
+đọc xong có mốc. Không chấp nhận thông báo “chưa có mốc” thay cho lỗi/chưa có quyền,
+hoặc số 0 khi chưa đọc được. Tên khách và Facebook/TikTok phải giữ nguyên.
+
+Hai khối giải thích tĩnh không còn; biểu mẫu tháng/trạng thái/nền tảng và hai liên
+kết cuối trang phải còn. Count đúng ở đầu bộ lọc chỉ khi đã đọc xong và phải nhìn
+thấy trên ảnh/thực tế, không chỉ tồn tại trong DOM. Không dùng class huy hiệu đã
+bị chính sách giao diện khách ẩn để chứa count. Thử ba thẻ
+trong grid và bốn mục trong agenda để bảo vệ overflow. Input/select ở ≤620px cần
+16px, không tắt zoom. Thử đổi tháng/status/platform rồi trả lại, không submit trong
+ma trận presentation. Kiểm theme, menu/Escape, palette/Escape, Tab/focus và tràn.
+
+Hiện có 39/39 Node, 8/8 Python/native, 1.562/1.562 full Node và review C0/I0/M0.
+Browser 90/90 cấu hình đã đạt, không lỗi trang/console hoặc request API/ngoại mạng/
+ghi; có báo cáo riêng và ảnh cho mỗi cấu hình, không lấy pilot2/2 thay cho toàn
+ma trận. Không dùng kết quả localhost để gọi signed production LIVE.
+Mọi case provider/ví/PayOS, lịch đăng, thông báo bên ngoài và ý định nhắc việc
+vẫn ngoài phạm vi. Không thay yêu cầu quyền tệp POSIX của metadata Tester chỉ vì
+Windows không có cùng chế độ; Linux CI phải đạt trước phát hành.
+
 ## Phiên bổ sung giữ nguyên phản hồi — 06/11/2026
 
 ID `PUBLISH-REVIEW-FEEDBACK-PRESERVATION-20261106`, BASE
