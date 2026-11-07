@@ -1,5 +1,33 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 07/11/2026 — Lịch nội dung: thông báo sau thao tác và phản hồi còn hiện hành
+
+Candidate tiếp nối bản giao diện đang triển khai
+`f70d653da80642c9a844a05179a46d3277a464ca`. PR682 chỉ đóng phần renderer/trình bày;
+rà soát toàn luồng phát hiện toast lọc/đổi tháng/làm mới còn VI và từ kỹ thuật.
+Bản tiếp nối dịch đúng tám câu cố định theo VI/EN/ZH, giữ nội dung ngoài bảng dịch
+đi qua helper/catch. Không dịch lại dữ liệu lịch hoặc thay xử lý lỗi GET đã có.
+
+Ba thao tác đọc dùng lại chốt request/session/route/selection hiện hữu để kiểm
+tra sau await, trong catch cục bộ và trước khi mở lại controls. Khi chuyển trang,
+đổi phiên/tài khoản, đăng xuất, đổi cửa sổ hoặc có lượt mới, phản hồi cũ không
+được báo lỗi/thành công hoặc mở nút của ngữ cảnh mới. GET cũ vẫn có thể kết thúc
+trên mạng; không hủy request hoặc thay quyền/đường dẫn/kiểm tra phản hồi đọc.
+
+Đã đo trước sửa: 108 ca gồm 25 đạt/83 lỗi; ba positive control và chín thứ tự
+phản hồi mới hoàn tất trước vẫn đạt, chứng minh cần giữ chốt dữ liệu đọc cũ.
+Sau patch: 108/108 tập trung và 1.670/1.670 Node toàn bộ đạt; 9/9 Python/native/
+hợp đồng, gồm ba GET thật từ DB tạm tới đủ chín toast action/locale. Review
+C0/I0/M0; 219 khóa nhóm cân bằng và 8.950 giá trị EN cũ giữ nguyên.
+
+Browser 36/36 cấu hình bấm nút thật (ba action × ba locale × sáng/tối ×360/1440)
+đạt: mỗi lần đúng một GET QA, cửa sổ hiện tại cập nhật và toast nhìn thấy đúng
+ngôn ngữ; không lỗi trang/console/request ghi/ngoại mạng/không biết nguồn.
+Bootstrap của browser là tổng hợp và initial auth hydration được chặn trong bản
+phục vụ QA; phản hồi GET là nguyên gốc từ DB tạm. Đây không phải kiểm tra phiên
+đăng nhập production. API, DTO, auth/CSRF/quyền, retry, schema, Bot/provider/ví/
+PayOS và motion không đổi. CI, deploy/runtime và signed UI vẫn là cổng riêng.
+
 ## 07/11/2026 — Lịch nội dung: đúng ngôn ngữ, trạng thái và thao tác
 
 Candidate từ bản đang triển khai `9137c0c037995b59e178edc1055eec825ace6f73`,

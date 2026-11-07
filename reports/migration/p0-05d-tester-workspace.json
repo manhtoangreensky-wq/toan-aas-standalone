@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-07",
-  "local_files_refresh_scope": "Calendar locale/state/compact presentation/mobile font: five scoped cases and Tester guide refreshed from measured local gates. Historical48core cases, push_gate, tracker/project snapshots preserved; no auth/project mutation.",
+  "local_files_refresh_scope": "Calendar native-action feedback continuation: three scoped cases, actual API-to-integration handoff and 36 browser action cases; historical48core cases/push_gate/tracker/project snapshots preserved. No auth/project mutation.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,15 +70,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 901,
-      "bytes": 107796,
-      "sha256": "10a41559606ea06a08cf14467e2e5c8d7ecfa152647864c834994936c969956c"
+      "lines": 915,
+      "bytes": 109242,
+      "sha256": "3e55c94d521b5d70225eaac8ecd8bbbf91ef2be50a9725f030ea749a3350dea6"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 466,
-      "bytes": 39028,
-      "sha256": "31d94b70269de8cb91ec350b270a57498253944baeadb19bc89bedc1e6cad534"
+      "lines": 487,
+      "bytes": 40567,
+      "sha256": "3be183f28d08a09af6daeed38d5bce246851088771f91899f2104c8b8e15fb4a"
     },
     {
       "path": "scripts/tester_case_sync.py",
@@ -101,23 +101,21 @@
     "github_mutations": 0
   },
   "active_release": {
-    "id": "CALENDAR-LOCALE-PRESENTATION-20261106",
-    "base_sha": "9137c0c037995b59e178edc1055eec825ace6f73",
-    "case_count": 5,
+    "id": "CALENDAR-ACTION-FEEDBACK-20261107",
+    "base_sha": "f70d653da80642c9a844a05179a46d3277a464ca",
+    "case_count": 3,
     "case_ids": [
-      "CAL-LOCALE-01",
-      "CAL-STATE-02",
-      "CAL-COMPACT-03",
-      "CAL-FONT-04",
-      "CAL-SAFETY-05"
+      "CAL-ACTION-01",
+      "CAL-ACTION-02",
+      "CAL-ACTION-03"
     ],
     "status": "LOCAL_ACCEPTED_PENDING_CI_DEPLOY_LIVE",
-    "local_node": 1562,
-    "targeted_node": 39,
-    "native_python": 8,
-    "browser_configurations": 90,
-    "independent_review": "C0/I0/M0;39Node rerun;211 balanced keys;8943 old EN unchanged;CSS/form/2links exact-base comparators",
-    "manifest": "reports/tester/CALENDAR-LOCALE-PRESENTATION-20261106.md",
+    "local_node": 1670,
+    "targeted_node": 108,
+    "native_python": 9,
+    "browser_configurations": 36,
+    "independent_review": "C0/I0/M0;108Node rerun;219balanced keys;8950oldENunchanged;10protectedfunctions byte-exactBASE",
+    "manifest": "reports/tester/CALENDAR-ACTION-FEEDBACK-20261107.md",
     "signed_ui_live": "NOT_TESTED",
     "legacy_push_gate_field": "Historical snapshot retained for its contract; not the gate of this release."
   }

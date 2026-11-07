@@ -1,5 +1,19 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## CALENDAR-ACTION-FEEDBACK-20261107 — thông báo và quyền sở hữu lượt đọc
+
+BASE `f70d653da80642c9a844a05179a46d3277a464ca`; nối tiếp cùng AP193 sau renderer.
+
+| Case | Mức | Thao tác | PASS bắt buộc / canh lỗi cũ | Evidence hiện có |
+|---|---|---|---|---|
+| CAL-ACTION-01 | vừa | Lọc/đổi tháng/làm mới ×VI/EN/ZH; entry guard/failure/unknown/generic fallback | Tám fixed messages đúng locale, lỗi role=alert, unknown không mất nội dung | 42/42 feedback; 219 khóa cân bằng,8.950 EN cũ giữ nguyên |
+| CAL-ACTION-02 | nặng | Giữ GET pending rồi đổi route/session/account/logout/selection hoặc gửi lượt mới | Không toast/mở nút ở ngữ cảnh mới; hiện hành vẫn báo lỗi và hoàn thành đúng | 66/66 currentness, gồm3 positive và9 newer-first control đã đúng trước sửa |
+| CAL-ACTION-03 | nặng | Ba GET native DB tạm → full integration; normal click/submit ×3locale×2theme×360/1440 | Projection gốc giữ nguyên, đúng request/cửa sổ và toast nhìn thấy; không ghi/provider | 9/9 Python/native/contracts;36/36 browser/36 GET QA;1.670/1.670 full Node |
+
+Không gửi token hoặc phản hồi API vào worker. Browser dùng bootstrap tổng hợp,
+chặn initial auth hydration trong served QA bytes; không là signed production
+flow. API/auth/CSRF/capability/DTO/retry/schema/provider/ví/Bot/motion giữ nguyên.
+
 ## CALENDAR-LOCALE-PRESENTATION-20261106 — Lịch nội dung
 
 Candidate BASE `9137c0c037995b59e178edc1055eec825ace6f73`; kiểm tiếp sang
