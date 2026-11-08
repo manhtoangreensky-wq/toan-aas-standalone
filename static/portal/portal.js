@@ -42453,7 +42453,7 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
     const input = container.querySelector("#portal-copilot-text-input");
     const msgsList = container.querySelector("#portal-copilot-msgs-list");
 
-    if (msgsList) {
+    if (msgsList && copilotState.open) {
       msgsList.scrollTop = copilotState.messages.length === 1 ? 0 : msgsList.scrollHeight;
     }
 

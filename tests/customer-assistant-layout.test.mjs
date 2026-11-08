@@ -24,5 +24,5 @@ test('The initial greeting starts at the top instead of scrolling past its instr
 test('Later assistant replies retain the existing auto-scroll to the newest message',()=>{
  const from=source.indexOf('  function bindCopilotListeners(container, context) {'),to=source.indexOf('  function renderCopilotHtml(container, context) {',from);
  const list={scrollTop:0,scrollHeight:700},container={querySelector:s=>s==='#portal-copilot-msgs-list'?list:null,querySelectorAll:()=>[]};
- const context=vm.createContext({container,copilotState:{messages:[{role:'assistant'},{role:'user'},{role:'assistant'}]},document:{getElementById:()=>null}});vm.runInContext(source.slice(from,to)+'\nbindCopilotListeners(container,{});',context);assert.equal(list.scrollTop,700);
+ const context=vm.createContext({container,copilotState:{open:true,messages:[{role:'assistant'},{role:'user'},{role:'assistant'}]},document:{getElementById:()=>null}});vm.runInContext(source.slice(from,to)+'\nbindCopilotListeners(container,{});',context);assert.equal(list.scrollTop,700);
 });
