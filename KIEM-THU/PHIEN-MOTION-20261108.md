@@ -29,4 +29,3 @@ node --check static/portal/portal-motion.js
 ```
 
 Trình duyệt: menu đang mở tại390px → dữ liệu nền cùng trang/cùng phiên → vẫn mở/giữ focus; Escape → đóng/trả focus nút menu. Lặp thường/giảm chuyển động. Sau đổi trang/phiên/đăng xuất/Admin/locale/tên đầu trang → đóng và nền hết inert. Landing thường bấm phát lại → sequence tăng; đổi giảm chuyển động → nút ẩn/không focus; tải đầu giảm chuyển động → static. Không gọi provider, tạo job, thao tác ví hoặc dữ liệu production.
-
