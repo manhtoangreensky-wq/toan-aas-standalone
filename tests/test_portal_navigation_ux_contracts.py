@@ -473,7 +473,6 @@ def test_closed_mobile_sidebar_is_removed_from_keyboard_and_accessibility_naviga
 
     close_sidebar = _section("function closeSidebar(options)", "function toggleSidebar()")
     toggle_sidebar = _section("function toggleSidebar()", "function closeSidebarAboveMobileBreakpoint()")
-    mount = PORTAL[PORTAL.index("function mountPortal(override)"):]
 
     for token in (
         "function mobileSidebarDialogSupported()",
@@ -488,7 +487,20 @@ def test_closed_mobile_sidebar_is_removed_from_keyboard_and_accessibility_naviga
 
     assert "setSidebarAccessibilityState(false);" in close_sidebar
     assert "setSidebarAccessibilityState(true);" in toggle_sidebar
-    assert "setSidebarAccessibilityState(false);" in mount
+    # Mount now preserves an already-open mobile drawer on unchanged signed
+    # hydration. Exercise both retention and close branches, rather than
+    # requiring an unconditional false literal that recreates the old bug.
+    node = shutil.which("node")
+    assert node, "Node is required to verify mobile mount accessibility"
+    result = subprocess.run(
+        [node, "--test", "tests/customer-sidebar-hydration.test.mjs"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    assert result.returncode == 0, result.stderr or result.stdout
     assert "sidebar.setAttribute(\"role\", \"dialog\")" in toggle_sidebar
     assert "sidebar.removeAttribute(\"role\")" in close_sidebar
 
@@ -644,15 +656,15 @@ process.stdout.write(JSON.stringify({ closed, opened }));
 def test_closed_mobile_sidebar_applies_fallback_after_fresh_shell_markup_renders() -> None:
     """Fresh mobile markup is made unfocusable after, not before, it exists.
 
-    A Portal mount replaces the sidebar contents on every route render.  The
+    A fresh or changed Portal render replaces the sidebar contents. The
     closed-drawer helper therefore has to run after ``renderSidebar`` writes
     those controls; calling it only before the replacement leaves a one-render
     keyboard-accessible off-canvas drawer on a fresh mobile visit.
     """
 
     render_shell = _section("function renderShell()", "const replaceResult =")
-    markup = "sidebar.innerHTML = renderSidebar(page, context);"
-    state_sync = "setSidebarAccessibilityState(false);"
+    markup = "if (!keepCustomerSidebar) sidebar.innerHTML = sidebarMarkup;"
+    state_sync = "setSidebarAccessibilityState(keepCustomerSidebar);"
 
     assert markup in render_shell
     assert state_sync in render_shell

@@ -14,7 +14,7 @@ assert.ok(mount > 0 && end > start && renderEnd > renderStart);
 function harness() {
   const sidebar = { open: false, writes: 0, accessible: false, focused: false,
     classList: { contains: () => sidebar.open },
-    set innerHTML(value) { this.writes++; this.markup = value; this.focused = false; },
+    set innerHTML(value) { this.writes++; this.markup = value; this.focused = false; this.accessible = null; },
   };
   const header = { writes: 0, set innerHTML(value) { this.writes++; this.markup = value; } };
   const context = { path: '/workspace-menu', header: '<header>A</header>', sidebar: '<nav>A</nav>', session: { authenticated: true, csrfToken: 'fixture-a' } };
