@@ -42044,7 +42044,7 @@
       main.innerHTML = renderPage(page, context);
       if (!isHydration) {
         const workspace = document.querySelector(".portal-workspace") || main;
-        if (workspace && typeof workspace.scrollTop === "number") workspace.scrollTop = 0;
+        if (workspace && "scrollTop" in workspace) workspace.scrollTop = 0;
         if (typeof window.scrollTo === "function") window.scrollTo(0, 0);
       }
       syncAdminDataViewRows(main);

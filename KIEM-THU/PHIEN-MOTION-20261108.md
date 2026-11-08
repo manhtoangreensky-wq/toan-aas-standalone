@@ -17,6 +17,9 @@ Receipt: [chuyển động](../docs/reports/motion-20261108.md); bằng chứng 
 - [ ] Exact-commit CI.
 - [ ] Merge/deploy/runtime SHA/service health.
 - [ ] Signed production interaction và đo giật còn lại. Không đánh dấu toàn goal hoàn tất.
+- [x] F2 hidden copilot scroll: browser đóng 0 đọc/ghi, mở 4 ghi, bản gõ giữ; Node trợ lý22/22.
+- [x] F1 startup layout getter: một dòng worker patch; source test và Chrome profile đạt; Layout harness75,07ms diagnostic.
+- [ ] Exact-commit CI/merge/deploy cho F1/F2.
 
 Chạy lại phần repository-owned:
 ```powershell

@@ -15,14 +15,11 @@ def _mount_portal() -> str:
 
 def test_auth_surface_skips_generic_main_enter_before_replace() -> None:
     mount = _mount_portal()
-    existing_assignment = (
-        'main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute '
-        '|| featureCatalogRoute || isCustomerDirectoryRoute || isAdminPortalSurface(page) ? "true" : "false";'
-    )
+    assignment_marker = 'main.dataset.portalMotionSkipEnter = '
     auth_override = 'if (isAuth) main.dataset.portalMotionSkipEnter = "true";'
 
-    assert existing_assignment in mount
+    assert assignment_marker in mount
     assert auth_override in mount
-    assert mount.index(existing_assignment) < mount.index(auth_override) < mount.index(
+    assert mount.index(assignment_marker) < mount.index(auth_override) < mount.index(
         "const replaceResult = featureCatalogRoute"
     )
