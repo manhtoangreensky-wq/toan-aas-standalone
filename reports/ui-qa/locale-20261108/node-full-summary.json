@@ -1,0 +1,20 @@
+{
+  "schema": "node-full-reviewed-summary-v1",
+  "command": "node --test --test-reporter=spec tests/*.test.mjs",
+  "fixture_environment": [
+    "BOT_ROOT (isolated exact catalogue checkout)",
+    "BOT_AUTHORITY_SHA"
+  ],
+  "catalogue_sha": "83a994aea6fb253ee9e64fcfc845d4c31aa2934d",
+  "catalogue_blob_sha256": {
+    "video_ai_edit_catalog": "c7f4c7ac739d2159ca6426b6b23fc6ce03c08ce0510e87f0e7988633c2b4d514",
+    "video_profile_catalog": "e930899cb8a03e5f0c4fccd523735a4b3a6f3232f2500f65b18695a293e4cd3a"
+  },
+  "source_fingerprint": "6304e085b8df780e130841c5d2ba28f3de47b4efc5bf2bfda12119be6de0ba03",
+  "total": 1871,
+  "passed": 1871,
+  "failed": 0,
+  "skipped": 0,
+  "exit_code": 0,
+  "proof_scope": "local tests, not production or deployed-state evidence"
+}

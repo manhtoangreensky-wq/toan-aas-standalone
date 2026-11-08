@@ -1,0 +1,1683 @@
+{
+  "schema": "dedicated-audio-reviewed-browser-v1",
+  "environment": "isolated synthetic QA; real Chrome; network blocked; no integration/backend/provider/wallet",
+  "source_fingerprint": "6304e085b8df780e130841c5d2ba28f3de47b4efc5bf2bfda12119be6de0ba03",
+  "records": [
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "vi",
+      "theme": "light",
+      "width": 320,
+      "title": "Soạn hướng dẫn âm nhạc · TOAN AAS",
+      "heading": "Soạn hướng dẫn âm nhạc",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "suggestion_set",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "vi",
+      "theme": "light",
+      "width": 320,
+      "title": "Hướng âm nhạc · TOAN AAS",
+      "heading": "Hướng âm nhạc",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "vi",
+      "theme": "light",
+      "width": 320,
+      "title": "Gợi ý hiệu ứng âm thanh · TOAN AAS",
+      "heading": "Gợi ý hiệu ứng âm thanh",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "vi",
+      "theme": "light",
+      "width": 768,
+      "title": "Soạn hướng dẫn âm nhạc · TOAN AAS",
+      "heading": "Soạn hướng dẫn âm nhạc",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 15,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "language",
+          "font": 15,
+          "height": 68.9375
+        },
+        {
+          "name": "suggestion_set",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 15,
+          "height": 51.140625
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "vi",
+      "theme": "light",
+      "width": 768,
+      "title": "Hướng âm nhạc · TOAN AAS",
+      "heading": "Hướng âm nhạc",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "vi",
+      "theme": "light",
+      "width": 768,
+      "title": "Gợi ý hiệu ứng âm thanh · TOAN AAS",
+      "heading": "Gợi ý hiệu ứng âm thanh",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "vi",
+      "theme": "light",
+      "width": 1440,
+      "title": "Soạn hướng dẫn âm nhạc · TOAN AAS",
+      "heading": "Soạn hướng dẫn âm nhạc",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 15,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "language",
+          "font": 15,
+          "height": 79.65625
+        },
+        {
+          "name": "suggestion_set",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 15,
+          "height": 44
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "vi",
+      "theme": "light",
+      "width": 1440,
+      "title": "Hướng âm nhạc · TOAN AAS",
+      "heading": "Hướng âm nhạc",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "vi",
+      "theme": "light",
+      "width": 1440,
+      "title": "Gợi ý hiệu ứng âm thanh · TOAN AAS",
+      "heading": "Gợi ý hiệu ứng âm thanh",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "vi",
+      "theme": "dark",
+      "width": 320,
+      "title": "Soạn hướng dẫn âm nhạc · TOAN AAS",
+      "heading": "Soạn hướng dẫn âm nhạc",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "suggestion_set",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "vi",
+      "theme": "dark",
+      "width": 320,
+      "title": "Hướng âm nhạc · TOAN AAS",
+      "heading": "Hướng âm nhạc",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "vi",
+      "theme": "dark",
+      "width": 320,
+      "title": "Gợi ý hiệu ứng âm thanh · TOAN AAS",
+      "heading": "Gợi ý hiệu ứng âm thanh",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "vi",
+      "theme": "dark",
+      "width": 768,
+      "title": "Soạn hướng dẫn âm nhạc · TOAN AAS",
+      "heading": "Soạn hướng dẫn âm nhạc",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 15,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "language",
+          "font": 15,
+          "height": 68.9375
+        },
+        {
+          "name": "suggestion_set",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 15,
+          "height": 51.140625
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "vi",
+      "theme": "dark",
+      "width": 768,
+      "title": "Hướng âm nhạc · TOAN AAS",
+      "heading": "Hướng âm nhạc",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "vi",
+      "theme": "dark",
+      "width": 768,
+      "title": "Gợi ý hiệu ứng âm thanh · TOAN AAS",
+      "heading": "Gợi ý hiệu ứng âm thanh",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "vi",
+      "theme": "dark",
+      "width": 1440,
+      "title": "Soạn hướng dẫn âm nhạc · TOAN AAS",
+      "heading": "Soạn hướng dẫn âm nhạc",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 15,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "language",
+          "font": 15,
+          "height": 79.65625
+        },
+        {
+          "name": "suggestion_set",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 15,
+          "height": 44
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "vi",
+      "theme": "dark",
+      "width": 1440,
+      "title": "Hướng âm nhạc · TOAN AAS",
+      "heading": "Hướng âm nhạc",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "vi",
+      "theme": "dark",
+      "width": 1440,
+      "title": "Gợi ý hiệu ứng âm thanh · TOAN AAS",
+      "heading": "Gợi ý hiệu ứng âm thanh",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "en",
+      "theme": "light",
+      "width": 320,
+      "title": "Music Prompt Composer · TOAN AAS",
+      "heading": "Music Prompt Composer",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "suggestion_set",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "en",
+      "theme": "light",
+      "width": 320,
+      "title": "Music Directions · TOAN AAS",
+      "heading": "Music directions",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "en",
+      "theme": "light",
+      "width": 320,
+      "title": "SFX Cue Sheet · TOAN AAS",
+      "heading": "Sound effect planning",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "en",
+      "theme": "light",
+      "width": 768,
+      "title": "Music Prompt Composer · TOAN AAS",
+      "heading": "Music Prompt Composer",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 15,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "language",
+          "font": 15,
+          "height": 68.9375
+        },
+        {
+          "name": "suggestion_set",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 15,
+          "height": 44
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "en",
+      "theme": "light",
+      "width": 768,
+      "title": "Music Directions · TOAN AAS",
+      "heading": "Music directions",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "en",
+      "theme": "light",
+      "width": 768,
+      "title": "SFX Cue Sheet · TOAN AAS",
+      "heading": "Sound effect planning",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "en",
+      "theme": "light",
+      "width": 1440,
+      "title": "Music Prompt Composer · TOAN AAS",
+      "heading": "Music Prompt Composer",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 15,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "language",
+          "font": 15,
+          "height": 79.65625
+        },
+        {
+          "name": "suggestion_set",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 15,
+          "height": 44
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "en",
+      "theme": "light",
+      "width": 1440,
+      "title": "Music Directions · TOAN AAS",
+      "heading": "Music directions",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "en",
+      "theme": "light",
+      "width": 1440,
+      "title": "SFX Cue Sheet · TOAN AAS",
+      "heading": "Sound effect planning",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "en",
+      "theme": "dark",
+      "width": 320,
+      "title": "Music Prompt Composer · TOAN AAS",
+      "heading": "Music Prompt Composer",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "suggestion_set",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "en",
+      "theme": "dark",
+      "width": 320,
+      "title": "Music Directions · TOAN AAS",
+      "heading": "Music directions",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "en",
+      "theme": "dark",
+      "width": 320,
+      "title": "SFX Cue Sheet · TOAN AAS",
+      "heading": "Sound effect planning",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "en",
+      "theme": "dark",
+      "width": 768,
+      "title": "Music Prompt Composer · TOAN AAS",
+      "heading": "Music Prompt Composer",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 15,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "language",
+          "font": 15,
+          "height": 68.9375
+        },
+        {
+          "name": "suggestion_set",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 15,
+          "height": 44
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "en",
+      "theme": "dark",
+      "width": 768,
+      "title": "Music Directions · TOAN AAS",
+      "heading": "Music directions",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "en",
+      "theme": "dark",
+      "width": 768,
+      "title": "SFX Cue Sheet · TOAN AAS",
+      "heading": "Sound effect planning",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "en",
+      "theme": "dark",
+      "width": 1440,
+      "title": "Music Prompt Composer · TOAN AAS",
+      "heading": "Music Prompt Composer",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 15,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "language",
+          "font": 15,
+          "height": 79.65625
+        },
+        {
+          "name": "suggestion_set",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 15,
+          "height": 44
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "en",
+      "theme": "dark",
+      "width": 1440,
+      "title": "Music Directions · TOAN AAS",
+      "heading": "Music directions",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "en",
+      "theme": "dark",
+      "width": 1440,
+      "title": "SFX Cue Sheet · TOAN AAS",
+      "heading": "Sound effect planning",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "zh",
+      "theme": "light",
+      "width": 320,
+      "title": "音乐提示编写器 · TOAN AAS",
+      "heading": "音乐提示编写器",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "suggestion_set",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "zh",
+      "theme": "light",
+      "width": 320,
+      "title": "音乐方向 · TOAN AAS",
+      "heading": "音乐方向",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "zh",
+      "theme": "light",
+      "width": 320,
+      "title": "音效提示表 · TOAN AAS",
+      "heading": "音效规划",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "zh",
+      "theme": "light",
+      "width": 768,
+      "title": "音乐提示编写器 · TOAN AAS",
+      "heading": "音乐提示编写器",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 15,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "language",
+          "font": 15,
+          "height": 68.9375
+        },
+        {
+          "name": "suggestion_set",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 15,
+          "height": 44
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "zh",
+      "theme": "light",
+      "width": 768,
+      "title": "音乐方向 · TOAN AAS",
+      "heading": "音乐方向",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "zh",
+      "theme": "light",
+      "width": 768,
+      "title": "音效提示表 · TOAN AAS",
+      "heading": "音效规划",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "zh",
+      "theme": "light",
+      "width": 1440,
+      "title": "音乐提示编写器 · TOAN AAS",
+      "heading": "音乐提示编写器",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 15,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "language",
+          "font": 15,
+          "height": 68.9375
+        },
+        {
+          "name": "suggestion_set",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 15,
+          "height": 44
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "zh",
+      "theme": "light",
+      "width": 1440,
+      "title": "音乐方向 · TOAN AAS",
+      "heading": "音乐方向",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "zh",
+      "theme": "light",
+      "width": 1440,
+      "title": "音效提示表 · TOAN AAS",
+      "heading": "音效规划",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "zh",
+      "theme": "dark",
+      "width": 320,
+      "title": "音乐提示编写器 · TOAN AAS",
+      "heading": "音乐提示编写器",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "suggestion_set",
+          "font": 16,
+          "height": 45
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "zh",
+      "theme": "dark",
+      "width": 320,
+      "title": "音乐方向 · TOAN AAS",
+      "heading": "音乐方向",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "zh",
+      "theme": "dark",
+      "width": 320,
+      "title": "音效提示表 · TOAN AAS",
+      "heading": "音效规划",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "zh",
+      "theme": "dark",
+      "width": 768,
+      "title": "音乐提示编写器 · TOAN AAS",
+      "heading": "音乐提示编写器",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 15,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "language",
+          "font": 15,
+          "height": 68.9375
+        },
+        {
+          "name": "suggestion_set",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 15,
+          "height": 44
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "zh",
+      "theme": "dark",
+      "width": 768,
+      "title": "音乐方向 · TOAN AAS",
+      "heading": "音乐方向",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "zh",
+      "theme": "dark",
+      "width": 768,
+      "title": "音效提示表 · TOAN AAS",
+      "heading": "音效规划",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-prompt-composer",
+      "locale": "zh",
+      "theme": "dark",
+      "width": 1440,
+      "title": "音乐提示编写器 · TOAN AAS",
+      "heading": "音乐提示编写器",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 15,
+          "height": 132
+        },
+        {
+          "name": "mode",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "language",
+          "font": 15,
+          "height": 68.9375
+        },
+        {
+          "name": "suggestion_set",
+          "font": 15,
+          "height": 44
+        },
+        {
+          "name": "selected_suggestion",
+          "font": 15,
+          "height": 44
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/music-directions",
+      "locale": "zh",
+      "theme": "dark",
+      "width": 1440,
+      "title": "音乐方向 · TOAN AAS",
+      "heading": "音乐方向",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    },
+    {
+      "route": "/media-workspace/sfx-cue-sheet",
+      "locale": "zh",
+      "theme": "dark",
+      "width": 1440,
+      "title": "音效提示表 · TOAN AAS",
+      "heading": "音效规划",
+      "overflow": false,
+      "localeClean": true,
+      "interaction": true,
+      "mobileFieldsReadable": true,
+      "errors": [],
+      "fields": [
+        {
+          "name": "description",
+          "font": 16,
+          "height": 132
+        },
+        {
+          "name": "language",
+          "font": 16,
+          "height": 45
+        }
+      ],
+      "pass": true
+    }
+  ],
+  "count": 54,
+  "failed": 0
+}

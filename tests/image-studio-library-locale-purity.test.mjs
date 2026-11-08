@@ -21,7 +21,8 @@ const renderer = portalSource.slice(rendererStart, rendererEnd);
 const genericEnglish = /\b(?:server|provider|workspace|image|creative|direction|self-review|artboard|metadata|target|brief|style|job|delivery|wallet|payment|review|reference|library|operations|active|status|refresh|find|open|account|current|read-only|prompt)\b/i;
 
 test("Image Studio library catalogue stays balanced and Vietnamese fixed copy is clean", () => {
-  assert.equal(rows.length, 67, "Image Studio library catalogue must keep every reviewed key");
+  assert.equal(rows.length, 69, "Image Studio library catalogue keeps 67 reviewed keys plus the two hub page keys");
+  for (const key of ["page.title", "page.description"]) assert.ok(rows.some((row) => row[1] === key), key);
   assert.equal(new Set(rows.map((match) => match[1])).size, rows.length, "Library locale keys must be unique");
   assert.equal(vi.length, en.length);
   assert.equal(vi.length, zh.length);

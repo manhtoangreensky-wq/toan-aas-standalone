@@ -13,15 +13,15 @@ function presets(name){const a=source.indexOf(`  const ${name} = Object.freeze([
 const lanes={
   music:{action:'music-direction-preset-compose',prefix:'music-direction',input:'web_preset_id',
     sync:'synchronizeMusicDirectionPresetForm',edit:'markMusicDirectionPresetDraftEdited',event:'toanaas:music-direction-preset-draft-edited',
-    labels:[['commercial_bright','Thương mại sáng','Bright commercial','明亮商业'],['technology_future','Công nghệ tương lai','Future technology','未来科技'],['cinematic_brand','Cinematic thương hiệu','Cinematic brand','品牌电影感'],['warm_story','Kể chuyện ấm','Warm story','温暖故事'],['short_viral','Short-form bắt nhịp','Short-form momentum','短内容节奏']],
-    unselected:['Chưa chọn preset. Hãy chọn một hướng trước khi lập hướng.','No preset selected. Choose one before creating a direction.','尚未选择预设。创建方向前请选择一个。'],
-    selected:[label=>`Đã chọn ${label}. Hoàn tất brief rồi bấm lập hướng.`,label=>`${label} selected. Complete the brief and create the direction.`,label=>`已选择 ${label}。完成摘要后创建方向。`],
+    labels:[['commercial_bright','Thương mại sáng','Bright commercial','明亮商业'],['technology_future','Công nghệ tương lai','Future technology','未来科技'],['cinematic_brand','Điện ảnh thương hiệu','Cinematic brand','品牌电影感'],['warm_story','Kể chuyện ấm','Warm story','温暖故事'],['short_viral','Video ngắn bắt nhịp','Short-form momentum','短内容节奏']],
+    unselected:['Chưa chọn mẫu. Hãy chọn một hướng trước khi lập hướng.','No preset selected. Choose one before creating a direction.','尚未选择预设。创建方向前请选择一个。'],
+    selected:[label=>`Đã chọn ${label}. Hoàn tất yêu cầu rồi bấm lập hướng.`,label=>`${label} selected. Complete the brief and create the direction.`,label=>`已选择 ${label}。完成摘要后创建方向。`],
     stale:['Nội dung đã thay đổi. Các hướng bên dưới thuộc nội dung trước; lập lại hướng âm nhạc để cập nhật.','The brief has changed. The directions below use the previous brief; create music directions again to update them.','摘要已更改。下方方向仍基于先前内容，请重新创建音乐方向以更新。']},
   sfx:{action:'sfx-cue-sheet-compose',prefix:'sfx-cue-sheet',input:'web_sfx_preset_id',
     sync:'synchronizeSfxCueSheetForm',edit:'markSfxCueSheetDraftEdited',event:'toanaas:sfx-cue-sheet-draft-edited',
     labels:[['motion_transition','Chuyển động mượt','Smooth transition','流畅转场'],['interface_confirm','Xác nhận giao diện','Interface confirmation','界面确认'],['reveal_impact','Điểm nhấn mở lộ','Reveal impact','揭示强调'],['status_signal','Tín hiệu trạng thái','Status signal','状态信号'],['caption_emphasis','Nhấn chú thích / lời kêu gọi','Caption / call-to-action emphasis','字幕 / 行动号召强调']],
-    unselected:['Chưa chọn preset. Hãy chọn một hướng trước khi lập cue sheet.','No preset selected. Choose one before creating the cue sheet.','尚未选择预设。创建提示表前请选择一个。'],
-    selected:[label=>`Đã chọn ${label}. Hoàn tất brief rồi bấm lập cue sheet.`,label=>`${label} selected. Complete the brief and create the cue sheet.`,label=>`已选择 ${label}。完成摘要后创建提示表。`],
+    unselected:['Chưa chọn mẫu. Hãy chọn một hướng trước khi lập bảng gợi ý.','No preset selected. Choose one before creating the cue sheet.','尚未选择预设。创建提示表前请选择一个。'],
+    selected:[label=>`Đã chọn ${label}. Hoàn tất yêu cầu rồi bấm lập bảng gợi ý.`,label=>`${label} selected. Complete the brief and create the cue sheet.`,label=>`已选择 ${label}。完成摘要后创建提示表。`],
     stale:['Nội dung đã thay đổi. Bảng hiệu ứng bên dưới thuộc nội dung trước; lập lại bảng để cập nhật.','The brief has changed. The cue sheet below uses the previous brief; create the cue sheet again to update it.','摘要已更改。下方音效提示表仍基于先前内容，请重新创建提示表以更新。']}
 };
 function harness(locale,lane,{id='',enabled='true',receipt=false,stale=false}={}){

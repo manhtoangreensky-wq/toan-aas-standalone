@@ -21,7 +21,8 @@ const renderer = portalSource.slice(detailStart, detailEnd);
 const genericEnglish = /\b(?:review|estimate|server|provider|browser|workspace|image|creative|direction|self-review|artboard|metadata|reference|archive|restore|version|history|prompt|visual|private|deterministic|output|thumbnail|preview|raw|blob|feed|activity|current|open|save|draft|guarded|studio|operations|active|status|variant|notes|library)\b/i;
 
 test("Image Studio detail catalogue stays balanced and Vietnamese fixed copy is clean", () => {
-  assert.equal(rows.length, 91, "Image Studio detail catalogue must keep every reviewed key");
+  assert.equal(rows.length, 93, "Image Studio detail catalogue keeps 91 reviewed keys plus the two new-route keys");
+  for (const key of ["page.newTitle", "page.newDescription"]) assert.ok(rows.some((row) => row[1] === key), key);
   assert.equal(new Set(rows.map((match) => match[1])).size, rows.length, "Detail locale keys must be unique");
   assert.equal(vi.length, en.length);
   assert.equal(vi.length, zh.length);

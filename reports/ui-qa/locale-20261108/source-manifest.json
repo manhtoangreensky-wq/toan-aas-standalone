@@ -1,0 +1,45 @@
+{
+  "schema": "locale-ui-source-manifest-v1",
+  "normalization": "UTF-8 text with LF line endings, matching committed Git blobs",
+  "base_sha": "3ff8644fb3f43ec6813090b2a11a85a8b81e93e3",
+  "publication_base_sha": "2038b595348f3d5609a56827e3c2141eb53a4a24",
+  "fingerprint": "6304e085b8df780e130841c5d2ba28f3de47b4efc5bf2bfda12119be6de0ba03",
+  "files": [
+    {
+      "path": "copyfast_pages.py",
+      "sha256": "00d8e84cb0ba7e635617b20f585477e4cc54da56cc457a44cee2a887b739febe"
+    },
+    {
+      "path": "static/portal/portal-first-paint.css",
+      "sha256": "6c33b091b1a2378d87ba0451d71bc89401368cdb9c1c4b737d85de13f4d4eca9"
+    },
+    {
+      "path": "static/portal/portal-i18n.js",
+      "sha256": "c391a7586e009c96ea5b1c2db73f40d0a31ad0b09f7e6f067560a672a0a8e7c5"
+    },
+    {
+      "path": "static/portal/portal-motion.js",
+      "sha256": "04bd12eb0a53775c671573605ca209fa8e10c879b8f1d4793d55a0cb9362962a"
+    },
+    {
+      "path": "static/portal/portal-theme.css",
+      "sha256": "e175e12e3c86f202e892ec492eb42e778b50399ae1e0e26db14e181596d8955a"
+    },
+    {
+      "path": "static/portal/portal-theme.js",
+      "sha256": "883fb51d0fa0f644be706a14a270a8b1c0709b85c0b3159769500d286789ce3d"
+    },
+    {
+      "path": "static/portal/portal.css",
+      "sha256": "4af13a62cc11da0eb457c696970b7a94053cecd54d2fd15206c309689a789d1b"
+    },
+    {
+      "path": "static/portal/portal.js",
+      "sha256": "7b5a7c9819d4daeb6956a197052ff2819ef24a47d97ab91443ae5625ff71b14d"
+    },
+    {
+      "path": "templates/portal_shell.html",
+      "sha256": "c0232b4f99566da1cdfaf9d43cd7c871bf727f4254f08840a955561f58e8ae07"
+    }
+  ]
+}

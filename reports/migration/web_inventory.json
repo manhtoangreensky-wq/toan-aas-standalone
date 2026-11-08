@@ -10421,7 +10421,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1144,
+      "occurrences": 1147,
       "provider": "PayOS"
     },
     {
@@ -10502,6 +10502,7 @@
         "copyfast_api.py",
         "copyfast_db.py",
         "copyfast_provider_policy.py",
+        "docs/AGY-DISPATCH-POINT-20261107.md",
         "reports/audit/R218-CHECKPOINT-20261021.md",
         "reports/audit/R218-CUSTOMER-UI-REALITY-QA-20261022.json",
         "reports/audit/R218-GLOBAL-STATUS-LABELS-QA-20261021.json",
@@ -10532,7 +10533,7 @@
         "video.html",
         "video.py"
       ],
-      "occurrences": 48,
+      "occurrences": 50,
       "provider": "Gemini"
     },
     {
@@ -10669,7 +10670,7 @@
         "copyfast_music_media.py",
         "copyfast_music_sfx_library_bridge.py"
       ],
-      "occurrences": 2039,
+      "occurrences": 2054,
       "provider": "Telegram"
     }
   ],
@@ -18794,39 +18795,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 418,
-  "source_files_scanned": 418,
-  "source_fingerprint_sha256": "462c9a22062c9e2c1683ea26ac2612efc5b305ba5e3f0005b22348fcc6213fb9",
+  "source_files_discovered": 424,
+  "source_files_scanned": 424,
+  "source_fingerprint_sha256": "50694f4bb3ffca0425c26c17cfbcee6f87e4114c125f26ded39f6569bc213647",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 35678,
+      "line": 35756,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35994,
+      "line": 36072,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35342,
+      "line": 35420,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35591,
+      "line": 35669,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 34963,
+      "line": 35041,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35255,
+      "line": 35333,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -19041,7 +19042,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 37114,
+      "line": 37192,
       "path": "/features"
     },
     {
