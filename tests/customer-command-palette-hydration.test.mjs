@@ -19,9 +19,12 @@ function harness() {
     window: { location: { pathname: '/dashboard' } }, document: { querySelector: () => palette },
     normalizePath: value => value, isAdminPortalSurface: page => page.admin,
     renderCommandPalette: (_page, context) => context.palette,
+    renderHeader: () => '<header>unchanged</header>',
+    renderSidebar: () => '<nav>unchanged</nav>',
+    mobileSidebarDialogSupported: () => true,
     setCommandPaletteBackgroundInert() {}, closeSidebar() {}
   });
-  vm.runInContext("let lastNormalizedRoute='/dashboard'; let lastCustomerHeaderSessionToken='qa-session-a'; let commandPaletteMarkup='<dialog>unchanged</dialog>'; let commandPaletteReturnFocus=null;", runtime);
+  vm.runInContext("let lastNormalizedRoute='/dashboard'; let lastCustomerHeaderSessionToken='qa-session-a'; let lastCustomerHeaderMarkup='<header>unchanged</header>'; let lastCustomerSidebarMarkup='<nav>unchanged</nav>'; let commandPaletteMarkup='<dialog>unchanged</dialog>'; let commandPaletteReturnFocus=null;", runtime);
   vm.runInContext(source.slice(closeStart, closeEnd), runtime);
   return { palette, runtime, render: () => vm.runInContext(`(() => { ${source.slice(start, end)} })()`, runtime) };
 }
