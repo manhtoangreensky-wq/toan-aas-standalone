@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "source_revision": "27175790f3ee01112684149dbbccdff0033c4b2b",
-  "source_fingerprint": "64e330f0017be5578a13eb1fb7eff96b064fb573711efe17f207ee5552cb66a7",
+  "source_fingerprint_reference": "reports/migration/preflight.json#/webapp/revision/source_fingerprint_sha256",
   "scope": "Owned synthetic Chrome, no integration/backend; not signed production LIVE",
   "mobile": {
     "viewport": {
