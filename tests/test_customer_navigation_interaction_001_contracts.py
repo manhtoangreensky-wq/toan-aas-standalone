@@ -168,6 +168,7 @@ function renderGuarded() {}
 function mountFeatureMotion() {}
 
 const runtime = [
+  extract("const FEATURE_ICON_PATHS = Object.freeze({", "const COPY = Object.freeze({"),
   extract("const COPY = Object.freeze({", "function safeRoute(value)"),
   extract("function make(tag, className, text)", "function signal(className"),
   extract("function renderShell(features, account, locale, ready)", "async function hydrateFeatures()")
