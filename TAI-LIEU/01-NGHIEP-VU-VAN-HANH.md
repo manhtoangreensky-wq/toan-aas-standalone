@@ -2222,6 +2222,14 @@ Bằng chứng local: Voice input/inventory/flow/expiry `67/67`, full Node `594/
 đủ `3/3` locale `vi/en/zh`. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
 `PRODUCTION_DATA_MUTATIONS=0`, `DEPLOY=NO`, `LIVE_PASS=NOT_TESTED`.
 
+## Chuyển động — bản sửa 08/11/2026
+
+Trang Đăng bài đã phát hành riêng qua PR691/deploy42496887494; VPS khớp b7a639cb.
+Hai sửa kế tiếp tại nguồn27175790 giữ menu điện thoại khi cập nhật nền không đổi trang/phiên/nội dung,
+và ẩn nút phát lại khi bật giảm chuyển động. Các trường hợp đổi phiên/quyền/đầu trang/điều hướng vẫn đóng menu.
+FullNode1877/1877, Chrome menu8/8 và landing thường/giảm đạt trong QA cô lập; CI/deploy/live của hai sửa này
+phải theo dõi riêng ở [receipt motion](../docs/reports/motion-20261108.md). Không suy ra hết giật hoặc provider LIVE.
+
 ## 2026-11-06 — Đăng bài: ngôn ngữ giao diện
 
 Candidate `/publishing` đổi tên VI thành “Đăng bài tự động”, dùng chữ Việt cho tiếp thị
