@@ -41956,6 +41956,7 @@
     // The dashboard has its own, narrower decision-layer motion. Its summary
     // and canonical read lane must not inherit the generic shell entrance.
     const dashboardMotionRoute = page.path === "/dashboard" && page.layout === "dashboard";
+    const publishingMotionRoute = page.path === "/publishing" && page.layout === "autopost-hub";
     const featureCatalogRoute = page.path === "/features" && page.layout === "feature-catalog";
     const isCustomerDirectoryRoute = page.path === "/admin/customers" || page.path === "/admin/customers/:id" || (typeof page.routePath === "string" && page.routePath.startsWith("/admin/customers"));
     // This presentation marker is intentionally derived from the same
@@ -42016,7 +42017,7 @@
     });
     if (typeof motion.unmountLanding === "function") motion.unmountLanding();
     if (typeof motion.unmountWorkspace === "function") motion.unmountWorkspace();
-    main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute || featureCatalogRoute || isCustomerDirectoryRoute || isAdminPortalSurface(page) ? "true" : "false";
+    main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute || publishingMotionRoute || featureCatalogRoute || isCustomerDirectoryRoute || isAdminPortalSurface(page) ? "true" : "false";
     if (isAuth) main.dataset.portalMotionSkipEnter = "true";
     main.dataset.portalPresentationRoute = featureCatalogRoute ? "features" : "default";
     document.documentElement.setAttribute("data-portal-motion-route", dashboardMotionRoute || isCustomerDirectoryRoute ? "dashboard" : "default");
