@@ -41909,6 +41909,7 @@
 
   let lastNormalizedRoute = null;
   let lastCustomerHeaderMarkup = null;
+  let lastCustomerSidebarMarkup = null;
   let lastCustomerHeaderSessionToken = null;
   function mountPortal(override) {
     const options = arguments[1] || {};
@@ -41944,7 +41945,15 @@
       && context.session && context.session.authenticated === true && context.session.csrfToken
       && context.session.csrfToken === lastCustomerHeaderSessionToken
       && renderCommandPalette(page, context) === commandPaletteMarkup;
-    if (sidebar.classList.contains("is-open")) closeSidebar({ restoreFocus: false });
+    const headerMarkup = renderHeader(page, context);
+    const headerSessionToken = context.session && context.session.authenticated === true
+      && typeof context.session.csrfToken === "string" ? context.session.csrfToken : "";
+    const keepCustomerHeader = isHydration && !isAdminPortalSurface(page) && headerSessionToken
+      && headerSessionToken === lastCustomerHeaderSessionToken && headerMarkup === lastCustomerHeaderMarkup;
+    const sidebarMarkup = renderSidebar(page, context);
+    const keepCustomerSidebar = Boolean(mobileSidebarDialogSupported() && keepCustomerHeader
+      && sidebar.classList.contains("is-open") && sidebarMarkup === lastCustomerSidebarMarkup);
+    if (sidebar.classList.contains("is-open") && !keepCustomerSidebar) closeSidebar({ restoreFocus: false });
     if (commandPalette && !commandPalette.hidden && !keepCustomerPalette) closeCommandPalette({ restoreFocus: false });
     const surface = portalSurface(page);
     const isLanding = surface === "landing";
@@ -41985,7 +41994,7 @@
     document.body.classList.toggle("portal-body--admin", surface === "admin");
     sidebar.hidden = minimalShell;
     header.hidden = minimalShell;
-    setSidebarAccessibilityState(false);
+    setSidebarAccessibilityState(keepCustomerSidebar);
     const skipLink = document.querySelector(".skip-link");
     if (skipLink) skipLink.textContent = uiText("chrome.skip_navigation", "Bỏ qua điều hướng");
     sidebar.setAttribute("aria-label", uiText("chrome.main_navigation", "Điều hướng chính"));
@@ -42026,22 +42035,16 @@
     shell.dataset.portalPresentationPhase = phase;
     main.dataset.portalPresentationPhase = phase;
     function renderShell() {
-      sidebar.innerHTML = renderSidebar(page, context);
-      setSidebarAccessibilityState(false);
-      const headerMarkup = renderHeader(page, context);
-      const headerSessionToken = context.session && context.session.authenticated === true
-        && typeof context.session.csrfToken === "string" ? context.session.csrfToken : "";
-      // Unrelated data hydration must not close a customer's open menu or
-      // replace its focused control. Changed markup/session still renders.
-      const keepCustomerHeader = isHydration && !isAdminPortalSurface(page) && headerSessionToken
-        && headerSessionToken === lastCustomerHeaderSessionToken && headerMarkup === lastCustomerHeaderMarkup;
+      if (!keepCustomerSidebar) sidebar.innerHTML = sidebarMarkup;
+      lastCustomerSidebarMarkup = sidebarMarkup;
+      setSidebarAccessibilityState(keepCustomerSidebar);
       if (!keepCustomerHeader) header.innerHTML = headerMarkup;
       lastCustomerHeaderMarkup = headerMarkup;
       lastCustomerHeaderSessionToken = headerSessionToken;
       main.innerHTML = renderPage(page, context);
       if (!isHydration) {
         const workspace = document.querySelector(".portal-workspace") || main;
-        if (workspace && typeof workspace.scrollTop === "number") workspace.scrollTop = 0;
+        if (workspace && "scrollTop" in workspace) workspace.scrollTop = 0;
         if (typeof window.scrollTo === "function") window.scrollTo(0, 0);
       }
       syncAdminDataViewRows(main);
@@ -42450,7 +42453,7 @@ Bạn muốn tôi mở công cụ nào ngay bây giờ?`;
     const input = container.querySelector("#portal-copilot-text-input");
     const msgsList = container.querySelector("#portal-copilot-msgs-list");
 
-    if (msgsList) {
+    if (msgsList && copilotState.open) {
       msgsList.scrollTop = copilotState.messages.length === 1 ? 0 : msgsList.scrollHeight;
     }
 

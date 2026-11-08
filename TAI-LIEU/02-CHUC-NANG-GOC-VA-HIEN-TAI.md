@@ -1553,3 +1553,15 @@ browser trình bày đã đo, còn signed-session/backend/LIVE vẫn phải xác
 
 Nguồn thiết kế trước: `tests/autopost-hub-product-controls.test.mjs` và renderer
 `renderAutoPostHub`. Không tuyên bố hoàn tất tích hợp mạng xã hội từ thay đổi giao diện.
+
+## Đối chiếu chuyển động — 08/11/2026
+
+| Hành vi trước | Thay đổi hẹp | Bằng chứng và giới hạn |
+|---|---|---|
+| Trang Đăng bài có hiệu ứng co/dịch trên toàn main | Chỉ đúng route/layout bỏ entrance của main, không tắt lớp chuyển động khác | PR691 đã deploy; Chrome8cấu hình; chưa signed LIVE/FPS |
+| Mỗi hydration dựng lại sidebar và đóng menu | Giữ menu/DOM/focus khi khách cùng trang/phiên và markup không đổi; sáu trường hợp thay đổi vẫn đóng | Nguồn27175790, Chrome8/8; auth/backend không đổi |
+| Cleanup landing bật lại nút phát lại dù đang giảm chuyển động | Cleanup tôn trọng tùy chọn giảm; nút thường vẫn chạy | Nút thường lần2; dynamic hidden/disabled; initial static |
+
+Nguồn thiết kế gốc: các contracts lifecycle/header/palette trong tests và portal-motion.js.
+Không còn đúng nếu hiểu “cleanup luôn cho phép replay” hoặc “hydration luôn được đóng menu khách”.
+Hai sửa lifecycle đang chờ exact-commit CI/ship/live; xem receipt motion, không dùng số QA thay trạng thái production.

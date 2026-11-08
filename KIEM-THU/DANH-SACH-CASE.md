@@ -971,3 +971,11 @@ vẫn chờ exact-SHA CI/deploy/live trong PR. Hồ sơ: `R218-LOCALE-183-RELEAS
 |---|---|---|---|---|
 | LOCALE-183-STUDIO-01 | vừa | Chọn VI, mở `/studio`; kiểm tiêu đề, breadcrumb, giới thiệu, sáu thẻ; mở lại EN/ZH | VI dùng “Xưởng sáng tạo”, toàn bộ fixed copy của sáu bước thuần VI; đủ sáu route/link; EN “Media Studio”, ZH “媒体工作室” và nội dung tương ứng không đổi | Renderer `7/7`; browser/live sau deploy chưa chạy |
 | LOCALE-183-SUBDUB-02 | vừa | Chọn VI, kiểm menu trái, chip trợ lý, dashboard, link quay lại Voice và link từ kho giọng; mở EN/ZH | VI hiển thị “Phụ đề & Lồng tiếng”; EN/ZH vẫn `SubDub`; chỉ chữ thay đổi, route `/subdub` và nội dung người dùng giữ nguyên | Nhóm `89/89`; browser/live sau deploy chưa chạy |
+
+## Motion — 08/11/2026
+
+| Case | Mức | Bước | Kết quả cần thấy | Bằng chứng hiện tại |
+|---|---|---|---|---|
+| MOTION-PUBLISHING-001 | vừa | Mở Đăng bài thường/giảm trên390/1440px | Toàn vùng main không co/dịch xuất hiện; vẫn có nội dung/điều khiển | PR691 đã deploy; Chrome8cấu hình; signed LIVE còn mở |
+| MOTION-LANDING-REDUCED-001 | vừa | Trang chào thường bấm phát lại, đổi sang giảm chuyển động; so với tải đầu giảm | Nút thường chạy; khi giảm nút ẩn+disabled+không focus | QA đạt; [phiên motion](PHIEN-MOTION-20261108.md) |
+| MOTION-MOBILE-HYDRATION-001 | nặng | Mở menu390px, focus link, cập nhật nền cùng phiên; Escape; lặp đổi trang/phiên/đăng xuất/Admin/locale/tên | Cùng phiên giữ menu/focus; Escape đóng/trả nút; các đổi trạng thái vẫn đóng/nền hết inert | Chrome8/8; CI/ship/signed LIVE còn mở |

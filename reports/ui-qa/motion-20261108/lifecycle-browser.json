@@ -1,0 +1,167 @@
+{
+  "schema": 1,
+  "source_revision": "27175790f3ee01112684149dbbccdff0033c4b2b",
+  "source_fingerprint_reference": "reports/migration/preflight.json#/webapp/revision/source_fingerprint_sha256",
+  "scope": "Owned synthetic Chrome, no integration/backend; not signed production LIVE",
+  "mobile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "cases": [
+      {
+        "scenario": "customer_same_route_same_session",
+        "reducedMotion": "no-preference",
+        "preserveExpected": true,
+        "beforeOpen": true,
+        "afterOpen": true,
+        "focusRetained": true,
+        "menuExpanded": "true",
+        "workspaceInert": true,
+        "escapeCloses": true,
+        "escapeReturnsMenu": true,
+        "pass": true,
+        "pageErrors": 0,
+        "consoleErrors": 0,
+        "overflow": false
+      },
+      {
+        "scenario": "customer_same_route_same_session_reduce",
+        "reducedMotion": "reduce",
+        "preserveExpected": true,
+        "beforeOpen": true,
+        "afterOpen": true,
+        "focusRetained": true,
+        "menuExpanded": "true",
+        "workspaceInert": true,
+        "escapeCloses": true,
+        "escapeReturnsMenu": true,
+        "pass": true,
+        "pageErrors": 0,
+        "consoleErrors": 0,
+        "overflow": false
+      },
+      {
+        "scenario": "customer_route_changed",
+        "reducedMotion": "no-preference",
+        "preserveExpected": false,
+        "beforeOpen": true,
+        "afterOpen": false,
+        "focusRetained": false,
+        "menuExpanded": "false",
+        "workspaceInert": false,
+        "escapeCloses": true,
+        "escapeReturnsMenu": false,
+        "pass": true,
+        "pageErrors": 0,
+        "consoleErrors": 0,
+        "overflow": false
+      },
+      {
+        "scenario": "customer_session_changed",
+        "reducedMotion": "no-preference",
+        "preserveExpected": false,
+        "beforeOpen": true,
+        "afterOpen": false,
+        "focusRetained": false,
+        "menuExpanded": "false",
+        "workspaceInert": false,
+        "escapeCloses": true,
+        "escapeReturnsMenu": false,
+        "pass": true,
+        "pageErrors": 0,
+        "consoleErrors": 0,
+        "overflow": false
+      },
+      {
+        "scenario": "customer_logout",
+        "reducedMotion": "no-preference",
+        "preserveExpected": false,
+        "beforeOpen": true,
+        "afterOpen": false,
+        "focusRetained": false,
+        "menuExpanded": "false",
+        "workspaceInert": false,
+        "escapeCloses": true,
+        "escapeReturnsMenu": false,
+        "pass": true,
+        "pageErrors": 0,
+        "consoleErrors": 0,
+        "overflow": false
+      },
+      {
+        "scenario": "customer_changed_navigation_locale",
+        "reducedMotion": "no-preference",
+        "preserveExpected": false,
+        "beforeOpen": true,
+        "afterOpen": false,
+        "focusRetained": false,
+        "menuExpanded": "false",
+        "workspaceInert": false,
+        "escapeCloses": true,
+        "escapeReturnsMenu": false,
+        "pass": true,
+        "pageErrors": 0,
+        "consoleErrors": 0,
+        "overflow": false
+      },
+      {
+        "scenario": "customer_changed_header_name",
+        "reducedMotion": "no-preference",
+        "preserveExpected": false,
+        "beforeOpen": true,
+        "afterOpen": false,
+        "focusRetained": false,
+        "menuExpanded": "false",
+        "workspaceInert": false,
+        "escapeCloses": true,
+        "escapeReturnsMenu": false,
+        "pass": true,
+        "pageErrors": 0,
+        "consoleErrors": 0,
+        "overflow": false
+      },
+      {
+        "scenario": "admin_same_route",
+        "reducedMotion": "no-preference",
+        "preserveExpected": false,
+        "beforeOpen": true,
+        "afterOpen": false,
+        "focusRetained": false,
+        "menuExpanded": "false",
+        "workspaceInert": false,
+        "escapeCloses": true,
+        "escapeReturnsMenu": false,
+        "pass": true,
+        "pageErrors": 0,
+        "consoleErrors": 0,
+        "overflow": false
+      }
+    ],
+    "summary": {
+      "tested": 8,
+      "passed": 8,
+      "failed": 0
+    }
+  },
+  "landing": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "dynamicReduced": {
+      "hidden": true,
+      "disabled": true,
+      "display": "none",
+      "focusable": false
+    },
+    "initialReduced": true,
+    "normalReplayRun": 2,
+    "pageErrors": 0,
+    "appConsoleErrors": 0,
+    "blockedResourceConsoleNoise": 2
+  },
+  "providerCalls": 0,
+  "walletMutations": 0,
+  "productionDataMutations": 0
+}

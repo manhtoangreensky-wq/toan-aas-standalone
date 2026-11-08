@@ -4,11 +4,14 @@ import test from 'node:test';
 import vm from 'node:vm';
 
 const source = fs.readFileSync('static/portal/portal.js', 'utf8');
+const mountStart = source.indexOf('  function mountPortal(override) {');
+const prepareStart = source.indexOf('    const headerMarkup = renderHeader(page, context);', mountStart);
+const prepareEnd = source.indexOf('    const sidebarMarkup = renderSidebar(page, context);', prepareStart);
 const renderStart = source.indexOf('    function renderShell() {');
-const headerStart = source.indexOf('      setSidebarAccessibilityState(false);', renderStart) + '      setSidebarAccessibilityState(false);'.length;
+const headerStart = source.indexOf('      if (!keepCustomerHeader) header.innerHTML = headerMarkup;', renderStart);
 const headerEnd = source.indexOf('      main.innerHTML = renderPage(page, context);', headerStart);
-assert.ok(renderStart > 0 && headerEnd > headerStart);
-const headerCode = source.slice(headerStart, headerEnd);
+assert.ok(prepareStart > mountStart && prepareEnd > prepareStart && headerStart > renderStart && headerEnd > headerStart);
+const headerCode = source.slice(prepareStart, prepareEnd) + source.slice(headerStart, headerEnd);
 
 function harness() {
   const header = { writes: 0, menuOpen: false, focusInside: false, set innerHTML(value) { this.writes++; this.markup = value; this.menuOpen = false; this.focusInside = false; } };

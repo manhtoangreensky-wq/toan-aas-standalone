@@ -567,7 +567,7 @@
       });
       pointerHandlers = [];
       landingCtas.forEach((cta) => cta.classList.remove("landing-motion-cta"));
-      setReplayAvailability(replayControl, true);
+      setReplayAvailability(replayControl, !prefersReducedMotion());
     };
     // The aperture remains a quiet static frame for motion-sensitive visitors.
     // Only animation setup is skipped; no content relies on this helper to be
