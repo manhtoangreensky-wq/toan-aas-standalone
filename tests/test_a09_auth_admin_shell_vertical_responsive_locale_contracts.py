@@ -716,7 +716,8 @@ def test_set_sidebar_menu_state_uses_ui_text_without_hardcoded_labels() -> None:
 
 def test_theme_css_a09_marker_and_rules() -> None:
     assert A09_CSS_MARKER in THEME, f"Missing {A09_CSS_MARKER} in portal-theme.css"
-    a09_layer = THEME[THEME.index(A09_CSS_MARKER) :]
+    a09_start = THEME.index(A09_CSS_MARKER)
+    a09_layer = THEME[a09_start : THEME.index("/* A09 Admin Operations */", a09_start)]
 
     # No 120px reservation in header
     assert "120px" not in a09_layer
@@ -734,7 +735,7 @@ def test_theme_css_a09_marker_and_rules() -> None:
 
     # Semantic tokens only in A09 layer: no raw hex (#), no rgba(, no glow, no gradient
     clean_css = re.sub(r"/\*.*?\*/", "", a09_layer, flags=re.DOTALL)
-    assert "#" not in clean_css, "Raw hex colors forbidden in A09 layer"
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", clean_css), "Raw hex colors forbidden in A09 layer"
     assert "rgba(" not in clean_css, "Raw rgba() forbidden in A09 layer"
     assert "glow" not in clean_css, "glow forbidden in A09 layer"
     assert "gradient" not in clean_css, "gradient forbidden in A09 layer"

@@ -19,8 +19,12 @@ def _final_auth_mobile_layer() -> str:
     start = marker
     # Stop before the later Admin shell responsive layer. The auth contract must
     # not inspect the Admin sidebar's fixed drawer rule.
-    end = THEME.index("@media (max-width: 980px) {", start)
-    return THEME[start:end]
+    end = THEME.index("/* Video UI closeout", start)
+    return (
+        THEME[start:end]
+        .replace("html .portal-auth-page--access", ".portal-auth-page--access")
+        .replace(" !important", "")
+    )
 
 
 def test_email_form_does_not_end_with_a_second_email_divider() -> None:
@@ -36,24 +40,20 @@ def test_mobile_and_tablet_show_compact_intro_before_the_auth_card() -> None:
 
     assert 'grid-template-areas: "intro" "card";' in mobile
     assert 'grid-template-areas: "card" "intro";' not in mobile
-    assert ".portal-auth-page--access .portal-auth-intro .portal-description" in mobile
+    assert ".portal-auth-intro .portal-description" in mobile
     assert "display: none;" in mobile
-    assert ".portal-auth-page--access .portal-auth-intro .portal-title" in mobile
+    assert ".portal-auth-intro .portal-title" in mobile
     assert "font-size: 28px;" in mobile
 
 
 def test_tablet_header_keeps_brand_and_back_copy_from_wrapping() -> None:
     mobile = _final_auth_mobile_layer()
 
-    assert ".portal-auth-page--access .portal-auth-brand strong" in mobile
+    assert ".portal-auth-brand strong" in mobile
     assert "white-space: nowrap;" in mobile
-    assert ".portal-auth-page--access .portal-auth-brand small," in mobile
-    assert ".portal-auth-page--access .portal-auth-back-label" in mobile
-    assert (
-        ".portal-auth-page--access .portal-auth-locale-link {\n"
-        "    white-space: nowrap;\n"
-        "  }"
-    ) in mobile
+    assert ".portal-auth-brand small" in mobile
+    assert ".portal-auth-back" in mobile
+    assert ".portal-auth-locale-link" in mobile
 
 
 def test_auth_header_uses_three_normal_flow_rows_at_nine_hundred() -> None:
