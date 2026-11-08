@@ -48,7 +48,8 @@ def test_detached_audio_request_stays_visible_as_a_guarded_history_record() -> N
     surface = _between(PORTAL, "function renderAudioChangeRequests", "function renderAudioHubCollectionBoard")
     assert "requestId && itemId && sourceById.has(itemId)" not in surface
     assert "function audioChangeRequestSourceIsActive" in surface
-    assert "Audio reference đã được gỡ khỏi collection" in surface
+    assert 'audioWorkspaceText("change.detachedTitle"' in surface
+    assert 'audioWorkspaceText("change.detachedShort"' in surface
     assert "sourceAttached ? audioChangeRequestStage(source)" in surface
 
 
@@ -56,7 +57,7 @@ def test_archived_collection_never_exposes_actionable_request_controls() -> None
     surface = _between(PORTAL, "function renderAudioChangeRequests", "function renderAudioHubCollectionBoard")
     assert 'const collectionActive = String(collection && collection.state || "").trim() === "active";' in surface
     assert "const ready = collectionActive && canView && readState === \"ready\";" in surface
-    assert "Collection đã archive" in surface
+    assert 'audioWorkspaceText("change.sourceHintArchived"' in surface
     assert "collectionActive && sourceAttached" in surface
 
 

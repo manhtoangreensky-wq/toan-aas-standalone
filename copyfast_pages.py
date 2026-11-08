@@ -173,12 +173,17 @@ _PORTAL_SHELL_TITLES = {
     "/workspace": {"vi": "Bản nháp không gian làm việc · TOAN AAS", "en": "Workspace drafts · TOAN AAS", "zh": "工作台草稿 · TOAN AAS"},
     "/project-packages": {"vi": "Project Packages · TOAN AAS", "en": "Project Packages · TOAN AAS", "zh": "项目套餐 · TOAN AAS"},
     "/starter-kits": {"vi": "Starter Kits · TOAN AAS", "en": "Starter Kits · TOAN AAS", "zh": "入门套件 · TOAN AAS"},
-    "/audio-hub": {"vi": "Audio Production Hub · TOAN AAS", "en": "Audio Production Hub · TOAN AAS", "zh": "音频制作中心 · TOAN AAS"},
-    "/audio-hub/new": {"vi": "Audio Production Brief mới · TOAN AAS", "en": "New Audio Production Brief · TOAN AAS", "zh": "新建音频制作简报 · TOAN AAS"},
-    "/image-hub": {"vi": "Image Operations Hub · TOAN AAS", "en": "Image Operations Hub · TOAN AAS", "zh": "图像运营中心 · TOAN AAS"},
-    "/image-hub/new": {"vi": "Image Direction mới · TOAN AAS", "en": "New Image Direction · TOAN AAS", "zh": "新建图像创意方向 · TOAN AAS"},
-    "/campaigns": {"vi": "Campaign Operations Board · TOAN AAS", "en": "Campaign Operations Board · TOAN AAS", "zh": "活动运营看板 · TOAN AAS"},
-    CAMPAIGN_CREATE_PATH: {"vi": "Campaign mới · TOAN AAS", "en": "New Campaign · TOAN AAS", "zh": "新建活动 · TOAN AAS"},
+    "/media-workspace": {"vi": "Thư viện âm thanh · TOAN AAS", "en": "Audio library · TOAN AAS", "zh": "音频工作台 · TOAN AAS"},
+    "/media-workspace/music-prompt-composer": {"vi": "Soạn hướng dẫn âm nhạc · TOAN AAS", "en": "Music Prompt Composer · TOAN AAS", "zh": "音乐提示编写器 · TOAN AAS"},
+    "/media-workspace/music-directions": {"vi": "Hướng âm nhạc · TOAN AAS", "en": "Music Directions · TOAN AAS", "zh": "音乐方向 · TOAN AAS"},
+    "/media-workspace/sfx-cue-sheet": {"vi": "Gợi ý hiệu ứng âm thanh · TOAN AAS", "en": "SFX Cue Sheet · TOAN AAS", "zh": "音效提示表 · TOAN AAS"},
+    "/media-workspace/new": {"vi": "Bộ sưu tập âm thanh mới · TOAN AAS", "en": "New audio collection · TOAN AAS", "zh": "新建音频合集 · TOAN AAS"},
+    "/audio-hub": {"vi": "Trung tâm sản xuất âm thanh · TOAN AAS", "en": "Audio production hub · TOAN AAS", "zh": "音频制作中心 · TOAN AAS"},
+    "/audio-hub/new": {"vi": "Yêu cầu âm thanh mới · TOAN AAS", "en": "New audio brief · TOAN AAS", "zh": "新建音频简报 · TOAN AAS"},
+    "/image-hub": {"vi": "Trung tâm vận hành hình ảnh · TOAN AAS", "en": "Image operations hub · TOAN AAS", "zh": "图像运营中心 · TOAN AAS"},
+    "/image-hub/new": {"vi": "Định hướng hình ảnh mới · TOAN AAS", "en": "New image direction · TOAN AAS", "zh": "新建图像创意方向 · TOAN AAS"},
+    "/campaigns": {"vi": "Trung tâm kế hoạch · TOAN AAS", "en": "Campaign Operations Board · TOAN AAS", "zh": "活动运营看板 · TOAN AAS"},
+    CAMPAIGN_CREATE_PATH: {"vi": "Kế hoạch mới · TOAN AAS", "en": "New campaign · TOAN AAS", "zh": "新建活动 · TOAN AAS"},
     "/projects": {"vi": "Project Operations Board · TOAN AAS", "en": "Project Operations Board · TOAN AAS", "zh": "项目运营看板 · TOAN AAS"},
     PROJECT_CREATE_PATH: {"vi": "Project mới · TOAN AAS", "en": "New Project · TOAN AAS", "zh": "新建项目 · TOAN AAS"},
     "/admin/security": {"vi": "Security Posture · TOAN AAS", "en": "Security Posture · TOAN AAS", "zh": "安全态势 · TOAN AAS"},
@@ -186,7 +191,7 @@ _PORTAL_SHELL_TITLES = {
     "/admin/automation": {"vi": "Automation Monitor · TOAN AAS", "en": "Automation Monitor · TOAN AAS", "zh": "自动化监控 · TOAN AAS"},
     "/admin/system-stewardship": {"vi": "System & Data Stewardship · TOAN AAS", "en": "System & Data Stewardship · TOAN AAS", "zh": "系统与数据治理 · TOAN AAS"},
     "/calendar": {"vi": "Lịch nội dung · TOAN AAS", "en": "Content calendar · TOAN AAS", "zh": "内容日历 · TOAN AAS"},
-    "/approvals": {"vi": "Self-review Queue · TOAN AAS", "en": "Self-review Queue · TOAN AAS", "zh": "自审队列 · TOAN AAS"},
+    "/approvals": {"vi": "Hàng tự rà soát · TOAN AAS", "en": "Self-review queue · TOAN AAS", "zh": "自我审核队列 · TOAN AAS"},
     "/operations": {"vi": "Operations Autopilot", "en": "Operations Autopilot", "zh": "Operations Autopilot"},
     "/admin/operations": {"vi": "Operations Autopilot", "en": "Operations Autopilot", "zh": "Operations Autopilot"},
     "/history": {"vi": "Lịch sử & Nhật ký · TOAN AAS", "en": "History & Logs · TOAN AAS", "zh": "历史与日志 · TOAN AAS"},
@@ -495,17 +500,23 @@ def _shell_title_for(path: str, locale: str) -> str:
             "en": "Request details · TOAN AAS",
             "zh": "请求详情 · TOAN AAS",
         }[locale]
+    if MEDIA_WORKSPACE_PATH.fullmatch(normalized):
+        return {
+            "vi": "Chi tiết bộ sưu tập âm thanh · TOAN AAS",
+            "en": "Audio collection details · TOAN AAS",
+            "zh": "音频合集详情 · TOAN AAS",
+        }[locale]
     if AUDIO_HUB_PATH.fullmatch(normalized):
         return {
-            "vi": "Audio Production Board · TOAN AAS",
-            "en": "Audio Production Board · TOAN AAS",
-            "zh": "音频制作看板 · TOAN AAS",
+            "vi": "Chi tiết bộ sưu tập âm thanh · TOAN AAS",
+            "en": "Audio collection details · TOAN AAS",
+            "zh": "音频合集详情 · TOAN AAS",
         }[locale]
     if IMAGE_HUB_PATH.fullmatch(normalized):
         return {
-            "vi": "Image Operations Board · TOAN AAS",
-            "en": "Image Operations Board · TOAN AAS",
-            "zh": "图像运营看板 · TOAN AAS",
+            "vi": "Chi tiết định hướng hình ảnh · TOAN AAS",
+            "en": "Image direction details · TOAN AAS",
+            "zh": "图像方向详情 · TOAN AAS",
         }[locale]
     if PROJECT_PATH.fullmatch(normalized):
         return {

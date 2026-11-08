@@ -1,5 +1,22 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## LOCALE-MOTION-QA-20261108
+
+Manifest/trạng thái: [phiên Tester](PHIEN-LOCALE-20261108.md). Sửa ca tại file
+nguồn này trước khi cập nhật thẻ theo dõi.
+
+| Case | Mức | Thao tác | PASS bắt buộc | Hiện tại |
+|---|---|---|---|---|
+| LOCALE-DEDICATED-01..12|nặng|3tool,3locale,trang rỗng/kết quả|Đúng chữ;giữ dữ liệu máy chủ/action/option|12/12|
+| LOCALE-LIBRARY-01..24|nặng|Collection/Hub/account/campaign/tool|Giữ ID,nội dung;không nhận nhầm detail|24/24|
+| LOCALE-FIRST-01..39|nặng|HTMLResponse lần tải đầu|Tiêu đề riêng đúngVI/EN/ZH|39/39|
+| LOCALE-INTERACTION-01..30|nặng|Chọn mẫu,giữ nháp,chốt nút|Không tự gửi/điều hướng;giữ scalar|30/30|
+| LOCALE-SWEEP-01|nặng|Full locale|Không trộn chữ;giữ dữ liệu|418/418|
+| AUDIO-BROWSER-01..54|vừa|3tool×3locale×2theme×3viewport|Không overflow/error;mobile16px/min44px|54/54|
+
+Bằng chứng: reports/ui-qa/locale-20261108 và [receipt](../docs/reports/locale-release-20261108.md).
+QA authenticated456ca/responsive30ca trước đó thuộc nguồn cũ, không phải exact-source/LIVE cho đợt này.
+
 ## AP195-ACK-TRUTH-20261107 — xác nhận bản ghi lưu
 
 BASE3de678d3a8e9707ae60514aa1b4fce8160371c4b; giữ48case lõi.

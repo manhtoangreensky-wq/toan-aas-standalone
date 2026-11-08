@@ -3938,6 +3938,9 @@ a { color: inherit; text-decoration: none; }
   .portal-music-prompt-composer-intro { padding: 20px; border-radius: 18px; }
   .portal-music-prompt-composer-intro dl, .portal-music-prompt-composer-guard-list, .portal-music-prompt-composer-suggestions dl, .portal-music-prompt-composer-usage > dl { grid-template-columns: 1fr; }
   .portal-music-prompt-composer-suggestions dl > div:last-child { grid-column: auto; }
+  .portal-music-prompt-composer .portal-input,
+  .portal-music-prompt-composer .portal-select,
+  .portal-music-prompt-composer .portal-textarea { font-size: 16px; }
 }
 @media (max-width: 440px) {
   .portal-music-prompt-composer-suggestions, .portal-music-prompt-composer-usage { padding: 12px; }

@@ -1019,8 +1019,10 @@ def test_core_portal_renderers_consume_reviewed_locale_keys() -> None:
     setup = _between(PORTAL, "function renderWorkspaceSetup(page, context)", "function renderOnboarding(page, context)")
     starter = _between(PORTAL, "function starterKitRecordCounts(kit)", "function renderWorkspaceSetup(page, context)")
 
+    # Check the five rendered destinations, not an unused legacy home key.
+    for key in ("mobile.studio", "mobile.publishing", "mobile.projects", "mobile.wallet", "mobile.account"):
+        assert f'uiText("{key}"' in chrome
     for required in (
-        'uiText("mobile.home"',
         'uiText("chrome.searchWorkspace"',
         'uiText("chrome.openNavigation"',
         'uiText("chrome.installApp"',

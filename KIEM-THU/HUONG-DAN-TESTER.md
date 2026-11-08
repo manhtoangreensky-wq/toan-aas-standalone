@@ -1,5 +1,21 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Đợt locale/motion/responsive — 08/11/2026
+
+Nguồn hiện tại: [phiên Tester](PHIEN-LOCALE-20261108.md) và
+[receipt phát hành](../docs/reports/locale-release-20261108.md).
+
+1. `node --test tests/*locale*.test.mjs` —418/418.
+2. `node --test tests/dedicated-audio-fixed-chrome-locale.test.mjs tests/library-account-locale-render-regression.test.mjs` —36/36.
+3. `node --test tests/music-sfx-interaction-feedback.test.mjs` —30/30.
+4. `python -m pytest -q tests/test_library_shell_locale_runtime.py` —39/39.
+5. FullNode cần catalogue khóa SHA theo checkout trong .github/workflows/webapp-quality.yml; với đúng fixture đạt1.871/1.871, không bỏ ca.
+
+Bản trích54ca Chrome nằm trong reports/ui-qa/locale-20261108. Rawtraces giữlocal,
+không có lệnh helper nội bộ không xuất bản trong hướng dẫn hiện tại. Các mốc456/30
+của bản trước là lịch sử, không dùng cho exact-source hoặc LIVE của bản mới.
+CI, runtime SHA và production UI phải được xác minh riêng.
+
 ## Phiên xác nhận lưu kế hoạch — 07/11/2026
 
 AP195-ACK-TRUTH-20261107: kiểm AP195-ACK-01..03. Giữ request hiện hành và trả

@@ -1,5 +1,20 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 08/11/2026 — Locale và công cụ âm nhạc
+
+Đã dịch chữ cố định VI/EN/ZH của tiêu đề, biểu mẫu, kết quả và ghi chú công cụ;
+giữ nguyên nội dung khách/máy chủ, route, action, ID, scalar option, quyền và giới hạn.
+Một quy tắc mobile nâng chữ ô nhập composer lên16px; desktop vẫn15px.
+
+Toàn Node đạt1.871/1.871 với catalogue chuẩn khóa SHA. Locale418/418, renderer36/36,
+tương tác30/30, HTMLResponse39/39 và Chrome54/54 đạt. Đây là QA cô lập, không
+tuyên bố có đầu ra provider hay production LIVE.
+
+Bằng chứng hiện tại và manifest nguồn được giữ tại [receipt phát hành](../docs/reports/locale-release-20261108.md) và [phiên Tester](../KIEM-THU/PHIEN-LOCALE-20261108.md). Không dùng số liệu lịch sử bên dưới thay cho đợt này.
+
+Không sửa Bot, route-engine, auth authority, backend/API/schema, ví/PayOS,
+provider, ENV hoặc dữ liệu production. Runtime SHA và LIVE phải kiểm riêng.
+
 ## 07/11/2026 — Chỉ xác nhận lưu khi phản hồi có bản ghi đúng hợp đồng
 
 Candidate AP195-ACK-TRUTH kiểm ba phản hồi tạo/sửa/đổi trạng thái trước khi

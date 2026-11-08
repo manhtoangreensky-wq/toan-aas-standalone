@@ -1,5 +1,20 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 08/11/2026 — Đối chiếu locale, âm nhạc và motion
+
+| Chức năng đang có | Hiện trạng đã đo | Ranh giới giữ nguyên |
+|---|---|---|
+| Tiêu đề list/new/detail UUID/bảng kế hoạch |39/39 HTMLResponse đúng locale|Không đổi UUID recognizer/quyền|
+| Ba công cụ âm nhạc riêng và dữ liệu kết quả |36/36 renderer,30/30 tương tác|Giữ route/action/ID/scalar và nội dung máy chủ|
+| Locale và bố cục công cụ |418/418 locale,54/54 Chrome; mobile16px/min45px|Không tạo âm thanh hay quyền mới|
+| Dashboard motion |Không gọi entrance trên main ở normal/reduced|Chỉ reveal lớp quyết định; không chặn trạng thái chuẩn|
+
+Tiền tố /media-workspace/ không đủ để phân biệt tool với collection detail; dùng
+layout/route đóng. Bài kiểm phải kiểm các nhóm điều hướng đang render, không
+giữ một khóa home đã bỏ bằng hằng số không sử dụng. PASS local không phải deploy/LIVE.
+
+Bằng chứng hiện tại và manifest nguồn được giữ tại [receipt phát hành](../docs/reports/locale-release-20261108.md) và [phiên Tester](../KIEM-THU/PHIEN-LOCALE-20261108.md). Không dùng số liệu lịch sử bên dưới thay cho đợt này.
+
 ## 07/11/2026 — Đối chiếu xác nhận lưu kế hoạch
 
 Nguồn: `docs/migration/CAMPAIGN_PLANNER_BOUNDARY.md`, projection native
