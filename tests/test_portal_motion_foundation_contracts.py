@@ -170,11 +170,11 @@ def test_mount_restores_focus_after_the_deferred_render_completes() -> None:
 
     # The first deferred script can mount before the optional presentation
     # utility loads, while a supported View Transition may defer the DOM swap.
-    # Both paths must restore focus only after the renderer has run.
+    # Both paths restore only the current mount's focus after rendering.
     assert "? motion.replace(shell, main, renderShell, { animate: false })" in mount
     assert ": motion.replace(shell, main, renderShell);" in mount
-    assert re.search(
-        r"replaceResult\.then\(\(\)\s*=>\s*restoreFocus\(focus\),\s*"
-        r"\(\)\s*=>\s*restoreFocus\(focus\)\)",
-        mount,
+    result = subprocess.run(
+        ["node", "--test", "tests/motion-focus-continuation.test.mjs"],
+        cwd=ROOT, capture_output=True, text=True, encoding="utf-8", timeout=30,
     )
+    assert result.returncode == 0, result.stdout + result.stderr

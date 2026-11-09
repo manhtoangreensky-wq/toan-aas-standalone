@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-09",
-  "local_files_refresh_scope": "Motion20261109: four source fixes,26new lifecycle/read-order cases and dedicated Tester session; preserve historical metadata and existing case gates.",
+  "local_files_refresh_scope": "Focus continuation:8behavior/20native,24focused/1915fullNode/18Pythonmotion; Tester session added, historical metadata and48case gates preserved.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1002,
-      "bytes": 116659,
-      "sha256": "e080794838fa97b3237de7e94421b0a0479670f2662ce73f5ae231b6ea20aa7d"
+      "lines": 1013,
+      "bytes": 117256,
+      "sha256": "0161810d1757d99dc81bdae8bcd4dc6be5ea212090d2c0bb5d8886442aa0bdfb"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
