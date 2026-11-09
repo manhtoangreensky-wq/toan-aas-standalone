@@ -6,7 +6,13 @@
   local/GitHub/VPS/HTTPS khớp, Bot/Web/nginx active. Không phải LIVE/FPS.
 - [x] Focus candidate: R1, RED5/8→8/8, fullNode1915/Python18/native20, review0C0I;
   helper/route/data giữ. [Receipt](../../docs/reports/motion-focus-20261109.md).
-- [ ] Focus exact CI/merge/deploy/reconcile; native opt-in error/startup vẫn mở.
+- [x] Focus PR701: CI42598868242, merge/runtime2c186071, deploy42600585743;
+  runtime SHA/services/portal.js hash được đối chiếu lại; đây là delivery unit riêng.
+- [ ] Native opt-in error/startup và kiểm chứng thiết bị/signed UI vẫn mở.
+- [x] WIP Video Studio locale/opt-in/font: renderer23/23, markup8/8, native18/18,
+  actual-source navigation8/8, fullNode1938/1938, Python targeted26/26 + markup/font9/9.
+- [ ] Exact CI/merge/deploy/runtime của WIP branch; fallback native runtime,
+  device/signed UI and whole-app locale/responsive/auth remain open.
 - [ ] Whole locale/keyboard/auth/responsive/lab/device/signed UI R218 chưa đủ
   evidence; giữ toàn phạm vi goal, không đóng bằng motion hoặc focus unit.
 
@@ -16,8 +22,8 @@
   four AntigravityR1; focused65/fullNode1907/Python18 đạt; protected source giữ.
 - [x] Final native12+focused6; replay0, article18/18, Features/menu/navigation giữ;
   independent review0Critical/0Important. Bằng chứng source không phảiLIVE.
-- [ ] Exact-head CI/merge/deploy/runtime:
-  theo [receipt](../../docs/reports/motion-20261109.md) và Issue689.
+- [x] PR700 exact CI42575690454, mergea3ebcadf, deploy42586089352;
+  [receipt](../../docs/reports/motion-20261109.md), runtime/asset verification và Issue689.
 - [ ] Startup longtask, signed production/device motion và toàn bộ nhóm locale,
   responsive/keyboard/auth lifecycle R218 còn thiếu evidence vẫn giữ mở. Không
   rút goal còn hai cổng hoặc suy toàn app PASS từ bản motion này.

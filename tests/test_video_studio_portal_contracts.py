@@ -157,7 +157,8 @@ def test_video_studio_has_no_private_pwa_cache_or_fake_media_surface() -> None:
     assert 'const estimateMarkup = planState === "archived"' in PORTAL
     assert "Estimate đã được khóa" in PORTAL
     assert "self-review only" not in PORTAL.lower()  # no generic status alias
-    assert "Không có upload, renderer, player, URL media, tệp hoặc delivery" in PORTAL
+    assert 'videoStudioText("boundary.description", "Không gian này chỉ lưu mô tả' in PORTAL
+    assert "tệp đa phương tiện" in PORTAL
 
 
 def test_video_scene_order_uses_active_scene_position_not_raw_list_index() -> None:
@@ -249,7 +250,9 @@ def test_video_navigation_is_a_dedicated_group_with_unambiguous_active_routes() 
         assert 'if (linkPath === "/video-studio/workflow") return path === "/video-studio/workflow";' in PORTAL
         assert 'if (linkPath === "/video-studio/story-video-plan") return path === "/video-studio/story-video-plan";' in PORTAL
     else:
-        assert '["/studio", "Video Studio"' in PORTAL or '["/video-studio"' in PORTAL
+        assert 'customerPage("/video-studio", "Video Production Studio"' in PORTAL
+        assert 'customerPage("/video-studio/new", "Video plan mới"' in PORTAL
+        assert 'customerPage("/video-studio/motion-guide", "Creative Motion Guide"' in PORTAL
 
 
 def test_video_studio_plan_and_reference_reads_ignore_stale_private_responses() -> None:

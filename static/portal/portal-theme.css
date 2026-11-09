@@ -23485,3 +23485,10 @@ html:not([data-portal-theme="dark"]) .portal-shell[data-portal-app-kind="admin"]
     min-height: 44px;
   }
 }
+
+/* Video plan: readable editable fields on mobile without focus zoom. */
+@media (max-width: 620px) {
+  .portal-shell[data-portal-surface="customer"] form[data-portal-action="video-plan-create"] :is(input, select, textarea) {
+    font-size: 16px;
+  }
+}
