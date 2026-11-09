@@ -8,7 +8,7 @@ deployed và LIVE là bốn mức khác nhau. Sổ GitHub duy nhất là Issue68
 
 | Thứ tự | Nhóm | Evidence đang có | Cổng tiếp theo bắt buộc |
 |---|---|---|---|
-| 1 | WIP biểu mẫu kế hoạch video + early opt-in | Commit b4d86f0e; renderer23/23; markup8/8; source review không đổi guard/data | Native layout18, actual-source navigation8, full regression, docs/Tester/provenance, CI rồi delivery |
+| 1 | WIP biểu mẫu kế hoạch video + early opt-in | Renderer23/23; native18/18; markup8/8; actual-source nav8/8; fullNode1938/Python26; source review không đổi guard/data | Đã merge/deploy PR702 (CI42650106952, runtime e88f25ba, deploy42652904052); fallback native và broader route/locale responsive còn mở |
 | 2 | Đối chiếu delivery đã cũ | PR700/701 đã merge/deploy; kiểm lại GitHub và VPS trả2c186071, ba services active, portal.js f0150811… | Giữ riêng delivery đã đóng và motion/native còn mở; không làm lại mã đã khóa |
 | 3 | Whole-app locale VI/EN/ZH | Các unit đã phát hành và WIP là những lát hẹp | Visible DOM/AX theo route×state, gồm loading/error/empty/read-only/guarded; giữ brand và dữ liệu khách |
 | 4 | Nội dung có mục đích | Các unit bỏ thẻ dư đã có evidence riêng | Inventory control→mục đích/action/output; không filler, khung trống, fake ready hoặc che guard |

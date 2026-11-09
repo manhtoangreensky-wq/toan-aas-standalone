@@ -13,6 +13,8 @@
   actual-source navigation8/8, fullNode1938/1938, Python targeted26/26 + markup/font9/9.
 - [ ] Exact CI/merge/deploy/runtime của WIP branch; fallback native runtime,
   device/signed UI and whole-app locale/responsive/auth remain open.
+- [x] WIP Video Studio delivery: PR702 CI42650106952, merge/runtime e88f25ba,
+  deploy42652904052; VPS services/health/portal-theme asset hash verified.
 - [ ] Whole locale/keyboard/auth/responsive/lab/device/signed UI R218 chưa đủ
   evidence; giữ toàn phạm vi goal, không đóng bằng motion hoặc focus unit.
 
