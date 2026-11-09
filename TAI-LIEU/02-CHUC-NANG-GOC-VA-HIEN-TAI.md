@@ -1564,4 +1564,12 @@ Nguồn thiết kế trước: `tests/autopost-hub-product-controls.test.mjs` v�
 
 Nguồn thiết kế gốc: các contracts lifecycle/header/palette trong tests và portal-motion.js.
 Không còn đúng nếu hiểu “cleanup luôn cho phép replay” hoặc “hydration luôn được đóng menu khách”.
-Hai sửa lifecycle đang chờ exact-commit CI/ship/live; xem receipt motion, không dùng số QA thay trạng thái production.
+Mốc lịch sử trên đã được phát hành qua PR692/runtime745fabbd; signed LIVE vẫn mở.
+Xem receipt motion, không dùng số QA thay trạng thái production.
+
+## Đối chiếu cỡ chữ Voice — 09/11/2026
+
+Input Voice mobile15px ở baselinebd6f947f được nâng16px trong namespace task tại<=620px.
+Các role desktop giữ nguyên (không giả định tất cả cùng15px), màu/route/action/scalar và
+processing boundary không đổi.60field RED và120native cases đối chiếu source a6cdc5fb;
+CI/ship/LIVE riêng theo receipt Voice. Không suy ra engine/provider đã được thực thi.
