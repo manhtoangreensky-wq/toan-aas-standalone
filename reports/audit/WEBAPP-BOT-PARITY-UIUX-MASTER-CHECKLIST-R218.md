@@ -1255,3 +1255,26 @@ HTTP200/smoke/CIxanh thaybằngchứngchuyểnđộngthật.
 
 PROVIDER_CALLS=0; WALLET_MUTATIONS=0; PRODUCTION_DATA_MUTATIONS=0.
 MERGE/DEPLOY/LIVE không suy từ tests. Trạng thái delivery theo PR/checkpoint hiện tại.
+
+## Checkpoint 10/11/2026 — kết quả kế hoạch video, không đóng toàn goal
+
+- [x] RESULT-LOCALE-VIDEO-PLANNING local: 24 khóa motion và 45 khóa roadmap
+  đúng VI/EN/ZH; 45/45 targeted, 1969/1969 Node. Toàn bộ 9266 mục dịch cũ mỗi
+  ngôn ngữ và 178 khóa videoStudioUi giữ nguyên; dữ liệu và điều kiện lưu không đổi.
+- [x] RESULT-LOCALE-VIDEO-PLANNING-ROADMAP-WRAP local: sửa đúng một quy tắc CSS
+  cho mô tả từng chương ở <=620px; ca 390px từ sáu ô tràn về 0. Native cuối
+  24/24 result + 24/24 wrap đạt, 42 tổ hợp khác nhau; không page error, request
+  ngoài hoặc ghi sản phẩm. Chuỗi dài và xuống dòng gốc được giữ ở 12 ca mobile.
+- [ ] RESULT-LOCALE-VIDEO-PLANNING delivery: CI đúng HEAD, merge, deploy,
+  runtime và asset cần bằng chứng riêng; receipt local không thay signed LIVE.
+- [x] AUTH anonymous bounded: sáu route x390/1440 có12/12 đúng chính sách;
+  helper safeReturnPath thật22/22; không protected flash được quan sát. Chưa
+  đóng signed hydration/auth lifecycle và không suy /studio/ từ /studio.
+- [ ] Next: xác nhận đã lưu long-form bị chuẩn hóa hai lần;3/3 source-render
+  không hiện dù phản hồi31khóa hợp lệ. Giữ guard dữ liệu, không đổi backend.
+- [ ] Next: biểu mẫu/lựa chọn/metadata bên ngoài hai kết quả còn lẫn ngôn ngữ;
+  audit12render đã tái hiện, không đóng whole-route locale từ69khóa kết quả.
+
+Evidence và giới hạn: `docs/reports/video-planning-result-locale-20261110.md`,
+spec cùng ngày và `KIEM-THU/PHIEN-VIDEO-RESULT-LOCALE-20261110.md`.
+Nhóm responsive/keyboard/auth signed và M-FINAL-01..06 ở trên vẫn mở.

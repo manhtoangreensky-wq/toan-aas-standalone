@@ -16563,6 +16563,91 @@
     Object.entries(VIDEO_STUDIO_UI_COPY[locale]).forEach(([key, value]) => { MESSAGES[locale][`videoStudioUi.${key}`] = value; });
   });
 
+  const VIDEO_MOTION_RESULT_COPY_ROWS = [
+    ["selected", "Hướng đã chọn", "Selected direction", "已选方向"],
+    ["custom", "Hướng tự chọn", "Custom direction", "自定义方向"],
+    ["videoPrompt", "Mô tả tạo video", "Video prompt", "视频提示词"],
+    ["motion", "Chuyển động", "Motion", "运动"],
+    ["audio", "Định hướng âm thanh", "Audio direction", "音频方向"],
+    ["customNote", "Chủ đề tự nhập được dùng trực tiếp; không có gợi ý hay thẻ ẩn nào được chọn thay bạn.", "Your custom topic is used directly; no suggestion or hidden card is selected for you.", "直接使用您输入的主题，不会代您选择建议或隐藏卡片。"],
+    ["kicker", "Hướng dẫn chuyển động", "Motion guide", "运动指南"],
+    ["fallbackTitle", "Hướng dẫn chuyển động sáng tạo", "Creative motion guide", "创意运动指南"],
+    ["boundary", "Đây là định hướng bằng văn bản để rà soát, không phải hình ảnh, video, âm thanh, bản xem trước, tệp đầu ra hay xác nhận từ nhà cung cấp.", "These are text directions for review, not images, video, audio, a preview, output files or provider confirmation.", "这些是供检查的文字方向，并非图像、视频、音频、预览、输出文件或供应商确认。"],
+    ["stale", "Các lựa chọn trong biểu mẫu đã thay đổi. Hướng dẫn bên dưới được giữ để so sánh nhưng không còn khớp biểu mẫu hiện tại; hãy tạo lại khi đã sẵn sàng.", "The form selections have changed. The guide below is kept for comparison but no longer matches the current form; recreate it when ready.", "表单选项已更改。下方指南保留用于比较，但已不再匹配当前表单；准备好后请重新创建。"],
+    ["idea15", "Ý tưởng 15 giây", "15-second idea", "15秒创意"],
+    ["idea30", "Ý tưởng 30 giây", "30-second idea", "30秒创意"],
+    ["map", "Sơ đồ chuyển động", "Motion map", "运动安排"],
+    ["rhythm", "Rà soát nhịp chuyển động", "Review the motion rhythm", "检查运动节奏"],
+    ["timelineNote", "Đây là trình tự định hướng, không có cảnh quay, trình phát, dòng thời gian dựng phim hoặc tệp đa phương tiện đầu ra.", "This is a sequence of directions, not footage, a player, an editing timeline or media output.", "这是方向顺序，并非素材、播放器、剪辑时间线或媒体输出。"],
+    ["imagePrompt", "Mô tả tạo hình ảnh", "Image prompt direction", "图像提示词方向"],
+    ["motionPrompt", "Mô tả chuyển động video", "Video motion prompt", "视频运动提示词"],
+    ["camera", "Chuyển động máy quay", "Camera movements", "镜头运动"],
+    ["overlay", "Chữ trên màn hình", "On-screen text", "画面文字"],
+    ["voiceover", "Lời thuyết minh", "Voiceover", "旁白"],
+    ["cta", "Lời kêu gọi hành động", "Call to action", "行动号召"],
+    ["review", "Rà soát trước khi dùng trong quy trình khác", "Review before using in another workflow", "用于其他流程前请检查"],
+    ["footer", "Hướng dẫn chỉ được giữ trong phiên đăng nhập hiện tại. Trang này không tự lưu, gửi mô tả tới bộ xử lý hoặc nhà cung cấp, xuất tệp hay tạo video.", "The guide is kept only in the current signed-in session. This page does not automatically save, send prompts to an engine or provider, export files or create video.", "指南仅保存在当前登录会话中。此页面不会自动保存、向引擎或供应商发送提示词、导出文件或创建视频。"],
+    ["open", "Mở không gian video", "Open video workspace", "打开视频工作区"],
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    VIDEO_MOTION_RESULT_COPY_ROWS.forEach((row) => {
+      MESSAGES[locale][`videoMotionResultUi.${row[0]}`] = row[index + 1];
+    });
+  });
+
+  const VIDEO_ROADMAP_RESULT_COPY_ROWS = [
+    ["emptyKicker", "Kết quả lập kế hoạch", "Planning result", "规划结果"],
+    ["emptyTitle", "Chưa có kế hoạch video dài", "No long-form video roadmap yet", "暂无长视频规划"],
+    ["emptyBody", "Điền chủ đề, thời lượng, phong cách và cấu trúc để nhận dàn ý, kế hoạch từng chương, hồ sơ nhân vật và các phần mô tả tạo nội dung. Trình duyệt không tự tạo bản chép lời, bản xem trước hoặc video khi chưa có phản hồi hợp lệ từ máy chủ.", "Enter a topic, duration, style and structure to receive an outline, chapter roadmap, character guide and prompt sections. The browser does not create a transcript, preview or video without a valid server response.", "填写主题、时长、风格和结构后可获取大纲、章节规划、角色指南和提示词部分。浏览器不会在收到有效服务器响应前自行创建转录、预览或视频。"],
+    ["confirm", "Lưu kế hoạch video dài hiện tại thành bản nháp kế hoạch video? Máy chủ sẽ tạo lại kế hoạch từ các lựa chọn đã xác nhận; không tạo trạng thái chờ trên Telegram hoặc trợ lý tự động, không gọi nhà cung cấp, không tạo tệp đa phương tiện hay tác vụ, không thay đổi ví Xu, PayOS, tài nguyên, xuất bản hoặc bàn giao.", "Save the current long-form roadmap as a video plan draft? The server recomputes it from confirmed selections; no pending Telegram or bot state, provider call, media or job creation, wallet or PayOS change, asset, publication or delivery is created.", "将当前长视频规划保存为视频计划草稿？服务器会根据已确认选项重新生成规划；不会创建Telegram或机器人待处理状态、调用供应商、创建媒体或任务、更改Xu钱包或PayOS、创建资源、发布或交付。"],
+    ["save", "Lưu thành kế hoạch video", "Save as video plan", "保存为视频计划"],
+    ["chapter", "Chương", "Chapter", "章节"],
+    ["chapterNote", "Văn bản lập kế hoạch để rà soát — không có cảnh quay, nhà cung cấp, bộ dựng, bản xem trước hoặc tệp đa phương tiện đầu ra.", "Planning text for review — no footage, provider, renderer, preview or media output.", "供检查的规划文字，不包含素材、供应商调用、渲染、预览或媒体输出。"],
+    ["objective", "Mục tiêu", "Objective", "目标"],
+    ["hook", "Mở đầu thu hút", "Opening hook", "吸引注意的开场"],
+    ["script", "Nhịp kịch bản", "Script beat", "脚本节奏"],
+    ["visual", "Định hướng hình ảnh", "Visual direction", "视觉方向"],
+    ["voice", "Định hướng giọng đọc", "Voice direction", "配音方向"],
+    ["music", "Định hướng nhạc và hiệu ứng âm thanh", "Music and sound effects direction", "音乐与音效方向"],
+    ["transition", "Chuyển cảnh", "Transition", "转场"],
+    ["imagePrompt", "Mô tả tạo hình ảnh", "Image prompt section", "图像提示词部分"],
+    ["videoPrompt", "Mô tả tạo video", "Video prompt section", "视频提示词部分"],
+    ["kicker", "Kế hoạch video dài", "Long-form video roadmap", "长视频规划"],
+    ["fallbackTitle", "Kế hoạch video dài", "Long-form video roadmap", "长视频规划"],
+    ["minutes", "phút", "minutes", "分钟"],
+    ["boundary", "Đây là kế hoạch bằng văn bản để rà soát, không phải video, bản xem trước, tài nguyên, tệp đầu ra hoặc xác nhận từ nhà cung cấp.", "This is a text roadmap for review, not a video, preview, asset, output file or provider confirmation.", "这是供检查的文字规划，并非视频、预览、资源、输出文件或供应商确认。"],
+    ["style", "Phong cách:", "Style:", "风格："],
+    ["structure", "Cấu trúc:", "Structure:", "结构："],
+    ["chapters", "chương", "chapters", "章"],
+    ["audience", "Khán giả:", "Audience:", "受众："],
+    ["outline", "Dàn ý tổng thể", "Overall outline", "总体大纲"],
+    ["outlineTitle", "Mạch nội dung tổng thể", "Overall narrative", "整体叙事脉络"],
+    ["outlineEmpty", "Chưa có dàn ý hợp lệ.", "No valid outline yet.", "暂无有效大纲。"],
+    ["continuity", "Hồ sơ nhân vật và tính nhất quán", "Character and continuity guide", "角色与连贯性指南"],
+    ["continuityTitle", "Giữ mạch xuyên suốt", "Maintain continuity", "保持连贯性"],
+    ["continuityEmpty", "Chưa có hướng dẫn giữ tính nhất quán hợp lệ.", "No valid continuity guidance yet.", "暂无有效的连贯性指南。"],
+    ["roadmap", "Kế hoạch từng chương", "Chapter roadmap", "章节规划"],
+    ["reviewableChapters", "chương để rà soát", "chapters for review", "章供检查"],
+    ["chaptersNote", "Mỗi chương có định hướng bằng văn bản riêng. Không tạo bản chép lời, giọng đọc, nhạc, hình ảnh, video, bản dựng, tác vụ hoặc tệp bàn giao.", "Each chapter has its own text directions. No transcript, voice, music, image, video, render, job or delivery file is created.", "每章都有独立的文字方向。不会创建转录、配音、音乐、图像、视频、渲染、任务或交付文件。"],
+    ["audioReview", "Âm thanh, chú thích và rà soát", "Audio, caption and review", "音频、配文与检查"],
+    ["beforeUse", "Chốt nội dung trước khi dùng trong quy trình khác", "Finalize content before using in another workflow", "用于其他流程前请确认内容"],
+    ["audio", "Định hướng âm thanh", "Audio direction", "音频方向"],
+    ["caption", "Chú thích", "Caption", "配文"],
+    ["cta", "Lời kêu gọi hành động", "Call to action", "行动号召"],
+    ["review", "Rà soát trước khi dùng ở nơi khác", "Review before using elsewhere", "用于其他地方前请检查"],
+    ["reviewFallback", "Luôn kiểm tra các nhận định, quyền sử dụng, sự đồng ý và an toàn thương hiệu trước khi đưa kế hoạch sang quy trình khác.", "Check claims, usage rights, consent and brand safety before taking the roadmap into another workflow.", "将规划用于其他流程前，请检查声明、使用权、同意和品牌安全。"],
+    ["saveKicker", "Lưu kế hoạch", "Save the plan", "保存计划"],
+    ["saveTitle", "Xác nhận lưu thành bản nháp kế hoạch video", "Confirm saving as a video plan draft", "确认保存为视频计划草稿"],
+    ["saveBody", "Chỉ gửi lại các lựa chọn mô tả gốc trong phiên này. Máy chủ tạo lại dàn ý và kế hoạch từng chương trước khi tạo kế hoạch riêng tư của tài khoản; trình duyệt không gửi nội dung chương, mô tả đã hiển thị hoặc trạng thái Telegram.", "Only the original brief selections from this session are resubmitted. The server rebuilds the outline and chapter roadmap before creating a private account-owned plan; the browser does not send rendered chapters, prompts or Telegram state.", "仅重新提交本会话中的原始描述选项。服务器会先重建大纲和章节规划，再创建账户私有计划；浏览器不会发送已显示的章节、提示词或Telegram状态。"],
+    ["saveNote", "Lưu kế hoạch không phải dựng phim: không gọi trợ lý tự động, cầu nối hay nhà cung cấp; không xử lý tệp nguồn, tạo hình ảnh, video, âm thanh, bản xem trước, tệp đầu ra, tác vụ, tài nguyên, xuất bản, bàn giao, phê duyệt, khóa hoặc tạo nội dung; không thay đổi ví Xu hay PayOS.", "Saving a plan is not rendering: it does not call a bot, bridge or provider; process source media; create images, video, audio, previews, output, jobs or assets; publish, deliver, approve, lock or generate content; or change the Xu wallet or PayOS.", "保存计划并非渲染：不会调用机器人、桥接或供应商，处理源媒体，创建图像、视频、音频、预览、输出、任务或资源，发布、交付、审批、锁定或生成内容，也不会更改Xu钱包或PayOS。"],
+    ["open", "Mở không gian video", "Open video workspace", "打开视频工作区"]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    VIDEO_ROADMAP_RESULT_COPY_ROWS.forEach((row) => {
+      MESSAGES[locale][`videoRoadmapResultUi.${row[0]}`] = row[index + 1];
+    });
+  });
+
   const VOICE_STUDIO_UI_COPY_ROWS = [
     ["feedback.filtered","Đã áp dụng bộ lọc.","Filters applied.","已应用筛选条件。"],
     ["feedback.all","Đã hiển thị tất cả hồ sơ.","Showing all profiles.","已显示全部档案。"],
