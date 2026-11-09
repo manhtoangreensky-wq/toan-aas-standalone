@@ -1,8 +1,8 @@
 # Video Studio runtime receipt — 09/11/2026
 
-PR702: https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/702  
-CI: `42650106952` (Verify WebApp + Authenticated QA SUCCESS)  
-Merge/runtime: `e88f25ba6f85059ca258536e3c7efefec488880a`  
+PR702: https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/702
+CI: `42650106952` (Verify WebApp + Authenticated QA SUCCESS)
+Merge/runtime: `e88f25ba6f85059ca258536e3c7efefec488880a`
 Deploy: `42652904052` SUCCESS
 
 ## VPS verification
