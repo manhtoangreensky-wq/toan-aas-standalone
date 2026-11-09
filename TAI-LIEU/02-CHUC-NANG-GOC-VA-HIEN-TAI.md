@@ -1571,5 +1571,5 @@ Xem receipt motion, không dùng số QA thay trạng thái production.
 
 Input Voice mobile15px ở baselinebd6f947f được nâng16px trong namespace task tại<=620px.
 Các role desktop giữ nguyên (không giả định tất cả cùng15px), màu/route/action/scalar và
-processing boundary không đổi.60field RED và120native cases đối chiếu source a6cdc5fb;
+processing boundary không đổi.60field RED và120native cases đối chiếu source 06e4ab9;
 CI/ship/LIVE riêng theo receipt Voice. Không suy ra engine/provider đã được thực thi.

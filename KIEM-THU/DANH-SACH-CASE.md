@@ -985,3 +985,4 @@ vẫn chờ exact-SHA CI/deploy/live trong PR. Hồ sơ: `R218-LOCALE-183-RELEAS
 | Case | Mức | Bước | Kết quả cần thấy | Bằng chứng hiện tại |
 |---|---|---|---|---|
 | VOICE-MOBILE-INPUT-16-001 | vừa | TTS/STT/Clone/Saved/Outputs ở320/414/1024/1440, VI/EN/ZH, light/dark | Ô nhập mobile16px; desktop từng field giữ baseline; không overflow/errors, không gọi provider | Native120cases/font acceptance; [phiên Voice](PHIEN-VOICE-MOBILE-20261109.md); CI/ship/LIVE riêng |
+| VOICE-CLONE-TOUCH-001 | vừa | Mở “Quy trình thêm giọng” ở320/414, click/Space/Enter, lặpVI/EN/ZH light/dark | Summary tối thiểu44px; marker/toggle/focus native; bảy bước không đổi | Native Clone12RED→green; cùng phiên Voice; CI/ship/LIVE riêng |

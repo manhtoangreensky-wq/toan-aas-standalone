@@ -11,6 +11,7 @@
 | Motion lifecycle/startup | PR692, CI `42517213551`, merge `745fabbd`, deploy `42518106973` | Đã triển khai/runtime verified |
 | Motion QA | Full Node `1880/1880`; Chrome menu `8/8`; landing reduced/normal; assistant closed `0` scroll read/write; layout `87.65ms → 75.07ms` cùng harness | Đã có bằng chứng cục bộ/CI; không suy ra FPS thiết bị |
 | Bảo vệ phạm vi | Provider `0`, wallet `0`, ENV `0`, production data `0`; Bot/route-engine/auth authority không đổi | Đạt trong các gate của đợt |
+| Voice mobile readability/Clone touch | PR chưa mở ở checkpoint; native120 records, font0 violations, Clone summary RED→green, FullNode1880/1880 | Sẵn sàng CI; signed UI/device gate riêng |
 
 ## Cổng còn mở theo đúng phạm vi goal
 
@@ -38,6 +39,10 @@ Nó không đóng toàn bộ typography, AX hoặc goal.
 - Lane mới phải có RED, scope allowlist, worker receipt, independent verification, CI, merge, deploy và runtime SHA riêng.
 - Không dùng HTTP 200, CI xanh hoặc QA cô lập để thay cho signed LIVE.
 - Không chạm Bot, route-engine, provider, wallet/PayOS, ENV/secrets hoặc production data.
+
+Voice unit `VOICE-MOBILE-INPUT-16-001` và `VOICE-CLONE-TOUCH-001` chỉ đụng scoped CSS
+và test/receipt; không mở upload, quote, provider, job hoặc ví. Clone summary vẫn là
+acceptance touch riêng, không dùng field typography để tuyên bố toàn bộ AX.
 
 ## Provenance
 
