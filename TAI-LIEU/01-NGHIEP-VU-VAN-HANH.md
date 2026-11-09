@@ -2354,7 +2354,7 @@ và LIVE vẫn chưa đóng. `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`,
 ## Voice mobile — source09/11/2026
 
 Biểu mẫu Voice dùng16px cho input/select/textarea khi màn hình không quá620px;
-desktop giữ cỡ chữ theo từng field. Source a6cdc5fb chỉ thêm năm dòng CSS;
+desktop giữ cỡ chữ theo từng field. Source 06e4ab9 chỉ thêm CSS Voice mobile;
 120cấu hình native QA đã đo, FullNode1880/1880. Đây là bản chờ CI/phát hành,
 không đổi xử lý giọng, upload, quote, provider, ví hoặc quyền.
 [Receipt và giới hạn](../docs/reports/voice-mobile-readability-20261109.md).

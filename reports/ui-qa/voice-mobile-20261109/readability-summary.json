@@ -1,0 +1,26 @@
+{
+  "schema": "voice-mobile-readability-v2",
+  "source_sha": "06e4ab94919b39555187eefd46c475f739c8a3a2",
+  "baseline": {
+    "tts_mobile_rows": 12,
+    "tts_field_font_violations": 60,
+    "clone_mobile_summary_rows": 12,
+    "clone_summary_height_px": 24
+  },
+  "after": {
+    "records": 120,
+    "voice_field_font_violations": 0,
+    "small_target_rows": 0,
+    "overflow_rows": 0,
+    "clone_touch_target_rows": 12,
+    "full_node_pass": 1880,
+    "full_node_fail": 0
+  },
+  "runtime_hashes": {
+    "static/portal/portal-theme.css": "9508b2443b90355a76b834fbe0b7d103cfb2d4617113a59e0f8a1fdbee134548"
+  },
+  "provider_calls": 0,
+  "wallet_mutations": 0,
+  "production_data_mutations": 0,
+  "limitations": "Synthetic local QA; no signed production interaction/device FPS/whole-app AX/locale/Web Vitals claim."
+}
