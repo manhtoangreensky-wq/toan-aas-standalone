@@ -1,7 +1,7 @@
 # Biểu mẫu kế hoạch video — Việt hóa và opt-in chuyển trang — 09/11/2026
 
 BASE_SHA=2c18607169dc0ed9d55d934741a6e26f730c9b88
-STATUS=LOCAL_VERIFIED_PENDING_CI_DEPLOY
+STATUS=DEPLOYED_RUNTIME_VERIFIED_WITH_NATIVE_FALLBACK_OPEN
 LOCALE_SCOPE=static/portal/portal-i18n.js, static/portal/portal.js
 OPTIN_SCOPE=templates/portal_shell.html, copyfast_pages.py:_fallback_template
 PROVENANCE=reports/migration/preflight.json
@@ -14,9 +14,11 @@ PROVENANCE=reports/migration/preflight.json
 - EN/ZH không đổi; không dịch thương hiệu, tên người dùng hoặc dữ liệu trả về máy chủ.
 - `node --check` hai file đạt; `git diff --check` đạt.
 
-## Native/layout limitation
+## Native/layout and delivery
 
 QA native R4 đạt 18/18 cấu hình 320/414/1024 × VI/EN/ZH × sáng/tối. Mỗi ca giữ route/locale/theme, 10 ô chỉnh sửa, không page/console/overflow/external/write lỗi; mobile editable fields đạt16px, desktop giữ15px, target không vi phạm. Runner cũ thiếu bước đăng ký fixture và không đóng browser trong nhánh lỗi; hai timeout được phân loại là harness failure, không phải app PASS/FAIL.
+
+PR702 đã merge/runtime/deploy: CI `42650106952`, merge/runtime `e88f25ba6f85059ca258536e3c7efefec488880a`, deploy `42652904052`. VPS trả health hợp lệ; Bot/Web/nginx active; portal-theme.css VPS/HTTPS SHA256 `959d793d9f5cc9e94b65f00e4dc8c8d5962980ce18ca8e068be0a9fff27a30f6`. Native fallback runtime chưa được claim.
 
 ## Motion opt-in cùng đợt
 
