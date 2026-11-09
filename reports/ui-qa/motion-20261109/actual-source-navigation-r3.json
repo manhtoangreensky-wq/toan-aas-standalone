@@ -1,0 +1,20 @@
+{
+  "pass": true,
+  "cases": 8,
+  "normal": 6,
+  "reduced": 2,
+  "source_binding": {
+    "static/portal/portal.js": "7001ed3d954e424628f4a61ccec235070be2dac2079ed04aa4b10d6866f0f249",
+    "static/portal/portal-i18n.js": "cc29465a5a6140cf0c9593392a513fa3a5da56bb41d300140c697be4b3b2d2fc",
+    "static/portal/portal-theme.css": "04121d1715dc0644cc50e3cfa824afd781473d426cf4d051b7fd8f09277ed55a",
+    "templates/portal_shell.html": "299b614e27661c0b8664b47f857666aecd510f4bbfcb4a12c1c266d845434e6b",
+    "copyfast_pages.py": "a93e64b018c45762f3eaa5b4367f135bd1f1a823c442c9193e14f59ebb841c06"
+  },
+  "source_unchanged": true,
+  "fallback_native": "NOT_TESTED; markup parser unit covers literal body",
+  "provider_calls": 0,
+  "wallet_mutations": 0,
+  "live_pass": "NOT_TESTED",
+  "limitations": "Actual localhost current-source HTTP navigation; no HTML/static override or rejection suppression; CPU profiling diagnostic only, not FPS/field metrics.",
+  "artifact_note": "Sanitized owned localhost summary; full traces/screenshots remain outside repo."
+}

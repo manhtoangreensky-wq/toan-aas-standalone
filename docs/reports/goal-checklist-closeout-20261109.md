@@ -2,6 +2,10 @@
 
 Đây là checkpoint của goal, không phải tuyên bố hoàn tất toàn bộ WebApp.
 
+Lưu ý thời điểm: bảng bên dưới là snapshot trước PR697–701, không phải trạng
+thái release mới nhất. Dùng [đối soát hiện hành](goal-reconciliation-20261109.md)
+và completion ledger R218; không xóa hoặc diễn giải snapshot cũ thành hiện trạng.
+
 ## Đã có bằng chứng và đã phát hành
 
 | Nhóm | Bằng chứng hiện tại | Trạng thái |
