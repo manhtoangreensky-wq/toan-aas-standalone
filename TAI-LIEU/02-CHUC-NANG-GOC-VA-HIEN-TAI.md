@@ -1,5 +1,18 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 09/11/2026 — Đối chiếu hợp đồng motion và hành vi thực tế
+
+Nguồn gốc: docs/superpowers/specs/2026-10-16-r217-10-motion-performance.md.
+
+| Hợp đồng gốc | Sai lệch đã tái hiện | Candidate có bằng chứng |
+|---|---|---|
+| Không stale callback/hydration replay | Native A ghi đè/enter lên B; rule toàn bài chạy Dashboard7/7/5lần | Ownership riêng main; bỏ rule vô điều kiện, giữ entry riêng |
+| Scroll hot path không layout thrash | Landing đọc vị trí sau ghi; workspace đo/ghi xen kẽ | Snapshot trước ghi, giữ ngưỡng/số lần đo và cleanup |
+| CLS/LCP/INP hoặc runtime evidence | Source xanh từng bị hiểu nhầm là hết giật | Native replay được đo; startup/device/fieldINP/signedUI vẫn mở |
+
+Không đổi chức năng sản phẩm, provider/engine/backend/auth/ví hoặc dữ liệu; không
+xóa keyframes cũ hay khảo sát dependency ngoài phạm vi. [Receipt](../docs/reports/motion-20261109.md).
+
 ## 08/11/2026 — Đối chiếu locale, âm nhạc và motion
 
 | Chức năng đang có | Hiện trạng đã đo | Ranh giới giữ nguyên |

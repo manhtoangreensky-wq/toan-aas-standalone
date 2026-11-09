@@ -1,5 +1,17 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## Motion bổ sung — 09/11/2026
+
+- [x] Callback ownership, Landing snapshot, workspace read/write và bỏ article replay:
+  four AntigravityR1; focused65/fullNode1907/Python18 đạt; protected source giữ.
+- [x] Final native12+focused6; replay0, article18/18, Features/menu/navigation giữ;
+  independent review0Critical/0Important. Bằng chứng source không phảiLIVE.
+- [ ] Exact-head CI/merge/deploy/runtime:
+  theo [receipt](../../docs/reports/motion-20261109.md) và Issue689.
+- [ ] Startup longtask, signed production/device motion và toàn bộ nhóm locale,
+  responsive/keyboard/auth lifecycle R218 còn thiếu evidence vẫn giữ mở. Không
+  rút goal còn hai cổng hoặc suy toàn app PASS từ bản motion này.
+
 ## AP192 — Publish Review 06/11/2026
 
 - [x] Receipt21/21, customer content/12 flags preserved; native API verified.

@@ -44,8 +44,8 @@
     "note": "Earlier tracker/remote_revalidation fields are historical snapshots; no issue was reopened or created."
   },
   "partial_remote_revalidated_at": "2026-09-12",
-  "local_files_refreshed_at": "2026-11-08",
-  "local_files_refresh_scope": "Locale F/G/H/I release unit:418locale,39firstpaint,36renderer,30interaction,54Chrome,1871fullNode with pinned catalogue; historical tester metadata and GitHub snapshots preserved. No auth/project mutation or production data.",
+  "local_files_refreshed_at": "2026-11-09",
+  "local_files_refresh_scope": "Motion20261109: four source fixes,26new lifecycle/read-order cases and dedicated Tester session; preserve historical metadata and existing case gates.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 988,
-      "bytes": 115555,
-      "sha256": "cf31e7ad0a9d24daa5b26a8cacfb97dd51c09fcd0794ee09f39e3e88059e37ff"
+      "lines": 1002,
+      "bytes": 116659,
+      "sha256": "e080794838fa97b3237de7e94421b0a0479670f2662ce73f5ae231b6ea20aa7d"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

@@ -19117,9 +19117,6 @@ html::view-transition-new(root) {
   }
 }
 
-.portal-page {
-  animation: portalSaaS2026Entrance 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
 
 .portal-workboard-intro {
   border: 1px solid rgba(13, 148, 136, 0.22) !important;

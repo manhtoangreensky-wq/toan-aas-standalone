@@ -1,5 +1,19 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## MOTION-NOV09 — callback, hydration và read/write order
+
+Phiên độc lập: [MOTION-SMOOTHNESS-20261109](PHIEN-MOTION-20261109.md).
+Sửa case tại file nguồn này trước khi cập nhật Issue689.
+
+| Case | Mức | Thao tác | PASS bắt buộc / canh lỗi cũ | Bằng chứng |
+|---|---|---|---|---|
+| MOTION-NOV09-ENTRY | nặng | Native A chờ, B mới dựng; đảo thứ tự callback, hai main, fallback/reduced | A không ghi đè/replay B; current main vẫn vào đúng |12Node|
+| MOTION-NOV09-LANDING | vừa | Window/workspace tại0/20/21/300px | Một snapshot; geometry trước write; ngưỡng20px giữ |8Node|
+| MOTION-NOV09-ARTICLE | nặng | Dashboard/Studio hydrate, Features vào trang,390/1440thường/giảm | Không mờ/trượt toàn bài lặp; entry riêng giữ |Native final gate ở phiênTester|
+| MOTION-NOV09-WORKSPACE | vừa | Ba target visible/pending, reduced/unmount/noobserver | Membership giữ; geometry trước class/style; stale callbacks vô hiệu |6Node|
+
+Không dùng lab FPS/LCP hoặc HTTP200 thay signed production/device evidence.
+
 ## LOCALE-MOTION-QA-20261108
 
 Manifest/trạng thái: [phiên Tester](PHIEN-LOCALE-20261108.md). Sửa ca tại file
